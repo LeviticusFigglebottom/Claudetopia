@@ -209,11 +209,25 @@ static func ink_out(control: Control, seconds := 0.25) -> void:
 # --- controller focus -----------------------------------------------------------------
 
 ## Wires up/down (or left/right) neighbours through a list and focuses the first.
+## Neighbours are node paths, so this waits until the controls are in the tree.
 static func focus_chain(controls: Array, vertical := true, wrap := true) -> void:
 	var live: Array[Control] = []
 	for c in controls:
 		if c is Control and (c as Control).focus_mode != Control.FOCUS_NONE:
 			live.append(c)
+	if live.is_empty():
+		return
+	if not live[0].is_inside_tree():
+		live[0].tree_entered.connect(func() -> void: _wire_focus(live, vertical, wrap),
+				CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+		return
+	_wire_focus(live, vertical, wrap)
+
+
+static func _wire_focus(live: Array[Control], vertical: bool, wrap: bool) -> void:
+	for c in live:
+		if not is_instance_valid(c) or not c.is_inside_tree():
+			return
 	for i in live.size():
 		var prev: Control = live[(i - 1 + live.size()) % live.size()] if wrap else live[maxi(i - 1, 0)]
 		var next: Control = live[(i + 1) % live.size()] if wrap else live[mini(i + 1, live.size() - 1)]

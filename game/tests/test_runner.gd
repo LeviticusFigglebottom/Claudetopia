@@ -27,6 +27,10 @@ func _ready() -> void:
 			failures.append("%s: failed to load" % path)
 			failed += 1
 			continue
+		if not script.can_instantiate():
+			failures.append("%s: script did not compile" % path)
+			failed += 1
+			continue
 		var inst: TestCase = script.new()
 		for m in script.get_script_method_list():
 			var name: String = m["name"]

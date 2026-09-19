@@ -144,6 +144,8 @@ func _setup(shot: Dictionary) -> void:
 			return
 		_current = (load(path) as PackedScene).instantiate()
 		_host.add_child(_current)
+		if _current.has_method("review_state"):
+			_current.call("review_state")
 	elif shot.get("hud", false):
 		UI.show_hud()
 		# the HUD has to exist before the world talks to it, or it misses the signals
