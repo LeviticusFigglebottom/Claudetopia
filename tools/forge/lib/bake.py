@@ -38,10 +38,13 @@ def pick_resolution(radius_m: float, override: int = 0, quick: bool = False, tie
     if override:
         size = int(override)
     elif tier == "hero":
-        size = 2048
+        # 2048 costs five megabytes of PNG per landmark and the forge commits its output.
+        # 1536 over a forty-metre bell is still forty texels to the metre, which is more
+        # than a painterly surface with no micro-detail can use.
+        size = 1536
     elif tier == "tiny" or radius_m < 0.32:
         size = 256
-    elif radius_m < 1.6:
+    elif radius_m < 2.4:
         size = 512
     else:
         size = 1024
@@ -214,7 +217,7 @@ def save_png(arr: np.ndarray, path, size: int | None = None) -> None:
     if size and size != im.size[0]:
         im = im.resize((size, size), Image.LANCZOS)
     # optimize= re-runs the deflate filters; worth it on small maps, far too slow on large.
-    im.save(str(path), optimize=im.size[0] <= 512, compress_level=6)
+    im.save(str(path), optimize=im.size[0] <= 1024, compress_level=6)
 
 
 # --- main entry -------------------------------------------------------------------------
@@ -241,9 +244,9 @@ def only_visible(obj, occluders=()):
 
 
 def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_distance: float | None = None,
-               orm_scale: float = 0.5, alpha: bool = False, samples: int | None = None,
+               orm_scale: float = 0.0, alpha: bool = False, samples: int | None = None,
                texture_prefix: str | None = None, occluders=(), keep_uv: bool = False,
-               unwrap_mode: str = "smart", normal_scale: float = 0.5) -> dict:
+               unwrap_mode: str = "smart", normal_scale: float = 0.0) -> dict:
     """Bake `obj` (all material slots) into <out_dir>/<prefix>_{albedo,normal,orm}.png and
     replace its materials with one baked Principled material named <name>_mat."""
     t0 = time.time()
@@ -277,7 +280,9 @@ def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_dista
     # and metallic are low-frequency and are written to the ORM map at half size anyway, so
     # they are baked at that size: the AO pass is the most expensive one by far and this
     # cuts it to a quarter of the rays for no visible loss.
-    orm_size = max(64, int(size * orm_scale))
+    # Occlusion, roughness and metallic are all slow-varying, so a large atlas keeps them
+    # at a quarter: it is a quarter of the ray cost as well as a quarter of the bytes.
+    orm_size = max(64, int(size * (orm_scale or (0.25 if size >= 1024 else 0.5))))
 
     img = bpy.data.images.new("%s_bake" % name, size, size, alpha=True, float_buffer=True)
     img.colorspace_settings.name = "Non-Color"
@@ -335,10 +340,11 @@ def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_dista
     if not alpha:
         alb8 = alb8[..., :3]
     save_png(alb8, paths["albedo"])
-    # The normal map is written at half the albedo's size. These surfaces carry broad,
-    # soft relief rather than fine engraving, so the detail survives the downscale (which
-    # supersamples it), and normal maps are otherwise the second largest file in the repo.
-    save_png(_to_lin8(nrm), paths["normal"], size=max(128, int(size * normal_scale)))
+    # The normal map is written smaller than the albedo. These surfaces carry broad, soft
+    # relief rather than fine engraving, so the detail survives a downscale that also
+    # supersamples it, and a normal map is otherwise the second largest file in the repo.
+    nscale = normal_scale or (0.25 if size >= 1024 else 0.5)
+    save_png(_to_lin8(nrm), paths["normal"], size=max(128, int(size * nscale)))
     orm8 = np.dstack([_to_lin8(ao), _to_lin8(rough), _to_lin8(metal)])
     save_png(orm8, paths["orm"])
     if emis is not None:

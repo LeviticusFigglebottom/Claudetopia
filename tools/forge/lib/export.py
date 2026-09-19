@@ -287,7 +287,7 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
                  pal, opaque_objs=None, card_objs=None, baked_objs=None, collision: str = "convex",
                  collision_params: dict | None = None, quick: bool = False, res: int = 0, tier: str | None = None,
                  lods: bool = True, lod_ratios=LOD_RATIOS, card_keep=(0.55, 0.25), smooth_angle: float = 35.0,
-                 alpha: bool = False, orm_scale: float = 0.5, write_import: bool = True, extra_meta: dict | None = None,
+                 alpha: bool = False, orm_scale: float = 0.0, write_import: bool = True, extra_meta: dict | None = None,
                  version: int = FORGE_VERSION, rng=None, materials_used: list[str] | None = None,
                  impostor=None, impostor_textures: dict | None = None,
                  unwrap_mode: str = "smart", ground: bool = True) -> dict:
