@@ -59,7 +59,11 @@ func spawn() -> Node3D:
 			Log.error("PlayerSpawn", "no player scene at %s" % PLAYER_SCENE)
 			return null
 		player = packed.instantiate() as Node3D
-		var host: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+		# The body belongs to the world it is standing in, not to whatever scene happens to be
+		# current: parented anywhere else it outlives the world and haunts the next one.
+		var host: Node = _world()
+		if host == null:
+			host = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 		host.add_child(player)
 	player.global_position = _landing()
 	if install_services:
@@ -121,7 +125,8 @@ func _install_services() -> void:
 	var services := GameServices.new()
 	services.name = "GameServices"
 	services.add_to_group("game_services")
-	get_parent().add_child(services)
+	var host: Node = _world()
+	(host if host != null else get_parent()).add_child(services)
 
 
 ## The ground, through this world rather than the singleton.
