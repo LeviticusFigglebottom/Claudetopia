@@ -1,0 +1,27 @@
+{
+ "bounds": [
+  -0.1027,
+  -0.0286,
+  1.7216,
+  0.1037,
+  0.0316,
+  1.8748
+ ],
+ "collision": "none",
+ "generator": "character_forge",
+ "kind": "attachment",
+ "material": "horn",
+ "params": {
+  "bone": "Head",
+  "material": "horn"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 3790,
+ "slot_hint": "attachment",
+ "tris": [
+  700,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -399,9 +399,10 @@ func _build_animation_tree() -> void:
 	var tree := AnimationTree.new()
 	tree.name = "AnimationTree"
 	tree.tree_root = sm
-	tree.anim_player = tree.get_path_to(anim_player)
 	tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE
+	# the node has to be in the tree before a NodePath to the player can resolve
 	add_child(tree)
+	tree.anim_player = tree.get_path_to(anim_player)
 	tree.active = true
 	anim_tree = tree
 	_state_machine = tree.get("parameters/playback")

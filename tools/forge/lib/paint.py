@@ -362,7 +362,7 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             for sx in (1, -1):
                 sock = gauss(p, [sx * eye_x, face_y + 0.012 * s, eye_z + 0.002 * s],
                              [eye_r * 2.1, 0.022 * s, eye_r * 1.5])
-                c = mix(c, t["shadow"], np.clip(sock, 0, 1) * 0.30)
+                c = mix(c, t["shadow"], np.clip(sock, 0, 1) * 0.20)
             # lids and lashes: a dark rim around the eye opening, heavier above
             for sx in (1, -1):
                 d = (p - np.array([sx * eye_x, L["eye_c_y"], eye_z])) / np.array([eye_r * 1.30, eye_r * 1.9, eye_r * 0.80])
@@ -371,7 +371,7 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 rim = smoothstep(0.62, 0.95, rad) * (1.0 - smoothstep(1.02, 1.30, rad)) * near
                 upper = np.clip((p[:, 2] - eye_z) / (eye_r * 0.7), -1, 1)
                 weight = np.clip(0.45 + 0.55 * upper, 0, 1)
-                c = mix(c, np.clip(hair_rgb * 0.7, 0, 1), np.clip(rim * weight, 0, 1) * 0.85)
+                c = mix(c, np.clip(hair_rgb * 0.75, 0, 1), np.clip(rim * weight, 0, 1) * 0.62)
             # brows
             for sx in (1, -1):
                 bx = (p[:, 0] - sx * eye_x * 1.02) / (eye_r * 2.0)
@@ -380,7 +380,7 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 by = (p[:, 1] - (face_y + 0.016 * s)) / (0.030 * s)
                 m = np.exp(-0.5 * (bz ** 2 + by ** 2)) * (1.0 - smoothstep(0.80, 1.25, np.abs(bx)))
                 thick = 1.0 - 0.35 * smoothstep(0.3, 1.1, np.abs(bx))
-                c = mix(c, hair_rgb, np.clip(m * thick, 0, 1) * 0.92)
+                c = mix(c, hair_rgb, np.clip(m * thick, 0, 1) * 0.80)
             # lips
             lipd = np.abs(p[:, 2] - mouth_z) / (0.011 * s)
             lipx = np.abs(p[:, 0]) / (mouth_w * 0.92)
