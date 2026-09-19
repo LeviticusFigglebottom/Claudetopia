@@ -157,6 +157,15 @@ def write_meta(path: str, name: str, params: dict, tris: Sequence[int], collisio
     return path
 
 
+def mesh_object_name(base: str) -> str:
+    """A mesh object name that cannot collide with a bone name.
+
+    Godot makes node names unique on import, so a mesh called "Head" forces the *bone*
+    called "Head" to become "Head_2" — which silently breaks CONTRACTS §2 and every
+    animation track that targets it."""
+    return "%s_Mesh" % base if base in rig.ALL_BONES else base
+
+
 def object_bounds(ob) -> List[float]:
     v = np.array([v.co[:] for v in ob.data.vertices])
     if len(v) == 0:
@@ -242,7 +251,7 @@ HEAD_TEX = 1024
 def build_body(skel: Skeleton, style: bodylib.BodyStyle, name: str = "Body",
                spacing: float = 0.0080, target_tris: int = BODY_TRIS):
     verts, quads = bodylib.body_mesh(skel, style, spacing=spacing)
-    ob = bodylib.to_object(name, verts, quads)
+    ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
     bodylib.smart_uv(ob, angle_deg=66.0, margin=0.015)
     return ob
@@ -251,7 +260,7 @@ def build_body(skel: Skeleton, style: bodylib.BodyStyle, name: str = "Body",
 def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
                spacing: float = 0.0032, target_tris: int = HEAD_TRIS):
     verts, quads = bodylib.head_mesh(skel, hs, spacing=spacing)
-    ob = bodylib.to_object(name, verts, quads)
+    ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
     L = bodylib.head_landmarks(skel, hs)
     bodylib.cylindrical_uv(ob, L["skull_c"], float(L["chin_z"] - 0.10 * L["s"]), float(L["top"][2]))
@@ -459,7 +468,7 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
     if len(verts) == 0:
         log("part %s produced no geometry" % g.name)
         return ""
-    ob = bodylib.to_object(g.name, verts, quads)
+    ob = bodylib.to_object(mesh_object_name(g.name), verts, quads)
     bodylib.decimate(ob, g.target_tris)
     bodylib.smart_uv(ob, angle_deg=66.0, margin=0.02)
     if g.bone:
@@ -467,19 +476,20 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
     else:
         bodylib.transfer_weights(ob, bW[0], bW[1], arm)
     out_dir = part_dir(kind, g.name)
-    maps = paint.surface_maps(ob, size=512, pad=3)
+    tex = 256
+    maps = paint.surface_maps(ob, size=tex, pad=3)
     if g.material == "hair":
         fn = paint.hair_paint("brown", seed=seed)
         alb = paint.paint(maps, fn, background=(0.35, 0.25, 0.18))
-        rough = np.full((512, 512), 0.52)
+        rough = np.full((tex, tex), 0.52)
     else:
         a_fn, o_fn = _garment_material(g, out_dir, g.name, seed)
         alb = paint.paint(maps, a_fn, background=(0.8, 0.8, 0.8))
         orm3 = paint.paint(maps, o_fn, background=(1.0, 0.8, 0.0))
         rough = orm3[..., 1]
     defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
-    occ = np.ones((512, 512))
-    met = np.full((512, 512), float(defaults["metallic"]))
+    occ = np.ones((tex, tex))
+    met = np.full((tex, tex), float(defaults["metallic"]))
     a_path = paint.save_png(alb, os.path.join(out_dir, "%s_albedo.png" % g.name))
     o_path = paint.save_png(paint.orm_image(occ, rough, met), os.path.join(out_dir, "%s_orm.png" % g.name))
     mat = make_material("WM_%s" % g.name, a_path, o_path,
@@ -527,7 +537,7 @@ def cmd_parts(args) -> None:
             bodylib.rigid_weights(e, "Head", arm)
         out_dir = part_dir("head", name)
         app = dict(DEFAULT_APPEARANCE)
-        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=HEAD_TEX)
+        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=768)
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)

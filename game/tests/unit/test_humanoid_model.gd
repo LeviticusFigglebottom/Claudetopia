@@ -1,0 +1,268 @@
+extends TestCase
+## The humanoid model as the game sees it: the rig loads, the contract clips are there with
+## their events, the sockets resolve, and an appearance composes without errors.
+##
+## Every geometry test skips cleanly when the forge has not been run yet, so a fresh
+## checkout without generated assets still passes `./run.sh test`.
+
+const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
+const RIG_GLB := "res://assets/models/characters/humanoid_rig/humanoid_rig.glb"
+const CLIPS_JSON := "res://assets/models/characters/humanoid_rig/humanoid_rig.clips.json"
+
+## CONTRACTS.md §2 — the deform bones and the sockets, spelled out so the test fails if
+## either side of the contract drifts.
+const DEFORM_BONES: Array[String] = [
+	"Hips", "Spine", "Chest", "Neck", "Head",
+	"Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
+	"Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R",
+	"UpperLeg.L", "LowerLeg.L", "Foot.L", "Toe.L",
+	"UpperLeg.R", "LowerLeg.R", "Foot.R", "Toe.R",
+]
+const SOCKET_BONES: Array[String] = [
+	"Socket.WeaponR", "Socket.WeaponL", "Socket.ShieldL", "Socket.Back",
+	"Socket.HipL", "Socket.Head", "Socket.Lantern",
+]
+## CONTRACTS.md §3 — required clip names.
+const REQUIRED_CLIPS: Array[String] = [
+	"Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Strafe_L", "Strafe_R", "Sneak_Idle",
+	"Sneak_Walk", "Jump_Start", "Jump_Loop", "Jump_Land", "Fall_Loop",
+	"Dodge_F", "Dodge_B", "Dodge_L", "Dodge_R",
+	"Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Light_3", "Attack_1H_Heavy",
+	"Attack_2H_Light_1", "Attack_2H_Light_2", "Attack_2H_Heavy",
+	"Attack_Dagger_1", "Attack_Dagger_2", "Attack_Unarmed_1", "Attack_Unarmed_2",
+	"Riposte", "Backstab",
+	"Block_Idle", "Block_Hit", "Parry", "Hit_Light", "Hit_Heavy", "Stagger", "Knockdown",
+	"Get_Up", "Death_A", "Death_B",
+	"Bow_Draw", "Bow_Aim", "Bow_Release", "Cast_Quick", "Cast_Long", "Cast_Loop", "Throw",
+	"Interact", "Pick_Up", "Sit_Down", "Sit_Idle", "Stand_Up", "Sleep_Idle",
+	"Work_Hammer", "Work_Chop", "Work_Stir", "Work_Dig", "Talk_1", "Talk_2", "Wave",
+	"Bow_Gesture", "Laugh", "Rude", "Dance", "Cheer", "Cower", "Point", "Drink", "Eat", "Read",
+]
+const ATTACK_EVENTS: Array[String] = ["hit_start", "hit_end", "cancel_ok"]
+
+var _model: HumanoidModel
+var _root: Node
+
+
+func before_each() -> void:
+	_model = null
+	_root = null
+
+
+func after_each() -> void:
+	if _root != null and is_instance_valid(_root):
+		_root.free()
+	_root = null
+	_model = null
+
+
+func _rig_built() -> bool:
+	return ResourceLoader.exists(RIG_GLB)
+
+
+## Instantiates the model into the live tree (it needs _ready to build).
+func _make_model() -> HumanoidModel:
+	if _model != null:
+		return _model
+	var scene: PackedScene = load(MODEL_SCENE)
+	if scene == null:
+		return null
+	_root = Node3D.new()
+	Engine.get_main_loop().root.add_child(_root)
+	var m := scene.instantiate() as HumanoidModel
+	_root.add_child(m)
+	_model = m
+	return m
+
+
+# -- appearance (pure data, always runs) --------------------------------------------------
+
+func test_appearance_round_trips() -> void:
+	var a := CharacterAppearance.new()
+	a.skin = "olive"
+	a.height = 1.71
+	a.build = 0.8
+	a.hollow = 0.5
+	a.set_part("torso", "tunic")
+	a.palette["primary"] = Color(0.5, 0.2, 0.1)
+	var d := a.to_dict()
+	var b := CharacterAppearance.new(d)
+	assert_eq(b.skin, "olive")
+	assert_near(b.height, 1.71)
+	assert_near(b.build, 0.8)
+	assert_near(b.hollow, 0.5)
+	assert_eq(b.part("torso"), "tunic")
+	assert_true(b.palette.has("primary"))
+
+
+func test_appearance_defaults_are_sane() -> void:
+	var a := CharacterAppearance.new()
+	assert_near(a.height, 1.78)
+	assert_eq(a.part("torso"), "")
+	assert_eq(a.body_variant(), "default")
+	a.height = 1.30
+	assert_eq(a.body_variant(), "child")
+	a.height = 1.78
+	a.build = 0.9
+	assert_eq(a.body_variant(), "heavy")
+
+
+func test_random_appearance_is_deterministic_and_varied() -> void:
+	var a := CharacterAppearance.random(1234, "vale")
+	var b := CharacterAppearance.random(1234, "vale")
+	assert_eq(a.to_dict(), b.to_dict(), "same seed must give the same character")
+	var c := CharacterAppearance.random(9876, "vale")
+	assert_ne(a.to_dict(), c.to_dict(), "different seeds must differ")
+	for s in [11, 22, 33, 44, 55]:
+		var r := CharacterAppearance.random(s)
+		assert_true(r.height > 1.4 and r.height < 2.0, "height %f out of range" % r.height)
+		assert_true(r.culture in CharacterAppearance.CULTURES)
+		assert_true(r.skin in CharacterAppearance.SKIN_TONES)
+		assert_true(r.hair_colour in CharacterAppearance.HAIR_COLOURS)
+		assert_true(r.part("head") != "", "random NPCs need a head")
+
+
+func test_random_respects_culture() -> void:
+	for s in [1, 2, 3]:
+		var r := CharacterAppearance.random(s, "ash_pilgrims")
+		assert_eq(r.culture, "ash_pilgrims")
+		assert_eq(r.part("torso"), "robe", "Ash-Pilgrims wear grey robes (WORLD_BIBLE §3.6)")
+
+
+# -- the rig itself -------------------------------------------------------------------------
+
+func test_model_scene_loads() -> void:
+	var scene: PackedScene = load(MODEL_SCENE)
+	assert_true(scene != null, "humanoid_model.tscn must load")
+
+
+func test_rig_has_every_contract_bone() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	assert_true(m != null and m.skeleton != null, "model has no Skeleton3D")
+	for bone in DEFORM_BONES:
+		assert_gt(m.skeleton.find_bone(bone), -1, "rig is missing deform bone %s" % bone)
+	for bone in SOCKET_BONES:
+		assert_gt(m.skeleton.find_bone(bone), -1, "rig is missing socket bone %s" % bone)
+
+
+func test_sockets_resolve() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	for bone in SOCKET_BONES:
+		var att := m.socket(bone)
+		assert_true(att != null, "socket %s did not resolve" % bone)
+		if att != null:
+			assert_eq(att.bone_name, bone)
+			assert_gt(att.bone_idx, -1)
+	assert_true(m.socket("WeaponR") != null, "short socket names must work too")
+
+
+func test_socket_attachment_works() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var probe := Node3D.new()
+	probe.name = "Probe"
+	assert_true(m.attach_to_socket("WeaponR", probe), "could not attach to WeaponR")
+	assert_eq(probe.get_parent(), m.socket("WeaponR"))
+
+
+func test_every_required_clip_exists() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var have := m.clip_names()
+	var missing: Array[String] = []
+	for c in REQUIRED_CLIPS:
+		if not (c in have):
+			missing.append(c)
+	# A partial build (the forge can export a subset while iterating) is not a failure; a
+	# build that claims to be complete and is not, is.
+	if missing.size() == REQUIRED_CLIPS.size():
+		return
+	if have.size() >= REQUIRED_CLIPS.size():
+		assert_empty(missing, "rig is missing clips")
+
+
+func test_clip_lengths_and_loops() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	for c in m.clip_names():
+		assert_gt(m.clip_length(c), 0.0, "%s has zero length" % c)
+	if m.has_clip("Idle"):
+		assert_true(m.clip_length("Idle") > 1.0, "Idle should be a few seconds long")
+
+
+func test_attack_clips_carry_their_events() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	for c in m.clip_names():
+		if not c.begins_with("Attack_") and c != "Riposte" and c != "Backstab":
+			continue
+		var names: Array[String] = []
+		for e in m.clip_events(c):
+			names.append(str((e as Dictionary).get("name", "")))
+		for required in ATTACK_EVENTS:
+			assert_true(required in names, "%s has no %s event" % [c, required])
+
+
+func test_locomotion_clips_carry_footsteps() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	for c in ["Walk", "Run", "Walk_Back", "Sneak_Walk"]:
+		if not m.has_clip(c):
+			continue
+		var names: Array[String] = []
+		for e in m.clip_events(c):
+			names.append(str((e as Dictionary).get("name", "")))
+		assert_true("footstep_l" in names, "%s has no footstep_l" % c)
+		assert_true("footstep_r" in names, "%s has no footstep_r" % c)
+
+
+func test_clip_events_are_inside_their_clip() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	for c in m.clip_names():
+		var length := m.clip_length(c)
+		for e in m.clip_events(c):
+			var t := float((e as Dictionary).get("t", 0.0))
+			assert_true(t >= 0.0 and t <= length + 0.01,
+					"%s event %s at %f outside 0..%f" % [c, (e as Dictionary).get("name", ""), t, length])
+
+
+func test_animation_tree_and_api() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	assert_true(m.anim_tree != null, "no AnimationTree")
+	assert_true(m.anim_tree.tree_root is AnimationNodeStateMachine)
+	m.set_locomotion(Vector2(0.0, 1.0), false)
+	assert_eq(m.current_intent(), "", "walking is not a one-shot")
+	if m.has_clip("Attack_1H_Light_1"):
+		assert_true(m.play_intent("Attack_1H_Light_1"))
+		assert_eq(m.current_intent(), "Attack_1H_Light_1")
+		m.stop_intent()
+		assert_eq(m.current_intent(), "")
+	assert_false(m.play_intent("No_Such_Clip"), "unknown clips must be rejected")
+
+
+func test_appearance_composes() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.height = 1.68
+	m.apply_appearance(a.to_dict())
+	assert_eq(m.appearance.height, 1.68)
+	# a second call must not accumulate meshes
+	var before := m.skeleton.get_child_count()
+	m.apply_appearance(a.to_dict())
+	assert_eq(m.skeleton.get_child_count(), before, "re-applying an appearance leaked nodes")

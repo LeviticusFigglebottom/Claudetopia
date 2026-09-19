@@ -38,7 +38,7 @@ const LOCOMOTION_STATE := "Locomotion"
 @export var appearance_dict: Dictionary = {}:
 	set(value):
 		appearance_dict = value
-		if is_inside_tree():
+		if is_inside_tree() and not _applying:
 			apply_appearance(value)
 
 var skeleton: Skeleton3D
@@ -59,6 +59,7 @@ var _fired: Dictionary = {}              ## event index -> true, for the running
 var _locomotion := Vector2.ZERO
 var _sneaking := false
 var _part_cache: Dictionary = {}
+var _applying := false      ## guards the appearance_dict setter against re-entering
 
 static var _clip_cache: Dictionary = {}
 
@@ -89,11 +90,14 @@ func build() -> void:
 		var m := mi as MeshInstance3D
 		_default_meshes[_logical_name(m.name)] = m
 	_clip_data = _load_clip_data()
+	_restore_contract_clip_names()
 	_apply_loop_flags()
 	_build_sockets()
 	_build_animation_tree()
 
 
+## The rig GLB's meshes are named to avoid clashing with bone names (see the forge's
+## `mesh_object_name`), so map them back to the slot they stand in for.
 func _logical_name(n: String) -> String:
 	var s := n.to_lower()
 	if s.begins_with("body"):
@@ -120,6 +124,28 @@ static func _load_clip_data() -> Dictionary:
 		push_warning("HumanoidModel: missing %s" % CLIPS_JSON)
 	_clip_cache[CLIPS_JSON] = out
 	return out
+
+
+## Godot's glTF importer treats a "_Loop" (or "-loop", "_cycle", ...) suffix as a marker,
+## strips it from the animation name and sets the loop mode — so `Jump_Loop` arrives as
+## `Jump`. CONTRACTS.md §3 names are binding, so put them back; the sidecar says which
+## names should exist.
+func _restore_contract_clip_names() -> void:
+	const SUFFIXES := ["_Loop", "-loop", "_loop", "_Cycle", "-cycle", "_cycle"]
+	for wanted in _clip_data:
+		var name := str(wanted)
+		if _find_animation(name) != null:
+			continue
+		for suffix in SUFFIXES:
+			if not name.ends_with(suffix):
+				continue
+			var stripped := name.substr(0, name.length() - suffix.length())
+			for lib_name in anim_player.get_animation_library_list():
+				var lib := anim_player.get_animation_library(lib_name)
+				if lib.has_animation(stripped) and not lib.has_animation(name):
+					lib.rename_animation(stripped, name)
+					break
+			break
 
 
 ## The sidecar is the source of truth for loop flags (CONTRACTS.md §3).
@@ -212,7 +238,9 @@ func apply_appearance(d: Variant) -> void:
 	if skeleton == null:
 		return
 	appearance = d as CharacterAppearance if d is CharacterAppearance else CharacterAppearance.new(d as Dictionary)
+	_applying = true
 	appearance_dict = appearance.to_dict()
+	_applying = false
 	_clear_parts()
 	for slot in CharacterAppearance.SLOTS:
 		var part_name := appearance.part(slot)
@@ -354,6 +382,7 @@ func _apply_proportions() -> void:
 
 func _build_animation_tree() -> void:
 	var sm := AnimationNodeStateMachine.new()
+	sm.state_machine_type = AnimationNodeStateMachine.STATE_MACHINE_TYPE_GROUPED
 	sm.add_node(LOCOMOTION_STATE, _build_locomotion_blend(), Vector2(0, 0))
 	var x := 260.0
 	var y := -420.0
@@ -367,7 +396,6 @@ func _build_animation_tree() -> void:
 		if y > 420.0:
 			y = -420.0
 			x += 200.0
-	sm.set_start_node(LOCOMOTION_STATE)
 	var tree := AnimationTree.new()
 	tree.name = "AnimationTree"
 	tree.tree_root = sm
@@ -403,7 +431,7 @@ func _build_locomotion_blend() -> AnimationNodeBlendSpace2D:
 			continue
 		var node := AnimationNodeAnimation.new()
 		node.animation = name
-		bs.add_blend_point(node, points[name])
+		bs.add_blend_point(node, points[name], -1, name)
 	return bs
 
 

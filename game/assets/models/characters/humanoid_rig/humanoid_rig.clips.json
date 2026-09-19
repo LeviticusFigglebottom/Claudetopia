@@ -1,4 +1,26 @@
 {
+ "Attack_1H_Heavy": {
+  "events": [
+   {
+    "name": "telegraph",
+    "t": 0.296
+   },
+   {
+    "name": "hit_start",
+    "t": 0.8606
+   },
+   {
+    "name": "hit_end",
+    "t": 1.1017
+   },
+   {
+    "name": "cancel_ok",
+    "t": 1.2217
+   }
+  ],
+  "length": 1.48,
+  "loop": false
+ },
  "Attack_1H_Light_1": {
   "events": [
    {
@@ -17,10 +39,644 @@
   "length": 0.78,
   "loop": false
  },
+ "Attack_1H_Light_2": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.2544
+   },
+   {
+    "name": "hit_end",
+    "t": 0.3844
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.4744
+   }
+  ],
+  "length": 0.72,
+  "loop": false
+ },
+ "Attack_1H_Light_3": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.3242
+   },
+   {
+    "name": "hit_end",
+    "t": 0.4984
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.5884
+   }
+  ],
+  "length": 0.88,
+  "loop": false
+ },
+ "Attack_2H_Heavy": {
+  "events": [
+   {
+    "name": "telegraph",
+    "t": 0.3456
+   },
+   {
+    "name": "hit_start",
+    "t": 1.2319
+   },
+   {
+    "name": "hit_end",
+    "t": 1.5447
+   },
+   {
+    "name": "cancel_ok",
+    "t": 1.6847
+   }
+  ],
+  "length": 1.92,
+  "loop": false
+ },
+ "Attack_2H_Light_1": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.4347
+   },
+   {
+    "name": "hit_end",
+    "t": 0.6853
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.7953
+   }
+  ],
+  "length": 0.98,
+  "loop": false
+ },
+ "Attack_2H_Light_2": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.4138
+   },
+   {
+    "name": "hit_end",
+    "t": 0.5823
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.6923
+   }
+  ],
+  "length": 0.96,
+  "loop": false
+ },
+ "Attack_Dagger_1": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.2
+   },
+   {
+    "name": "hit_end",
+    "t": 0.29
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.36
+   }
+  ],
+  "length": 0.52,
+  "loop": false
+ },
+ "Attack_Dagger_2": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.1648
+   },
+   {
+    "name": "hit_end",
+    "t": 0.2719
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.3619
+   }
+  ],
+  "length": 0.48,
+  "loop": false
+ },
+ "Attack_Unarmed_1": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.3024
+   },
+   {
+    "name": "hit_end",
+    "t": 0.4056
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.4472
+   }
+  ],
+  "length": 0.52,
+  "loop": false
+ },
+ "Attack_Unarmed_2": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.3512
+   },
+   {
+    "name": "hit_end",
+    "t": 0.464
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.5104
+   }
+  ],
+  "length": 0.58,
+  "loop": false
+ },
+ "Backstab": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.575
+   },
+   {
+    "name": "hit_end",
+    "t": 0.759
+   },
+   {
+    "name": "cancel_ok",
+    "t": 1.035
+   }
+  ],
+  "length": 1.15,
+  "loop": false
+ },
+ "Block_Hit": {
+  "events": [
+   {
+    "name": "block_impact",
+    "t": 0.02
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.28
+   }
+  ],
+  "length": 0.42,
+  "loop": false
+ },
+ "Block_Idle": {
+  "events": [],
+  "length": 2.0,
+  "loop": true
+ },
+ "Bow_Aim": {
+  "events": [],
+  "length": 2.2,
+  "loop": true
+ },
+ "Bow_Draw": {
+  "events": [
+   {
+    "name": "bow_raised",
+    "t": 0.3
+   },
+   {
+    "name": "bow_drawn",
+    "t": 0.74
+   }
+  ],
+  "length": 0.78,
+  "loop": false
+ },
+ "Bow_Gesture": {
+  "events": [
+   {
+    "name": "gesture",
+    "t": 0.777
+   }
+  ],
+  "length": 1.85,
+  "loop": false
+ },
+ "Bow_Release": {
+  "events": [
+   {
+    "name": "release",
+    "t": 0.03
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.34
+   }
+  ],
+  "length": 0.62,
+  "loop": false
+ },
+ "Cast_Long": {
+  "events": [
+   {
+    "name": "cast_charge",
+    "t": 0.4
+   },
+   {
+    "name": "cast_release",
+    "t": 1.04
+   },
+   {
+    "name": "hit_start",
+    "t": 1.06
+   },
+   {
+    "name": "hit_end",
+    "t": 1.18
+   },
+   {
+    "name": "cancel_ok",
+    "t": 1.26
+   }
+  ],
+  "length": 1.55,
+  "loop": false
+ },
+ "Cast_Loop": {
+  "events": [],
+  "length": 1.8,
+  "loop": true
+ },
+ "Cast_Quick": {
+  "events": [
+   {
+    "name": "cast_release",
+    "t": 0.44
+   },
+   {
+    "name": "hit_start",
+    "t": 0.46
+   },
+   {
+    "name": "hit_end",
+    "t": 0.54
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.58
+   }
+  ],
+  "length": 0.68,
+  "loop": false
+ },
+ "Cheer": {
+  "events": [
+   {
+    "name": "gesture",
+    "t": 0.476
+   }
+  ],
+  "length": 1.7,
+  "loop": false
+ },
+ "Cower": {
+  "events": [],
+  "length": 2.6,
+  "loop": true
+ },
+ "Dance": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0
+   },
+   {
+    "name": "footstep_r",
+    "t": 1.2
+   }
+  ],
+  "length": 2.4,
+  "loop": true
+ },
+ "Death_A": {
+  "events": [
+   {
+    "name": "death_start",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 1.426
+   }
+  ],
+  "length": 2.3,
+  "loop": false
+ },
+ "Death_B": {
+  "events": [
+   {
+    "name": "death_start",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 1.302
+   }
+  ],
+  "length": 2.1,
+  "loop": false
+ },
+ "Dodge_B": {
+  "events": [
+   {
+    "name": "roll_start",
+    "t": 0.175
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.595
+   }
+  ],
+  "length": 0.7,
+  "loop": false
+ },
+ "Dodge_F": {
+  "events": [
+   {
+    "name": "roll_start",
+    "t": 0.175
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.595
+   }
+  ],
+  "length": 0.7,
+  "loop": false
+ },
+ "Dodge_L": {
+  "events": [
+   {
+    "name": "roll_start",
+    "t": 0.175
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.595
+   }
+  ],
+  "length": 0.7,
+  "loop": false
+ },
+ "Dodge_R": {
+  "events": [
+   {
+    "name": "roll_start",
+    "t": 0.175
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.595
+   }
+  ],
+  "length": 0.7,
+  "loop": false
+ },
+ "Drink": {
+  "events": [
+   {
+    "name": "drink",
+    "t": 1.05
+   }
+  ],
+  "length": 2.0,
+  "loop": false
+ },
+ "Eat": {
+  "events": [
+   {
+    "name": "eat",
+    "t": 0.84
+   }
+  ],
+  "length": 2.1,
+  "loop": false
+ },
+ "Fall_Loop": {
+  "events": [],
+  "length": 1.1,
+  "loop": true
+ },
+ "Get_Up": {
+  "events": [
+   {
+    "name": "footstep_r",
+    "t": 0.55
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.86
+   },
+   {
+    "name": "cancel_ok",
+    "t": 1.15
+   }
+  ],
+  "length": 1.45,
+  "loop": false
+ },
+ "Hit_Heavy": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.5
+   }
+  ],
+  "length": 0.78,
+  "loop": false
+ },
+ "Hit_Light": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.26
+   }
+  ],
+  "length": 0.42,
+  "loop": false
+ },
  "Idle": {
   "events": [],
   "length": 4.0,
   "loop": true
+ },
+ "Idle_Combat": {
+  "events": [],
+  "length": 2.4,
+  "loop": true
+ },
+ "Interact": {
+  "events": [
+   {
+    "name": "interact",
+    "t": 0.5
+   }
+  ],
+  "length": 0.92,
+  "loop": false
+ },
+ "Jump_Land": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.1
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.11
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.3
+   }
+  ],
+  "length": 0.52,
+  "loop": false
+ },
+ "Jump_Loop": {
+  "events": [],
+  "length": 0.7,
+  "loop": true
+ },
+ "Jump_Start": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.17
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.17
+   },
+   {
+    "name": "jump_off",
+    "t": 0.3
+   }
+  ],
+  "length": 0.34,
+  "loop": false
+ },
+ "Knockdown": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 0.713
+   }
+  ],
+  "length": 1.15,
+  "loop": false
+ },
+ "Laugh": {
+  "events": [
+   {
+    "name": "gesture",
+    "t": 0.304
+   }
+  ],
+  "length": 1.9,
+  "loop": false
+ },
+ "Parry": {
+  "events": [
+   {
+    "name": "parry_window",
+    "t": 0.06
+   },
+   {
+    "name": "parry_hit",
+    "t": 0.2
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.3
+   }
+  ],
+  "length": 0.48,
+  "loop": false
+ },
+ "Pick_Up": {
+  "events": [
+   {
+    "name": "pick_up",
+    "t": 0.52
+   }
+  ],
+  "length": 1.2,
+  "loop": false
+ },
+ "Point": {
+  "events": [
+   {
+    "name": "gesture",
+    "t": 0.26
+   }
+  ],
+  "length": 1.5,
+  "loop": false
+ },
+ "Read": {
+  "events": [],
+  "length": 4.2,
+  "loop": true
+ },
+ "Riposte": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.475
+   },
+   {
+    "name": "hit_end",
+    "t": 0.646
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.76
+   }
+  ],
+  "length": 0.95,
+  "loop": false
+ },
+ "Rude": {
+  "events": [
+   {
+    "name": "gesture",
+    "t": 0.28
+   }
+  ],
+  "length": 1.4,
+  "loop": false
  },
  "Run": {
   "events": [
@@ -37,6 +693,148 @@
   "loop": true,
   "speed": 5.0
  },
+ "Sit_Down": {
+  "events": [
+   {
+    "name": "sit",
+    "t": 0.84
+   }
+  ],
+  "length": 1.3,
+  "loop": false
+ },
+ "Sit_Idle": {
+  "events": [],
+  "length": 4.4,
+  "loop": true
+ },
+ "Sleep_Idle": {
+  "events": [],
+  "length": 5.0,
+  "loop": true
+ },
+ "Sneak_Idle": {
+  "events": [],
+  "length": 3.6,
+  "loop": true
+ },
+ "Sneak_Walk": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0405
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.7155
+   }
+  ],
+  "length": 1.35,
+  "loop": true,
+  "speed": 0.95
+ },
+ "Stagger": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.273
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.483
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.714
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.86
+   }
+  ],
+  "length": 1.05,
+  "loop": false
+ },
+ "Stand_Up": {
+  "events": [
+   {
+    "name": "stand",
+    "t": 0.62
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.7
+   }
+  ],
+  "length": 1.25,
+  "loop": false
+ },
+ "Strafe_L": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0285
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.5035
+   }
+  ],
+  "length": 0.95,
+  "loop": true,
+  "speed": 1.9
+ },
+ "Strafe_R": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0285
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.5035
+   }
+  ],
+  "length": 0.95,
+  "loop": true,
+  "speed": 1.9
+ },
+ "Talk_1": {
+  "events": [],
+  "length": 3.2,
+  "loop": true
+ },
+ "Talk_2": {
+  "events": [],
+  "length": 3.6,
+  "loop": true
+ },
+ "Throw": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.48
+   },
+   {
+    "name": "throw_release",
+    "t": 0.5
+   },
+   {
+    "name": "hit_end",
+    "t": 0.56
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.62
+   }
+  ],
+  "length": 0.76,
+  "loop": false
+ },
  "Walk": {
   "events": [
    {
@@ -51,5 +849,94 @@
   "length": 1.0,
   "loop": true,
   "speed": 1.55
+ },
+ "Walk_Back": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0345
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.6095
+   }
+  ],
+  "length": 1.15,
+  "loop": true,
+  "speed": 1.15
+ },
+ "Wave": {
+  "events": [
+   {
+    "name": "gesture",
+    "t": 0.372
+   }
+  ],
+  "length": 1.55,
+  "loop": false
+ },
+ "Work_Chop": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.891
+   },
+   {
+    "name": "work_hit",
+    "t": 0.891
+   },
+   {
+    "name": "hit_end",
+    "t": 0.972
+   }
+  ],
+  "length": 1.35,
+  "loop": true
+ },
+ "Work_Dig": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.666
+   },
+   {
+    "name": "work_dig",
+    "t": 0.666
+   },
+   {
+    "name": "hit_end",
+    "t": 0.814
+   }
+  ],
+  "length": 1.85,
+  "loop": true
+ },
+ "Work_Hammer": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.63
+   },
+   {
+    "name": "work_hit",
+    "t": 0.63
+   },
+   {
+    "name": "hit_end",
+    "t": 0.693
+   }
+  ],
+  "length": 1.05,
+  "loop": true
+ },
+ "Work_Stir": {
+  "events": [
+   {
+    "name": "work_stir",
+    "t": 0.04
+   }
+  ],
+  "length": 2.0,
+  "loop": true
  }
 }
