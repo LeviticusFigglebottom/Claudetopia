@@ -222,6 +222,12 @@ def build(args) -> dict:
             "props": {"place_id": entry["place_id"]}})
 
     # --- write ------------------------------------------------------------------------
+    # A staged build only rewrites its own outputs, so `--only textures` never blanks the
+    # cells a previous full build wrote.
+    stage = args.only or "all"
+    want_terrain = stage in ("all", "heights")
+    want_textures = stage in ("all", "textures")
+    want_cells = stage in ("all", "cells")
     if base is None:
         base = np.zeros((n, n), dtype=np.uint8)
         overlay = np.zeros((n, n), dtype=np.uint8)
@@ -230,11 +236,15 @@ def build(args) -> dict:
         colour[..., :3] = 255
     # navigation bit: walkable ground (gentle, dry, not a cliff) for future nav baking
     nav = ((ctx.slope < 0.55) & (water.mask == 0)).astype(np.uint8)
-    OUT.write_maps(out_dir, grid, H, region_mask, base, overlay, blend, colour, water.mask, water.flow, nav)
+    OUT.write_maps(out_dir, grid, H, region_mask, base, overlay, blend, colour, water.mask, water.flow, nav,
+                   terrain=want_terrain, textures=want_textures)
     runtime = OUT.write_runtime(out_dir, grid, H, region_mask, water.mask, water.level)
-    OUT.write_splines(out_dir, rivers, roads_list)
-    OUT.write_pois(out_dir, poi_out)
-    n_cells = OUT.write_cells(out_dir, grid, buckets, cell_regions, scenes_by_cell)
+    if want_terrain:
+        OUT.write_splines(out_dir, rivers, roads_list)
+    n_cells = 0
+    if want_cells:
+        OUT.write_pois(out_dir, poi_out)
+        n_cells = OUT.write_cells(out_dir, grid, buckets, cell_regions, scenes_by_cell)
     instances = int(sum(len(v) for b in buckets.values() for v in b.values()))
     stats = {
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

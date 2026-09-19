@@ -41,7 +41,8 @@ func _start_world(args: Dictionary) -> void:
 	if ResourceLoader.exists("res://world/world.tscn"):
 		if args.has("load"):
 			GameState.set_flag("_pending_load_slot", str(args["load"]))
-		get_tree().change_scene_to_file("res://world/world.tscn")
+		# deferred: _ready() is inside the tree's add/remove pass, where a scene swap is refused
+		get_tree().change_scene_to_file.call_deferred("res://world/world.tscn")
 	else:
 		label.text += "\n(no world scene yet)"
 

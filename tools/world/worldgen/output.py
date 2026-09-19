@@ -43,21 +43,24 @@ def pack_control(base: np.ndarray, overlay: np.ndarray, blend: np.ndarray, nav: 
 
 def write_maps(out_dir: str, grid: Grid, H: np.ndarray, region_mask: np.ndarray, base: np.ndarray,
                overlay: np.ndarray, blend: np.ndarray, colour: np.ndarray, water: np.ndarray,
-               flow: np.ndarray, nav: np.ndarray | None = None) -> dict:
+               flow: np.ndarray, nav: np.ndarray | None = None, terrain: bool = True,
+               textures: bool = True) -> dict:
     os.makedirs(out_dir, exist_ok=True)
     sizes = {}
-    sizes["heights.r32"] = _write(os.path.join(out_dir, "heights.r32"), np.ascontiguousarray(H, dtype="<f4").tobytes())
-    sizes["region_mask.u8"] = _write(os.path.join(out_dir, "region_mask.u8"), np.ascontiguousarray(region_mask, dtype=np.uint8).tobytes())
-    sizes["texture_base.u8"] = _write(os.path.join(out_dir, "texture_base.u8"), np.ascontiguousarray(base, dtype=np.uint8).tobytes())
-    sizes["texture_overlay.u8"] = _write(os.path.join(out_dir, "texture_overlay.u8"), np.ascontiguousarray(overlay, dtype=np.uint8).tobytes())
-    sizes["texture_blend.u8"] = _write(os.path.join(out_dir, "texture_blend.u8"), np.ascontiguousarray(blend, dtype=np.uint8).tobytes())
-    sizes["color.rgba8"] = _write(os.path.join(out_dir, "color.rgba8"), np.ascontiguousarray(colour, dtype=np.uint8).tobytes())
-    sizes["water_mask.u8"] = _write(os.path.join(out_dir, "water_mask.u8"), np.ascontiguousarray(water, dtype=np.uint8).tobytes())
-    sizes["flow.rg8"] = _write(os.path.join(out_dir, "flow.rg8"), np.ascontiguousarray(flow, dtype=np.uint8).tobytes())
-    # control.u32: the same three maps packed the way Terrain3D stores them, so the in-engine
-    # import tool can hand the bytes straight to an Image without touching a pixel.
-    ctrl = pack_control(base, overlay, blend, nav)
-    sizes["control.u32"] = _write(os.path.join(out_dir, "control.u32"), np.ascontiguousarray(ctrl).tobytes())
+    if terrain:
+        sizes["heights.r32"] = _write(os.path.join(out_dir, "heights.r32"), np.ascontiguousarray(H, dtype="<f4").tobytes())
+        sizes["region_mask.u8"] = _write(os.path.join(out_dir, "region_mask.u8"), np.ascontiguousarray(region_mask, dtype=np.uint8).tobytes())
+        sizes["water_mask.u8"] = _write(os.path.join(out_dir, "water_mask.u8"), np.ascontiguousarray(water, dtype=np.uint8).tobytes())
+        sizes["flow.rg8"] = _write(os.path.join(out_dir, "flow.rg8"), np.ascontiguousarray(flow, dtype=np.uint8).tobytes())
+    if textures:
+        sizes["texture_base.u8"] = _write(os.path.join(out_dir, "texture_base.u8"), np.ascontiguousarray(base, dtype=np.uint8).tobytes())
+        sizes["texture_overlay.u8"] = _write(os.path.join(out_dir, "texture_overlay.u8"), np.ascontiguousarray(overlay, dtype=np.uint8).tobytes())
+        sizes["texture_blend.u8"] = _write(os.path.join(out_dir, "texture_blend.u8"), np.ascontiguousarray(blend, dtype=np.uint8).tobytes())
+        sizes["color.rgba8"] = _write(os.path.join(out_dir, "color.rgba8"), np.ascontiguousarray(colour, dtype=np.uint8).tobytes())
+        # control.u32: the same three maps packed the way Terrain3D stores them, so the
+        # in-engine import tool can hand the bytes to an Image without touching a pixel.
+        ctrl = pack_control(base, overlay, blend, nav)
+        sizes["control.u32"] = _write(os.path.join(out_dir, "control.u32"), np.ascontiguousarray(ctrl).tobytes())
     return sizes
 
 
@@ -71,10 +74,17 @@ def write_runtime(out_dir: str, grid: Grid, H: np.ndarray, region_mask: np.ndarr
     h_lo = downsample(H.astype(np.float32), n)
     r_lo = region_mask[::f, ::f].copy()
     w_lo = water[::f, ::f].copy()
-    lvl = water_level.copy()
-    lvl[water == 0] = np.nan
-    lvl_lo = lvl[::f, ::f].copy()
-    lvl_lo = np.where(np.isnan(lvl_lo), -1000.0, lvl_lo).astype(np.float32)
+    # The water level map is *filled*: every texel carries the level of the nearest water, so
+    # the runtime water surface mesh can interpolate it without hitting a -1000 hole at the shore.
+    # Visibility is the mask's job, not the level's.
+    from scipy import ndimage
+    wet = water > 0
+    if wet.any():
+        idx = ndimage.distance_transform_edt(~wet, return_distances=False, return_indices=True)
+        filled = water_level[idx[0], idx[1]].astype(np.float32)
+    else:
+        filled = np.zeros_like(water_level, dtype=np.float32)
+    lvl_lo = filled[::f, ::f].copy()
     _write(os.path.join(d, "heights_%d.r32" % n), np.ascontiguousarray(h_lo, dtype="<f4").tobytes())
     _write(os.path.join(d, "regions_%d.u8" % n), np.ascontiguousarray(r_lo, dtype=np.uint8).tobytes())
     _write(os.path.join(d, "water_%d.u8" % n), np.ascontiguousarray(w_lo, dtype=np.uint8).tobytes())
