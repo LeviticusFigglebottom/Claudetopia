@@ -25,13 +25,21 @@ func run(arena_node: Node3D, output_dir: String) -> void:
 	player = arena.player
 	out_dir = output_dir if not output_dir.is_empty() else "user://"
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	# Clear screenshots from an earlier run so the output directory only shows this one.
+	for f in DirAccess.get_files_at(out_dir):
+		if f.ends_with(".png"):
+			DirAccess.remove_absolute("%s/%s" % [out_dir.rstrip("/"), f])
 	_report("=== Wickmere combat arena verification ===")
 	await _settle(SETTLE_FRAMES)
 	await _check_attack_damages_bandit()
 	await _check_stamina_drain_and_regen()
 	await _check_parry_opens_riposte()
 	await _check_dodge_iframes()
+	await _check_block_reduces_damage()
 	await _check_poise_stagger()
+	await _check_spell_cost_and_silence()
+	await _check_bow_arrow()
+	await _check_mantle()
 	await _check_wolf_pack_flanks()
 	await _check_charger_knockdown()
 	_summary()
@@ -163,6 +171,126 @@ func _check_poise_stagger() -> void:
 	_record("enemy staggers at zero poise", bool(flags["staggered"]) and bandit.is_stunned(),
 		"poise %.1f, %.1f poise damage per heavy hit, broke after %d hits, stunned %s, poise reset to %.1f" % [
 			poise_before, per_hit, swings, str(bandit.is_stunned()), bandit.poise])
+
+
+func _check_block_reduces_damage() -> void:
+	var bandit := _enemy("core:enemy/roadside_bandit")
+	if bandit == null:
+		_record("blocking scales with shield stability", false, "no bandit")
+		return
+	arena.reset()
+	_isolate([])
+	await _settle(4)
+	_place_player_near(bandit, 2.0)
+	await _settle(4)
+	# Unblocked reference hit.
+	var hp0 := player.health
+	var unblocked_outcome := player.take_hit(_enemy_hit(bandit, "slash"))
+	var unblocked := hp0 - player.health
+	player.full_restore()
+	await _settle(2)
+	# Same hit onto a raised round shield (stability 0.8). The guard must be held past the
+	# 0.18 s parry window, or this would test the parry instead.
+	Input.action_press("block")
+	await _wait_seconds(0.4)
+	var blocking := player.is_blocking
+	var stability := player.block_stability
+	var stamina0 := player.stamina
+	var hp1 := player.health
+	var outcome := player.take_hit(_enemy_hit(bandit, "slash"))
+	var blocked := hp1 - player.health
+	var stamina_cost := stamina0 - player.stamina
+	Input.action_release("block")
+	await _settle(2)
+	await _shot("block")
+	_record("blocking scales with shield stability", blocking and outcome == "blocked" and blocked < unblocked and stamina_cost > 0.0,
+		"stability %.2f: unblocked %.1f hp ('%s'), blocked %.1f hp ('%s'), stamina cost %.1f" % [
+			stability, unblocked, unblocked_outcome, blocked, outcome, stamina_cost])
+
+
+func _check_spell_cost_and_silence() -> void:
+	var bandit := _enemy("core:enemy/roadside_bandit")
+	arena.reset()
+	_isolate([])
+	await _settle(4)
+	_place_player_near(bandit, 6.0)
+	player.camera_rig.pitch = 0.0
+	player.equip_spell("core:spell/kindle_bolt")
+	await _settle(6)
+	var mana0 := player.mana
+	var hp0 := bandit.health if bandit != null else 0.0
+	await _tap("cast")
+	await _wait_until(func() -> bool: return not player.caster.casting, 3.0)
+	var spent := mana0 - player.mana
+	var hit_landed := await _wait_until(func() -> bool: return bandit != null and bandit.health < hp0, 2.5)
+	await _shot("spell")
+	# The cost is discounted by the caster's school skill, so compare against the rule.
+	var bolt := ContentDB.get_or_empty("core:spell/kindle_bolt")
+	var expected := SpellRuntime.cost_of(bolt, player.get_skill("kindling"))
+	_record("casting costs mana and the bolt damages its target", absf(spent - expected) < 0.5 and hit_landed,
+		"mana %.1f -> %.1f (spent %.1f, expected %.1f at skill %.0f), target hp %.1f -> %.1f" % [
+			mana0, player.mana, spent, expected, player.get_skill("kindling"), hp0, bandit.health if bandit else 0.0])
+	# Silenced: no casting at all (DESIGN §5.3).
+	var mana1 := player.mana
+	player.status.apply("silenced", 5.0)
+	var refused := {"reason": ""}
+	player.caster.cast_failed.connect(func(_id: String, reason: String) -> void: refused["reason"] = reason, CONNECT_ONE_SHOT)
+	await _tap("cast")
+	await _settle(4)
+	_record("silence stops casting", str(refused["reason"]) == "silenced" and absf(player.mana - mana1) < 0.6 and not player.caster.casting,
+		"refusal '%s', mana unchanged (%.1f -> %.1f)" % [str(refused["reason"]), mana1, player.mana])
+	player.status.clear("silenced")
+
+
+func _check_bow_arrow() -> void:
+	var bandit := _enemy("core:enemy/roadside_bandit")
+	if bandit == null:
+		_record("the bow looses an arrow that damages its target", false, "no bandit")
+		return
+	arena.reset()
+	_isolate([])
+	await _settle(4)
+	_place_player_near(bandit, 5.0)
+	player.camera_rig.pitch = 0.0
+	player.equip_weapon("core:item/hunting_bow")
+	player.arrows = 5
+	await _settle(6)
+	var hp0 := bandit.health
+	var arrows0 := player.arrows
+	# Hold to draw, then release to loose.
+	Input.action_press("attack_light")
+	await _wait_seconds(1.1)
+	var drawing := player.state == Player.State.BOW
+	Input.action_release("attack_light")
+	var landed := await _wait_until(func() -> bool: return bandit.health < hp0, 3.0)
+	await _shot("bow")
+	_record("the bow looses an arrow that damages its target", drawing and landed and player.arrows == arrows0 - 1,
+		"drawn %s, arrows %d -> %d, target hp %.1f -> %.1f" % [str(drawing), arrows0, player.arrows, hp0, bandit.health])
+	player.equip_weapon("core:item/iron_sword")
+
+
+func _check_mantle() -> void:
+	arena.reset()
+	_isolate([])
+	await _settle(4)
+	# The low crate at (7, 1) in the arena: 0.9 m top, inside the 0.4-1.3 m mantle band.
+	player.global_position = Vector3(7.0, 0.6, 3.6)
+	player.velocity = Vector3.ZERO
+	player.rotation.y = 0.0
+	player.camera_rig.yaw = 0.0
+	await _settle(8)
+	var y0 := player.global_position.y
+	Input.action_press("move_forward")
+	await _wait_seconds(0.8)
+	Input.action_press("jump")
+	await _settle(3)
+	Input.action_release("jump")
+	var climbed := await _wait_until(func() -> bool: return player.global_position.y > y0 + 0.25, 3.0)
+	Input.action_release("move_forward")
+	await _settle(10)
+	await _shot("mantle")
+	_record("the player mantles a low ledge", climbed and player.global_position.y > y0 + 0.25,
+		"y %.2f -> %.2f (ledge at 0.90, mantle band %.1f-%.1f m)" % [y0, player.global_position.y, Player.MANTLE_MIN, Player.MANTLE_MAX])
 
 
 func _check_wolf_pack_flanks() -> void:
