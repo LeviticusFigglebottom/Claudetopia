@@ -12,8 +12,11 @@ extends Node
 ##
 ## Emits: EventBus.rumour_spread(rumour_id, place_id) when a rumour reaches a new place.
 
-## A rumour cools by this factor every game hour, and is forgotten below MIN_HEAT.
-const DECAY_PER_HOUR := 0.965
+## How much of a rumour survives a game hour. Small talk is cold within a day; a killing is
+## still being chewed over three days later, so the rate is interpolated by how big the news was
+## when it was fresh. Below MIN_HEAT it is forgotten.
+const DECAY_SMALL_TALK := 0.93
+const DECAY_BIG_NEWS := 0.99
 const MIN_HEAT := 0.08
 ## A rumour has to be at least this warm to be worth repeating to the next village.
 const SPREAD_THRESHOLD := 0.3
@@ -35,7 +38,7 @@ var _graph: Dictionary = {}         # place_id -> [{place, hours}]
 var _graph_built := false
 var rng := RandomNumberGenerator.new()
 
-## Entry shape: {heat: float, deed: String, age: float, spread: {place_id: true}, day: int, hour: int}
+## Entry shape: {heat, peak, deed, age, spread{place_id: true}, day, hour}
 
 
 func _ready() -> void:
@@ -71,12 +74,13 @@ func _add_entry(place_id: String, rumour_id: String, heat: float, deed_id: Strin
 	if pool.has(rumour_id):
 		var e: Dictionary = pool[rumour_id]
 		e["heat"] = minf(1.5, maxf(float(e.get("heat", 0.0)), heat))
+		e["peak"] = maxf(float(e.get("peak", 0.0)), float(e["heat"]))
 		e["age"] = 0.0
 		if deed_id != "":
 			e["deed"] = deed_id
 		return
 	pool[rumour_id] = {
-		"heat": heat, "deed": deed_id, "age": 0.0, "spread": {},
+		"heat": heat, "peak": heat, "deed": deed_id, "age": 0.0, "spread": {},
 		"day": WorldClock.day, "hour": WorldClock.hour(),
 	}
 	if announce:
@@ -96,12 +100,17 @@ func advance_hours(hours: float) -> void:
 		_spread(step)
 
 
+## What share of a rumour survives an hour, given the heat it reached when it was fresh.
+static func decay_rate(peak: float) -> float:
+	return lerpf(DECAY_SMALL_TALK, DECAY_BIG_NEWS, clampf(peak, 0.0, 1.0))
+
+
 func _decay(step: float) -> void:
-	var factor := pow(DECAY_PER_HOUR, step)
 	for place_id in pools.keys():
 		var pool: Dictionary = pools[place_id]
 		for rumour_id in pool.keys():
 			var e: Dictionary = pool[rumour_id]
+			var factor := pow(decay_rate(float(e.get("peak", e["heat"]))), step)
 			e["heat"] = float(e["heat"]) * factor
 			e["age"] = float(e.get("age", 0.0)) + step
 			if float(e["heat"]) < MIN_HEAT:
@@ -127,12 +136,16 @@ func _spread(_step: float) -> void:
 				if float(e.get("age", 0.0)) < float(link["hours"]):
 					continue
 				spread[to] = true
-				arrivals.append({"place": to, "rumour": rumour_id, "heat": float(e["heat"]) * TRANSFER, "deed": str(e.get("deed", ""))})
+				arrivals.append({"place": to, "rumour": rumour_id, "heat": float(e["heat"]) * TRANSFER,
+					"peak": float(e.get("peak", e["heat"])), "deed": str(e.get("deed", ""))})
 			e["spread"] = spread
 	for a in arrivals:
 		if float(a["heat"]) >= MIN_HEAT:
 			var already: bool = pools.get(a["place"], {}).has(a["rumour"])
 			_add_entry(a["place"], a["rumour"], float(a["heat"]), str(a["deed"]), not already)
+			# News keeps its size as it travels: a killing is a killing in the next village too.
+			var arrived: Dictionary = pools[a["place"]][a["rumour"]]
+			arrived["peak"] = maxf(float(arrived.get("peak", 0.0)), float(a["peak"]))
 
 
 # --- queries -----------------------------------------------------------------------------------------
@@ -310,8 +323,9 @@ func to_save() -> Dictionary:
 		for rumour_id in pools[place_id]:
 			var e: Dictionary = pools[place_id][rumour_id]
 			pool[rumour_id] = {
-				"heat": float(e["heat"]), "deed": str(e.get("deed", "")), "age": float(e.get("age", 0.0)),
-				"spread": (e.get("spread", {}) as Dictionary).keys(), "day": int(e.get("day", 1)), "hour": int(e.get("hour", 0)),
+				"heat": float(e["heat"]), "peak": float(e.get("peak", e["heat"])), "deed": str(e.get("deed", "")),
+				"age": float(e.get("age", 0.0)), "spread": (e.get("spread", {}) as Dictionary).keys(),
+				"day": int(e.get("day", 1)), "hour": int(e.get("hour", 0)),
 			}
 		out[place_id] = pool
 	return {"pools": out}
@@ -328,7 +342,8 @@ func from_save(d: Dictionary) -> void:
 			for p in e.get("spread", []):
 				spread[str(p)] = true
 			pool[str(rumour_id)] = {
-				"heat": float(e.get("heat", 0.0)), "deed": str(e.get("deed", "")), "age": float(e.get("age", 0.0)),
+				"heat": float(e.get("heat", 0.0)), "peak": float(e.get("peak", e.get("heat", 0.0))),
+				"deed": str(e.get("deed", "")), "age": float(e.get("age", 0.0)),
 				"spread": spread, "day": int(e.get("day", 1)), "hour": int(e.get("hour", 0)),
 			}
 		pools[str(place_id)] = pool
