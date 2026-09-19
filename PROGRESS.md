@@ -95,8 +95,17 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
    remaining hole in the world and the one the drop test most depends on. Assigned to the
    world stream: resolve a landmark `.glb` as the place's scene, give it collision and a
    deliberate yaw, and place standing stones as hand-authored sets rather than scatter.
-4. NPC and encounter density tuning once there is somebody to walk the country and feel it.
-5. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
+4. **The settlements are built but not planned.** Eleven places now carry a fabric of
+   generated houses around their hand-built interiors — 54 slate roofs in Tollmere, 34 thatched
+   ones in Merrowby, with the culture's walls, a plinth, a framed door and the carts, hay,
+   fences and market stalls the forge has made. What they do not have is a *street*: the roads
+   stop at the edge of the flattened pad instead of running through it, so the layout falls back
+   to a ring around a green every time. `Settlement._along_road` already fronts houses onto a
+   road correctly when one crosses the pad (there is a test for it) — the roads simply do not.
+   Second: the pads are far wider than the towns on them and are paved edge to edge, so every
+   village sits in the middle of a two-hundred-metre cobbled disc.
+5. NPC and encounter density tuning once there is somebody to walk the country and feel it.
+6. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
    score: the downs currently read as bare ground with trees on it.
 
 ## Deliberately not done (pass two)

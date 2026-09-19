@@ -21,9 +21,13 @@ const SILL := 0.05
 @export var place_doors: bool = true
 ## Buildings are raised around house doors; a tool that only wants the doors turns this off.
 @export var raise_buildings: bool = true
+## The rest of the town around them: the roofs nobody lives under. Off for a tool that only
+## wants the doors, and for a test that does not want fifty meshes it did not ask for.
+@export var raise_fabric: bool = true
 
 var placed: Array[Door] = []
 var raised: Array[Building] = []
+var fabric: Array[Settlement] = []
 
 
 func _ready() -> void:
@@ -73,8 +77,82 @@ func place_all() -> int:
 			if door != null:
 				placed.append(door)
 	Log.info("WorldDoors", "placed %d doors" % placed.size())
+	if raise_fabric:
+		_fill_settlements()
 	doors_placed.emit(placed.size())
 	return placed.size()
+
+
+## The town around the doors. Twenty-four interiors do not make eleven settlements; the fabric
+## is what turns a paved circle with four doors on it into somewhere people live.
+func _fill_settlements() -> void:
+	for s in fabric:
+		if is_instance_valid(s):
+			s.queue_free()
+	fabric.clear()
+	var world := _world()
+	if world == null:
+		return
+	var roads := _roads()
+	# Every door already placed keeps its own ground clear, house or hillside mouth alike.
+	var reserved: Array[Rect2] = []
+	for door in placed:
+		if is_instance_valid(door):
+			var p := door.global_position
+			reserved.append(Rect2(p.x - 11.0, p.z - 11.0, 22.0, 22.0))
+	var built := 0
+	for place in ContentDB.all("place"):
+		var kind := str(place.get("kind", ""))
+		if not Settlement.FABRIC.has(kind):
+			continue
+		var id := str(place.get("id", ""))
+		var centre := world.place_position(id)
+		if centre == Vector3.ZERO:
+			continue
+		var radius := _pad_radius(world, id)
+		var near: Array = []
+		for line in roads:
+			if _touches(line, centre, radius):
+				near.append(line)
+		var s := Settlement.raise_at(id, kind, str(place.get("region", "")), centre, radius,
+				near, reserved)
+		add_child(s)
+		fabric.append(s)
+		built += 1
+	Log.info("WorldDoors", "raised the fabric of %d settlements" % built)
+
+
+func _roads() -> Array:
+	var path := "res://world/generated/roads.json"
+	if not FileAccess.file_exists(path):
+		return []
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_ARRAY:
+		return []
+	var out: Array = []
+	for entry in parsed:
+		if typeof(entry) == TYPE_DICTIONARY:
+			out.append((entry as Dictionary).get("points", []))
+	return out
+
+
+static func _touches(line_v: Variant, centre: Vector3, radius: float) -> bool:
+	if typeof(line_v) != TYPE_ARRAY:
+		return false
+	for p_v in line_v:
+		var p: Array = p_v
+		if Vector2(float(p[0]) - centre.x, float(p[1]) - centre.z).length() < radius:
+			return true
+	return false
+
+
+## How much ground the world flattened for this place, which is how much town there is room for.
+func _pad_radius(world: World, place_id: String) -> float:
+	for entry in world.pois():
+		var poi: Dictionary = entry
+		if str(poi.get("place_id", "")) == place_id:
+			return maxf(float(poi.get("radius_flat_m", 40.0)), 24.0)
+	return 40.0
 
 
 ## Where the place stands in the world: the built POI data first, since that is the ground the
