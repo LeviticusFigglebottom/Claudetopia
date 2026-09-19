@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_property_sign"]
+
+[ext_resource type="Script" path="res://systems/economy/property_sign.gd" id="1"]
+
+[node name="PropertySign" type="StaticBody3D" groups=["interactable", "property_sign"]]
+collision_layer = 17
+collision_mask = 0
+script = ExtResource("1")
