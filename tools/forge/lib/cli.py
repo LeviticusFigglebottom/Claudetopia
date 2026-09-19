@@ -17,6 +17,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_OUT = REPO_ROOT / "game" / "assets" / "models"
 CATEGORIES = ("trees", "flora", "rocks", "props", "architecture", "dungeon", "landmarks",
               "characters", "creatures", "weapons", "armour", "vfx_meshes")
+
+# Bump when generated geometry changes in a way that should rebuild every asset; it is
+# part of each asset's hash, so build_assets sees the whole manifest as stale. It lives
+# here rather than in export.py so the build orchestrator can read it without Blender.
+FORGE_VERSION = 1
 VARIANT_LETTERS = "abcdefghijklmnopqrstuvwxyz"
 
 

@@ -22,7 +22,7 @@ from . import cli
 from . import glb as G
 from . import scene as S
 
-FORGE_VERSION = 1
+FORGE_VERSION = cli.FORGE_VERSION
 LOD_RATIOS = (0.4, 0.15)
 LOD_MIN_TRIS = (300, 120)
 COLLISION_KINDS = ("convex", "trimesh", "capsule", "none", "col_glb")

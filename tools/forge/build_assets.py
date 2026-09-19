@@ -10,7 +10,7 @@ and runs each through `blender -b --python tools/forge/<generator>.py -- ...`.
 
 Incremental: an entry is skipped when its output meta.json records the same hash (the
 generator name + version + params + seed + palette). Touching a generator does not
-invalidate assets on its own; bump FORGE_VERSION in lib/export.py (or pass --force) when
+invalidate assets on its own; bump FORGE_VERSION in lib/cli.py (or pass --force) when
 the geometry changes and everything should be rebuilt.
 """
 from __future__ import annotations
@@ -26,8 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import cli  # noqa: E402
-from lib import export as export_consts  # noqa: E402 - only for FORGE_VERSION (pure constant)
+from lib import cli  # noqa: E402  (pure Python: this script runs outside Blender)
 
 FORGE_DIR = Path(__file__).resolve().parent
 MANIFEST = FORGE_DIR / "manifest.json"
@@ -129,7 +128,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     out_root = Path(args.out)
-    version = export_consts.FORGE_VERSION
+    version = cli.FORGE_VERSION
     entries = load_manifest(Path(args.manifest))
     if args.only:
         def matches(e):
