@@ -933,11 +933,37 @@ def fall_clip(skel: Skeleton, name: str, length: float, direction: str = "B", st
     cb.key(0.46 * length, mid, "in2")
     cb.key(0.66 * length, landed, "out")
     if settle:
-        settled = dict(landed)
-        settled["Neck"] = tuple(np.asarray(landed.get("Neck", (0, 0, 0))) + np.array([4.0, 0, 3.0]))
-        settled["Head"] = tuple(np.asarray(landed.get("Head", (0, 0, 0))) + np.array([3.0, 0, 4.0]))
-        settled["UpperArm.R"] = tuple(np.asarray(landed.get("UpperArm.R", (0, 0, 0))) + np.array([-8.0, 4.0, 0]))
-        cb.key(0.82 * length, settled, "out")
-        cb.key(length, settled, "linear")
+        # A body that lands and then holds the landing pose reads as a dropped mannequin.
+        # What sells a death is what happens AFTER the impact: the limbs keep going a little,
+        # find nothing to hold them, and give.  Three decaying keys -- flop out, fall back,
+        # one last slump -- and the arms travel furthest because nothing is bracing them.
+        roll = 1.0 if direction in ("B", "K") else -1.0
+
+        def give(base: Pose, amt: float) -> Pose:
+            out = dict(base)
+            for bone, delta in (
+                ("UpperArm.L", (-26.0, -16.0, 0.0)), ("UpperArm.R", (-24.0, 14.0, 0.0)),
+                ("LowerArm.L", (-34.0, 0.0, 0.0)), ("LowerArm.R", (-30.0, 0.0, 0.0)),
+                ("Hand.L", (-16.0, 0.0, -10.0)), ("Hand.R", (-14.0, 0.0, 10.0)),
+                ("Neck", (5.0, 0.0, 7.0 * roll)), ("Head", (4.0, 0.0, 9.0 * roll)),
+                ("Chest", (3.0, 0.0, 0.0)), ("Spine", (2.0, 0.0, 0.0)),
+                ("UpperLeg.L", (-6.0, 5.0, 0.0)), ("UpperLeg.R", (-5.0, -4.0, 0.0)),
+                ("LowerLeg.L", (-12.0, 0.0, 0.0)), ("LowerLeg.R", (-10.0, 0.0, 0.0)),
+                ("Foot.L", (-10.0, 0.0, 6.0)), ("Foot.R", (-9.0, 0.0, -6.0)),
+            ):
+                out[bone] = tuple(np.asarray(base.get(bone, (0.0, 0.0, 0.0)), float)
+                                  + np.asarray(delta, float) * amt)
+            return out
+
+        # the limbs overshoot past where the body stopped, because they have their own weight
+        cb.key(0.74 * length, give(landed, 1.00), "out")
+        # and come back most of the way, slowly, with no muscle left to stop them cleanly
+        cb.key(0.86 * length, give(landed, 0.62), "smooth")
+        # a last settling: the chest sinks, the head finishes rolling, a hand turns over
+        final = give(landed, 0.78)
+        final["Chest"] = tuple(np.asarray(final["Chest"], float) + np.array([2.0, 0.0, 0.0]))
+        final["Hand.R"] = tuple(np.asarray(final["Hand.R"], float) + np.array([0.0, 0.0, 14.0]))
+        cb.key(0.96 * length, final, "smooth")
+        cb.key(length, final, "linear")
     cb.event(0.62 * length, "body_land")
     return cb

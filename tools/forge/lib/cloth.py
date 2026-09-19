@@ -104,9 +104,46 @@ def head_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None, spacing: 
     return sdf.SampledField(bodylib.head_scene(skel, hs, with_neck=False), spacing=spacing, margin=0.06)
 
 
+def relief_band(z0: float, z1: float, amount: float, soft: float) -> RegionFn:
+    """Extra (or, negative, less) offset between two heights, faded over `soft`.
+
+    This is how a garment gets edges.  A hem, a collar and a cuff are all the same thing --
+    the cloth doubled back on itself, so it stands a few millimetres further out than the
+    body of the garment and catches light along a line.  A waist is the same trick with the
+    sign flipped: the cloth pulled IN where the belt or the wearer's shape holds it."""
+    def fn(P):
+        z = P[:, 2]
+        w = sdf_smoothstep(z0 - soft, z0 + soft, z) * (1.0 - sdf_smoothstep(z1 - soft, z1 + soft, z))
+        return amount * w
+    return fn
+
+
+def relief_around(points: Sequence[np.ndarray], radius: float, amount: float, soft: float) -> RegionFn:
+    """Extra offset within `radius` of any of `points` -- cuffs at the wrists, a collar
+    round the throat."""
+    pts = [np.asarray(p, float) for p in points]
+
+    def fn(P):
+        best = None
+        for c in pts:
+            d = np.linalg.norm(P - c, axis=1)
+            best = d if best is None else np.minimum(best, d)
+        return amount * (1.0 - sdf_smoothstep(radius - soft, radius + soft, best))
+    return fn
+
+
+def relief_sum(*fns: RegionFn) -> RegionFn:
+    def fn(P):
+        out = fns[0](P)
+        for f in fns[1:]:
+            out = out + f(P)
+        return out
+    return fn
+
+
 def offset_shell(body, region: RegionFn, thickness: float, gap: float = 0.004,
                  k: float = 0.0, bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None,
-                 hollow: bool = False) -> Prim:
+                 hollow: bool = False, relief: Optional[RegionFn] = None) -> Prim:
     """The body's field pushed out by `gap + thickness`, restricted to `region`.
 
     Solid by default.  A garment modelled as a true two-sided shell a centimetre thick
@@ -124,7 +161,8 @@ def offset_shell(body, region: RegionFn, thickness: float, gap: float = 0.004,
     def fn(P):
         d = body.eval(P)
         w = np.clip(region(P), 0.0, 1.0)
-        surf = (np.abs(d - mid) - half) if hollow else (d - outer)
+        o = outer if relief is None else outer + relief(P)
+        surf = (np.abs(d - mid) - half) if hollow else (d - o)
         return surf + (1.0 - w) * 0.25
     lo, hi = bounds if bounds is not None else body.bounds(outer + 0.05)
     return Prim(fn, np.asarray(lo, float), np.asarray(hi, float), "union", k)
@@ -225,22 +263,68 @@ def legs_region(skel: Skeleton, *, top: float = 0.60, length: float = 1.0, soft:
                       near_bones(skel, ["UpperLeg.L", "UpperLeg.R", "LowerLeg.L", "LowerLeg.R", "Hips"], 0.17 * s, 0.05 * s))
 
 
+def _ring(rx: float, ry: float, z: float, n: int = 28) -> List[List[float]]:
+    """A closed elliptical path at height z, for hem and belt rings."""
+    pts = []
+    for i in range(n + 1):
+        a = 2.0 * math.pi * i / n
+        pts.append([rx * math.cos(a), ry * math.sin(a), z])
+    return pts
+
+
+def garment_edges(skel: Skeleton, *, hem_z: Optional[float] = None, collar_z: Optional[float] = None,
+                  sleeve_end: Optional[float] = None, waist: float = 0.0,
+                  edge: float = 0.0045) -> RegionFn:
+    """The relief that turns a shrink-wrapped offset into a garment: a doubled hem, a
+    standing collar, thick cuffs, and cloth drawn in at the waist.
+
+    Without these a tunic is a coloured layer of skin.  What says `cloth` at any distance is
+    the line of light along an edge and the one place the shape is held in."""
+    s = _s(skel)
+    parts: List[RegionFn] = []
+    if hem_z is not None:
+        parts.append(relief_band(hem_z - 0.004 * s, hem_z + 0.026 * s, edge * s, 0.008 * s))
+    if collar_z is not None:
+        parts.append(relief_band(collar_z - 0.012 * s, collar_z + 0.050 * s, edge * 1.25 * s, 0.010 * s))
+    if sleeve_end is not None:
+        cuffs = []
+        for side in ("L", "R"):
+            sh = skel.J[f"UpperArm.{side}"]
+            wr = skel.J[f"Hand.{side}"]
+            cuffs.append(sh + (wr - sh) * sleeve_end)
+        parts.append(relief_around(cuffs, 0.042 * s, edge * 1.3 * s, 0.016 * s))
+    if abs(waist) > 1e-6:
+        wz = float(skel.J["Spine"][2])
+        parts.append(relief_band(wz - 0.070 * s, wz + 0.055 * s, -waist * s, 0.032 * s))
+    if not parts:
+        return lambda P: np.zeros(len(P))
+    return relief_sum(*parts)
+
+
 def tunic(skel: Skeleton, body, *, hem: float = 0.44, sleeves: float = 0.55,
           thickness: float = 0.010, name: str = "tunic") -> Garment:
     s = _s(skel)
     sc = Scene()
     reg = torso_region(skel, top=0.90, hem=hem, sleeves=sleeves, collar=0.012)
     sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
+                          relief=garment_edges(skel, collar_z=float(skel.J["Neck"][2]),
+                                               sleeve_end=min(sleeves, 1.0), waist=0.010),
                           bounds=zbox(skel, hem * skel.props.height - 0.03 * s, 0.92 * skel.props.height, xy=0.55)))
     # the skirt of the tunic hangs away from the legs instead of shrink-wrapping them
     hip = float(skel.J["UpperLeg.L"][2])
     z_hem = hem * skel.props.height
     sc.union(sdf.loft([
-        (np.array([0.0, 0.010 * s, hip + 0.10 * s]), 0.150 * s, 0.110 * s),
-        (np.array([0.0, 0.008 * s, hip - 0.02 * s]), 0.160 * s, 0.118 * s),
-        (np.array([0.0, 0.004 * s, z_hem + 0.03 * s]), 0.170 * s, 0.126 * s),
-        (np.array([0.0, 0.0, z_hem]), 0.171 * s, 0.127 * s),
+        (np.array([0.0, 0.010 * s, hip + 0.10 * s]), 0.148 * s, 0.108 * s),
+        (np.array([0.0, 0.008 * s, hip - 0.02 * s]), 0.158 * s, 0.116 * s),
+        (np.array([0.0, 0.004 * s, z_hem + 0.045 * s]), 0.168 * s, 0.124 * s),
+        (np.array([0.0, 0.002 * s, z_hem + 0.020 * s]), 0.176 * s, 0.131 * s),
+        (np.array([0.0, 0.0, z_hem]), 0.174 * s, 0.129 * s),
     ], LEFT, axis=UP), k=0.014 * s)
+    # the hem edge: the skirt doubled back, so it ends on a line of light not a fade
+    sc.union(sdf.tube_path(_ring(0.176 * s, 0.131 * s, z_hem + 0.008 * s), 0.0055 * s), k=0.006 * s)
+    # a sphere sweep caps its end station with a hemisphere; left alone that hangs between
+    # the legs as a dome.  A skirt is open at the bottom.
+    sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     return Garment(name, sc, spacing=0.0075, target_tris=4200, material="cloth")
 
 
@@ -249,6 +333,9 @@ def shirt(skel: Skeleton, body, *, thickness: float = 0.008) -> Garment:
     s = _s(skel)
     reg = torso_region(skel, top=0.90, hem=0.52, sleeves=0.62, collar=0.004)
     sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
+                          relief=garment_edges(skel, hem_z=0.52 * skel.props.height,
+                                               collar_z=float(skel.J["Neck"][2]), sleeve_end=0.62,
+                                               waist=0.006, edge=0.0035),
                           bounds=zbox(skel, 0.50 * skel.props.height, 0.92 * skel.props.height, xy=0.62)))
     return Garment("shirt", sc, spacing=0.0070, target_tris=3600, material="cloth")
 
@@ -284,6 +371,9 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
         sc.subtract(sdf.tube_path([d * 0.155 * s + np.array([0, 0, hip + 0.02 * s]),
                                    d * (0.186 + 0.058 * flare) * s + np.array([0, 0, z_hem])],
                                   0.010 * s), k=0.016 * s)
+    sc.union(sdf.tube_path(_ring((0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s,
+                                 z_hem + 0.010 * s), 0.0060 * s), k=0.006 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     return Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
 
 
@@ -732,6 +822,194 @@ def build_beard(skel: Skeleton, style: str) -> Garment:
     return beard(skel, style, **BEARD_STYLES[style])
 
 
+# --------------------------------------------------------------------------------------
+# culture silhouettes
+#
+# Five peoples have to be tellable apart at the distance the player actually sees them,
+# which is far too far for a colour to help.  What carries that far is the OUTLINE: where
+# the hem falls, whether the shoulders are square or sloped, whether the thing is symmetric,
+# and whether the head is covered.  Each of these pieces exists to give one culture a shape
+# you could name from across a field.
+# --------------------------------------------------------------------------------------
+
+def coat(skel: Skeleton, body, *, hem: float = 0.30) -> Garment:
+    """Lakefolk: a long straight coat with a standing collar.  It falls to the shin without
+    narrowing, which is the opposite of everyone else's belted taper."""
+    s = _s(skel)
+    sc = Scene()
+    z_hem = hem * skel.props.height
+    hip = float(skel.J["UpperLeg.L"][2])
+    neck = float(skel.J["Neck"][2])
+    reg = torso_region(skel, top=0.92, hem=0.52, sleeves=0.96, collar=0.030)
+    sc.union(offset_shell(body, reg, 0.011 * s, gap=0.005 * s,
+                          relief=garment_edges(skel, collar_z=neck + 0.012 * s, sleeve_end=0.98,
+                                               waist=0.004),
+                          bounds=zbox(skel, 0.50 * skel.props.height, 0.96 * skel.props.height, xy=0.64)))
+    # the skirt of the coat: straight sides, no flare, so it reads as a column
+    sc.union(sdf.loft([
+        (np.array([0.0, 0.006 * s, hip + 0.14 * s]), 0.142 * s, 0.108 * s),
+        (np.array([0.0, 0.004 * s, hip - 0.04 * s]), 0.150 * s, 0.114 * s),
+        (np.array([0.0, 0.002 * s, z_hem + 0.06 * s]), 0.152 * s, 0.116 * s),
+        (np.array([0.0, 0.0, z_hem]), 0.150 * s, 0.114 * s),
+    ], LEFT, axis=UP), k=0.012 * s)
+    sc.union(sdf.tube_path(_ring(0.152 * s, 0.116 * s, z_hem + 0.012 * s), 0.0060 * s), k=0.006 * s)
+    # standing collar: a band that rises past the jaw
+    sc.union(sdf.tube_path(_ring(0.072 * s, 0.064 * s, neck + 0.050 * s), 0.012 * s), k=0.010 * s)
+    # the front split, so the coat has a centre line down the middle of the silhouette
+    sc.subtract(sdf.box([0.0, -0.140 * s, (hip + z_hem) * 0.5],
+                        [0.007 * s, 0.045 * s, (hip - z_hem) * 0.62]), k=0.005 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
+    return Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth")
+
+
+def shoulder_cape(skel: Skeleton, body) -> Garment:
+    """Lakefolk: a short cape ending above the elbow.  It squares the shoulders off, and a
+    square shoulder is the one cue that still reads at thirty pixels tall."""
+    s = _s(skel)
+    sc = Scene()
+    neck = float(skel.J["Neck"][2])
+    chest = float(skel.J["Chest"][2])
+    z_bot = chest - 0.10 * s
+    sc.union(sdf.loft([
+        (np.array([0.0, 0.010 * s, neck + 0.030 * s]), 0.082 * s, 0.072 * s),
+        (np.array([0.0, 0.008 * s, neck - 0.020 * s]), 0.170 * s, 0.118 * s),
+        (np.array([0.0, 0.004 * s, chest + 0.030 * s]), 0.198 * s, 0.134 * s),
+        (np.array([0.0, 0.0, z_bot + 0.020 * s]), 0.208 * s, 0.142 * s),
+        (np.array([0.0, 0.0, z_bot]), 0.204 * s, 0.139 * s),
+    ], LEFT, axis=UP))
+    sc.union(sdf.tube_path(_ring(0.208 * s, 0.142 * s, z_bot + 0.010 * s), 0.0058 * s), k=0.006 * s)
+    sc.subtract(sdf.sphere([0.0, 0.012 * s, neck + 0.075 * s], 0.080 * s), k=0.008 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]))
+    return Garment("shoulder_cape", sc, spacing=0.0060, target_tris=2000, material="cloth")
+
+
+def wrap_torso(skel: Skeleton, body) -> Garment:
+    """Reedfolk: cloth wound over one shoulder and under the other arm, with a sash across
+    the chest.  Nobody else in the world is asymmetric, so this reads instantly."""
+    s = _s(skel)
+    sc = Scene()
+    neck = float(skel.J["Neck"][2])
+    waist = float(skel.J["Spine"][2])
+    hip = float(skel.J["UpperLeg.L"][2])
+
+    def diagonal(P):
+        # covered below a plane running from the left shoulder down to the right hip
+        t = (P[:, 2] - (waist - 0.02 * s)) / (0.30 * s) + P[:, 0] / (0.26 * s)
+        return 1.0 - sdf_smoothstep(0.55, 1.15, t)
+    reg = region_and(band_z(hip - 0.02 * s, neck + 0.030 * s, 0.020 * s), diagonal)
+    sc.union(offset_shell(body, reg, 0.010 * s, gap=0.004 * s,
+                          relief=garment_edges(skel, waist=0.008),
+                          bounds=zbox(skel, hip - 0.06 * s, neck + 0.08 * s, xy=0.44)))
+    # the sash: a band of cloth over one shoulder, thick enough to carry its own line
+    sh = skel.J["UpperArm.L"]
+    shz = float(sh[2])
+    sc.union(sdf.tube_path([[float(sh[0]) * 0.55, 0.086 * s, shz - 0.02 * s],
+                            [float(sh[0]) * 0.92, 0.030 * s, shz + 0.030 * s],
+                            [float(sh[0]) * 0.70, -0.090 * s, shz - 0.05 * s],
+                            [0.010 * s, -0.116 * s, waist + 0.06 * s],
+                            [-0.090 * s, -0.070 * s, waist - 0.05 * s],
+                            [-0.112 * s, 0.050 * s, waist - 0.06 * s]],
+                           [0.026 * s, 0.030 * s, 0.030 * s, 0.028 * s, 0.026 * s, 0.022 * s]),
+             k=0.012 * s)
+    return Garment("wrap_torso", sc, spacing=0.0065, target_tris=3200, material="cloth")
+
+
+def wrap_skirt(skel: Skeleton, body, *, hem: float = 0.18) -> Garment:
+    """Reedfolk: a long narrow wrapped skirt to mid-calf, with the overlap showing."""
+    s = _s(skel)
+    g = skirt(skel, body, hem=hem, flare=0.22, name="wrap_skirt")
+    z_hem = hem * skel.props.height
+    hip = float(skel.J["UpperLeg.L"][2])
+    g.scene.union(sdf.tube_path([[0.130 * s, -0.100 * s, hip + 0.04 * s],
+                                 [0.114 * s, -0.118 * s, (hip + z_hem) * 0.5],
+                                 [0.098 * s, -0.126 * s, z_hem + 0.03 * s]],
+                                [0.011 * s, 0.012 * s, 0.012 * s]), k=0.008 * s)
+    g.scene.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
+    g.target_tris = 3600
+    return g
+
+
+def kilt(skel: Skeleton, body) -> Garment:
+    """Clans: a short pleated kilt ending above the knee.  Bare knees are unmistakable next
+    to five peoples who all cover their legs."""
+    s = _s(skel)
+    knee = float(skel.J["LowerLeg.L"][2])
+    z_hem = knee + 0.060 * s
+    hip = float(skel.J["UpperLeg.L"][2])
+    waist = float(skel.J["Spine"][2])
+    sc = Scene()
+    sc.union(sdf.loft([
+        (np.array([0.0, 0.0, waist - 0.01 * s]), 0.132 * s, 0.100 * s),
+        (np.array([0.0, 0.0, hip + 0.02 * s]), 0.156 * s, 0.118 * s),
+        (np.array([0.0, 0.0, z_hem + 0.05 * s]), 0.180 * s, 0.138 * s),
+        (np.array([0.0, 0.0, z_hem]), 0.184 * s, 0.141 * s),
+    ], LEFT, axis=UP))
+    # pleats, deeper at the back than the front, the way a kilt is actually made
+    n = 14
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        dvec = np.array([math.cos(a), math.sin(a), 0.0])
+        depth = 0.009 * s * (0.55 + 0.45 * math.sin(a))
+        sc.subtract(sdf.tube_path([dvec * 0.156 * s + np.array([0, 0, hip + 0.02 * s]),
+                                   dvec * 0.186 * s + np.array([0, 0, z_hem])], depth), k=0.013 * s)
+    sc.union(sdf.tube_path(_ring(0.185 * s, 0.142 * s, z_hem + 0.012 * s), 0.0062 * s), k=0.006 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
+    return Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
+
+
+def plaid(skel: Skeleton, body) -> Garment:
+    """Clans: a great blanket over the left shoulder, pinned, falling behind the knee.  It
+    gives one high shoulder and a long diagonal -- a shape no one else in the world has."""
+    s = _s(skel)
+    sc = Scene()
+    sh = skel.J["UpperArm.L"]
+    shx, shz = float(sh[0]), float(sh[2])
+    neck = float(skel.J["Neck"][2])
+    knee = float(skel.J["LowerLeg.L"][2])
+    sc.union(sdf.loft([
+        (np.array([shx * 0.75, 0.020 * s, shz + 0.038 * s]), 0.074 * s, 0.064 * s),
+        (np.array([shx * 0.40, 0.055 * s, neck - 0.06 * s]), 0.134 * s, 0.098 * s),
+        (np.array([-0.010 * s, 0.078 * s, neck - 0.28 * s]), 0.152 * s, 0.072 * s),
+        (np.array([-0.020 * s, 0.086 * s, knee + 0.22 * s]), 0.150 * s, 0.062 * s),
+        (np.array([-0.026 * s, 0.090 * s, knee + 0.04 * s]), 0.138 * s, 0.056 * s),
+    ], LEFT, axis=UP), k=0.010 * s)
+    # the pin at the shoulder, which is where the eye goes
+    sc.union(sdf.torus([shx * 0.80, -0.022 * s, shz + 0.032 * s], 0.021 * s, 0.0065 * s,
+                       axis=np.array([0.0, 1.0, 0.0])), k=0.004 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, knee + 0.04 * s], [0.0, 0.0, -1.0]))
+    return Garment("plaid", sc, spacing=0.0065, target_tris=2600, material="cloth")
+
+
+def leg_wraps(skel: Skeleton, body) -> Garment:
+    """Woodfolk: strips wound from the ankle to below the knee, so the leg reads as banded
+    rather than as one smooth trouser."""
+    s = _s(skel)
+    sc = Scene()
+    for side in ("L", "R"):
+        an = skel.J["Foot.%s" % side]
+        kn = skel.J["LowerLeg.%s" % side]
+        n = 7
+        for i in range(n):
+            t = (i + 0.5) / n
+            c = an * (1 - t) + kn * t + np.array([0.0, 0.0, 0.014 * s])
+            r = (0.050 - 0.006 * t) * s
+            sc.union(sdf.torus(c, r, 0.0130 * s,
+                               axis=np.array([0.10 * (1 if i % 2 else -1), 0.05, 1.0])), k=0.007 * s)
+    return Garment("leg_wraps", sc, spacing=0.0045, target_tris=2400, material="cloth")
+
+
+def ragged_hem(skel: Skeleton, g: Garment, z_hem: float, teeth: int = 13,
+               depth: float = 0.05) -> Garment:
+    """Woodfolk: bite a row of notches out of a hem so it reads as torn leaf-shapes."""
+    s = _s(skel)
+    for i in range(teeth):
+        a = 2 * math.pi * (i + 0.5) / teeth
+        dvec = np.array([math.cos(a), math.sin(a), 0.0])
+        g.scene.subtract(sdf.ellipsoid(dvec * 0.215 * s + np.array([0, 0, z_hem - 0.006 * s]),
+                                       [0.058 * s, 0.058 * s, depth * s]), k=0.010 * s)
+    return g
+
+
 CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "tunic": lambda s, b: tunic(s, b),
     "shirt": shirt,
@@ -753,6 +1031,15 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "pauldrons": pauldrons,
     "greaves": greaves,
     "helm": lambda s, b: helm(s, b),
+    "coat": lambda s, b: coat(s, b),
+    "shoulder_cape": shoulder_cape,
+    "wrap_torso": wrap_torso,
+    "wrap_skirt": lambda s, b: wrap_skirt(s, b),
+    "kilt": kilt,
+    "plaid": plaid,
+    "leg_wraps": leg_wraps,
+    "ragged_cloak": lambda s, b: ragged_hem(s, cloak(s, b, hooded=True, hem=0.38),
+                                            0.38 * s.props.height, teeth=13, depth=0.055),
 }
 ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
     "horns_small": lambda s: horns(s, big=False),

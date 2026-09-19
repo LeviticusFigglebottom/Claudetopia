@@ -279,19 +279,30 @@ def build_eyes(skel: Skeleton, hs: bodylib.HeadStyle) -> List:
 
 
 def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: str, appearance: dict,
-               size: int = BODY_TEX) -> Tuple[str, str, str]:
-    """Bake albedo / ORM / normal for a skin mesh and return their paths."""
+               size: int = BODY_TEX, scene=None) -> Tuple[str, str, str]:
+    """Bake albedo / ORM / normal for a skin mesh and return their paths.
+
+    `scene` is the SDF the mesh came from.  Handing it over is what makes the bake painted
+    rather than flat: the armpit, the inside of an elbow, the gap between two fingers and
+    the crease under a lip all darken because the field says they are enclosed, and the
+    parts that stick out -- knuckles, knees, the nose -- take the warmth and the wear."""
     L = bodylib.head_landmarks(skel, hs)
     maps = paint.surface_maps(ob, size=size, pad=4)
+    head = bool(appearance.get("face", True))
+    occ_r = 0.022 if head else 0.052
     fn = paint.skin_paint(
         L, tone=appearance.get("skin", "wheat"), seed=int(appearance.get("seed", 0)),
         face=appearance.get("face", True), brow_colour=appearance.get("hair_colour", "dark_brown"),
         age=float(appearance.get("age", 0.3)), hearth=float(appearance.get("hearth", 0.0)),
         hollow=float(appearance.get("hollow", 0.0)), veins=float(appearance.get("veins", 0.0)),
         freckles=float(appearance.get("freckles", 0.0)), stubble=float(appearance.get("stubble", 0.0)),
-        beard_colour=appearance.get("beard_colour"))
+        beard_colour=appearance.get("beard_colour"),
+        scene=scene, occ_radius=occ_r,
+        warm_points=None if head else paint.warm_points_for(skel, L))
     albedo = paint.paint(maps, fn, background=(0.72, 0.58, 0.48))
-    occ_fn, rough_fn = paint.skin_orm(L, seed=int(appearance.get("seed", 0)), age=float(appearance.get("age", 0.3)))
+    occ_fn, rough_fn = paint.skin_orm(L, seed=int(appearance.get("seed", 0)),
+                                      age=float(appearance.get("age", 0.3)),
+                                      scene=scene, occ_radius=occ_r)
     occ = paint.paint(maps, occ_fn, background=(1, 1, 1))[..., 0]
     rough = paint.paint(maps, rough_fn, background=(0.7, 0.7, 0.7))[..., 0]
     orm = paint.orm_image(occ, rough, np.zeros_like(rough))
@@ -363,8 +374,10 @@ def cmd_rig(args) -> None:
         bodylib.rigid_weights(e, "Head", arm)
 
     app = dict(DEFAULT_APPEARANCE)
-    ba, bo, bnp = paint_body(body_ob, skel, hs, out_dir, "%s_body" % name, dict(app, face=False))
-    ha, ho, hn = paint_body(head_ob, skel, hs, out_dir, "%s_head" % name, dict(app, face=True))
+    ba, bo, bnp = paint_body(body_ob, skel, hs, out_dir, "%s_body" % name, dict(app, face=False),
+                             scene=bodylib.body_scene(skel, style))
+    ha, ho, hn = paint_body(head_ob, skel, hs, out_dir, "%s_head" % name, dict(app, face=True),
+                            scene=bodylib.head_scene(skel, hs))
     ea = paint_eyes(out_dir, "%s_eye" % name, app)
     body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
     head_ob.data.materials.append(make_material("WM_Skin_Head", ha, ho, hn, roughness=0.62))
@@ -440,24 +453,52 @@ def _fresh_rig(props: Optional[rig.Proportions] = None):
     return skel, arm
 
 
-def _garment_material(g, out_dir: str, stem: str, seed: int):
-    """Flat painted material for a garment: colour comes from the game at runtime, so the
-    texture carries weave and wear, not hue."""
+def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
+    """Painted material for a garment: the colour comes from the game at runtime, so the
+    texture carries value, weave and wear rather than hue.
+
+    Three things stop a garment being a coloured layer of skin.  Occlusion from the cloth's
+    own field, which darkens the inside of every fold and the shadow under a hem.  A weave
+    at two scales, because one scale is noise and two is fabric.  And wear on the parts that
+    stick out and the parts that face up, where a real garment is rubbed pale and where dust
+    settles -- an elbow and a shoulder are never the same value as a chest."""
     defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
+    leather = g.material in ("leather", "horn")
+    metal = float(defaults["metallic"]) > 0.5
     n = paint.Noise(seed + 31, 32)
+    radius = 0.026 if metal else 0.034
+
+    def _occ(p, nrm):
+        if scene is None:
+            return np.ones(len(p))
+        return paint.sdf_occlusion(scene, p, nrm, radius=radius, samples=5)
 
     def albedo(p, nrm):
         base = np.full((len(p), 3), 0.82)
-        weave = n.fbm(p, freq=90.0, octaves=2)
-        big = n.fbm(p, freq=8.0, octaves=3)
-        c = base * (0.86 + 0.18 * big)[:, None] * (0.94 + 0.10 * weave)[:, None]
-        # edge wear: upward faces catch the light, downward faces hold dirt
-        c = paint.mix(c, np.full((len(p), 3), 0.62), 0.22 * np.clip(-nrm[:, 2], 0, 1))
+        # two scales of weave: the thread and the bolt it was cut from
+        thread = n.fbm(p, freq=190.0 if not leather else 120.0, octaves=2)
+        cloth = n.fbm(p, freq=26.0, octaves=3)
+        bolt = n.fbm(p, freq=6.0, octaves=2)
+        c = base * (0.88 + 0.16 * bolt)[:, None] * (0.93 + 0.12 * cloth)[:, None] \
+            * (0.96 + 0.07 * thread)[:, None]
+        occ = _occ(p, nrm)
+        # creases: value, not hue, so the game can tint the garment any colour it likes
+        c = c * (0.62 + 0.38 * occ)[:, None]
+        # dust settles on what faces up; the underside of a hem stays dark
+        up = np.clip(nrm[:, 2], 0, 1)
+        c = paint.mix(c, np.full((len(p), 3), 0.90), 0.10 * up * (0.4 + 0.6 * occ))
+        c = paint.mix(c, np.full((len(p), 3), 0.58), 0.20 * np.clip(-nrm[:, 2], 0, 1))
+        # wear: the proud parts rub pale, and unevenly, so it does not look sprayed on
+        proud = paint.exposure(occ, 3.0) * (0.55 + 0.45 * n.fbm(p, freq=13.0, octaves=2))
+        c = paint.mix(c, np.full((len(p), 3), 0.97 if not leather else 0.88), 0.26 * proud)
         return np.clip(c, 0, 1)
 
     def orm(p, nrm):
-        r = defaults["roughness"] + 0.08 * (n.fbm(p, freq=40.0, octaves=2) - 0.5)
-        o = 1.0 - 0.22 * np.clip(-nrm[:, 2], 0, 1)
+        occ = _occ(p, nrm)
+        r = defaults["roughness"] + 0.10 * (n.fbm(p, freq=44.0, octaves=2) - 0.5)
+        # worn patches are smoother than the cloth around them; creases are rougher
+        r = r - 0.14 * paint.exposure(occ, 3.0) + 0.06 * (1.0 - occ)
+        o = np.clip(occ, 0, 1) * (1.0 - 0.16 * np.clip(-nrm[:, 2], 0, 1))
         m = np.full(len(p), float(defaults["metallic"]))
         return np.stack([np.clip(o, 0, 1), np.clip(r, 0.05, 1), m], axis=1)
     return albedo, orm
@@ -476,19 +517,23 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
     else:
         bodylib.transfer_weights(ob, bW[0], bW[1], arm)
     out_dir = part_dir(kind, g.name)
-    tex = 256
+    tex = 256 if g.material in ("hair", "horn", "glow") else 384
     maps = paint.surface_maps(ob, size=tex, pad=3)
+    occ_map = np.ones((tex, tex))
     if g.material == "hair":
         fn = paint.hair_paint("brown", seed=seed)
         alb = paint.paint(maps, fn, background=(0.35, 0.25, 0.18))
         rough = np.full((tex, tex), 0.52)
     else:
-        a_fn, o_fn = _garment_material(g, out_dir, g.name, seed)
+        a_fn, o_fn = _garment_material(g, out_dir, g.name, seed, scene=g.scene)
         alb = paint.paint(maps, a_fn, background=(0.8, 0.8, 0.8))
         orm3 = paint.paint(maps, o_fn, background=(1.0, 0.8, 0.0))
         rough = orm3[..., 1]
+        occ_map = orm3[..., 0]
     defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
-    occ = np.ones((tex, tex))
+    # the occlusion channel used to be discarded here for a flat white, which threw away
+    # every crease the material had just worked out
+    occ = occ_map if g.material != "hair" else np.ones((tex, tex))
     met = np.full((tex, tex), float(defaults["metallic"]))
     a_path = paint.save_png(alb, os.path.join(out_dir, "%s_albedo.png" % g.name))
     o_path = paint.save_png(paint.orm_image(occ, rough, met), os.path.join(out_dir, "%s_orm.png" % g.name))
@@ -500,9 +545,10 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
 
 
 def _slot_hint(name: str) -> str:
-    if name in ("tunic", "shirt", "dress", "robe", "gambeson", "plate_torso", "brigandine", "apron"):
+    if name in ("tunic", "shirt", "dress", "robe", "gambeson", "plate_torso", "brigandine", "apron",
+                "coat", "wrap_torso"):
         return "torso"
-    if name in ("trousers", "skirt"):
+    if name in ("trousers", "skirt", "wrap_skirt", "kilt", "leg_wraps"):
         return "legs"
     if name in ("boots", "shoes", "greaves"):
         return "feet"
@@ -510,7 +556,7 @@ def _slot_hint(name: str) -> str:
         return "hands"
     if name in ("belt",):
         return "belt"
-    if name in ("cloak", "hooded_cloak"):
+    if name in ("cloak", "hooded_cloak", "ragged_cloak", "plaid", "shoulder_cape"):
         return "back"
     if name in ("helm", "hood", "pauldrons"):
         return "headgear" if name in ("helm", "hood") else "torso"
@@ -537,7 +583,8 @@ def cmd_parts(args) -> None:
             bodylib.rigid_weights(e, "Head", arm)
         out_dir = part_dir("head", name)
         app = dict(DEFAULT_APPEARANCE)
-        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=768)
+        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=768,
+                                scene=bodylib.head_scene(skel, hs))
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
@@ -557,7 +604,8 @@ def cmd_parts(args) -> None:
         bodylib.skin_to_armature(ob, arm, skel)
         out_dir = part_dir("body", name)
         app = dict(DEFAULT_APPEARANCE)
-        a, o, nmap = paint_body(ob, skel, bodylib.HeadStyle(), out_dir, name, dict(app, face=False))
+        a, o, nmap = paint_body(ob, skel, bodylib.HeadStyle(), out_dir, name, dict(app, face=False),
+                                scene=bodylib.body_scene(skel, style))
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.65))
         export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
                     extra={"slot_hint": "body"})
@@ -626,18 +674,19 @@ def cmd_presets(args) -> None:
          "belt": "belt", "back": "cloak"},
         skin="wheat", hair_colour="brown", eye_colour="hazel", build=0.45, age=0.30)
     add("player_reedborn", "reedfolk",
-        {"head": "narrow", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"},
+        {"head": "narrow", "hair": "long", "torso": "wrap_torso", "legs": "wrap_skirt",
+         "feet": "shoes", "belt": "belt"},
         skin="olive", hair_colour="black", eye_colour="dark_brown", build=0.36, age=0.26)
     add("player_cragborn", "clans",
-        {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "gambeson", "legs": "trousers",
-         "feet": "boots", "belt": "belt"},
+        {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "gambeson", "legs": "kilt",
+         "feet": "boots", "belt": "belt", "back": "plaid"},
         skin="fair", hair_colour="ginger", eye_colour="grey_green", build=0.70, bulk=1.10,
         shoulder_width=1.12, age=0.34)
     add("player_ashwalker", "ash_pilgrims",
         {"head": "hawk", "hair": "cropped", "torso": "robe", "feet": "boots", "back": "hooded_cloak"},
         skin="amber", hair_colour="soot", eye_colour="grey", build=0.38, age=0.44)
     add("player_lantern_clerk", "lakefolk",
-        {"head": "soft", "hair": "bun", "torso": "shirt", "legs": "trousers", "feet": "shoes",
+        {"head": "soft", "hair": "bun", "torso": "coat", "legs": "trousers", "feet": "shoes",
          "belt": "belt", "hands": "gloves"},
         skin="porcelain", hair_colour="ash_blond", eye_colour="pale_blue", build=0.40, age=0.28,
         feminine=1.0, height=1.66)
@@ -646,21 +695,26 @@ def cmd_presets(args) -> None:
     add("vale_villager", "vale",
         {"head": "round", "hair": "short", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"},
         skin="fair", hair_colour="chestnut", eye_colour="brown", build=0.55, age=0.42, freckles=0.4)
+    # Each culture gets ONE shape you could name from across a field: the Vale is belted and
+    # knee-length, Lakefolk are a straight column with square shoulders, Reedfolk are
+    # asymmetric over a long wrap, the Clans are a diagonal drape over bare knees, Woodfolk
+    # are hooded with banded legs and a torn hem.  Recolouring a tunic six times does not
+    # make six peoples (DESIGN.md §7, WORLD_BIBLE.md §3).
     add("lakefolk_clerk", "lakefolk",
-        {"head": "narrow", "hair": "hood_friendly", "torso": "shirt", "legs": "trousers", "feet": "shoes",
-         "belt": "belt", "hands": "gloves"},
+        {"head": "narrow", "hair": "bun", "torso": "coat", "legs": "trousers", "feet": "shoes",
+         "back": "shoulder_cape", "hands": "gloves"},
         skin="wheat", hair_colour="dark_brown", eye_colour="grey", build=0.40, age=0.50)
     add("reedfolk_eeler", "reedfolk",
-        {"head": "angular", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "boots",
-         "belt": "belt", "back": "cloak"},
+        {"head": "angular", "hair": "long", "torso": "wrap_torso", "legs": "wrap_skirt",
+         "feet": "shoes", "belt": "belt"},
         skin="umber", hair_colour="black", eye_colour="dark_brown", build=0.44, age=0.38)
     add("clans_herder", "clans",
-        {"head": "broad", "hair": "braid", "beard": "long_beard", "torso": "tunic", "legs": "trousers",
-         "feet": "boots", "belt": "belt", "back": "cloak"},
+        {"head": "broad", "hair": "braid", "beard": "long_beard", "torso": "shirt", "legs": "kilt",
+         "feet": "boots", "belt": "belt", "back": "plaid"},
         skin="fair", hair_colour="auburn", eye_colour="green", build=0.68, bulk=1.08, age=0.55)
     add("woodfolk_forester", "woodfolk",
-        {"head": "hawk", "hair": "tousled", "torso": "tunic", "legs": "trousers", "feet": "boots",
-         "belt": "belt", "back": "hooded_cloak"},
+        {"head": "hawk", "hair": "tousled", "torso": "shirt", "legs": "leg_wraps",
+         "feet": "boots", "belt": "belt", "back": "ragged_cloak"},
         skin="olive", hair_colour="soot", eye_colour="grey_green", build=0.42, age=0.36)
     add("ash_pilgrim", "ash_pilgrims",
         {"head": "heavy_brow", "hair": "cropped", "beard": "long_beard", "torso": "robe",
