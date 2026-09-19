@@ -135,7 +135,9 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	if err != OK:
 		_failures.append("cannot write %s: %s" % [path, error_string(err)])
 		return
-	_perf.append(_sample_perf(label, pos, waited, path))
+	var sample := _sample_perf(label, pos, waited, path)
+	_perf.append(sample)
+	_write_region_copy(img, str(sample["region"]), label)
 	Log.info("Capture", "%s: %s (%d draw calls, %.2f M primitives, %d frames waited)"
 		% [label, path.get_file(), int(_perf[-1]["draw_calls"]), float(_perf[-1]["primitives"]) / 1e6, waited])
 
@@ -163,6 +165,16 @@ func _environment() -> Environment:
 		return null
 	var env: Variant = atmos.get("env")
 	return env as Environment
+
+
+## A second copy named <region>_<label>.png, which is what tools/uniqueness_check.py reads
+## for the automated half of the region drop test (DESIGN.md §10).
+func _write_region_copy(img: Image, region_id: String, label: String) -> void:
+	if region_id.is_empty():
+		return
+	var dir := "%s/regions" % out_dir
+	DirAccess.make_dir_recursive_absolute(dir)
+	img.save_png("%s/%s_%s.png" % [dir, region_id.get_file(), label])
 
 
 ## Capture plans pin the weather so a sheet is repeatable and each region shows its own light.

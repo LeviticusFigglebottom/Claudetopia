@@ -34,7 +34,8 @@ def _font(size: int):
 
 
 def build(src: str, out: str, cols: int, width: int) -> str:
-    names = sorted(f for f in os.listdir(src) if f.lower().endswith(".png"))
+    names = sorted(f for f in os.listdir(src)
+                   if f.lower().endswith(".png") and os.path.isfile(os.path.join(src, f)))
     if not names:
         raise SystemExit("no PNGs in %s" % src)
     perf = {}
