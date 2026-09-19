@@ -27,7 +27,12 @@ func _ready() -> void:
 			failures.append("%s: failed to load" % path)
 			failed += 1
 			continue
-		var inst: TestCase = script.new()
+		var made: Variant = script.new()
+		if made == null or not (made is TestCase):
+			failures.append("%s: does not instance a TestCase (parse error?)" % path)
+			failed += 1
+			continue
+		var inst: TestCase = made
 		for m in script.get_script_method_list():
 			var name: String = m["name"]
 			if not name.begins_with("test_"):

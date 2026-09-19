@@ -17,7 +17,13 @@
       0,
       2
     ],
-    "lore": "The un-ended people of Greyfold. Weak, many, easily staggered. They still wave."
+    "lore": "The un-ended people of Greyfold. Weak, many, easily staggered. They still wave.",
+    "tags": [
+      "humanoid",
+      "swarm",
+      "undead"
+    ],
+    "region": "core:region/cinderlea"
   },
   {
     "id": "core:boss/she_who_waits",

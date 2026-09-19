@@ -260,7 +260,7 @@ class FakePlayer extends RefCounted:
 		return int(skills.get(skill_id, 0))
 
 
-class Bounty extends RefCounted:
+class FakeBounty extends RefCounted:
 	var bounties: Dictionary = {}
 
 	func bounty_for(faction_id: String) -> int:
@@ -339,7 +339,7 @@ static func context(rng_seed: int = 12345) -> SocialContext:
 	ctx.set_provider("gossip", Gossip.new())
 	ctx.set_provider("inventory", FakeInventory.new())
 	ctx.set_provider("player", FakePlayer.new())
-	ctx.set_provider("bounty", Bounty.new())
+	ctx.set_provider("bounty", FakeBounty.new())
 	ctx.set_provider("recipes", Recipes.new())
 	ctx.set_provider("clock", Clock.new())
 	ctx.set_provider("content", ContentDB)

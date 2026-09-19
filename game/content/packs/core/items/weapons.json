@@ -433,7 +433,7 @@
     },
     "ranged": {
       "draw_time": 1.2,
-      "ammo": "core:item/iron_arrow"
+      "ammo_item": "core:item/iron_arrow"
     },
     "description": "A short bow laminated with giant-bone and backed with sinew. Skerrow's chain-bridge guards can put an arrow through a raider at three hundred paces in a crosswind."
   },
@@ -492,7 +492,7 @@
     "ranged": {
       "draw_time": 0.0,
       "reload_time": 2.2,
-      "ammo": "core:item/crossbow_bolt"
+      "ammo_item": "core:item/crossbow_bolt"
     },
     "description": "Guild-made, with a brass tally-plate let into the stock. The Tallymen's paid watch carries these; it is law you can hear being cocked."
   },
@@ -523,7 +523,7 @@
     },
     "ranged": {
       "draw_time": 0.9,
-      "ammo": "core:item/iron_arrow"
+      "ammo_item": "core:item/iron_arrow"
     },
     "description": "Briarwold yew, backed with sinew and waxed against the wet. The Woodfolk have no law and no jail; they have this, and a custom about where they aim first."
   },

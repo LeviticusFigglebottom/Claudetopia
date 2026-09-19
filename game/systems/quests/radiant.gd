@@ -381,7 +381,9 @@ func _enemies_for(region_id: String, traits: Array) -> Array[String]:
 			if archetype == str(t) or tags.has(str(t)):
 				narrowed.append(id)
 				break
-	return narrowed if not narrowed.is_empty() else in_region
+	# A template that asks for traits nothing in this region has must be skipped, not
+	# filled with whatever else lives here: that is how a wanted notice names a wolf.
+	return narrowed
 
 
 func _places_for(region_id: String, spec: Dictionary, board: String) -> Array[String]:

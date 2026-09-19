@@ -486,10 +486,10 @@ func test_kill_targets_come_from_the_regions_ecology() -> void:
 					assert_eq(str(def.get("region", "")), HEARTHVALE, "%s is not native here" % target)
 					if str(job["kind"]) == "bounty":
 						seen_bounty = true
-						assert_true((def["tags"] as Array).has("bandit"), "bounties are for people")
+						assert_true((def.get("tags", []) as Array).has("bandit"), "bounty target %s is not tagged bandit" % target)
 					if str(job["kind"]) == "hunt":
 						seen_hunt = true
-						assert_true((def["tags"] as Array).has("beast"), "hunts are for beasts")
+						assert_true((def.get("tags", []) as Array).has("beast"), "hunt target %s is not tagged beast" % target)
 	assert_true(seen_bounty and seen_hunt, "both kill templates were exercised")
 
 

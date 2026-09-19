@@ -13,7 +13,7 @@ var standing: SocialFakes.Standing
 var gossip: SocialFakes.Gossip
 var inventory: SocialFakes.FakeInventory
 var player: SocialFakes.FakePlayer
-var bounty: SocialFakes.Bounty
+var bounty: SocialFakes.FakeBounty
 var clock: SocialFakes.Clock
 
 

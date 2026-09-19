@@ -13,6 +13,29 @@ const SHAFT_SHADER := preload("res://assets/shaders/light_shaft.gdshader")
 const HEARTHSTONE := preload("res://systems/hearth/hearthstone.tscn")
 const DOOR := preload("res://systems/interiors/door.tscn")
 
+## Surface parameters per formation: what cut the rock decides how the rock reads.
+const ROCK_BY_FORMATION := {
+	"water": {"bed_scale": 0.14, "bed_strength": 0.30, "block_scale": 0.34, "block_strength": 0.40,
+			  "grain_scale": 6.0, "grain_strength": 0.22, "bump_strength": 0.75, "roughness_base": 0.82,
+			  "occlusion": 0.70, "brightness": 1.10, "vein_amount": 0.14},
+	"mining": {"bed_scale": 0.10, "bed_strength": 0.22, "block_scale": 0.55, "block_strength": 0.80,
+			   "grain_scale": 9.0, "grain_strength": 0.30, "bump_strength": 0.85, "roughness_base": 0.93,
+			   "occlusion": 0.72, "brightness": 1.05, "vein_amount": 0.26},
+	"creature": {"bed_scale": 0.07, "bed_strength": 0.10, "block_scale": 0.28, "block_strength": 0.55,
+				 "grain_scale": 5.0, "grain_strength": 0.34, "bump_strength": 1.05, "roughness_base": 0.88,
+				 "occlusion": 0.78, "brightness": 1.00, "vein_amount": 0.08},
+	"crypt": {"bed_scale": 0.22, "bed_strength": 0.45, "block_scale": 0.46, "block_strength": 0.70,
+			  "grain_scale": 7.5, "grain_strength": 0.26, "bump_strength": 0.90, "roughness_base": 0.90,
+			  "occlusion": 0.74, "brightness": 1.12, "vein_amount": 0.20},
+	# Oroth: cut whole, no joints anywhere, courses you could lie down on.
+	"builder": {"bed_scale": 0.045, "bed_strength": 0.55, "block_scale": 0.085, "block_strength": 1.05,
+				"grain_scale": 3.0, "grain_strength": 0.10, "bump_strength": 1.25, "roughness_base": 0.62,
+				"occlusion": 0.60, "brightness": 1.22, "vein_amount": 0.05},
+	"ice": {"bed_scale": 0.09, "bed_strength": 0.38, "block_scale": 0.30, "block_strength": 0.30,
+			"grain_scale": 4.5, "grain_strength": 0.14, "bump_strength": 0.60, "roughness_base": 0.22,
+			"occlusion": 0.45, "brightness": 1.45, "vein_amount": 0.10},
+}
+
 @export_file("*.json") var meta_path := ""
 @export var build_on_ready := true
 @export var spawn_encounters := true
@@ -68,19 +91,11 @@ func _build_shell(dir: String, slug: String) -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = ROCK_SHADER
 	var palette: Array = meta.get("palette", [])
-	mat.set_shader_parameter("bed_scale", 0.12)
-	mat.set_shader_parameter("bed_strength", 0.16)
-	mat.set_shader_parameter("block_scale", 0.40)
-	mat.set_shader_parameter("block_strength", 0.45)
-	mat.set_shader_parameter("bump_strength", 0.7)
-	mat.set_shader_parameter("roughness_base", 0.86)
-	mat.set_shader_parameter("occlusion", 0.72)
-	mat.set_shader_parameter("grain_strength", 0.2)
-	mat.set_shader_parameter("grain_scale", 7.0)
-	mat.set_shader_parameter("brightness", 1.0)
-	mat.set_shader_parameter("vein_amount", 0.16)
-	if palette.size() > 4:
-		mat.set_shader_parameter("vein_color", Color.html(str(palette[4])))
+	# Each formation gets its own surface. Oroth work is vast regular ashlar; a mined
+	# adit is blocky and dusty; a water cave is rounded; ice is smooth and bright.
+	var tuned: Dictionary = ROCK_BY_FORMATION.get(str(meta.get("formed_by", "water")), ROCK_BY_FORMATION["water"])
+	for key in tuned:
+		mat.set_shader_parameter(key, tuned[key])
 	var lowest := _lowest_floor()
 	var wet := lowest
 	for w in meta.get("water", []):

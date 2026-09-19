@@ -6,10 +6,37 @@
     "description": "A notice with a price on it. Job boards in settled places carry these.",
     "template": {
       "kind": "bounty",
-      "board_kinds": ["city", "town", "village", "fort", "camp"],
-      "targets": {"quarry": {"pool": "enemy", "traits": ["humanoid", "bandit", "raider", "outlaw"]}},
-      "count": [3, 6],
-      "reward": {"base_marks": 40, "marks_per_danger": 22, "marks_per_count": 6, "renown": 3, "rep_with_board_faction": 2},
+      "board_kinds": [
+        "city",
+        "town",
+        "village",
+        "fort",
+        "camp"
+      ],
+      "targets": {
+        "quarry": {
+          "pool": "enemy",
+          "traits": [
+            "bandit",
+            "raider",
+            "outlaw",
+            "smuggler",
+            "poacher",
+            "brigand"
+          ]
+        }
+      },
+      "count": [
+        3,
+        6
+      ],
+      "reward": {
+        "base_marks": 40,
+        "marks_per_danger": 22,
+        "marks_per_count": 6,
+        "renown": 3,
+        "rep_with_board_faction": 2
+      },
       "names": [
         "Bounty: the {quarry} on the {region} road",
         "Wanted, and the Wardens are busy: {quarry}",
@@ -34,12 +61,37 @@
       "hand_in_text": "Tell them at {place} that it is done"
     },
     "stages": [
-      {"id": "hunt", "journal": "{journal}", "objectives": [{"type": "kill", "target": "{quarry}", "count": "{count}", "text": "{objective_text}", "region": "{region}"}]},
-      {"id": "collect_pay", "journal": "It is done. {place} owes {marks} marks and a drink.", "objectives": [{"type": "reach", "target": "{place}", "text": "{hand_in_text}", "radius": 90}]}
+      {
+        "id": "hunt",
+        "journal": "{journal}",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "{quarry}",
+            "count": "{count}",
+            "text": "{objective_text}",
+            "region": "{region}"
+          }
+        ]
+      },
+      {
+        "id": "collect_pay",
+        "journal": "It is done. {place} owes {marks} marks and a drink.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "{place}",
+            "text": "{hand_in_text}",
+            "radius": 90
+          }
+        ]
+      }
     ],
-    "rewards": {"marks": 0, "renown": 0}
+    "rewards": {
+      "marks": 0,
+      "renown": 0
+    }
   },
-
   {
     "id": "core:quest/radiant_hunt",
     "name": "Hunt",
@@ -47,10 +99,37 @@
     "description": "Beasts, not people. Hunters' lodges and market towns post these.",
     "template": {
       "kind": "hunt",
-      "board_kinds": ["city", "town", "village", "hamlet", "lodge", "camp"],
-      "targets": {"beast": {"pool": "enemy", "traits": ["beast", "animal", "pack", "charger", "vermin"]}},
-      "count": [4, 8],
-      "reward": {"base_marks": 30, "marks_per_danger": 18, "marks_per_count": 4, "renown": 2, "rep_with_board_faction": 1},
+      "board_kinds": [
+        "city",
+        "town",
+        "village",
+        "hamlet",
+        "lodge",
+        "camp"
+      ],
+      "targets": {
+        "beast": {
+          "pool": "enemy",
+          "traits": [
+            "beast",
+            "animal",
+            "pack",
+            "charger",
+            "vermin"
+          ]
+        }
+      },
+      "count": [
+        4,
+        8
+      ],
+      "reward": {
+        "base_marks": 30,
+        "marks_per_danger": 18,
+        "marks_per_count": 4,
+        "renown": 2,
+        "rep_with_board_faction": 1
+      },
       "names": [
         "The {beast} are at it again",
         "Thinning: {beast}",
@@ -68,16 +147,44 @@
         "{beast} have got above themselves around {place}. {count} of them, and the price rises the fewer are left.",
         "A hunt, plain and unsung: {count} {beast} in {region}, paid out at {place}."
       ],
-      "objective_text": ["Thin the {beast} in {region} ({count})", "Hunt {count} {beast}"],
+      "objective_text": [
+        "Thin the {beast} in {region} ({count})",
+        "Hunt {count} {beast}"
+      ],
       "hand_in_text": "Collect the price at {place}"
     },
     "stages": [
-      {"id": "hunt", "journal": "{journal}", "objectives": [{"type": "kill", "target": "{beast}", "count": "{count}", "text": "{objective_text}", "region": "{region}"}]},
-      {"id": "collect_pay", "journal": "Counted and done. {place} pays {marks}.", "objectives": [{"type": "reach", "target": "{place}", "text": "{hand_in_text}", "radius": 90}]}
+      {
+        "id": "hunt",
+        "journal": "{journal}",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "{beast}",
+            "count": "{count}",
+            "text": "{objective_text}",
+            "region": "{region}"
+          }
+        ]
+      },
+      {
+        "id": "collect_pay",
+        "journal": "Counted and done. {place} pays {marks}.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "{place}",
+            "text": "{hand_in_text}",
+            "radius": 90
+          }
+        ]
+      }
     ],
-    "rewards": {"marks": 0, "renown": 0}
+    "rewards": {
+      "marks": 0,
+      "renown": 0
+    }
   },
-
   {
     "id": "core:quest/radiant_deliver",
     "name": "Delivery",
@@ -85,13 +192,55 @@
     "description": "Something goes from here to there, and the road is the difficulty.",
     "template": {
       "kind": "deliver",
-      "board_kinds": ["city", "town", "village", "hamlet", "camp", "lodge", "fort"],
+      "board_kinds": [
+        "city",
+        "town",
+        "village",
+        "hamlet",
+        "camp",
+        "lodge",
+        "fort"
+      ],
       "targets": {
-        "goods": {"pool": "item", "tags": ["trade", "food", "craft", "letter"], "fallback_categories": ["consumable", "material", "misc"]},
-        "destination": {"pool": "place", "kinds": ["city", "town", "village", "hamlet", "lodge", "fort", "camp"], "not_board": true}
+        "goods": {
+          "pool": "item",
+          "tags": [
+            "trade",
+            "food",
+            "craft",
+            "letter"
+          ],
+          "fallback_categories": [
+            "consumable",
+            "material",
+            "misc"
+          ]
+        },
+        "destination": {
+          "pool": "place",
+          "kinds": [
+            "city",
+            "town",
+            "village",
+            "hamlet",
+            "lodge",
+            "fort",
+            "camp"
+          ],
+          "not_board": true
+        }
       },
-      "count": [1, 1],
-      "reward": {"base_marks": 25, "marks_per_danger": 12, "marks_per_distance_km": 14, "renown": 1, "rep_with_board_faction": 1},
+      "count": [
+        1,
+        1
+      ],
+      "reward": {
+        "base_marks": 25,
+        "marks_per_danger": 12,
+        "marks_per_distance_km": 14,
+        "renown": 1,
+        "rep_with_board_faction": 1
+      },
       "names": [
         "Carry {goods} to {destination}",
         "{destination} is waiting on {goods}",
@@ -109,17 +258,52 @@
         "A package of {goods} for {destination}. {place} says it is not heavy. {place} is not carrying it.",
         "Simple enough: {goods} from {place} to {destination}, {marks} marks on arrival, weather and wolves permitting."
       ],
-      "objective_text": ["Carry {goods} to {destination}"],
+      "objective_text": [
+        "Carry {goods} to {destination}"
+      ],
       "hand_in_text": "Deliver to {destination}"
     },
     "stages": [
-      {"id": "carry", "journal": "{journal}", "on_enter": [{"give_item": ["{goods}", 1]}],
-       "objectives": [{"type": "reach", "target": "{destination}", "text": "{objective_text}", "radius": 90}]},
-      {"id": "handed_over", "auto": true, "journal": "Handed over at {destination}, knot intact.", "on_enter": [{"take_item": ["{goods}", 1]}], "objectives": []}
+      {
+        "id": "carry",
+        "journal": "{journal}",
+        "on_enter": [
+          {
+            "give_item": [
+              "{goods}",
+              1
+            ]
+          }
+        ],
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "{destination}",
+            "text": "{objective_text}",
+            "radius": 90
+          }
+        ]
+      },
+      {
+        "id": "handed_over",
+        "auto": true,
+        "journal": "Handed over at {destination}, knot intact.",
+        "on_enter": [
+          {
+            "take_item": [
+              "{goods}",
+              1
+            ]
+          }
+        ],
+        "objectives": []
+      }
     ],
-    "rewards": {"marks": 0, "renown": 0}
+    "rewards": {
+      "marks": 0,
+      "renown": 0
+    }
   },
-
   {
     "id": "core:quest/radiant_clear",
     "name": "Clearing",
@@ -127,13 +311,46 @@
     "description": "A place has gone wrong and somebody would like it to stop.",
     "template": {
       "kind": "clear",
-      "board_kinds": ["city", "town", "village", "hamlet", "fort", "camp", "lodge"],
+      "board_kinds": [
+        "city",
+        "town",
+        "village",
+        "hamlet",
+        "fort",
+        "camp",
+        "lodge"
+      ],
       "targets": {
-        "den": {"pool": "place", "kinds": ["deep_place", "interior_dungeon", "ruin_village"], "same_region": true},
-        "vermin": {"pool": "enemy", "traits": ["swarm", "pack", "vermin", "brute"]}
+        "den": {
+          "pool": "place",
+          "kinds": [
+            "deep_place",
+            "interior_dungeon",
+            "ruin_village"
+          ],
+          "same_region": true
+        },
+        "vermin": {
+          "pool": "enemy",
+          "traits": [
+            "swarm",
+            "pack",
+            "vermin",
+            "brute"
+          ]
+        }
       },
-      "count": [5, 9],
-      "reward": {"base_marks": 55, "marks_per_danger": 30, "marks_per_count": 5, "renown": 6, "rep_with_board_faction": 3},
+      "count": [
+        5,
+        9
+      ],
+      "reward": {
+        "base_marks": 55,
+        "marks_per_danger": 30,
+        "marks_per_count": 5,
+        "renown": 6,
+        "rep_with_board_faction": 3
+      },
       "names": [
         "Clear {den}",
         "{den} needs emptying",
@@ -151,18 +368,55 @@
         "{den} has {vermin} in it and {place} has a board with my name going on it. {count} of them should do it.",
         "Work at {den}: clear out {count} {vermin}. {place} pays {marks} and does not want the details."
       ],
-      "objective_text": ["Clear {count} {vermin} out of {den}"],
+      "objective_text": [
+        "Clear {count} {vermin} out of {den}"
+      ],
       "hand_in_text": "Report at {place}"
     },
     "stages": [
-      {"id": "go", "journal": "{journal}", "objectives": [{"type": "reach", "target": "{den}", "text": "Find {den}", "radius": 120}]},
-      {"id": "clear", "journal": "Inside {den}. It is as quiet as they said, which is the complaint.",
-       "objectives": [{"type": "kill", "target": "{vermin}", "count": "{count}", "text": "{objective_text}", "region": "{region}"}]},
-      {"id": "report", "journal": "{den} is ordinary again. {place} owes {marks}.", "objectives": [{"type": "reach", "target": "{place}", "text": "{hand_in_text}", "radius": 90}]}
+      {
+        "id": "go",
+        "journal": "{journal}",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "{den}",
+            "text": "Find {den}",
+            "radius": 120
+          }
+        ]
+      },
+      {
+        "id": "clear",
+        "journal": "Inside {den}. It is as quiet as they said, which is the complaint.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "{vermin}",
+            "count": "{count}",
+            "text": "{objective_text}",
+            "region": "{region}"
+          }
+        ]
+      },
+      {
+        "id": "report",
+        "journal": "{den} is ordinary again. {place} owes {marks}.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "{place}",
+            "text": "{hand_in_text}",
+            "radius": 90
+          }
+        ]
+      }
     ],
-    "rewards": {"marks": 0, "renown": 0}
+    "rewards": {
+      "marks": 0,
+      "renown": 0
+    }
   },
-
   {
     "id": "core:quest/radiant_escort",
     "name": "Escort",
@@ -170,13 +424,47 @@
     "description": "Somebody has to go somewhere and would rather not go alone.",
     "template": {
       "kind": "escort",
-      "board_kinds": ["city", "town", "village", "hamlet", "camp", "fort", "lodge"],
+      "board_kinds": [
+        "city",
+        "town",
+        "village",
+        "hamlet",
+        "camp",
+        "fort",
+        "lodge"
+      ],
       "targets": {
-        "traveller": {"pool": "npc", "same_region": true},
-        "destination": {"pool": "place", "kinds": ["city", "town", "village", "hamlet", "lodge", "fort", "camp", "landmark"], "not_board": true}
+        "traveller": {
+          "pool": "npc",
+          "same_region": true
+        },
+        "destination": {
+          "pool": "place",
+          "kinds": [
+            "city",
+            "town",
+            "village",
+            "hamlet",
+            "lodge",
+            "fort",
+            "camp",
+            "landmark"
+          ],
+          "not_board": true
+        }
       },
-      "count": [1, 1],
-      "reward": {"base_marks": 45, "marks_per_danger": 25, "marks_per_distance_km": 18, "renown": 4, "rep_with_board_faction": 2, "morality": 1},
+      "count": [
+        1,
+        1
+      ],
+      "reward": {
+        "base_marks": 45,
+        "marks_per_danger": 25,
+        "marks_per_distance_km": 18,
+        "renown": 4,
+        "rep_with_board_faction": 2,
+        "morality": 1
+      },
       "names": [
         "Walk {traveller} to {destination}",
         "{traveller} will not go alone",
@@ -194,18 +482,47 @@
         "An escort out of {place}: {traveller}, bound for {destination}, across as much of {region} as lies between.",
         "{traveller} has waited three days at {place} for company to {destination}. I am the company."
       ],
-      "objective_text": ["See {traveller} to {destination}"],
+      "objective_text": [
+        "See {traveller} to {destination}"
+      ],
       "hand_in_text": "Arrive at {destination} with {traveller}"
     },
     "stages": [
-      {"id": "set_out", "journal": "{journal}", "objectives": [{"type": "talk", "target": "{traveller}", "text": "Tell {traveller} you are ready"}]},
-      {"id": "on_the_road", "journal": "On the road to {destination} with {traveller} talking.",
-       "objectives": [{"type": "escort", "target": "{traveller}", "place": "{destination}", "text": "{objective_text}"}]},
-      {"id": "arrived", "auto": true, "journal": "{traveller} is at {destination}, whole, and still talking.", "objectives": []}
+      {
+        "id": "set_out",
+        "journal": "{journal}",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "{traveller}",
+            "text": "Tell {traveller} you are ready"
+          }
+        ]
+      },
+      {
+        "id": "on_the_road",
+        "journal": "On the road to {destination} with {traveller} talking.",
+        "objectives": [
+          {
+            "type": "escort",
+            "target": "{traveller}",
+            "place": "{destination}",
+            "text": "{objective_text}"
+          }
+        ]
+      },
+      {
+        "id": "arrived",
+        "auto": true,
+        "journal": "{traveller} is at {destination}, whole, and still talking.",
+        "objectives": []
+      }
     ],
-    "rewards": {"marks": 0, "renown": 0}
+    "rewards": {
+      "marks": 0,
+      "renown": 0
+    }
   },
-
   {
     "id": "core:quest/radiant_fetch",
     "name": "Fetch",
@@ -213,13 +530,52 @@
     "description": "Something is out there and somebody wants it in here.",
     "template": {
       "kind": "fetch",
-      "board_kinds": ["city", "town", "village", "hamlet", "camp", "fort", "lodge"],
+      "board_kinds": [
+        "city",
+        "town",
+        "village",
+        "hamlet",
+        "camp",
+        "fort",
+        "lodge"
+      ],
       "targets": {
-        "goods": {"pool": "item", "tags": ["ingredient", "herb", "ore", "material", "craft"], "fallback_categories": ["ingredient", "material"]},
-        "ground": {"pool": "poi", "same_region": true, "fallback_pool": "place", "fallback_kinds": ["poi", "landmark", "deep_place"]}
+        "goods": {
+          "pool": "item",
+          "tags": [
+            "ingredient",
+            "herb",
+            "ore",
+            "material",
+            "craft"
+          ],
+          "fallback_categories": [
+            "ingredient",
+            "material"
+          ]
+        },
+        "ground": {
+          "pool": "poi",
+          "same_region": true,
+          "fallback_pool": "place",
+          "fallback_kinds": [
+            "poi",
+            "landmark",
+            "deep_place"
+          ]
+        }
       },
-      "count": [3, 8],
-      "reward": {"base_marks": 22, "marks_per_danger": 14, "marks_per_count": 5, "renown": 1, "rep_with_board_faction": 1},
+      "count": [
+        3,
+        8
+      ],
+      "reward": {
+        "base_marks": 22,
+        "marks_per_danger": 14,
+        "marks_per_count": 5,
+        "renown": 1,
+        "rep_with_board_faction": 1
+      },
       "names": [
         "Wanted: {goods}",
         "{count} of {goods}, paid on the nail",
@@ -237,18 +593,47 @@
         "A gathering job: {count} {goods} from around {ground} in {region}, paid at {place}.",
         "Somebody at {place} needs {goods} and needs it enough to pay {marks} for {count} of them."
       ],
-      "objective_text": ["Gather {count} {goods}"],
+      "objective_text": [
+        "Gather {count} {goods}"
+      ],
       "hand_in_text": "Bring it all back to {place}"
     },
     "stages": [
-      {"id": "gather", "journal": "{journal}",
-       "objectives": [
-         {"type": "collect", "target": "{goods}", "count": "{count}", "text": "{objective_text}"},
-         {"type": "reach", "target": "{ground}", "text": "Look around {ground}", "radius": 150, "optional": true}
-       ]},
-      {"id": "hand_in", "journal": "Gathered. {place} pays {marks} and will still say they are small.",
-       "objectives": [{"type": "reach", "target": "{place}", "text": "{hand_in_text}", "radius": 90}]}
+      {
+        "id": "gather",
+        "journal": "{journal}",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "{goods}",
+            "count": "{count}",
+            "text": "{objective_text}"
+          },
+          {
+            "type": "reach",
+            "target": "{ground}",
+            "text": "Look around {ground}",
+            "radius": 150,
+            "optional": true
+          }
+        ]
+      },
+      {
+        "id": "hand_in",
+        "journal": "Gathered. {place} pays {marks} and will still say they are small.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "{place}",
+            "text": "{hand_in_text}",
+            "radius": 90
+          }
+        ]
+      }
     ],
-    "rewards": {"marks": 0, "renown": 0}
+    "rewards": {
+      "marks": 0,
+      "renown": 0
+    }
   }
 ]
