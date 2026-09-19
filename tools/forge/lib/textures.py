@@ -84,6 +84,27 @@ def _tile(points, pad, img_size):
     return x0, y0, x1, y1
 
 
+def _aa_mask(tw, th, shapes):
+    """A soft-edged mask: the shape is drawn several times larger and box-filtered down.
+
+    PIL has no anti-aliased polygon or ellipse fill, and a fern pinna is a dozen pixels
+    across in its atlas cell, so without this every leaflet is a visible staircase. The
+    supersample factor falls as the element grows, because the cost is quadratic and a
+    large shape's edge is already a small fraction of it.
+    """
+    big = max(tw, th)
+    ss = 4 if big <= 96 else (3 if big <= 224 else 2)
+    img = Image.new("L", (tw * ss, th * ss), 0)
+    d = ImageDraw.Draw(img)
+    for kind, pts in shapes:
+        if kind == "polygon":
+            d.polygon([(x * ss, y * ss) for (x, y) in pts], fill=255)
+        else:
+            x0, y0, x1, y1 = pts
+            d.ellipse([x0 * ss, y0 * ss, x1 * ss, y1 * ss], fill=255)
+    return img.resize((tw, th), Image.BOX)
+
+
 def _composite(rgb, alpha, hgt, box, mask_img, colour_img, height_img):
     """Paste one drawn element into the three layers, inside `box` only.
 
@@ -107,15 +128,21 @@ def _composite(rgb, alpha, hgt, box, mask_img, colour_img, height_img):
         hgt.paste(Image.fromarray(cur_h), region)
 
 
-def draw_leaf(layers, cx, cy, size, angle, color, shape="oval", rng=None, curl=0.0, vein=0.45, rim=0.35):
-    """Paint one leaf: filled silhouette, soft two-tone gradient, rim light and a midrib."""
+def draw_leaf(layers, cx, cy, size, angle, color, shape="oval", rng=None, curl=0.0, vein=0.45,
+              rim=0.35, narrow=1.0):
+    """Paint one leaf: filled silhouette, soft two-tone gradient, rim light and a midrib.
+
+    `size` is a half-length: the leaf runs 2*size along its axis and about `size` across.
+    `narrow` squeezes it across that axis without shortening it, which is how a fern pinna
+    or a willow leaf is made from the same outlines as a fat oak one.
+    """
     rgb, alpha, hgt = layers
     rng = rng or random.Random(0)
     outline = leaf_outline(shape)
     pts = []
     for (x, y) in outline:
         # gentle curl along the leaf
-        xx = x + curl * (y / 2.0) ** 2
+        xx = x * narrow + curl * (y / 2.0) ** 2
         p = _rot((xx * size, (y - 1.0) * size * 0.5), angle)
         pts.append((cx + p[0], cy - p[1]))
     blur_pad = max(2.0, size * 0.5)
@@ -126,8 +153,7 @@ def draw_leaf(layers, cx, cy, size, angle, color, shape="oval", rng=None, curl=0
     tw, th = x1 - x0, y1 - y0
     lpts = [(px - x0, py - y0) for (px, py) in pts]
 
-    lay = Image.new("L", (tw, th), 0)
-    ImageDraw.Draw(lay).polygon(lpts, fill=255)
+    lay = _aa_mask(tw, th, [("polygon", lpts)])
 
     base = _to8(color)
     dark = _to8([c * 0.62 for c in color])
@@ -293,8 +319,7 @@ def _blob(rgb, alpha, hgt, cx, cy, r, color):
     x0, y0, x1, y1 = box
     tw, th = x1 - x0, y1 - y0
     lx, ly = cx - x0, cy - y0
-    lay = Image.new("L", (tw, th), 0)
-    ImageDraw.Draw(lay).ellipse([lx - r, ly - r, lx + r, ly + r], fill=255)
+    lay = _aa_mask(tw, th, [("ellipse", (lx - r, ly - r, lx + r, ly + r))])
     base = _to8(color)
     light = _to8([min(1.0, c * 1.7) for c in color])
     grad = Image.new("RGB", (tw, th), base)
@@ -360,7 +385,10 @@ def _blade(rgb, alpha, hgt, x0, y0, h, lean_x, w, color, bend=0.5, taper=0.85, r
         left.append((x - ww, y))
         right.append((x + ww, y))
         mid.append((x, y))
-    poly = left + list(reversed(right))
+    # Blades come to a point. Holding a floor width to the last segment ended every reed
+    # in a blunt square, and a bed of squared-off strips does not read as reeds at any
+    # distance; the tip is the one part of a blade the eye checks.
+    poly = left[:-1] + [mid[-1]] + list(reversed(right[:-1]))
     box = _tile(poly, max(2.0, w * 2.0), rgb.size)
     if box is None:
         return
@@ -368,8 +396,7 @@ def _blade(rgb, alpha, hgt, x0, y0, h, lean_x, w, color, bend=0.5, taper=0.85, r
     tw, th = x1 - x0, y1 - y0
     lpoly = [(px - x0, py - y0) for (px, py) in poly]
     lmid = [(px - x0, py - y0) for (px, py) in mid]
-    lay = Image.new("L", (tw, th), 0)
-    ImageDraw.Draw(lay).polygon(lpoly, fill=255)
+    lay = _aa_mask(tw, th, [("polygon", lpoly)])
     base = _to8(color)
     dark = _to8([c * 0.55 for c in color])
     light = _to8([min(1.0, c * 1.5) for c in color])
@@ -464,15 +491,29 @@ def frond_atlas(out_dir, prefix: str, color, seed: int = 0, size: int = 512, cel
                     y = y0 - h * t
                     pts.append((x, y, t))
                 _blade(rgb, alpha, hgt, x0, y0, h, lean * h, cs * 0.008, [c * 0.8 for c in col], bend=0.6, taper=0.6, rng=rng)
-                for (x, y, t) in pts[1:]:
-                    # narrower pinnae: a frond has to read as feathered, not as a green slab
-                    ln = cs * 0.115 * math.sin(math.pi * (0.15 + 0.85 * (1 - t))) * rng.uniform(0.8, 1.15)
+                for i, (x, y, t) in enumerate(pts[1:]):
+                    # Longest pinnae low on the frond, narrowing to a point at the tip. This
+                    # ran the other way round, which gives a bottle brush: the frond grew
+                    # wider the higher it went and ended in a blunt fan.
+                    # draw_leaf's size is a half-length, so a pinna is 2*ln long and ln
+                    # wide. At the old 0.105 that was three times the rachis spacing and
+                    # the leaflets fused into one strap; they have to be able to show gaps.
+                    ln = cs * 0.075 * math.sin(math.pi * (0.15 + 0.85 * t)) * rng.uniform(0.82, 1.12)
+                    if ln < 1.5:
+                        continue
                     c2 = col if tip_color is None or t < 0.7 else _vary(rng, tip_color)
+                    # The rachis leans, so its pinnae lean with it; and they sweep forward
+                    # towards the tip rather than standing square to the stalk. Before this
+                    # one side of every frond pointed down and the other up, which is what
+                    # made a fern read as a stack of blocks instead of a feather.
+                    rach = -math.atan2(lean * 1.6 * (t ** 0.6), 1.0)
                     for sgn in (-1, 1):
-                        a = sgn * (1.1 + curl * t) - math.pi / 2 * 0 + (0 if sgn > 0 else 0)
-                        ang = (math.pi / 2 + sgn * (0.9 - 0.5 * t) * 1.0)
-                        draw_leaf((rgb, alpha, hgt), x, y, ln, ang if sgn > 0 else -ang, c2,
-                                  shape=shape, rng=rng, curl=sgn * curl * 0.4)
+                        # Pinnae alternate rather than pairing exactly, and each sits a
+                        # little along the rachis from its partner.
+                        stagger = (0.5 * sgn + rng.uniform(-0.25, 0.25)) * (h / pinnae)
+                        ang = rach + sgn * (1.15 - 0.45 * t)
+                        draw_leaf((rgb, alpha, hgt), x, y + stagger, ln, ang, c2, shape=shape,
+                                  rng=rng, curl=sgn * curl * 0.4, narrow=0.42, vein=0.25)
     _margin_bleed(rgb, alpha)
     return save_set(out_dir, prefix, rgb, alpha, hgt, roughness=roughness)
 
