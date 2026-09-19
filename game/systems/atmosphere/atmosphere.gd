@@ -51,6 +51,7 @@ const DEFAULT_LOOK := {
 
 
 func _ready() -> void:
+	add_to_group("atmosphere")
 	_forward_plus = RenderingServer.get_current_rendering_method() == "forward_plus"
 	_rng.seed = 1043
 	_build_nodes()
