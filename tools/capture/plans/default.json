@@ -17,7 +17,7 @@
    "fov": 58.0,
    "time": 9.0,
    "weather": "core:weather/clear",
-   "fog_scale": 0.3
+   "fog_scale": 1.0
   },
   {
    "label": "hearthvale_vista",
@@ -35,7 +35,7 @@
    "fov": 68.0,
    "time": 9.0,
    "weather": "core:weather/clear",
-   "fog_scale": 0.25
+   "fog_scale": 1.0
   },
   {
    "label": "hearthvale_approach",
@@ -53,7 +53,7 @@
    "fov": 55.0,
    "time": 9.0,
    "weather": "core:weather/clear",
-   "fog_scale": 0.45
+   "fog_scale": 1.0
   },
   {
    "label": "brightwater_landmark",
@@ -71,7 +71,7 @@
    "fov": 58.0,
    "time": 12.0,
    "weather": "core:weather/clear",
-   "fog_scale": 0.3
+   "fog_scale": 1.0
   },
   {
    "label": "brightwater_vista",
@@ -89,7 +89,7 @@
    "fov": 68.0,
    "time": 12.0,
    "weather": "core:weather/clear",
-   "fog_scale": 0.25
+   "fog_scale": 1.0
   },
   {
    "label": "brightwater_approach",
@@ -107,7 +107,7 @@
    "fov": 55.0,
    "time": 12.0,
    "weather": "core:weather/clear",
-   "fog_scale": 0.45
+   "fog_scale": 1.0
   },
   {
    "label": "sedgemire_landmark",
@@ -125,7 +125,7 @@
    "fov": 58.0,
    "time": 7.5,
    "weather": "core:weather/overcast",
-   "fog_scale": 0.3
+   "fog_scale": 1.0
   },
   {
    "label": "sedgemire_vista",
@@ -143,14 +143,14 @@
    "fov": 68.0,
    "time": 7.5,
    "weather": "core:weather/overcast",
-   "fog_scale": 0.25
+   "fog_scale": 1.0
   },
   {
    "label": "sedgemire_approach",
    "region": "core:region/sedgemire",
    "pos": [
     -2775.9,
-    29.4,
+    30.1,
     -901.3
    ],
    "look_at": [
@@ -161,7 +161,7 @@
    "fov": 55.0,
    "time": 7.5,
    "weather": "core:weather/overcast",
-   "fog_scale": 0.45
+   "fog_scale": 1.0
   },
   {
    "label": "briarwold_landmark",
@@ -179,7 +179,7 @@
    "fov": 58.0,
    "time": 10.5,
    "weather": "core:weather/still",
-   "fog_scale": 0.3
+   "fog_scale": 1.0
   },
   {
    "label": "briarwold_vista",
@@ -197,7 +197,7 @@
    "fov": 68.0,
    "time": 10.5,
    "weather": "core:weather/still",
-   "fog_scale": 0.25
+   "fog_scale": 1.0
   },
   {
    "label": "briarwold_approach",
@@ -215,7 +215,7 @@
    "fov": 55.0,
    "time": 10.5,
    "weather": "core:weather/still",
-   "fog_scale": 0.45
+   "fog_scale": 1.0
   },
   {
    "label": "skerrow_landmark",
@@ -233,7 +233,7 @@
    "fov": 58.0,
    "time": 14.0,
    "weather": "core:weather/clear_cold",
-   "fog_scale": 0.3
+   "fog_scale": 1.0
   },
   {
    "label": "skerrow_vista",
@@ -251,7 +251,7 @@
    "fov": 68.0,
    "time": 14.0,
    "weather": "core:weather/clear_cold",
-   "fog_scale": 0.25
+   "fog_scale": 1.0
   },
   {
    "label": "skerrow_approach",
@@ -269,7 +269,7 @@
    "fov": 55.0,
    "time": 14.0,
    "weather": "core:weather/clear_cold",
-   "fog_scale": 0.45
+   "fog_scale": 1.0
   },
   {
    "label": "cinderlea_landmark",
@@ -287,7 +287,7 @@
    "fov": 58.0,
    "time": 16.5,
    "weather": "core:weather/dry_wind",
-   "fog_scale": 0.3
+   "fog_scale": 1.0
   },
   {
    "label": "cinderlea_vista",
@@ -305,7 +305,7 @@
    "fov": 68.0,
    "time": 16.5,
    "weather": "core:weather/dry_wind",
-   "fog_scale": 0.25
+   "fog_scale": 1.0
   },
   {
    "label": "cinderlea_approach",
@@ -323,7 +323,7 @@
    "fov": 55.0,
    "time": 16.5,
    "weather": "core:weather/dry_wind",
-   "fog_scale": 0.45
+   "fog_scale": 1.0
   }
  ],
  "flythrough": {
@@ -368,6 +368,6 @@
   "look_ahead": true,
   "time": 9.5,
   "weather": "core:weather/clear",
-  "fog_scale": 0.3
+  "fog_scale": 1.0
  }
 }

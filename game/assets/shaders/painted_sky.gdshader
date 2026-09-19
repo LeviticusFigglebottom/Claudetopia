@@ -67,7 +67,15 @@ void sky() {
 	if (t >= 0.0) {
 		col = mix(horizon_color.rgb, top_color.rgb, sky_mix);
 	} else {
-		col = mix(ground_horizon_color.rgb, ground_color.rgb, clamp(-t * 4.0, 0.0, 1.0));
+		// Below the horizon the sky stands in for ground the view has not reached. It has to
+		// leave the horizon at exactly the horizon colour: stepping straight to a darker
+		// ground tone draws a dead straight band across the distance wherever the land stops
+		// short of the skyline, and that band reads as the world ending in a line rather than
+		// as ground. The darkening is kept for steep downward views, where real ground is
+		// almost always in front of it anyway.
+		float down = clamp(-t, 0.0, 1.0);
+		col = mix(horizon_color.rgb, ground_horizon_color.rgb, smoothstep(0.0, 0.10, down));
+		col = mix(col, ground_color.rgb, smoothstep(0.06, 0.45, down));
 	}
 	col = mix(col, horizon_color.rgb, haze * exp(-abs(t) * 6.0) * 0.6);
 

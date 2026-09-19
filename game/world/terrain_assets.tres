@@ -67,7 +67,7 @@ detiling_shift = 0.08
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_80r77"]
 name = "dirt_path"
 id = 2
-albedo_color = Color(0.45, 0.45, 0.45, 1)
+albedo_color = Color(0.52, 0.52, 0.52, 1)
 albedo_texture = ExtResource("5_qj8vf")
 normal_texture = ExtResource("6_y5x2p")
 normal_depth = 0.55
