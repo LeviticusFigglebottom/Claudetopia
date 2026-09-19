@@ -6,6 +6,7 @@
 #   ./run.sh shots      headless capture plan -> captures/
 #   ./run.sh world      rebuild terrain/world data from recipes
 #   ./run.sh assets     rebuild generated assets (needs Blender)
+#   ./run.sh interiors  rebuild every cave and house from its recipe
 #   ./run.sh import     (re)import the Godot project headlessly
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,8 +19,16 @@ have_display() { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; }
 xvfb() { if have_display; then "$@"; else xvfb-run -a -s "-screen 0 1600x900x24" "$@"; fi; }
 import_project() { "$GODOT" --headless --path "$GAME" --import --audio-driver Dummy >/dev/null 2>&1 || true; }
 ensure_world() {
-  if [ ! -f "$GAME/world/generated/world_manifest.json" ]; then
+  if [ ! -f "$GAME/world/generated/world_manifest.json" ] && [ -f "$ROOT/tools/world/build_world.py" ]; then
     echo "[run] world data missing; building..."; "$PY" "$ROOT/tools/world/build_world.py" && import_terrain
+  fi
+}
+ensure_interiors() {
+  if [ ! -f "$GAME/assets/models/dungeon/hollin_barrow/hollin_barrow.meta.json" ]; then
+    echo "[run] interiors missing; forging (this takes a while)..."
+    "$PY" "$ROOT/tools/interiors/cave_forge.py" "$ROOT"/tools/interiors/recipes/*.json --out "$GAME/assets/models/dungeon"
+    "$PY" "$ROOT/tools/interiors/house_forge.py" "$ROOT"/tools/interiors/recipes/houses/*.json --out "$GAME/assets/models/interior"
+    import_project
   fi
 }
 import_terrain() {
@@ -28,6 +37,7 @@ import_terrain() {
 
 case "$cmd" in
   run)
+    ensure_interiors
     ensure_world
     exec "$GODOT" --path "$GAME" "$@" ;;
   test)
@@ -36,7 +46,8 @@ case "$cmd" in
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"
-    if echo "$out" | grep -qE "^ERROR:|SCRIPT ERROR|SMOKE: FAIL"; then echo "[smoke] FAIL"; exit 1; fi
+    if echo "$out" | grep -qE "SCRIPT ERROR|SMOKE: FAIL"; then echo "[smoke] FAIL"; exit 1; fi
+    if ! echo "$out" | grep -q "SMOKE: PASS"; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
     echo "[smoke] PASS" ;;
   shots)
     import_project
@@ -47,6 +58,10 @@ case "$cmd" in
     "$PY" "$ROOT/tools/world/build_world.py" "$@" && import_terrain ;;
   assets)
     "$PY" "$ROOT/tools/forge/build_assets.py" "$@" ;;
+  interiors)
+    "$PY" "$ROOT/tools/interiors/cave_forge.py" "$ROOT"/tools/interiors/recipes/*.json --out "$GAME/assets/models/dungeon"
+    "$PY" "$ROOT/tools/interiors/house_forge.py" "$ROOT"/tools/interiors/recipes/houses/*.json --out "$GAME/assets/models/interior"
+    import_project ;;
   import)
     import_project ;;
   *)
