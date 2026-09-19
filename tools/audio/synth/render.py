@@ -272,20 +272,57 @@ def seam_discontinuity_db(x: np.ndarray, window_ms: float = 50.0) -> float:
     return float(abs(20.0 * np.log10(a / b)))
 
 
+def local_rms_step_db(x: np.ndarray, window_ms: float = 50.0, percentile: float = 90.0) -> float:
+    """How much the level normally changes from one window to the next, in dB.
+
+    This is the yardstick a musical loop's seam should be measured against: a piece that
+    strikes a bell on its downbeat swings 20 dB between windows all the way through, and its
+    wrap doing the same is not a defect. A continuous ambience bed barely moves, so the same
+    measure holds it to a much tighter standard automatically.
+    """
+    y = to_mono(np.asarray(x, dtype=np.float64))
+    w = samples(window_ms * 0.001)
+    if len(y) < 4 * w:
+        return 0.0
+    n = len(y) // w
+    blocks = y[:n * w].reshape(n, w)
+    levels = 20.0 * np.log10(np.sqrt(np.mean(np.square(blocks), axis=1)) + 1e-12)
+    steps = np.abs(np.diff(levels))
+    steps = steps[np.isfinite(steps)]
+    return float(np.percentile(steps, percentile)) if len(steps) else 0.0
+
+
+def seam_report(x: np.ndarray, window_ms: float = 50.0) -> dict:
+    """Everything worth knowing about a loop's wrap point."""
+    seam = seam_discontinuity_db(x, window_ms)
+    local = local_rms_step_db(x, window_ms)
+    return {
+        "seam_rms_db": seam,
+        "local_step_db": local,
+        "seam_click_db": seam_click_db(x),
+        # how far the wrap stands out from the piece's own movement; <= 0 means it does not
+        "excess_db": seam - local,
+    }
+
+
 def seam_click_db(x: np.ndarray) -> float:
     """How far the sample-level step at the wrap point stands out from the signal's own
     sample-to-sample motion, in dB.
 
     Comparing the step to the overall RMS would condemn every noise bed, because neighbouring
-    samples of noise already differ by about the RMS. The reference here is the median absolute
-    difference between successive samples, so 0 dB means "the wrap looks like any other sample
-    boundary" and a real click shows up as +20 dB or more.
+    samples of noise already differ by about the RMS. The reference is instead how big a step
+    this waveform takes between samples elsewhere, so 0 dB means "the wrap looks like any other
+    sample boundary" and a real click shows up as +20 dB or more.
+
+    That reference is the 95th percentile of the successive differences, not the median: a bed
+    that is mostly silence between events, or a slow sine, has a median step near zero, and
+    dividing by it reported a click on loops that were in fact continuous.
     """
     y = to_mono(np.asarray(x, dtype=np.float64))
     if len(y) < 4:
         return -120.0
     step = abs(y[0] - y[-1])
-    typical = float(np.median(np.abs(np.diff(y))))
+    typical = float(np.percentile(np.abs(np.diff(y)), 95.0))
     if typical < 1e-12:
         return -120.0 if step < 1e-9 else 120.0
     return float(20.0 * np.log10(step / typical + 1e-12))
@@ -293,19 +330,44 @@ def seam_click_db(x: np.ndarray) -> float:
 
 # --- mixdown ------------------------------------------------------------------------------------
 
+def wrap_process(x: np.ndarray, fn, pad_seconds: float = 1.0) -> np.ndarray:
+    """Run a time-varying process over a loop without breaking its seam.
+
+    A limiter or compressor builds its gain from what came before, so at the start of a file it
+    has no history and at the end it has a tail: applied to a loop, that alone puts a step at
+    the wrap. Wrapping the signal round itself first gives the process the history it would
+    have had on the loop's previous time round, and the padding is discarded afterwards.
+    """
+    k = min(samples(pad_seconds), len(x))
+    if k <= 0:
+        return fn(x)
+    padded = np.concatenate([x[-k:], x, x[:k]])
+    return fn(padded)[k:k + len(x)]
+
+
 def mixdown(x: np.ndarray, peak_db: float = -1.0, target_lufs: float | None = None,
-            limit: bool = True, hp: float | None = 24.0) -> np.ndarray:
-    """Finish a render: DC/rumble removal, optional loudness match, limiting, peak normalisation."""
+            limit: bool = True, hp: float | None = 24.0, loop: bool = False) -> np.ndarray:
+    """Finish a render: DC/rumble removal, optional loudness match, limiting, peak normalisation.
+    Pass loop=True for seamless material so the limiter runs circularly."""
     from . import filters as _f
     y = np.asarray(x, dtype=np.float64)
-    if hp:
-        y = _f.highpass(y, hp, 0.7)
+
+    def chain(s: np.ndarray) -> np.ndarray:
+        # The high-pass is as much a seam risk as the limiter: a causal IIR starts from zero
+        # state, and on bass-heavy material that start-up transient is exactly the step a loop
+        # must not have. Both run inside one wrapped pass when the material loops.
+        if hp:
+            s = _f.highpass(s, hp, 0.7)
+        if limit:
+            s = fx.limiter(s, ceiling_db=peak_db, lookahead_ms=4.0, release_ms=80.0)
+        return s
+
     if target_lufs is not None:
-        cur = loudness_lufs(y)
+        pre = _f.highpass(y, hp, 0.7) if hp else y
+        cur = loudness_lufs(pre)
         if cur > -70.0:
             y = y * db_to_lin(target_lufs - cur)
-    if limit:
-        y = fx.limiter(y, ceiling_db=peak_db, lookahead_ms=4.0, release_ms=80.0)
+    y = wrap_process(y, chain, pad_seconds=1.0) if loop else chain(y)
     p = float(np.max(np.abs(y))) if len(y) else 0.0
     if p > 1e-9:
         y = y * min(db_to_lin(peak_db) / p, 1.0) if p > db_to_lin(peak_db) else y

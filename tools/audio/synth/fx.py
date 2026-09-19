@@ -120,7 +120,9 @@ def reverb(x: np.ndarray, preset: str = "hall", mix: float = 0.25, seed: int = 7
     xs = to_stereo(x)
     if pre_lp:
         xs = filters.lowpass(xs, pre_lp)
-    wet = np.stack([signal.fftconvolve(xs[:, 0], ir[:, 0]), signal.fftconvolve(xs[:, 1], ir[:, 1])], axis=1)
+    # Overlap-add, not a single transform: a two-minute music stem against a seven-second
+    # impulse response would otherwise need one FFT over the whole thing.
+    wet = np.stack([signal.oaconvolve(xs[:, 0], ir[:, 0]), signal.oaconvolve(xs[:, 1], ir[:, 1])], axis=1)
     out_len = len(wet) if tail else len(xs)
     dry = np.zeros((out_len, 2))
     dry[:len(xs)] = to_stereo(x)

@@ -320,7 +320,8 @@ def pipes(note: float, seconds: float, amp: float = 0.3, reed: float = 0.6, dron
 
 
 def drone(note: float, seconds: float, amp: float = 0.25, rng: np.random.Generator | None = None,
-          voices: int = 3, fifth: bool = True, bite: float = 0.3) -> np.ndarray:
+          voices: int = 3, fifth: bool = True, bite: float = 0.3, attack: float = 0.35,
+          release: float = 0.8) -> np.ndarray:
     """A sustained pipe/hurdy drone: detuned pulses plus the fifth, formant-shaped, very slow
     movement. Used under Skerrow and for the Cinderlea sustained note's lower body."""
     rng = rng or np.random.default_rng(17)
@@ -337,6 +338,11 @@ def drone(note: float, seconds: float, amp: float = 0.25, rng: np.random.Generat
     out = filters.formant_bank(out, [(220, 120, 0.8), (700, 200, 0.5), (1600, 400, 0.2)]) + out * 0.4
     out = fx.saturate(out, 1.0 + bite, "tanh", 0.5)
     out = filters.lowpass(out, 3200.0, 0.7)
+    # A drone without an envelope switches on and off at full amplitude, which clicks at both
+    # ends -- and at the seam of any loop whose held note lands on the loop point.
+    hold = max(seconds - release, 0.02)
+    out *= envmod.adsr(hold, a=min(attack, seconds * 0.4), d=0.3, s=0.95,
+                       r=min(release, seconds * 0.5), curve=1.3, total=seconds)
     return filters.dc_block(out) * amp * 0.5
 
 
