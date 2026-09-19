@@ -14,7 +14,8 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))))
 
 import compose  # noqa: E402
 import gen_ambience  # noqa: E402
@@ -184,8 +185,11 @@ def test_music_renders_are_deterministic():
 
 def test_a_note_seeded_by_position_sounds_the_same_in_a_later_bar():
     """Per-note randomness must depend on where a note sits musically, not on its index, or the
-    same bar renders differently depending on what came before it."""
-    cfg = _cfg("hearthvale")
+    same bar renders differently depending on what came before it.
+
+    Rendered dry: with reverb on, the earlier note's tail reaches into the compared window and
+    the two renders differ for a reason that has nothing to do with seeding."""
+    cfg = dict(_cfg("hearthvale"), reverb_mix=0.0)
     one = compose.Score("a", 62, "lydian", 80.0, 1)
     one.stems["melody"] = [compose.Note(0.0, 1.0, 74, 0.8, "lead")]
     two = compose.Score("b", 62, "lydian", 80.0, 2)
@@ -243,9 +247,7 @@ def test_sfx_are_mono_short_and_clean():
                  "spell_cast_kindling"):
         spec = gen_sfx.CATALOGUE[name]
         rng = core.rng(core.sub_seed("sfx", name, 0))
-        y = core.to_mono(spec["fn"](rng, **spec.get("kw", {})))
-        y = render.mixdown(y, peak_db=gen_sfx.PEAK_DB, target_lufs=None, limit=False, hp=35.0)
-        y = gen_sfx._trim_silence(y)
+        y = gen_sfx.finish_variant(spec["fn"](rng, **spec.get("kw", {})))
         assert y.ndim == 1, name
         assert np.all(np.isfinite(y)), name
         assert 0.02 < len(y) / SR < 25.0, "%s is %.2f s" % (name, len(y) / SR)

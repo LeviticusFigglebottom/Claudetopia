@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://2e23rw3mh03f"
-path="res://.godot/imported/hearthstone_rest_01.ogg-395d21b7d9726ca4b69f63766488a2ae.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/hearthstone_rest/hearthstone_rest_01.ogg"
-dest_files=["res://.godot/imported/hearthstone_rest_01.ogg-395d21b7d9726ca4b69f63766488a2ae.oggvorbisstr"]
 
 [params]
 

@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://dxv3ixnlj4q0y"
-path="res://.godot/imported/thunder_near_03.ogg-4a37ef7d19b28c2cc9b1190f7eb52f57.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/thunder_near/thunder_near_03.ogg"
-dest_files=["res://.godot/imported/thunder_near_03.ogg-4a37ef7d19b28c2cc9b1190f7eb52f57.oggvorbisstr"]
 
 [params]
 

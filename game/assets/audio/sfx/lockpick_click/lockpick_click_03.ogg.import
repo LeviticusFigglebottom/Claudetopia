@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://cm7v3d42dfmia"
-path="res://.godot/imported/lockpick_click_03.ogg-165cb09bbf7ea3a2ad1e36dc35421dc4.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/lockpick_click/lockpick_click_03.ogg"
-dest_files=["res://.godot/imported/lockpick_click_03.ogg-165cb09bbf7ea3a2ad1e36dc35421dc4.oggvorbisstr"]
 
 [params]
 

@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://relb66k637vd"
-path="res://.godot/imported/wind_gust_02.ogg-6151f3926d791f2ffd0f0fcda9b66dc9.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/wind_gust/wind_gust_02.ogg"
-dest_files=["res://.godot/imported/wind_gust_02.ogg-6151f3926d791f2ffd0f0fcda9b66dc9.oggvorbisstr"]
 
 [params]
 

@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://5h2bh5df8xnn"
-path="res://.godot/imported/spell_cast_hush_01.ogg-6bc1c92d8077be61492530fb5b8856a3.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/spell_cast_hush/spell_cast_hush_01.ogg"
-dest_files=["res://.godot/imported/spell_cast_hush_01.ogg-6bc1c92d8077be61492530fb5b8856a3.oggvorbisstr"]
 
 [params]
 

@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://b8ocj6ivplu54"
-path="res://.godot/imported/ui_page_turn_01.ogg-31ac7f2c09c0246b49b4e7acdbad7276.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/ui_page_turn/ui_page_turn_01.ogg"
-dest_files=["res://.godot/imported/ui_page_turn_01.ogg-31ac7f2c09c0246b49b4e7acdbad7276.oggvorbisstr"]
 
 [params]
 

@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://ec54w58ggxt6"
-path="res://.godot/imported/mace_swing_01.ogg-fcfe3fd4354a067a6b49d5ad9367847a.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/mace_swing/mace_swing_01.ogg"
-dest_files=["res://.godot/imported/mace_swing_01.ogg-fcfe3fd4354a067a6b49d5ad9367847a.oggvorbisstr"]
 
 [params]
 

@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://5x7150g50l8q"
-path="res://.godot/imported/ui_map_unroll_03.ogg-cc062478e4bb0a59a0197c6e2f755cff.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/ui_map_unroll/ui_map_unroll_03.ogg"
-dest_files=["res://.godot/imported/ui_map_unroll_03.ogg-cc062478e4bb0a59a0197c6e2f755cff.oggvorbisstr"]
 
 [params]
 

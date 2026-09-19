@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://sdtsvsucb6fw"
-path="res://.godot/imported/ui_brass_click_03.ogg-22b5a8878b169615c6323620bf7fe136.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/ui_brass_click/ui_brass_click_03.ogg"
-dest_files=["res://.godot/imported/ui_brass_click_03.ogg-22b5a8878b169615c6323620bf7fe136.oggvorbisstr"]
 
 [params]
 

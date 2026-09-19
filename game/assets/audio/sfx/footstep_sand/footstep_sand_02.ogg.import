@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://b8w8g1bqndumk"
-path="res://.godot/imported/footstep_sand_02.ogg-52112624734e9fc6c6cfd271e227f0a9.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/footstep_sand/footstep_sand_02.ogg"
-dest_files=["res://.godot/imported/footstep_sand_02.ogg-52112624734e9fc6c6cfd271e227f0a9.oggvorbisstr"]
 
 [params]
 

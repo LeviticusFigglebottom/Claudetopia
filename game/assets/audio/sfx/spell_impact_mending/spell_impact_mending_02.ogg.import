@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://diguaa8tpl5q5"
-path="res://.godot/imported/spell_impact_mending_02.ogg-299db5ce8d1532ed55738b0ae8c8f982.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/spell_impact_mending/spell_impact_mending_02.ogg"
-dest_files=["res://.godot/imported/spell_impact_mending_02.ogg-299db5ce8d1532ed55738b0ae8c8f982.oggvorbisstr"]
 
 [params]
 

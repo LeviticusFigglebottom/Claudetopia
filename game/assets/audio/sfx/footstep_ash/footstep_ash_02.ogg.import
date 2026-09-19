@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://dwkusv50uhr4i"
-path="res://.godot/imported/footstep_ash_02.ogg-f2b6c7412ff1bb936123b4c44df9d7a0.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/footstep_ash/footstep_ash_02.ogg"
-dest_files=["res://.godot/imported/footstep_ash_02.ogg-f2b6c7412ff1bb936123b4c44df9d7a0.oggvorbisstr"]
 
 [params]
 

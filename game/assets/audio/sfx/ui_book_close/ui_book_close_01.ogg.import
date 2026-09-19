@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://dwctml0o56t0w"
-path="res://.godot/imported/ui_book_close_01.ogg-5a4c4847037a626b5bf0a0e876ec98c5.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/ui_book_close/ui_book_close_01.ogg"
-dest_files=["res://.godot/imported/ui_book_close_01.ogg-5a4c4847037a626b5bf0a0e876ec98c5.oggvorbisstr"]
 
 [params]
 

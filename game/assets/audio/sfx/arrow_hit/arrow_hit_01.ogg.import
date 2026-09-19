@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://yl0kkmblprwi"
-path="res://.godot/imported/arrow_hit_01.ogg-0e7bc0275ce4c54b359ce3807323b748.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/arrow_hit/arrow_hit_01.ogg"
-dest_files=["res://.godot/imported/arrow_hit_01.ogg-0e7bc0275ce4c54b359ce3807323b748.oggvorbisstr"]
 
 [params]
 

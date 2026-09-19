@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://bclpagcrk7r5s"
-path="res://.godot/imported/player_death_01.ogg-728588a0af706233a9ddd77b22d31386.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/player_death/player_death_01.ogg"
-dest_files=["res://.godot/imported/player_death_01.ogg-728588a0af706233a9ddd77b22d31386.oggvorbisstr"]
 
 [params]
 

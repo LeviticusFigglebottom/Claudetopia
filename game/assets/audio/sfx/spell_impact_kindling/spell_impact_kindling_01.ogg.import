@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://dxc5yb8csryxs"
-path="res://.godot/imported/spell_impact_kindling_01.ogg-6c1ca5cedcab219a125905218c1e2893.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/spell_impact_kindling/spell_impact_kindling_01.ogg"
-dest_files=["res://.godot/imported/spell_impact_kindling_01.ogg-6c1ca5cedcab219a125905218c1e2893.oggvorbisstr"]
 
 [params]
 

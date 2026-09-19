@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://7cpylgg50wjx"
-path="res://.godot/imported/coins_few_04.ogg-bc100485d32b1ff440456d5dfacf79e1.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/coins_few/coins_few_04.ogg"
-dest_files=["res://.godot/imported/coins_few_04.ogg-bc100485d32b1ff440456d5dfacf79e1.oggvorbisstr"]
 
 [params]
 

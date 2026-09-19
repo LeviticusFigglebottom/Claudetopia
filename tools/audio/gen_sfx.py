@@ -115,6 +115,21 @@ def _trim_silence(y: np.ndarray, floor_db: float = -70.0, keep: float = 0.03) ->
     return core.fade(y[:end], 0.0, min(keep, end / SR * 0.2))
 
 
+def finish_variant(y: np.ndarray) -> np.ndarray:
+    """Everything done to one rendered variant before it is written.
+
+    Kept as one function so the tests measure the same thing the files contain: rumble
+    removed, the inaudible reverb tail cut, and the peak brought to the ceiling. Note that
+    render.mixdown only pulls a peak *down*, so the normalisation afterwards is what makes
+    every effect arrive at the same height and leaves volume_db as the balance control.
+    """
+    y = core.to_mono(y)
+    y = render.mixdown(y, peak_db=PEAK_DB, target_lufs=None, limit=False, hp=35.0)
+    y = _trim_silence(y)
+    return fx.normalize_peak(y, PEAK_DB)
+
+
+
 # =================================================================================================
 # Footsteps
 # =================================================================================================
@@ -126,12 +141,12 @@ SURFACES = {
                        body_t60=0.07, grains=170, wet=0.0, dur=0.34),
     "dirt":       dict(colour="pink", band=(700, 3200), t60=0.065, body=74.0, body_gain=0.42,
                        body_t60=0.075, grains=130, wet=0.0, dur=0.32),
-    "stone":      dict(colour="white", band=(2200, 9000), t60=0.05, body=150.0, body_gain=0.26,
-                       body_t60=0.05, grains=60, wet=0.0, dur=0.40, ring=True),
+    "stone":      dict(colour="white", band=(2200, 9000), t60=0.05, body=150.0, body_gain=0.16,
+                       body_t60=0.04, grains=90, wet=0.0, dur=0.40, ring=True),
     "wood":       dict(colour="pink", band=(900, 4200), t60=0.06, body=190.0, body_gain=0.45,
                        body_t60=0.12, grains=50, wet=0.0, dur=0.38, hollow=True),
     "water":      dict(colour="white", band=(900, 6000), t60=0.14, body=120.0, body_gain=0.30,
-                       body_t60=0.08, grains=240, wet=1.0, dur=0.55),
+                       body_t60=0.08, grains=240, wet=1.0, wet_hz=2600.0, dur=0.55),
     "snow":       dict(colour="white", band=(2600, 9500), t60=0.09, body=70.0, body_gain=0.18,
                        body_t60=0.06, grains=420, wet=0.0, dur=0.38, squeak=True),
     "ash":        dict(colour="pink", band=(1600, 6500), t60=0.10, body=64.0, body_gain=0.16,
@@ -139,7 +154,7 @@ SURFACES = {
     "gravel":     dict(colour="white", band=(1800, 8000), t60=0.11, body=96.0, body_gain=0.30,
                        body_t60=0.06, grains=260, wet=0.0, dur=0.42),
     "mud":        dict(colour="brown", band=(300, 1800), t60=0.10, body=62.0, body_gain=0.50,
-                       body_t60=0.10, grains=90, wet=0.8, dur=0.48),
+                       body_t60=0.10, grains=90, wet=0.8, wet_hz=620.0, dur=0.48),
     "sand":       dict(colour="white", band=(1500, 7000), t60=0.09, body=70.0, body_gain=0.20,
                        body_t60=0.05, grains=380, wet=0.0, dur=0.36),
 }
@@ -184,12 +199,15 @@ def footstep(rng, surface: str) -> np.ndarray:
         st = samples(float(rng.uniform(0.01, 0.05)))
         out[st:st + k] += sq * 0.22
     if s["wet"] > 0:
-        # water displaced: a fizz and a small splash
+        # Water displaced. How bright that is depends on the water: a puddle throws a fizzy
+        # splash, mud makes a low squelch. Giving both the same bright band made mud read as
+        # the brighter surface of the two, which is exactly backwards.
+        wet_hz = float(s.get("wet_hz", 2600.0))
         splash = osc.white(n, rng)
         splashenv = env.segments([(0, 0), (0.008, 1.0), (0.09, 0.35), (dur, 0.0)], n)
-        splash = filters.bandpass(splash, 2600.0, 0.5) * splashenv
+        splash = filters.bandpass(splash, wet_hz, 0.5) * splashenv
         drops = osc.crackle(n, rng, 55.0, 6.0, 1.2)
-        drops = filters.bandpass(drops, 1500.0, 1.4)
+        drops = filters.bandpass(drops, wet_hz * 0.58, 1.4)
         out += (splash * 0.55 + drops * 0.35) * s["wet"]
     return _limit_tail(filters.highpass(out, 45.0), 0.03)
 
@@ -841,9 +859,7 @@ def build(only=None, force: bool = False) -> dict:
         paths, lens, lufs = [], [], []
         for i in range(spec["count"]):
             rng = core.rng(core.sub_seed("sfx", name, i))
-            y = core.to_mono(spec["fn"](rng, **spec.get("kw", {})))
-            y = render.mixdown(y, peak_db=PEAK_DB, target_lufs=None, limit=False, hp=35.0)
-            y = _trim_silence(y)
+            y = finish_variant(spec["fn"](rng, **spec.get("kw", {})))
             p = os.path.join(out_dir, "%s_%02d.ogg" % (name, i + 1))
             render.write_ogg(p, y, quality=OGG_QUALITY)
             render.write_ogg_import(p, res_path(p), loop=False)

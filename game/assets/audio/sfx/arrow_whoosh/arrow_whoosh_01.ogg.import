@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://ml3tb00eunbl"
-path="res://.godot/imported/arrow_whoosh_01.ogg-95b3dfe315a7da6f80ea6fae6e2ed174.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/arrow_whoosh/arrow_whoosh_01.ogg"
-dest_files=["res://.godot/imported/arrow_whoosh_01.ogg-95b3dfe315a7da6f80ea6fae6e2ed174.oggvorbisstr"]
 
 [params]
 

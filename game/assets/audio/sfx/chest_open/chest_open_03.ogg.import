@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://b8lpj3t0vm2cw"
-path="res://.godot/imported/chest_open_03.ogg-ed6fb452a5e589ee738cd57f505b94b7.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/chest_open/chest_open_03.ogg"
-dest_files=["res://.godot/imported/chest_open_03.ogg-ed6fb452a5e589ee738cd57f505b94b7.oggvorbisstr"]
 
 [params]
 

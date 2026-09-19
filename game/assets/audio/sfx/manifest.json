@@ -1,7 +1,7 @@
 {
   "armour_heavy": {
     "bus": "SFX",
-    "bytes": 35613,
+    "bytes": 35705,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/armour_heavy/armour_heavy_01.ogg",
@@ -9,14 +9,14 @@
       "res://assets/audio/sfx/armour_heavy/armour_heavy_03.ogg",
       "res://assets/audio/sfx/armour_heavy/armour_heavy_04.ogg"
     ],
-    "lufs": -18.41,
+    "lufs": -15.77,
     "pitch_variance": 0.07,
     "seconds": 0.485,
     "volume_db": -8.0
   },
   "armour_light": {
     "bus": "SFX",
-    "bytes": 32661,
+    "bytes": 33140,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/armour_light/armour_light_01.ogg",
@@ -24,7 +24,7 @@
       "res://assets/audio/sfx/armour_light/armour_light_03.ogg",
       "res://assets/audio/sfx/armour_light/armour_light_04.ogg"
     ],
-    "lufs": -24.02,
+    "lufs": -18.85,
     "pitch_variance": 0.08,
     "seconds": 0.475,
     "volume_db": -10.0
@@ -46,7 +46,7 @@
   },
   "arrow_whoosh": {
     "bus": "SFX",
-    "bytes": 26754,
+    "bytes": 26975,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/arrow_whoosh/arrow_whoosh_01.ogg",
@@ -54,14 +54,14 @@
       "res://assets/audio/sfx/arrow_whoosh/arrow_whoosh_03.ogg",
       "res://assets/audio/sfx/arrow_whoosh/arrow_whoosh_04.ogg"
     ],
-    "lufs": -22.89,
+    "lufs": -11.2,
     "pitch_variance": 0.09,
     "seconds": 0.38,
     "volume_db": -8.0
   },
   "axe_swing": {
     "bus": "SFX",
-    "bytes": 28758,
+    "bytes": 28865,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/axe_swing/axe_swing_01.ogg",
@@ -69,61 +69,61 @@
       "res://assets/audio/sfx/axe_swing/axe_swing_03.ogg",
       "res://assets/audio/sfx/axe_swing/axe_swing_04.ogg"
     ],
-    "lufs": -21.69,
+    "lufs": -13.96,
     "pitch_variance": 0.06,
     "seconds": 0.46,
     "volume_db": -3.0
   },
   "bell_hand": {
     "bus": "SFX",
-    "bytes": 32808,
+    "bytes": 31975,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/bell_hand/bell_hand_01.ogg",
       "res://assets/audio/sfx/bell_hand/bell_hand_02.ogg",
       "res://assets/audio/sfx/bell_hand/bell_hand_03.ogg"
     ],
-    "lufs": -28.9,
+    "lufs": -22.22,
     "pitch_variance": 0.04,
     "seconds": 1.116,
     "volume_db": -6.0
   },
   "bell_tavern": {
     "bus": "SFX",
-    "bytes": 74382,
+    "bytes": 69521,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/bell_tavern/bell_tavern_01.ogg",
       "res://assets/audio/sfx/bell_tavern/bell_tavern_02.ogg",
       "res://assets/audio/sfx/bell_tavern/bell_tavern_03.ogg"
     ],
-    "lufs": -26.58,
+    "lufs": -20.71,
     "pitch_variance": 0.03,
     "seconds": 3.369,
     "volume_db": -5.0
   },
   "bell_toll": {
     "bus": "SFX",
-    "bytes": 276558,
+    "bytes": 282217,
     "count": 2,
     "files": [
       "res://assets/audio/sfx/bell_toll/bell_toll_01.ogg",
       "res://assets/audio/sfx/bell_toll/bell_toll_02.ogg"
     ],
-    "lufs": -28.95,
+    "lufs": -17.48,
     "pitch_variance": 0.01,
     "seconds": 22.032,
     "volume_db": -1.0
   },
   "bell_tower": {
     "bus": "SFX",
-    "bytes": 136712,
+    "bytes": 125736,
     "count": 2,
     "files": [
       "res://assets/audio/sfx/bell_tower/bell_tower_01.ogg",
       "res://assets/audio/sfx/bell_tower/bell_tower_02.ogg"
     ],
-    "lufs": -27.6,
+    "lufs": -17.7,
     "pitch_variance": 0.02,
     "seconds": 9.721,
     "volume_db": -3.0
@@ -145,21 +145,21 @@
   },
   "bow_draw": {
     "bus": "SFX",
-    "bytes": 41057,
+    "bytes": 41489,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/bow_draw/bow_draw_01.ogg",
       "res://assets/audio/sfx/bow_draw/bow_draw_02.ogg",
       "res://assets/audio/sfx/bow_draw/bow_draw_03.ogg"
     ],
-    "lufs": -28.47,
+    "lufs": -17.91,
     "pitch_variance": 0.05,
     "seconds": 0.78,
     "volume_db": -8.0
   },
   "bow_release": {
     "bus": "SFX",
-    "bytes": 30278,
+    "bytes": 30326,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/bow_release/bow_release_01.ogg",
@@ -167,7 +167,7 @@
       "res://assets/audio/sfx/bow_release/bow_release_03.ogg",
       "res://assets/audio/sfx/bow_release/bow_release_04.ogg"
     ],
-    "lufs": -24.97,
+    "lufs": -22.72,
     "pitch_variance": 0.06,
     "seconds": 0.5,
     "volume_db": -4.0
@@ -187,14 +187,14 @@
   },
   "chest_open": {
     "bus": "SFX",
-    "bytes": 39333,
+    "bytes": 39615,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/chest_open/chest_open_01.ogg",
       "res://assets/audio/sfx/chest_open/chest_open_02.ogg",
       "res://assets/audio/sfx/chest_open/chest_open_03.ogg"
     ],
-    "lufs": -29.74,
+    "lufs": -28.13,
     "pitch_variance": 0.04,
     "seconds": 1.474,
     "volume_db": -6.0
@@ -272,48 +272,48 @@
   },
   "door_wood_open": {
     "bus": "SFX",
-    "bytes": 37524,
+    "bytes": 39125,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/door_wood_open/door_wood_open_01.ogg",
       "res://assets/audio/sfx/door_wood_open/door_wood_open_02.ogg",
       "res://assets/audio/sfx/door_wood_open/door_wood_open_03.ogg"
     ],
-    "lufs": -30.19,
+    "lufs": -19.04,
     "pitch_variance": 0.05,
     "seconds": 1.307,
     "volume_db": -6.0
   },
   "eat": {
     "bus": "SFX",
-    "bytes": 26221,
+    "bytes": 26280,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/eat/eat_01.ogg",
       "res://assets/audio/sfx/eat/eat_02.ogg",
       "res://assets/audio/sfx/eat/eat_03.ogg"
     ],
-    "lufs": -24.39,
+    "lufs": -22.67,
     "pitch_variance": 0.06,
     "seconds": 0.759,
     "volume_db": -8.0
   },
   "echo_recovered": {
     "bus": "UI",
-    "bytes": 53554,
+    "bytes": 51401,
     "count": 2,
     "files": [
       "res://assets/audio/sfx/echo_recovered/echo_recovered_01.ogg",
       "res://assets/audio/sfx/echo_recovered/echo_recovered_02.ogg"
     ],
-    "lufs": -22.86,
+    "lufs": -14.17,
     "pitch_variance": 0.02,
     "seconds": 3.486,
     "volume_db": -4.0
   },
   "footstep_ash": {
     "bus": "SFX",
-    "bytes": 19266,
+    "bytes": 19547,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_ash/footstep_ash_01.ogg",
@@ -321,14 +321,14 @@
       "res://assets/audio/sfx/footstep_ash/footstep_ash_03.ogg",
       "res://assets/audio/sfx/footstep_ash/footstep_ash_04.ogg"
     ],
-    "lufs": -28.33,
+    "lufs": -22.13,
     "pitch_variance": 0.08,
     "seconds": 0.158,
     "volume_db": -6.0
   },
   "footstep_dirt": {
     "bus": "SFX",
-    "bytes": 18432,
+    "bytes": 18665,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_dirt/footstep_dirt_01.ogg",
@@ -336,14 +336,14 @@
       "res://assets/audio/sfx/footstep_dirt/footstep_dirt_03.ogg",
       "res://assets/audio/sfx/footstep_dirt/footstep_dirt_04.ogg"
     ],
-    "lufs": -23.54,
+    "lufs": -18.35,
     "pitch_variance": 0.08,
     "seconds": 0.134,
     "volume_db": -6.0
   },
   "footstep_gravel": {
     "bus": "SFX",
-    "bytes": 20125,
+    "bytes": 20264,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_gravel/footstep_gravel_01.ogg",
@@ -351,14 +351,14 @@
       "res://assets/audio/sfx/footstep_gravel/footstep_gravel_03.ogg",
       "res://assets/audio/sfx/footstep_gravel/footstep_gravel_04.ogg"
     ],
-    "lufs": -26.04,
+    "lufs": -20.99,
     "pitch_variance": 0.08,
     "seconds": 0.174,
     "volume_db": -6.0
   },
   "footstep_mud": {
     "bus": "SFX",
-    "bytes": 30356,
+    "bytes": 30002,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_mud/footstep_mud_01.ogg",
@@ -366,14 +366,14 @@
       "res://assets/audio/sfx/footstep_mud/footstep_mud_03.ogg",
       "res://assets/audio/sfx/footstep_mud/footstep_mud_04.ogg"
     ],
-    "lufs": -22.1,
+    "lufs": -20.33,
     "pitch_variance": 0.08,
     "seconds": 0.48,
     "volume_db": -6.0
   },
   "footstep_sand": {
     "bus": "SFX",
-    "bytes": 18625,
+    "bytes": 18942,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_sand/footstep_sand_01.ogg",
@@ -381,14 +381,14 @@
       "res://assets/audio/sfx/footstep_sand/footstep_sand_03.ogg",
       "res://assets/audio/sfx/footstep_sand/footstep_sand_04.ogg"
     ],
-    "lufs": -27.0,
+    "lufs": -21.74,
     "pitch_variance": 0.08,
     "seconds": 0.141,
     "volume_db": -6.0
   },
   "footstep_snow": {
     "bus": "SFX",
-    "bytes": 19222,
+    "bytes": 19473,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_snow/footstep_snow_01.ogg",
@@ -396,14 +396,14 @@
       "res://assets/audio/sfx/footstep_snow/footstep_snow_03.ogg",
       "res://assets/audio/sfx/footstep_snow/footstep_snow_04.ogg"
     ],
-    "lufs": -28.34,
+    "lufs": -22.37,
     "pitch_variance": 0.08,
     "seconds": 0.153,
     "volume_db": -6.0
   },
   "footstep_stone": {
     "bus": "SFX",
-    "bytes": 18836,
+    "bytes": 19276,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_stone/footstep_stone_01.ogg",
@@ -411,14 +411,14 @@
       "res://assets/audio/sfx/footstep_stone/footstep_stone_03.ogg",
       "res://assets/audio/sfx/footstep_stone/footstep_stone_04.ogg"
     ],
-    "lufs": -26.16,
+    "lufs": -18.69,
     "pitch_variance": 0.08,
-    "seconds": 0.138,
+    "seconds": 0.146,
     "volume_db": -6.0
   },
   "footstep_vale_grass": {
     "bus": "SFX",
-    "bytes": 18687,
+    "bytes": 18948,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_vale_grass/footstep_vale_grass_01.ogg",
@@ -426,14 +426,14 @@
       "res://assets/audio/sfx/footstep_vale_grass/footstep_vale_grass_03.ogg",
       "res://assets/audio/sfx/footstep_vale_grass/footstep_vale_grass_04.ogg"
     ],
-    "lufs": -25.15,
+    "lufs": -19.57,
     "pitch_variance": 0.08,
     "seconds": 0.127,
     "volume_db": -6.0
   },
   "footstep_water": {
     "bus": "SFX",
-    "bytes": 33011,
+    "bytes": 33050,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_water/footstep_water_01.ogg",
@@ -441,14 +441,14 @@
       "res://assets/audio/sfx/footstep_water/footstep_water_03.ogg",
       "res://assets/audio/sfx/footstep_water/footstep_water_04.ogg"
     ],
-    "lufs": -23.37,
+    "lufs": -20.74,
     "pitch_variance": 0.08,
     "seconds": 0.55,
     "volume_db": -6.0
   },
   "footstep_wood": {
     "bus": "SFX",
-    "bytes": 20265,
+    "bytes": 20310,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/footstep_wood/footstep_wood_01.ogg",
@@ -456,27 +456,27 @@
       "res://assets/audio/sfx/footstep_wood/footstep_wood_03.ogg",
       "res://assets/audio/sfx/footstep_wood/footstep_wood_04.ogg"
     ],
-    "lufs": -19.86,
+    "lufs": -18.35,
     "pitch_variance": 0.08,
     "seconds": 0.193,
     "volume_db": -6.0
   },
   "hearthstone_rest": {
     "bus": "UI",
-    "bytes": 84044,
+    "bytes": 85193,
     "count": 2,
     "files": [
       "res://assets/audio/sfx/hearthstone_rest/hearthstone_rest_01.ogg",
       "res://assets/audio/sfx/hearthstone_rest/hearthstone_rest_02.ogg"
     ],
-    "lufs": -30.05,
+    "lufs": -17.85,
     "pitch_variance": 0.02,
     "seconds": 5.348,
     "volume_db": -4.0
   },
   "impact_flesh": {
     "bus": "SFX",
-    "bytes": 22463,
+    "bytes": 22459,
     "count": 5,
     "files": [
       "res://assets/audio/sfx/impact_flesh/impact_flesh_01.ogg",
@@ -485,7 +485,7 @@
       "res://assets/audio/sfx/impact_flesh/impact_flesh_04.ogg",
       "res://assets/audio/sfx/impact_flesh/impact_flesh_05.ogg"
     ],
-    "lufs": -16.32,
+    "lufs": -16.23,
     "pitch_variance": 0.08,
     "seconds": 0.149,
     "volume_db": -3.0
@@ -507,7 +507,7 @@
   },
   "impact_stone": {
     "bus": "SFX",
-    "bytes": 17742,
+    "bytes": 17771,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/impact_stone/impact_stone_01.ogg",
@@ -515,7 +515,7 @@
       "res://assets/audio/sfx/impact_stone/impact_stone_03.ogg",
       "res://assets/audio/sfx/impact_stone/impact_stone_04.ogg"
     ],
-    "lufs": -19.13,
+    "lufs": -18.22,
     "pitch_variance": 0.07,
     "seconds": 0.135,
     "volume_db": -4.0
@@ -537,21 +537,21 @@
   },
   "lockpick_break": {
     "bus": "SFX",
-    "bytes": 12665,
+    "bytes": 12677,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/lockpick_break/lockpick_break_01.ogg",
       "res://assets/audio/sfx/lockpick_break/lockpick_break_02.ogg",
       "res://assets/audio/sfx/lockpick_break/lockpick_break_03.ogg"
     ],
-    "lufs": -17.62,
+    "lufs": -15.66,
     "pitch_variance": 0.06,
     "seconds": 0.119,
     "volume_db": -6.0
   },
   "lockpick_click": {
     "bus": "SFX",
-    "bytes": 19080,
+    "bytes": 19076,
     "count": 5,
     "files": [
       "res://assets/audio/sfx/lockpick_click/lockpick_click_01.ogg",
@@ -560,14 +560,14 @@
       "res://assets/audio/sfx/lockpick_click/lockpick_click_04.ogg",
       "res://assets/audio/sfx/lockpick_click/lockpick_click_05.ogg"
     ],
-    "lufs": -17.65,
+    "lufs": -17.24,
     "pitch_variance": 0.1,
     "seconds": 0.068,
     "volume_db": -10.0
   },
   "mace_swing": {
     "bus": "SFX",
-    "bytes": 29442,
+    "bytes": 29887,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/mace_swing/mace_swing_01.ogg",
@@ -575,7 +575,7 @@
       "res://assets/audio/sfx/mace_swing/mace_swing_03.ogg",
       "res://assets/audio/sfx/mace_swing/mace_swing_04.ogg"
     ],
-    "lufs": -22.93,
+    "lufs": -14.11,
     "pitch_variance": 0.06,
     "seconds": 0.5,
     "volume_db": -3.0
@@ -597,7 +597,7 @@
   },
   "pick_up": {
     "bus": "SFX",
-    "bytes": 17549,
+    "bytes": 17587,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/pick_up/pick_up_01.ogg",
@@ -605,62 +605,62 @@
       "res://assets/audio/sfx/pick_up/pick_up_03.ogg",
       "res://assets/audio/sfx/pick_up/pick_up_04.ogg"
     ],
-    "lufs": -19.29,
+    "lufs": -18.07,
     "pitch_variance": 0.08,
     "seconds": 0.13,
     "volume_db": -8.0
   },
   "player_death": {
     "bus": "UI",
-    "bytes": 134931,
+    "bytes": 129858,
     "count": 2,
     "files": [
       "res://assets/audio/sfx/player_death/player_death_01.ogg",
       "res://assets/audio/sfx/player_death/player_death_02.ogg"
     ],
-    "lufs": -20.65,
+    "lufs": -15.05,
     "pitch_variance": 0.01,
     "seconds": 10.514,
     "volume_db": -2.0
   },
   "potion_drink": {
     "bus": "SFX",
-    "bytes": 28741,
+    "bytes": 28834,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/potion_drink/potion_drink_01.ogg",
       "res://assets/audio/sfx/potion_drink/potion_drink_02.ogg",
       "res://assets/audio/sfx/potion_drink/potion_drink_03.ogg"
     ],
-    "lufs": -23.58,
+    "lufs": -22.29,
     "pitch_variance": 0.04,
     "seconds": 1.441,
     "volume_db": -6.0
   },
   "spell_cast_binding": {
     "bus": "SFX",
-    "bytes": 67193,
+    "bytes": 67190,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/spell_cast_binding/spell_cast_binding_01.ogg",
       "res://assets/audio/sfx/spell_cast_binding/spell_cast_binding_02.ogg",
       "res://assets/audio/sfx/spell_cast_binding/spell_cast_binding_03.ogg"
     ],
-    "lufs": -19.57,
+    "lufs": -17.37,
     "pitch_variance": 0.05,
     "seconds": 2.673,
     "volume_db": -5.0
   },
   "spell_cast_calling": {
     "bus": "SFX",
-    "bytes": 179441,
+    "bytes": 181110,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/spell_cast_calling/spell_cast_calling_01.ogg",
       "res://assets/audio/sfx/spell_cast_calling/spell_cast_calling_02.ogg",
       "res://assets/audio/sfx/spell_cast_calling/spell_cast_calling_03.ogg"
     ],
-    "lufs": -25.61,
+    "lufs": -13.89,
     "pitch_variance": 0.05,
     "seconds": 7.639,
     "volume_db": -5.0
@@ -681,70 +681,70 @@
   },
   "spell_cast_kindling": {
     "bus": "SFX",
-    "bytes": 49643,
+    "bytes": 50692,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/spell_cast_kindling/spell_cast_kindling_01.ogg",
       "res://assets/audio/sfx/spell_cast_kindling/spell_cast_kindling_02.ogg",
       "res://assets/audio/sfx/spell_cast_kindling/spell_cast_kindling_03.ogg"
     ],
-    "lufs": -21.26,
+    "lufs": -13.43,
     "pitch_variance": 0.05,
     "seconds": 1.472,
     "volume_db": -5.0
   },
   "spell_cast_mending": {
     "bus": "SFX",
-    "bytes": 105301,
+    "bytes": 107253,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/spell_cast_mending/spell_cast_mending_01.ogg",
       "res://assets/audio/sfx/spell_cast_mending/spell_cast_mending_02.ogg",
       "res://assets/audio/sfx/spell_cast_mending/spell_cast_mending_03.ogg"
     ],
-    "lufs": -29.71,
+    "lufs": -18.49,
     "pitch_variance": 0.05,
     "seconds": 4.364,
     "volume_db": -5.0
   },
   "spell_impact_binding": {
     "bus": "SFX",
-    "bytes": 16300,
+    "bytes": 16297,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/spell_impact_binding/spell_impact_binding_01.ogg",
       "res://assets/audio/sfx/spell_impact_binding/spell_impact_binding_02.ogg",
       "res://assets/audio/sfx/spell_impact_binding/spell_impact_binding_03.ogg"
     ],
-    "lufs": -19.5,
+    "lufs": -19.41,
     "pitch_variance": 0.06,
     "seconds": 0.348,
     "volume_db": -4.0
   },
   "spell_impact_calling": {
     "bus": "SFX",
-    "bytes": 35399,
+    "bytes": 35584,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/spell_impact_calling/spell_impact_calling_01.ogg",
       "res://assets/audio/sfx/spell_impact_calling/spell_impact_calling_02.ogg",
       "res://assets/audio/sfx/spell_impact_calling/spell_impact_calling_03.ogg"
     ],
-    "lufs": -24.14,
+    "lufs": -19.58,
     "pitch_variance": 0.06,
     "seconds": 1.1,
     "volume_db": -4.0
   },
   "spell_impact_hush": {
     "bus": "SFX",
-    "bytes": 18955,
+    "bytes": 18907,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/spell_impact_hush/spell_impact_hush_01.ogg",
       "res://assets/audio/sfx/spell_impact_hush/spell_impact_hush_02.ogg",
       "res://assets/audio/sfx/spell_impact_hush/spell_impact_hush_03.ogg"
     ],
-    "lufs": -21.95,
+    "lufs": -21.11,
     "pitch_variance": 0.06,
     "seconds": 0.484,
     "volume_db": -4.0
@@ -765,14 +765,14 @@
   },
   "spell_impact_mending": {
     "bus": "SFX",
-    "bytes": 34009,
+    "bytes": 33068,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/spell_impact_mending/spell_impact_mending_01.ogg",
       "res://assets/audio/sfx/spell_impact_mending/spell_impact_mending_02.ogg",
       "res://assets/audio/sfx/spell_impact_mending/spell_impact_mending_03.ogg"
     ],
-    "lufs": -28.53,
+    "lufs": -21.05,
     "pitch_variance": 0.06,
     "seconds": 1.136,
     "volume_db": -4.0
@@ -793,7 +793,7 @@
   },
   "sword_swing_heavy": {
     "bus": "SFX",
-    "bytes": 30559,
+    "bytes": 30740,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/sword_swing_heavy/sword_swing_heavy_01.ogg",
@@ -801,14 +801,14 @@
       "res://assets/audio/sfx/sword_swing_heavy/sword_swing_heavy_03.ogg",
       "res://assets/audio/sfx/sword_swing_heavy/sword_swing_heavy_04.ogg"
     ],
-    "lufs": -21.83,
+    "lufs": -12.59,
     "pitch_variance": 0.06,
     "seconds": 0.52,
     "volume_db": -3.0
   },
   "sword_swing_light": {
     "bus": "SFX",
-    "bytes": 25260,
+    "bytes": 25536,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/sword_swing_light/sword_swing_light_01.ogg",
@@ -816,63 +816,63 @@
       "res://assets/audio/sfx/sword_swing_light/sword_swing_light_03.ogg",
       "res://assets/audio/sfx/sword_swing_light/sword_swing_light_04.ogg"
     ],
-    "lufs": -21.49,
+    "lufs": -11.84,
     "pitch_variance": 0.07,
     "seconds": 0.34,
     "volume_db": -4.0
   },
   "thunder_far": {
     "bus": "SFX",
-    "bytes": 77597,
+    "bytes": 75531,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/thunder_far/thunder_far_01.ogg",
       "res://assets/audio/sfx/thunder_far/thunder_far_02.ogg",
       "res://assets/audio/sfx/thunder_far/thunder_far_03.ogg"
     ],
-    "lufs": -28.97,
+    "lufs": -17.34,
     "pitch_variance": 0.05,
     "seconds": 4.573,
     "volume_db": -6.0
   },
   "thunder_near": {
     "bus": "SFX",
-    "bytes": 99793,
+    "bytes": 100889,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/thunder_near/thunder_near_01.ogg",
       "res://assets/audio/sfx/thunder_near/thunder_near_02.ogg",
       "res://assets/audio/sfx/thunder_near/thunder_near_03.ogg"
     ],
-    "lufs": -26.12,
+    "lufs": -17.83,
     "pitch_variance": 0.05,
     "seconds": 4.712,
     "volume_db": -2.0
   },
   "ui_book_close": {
     "bus": "UI",
-    "bytes": 12930,
+    "bytes": 12910,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/ui_book_close/ui_book_close_01.ogg",
       "res://assets/audio/sfx/ui_book_close/ui_book_close_02.ogg",
       "res://assets/audio/sfx/ui_book_close/ui_book_close_03.ogg"
     ],
-    "lufs": -18.39,
+    "lufs": -16.15,
     "pitch_variance": 0.05,
     "seconds": 0.125,
     "volume_db": -9.0
   },
   "ui_book_open": {
     "bus": "UI",
-    "bytes": 29277,
+    "bytes": 29638,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/ui_book_open/ui_book_open_01.ogg",
       "res://assets/audio/sfx/ui_book_open/ui_book_open_02.ogg",
       "res://assets/audio/sfx/ui_book_open/ui_book_open_03.ogg"
     ],
-    "lufs": -24.22,
+    "lufs": -20.67,
     "pitch_variance": 0.05,
     "seconds": 0.7,
     "volume_db": -9.0
@@ -909,7 +909,7 @@
   },
   "ui_hover_tick": {
     "bus": "UI",
-    "bytes": 18608,
+    "bytes": 18621,
     "count": 5,
     "files": [
       "res://assets/audio/sfx/ui_hover_tick/ui_hover_tick_01.ogg",
@@ -918,56 +918,56 @@
       "res://assets/audio/sfx/ui_hover_tick/ui_hover_tick_04.ogg",
       "res://assets/audio/sfx/ui_hover_tick/ui_hover_tick_05.ogg"
     ],
-    "lufs": -20.61,
+    "lufs": -16.27,
     "pitch_variance": 0.05,
     "seconds": 0.056,
     "volume_db": -12.0
   },
   "ui_map_unroll": {
     "bus": "UI",
-    "bytes": 42617,
+    "bytes": 42884,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/ui_map_unroll/ui_map_unroll_01.ogg",
       "res://assets/audio/sfx/ui_map_unroll/ui_map_unroll_02.ogg",
       "res://assets/audio/sfx/ui_map_unroll/ui_map_unroll_03.ogg"
     ],
-    "lufs": -18.31,
+    "lufs": -17.54,
     "pitch_variance": 0.05,
     "seconds": 1.1,
     "volume_db": -9.0
   },
   "ui_page_turn": {
     "bus": "UI",
-    "bytes": 26922,
+    "bytes": 27972,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/ui_page_turn/ui_page_turn_01.ogg",
       "res://assets/audio/sfx/ui_page_turn/ui_page_turn_02.ogg",
       "res://assets/audio/sfx/ui_page_turn/ui_page_turn_03.ogg"
     ],
-    "lufs": -20.54,
+    "lufs": -16.78,
     "pitch_variance": 0.05,
     "seconds": 0.55,
     "volume_db": -9.0
   },
   "ui_paper_slide": {
     "bus": "UI",
-    "bytes": 19977,
+    "bytes": 20194,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/ui_paper_slide/ui_paper_slide_01.ogg",
       "res://assets/audio/sfx/ui_paper_slide/ui_paper_slide_02.ogg",
       "res://assets/audio/sfx/ui_paper_slide/ui_paper_slide_03.ogg"
     ],
-    "lufs": -20.87,
+    "lufs": -17.21,
     "pitch_variance": 0.05,
     "seconds": 0.34,
     "volume_db": -9.0
   },
   "water_splash": {
     "bus": "SFX",
-    "bytes": 50849,
+    "bytes": 50873,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/water_splash/water_splash_01.ogg",
@@ -975,28 +975,28 @@
       "res://assets/audio/sfx/water_splash/water_splash_03.ogg",
       "res://assets/audio/sfx/water_splash/water_splash_04.ogg"
     ],
-    "lufs": -21.03,
+    "lufs": -20.4,
     "pitch_variance": 0.08,
     "seconds": 1.1,
     "volume_db": -5.0
   },
   "wind_gust": {
     "bus": "SFX",
-    "bytes": 87314,
+    "bytes": 90115,
     "count": 3,
     "files": [
       "res://assets/audio/sfx/wind_gust/wind_gust_01.ogg",
       "res://assets/audio/sfx/wind_gust/wind_gust_02.ogg",
       "res://assets/audio/sfx/wind_gust/wind_gust_03.ogg"
     ],
-    "lufs": -27.1,
+    "lufs": -15.58,
     "pitch_variance": 0.05,
-    "seconds": 3.382,
+    "seconds": 3.38,
     "volume_db": -10.0
   },
   "wood_creak": {
     "bus": "SFX",
-    "bytes": 69965,
+    "bytes": 100950,
     "count": 4,
     "files": [
       "res://assets/audio/sfx/wood_creak/wood_creak_01.ogg",
@@ -1004,7 +1004,7 @@
       "res://assets/audio/sfx/wood_creak/wood_creak_03.ogg",
       "res://assets/audio/sfx/wood_creak/wood_creak_04.ogg"
     ],
-    "lufs": -23.23,
+    "lufs": -10.83,
     "pitch_variance": 0.09,
     "seconds": 1.804,
     "volume_db": -10.0

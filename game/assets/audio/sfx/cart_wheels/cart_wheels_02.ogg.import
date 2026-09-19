@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://cwcdiy7a5xoaa"
-path="res://.godot/imported/cart_wheels_02.ogg-d7c152cf0f1232bfd87ed03336828576.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/cart_wheels/cart_wheels_02.ogg"
-dest_files=["res://.godot/imported/cart_wheels_02.ogg-d7c152cf0f1232bfd87ed03336828576.oggvorbisstr"]
 
 [params]
 

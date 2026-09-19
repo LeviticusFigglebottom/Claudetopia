@@ -2,13 +2,10 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
-uid="uid://bi2tkdpqwnqow"
-path="res://.godot/imported/ui_paper_slide_03.ogg-c5687ae53874c8a8ce2920cf426aa1af.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/ui_paper_slide/ui_paper_slide_03.ogg"
-dest_files=["res://.godot/imported/ui_paper_slide_03.ogg-c5687ae53874c8a8ce2920cf426aa1af.oggvorbisstr"]
 
 [params]
 
