@@ -79,7 +79,7 @@ static func _apply_entry(e: Dictionary, rng: RandomNumberGenerator, context: Dic
 	if e.get("nothing", false):
 		return
 	if e.has("table"):
-		_roll_into(str(e["table"]), rng, context, out, depth + 1)
+		_roll_into(e["table"], rng, context, out, depth + 1)
 		return
 	if e.has("marks"):
 		var n := range_value(e["marks"], rng)
