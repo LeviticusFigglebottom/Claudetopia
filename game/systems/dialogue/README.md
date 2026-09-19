@@ -16,7 +16,7 @@ Everything an NPC says and everything a conversation does to the world.
 * `content/packs/core/dialogues/*.json` — `dialogue` defs: `{id, start, nodes{...}}` (CONTRACTS §7).
   A node is `{speaker, text, conditions[], effects[], choices[{text, next, conditions[], effects[], once, tag}], next, else, once}`.
   `speaker` is `npc`, `player`, or an NPC id. Text may use `{player} {title} {npc} {place} {region}` and `{greeting}`.
-* `content/packs/core/dialogues/greetings.json` — `core:table/greetings`, 57 rows / 142 lines.
+* `content/packs/core/dialogues/greetings.json` — `core:table/greetings`, 60 rows / 152 lines.
 * `content/packs/core/gestures/gestures.json` — the ten `gesture` defs.
 
 ## Vocabulary
@@ -73,6 +73,10 @@ Specificity is weighted so that what this villager *saw* (4) beats what the vill
 (3), which beats your standing, rank, bounty and the hour (2), which beat their personality (1).
 A row that matches only because you are unremarkable (renown tier 0, morality tier 0) scores no
 specificity, so it is a fallback rather than an answer.
+
+Traits the matrix has rows for: `kind`, `gossip`, `quiet`, `timid`, `brave`, `proud`, `humble`,
+`greedy`, `generous`, `pious`, `cynical`. An NPC with a trait no row names still gets rows for
+their other traits and for your standing, so nothing goes silent; adding a trait is adding rows.
 
 `wearing_tag` asks the inventory if it answers that question itself, otherwise it reads the
 equipment slots and the items' own `tags`. `skill_min` reads the progression system.

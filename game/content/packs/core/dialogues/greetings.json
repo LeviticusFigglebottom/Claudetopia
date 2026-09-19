@@ -55,6 +55,23 @@
       "The hearth's lit and there's a place at it. That's all any of it is.",
       "You've the look of somebody the world's forgotten to introduce itself to."
     ]},
+    {"id": "trait_kind", "traits": ["kind"], "weight": 1.1, "lines": [
+      "You've walked a long way on those. Sit down, I'll not charge you for the chair.",
+      "Hello, love. Have you eaten? Don't lie to me, I can tell.",
+      "Whatever it is, it'll keep until you're warm.",
+      "Come in. The kettle's the only thing in this house that works properly."
+    ]},
+    {"id": "kind_to_the_hollow", "traits": ["kind"], "morality_tier": [-3, -2], "weight": 1.4, "lines": [
+      "I'm not going to pretend I can't see it. Sit down anyway.",
+      "They're saying things about you. I'd rather hear them from you, with tea.",
+      "Whatever's gone cold in you — it came from somewhere. Things that come from somewhere can go back."
+    ]},
+    {"id": "kind_to_the_named", "traits": ["kind"], "renown_tier": [3, 4], "weight": 1.3, "lines": [
+      "Look at you, {title}, and still nobody's fed you. Sit.",
+      "Famous, and thin as a rake. The two usually travel together.",
+      "They'll all want something from you. I want you to eat something first."
+    ]},
+
     {"id": "trait_cynical", "traits": ["cynical"], "lines": [
       "Let me guess. You're here to fix something and it'll cost us.",
       "New face. New face means news, and news has never once been good.",
