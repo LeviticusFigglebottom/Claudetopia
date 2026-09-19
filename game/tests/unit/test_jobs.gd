@@ -90,7 +90,7 @@ func test_station_shift_pays_marks_xp_and_yield() -> void:
 	var pay := station.finish(worker)
 	assert_gt(pay, 0)
 	assert_eq(int(worker.get("marks")), pay)
-	assert_eq(worker.call("count", "core:item/econ_charcoal"), 1, "and the charcoal you cut")
+	assert_eq(worker.call("count", "core:item/oak_plank"), 1, "and a plank of what you cut")
 	assert_eq(xp.size(), 1)
 	assert_eq(xp[0][0], "athletics")
 	assert_eq(jobs_done.size(), 1)

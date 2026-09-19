@@ -1,9 +1,9 @@
 extends TestCase
 
 const GENERAL := "core:table/stock_general"
-const ROPE := "core:item/econ_rope"
-const CANDLE := "core:item/econ_tallow_candle"
-const KNIFE := "core:item/econ_iron_knife"
+const ROPE := "core:item/rope"
+const CANDLE := "core:item/candle"
+const KNIFE := "core:item/iron_dagger"
 
 var _nodes: Array[Node] = []
 
@@ -156,9 +156,9 @@ func test_sell_respects_buys_list_and_merchant_purse() -> void:
 	var m := _merchant(GENERAL, 30, ["tool", "material"])
 	var seller := _buyer(0)
 	seller.call("add", ROPE, 3)
-	seller.call("add", "core:item/econ_healing_draught", 1)
-	assert_false(m.will_buy("core:item/econ_healing_draught"), "a general store does not deal in potions")
-	var no := m.sell(seller, "core:item/econ_healing_draught", 1)
+	seller.call("add", "core:item/potion_restore_health", 1)
+	assert_false(m.will_buy("core:item/potion_restore_health"), "a general store does not deal in potions")
+	var no := m.sell(seller, "core:item/potion_restore_health", 1)
 	assert_false(no["ok"])
 	assert_eq(no["reason"], "not_bought")
 	assert_true(m.will_buy(ROPE))

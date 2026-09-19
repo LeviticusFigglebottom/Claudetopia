@@ -10,12 +10,14 @@ class_name Jobs
 ##
 ## Both are pure enough to test: `offers()` builds the list, `resolve()` computes pay.
 
+## Station work. `yield` names an item the worker keeps as well as the wage; a station whose
+## yield item is not in the loaded packs simply pays marks.
 const STATIONS := {
-	"chop": {"label": "Chop wood", "skill": "athletics", "seconds": 6.0, "pay": [4, 8], "xp": 8.0, "clip": "Work_Chop", "cooldown_hours": 4.0, "yield": "core:item/econ_charcoal"},
-	"smith": {"label": "Work the bellows", "skill": "smithing", "seconds": 8.0, "pay": [6, 12], "xp": 12.0, "clip": "Work_Hammer", "cooldown_hours": 4.0, "yield": "core:item/econ_iron_nails"},
-	"brew": {"label": "Stir the mash", "skill": "alchemy", "seconds": 7.0, "pay": [5, 10], "xp": 10.0, "clip": "Work_Stir", "cooldown_hours": 4.0, "yield": "core:item/econ_cider"},
-	"fish": {"label": "Haul the eel traps", "skill": "athletics", "seconds": 7.0, "pay": [4, 9], "xp": 8.0, "clip": "Work_Dig", "cooldown_hours": 4.0, "yield": "core:item/econ_lake_eel"},
-	"dig": {"label": "Cut peat", "skill": "athletics", "seconds": 8.0, "pay": [3, 7], "xp": 8.0, "clip": "Work_Dig", "cooldown_hours": 4.0, "yield": "core:item/econ_charcoal"},
+	"chop": {"label": "Chop wood", "skill": "athletics", "seconds": 6.0, "pay": [4, 8], "xp": 8.0, "clip": "Work_Chop", "cooldown_hours": 4.0, "yield": "core:item/oak_plank"},
+	"smith": {"label": "Work the bellows", "skill": "smithing", "seconds": 8.0, "pay": [6, 12], "xp": 12.0, "clip": "Work_Hammer", "cooldown_hours": 4.0, "yield": "core:item/iron_ingot"},
+	"brew": {"label": "Stir the mash", "skill": "alchemy", "seconds": 7.0, "pay": [5, 10], "xp": 10.0, "clip": "Work_Stir", "cooldown_hours": 4.0, "yield": "core:item/cider"},
+	"fish": {"label": "Haul the eel traps", "skill": "athletics", "seconds": 7.0, "pay": [4, 9], "xp": 8.0, "clip": "Work_Dig", "cooldown_hours": 4.0, "yield": "core:item/eel_liver"},
+	"dig": {"label": "Cut chalk", "skill": "athletics", "seconds": 8.0, "pay": [3, 7], "xp": 8.0, "clip": "Work_Dig", "cooldown_hours": 4.0, "yield": "core:item/chalk"},
 }
 const DELIVERY_PAY_PER_KM := 14
 const DELIVERY_MIN_PAY := 20
