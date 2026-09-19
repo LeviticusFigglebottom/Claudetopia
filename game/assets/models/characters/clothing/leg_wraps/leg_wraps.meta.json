@@ -1,0 +1,27 @@
+{
+ "bounds": [
+  -0.1952,
+  -0.1006,
+  0.1105,
+  0.1952,
+  0.1267,
+  1.022
+ ],
+ "collision": "none",
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 634,
+ "slot_hint": "legs",
+ "tris": [
+  3800,
+  0,
+  0
+ ],
+ "version": 1
+}

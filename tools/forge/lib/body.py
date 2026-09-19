@@ -171,11 +171,11 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
                                 [sx * 0.072 * s, 0.020 * s, neck_z - 0.006 * s],
                                 [sx * 0.130 * s, 0.016 * s, sh[2] + 0.028 * s],
                                 [sh[0] + sx * 0.020 * s, 0.006 * s, sh[2] + 0.020 * s]],
-                               [0.030 * b * s, 0.034 * b * s, 0.040 * b * s, 0.046 * b * s]), k=0.050 * s)
+                               [0.030 * b * s, 0.034 * b * s, 0.042 * b * s, 0.048 * b * s]), k=0.050 * s)
         # deltoid: a cap that sits over the joint and carries the width
         sc.union(sdf.ellipsoid(sh + np.array([sx * 0.026 * s, 0.0, 0.014 * s]),
-                               [(0.076 + 0.018 * mus) * lb * s, (0.062 + 0.012 * mus) * lb * s,
-                                (0.072 + 0.014 * mus) * lb * s], rot=rig.rot_axis(FWD, math.radians(-22.0 * sx))),
+                               [(0.058 + 0.014 * mus) * lb * s, (0.054 + 0.010 * mus) * lb * s,
+                                (0.062 + 0.012 * mus) * lb * s], rot=rig.rot_axis(FWD, math.radians(-22.0 * sx))),
                  k=0.030 * s)
 
     # -- arms -------------------------------------------------------------------------------
@@ -185,16 +185,16 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         wr = J[f"Hand.{side}"]
         d = sdf._unit(el - sh)
         fwd, up = _arm_frame(d)
-        ua = (0.057 + 0.015 * mus + 0.013 * heavy - 0.005 * fem) * lb * s
-        el_r = (0.040 + 0.005 * mus + 0.005 * heavy) * lb * s
-        fa = (0.048 + 0.012 * mus + 0.009 * heavy - 0.004 * fem) * lb * s
+        ua = (0.047 + 0.012 * mus + 0.011 * heavy - 0.004 * fem) * lb * s
+        el_r = (0.035 + 0.005 * mus + 0.005 * heavy) * lb * s
+        fa = (0.042 + 0.010 * mus + 0.008 * heavy - 0.003 * fem) * lb * s
         wrist = (0.026 + 0.004 * mus + 0.004 * heavy - 0.002 * fem) * lb * s
         ua_len = float(np.linalg.norm(el - sh))
         fa_len = float(np.linalg.norm(wr - el))
         parts = [
             sdf.chain([sh + d * 0.02 * s, sh + d * (0.40 * ua_len), el - d * 0.02 * s,
                        el + d * (0.10 * fa_len), el + d * (0.32 * fa_len), wr],
-                      [ua * 1.06, ua * 0.94, el_r, fa, fa * 0.90, wrist], k=0.0),
+                      [ua * 1.02, ua * 0.92, el_r, fa, fa * 0.90, wrist], k=0.0),
             # elbow: a real mass, so the arm has a joint instead of a kink
             sdf.ellipsoid(el + up * 0.008 * s, [el_r * 1.30, el_r * 1.26, el_r * 1.30], k=0.026 * s),
             # forearm belly, thickest just below the elbow
