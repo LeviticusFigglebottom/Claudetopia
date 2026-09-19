@@ -144,6 +144,19 @@ class NB:
             n.inputs["Smoothness"].default_value = smoothness
         return n
 
+    def vwarp(self, vec, source, amount=0.5):
+        """Offset a coordinate by a noise vector.
+
+        Any procedural pattern with straight walls — a Voronoi cell field above all — reads
+        as a crystal lattice or an ink drawing unless its lookup wanders. Warping the
+        coordinate is what turns cells into weathered facets.
+        """
+        sc = self.node("ShaderNodeVectorMath", operation="SCALE", inputs={0: source})
+        sc.inputs["Scale"].default_value = amount
+        add = self.node("ShaderNodeVectorMath", operation="ADD",
+                        inputs={0: vec, 1: sc.outputs["Vector"]})
+        return add.outputs["Vector"]
+
     def wave(self, vec, scale=4.0, distortion=1.0, detail=1.0, detail_scale=1.0, direction="X", profile="SIN", kind="BANDS"):
         n = self.node("ShaderNodeTexWave", wave_type=kind, bands_direction=direction, wave_profile=profile,
                       inputs={"Vector": vec, "Scale": scale, "Distortion": distortion, "Detail": detail, "Detail Scale": detail_scale})
@@ -640,8 +653,14 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
     # and grain rather than a soft haze. Without the cell term the baked normal map comes
     # out almost flat and the stone reads as painted paper.
     hn = nb.noise(nb.coord(2.0 / scale), scale=1.0, detail=3.0, rough=0.5)
-    cell = nb.voronoi(nb.coord(3.2 / scale), scale=1.0, feature="DISTANCE_TO_EDGE")
-    facet_mask = nb.map_range(cell.outputs["Distance"], 0.0, 0.14, 0.0, 1.0)
+    # Facets, but weathered stone rather than cut crystal. Three things keep the cell field
+    # from baking a lattice of hard black creases into the normal map: the lookup is warped
+    # so no wall runs straight, the ramp is wide so a crease is a slope instead of a step,
+    # and the floor is lifted off zero so the cell interiors are gently domed planes.
+    fwarp = nb.noise(nb.coord(1.3 / scale), scale=1.0, detail=2.0, rough=0.55)
+    cell = nb.voronoi(nb.vwarp(nb.coord(3.2 / scale), fwarp.outputs["Color"], 0.5),
+                      scale=1.0, feature="DISTANCE_TO_EDGE", randomness=0.9)
+    facet_mask = nb.map_range(cell.outputs["Distance"], 0.0, 0.34, 0.25, 1.0)
     height = nb.math("ADD", nb.math("MULTIPLY", hn.outputs["Fac"], 1.0 - facet),
                      nb.math("MULTIPLY", facet_mask, facet))
     if bed_relief > 0.0:
@@ -651,7 +670,9 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
         height = nb.math("ADD", height, nb.math("MULTIPLY", bw.outputs["Fac"], bed_relief))
     if pit is not None:
         height = nb.math("SUBTRACT", height, nb.math("MULTIPLY", pit, 0.4))
-    normal = nb.bump(height, strength=0.8, distance=0.075)
+    # 0.8 read as embossed sheet metal once the facets were in; the relief has to be felt
+    # at a glance and not analysed, so it is strong but well short of self-shadowing.
+    normal = nb.bump(height, strength=0.5, distance=0.05)
     rough = rough_var(nb, v, 0.85 - 0.4 * sheen, 0.08)
     if sheen > 0:
         rough = nb.mix(nb.pointiness(0.5, 0.6), rough, 0.35)

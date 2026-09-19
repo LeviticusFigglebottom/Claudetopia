@@ -173,6 +173,17 @@ func _place_lineup(paths: Array[String]) -> void:
 		loaded.append({"path": p, "node": inst, "aabb": box})
 	if loaded.is_empty():
 		return
+	# Group by size rather than by name. A lineup is framed on its largest member, so
+	# an alphabetical run that puts a candle stub next to a six-metre well renders the
+	# candle as a dot. Sorting first means every shot holds things of one scale.
+	loaded.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ba: AABB = a["aabb"]
+		var bb: AABB = b["aabb"]
+		var sa := maxf(ba.size.x, maxf(ba.size.y, ba.size.z))
+		var sb := maxf(bb.size.x, maxf(bb.size.y, bb.size.z))
+		if absf(sa - sb) < 0.001:
+			return String(a["path"]) < String(b["path"])
+		return sa < sb)
 	# Space neighbours by their own footprints, not by the largest in the set: one 13 m
 	# giant bone must not push a 0.4 m mug half a screen away from its neighbour.
 	var cursor := 0.0
