@@ -129,26 +129,65 @@ def render_strip(skel: Skeleton, clip, out_png: str, times: Optional[Sequence[fl
     return out_png
 
 
-def foot_slide_report(skel: Skeleton, clip: ClipBuilder, speed: float, direction=(0.0, 1.0), samples: int = 40) -> Dict[str, float]:
-    """For a gait clip: measure max deviation of each planted ankle from ideal constant
-    backward motion (m).  0 = perfect foot lock."""
-    d = np.array(direction, float)
-    d /= np.linalg.norm(d)
-    travel = rig.LEFT * d[0] + rig.FWD * d[1]
+def foot_contact_points(skel: Skeleton) -> Dict[str, np.ndarray]:
+    """Heel, ball and toe tip in each Foot bone's local frame — the points that actually
+    touch the ground, and therefore the ones that must not slide."""
     out = {}
+    for side in ("L", "R"):
+        fb = skel.bones[f"Foot.{side}"]
+        inv = np.linalg.inv(fb.rest)
+        ankle = skel.J[f"Foot.{side}"]
+        pts = {
+            "heel": ankle + np.array([0.0, 0.065, -ankle[2]]),
+            "ball": np.array([skel.J[f"Toe.{side}"][0], skel.J[f"Toe.{side}"][1], 0.0]),
+            "tip": np.array([skel.J[f"ToeTip.{side}"][0], skel.J[f"ToeTip.{side}"][1], 0.0]),
+        }
+        for k, p in pts.items():
+            out[f"{side}.{k}"] = (inv @ np.append(p, 1.0))[:3]
+    return out
+
+
+def foot_slide_report(skel: Skeleton, clip: ClipBuilder, speed: float, direction=(0.0, 1.0),
+                      samples: int = 48) -> Dict[str, float]:
+    """How far a planted foot slips out of place, per side, in metres.
+
+    In-place locomotion means the world moves under the character: a planted foot must
+    travel *backwards* along the direction of travel at exactly the clip's speed.  The
+    measurement follows the ground contact point (heel, ball or toe tip, whichever is
+    lowest), not the ankle, because the ankle legitimately swings up over the toes during
+    the heel-off roll."""
+    d = np.array(direction, float)
+    d /= max(np.linalg.norm(d), 1e-9)
+    travel = rig.LEFT * d[0] + rig.FWD * d[1]
+    local_pts = foot_contact_points(skel)
+    out: Dict[str, float] = {}
     for side in ("L", "R"):
         worst = 0.0
         prev = None
-        for i in range(samples):
+        for i in range(samples + 1):
             t = clip.length * i / samples
             fs = clip.feet.state(side, t)
-            local = clip.local_pose(t)
-            W = skel.fk(local)
-            ankle = skel.joint_world(W, f"Foot.{side}")
-            if fs.planted and prev is not None and prev[1]:
+            lp = clip.local_pose(t)
+            W = skel.fk(lp)
+            M = W[f"Foot.{side}"]
+            pts = {k.split(".")[1]: (M @ np.append(local_pts[k], 1.0))[:3]
+                   for k in local_pts if k.startswith(side + ".")}
+            lowest = min(pts, key=lambda k: pts[k][2])
+            if prev is not None and fs.planted and prev[1] and prev[2] == lowest:
                 dt = t - prev[0]
-                expected = prev[2] - travel * speed * dt
-                worst = max(worst, float(np.linalg.norm(ankle - expected)))
-            prev = (t, fs.planted, ankle)
+                expected = prev[3] - travel * speed * dt
+                worst = max(worst, float(np.linalg.norm(pts[lowest][:2] - expected[:2])))
+            prev = (t, fs.planted, lowest, pts[lowest])
         out[side] = worst
     return out
+
+
+def joint_bend_degrees(skel: Skeleton, clip, t: float, upper: str, lower: str) -> float:
+    """The real flexion of a hinge joint: the angle between the two bone directions."""
+    local = local_pose_at(skel, clip, t)
+    W = skel.fk(local)
+    a = skel.tail_world(W, upper) - skel.joint_world(W, upper)
+    b = skel.tail_world(W, lower) - skel.joint_world(W, lower)
+    a /= max(np.linalg.norm(a), 1e-9)
+    b /= max(np.linalg.norm(b), 1e-9)
+    return float(np.degrees(np.arccos(np.clip(np.dot(a, b), -1.0, 1.0))))

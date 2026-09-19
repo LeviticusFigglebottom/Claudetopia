@@ -263,8 +263,12 @@ class FootPlan:
         if self.pos_fn[side] is not None:
             r = self.pos_fn[side](t)
             if r is not None:
-                pos, yaw, pitch = r
-                return FootState(np.asarray(pos, float), yaw, pitch, True)
+                planted = True
+                if len(r) == 4:
+                    pos, yaw, pitch, planted = r
+                else:
+                    pos, yaw, pitch = r
+                return FootState(np.asarray(pos, float), yaw, pitch, bool(planted))
         pos, yaw = self.start[side]
         pos = pos.copy()
         planted = True
@@ -683,7 +687,7 @@ def gait_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: bool =
                         pitch = -math.radians(20.0) * (1 - u / 0.2) * gp.heel_roll
                     elif u > 0.8:
                         pitch = math.radians(10.0) * ((u - 0.8) / 0.2) * gp.heel_roll
-                return pos, 0.0, pitch
+                return pos, 0.0, pitch, True
             # swing: from lift point to next contact point
             v = (ph - gp.duty) / (1 - gp.duty)
             start = base - travel_dir * (0.5 * L)
@@ -703,7 +707,7 @@ def gait_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: bool =
                 else:
                     # from toes-down (toe-off) to toes-up (heel strike)
                     pitch = math.radians(-30.0) * (1 - v) ** 2 + math.radians(18.0) * v * v
-            return pos, 0.0, pitch
+            return pos, 0.0, pitch, False
         return fn
 
     cb.feet.pos_fn["L"] = foot_fn("L")
@@ -725,7 +729,7 @@ def gait_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: bool =
         # reachability: for each planted foot compute max hip height
         z_max = 1e9
         for side, fn in (("L", cb.feet.pos_fn["L"]), ("R", cb.feet.pos_fn["R"])):
-            pos, _, pitch = fn(t)
+            pos, _, pitch = fn(t)[:3]
             phc = ((t / T) - (0.0 if side == "L" else 0.5)) % 1.0
             if phc < gp.duty:
                 hx = hip_j[0] * (1 if side == "L" else -1)

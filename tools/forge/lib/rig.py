@@ -422,7 +422,8 @@ class Skeleton:
 
     # -- two-bone IK ------------------------------------------------------------------
     def ik_two_bone(self, W: Dict[str, np.ndarray], upper: str, lower: str, target: np.ndarray,
-                    pole: np.ndarray, end_align: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+                    pole: np.ndarray, end_align: Optional[np.ndarray] = None,
+                    max_fold_deg: float = 148.0) -> Tuple[np.ndarray, np.ndarray]:
         """Solve local rotations for `upper`/`lower` so the tail of `lower` reaches `target`.
         `W` must contain the current world matrix of upper's parent.  `pole` is a world
         direction the bend (knee/elbow) should point towards.  Returns (R_upper, R_lower)
@@ -433,7 +434,16 @@ class Skeleton:
         root = (Wp @ bu.rest_local)[:3, 3]
         to = target - root
         dist = float(np.linalg.norm(to))
-        dist = min(max(dist, abs(l1 - l2) + 1e-4), l1 + l2 - 1e-4)
+        # Elbows and knees are hinges with a real limit: a hand cannot reach the shoulder.
+        # Clamping the reach here keeps every clip anatomically possible however its targets
+        # were authored, instead of folding the forearm back through the upper arm.
+        fold = math.radians(max_fold_deg)
+        min_dist = math.sqrt(max(l1 * l1 + l2 * l2 + 2 * l1 * l2 * math.cos(fold), 1e-6))
+        min_dist = max(min_dist, abs(l1 - l2) + 1e-4)
+        dist = min(max(dist, min_dist), l1 + l2 - 1e-4)
+        if dist > 1e-9:
+            to = to * (dist / max(float(np.linalg.norm(to)), 1e-9))
+            target = root + to
         dirv = _unit(to)
         # angle at the root between dir and the upper bone (law of cosines)
         cos_a = (l1 * l1 + dist * dist - l2 * l2) / (2 * l1 * dist)
