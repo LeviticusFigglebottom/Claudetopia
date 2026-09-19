@@ -88,6 +88,9 @@ func _begin(new_dialogue_id: String, def_override: Dictionary, new_npc_id: Strin
 	if dialogue_id != "" and _def.is_empty():
 		Log.warn("Dialogue", "unknown dialogue '%s' (content problem)" % dialogue_id)
 	_running = true
+	# Having spoken to somebody once is what puts them in the journal's People page.
+	if npc_id != "" and ContentDB.has(npc_id):
+		ctx.set_flag("met:" + npc_id, true)
 	EventBus.dialogue_started.emit(npc_id)
 
 	if _def.is_empty() or typeof(_def.get("nodes")) != TYPE_DICTIONARY:

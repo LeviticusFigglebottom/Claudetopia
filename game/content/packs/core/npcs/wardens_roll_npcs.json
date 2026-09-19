@@ -13,6 +13,7 @@
       ]
     },
     "lore": "Keeps the Roll of Names at Wardens' Rest: every settlement in the basin, written and read aloud once a season so that none of them can go quiet. Has ink on three fingers permanently and will tell you which three.",
+    "unique_habit": "Reads one page of the Roll aloud to the empty room before locking up, always a different page, never the page anyone asks for.",
     "schedule": [
       {
         "days": "all",
@@ -58,6 +59,7 @@
       ]
     },
     "lore": "Twenty-one years a Warden, most of them on the Larkbourne road. Believes the Roll is a tool and not a scripture, which is the kind of opinion that ends careers at the Rest.",
+    "unique_habit": "Walks the Larkbourne road as far as the fallen tower and back every morning he is at the Rest, in all weather, and has never once said why.",
     "schedule": [
       {
         "days": "all",
@@ -96,6 +98,7 @@
     },
     "no_radiant": true,
     "lore": "Had a name, a band named after the name, and a stolen mill wheel for a table. Since the ink went through the page, people have begun to forget the face over an evening, and Ryn has begun to notice them doing it.",
+    "unique_habit": "Says their own name under their breath at every doorway they go through, the way other people touch a lintel.",
     "schedule": [
       {
         "days": "all",

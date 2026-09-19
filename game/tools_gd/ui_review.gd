@@ -95,8 +95,11 @@ func _plan() -> Array[Dictionary]:
 		{"name": "save_load", "menu": "save_load", "args": {"mode": "save"}},
 		{"name": "journal_quests", "menu": "journal", "args": {"tab": 0}},
 		{"name": "journal_rumours", "menu": "journal", "args": {"tab": 1}},
-		{"name": "journal_bestiary", "menu": "journal", "args": {"tab": 2}},
-		{"name": "journal_books", "menu": "journal", "args": {"tab": 3}},
+		{"name": "journal_people", "menu": "journal", "args": {"tab": 2, "people": [
+			"core:npc/wren_tallow", "core:npc/osric_pennywort", "core:npc/merrick_gosling",
+			"core:npc/hesta_hollins", "core:npc/wardens_hesk"]}},
+		{"name": "journal_bestiary", "menu": "journal", "args": {"tab": 3}},
+		{"name": "journal_books", "menu": "journal", "args": {"tab": 4}},
 		{"name": "book_reader", "menu": "book", "args": {"book_id": "core:book/the_falling_of_the_toll"}},
 		{"name": "book_tome", "menu": "book", "args": {"book_id": "core:book/saying_ward"}},
 		{"name": "inventory", "menu": "inventory"},
