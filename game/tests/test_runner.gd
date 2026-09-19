@@ -56,6 +56,12 @@ func _ready() -> void:
 	print("%d tests, %d failed, %d content problems, %d ms" % [total, failed, ContentDB.problems.size(), ms])
 	for p in ContentDB.problems:
 		print("CONTENT: %s" % p)
+	# Audio autoloads hold open stream decoders while they play; released here so the run does
+	# not end on Godot's "resources still in use" error, which the smoke check treats as failure.
+	for autoload_name in ["Music", "Ambience", "Foley"]:
+		var node := get_node_or_null("/root/" + autoload_name)
+		if node and node.has_method("release"):
+			node.release()
 	var code := 0 if (failed == 0 and ContentDB.problems.is_empty()) else 1
 	print("RESULT: %s" % ("PASS" if code == 0 else "FAIL"))
 	get_tree().quit(code)

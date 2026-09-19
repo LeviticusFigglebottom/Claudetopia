@@ -409,12 +409,12 @@ def region_score(key: str) -> Score:
         for i, idx in enumerate(pattern):
             b = beat + i * (bpb / density)
             midi = chord[idx % len(chord)] + (12 if i % 4 == 3 else 0)
-            texture.append(Note(b, bpb / density * 0.9, midi, 0.34 - 0.03 * i, "arp"))
+            texture.append(Note(b, bpb / density * 0.9, midi, 0.46 - 0.035 * i, "arp"))
         # a bell marks the start of every phrase: the ringing the region is made of
         if bar % phrase_bars == 0:
-            texture.append(Note(beat, bpb * 2.0, tonic + 12, 0.5 if bar else 0.62, "bell"))
+            texture.append(Note(beat, bpb * 2.0, tonic + 12, 0.36 if bar else 0.44, "bell"))
         elif bar % 4 == 2 and r.random() < 0.35:
-            texture.append(Note(beat + bpb * 0.5, bpb, chord[1] + 12, 0.28, "bell"))
+            texture.append(Note(beat + bpb * 0.5, bpb, chord[1] + 12, 0.22, "bell"))
     # a slow counter-melody under the lead: the augmented motif, very quiet
     counter = motifs["toll_aug"].to_notes(tonic, mode, root_degree=0, start_beat=phrase_bars * bpb)
     for (b, dur, midi, vel) in counter:
@@ -434,9 +434,9 @@ def region_score(key: str) -> Score:
         for i in range(bpb * 2):
             b = beat + i * 0.5
             midi = root if i % 4 != 3 else theory.degree_to_midi(prog[ci] + 4, tonic, mode) - 12
-            combat.append(Note(b, 0.45, midi, 0.5 if i % 2 == 0 else 0.34, "ostinato"))
+            combat.append(Note(b, 0.45, midi, 0.56 if i % 2 == 0 else 0.4, "ostinato"))
         # drum: a heartbeat that doubles up as the bar goes on
-        for i, (b, v) in enumerate([(0.0, 0.85), (1.5, 0.5), (2.0, 0.7), (3.5, 0.45)]):
+        for i, (b, v) in enumerate([(0.0, 0.68), (1.5, 0.42), (2.0, 0.56), (3.5, 0.38)]):
             combat.append(Note(beat + b, 0.5, 36, v, "drum"))
         # accented bell every other bar, high and hard
         if bar % 2 == 0:

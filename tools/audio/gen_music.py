@@ -186,7 +186,8 @@ def render_stem(score: compose.Score, stem: str, cfg: dict, seed, loop: bool = T
                     seed=core.sub_seed(seed, "ir") % (2 ** 31), tail=True)
     out = dry.copy()
     core.mix_into(out, wet[:n], 0, cfg.get("reverb_mix", 0.25) * 2.0)
-    out = filters.highpass(out, 28.0, 0.7)
+    # The rumble filter waits for mixdown, which runs it circularly for a loop. Run here, its
+    # start-up transient would land on sample 0 of the head and step against the folded tail.
     if loop:
         out = render.loop_fold(out, loop_s)
     else:
@@ -213,7 +214,7 @@ def region_stems(key: str, seed=None) -> dict:
     for stem in ("pad", "melody", "texture", "combat", "deep"):
         t0 = time.time()
         y = render_stem(score, stem, cfg, core.sub_seed(seed, stem))
-        y = render.mixdown(y, peak_db=-1.5, target_lufs=STEM_LUFS[stem], hp=None, loop=True)
+        y = render.mixdown(y, peak_db=-1.5, target_lufs=STEM_LUFS[stem], hp=28.0, loop=True)
         out[stem] = y
         print("      %-8s %6.1f s  peak %5.1f dB  %5.1f LUFS  (%.0f s)" % (
             stem, len(y) / SR, core.lin_to_db(core.peak(y)), render.loudness_lufs(y),

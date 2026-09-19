@@ -332,7 +332,8 @@ def stagger_thud(rng) -> np.ndarray:
     n = samples(dur)
     out = body_thump(rng, dur, float(rng.uniform(48, 68)), 0.20, bend=0.8)
     out += filters.lowpass(osc.brown(n, rng), 200.0) * env.perc(n, 0.004, 0.13) * 0.6
-    out += armour_rustle(rng, heavy=True)[:n] * 0.45
+    # armour_rustle picks its own random length, which may be shorter than this thud
+    core.mix_into(out, armour_rustle(rng, heavy=True), 0, 0.45)
     return _limit_tail(filters.highpass(out, 35.0), 0.05)
 
 
@@ -376,30 +377,25 @@ def spell_cast(rng, school: str) -> np.ndarray:
         hum *= env.segments([(0, 0), (0.25, 0.7), (dur * 0.72, 1.0), (dur * 0.78, 0.25),
                              (dur, 0.0)], n)
         lock = np.zeros(n)
-        s = samples(dur * 0.72)
-        click = struck(rng, [(320, 0.18, 1.0), (880, 0.1, 0.5), (1900, 0.06, 0.25)], 0.3,
-                       hardness=0.8)
-        lock[s:s + min(len(click), n - s)] += click[:n - s] * 0.8
+        core.mix_into(lock, struck(rng, [(320, 0.18, 1.0), (880, 0.1, 0.5), (1900, 0.06, 0.25)],
+                                   0.3, hardness=0.8), samples(dur * 0.72), 0.8)
         out = hum * 0.8 + lock
     elif school == "mending":
         dur = 1.8
         notes = [theory.degree_to_midi(d, 72, "lydian") for d in (0, 2, 4, 6)]
         out = inst.chime_run(notes, dur, spacing=0.10, amp=0.55, rng=rng, t60=1.4)
-        n = len(out)
-        warm = inst.pad([60, 67], dur, amp=0.12, rng=rng, attack=0.25, release=0.8)[:n]
-        out = out + warm * 0.6
+        core.mix_into(out, inst.pad([60, 67], dur, amp=0.12, rng=rng, attack=0.25,
+                                    release=0.8), 0, 0.6)
     elif school == "calling":
         dur = 2.0
         n = samples(dur)
         # a choir taking breath and arriving
-        voices = inst.choir([52, 59, 64], dur * 0.9, amp=0.5, rng=rng, vowel="ah",
-                            attack=0.55, release=0.7)[:n]
         breath = filters.bandpass(osc.white(n, rng), 1800.0, 0.5) * \
             env.segments([(0, 0), (0.25, 0.7), (0.6, 0.15), (dur, 0.0)], n) * 0.3
-        swell = inst.cymbal_swell(dur, amp=0.18, rng=rng, reverse=True)[:n]
-        out = np.zeros(n)
-        out[:len(voices)] += voices
-        out += breath + swell * 0.5
+        out = breath
+        core.mix_into(out, inst.choir([52, 59, 64], dur * 0.9, amp=0.5, rng=rng, vowel="ah",
+                                      attack=0.55, release=0.7), 0, 1.0)
+        core.mix_into(out, inst.cymbal_swell(dur, amp=0.18, rng=rng, reverse=True), 0, 0.5)
     else:
         raise ValueError(school)
     out = filters.highpass(out, 60.0)
@@ -430,14 +426,13 @@ def spell_impact(rng, school: str) -> np.ndarray:
     elif school == "mending":
         dur = 1.2
         out = inst.hand_bell(84, dur, amp=0.5, rng=rng)
-        out = out + inst.hand_bell(91, dur * 0.8, amp=0.28, rng=rng)[:len(out)]
+        core.mix_into(out, inst.hand_bell(91, dur * 0.8, amp=0.28, rng=rng), 0, 1.0)
     elif school == "calling":
         dur = 1.1
         n = samples(dur)
-        out = inst.choir([45, 52], dur * 0.85, amp=0.45, rng=rng, vowel="oh",
-                         attack=0.05, release=0.4)[:n]
-        out = np.pad(out, (0, max(0, n - len(out))))[:n]
-        out += body_thump(rng, dur, 55.0, 0.3, bend=0.7) * 0.5
+        out = body_thump(rng, dur, 55.0, 0.3, bend=0.7) * 0.5
+        core.mix_into(out, inst.choir([45, 52], dur * 0.85, amp=0.45, rng=rng, vowel="oh",
+                                      attack=0.05, release=0.4), 0, 1.0)
     else:
         raise ValueError(school)
     return _limit_tail(filters.highpass(out, 50.0), 0.06)
@@ -557,9 +552,7 @@ def chest_open(rng) -> np.ndarray:
     out = np.zeros(n)
     latch = struck(rng, [(1500, 0.08, 1.0), (3100, 0.05, 0.5)], 0.25, hardness=0.9)
     out[:len(latch)] += latch * 0.6
-    s = samples(0.2)
-    lid = door(rng, "wood", opening=True)[:n - s]
-    out[s:s + len(lid)] += lid * 0.7
+    core.mix_into(out, door(rng, "wood", opening=True), samples(0.2), 0.7)
     return _limit_tail(out, 0.08)
 
 
@@ -719,9 +712,8 @@ def hearth_chime(rng) -> np.ndarray:
     dur = 3.4
     notes = [theory.degree_to_midi(d, 74, "lydian") for d in (0, 2, 4)]
     y = inst.chime_run(notes, dur, spacing=0.22, amp=0.5, rng=rng, t60=2.6)
-    n = len(y)
-    warm = inst.pad([50, 57, 62], dur * 0.9, amp=0.13, rng=rng, attack=0.4, release=1.0)[:n]
-    y = y + np.pad(warm, (0, max(0, n - len(warm))))[:n]
+    core.mix_into(y, inst.pad([50, 57, 62], dur * 0.9, amp=0.13, rng=rng, attack=0.4,
+                              release=1.0), 0, 1.0)
     y = core.to_mono(fx.reverb(y, "valley", mix=0.3, seed=int(rng.integers(1 << 30)), tail=True))
     return _limit_tail(y, 0.3)
 
@@ -735,9 +727,8 @@ def echo_tone(rng) -> np.ndarray:
     degs = theory.TOLL.inverse().fragment(3).degrees()
     for i, d in enumerate(degs):
         s = samples(i * 0.34)
-        note = inst.bell(theory.degree_to_midi(d, tonic, mode) + 12, dur - i * 0.34,
-                         t60=2.4, amp=0.4, rng=rng, warmth=0.3)
-        out[s:s + len(note)] += note[:n - s]
+        core.mix_into(out, inst.bell(theory.degree_to_midi(d, tonic, mode) + 12,
+                                     dur - i * 0.34, t60=2.4, amp=0.4, rng=rng, warmth=0.3), s)
     out = core.to_mono(fx.reverb(out, "marsh", mix=0.4, seed=int(rng.integers(1 << 30)), tail=True))
     return _limit_tail(out, 0.3)
 
@@ -749,7 +740,8 @@ def death_sound(rng) -> np.ndarray:
     bell = inst.bell(38, dur, t60=3.2, amp=0.5, rng=rng, warmth=0.5)
     drain = osc.sine(np.geomspace(320.0, 42.0, n), n) * env.segments(
         [(0, 0), (0.08, 0.5), (1.2, 0.3), (dur, 0.0)], n) * 0.3
-    out = bell[:n] + drain
+    out = drain.copy()
+    core.mix_into(out, bell, 0, 1.0)
     out = core.to_mono(fx.reverb(out, "cinder", mix=0.38, seed=int(rng.integers(1 << 30)), tail=True))
     return _limit_tail(out, 0.5)
 
