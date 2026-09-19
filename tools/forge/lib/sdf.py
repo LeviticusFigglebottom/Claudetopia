@@ -616,8 +616,13 @@ def vertex_normals(verts: np.ndarray, quads: np.ndarray) -> np.ndarray:
 
 
 def project_to_field(verts: np.ndarray, scene: Scene, iters: int = 2, step: float = 0.7,
-                     iso: float = 0.0, eps: float = 1e-3) -> np.ndarray:
-    """Push vertices back onto the iso-surface (recovers detail smoothing rounded off)."""
+                     iso: float = 0.0, eps: float = 1e-3, max_step: float = 0.01) -> np.ndarray:
+    """Push vertices back onto the iso-surface (recovers detail that smoothing rounded off).
+
+    The move is clamped to `max_step`.  A field built from a region mask has flat plateaus
+    where the gradient is nearly zero while the value is not; without a clamp, dividing by
+    that gradient throws vertices thousands of metres away — which is exactly how a hairstyle
+    ended up with a spike reaching 1.8 km into the sky."""
     V = verts.copy()
     for _ in range(iters):
         d = scene.eval(V) - iso
@@ -627,7 +632,13 @@ def project_to_field(verts: np.ndarray, scene: Scene, iters: int = 2, step: floa
             o[a] = eps
             g[:, a] = (scene.eval(V + o) - scene.eval(V - o)) / (2 * eps)
         gl = np.linalg.norm(g, axis=1, keepdims=True)
-        V = V - step * (d[:, None] * g / np.maximum(gl, 1e-6))
+        delta = -step * (d[:, None] * g / np.maximum(gl, 1e-4))
+        n = np.linalg.norm(delta, axis=1, keepdims=True)
+        delta = np.where(n > max_step, delta * (max_step / np.maximum(n, 1e-12)), delta)
+        delta[~np.isfinite(delta)] = 0.0
+        # a vertex sitting in a flat plateau has nothing to project onto: leave it alone
+        delta[(gl < 1e-3).ravel()] = 0.0
+        V = V + delta
     return V
 
 
@@ -640,8 +651,11 @@ def mesh_from_scene(scene: Scene, spacing: float, smooth_iters: int = 6, project
     if smooth_iters:
         verts = taubin_smooth(verts, quads, iters=smooth_iters)
     if project:
-        verts = project_to_field(verts, scene, iters=project, iso=iso)
+        verts = project_to_field(verts, scene, iters=project, iso=iso, max_step=1.2 * spacing)
         verts = taubin_smooth(verts, quads, iters=2)
+    bad = ~np.isfinite(verts).all(axis=1)
+    if bad.any():
+        verts[bad] = 0.0
     return verts, quads
 
 

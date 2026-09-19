@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ixnur8m8thtn"
-path="res://.godot/imported/shirt_shirt_albedo.png-1fa68fe293a1a8569e3f2b28fcb3557a.ctex"
+uid="uid://cxvkbkwdqll3e"
+path="res://.godot/imported/dress_dress_orm.png-465d9cd9a58c18fad06111ccea5536bf.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "77f7d314e6e557178bc395d9d57b501d"
+"md5": "bd19cf3239ead8a3b146413c2433f188"
 }
 
 [deps]
 
-source_file="res://assets/models/characters/clothing/shirt/shirt_shirt_albedo.png"
-dest_files=["res://.godot/imported/shirt_shirt_albedo.png-1fa68fe293a1a8569e3f2b28fcb3557a.ctex"]
+source_file="res://assets/models/characters/clothing/dress/dress_dress_orm.png"
+dest_files=["res://.godot/imported/dress_dress_orm.png-465d9cd9a58c18fad06111ccea5536bf.ctex"]
 
 [params]
 

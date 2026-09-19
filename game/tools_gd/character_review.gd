@@ -29,6 +29,7 @@ var _job := 0
 var _warmup := 0
 var _written: Array[String] = []
 var _models: Array[HumanoidModel] = []
+var _preset_ids: Array[String] = []
 
 
 func _ready() -> void:
@@ -138,6 +139,18 @@ func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
 	return m
 
 
+## Holds a model on one frame of a clip, so a lineup is not a row of A-posed mannequins.
+func _hold_pose(m: HumanoidModel, clip: String, t: float) -> void:
+	if not m.has_clip(clip):
+		return
+	if m.anim_tree != null:
+		m.anim_tree.active = false
+	m.anim_player.play(clip)
+	m.anim_player.seek(t, true)
+	m.anim_player.advance(0.0)
+	m.anim_player.pause()
+
+
 func _queue_lineup() -> void:
 	var presets := _load_presets()
 	if presets.is_empty():
@@ -152,23 +165,27 @@ func _queue_lineup() -> void:
 		var n_in_row: int = mini(per_row, presets.size() - row * per_row)
 		var x := (col - (n_in_row - 1) * 0.5) * spacing
 		var z := -float(row) * 1.6
-		_spawn(presets[i]["appearance"], Vector3(x, 0, z))
+		var mm := _spawn(presets[i]["appearance"], Vector3(x, 0, z))
+		_hold_pose(mm, "Idle", 0.7 + 0.31 * float(i))
 		labels.append(str(presets[i]["id"]))
 	for row in rows:
 		var n_in_row: int = mini(per_row, presets.size() - row * per_row)
 		var width := n_in_row * spacing
 		_jobs.append({
 			"file": "lineup_row%d.png" % row,
-			"cam": Vector3(0, 1.05, -row * 1.6 - width * 1.5 - 1.2),
-			"look": Vector3(0, 0.95, -row * 1.6),
-			"fov": 40.0,
+			"cam": Vector3(0, 1.02, -row * 1.6 - width * 1.25 - 0.9),
+			"look": Vector3(0, 0.92, -row * 1.6),
+			"fov": 36.0,
+			"hide_rows": row,
 		})
 	_jobs.append({
 		"file": "lineup_all.png",
 		"cam": Vector3(0, 2.4, -per_row * spacing * 1.6),
 		"look": Vector3(0, 0.9, -rows * 0.8),
 		"fov": 42.0,
+		"hide_rows": -1,
 	})
+	_preset_ids = labels
 
 
 func _queue_strips() -> void:
@@ -191,6 +208,16 @@ func _queue_strips() -> void:
 				})
 
 
+## Shows only the lineup row being photographed (or all of them when row < 0).
+func _only_row(row: int) -> void:
+	var per_row := 6
+	for i in _models.size():
+		var holder := _models[i].get_parent() as Node3D
+		if holder == null:
+			continue
+		holder.visible = row < 0 or (i / per_row) == row
+
+
 func _process(_delta: float) -> void:
 	if _job >= _jobs.size():
 		return
@@ -199,6 +226,8 @@ func _process(_delta: float) -> void:
 		_camera.position = job["cam"]
 		_camera.look_at(job["look"])
 		_camera.fov = float(job.get("fov", 38.0))
+		if job.has("hide_rows"):
+			_only_row(int(job["hide_rows"]))
 		if job.has("clip"):
 			var m: HumanoidModel = job["model"]
 			_pose_at(m, str(job["clip"]), float(job["time"]))

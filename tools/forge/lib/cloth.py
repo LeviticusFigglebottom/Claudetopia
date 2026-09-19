@@ -178,7 +178,11 @@ def _s(skel: Skeleton) -> float:
 def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves: float = 0.0,
                  collar: float = 0.0, soft: float = 0.025) -> RegionFn:
     """The trunk between `hem` and `top` (fractions of the body height), optionally with
-    sleeves running `sleeves` of the way down the arms."""
+    sleeves running `sleeves` of the way down the arms.
+
+    `collar` raises (+) or lowers (-) the neckline in metres from the base of the neck; the
+    garment always covers the shoulders, so a negative collar opens the throat rather than
+    stripping the chest."""
     s = _s(skel)
     z0 = hem * skel.props.height
     z1 = top * skel.props.height
@@ -199,8 +203,15 @@ def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves:
             d = np.minimum(dl, dr)
             return 1.0 - sdf_smoothstep(reach - 0.05 * s, reach + 0.02 * s, d)
         arms.append(region_and(near_bones(skel, bones, 0.115 * s, 0.05 * s), sleeve_fn))
-    neck_cut = skel.J["Neck"][2] + collar * 0.10 * skel.props.height
-    body_part = region_and(trunk, lambda P: 1.0 - sdf_smoothstep(neck_cut - 0.02 * s, neck_cut + 0.01 * s, P[:, 2]))
+    neck_cut = float(skel.J["Neck"][2]) + collar * s
+    neck_r = 0.085 * s
+
+    def neckline(P):
+        # cut only a throat-sized hole, so shoulders and chest stay covered
+        near_axis = 1.0 - sdf_smoothstep(neck_r * 0.75, neck_r * 1.35, np.hypot(P[:, 0], P[:, 1] - 0.01 * s))
+        above = sdf_smoothstep(neck_cut - 0.025 * s, neck_cut + 0.015 * s, P[:, 2])
+        return 1.0 - np.clip(near_axis * above + sdf_smoothstep(neck_cut + 0.06 * s, neck_cut + 0.10 * s, P[:, 2]), 0, 1)
+    body_part = region_and(trunk, neckline)
     return region_or(body_part, *arms) if arms else body_part
 
 
@@ -218,25 +229,25 @@ def tunic(skel: Skeleton, body, *, hem: float = 0.44, sleeves: float = 0.55,
           thickness: float = 0.010, name: str = "tunic") -> Garment:
     s = _s(skel)
     sc = Scene()
-    reg = torso_region(skel, top=0.90, hem=hem, sleeves=sleeves, collar=-0.15)
+    reg = torso_region(skel, top=0.90, hem=hem, sleeves=sleeves, collar=0.012)
     sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
                           bounds=zbox(skel, hem * skel.props.height - 0.03 * s, 0.92 * skel.props.height, xy=0.55)))
     # the skirt of the tunic hangs away from the legs instead of shrink-wrapping them
     hip = float(skel.J["UpperLeg.L"][2])
     z_hem = hem * skel.props.height
     sc.union(sdf.loft([
-        (np.array([0.0, 0.010 * s, hip + 0.09 * s]), 0.166 * s, 0.122 * s),
-        (np.array([0.0, 0.008 * s, hip - 0.02 * s]), 0.180 * s, 0.132 * s),
-        (np.array([0.0, 0.004 * s, z_hem + 0.03 * s]), 0.205 * s, 0.150 * s),
-        (np.array([0.0, 0.0, z_hem]), 0.207 * s, 0.152 * s),
-    ], LEFT, axis=UP), k=0.03 * s)
+        (np.array([0.0, 0.010 * s, hip + 0.10 * s]), 0.150 * s, 0.110 * s),
+        (np.array([0.0, 0.008 * s, hip - 0.02 * s]), 0.160 * s, 0.118 * s),
+        (np.array([0.0, 0.004 * s, z_hem + 0.03 * s]), 0.170 * s, 0.126 * s),
+        (np.array([0.0, 0.0, z_hem]), 0.171 * s, 0.127 * s),
+    ], LEFT, axis=UP), k=0.014 * s)
     return Garment(name, sc, spacing=0.0075, target_tris=4200, material="cloth")
 
 
 def shirt(skel: Skeleton, body, *, thickness: float = 0.008) -> Garment:
     sc = Scene()
     s = _s(skel)
-    reg = torso_region(skel, top=0.90, hem=0.52, sleeves=0.62, collar=-0.12)
+    reg = torso_region(skel, top=0.90, hem=0.52, sleeves=0.62, collar=0.004)
     sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
                           bounds=zbox(skel, 0.50 * skel.props.height, 0.92 * skel.props.height, xy=0.62)))
     return Garment("shirt", sc, spacing=0.0070, target_tris=3600, material="cloth")
@@ -258,17 +269,11 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
     waist = float(skel.J["Spine"][2])
     sc = Scene()
     outer = sdf.loft([
-        (np.array([0.0, 0.0, waist]), 0.140 * s, 0.104 * s),
-        (np.array([0.0, 0.0, hip + 0.02 * s]), 0.172 * s, 0.128 * s),
-        (np.array([0.0, 0.0, (hip + z_hem) * 0.5]), (0.195 + 0.05 * flare) * s, (0.146 + 0.04 * flare) * s),
-        (np.array([0.0, 0.0, z_hem + 0.02 * s]), (0.215 + 0.10 * flare) * s, (0.162 + 0.08 * flare) * s),
-        (np.array([0.0, 0.0, z_hem]), (0.216 + 0.10 * flare) * s, (0.163 + 0.08 * flare) * s),
-    ], LEFT, axis=UP)
-    inner = sdf.loft([
-        (np.array([0.0, 0.0, waist + 0.01 * s]), 0.128 * s, 0.094 * s),
-        (np.array([0.0, 0.0, hip + 0.02 * s]), 0.160 * s, 0.117 * s),
-        (np.array([0.0, 0.0, (hip + z_hem) * 0.5]), (0.183 + 0.05 * flare) * s, (0.135 + 0.04 * flare) * s),
-        (np.array([0.0, 0.0, z_hem - 0.012 * s]), (0.205 + 0.10 * flare) * s, (0.152 + 0.08 * flare) * s),
+        (np.array([0.0, 0.0, waist]), 0.134 * s, 0.100 * s),
+        (np.array([0.0, 0.0, hip + 0.02 * s]), 0.158 * s, 0.118 * s),
+        (np.array([0.0, 0.0, (hip + z_hem) * 0.5]), (0.172 + 0.030 * flare) * s, (0.130 + 0.026 * flare) * s),
+        (np.array([0.0, 0.0, z_hem + 0.02 * s]), (0.186 + 0.058 * flare) * s, (0.142 + 0.048 * flare) * s),
+        (np.array([0.0, 0.0, z_hem]), (0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s),
     ], LEFT, axis=UP)
     sc.union(outer)
     # soft vertical folds
@@ -276,16 +281,16 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
     for i in range(n):
         a = 2 * math.pi * i / n
         d = np.array([math.cos(a), math.sin(a), 0.0])
-        sc.subtract(sdf.tube_path([d * 0.17 * s + np.array([0, 0, hip + 0.02 * s]),
-                                   d * (0.215 + 0.10 * flare) * s + np.array([0, 0, z_hem])],
-                                  0.012 * s), k=0.02 * s)
+        sc.subtract(sdf.tube_path([d * 0.155 * s + np.array([0, 0, hip + 0.02 * s]),
+                                   d * (0.186 + 0.058 * flare) * s + np.array([0, 0, z_hem])],
+                                  0.010 * s), k=0.016 * s)
     return Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
 
 
 def dress(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     g = skirt(skel, body, hem=0.22, flare=0.8, name="dress")
-    reg = torso_region(skel, top=0.90, hem=0.55, sleeves=0.45, collar=-0.14)
+    reg = torso_region(skel, top=0.90, hem=0.55, sleeves=0.45, collar=0.0)
     g.scene.union(offset_shell(body, reg, 0.010 * s, gap=0.004 * s,
                                bounds=zbox(skel, 0.53 * skel.props.height, 0.92 * skel.props.height, xy=0.50)), k=0.01 * s)
     g.target_tris = 4400
@@ -295,7 +300,7 @@ def dress(skel: Skeleton, body) -> Garment:
 def robe(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     g = skirt(skel, body, hem=0.08, flare=0.55, name="robe")
-    reg = torso_region(skel, top=0.92, hem=0.50, sleeves=1.0, collar=-0.10)
+    reg = torso_region(skel, top=0.92, hem=0.50, sleeves=1.0, collar=0.020)
     g.scene.union(offset_shell(body, reg, 0.013 * s, gap=0.006 * s,
                                bounds=zbox(skel, 0.48 * skel.props.height, 0.94 * skel.props.height, xy=0.80)), k=0.012 * s)
     # wide sleeve bells
@@ -325,14 +330,9 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30) -> G
         (np.array([0.0, 0.014 * s, neck + 0.030 * s]), 0.150 * s, 0.118 * s),
         (np.array([0.0, 0.016 * s, neck - 0.020 * s]), (shoulder_x + 0.045) * s, 0.130 * s),
         (np.array([0.0, 0.018 * s, chest - 0.05 * s]), (shoulder_x + 0.060) * s, 0.145 * s),
-        (np.array([0.0, 0.020 * s, (chest + z_hem) * 0.5]), (shoulder_x + 0.085) * s, 0.170 * s),
-        (np.array([0.0, 0.022 * s, z_hem + 0.03 * s]), (shoulder_x + 0.105) * s, 0.190 * s),
-        (np.array([0.0, 0.022 * s, z_hem]), (shoulder_x + 0.106) * s, 0.191 * s),
-    ], LEFT, axis=UP)
-    inner = sdf.loft([
-        (np.array([0.0, 0.014 * s, neck + 0.034 * s]), 0.138 * s, 0.106 * s),
-        (np.array([0.0, 0.018 * s, chest - 0.05 * s]), (shoulder_x + 0.046) * s, 0.132 * s),
-        (np.array([0.0, 0.022 * s, z_hem - 0.02 * s]), (shoulder_x + 0.092) * s, 0.177 * s),
+        (np.array([0.0, 0.020 * s, (chest + z_hem) * 0.5]), (shoulder_x + 0.055) * s, 0.150 * s),
+        (np.array([0.0, 0.022 * s, z_hem + 0.03 * s]), (shoulder_x + 0.075) * s, 0.165 * s),
+        (np.array([0.0, 0.022 * s, z_hem]), (shoulder_x + 0.076) * s, 0.166 * s),
     ], LEFT, axis=UP)
     sc.union(outer)
     # open down the front
@@ -342,7 +342,7 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30) -> G
         a = math.pi * (0.25 + 0.5 * i / 6)
         d = np.array([math.cos(a), math.sin(a), 0.0])
         sc.subtract(sdf.tube_path([d * 0.16 * s + np.array([0, 0, chest]),
-                                   d * (shoulder_x + 0.10) * s + np.array([0, 0.02 * s, z_hem])],
+                                   d * (shoulder_x + 0.072) * s + np.array([0, 0.02 * s, z_hem])],
                                   0.014 * s), k=0.022 * s)
     g = Garment("hooded_cloak" if hooded else "cloak", sc, spacing=0.0080, target_tris=3600, material="cloth")
     if hooded:
@@ -598,7 +598,7 @@ def hair(skel: Skeleton, name: str, *, front: float = 1.0, sides: float = 1.0, b
     L = bodylib.head_landmarks(skel, hs)
 
     def region(P):
-        return np.clip(bodylib.scalp_field(P, skel, hs or bodylib.HeadStyle(), front, sides, back) * 1.6 + 0.30, 0.0, 1.0)
+        return np.clip(bodylib.scalp_field(P, skel, hs or bodylib.HeadStyle(), front, sides, back) * 0.55 + 0.42, 0.0, 1.0)
     sc = Scene()
     lo, hi = head.bounds(0.02)
     sc.union(offset_shell(head, region, thickness * s, gap=0.001 * s, bounds=(lo, hi)))

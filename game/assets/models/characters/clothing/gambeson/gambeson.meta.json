@@ -1,11 +1,11 @@
 {
  "bounds": [
-  -0.5991,
-  -0.1739,
-  0.5696,
-  0.5998,
-  0.1812,
-  1.5418
+  -0.6004,
+  -0.1719,
+  0.5699,
+  0.6002,
+  0.1791,
+  1.5411
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -16,10 +16,10 @@
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 5882,
+ "seed": 9604,
  "slot_hint": "torso",
  "tris": [
-  2800,
+  4400,
   0,
   0
  ],
