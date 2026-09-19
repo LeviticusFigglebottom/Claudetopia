@@ -6,7 +6,8 @@ extends Control
 ##
 ## It reads other streams by group and by duck typing, so it works before they land:
 ##   player            health/max_health, stamina/max_stamina, mana/max_mana, `stats_changed`,
-##                     `lock_on_changed(target)`, a child with `prompt_changed(text)`
+##                     `lock_on_changed(target)`, `spell_readied(id)`, `equipped_spell`,
+##                     a child with `prompt_changed(text)`
 ##   equipment         quick_item(slot) / quick_count(slot)
 ##   quest_log         active_markers() -> [{place_id, radius}]
 
@@ -23,6 +24,10 @@ var _quest_log: Node = null
 var _bars: Dictionary = {}          # kind -> StatBar
 var _compass: Compass
 var _quick_slots: Array[Control] = []
+var _saying_plate: PanelContainer
+var _saying_mark: SchoolMark
+var _saying_name: Label
+var _saying_cost: Label
 var _prompt: PanelContainer
 var _prompt_label: Label
 var _prompt_glyph: Label
@@ -116,6 +121,31 @@ func _build() -> void:
 		var slot := _make_quick_slot(i + 1)
 		quick.add_child(slot)
 		_quick_slots.append(slot)
+
+	# the readied saying, sitting over the quick slots: the school's mark, its name, and what
+	# it costs against the breath in the bar on the other side of the screen
+	_saying_plate = UiKit.panel("ChromePanel")
+	_saying_plate.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_saying_plate.offset_left = -300.0
+	_saying_plate.offset_top = -152.0
+	_saying_plate.offset_right = -24.0
+	_saying_plate.offset_bottom = -114.0
+	_saying_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_saying_plate.visible = false
+	add_child(_saying_plate)
+	var saying_row := UiKit.row(8)
+	saying_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_saying_plate.add_child(UiKit.margins(saying_row, 10, 0, 10, 0))
+	_saying_mark = SchoolMark.new()
+	_saying_mark.custom_minimum_size = Vector2(22, 22)
+	_saying_mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	saying_row.add_child(_saying_mark)
+	_saying_name = UiKit.label("", "Body")
+	_saying_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_saying_name.clip_text = true
+	saying_row.add_child(_saying_name)
+	_saying_cost = UiKit.label("", "Small", HORIZONTAL_ALIGNMENT_RIGHT)
+	saying_row.add_child(_saying_cost)
 
 	# boss bar, above the quick slots
 	_boss_box = UiKit.column(2)
@@ -267,11 +297,14 @@ func _connect_world() -> void:
 			_player.connect("stats_changed", _refresh_stats)
 		if _player.has_signal("lock_on_changed") and not _player.is_connected("lock_on_changed", _on_lock_on):
 			_player.connect("lock_on_changed", _on_lock_on)
+		if _player.has_signal("spell_readied") and not _player.is_connected("spell_readied", _on_spell_readied):
+			_player.connect("spell_readied", _on_spell_readied)
 		var interactor := _find_interactor(_player)
 		if interactor and not interactor.is_connected("prompt_changed", _on_prompt_changed):
 			interactor.connect("prompt_changed", _on_prompt_changed)
 	_refresh_stats()
 	_refresh_quick()
+	_refresh_saying()
 
 
 func _find_interactor(root: Node) -> Node:
@@ -293,6 +326,7 @@ func _refresh_stats() -> void:
 			continue
 		bar.visible = true
 		bar.set_values(float(value), float(maximum))
+	_refresh_saying()
 
 
 func _refresh_quick() -> void:
@@ -322,6 +356,37 @@ func _refresh_quick() -> void:
 			icon.texture = ThemeBuilder.icon(UiKit.item_icon_name(def))
 		if count:
 			count.text = str(n) if n > 1 else ""
+
+
+func _on_spell_readied(_spell_id: String) -> void:
+	_refresh_saying()
+	_idle = 0.0
+
+
+## The readied saying's plate. Hidden when nothing is readied, so a character who does not Say
+## never sees a slot asking to be filled.
+func _refresh_saying() -> void:
+	if _saying_plate == null:
+		return
+	var id := ""
+	if _player and is_instance_valid(_player):
+		id = str(_player.get("equipped_spell"))
+	var def := ContentDB.get_or_empty(id)
+	if id.is_empty() or def.is_empty():
+		_saying_plate.visible = false
+		return
+	var was_hidden := not _saying_plate.visible
+	_saying_plate.visible = true
+	_saying_mark.school = SpellRuntime.school_of(def)
+	_saying_name.text = str(def.get("name", id))
+	var cost := float(def.get("cost", 0.0))
+	_saying_cost.text = "%d" % roundi(cost)
+	var mana: Variant = _player.get("mana") if _player and is_instance_valid(_player) else null
+	var enough := mana == null or float(mana) >= cost
+	_saying_cost.modulate = Color(1, 1, 1, 1) if enough else ThemeBuilder.colour("accent", UI.theme_variant)
+	_saying_plate.modulate = Color(1, 1, 1, 1.0 if enough else 0.7)
+	if was_hidden:
+		UiKit.ink_in(_saying_plate, 0.0, 0.3)
 
 
 func _refresh_prompt_glyph() -> void:

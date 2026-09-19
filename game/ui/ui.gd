@@ -37,6 +37,7 @@ const MENUS := {
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
 	"journal": {"scene": "res://ui/journal/journal.tscn", "full": true},
 	"skills": {"scene": "res://ui/skills/skills_screen.tscn", "full": true},
+	"sayings": {"scene": "res://ui/sayings/sayings_screen.tscn", "full": true},
 	"map": {"scene": "res://ui/map/map_screen.tscn", "full": true},
 	"book": {"scene": "res://ui/books/book_reader.tscn", "full": true},
 	"crafting": {"scene": "res://ui/crafting/station_screen.tscn", "full": true},
@@ -45,7 +46,7 @@ const MENUS := {
 }
 
 ## Actions that open their screen straight from the world.
-const MENU_ACTIONS := {"inventory": "inventory", "journal": "journal", "map": "map", "skills": "skills"}
+const MENU_ACTIONS := {"inventory": "inventory", "journal": "journal", "map": "map", "skills": "skills", "sayings": "sayings"}
 
 ## Where a screenshot taken with the bound key lands.
 const SHOT_DIR := "user://captures/shots"

@@ -292,6 +292,13 @@ func _refresh_detail() -> void:
 	if not armour.is_empty():
 		facts.add_child(_fact("Armour", str(armour.get("armour", 0))))
 		facts.add_child(_fact("Class", str(armour.get("weight_class", ""))))
+	var book := ContentDB.get_or_empty(str(it.get("reads", "")))
+	var teaches := str(book.get("teaches_spell", ""))
+	if teaches != "":
+		var spell := ContentDB.get_or_empty(teaches)
+		facts.add_child(_fact("The saying", str(spell.get("name", teaches))))
+		facts.add_child(_fact("School", str(spell.get("school", "")).capitalize()))
+		facts.add_child(_fact("Costs to say", "%d breath" % int(spell.get("cost", 0))))
 	_detail_box.add_child(facts)
 	_detail_box.add_child(UiKit.divider())
 	_detail_box.add_child(UiKit.wrapped(str(it.get("description", "")), "Journal"))
@@ -355,6 +362,7 @@ func _use(uid: int) -> void:
 func _read(uid: int) -> void:
 	if _bag and _bag.has_method("read"):
 		_bag.call("read", uid)
+	_refresh()
 
 
 func _drop(uid: int) -> void:

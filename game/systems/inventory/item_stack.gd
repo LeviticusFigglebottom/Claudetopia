@@ -157,20 +157,20 @@ func is_consumable() -> bool:
 	return category() == "consumable" or category() == "ingredient"
 
 
-## The book this stack opens, if any: `reads` names one outright, and a `book` item with no
-## `reads` is assumed to be the book of the same name (core:item/x -> core:book/x).
+## The book this item opens ("" when it is not something to read). An item says so with
+## `reads`; a `book`-category item whose short name matches a book id says so by its name.
 func reads_book() -> String:
 	var named := str(def().get("reads", ""))
-	if not named.is_empty():
+	if named != "":
 		return named
 	if category() != "book":
 		return ""
-	var guess := "core:book/" + Ids.name_of(id)
+	var guess := Ids.make(Ids.pack_of(id), "book", Ids.name_of(id))
 	return guess if ContentDB.has(guess) else ""
 
 
 func is_readable() -> bool:
-	return not reads_book().is_empty()
+	return reads_book() != ""
 
 
 func is_ingredient() -> bool:

@@ -4,8 +4,8 @@ _Updated 2026-09-19 (session 1, early)._
 
 ## State
 
-**793 unit tests green, 0 content problems. The smoke run builds all 24 shipping
-interiors clean (6 regions, 34 places). The scripted journey passes all 12 of
+**Unit tests green, 0 content problems. The smoke run builds all 24 shipping
+interiors clean (6 regions, 34 places). The scripted journey passes all 13 of
 DESIGN's done-list promises. The performance probe's worst interior costs 90 draw
 calls and 1.17M primitives against budgets of 2000 and 1.5M. 16/16 combat-arena
 checks pass. 722 content definitions across 24 types, including the full
@@ -15,7 +15,7 @@ all five schools.**
 Verify the whole thing with four commands:
 
 ```
-./run.sh test       # 793 unit tests, and content validation fails the build
+./run.sh test       # the unit suite; content validation fails the build
 ./run.sh smoke      # build every interior for real; fail on any error
 ./run.sh journey    # one scripted run through every promise in the done list
 ./run.sh perf       # draw calls and primitives against the budgets
@@ -42,6 +42,13 @@ Merged and working on the main branch:
 * **Inventory, progression, crafting** — stacks with per-instance state, 13 equipment
   slots, deterministic loot tables, 16 use-based skills with 34 perks, six callings,
   smithing with tempering, alchemy with effect discovery, enchanting with mote charge.
+* **Saying** — what a character knows lives on Progression beside their skills. Three
+  Sayer-ish callings come up knowing one or two; fifteen spell tomes (a book with the
+  working written out and an item that reads it) teach the rest; the three Sayers of the
+  Circle teach the first rung of Binding, Hush and Mending, and the Sayers', Order's and
+  Quiet Hands' questlines each end in one. The Sayings screen readies one to the cast key,
+  the HUD shows it over the quick slots, and a saying nobody taught cannot be cast however
+  its id reached the slot.
 * **Bosses** — five, with phases that swap attack sets, breakable limbs on the
   Stone-Thrall King, channelled attacks that must be interrupted or silenced, and unique
   drops that carry the fight they came out of.
@@ -60,8 +67,8 @@ Merged and working on the main branch:
 * **UI** — a generated "tended paper" identity: parchment panels, brass and dark-oak
   frames, hand-drawn icons, a painted chart. Title, the Naming, HUD with compass and boss
   bar, conversation and gesture wheel, pause, settings with live rebinding, save and load,
-  journal in four tabs, book reader, inventory, skills and perks, the three crafting
-  stations, trade, deeds and the map. Every screen renders from real content.
+  journal in four tabs, book reader, inventory, skills and perks, sayings, the three
+  crafting stations, trade, deeds and the map. Every screen renders from real content.
 * **Tooling** — `run.sh`, the debug console with scripted `--cmd` runs, the region
   drop-test checker, the naming generator with a banned-name check, review scenes for
   atmosphere, interiors and the combat arena.

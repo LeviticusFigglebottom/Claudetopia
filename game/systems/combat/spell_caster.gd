@@ -21,6 +21,11 @@ var auto_advance: bool = true
 var skill_lookup: Callable = Callable()
 ## Optional: Callable() -> Node returning the current lock-on target for "target" spells.
 var target_lookup: Callable = Callable()
+## Optional: a Callable(spell_id) -> bool answering "has this caster been taught it?".
+## Unset means yes: an enemy caster's spells are part of its def, so nothing has to teach them.
+## The player sets this to the Progression node's known sayings, so an id put in the slot by
+## a console, a save or a bug is still refused.
+var known_lookup: Callable = Callable()
 
 var casting: bool = false
 var current_spell_id: String = ""
@@ -59,6 +64,12 @@ func skill_for(def: Dictionary) -> float:
 	return 0.0
 
 
+func knows(spell_id: String) -> bool:
+	if known_lookup.is_valid():
+		return bool(known_lookup.call(spell_id))
+	return true
+
+
 func is_silenced() -> bool:
 	if actor == null:
 		return false
@@ -69,7 +80,7 @@ func is_silenced() -> bool:
 ## Starts a cast. Returns false (and emits cast_failed) when the rules refuse it.
 func cast(spell_id: String, target: Node = null) -> bool:
 	var def := ContentDB.get_or_empty(spell_id)
-	var check := SpellRuntime.can_cast(def, mana, is_silenced(), skill_for(def), casting)
+	var check := SpellRuntime.can_cast(def, mana, is_silenced(), skill_for(def), casting, knows(spell_id))
 	if not bool(check["ok"]):
 		cast_failed.emit(spell_id, str(check["reason"]))
 		return false

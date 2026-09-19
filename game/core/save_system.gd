@@ -4,7 +4,7 @@ extends Node
 ## from_save(Dictionary). Late joiners (e.g. the player spawned after load) call
 ## take_pending(section) to pull their data.
 
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 const SAVE_DIR := "user://saves"
 const QUICK_SLOT := "quick"
 const AUTO_SLOT := "auto"

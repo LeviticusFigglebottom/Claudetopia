@@ -18,7 +18,8 @@ Deep places and dangerous regions swap brass and oak for cold bronze and ash.
 | `ui/hud/` | `hud.gd`, `compass.gd` (static bearing maths), `stat_bar.gd` (damage-lag ghost) |
 | `ui/dialogue/` | the conversation page and the gesture wheel |
 | `ui/journal/`, `ui/books/` | the journal's four tabs; the two-page reader |
-| `ui/inventory/`, `ui/skills/`, `ui/crafting/`, `ui/trade/`, `ui/property/` | the system screens |
+| `ui/inventory/`, `ui/skills/`, `ui/sayings/`, `ui/crafting/`, `ui/trade/`, `ui/property/` | the system screens |
+| `ui/lib/school_mark.gd` | `SchoolMark`: the drawn sigil of a school of Saying, used by the sayings screen and the HUD |
 | `ui/map/` | the chart, its fog shader is `assets/shaders/map_fog.gdshader` |
 | `ui/character/` | the Naming, and `valish_names.gd` |
 
@@ -52,7 +53,11 @@ By group and by duck typing, so every screen works before the stream it talks to
 `player` (health/stamina/mana, `stats_changed`, `lock_on_changed`, a child with
 `prompt_changed`), `inventory`, `equipment`, `progression`, `crafting`, `quest_log`,
 `dialogue_runner` — see CONTRACTS §8. Content types read: `item`, `skill`, `perk`, `calling`,
-`recipe`, `effect`, `book`, `gesture`, `rumour`, `enemy`, `boss`, `place`, `poi`, `region`.
+`recipe`, `effect`, `book`, `spell`, `gesture`, `rumour`, `enemy`, `boss`, `place`, `poi`, `region`.
+
+The sayings screen (`B`, or a pad button) lists what the character has been taught, grouped by
+school, and its **Ready it** is what sets the player's `equipped_spell`; the HUD's plate over the
+quick slots shows the readied saying, its school mark and what it costs.
 
 Emitted: `EventBus.menu_opened/closed`, `gesture_performed`, `transaction`,
 `property_purchased`, `notify`. Consumed: `notify`, `book_opened`, `region_entered`,

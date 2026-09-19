@@ -13,7 +13,8 @@ extends Node
 ##   Dialogue   group "dialogue_runner"  no save section (its state is flags in GameState)
 ##
 ## Other streams bind themselves with Social.bind("inventory", node) or simply by joining the
-## group this looks for: "inventory", "player", "crime" (bounty), "crafting" (recipes).
+## group this looks for: "inventory", "player", "crime" (bounty), "crafting" (recipes),
+## "progression" (skills and sayings).
 
 const PROVIDER_GROUPS := {
 	"inventory": "inventory",
@@ -22,6 +23,7 @@ const PROVIDER_GROUPS := {
 	"skills": "progression",
 	"bounty": "crime",
 	"recipes": "crafting",
+	"sayings": "progression",
 }
 
 var ctx: SocialContext

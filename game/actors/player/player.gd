@@ -13,6 +13,8 @@ signal attack_started(kind: String, index: int)
 signal dodge_started(direction: Vector3)
 signal parried(attacker: Node)
 signal equipment_changed(slot: String, item_id: String)
+## The readied saying changed (empty when it was put away). The HUD and the sayings screen listen.
+signal spell_readied(spell_id: String)
 signal quick_slot_used(index: int, item_id: String)
 signal camera_mode_changed(first_person: bool)
 
@@ -128,6 +130,8 @@ func _ready() -> void:
 		interactor.position = Vector3(0.0, 1.3, 0.0)
 		add_child(interactor)
 	caster.target_lookup = func() -> Node: return lock.target
+	# A saying has to have been taught before it can be Said, whatever put the id in the slot.
+	caster.known_lookup = func(spell_id: String) -> bool: return knows_spell(spell_id)
 	caster.cast_released.connect(_on_cast_released)
 	caster.cast_failed.connect(_on_cast_failed)
 	camera_rig.mode_changed.connect(_on_camera_mode_changed)
@@ -709,7 +713,7 @@ func _start_cast() -> bool:
 	if not can_act():
 		return false
 	if equipped_spell.is_empty():
-		EventBus.notify.emit("No spell readied.", "warning")
+		EventBus.notify.emit("No saying readied.", "warning")
 		return false
 	if not caster.cast(equipped_spell, lock.target):
 		return false
@@ -742,6 +746,8 @@ func _on_cast_failed(_spell_id: String, reason: String) -> void:
 		"silenced": EventBus.notify.emit("You cannot Say anything: silenced.", "warning")
 		"mana": EventBus.notify.emit("Not enough breath to Say it.", "warning")
 		"no_target": EventBus.notify.emit("No target.", "warning")
+		"not_known": EventBus.notify.emit("You have not been taught that saying.", "warning")
+		"busy": EventBus.notify.emit("You are already saying something.", "warning")
 	if state == State.CAST and reason != "interrupted":
 		_set_state(State.FREE)
 
@@ -984,8 +990,52 @@ func reload_left() -> float:
 	return maxf(_reload_until - now(), 0.0)
 
 
-func equip_spell(spell_id: String) -> void:
+## The Progression node that keeps what this character has learned, if there is one.
+func progression() -> Node:
+	var p := get_node_or_null(NodePath("Progression"))
+	if p != null:
+		return p
+	return get_tree().get_first_node_in_group("progression") if is_inside_tree() else null
+
+
+## Whether this character has been taught a saying. With no progression node (an arena test,
+## a review harness) nothing has been taught, so nothing is castable — which is the honest
+## answer rather than a silently permissive one.
+func knows_spell(spell_id: String) -> bool:
+	if spell_id.is_empty():
+		return false
+	var prog := progression()
+	if prog != null and prog.has_method("knows_spell"):
+		return bool(prog.call("knows_spell", spell_id))
+	return false
+
+
+## Puts away a readied saying the character turns out not to know (an old save, a pack that
+## is no longer loaded, a console id). Runs a frame after a load, once progression is back.
+func _validate_readied_saying() -> void:
+	if equipped_spell.is_empty():
+		return
+	if knows_spell(equipped_spell):
+		spell_readied.emit(equipped_spell)
+		return
+	Log.warn("Player", "readied saying '%s' is not known; slot cleared" % equipped_spell)
+	equipped_spell = ""
+	spell_readied.emit("")
+
+
+## Readies a saying (the sayings screen and the quick slots call this). An empty id puts the
+## saying away; an unknown one is refused and says so. Returns whether the slot now holds it.
+func equip_spell(spell_id: String) -> bool:
+	if spell_id.is_empty():
+		equipped_spell = ""
+		spell_readied.emit("")
+		return true
+	if not knows_spell(spell_id):
+		EventBus.notify.emit("You have not been taught that saying.", "warning")
+		return false
 	equipped_spell = spell_id
+	spell_readied.emit(spell_id)
+	return true
 
 
 ## Placeholder load until the inventory stream owns weights: equipped weight over capacity.
@@ -1011,8 +1061,8 @@ func use_quick_slot(index: int) -> void:
 	if quick_slot_handler.is_valid():
 		quick_slot_handler.call(index, id)
 	elif not id.is_empty() and Ids.type_of(id) == "spell":
-		equipped_spell = id
-		EventBus.notify.emit("Readied %s." % ContentDB.get_or_empty(id).get("name", id), "info")
+		if equip_spell(id):
+			EventBus.notify.emit("Readied %s." % ContentDB.get_or_empty(id).get("name", id), "info")
 
 
 func _emit_noise(loudness: float) -> void:
@@ -1123,9 +1173,13 @@ func from_save(d: Dictionary) -> void:
 	equip_weapon(str(eq.get("main_hand", "")))
 	equip_offhand(str(eq.get("off_hand", "")))
 	equip_armour(str(eq.get("body", "")))
+	# The readied saying comes back as saved. It cannot be checked against what the character
+	# knows yet — the "progression" section loads after this one — so the check is deferred to
+	# the end of the frame. Until then the caster's own gate refuses it anyway.
 	equipped_spell = str(d.get("equipped_spell", ""))
 	lantern_lit = bool(d.get("lantern_lit", false))
 	_refresh_lantern()
+	call_deferred("_validate_readied_saying")
 	var qs: Array = d.get("quick_slots", [])
 	for i in mini(qs.size(), quick_slots.size()):
 		quick_slots[i] = str(qs[i])

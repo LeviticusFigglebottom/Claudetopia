@@ -16,8 +16,8 @@ normative; everything tunable is content, everything pure is a `static func`.
 | `status_effects.gd` | burning, chilled, webbed, bleeding, poisoned, silenced, quieted, stagger, knockdown, warded — durations, ticks and stacking rules in one `RULES` table. |
 | `enemy_abilities.gd` | `EnemyAbilities`: the pure decisions behind the bestiary's special behaviours — whether a voice attack may be used, how much a cutpurse takes, what a lure does this frame, whether greed has roused a guardian, when a duelist presses its guard, which limb comes off next. No state, no nodes; `Enemy` does the acting. |
 | `projectile.gd`, `arrow.tscn` | Swept-ray kinematic projectile with a gravity arc; arrows stick into geometry, bolts vanish. |
-| `spell_runtime.gd` | Pure spell rules: cost and cast time by skill, silence check, school → skill and damage kind, effect → `HitData`. |
-| `spell_caster.gd` | Runtime casting: mana pool, cast timer, and the four implemented cast types (`projectile`, `self`, `aura`, `target`). `summon` is deliberately refused, not faked. |
+| `spell_runtime.gd` | Pure spell rules: cost and cast time by skill, silence check, whether the saying has been taught, school → skill and damage kind, effect → `HitData`. |
+| `spell_caster.gd` | Runtime casting: mana pool, cast timer, and the five implemented cast types (`projectile`, `self`, `aura`, `target`, `summon`). `known_lookup` asks whether this caster was ever taught the saying; unset means yes, which is what an enemy's own def wants. |
 | `lock_on.gd` | Targeting service: best target in a 30 m cone, cycling left/right with wrap, drops dead or distant targets. |
 
 Actors live in `actors/`: `actors/shared/actor.gd` (the base that owns these components and
@@ -44,7 +44,9 @@ resolves hits), `actors/player/`, `actors/enemy/`.
   post), `parries{parry_chance, parry_delay, guard_stability}` (an elite that guards between its
   own swings) and `flee_after_steal`/`flee_time`. `limbs[{name, remove_attacks[], add_attacks[],
   poise_loss, speed_mult, say}]` come off one per poise break, changing the moveset as they go.
-* `spell` defs — `{school, cast_type, cost, cast_time, range, speed, radius, duration, effects[]}`
+* `spell` defs — `{school, cast_type, cost, cast_time, range, speed, radius, duration, effects[]}`.
+  Who may cast one is not in the def: the player's `SpellCaster.known_lookup` asks the
+  `progression` node, so `can_cast` refuses with `"not_known"` whatever put the id in the slot.
   with effect types `damage`, `status`, `heal`, `shield`, `cleanse`.
 
 Weapon and attack timing is placeholder-generated from `speed` and the attack's telegraph until

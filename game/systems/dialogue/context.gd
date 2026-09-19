@@ -24,6 +24,7 @@ extends RefCounted
 ##   player     display_name() position() -> Vector3 skill_level(skill) -> int
 ##   bounty     bounty_for(faction) -> int
 ##   recipes    teach(recipe) -> bool
+##   sayings    learn_spell(spell) -> bool  knows_spell(spell) -> bool   (the progression node)
 ##   clock      hour() day (property or method)
 ##   content    get_or_empty(id) has(id) all(type)   (defaults to ContentDB)
 
@@ -424,6 +425,18 @@ func teach_recipe(recipe: String) -> bool:
 		problem("teach_recipe '%s' lost: no recipes provider" % recipe)
 		return false
 	return bool(_call("recipes", "teach", [recipe], false))
+
+
+## Teaches a saying (DESIGN §5.3). False when it was already known or nobody is listening.
+func teach_spell(spell: String) -> bool:
+	if not _has("sayings", "learn_spell"):
+		problem("teach_spell '%s' lost: no sayings provider" % spell)
+		return false
+	return bool(_call("sayings", "learn_spell", [spell], false))
+
+
+func knows_spell(spell: String) -> bool:
+	return bool(_call("sayings", "knows_spell", [spell], false))
 
 
 # --- time ----------------------------------------------------------------------------------
