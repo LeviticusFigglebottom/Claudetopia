@@ -132,3 +132,35 @@ never lost. Respawn counts as resting: the deep places reset.
 **Why.** One clear, visible consequence (DESIGN pillar 2) that fits the fiction
 (you are anchored where you were last known) without punishing use-based
 progression, which is per-skill and would be awkward to drop.
+
+## 2026-09-19 · Interiors are generated from authored intent, not from seeds
+**Decision.** Deep places come from a recipe of **beats** (entrance, passage, chamber,
+camp, flooded, shrine, treasure, boss) with a size word, a drop, links and a shortcut;
+houses come from a resident's **trade, wealth, household and habits**. The generator
+turns that intent into geometry and dressing. It is never the final result: the recipe
+also carries hand-placed features, encounters, and the story of who was here.
+**Why.** DESIGN requires interiors that answer "who was here?" and "what happened?", and
+no two that read the same. Pure procedural generation cannot answer either question;
+hand-building 24 interiors would eat the whole pass. Authored intent plus a generator
+gives both, and makes a new interior a short JSON file rather than a week of modelling.
+**Consequences.** The recipe is the source of truth; the meshes are build artifacts
+(`./run.sh interiors` rebuilds them). A designer changes a place by changing a sentence.
+The generated shell is chunked per chamber so the renderer can cull it.
+
+## 2026-09-19 · The scripted journey is the real acceptance test
+**Decision.** `./run.sh journey` drives one run through every promise in DESIGN's done
+list, against the real systems, and fails if any step does not hold.
+**Why.** Every stream's unit tests passed while the player spawned with no bag, no host
+scene installed the law or the market, two streams named the same shop tables
+differently, and four bosses had no stats. Unit tests cannot see a gap that lives
+between two systems; the journey found six in its first run.
+**Consequences.** Any new system that the done list depends on adds a step. A stream is
+not integrated when its tests pass, but when the journey still passes with it merged.
+
+## 2026-09-19 · Compatibility's light cap is a design constraint, not a bug to tune around
+**Decision.** Interiors are lit for Forward+ (the shipped renderer) and reviewed on it.
+The Compatibility per-object omni cap is raised to 12 and treated as a budget: a room
+gets a small number of strong lamps plus one vault light and one fill, not a scatter.
+**Why.** Compatibility silently drops lights past the cap, so a large chamber stayed
+black no matter how much light was added. Discovering that cost an hour; the rendering
+notes now say so plainly.
