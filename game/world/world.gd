@@ -38,6 +38,26 @@ static func terrain() -> TerrainProvider:
 	return instance.provider if instance else null
 
 
+## The three ground questions, answered statically so anything can ask them without holding a
+## reference to the world. `WorldProbe` looks for exactly these on the World script: without
+## them every query fell through to the region's nominal base height, which is how NPCs came to
+## stand at the average altitude of their county rather than on the hill they live on.
+static func get_height(x: float, z: float) -> float:
+	var t := terrain()
+	return t.get_height(x, z) if t != null else 0.0
+
+
+## Takes a point rather than a pair, because that is the shape `WorldProbe` asks in.
+static func region_id_at(pos: Vector3) -> String:
+	var t := terrain()
+	return t.nearest_region_id_at(pos.x, pos.z) if t != null else ""
+
+
+static func is_water(x: float, z: float) -> bool:
+	var t := terrain()
+	return t.is_water(x, z) if t != null else false
+
+
 func _ready() -> void:
 	instance = self
 	provider = TerrainProvider.new()
