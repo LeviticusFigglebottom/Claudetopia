@@ -333,22 +333,34 @@ func _approach_or_hold(delta: float, dist: float) -> void:
 		_strafe_or_retreat(delta, dist, false)
 
 
-## Pack members spread out and aim for a flanking slot instead of piling onto the same point.
+## Pack members take distinct bearings around the target instead of piling onto one point:
+## the pack's slots are fanned evenly across `flank_arc` degrees, centred on the bearing the
+## pack is approaching from, so a wolf that already holds a side keeps it and the others go wide.
 func _approach_goal() -> Vector3:
 	if target == null:
 		return global_position
 	if not bool(brain.param("flank", false)):
 		return target.global_position
+	var mates := _pack_mates()
+	var count := mates.size() + 1
+	if count <= 1:
+		return target.global_position
+	# Reference bearing: from the target towards the pack's centre of mass.
+	var centroid := global_position
+	for m in mates:
+		centroid += (m as Node3D).global_position
+	centroid /= float(count)
+	var reference := centroid - target.global_position
+	reference.y = 0.0
+	if reference.length_squared() < 0.01:
+		reference = Vector3.FORWARD
+	reference = reference.normalized()
+	var arc := deg_to_rad(float(brain.param("flank_arc", 200.0)))
 	var slot := _pack_slot()
-	var count := maxi(_pack_size(), 1)
-	var spread := float(brain.param("spread", 2.6))
-	var angle := TAU * float(slot) / float(count)
-	var to := global_position - target.global_position
-	to.y = 0.0
-	if to.length_squared() < 0.01:
-		to = Vector3.FORWARD
-	var base := to.normalized().rotated(Vector3.UP, angle * 0.6)
-	return target.global_position + base * maxf(spread, brain.engage_range())
+	var offset := (float(slot) / float(count - 1) - 0.5) * arc
+	var bearing := reference.rotated(Vector3.UP, offset)
+	var ring := maxf(float(brain.param("spread", 2.6)), brain.engage_range())
+	return target.global_position + bearing * ring
 
 
 func _pack_mates() -> Array[Node]:
@@ -433,7 +445,8 @@ func _end_charge(connected: bool) -> void:
 	_charging = false
 	poise_comp.clear_hyper_armour()
 	if connected:
-		_begin_attack(_current_attack)
+		# The charge landed: swing the attack itself (never re-enter the wind-up).
+		_begin_melee(_current_attack)
 	else:
 		_global_cooldown = 1.2
 		anim.play_intent("Hit_Light")
@@ -470,18 +483,24 @@ func _select_attack(dist: float) -> Dictionary:
 	return options[0]
 
 
+## Dispatches by attack kind: a charge winds up then runs; a spell goes through the caster;
+## everything else is a melee swing.
 func _begin_attack(attack: Dictionary) -> void:
+	match str(attack.get("kind", "")):
+		"charge":
+			_current_attack = attack
+			_attacking = true
+			_attack_phase = "telegraph"
+			telegraph.emit(str(attack.get("name", "attack")), CHARGE_WINDUP)
+			anim.play_intent(str(attack.get("clip", "Attack_1")), {"length": CHARGE_WINDUP, "events": [{"t": CHARGE_WINDUP * 0.95, "name": "charge_go"}]})
+		"spell":
+			_begin_spell_attack(attack)
+		_:
+			_begin_melee(attack)
+
+
+func _begin_melee(attack: Dictionary) -> void:
 	var name := str(attack.get("name", "attack"))
-	if str(attack.get("kind", "")) == "charge" and not _charging:
-		telegraph.emit(name, CHARGE_WINDUP)
-		_current_attack = attack
-		_attacking = true
-		_attack_phase = "telegraph"
-		anim.play_intent(str(attack.get("clip", "Attack_1")), {"length": CHARGE_WINDUP, "events": [{"t": CHARGE_WINDUP * 0.95, "name": "charge_go"}]})
-		return
-	if str(attack.get("kind", "")) == "spell":
-		_begin_spell_attack(attack)
-		return
 	_current_attack = attack
 	_attacking = true
 	_attack_phase = "telegraph"
@@ -610,7 +629,8 @@ func _weapon_hitbox() -> Hitbox:
 	if hb == null:
 		hb = Hitbox.create(self, 0.45, 2.0)
 		attack_origin.add_child(hb)
-	var reach := float(_current_attack.get("range", brain.engage_range())) + 0.4
+	# `hit_range` lets an attack whose selection range is long (a charge) keep a short hitbox.
+	var reach := float(_current_attack.get("hit_range", _current_attack.get("range", brain.engage_range()))) + 0.4
 	hb.set_capsule(0.45 * body_scale, reach)
 	return hb
 
