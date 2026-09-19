@@ -59,6 +59,16 @@ static func table_rows() -> Array:
 	return rows if typeof(rows) == TYPE_ARRAY else []
 
 
+## How much each kind of constraint counts towards a row being the most specific match. What a
+## villager has personally seen beats what the village is saying, which beats your standing and
+## the hour, which beat their personality: a timid neighbour who watched you rob a house does not
+## greet you timidly, they greet you as a witness.
+const W_NPC := 4
+const W_SEEN := 3
+const W_STANDING := 2
+const W_TRAIT := 1
+
+
 ## -1 when the row does not apply; otherwise how specific it is (constraints met) plus its weight.
 static func _score(row: Dictionary, npc_id: String, ctx: SocialContext) -> float:
 	var specificity := 0
@@ -66,7 +76,7 @@ static func _score(row: Dictionary, npc_id: String, ctx: SocialContext) -> float
 	if row.has("npc"):
 		if str(row["npc"]) != npc_id:
 			return -1.0
-		specificity += 3
+		specificity += W_NPC
 
 	if row.has("traits"):
 		var traits := _traits_for(npc_id, ctx)
@@ -77,27 +87,31 @@ static func _score(row: Dictionary, npc_id: String, ctx: SocialContext) -> float
 				break
 		if not hit:
 			return -1.0
-		specificity += 1
+		specificity += W_TRAIT
 
+	# A tier row only counts as specific when the tier it matched is a notable one. Rows that
+	# describe an unremarkable stranger are fallbacks, not answers.
 	if row.has("renown_tier"):
 		var span: Array = row["renown_tier"]
 		var tier := ctx.renown_tier()
 		if tier < int(span[0]) or tier > int(span[span.size() - 1]):
 			return -1.0
-		specificity += 1
+		if tier > 0:
+			specificity += W_STANDING
 
 	if row.has("morality_tier"):
 		var span: Array = row["morality_tier"]
 		var tier := ctx.morality_tier()
 		if tier < int(span[0]) or tier > int(span[span.size() - 1]):
 			return -1.0
-		specificity += 1
+		if tier != 0:
+			specificity += W_STANDING
 
 	var faction := str(row.get("faction", _faction_of(npc_id, ctx)))
 	if row.has("faction_rank_min"):
 		if faction == "" or not ctx.is_member(faction) or ctx.faction_rank(faction) < int(row["faction_rank_min"]):
 			return -1.0
-		specificity += 2
+		specificity += W_STANDING
 	if row.has("rep_min"):
 		if faction == "" or ctx.reputation(faction) < int(row["rep_min"]):
 			return -1.0
@@ -111,29 +125,29 @@ static func _score(row: Dictionary, npc_id: String, ctx: SocialContext) -> float
 		var law := _law_faction(npc_id, ctx)
 		if law == "" or ctx.bounty(law) < int(row["bounty_min"]):
 			return -1.0
-		specificity += 2
+		specificity += W_SEEN
 
 	if row.has("witnessed"):
 		var saw := ctx.npc_witnessed(npc_id) != ""
 		if saw != bool(row["witnessed"]):
 			return -1.0
-		specificity += 2
+		specificity += W_NPC if saw else 0
 
 	if row.has("knows_deed"):
 		if not ctx.knows_deed(ctx.place_id, str(row["knows_deed"])):
 			return -1.0
-		specificity += 2
+		specificity += W_SEEN
 
 	if row.has("time"):
 		var span: Array = row["time"]
 		if not Conditions.in_hour_window(float(ctx.hour()), float(span[0]), float(span[1])):
 			return -1.0
-		specificity += 1
+		specificity += W_STANDING
 
 	if row.has("wearing_tag"):
 		if not ctx.wearing_tag(str(row["wearing_tag"])):
 			return -1.0
-		specificity += 2
+		specificity += W_SEEN
 
 	if row.has("disposition_min"):
 		if ctx.disposition(npc_id) < int(row["disposition_min"]):
@@ -147,7 +161,7 @@ static func _score(row: Dictionary, npc_id: String, ctx: SocialContext) -> float
 	if row.has("place"):
 		if ctx.place_id != str(row["place"]):
 			return -1.0
-		specificity += 2
+		specificity += W_STANDING
 	if row.has("region"):
 		if ctx.region_id() != str(row["region"]):
 			return -1.0
@@ -160,7 +174,7 @@ static func _score(row: Dictionary, npc_id: String, ctx: SocialContext) -> float
 	if row.has("conditions"):
 		if not Conditions.all_of(row["conditions"], ctx):
 			return -1.0
-		specificity += 2
+		specificity += W_STANDING
 
 	return float(specificity) + float(row.get("weight", 1.0))
 

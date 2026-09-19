@@ -148,6 +148,23 @@ func _stored_def(quest_id: String) -> Dictionary:
 	return {}
 
 
+## Where a board hangs when the caller does not say: the largest settled place in the region.
+func _default_board(region_id: String) -> String:
+	const PREFERENCE := ["city", "town", "village", "fort", "camp", "lodge", "hamlet"]
+	var best := ""
+	var best_rank := PREFERENCE.size()
+	for def in ContentDB.all("place"):
+		if str(def.get("region", "")) != region_id:
+			continue
+		var rank := PREFERENCE.find(str(def.get("kind", "")))
+		if rank < 0 or rank > best_rank:
+			continue
+		if rank < best_rank or str(def["id"]) < best:
+			best_rank = rank
+			best = str(def["id"])
+	return best
+
+
 func _daily_seed(region_id: String, board: String) -> int:
 	return abs(hash("%s|%s|%d" % [region_id, board, WorldClock.day])) | 1
 

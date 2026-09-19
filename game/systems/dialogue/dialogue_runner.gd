@@ -50,6 +50,16 @@ func is_running() -> bool:
 ## Begins a conversation. A dialogue id of "" gives the bare greeting exchange, which is what a
 ## villager with nothing to say still owes you.
 func start(new_dialogue_id: String, new_npc_id: String = "", place_id: String = "") -> bool:
+	return _begin(new_dialogue_id, {}, new_npc_id, place_id)
+
+
+## Runs a dialogue graph that is not in the content packs: a generated conversation, a debug
+## graph, or a test fixture. The definition has the same shape as a `dialogue` def.
+func start_def(def: Dictionary, new_npc_id: String = "", place_id: String = "") -> bool:
+	return _begin(str(def.get("id", "")), def, new_npc_id, place_id)
+
+
+func _begin(new_dialogue_id: String, def_override: Dictionary, new_npc_id: String, place_id: String) -> bool:
 	if _running:
 		stop()
 	npc_id = new_npc_id
@@ -69,7 +79,10 @@ func start(new_dialogue_id: String, new_npc_id: String = "", place_id: String = 
 	if dialogue_id == "" and ctx.npc.has("dialogue"):
 		dialogue_id = str(ctx.npc["dialogue"])
 
-	_def = ContentDB.get_or_empty(dialogue_id) if dialogue_id != "" else {}
+	if not def_override.is_empty():
+		_def = def_override
+	else:
+		_def = ContentDB.get_or_empty(dialogue_id) if dialogue_id != "" else {}
 	if dialogue_id != "" and _def.is_empty():
 		Log.warn("Dialogue", "unknown dialogue '%s' (content problem)" % dialogue_id)
 	_running = true
