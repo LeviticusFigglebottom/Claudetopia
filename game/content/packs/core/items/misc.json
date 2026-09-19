@@ -12,7 +12,7 @@
   {"id": "core:item/torch", "name": "Pitch Torch", "category": "tool", "weight": 0.5, "value": 2, "stack": 10, "tags": ["tool", "offhand", "light"],
    "light": {"range": 6.0, "energy": 1.0, "color": "#ff9a4a"},
    "description": "Pitch-wrapped ash. Burns an hour, and in a barrow that is exactly long enough to regret not bringing two."},
-  {"id": "core:item/lockpick", "name": "Lockpick", "category": "tool", "weight": 0.02, "value": 4, "stack": 20, "tags": ["tool", "thief"],
+  {"id": "core:item/lockpick", "name": "Lockpick", "category": "tool", "weight": 0.02, "value": 4, "stack": 20, "tags": ["tool", "thief", "lockpick"],
    "description": "A slim iron pick. The Quiet Hands do not sell these, but a Palm will lose a bundle near you if you have been polite."},
   {"id": "core:item/iron_arrow", "name": "Iron Arrow", "category": "misc", "weight": 0.05, "value": 1, "stack": 50, "tags": ["ammo", "arrow"],
    "projectile": {"damage_mult": 1.0, "speed": 55.0},

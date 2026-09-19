@@ -1,0 +1,68 @@
+[
+  {
+    "id": "core:npc/guard_wardens", "name": "Warden of the Hearth", "home_place": "core:place/wardens_rest",
+    "faction": "core:faction/wardens", "tags": ["guard", "law", "vale"],
+    "personality": {"traits": ["brave", "kind", "humble"]},
+    "perception": {"sight_range": 22, "sight_fov": 120, "hearing": 16},
+    "work_clip": "Work_Hammer",
+    "description": "A Warden on the roll-keeping round: boots muddy, iron cap pushed back so the children can see the face under it. Wardens arrest people they have known since those people were children, and it shows.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/wardens_rest", "activity": "eat", "spot": "hall_table"},
+      {"days": "workdays", "hour": 7, "place": "core:place/merrowby", "activity": "patrol", "spot": "market_square"},
+      {"days": "workdays", "hour": 13, "place": "core:place/merrowby", "activity": "eat", "spot": "inn_bench"},
+      {"days": "workdays", "hour": 14, "place": "core:place/merrowby", "activity": "patrol", "spot": "bell_row"},
+      {"days": "workdays", "hour": 19, "place": "core:place/wardens_rest", "activity": "socialise", "spot": "hall_fire"},
+      {"days": "hushday", "hour": 8, "place": "core:place/wardens_rest", "activity": "work", "spot": "roll_room"},
+      {"days": "tollday", "hour": 9, "place": "core:place/wardens_rest", "activity": "pray", "spot": "roll_room"},
+      {"days": "all", "hour": 22, "place": "core:place/wardens_rest", "activity": "sleep", "spot": "bunk"}
+    ]
+  },
+  {
+    "id": "core:npc/guard_tallymen", "name": "Paid Watchman", "home_place": "core:place/tollmere",
+    "faction": "core:faction/tallymen", "tags": ["guard", "law", "lakefolk"],
+    "personality": {"traits": ["greedy", "cynical", "proud"]},
+    "perception": {"sight_range": 24, "sight_fov": 120, "hearing": 18},
+    "work_clip": "Work_Hammer",
+    "description": "Tollmere's watch is a service with a price list, and this one has read it. Brass badge, slate-grey coat, an eye for whose coat is worth more than his.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/tollmere", "activity": "eat", "spot": "watch_house"},
+      {"days": "all", "hour": 7, "place": "core:place/tollmere", "activity": "patrol", "spot": "lantern_row"},
+      {"days": "all", "hour": 12, "place": "core:place/tollmere", "activity": "eat", "spot": "quay_stall"},
+      {"days": "all", "hour": 13, "place": "core:place/tollmere", "activity": "patrol", "spot": "long_stride"},
+      {"days": "all", "hour": 20, "place": "core:place/tollmere", "activity": "socialise", "spot": "watch_house"},
+      {"days": "all", "hour": 23, "place": "core:place/tollmere", "activity": "sleep", "spot": "watch_bunk"}
+    ]
+  },
+  {
+    "id": "core:npc/guard_clan_moot", "name": "Moot-Sworn", "home_place": "core:place/kharrow_hold",
+    "faction": "core:faction/clan_moot", "tags": ["guard", "law", "clans"],
+    "personality": {"traits": ["proud", "brave", "quiet"]},
+    "perception": {"sight_range": 26, "sight_fov": 110, "hearing": 20},
+    "work_clip": "Work_Hammer",
+    "description": "Sworn to the Moot rather than to a clan, which means every clan watches how they judge. Carries no jail keys; there is no jail. A debt in blood is a debt in marks, and it is remembered either way.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "moot_hall"},
+      {"days": "workdays", "hour": 7, "place": "core:place/kharrow_hold", "activity": "patrol", "spot": "chain_bridge"},
+      {"days": "workdays", "hour": 14, "place": "core:place/kharrow_hold", "activity": "patrol", "spot": "cliff_stair"},
+      {"days": "hushday", "hour": 9, "place": "core:place/brindlecrag", "activity": "patrol", "spot": "headframe"},
+      {"days": "all", "hour": 19, "place": "core:place/kharrow_hold", "activity": "socialise", "spot": "moot_fire"},
+      {"days": "all", "hour": 22, "place": "core:place/kharrow_hold", "activity": "sleep", "spot": "cliff_cell"}
+    ]
+  },
+  {
+    "id": "core:npc/guard_reed_council", "name": "Council Boardwalker", "home_place": "core:place/isseva",
+    "faction": "core:faction/reed_council", "tags": ["guard", "law", "reedfolk"],
+    "personality": {"traits": ["quiet", "pious", "kind"]},
+    "perception": {"sight_range": 18, "sight_fov": 120, "hearing": 22},
+    "work_clip": "Work_Stir",
+    "description": "Keeps the boardwalks for the Council. Carries a pole, not a blade. The Reed Council's only sentence is to be asked to leave, which in a marsh is a long sentence indeed.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/isseva", "activity": "eat", "spot": "stilt_kitchen"},
+      {"days": "all", "hour": 7, "place": "core:place/isseva", "activity": "patrol", "spot": "boardwalk_north"},
+      {"days": "all", "hour": 13, "place": "core:place/isseva", "activity": "eat", "spot": "jetty_bench"},
+      {"days": "all", "hour": 14, "place": "core:place/isseva", "activity": "patrol", "spot": "burial_jetty"},
+      {"days": "tollday", "hour": 18, "place": "core:place/isseva", "activity": "pray", "spot": "burial_jetty"},
+      {"days": "all", "hour": 21, "place": "core:place/isseva", "activity": "sleep", "spot": "stilt_bunk"}
+    ]
+  }
+]

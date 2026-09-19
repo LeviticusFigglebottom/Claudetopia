@@ -1,0 +1,8 @@
+[
+  {"id": "core:item/econ_parcel", "name": "Sealed Parcel", "category": "misc", "weight": 1.0, "value": 0, "stack": 5, "tags": ["parcel", "job"],
+   "description": "Waxed cloth, string, a name in charcoal. Somebody is waiting for it, which in Wickmere is nearly the same as somebody remembering you."},
+  {"id": "core:item/econ_fish_hooks", "name": "Fish Hooks", "category": "tool", "weight": 0.05, "value": 2, "stack": 20, "tags": ["tool", "fishing"],
+   "description": "Bone in the marsh, iron on the lake. Either will hold an eel that wants holding."},
+  {"id": "core:item/econ_reed_net", "name": "Reed Net", "category": "tool", "weight": 1.2, "value": 15, "stack": 1, "tags": ["tool", "fishing", "sedgemire"],
+   "description": "Knotted by someone singing a round. The knots are the verses; you can hear it if you know the song."}
+]
