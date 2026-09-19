@@ -259,6 +259,8 @@ func _contact_sheet() -> void:
 			if img == null:
 				continue
 			img.resize(cell, cell, Image.INTERPOLATE_BILINEAR)
+			# blit_rect needs matching formats, and the viewport gives RGBA8
+			img.convert(Image.FORMAT_RGB8)
 			var rest: String = (f as String).substr(5).trim_suffix(".png")
 			var idx := int(rest.rsplit("_", true, 1)[1])
 			var angle := rest.trim_prefix(clip + "_").rsplit("_", true, 1)[0]

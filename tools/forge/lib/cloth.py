@@ -105,23 +105,27 @@ def head_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None, spacing: 
 
 
 def offset_shell(body, region: RegionFn, thickness: float, gap: float = 0.004,
-                 k: float = 0.0, bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None) -> Prim:
-    """A shell of the body field: `gap` clear of the skin, `thickness` thick, and present
-    only where `region` says so.  Outside the region the field is pushed outward, which ends
-    the garment with a soft hem rather than a torn edge.
+                 k: float = 0.0, bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+                 hollow: bool = False) -> Prim:
+    """The body's field pushed out by `gap + thickness`, restricted to `region`.
 
-    `bounds` limits where the shell is even evaluated; without it a belt would be meshed
-    over the whole body's bounding box."""
-    inner = gap
+    Solid by default.  A garment modelled as a true two-sided shell a centimetre thick
+    tangles the moment it is decimated to a game triangle budget — opposite faces collapse
+    into each other — and nothing in this game ever sees the inside of a tunic, so the
+    piece simply encloses the body instead.  Outside the region the field is pushed
+    outward, which ends the garment in a soft hem rather than a torn edge.
+
+    `bounds` limits where the garment is evaluated at all; without it a belt would be
+    meshed over the whole body's bounding box."""
     outer = gap + thickness
-    mid = 0.5 * (inner + outer)
-    half = 0.5 * (outer - inner)
+    mid = 0.5 * (gap + outer)
+    half = 0.5 * (outer - gap)
 
     def fn(P):
         d = body.eval(P)
         w = np.clip(region(P), 0.0, 1.0)
-        shell = np.abs(d - mid) - half
-        return shell + (1.0 - w) * 0.25
+        surf = (np.abs(d - mid) - half) if hollow else (d - outer)
+        return surf + (1.0 - w) * 0.25
     lo, hi = bounds if bounds is not None else body.bounds(outer + 0.05)
     return Prim(fn, np.asarray(lo, float), np.asarray(hi, float), "union", k)
 
@@ -210,8 +214,8 @@ def legs_region(skel: Skeleton, *, top: float = 0.60, length: float = 1.0, soft:
                       near_bones(skel, ["UpperLeg.L", "UpperLeg.R", "LowerLeg.L", "LowerLeg.R", "Hips"], 0.17 * s, 0.05 * s))
 
 
-def tunic(skel: Skeleton, body: Scene, *, hem: float = 0.44, sleeves: float = 0.55,
-          thickness: float = 0.012, name: str = "tunic") -> Garment:
+def tunic(skel: Skeleton, body, *, hem: float = 0.44, sleeves: float = 0.55,
+          thickness: float = 0.016, name: str = "tunic") -> Garment:
     s = _s(skel)
     sc = Scene()
     reg = torso_region(skel, top=0.90, hem=hem, sleeves=sleeves, collar=-0.15)
@@ -226,14 +230,10 @@ def tunic(skel: Skeleton, body: Scene, *, hem: float = 0.44, sleeves: float = 0.
         (np.array([0.0, 0.004 * s, z_hem + 0.03 * s]), 0.205 * s, 0.150 * s),
         (np.array([0.0, 0.0, z_hem]), 0.207 * s, 0.152 * s),
     ], LEFT, axis=UP), k=0.03 * s)
-    sc.subtract(sdf.loft([
-        (np.array([0.0, 0.010 * s, hip + 0.10 * s]), 0.152 * s, 0.110 * s),
-        (np.array([0.0, 0.004 * s, z_hem - 0.01 * s]), 0.194 * s, 0.140 * s),
-    ], LEFT, axis=UP), k=0.006 * s)
     return Garment(name, sc, spacing=0.0090, target_tris=2400, material="cloth")
 
 
-def shirt(skel: Skeleton, body: Scene, *, thickness: float = 0.009) -> Garment:
+def shirt(skel: Skeleton, body, *, thickness: float = 0.012) -> Garment:
     sc = Scene()
     s = _s(skel)
     reg = torso_region(skel, top=0.90, hem=0.52, sleeves=0.62, collar=-0.12)
@@ -242,7 +242,7 @@ def shirt(skel: Skeleton, body: Scene, *, thickness: float = 0.009) -> Garment:
     return Garment("shirt", sc, spacing=0.0085, target_tris=2000, material="cloth")
 
 
-def trousers(skel: Skeleton, body: Scene, *, thickness: float = 0.011, length: float = 0.92) -> Garment:
+def trousers(skel: Skeleton, body, *, thickness: float = 0.014, length: float = 0.92) -> Garment:
     sc = Scene()
     s = _s(skel)
     reg = legs_region(skel, top=0.575, length=length)
@@ -251,7 +251,7 @@ def trousers(skel: Skeleton, body: Scene, *, thickness: float = 0.011, length: f
     return Garment("trousers", sc, spacing=0.0080, target_tris=2000, material="cloth")
 
 
-def skirt(skel: Skeleton, body: Scene, *, hem: float = 0.30, flare: float = 1.0, name: str = "skirt") -> Garment:
+def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: str = "skirt") -> Garment:
     s = _s(skel)
     hip = float(skel.J["UpperLeg.L"][2])
     z_hem = hem * skel.props.height
@@ -271,7 +271,6 @@ def skirt(skel: Skeleton, body: Scene, *, hem: float = 0.30, flare: float = 1.0,
         (np.array([0.0, 0.0, z_hem - 0.012 * s]), (0.205 + 0.10 * flare) * s, (0.152 + 0.08 * flare) * s),
     ], LEFT, axis=UP)
     sc.union(outer)
-    sc.subtract(inner, k=0.004 * s)
     # soft vertical folds
     n = 9
     for i in range(n):
@@ -283,7 +282,7 @@ def skirt(skel: Skeleton, body: Scene, *, hem: float = 0.30, flare: float = 1.0,
     return Garment(name, sc, spacing=0.0090, target_tris=2000, material="cloth")
 
 
-def dress(skel: Skeleton, body: Scene) -> Garment:
+def dress(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     g = skirt(skel, body, hem=0.22, flare=0.8, name="dress")
     reg = torso_region(skel, top=0.90, hem=0.55, sleeves=0.45, collar=-0.14)
@@ -293,7 +292,7 @@ def dress(skel: Skeleton, body: Scene) -> Garment:
     return g
 
 
-def robe(skel: Skeleton, body: Scene) -> Garment:
+def robe(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     g = skirt(skel, body, hem=0.08, flare=0.55, name="robe")
     reg = torso_region(skel, top=0.92, hem=0.50, sleeves=1.0, collar=-0.10)
@@ -309,16 +308,12 @@ def robe(skel: Skeleton, body: Scene) -> Garment:
             (wr - d * 0.02 * s, 0.098 * s, 0.098 * s),
             (wr + d * 0.03 * s, 0.100 * s, 0.100 * s),
         ], FWD), k=0.02 * s)
-        g.scene.subtract(sdf.loft([
-            (el + d * 0.11 * s, 0.062 * s, 0.062 * s),
-            (wr + d * 0.04 * s, 0.088 * s, 0.088 * s),
-        ], FWD), k=0.005 * s)
     g.target_tris = 3000
     g.spacing = 0.0090
     return g
 
 
-def cloak(skel: Skeleton, body: Scene, *, hooded: bool = False, hem: float = 0.30) -> Garment:
+def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30) -> Garment:
     s = _s(skel)
     sc = Scene()
     chest = float(skel.J["Chest"][2])
@@ -340,7 +335,6 @@ def cloak(skel: Skeleton, body: Scene, *, hooded: bool = False, hem: float = 0.3
         (np.array([0.0, 0.022 * s, z_hem - 0.02 * s]), (shoulder_x + 0.092) * s, 0.177 * s),
     ], LEFT, axis=UP)
     sc.union(outer)
-    sc.subtract(inner, k=0.004 * s)
     # open down the front
     sc.subtract(sdf.box([0.0, -0.40 * s, (neck + z_hem) * 0.5], [0.085 * s, 0.30 * s, (neck - z_hem) * 0.6],
                         round_r=0.02 * s), k=0.02 * s)
@@ -357,7 +351,7 @@ def cloak(skel: Skeleton, body: Scene, *, hooded: bool = False, hem: float = 0.3
     return g
 
 
-def hood_prim(skel: Skeleton, body: Scene, up: bool = True) -> Prim:
+def hood_prim(skel: Skeleton, body, up: bool = True) -> Prim:
     """A hood standing off the skull (worn up), open at the face."""
     s = _s(skel)
     L = bodylib.head_landmarks(skel)
@@ -382,13 +376,13 @@ def hood_prim(skel: Skeleton, body: Scene, up: bool = True) -> Prim:
     return prim
 
 
-def hood(skel: Skeleton, body: Scene) -> Garment:
+def hood(skel: Skeleton, body) -> Garment:
     sc = Scene()
     sc.union(hood_prim(skel, body, up=True))
     return Garment("hood", sc, spacing=0.0055, target_tris=1400, material="cloth", bone="Head")
 
 
-def boots(skel: Skeleton, body: Scene, *, high: float = 0.30) -> Garment:
+def boots(skel: Skeleton, body, *, high: float = 0.30) -> Garment:
     s = _s(skel)
     sc = Scene()
     ankle = float(skel.J["Foot.L"][2])
@@ -412,14 +406,14 @@ def boots(skel: Skeleton, body: Scene, *, high: float = 0.30) -> Garment:
     return Garment("boots", sc, spacing=0.0055, target_tris=1600, material="leather")
 
 
-def shoes(skel: Skeleton, body: Scene) -> Garment:
+def shoes(skel: Skeleton, body) -> Garment:
     g = boots(skel, body, high=0.07)
     g.name = "shoes"
     g.target_tris = 1100
     return g
 
 
-def gloves(skel: Skeleton, body: Scene) -> Garment:
+def gloves(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     sc = Scene()
     reg = near_bones(skel, ["Hand.L", "Hand.R"], 0.115 * s, 0.045 * s)
@@ -437,7 +431,7 @@ def gloves(skel: Skeleton, body: Scene) -> Garment:
     return Garment("gloves", sc, spacing=0.0040, target_tris=1200, material="leather")
 
 
-def belt(skel: Skeleton, body: Scene, *, pouch: bool = True) -> Garment:
+def belt(skel: Skeleton, body, *, pouch: bool = True) -> Garment:
     s = _s(skel)
     sc = Scene()
     z = float(skel.J["Spine"][2]) - 0.02 * s
@@ -452,7 +446,7 @@ def belt(skel: Skeleton, body: Scene, *, pouch: bool = True) -> Garment:
     return Garment("belt", sc, spacing=0.0040, target_tris=900, material="leather")
 
 
-def apron(skel: Skeleton, body: Scene) -> Garment:
+def apron(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     sc = Scene()
     chest = float(skel.J["Chest"][2])
@@ -472,7 +466,7 @@ def apron(skel: Skeleton, body: Scene) -> Garment:
     return Garment("apron", sc, spacing=0.0060, target_tris=1200, material="cloth")
 
 
-def gambeson(skel: Skeleton, body: Scene) -> Garment:
+def gambeson(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     g = tunic(skel, body, hem=0.42, sleeves=0.75, thickness=0.026, name="gambeson")
     # quilted channels
@@ -491,7 +485,7 @@ def gambeson(skel: Skeleton, body: Scene) -> Garment:
     return g
 
 
-def plate_torso(skel: Skeleton, body: Scene, *, brigandine: bool = False) -> Garment:
+def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
     s = _s(skel)
     sc = Scene()
     chest = float(skel.J["Chest"][2])
@@ -529,7 +523,7 @@ def plate_torso(skel: Skeleton, body: Scene, *, brigandine: bool = False) -> Gar
                    target_tris=2600, material="iron")
 
 
-def pauldrons(skel: Skeleton, body: Scene) -> Garment:
+def pauldrons(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     sc = Scene()
     for side, sx in (("L", 1), ("R", -1)):
@@ -547,7 +541,7 @@ def pauldrons(skel: Skeleton, body: Scene) -> Garment:
     return Garment("pauldrons", sc, spacing=0.0045, target_tris=1600, material="iron")
 
 
-def greaves(skel: Skeleton, body: Scene) -> Garment:
+def greaves(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     sc = Scene()
     knee = float(skel.J["LowerLeg.L"][2])
@@ -565,7 +559,7 @@ def greaves(skel: Skeleton, body: Scene) -> Garment:
     return Garment("greaves", sc, spacing=0.0045, target_tris=1300, material="iron")
 
 
-def helm(skel: Skeleton, body: Scene, *, open_face: bool = True) -> Garment:
+def helm(skel: Skeleton, body, *, open_face: bool = True) -> Garment:
     s = _s(skel)
     L = bodylib.head_landmarks(skel)
     c, r = L["skull_c"], L["skull_r"]

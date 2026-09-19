@@ -1,0 +1,40 @@
+{
+ "bounds": [
+  -0.0939,
+  -0.0959,
+  1.386,
+  0.0941,
+  0.1147,
+  1.7836
+ ],
+ "collision": "none",
+ "generator": "character_forge",
+ "kind": "head",
+ "params": {
+  "head": {
+   "brow": 0.78,
+   "cheeks": 1.15,
+   "chin": 0.85,
+   "ears": 1.0,
+   "eye_size": 1.06,
+   "eye_spacing": 1.0,
+   "forehead": 1.0,
+   "jaw_width": 0.9,
+   "lips": 1.25,
+   "mouth_width": 1.0,
+   "nose": 1.0,
+   "nose_bridge": 1.0,
+   "skull_depth": 1.0,
+   "skull_width": 1.0
+  }
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 1,
+ "slot_hint": "head",
+ "tris": [
+  5608,
+  0,
+  0
+ ],
+ "version": 1
+}

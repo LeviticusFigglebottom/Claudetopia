@@ -407,7 +407,12 @@ class Scene:
         F = np.full(tuple(n), 1e6)
         for p in self.prims:
             pad = p.k + 2 * spacing
-            if p.op == "union":
+            if p.op in ("union", "subtract"):
+                # A union only adds material inside its own bounds; a subtraction only
+                # removes material inside its own bounds (outside, -d is very negative and
+                # the smooth max returns the field unchanged).  Either way there is no need
+                # to evaluate it over the whole grid — which is what made a cloak with nine
+                # fold cuts take three minutes.
                 i0 = np.maximum(np.floor((p.lo - pad - origin) / spacing).astype(int), 0)
                 i1 = np.minimum(np.ceil((p.hi + pad - origin) / spacing).astype(int) + 1, n)
                 if np.any(i1 <= i0):
