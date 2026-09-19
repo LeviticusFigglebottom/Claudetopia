@@ -547,3 +547,336 @@ def beard_mask(verts: np.ndarray, normals: np.ndarray, skel: Skeleton, hs: HeadS
     # never under the neck stub / far back
     m &= normals[:, 2] > -0.85
     return m
+
+
+# --------------------------------------------------------------------------------------
+# Blender pipeline (bpy imported lazily)
+# --------------------------------------------------------------------------------------
+
+def _bpy():
+    import bpy
+    return bpy
+
+
+def select_only(ob) -> None:
+    bpy = _bpy()
+    bpy.ops.object.select_all(action='DESELECT')
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+
+
+def tri_count(ob) -> int:
+    return sum(len(p.vertices) - 2 for p in ob.data.polygons)
+
+
+def mesh_arrays(ob) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """(verts (n,3), vertex normals (n,3), triangles (m,3)) in object space."""
+    me = ob.data
+    me.calc_loop_triangles()
+    n = len(me.vertices)
+    verts = np.empty(n * 3)
+    me.vertices.foreach_get("co", verts)
+    normals = np.empty(n * 3)
+    me.vertices.foreach_get("normal", normals)
+    tris = np.empty(len(me.loop_triangles) * 3, dtype=np.int64)
+    me.loop_triangles.foreach_get("vertices", tris)
+    return verts.reshape(-1, 3), normals.reshape(-1, 3), tris.reshape(-1, 3)
+
+
+def set_verts(ob, verts: np.ndarray) -> None:
+    ob.data.vertices.foreach_set("co", np.asarray(verts, float).ravel())
+    ob.data.update()
+
+
+def remesh_smooth_decimate(ob, voxel: float, smooth_iters: int = 6, smooth_factor: float = 0.6,
+                           target_tris: Optional[int] = None) -> None:
+    """Voxel-remesh `ob` in place (unions overlapping parts), smooth the voxel staircase and
+    collapse-decimate to `target_tris` (symmetric on X)."""
+    bpy = _bpy()
+    select_only(ob)
+    m = ob.modifiers.new("Remesh", 'REMESH')
+    m.mode = 'VOXEL'
+    m.voxel_size = voxel
+    m.use_smooth_shade = True
+    bpy.ops.object.modifier_apply(modifier=m.name)
+    if smooth_iters > 0:
+        sm = ob.modifiers.new("Smooth", 'SMOOTH')
+        sm.factor = smooth_factor
+        sm.iterations = smooth_iters
+        bpy.ops.object.modifier_apply(modifier=sm.name)
+    if target_tris:
+        tris = tri_count(ob)
+        if tris > target_tris:
+            dm = ob.modifiers.new("Decimate", 'DECIMATE')
+            dm.decimate_type = 'COLLAPSE'
+            dm.ratio = target_tris / tris
+            dm.use_symmetry = True
+            dm.symmetry_axis = 'X'
+            dm.use_collapse_triangulate = True
+            bpy.ops.object.modifier_apply(modifier=dm.name)
+    for p in ob.data.polygons:
+        p.use_smooth = True
+
+
+def smart_uv(ob, angle_deg: float = 66.0, margin: float = 0.02) -> None:
+    bpy = _bpy()
+    select_only(ob)
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project(angle_limit=math.radians(angle_deg), island_margin=margin, correct_aspect=True, scale_to_bounds=False)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def cylindrical_uv(ob, axis_center: np.ndarray, z0: float, z1: float) -> None:
+    """UVs by cylindrical projection around a vertical axis (heads): u = angle (seam at the
+    back), v = height.  Per-loop so the seam does not smear."""
+    me = ob.data
+    if not me.uv_layers:
+        me.uv_layers.new(name="UVMap")
+    uv = me.uv_layers[0]
+    verts = np.array([v.co[:] for v in me.vertices])
+    rel = verts - np.asarray(axis_center, float)
+    ang = np.arctan2(rel[:, 0], -rel[:, 1])          # 0 at the front (-Y), +/-pi at the back
+    u_all = 0.5 + ang / (2 * math.pi)
+    v_all = (verts[:, 2] - z0) / max(z1 - z0, 1e-6)
+    for poly in me.polygons:
+        us = [u_all[me.loops[l].vertex_index] for l in poly.loop_indices]
+        if max(us) - min(us) > 0.5:
+            us = [u + 1.0 if u < 0.5 else u for u in us]
+        for l, u in zip(poly.loop_indices, us):
+            uv.data[l].uv = (u, v_all[me.loops[l].vertex_index])
+
+
+def auto_weights(ob, arm) -> bool:
+    """Blender bone-heat automatic weights; returns True if every vertex got a weight."""
+    bpy = _bpy()
+    bpy.ops.object.select_all(action='DESELECT')
+    ob.select_set(True)
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    try:
+        bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    except Exception as e:  # pragma: no cover
+        print("auto weights failed:", e)
+        return False
+    missing = sum(1 for v in ob.data.vertices if not v.groups)
+    if missing:
+        print("auto weights left %d verts unweighted" % missing)
+    return missing == 0
+
+
+def weight_matrix(ob, bones: Sequence[str]) -> np.ndarray:
+    """(n_verts, len(bones)) weights from vertex groups."""
+    gi = {g.name: g.index for g in ob.vertex_groups}
+    n = len(ob.data.vertices)
+    W = np.zeros((n, len(bones)))
+    col = {gi[b]: j for j, b in enumerate(bones) if b in gi}
+    for v in ob.data.vertices:
+        for g in v.groups:
+            if g.group in col:
+                W[v.index, col[g.group]] = g.weight
+    return W
+
+
+def apply_weight_matrix(ob, bones: Sequence[str], W: np.ndarray, threshold: float = 0.004) -> None:
+    for g in list(ob.vertex_groups):
+        ob.vertex_groups.remove(g)
+    W = W / np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
+    for j, b in enumerate(bones):
+        vg = ob.vertex_groups.new(name=b)
+        idx = np.nonzero(W[:, j] > threshold)[0]
+        for vi in idx:
+            vg.add([int(vi)], float(W[vi, j]), 'REPLACE')
+
+
+def segment_weights(verts: np.ndarray, skel: Skeleton, bones: Sequence[str], sharpness: float = 2.6) -> np.ndarray:
+    """Distance-to-bone-segment weights with a smooth falloff (the fallback/seed field)."""
+    n = len(verts)
+    W = np.zeros((n, len(bones)))
+    for bi, b in enumerate(bones):
+        bb = skel.bones[b]
+        a, t = bb.head, bb.tail
+        ab = t - a
+        l2 = max(float(np.dot(ab, ab)), 1e-9)
+        u = np.clip(((verts - a) @ ab) / l2, 0.0, 1.0)
+        d = np.linalg.norm(verts - (a + u[:, None] * ab), axis=1)
+        r = 0.04 + 0.45 * bb.length
+        W[:, bi] = np.exp(-((d / r) ** sharpness))
+    return W / np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
+
+
+def smooth_weights(W: np.ndarray, tris: np.ndarray, iters: int = 4, factor: float = 0.45) -> np.ndarray:
+    """Laplacian smoothing of the weight field across mesh edges (kills creasing at joints)."""
+    n = W.shape[0]
+    edges = np.concatenate([tris[:, [0, 1]], tris[:, [1, 2]], tris[:, [2, 0]]], axis=0)
+    for _ in range(iters):
+        acc = np.zeros_like(W)
+        cnt = np.zeros(n)
+        np.add.at(acc, edges[:, 0], W[edges[:, 1]])
+        np.add.at(acc, edges[:, 1], W[edges[:, 0]])
+        np.add.at(cnt, edges[:, 0], 1)
+        np.add.at(cnt, edges[:, 1], 1)
+        W = (1.0 - factor) * W + factor * acc / np.maximum(cnt, 1)[:, None]
+        W = np.maximum(W, 0.0)
+        W /= np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
+    return W
+
+
+def limit_influences(W: np.ndarray, max_influences: int = 4) -> np.ndarray:
+    n = W.shape[0]
+    idx = np.argsort(-W, axis=1)
+    keep = np.zeros_like(W)
+    for k in range(min(max_influences, W.shape[1])):
+        keep[np.arange(n), idx[:, k]] = W[np.arange(n), idx[:, k]]
+    return keep / np.maximum(keep.sum(axis=1, keepdims=True), 1e-9)
+
+
+def skin_to_armature(ob, arm, skel: Skeleton, smooth_iters: int = 3, max_influences: int = 4) -> str:
+    """Skin `ob` to `arm`.  Bone-heat automatic weights when they succeed (they respect the
+    surface, so no bleed across a gap), seeded segment weights otherwise; then smoothing
+    across edges and a 4-influence limit for glTF.  Returns the method used."""
+    bpy = _bpy()
+    method = "auto"
+    if not auto_weights(ob, arm):
+        method = "segment"
+        verts, normals, tris = mesh_arrays(ob)
+        W = segment_weights(verts, skel, rig.DEFORM_NAMES)
+        apply_weight_matrix(ob, rig.DEFORM_NAMES, W)
+        if not ob.modifiers or not any(m.type == 'ARMATURE' for m in ob.modifiers):
+            mod = ob.modifiers.new("Armature", 'ARMATURE')
+            mod.object = arm
+            ob.parent = arm
+    verts, normals, tris = mesh_arrays(ob)
+    W = weight_matrix(ob, rig.DEFORM_NAMES)
+    empty = W.sum(axis=1) < 1e-6
+    if empty.any():
+        seed = segment_weights(verts, skel, rig.DEFORM_NAMES)
+        W[empty] = seed[empty]
+    W = smooth_weights(W, tris, iters=smooth_iters)
+    W = limit_influences(W, max_influences)
+    apply_weight_matrix(ob, rig.DEFORM_NAMES, W)
+    return method
+
+
+def transfer_weights(dst_ob, src_verts: np.ndarray, src_W: np.ndarray, arm, bones: Sequence[str] = rig.DEFORM_NAMES,
+                     k: int = 4, smooth: int = 2) -> None:
+    """Skin a garment/part by copying weights from the nearest body vertices (inverse-distance
+    over k neighbours), then smoothing.  Keeps every part deforming exactly like the body."""
+    verts, normals, tris = mesh_arrays(dst_ob)
+    d2 = ((verts[:, None, :] - src_verts[None, :, :]) ** 2).sum(axis=2) if len(src_verts) * len(verts) < 4_000_000 else None
+    if d2 is None:
+        # chunked nearest-neighbour to keep memory sane
+        W = np.zeros((len(verts), len(bones)))
+        chunk = max(1, 4_000_000 // max(len(src_verts), 1))
+        for i in range(0, len(verts), chunk):
+            part = verts[i:i + chunk]
+            dd = ((part[:, None, :] - src_verts[None, :, :]) ** 2).sum(axis=2)
+            idx = np.argsort(dd, axis=1)[:, :k]
+            w = 1.0 / np.maximum(np.take_along_axis(dd, idx, axis=1), 1e-8)
+            w /= w.sum(axis=1, keepdims=True)
+            W[i:i + chunk] = np.einsum("nk,nkb->nb", w, src_W[idx])
+    else:
+        idx = np.argsort(d2, axis=1)[:, :k]
+        w = 1.0 / np.maximum(np.take_along_axis(d2, idx, axis=1), 1e-8)
+        w /= w.sum(axis=1, keepdims=True)
+        W = np.einsum("nk,nkb->nb", w, src_W[idx])
+    if smooth:
+        W = smooth_weights(W, tris, iters=smooth, factor=0.4)
+    W = limit_influences(W)
+    apply_weight_matrix(dst_ob, bones, W)
+    if not any(m.type == 'ARMATURE' for m in dst_ob.modifiers):
+        mod = dst_ob.modifiers.new("Armature", 'ARMATURE')
+        mod.object = arm
+    dst_ob.parent = arm
+
+
+# --------------------------------------------------------------------------------------
+# morph targets (analytic displacement fields)
+# --------------------------------------------------------------------------------------
+
+def body_morphs(verts: np.ndarray, normals: np.ndarray, skel: Skeleton) -> Dict[str, np.ndarray]:
+    """name -> displaced vertex array for the body.  Fields are smooth bumps along normals."""
+    J = skel.J
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    z = verts[:, 2]
+    x = verts[:, 0]
+    hip, spine, chest, neck = J["Hips"][2], J["Spine"][2], J["Chest"][2], J["Neck"][2]
+    front = np.clip(-normals[:, 1], 0, 1)
+    back = np.clip(normals[:, 1], 0, 1)
+    side = np.abs(normals[:, 0])
+    torso = smoothstep((z - (hip - 0.12 * s)) / (0.06 * s)) * (1 - smoothstep((z - (neck - 0.02 * s)) / (0.05 * s))) * (np.abs(x) < 0.22 * s)
+    arms = ((np.abs(x) > 0.20 * s) & (z > chest - 0.05 * s)).astype(float)
+    legs = ((z < hip - 0.02 * s) & (np.abs(x) < 0.25 * s)).astype(float)
+    out: Dict[str, np.ndarray] = {}
+
+    def disp(field: np.ndarray, amount: float) -> np.ndarray:
+        return normals * (field * amount)[:, None]
+
+    belly = gauss3(verts, np.array([0.0, -0.09 * s, spine - 0.02 * s]), (0.17 * s, 0.14 * s, 0.13 * s)) * front
+    chest_f = gauss3(verts, np.array([0.0, -0.10 * s, chest + 0.08 * s]), (0.20 * s, 0.12 * s, 0.10 * s)) * front
+    love = gauss3(verts, np.array([0.0, 0.02 * s, hip + 0.02 * s]), (0.2 * s, 0.16 * s, 0.10 * s)) * side
+    butt = gauss3(verts, np.array([0.0, 0.10 * s, hip - 0.04 * s]), (0.16 * s, 0.10 * s, 0.10 * s)) * back
+    thigh = legs * smoothstep((z - (hip - 0.45 * s)) / (0.1 * s)) * (1 - smoothstep((z - (hip - 0.05 * s)) / (0.04 * s)))
+    upper_arm = arms * smoothstep((z - (chest - 0.05 * s)) / (0.08 * s))
+    neck_f = gauss3(verts, np.array([0.0, 0.0, neck + 0.04 * s]), (0.08 * s, 0.08 * s, 0.05 * s))
+    calf = legs * gauss3(verts, np.array([0.0, 0.02 * s, hip - 0.62 * s]), (0.3 * s, 0.1 * s, 0.08 * s))
+    heavy = 0.075 * belly + 0.025 * chest_f + 0.03 * love + 0.035 * butt + 0.022 * thigh + 0.022 * upper_arm + 0.014 * neck_f + 0.012 * calf + 0.006 * torso
+    out["heavy"] = verts + disp(heavy, s)
+    slight = -(0.022 * torso + 0.012 * thigh + 0.012 * upper_arm + 0.02 * belly + 0.01 * butt + 0.006 * calf)
+    out["slight"] = verts + disp(slight, s)
+    muscular = 0.02 * chest_f + 0.018 * upper_arm + 0.014 * thigh + 0.012 * calf + gauss3(verts, np.array([0.0, 0.06 * s, chest + 0.06 * s]), (0.16 * s, 0.1 * s, 0.12 * s)) * back * 0.015 - 0.01 * belly
+    out["muscular"] = verts + disp(muscular, s)
+    bust = (gauss3(verts, np.array([0.07 * s, -0.11 * s, chest + 0.065 * s]), (0.055 * s, 0.06 * s, 0.05 * s)) +
+            gauss3(verts, np.array([-0.07 * s, -0.11 * s, chest + 0.065 * s]), (0.055 * s, 0.06 * s, 0.05 * s))) * front
+    waist = gauss3(verts, np.array([0.0, 0.0, spine + 0.03 * s]), (0.3 * s, 0.3 * s, 0.05 * s)) * side
+    hips_w = gauss3(verts, np.array([0.0, 0.0, hip - 0.05 * s]), (0.3 * s, 0.3 * s, 0.07 * s)) * side
+    feminine = 0.03 * bust - 0.02 * waist + 0.02 * hips_w + 0.012 * butt - 0.008 * upper_arm - 0.006 * neck_f
+    out["feminine"] = verts + disp(feminine, s)
+    old = 0.02 * belly - 0.006 * chest_f + 0.006 * neck_f - 0.006 * upper_arm - 0.004 * thigh
+    out["old"] = verts + disp(old, s)
+    return out
+
+
+def head_morphs(verts: np.ndarray, normals: np.ndarray, skel: Skeleton, hs: HeadStyle) -> Dict[str, np.ndarray]:
+    L = head_landmarks(skel, hs)
+    s = L["s"]
+    eye_z, mouth_z, chin_z = L["eye_z"], L["mouth_z"], L["chin_z"]
+    fy = L["face_y"]
+    out: Dict[str, np.ndarray] = {}
+
+    def disp(field: np.ndarray, amount: float) -> np.ndarray:
+        return normals * (field * amount)[:, None]
+
+    jowl = (gauss3(verts, np.array([0.05 * s, fy + 0.04 * s, mouth_z - 0.01 * s]), (0.03 * s, 0.035 * s, 0.03 * s)) +
+            gauss3(verts, np.array([-0.05 * s, fy + 0.04 * s, mouth_z - 0.01 * s]), (0.03 * s, 0.035 * s, 0.03 * s)))
+    chin = gauss3(verts, np.array([0.0, fy + 0.02 * s, chin_z - 0.01 * s]), (0.04 * s, 0.04 * s, 0.025 * s))
+    cheek = (gauss3(verts, np.array([0.05 * s, fy + 0.03 * s, eye_z - 0.035 * s]), (0.028 * s, 0.03 * s, 0.028 * s)) +
+             gauss3(verts, np.array([-0.05 * s, fy + 0.03 * s, eye_z - 0.035 * s]), (0.028 * s, 0.03 * s, 0.028 * s)))
+    neck = (verts[:, 2] < L["head"][2] + 0.03 * s).astype(float)
+    out["heavy"] = verts + disp(0.012 * jowl + 0.012 * chin + 0.008 * cheek + 0.006 * neck, s)
+    out["slight"] = verts + disp(-0.010 * cheek - 0.005 * jowl - 0.004 * chin, s)
+    jaw_side = np.abs(normals[:, 0]) * ((verts[:, 2] < eye_z - 0.03 * s) & (verts[:, 2] > chin_z - 0.02 * s) & (verts[:, 1] < 0.03 * s))
+    brow = gauss3(verts, np.array([0.0, fy, L["brow_z"]]), (0.06 * s, 0.03 * s, 0.012 * s))
+    out["feminine"] = verts + disp(-0.008 * jaw_side - 0.004 * brow + 0.004 * cheek - 0.004 * chin, s)
+    out["old"] = verts + disp(0.006 * jowl - 0.006 * cheek + 0.003 * chin, s)
+    return out
+
+
+def add_shape_keys(ob, targets: Dict[str, np.ndarray]) -> None:
+    if ob.data.shape_keys is None:
+        ob.shape_key_add(name="Basis", from_mix=False)
+    for name, verts in targets.items():
+        kb = ob.shape_key_add(name=name, from_mix=False)
+        kb.data.foreach_set("co", np.asarray(verts, float).ravel())
+        kb.value = 0.0
+
+
+def apply_morph_mix(verts: np.ndarray, morphs: Dict[str, np.ndarray], mix: Dict[str, float]) -> np.ndarray:
+    """Bake a weighted morph mix into vertices (the forge exports baked bodies, not shape keys,
+    so Godot only has to pick a variant)."""
+    out = verts.copy()
+    for name, w in mix.items():
+        if abs(w) < 1e-4 or name not in morphs:
+            continue
+        out += (morphs[name] - verts) * w
+    return out
