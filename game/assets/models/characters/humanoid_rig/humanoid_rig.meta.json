@@ -122,7 +122,7 @@
    "shoulder_width": 1.0
   },
   "style": {
-   "belly": 0.25,
+   "belly": 0.14,
    "chest": 0.5,
    "feet": 1.06,
    "hands": 1.12,
@@ -133,7 +133,7 @@
  "rig": "WM_Humanoid_v1",
  "seed": 1,
  "tris": [
-  13406,
+  13408,
   0,
   0
  ],

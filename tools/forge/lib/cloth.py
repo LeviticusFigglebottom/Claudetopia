@@ -201,8 +201,8 @@ def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves:
             dl = np.linalg.norm(P - sh, axis=1)
             dr = np.linalg.norm(P - (sh * np.array([-1, 1, 1])), axis=1)
             d = np.minimum(dl, dr)
-            return 1.0 - sdf_smoothstep(reach - 0.05 * s, reach + 0.02 * s, d)
-        arms.append(region_and(near_bones(skel, bones, 0.115 * s, 0.05 * s), sleeve_fn))
+            return 1.0 - sdf_smoothstep(reach - 0.015 * s, reach + 0.010 * s, d)
+        arms.append(region_and(near_bones(skel, bones, 0.100 * s, 0.030 * s), sleeve_fn))
     neck_cut = float(skel.J["Neck"][2]) + collar * s
     neck_r = 0.085 * s
 

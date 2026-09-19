@@ -16,10 +16,10 @@
   "material": "iron"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 3982,
+ "seed": 1248,
  "slot_hint": "torso",
  "tris": [
-  4000,
+  3998,
   0,
   0
  ],

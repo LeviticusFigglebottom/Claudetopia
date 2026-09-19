@@ -32,7 +32,7 @@ BACK = -FWD
 class BodyStyle:
     """Shape knobs beyond `Proportions`."""
     muscle: float = 0.35        # 0 soft .. 1 defined
-    belly: float = 0.25
+    belly: float = 0.14
     chest: float = 0.5
     shoulders: float = 0.5
     hands: float = 1.12         # slightly large hands read well
@@ -129,11 +129,11 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
     for sx in (1, -1):
         torso_parts.append(sdf.ellipsoid([sx * 0.070 * s, 0.072 * td * s, hipj + 0.010 * s],
                                          [0.078 * tw * s, (0.056 + 0.022 * heavy) * td * s, 0.082 * s], k=0.05 * s))
-    belly_amt = st.belly * (0.4 + 1.2 * heavy) + 0.3 * old * heavy
+    belly_amt = st.belly * (0.4 + 1.1 * heavy) + 0.22 * old * heavy
     if belly_amt > 0.06:
-        torso_parts.append(sdf.ellipsoid([0.0, -(0.048 + 0.040 * belly_amt) * td * s, waist_z - 0.035 * s],
-                                         [(0.100 + 0.030 * belly_amt) * s, (0.048 + 0.055 * belly_amt) * s,
-                                          (0.098 + 0.022 * belly_amt) * s], k=0.06 * s))
+        torso_parts.append(sdf.ellipsoid([0.0, -(0.044 + 0.036 * belly_amt) * td * s, waist_z - 0.045 * s],
+                                         [(0.094 + 0.028 * belly_amt) * s, (0.040 + 0.050 * belly_amt) * s,
+                                          (0.090 + 0.020 * belly_amt) * s], k=0.06 * s))
     if fem > 0.05:
         for sx in (1, -1):
             torso_parts.append(sdf.ellipsoid([sx * 0.062 * s, -(0.092 + 0.020 * fem) * td * s, chest_z + 0.038 * s],

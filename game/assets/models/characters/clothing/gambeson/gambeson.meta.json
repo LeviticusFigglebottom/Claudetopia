@@ -16,10 +16,10 @@
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 3325,
+ "seed": 9273,
  "slot_hint": "torso",
  "tris": [
-  4398,
+  4400,
   0,
   0
  ],

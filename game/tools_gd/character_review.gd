@@ -13,7 +13,7 @@ const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
 const PRESETS_PATH := "res://../tools/forge/characters.json"
 const STRIP_TIMES := 8
 ## The model faces -Z once its holder is rotated (CONTRACTS.md §1), so "front" sits at -Z.
-const STRIP_ANGLES := {"side": Vector3(3.6, 1.05, 0.0), "front": Vector3(0.0, 1.05, -3.6), "three_q": Vector3(-2.5, 1.45, -2.5)}
+const STRIP_ANGLES := {"side": Vector3(3.6, 1.05, 0.0), "front": Vector3(0.0, 1.05, -3.6), "iso": Vector3(-2.5, 1.45, -2.5)}
 
 var out_dir := "captures/characters"
 var mode := "both"
