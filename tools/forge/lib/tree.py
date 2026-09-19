@@ -99,7 +99,7 @@ def trim_to_budget(trunk, budget: int) -> int:
 
 def cards_from_leaves(leaves, name: str, mat, rng: random.Random, cells: int = 2,
                       scale: float = 1.0, jitter: float = 0.25, keep: float = 1.0,
-                      droop_deg: float = 0.0, target: int | None = None):
+                      droop_deg: float = 0.0, target: int | None = None, min_z: float = 0.0):
     """Turn Sapling's leaf quads into atlas-mapped cluster cards.
 
     Each quad becomes one card: it is scaled about its own centre, tilted a little, and its
@@ -115,6 +115,13 @@ def cards_from_leaves(leaves, name: str, mat, rng: random.Random, cells: int = 2
     bm.faces.ensure_lookup_table()
     uv_layer = bm.loops.layers.uv.verify()
     faces = list(bm.faces)
+    if min_z > 0.0:
+        # Sapling puts leaf points on the lowest branches too; at card scale those bury
+        # half a cluster in the ground. Nothing grows out of the soil, so drop them.
+        buried = [f for f in faces if f.calc_center_median().z < min_z]
+        if buried and len(buried) < len(faces):
+            bmesh.ops.delete(bm, geom=buried, context="FACES")
+            faces = [f for f in faces if f.is_valid]
     if target is not None and faces:
         keep = min(keep, target / float(len(faces)))
     if keep < 1.0:

@@ -313,7 +313,8 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
         card_tex = dict(names)
         TR.cards_from_leaves(leaves, "%s_leaves" % name, leaf_mat, rng, cells=cells,
                              scale=spec.get("card", 1.0) * CARD_SCALE,
-                             droop_deg=spec.get("droop", 0.0), target=cards_target)
+                             droop_deg=spec.get("droop", 0.0), target=cards_target,
+                             min_z=spec.get("card", 1.0) * CARD_SCALE * 0.55)
         cards.append(leaves)
         # weeping curtains (willow) and hanging moss (Briarwold giants)
         if spec.get("weep") and not quick:

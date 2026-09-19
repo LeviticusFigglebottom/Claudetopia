@@ -14,7 +14,8 @@ from pathlib import Path
 FORGE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(FORGE))
 
-MODULES = ["tests.test_palette", "tests.test_paths", "tests.test_generation"]
+MODULES = ["tests.test_palette", "tests.test_paths", "tests.test_output",
+           "tests.test_generation"]
 
 
 def main(argv: list[str]) -> int:
