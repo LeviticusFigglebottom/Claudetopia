@@ -24,7 +24,7 @@
   "flora": {
     "oak": {
       "asset": "trees/oak",
-      "density": 9.0,
+      "density": 6.0,
       "scale": [
         0.9,
         1.45
@@ -44,7 +44,7 @@
     },
     "apple": {
       "asset": "trees/apple",
-      "density": 16.0,
+      "density": 11.0,
       "scale": [
         0.85,
         1.05
@@ -63,7 +63,7 @@
     },
     "hawthorn": {
       "asset": "flora/hawthorn",
-      "density": 90.0,
+      "density": 55.0,
       "scale": [
         0.8,
         1.3
@@ -348,7 +348,7 @@
     },
     "giant_oak": {
       "asset": "trees/giant_oak",
-      "density": 46.0,
+      "density": 26.0,
       "scale": [
         1.1,
         2.0
@@ -368,7 +368,7 @@
     },
     "black_ash": {
       "asset": "trees/black_ash",
-      "density": 38.0,
+      "density": 30.0,
       "scale": [
         0.95,
         1.5
@@ -447,7 +447,7 @@
     },
     "briar": {
       "asset": "flora/briar",
-      "density": 34.0,
+      "density": 26.0,
       "scale": [
         0.9,
         1.6

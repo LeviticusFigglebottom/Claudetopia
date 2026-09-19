@@ -21,11 +21,21 @@ const GENERATED := "res://world/generated"
 @export var lod_bias_far: float = 0.6
 @export var enabled: bool = true
 
-## How far each kind of scatter is worth drawing (metres). A grass tuft is invisible at
-## 80 m but still costs a draw call and its share of the primitive budget, so the ranges are
-## what keep a forest cell inside DESIGN.md §11 rather than the instance counts alone.
-const VIEW_RANGE := {"tree": 340.0, "bush": 180.0, "rock": 220.0, "prop": 200.0, "herb": 80.0}
-const VIEW_RANGE_FAR := {"tree": 300.0, "bush": 120.0, "rock": 160.0, "prop": 140.0, "herb": 0.0}
+## How far each kind of scatter is worth drawing (metres). A grass tuft is invisible at 80 m
+## but still costs a draw call and its share of the primitive budget, so the ranges are what
+## keep a forest cell inside DESIGN.md §11 rather than the instance counts alone.
+##
+## The far-ring numbers are measured from the camera to the cell, and a far-ring cell is
+## between 384 m and 905 m away: a range *shorter* than that hides the whole ring. They were,
+## which is why a wooded region could be shot from a hilltop and show eight trees. The far
+## ring's cost is controlled by `far_density` and by drawing it at a lower LOD, not by a range
+## that cuts it off before it begins.
+const VIEW_RANGE := {"tree": 230.0, "bush": 130.0, "rock": 170.0, "prop": 150.0, "herb": 60.0}
+const VIEW_RANGE_FAR := {"tree": 920.0, "bush": 430.0, "rock": 480.0, "prop": 400.0, "herb": 0.0}
+## and how much of the far ring is worth keeping, per kind: a wood reads as a wood from a
+## kilometre away at a fraction of its stems, and trees are much the most expensive thing in
+## the world -- the forge's are seven to fifteen thousand triangles each.
+const FAR_KEEP := {"tree": 0.12, "bush": 0.15, "rock": 0.3, "prop": 0.3, "herb": 0.0}
 
 var target: Node3D = null
 var provider: TerrainProvider = null
@@ -269,7 +279,8 @@ func _build_spawns(parent: Node3D, spawns: Array) -> void:
 func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Array, ring: int) -> void:
 	var keep := rows.size()
 	if ring > full_ring:
-		keep = int(ceil(float(rows.size()) * far_density))
+		var kind := asset_kind(asset_path)
+		keep = int(ceil(float(rows.size()) * float(FAR_KEEP.get(kind, far_density))))
 	if keep <= 0:
 		return
 	var mm := MultiMesh.new()
@@ -408,7 +419,10 @@ func _unload(cell: Vector2i) -> void:
 ## cheap one. That is what buys the Briarwold its density: the budget is spent on the wood you
 ## are standing in rather than on the one on the far hill.
 func _mesh_for(asset_path: String, ring: int = 0) -> Mesh:
-	var want_lod := 0 if ring <= full_ring else 2
+	# Only the cell you are standing in gets the full mesh. The eight around it are already
+	# a hundred metres away, where the difference between fifteen thousand triangles and five
+	# is a tree you cannot tell apart, and there are eight times as many of them.
+	var want_lod := 0 if ring <= 0 else (1 if ring <= full_ring else 2)
 	var key := "%s#%d" % [asset_path, want_lod]
 	if _mesh_cache.has(key):
 		return _mesh_cache[key]
@@ -426,14 +440,34 @@ func _mesh_for(asset_path: String, ring: int = 0) -> Mesh:
 	return mesh
 
 
-## The mesh named "<something>_LOD<n>", or the first mesh in the scene when the asset has no
-## LODs or the wanted one is missing. Falling back rather than failing matters: not every
-## generator emits LODs, and a missing LOD should cost triangles, not a bald hillside.
+## The cheapest mesh in the scene that is still worth drawing, for a far-ring instance; the
+## full one for the near ring.
+##
+## LOD ladders arrive in whatever shape the generator gave them, and not every rung is usable:
+## some of the forge's trees collapse to four triangles at LOD2, which is not a distant tree,
+## it is nothing. So a rung is only taken if it still has a silhouette, and otherwise the next
+## one up is used. Falling back rather than failing matters -- a missing LOD should cost
+## triangles, not a bald hillside.
+const MIN_LOD_TRIS := 12
+
+
+static func _tri_count(mesh: Mesh) -> int:
+	var am := mesh as ArrayMesh
+	if am == null:
+		return MIN_LOD_TRIS          # not an ArrayMesh: assume it is worth drawing
+	var tris := 0
+	for si in am.get_surface_count():
+		var n := am.surface_get_array_index_len(si)
+		if n == 0:
+			n = am.surface_get_array_len(si)
+		tris += n / 3
+	return tris
+
+
 static func _mesh_of(packed: PackedScene, want_lod: int) -> Mesh:
 	var state := packed.get_state()
-	var first: Mesh = null
-	var wanted: Mesh = null
-	var suffix := "_LOD%d" % want_lod
+	var full: Mesh = null
+	var by_lod: Dictionary = {}
 	for i in state.get_node_count():
 		if state.get_node_type(i) != "MeshInstance3D":
 			continue
@@ -444,24 +478,27 @@ static func _mesh_of(packed: PackedScene, want_lod: int) -> Mesh:
 			var v: Variant = state.get_node_property_value(i, p)
 			if not (v is Mesh):
 				continue
-			if first == null and not node_name.contains("_LOD"):
-				first = v
-			if want_lod > 0 and node_name.ends_with(suffix):
-				wanted = v
-	if wanted != null:
-		return wanted
-	if first != null:
-		return first
-	# no unsuffixed mesh at all: take whatever the scene has
-	for i in state.get_node_count():
-		if state.get_node_type(i) != "MeshInstance3D":
+			var at := node_name.rfind("_LOD")
+			if at < 0:
+				if full == null:
+					full = v
+			else:
+				by_lod[int(node_name.substr(at + 4).to_int())] = v
+	if want_lod <= 0:
+		if full != null:
+			return full
+		return by_lod.get(1, by_lod.values()[0] if not by_lod.is_empty() else null)
+	# walk down from the wanted rung to the full mesh, taking the first that still has a shape
+	var rungs: Array = by_lod.keys()
+	rungs.sort()
+	rungs.reverse()
+	for lod in rungs:
+		if lod > want_lod:
 			continue
-		for p in state.get_node_property_count(i):
-			if state.get_node_property_name(i, p) == "mesh":
-				var v: Variant = state.get_node_property_value(i, p)
-				if v is Mesh:
-					return v
-	return null
+		var m: Mesh = by_lod[lod]
+		if _tri_count(m) >= MIN_LOD_TRIS:
+			return m
+	return full
 
 
 func _scene_for(path: String) -> PackedScene:
