@@ -324,15 +324,27 @@ def tri_count(obj) -> int:
 
 
 def bounds(objs):
-    """World-space (min, max) Vectors over the given objects."""
+    """World-space (min, max) Vectors over the given objects, modifiers included.
+
+    An object's own bound box belongs to its *unmodified* mesh. A boolean that cuts the
+    bottom off a sphere leaves a bound box still reaching down to where the sphere used to
+    be, so grounding an asset from it drops the thing into the air -- which is exactly what
+    happened to the Fallen Hand, whose palm is a dished sphere. Evaluating through the
+    depsgraph costs a little and is always the geometry that will actually be exported.
+    """
     objs = list(objs) if not isinstance(objs, bpy.types.Object) else [objs]
+    dg = bpy.context.evaluated_depsgraph_get()
     lo = Vector((1e9, 1e9, 1e9))
     hi = Vector((-1e9, -1e9, -1e9))
     for o in objs:
         if o.type != "MESH":
             continue
-        mw = o.matrix_world
-        for c in o.bound_box:
+        try:
+            ev = o.evaluated_get(dg)
+        except (RuntimeError, ReferenceError):
+            ev = o
+        mw = ev.matrix_world
+        for c in ev.bound_box:
             w = mw @ Vector(c)
             lo.x, lo.y, lo.z = min(lo.x, w.x), min(lo.y, w.y), min(lo.z, w.z)
             hi.x, hi.y, hi.z = max(hi.x, w.x), max(hi.y, w.y), max(hi.z, w.z)
