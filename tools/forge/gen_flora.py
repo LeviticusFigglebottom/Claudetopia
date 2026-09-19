@@ -201,18 +201,18 @@ def bulrush(pal, rng, params, variant, ctx):
 def fern(pal, rng, params, variant, ctx):
     names = T.frond_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"],
                           pal.tint(P.lin("#3d6a2a"), "green", 0.4), seed=rng.randrange(9999),
-                          size=256 if ctx["quick"] else 512, fronds=7, pinnae=13, shape="lance", curl=0.5)
+                          size=256 if ctx["quick"] else 512, fronds=4, pinnae=15, shape="lance", curl=0.5)
     mat = _mat(ctx["out_dir"], "%s_fern_foliage" % ctx["name"], names)
     h = params.get("height", rng.uniform(0.45, 0.75))
-    ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 5), width=h * 1.35,
-                   height=h, radius=h * 0.22, bow=0.22, tilt=16)
+    ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 7), width=h * 1.15,
+                   height=h, radius=h * 0.26, bow=0.22, tilt=16)
     return {"card_objs": [ob], "collision": "none", "materials_used": ["foliage_leaf_card"]}
 
 
 def bracken(pal, rng, params, variant, ctx):
     names = T.frond_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"],
                           pal.tint(P.lin("#5a6a26"), "green", 0.3), seed=rng.randrange(9999),
-                          size=256 if ctx["quick"] else 512, fronds=6, pinnae=11, shape="toothed",
+                          size=256 if ctx["quick"] else 512, fronds=4, pinnae=13, shape="toothed",
                           curl=0.35, tip_color=pal.tint(P.lin("#8c4a2a"), "warm", 0.4))
     mat = _mat(ctx["out_dir"], "%s_bracken_foliage" % ctx["name"], names)
     h = params.get("height", rng.uniform(0.6, 0.95))

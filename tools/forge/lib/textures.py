@@ -442,7 +442,7 @@ def flower_atlas(out_dir, prefix: str, leaf_color, flower_color, seed: int = 0, 
 
 
 def frond_atlas(out_dir, prefix: str, color, seed: int = 0, size: int = 512, cells: int = 2,
-                fronds: int = 7, pinnae: int = 13, shape: str = "lance", curl: float = 0.5,
+                fronds: int = 5, pinnae: int = 13, shape: str = "lance", curl: float = 0.5,
                 roughness: float = 0.72, tip_color=None) -> dict:
     """Ferns and bracken: arching fronds of paired pinnae."""
     rng = random.Random(seed)
@@ -465,7 +465,8 @@ def frond_atlas(out_dir, prefix: str, color, seed: int = 0, size: int = 512, cel
                     pts.append((x, y, t))
                 _blade(rgb, alpha, hgt, x0, y0, h, lean * h, cs * 0.008, [c * 0.8 for c in col], bend=0.6, taper=0.6, rng=rng)
                 for (x, y, t) in pts[1:]:
-                    ln = cs * 0.16 * math.sin(math.pi * (0.15 + 0.85 * (1 - t))) * rng.uniform(0.8, 1.15)
+                    # narrower pinnae: a frond has to read as feathered, not as a green slab
+                    ln = cs * 0.115 * math.sin(math.pi * (0.15 + 0.85 * (1 - t))) * rng.uniform(0.8, 1.15)
                     c2 = col if tip_color is None or t < 0.7 else _vary(rng, tip_color)
                     for sgn in (-1, 1):
                         a = sgn * (1.1 + curl * t) - math.pi / 2 * 0 + (0 if sgn > 0 else 0)

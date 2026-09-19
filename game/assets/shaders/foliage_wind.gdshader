@@ -11,7 +11,7 @@ uniform sampler2D albedo_texture : source_color, filter_linear_mipmap_anisotropi
 uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap, repeat_disable;
 uniform sampler2D orm_texture : hint_default_white, filter_linear_mipmap, repeat_disable;
 uniform vec4 tint : source_color = vec4(1.0);
-uniform float alpha_scissor : hint_range(0.0, 1.0) = 0.45;
+uniform float alpha_scissor : hint_range(0.0, 1.0) = 0.52;
 uniform float roughness_mult : hint_range(0.0, 2.0) = 1.0;
 uniform float normal_depth : hint_range(0.0, 2.0) = 0.8;
 uniform float wind_strength : hint_range(0.0, 1.0) = 0.10;

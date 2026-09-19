@@ -123,7 +123,7 @@ func _make_foliage_material(src: Material) -> ShaderMaterial:
 		sm.set_shader_parameter("normal_texture", std.normal_texture)
 		sm.set_shader_parameter("orm_texture", std.ao_texture if std.ao_texture != null else std.roughness_texture)
 		sm.set_shader_parameter("tint", std.albedo_color)
-		sm.set_shader_parameter("alpha_scissor", maxf(std.alpha_scissor_threshold, 0.35))
+		sm.set_shader_parameter("alpha_scissor", maxf(std.alpha_scissor_threshold, 0.5))
 	# Grass sways less than a tree crown; the mesh height sets the falloff.
 	sm.set_shader_parameter("sway_height", 2.0)
 	return sm
