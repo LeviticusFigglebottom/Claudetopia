@@ -105,22 +105,35 @@ def cracked_toll(pal, rng, params, variant):
     S.apply_transforms(bow)
     parts.append(bow)
 
-    # The hill it is buried in: a chalk mound swallowing a third of the bell, with the
-    # white scar the fall cut (WORLD_BIBLE §6.1).
+    # The hill it is buried in. Not a disc round the foot: a chalk down that rises behind
+    # the bell so a third of it is swallowed, with the white scar the fall cut down the
+    # near face (WORLD_BIBLE §6.1). The bell itself is subtracted from the hill, so the
+    # ground meets the bronze instead of clipping through it.
     if params.get("mound", True):
         ground = M.chalk_rock(pal, wear=0.5, age=0.6, scale=h * 0.06)
-        mound = S.uv_sphere("mound", radius=r * 1.85, segments=40, rings=20, mat=ground,
-                            scale=(1.0, 1.0, 0.34))
+        mound = S.uv_sphere("mound", radius=1.0, segments=44, rings=22, mat=ground,
+                            scale=(r * 3.1, r * 2.5, r * 1.35))
         S.apply_transforms(mound)
-        mound.location = Vector((0, r * 0.55, -r * 0.22))
+        mound.location = Vector((0, r * 1.5, -r * 0.35))
         S.apply_transforms(mound)
-        cut = S.box_centered("mcut", size=(r * 8, r * 8, r * 4), location=(0, 0, -r * 2.0 - r * 0.22))
+        # shear the hill so its crest leans away and the near face is a slope, not a dome
+        for v in mound.data.vertices:
+            f = max(0.0, (v.co.y - r * 0.2) / (r * 3.2))
+            v.co.z += f * r * 0.85
+        cut = S.box_centered("mcut", size=(r * 12, r * 12, r * 6), location=(0, 0, -r * 3.0))
         S.boolean(mound, cut, "DIFFERENCE")
+        # the scar: a gouge running down the near face on the line the Toll came in on
+        scar = S.box_centered("scar", size=(r * 0.95, r * 4.2, r * 0.9),
+                              location=(r * 0.35, -r * 0.6, r * 0.55), rotation=(-22, 0, 7))
+        S.boolean(mound, scar, "DIFFERENCE")
+        # carve the bell's own volume out of the hill
+        socket = S.lathe("socket", [(x * 1.03, z) for (x, z) in prof], segments=segs // 2, close=True)
+        S.boolean(mound, socket, "DIFFERENCE")
         _weather(mound, rng, amount=r * 0.05, scale=h * 0.3, seed=rng.randrange(999))
         S.shade_smooth(mound, 42.0)
         tris = S.tri_count(mound)
-        if tris > 4000:
-            S.decimate(mound, 4000.0 / tris)
+        if tris > 6000:
+            S.decimate(mound, 6000.0 / tris)
             S.shade_smooth(mound, 42.0)
         parts.append(mound)
 
@@ -273,21 +286,23 @@ def choir_colossus(pal, rng, params, variant):
                       vertices=18, location=(0, 0, h * 0.97), mat=stone)
     _weather(neck, rng, amount=h * 0.004, scale=h * 0.02, seed=rng.randrange(999))
     parts.append(neck)
-    # Arms folded across the chest (the Choir holds a note; the hands are cupped).
+    # Arms folded across the body: upper arms hang close to the sides, forearms come in and
+    # meet at the waist. Built as swept tubes rather than cylinders so the elbow bends;
+    # straight cylinders off the shoulders read as a crossbar, not as arms.
     for sgn in (-1, 1):
-        upper = S.cylinder("arm_u%d" % sgn, radius=hem_r * 0.13, radius_top=hem_r * 0.11,
-                           depth=h * 0.16, vertices=14,
-                           location=(sgn * hem_r * 0.50, 0, h * 0.90),
-                           rotation=(0, sgn * 118, 0), mat=stone)
-        parts.append(upper)
-        fore = S.cylinder("arm_f%d" % sgn, radius=hem_r * 0.11, radius_top=hem_r * 0.09,
-                          depth=h * 0.17, vertices=14,
-                          location=(sgn * hem_r * 0.40, -hem_r * 0.30, h * 0.775),
-                          rotation=(-74, 0, sgn * 26), mat=stone)
-        parts.append(fore)
-        hand = S.sphere("hand%d" % sgn, radius=hem_r * 0.11, subdivisions=3,
-                        location=(sgn * hem_r * 0.14, -hem_r * 0.40, h * 0.755), mat=stone,
-                        scale=(1.0, 1.25, 0.7))
+        shoulder = Vector((sgn * hem_r * 0.52, 0.0, h * 0.905))
+        elbow = Vector((sgn * hem_r * 0.60, -hem_r * 0.16, h * 0.775))
+        wrist = Vector((sgn * hem_r * 0.26, -hem_r * 0.40, h * 0.715))
+        arm = S.tube_along("arm%d" % sgn, [shoulder,
+                                           shoulder.lerp(elbow, 0.55) + Vector((sgn * hem_r * 0.03, 0, 0)),
+                                           elbow,
+                                           elbow.lerp(wrist, 0.5) + Vector((0, -hem_r * 0.05, 0)),
+                                           wrist],
+                           radius=hem_r * 0.135, segments=12, radius_end=hem_r * 0.085, mat=stone)
+        parts.append(arm)
+        hand = S.sphere("hand%d" % sgn, radius=hem_r * 0.105, subdivisions=3,
+                        location=(sgn * hem_r * 0.13, -hem_r * 0.44, h * 0.705), mat=stone,
+                        scale=(1.0, 1.3, 0.72))
         S.apply_transforms(hand)
         parts.append(hand)
     # Plinth of fused stone, cracked and sunk.
