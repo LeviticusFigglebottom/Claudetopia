@@ -18,6 +18,7 @@
    "signature_item": "core:item/lantern",
    "starting_items": [{"item": "core:item/eel_pie", "count": 2}, {"item": "core:item/marsh_marigold", "count": 3}, {"item": "core:item/sundew", "count": 2}, {"item": "core:item/rope", "count": 1}],
    "starting_reputation": {"core:faction/reed_council": 15},
+   "starting_spells": ["core:spell/hush_frost"],
    "starting_marks": 20,
    "description": "You swim as if you had been born in the water, and the Reedfolk say you were. You carry a jetty-lantern of the kind hung for the drowned, and you do not remember whose it was. Patience comes easily; so does the marsh's fatalism, which the Council will tell you is the same thing seen from a boat."},
   {"id": "core:calling/cragborn", "name": "Cragborn", "culture": "Clans of Skerrow", "home_region": "core:region/skerrow",
@@ -32,6 +33,7 @@
    "signature_item": "core:item/ring_ash_knights_signet",
    "starting_items": [{"item": "core:item/ash_cake", "count": 4}, {"item": "core:item/padded_cap", "count": 1}, {"item": "core:item/ember_mote", "count": 2}, {"item": "core:item/ash_poppy_petal", "count": 1}],
    "starting_reputation": {"core:faction/tolling_order": 15},
+   "starting_spells": ["core:spell/kindle_bolt", "core:spell/quiet_the_blood"],
    "starting_marks": 15,
    "description": "You wear grey without deciding to and count bells without meaning to. A Bell-Sworn signet was on your hand when the Warden found you at the Hushline, written at a Name-table by someone who came back from the Ash Winter. The Order does not ask questions; it has learned not to expect answers."},
   {"id": "core:calling/lantern_clerk", "name": "Lantern-Clerk", "culture": "Lakefolk of Tollmere", "home_region": "core:region/brightwater",
@@ -39,6 +41,7 @@
    "signature_item": "core:item/ring_tallymans_band",
    "starting_items": [{"item": "core:item/eel_pie", "count": 2}, {"item": "core:item/lockpick", "count": 3}, {"item": "core:item/candle", "count": 5}, {"item": "core:item/linen", "count": 2}],
    "starting_reputation": {"core:faction/tallymen": 15, "core:faction/sayers": 5, "core:faction/quiet_hands": -5},
+   "starting_spells": ["core:spell/ward"],
    "starting_marks": 60,
    "description": "You read charters in your sleep and know what a signature costs. A factor's brass band says you once had standing in Tollmere; the Tallymen's ledger has no line for you now, and the Quiet Hands find that very interesting."}
 ]

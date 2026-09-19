@@ -29,6 +29,7 @@ const REQUIRED := {
 	"cell": ["placements"],
 	"effect": ["name"],
 	"table": ["rows"],
+	"opening": ["quest"],
 	"schedule": ["entries"],
 	"world": ["seed", "size_m"],
 	"poi": ["name", "kind", "region"],

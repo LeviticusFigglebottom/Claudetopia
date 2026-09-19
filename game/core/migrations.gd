@@ -5,6 +5,7 @@ class_name Migrations
 
 static var STEPS: Array[Callable] = [
 	_v1_to_v2,
+	_v2_to_v3,
 ]
 
 
@@ -32,5 +33,25 @@ static func _v1_to_v2(data: Dictionary) -> Dictionary:
 		sections["world"] = {}
 	if not sections.world.has("weather"):
 		sections.world["weather"] = {}
+	data["sections"] = sections
+	return data
+
+
+## v2 -> v3: the progression section gained `known_spells` — the sayings the character has been
+## taught (DESIGN §5.3). Before this, nothing tracked them and a readied saying was the only
+## evidence that a character could Say anything at all, so that one is carried over; otherwise
+## the character simply knows nothing yet and has to be taught, like a new one.
+static func _v2_to_v3(data: Dictionary) -> Dictionary:
+	var sections: Dictionary = data.get("sections", {})
+	if not sections.has("progression"):
+		sections["progression"] = {}
+	var progression: Dictionary = sections["progression"]
+	if not progression.has("known_spells"):
+		var carried: Array = []
+		var readied := str((sections.get("player", {}) as Dictionary).get("equipped_spell", ""))
+		if readied != "":
+			carried.append(readied)
+		progression["known_spells"] = carried
+	sections["progression"] = progression
 	data["sections"] = sections
 	return data

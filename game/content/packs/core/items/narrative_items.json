@@ -102,11 +102,7 @@
       "food",
       "vale"
     ],
-    "effects": [
-      {
-        "restore_health": 15
-      }
-    ],
+    "effects": [{"effect": "core:effect/restore_health", "magnitude": 15, "duration": 0}],
     "description": "A round chalk-crusted loaf from Maud Brambling's oven, still warm if you hurry. Vale folk say a loaf carried to a neighbour counts as a sentence spoken."
   },
   {

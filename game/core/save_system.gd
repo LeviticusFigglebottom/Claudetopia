@@ -4,7 +4,7 @@ extends Node
 ## from_save(Dictionary). Late joiners (e.g. the player spawned after load) call
 ## take_pending(section) to pull their data.
 
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 const SAVE_DIR := "user://saves"
 const QUICK_SLOT := "quick"
 const AUTO_SLOT := "auto"
@@ -39,10 +39,17 @@ func take_pending(section: String) -> Dictionary:
 
 func serialize() -> Dictionary:
 	var sections := {}
-	for name in participants:
-		var obj: Object = participants[name]
-		if is_instance_valid(obj) and obj.has_method("to_save"):
-			sections[name] = obj.to_save()
+	# A participant that was freed without unregistering (a scene torn down, a test double)
+	# must not be able to take the whole save with it: assigning a freed instance to a typed
+	# Object variable raises, which used to abort this loop part-way and write a save missing
+	# every section after it. Read the entry untyped, drop it if it is gone, and carry on.
+	for name in participants.keys():
+		var obj: Variant = participants[name]
+		if not is_instance_valid(obj):
+			participants.erase(name)
+			continue
+		if (obj as Object).has_method("to_save"):
+			sections[name] = (obj as Object).to_save()
 	return {
 		"schema_version": SCHEMA_VERSION,
 		"game_version": ProjectSettings.get_setting("application/config/version"),
@@ -57,7 +64,9 @@ func deserialize(data: Dictionary) -> void:
 	pending.clear()
 	var sections: Dictionary = data.get("sections", {})
 	for name in sections:
-		if participants.has(name) and is_instance_valid(participants[name]) and participants[name].has_method("from_save"):
+		if participants.has(name) and not is_instance_valid(participants[name]):
+			participants.erase(name)
+		if participants.has(name) and participants[name].has_method("from_save"):
 			participants[name].from_save(sections[name])
 		else:
 			pending[name] = sections[name]

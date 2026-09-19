@@ -6,7 +6,10 @@ extends Control
 ## Reads the quest log by group ("quest_log": active_quests(), completed_quests()), rumours
 ## and enemies from ContentDB, and books from GameState.read_books.
 
-const TABS := ["Quests", "Rumours", "Bestiary", "Books"]
+const TABS := ["Quests", "Rumours", "People", "Bestiary", "Books"]
+## Flag set the first time a conversation with someone begins; the People page is the record
+## of who you have actually met, not a directory of everyone alive.
+const MET_PREFIX := "met:"
 
 var _tab := 0
 var _tab_buttons: Array[Control] = []
@@ -15,11 +18,13 @@ var _detail_box: VBoxContainer
 var _selected := ""
 var _entries: Array[Dictionary] = []
 var _review_bestiary: Array = []
+var _review_people: Array = []
 
 
 func setup(args: Dictionary) -> void:
 	_tab = int(args.get("tab", 0))
 	_review_bestiary = args.get("bestiary", [])
+	_review_people = args.get("people", [])
 	if is_inside_tree():
 		_show_tab(_tab)
 
@@ -93,7 +98,8 @@ func _gather() -> Array[Dictionary]:
 	match _tab:
 		0: return _quests()
 		1: return _rumours()
-		2: return _bestiary()
+		2: return _people()
+		3: return _bestiary()
 		_: return _books()
 
 
@@ -156,6 +162,25 @@ func _rumour_title(def: Dictionary) -> String:
 	return title
 
 
+## Everyone you have spoken to, warmest first: the Vale keeps people by how they feel about
+## you, not alphabetically.
+func _people() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var registry := get_tree().get_first_node_in_group("npc_registry")
+	for def in ContentDB.all("npc"):
+		var id := str(def.get("id", ""))
+		if bool(def.get("example", false)) or def.get("tags", []).has("guard"):
+			continue          # a post, not a person: every town has one and none of them is somebody
+		if not GameState.has_flag(MET_PREFIX + id) and not _review_people.has(id):
+			continue
+		var feeling := 0
+		if registry != null and registry.has_method("disposition_of"):
+			feeling = int(registry.call("disposition_of", id))
+		out.append({"id": id, "name": str(def.get("name", id)), "def": def, "feeling": feeling})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["feeling"]) > int(b["feeling"]))
+	return out
+
+
 func _bestiary() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for def in ContentDB.all("enemy"):
@@ -216,7 +241,8 @@ func _empty_line() -> String:
 	match _tab:
 		0: return "Nothing is asked of you yet."
 		1: return "You have not heard anything worth writing down."
-		2: return "Nothing has been written down yet. Things have to be met first."
+		2: return "You have spoken to nobody worth writing down."
+		3: return "Nothing has been written down yet. Things have to be met first."
 		_: return "You have read nothing yet."
 
 
@@ -236,7 +262,8 @@ func _rebuild_detail() -> void:
 	match _tab:
 		0: _detail_quest(e)
 		1: _detail_rumour(e)
-		2: _detail_beast(e)
+		2: _detail_person(e)
+		3: _detail_beast(e)
 		_: _detail_book(e)
 	UiKit.ink_in(_detail_box, 0.0, 0.28)
 
@@ -287,6 +314,74 @@ func _detail_rumour(e: Dictionary) -> void:
 		if not where.is_empty():
 			_detail_box.add_child(UiKit.label("Heard in %s" % str(where.get("name", "")), "Small"))
 			break
+
+
+## How somebody is kept in the journal: what they are to you, the one thing they do that
+## nobody else does, and where to find them. The writing was all in the pack already and
+## nothing in the game had ever shown a line of it.
+func _detail_person(e: Dictionary) -> void:
+	var def: Dictionary = e["def"]
+	_detail_box.add_child(UiKit.wrapped(str(def.get("name", "")), "Title"))
+	var home := str(ContentDB.get_or_empty(str(def.get("home_place", ""))).get("name", ""))
+	var sub := _feeling_word(int(e.get("feeling", 0)))
+	if home != "":
+		sub += " · of " + home
+	var traits: Array = def.get("personality", {}).get("traits", [])
+	if not traits.is_empty():
+		var words: Array[String] = []
+		for t in traits:
+			words.append(str(t).replace("_", " "))
+		sub += " · " + ", ".join(words)
+	_detail_box.add_child(UiKit.wrapped(sub, "Small"))
+	_detail_box.add_child(UiKit.divider())
+	var bio := str(def.get("bio", def.get("lore", "")))
+	if bio != "":
+		_detail_box.add_child(UiKit.wrapped(bio, "Body"))
+	var habit := str(def.get("unique_habit", ""))
+	if habit != "":
+		_detail_box.add_child(UiKit.spacer(14.0, true))
+		_detail_box.add_child(UiKit.label("Always", "Tiny"))
+		_detail_box.add_child(UiKit.wrapped(habit, "Journal"))
+	var faction := str(ContentDB.get_or_empty(str(def.get("faction", ""))).get("name", ""))
+	var where := _where_they_are(str(e.get("id", "")))
+	if faction != "" or where != "":
+		_detail_box.add_child(UiKit.spacer(14.0, true))
+		if faction != "":
+			_detail_box.add_child(UiKit.label("Of the " + faction, "Small"))
+		if where != "":
+			_detail_box.add_child(UiKit.label(where, "Small"))
+
+
+
+## Where somebody is, right now, in the words the journal would use. Empty when nobody is
+## keeping track of them (a review harness, a save with no world loaded).
+func _where_they_are(npc_id: String) -> String:
+	var registry := get_tree().get_first_node_in_group("npc_registry")
+	if registry == null or not registry.has_method("place_of"):
+		return ""
+	var place := str(registry.call("place_of", npc_id))
+	if place == "":
+		return ""
+	var place_name := str(ContentDB.get_or_empty(place).get("name", ""))
+	if place_name == "":
+		return ""
+	var doing := str(registry.call("activity_of", npc_id)) if registry.has_method("activity_of") else ""
+	if doing == "" or doing == "idle":
+		return "At %s just now" % place_name
+	return "At %s just now, %s" % [place_name, doing.replace("_", " ")]
+
+
+## Disposition in the Vale's own words rather than a number.
+static func _feeling_word(value: int) -> String:
+	if value >= 60:
+		return "Would stand up for you"
+	if value >= 25:
+		return "Glad to see you"
+	if value > -10:
+		return "Civil"
+	if value > -40:
+		return "Has taken against you"
+	return "Would shut the door"
 
 
 func _detail_beast(e: Dictionary) -> void:

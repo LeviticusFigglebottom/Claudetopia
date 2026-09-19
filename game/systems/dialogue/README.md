@@ -23,14 +23,15 @@ Everything an NPC says and everything a conversation does to the world.
 
 Conditions (all of CONTRACTS §7 plus this stream's): `flag`, `quest_at`, `rep_min`, `renown_min`,
 `morality_min`, `skill_min`, `has_item`, `time_between`, `not`, `any`, `all`, `personality`,
-`faction_rank_min`, `bounty_min`, `counter_min`, `discovered`, `wearing_tag`, `random`, and the
+`faction_rank_min`, `bounty_min`, `counter_min`, `discovered`, `wearing_tag`, `random`,
+`knows_spell`, and the
 mirrors `flag_not`, `flag_equals`, `quest_active`, `quest_done`, `quest_not_done`,
 `quest_min_stage`, `quest_outcome`, `rep_max`, `renown_max`, `morality_max`, `member_of`,
 `not_member_of`, `has_no_item`, `marks_min`, `is_night`, `knows_deed`, `book_read`, `in_region`,
 `at_place`, `npc_is`, `witnessed_crime`, `disposition_min`, `true`, `false`.
 
 Effects: `set_flag`, `give_item`, `quest_stage`, `rep`, `morality`, `renown`, `marks`,
-`start_quest`, `teach_recipe`, `gesture_reply`, `rumour`, `unlock_topic`, `end`, plus
+`start_quest`, `teach_recipe`, `teach_spell`, `gesture_reply`, `rumour`, `unlock_topic`, `end`, plus
 `clear_flag`, `inc_counter`, `take_item`, `deed`, `disposition`, `complete_quest`, `fail_quest`,
 `quest_choice`, `complete_objective`, `join_faction`, `leave_faction`, `discover`, `notify`, `none`.
 

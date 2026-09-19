@@ -1,0 +1,119 @@
+[
+  {
+    "id": "core:dialogue/cassa_binder",
+    "speaker_name": "Cassa Binder",
+    "notes": "Tollmere's binder. Sells the four beginners' tomes and a shelf of Vale books; buys books. Her view of the Circle is the outsider's view of it, which is the only unflattering one in the pack.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "knows_spell": "core:spell/call_a_name"
+          }
+        ],
+        "text": "You have been Calling. Don't look like that; it gets into the hands. You've the same grip on the door that the old ones have, like you're not sure the room will be there."
+      },
+      {
+        "conditions": [
+          {
+            "renown_min": 300
+          }
+        ],
+        "text": "The famous one. I'll not make a fuss. I will say that two people came in this month asking whether I'd a book about you, and I said give it a year."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "sayers_listener"
+          }
+        ],
+        "text": "A Listener. Then you'll want the First Lecture, and you'll want it in the cheap binding, because you'll be writing in it inside a week whatever you promise Sulion."
+      },
+      {
+        "conditions": [
+          {
+            "morality_min": -100
+          }
+        ],
+        "text": "I've heard. Your marks are the same colour as anybody's, and I'd like you to keep your hands where the paste isn't."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Cassa Binder",
+        "text": "Mind the boards, they're wet. Books on the shelf, tomes in the press, and anything on the bench is somebody else's and not for sale no matter what you offer.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Cassa Binder",
+        "text": "Well?",
+        "choices": [
+          {
+            "text": "Show me what you have.",
+            "next": "trade"
+          },
+          {
+            "text": "You sell sayings?",
+            "next": "the_tomes"
+          },
+          {
+            "text": "What do you make of the Circle?",
+            "next": "the_circle"
+          },
+          {
+            "text": "Does anybody buy the Vale books?",
+            "next": "the_vale_books"
+          },
+          {
+            "text": "Would you buy a book from me?",
+            "next": "buying"
+          },
+          {
+            "text": "Nothing today.",
+            "next": "bye"
+          }
+        ]
+      },
+      "trade": {
+        "speaker": "Cassa Binder",
+        "text": "Kindle-Bolt, Hush-Frost, Ward and Quiet the Blood: the four the Spire sends them down the hill for, and I keep them in that order because that is the order they come asking. The rest of what I have is Vale reading, and the primer, which sells more than all of it together because every child in this city has to be got through Naming Day somehow.",
+        "next": "hub"
+      },
+      "the_tomes": {
+        "speaker": "Cassa Binder",
+        "text": "I sell the working written down. That is not the same thing and I say so to everyone who asks, because one day somebody is going to buy Raise the Buried off me, take it out to a hedge, do exactly what it says, and be very surprised. — A tome is somebody's hands, written out by somebody else's. You read it, and then you go and do it badly for a month, and then it is yours. Anyone who tells you the book did it is selling you a second book.",
+        "effects": [
+          {
+            "set_flag": "cassa_on_tomes"
+          }
+        ],
+        "next": "hub"
+      },
+      "the_circle": {
+        "speaker": "Cassa Binder",
+        "text": "Three people who disagree, and me, and I have copied out all three of them by hand, which is a closer reading than any of them have given the other two. — Sulion is right about more of it and insufferable about all of it. Cresswell is wrong and kind, which wears better than it should. Ondrael is honest, and honesty in a Sayer reads as weakness to the other two, and they are both a little afraid of her anyway. Three hundred years of that. I have the ledgers; the arguments get shorter and the bindings get cheaper.",
+        "effects": [
+          {
+            "set_flag": "cassa_on_circle"
+          }
+        ],
+        "next": "hub"
+      },
+      "the_vale_books": {
+        "speaker": "Cassa Binder",
+        "text": "The cookery, always. The bestiary, to men who intend to go out on the downs and would rather be lied to first. The play, in spring, when the Long Table's coming and everybody wants to be the one who knows the extra stanza. — And the Candle Book, which nobody buys. They come in and read a page of it standing up and put it back and go home to their grandmother's copy. I keep two on the shelf for that exact purpose and I have never sold one in nine years.",
+        "next": "hub"
+      },
+      "buying": {
+        "speaker": "Cassa Binder",
+        "text": "I will, if it is a book and not a wet thing you pulled out of a barrow. I smell the spine. That is not a superstition: a book that has been under ground has a smell, and it goes into everything on the shelf beside it, and then I am selling ruined stock to people who trusted me. Twice I have handed one back across this counter and both times the man went away angry and both times I was right.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Cassa Binder",
+        "text": "Mind the boards.",
+        "next": "end"
+      }
+    }
+  }
+]

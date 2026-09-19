@@ -37,6 +37,8 @@ signal item_equipped(slot: String, item_id: String)
 signal item_used(item_id: String, effects: Array)
 signal container_opened(container: Node, actor: Node)
 signal recipe_learned(recipe_id: String)
+## A saying (spell) was added to what the character knows; Progression owns the list.
+signal spell_learned(spell_id: String)
 signal ingredient_effect_discovered(item_id: String, effect_index: int)
 signal item_crafted(recipe_id: String, item_id: String, count: int)
 signal item_enchanted(item_id: String, effect_id: String)

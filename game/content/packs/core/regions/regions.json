@@ -161,7 +161,12 @@
       "water_table": 8,
       "lake_radius": 1250
     },
-    "enemy_ecology": [],
+    "enemy_ecology": [
+      "core:enemy/cutpurse",
+      "core:enemy/gutter_drake",
+      "core:enemy/bravo",
+      "core:enemy/smuggler_sayer"
+    ],
     "danger": 1
   },
   {
@@ -244,7 +249,12 @@
       "shape": "delta",
       "water_table": 2
     },
-    "enemy_ecology": [],
+    "enemy_ecology": [
+      "core:enemy/bog_drowned",
+      "core:enemy/sallowjaw",
+      "core:enemy/wisp",
+      "core:enemy/leech_hound"
+    ],
     "danger": 2
   },
   {
@@ -329,7 +339,13 @@
       "shape": "forest_rise",
       "water_table": 6
     },
-    "enemy_ecology": [],
+    "enemy_ecology": [
+      "core:enemy/thornhound",
+      "core:enemy/weaver",
+      "core:enemy/warden",
+      "core:enemy/poacher",
+      "core:enemy/hart_knight"
+    ],
     "danger": 3
   },
   {
@@ -411,7 +427,12 @@
       "shape": "mountains",
       "water_table": 10
     },
-    "enemy_ecology": [],
+    "enemy_ecology": [
+      "core:enemy/crag_wolf",
+      "core:enemy/scree_hag",
+      "core:enemy/stone_thrall",
+      "core:enemy/clanless_raider"
+    ],
     "danger": 4
   },
   {
@@ -492,7 +513,10 @@
       "water_table": 0
     },
     "enemy_ecology": [
-      "core:enemy/ash_wight"
+      "core:enemy/ash_wight",
+      "core:enemy/chorister",
+      "core:enemy/tolling_knight",
+      "core:enemy/bell_bearer"
     ],
     "danger": 5
   }

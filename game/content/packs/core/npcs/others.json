@@ -195,5 +195,90 @@
       {"days": "all", "hour": 18, "place": "core:place/pilgrims_ash", "activity": "eat", "spot": "pilgrim_tents"},
       {"days": "all", "hour": 20, "place": "core:place/pilgrims_ash", "activity": "sleep", "spot": "pilgrim_tents"}
     ]
+  },
+  {
+    "id": "core:npc/cassa_binder",
+    "name": "Cassa Binder",
+    "home_place": "core:place/tollmere",
+    "dialogue": "core:dialogue/cassa_binder",
+    "bio": "Binds and sells books three doors down from the Spire, and has read more of the Circle's argument than any two Sayers, because she has had to copy out all three sides of it.",
+    "unique_habit": "Smells the spine of every book handed back to her before she will put it on the shelf, and has twice refused to take one back on that basis alone.",
+    "personality": {
+      "traits": [
+        "cynical",
+        "generous",
+        "quiet",
+        "proud",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 3312,
+      "build": "square",
+      "age": 44,
+      "hair": "dark_pinned",
+      "notes": "an apron with an awl and three sizes of needle in it, paste under the nails, and reading glasses pushed up and forgotten"
+    },
+    "merchant": {
+      "stock": "core:table/stock_binder",
+      "marks": 320,
+      "buys": [
+        "book",
+        "misc"
+      ]
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:place/tollmere",
+        "activity": "work",
+        "spot": "bindery",
+        "notes": "sewing signatures before the light is good enough to letter by"
+      },
+      {
+        "days": "workdays",
+        "hour": 9,
+        "place": "core:place/tollmere",
+        "activity": "work",
+        "spot": "shop_counter"
+      },
+      {
+        "days": "workdays",
+        "hour": 13,
+        "place": "core:place/tollmere",
+        "activity": "eat",
+        "spot": "canal_steps"
+      },
+      {
+        "days": "workdays",
+        "hour": 14,
+        "place": "core:place/tollmere",
+        "activity": "work",
+        "spot": "shop_counter"
+      },
+      {
+        "days": "restday",
+        "hour": 10,
+        "place": "core:place/sayers_spire",
+        "activity": "idle",
+        "spot": "lecture_hall",
+        "notes": "at the back, correcting the lecturer under her breath"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:place/tollmere",
+        "activity": "idle",
+        "spot": "shop_door"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:place/tollmere",
+        "activity": "sleep",
+        "spot": "bindery_loft"
+      }
+    ]
   }
 ]

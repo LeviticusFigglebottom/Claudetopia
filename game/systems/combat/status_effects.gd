@@ -16,6 +16,7 @@ signal renown_tick(amount: float)
 const RULES := {
 	"burning": {"duration": 4.0, "tick": 0.5, "dps": 3.0, "kind": "fire", "stacking": "refresh"},
 	"chilled": {"duration": 5.0, "speed_mult": 0.6, "stacking": "refresh"},
+	"webbed": {"duration": 5.0, "speed_mult": 0.45, "stacking": "refresh"},
 	"bleeding": {"duration": 6.0, "tick": 1.0, "dps": 2.0, "kind": "slash", "stacking": "stack", "max_stacks": 3},
 	"poisoned": {"duration": 10.0, "tick": 1.0, "dps": 1.5, "kind": "poison", "stacking": "extend", "max_duration": 30.0},
 	"silenced": {"duration": 6.0, "blocks_casting": true, "stacking": "refresh"},

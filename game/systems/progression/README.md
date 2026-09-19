@@ -4,6 +4,11 @@
 levels, each level grants one attribute point and one perk point, and every perk, potion and worn
 item ends up as a number other systems can query.
 
+It also owns **what sayings the character knows** (DESIGN §5.3), for the same reason it owns
+skills: a saying is something the character learned, not something they are carrying. The list
+rides with the `progression` save section, survives death and respawn, and is the only authority
+on what may be cast — see DECISIONS.md.
+
 ## Files
 
 | File | What it is |
@@ -18,7 +23,10 @@ item ends up as a number other systems can query.
 
 * `core:skill/*` — `{name, group, governs, description, shares_xp_with?}`.
 * `core:perk/*` — `{name, skill, requires_level, requires_perk?, effects: [{stat, mult|add}], description}`.
-* `core:calling/*` — `{name, skill_bonuses, signature_item, starting_items, starting_reputation, starting_marks, description}`.
+* `core:calling/*` — `{name, skill_bonuses, signature_item, starting_items, starting_reputation, starting_marks, starting_spells?, description}`.
+* `core:spell/*` — read for the sayings listing (school, cost, cast time, effects, description).
+* `core:book/*` — `teaches_spell?`: a book with a working in it teaches that saying the first
+  time it is opened, wherever it is opened.
 
 ## Formulas (normative, DESIGN §5.6 and §5.3)
 
@@ -37,15 +45,19 @@ worn gear change them.
 ## Signals
 
 Emitted on `EventBus`: `skill_level_up(skill_id, level)`, `level_up(level)`,
-`attribute_raised(attribute, value)`, `perk_taken(perk_id)`.
-Local: `skills_changed`, `level_changed(level)`, `points_changed(attribute_points, perk_points)`.
+`attribute_raised(attribute, value)`, `perk_taken(perk_id)`, `spell_learned(spell_id)`.
+Local: `skills_changed`, `level_changed(level)`, `points_changed(attribute_points, perk_points)`,
+`sayings_changed`.
 Consumed: `EventBus.skill_used(skill_id, xp)` — combat, crafting, stealth and speech all just emit
-this, and nothing needs a reference to this node.
+this, and nothing needs a reference to this node; `EventBus.book_opened(book_id)` — a book whose
+def carries `teaches_spell` teaches it, and re-reading says so rather than doing nothing.
 
 ## Save section
 
-**`progression`** — `{calling, skills{levels, progress, uses, total_gains}, leveling{...}, perks{taken}}`.
-Registered by `Progression._ready()`.
+**`progression`** — `{calling, skills{levels, progress, uses, total_gains}, leveling{...},
+perks{taken}, known_spells[]}`. Registered by `Progression._ready()`. A save from before
+`known_spells` existed loads with nothing known; `Migrations._v2_to_v3` carries over whatever
+saying that character had readied, which is the only evidence such a save holds.
 
 ## Finding this node
 
@@ -67,6 +79,14 @@ level_progress() -> float                    summary() -> Dictionary
 max_health() / max_stamina() / max_mana() / load_capacity() -> float
 effective_skill(skill) -> float              # trained level + fortify effects
 apply_calling(id, inventory := null) -> bool Progression.callings() -> Array
+
+# sayings (DESIGN §5.3) — mirrors Crafting's known_recipes
+learn_spell(spell_id) -> bool                # false when already known or not a spell
+knows_spell(spell_id) -> bool                forget_spell(spell_id) -> bool
+known_spells: Array[String]                  # sorted; what the caster is allowed to say
+spells() -> Array[Dictionary]                # {id, name, school, school_name, cast_type, cost,
+                                             #  base_cost, cast_time, range, radius, duration,
+                                             #  skill_level, description, effects} for the screen
 mods: Modifiers                              # get_mult(key) / get_add(key) / apply(key, base)
 
 # Modifiers (used by every other system)

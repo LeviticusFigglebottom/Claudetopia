@@ -13,6 +13,8 @@ extends Node
 ## (a deed is bought with marks at a price).
 
 signal installed
+## Fired once, on the first frame of a new game, after the opening has been set up.
+signal new_game_started(quest_id: String)
 
 const ORDER := [
 	["Ownership", "res://systems/crime/ownership.gd"],
@@ -23,6 +25,10 @@ const ORDER := [
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 ]
+
+## The one thing a new game needs that no system owns: the opening quest, named in data so
+## a content pack can open somewhere else entirely.
+const OPENING := "core:opening/new_game"
 
 var services: Dictionary = {}
 
@@ -50,6 +56,8 @@ func install() -> void:
 	_install_loot_drops()
 	Log.info("GameServices", "installed %d services: %s" % [services.size(), ", ".join(services.keys())])
 	installed.emit()
+	if GameState.has_flag("new_game"):
+		call_deferred("begin_new_game")
 
 
 ## Loot is a listener rather than a queried service, so it has no ensure() of its own.
@@ -64,6 +72,27 @@ func _install_loot_drops() -> void:
 	drops.add_to_group("loot_drops")
 	add_child(drops)
 	services["LootDrops"] = drops
+
+
+## The Naming hands over a named character and a flag, and until now nothing picked it up, so
+## the first quest of the game never started and the main thread could not be entered at all.
+## Starting it is all this does: everything else about a new game is a system's own business.
+func begin_new_game() -> void:
+	GameState.set_flag("new_game", false)
+	var opening := ContentDB.get_or_empty(OPENING)
+	var quest := str(opening.get("quest", ""))
+	if quest.is_empty() or not ContentDB.has(quest):
+		Log.warn("GameServices", "no opening quest in %s" % OPENING)
+		return
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	if log_node == null or not log_node.has_method("start"):
+		Log.warn("GameServices", "no quest log to start '%s' in" % quest)
+		return
+	if bool(log_node.call("is_active", quest)) or bool(log_node.call("is_completed", quest)):
+		return
+	log_node.call("start", quest)
+	new_game_started.emit(quest)
+	Log.info("GameServices", "new game: started %s" % quest)
 
 
 func service(display_name: String) -> Node:

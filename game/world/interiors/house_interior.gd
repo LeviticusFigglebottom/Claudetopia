@@ -39,6 +39,9 @@ var rooms: Dictionary = {}
 var _missing: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
 var _props := PropLibrary.new()
+## Prop kinds that are a book somebody could pick up and read.
+const BOOK_PROPS := ["book_single", "book_stack", "roll_book", "ledger"]
+var _shelf_index := 0
 var _variant := 0
 
 
@@ -239,6 +242,58 @@ func _build_props() -> void:
 			node.set_meta("habit", p["habit"])
 		node.set_meta("room", p.get("room", ""))
 		holder.add_child(node)
+		_make_readable(node, str(p.get("fixture", p.get("prop", ""))), p)
+
+
+## Book props are the only ones worth walking across a room for, so they carry the book they
+## are. The recipe may name one (`book`/`item`); otherwise the house's own shelf gets what a
+## household like this would own, picked from the culture pool and settled by the house seed so
+## the same shelf holds the same book every time you come back.
+func _make_readable(node: Node3D, kind: String, placement: Dictionary) -> void:
+	if not BOOK_PROPS.has(kind):
+		return
+	var book := str(placement.get("book", ""))
+	var item := str(placement.get("item", ""))
+	if book.is_empty() and item.is_empty():
+		var pick := _shelf_book()
+		book = str(pick.get("book", ""))
+		item = str(pick.get("item", ""))
+	if book.is_empty() and item.is_empty():
+		return
+	var readable := Readable.new()
+	readable.name = "Readable"
+	readable.book_id = book
+	readable.item_id = "" if bool(placement.get("fixed", false)) else item
+	readable.fixed = bool(placement.get("fixed", false))
+	if not book.is_empty():
+		readable.display_name = str(ContentDB.get_or_empty(book).get("title", "a book"))
+	elif not item.is_empty():
+		readable.display_name = str(ContentDB.get_or_empty(item).get("name", "a book"))
+	node.add_child(readable)
+
+
+## What this household keeps on the shelf. Books tagged with the house's culture come first,
+## then anything common; a house with nothing suitable simply has no readable book.
+func _shelf_book() -> Dictionary:
+	var culture := str(meta.get("culture", ""))
+	var wanted: Array = []
+	var common: Array = []
+	for def in ContentDB.all("item"):
+		if str(def.get("category", "")) != "book":
+			continue
+		var tags: Array = def.get("tags", [])
+		if tags.has("no_sale") or tags.has("quest"):
+			continue
+		if tags.has(culture):
+			wanted.append(def)
+		elif tags.has("common") or tags.has("vale"):
+			common.append(def)
+	var pool: Array = wanted if not wanted.is_empty() else common
+	if pool.is_empty():
+		return {}
+	_shelf_index += 1
+	var pick: Dictionary = pool[(int(meta.get("seed", 0)) + _shelf_index * 7) % pool.size()]
+	return {"item": str(pick.get("id", "")), "book": str(pick.get("reads", ""))}
 
 
 func _build_doors() -> void:

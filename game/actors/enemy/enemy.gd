@@ -6,13 +6,22 @@ extends Actor
 ## hit window. Archetype flavour: pack spread/flank, charger line charge with knockdown, caster
 ## keeps distance, ambusher waits inactive, sentinel never leaves its post, brute hyper-armour,
 ## skirmisher hits and retreats. Bosses swap attack sets at hp thresholds.
+## The bestiary's special behaviours — voice attacks a silence stops, radial bursts, loosed
+## projectiles, pounces, cut purses, drained stamina, lures, guarded shrines, duellists' guards
+## and limbs that break off — decide themselves in EnemyAbilities and act here. So do the boss
+## fights (WORLD_BIBLE §9): held notes that heal until they are cut short, shockwaves that
+## follow a landed blow out across the floor, two-beat combos, and an arena that closes in.
 
 signal state_changed(from: String, to: String)
 signal telegraph(attack_name: String, duration: float)
 signal attack_launched(attack_name: String)
 signal phase_changed(index: int, phase: Dictionary)
+signal limb_broken(index: int, limb: Dictionary)
 signal mark_dropped(enemy_id: String, position: Vector3)
 signal summoned(enemies: Array)
+signal channel_started(attack_name: String, seconds: float)
+signal channel_pulse(attack_name: String, healed: float)
+signal channel_ended(attack_name: String, reason: String)
 
 const TURN_SPEED := 7.0
 const ACCEL := 12.0
@@ -30,6 +39,10 @@ const PACK_CALL_RADIUS := 18.0
 const SUMMON_RADIUS := 4.5
 const SUMMON_DEFAULT_CAP := 6
 const GROUND_MASK := (1 << 0) | (1 << 10)
+const MASK_HURTBOX := 1 << 5
+const BURST_MAX_TARGETS := 24
+const FLEE_TIME := 7.0
+const PROJECTILE_SPEED := 30.0
 
 @export var enemy_id: String = ""
 @export var patrol_points: PackedVector3Array = PackedVector3Array()
@@ -71,6 +84,20 @@ var _charge_time: float = 0.0
 var _has_nav: bool = false
 var _desired: Vector3 = Vector3.ZERO
 var _last_state: String = ""
+var _flee_timer: float = 0.0
+var _lure_engaged: bool = false
+var _lure_closed: float = 0.0
+var _limbs: Array = []
+var _limbs_broken: int = 0
+var _damage_since_limb: float = 0.0
+var _roused_by_greed: bool = false
+var _watched_target: Node = null
+var _channel_left: float = 0.0
+var _channel_next_pulse: float = 0.0
+var _channel_damage: float = 0.0
+var _last_attack_name: String = ""
+var _last_attack_at: float = -999.0
+var _arena: BossArena = null
 
 
 # --- construction -------------------------------------------------------------------------------
@@ -112,6 +139,9 @@ func _ready() -> void:
 	add_to_group("actors")
 	EventBus.hearthstone_rested.connect(_on_hearthstone_rested)
 	died.connect(_on_died)
+	if not EnemyAbilities.guard_params(brain.params).is_empty():
+		EventBus.container_opened.connect(_on_container_opened)
+		EventBus.item_acquired.connect(_on_item_acquired)
 	if is_boss and not phases.is_empty():
 		_enter_phase(0)
 
@@ -128,10 +158,14 @@ func _read_def(d: Dictionary) -> void:
 	armour_flat = float(stats.get("armour", 0.0))
 	speed = float(stats.get("speed", 3.2))
 	endurance = int(stats.get("stamina", 80.0) / 8.0)
+	will = int(stats.get("will", will))
 	resists = def.get("resists", {})
 	attacks = def.get("attacks", [])
 	current_attacks = attacks
 	marks_range = def.get("marks", [0, 0])
+	_limbs = def.get("limbs", [])
+	_limbs_broken = 0
+	_damage_since_limb = 0.0
 	phases = def.get("phases", [])
 	is_boss = archetype == "boss" or not phases.is_empty()
 	var rig := str(def.get("rig", "humanoid"))
@@ -186,6 +220,7 @@ func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
 	_check_phase()
 	target = perception.target if perception.target != null and is_instance_valid(perception.target) else null
+	_watch_for_swings()
 	var state := brain.tick(delta, _context())
 	if state != _last_state:
 		_last_state = state
@@ -216,6 +251,7 @@ func _tick_timers(delta: float) -> void:
 	_global_cooldown = maxf(_global_cooldown - delta, 0.0)
 	_strafe_timer -= delta
 	_retreat_timer = maxf(_retreat_timer - delta, 0.0)
+	_flee_timer = maxf(_flee_timer - delta, 0.0)
 	_repath -= delta
 	for k in _attack_cooldowns.keys():
 		_attack_cooldowns[k] = maxf(float(_attack_cooldowns[k]) - delta, 0.0)
@@ -298,6 +334,7 @@ func _tick_return(delta: float) -> void:
 func _tick_combat(delta: float) -> void:
 	if target == null:
 		_damp(delta, 8.0)
+		_guard(false)
 		return
 	if inactive:
 		inactive = false
@@ -306,18 +343,67 @@ func _tick_combat(delta: float) -> void:
 	var to := target.global_position - global_position
 	to.y = 0.0
 	var dist := to.length()
+	# A cutpurse with your marks is not interested in a fight; it runs, and it does not look back.
+	if _flee_timer > 0.0:
+		_guard(false)
+		var away := -_to_target_flat()
+		face_toward(global_position + away, TURN_SPEED, delta)
+		_step(away, speed * 1.2, delta)
+		return
 	face_toward(target.global_position, TURN_SPEED, delta)
 	if _charging:
 		_tick_charge(delta)
 		return
 	if _retreat_timer > 0.0:
+		_guard(false)
 		_strafe_or_retreat(delta, dist, true)
 		return
 	var attack := _select_attack(dist)
 	if not attack.is_empty() and _global_cooldown <= 0.0 and can_act():
+		_guard(false)
 		_begin_attack(attack)
 		return
+	_guard(true)
+	if _tick_lure(delta, dist):
+		return
 	_approach_or_hold(delta, dist)
+
+
+## A duelist keeps its guard up between its own swings (and only then): the openings it gives
+## you are the attacks it commits to, which is how a rapier fight is supposed to read.
+func _guard(up: bool) -> void:
+	if not EnemyAbilities.parries(brain.params):
+		return
+	var p := EnemyAbilities.parry_params(brain.params)
+	var want := up and not dead and can_act() and target != null
+	if want != is_blocking:
+		is_blocking = want
+		anim.play_intent("Block_Idle" if want else "Idle_Combat")
+		stamina_comp.regen_multiplier = 0.5 if want else 1.0
+	block_stability = float(p["guard_stability"]) if want else 0.0
+	can_parry = want
+
+
+## The lure: a wisp keeps its distance and goes on keeping it, which is the point of a wisp.
+## Returns true when it has handled this frame's movement. Once it turns and fights, it fights.
+func _tick_lure(delta: float, dist: float) -> bool:
+	if _lure_engaged or not EnemyAbilities.lures(brain.params):
+		return false
+	var p := EnemyAbilities.lure_params(brain.params)
+	if dist <= float(p["lure_break"]):
+		_lure_closed += delta
+	else:
+		_lure_closed = 0.0
+	match EnemyAbilities.lure_decision(dist, brain.params, _lure_closed):
+		EnemyAbilities.ENGAGE:
+			_lure_engaged = true
+			return false
+		EnemyAbilities.WITHDRAW:
+			_step(-_to_target_flat(), speed * float(p["lure_speed"]), delta)
+			return true
+		_:
+			_strafe_or_retreat(delta, dist, false)
+			return true
 
 
 func _approach_or_hold(delta: float, dist: float) -> void:
@@ -434,6 +520,9 @@ func _start_charge(attack: Dictionary) -> void:
 	_charge_time = 0.0
 	_charge_dir = _to_target_flat()
 	_current_attack = attack
+	# A leap is a charge that leaves the ground: gravity brings it down on whatever it aimed at.
+	if EnemyAbilities.is_leap(attack):
+		velocity.y = EnemyAbilities.leap_lift(attack)
 	poise_comp.set_hyper_armour(float(brain.param("hyper_armour", 10.0)))
 
 
@@ -468,11 +557,19 @@ func _end_charge(connected: bool) -> void:
 # --- attacks ------------------------------------------------------------------------------------
 
 ## Picks an off-cooldown attack whose range brackets the target. Ranged/charge attacks declare
-## `min_range`; melee ones just use `range`.
+## `min_range`; melee ones just use `range`. An attack made with the voice is off the table while
+## this creature is silenced, which is how a Hush answers a chorister.
 func _select_attack(dist: float) -> Dictionary:
 	var options: Array = []
+	var silenced := status != null and status.has("silenced")
+	var since := now() - _last_attack_at
 	for a in current_attacks:
 		var attack: Dictionary = a
+		if not EnemyAbilities.is_usable(attack, silenced):
+			continue
+		# The second beat of a pair only exists after the first one.
+		if not EnemyAbilities.combo_ready(attack, _last_attack_name, since):
+			continue
 		var name := str(attack.get("name", "attack"))
 		if float(_attack_cooldowns.get(name, 0.0)) > 0.0:
 			continue
@@ -499,7 +596,7 @@ func _select_attack(dist: float) -> Dictionary:
 ## everything else is a melee swing.
 func _begin_attack(attack: Dictionary) -> void:
 	match str(attack.get("kind", "")):
-		"charge":
+		"charge", "leap":
 			_current_attack = attack
 			_attacking = true
 			_attack_phase = "telegraph"
@@ -508,6 +605,7 @@ func _begin_attack(attack: Dictionary) -> void:
 		"spell":
 			_begin_spell_attack(attack)
 		_:
+			# burst and projectile share the melee shape: telegraph, act on hit_start, recover.
 			_begin_melee(attack)
 
 
@@ -524,10 +622,19 @@ func _begin_melee(attack: Dictionary) -> void:
 
 
 ## Telegraph → hit window → recovery, as placeholder clip timing (CONTRACTS §3 event names).
+## A channelled attack holds the note between the wind-up and the recovery: `channel_start` opens
+## it, the pulses run off a timer, and `channel_end` closes it if nothing has cut it short.
 static func attack_timing(attack: Dictionary) -> Dictionary:
 	var tel := maxf(float(attack.get("telegraph", 0.6)), 0.05)
 	var window := maxf(float(attack.get("hit_window", 0.18)), 0.05)
 	var rec := maxf(float(attack.get("recovery", 0.6)), 0.05)
+	var held := EnemyAbilities.channel_seconds(attack)
+	if held > 0.0:
+		return {"length": tel + held + rec, "events": [
+			{"t": tel, "name": "channel_start"},
+			{"t": tel + held, "name": "channel_end"},
+			{"t": tel + held + rec * 0.6, "name": "cancel_ok"},
+		]}
 	var length := tel + window + rec
 	return {"length": length, "events": [
 		{"t": tel, "name": "hit_start"},
@@ -552,9 +659,105 @@ func _begin_spell_attack(attack: Dictionary) -> void:
 	_global_cooldown = ct + 0.4
 
 
+# --- channelled attacks ---------------------------------------------------------------------------
+
+## The held note begins. From here it pulses on a beat until it runs out, or until something
+## stops it: a silence in a throat that needs one, or enough damage to break the concentration.
+func _start_channel(a: Dictionary) -> void:
+	_attack_phase = "channel"
+	_channel_left = EnemyAbilities.channel_seconds(a)
+	_channel_next_pulse = 0.0
+	_channel_damage = 0.0
+	channel_started.emit(str(a.get("name", "attack")), _channel_left)
+
+
+func _tick_channel(delta: float) -> void:
+	_damp(delta, 14.0)
+	if target != null and is_instance_valid(target):
+		face_toward(target.global_position, TURN_SPEED * 0.4, delta)
+	var a := _current_attack
+	var reason := EnemyAbilities.channel_break_reason(a, status != null and status.has("silenced"), _channel_damage, max_health)
+	if not reason.is_empty():
+		_end_channel(reason)
+		return
+	_channel_next_pulse -= delta
+	_channel_left -= delta
+	# The note runs out before it can take another beat: `channel` seconds is exactly
+	# `channel_pulses` pulses, so the healing it is worth is the healing it can give.
+	if _channel_left <= 0.0:
+		_end_channel("finished")
+		return
+	if _channel_next_pulse <= 0.0:
+		_channel_next_pulse = EnemyAbilities.channel_tick(a)
+		_channel_pulse(a)
+
+
+## One beat of the note: it takes back a share of what the whole note is worth, and everything
+## inside its reach hears it. Cut the note short and the rest of the healing never happens.
+func _channel_pulse(a: Dictionary) -> void:
+	var healed := EnemyAbilities.channel_heal_per_pulse(a)
+	if healed > 0.0 and health < max_health:
+		heal(healed)
+	if float(a.get("damage", 0.0)) > 0.0:
+		var pulse := a.duplicate(true)
+		pulse["kind"] = "burst"
+		pulse["radius"] = EnemyAbilities.radial_radius(a, arena_radius())
+		pulse["unparryable"] = true
+		_burst(pulse)
+	channel_pulse.emit(str(a.get("name", "attack")), healed)
+
+
+func _end_channel(reason: String) -> void:
+	if _attack_phase != "channel":
+		return
+	var name := str(_current_attack.get("name", "attack"))
+	var open_for := float(_current_attack.get("interrupt_stagger", 1.1))
+	_attack_phase = "recovery"
+	_channel_left = 0.0
+	channel_ended.emit(name, reason)
+	if reason == "finished":
+		return
+	# A note that was cut off leaves its singer open, which is the whole reward for cutting it.
+	anim.stop()
+	_finish_attack()
+	stagger(open_for)
+	EventBus.notify.emit("%s's note breaks off." % display_name, "combat")
+
+
+func is_channelling() -> bool:
+	return _attack_phase == "channel"
+
+
+func channel_remaining() -> float:
+	return maxf(_channel_left, 0.0)
+
+
+# --- the arena ------------------------------------------------------------------------------------
+
+## The bound this fight is being held inside, made on demand around where the boss was standing
+## when it woke. A designer-placed BossArena for this id wins over an improvised one.
+func arena() -> BossArena:
+	if _arena != null and is_instance_valid(_arena):
+		return _arena
+	_arena = BossArena.for_boss(self)
+	return _arena
+
+
+## The floor this fight is being held on. An arena nobody has measured is the default circle,
+## not a circle of nothing: `arena_wide` has to mean something before the Briar has taken a step.
+func arena_radius() -> float:
+	var a := arena()
+	if a != null and a.is_bounded():
+		return a.radius
+	return EnemyAbilities.DEFAULT_ARENA_RADIUS
+
+
 func _tick_attack(delta: float) -> void:
 	if target != null and _attack_phase == "telegraph" and not _charging:
 		face_toward(target.global_position, TURN_SPEED * 0.6, delta)
+	if _attack_phase == "channel":
+		_tick_channel(delta)
+		return
 	if _attack_phase == "active":
 		var lunge := float(_current_attack.get("lunge", 0.0))
 		if lunge > 0.0:
@@ -575,11 +778,30 @@ func _on_clip_event(event_name: String) -> void:
 		"hit_start":
 			if _attacking:
 				_attack_phase = "active"
-				_open_hitbox()
+				if EnemyAbilities.is_burst(_current_attack):
+					_burst(_current_attack)
+				elif EnemyAbilities.is_projectile(_current_attack):
+					_loose(_current_attack)
+				else:
+					_open_hitbox()
+				# The floor answers a blow whether or not the blow found you.
+				if EnemyAbilities.has_shockwave(_current_attack):
+					_burst(EnemyAbilities.shockwave_attack(_current_attack, arena_radius()))
+				var taken := EnemyAbilities.shrinks_arena_by(_current_attack)
+				if taken > 0.0:
+					var bound := arena()
+					if bound != null:
+						bound.shrink(taken)
 		"hit_end":
 			if _attacking:
 				_attack_phase = "recovery"
 				_close_hitbox()
+		"channel_start":
+			if _attacking:
+				_start_channel(_current_attack)
+		"channel_end":
+			if _attacking and _attack_phase == "channel":
+				_end_channel("finished")
 		_:
 			pass
 
@@ -597,25 +819,36 @@ func _finish_attack() -> void:
 	_global_cooldown = float(_current_attack.get("gcd", 0.5))
 	if archetype == "skirmisher":
 		_retreat_timer = float(brain.param("retreat_time", 1.4))
+	# What was just thrown, and when: a combo's second beat asks about both.
+	if not _current_attack.is_empty():
+		_last_attack_name = name
+		_last_attack_at = now()
 	_attacking = false
 	_attack_phase = ""
+	_channel_left = 0.0
 	_current_attack = {}
 
 
 func on_action_interrupted() -> void:
+	is_blocking = false
+	can_parry = false
+	block_stability = 0.0
+	stamina_comp.regen_multiplier = 1.0
+	if _attack_phase == "channel":
+		channel_ended.emit(str(_current_attack.get("name", "attack")), EnemyAbilities.BROKE_INTERRUPTED)
 	if _attacking or _charging:
 		_close_hitbox()
 		poise_comp.clear_hyper_armour()
 		_attacking = false
 		_charging = false
 		_attack_phase = ""
+		_channel_left = 0.0
 		_current_attack = {}
 	caster.interrupt()
 
 
-## Enemies swing with a hitbox in front of them sized by the attack's range.
-func _open_hitbox() -> void:
-	var a := _current_attack
+## One hit in flight from an attack definition. Shared by the swing, the burst and the arrow.
+func build_hit(a: Dictionary) -> HitData:
 	var hit := HitData.new()
 	hit.amount = float(a.get("damage", 10.0))
 	hit.kind = str(a.get("kind_damage", DamageModel.kind_for_class(str(a.get("weapon_class", "claw")))))
@@ -627,7 +860,14 @@ func _open_hitbox() -> void:
 	hit.parryable = not bool(a.get("unparryable", false))
 	hit.label = "%s:%s" % [Ids.name_of(enemy_id), str(a.get("name", "attack"))]
 	hit.statuses = a.get("statuses", [])
-	_weapon_hitbox().begin_swing(hit)
+	hit.origin = global_position
+	return hit
+
+
+## Enemies swing with a hitbox in front of them sized by the attack's range.
+func _open_hitbox() -> void:
+	var a := _current_attack
+	_weapon_hitbox().begin_swing(build_hit(a))
 	if a.has("summons"):
 		_summon(a["summons"])
 	attack_launched.emit(str(a.get("name", "attack")))
@@ -674,6 +914,142 @@ func _summon(spec_v: Variant) -> void:
 		summoned.emit(made)
 
 
+## A shriek, a ring, a note: everything in a radius is hit at once and nothing in front of it
+## is hit twice. Used by the scree-hag's silence and the bell-bearer's toll.
+func _burst(a: Dictionary) -> void:
+	var radius := EnemyAbilities.burst_radius(a)
+	var hit := build_hit(a)
+	var lit_share := EnemyAbilities.lit_damage_share(a)
+	var bound := arena() if lit_share < 1.0 else null
+	for victim in _actors_within(radius):
+		if not is_hostile_to(victim) or not victim.has_method("take_hit"):
+			continue
+		var h := hit.copy()
+		h.dodgeable = bool(a.get("dodgeable", true))
+		h.origin = global_position
+		# Only what you are known for stays lit, and standing in it is worth something.
+		if bound != null and victim is Node3D and bound.lit_at((victim as Node3D).global_position):
+			h.amount *= lit_share
+			h.poise_damage *= lit_share
+		var outcome: String = victim.take_hit(h)
+		_after_hit_landed(a, victim, outcome)
+	attack_launched.emit(str(a.get("name", "attack")))
+	_make_noise(float(a.get("noise", 1.0)))
+
+
+## A loosed arrow, a thrown stone, a sung note that crosses the room.
+func _loose(a: Dictionary) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+	var p := Projectile.make_bolt(Color(str(a.get("projectile_colour", "#d8d2c0"))), float(a.get("projectile_radius", 0.09)))
+	p.sticks = bool(a.get("sticks", false))
+	p.max_range = float(a.get("range", 24.0)) + 12.0
+	var tree := get_tree()
+	var parent: Node = tree.current_scene if tree.current_scene != null else tree.root
+	parent.add_child(p)
+	var origin := global_position + Vector3.UP * (1.4 * body_scale)
+	var aim: Vector3 = target.lock_point() if target.has_method("lock_point") else target.global_position + Vector3.UP
+	var speed_ms := float(a.get("speed", PROJECTILE_SPEED))
+	var gravity_ms := float(a.get("gravity", 0.0))
+	var dir := (aim - origin)
+	# Lead the shot and raise the nose enough that a heavy arrow still arrives where it was aimed.
+	if gravity_ms > 0.0 and dir.length() > 0.5:
+		dir.y += 0.5 * gravity_ms * pow(dir.length() / maxf(speed_ms, 1.0), 2.0)
+	dir = dir.normalized()
+	p.launch(origin + dir * 0.6, dir, speed_ms, build_hit(a), gravity_ms)
+	p.struck.connect(_on_projectile_struck.bind(a))
+	attack_launched.emit(str(a.get("name", "attack")))
+	_make_noise(float(a.get("noise", 0.4)))
+
+
+## Every actor with a hurtbox inside `radius` of this one.
+func _actors_within(radius: float) -> Array[Node]:
+	var out: Array[Node] = []
+	if not is_inside_tree():
+		return out
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsShapeQueryParameters3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = radius
+	q.shape = sphere
+	q.transform = Transform3D(Basis.IDENTITY, global_position + Vector3.UP * 0.9)
+	q.collide_with_areas = true
+	q.collide_with_bodies = false
+	q.collision_mask = MASK_HURTBOX
+	for r in space.intersect_shape(q, BURST_MAX_TARGETS):
+		var c: Object = r.get("collider")
+		if c is Hurtbox and (c as Hurtbox).actor != null and (c as Hurtbox).actor != self and not out.has((c as Hurtbox).actor):
+			out.append((c as Hurtbox).actor)
+	return out
+
+
+# --- what a landed hit costs the victim -----------------------------------------------------------
+
+func _on_swing_landed(hurtbox: Hurtbox, _hit: HitData, outcome: String) -> void:
+	if hurtbox != null and hurtbox.actor != null:
+		_after_hit_landed(_current_attack, hurtbox.actor, outcome)
+
+
+func _on_projectile_struck(victim: Node, _hit: HitData, outcome: String, attack: Dictionary) -> void:
+	_after_hit_landed(attack, victim, outcome)
+
+
+## Consequences an attack carries beyond damage: a cut purse, a drained bar. Runs for swings,
+## bursts and arrows alike, and only for hits that actually got through.
+func _after_hit_landed(a: Dictionary, victim: Node, outcome: String) -> void:
+	if a.is_empty() or victim == null or not is_instance_valid(victim):
+		return
+	if outcome == "dodged" or outcome == "parried" or outcome == "immune":
+		return
+	if EnemyAbilities.drain_amount(a) > 0.0:
+		_drain(a, victim)
+	if EnemyAbilities.steals(a):
+		_cut_purse(a, victim)
+
+
+## Stamina off the bar, and a mouthful back for whatever drank it.
+func _drain(a: Dictionary, victim: Node) -> void:
+	var pool: Node = victim.get("stamina_comp")
+	if pool == null or not pool.has_method("spend"):
+		return
+	var want := EnemyAbilities.drain_amount(a)
+	var took := minf(want, float(pool.get("current")))
+	if took <= 0.0:
+		return
+	pool.spend(took)
+	var back := EnemyAbilities.drain_heal(a, took)
+	if back > 0.0:
+		heal(back)
+
+
+## The cutpurse's whole trade: take what is in the purse and be somewhere else. It only works
+## on a bag that is the player's (CONTRACTS §8: only the player's Inventory joins that group).
+func _cut_purse(a: Dictionary, victim: Node) -> void:
+	if not victim.is_in_group("player"):
+		return
+	var bag: Node = null
+	for n in get_tree().get_nodes_in_group("inventory"):
+		bag = n
+		break
+	if bag == null or not bag.has_method("remove_marks"):
+		return
+	var purse := int(bag.get("marks"))
+	var want := EnemyAbilities.steal_amount(a, purse, randf())
+	var taken := 0
+	if want > 0:
+		taken = int(bag.remove_marks(want))
+	if taken > 0:
+		# What it took, it carries: kill it before it gets away and the purse comes back.
+		marks_range = [int(marks_range[0]) + taken, int(marks_range[1]) + taken]
+		EventBus.notify.emit("%s cuts your purse: %d marks." % [display_name, taken], "warn")
+	# It runs whether or not there was anything in the purse; that is what makes it a cutpurse
+	# and not a murderer. Killing it before it reaches the leash is how you get the marks back.
+	if bool(brain.param("flee_after_steal", false)):
+		_flee_timer = float(brain.param("flee_time", FLEE_TIME))
+		_retreat_timer = 0.0
+		on_action_interrupted()
+
+
 func _close_hitbox() -> void:
 	_weapon_hitbox().end_swing()
 
@@ -683,6 +1059,7 @@ func _weapon_hitbox() -> Hitbox:
 	if hb == null:
 		hb = Hitbox.create(self, 0.45, 2.0)
 		attack_origin.add_child(hb)
+		hb.hit_landed.connect(_on_swing_landed)
 	# `hit_range` lets an attack whose selection range is long (a charge) keep a short hitbox.
 	var reach := float(_current_attack.get("hit_range", _current_attack.get("range", brain.engage_range()))) + 0.4
 	hb.set_capsule(0.45 * body_scale, reach)
@@ -737,7 +1114,16 @@ func _update_anim() -> void:
 # --- reactions ----------------------------------------------------------------------------------
 
 func take_hit(hit: HitData) -> String:
+	var before := health
 	var outcome := super.take_hit(hit)
+	var dealt := maxf(before - health, 0.0)
+	if dealt > 0.0:
+		# Damage counts twice over: against the concentration of anything mid-note, and against
+		# whatever is next to come off a thing that is put together.
+		if _attack_phase == "channel":
+			_channel_damage += dealt
+		_damage_since_limb += dealt
+		_check_damage_limb()
 	if outcome != "dead" and hit.attacker is Node3D:
 		perception.alert_to((hit.attacker as Node3D).global_position, hit.attacker as Node3D)
 		inactive = false
@@ -792,6 +1178,8 @@ func _on_brain_state(from: String, to: String) -> void:
 			anim.play_intent("Idle_Combat")
 		_:
 			pass
+	if from == Brain.COMBAT:
+		_guard(false)
 
 
 func _on_hearthstone_rested(_id: String) -> void:
@@ -810,13 +1198,154 @@ func reset_to_spawn() -> void:
 	inactive = archetype == "ambusher"
 	_attacking = false
 	_charging = false
+	_flee_timer = 0.0
+	_lure_engaged = false
+	_lure_closed = 0.0
+	_roused_by_greed = false
+	is_blocking = false
+	can_parry = false
+	block_stability = 0.0
+	stamina_comp.regen_multiplier = 1.0
 	_attack_cooldowns.clear()
+	if not _limbs.is_empty() and _limbs_broken > 0:
+		# A thrall the player walked away from is whole again by the time they come back.
+		_limbs_broken = 0
+		current_attacks = attacks
+		poise_max = float(def.get("stats", {}).get("poise", poise_max))
+		poise_comp.setup(poise_max)
+		speed = float(def.get("stats", {}).get("speed", speed))
+	brain.params = Brain.params_for(archetype, def.get("behaviour", {}))
+	marks_range = def.get("marks", marks_range)
 	if dead:
 		revive()
 		collision_layer = LAYER_ENEMY
 	else:
 		full_restore()
 	anim.play_intent("Idle")
+
+
+# --- limbs --------------------------------------------------------------------------------------
+
+## Poise is the lever that takes a stone-thrall apart: every time its footing goes, something
+## comes off, and what comes off decides what it can still do to you.
+func _on_poise_broken() -> void:
+	super()
+	# Only the pieces that come off when the footing goes. The King's arms have to be broken.
+	var limb := EnemyAbilities.next_limb(_limbs, _limbs_broken)
+	if not limb.is_empty() and EnemyAbilities.limb_breaks_on_poise(limb):
+		_break_next_limb()
+
+
+func _break_next_limb() -> void:
+	var limb := EnemyAbilities.next_limb(_limbs, _limbs_broken)
+	if limb.is_empty():
+		return
+	var index := _limbs_broken
+	_limbs_broken += 1
+	_damage_since_limb = 0.0
+	current_attacks = EnemyAbilities.apply_broken_limbs(_phase_attacks(), _limbs, _limbs_broken)
+	poise_max = EnemyAbilities.poise_after_limb(poise_max, limb)
+	poise_comp.setup(poise_max)
+	speed = EnemyAbilities.speed_after_limb(speed, limb)
+	_attack_cooldowns.clear()
+	limb_broken.emit(index, limb)
+	if limb.has("say"):
+		EventBus.notify.emit(str(limb["say"]), "combat")
+
+
+## A limb that comes off by being hit enough rather than by the footing going: the Stone-Thrall
+## King's arms, which the bible says you break to change what it can do.
+func _check_damage_limb() -> void:
+	var limb := EnemyAbilities.next_limb(_limbs, _limbs_broken)
+	if limb.is_empty() or EnemyAbilities.limb_breaks_on_poise(limb):
+		return
+	if _damage_since_limb >= EnemyAbilities.limb_damage_needed(limb):
+		_break_next_limb()
+
+
+## The attack set this phase would have if nothing had been broken off yet.
+func _phase_attacks() -> Array:
+	if phase_index >= 0 and phase_index < phases.size():
+		var phase: Dictionary = phases[phase_index]
+		if phase.has("attacks"):
+			return phase["attacks"]
+	return attacks
+
+
+func limbs_broken() -> int:
+	return _limbs_broken
+
+
+# --- guarded ground -------------------------------------------------------------------------------
+
+## A Warden does not chase and does not care what you are. It cares what you take. Opening
+## anything inside its radius rouses it, and a roused Warden fights harder than a watching one.
+func _on_container_opened(container: Node, actor: Node) -> void:
+	if container is Node3D:
+		_greed(container.global_position, actor)
+
+
+func _on_item_acquired(_item_id: String, _count: int) -> void:
+	for n in get_tree().get_nodes_in_group("player"):
+		if n is Node3D:
+			_greed((n as Node3D).global_position, n)
+			return
+
+
+func _greed(at: Vector3, thief: Node) -> void:
+	if dead or not is_inside_tree():
+		return
+	if not EnemyAbilities.greed_rouses(brain.post, at, brain.params):
+		return
+	if not _roused_by_greed:
+		_roused_by_greed = true
+		brain.params["aggression"] = EnemyAbilities.guard_aggression(float(brain.param("aggression", 0.8)), brain.params)
+	inactive = false
+	perception.alert_to(at, thief as Node3D if thief is Node3D else null)
+	brain.force(Brain.COMBAT)
+
+
+func is_roused() -> bool:
+	return _roused_by_greed
+
+
+# --- the duelist's answer ---------------------------------------------------------------------
+
+## A bravo that has seen a swing begin sometimes gets its guard there in time. The press is
+## scheduled, not instant: DamageModel.parry_succeeds still decides whether it was early enough.
+func _watch_for_swings() -> void:
+	if not EnemyAbilities.parries(brain.params):
+		return
+	if _watched_target == target:
+		return
+	if _watched_target != null and is_instance_valid(_watched_target) and _watched_target.has_signal("attack_started"):
+		if _watched_target.attack_started.is_connected(_on_target_swing):
+			_watched_target.attack_started.disconnect(_on_target_swing)
+	_watched_target = target
+	if _watched_target != null and _watched_target.has_signal("attack_started"):
+		_watched_target.attack_started.connect(_on_target_swing)
+
+
+func _on_target_swing(_kind: String, _index: int) -> void:
+	if dead or not is_blocking:
+		return
+	var at := EnemyAbilities.parry_press_at(now(), brain.params, randf())
+	if at >= 0.0:
+		_schedule_parry(at - now())
+
+
+func _schedule_parry(delay: float) -> void:
+	if delay <= 0.0:
+		_press_guard()
+		return
+	# Bound to a method rather than a closure: freeing the enemy takes the connection with it,
+	# so a bravo that dies mid-swing leaves nothing behind to fire into.
+	get_tree().create_timer(delay, false, true).timeout.connect(_press_guard)
+
+
+func _press_guard() -> void:
+	if not dead and is_blocking:
+		parry_pressed_at = now()
 
 
 # --- boss ---------------------------------------------------------------------------------------
@@ -844,13 +1373,19 @@ func _check_phase() -> void:
 func _enter_phase(index: int) -> void:
 	phase_index = index
 	var phase: Dictionary = phases[index]
-	current_attacks = phase.get("attacks", attacks)
+	# A new phase does not grow back what has already come off: the phase's own attack set goes
+	# through the same filter the broken limbs applied to the last one.
+	current_attacks = EnemyAbilities.apply_broken_limbs(phase.get("attacks", attacks), _limbs, _limbs_broken)
 	for key in ["engage_range", "circle", "aggression", "hyper_armour", "retreat_threshold"]:
 		if phase.has(key):
 			brain.params[key] = phase[key]
 	if phase.has("speed"):
 		speed = float(phase["speed"])
 	_attack_cooldowns.clear()
+	if EnemyAbilities.lights_by_renown(phase):
+		var bound := arena()
+		if bound != null:
+			bound.light_by_renown(true)
 	phase_changed.emit(index, phase)
 	if phase.has("say"):
 		EventBus.notify.emit(str(phase["say"]), "boss")
@@ -899,6 +1434,8 @@ func to_save() -> Dictionary:
 	d["spawn_yaw"] = spawn_yaw
 	d["phase"] = phase_index
 	d["inactive"] = inactive
+	d["limbs_broken"] = _limbs_broken
+	d["roused"] = _roused_by_greed
 	return d
 
 
@@ -909,6 +1446,12 @@ func from_save(d: Dictionary) -> void:
 	spawn_position = Vector3(float(s[0]), float(s[1]), float(s[2]))
 	spawn_yaw = float(d.get("spawn_yaw", spawn_yaw))
 	inactive = bool(d.get("inactive", inactive))
+	_roused_by_greed = bool(d.get("roused", false))
+	if _roused_by_greed:
+		brain.params["aggression"] = EnemyAbilities.guard_aggression(float(brain.param("aggression", 0.8)), brain.params)
+	var want_broken := int(d.get("limbs_broken", 0))
+	while _limbs_broken < want_broken and _limbs_broken < _limbs.size():
+		_break_next_limb()
 	var p := int(d.get("phase", -1))
 	if p >= 0 and p < phases.size():
 		_enter_phase(p)

@@ -275,6 +275,20 @@ class Recipes extends RefCounted:
 		return true
 
 
+## The "sayings" provider a SocialContext teaches through (the real one is Progression).
+class Sayings extends RefCounted:
+	var known: Array[String] = []
+
+	func learn_spell(spell_id: String) -> bool:
+		if known.has(spell_id):
+			return false
+		known.append(spell_id)
+		return true
+
+	func knows_spell(spell_id: String) -> bool:
+		return known.has(spell_id)
+
+
 class Clock extends RefCounted:
 	var hour_value := 12
 	var day := 1

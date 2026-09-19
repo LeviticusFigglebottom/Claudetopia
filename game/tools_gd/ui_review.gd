@@ -95,11 +95,17 @@ func _plan() -> Array[Dictionary]:
 		{"name": "save_load", "menu": "save_load", "args": {"mode": "save"}},
 		{"name": "journal_quests", "menu": "journal", "args": {"tab": 0}},
 		{"name": "journal_rumours", "menu": "journal", "args": {"tab": 1}},
-		{"name": "journal_bestiary", "menu": "journal", "args": {"tab": 2}},
-		{"name": "journal_books", "menu": "journal", "args": {"tab": 3}},
+		{"name": "journal_people", "menu": "journal", "args": {"tab": 2, "people": [
+			"core:npc/wren_tallow", "core:npc/osric_pennywort", "core:npc/merrick_gosling",
+			"core:npc/hesta_hollins", "core:npc/wardens_hesk"]}},
+		{"name": "journal_bestiary", "menu": "journal", "args": {"tab": 3}},
+		{"name": "journal_books", "menu": "journal", "args": {"tab": 4}},
 		{"name": "book_reader", "menu": "book", "args": {"book_id": "core:book/the_falling_of_the_toll"}},
+		{"name": "book_tome", "menu": "book", "args": {"book_id": "core:book/saying_ward"}},
 		{"name": "inventory", "menu": "inventory"},
 		{"name": "skills", "menu": "skills"},
+		{"name": "sayings", "menu": "sayings"},
+		{"name": "sayings_empty", "menu": "sayings", "state": "no_sayings"},
 		{"name": "crafting_forge", "menu": "crafting", "args": {"station": "forge"}},
 		{"name": "crafting_alchemy", "menu": "crafting", "args": {"station": "alembic"}},
 		{"name": "crafting_enchanting", "menu": "crafting", "args": {"station": "name_table"}},
@@ -159,6 +165,8 @@ func _setup(shot: Dictionary) -> void:
 		if dlg:
 			_fakes.drive_dialogue(dlg, state)
 	elif shot.has("menu"):
+		if state != "default":
+			_fakes.set_state(state)
 		UI.show_hud()
 		UI.open(str(shot["menu"]), shot.get("args", {}))
 

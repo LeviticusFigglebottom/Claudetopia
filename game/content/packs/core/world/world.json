@@ -1,0 +1,11 @@
+{
+  "id": "core:world/wickmere",
+  "name": "Wickmere",
+  "seed": 8471,
+  "size_m": 8192,
+  "spacing_m": 2,
+  "cell_size_m": 256,
+  "sea_level": 0,
+  "lake_level": 8,
+  "description": "The Wickmere basin: six regions around the Mere. The world builder (tools/world/build_world.py) derives every generated map from this seed plus the region and place definitions."
+}

@@ -8,17 +8,26 @@ extends Node
 ##     var prog := get_tree().get_first_node_in_group("progression")
 ##     prog.skill_level("one_handed"); prog.mods.get_mult("stamina_cost_light")
 ##
-## Signals it emits on EventBus: skill_level_up, level_up, attribute_raised, perk_taken.
+## It also owns the sayings the character knows (DESIGN §5.3 "Saying"), the same way Crafting
+## owns known recipes: a saved, queryable list with learn_spell / knows_spell / spells().
+##
+## Signals it emits on EventBus: skill_level_up, level_up, attribute_raised, perk_taken,
+## spell_learned.
 ## Derived pools (max HP/stamina/mana, load capacity) come from attributes and are passed
 ## through the modifier stack, so perks and worn gear change them.
 
 signal skills_changed
 signal level_changed(new_level: int)
 signal points_changed(attribute_points: int, perk_points: int)
+## A saying was added to `known_spells` (the sayings screen listens to this).
+signal sayings_changed
+## A timed modifier (a potion, a meal) came or went.
+signal modifiers_changed
 
 const GROUP := "progression"
 const SAVE_SECTION := "progression"
 const CALLING_TYPE := "calling"
+const SPELL_TYPE := "spell"
 
 @export var listen_to_event_bus: bool = true
 ## Global multiplier on awarded skill XP (difficulty, debug).
@@ -28,7 +37,11 @@ var skill_set := Skills.new()
 var leveling := Leveling.new()
 var perks := Perks.new()
 var mods := Modifiers.new()
+## effect id -> when the timed modifier it set runs out (seconds, engine clock).
+var mods_source_expiry: Dictionary = {}
 var calling_id: String = ""
+## The sayings this character has been taught, sorted; the only authority on what may be cast.
+var known_spells: Array[String] = []
 
 
 func _ready() -> void:
@@ -37,11 +50,15 @@ func _ready() -> void:
 	SaveSystem.register(SAVE_SECTION, self)
 	if listen_to_event_bus and not EventBus.skill_used.is_connected(_on_skill_used):
 		EventBus.skill_used.connect(_on_skill_used)
+	if listen_to_event_bus and not EventBus.book_opened.is_connected(_on_book_opened):
+		EventBus.book_opened.connect(_on_book_opened)
 
 
 func _exit_tree() -> void:
 	if EventBus.skill_used.is_connected(_on_skill_used):
 		EventBus.skill_used.disconnect(_on_skill_used)
+	if EventBus.book_opened.is_connected(_on_book_opened):
+		EventBus.book_opened.disconnect(_on_book_opened)
 	if SaveSystem.participants.get(SAVE_SECTION) == self:
 		SaveSystem.unregister(SAVE_SECTION)
 
@@ -71,6 +88,10 @@ func apply_calling(id: String, inventory: Inventory = null) -> bool:
 			if ContentDB.has(item):
 				inventory.add(item, int(entry.get("count", 1)))
 		inventory.add_marks(int(def.get("starting_marks", 0)))
+	# A calling raised near Saying starts with one or two already in the mouth; the rest have
+	# to be taught (a tome, a Sayer, a quest). Which is which is data, not a rule in here.
+	for spell in def.get("starting_spells", []):
+		learn_spell(str(spell))
 	skills_changed.emit()
 	return true
 
@@ -85,6 +106,8 @@ func reset_for_new_game() -> void:
 	leveling.reset()
 	perks.reset()
 	calling_id = ""
+	known_spells.clear()
+	sayings_changed.emit()
 	_refresh_perk_modifiers()
 	skills_changed.emit()
 	level_changed.emit(leveling.level)
@@ -95,6 +118,29 @@ func reset_for_new_game() -> void:
 
 func _on_skill_used(skill_id: String, xp: float) -> void:
 	award(skill_id, xp)
+
+
+## A book that teaches (`teaches_skill` on the book def) is worth one level of that skill, the
+## first time it is read and never again. The flag it sets is also what dialogue and quests
+## key on to know you have read a thing.
+## A modifier with a clock on it: what a potion or a meal leaves behind. The source is the
+## effect's own id, so drinking the same draught twice refreshes rather than stacks, and the
+## timer is a scene-tree timer so it survives whatever else is going on.
+func add_timed_modifier(source: String, mods: Array, duration: float) -> void:
+	mods_source_expiry[source] = Time.get_ticks_msec() * 0.001 + duration
+	self.mods.set_source(source, mods)
+	modifiers_changed.emit()
+	var timer := get_tree().create_timer(duration, false)
+	timer.timeout.connect(func() -> void: _expire_modifier(source))
+
+
+func _expire_modifier(source: String) -> void:
+	# Another draught may have refreshed it while this timer was running.
+	if float(mods_source_expiry.get(source, 0.0)) - Time.get_ticks_msec() * 0.001 > 0.05:
+		return
+	mods_source_expiry.erase(source)
+	mods.clear_source(source)
+	modifiers_changed.emit()
 
 
 ## Grants skill XP, levels the skill up and, through the gain total, the character.
@@ -156,6 +202,103 @@ func attribute(name: String) -> int:
 
 func level_progress() -> float:
 	return Leveling.fraction_for(skill_set.total_gains)
+
+
+# --- sayings (DESIGN §5.3) ----------------------------------------------------------------
+#
+# Known sayings live here rather than on the player actor because they are something the
+# character learned, not something they are carrying: they ride with `progression` in the
+# save, survive a respawn, and are readable by the sayings screen and by dialogue through
+# the "progression" group, exactly as known recipes ride with `crafting`.
+
+## A book has been opened, anywhere: out of the bag, off a shelf, through a quest. A book
+## whose def carries `teaches_spell` is a tome, and the saying in it is learned the first
+## time it is read. Re-reading says so rather than doing nothing in silence.
+func _on_book_opened(book_id: String) -> void:
+	var def := ContentDB.get_or_empty(book_id)
+	var flag := "read:" + book_id
+	var first_reading := not GameState.has_flag(flag)
+	GameState.set_flag(flag, true)
+
+	# A tome: the saying in it is learned the first time, and said so on any later reading,
+	# because a player who re-opens one wants to know they already have it.
+	var spell := str(def.get("teaches_spell", ""))
+	if spell != "":
+		var saying := str(ContentDB.get_or_empty(spell).get("name", spell))
+		if learn_spell(spell):
+			EventBus.notify.emit("You have the saying: %s." % saying, "book")
+		else:
+			EventBus.notify.emit("You have %s by heart already." % saying, "book")
+
+	# A book that teaches a skill is worth one level of it, once and never again.
+	if not first_reading:
+		return
+	var skill := Skills.normalise(str(def.get("teaches_skill", "")))
+	if skill == "":
+		return
+	var gained := award(skill, Skills.xp_for_level(skill_set.level(skill)))
+	if gained > 0:
+		var skill_name := str(Skills.def(skill).get("name", Ids.name_of(skill)))
+		EventBus.notify.emit("%s taught you something. %s is %d." % [str(def.get("title", "The book")), skill_name, skill_set.level(skill)], "book")
+
+
+## Learns a saying (a calling, a tome, a Sayer, a quest reward). False when already known
+## or when the id is not a spell in any loaded pack.
+func learn_spell(spell_id: String) -> bool:
+	if known_spells.has(spell_id):
+		return false
+	if not ContentDB.has(spell_id) or Ids.type_of(spell_id) != SPELL_TYPE:
+		Log.warn("Progression", "not a saying: '%s'" % spell_id)
+		return false
+	known_spells.append(spell_id)
+	known_spells.sort()
+	sayings_changed.emit()
+	EventBus.spell_learned.emit(spell_id)
+	return true
+
+
+func knows_spell(spell_id: String) -> bool:
+	return known_spells.has(spell_id)
+
+
+## Takes a saying back (the console, a story that unsays one). False when it was not known.
+func forget_spell(spell_id: String) -> bool:
+	if not known_spells.has(spell_id):
+		return false
+	known_spells.erase(spell_id)
+	sayings_changed.emit()
+	return true
+
+
+## [{id, name, school, school_name, cast_type, cost, cast_time, range, radius, duration,
+##   description, effects}] for the sayings screen, cheapest first inside each school.
+## Costs and cast times are the ones this character would pay, skill included.
+func spells() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for id in known_spells:
+		var def := ContentDB.get_or_empty(id)
+		if def.is_empty():
+			continue
+		var school := SpellRuntime.school_of(def)
+		var skill := effective_skill(school)
+		out.append({
+			"id": id, "name": str(def.get("name", Ids.name_of(id))), "school": school,
+			"school_name": str(ContentDB.get_or_empty("core:skill/" + school).get("name", school.capitalize())),
+			"cast_type": str(def.get("cast_type", "")), "skill_level": skill_level(school),
+			"cost": SpellRuntime.cost_of(def, skill), "base_cost": float(def.get("cost", 0.0)),
+			"cast_time": SpellRuntime.cast_time_of(def, skill),
+			"range": SpellRuntime.range_of(def) if def.has("range") else 0.0,
+			"radius": SpellRuntime.radius_of(def) if def.has("radius") else 0.0,
+			"duration": SpellRuntime.duration_of(def),
+			"description": str(def.get("description", "")), "effects": SpellRuntime.effects_of(def),
+		})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var sa := SpellRuntime.SCHOOLS.find(str(a["school"]))
+		var sb := SpellRuntime.SCHOOLS.find(str(b["school"]))
+		if sa != sb:
+			return sa < sb
+		return float(a["base_cost"]) < float(b["base_cost"]))
+	return out
 
 
 # --- derived pools (attributes through the modifier stack) -------------------------------
@@ -264,7 +407,7 @@ static func of(tree: SceneTree) -> Progression:
 func to_save() -> Dictionary:
 	return {
 		"calling": calling_id, "skills": skill_set.to_save(), "leveling": leveling.to_save(),
-		"perks": perks.to_save(),
+		"perks": perks.to_save(), "known_spells": known_spells.duplicate(),
 	}
 
 
@@ -273,7 +416,16 @@ func from_save(d: Dictionary) -> void:
 	skill_set.from_save(d.get("skills", {}))
 	leveling.from_save(d.get("leveling", {}))
 	perks.from_save(d.get("perks", {}))
+	# A save from before sayings existed simply has no key, and a saying whose pack is no
+	# longer loaded is dropped rather than left to fail at the moment of casting.
+	known_spells.clear()
+	for id in d.get("known_spells", []):
+		var s := str(id)
+		if ContentDB.has(s) and not known_spells.has(s):
+			known_spells.append(s)
+	known_spells.sort()
 	_refresh_perk_modifiers()
+	sayings_changed.emit()
 	skills_changed.emit()
 	level_changed.emit(leveling.level)
 	points_changed.emit(leveling.attribute_points, leveling.perk_points)
