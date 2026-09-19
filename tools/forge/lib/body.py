@@ -1,212 +1,42 @@
 """Procedural humanoid body, head, eyes, hair and beards for WM_Humanoid_v1.
 
-Pipeline (Blender): lofted primitives (numpy) -> voxel remesh (one smooth manifold with
-proper joint blends) -> smooth -> decimate -> UVs -> skin weights -> analytic morph targets.
-Heads use the same pipeline at a finer voxel size; eyes are separate spheres; hair and
-beards are shells derived from head regions (so they fit every head preset).
+Shapes are SDF scenes (see `sdf.py`) polygonised with surface nets: smooth blended
+joints, no boolean creases, and the same field offset outward gives a clothing shell
+that fits the body exactly (used by `cloth.py`).
 
-Everything here is deterministic for a given parameter set.
+Style: painted storybook realism — chunky-appealing proportions, slightly large hands
+and head, soft forms, readable silhouette.  Not low-poly, not anatomical realism.
+
+Blender is only needed by the functions below the "Blender pipeline" banner.
 """
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from . import rig
+from . import rig, sdf
 from .rig import Skeleton, FWD, UP, LEFT
+from .sdf import Scene
 
-# --------------------------------------------------------------------------------------
-# numpy mesh helpers
-# --------------------------------------------------------------------------------------
-
-class MeshData:
-    """Vertex/face accumulator (faces are lists of vertex indices, tris or quads)."""
-
-    def __init__(self):
-        self.verts: List[np.ndarray] = []
-        self.faces: List[List[int]] = []
-        self._n = 0
-
-    def add(self, verts: np.ndarray, faces: Sequence[Sequence[int]]) -> None:
-        off = self._n
-        self.verts.append(np.asarray(verts, float))
-        self.faces.extend([[int(i) + off for i in f] for f in faces])
-        self._n += len(verts)
-
-    def merge(self, other: "MeshData") -> None:
-        for v, f in zip(other.verts, []):
-            pass
-        vs = other.vertices()
-        self.add(vs, other.faces)
-
-    def vertices(self) -> np.ndarray:
-        return np.concatenate(self.verts, axis=0) if self.verts else np.zeros((0, 3))
-
-    def to_blender(self, name: str):
-        import bpy
-        me = bpy.data.meshes.new(name)
-        vs = self.vertices()
-        me.from_pydata([tuple(v) for v in vs], [], self.faces)
-        me.update()
-        ob = bpy.data.objects.new(name, me)
-        bpy.context.collection.objects.link(ob)
-        return ob
-
-
-def perp_frame(d: np.ndarray, front: np.ndarray = FWD) -> Tuple[np.ndarray, np.ndarray]:
-    """Two unit vectors (u, v) perpendicular to d; u is `front` projected."""
-    d = rig._unit(d)
-    u = front - np.dot(front, d) * d
-    if np.linalg.norm(u) < 1e-6:
-        u = UP - np.dot(UP, d) * d
-    u = rig._unit(u)
-    v = np.cross(d, u)
-    return u, v
-
-
-def superellipse(n: int, e: float = 2.0, phase: float = 0.0) -> np.ndarray:
-    """(n, 2) points of a unit superellipse |x|^e + |y|^e = 1."""
-    a = np.linspace(0, 2 * math.pi, n, endpoint=False) + phase
-    c, s = np.cos(a), np.sin(a)
-    x = np.sign(c) * np.abs(c) ** (2.0 / e)
-    y = np.sign(s) * np.abs(s) ** (2.0 / e)
-    return np.stack([x, y], axis=1)
-
-
-def ring_points(center: np.ndarray, u: np.ndarray, v: np.ndarray, ru: float, rv: float, n: int,
-                e: float = 2.0, flatten_v_neg: float = 0.0, shift_u: float = 0.0, shift_v: float = 0.0) -> np.ndarray:
-    """Ring in the plane spanned by u,v around center.  `flatten_v_neg` (0..1) squashes the
-    -v half (e.g. flat soles); shifts move the ring within its plane."""
-    pts2 = superellipse(n, e)
-    x = pts2[:, 0] * ru + shift_u
-    y = pts2[:, 1] * rv
-    if flatten_v_neg > 0:
-        neg = y < 0
-        y[neg] *= (1.0 - flatten_v_neg)
-    y = y + shift_v
-    return center[None, :] + x[:, None] * u[None, :] + y[:, None] * v[None, :]
-
-
-def loft_rings(rings: Sequence[np.ndarray], cap_start: bool = True, cap_end: bool = True, close: bool = False) -> Tuple[np.ndarray, List[List[int]]]:
-    """Connect rings (same point count) into quads; optional triangle-fan caps."""
-    n = len(rings[0])
-    verts = list(np.concatenate(rings, axis=0))
-    faces: List[List[int]] = []
-    m = len(rings)
-    for i in range(m - 1 if not close else m):
-        a = i * n
-        b = ((i + 1) % m) * n
-        for j in range(n):
-            j2 = (j + 1) % n
-            faces.append([a + j, a + j2, b + j2, b + j])
-    if cap_start and not close:
-        c = len(verts)
-        verts.append(rings[0].mean(axis=0))
-        for j in range(n):
-            faces.append([c, (j + 1) % n, j])
-    if cap_end and not close:
-        c = len(verts)
-        verts.append(rings[-1].mean(axis=0))
-        a = (m - 1) * n
-        for j in range(n):
-            faces.append([c, a + j, a + (j + 1) % n])
-    return np.asarray(verts), faces
-
-
-def tube(md: MeshData, path: Sequence[np.ndarray], radii: Sequence[Tuple[float, float]], n: int = 20, e: float = 2.0,
-         front: np.ndarray = FWD, shifts: Optional[Sequence[Tuple[float, float]]] = None, round_ends: bool = True,
-         exps: Optional[Sequence[float]] = None, flatten: Optional[Sequence[float]] = None) -> None:
-    """A lofted tube along a polyline `path` with per-station (ru, rv) radii (u = front, v = the
-    other perpendicular).  Rounded ends are added as shrinking rings."""
-    path = [np.asarray(p, float) for p in path]
-    rings = []
-    m = len(path)
-    for i, p in enumerate(path):
-        if i == 0:
-            d = path[1] - path[0]
-        elif i == m - 1:
-            d = path[-1] - path[-2]
-        else:
-            d = rig._unit(path[i + 1] - path[i]) + rig._unit(path[i] - path[i - 1])
-        u, v = perp_frame(d, front)
-        ru, rv = radii[i]
-        su, sv = (shifts[i] if shifts else (0.0, 0.0))
-        ee = exps[i] if exps else e
-        fl = flatten[i] if flatten else 0.0
-        if i == 0 and round_ends:
-            d0 = rig._unit(path[1] - path[0])
-            for k in (0.55, 0.85):
-                a = math.acos(k)
-                rings.append(ring_points(p - d0 * math.sin(a) * min(ru, rv) * 0.9, u, v, ru * k, rv * k, n, ee, fl, su * k, sv * k))
-        rings.append(ring_points(p, u, v, ru, rv, n, ee, fl, su, sv))
-        if i == m - 1 and round_ends:
-            d1 = rig._unit(path[-1] - path[-2])
-            for k in (0.85, 0.55):
-                a = math.acos(k)
-                rings.append(ring_points(p + d1 * math.sin(a) * min(ru, rv) * 0.9, u, v, ru * k, rv * k, n, ee, fl, su * k, sv * k))
-    verts, faces = loft_rings(rings, True, True)
-    md.add(verts, faces)
-
-
-def ellipsoid(md: MeshData, center: np.ndarray, radii: Tuple[float, float, float], nu: int = 16, nv: int = 12,
-              rot: Optional[np.ndarray] = None) -> None:
-    center = np.asarray(center, float)
-    verts = []
-    faces = []
-    for i in range(nv + 1):
-        th = math.pi * i / nv
-        for j in range(nu):
-            ph = 2 * math.pi * j / nu
-            p = np.array([radii[0] * math.sin(th) * math.cos(ph), radii[1] * math.sin(th) * math.sin(ph), radii[2] * math.cos(th)])
-            if rot is not None:
-                p = rot @ p
-            verts.append(center + p)
-    for i in range(nv):
-        for j in range(nu):
-            a = i * nu + j
-            b = i * nu + (j + 1) % nu
-            c = (i + 1) * nu + (j + 1) % nu
-            d = (i + 1) * nu + j
-            if i == 0:
-                faces.append([a, c, d])
-            elif i == nv - 1:
-                faces.append([a, b, c])
-            else:
-                faces.append([a, b, c, d])
-    md.add(np.asarray(verts), faces)
-
-
-def capsule(md: MeshData, a: np.ndarray, b: np.ndarray, ra: float, rb: Optional[float] = None, n: int = 14, front=FWD) -> None:
-    rb = ra if rb is None else rb
-    tube(md, [a, b], [(ra, ra), (rb, rb)], n=n, front=front, round_ends=True)
-
-
-def smoothstep(x: np.ndarray) -> np.ndarray:
-    x = np.clip(x, 0.0, 1.0)
-    return x * x * (3 - 2 * x)
-
-
-def gauss3(p: np.ndarray, c: np.ndarray, s: Tuple[float, float, float]) -> np.ndarray:
-    d = (p - np.asarray(c)) / np.asarray(s)
-    return np.exp(-0.5 * np.sum(d * d, axis=1))
+BACK = -FWD
 
 
 # --------------------------------------------------------------------------------------
-# body style
+# style parameters
 # --------------------------------------------------------------------------------------
 
 @dataclass
 class BodyStyle:
-    """Shape knobs beyond `Proportions` (all 0..1 unless noted)."""
-    muscle: float = 0.35
-    belly: float = 0.2
+    """Shape knobs beyond `Proportions`."""
+    muscle: float = 0.35        # 0 soft .. 1 defined
+    belly: float = 0.25
     chest: float = 0.5
     shoulders: float = 0.5
-    hands: float = 1.12     # slightly large hands read well
-    feet: float = 1.05
+    hands: float = 1.12         # slightly large hands read well
+    feet: float = 1.06
 
     @staticmethod
     def from_dict(d: Optional[dict]) -> "BodyStyle":
@@ -216,117 +46,17 @@ class BodyStyle:
                 setattr(b, k, float(v))
         return b
 
+    def to_dict(self) -> dict:
+        return asdict(self)
 
-# --------------------------------------------------------------------------------------
-# body primitives
-# --------------------------------------------------------------------------------------
-
-def build_body_primitives(skel: Skeleton, style: BodyStyle) -> MeshData:
-    """Union of lofted parts approximating the body (to be voxel-remeshed)."""
-    p = skel.props
-    J = skel.J
-    s = p.height / rig.DEFAULT_HEIGHT
-    bulk = p.bulk * (0.9 + 0.2 * (0.5 + 0.5 * p.build)) if False else p.bulk
-    fem = p.feminine
-    md = MeshData()
-
-    hip = J["Hips"]; spine = J["Spine"]; chest = J["Chest"]; neck = J["Neck"]; head = J["Head"]
-    hipj_l = J["UpperLeg.L"]
-    z_crotch = hipj_l[2] - 0.06 * s
-    # -- torso loft (z stations) ---------------------------------------------------------
-    torso_len = neck[2] - hip[2]
-    hipw = (0.165 + 0.02 * fem) * bulk * s * (0.9 + 0.2 * p.hip_width)
-    stations = [  # (z, half-width, half-depth, y-centre offset (+ back), exponent)
-        (z_crotch, hipw * 0.72, 0.085 * bulk * s, 0.01 * s, 2.4),
-        (hipj_l[2] + 0.02 * s, hipw, 0.115 * bulk * s, 0.012 * s, 2.5),
-        (hip[2] + 0.06 * s, hipw * 0.96, 0.110 * bulk * s, 0.008 * s, 2.4),
-        (spine[2] + 0.02 * s, (0.145 - 0.02 * fem) * bulk * s, 0.098 * bulk * s, 0.0, 2.3),      # waist
-        (chest[2] - 0.01 * s, (0.160 - 0.01 * fem) * bulk * s, 0.108 * bulk * s, 0.0, 2.3),
-        (chest[2] + 0.09 * s, (0.172 + 0.02 * style.chest) * bulk * s, (0.116 + 0.02 * style.chest) * bulk * s, -0.004 * s, 2.4),  # chest
-        (chest[2] + 0.16 * s, 0.170 * bulk * s, 0.105 * bulk * s, 0.0, 2.6),
-        (neck[2] - 0.005 * s, 0.135 * bulk * s, 0.085 * bulk * s, 0.004 * s, 2.6),
-        (neck[2] + 0.025 * s, 0.085 * bulk * s, 0.065 * bulk * s, 0.008 * s, 2.2),
-    ]
-    rings = []
-    n = 28
-    for z, hw, hd, yo, e in stations:
-        c = np.array([0.0, yo, z])
-        rings.append(ring_points(c, LEFT, -FWD, hw, hd, n, e))
-    verts, faces = loft_rings(rings, True, True)
-    md.add(verts, faces)
-    # buttocks and (feminine) bust as soft ellipsoids
-    for sx in (1, -1):
-        ellipsoid(md, np.array([sx * 0.075 * s, 0.075 * bulk * s, hipj_l[2] + 0.02 * s]), (0.085 * bulk * s, 0.07 * bulk * s, 0.085 * bulk * s), 14, 10)
-        if fem > 0.05:
-            ellipsoid(md, np.array([sx * 0.075 * s, -0.085 * bulk * s, chest[2] + 0.06 * s]), (0.06 * fem * s + 0.02 * s, 0.055 * fem * s + 0.02 * s, 0.055 * fem * s + 0.02 * s), 14, 10)
-    if style.belly > 0:
-        ellipsoid(md, np.array([0.0, -0.045 * bulk * s, spine[2] - 0.01 * s]), (0.12 * bulk * s, (0.07 + 0.07 * style.belly) * bulk * s, 0.11 * bulk * s), 16, 12)
-    # -- neck --------------------------------------------------------------------------
-    tube(md, [neck - UP * 0.01 * s, head + UP * 0.04 * s], [(0.062 * bulk * s, 0.058 * bulk * s), (0.058 * bulk * s, 0.056 * bulk * s)], n=16)
-    # -- shoulders: deltoid balls + trapezius slope ---------------------------------------
-    for side, sx in (("L", 1), ("R", -1)):
-        sh = J[f"UpperArm.{side}"]
-        ellipsoid(md, sh + np.array([sx * 0.012 * s, 0.0, 0.01 * s]), ((0.072 + 0.02 * style.shoulders - 0.012 * fem) * bulk * s, 0.072 * bulk * s, 0.07 * bulk * s), 16, 12)
-        trap_a = np.array([sx * 0.04 * s, 0.015 * s, neck[2] + 0.005 * s])
-        trap_b = np.array([sx * 0.16 * s, 0.01 * s, sh[2] + 0.02 * s])
-        capsule(md, trap_a, trap_b, 0.055 * bulk * s, 0.045 * bulk * s, n=14)
-    # -- arms --------------------------------------------------------------------------
-    for side, sx in (("L", 1), ("R", -1)):
-        sh, el, wr, tip = J[f"UpperArm.{side}"], J[f"LowerArm.{side}"], J[f"Hand.{side}"], J[f"HandTip.{side}"]
-        d = rig._unit(el - sh)
-        ua = 0.062 * bulk * s * (1 + 0.15 * style.muscle - 0.08 * fem)
-        fa = 0.052 * bulk * s * (1 + 0.1 * style.muscle - 0.06 * fem)
-        path = [sh + d * 0.02 * s, sh + d * 0.12 * s, el - d * 0.06 * s, el, el + d * 0.07 * s, wr - d * 0.04 * s, wr]
-        radii = [(ua * 0.95, ua * 0.95), (ua, ua * 0.96), (ua * 0.84, ua * 0.84), (0.047 * bulk * s, 0.046 * bulk * s),
-                 (fa, fa * 0.95), (0.040 * bulk * s, 0.034 * bulk * s), (0.034 * bulk * s, 0.028 * bulk * s)]
-        tube(md, path, radii, n=18, round_ends=True)
-        # hand: mitten + thumb.  Palm normal = arm-frame "v" (up/out); fingers along d.
-        u, v = perp_frame(d, FWD)      # u = forward, v = d x u
-        hs = style.hands * p.hand_size * s
-        palm_len, palm_w, palm_t = 0.085 * hs, 0.082 * hs, 0.030 * hs
-        hpath = [wr - d * 0.01 * s, wr + d * palm_len * 0.45, wr + d * palm_len, wr + d * (palm_len + 0.05 * hs), wr + d * (palm_len + 0.085 * hs)]
-        hr = [(0.034 * hs, 0.026 * hs), (palm_w * 0.5, palm_t * 0.55), (palm_w * 0.52, palm_t * 0.5), (palm_w * 0.46, palm_t * 0.42), (palm_w * 0.34, palm_t * 0.33)]
-        # the hand's flat plane must contain the forward direction: ru along u (forward) = width
-        tube(md, hpath, hr, n=18, e=2.6, round_ends=True)
-        # thumb: from the palm's forward edge near the wrist, pointing forward-out
-        tb0 = wr + d * 0.025 * hs + u * palm_w * 0.42
-        tb1 = tb0 + rig._unit(u * 0.8 + d * 0.5 - v * 0.15 * sx * 0) * 0.055 * hs
-        capsule(md, tb0, tb1, 0.016 * hs, 0.013 * hs, n=10, front=UP)
-    # -- legs --------------------------------------------------------------------------
-    for side, sx in (("L", 1), ("R", -1)):
-        hj, kn, an = J[f"UpperLeg.{side}"], J[f"LowerLeg.{side}"], J[f"Foot.{side}"]
-        th = 0.092 * bulk * s * (1 + 0.1 * style.muscle + 0.05 * fem)
-        path = [hj + UP * 0.03 * s + LEFT * sx * 0.01 * s, hj - UP * 0.10 * s, kn + UP * 0.10 * s, kn, kn - UP * 0.10 * s, an + UP * 0.10 * s, an + UP * 0.02 * s]
-        radii = [(th * 1.05, th * 1.0), (th * 0.98, th * 0.94), (0.070 * bulk * s, 0.068 * bulk * s), (0.062 * bulk * s, 0.060 * bulk * s),
-                 (0.066 * bulk * s, 0.070 * bulk * s), (0.046 * bulk * s, 0.045 * bulk * s), (0.040 * bulk * s, 0.038 * bulk * s)]
-        shifts = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.012 * s, 0.0), (0.006 * s, 0.0), (0.0, 0.0)]  # calf back
-        # u = forward; shift_u positive = forward.  Calf bulge sits backward -> negative shift.
-        shifts = [(a * -1, b) for a, b in shifts]
-        tube(md, path, radii, n=20, shifts=shifts, round_ends=True)
-        # foot: heel ball + lofted wedge along the foot, flat sole
-        fs = style.feet * p.foot_size * s
-        heel = an + np.array([0.0, 0.055 * fs, -an[2] + 0.04 * fs])
-        toe_tip = J[f"ToeTip.{side}"]
-        ball = J[f"Toe.{side}"]
-        fpath = [heel + np.array([0.0, 0.012 * fs, 0.0]), an + np.array([0.0, 0.0, -an[2] + 0.045 * fs]), (an + ball) / 2 + np.array([0.0, 0.0, -((an + ball) / 2)[2] + 0.04 * fs]),
-                 ball + np.array([0.0, 0.0, -ball[2] + 0.028 * fs]), toe_tip + np.array([0.0, 0.01 * fs, -toe_tip[2] + 0.022 * fs])]
-        fr = [(0.036 * fs, 0.04 * fs), (0.042 * fs, 0.048 * fs), (0.048 * fs, 0.04 * fs), (0.055 * fs, 0.03 * fs), (0.05 * fs, 0.024 * fs)]
-        tube(md, fpath, fr, n=16, e=2.8, front=UP, flatten=[0.75, 0.8, 0.85, 0.85, 0.85], round_ends=True)
-        ellipsoid(md, an + np.array([0.0, 0.0, 0.0]), (0.045 * bulk * s, 0.05 * bulk * s, 0.045 * bulk * s), 12, 8)
-    return md
-
-
-# --------------------------------------------------------------------------------------
-# head
-# --------------------------------------------------------------------------------------
 
 @dataclass
 class HeadStyle:
     skull_width: float = 1.0
     skull_depth: float = 1.0
     jaw_width: float = 1.0
-    chin: float = 1.0          # chin length/prominence
-    nose: float = 1.0          # nose size
+    chin: float = 1.0
+    nose: float = 1.0
     nose_bridge: float = 1.0
     brow: float = 1.0
     cheeks: float = 1.0
@@ -345,213 +75,452 @@ class HeadStyle:
                 setattr(h, k, float(v))
         return h
 
+    def to_dict(self) -> dict:
+        return asdict(self)
 
-def head_landmarks(skel: Skeleton, hs: HeadStyle) -> dict:
-    """Key positions used by the head builder, eyes and the face painter."""
+
+# --------------------------------------------------------------------------------------
+# body
+# --------------------------------------------------------------------------------------
+
+def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bool = True) -> Scene:
+    """The naked body as an SDF scene (Blender space, feet at z=0).
+
+    Structure: each anatomical part is one primitive (a loft or a chain, combined internally
+    with a plain min so no station rings appear), and the parts are joined to the scene with
+    a small smooth blend that acts as a fillet at the armpit, groin, neck and wrists."""
+    st = style or BodyStyle()
+    p = skel.props
+    J = skel.J
+    s = p.height / rig.DEFAULT_HEIGHT
+    b = p.bulk
+    fem = p.feminine
+    heavy = p.build                       # 0 slight .. 1 heavy
+    old = p.age
+    mus = st.muscle
+    sc = Scene()
+
+    tw = b * (0.90 + 0.22 * heavy)        # torso width factor
+    td = b * (0.88 + 0.34 * heavy)        # torso depth factor
+    lb = b * (0.92 + 0.20 * heavy)        # limb factor
+    hipj = J["UpperLeg.L"][2]
+    waist_z = J["Spine"][2] + 0.015 * s
+    chest_z = J["Chest"][2]
+    neck_z = J["Neck"][2]
+    crotch_z = hipj - 0.065 * s
+
+    hipw = (0.150 + 0.022 * fem) * (0.9 + 0.2 * p.hip_width) * tw * s
+    shw = (0.186 + 0.020 * st.shoulders) * (0.86 + 0.28 * p.shoulder_width) * (1 - 0.06 * fem) * tw * s
+    chw = (0.168 + 0.016 * st.chest) * (1 - 0.03 * fem) * tw * s
+
+    # -- torso ---------------------------------------------------------------------------
+    stations = [
+        (np.array([0.0, 0.014 * s, crotch_z]), hipw * 0.74, 0.082 * td * s),
+        (np.array([0.0, 0.016 * s, hipj + 0.010 * s]), hipw, 0.108 * td * s),
+        (np.array([0.0, 0.010 * s, hipj + 0.070 * s]), hipw * 0.93, 0.106 * td * s),
+        (np.array([0.0, 0.0, waist_z]), (0.126 - 0.016 * fem + 0.034 * heavy) * tw * s, (0.092 + 0.024 * heavy) * td * s),
+        (np.array([0.0, -0.006 * s, chest_z - 0.025 * s]), chw * 0.95, 0.104 * td * s),
+        (np.array([0.0, -0.010 * s, chest_z + 0.050 * s]), chw, (0.112 + 0.012 * st.chest) * td * s),
+        (np.array([0.0, -0.004 * s, chest_z + 0.115 * s]), shw * 0.92, 0.104 * td * s),
+        (np.array([0.0, 0.006 * s, neck_z - 0.006 * s]), shw * 0.74, 0.088 * td * s),
+        (np.array([0.0, 0.012 * s, neck_z + 0.026 * s]), 0.080 * b * s, 0.072 * b * s),
+    ]
+    torso_parts = [sdf.loft(stations, LEFT)]
+    for sx in (1, -1):
+        torso_parts.append(sdf.ellipsoid([sx * 0.070 * s, 0.072 * td * s, hipj + 0.010 * s],
+                                         [0.078 * tw * s, (0.056 + 0.022 * heavy) * td * s, 0.082 * s], k=0.05 * s))
+    belly_amt = st.belly * (0.4 + 1.2 * heavy) + 0.3 * old * heavy
+    if belly_amt > 0.06:
+        torso_parts.append(sdf.ellipsoid([0.0, -(0.048 + 0.040 * belly_amt) * td * s, waist_z - 0.035 * s],
+                                         [(0.100 + 0.030 * belly_amt) * s, (0.048 + 0.055 * belly_amt) * s,
+                                          (0.098 + 0.022 * belly_amt) * s], k=0.06 * s))
+    if fem > 0.05:
+        for sx in (1, -1):
+            torso_parts.append(sdf.ellipsoid([sx * 0.062 * s, -(0.092 + 0.020 * fem) * td * s, chest_z + 0.038 * s],
+                                             [(0.046 + 0.020 * fem) * s, (0.030 + 0.026 * fem) * s,
+                                              (0.044 + 0.020 * fem) * s], k=0.04 * s))
+    if mus > 0.25:
+        for sx in (1, -1):
+            torso_parts.append(sdf.ellipsoid([sx * 0.058 * s, -0.094 * td * s, chest_z + 0.050 * s],
+                                             [0.066 * s, 0.026 * s, 0.040 * s], k=0.05 * s))
+        # latissimus / back mass
+        torso_parts.append(sdf.ellipsoid([0.0, 0.070 * td * s, chest_z + 0.030 * s],
+                                         [0.150 * s, 0.040 * s, 0.075 * s], k=0.06 * s))
+    sc.union(sdf.group(torso_parts), k=0.02 * s)
+
+    # -- neck ----------------------------------------------------------------------------
+    nr = (0.054 + 0.010 * mus - 0.007 * fem - 0.004 * old) * b * s
+    sc.union(sdf.round_cone(J["Neck"] + np.array([0.0, 0.008 * s, -0.030 * s]),
+                            J["Head"] + np.array([0.0, 0.004 * s, 0.020 * s]), nr * 1.12, nr * 0.96), k=0.035 * s)
+
+    # -- shoulders and arms --------------------------------------------------------------
+    for side, sx in (("L", 1), ("R", -1)):
+        sh = J[f"UpperArm.{side}"]
+        el = J[f"LowerArm.{side}"]
+        wr = J[f"Hand.{side}"]
+        tip = J[f"HandTip.{side}"]
+        d = sdf._unit(el - sh)
+        fwd, up = _arm_frame(d)
+        ua = (0.050 + 0.014 * mus + 0.012 * heavy - 0.004 * fem) * lb * s
+        el_r = (0.040 + 0.006 * mus + 0.006 * heavy) * lb * s
+        fa = (0.045 + 0.011 * mus + 0.009 * heavy - 0.003 * fem) * lb * s
+        wrist = (0.030 + 0.004 * mus + 0.004 * heavy - 0.002 * fem) * lb * s
+        parts = [
+            # trapezius slope into the shoulder
+            sdf.round_cone(np.array([sx * 0.030 * s, 0.014 * s, neck_z + 0.008 * s]),
+                           sh + np.array([0.0, 0.0, 0.006 * s]), 0.046 * b * s, 0.054 * b * s),
+            # deltoid cap
+            sdf.ellipsoid(sh + np.array([sx * 0.008 * s, 0.0, 0.006 * s]),
+                          [(0.058 + 0.014 * mus) * lb * s, (0.058 + 0.010 * mus) * lb * s,
+                           (0.060 + 0.012 * mus) * lb * s], k=0.035 * s),
+            sdf.chain([sh + d * 0.015 * s, sh + d * 0.42 * np.linalg.norm(el - sh), el, el + d * 0.10 * np.linalg.norm(wr - el), wr],
+                      [ua * 1.02, ua, el_r, fa, wrist], k=0.0),
+        ]
+        if mus > 0.2:
+            parts.append(sdf.ellipsoid(sh + d * (0.36 * np.linalg.norm(el - sh)) + fwd * 0.016 * s,
+                                       [0.038 * s, 0.036 * s, 0.036 * s], k=0.04 * s))
+            parts.append(sdf.ellipsoid(el + d * (0.22 * np.linalg.norm(wr - el)) + fwd * 0.012 * s,
+                                       [0.034 * s, 0.032 * s, 0.032 * s], k=0.04 * s))
+        parts.extend(_hand_parts(skel, st, wr, d, fwd, up))
+        sc.union(sdf.group(parts, internal_k=0.018 * s), k=0.028 * s)
+
+    # -- legs ----------------------------------------------------------------------------
+    for side, sx in (("L", 1), ("R", -1)):
+        hj = J[f"UpperLeg.{side}"]
+        kn = J[f"LowerLeg.{side}"]
+        an = J[f"Foot.{side}"]
+        th = (0.086 + 0.012 * mus + 0.024 * heavy + 0.010 * fem) * lb * s
+        kr = (0.054 + 0.005 * mus + 0.009 * heavy) * lb * s
+        ar = (0.036 + 0.003 * mus + 0.006 * heavy) * lb * s
+        leg_dir = sdf._unit(kn - hj)
+        parts = [
+            sdf.chain([hj + np.array([0.0, 0.004 * s, 0.050 * s]), hj - np.array([0.0, 0.0, 0.10 * s]),
+                       kn + np.array([0.0, 0.004 * s, 0.075 * s]), kn, kn - np.array([0.0, -0.004 * s, 0.10 * s]),
+                       an + np.array([0.0, 0.0, 0.055 * s]), an + np.array([0.0, 0.0, 0.012 * s])],
+                      [th * 1.05, th * 0.99, kr * 1.16, kr, kr * 0.94, ar * 1.10, ar]),
+            # calf
+            sdf.ellipsoid([kn[0], 0.030 * s + 0.008 * mus * s, kn[2] - (kn[2] - an[2]) * 0.30],
+                          [(0.042 + 0.008 * mus) * lb * s, (0.036 + 0.012 * mus) * lb * s, (0.082 + 0.012 * mus) * s],
+                          k=0.05 * s),
+            # knee cap
+            sdf.ellipsoid(kn + np.array([0.0, -0.016 * s, 0.004 * s]), [0.042 * lb * s, 0.030 * lb * s, 0.044 * lb * s], k=0.04 * s),
+        ]
+        if mus > 0.2:
+            parts.append(sdf.ellipsoid([hj[0] + sx * 0.008 * s, -0.030 * s, hj[2] - 0.13 * s],
+                                       [0.050 * s, 0.038 * s, 0.085 * s], k=0.05 * s))
+        parts.extend(_foot_parts(skel, st, side))
+        sc.union(sdf.group(parts, internal_k=0.020 * s), k=0.030 * s)
+
+    if ground_cut:
+        sc.intersect(sdf.plane([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]), k=0.008 * s)
+    return sc
+
+
+def _arm_frame(d: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """(front, up) perpendiculars of an arm direction."""
+    u = FWD - np.dot(FWD, d) * d
+    u = sdf._unit(u)
+    v = np.cross(d, u)
+    return u, v
+
+
+def _hand_parts(skel: Skeleton, st: BodyStyle, wr: np.ndarray, d: np.ndarray,
+                fwd: np.ndarray, up: np.ndarray) -> List[sdf.Prim]:
+    """Mitten hand: a flat palm/finger slab in the (d, fwd) plane plus a thumb.
+    Slightly large, which reads well at gameplay distance."""
+    p = skel.props
+    s = p.height / rig.DEFAULT_HEIGHT
+    hs = st.hands * p.hand_size * s
+    L = 0.185 * hs                 # wrist to fingertip
+    w = 0.048 * hs                 # half width across the fingers
+    t = 0.026 * hs                 # half thickness
+    slab = sdf.loft([
+        (wr - d * 0.010 * L, 0.034 * hs, 0.024 * hs),
+        (wr + d * 0.22 * L, w * 0.94, t * 1.05),
+        (wr + d * 0.52 * L, w, t),
+        (wr + d * 0.80 * L, w * 0.95, t * 0.90),
+        (wr + d * 1.00 * L, w * 0.66, t * 0.72),
+    ], fwd)
+    parts = [slab]
+    # finger separation groove (between the middle and ring finger)
+    parts.append(sdf.capsule(wr + d * 0.62 * L - fwd * 0.005 * hs, wr + d * 1.05 * L - fwd * 0.005 * hs,
+                             0.0055 * hs, k=0.008 * s, op="subtract"))
+    # knuckle swell
+    parts.append(sdf.ellipsoid(wr + d * 0.52 * L, [0.050 * hs, 0.028 * hs, 0.028 * hs], k=0.02 * s))
+    # thumb
+    tb0 = wr + d * 0.20 * L + fwd * 0.026 * hs
+    tb1 = tb0 + sdf._unit(fwd * 0.75 + d * 0.62 - up * 0.10) * 0.085 * hs
+    parts.append(sdf.round_cone(tb0, tb1, 0.019 * hs, 0.015 * hs, k=0.020 * s))
+    return parts
+
+
+def _foot_parts(skel: Skeleton, st: BodyStyle, side: str) -> List[sdf.Prim]:
+    p = skel.props
+    s = p.height / rig.DEFAULT_HEIGHT
+    fs = st.feet * p.foot_size * s
+    J = skel.J
+    an = J[f"Foot.{side}"]
+    ball = J[f"Toe.{side}"]
+    tip = J[f"ToeTip.{side}"]
+    x = float(an[0])
+    heel = np.array([x, an[1] + 0.055 * fs, 0.036 * fs])
+    sole = sdf.loft([
+        (heel + np.array([0.0, 0.012 * fs, 0.0]), 0.036 * fs, 0.034 * fs),
+        (np.array([x, an[1], 0.036 * fs]), 0.042 * fs, 0.034 * fs),
+        (np.array([x, (an[1] + ball[1]) * 0.5, 0.033 * fs]), 0.047 * fs, 0.031 * fs),
+        (np.array([ball[0], ball[1], 0.029 * fs]), 0.050 * fs, 0.028 * fs),
+        (np.array([tip[0], tip[1] + 0.010 * fs, 0.023 * fs]), 0.041 * fs, 0.021 * fs),
+    ], LEFT)
+    return [
+        sdf.round_cone(an, heel, 0.038 * fs, 0.034 * fs, k=0.025 * s),
+        sole,
+        # instep / arch
+        sdf.ellipsoid([x, an[1] - 0.028 * fs, 0.048 * fs], [0.038 * fs, 0.045 * fs, 0.028 * fs], k=0.03 * s),
+    ]
+
+
+def body_mesh(skel: Skeleton, style: Optional[BodyStyle] = None, spacing: float = 0.0080,
+              smooth: int = 5) -> Tuple[np.ndarray, np.ndarray]:
+    sc = body_scene(skel, style)
+    return sdf.mesh_from_scene(sc, spacing * (skel.props.height / rig.DEFAULT_HEIGHT), smooth_iters=smooth, project=1)
+
+
+def head_landmarks(skel: Skeleton, hs: Optional[HeadStyle] = None) -> dict:
+    """Key positions for the head builder, the eyes, hair, beards and the face painter.
+
+    The Head bone starts at the skull pivot (about ear level); the jaw and chin hang below
+    it, so the visible head runs from `chin_z` to `top`."""
+    hs = hs or HeadStyle()
     p = skel.props
     s = p.height / rig.DEFAULT_HEIGHT * p.head_size
     fem = p.feminine
     head = skel.J["Head"]
     top = skel.J["HeadTop"]
-    hl = top[2] - head[2]                    # head bone length (~0.245)
-    eye_z = head[2] + hl * 0.465
-    skull_c = np.array([0.0, 0.008 * s, head[2] + hl * 0.56])
-    skull_r = np.array([0.077 * hs.skull_width * (1 - 0.03 * fem), 0.094 * hs.skull_depth, 0.100 * (0.96 + 0.08 * hs.forehead)]) * s
-    face_y = skull_c[1] - skull_r[1] * 0.93   # y of the face plane at eye level
+    hl = float(top[2] - head[2])
+    chin_z = float(head[2]) - 0.022 * s
+    visible = float(top[2]) - chin_z                      # ~0.265 m at 1.78 m
+    eye_z = chin_z + visible * 0.505
+    skull_r = np.array([0.0815 * hs.skull_width * (1 - 0.03 * fem), 0.0965 * hs.skull_depth,
+                        0.1010 * (0.96 + 0.08 * hs.forehead)]) * s
+    skull_c = np.array([0.0, 0.014 * s, float(top[2]) - skull_r[2] * 0.985])
+    face_y = skull_c[1] - skull_r[1] * 0.99
+    jaw_z = chin_z + visible * 0.175
+    mouth_z = chin_z + visible * 0.245
     return {
-        "s": s, "head": head, "top": top, "eye_z": eye_z, "skull_c": skull_c, "skull_r": skull_r, "face_y": face_y,
-        "eye_x": 0.031 * hs.eye_spacing * s, "eye_r": 0.0125 * hs.eye_size * s,
-        "eye_c_y": face_y + 0.019 * s,        # eyeball centre a little behind the face plane
-        "nose_tip": np.array([0.0, face_y - 0.024 * hs.nose * s, eye_z - 0.040 * s]),
-        "mouth_z": head[2] + hl * 0.20, "mouth_w": 0.026 * hs.mouth_width * s,
-        "chin_z": head[2] - 0.012 * hs.chin * s,
-        "brow_z": eye_z + 0.024 * s,
-        "ear_c": np.array([0.078 * hs.skull_width * s, 0.012 * s, eye_z - 0.004 * s]),
+        "s": s, "head": head, "top": top, "hl": hl, "visible": visible,
+        "eye_z": eye_z, "skull_c": skull_c, "skull_r": skull_r, "face_y": face_y,
+        "eye_x": 0.0315 * hs.eye_spacing * s, "eye_r": 0.0133 * hs.eye_size * s,
+        "eye_c_y": face_y + 0.0165 * s,
+        "nose_root": np.array([0.0, face_y + 0.012 * s, eye_z + 0.014 * s]),
+        "nose_tip": np.array([0.0, face_y - (0.018 + 0.009 * hs.nose) * s, eye_z - 0.046 * s]),
+        "mouth_z": mouth_z, "mouth_w": 0.0265 * hs.mouth_width * s,
+        "chin_z": chin_z, "jaw_z": jaw_z,
+        "brow_z": eye_z + 0.0235 * s,
+        "ear_c": np.array([0.0775 * hs.skull_width * s, 0.020 * s, eye_z - 0.006 * s]),
+        "ear_r": np.array([0.0070 * s, 0.0160 * hs.ears * s, 0.0285 * hs.ears * s]),
     }
 
 
-def build_head_primitives(skel: Skeleton, hs: HeadStyle) -> MeshData:
+def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool = True) -> Scene:
+    """Head as an SDF scene: a cranium/jaw mass, then features blended onto it."""
+    hs = hs or HeadStyle()
     L = head_landmarks(skel, hs)
-    s = L["s"]; fem = skel.props.feminine
-    md = MeshData()
-    ellipsoid(md, L["skull_c"], tuple(L["skull_r"]), 24, 18)
-    # forehead/temple fill: slightly boxier front upper skull
-    ellipsoid(md, L["skull_c"] + np.array([0.0, -0.02 * s, 0.02 * s]), (L["skull_r"][0] * 0.9, L["skull_r"][1] * 0.78, L["skull_r"][2] * 0.85), 18, 14)
-    # jaw loft: from the cheekbone level to the chin
-    eye_z = L["eye_z"]
-    face_y = L["face_y"]
-    jw = hs.jaw_width * (1 - 0.06 * fem)
-    stations = [
-        (eye_z + 0.005 * s, 0.076 * jw * s, 0.088 * s, 0.006 * s, 2.3),
-        (eye_z - 0.035 * s, 0.072 * jw * s, 0.082 * s, 0.0, 2.4),
-        (L["mouth_z"] + 0.005 * s, 0.060 * jw * s, 0.070 * s, -0.008 * s, 2.5),
-        (L["mouth_z"] - 0.022 * s, 0.047 * jw * s, 0.056 * s, -0.016 * s, 2.5),
-        (L["chin_z"] + 0.004 * s, 0.032 * jw * s, 0.036 * s, -0.022 * hs.chin * s, 2.2),
-    ]
-    rings = [ring_points(np.array([0.0, yo, z]), LEFT, -FWD, hw, hd, 24, e) for z, hw, hd, yo, e in stations]
-    verts, faces = loft_rings(rings, True, True)
-    md.add(verts, faces)
+    p = skel.props
+    s = L["s"]
+    fem = p.feminine
+    old = p.age
+    heavy = p.build
+    c, r = L["skull_c"], L["skull_r"]
+    eye_z, face_y = L["eye_z"], L["face_y"]
+    chin_z, mouth_z, jaw_z = L["chin_z"], L["mouth_z"], L["jaw_z"]
+    sc = Scene()
+
+    # -- skull + jaw as one mass ---------------------------------------------------------
+    jw = hs.jaw_width * (1 - 0.07 * fem) * (1 + 0.05 * heavy)
+    skull = sdf.ellipsoid(c, r)
+    # the face block: a vertical loft from inside the cranium down to the chin, so its top
+    # never breaks the skull surface (which would leave a ring)
+    face = sdf.loft([
+        (np.array([0.0, c[1], eye_z + 0.055 * s]), r[0] * 0.70, r[1] * 0.70),
+        (np.array([0.0, c[1] - 0.004 * s, eye_z + 0.012 * s]), 0.0690 * s, 0.0845 * s),
+        (np.array([0.0, c[1] - 0.006 * s, eye_z - 0.026 * s]), 0.0680 * jw * s, 0.0830 * s),
+        (np.array([0.0, c[1] - 0.012 * s, jaw_z + 0.014 * s]), 0.0600 * jw * s, 0.0745 * s),
+        (np.array([0.0, c[1] - 0.026 * s, mouth_z - 0.016 * s]), 0.0470 * jw * s, 0.0610 * s),
+        (np.array([0.0, c[1] - 0.040 * hs.chin * s, chin_z + 0.012 * s]), 0.0305 * jw * s, 0.0395 * s),
+    ], LEFT)
+    mass = [skull, sdf.Prim(face.fn, face.lo, face.hi, "union", 0.022 * s)]
+    # occiput
+    mass.append(sdf.ellipsoid(c + np.array([0.0, 0.020 * s, -0.016 * s]),
+                              [r[0] * 0.92, r[1] * 0.86, r[2] * 0.84], k=0.03 * s))
+    # chin button
+    mass.append(sdf.ellipsoid([0.0, face_y + (0.020 - 0.008 * hs.chin) * s, chin_z + 0.016 * s],
+                              [0.020 * s, 0.018 * hs.chin * s, 0.019 * hs.chin * s], k=0.025 * s))
     # cheekbones
     for sx in (1, -1):
-        ellipsoid(md, np.array([sx * 0.052 * s, face_y + 0.030 * s, eye_z - 0.030 * s]), (0.030 * hs.cheeks * s, 0.034 * s, 0.028 * s), 12, 10)
+        mass.append(sdf.ellipsoid([sx * 0.050 * s, face_y + 0.030 * s, eye_z - 0.020 * s],
+                                  [0.026 * hs.cheeks * s, 0.028 * s, 0.022 * s], k=0.028 * s))
+    cheek_amt = 0.30 + 0.55 * heavy - 0.28 * old
+    if cheek_amt > 0.08:
+        for sx in (1, -1):
+            mass.append(sdf.ellipsoid([sx * 0.044 * s, face_y + 0.024 * s, mouth_z + 0.014 * s],
+                                      [0.025 * s, 0.024 * s, 0.024 * s * (0.8 + 0.5 * cheek_amt)], k=0.032 * s))
     # brow ridge
-    capsule(md, np.array([-0.048 * s, face_y + 0.006 * s, L["brow_z"]]), np.array([0.048 * s, face_y + 0.006 * s, L["brow_z"]]),
-            (0.013 + 0.004 * hs.brow - 0.004 * fem) * s, n=12, front=UP)
-    # nose: bridge to tip, wings
-    bridge = np.array([0.0, face_y - 0.002 * s, eye_z + 0.004 * s])
-    tip = L["nose_tip"]
-    tube(md, [bridge, (bridge + tip) / 2 + np.array([0.0, -0.004 * s, 0.0]), tip],
-         [(0.010 * hs.nose_bridge * s, 0.009 * s), (0.012 * hs.nose * s, 0.011 * s), (0.016 * hs.nose * s, 0.014 * s)], n=12, front=UP)
+    brow_r = (0.0095 + 0.0050 * hs.brow - 0.0035 * fem) * s
     for sx in (1, -1):
-        ellipsoid(md, tip + np.array([sx * 0.012 * hs.nose * s, 0.010 * s, 0.002 * s]), (0.011 * hs.nose * s, 0.011 * s, 0.009 * s), 10, 8)
+        mass.append(sdf.round_cone([sx * 0.005 * s, face_y + 0.010 * s, L["brow_z"] - 0.003 * s],
+                                   [sx * 0.049 * s, face_y + 0.022 * s, L["brow_z"] + 0.003 * s],
+                                   brow_r * 1.05, brow_r * 0.75, k=0.018 * s))
+    # nose
+    root, tip = L["nose_root"], L["nose_tip"]
+    bridge_r = (0.0080 + 0.0035 * hs.nose_bridge) * s
+    mass.append(sdf.chain([root + np.array([0.0, 0.012 * s, 0.010 * s]),
+                           (root + tip) * 0.5 + np.array([0.0, 0.006 * s, 0.0]), tip],
+                          [bridge_r * 0.80, bridge_r * 1.00, (0.0115 + 0.0045 * hs.nose) * s], k=0.014 * s))
+    for sx in (1, -1):
+        mass.append(sdf.ellipsoid(tip + np.array([sx * 0.0125 * hs.nose * s, 0.011 * s, -0.001 * s]),
+                                  [0.0092 * hs.nose * s, 0.0100 * s, 0.0082 * s], k=0.009 * s))
+    # lips
+    mw = L["mouth_w"]
+    lip_y = face_y + 0.022 * s
+    lip = 0.7 + 0.5 * hs.lips + 0.25 * fem
+    mass.append(sdf.elliptic_cone([-mw * 0.82, lip_y, mouth_z + 0.0072 * s], [mw * 0.82, lip_y, mouth_z + 0.0072 * s],
+                                  0.0072 * lip * s, 0.0058 * lip * s, 0.0072 * lip * s, 0.0058 * lip * s, FWD, k=0.012 * s))
+    mass.append(sdf.elliptic_cone([-mw * 0.74, lip_y + 0.001 * s, mouth_z - 0.0085 * s],
+                                  [mw * 0.74, lip_y + 0.001 * s, mouth_z - 0.0085 * s],
+                                  0.0082 * lip * s, 0.0066 * lip * s, 0.0082 * lip * s, 0.0066 * lip * s, FWD, k=0.012 * s))
+    # eyeballs (the lids are built around them)
+    for sx in (1, -1):
+        ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
+        mass.append(sdf.sphere(ec, L["eye_r"] * 1.02, k=0.010 * s))
     # ears
     for sx in (1, -1):
-        c = L["ear_c"] * np.array([sx, 1, 1])
-        rot = rig.rot_axis(UP, math.radians(-12.0 * sx)) @ rig.rot_axis(FWD, math.radians(8.0 * sx))
-        ellipsoid(md, c, (0.009 * s, 0.017 * hs.ears * s, 0.030 * hs.ears * s), 12, 10, rot=rot)
-    # neck stub (so the head closes at the bottom and meets the neck)
-    tube(md, [L["head"] - UP * 0.03 * s, L["head"] + UP * 0.05 * s], [(0.052 * s, 0.05 * s), (0.056 * s, 0.056 * s)], n=16)
-    return md
+        e = L["ear_c"] * np.array([sx, 1, 1])
+        rot = rig.rot_axis(UP, math.radians(-16.0 * sx)) @ rig.rot_axis(FWD, math.radians(10.0 * sx))
+        mass.append(sdf.ellipsoid(e, L["ear_r"], rot=rot, k=0.012 * s))
+    if with_neck:
+        nr = (0.054 - 0.007 * fem) * p.bulk * s
+        mass.append(sdf.round_cone(L["head"] + np.array([0.0, 0.012 * s, -0.075 * s]),
+                                   L["head"] + np.array([0.0, 0.006 * s, 0.010 * s]), nr * 1.10, nr * 1.02, k=0.030 * s))
+    sc.union(sdf.group(mass, internal_k=0.020 * s))
 
-
-def head_sculpt(verts: np.ndarray, normals: np.ndarray, skel: Skeleton, hs: HeadStyle) -> np.ndarray:
-    """Post-remesh analytic sculpting: eye sockets (almond dishes that the eyeballs sit in),
-    philtrum/mouth groove, slight chin cleft.  Returns displaced vertices."""
-    L = head_landmarks(skel, hs)
-    s = L["s"]
-    out = verts.copy()
+    # -- carved detail (subtractions come after the whole mass) ---------------------------
+    # eye sockets: a dish around each eyeball, deeper towards the nose
     for sx in (1, -1):
-        c = np.array([sx * L["eye_x"], L["face_y"], L["eye_z"]])
-        d = (verts - c) / np.array([0.030 * hs.eye_size * s, 0.03 * s, 0.0075 * hs.eye_size * s])
-        w = np.exp(-0.5 * np.sum(d * d, axis=1))
-        # push inward along +Y (back), only near the front surface
-        front = np.clip(-normals[:, 1], 0, 1)
-        out[:, 1] += 0.013 * s * w * front
-    # mouth line groove
-    d = (verts - np.array([0.0, L["face_y"] + 0.012 * s, L["mouth_z"]])) / np.array([L["mouth_w"] * 1.1, 0.03 * s, 0.004 * s])
-    w = np.exp(-0.5 * np.sum(d * d, axis=1))
-    front = np.clip(-normals[:, 1], 0, 1)
-    out[:, 1] += 0.004 * s * w * front
-    return out
+        ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
+        sc.subtract(sdf.ellipsoid(ec + np.array([-sx * 0.006 * s, -0.018 * s, 0.001 * s]),
+                                  [0.0215 * s, 0.017 * s, 0.0145 * s]), k=0.011 * s)
+        # tear duct notch
+        sc.subtract(sdf.sphere(ec + np.array([-sx * 0.015 * s, -0.010 * s, -0.002 * s]), 0.0062 * s), k=0.006 * s)
+    # mouth line
+    sc.subtract(sdf.elliptic_cone([-mw * 0.88, lip_y - 0.007 * s, mouth_z], [mw * 0.88, lip_y - 0.007 * s, mouth_z],
+                                  0.0060 * s, 0.0018 * s, 0.0060 * s, 0.0018 * s, FWD), k=0.005 * s)
+    # philtrum
+    sc.subtract(sdf.capsule([0.0, face_y + 0.014 * s, mouth_z + 0.011 * s],
+                            [0.0, face_y + 0.014 * s, mouth_z + 0.022 * s], 0.0042 * s), k=0.007 * s)
+    # nostrils
+    for sx in (1, -1):
+        sc.subtract(sdf.sphere(tip + np.array([sx * 0.0085 * s, 0.007 * s, -0.008 * s]), 0.0042 * s), k=0.004 * s)
+    # ear bowl
+    for sx in (1, -1):
+        e = L["ear_c"] * np.array([sx, 1, 1])
+        rot = rig.rot_axis(UP, math.radians(-16.0 * sx)) @ rig.rot_axis(FWD, math.radians(10.0 * sx))
+        sc.subtract(sdf.ellipsoid(e + rot @ np.array([sx * 0.0045 * s, -0.003 * s, -0.003 * s]),
+                                  [0.0055 * s, 0.0085 * hs.ears * s, 0.0155 * hs.ears * s], rot=rot), k=0.005 * s)
+    # naso-labial crease for older faces
+    if old > 0.45:
+        amt = (old - 0.45) / 0.55
+        for sx in (1, -1):
+            sc.subtract(sdf.round_cone([sx * 0.016 * s, face_y + 0.016 * s, mouth_z + 0.026 * s],
+                                       [sx * 0.030 * s, face_y + 0.022 * s, mouth_z - 0.014 * s],
+                                       0.0035 * amt * s, 0.0045 * amt * s), k=0.006 * s)
+    return sc
+
+
+def head_mesh(skel: Skeleton, hs: Optional[HeadStyle] = None, spacing: float = 0.0038,
+              smooth: int = 4) -> Tuple[np.ndarray, np.ndarray]:
+    sc = head_scene(skel, hs)
+    s = skel.props.height / rig.DEFAULT_HEIGHT * skel.props.head_size
+    return sdf.mesh_from_scene(sc, spacing * s, smooth_iters=smooth, project=1)
 
 
 # --------------------------------------------------------------------------------------
 # eyes
 # --------------------------------------------------------------------------------------
 
-def eye_mesh(center: np.ndarray, r: float, nu: int = 20, nv: int = 14) -> Tuple[np.ndarray, List[List[int]], np.ndarray]:
-    """UV sphere whose pole faces forward (-Y); uv = (azimuth around forward axis, polar angle
-    from forward / pi).  Returns verts, faces, uvs-per-vertex."""
+def eye_mesh(center: np.ndarray, r: float, nu: int = 22, nv: int = 16) -> Tuple[np.ndarray, List[List[int]], np.ndarray]:
+    """Eyeball sphere whose pole faces forward (-Y).  UV: u = azimuth, v = polar angle / pi,
+    so v=0 is the pupil centre — the iris texture is painted as rings in v."""
     verts, faces, uvs = [], [], []
     for i in range(nv + 1):
         th = math.pi * i / nv
         for j in range(nu + 1):
             ph = 2 * math.pi * j / nu
-            # forward axis = -Y; ring plane spanned by X and Z
             p = np.array([r * math.sin(th) * math.cos(ph), -r * math.cos(th), r * math.sin(th) * math.sin(ph)])
             verts.append(center + p)
             uvs.append((j / nu, th / math.pi))
     for i in range(nv):
         for j in range(nu):
             a = i * (nu + 1) + j
-            b = a + 1
-            c = a + nu + 2
-            d = a + nu + 1
-            if i == 0:
-                faces.append([a, c, d])
-            elif i == nv - 1:
-                faces.append([a, b, c])
-            else:
-                faces.append([a, b, c, d])
+            faces.append([a, a + 1, a + nu + 2, a + nu + 1])
     return np.asarray(verts), faces, np.asarray(uvs)
 
 
 # --------------------------------------------------------------------------------------
-# hair and beards (shells from head regions, built in numpy from the head mesh arrays)
+# hair and beards: shells grown from head regions
 # --------------------------------------------------------------------------------------
 
-def _region_shell(verts: np.ndarray, normals: np.ndarray, faces: np.ndarray, mask: np.ndarray, offset: np.ndarray,
-                  thickness_back: float = 0.0) -> Tuple[np.ndarray, List[List[int]], np.ndarray]:
-    """Extract faces whose vertices are all in `mask`, offset their vertices along normals by
-    `offset` (per-vertex), and close the boundary with a rim back to an inner shell so the
-    piece has thickness (looks solid from all angles).  Returns verts, faces, source indices."""
-    keep = mask[faces].all(axis=1)
-    f = faces[keep]
-    used = np.unique(f)
-    remap = -np.ones(len(verts), dtype=int)
-    remap[used] = np.arange(len(used))
-    outer = verts[used] + normals[used] * offset[used][:, None]
-    inner = verts[used] + normals[used] * (thickness_back)[None] if False else verts[used] - normals[used] * 0.002
-    fo = remap[f]
-    faces_out: List[List[int]] = [list(map(int, tri)) for tri in fo]
-    n_out = len(used)
-    # inner shell (flipped)
-    faces_in = [[int(i) + n_out for i in tri[::-1]] for tri in fo]
-    # boundary edges -> rim quads
-    edges: Dict[Tuple[int, int], int] = {}
-    for tri in fo:
-        for k in range(3):
-            a, b = int(tri[k]), int(tri[(k + 1) % 3])
-            key = (min(a, b), max(a, b))
-            edges[key] = edges.get(key, 0) + 1
-    rim = []
-    for tri in fo:
-        for k in range(3):
-            a, b = int(tri[k]), int(tri[(k + 1) % 3])
-            if edges[(min(a, b), max(a, b))] == 1:
-                rim.append([a, b, b + n_out, a + n_out])
-    allv = np.concatenate([outer, inner], axis=0)
-    return allv, faces_out + faces_in + rim, np.concatenate([used, used])
-
-
-def scalp_mask(verts: np.ndarray, skel: Skeleton, hs: HeadStyle, hairline: float = 1.0, sides: float = 1.0, nape: float = 1.0) -> np.ndarray:
-    """Vertices on the scalp: above a hairline that dips at the temples, above the ears at the
-    sides, down to the nape at the back."""
+def scalp_field(verts: np.ndarray, skel: Skeleton, hs: HeadStyle, front: float = 1.0, sides: float = 1.0,
+                back: float = 1.0) -> np.ndarray:
+    """Signed 'hairiness' (>0 = covered) over the head surface.  `front` lowers/raises the
+    hairline, `sides` covers the temples/over the ears, `back` reaches down the nape."""
     L = head_landmarks(skel, hs)
     s = L["s"]
     x, y, z = verts[:, 0], verts[:, 1], verts[:, 2]
     eye_z = L["eye_z"]
     fy = L["face_y"]
-    front = -y / max(abs(fy), 1e-6)         # 1 at the face plane, 0 at the centre, -1 at the back
-    frontness = np.clip((-y - 0.0) / 0.09 / s, -1, 1)
-    # hairline height: forehead top at the front, ear top at the sides, nape at the back
-    z_front = eye_z + (0.058 + 0.01 * (1 - hairline)) * s
-    z_side = eye_z + 0.028 * s * sides
-    z_back = eye_z - (0.06 + 0.02 * nape) * s
-    ff = np.clip(frontness, 0, 1)
-    bb = np.clip(-frontness, 0, 1)
-    zl = z_side * (1 - ff - bb) + z_front * ff + z_back * bb
-    # temple dips
-    temple = np.exp(-0.5 * (((np.abs(x) - 0.06 * s) / (0.02 * s)) ** 2)) * np.clip(frontness, 0, 1)
-    zl = zl + temple * 0.012 * s
-    m = z > zl
-    # exclude the face/front below the brow no matter what
-    m &= ~((frontness > 0.55) & (z < eye_z + 0.05 * s))
-    return m
+    # -1 at the back, +1 at the face
+    fwdness = np.clip((L["skull_c"][1] - y) / max(abs(L["skull_c"][1] - fy), 1e-6), -1.2, 1.2)
+    ff = np.clip(fwdness, 0, 1)
+    bb = np.clip(-fwdness, 0, 1)
+    z_front = eye_z + (0.075 - 0.022 * front) * s
+    z_side = eye_z + (0.055 - 0.040 * sides) * s
+    z_back = eye_z + (0.020 - 0.085 * back) * s
+    zl = z_side * np.clip(1 - ff - bb, 0, 1) + z_front * ff + z_back * bb
+    # widow's-peak dip / temple recession
+    temple = np.exp(-0.5 * (((np.abs(x) - 0.055 * s) / (0.020 * s)) ** 2)) * ff
+    peak = np.exp(-0.5 * ((x / (0.016 * s)) ** 2)) * ff
+    zl = zl + temple * 0.016 * s - peak * 0.010 * s
+    f = (z - zl) / (0.02 * s)
+    # never on the face below the brow
+    f = np.minimum(f, np.where((ff > 0.55) & (z < eye_z + 0.055 * s), -1.0, 10.0))
+    return f
 
 
-def beard_mask(verts: np.ndarray, normals: np.ndarray, skel: Skeleton, hs: HeadStyle, moustache: bool = True, cheeks: float = 1.0) -> np.ndarray:
+def beard_field(verts: np.ndarray, normals: np.ndarray, skel: Skeleton, hs: HeadStyle,
+                moustache: bool = True, cheeks: float = 1.0, length: float = 1.0) -> np.ndarray:
+    """Signed beard coverage over the head surface."""
     L = head_landmarks(skel, hs)
     s = L["s"]
     x, y, z = verts[:, 0], verts[:, 1], verts[:, 2]
-    eye_z = L["eye_z"]; mouth_z = L["mouth_z"]; chin_z = L["chin_z"]
-    lower_face = (z < mouth_z + 0.012 * s) & (z > chin_z - 0.03 * s) & (y < 0.04 * s)
-    # jawline sides up to below the cheekbones
-    jaw = (z < eye_z - 0.045 * s) & (z > chin_z - 0.03 * s) & (np.abs(x) > 0.03 * s) & (y < 0.05 * s) & (normals[:, 2] < 0.6)
-    m = lower_face | (jaw & (cheeks > 0.5))
-    # keep off the lips: exclude the mouth slit region unless moustache (above the mouth)
-    mouth = (np.abs(x) < L["mouth_w"] * 1.05) & (np.abs(z - mouth_z) < 0.007 * s) & (y < 0.0)
-    m &= ~mouth
+    eye_z, mouth_z, chin_z = L["eye_z"], L["mouth_z"], L["chin_z"]
+    top = (eye_z - 0.030 * s) * cheeks + (L["mouth_z"] + 0.008 * s) * (1 - cheeks)
+    f = np.minimum(top - z, z - (chin_z - 0.09 * s * length)) / (0.012 * s)
+    f = np.minimum(f, (0.045 * s - y) / (0.01 * s))            # front half only
+    f = np.minimum(f, (0.72 - normals[:, 2]) / 0.2)            # not the top of the head
+    # keep the lips bare
+    lips = ((np.abs(x) < L["mouth_w"] * 1.15) & (np.abs(z - mouth_z) < 0.009 * s) & (y < 0.02 * s))
+    f = np.where(lips, -1.0, f)
     if not moustache:
-        m &= ~((z > mouth_z) & (np.abs(x) < L["mouth_w"] * 1.3) & (y < 0.0))
-    # never under the neck stub / far back
-    m &= normals[:, 2] > -0.85
-    return m
+        f = np.where((z > mouth_z) & (np.abs(x) < L["mouth_w"] * 1.5) & (y < 0.02 * s), -1.0, f)
+    else:
+        must = (z > mouth_z + 0.004 * s) & (z < mouth_z + 0.026 * s) & (np.abs(x) < L["mouth_w"] * 1.5) & (y < 0.02 * s)
+        f = np.where(must, np.maximum(f, 1.0), f)
+    return f
 
 
-# --------------------------------------------------------------------------------------
-# Blender pipeline (bpy imported lazily)
-# --------------------------------------------------------------------------------------
+# ======================================================================================
+# Blender pipeline (bpy imported lazily so the rest of the module works without Blender)
+# ======================================================================================
 
 def _bpy():
     import bpy
@@ -567,6 +536,25 @@ def select_only(ob) -> None:
 
 def tri_count(ob) -> int:
     return sum(len(p.vertices) - 2 for p in ob.data.polygons)
+
+
+def to_object(name: str, verts: np.ndarray, faces, smooth: bool = True, uvs: Optional[np.ndarray] = None):
+    """Create a Blender object from arrays.  `uvs` is per-vertex (n,2) if given."""
+    bpy = _bpy()
+    me = bpy.data.meshes.new(name)
+    me.from_pydata([tuple(map(float, v)) for v in verts], [], [list(map(int, f)) for f in faces])
+    me.update()
+    if smooth:
+        for p in me.polygons:
+            p.use_smooth = True
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.collection.objects.link(ob)
+    if uvs is not None:
+        uv = me.uv_layers.new(name="UVMap")
+        for poly in me.polygons:
+            for l in poly.loop_indices:
+                uv.data[l].uv = tuple(map(float, uvs[me.loops[l].vertex_index]))
+    return ob
 
 
 def mesh_arrays(ob) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -588,34 +576,31 @@ def set_verts(ob, verts: np.ndarray) -> None:
     ob.data.update()
 
 
-def remesh_smooth_decimate(ob, voxel: float, smooth_iters: int = 6, smooth_factor: float = 0.6,
-                           target_tris: Optional[int] = None) -> None:
-    """Voxel-remesh `ob` in place (unions overlapping parts), smooth the voxel staircase and
-    collapse-decimate to `target_tris` (symmetric on X)."""
+def decimate(ob, target_tris: int, symmetry: bool = True) -> None:
     bpy = _bpy()
+    tris = tri_count(ob)
+    if tris <= target_tris:
+        return
     select_only(ob)
-    m = ob.modifiers.new("Remesh", 'REMESH')
-    m.mode = 'VOXEL'
-    m.voxel_size = voxel
-    m.use_smooth_shade = True
-    bpy.ops.object.modifier_apply(modifier=m.name)
-    if smooth_iters > 0:
-        sm = ob.modifiers.new("Smooth", 'SMOOTH')
-        sm.factor = smooth_factor
-        sm.iterations = smooth_iters
-        bpy.ops.object.modifier_apply(modifier=sm.name)
-    if target_tris:
-        tris = tri_count(ob)
-        if tris > target_tris:
-            dm = ob.modifiers.new("Decimate", 'DECIMATE')
-            dm.decimate_type = 'COLLAPSE'
-            dm.ratio = target_tris / tris
-            dm.use_symmetry = True
-            dm.symmetry_axis = 'X'
-            dm.use_collapse_triangulate = True
-            bpy.ops.object.modifier_apply(modifier=dm.name)
+    dm = ob.modifiers.new("Decimate", 'DECIMATE')
+    dm.decimate_type = 'COLLAPSE'
+    dm.ratio = target_tris / tris
+    dm.use_symmetry = symmetry
+    dm.symmetry_axis = 'X'
+    dm.use_collapse_triangulate = False
+    bpy.ops.object.modifier_apply(modifier=dm.name)
     for p in ob.data.polygons:
         p.use_smooth = True
+
+
+def shade_smooth_with_autosmooth(ob, angle_deg: float = 60.0) -> None:
+    for p in ob.data.polygons:
+        p.use_smooth = True
+    try:
+        ob.data.use_auto_smooth = True
+        ob.data.auto_smooth_angle = math.radians(angle_deg)
+    except AttributeError:      # Blender >= 4.1
+        pass
 
 
 def smart_uv(ob, angle_deg: float = 66.0, margin: float = 0.02) -> None:
@@ -627,17 +612,17 @@ def smart_uv(ob, angle_deg: float = 66.0, margin: float = 0.02) -> None:
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
-def cylindrical_uv(ob, axis_center: np.ndarray, z0: float, z1: float) -> None:
-    """UVs by cylindrical projection around a vertical axis (heads): u = angle (seam at the
-    back), v = height.  Per-loop so the seam does not smear."""
+def cylindrical_uv(ob, axis_center, z0: float, z1: float, u_scale: float = 1.0) -> None:
+    """Cylindrical projection around a vertical axis (heads, torsos): u = angle with the seam
+    at the back, v = height.  Written per loop so the seam does not smear."""
     me = ob.data
     if not me.uv_layers:
         me.uv_layers.new(name="UVMap")
     uv = me.uv_layers[0]
     verts = np.array([v.co[:] for v in me.vertices])
     rel = verts - np.asarray(axis_center, float)
-    ang = np.arctan2(rel[:, 0], -rel[:, 1])          # 0 at the front (-Y), +/-pi at the back
-    u_all = 0.5 + ang / (2 * math.pi)
+    ang = np.arctan2(rel[:, 0], -rel[:, 1])
+    u_all = 0.5 + ang / (2 * math.pi) * u_scale
     v_all = (verts[:, 2] - z0) / max(z1 - z0, 1e-6)
     for poly in me.polygons:
         us = [u_all[me.loops[l].vertex_index] for l in poly.loop_indices]
@@ -647,8 +632,10 @@ def cylindrical_uv(ob, axis_center: np.ndarray, z0: float, z1: float) -> None:
             uv.data[l].uv = (u, v_all[me.loops[l].vertex_index])
 
 
+# -- skinning ---------------------------------------------------------------------------
+
 def auto_weights(ob, arm) -> bool:
-    """Blender bone-heat automatic weights; returns True if every vertex got a weight."""
+    """Blender bone-heat automatic weights; True when every vertex got a weight."""
     bpy = _bpy()
     bpy.ops.object.select_all(action='DESELECT')
     ob.select_set(True)
@@ -657,16 +644,15 @@ def auto_weights(ob, arm) -> bool:
     try:
         bpy.ops.object.parent_set(type='ARMATURE_AUTO')
     except Exception as e:  # pragma: no cover
-        print("auto weights failed:", e)
+        print("  auto weights failed:", e)
         return False
     missing = sum(1 for v in ob.data.vertices if not v.groups)
     if missing:
-        print("auto weights left %d verts unweighted" % missing)
+        print("  auto weights left %d/%d verts unweighted" % (missing, len(ob.data.vertices)))
     return missing == 0
 
 
 def weight_matrix(ob, bones: Sequence[str]) -> np.ndarray:
-    """(n_verts, len(bones)) weights from vertex groups."""
     gi = {g.name: g.index for g in ob.vertex_groups}
     n = len(ob.data.vertices)
     W = np.zeros((n, len(bones)))
@@ -683,14 +669,16 @@ def apply_weight_matrix(ob, bones: Sequence[str], W: np.ndarray, threshold: floa
         ob.vertex_groups.remove(g)
     W = W / np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
     for j, b in enumerate(bones):
-        vg = ob.vertex_groups.new(name=b)
         idx = np.nonzero(W[:, j] > threshold)[0]
+        if len(idx) == 0:
+            continue
+        vg = ob.vertex_groups.new(name=b)
         for vi in idx:
             vg.add([int(vi)], float(W[vi, j]), 'REPLACE')
 
 
-def segment_weights(verts: np.ndarray, skel: Skeleton, bones: Sequence[str], sharpness: float = 2.6) -> np.ndarray:
-    """Distance-to-bone-segment weights with a smooth falloff (the fallback/seed field)."""
+def segment_weights(verts: np.ndarray, skel: Skeleton, bones: Sequence[str], sharpness: float = 2.4) -> np.ndarray:
+    """Distance-to-bone-segment weights with a smooth falloff (seed / fallback field)."""
     n = len(verts)
     W = np.zeros((n, len(bones)))
     for bi, b in enumerate(bones):
@@ -700,13 +688,13 @@ def segment_weights(verts: np.ndarray, skel: Skeleton, bones: Sequence[str], sha
         l2 = max(float(np.dot(ab, ab)), 1e-9)
         u = np.clip(((verts - a) @ ab) / l2, 0.0, 1.0)
         d = np.linalg.norm(verts - (a + u[:, None] * ab), axis=1)
-        r = 0.04 + 0.45 * bb.length
+        r = 0.035 + 0.42 * bb.length
         W[:, bi] = np.exp(-((d / r) ** sharpness))
     return W / np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
 
 
 def smooth_weights(W: np.ndarray, tris: np.ndarray, iters: int = 4, factor: float = 0.45) -> np.ndarray:
-    """Laplacian smoothing of the weight field across mesh edges (kills creasing at joints)."""
+    """Laplacian smoothing of the weight field across mesh edges (kills joint creasing)."""
     n = W.shape[0]
     edges = np.concatenate([tris[:, [0, 1]], tris[:, [1, 2]], tris[:, [2, 0]]], axis=0)
     for _ in range(iters):
@@ -732,20 +720,19 @@ def limit_influences(W: np.ndarray, max_influences: int = 4) -> np.ndarray:
 
 
 def skin_to_armature(ob, arm, skel: Skeleton, smooth_iters: int = 3, max_influences: int = 4) -> str:
-    """Skin `ob` to `arm`.  Bone-heat automatic weights when they succeed (they respect the
-    surface, so no bleed across a gap), seeded segment weights otherwise; then smoothing
-    across edges and a 4-influence limit for glTF.  Returns the method used."""
-    bpy = _bpy()
+    """Skin `ob` to `arm`: bone-heat automatic weights where they work (they respect the
+    surface, so nothing bleeds across a gap), a segment-distance field where they do not;
+    then edge smoothing and a 4-influence limit for glTF."""
     method = "auto"
     if not auto_weights(ob, arm):
         method = "segment"
         verts, normals, tris = mesh_arrays(ob)
         W = segment_weights(verts, skel, rig.DEFORM_NAMES)
         apply_weight_matrix(ob, rig.DEFORM_NAMES, W)
-        if not ob.modifiers or not any(m.type == 'ARMATURE' for m in ob.modifiers):
+        if not any(m.type == 'ARMATURE' for m in ob.modifiers):
             mod = ob.modifiers.new("Armature", 'ARMATURE')
             mod.object = arm
-            ob.parent = arm
+        ob.parent = arm
     verts, normals, tris = mesh_arrays(ob)
     W = weight_matrix(ob, rig.DEFORM_NAMES)
     empty = W.sum(axis=1) < 1e-6
@@ -758,29 +745,29 @@ def skin_to_armature(ob, arm, skel: Skeleton, smooth_iters: int = 3, max_influen
     return method
 
 
+def nearest_weights(dst_verts: np.ndarray, src_verts: np.ndarray, src_W: np.ndarray, k: int = 4) -> np.ndarray:
+    """Inverse-distance weight transfer from a source point cloud (chunked)."""
+    out = np.zeros((len(dst_verts), src_W.shape[1]))
+    chunk = max(1, 3_000_000 // max(len(src_verts), 1))
+    for i in range(0, len(dst_verts), chunk):
+        part = dst_verts[i:i + chunk]
+        dd = ((part[:, None, :] - src_verts[None, :, :]) ** 2).sum(axis=2)
+        kk = min(k, dd.shape[1])
+        idx = np.argpartition(dd, kk - 1, axis=1)[:, :kk]
+        d2 = np.take_along_axis(dd, idx, axis=1)
+        w = 1.0 / np.maximum(d2, 1e-8)
+        w /= w.sum(axis=1, keepdims=True)
+        out[i:i + chunk] = np.einsum("nk,nkb->nb", w, src_W[idx])
+    return out
+
+
 def transfer_weights(dst_ob, src_verts: np.ndarray, src_W: np.ndarray, arm, bones: Sequence[str] = rig.DEFORM_NAMES,
                      k: int = 4, smooth: int = 2) -> None:
-    """Skin a garment/part by copying weights from the nearest body vertices (inverse-distance
-    over k neighbours), then smoothing.  Keeps every part deforming exactly like the body."""
+    """Skin a part (garment, hair, armour) by copying weights from the nearest body vertices,
+    so every part deforms exactly like the body under it."""
     verts, normals, tris = mesh_arrays(dst_ob)
-    d2 = ((verts[:, None, :] - src_verts[None, :, :]) ** 2).sum(axis=2) if len(src_verts) * len(verts) < 4_000_000 else None
-    if d2 is None:
-        # chunked nearest-neighbour to keep memory sane
-        W = np.zeros((len(verts), len(bones)))
-        chunk = max(1, 4_000_000 // max(len(src_verts), 1))
-        for i in range(0, len(verts), chunk):
-            part = verts[i:i + chunk]
-            dd = ((part[:, None, :] - src_verts[None, :, :]) ** 2).sum(axis=2)
-            idx = np.argsort(dd, axis=1)[:, :k]
-            w = 1.0 / np.maximum(np.take_along_axis(dd, idx, axis=1), 1e-8)
-            w /= w.sum(axis=1, keepdims=True)
-            W[i:i + chunk] = np.einsum("nk,nkb->nb", w, src_W[idx])
-    else:
-        idx = np.argsort(d2, axis=1)[:, :k]
-        w = 1.0 / np.maximum(np.take_along_axis(d2, idx, axis=1), 1e-8)
-        w /= w.sum(axis=1, keepdims=True)
-        W = np.einsum("nk,nkb->nb", w, src_W[idx])
-    if smooth:
+    W = nearest_weights(verts, src_verts, src_W, k)
+    if smooth and len(tris):
         W = smooth_weights(W, tris, iters=smooth, factor=0.4)
     W = limit_influences(W)
     apply_weight_matrix(dst_ob, bones, W)
@@ -790,93 +777,24 @@ def transfer_weights(dst_ob, src_verts: np.ndarray, src_W: np.ndarray, arm, bone
     dst_ob.parent = arm
 
 
-# --------------------------------------------------------------------------------------
-# morph targets (analytic displacement fields)
-# --------------------------------------------------------------------------------------
-
-def body_morphs(verts: np.ndarray, normals: np.ndarray, skel: Skeleton) -> Dict[str, np.ndarray]:
-    """name -> displaced vertex array for the body.  Fields are smooth bumps along normals."""
-    J = skel.J
-    s = skel.props.height / rig.DEFAULT_HEIGHT
-    z = verts[:, 2]
-    x = verts[:, 0]
-    hip, spine, chest, neck = J["Hips"][2], J["Spine"][2], J["Chest"][2], J["Neck"][2]
-    front = np.clip(-normals[:, 1], 0, 1)
-    back = np.clip(normals[:, 1], 0, 1)
-    side = np.abs(normals[:, 0])
-    torso = smoothstep((z - (hip - 0.12 * s)) / (0.06 * s)) * (1 - smoothstep((z - (neck - 0.02 * s)) / (0.05 * s))) * (np.abs(x) < 0.22 * s)
-    arms = ((np.abs(x) > 0.20 * s) & (z > chest - 0.05 * s)).astype(float)
-    legs = ((z < hip - 0.02 * s) & (np.abs(x) < 0.25 * s)).astype(float)
-    out: Dict[str, np.ndarray] = {}
-
-    def disp(field: np.ndarray, amount: float) -> np.ndarray:
-        return normals * (field * amount)[:, None]
-
-    belly = gauss3(verts, np.array([0.0, -0.09 * s, spine - 0.02 * s]), (0.17 * s, 0.14 * s, 0.13 * s)) * front
-    chest_f = gauss3(verts, np.array([0.0, -0.10 * s, chest + 0.08 * s]), (0.20 * s, 0.12 * s, 0.10 * s)) * front
-    love = gauss3(verts, np.array([0.0, 0.02 * s, hip + 0.02 * s]), (0.2 * s, 0.16 * s, 0.10 * s)) * side
-    butt = gauss3(verts, np.array([0.0, 0.10 * s, hip - 0.04 * s]), (0.16 * s, 0.10 * s, 0.10 * s)) * back
-    thigh = legs * smoothstep((z - (hip - 0.45 * s)) / (0.1 * s)) * (1 - smoothstep((z - (hip - 0.05 * s)) / (0.04 * s)))
-    upper_arm = arms * smoothstep((z - (chest - 0.05 * s)) / (0.08 * s))
-    neck_f = gauss3(verts, np.array([0.0, 0.0, neck + 0.04 * s]), (0.08 * s, 0.08 * s, 0.05 * s))
-    calf = legs * gauss3(verts, np.array([0.0, 0.02 * s, hip - 0.62 * s]), (0.3 * s, 0.1 * s, 0.08 * s))
-    heavy = 0.075 * belly + 0.025 * chest_f + 0.03 * love + 0.035 * butt + 0.022 * thigh + 0.022 * upper_arm + 0.014 * neck_f + 0.012 * calf + 0.006 * torso
-    out["heavy"] = verts + disp(heavy, s)
-    slight = -(0.022 * torso + 0.012 * thigh + 0.012 * upper_arm + 0.02 * belly + 0.01 * butt + 0.006 * calf)
-    out["slight"] = verts + disp(slight, s)
-    muscular = 0.02 * chest_f + 0.018 * upper_arm + 0.014 * thigh + 0.012 * calf + gauss3(verts, np.array([0.0, 0.06 * s, chest + 0.06 * s]), (0.16 * s, 0.1 * s, 0.12 * s)) * back * 0.015 - 0.01 * belly
-    out["muscular"] = verts + disp(muscular, s)
-    bust = (gauss3(verts, np.array([0.07 * s, -0.11 * s, chest + 0.065 * s]), (0.055 * s, 0.06 * s, 0.05 * s)) +
-            gauss3(verts, np.array([-0.07 * s, -0.11 * s, chest + 0.065 * s]), (0.055 * s, 0.06 * s, 0.05 * s))) * front
-    waist = gauss3(verts, np.array([0.0, 0.0, spine + 0.03 * s]), (0.3 * s, 0.3 * s, 0.05 * s)) * side
-    hips_w = gauss3(verts, np.array([0.0, 0.0, hip - 0.05 * s]), (0.3 * s, 0.3 * s, 0.07 * s)) * side
-    feminine = 0.03 * bust - 0.02 * waist + 0.02 * hips_w + 0.012 * butt - 0.008 * upper_arm - 0.006 * neck_f
-    out["feminine"] = verts + disp(feminine, s)
-    old = 0.02 * belly - 0.006 * chest_f + 0.006 * neck_f - 0.006 * upper_arm - 0.004 * thigh
-    out["old"] = verts + disp(old, s)
-    return out
+def rigid_weights(ob, bone: str, arm, bones: Sequence[str] = rig.DEFORM_NAMES) -> None:
+    """Bind a whole part to one bone (helms, horns, halos attached to Head)."""
+    W = np.zeros((len(ob.data.vertices), len(bones)))
+    W[:, list(bones).index(bone)] = 1.0
+    apply_weight_matrix(ob, bones, W)
+    if not any(m.type == 'ARMATURE' for m in ob.modifiers):
+        mod = ob.modifiers.new("Armature", 'ARMATURE')
+        mod.object = arm
+    ob.parent = arm
 
 
-def head_morphs(verts: np.ndarray, normals: np.ndarray, skel: Skeleton, hs: HeadStyle) -> Dict[str, np.ndarray]:
-    L = head_landmarks(skel, hs)
-    s = L["s"]
-    eye_z, mouth_z, chin_z = L["eye_z"], L["mouth_z"], L["chin_z"]
-    fy = L["face_y"]
-    out: Dict[str, np.ndarray] = {}
+# -- morph targets ----------------------------------------------------------------------
 
-    def disp(field: np.ndarray, amount: float) -> np.ndarray:
-        return normals * (field * amount)[:, None]
-
-    jowl = (gauss3(verts, np.array([0.05 * s, fy + 0.04 * s, mouth_z - 0.01 * s]), (0.03 * s, 0.035 * s, 0.03 * s)) +
-            gauss3(verts, np.array([-0.05 * s, fy + 0.04 * s, mouth_z - 0.01 * s]), (0.03 * s, 0.035 * s, 0.03 * s)))
-    chin = gauss3(verts, np.array([0.0, fy + 0.02 * s, chin_z - 0.01 * s]), (0.04 * s, 0.04 * s, 0.025 * s))
-    cheek = (gauss3(verts, np.array([0.05 * s, fy + 0.03 * s, eye_z - 0.035 * s]), (0.028 * s, 0.03 * s, 0.028 * s)) +
-             gauss3(verts, np.array([-0.05 * s, fy + 0.03 * s, eye_z - 0.035 * s]), (0.028 * s, 0.03 * s, 0.028 * s)))
-    neck = (verts[:, 2] < L["head"][2] + 0.03 * s).astype(float)
-    out["heavy"] = verts + disp(0.012 * jowl + 0.012 * chin + 0.008 * cheek + 0.006 * neck, s)
-    out["slight"] = verts + disp(-0.010 * cheek - 0.005 * jowl - 0.004 * chin, s)
-    jaw_side = np.abs(normals[:, 0]) * ((verts[:, 2] < eye_z - 0.03 * s) & (verts[:, 2] > chin_z - 0.02 * s) & (verts[:, 1] < 0.03 * s))
-    brow = gauss3(verts, np.array([0.0, fy, L["brow_z"]]), (0.06 * s, 0.03 * s, 0.012 * s))
-    out["feminine"] = verts + disp(-0.008 * jaw_side - 0.004 * brow + 0.004 * cheek - 0.004 * chin, s)
-    out["old"] = verts + disp(0.006 * jowl - 0.006 * cheek + 0.003 * chin, s)
-    return out
+def smoothstep(x: np.ndarray) -> np.ndarray:
+    x = np.clip(x, 0.0, 1.0)
+    return x * x * (3 - 2 * x)
 
 
-def add_shape_keys(ob, targets: Dict[str, np.ndarray]) -> None:
-    if ob.data.shape_keys is None:
-        ob.shape_key_add(name="Basis", from_mix=False)
-    for name, verts in targets.items():
-        kb = ob.shape_key_add(name=name, from_mix=False)
-        kb.data.foreach_set("co", np.asarray(verts, float).ravel())
-        kb.value = 0.0
-
-
-def apply_morph_mix(verts: np.ndarray, morphs: Dict[str, np.ndarray], mix: Dict[str, float]) -> np.ndarray:
-    """Bake a weighted morph mix into vertices (the forge exports baked bodies, not shape keys,
-    so Godot only has to pick a variant)."""
-    out = verts.copy()
-    for name, w in mix.items():
-        if abs(w) < 1e-4 or name not in morphs:
-            continue
-        out += (morphs[name] - verts) * w
-    return out
+def gauss3(p: np.ndarray, c, s) -> np.ndarray:
+    d = (p - np.asarray(c, float)) / np.asarray(s, float)
+    return np.exp(-0.5 * np.sum(d * d, axis=1))
