@@ -196,3 +196,30 @@ left on a shelf, which is what the fiction says happens to them.
 **Consequences.** Teaching hangs off `book_opened` in `Progression`, so a tome read off a
 shelf and a tome read out of the bag teach exactly the same thing. Re-reading one says so
 rather than silently doing nothing.
+
+## 2026-09-19 · A landmark stands where the fiction says, with the collision it was built with
+**Decision.** Landmarks are placed from the forge's own metadata, not from a table in the
+builder. Each landmark model names its `place` in its meta file, so `build_world.py` indexes
+`game/assets/models/landmarks/` by place id and emits the `.glb` as that POI's `scene`; an
+imported `.glb` loads as a `PackedScene`, so the streamer instantiates it with no special
+case. Collision is the `*_col.glb` the forge already builds beside it, named in the meta and
+copied into the cell entry as a `collision` field; the streamer turns it into a `StaticBody3D`
+of trimesh shapes under the instance. Yaw is a bearing the world gives the landmark, not a
+default: the Lamp faces down the gradient of the water-distance field, the Sayers' Spire and
+the Sunken Choir's colossi face a named place, and anything unlisted faces downhill, which for
+a fallen thing is the way it fell. A `yaw` in `places.json` overrides all of it.
+**Why.** The alternative for collision was a trimesh built from the visible mesh at load, which
+would have put 10,807 triangles into the physics world for the Cracked Toll instead of 729 for
+something you mostly walk around; and asking the forge for `-col` suffixed nodes inside the
+main glb would have duplicated a file it already writes. The alternative for yaw was a hand
+table, which is fine for six landmarks and wrong for sixty: a bearing taken from the water, the
+slope or another place keeps working when a place moves, and a landmark facing due north
+because that is the default is a tell.
+**Consequences.** `pois.json` entries gain an optional `collision` path beside `scene`, and so
+do the cell `scenes` entries — additive, and consumers that ignore it get what they had. A
+landmark that is really a set (the Sunken Choir is twelve headless colossi) is described in
+`LANDMARK_SETS` and comes out as an avenue running from the place toward what it faces, which
+means one place can own more scene entries than it has POI entries. Standing stones are not
+landmarks and are not scattered either: `worldgen/stones.py` sets them as a ring at the Moot,
+as pairs flanking a road where it crosses the high ground, and as single stones on skylines,
+because the whole point of a standing stone is that a person put it there.

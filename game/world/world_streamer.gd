@@ -219,7 +219,7 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 		var rows: Array = instances[asset_path]
 		if rows.is_empty():
 			continue
-		var mesh := _mesh_for(str(asset_path))
+		var mesh := _mesh_for(str(asset_path), ring)
 		if mesh == null:
 			continue
 		_build_multimesh(node, str(asset_path), mesh, rows, ring)
@@ -337,6 +337,43 @@ func _build_scene(parent: Node3D, entry: Variant) -> void:
 	if not props.is_empty() and inst.has_method("configure"):
 		inst.call("configure", props)
 	parent.add_child(inst)
+	_add_collision(inst, str(entry.get("collision", "")))
+
+
+## A landmark you can walk through is worse than a landmark that is not there. The forge builds
+## a separate low-triangle collision mesh beside each landmark and names it in its meta file,
+## which the world builder copies into the cell entry; here it becomes a static body under the
+## instance. Building it from the visible mesh instead would put ten thousand triangles into
+## the physics world for something you mostly walk around.
+func _add_collision(inst: Node, path: String) -> void:
+	if path.is_empty() or not (inst is Node3D):
+		return
+	if not ResourceLoader.exists(path):
+		if not _missing_assets.has(path):
+			_missing_assets[path] = true
+			Log.warn("WorldStreamer", "landmark collision missing, skipping: %s" % path)
+		return
+	var packed: PackedScene = load(path)
+	if packed == null:
+		return
+	var source: Node = packed.instantiate()
+	var body := StaticBody3D.new()
+	body.name = "Collision"
+	var shapes := 0
+	for m in source.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (m as MeshInstance3D).mesh
+		if mesh == null:
+			continue
+		var shape := CollisionShape3D.new()
+		shape.shape = mesh.create_trimesh_shape()
+		shape.transform = (m as MeshInstance3D).global_transform
+		body.add_child(shape)
+		shapes += 1
+	source.queue_free()
+	if shapes == 0:
+		body.queue_free()
+		return
+	(inst as Node3D).add_child(body)
 
 
 ## The kind of thing an asset is, from where the forge files it. Scatter rules put trees in
@@ -363,25 +400,59 @@ func _unload(cell: Vector2i) -> void:
 
 
 ## Loads the mesh for a scatter asset, warning exactly once per missing asset.
-func _mesh_for(asset_path: String) -> Mesh:
-	if _mesh_cache.has(asset_path):
-		return _mesh_cache[asset_path]
+## The mesh to draw one of these with, at the detail this ring deserves.
+##
+## The forge builds every scatter asset with LOD1 and LOD2 meshes beside the full one, named
+## after it. A tree is about 150 triangles at LOD0 and a fifth of that at LOD2, and a tree
+## three hundred metres away across a valley is four pixels tall, so the far ring takes the
+## cheap one. That is what buys the Briarwold its density: the budget is spent on the wood you
+## are standing in rather than on the one on the far hill.
+func _mesh_for(asset_path: String, ring: int = 0) -> Mesh:
+	var want_lod := 0 if ring <= full_ring else 2
+	var key := "%s#%d" % [asset_path, want_lod]
+	if _mesh_cache.has(key):
+		return _mesh_cache[key]
 	var mesh: Mesh = null
 	if ResourceLoader.exists(asset_path):
 		var res: Resource = load(asset_path)
 		if res is Mesh:
 			mesh = res
 		elif res is PackedScene:
-			mesh = _first_mesh_of(res)
+			mesh = _mesh_of(res, want_lod)
 	if mesh == null and not _missing_assets.has(asset_path):
 		_missing_assets[asset_path] = true
 		Log.warn("WorldStreamer", "scatter asset missing, skipping: %s" % asset_path)
-	_mesh_cache[asset_path] = mesh
+	_mesh_cache[key] = mesh
 	return mesh
 
 
-static func _first_mesh_of(packed: PackedScene) -> Mesh:
+## The mesh named "<something>_LOD<n>", or the first mesh in the scene when the asset has no
+## LODs or the wanted one is missing. Falling back rather than failing matters: not every
+## generator emits LODs, and a missing LOD should cost triangles, not a bald hillside.
+static func _mesh_of(packed: PackedScene, want_lod: int) -> Mesh:
 	var state := packed.get_state()
+	var first: Mesh = null
+	var wanted: Mesh = null
+	var suffix := "_LOD%d" % want_lod
+	for i in state.get_node_count():
+		if state.get_node_type(i) != "MeshInstance3D":
+			continue
+		var node_name := str(state.get_node_name(i))
+		for p in state.get_node_property_count(i):
+			if state.get_node_property_name(i, p) != "mesh":
+				continue
+			var v: Variant = state.get_node_property_value(i, p)
+			if not (v is Mesh):
+				continue
+			if first == null and not node_name.contains("_LOD"):
+				first = v
+			if want_lod > 0 and node_name.ends_with(suffix):
+				wanted = v
+	if wanted != null:
+		return wanted
+	if first != null:
+		return first
+	# no unsuffixed mesh at all: take whatever the scene has
 	for i in state.get_node_count():
 		if state.get_node_type(i) != "MeshInstance3D":
 			continue
