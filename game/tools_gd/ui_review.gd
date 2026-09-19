@@ -103,7 +103,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "crafting_alchemy", "menu": "crafting", "args": {"station": "alembic"}},
 		{"name": "crafting_enchanting", "menu": "crafting", "args": {"station": "name_table"}},
 		{"name": "trade", "menu": "trade", "args": {"merchant_id": "core:npc/review_merchant"}},
-		{"name": "deed", "menu": "deed", "args": {"property_id": "core:property/merrowby_cottage", "name": "The Cottage by the Toll", "place": "Merrowby", "price": 2400}},
+		{"name": "deed", "menu": "deed", "args": {"property_id": "core:property/merrowby_cottage", "name": "The Cottage by the Toll", "place": "Merrowby", "price": 980}},
 		{"name": "map", "menu": "map"},
 	]
 	if only.is_empty():

@@ -103,6 +103,7 @@ func _bags() -> void:
 
 	merchant_bag = Inventory.new()
 	merchant_bag.name = "MerchantBag"
+	merchant_bag.add_to_group("merchant_bag")
 	merchant_bag.capacity_override = 900.0
 	add_child(merchant_bag)
 	for entry in [["core:item/iron_axe", 2], ["core:item/iron_ingot", 12], ["core:item/leather", 9],
@@ -128,11 +129,12 @@ func _progression() -> void:
 	crafting.name = "Crafting"
 	add_child(crafting)
 	crafting.inventory = bag
-	for e in ["core:effect/restore_health", "core:effect/fortify_one_handed"]:
+	for e in ["core:effect/fortify_armour", "core:effect/ember_burst", "core:effect/resist_fire"]:
 		if ContentDB.has(e):
 			crafting.learn_enchantment(e)
-	for ing in bag.query({"category": "ingredient"}):
-		crafting.known_effects(ing.id)
+	# eating a few reveals their second effect, so the alembic shows known and unknown
+	for ing in bag.query({"category": "ingredient"}).slice(0, 4):
+		crafting.eat_ingredient(ing.id)
 
 
 func _quests() -> void:

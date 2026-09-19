@@ -255,6 +255,12 @@ static func item_icon_name(def: Dictionary) -> String:
 		return str(def["icon"])
 	var tags: Array = def.get("tags", [])
 	var category := str(def.get("category", ""))
+	if tags.has("shield"):
+		return "shield"
+	if tags.has("ring"):
+		return "ring"
+	if tags.has("amulet") or tags.has("jewellery"):
+		return "amulet"
 	if def.has("weapon"):
 		match str(def["weapon"].get("class", "")):
 			"bow", "crossbow": return "bow"
@@ -268,13 +274,9 @@ static func item_icon_name(def: Dictionary) -> String:
 			"feet": return "boots"
 			"hands", "body": return "tunic"
 			"off_hand": return "shield"
+			"ring", "ring_1", "ring_2": return "ring"
+			"amulet": return "amulet"
 			_: return "tunic"
-	if tags.has("shield"):
-		return "shield"
-	if tags.has("ring"):
-		return "ring"
-	if tags.has("amulet") or tags.has("jewellery"):
-		return "amulet"
 	if tags.has("potion"):
 		return "potion"
 	if tags.has("letter") or category == "book":
