@@ -1,10 +1,13 @@
 class_name DoorLock
 extends Node
-## Lock component for doors and containers. Put it under the door/chest node; the parent's
-## `interact(actor)` forwards here while `locked` is true. A key opens it outright; otherwise
-## `interact` starts the lockpick minigame (the UI stream shows the timing bar and calls
-## `attempt(actor, timing_accuracy)` per try). Picking something owned by someone else is
-## the crime "lockpicking". Ownership on the parent comes from `owner_faction`/`owner_npc`.
+## Lock component for doors and containers. Add it as a child named exactly "DoorLock" of a
+## Door (res://systems/interiors/door.tscn) or of a chest; the parent's `interact(actor)`
+## forwards here through the contracted pair `is_locked()` / `try_open(actor)`. A key opens
+## it outright; otherwise `try_open` starts the lockpick minigame (the UI stream shows the
+## timing bar and calls `attempt(actor, timing_accuracy)` per try) and returns false so the
+## door stays shut. Picking something owned by someone else is the crime "lockpicking".
+## Ownership comes from this node's exports, or from the parent Door's own
+## `owner_faction`/`owner_npc` fields when they are set there.
 
 signal unlocked(by: Node)
 signal lockpick_started(lock: DoorLock)
@@ -27,7 +30,14 @@ static var _default_pick := ""
 
 func _ready() -> void:
 	var parent := get_parent()
-	if parent != null and (not owner_faction.is_empty() or not owner_npc.is_empty()):
+	if parent == null:
+		return
+	# A Door carries its own owner fields; adopt them when this node leaves them blank.
+	if owner_faction.is_empty() and "owner_faction" in parent:
+		owner_faction = str(parent.get("owner_faction"))
+	if owner_npc.is_empty() and "owner_npc" in parent:
+		owner_npc = str(parent.get("owner_npc"))
+	if not owner_faction.is_empty() or not owner_npc.is_empty():
 		Ownership.tag(parent, owner_faction, owner_npc)
 
 
@@ -35,13 +45,24 @@ func target() -> Node:
 	return get_parent()
 
 
+## --- Door contract -------------------------------------------------------------------------
+
+func is_locked() -> bool:
+	return locked
+
+
+## True when the door may open now (unlocked, or unlocked by a key the actor carries).
+## False leaves it shut and, when the actor has a pick, starts the lockpick minigame.
+func try_open(actor: Node) -> bool:
+	var r := interact(actor)
+	return bool(r.get("ok", false))
+
+
 func lockpick_item_id() -> String:
 	if not lockpick_item.is_empty():
 		return lockpick_item
 	if _default_pick.is_empty() and ContentDB.is_loaded:
-		var picks := ContentDB.where("item", "tags", "lockpick")
-		if not picks.is_empty():
-			_default_pick = str(picks[0]["id"])
+		_default_pick = ContentQuery.id_of_first_with_tag("item", "lockpick")
 	return _default_pick
 
 

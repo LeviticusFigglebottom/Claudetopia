@@ -60,7 +60,7 @@ static func rows() -> Dictionary:
 	_rows_loaded = true
 	_rows_cache = {}
 	if ContentDB.is_loaded:
-		for t in ContentDB.where("table", "role", "personality_traits"):
+		for t in ContentQuery.where_scalar("table", "role", "personality_traits"):
 			for r in t.get("rows", []):
 				if typeof(r) == TYPE_DICTIONARY and r.has("trait"):
 					_rows_cache[str(r["trait"])] = r

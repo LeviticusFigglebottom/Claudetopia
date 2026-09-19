@@ -93,7 +93,7 @@ static func is_owned_by_other(node_or_id: Variant, actor_id: String = PLAYER, ac
 	return true
 
 
-func set_owner(id: String, faction: String = "", npc: String = "") -> void:
+func assign_owner(id: String, faction: String = "", npc: String = "") -> void:
 	if faction.is_empty() and npc.is_empty():
 		registry.erase(id)
 	else:
@@ -105,7 +105,7 @@ func clear_owner(id: String) -> void:
 
 
 func claim_for_player(id: String) -> void:
-	set_owner(id, "", PLAYER)
+	assign_owner(id, "", PLAYER)
 
 
 func is_player_owned(id: String) -> bool:

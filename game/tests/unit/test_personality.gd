@@ -50,7 +50,7 @@ func test_table_rows_loaded_from_content() -> void:
 	for t in Personality.TRAITS:
 		assert_has(rows, t, "trait row %s" % t)
 		assert_has(rows[t], "gestures")
-	var tables := ContentDB.where("table", "role", "personality_traits")
+	var tables := ContentQuery.where_scalar("table", "role", "personality_traits")
 	assert_eq(tables.size(), 1, "exactly one personality table in core")
 
 

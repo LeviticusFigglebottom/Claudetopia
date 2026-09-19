@@ -307,3 +307,28 @@ func test_door_lock_component() -> void:
 	actor.call("add", "core:item/econ_rope", 1)
 	assert_eq(lock.prompt_text(actor), "Unlock")
 	assert_eq(lock.interact(actor)["state"], "unlocked_with_key")
+
+
+func test_door_lock_fits_the_door_contract() -> void:
+	var door: Door = load("res://systems/interiors/door.tscn").instantiate()
+	door.display_name = "Wren's cottage"
+	door.owner_npc = "core:npc/wren_tallow"
+	var lock := DoorLock.new()
+	lock.name = "DoorLock"
+	lock.lock_level = 2
+	door.add_child(lock)
+	_root().add_child(door)
+	_nodes.append(door)
+	assert_true(lock.is_locked())
+	assert_eq(lock.owner_npc, "core:npc/wren_tallow", "the lock adopts the door's owner")
+	assert_true(Ownership.is_owned_by_other(door))
+	assert_eq(door.prompt_text(), "Wren's cottage (locked)", "Door asks the lock")
+	var actor := Node.new()
+	actor.set_script(_script("extends Node\nvar bag := {}\nfunc add(id: String, n: int) -> void:\n\tbag[id] = bag.get(id, 0) + n\nfunc remove(id: String, n: int) -> int:\n\tvar have: int = bag.get(id, 0)\n\tbag[id] = have - mini(have, n)\n\treturn mini(have, n)\nfunc count(id: String) -> int:\n\treturn bag.get(id, 0)\n"))
+	_nodes.append(actor)
+	assert_false(lock.try_open(actor), "no key, no pick: stays shut")
+	lock.key_item = "core:item/econ_rope"
+	actor.call("add", "core:item/econ_rope", 1)
+	assert_true(lock.try_open(actor), "the key opens it")
+	assert_false(lock.is_locked())
+	assert_eq(door.prompt_text(), "Enter Wren's cottage")
