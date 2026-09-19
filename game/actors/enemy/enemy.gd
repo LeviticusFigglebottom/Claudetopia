@@ -8,7 +8,9 @@ extends Actor
 ## skirmisher hits and retreats. Bosses swap attack sets at hp thresholds.
 ## The bestiary's special behaviours — voice attacks a silence stops, radial bursts, loosed
 ## projectiles, pounces, cut purses, drained stamina, lures, guarded shrines, duellists' guards
-## and limbs that break off — decide themselves in EnemyAbilities and act here.
+## and limbs that break off — decide themselves in EnemyAbilities and act here. So do the boss
+## fights (WORLD_BIBLE §9): held notes that heal until they are cut short, shockwaves that
+## follow a landed blow out across the floor, two-beat combos, and an arena that closes in.
 
 signal state_changed(from: String, to: String)
 signal telegraph(attack_name: String, duration: float)
@@ -17,6 +19,9 @@ signal phase_changed(index: int, phase: Dictionary)
 signal limb_broken(index: int, limb: Dictionary)
 signal mark_dropped(enemy_id: String, position: Vector3)
 signal summoned(enemies: Array)
+signal channel_started(attack_name: String, seconds: float)
+signal channel_pulse(attack_name: String, healed: float)
+signal channel_ended(attack_name: String, reason: String)
 
 const TURN_SPEED := 7.0
 const ACCEL := 12.0
@@ -84,8 +89,15 @@ var _lure_engaged: bool = false
 var _lure_closed: float = 0.0
 var _limbs: Array = []
 var _limbs_broken: int = 0
+var _damage_since_limb: float = 0.0
 var _roused_by_greed: bool = false
 var _watched_target: Node = null
+var _channel_left: float = 0.0
+var _channel_next_pulse: float = 0.0
+var _channel_damage: float = 0.0
+var _last_attack_name: String = ""
+var _last_attack_at: float = -999.0
+var _arena: BossArena = null
 
 
 # --- construction -------------------------------------------------------------------------------
@@ -153,6 +165,7 @@ func _read_def(d: Dictionary) -> void:
 	marks_range = def.get("marks", [0, 0])
 	_limbs = def.get("limbs", [])
 	_limbs_broken = 0
+	_damage_since_limb = 0.0
 	phases = def.get("phases", [])
 	is_boss = archetype == "boss" or not phases.is_empty()
 	var rig := str(def.get("rig", "humanoid"))
@@ -549,9 +562,13 @@ func _end_charge(connected: bool) -> void:
 func _select_attack(dist: float) -> Dictionary:
 	var options: Array = []
 	var silenced := status != null and status.has("silenced")
+	var since := now() - _last_attack_at
 	for a in current_attacks:
 		var attack: Dictionary = a
 		if not EnemyAbilities.is_usable(attack, silenced):
+			continue
+		# The second beat of a pair only exists after the first one.
+		if not EnemyAbilities.combo_ready(attack, _last_attack_name, since):
 			continue
 		var name := str(attack.get("name", "attack"))
 		if float(_attack_cooldowns.get(name, 0.0)) > 0.0:
@@ -605,10 +622,19 @@ func _begin_melee(attack: Dictionary) -> void:
 
 
 ## Telegraph → hit window → recovery, as placeholder clip timing (CONTRACTS §3 event names).
+## A channelled attack holds the note between the wind-up and the recovery: `channel_start` opens
+## it, the pulses run off a timer, and `channel_end` closes it if nothing has cut it short.
 static func attack_timing(attack: Dictionary) -> Dictionary:
 	var tel := maxf(float(attack.get("telegraph", 0.6)), 0.05)
 	var window := maxf(float(attack.get("hit_window", 0.18)), 0.05)
 	var rec := maxf(float(attack.get("recovery", 0.6)), 0.05)
+	var held := EnemyAbilities.channel_seconds(attack)
+	if held > 0.0:
+		return {"length": tel + held + rec, "events": [
+			{"t": tel, "name": "channel_start"},
+			{"t": tel + held, "name": "channel_end"},
+			{"t": tel + held + rec * 0.6, "name": "cancel_ok"},
+		]}
 	var length := tel + window + rec
 	return {"length": length, "events": [
 		{"t": tel, "name": "hit_start"},
@@ -633,9 +659,105 @@ func _begin_spell_attack(attack: Dictionary) -> void:
 	_global_cooldown = ct + 0.4
 
 
+# --- channelled attacks ---------------------------------------------------------------------------
+
+## The held note begins. From here it pulses on a beat until it runs out, or until something
+## stops it: a silence in a throat that needs one, or enough damage to break the concentration.
+func _start_channel(a: Dictionary) -> void:
+	_attack_phase = "channel"
+	_channel_left = EnemyAbilities.channel_seconds(a)
+	_channel_next_pulse = 0.0
+	_channel_damage = 0.0
+	channel_started.emit(str(a.get("name", "attack")), _channel_left)
+
+
+func _tick_channel(delta: float) -> void:
+	_damp(delta, 14.0)
+	if target != null and is_instance_valid(target):
+		face_toward(target.global_position, TURN_SPEED * 0.4, delta)
+	var a := _current_attack
+	var reason := EnemyAbilities.channel_break_reason(a, status != null and status.has("silenced"), _channel_damage, max_health)
+	if not reason.is_empty():
+		_end_channel(reason)
+		return
+	_channel_next_pulse -= delta
+	_channel_left -= delta
+	# The note runs out before it can take another beat: `channel` seconds is exactly
+	# `channel_pulses` pulses, so the healing it is worth is the healing it can give.
+	if _channel_left <= 0.0:
+		_end_channel("finished")
+		return
+	if _channel_next_pulse <= 0.0:
+		_channel_next_pulse = EnemyAbilities.channel_tick(a)
+		_channel_pulse(a)
+
+
+## One beat of the note: it takes back a share of what the whole note is worth, and everything
+## inside its reach hears it. Cut the note short and the rest of the healing never happens.
+func _channel_pulse(a: Dictionary) -> void:
+	var healed := EnemyAbilities.channel_heal_per_pulse(a)
+	if healed > 0.0 and health < max_health:
+		heal(healed)
+	if float(a.get("damage", 0.0)) > 0.0:
+		var pulse := a.duplicate(true)
+		pulse["kind"] = "burst"
+		pulse["radius"] = EnemyAbilities.radial_radius(a, arena_radius())
+		pulse["unparryable"] = true
+		_burst(pulse)
+	channel_pulse.emit(str(a.get("name", "attack")), healed)
+
+
+func _end_channel(reason: String) -> void:
+	if _attack_phase != "channel":
+		return
+	var name := str(_current_attack.get("name", "attack"))
+	var open_for := float(_current_attack.get("interrupt_stagger", 1.1))
+	_attack_phase = "recovery"
+	_channel_left = 0.0
+	channel_ended.emit(name, reason)
+	if reason == "finished":
+		return
+	# A note that was cut off leaves its singer open, which is the whole reward for cutting it.
+	anim.stop()
+	_finish_attack()
+	stagger(open_for)
+	EventBus.notify.emit("%s's note breaks off." % display_name, "combat")
+
+
+func is_channelling() -> bool:
+	return _attack_phase == "channel"
+
+
+func channel_remaining() -> float:
+	return maxf(_channel_left, 0.0)
+
+
+# --- the arena ------------------------------------------------------------------------------------
+
+## The bound this fight is being held inside, made on demand around where the boss was standing
+## when it woke. A designer-placed BossArena for this id wins over an improvised one.
+func arena() -> BossArena:
+	if _arena != null and is_instance_valid(_arena):
+		return _arena
+	_arena = BossArena.for_boss(self)
+	return _arena
+
+
+## The floor this fight is being held on. An arena nobody has measured is the default circle,
+## not a circle of nothing: `arena_wide` has to mean something before the Briar has taken a step.
+func arena_radius() -> float:
+	var a := arena()
+	if a != null and a.is_bounded():
+		return a.radius
+	return EnemyAbilities.DEFAULT_ARENA_RADIUS
+
+
 func _tick_attack(delta: float) -> void:
 	if target != null and _attack_phase == "telegraph" and not _charging:
 		face_toward(target.global_position, TURN_SPEED * 0.6, delta)
+	if _attack_phase == "channel":
+		_tick_channel(delta)
+		return
 	if _attack_phase == "active":
 		var lunge := float(_current_attack.get("lunge", 0.0))
 		if lunge > 0.0:
@@ -662,10 +784,24 @@ func _on_clip_event(event_name: String) -> void:
 					_loose(_current_attack)
 				else:
 					_open_hitbox()
+				# The floor answers a blow whether or not the blow found you.
+				if EnemyAbilities.has_shockwave(_current_attack):
+					_burst(EnemyAbilities.shockwave_attack(_current_attack, arena_radius()))
+				var taken := EnemyAbilities.shrinks_arena_by(_current_attack)
+				if taken > 0.0:
+					var bound := arena()
+					if bound != null:
+						bound.shrink(taken)
 		"hit_end":
 			if _attacking:
 				_attack_phase = "recovery"
 				_close_hitbox()
+		"channel_start":
+			if _attacking:
+				_start_channel(_current_attack)
+		"channel_end":
+			if _attacking and _attack_phase == "channel":
+				_end_channel("finished")
 		_:
 			pass
 
@@ -683,8 +819,13 @@ func _finish_attack() -> void:
 	_global_cooldown = float(_current_attack.get("gcd", 0.5))
 	if archetype == "skirmisher":
 		_retreat_timer = float(brain.param("retreat_time", 1.4))
+	# What was just thrown, and when: a combo's second beat asks about both.
+	if not _current_attack.is_empty():
+		_last_attack_name = name
+		_last_attack_at = now()
 	_attacking = false
 	_attack_phase = ""
+	_channel_left = 0.0
 	_current_attack = {}
 
 
@@ -693,12 +834,15 @@ func on_action_interrupted() -> void:
 	can_parry = false
 	block_stability = 0.0
 	stamina_comp.regen_multiplier = 1.0
+	if _attack_phase == "channel":
+		channel_ended.emit(str(_current_attack.get("name", "attack")), EnemyAbilities.BROKE_INTERRUPTED)
 	if _attacking or _charging:
 		_close_hitbox()
 		poise_comp.clear_hyper_armour()
 		_attacking = false
 		_charging = false
 		_attack_phase = ""
+		_channel_left = 0.0
 		_current_attack = {}
 	caster.interrupt()
 
@@ -775,12 +919,18 @@ func _summon(spec_v: Variant) -> void:
 func _burst(a: Dictionary) -> void:
 	var radius := EnemyAbilities.burst_radius(a)
 	var hit := build_hit(a)
+	var lit_share := EnemyAbilities.lit_damage_share(a)
+	var bound := arena() if lit_share < 1.0 else null
 	for victim in _actors_within(radius):
 		if not is_hostile_to(victim) or not victim.has_method("take_hit"):
 			continue
 		var h := hit.copy()
 		h.dodgeable = bool(a.get("dodgeable", true))
 		h.origin = global_position
+		# Only what you are known for stays lit, and standing in it is worth something.
+		if bound != null and victim is Node3D and bound.lit_at((victim as Node3D).global_position):
+			h.amount *= lit_share
+			h.poise_damage *= lit_share
 		var outcome: String = victim.take_hit(h)
 		_after_hit_landed(a, victim, outcome)
 	attack_launched.emit(str(a.get("name", "attack")))
@@ -964,7 +1114,16 @@ func _update_anim() -> void:
 # --- reactions ----------------------------------------------------------------------------------
 
 func take_hit(hit: HitData) -> String:
+	var before := health
 	var outcome := super.take_hit(hit)
+	var dealt := maxf(before - health, 0.0)
+	if dealt > 0.0:
+		# Damage counts twice over: against the concentration of anything mid-note, and against
+		# whatever is next to come off a thing that is put together.
+		if _attack_phase == "channel":
+			_channel_damage += dealt
+		_damage_since_limb += dealt
+		_check_damage_limb()
 	if outcome != "dead" and hit.attacker is Node3D:
 		perception.alert_to((hit.attacker as Node3D).global_position, hit.attacker as Node3D)
 		inactive = false
@@ -1071,7 +1230,10 @@ func reset_to_spawn() -> void:
 ## comes off, and what comes off decides what it can still do to you.
 func _on_poise_broken() -> void:
 	super()
-	_break_next_limb()
+	# Only the pieces that come off when the footing goes. The King's arms have to be broken.
+	var limb := EnemyAbilities.next_limb(_limbs, _limbs_broken)
+	if not limb.is_empty() and EnemyAbilities.limb_breaks_on_poise(limb):
+		_break_next_limb()
 
 
 func _break_next_limb() -> void:
@@ -1080,7 +1242,8 @@ func _break_next_limb() -> void:
 		return
 	var index := _limbs_broken
 	_limbs_broken += 1
-	current_attacks = EnemyAbilities.attacks_after_limb(current_attacks, limb)
+	_damage_since_limb = 0.0
+	current_attacks = EnemyAbilities.apply_broken_limbs(_phase_attacks(), _limbs, _limbs_broken)
 	poise_max = EnemyAbilities.poise_after_limb(poise_max, limb)
 	poise_comp.setup(poise_max)
 	speed = EnemyAbilities.speed_after_limb(speed, limb)
@@ -1088,6 +1251,25 @@ func _break_next_limb() -> void:
 	limb_broken.emit(index, limb)
 	if limb.has("say"):
 		EventBus.notify.emit(str(limb["say"]), "combat")
+
+
+## A limb that comes off by being hit enough rather than by the footing going: the Stone-Thrall
+## King's arms, which the bible says you break to change what it can do.
+func _check_damage_limb() -> void:
+	var limb := EnemyAbilities.next_limb(_limbs, _limbs_broken)
+	if limb.is_empty() or EnemyAbilities.limb_breaks_on_poise(limb):
+		return
+	if _damage_since_limb >= EnemyAbilities.limb_damage_needed(limb):
+		_break_next_limb()
+
+
+## The attack set this phase would have if nothing had been broken off yet.
+func _phase_attacks() -> Array:
+	if phase_index >= 0 and phase_index < phases.size():
+		var phase: Dictionary = phases[phase_index]
+		if phase.has("attacks"):
+			return phase["attacks"]
+	return attacks
 
 
 func limbs_broken() -> int:
@@ -1191,13 +1373,19 @@ func _check_phase() -> void:
 func _enter_phase(index: int) -> void:
 	phase_index = index
 	var phase: Dictionary = phases[index]
-	current_attacks = phase.get("attacks", attacks)
+	# A new phase does not grow back what has already come off: the phase's own attack set goes
+	# through the same filter the broken limbs applied to the last one.
+	current_attacks = EnemyAbilities.apply_broken_limbs(phase.get("attacks", attacks), _limbs, _limbs_broken)
 	for key in ["engage_range", "circle", "aggression", "hyper_armour", "retreat_threshold"]:
 		if phase.has(key):
 			brain.params[key] = phase[key]
 	if phase.has("speed"):
 		speed = float(phase["speed"])
 	_attack_cooldowns.clear()
+	if EnemyAbilities.lights_by_renown(phase):
+		var bound := arena()
+		if bound != null:
+			bound.light_by_renown(true)
 	phase_changed.emit(index, phase)
 	if phase.has("say"):
 		EventBus.notify.emit(str(phase["say"]), "boss")

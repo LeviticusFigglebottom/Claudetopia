@@ -75,11 +75,13 @@ func _on_entity_killed(victim: Node, killer: Node, enemy_id: String) -> void:
 	spawn_drops(results, pos, parent, enemy_id)
 
 
-## Rolls what an enemy def drops: its loot table plus a marks purse. Pure apart from the rng.
+## Rolls what an enemy def drops: its `drops` (unique and guaranteed), its loot table, and a
+## marks purse. Pure apart from the rng.
 func drops_for(enemy_def: Dictionary, ctx: Dictionary = {}) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if ctx.is_empty():
 		ctx = context()
+	out.append_array(guaranteed_drops(enemy_def))
 	var loot_id := str(enemy_def.get("loot", ""))
 	if loot_id != "" and ContentDB.has(loot_id):
 		out.append_array(LootTable.roll(loot_id, rng, ctx))
@@ -92,6 +94,32 @@ func drops_for(enemy_def: Dictionary, ctx: Dictionary = {}) -> Array[Dictionary]
 	if n > 0:
 		out.append({"marks": n})
 	return LootTable.merge(out)
+
+
+## A boss's `drops` (WORLD_BIBLE §9): the one thing the fight was for. Not a roll and not a
+## chance — the Nave Bell is the price the Circle asks for its verdict, so killing her has to
+## hand it over. An id nothing knows is reported rather than quietly skipped: a drop that does
+## not drop is a main quest that cannot be finished.
+func guaranteed_drops(enemy_def: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var listed: Variant = enemy_def.get("drops", [])
+	if typeof(listed) != TYPE_ARRAY:
+		return out
+	for entry in listed:
+		var item_id := ""
+		var count := 1
+		if typeof(entry) == TYPE_DICTIONARY:
+			item_id = str((entry as Dictionary).get("item", ""))
+			count = int((entry as Dictionary).get("count", 1))
+		else:
+			item_id = str(entry)
+		if item_id.is_empty():
+			continue
+		if not ContentDB.has(item_id):
+			Log.warn("LootDrops", "%s drops unknown item '%s'" % [str(enemy_def.get("id", "?")), item_id])
+			continue
+		out.append({"item": item_id, "count": maxi(count, 1)})
+	return out
 
 
 ## Spawns WorldItems for loot results around `position` under `parent`. Returns the nodes.
