@@ -4,7 +4,7 @@ _Updated 2026-09-19 (session 1, early)._
 
 ## State
 
-**603 unit tests green, 0 content problems. The smoke run builds all 24 shipping
+**705 unit tests green, 0 content problems. The smoke run builds all 24 shipping
 interiors clean. The scripted journey passes all 12 of DESIGN's done-list promises.
 16/16 combat-arena checks pass. 620+ content definitions across 23 types.**
 
@@ -48,6 +48,16 @@ Merged and working on the main branch:
 * **Narrative** — 25 NPCs with weekly schedules, 25 dialogue graphs, the seven main
   quests, three faction lines, six side quests, 20 books carrying the four contradictory
   accounts, 22 rumours.
+* **Audio** — a full synthesis toolkit (no sample or recording enters the project): six
+  region themes in five stems each, built on a five-note bell motif from the Toll and
+  developed per region's mode; 43 ambience beds and one-shot pools by time, weather and
+  interior; 70 sound ids in 240 variants; `Music`, `Ambience` and `Foley` autoloads over a
+  seven-bus layout. 62 MB.
+* **UI** — a generated "tended paper" identity: parchment panels, brass and dark-oak
+  frames, hand-drawn icons, a painted chart. Title, the Naming, HUD with compass and boss
+  bar, conversation and gesture wheel, pause, settings with live rebinding, save and load,
+  journal in four tabs, book reader, inventory, skills and perks, the three crafting
+  stations, trade, deeds and the map. Every screen renders from real content.
 * **Tooling** — `run.sh`, the debug console with scripted `--cmd` runs, the region
   drop-test checker, the naming generator with a banned-name check, review scenes for
   atmosphere, interiors and the combat arena.
@@ -69,7 +79,8 @@ hearthstones/death/echo, docs.
    forge, dialogue/quests/factions, NPC life/crime/economy, UI, audio.
 2. Place the interiors in the world: doors on the settlement buildings and at each
    deep place's mouth, wired to the `interior` defs.
-3. Replace the placeholder props in the interiors with the forge's meshes.
+3. Merge the world, asset forge and character forge streams as they land.
+4. Place the interiors in the world through `core:table/door_plan_*`.
 4. Region fly-throughs, the drop test, and a pass of art direction on the overworld.
 5. The smoke run over every region and every interior, and the performance budgets.
 
