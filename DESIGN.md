@@ -391,8 +391,14 @@ unlisted in `STYLE_EXCEPTIONS.md`.
 ## 10. Uniqueness tests (enforced by review + automated checks)
 
 1. **Region drop test**: screenshots from random points per region, HUD off,
-   must be sortable by region by a reviewer. Automated proxy: region palette
-   histograms must be separable (tooling in `tools/uniqueness_check.py`).
+   must be sortable by region by a reviewer. Automated proxy in
+   `tools/uniqueness_check.py`, which scores two axes separately: **colour**
+   (palette histograms) and **landform** (skyline profile, ruggedness, where
+   the detail sits in the frame, sky area -- computed on per-image-normalised
+   luminance, so it is blind to tint). Leave-one-out nearest-centroid accuracy
+   on the two together must reach 0.80; landform alone must reach 0.55. The
+   second bar exists because a region that separates on colour alone is a
+   region that would vanish if you desaturated it, and a filter is not a place.
 2. **Named-place test**: each named location's data declares its `unique_feature`;
    the check fails if any two locations share one.
 3. **Interior test**: every interior declares `resident`, `trade`, `wealth`,

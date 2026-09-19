@@ -66,6 +66,24 @@ ASSET_ALIASES = {
     "flora/cottongrass": "flora/grey_grass",
     "flora/clover": "flora/grass_clump",
     "flora/market_herbs": "flora/cow_parsley",
+    # Rocks. The rules name what a place would call the stone underfoot; the forge builds the
+    # shapes a stone can take. A chalk boulder and a granite slab are both a slab of rock
+    # shouldered out of a hillside, so they map onto the same shape and take their colour from
+    # the region that owns them. "rocks/bone" is deliberately a prefix: it catches every bone
+    # kind Skerrow has, so the giants' remains are fingers and ribs and skulls, not one bone.
+    "rocks/flint_nodule": "rocks/boulder",
+    "rocks/chalk_boulder": "rocks/cliff_slab",
+    "rocks/shore_cobble": "rocks/boulder",
+    "rocks/black_stone_shard": "rocks/cliff_slab",
+    "rocks/sunken_masonry": "rocks/cliff_slab",
+    "rocks/peat_hummock": "rocks/boulder",
+    "rocks/mossy_boulder": "rocks/boulder",
+    "rocks/granite_slab": "rocks/cliff_slab",
+    "rocks/limestone_clint": "rocks/cliff_slab",
+    "rocks/scree_rubble": "rocks/scree",
+    "rocks/ash_drift": "rocks/scree",
+    "rocks/fused_block": "rocks/cliff_slab",
+    "rocks/giant_bone": "rocks/bone",
 }
 
 

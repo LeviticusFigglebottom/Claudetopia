@@ -19,8 +19,11 @@ const DOOR_SCENE := "res://systems/interiors/door.tscn"
 const SILL := 0.05
 
 @export var place_doors: bool = true
+## Buildings are raised around house doors; a tool that only wants the doors turns this off.
+@export var raise_buildings: bool = true
 
 var placed: Array[Door] = []
+var raised: Array[Building] = []
 
 
 func _ready() -> void:
@@ -53,6 +56,10 @@ func place_all() -> int:
 		if is_instance_valid(door):
 			door.queue_free()
 	placed.clear()
+	for building in raised:
+		if is_instance_valid(building):
+			building.queue_free()
+	raised.clear()
 	for plan in ContentDB.all("table"):
 		if str(plan.get("role", "")) != PLAN_ROLE:
 			continue
@@ -106,7 +113,20 @@ func _place_one(row_v: Variant, centre: Vector3, place_id: String) -> Door:
 	door.rotation.y = bearing
 	if bool(row.get("locked", false)):
 		_lock(door, interior)
+	if str(row.get("kind", "")) == "house" and raise_buildings:
+		_raise_building(interior, door.global_position, bearing)
 	return door
+
+
+## The house around the door. A deep place's mouth is a hole in a hill and needs nothing; a
+## house needs to be a house from across the green, and the one we raise is the one you enter,
+## because it is built from that interior's own rooms.
+func _raise_building(interior_id: String, at: Vector3, bearing: float) -> void:
+	# The interior extends away from its front wall, so the building turns to put its back to
+	# the door's facing.
+	var building := Building.raise_for(interior_id, at, bearing + PI)
+	add_child(building)
+	raised.append(building)
 
 
 func _on_ground(point: Vector3) -> Vector3:

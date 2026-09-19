@@ -324,6 +324,42 @@
    "time": 16.5,
    "weather": "core:weather/dry_wind",
    "fog_scale": 0.45
+  },
+  {
+   "label": "merrowby_village",
+   "region": "core:region/hearthvale",
+   "pos": [
+    830.0,
+    80.75,
+    2280.0
+   ],
+   "look_at": [
+    900.0,
+    56.75,
+    2350.0
+   ],
+   "fov": 55.0,
+   "time": 9.5,
+   "weather": "core:weather/clear",
+   "fog_scale": 0.25
+  },
+  {
+   "label": "tollmere_city",
+   "region": "core:region/hearthvale",
+   "pos": [
+    -70.0,
+    44.39,
+    -220.0
+   ],
+   "look_at": [
+    0.0,
+    20.39,
+    -150.0
+   ],
+   "fov": 60.0,
+   "time": 9.5,
+   "weather": "core:weather/clear",
+   "fog_scale": 0.25
   }
  ],
  "flythrough": {

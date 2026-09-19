@@ -86,11 +86,18 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
 1. The surface and tree passes above, then re-shoot and judge the six regions again.
 2. Hedgerows and field boundaries in Hearthvale: the bible's defining feature, and the thing
    that would most change how the downs read.
-3. Interiors placed as buildings rather than doors standing in open ground — the doors are in
-   the right places, but there is no house around them yet.
+3. **Nothing named is standing in the world.** `game/world/pois/` is empty, so `scene_for()`
+   in the world build never resolves a scene and all 34 places and 48 POIs are flattened pads
+   with nothing on them. The forge has built the six landmark meshes — the Cracked Toll, the
+   Lamp, the Sayer's Spire, both Choir Colossi, the Fallen Hand — and seven standing stones,
+   and no code places any of them. You can stand on the exact coordinates of a forty-metre
+   bronze bell that the main quest turns on and see a bald hillside. This is the largest
+   remaining hole in the world and the one the drop test most depends on. Assigned to the
+   world stream: resolve a landmark `.glb` as the place's scene, give it collision and a
+   deliberate yaw, and place standing stones as hand-authored sets rather than scatter.
 4. NPC and encounter density tuning once there is somebody to walk the country and feel it.
-5. The automated drop test measures colour only, so three deliberately low-chroma regions are
-   penalised for doing what the design asks. It should score landform too.
+5. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
+   score: the downs currently read as bare ground with trees on it.
 
 ## Deliberately not done (pass two)
 
@@ -106,6 +113,13 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
 
 ## Known issues
 
+* **The drop test does not pass.** `tools/uniqueness_check.py` now scores colour and landform
+  separately (DESIGN §10.1). On the eighteen region captures as they stand: colour 0.61,
+  landform 0.50, together 0.56, against a 0.17 chance line and a 0.80 bar. Skerrow and
+  Cinderlea read as each other, and Briarwold and Sedgemire are the closest pair in the world.
+  Those captures were taken from a country with no stones in it and nothing named standing up,
+  so the number should move a long way once the rock scatter, the landmarks and the surface
+  pass land — but it is 0.56 today and it is recorded as 0.56 today.
 * Terrain3D + lavapipe (software Vulkan) crashes in JIT code; use OpenGL for
   headless captures (ARCHITECTURE.md §10).
 * Cave floors show a faint dune ripple where the shell noise is applied before the
