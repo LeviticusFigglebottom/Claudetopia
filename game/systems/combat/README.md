@@ -69,12 +69,15 @@ xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver open
   --audio-driver Dummy -- --arena --verify --out=$PWD/captures/arena
 ```
 
-The last line is the scripted verification (`tests/arena/arena_verify.gd`), 13 checks driven
+The last line is the scripted verification (`tests/arena/arena_verify.gd`), 16 checks driven
 through real input actions: an attack damages a bandit; stamina drains 18 and regenerates; a
 parry opens a riposte and the riposte triples damage; dodge i-frames deny a hit that lands once
 the roll ends; a raised shield cuts damage and costs stamina; an enemy staggers at zero poise;
 a cast costs mana, lands its bolt, and is refused outright while silenced; the bow draws and
-looses an arrow that damages its target; the player mantles a low ledge; the wolf pack takes
-separate bearings; and the bristleback telegraphs, charges and knocks the player down. It exits
-non-zero on any failure and writes screenshots to `--out`. In-game, the `Debug` console exposes `arena_report`, `arena_spawn`,
+looses an arrow that damages its target; the player mantles a low ledge; a signpost shows an
+interaction prompt that clears when you walk away; the wolf pack takes separate bearings; the
+bristleback telegraphs, charges and knocks the player down; boss phases swap attack sets and
+emit `boss_started`/`boss_defeated`; and death hands over to `systems/hearth`, which respawns
+the player at the rest point. It exits non-zero on any failure (and 2 if it stalls) and writes
+screenshots to `--out`. In-game, the `Debug` console exposes `arena_report`, `arena_spawn`,
 `arena_hurt`, `arena_give`, `arena_kill_enemies`, `arena_reset` and `arena_verify`.

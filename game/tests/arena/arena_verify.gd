@@ -40,8 +40,11 @@ func run(arena_node: Node3D, output_dir: String) -> void:
 	await _check_spell_cost_and_silence()
 	await _check_bow_arrow()
 	await _check_mantle()
+	await _check_interaction_prompt()
 	await _check_wolf_pack_flanks()
 	await _check_charger_knockdown()
+	await _check_boss_phases()
+	await _check_death_hands_over_to_hearth()
 	_summary()
 
 
@@ -375,6 +378,111 @@ func _check_charger_knockdown() -> void:
 
 
 # --- helpers ------------------------------------------------------------------------------------
+
+func _check_interaction_prompt() -> void:
+	arena.reset()
+	_isolate([])
+	await _settle(4)
+	var post: StaticBody3D = arena.signpost
+	if post == null:
+		_record("looking at an interactable shows a prompt", false, "no signpost in the arena")
+		return
+	# Stand in front of the signpost, looking at it.
+	player.global_position = post.global_position + Vector3(0.0, 0.6, 1.8)
+	player.velocity = Vector3.ZERO
+	player.rotation.y = 0.0
+	player.camera_rig.yaw = 0.0
+	player.camera_rig.pitch = 0.0
+	var seen := {"prompt": "", "notified": ""}
+	player.interactor.prompt_changed.connect(func(text: String) -> void:
+		if not text.is_empty():
+			seen["prompt"] = text)
+	var on_notify := func(text: String, kind: String) -> void:
+		if kind == "read":
+			seen["notified"] = text
+	EventBus.notify.connect(on_notify)
+	await _wait_until(func() -> bool: return player.interactor.has_target(), 2.0)
+	var targeted := player.interactor.has_target()
+	var used_before: int = post.get("times_used")
+	await _tap("interact")
+	await _settle(6)
+	await _shot("interact")
+	var used_after: int = post.get("times_used")
+	# Walk away: the prompt must clear.
+	player.global_position += Vector3(0.0, 0.0, 12.0)
+	await _settle(6)
+	var cleared := not player.interactor.has_target()
+	EventBus.notify.disconnect(on_notify)
+	_record("looking at an interactable shows a prompt, and interacting fires it",
+		targeted and str(seen["prompt"]).contains("signpost") and used_after == used_before + 1 and cleared,
+		"prompt '%s', interacted %d -> %d, notify '%s', prompt cleared on walking away: %s" % [
+			str(seen["prompt"]), used_before, used_after, str(seen["notified"]).left(28), str(cleared)])
+
+
+## Boss machinery: no core boss content exists yet (bosses belong to the world stream), so the
+## phase table is applied to a spawned enemy here to prove the swap and the EventBus signals.
+func _check_boss_phases() -> void:
+	arena.reset()
+	_isolate([])
+	await _settle(4)
+	var boss: Enemy = arena.spawner.spawn_one("core:enemy/hedge_wight", Vector3(-20.0, 0.6, 20.0), 0.0)
+	if boss == null:
+		_record("boss phases swap attack sets and emit boss events", false, "could not spawn")
+		return
+	boss.is_boss = true
+	boss.phases = [
+		{"hp": 1.0, "attacks": boss.attacks.slice(0, 1), "aggression": 0.5},
+		{"hp": 0.5, "attacks": boss.attacks, "aggression": 1.0, "say": "The second phase."},
+	]
+	var seen := {"started": "", "defeated": "", "phase": -1}
+	EventBus.boss_started.connect(func(id: String) -> void: seen["started"] = id, CONNECT_ONE_SHOT)
+	EventBus.boss_defeated.connect(func(id: String) -> void: seen["defeated"] = id, CONNECT_ONE_SHOT)
+	boss.phase_changed.connect(func(index: int, _p: Dictionary) -> void: seen["phase"] = index)
+	boss._enter_phase(0)
+	await _settle(2)
+	var first_set: int = boss.current_attacks.size()
+	boss.start_boss()
+	# Drive it past the 50% threshold.
+	boss.health = boss.max_health * 0.4
+	await _settle(4)
+	var second_set: int = boss.current_attacks.size()
+	var swapped: bool = int(seen["phase"]) == 1 and second_set > first_set
+	boss.die(player)
+	await _settle(4)
+	_record("boss phases swap attack sets and emit boss events",
+		swapped and str(seen["started"]) == boss.enemy_id and str(seen["defeated"]) == boss.enemy_id,
+		"phase 0 had %d attacks, phase 1 has %d at <=50%% hp; boss_started '%s', boss_defeated '%s'" % [
+			first_set, second_set, str(seen["started"]), str(seen["defeated"])])
+	boss.queue_free()
+
+
+## The hand-off to systems/hearth: combat emits player_died and implements full_restore()/
+## respawn(); the Hearth autoload owns the respawn point, the delay and the Echo.
+func _check_death_hands_over_to_hearth() -> void:
+	arena.reset()
+	_isolate([])
+	await _settle(4)
+	player.global_position = Vector3(-18.0, 0.6, -18.0)
+	await _settle(4)
+	var seen := {"died": false, "respawned": false, "deaths": Hearth.deaths}
+	EventBus.player_died.connect(func(_p: Vector3) -> void: seen["died"] = true, CONNECT_ONE_SHOT)
+	EventBus.player_respawned.connect(func(_id: String) -> void: seen["respawned"] = true, CONNECT_ONE_SHOT)
+	player.kill()
+	await _settle(2)
+	var died_once := bool(seen["died"]) and player.is_dead()
+	var death_spot := player.global_position
+	# Hearth waits RESPAWN_DELAY before putting the player back.
+	var back := await _wait_until(func() -> bool: return bool(seen["respawned"]), 8.0)
+	await _settle(8)
+	await _shot("respawn")
+	var at_respawn := player.global_position.distance_to(Hearth.respawn_position) < 2.0
+	var moved_back := player.global_position.distance_to(death_spot) > 5.0
+	_record("death emits player_died and the Hearth autoload respawns the player",
+		died_once and back and at_respawn and moved_back and not player.is_dead() and player.health == player.max_health,
+		"died at %s, respawned at %s (point %s), hp %.1f/%.1f, deaths %d -> %d" % [
+			str(death_spot.round()), str(player.global_position.round()), str(Hearth.respawn_position.round()),
+			player.health, player.max_health, int(seen["deaths"]), Hearth.deaths])
+
 
 ## Test-harness isolation: everything not under test stops perceiving and goes home, so a check
 ## measures its own subject instead of whatever else wandered into the fight.

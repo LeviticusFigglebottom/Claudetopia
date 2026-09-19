@@ -23,8 +23,13 @@ const SPAWNS := [
 
 signal verification_finished(failures: int)
 
+const VERIFY_TIMEOUT := 240.0
+const SIGNPOST_SCRIPT := "res://tests/arena/signpost.gd"
+const SIGNPOST_POSITION := Vector3(3.0, 0.0, 4.5)
+
 var player: Player = null
 var spawner: EnemySpawner = null
+var signpost: StaticBody3D = null
 var _verify_failures: int = -1
 var readout: Label = null
 var respawn_point: Marker3D = null
@@ -36,14 +41,15 @@ func _ready() -> void:
 	_build_environment()
 	_build_ground()
 	_build_obstacles()
+	_build_signpost()
 	respawn_point = Marker3D.new()
 	respawn_point.name = "RespawnPoint"
 	respawn_point.position = PLAYER_START
 	add_child(respawn_point)
-	# No Hearthstone content in the arena: seed the Hearth autoload's respawn point directly.
-	Hearth.respawn_position = PLAYER_START
-	Hearth.respawn_yaw = 0.0
 	_spawn_player()
+	# No Hearthstone content in the arena: register the start marker as the rest point, which is
+	# what a Hearthstone would do. Without this, Hearth's fallback respawns you where you fell.
+	Hearth.rest_at("arena", PLAYER_START, 0.0, false)
 	_spawn_enemies()
 	_build_hud()
 	_register_commands()
@@ -57,10 +63,15 @@ func _has_arg(flag: String) -> bool:
 
 
 ## `--arena --verify [--out=<dir>]`: run the scripted checks, then quit non-zero on any failure.
+## A watchdog quits with 2 if the run stalls, so a broken build fails instead of hanging.
 func _run_verification_and_quit() -> void:
 	verification_finished.connect(func(failures: int) -> void:
 		await get_tree().create_timer(0.3).timeout
 		get_tree().quit(1 if failures > 0 else 0), CONNECT_ONE_SHOT)
+	get_tree().create_timer(VERIFY_TIMEOUT).timeout.connect(func() -> void:
+		if _verify_failures < 0:
+			Log.error("Arena", "verification did not finish within %d s" % VERIFY_TIMEOUT)
+			get_tree().quit(2))
 	Debug.run("arena_verify")
 
 
@@ -145,6 +156,15 @@ func _build_obstacles() -> void:
 		shape.shape = col
 		body.add_child(shape)
 		i += 1
+
+
+## One interactable, so the Interactor's prompt path is exercised in the arena.
+func _build_signpost() -> void:
+	signpost = StaticBody3D.new()
+	signpost.name = "Signpost"
+	signpost.set_script(load(SIGNPOST_SCRIPT))
+	signpost.position = SIGNPOST_POSITION
+	add_child(signpost)
 
 
 func _spawn_player() -> void:
