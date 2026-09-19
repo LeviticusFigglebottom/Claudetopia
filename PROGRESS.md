@@ -4,14 +4,16 @@ _Updated 2026-09-19 (session 1, early)._
 
 ## State
 
-**705 unit tests green, 0 content problems. The smoke run builds all 24 shipping
-interiors clean. The scripted journey passes all 12 of DESIGN's done-list promises.
-16/16 combat-arena checks pass. 620+ content definitions across 23 types.**
+**716 unit tests green, 0 content problems. The smoke run builds all 24 shipping
+interiors clean (6 regions, 34 places). The scripted journey passes all 12 of
+DESIGN's done-list promises. The performance probe's worst interior costs 90 draw
+calls and 1.17M primitives against budgets of 2000 and 1.5M. 16/16 combat-arena
+checks pass. 656 content definitions across 23 types.**
 
 Verify the whole thing with four commands:
 
 ```
-./run.sh test       # 603 unit tests, and content validation fails the build
+./run.sh test       # 716 unit tests, and content validation fails the build
 ./run.sh smoke      # build every interior for real; fail on any error
 ./run.sh journey    # one scripted run through every promise in the done list
 ./run.sh perf       # draw calls and primitives against the budgets
@@ -84,8 +86,23 @@ hearthstones/death/echo, docs.
 4. Region fly-throughs, the drop test, and a pass of art direction on the overworld.
 5. The smoke run over every region and every interior, and the performance budgets.
 
+## Deliberately not done (pass two)
+
+* **The Barrow Reeve's falling pillars.** WORLD_BIBLE §9 says the arena's pillars
+  come down during the fight to make cover. The chamber's pillars are part of the
+  cave shell mesh, not separate props, so felling them needs the cave forge to emit
+  them as their own bodies. The fight ships without it: the second phase changes
+  through the toll (silence, four raised wights, a faster second stroke) instead.
+* **Light as a spell effect.** Kindling is "fire and light" in DESIGN §5.3 but the
+  spell runtime has no effect type that puts a light in the world, so all three
+  Kindling spells are fire. A `light` effect is a small addition once someone wants
+  a lantern spell.
+
 ## Known issues
 
 * Terrain3D + lavapipe (software Vulkan) crashes in JIT code; use OpenGL for
   headless captures (ARCHITECTURE.md §10).
+* Cave floors show a faint dune ripple where the shell noise is applied before the
+  floor is flattened. It reads as drifted sand rather than stone in the flattest
+  chambers; the fix is to flatten first and noise the walls only.
 * Compatibility renderer lacks SSAO/volumetric fog; the look must not depend on them.
