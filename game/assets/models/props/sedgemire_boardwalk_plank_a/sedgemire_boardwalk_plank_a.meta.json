@@ -3,17 +3,17 @@
   "height": 0.115,
   "max": [
    1.0,
-   0.615,
+   0.115,
    0.789
   ],
   "min": [
    -1.0,
-   0.5,
+   0.0,
    -0.789
   ],
   "radius": 1.275
  },
- "built_seconds": 41.14,
+ "built_seconds": 21.58,
  "category": "props",
  "collision": "sedgemire_boardwalk_plank_a_col.glb",
  "collision_params": {},

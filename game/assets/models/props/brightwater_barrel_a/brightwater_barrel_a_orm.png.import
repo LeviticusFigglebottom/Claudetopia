@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b15lwm2710ute"
+path.s3tc="res://.godot/imported/brightwater_barrel_a_orm.png-9a166e95f50e720a3998dd78c854a9e8.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_barrel_a/brightwater_barrel_a_orm.png"
+dest_files=["res://.godot/imported/brightwater_barrel_a_orm.png-9a166e95f50e720a3998dd78c854a9e8.s3tc.ctex"]
 
 [params]
 

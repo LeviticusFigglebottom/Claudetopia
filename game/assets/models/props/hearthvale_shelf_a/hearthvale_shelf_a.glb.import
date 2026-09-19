@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cs2mq5jy7grqm"
+path="res://.godot/imported/hearthvale_shelf_a.glb-c98edd76082c1e7fd28d1f50fab26c27.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_shelf_a/hearthvale_shelf_a.glb"
+dest_files=["res://.godot/imported/hearthvale_shelf_a.glb-c98edd76082c1e7fd28d1f50fab26c27.scn"]
 
 [params]
 

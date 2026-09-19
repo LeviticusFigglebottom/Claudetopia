@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bby45ft1i0u4d"
+path.s3tc="res://.godot/imported/hearthvale_fence_wattle_b_orm.png-1f3380dda517033e03c13d72e00ba8fb.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_fence_wattle_b/hearthvale_fence_wattle_b_orm.png"
+dest_files=["res://.godot/imported/hearthvale_fence_wattle_b_orm.png-1f3380dda517033e03c13d72e00ba8fb.s3tc.ctex"]
 
 [params]
 

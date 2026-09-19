@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://debh2pv1jph1k"
+path="res://.godot/imported/hearthvale_table_trestle_b.glb-63d1f152b13528c745c7e18bb11d9d3e.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_table_trestle_b/hearthvale_table_trestle_b.glb"
+dest_files=["res://.godot/imported/hearthvale_table_trestle_b.glb-63d1f152b13528c745c7e18bb11d9d3e.scn"]
 
 [params]
 

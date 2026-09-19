@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg4kjfvogehmt"
+path.s3tc="res://.godot/imported/hearthvale_book_stack_b_normal.png-5a8833e622e8369bf26bf42fec8893b5.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_book_stack_b/hearthvale_book_stack_b_normal.png"
+dest_files=["res://.godot/imported/hearthvale_book_stack_b_normal.png-5a8833e622e8369bf26bf42fec8893b5.s3tc.ctex"]
 
 [params]
 

@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c0ings640o43t"
+path="res://.godot/imported/skerrow_drystone_wall_end_a.glb-ce4b1f8470531a05042a573903fbb9c2.scn"
 
 [deps]
 
 source_file="res://assets/models/props/skerrow_drystone_wall_end_a/skerrow_drystone_wall_end_a.glb"
+dest_files=["res://.godot/imported/skerrow_drystone_wall_end_a.glb-ce4b1f8470531a05042a573903fbb9c2.scn"]
 
 [params]
 

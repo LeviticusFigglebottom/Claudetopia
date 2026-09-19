@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://yyk2mnykc8mn"
+path.s3tc="res://.godot/imported/hearthvale_candlestick_b_orm.png-92f67c11e5b49bd134b2cc933721d649.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_candlestick_b/hearthvale_candlestick_b_orm.png"
+dest_files=["res://.godot/imported/hearthvale_candlestick_b_orm.png-92f67c11e5b49bd134b2cc933721d649.s3tc.ctex"]
 
 [params]
 

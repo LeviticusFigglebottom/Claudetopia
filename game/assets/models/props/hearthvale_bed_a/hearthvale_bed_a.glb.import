@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://begw2s1oahes3"
+path="res://.godot/imported/hearthvale_bed_a.glb-19f4ee84f6ae52b805955de221c73718.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_bed_a/hearthvale_bed_a.glb"
+dest_files=["res://.godot/imported/hearthvale_bed_a.glb-19f4ee84f6ae52b805955de221c73718.scn"]
 
 [params]
 

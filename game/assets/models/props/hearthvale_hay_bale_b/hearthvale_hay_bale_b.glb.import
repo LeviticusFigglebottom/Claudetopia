@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bph4133bethcd"
+path="res://.godot/imported/hearthvale_hay_bale_b.glb-f1052e9d501ec6edf590432b6215c162.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_hay_bale_b/hearthvale_hay_bale_b.glb"
+dest_files=["res://.godot/imported/hearthvale_hay_bale_b.glb-f1052e9d501ec6edf590432b6215c162.scn"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c428ln62pti4"
+path.s3tc="res://.godot/imported/hearthvale_cooking_pot_a_orm.png-90d3e4d5af0415023c2c334258b8b878.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_cooking_pot_a/hearthvale_cooking_pot_a_orm.png"
+dest_files=["res://.godot/imported/hearthvale_cooking_pot_a_orm.png-90d3e4d5af0415023c2c334258b8b878.s3tc.ctex"]
 
 [params]
 

@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://mmafi41l101p"
+path="res://.godot/imported/cinderlea_sarcophagus_a.glb-4fbba331e1fedd292f4e68a380a290e7.scn"
 
 [deps]
 
 source_file="res://assets/models/props/cinderlea_sarcophagus_a/cinderlea_sarcophagus_a.glb"
+dest_files=["res://.godot/imported/cinderlea_sarcophagus_a.glb-4fbba331e1fedd292f4e68a380a290e7.scn"]
 
 [params]
 

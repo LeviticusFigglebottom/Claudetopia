@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://qnut02e7yn15"
+path="res://.godot/imported/hearthvale_fence_wattle_a.glb-bbdb8f4fb69a3d96abd4bd5365328567.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_fence_wattle_a/hearthvale_fence_wattle_a.glb"
+dest_files=["res://.godot/imported/hearthvale_fence_wattle_a.glb-bbdb8f4fb69a3d96abd4bd5365328567.scn"]
 
 [params]
 

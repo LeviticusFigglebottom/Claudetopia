@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://drojx2yujli6h"
+path="res://.godot/imported/brightwater_scroll_b.glb-a27ffaf52dfcaf7e76dd98547400164c.scn"
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_scroll_b/brightwater_scroll_b.glb"
+dest_files=["res://.godot/imported/brightwater_scroll_b.glb-a27ffaf52dfcaf7e76dd98547400164c.scn"]
 
 [params]
 

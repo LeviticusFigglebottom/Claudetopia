@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dci004d3oqpu3"
+path="res://.godot/imported/sedgemire_rowboat_a_col.glb-ec55a5ce01cd66ddcfb3e216094f6512.scn"
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_rowboat_a/sedgemire_rowboat_a_col.glb"
+dest_files=["res://.godot/imported/sedgemire_rowboat_a_col.glb-ec55a5ce01cd66ddcfb3e216094f6512.scn"]
 
 [params]
 

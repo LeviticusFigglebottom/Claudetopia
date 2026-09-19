@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://5jbrqetbc2it"
+path.s3tc="res://.godot/imported/sedgemire_dock_post_b_orm.png-5e8d06879ef8d93ed7eb38410442f36e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_dock_post_b/sedgemire_dock_post_b_orm.png"
+dest_files=["res://.godot/imported/sedgemire_dock_post_b_orm.png-5e8d06879ef8d93ed7eb38410442f36e.s3tc.ctex"]
 
 [params]
 

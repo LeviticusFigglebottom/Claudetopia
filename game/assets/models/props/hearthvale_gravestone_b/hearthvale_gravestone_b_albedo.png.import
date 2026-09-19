@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://yc6qxpcrgiyn"
+path.s3tc="res://.godot/imported/hearthvale_gravestone_b_albedo.png-711cb2b426f32e609a7c85a1122755dc.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_gravestone_b/hearthvale_gravestone_b_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_gravestone_b_albedo.png-711cb2b426f32e609a7c85a1122755dc.s3tc.ctex"]
 
 [params]
 

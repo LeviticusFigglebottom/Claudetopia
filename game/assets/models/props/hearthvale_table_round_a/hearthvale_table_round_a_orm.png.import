@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dr15xo0yqrhn7"
+path.s3tc="res://.godot/imported/hearthvale_table_round_a_orm.png-9ed1dd7e1c66a50ef21f2cd55fb6ad35.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_table_round_a/hearthvale_table_round_a_orm.png"
+dest_files=["res://.godot/imported/hearthvale_table_round_a_orm.png-9ed1dd7e1c66a50ef21f2cd55fb6ad35.s3tc.ctex"]
 
 [params]
 

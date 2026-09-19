@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cfsdvc8xbxric"
+path.s3tc="res://.godot/imported/hearthvale_book_a_albedo.png-c9af9be4c064769e488527985fb6b1dc.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_book_a/hearthvale_book_a_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_book_a_albedo.png-c9af9be4c064769e488527985fb6b1dc.s3tc.ctex"]
 
 [params]
 

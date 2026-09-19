@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c75wmpfyrlvov"
+path.s3tc="res://.godot/imported/hearthvale_barrel_a_orm.png-182c62f211464a91472e5eae4e3e2ede.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_barrel_a/hearthvale_barrel_a_orm.png"
+dest_files=["res://.godot/imported/hearthvale_barrel_a_orm.png-182c62f211464a91472e5eae4e3e2ede.s3tc.ctex"]
 
 [params]
 

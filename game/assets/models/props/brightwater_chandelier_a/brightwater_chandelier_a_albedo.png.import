@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c41boo21o8a2n"
+path.s3tc="res://.godot/imported/brightwater_chandelier_a_albedo.png-4641bf6a6e3a95edba21d3c0db68467d.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_chandelier_a/brightwater_chandelier_a_albedo.png"
+dest_files=["res://.godot/imported/brightwater_chandelier_a_albedo.png-4641bf6a6e3a95edba21d3c0db68467d.s3tc.ctex"]
 
 [params]
 

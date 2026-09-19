@@ -3,17 +3,17 @@
   "height": 2.436,
   "max": [
    2.088,
-   2.541,
+   2.436,
    2.078
   ],
   "min": [
    -2.088,
-   0.105,
+   0.0,
    -2.078
   ],
   "radius": 3.188
  },
- "built_seconds": 174.88,
+ "built_seconds": 50.37,
  "category": "props",
  "collision": "cinderlea_tent_b_col.glb",
  "collision_params": {},

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ci3yi2ka2fcsm"
+path.s3tc="res://.godot/imported/hearthvale_shelf_a_orm.png-c5326f03205b63964fc916bb667b3fda.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_shelf_a/hearthvale_shelf_a_orm.png"
+dest_files=["res://.godot/imported/hearthvale_shelf_a_orm.png-c5326f03205b63964fc916bb667b3fda.s3tc.ctex"]
 
 [params]
 

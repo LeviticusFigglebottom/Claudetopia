@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b25yfbgnp5kxp"
+path.s3tc="res://.godot/imported/sedgemire_rowboat_a_orm.png-bcb184316f5e05e083432b83330745df.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_rowboat_a/sedgemire_rowboat_a_orm.png"
+dest_files=["res://.godot/imported/sedgemire_rowboat_a_orm.png-bcb184316f5e05e083432b83330745df.s3tc.ctex"]
 
 [params]
 

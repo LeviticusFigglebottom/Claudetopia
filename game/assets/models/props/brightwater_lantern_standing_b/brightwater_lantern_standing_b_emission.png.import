@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://co6w34ap5s1c"
+path.s3tc="res://.godot/imported/brightwater_lantern_standing_b_emission.png-ebe4596931cb29bff055e4c30a909495.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_lantern_standing_b/brightwater_lantern_standing_b_emission.png"
+dest_files=["res://.godot/imported/brightwater_lantern_standing_b_emission.png-ebe4596931cb29bff055e4c30a909495.s3tc.ctex"]
 
 [params]
 

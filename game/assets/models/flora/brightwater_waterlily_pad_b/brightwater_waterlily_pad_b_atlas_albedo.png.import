@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cmlutrerq4v10"
+path.s3tc="res://.godot/imported/brightwater_waterlily_pad_b_atlas_albedo.png-7d4c8a8ed4b07b09fd8205e815c37645.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/brightwater_waterlily_pad_b/brightwater_waterlily_pad_b_atlas_albedo.png"
+dest_files=["res://.godot/imported/brightwater_waterlily_pad_b_atlas_albedo.png-7d4c8a8ed4b07b09fd8205e815c37645.s3tc.ctex"]
 
 [params]
 

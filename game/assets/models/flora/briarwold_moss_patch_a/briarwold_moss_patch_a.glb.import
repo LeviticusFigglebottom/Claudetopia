@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://ba8gfyluci8x1"
+path="res://.godot/imported/briarwold_moss_patch_a.glb-09a769df0401aa2e93c2a2be2da212ea.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_moss_patch_a/briarwold_moss_patch_a.glb"
+dest_files=["res://.godot/imported/briarwold_moss_patch_a.glb-09a769df0401aa2e93c2a2be2da212ea.scn"]
 
 [params]
 

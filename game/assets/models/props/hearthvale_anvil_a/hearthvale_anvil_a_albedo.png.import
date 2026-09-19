@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bt4y04spnx8n4"
+path.s3tc="res://.godot/imported/hearthvale_anvil_a_albedo.png-c2f74ef345045bde0afba67906aad016.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_anvil_a/hearthvale_anvil_a_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_anvil_a_albedo.png-c2f74ef345045bde0afba67906aad016.s3tc.ctex"]
 
 [params]
 
