@@ -65,8 +65,14 @@ def _rock_body(name, rng, radius=1.0, subdiv=4, squash=(1.0, 1.0, 0.72), facet=0
     off = Vector((seed * 3.1 % 17.0, seed * 7.7 % 13.0, seed * 2.3 % 11.0))
     ob.location += off
     S.apply_transforms(ob, location=True, rotation=False, scale=False)
-    _displace_stack(ob, rng, facet * radius, mass * radius, grain * radius,
-                    facet_scale=0.9 / radius, mass_scale=0.35 / radius, grain_scale=0.12 / radius, seed=seed)
+    # Mass and grain only. Displacing along the normal by a Voronoi distance field pushes a
+    # spike out of the middle of every cell, which gives popcorn, not stone; the planes a
+    # rock breaks along are cut below instead, by dissolving the surface into facets.
+    # Blender's legacy textures take a feature SIZE, not a frequency: the old scales
+    # divided by the radius, so a bigger rock got finer noise and the "mass" layer was
+    # actually grain. Mass has to be a good fraction of the rock to be mass.
+    _displace_stack(ob, rng, 0.0, mass * radius * 1.6, grain * radius,
+                    mass_scale=0.62 * radius, grain_scale=0.13 * radius, seed=seed)
     ob.location -= off
     S.apply_transforms(ob, location=True, rotation=False, scale=False)
     if flatten_base:
@@ -79,7 +85,15 @@ def _rock_body(name, rng, radius=1.0, subdiv=4, squash=(1.0, 1.0, 0.72), facet=0
     tris = S.tri_count(ob)
     if tris > budget:
         S.decimate(ob, budget / float(tris))
-    S.shade_smooth(ob, 32.0)
+    if facet > 0.0:
+        # Facets: merge near-coplanar faces into single planes with straight edges. A wider
+        # angle breaks the rock into fewer, larger planes, which is the difference between
+        # a pebble and a quarried block.
+        S.decimate(ob, 1.0, planar_deg=4.0 + 13.0 * min(1.0, facet * 2.2))
+        S.jitter_verts(ob, amount=radius * grain * 0.25, scale=1.6 * radius, seed=seed + 7)
+    # A low auto-smooth angle keeps the facet edges hard while the relief inside a plane
+    # still reads as one surface.
+    S.shade_smooth(ob, 18.0)
     return ob
 
 
@@ -136,19 +150,30 @@ def cliff_slab(pal, rng, params, variant):
     seed = rng.randrange(9999)
     t1 = S.new_texture("cfacet_%d" % seed, "VORONOI", noise_scale=w * 0.42, noise_intensity=1.0)
     t1.distance_metric = "DISTANCE"
-    m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=w * 0.16, mid_level=0.5,
+    m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=w * 0.28, mid_level=0.5,
                        direction="NORMAL", texture_coords="LOCAL", vertex_group="front")
     S.apply_modifier(ob, m)
     t2 = S.new_texture("cbed_%d" % seed, "WOOD", noise_scale=h * 0.3)
     t2.wood_type = "BANDS"
     t2.noise_basis_2 = "SIN"
-    m = S.add_modifier(ob, "DISPLACE", "d2", texture=t2, strength=w * 0.07, mid_level=0.5,
+    m = S.add_modifier(ob, "DISPLACE", "d2", texture=t2, strength=w * 0.14, mid_level=0.5,
                        direction="Y", texture_coords="LOCAL", vertex_group="front")
+    S.apply_modifier(ob, m)
+    # Break the crest. A straight top edge is what made a slab read as a poster on a stand
+    # rather than as the end of a cliff; the sides stay flat so slabs still tile.
+    crest = ob.vertex_groups.new(name="crest")
+    for v in ob.data.vertices:
+        f = max(0.0, (v.co.z - h * 0.74) / (h * 0.26))
+        crest.add([v.index], min(1.0, f) * (1.0 - min(1.0, abs(v.co.x) / (w * 0.5) * 1.1)), "REPLACE")
+    t3 = S.new_texture("ccrest_%d" % seed, "CLOUDS", noise_scale=w * 0.35, noise_depth=2)
+    m = S.add_modifier(ob, "DISPLACE", "d3", texture=t3, strength=-h * 0.26, mid_level=0.42,
+                       direction="Z", texture_coords="LOCAL", vertex_group="crest")
     S.apply_modifier(ob, m)
     tris = S.tri_count(ob)
     if tris > 3000:
         S.decimate(ob, 3000.0 / tris)
-    S.shade_smooth(ob, 28.0)
+    S.decimate(ob, 1.0, planar_deg=7.0)
+    S.shade_smooth(ob, 20.0)
     # rubble at the foot
     parts = [ob]
     for i in range(rng.randint(3, 6)):

@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://d2wrl7pcidj7y"
-path="res://.godot/imported/skerrow_standing_stone_a.glb-d9e66fe50e305eb2344ce1d79fc5c411.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_standing_stone_a/skerrow_standing_stone_a.glb"
-dest_files=["res://.godot/imported/skerrow_standing_stone_a.glb-d9e66fe50e305eb2344ce1d79fc5c411.scn"]
 
 [params]
 

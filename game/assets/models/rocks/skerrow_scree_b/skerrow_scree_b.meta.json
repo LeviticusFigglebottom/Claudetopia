@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 0.482,
+  "height": 0.546,
   "max": [
-   1.889,
-   0.482,
-   2.023
+   1.878,
+   0.546,
+   2.005
   ],
   "min": [
-   -1.767,
+   -1.751,
    0.0,
-   -1.742
+   -1.749
   ],
-  "radius": 2.635
+  "radius": 2.625
  },
- "built_seconds": 61.47,
+ "built_seconds": 23.83,
  "category": "rocks",
  "collision": "trimesh",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "skerrow_scree_b",
-   "tris": 3060
+   "tris": 2932
   },
   {
    "name": "skerrow_scree_b_LOD1",
-   "tris": 1224
+   "tris": 1172
   },
   {
    "name": "skerrow_scree_b_LOD2",
-   "tris": 458
+   "tris": 438
   }
  ],
  "name": "skerrow_scree_b",
@@ -71,9 +71,9 @@
   "skerrow_scree_b_orm.png"
  ],
  "tris": [
-  3060,
-  1224,
-  458
+  2932,
+  1172,
+  438
  ],
  "version": 3
 }

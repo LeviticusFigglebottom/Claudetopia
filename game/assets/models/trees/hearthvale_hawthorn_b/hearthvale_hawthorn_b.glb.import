@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cm8i8s87cv47m"
-path="res://.godot/imported/hearthvale_hawthorn_b.glb-1b08b71088dabd9774c4e097e7586bc6.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_hawthorn_b/hearthvale_hawthorn_b.glb"
-dest_files=["res://.godot/imported/hearthvale_hawthorn_b.glb-1b08b71088dabd9774c4e097e7586bc6.scn"]
 
 [params]
 

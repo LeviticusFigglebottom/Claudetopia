@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 15.72,
+  "height": 14.59,
   "max": [
-   6.442,
-   15.72,
-   5.256
+   6.476,
+   14.59,
+   5.085
   ],
   "min": [
-   -6.166,
+   -6.299,
    0.0,
-   -5.039
+   -4.898
   ],
-  "radius": 11.315
+  "radius": 10.905
  },
- "built_seconds": 7.12,
+ "built_seconds": 4.68,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 12.87,
-  "radius": 6.039
+  "height": 10.26,
+  "radius": 6.373
  },
  "generator": "gen_trees",
  "glb": "sedgemire_willow_b.glb",
@@ -37,11 +37,11 @@
  "meshes": [
   {
    "name": "sedgemire_willow_b_cards",
-   "tris": 1630
+   "tris": 2410
   },
   {
    "name": "sedgemire_willow_b",
-   "tris": 6386
+   "tris": 4999
   },
   {
    "name": "sedgemire_willow_b_LOD2",
@@ -49,11 +49,11 @@
   },
   {
    "name": "sedgemire_willow_b_LOD1",
-   "tris": 5292
+   "tris": 3981
   },
   {
    "name": "sedgemire_willow_b_cards_LOD1",
-   "tris": 732
+   "tris": 1084
   }
  ],
  "name": "sedgemire_willow_b",
@@ -94,8 +94,8 @@
   "sedgemire_willow_b_impostor_orm.png"
  ],
  "tris": [
-  8016,
-  6024,
+  7409,
+  5065,
   4
  ],
  "version": 3

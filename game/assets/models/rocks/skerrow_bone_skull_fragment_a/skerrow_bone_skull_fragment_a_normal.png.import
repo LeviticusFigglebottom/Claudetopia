@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://fw8gdowj6ll2"
-path.s3tc="res://.godot/imported/skerrow_bone_skull_fragment_a_normal.png-29f9e394503d4f8ca99e0e856106f84f.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_bone_skull_fragment_a/skerrow_bone_skull_fragment_a_normal.png"
-dest_files=["res://.godot/imported/skerrow_bone_skull_fragment_a_normal.png-29f9e394503d4f8ca99e0e856106f84f.s3tc.ctex"]
 
 [params]
 

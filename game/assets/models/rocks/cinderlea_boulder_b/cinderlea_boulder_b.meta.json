@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 2.576,
+  "height": 2.444,
   "max": [
-   1.869,
-   2.576,
-   1.884
+   1.761,
+   2.444,
+   1.476
   ],
   "min": [
-   -1.891,
+   -1.801,
    0.0,
-   -1.878
+   -1.56
   ],
-  "radius": 2.955
+  "radius": 2.64
  },
- "built_seconds": 41.56,
+ "built_seconds": 36.02,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "cinderlea_boulder_b",
-   "tris": 2460
+   "tris": 2022
   },
   {
    "name": "cinderlea_boulder_b_LOD1",
-   "tris": 984
+   "tris": 808
   },
   {
    "name": "cinderlea_boulder_b_LOD2",
-   "tris": 368
+   "tris": 302
   }
  ],
  "name": "cinderlea_boulder_b",
@@ -71,9 +71,9 @@
   "cinderlea_boulder_b_orm.png"
  ],
  "tris": [
-  2460,
-  984,
-  368
+  2022,
+  808,
+  302
  ],
  "version": 3
 }

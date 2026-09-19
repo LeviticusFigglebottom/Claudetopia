@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dfpdaj1b5exwj"
-path.s3tc="res://.godot/imported/brightwater_lime_b_impostor_albedo.png-96741bbdaa9965744744a02fc65b9d9d.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/trees/brightwater_lime_b/brightwater_lime_b_impostor_albedo.png"
-dest_files=["res://.godot/imported/brightwater_lime_b_impostor_albedo.png-96741bbdaa9965744744a02fc65b9d9d.s3tc.ctex"]
 
 [params]
 

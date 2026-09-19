@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cu50enswijk0c"
-path="res://.godot/imported/sedgemire_alder_b.glb-304bac9f35f4ddf9b04c215f83065c4c.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/sedgemire_alder_b/sedgemire_alder_b.glb"
-dest_files=["res://.godot/imported/sedgemire_alder_b.glb-304bac9f35f4ddf9b04c215f83065c4c.scn"]
 
 [params]
 

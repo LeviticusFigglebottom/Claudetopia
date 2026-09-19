@@ -701,7 +701,9 @@ def chalk_rock(pal=None, wear=0.5, age=0.4, tint=0.12, scale=1.0, name=None, **_
     nb = NB(name or "chalk_rock")
     # Chalk is the brightest stone in the game, which makes it the easiest to blow out;
     # the base sits well below white so the highlight has somewhere to go.
-    base = pal.tint(P.lin("#cdc7b4"), "light", tint)
+    # Lighter than this and a chalk boulder bakes out near white, which carries no region
+    # at all; the highlight needs room above the base, not the base sitting in it.
+    base = pal.tint(P.lin("#b6ae99"), "earth", tint + 0.06)
     # Chalk weathers round, not faceted: soft lumps, flint specks, no crystal edges.
     return _rock_common(nb, pal, base, 0.9, "light", tint, wear, age, bands=0.5, pits=0.3,
                         speckle=0.3, speckle_col=P.lin("#5a564e"), scale=scale, grime=0.7,

@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 3.202,
+  "height": 3.273,
   "max": [
-   0.752,
-   3.202,
-   0.548
+   0.758,
+   3.273,
+   0.547
   ],
   "min": [
-   -0.573,
+   -0.603,
    0.0,
-   -0.53
+   -0.581
   ],
-  "radius": 1.814
+  "radius": 1.86
  },
- "built_seconds": 16.88,
+ "built_seconds": 9.68,
  "carved": false,
  "category": "rocks",
  "collision": "convex",
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "skerrow_standing_stone_b",
-   "tris": 3400
+   "tris": 3362
   },
   {
    "name": "skerrow_standing_stone_b_LOD1",
-   "tris": 1360
+   "tris": 1344
   },
   {
    "name": "skerrow_standing_stone_b_LOD2",
-   "tris": 510
+   "tris": 504
   }
  ],
  "name": "skerrow_standing_stone_b",
@@ -74,9 +74,9 @@
   "skerrow_standing_stone_b_orm.png"
  ],
  "tris": [
-  3400,
-  1360,
-  510
+  3362,
+  1344,
+  504
  ],
  "version": 3
 }

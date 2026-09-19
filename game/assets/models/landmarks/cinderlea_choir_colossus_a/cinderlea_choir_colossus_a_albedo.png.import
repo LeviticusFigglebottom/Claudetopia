@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bbxoqfer3itkk"
-path.s3tc="res://.godot/imported/cinderlea_choir_colossus_a_albedo.png-66a321abc8ef26e16dc16e01ce6fdfa0.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/landmarks/cinderlea_choir_colossus_a/cinderlea_choir_colossus_a_albedo.png"
-dest_files=["res://.godot/imported/cinderlea_choir_colossus_a_albedo.png-66a321abc8ef26e16dc16e01ce6fdfa0.s3tc.ctex"]
 
 [params]
 

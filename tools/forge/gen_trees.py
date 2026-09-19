@@ -225,9 +225,9 @@ SPECIES = {
 # A canopy has to be a mass, not a scattering. Sapling's own leaf count is per parent
 # branch, so the card count is set here instead: these are the numbers that make the crown
 # read as foliage rather than as a bare frame with decorations on it.
-CARDS_BIG = 760      # trees over 6 m
-CARDS_SMALL = 460    # shrubs and small trees
-CARD_SCALE = 1.75    # multiplies each species' own relative card size
+CARDS_BIG = 1150     # trees over 6 m
+CARDS_SMALL = 760    # shrubs and small trees
+CARD_SCALE = 1.25    # multiplies each species' own relative card size
 # A cluster card stands in for a hand of foliage, so it needs many small leaves rather
 # than a few large ones: at a metre and a half across, six big leaves make an oak look
 # like a houseplant.
@@ -254,6 +254,11 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
     sap = dict(spec["sapling"])
     sap["scale"] = height
     sap["scaleV"] = height * 0.06
+    # Sapling tapers its last branches to 1.5 mm. At that width a twig is a one-pixel black
+    # hair a metre long, and a crown's worth of them reads as a halo of needles round the
+    # tree. Real game trees stop at a twig the eye can accept as a branch and let the leaf
+    # cards stand in for everything finer.
+    sap["minRadius"] = max(0.004, height * 0.0022)
     budget_tier = spec.get("budget", "hero" if spec.get("tier") == "hero" else
                            ("small" if height < 4.0 else "normal"))
     sap = TR.cap_resolution(sap, budget_tier, quick)
@@ -270,6 +275,9 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
     trunk_budget = int(spec.get("trunk_budget", 11000 if spec.get("tier") == "hero" else 5000))
     if quick:
         trunk_budget //= 3
+    clear_bole = spec.get("clear_bole", 0.0 if spec.get("shrub") else 0.18)
+    if clear_bole > 0.0:
+        TR.clear_low_branches(trunk, height, clear_bole)
     TR.trim_to_budget(trunk, trunk_budget)
 
     # bark
@@ -314,7 +322,12 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
         TR.cards_from_leaves(leaves, "%s_leaves" % name, leaf_mat, rng, cells=cells,
                              scale=spec.get("card", 1.0) * CARD_SCALE,
                              droop_deg=spec.get("droop", 0.0), target=cards_target,
-                             min_z=spec.get("card", 1.0) * CARD_SCALE * 0.55)
+                             # Lift the canopy off the ground. Sapling puts leaf points on
+                             # the lowest branches, and at card scale those bury a cluster
+                             # in the grass and hide the bole, which is what turns a tree
+                             # into a shrub in silhouette.
+                             min_z=max(spec.get("card", 1.0) * CARD_SCALE * 0.55,
+                                       height * spec.get("clear_bole", 0.18)))
         cards.append(leaves)
         # weeping curtains (willow) and hanging moss (Briarwold giants)
         if spec.get("weep") and not quick:

@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 3.818,
+  "height": 3.849,
   "max": [
-   0.76,
-   3.818,
-   0.747
+   0.774,
+   3.849,
+   0.732
   ],
   "min": [
-   -0.798,
+   -0.802,
    0.0,
-   -0.687
+   -0.738
   ],
-  "radius": 2.183
+  "radius": 2.206
  },
- "built_seconds": 15.42,
+ "built_seconds": 9.46,
  "carved": false,
  "category": "rocks",
  "collision": "convex",
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "hearthvale_standing_stone_b",
-   "tris": 3600
+   "tris": 3560
   },
   {
    "name": "hearthvale_standing_stone_b_LOD1",
-   "tris": 1440
+   "tris": 1424
   },
   {
    "name": "hearthvale_standing_stone_b_LOD2",
-   "tris": 540
+   "tris": 534
   }
  ],
  "name": "hearthvale_standing_stone_b",
@@ -74,9 +74,9 @@
   "hearthvale_standing_stone_b_orm.png"
  ],
  "tris": [
-  3600,
-  1440,
-  540
+  3560,
+  1424,
+  534
  ],
  "version": 3
 }

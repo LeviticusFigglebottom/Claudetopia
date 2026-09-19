@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 1.451,
+  "height": 1.505,
   "max": [
-   0.915,
-   1.451,
-   0.907
+   0.898,
+   1.505,
+   0.934
   ],
   "min": [
-   -0.911,
+   -0.881,
    0.0,
-   -0.884
+   -0.792
   ],
-  "radius": 1.47
+  "radius": 1.45
  },
- "built_seconds": 22.87,
+ "built_seconds": 11.73,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "hearthvale_boulder_b",
-   "tris": 2460
+   "tris": 2246
   },
   {
    "name": "hearthvale_boulder_b_LOD1",
-   "tris": 984
+   "tris": 898
   },
   {
    "name": "hearthvale_boulder_b_LOD2",
-   "tris": 368
+   "tris": 336
   }
  ],
  "name": "hearthvale_boulder_b",
@@ -71,9 +71,9 @@
   "hearthvale_boulder_b_orm.png"
  ],
  "tris": [
-  2460,
-  984,
-  368
+  2246,
+  898,
+  336
  ],
  "version": 3
 }

@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://ct0q5cuv27uly"
-path="res://.godot/imported/skerrow_juniper_a.glb-b0262c061244884045302d50c01af06b.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_juniper_a/skerrow_juniper_a.glb"
-dest_files=["res://.godot/imported/skerrow_juniper_a.glb-b0262c061244884045302d50c01af06b.scn"]
 
 [params]
 

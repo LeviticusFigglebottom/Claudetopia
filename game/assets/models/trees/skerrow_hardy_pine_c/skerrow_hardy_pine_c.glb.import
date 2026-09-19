@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://d13wewjr434yo"
-path="res://.godot/imported/skerrow_hardy_pine_c.glb-1ef456979f521a8fa5159fcd8074bc70.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_hardy_pine_c/skerrow_hardy_pine_c.glb"
-dest_files=["res://.godot/imported/skerrow_hardy_pine_c.glb-1ef456979f521a8fa5159fcd8074bc70.scn"]
 
 [params]
 

@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 0.665,
+  "height": 0.658,
   "max": [
-   1.816,
-   0.665,
-   1.836
+   1.808,
+   0.658,
+   1.746
   ],
   "min": [
-   -1.742,
+   -1.725,
    0.0,
-   -1.88
+   -1.889
   ],
-  "radius": 2.594
+  "radius": 2.556
  },
- "built_seconds": 38.17,
+ "built_seconds": 22.98,
  "category": "rocks",
  "collision": "trimesh",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "cinderlea_scree_a",
-   "tris": 3060
+   "tris": 2962
   },
   {
    "name": "cinderlea_scree_a_LOD1",
-   "tris": 1224
+   "tris": 1184
   },
   {
    "name": "cinderlea_scree_a_LOD2",
-   "tris": 458
+   "tris": 444
   }
  ],
  "name": "cinderlea_scree_a",
@@ -71,9 +71,9 @@
   "cinderlea_scree_a_orm.png"
  ],
  "tris": [
-  3060,
-  1224,
-  458
+  2962,
+  1184,
+  444
  ],
  "version": 3
 }

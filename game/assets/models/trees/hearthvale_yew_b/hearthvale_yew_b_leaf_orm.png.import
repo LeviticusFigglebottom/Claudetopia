@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ip7n4vdc1fee"
-path.s3tc="res://.godot/imported/hearthvale_yew_b_leaf_orm.png-b9b7b5d9de12fdb4bed3747603c0aea8.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_yew_b/hearthvale_yew_b_leaf_orm.png"
-dest_files=["res://.godot/imported/hearthvale_yew_b_leaf_orm.png-b9b7b5d9de12fdb4bed3747603c0aea8.s3tc.ctex"]
 
 [params]
 

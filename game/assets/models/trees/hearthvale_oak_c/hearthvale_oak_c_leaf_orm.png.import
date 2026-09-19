@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b4li668hnsk04"
-path.s3tc="res://.godot/imported/hearthvale_oak_c_leaf_orm.png-69f4a415775414c7775551be3896786d.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_oak_c/hearthvale_oak_c_leaf_orm.png"
-dest_files=["res://.godot/imported/hearthvale_oak_c_leaf_orm.png-69f4a415775414c7775551be3896786d.s3tc.ctex"]
 
 [params]
 

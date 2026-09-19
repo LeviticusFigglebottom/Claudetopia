@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 3.423,
+  "height": 2.908,
   "max": [
-   2.18,
-   3.423,
-   1.797
+   2.133,
+   2.908,
+   1.802
   ],
   "min": [
-   -1.914,
+   -2.002,
    0.0,
-   -1.587
+   -1.514
   ],
-  "radius": 3.16
+  "radius": 3.023
  },
- "built_seconds": 9.26,
+ "built_seconds": 7.21,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 3.01,
-  "radius": 2.018
+  "height": 2.78,
+  "radius": 2.026
  },
  "generator": "gen_trees",
  "glb": "hearthvale_hawthorn_b.glb",
@@ -37,7 +37,7 @@
  "meshes": [
   {
    "name": "hearthvale_hawthorn_b_cards",
-   "tris": 920
+   "tris": 1520
   },
   {
    "name": "hearthvale_hawthorn_b",
@@ -49,11 +49,11 @@
   },
   {
    "name": "hearthvale_hawthorn_b_LOD1",
-   "tris": 3572
+   "tris": 1635
   },
   {
    "name": "hearthvale_hawthorn_b_cards_LOD1",
-   "tris": 414
+   "tris": 684
   }
  ],
  "name": "hearthvale_hawthorn_b",
@@ -94,8 +94,8 @@
   "hearthvale_hawthorn_b_impostor_orm.png"
  ],
  "tris": [
-  5919,
-  3986,
+  6519,
+  2319,
   4
  ],
  "version": 3

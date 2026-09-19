@@ -1,23 +1,23 @@
 {
  "bounds": {
-  "height": 0.751,
+  "height": 0.702,
   "max": [
-   0.105,
-   0.751,
-   0.115
+   0.107,
+   0.702,
+   0.117
   ],
   "min": [
-   -0.125,
+   -0.127,
    0.0,
    -0.163
   ],
-  "radius": 0.417
+  "radius": 0.395
  },
- "built_seconds": 2.96,
+ "built_seconds": 5.77,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 0.75,
+  "height": 0.7,
   "radius": 0.12
  },
  "generator": "gen_trees",
@@ -36,7 +36,7 @@
  "meshes": [
   {
    "name": "cinderlea_char_stump_a",
-   "tris": 2688
+   "tris": 2676
   },
   {
    "name": "cinderlea_char_stump_a_LOD2",
@@ -44,7 +44,7 @@
   },
   {
    "name": "cinderlea_char_stump_a_LOD1",
-   "tris": 859
+   "tris": 855
   }
  ],
  "name": "cinderlea_char_stump_a",
@@ -82,8 +82,8 @@
   "cinderlea_char_stump_a_impostor_orm.png"
  ],
  "tris": [
-  2688,
-  859,
+  2676,
+  855,
   4
  ],
  "version": 3

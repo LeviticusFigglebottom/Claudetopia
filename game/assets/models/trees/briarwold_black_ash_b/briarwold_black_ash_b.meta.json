@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 20.143,
+  "height": 20.242,
   "max": [
-   8.464,
-   20.143,
-   8.575
+   8.484,
+   20.242,
+   8.603
   ],
   "min": [
-   -8.115,
+   -8.392,
    0.0,
-   -6.739
+   -6.747
   ],
-  "radius": 15.126
+  "radius": 15.249
  },
- "built_seconds": 1.31,
+ "built_seconds": 1.45,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 19.85,
-  "radius": 0.676
+  "height": 19.86,
+  "radius": 0.509
  },
  "generator": "gen_trees",
  "glb": "briarwold_black_ash_b.glb",
@@ -38,11 +38,11 @@
  "meshes": [
   {
    "name": "briarwold_black_ash_b_cards",
-   "tris": 1576
+   "tris": 2356
   },
   {
    "name": "briarwold_black_ash_b",
-   "tris": 9078
+   "tris": 5000
   },
   {
    "name": "briarwold_black_ash_b_LOD2",
@@ -50,11 +50,11 @@
   },
   {
    "name": "briarwold_black_ash_b_LOD1",
-   "tris": 5826
+   "tris": 2886
   },
   {
    "name": "briarwold_black_ash_b_cards_LOD1",
-   "tris": 708
+   "tris": 1060
   }
  ],
  "name": "briarwold_black_ash_b",
@@ -98,8 +98,8 @@
   "briarwold_black_ash_b_impostor_orm.png"
  ],
  "tris": [
-  10654,
-  6534,
+  7356,
+  3946,
   4
  ],
  "version": 3

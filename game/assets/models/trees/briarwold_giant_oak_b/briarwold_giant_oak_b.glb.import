@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c4uduao7d4v1s"
-path="res://.godot/imported/briarwold_giant_oak_b.glb-ed3fd867468b601ed884818919721af7.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/briarwold_giant_oak_b/briarwold_giant_oak_b.glb"
-dest_files=["res://.godot/imported/briarwold_giant_oak_b.glb-ed3fd867468b601ed884818919721af7.scn"]
 
 [params]
 

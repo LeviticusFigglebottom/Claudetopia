@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ky0yu10e7spk"
-path.s3tc="res://.godot/imported/briarwold_standing_stone_c_orm.png-4a0b87413b9e887a95d88a805776f0d5.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/rocks/briarwold_standing_stone_c/briarwold_standing_stone_c_orm.png"
-dest_files=["res://.godot/imported/briarwold_standing_stone_c_orm.png-4a0b87413b9e887a95d88a805776f0d5.s3tc.ctex"]
 
 [params]
 

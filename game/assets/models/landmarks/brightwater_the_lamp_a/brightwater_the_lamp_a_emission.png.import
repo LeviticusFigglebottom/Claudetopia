@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bj2w7w78xhnsw"
-path.s3tc="res://.godot/imported/brightwater_the_lamp_a_emission.png-e2b0d10aa9b8b2b9d53cfdfe2977aae5.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/landmarks/brightwater_the_lamp_a/brightwater_the_lamp_a_emission.png"
-dest_files=["res://.godot/imported/brightwater_the_lamp_a_emission.png-e2b0d10aa9b8b2b9d53cfdfe2977aae5.s3tc.ctex"]
 
 [params]
 

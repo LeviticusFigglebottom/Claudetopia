@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c1iqn7vexyps7"
-path="res://.godot/imported/briarwold_black_ash_a.glb-3e1f7002423f73ce5eb344bb5eb5da9d.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/briarwold_black_ash_a/briarwold_black_ash_a.glb"
-dest_files=["res://.godot/imported/briarwold_black_ash_a.glb-3e1f7002423f73ce5eb344bb5eb5da9d.scn"]
 
 [params]
 

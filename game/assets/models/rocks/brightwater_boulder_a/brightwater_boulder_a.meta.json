@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 1.981,
+  "height": 1.741,
   "max": [
-   1.868,
-   1.981,
-   1.351
+   1.82,
+   1.741,
+   1.322
   ],
   "min": [
-   -1.485,
+   -1.316,
    0.0,
-   -1.468
+   -1.462
   ],
-  "radius": 2.404
+  "radius": 2.271
  },
- "built_seconds": 105.64,
+ "built_seconds": 15.18,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "brightwater_boulder_a",
-   "tris": 2720
+   "tris": 2552
   },
   {
    "name": "brightwater_boulder_a_LOD1",
-   "tris": 1088
+   "tris": 1020
   },
   {
    "name": "brightwater_boulder_a_LOD2",
-   "tris": 408
+   "tris": 382
   }
  ],
  "name": "brightwater_boulder_a",
@@ -71,9 +71,9 @@
   "brightwater_boulder_a_orm.png"
  ],
  "tris": [
-  2720,
-  1088,
-  408
+  2552,
+  1020,
+  382
  ],
  "version": 3
 }

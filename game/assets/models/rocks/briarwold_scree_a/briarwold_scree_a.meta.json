@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 0.414,
+  "height": 0.393,
   "max": [
-   1.92,
-   0.414,
-   1.589
+   1.892,
+   0.393,
+   1.566
   ],
   "min": [
-   -1.454,
+   -1.447,
    0.0,
-   -1.214
+   -1.201
   ],
-  "radius": 2.203
+  "radius": 2.177
  },
- "built_seconds": 11.58,
+ "built_seconds": 12.7,
  "category": "rocks",
  "collision": "trimesh",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "briarwold_scree_a",
-   "tris": 2700
+   "tris": 2600
   },
   {
    "name": "briarwold_scree_a_LOD1",
-   "tris": 1080
+   "tris": 1040
   },
   {
    "name": "briarwold_scree_a_LOD2",
-   "tris": 404
+   "tris": 390
   }
  ],
  "name": "briarwold_scree_a",
@@ -71,9 +71,9 @@
   "briarwold_scree_a_orm.png"
  ],
  "tris": [
-  2700,
-  1080,
-  404
+  2600,
+  1040,
+  390
  ],
  "version": 3
 }

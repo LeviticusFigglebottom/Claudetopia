@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://1n5pplbvfekg"
-path.s3tc="res://.godot/imported/skerrow_bone_rib_c_normal.png-c2d4340aa2362659d94b228baf84932f.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_bone_rib_c/skerrow_bone_rib_c_normal.png"
-dest_files=["res://.godot/imported/skerrow_bone_rib_c_normal.png-c2d4340aa2362659d94b228baf84932f.s3tc.ctex"]
 
 [params]
 

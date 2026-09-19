@@ -34,6 +34,10 @@ BASE = dict(
     rootFlare=1.2, autoTaper=True, taper=(1, 1, 1, 1), radiusTweak=(1, 1, 1, 1),
     resU=3, bevelRes=3, nrings=0, splitByLen=True, rMode="rotate", splitHeight=0.2,
     branchDist=1.2, leafShape="rect", leafDist="6", leafangle=-35.0, horzLeaves=False,
+    # Sapling's side branches hang by default, which on a short tree gives a ring of bare
+    # whips trailing on the ground instead of a crown. attractUp lifts each level back
+    # towards vertical; species that want a weeping habit override it.
+    attractUp=(0.0, 0.55, 0.85, 0.7),
     leafScaleT=0.0, leafScaleV=0.2, leafRotate=137.5, leafRotateV=25.0, leafDownAngleV=12.0,
     useOldDownAngle=False, useParentAngle=True, armLevels=2, boneStep=(1, 1, 1, 1),
     makeMesh=False, armAnim=False, previewArm=False, leafAnim=False,
@@ -89,6 +93,52 @@ def cap_resolution(sap: dict, budget: str = "normal", quick: bool = False) -> di
     return sap
 
 
+def clear_low_branches(trunk, height: float, frac: float = 0.18) -> None:
+    """Delete whole branches that hang below the bole.
+
+    Sapling's lowest side branches arc out and trail along the ground. Left leafy they bury
+    a cluster in the grass; with their leaf cards thinned away they are worse, a ring of
+    bare whips round the foot of the tree. A tree needs a clear bole to read as a tree
+    rather than a bush.
+
+    The cut is made a whole branch at a time by flooding face adjacency, but only through
+    faces far enough from the trunk axis that the trunk itself acts as a wall. Cutting by
+    height alone would leave the outer half of a drooping branch floating in the air, and
+    measuring the trunk's width from the lowest vertices would measure the drooping
+    branches instead and conclude the trunk is three metres thick.
+    """
+    z0 = height * frac
+    if z0 <= 0.0:
+        return
+    me = trunk.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.faces.ensure_lookup_table()
+    keep = max(height * 0.045, 0.06)
+    centres = {f: f.calc_center_median() for f in bm.faces}
+    outside = {f for f, c in centres.items() if math.hypot(c.x, c.y) > keep}
+    seeds = [f for f in outside if centres[f].z < z0]
+    doomed = set()
+    stack = list(seeds)
+    while stack:
+        f = stack.pop()
+        if f in doomed:
+            continue
+        doomed.add(f)
+        for e in f.edges:
+            for nf in e.link_faces:
+                if nf not in doomed and nf in outside:
+                    stack.append(nf)
+    if doomed and len(doomed) < len(bm.faces) * 0.85:
+        bmesh.ops.delete(bm, geom=list(doomed), context="FACES")
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+
+
 def trim_to_budget(trunk, budget: int) -> int:
     """Decimate the grown trunk down to a triangle budget (DESIGN §7.0)."""
     tris = S.tri_count(trunk)
@@ -130,25 +180,56 @@ def cards_from_leaves(leaves, name: str, mat, rng: random.Random, cells: int = 2
         bmesh.ops.delete(bm, geom=drop, context="FACES")
         faces = [f for f in faces if f.is_valid]
     cell = 1.0 / cells
+    # Where the crown is, so cards can be turned to face out of it.
+    live = [f for f in faces if f.is_valid]
+    if live:
+        crown = Vector((0.0, 0.0, 0.0))
+        for f in live:
+            crown += f.calc_center_median()
+        crown /= len(live)
+    else:
+        crown = Vector((0.0, 0.0, 0.0))
     for f in faces:
         if not f.is_valid or len(f.loops) != 4:
             continue
         c = f.calc_center_median()
-        n = f.normal.copy()
         s = scale * rng.uniform(1.0 - jitter, 1.0 + jitter)
-        # random roll about the card normal keeps clusters from lining up
+        # Card size from the quad Sapling grew, so species keep their relative leaf size.
+        half = math.sqrt(max(f.calc_area(), 1e-8)) * 0.5 * s
+        # Cards are rebuilt facing out of the crown rather than lying along their parent
+        # twig. Sapling orients every leaf quad with the branch it grew on, so a whole
+        # branch's worth turns edge-on at once and the tree sprouts a halo of black
+        # needles; pointing them out of the crown, with enough scatter that they do not all
+        # agree, is what makes a canopy read as a volume instead of a pile of blades.
+        out = c - crown
+        if out.length < 1e-5:
+            out = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-1, 1)))
+        out.normalize()
+        wobble = Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1)))
+        if wobble.length < 1e-5:
+            wobble = Vector((0.0, 0.0, 1.0))
+        wobble.normalize()
+        nrm = out * 0.62 + wobble * 0.38
+        if nrm.length < 1e-5:
+            nrm = Vector((0.0, 0.0, 1.0))
+        nrm.normalize()
+        ref = Vector((0.0, 0.0, 1.0)) if abs(nrm.z) < 0.9 else Vector((1.0, 0.0, 0.0))
+        u_ax = nrm.cross(ref)
+        u_ax.normalize()
+        v_ax = nrm.cross(u_ax)
+        v_ax.normalize()
         roll = rng.uniform(0, math.tau)
-        droop = math.radians(droop_deg) * rng.uniform(0.4, 1.0) if droop_deg else 0.0
-        axis = n.cross(Vector((0, 0, 1)))
-        for v in f.verts:
-            d = v.co - c
-            d = d * s
-            d.rotate(Euler((0, 0, 0)))
-            if roll:
-                d.rotate(_axis_rot(n, roll))
-            if droop and axis.length > 1e-5:
-                d.rotate(_axis_rot(axis.normalized(), droop))
-            v.co = c + d
+        cr, sr = math.cos(roll), math.sin(roll)
+        ua = u_ax * cr + v_ax * sr
+        va = v_ax * cr - u_ax * sr
+        if droop_deg:
+            droop = math.radians(droop_deg) * rng.uniform(0.4, 1.0)
+            va = va - Vector((0.0, 0.0, 1.0)) * math.sin(droop) * va.length
+            if va.length > 1e-5:
+                va.normalize()
+        offsets = ((-1, -1), (1, -1), (1, 1), (-1, 1))
+        for loop, (su, sv) in zip(f.loops, offsets):
+            loop.vert.co = c + ua * (su * half) + va * (sv * half)
         cx = rng.randrange(cells)
         cy = rng.randrange(cells)
         flip = rng.random() < 0.5

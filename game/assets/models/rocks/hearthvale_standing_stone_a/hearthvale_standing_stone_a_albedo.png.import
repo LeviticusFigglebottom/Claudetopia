@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://btg6ng3fas73y"
-path.s3tc="res://.godot/imported/hearthvale_standing_stone_a_albedo.png-85dd7a69814a36f0310344dddcedd062.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/rocks/hearthvale_standing_stone_a/hearthvale_standing_stone_a_albedo.png"
-dest_files=["res://.godot/imported/hearthvale_standing_stone_a_albedo.png-85dd7a69814a36f0310344dddcedd062.s3tc.ctex"]
 
 [params]
 

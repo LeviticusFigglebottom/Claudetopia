@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://s0xt020n8fkt"
-path="res://.godot/imported/cinderlea_char_stump_a.glb-ea941b78bf5f737e05aa3ca42be6ed8e.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/cinderlea_char_stump_a/cinderlea_char_stump_a.glb"
-dest_files=["res://.godot/imported/cinderlea_char_stump_a.glb-ea941b78bf5f737e05aa3ca42be6ed8e.scn"]
 
 [params]
 

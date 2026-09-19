@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bljb4s2ft1lhm"
-path.s3tc="res://.godot/imported/cinderlea_cliff_slab_b_orm.png-dd59a091a794d29c4ac2e9515ef9ca62.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/rocks/cinderlea_cliff_slab_b/cinderlea_cliff_slab_b_orm.png"
-dest_files=["res://.godot/imported/cinderlea_cliff_slab_b_orm.png-dd59a091a794d29c4ac2e9515ef9ca62.s3tc.ctex"]
 
 [params]
 

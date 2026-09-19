@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 1.351,
+  "height": 1.249,
   "max": [
-   1.026,
-   1.351,
-   0.905
+   1.059,
+   1.249,
+   0.867
   ],
   "min": [
-   -1.156,
+   -1.143,
    0.0,
-   -0.876
+   -0.901
   ],
-  "radius": 1.562
+  "radius": 1.544
  },
- "built_seconds": 26.73,
+ "built_seconds": 13.86,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "skerrow_boulder_b",
-   "tris": 2980
+   "tris": 2824
   },
   {
    "name": "skerrow_boulder_b_LOD1",
-   "tris": 1192
+   "tris": 1128
   },
   {
    "name": "skerrow_boulder_b_LOD2",
-   "tris": 446
+   "tris": 422
   }
  ],
  "name": "skerrow_boulder_b",
@@ -71,9 +71,9 @@
   "skerrow_boulder_b_orm.png"
  ],
  "tris": [
-  2980,
-  1192,
-  446
+  2824,
+  1128,
+  422
  ],
  "version": 3
 }

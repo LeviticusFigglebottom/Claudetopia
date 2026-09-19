@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://olj10g0l4jpp"
-path="res://.godot/imported/brightwater_willow_pollard_b.glb-1fb5ab193c1706706cec4f795e71b0c3.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/brightwater_willow_pollard_b/brightwater_willow_pollard_b.glb"
-dest_files=["res://.godot/imported/brightwater_willow_pollard_b.glb-1fb5ab193c1706706cec4f795e71b0c3.scn"]
 
 [params]
 

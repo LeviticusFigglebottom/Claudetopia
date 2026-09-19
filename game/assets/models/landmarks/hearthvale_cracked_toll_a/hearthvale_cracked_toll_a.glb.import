@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cv73bjdosj1u1"
-path="res://.godot/imported/hearthvale_cracked_toll_a.glb-2d98c87fce5708eaeab0d31ca1186e5a.scn"
 
 [deps]
 
 source_file="res://assets/models/landmarks/hearthvale_cracked_toll_a/hearthvale_cracked_toll_a.glb"
-dest_files=["res://.godot/imported/hearthvale_cracked_toll_a.glb-2d98c87fce5708eaeab0d31ca1186e5a.scn"]
 
 [params]
 

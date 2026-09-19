@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 9.453,
+  "height": 9.478,
   "max": [
-   6.43,
-   9.453,
-   6.269
+   6.472,
+   9.478,
+   6.254
   ],
   "min": [
-   -6.231,
+   -6.245,
    0.0,
-   -5.074
+   -5.022
   ],
-  "radius": 9.725
+  "radius": 9.73
  },
- "built_seconds": 2.07,
+ "built_seconds": 3.96,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 9.45,
-  "radius": 3.579
+  "height": 9.48,
+  "radius": 3.435
  },
  "generator": "gen_trees",
  "glb": "cinderlea_dead_ash_tree_c.glb",
@@ -36,7 +36,7 @@
  "meshes": [
   {
    "name": "cinderlea_dead_ash_tree_c",
-   "tris": 16602
+   "tris": 6250
   },
   {
    "name": "cinderlea_dead_ash_tree_c_LOD2",
@@ -44,7 +44,7 @@
   },
   {
    "name": "cinderlea_dead_ash_tree_c_LOD1",
-   "tris": 11888
+   "tris": 5204
   }
  ],
  "name": "cinderlea_dead_ash_tree_c",
@@ -82,8 +82,8 @@
   "cinderlea_dead_ash_tree_c_impostor_orm.png"
  ],
  "tris": [
-  16602,
-  11888,
+  6250,
+  5204,
   4
  ],
  "version": 3

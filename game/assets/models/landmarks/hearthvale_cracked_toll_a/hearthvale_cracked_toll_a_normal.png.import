@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://jj3wbks37tun"
-path.s3tc="res://.godot/imported/hearthvale_cracked_toll_a_normal.png-a0ab85a4be591a6359e3fe02110a2799.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/landmarks/hearthvale_cracked_toll_a/hearthvale_cracked_toll_a_normal.png"
-dest_files=["res://.godot/imported/hearthvale_cracked_toll_a_normal.png-a0ab85a4be591a6359e3fe02110a2799.s3tc.ctex"]
 
 [params]
 

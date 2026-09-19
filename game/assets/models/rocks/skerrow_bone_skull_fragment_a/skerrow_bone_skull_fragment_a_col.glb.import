@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cw4yqln1b5bhp"
-path="res://.godot/imported/skerrow_bone_skull_fragment_a_col.glb-3a1a43ffdb6d9e4292194b53496e16bf.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_bone_skull_fragment_a/skerrow_bone_skull_fragment_a_col.glb"
-dest_files=["res://.godot/imported/skerrow_bone_skull_fragment_a_col.glb-3a1a43ffdb6d9e4292194b53496e16bf.scn"]
 
 [params]
 

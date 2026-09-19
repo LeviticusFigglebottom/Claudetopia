@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 6.431,
+  "height": 6.477,
   "max": [
    2.0,
-   6.431,
-   2.198
+   6.477,
+   2.209
   ],
   "min": [
    -2.0,
    0.0,
-   -1.213
+   -1.294
   ],
-  "radius": 4.153
+  "radius": 4.19
  },
- "built_seconds": 42.2,
+ "built_seconds": 63.46,
  "category": "rocks",
  "collision": "hearthvale_cliff_slab_b_col.glb",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "hearthvale_cliff_slab_b",
-   "tris": 4100
+   "tris": 2200
   },
   {
    "name": "hearthvale_cliff_slab_b_LOD1",
-   "tris": 1640
+   "tris": 880
   },
   {
    "name": "hearthvale_cliff_slab_b_LOD2",
-   "tris": 614
+   "tris": 330
   }
  ],
  "modular": true,
@@ -75,9 +75,9 @@
   "hearthvale_cliff_slab_b_orm.png"
  ],
  "tris": [
-  4100,
-  1640,
-  614
+  2200,
+  880,
+  330
  ],
  "version": 3
 }

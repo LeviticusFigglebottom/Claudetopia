@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bnvfykwqmn6pb"
-path="res://.godot/imported/skerrow_scree_b.glb-edbe288e9dbb64c0d5152653897cca0e.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_scree_b/skerrow_scree_b.glb"
-dest_files=["res://.godot/imported/skerrow_scree_b.glb-edbe288e9dbb64c0d5152653897cca0e.scn"]
 
 [params]
 

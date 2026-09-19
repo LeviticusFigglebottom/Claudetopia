@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bnryvlolytnd4"
-path="res://.godot/imported/cinderlea_cliff_slab_b.glb-f52cf4bb65507e37c24a097fcf7c479e.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/cinderlea_cliff_slab_b/cinderlea_cliff_slab_b.glb"
-dest_files=["res://.godot/imported/cinderlea_cliff_slab_b.glb-f52cf4bb65507e37c24a097fcf7c479e.scn"]
 
 [params]
 

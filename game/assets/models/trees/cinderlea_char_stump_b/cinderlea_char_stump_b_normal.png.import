@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://nfy205q4slc7"
-path.s3tc="res://.godot/imported/cinderlea_char_stump_b_normal.png-b0ca1cc048bf3e8dc40121ed80c8260c.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/trees/cinderlea_char_stump_b/cinderlea_char_stump_b_normal.png"
-dest_files=["res://.godot/imported/cinderlea_char_stump_b_normal.png-b0ca1cc048bf3e8dc40121ed80c8260c.s3tc.ctex"]
 
 [params]
 

@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgh05oewwxefw"
-path.s3tc="res://.godot/imported/skerrow_juniper_b_orm.png-6cc36c8e34cd7d9927c1de8f81666d7d.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_juniper_b/skerrow_juniper_b_orm.png"
-dest_files=["res://.godot/imported/skerrow_juniper_b_orm.png-6cc36c8e34cd7d9927c1de8f81666d7d.s3tc.ctex"]
 
 [params]
 

@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 6.562,
+  "height": 2.897,
   "max": [
-   2.599,
-   6.562,
-   2.229
+   2.579,
+   2.897,
+   2.141
   ],
   "min": [
-   -2.401,
+   -2.217,
    0.0,
-   -2.272
+   -2.29
   ],
-  "radius": 4.699
+  "radius": 3.572
  },
- "built_seconds": 19.51,
+ "built_seconds": 5.06,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 4.77,
-  "radius": 2.461
+  "height": 2.9,
+  "radius": 2.456
  },
  "generator": "gen_trees",
  "glb": "hearthvale_yew_a.glb",
@@ -37,11 +37,11 @@
  "meshes": [
   {
    "name": "hearthvale_yew_a_cards",
-   "tris": 920
+   "tris": 1520
   },
   {
    "name": "hearthvale_yew_a",
-   "tris": 5000
+   "tris": 4999
   },
   {
    "name": "hearthvale_yew_a_LOD2",
@@ -49,11 +49,11 @@
   },
   {
    "name": "hearthvale_yew_a_LOD1",
-   "tris": 4214
+   "tris": 1782
   },
   {
    "name": "hearthvale_yew_a_cards_LOD1",
-   "tris": 414
+   "tris": 684
   }
  ],
  "name": "hearthvale_yew_a",
@@ -94,8 +94,8 @@
   "hearthvale_yew_a_impostor_orm.png"
  ],
  "tris": [
-  5920,
-  4628,
+  6519,
+  2466,
   4
  ],
  "version": 3

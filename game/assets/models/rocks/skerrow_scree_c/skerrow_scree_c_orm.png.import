@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rv556d1gckrv"
-path.s3tc="res://.godot/imported/skerrow_scree_c_orm.png-311dc8a792ad964bdb0160f9a279b173.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_scree_c/skerrow_scree_c_orm.png"
-dest_files=["res://.godot/imported/skerrow_scree_c_orm.png-311dc8a792ad964bdb0160f9a279b173.s3tc.ctex"]
 
 [params]
 

@@ -1,23 +1,23 @@
 {
  "bounds": {
-  "height": 5.287,
+  "height": 5.237,
   "max": [
-   1.224,
-   5.287,
-   1.485
+   1.139,
+   5.237,
+   1.418
   ],
   "min": [
-   -1.132,
+   -1.096,
    0.0,
-   -1.262
+   -1.215
   ],
-  "radius": 3.203
+  "radius": 3.137
  },
- "built_seconds": 3.83,
+ "built_seconds": 6.49,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 5.12,
+  "height": 5.13,
   "radius": 0.257
  },
  "generator": "gen_trees",
@@ -49,7 +49,7 @@
   },
   {
    "name": "brightwater_willow_pollard_a_LOD1",
-   "tris": 1205
+   "tris": 1204
   },
   {
    "name": "brightwater_willow_pollard_a_cards_LOD1",
@@ -95,7 +95,7 @@
  ],
  "tris": [
   4114,
-  1359,
+  1358,
   4
  ],
  "version": 3

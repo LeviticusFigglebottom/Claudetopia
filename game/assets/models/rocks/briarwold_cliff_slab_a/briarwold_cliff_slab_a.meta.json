@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 6.417,
+  "height": 6.457,
   "max": [
    2.0,
-   6.417,
-   2.099
+   6.457,
+   2.122
   ],
   "min": [
-   -2.026,
+   -2.063,
    0.0,
-   -1.213
+   -1.294
   ],
-  "radius": 4.134
+  "radius": 4.179
  },
- "built_seconds": 42.28,
+ "built_seconds": 50.66,
  "category": "rocks",
  "collision": "briarwold_cliff_slab_a_col.glb",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "briarwold_cliff_slab_a",
-   "tris": 4100
+   "tris": 2202
   },
   {
    "name": "briarwold_cliff_slab_a_LOD1",
-   "tris": 1640
+   "tris": 880
   },
   {
    "name": "briarwold_cliff_slab_a_LOD2",
-   "tris": 614
+   "tris": 330
   }
  ],
  "modular": true,
@@ -75,9 +75,9 @@
   "briarwold_cliff_slab_a_orm.png"
  ],
  "tris": [
-  4100,
-  1640,
-  614
+  2202,
+  880,
+  330
  ],
  "version": 3
 }

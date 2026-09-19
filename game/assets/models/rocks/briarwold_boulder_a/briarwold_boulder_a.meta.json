@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 2.101,
+  "height": 1.645,
   "max": [
-   1.226,
-   2.101,
-   1.519
+   1.228,
+   1.645,
+   1.42
   ],
   "min": [
-   -1.236,
+   -1.07,
    0.0,
-   -1.419
+   -1.42
   ],
-  "radius": 2.186
+  "radius": 2.003
  },
- "built_seconds": 17.81,
+ "built_seconds": 12.69,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "briarwold_boulder_a",
-   "tris": 2980
+   "tris": 2850
   },
   {
    "name": "briarwold_boulder_a_LOD1",
-   "tris": 1192
+   "tris": 1140
   },
   {
    "name": "briarwold_boulder_a_LOD2",
-   "tris": 446
+   "tris": 426
   }
  ],
  "name": "briarwold_boulder_a",
@@ -71,9 +71,9 @@
   "briarwold_boulder_a_orm.png"
  ],
  "tris": [
-  2980,
-  1192,
-  446
+  2850,
+  1140,
+  426
  ],
  "version": 3
 }

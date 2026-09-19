@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkvfyyo7rwh4b"
-path.s3tc="res://.godot/imported/skerrow_fallen_hand_a_albedo.png-01e833a8814011eca1c6ba1f5643e72f.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/landmarks/skerrow_fallen_hand_a/skerrow_fallen_hand_a_albedo.png"
-dest_files=["res://.godot/imported/skerrow_fallen_hand_a_albedo.png-01e833a8814011eca1c6ba1f5643e72f.s3tc.ctex"]
 
 [params]
 

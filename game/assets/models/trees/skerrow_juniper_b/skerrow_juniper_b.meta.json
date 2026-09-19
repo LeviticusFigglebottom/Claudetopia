@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 1.736,
+  "height": 1.467,
   "max": [
-   1.088,
-   1.736,
-   1.373
+   1.145,
+   1.467,
+   1.381
   ],
   "min": [
-   -1.181,
+   -1.127,
    0.0,
-   -1.043
+   -1.041
   ],
-  "radius": 1.87
+  "radius": 1.816
  },
- "built_seconds": 2.79,
+ "built_seconds": 2.67,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 1.5,
-  "radius": 1.44
+  "height": 1.41,
+  "radius": 1.352
  },
  "generator": "gen_trees",
  "glb": "skerrow_juniper_b.glb",
@@ -37,11 +37,11 @@
  "meshes": [
   {
    "name": "skerrow_juniper_b_cards",
-   "tris": 920
+   "tris": 1520
   },
   {
    "name": "skerrow_juniper_b",
-   "tris": 7342
+   "tris": 4999
   },
   {
    "name": "skerrow_juniper_b_LOD2",
@@ -49,11 +49,11 @@
   },
   {
    "name": "skerrow_juniper_b_LOD1",
-   "tris": 6336
+   "tris": 4090
   },
   {
    "name": "skerrow_juniper_b_cards_LOD1",
-   "tris": 414
+   "tris": 684
   }
  ],
  "name": "skerrow_juniper_b",
@@ -94,8 +94,8 @@
   "skerrow_juniper_b_impostor_orm.png"
  ],
  "tris": [
-  8262,
-  6750,
+  6519,
+  4774,
   4
  ],
  "version": 3

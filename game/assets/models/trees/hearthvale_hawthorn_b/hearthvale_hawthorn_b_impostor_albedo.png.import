@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://8wqxkmnrscv5"
-path.s3tc="res://.godot/imported/hearthvale_hawthorn_b_impostor_albedo.png-82fb43034b20b4b7bad7614c8355853a.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_hawthorn_b/hearthvale_hawthorn_b_impostor_albedo.png"
-dest_files=["res://.godot/imported/hearthvale_hawthorn_b_impostor_albedo.png-82fb43034b20b4b7bad7614c8355853a.s3tc.ctex"]
 
 [params]
 

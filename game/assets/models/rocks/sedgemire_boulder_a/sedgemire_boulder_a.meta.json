@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 2.584,
+  "height": 2.141,
   "max": [
-   1.813,
-   2.584,
-   2.044
+   1.609,
+   2.141,
+   2.07
   ],
   "min": [
-   -1.8,
+   -1.723,
    0.0,
-   -2.033
+   -1.993
   ],
-  "radius": 3.015
+  "radius": 2.837
  },
- "built_seconds": 68.99,
+ "built_seconds": 27.79,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "sedgemire_boulder_a",
-   "tris": 2720
+   "tris": 2402
   },
   {
    "name": "sedgemire_boulder_a_LOD1",
-   "tris": 1088
+   "tris": 960
   },
   {
    "name": "sedgemire_boulder_a_LOD2",
-   "tris": 408
+   "tris": 360
   }
  ],
  "name": "sedgemire_boulder_a",
@@ -71,9 +71,9 @@
   "sedgemire_boulder_a_orm.png"
  ],
  "tris": [
-  2720,
-  1088,
-  408
+  2402,
+  960,
+  360
  ],
  "version": 3
 }

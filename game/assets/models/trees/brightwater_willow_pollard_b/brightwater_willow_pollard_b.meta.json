@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 5.442,
+  "height": 5.391,
   "max": [
-   1.098,
-   5.442,
-   1.731
+   0.947,
+   5.391,
+   1.72
   ],
   "min": [
-   -1.496,
+   -1.438,
    0.0,
-   -1.375
+   -1.272
   ],
-  "radius": 3.391
+  "radius": 3.305
  },
- "built_seconds": 3.81,
+ "built_seconds": 8.55,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {

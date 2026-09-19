@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 10.87,
+  "height": 8.869,
   "max": [
-   5.09,
-   10.87,
-   5.456
+   4.858,
+   8.869,
+   5.543
   ],
   "min": [
-   -5.397,
+   -5.268,
    0.0,
-   -5.429
+   -5.402
   ],
-  "radius": 9.309
+  "radius": 8.674
  },
- "built_seconds": 6.58,
+ "built_seconds": 4.85,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 9.48,
-  "radius": 6.105
+  "height": 8.48,
+  "radius": 6.114
  },
  "generator": "gen_trees",
  "glb": "hearthvale_oak_a.glb",
@@ -37,11 +37,11 @@
  "meshes": [
   {
    "name": "hearthvale_oak_a_cards",
-   "tris": 1520
+   "tris": 2166
   },
   {
    "name": "hearthvale_oak_a",
-   "tris": 6538
+   "tris": 5000
   },
   {
    "name": "hearthvale_oak_a_LOD2",
@@ -49,11 +49,11 @@
   },
   {
    "name": "hearthvale_oak_a_LOD1",
-   "tris": 4958
+   "tris": 2730
   },
   {
    "name": "hearthvale_oak_a_cards_LOD1",
-   "tris": 684
+   "tris": 974
   }
  ],
  "name": "hearthvale_oak_a",
@@ -94,8 +94,8 @@
   "hearthvale_oak_a_impostor_orm.png"
  ],
  "tris": [
-  8058,
-  5642,
+  7166,
+  3704,
   4
  ],
  "version": 3

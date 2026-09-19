@@ -131,6 +131,15 @@ def cracked_toll(pal, rng, params, variant):
         S.boolean(mound, socket, "DIFFERENCE")
         _weather(mound, rng, amount=r * 0.05, scale=h * 0.3, seed=rng.randrange(999))
         S.shade_smooth(mound, 42.0)
+        # A chalk down is green on top; the chalk only shows where the ground was torn
+        # open. Faces that lie flat get turf, and the steep cut faces of the scar and the
+        # collar of bare ground round the bronze keep the chalk, which is what makes the
+        # scar read as a scar rather than the whole hill as a meringue.
+        turf = M.moss(pal, age=0.5, tint=0.45, scale=h * 0.045, name="toll_turf")
+        bare_r = r * 1.3
+        S.assign_material_to_faces(
+            mound, turf,
+            lambda poly: poly.normal.z > 0.62 and math.hypot(poly.center.x, poly.center.y) > bare_r)
         tris = S.tri_count(mound)
         if tris > 6000:
             S.decimate(mound, 6000.0 / tris)
@@ -194,7 +203,10 @@ def fallen_hand(pal, rng, params, variant):
     """A giant's stone hand 60 m long, palm up, fingers as tall as towers, with a clan
     shrine in its cup (WORLD_BIBLE §6.5). The palm is a walkable floor."""
     length = params.get("length", 60.0)
-    stone = M.limestone(pal, wear=0.55, age=0.8, scale=length * 0.05)
+    # At length*0.05 the pattern is one blob across sixty metres and the hand bakes out as
+    # flat bone; halving the scale puts a couple of metres between tonal changes, which is
+    # what a weathered surface this size needs to stop reading as plastic.
+    stone = M.limestone(pal, wear=0.6, age=0.9, scale=length * 0.026)
     palm_l = length * 0.40
     palm_w = length * 0.34
     palm_t = length * 0.10

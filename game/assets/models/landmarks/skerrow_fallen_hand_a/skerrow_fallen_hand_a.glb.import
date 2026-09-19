@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bx7cejt0j8svc"
-path="res://.godot/imported/skerrow_fallen_hand_a.glb-13841aeb9429b656231bff0188ba1e25.scn"
 
 [deps]
 
 source_file="res://assets/models/landmarks/skerrow_fallen_hand_a/skerrow_fallen_hand_a.glb"
-dest_files=["res://.godot/imported/skerrow_fallen_hand_a.glb-13841aeb9429b656231bff0188ba1e25.scn"]
 
 [params]
 
