@@ -115,6 +115,21 @@ def export_glb(objs, path, material_textures: dict | None = None) -> dict:
         o.hide_set(False)
         o.hide_viewport = False
         o.hide_render = False
+        # Baking leaves the pre-bake UV layer behind, and the exporter writes it as
+        # TEXCOORD_1 that nothing ever samples: eight bytes a vertex, which on a tree is a
+        # fifth of the file. Only the active layer survives to the GLB.
+        if o.type == "MESH" and len(o.data.uv_layers) > 1:
+            # The bake reads the render layer, so that is the one that must survive. Work
+            # by name: removing a layer reshuffles the collection, and holding a reference
+            # across a removal deletes the wrong one (which strips every UV off the mesh).
+            uvs = o.data.uv_layers
+            keep = next((u.name for u in uvs if u.active_render), None) or uvs.active.name
+            for name in [u.name for u in uvs if u.name != keep]:
+                layer = uvs.get(name)
+                if layer is not None:
+                    uvs.remove(layer)
+            if uvs.get(keep) is not None:
+                uvs.active = uvs[keep]
     S.select_only(objs)
     bpy.ops.export_scene.gltf(
         filepath=str(path), export_format="GLB", use_selection=True, export_apply=True, export_yup=True,
