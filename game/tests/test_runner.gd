@@ -23,9 +23,12 @@ func _ready() -> void:
 	var t0 := Time.get_ticks_msec()
 	for path in files:
 		var script: GDScript = load(path)
-		if script == null:
-			failures.append("%s: failed to load" % path)
+		# A script with a parse error still loads, as a GDScript that cannot be instantiated;
+		# calling new() on it takes the whole run down instead of failing that one file.
+		if script == null or not script.can_instantiate():
+			failures.append("%s: failed to load (parse error?)" % path)
 			failed += 1
+			print("  FAIL %s (did not compile)" % path)
 			continue
 		var made: Variant = script.new()
 		if made == null or not (made is TestCase):
@@ -61,6 +64,20 @@ func _ready() -> void:
 	print("%d tests, %d failed, %d content problems, %d ms" % [total, failed, ContentDB.problems.size(), ms])
 	for p in ContentDB.problems:
 		print("CONTENT: %s" % p)
+	# Audio autoloads hold open stream decoders while they play. Releasing them here keeps a
+	# test run from ending on Godot's "resources still in use" error, which the smoke check
+	# reads as a failure. It is not completely reliable: AudioServer drops a stopped player's
+	# playback on its own schedule, so a run can still end with that message even though every
+	# player has been stopped and emptied. The exit code is unaffected.
+	for autoload_name in ["Music", "Ambience", "Foley"]:
+		var node := get_node_or_null("/root/" + autoload_name)
+		if node and node.has_method("release"):
+			node.release()
+	# AudioServer drops a stopped player's stream playback on its next update, so quitting in
+	# the same frame as the release leaves those playbacks (and the streams they reference)
+	# alive, which the engine then reports as leaked resources at exit.
+	for i in 3:
+		await get_tree().process_frame
 	var code := 0 if (failed == 0 and ContentDB.problems.is_empty()) else 1
 	print("RESULT: %s" % ("PASS" if code == 0 else "FAIL"))
 	get_tree().quit(code)

@@ -30,7 +30,14 @@ SaveSystem="*res://core/save_system.gd"
 Hearth="*res://systems/hearth/hearth_system.gd"
 Interiors="*res://systems/interiors/interior_manager.gd"
 Social="*res://systems/social/social.gd"
+Music="*res://systems/audio/music_director.gd"
+Ambience="*res://systems/audio/ambience_mixer.gd"
+Foley="*res://systems/audio/foley.gd"
 Debug="*res://tools_gd/debug_console.tscn"
+
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
 
 [debug]
 
