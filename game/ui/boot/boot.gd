@@ -1,6 +1,7 @@
 extends Node
 ## Boot: first scene. Waits for content, handles command-line modes, then hands off.
 ##   --smoke            run the smoke test (load every region and interior) and quit
+##   --arena            load the flat combat test arena (tests/arena/arena.tscn)
 ##   --capture=<plan>   run a capture plan (screenshots / fly-through) and quit
 ##   --new-game         skip the main menu and start a new game with defaults
 ##   --load=<slot>      load a slot straight away
@@ -15,6 +16,9 @@ func _ready() -> void:
 	var args := _user_args()
 	if args.has("smoke"):
 		_run_smoke()
+		return
+	if args.has("arena"):
+		_run_arena()
 		return
 	if args.has("capture"):
 		_run_capture(args["capture"])
@@ -51,6 +55,14 @@ func _run_smoke() -> void:
 		get_tree().change_scene_to_file("res://tests/smoke/smoke_runner.tscn")
 	else:
 		Log.error("Boot", "smoke runner missing")
+		get_tree().quit(2)
+
+
+func _run_arena() -> void:
+	if ResourceLoader.exists("res://tests/arena/arena.tscn"):
+		get_tree().call_deferred("change_scene_to_file", "res://tests/arena/arena.tscn")
+	else:
+		Log.error("Boot", "test arena missing")
 		get_tree().quit(2)
 
 
