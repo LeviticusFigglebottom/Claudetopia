@@ -251,14 +251,14 @@
   "events": [
    {
     "name": "bow_raised",
-    "t": 0.3
+    "t": 0.38
    },
    {
     "name": "bow_drawn",
-    "t": 0.74
+    "t": 0.82
    }
   ],
-  "length": 0.78,
+  "length": 0.86,
   "loop": false
  },
  "Bow_Gesture": {

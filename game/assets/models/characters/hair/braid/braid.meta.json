@@ -4,7 +4,7 @@
   -0.0844,
   1.3392,
   0.1005,
-  0.1237,
+  0.1219,
   1.7952
  ],
  "collision": "none",
@@ -16,7 +16,7 @@
   "material": "hair"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 5426,
+ "seed": 7680,
  "slot_hint": "attachment",
  "tris": [
   2200,

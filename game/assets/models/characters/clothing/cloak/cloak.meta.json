@@ -16,7 +16,7 @@
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 3145,
+ "seed": 1510,
  "slot_hint": "back",
  "tris": [
   3600,

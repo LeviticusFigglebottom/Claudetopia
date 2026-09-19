@@ -2,9 +2,9 @@
  "bounds": [
   -0.1815,
   -0.0998,
-  0.1192,
+  0.1218,
   0.1815,
-  0.0027,
+  0.0013,
   0.57
  ],
  "collision": "none",
@@ -16,7 +16,7 @@
   "material": "iron"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 1049,
+ "seed": 6493,
  "slot_hint": "feet",
  "tris": [
   1300,

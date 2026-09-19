@@ -790,17 +790,21 @@ def ranged_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         stance_feet(cb.feet, spread=0.04, forward_l=0.06, forward_r=-0.16, yaw_l=40.0, yaw_r=-52.0)
         return cb
 
-    bd = archer_clip("Bow_Draw", 0.78)
-    bd.key(0.00, pose_add(STAND, {"Shoulder.L": (6, 2, 0), "UpperArm.L": (26, -34, 0), "LowerArm.L": (44, 0, 0),
-                                  "UpperArm.R": (16, -38, 0), "LowerArm.R": (36, 0, 0), "Hips": (0, 0, -20),
-                                  "Chest": (0, 0, 12), "Neck": (0, 0, -16), "Head": (0, 0, -16)}))
-    bd.key(0.34, pose_add(archer, {}) | {"Hand.L@grip": tuple(bow_hand), "Hand.L@aim": bow_aim,
+    bow_low = body_point(skel, 0.26, 0.20, -0.30)       # bow held down at the side
+    nock_low = body_point(skel, 0.20, -0.02, -0.26)
+    bd = archer_clip("Bow_Draw", 0.86)
+    # Key the hand targets from the first frame: an IK channel has no rest pose, so if it
+    # first appears mid-clip the arm is already there and the raise never reads.
+    bd.key(0.00, pose_add(STAND, {"Hips": (0, 0, -14), "Chest": (0, 0, 8), "Neck": (0, 0, -12), "Head": (0, 0, -12)}) |
+           {"Hand.L@grip": tuple(bow_low), "Hand.L@aim": tuple(rig._unit(UP * 0.4 + FWD * 0.2)),
+            "Hand.R@grip": tuple(nock_low), "Hand.R@aim": tuple(FWD)})
+    bd.key(0.40, pose_add(archer, {}) | {"Hand.L@grip": tuple(bow_hand), "Hand.L@aim": bow_aim,
                                          "Hand.R@grip": tuple(nock_home), "Hand.R@aim": tuple(FWD)}, "out2")
-    bd.key(0.78, pose_add(archer, {"Shoulder.R": (-10, 12, 0), "Chest": (0, 0, 26)}) |
+    bd.key(0.86, pose_add(archer, {"Shoulder.R": (-10, 12, 0), "Chest": (0, 0, 26)}) |
            {"Hand.L@grip": tuple(bow_hand), "Hand.L@aim": bow_aim,
             "Hand.R@grip": tuple(draw_anchor), "Hand.R@aim": tuple(rig._unit(FWD + UP * 0.1))}, "in2")
-    bd.event(0.30, "bow_raised")
-    bd.event(0.74, "bow_drawn")
+    bd.event(0.38, "bow_raised")
+    bd.event(0.82, "bow_drawn")
     out["Bow_Draw"] = bd
 
     ba = archer_clip("Bow_Aim", 2.2, loop=True)

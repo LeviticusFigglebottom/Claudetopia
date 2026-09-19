@@ -1,11 +1,11 @@
 {
  "bounds": [
-  -0.1602,
-  -0.1062,
-  1.4382,
-  0.2037,
-  0.133,
-  1.7044
+  -0.1084,
+  -0.1055,
+  1.4943,
+  0.1089,
+  0.0435,
+  1.6153
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -16,10 +16,10 @@
   "material": "hair"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 9751,
+ "seed": 3946,
  "slot_hint": "attachment",
  "tris": [
-  900,
+  895,
   0,
   0
  ],
