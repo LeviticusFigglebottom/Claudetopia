@@ -108,6 +108,38 @@ def capsule_params(objs) -> dict:
 
 # --- glTF ----------------------------------------------------------------------------------
 
+UV_LAYER = "UVMap"
+
+
+def single_uv(obj) -> None:
+    """Leave the mesh with exactly one UV layer, the one the bake reads, called UVMap.
+
+    Two reasons, and both of them have cost a day. Baking leaves the pre-bake layer behind
+    and the exporter writes it as a TEXCOORD_1 nothing samples -- eight bytes a vertex,
+    a fifth of a tree's file. Worse, joining two meshes whose UV layers have different
+    names gives the result *both* layers with half the loops blank in each, so when the
+    stale one is dropped a leaf card ends up reading the bark atlas. Normalising the name
+    first means a join merges the layers instead of stacking them.
+
+    Removing a layer reshuffles the collection, so this works by name throughout: holding a
+    reference across a removal deletes the wrong one and strips every UV off the mesh.
+    """
+    if obj.type != "MESH":
+        return
+    uvs = obj.data.uv_layers
+    if not len(uvs):
+        return
+    keep = next((u.name for u in uvs if u.active_render), None) or uvs.active.name
+    for name in [u.name for u in uvs if u.name != keep]:
+        layer = uvs.get(name)
+        if layer is not None:
+            uvs.remove(layer)
+    layer = uvs.get(keep)
+    if layer is not None:
+        layer.name = UV_LAYER
+        uvs.active = uvs[UV_LAYER]
+
+
 def export_glb(objs, path, material_textures: dict | None = None) -> dict:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -115,21 +147,7 @@ def export_glb(objs, path, material_textures: dict | None = None) -> dict:
         o.hide_set(False)
         o.hide_viewport = False
         o.hide_render = False
-        # Baking leaves the pre-bake UV layer behind, and the exporter writes it as
-        # TEXCOORD_1 that nothing ever samples: eight bytes a vertex, which on a tree is a
-        # fifth of the file. Only the active layer survives to the GLB.
-        if o.type == "MESH" and len(o.data.uv_layers) > 1:
-            # The bake reads the render layer, so that is the one that must survive. Work
-            # by name: removing a layer reshuffles the collection, and holding a reference
-            # across a removal deletes the wrong one (which strips every UV off the mesh).
-            uvs = o.data.uv_layers
-            keep = next((u.name for u in uvs if u.active_render), None) or uvs.active.name
-            for name in [u.name for u in uvs if u.name != keep]:
-                layer = uvs.get(name)
-                if layer is not None:
-                    uvs.remove(layer)
-            if uvs.get(keep) is not None:
-                uvs.active = uvs[keep]
+        single_uv(o)
     S.select_only(objs)
     bpy.ops.export_scene.gltf(
         filepath=str(path), export_format="GLB", use_selection=True, export_apply=True, export_yup=True,
@@ -379,21 +397,9 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     if not lod0:
         raise RuntimeError("finish_asset: nothing to export")
     bnd = bounds_dict(lod0)
-    all_objs = [o for chain in parts for o in chain]
-    if impostor is not None:
-        impostor.name = "%s_LOD%d" % (name, len(lod_ratios) + 1)
-        impostor.data.name = impostor.name
-        if impostor_textures:
-            for m in impostor.data.materials:
-                if m is not None:
-                    slot_map.update(texture_slots(m.name, dict(impostor_textures)))
-            meta_textures += [t for t in impostor_textures.values() if t not in meta_textures]
-        all_objs.append(impostor)
-    glb_path = out_dir / ("%s.glb" % name)
-    stage("export %d objects" % len(all_objs))
-    export_info = export_glb(all_objs, glb_path, slot_map)
-    stage("exported")
 
+    # Collision and the triangle counts are settled here, before LOD0 is merged below,
+    # because both of them need the parts as the separate objects they were built as.
     extra_glbs = []
     col_value = collision
     col_params = dict(collision_params or {})
@@ -415,6 +421,37 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
         tris.append(S.tri_count(impostor))
     while len(tris) < 3:
         tris.append(tris[-1])
+
+    # LOD0 is exported as ONE mesh with one surface per material. The world streamer
+    # scatters an asset by taking the first MeshInstance3D out of the imported scene and
+    # handing its mesh to a MultiMesh, so a tree split into a trunk mesh and a leaf-card
+    # mesh arrived in the world as a bare trunk -- four hundred thousand bare trunks, as it
+    # turned out. Merging costs nothing (the surfaces are what the materials were anyway)
+    # and it means whatever the streamer grabs is the whole plant. The LOD1/LOD2 meshes
+    # stay as separate nodes, for whatever instantiates the scene and uses their
+    # visibility ranges.
+    tails = [o for chain in parts for o in chain[1:]]
+    if len(lod0) > 1:
+        # Every part must carry the same, singular UV layer before they are joined, or the
+        # join stacks two layers and the cards end up reading the trunk's atlas.
+        for o in lod0:
+            single_uv(o)
+        all_objs = [S.join(lod0, name)] + tails
+    else:
+        all_objs = lod0 + tails
+    if impostor is not None:
+        impostor.name = "%s_LOD%d" % (name, len(lod_ratios) + 1)
+        impostor.data.name = impostor.name
+        if impostor_textures:
+            for m in impostor.data.materials:
+                if m is not None:
+                    slot_map.update(texture_slots(m.name, dict(impostor_textures)))
+            meta_textures += [t for t in impostor_textures.values() if t not in meta_textures]
+        all_objs.append(impostor)
+    glb_path = out_dir / ("%s.glb" % name)
+    stage("export %d objects" % len(all_objs))
+    export_info = export_glb(all_objs, glb_path, slot_map)
+    stage("exported")
 
     meta = {
         "name": name,
