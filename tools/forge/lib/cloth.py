@@ -318,7 +318,7 @@ def garment_edges(skel: Skeleton, *, hem_z: Optional[float] = None, collar_z: Op
 
 
 def tunic(skel: Skeleton, body, *, hem: float = 0.44, sleeves: float = 0.55,
-          thickness: float = 0.010, name: str = "tunic") -> Garment:
+          thickness: float = 0.008, name: str = "tunic") -> Garment:
     s = _s(skel)
     sc = Scene()
     reg = torso_region(skel, top=0.90, hem=hem, sleeves=sleeves, collar=0.012)
