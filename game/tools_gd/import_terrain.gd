@@ -19,8 +19,11 @@ const REGION_SIZE := 1024
 const VERTEX_SPACING := 2.0
 
 ## Slot order is binding (docs/CONTRACTS.md §5); uv_scale is 1 / tile size in metres.
-## `value` is an albedo multiplier that keeps bright materials (chalk, snow, limestone) from
-## blowing out under the atmosphere's sun, and `rough` nudges the material's roughness.
+## `value` is an albedo multiplier (Terrain3DTextureAsset.albedo_color): the painted textures
+## are authored at a comfortable value for viewing, and this brings them down to the ground
+## albedo the atmosphere's sun expects -- about 0.4-0.6 for rock and grass, higher for snow.
+## `roughness_mod` nudges the material's roughness (the fused Oroth stone would otherwise be
+## a mirror; ash and lake bed want the opposite).
 const SLOTS: Array = [
 	{"name": "vale_grass", "tile_m": 2.6, "value": 0.46, "roughness_mod": 0.0},
 	{"name": "chalk", "tile_m": 3.0, "value": 0.42, "roughness_mod": 0.0},
