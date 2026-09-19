@@ -1,0 +1,323 @@
+extends Node3D
+## Headless review renders for the character forge.
+##
+##   xvfb-run -a -s "-screen 0 1600x900x24" godot --path game --rendering-driver opengl3 \
+##       --audio-driver Dummy res://tools_gd/character_review.tscn -- \
+##       --out=captures/characters [--mode=lineup|strips|both] [--clips=Walk,Attack_1H_Heavy]
+##
+## `lineup` renders every preset in tools/forge/characters.json side by side; `strips`
+## renders each named clip at eight times from three angles and stitches a contact sheet.
+## Both write PNGs plus `contact_sheet.png` into the output folder.
+
+const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
+const PRESETS_PATH := "res://../tools/forge/characters.json"
+const STRIP_TIMES := 8
+## The model faces -Z once its holder is rotated (CONTRACTS.md §1), so "front" sits at -Z.
+const STRIP_ANGLES := {"side": Vector3(3.6, 1.05, 0.0), "front": Vector3(0.0, 1.05, -3.6), "iso": Vector3(-2.5, 1.45, -2.5)}
+
+var out_dir := "captures/characters"
+var mode := "both"
+var clip_list: PackedStringArray = PackedStringArray([
+	"Idle", "Walk", "Run", "Attack_1H_Light_1", "Attack_1H_Heavy", "Attack_2H_Heavy",
+	"Dodge_F", "Block_Hit", "Parry", "Hit_Heavy", "Stagger", "Death_A", "Bow_Draw", "Work_Chop",
+])
+var preset_filter: PackedStringArray = PackedStringArray()
+
+var _camera: Camera3D
+var _jobs: Array[Dictionary] = []
+var _job := 0
+var _warmup := 0
+var _written: Array[String] = []
+var _models: Array[HumanoidModel] = []
+var _preset_ids: Array[String] = []
+
+
+func _ready() -> void:
+	_parse_args()
+	_build_environment()
+	if mode == "lineup" or mode == "both":
+		_queue_lineup()
+	if mode == "strips" or mode == "both":
+		_queue_strips()
+	if _jobs.is_empty():
+		print("REVIEW: nothing to do")
+		get_tree().quit(0)
+
+
+func _parse_args() -> void:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--out="):
+			out_dir = a.substr(6)
+		elif a.begins_with("--mode="):
+			mode = a.substr(7)
+		elif a.begins_with("--clips="):
+			clip_list = a.substr(8).split(",", false)
+		elif a.begins_with("--presets="):
+			preset_filter = a.substr(10).split(",", false)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../%s" % out_dir) if not out_dir.begins_with("/") else out_dir)
+
+
+func _abs_out() -> String:
+	if out_dir.begins_with("/"):
+		return out_dir
+	return ProjectSettings.globalize_path("res://../%s" % out_dir)
+
+
+func _build_environment() -> void:
+	var we := WorldEnvironment.new()
+	var env := Environment.new()
+	env.background_mode = Environment.BG_SKY
+	var sky := Sky.new()
+	var mat := ProceduralSkyMaterial.new()
+	mat.sky_top_color = Color(0.36, 0.52, 0.76)
+	mat.sky_horizon_color = Color(0.86, 0.84, 0.78)
+	mat.ground_bottom_color = Color(0.22, 0.21, 0.18)
+	mat.ground_horizon_color = Color(0.72, 0.68, 0.62)
+	sky.sky_material = mat
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 0.9
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	# without a raised white point the mid-greys clip on this renderer (ARCHITECTURE.md §10)
+	env.tonemap_white = 6.0
+	we.environment = env
+	add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-46, 38, 0)
+	sun.light_energy = 1.0
+	sun.light_color = Color(1.0, 0.95, 0.87)
+	sun.shadow_enabled = true
+	add_child(sun)
+	var fill := DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-18, -130, 0)
+	fill.light_energy = 0.35
+	fill.light_color = Color(0.78, 0.84, 1.0)
+	add_child(fill)
+	var ground := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(60, 60)
+	ground.mesh = pm
+	var gm := StandardMaterial3D.new()
+	gm.albedo_color = Color(0.40, 0.42, 0.33)
+	gm.roughness = 1.0
+	ground.material_override = gm
+	add_child(ground)
+	_camera = Camera3D.new()
+	_camera.fov = 38.0
+	add_child(_camera)
+
+
+func _load_presets() -> Array:
+	var path := ProjectSettings.globalize_path("res://../tools/forge/characters.json")
+	if not FileAccess.file_exists(path):
+		push_warning("character_review: no presets at %s" % path)
+		return []
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return []
+	var out: Array = []
+	for key in (parsed as Dictionary).get("presets", {}):
+		if preset_filter.size() > 0 and not (key in preset_filter):
+			continue
+		out.append({"id": key, "appearance": (parsed["presets"] as Dictionary)[key]})
+	out.sort_custom(func(a, b): return str(a["id"]) < str(b["id"]))
+	return out
+
+
+func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
+	var holder := Node3D.new()
+	holder.position = pos
+	# CONTRACTS §1: actor scenes rotate the model 180 degrees so gameplay forward is -Z
+	holder.rotation_degrees = Vector3(0, 180, 0)
+	add_child(holder)
+	var m := MODEL_SCENE.instantiate() as HumanoidModel
+	holder.add_child(m)
+	m.build()
+	if not appearance.is_empty():
+		m.apply_appearance(appearance)
+	_models.append(m)
+	return m
+
+
+## Holds a model on one frame of a clip, so a lineup is not a row of A-posed mannequins.
+func _hold_pose(m: HumanoidModel, clip: String, t: float) -> void:
+	if not m.has_clip(clip):
+		return
+	if m.anim_tree != null:
+		m.anim_tree.active = false
+	m.anim_player.play(clip)
+	m.anim_player.seek(t, true)
+	m.anim_player.advance(0.0)
+	m.anim_player.pause()
+
+
+func _queue_lineup() -> void:
+	var presets := _load_presets()
+	if presets.is_empty():
+		presets = [{"id": "default", "appearance": {}}]
+	var per_row := 6
+	var spacing := 1.15
+	var rows: int = int(ceil(float(presets.size()) / per_row))
+	var labels: Array[String] = []
+	for i in presets.size():
+		var row := i / per_row
+		var col := i % per_row
+		var n_in_row: int = mini(per_row, presets.size() - row * per_row)
+		var x := (col - (n_in_row - 1) * 0.5) * spacing
+		var z := -float(row) * 1.6
+		var mm := _spawn(presets[i]["appearance"], Vector3(x, 0, z))
+		_hold_pose(mm, "Idle", 0.7 + 0.31 * float(i))
+		labels.append(str(presets[i]["id"]))
+	for row in rows:
+		var n_in_row: int = mini(per_row, presets.size() - row * per_row)
+		var width := n_in_row * spacing
+		_jobs.append({
+			"file": "lineup_row%d.png" % row,
+			"cam": Vector3(0, 1.02, -row * 1.6 - width * 1.25 - 0.9),
+			"look": Vector3(0, 0.92, -row * 1.6),
+			"fov": 36.0,
+			"hide_rows": row,
+		})
+	_jobs.append({
+		"file": "lineup_all.png",
+		"cam": Vector3(0, 2.4, -per_row * spacing * 1.6),
+		"look": Vector3(0, 0.9, -rows * 0.8),
+		"fov": 42.0,
+		"hide_rows": -1,
+	})
+	_preset_ids = labels
+
+
+func _queue_strips() -> void:
+	var m := _spawn({}, Vector3(0, 0, 6.0))
+	for clip in clip_list:
+		if not m.has_clip(clip):
+			push_warning("character_review: no clip %s" % clip)
+			continue
+		var length := m.clip_length(clip)
+		for i in STRIP_TIMES:
+			var t := length * float(i) / float(STRIP_TIMES if m._clip_data.get(clip, {}).get("loop", false) else STRIP_TIMES - 1)
+			for angle_name in STRIP_ANGLES:
+				var off: Vector3 = STRIP_ANGLES[angle_name]
+				_jobs.append({
+					"file": "clip_%s_%s_%02d.png" % [clip, angle_name, i],
+					"cam": Vector3(0, 0, 6.0) + off,
+					"look": Vector3(0, 0.95, 6.0),
+					"fov": 34.0,
+					"clip": clip, "time": t, "model": m,
+				})
+
+
+## Shows only the lineup row being photographed (or all of them when row < 0).
+func _only_row(row: int) -> void:
+	var per_row := 6
+	for i in _models.size():
+		var holder := _models[i].get_parent() as Node3D
+		if holder == null:
+			continue
+		holder.visible = row < 0 or (i / per_row) == row
+
+
+func _process(_delta: float) -> void:
+	if _job >= _jobs.size():
+		return
+	var job: Dictionary = _jobs[_job]
+	if _warmup == 0:
+		_camera.position = job["cam"]
+		_camera.look_at(job["look"])
+		_camera.fov = float(job.get("fov", 38.0))
+		if job.has("hide_rows"):
+			_only_row(int(job["hide_rows"]))
+		if job.has("clip"):
+			var m: HumanoidModel = job["model"]
+			_pose_at(m, str(job["clip"]), float(job["time"]))
+	_warmup += 1
+	if _warmup < 3:
+		return
+	_warmup = 0
+	var img := get_viewport().get_texture().get_image()
+	var path := "%s/%s" % [_abs_out(), str(job["file"])]
+	img.save_png(path)
+	_written.append(str(job["file"]))
+	_job += 1
+	if _job >= _jobs.size():
+		_finish()
+
+
+## Poses the model at one instant of a clip without running the AnimationTree.
+func _pose_at(m: HumanoidModel, clip: String, t: float) -> void:
+	if m.anim_tree != null:
+		m.anim_tree.active = false
+	m.anim_player.play(clip)
+	m.anim_player.seek(t, true)
+	m.anim_player.advance(0.0)
+	m.anim_player.pause()
+
+
+func _finish() -> void:
+	_contact_sheet()
+	print("REVIEW: wrote %d images to %s" % [_written.size(), _abs_out()])
+	get_tree().quit(0)
+
+
+## Stitches every clip strip into one sheet per clip, then an index sheet of the lineups.
+func _contact_sheet() -> void:
+	var by_clip := {}
+	for f in _written:
+		if not f.begins_with("clip_"):
+			continue
+		var rest := f.substr(5).trim_suffix(".png")
+		var parts := rest.rsplit("_", true, 2)
+		if parts.size() < 3:
+			continue
+		var clip: String = parts[0]
+		if not by_clip.has(clip):
+			by_clip[clip] = []
+		by_clip[clip].append(f)
+	for clip in by_clip:
+		var files: Array = by_clip[clip]
+		files.sort()
+		var angles := STRIP_ANGLES.keys()
+		var cols := STRIP_TIMES
+		var rows := angles.size()
+		var cell := 260
+		var sheet := Image.create(cell * cols, cell * rows, false, Image.FORMAT_RGB8)
+		sheet.fill(Color(0.95, 0.94, 0.91))
+		for f in files:
+			var img := Image.load_from_file("%s/%s" % [_abs_out(), f])
+			if img == null:
+				continue
+			img.resize(cell, cell, Image.INTERPOLATE_BILINEAR)
+			# blit_rect needs matching formats, and the viewport gives RGBA8
+			img.convert(Image.FORMAT_RGB8)
+			var rest: String = (f as String).substr(5).trim_suffix(".png")
+			var idx := int(rest.rsplit("_", true, 1)[1])
+			var angle := rest.trim_prefix(clip + "_").rsplit("_", true, 1)[0]
+			var row := angles.find(angle)
+			if row < 0:
+				continue
+			sheet.blit_rect(img, Rect2i(0, 0, cell, cell), Vector2i(idx * cell, row * cell))
+		sheet.save_png("%s/sheet_%s.png" % [_abs_out(), clip])
+	var lineups: Array[String] = []
+	for f in _written:
+		if f.begins_with("lineup_"):
+			lineups.append(f)
+	if lineups.is_empty():
+		return
+	lineups.sort()
+	var imgs: Array[Image] = []
+	for f in lineups:
+		var im := Image.load_from_file("%s/%s" % [_abs_out(), f])
+		if im != null:
+			imgs.append(im)
+	if imgs.is_empty():
+		return
+	var w: int = imgs[0].get_width()
+	var h: int = imgs[0].get_height()
+	var sheet2 := Image.create(w, h * imgs.size(), false, Image.FORMAT_RGB8)
+	for i in imgs.size():
+		var im: Image = imgs[i]
+		im.resize(w, h, Image.INTERPOLATE_BILINEAR)
+		im.convert(Image.FORMAT_RGB8)
+		sheet2.blit_rect(im, Rect2i(0, 0, w, h), Vector2i(0, i * h))
+	sheet2.save_png("%s/contact_sheet.png" % _abs_out())

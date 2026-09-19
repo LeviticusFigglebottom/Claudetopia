@@ -1,0 +1,27 @@
+{
+ "bounds": [
+  -0.1122,
+  -0.1036,
+  1.8473,
+  0.1122,
+  0.1216,
+  1.8625
+ ],
+ "collision": "none",
+ "generator": "character_forge",
+ "kind": "attachment",
+ "material": "glow",
+ "params": {
+  "bone": "Head",
+  "material": "glow"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 4458,
+ "slot_hint": "attachment",
+ "tris": [
+  600,
+  0,
+  0
+ ],
+ "version": 1
+}

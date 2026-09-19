@@ -1,0 +1,27 @@
+{
+ "bounds": [
+  -0.0973,
+  -0.101,
+  1.6024,
+  0.0972,
+  0.1155,
+  1.7948
+ ],
+ "collision": "none",
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "iron",
+ "params": {
+  "bone": "Head",
+  "material": "iron"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 4809,
+ "slot_hint": "headgear",
+ "tris": [
+  1500,
+  0,
+  0
+ ],
+ "version": 1
+}

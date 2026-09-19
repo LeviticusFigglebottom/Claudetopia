@@ -1,0 +1,27 @@
+{
+ "bounds": [
+  -0.1041,
+  -0.0885,
+  1.4614,
+  0.1037,
+  0.1228,
+  1.7966
+ ],
+ "collision": "none",
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 3527,
+ "slot_hint": "attachment",
+ "tris": [
+  2200,
+  0,
+  0
+ ],
+ "version": 1
+}

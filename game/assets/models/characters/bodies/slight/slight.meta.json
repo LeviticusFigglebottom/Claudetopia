@@ -1,0 +1,38 @@
+{
+ "bounds": [
+  -0.8392,
+  -0.2515,
+  0.0008,
+  0.8393,
+  0.1174,
+  1.6048
+ ],
+ "collision": "none",
+ "generator": "character_forge",
+ "kind": "body",
+ "params": {
+  "proportions": {
+   "age": 0.3,
+   "build": 0.15,
+   "bulk": 0.9,
+   "feminine": 0.0,
+   "foot_size": 1.0,
+   "hand_size": 1.0,
+   "head_size": 1.0,
+   "height": 1.78,
+   "hip_width": 1.0,
+   "limb_length": 1.0,
+   "neck_length": 1.0,
+   "shoulder_width": 0.92
+  }
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 1,
+ "slot_hint": "body",
+ "tris": [
+  7800,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -1,0 +1,796 @@
+"""Clothing, armour, hair and attachments for WM_Humanoid_v1.
+
+Garments are grown from the body itself: the body's signed-distance field offset outward by
+the cloth thickness is, by construction, a shell that fits the wearer exactly and can never
+clip through them.  A garment is then that shell restricted to a *region* (torso, arms,
+legs, ...) plus its own shapes — a skirt that falls away from the legs, a hood that stands
+off the skull, a pauldron that sits proud of the shoulder.
+
+The same trick makes hair: the scalp region of the head field, pushed out by a thickness
+that varies with the style, plus tube_path locks for braids, buns and fringes.
+
+Regions are smooth 0..1 weights over 3D space (see `Region`), so garment edges can be soft
+(a sleeve that fades at the wrist) rather than a hard cut.
+"""
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass, field
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
+
+import numpy as np
+
+from . import rig, sdf, body as bodylib
+from .rig import Skeleton, FWD, UP, LEFT
+from .sdf import Prim, Scene
+
+BACK = -FWD
+
+
+# --------------------------------------------------------------------------------------
+# regions
+# --------------------------------------------------------------------------------------
+
+RegionFn = Callable[[np.ndarray], np.ndarray]
+
+
+def band_z(z0: float, z1: float, soft: float = 0.02) -> RegionFn:
+    """1 between two heights, fading over `soft`."""
+    def fn(P):
+        return (sdf_smoothstep(z0 - soft, z0 + soft, P[:, 2]) *
+                (1.0 - sdf_smoothstep(z1 - soft, z1 + soft, P[:, 2])))
+    return fn
+
+
+def sdf_smoothstep(e0: float, e1: float, x: np.ndarray) -> np.ndarray:
+    t = np.clip((x - e0) / max(e1 - e0, 1e-9), 0.0, 1.0)
+    return t * t * (3 - 2 * t)
+
+
+def near_bones(skel: Skeleton, bones: Sequence[str], radius: float, soft: float = 0.06) -> RegionFn:
+    """1 near the given bone segments.  The natural way to say 'the sleeves' or 'the legs'."""
+    segs = [(skel.bones[b].head, skel.bones[b].tail) for b in bones]
+
+    def fn(P):
+        d = np.full(len(P), 1e6)
+        for a, t in segs:
+            ab = t - a
+            l2 = max(float(np.dot(ab, ab)), 1e-9)
+            u = np.clip(((P - a) @ ab) / l2, 0.0, 1.0)
+            np.minimum(d, np.linalg.norm(P - (a + u[:, None] * ab), axis=1), out=d)
+        return 1.0 - sdf_smoothstep(radius - soft, radius + soft, d)
+    return fn
+
+
+def region_or(*fns: RegionFn) -> RegionFn:
+    def fn(P):
+        out = np.zeros(len(P))
+        for f in fns:
+            out = np.maximum(out, f(P))
+        return out
+    return fn
+
+
+def region_and(*fns: RegionFn) -> RegionFn:
+    def fn(P):
+        out = np.ones(len(P))
+        for f in fns:
+            out = np.minimum(out, f(P))
+        return out
+    return fn
+
+
+def region_not(f: RegionFn) -> RegionFn:
+    return lambda P: 1.0 - f(P)
+
+
+def region_scale(f: RegionFn, k: float) -> RegionFn:
+    return lambda P: np.clip(f(P) * k, 0.0, 1.0)
+
+
+# --------------------------------------------------------------------------------------
+# garment shells
+# --------------------------------------------------------------------------------------
+
+Field = "sdf.SampledField"
+
+
+def body_field(skel: Skeleton, style: Optional[bodylib.BodyStyle] = None, spacing: float = 0.005) -> sdf.SampledField:
+    """The body's distance field, cached once so every garment can offset it cheaply."""
+    return sdf.SampledField(bodylib.body_scene(skel, style), spacing=spacing, margin=0.09)
+
+
+def head_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None, spacing: float = 0.0032) -> sdf.SampledField:
+    return sdf.SampledField(bodylib.head_scene(skel, hs, with_neck=False), spacing=spacing, margin=0.06)
+
+
+def offset_shell(body, region: RegionFn, thickness: float, gap: float = 0.004,
+                 k: float = 0.0, bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+                 hollow: bool = False) -> Prim:
+    """The body's field pushed out by `gap + thickness`, restricted to `region`.
+
+    Solid by default.  A garment modelled as a true two-sided shell a centimetre thick
+    tangles the moment it is decimated to a game triangle budget — opposite faces collapse
+    into each other — and nothing in this game ever sees the inside of a tunic, so the
+    piece simply encloses the body instead.  Outside the region the field is pushed
+    outward, which ends the garment in a soft hem rather than a torn edge.
+
+    `bounds` limits where the garment is evaluated at all; without it a belt would be
+    meshed over the whole body's bounding box."""
+    outer = gap + thickness
+    mid = 0.5 * (gap + outer)
+    half = 0.5 * (outer - gap)
+
+    def fn(P):
+        d = body.eval(P)
+        w = np.clip(region(P), 0.0, 1.0)
+        surf = (np.abs(d - mid) - half) if hollow else (d - outer)
+        return surf + (1.0 - w) * 0.25
+    lo, hi = bounds if bounds is not None else body.bounds(outer + 0.05)
+    return Prim(fn, np.asarray(lo, float), np.asarray(hi, float), "union", k)
+
+
+def solid_shell(body, region: RegionFn, thickness: float, gap: float = 0.004,
+                bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None) -> Prim:
+    """Like `offset_shell` but solid (the body's volume is included), for pieces that are
+    easier to mesh closed — boots, helms, gloves."""
+    outer = gap + thickness
+
+    def fn(P):
+        d = body.eval(P) - outer
+        w = np.clip(region(P), 0.0, 1.0)
+        return d + (1.0 - w) * 0.25
+    lo, hi = bounds if bounds is not None else body.bounds(outer + 0.05)
+    return Prim(fn, np.asarray(lo, float), np.asarray(hi, float), "union", 0.0)
+
+
+def zbox(skel: Skeleton, z0: float, z1: float, xy: float = 0.42, ymin: float = -0.34,
+         ymax: float = 0.30) -> Tuple[np.ndarray, np.ndarray]:
+    """Bounds helper in metres: a slab between two heights around the body axis."""
+    s = _s(skel)
+    return (np.array([-xy * s, ymin * s, z0]), np.array([xy * s, ymax * s, z1]))
+
+
+@dataclass
+class Garment:
+    name: str
+    scene: Scene
+    spacing: float = 0.006
+    smooth: int = 5
+    target_tris: int = 2200
+    material: str = "cloth"
+    colour_key: str = "primary"
+    bone: Optional[str] = None           # rigid parts (helms, horns) bind to one bone
+    double_sided: bool = False
+
+    def mesh(self) -> Tuple[np.ndarray, np.ndarray]:
+        return sdf.mesh_from_scene(self.scene, self.spacing, smooth_iters=self.smooth, project=1)
+
+
+# --------------------------------------------------------------------------------------
+# the garment library
+# --------------------------------------------------------------------------------------
+
+def _s(skel: Skeleton) -> float:
+    return skel.props.height / rig.DEFAULT_HEIGHT
+
+
+def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves: float = 0.0,
+                 collar: float = 0.0, soft: float = 0.025) -> RegionFn:
+    """The trunk between `hem` and `top` (fractions of the body height), optionally with
+    sleeves running `sleeves` of the way down the arms.
+
+    `collar` raises (+) or lowers (-) the neckline in metres from the base of the neck; the
+    garment always covers the shoulders, so a negative collar opens the throat rather than
+    stripping the chest."""
+    s = _s(skel)
+    z0 = hem * skel.props.height
+    z1 = top * skel.props.height
+    trunk = band_z(z0, z1, soft * s)
+    arms: List[RegionFn] = []
+    if sleeves > 0.01:
+        bones = ["Shoulder.L", "Shoulder.R", "UpperArm.L", "UpperArm.R"]
+        if sleeves > 0.55:
+            bones += ["LowerArm.L", "LowerArm.R"]
+        r = 0.10 * s + 0.02 * s
+        arm_len = skel.bones["UpperArm.L"].length + skel.bones["LowerArm.L"].length
+        reach = arm_len * sleeves
+        sh = skel.J["UpperArm.L"]
+
+        def sleeve_fn(P, sh=sh, reach=reach):
+            dl = np.linalg.norm(P - sh, axis=1)
+            dr = np.linalg.norm(P - (sh * np.array([-1, 1, 1])), axis=1)
+            d = np.minimum(dl, dr)
+            return 1.0 - sdf_smoothstep(reach - 0.015 * s, reach + 0.010 * s, d)
+        arms.append(region_and(near_bones(skel, bones, 0.100 * s, 0.030 * s), sleeve_fn))
+    neck_cut = float(skel.J["Neck"][2]) + collar * s
+    neck_r = 0.085 * s
+
+    def neckline(P):
+        # cut only a throat-sized hole, so shoulders and chest stay covered
+        near_axis = 1.0 - sdf_smoothstep(neck_r * 0.75, neck_r * 1.35, np.hypot(P[:, 0], P[:, 1] - 0.01 * s))
+        above = sdf_smoothstep(neck_cut - 0.025 * s, neck_cut + 0.015 * s, P[:, 2])
+        return 1.0 - np.clip(near_axis * above + sdf_smoothstep(neck_cut + 0.06 * s, neck_cut + 0.10 * s, P[:, 2]), 0, 1)
+    body_part = region_and(trunk, neckline)
+    return region_or(body_part, *arms) if arms else body_part
+
+
+def legs_region(skel: Skeleton, *, top: float = 0.60, length: float = 1.0, soft: float = 0.02) -> RegionFn:
+    s = _s(skel)
+    hip = float(skel.J["UpperLeg.L"][2])
+    z_top = top * skel.props.height
+    ankle = float(skel.J["Foot.L"][2])
+    z_bot = ankle + (hip - ankle) * (1.0 - length)
+    return region_and(band_z(z_bot, z_top, soft * s),
+                      near_bones(skel, ["UpperLeg.L", "UpperLeg.R", "LowerLeg.L", "LowerLeg.R", "Hips"], 0.17 * s, 0.05 * s))
+
+
+def tunic(skel: Skeleton, body, *, hem: float = 0.44, sleeves: float = 0.55,
+          thickness: float = 0.010, name: str = "tunic") -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    reg = torso_region(skel, top=0.90, hem=hem, sleeves=sleeves, collar=0.012)
+    sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
+                          bounds=zbox(skel, hem * skel.props.height - 0.03 * s, 0.92 * skel.props.height, xy=0.55)))
+    # the skirt of the tunic hangs away from the legs instead of shrink-wrapping them
+    hip = float(skel.J["UpperLeg.L"][2])
+    z_hem = hem * skel.props.height
+    sc.union(sdf.loft([
+        (np.array([0.0, 0.010 * s, hip + 0.10 * s]), 0.150 * s, 0.110 * s),
+        (np.array([0.0, 0.008 * s, hip - 0.02 * s]), 0.160 * s, 0.118 * s),
+        (np.array([0.0, 0.004 * s, z_hem + 0.03 * s]), 0.170 * s, 0.126 * s),
+        (np.array([0.0, 0.0, z_hem]), 0.171 * s, 0.127 * s),
+    ], LEFT, axis=UP), k=0.014 * s)
+    return Garment(name, sc, spacing=0.0075, target_tris=4200, material="cloth")
+
+
+def shirt(skel: Skeleton, body, *, thickness: float = 0.008) -> Garment:
+    sc = Scene()
+    s = _s(skel)
+    reg = torso_region(skel, top=0.90, hem=0.52, sleeves=0.62, collar=0.004)
+    sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
+                          bounds=zbox(skel, 0.50 * skel.props.height, 0.92 * skel.props.height, xy=0.62)))
+    return Garment("shirt", sc, spacing=0.0070, target_tris=3600, material="cloth")
+
+
+def trousers(skel: Skeleton, body, *, thickness: float = 0.010, length: float = 0.92) -> Garment:
+    sc = Scene()
+    s = _s(skel)
+    reg = legs_region(skel, top=0.575, length=length)
+    sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
+                          bounds=zbox(skel, 0.02, 0.60 * skel.props.height, xy=0.26)))
+    return Garment("trousers", sc, spacing=0.0070, target_tris=3600, material="cloth")
+
+
+def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: str = "skirt") -> Garment:
+    s = _s(skel)
+    hip = float(skel.J["UpperLeg.L"][2])
+    z_hem = hem * skel.props.height
+    waist = float(skel.J["Spine"][2])
+    sc = Scene()
+    outer = sdf.loft([
+        (np.array([0.0, 0.0, waist]), 0.134 * s, 0.100 * s),
+        (np.array([0.0, 0.0, hip + 0.02 * s]), 0.158 * s, 0.118 * s),
+        (np.array([0.0, 0.0, (hip + z_hem) * 0.5]), (0.172 + 0.030 * flare) * s, (0.130 + 0.026 * flare) * s),
+        (np.array([0.0, 0.0, z_hem + 0.02 * s]), (0.186 + 0.058 * flare) * s, (0.142 + 0.048 * flare) * s),
+        (np.array([0.0, 0.0, z_hem]), (0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s),
+    ], LEFT, axis=UP)
+    sc.union(outer)
+    # soft vertical folds
+    n = 9
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        d = np.array([math.cos(a), math.sin(a), 0.0])
+        sc.subtract(sdf.tube_path([d * 0.155 * s + np.array([0, 0, hip + 0.02 * s]),
+                                   d * (0.186 + 0.058 * flare) * s + np.array([0, 0, z_hem])],
+                                  0.010 * s), k=0.016 * s)
+    return Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
+
+
+def dress(skel: Skeleton, body) -> Garment:
+    s = _s(skel)
+    g = skirt(skel, body, hem=0.22, flare=0.8, name="dress")
+    reg = torso_region(skel, top=0.90, hem=0.55, sleeves=0.45, collar=0.0)
+    g.scene.union(offset_shell(body, reg, 0.010 * s, gap=0.004 * s,
+                               bounds=zbox(skel, 0.53 * skel.props.height, 0.92 * skel.props.height, xy=0.50)), k=0.01 * s)
+    g.target_tris = 4400
+    return g
+
+
+def robe(skel: Skeleton, body) -> Garment:
+    s = _s(skel)
+    g = skirt(skel, body, hem=0.08, flare=0.55, name="robe")
+    reg = torso_region(skel, top=0.92, hem=0.50, sleeves=1.0, collar=0.020)
+    g.scene.union(offset_shell(body, reg, 0.013 * s, gap=0.006 * s,
+                               bounds=zbox(skel, 0.48 * skel.props.height, 0.94 * skel.props.height, xy=0.80)), k=0.012 * s)
+    # wide sleeve bells
+    for side in ("L", "R"):
+        wr = skel.J[f"Hand.{side}"]
+        el = skel.J[f"LowerArm.{side}"]
+        d = rig._unit(wr - el)
+        g.scene.union(sdf.loft([
+            (el + d * 0.10 * s, 0.075 * s, 0.075 * s),
+            (wr - d * 0.02 * s, 0.098 * s, 0.098 * s),
+            (wr + d * 0.03 * s, 0.100 * s, 0.100 * s),
+        ], FWD), k=0.02 * s)
+    g.target_tris = 4800
+    g.spacing = 0.0080
+    return g
+
+
+def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30) -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    chest = float(skel.J["Chest"][2])
+    neck = float(skel.J["Neck"][2])
+    z_hem = hem * skel.props.height
+    shoulder_x = float(skel.J["UpperArm.L"][0])
+    # a cape hanging off the shoulders: wide at the back, open at the front
+    outer = sdf.loft([
+        (np.array([0.0, 0.014 * s, neck + 0.030 * s]), 0.150 * s, 0.118 * s),
+        (np.array([0.0, 0.016 * s, neck - 0.020 * s]), (shoulder_x + 0.045) * s, 0.130 * s),
+        (np.array([0.0, 0.018 * s, chest - 0.05 * s]), (shoulder_x + 0.060) * s, 0.145 * s),
+        (np.array([0.0, 0.020 * s, (chest + z_hem) * 0.5]), (shoulder_x + 0.055) * s, 0.150 * s),
+        (np.array([0.0, 0.022 * s, z_hem + 0.03 * s]), (shoulder_x + 0.075) * s, 0.165 * s),
+        (np.array([0.0, 0.022 * s, z_hem]), (shoulder_x + 0.076) * s, 0.166 * s),
+    ], LEFT, axis=UP)
+    sc.union(outer)
+    # open down the front
+    sc.subtract(sdf.box([0.0, -0.40 * s, (neck + z_hem) * 0.5], [0.085 * s, 0.30 * s, (neck - z_hem) * 0.6],
+                        round_r=0.02 * s), k=0.02 * s)
+    for i in range(7):
+        a = math.pi * (0.25 + 0.5 * i / 6)
+        d = np.array([math.cos(a), math.sin(a), 0.0])
+        sc.subtract(sdf.tube_path([d * 0.16 * s + np.array([0, 0, chest]),
+                                   d * (shoulder_x + 0.072) * s + np.array([0, 0.02 * s, z_hem])],
+                                  0.014 * s), k=0.022 * s)
+    g = Garment("hooded_cloak" if hooded else "cloak", sc, spacing=0.0080, target_tris=3600, material="cloth")
+    if hooded:
+        g.scene.union(hood_prim(skel, body, up=True), k=0.02 * s)
+        g.target_tris = 3000
+    return g
+
+
+def hood_prim(skel: Skeleton, body, up: bool = True) -> Prim:
+    """A hood standing off the skull (worn up), open at the face."""
+    s = _s(skel)
+    L = bodylib.head_landmarks(skel)
+    c = L["skull_c"]
+    r = L["skull_r"]
+    parts = []
+    outer = sdf.ellipsoid(c + np.array([0.0, 0.020 * s, 0.012 * s]),
+                          [r[0] * 1.24, r[1] * 1.26, r[2] * 1.22])
+    cone = sdf.loft([
+        (np.array([0.0, c[1] + 0.03 * s, c[2] - r[2] * 1.1]), r[0] * 1.30, r[1] * 1.34),
+        (np.array([0.0, c[1] + 0.05 * s, float(skel.J["Neck"][2]) - 0.02 * s]), r[0] * 1.55, r[1] * 1.50),
+    ], LEFT, axis=UP)
+    grp = sdf.group([outer, sdf.Prim(cone.fn, cone.lo, cone.hi, "union", 0.04 * s)], internal_k=0.03 * s)
+    sc = Scene()
+    sc.union(grp)
+    sc.subtract(sdf.ellipsoid(c + np.array([0.0, 0.016 * s, 0.006 * s]),
+                              [r[0] * 1.12, r[1] * 1.14, r[2] * 1.10]), k=0.006 * s)
+    # the face opening
+    sc.subtract(sdf.ellipsoid([0.0, L["face_y"] - 0.02 * s, L["eye_z"] - 0.012 * s],
+                              [r[0] * 0.92, 0.090 * s, r[2] * 0.85]), k=0.012 * s)
+    prim = sdf.Prim(sc.eval, *sc.bounds(0.02), "union", 0.0)
+    return prim
+
+
+def hood(skel: Skeleton, body) -> Garment:
+    sc = Scene()
+    sc.union(hood_prim(skel, body, up=True))
+    return Garment("hood", sc, spacing=0.0055, target_tris=1400, material="cloth", bone="Head")
+
+
+def boots(skel: Skeleton, body, *, high: float = 0.30) -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    ankle = float(skel.J["Foot.L"][2])
+    knee = float(skel.J["LowerLeg.L"][2])
+    top = ankle + (knee - ankle) * high
+    reg = region_and(band_z(-0.05, top, 0.018 * s),
+                     near_bones(skel, ["Foot.L", "Foot.R", "Toe.L", "Toe.R", "LowerLeg.L", "LowerLeg.R"], 0.13 * s, 0.05 * s))
+    sc.union(solid_shell(body, reg, 0.013 * s, gap=0.003 * s,
+                         bounds=zbox(skel, -0.01, top + 0.03 * s, xy=0.24, ymin=-0.32, ymax=0.16)))
+    # a sole and a small heel
+    for side in ("L", "R"):
+        an = skel.J[f"Foot.{side}"]
+        tip = skel.J[f"ToeTip.{side}"]
+        sc.union(sdf.loft([
+            (np.array([an[0], an[1] + 0.075 * s, 0.012 * s]), 0.048 * s, 0.014 * s),
+            (np.array([an[0], an[1], 0.010 * s]), 0.054 * s, 0.012 * s),
+            (np.array([an[0], tip[1] + 0.012 * s, 0.010 * s]), 0.058 * s, 0.011 * s),
+        ], LEFT), k=0.012 * s)
+        sc.union(sdf.box([an[0], an[1] + 0.065 * s, 0.014 * s], [0.042 * s, 0.038 * s, 0.016 * s], round_r=0.008 * s), k=0.012 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]), k=0.006 * s)
+    return Garment("boots", sc, spacing=0.0055, target_tris=1600, material="leather")
+
+
+def shoes(skel: Skeleton, body) -> Garment:
+    g = boots(skel, body, high=0.07)
+    g.name = "shoes"
+    g.target_tris = 1100
+    return g
+
+
+def gloves(skel: Skeleton, body) -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    reg = near_bones(skel, ["Hand.L", "Hand.R"], 0.115 * s, 0.045 * s)
+    cuff = near_bones(skel, ["LowerArm.L", "LowerArm.R"], 0.075 * s, 0.03 * s)
+    wrist_l = skel.J["Hand.L"]
+    wrist_r = skel.J["Hand.R"]
+
+    def near_wrist(P):
+        d = np.minimum(np.linalg.norm(P - wrist_l, axis=1), np.linalg.norm(P - wrist_r, axis=1))
+        return 1.0 - sdf_smoothstep(0.085 * s, 0.115 * s, d)
+    lo = np.minimum(wrist_l, wrist_r) - 0.20 * s
+    hi = np.maximum(wrist_l, wrist_r) + 0.22 * s
+    sc.union(solid_shell(body, region_or(reg, region_and(cuff, near_wrist)), 0.008 * s, gap=0.002 * s,
+                         bounds=(lo, hi)))
+    return Garment("gloves", sc, spacing=0.0040, target_tris=1200, material="leather")
+
+
+def belt(skel: Skeleton, body, *, pouch: bool = True) -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    z = float(skel.J["Spine"][2]) - 0.02 * s
+    reg = band_z(z - 0.026 * s, z + 0.026 * s, 0.006 * s)
+    sc.union(offset_shell(body, reg, 0.009 * s, gap=0.013 * s,
+                          bounds=zbox(skel, z - 0.05 * s, z + 0.05 * s, xy=0.24)))
+    # buckle
+    sc.union(sdf.box([0.0, -0.135 * s, z], [0.026 * s, 0.014 * s, 0.024 * s], round_r=0.005 * s), k=0.006 * s)
+    if pouch:
+        sc.union(sdf.box([0.105 * s, -0.030 * s, z - 0.055 * s], [0.042 * s, 0.030 * s, 0.046 * s], round_r=0.014 * s), k=0.012 * s)
+        sc.union(sdf.box([0.105 * s, -0.030 * s, z - 0.012 * s], [0.044 * s, 0.032 * s, 0.010 * s], round_r=0.006 * s), k=0.008 * s)
+    return Garment("belt", sc, spacing=0.0040, target_tris=900, material="leather")
+
+
+def apron(skel: Skeleton, body) -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    chest = float(skel.J["Chest"][2])
+    hem = 0.36 * skel.props.height
+
+    def front(P):
+        return (1.0 - sdf_smoothstep(-0.02 * s, 0.03 * s, P[:, 1])) * \
+            (1.0 - sdf_smoothstep(0.115 * s, 0.155 * s, np.abs(P[:, 0])))
+    reg = region_and(band_z(hem, chest + 0.06 * s, 0.02 * s), front)
+    sc.union(offset_shell(body, reg, 0.010 * s, gap=0.014 * s,
+                          bounds=zbox(skel, hem - 0.03 * s, chest + 0.10 * s, xy=0.22, ymin=-0.26, ymax=0.10)))
+    # neck strap and waist ties
+    sc.union(sdf.tube_path([[0.05 * s, -0.04 * s, chest + 0.06 * s], [0.055 * s, 0.02 * s, float(skel.J["Neck"][2])],
+                            [0.0, 0.075 * s, float(skel.J["Neck"][2]) + 0.005 * s],
+                            [-0.055 * s, 0.02 * s, float(skel.J["Neck"][2])], [-0.05 * s, -0.04 * s, chest + 0.06 * s]],
+                           0.008 * s), k=0.01 * s)
+    return Garment("apron", sc, spacing=0.0060, target_tris=1200, material="cloth")
+
+
+def gambeson(skel: Skeleton, body) -> Garment:
+    s = _s(skel)
+    g = tunic(skel, body, hem=0.42, sleeves=0.75, thickness=0.026, name="gambeson")
+    # quilted channels
+    hip = float(skel.J["UpperLeg.L"][2])
+    chest = float(skel.J["Chest"][2])
+    for i in range(8):
+        a = 2 * math.pi * i / 8
+        d = np.array([math.cos(a), math.sin(a), 0.0])
+        g.scene.subtract(sdf.tube_path([d * 0.175 * s + np.array([0, 0, chest + 0.10 * s]),
+                                        d * 0.185 * s + np.array([0, 0, hip + 0.03 * s]),
+                                        d * 0.200 * s + np.array([0, 0, 0.44 * skel.props.height])],
+                                       0.010 * s), k=0.016 * s)
+    g.material = "cloth"
+    g.target_tris = 4400
+    g.spacing = 0.0080
+    return g
+
+
+def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    chest = float(skel.J["Chest"][2])
+    waist = float(skel.J["Spine"][2])
+    hip = float(skel.J["UpperLeg.L"][2])
+    reg = region_and(band_z(hip + 0.02 * s, float(skel.J["Neck"][2]) - 0.01 * s, 0.018 * s),
+                     region_not(near_bones(skel, ["UpperArm.L", "UpperArm.R"], 0.085 * s, 0.03 * s)))
+    sc.union(offset_shell(body, reg, 0.016 * s, gap=0.014 * s,
+                          bounds=zbox(skel, hip - 0.16 * s, float(skel.J["Neck"][2]) + 0.04 * s, xy=0.30)))
+    # a breastplate keel and a raised neck edge
+    sc.union(sdf.loft([
+        (np.array([0.0, -0.128 * s, chest + 0.085 * s]), 0.070 * s, 0.020 * s),
+        (np.array([0.0, -0.140 * s, chest - 0.01 * s]), 0.058 * s, 0.024 * s),
+        (np.array([0.0, -0.126 * s, waist + 0.02 * s]), 0.040 * s, 0.020 * s),
+    ], LEFT, axis=UP), k=0.026 * s)
+    if brigandine:
+        rng = np.random.default_rng(7)
+        for i in range(34):
+            a = rng.uniform(0, 2 * math.pi)
+            z = rng.uniform(hip + 0.05 * s, chest + 0.14 * s)
+            d = np.array([math.cos(a), math.sin(a) * 0.78, 0.0])
+            sc.union(sdf.sphere(d * 0.175 * s + np.array([0, 0, z]), 0.0075 * s), k=0.004 * s)
+    else:
+        for i in range(3):
+            z = waist - 0.01 * s - i * 0.045 * s
+            sc.union(sdf.loft([
+                (np.array([0.0, 0.0, z]), (0.175 + 0.008 * i) * s, (0.132 + 0.006 * i) * s),
+                (np.array([0.0, 0.0, z - 0.030 * s]), (0.180 + 0.008 * i) * s, (0.136 + 0.006 * i) * s),
+            ], LEFT, axis=UP), k=0.010 * s)
+            sc.subtract(sdf.loft([
+                (np.array([0.0, 0.0, z + 0.004 * s]), (0.162 + 0.008 * i) * s, (0.120 + 0.006 * i) * s),
+                (np.array([0.0, 0.0, z - 0.034 * s]), (0.168 + 0.008 * i) * s, (0.124 + 0.006 * i) * s),
+            ], LEFT, axis=UP), k=0.004 * s)
+    return Garment("brigandine" if brigandine else "plate_torso", sc, spacing=0.0075,
+                   target_tris=4000, material="iron")
+
+
+def pauldrons(skel: Skeleton, body) -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    for side, sx in (("L", 1), ("R", -1)):
+        sh = skel.J[f"UpperArm.{side}"]
+        for i in range(3):
+            r = (0.095 + 0.012 * i) * s
+            c = sh + np.array([sx * (0.004 + 0.012 * i) * s, 0.0, (0.012 - 0.030 * i) * s])
+            lam = sdf.ellipsoid(c, [r, r * 1.02, r * 0.86])
+            inner = sdf.ellipsoid(c + np.array([-sx * 0.012 * s, 0, 0.004 * s]), [r * 0.88, r * 0.88, r * 0.78])
+            sub = Scene()
+            sub.union(lam)
+            sub.subtract(inner, k=0.004 * s)
+            sub.intersect(sdf.plane(c + np.array([0, 0, (-0.022 - 0.002 * i) * s]), [0, 0, -1.0]), k=0.004 * s)
+            sc.union(sdf.Prim(sub.eval, *sub.bounds(0.02), "union", 0.0), k=0.006 * s)
+    return Garment("pauldrons", sc, spacing=0.0045, target_tris=1600, material="iron")
+
+
+def greaves(skel: Skeleton, body) -> Garment:
+    s = _s(skel)
+    sc = Scene()
+    knee = float(skel.J["LowerLeg.L"][2])
+    ankle = float(skel.J["Foot.L"][2])
+
+    def shin_front(P):
+        return 1.0 - sdf_smoothstep(-0.02 * s, 0.04 * s, P[:, 1])
+    reg = region_and(band_z(ankle + 0.035 * s, knee + 0.015 * s, 0.015 * s),
+                     near_bones(skel, ["LowerLeg.L", "LowerLeg.R"], 0.085 * s, 0.03 * s), shin_front)
+    sc.union(offset_shell(body, reg, 0.010 * s, gap=0.010 * s,
+                          bounds=zbox(skel, ankle, knee + 0.08 * s, xy=0.24, ymin=-0.20, ymax=0.14)))
+    for side, sx in (("L", 1), ("R", -1)):
+        kn = skel.J[f"LowerLeg.{side}"]
+        sc.union(sdf.ellipsoid(kn + np.array([0.0, -0.052 * s, 0.012 * s]), [0.052 * s, 0.028 * s, 0.052 * s], k=0.012 * s))
+    return Garment("greaves", sc, spacing=0.0045, target_tris=1300, material="iron")
+
+
+def helm(skel: Skeleton, body, *, open_face: bool = True) -> Garment:
+    s = _s(skel)
+    L = bodylib.head_landmarks(skel)
+    c, r = L["skull_c"], L["skull_r"]
+    sc = Scene()
+    sc.union(sdf.ellipsoid(c + np.array([0.0, 0.004 * s, 0.004 * s]), [r[0] * 1.12, r[1] * 1.10, r[2] * 1.12]))
+    sc.subtract(sdf.ellipsoid(c + np.array([0.0, 0.004 * s, 0.002 * s]), [r[0] * 1.03, r[1] * 1.01, r[2] * 1.03]), k=0.003 * s)
+    # cut the whole lower half off, then a face opening
+    sc.intersect(sdf.plane([0.0, 0.0, L["eye_z"] - 0.012 * s], [0.0, 0.0, -1.0]), k=0.006 * s)
+    if open_face:
+        sc.subtract(sdf.box([0.0, L["face_y"] - 0.04 * s, L["eye_z"] + 0.030 * s],
+                            [r[0] * 0.62, 0.075 * s, 0.030 * s], round_r=0.012 * s), k=0.008 * s)
+    # nasal bar and a brow ridge
+    sc.union(sdf.tube_path([[0.0, L["face_y"] + 0.004 * s, L["brow_z"] + 0.016 * s],
+                            [0.0, L["face_y"] - 0.008 * s, L["eye_z"] - 0.006 * s],
+                            [0.0, L["face_y"] - 0.010 * s, L["nose_base_z"]]], 0.009 * s), k=0.006 * s)
+    sc.union(sdf.tube_path([[-r[0] * 1.02, c[1] + 0.03 * s, L["eye_z"] + 0.030 * s],
+                            [0.0, L["face_y"] + 0.004 * s, L["eye_z"] + 0.036 * s],
+                            [r[0] * 1.02, c[1] + 0.03 * s, L["eye_z"] + 0.030 * s]], 0.010 * s), k=0.008 * s)
+    return Garment("helm", sc, spacing=0.0042, target_tris=1500, material="iron", bone="Head")
+
+
+# --------------------------------------------------------------------------------------
+# hair and beards
+# --------------------------------------------------------------------------------------
+
+def _head_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None) -> sdf.SampledField:
+    return head_field(skel, hs)
+
+
+def hair(skel: Skeleton, name: str, *, front: float = 1.0, sides: float = 1.0, back: float = 1.0,
+         thickness: float = 0.016, locks: Sequence[Sequence[Sequence[float]]] = (),
+         lock_radius: float = 0.018, hs: Optional[bodylib.HeadStyle] = None) -> Garment:
+    """A hair shell over the scalp, plus optional locks (a braid, a bun, a fringe)."""
+    s = _s(skel)
+    head = _head_field(skel, hs)
+    L = bodylib.head_landmarks(skel, hs)
+
+    def region(P):
+        return np.clip(bodylib.scalp_field(P, skel, hs or bodylib.HeadStyle(), front, sides, back) * 0.55 + 0.42, 0.0, 1.0)
+    sc = Scene()
+    lo, hi = head.bounds(0.02)
+    sc.union(offset_shell(head, region, thickness * s, gap=0.001 * s, bounds=(lo, hi)))
+    for pts in locks:
+        sc.union(sdf.tube_path([np.asarray(p, float) * s for p in pts], lock_radius * s), k=0.012 * s)
+    return Garment(name, sc, spacing=0.0034, target_tris=2200, material="hair", bone="Head")
+
+
+def beard(skel: Skeleton, name: str, *, moustache: bool = True, cheeks: float = 1.0, length: float = 1.0,
+          thickness: float = 0.013, hs: Optional[bodylib.HeadStyle] = None) -> Garment:
+    s = _s(skel)
+    head = _head_field(skel, hs)
+    hsx = hs or bodylib.HeadStyle()
+    L = bodylib.head_landmarks(skel, hsx)
+
+    def region(P):
+        eps = 1e-3
+        d0 = head.eval(P)
+        g = np.stack([(head.eval(P + np.eye(3)[i] * eps) - d0) / eps for i in range(3)], axis=1)
+        g = g / np.maximum(np.linalg.norm(g, axis=1, keepdims=True), 1e-9)
+        f = bodylib.beard_field(P, g, skel, hsx, moustache, cheeks, length)
+        return np.clip(f * 0.8 + 0.4, 0.0, 1.0)
+    sc = Scene()
+    lo, hi = head.bounds(0.02)
+    sc.union(offset_shell(head, region, thickness * s, gap=0.001 * s, bounds=(lo, hi)))
+    if length > 1.2:
+        chin = np.array([0.0, L["face_y"] + 0.02 * s, L["chin_z"]])
+        sc.union(sdf.tube_path([chin, chin + np.array([0.0, 0.006 * s, -0.05 * s * length]),
+                                chin + np.array([0.0, 0.016 * s, -0.10 * s * length])],
+                               [0.028 * s, 0.024 * s, 0.014 * s]), k=0.015 * s)
+    return Garment(name, sc, spacing=0.0036, target_tris=900, material="hair", bone="Head")
+
+
+# --------------------------------------------------------------------------------------
+# morality attachments (DESIGN.md §5.11)
+# --------------------------------------------------------------------------------------
+
+def horns(skel: Skeleton, *, big: bool = False) -> Garment:
+    s = _s(skel)
+    L = bodylib.head_landmarks(skel)
+    c, r = L["skull_c"], L["skull_r"]
+    k = 1.7 if big else 1.0
+    sc = Scene()
+    for sx in (1, -1):
+        base = np.array([sx * r[0] * 0.62, c[1] - 0.010 * s, c[2] + r[2] * 0.66])
+        pts = [base,
+               base + np.array([sx * 0.012 * s, -0.004 * s, 0.030 * s * k]),
+               base + np.array([sx * 0.030 * s, 0.006 * s, 0.055 * s * k]),
+               base + np.array([sx * 0.044 * s, 0.026 * s, 0.070 * s * k])]
+        radii = [0.016 * s * k, 0.013 * s * k, 0.009 * s * k, 0.004 * s * k]
+        sc.union(sdf.tube_path(pts, radii), k=0.006 * s)
+    return Garment("horns_big" if big else "horns_small", sc, spacing=0.0028,
+                   target_tris=700, material="horn", bone="Head")
+
+
+def halo(skel: Skeleton) -> Garment:
+    s = _s(skel)
+    L = bodylib.head_landmarks(skel)
+    sc = Scene()
+    z = float(L["top"][2]) + 0.075 * s
+    sc.union(sdf.torus([0.0, L["skull_c"][1], z], 0.105 * s, 0.0075 * s, axis=UP))
+    return Garment("halo", sc, spacing=0.0030, target_tris=600, material="glow", bone="Head")
+
+
+# --------------------------------------------------------------------------------------
+# the catalogue
+# --------------------------------------------------------------------------------------
+
+HAIR_STYLES: Dict[str, dict] = {
+    "short": dict(front=1.0, sides=1.0, back=1.0, thickness=0.010),
+    "cropped": dict(front=1.15, sides=1.35, back=1.25, thickness=0.005),
+    "long": dict(front=0.9, sides=0.55, back=0.2, thickness=0.015),
+    "braid": dict(front=0.95, sides=0.85, back=0.7, thickness=0.011),
+    "bun": dict(front=0.95, sides=0.95, back=0.9, thickness=0.010),
+    "hood_friendly": dict(front=1.05, sides=1.1, back=1.05, thickness=0.007),
+    "tousled": dict(front=0.85, sides=1.0, back=0.95, thickness=0.014),
+}
+BEARD_STYLES: Dict[str, dict] = {
+    "stubble": dict(moustache=True, cheeks=1.0, length=0.55, thickness=0.006),
+    "short_beard": dict(moustache=True, cheeks=1.0, length=1.0, thickness=0.013),
+    "long_beard": dict(moustache=True, cheeks=1.0, length=1.6, thickness=0.017),
+    "moustache": dict(moustache=True, cheeks=0.0, length=0.35, thickness=0.011),
+}
+
+
+def hair_locks(skel: Skeleton, style: str) -> List[List[List[float]]]:
+    """Extra strands for the styles that need them, in units of the body scale."""
+    s = 1.0
+    L = bodylib.head_landmarks(skel)
+    c, r = L["skull_c"] / _s(skel), L["skull_r"] / _s(skel)
+    nape = [0.0, float(c[1]) + float(r[1]) * 0.72, float(c[2]) - float(r[2]) * 0.55]
+    if style == "long":
+        out = []
+        for sx in (1, -1, 0):
+            x = sx * 0.055
+            out.append([[x * 0.7, c[1] + r[1] * 0.55, c[2] + r[2] * 0.30],
+                        [x, c[1] + r[1] * 0.80, c[2] - r[2] * 0.30],
+                        [x, c[1] + r[1] * 0.86, c[2] - r[2] * 1.30],
+                        [x * 0.9, c[1] + r[1] * 0.80, c[2] - r[2] * 2.30]])
+        return out
+    if style == "braid":
+        return [[nape,
+                 [0.0, nape[1] + 0.012, nape[2] - 0.075],
+                 [0.012, nape[1] + 0.020, nape[2] - 0.150],
+                 [-0.010, nape[1] + 0.022, nape[2] - 0.225],
+                 [0.0, nape[1] + 0.020, nape[2] - 0.285]]]
+    if style == "bun":
+        b = [0.0, nape[1] + 0.030, float(c[2]) + float(r[2]) * 0.30]
+        return [[[b[0] - 0.045, b[1], b[2]], [b[0], b[1] + 0.022, b[2] + 0.020],
+                 [b[0] + 0.045, b[1], b[2]], [b[0], b[1] - 0.010, b[2] - 0.020],
+                 [b[0] - 0.045, b[1], b[2]]]]
+    if style == "tousled":
+        rng = np.random.default_rng(3)
+        out = []
+        for i in range(5):
+            a = rng.uniform(-1.0, 1.0)
+            out.append([[a * 0.05, c[1] - r[1] * 0.35, c[2] + r[2] * 0.70],
+                        [a * 0.055, c[1] - r[1] * 0.70, c[2] + r[2] * 0.62],
+                        [a * 0.06, c[1] - r[1] * 0.92, c[2] + r[2] * 0.50]])
+        return out
+    return []
+
+
+def build_hair(skel: Skeleton, style: str) -> Garment:
+    kw = dict(HAIR_STYLES[style])
+    locks = hair_locks(skel, style)
+    return hair(skel, style, locks=locks, lock_radius=0.021 if style != "braid" else 0.016, **kw)
+
+
+def build_beard(skel: Skeleton, style: str) -> Garment:
+    return beard(skel, style, **BEARD_STYLES[style])
+
+
+CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
+    "tunic": lambda s, b: tunic(s, b),
+    "shirt": shirt,
+    "trousers": trousers,
+    "skirt": lambda s, b: skirt(s, b),
+    "dress": dress,
+    "robe": robe,
+    "cloak": lambda s, b: cloak(s, b),
+    "hooded_cloak": lambda s, b: cloak(s, b, hooded=True),
+    "hood": hood,
+    "boots": lambda s, b: boots(s, b),
+    "shoes": shoes,
+    "gloves": gloves,
+    "belt": lambda s, b: belt(s, b),
+    "apron": apron,
+    "gambeson": gambeson,
+    "plate_torso": lambda s, b: plate_torso(s, b),
+    "brigandine": lambda s, b: plate_torso(s, b, brigandine=True),
+    "pauldrons": pauldrons,
+    "greaves": greaves,
+    "helm": lambda s, b: helm(s, b),
+}
+ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
+    "horns_small": lambda s: horns(s, big=False),
+    "horns_big": lambda s: horns(s, big=True),
+    "halo": halo,
+}
+
+
+# --------------------------------------------------------------------------------------
+# culture palettes (WORLD_BIBLE.md §3, DESIGN.md §7.0)
+# --------------------------------------------------------------------------------------
+
+CULTURE_PALETTES: Dict[str, Dict[str, str]] = {
+    # primary / secondary garment colours, the leather and the metal each culture uses
+    "vale": {"primary": "#a8763f", "secondary": "#7d8a4a", "accent": "#b23a2e",
+             "leather": "#6b4a2c", "metal": "#8a8f94", "trim": "#c9a24a",
+             "note": "warm wool; the accent is the family's painted-door colour"},
+    "lakefolk": {"primary": "#efe9dc", "secondary": "#5d6470", "accent": "#b08a3e",
+                 "leather": "#4a4239", "metal": "#b08a3e", "trim": "#3f7fb5",
+                 "note": "lime-white and slate, brass fittings"},
+    "reedfolk": {"primary": "#3b3a6e", "secondary": "#2f7f78", "accent": "#e8a93f",
+                 "leather": "#54452f", "metal": "#7d7a70", "trim": "#c9b26a",
+                 "note": "marsh indigo on everything"},
+    "clans": {"primary": "#c8bda6", "secondary": "#6e5a44", "accent": "#8a4a2e",
+              "leather": "#59432c", "metal": "#6f7378", "trim": "#e8e4d8",
+              "note": "undyed wool, bone tokens, chain"},
+    "woodfolk": {"primary": "#4a4030", "secondary": "#5c6b3c", "accent": "#8ab34a",
+                 "leather": "#3f3325", "metal": "#5f6259", "trim": "#2b211c",
+                 "note": "bark browns and moss"},
+    "ash_pilgrims": {"primary": "#8b8a86", "secondary": "#5a5652", "accent": "#d8cfbf",
+                     "leather": "#4a4744", "metal": "#77736d", "trim": "#a08a4a",
+                     "note": "grey, always grey"},
+}
+MATERIAL_DEFAULTS: Dict[str, dict] = {
+    "cloth": {"roughness": 0.88, "metallic": 0.0, "colour": "primary"},
+    "leather": {"roughness": 0.62, "metallic": 0.0, "colour": "leather"},
+    "iron": {"roughness": 0.38, "metallic": 1.0, "colour": "metal"},
+    "hair": {"roughness": 0.52, "metallic": 0.0, "colour": "hair"},
+    "horn": {"roughness": 0.55, "metallic": 0.0, "colour": "#c9bda6"},
+    "glow": {"roughness": 0.30, "metallic": 0.0, "colour": "#ffe7a8"},
+}
