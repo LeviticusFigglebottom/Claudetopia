@@ -60,7 +60,7 @@ func _merchant(table := GENERAL, marks := 200, buys: Array[String] = ["all"], on
 
 func test_stock_tables_are_well_formed() -> void:
 	var tables := ContentQuery.where_scalar("table", "role", "merchant_stock")
-	assert_eq(tables.size(), 5, "general, smith, alchemist, innkeeper, fishmonger")
+	assert_eq(tables.size(), 6, "general, smith, alchemist, innkeeper, fishmonger, binder")
 	for t in tables:
 		assert_gt(t["rows"].size(), 3, "%s is thin" % t["id"])
 		for row in t["rows"]:
@@ -70,6 +70,18 @@ func test_stock_tables_are_well_formed() -> void:
 			assert_eq(row["count"].size(), 2, "%s: %s count is a [min, max]" % [t["id"], row["item"]])
 			assert_true(int(row["count"][0]) <= int(row["count"][1]))
 			assert_gt(float(row.get("restock_hours", 0)), 0.0, "%s: %s needs restock_hours" % [t["id"], row["item"]])
+
+
+## Every shelf in the world has to be somebody's: a stock table nobody stands behind is a
+## shop that does not exist, which is how the tomes ended up unbuyable.
+func test_every_stock_table_has_a_merchant_behind_it() -> void:
+	var kept := {}
+	for npc in ContentDB.all("npc"):
+		var merchant: Dictionary = npc.get("merchant", {})
+		if merchant.has("stock"):
+			kept[str(merchant["stock"])] = str(npc["id"])
+	for t in ContentQuery.where_scalar("table", "role", "merchant_stock"):
+		assert_true(kept.has(str(t["id"])), "nobody sells from %s" % t["id"])
 
 
 func test_initial_stock_within_table_range() -> void:
