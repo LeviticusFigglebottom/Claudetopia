@@ -95,7 +95,7 @@ rolls) lives in `static func`s or `RefCounted` classes so tests need no scene.
 |---|---|---|---|
 | Stats & damage | `systems/combat` | `DamageModel` (pure), `Hitbox`, `Hurtbox`, `StaminaComponent`, `PoiseComponent`, `StatusEffects`, `LockOn` | via actors |
 | Progression | `systems/progression` | `Skills` (use-XP curves), `Leveling`, `Perks` | `progression` |
-| Inventory & loot | `systems/inventory` | `Inventory`, `Equipment`, `LootTable` (pure rolls) | `inventory`, `equipment` |
+| Inventory & loot | `systems/inventory` | `Inventory`, `Equipment`, `ItemStack`, `LootTable` (pure), `WorldContainer`, `LootDrops` | `inventory`, `equipment`, `containers` |
 | Crafting | `systems/crafting` | `Smithing`, `Alchemy` (effect discovery), `Enchanting` | `crafting` |
 | Dialogue | `systems/dialogue` | `DialogueRunner`, `Conditions` (pure), `Effects` | none (flags in GameState) |
 | Quests | `systems/quests` | `QuestLog`, `QuestStage`, `RadiantGenerator` | `quests` |
