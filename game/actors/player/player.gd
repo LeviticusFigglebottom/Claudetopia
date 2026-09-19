@@ -142,6 +142,8 @@ func _ready() -> void:
 	SaveSystem.register(SAVE_SECTION, self)
 	_register_character_sections()
 	_follow_equipment()
+	if not EventBus.item_used.is_connected(_on_item_used):
+		EventBus.item_used.connect(_on_item_used)
 	if DisplayServer.get_name() != "headless" and input_enabled:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	call_deferred("_announce")
@@ -152,6 +154,8 @@ func _announce() -> void:
 
 
 func _exit_tree() -> void:
+	if EventBus.item_used.is_connected(_on_item_used):
+		EventBus.item_used.disconnect(_on_item_used)
 	if SaveSystem.participants.get(SAVE_SECTION) == self:
 		SaveSystem.unregister(SAVE_SECTION)
 	for pair in [["inventory", "Inventory"], ["equipment", "Equipment"],
@@ -1004,6 +1008,16 @@ func casting_power(school: String = "") -> float:
 	if cut_for != "" and school != "" and cut_for != school:
 		return 1.0
 	return float(casting.get("power_mult", 1.0))
+
+
+## Eating or drinking something: the bag says what was used and the body does it. Nothing
+## applied these before, so every potion in the game was coloured water.
+func _on_item_used(item_id: String, effects: Array) -> void:
+	if effects.is_empty():
+		return
+	take_effects(effects)
+	var name := str(ContentDB.get_or_empty(item_id).get("name", "It"))
+	EventBus.notify.emit("%s takes hold." % name, "item")
 
 
 ## The Progression node that keeps what this character has learned, if there is one.

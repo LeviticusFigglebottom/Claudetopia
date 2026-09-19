@@ -21,6 +21,8 @@ signal level_changed(new_level: int)
 signal points_changed(attribute_points: int, perk_points: int)
 ## A saying was added to `known_spells` (the sayings screen listens to this).
 signal sayings_changed
+## A timed modifier (a potion, a meal) came or went.
+signal modifiers_changed
 
 const GROUP := "progression"
 const SAVE_SECTION := "progression"
@@ -35,6 +37,8 @@ var skill_set := Skills.new()
 var leveling := Leveling.new()
 var perks := Perks.new()
 var mods := Modifiers.new()
+## effect id -> when the timed modifier it set runs out (seconds, engine clock).
+var mods_source_expiry: Dictionary = {}
 var calling_id: String = ""
 ## The sayings this character has been taught, sorted; the only authority on what may be cast.
 var known_spells: Array[String] = []
@@ -119,6 +123,26 @@ func _on_skill_used(skill_id: String, xp: float) -> void:
 ## A book that teaches (`teaches_skill` on the book def) is worth one level of that skill, the
 ## first time it is read and never again. The flag it sets is also what dialogue and quests
 ## key on to know you have read a thing.
+## A modifier with a clock on it: what a potion or a meal leaves behind. The source is the
+## effect's own id, so drinking the same draught twice refreshes rather than stacks, and the
+## timer is a scene-tree timer so it survives whatever else is going on.
+func add_timed_modifier(source: String, mods: Array, duration: float) -> void:
+	mods_source_expiry[source] = Time.get_ticks_msec() * 0.001 + duration
+	self.mods.set_source(source, mods)
+	modifiers_changed.emit()
+	var timer := get_tree().create_timer(duration, false)
+	timer.timeout.connect(func() -> void: _expire_modifier(source))
+
+
+func _expire_modifier(source: String) -> void:
+	# Another draught may have refreshed it while this timer was running.
+	if float(mods_source_expiry.get(source, 0.0)) - Time.get_ticks_msec() * 0.001 > 0.05:
+		return
+	mods_source_expiry.erase(source)
+	mods.clear_source(source)
+	modifiers_changed.emit()
+
+
 ## Grants skill XP, levels the skill up and, through the gain total, the character.
 ## Returns the skill levels gained.
 func award(skill: String, xp: float) -> int:

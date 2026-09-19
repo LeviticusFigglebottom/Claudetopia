@@ -410,6 +410,48 @@ func heal(amount: float) -> void:
 	health = health + amount
 
 
+## Puts stamina and breath back, the way `heal` puts health back, so what a potion does can be
+## said in one vocabulary (Consumables.plan).
+func restore_stamina(amount: float) -> void:
+	if dead or amount <= 0.0 or stamina_comp == null:
+		return
+	stamina_comp.restore(amount)
+
+
+func restore_mana(amount: float) -> void:
+	if dead or amount <= 0.0 or caster == null:
+		return
+	caster.restore_mana(amount)
+
+
+## Carries out what Consumables.plan() worked out from an item's effects. Actors take their
+## own potions; nothing else has to know how an effect def is shaped.
+func take_effects(entries: Array) -> void:
+	if dead:
+		return
+	for step in Consumables.plan(entries):
+		match str(step.get("kind", "")):
+			"stat":
+				var method := str(Consumables.STAT_METHOD.get(str(step["stat"]), ""))
+				if method != "" and has_method(method):
+					call(method, float(step["amount"]))
+			"status":
+				status.apply(str(step["id"]), float(step["duration"]), float(step["magnitude"]), self)
+			"cure":
+				status.clear_many(step["ids"])
+			"modifier":
+				_apply_timed_modifier(step)
+
+
+## A buff is a modifier with a clock on it. Actors without a modifier table (an enemy, a test
+## double) simply do not get the buff rather than failing.
+func _apply_timed_modifier(step: Dictionary) -> void:
+	var mods_node: Node = get_node_or_null(NodePath("Progression"))
+	if mods_node == null or not mods_node.has_method("add_timed_modifier"):
+		return
+	mods_node.call("add_timed_modifier", str(step["source"]), step["mods"], float(step["duration"]))
+
+
 func add_shield(amount: float, duration: float) -> void:
 	shield_hp = maxf(shield_hp, amount)
 	shield_until = now() + duration
