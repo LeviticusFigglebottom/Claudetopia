@@ -1,0 +1,16 @@
+{
+  "id": "core:interior/osric_smithy",
+  "name": "Osric's Forge",
+  "place": "core:place/merrowby",
+  "culture": "vale",
+  "resident": "core:npc/osric_pennywort",
+  "trade": "smith",
+  "wealth": 2,
+  "household": 3,
+  "children": 0,
+  "seed": 331,
+  "habits": ["sharpens_obsessively", "leaves_boots_by_the_door", "keeps_the_fire_in", "has_a_dog"],
+  "story": "The forge has been worked by the same family for four generations, and the anvil has a dish worn into it you could set a bowl in. Osric works late because the quiet is worse than the noise.",
+  "who_was_here": "His father, whose apron still hangs on the nail nobody uses.",
+  "unique_object": "an anvil with a dish worn into its face and a name scratched underneath it that is not Osric's"
+}

@@ -1,0 +1,749 @@
+{
+  "id": "core:house/corwen_brewhouse",
+  "name": "Mullard's Yellow Door",
+  "generator": "house_forge",
+  "version": 1,
+  "seed": 1205,
+  "resident": "core:npc/corwen_mullard",
+  "trade": "brewer",
+  "wealth": 2,
+  "household": 3,
+  "story": "A yellow door, as the trade requires, and behind it a brewer who considers the Tallymen's excise a personal insult and keeps two sets of books about it, one of which is accurate.",
+  "who_was_here": "His mother, who started the second set of books.",
+  "unique_object": "two ledgers in the same hand, one of them true, kept in different rooms",
+  "habits": [
+    "counts_everything",
+    "drinks_alone",
+    "keeps_the_fire_in"
+  ],
+  "culture": "vale",
+  "place": "core:place/merrowby",
+  "tris": 916,
+  "has_timber": true,
+  "rooms": [
+    {
+      "id": "brewhouse",
+      "kind": "brewhouse",
+      "x": 0.0,
+      "z": 0.0,
+      "w": 5.262176389634002,
+      "d": 4.3131475857872195,
+      "storey": 0,
+      "wear": 0.7,
+      "centre": [
+        2.63,
+        0.0,
+        2.16
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "cellar",
+      "kind": "cellar",
+      "x": 5.262176389634002,
+      "z": 0.0,
+      "w": 4.189010486926138,
+      "d": 3.4538331561871343,
+      "storey": 0,
+      "wear": 0.5,
+      "centre": [
+        7.36,
+        0.0,
+        1.73
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "hearth_room",
+      "kind": "hearth_room",
+      "x": 0.0,
+      "z": 4.59314758578722,
+      "w": 5.271362256185215,
+      "d": 4.421909031061909,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        2.64,
+        0.0,
+        6.8
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "bed",
+      "kind": "bed",
+      "x": 0.0,
+      "z": 0.0,
+      "w": 3.404180207188868,
+      "d": 3.3491520886503077,
+      "storey": 1,
+      "wear": 0.25,
+      "centre": [
+        1.7,
+        2.75,
+        1.67
+      ],
+      "floor_y": 2.75
+    },
+    {
+      "id": "landing",
+      "kind": "landing",
+      "x": 3.404180207188868,
+      "z": 0.0,
+      "w": 2.4,
+      "d": 2.4,
+      "storey": 1,
+      "wear": 0.2,
+      "centre": [
+        4.6,
+        2.75,
+        1.2
+      ],
+      "floor_y": 2.75
+    }
+  ],
+  "doors": [
+    {
+      "between": [
+        "brewhouse",
+        "cellar"
+      ],
+      "at": [
+        5.26,
+        1.02,
+        1.73
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "brewhouse",
+        "hearth_room"
+      ],
+      "at": [
+        2.63,
+        1.02,
+        4.45
+      ],
+      "yaw": 0.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "bed",
+        "landing"
+      ],
+      "at": [
+        3.4,
+        3.77,
+        1.2
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "outside",
+        "brewhouse"
+      ],
+      "at": [
+        2.63,
+        0.0,
+        -0.28
+      ],
+      "yaw": 0.0,
+      "kind": "front"
+    }
+  ],
+  "windows": [
+    {
+      "room": "landing",
+      "at": [
+        4.6,
+        4.23,
+        2.4
+      ],
+      "yaw": 0.0,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        0.0,
+        1.48,
+        6.8
+      ],
+      "yaw": 90.0,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "room": "landing",
+      "at": [
+        4.6,
+        4.23,
+        0.0
+      ],
+      "yaw": 0.0,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "asset": "res://assets/models/props/mash_tun/mash_tun.glb",
+      "fixture": "mash_tun",
+      "room": "brewhouse",
+      "at": [
+        4.36,
+        0.0,
+        0.9
+      ],
+      "yaw": 90.0,
+      "wear": 0.78
+    },
+    {
+      "asset": "res://assets/models/props/copper/copper.glb",
+      "fixture": "copper",
+      "room": "brewhouse",
+      "at": [
+        1.7,
+        0.0,
+        0.75
+      ],
+      "yaw": 0.0,
+      "wear": 0.72
+    },
+    {
+      "asset": "res://assets/models/props/cooling_trays/cooling_trays.glb",
+      "fixture": "cooling_trays",
+      "room": "brewhouse",
+      "at": [
+        1.1,
+        0.8,
+        3.1
+      ],
+      "yaw": 90.0,
+      "wear": 0.76
+    },
+    {
+      "asset": "res://assets/models/props/hop_sacks/hop_sacks.glb",
+      "fixture": "hop_sacks",
+      "room": "brewhouse",
+      "at": [
+        4.61,
+        0.0,
+        3.71
+      ],
+      "yaw": 270.0,
+      "wear": 0.69
+    },
+    {
+      "asset": "res://assets/models/props/barrel_rack/barrel_rack.glb",
+      "fixture": "barrel_rack",
+      "room": "cellar",
+      "at": [
+        6.56,
+        0.0,
+        2.05
+      ],
+      "yaw": 90.0,
+      "wear": 0.53
+    },
+    {
+      "asset": "res://assets/models/props/barrel/barrel.glb",
+      "fixture": "barrel",
+      "room": "cellar",
+      "at": [
+        7.74,
+        0.0,
+        3.0
+      ],
+      "yaw": 180.0,
+      "wear": 0.53
+    },
+    {
+      "asset": "res://assets/models/props/tap_bench/tap_bench.glb",
+      "fixture": "tap_bench",
+      "room": "cellar",
+      "at": [
+        7.87,
+        0.0,
+        0.4
+      ],
+      "yaw": 0.0,
+      "wear": 0.5
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "cellar",
+      "on": "tap_bench",
+      "at": [
+        7.85,
+        0.78,
+        0.39
+      ],
+      "yaw": 11.0,
+      "group": "tap_bench_0"
+    },
+    {
+      "asset": "res://assets/models/props/funnel/funnel.glb",
+      "prop": "funnel",
+      "room": "cellar",
+      "on": "tap_bench",
+      "at": [
+        8.1,
+        0.78,
+        0.29
+      ],
+      "yaw": 190.7,
+      "group": "tap_bench_0"
+    },
+    {
+      "asset": "res://assets/models/props/bung_mallet/bung_mallet.glb",
+      "prop": "bung_mallet",
+      "room": "cellar",
+      "on": "tap_bench",
+      "at": [
+        8.23,
+        0.78,
+        0.33
+      ],
+      "yaw": 172.6,
+      "group": "tap_bench_0"
+    },
+    {
+      "asset": "res://assets/models/props/hearth/hearth.glb",
+      "fixture": "hearth",
+      "room": "hearth_room",
+      "at": [
+        4.37,
+        0.0,
+        5.62
+      ],
+      "yaw": 270.0,
+      "wear": 0.23
+    },
+    {
+      "asset": "res://assets/models/props/table/table.glb",
+      "fixture": "table",
+      "room": "hearth_room",
+      "at": [
+        3.0,
+        0.0,
+        6.64
+      ],
+      "yaw": 90.0,
+      "wear": 0.24
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        3.16,
+        0.0,
+        5.95
+      ],
+      "yaw": 0.0,
+      "wear": 0.15
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        3.03,
+        0.0,
+        7.33
+      ],
+      "yaw": 180.0,
+      "wear": 0.16
+    },
+    {
+      "asset": "res://assets/models/props/cupboard/cupboard.glb",
+      "fixture": "cupboard",
+      "room": "hearth_room",
+      "at": [
+        1.14,
+        0.0,
+        8.67
+      ],
+      "yaw": 180.0,
+      "wear": 0.16
+    },
+    {
+      "asset": "res://assets/models/props/settle/settle.glb",
+      "fixture": "settle",
+      "room": "hearth_room",
+      "at": [
+        1.0,
+        0.0,
+        7.18
+      ],
+      "yaw": 90.0,
+      "wear": 0.28
+    },
+    {
+      "asset": "res://assets/models/props/loom/loom.glb",
+      "fixture": "loom",
+      "room": "hearth_room",
+      "at": [
+        1.85,
+        0.0,
+        5.19
+      ],
+      "yaw": 0.0,
+      "wear": 0.17
+    },
+    {
+      "asset": "res://assets/models/props/spinning_wheel/spinning_wheel.glb",
+      "fixture": "spinning_wheel",
+      "room": "hearth_room",
+      "at": [
+        2.3,
+        0.0,
+        8.09
+      ],
+      "yaw": 300.5,
+      "wear": 0.17
+    },
+    {
+      "asset": "res://assets/models/props/bowl/bowl.glb",
+      "prop": "bowl",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        3.1,
+        0.78,
+        6.35
+      ],
+      "yaw": 267.7,
+      "group": "table_0"
+    },
+    {
+      "asset": "res://assets/models/props/spoon/spoon.glb",
+      "prop": "spoon",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        3.19,
+        0.78,
+        6.52
+      ],
+      "yaw": 80.5,
+      "group": "table_0"
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        3.09,
+        0.78,
+        6.76
+      ],
+      "yaw": 136.6,
+      "group": "table_0"
+    },
+    {
+      "asset": "res://assets/models/props/candlestick/candlestick.glb",
+      "prop": "candlestick",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        3.07,
+        0.78,
+        6.66
+      ],
+      "yaw": 156.8,
+      "group": "table_1"
+    },
+    {
+      "asset": "res://assets/models/props/candle_stub/candle_stub.glb",
+      "prop": "candle_stub",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        2.92,
+        0.78,
+        6.81
+      ],
+      "yaw": 130.3,
+      "group": "table_1"
+    },
+    {
+      "asset": "res://assets/models/props/bread_heel/bread_heel.glb",
+      "prop": "bread_heel",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        2.84,
+        0.78,
+        6.9
+      ],
+      "yaw": 172.3,
+      "group": "table_2"
+    },
+    {
+      "asset": "res://assets/models/props/cheese_end/cheese_end.glb",
+      "prop": "cheese_end",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        3.11,
+        0.78,
+        7.09
+      ],
+      "yaw": 330.0,
+      "group": "table_2"
+    },
+    {
+      "asset": "res://assets/models/props/bed/bed.glb",
+      "fixture": "bed",
+      "room": "bed",
+      "at": [
+        2.3,
+        2.75,
+        1.77
+      ],
+      "yaw": 270.0,
+      "wear": 0.28
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "bed",
+      "at": [
+        2.8,
+        2.75,
+        2.63
+      ],
+      "yaw": 270.0,
+      "wear": 0.34
+    },
+    {
+      "asset": "res://assets/models/props/washstand/washstand.glb",
+      "fixture": "washstand",
+      "room": "bed",
+      "at": [
+        1.53,
+        2.75,
+        3.0
+      ],
+      "yaw": 180.0,
+      "wear": 0.25
+    },
+    {
+      "asset": "res://assets/models/props/basin/basin.glb",
+      "prop": "basin",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        1.34,
+        3.53,
+        3.01
+      ],
+      "yaw": 270.6,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/ewer/ewer.glb",
+      "prop": "ewer",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        1.23,
+        3.53,
+        2.95
+      ],
+      "yaw": 226.3,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/cloth/cloth.glb",
+      "prop": "cloth",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        1.12,
+        3.53,
+        2.99
+      ],
+      "yaw": 192.7,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/tally_sticks/tally_sticks.glb",
+      "prop": "tally_sticks",
+      "room": "hearth_room",
+      "habit": "counts_everything",
+      "at": [
+        0.75,
+        1.2,
+        7.68
+      ],
+      "yaw": 226.8
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "hearth_room",
+      "habit": "drinks_alone",
+      "at": [
+        3.14,
+        0.45,
+        7.45
+      ],
+      "yaw": 218.2
+    },
+    {
+      "asset": "res://assets/models/props/jug/jug.glb",
+      "prop": "jug",
+      "room": "hearth_room",
+      "habit": "drinks_alone",
+      "at": [
+        0.68,
+        0.45,
+        7.74
+      ],
+      "yaw": 259.7
+    },
+    {
+      "asset": "res://assets/models/props/banked_embers/banked_embers.glb",
+      "prop": "banked_embers",
+      "room": "hearth_room",
+      "habit": "keeps_the_fire_in",
+      "at": [
+        0.94,
+        0.0,
+        6.07
+      ],
+      "yaw": 296.5
+    },
+    {
+      "asset": "res://assets/models/props/kindling_basket/kindling_basket.glb",
+      "prop": "kindling_basket",
+      "room": "hearth_room",
+      "habit": "keeps_the_fire_in",
+      "at": [
+        4.2,
+        0.0,
+        7.57
+      ],
+      "yaw": 236.7
+    }
+  ],
+  "lights": [
+    {
+      "room": "brewhouse",
+      "at": [
+        2.63,
+        2.2,
+        2.16
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "cellar",
+      "at": [
+        7.36,
+        2.2,
+        1.73
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        4.37,
+        0.6,
+        5.62
+      ],
+      "color": "#ff9a42",
+      "energy": 3.0,
+      "range": 9.0,
+      "flicker": 0.4,
+      "shadow": true
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        3.07,
+        1.03,
+        6.66
+      ],
+      "color": "#ffca7a",
+      "energy": 1.1,
+      "range": 4.5,
+      "flicker": 0.35,
+      "shadow": false
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        2.92,
+        1.03,
+        6.81
+      ],
+      "color": "#ffca7a",
+      "energy": 1.1,
+      "range": 4.5,
+      "flicker": 0.35,
+      "shadow": false
+    },
+    {
+      "room": "bed",
+      "at": [
+        1.7,
+        4.95,
+        1.67
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "landing",
+      "at": [
+        4.6,
+        4.95,
+        1.2
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    }
+  ],
+  "features": [],
+  "entrance": [
+    5.26,
+    1.02,
+    1.73
+  ]
+}

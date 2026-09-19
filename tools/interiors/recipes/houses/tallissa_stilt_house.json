@@ -1,0 +1,22 @@
+{
+  "id": "core:house/tallissa_stilt",
+  "name": "The Eldest's Stilt-House",
+  "place": "core:place/isseva",
+  "culture": "reedfolk",
+  "resident": "core:npc/tallissa_oul",
+  "trade": "fisher",
+  "wealth": 2,
+  "household": 3,
+  "seed": 1211,
+  "habits": [
+    "keeps_a_shrine",
+    "mends_at_night",
+    "has_children",
+    "hoards_string"
+  ],
+  "story": "Tallissa has buried more of Isseva in the water than lives on it now, and keeps a lantern lit on the jetty rail for each one she buried herself, which is a lot of lanterns and a lot of oil.",
+  "who_was_here": "Four generations of Ouls, and the water, twice, in bad years.",
+  "unique_object": "a rail of forty lantern hooks facing the burial water, every one of them lit",
+  "children": 0,
+  "name_slug": "tallissa_stilt_house"
+}

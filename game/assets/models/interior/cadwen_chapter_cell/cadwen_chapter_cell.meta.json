@@ -1,0 +1,590 @@
+{
+  "id": "core:house/cadwen_chapter_cell",
+  "name": "The Bell Chapter-House",
+  "generator": "house_forge",
+  "version": 1,
+  "seed": 1214,
+  "resident": "core:npc/cadwen_ash",
+  "trade": "warden",
+  "wealth": 0,
+  "household": 2,
+  "story": "The Order sleeps inside a fallen bell. Cadwen took the name Ash when she took the vigil, and her old name is written once, on the inside of the bell, where only someone lying down can read it.",
+  "who_was_here": "Every Toll-Knight since the Ash Winter, each of whom wrote their old name in the same place.",
+  "unique_object": "a hundred and seventy old names written on the inside curve of a bell, readable only lying down",
+  "habits": [
+    "keeps_a_shrine",
+    "sleeps_badly",
+    "sharpens_obsessively",
+    "reads_late"
+  ],
+  "culture": "pilgrims",
+  "place": "core:place/pilgrims_ash",
+  "tris": 736,
+  "has_timber": true,
+  "rooms": [
+    {
+      "id": "muster_room",
+      "kind": "muster_room",
+      "x": 0.0,
+      "z": 0.0,
+      "w": 4.1911097890692455,
+      "d": 3.701620613333953,
+      "storey": 0,
+      "wear": 0.5,
+      "centre": [
+        2.1,
+        0.0,
+        1.85
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "hearth_room",
+      "kind": "hearth_room",
+      "x": 4.1911097890692455,
+      "z": 0.0,
+      "w": 3.8855118331900216,
+      "d": 3.3803348419604644,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        6.13,
+        0.0,
+        1.69
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "store",
+      "kind": "store",
+      "x": 0.0,
+      "z": 3.981620613333953,
+      "w": 2.2506502570851077,
+      "d": 1.9653280928230898,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        1.13,
+        0.0,
+        4.96
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "bed",
+      "kind": "bed",
+      "x": 2.2506502570851077,
+      "z": 3.981620613333953,
+      "w": 2.883736491172474,
+      "d": 2.401864665788549,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        3.69,
+        0.0,
+        5.18
+      ],
+      "floor_y": 0.0
+    }
+  ],
+  "doors": [
+    {
+      "between": [
+        "muster_room",
+        "hearth_room"
+      ],
+      "at": [
+        4.19,
+        1.02,
+        1.69
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "muster_room",
+        "store"
+      ],
+      "at": [
+        1.13,
+        1.02,
+        3.84
+      ],
+      "yaw": 0.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "muster_room",
+        "bed"
+      ],
+      "at": [
+        3.22,
+        1.02,
+        3.84
+      ],
+      "yaw": 0.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "store",
+        "bed"
+      ],
+      "at": [
+        2.25,
+        1.02,
+        4.96
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "outside",
+        "muster_room"
+      ],
+      "at": [
+        2.1,
+        0.0,
+        -0.28
+      ],
+      "yaw": 0.0,
+      "kind": "front"
+    }
+  ],
+  "windows": [
+    {
+      "room": "hearth_room",
+      "at": [
+        6.13,
+        1.48,
+        3.38
+      ],
+      "yaw": 0.0,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "asset": "res://assets/models/props/weapon_rack/weapon_rack.glb",
+      "fixture": "weapon_rack",
+      "room": "muster_room",
+      "at": [
+        3.19,
+        0.0,
+        2.06
+      ],
+      "yaw": 270.0,
+      "wear": 0.41
+    },
+    {
+      "asset": "res://assets/models/props/roll_desk/roll_desk.glb",
+      "fixture": "roll_desk",
+      "room": "muster_room",
+      "at": [
+        0.8,
+        0.0,
+        2.65
+      ],
+      "yaw": 90.0,
+      "wear": 0.5
+    },
+    {
+      "asset": "res://assets/models/props/map_board/map_board.glb",
+      "fixture": "map_board",
+      "room": "muster_room",
+      "at": [
+        1.13,
+        1.3,
+        3.55
+      ],
+      "yaw": 180.0,
+      "wear": 0.45
+    },
+    {
+      "asset": "res://assets/models/props/bench/bench.glb",
+      "fixture": "bench",
+      "room": "muster_room",
+      "at": [
+        2.99,
+        0.0,
+        1.59
+      ],
+      "yaw": 0.0,
+      "wear": 0.51
+    },
+    {
+      "asset": "res://assets/models/props/spear/spear.glb",
+      "prop": "spear",
+      "room": "muster_room",
+      "on": "weapon_rack",
+      "at": [
+        3.13,
+        0.78,
+        1.62
+      ],
+      "yaw": 105.4,
+      "group": "weapon_rack_0"
+    },
+    {
+      "asset": "res://assets/models/props/spear/spear.glb",
+      "prop": "spear",
+      "room": "muster_room",
+      "on": "weapon_rack",
+      "at": [
+        3.18,
+        0.78,
+        1.45
+      ],
+      "yaw": 54.4,
+      "group": "weapon_rack_0"
+    },
+    {
+      "asset": "res://assets/models/props/shield/shield.glb",
+      "prop": "shield",
+      "room": "muster_room",
+      "on": "weapon_rack",
+      "at": [
+        3.25,
+        0.78,
+        1.21
+      ],
+      "yaw": 135.0,
+      "group": "weapon_rack_0"
+    },
+    {
+      "asset": "res://assets/models/props/roll_book/roll_book.glb",
+      "prop": "roll_book",
+      "room": "muster_room",
+      "on": "roll_desk",
+      "at": [
+        0.89,
+        0.78,
+        2.26
+      ],
+      "yaw": 113.4,
+      "group": "roll_desk_0"
+    },
+    {
+      "asset": "res://assets/models/props/quill/quill.glb",
+      "prop": "quill",
+      "room": "muster_room",
+      "on": "roll_desk",
+      "at": [
+        0.82,
+        0.78,
+        2.47
+      ],
+      "yaw": 351.2,
+      "group": "roll_desk_0"
+    },
+    {
+      "asset": "res://assets/models/props/inkpot/inkpot.glb",
+      "prop": "inkpot",
+      "room": "muster_room",
+      "on": "roll_desk",
+      "at": [
+        0.63,
+        0.78,
+        2.66
+      ],
+      "yaw": 55.3,
+      "group": "roll_desk_0"
+    },
+    {
+      "asset": "res://assets/models/props/hearth/hearth.glb",
+      "fixture": "hearth",
+      "room": "hearth_room",
+      "at": [
+        7.18,
+        0.0,
+        1.29
+      ],
+      "yaw": 270.0,
+      "wear": 0.16
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        7.2,
+        0.0,
+        0.6
+      ],
+      "yaw": 0.0,
+      "wear": 0.32
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        7.73,
+        0.0,
+        1.98
+      ],
+      "yaw": 180.0,
+      "wear": 0.23
+    },
+    {
+      "asset": "res://assets/models/props/cupboard/cupboard.glb",
+      "fixture": "cupboard",
+      "room": "hearth_room",
+      "at": [
+        5.45,
+        0.0,
+        3.03
+      ],
+      "yaw": 180.0,
+      "wear": 0.21
+    },
+    {
+      "asset": "res://assets/models/props/settle/settle.glb",
+      "fixture": "settle",
+      "room": "hearth_room",
+      "at": [
+        5.19,
+        0.0,
+        1.46
+      ],
+      "yaw": 90.0,
+      "wear": 0.25
+    },
+    {
+      "asset": "res://assets/models/props/crate/crate.glb",
+      "fixture": "crate",
+      "room": "store",
+      "at": [
+        1.29,
+        0.0,
+        5.45
+      ],
+      "yaw": 180.0,
+      "wear": 0.19
+    },
+    {
+      "asset": "res://assets/models/props/barrel/barrel.glb",
+      "fixture": "barrel",
+      "room": "store",
+      "at": [
+        0.45,
+        0.0,
+        5.06
+      ],
+      "yaw": 90.0,
+      "wear": 0.2
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "store",
+      "at": [
+        0.76,
+        0.0,
+        4.33
+      ],
+      "yaw": 0.0,
+      "wear": 0.35
+    },
+    {
+      "asset": "res://assets/models/props/bed/bed.glb",
+      "fixture": "bed",
+      "room": "bed",
+      "at": [
+        3.35,
+        0.0,
+        5.18
+      ],
+      "yaw": 90.0,
+      "wear": 0.28
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "bed",
+      "at": [
+        3.68,
+        0.0,
+        6.03
+      ],
+      "yaw": 180.0,
+      "wear": 0.27
+    },
+    {
+      "asset": "res://assets/models/props/small_bell/small_bell.glb",
+      "prop": "small_bell",
+      "room": "hearth_room",
+      "habit": "keeps_a_shrine",
+      "at": [
+        7.21,
+        1.5,
+        2.48
+      ],
+      "yaw": 278.2
+    },
+    {
+      "asset": "res://assets/models/props/candle_stub/candle_stub.glb",
+      "prop": "candle_stub",
+      "room": "hearth_room",
+      "habit": "keeps_a_shrine",
+      "at": [
+        5.24,
+        1.5,
+        2.05
+      ],
+      "yaw": 250.3
+    },
+    {
+      "asset": "res://assets/models/props/blanket_heap/blanket_heap.glb",
+      "prop": "blanket_heap",
+      "room": "bed",
+      "habit": "sleeps_badly",
+      "at": [
+        4.42,
+        0.5,
+        5.64
+      ],
+      "yaw": 181.6
+    },
+    {
+      "asset": "res://assets/models/props/cold_tea/cold_tea.glb",
+      "prop": "cold_tea",
+      "room": "bed",
+      "habit": "sleeps_badly",
+      "at": [
+        4.32,
+        0.5,
+        4.93
+      ],
+      "yaw": 208.4
+    },
+    {
+      "asset": "res://assets/models/props/whetstone/whetstone.glb",
+      "prop": "whetstone",
+      "room": "hearth_room",
+      "habit": "sharpens_obsessively",
+      "at": [
+        6.1,
+        0.0,
+        0.95
+      ],
+      "yaw": 16.3
+    },
+    {
+      "asset": "res://assets/models/props/oil_rag/oil_rag.glb",
+      "prop": "oil_rag",
+      "room": "hearth_room",
+      "habit": "sharpens_obsessively",
+      "at": [
+        7.35,
+        0.0,
+        1.11
+      ],
+      "yaw": 357.4
+    },
+    {
+      "asset": "res://assets/models/props/book_single/book_single.glb",
+      "prop": "book_single",
+      "room": "bed",
+      "habit": "reads_late",
+      "at": [
+        3.53,
+        0.55,
+        5.68
+      ],
+      "yaw": 110.9
+    },
+    {
+      "asset": "res://assets/models/props/candle_stub/candle_stub.glb",
+      "prop": "candle_stub",
+      "room": "bed",
+      "habit": "reads_late",
+      "at": [
+        3.46,
+        0.55,
+        5.43
+      ],
+      "yaw": 195.0
+    }
+  ],
+  "lights": [
+    {
+      "room": "muster_room",
+      "at": [
+        2.1,
+        2.2,
+        1.85
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        7.18,
+        0.6,
+        1.29
+      ],
+      "color": "#ff9a42",
+      "energy": 3.0,
+      "range": 9.0,
+      "flicker": 0.4,
+      "shadow": true
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        5.24,
+        1.75,
+        2.05
+      ],
+      "color": "#ffca7a",
+      "energy": 1.1,
+      "range": 4.5,
+      "flicker": 0.35,
+      "shadow": false
+    },
+    {
+      "room": "store",
+      "at": [
+        1.13,
+        2.2,
+        4.96
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "bed",
+      "at": [
+        3.46,
+        0.8,
+        5.43
+      ],
+      "color": "#ffca7a",
+      "energy": 1.1,
+      "range": 4.5,
+      "flicker": 0.35,
+      "shadow": false
+    }
+  ],
+  "features": [],
+  "entrance": [
+    4.19,
+    1.02,
+    1.69
+  ]
+}

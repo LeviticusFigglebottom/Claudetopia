@@ -1,0 +1,198 @@
+{
+  "id": "core:interior/oskeld_mine",
+  "name": "Oskeld Mine",
+  "place": "core:place/oskeld_mine",
+  "region": "core:region/skerrow",
+  "formed_by": "mining",
+  "seed": 6104,
+  "voxel": 0.4,
+  "formed_by_story": "Clan Oskel followed a silver vein into the fell for two hundred years. At the eleventh level the vein ran into bone, and they kept going, because the bone had silver in it too.",
+  "who_was_here": "Nine generations of Oskel miners, and the thing the eleventh level was cut into.",
+  "story": "The singing shaft is a vertical bore, two hundred feet, that makes a note when the wind is from the north. The clans say it is the giant remembering. The Stone-Thrall King stands at the bottom of it holding a name that belongs to a clan there are no more of.",
+  "unique_object": "the singing shaft, which holds one note for as long as the wind lasts",
+  "palette": [
+    "#6f6a60",
+    "#2e2b27",
+    "#a39c90",
+    "#4a5b74",
+    "#c9c2a8"
+  ],
+  "ambience": [
+    "hammer_distant",
+    "chain_clink",
+    "wind_high"
+  ],
+  "start_heading_deg": 170,
+  "beats": [
+    {
+      "id": "adit",
+      "role": "entrance",
+      "size": "small",
+      "drop": 0,
+      "note": "The adit mouth, timbered and square, with the day's-work board still chalked for a day nine years ago."
+    },
+    {
+      "id": "level_one",
+      "role": "passage",
+      "size": "tight",
+      "drop": -2.0,
+      "note": "A level cut for carts: rails, a drainage channel, lamp niches every ten paces."
+    },
+    {
+      "id": "stope",
+      "role": "chamber",
+      "size": "large",
+      "drop": -5.0,
+      "note": "A worked-out stope, propped with timber that has gone the colour of iron. The silver ran out here and they went down."
+    },
+    {
+      "id": "ladderway",
+      "role": "passage",
+      "size": "tight",
+      "drop": -12.0,
+      "note": "A ladderway down four levels. Some rungs are gone. All of them creak."
+    },
+    {
+      "id": "pump_house",
+      "role": "camp",
+      "size": "medium",
+      "drop": -2.0,
+      "water": 0.4,
+      "note": "The pump house, where the water is kept out by a wheel that still works because the clanless keep it working."
+    },
+    {
+      "id": "bone_level",
+      "role": "chamber",
+      "size": "huge",
+      "drop": -6.0,
+      "note": "The eleventh level. The walls stop being rock. A rib the height of the gallery runs through the workings, drilled and blasted and still there."
+    },
+    {
+      "id": "shaft_foot",
+      "role": "boss",
+      "size": "huge",
+      "drop": -4.0,
+      "light_shaft": true,
+      "shaft_radius": 2.6,
+      "note": "The foot of the singing shaft. Two hundred feet of round bore straight up, a coin of daylight at the top, and a note coming down it."
+    },
+    {
+      "id": "cart_run",
+      "role": "passage",
+      "size": "tight",
+      "drop": 14.0,
+      "branch_from": "shaft_foot",
+      "note": "A cart incline climbing back to the adit on a chain that still has tension in it."
+    },
+    {
+      "id": "pay_seam",
+      "role": "treasure",
+      "size": "small",
+      "drop": -2.0,
+      "branch_from": "bone_level",
+      "note": "The seam that was worth all of it: silver in bone, and a barrow of it nobody came back for."
+    }
+  ],
+  "links": [
+    [
+      "adit",
+      "level_one"
+    ],
+    [
+      "level_one",
+      "stope"
+    ],
+    [
+      "stope",
+      "ladderway"
+    ],
+    [
+      "ladderway",
+      "pump_house"
+    ],
+    [
+      "pump_house",
+      "bone_level"
+    ],
+    [
+      "bone_level",
+      "shaft_foot"
+    ],
+    [
+      "bone_level",
+      "pay_seam"
+    ],
+    [
+      "shaft_foot",
+      "cart_run"
+    ],
+    [
+      "cart_run",
+      "adit"
+    ]
+  ],
+  "shortcut": {
+    "from": "cart_run",
+    "to": "adit",
+    "kind": "cart_incline",
+    "note": "Release the brake at the bottom and the chain does the rest, once."
+  },
+  "encounters": [
+    {
+      "chamber": "stope",
+      "enemy": "core:enemy/roadside_bandit",
+      "count": 3,
+      "group": "stope",
+      "note": "Clanless raiders working the props for iron."
+    },
+    {
+      "chamber": "pump_house",
+      "enemy": "core:enemy/roadside_bandit",
+      "count": 2,
+      "group": "pump",
+      "role": "elite"
+    },
+    {
+      "chamber": "bone_level",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 4,
+      "group": "bone",
+      "note": "Stone-thralls, in the bestiary's terms brutes: bone and rock walking, and you can break the limbs off."
+    },
+    {
+      "chamber": "shaft_foot",
+      "enemy": "core:boss/stone_thrall_king",
+      "count": 1,
+      "role": "boss",
+      "group": "boss"
+    }
+  ],
+  "features": [
+    {
+      "kind": "exit",
+      "chamber": "adit",
+      "anchor": 0,
+      "name": "the adit mouth"
+    },
+    {
+      "kind": "hearthstone",
+      "chamber": "pump_house",
+      "id": "hearth_oskeld_pump",
+      "name": "The Pump House",
+      "place": "core:place/oskeld_mine"
+    },
+    {
+      "kind": "marker",
+      "chamber": "shaft_foot",
+      "name": "FogGate",
+      "anchor": 4
+    },
+    {
+      "kind": "prop",
+      "asset": "res://assets/models/props/mine_cart/mine_cart.glb",
+      "chamber": "level_one",
+      "anchor": 2
+    }
+  ],
+  "smoothing": 2
+}

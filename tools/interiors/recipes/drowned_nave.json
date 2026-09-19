@@ -1,0 +1,182 @@
+{
+  "id": "core:interior/drowned_nave",
+  "name": "The Drowned Nave",
+  "place": "core:place/drowned_nave",
+  "region": "core:region/sedgemire",
+  "formed_by": "builder",
+  "seed": 2287,
+  "voxel": 0.5,
+  "formed_by_story": "An Oroth Harmony, raised to hold the note over the delta, that sank fifteen degrees into the peat over nine hundred years and is still sinking.",
+  "who_was_here": "The Builders, then nobody, then the reedfolk who row out on the shortest night of the year and sing a round at the door and row away again.",
+  "story": "Isse-Anthe, the Drowned Choir. Everything in it leans. The water comes in when the marsh tide turns, and She Who Waits has learned to turn it. The bell the Sayers want is in the crossing, forty feet down, and the only way to reach it is to make her stop singing.",
+  "unique_object": "the Nave Bell, cast so thin you can see lamplight through its lip",
+  "palette": [
+    "#4a6b66",
+    "#1e332f",
+    "#7e9a92",
+    "#3b3a6e",
+    "#c9b26a"
+  ],
+  "ambience": [
+    "drip",
+    "water_still",
+    "bittern"
+  ],
+  "start_heading_deg": 250,
+  "beats": [
+    {
+      "id": "porch",
+      "role": "entrance",
+      "size": "medium",
+      "drop": 0,
+      "light_shaft": true,
+      "shaft_radius": 2.2,
+      "note": "The west door, leaning fifteen degrees, half out of the reeds. Everything from here on is off-plumb, and your feet know it before you do."
+    },
+    {
+      "id": "nave_high",
+      "role": "chamber",
+      "size": "huge",
+      "drop": -2.0,
+      "water": 0.5,
+      "light_shaft": true,
+      "shaft_radius": 3.0,
+      "note": "The nave's high end, still dry to the knee. Pews fixed to a floor that slopes away into black water."
+    },
+    {
+      "id": "aisle",
+      "role": "passage",
+      "size": "tight",
+      "drop": -3.0,
+      "water": 1.2,
+      "note": "The south aisle, tilted until the columns are a staircase. You walk on the wall."
+    },
+    {
+      "id": "chapter",
+      "role": "chamber",
+      "size": "medium",
+      "drop": -1.5,
+      "note": "A chapter house that the lean has made watertight, being now on the high side. Dry, and full of the Builders' furniture."
+    },
+    {
+      "id": "crossing",
+      "role": "boss",
+      "size": "cathedral",
+      "drop": -6.0,
+      "water": 1.0,
+      "note": "The crossing. Six tiers of pews going down into water, and the bell hanging over the middle of them."
+    },
+    {
+      "id": "tower_stair",
+      "role": "passage",
+      "size": "tight",
+      "drop": 9.0,
+      "branch_from": "crossing",
+      "note": "The spire stair, climbing out of the crossing toward the door you came in by, on the inside of the lean."
+    },
+    {
+      "id": "crypt",
+      "role": "treasure",
+      "size": "medium",
+      "drop": -4.0,
+      "branch_from": "aisle",
+      "water": 1.8,
+      "note": "A crypt fully flooded, its shelves holding things the water has been kind to."
+    }
+  ],
+  "links": [
+    [
+      "porch",
+      "nave_high"
+    ],
+    [
+      "nave_high",
+      "aisle"
+    ],
+    [
+      "aisle",
+      "chapter"
+    ],
+    [
+      "chapter",
+      "crossing"
+    ],
+    [
+      "aisle",
+      "crypt"
+    ],
+    [
+      "crossing",
+      "tower_stair"
+    ],
+    [
+      "tower_stair",
+      "porch"
+    ]
+  ],
+  "shortcut": {
+    "from": "tower_stair",
+    "to": "porch",
+    "kind": "rope",
+    "note": "A rope the reedfolk leave for their once-a-year round, which you can now reach from below."
+  },
+  "encounters": [
+    {
+      "chamber": "nave_high",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 3,
+      "group": "nave",
+      "note": "The bog-drowned, standing in the pews as if the service had not ended."
+    },
+    {
+      "chamber": "aisle",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 2,
+      "group": "aisle",
+      "ambush": true,
+      "note": "They come up out of the water on the low side, where you cannot dodge downhill."
+    },
+    {
+      "chamber": "crypt",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 3,
+      "group": "crypt"
+    },
+    {
+      "chamber": "crossing",
+      "enemy": "core:boss/she_who_waits",
+      "count": 1,
+      "role": "boss",
+      "group": "boss"
+    }
+  ],
+  "features": [
+    {
+      "kind": "exit",
+      "chamber": "porch",
+      "anchor": 0,
+      "name": "the west door"
+    },
+    {
+      "kind": "hearthstone",
+      "chamber": "chapter",
+      "id": "hearth_nave_chapter",
+      "name": "The Dry Chapter",
+      "place": "core:place/drowned_nave"
+    },
+    {
+      "kind": "marker",
+      "chamber": "crossing",
+      "name": "FogGate",
+      "anchor": 2
+    },
+    {
+      "kind": "item",
+      "item": "core:item/nave_bell",
+      "chamber": "crossing",
+      "anchor": 0,
+      "asset": "res://assets/models/props/medium_bell/medium_bell.glb"
+    }
+  ],
+  "smoothing": 2
+}

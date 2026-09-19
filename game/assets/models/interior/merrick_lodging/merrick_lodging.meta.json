@@ -1,0 +1,294 @@
+{
+  "id": "core:house/merrick_lodging",
+  "name": "The Bard's Room",
+  "generator": "house_forge",
+  "version": 1,
+  "seed": 1209,
+  "resident": "core:npc/merrick_gosling",
+  "trade": "none",
+  "wealth": 0,
+  "household": 1,
+  "story": "One rented room over the Lip's stable. Merrick has written a verse about everyone in Merrowby except himself, and the unfinished one on the table is about the person reading it.",
+  "who_was_here": "A succession of people who could not pay the Lip's rates, of whom Merrick is the current.",
+  "unique_object": "an unfinished verse on the table whose subject is left blank",
+  "habits": [
+    "never_finishes_a_job",
+    "drinks_alone",
+    "works_at_the_table",
+    "reads_late"
+  ],
+  "culture": "vale",
+  "place": "core:place/merrowby",
+  "tris": 358,
+  "has_timber": true,
+  "rooms": [
+    {
+      "id": "hearth_room",
+      "kind": "hearth_room",
+      "x": 0.0,
+      "z": 0.0,
+      "w": 3.8363750417608213,
+      "d": 3.4113469635248346,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        1.92,
+        0.0,
+        1.71
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "bed",
+      "kind": "bed",
+      "x": 3.8363750417608213,
+      "z": 0.0,
+      "w": 3.0133545496617846,
+      "d": 2.426754955368658,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        5.34,
+        0.0,
+        1.21
+      ],
+      "floor_y": 0.0
+    }
+  ],
+  "doors": [
+    {
+      "between": [
+        "hearth_room",
+        "bed"
+      ],
+      "at": [
+        3.84,
+        1.02,
+        1.21
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "outside",
+        "hearth_room"
+      ],
+      "at": [
+        1.92,
+        0.0,
+        -0.28
+      ],
+      "yaw": 0.0,
+      "kind": "front"
+    }
+  ],
+  "windows": [
+    {
+      "room": "hearth_room",
+      "at": [
+        1.92,
+        1.48,
+        0.0
+      ],
+      "yaw": 0.0,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "asset": "res://assets/models/props/hearth/hearth.glb",
+      "fixture": "hearth",
+      "room": "hearth_room",
+      "at": [
+        2.94,
+        0.0,
+        1.83
+      ],
+      "yaw": 270.0,
+      "wear": 0.15
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        2.54,
+        0.0,
+        1.14
+      ],
+      "yaw": 0.0,
+      "wear": 0.24
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        2.34,
+        0.0,
+        2.52
+      ],
+      "yaw": 180.0,
+      "wear": 0.29
+    },
+    {
+      "asset": "res://assets/models/props/cupboard/cupboard.glb",
+      "fixture": "cupboard",
+      "room": "hearth_room",
+      "at": [
+        0.7,
+        0.0,
+        2.11
+      ],
+      "yaw": 90.0,
+      "wear": 0.26
+    },
+    {
+      "asset": "res://assets/models/props/settle/settle.glb",
+      "fixture": "settle",
+      "room": "hearth_room",
+      "at": [
+        1.0,
+        0.0,
+        1.17
+      ],
+      "yaw": 90.0,
+      "wear": 0.24
+    },
+    {
+      "asset": "res://assets/models/props/bed/bed.glb",
+      "fixture": "bed",
+      "room": "bed",
+      "at": [
+        5.75,
+        0.0,
+        1.21
+      ],
+      "yaw": 270.0,
+      "wear": 0.29
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "bed",
+      "at": [
+        5.34,
+        0.0,
+        0.35
+      ],
+      "yaw": 0.0,
+      "wear": 0.2
+    },
+    {
+      "asset": "res://assets/models/props/half_made_thing/half_made_thing.glb",
+      "prop": "half_made_thing",
+      "room": "hearth_room",
+      "habit": "never_finishes_a_job",
+      "at": [
+        2.87,
+        0.0,
+        1.4
+      ],
+      "yaw": 277.5
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "hearth_room",
+      "habit": "drinks_alone",
+      "at": [
+        1.87,
+        0.45,
+        1.29
+      ],
+      "yaw": 85.8
+    },
+    {
+      "asset": "res://assets/models/props/jug/jug.glb",
+      "prop": "jug",
+      "room": "hearth_room",
+      "habit": "drinks_alone",
+      "at": [
+        2.45,
+        0.45,
+        2.4
+      ],
+      "yaw": 51.8
+    },
+    {
+      "asset": "res://assets/models/props/work_in_progress/work_in_progress.glb",
+      "prop": "work_in_progress",
+      "room": "hearth_room",
+      "habit": "works_at_the_table",
+      "at": [
+        1.15,
+        0.75,
+        1.74
+      ],
+      "yaw": 255.7
+    },
+    {
+      "asset": "res://assets/models/props/book_single/book_single.glb",
+      "prop": "book_single",
+      "room": "bed",
+      "habit": "reads_late",
+      "at": [
+        5.53,
+        0.55,
+        1.39
+      ],
+      "yaw": 20.6
+    },
+    {
+      "asset": "res://assets/models/props/candle_stub/candle_stub.glb",
+      "prop": "candle_stub",
+      "room": "bed",
+      "habit": "reads_late",
+      "at": [
+        4.75,
+        0.55,
+        1.28
+      ],
+      "yaw": 54.4
+    }
+  ],
+  "lights": [
+    {
+      "room": "hearth_room",
+      "at": [
+        2.94,
+        0.6,
+        1.83
+      ],
+      "color": "#ff9a42",
+      "energy": 3.0,
+      "range": 9.0,
+      "flicker": 0.4,
+      "shadow": true
+    },
+    {
+      "room": "bed",
+      "at": [
+        4.75,
+        0.8,
+        1.28
+      ],
+      "color": "#ffca7a",
+      "energy": 1.1,
+      "range": 4.5,
+      "flicker": 0.35,
+      "shadow": false
+    }
+  ],
+  "features": [],
+  "entrance": [
+    3.84,
+    1.02,
+    1.21
+  ]
+}

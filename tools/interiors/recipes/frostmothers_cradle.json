@@ -1,0 +1,166 @@
+{
+  "id": "core:interior/frostmothers_cradle",
+  "name": "Frostmother's Cradle",
+  "place": "core:place/frostmothers_cradle",
+  "region": "core:region/skerrow",
+  "formed_by": "ice",
+  "seed": 8815,
+  "voxel": 0.42,
+  "formed_by_story": "Meltwater under the Oskeld glacier, cutting a cave through ice that closes behind it a little every winter and opens a little every summer, so the cave is a different cave each year.",
+  "who_was_here": "Whatever the ice caught. It is all still here, and you can see most of it.",
+  "story": "The Cradle holds shapes. A wolf mid-stride, four feet off the floor, in clear ice. A clan banner. A hand. The clans will not come here because the ice keeps what it takes, and keeping is the Frostmother's business, and she is not a story.",
+  "unique_object": "ice that holds the shapes of what froze in it, lit from behind",
+  "palette": [
+    "#cfe0ee",
+    "#7d97ad",
+    "#eef6ff",
+    "#3e5a74",
+    "#a8d4e8"
+  ],
+  "ambience": [
+    "drip",
+    "wind_high",
+    "creak"
+  ],
+  "start_heading_deg": 60,
+  "beats": [
+    {
+      "id": "melt_mouth",
+      "role": "entrance",
+      "size": "small",
+      "drop": 0,
+      "light_shaft": true,
+      "shaft_radius": 1.6,
+      "note": "A blue mouth in the glacier's foot, running with meltwater on any day above freezing."
+    },
+    {
+      "id": "blue_run",
+      "role": "passage",
+      "size": "tight",
+      "drop": -3.0,
+      "water": 0.2,
+      "note": "A meltwater run, scalloped, glass-smooth underfoot, sloping down faster than it looks."
+    },
+    {
+      "id": "gallery",
+      "role": "chamber",
+      "size": "large",
+      "drop": -4.0,
+      "light_shaft": true,
+      "shaft_radius": 1.0,
+      "note": "The gallery. Daylight comes through eight feet of ice above and turns the whole room blue. The shapes start here."
+    },
+    {
+      "id": "pinch",
+      "role": "passage",
+      "size": "squeeze",
+      "drop": -2.0,
+      "note": "Where last winter closed the cave. It is open by a shoulder's width."
+    },
+    {
+      "id": "cistern",
+      "role": "flooded",
+      "size": "medium",
+      "drop": -5.0,
+      "water": 1.6,
+      "note": "A meltwater pool, still, so clear that it reads as air until you step in it."
+    },
+    {
+      "id": "cradle",
+      "role": "boss",
+      "size": "huge",
+      "drop": -3.0,
+      "note": "The Cradle: a dome of clear ice with a century of caught things suspended in the walls, arranged the way a room is arranged."
+    },
+    {
+      "id": "crevasse",
+      "role": "passage",
+      "size": "tight",
+      "drop": 10.0,
+      "branch_from": "cradle",
+      "note": "A crevasse climbing back to the surface, wide enough to chimney up if your hands hold."
+    }
+  ],
+  "links": [
+    [
+      "melt_mouth",
+      "blue_run"
+    ],
+    [
+      "blue_run",
+      "gallery"
+    ],
+    [
+      "gallery",
+      "pinch"
+    ],
+    [
+      "pinch",
+      "cistern"
+    ],
+    [
+      "cistern",
+      "cradle"
+    ],
+    [
+      "cradle",
+      "crevasse"
+    ],
+    [
+      "crevasse",
+      "melt_mouth"
+    ]
+  ],
+  "shortcut": {
+    "from": "crevasse",
+    "to": "melt_mouth",
+    "kind": "crevasse",
+    "note": "Chimney up once, and the rope you fix stays fixed."
+  },
+  "encounters": [
+    {
+      "chamber": "gallery",
+      "enemy": "core:enemy/down_wolf",
+      "count": 3,
+      "group": "gallery",
+      "note": "Crag-wolves, white on white."
+    },
+    {
+      "chamber": "cistern",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 2,
+      "group": "cistern",
+      "ambush": true,
+      "note": "Scree-hags; they come out of the pool, which reads as air."
+    },
+    {
+      "chamber": "cradle",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 3,
+      "group": "cradle",
+      "role": "elite"
+    }
+  ],
+  "features": [
+    {
+      "kind": "exit",
+      "chamber": "melt_mouth",
+      "anchor": 0,
+      "name": "the melt mouth"
+    },
+    {
+      "kind": "hearthstone",
+      "chamber": "gallery",
+      "id": "hearth_cradle_gallery",
+      "name": "The Blue Gallery",
+      "place": "core:place/frostmothers_cradle"
+    },
+    {
+      "kind": "marker",
+      "chamber": "cradle",
+      "name": "FrostmotherArena",
+      "anchor": 0
+    }
+  ],
+  "smoothing": 2
+}

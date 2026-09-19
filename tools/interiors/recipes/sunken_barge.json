@@ -1,0 +1,174 @@
+{
+  "id": "core:interior/sunken_barge",
+  "name": "The Sunken Barge",
+  "place": "core:place/sunken_barge",
+  "region": "core:region/brightwater",
+  "formed_by": "water",
+  "seed": 3390,
+  "voxel": 0.36,
+  "formed_by_story": "A guild grain barge that went down at the foot of the Pilgrim Stair with its hatches open, settled into the silt on its side, and had a hollow scoured under it by forty years of lake current.",
+  "who_was_here": "Eleven crew, a cargo of Hearthvale barley, and a Tallymen clerk who was counting it and did not stop.",
+  "story": "The barge lies on its side on an Oroth step, half in the lake and half in a scour-hollow the current dug under it. You can walk its hull like a floor and its deck like a wall. The serpent uses the hold as a nest because the hold is the only warm place at the bottom of the Mere, and the grain is why.",
+  "unique_object": "a cargo of barley still fermenting after forty years, which is what keeps the hold warm",
+  "palette": [
+    "#4a5a5e",
+    "#232c30",
+    "#7d8a8c",
+    "#6b5a3e",
+    "#3f7fb5"
+  ],
+  "ambience": [
+    "water_still",
+    "creak",
+    "drip"
+  ],
+  "start_heading_deg": 215,
+  "beats": [
+    {
+      "id": "stair_foot",
+      "role": "entrance",
+      "size": "small",
+      "drop": 0,
+      "light_shaft": true,
+      "shaft_radius": 1.8,
+      "note": "The Pilgrim Stair's last dry step, with the lake above it and the barge below. Light comes down green."
+    },
+    {
+      "id": "scour",
+      "role": "passage",
+      "size": "tight",
+      "drop": -4.0,
+      "water": 0.6,
+      "note": "The scour-hollow under the hull: a tunnel the current dug, floored in silt, roofed in tarred planking."
+    },
+    {
+      "id": "hull_walk",
+      "role": "chamber",
+      "size": "medium",
+      "drop": -1.5,
+      "note": "Inside the hull, walking on what was the port side. Every fitting is ninety degrees wrong and your eye keeps arguing."
+    },
+    {
+      "id": "hold",
+      "role": "camp",
+      "size": "large",
+      "drop": -2.5,
+      "water": 0.3,
+      "note": "The grain hold. Warm, sour, and full of forty years of barley that has been quietly working the whole time."
+    },
+    {
+      "id": "counting_room",
+      "role": "treasure",
+      "size": "small",
+      "drop": -1.0,
+      "branch_from": "hull_walk",
+      "note": "The clerk's cabin, dry in an air pocket, with a tally half finished and a candle burned to the socket."
+    },
+    {
+      "id": "nest",
+      "role": "boss",
+      "size": "huge",
+      "drop": -3.5,
+      "water": 0.8,
+      "note": "The aft hold, opened to the lake, where the current comes in and the serpent goes out."
+    },
+    {
+      "id": "deck_hatch",
+      "role": "passage",
+      "size": "tight",
+      "drop": 6.0,
+      "branch_from": "nest",
+      "note": "A cargo hatch in what is now the ceiling, opening onto the Oroth step above."
+    }
+  ],
+  "links": [
+    [
+      "stair_foot",
+      "scour"
+    ],
+    [
+      "scour",
+      "hull_walk"
+    ],
+    [
+      "hull_walk",
+      "hold"
+    ],
+    [
+      "hold",
+      "nest"
+    ],
+    [
+      "hull_walk",
+      "counting_room"
+    ],
+    [
+      "nest",
+      "deck_hatch"
+    ],
+    [
+      "deck_hatch",
+      "stair_foot"
+    ]
+  ],
+  "shortcut": {
+    "from": "deck_hatch",
+    "to": "stair_foot",
+    "kind": "hatch",
+    "note": "Shoulder it open from below and it stays open; the lake has been holding it shut for forty years and will not try again."
+  },
+  "encounters": [
+    {
+      "chamber": "scour",
+      "enemy": "core:enemy/down_wolf",
+      "count": 3,
+      "group": "scour",
+      "note": "Leech-hounds in the silt, drawn by the warmth of the hold."
+    },
+    {
+      "chamber": "hull_walk",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 2,
+      "group": "hull",
+      "note": "The crew, at their stations, on a floor that is a wall."
+    },
+    {
+      "chamber": "hold",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 3,
+      "group": "hold",
+      "ambush": true
+    },
+    {
+      "chamber": "nest",
+      "enemy": "core:boss/she_who_waits",
+      "count": 1,
+      "role": "boss",
+      "group": "boss",
+      "note": "Placeholder for the lake serpent until its own definition exists."
+    }
+  ],
+  "features": [
+    {
+      "kind": "exit",
+      "chamber": "stair_foot",
+      "anchor": 0,
+      "name": "the Pilgrim Stair"
+    },
+    {
+      "kind": "hearthstone",
+      "chamber": "hold",
+      "id": "hearth_barge_hold",
+      "name": "The Warm Hold",
+      "place": "core:place/sunken_barge"
+    },
+    {
+      "kind": "prop",
+      "asset": "res://assets/models/props/ledger/ledger.glb",
+      "chamber": "counting_room",
+      "anchor": 0,
+      "note": "A tally that stops mid-column, and a column that does not add up."
+    }
+  ],
+  "smoothing": 2
+}
