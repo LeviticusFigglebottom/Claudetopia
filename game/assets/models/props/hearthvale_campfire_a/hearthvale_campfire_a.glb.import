@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://l2sd62dceh3g"
+path="res://.godot/imported/hearthvale_campfire_a.glb-c81fc474036037979efe8e939f091f31.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_campfire_a/hearthvale_campfire_a.glb"
+dest_files=["res://.godot/imported/hearthvale_campfire_a.glb-c81fc474036037979efe8e939f091f31.scn"]
 
 [params]
 

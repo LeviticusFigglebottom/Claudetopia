@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://rlr84ybi8ksi"
+path="res://.godot/imported/sedgemire_fern_a.glb-4ff31ffcf090b156b0a837351a0e8e5a.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_fern_a/sedgemire_fern_a.glb"
+dest_files=["res://.godot/imported/sedgemire_fern_a.glb-4ff31ffcf090b156b0a837351a0e8e5a.scn"]
 
 [params]
 

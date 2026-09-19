@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dfgqb1i5xlr25"
+path="res://.godot/imported/cinderlea_red_poppy_single_a.glb-faf1b90db6cee81d0f87552bdfe856d9.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/cinderlea_red_poppy_single_a/cinderlea_red_poppy_single_a.glb"
+dest_files=["res://.godot/imported/cinderlea_red_poppy_single_a.glb-faf1b90db6cee81d0f87552bdfe856d9.scn"]
 
 [params]
 

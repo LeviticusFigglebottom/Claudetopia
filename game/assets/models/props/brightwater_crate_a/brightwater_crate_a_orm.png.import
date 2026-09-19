@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://chw1cwl6iukkd"
+path.s3tc="res://.godot/imported/brightwater_crate_a_orm.png-21053838575d45c5cc02b50f416b11bf.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_crate_a/brightwater_crate_a_orm.png"
+dest_files=["res://.godot/imported/brightwater_crate_a_orm.png-21053838575d45c5cc02b50f416b11bf.s3tc.ctex"]
 
 [params]
 

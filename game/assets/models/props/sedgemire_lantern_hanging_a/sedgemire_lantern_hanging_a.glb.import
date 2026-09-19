@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://mgpthynt783"
+path="res://.godot/imported/sedgemire_lantern_hanging_a.glb-1243ab4adb8a9caaed768b3d3ec9e88e.scn"
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb"
+dest_files=["res://.godot/imported/sedgemire_lantern_hanging_a.glb-1243ab4adb8a9caaed768b3d3ec9e88e.scn"]
 
 [params]
 

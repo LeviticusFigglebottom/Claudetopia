@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bwclsi7re4dep"
+path="res://.godot/imported/hearthvale_wheelbarrow_a.glb-a42f0811f0564c2399c7613443f979b9.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_wheelbarrow_a/hearthvale_wheelbarrow_a.glb"
+dest_files=["res://.godot/imported/hearthvale_wheelbarrow_a.glb-a42f0811f0564c2399c7613443f979b9.scn"]
 
 [params]
 

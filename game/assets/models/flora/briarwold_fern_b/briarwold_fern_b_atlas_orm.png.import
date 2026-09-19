@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cp2mmo6a6lcye"
+path.s3tc="res://.godot/imported/briarwold_fern_b_atlas_orm.png-a756f416ba691d954ac04d21316bdcc4.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_fern_b/briarwold_fern_b_atlas_orm.png"
+dest_files=["res://.godot/imported/briarwold_fern_b_atlas_orm.png-a756f416ba691d954ac04d21316bdcc4.s3tc.ctex"]
 
 [params]
 

@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dgoaqfns3281j"
+path="res://.godot/imported/brightwater_boulder_b.glb-210cde5efe7f020d233144a578c80e2b.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/brightwater_boulder_b/brightwater_boulder_b.glb"
+dest_files=["res://.godot/imported/brightwater_boulder_b.glb-210cde5efe7f020d233144a578c80e2b.scn"]
 
 [params]
 

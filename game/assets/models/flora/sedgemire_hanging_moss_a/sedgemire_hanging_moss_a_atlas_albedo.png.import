@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c2tej2t55163r"
+path.s3tc="res://.godot/imported/sedgemire_hanging_moss_a_atlas_albedo.png-cb582548884351d53e8ab40d4c98ef7e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_hanging_moss_a/sedgemire_hanging_moss_a_atlas_albedo.png"
+dest_files=["res://.godot/imported/sedgemire_hanging_moss_a_atlas_albedo.png-cb582548884351d53e8ab40d4c98ef7e.s3tc.ctex"]
 
 [params]
 

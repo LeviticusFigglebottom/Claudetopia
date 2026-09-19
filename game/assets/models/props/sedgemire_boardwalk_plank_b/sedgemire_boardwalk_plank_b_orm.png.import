@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://o2lrq1frdljf"
+path.s3tc="res://.godot/imported/sedgemire_boardwalk_plank_b_orm.png-8f7d0191becbc646c2f94e460c4dda61.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_boardwalk_plank_b/sedgemire_boardwalk_plank_b_orm.png"
+dest_files=["res://.godot/imported/sedgemire_boardwalk_plank_b_orm.png-8f7d0191becbc646c2f94e460c4dda61.s3tc.ctex"]
 
 [params]
 

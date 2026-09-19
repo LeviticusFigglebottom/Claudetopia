@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cse4gcvt8exh8"
+path="res://.godot/imported/hearthvale_cupboard_a.glb-8c12d261d6dae821a44d309c044becf8.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_cupboard_a/hearthvale_cupboard_a.glb"
+dest_files=["res://.godot/imported/hearthvale_cupboard_a.glb-8c12d261d6dae821a44d309c044becf8.scn"]
 
 [params]
 

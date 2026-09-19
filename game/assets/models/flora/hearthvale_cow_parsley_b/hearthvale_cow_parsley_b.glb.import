@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dms5lhx7vbbxm"
+path="res://.godot/imported/hearthvale_cow_parsley_b.glb-c28f6f49f8d402a2e4f35c7bb2dc7cf5.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/hearthvale_cow_parsley_b/hearthvale_cow_parsley_b.glb"
+dest_files=["res://.godot/imported/hearthvale_cow_parsley_b.glb-c28f6f49f8d402a2e4f35c7bb2dc7cf5.scn"]
 
 [params]
 

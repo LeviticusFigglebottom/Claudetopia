@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dsgy3adlrustl"
+path.s3tc="res://.godot/imported/brightwater_boulder_b_albedo.png-630bb9287b0703c85766c921b3d86b50.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/brightwater_boulder_b/brightwater_boulder_b_albedo.png"
+dest_files=["res://.godot/imported/brightwater_boulder_b_albedo.png-630bb9287b0703c85766c921b3d86b50.s3tc.ctex"]
 
 [params]
 

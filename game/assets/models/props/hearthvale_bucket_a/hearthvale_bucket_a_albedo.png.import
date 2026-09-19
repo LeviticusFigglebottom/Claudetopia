@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b38nwoco8qi1x"
+path.s3tc="res://.godot/imported/hearthvale_bucket_a_albedo.png-52c9af99eb5defe9058711fa203acd8f.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_bucket_a/hearthvale_bucket_a_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_bucket_a_albedo.png-52c9af99eb5defe9058711fa203acd8f.s3tc.ctex"]
 
 [params]
 

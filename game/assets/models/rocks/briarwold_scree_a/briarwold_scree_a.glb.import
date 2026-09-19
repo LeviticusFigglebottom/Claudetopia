@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dbuvofa3fm4os"
+path="res://.godot/imported/briarwold_scree_a.glb-5917abda5f5fba36be0a9f2749e93895.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/briarwold_scree_a/briarwold_scree_a.glb"
+dest_files=["res://.godot/imported/briarwold_scree_a.glb-5917abda5f5fba36be0a9f2749e93895.scn"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cs0yxbsyuy7rr"
+path.s3tc="res://.godot/imported/brightwater_banner_b_albedo.png-248496bbf2017d456037c8358e28919e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_banner_b/brightwater_banner_b_albedo.png"
+dest_files=["res://.godot/imported/brightwater_banner_b_albedo.png-248496bbf2017d456037c8358e28919e.s3tc.ctex"]
 
 [params]
 

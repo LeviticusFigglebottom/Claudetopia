@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bn3jcg1sqtbiy"
+path.s3tc="res://.godot/imported/hearthvale_signpost_a_orm.png-2cdd57d7a2893b5a1eab13a2be399bf4.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_signpost_a/hearthvale_signpost_a_orm.png"
+dest_files=["res://.godot/imported/hearthvale_signpost_a_orm.png-2cdd57d7a2893b5a1eab13a2be399bf4.s3tc.ctex"]
 
 [params]
 

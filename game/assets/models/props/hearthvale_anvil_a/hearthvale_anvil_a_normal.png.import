@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bp55jjt8gnwj0"
+path.s3tc="res://.godot/imported/hearthvale_anvil_a_normal.png-b82cc89da94757fe07a7a5c940e752c0.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_anvil_a/hearthvale_anvil_a_normal.png"
+dest_files=["res://.godot/imported/hearthvale_anvil_a_normal.png-b82cc89da94757fe07a7a5c940e752c0.s3tc.ctex"]
 
 [params]
 

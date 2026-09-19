@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://3v7o5sygtbmb"
+path.s3tc="res://.godot/imported/hearthvale_cooking_pot_a_albedo.png-a2f1adf9d87b4e34d542265d27ecddae.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_cooking_pot_a/hearthvale_cooking_pot_a_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_cooking_pot_a_albedo.png-a2f1adf9d87b4e34d542265d27ecddae.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddghte2f53ng4"
+path.s3tc="res://.godot/imported/hearthvale_bell_small_a_normal.png-b8521ecc01208757bb4613f3ec55dbb9.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_bell_small_a/hearthvale_bell_small_a_normal.png"
+dest_files=["res://.godot/imported/hearthvale_bell_small_a_normal.png-b8521ecc01208757bb4613f3ec55dbb9.s3tc.ctex"]
 
 [params]
 

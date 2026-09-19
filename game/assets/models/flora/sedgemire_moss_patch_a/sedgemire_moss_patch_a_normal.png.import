@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c5niu77d2unor"
+path.s3tc="res://.godot/imported/sedgemire_moss_patch_a_normal.png-ea3002878eb3a088e9ff8738588c234f.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_moss_patch_a/sedgemire_moss_patch_a_normal.png"
+dest_files=["res://.godot/imported/sedgemire_moss_patch_a_normal.png-ea3002878eb3a088e9ff8738588c234f.s3tc.ctex"]
 
 [params]
 

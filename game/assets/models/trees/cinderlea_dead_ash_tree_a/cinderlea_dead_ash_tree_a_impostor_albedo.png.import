@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ffb1i7ktt8vc"
+path.s3tc="res://.godot/imported/cinderlea_dead_ash_tree_a_impostor_albedo.png-1aad5f12823f02ecf33e8233d7c5246a.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/cinderlea_dead_ash_tree_a/cinderlea_dead_ash_tree_a_impostor_albedo.png"
+dest_files=["res://.godot/imported/cinderlea_dead_ash_tree_a_impostor_albedo.png-1aad5f12823f02ecf33e8233d7c5246a.s3tc.ctex"]
 
 [params]
 

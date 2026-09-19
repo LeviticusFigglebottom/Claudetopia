@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d20on32e1cygm"
+path.s3tc="res://.godot/imported/sedgemire_reeds_c_atlas_albedo.png-bd8d73fc94adf4116f09f5f19a170659.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_reeds_c/sedgemire_reeds_c_atlas_albedo.png"
+dest_files=["res://.godot/imported/sedgemire_reeds_c_atlas_albedo.png-bd8d73fc94adf4116f09f5f19a170659.s3tc.ctex"]
 
 [params]
 

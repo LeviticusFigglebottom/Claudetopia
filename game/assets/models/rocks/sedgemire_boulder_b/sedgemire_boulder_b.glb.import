@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cteidnmk10tyr"
+path="res://.godot/imported/sedgemire_boulder_b.glb-e80407eb061723d6af27ff6e9d9dcafe.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/sedgemire_boulder_b/sedgemire_boulder_b.glb"
+dest_files=["res://.godot/imported/sedgemire_boulder_b.glb-e80407eb061723d6af27ff6e9d9dcafe.scn"]
 
 [params]
 

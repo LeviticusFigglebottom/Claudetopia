@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0qihi75ttb7m"
+path.s3tc="res://.godot/imported/brightwater_reeds_a_atlas_normal.png-33c3293672b7e57514fd6f545dd5687c.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/brightwater_reeds_a/brightwater_reeds_a_atlas_normal.png"
+dest_files=["res://.godot/imported/brightwater_reeds_a_atlas_normal.png-33c3293672b7e57514fd6f545dd5687c.s3tc.ctex"]
 
 [params]
 

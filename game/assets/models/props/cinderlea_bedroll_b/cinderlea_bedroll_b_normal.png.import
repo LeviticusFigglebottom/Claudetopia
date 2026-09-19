@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddl4r5kww8rl7"
+path.s3tc="res://.godot/imported/cinderlea_bedroll_b_normal.png-cf2a70bdc8a633f7bc9ea5861040ab65.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/cinderlea_bedroll_b/cinderlea_bedroll_b_normal.png"
+dest_files=["res://.godot/imported/cinderlea_bedroll_b_normal.png-cf2a70bdc8a633f7bc9ea5861040ab65.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://phbo17pe8w47"
+path.s3tc="res://.godot/imported/briarwold_scree_a_orm.png-adae670b8f7d8c63863f6ed68a5d52ac.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/briarwold_scree_a/briarwold_scree_a_orm.png"
+dest_files=["res://.godot/imported/briarwold_scree_a_orm.png-adae670b8f7d8c63863f6ed68a5d52ac.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cypyod6r80ksc"
+path.s3tc="res://.godot/imported/hearthvale_barley_tuft_b_atlas_albedo.png-4867d28baad838fbcc2c29e68e4d9797.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/hearthvale_barley_tuft_b/hearthvale_barley_tuft_b_atlas_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_barley_tuft_b_atlas_albedo.png-4867d28baad838fbcc2c29e68e4d9797.s3tc.ctex"]
 
 [params]
 

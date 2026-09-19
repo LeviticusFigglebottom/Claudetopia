@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://26nmq5f0tlat"
+path.s3tc="res://.godot/imported/skerrow_lichen_crust_a_albedo.png-fc7eaf70d7e4a8dd3d6e88623bce505e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/skerrow_lichen_crust_a/skerrow_lichen_crust_a_albedo.png"
+dest_files=["res://.godot/imported/skerrow_lichen_crust_a_albedo.png-fc7eaf70d7e4a8dd3d6e88623bce505e.s3tc.ctex"]
 
 [params]
 

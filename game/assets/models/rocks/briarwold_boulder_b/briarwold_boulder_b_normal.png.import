@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dqq2rd78d83b4"
+path.s3tc="res://.godot/imported/briarwold_boulder_b_normal.png-e20d411e63b4c20669d172db2e99971f.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/briarwold_boulder_b/briarwold_boulder_b_normal.png"
+dest_files=["res://.godot/imported/briarwold_boulder_b_normal.png-e20d411e63b4c20669d172db2e99971f.s3tc.ctex"]
 
 [params]
 

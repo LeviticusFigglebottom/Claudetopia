@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dlngat2xl58jh"
+path="res://.godot/imported/sedgemire_marsh_marigold_b.glb-9b54fd5516710c545f42a21b3b89a4fd.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_marsh_marigold_b/sedgemire_marsh_marigold_b.glb"
+dest_files=["res://.godot/imported/sedgemire_marsh_marigold_b.glb-9b54fd5516710c545f42a21b3b89a4fd.scn"]
 
 [params]
 

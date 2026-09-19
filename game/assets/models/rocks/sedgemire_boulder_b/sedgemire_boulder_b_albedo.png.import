@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://q3m5r4owljyy"
+path.s3tc="res://.godot/imported/sedgemire_boulder_b_albedo.png-e5989ad4c74ab1e1df0b35606d28c89e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/sedgemire_boulder_b/sedgemire_boulder_b_albedo.png"
+dest_files=["res://.godot/imported/sedgemire_boulder_b_albedo.png-e5989ad4c74ab1e1df0b35606d28c89e.s3tc.ctex"]
 
 [params]
 

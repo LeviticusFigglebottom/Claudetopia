@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cqoslnwfyd63"
+path="res://.godot/imported/briarwold_boulder_a.glb-20165697deb64b6160e7223e0520ee91.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/briarwold_boulder_a/briarwold_boulder_a.glb"
+dest_files=["res://.godot/imported/briarwold_boulder_a.glb-20165697deb64b6160e7223e0520ee91.scn"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://877cta74n4rw"
+path.s3tc="res://.godot/imported/skerrow_heather_b_atlas_normal.png-ba0f55a035bf05f51909c2ca6a558c76.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/skerrow_heather_b/skerrow_heather_b_atlas_normal.png"
+dest_files=["res://.godot/imported/skerrow_heather_b_atlas_normal.png-ba0f55a035bf05f51909c2ca6a558c76.s3tc.ctex"]
 
 [params]
 

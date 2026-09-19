@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0o27ak1r6tm6"
+path.s3tc="res://.godot/imported/hearthvale_forge_hearth_a_albedo.png-e3d1a7ede33f63efdad8d5200aea7e0f.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_forge_hearth_a/hearthvale_forge_hearth_a_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_forge_hearth_a_albedo.png-e3d1a7ede33f63efdad8d5200aea7e0f.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dryq1cq36t7xe"
+path.s3tc="res://.godot/imported/hearthvale_wheelbarrow_a_orm.png-aeb4a9b64a1c60e8f4cbcf76a78becb5.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_wheelbarrow_a/hearthvale_wheelbarrow_a_orm.png"
+dest_files=["res://.godot/imported/hearthvale_wheelbarrow_a_orm.png-aeb4a9b64a1c60e8f4cbcf76a78becb5.s3tc.ctex"]
 
 [params]
 

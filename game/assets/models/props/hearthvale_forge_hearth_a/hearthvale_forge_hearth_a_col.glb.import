@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dqovd2xfr0cuh"
+path="res://.godot/imported/hearthvale_forge_hearth_a_col.glb-52487651d2fb1c152c6015d54b343ad1.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_forge_hearth_a/hearthvale_forge_hearth_a_col.glb"
+dest_files=["res://.godot/imported/hearthvale_forge_hearth_a_col.glb-52487651d2fb1c152c6015d54b343ad1.scn"]
 
 [params]
 

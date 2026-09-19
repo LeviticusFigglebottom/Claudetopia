@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://blf6ih335yh5u"
+path.s3tc="res://.godot/imported/skerrow_rowan_b_impostor_orm.png-c98be58aba579ee6e98a990b6b6e9cea.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_rowan_b/skerrow_rowan_b_impostor_orm.png"
+dest_files=["res://.godot/imported/skerrow_rowan_b_impostor_orm.png-c98be58aba579ee6e98a990b6b6e9cea.s3tc.ctex"]
 
 [params]
 

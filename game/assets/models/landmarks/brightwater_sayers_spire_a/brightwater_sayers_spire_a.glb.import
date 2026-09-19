@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b2prmls67cqwp"
+path="res://.godot/imported/brightwater_sayers_spire_a.glb-5966dbaf6fb645bbe6926ee09d88c2c9.scn"
 
 [deps]
 
 source_file="res://assets/models/landmarks/brightwater_sayers_spire_a/brightwater_sayers_spire_a.glb"
+dest_files=["res://.godot/imported/brightwater_sayers_spire_a.glb-5966dbaf6fb645bbe6926ee09d88c2c9.scn"]
 
 [params]
 

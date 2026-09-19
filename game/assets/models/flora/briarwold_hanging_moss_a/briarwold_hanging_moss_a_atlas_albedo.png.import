@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://jn2yrr8d158u"
+path.s3tc="res://.godot/imported/briarwold_hanging_moss_a_atlas_albedo.png-60c11630898498b9ec152182da7c42e4.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_hanging_moss_a/briarwold_hanging_moss_a_atlas_albedo.png"
+dest_files=["res://.godot/imported/briarwold_hanging_moss_a_atlas_albedo.png-60c11630898498b9ec152182da7c42e4.s3tc.ctex"]
 
 [params]
 

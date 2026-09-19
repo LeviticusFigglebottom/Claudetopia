@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://chvb4pcx3bf3s"
+path.s3tc="res://.godot/imported/cinderlea_tent_b_orm.png-b281585fa651a1462448f5ae4f8e356b.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/cinderlea_tent_b/cinderlea_tent_b_orm.png"
+dest_files=["res://.godot/imported/cinderlea_tent_b_orm.png-b281585fa651a1462448f5ae4f8e356b.s3tc.ctex"]
 
 [params]
 

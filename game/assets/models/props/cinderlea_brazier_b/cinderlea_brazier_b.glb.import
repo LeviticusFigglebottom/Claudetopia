@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://uj78ke8uktxf"
+path="res://.godot/imported/cinderlea_brazier_b.glb-6cb150bfc2d29dc8a8ef69f3e42315dd.scn"
 
 [deps]
 
 source_file="res://assets/models/props/cinderlea_brazier_b/cinderlea_brazier_b.glb"
+dest_files=["res://.godot/imported/cinderlea_brazier_b.glb-6cb150bfc2d29dc8a8ef69f3e42315dd.scn"]
 
 [params]
 

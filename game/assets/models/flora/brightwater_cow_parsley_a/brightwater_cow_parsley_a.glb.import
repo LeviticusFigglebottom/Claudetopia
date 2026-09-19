@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bggaaevpwa1hr"
+path="res://.godot/imported/brightwater_cow_parsley_a.glb-020d465e8b3d5d750ab9d9a564ada6e7.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/brightwater_cow_parsley_a/brightwater_cow_parsley_a.glb"
+dest_files=["res://.godot/imported/brightwater_cow_parsley_a.glb-020d465e8b3d5d750ab9d9a564ada6e7.scn"]
 
 [params]
 

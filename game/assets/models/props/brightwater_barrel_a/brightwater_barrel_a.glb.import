@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://ct1s0a1g1elvv"
+path="res://.godot/imported/brightwater_barrel_a.glb-20d029ccf0a2becae23850fba702deca.scn"
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_barrel_a/brightwater_barrel_a.glb"
+dest_files=["res://.godot/imported/brightwater_barrel_a.glb-20d029ccf0a2becae23850fba702deca.scn"]
 
 [params]
 

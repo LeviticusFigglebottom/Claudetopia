@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://d0kl7pmd3r8ap"
+path="res://.godot/imported/sedgemire_boardwalk_plank_b.glb-862b42a282bc23573f074dd7e664a5c1.scn"
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_boardwalk_plank_b/sedgemire_boardwalk_plank_b.glb"
+dest_files=["res://.godot/imported/sedgemire_boardwalk_plank_b.glb-862b42a282bc23573f074dd7e664a5c1.scn"]
 
 [params]
 

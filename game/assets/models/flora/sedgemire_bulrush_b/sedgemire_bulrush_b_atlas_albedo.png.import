@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bsdnw0pbfm53b"
+path.s3tc="res://.godot/imported/sedgemire_bulrush_b_atlas_albedo.png-9d2c62f2ee7c66ba6ac6100e35f42ce6.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_bulrush_b/sedgemire_bulrush_b_atlas_albedo.png"
+dest_files=["res://.godot/imported/sedgemire_bulrush_b_atlas_albedo.png-9d2c62f2ee7c66ba6ac6100e35f42ce6.s3tc.ctex"]
 
 [params]
 

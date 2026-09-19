@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6mtvo3fd6qpu"
+path.s3tc="res://.godot/imported/briarwold_moss_patch_a_orm.png-1b8bef73560bf272d24e4d7c2dc67c33.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_moss_patch_a/briarwold_moss_patch_a_orm.png"
+dest_files=["res://.godot/imported/briarwold_moss_patch_a_orm.png-1b8bef73560bf272d24e4d7c2dc67c33.s3tc.ctex"]
 
 [params]
 

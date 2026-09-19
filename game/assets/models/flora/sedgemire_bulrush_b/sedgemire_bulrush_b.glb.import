@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://0yfylje727uc"
+path="res://.godot/imported/sedgemire_bulrush_b.glb-4578ea533b3fd3770ff73b83e9aa2c2a.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_bulrush_b/sedgemire_bulrush_b.glb"
+dest_files=["res://.godot/imported/sedgemire_bulrush_b.glb-4578ea533b3fd3770ff73b83e9aa2c2a.scn"]
 
 [params]
 

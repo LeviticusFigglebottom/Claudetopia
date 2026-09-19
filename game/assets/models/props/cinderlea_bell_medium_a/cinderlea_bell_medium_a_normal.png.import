@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b3g1g6aw6rgfi"
+path.s3tc="res://.godot/imported/cinderlea_bell_medium_a_normal.png-690e1cb37857e86143a98b6e86caa11c.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/cinderlea_bell_medium_a/cinderlea_bell_medium_a_normal.png"
+dest_files=["res://.godot/imported/cinderlea_bell_medium_a_normal.png-690e1cb37857e86143a98b6e86caa11c.s3tc.ctex"]
 
 [params]
 

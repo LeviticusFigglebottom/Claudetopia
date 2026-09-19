@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cy176ecy2xvgh"
+path="res://.godot/imported/cinderlea_bedroll_a.glb-bfde163233bdd8146ec413cbbb9d8481.scn"
 
 [deps]
 
 source_file="res://assets/models/props/cinderlea_bedroll_a/cinderlea_bedroll_a.glb"
+dest_files=["res://.godot/imported/cinderlea_bedroll_a.glb-bfde163233bdd8146ec413cbbb9d8481.scn"]
 
 [params]
 

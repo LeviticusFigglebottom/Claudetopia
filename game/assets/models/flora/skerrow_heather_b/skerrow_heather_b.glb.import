@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c8hg6n1dmdnb8"
+path="res://.godot/imported/skerrow_heather_b.glb-0b951a36267f64893164c6e9e012a6b1.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/skerrow_heather_b/skerrow_heather_b.glb"
+dest_files=["res://.godot/imported/skerrow_heather_b.glb-0b951a36267f64893164c6e9e012a6b1.scn"]
 
 [params]
 

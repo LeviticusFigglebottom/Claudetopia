@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://biht5c41cpd1d"
+path="res://.godot/imported/brightwater_the_lamp_a.glb-1ef508026af8a9f30a35e97d3aa21d13.scn"
 
 [deps]
 
 source_file="res://assets/models/landmarks/brightwater_the_lamp_a/brightwater_the_lamp_a.glb"
+dest_files=["res://.godot/imported/brightwater_the_lamp_a.glb-1ef508026af8a9f30a35e97d3aa21d13.scn"]
 
 [params]
 

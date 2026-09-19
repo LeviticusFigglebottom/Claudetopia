@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://clnccc7o1r4go"
+path="res://.godot/imported/brightwater_banner_a.glb-609bf30edaebef12865c42d88287e1f1.scn"
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_banner_a/brightwater_banner_a.glb"
+dest_files=["res://.godot/imported/brightwater_banner_a.glb-609bf30edaebef12865c42d88287e1f1.scn"]
 
 [params]
 

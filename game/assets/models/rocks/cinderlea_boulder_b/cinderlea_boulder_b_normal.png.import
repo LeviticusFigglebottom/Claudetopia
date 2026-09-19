@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://di56fb4bhwbq8"
+path.s3tc="res://.godot/imported/cinderlea_boulder_b_normal.png-b31719b76cac0f26cb9c14f00eec7a0c.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/cinderlea_boulder_b/cinderlea_boulder_b_normal.png"
+dest_files=["res://.godot/imported/cinderlea_boulder_b_normal.png-b31719b76cac0f26cb9c14f00eec7a0c.s3tc.ctex"]
 
 [params]
 

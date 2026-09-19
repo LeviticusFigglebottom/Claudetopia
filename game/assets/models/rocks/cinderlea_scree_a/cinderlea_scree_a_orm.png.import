@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://clmxqlvxdk0ls"
+path.s3tc="res://.godot/imported/cinderlea_scree_a_orm.png-d6f316a4e544ad8f4298da9353b5ab8a.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/cinderlea_scree_a/cinderlea_scree_a_orm.png"
+dest_files=["res://.godot/imported/cinderlea_scree_a_orm.png-d6f316a4e544ad8f4298da9353b5ab8a.s3tc.ctex"]
 
 [params]
 

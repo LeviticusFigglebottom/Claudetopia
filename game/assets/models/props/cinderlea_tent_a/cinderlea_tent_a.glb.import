@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://6l8juo18spgw"
+path="res://.godot/imported/cinderlea_tent_a.glb-56f8cf6cf70e2ec82702c798614a35f7.scn"
 
 [deps]
 
 source_file="res://assets/models/props/cinderlea_tent_a/cinderlea_tent_a.glb"
+dest_files=["res://.godot/imported/cinderlea_tent_a.glb-56f8cf6cf70e2ec82702c798614a35f7.scn"]
 
 [params]
 

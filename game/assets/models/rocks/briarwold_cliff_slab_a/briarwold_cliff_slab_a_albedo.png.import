@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dewapmepwjbom"
+path.s3tc="res://.godot/imported/briarwold_cliff_slab_a_albedo.png-e70585756bb10212e8af9d1f116fc1fd.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/briarwold_cliff_slab_a/briarwold_cliff_slab_a_albedo.png"
+dest_files=["res://.godot/imported/briarwold_cliff_slab_a_albedo.png-e70585756bb10212e8af9d1f116fc1fd.s3tc.ctex"]
 
 [params]
 

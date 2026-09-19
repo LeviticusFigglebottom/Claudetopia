@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c6ctnm7cylxq"
+path="res://.godot/imported/brightwater_crate_a.glb-674646a672d2609c9367acc241f88a7f.scn"
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_crate_a/brightwater_crate_a.glb"
+dest_files=["res://.godot/imported/brightwater_crate_a.glb-674646a672d2609c9367acc241f88a7f.scn"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://31ru4ak0wfw2"
+path.s3tc="res://.godot/imported/brightwater_lime_a_leaf_albedo.png-8c3e943320e25cf3c4bcac3ed72662e1.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/brightwater_lime_a/brightwater_lime_a_leaf_albedo.png"
+dest_files=["res://.godot/imported/brightwater_lime_a_leaf_albedo.png-8c3e943320e25cf3c4bcac3ed72662e1.s3tc.ctex"]
 
 [params]
 

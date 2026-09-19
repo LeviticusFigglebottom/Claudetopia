@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://fwevtmc748oq"
+path.s3tc="res://.godot/imported/hearthvale_fence_post_rail_b_normal.png-d7fea97fdf7ccd379a9958260f32794e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_fence_post_rail_b/hearthvale_fence_post_rail_b_normal.png"
+dest_files=["res://.godot/imported/hearthvale_fence_post_rail_b_normal.png-d7fea97fdf7ccd379a9958260f32794e.s3tc.ctex"]
 
 [params]
 

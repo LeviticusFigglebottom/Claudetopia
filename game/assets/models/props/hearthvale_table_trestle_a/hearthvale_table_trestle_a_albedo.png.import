@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dtfs55pjf8ehv"
+path.s3tc="res://.godot/imported/hearthvale_table_trestle_a_albedo.png-0f97c89a97b39a8349c821f9a25fba17.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_table_trestle_a/hearthvale_table_trestle_a_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_table_trestle_a_albedo.png-0f97c89a97b39a8349c821f9a25fba17.s3tc.ctex"]
 
 [params]
 

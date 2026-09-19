@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://2y016y6bgv0"
+path="res://.godot/imported/cinderlea_scree_a.glb-3047ca6fff9655ba4cca8d56c3276d40.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/cinderlea_scree_a/cinderlea_scree_a.glb"
+dest_files=["res://.godot/imported/cinderlea_scree_a.glb-3047ca6fff9655ba4cca8d56c3276d40.scn"]
 
 [params]
 

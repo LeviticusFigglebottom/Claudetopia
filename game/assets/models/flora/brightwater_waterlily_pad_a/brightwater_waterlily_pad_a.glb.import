@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cgwvpgt2lkc8y"
+path="res://.godot/imported/brightwater_waterlily_pad_a.glb-bf7850eeedcede17e1fc80ef894be6c9.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/brightwater_waterlily_pad_a/brightwater_waterlily_pad_a.glb"
+dest_files=["res://.godot/imported/brightwater_waterlily_pad_a.glb-bf7850eeedcede17e1fc80ef894be6c9.scn"]
 
 [params]
 

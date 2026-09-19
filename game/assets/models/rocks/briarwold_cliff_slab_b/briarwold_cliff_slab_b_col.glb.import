@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bo4mjk26f0ok3"
+path="res://.godot/imported/briarwold_cliff_slab_b_col.glb-35dbc23ddee695a62b176807f9f97666.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/briarwold_cliff_slab_b/briarwold_cliff_slab_b_col.glb"
+dest_files=["res://.godot/imported/briarwold_cliff_slab_b_col.glb-35dbc23ddee695a62b176807f9f97666.scn"]
 
 [params]
 

@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://df2ifuqp26c2p"
+path="res://.godot/imported/hearthvale_table_round_a.glb-703c7306d5b14d7632e20d05f65b0f73.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_table_round_a/hearthvale_table_round_a.glb"
+dest_files=["res://.godot/imported/hearthvale_table_round_a.glb-703c7306d5b14d7632e20d05f65b0f73.scn"]
 
 [params]
 

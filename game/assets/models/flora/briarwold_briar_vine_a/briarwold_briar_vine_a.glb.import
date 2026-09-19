@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b105m3k5cmmhe"
+path="res://.godot/imported/briarwold_briar_vine_a.glb-8bb8fdfffe6d4850e71b1fe8d3f83750.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_briar_vine_a/briarwold_briar_vine_a.glb"
+dest_files=["res://.godot/imported/briarwold_briar_vine_a.glb-8bb8fdfffe6d4850e71b1fe8d3f83750.scn"]
 
 [params]
 

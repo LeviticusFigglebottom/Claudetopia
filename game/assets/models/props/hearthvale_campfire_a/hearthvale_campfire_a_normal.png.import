@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cia4ursrq27it"
+path.s3tc="res://.godot/imported/hearthvale_campfire_a_normal.png-20d284a41896e14cef6866d465809bec.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_campfire_a/hearthvale_campfire_a_normal.png"
+dest_files=["res://.godot/imported/hearthvale_campfire_a_normal.png-20d284a41896e14cef6866d465809bec.s3tc.ctex"]
 
 [params]
 

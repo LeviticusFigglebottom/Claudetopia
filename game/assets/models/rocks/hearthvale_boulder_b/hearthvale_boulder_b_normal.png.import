@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ds0n438nuoi4u"
+path.s3tc="res://.godot/imported/hearthvale_boulder_b_normal.png-9550cc37f429f9cd984d30ec2c00ab45.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/hearthvale_boulder_b/hearthvale_boulder_b_normal.png"
+dest_files=["res://.godot/imported/hearthvale_boulder_b_normal.png-9550cc37f429f9cd984d30ec2c00ab45.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dwr2axp08fm67"
+path.s3tc="res://.godot/imported/brightwater_cow_parsley_a_atlas_normal.png-dfb95c8377ca3b94f4f0021352357694.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/brightwater_cow_parsley_a/brightwater_cow_parsley_a_atlas_normal.png"
+dest_files=["res://.godot/imported/brightwater_cow_parsley_a_atlas_normal.png-dfb95c8377ca3b94f4f0021352357694.s3tc.ctex"]
 
 [params]
 

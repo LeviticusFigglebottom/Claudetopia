@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0q1ifg2dnftl"
+path.s3tc="res://.godot/imported/hearthvale_poppy_a_atlas_orm.png-41a0b8bae79b116e98ad73fc5d60627d.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/hearthvale_poppy_a/hearthvale_poppy_a_atlas_orm.png"
+dest_files=["res://.godot/imported/hearthvale_poppy_a_atlas_orm.png-41a0b8bae79b116e98ad73fc5d60627d.s3tc.ctex"]
 
 [params]
 

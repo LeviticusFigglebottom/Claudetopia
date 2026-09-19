@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bieo65rirgeq8"
+path.s3tc="res://.godot/imported/hearthvale_cliff_slab_a_normal.png-95646e582bbe21083ffd88b2ca8404c3.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/hearthvale_cliff_slab_a/hearthvale_cliff_slab_a_normal.png"
+dest_files=["res://.godot/imported/hearthvale_cliff_slab_a_normal.png-95646e582bbe21083ffd88b2ca8404c3.s3tc.ctex"]
 
 [params]
 

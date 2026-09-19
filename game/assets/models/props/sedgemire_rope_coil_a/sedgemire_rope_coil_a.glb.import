@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://castugcn0w56c"
+path="res://.godot/imported/sedgemire_rope_coil_a.glb-e9f89a99e82de72a263598f568ae3947.scn"
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_rope_coil_a/sedgemire_rope_coil_a.glb"
+dest_files=["res://.godot/imported/sedgemire_rope_coil_a.glb-e9f89a99e82de72a263598f568ae3947.scn"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c24awxtdsycqj"
+path.s3tc="res://.godot/imported/hearthvale_cart_a_orm.png-2c77a38fe9aefc4a89b43b4a438ad841.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_cart_a/hearthvale_cart_a_orm.png"
+dest_files=["res://.godot/imported/hearthvale_cart_a_orm.png-2c77a38fe9aefc4a89b43b4a438ad841.s3tc.ctex"]
 
 [params]
 

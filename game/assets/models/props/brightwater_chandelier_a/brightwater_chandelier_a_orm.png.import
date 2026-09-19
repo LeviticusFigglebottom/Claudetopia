@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkren51r5kvgn"
+path.s3tc="res://.godot/imported/brightwater_chandelier_a_orm.png-24391538069bfcd6d46f12a8c5c56d27.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_chandelier_a/brightwater_chandelier_a_orm.png"
+dest_files=["res://.godot/imported/brightwater_chandelier_a_orm.png-24391538069bfcd6d46f12a8c5c56d27.s3tc.ctex"]
 
 [params]
 

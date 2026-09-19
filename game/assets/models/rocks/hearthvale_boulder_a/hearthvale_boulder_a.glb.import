@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dgc40wo3twdvx"
+path="res://.godot/imported/hearthvale_boulder_a.glb-f8eb3c866dbd18b55ef2ee66d55739e9.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/hearthvale_boulder_a/hearthvale_boulder_a.glb"
+dest_files=["res://.godot/imported/hearthvale_boulder_a.glb-f8eb3c866dbd18b55ef2ee66d55739e9.scn"]
 
 [params]
 

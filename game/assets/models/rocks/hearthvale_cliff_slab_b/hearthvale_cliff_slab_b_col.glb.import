@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bd8ldh1q32g6u"
+path="res://.godot/imported/hearthvale_cliff_slab_b_col.glb-6658623b69bc9d173ee0c034be33286b.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/hearthvale_cliff_slab_b/hearthvale_cliff_slab_b_col.glb"
+dest_files=["res://.godot/imported/hearthvale_cliff_slab_b_col.glb-6658623b69bc9d173ee0c034be33286b.scn"]
 
 [params]
 

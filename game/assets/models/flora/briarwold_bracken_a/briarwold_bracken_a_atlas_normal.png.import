@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cby3361n68kgi"
+path.s3tc="res://.godot/imported/briarwold_bracken_a_atlas_normal.png-c028a8f2891196beb9c3c82219b75bed.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_bracken_a/briarwold_bracken_a_atlas_normal.png"
+dest_files=["res://.godot/imported/briarwold_bracken_a_atlas_normal.png-c028a8f2891196beb9c3c82219b75bed.s3tc.ctex"]
 
 [params]
 

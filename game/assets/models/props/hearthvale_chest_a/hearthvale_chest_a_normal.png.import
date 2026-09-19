@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bp3ykhjij7jtc"
+path.s3tc="res://.godot/imported/hearthvale_chest_a_normal.png-aa0eb05d6ea63af1c1378d0413147262.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_chest_a/hearthvale_chest_a_normal.png"
+dest_files=["res://.godot/imported/hearthvale_chest_a_normal.png-aa0eb05d6ea63af1c1378d0413147262.s3tc.ctex"]
 
 [params]
 
