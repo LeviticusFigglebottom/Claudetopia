@@ -1,0 +1,7 @@
+{
+  "id": "core",
+  "name": "Wickmere Core",
+  "version": "0.1.0",
+  "depends": [],
+  "description": "The first content pack: the Wickmere basin, its six regions, peoples, factions, creatures, quests and books. Loaded through the same path as any future pack."
+}

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "sections": {
+    "player": {"name": "Test", "gold": 120, "hp": 80},
+    "clock": {"total_hours": 54.5},
+    "state": {"flags": {"met_wren": true}}
+  }
+}

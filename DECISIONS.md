@@ -44,7 +44,7 @@ software-renderer issue, the fallback is a custom chunked heightmap terrain
 interface so the rest of the game does not care.
 **Reversible.** Yes, behind `TerrainProvider`.
 
-## 2026-09-19 · Art: "Painted Low-Poly, Strong Light" and a binding style contract
+## 2026-09-19 · (SUPERSEDED, see below) Art: "Painted Low-Poly, Strong Light"
 **Decision.** Flat-shaded low-poly assets (Kenney, KayKit, our own Blender/
 Python generators) unified by one palette-shader family and one import
 normaliser; painterly generated surface textures; realism carried by light,
@@ -58,7 +58,7 @@ clash with any low-poly kit and cannot be varied procedurally.
 **Consequences.** Every imported asset is re-materialled; textures are
 generated; a style report gates the build.
 
-## 2026-09-19 · Characters: original bodies on the KayKit humanoid rig
+## 2026-09-19 · (SUPERSEDED, see below) Characters: original bodies on the KayKit humanoid rig
 **Decision.** Player, villagers and humanoid enemies are procedurally built
 bodies (Blender script) skinned to the KayKit skeleton rig (41 bones), so the
 CC0 KayKit animation library (95 clips: 1H/2H attacks, block, block-hit,
@@ -89,3 +89,25 @@ are gitignored. The single run command generates them if missing.
 **Why.** Hundreds of MB of binary terrain in git would make the repo unusable;
 the recipe is the source of truth and is deterministic.
 **Consequences.** Python 3 + numpy are build-time dependencies (documented).
+
+## 2026-09-19 · Art pivot: all assets self-made, "Storybook Painted", not low-poly
+**Decision.** Per the user's direction, no third-party model/texture packs
+(Kenney, KayKit, Quaternius, Poly Haven) and no low-poly style. Every mesh,
+texture, animation, sound and UI element is produced by this project's own
+tooling: Blender 4.0 scripted headlessly (`tools/forge/`), Python image and
+audio synthesis, and Godot shaders. The look is painted storybook realism with
+smooth mid-poly geometry and hand-painted-style baked PBR textures. The only
+third-party files are SIL-OFL fonts and the Terrain3D plugin (MIT).
+**Why.** The user does not want the low-poly kit look, and self-made assets
+give total stylistic control and clean IP. Blender's built-in generators
+(Sapling trees, displacement, Skin modifier bodies, Cycles baking) make this
+feasible at scale; verified by prototype renders (see PROGRESS.md).
+**Alternatives.** Keeping CC0 kits with a re-material pass: rejected by the
+user. Photoreal scans: clash with a painted look and cannot be varied.
+**Consequences.** Animation is authored in code from pose libraries and gait
+generators on our own rig; this is the largest risk in the pass and gets a
+dedicated review loop. Asset generation becomes a first-class build step
+(`make assets`), cached and committed as GLB/PNG outputs so the game runs
+without Blender.
+**Supersedes.** The two entries marked SUPERSEDED above. The Kenney/KayKit
+downloads were deleted; nothing from them is in the repository.

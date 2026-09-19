@@ -1,0 +1,75 @@
+extends Node
+## EventBus: global signals between systems. Systems never reference each other directly
+## for cross-cutting events; they emit or connect here. Keep payloads plain (ids, numbers).
+
+# world & time
+signal region_entered(region_id: String, previous_region_id: String)
+signal place_discovered(place_id: String)
+signal hour_changed(hour: int)
+signal new_day(day: int)
+signal weather_changed(region_id: String, weather_id: String)
+signal cell_loaded(cell: Vector2i)
+signal cell_unloaded(cell: Vector2i)
+signal interior_entered(interior_id: String)
+signal interior_exited(interior_id: String)
+
+# player & combat
+signal player_spawned(player: Node)
+signal player_died(position: Vector3)
+signal player_respawned(hearthstone_id: String)
+signal hearthstone_rested(hearthstone_id: String)
+signal echo_recovered(marks: int)
+signal damage_dealt(attacker: Node, victim: Node, amount: float, kind: String)
+signal entity_killed(victim: Node, killer: Node, enemy_id: String)
+signal boss_started(boss_id: String)
+signal boss_defeated(boss_id: String)
+signal status_applied(target: Node, effect_id: String)
+
+# progression & items
+signal skill_used(skill_id: String, xp: float)
+signal skill_level_up(skill_id: String, new_level: int)
+signal level_up(new_level: int)
+signal item_acquired(item_id: String, count: int)
+signal item_removed(item_id: String, count: int)
+signal item_equipped(slot: String, item_id: String)
+signal recipe_learned(recipe_id: String)
+signal ingredient_effect_discovered(item_id: String, effect_index: int)
+signal marks_changed(new_total: int, delta: int)
+
+# social
+signal dialogue_started(npc_id: String)
+signal dialogue_ended(npc_id: String)
+signal gesture_performed(gesture_id: String, target_npc_id: String)
+signal quest_started(quest_id: String)
+signal quest_stage_changed(quest_id: String, stage: int)
+signal quest_completed(quest_id: String, outcome: String)
+signal faction_reputation_changed(faction_id: String, new_value: int, delta: int)
+signal faction_rank_changed(faction_id: String, new_rank: int)
+signal morality_changed(new_value: int, delta: int, reason: String)
+signal renown_changed(new_value: int, delta: int, reason: String)
+signal rumour_spread(rumour_id: String, place_id: String)
+
+# crime & stealth
+signal crime_committed(crime: Dictionary)
+signal bounty_changed(faction_id: String, new_bounty: int)
+signal arrested(faction_id: String)
+signal detection_changed(observer: Node, level: float)
+
+# economy & property
+signal transaction(merchant_id: String, item_id: String, count: int, price: int, bought: bool)
+signal property_purchased(property_id: String)
+signal job_completed(job_id: String, pay: int)
+
+# ui
+signal notify(text: String, kind: String)
+signal book_opened(book_id: String)
+signal menu_opened(menu_id: String)
+signal menu_closed(menu_id: String)
+
+# save
+signal game_saved(slot: String)
+signal game_loaded(slot: String)
+
+
+func emit_notify(text: String, kind: String = "info") -> void:
+	notify.emit(text, kind)
