@@ -129,6 +129,24 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
   Kindling spells are fire. A `light` effect is a small addition once someone wants
   a lantern spell.
 
+## Two things that were built and never connected
+
+Both were found the same way: by asking which public functions in the systems are called
+only by the tests. A system can be complete, correct, covered and inert, and nothing in a
+green test suite says so.
+
+* **Nobody was standing in the villages.** `NpcRegistry.spawn()` had one caller in the
+  repository and it was a unit test. Fixed by `NpcStreamer` (see above).
+* **Nothing told the law.** `Bounty.commit()` had two callers — picking a lock and picking a
+  pocket — and neither of the two crimes a player is most likely to commit. Emptying a
+  stranger's chest and killing a villager in their own kitchen both went unreported, so the
+  witness model, the guard confrontation, the fine, the jail term and the morality hit were
+  all working perfectly on events that never arrived. `CrimeReports` is the join.
+
+The audit script is `tools/dead_data.py`'s sibling in spirit and lives in this session's notes
+rather than the repo; the discipline it encodes — *does anything outside a test ever call
+this?* — is worth running again before the next milestone.
+
 ## Known issues
 
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.

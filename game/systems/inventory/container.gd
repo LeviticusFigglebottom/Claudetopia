@@ -140,9 +140,26 @@ func take_all(actor: Node) -> int:
 	var inv := Inventory.for_actor(actor)
 	if inv == null:
 		return 0
+	var worth := _worth_of_contents()
 	var moved := inventory.transfer_all_to(inv)
 	looted.emit(self, actor)
+	# `moved` counts units of items and not marks, so a strongbox holding nothing but money
+	# would otherwise be emptied without a word. What was in it is the test, not what it was.
+	if worth > 0:
+		CrimeReports.theft(actor, global_position, worth, owner_npc, owner_faction, container_id)
 	return moved
+
+
+## What is in here, in marks. The bounty for a theft is a fraction of what was taken, so an
+## empty crate in a stranger's byre is not the same crime as their strongbox.
+func _worth_of_contents() -> int:
+	var total := 0
+	for stack in inventory.stacks():
+		if stack == null:
+			continue
+		total += int(stack.value())
+	total += int(inventory.marks)
+	return total
 
 
 # --- loot --------------------------------------------------------------------------------

@@ -20,6 +20,8 @@ signal new_game_started(quest_id: String)
 const ORDER := [
 	["Ownership", "res://systems/crime/ownership.gd"],
 	["Bounty", "res://systems/crime/bounty.gd"],
+	# Nothing in the world told the law about a theft or a killing; this is what does.
+	["CrimeReports", "res://systems/crime/crime_reports.gd"],
 	["Stealth", "res://systems/crime/stealth.gd"],
 	["NpcRegistry", "res://systems/npc_life/npc_registry.gd"],
 	["Reactions", "res://systems/npc_life/reactions.gd"],
