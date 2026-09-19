@@ -29,6 +29,11 @@ const MAX_LINK_M := 3000.0
 const MAX_NEIGHBOURS := 4
 ## Above this heat an NPC in the place will bring the rumour up unprompted.
 const KNOWN_HEAT := 0.25
+## A rumour's tone as a number: people who like you would rather repeat the warm ones, and
+## people who do not would rather repeat the cold. 0 is news with no colour to it.
+const TONE_VALUE := {"warm": 1.0, "neutral": 0.0, "cold": -1.0}
+## How far warmth may tilt the order. Well under 1, so a hot piece of news is still the news.
+const TONE_WEIGHT := 0.4
 
 ## Place kinds where people live and therefore talk. Deep places and landmarks do not gossip.
 const SETTLED_KINDS := ["city", "town", "village", "hamlet", "camp", "fort", "lodge", "ruin_village"]
@@ -176,16 +181,36 @@ func pool_of(place_id: String, substitutions: Dictionary = {}) -> Array[Dictiona
 		var e: Dictionary = pools[place_id][rumour_id]
 		out.append({
 			"rumour": rumour_id, "heat": float(e["heat"]), "deed": str(e.get("deed", "")),
+			"tone": tone_of(rumour_id),
 			"text": rumour_text(rumour_id, place_id, substitutions),
 		})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["heat"]) > float(b["heat"]))
 	return out
 
 
-## The hottest rumour a place can offer, or {} when it has nothing to say.
-func hottest(place_id: String, substitutions: Dictionary = {}) -> Dictionary:
+static func tone_of(rumour_id: String) -> String:
+	return str(ContentDB.get_or_empty(rumour_id).get("tone", "neutral"))
+
+
+## The hottest rumour a place can offer, or {} when it has nothing to say. `warmth` is how the
+## speaker feels about the player, −1 to 1: a friend leads with the kind story about you, and
+## somebody who has taken against you leads with the other one. The heat still decides most of
+## it, because news is news.
+func hottest(place_id: String, substitutions: Dictionary = {}, warmth: float = 0.0) -> Dictionary:
 	var pool := pool_of(place_id, substitutions)
-	return pool[0] if not pool.is_empty() else {}
+	if pool.is_empty():
+		return {}
+	if is_zero_approx(warmth):
+		return pool[0]
+	var best: Dictionary = {}
+	var best_score := -INF
+	for entry in pool:
+		var tone := float(TONE_VALUE.get(str(entry.get("tone", "neutral")), 0.0))
+		var score: float = float(entry["heat"]) * (1.0 + TONE_WEIGHT * clampf(warmth, -1.0, 1.0) * tone)
+		if score > best_score:
+			best_score = score
+			best = entry
+	return best
 
 
 ## Fills a rumour's text template. Variants are picked deterministically from the place and

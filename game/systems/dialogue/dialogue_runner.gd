@@ -30,6 +30,8 @@ var current_choices: Array[Dictionary] = []
 var history: Array[String] = []
 
 var _def: Dictionary = {}
+## The hub the talk choice was asked from, so the conversation comes back to it.
+var _talk_return_to: String = ""
 var _running := false
 var _visits: Dictionary = {}            # node_id -> times entered this conversation
 var _taken: Dictionary = {}             # "node:index" -> true, for `once` choices this run
@@ -123,11 +125,12 @@ func _enter(node_id: String) -> void:
 		stop()
 		return
 	var nodes: Dictionary = _def.get("nodes", {})
-	if not nodes.has(node_id):
+	if not nodes.has(node_id) and node_id != TALK_NODE:
 		Log.warn("Dialogue", "%s: no node '%s' (content problem)" % [dialogue_id, node_id])
 		stop()
 		return
-	var node: Dictionary = nodes[node_id]
+	# The talk is built when it is asked for, so it is not in the graph the author wrote.
+	var node: Dictionary = _node(node_id)
 
 	if not Conditions.all_of(node.get("conditions", []), ctx):
 		var alt := str(node.get("else", ""))
@@ -196,8 +199,11 @@ func choose(index: int) -> void:
 		Log.warn("Dialogue", "%s: choice %d out of range (%d shown)" % [dialogue_id, index, current_choices.size()])
 		return
 	var choice: Dictionary = current_choices[index]
+	if bool(choice.get("talk", false)):
+		_talk_return_to = current_node_id
 	var source: int = int(choice.get("source_index", index))
-	_taken["%s:%d" % [current_node_id, source]] = true
+	if source >= 0:
+		_taken["%s:%d" % [current_node_id, source]] = true
 	current_choices.clear()
 
 	Effects.apply_all(choice.get("effects", []), ctx, "dialogue:" + dialogue_id)
@@ -230,6 +236,8 @@ func gesture(gesture_id: String, witnesses: Array = []) -> Dictionary:
 # --- node helpers -----------------------------------------------------------------------------------
 
 func _node(node_id: String) -> Dictionary:
+	if node_id == TALK_NODE:
+		return _talk_node()
 	var nodes: Dictionary = _def.get("nodes", {})
 	var n: Variant = nodes.get(node_id, {})
 	return n if typeof(n) == TYPE_DICTIONARY else {}
@@ -254,11 +262,50 @@ func _speaker_of(node: Dictionary) -> String:
 			return str(def.get("name", speaker)) if not def.is_empty() else speaker
 
 
+## Who the nameplate says. The bound NPC's name when there is one; otherwise the dialogue's own
+## `speaker_name`, which is how a conversation with somebody who is not a roster NPC — a voice
+## through a door, a Sayer at a lectern — still has a name over it.
 func _npc_name() -> String:
-	return str(ctx.npc.get("name", npc_id if npc_id != "" else "Somebody"))
+	var bound := str(ctx.npc.get("name", ""))
+	if not bound.is_empty():
+		return bound
+	var named := str(_def.get("speaker_name", ""))
+	if not named.is_empty():
+		return named
+	return npc_id if npc_id != "" else "Somebody"
 
 
 ## Choices whose conditions pass and which have not been used up, in authored order.
+## The talk of the place, offered at any hub that does not turn it down. Every villager can be
+## asked what people are saying, so the gossip the world generates about your deeds actually
+## reaches you instead of sitting in a pool nobody reads. Hearing it writes the rumour into the
+## journal, which is what the rumour page has always keyed on.
+const TALK_CHOICE := "What are people saying?"
+const TALK_NODE := "__talk"
+const TALK_FRAMING := {
+	"warm": "%s",
+	"neutral": "%s",
+	"cold": "You did not hear this from me. — %s",
+}
+
+
+func _talk_choice() -> Dictionary:
+	return {"text": TALK_CHOICE, "next": TALK_NODE, "talk": true}
+
+
+## Builds the node the talk choice goes to, so the rumour is picked at the moment it is asked
+## for rather than when the conversation opened.
+func _talk_node() -> Dictionary:
+	var news := ctx.hottest_rumour()
+	if news.is_empty():
+		return {"speaker": "npc", "text": "Nothing worth repeating. Which is its own kind of news, round here.", "next": current_node_id}
+	var rumour_id := str(news.get("rumour", ""))
+	if rumour_id != "":
+		ctx.set_flag("rumour:" + rumour_id, true)
+	var framing := str(TALK_FRAMING.get(str(news.get("tone", "neutral")), "%s"))
+	return {"speaker": "npc", "text": framing % str(news.get("text", "")), "next": _talk_return_to}
+
+
 func _visible_choices(node: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var choices: Variant = node.get("choices", [])
@@ -277,6 +324,10 @@ func _visible_choices(node: Dictionary) -> Array[Dictionary]:
 		choice["source_index"] = i
 		choice["text"] = ctx.substitute(str(choice.get("text", "...")))
 		out.append(choice)
+	if not out.is_empty() and not bool(node.get("no_talk", false)) and not ctx.hottest_rumour().is_empty():
+		var talk := _talk_choice()
+		talk["source_index"] = -1
+		out.insert(maxi(out.size() - 1, 0), talk)
 	return out
 
 
