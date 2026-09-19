@@ -61,6 +61,26 @@ func _ready() -> void:
 	if place_id.is_empty():
 		place_id = str(def.get("home_place", ""))
 	target_position = global_position
+	# The services these actors talk to install themselves on first use, so a village works
+	# whether or not the world scene has added them.
+	Stealth.ensure()
+	Reactions.ensure()
+	_build_merchant()
+
+
+## A shopkeeper carries their trade with them: an npc def with a `merchant` block gets a
+## Merchant child, which loads its own stock table and registers with the economy service.
+func _build_merchant() -> void:
+	if not def.has("merchant") or get_node_or_null("Merchant") != null:
+		return
+	var m := Merchant.new()
+	m.name = "Merchant"
+	m.npc_id = npc_id
+	add_child(m)
+
+
+func merchant() -> Merchant:
+	return get_node_or_null("Merchant") as Merchant
 
 
 func load_def() -> void:
@@ -383,11 +403,10 @@ func interact(actor: Node) -> void:
 		return
 	stop()
 	play_intent("Talk_1")
-	if def.has("merchant"):
-		var m := get_node_or_null("Merchant")
-		if m is Merchant:
-			(m as Merchant).open_trade(actor)
-			return
+	var shop := merchant()
+	if shop != null:
+		shop.open_trade(actor)
+		return
 	EventBus.dialogue_started.emit(npc_id)
 
 

@@ -90,6 +90,25 @@ func test_actor_loads_its_def() -> void:
 	assert_true(n.get_node_or_null("Model") != null, "a Model pivot for the humanoid stream")
 	var merchant_npc := _npc(NELL)
 	assert_eq(merchant_npc.prompt_text(), "Trade with Nell Cresswell")
+	var shop := merchant_npc.merchant()
+	assert_true(shop != null, "a shopkeeper carries their trade with them")
+	assert_eq(shop.stock_table, "core:table/stock_general", "read from her merchant block")
+	assert_eq(shop.marks, 240)
+	assert_gt(shop.items().size(), 3, "and her shelves are stocked")
+	assert_true(shop.personality.has("greedy"), "which she prices accordingly")
+	assert_true(_npc(BRAM).merchant() == null, "a thatcher sells nothing")
+
+
+func test_talking_to_a_shopkeeper_opens_trade() -> void:
+	var svc := EconomyService.ensure()
+	var nell := _npc(NELL)
+	var asked: Array = []
+	var cb := func(m: Node) -> void: asked.append(m)
+	svc.trade_requested.connect(cb)
+	nell.interact(_player())
+	assert_eq(asked.size(), 1, "the UI stream is asked to open a trade screen")
+	assert_eq(asked[0], nell.merchant())
+	svc.trade_requested.disconnect(cb)
 
 
 func test_interaction_hands_off_to_dialogue() -> void:
