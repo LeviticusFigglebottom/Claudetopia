@@ -35,10 +35,6 @@ class WaterResult:
     river_dist: np.ndarray   # float32 metres to the nearest river centre line
 
 
-def _coarse(h: np.ndarray, n_c: int) -> np.ndarray:
-    return downsample(h, n_c)
-
-
 def _monotone_profile(h_along: np.ndarray, start: float, end: float, min_drop: float = 0.05) -> np.ndarray:
     """A water surface that starts at `start`, ends at `end`, follows the land and never climbs."""
     k = h_along.size
@@ -59,7 +55,7 @@ def trace_rivers(grid: Grid, H: np.ndarray, bank: NoiseBank, lake, places: list,
     """The Skerrow water into the Mere, the Mere's outflow west to the sea, and two feeders."""
     n_c = min(n_c, grid.n)             # a small test build has no room for a finer lattice
     gc = grid.with_n(n_c)
-    hc = _coarse(H, n_c)
+    hc = downsample(H, n_c)
     Xc, Zc = gc.mesh()
     lake_sd_c = downsample(lake.sd, n_c)
     lake_water = lake_sd_c < -30.0

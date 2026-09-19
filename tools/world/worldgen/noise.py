@@ -126,10 +126,6 @@ def ridged(field: np.ndarray, sharpness: float = 1.0) -> np.ndarray:
     return r.astype(np.float32)
 
 
-def billow(field: np.ndarray) -> np.ndarray:
-    return (np.abs(field) / 2.5).clip(0, 1).astype(np.float32)
-
-
 def terrace(h: np.ndarray, step: float, riser: float = 0.35) -> np.ndarray:
     """Soft quantisation: flat treads with short smooth risers (fraction `riser` of a step)."""
     q = h / step
@@ -138,8 +134,3 @@ def terrace(h: np.ndarray, step: float, riser: float = 0.35) -> np.ndarray:
     t = np.clip((frac - (1.0 - riser)) / riser, 0.0, 1.0)
     t = t * t * (3 - 2 * t)
     return ((base + t) * step).astype(np.float32)
-
-
-def gaussian_blob(X, Z, cx, cz, radius, depth):
-    d2 = (X - cx) ** 2 + (Z - cz) ** 2
-    return (depth * np.exp(-d2 / (2.0 * (radius * 0.5) ** 2))).astype(np.float32)

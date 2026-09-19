@@ -9,7 +9,6 @@ roads sit on gentle grades.
 from __future__ import annotations
 
 import numpy as np
-from scipy import ndimage
 from scipy.sparse import coo_matrix, csgraph
 
 NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -122,9 +121,3 @@ def rasterise_polyline(points: np.ndarray, grid, value: np.ndarray | None = None
         v = np.interp(sdense, s, value)
         out_value[i, j] = v
     return out_mask, out_value
-
-
-def field_from_mask(mask: np.ndarray, values: np.ndarray):
-    """Distance (texels) to the nearest mask cell and that cell's value, for every texel."""
-    dist, (ii, jj) = ndimage.distance_transform_edt(~mask, return_indices=True)
-    return dist.astype(np.float32), values[ii, jj]

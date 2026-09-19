@@ -369,10 +369,3 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, regions: list, rf
     water = 1.0 - smoothstep(-6.0, 6.0, lake_f.sd)
     H += d * amp * (1.0 - 0.85 * water)
     return H.astype(np.float32)
-
-
-def _shape_index(regions: list, shape: str) -> int:
-    for r in regions:
-        if r.shape == shape:
-            return r.index
-    return -1

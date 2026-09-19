@@ -35,7 +35,6 @@ var _current_region := ""
 var _missing_assets: Dictionary = {}  # asset path -> true (one warning each)
 var _mesh_cache: Dictionary = {}      # asset path -> Mesh or null
 var _scene_cache: Dictionary = {}
-var _ready_for_target := false
 var _mutex := Mutex.new()
 
 
@@ -54,7 +53,6 @@ func setup(p: TerrainProvider, t: Node3D) -> void:
 		_cells_wide = int(cells[0])
 		cell_size = float(provider.manifest.get("cell_size_m", 256))
 		_origin = provider.origin
-	_ready_for_target = true
 	set_physics_process(true)
 	refresh()
 
