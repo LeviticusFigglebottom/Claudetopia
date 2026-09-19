@@ -287,9 +287,11 @@ func _write_perf() -> void:
 	var doc := {
 		"generated_at": Time.get_datetime_string_from_system(),
 		"renderer": RenderingServer.get_current_rendering_method(),
-		"resolution": [int(ProjectSettings.get_setting("display/window/size/viewport_width")),
+		# The window size is what the 3D scene is actually rendered at, and what the saved PNG
+		# measures; the project's base viewport only sets the 2D stretch reference.
+		"resolution": [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y],
+		"base_viewport": [int(ProjectSettings.get_setting("display/window/size/viewport_width")),
 			int(ProjectSettings.get_setting("display/window/size/viewport_height"))],
-		"viewport": [get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y],
 		"budget": {"draw_calls": 2000, "primitives": 1500000},
 		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
 		"within_budget": worst_draw <= 2000 and worst_prims <= 1500000,
