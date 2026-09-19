@@ -60,16 +60,18 @@ static func cycle_index(origin: Vector3, forward: Vector3, positions: PackedVect
 	var best := -1
 	var best_delta := INF
 	var wrap := -1
-	var wrap_delta := -INF
+	var wrap_delta := INF
 	for i in positions.size():
 		if i == current or origin.distance_to(positions[i]) > range_m:
 			continue
 		var a := signed_angle(origin, forward, positions[i])
 		var delta := (a - cur_angle) * float(sign(direction))
 		if delta > 0.001 and delta < best_delta:
+			# The nearest target further in the requested direction.
 			best_delta = delta
 			best = i
-		elif delta <= 0.001 and delta > wrap_delta:
+		elif delta <= 0.001 and delta < wrap_delta:
+			# Nothing further that way: wrap to the one furthest back the other way.
 			wrap_delta = delta
 			wrap = i
 	return best if best >= 0 else wrap
