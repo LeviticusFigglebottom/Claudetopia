@@ -1,0 +1,84 @@
+{
+ "bounds": {
+  "height": 13.975,
+  "max": [
+   14.347,
+   14.734,
+   12.209
+  ],
+  "min": [
+   -25.877,
+   0.759,
+   -36.059
+  ],
+  "radius": 32.183
+ },
+ "built_seconds": 694.76,
+ "category": "landmarks",
+ "collision": "skerrow_fallen_hand_a_col.glb",
+ "collision_params": {},
+ "generator": "gen_landmarks",
+ "glb": "skerrow_fallen_hand_a.glb",
+ "hash": "d702e8ddf00a392b",
+ "kind": "fallen_hand",
+ "length_m": 60.0,
+ "materials": [
+  "skerrow_fallen_hand_a_mat"
+ ],
+ "materials_used": [
+  "limestone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_fallen_hand_a",
+   "tris": 8818
+  },
+  {
+   "name": "skerrow_fallen_hand_a_LOD1",
+   "tris": 3526
+  },
+  {
+   "name": "skerrow_fallen_hand_a_LOD2",
+   "tris": 1322
+  }
+ ],
+ "name": "skerrow_fallen_hand_a",
+ "params": {},
+ "place": "core:place/fallen_hand",
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 6567,
+ "textures": [
+  "skerrow_fallen_hand_a_albedo.png",
+  "skerrow_fallen_hand_a_normal.png",
+  "skerrow_fallen_hand_a_orm.png"
+ ],
+ "tris": [
+  8818,
+  3526,
+  1322
+ ],
+ "version": 3,
+ "walkable": [
+  "palm"
+ ]
+}

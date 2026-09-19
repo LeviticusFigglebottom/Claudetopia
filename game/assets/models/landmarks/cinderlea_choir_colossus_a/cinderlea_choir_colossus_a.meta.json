@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 52.39,
+  "max": [
+   13.407,
+   52.39,
+   13.498
+  ],
+  "min": [
+   -13.411,
+   0.0,
+   -13.467
+  ],
+  "radius": 32.369
+ },
+ "built_seconds": 441.08,
+ "category": "landmarks",
+ "collision": "cinderlea_choir_colossus_a_col.glb",
+ "collision_params": {},
+ "generator": "gen_landmarks",
+ "glb": "cinderlea_choir_colossus_a.glb",
+ "hash": "c279e360a25f3445",
+ "headless": true,
+ "height_m": 50.0,
+ "kind": "choir_colossus",
+ "materials": [
+  "cinderlea_choir_colossus_a_mat"
+ ],
+ "materials_used": [
+  "fused_stone"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_choir_colossus_a",
+   "tris": 2436
+  },
+  {
+   "name": "cinderlea_choir_colossus_a_LOD1",
+   "tris": 974
+  },
+  {
+   "name": "cinderlea_choir_colossus_a_LOD2",
+   "tris": 364
+  }
+ ],
+ "name": "cinderlea_choir_colossus_a",
+ "params": {},
+ "place": "core:place/sunken_choir",
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "ring_count": 12,
+ "seed": 6620,
+ "textures": [
+  "cinderlea_choir_colossus_a_albedo.png",
+  "cinderlea_choir_colossus_a_normal.png",
+  "cinderlea_choir_colossus_a_orm.png"
+ ],
+ "tris": [
+  2436,
+  974,
+  364
+ ],
+ "version": 3
+}
