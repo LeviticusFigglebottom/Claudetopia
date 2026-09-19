@@ -42,6 +42,26 @@ func _ready() -> void:
 	var host_layer := CanvasLayer.new()
 	host_layer.layer = 0
 	add_child(host_layer)
+	# a plain sky-and-ground wash behind the HUD, so contrast can be judged against
+	# something like the world rather than against the editor's clear colour
+	var wash := ColorRect.new()
+	wash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.45, 0.46, 1.0])
+	grad.colors = PackedColorArray([Color(0.52, 0.62, 0.74), Color(0.74, 0.76, 0.70),
+			Color(0.44, 0.47, 0.32), Color(0.24, 0.26, 0.18)])
+	var gtex := GradientTexture2D.new()
+	gtex.gradient = grad
+	gtex.fill_from = Vector2(0, 0)
+	gtex.fill_to = Vector2(0, 1)
+	var sky := TextureRect.new()
+	sky.texture = gtex
+	sky.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sky.stretch_mode = TextureRect.STRETCH_SCALE
+	sky.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	host_layer.add_child(wash)
+	host_layer.add_child(sky)
+
 	_host = Control.new()
 	_host.set_anchors_preset(Control.PRESET_FULL_RECT)
 	host_layer.add_child(_host)
@@ -113,7 +133,7 @@ func _process(delta: float) -> void:
 
 
 func _setup(shot: Dictionary) -> void:
-	_fakes.set_state(str(shot.get("state", "default")))
+	var state := str(shot.get("state", "default"))
 	if shot.has("scene"):
 		var path: String = shot["scene"]
 		if not ResourceLoader.exists(path):
@@ -123,20 +143,25 @@ func _setup(shot: Dictionary) -> void:
 		_host.add_child(_current)
 	elif shot.get("hud", false):
 		UI.show_hud()
+		# the HUD has to exist before the world talks to it, or it misses the signals
+		_fakes.set_state(state)
 		if UI.hud() and UI.hud().has_method("review_state"):
-			UI.hud().call("review_state", str(shot.get("state", "default")))
-		_fakes.fire_hud_events(str(shot.get("state", "default")))
+			UI.hud().call("review_state", state)
+		_fakes.fire_hud_events(state)
 	elif shot.get("dialogue", false):
 		UI.show_hud()
 		var dlg := UI.show_dialogue()
 		if dlg:
-			_fakes.drive_dialogue(dlg, str(shot.get("state", "default")))
+			_fakes.drive_dialogue(dlg, state)
 	elif shot.has("menu"):
 		UI.show_hud()
 		UI.open(str(shot["menu"]), shot.get("args", {}))
 
 
 func _teardown() -> void:
+	_fakes.set_state("default")
+	EventBus.boss_defeated.emit("")
+	UI.set_variant("warm")
 	UI.close_all()
 	if _current and is_instance_valid(_current):
 		_current.queue_free()

@@ -97,6 +97,47 @@
    ],
    "tile": true
   },
+  "panel_small": {
+   "file": "panel_small.png",
+   "size": [
+    56,
+    56
+   ],
+   "margin": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "tile": true
+  },
+  "panel_small_wood": {
+   "file": "panel_small_wood.png",
+   "size": [
+    56,
+    56
+   ],
+   "margin": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "tile": true
+  },
+  "frame_small": {
+   "file": "frame_small.png",
+   "size": [
+    56,
+    56
+   ],
+   "margin": [
+    12,
+    12,
+    12,
+    12
+   ]
+  },
   "button_normal": {
    "file": "button_normal.png",
    "size": [
@@ -582,6 +623,47 @@
     20
    ],
    "tile": true
+  },
+  "panel_small_deep": {
+   "file": "panel_small_deep.png",
+   "size": [
+    56,
+    56
+   ],
+   "margin": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "tile": true
+  },
+  "panel_small_wood_deep": {
+   "file": "panel_small_wood_deep.png",
+   "size": [
+    56,
+    56
+   ],
+   "margin": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "tile": true
+  },
+  "frame_small_deep": {
+   "file": "frame_small_deep.png",
+   "size": [
+    56,
+    56
+   ],
+   "margin": [
+    12,
+    12,
+    12,
+    12
+   ]
   },
   "button_normal_deep": {
    "file": "button_normal_deep.png",
@@ -1210,6 +1292,13 @@
     48,
     48
    ]
+  },
+  "reticle": {
+   "file": "markers/reticle.png",
+   "size": [
+    48,
+    48
+   ]
   }
  },
  "variants": {
@@ -1222,6 +1311,9 @@
    "frame_metal": "frame_brass",
    "frame_wood": "frame_oak",
    "tooltip": "tooltip",
+   "panel_small": "panel_small",
+   "panel_small_wood": "panel_small_wood",
+   "frame_small": "frame_small",
    "button": {
     "normal": "button_normal",
     "hover": "button_hover",
@@ -1261,6 +1353,9 @@
    "frame_metal": "frame_bronze",
    "frame_wood": "frame_ash",
    "tooltip": "tooltip_deep",
+   "panel_small": "panel_small_deep",
+   "panel_small_wood": "panel_small_wood_deep",
+   "frame_small": "frame_small_deep",
    "button": {
     "normal": "button_normal_deep",
     "hover": "button_hover_deep",
@@ -1343,6 +1438,7 @@
   "player",
   "poi",
   "quest_area",
+  "reticle",
   "ruin_village",
   "ruins",
   "shrine",

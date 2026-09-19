@@ -108,6 +108,7 @@ func _build_layers() -> void:
 	_toast_box.add_theme_constant_override("separation", 8)
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_layer.add_child(_toast_box)
+	_toast_box.theme = theme_for(theme_variant)
 
 	_fade = ColorRect.new()
 	_fade.name = "Fade"
@@ -359,8 +360,7 @@ func toast(text: String, kind := "info") -> void:
 	if _toast_box == null:
 		return
 	var panel := PanelContainer.new()
-	panel.theme = theme_for(theme_variant)
-	panel.theme_type_variation = &"FramedPanel"
+	panel.theme_type_variation = &"ChromePanel"
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_END
 	var row := HBoxContainer.new()

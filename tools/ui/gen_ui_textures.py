@@ -385,9 +385,10 @@ PANEL_MARGIN = 26
 
 
 def panel(rng, pal, *, frame: str | None, size: int = PANEL_SIZE, margin: int = PANEL_MARGIN,
-          rule: bool = True, paper_vignette: float = 0.22) -> Image.Image:
+          rule: bool = True, paper_vignette: float = 0.0) -> Image.Image:
     """Parchment nine-patch, optionally banded with brass ('metal') or oak ('wood')."""
-    img = parchment(size, size, rng, pal, vignette=paper_vignette, stains=0, fibre=0.08, wrap=True)
+    img = parchment(size, size, rng, pal, vignette=paper_vignette, stains=0, fibre=0.08,
+                    wrap=True, edge=(margin * 0.92) / size)
     if rule:
         nib = Nib(size, size, rng)
         inset = (margin * 0.55 if frame else margin * 0.42) / size
@@ -398,11 +399,25 @@ def panel(rng, pal, *, frame: str | None, size: int = PANEL_SIZE, margin: int = 
     return img
 
 
+SMALL_SIZE = 56
+SMALL_MARGIN = 12
+
+
+def small_panel(rng, pal, *, frame: str = "metal", size: int = SMALL_SIZE,
+                margin: int = SMALL_MARGIN) -> Image.Image:
+    """A light nine-patch for HUD chrome — quick slots, prompts, toasts — where the full
+    brass moulding would swallow the thing it frames."""
+    img = parchment(size, size, rng, pal, vignette=0.0, stains=0, fibre=0.07, wrap=True,
+                    edge=(margin * 0.9) / size)
+    band = moulding(size, size, margin, rng, pal, frame, studs=False, inner_rule=False)
+    return over(img, band)
+
+
 def button(rng, pal, state: str, w: int = 160, h: int = 56, margin: int = 18) -> Image.Image:
     """Normal / hover / pressed / disabled: a small paper tablet held by a metal rule."""
     tone = {"normal": 0.0, "hover": 0.10, "pressed": -0.13, "disabled": -0.06}[state]
-    img = parchment(w, h, rng, pal, vignette=0.16 if state != "pressed" else 0.34,
-                    stains=0, fibre=0.07, wrap=True)
+    img = parchment(w, h, rng, pal, vignette=0.0, stains=0, fibre=0.07, wrap=True,
+                    edge=(margin * 0.8) / min(w, h) * (1.5 if state == "pressed" else 1.0))
     arr = np.asarray(img, np.float32)
     if state == "disabled":  # washed out and greyer
         grey = arr[..., :3].mean(axis=2, keepdims=True)
@@ -479,7 +494,8 @@ def radio(rng, pal, checked: bool, size: int = 32) -> Image.Image:
 
 
 def tab(rng, pal, active: bool, w: int = 96, h: int = 44, margin: int = 14) -> Image.Image:
-    img = parchment(w, h, rng, pal, vignette=0.10 if active else 0.30, stains=0, fibre=0.12, wrap=True)
+    img = parchment(w, h, rng, pal, vignette=0.0, stains=0, fibre=0.10, wrap=True,
+                    edge=(margin * 0.75) / min(w, h) * (0.8 if active else 1.4))
     arr = np.asarray(img, np.float32)
     if not active:
         grey = arr[..., :3].mean(axis=2, keepdims=True)
@@ -498,7 +514,8 @@ def tab(rng, pal, active: bool, w: int = 96, h: int = 44, margin: int = 14) -> I
 
 
 def tooltip(rng, pal, size: int = 96, margin: int = 20) -> Image.Image:
-    img = parchment(size, size, rng, pal, vignette=0.30, stains=0, fibre=0.15, wrap=True)
+    img = parchment(size, size, rng, pal, vignette=0.0, stains=0, fibre=0.13, wrap=True,
+                    edge=(margin * 0.85) / size)
     arr = np.asarray(img, np.float32)
     arr[..., :3] = np.clip(arr[..., :3] * 0.92, 0, 255)
     img = Image.fromarray(arr.astype(np.uint8), "RGBA")
@@ -510,7 +527,7 @@ def tooltip(rng, pal, size: int = 96, margin: int = 20) -> Image.Image:
 
 
 def scroll_track(rng, pal, w: int = 16, h: int = 64) -> Image.Image:
-    img = parchment(w, h, rng, pal, vignette=0.42, stains=0, fibre=0.1, wrap=True)
+    img = parchment(w, h, rng, pal, vignette=0.0, stains=0, fibre=0.09, wrap=True, edge=0.30)
     arr = np.asarray(img, np.float32)
     arr[..., :3] *= 0.86
     arr[..., 3] *= 0.7
@@ -536,7 +553,8 @@ def focus_ring(rng, pal, size: int = 64, margin: int = 14) -> Image.Image:
 
 
 def bar_track(rng, pal, w: int = 48, h: int = 24, margin: int = 8) -> Image.Image:
-    img = parchment(w, h, rng, pal, vignette=0.38, stains=0, fibre=0.12, wrap=True)
+    img = parchment(w, h, rng, pal, vignette=0.0, stains=0, fibre=0.10, wrap=True,
+                    edge=(margin * 0.9) / min(w, h))
     arr = np.asarray(img, np.float32)
     arr[..., :3] *= 0.74
     img = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
@@ -1084,6 +1102,15 @@ def _m_strange(n, ink, ac):
     n.stroke(pts, MW * 0.9, ink, jitter=0.005)
 
 
+def _m_reticle(n, ink, ac):
+    n.circle((0.50, 0.50), 0.30, ink, width=MW * 0.7)
+    for a in np.linspace(0.0, math.tau, 4, endpoint=False):
+        a += math.pi / 4.0
+        n.stroke([(0.50 + math.cos(a) * 0.34, 0.50 + math.sin(a) * 0.34),
+                  (0.50 + math.cos(a) * 0.48, 0.50 + math.sin(a) * 0.48)], MW * 0.8, ink)
+    n.circle((0.50, 0.50), 0.07, ink, width=0.0, fill=ink)
+
+
 def _m_player(n, ink, ac):
     head = [(0.50, 0.12), (0.76, 0.76), (0.50, 0.62), (0.24, 0.76)]
     n.poly(head, ac, alpha=200)
@@ -1105,7 +1132,7 @@ MARKERS = {
     "waterfall": _m_waterfall, "standing_stones": _m_standing_stones,
     "giant_bones": _m_giant_bones, "strange_tree": _m_strange_tree, "wreck": _m_wreck,
     "ruins": _m_ruins, "hidden_valley": _m_hidden_valley, "strange": _m_strange,
-    "player": _m_player, "default": _m_default,
+    "player": _m_player, "reticle": _m_reticle, "default": _m_default,
 }
 
 
@@ -1354,6 +1381,19 @@ def build(out: Path, only: str = "") -> dict:
 
             put(f"tooltip{sfx}", tooltip(_rng("tooltip" + sfx), pal), margin=[20] * 4, tile=True)
             v["tooltip"] = f"tooltip{sfx}"
+
+            small_metal = f"panel_small{sfx}"
+            small_wood = f"panel_small_wood{sfx}"
+            put(small_metal, small_panel(_rng(small_metal), pal, frame="metal"),
+                margin=[SMALL_MARGIN] * 4, tile=True)
+            put(small_wood, small_panel(_rng(small_wood), pal, frame="wood"),
+                margin=[SMALL_MARGIN] * 4, tile=True)
+            put(f"frame_small{sfx}", moulding(SMALL_SIZE, SMALL_SIZE, SMALL_MARGIN,
+                _rng("frame_small" + sfx), pal, "metal", studs=False, inner_rule=False),
+                margin=[SMALL_MARGIN] * 4)
+            v["panel_small"] = small_metal
+            v["panel_small_wood"] = small_wood
+            v["frame_small"] = f"frame_small{sfx}"
 
         if want("buttons"):
             states = {}

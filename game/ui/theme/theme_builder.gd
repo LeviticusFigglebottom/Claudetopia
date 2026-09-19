@@ -305,6 +305,11 @@ static func build(variant := "warm") -> Theme:
 	t.set_stylebox("panel", "FramedPanel", variant_box(variant, ["panel_metal"], PackedInt32Array([30, 30, 30, 30])))
 	t.set_type_variation("OakPanel", "PanelContainer")
 	t.set_stylebox("panel", "OakPanel", variant_box(variant, ["panel_wood"], PackedInt32Array([30, 30, 30, 30])))
+	# light chrome for HUD-sized boxes: quick slots, prompts, toasts
+	t.set_type_variation("ChromePanel", "PanelContainer")
+	t.set_stylebox("panel", "ChromePanel", variant_box(variant, ["panel_small"], PackedInt32Array([12, 10, 12, 10])))
+	t.set_type_variation("ChromeWoodPanel", "PanelContainer")
+	t.set_stylebox("panel", "ChromeWoodPanel", variant_box(variant, ["panel_small_wood"], PackedInt32Array([12, 10, 12, 10])))
 	t.set_type_variation("PlainPanel", "PanelContainer")
 	t.set_stylebox("panel", "PlainPanel", empty())
 	t.set_type_variation("SheetPanel", "PanelContainer")

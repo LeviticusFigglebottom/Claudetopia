@@ -209,9 +209,10 @@ class FakePlayer:
 			add_child(target)
 			target.global_position = Vector3(0.4, 1.2, -3.0)
 			lock_on_changed.emit(target)
-			EventBus.boss_started.emit("core:boss/barrow_reeve")
-			EventBus.status_applied.emit(self, "core:effect/bleeding")
-			EventBus.status_applied.emit(self, "core:effect/chilled")
+			EventBus.boss_started.emit("core:boss/she_who_waits")
+			EventBus.status_applied.emit(self, "core:effect/damage_health")
+			EventBus.status_applied.emit(self, "core:effect/cold_bite")
+			EventBus.status_applied.emit(self, "core:effect/fortify_armour")
 		else:
 			health = 92.0
 			stamina = 78.0
