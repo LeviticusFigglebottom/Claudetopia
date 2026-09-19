@@ -252,6 +252,56 @@ func test_loot_drops_turn_an_enemy_def_into_pickups() -> void:
 	root.free()
 
 
+func test_dropping_puts_the_item_back_in_the_world() -> void:
+	var carrier := Node3D.new()
+	var inv := Inventory.new()
+	carrier.add_child(inv)
+	add_children([carrier])
+	carrier.global_position = Vector3(2, 0, 2)
+	inv.add(APPLE, 5)
+	var node := inv.drop(APPLE, 2)
+	assert_ne(node, null)
+	assert_eq(inv.count(APPLE), 3, "only the dropped apples leave the bag")
+	await carrier.get_tree().process_frame
+	assert_true(node.is_inside_tree(), "the pickup is in the world")
+	assert_eq(str(node.get("item_id")), APPLE)
+	assert_eq(int(node.get("count")), 2)
+	assert_true((node as Node3D).global_position.distance_to(carrier.global_position) < 2.0)
+	node.free()
+	carrier.free()
+
+
+func test_a_kill_spawns_its_loot_where_the_victim_fell() -> void:
+	var root := Node3D.new()
+	var drops := LootDrops.new()
+	drops.rng.seed = 4242
+	drops.snap_to_ground = false
+	add_children([root, drops])
+	# the victim names its own loot; there is no enemy def for this id at all
+	var victim: Node3D = preload("res://tests/fixtures/loot_victim.gd").new()
+	root.add_child(victim)
+	victim.global_position = Vector3(5, 0, -3)
+	var reported: Array = []
+	drops.dropped.connect(func(results: Array, pos: Vector3, enemy_id: String) -> void: reported.append(results))
+	EventBus.entity_killed.emit(victim, null, "core:enemy/not_in_the_pack_yet")
+	await get_tree_of(drops).process_frame
+	await get_tree_of(drops).physics_frame
+	await get_tree_of(drops).process_frame
+	assert_eq(reported.size(), 1, "the kill was turned into drops")
+	var pickups := 0
+	for c in root.get_children():
+		if c is WorldItem:
+			pickups += 1
+			assert_true((c as WorldItem).global_position.distance_to(Vector3(5, 0, -3)) < 2.0, "drops land by the body")
+	assert_gt(pickups, 0)
+	drops.free()
+	root.free()
+
+
+func get_tree_of(n: Node) -> SceneTree:
+	return n.get_tree()
+
+
 ## Adds nodes to the scene tree via the test runner's own tree.
 func add_children(nodes: Array) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
