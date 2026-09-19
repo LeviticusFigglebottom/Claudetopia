@@ -1,0 +1,126 @@
+[
+{
+  "id": "core:dialogue/merrick_gosling",
+  "speaker_name": "Merrick Gosling",
+  "notes": "The bard. Gates A Verse About You on renown 40. The paid third stanza is the game's cheapest and most honest renown transaction.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "verse_sung"}], "text": "The one I wrote about. Sit where they can see you sitting with me; it's good for us both and I'll not pretend otherwise."},
+    {"conditions": [{"renown_min": 400}], "text": "They're singing my verse in Gullhithe with the wrong tune and an extra stanza I did not write and which is, infuriatingly, better."},
+    {"conditions": [{"renown_min": 40}], "text": "Now here's a person with a name on them. Come and sit down; I've a professional interest and about four minutes."},
+    {"conditions": [{"morality_min": -50}], "text": "I'll be honest, which is unlike me: the verse I'd write about you now would sell better and I'd rather not have written it."},
+    {"conditions": [{"flag": "hamlet_name_restored"}], "text": "Mullbourne. You found Mullbourne. I changed that name in a wedding song because it wouldn't scan, and I have been quietly sick about it since you told me why it mattered."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Merrick Gosling", "text": "Fiddle's tuned, near enough, and near enough is a professional standard whatever Sulion's lot say.", "next": "hub"},
+    "hub": {"speaker": "Merrick Gosling", "text": "What can I do for you?", "choices": [
+      {"text": "You tune to the Toll every morning.", "next": "tuning"},
+      {"text": "Do you have a verse about me?", "next": "the_offer", "conditions": [{"renown_min": 40}]},
+      {"text": "Do you have a verse about me?", "next": "not_yet"},
+      {"text": "Tell me a verse about somebody else.", "next": "others"},
+      {"text": "Did you ever sing about a wedding on soft ground?", "next": "the_wedding", "conditions": [{"flag": "merrick_remembered_wedding"}]},
+      {"text": "Did you ever sing about a wedding on soft ground?", "next": "the_wedding_ask"},
+      {"text": "About the verse. I'd pay for a better one.", "next": "the_payment", "conditions": [{"flag": "verse_sung"}]},
+      {"text": "Play on.", "next": "bye"}
+    ]},
+    "tuning": {"speaker": "Merrick Gosling", "text": "Every morning at the rim, and every morning it's moved. Not much. About a comma, if that means anything to you, which it doesn't, so: about the width of a thing being slightly wrong. A fiddle tuned to the Toll on a Kindleday is flat against it by Tollday. I've told Tobin, who poured. I've told Hallam, who said his anvil's doing the same and then looked like he'd said too much. And I have not told the Sayers, because the moment I tell the Sayers it becomes their discovery and I become a man who plays at an inn.", "effects": [{"set_flag": "merrick_tuning_drift"}], "next": "hub"},
+    "not_yet": {"speaker": "Merrick Gosling", "text": "Not yet. Don't be wounded; it's not personal, it's structural. A verse needs a deed and a deed needs witnesses, and at present you're a rumour with muddy boots. Go and do something in front of four or five people who talk. Then come back and I'll be unbearably interested in you.", "next": "hub"},
+    "the_offer": {"speaker": "Merrick Gosling", "text": "I do not, and it's beginning to look like negligence. I've a verse about Maud's oven, about Hallam's one sword, about the year Corwen's yellow door was painted blue overnight by persons unknown — and about you, nothing, and people have started asking, which for a bard is the sound of money walking past. So. A verse needs a deed to hang on, and I'd like to choose the deed, or at any rate the kind.", "effects": [{"start_quest": "core:quest/a_verse_about_you"}], "choices": [
+      {"text": "What kinds are there?", "next": "the_offer_2"},
+      {"text": "Shouldn't the deed come first?", "next": "the_offer_3"}
+    ]},
+    "the_offer_2": {"speaker": "Merrick Gosling", "text": "Three that sell. Brave: the Larkbourne Boys are keeping hall in the Tumbled Watch and nobody remembers the Larkbourne Boys, which is precisely what they're banking on. Kind: Hesta Hollins hasn't had bread carried to her door since Tam died, because every soul in this village assumes somebody else does it, and nobody does. Terrible: the steward's brass key, off his belt, at noon, at the well. That one would be sung for a year and I'd not be able to look at him.", "next": "hub"},
+    "the_offer_3": {"speaker": "Merrick Gosling", "text": "In an honest world. In this one, half the deeds I've sung happened because somebody knew a verse was waiting. Hallam's grandfather cleared the ford of the Boys in 'ninety-one and my master had the verse half-written before he went, and told him so, and off he went. Is that cheating? It's a bellows. The fire's yours. I only blow on it and take a cut.", "effects": [{"set_flag": "merrick_admitted_bellows"}], "next": "hub"},
+    "others": {"speaker": "Merrick Gosling", "text": "Take Mistress Hollins. Four verses about the bells and not one of them true, and she's heard all four and corrected none, which is a kind of permission. The true one I'll never sing: she rang the trees the morning Tam Hollins died, all seventeen, alone, for an hour, because that's what you do when a Merrowby man dies, and there was nobody else left in the family to do it. And she has not rung one since. There's your verse. It doesn't scan and it would empty the room.", "effects": [{"set_flag": "knows_hesta_rang"}], "next": "hub"},
+    "the_wedding_ask": {"speaker": "Merrick Gosling", "text": "I've sung about nine weddings and soft ground's in four of them; it rhymes with a great deal. Come back when you can tell me whose wedding and I'll tell you what I changed, because I always change something and I always remember what.", "next": "hub"},
+    "the_wedding": {"speaker": "Merrick Gosling", "text": "The bride's sister married a Gullhithe eel-man and the ale at the feast was a disgrace that I have not forgiven the marsh for. And the place — yes. It wouldn't scan. Two syllables where I wanted three, so I sang 'Millerbourne' and everybody clapped and nobody corrected me, and I have been singing it wrong in four villages for eleven years. — Whatever it truly was, the Lamp keeper at Gullhithe will have it. Her mother's mother came off that ground and there was an eel-knife with the name cut in the handle, and I have held it, and I did not read it, because I was twenty-two and drunk and the ale was a disgrace.", "effects": [{"set_flag": "merrick_remembered_wedding"}, {"renown": 5}], "next": "hub"},
+    "the_payment": {"speaker": "Merrick Gosling", "text": "It's finished. It is. It's a good, honest, two-stanza verse and it will do you credit in this valley for a year. — It would be more finished for fifty marks, in which case there is a third stanza where you are taller, the weather is worse, and there are more of them. I say this to your face because you'd hear it from Tobin anyway and because you should know exactly what you're buying, which is not a lie. It's an emphasis. The deed was yours; I'm only selling the volume.", "choices": [
+      {"text": "Fifty marks. Make me taller.", "next": "the_payment_2"},
+      {"text": "Two stanzas is plenty.", "next": "the_payment_3"}
+    ]},
+    "the_payment_2": {"speaker": "Merrick Gosling", "text": "A pleasure doing business with a person of no modesty whatsoever. Tonight, at the hearth, after the second cask, and I'll do the thing with the fiddle at the end that Tobin hates. You'll hear it in Gullhithe inside a month and in Tollmere inside two, and by the spring somebody in Isseva will be singing it slower and sadder and getting it wrong, which is how you know it's arrived.", "effects": [{"marks": -50}, {"renown": 40}, {"set_flag": "verse_paid"}], "next": "hub"},
+    "the_payment_3": {"speaker": "Merrick Gosling", "text": "Good. Honestly, good. The two-stanza version has a chance of still being true in ten years, and the three-stanza version has a chance of being sung at your funeral by people who never met you. I know which I'd want and I know which I'd sell.", "effects": [{"renown": 5}, {"morality": 2}], "next": "hub"},
+    "bye": {"speaker": "Merrick Gosling", "text": "Go on. And if you do anything remarkable, do it where there are at least three people who can count.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/hesta_hollins",
+  "speaker_name": "Hesta Hollins",
+  "notes": "Widow of the bells; gives Seventeen Bells. Quiet, precise, kind. The grief is never stated outright, only counted.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "fennick_bell_kept"}], "text": "Seventeen. Silent, but seventeen. I polished it this morning same as ever and I did not feel a fool doing it."},
+    {"conditions": [{"flag": "fennick_bell_buried"}], "text": "Sixteen. I'll get used to the shape of the lane. It takes about a year. I know how long it takes."},
+    {"conditions": [{"flag": "fennick_bell_to_aud"}], "text": "It went south with her. That's not a bell gone, that's a bell moved, and I have decided that firmly and I'd thank you not to take the decision off me."},
+    {"conditions": [{"flag": "verse_kind"}], "text": "Three loaves. At my door. Warm. — I have not had bread carried to that door in nine years, and I want you to know that I know it was three, and I know what three means here."},
+    {"conditions": [{"morality_min": 40}], "text": "Come and sit on the porch. You needn't talk. Most people talk."},
+    {"conditions": [{"time_between": [5, 7]}], "text": "You're up with the bells. Mind the wet grass under the third tree; it never dries, and Tam always said he'd cut the bough and never did."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Hesta Hollins", "text": "Mind the cords, they're low on the near side. I retie them Thornday and they slip by Tollday.", "next": "hub"},
+    "hub": {"speaker": "Hesta Hollins", "text": "Was there something you wanted, dear?", "choices": [
+      {"text": "Tell me about the bells.", "next": "the_bells"},
+      {"text": "One of them has gone silent.", "next": "the_fennick"},
+      {"text": "Why don't you ring them yourself?", "next": "the_ringing"},
+      {"text": "What's the eighteenth, in your kitchen?", "next": "the_eighteenth"},
+      {"text": "What do you make of the Toll humming?", "next": "the_hum"},
+      {"text": "I'll leave you to it.", "next": "bye"}
+    ]},
+    "the_bells": {"speaker": "Hesta Hollins", "text": "Seventeen, one to a family, hung in the trees along the lane, and small: a hand's span, no more. When the Toll fell it broke and the pieces were carried off and some of them were made into these, or so we say, and I have never seen any reason to check. A Merrowby family that has a bell in the trees is a family the village will notice the absence of, which is the whole of it, and which is not a small thing to have hanging over a lane.", "choices": [
+      {"text": "Who decides when a family gets one?", "next": "the_bells_2"},
+      {"text": "And when a family ends?", "next": "the_bells_3"}
+    ]},
+    "the_bells_2": {"speaker": "Hesta Hollins", "text": "Nobody decides. It happens. There's a Naming Day, and there's a family with a child and no bell, and by the next Naming Day there is a bell, and if you asked twelve people who hung it you would get four answers and all four would be modest. I have hung nine. I'll not tell you which nine.", "next": "hub"},
+    "the_bells_3": {"speaker": "Hesta Hollins", "text": "Then the bell comes down at the Long Table, in front of everyone, and it's buried in the crater under the Toll's lip, and the name is said once, and that's the custom and it's a good custom and I have seen it done twice. — It is done when the family is gone. Not when the family is far. That distinction is the whole of my present difficulty and I have not slept properly since spring.", "effects": [{"set_flag": "hesta_custom_explained"}], "next": "hub"},
+    "the_fennick": {"speaker": "Hesta Hollins", "text": "The Fennick bell. It does not ring. Not in wind, not in the hand — and I have had it in my hand, which I should not have done, and it sat there like a stone. Since spring. — Aud Fennick is the last of them. She put on grey and walked south to Cinderlea in the spring, which is what a body does when they've decided, and I do not judge her for it and I will not have it judged in this lane. But if Aud lives, the bell stays up, silent or no. And if Aud is gone, then it comes down at the Long Table and I say the name and it's finished. I cannot find out which from here. I am seventy-six and the road south is not for me.", "effects": [{"start_quest": "core:quest/seventeen_bells"}], "next": "hub"},
+    "the_ringing": {"speaker": "Hesta Hollins", "text": "...I polish them. That's my part now. — You'll have heard, or you'll hear, so you may as well have it from me and have it right. When a Merrowby man dies the trees are rung, all of them, by his family. Tam Hollins died on a Hushday morning and there was no family left but me, so I rang seventeen bells for an hour in this lane on my own, and I did it properly, and I have not rung one since, and I do not intend to. That isn't sorrow, dear. Sorrow I've made my arrangements with. It's that I did it right the once and I'd not like to do it again less well.", "effects": [{"set_flag": "knows_hesta_rang"}, {"morality": 3}], "next": "hub"},
+    "the_eighteenth": {"speaker": "Hesta Hollins", "text": "That one's off no family. My mother found it in the crater as a girl, in the chalk, and it had a hare cut on the shoulder of it, very small, the sort of mark a family puts on a thing. There has never been a hare family in Merrowby. — I keep it on the kitchen shelf and I polish it with the others and I have never hung it, because you do not hang a bell for a family you cannot name. I have wondered lately whether that was the right choice. I am wondering it rather a lot this year.", "effects": [{"set_flag": "hesta_hare_bell"}], "next": "hub"},
+    "the_hum": {"speaker": "Hesta Hollins", "text": "I'll tell you what I do, not what I think, because what I think is nothing anyone can use. When it starts I stop what I'm doing. Every time, without meaning to, the way you stop when someone says your name across a room. That's all. Mister Wynstead has written down three mornings when I did it, which I did not know until this minute and which I find I don't mind.", "next": "hub"},
+    "bye": {"speaker": "Hesta Hollins", "text": "Go safely. And if you're passing on a Thornday, the cords want two hands and I've one pair.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/pellam_ashcombe",
+  "speaker_name": "Pellam Ashcombe",
+  "notes": "Old Roll-Keeper, 81. Main-quest stage-2 informant; gives The Last Name of Mullbourne. He is the one person in the valley who never exaggerates.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "hamlet_name_restored"}], "text": "Three names this morning. Three. I said them slow, the way you say a thing you've got back."},
+    {"conditions": [{"flag": "hamlet_name_struck"}], "text": "Two names this morning. Wren did it properly, with the door open and a witness, and I'll not say a word against her, and I've not spoken to her since Tollday."},
+    {"conditions": [{"flag": "hamlet_name_let_go"}], "text": "Two names. I'll go up a while yet. Not for ever. A man knows when he's saying a thing to nobody."},
+    {"conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}], "text": "Sit down, don't help me, and don't ask me about the bell for a minute or two."},
+    {"conditions": [{"renown_min": 200}], "text": "They say your name in the Lip on nights you're not in it. Do you know how few people that's true of? Four. I've counted."},
+    {"conditions": [{"time_between": [5, 7]}], "text": "You've come up in the dark. Good. Stand there and don't talk and I'll be done in a moment."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Pellam Ashcombe", "text": "Eighty-one, and the eyes are gone, and the ears are better than any of theirs, so speak normally and don't lean in.", "next": "hub"},
+    "hub": {"speaker": "Pellam Ashcombe", "text": "Well then.", "choices": [
+      {"text": "What are you saying, up at the rim?", "next": "the_names"},
+      {"text": "Wren says you heard the bell hum once before.", "next": "the_hum", "conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}]},
+      {"text": "You heard the bell hum before. Will you tell me now?", "next": "the_hum", "conditions": [{"flag": "found_tuning_tine"}]},
+      {"text": "Tell me about keeping the Roll.", "next": "the_roll"},
+      {"text": "You've lost one of the names.", "next": "the_lost_name", "conditions": [{"flag": "pellam_opened_up"}]},
+      {"text": "What's in the Toll's crown?", "next": "the_crown"},
+      {"text": "I'll let you be.", "next": "bye"}
+    ]},
+    "the_names": {"speaker": "Pellam Ashcombe", "text": "The quiet ones. Larkstead. Gosford. And there was a third and it will not come, and I have stood up here three mornings with my mouth open like a fish. Fifty years I've said them at first light. Not prayers. I've no god to say them to and neither has anyone; we've the Named, and the Named are only people who were talked about long enough. It's a count. Somebody living has to have said the name out loud that day, and up here I'm the somebody, and that bell's the nearest thing to a witness I can get at five in the morning.", "effects": [{"set_flag": "pellam_opened_up"}, {"start_quest": "core:quest/last_name"}], "next": "hub"},
+    "the_hum": {"speaker": "Pellam Ashcombe", "text": "Once. Nineteen, I was, and it went for eleven days and then it stopped, and I'd have told you it was a boy's fancy except my father heard it too and my father had no fancies in him at all. — And in the middle of those eleven days, Gosford stopped sending a cart to market. That's the whole of it. That's the thing I've not said in sixty years and the reason I've not said it is that it is not evidence, it is two things that happened in the same fortnight, and I have watched this valley make a hanging out of less. So: the bell hummed, and a village went quiet, and I was nineteen, and I have said four names at dawn ever since instead of three.", "effects": [{"set_flag": "pellam_told_gosford"}, {"renown": 10}], "choices": [
+      {"text": "Did anyone go and look?", "next": "the_hum_2"},
+      {"text": "You've carried that a long time.", "next": "the_hum_3"}
+    ]},
+    "the_hum_2": {"speaker": "Pellam Ashcombe", "text": "I did. Twenty-two years old and I walked out there with a lantern and a billhook, and there was a lane, and there was a green, and there were nine houses with the doors on, and there was nobody, and there was no sign of a hurry. Kettles on hooks. A loom half-done. I came back and I told the Wardens and the Wardens wrote a line and read it out, and that was the correct thing to do, and it has never once stopped being the thing I go over at night. — Take a Warden with you when you go out on the down. Not for the bandits.", "next": "hub"},
+    "the_hum_3": {"speaker": "Pellam Ashcombe", "text": "Sixty years is not so long to carry a thing. It's long to carry it alone, and I've not been alone, I've had the book. — Now it's you as well, which is better arithmetic than I've had since my father. Go and tell Wren. She'll write down the date I heard it and want it in my own words and I'll give her a hard time about the spelling, and that will be a good morning for the both of us.", "effects": [{"morality": 3}], "next": "hub"},
+    "the_roll": {"speaker": "Pellam Ashcombe", "text": "Forty years of it. Every settlement in the Vale in one book in ink, and four lines written deeper than the rest. Wren copies for me now that the hands have gone; she's a fine hand and a worse speller than she thinks and she knows I know. — The Roll is not a record, whatever the Rest tells you. A record is for after. The Roll is a rope, and the reading aloud is the hand on it, and the week nobody reads it aloud is the week you find out whether I've been right for forty years or whether I've been an old man shouting at a bell.", "next": "hub"},
+    "the_lost_name": {"speaker": "Pellam Ashcombe", "text": "Gone out of me like a coin through a hole. Soft ground, that's all I have. Nine households, or eleven; that's already two versions and both are mine. — Don't tell Wren I've asked you. She'd say a name nobody can find is a weight and should be let go, and she'd say it kindly, and she'd be reasoning it out properly and honestly, and she would be wrong. A name let go is a place that never was. I've said the words 'a place that never was' out loud twice in my life and both times I had to sit down after.", "choices": [
+      {"text": "Who might remember?", "next": "the_lost_name_2"},
+      {"text": "I'll find it.", "next": "the_lost_name_3"}
+    ]},
+    "the_lost_name_2": {"speaker": "Pellam Ashcombe", "text": "Not the old. We're the ones it's going out of. The young and the singers, that's who. A name that won't stay in a book will sometimes stay in a tune, because a tune keeps a thing by the shape of it and not by the meaning. Merrick Gosling sang a wedding out that way once, years back, on soft ground. Ask him what he changed. He'll know. He changes something in every one and he remembers all of them, which is the nearest thing to scholarship in this village and he'd be mortified to hear it called that.", "effects": [{"set_flag": "pellam_sent_to_merrick"}], "next": "hub"},
+    "the_lost_name_3": {"speaker": "Pellam Ashcombe", "text": "Then find it soon. I'm not being grand; I'm being accurate. I'm eighty-one and the bell's up ninety steps and there'll come a morning I don't do the ninety, and on that morning there's nobody in this valley saying those names at first light. Wren reads them on Tolldays, once a week, at the Rest, to a room. It's not the same and she knows it isn't and she does it anyway, which is the best thing about her.", "next": "hub"},
+    "the_crown": {"speaker": "Pellam Ashcombe", "text": "The Builders wrote on the inside of everything they made. Not on the outside, mind — inside, where it's dark and you'd need a reason to be. My father went up the lip as a young man and said there was writing up there, running round the crown, and he could not read it, and neither could anyone he showed it to, and he never went up again. — If you're going up: take a light that won't go out in a draught, put your hand flat on the bronze before you climb, and if the hum changes while you're in there, come down. That's my father's advice and he gave it once and never explained it.", "effects": [{"set_flag": "pellam_told_crown"}], "next": "hub"},
+    "bye": {"speaker": "Pellam Ashcombe", "text": "Go on. And if you're ever somewhere with a name on it, say it out loud once before you leave. Costs nothing. Might be nothing. Might not.", "next": "hub"}
+  }
+}
+]
