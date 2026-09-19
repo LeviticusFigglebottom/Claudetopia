@@ -123,9 +123,9 @@
     "alchemy": {
       "effects": [
         "core:effect/fortify_stamina",
-        "core:effect/resist_cold",
+        "core:effect/resist_frost",
         "core:effect/silence",
-        "core:effect/drain_warmth"
+        "core:effect/cold_bite"
       ]
     },
     "description": "Flour ground by the wheel that turns with no water. Fine, white, keeps for a month, and bread made from it tastes of nothing you can name.",

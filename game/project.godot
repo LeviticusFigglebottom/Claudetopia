@@ -33,6 +33,7 @@ Social="*res://systems/social/social.gd"
 Music="*res://systems/audio/music_director.gd"
 Ambience="*res://systems/audio/ambience_mixer.gd"
 Foley="*res://systems/audio/foley.gd"
+UI="*res://ui/ui.gd"
 Debug="*res://tools_gd/debug_console.tscn"
 
 [audio]

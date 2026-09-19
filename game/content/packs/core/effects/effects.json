@@ -406,14 +406,6 @@
     "description": "A Hush word written into an edge. What it cuts goes quiet and slow, as things do at the Hushline."
   },
   {
-    "id": "core:effect/resist_cold",
-    "name": "Resist Cold",
-    "kind": "buff",
-    "magnitude_base": 20.0,
-    "duration_base": 90.0,
-    "description": "Warmth that stays where it is put. A clan remedy: what the Heights take, the Heights also teach you to keep."
-  },
-  {
     "id": "core:effect/drain_warmth",
     "name": "Drain Warmth",
     "kind": "harm",

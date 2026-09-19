@@ -30,6 +30,10 @@ func _ready() -> void:
 			failed += 1
 			print("  FAIL %s (did not compile)" % path)
 			continue
+		if not script.can_instantiate():
+			failures.append("%s: script did not compile" % path)
+			failed += 1
+			continue
 		var made: Variant = script.new()
 		if made == null or not (made is TestCase):
 			failures.append("%s: does not instance a TestCase (parse error?)" % path)
