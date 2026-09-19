@@ -1,0 +1,623 @@
+{
+  "budget": {
+    "draw_calls": 2000,
+    "primitives": 1500000
+  },
+  "generated_at": "2026-09-19T19:12:29",
+  "renderer": "gl_compatibility",
+  "resolution": [
+    1280,
+    720
+  ],
+  "shots": [
+    {
+      "cells_loaded": 25,
+      "draw_calls": 118,
+      "file": "00_hearthvale_landmark.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "hearthvale_landmark",
+      "objects": 118,
+      "pos": [
+        661.7,
+        110.2,
+        2026.9
+      ],
+      "primitives": 392964,
+      "process_ms": 3727.77,
+      "region": "core:region/hearthvale",
+      "scatter_instances": 0,
+      "time_hours": 9.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 157,
+      "file": "01_hearthvale_vista.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "hearthvale_vista",
+      "objects": 157,
+      "pos": [
+        1523.0,
+        113.8,
+        2896.4
+      ],
+      "primitives": 537702,
+      "process_ms": 3865.12,
+      "region": "core:region/hearthvale",
+      "scatter_instances": 0,
+      "time_hours": 9.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 141,
+      "file": "02_hearthvale_approach.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "hearthvale_approach",
+      "objects": 141,
+      "pos": [
+        1215.8,
+        89.5,
+        2626.9
+      ],
+      "primitives": 468424,
+      "process_ms": 3367.66,
+      "region": "core:region/hearthvale",
+      "scatter_instances": 0,
+      "time_hours": 9.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 74,
+      "file": "03_brightwater_landmark.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "brightwater_landmark",
+      "objects": 74,
+      "pos": [
+        -251.8,
+        74.0,
+        -50.0
+      ],
+      "primitives": 260528,
+      "process_ms": 3139.54,
+      "region": "core:region/brightwater",
+      "scatter_instances": 0,
+      "time_hours": 12.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 95,
+      "file": "04_brightwater_vista.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "brightwater_vista",
+      "objects": 95,
+      "pos": [
+        1867.5,
+        185.6,
+        -1673.9
+      ],
+      "primitives": 340898,
+      "process_ms": 4795.91,
+      "region": "core:region/skerrow",
+      "scatter_instances": 0,
+      "time_hours": 12.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 78,
+      "file": "05_brightwater_approach.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "brightwater_approach",
+      "objects": 78,
+      "pos": [
+        1680.2,
+        61.9,
+        -1279.4
+      ],
+      "primitives": 270186,
+      "process_ms": 3629.27,
+      "region": "core:region/brightwater",
+      "scatter_instances": 0,
+      "time_hours": 12.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 160,
+      "file": "06_sedgemire_landmark.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "sedgemire_landmark",
+      "objects": 160,
+      "pos": [
+        -3320.0,
+        56.8,
+        -988.2
+      ],
+      "primitives": 515410,
+      "process_ms": 3532.61,
+      "region": "core:region/sedgemire",
+      "scatter_instances": 0,
+      "time_hours": 7.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 163,
+      "file": "07_sedgemire_vista.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "sedgemire_vista",
+      "objects": 163,
+      "pos": [
+        -2445.1,
+        53.3,
+        -1970.9
+      ],
+      "primitives": 492762,
+      "process_ms": 3823.56,
+      "region": "core:region/sedgemire",
+      "scatter_instances": 0,
+      "time_hours": 7.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 152,
+      "file": "08_sedgemire_approach.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "sedgemire_approach",
+      "objects": 152,
+      "pos": [
+        -2775.9,
+        29.4,
+        -901.3
+      ],
+      "primitives": 468794,
+      "process_ms": 3777.77,
+      "region": "core:region/sedgemire",
+      "scatter_instances": 0,
+      "time_hours": 7.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 126,
+      "file": "09_briarwold_landmark.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "briarwold_landmark",
+      "objects": 126,
+      "pos": [
+        2876.9,
+        169.7,
+        -88.3
+      ],
+      "primitives": 384488,
+      "process_ms": 3168.87,
+      "region": "core:region/briarwold",
+      "scatter_instances": 0,
+      "time_hours": 10.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 15,
+      "draw_calls": 139,
+      "file": "10_briarwold_vista.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "briarwold_vista",
+      "objects": 139,
+      "pos": [
+        3938.2,
+        409.4,
+        1872.1
+      ],
+      "primitives": 443286,
+      "process_ms": 4262.3,
+      "region": "core:region/briarwold",
+      "scatter_instances": 0,
+      "time_hours": 10.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 112,
+      "file": "11_briarwold_approach.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "briarwold_approach",
+      "objects": 112,
+      "pos": [
+        2679.9,
+        199.3,
+        1279.1
+      ],
+      "primitives": 376614,
+      "process_ms": 4883.09,
+      "region": "core:region/briarwold",
+      "scatter_instances": 0,
+      "time_hours": 10.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 125,
+      "file": "12_skerrow_landmark.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "skerrow_landmark",
+      "objects": 125,
+      "pos": [
+        1076.9,
+        280.1,
+        -2961.7
+      ],
+      "primitives": 407890,
+      "process_ms": 4336.3,
+      "region": "core:region/skerrow",
+      "scatter_instances": 0,
+      "time_hours": 14.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 10,
+      "draw_calls": 126,
+      "file": "13_skerrow_vista.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "skerrow_vista",
+      "objects": 126,
+      "pos": [
+        682.4,
+        722.6,
+        -4101.0
+      ],
+      "primitives": 405254,
+      "process_ms": 6195.16,
+      "region": "core:region/skerrow",
+      "scatter_instances": 0,
+      "time_hours": 14.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 113,
+      "file": "14_skerrow_approach.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "skerrow_approach",
+      "objects": 113,
+      "pos": [
+        483.0,
+        393.1,
+        -3111.7
+      ],
+      "primitives": 358406,
+      "process_ms": 4136.16,
+      "region": "core:region/skerrow",
+      "scatter_instances": 0,
+      "time_hours": 14.01,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 130,
+      "file": "15_cinderlea_landmark.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "cinderlea_landmark",
+      "objects": 130,
+      "pos": [
+        -1561.7,
+        172.3,
+        3423.1
+      ],
+      "primitives": 430906,
+      "process_ms": 4940.14,
+      "region": "core:region/cinderlea",
+      "scatter_instances": 0,
+      "time_hours": 16.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 192,
+      "file": "16_cinderlea_vista.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "cinderlea_vista",
+      "objects": 192,
+      "pos": [
+        -2863.0,
+        168.4,
+        3021.4
+      ],
+      "primitives": 626558,
+      "process_ms": 3762.99,
+      "region": "core:region/cinderlea",
+      "scatter_instances": 0,
+      "time_hours": 16.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 175,
+      "file": "17_cinderlea_approach.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "cinderlea_approach",
+      "objects": 175,
+      "pos": [
+        -1859.7,
+        93.7,
+        2416.8
+      ],
+      "primitives": 572422,
+      "process_ms": 3932.21,
+      "region": "core:region/cinderlea",
+      "scatter_instances": 0,
+      "time_hours": 16.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 131,
+      "file": "18_fly_000.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_000",
+      "objects": 131,
+      "pos": [
+        900.0,
+        194.8,
+        2350.0
+      ],
+      "primitives": 443780,
+      "process_ms": 3464.75,
+      "region": "core:region/hearthvale",
+      "scatter_instances": 0,
+      "time_hours": 9.51,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 152,
+      "file": "19_fly_001.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_001",
+      "objects": 152,
+      "pos": [
+        1227.3,
+        173.2,
+        577.3
+      ],
+      "primitives": 486108,
+      "process_ms": 3249.44,
+      "region": "core:region/brightwater",
+      "scatter_instances": 0,
+      "time_hours": 9.53,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 138,
+      "file": "20_fly_002.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_002",
+      "objects": 138,
+      "pos": [
+        1100.0,
+        154.0,
+        -863.6
+      ],
+      "primitives": 466678,
+      "process_ms": 2672.48,
+      "region": "core:region/brightwater",
+      "scatter_instances": 0,
+      "time_hours": 9.54,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 106,
+      "file": "21_fly_003.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_003",
+      "objects": 106,
+      "pos": [
+        -1300.0,
+        146.7,
+        -645.5
+      ],
+      "primitives": 355018,
+      "process_ms": 2793.18,
+      "region": "core:region/brightwater",
+      "scatter_instances": 0,
+      "time_hours": 9.55,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 122,
+      "file": "22_fly_004.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_004",
+      "objects": 122,
+      "pos": [
+        -1954.5,
+        156.8,
+        -209.1
+      ],
+      "primitives": 403374,
+      "process_ms": 1927.44,
+      "region": "core:region/sedgemire",
+      "scatter_instances": 0,
+      "time_hours": 9.57,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 127,
+      "file": "23_fly_005.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_005",
+      "objects": 127,
+      "pos": [
+        881.8,
+        201.5,
+        663.6
+      ],
+      "primitives": 412486,
+      "process_ms": 2831.49,
+      "region": "core:region/brightwater",
+      "scatter_instances": 0,
+      "time_hours": 9.58,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 127,
+      "file": "24_fly_006.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_006",
+      "objects": 127,
+      "pos": [
+        1781.8,
+        297.9,
+        63.6
+      ],
+      "primitives": 405010,
+      "process_ms": 2646.78,
+      "region": "core:region/briarwold",
+      "scatter_instances": 0,
+      "time_hours": 9.59,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 111,
+      "file": "25_fly_007.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_007",
+      "objects": 111,
+      "pos": [
+        745.5,
+        446.0,
+        -2009.1
+      ],
+      "primitives": 376262,
+      "process_ms": 2403.47,
+      "region": "core:region/skerrow",
+      "scatter_instances": 0,
+      "time_hours": 9.61,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 109,
+      "file": "26_fly_008.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_008",
+      "objects": 109,
+      "pos": [
+        -290.9,
+        405.1,
+        -918.2
+      ],
+      "primitives": 379228,
+      "process_ms": 2232.24,
+      "region": "core:region/brightwater",
+      "scatter_instances": 0,
+      "time_hours": 9.62,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 112,
+      "file": "27_fly_009.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_009",
+      "objects": 112,
+      "pos": [
+        -1327.3,
+        269.8,
+        1754.5
+      ],
+      "primitives": 369746,
+      "process_ms": 2780.38,
+      "region": "core:region/cinderlea",
+      "scatter_instances": 0,
+      "time_hours": 9.63,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 139,
+      "file": "28_fly_010.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_010",
+      "objects": 139,
+      "pos": [
+        -409.1,
+        223.4,
+        2268.2
+      ],
+      "primitives": 429234,
+      "process_ms": 2033.08,
+      "region": "core:region/cinderlea",
+      "scatter_instances": 0,
+      "time_hours": 9.65,
+      "video_mem_mb": 546.4
+    },
+    {
+      "cells_loaded": 25,
+      "draw_calls": 109,
+      "file": "29_fly_011.png",
+      "fps_estimate": 1.0,
+      "frames_waited": 11,
+      "label": "fly_011",
+      "objects": 109,
+      "pos": [
+        900.0,
+        194.8,
+        2350.0
+      ],
+      "primitives": 414972,
+      "process_ms": 2801.08,
+      "region": "core:region/hearthvale",
+      "scatter_instances": 0,
+      "time_hours": 9.66,
+      "video_mem_mb": 546.4
+    }
+  ],
+  "viewport": [
+    1280.0,
+    720.0
+  ],
+  "within_budget": true,
+  "worst": {
+    "draw_calls": 192,
+    "primitives": 626558
+  }
+}

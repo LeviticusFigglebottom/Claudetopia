@@ -30,7 +30,7 @@ uniform float wave_scale = 0.07;
 uniform float wave_speed = 0.5;
 uniform float wave_strength = 0.42;
 uniform float ripple_scale = 0.8;
-uniform float opacity_shallow = 0.55;
+uniform float opacity_shallow = 0.66;
 uniform float opacity_deep = 0.97;
 uniform float roughness_water = 0.10;
 uniform float specular_boost = 0.32;
@@ -98,7 +98,7 @@ void fragment() {
 	// shore foam: a band that follows the waterline and wobbles with the waves
 	float wobble = sin(v_world.x * 0.7 + t * 1.6) * 0.25 + cos(v_world.z * 0.63 - t * 1.3) * 0.25;
 	float foam = smoothstep(foam_width_m * (1.0 + wobble * 0.35), 0.0, v_depth);
-	foam *= 0.85;
+	foam *= 0.6;
 
 	vec3 view = normalize(VIEW);
 	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), view), 0.0, 1.0), 5.0);
