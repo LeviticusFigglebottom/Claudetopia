@@ -32,7 +32,8 @@ func test_enter_and_exit() -> void:
 	assert_near(player.global_position.x, Interiors.pocket_for("core:interior/test_cell").x + 2.0, 0.01)
 	assert_true(Interiors.exit())
 	assert_false(Interiors.in_interior())
-	assert_near(player.global_position.x, 110.0 + 1.5, 0.01, "returned to just outside the door")
+	assert_near(player.global_position.x, 110.0, 0.01, "returned beside the door")
+	assert_near(player.global_position.z, 100.0 + 1.5, 0.01, "one and a half metres in front of the door")
 	door.get_parent().remove_child(door)
 	door.free()
 
