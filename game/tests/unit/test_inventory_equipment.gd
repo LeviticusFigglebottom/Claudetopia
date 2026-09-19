@@ -262,3 +262,41 @@ func test_save_loaded_before_the_inventory_still_resolves() -> void:
 	assert_eq(eq2.item_id("main_hand"), SWORD, "the slot resolves once the bag arrives")
 	eq2.free()
 	inv2.free()
+
+
+# --- the carried light ---------------------------------------------------------------------------
+
+func test_a_lantern_in_the_off_hand_becomes_a_real_light() -> void:
+	# CONTRACTS §7 gives items a `light` block; nothing read it until now, so a lantern was a
+	# 1.4 kg paperweight. It hangs off Socket.Lantern and starts unlit.
+	var p := Player.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(p)
+	p.equip_offhand("core:item/lantern")
+	var light := p.get_socket("Socket.Lantern").get_node_or_null("CarriedLight") as OmniLight3D
+	assert_true(light != null, "a lamp is built on the lantern socket")
+	assert_false(light.visible, "carried dark until you strike it")
+	assert_near(light.omni_range, 8.0)
+	assert_true(p.toggle_lantern(), "striking it lights it")
+	assert_true(light.visible)
+	var stealth := light.get_node_or_null("StealthLight") as StealthLight
+	assert_true(stealth != null and stealth.enabled, "and the dark stops hiding you")
+	assert_false(p.toggle_lantern(), "shuttering it puts it out")
+	assert_false(light.visible)
+	p.equip_offhand("core:item/oak_round_shield")
+	assert_true(p.get_socket("Socket.Lantern").get_node_or_null("CarriedLight") == null, "a shield is not a lamp")
+	assert_false(p.lantern_lit)
+	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
+	p.free()
+
+
+func test_striking_nothing_says_so_rather_than_failing_quietly() -> void:
+	var p := Player.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(p)
+	var heard: Array = []
+	var handler := func(_text: String, kind: String) -> void: heard.append(kind)
+	EventBus.notify.connect(handler)
+	assert_false(p.toggle_lantern())
+	EventBus.notify.disconnect(handler)
+	assert_eq(heard, ["warning"])
+	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
+	p.free()

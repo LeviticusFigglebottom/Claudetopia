@@ -34,7 +34,7 @@ const LOAD_CAPACITY_BASE := 40.0
 const LOAD_CAPACITY_PER_ENDURANCE := 3.0
 const SAVE_SECTION := "player"
 const SKILL_IDS: Array[String] = ["one_handed", "two_handed", "archery", "block", "armour", "sneak", "speech", "alchemy", "smithing", "enchanting", "athletics", "kindling", "hush", "binding", "mending", "calling"]
-const ACTIONS: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact", "block", "sprint", "sneak", "lock_on", "cycle_target", "toggle_camera", "quick_1", "quick_2", "quick_3", "quick_4"]
+const ACTIONS: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact", "block", "sprint", "sneak", "lock_on", "cycle_target", "toggle_camera", "toggle_lantern", "quick_1", "quick_2", "quick_3", "quick_4"]
 const BUFFERABLE: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact"]
 const ARROW_SCENE := "res://systems/combat/arrow.tscn"
 
@@ -50,6 +50,9 @@ var quick_slot_handler: Callable = Callable()
 ## Inventory-stream hook: Callable(ammo_tag: String) -> bool, consumes one arrow when true.
 var ammo_provider: Callable = Callable()
 var equipped_spell: String = ""
+## A carried light is off until the player strikes it, and it is the one thing they can do
+## about the dark that also makes them easier to see (Stealth reads it as any other lamp).
+var lantern_lit: bool = false
 var arrows: int = 20
 var is_sneaking: bool = false
 var is_sprinting: bool = false
@@ -69,6 +72,7 @@ var _buffer_action: String = ""
 var _buffer_at: float = -1.0
 var _move_input: Vector2 = Vector2.ZERO
 var _look_stick: Vector2 = Vector2.ZERO
+var _lantern_light: OmniLight3D = null
 var _attack_kind: String = "light"
 var _attack_index: int = 0
 var _attack_phase: String = ""
@@ -127,6 +131,7 @@ func _ready() -> void:
 	camera_rig.mode_changed.connect(_on_camera_mode_changed)
 	if weapon == null:
 		equip_weapon("")
+	_refresh_lantern()          # equipment restored before the body entered the tree
 	add_to_group("player")
 	SaveSystem.register(SAVE_SECTION, self)
 	_register_character_sections()
@@ -299,6 +304,8 @@ func _tick_free(delta: float) -> void:
 func _update_common_toggles() -> void:
 	if _just["toggle_camera"]:
 		camera_rig.toggle_mode()
+	if _just["toggle_lantern"]:
+		toggle_lantern()
 	if _just["sneak"]:
 		is_sneaking = not is_sneaking
 		if is_sneaking:
@@ -893,6 +900,7 @@ func equip_weapon(item_id: String) -> void:
 func equip_offhand(item_id: String) -> void:
 	offhand = ContentDB.get_or_empty(item_id) if not item_id.is_empty() else {}
 	equipped["off_hand"] = item_id
+	_refresh_lantern()
 	_recompute_load()
 	equipment_changed.emit("off_hand", item_id)
 	EventBus.item_equipped.emit("off_hand", item_id)
@@ -905,6 +913,56 @@ func equip_armour(item_id: String) -> void:
 	_recompute_load()
 	equipment_changed.emit("body", item_id)
 	EventBus.item_equipped.emit("body", item_id)
+
+
+## The `light` block on the off-hand item (CONTRACTS §7) becomes a real lamp on the lantern
+## socket, with a StealthLight beside it so being lit costs you the dark. Nothing carried means
+## nothing to strike.
+func _refresh_lantern() -> void:
+	if not is_inside_tree():
+		return          # equipment can be restored before the body is in the world; _ready retries
+	var light_def: Dictionary = offhand.get("light", {})
+	if light_def.is_empty():
+		if _lantern_light != null:
+			# Taken out of the tree at once, not on the next frame: anything asking whether a
+			# light is carried must get the answer the equipment change already gave.
+			var parent := _lantern_light.get_parent()
+			if parent != null:
+				parent.remove_child(_lantern_light)
+			_lantern_light.queue_free()
+			_lantern_light = null
+		lantern_lit = false
+		return
+	if _lantern_light == null:
+		_lantern_light = OmniLight3D.new()
+		_lantern_light.name = "CarriedLight"
+		_lantern_light.shadow_enabled = true
+		_lantern_light.light_bake_mode = Light3D.BAKE_DISABLED
+		var stealth_light := StealthLight.new()
+		stealth_light.name = "StealthLight"
+		_lantern_light.add_child(stealth_light)
+		get_socket("Socket.Lantern").add_child(_lantern_light)
+	_lantern_light.omni_range = float(light_def.get("range", 8.0))
+	_lantern_light.light_energy = float(light_def.get("energy", 1.0))
+	_lantern_light.light_color = Color.html(str(light_def.get("color", "#ffb86a")))
+	var stealth := _lantern_light.get_node_or_null("StealthLight") as StealthLight
+	if stealth != null:
+		stealth.range_m = _lantern_light.omni_range
+		stealth.energy = _lantern_light.light_energy
+		stealth.enabled = lantern_lit
+	_lantern_light.visible = lantern_lit
+
+
+## Strikes or shutters the carried light. Returns whether anything is lit afterwards.
+func toggle_lantern() -> bool:
+	if offhand.get("light", {}).is_empty():
+		EventBus.notify.emit("You have nothing to light.", "warning")
+		return false
+	lantern_lit = not lantern_lit
+	_refresh_lantern()
+	var said := "The %s is lit." % str(offhand.get("name", "lantern")).to_lower() if lantern_lit else "You shutter the light."
+	EventBus.notify.emit(said, "item")
+	return lantern_lit
 
 
 func equip_spell(spell_id: String) -> void:
@@ -975,6 +1033,7 @@ func to_save() -> Dictionary:
 	d["mana"] = caster.to_save()
 	d["equipped"] = equipped.duplicate()
 	d["equipped_spell"] = equipped_spell
+	d["lantern_lit"] = lantern_lit
 	d["quick_slots"] = quick_slots.duplicate()
 	d["skills"] = skills.duplicate()
 	d["arrows"] = arrows
@@ -1000,6 +1059,8 @@ func from_save(d: Dictionary) -> void:
 	equip_offhand(str(eq.get("off_hand", "")))
 	equip_armour(str(eq.get("body", "")))
 	equipped_spell = str(d.get("equipped_spell", ""))
+	lantern_lit = bool(d.get("lantern_lit", false))
+	_refresh_lantern()
 	var qs: Array = d.get("quick_slots", [])
 	for i in mini(qs.size(), quick_slots.size()):
 		quick_slots[i] = str(qs[i])
