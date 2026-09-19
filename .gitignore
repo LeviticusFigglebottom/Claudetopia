@@ -1,0 +1,18 @@
+# Godot
+.godot/
+*.import.tmp
+export/
+build/
+# Generated world data (rebuilt by `make world`)
+game/terrain_data/**/*.res
+game/world/generated/
+# Python
+__pycache__/
+*.pyc
+.venv/
+# Tools output
+captures/
+tools/out/
+# OS
+.DS_Store
+Thumbs.db
