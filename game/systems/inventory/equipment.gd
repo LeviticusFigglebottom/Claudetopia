@@ -64,12 +64,27 @@ func _find_inventory() -> void:
 			set_inventory(bag)
 
 
+## Only the player's paper-doll joins the "equipment" group, so the HUD and the UI stream find
+## exactly one. Membership follows the bag's `is_player`, or an ancestor in the "player" group.
 func _update_group() -> void:
-	var player := inventory != null and inventory.is_player
+	var player := (inventory != null and inventory.is_player) or _carried_by_player()
 	if player and not is_in_group(GROUP):
 		add_to_group(GROUP)
 	elif not player and is_in_group(GROUP):
 		remove_from_group(GROUP)
+
+
+func _carried_by_player() -> bool:
+	if not is_inside_tree():
+		return false
+	var n: Node = get_parent()
+	var hops := 0
+	while n != null and hops < 3:
+		if n.is_in_group("player"):
+			return true
+		n = n.get_parent()
+		hops += 1
+	return false
 
 
 # --- slot rules --------------------------------------------------------------------------

@@ -181,7 +181,7 @@ func test_crafting_node_crafts_and_awards_xp() -> void:
 	assert_true(c.craft(SWORD_RECIPE))
 	assert_eq(c.bag().count(SWORD), 1)
 	assert_eq(crafted.size(), 1)
-	assert_true(prog.skills.xp("core:skill/smithing") > 0.0, "crafting trains smithing")
+	assert_true(prog.skill_set.xp("core:skill/smithing") > 0.0, "crafting trains smithing")
 	prog.free()
 	free_crafting(c)
 

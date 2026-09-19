@@ -23,6 +23,9 @@ const SORT_MODES := ["category", "name", "weight", "value"]
 const CATEGORY_ORDER := ["weapon", "armour", "consumable", "ingredient", "material", "tool", "book", "key", "misc"]
 const WORLD_ITEM_SCENE := "res://systems/inventory/world_item.tscn"
 
+## The player's bag. Only this one joins the "inventory" group and mirrors its events onto
+## EventBus, so the Hearth, the HUD and the crime stream always find the right bag. A bag whose
+## parent (or grandparent) is in the "player" group sets this itself when it enters the tree.
 @export var is_player: bool = false:
 	set(value):
 		is_player = value
@@ -44,7 +47,21 @@ var _next_uid: int = 1
 
 
 func _ready() -> void:
+	if not is_player and _carried_by_player():
+		is_player = true
 	_update_group()
+
+
+## True when an ancestor is in the "player" group (the player stream tags its own actor).
+func _carried_by_player() -> bool:
+	var n: Node = get_parent()
+	var hops := 0
+	while n != null and hops < 3:
+		if n.is_in_group("player"):
+			return true
+		n = n.get_parent()
+		hops += 1
+	return false
 
 
 func _update_group() -> void:

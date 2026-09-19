@@ -24,7 +24,7 @@ const CALLING_TYPE := "calling"
 ## Global multiplier on awarded skill XP (difficulty, debug).
 @export var learn_rate: float = 1.0
 
-var skills := Skills.new()
+var skill_set := Skills.new()
 var leveling := Leveling.new()
 var perks := Perks.new()
 var mods := Modifiers.new()
@@ -57,7 +57,7 @@ func apply_calling(id: String, inventory: Inventory = null) -> bool:
 		Log.error("Progression", "unknown calling '%s'" % id)
 		return false
 	calling_id = id
-	skills.apply_bonuses(def.get("skill_bonuses", {}))
+	skill_set.apply_bonuses(def.get("skill_bonuses", {}))
 	for faction in def.get("starting_reputation", {}):
 		EventBus.faction_reputation_changed.emit(str(faction), int(def["starting_reputation"][faction]), int(def["starting_reputation"][faction]))
 	if inventory != null:
@@ -81,7 +81,7 @@ static func callings() -> Array:
 
 
 func reset_for_new_game() -> void:
-	skills.reset()
+	skill_set.reset()
 	leveling.reset()
 	perks.reset()
 	calling_id = ""
@@ -104,9 +104,9 @@ func award(skill: String, xp: float) -> int:
 	if id == "":
 		Log.warn("Progression", "unknown skill '%s'" % skill)
 		return 0
-	var gained := skills.add_xp(id, xp, learn_rate)
+	var gained := skill_set.add_xp(id, xp, learn_rate)
 	if gained > 0:
-		EventBus.skill_level_up.emit(id, skills.level(id))
+		EventBus.skill_level_up.emit(id, skill_set.level(id))
 	skills_changed.emit()
 	if gained > 0:
 		_check_level_up()
@@ -114,7 +114,7 @@ func award(skill: String, xp: float) -> int:
 
 
 func _check_level_up() -> void:
-	var levels := leveling.update_from_gains(skills.total_gains)
+	var levels := leveling.update_from_gains(skill_set.total_gains)
 	if levels <= 0:
 		return
 	level_changed.emit(leveling.level)
@@ -138,16 +138,16 @@ var perk_points: int:
 
 
 func skill_level(skill: String) -> int:
-	return skills.level(skill)
+	return skill_set.level(skill)
 
 
 func skill_progress(skill: String) -> float:
-	return skills.fraction(skill)
+	return skill_set.fraction(skill)
 
 
-## [{id, name, level, progress, ...}] for the skills screen.
-func skills_list() -> Array[Dictionary]:
-	return skills.summaries()
+## [{id, name, level, progress, xp, xp_needed, uses, group, governs, description}] for the skills screen.
+func skills() -> Array[Dictionary]:
+	return skill_set.summaries()
 
 
 func attribute(name: String) -> int:
@@ -155,7 +155,7 @@ func attribute(name: String) -> int:
 
 
 func level_progress() -> float:
-	return Leveling.fraction_for(skills.total_gains)
+	return Leveling.fraction_for(skill_set.total_gains)
 
 
 # --- derived pools (attributes through the modifier stack) -------------------------------
@@ -186,15 +186,15 @@ func effective_skill(skill: String) -> float:
 	var id := Skills.normalise(skill)
 	if id == "":
 		return 0.0
-	return mods.apply("skill_" + Ids.name_of(id), float(skills.level(id)))
+	return mods.apply("skill_" + Ids.name_of(id), float(skill_set.level(id)))
 
 
 ## Everything a HUD or character screen needs in one call.
 func summary() -> Dictionary:
-	var d := leveling.summary(skills.total_gains)
+	var d := leveling.summary(skill_set.total_gains)
 	d["calling"] = calling_id
 	d["calling_name"] = str(ContentDB.get_or_empty(calling_id).get("name", ""))
-	d["total_gains"] = skills.total_gains
+	d["total_gains"] = skill_set.total_gains
 	d["max_health"] = max_health()
 	d["max_stamina"] = max_stamina()
 	d["max_mana"] = max_mana()
@@ -217,11 +217,11 @@ func spend_attribute(name: String) -> bool:
 func take_perk(perk_id: String) -> bool:
 	if leveling.perk_points <= 0:
 		return false
-	if not perks.can_take(perk_id, skills):
+	if not perks.can_take(perk_id, skill_set):
 		return false
 	if not leveling.spend_perk_point():
 		return false
-	perks.take(perk_id, skills)
+	perks.take(perk_id, skill_set)
 	_refresh_perk_modifiers()
 	points_changed.emit(leveling.attribute_points, leveling.perk_points)
 	EventBus.perk_taken.emit(perk_id)
@@ -230,9 +230,9 @@ func take_perk(perk_id: String) -> bool:
 
 ## Gives a perk without spending a point (quest reward, console).
 func grant_perk(perk_id: String) -> bool:
-	if not perks.can_take(perk_id, skills):
+	if not perks.can_take(perk_id, skill_set):
 		return false
-	perks.take(perk_id, skills)
+	perks.take(perk_id, skill_set)
 	_refresh_perk_modifiers()
 	EventBus.perk_taken.emit(perk_id)
 	return true
@@ -241,7 +241,7 @@ func grant_perk(perk_id: String) -> bool:
 ## Perk trees for the perks screen. Empty skill = every perk.
 func perks_for(skill: String = "") -> Array[Dictionary]:
 	var id := Skills.normalise(skill) if skill != "" else ""
-	return perks.summaries(id, skills)
+	return perks.summaries(id, skill_set)
 
 
 func has_perk(perk_id: String) -> bool:
@@ -263,14 +263,14 @@ static func of(tree: SceneTree) -> Progression:
 
 func to_save() -> Dictionary:
 	return {
-		"calling": calling_id, "skills": skills.to_save(), "leveling": leveling.to_save(),
+		"calling": calling_id, "skills": skill_set.to_save(), "leveling": leveling.to_save(),
 		"perks": perks.to_save(),
 	}
 
 
 func from_save(d: Dictionary) -> void:
 	calling_id = str(d.get("calling", ""))
-	skills.from_save(d.get("skills", {}))
+	skill_set.from_save(d.get("skills", {}))
 	leveling.from_save(d.get("leveling", {}))
 	perks.from_save(d.get("perks", {}))
 	_refresh_perk_modifiers()

@@ -143,7 +143,7 @@ func test_progression_node_awards_xp_and_levels_the_character() -> void:
 		gained += prog.award("one_handed", 120.0)
 	assert_gt(gained, 20)
 	assert_gt(prog.level, 1, "skill gains buy character levels")
-	assert_eq(prog.level, Leveling.level_for(prog.skills.total_gains))
+	assert_eq(prog.level, Leveling.level_for(prog.skill_set.total_gains))
 	assert_eq(prog.attribute_points, prog.level - 1)
 	assert_eq(prog.perk_points, prog.level - 1)
 	assert_gt(level_ups.size(), 0)
@@ -198,7 +198,7 @@ func test_skill_used_on_the_event_bus_is_picked_up() -> void:
 	var prog := Progression.new()
 	add_node(prog)
 	EventBus.skill_used.emit("core:skill/sneak", 30.0)
-	assert_true(prog.skills.xp("core:skill/sneak") > 0.0)
+	assert_true(prog.skill_set.xp("core:skill/sneak") > 0.0)
 	prog.free()
 
 
