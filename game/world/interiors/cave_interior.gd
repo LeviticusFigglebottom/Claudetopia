@@ -298,8 +298,8 @@ func _build_chamber_lighting() -> void:
 				# have lit for centuries, and the player must read the room's shape.
 				var fill := OmniLight3D.new()
 				fill.position = centre + Vector3(0, radii.y * 0.55, 0)
-				fill.light_color = Color(0.45, 0.58, 0.8)
-				fill.light_energy = 0.55
+				fill.light_color = Color(0.58, 0.64, 0.78)
+				fill.light_energy = 0.28
 				fill.omni_range = radii.length() * 1.5
 				fill.shadow_enabled = false
 				fill.light_specular = 0.0
@@ -325,9 +325,9 @@ func _light_recipe(role: String) -> Dictionary:
 		"entrance":
 			return {"color": Color(0.85, 0.92, 1.0), "energy": 1.8, "range": 20.0, "flicker": 0.0, "shadow": false, "ember": false}
 		"camp":
-			return {"color": Color(1.0, 0.62, 0.28), "energy": 3.0, "range": 17.0, "flicker": 0.35, "shadow": true, "ember": true}
+			return {"color": Color(1.0, 0.62, 0.28), "energy": 4.0, "range": 18.0, "flicker": 0.35, "shadow": true, "ember": true}
 		"boss":
-			return {"color": Color(0.55, 0.72, 1.0), "energy": 2.4, "range": 24.0, "flicker": 0.08, "shadow": true, "ember": true}
+			return {"color": Color(0.55, 0.72, 1.0), "energy": 3.2, "range": 26.0, "flicker": 0.08, "shadow": true, "ember": true}
 		"treasure":
 			return {"color": Color(1.0, 0.82, 0.45), "energy": 1.9, "range": 14.0, "flicker": 0.15, "shadow": false, "ember": true}
 		"shrine":
@@ -335,11 +335,11 @@ func _light_recipe(role: String) -> Dictionary:
 		"flooded", "pool":
 			return {"color": Color(0.5, 0.8, 0.82), "energy": 1.5, "range": 15.0, "flicker": 0.05, "shadow": false, "ember": false}
 		"passage":
-			return {"color": Color(1.0, 0.7, 0.4), "energy": 1.3, "range": 11.0, "flicker": 0.25, "shadow": false, "ember": true}
+			return {"color": Color(1.0, 0.7, 0.4), "energy": 1.8, "range": 12.0, "flicker": 0.25, "shadow": false, "ember": true}
 		"deep", "chamber":
-			return {"color": Color(1.0, 0.68, 0.36), "energy": 2.4, "range": 17.0, "flicker": 0.28, "shadow": false, "ember": true}
+			return {"color": Color(1.0, 0.68, 0.36), "energy": 3.2, "range": 18.0, "flicker": 0.28, "shadow": false, "ember": true}
 		_:
-			return {"color": Color(1.0, 0.68, 0.36), "energy": 2.4, "range": 17.0, "flicker": 0.28, "shadow": false, "ember": true}
+			return {"color": Color(1.0, 0.68, 0.36), "energy": 3.2, "range": 18.0, "flicker": 0.28, "shadow": false, "ember": true}
 
 
 func _build_features() -> void:

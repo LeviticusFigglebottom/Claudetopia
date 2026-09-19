@@ -54,8 +54,8 @@ FORMATIONS = {
     },
     # Cut by people following a vein: straight runs, square section, props, spoil heaps.
     "mining": {
-        "tunnel": "box", "tunnel_radius": 1.5, "radius_jitter": 0.12,
-        "noise_amp": 0.42, "noise_base": 10, "noise_octaves": 4, "fillet": 0.7,
+        "tunnel": "box", "tunnel_radius": 1.5, "radius_jitter": 0.16,
+        "noise_amp": 0.62, "noise_base": 10, "noise_octaves": 4, "fillet": 0.7,
         "turn_deg": (0, 30), "chamber_squash": 0.8, "floor_flatten": 0.75,
         "stalactites": 0.05, "stalagmites": 0.0, "columns": 0.0, "rubble": 0.55,
         "detail_amp": 0.16, "detail_base": 44, "fine_amp": 0.12, "fine_base": 80,
@@ -72,11 +72,11 @@ FORMATIONS = {
     },
     # Built, then fallen in: straight masonry corridors interrupted by collapse.
     "crypt": {
-        "tunnel": "box", "tunnel_radius": 1.7, "radius_jitter": 0.18,
-        "noise_amp": 0.6, "noise_base": 9, "noise_octaves": 4, "fillet": 1.1,
+        "tunnel": "box", "tunnel_radius": 1.7, "radius_jitter": 0.22,
+        "noise_amp": 0.95, "noise_base": 9, "noise_octaves": 4, "fillet": 1.1,
         "turn_deg": (0, 45), "chamber_squash": 0.75, "floor_flatten": 0.7,
         "stalactites": 0.1, "stalagmites": 0.05, "columns": 0.35, "rubble": 0.7,
-        "detail_amp": 0.26, "detail_base": 40, "fine_amp": 0.18, "fine_base": 70,
+        "detail_amp": 0.36, "detail_base": 36, "fine_amp": 0.24, "fine_base": 64,
         "scallop": 0.2, "water_bias": 0.3, "ceiling_lift": 0.0,
     },
     # Oroth work that never fell: vast, regular, cold, still standing.
@@ -375,6 +375,46 @@ def hex_rgb(h: str) -> tuple[float, float, float]:
 # Anchors: where the floor is, where things can stand, where the water sits.
 # ---------------------------------------------------------------------------------------
 
+
+def decimate_keeping_colour(mesh: trimesh.Trimesh, target: int) -> trimesh.Trimesh:
+    """Quadric decimation that carries vertex colour across by nearest-vertex lookup."""
+    colours = None
+    if hasattr(mesh.visual, "vertex_colors") and mesh.visual.vertex_colors is not None:
+        colours = np.asarray(mesh.visual.vertex_colors).copy()
+    out = mesh.simplify_quadric_decimation(face_count=target)
+    if colours is not None and len(out.vertices):
+        tree = __import__("scipy.spatial", fromlist=["cKDTree"]).cKDTree(mesh.vertices)
+        _, idx = tree.query(out.vertices, k=1)
+        out.visual.vertex_colors = colours[idx]
+    return out
+
+
+def split_by_chamber(mesh: trimesh.Trimesh, chambers: dict) -> dict:
+    """Assign each face to its nearest chamber so each room is its own drawable chunk."""
+    ids = list(chambers)
+    if len(ids) < 2:
+        return {ids[0] if ids else "shell": mesh}
+    centres = np.array([chambers[i]["pos"] for i in ids])
+    centroids = mesh.vertices[mesh.faces].mean(axis=1)
+    tree = __import__("scipy.spatial", fromlist=["cKDTree"]).cKDTree(centres)
+    _, owner = tree.query(centroids, k=1)
+    colours = np.asarray(mesh.visual.vertex_colors) if hasattr(mesh.visual, "vertex_colors") else None
+    out = {}
+    for j, cid in enumerate(ids):
+        sel = owner == j
+        if not sel.any():
+            continue
+        faces = mesh.faces[sel]
+        used = np.unique(faces)
+        remap = np.full(len(mesh.vertices), -1, dtype=np.int64)
+        remap[used] = np.arange(len(used))
+        part = trimesh.Trimesh(vertices=mesh.vertices[used], faces=remap[faces], process=False)
+        if colours is not None:
+            part.visual.vertex_colors = colours[used]
+        out[cid] = part
+    return out
+
+
 def find_anchors(field: np.ndarray, origin: np.ndarray, voxel: float, chambers: dict, rng: np.random.Generator) -> dict:
     air = field < 0
     shape = field.shape
@@ -443,8 +483,23 @@ def build(recipe: dict, out_root: str, voxel_override: float | None = None, quie
 
     folder = os.path.join(out_root, name)
     os.makedirs(folder, exist_ok=True)
-    mesh.export(os.path.join(folder, f"{name}.glb"))
-    collision = mesh.simplify_quadric_decimation(face_count=max(int(len(mesh.faces) * 0.35), 2000)) if len(mesh.faces) > 8000 else mesh
+
+    # Budget: a dungeon shell is one surface, so without chunking nothing can be culled.
+    # Decimate to a sane wall density, then split by nearest chamber so the renderer can
+    # throw away the rooms you are not standing in.
+    # Decimation flattens rock into planes, so the budget is generous: chunking is what
+    # buys the performance, and a cap only stops a runaway.
+    target = int(recipe.get("target_tris", 0)) or min(len(mesh.faces), 95_000 * max(len(chambers), 1))
+    if len(mesh.faces) > target * 1.15:
+        mesh = decimate_keeping_colour(mesh, target)
+    chunks = split_by_chamber(mesh, chambers)
+    scene = trimesh.Scene()
+    for chamber_id, part in chunks.items():
+        scene.add_geometry(part, node_name=f"shell_{chamber_id}", geom_name=f"shell_{chamber_id}")
+    scene.export(os.path.join(folder, f"{name}.glb"))
+
+    col_target = max(int(len(mesh.faces) * 0.22), 3000)
+    collision = decimate_keeping_colour(mesh, col_target) if len(mesh.faces) > col_target * 1.2 else mesh
     collision.export(os.path.join(folder, f"{name}_col.glb"))
 
     entrance = next((c for c in chambers.values() if c["role"] == "entrance"), next(iter(chambers.values())))
@@ -463,6 +518,7 @@ def build(recipe: dict, out_root: str, voxel_override: float | None = None, quie
         "bounds": [[round(float(v), 2) for v in origin], [round(float(origin[i] + (shape[i] - 1) * voxel), 2) for i in range(3)]],
         "tris": int(len(mesh.faces)),
         "collision_tris": int(len(collision.faces)),
+        "chunks": {k: int(len(v.faces)) for k, v in chunks.items()},
         "entrance": anchors.get(entrance["id"], {}).get("centre", [0, 0, 0]),
         "chambers": anchors,
         "links": [list(l) for l in links],
@@ -478,7 +534,9 @@ def build(recipe: dict, out_root: str, voxel_override: float | None = None, quie
     with open(os.path.join(folder, f"{name}.meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
     if not quiet:
-        print(f"{name}: {len(mesh.faces):,} tris ({len(collision.faces):,} collision), "
+        biggest = max(chunks.values(), key=lambda m: len(m.faces))
+        print(f"{name}: {len(mesh.faces):,} tris in {len(chunks)} chunks "
+              f"(largest {len(biggest.faces):,}), {len(collision.faces):,} collision, "
               f"{len(anchors)} chambers, {len(shafts)} shafts, {len(water)} water, "
               f"grid {shape}, {time.time() - t0:.1f}s")
     return meta

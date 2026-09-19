@@ -22,8 +22,20 @@
       25.48
     ]
   ],
-  "tris": 892868,
-  "collision_tris": 312503,
+  "tris": 190000,
+  "collision_tris": 56999,
+  "chunks": {
+    "mouth": 37901,
+    "stair": 26854,
+    "first_cist": 9017,
+    "root_run": 11390,
+    "tool_hall": 14429,
+    "sump": 14735,
+    "squeeze": 19063,
+    "bell_cist": 14715,
+    "reeve_hall": 24020,
+    "back_stair": 17876
+  },
   "entrance": [
     0.0,
     -2.04,
