@@ -18,69 +18,69 @@
   "panel_parchment": {
    "file": "panel_parchment.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ],
    "tile": true
   },
   "panel_brass": {
    "file": "panel_brass.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ],
    "tile": true
   },
   "panel_oak": {
    "file": "panel_oak.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ],
    "tile": true
   },
   "frame_brass": {
    "file": "frame_brass.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ]
   },
   "frame_oak": {
    "file": "frame_oak.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ]
   },
   "tooltip": {
@@ -100,42 +100,42 @@
   "panel_small": {
    "file": "panel_small.png",
    "size": [
-    56,
-    56
+    64,
+    64
    ],
    "margin": [
-    12,
-    12,
-    12,
-    12
+    13,
+    13,
+    13,
+    13
    ],
    "tile": true
   },
   "panel_small_wood": {
    "file": "panel_small_wood.png",
    "size": [
-    56,
-    56
+    64,
+    64
    ],
    "margin": [
-    12,
-    12,
-    12,
-    12
+    13,
+    13,
+    13,
+    13
    ],
    "tile": true
   },
   "frame_small": {
    "file": "frame_small.png",
    "size": [
-    56,
-    56
+    64,
+    64
    ],
    "margin": [
-    12,
-    12,
-    12,
-    12
+    13,
+    13,
+    13,
+    13
    ]
   },
   "button_normal": {
@@ -545,69 +545,69 @@
   "panel_parchment_deep": {
    "file": "panel_parchment_deep.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ],
    "tile": true
   },
   "panel_bronze": {
    "file": "panel_bronze.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ],
    "tile": true
   },
   "panel_ash": {
    "file": "panel_ash.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ],
    "tile": true
   },
   "frame_bronze": {
    "file": "frame_bronze.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ]
   },
   "frame_ash": {
    "file": "frame_ash.png",
    "size": [
-    128,
-    128
+    192,
+    192
    ],
    "margin": [
-    26,
-    26,
-    26,
-    26
+    28,
+    28,
+    28,
+    28
    ]
   },
   "tooltip_deep": {
@@ -627,42 +627,42 @@
   "panel_small_deep": {
    "file": "panel_small_deep.png",
    "size": [
-    56,
-    56
+    64,
+    64
    ],
    "margin": [
-    12,
-    12,
-    12,
-    12
+    13,
+    13,
+    13,
+    13
    ],
    "tile": true
   },
   "panel_small_wood_deep": {
    "file": "panel_small_wood_deep.png",
    "size": [
-    56,
-    56
+    64,
+    64
    ],
    "margin": [
-    12,
-    12,
-    12,
-    12
+    13,
+    13,
+    13,
+    13
    ],
    "tile": true
   },
   "frame_small_deep": {
    "file": "frame_small_deep.png",
    "size": [
-    56,
-    56
+    64,
+    64
    ],
    "margin": [
-    12,
-    12,
-    12,
-    12
+    13,
+    13,
+    13,
+    13
    ]
   },
   "button_normal_deep": {
@@ -1216,6 +1216,13 @@
     48
    ]
   },
+  "reticle": {
+   "file": "markers/reticle.png",
+   "size": [
+    48,
+    48
+   ]
+  },
   "ruin_village": {
    "file": "markers/ruin_village.png",
    "size": [
@@ -1288,13 +1295,6 @@
   },
   "wreck": {
    "file": "markers/wreck.png",
-   "size": [
-    48,
-    48
-   ]
-  },
-  "reticle": {
-   "file": "markers/reticle.png",
    "size": [
     48,
     48

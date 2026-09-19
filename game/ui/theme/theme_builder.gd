@@ -102,9 +102,7 @@ static func box(name: String, content := PackedInt32Array()) -> StyleBoxTexture:
 	sb.set_texture_margin(SIDE_TOP, float(m[1]))
 	sb.set_texture_margin(SIDE_RIGHT, float(m[2]))
 	sb.set_texture_margin(SIDE_BOTTOM, float(m[3]))
-	if entry.get("tile", false):
-		sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
-		sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	# Nine-patch centres are stretched, not tiled: a tiled centre shows its seams on paper.
 	if content.size() == 4:
 		sb.set_content_margin(SIDE_LEFT, float(content[0]))
 		sb.set_content_margin(SIDE_TOP, float(content[1]))
@@ -298,13 +296,13 @@ static func build(variant := "warm") -> Theme:
 	t.set_color("font_color", "ProgressBar", paper)
 
 	# -- panels ---------------------------------------------------------------------------
-	var panel_pad := PackedInt32Array([26, 26, 26, 26])
+	var panel_pad := PackedInt32Array([28, 26, 28, 26])
 	t.set_stylebox("panel", "PanelContainer", variant_box(variant, ["panel"], panel_pad))
 	t.set_stylebox("panel", "Panel", variant_box(variant, ["panel"]))
 	t.set_type_variation("FramedPanel", "PanelContainer")
-	t.set_stylebox("panel", "FramedPanel", variant_box(variant, ["panel_metal"], PackedInt32Array([30, 30, 30, 30])))
+	t.set_stylebox("panel", "FramedPanel", variant_box(variant, ["panel_metal"], PackedInt32Array([32, 30, 32, 30])))
 	t.set_type_variation("OakPanel", "PanelContainer")
-	t.set_stylebox("panel", "OakPanel", variant_box(variant, ["panel_wood"], PackedInt32Array([30, 30, 30, 30])))
+	t.set_stylebox("panel", "OakPanel", variant_box(variant, ["panel_wood"], PackedInt32Array([32, 30, 32, 30])))
 	# light chrome for HUD-sized boxes: quick slots, prompts, toasts
 	t.set_type_variation("ChromePanel", "PanelContainer")
 	t.set_stylebox("panel", "ChromePanel", variant_box(variant, ["panel_small"], PackedInt32Array([12, 10, 12, 10])))

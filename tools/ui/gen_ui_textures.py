@@ -380,8 +380,8 @@ def moulding(w: int, h: int, margin: int, rng: np.random.Generator, pal: dict,
 # panels, frames, buttons and the rest of the chrome
 # --------------------------------------------------------------------------------------
 
-PANEL_SIZE = 128
-PANEL_MARGIN = 26
+PANEL_SIZE = 192
+PANEL_MARGIN = 28
 
 
 def panel(rng, pal, *, frame: str | None, size: int = PANEL_SIZE, margin: int = PANEL_MARGIN,
@@ -399,8 +399,8 @@ def panel(rng, pal, *, frame: str | None, size: int = PANEL_SIZE, margin: int = 
     return img
 
 
-SMALL_SIZE = 56
-SMALL_MARGIN = 12
+SMALL_SIZE = 64
+SMALL_MARGIN = 13
 
 
 def small_panel(rng, pal, *, frame: str = "metal", size: int = SMALL_SIZE,

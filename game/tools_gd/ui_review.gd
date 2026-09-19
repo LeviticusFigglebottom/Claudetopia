@@ -16,7 +16,7 @@ const FAKES := "res://tools_gd/ui_review_fakes.gd"
 
 var out_dir := "user://ui"
 var only: PackedStringArray = []
-var settle_seconds := 2.4
+var settle_seconds := 3.3
 var _shots: Array[Dictionary] = []
 var _index := 0
 var _wait := 0.0
