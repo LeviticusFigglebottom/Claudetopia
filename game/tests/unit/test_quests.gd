@@ -204,6 +204,39 @@ func test_reach_objectives_use_the_position_provider() -> void:
 	assert_true(log_node.is_completed("core:quest/_test_reach"))
 
 
+func test_reach_works_with_a_plain_node3d_player() -> void:
+	# Other streams' player doubles are Node3Ds with no position() method; the seam must take
+	# either shape, because the real player will be a CharacterBody3D.
+	var node_player: Node3D = preload("res://tests/fakes/fake_player.gd").new()
+	Engine.get_main_loop().root.add_child(node_player)
+	var def := scripted_quest()
+	def["id"] = "core:quest/_test_reach_node"
+	def["stages"] = [
+		{"id": "go", "journal": "Go there.", "objectives": [{"type": "reach", "target": MERROWBY, "radius": 60}]},
+		{"id": "done", "auto": true, "journal": "Arrived.", "objectives": []}
+	]
+	log_node.register_runtime(def)
+	Social.bind("player", node_player)
+	assert_eq(log_node.position_provider, node_player, "a Node3D counts as a position provider")
+	var pos: Array = ContentDB.get_or_empty(MERROWBY)["position"]
+	node_player.global_position = Vector3(float(pos[0]), 0.0, float(pos[1]))
+	log_node.start("core:quest/_test_reach_node")
+	log_node.check_reach()
+	assert_true(log_node.is_completed("core:quest/_test_reach_node"))
+	node_player.queue_free()
+
+
+func test_marks_can_be_a_property_on_the_inventory() -> void:
+	var node_inventory: Node = preload("res://tests/fakes/fake_inventory.gd").new()
+	Engine.get_main_loop().root.add_child(node_inventory)
+	Social.bind("inventory", node_inventory)
+	ctx.add_marks(25)
+	assert_eq(ctx.marks(), 25, "the inventory stream may expose marks as a property")
+	ctx.add_marks(-10)
+	assert_eq(ctx.marks(), 15)
+	node_inventory.queue_free()
+
+
 func test_discovering_a_place_also_satisfies_reach() -> void:
 	var def := scripted_quest()
 	def["id"] = "core:quest/_test_discover"

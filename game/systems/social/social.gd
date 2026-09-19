@@ -73,6 +73,15 @@ func _ready() -> void:
 	EventBus.player_spawned.connect(_on_player_spawned)
 	EventBus.region_entered.connect(_on_region_entered)
 	call_deferred("refresh_providers")
+	call_deferred("_register_debug_commands")
+
+
+## The debug console is optional and loads after this autoload, so commands are registered on the
+## first frame and only if it is there.
+func _register_debug_commands() -> void:
+	var console := get_node_or_null("/root/Debug")
+	if console != null and console.has_method("register"):
+		SocialDebugCommands.register_all(self, console)
 
 
 # --- provider binding -------------------------------------------------------------------------
@@ -81,8 +90,8 @@ func _ready() -> void:
 ## "recipes", or any other name a future system wants to serve.
 func bind(provider_name: String, obj: Object) -> void:
 	ctx.set_provider(provider_name, obj)
-	if provider_name == "player" and obj != null and obj.has_method("position"):
-		quests.position_provider = obj
+	if provider_name == "player":
+		quests.position_provider = obj if SocialContext.can_locate(obj) else null
 
 
 ## Looks for the systems other streams own and binds the first node in each group.

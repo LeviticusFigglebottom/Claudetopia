@@ -39,7 +39,7 @@ var quests: Dictionary = {}
 
 ## Injected by Social: a SocialContext for on_enter/on_complete effect lists.
 var ctx: SocialContext = null
-## Duck-typed: position() -> Vector3. Used for `reach` objectives.
+## Where the player is, for `reach` objectives: anything with a position() method or a Node3D.
 var position_provider: Object = null
 ## The board generator, whose board cooldowns ride along in this system's save section.
 var radiant: RadiantGenerator = null
@@ -702,8 +702,8 @@ func check_reach(at: Variant = null) -> void:
 	var pos: Vector3
 	if typeof(at) == TYPE_VECTOR3:
 		pos = at
-	elif position_provider != null and is_instance_valid(position_provider) and position_provider.has_method("position"):
-		pos = position_provider.position()
+	elif SocialContext.can_locate(position_provider):
+		pos = SocialContext.position_of(position_provider)
 	else:
 		return
 	_for_each_objective("reach", func(quest_id: String, i: int, o: Dictionary) -> void:

@@ -328,8 +328,9 @@ func wearing_tag(tag: String) -> bool:
 	return bool(_call("inventory", "has_equipped_tag", [tag], false))
 
 
+## The inventory stream owns marks; it may expose them as a method or as a plain property.
 func marks() -> int:
-	return int(_call("inventory", "marks", [], 0))
+	return int(_prop("inventory", "marks", 0))
 
 
 func add_marks(delta: int) -> void:
@@ -351,8 +352,33 @@ func player_name() -> String:
 
 
 func player_position() -> Vector3:
-	var p: Variant = _call("player", "position", [], null)
-	return p if typeof(p) == TYPE_VECTOR3 else Vector3.ZERO
+	return position_of(provider("player"))
+
+
+## Where an object is, whether it answers with a position() method (a provider) or carries the
+## Node3D properties (an actor scene). Zero when it is neither.
+static func position_of(obj: Object) -> Vector3:
+	if obj == null or not is_instance_valid(obj):
+		return Vector3.ZERO
+	if obj.has_method("position"):
+		var p: Variant = obj.call("position")
+		if typeof(p) == TYPE_VECTOR3:
+			return p
+	if obj is Node3D:
+		return (obj as Node3D).global_position
+	for prop in ["global_position", "position"]:
+		if prop in obj:
+			var v: Variant = obj.get(prop)
+			if typeof(v) == TYPE_VECTOR3:
+				return v
+	return Vector3.ZERO
+
+
+## True when this object can say where it is, either way.
+static func can_locate(obj: Object) -> bool:
+	if obj == null or not is_instance_valid(obj):
+		return false
+	return obj.has_method("position") or obj is Node3D or ("global_position" in obj) or ("position" in obj)
 
 
 func skill_level(skill: String) -> int:
