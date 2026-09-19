@@ -561,7 +561,10 @@ CATALOGUE = {
     "buoy_bell": _pool(lambda rng, **k: buoy_bell(rng), count=5),
     "frogs": _bed(lambda s, rng, **k: frogs_bed(s, rng, density=0.6)),
     "bittern": _pool(lambda rng, **k: bird_call(rng, "bittern"), count=5),
-    "drip": _bed(lambda s, rng, **k: drip(s, rng, rate_hz=0.7)),
+    # A drip is a discrete event, not a texture: as a 42-second bed it was 94% digital
+    # silence, which is both a waste of a file and worse than letting the mixer place
+    # them with its own random gaps.
+    "drip": _pool(lambda rng, **k: drip(2.2, rng, rate_hz=1.6), count=6),
     "rope_creak": _bed(lambda s, rng, **k: rope_creak_bed(s, rng)),
     "water_still": _bed(lambda s, rng, **k: water_still(s, rng)),
     "canopy_wind": _bed(lambda s, rng, **k: wind(s, rng, strength=0.5, height=0.7, gustiness=0.75)),

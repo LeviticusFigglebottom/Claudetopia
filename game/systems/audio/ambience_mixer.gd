@@ -84,6 +84,7 @@ const POOL_GAPS := {
 	"owl": Vector2(20.0, 70.0),
 	"woodpecker": Vector2(12.0, 45.0),
 	"creak": Vector2(8.0, 30.0),
+	"drip": Vector2(1.5, 7.0),
 	"buoy_bell": Vector2(9.0, 26.0),
 	"hammer_distant": Vector2(14.0, 50.0),
 	"pipes_night": Vector2(45.0, 150.0),

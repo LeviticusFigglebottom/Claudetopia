@@ -117,12 +117,19 @@
     "loop": true
   },
   "drip": {
-    "bytes": 31359,
+    "bytes": 35370,
     "files": [
-      "res://assets/audio/ambience/drip/drip.ogg"
+      "res://assets/audio/ambience/drip/drip_01.ogg",
+      "res://assets/audio/ambience/drip/drip_02.ogg",
+      "res://assets/audio/ambience/drip/drip_03.ogg",
+      "res://assets/audio/ambience/drip/drip_04.ogg",
+      "res://assets/audio/ambience/drip/drip_05.ogg",
+      "res://assets/audio/ambience/drip/drip_06.ogg"
     ],
-    "kind": "bed",
-    "loop": true
+    "kind": "pool",
+    "loop": false,
+    "lufs": -26.15,
+    "seconds": 2.2
   },
   "frogs": {
     "bytes": 255198,
