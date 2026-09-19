@@ -21,7 +21,7 @@ CATEGORIES = ("trees", "flora", "rocks", "props", "architecture", "dungeon", "la
 # Bump when generated geometry changes in a way that should rebuild every asset; it is
 # part of each asset's hash, so build_assets sees the whole manifest as stale. It lives
 # here rather than in export.py so the build orchestrator can read it without Blender.
-FORGE_VERSION = 2
+FORGE_VERSION = 3
 VARIANT_LETTERS = "abcdefghijklmnopqrstuvwxyz"
 
 

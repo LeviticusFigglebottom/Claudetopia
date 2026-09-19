@@ -264,7 +264,10 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
         # enough leaf points that thinning to cards_target still samples the whole crown
         sap["leaves"] = 14
     trunk, leaves = TR.grow(sap, rng.randrange(99999))
-    trunk_budget = int(spec.get("trunk_budget", 16000 if spec.get("tier") == "hero" else 7500))
+    # A branching trunk splits almost every vertex when it is smooth-shaded (a junction is
+    # a hard edge), so triangles cost roughly 2.5 vertices each in the exported file. The
+    # budget is set with that multiplier in mind rather than from the triangle count alone.
+    trunk_budget = int(spec.get("trunk_budget", 11000 if spec.get("tier") == "hero" else 5000))
     if quick:
         trunk_budget //= 3
     TR.trim_to_budget(trunk, trunk_budget)
@@ -379,9 +382,10 @@ def main():
         out_root=args.out, category=args.category or "trees", name=name, generator="gen_trees",
         seed=args.seed, kind=kind, params=dict(args.params), pal=pal, opaque_objs=opaque,
         card_objs=card_objs or None, baked_objs=baked_objs or None, collision="capsule",
-        collision_params=trunk_capsule(opaque[0], height), quick=args.quick, res=args.res,
-        tier=spec.get("tier"), rng=rng, smooth_angle=45.0,
-        lod_ratios=(0.45, 0.2), card_keep=(0.55, 0.0), impostor=lod2, impostor_textures=impostor_tex,
+        collision_params=trunk_capsule(opaque[0], height), quick=args.quick,
+        res=args.res or (1024 if spec.get("tier") == "hero" else 512), unwrap_mode="cylinder",
+        tier=spec.get("tier"), rng=rng, smooth_angle=62.0,
+        lod_ratios=(0.32, 0.2), card_keep=(0.45, 0.0), impostor=lod2, impostor_textures=impostor_tex,
         materials_used=[spec["bark"], "foliage_leaf_card"],
         extra_meta={"species": kind, "region": REGION_OF.get(kind, ""), "height_m": round(height, 2)})
     return meta

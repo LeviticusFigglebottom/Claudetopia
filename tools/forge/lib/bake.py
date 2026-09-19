@@ -63,6 +63,9 @@ def unwrap(obj, angle_deg: float = 66.0, margin: float = 0.006, mode: str = "sma
     * ``sphere`` - spherical projection. Right for blobs: a boulder, a bone, a lathed
       stone. One seam and some pole stretch, which a painterly noise surface does not
       show, in exchange for ~80% coverage in three islands instead of 45% in nine hundred.
+    * ``cylinder`` - cylindrical projection about the object's Z. Right for a tree: bark
+      is a repeating surface, and smart project on a branching trunk makes thousands of
+      face-sized islands whose seams triple the exported vertex count.
     * ``cube`` - box projection, for rectilinear assets whose faces are axis-aligned.
 
     In every mode island scale is averaged first, so texel density is even across parts
@@ -74,18 +77,22 @@ def unwrap(obj, angle_deg: float = 66.0, margin: float = 0.006, mode: str = "sma
     bpy.ops.mesh.select_all(action="SELECT")
     if mode == "sphere":
         bpy.ops.uv.sphere_project(direction="ALIGN_TO_OBJECT", correct_aspect=True)
+    elif mode == "cylinder":
+        bpy.ops.uv.cylinder_project(direction="ALIGN_TO_OBJECT", align="POLAR_ZX",
+                                    radius=1.0, correct_aspect=True)
     elif mode == "cube":
         bpy.ops.uv.cube_project(cube_size=1.0, correct_aspect=True)
     else:
         bpy.ops.uv.smart_project(angle_limit=math.radians(angle_deg), island_margin=0.0,
                                  area_weight=1.0, correct_aspect=True, scale_to_bounds=False)
     bpy.ops.uv.select_all(action="SELECT")
-    if mode != "sphere":
+    projected = mode in ("sphere", "cylinder")
+    if not projected:
         bpy.ops.uv.average_islands_scale()
     try:
-        bpy.ops.uv.pack_islands(rotate=mode != "sphere", margin=margin, scale=True)
+        bpy.ops.uv.pack_islands(rotate=not projected, margin=margin, scale=True)
     except TypeError:  # older signature
-        bpy.ops.uv.pack_islands(rotate=mode != "sphere", margin=margin)
+        bpy.ops.uv.pack_islands(rotate=not projected, margin=margin)
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
@@ -236,7 +243,7 @@ def only_visible(obj, occluders=()):
 def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_distance: float | None = None,
                orm_scale: float = 0.5, alpha: bool = False, samples: int | None = None,
                texture_prefix: str | None = None, occluders=(), keep_uv: bool = False,
-               unwrap_mode: str = "smart") -> dict:
+               unwrap_mode: str = "smart", normal_scale: float = 0.5) -> dict:
     """Bake `obj` (all material slots) into <out_dir>/<prefix>_{albedo,normal,orm}.png and
     replace its materials with one baked Principled material named <name>_mat."""
     t0 = time.time()
@@ -328,7 +335,10 @@ def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_dista
     if not alpha:
         alb8 = alb8[..., :3]
     save_png(alb8, paths["albedo"])
-    save_png(_to_lin8(nrm), paths["normal"])
+    # The normal map is written at half the albedo's size. These surfaces carry broad,
+    # soft relief rather than fine engraving, so the detail survives the downscale (which
+    # supersamples it), and normal maps are otherwise the second largest file in the repo.
+    save_png(_to_lin8(nrm), paths["normal"], size=max(128, int(size * normal_scale)))
     orm8 = np.dstack([_to_lin8(ao), _to_lin8(rough), _to_lin8(metal)])
     save_png(orm8, paths["orm"])
     if emis is not None:
