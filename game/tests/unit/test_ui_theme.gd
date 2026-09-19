@@ -3,6 +3,13 @@ extends TestCase
 ## has to be on disk — otherwise a screen silently falls back to Godot's default grey.
 
 
+## Other suites emit EventBus.book_opened and the like, which the UI answers by opening a
+## screen; start each of these from a clean stack.
+func before_each() -> void:
+	UI.close_all()
+	(Engine.get_main_loop() as SceneTree).paused = false
+
+
 func test_manifest_matches_the_textures_on_disk() -> void:
 	var manifest := ThemeBuilder.manifest()
 	assert_false(manifest.is_empty(), "ui_textures.json should load")

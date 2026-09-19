@@ -1,56 +1,4 @@
 [
-<<<<<<< HEAD
-  {"id": "core:item/foundlings_token", "name": "Foundling's Token", "category": "misc", "weight": 0.05, "value": 1, "stack": 1, "tags": ["quest", "keepsake"],
-   "description": "A wooden bell no bigger than a thumb, whittled by a Warden on the walk out of the Hush. Wren said: if you go quiet, somebody should have something to hold."},
-  {"id": "core:item/tuning_tine", "name": "Tuning Tine", "category": "misc", "weight": 0.6, "value": 40, "stack": 1, "tags": ["quest", "oroth"],
-   "description": "A tine of black Oroth stone from the cradle in the Toll's crown. Held to the ear it hums a half-note below the bell, as if it disagreed."},
-  {"id": "core:item/letter_to_the_circle", "name": "Letter to the Circle", "category": "misc", "weight": 0.05, "value": 5, "stack": 1, "tags": ["quest", "letter"],
-   "description": "Wren Tallow's letter of passage, addressed to 'whichever of the Circle is speaking this week'. Sealed with candle-wax and a thumbprint, because the Wardens' seal is at the Rest and she was not walking back for it."},
-  {"id": "core:item/nave_bell", "name": "The Nave Bell", "category": "misc", "weight": 3.0, "value": 300, "stack": 1, "tags": ["quest", "oroth", "bell"],
-   "notes": "Also listed as She Who Waits' drop in the bible; duplicate-prone with the boss stream. Either definition may stand.",
-   "description": "A hand-bell of green-black Oroth bronze from the altar of the Drowned Nave. It has no clapper and rings anyway, very softly, whenever nobody is speaking."},
-  {"id": "core:item/sluice_pin", "name": "Sluice Pin", "category": "tool", "weight": 1.2, "value": 6, "stack": 1, "tags": ["quest"],
-   "description": "An oak pin as long as a forearm, sound after eighty years in the Larkbourne's head-pool. It fits the old sluice gate at Pennywort's Mill and nothing else in the world."},
-  {"id": "core:item/brambles_collar", "name": "Bramble's Collar", "category": "misc", "weight": 0.1, "value": 1, "stack": 1, "tags": ["quest", "keepsake"],
-   "description": "A plaited leather collar with a tin tag: BRAMBLE. IF FOUND, ROBIN ASHDOWN, RED DOOR, MERROWBY. The lettering is a child's and the spelling is not."},
-  {"id": "core:item/fennick_bell", "name": "The Fennick Bell", "category": "misc", "weight": 0.4, "value": 12, "stack": 1, "tags": ["quest", "bell"],
-   "description": "The Fennick family's tree-bell, the seventeenth of Merrowby. It has not rung in wind or hand since spring. Hesta Hollins polished it anyway."},
-  {"id": "core:item/hearth_loaf", "name": "Hearth Loaf", "category": "consumable", "weight": 0.5, "value": 3, "stack": 10, "tags": ["food", "vale"],
-   "effects": [{"restore_health": 15}],
-   "description": "A round chalk-crusted loaf from Maud Brambling's oven, still warm if you hurry. Vale folk say a loaf carried to a neighbour counts as a sentence spoken."},
-  {"id": "core:item/cold_flour", "name": "Cold Flour", "category": "ingredient", "weight": 0.8, "value": 2, "stack": 10, "tags": ["ingredient", "food", "strange"], "origin": "core:region/hearthvale",
-   "alchemy": {"effects": ["core:effect/fortify_stamina", "core:effect/resist_frost", "core:effect/silence", "core:effect/cold_bite"]},
-   "description": "Flour ground by the wheel that turns with no water. Fine, white, keeps for a month, and bread made from it tastes of nothing you can name."},
-  {"id": "core:item/press_screw", "name": "Cider Press Screw", "category": "material", "weight": 4.0, "value": 25, "stack": 1, "tags": ["quest", "iron"],
-   "description": "The iron screw of the Tamwick cider press, worn bright by forty harvests. Without it the press is a table, and Tamwick is a hamlet with a lot of apples."},
-  {"id": "core:item/stewards_brass_key", "name": "Steward's Brass Key", "category": "key", "weight": 0.2, "value": 30, "stack": 1, "tags": ["quest", "key"],
-   "description": "Merrowby's one brass key, polished at noon every day by Ellard Wynstead whether or not it needs it. It opens the deed chest in the steward's house, and, he would say, nothing else that is any of your business."},
-  {"id": "core:item/quills_daybook", "name": "Quill's Day-Book", "category": "book", "weight": 0.4, "value": 20, "stack": 1, "tags": ["quest", "ledger"],
-   "reads": "core:book/charter_ledger_page",
-   "description": "Steward Orrin Quill's day-book from Lantern Row: a week of prices, fines and favours in a small tidy hand. The favours are priced too."},
-  {"id": "core:item/pilgrims_bell_aud", "name": "Aud's Pilgrim Bell", "category": "misc", "weight": 0.3, "value": 4, "stack": 1, "tags": ["quest", "bell", "keepsake"],
-   "description": "Aud Fennick's grey pilgrim's bell, left on a stone at the Hushline with its clapper tied. She said she would not need it where she was going and would rather it stayed somewhere loud."},
-  {"id": "core:item/speaking_stone", "name": "Speaking-Stone", "category": "tool", "weight": 0.3, "value": 45, "stack": 1, "tags": ["sayers", "tool"],
-   "description": "A Sayers' speaking-stone: a river pebble drilled through and worn smooth by a century of thumbs. Held to the lips it makes a Said word carry a little further and last a little longer. The Circle insists this is a teaching aid."},
-  {"id": "core:item/vigil_cloak", "name": "Vigil Cloak", "category": "armour", "weight": 2.0, "value": 60, "stack": 1, "tags": ["tolling_order", "cloak"],
-   "armour": {"slot": "body", "armour": 4, "weight_class": "light", "stability": 1},
-   "description": "A grey wool cloak of the Tolling Order, hemmed with a row of tiny bells that have had their clappers taken out. Warm. Quiet. Given, never sold."},
-  {"id": "core:item/scraped_roll_page", "name": "Scraped Roll Page", "category": "misc", "weight": 0.05, "value": 15, "stack": 1, "tags": ["quest", "sayers", "letter"],
-   "description": "A page from the Sayers' own roll of members. One line, dated Y.T. 941, has been scraped down to the vellum and written over. Held to a lamp, the ghost of a name shows through: Tessane."},
-  {"id": "core:item/kharrow_bone_token", "name": "Kharrow Bone Token", "category": "misc", "weight": 0.1, "value": 50, "stack": 1, "tags": ["clan", "token", "amulet"],
-   "description": "A sliver of giant bone on a leather cord, given by Clan Kharrow to one whose deed they have heard. In Skerrow it is a name you can wear."},
-  {"id": "core:item/reed_lantern", "name": "Reed Lantern", "category": "tool", "weight": 0.6, "value": 18, "stack": 1, "tags": ["sedgemire", "lantern"],
-   "description": "An Isseva lantern of indigo paper and eel-oil, the kind set on the water for the dead. Tallissa Oul gave it unlit. 'It is for later,' she said, and would not say for whom."},
-  {"id": "core:item/circle_listeners_ring", "name": "Listener's Ring", "category": "misc", "weight": 0.05, "value": 35, "stack": 1, "tags": ["sayers", "ring"],
-   "description": "A brass ring stamped with an open mouth: the Circle's mark for a Listener, the rank that is allowed to hear all three lectures and forbidden to prefer one out loud."},
-  {"id": "core:item/half_ells_thimble", "name": "Tin Thimble", "category": "misc", "weight": 0.02, "value": 1, "stack": 1, "tags": ["quiet_hands", "token"],
-   "description": "A dented tin thimble. In the Undercroft it is worth more than the marks in your purse: doors that do not exist open for whoever wears it on the smallest finger."},
-  {"id": "core:item/merricks_verse", "name": "Merrick's Verse", "category": "misc", "weight": 0.02, "value": 2, "stack": 1, "tags": ["keepsake", "letter"],
-   "description": "A fair copy of Merrick Gosling's verse about you, in his own hand, with an ale-ring where he set his cup down on the second stanza. He says the ring is part of it now."},
-  {"id": "core:item/harewell_doorstep_stone", "name": "Harewell Doorstep", "category": "misc", "weight": 2.5, "value": 0, "stack": 1, "tags": ["quest", "wardens"],
-   "description": "A chalk doorstep worn hollow by feet. It was the only thing left where Harewell had been, and now that it is in your pack the place it came from cannot be found at all."}
-]
-=======
   {
     "id": "core:item/foundlings_token",
     "name": "Foundling's Token",
@@ -175,9 +123,9 @@
     "alchemy": {
       "effects": [
         "core:effect/fortify_stamina",
-        "core:effect/resist_cold",
+        "core:effect/resist_frost",
         "core:effect/silence",
-        "core:effect/drain_warmth"
+        "core:effect/cold_bite"
       ]
     },
     "description": "Flour ground by the wheel that turns with no water. Fine, white, keeps for a month, and bread made from it tastes of nothing you can name.",
@@ -364,4 +312,3 @@
     "description": "A chalk doorstep worn hollow by feet. It was the only thing left where Harewell had been, and now that it is in your pack the place it came from cannot be found at all."
   }
 ]
->>>>>>> 7872c0d439d3e3b6e12305b217b8b73914cac008

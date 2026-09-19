@@ -1,24 +1,4 @@
 [
-<<<<<<< HEAD
-  {"id": "core:gesture/bow", "name": "Bow", "animation": "Bow_Gesture", "icon": "gesture", "order": 0,
-   "description": "The Vale bow: shallow, quick, eyes up. Deeper is for lords and for jokes.",
-   "disposition": {"proud": 6, "pious": 5, "humble": 3, "cynical": -2}},
-  {"id": "core:gesture/wave", "name": "Wave", "animation": "Wave", "icon": "gesture", "order": 1,
-   "description": "A hand up. Says nothing, and means: I have seen you and I am not trouble.",
-   "disposition": {"timid": 5, "gossip": 4, "brave": 2, "quiet": 1}},
-  {"id": "core:gesture/laugh", "name": "Laugh", "animation": "Laugh", "icon": "rumour", "order": 2,
-   "description": "Useful at a table, dangerous at a graveside, and the quickest way into a rumour pool.",
-   "disposition": {"gossip": 7, "cynical": 4, "pious": -5, "quiet": -3}},
-  {"id": "core:gesture/cheer", "name": "Cheer", "animation": "Cheer", "icon": "bell", "order": 3,
-   "description": "Both arms up. Villagers answer it; Toll-Knights look at their boots.",
-   "disposition": {"brave": 6, "generous": 3, "proud": 2, "quiet": -4}},
-  {"id": "core:gesture/dance", "name": "Dance", "animation": "Dance", "icon": "hearth", "order": 4,
-   "description": "Three steps of the Naming Day round. Children join in whether you want them to or not.",
-   "disposition": {"generous": 6, "gossip": 5, "brave": 2, "proud": -3}},
-  {"id": "core:gesture/rude", "name": "Rude", "animation": "Rude", "icon": "skull", "order": 5,
-   "description": "The old Vale insult: two fingers and a turn of the wrist. It is remembered.",
-   "disposition": {"cynical": 5, "brave": 1, "pious": -8, "timid": -6, "proud": -7}}
-=======
   {
     "id": "core:gesture/bow", "name": "Bow", "animation": "Bow_Gesture", "animation_fallback": "Interact",
     "description": "A short bow from the waist. In the Vale it is courtesy; in Skerrow it is what you do before you are told a long story.",
@@ -171,5 +151,4 @@
     },
     "reply_gestures": {"generous": "core:gesture/wave", "default": ""}
   }
->>>>>>> 7872c0d439d3e3b6e12305b217b8b73914cac008
 ]

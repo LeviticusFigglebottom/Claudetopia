@@ -231,13 +231,32 @@ func _on_ended() -> void:
 
 # --- the gesture wheel ---------------------------------------------------------------------------
 
+## Which drawn icon stands for a gesture. The gesture defs carry no icon of their own, so
+## the wheel reads it from the gesture's name — and falls back to an open hand.
+const GESTURE_ICONS := {
+	"bow": "gesture", "wave": "gesture", "laugh": "rumour", "cheer": "bell",
+	"dance": "hearth", "rude": "skull", "threaten": "sword", "flex": "shield",
+	"point": "quest", "apologise": "amulet", "salute": "helm", "beckon": "gesture",
+}
+
+
 func gestures() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for def in ContentDB.all("gesture"):
 		out.append(def)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-			return int(a.get("order", 99)) < int(b.get("order", 99)))
+			var oa := int(a.get("order", 50))
+			var ob := int(b.get("order", 50))
+			if oa != ob:
+				return oa < ob
+			return str(a.get("name", "")) < str(b.get("name", "")))
 	return out
+
+
+func gesture_icon(def: Dictionary) -> String:
+	if def.has("icon"):
+		return str(def["icon"])
+	return str(GESTURE_ICONS.get(Ids.name_of(str(def.get("id", ""))), "gesture"))
 
 
 func open_gesture_wheel(npc_id := "") -> void:
@@ -266,7 +285,7 @@ func open_gesture_wheel(npc_id := "") -> void:
 		node.offset_top = sin(angle) * WHEEL_RADIUS - 38.0
 		node.offset_bottom = sin(angle) * WHEEL_RADIUS + 38.0
 		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var icon := UiKit.icon_rect(str(def.get("icon", "gesture")), 44)
+		var icon := UiKit.icon_rect(gesture_icon(def), 44)
 		node.add_child(icon)
 		_wheel.add_child(node)
 		_wheel_items.append({"def": def, "node": node, "angle": angle})
