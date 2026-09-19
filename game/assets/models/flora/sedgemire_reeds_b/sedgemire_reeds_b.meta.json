@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 2.321,
+  "max": [
+   0.597,
+   2.321,
+   0.542
+  ],
+  "min": [
+   -0.561,
+   0.0,
+   -0.641
+  ],
+  "radius": 1.425
+ },
+ "built_seconds": 1.6,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "sedgemire_reeds_b.glb",
+ "hash": "bff3ab6f53c6e39a",
+ "kind": "reeds",
+ "materials": [
+  "sedgemire_reeds_b_reed_foliage"
+ ],
+ "materials_used": [
+  "grass_blades"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_reeds_b_cards",
+   "tris": 12
+  },
+  {
+   "name": "sedgemire_reeds_b_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "sedgemire_reeds_b_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "sedgemire_reeds_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 2344,
+ "textures": [
+  "sedgemire_reeds_b_atlas_albedo.png",
+  "sedgemire_reeds_b_atlas_normal.png",
+  "sedgemire_reeds_b_atlas_orm.png"
+ ],
+ "tris": [
+  12,
+  6,
+  4
+ ],
+ "version": 3
+}

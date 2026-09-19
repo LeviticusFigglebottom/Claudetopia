@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.817,
+  "max": [
+   0.496,
+   0.817,
+   0.447
+  ],
+  "min": [
+   -0.463,
+   0.0,
+   -0.487
+  ],
+  "radius": 0.784
+ },
+ "built_seconds": 0.21,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "sedgemire_fern_a.glb",
+ "hash": "b9ecb13915796a5c",
+ "kind": "fern",
+ "materials": [
+  "sedgemire_fern_a_fern_foliage"
+ ],
+ "materials_used": [
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_fern_a_cards",
+   "tris": 14
+  },
+  {
+   "name": "sedgemire_fern_a_cards_LOD1",
+   "tris": 8
+  },
+  {
+   "name": "sedgemire_fern_a_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "sedgemire_fern_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 2539,
+ "textures": [
+  "sedgemire_fern_a_atlas_albedo.png",
+  "sedgemire_fern_a_atlas_normal.png",
+  "sedgemire_fern_a_atlas_orm.png"
+ ],
+ "tris": [
+  14,
+  8,
+  4
+ ],
+ "version": 3
+}

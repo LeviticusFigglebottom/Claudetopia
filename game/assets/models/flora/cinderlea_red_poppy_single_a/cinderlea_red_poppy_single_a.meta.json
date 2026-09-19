@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.374,
+  "max": [
+   0.175,
+   0.374,
+   0.195
+  ],
+  "min": [
+   -0.233,
+   0.0,
+   -0.181
+  ],
+  "radius": 0.335
+ },
+ "built_seconds": 0.09,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "cinderlea_red_poppy_single_a.glb",
+ "hash": "7bcc42c495750a11",
+ "kind": "red_poppy_single",
+ "materials": [
+  "cinderlea_red_poppy_single_a_poppy_foliage"
+ ],
+ "materials_used": [
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_red_poppy_single_a_cards",
+   "tris": 6
+  },
+  {
+   "name": "cinderlea_red_poppy_single_a_cards_LOD1",
+   "tris": 2
+  },
+  {
+   "name": "cinderlea_red_poppy_single_a_cards_LOD2",
+   "tris": 2
+  }
+ ],
+ "name": "cinderlea_red_poppy_single_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 2804,
+ "textures": [
+  "cinderlea_red_poppy_single_a_atlas_albedo.png",
+  "cinderlea_red_poppy_single_a_atlas_normal.png",
+  "cinderlea_red_poppy_single_a_atlas_orm.png"
+ ],
+ "tris": [
+  6,
+  2,
+  2
+ ],
+ "version": 3
+}

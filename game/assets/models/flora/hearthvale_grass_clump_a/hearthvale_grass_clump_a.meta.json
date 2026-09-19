@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.429,
+  "max": [
+   0.334,
+   0.429,
+   0.278
+  ],
+  "min": [
+   -0.297,
+   0.0,
+   -0.291
+  ],
+  "radius": 0.476
+ },
+ "built_seconds": 0.49,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "hearthvale_grass_clump_a.glb",
+ "hash": "0503995d9d78ce21",
+ "kind": "grass_clump",
+ "materials": [
+  "hearthvale_grass_clump_a_grass_foliage"
+ ],
+ "materials_used": [
+  "grass_blades"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_grass_clump_a_cards",
+   "tris": 12
+  },
+  {
+   "name": "hearthvale_grass_clump_a_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "hearthvale_grass_clump_a_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "hearthvale_grass_clump_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 1956,
+ "textures": [
+  "hearthvale_grass_clump_a_atlas_albedo.png",
+  "hearthvale_grass_clump_a_atlas_normal.png",
+  "hearthvale_grass_clump_a_atlas_orm.png"
+ ],
+ "tris": [
+  12,
+  6,
+  4
+ ],
+ "version": 3
+}

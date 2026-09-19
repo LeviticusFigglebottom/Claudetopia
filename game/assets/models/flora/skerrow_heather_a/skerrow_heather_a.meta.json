@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.445,
+  "max": [
+   0.268,
+   0.445,
+   0.257
+  ],
+  "min": [
+   -0.281,
+   0.0,
+   -0.235
+  ],
+  "radius": 0.431
+ },
+ "built_seconds": 0.17,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "skerrow_heather_a.glb",
+ "hash": "d742ceb14d8753f0",
+ "kind": "heather",
+ "materials": [
+  "skerrow_heather_a_heather_foliage"
+ ],
+ "materials_used": [
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_heather_a_cards",
+   "tris": 12
+  },
+  {
+   "name": "skerrow_heather_a_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "skerrow_heather_a_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "skerrow_heather_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 2963,
+ "textures": [
+  "skerrow_heather_a_atlas_albedo.png",
+  "skerrow_heather_a_atlas_normal.png",
+  "skerrow_heather_a_atlas_orm.png"
+ ],
+ "tris": [
+  12,
+  6,
+  4
+ ],
+ "version": 3
+}

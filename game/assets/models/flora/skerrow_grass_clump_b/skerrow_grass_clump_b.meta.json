@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.417,
+  "max": [
+   0.338,
+   0.417,
+   0.328
+  ],
+  "min": [
+   -0.39,
+   0.0,
+   -0.327
+  ],
+  "radius": 0.532
+ },
+ "built_seconds": 0.22,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "skerrow_grass_clump_b.glb",
+ "hash": "03d7a39b087436d9",
+ "kind": "grass_clump",
+ "materials": [
+  "skerrow_grass_clump_b_grass_foliage"
+ ],
+ "materials_used": [
+  "grass_blades"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_grass_clump_b_cards",
+   "tris": 12
+  },
+  {
+   "name": "skerrow_grass_clump_b_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "skerrow_grass_clump_b_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "skerrow_grass_clump_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 2185,
+ "textures": [
+  "skerrow_grass_clump_b_atlas_albedo.png",
+  "skerrow_grass_clump_b_atlas_normal.png",
+  "skerrow_grass_clump_b_atlas_orm.png"
+ ],
+ "tris": [
+  12,
+  6,
+  4
+ ],
+ "version": 3
+}

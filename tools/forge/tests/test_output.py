@@ -104,16 +104,22 @@ class TestGeneratedOutput(unittest.TestCase):
         self.assertEqual(bad, [], "GLB texture problems:\n  " + "\n  ".join(bad))
 
     def test_foliage_materials_are_named_for_the_wind_shader(self):
-        """CONTRACTS §4: the import step keys off the *_foliage suffix."""
+        """CONTRACTS §4: the import step keys off the *_foliage suffix.
+
+        Only card-based plants need it. A moss patch or a lichen crust is a baked mesh
+        lying on the ground; it neither cuts out nor sways, so it is a plain material."""
         from lib import glb
+        card_materials = {"foliage_leaf_card", "grass_blades"}
         bad = []
         for m in ALL:
             if m["category"] != "flora":
                 continue
+            if not card_materials.intersection(m.get("materials_used", [])):
+                continue
             names = glb.summary(MODELS / m["category"] / m["name"] / m["glb"])["materials"]
             if not any("_foliage" in n for n in names):
                 bad.append("%s: %s" % (m["name"], names))
-        self.assertEqual(bad, [], "flora without a foliage material:\n  " + "\n  ".join(bad))
+        self.assertEqual(bad, [], "card flora without a foliage material:\n  " + "\n  ".join(bad))
 
     def test_every_asset_records_its_palette_and_seed(self):
         bad = [m["name"] for m in ALL

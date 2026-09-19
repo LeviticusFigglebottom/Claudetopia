@@ -1,0 +1,96 @@
+{
+ "bounds": {
+  "height": 1.843,
+  "max": [
+   1.531,
+   1.793,
+   0.892
+  ],
+  "min": [
+   -1.575,
+   -0.05,
+   -1.133
+  ],
+  "radius": 2.07
+ },
+ "built_seconds": 24.56,
+ "category": "flora",
+ "collision": "trimesh",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "briarwold_briar_vine_b.glb",
+ "hash": "aa7b5f51f87744b8",
+ "kind": "briar_vine",
+ "materials": [
+  "briarwold_briar_vine_b_mat",
+  "briarwold_briar_vine_b_briar_foliage"
+ ],
+ "materials_used": [
+  "oak_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_briar_vine_b",
+   "tris": 384
+  },
+  {
+   "name": "briarwold_briar_vine_b_cards",
+   "tris": 16
+  },
+  {
+   "name": "briarwold_briar_vine_b_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "briarwold_briar_vine_b_LOD2",
+   "tris": 101
+  },
+  {
+   "name": "briarwold_briar_vine_b_cards_LOD1",
+   "tris": 8
+  },
+  {
+   "name": "briarwold_briar_vine_b_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "briarwold_briar_vine_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 3086,
+ "textures": [
+  "briarwold_briar_vine_b_albedo.png",
+  "briarwold_briar_vine_b_normal.png",
+  "briarwold_briar_vine_b_orm.png",
+  "briarwold_briar_vine_b_atlas_albedo.png",
+  "briarwold_briar_vine_b_atlas_normal.png",
+  "briarwold_briar_vine_b_atlas_orm.png"
+ ],
+ "tris": [
+  400,
+  308,
+  105
+ ],
+ "version": 3
+}

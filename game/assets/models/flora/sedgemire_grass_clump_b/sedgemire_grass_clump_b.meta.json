@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.515,
+  "max": [
+   0.338,
+   0.515,
+   0.384
+  ],
+  "min": [
+   -0.353,
+   0.0,
+   -0.384
+  ],
+  "radius": 0.577
+ },
+ "built_seconds": 0.47,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "sedgemire_grass_clump_b.glb",
+ "hash": "df577663b40e1b79",
+ "kind": "grass_clump",
+ "materials": [
+  "sedgemire_grass_clump_b_grass_foliage"
+ ],
+ "materials_used": [
+  "grass_blades"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_grass_clump_b_cards",
+   "tris": 12
+  },
+  {
+   "name": "sedgemire_grass_clump_b_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "sedgemire_grass_clump_b_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "sedgemire_grass_clump_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 2132,
+ "textures": [
+  "sedgemire_grass_clump_b_atlas_albedo.png",
+  "sedgemire_grass_clump_b_atlas_normal.png",
+  "sedgemire_grass_clump_b_atlas_orm.png"
+ ],
+ "tris": [
+  12,
+  6,
+  4
+ ],
+ "version": 3
+}
