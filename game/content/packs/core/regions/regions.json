@@ -277,7 +277,7 @@
         "sun_color": "#ffd98a",
         "sun_elevation_bias": 0,
         "fog_color": "#5f7a4a",
-        "fog_density": 0.0006,
+        "fog_density": 0.00045,
         "ambient_tint": "#3f5a3a",
         "saturation": 1.08,
         "contrast": 1.12,

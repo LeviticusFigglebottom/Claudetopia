@@ -348,7 +348,7 @@
     },
     "giant_oak": {
       "asset": "trees/giant_oak",
-      "density": 26.0,
+      "density": 18.0,
       "scale": [
         1.1,
         2.0
@@ -368,7 +368,7 @@
     },
     "black_ash": {
       "asset": "trees/black_ash",
-      "density": 30.0,
+      "density": 26.0,
       "scale": [
         0.95,
         1.5

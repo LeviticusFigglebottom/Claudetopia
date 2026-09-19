@@ -30,12 +30,12 @@ const GENERATED := "res://world/generated"
 ## which is why a wooded region could be shot from a hilltop and show eight trees. The far
 ## ring's cost is controlled by `far_density` and by drawing it at a lower LOD, not by a range
 ## that cuts it off before it begins.
-const VIEW_RANGE := {"tree": 230.0, "bush": 130.0, "rock": 170.0, "prop": 150.0, "herb": 60.0}
+const VIEW_RANGE := {"tree": 185.0, "bush": 120.0, "rock": 160.0, "prop": 145.0, "herb": 58.0}
 const VIEW_RANGE_FAR := {"tree": 920.0, "bush": 430.0, "rock": 480.0, "prop": 400.0, "herb": 0.0}
 ## and how much of the far ring is worth keeping, per kind: a wood reads as a wood from a
 ## kilometre away at a fraction of its stems, and trees are much the most expensive thing in
 ## the world -- the forge's are seven to fifteen thousand triangles each.
-const FAR_KEEP := {"tree": 0.12, "bush": 0.15, "rock": 0.3, "prop": 0.3, "herb": 0.0}
+const FAR_KEEP := {"tree": 0.14, "bush": 0.14, "rock": 0.3, "prop": 0.3, "herb": 0.0}
 
 var target: Node3D = null
 var provider: TerrainProvider = null
