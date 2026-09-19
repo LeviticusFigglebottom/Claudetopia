@@ -1,0 +1,52 @@
+{
+  "id": "core:interior/hollin_barrow",
+  "name": "Hollin Barrow",
+  "place": "core:place/hollin_barrow",
+  "region": "core:region/hearthvale",
+  "formed_by": "crypt",
+  "formed_by_story": "Cut into chalk as a Vale barrow, roofed with flint and turf. Two hundred years later a yew took root on the mound and its roots came down through the roof, breaking the chambers open into one another and letting the rain in.",
+  "who_was_here": "The Hollin families buried their reeves here with their tools, and stopped when the reeves would not stay buried.",
+  "story": "A working man's grave. The Barrow Reeve was buried with his bell-hammer, the one he rang to call the harvest in, and he has been calling ever since to a village that no longer answers. Everything in here is a farm tool, and everything in here is still being used.",
+  "unique_object": "the Reeve's bell-hammer, a hay-mallet with a hand-bell cast into its head",
+  "seed": 4821,
+  "voxel": 0.42,
+  "smoothing": 2,
+  "palette": ["#b8ad97", "#6b5f4a", "#d8d2c0", "#7d8a72", "#c9a24a"],
+  "ambience": ["drip", "creak", "bell_rare"],
+  "start_heading_deg": 200,
+  "beats": [
+    {"id": "mouth", "role": "entrance", "size": "small", "drop": 0, "note": "A turf-roofed porch between two flint uprights. Daylight reaches four metres and stops."},
+    {"id": "stair", "role": "passage", "size": "tight", "drop": -4.5, "note": "Chalk steps worn into a ramp. A yew root has split them down the middle."},
+    {"id": "first_cist", "role": "chamber", "size": "medium", "drop": -1.5, "light_shaft": true, "shaft_radius": 1.1, "note": "The first burial chamber. The roof fell here when the yew came through; rain has made a chalk paste of the floor."},
+    {"id": "root_run", "role": "passage", "size": "tight", "drop": -2.0, "link_radius": 1.9, "note": "A corridor the roots have narrowed to a squeeze. You go sideways."},
+    {"id": "tool_hall", "role": "camp", "size": "large", "drop": -3.0, "note": "A long chamber where the reeves' tools were stacked for the next harvest. Somebody has been sharpening them."},
+    {"id": "sump", "role": "flooded", "size": "medium", "drop": -5.0, "water": 1.1, "note": "The low point. Rain has been collecting here for a century; the chalk has gone milky."},
+    {"id": "squeeze", "role": "passage", "size": "squeeze", "drop": 1.0, "note": "A gap between two fallen roof slabs. A tall man would think twice."},
+    {"id": "bell_cist", "role": "shrine", "size": "medium", "drop": -1.0, "note": "A side cist nobody disturbed, because a small bell hangs in its doorway and the wights will not pass it."},
+    {"id": "reeve_hall", "role": "boss", "size": "huge", "drop": -2.5, "light_shaft": true, "shaft_radius": 1.8, "note": "The reeve's own chamber, pillared with chalk and flint. Four cists in the walls, all open. The shaft above was the yew's doing."},
+    {"id": "back_stair", "role": "passage", "size": "tight", "drop": 9.0, "branch_from": "reeve_hall", "note": "A spoil shaft the diggers used, climbing back toward the porch. Barred from the far side until somebody lifts the bar."}
+  ],
+  "links": [
+    ["mouth", "stair"], ["stair", "first_cist"], ["first_cist", "root_run"], ["root_run", "tool_hall"],
+    ["tool_hall", "sump"], ["sump", "squeeze"], ["squeeze", "reeve_hall"], ["tool_hall", "bell_cist"],
+    ["reeve_hall", "back_stair"], ["back_stair", "mouth"]
+  ],
+  "shortcut": {"from": "back_stair", "to": "mouth", "kind": "barred_door", "note": "The bar lifts only from the barrow side, so the way back opens once, and stays open."},
+  "encounters": [
+    {"chamber": "first_cist", "enemy": "core:enemy/hedge_wight", "count": 1, "role": "sentry", "group": "first_cist", "note": "One wight standing in the light shaft, not moving. It is holding a scythe and facing the wall."},
+    {"chamber": "tool_hall", "enemy": "core:enemy/hedge_wight", "count": 3, "group": "tool_hall", "note": "Two at the tool racks, one above on the ledge who drops in behind you when the first is struck."},
+    {"chamber": "tool_hall", "enemy": "core:enemy/hedge_wight", "count": 1, "ambush": true, "group": "tool_hall", "role": "ambusher"},
+    {"chamber": "sump", "enemy": "core:enemy/hedge_wight", "count": 2, "group": "sump", "note": "Standing in the water up to the knee. The water slows your dodge; theirs is slower."},
+    {"chamber": "reeve_hall", "enemy": "core:boss/barrow_reeve", "count": 1, "role": "boss", "group": "boss"}
+  ],
+  "features": [
+    {"kind": "exit", "chamber": "mouth", "name": "the barrow porch", "anchor": 0},
+    {"kind": "hearthstone", "chamber": "bell_cist", "id": "hearth_hollin_barrow", "name": "Bell Cist", "place": "core:place/hollin_barrow", "note": "The hanging bell is why this cist is safe, and why it is the only warm thing down here."},
+    {"kind": "marker", "chamber": "reeve_hall", "name": "FogGate", "anchor": 3},
+    {"kind": "prop", "asset": "res://assets/models/props/scythe/scythe.glb", "chamber": "tool_hall", "anchor": 4, "note": "A scythe leaning where a man would leave it, sharpened this week."},
+    {"kind": "prop", "asset": "res://assets/models/props/tool_rack/tool_rack.glb", "chamber": "tool_hall", "anchor": 9, "yaw": 90},
+    {"kind": "prop", "asset": "res://assets/models/props/sarcophagus/sarcophagus.glb", "chamber": "reeve_hall", "anchor": 0, "note": "Open, and the lid is on the floor face down, which is how you lay a lid you mean to put back."},
+    {"kind": "prop", "asset": "res://assets/models/props/hand_bell/hand_bell.glb", "chamber": "bell_cist", "anchor": 1, "scale": 1.4},
+    {"kind": "item", "item": "core:item/wardens_roll_fragment", "chamber": "bell_cist", "anchor": 2, "asset": "res://assets/models/props/book_single/book_single.glb"}
+  ]
+}

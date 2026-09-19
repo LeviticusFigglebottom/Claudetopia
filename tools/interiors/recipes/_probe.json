@@ -1,0 +1,16 @@
+{
+  "id": "core:interior/probe",
+  "name": "Probe",
+  "formed_by": "water",
+  "seed": 11,
+  "voxel": 0.4,
+  "palette": ["#6a6560", "#403a33", "#8a857c"],
+  "beats": [
+    {"id": "mouth", "role": "entrance", "size": "small", "drop": 0},
+    {"id": "throat", "role": "passage", "size": "tight", "drop": -3},
+    {"id": "hall", "role": "hall", "size": "large", "drop": -5, "light_shaft": true, "water": 0.6},
+    {"id": "squeeze", "role": "passage", "size": "squeeze", "drop": -1},
+    {"id": "deep", "role": "chamber", "size": "medium", "drop": -4}
+  ],
+  "links": [["mouth", "throat"], ["throat", "hall"], ["hall", "squeeze"], ["squeeze", "deep"], ["deep", "hall"]]
+}

@@ -1,0 +1,190 @@
+[
+{
+  "id": "core:dialogue/osric_pennywort",
+  "speaker_name": "Osric Pennywort",
+  "notes": "The miller. Hub at 'hub'. Reacts to the Grist outcomes (mill_rests, mill_water_returned, mill_ghost_works) and to the stolen wheel at the Gosling Pit.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "mill_rests"}], "text": "Quiet down there now. First quiet in forty year. I keep waking up at four to listen to it."},
+    {"conditions": [{"flag": "mill_water_returned"}], "text": "Water's back in the race. Sounds like a mill again. Sounds like my father's mill, if I'm honest, and I'm not usually."},
+    {"conditions": [{"flag": "mill_ghost_works"}], "text": "Still turning. Still no water. I've stopped taking the trap up, and I'd thank you not to mention why."},
+    {"conditions": [{"flag": "saw_old_pennywort"}], "text": "You went down. You've the look of someone who went down. Don't tell me in the street."},
+    {"conditions": [{"renown_min": 200}], "text": "Look who it is. Don't let Maud see you or she'll have your whole week off you before the bread's cool."},
+    {"conditions": [{"morality_min": -100}, {"flag": "verse_terrible"}], "text": "I heard about the steward's key. I've nothing to say about it. I've a great deal to think about it."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Osric Pennywort", "text": "Flour's twopence the measure and I'll not come down, because the measure's honest and Wynstead's weighed it twice this month out of spite.", "next": "hub"},
+    "hub": {"speaker": "Osric Pennywort", "text": "Was there something?", "choices": [
+      {"text": "Your wheel turns with no water.", "next": "the_wheel"},
+      {"text": "Tell me about your family.", "next": "pennyworts"},
+      {"text": "What do you make of the bell humming?", "next": "the_hum"},
+      {"text": "Where's the rest of your mill gear?", "next": "the_stolen_wheel"},
+      {"text": "Your daughter counts the Toll's cracks.", "next": "winnow"},
+      {"text": "About what's under the wheel.", "next": "after_grist", "conditions": [{"flag": "saw_old_pennywort"}]},
+      {"text": "Good day to you.", "next": "bye"}
+    ]},
+    "the_wheel": {"speaker": "Osric Pennywort", "text": "It does. Since the night the Toll started up. The Larkbourne moved out of the race the summer my father died, so I've ground by hand eleven year, and then one morning I come down and the wheel's going round like it's been paid. I ground a sack. It's good flour. It's very good flour, and it keeps a month, and bread off it tastes of nothing at all, and I've sold two hundredweight of it and I would like you to know that I did not know that at the time.", "choices": [
+      {"text": "Has anyone looked in the wheel-pit?", "next": "the_wheel_2"},
+      {"text": "You're still selling it.", "next": "the_wheel_3"}
+    ]},
+    "the_wheel_2": {"speaker": "Osric Pennywort", "text": "I opened the trap. I got two rungs down. I came back up. I'm not a brave man, I'm a miller, and there's a difference which I've made my peace with. Winnow won't set foot past the yard now and she's nine and afraid of nothing, and that's what's got me asking strangers.", "effects": [{"set_flag": "osric_asked_for_help"}, {"start_quest": "core:quest/grist"}], "next": "hub"},
+    "the_wheel_3": {"speaker": "Osric Pennywort", "text": "Flour is flour and the Vale eats. You go and tell Maud Brambling her loaves have been coming off a wheel that nobody turns and see what that does to her oven, and to her, and to me. When I know what it is, I'll say. That's the order I'm doing it in and I'd thank you to let me.", "next": "hub"},
+    "pennyworts": {"speaker": "Osric Pennywort", "text": "Four of us have ground at that mill. Old Osric, that's my great-grandfather and I've his name and his temper. Then Hob, then my father Wat, then me. Blue door, all four. Pennywort means small, did you know that? Small and it grows anywhere. My great-grandfather chose it off a hedge because he came here with nothing, and now there's a family and a mill and a girl who can count to forty-one, so the hedge was right.", "next": "hub"},
+    "the_hum": {"speaker": "Osric Pennywort", "text": "I'll tell you what nobody in the Lip will say out loud. A mill wheel turning is a sound you feel in your feet, and since the Toll started, the floor of my mill has the same feel to it as the floor of the Lip's cellar, and the Lip's cellar is the inside of the bell. Two things doing the same thing a mile apart. Tobin's noticed. He pours and he doesn't say.", "next": "hub"},
+    "the_stolen_wheel": {"speaker": "Osric Pennywort", "text": "In a chalk pit under the Chalk Hound with the Larkbourne Boys' dinner on it, that's where. They came in the autumn and took the good wheel off the gable, which took four of them and a night, and they use it for a table. I'd have it back. Wren says they'll be dealt with in the spring. I'd have it back before the spring, and I'd not ask how.", "effects": [{"set_flag": "osric_wants_wheel"}], "next": "hub"},
+    "winnow": {"speaker": "Osric Pennywort", "text": "Forty-one. Forty-three on wet days, which she'll explain to you at length and which I've stopped arguing with because her reasoning is better than mine. She runs snails on the well-lip and keeps a table of them scratched in the stone and Wynstead has told her twice about defacing the well. She listens very politely and then does it again. She'll be the miller. Wheel or no wheel.", "next": "hub"},
+    "after_grist": {"speaker": "Osric Pennywort", "text": "Say it plain and say it once.", "choices": [
+      {"text": "It was your great-grandfather. He never stopped working.", "next": "after_grist_2"},
+      {"text": "It's dealt with. Leave it there.", "next": "after_grist_3"}
+    ]},
+    "after_grist_2": {"speaker": "Osric Pennywort", "text": "Old Osric. Buried in the yard under the apple with his tools, sixty year ago, because that was the custom and we thought it was a kindness. Treading the paddles. Sixty years of walking in a hole in the ground under his own floor because nobody said his name at the bell and nobody ground the flour he'd have wanted ground. — I'm going to sit down. Don't tell Winnow. I'll tell Winnow. In about a year.", "effects": [{"set_flag": "osric_knows"}, {"morality": 5}], "next": "hub"},
+    "after_grist_3": {"speaker": "Osric Pennywort", "text": "Right. Right. I asked and you answered and I'll not go digging at it. Take a sack of the cold flour and don't bake it for anyone you like.", "effects": [{"give_item": ["core:item/cold_flour", 2]}], "next": "hub"},
+    "bye": {"speaker": "Osric Pennywort", "text": "Mind the trap by the stones. And two taps before you touch anything, if you've any manners.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/winnow_pennywort",
+  "speaker_name": "Winnow Pennywort",
+  "notes": "The miller's daughter, nine. Child's-eye view of the main quest. Reacts to renown, to the Hollow axis, and to the Bramble outcomes.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"renown_min": 300}], "text": "You're the one off Merrick's song! You're much shorter than the song."},
+    {"conditions": [{"morality_min": -30}], "text": "My father says I'm not to talk to you. He says it in the voice he uses when he doesn't mean it much, but still."},
+    {"conditions": [{"flag": "bramble_home"}], "text": "Bramble's back! He limps in a circle, so you have to go round with him. Robin's teaching him to whistle back. It's not working."},
+    {"conditions": [{"flag": "bramble_dead"}], "text": "Robin's not racing snails today. He's not racing them tomorrow either, he says."},
+    {"conditions": [{"flag": "mill_rests"}], "text": "The mill stopped! I'm allowed in the yard again. It's boring in the yard."},
+    {"conditions": [{"time_between": [20, 6]}], "text": "I'm not out. If anyone asks, I'm not out."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Winnow Pennywort", "text": "Do you want to bet on a snail? Not for money. My father says not for money. For a favour.", "next": "hub"},
+    "hub": {"speaker": "Winnow Pennywort", "text": "What?", "choices": [
+      {"text": "Tell me about the snail races.", "next": "snails"},
+      {"text": "You've counted the Toll's cracks?", "next": "cracks"},
+      {"text": "What do the grown-ups say about the hum?", "next": "the_hum"},
+      {"text": "Why won't you go in the mill?", "next": "the_mill"},
+      {"text": "Who's the most interesting person in Merrowby?", "next": "gossip"},
+      {"text": "Go on then. A snail, for a favour.", "next": "bet"},
+      {"text": "Off you go.", "next": "bye"}
+    ]},
+    "snails": {"speaker": "Winnow Pennywort", "text": "There's a league. It's scratched on the well and Steward Wynstead has told me about it twice. Greatsnail has eleven wins. Second Greatsnail has four, but Second Greatsnail is a different snail every week because they wander off, so really Second Greatsnail is a job and not a snail. That's what Old Pellam says. He comes and watches on Tolldays and he's very serious about it and he always bets on the slow one.", "next": "hub"},
+    "cracks": {"speaker": "Winnow Pennywort", "text": "Forty-one. Forty-three when it rains, because two of them only open up wet, and my father says that means they're not cracks, and I say a crack that's only there sometimes is more of a crack, not less. You can go all the way round the lip on the outside if you don't mind the nettles. Don't go in the crown. Old Pellam says the crown is for the Builders and the Builders are dead, and when he says it he looks like he's being polite to someone.", "effects": [{"set_flag": "winnow_told_about_crown"}], "next": "hub"},
+    "the_hum": {"speaker": "Winnow Pennywort", "text": "Maud says hard winter. Corwen says Sayers. Mistress Hollins doesn't say anything, she just stops what she's doing when it does it. And my father says nothing at all, which is how you know it's interesting. I think it's saying a word very slowly. If you sit in the eye of the Chalk Hound at noon you can hear it come up through the chalk and it's not the same note as up close, and nobody will tell me why that is.", "next": "hub"},
+    "the_mill": {"speaker": "Winnow Pennywort", "text": "Because there's someone under the floor and everyone's decided there isn't. I heard him. He walks and he doesn't stop and he doesn't ever get tired, and if you get tired you stop, so he's not a person who's walking, he's a walking that used to be a person. I told my father that and he sent me to Maud's for an hour.", "effects": [{"set_flag": "winnow_heard_the_pit"}], "next": "hub"},
+    "gossip": {"speaker": "Winnow Pennywort", "text": "Mistress Hollins, because she polishes bells she won't ring. Merrick, because he's got a verse about everybody and he tells you yours is the best one, and he tells everyone that, and they all know, and they all like it. Steward Wynstead, because he polishes a key at noon where everyone can see and that is a stupid place to keep a key and I have thought about this a lot. And Bramble, but Bramble's a dog and he's lost, and Robin whistles for him every hour, which you can hear from the well.", "effects": [{"set_flag": "heard_about_bramble"}], "next": "hub"},
+    "bet": {"speaker": "Winnow Pennywort", "text": "Right. You get Greatsnail because you're a guest, and I get Fast Colin, and Fast Colin is not fast, that's the joke, and — oh. Oh, he's gone straight over the edge. That's a forfeit. Your favour: next time you're up at the Hound, look in the eye and see if there's a dog in it. Robin's too small to go and I'm not allowed and you're a grown person with a sword, so it's not even dangerous for you.", "effects": [{"set_flag": "winnow_favour_owed"}, {"set_flag": "heard_about_bramble"}], "next": "hub"},
+    "bye": {"speaker": "Winnow Pennywort", "text": "If you find anything in the Toll that's small enough to carry, I'll trade you a snail for it. A good one.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/hallam_ashdown",
+  "speaker_name": "Hallam Ashdown",
+  "notes": "Smith and merchant. Quiet, proud. Reacts to the Bramble outcomes (his son's dog) and to renown; the one sword under the bed is the emotional centre.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "bramble_home"}], "text": "Dog's in the forge. Dog's been in the forge four days. I'm not moving him."},
+    {"conditions": [{"flag": "bramble_healed"}], "text": "Harebell's hazel splint and a bill I've paid twice over gladly. He limps. He's here. Sit down."},
+    {"conditions": [{"flag": "bramble_dead"}], "text": "...The boy's inside. I'll not have you go in. That's not against you. That's just how it is today."},
+    {"conditions": [{"renown_min": 250}], "text": "Now then. I'll say this once: whatever you're carrying, I'll look at it, and I'll charge you the same as anyone."},
+    {"conditions": [{"morality_min": 40}], "text": "You've been decent to my boy. That buys you the price I give Maud, and Maud's had that price for nine years."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Hallam Ashdown", "text": "Red door. That's smith. You'll want something mended or you'll want something made, and one of those I do same-day.", "next": "hub"},
+    "hub": {"speaker": "Hallam Ashdown", "text": "Go on.", "choices": [
+      {"text": "Show me what you've got.", "next": "trade"},
+      {"text": "They say you made a sword once.", "next": "the_sword"},
+      {"text": "Seven horseshoes on your lintel.", "next": "the_shoes"},
+      {"text": "Your boy's dog is missing.", "next": "the_dog"},
+      {"text": "What's the talk in the forge?", "next": "the_hum"},
+      {"text": "Nothing today.", "next": "bye"}
+    ]},
+    "trade": {"speaker": "Hallam Ashdown", "text": "Ploughshares, billhooks, hinges, nails by the pound, and the arrowheads I do for the Fernhold men when they come over the ridge, which is twice a year and they pay in cured meat and argue about the weight. I'll temper what you've got if it's worth tempering. If it isn't, I'll say so, and you'll be annoyed, and in a month you'll be glad.", "next": "hub"},
+    "the_sword": {"speaker": "Hallam Ashdown", "text": "One. Year I was twenty-six. Wardens were short after the Gosford business and a man from the Rest asked me for a blade and I sat up eleven nights over it and it came out true. Then the Wardens' man didn't come back for it, on account of the Gosford business, and I've had it under the bed nineteen years.", "choices": [
+      {"text": "Why not sell it?", "next": "the_sword_2"},
+      {"text": "Why not use it?", "next": "the_sword_3"}
+    ]},
+    "the_sword_2": {"speaker": "Hallam Ashdown", "text": "Because the day I sell it I'm a man who made a sword once, and I'd rather be a man who makes swords and hasn't lately. That's vanity. I know it's vanity. My wife knew it was vanity and she let me keep it, which is the kindest thing anyone's done in this house.", "next": "hub"},
+    "the_sword_3": {"speaker": "Hallam Ashdown", "text": "Because I'm a smith with a boy, not a Warden with a horse. There's a difference and the difference is that I come home. Ask me again if the Boys come off the Larkbourne road and into this street. Then it'll come out from under the bed and I'll be no good with it and I'll go anyway.", "effects": [{"set_flag": "hallam_would_fight"}], "next": "hub"},
+    "the_shoes": {"speaker": "Hallam Ashdown", "text": "New one up every Tollday, oldest one down. Seven, always. My grandmother's habit and she never said why, and I asked once as a boy and she said 'because six is not enough and eight is showing off'. I've since worked out there are seven days and I suspect that's all there is to it, but I've been wrong about her before and I'd rather keep hanging them.", "next": "hub"},
+    "the_dog": {"speaker": "Hallam Ashdown", "text": "Two days. Went over the down after a hare. There are wolves in the dry valley under the Hound; I've told the boy he's not to go and he's not going, because he minds me, and he's whistling on the hour instead, which is worse. — I'm not asking you. I'll say that plainly. But you walk about with a sword and you'll be up that way.", "effects": [{"set_flag": "heard_about_bramble"}], "choices": [
+      {"text": "I'll look in the Hound's eye.", "next": "the_dog_2"},
+      {"text": "Why not go yourself?", "next": "the_dog_3"}
+    ]},
+    "the_dog_2": {"speaker": "Hallam Ashdown", "text": "Right. — Right. Take that. It's a billhook, it's not a weapon, but a wolf doesn't know the difference at arm's length. Bring it back or don't. Bring the dog back if the dog's there to bring.", "effects": [{"set_flag": "hallam_asked"}, {"start_quest": "core:quest/bramble"}], "next": "hub"},
+    "the_dog_3": {"speaker": "Hallam Ashdown", "text": "Forge doesn't bank itself and the boy doesn't get left in a house on his own with a thing he's frightened of. If it were three days I'd shut the forge. It's two. Ask me tomorrow and you'll get a different answer and a closed forge.", "next": "hub"},
+    "the_hum": {"speaker": "Hallam Ashdown", "text": "Anvil's been off. That's all I'll say and it's more than I've said to anyone. You hit true iron, you get a note, and you know that note the way you know your own door. Since the Toll started, mine's flat, and it's flat by the same amount every time, so it's not me and it's not the hammer. Tobin's cellar hums. Osric's floor hums. My anvil's flat. Somebody with letters should be writing that down, and instead they're in Tollmere arguing about it.", "effects": [{"set_flag": "hallam_anvil_flat"}], "next": "hub"},
+    "bye": {"speaker": "Hallam Ashdown", "text": "Mind how you go. And if you're on the down, whistle now and then. Carries further than shouting.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/maud_brambling",
+  "speaker_name": "Maud Brambling",
+  "notes": "Baker and the valley's news exchange. Main-quest stage-2 informant. Every deed the player does eventually comes back through her.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}], "text": "You're the one Wren brought up on the bell cart. Sit on the step, the bench is wet, and tell me everything about yourself before somebody else does it worse."},
+    {"conditions": [{"renown_min": 400}], "text": "Here she is. Here's the one. No, don't be modest, I've been dining out on knowing you for a month and I'll not have it spoiled."},
+    {"conditions": [{"morality_min": -40}], "text": "...Loaf's threepence. No, there's no seat. The bench is wet."},
+    {"conditions": [{"flag": "verse_kind"}], "text": "Three loaves to Hesta Hollins' door. Three. I gave you those warm and I knew where they were going and I said nothing, and I have been unbearable about it ever since."},
+    {"conditions": [{"flag": "fennick_bell_buried"}], "text": "Sixteen bells now. I counted them twice this morning like a fool, standing in the lane in my apron."},
+    {"conditions": [{"time_between": [3, 6]}], "text": "You're up early or you're up late, and either way you'll want the first loaf, and you can't have it, because the first loaf goes on the rim-stone."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Maud Brambling", "text": "Bread's out at seven, and the news is out whenever you like, and both are fresher than what you'll get in the Lip.", "next": "hub"},
+    "hub": {"speaker": "Maud Brambling", "text": "Well? I've got a batch on.", "choices": [
+      {"text": "What does the village make of the bell?", "next": "the_hum"},
+      {"text": "Why do you put a loaf on the rim-stone?", "next": "rim_stone"},
+      {"text": "Tell me about the people here.", "next": "the_village"},
+      {"text": "What do they say about me?", "next": "about_you"},
+      {"text": "Sell me something.", "next": "trade"},
+      {"text": "Did you know a woman called Cille, from Harewell?", "next": "harewell", "conditions": [{"flag": "learned_harewell"}]},
+      {"text": "I'll let you get on.", "next": "bye"}
+    ]},
+    "the_hum": {"speaker": "Maud Brambling", "text": "Hard winter. I'll tell you why and it's not superstition, it's forty years of ovens. The Toll went in the year nought and the valley got warm enough to farm, and every soul here will tell you that's a coincidence because that's what the Wardens tell them. But bread knows. My dough's been slow proving three weeks, in a warm kitchen, with my own barm, and the last time it did that my mother was alive and it snowed to the eaves. So: hard winter. And if it's something worse than a hard winter, well, you still want flour in, don't you.", "effects": [{"set_flag": "maud_opinion_heard"}], "choices": [
+      {"text": "Who disagrees with you?", "next": "the_hum_2"},
+      {"text": "That's a good answer.", "next": "hub"}
+    ]},
+    "the_hum_2": {"speaker": "Maud Brambling", "text": "Corwen says the Sayers are at something, which is what Corwen says about weather, prices and his own gout. Tobin won't say, and Tobin's cellar is the inside of it, so that's a silence worth its weight. And Old Pellam heard it as a boy and won't finish the sentence, and he's the only one of us who's never once exaggerated, so if you want the true version you'll have to go and be patient at him. He's at the rim at dawn. Take him something warm and don't ask straight off.", "next": "hub"},
+    "rim_stone": {"speaker": "Maud Brambling", "text": "First loaf of the day goes on the rim-stone, and I walk away and I don't look back to see who takes it. My mother did it. Her mother did it. Ask the Wardens and they'll say it's for the folk on the road; ask Mistress Hollins and she'll say something about the quiet places and go pale. I'll tell you what I think, and then I'd like a different subject. I think there are people who used to come to this market who don't any more, and I think nobody can remember which, and I think a warm loaf where they'd have walked is the least a person can do about that.", "effects": [{"set_flag": "maud_explained_rim_loaf"}], "next": "hub"},
+    "the_village": {"speaker": "Maud Brambling", "text": "Osric Pennywort's hiding something and it's about the mill and he's a bad liar, bless him. Hallam's boy's lost that dog. Corwen and Bessa Tamwick have been at war over the Long Table drink for twenty years and they'd be devastated if either won. Wynstead sells the deeds and polishes that key at the well at noon where we can all admire him doing it. Mistress Hollins won't ring a bell, not one, not since Tam died, and she polishes seventeen of them every dawn. Merrick has a verse about all of us and yours is coming. And Old Pellam says four dead names at the bell every morning before the rest of us are up.", "next": "hub"},
+    "about_you": {"speaker": "Maud Brambling", "text": "You want the truth or the kind version? — The truth: they say you came up the Hushline Stair, which they say in the voice people use for things they don't want confirmed. They say Wren Tallow named you, which counts for a great deal here, because Wren is not fanciful and has never been kind to anything undeserving in her life including her own mother. And they say you're either the best thing to happen to this valley since the bell fell or the reason it's humming. Both, most likely. That's usually how it goes with a person.", "conditions": [{"renown_min": 50}], "effects": [{"renown": 5}], "next": "hub"},
+    "trade": {"speaker": "Maud Brambling", "text": "Hearth loaves, threepence, chalk-crusted, warm till noon. Seedcake on Tolldays. And a word of advice at no charge: a loaf carried to somebody's door in this valley counts as a sentence spoken, and two counts as a conversation, and three is a friendship, and I have never known it fail. People think that's sentiment. It's tactics.", "next": "hub"},
+    "harewell": {"speaker": "Maud Brambling", "text": "Cille. Cille. — Hedge-honey, in stone jars with a cloth over. On the end stall by the wall, the one nobody takes now because the ground's uneven. I bought from her for years and I could not tell you her face, and I have been standing at that oven every morning for a month trying, and there is nothing there, and I knew her, I *knew* her, I knew what she charged and how she tied the cloth and I cannot see her face. — Don't say anything kind. Go and ask Wren. And when you find out what it is, come and tell me first, and I'll have the oven warm.", "effects": [{"set_flag": "maud_remembers_cille"}, {"morality": 5}], "next": "hub"},
+    "bye": {"speaker": "Maud Brambling", "text": "Go on. And whatever you did this week, tell me before Bessa does, because Bessa tells it with the numbers wrong.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/tobin_cresswell",
+  "speaker_name": "Tobin Cresswell",
+  "notes": "Innkeeper of the Toll's Lip; his cellar is the inside of the bell, which makes him a main-quest gate (unbars the lip door at stage 3).",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"quest_at": ["core:quest/the_toll_hums", 3]}], "text": "Wren said you'd want the cellar door. I've been up since four thinking about that and I've not enjoyed it."},
+    {"conditions": [{"flag": "toll_lip_open"}], "text": "Door's unbarred. Casks are to the left. Everything to the right is bronze and I'd be obliged if you'd remember that on the way back."},
+    {"conditions": [{"renown_min": 300}], "text": "Your chair's by the fire. No, it's your chair now, there's no arguing, Merrick's been calling it that for a fortnight and the name's stuck and that's how things work here."},
+    {"conditions": [{"morality_min": -50}], "text": "Room's a shilling and you'll pay it up front tonight. Nothing personal. It's very slightly personal."},
+    {"conditions": [{"flag": "long_table_wassail"}], "text": "A wassail. Both in one bowl, warmed. Twenty years of that feud and you walk in and put them in a bowl together. I've had to buy a bigger bowl."},
+    {"conditions": [{"time_between": [0, 3]}], "text": "Bar's shut. Bell's rung. You may sit there and I may forget to notice."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Tobin Cresswell", "text": "Toll's Lip. Ale's Corwen's, cider's Bessa's, and if you ask me which is better I'll be needed in the cellar.", "next": "hub"},
+    "hub": {"speaker": "Tobin Cresswell", "text": "What'll it be?", "choices": [
+      {"text": "Your cellar is the inside of the bell?", "next": "the_cellar"},
+      {"text": "I need to get up inside the Toll.", "next": "the_door", "conditions": [{"quest_at": ["core:quest/the_toll_hums", 3]}]},
+      {"text": "You close at a different hour every night.", "next": "the_bell"},
+      {"text": "What have you heard?", "next": "the_hum"},
+      {"text": "A room, please.", "next": "room"},
+      {"text": "Later, Tobin.", "next": "bye"}
+    ]},
+    "the_cellar": {"speaker": "Tobin Cresswell", "text": "Eighteen feet of it. My grandfather cut into the lip because the ground's chalk and chalk's warm, and bronze is cold, and cold is what ale wants. So there's a wall of casks and behind the casks the floor stops being floor and starts being bell, and it goes up into the dark at an angle, and there's a draught off it that smells like a coin in your mouth. Best cellar in Hearthvale. I've not been past the casks in eleven years and I'd not describe that as fear so much as policy.", "next": "hub"},
+    "the_door": {"speaker": "Tobin Cresswell", "text": "I know. Wren's asked, Pellam's asked in his way, which is worse, and I've been up since four. Here's my trouble and then I'll unbar it. My grandfather went up the lip as a young man on a bet and he came back down and he was fine, and he was fine for sixty years, and on the night he died he sat up and said a word none of us knew and then he was done. My father said it was just a word. — Go on then. Left is casks. Right is bronze. Take a light that won't go out in a draught, and if you hear the hum change while you're in there, come down. Don't finish what you're doing. Come down.", "effects": [{"set_flag": "toll_lip_open"}, {"set_flag": "tobin_grandfather_word"}], "next": "hub"},
+    "the_bell": {"speaker": "Tobin Cresswell", "text": "Never the same hour twice running. My little bell, bronze, a cousin of the big one out of the same pour if you believe the pedlar I bought it from, which I don't. Why? Because a house where the bell goes at the same hour every night is a house where people stop hearing the bell. And a bell nobody hears is just a shape. I'd rather my regulars looked up. They grumble. They look up.", "effects": [{"set_flag": "tobin_explained_bell"}], "next": "hub"},
+    "the_hum": {"speaker": "Tobin Cresswell", "text": "I'll tell you what I've heard and you'll notice I'm not telling you what I think. Maud says hard winter. Corwen says Sayers. Hallam says his anvil's gone flat, which he's told exactly one person and that person told me within the hour, so much for that. And on the nights it's loudest, the casks in the cellar sing. Not rattle. Sing, the way a glass does under a wet finger. I pour on those nights and I don't go down, and I've a girl from Tamwick who fetches up, and I pay her double, and she knows why and I've never said.", "next": "hub"},
+    "room": {"speaker": "Tobin Cresswell", "text": "Shilling, bed, breakfast, and the fire's lit whether or not you're up for it. The room over the yard's quieter. The room over the bar isn't, but you'll hear Merrick from it, and about half my guests count that as the better bargain until about the third night.", "next": "hub"},
+    "bye": {"speaker": "Tobin Cresswell", "text": "Mind the step down. Everyone says they'll mind the step down.", "next": "hub"}
+  }
+}
+]

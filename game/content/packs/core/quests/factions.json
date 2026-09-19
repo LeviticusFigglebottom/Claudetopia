@@ -1,0 +1,113 @@
+[
+  {
+    "id": "core:quest/louder", "name": "Louder", "layer": "faction", "faction": "core:faction/sayers", "giver": "core:npc/aldith_sulion",
+    "description": "Become a Listener of the Circle: read the First Lecture, Say the Chalk Hound's name until the down says it back, and find the line the Circle scraped off its own roll.",
+    "notes": "Stage numbers in quest_at and quest_stage are 1-based indices into stages. First quest of the Sayers' line; the later quests (the Nave bell in council, the quieted name) build on the flags set here.",
+    "stages": [
+      {"id": "listener",
+       "journal": "The Circle takes Listeners: those allowed to hear all three lectures and forbidden to prefer one out loud. Aldith Sulion says you have already heard them, which makes you a Listener who has not paid, and hands you a speaking-stone and a first errand in the same movement.",
+       "objectives": [{"type": "talk", "target": "core:npc/aldith_sulion", "count": 1}],
+       "on_enter": [{"give_item": ["core:item/speaking_stone", 1]}],
+       "on_complete": [{"rep": ["core:faction/sayers", 5]}]},
+      {"id": "read",
+       "journal": "Read the First Lecture before you try to Say anything. Sulion says the untrained voice is a hazard to the neighbourhood, and has a story about a Listener who Said a bridge so loudly it fell down, which she tells as a warning and Bennick Cresswell tells as a joke.",
+       "objectives": [{"type": "read_book", "target": "core:book/lecture_on_saying", "count": 1}],
+       "on_enter": [],
+       "on_complete": []},
+      {"id": "say_something",
+       "journal": "Take the stone to the Chalk Hound at noon, lie in its eye, and Say the Hound's name into the stone until you hear it come back off the down. The Circle uses the Hound to test Listeners because it is very old, very simple, and cannot be offended.",
+       "objectives": [{"type": "reach", "target": "core:place/chalk_hound", "count": 1}, {"type": "use_item", "target": "core:item/speaking_stone", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"renown": 15}, {"set_flag": "said_the_hound"}]},
+      {"id": "the_scraped_line",
+       "journal": "In the Spire's library, while Ondrael was timing her breath, the Circle's roll of members lay open at Y.T. 941. One line has been scraped to the vellum and written over. Held to a lamp, a name shows through: Tessane. Ondrael went very quiet when you said it, which is not something Sayers do.",
+       "objectives": [{"type": "collect", "target": "core:item/scraped_roll_page", "count": 1}, {"type": "talk", "target": "core:npc/ismay_ondrael", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "found_tessane"}]},
+      {"id": "profess",
+       "journal": "A Listener becomes a Speaker by professing: standing in the lecture hall and saying which account they will teach. Sulion expects the Bell, Cresswell hopes for the Candle, Ondrael says it does not matter. Nobody expects you to say the name under the scraped line, and the hall is very full.",
+       "objectives": [{"type": "choice", "target": "profession", "options": [
+         {"id": "bell", "text": "Profess the Bell. Sound is being.", "effects": [{"set_flag": "sayer_professed_bell"}, {"rep": ["core:faction/sayers", 20]}]},
+         {"id": "candle", "text": "Profess the Candle. Tending is everything.", "effects": [{"set_flag": "sayer_professed_candle"}, {"rep": ["core:faction/sayers", 20]}]},
+         {"id": "breath", "text": "Profess the Breath. Memory is a hand on the rope.", "effects": [{"set_flag": "sayer_professed_breath"}, {"rep": ["core:faction/sayers", 20]}]},
+         {"id": "tide", "text": "Profess the Tide, in Tessane's name. Say the scraped name aloud.", "conditions": [{"flag": "found_tessane"}], "effects": [{"set_flag": "sayer_professed_tide"}, {"rep": ["core:faction/sayers", 5]}, {"renown": 20}]}
+       ]}, {"type": "talk", "target": "core:npc/aldith_sulion", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "ranked_in_a_faction"}, {"set_flag": "louder_done"}, {"give_item": ["core:item/circle_listeners_ring", 1]}, {"renown": 20}]}
+    ],
+    "rewards": {"renown": 25, "rep": [["core:faction/sayers", 20]], "items": [["core:item/circle_listeners_ring", 1]]}
+  },
+  {
+    "id": "core:quest/vigil", "name": "Vigil", "layer": "faction", "faction": "core:faction/tolling_order", "giver": "core:npc/cadwen_ash",
+    "description": "Stand a night at the Choir and count the bells, walk a pilgrim to the Hushline, bring back what she leaves, and learn what the Order knows about the Cantor.",
+    "notes": "Stage numbers in quest_at and quest_stage are 1-based indices into stages. First quest of the Tolling Order's line, which ends at the gate of the Cantor's Seat.",
+    "stages": [
+      {"id": "pilgrim",
+       "journal": "The Order takes anyone who will stand a night at the Choir and count. Cadwen Ash says the counting is the whole of it, and that most who fail, fail by trying to do more.",
+       "objectives": [{"type": "talk", "target": "core:npc/cadwen_ash", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"rep": ["core:faction/tolling_order", 5]}]},
+      {"id": "the_night",
+       "journal": "Stand the night at the ring. The ash-wights come up from Greyfold when a bell sounds; they are weak and many and they still wave. Put them down between bells. Count the bells. Cadwen says the number does not matter and to count anyway, because a counted thing is a kept thing.",
+       "objectives": [{"type": "reach", "target": "core:place/sunken_choir", "count": 1}, {"type": "kill", "target": "core:enemy/ash_wight", "count": 6}],
+       "on_enter": [],
+       "on_complete": [{"rep": ["core:faction/tolling_order", 10]}, {"renown": 10}, {"set_flag": "stood_vigil"}]},
+      {"id": "the_pilgrim",
+       "journal": "A Vale woman in pilgrim grey, Aud Fennick of Merrowby, has asked for the Order's escort to the Hushline. The Order does not stop pilgrims and does not encourage them; it walks with them, so that the last thing they hear is a voice. Cadwen asks you to walk her. She will leave something at the line. Bring it back.",
+       "objectives": [{"type": "talk", "target": "core:npc/aud_fennick", "count": 1}, {"type": "escort", "target": "core:npc/aud_fennick", "to": "core:place/hushline", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "aud_walked_south"}]},
+      {"id": "what_she_left",
+       "journal": "Aud left her bell on a stone with the clapper tied, said something to it you did not catch, and walked into the grey without looking back, humming the Long Table grace with the words left out. Bring the bell to Cadwen. The Order hangs what pilgrims leave in the chapter-bell and rings them once a year, on the night of the Ash Winter.",
+       "objectives": [{"type": "collect", "target": "core:item/pilgrims_bell_aud", "count": 1}, {"type": "deliver", "target": "core:npc/cadwen_ash", "item": "core:item/pilgrims_bell_aud", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"rep": ["core:faction/tolling_order", 5]}]},
+      {"id": "what_the_cantor_is",
+       "journal": "Cadwen will tell you now what the Order knows. The Cantor is not a machine and not a god. The founders turned back from the Hush in the Ash Winter because a voice in the Seat asked them, by name, to stay and keep count. He has been holding the note since before Merrowby had a name, and he is tired, and the door will open for whoever is known enough to relieve him. Custom says a pilgrim's bell hangs silent until the Ash Winter night. You could ring Aud's now.",
+       "objectives": [{"type": "choice", "target": "auds_bell", "options": [
+         {"id": "ring_now", "text": "Ring it now. Let the chapter-house hear her name tonight.", "effects": [{"set_flag": "aud_bell_rung"}, {"renown": 10}, {"morality": 5}, {"rep": ["core:faction/tolling_order", -5]}]},
+         {"id": "hang_silent", "text": "Hang it silent, by custom. It will ring with the others in winter.", "effects": [{"set_flag": "aud_bell_hung"}, {"rep": ["core:faction/tolling_order", 15]}]}
+       ]}, {"type": "talk", "target": "core:npc/cadwen_ash", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "ranked_in_a_faction"}, {"set_flag": "vigil_done"}, {"give_item": ["core:item/vigil_cloak", 1]}, {"renown": 20}]}
+    ],
+    "rewards": {"renown": 25, "rep": [["core:faction/tolling_order", 20]], "items": [["core:item/vigil_cloak", 1]]}
+  },
+  {
+    "id": "core:quest/the_unsaid_ledger", "name": "The Unsaid Ledger", "layer": "faction", "faction": "core:faction/quiet_hands", "giver": "core:npc/half_ell",
+    "description": "Say a name to a door with no hinges, learn the first Hush, lift a week of the Tallymen's prices from Lantern Row, and decide who reads it.",
+    "notes": "Stage numbers in quest_at and quest_stage are 1-based indices into stages. First quest of the Quiet Hands' line; the whole Ledger of Prices is the line's last heist. Learning Hush is expressed as the flag learned_first_hush for the magic stream to hook.",
+    "stages": [
+      {"id": "the_door",
+       "journal": "There is a door in the Undercroft with no hinges that opens for names. The Quiet Hands are on the other side of it. Say a name to the door: yours works if you are known; otherwise, they say, the name of someone who has wronged you, which the door finds funny.",
+       "objectives": [{"type": "reach", "target": "core:place/undercroft", "count": 1}, {"type": "talk", "target": "core:npc/half_ell", "count": 1}],
+       "on_enter": [{"set_flag": "sought_quiet_hands"}],
+       "on_complete": [{"rep": ["core:faction/quiet_hands", 5]}]},
+      {"id": "the_first_hush",
+       "journal": "Half-Ell calls you by the last thing you touched and will not say her own name or yours. She teaches the first Hush, which is not magic, she says, only standing where nobody is looking and letting the not-looking do the work. Then a task, because the Hands do not keep anyone who has not carried something.",
+       "objectives": [{"type": "talk", "target": "core:npc/half_ell", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "learned_first_hush"}, {"rep": ["core:faction/quiet_hands", 5]}]},
+      {"id": "the_daybook",
+       "journal": "Lift Steward Orrin Quill's day-book from the tally-house on Lantern Row without being seen. It is not the Ledger; it is a week of it. Half-Ell says the Hands do not want the marks. They want to know what the law cost this week and who paid it.",
+       "objectives": [{"type": "collect", "target": "core:item/quills_daybook", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"renown": 5}, {"set_flag": "lifted_daybook"}]},
+      {"id": "read_it",
+       "journal": "Read it before you hand it over. The Hands will not mind; they say a thing read by one more person is louder, and the Ledger is meant to be loud one day.",
+       "objectives": [{"type": "read_book", "target": "core:book/charter_ledger_page", "count": 1}],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "read_daybook"}]},
+      {"id": "what_it_costs",
+       "journal": "The day-book prices a fine at four marks for a Merrowby carter and forty for a Gullhithe fisher for the same barrow in the same street, with a note in Quill's hand about who each of them knows. Half-Ell is waiting in the Undercroft. So, in a way, is Quill.",
+       "objectives": [{"type": "choice", "target": "the_daybook", "options": [
+         {"id": "to_hands", "text": "Give the day-book to Half-Ell. Let it be read.", "effects": [{"set_flag": "daybook_to_hands"}, {"set_flag": "ranked_in_a_faction"}, {"rep": ["core:faction/quiet_hands", 20]}, {"renown": 5}, {"give_item": ["core:item/half_ells_thimble", 1]}]},
+         {"id": "return_it", "text": "Put it back on Quill's desk. Tell Half-Ell you could not.", "effects": [{"set_flag": "daybook_returned"}, {"rep": ["core:faction/quiet_hands", -10]}, {"rep": ["core:faction/tallymen", 5]}, {"morality": 5}]},
+         {"id": "to_quill", "text": "Hand it to Quill openly and tell him who wanted it.", "effects": [{"set_flag": "daybook_to_quill"}, {"rep": ["core:faction/tallymen", 15]}, {"rep": ["core:faction/quiet_hands", -30]}, {"marks": 50}]}
+       ]}],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "unsaid_ledger_done"}]}
+    ],
+    "rewards": {"marks": 60, "renown": 10}
+  }
+]

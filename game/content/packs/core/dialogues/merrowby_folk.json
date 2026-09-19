@@ -1,0 +1,180 @@
+[
+{
+  "id": "core:dialogue/nell_harebell",
+  "speaker_name": "Nell Harebell",
+  "notes": "Hedge-witch and alchemist. Kin-rivalry with Tansy Cresswell of Foxglove Dell. Heals Bramble in that side quest's branch.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "bramble_to_nell"}], "text": "Hazel splint, two weeks, and he'll limp in the cold for the rest of his life and be perfectly happy. Fifteen marks or something useful off the downs."},
+    {"conditions": [{"morality_min": 40}], "text": "The bees like you. I don't say that to be charming. They go quiet for about half of what comes through that gate and they've not gone quiet for you."},
+    {"conditions": [{"morality_min": -40}], "text": "Stand where you are, in the light, where I can see your hands. Thank you. Now: what do you want?"},
+    {"conditions": [{"renown_min": 300}], "text": "The famous one, in my yard, among the hives. Mind the third skep, they're new and they've no manners."},
+    {"conditions": [{"flag": "mill_water_returned"}], "text": "You put the water back in the Larkbourne race. That's changed what grows along it. I'll want a season to see whether I'm pleased."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Nell Harebell", "text": "Salves on the left, syrups on the right, and if you call me a wise woman you can buy your fever cure in Tollmere at four times the price.", "next": "hub"},
+    "hub": {"speaker": "Nell Harebell", "text": "Yes?", "choices": [
+      {"text": "Show me your stock.", "next": "trade"},
+      {"text": "You consult your bees.", "next": "the_bees"},
+      {"text": "Why not 'wise woman'?", "next": "the_word"},
+      {"text": "What's really wrong with the flour from the mill?", "next": "cold_flour", "conditions": [{"flag": "saw_old_pennywort"}]},
+      {"text": "There's a hedge-witch out at Foxglove Dell.", "next": "tansy"},
+      {"text": "What do you make of the hum?", "next": "the_hum"},
+      {"text": "That's all.", "next": "bye"}
+    ]},
+    "trade": {"speaker": "Nell Harebell", "text": "Fever draught, wound wash, a salve for burns that Hallam buys by the crock and pretends is for the horses. Yew berries I keep in the locked press and sell to nobody, before you ask, and people do ask, and they ask casually, and I remember all of them.", "next": "hub"},
+    "the_bees": {"speaker": "Nell Harebell", "text": "I do. And before you decide what sort of woman that makes me: a hive is four thousand animals that have been outside all day. They know what's flowering a mile off, where the ground's wet, whether there's smoke in the next valley, and when something's wrong with a person, and they tell you all of it in how they sound when you lift the lid. I listen to that and I say 'the bees told me', because if I say 'I have inferred it', people ask questions for an hour and take the salve anyway.", "effects": [{"set_flag": "nell_explained_bees"}], "choices": [
+      {"text": "What have they told you lately?", "next": "the_bees_2"},
+      {"text": "Fair enough.", "next": "hub"}
+    ]},
+    "the_bees_2": {"speaker": "Nell Harebell", "text": "That the clover's three weeks late on the south down and nothing is late on the north. That's not weather; weather doesn't stop at a hedge. And they will not work the strip that runs up toward where the Harewell lane used to go. They go round it. Four thousand animals, all of them going round a perfectly good field of flowers. I've watched it since spring and I have not told Wren Tallow, and I've been meaning to, and I'd be glad if you did it for me.", "effects": [{"set_flag": "nell_bees_avoid_harewell"}], "next": "hub"},
+    "the_word": {"speaker": "Nell Harebell", "text": "Because 'wise' is what people call you just before they decide you're something else. A woman who knows plants is useful until the year the fever takes children, and then she's a woman who knows things, and then she's a woman who knew. My grandmother was called wise for thirty years in a village that is now a line in the Wardens' book. Call me the hedge-witch. It's rude, it's accurate, and nobody has ever burned anything over a word they were already using rudely.", "next": "hub"},
+    "cold_flour": {"speaker": "Nell Harebell", "text": "Ah. You've been down the wheel-pit, then, and you've come to the one person in this village who'll give you a straight answer about it. — There's nothing wrong with the flour. That is the whole trouble. It keeps a month when it should keep a fortnight, it doesn't mould, and the bread off it tastes of nothing, and I have eaten a slice of it every morning for three weeks to see what it does. It does nothing. I'm neither warmer nor colder. Food that does nothing is food that isn't food, and something that isn't food is still going down every throat in Merrowby.", "effects": [{"set_flag": "nell_tested_cold_flour"}, {"give_item": ["core:item/cold_flour", 1]}], "next": "hub"},
+    "tansy": {"speaker": "Nell Harebell", "text": "Tansy Cresswell. My cousin, since you'll hear it in the Lip within the week and hear it wrong. She took the turf hut in the dell because she wanted the foxgloves and no neighbours, and she grows what this village pretends not to buy and then buys, at night, from a woman who lives usefully far away. We're not at odds. We're at a distance, which is not the same and suits us both. — She's had something digging up her yew berries at night. Berries. Not roots. Something that wants the seed and not the plant, and that is a short list and I don't like any of it.", "effects": [{"set_flag": "heard_about_tansy"}], "next": "hub"},
+    "the_hum": {"speaker": "Nell Harebell", "text": "Maud says winter, Corwen says Sayers, and I say that the bees swarmed a month early and went the wrong way, which is north, over the downs, away from the flowers, and I have never in forty years lost a swarm going north. Make of that what you like. I've made nothing of it yet, which is the honest position and nobody wants it.", "next": "hub"},
+    "bye": {"speaker": "Nell Harebell", "text": "If you're going up the downs, bring me back sundew if you see it. I'll pay. I always pay; kindness that isn't paid for goes quiet.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/corwen_mullard",
+  "speaker_name": "Corwen Mullard",
+  "notes": "Brewer; gives Cask and Press. Loud, aggrieved, fond. Reacts to the Long Table outcomes and to the sabotage branch.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "press_sabotaged"}], "text": "...Sit at the back. No, further back. And don't say the word 'screw' in my brewhouse."},
+    {"conditions": [{"flag": "long_table_cider"}], "text": "Cider. At the head of my Long Table. You said it out loud, in front of Maud Brambling, who has a memory like a ledger. There's a cask named after you and I've drunk most of it."},
+    {"conditions": [{"flag": "long_table_ale"}], "text": "There he is! There's the one with a palate! Sit down, first one's free, and the second one's free, and by the third you'll be agreeing with everything I say."},
+    {"conditions": [{"flag": "long_table_wassail"}], "text": "A wassail. Both. In one bowl. Warmed. My father would rise out of the ground, and the worst of it is I've had four bowls and it's good."},
+    {"conditions": [{"renown_min": 250}], "text": "Cask's named after you. That's not an honour, that's a filing system, but it's the best filing system in Hearthvale."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Corwen Mullard", "text": "Yellow door. That's brewer. Everything you've drunk in the Lip that was any good came out of that cellar, and everything that wasn't came out of a tree in Tamwick.", "next": "hub"},
+    "hub": {"speaker": "Corwen Mullard", "text": "Well?", "choices": [
+      {"text": "You name your casks after people.", "next": "the_casks"},
+      {"text": "What's this feud with Bessa Tamwick?", "next": "the_feud"},
+      {"text": "You wanted something done about the cider press.", "next": "the_job"},
+      {"text": "What do you make of the hum?", "next": "the_hum"},
+      {"text": "I'll be going.", "next": "bye"}
+    ]},
+    "the_casks": {"speaker": "Corwen Mullard", "text": "Every one. There's a Maud, a Hallam, a Tobin, a Wynstead — Wynstead's a small one at the back that nobody asks for — and I drink them in the order of who's annoyed me most recently, which means a man can tell how he stands with me by how empty his cask is. Hallam's been full since spring. That's love, that is. Osric's been drunk twice this month and he doesn't know why and I'll not tell him.", "next": "hub"},
+    "the_feud": {"speaker": "Corwen Mullard", "text": "Twenty years, and it's about the head of the Long Table, which is one cup, at one meal, once a year, and which everyone in this valley pretends not to care about while caring about nothing else from harvest onward. Her father beat my father in the year of the wet summer with a cider that was frankly, and I'll say this once, very good. Mine's better. Mine is better. Ask anyone who isn't from Tamwick, or related to anyone from Tamwick, or hoping to marry anyone from Tamwick, which narrows it, but the ones who are left are unanimous.", "choices": [
+      {"text": "Do you actually dislike her?", "next": "the_feud_2"},
+      {"text": "It sounds exhausting.", "next": "hub"}
+    ]},
+    "the_feud_2": {"speaker": "Corwen Mullard", "text": "...She sent a cart when my wife was ill. Three weeks, every other day, apples and a woman to sit up, and never came herself so I'd not have to thank her. — Put that down and never pick it up again. If that gets into the Lip I'll know exactly who carried it and I'll name a cask after you and drink it immediately.", "effects": [{"set_flag": "knows_corwen_softness"}], "next": "hub"},
+    "the_job": {"speaker": "Corwen Mullard", "text": "I said a man might go and look at that press. Look at it. There's a screw in it, iron, forty harvests old, and a press without a screw is a table, and a table doesn't win a Long Table. — Don't look at me like that. I've not said a word that a magistrate could use, and if you go and do something about it that's between you and the down.", "choices": [
+      {"text": "I'll go to Tamwick. I'm not promising what I'll do there.", "next": "the_job_2"},
+      {"text": "Ask me properly or don't ask.", "next": "the_job_3"}
+    ]},
+    "the_job_2": {"speaker": "Corwen Mullard", "text": "That's all I asked. Taste hers. Taste mine. Go on, taste hers first, I'd rather you had the bad one while your palate's fresh. — And if you come back and tell me to my face that hers is better, I'll not like you, but I'll believe you, and I'll be in the Lip either way.", "effects": [{"start_quest": "core:quest/cask_and_press"}], "next": "hub"},
+    "the_job_3": {"speaker": "Corwen Mullard", "text": "...Fine. I'm asking you to go to Tamwick, taste both, and say the truth at the Long Table, whichever way it falls. There. That's the ask. It's a worse ask than the other one and I've had to say it out loud in my own brewhouse and I hope you're satisfied.", "effects": [{"start_quest": "core:quest/cask_and_press"}, {"set_flag": "corwen_asked_honestly"}, {"morality": 5}], "next": "hub"},
+    "the_hum": {"speaker": "Corwen Mullard", "text": "Sayers. It's always Sayers. They're in Tollmere saying things louder for money, and a bell forty metres across is the loudest thing in the basin, and you're telling me nobody over there has had a go at it? — I'll give you a real one, though, since you've been decent. My second ferment's gone fast three weeks running. Same barm, same heat, same cellar, faster. Something in this valley is in a hurry and it isn't me.", "effects": [{"set_flag": "corwen_fast_ferment"}], "next": "hub"},
+    "bye": {"speaker": "Corwen Mullard", "text": "Go on. And tell Tobin the small cask is for Wynstead and he'll know what I mean and he'll laugh and deny laughing.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/bessa_tamwick",
+  "speaker_name": "Bessa Tamwick",
+  "notes": "Orchard-keeper from Tamwick, at Merrowby market on Tolldays. The Grafted Tree is her unique habit and her account of the Dwindling.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "press_sabotaged"}], "text": "My screw's gone. Forty harvests, and it's gone, and I know where it's gone, and I'm looking at the only person who's been in my press-house twice this week."},
+    {"conditions": [{"flag": "long_table_cider"}], "text": "You said it in front of Merrowby. Cider at the head of the table. I've not been able to be properly rude to you since and it's ruining my week."},
+    {"conditions": [{"flag": "long_table_wassail"}], "text": "Both in a bowl. Both. — It's good. Don't tell him it's good. He'll hear it's good, but don't you be the one."},
+    {"conditions": [{"renown_min": 200}], "text": "I've told the version where you were eight feet tall to about forty people and I'll thank you not to correct it."},
+    {"conditions": [{"morality_min": -40}], "text": "Buy or move along. There's a queue and there isn't, and you take my meaning."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Bessa Tamwick", "text": "Apples, cider, and cuttings if you've land and sense. Tollday only. The rest of the week I'm up the Tamwick road with the trees and glad of it.", "next": "hub"},
+    "hub": {"speaker": "Bessa Tamwick", "text": "Go on then.", "choices": [
+      {"text": "Tell me about the Grafted Tree.", "next": "grafted"},
+      {"text": "Corwen Mullard sent me to look at your press.", "next": "the_press"},
+      {"text": "The only apple trees in Wickmere?", "next": "apples"},
+      {"text": "What's the talk on the Tamwick road?", "next": "the_road"},
+      {"text": "Later.", "next": "bye"}
+    ]},
+    "grafted": {"speaker": "Bessa Tamwick", "text": "Every tree that dies in my orchard, I take a twig off it first and I graft it onto one particular tree behind the press-house. Eleven kinds on it now. Half of them are the last of their kind in the world, because my father's russet and my grandmother's keeper and the sweet one with no name all died in the frost years and are now four branches of the same trunk. — I can name them by taste. All eleven. Blindfold. Merrick wanted to make a verse of it and I said no, and he's sulked about it for two years, and I'll let him have it eventually.", "choices": [
+      {"text": "Why does it matter that you can taste them?", "next": "grafted_2"},
+      {"text": "That's a good habit.", "next": "hub"}
+    ]},
+    "grafted_2": {"speaker": "Bessa Tamwick", "text": "Because a thing nobody can name is a thing on its way out. That's not the Sayers talking, I've never been to Tollmere and I'd not spend the fare. It's orcharding. The varieties that go are always the ones nobody's bothered to keep the name of; the name goes first and then in about a generation there's no wood left anywhere. I've got eleven names on one trunk and every autumn I say all eleven out loud while I pick, like a fool, in an empty orchard. And they're all still there.", "effects": [{"set_flag": "bessa_grafted_account"}], "next": "hub"},
+    "the_press": {"speaker": "Bessa Tamwick", "text": "Of course he did. He sent that Gullhithe boy two years ago and he sent his own nephew before that and I fed the nephew and sent him home with a bag of windfalls. — Look at it all you like. It's a screw and a beam and a stone and it's older than either of us. Here's my ask, and it's a worse job than his: taste both, honestly, and say the truth at the Long Table in front of the whole valley, even if the truth is his. Twenty years I've wanted that feud settled by somebody with no dog in it and a mouth that works.", "effects": [{"start_quest": "core:quest/cask_and_press"}, {"set_flag": "bessa_asked_for_truth"}], "next": "hub"},
+    "apples": {"speaker": "Bessa Tamwick", "text": "The only ones. Anywhere. Reedfolk have never seen one on the branch; a Kharrow man paid me a silver token for two and carried them home in a cloth like eggs. They grow here because the Toll fell and warmed the valley, which is what the Wardens say, or because the chalk's right, which is what I say, and I'm the one with the trees. Take one. Go on. Everyone should be given the first one.", "effects": [{"morality": 2}], "next": "hub"},
+    "the_road": {"speaker": "Bessa Tamwick", "text": "Wolves in the dry valley, which is nothing new, and Boys on the Larkbourne, which is. And this: the old Harewell lane off the Tamwick road has hedged over. I've driven that road my whole life and last month I went to turn up the lane out of habit and there was no lane, and I sat in the cart a while and then I drove on to market and sold eleven gallons and did not think about it again until now, and now I've a cold feeling and a customer waiting.", "effects": [{"set_flag": "bessa_lane_gone"}], "next": "hub"},
+    "bye": {"speaker": "Bessa Tamwick", "text": "Tollday next, same trestle. And if you see Mullard, tell him the russet's coming in early and watch his face.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/robin_ashdown",
+  "speaker_name": "Robin Ashdown",
+  "notes": "The smith's son, eight. Gives Bramble. All outcomes land here; the dead-dog branch is the game's demonstration that consequences are seen, not read.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "bramble_home"}], "text": "He's in the forge! He's not allowed in the forge! Da says he can stay in the forge!"},
+    {"conditions": [{"flag": "bramble_healed"}], "text": "Mistress Harebell says he'll limp when it's cold. I said that's all right, I'll carry him when it's cold, and she said I'll not be able to in a year, and I said I will."},
+    {"conditions": [{"flag": "bramble_dead"}], "text": "..."},
+    {"conditions": [{"flag": "heard_about_bramble"}], "text": "Did you go up the Hound? Was there anything in the eye? You can tell me the bad one. I'd rather have the bad one than the hour."},
+    {"conditions": [{"renown_min": 300}], "text": "Merrick put you in a song. Da says songs are mostly lies. Da hums it at the anvil though."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Robin Ashdown", "text": "I'm not supposed to bother folk with swords. — Are you busy?", "next": "hub"},
+    "hub": {"speaker": "Robin Ashdown", "text": "Um.", "choices": [
+      {"text": "Why are you whistling every hour?", "next": "the_whistle"},
+      {"text": "Tell me about Bramble.", "next": "bramble"},
+      {"text": "What's it like being the smith's boy?", "next": "the_forge"},
+      {"text": "I found your dog.", "next": "found", "conditions": [{"flag": "found_bramble"}]},
+      {"text": "Go and race a snail, Robin.", "next": "bye"}
+    ]},
+    "the_whistle": {"speaker": "Robin Ashdown", "text": "Because he might be in a place where he can hear one but he can't hear a shout, like if he's under something, and a whistle goes further. Da says that. And because if I do it on the hour then he'll know it's me and not just a bird, because birds don't keep time. — And because if I stop doing it on the hour then I've stopped, and I'm not going to be the one who stopped.", "effects": [{"set_flag": "heard_about_bramble"}], "next": "hub"},
+    "bramble": {"speaker": "Robin Ashdown", "text": "He's brown with a white foot and he's got a collar I made, well, Mistress Hollins made it and I did the letters, and the letters are wrong. He went over the down after a hare two days ago. He always comes back by dark. He likes the Hound's eye because it's warm and you can see the whole valley and he sits with his chin on the edge like this. — There's wolves in the dry valley. Da says I'm not to go. I'm not going. I'm minding him.", "choices": [
+      {"text": "I'll go and look.", "next": "bramble_2"},
+      {"text": "Two days is a long time.", "next": "bramble_3"}
+    ]},
+    "bramble_2": {"speaker": "Robin Ashdown", "text": "Really? — Take this. It's the whistle. It's my whistle, it's the one he knows, it's not just any whistle. Blow it at the eye. If he's anywhere he'll come, unless he can't, and if he can't then he'll still know somebody came, so blow it anyway. Blow it even if. — You'll bring him back either way? Even if.", "effects": [{"start_quest": "core:quest/bramble"}, {"set_flag": "robin_gave_whistle"}], "next": "hub"},
+    "bramble_3": {"speaker": "Robin Ashdown", "text": "It is. I know it is. Everyone's been very kind about how long it is. Mistress Brambling gave me a bun and didn't say anything, and that's worse than saying something, that is.", "next": "hub"},
+    "the_forge": {"speaker": "Robin Ashdown", "text": "Hot. You're not allowed to touch anything until you're ten and then you're allowed to touch the bellows. Da made a sword once. It's under the bed. I've seen it, I'm not supposed to have seen it, and it's not even shiny, it's grey, and Da says that's how you know it's a real one. He looks at the lintel a lot. There's seven shoes on it and he swaps one every Tollday and if you ask him why he says his grandmother.", "next": "hub"},
+    "found": {"speaker": "Robin Ashdown", "text": "You went. — Say it. It's all right. Just say it the way you'd say it to Da.", "choices": [
+      {"text": "He's alive. He's hurt, and he's alive.", "next": "found_alive", "conditions": [{"flag": "bramble_home"}]},
+      {"text": "He's alive. Nell Harebell has him. He'll limp.", "next": "found_healed", "conditions": [{"flag": "bramble_healed"}]},
+      {"text": "I'm sorry, Robin. I've brought his collar.", "next": "found_dead", "conditions": [{"flag": "bramble_dead"}]}
+    ]},
+    "found_alive": {"speaker": "Robin Ashdown", "text": "Where. Where is he. — Don't pick me up, I'm eight. — Da! DA! He's not dead, he's only broken! — I'm going to sit with him all night and nobody's going to say I can't, and if they say I can't I'm going to do it anyway and I'll take the whistle back off you now please. Thank you. I mean it, thank you, I'll say it properly tomorrow when I can do it without my face going.", "effects": [{"renown": 15}, {"morality": 10}, {"set_flag": "robin_happy"}], "next": "hub"},
+    "found_healed": {"speaker": "Robin Ashdown", "text": "A limp's nothing. A limp's nothing at all. I'll carry him when it's cold and Mistress Harebell says I'll not be able to in a year and she's wrong, because I'll be bigger in a year, that's how years work. — Da'll pay her. Da'll pay her twice and grumble, and then he'll pay her a third time in horseshoes so she can't refuse it.", "effects": [{"renown": 15}, {"morality": 10}, {"set_flag": "robin_happy"}], "next": "hub"},
+    "found_dead": {"speaker": "Robin Ashdown", "text": "...The letters are wrong on it. I did them. I did them when I was six and Mistress Hollins let me and she didn't fix them because she said it was mine to do. — I'm going in now. I'm not cross with you. I want to say that before I go in, so it's said, because Da says you should say the thing before you go in. I'm not cross with you.", "effects": [{"renown": 5}, {"set_flag": "robin_grieving"}], "next": "hub"},
+    "bye": {"speaker": "Robin Ashdown", "text": "If you hear a dog anywhere — anywhere, even Tamwick, even the marsh — you'll say, won't you.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/ellard_wynstead",
+  "speaker_name": "Ellard Wynstead",
+  "notes": "Steward: deeds, weights, grudges. Deed prices themselves belong to the economy stream; this dialogue routes to them without naming figures.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "verse_terrible"}], "text": "My key was taken off my belt at the well at noon in front of eleven people. I have not yet decided what to do and I have written down that I have not yet decided."},
+    {"conditions": [{"renown_min": 300}], "text": "Ah. The valley's celebrity. You will find that I treat celebrated persons exactly as I treat carters, which is correctly."},
+    {"conditions": [{"morality_min": 50}], "text": "You have, I am told, carried bread to Mistress Hollins. I have made a note of it. My notes are not all unkind."},
+    {"conditions": [{"time_between": [12, 13]}], "text": "It is noon. I am polishing the key. You may speak while I polish; I have found that people say more to a man who is looking at something else."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Ellard Wynstead", "text": "Steward of Merrowby. Deeds, weights, measures, and the settling of disputes that the Wardens consider beneath them, which is most disputes.", "next": "hub"},
+    "hub": {"speaker": "Ellard Wynstead", "text": "State your business.", "choices": [
+      {"text": "I want to buy property.", "next": "deeds"},
+      {"text": "Why polish a key in public every day?", "next": "the_key"},
+      {"text": "What does a steward actually do here?", "next": "the_office"},
+      {"text": "What do you make of the hum?", "next": "the_hum"},
+      {"text": "Tell me about Harewell.", "next": "harewell", "conditions": [{"flag": "learned_harewell"}]},
+      {"text": "Nothing further.", "next": "bye"}
+    ]},
+    "deeds": {"speaker": "Ellard Wynstead", "text": "There are properties in Merrowby and one in Tamwick. The deeds are in the chest, the prices are on the board, and the board is not negotiable, whatever Mullard tells you he achieved in the year of the wet summer, which he did not. Buy one and you get a key, a bed, a roof you are then responsible for, and the right to be complained to about your own gutter.", "next": "hub"},
+    "the_key": {"speaker": "Ellard Wynstead", "text": "Because it is the town's one brass key and it opens the deed chest, and because a steward who is never seen with it is a steward whom people begin to wonder about. — You think it vanity. Every soul in this village thinks it vanity and I have heard the girl at the well say so in a carrying voice. It is not vanity. It is the only proof I have, every day, in daylight, that the chest is shut and the deeds are in it and nothing has been quietly done. There is no other proof. There is only a small man polishing a key where you can all see him.", "effects": [{"set_flag": "wynstead_explained_key"}], "next": "hub"},
+    "the_office": {"speaker": "Ellard Wynstead", "text": "I weigh Pennywort's measure twice a month, which he resents and which keeps him honest and, more importantly, keeps him *thought* honest, which is what a small man's living depends on. I hold the deeds. I write down who owes whom what at the Long Table, when everyone is loud and generous and will deny it in the morning. Nobody likes me. That is the post. A steward who is liked has been agreeing with people.", "next": "hub"},
+    "the_hum": {"speaker": "Ellard Wynstead", "text": "I have no opinion on the bell. I have a record of the bell. Fourteen mornings on which it was audible in the square before the seventh hour, with the weather beside each, and three mornings on which Mistress Hollins stopped work in the lane, which I noted because she does not. If the Circle in Tollmere wishes to know what the bell has actually done, rather than what the Lip thinks it means, the ledger is here and I will copy it for a fee that covers the ink.", "effects": [{"set_flag": "wynstead_has_bell_ledger"}], "next": "hub"},
+    "harewell": {"speaker": "Ellard Wynstead", "text": "...I have the hearth-tallies for this parish going back ninety years. Harewell paid eleven hearths in the year 1029. In 1030 it paid nine. In 1031 the page has a line and no figure, in my own predecessor's hand, and in the margin he has written 'ask Tamwick', and he did not, or he did and did not write it down. — I have looked at that line for a month. I am a man whose entire use is that the figures are there. Take that to your Warden. And tell her that I would like it back, and that I would like her to say, in writing, that she has had it.", "effects": [{"give_item": ["core:item/harewell_doorstep_stone", 1]}, {"set_flag": "wynstead_gave_tally"}, {"rep": ["core:faction/wardens", 5]}], "next": "hub"},
+    "bye": {"speaker": "Ellard Wynstead", "text": "Good day. Mind the well-stone on your way; the child has been scratching on it again and I shall have to notice it eventually.", "next": "hub"}
+  }
+}
+]
