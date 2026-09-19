@@ -135,7 +135,10 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		return
 	var sample := _sample_perf(label, pos, waited, path)
 	_perf.append(sample)
-	_write_region_copy(img, str(sample["region"]), label)
+	# Only composed region shots go into the drop-test folder, filed under the region the plan
+	# says they are about; the flythrough deliberately crosses boundaries, so its frames are
+	# not a picture of any one region.
+	_write_region_copy(img, str(shot.get("region", "")), label)
 	Log.info("Capture", "%s: %s (%d draw calls, %.2f M primitives, %d frames waited)"
 		% [label, path.get_file(), int(_perf[-1]["draw_calls"]), float(_perf[-1]["primitives"]) / 1e6, waited])
 

@@ -128,7 +128,7 @@ def _weights(ctx: SurfaceContext):
     forest = ctx.region_w("forest_rise")
     karst = ctx.region_w("mountains")
     ash = ctx.region_w("ash_plateau")
-    shore_band = np.exp(-((ctx.lake.sd) / 55.0) ** 2)
+    shore_band = np.exp(-((ctx.lake.sd) / 34.0) ** 2)
     river_band = np.exp(-(ctx.river_d / 14.0) ** 2)
 
     # --- Hearthvale: chalk downs, barley, orchards -------------------------------------
@@ -145,7 +145,7 @@ def _weights(ctx: SurfaceContext):
     under_water = ctx.water.astype(np.float32)
     yield SLOTS["lake_bed"], 2.2 * under_water * (1.0 - smoothstep(0.0, 1.0, np.abs(ctx.lake.sd) / 4000.0)) \
         * (ctx.lake.sd < 0).astype(np.float32) + 0.9 * under_water * (H > -1.0)
-    yield SLOTS["shingle"], 1.9 * shore_band * (1.0 - steep) + 0.9 * river_band * (1.0 - ctx.water) * basin \
+    yield SLOTS["shingle"], 1.9 * shore_band * (1.0 - steep) * (0.45 + 0.9 * ctx.patch(415, 20, 95)) + 0.9 * river_band * (1.0 - ctx.water) * basin \
         + basin * 0.55 * ctx.patch(411, 40, 180) ** 2 * (1.0 - smoothstep(120.0, 500.0, ctx.lake.sd))
     yield SLOTS["fused_stone"], 2.4 * (ctx.lake.island_sd < 20.0).astype(np.float32) \
         + ash * (0.5 * ctx.patch(403, 60, 260) ** 2
@@ -184,7 +184,7 @@ def _weights(ctx: SurfaceContext):
     # --- roads everywhere ---------------------------------------------------------------
     yield SLOTS["dirt_path"], 3.0 * ctx.on_road * (1.0 - ctx.town) + 1.1 * ctx.near_road * (1.0 - ctx.town) \
         + 1.4 * ctx.pad * (1.0 - ctx.town) * (1.0 - steep) * ctx.patch(409, 30, 120) \
-        + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.72, 0.0, 1.0) * 3.0 * (1.0 - flat * 0.4)
+        + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.82, 0.0, 1.0) * 1.4 * (1.0 - flat * 0.4)
 
 
 def control_maps(ctx: SurfaceContext, blend_sharpness: float = 1.9):

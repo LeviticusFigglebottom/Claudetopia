@@ -39,7 +39,7 @@ const SLOTS: Array = [
 	{"name": "heather", "tile_m": 2.2, "value": 0.51, "roughness_mod": 0.0},
 	{"name": "ash_soil", "tile_m": 2.6, "value": 0.45, "roughness_mod": 0.05},
 	{"name": "grey_grass", "tile_m": 2.4, "value": 0.46, "roughness_mod": 0.0},
-	{"name": "fused_stone", "tile_m": 4.0, "value": 0.42, "roughness_mod": 0.25},
+	{"name": "fused_stone", "tile_m": 4.0, "value": 0.42, "roughness_mod": 0.4},
 	{"name": "shingle", "tile_m": 2.0, "value": 0.51, "roughness_mod": 0.0},
 	{"name": "cobbles", "tile_m": 2.6, "value": 0.53, "roughness_mod": 0.0},
 	{"name": "barley", "tile_m": 2.4, "value": 0.49, "roughness_mod": 0.0},

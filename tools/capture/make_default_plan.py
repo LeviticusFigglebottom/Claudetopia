@@ -74,9 +74,13 @@ def load_places() -> dict:
         return {p["id"]: p for p in json.load(f)}
 
 
-def shot(label: str, pos, look, fov: float, hour: float, weather: str, fog_scale: float = 0.35) -> dict:
+def shot(label: str, pos, look, fov: float, hour: float, weather: str, fog_scale: float = 0.35,
+         region: str = "") -> dict:
     return {
         "label": label,
+        # the region the shot is *about*: a vista is often taken from the high ground of a
+        # neighbour, and the drop test should file the picture under its subject
+        "region": region,
         "pos": [round(pos[0], 1), round(pos[1], 1), round(pos[2], 1)],
         "look_at": [round(look[0], 1), round(look[1], 1), round(look[2], 1)],
         "fov": fov,
@@ -102,7 +106,7 @@ def build_plan() -> dict:
         dist = 360.0
         cx, cz = lx + math.cos(ang) * dist, lz + math.sin(ang) * dist
         cam_h = max(hh.at(cx, cz), lh) + 55.0
-        shots.append(shot("%s_landmark" % short, (cx, cam_h, cz), (lx, lh + 8.0, lz), 58.0, hour, weather, 0.3))
+        shots.append(shot("%s_landmark" % short, (cx, cam_h, cz), (lx, lh + 8.0, lz), 58.0, hour, weather, 0.3, region_id))
         # 2. a vista from the highest ground near the region's viewpoint, over the settlement
         vp = places[vista]
         vx, vz = float(vp["position"][0]), float(vp["position"][1])
@@ -110,13 +114,13 @@ def build_plan() -> dict:
         tx, tz = float(places[settlement]["position"][0]), float(places[settlement]["position"][1])
         # look at a point part-way to the settlement so the near ground is in frame too
         mx, mz = hx + (tx - hx) * 0.45, hz + (tz - hz) * 0.45
-        shots.append(shot("%s_vista" % short, (hx, hy + 48.0, hz), (mx, hh.at(mx, mz), mz), 68.0, hour, weather, 0.25))
+        shots.append(shot("%s_vista" % short, (hx, hy + 48.0, hz), (mx, hh.at(mx, mz), mz), 68.0, hour, weather, 0.25, region_id))
         # 3. the approach to the settlement, 420 m out and 28 m up, looking down on it
         sx, sz = tx, tz
         a2 = math.atan2(hz - sz, hx - sx)
         ax, az = sx + math.cos(a2) * 420.0, sz + math.sin(a2) * 420.0
         shots.append(shot("%s_approach" % short, (ax, hh.at(ax, az) + 28.0, az),
-                          (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 0.45))
+                          (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 0.45, region_id))
     # a flythrough that crosses every region, high enough to read the landforms
     waypoints = []
     for region_id in REGION_SHOTS:
