@@ -231,7 +231,7 @@ COLOUR_VOICES = {
 }
 
 
-def colour_map(ctx: SurfaceContext, rf, strength: float = 0.78, work_n: int = 1024) -> np.ndarray:
+def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 1024) -> np.ndarray:
     """RGBA8 tint map: region palettes broken up by low-frequency noise; alpha = wetness.
 
     Computed on a coarse lattice (the tint is all low-frequency) and upsampled to the grid.
@@ -267,8 +267,8 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.78, work_n: int = 10
     # a tint, not a paint: the multiplier stays near 1 so the terrain textures still set the
     # value -- but the hue deviation is amplified, or a palette that is nearly neutral (slate,
     # bone, ash) would tint nothing at all and the regions would look alike under one sun.
-    chroma = 1.0 + (chroma - 1.0) * 1.7
-    chroma = np.clip(chroma, 0.45, 1.85)
+    chroma = 1.0 + (chroma - 1.0) * 2.0
+    chroma = np.clip(chroma, 0.40, 1.95)
     tint = lerp(np.ones_like(acc), chroma, strength)
     # height and slope shading so the land reads even under flat light
     shade = 1.0 + 0.10 * np.tanh((H - 60.0) / 260.0) - 0.10 * smoothstep(0.35, 1.1, slope)

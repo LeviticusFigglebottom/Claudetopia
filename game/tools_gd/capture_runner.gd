@@ -174,7 +174,13 @@ func _write_region_copy(img: Image, region_id: String, label: String) -> void:
 		return
 	var dir := "%s/regions" % out_dir
 	DirAccess.make_dir_recursive_absolute(dir)
-	img.save_png("%s/%s_%s.png" % [dir, region_id.get_file(), label])
+	# tools/uniqueness_check.py reads the region from the leading name, so the file has to be
+	# <region>_<rest>; most shot labels already start with the region, so do not repeat it
+	var short_name: String = region_id.get_file()
+	var rest := label
+	if rest.begins_with(short_name + "_"):
+		rest = rest.substr(short_name.length() + 1)
+	img.save_png("%s/%s_%s.png" % [dir, short_name, rest])
 
 
 ## Capture plans pin the weather so a sheet is repeatable and each region shows its own light.
