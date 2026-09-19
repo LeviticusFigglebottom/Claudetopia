@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_ui_review"]
+
+[ext_resource type="Script" path="res://tools_gd/ui_review.gd" id="1"]
+
+[node name="UiReview" type="Node"]
+script = ExtResource("1")

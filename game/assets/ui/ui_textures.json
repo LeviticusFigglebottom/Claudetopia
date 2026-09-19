@@ -8,6 +8,13 @@
     512
    ]
   },
+  "torn_sheet": {
+   "file": "torn_sheet.png",
+   "size": [
+    512,
+    512
+   ]
+  },
   "panel_parchment": {
    "file": "panel_parchment.png",
    "size": [
@@ -482,6 +489,13 @@
   },
   "paper_sheet_deep": {
    "file": "paper_sheet_deep.png",
+   "size": [
+    512,
+    512
+   ]
+  },
+  "torn_sheet_deep": {
+   "file": "torn_sheet_deep.png",
    "size": [
     512,
     512
@@ -1201,6 +1215,7 @@
  "variants": {
   "warm": {
    "sheet": "paper_sheet",
+   "torn": "torn_sheet",
    "panel": "panel_parchment",
    "panel_metal": "panel_brass",
    "panel_wood": "panel_oak",
@@ -1239,6 +1254,7 @@
   },
   "deep": {
    "sheet": "paper_sheet_deep",
+   "torn": "torn_sheet_deep",
    "panel": "panel_parchment_deep",
    "panel_metal": "panel_bronze",
    "panel_wood": "panel_ash",

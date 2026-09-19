@@ -388,7 +388,6 @@ func toast(text: String, kind := "info") -> void:
 
 	# fade in from ink: the panel arrives dark and settles into paper
 	panel.modulate = Color(0.25, 0.20, 0.16, 0.0)
-	panel.position.x += 30.0
 	var tw := create_tween()
 	tw.set_parallel(true)
 	tw.tween_property(panel, "modulate", Color(1, 1, 1, 1), 0.45).set_trans(Tween.TRANS_CUBIC)

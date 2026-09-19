@@ -1203,6 +1203,21 @@ def smudge(rng, pal, size: int = 96) -> Image.Image:
     return img.filter(ImageFilter.GaussianBlur(size * 0.03))
 
 
+def torn_sheet(rng, pal, w: int = 512, h: int = 512) -> Image.Image:
+    """A sheet of paper with a torn, feathered edge: laid over anything without a seam."""
+    img = parchment(w, h, rng, pal, vignette=0.24, stains=4, fibre=0.16)
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
+    b = np.minimum(np.minimum(xs, w - 1 - xs), np.minimum(ys, h - 1 - ys)) / (0.16 * min(w, h))
+    ragged = fbm(w, h, rng, octaves=4, base=7, persistence=0.6) * 0.55 + 0.35
+    alpha = np.clip((b - ragged) / 0.7, 0.0, 1.0) ** 0.8
+    arr = np.asarray(img, np.float32)
+    arr[..., 3] = alpha * 255.0
+    # the torn lip is a little darker, the way a fibre edge catches the light
+    lip = np.clip(1.0 - np.abs(b - ragged - 0.35) / 0.5, 0.0, 1.0) * alpha
+    arr[..., :3] = arr[..., :3] * (1.0 - 0.28 * lip)[..., None] + np.asarray(pal["paper_edge"], np.float32) * (0.28 * lip)[..., None]
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
+
+
 def menu_backdrop(rng, pal, w: int = 1280, h: int = 720) -> Image.Image:
     """A drawn chart of the basin for the main menu to pan across slowly."""
     img = parchment(w, h, rng, pal, vignette=0.36, stains=6, fibre=0.18, edge=0.05)
@@ -1286,6 +1301,14 @@ def build(out: Path, only: str = "") -> dict:
                 "margin is [left, top, right, bottom] in pixels for nine-patch styleboxes.",
         "textures": {}, "variants": {}, "icons": [], "markers": [],
     }
+    # regenerating one group must not drop the other groups from the manifest
+    existing = out / "ui_textures.json"
+    if only and existing.exists():
+        manifest = json.loads(existing.read_text())
+        manifest.setdefault("textures", {})
+        manifest.setdefault("variants", {})
+        manifest.setdefault("icons", [])
+        manifest.setdefault("markers", [])
 
     def want(group: str) -> bool:
         return only in ("", group)
@@ -1308,6 +1331,8 @@ def build(out: Path, only: str = "") -> dict:
             put(f"paper_sheet{sfx}", parchment(512, 512, _rng("sheet" + sfx), pal,
                                                vignette=0.34, stains=5, fibre=0.17, edge=0.035))
             v["sheet"] = f"paper_sheet{sfx}"
+            put(f"torn_sheet{sfx}", torn_sheet(_rng("torn" + sfx), pal))
+            v["torn"] = f"torn_sheet{sfx}"
 
             put(f"panel_parchment{sfx}", panel(_rng("panel" + sfx), pal, frame=None),
                 margin=[PANEL_MARGIN] * 4, tile=True)
@@ -1392,10 +1417,12 @@ def build(out: Path, only: str = "") -> dict:
 
     pal = PALETTES["warm"]
     if want("icons"):
+        manifest["icons"] = []
         for name in sorted(ICONS):
             put(name, icon(name, _rng("icon" + name), pal), sub="icons")
             manifest["icons"].append(name)
     if want("markers"):
+        manifest["markers"] = []
         for name in sorted(MARKERS):
             put(name, marker(name, _rng("marker" + name), pal), sub="markers")
             manifest["markers"].append(name)
