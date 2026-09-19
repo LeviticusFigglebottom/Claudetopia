@@ -33,6 +33,8 @@ func _build() -> void:
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(back)
 
+	# the drawn chart, not the player's one: the world map carries its region names in
+	# Cinzel and they fight the title
 	_backdrop = TextureRect.new()
 	_backdrop.texture = ThemeBuilder.texture("menu_backdrop")
 	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
@@ -55,17 +57,17 @@ func _build() -> void:
 	sheet.anchor_right = 0.5
 	sheet.anchor_top = 0.5
 	sheet.anchor_bottom = 0.5
-	sheet.offset_left = -330.0
-	sheet.offset_right = 330.0
+	sheet.offset_left = -368.0
+	sheet.offset_right = 368.0
 	sheet.offset_top = -340.0
 	sheet.offset_bottom = 330.0
-	sheet.modulate = Color(1.0, 0.99, 0.96, 0.82)
+	sheet.modulate = Color(1.0, 0.99, 0.96, 0.86)
 	sheet.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(sheet)
 
 	var vign := ColorRect.new()
 	vign.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vign.color = Color(0.10, 0.08, 0.06, 0.30)
+	vign.color = Color(0.10, 0.08, 0.06, 0.22)
 	vign.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(vign)
 

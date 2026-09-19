@@ -297,10 +297,18 @@ static func item_icon_name(def: Dictionary) -> String:
 		return "book"
 	if tags.has("light"):
 		return "hearth"
+	if tags.has("ember") or tags.has("mote"):
+		return "hearth"
+	if tags.has("lockpick") or tags.has("key"):
+		return "key"
 	match category:
 		"consumable": return "potion" if tags.has("potion") else "food"
 		"ingredient": return "ingredient"
-		"material": return "hammer"
+		"material":
+			for soft in ["wood", "leather", "linen", "wool", "cloth", "dye", "pelt", "thatch"]:
+				if tags.has(soft):
+					return "ingredient"
+			return "hammer"
 		"key": return "key"
 		"book": return "book"
 		"tool": return "alembic" if tags.has("alchemy") else "hammer"
