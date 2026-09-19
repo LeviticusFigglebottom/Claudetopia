@@ -13,8 +13,9 @@ plugin, listed in `LICENSES.md`.
 ./run.sh
 ```
 
-That is the whole thing. It forges any missing interiors and world data, then starts the
-game. First run takes a while because it builds the caves; after that it is immediate.
+That is the whole thing. It forges any missing interiors and builds the world — six regions
+over eight kilometres square, with its rivers, roads and settlements — then starts the game.
+The first run takes a few minutes for the caves and the terrain; after that it is immediate.
 
 Requirements: **Godot 4.7.2** (on `PATH`, or set `GODOT`), **Python 3.11+** with
 `pip install -r tools/requirements.txt`. **Blender 4.x** is only needed to regenerate
@@ -24,8 +25,8 @@ meshes, not to play.
 
 | Command | What it proves |
 |---|---|
-| `./run.sh test` | 603 unit tests. Content validation runs here too, so a dangling id fails the build. |
-| `./run.sh journey` | One scripted run through every promise in the design's done list: create a character, leave the start, fight, level up, die and recover your marks, join a faction, commit a crime and pay for it, buy a house, clear a dungeon, fight a boss, save and load. |
+| `./run.sh test` | 910 unit tests. Content validation runs here too, so a dangling id fails the build. |
+| `./run.sh journey` | One scripted run through every promise in the design's done list, in the built world: create a character, wake at the Hushline Stair and walk out of the region, fight, level up, die and recover your marks, join a faction, commit a crime and pay for it, buy a house, clear a dungeon, fight a boss, learn a saying and cast it, save and load. |
 | `./run.sh smoke` | Builds all 24 shipping interiors for real and fails if one has no geometry, no collision, no light or no way out. |
 | `./run.sh perf` | Measures draw calls and primitives against the budgets in `DESIGN.md` §11. |
 | `./run.sh shots` | Headless capture plan into `captures/`. |

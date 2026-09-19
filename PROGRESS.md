@@ -1,16 +1,17 @@
 # PROGRESS.md — state of Wickmere
 
-_Updated 2026-09-19 (session 1, early)._
+_Updated 2026-09-19 (session 1)._
 
 ## State
 
-**Unit tests green, 0 content problems. The smoke run builds all 24 shipping
-interiors clean (6 regions, 34 places). The scripted journey passes all 13 of
-DESIGN's done-list promises. The performance probe's worst interior costs 90 draw
-calls and 1.17M primitives against budgets of 2000 and 1.5M. 16/16 combat-arena
-checks pass. 722 content definitions across 24 types, including the full
-bestiary (26 creatures over six regions), five bosses, and fifteen spells across
-all five schools.**
+**910 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
+clean and sweeps all six regions and 34 places. The scripted journey passes all 13 of
+DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
+of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
+definitions. The world is 16 Terrain3D regions over 8 km square, built deterministically in
+about two and a half minutes, with 404,000 scatter instances of 79 forged assets, 596
+creatures in 247 groups, 24 interiors with doors in the ground, and the worst captured frame
+costing 95 draw calls and 0.2M primitives against budgets of 2000 and 1.5M.**
 
 Verify the whole thing with four commands:
 
@@ -73,27 +74,23 @@ Merged and working on the main branch:
   drop-test checker, the naming generator with a banned-name check, review scenes for
   atmosphere, interiors and the combat arena.
 
-## In flight (parallel worktree streams, session 1)
+## In flight
 
-World builder + Terrain3D import + streaming + capture/smoke runners · Asset forge
-library + trees/rocks/flora/props/landmarks · Character forge + humanoid clip
-library · Player/cameras/combat core/enemy AI · Inventory/progression/crafting ·
-Dialogue/quests/factions/standing · NPC life/crime/stealth/economy · Narrative
-content (Merrowby roster, dialogue, quests, books) · UI (theme, HUD, menus, map,
-Naming) · Audio (synth toolkit, music, ambience, SFX, directors).
-Integrator (main branch) owns: atmosphere system (done, first pass), merging,
-hearthstones/death/echo, docs.
+Two streams are still polishing what they landed, against captures taken in the built world:
+the terrain surface (the texture boundaries read as a pixel staircase, the road as a painted
+stripe, the horizon as a white band) and the trees (they read as winter scrub at distance
+rather than the Vale's orchards and hedgerows). Everything else is merged.
 
 ## Next
 
-1. Merge the remaining streams as they land: world/terrain, asset forge, character
-   forge, dialogue/quests/factions, NPC life/crime/economy, UI, audio.
-2. Place the interiors in the world: doors on the settlement buildings and at each
-   deep place's mouth, wired to the `interior` defs.
-3. Merge the world, asset forge and character forge streams as they land.
-4. Place the interiors in the world through `core:table/door_plan_*`.
-4. Region fly-throughs, the drop test, and a pass of art direction on the overworld.
-5. The smoke run over every region and every interior, and the performance budgets.
+1. The surface and tree passes above, then re-shoot and judge the six regions again.
+2. Hedgerows and field boundaries in Hearthvale: the bible's defining feature, and the thing
+   that would most change how the downs read.
+3. Interiors placed as buildings rather than doors standing in open ground — the doors are in
+   the right places, but there is no house around them yet.
+4. NPC and encounter density tuning once there is somebody to walk the country and feel it.
+5. The automated drop test measures colour only, so three deliberately low-chroma regions are
+   penalised for doing what the design asks. It should score landform too.
 
 ## Deliberately not done (pass two)
 
