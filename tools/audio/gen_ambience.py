@@ -47,14 +47,24 @@ def wind(seconds: float, rng, strength: float = 0.5, height: float = 0.5, gustin
     (a valley) to a thin whistle over stone (the Skerrow tops)."""
     n = samples(seconds)
     base = osc.brown(n, rng) * 0.6 + osc.pink(n, rng) * 0.4
-    # two gust envelopes at different rates so gusts do not come regularly
-    g1 = env.wander(n, rng, 0.055 + 0.06 * gustiness, 1.0)
-    g2 = env.wander(n, rng, 0.21 + 0.3 * gustiness, 0.6)
-    gust = np.clip(0.42 + 0.38 * g1 + 0.28 * g2, 0.04, 1.6)
-    centre = 240.0 + 900.0 * height + 620.0 * gust * (0.4 + height)
-    y = filters.svf(base, centre, 0.8 + 1.5 * height, "lp", block=512)
-    y = y + filters.bandpass(base, 900.0 + 2400.0 * height, 1.4 + 2.0 * height) * (0.12 + 0.4 * height)
-    y = y * gust * (0.35 + 0.9 * strength)
+    # Three gust envelopes at different rates, so gusts never arrive on a schedule, and a
+    # power curve on the sum so the lulls between them are genuinely quiet. Wind that only
+    # breathes a few dB reads as a static wall of noise however long the loop is.
+    g1 = env.wander(n, rng, 0.035 + 0.04 * gustiness, 1.0)
+    g2 = env.wander(n, rng, 0.13 + 0.18 * gustiness, 0.7)
+    g3 = env.wander(n, rng, 0.45 + 0.5 * gustiness, 0.35)
+    # The floor matters as much as the depth: wind that falls away to nothing sounds broken,
+    # not calm. These give roughly a 13-17 dB swell, which reads as weather rather than as a
+    # fader being moved.
+    gust = np.clip(0.40 + 0.34 * g1 + 0.22 * g2 + 0.12 * g3, 0.10, 1.7) ** (1.0 + 0.25 * gustiness)
+    gust = env.smooth(gust, 90.0)
+    # wind is brighter when it blows harder, so the band opens with the gust rather than
+    # sitting still; the two bands overlap so there is no notch between them
+    centre = 260.0 + 820.0 * height + 900.0 * gust * (0.5 + height)
+    y = filters.svf(base, np.clip(centre, 120.0, 9000.0), 0.7 + 0.5 * height, "lp", block=256)
+    upper = filters.bandpass(base, 700.0 + 1500.0 * height, 0.8 + 0.5 * height)
+    y = y + upper * (0.14 + 0.45 * height) * (0.4 + 0.9 * gust)
+    y = y * gust * (0.5 + 1.1 * strength)
     y = filters.highpass(y, 40.0 + 60.0 * height, 0.7)
     if not stereo:
         return y
@@ -554,7 +564,7 @@ CATALOGUE = {
     "drip": _bed(lambda s, rng, **k: drip(s, rng, rate_hz=0.7)),
     "rope_creak": _bed(lambda s, rng, **k: rope_creak_bed(s, rng)),
     "water_still": _bed(lambda s, rng, **k: water_still(s, rng)),
-    "canopy_wind": _bed(lambda s, rng, **k: wind(s, rng, strength=0.5, height=0.7, gustiness=0.5)),
+    "canopy_wind": _bed(lambda s, rng, **k: wind(s, rng, strength=0.5, height=0.7, gustiness=0.75)),
     "woodpecker": _pool(lambda rng, **k: bird_call(rng, "woodpecker"), count=6),
     "distant_falls": _bed(lambda s, rng, **k: waterfall(s, rng, distance=0.75)),
     "creak": _pool(lambda rng, **k: creak(rng, big=True), count=7),

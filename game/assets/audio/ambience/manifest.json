@@ -1,0 +1,67 @@
+{
+  "canopy_wind": {
+    "bytes": 597382,
+    "files": [
+      "res://assets/audio/ambience/canopy_wind/canopy_wind.ogg"
+    ],
+    "kind": "bed",
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -15.64,
+    "seam_click_db": -2.16,
+    "seam_rms_db": 0.714,
+    "seconds": 42.0
+  },
+  "wind_gust_light": {
+    "bytes": 581069,
+    "files": [
+      "res://assets/audio/ambience/wind_gust_light/wind_gust_light.ogg"
+    ],
+    "kind": "bed",
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -13.5,
+    "seam_click_db": -9.26,
+    "seam_rms_db": 0.677,
+    "seconds": 42.0
+  },
+  "wind_gust_strong": {
+    "bytes": 605268,
+    "files": [
+      "res://assets/audio/ambience/wind_gust_strong/wind_gust_strong.ogg"
+    ],
+    "kind": "bed",
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -15.46,
+    "seam_click_db": -58.65,
+    "seam_rms_db": 1.041,
+    "seconds": 42.0
+  },
+  "wind_high": {
+    "bytes": 610758,
+    "files": [
+      "res://assets/audio/ambience/wind_high/wind_high.ogg"
+    ],
+    "kind": "bed",
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -15.65,
+    "seam_click_db": -10.64,
+    "seam_rms_db": 0.17,
+    "seconds": 42.0
+  },
+  "wind_soft": {
+    "bytes": 557556,
+    "files": [
+      "res://assets/audio/ambience/wind_soft/wind_soft.ogg"
+    ],
+    "kind": "bed",
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -15.14,
+    "seam_click_db": -23.28,
+    "seam_rms_db": 2.357,
+    "seconds": 42.0
+  }
+}
