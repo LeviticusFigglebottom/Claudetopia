@@ -193,6 +193,58 @@ func test_pickpocket_model_is_deterministic() -> void:
 	assert_true(successes > 60 and successes < 140, "roughly half succeed at 0.5: %d" % successes)
 
 
+func test_pickpocket_resolution_moves_goods_and_records_the_crime() -> void:
+	var st := Stealth.new()
+	_root().add_child(st)
+	_nodes.append(st)
+	var b := Bounty.new()
+	_root().add_child(b)
+	_nodes.append(b)
+	var bag_script := "extends Node3D\nvar npc_id := \"core:npc/mark\"\nvar detection := 0.0\nvar bag := {}\nfunc add(id: String, n: int) -> void:\n\tbag[id] = bag.get(id, 0) + n\nfunc remove(id: String, n: int) -> int:\n\tvar have: int = bag.get(id, 0)\n\tvar t: int = mini(have, n)\n\tbag[id] = have - t\n\treturn t\nfunc count(id: String) -> int:\n\treturn bag.get(id, 0)\n"
+	var victim := Node3D.new()
+	victim.set_script(_script(bag_script))
+	_root().add_child(victim)
+	_nodes.append(victim)
+	victim.global_position = Vector3(900, 40, 2350)
+	victim.call("add", "core:item/econ_rope", 1)
+	var thief := Node3D.new()
+	thief.set_script(_script(bag_script))
+	_root().add_child(thief)
+	_nodes.append(thief)
+	var chance := Stealth.pickpocket_chance(0, 0.0, ContentQuery.item_value("core:item/econ_rope"))
+	var r := st.pickpocket(thief, victim, "core:item/econ_rope", _rng_rolling(chance, true))
+	assert_true(r["ok"], "a sleeping mark and a cheap rope")
+	assert_eq(thief.call("count", "core:item/econ_rope"), 1)
+	assert_eq(victim.call("count", "core:item/econ_rope"), 0)
+	assert_eq(b.history.back()["kind"], "pickpocket")
+	assert_eq(int(b.history.back()["severity"]), 25)
+	assert_false(bool(b.history.back()["witnessed"]), "done cleanly, nobody saw")
+	assert_eq(b.pending_count(), 0)
+	victim.call("add", "core:item/econ_rope", 1)
+	var caught := st.pickpocket(thief, victim, "core:item/econ_rope", _rng_rolling(chance, false))
+	assert_false(caught["ok"])
+	assert_true(caught["caught"])
+	assert_eq(victim.call("count", "core:item/econ_rope"), 1, "he keeps his rope")
+	assert_near(float(victim.get("detection")), 1.0, 0.0001, "and he has your measure now")
+	assert_true(bool(b.history.back()["witnessed"]), "the mark is always a witness to a fumble")
+	assert_eq(b.pending_count(), 1)
+
+
+## An RNG whose first randf() is below `chance` (succeed) or at/above it (fail), found by
+## probing seeds, so the outcome of a roll is fixed without stubbing the model.
+func _rng_rolling(chance: float, succeed: bool) -> RandomNumberGenerator:
+	for s in range(1, 2000):
+		var probe := RandomNumberGenerator.new()
+		probe.seed = s
+		var roll := probe.randf()
+		if (roll < chance) == succeed:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = s
+			return rng
+	fail("no seed rolls %s against %f" % ["below" if succeed else "above", chance])
+	return RandomNumberGenerator.new()
+
+
 func test_lockpick_model() -> void:
 	assert_near(Stealth.lockpick_window(0, 1), 0.29)
 	assert_near(Stealth.lockpick_window(100, 1), 0.6, 0.0001, "capped")

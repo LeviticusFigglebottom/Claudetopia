@@ -231,6 +231,37 @@ static func pickpocket_roll(chance: float, rng: RandomNumberGenerator) -> bool:
 	return rng.randf() < chance
 
 
+## Resolves a pickpocket attempt end to end: rolls, moves the item, records the crime
+## (a failed attempt is seen by the victim, so it is always witnessed), and grants Sneak XP.
+## Returns {ok, chance, caught, item_id}. `rng` lets tests fix the outcome.
+func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGenerator = null) -> Dictionary:
+	if rng == null:
+		rng = RandomNumberGenerator.new()
+		rng.randomize()
+	var value := ContentQuery.item_value(item_id)
+	var chance := pickpocket_chance(Peers.skill_level("sneak"), awareness_of(victim), value)
+	var ok := pickpocket_roll(chance, rng)
+	var victim_id := str(victim.get("npc_id")) if victim != null and "npc_id" in victim else ""
+	var pos := (victim as Node3D).global_position if victim is Node3D else Vector3.ZERO
+	EventBus.skill_used.emit("sneak", 6.0 + float(value) * 0.05)
+	if ok:
+		if not Peers.take_item(victim, item_id, 1):
+			return {"ok": false, "chance": chance, "caught": false, "item_id": item_id}
+		Peers.give_item(thief, item_id, 1)
+		EventBus.notify.emit("Taken.", "stealth")
+	else:
+		EventBus.notify.emit("A hand closes on your wrist.", "stealth")
+		if victim != null and "detection" in victim:
+			victim.set("detection", 1.0)
+	if Bounty.instance != null:
+		var witnesses: Variant = null
+		if not ok and not victim_id.is_empty():
+			# Caught in the act: the victim is a witness whatever else they were doing.
+			witnesses = [{"npc_id": victim_id, "detection": 1.0, "line_of_sight": true, "is_guard": victim.is_in_group("guard"), "reaction": "report"}]
+		Bounty.instance.commit("pickpocket", pos, {"victim": victim_id, "target": item_id, "value": value, "witnesses": witnesses})
+	return {"ok": ok, "chance": chance, "caught": not ok, "item_id": item_id}
+
+
 ## Width of the timing sweet spot 0..1 for a Sneak skill against a lock level 1..5.
 static func lockpick_window(skill: int, lock_level: int) -> float:
 	return clampf(0.35 + float(skill) / 250.0 - float(lock_level) * 0.06, 0.03, 0.6)

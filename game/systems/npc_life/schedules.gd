@@ -183,9 +183,9 @@ static func intent_for(activity: String, entry: Dictionary = {}, def: Dictionary
 		"eat":
 			return "Eat"
 		"work":
-			if entry.has("clip"):
+			if not str(entry.get("clip", "")).is_empty():
 				return str(entry["clip"])
-			if def.has("work_clip"):
+			if not str(def.get("work_clip", "")).is_empty():
 				return str(def["work_clip"])
 			return "Work_Hammer"
 		"pray":

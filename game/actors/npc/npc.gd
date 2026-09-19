@@ -45,6 +45,7 @@ var _model: Node3D = null
 var _agent: NavigationAgent3D = null
 var _use_agent := false
 var _intent := ""
+var _entry_clip := ""
 var _react_accum := 0.0
 var _last_heard := Vector3.ZERO
 
@@ -147,13 +148,14 @@ func apply_schedule_state(entry: Dictionary) -> void:
 	place_id = str(entry.get("place", place_id))
 	activity = str(entry.get("activity", activity))
 	spot = str(entry.get("spot", spot))
+	_entry_clip = str(entry.get("clip", ""))
 	_go_to_spot()
 	if activity != was:
 		_apply_activity()
 
 
 func _apply_activity() -> void:
-	play_intent(Schedules.intent_for(activity, {"clip": spot if spot.begins_with("Work_") else ""}, def))
+	play_intent(Schedules.intent_for(activity, {"clip": _entry_clip}, def))
 	activity_changed.emit(activity)
 
 

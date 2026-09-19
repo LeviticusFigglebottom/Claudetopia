@@ -103,6 +103,8 @@ func test_empty_schedule_and_intents() -> void:
 	assert_eq(Schedules.intent_for("work", {"clip": "Work_Stir"}), "Work_Stir")
 	assert_eq(Schedules.intent_for("work", {}, {"work_clip": "Work_Chop"}), "Work_Chop")
 	assert_eq(Schedules.intent_for("work"), "Work_Hammer")
+	assert_eq(Schedules.intent_for("work", {"clip": ""}, {"work_clip": "Work_Chop"}), "Work_Chop", "an empty clip is no clip")
+	assert_eq(Schedules.intent_for("work", {"clip": ""}, {"work_clip": ""}), "Work_Hammer")
 	assert_eq(Schedules.intent_for("travel"), "Walk")
 	assert_eq(Schedules.intent_for("socialise"), "Talk_1")
 	var bad := Schedules.problems([{"hour": 25, "activity": "juggle"}], "x")
