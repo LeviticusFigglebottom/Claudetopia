@@ -42,6 +42,7 @@ var _weather_params: Dictionary = {}
 var _weather_timer_hours := 0.0
 var _rng := RandomNumberGenerator.new()
 var _forward_plus := false
+var interior := false
 
 const DEFAULT_LOOK := {
 	"sun_color": Color(1, 0.94, 0.85), "sun_elevation_bias": 0.0, "sun_elevation_scale": 1.0,
@@ -286,6 +287,10 @@ static func _day_sample(hour: float) -> Array:
 	]
 
 
+func set_interior(inside: bool) -> void:
+	interior = inside
+
+
 func sun_direction() -> Vector3:
 	return sun.global_transform.basis.z
 
@@ -358,11 +363,11 @@ func _apply(_delta: float) -> void:
 	sky_mat.set_shader_parameter("moon_strength", stars)
 
 	# environment
-	env.ambient_light_energy = ambient_energy * float(w["ambient_mult"])
+	env.ambient_light_energy = ambient_energy * float(w["ambient_mult"]) * (0.45 if interior else 1.0)
 	env.ambient_light_color = (_look["ambient_tint"] as Color)
 	env.fog_light_color = hor_c.lerp(fogc, 0.5).lerp(top_c, 0.15 * (1.0 - cloudy))
 	env.fog_light_energy = lerpf(0.35, 1.0, ambient_energy)
-	env.fog_density = float(_look["fog_density"]) * float(w["fog_mult"]) * lerpf(1.4, 1.0, ambient_energy)
+	env.fog_density = float(_look["fog_density"]) * float(w["fog_mult"]) * lerpf(1.4, 1.0, ambient_energy) * (0.12 if interior else 1.0)
 	env.fog_sun_scatter = 0.1 + 0.4 * (1.0 - low) * low
 	env.adjustment_saturation = float(_look["saturation"]) * float(w["saturation_mult"])
 	env.adjustment_contrast = float(_look["contrast"])
@@ -373,7 +378,7 @@ func _apply(_delta: float) -> void:
 	# precipitation
 	var kind: String = str(_weather_to.get("precipitation", "none")) if _weather_t > 0.5 else str(_weather_from.get("precipitation", "none"))
 	var intensity := float(w["precip_intensity"])
-	precipitation.emitting = kind != "none" and intensity > 0.02
+	precipitation.emitting = kind != "none" and intensity > 0.02 and not interior
 	if precipitation.emitting:
 		var cam := get_viewport().get_camera_3d()
 		if cam:

@@ -27,6 +27,8 @@ Settings="*res://core/settings.gd"
 WorldClock="*res://core/world_clock.gd"
 GameState="*res://core/game_state.gd"
 SaveSystem="*res://core/save_system.gd"
+Hearth="*res://systems/hearth/hearth_system.gd"
+Interiors="*res://systems/interiors/interior_manager.gd"
 
 [debug]
 
