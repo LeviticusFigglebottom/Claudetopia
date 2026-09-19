@@ -5,6 +5,7 @@ extends Node3D
 ## a Hitbox sized by reach, and turns clip events (hit_start/hit_end) into swings.
 ## Sits under the actor's AttackOrigin node so the capsule points along the actor's forward.
 
+signal charge_changed(charge: int, charge_max: int)
 signal hit_landed(victim: Node, hit: HitData, outcome: String)
 
 const CHAIN_LENGTH := {"1H": 3, "2H": 2, "dagger": 2, "unarmed": 2, "bow": 0, "staff": 0}
@@ -25,15 +26,18 @@ var stability: float = 0.2
 var kind: String = "blunt"
 var skill_id: String = "one_handed"
 var ranged: Dictionary = {}           # bows: {draw_time, speed, ammo_tag}
+## The equipped stack's own state, and the enchantment out of it (CONTRACTS §7).
+var data: Dictionary = {}
+var enchant: Dictionary = {}
 var owner_actor: Node = null
 var hitbox: Hitbox = null
 var current_hit: HitData = null
 
 
-static func from_item(id: String, actor: Node) -> WeaponInstance:
+static func from_item(id: String, actor: Node, instance_data: Dictionary = {}) -> WeaponInstance:
 	var w := WeaponInstance.new()
 	w.owner_actor = actor
-	w.configure(ContentDB.get_or_empty(id), id)
+	w.configure(ContentDB.get_or_empty(id), id, instance_data)
 	return w
 
 
@@ -44,9 +48,13 @@ static func unarmed(actor: Node) -> WeaponInstance:
 	return w
 
 
-func configure(def: Dictionary, id: String = "") -> void:
+## `instance_data` is the equipped stack's own state (CONTRACTS §7: temper, enchant, quality).
+## A weapon on the ground is its definition; a weapon somebody has tempered and named is that
+## definition plus what was done to it, and the swing has to know both.
+func configure(def: Dictionary, id: String = "", instance_data: Dictionary = {}) -> void:
 	item_id = id
 	item_def = def
+	data = instance_data.duplicate(true)
 	block = def.get("weapon", UNARMED_BLOCK) if def.has("weapon") else UNARMED_BLOCK
 	weapon_class = str(block.get("class", "unarmed"))
 	damage = float(block.get("damage", 6.0))
@@ -59,6 +67,10 @@ func configure(def: Dictionary, id: String = "") -> void:
 	kind = str(block.get("kind", DamageModel.kind_for_class(weapon_class)))
 	skill_id = str(block.get("skill", DamageModel.skill_for_clips(clips_set)))
 	ranged = def.get("ranged", {})
+	var temper := 1.0 + ItemStack.TEMPER_BONUS_PER_TIER * float(int(data.get("temper", 0)))
+	damage *= temper
+	poise_damage *= temper
+	enchant = data.get("enchant", {}) if typeof(data.get("enchant", {})) == TYPE_DICTIONARY else {}
 	name = "Weapon_" + (Ids.name_of(id) if not id.is_empty() else "unarmed")
 	if hitbox != null:
 		hitbox.set_capsule(HITBOX_RADIUS, minf(reach, 3.0))
@@ -181,7 +193,33 @@ func build_hit(attack_kind: String, index: int, charge_ratio: float, skill: floa
 	h.label = "%s:%s%d" % [weapon_class, attack_kind, index + 1]
 	if weapon_class == "dagger":
 		h.statuses = [{"id": "bleeding", "duration": 6.0, "magnitude": 0.0}]
+	_add_enchantment(h)
 	return h
+
+
+## What a Name-table wrote on the blade. An effect with an `on_hit` block changes the hit: the
+## kind of damage it does and the mark it leaves. Charge is what it costs to say it again, and
+## a spent enchantment is a decoration until it is recharged.
+func _add_enchantment(h: HitData) -> void:
+	if enchant.is_empty():
+		return
+	var eff := ContentDB.get_or_empty(str(enchant.get("effect", "")))
+	var on_hit: Dictionary = eff.get("on_hit", {})
+	if on_hit.is_empty():
+		return
+	var cost := int(eff.get("charge_cost", 0))
+	if cost > 0 and int(enchant.get("charge", 0)) < cost:
+		return
+	var magnitude := float(enchant.get("magnitude", eff.get("magnitude_base", 0.0)))
+	var duration := float(enchant.get("duration", eff.get("duration_base", 0.0)))
+	h.amount += magnitude
+	if on_hit.has("damage_type"):
+		h.kind = str(on_hit["damage_type"])
+	if on_hit.has("status"):
+		var statuses: Array = h.statuses.duplicate()
+		statuses.append({"id": str(on_hit["status"]), "duration": duration, "magnitude": magnitude})
+		h.statuses = statuses
+	h.enchant_cost = cost
 
 
 ## Arms the next swing; the hitbox opens on the hit_start clip event and closes on hit_end.
@@ -210,4 +248,17 @@ func is_swinging() -> bool:
 
 
 func _on_hit_landed(hurtbox: Hurtbox, hit: HitData, outcome: String) -> void:
+	if hit.enchant_cost > 0 and (outcome == "hit" or outcome == "blocked"):
+		_spend_charge(hit.enchant_cost)
 	hit_landed.emit(hurtbox.actor, hit, outcome)
+
+
+## Takes charge off the blade and off the stack it came from, so the running-down survives
+## unequipping and a save. Emits so a HUD can show a weapon going quiet.
+func _spend_charge(cost: int) -> void:
+	var left := maxi(int(enchant.get("charge", 0)) - cost, 0)
+	enchant["charge"] = left
+	charge_changed.emit(left, int(enchant.get("charge_max", left)))
+	if owner_actor == null or not owner_actor.has_method("on_weapon_charge_spent"):
+		return
+	owner_actor.call("on_weapon_charge_spent", item_id, left)

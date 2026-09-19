@@ -102,3 +102,20 @@ func test_quick_load_with_nothing_saved_says_so() -> void:
 		var f := FileAccess.open(SaveSystem.slot_path(SaveSystem.QUICK_SLOT), FileAccess.WRITE)
 		f.store_buffer(kept)
 		f.close()
+
+
+func test_a_freed_participant_cannot_take_the_save_with_it() -> void:
+	# A scene torn down without unregistering used to abort serialize() part-way through, so
+	# the file was written missing every section after the dead one — including the world flags.
+	var ghost := Node.new()
+	ghost.set_script(load("res://core/game_state.gd"))
+	SaveSystem.register("_ghost_section", ghost)
+	ghost.free()
+	GameState.set_flag("survives_a_ghost", true)
+	var data := SaveSystem.serialize()
+	var sections: Dictionary = data.get("sections", {})
+	assert_false(sections.has("_ghost_section"), "the dead section is dropped")
+	assert_true(sections.has("state"), "and everything else is still written")
+	assert_true(bool(sections["state"]["flags"].get("survives_a_ghost", false)))
+	assert_false(SaveSystem.participants.has("_ghost_section"), "and it is pruned on the way past")
+	GameState.set_flag("survives_a_ghost", false)

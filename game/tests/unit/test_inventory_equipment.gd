@@ -300,3 +300,97 @@ func test_striking_nothing_says_so_rather_than_failing_quietly() -> void:
 	assert_eq(heard, ["warning"])
 	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
 	p.free()
+
+
+# --- the crossbow --------------------------------------------------------------------------------
+
+func test_a_crossbow_costs_the_winding_time_back() -> void:
+	# DESIGN §5.3: a bow is drawn, a crossbow is loaded. The reload_time in the item data was
+	# read by nothing, so the crossbow was a bow that fired instantly for 32 damage.
+	var p := Player.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(p)
+	p.equip_weapon("core:item/crossbow")
+	p.arrows = 5
+	assert_near(p.reload_left(), 0.0, 0.001, "it starts loaded")
+	assert_near(float(p.weapon.ranged.get("draw_time", -1.0)), 0.0, 0.001, "and is not drawn")
+	p._fire_arrow(1.0)
+	assert_gt(p.reload_left(), 2.0, "then it has to be wound again")
+	assert_false(p._start_bow(), "and will not loose while it is being wound")
+	p.equip_weapon("core:item/hunting_bow")
+	p._reload_until = -1.0
+	p._fire_arrow(1.0)
+	assert_near(p.reload_left(), 0.0, 0.001, "a bow has no reload at all")
+	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
+	p.free()
+
+
+# --- the hands follow the paper doll ---------------------------------------------------------------
+
+func _player_with_gear() -> Player:
+	var p := Player.new()
+	var inv := Inventory.new()
+	inv.name = "Inventory"
+	p.add_child(inv)
+	var eq := Equipment.new()
+	eq.name = "Equipment"
+	p.add_child(eq)
+	(Engine.get_main_loop() as SceneTree).root.add_child(p)
+	eq.set_inventory(inv)
+	return p
+
+
+func test_what_you_equip_in_the_menu_is_what_you_swing() -> void:
+	# Equipping went through Equipment and never reached the WeaponInstance, so the paper doll
+	# and the hands disagreed: the menu said greatsword and the swing was still a fist.
+	var p := _player_with_gear()
+	var inv: Inventory = p.get_node("Inventory")
+	var eq: Equipment = p.get_node("Equipment")
+	var stack := inv.add("core:item/iron_greatsword", 1)
+	assert_true(eq.equip(stack))
+	assert_eq(p.weapon.item_id, "core:item/iron_greatsword", "the hands follow the doll")
+	assert_eq(p.weapon.weapon_class, "greatsword")
+	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
+	p.free()
+
+
+func test_a_tempered_weapon_hits_harder_in_the_hand() -> void:
+	var p := _player_with_gear()
+	var inv: Inventory = p.get_node("Inventory")
+	var eq: Equipment = p.get_node("Equipment")
+	var plain := inv.add("core:item/iron_sword", 1)
+	eq.equip(plain)
+	var base := p.weapon.damage
+	var fine := inv.add("core:item/iron_sword", 1, {"temper": 3})
+	eq.equip(fine)
+	assert_gt(p.weapon.damage, base, "three tiers of tempering are worth something")
+	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
+	p.free()
+
+
+func test_an_enchanted_blade_burns_and_runs_down() -> void:
+	# Enchanting wrote `enchant` onto the stack and combat never looked at it: a named weapon
+	# did exactly what an unnamed one did.
+	var p := _player_with_gear()
+	var inv: Inventory = p.get_node("Inventory")
+	var eq: Equipment = p.get_node("Equipment")
+	var stack := inv.add("core:item/iron_sword", 1, {"enchant":
+		{"effect": "core:effect/ember_burst", "magnitude": 8.0, "duration": 4.0, "charge": 30, "charge_max": 30}})
+	eq.equip(stack)
+	var hit := p.weapon.build_hit("light", 0, 0.0, 10.0)
+	assert_eq(hit.kind, "fire", "the blade's own damage type wins")
+	var burned := false
+	for st in hit.statuses:
+		if str(st["id"]) == "burning":
+			burned = true
+	assert_true(burned, "and it leaves the mark the effect describes")
+	assert_gt(hit.enchant_cost, 0, "which costs charge")
+	p.weapon._spend_charge(hit.enchant_cost)
+	assert_eq(int(stack.data["enchant"]["charge"]), 30 - hit.enchant_cost, "off the blade and off the stack")
+	# A spent enchantment is a decoration.
+	stack.data["enchant"]["charge"] = 0
+	p.weapon.enchant["charge"] = 0
+	var spent := p.weapon.build_hit("light", 0, 0.0, 10.0)
+	assert_eq(spent.kind, "slash", "a weapon with nothing left in it is just iron")
+	assert_eq(spent.enchant_cost, 0)
+	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
+	p.free()

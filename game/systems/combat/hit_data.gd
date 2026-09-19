@@ -22,6 +22,9 @@ var knockback: float = 0.0           # metres of shove along the hit direction
 var statuses: Array = []             # [{"id": "bleeding", "duration": 6.0, "magnitude": 1.0}]
 var skill_id: String = ""            # skill that gains XP when this lands
 var label: String = ""               # attack name, for logs and tests
+## Charge an enchantment spends when this hit lands; the wielder's weapon takes it back off
+## the blade so a named weapon runs down with use.
+var enchant_cost: int = 0
 
 
 func copy() -> HitData:
@@ -44,6 +47,7 @@ func copy() -> HitData:
 	h.statuses = statuses.duplicate(true)
 	h.skill_id = skill_id
 	h.label = label
+	h.enchant_cost = enchant_cost
 	return h
 
 

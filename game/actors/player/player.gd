@@ -73,6 +73,8 @@ var _buffer_at: float = -1.0
 var _move_input: Vector2 = Vector2.ZERO
 var _look_stick: Vector2 = Vector2.ZERO
 var _lantern_light: OmniLight3D = null
+## A crossbow is loaded, not drawn: it looses at once and then costs you the time back.
+var _reload_until: float = -1.0
 var _attack_kind: String = "light"
 var _attack_index: int = 0
 var _attack_phase: String = ""
@@ -135,6 +137,7 @@ func _ready() -> void:
 	add_to_group("player")
 	SaveSystem.register(SAVE_SECTION, self)
 	_register_character_sections()
+	_follow_equipment()
 	if DisplayServer.get_name() != "headless" and input_enabled:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	call_deferred("_announce")
@@ -147,6 +150,11 @@ func _announce() -> void:
 func _exit_tree() -> void:
 	if SaveSystem.participants.get(SAVE_SECTION) == self:
 		SaveSystem.unregister(SAVE_SECTION)
+	for pair in [["inventory", "Inventory"], ["equipment", "Equipment"],
+			["progression", "Progression"], ["crafting", "Crafting"]]:
+		var node := get_node_or_null(NodePath(pair[1]))
+		if node != null and SaveSystem.participants.get(str(pair[0])) == node:
+			SaveSystem.unregister(str(pair[0]))
 
 
 # --- input --------------------------------------------------------------------------------------
@@ -757,6 +765,9 @@ func _start_bow() -> bool:
 	if arrows <= 0 and not ammo_provider.is_valid():
 		EventBus.notify.emit("No arrows.", "warning")
 		return false
+	if now() < _reload_until:
+		EventBus.notify.emit("Still winding.", "warning")
+		return false
 	_bow_draw_start = now()
 	var draw_time := float(weapon.ranged.get("draw_time", 0.7))
 	anim.play_intent("Bow_Draw", {"length": draw_time})
@@ -826,6 +837,9 @@ func _fire_arrow(drawn: float) -> void:
 	arrow.struck.connect(func(_v: Node, h: HitData, outcome: String) -> void:
 		if outcome == "hit" or outcome == "blocked":
 			EventBus.skill_used.emit(h.skill_id, 3.0))
+	var reload := float(weapon.ranged.get("reload_time", 0.0))
+	if reload > 0.0:
+		_reload_until = now() + reload
 	_emit_noise(0.3)
 
 
@@ -884,11 +898,11 @@ func set_skill(skill_id: String, level_value: int) -> void:
 	skills[skill_id] = level_value
 
 
-func equip_weapon(item_id: String) -> void:
+func equip_weapon(item_id: String, instance_data: Dictionary = {}) -> void:
 	if weapon != null:
 		weapon.end_attack()
 		weapon.queue_free()
-	weapon = WeaponInstance.unarmed(self) if item_id.is_empty() else WeaponInstance.from_item(item_id, self)
+	weapon = WeaponInstance.unarmed(self) if item_id.is_empty() else WeaponInstance.from_item(item_id, self, instance_data)
 	attack_origin.add_child(weapon)
 	weapon.hit_landed.connect(_on_weapon_hit)
 	equipped["main_hand"] = item_id
@@ -965,6 +979,11 @@ func toggle_lantern() -> bool:
 	return lantern_lit
 
 
+## Seconds before the weapon can be loosed again; 0 for a bow, which is drawn instead.
+func reload_left() -> float:
+	return maxf(_reload_until - now(), 0.0)
+
+
 func equip_spell(spell_id: String) -> void:
 	equipped_spell = spell_id
 
@@ -1016,6 +1035,52 @@ func _on_camera_mode_changed(fp: bool) -> void:
 ## The bag, the paper doll, the skills and the known recipes ride with the character, not
 ## with the world, so the player owns their save sections. Each is registered under its
 ## own name so a future pack can add one without touching this file.
+## Binds the hands to the Equipment node when the player has one, so what the menu equips is
+## what gets swung, with the stack's temper and enchantment on it. Without an Equipment node
+## (the arena, the tests) equip_weapon stays the way in.
+func _follow_equipment() -> void:
+	var eq := get_node_or_null(NodePath("Equipment"))
+	if eq == null or not eq.has_signal("changed"):
+		return
+	if not eq.changed.is_connected(_on_equipment_changed):
+		eq.changed.connect(_on_equipment_changed)
+	for slot in ["main_hand", "off_hand", "body"]:
+		_on_equipment_changed(slot)
+
+
+func _on_equipment_changed(slot: String) -> void:
+	var eq := get_node_or_null(NodePath("Equipment"))
+	if eq == null or not eq.has_method("get_slot"):
+		return
+	var stack: Variant = eq.call("get_slot", slot)
+	var id := str(stack.id) if stack != null else ""
+	var stack_data: Dictionary = stack.data.duplicate(true) if stack != null else {}
+	match slot:
+		"main_hand":
+			if id != equipped.get("main_hand", "") or not stack_data.is_empty():
+				equip_weapon(id, stack_data)
+		"off_hand":
+			equip_offhand(id)
+		"body":
+			equip_armour(id)
+
+
+## The blade running down: the WeaponInstance spent charge, so the stack it came from loses it
+## too, which is what makes it survive unequipping and a save.
+func on_weapon_charge_spent(item_id: String, left: int) -> void:
+	var eq := get_node_or_null(NodePath("Equipment"))
+	if eq == null or not eq.has_method("get_slot"):
+		return
+	var stack: Variant = eq.call("get_slot", "main_hand")
+	if stack == null or str(stack.id) != item_id:
+		return
+	var ench: Dictionary = stack.data.get("enchant", {})
+	if ench.is_empty():
+		return
+	ench["charge"] = left
+	stack.data["enchant"] = ench
+
+
 func _register_character_sections() -> void:
 	for pair in [["inventory", "Inventory"], ["equipment", "Equipment"],
 			["progression", "Progression"], ["crafting", "Crafting"]]:
