@@ -33,6 +33,9 @@ const SOCKETS := {
 	"Socket.Back": "Back", "Socket.HipL": "HipL", "Socket.Head": "Head", "Socket.Lantern": "Lantern",
 }
 const DEFAULT_BLEND := 0.12
+## Cross-fades on the state machine edges: into a one-shot fast, back to locomotion softer.
+const ONE_SHOT_BLEND_IN := 0.08
+const ONE_SHOT_BLEND_OUT := 0.14
 const LOCOMOTION_STATE := "Locomotion"
 
 @export var appearance_dict: Dictionary = {}:
@@ -382,8 +385,14 @@ func _apply_proportions() -> void:
 
 func _build_animation_tree() -> void:
 	var sm := AnimationNodeStateMachine.new()
-	sm.state_machine_type = AnimationNodeStateMachine.STATE_MACHINE_TYPE_GROUPED
+	# ROOT, not GROUPED: a grouped machine may only be driven through its parent's playback,
+	# and this one is the tree root, so every travel() on it pushed an error.  A walking
+	# actor did that once a frame.
+	sm.state_machine_type = AnimationNodeStateMachine.STATE_MACHINE_TYPE_ROOT
 	sm.add_node(LOCOMOTION_STATE, _build_locomotion_blend(), Vector2(0, 0))
+	var boot := _transition(0.0, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
+	boot.advance_mode = AnimationNodeStateMachineTransition.ADVANCE_MODE_AUTO
+	sm.add_transition("Start", LOCOMOTION_STATE, boot)
 	var x := 260.0
 	var y := -420.0
 	for name in anim_player.get_animation_list():
@@ -392,6 +401,11 @@ func _build_animation_tree() -> void:
 		var node := AnimationNodeAnimation.new()
 		node.animation = name
 		sm.add_node(name, node, Vector2(x, y))
+		# travel() needs a path of real transitions or it teleports without a cross-fade
+		sm.add_transition(LOCOMOTION_STATE, name,
+				_transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
+		sm.add_transition(name, LOCOMOTION_STATE,
+				_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		y += 46.0
 		if y > 420.0:
 			y = -420.0
@@ -407,6 +421,17 @@ func _build_animation_tree() -> void:
 	anim_tree = tree
 	_state_machine = tree.get("parameters/playback")
 	tree.set("parameters/%s/blend_position" % LOCOMOTION_STATE, Vector2.ZERO)
+
+
+## One transition resource per edge: they are cheap, and `travel` refuses to cross-fade
+## between two states that are not connected.
+func _transition(xfade: float, mode: int) -> AnimationNodeStateMachineTransition:
+	var t := AnimationNodeStateMachineTransition.new()
+	t.xfade_time = xfade
+	t.switch_mode = mode
+	t.advance_mode = AnimationNodeStateMachineTransition.ADVANCE_MODE_ENABLED
+	t.reset = false
+	return t
 
 
 ## Blend space: x is strafe (-1 left .. +1 right), y is forward speed (-1 back .. +1 run),
@@ -466,7 +491,12 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 		_one_shot = ""
 		_state_machine.travel(LOCOMOTION_STATE)
 		return true
-	_state_machine.start(clip_name, true)
+	# travel() cross-fades along the edge built for it; from another one-shot there is no
+	# direct edge, and routing through Locomotion would flash a walk, so that case restarts.
+	if _state_machine.get_current_node() == LOCOMOTION_STATE:
+		_state_machine.travel(clip_name)
+	else:
+		_state_machine.start(clip_name, true)
 	_one_shot = clip_name
 	_one_shot_time = 0.0
 	_one_shot_length = clip_length(clip_name)
