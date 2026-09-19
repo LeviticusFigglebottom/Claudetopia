@@ -623,8 +623,11 @@ def hair_paint(colour: str = "brown", seed: int = 0, grey: float = 0.0) -> Paint
         strand = n.fbm(p * np.array([3.0, 1.0, 1.0]), freq=120.0, octaves=2)
         big = n.fbm(p, freq=14.0, octaves=3)
         c = np.broadcast_to(base, (len(p), 3)).copy()
-        c = mix(c, np.clip(base * 0.45, 0, 1), 0.45 * strand)
-        c = mix(c, np.clip(base * 1.5 + 0.06, 0, 1), 0.30 * smoothstep(0.55, 0.95, big) * np.clip(nrm[:, 2], 0, 1))
+        # lighter overall and less contrasty than before: a dark head of hair baked at full
+        # strength goes to a black shell once the engine's own shading is on top of it
+        c = np.clip(c * 1.22 + 0.035, 0, 1)
+        c = mix(c, np.clip(base * 0.62, 0, 1), 0.34 * strand)
+        c = mix(c, np.clip(base * 1.9 + 0.12, 0, 1), 0.42 * smoothstep(0.45, 0.92, big) * np.clip(nrm[:, 2], 0, 1))
         if grey > 0.01:
             g = smoothstep(0.35, 0.85, n.fbm(p, freq=9.0, octaves=2))
             c = mix(c, np.array([0.80, 0.78, 0.75]), np.clip(g * grey, 0, 1))

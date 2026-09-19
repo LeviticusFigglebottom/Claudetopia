@@ -1124,7 +1124,9 @@ MATERIAL_DEFAULTS: Dict[str, dict] = {
     "cloth": {"roughness": 0.88, "metallic": 0.0, "colour": "primary"},
     "leather": {"roughness": 0.62, "metallic": 0.0, "colour": "leather"},
     "iron": {"roughness": 0.38, "metallic": 1.0, "colour": "metal"},
-    "hair": {"roughness": 0.52, "metallic": 0.0, "colour": "hair"},
+    # Hair at 0.52 roughness reads as a moulded swim cap under a sky light; real hair
+    # scatters far more than it reflects.
+    "hair": {"roughness": 0.78, "metallic": 0.0, "colour": "hair"},
     "horn": {"roughness": 0.55, "metallic": 0.0, "colour": "#c9bda6"},
     "glow": {"roughness": 0.30, "metallic": 0.0, "colour": "#ffe7a8"},
 }

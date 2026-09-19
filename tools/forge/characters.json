@@ -153,7 +153,7 @@
     "head": "heavy_brow",
     "torso": "robe"
    },
-   "seed": 53266,
+   "seed": 49421,
    "skin": "deep"
   },
   "bandit": {
@@ -179,7 +179,7 @@
     "legs": "trousers",
     "torso": "gambeson"
    },
-   "seed": 21923,
+   "seed": 95413,
    "skin": "olive",
    "stubble": 0.7
   },
@@ -207,7 +207,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 60824,
+   "seed": 95813,
    "shoulder_width": 0.88,
    "skin": "fair"
   },
@@ -236,7 +236,7 @@
     "legs": "kilt",
     "torso": "shirt"
    },
-   "seed": 15378,
+   "seed": 40406,
    "skin": "fair"
   },
   "hearth_touched": {
@@ -263,7 +263,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 62912,
+   "seed": 69210,
    "skin": "wheat"
   },
   "hollow_touched": {
@@ -288,7 +288,7 @@
     "legs": "trousers",
     "torso": "gambeson"
    },
-   "seed": 25240,
+   "seed": 63477,
    "skin": "porcelain",
    "veins": 0.9
   },
@@ -315,7 +315,7 @@
     "legs": "trousers",
     "torso": "coat"
    },
-   "seed": 1281,
+   "seed": 21254,
    "skin": "wheat"
   },
   "merchant": {
@@ -343,7 +343,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 40138,
+   "seed": 64743,
    "skin": "wheat"
   },
   "player_ashwalker": {
@@ -367,7 +367,7 @@
     "head": "hawk",
     "torso": "robe"
    },
-   "seed": 77769,
+   "seed": 33835,
    "skin": "amber"
   },
   "player_cragborn": {
@@ -395,7 +395,7 @@
     "legs": "kilt",
     "torso": "gambeson"
    },
-   "seed": 39807,
+   "seed": 28983,
    "shoulder_width": 1.12,
    "skin": "fair"
   },
@@ -421,7 +421,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 47995,
+   "seed": 85739,
    "skin": "fair"
   },
   "player_lantern_clerk": {
@@ -449,7 +449,7 @@
     "legs": "trousers",
     "torso": "coat"
    },
-   "seed": 17292,
+   "seed": 74610,
    "skin": "porcelain"
   },
   "player_reedborn": {
@@ -474,7 +474,7 @@
     "legs": "wrap_skirt",
     "torso": "wrap_torso"
    },
-   "seed": 30779,
+   "seed": 87669,
    "skin": "olive"
   },
   "player_wayfarer": {
@@ -500,7 +500,7 @@
     "legs": "trousers",
     "torso": "shirt"
    },
-   "seed": 92377,
+   "seed": 37731,
    "skin": "wheat"
   },
   "reedfolk_eeler": {
@@ -525,7 +525,7 @@
     "legs": "wrap_skirt",
     "torso": "wrap_torso"
    },
-   "seed": 80697,
+   "seed": 24688,
    "skin": "umber"
   },
   "sayer": {
@@ -551,7 +551,7 @@
     "head": "soft",
     "torso": "robe"
    },
-   "seed": 315,
+   "seed": 76543,
    "skin": "porcelain"
   },
   "tolling_knight": {
@@ -571,6 +571,7 @@
     "trim": "#a08a4a"
    },
    "parts": {
+    "back": "pauldrons",
     "belt": "belt",
     "feet": "boots",
     "hair": "cropped",
@@ -580,7 +581,7 @@
     "legs": "trousers",
     "torso": "plate_torso"
    },
-   "seed": 22048,
+   "seed": 71058,
    "shoulder_width": 1.14,
    "skin": "amber"
   },
@@ -607,7 +608,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 72796,
+   "seed": 50079,
    "skin": "fair"
   },
   "warden_guard": {
@@ -626,6 +627,7 @@
     "trim": "#c9a24a"
    },
    "parts": {
+    "back": "pauldrons",
     "belt": "belt",
     "feet": "boots",
     "hair": "cropped",
@@ -635,7 +637,7 @@
     "legs": "trousers",
     "torso": "brigandine"
    },
-   "seed": 58376,
+   "seed": 4595,
    "shoulder_width": 1.1,
    "skin": "wheat"
   },
@@ -662,7 +664,7 @@
     "legs": "leg_wraps",
     "torso": "shirt"
    },
-   "seed": 18716,
+   "seed": 22612,
    "skin": "olive"
   }
  },

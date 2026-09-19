@@ -5,7 +5,7 @@
   0.9832,
   0.8642,
   0.0721,
-  1.2434
+  1.242
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -16,7 +16,7 @@
   "material": "leather"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 735,
+ "seed": 7182,
  "slot_hint": "hands",
  "tris": [
   1200,

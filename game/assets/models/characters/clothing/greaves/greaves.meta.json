@@ -16,7 +16,7 @@
   "material": "iron"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 5381,
+ "seed": 1778,
  "slot_hint": "feet",
  "tris": [
   1298,

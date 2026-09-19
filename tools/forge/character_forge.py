@@ -722,9 +722,10 @@ def cmd_presets(args) -> None:
         skin="deep", hair_colour="grey", eye_colour="grey", build=0.46, age=0.72)
 
     # -- the named roles the world needs ----------------------------------------------------
+    # A breastplate with bare shoulders reads as a corset, so plate wearers get pauldrons.
     add("warden_guard", "vale",
         {"head": "broad", "hair": "cropped", "torso": "brigandine", "legs": "trousers", "feet": "boots",
-         "belt": "belt", "headgear": "helm", "hands": "gloves"},
+         "belt": "belt", "headgear": "helm", "hands": "gloves", "back": "pauldrons"},
         skin="wheat", hair_colour="dark_brown", eye_colour="brown", build=0.62, bulk=1.06,
         shoulder_width=1.10, age=0.40)
     add("bandit", "vale",
@@ -733,7 +734,7 @@ def cmd_presets(args) -> None:
         skin="olive", hair_colour="soot", eye_colour="hazel", build=0.52, age=0.35, stubble=0.7)
     add("tolling_knight", "ash_pilgrims",
         {"head": "heavy_brow", "hair": "cropped", "torso": "plate_torso", "legs": "trousers", "feet": "boots",
-         "belt": "belt", "headgear": "helm", "hands": "gloves"},
+         "belt": "belt", "headgear": "helm", "hands": "gloves", "back": "pauldrons"},
         skin="amber", hair_colour="grey", eye_colour="grey", build=0.66, bulk=1.10,
         shoulder_width=1.14, height=1.84, age=0.58)
     add("sayer", "lakefolk",

@@ -1,6 +1,6 @@
 {
  "bounds": [
-  -0.4644,
+  -0.4636,
   -0.1454,
   0.9362,
   0.2194,
@@ -16,7 +16,7 @@
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 9840,
+ "seed": 6103,
  "slot_hint": "torso",
  "tris": [
   3200,

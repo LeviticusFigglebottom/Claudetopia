@@ -5,7 +5,7 @@
   0.3916,
   0.541,
   0.1846,
-  1.5543
+  1.553
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -16,7 +16,7 @@
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 5464,
+ "seed": 5919,
  "slot_hint": "torso",
  "tris": [
   4400,
