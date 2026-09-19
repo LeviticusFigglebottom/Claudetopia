@@ -61,7 +61,9 @@ def render_alpha(objs, out_path, size: int = 512, samples: int = 24, margin: flo
 
     sc.render.engine = "CYCLES"
     sc.cycles.samples = samples
-    sc.cycles.use_denoising = True
+    # This Blender build ships without OpenImageDenoise; a constant white environment
+    # converges quickly instead, and _trim_and_write softens what noise is left.
+    sc.cycles.use_denoising = False
     sc.cycles.max_bounces = 2
     sc.cycles.diffuse_bounces = 2
     sc.render.resolution_x = size
@@ -120,6 +122,10 @@ def _trim_and_write(render_path: Path, out_dir: Path, prefix: str, size: int, ro
     sq = sq.resize((size, size), Image.LANCZOS)
     rgb = sq.convert("RGB")
     alpha = sq.getchannel("A")
+    # Path-traced sampling noise would read as photographic grain, which the style contract
+    # rules out; a small blur on colour only (never on alpha) removes it.
+    from PIL import ImageFilter as _IF
+    rgb = rgb.filter(_IF.GaussianBlur(0.6))
     from . import textures as T
     T._margin_bleed(rgb, alpha, iterations=6)
     height = Image.fromarray(np.full((size, size), 128, np.uint8))

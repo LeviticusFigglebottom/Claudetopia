@@ -71,62 +71,94 @@ def leaf_outline(shape: str, n: int = 26) -> list[tuple[float, float]]:
     return pts + back
 
 
+def _tile(points, pad, img_size):
+    """Integer bounding box around `points`, padded and clipped to the image."""
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    x0 = max(0, int(math.floor(min(xs) - pad)))
+    y0 = max(0, int(math.floor(min(ys) - pad)))
+    x1 = min(img_size[0], int(math.ceil(max(xs) + pad)))
+    y1 = min(img_size[1], int(math.ceil(max(ys) + pad)))
+    if x1 <= x0 or y1 <= y0:
+        return None
+    return x0, y0, x1, y1
+
+
+def _composite(rgb, alpha, hgt, box, mask_img, colour_img, height_img):
+    """Paste one drawn element into the three layers, inside `box` only.
+
+    Working on a local tile rather than the whole atlas is what makes drawing a few hundred
+    leaves per cluster affordable: every blur and every array op touches a few thousand
+    pixels instead of a quarter of a million."""
+    x0, y0, x1, y1 = box
+    m = np.asarray(mask_img, dtype=np.float32) / 255.0
+    sel = m > 0.5
+    if not sel.any():
+        return
+    region = (x0, y0, x1, y1)
+    cur_rgb = np.asarray(rgb.crop(region), dtype=np.uint8).copy()
+    np.copyto(cur_rgb, np.asarray(colour_img, dtype=np.uint8), where=sel[..., None])
+    rgb.paste(Image.fromarray(cur_rgb), region)
+    cur_a = np.asarray(alpha.crop(region), dtype=np.float32)
+    alpha.paste(Image.fromarray(np.maximum(cur_a, m * 255.0).astype(np.uint8)), region)
+    if height_img is not None:
+        cur_h = np.asarray(hgt.crop(region), dtype=np.uint8).copy()
+        np.copyto(cur_h, np.asarray(height_img, dtype=np.uint8), where=sel)
+        hgt.paste(Image.fromarray(cur_h), region)
+
+
 def draw_leaf(layers, cx, cy, size, angle, color, shape="oval", rng=None, curl=0.0, vein=0.45, rim=0.35):
-    """Paint one leaf into (rgb, alpha, height, mask) float arrays via PIL drawing."""
+    """Paint one leaf: filled silhouette, soft two-tone gradient, rim light and a midrib."""
     rgb, alpha, hgt = layers
     rng = rng or random.Random(0)
     outline = leaf_outline(shape)
     pts = []
     for (x, y) in outline:
         # gentle curl along the leaf
-        yy = y
         xx = x + curl * (y / 2.0) ** 2
-        p = _rot((xx * size, (yy - 1.0) * size * 0.5), angle)
+        p = _rot((xx * size, (y - 1.0) * size * 0.5), angle)
         pts.append((cx + p[0], cy - p[1]))
-    lay = Image.new("L", rgb.size, 0)
-    d = ImageDraw.Draw(lay)
-    d.polygon(pts, fill=255)
-    # shading: a soft gradient across the leaf plus a lighter rim
+    blur_pad = max(2.0, size * 0.5)
+    box = _tile(pts, blur_pad, rgb.size)
+    if box is None:
+        return
+    x0, y0, x1, y1 = box
+    tw, th = x1 - x0, y1 - y0
+    lpts = [(px - x0, py - y0) for (px, py) in pts]
+
+    lay = Image.new("L", (tw, th), 0)
+    ImageDraw.Draw(lay).polygon(lpts, fill=255)
+
     base = _to8(color)
     dark = _to8([c * 0.62 for c in color])
     light = _to8([min(1.0, c * 1.45) for c in color])
-    grad = Image.new("RGB", rgb.size, base)
+    grad = Image.new("RGB", (tw, th), base)
     gd = ImageDraw.Draw(grad)
     # half the leaf darker (light from the top-left of the card)
-    shade_pts = pts[: len(pts) // 2 + 1] + [pts[0]]
-    gd.polygon(shade_pts, fill=dark)
+    gd.polygon(lpts[: len(lpts) // 2 + 1] + [lpts[0]], fill=dark)
     grad = grad.filter(ImageFilter.GaussianBlur(max(1.0, size * 0.18)))
     # rim light near the tip
     tip = _rot((0.0, size * 0.85), angle)
-    rr = max(1.5, size * 0.42)
-    gd2 = ImageDraw.Draw(grad)
-    gd2.ellipse([cx + tip[0] - rr, cy - tip[1] - rr, cx + tip[0] + rr, cy - tip[1] + rr], fill=light)
+    tx, ty = cx + tip[0] - x0, cy - tip[1] - y0
+    rr = max(1.5, size * 0.42 * (0.6 + rim))
+    ImageDraw.Draw(grad).ellipse([tx - rr, ty - rr, tx + rr, ty + rr], fill=light)
     grad = grad.filter(ImageFilter.GaussianBlur(max(1.0, size * 0.22)))
-    # midrib
-    hh = Image.new("L", rgb.size, 128)
+
+    hh = Image.new("L", (tw, th), 128)
     hd = ImageDraw.Draw(hh)
     a = _rot((0.0, -size * 0.5), angle)
     b = _rot((0.0, size * 1.0), angle)
-    hd.line([(cx + a[0], cy - a[1]), (cx + b[0], cy - b[1])], fill=int(200 * vein + 55), width=max(1, int(size * 0.06)))
+    hd.line([(cx + a[0] - x0, cy - a[1] - y0), (cx + b[0] - x0, cy - b[1] - y0)],
+            fill=int(200 * vein + 55), width=max(1, int(size * 0.06)))
     for k in range(3):
         f = 0.25 + 0.25 * k
         p0 = _rot((0.0, (f * 1.5 - 0.5) * size), angle)
         for sgn in (-1, 1):
             p1 = _rot((sgn * size * 0.35 * (1 - f * 0.5), (f * 1.5 - 0.15) * size), angle)
-            hd.line([(cx + p0[0], cy - p0[1]), (cx + p1[0], cy - p1[1])], fill=int(170 * vein + 55), width=1)
+            hd.line([(cx + p0[0] - x0, cy - p0[1] - y0), (cx + p1[0] - x0, cy - p1[1] - y0)],
+                    fill=int(170 * vein + 55), width=1)
     hh = hh.filter(ImageFilter.GaussianBlur(max(0.8, size * 0.05)))
-    m = np.asarray(lay, dtype=np.float32) / 255.0
-    rgb_a = np.asarray(rgb, dtype=np.float32)
-    grad_a = np.asarray(grad, dtype=np.float32)
-    np.copyto(rgb_a, grad_a, where=(m[..., None] > 0.5))
-    rgb.paste(Image.fromarray(rgb_a.astype(np.uint8)))
-    alpha_a = np.asarray(alpha, dtype=np.float32)
-    alpha_a = np.maximum(alpha_a, m * 255.0)
-    alpha.paste(Image.fromarray(alpha_a.astype(np.uint8)))
-    h_a = np.asarray(hgt, dtype=np.float32)
-    hv = np.asarray(hh, dtype=np.float32)
-    np.copyto(h_a, hv, where=(m > 0.5))
-    hgt.paste(Image.fromarray(h_a.astype(np.uint8)))
+    _composite(rgb, alpha, hgt, box, lay, grad, hh)
 
 
 # --- normal / ORM from a height map -------------------------------------------------------
@@ -254,24 +286,24 @@ def leaf_cluster_atlas(out_dir, prefix: str, color, shapes=("oval",), seed: int 
 
 
 def _blob(rgb, alpha, hgt, cx, cy, r, color):
-    lay = Image.new("L", rgb.size, 0)
-    ImageDraw.Draw(lay).ellipse([cx - r, cy - r, cx + r, cy + r], fill=255)
+    """A round element with a highlight: a berry, an apple, a floret."""
+    box = _tile([(cx - r, cy - r), (cx + r, cy + r)], max(2.0, r * 0.8), rgb.size)
+    if box is None:
+        return
+    x0, y0, x1, y1 = box
+    tw, th = x1 - x0, y1 - y0
+    lx, ly = cx - x0, cy - y0
+    lay = Image.new("L", (tw, th), 0)
+    ImageDraw.Draw(lay).ellipse([lx - r, ly - r, lx + r, ly + r], fill=255)
     base = _to8(color)
     light = _to8([min(1.0, c * 1.7) for c in color])
-    grad = Image.new("RGB", rgb.size, base)
-    gd = ImageDraw.Draw(grad)
-    gd.ellipse([cx - r * 0.85, cy - r * 0.9, cx + r * 0.1, cy - r * 0.05], fill=light)
+    grad = Image.new("RGB", (tw, th), base)
+    ImageDraw.Draw(grad).ellipse([lx - r * 0.85, ly - r * 0.9, lx + r * 0.1, ly - r * 0.05], fill=light)
     grad = grad.filter(ImageFilter.GaussianBlur(max(1.0, r * 0.45)))
-    m = np.asarray(lay, dtype=np.float32) / 255.0
-    rgb_a = np.asarray(rgb, dtype=np.float32)
-    np.copyto(rgb_a, np.asarray(grad, dtype=np.float32), where=(m[..., None] > 0.5))
-    rgb.paste(Image.fromarray(rgb_a.astype(np.uint8)))
-    a = np.maximum(np.asarray(alpha, dtype=np.float32), m * 255)
-    alpha.paste(Image.fromarray(a.astype(np.uint8)))
-    hh = np.asarray(hgt, dtype=np.float32)
-    bulge = np.clip(1.0 - ((np.indices(rgb.size[::-1])[0] - cy) ** 2 + (np.indices(rgb.size[::-1])[1] - cx) ** 2) / max(1.0, r * r), 0, 1)
-    np.copyto(hh, 128 + bulge * 110, where=(m > 0.5))
-    hgt.paste(Image.fromarray(hh.astype(np.uint8)))
+    yy, xx = np.mgrid[0:th, 0:tw]
+    bulge = np.clip(1.0 - (((xx - lx) ** 2 + (yy - ly) ** 2) / max(1.0, r * r)), 0.0, 1.0)
+    hh = Image.fromarray((128 + bulge * 110).astype(np.uint8))
+    _composite(rgb, alpha, hgt, box, lay, grad, hh)
 
 
 def _margin_bleed(rgb, alpha, iterations: int = 3) -> None:
@@ -329,28 +361,28 @@ def _blade(rgb, alpha, hgt, x0, y0, h, lean_x, w, color, bend=0.5, taper=0.85, r
         right.append((x + ww, y))
         mid.append((x, y))
     poly = left + list(reversed(right))
-    lay = Image.new("L", rgb.size, 0)
-    ImageDraw.Draw(lay).polygon(poly, fill=255)
+    box = _tile(poly, max(2.0, w * 2.0), rgb.size)
+    if box is None:
+        return
+    x0, y0, x1, y1 = box
+    tw, th = x1 - x0, y1 - y0
+    lpoly = [(px - x0, py - y0) for (px, py) in poly]
+    lmid = [(px - x0, py - y0) for (px, py) in mid]
+    lay = Image.new("L", (tw, th), 0)
+    ImageDraw.Draw(lay).polygon(lpoly, fill=255)
     base = _to8(color)
     dark = _to8([c * 0.55 for c in color])
     light = _to8([min(1.0, c * 1.5) for c in color])
-    grad = Image.new("RGB", rgb.size, dark)
+    grad = Image.new("RGB", (tw, th), dark)
     gd = ImageDraw.Draw(grad)
-    gd.line(mid, fill=base, width=max(1, int(w * 1.6)))
-    gd.line(mid[len(mid) // 2:], fill=light, width=max(1, int(w * 0.9)))
+    gd.line(lmid, fill=base, width=max(1, int(w * 1.6)))
+    gd.line(lmid[len(lmid) // 2:], fill=light, width=max(1, int(w * 0.9)))
     grad = grad.filter(ImageFilter.GaussianBlur(max(0.8, w * 0.5)))
-    m = np.asarray(lay, dtype=np.float32) / 255.0
-    rgb_a = np.asarray(rgb, dtype=np.float32)
-    np.copyto(rgb_a, np.asarray(grad, dtype=np.float32), where=(m[..., None] > 0.5))
-    rgb.paste(Image.fromarray(rgb_a.astype(np.uint8)))
-    a = np.maximum(np.asarray(alpha, dtype=np.float32), m * 255)
-    alpha.paste(Image.fromarray(a.astype(np.uint8)))
-    hh = np.asarray(hgt, dtype=np.float32)
-    rib = Image.new("L", rgb.size, 0)
-    ImageDraw.Draw(rib).line(mid, fill=230, width=max(1, int(w)))
+    rib = Image.new("L", (tw, th), 0)
+    ImageDraw.Draw(rib).line(lmid, fill=230, width=max(1, int(w)))
     rib = rib.filter(ImageFilter.GaussianBlur(max(0.8, w * 0.6)))
-    np.copyto(hh, 110 + np.asarray(rib, dtype=np.float32) * 0.5, where=(m > 0.5))
-    hgt.paste(Image.fromarray(hh.astype(np.uint8)))
+    hh = Image.fromarray((110 + np.asarray(rib, dtype=np.float32) * 0.5).astype(np.uint8))
+    _composite(rgb, alpha, hgt, box, lay, grad, hh)
 
 
 def flower_atlas(out_dir, prefix: str, leaf_color, flower_color, seed: int = 0, size: int = 512, cells: int = 2,

@@ -294,12 +294,20 @@ def edge_wear(nb: NB, base, worn, amount=0.5, lo=0.52, hi=0.64, breakup_vec=None
     return nb.mix(mask, base, worn), mask
 
 
-def cavity_dirt(nb: NB, base, dirt, amount=0.5, distance=0.15, breakup_vec=None):
-    """Darken and dirty concave areas with the AO node (real occlusion, soft falloff)."""
+def cavity_dirt(nb: NB, base, dirt, amount=0.5, distance=0.15, breakup_vec=None, cheap=False):
+    """Darken and dirty concave areas.
+
+    By default this uses the AO node, which traces real occlusion and gives the soft,
+    believable falloff a painted surface wants. `cheap=True` swaps in the free
+    curvature-based concavity, for meshes where the AO rays would cost more than they are
+    worth (a tree trunk has no cavities to speak of, and there are a lot of samples)."""
     if amount <= 0.0:
         return base, None
-    occ = nb.ao(distance=distance)
-    mask = nb.map_range(occ, 0.25, 0.95, 1.0, 0.0)
+    if cheap:
+        mask = nb.concavity(0.5, 0.4)
+    else:
+        occ = nb.ao(distance=distance)
+        mask = nb.map_range(occ, 0.25, 0.95, 1.0, 0.0)
     if breakup_vec is not None:
         bn = nb.noise(breakup_vec, scale=3.0, detail=2.0, rough=0.5)
         mask = nb.math("MULTIPLY", mask, nb.map_range(bn.outputs["Fac"], 0.3, 0.7, 0.4, 1.0), clamp=True)
@@ -411,7 +419,9 @@ def _bark_common(nb, pal, base, fissure_scale, stretch, depth, tint, moss=0.35, 
         ln = nb.noise(nb.coord(6.0), scale=1.0, detail=2.0, rough=0.6)
         lm = nb.map_range(ln.outputs["Fac"], 0.68 - 0.12 * lichen, 0.8, 0.0, 1.0)
         col = nb.mix(lm, col, lichen_col or P.lin("#9aa08c"))
-    col, _ = cavity_dirt(nb, col, shade(dark, 0.6), amount=0.4, distance=0.2)
+    # Bark's own fissures already carry the cavity reading, and a trunk is a big mesh to
+    # trace AO rays across, so use the free curvature term here.
+    col, _ = cavity_dirt(nb, col, shade(dark, 0.6), amount=0.4, distance=0.2, cheap=True)
     height = nb.math("ADD", nb.math("MULTIPLY", fis, 0.7), nb.math("MULTIPLY", pn.outputs["Fac"], 0.3))
     normal = nb.bump(height, strength=depth, distance=0.03)
     rough = rough_var(nb, v, 0.85, 0.08)

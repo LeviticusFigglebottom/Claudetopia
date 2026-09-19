@@ -170,9 +170,30 @@ def save_png(arr: np.ndarray, path, size: int | None = None) -> None:
 
 # --- main entry -------------------------------------------------------------------------
 
+@contextlib.contextmanager
+def only_visible(obj, occluders=()):
+    """Hide every other mesh from the ray-traced passes.
+
+    The AO bake traces against the whole scene, so a tree's leaf cards (alpha-tested, and
+    hundreds of them) or an impostor billboard standing next to the model would both
+    falsify the occlusion and make the bake orders of magnitude slower. Objects listed in
+    `occluders` stay visible on purpose."""
+    keep = {obj, *occluders}
+    hidden = []
+    for o in bpy.context.scene.objects:
+        if o.type == "MESH" and o not in keep and not o.hide_render:
+            o.hide_render = True
+            hidden.append(o)
+    try:
+        yield
+    finally:
+        for o in hidden:
+            o.hide_render = False
+
+
 def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_distance: float | None = None,
                orm_scale: float = 0.5, alpha: bool = False, samples: int | None = None,
-               texture_prefix: str | None = None) -> dict:
+               texture_prefix: str | None = None, occluders=()) -> dict:
     """Bake `obj` (all material slots) into <out_dir>/<prefix>_{albedo,normal,orm}.png and
     replace its materials with one baked Principled material named <name>_mat."""
     t0 = time.time()
@@ -195,6 +216,7 @@ def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_dista
     added = _attach_bake_targets(mats, img)
     S.select_only([obj])
     try:
+      with only_visible(obj, occluders):
         with channel_as_emission(mats, "Base Color"):
             _bake("EMIT", col_samples, margin)
             albedo = _read(img, size)

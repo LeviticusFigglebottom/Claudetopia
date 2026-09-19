@@ -287,17 +287,23 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
                  collision_params: dict | None = None, quick: bool = False, res: int = 0, tier: str | None = None,
                  lods: bool = True, lod_ratios=LOD_RATIOS, card_keep=(0.55, 0.25), smooth_angle: float = 35.0,
                  alpha: bool = False, orm_scale: float = 0.5, write_import: bool = True, extra_meta: dict | None = None,
-                 version: int = FORGE_VERSION, rng=None, materials_used: list[str] | None = None) -> dict:
+                 version: int = FORGE_VERSION, rng=None, materials_used: list[str] | None = None,
+                 impostor=None, impostor_textures: dict | None = None) -> dict:
     """Bake, LOD, export and describe one asset. Returns the meta dict written to disk.
 
     opaque_objs: procedural-material parts, joined into one mesh and baked to one atlas.
     card_objs:   alpha-card parts that already carry image (foliage) materials.
     baked_objs:  parts that were baked separately already (own textures), exported as-is.
+    impostor:    an object that *replaces* the whole asset at LOD2 (crossed-card billboard);
+                 when given, only one decimated level is generated below LOD0.
     """
     t0 = time.time()
     if collision not in COLLISION_KINDS:
         raise ValueError("collision must be one of %s" % (COLLISION_KINDS,))
     out_dir = cli.asset_dir(out_root, category, name)
+    if impostor is not None:
+        lod_ratios = lod_ratios[:1]
+        card_keep = card_keep[:1]
     meta_textures: list[str] = []
     slot_map: dict = {}
     parts: list[list] = []  # list of LOD chains
@@ -336,6 +342,15 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
         raise RuntimeError("finish_asset: nothing to export")
     bnd = bounds_dict(lod0)
     all_objs = [o for chain in parts for o in chain]
+    if impostor is not None:
+        impostor.name = "%s_LOD%d" % (name, len(lod_ratios) + 1)
+        impostor.data.name = impostor.name
+        if impostor_textures:
+            for m in impostor.data.materials:
+                if m is not None:
+                    slot_map.update(texture_slots(m.name, dict(impostor_textures)))
+            meta_textures += [t for t in impostor_textures.values() if t not in meta_textures]
+        all_objs.append(impostor)
     glb_path = out_dir / ("%s.glb" % name)
     export_info = export_glb(all_objs, glb_path, slot_map)
 
@@ -356,6 +371,8 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     tris = []
     for i in range(n_lods):
         tris.append(sum(S.tri_count(chain[min(i, len(chain) - 1)]) for chain in parts))
+    if impostor is not None:
+        tris.append(S.tri_count(impostor))
     while len(tris) < 3:
         tris.append(tris[-1])
 
