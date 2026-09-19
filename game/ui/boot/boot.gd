@@ -23,7 +23,7 @@ func _ready() -> void:
 		_start_world(args)
 		return
 	if ResourceLoader.exists("res://ui/menus/main_menu.tscn"):
-		get_tree().change_scene_to_file("res://ui/menus/main_menu.tscn")
+		get_tree().change_scene_to_file.call_deferred("res://ui/menus/main_menu.tscn")
 	else:
 		_start_world(args)
 
@@ -49,7 +49,7 @@ func _start_world(args: Dictionary) -> void:
 
 func _run_smoke() -> void:
 	if ResourceLoader.exists("res://tests/smoke/smoke_runner.tscn"):
-		get_tree().change_scene_to_file("res://tests/smoke/smoke_runner.tscn")
+		get_tree().change_scene_to_file.call_deferred("res://tests/smoke/smoke_runner.tscn")
 	else:
 		Log.error("Boot", "smoke runner missing")
 		get_tree().quit(2)
@@ -58,7 +58,7 @@ func _run_smoke() -> void:
 func _run_capture(plan: String) -> void:
 	if ResourceLoader.exists("res://tools_gd/capture_runner.tscn"):
 		GameState.set_flag("_capture_plan", plan)
-		get_tree().change_scene_to_file("res://tools_gd/capture_runner.tscn")
+		get_tree().change_scene_to_file.call_deferred("res://tools_gd/capture_runner.tscn")
 	else:
 		Log.error("Boot", "capture runner missing")
 		get_tree().quit(2)

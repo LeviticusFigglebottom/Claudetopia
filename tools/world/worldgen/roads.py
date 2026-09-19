@@ -39,8 +39,12 @@ def pad_radius(place: dict) -> float:
     return PAD_RADIUS.get(str(place.get("kind", "")), PAD_DEFAULT)
 
 
-def apply_pads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray | None = None) -> tuple:
-    """Flatten a platform at every place. Returns (heights, pad_mask, pad heights by place id)."""
+def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None = None) -> tuple:
+    """Flatten a platform at every place. Returns (heights, pad_mask, pad heights by place id).
+
+    `min_levels` lifts a pad that would otherwise sit under standing water: a stilt-town in
+    the marsh stands on the highest peat island it can find, not in the pools.
+    """
     n = grid.n
     X, Z = grid.mesh()
     pad_mask = np.zeros((n, n), dtype=bool)
@@ -59,6 +63,8 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray |
         d = np.sqrt(dx * dx + dz * dz)
         inner = d <= r * 0.75
         level = float(np.median(sub[inner])) if inner.any() else float(H[int(i), int(j)])
+        if min_levels is not None and p["id"] in min_levels:
+            level = max(level, float(min_levels[p["id"]]))
         levels[p["id"]] = level
         w = 1.0 - smoothstep(r * 0.7, r * 1.6, d)
         H[i0:i1, j0:j1] = lerp(sub, level, w)
@@ -87,6 +93,7 @@ def _grade(profile: np.ndarray, step_m: float, max_grade: float = 0.11, passes: 
 def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, levels: dict,
                n_c: int = 512) -> list:
     """Minimum spanning tree over settlements plus a couple of convenience links."""
+    n_c = min(n_c, grid.n)
     gc = grid.with_n(n_c)
     hc = downsample(H, n_c)
     wc = downsample(water_mask.astype(np.float32), n_c)

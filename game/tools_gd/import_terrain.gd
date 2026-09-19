@@ -7,7 +7,6 @@ extends Node
 ## Reads  res://world/generated/{world_manifest.json, heights.r32, control.u32, color.rgba8}
 ## Writes res://terrain_data/terrain3d*.res   (gitignored build artifact)
 ##        res://world/terrain_assets.tres     (Terrain3DAssets: the 21 slots of CONTRACTS §5)
-##        res://world/terrain_material.tres   (Terrain3DMaterial with our shader settings)
 ##
 ## The control map arrives pre-packed by the Python builder (see worldgen/output.pack_control),
 ## so nothing here touches a pixel: 4096² images are handed to Terrain3D as raw byte arrays.
@@ -15,7 +14,6 @@ extends Node
 const GENERATED := "res://world/generated"
 const DATA_DIR := "res://terrain_data"
 const ASSETS_PATH := "res://world/terrain_assets.tres"
-const MATERIAL_PATH := "res://world/terrain_material.tres"
 const TEXTURE_DIR := "res://assets/textures/terrain"
 const REGION_SIZE := 1024
 const VERTEX_SPACING := 2.0
@@ -67,11 +65,9 @@ func run() -> int:
 	var assets := _build_assets()
 	if assets == null:
 		return 1
-	var material := _build_material()
 
 	var terrain: Node3D = ClassDB.instantiate("Terrain3D")
 	terrain.name = "Terrain3D"
-	terrain.set("material", material)
 	terrain.set("assets", assets)
 	add_child(terrain)
 	# Terrain3D builds its data object when the node enters the world, one frame after
@@ -83,6 +79,7 @@ func run() -> int:
 	# takes effect through change_region_size() once the data object exists.
 	terrain.call("change_region_size", REGION_SIZE)
 	terrain.set("vertex_spacing", VERTEX_SPACING)
+	_configure_material(terrain.get("material"))
 	if int(terrain.get("region_size")) != REGION_SIZE:
 		Log.error("ImportTerrain", "region size stuck at %d (wanted %d)" % [int(terrain.get("region_size")), REGION_SIZE])
 		return 1
@@ -195,12 +192,16 @@ func _build_assets() -> Resource:
 	return assets
 
 
-func _build_material() -> Resource:
-	var mat: Resource = ClassDB.instantiate("Terrain3DMaterial")
+## The terrain node makes its own Terrain3DMaterial; we only set it up. (Instantiating a
+## detached one and saving it as a resource makes Terrain3D try to load an empty shader path.)
+func _configure_material(mat: Object) -> void:
+	if mat == null:
+		return
 	mat.set("world_background", 1)            # FLAT: the sea and the Hush continue past the regions
 	mat.set("auto_shader", false)             # our control map is authored, not automatic
 	mat.set("dual_scaling", false)
 	mat.set("texture_filtering", 0)           # linear
+	mat.set("show_checkered", false)
 	mat.call("set_shader_param", "blend_sharpness", 0.82)
 	mat.call("set_shader_param", "enable_macro_variation", true)
 	mat.call("set_shader_param", "macro_variation1", Color(0.94, 0.96, 0.90))
@@ -209,7 +210,3 @@ func _build_material() -> Resource:
 	mat.call("set_shader_param", "enable_projection", true)
 	mat.call("set_shader_param", "mipmap_bias", 0.95)
 	mat.call("set_shader_param", "bias_distance", 420.0)
-	var err := ResourceSaver.save(mat, MATERIAL_PATH)
-	if err != OK:
-		Log.warn("ImportTerrain", "cannot save %s: %s" % [MATERIAL_PATH, error_string(err)])
-	return mat

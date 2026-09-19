@@ -110,8 +110,8 @@ def compute_regions(regions: list[RegionDef], grid: Grid, bank: NoiseBank, lake_
         for p in places or []:
             if p.get("region") == r.id:
                 qx, qz = p["position"]
-                pull = 320.0 if p.get("kind") in ("city", "town") else 260.0
-                s = s - 0.3 * np.exp(-(((X - qx) ** 2 + (Z - qz) ** 2) / (pull * pull)))
+                pull = 420.0 if p.get("kind") in ("city", "town") else 330.0
+                s = s - 0.45 * np.exp(-(((X - qx) ** 2 + (Z - qz) ** 2) / (pull * pull)))
         scores[r.index] = s
     owner = np.argmin(scores, axis=0).astype(np.uint8)
     smin = scores.min(axis=0)

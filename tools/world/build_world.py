@@ -117,6 +117,21 @@ def build(args) -> dict:
         pad_targets.append({"id": p["id"], "kind": p.get("kind", "poi"), "position": p["position"],
                             "region": p.get("region", "")})
 
+    # Minimum pad levels: settlements sit above standing water. The marsh's table and the
+    # sea's edge are the two that bite (Isseva is a stilt-town, not an underwater one).
+    marsh_idx = next((r.index for r in regions if r.shape == "delta"), -1)
+    marsh_tab = HY.marsh_table(grid, bank)
+    min_levels: dict = {}
+    dry_kinds = ("city", "town", "village", "hamlet", "fort", "camp", "lodge", "ruin_village")
+    for p in pad_targets:
+        px, pz = float(p["position"][0]), float(p["position"][1])
+        j, i = grid.to_tex(np.array([px]), np.array([pz]))
+        j, i = grid.clamp_index(j, i)
+        floor_m = 0.8 if p.get("kind") in dry_kinds else 0.2
+        if marsh_idx >= 0 and rf.owner_at(n)[int(i[0]), int(j[0])] == marsh_idx:
+            floor_m = max(floor_m, float(marsh_tab[int(i[0]), int(j[0])]) + 0.75)
+        min_levels[p["id"]] = floor_m
+
     heights_path = os.path.join(out_dir, "heights.r32")
     reuse = args.only in ("textures", "cells") and os.path.exists(heights_path)
     if reuse:
@@ -124,7 +139,7 @@ def build(args) -> dict:
         print("[world] reusing %s" % heights_path, flush=True)
         rivers = []
         roads_list = []
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H.copy(), pad_targets)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H.copy(), pad_targets, min_levels)
         river_d = np.full((n, n), 1e6, dtype=np.float32)
         river_surf = np.zeros((n, n), dtype=np.float32)
         river_w = np.zeros((n, n), dtype=np.float32)
@@ -153,7 +168,7 @@ def build(args) -> dict:
     else:
         H = HM.compose_heights(grid, grid_c, bank, regions, rf, lake_c, lake, places)
         t.mark("heights")
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         t.mark("pads")
         rivers = HY.trace_rivers(grid, H, bank, lake, places)
         H, river_d, river_surf, river_w = HY.carve_rivers(grid, H, rivers, bank)
@@ -164,7 +179,7 @@ def build(args) -> dict:
         roads_list = RD.plan_roads(grid, H, pad_targets, rough_water, pad_levels)
         H, road_d, road_w = RD.carve_roads(grid, H, roads_list)
         # pads again: roads must not tilt a settlement platform
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         t.mark("roads")
 
     owner = dithered_owner(rf, n, bank)

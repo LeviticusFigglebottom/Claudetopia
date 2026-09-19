@@ -98,11 +98,15 @@ def upsample(a: np.ndarray, n: int, order: int = 3) -> np.ndarray:
 
 
 def downsample(a: np.ndarray, n: int) -> np.ndarray:
-    """Block-mean downsample of a [m, m] array to [n, n] (m multiple of n)."""
+    """Block-mean downsample of a [m, m] array to [n, n]; upsamples instead if n is larger."""
     m = a.shape[0]
     if m == n:
         return a
+    if n > m:
+        return upsample(a, n, order=1)
     f = m // n
+    if f * n != m:                      # not a clean factor: fall back to resampling
+        return upsample(a, n, order=1)
     return a.reshape(n, f, n, f).mean(axis=(1, 3)).astype(a.dtype)
 
 

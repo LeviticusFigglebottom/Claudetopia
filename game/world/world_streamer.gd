@@ -232,15 +232,8 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	var step := float(rows.size()) / float(keep)
 	for i in keep:
 		var row: Array = rows[int(floor(float(i) * step))]
-		var pos := Vector3(float(row[0]), float(row[1]), float(row[2])) - origin3
-		var yaw := deg_to_rad(float(row[3]))
-		var scale := float(row[4])
-		var basis := Basis(Vector3.UP, yaw).scaled(Vector3(scale, scale, scale))
-		mm.set_instance_transform(i, Transform3D(basis, pos))
-		var tint := Color.WHITE
-		if row.size() > 5:
-			tint = Color.from_string(str(row[5]), Color.WHITE)
-		mm.set_instance_color(i, tint)
+		mm.set_instance_transform(i, instance_transform(row, origin3))
+		mm.set_instance_color(i, instance_tint(row))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = asset_path.get_file().get_basename()
 	mmi.multimesh = mm
@@ -251,6 +244,21 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	mmi.lod_bias = 1.0 if ring <= full_ring else lod_bias_far
 	parent.add_child(mmi)
+
+
+## A scatter row is [x, y, z, yaw_deg, scale, tint_hex] in world metres (CONTRACTS §6);
+## MultiMesh instances are stored relative to their cell node so the transforms stay small.
+static func instance_transform(row: Array, cell_origin: Vector3) -> Transform3D:
+	var pos := Vector3(float(row[0]), float(row[1]), float(row[2])) - cell_origin
+	var yaw := deg_to_rad(float(row[3])) if row.size() > 3 else 0.0
+	var scale := float(row[4]) if row.size() > 4 else 1.0
+	return Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(scale, scale, scale)), pos)
+
+
+static func instance_tint(row: Array) -> Color:
+	if row.size() > 5:
+		return Color.from_string(str(row[5]), Color.WHITE)
+	return Color.WHITE
 
 
 func _build_scene(parent: Node3D, entry: Variant) -> void:

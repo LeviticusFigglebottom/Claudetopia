@@ -57,6 +57,7 @@ def _monotone_profile(h_along: np.ndarray, start: float, end: float, min_drop: f
 
 def trace_rivers(grid: Grid, H: np.ndarray, bank: NoiseBank, lake, places: list, n_c: int = 512) -> list:
     """The Skerrow water into the Mere, the Mere's outflow west to the sea, and two feeders."""
+    n_c = min(n_c, grid.n)             # a small test build has no room for a finer lattice
     gc = grid.with_n(n_c)
     hc = _coarse(H, n_c)
     Xc, Zc = gc.mesh()
@@ -163,7 +164,7 @@ def water_maps(grid: Grid, H: np.ndarray, lake, rivers: list, river_d: np.ndarra
     marsh_idx = next((r.index for r in regions if r.shape == "delta"), -1)
     if marsh_idx >= 0:
         smooth_h = ndimage.gaussian_filter(H, max(2.0, 8.0 / grid.spacing))
-        table = 1.25 + 0.25 * np.tanh(bank.field_at(232, n, beta=2.0, wl_min=200, wl_max=900))
+        table = marsh_table(grid, bank)
         pools = (owner == marsh_idx) & (smooth_h < table) & (H < table + 0.25) & ~mask
         k = max(3, int(round(12.0 / grid.spacing)) | 1)
         disc = np.hypot(*np.ogrid[-(k // 2):k // 2 + 1, -(k // 2):k // 2 + 1]) <= k / 2.0
@@ -209,6 +210,11 @@ def water_maps(grid: Grid, H: np.ndarray, lake, rivers: list, river_d: np.ndarra
         flow = np.where(wide_mask[..., None], spread, flow)
     return WaterResult(rivers=rivers, mask=mask.astype(np.uint8), level=level, flow=flow,
                        river_dist=river_d)
+
+
+def marsh_table(grid: Grid, bank: NoiseBank) -> np.ndarray:
+    """The standing water level across the marsh: where the delta's pools sit."""
+    return (1.25 + 0.25 * np.tanh(bank.field_at(232, grid.n, beta=2.0, wl_min=200, wl_max=900))).astype(np.float32)
 
 
 def moisture(grid: Grid, H: np.ndarray, water: WaterResult, lake, bank: NoiseBank) -> np.ndarray:
