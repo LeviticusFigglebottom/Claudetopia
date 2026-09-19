@@ -14,7 +14,7 @@
   "core:region/skerrow",
   "core:region/cinderlea"
  ],
- "lake_level": 8.0,
- "synthetic": true,
+ "lake_level": 8,
+ "synthetic": false,
  "_doc": "world to pixel: px = (world_xz - origin) / size_m * size_px, z is +south"
 }

@@ -122,6 +122,15 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
 
 ## Known issues
 
+* **The exterior is over the primitive budget, badly.** DESIGN §11 sets 1.5 M primitives and
+  2000 draw calls. Interiors are all comfortably inside it (the Cantor's Seat is the worst at
+  1.17 M and 61 draws). The country is not: Merrowby from the air is **5.14 M primitives**
+  against 1.5 M, and the same village from the street is 4.04 M. Draw calls are fine (1259 and
+  1066), so this is not a batching problem — it is roughly 150 triangles on every one of the
+  eight to nine thousand scatter instances in view, with no distance LOD. Tollmere, on a bare
+  ash pad with little flora, sits inside budget at 1.07 M, which confirms where it comes from.
+  The fix is a cheap far variant per scatter asset, not fewer plants; it is with the world and
+  forge streams and it is not done.
 * **The drop test does not pass.** `tools/uniqueness_check.py` now scores colour and landform
   separately (DESIGN §10.1). On the eighteen region captures as they stand: colour 0.61,
   landform 0.50, together 0.56, against a 0.17 chance line and a 0.80 bar. Skerrow and

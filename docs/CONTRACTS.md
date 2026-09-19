@@ -158,6 +158,16 @@ Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 binds to the first node in the `progression` group. A quest grants a saying the same way, through
 its `rewards.effects[]`.
 
+* `place`: `{id, name, region, kind, position:[x, z], unique_feature, tags[]}`.
+  `kind` is load-bearing for the exterior: `WorldDoors` raises a built fabric around every
+  place whose kind appears in `Settlement.FABRIC` (`city`, `town`, `village`, `hamlet`,
+  `fort`, `lodge`, `camp`, `ruin_village`), and the kind picks how many houses, how big and
+  how many storeys. A new settlement kind with no entry raises nothing, and
+  `test_settlements.gd` fails the build rather than letting a place quietly stay empty.
+  `region` picks the culture through `Settlement.CULTURE_BY_REGION`, which must name a
+  culture that `Building.ROOF_BY_CULTURE`, `HouseInterior.CULTURE_SURFACES` and
+  `Settlement.PROP_PREFIX` all know — also pinned by that test.
+
 ## 8. System discovery contract (pinned by tests)
 
 Systems find each other by group, never by node path. These names and methods are pinned

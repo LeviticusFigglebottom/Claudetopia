@@ -360,6 +360,24 @@
    "time": 9.5,
    "weather": "core:weather/clear",
    "fog_scale": 0.25
+  },
+  {
+   "label": "merrowby_street",
+   "region": "core:region/hearthvale",
+   "pos": [
+    878.0,
+    58.4,
+    2326.0
+   ],
+   "look_at": [
+    906.0,
+    57.4,
+    2356.0
+   ],
+   "fov": 62.0,
+   "time": 9.5,
+   "weather": "core:weather/clear",
+   "fog_scale": 0.25
   }
  ],
  "flythrough": {
