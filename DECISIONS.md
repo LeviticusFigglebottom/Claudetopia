@@ -111,3 +111,24 @@ dedicated review loop. Asset generation becomes a first-class build step
 without Blender.
 **Supersedes.** The two entries marked SUPERSEDED above. The Kenney/KayKit
 downloads were deleted; nothing from them is in the repository.
+
+## 2026-09-19 · Interiors live in a far pocket, not in separate scenes
+**Decision.** Interior cells are instanced at x≈50 km, y=3 km (one 1 km slot per
+interior) inside the running world scene; doors teleport the player. The
+overworld keeps running; the streamer finds nothing around the pocket and idles.
+**Why.** No scene switching means autoloads, NPC simulation, weather and the
+clock keep state trivially; interiors can be tested headlessly with a fake
+player; sun and moon still light window shafts. A separate SubViewport world
+or a scene swap would need bespoke save/restore plumbing.
+**Consequences.** Interiors must be enclosed meshes (directional light is
+global) and the Atmosphere switches to an interior mode (fog ×0.12, ambient
+×0.45). Far-pocket coordinates are large but well within float precision for
+1 km slots (sub-centimetre).
+
+## 2026-09-19 · Death drops all marks into a single Echo
+**Decision.** Death leaves one Echo at the death point holding every mark; a
+second death before recovery lets the old Echo go quiet. Skills and levels are
+never lost. Respawn counts as resting: the deep places reset.
+**Why.** One clear, visible consequence (DESIGN pillar 2) that fits the fiction
+(you are anchored where you were last known) without punishing use-based
+progression, which is per-skill and would be awkward to drop.

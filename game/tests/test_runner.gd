@@ -6,6 +6,8 @@ extends Node
 func _ready() -> void:
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
+	# Leave the scene-setup frame so tests may add nodes to the root freely.
+	await get_tree().process_frame
 	var filter := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--filter="):
@@ -40,6 +42,7 @@ func _ready() -> void:
 			await inst.call(name)
 			if inst.has_method("after_each"):
 				inst.after_each()
+			await get_tree().process_frame
 			if inst._failures.size() > before:
 				failed += 1
 				print("  FAIL %s" % inst._current)
