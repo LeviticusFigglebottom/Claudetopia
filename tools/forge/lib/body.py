@@ -231,15 +231,15 @@ def _hand_parts(skel: Skeleton, st: BodyStyle, wr: np.ndarray, d: np.ndarray,
     p = skel.props
     s = p.height / rig.DEFAULT_HEIGHT
     hs = st.hands * p.hand_size * s
-    L = 0.185 * hs                 # wrist to fingertip
-    w = 0.048 * hs                 # half width across the fingers
-    t = 0.026 * hs                 # half thickness
+    L = 0.175 * hs                 # wrist to fingertip
+    w = 0.053 * hs                 # half width across the fingers
+    t = 0.030 * hs                 # half thickness
     slab = sdf.loft([
-        (wr - d * 0.010 * L, 0.034 * hs, 0.024 * hs),
-        (wr + d * 0.22 * L, w * 0.94, t * 1.05),
-        (wr + d * 0.52 * L, w, t),
-        (wr + d * 0.80 * L, w * 0.95, t * 0.90),
-        (wr + d * 1.00 * L, w * 0.66, t * 0.72),
+        (wr - d * 0.010 * L, 0.037 * hs, 0.027 * hs),
+        (wr + d * 0.22 * L, w * 0.95, t * 1.05),
+        (wr + d * 0.55 * L, w, t),
+        (wr + d * 0.84 * L, w * 0.97, t * 0.94),
+        (wr + d * 1.00 * L, w * 0.86, t * 0.84),
     ], fwd)
     parts = [slab]
     # finger separation groove (between the middle and ring finger)
@@ -248,9 +248,9 @@ def _hand_parts(skel: Skeleton, st: BodyStyle, wr: np.ndarray, d: np.ndarray,
     # knuckle swell
     parts.append(sdf.ellipsoid(wr + d * 0.52 * L, [0.050 * hs, 0.028 * hs, 0.028 * hs], k=0.02 * s))
     # thumb
-    tb0 = wr + d * 0.20 * L + fwd * 0.026 * hs
-    tb1 = tb0 + sdf._unit(fwd * 0.75 + d * 0.62 - up * 0.10) * 0.085 * hs
-    parts.append(sdf.round_cone(tb0, tb1, 0.019 * hs, 0.015 * hs, k=0.020 * s))
+    tb0 = wr + d * 0.20 * L + fwd * 0.028 * hs
+    tb1 = tb0 + sdf._unit(fwd * 0.72 + d * 0.66 - up * 0.10) * 0.098 * hs
+    parts.append(sdf.round_cone(tb0, tb1, 0.023 * hs, 0.018 * hs, k=0.022 * s))
     return parts
 
 
@@ -269,7 +269,7 @@ def _foot_parts(skel: Skeleton, st: BodyStyle, side: str) -> List[sdf.Prim]:
         (np.array([x, an[1], 0.036 * fs]), 0.042 * fs, 0.034 * fs),
         (np.array([x, (an[1] + ball[1]) * 0.5, 0.033 * fs]), 0.047 * fs, 0.031 * fs),
         (np.array([ball[0], ball[1], 0.029 * fs]), 0.050 * fs, 0.028 * fs),
-        (np.array([tip[0], tip[1] + 0.010 * fs, 0.023 * fs]), 0.041 * fs, 0.021 * fs),
+        (np.array([tip[0], tip[1] + 0.026 * fs, 0.026 * fs]), 0.043 * fs, 0.024 * fs),
     ], LEFT)
     return [
         sdf.round_cone(an, heel, 0.038 * fs, 0.034 * fs, k=0.025 * s),

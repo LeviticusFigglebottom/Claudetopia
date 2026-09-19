@@ -1,0 +1,55 @@
+{
+ "Attack_1H_Light_1": {
+  "events": [
+   {
+    "name": "hit_start",
+    "t": 0.2971
+   },
+   {
+    "name": "hit_end",
+    "t": 0.4672
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.5572
+   }
+  ],
+  "length": 0.78,
+  "loop": false
+ },
+ "Idle": {
+  "events": [],
+  "length": 4.0,
+  "loop": true
+ },
+ "Run": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0186
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.3286
+   }
+  ],
+  "length": 0.62,
+  "loop": true,
+  "speed": 5.0
+ },
+ "Walk": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.03
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.53
+   }
+  ],
+  "length": 1.0,
+  "loop": true,
+  "speed": 1.55
+ }
+}

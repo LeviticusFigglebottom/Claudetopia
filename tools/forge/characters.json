@@ -1,0 +1,663 @@
+{
+ "attachments": [
+  "halo",
+  "horns_big",
+  "horns_small"
+ ],
+ "beard_styles": [
+  "long_beard",
+  "moustache",
+  "short_beard",
+  "stubble"
+ ],
+ "body_variants": [
+  "child",
+  "default",
+  "heavy",
+  "slight"
+ ],
+ "callings": [
+  "hearthkeeper",
+  "wayfarer",
+  "reedborn",
+  "cragborn",
+  "ashwalker",
+  "lantern_clerk"
+ ],
+ "clothing": [
+  "apron",
+  "belt",
+  "boots",
+  "brigandine",
+  "cloak",
+  "dress",
+  "gambeson",
+  "gloves",
+  "greaves",
+  "helm",
+  "hood",
+  "hooded_cloak",
+  "pauldrons",
+  "plate_torso",
+  "robe",
+  "shirt",
+  "shoes",
+  "skirt",
+  "trousers",
+  "tunic"
+ ],
+ "culture_palettes": {
+  "ash_pilgrims": {
+   "accent": "#d8cfbf",
+   "leather": "#4a4744",
+   "metal": "#77736d",
+   "note": "grey, always grey",
+   "primary": "#8b8a86",
+   "secondary": "#5a5652",
+   "trim": "#a08a4a"
+  },
+  "clans": {
+   "accent": "#8a4a2e",
+   "leather": "#59432c",
+   "metal": "#6f7378",
+   "note": "undyed wool, bone tokens, chain",
+   "primary": "#c8bda6",
+   "secondary": "#6e5a44",
+   "trim": "#e8e4d8"
+  },
+  "lakefolk": {
+   "accent": "#b08a3e",
+   "leather": "#4a4239",
+   "metal": "#b08a3e",
+   "note": "lime-white and slate, brass fittings",
+   "primary": "#efe9dc",
+   "secondary": "#5d6470",
+   "trim": "#3f7fb5"
+  },
+  "reedfolk": {
+   "accent": "#e8a93f",
+   "leather": "#54452f",
+   "metal": "#7d7a70",
+   "note": "marsh indigo on everything",
+   "primary": "#3b3a6e",
+   "secondary": "#2f7f78",
+   "trim": "#c9b26a"
+  },
+  "vale": {
+   "accent": "#b23a2e",
+   "leather": "#6b4a2c",
+   "metal": "#8a8f94",
+   "note": "warm wool; the accent is the family's painted-door colour",
+   "primary": "#a8763f",
+   "secondary": "#7d8a4a",
+   "trim": "#c9a24a"
+  },
+  "woodfolk": {
+   "accent": "#8ab34a",
+   "leather": "#3f3325",
+   "metal": "#5f6259",
+   "note": "bark browns and moss",
+   "primary": "#4a4030",
+   "secondary": "#5c6b3c",
+   "trim": "#2b211c"
+  }
+ },
+ "generator": "character_forge",
+ "hair_styles": [
+  "braid",
+  "bun",
+  "cropped",
+  "hood_friendly",
+  "long",
+  "short",
+  "tousled"
+ ],
+ "head_presets": [
+  "angular",
+  "broad",
+  "default",
+  "hawk",
+  "heavy_brow",
+  "narrow",
+  "round",
+  "soft"
+ ],
+ "presets": {
+  "ash_pilgrim": {
+   "age": 0.72,
+   "build": 0.46,
+   "culture": "ash_pilgrims",
+   "eye_colour": "grey",
+   "hair_colour": "grey",
+   "palette": {
+    "accent": "#d8cfbf",
+    "leather": "#4a4744",
+    "metal": "#77736d",
+    "primary": "#8b8a86",
+    "secondary": "#5a5652",
+    "trim": "#a08a4a"
+   },
+   "parts": {
+    "back": "hooded_cloak",
+    "beard": "long_beard",
+    "feet": "boots",
+    "hair": "cropped",
+    "head": "heavy_brow",
+    "torso": "robe"
+   },
+   "seed": 45507,
+   "skin": "deep"
+  },
+  "bandit": {
+   "age": 0.35,
+   "build": 0.52,
+   "culture": "vale",
+   "eye_colour": "hazel",
+   "hair_colour": "soot",
+   "palette": {
+    "accent": "#b23a2e",
+    "leather": "#6b4a2c",
+    "metal": "#8a8f94",
+    "primary": "#a8763f",
+    "secondary": "#7d8a4a",
+    "trim": "#c9a24a"
+   },
+   "parts": {
+    "beard": "stubble",
+    "belt": "belt",
+    "feet": "boots",
+    "hair": "tousled",
+    "head": "angular",
+    "legs": "trousers",
+    "torso": "gambeson"
+   },
+   "seed": 36409,
+   "skin": "olive",
+   "stubble": 0.7
+  },
+  "child": {
+   "age": 0.05,
+   "build": 0.45,
+   "culture": "vale",
+   "eye_colour": "blue",
+   "hair_colour": "sand",
+   "head_size": 1.18,
+   "height": 1.3,
+   "limb_length": 0.9,
+   "palette": {
+    "accent": "#b23a2e",
+    "leather": "#6b4a2c",
+    "metal": "#8a8f94",
+    "primary": "#a8763f",
+    "secondary": "#7d8a4a",
+    "trim": "#c9a24a"
+   },
+   "parts": {
+    "feet": "shoes",
+    "hair": "tousled",
+    "head": "round",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 6578,
+   "shoulder_width": 0.88,
+   "skin": "fair"
+  },
+  "clans_herder": {
+   "age": 0.55,
+   "build": 0.68,
+   "bulk": 1.08,
+   "culture": "clans",
+   "eye_colour": "green",
+   "hair_colour": "auburn",
+   "palette": {
+    "accent": "#8a4a2e",
+    "leather": "#59432c",
+    "metal": "#6f7378",
+    "primary": "#c8bda6",
+    "secondary": "#6e5a44",
+    "trim": "#e8e4d8"
+   },
+   "parts": {
+    "back": "cloak",
+    "beard": "long_beard",
+    "belt": "belt",
+    "feet": "boots",
+    "hair": "braid",
+    "head": "broad",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 82201,
+   "skin": "fair"
+  },
+  "hearth_touched": {
+   "age": 0.28,
+   "build": 0.45,
+   "culture": "vale",
+   "eye_colour": "amber",
+   "feminine": 1.0,
+   "hair_colour": "flax",
+   "hearth": 0.85,
+   "height": 1.68,
+   "palette": {
+    "accent": "#b23a2e",
+    "leather": "#6b4a2c",
+    "metal": "#8a8f94",
+    "primary": "#a8763f",
+    "secondary": "#7d8a4a",
+    "trim": "#c9a24a"
+   },
+   "parts": {
+    "feet": "shoes",
+    "hair": "long",
+    "head": "soft",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 46817,
+   "skin": "wheat"
+  },
+  "hollow_touched": {
+   "age": 0.4,
+   "build": 0.48,
+   "culture": "vale",
+   "eye_colour": "red",
+   "hair_colour": "soot",
+   "hollow": 0.85,
+   "palette": {
+    "accent": "#b23a2e",
+    "leather": "#6b4a2c",
+    "metal": "#8a8f94",
+    "primary": "#a8763f",
+    "secondary": "#7d8a4a",
+    "trim": "#c9a24a"
+   },
+   "parts": {
+    "feet": "boots",
+    "hair": "cropped",
+    "head": "angular",
+    "legs": "trousers",
+    "torso": "gambeson"
+   },
+   "seed": 59587,
+   "skin": "porcelain",
+   "veins": 0.9
+  },
+  "lakefolk_clerk": {
+   "age": 0.5,
+   "build": 0.4,
+   "culture": "lakefolk",
+   "eye_colour": "grey",
+   "hair_colour": "dark_brown",
+   "palette": {
+    "accent": "#b08a3e",
+    "leather": "#4a4239",
+    "metal": "#b08a3e",
+    "primary": "#efe9dc",
+    "secondary": "#5d6470",
+    "trim": "#3f7fb5"
+   },
+   "parts": {
+    "belt": "belt",
+    "feet": "shoes",
+    "hair": "hood_friendly",
+    "hands": "gloves",
+    "head": "narrow",
+    "legs": "trousers",
+    "torso": "shirt"
+   },
+   "seed": 8546,
+   "skin": "wheat"
+  },
+  "merchant": {
+   "age": 0.52,
+   "build": 0.78,
+   "bulk": 1.12,
+   "culture": "lakefolk",
+   "eye_colour": "brown",
+   "hair_colour": "brown",
+   "palette": {
+    "accent": "#b08a3e",
+    "leather": "#4a4239",
+    "metal": "#b08a3e",
+    "primary": "#efe9dc",
+    "secondary": "#5d6470",
+    "trim": "#3f7fb5"
+   },
+   "parts": {
+    "back": "cloak",
+    "beard": "moustache",
+    "belt": "belt",
+    "feet": "shoes",
+    "hair": "short",
+    "head": "round",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 49569,
+   "skin": "wheat"
+  },
+  "player_ashwalker": {
+   "age": 0.44,
+   "build": 0.38,
+   "culture": "ash_pilgrims",
+   "eye_colour": "grey",
+   "hair_colour": "soot",
+   "palette": {
+    "accent": "#d8cfbf",
+    "leather": "#4a4744",
+    "metal": "#77736d",
+    "primary": "#8b8a86",
+    "secondary": "#5a5652",
+    "trim": "#a08a4a"
+   },
+   "parts": {
+    "back": "hooded_cloak",
+    "feet": "boots",
+    "hair": "cropped",
+    "head": "hawk",
+    "torso": "robe"
+   },
+   "seed": 4028,
+   "skin": "amber"
+  },
+  "player_cragborn": {
+   "age": 0.34,
+   "build": 0.7,
+   "bulk": 1.1,
+   "culture": "clans",
+   "eye_colour": "grey_green",
+   "hair_colour": "ginger",
+   "palette": {
+    "accent": "#8a4a2e",
+    "leather": "#59432c",
+    "metal": "#6f7378",
+    "primary": "#c8bda6",
+    "secondary": "#6e5a44",
+    "trim": "#e8e4d8"
+   },
+   "parts": {
+    "beard": "short_beard",
+    "belt": "belt",
+    "feet": "boots",
+    "hair": "braid",
+    "head": "broad",
+    "legs": "trousers",
+    "torso": "gambeson"
+   },
+   "seed": 18449,
+   "shoulder_width": 1.12,
+   "skin": "fair"
+  },
+  "player_hearthkeeper": {
+   "age": 0.22,
+   "build": 0.5,
+   "culture": "vale",
+   "eye_colour": "blue",
+   "hair_colour": "sand",
+   "palette": {
+    "accent": "#b23a2e",
+    "leather": "#6b4a2c",
+    "metal": "#8a8f94",
+    "primary": "#a8763f",
+    "secondary": "#7d8a4a",
+    "trim": "#c9a24a"
+   },
+   "parts": {
+    "belt": "belt",
+    "feet": "shoes",
+    "hair": "short",
+    "head": "round",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 44248,
+   "skin": "fair"
+  },
+  "player_lantern_clerk": {
+   "age": 0.28,
+   "build": 0.4,
+   "culture": "lakefolk",
+   "eye_colour": "pale_blue",
+   "feminine": 1.0,
+   "hair_colour": "ash_blond",
+   "height": 1.66,
+   "palette": {
+    "accent": "#b08a3e",
+    "leather": "#4a4239",
+    "metal": "#b08a3e",
+    "primary": "#efe9dc",
+    "secondary": "#5d6470",
+    "trim": "#3f7fb5"
+   },
+   "parts": {
+    "belt": "belt",
+    "feet": "shoes",
+    "hair": "bun",
+    "hands": "gloves",
+    "head": "soft",
+    "legs": "trousers",
+    "torso": "shirt"
+   },
+   "seed": 80731,
+   "skin": "porcelain"
+  },
+  "player_reedborn": {
+   "age": 0.26,
+   "build": 0.36,
+   "culture": "reedfolk",
+   "eye_colour": "dark_brown",
+   "hair_colour": "black",
+   "palette": {
+    "accent": "#e8a93f",
+    "leather": "#54452f",
+    "metal": "#7d7a70",
+    "primary": "#3b3a6e",
+    "secondary": "#2f7f78",
+    "trim": "#c9b26a"
+   },
+   "parts": {
+    "belt": "belt",
+    "feet": "shoes",
+    "hair": "long",
+    "head": "narrow",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 26687,
+   "skin": "olive"
+  },
+  "player_wayfarer": {
+   "age": 0.3,
+   "build": 0.45,
+   "culture": "vale",
+   "eye_colour": "hazel",
+   "hair_colour": "brown",
+   "palette": {
+    "accent": "#b23a2e",
+    "leather": "#6b4a2c",
+    "metal": "#8a8f94",
+    "primary": "#a8763f",
+    "secondary": "#7d8a4a",
+    "trim": "#c9a24a"
+   },
+   "parts": {
+    "back": "cloak",
+    "belt": "belt",
+    "feet": "boots",
+    "hair": "tousled",
+    "head": "angular",
+    "legs": "trousers",
+    "torso": "shirt"
+   },
+   "seed": 28811,
+   "skin": "wheat"
+  },
+  "reedfolk_eeler": {
+   "age": 0.38,
+   "build": 0.44,
+   "culture": "reedfolk",
+   "eye_colour": "dark_brown",
+   "hair_colour": "black",
+   "palette": {
+    "accent": "#e8a93f",
+    "leather": "#54452f",
+    "metal": "#7d7a70",
+    "primary": "#3b3a6e",
+    "secondary": "#2f7f78",
+    "trim": "#c9b26a"
+   },
+   "parts": {
+    "back": "cloak",
+    "belt": "belt",
+    "feet": "boots",
+    "hair": "long",
+    "head": "angular",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 46475,
+   "skin": "umber"
+  },
+  "sayer": {
+   "age": 0.8,
+   "build": 0.34,
+   "culture": "lakefolk",
+   "eye_colour": "pale_blue",
+   "feminine": 1.0,
+   "hair_colour": "white",
+   "height": 1.63,
+   "palette": {
+    "accent": "#b08a3e",
+    "leather": "#4a4239",
+    "metal": "#b08a3e",
+    "primary": "#efe9dc",
+    "secondary": "#5d6470",
+    "trim": "#3f7fb5"
+   },
+   "parts": {
+    "back": "cloak",
+    "feet": "shoes",
+    "hair": "long",
+    "head": "soft",
+    "torso": "robe"
+   },
+   "seed": 38148,
+   "skin": "porcelain"
+  },
+  "tolling_knight": {
+   "age": 0.58,
+   "build": 0.66,
+   "bulk": 1.1,
+   "culture": "ash_pilgrims",
+   "eye_colour": "grey",
+   "hair_colour": "grey",
+   "height": 1.84,
+   "palette": {
+    "accent": "#d8cfbf",
+    "leather": "#4a4744",
+    "metal": "#77736d",
+    "primary": "#8b8a86",
+    "secondary": "#5a5652",
+    "trim": "#a08a4a"
+   },
+   "parts": {
+    "belt": "belt",
+    "feet": "boots",
+    "hair": "cropped",
+    "hands": "gloves",
+    "head": "heavy_brow",
+    "headgear": "helm",
+    "legs": "trousers",
+    "torso": "plate_torso"
+   },
+   "seed": 25784,
+   "shoulder_width": 1.14,
+   "skin": "amber"
+  },
+  "vale_villager": {
+   "age": 0.42,
+   "build": 0.55,
+   "culture": "vale",
+   "eye_colour": "brown",
+   "freckles": 0.4,
+   "hair_colour": "chestnut",
+   "palette": {
+    "accent": "#b23a2e",
+    "leather": "#6b4a2c",
+    "metal": "#8a8f94",
+    "primary": "#a8763f",
+    "secondary": "#7d8a4a",
+    "trim": "#c9a24a"
+   },
+   "parts": {
+    "belt": "belt",
+    "feet": "shoes",
+    "hair": "short",
+    "head": "round",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 29652,
+   "skin": "fair"
+  },
+  "warden_guard": {
+   "age": 0.4,
+   "build": 0.62,
+   "bulk": 1.06,
+   "culture": "vale",
+   "eye_colour": "brown",
+   "hair_colour": "dark_brown",
+   "palette": {
+    "accent": "#b23a2e",
+    "leather": "#6b4a2c",
+    "metal": "#8a8f94",
+    "primary": "#a8763f",
+    "secondary": "#7d8a4a",
+    "trim": "#c9a24a"
+   },
+   "parts": {
+    "belt": "belt",
+    "feet": "boots",
+    "hair": "cropped",
+    "hands": "gloves",
+    "head": "broad",
+    "headgear": "helm",
+    "legs": "trousers",
+    "torso": "brigandine"
+   },
+   "seed": 43805,
+   "shoulder_width": 1.1,
+   "skin": "wheat"
+  },
+  "woodfolk_forester": {
+   "age": 0.36,
+   "build": 0.42,
+   "culture": "woodfolk",
+   "eye_colour": "grey_green",
+   "hair_colour": "soot",
+   "palette": {
+    "accent": "#8ab34a",
+    "leather": "#3f3325",
+    "metal": "#5f6259",
+    "primary": "#4a4030",
+    "secondary": "#5c6b3c",
+    "trim": "#2b211c"
+   },
+   "parts": {
+    "back": "hooded_cloak",
+    "belt": "belt",
+    "feet": "boots",
+    "hair": "tousled",
+    "head": "hawk",
+    "legs": "trousers",
+    "torso": "tunic"
+   },
+   "seed": 6768,
+   "skin": "olive"
+  }
+ },
+ "rig": "WM_Humanoid_v1",
+ "version": 1
+}

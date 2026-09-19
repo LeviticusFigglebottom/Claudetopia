@@ -230,6 +230,494 @@ def bake_all_clips(arm, skel: Skeleton, only: Optional[Sequence[str]] = None) ->
 
 
 # ======================================================================================
+# building the body, the head and the eyes
+# ======================================================================================
+
+BODY_TRIS = 7800
+HEAD_TRIS = 4200
+BODY_TEX = 1024
+HEAD_TEX = 1024
+
+
+def build_body(skel: Skeleton, style: bodylib.BodyStyle, name: str = "Body",
+               spacing: float = 0.0080, target_tris: int = BODY_TRIS):
+    verts, quads = bodylib.body_mesh(skel, style, spacing=spacing)
+    ob = bodylib.to_object(name, verts, quads)
+    bodylib.decimate(ob, target_tris)
+    bodylib.smart_uv(ob, angle_deg=66.0, margin=0.015)
+    return ob
+
+
+def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
+               spacing: float = 0.0032, target_tris: int = HEAD_TRIS):
+    verts, quads = bodylib.head_mesh(skel, hs, spacing=spacing)
+    ob = bodylib.to_object(name, verts, quads)
+    bodylib.decimate(ob, target_tris)
+    L = bodylib.head_landmarks(skel, hs)
+    bodylib.cylindrical_uv(ob, L["skull_c"], float(L["chin_z"] - 0.10 * L["s"]), float(L["top"][2]))
+    return ob
+
+
+def build_eyes(skel: Skeleton, hs: bodylib.HeadStyle) -> List:
+    L = bodylib.head_landmarks(skel, hs)
+    out = []
+    for side, sx in (("L", 1), ("R", -1)):
+        c = np.array([sx * L["eye_x"], L["eye_c_y"], L["eye_z"]])
+        v, f, uv = bodylib.eye_mesh(c, L["eye_r"])
+        ob = bodylib.to_object("Eye_%s" % side, v, f, uvs=uv)
+        out.append(ob)
+    return out
+
+
+def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: str, appearance: dict,
+               size: int = BODY_TEX) -> Tuple[str, str, str]:
+    """Bake albedo / ORM / normal for a skin mesh and return their paths."""
+    L = bodylib.head_landmarks(skel, hs)
+    maps = paint.surface_maps(ob, size=size, pad=4)
+    fn = paint.skin_paint(
+        L, tone=appearance.get("skin", "wheat"), seed=int(appearance.get("seed", 0)),
+        face=appearance.get("face", True), brow_colour=appearance.get("hair_colour", "dark_brown"),
+        age=float(appearance.get("age", 0.3)), hearth=float(appearance.get("hearth", 0.0)),
+        hollow=float(appearance.get("hollow", 0.0)), veins=float(appearance.get("veins", 0.0)),
+        freckles=float(appearance.get("freckles", 0.0)), stubble=float(appearance.get("stubble", 0.0)),
+        beard_colour=appearance.get("beard_colour"))
+    albedo = paint.paint(maps, fn, background=(0.72, 0.58, 0.48))
+    occ_fn, rough_fn = paint.skin_orm(L, seed=int(appearance.get("seed", 0)), age=float(appearance.get("age", 0.3)))
+    occ = paint.paint(maps, occ_fn, background=(1, 1, 1))[..., 0]
+    rough = paint.paint(maps, rough_fn, background=(0.7, 0.7, 0.7))[..., 0]
+    orm = paint.orm_image(occ, rough, np.zeros_like(rough))
+    # a little painterly surface: pores and creases as a height field -> tangent normal
+    # A gentle height field only: skin is smooth, and fine noise here aliases badly at
+    # texture resolution and reads as crust rather than as pores.
+    n = paint.Noise(int(appearance.get("seed", 0)) + 5, 32)
+    h = np.zeros((size, size))
+    m = maps["mask"]
+    if m.any():
+        h[m] = n.fbm(maps["pos"][m], freq=14.0, octaves=2)
+    nrm = normal_from_height(h, strength=0.010)
+    a_path = paint.save_png(albedo, os.path.join(out_dir, "%s_albedo.png" % stem))
+    o_path = paint.save_png(orm, os.path.join(out_dir, "%s_orm.png" % stem))
+    n_path = paint.save_png(nrm, os.path.join(out_dir, "%s_normal.png" % stem))
+    return a_path, o_path, n_path
+
+
+def paint_eyes(out_dir: str, stem: str, appearance: dict, size: int = 256) -> str:
+    img = paint.iris_texture(size, colour=appearance.get("eye_colour", "brown"),
+                             seed=int(appearance.get("seed", 0)),
+                             glint=float(appearance.get("hearth", 0.0)),
+                             red_eye=float(appearance.get("hollow", 0.0)) * 0.8)
+    return paint.save_png(img, os.path.join(out_dir, "%s_albedo.png" % stem))
+
+
+def skin_parts(objs: Sequence, arm, skel: Skeleton, body_ob=None, body_W=None) -> None:
+    """Bind meshes to the armature: the body by bone heat, everything else by transferring
+    the body's weights, so every part deforms exactly like the skin underneath it."""
+    for ob in objs:
+        if ob is body_ob:
+            continue
+        bodylib.transfer_weights(ob, body_W[0], body_W[1], arm)
+
+
+# ======================================================================================
+# the humanoid rig asset
+# ======================================================================================
+
+DEFAULT_APPEARANCE = {
+    "skin": "wheat", "eye_colour": "brown", "hair_colour": "dark_brown", "seed": 1,
+    "age": 0.3, "freckles": 0.15,
+}
+
+
+def cmd_rig(args) -> None:
+    t0 = time.time()
+    reset_scene()
+    name = "humanoid_rig"
+    out_dir = ensure_dir(os.path.join(OUT_ROOT, name))
+    skel = Skeleton(rig.Proportions())
+    style = bodylib.BodyStyle()
+    hs = bodylib.HeadStyle()
+    arm = rig.build_armature(skel, name="Armature")
+    log("armature: %d bones" % len(arm.data.bones))
+
+    body_ob = build_body(skel, style)
+    log("body: %d tris" % bodylib.tri_count(body_ob))
+    method = bodylib.skin_to_armature(body_ob, arm, skel)
+    log("body weights: %s" % method)
+    bv, bn, bt = bodylib.mesh_arrays(body_ob)
+    bW = bodylib.weight_matrix(body_ob, rig.DEFORM_NAMES)
+
+    head_ob = build_head(skel, hs)
+    log("head: %d tris" % bodylib.tri_count(head_ob))
+    eyes = build_eyes(skel, hs)
+    bodylib.rigid_weights(head_ob, "Head", arm)
+    for e in eyes:
+        bodylib.rigid_weights(e, "Head", arm)
+
+    app = dict(DEFAULT_APPEARANCE)
+    ba, bo, bnp = paint_body(body_ob, skel, hs, out_dir, "%s_body" % name, dict(app, face=False))
+    ha, ho, hn = paint_body(head_ob, skel, hs, out_dir, "%s_head" % name, dict(app, face=True))
+    ea = paint_eyes(out_dir, "%s_eye" % name, app)
+    body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
+    head_ob.data.materials.append(make_material("WM_Skin_Head", ha, ho, hn, roughness=0.62))
+    eye_mat = make_material("WM_Eye", ea, roughness=0.18)
+    for e in eyes:
+        e.data.materials.append(eye_mat)
+
+    sidecar = bake_all_clips(arm, skel, only=args.clips)
+    objs = [arm, body_ob, head_ob] + eyes
+    glb = export_glb(os.path.join(out_dir, "%s.glb" % name), objs, with_animation=True)
+    with open(os.path.join(out_dir, "%s.clips.json" % name), "w") as f:
+        json.dump(sidecar, f, indent=1, sort_keys=True)
+    tris = bodylib.tri_count(body_ob) + bodylib.tri_count(head_ob) + sum(bodylib.tri_count(e) for e in eyes)
+    write_meta(os.path.join(out_dir, "%s.meta.json" % name), name,
+               {"proportions": skel.props.to_dict(), "style": style.to_dict(), "head": hs.to_dict(),
+                "appearance": app},
+               [tris, 0, 0], collision="capsule", bounds=object_bounds(body_ob), seed=1,
+               extra={"rig": rig.RIG_ID, "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones)})
+    log("wrote %s (%d tris) in %.1fs" % (glb, tris, time.time() - t0))
+
+
+# ======================================================================================
+# modular parts
+# ======================================================================================
+
+PART_DIRS = {
+    "head": "heads", "hair": "hair", "beard": "beards", "clothing": "clothing",
+    "attachment": "attachments", "body": "bodies",
+}
+HEAD_PRESETS: Dict[str, dict] = {
+    # the five cultures of WORLD_BIBLE §3 plus the shapes character creation offers
+    "default": {},
+    "broad": {"skull_width": 1.08, "jaw_width": 1.14, "chin": 1.10, "brow": 1.15, "nose": 1.05},
+    "narrow": {"skull_width": 0.94, "jaw_width": 0.88, "chin": 0.92, "cheeks": 0.90, "nose": 0.95},
+    "round": {"skull_width": 1.05, "skull_depth": 0.96, "jaw_width": 1.02, "cheeks": 1.20, "chin": 0.88},
+    "angular": {"jaw_width": 1.10, "chin": 1.18, "cheeks": 1.15, "brow": 1.20, "nose_bridge": 1.15},
+    "soft": {"jaw_width": 0.90, "chin": 0.85, "cheeks": 1.15, "lips": 1.25, "brow": 0.78, "eye_size": 1.06},
+    "hawk": {"nose": 1.30, "nose_bridge": 1.25, "cheeks": 0.88, "jaw_width": 0.95, "brow": 1.10},
+    "heavy_brow": {"brow": 1.35, "skull_depth": 1.05, "jaw_width": 1.08, "eye_spacing": 1.05},
+}
+BODY_VARIANTS: Dict[str, dict] = {
+    # runtime bone scaling would break clips authored on the default proportions
+    # (CONTRACTS §2), so a few baked variants cover the range instead
+    "default": {},
+    "slight": {"bulk": 0.90, "build": 0.15, "shoulder_width": 0.92},
+    "heavy": {"bulk": 1.12, "build": 0.85, "hip_width": 1.10},
+    "child": {"height": 1.30, "head_size": 1.18, "limb_length": 0.90, "bulk": 0.92, "build": 0.45,
+              "shoulder_width": 0.88},
+}
+
+
+def part_dir(kind: str, name: str) -> str:
+    return ensure_dir(os.path.join(OUT_ROOT, PART_DIRS[kind], name))
+
+
+def export_part(name: str, kind: str, objs: Sequence, arm, params: dict, seed: int = 0,
+                extra: Optional[dict] = None) -> str:
+    out_dir = part_dir(kind, name)
+    glb = export_glb(os.path.join(out_dir, "%s.glb" % name), [arm] + list(objs), with_animation=False)
+    tris = sum(bodylib.tri_count(o) for o in objs)
+    write_meta(os.path.join(out_dir, "%s.meta.json" % name), name, params, [tris, 0, 0],
+               collision="none", bounds=object_bounds(objs[0]), seed=seed,
+               extra=dict(extra or {}, rig=rig.RIG_ID, kind=kind))
+    log("part %-16s %-11s %5d tris -> %s" % (name, kind, tris, os.path.relpath(glb, ROOT)))
+    return glb
+
+
+def _fresh_rig(props: Optional[rig.Proportions] = None):
+    """A scene holding only the armature, for building one part against."""
+    reset_scene()
+    skel = Skeleton(props or rig.Proportions())
+    arm = rig.build_armature(skel, name="Armature")
+    return skel, arm
+
+
+def _garment_material(g, out_dir: str, stem: str, seed: int):
+    """Flat painted material for a garment: colour comes from the game at runtime, so the
+    texture carries weave and wear, not hue."""
+    defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
+    n = paint.Noise(seed + 31, 32)
+
+    def albedo(p, nrm):
+        base = np.full((len(p), 3), 0.82)
+        weave = n.fbm(p, freq=90.0, octaves=2)
+        big = n.fbm(p, freq=8.0, octaves=3)
+        c = base * (0.86 + 0.18 * big)[:, None] * (0.94 + 0.10 * weave)[:, None]
+        # edge wear: upward faces catch the light, downward faces hold dirt
+        c = paint.mix(c, np.full((len(p), 3), 0.62), 0.22 * np.clip(-nrm[:, 2], 0, 1))
+        return np.clip(c, 0, 1)
+
+    def orm(p, nrm):
+        r = defaults["roughness"] + 0.08 * (n.fbm(p, freq=40.0, octaves=2) - 0.5)
+        o = 1.0 - 0.22 * np.clip(-nrm[:, 2], 0, 1)
+        m = np.full(len(p), float(defaults["metallic"]))
+        return np.stack([np.clip(o, 0, 1), np.clip(r, 0.05, 1), m], axis=1)
+    return albedo, orm
+
+
+def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str = "clothing") -> str:
+    verts, quads = g.mesh()
+    if len(verts) == 0:
+        log("part %s produced no geometry" % g.name)
+        return ""
+    ob = bodylib.to_object(g.name, verts, quads)
+    bodylib.decimate(ob, g.target_tris)
+    bodylib.smart_uv(ob, angle_deg=66.0, margin=0.02)
+    if g.bone:
+        bodylib.rigid_weights(ob, g.bone, arm)
+    else:
+        bodylib.transfer_weights(ob, bW[0], bW[1], arm)
+    out_dir = part_dir(kind, g.name)
+    maps = paint.surface_maps(ob, size=512, pad=3)
+    if g.material == "hair":
+        fn = paint.hair_paint("brown", seed=seed)
+        alb = paint.paint(maps, fn, background=(0.35, 0.25, 0.18))
+        rough = np.full((512, 512), 0.52)
+    else:
+        a_fn, o_fn = _garment_material(g, out_dir, g.name, seed)
+        alb = paint.paint(maps, a_fn, background=(0.8, 0.8, 0.8))
+        orm3 = paint.paint(maps, o_fn, background=(1.0, 0.8, 0.0))
+        rough = orm3[..., 1]
+    defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
+    occ = np.ones((512, 512))
+    met = np.full((512, 512), float(defaults["metallic"]))
+    a_path = paint.save_png(alb, os.path.join(out_dir, "%s_albedo.png" % g.name))
+    o_path = paint.save_png(paint.orm_image(occ, rough, met), os.path.join(out_dir, "%s_orm.png" % g.name))
+    mat = make_material("WM_%s" % g.name, a_path, o_path,
+                        roughness=float(defaults["roughness"]), metallic=float(defaults["metallic"]))
+    ob.data.materials.append(mat)
+    return export_part(g.name, kind, [ob], arm, {"material": g.material, "bone": g.bone},
+                       seed=seed, extra={"material": g.material, "slot_hint": _slot_hint(g.name)})
+
+
+def _slot_hint(name: str) -> str:
+    if name in ("tunic", "shirt", "dress", "robe", "gambeson", "plate_torso", "brigandine", "apron"):
+        return "torso"
+    if name in ("trousers", "skirt"):
+        return "legs"
+    if name in ("boots", "shoes", "greaves"):
+        return "feet"
+    if name in ("gloves",):
+        return "hands"
+    if name in ("belt",):
+        return "belt"
+    if name in ("cloak", "hooded_cloak"):
+        return "back"
+    if name in ("helm", "hood", "pauldrons"):
+        return "headgear" if name in ("helm", "hood") else "torso"
+    return "attachment"
+
+
+def cmd_parts(args) -> None:
+    only = set(args.only) if getattr(args, "only", None) else None
+    t0 = time.time()
+
+    def want(n: str) -> bool:
+        return only is None or n in only
+
+    # -- heads ---------------------------------------------------------------------------
+    for name, params in HEAD_PRESETS.items():
+        if not want(name) and not want("heads"):
+            continue
+        skel, arm = _fresh_rig()
+        hs = bodylib.HeadStyle.from_dict(params)
+        ob = build_head(skel, hs)
+        eyes = build_eyes(skel, hs)
+        bodylib.rigid_weights(ob, "Head", arm)
+        for e in eyes:
+            bodylib.rigid_weights(e, "Head", arm)
+        out_dir = part_dir("head", name)
+        app = dict(DEFAULT_APPEARANCE)
+        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=HEAD_TEX)
+        ea = paint_eyes(out_dir, "%s_eye" % name, app)
+        ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
+        em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
+        for e in eyes:
+            e.data.materials.append(em)
+        export_part(name, "head", [ob] + eyes, arm, {"head": hs.to_dict()}, seed=1,
+                    extra={"slot_hint": "head"})
+
+    # -- body variants --------------------------------------------------------------------
+    for name, params in BODY_VARIANTS.items():
+        if name == "default" or (not want(name) and not want("bodies")):
+            continue
+        props = rig.Proportions.from_dict(params)
+        skel, arm = _fresh_rig(props)
+        style = bodylib.BodyStyle()
+        ob = build_body(skel, style)
+        bodylib.skin_to_armature(ob, arm, skel)
+        out_dir = part_dir("body", name)
+        app = dict(DEFAULT_APPEARANCE)
+        a, o, nmap = paint_body(ob, skel, bodylib.HeadStyle(), out_dir, name, dict(app, face=False))
+        ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.65))
+        export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
+                    extra={"slot_hint": "body"})
+
+    # -- everything that is built against the default body --------------------------------
+    skel, arm = _fresh_rig()
+    style = bodylib.BodyStyle()
+    body_ob = build_body(skel, style)
+    bodylib.skin_to_armature(body_ob, arm, skel)
+    bv, bn, bt = bodylib.mesh_arrays(body_ob)
+    bW = (bv, bodylib.weight_matrix(body_ob, rig.DEFORM_NAMES))
+    field = clothlib.body_field(skel, style)
+    log("body field cached %s" % (field.F.shape,))
+    bpy.data.objects.remove(body_ob, do_unlink=True)
+
+    for name, builder in clothlib.CLOTHING_BUILDERS.items():
+        if not want(name) and not want("clothing"):
+            continue
+        g = builder(skel, field)
+        build_garment_part(g, skel, arm, None, bW, seed=abs(hash(name)) % 9999, kind="clothing")
+    for name in clothlib.HAIR_STYLES:
+        if not want(name) and not want("hair"):
+            continue
+        g = clothlib.build_hair(skel, name)
+        build_garment_part(g, skel, arm, None, bW, seed=abs(hash(name)) % 9999, kind="hair")
+    for name in clothlib.BEARD_STYLES:
+        if not want(name) and not want("beards"):
+            continue
+        g = clothlib.build_beard(skel, name)
+        build_garment_part(g, skel, arm, None, bW, seed=abs(hash(name)) % 9999, kind="beard")
+    for name, builder in clothlib.ATTACHMENT_BUILDERS.items():
+        if not want(name) and not want("attachments"):
+            continue
+        g = builder(skel)
+        build_garment_part(g, skel, arm, None, bW, seed=abs(hash(name)) % 9999, kind="attachment")
+    log("parts done in %.1fs" % (time.time() - t0))
+
+
+# ======================================================================================
+# presets
+# ======================================================================================
+
+CALLINGS = ["hearthkeeper", "wayfarer", "reedborn", "cragborn", "ashwalker", "lantern_clerk"]
+
+
+def _preset(culture: str, **kw) -> dict:
+    d = {"culture": culture, "seed": abs(hash(culture + str(kw.get("_n", "")))) % 99991}
+    d.update({k: v for k, v in kw.items() if not k.startswith("_")})
+    return d
+
+
+def cmd_presets(args) -> None:
+    pal = clothlib.CULTURE_PALETTES
+    presets: Dict[str, dict] = {}
+
+    def add(pid: str, culture: str, parts: dict, **kw) -> None:
+        p = _preset(culture, _n=pid, parts=parts, **kw)
+        presets[pid] = p
+
+    # -- the six Callings (DESIGN.md §5.1): the player's starting look ---------------------
+    add("player_hearthkeeper", "vale",
+        {"head": "round", "hair": "short", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"},
+        skin="fair", hair_colour="sand", eye_colour="blue", build=0.50, age=0.22)
+    add("player_wayfarer", "vale",
+        {"head": "angular", "hair": "tousled", "torso": "shirt", "legs": "trousers", "feet": "boots",
+         "belt": "belt", "back": "cloak"},
+        skin="wheat", hair_colour="brown", eye_colour="hazel", build=0.45, age=0.30)
+    add("player_reedborn", "reedfolk",
+        {"head": "narrow", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"},
+        skin="olive", hair_colour="black", eye_colour="dark_brown", build=0.36, age=0.26)
+    add("player_cragborn", "clans",
+        {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "gambeson", "legs": "trousers",
+         "feet": "boots", "belt": "belt"},
+        skin="fair", hair_colour="ginger", eye_colour="grey_green", build=0.70, bulk=1.10,
+        shoulder_width=1.12, age=0.34)
+    add("player_ashwalker", "ash_pilgrims",
+        {"head": "hawk", "hair": "cropped", "torso": "robe", "feet": "boots", "back": "hooded_cloak"},
+        skin="amber", hair_colour="soot", eye_colour="grey", build=0.38, age=0.44)
+    add("player_lantern_clerk", "lakefolk",
+        {"head": "soft", "hair": "bun", "torso": "shirt", "legs": "trousers", "feet": "shoes",
+         "belt": "belt", "hands": "gloves"},
+        skin="porcelain", hair_colour="ash_blond", eye_colour="pale_blue", build=0.40, age=0.28,
+        feminine=1.0, height=1.66)
+
+    # -- one archetype per culture (WORLD_BIBLE §3) ----------------------------------------
+    add("vale_villager", "vale",
+        {"head": "round", "hair": "short", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"},
+        skin="fair", hair_colour="chestnut", eye_colour="brown", build=0.55, age=0.42, freckles=0.4)
+    add("lakefolk_clerk", "lakefolk",
+        {"head": "narrow", "hair": "hood_friendly", "torso": "shirt", "legs": "trousers", "feet": "shoes",
+         "belt": "belt", "hands": "gloves"},
+        skin="wheat", hair_colour="dark_brown", eye_colour="grey", build=0.40, age=0.50)
+    add("reedfolk_eeler", "reedfolk",
+        {"head": "angular", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "boots",
+         "belt": "belt", "back": "cloak"},
+        skin="umber", hair_colour="black", eye_colour="dark_brown", build=0.44, age=0.38)
+    add("clans_herder", "clans",
+        {"head": "broad", "hair": "braid", "beard": "long_beard", "torso": "tunic", "legs": "trousers",
+         "feet": "boots", "belt": "belt", "back": "cloak"},
+        skin="fair", hair_colour="auburn", eye_colour="green", build=0.68, bulk=1.08, age=0.55)
+    add("woodfolk_forester", "woodfolk",
+        {"head": "hawk", "hair": "tousled", "torso": "tunic", "legs": "trousers", "feet": "boots",
+         "belt": "belt", "back": "hooded_cloak"},
+        skin="olive", hair_colour="soot", eye_colour="grey_green", build=0.42, age=0.36)
+    add("ash_pilgrim", "ash_pilgrims",
+        {"head": "heavy_brow", "hair": "cropped", "beard": "long_beard", "torso": "robe",
+         "feet": "boots", "back": "hooded_cloak"},
+        skin="deep", hair_colour="grey", eye_colour="grey", build=0.46, age=0.72)
+
+    # -- the named roles the world needs ----------------------------------------------------
+    add("warden_guard", "vale",
+        {"head": "broad", "hair": "cropped", "torso": "brigandine", "legs": "trousers", "feet": "boots",
+         "belt": "belt", "headgear": "helm", "hands": "gloves"},
+        skin="wheat", hair_colour="dark_brown", eye_colour="brown", build=0.62, bulk=1.06,
+        shoulder_width=1.10, age=0.40)
+    add("bandit", "vale",
+        {"head": "angular", "hair": "tousled", "beard": "stubble", "torso": "gambeson", "legs": "trousers",
+         "feet": "boots", "belt": "belt"},
+        skin="olive", hair_colour="soot", eye_colour="hazel", build=0.52, age=0.35, stubble=0.7)
+    add("tolling_knight", "ash_pilgrims",
+        {"head": "heavy_brow", "hair": "cropped", "torso": "plate_torso", "legs": "trousers", "feet": "boots",
+         "belt": "belt", "headgear": "helm", "hands": "gloves"},
+        skin="amber", hair_colour="grey", eye_colour="grey", build=0.66, bulk=1.10,
+        shoulder_width=1.14, height=1.84, age=0.58)
+    add("sayer", "lakefolk",
+        {"head": "soft", "hair": "long", "torso": "robe", "feet": "shoes", "back": "cloak"},
+        skin="porcelain", hair_colour="white", eye_colour="pale_blue", build=0.34, age=0.80,
+        feminine=1.0, height=1.63)
+    add("merchant", "lakefolk",
+        {"head": "round", "hair": "short", "beard": "moustache", "torso": "tunic", "legs": "trousers",
+         "feet": "shoes", "belt": "belt", "back": "cloak"},
+        skin="wheat", hair_colour="brown", eye_colour="brown", build=0.78, bulk=1.12, age=0.52)
+    add("child", "vale",
+        {"head": "round", "hair": "tousled", "torso": "tunic", "legs": "trousers", "feet": "shoes"},
+        skin="fair", hair_colour="sand", eye_colour="blue", build=0.45, age=0.05,
+        height=1.30, head_size=1.18, limb_length=0.90, shoulder_width=0.88)
+
+    # morality showcases (DESIGN.md §5.11)
+    add("hollow_touched", "vale",
+        {"head": "angular", "hair": "cropped", "torso": "gambeson", "legs": "trousers", "feet": "boots"},
+        skin="porcelain", hair_colour="soot", eye_colour="red", build=0.48, age=0.40,
+        hollow=0.85, veins=0.9)
+    add("hearth_touched", "vale",
+        {"head": "soft", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "shoes"},
+        skin="wheat", hair_colour="flax", eye_colour="amber", build=0.45, age=0.28,
+        hearth=0.85, feminine=1.0, height=1.68)
+
+    data = {
+        "generator": GENERATOR, "version": VERSION, "rig": rig.RIG_ID,
+        "callings": CALLINGS,
+        "culture_palettes": pal,
+        "head_presets": sorted(HEAD_PRESETS.keys()),
+        "body_variants": sorted(BODY_VARIANTS.keys()),
+        "hair_styles": sorted(clothlib.HAIR_STYLES.keys()),
+        "beard_styles": sorted(clothlib.BEARD_STYLES.keys()),
+        "clothing": sorted(clothlib.CLOTHING_BUILDERS.keys()),
+        "attachments": sorted(clothlib.ATTACHMENT_BUILDERS.keys()),
+        "presets": presets,
+    }
+    # a preset carries its culture's palette unless it overrides one
+    for pid, p in presets.items():
+        culture_pal = pal.get(p["culture"], pal["vale"])
+        p.setdefault("palette", {k: v for k, v in culture_pal.items() if k != "note"})
+    path = os.path.join(ROOT, "tools", "forge", "characters.json")
+    with open(path, "w") as f:
+        json.dump(data, f, indent=1, sort_keys=True)
+    log("wrote %s (%d presets)" % (os.path.relpath(path, ROOT), len(presets)))
+
+
+# ======================================================================================
 # CLI
 # ======================================================================================
 

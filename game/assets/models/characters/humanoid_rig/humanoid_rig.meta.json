@@ -1,0 +1,75 @@
+{
+ "bones": 29,
+ "bounds": [
+  -0.8425,
+  -0.2644,
+  0.001,
+  0.841,
+  0.1492,
+  1.6117
+ ],
+ "clips": [
+  "Attack_1H_Light_1",
+  "Idle",
+  "Run",
+  "Walk"
+ ],
+ "collision": "capsule",
+ "generator": "character_forge",
+ "params": {
+  "appearance": {
+   "age": 0.3,
+   "eye_colour": "brown",
+   "freckles": 0.15,
+   "hair_colour": "dark_brown",
+   "seed": 1,
+   "skin": "wheat"
+  },
+  "head": {
+   "brow": 1.0,
+   "cheeks": 1.0,
+   "chin": 1.0,
+   "ears": 1.0,
+   "eye_size": 1.0,
+   "eye_spacing": 1.0,
+   "forehead": 1.0,
+   "jaw_width": 1.0,
+   "lips": 1.0,
+   "mouth_width": 1.0,
+   "nose": 1.0,
+   "nose_bridge": 1.0,
+   "skull_depth": 1.0,
+   "skull_width": 1.0
+  },
+  "proportions": {
+   "age": 0.3,
+   "build": 0.5,
+   "bulk": 1.0,
+   "feminine": 0.0,
+   "foot_size": 1.0,
+   "hand_size": 1.0,
+   "head_size": 1.0,
+   "height": 1.78,
+   "hip_width": 1.0,
+   "limb_length": 1.0,
+   "neck_length": 1.0,
+   "shoulder_width": 1.0
+  },
+  "style": {
+   "belly": 0.25,
+   "chest": 0.5,
+   "feet": 1.06,
+   "hands": 1.12,
+   "muscle": 0.35,
+   "shoulders": 0.5
+  }
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 1,
+ "tris": [
+  13408,
+  0,
+  0
+ ],
+ "version": 1
+}
