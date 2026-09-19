@@ -1,0 +1,18 @@
+[
+  {"id": "core:item/ring_tallymans_band", "name": "Tallyman's Band", "category": "armour", "weight": 0.05, "value": 120, "tags": ["ring", "jewellery", "brass"], "tier": 2,
+   "armour": {"slot": "ring", "armour": 0, "weight_class": "light", "stability": 0.0},
+   "effects": [{"effect": "core:effect/fortify_speech", "magnitude": 8, "duration": 0}],
+   "description": "A brass ring stamped with the Charter's seal, worn by guild factors. A Tollmere merchant who sees it talks to you as to a peer, and prices accordingly."},
+  {"id": "core:item/ring_ash_knights_signet", "name": "Ash-Knight's Signet", "category": "armour", "weight": 0.05, "value": 260, "tags": ["ring", "jewellery", "iron", "enchanted"], "tier": 2,
+   "armour": {"slot": "ring", "armour": 0, "weight_class": "light", "stability": 0.0},
+   "effects": [{"effect": "core:effect/resist_fire", "magnitude": 20, "duration": 0}],
+   "description": "An iron ring with a bell for a bezel, worn by the Tolling Order's Bell-Sworn. It was written at a Name-table by a knight who walked into the Ash Winter and came back."},
+  {"id": "core:item/ring_cragborn_bone", "name": "Cragborn Bone Ring", "category": "armour", "weight": 0.05, "value": 90, "tags": ["ring", "jewellery", "bone"], "tier": 1,
+   "armour": {"slot": "ring", "armour": 0, "weight_class": "light", "stability": 0.0},
+   "effects": [{"effect": "core:effect/resist_frost", "magnitude": 15, "duration": 0}],
+   "description": "A ring cut from giant-bone by a Kharrow smith. The clans give one to a child on the day they first cross a chain bridge alone."},
+  {"id": "core:item/amulet_ansels_ember", "name": "Ansel's Ember", "category": "armour", "weight": 0.1, "value": 300, "tags": ["amulet", "jewellery", "unique", "hearth"], "tier": 3,
+   "armour": {"slot": "amulet", "armour": 0, "weight_class": "light", "stability": 0.0},
+   "effects": [{"effect": "core:effect/regen_health", "magnitude": 0.5, "duration": 0}],
+   "description": "A hearth-coal set in silver, still warm after a thousand years. The Vale says Hearth-Mother Ansel wore it when she told the first story about a neighbour. Whoever wears it is a little harder to forget."}
+]
