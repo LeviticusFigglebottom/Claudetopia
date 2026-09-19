@@ -283,6 +283,10 @@ func _step_die_and_recover() -> void:
 	host.add_child(stone)
 	(stone as Node3D).global_position = player.global_position + Vector3(3, 0, 0)
 	stone.hearthstone_id = "journey_stone"
+	# Two frames, not one, at each settling point below: a single frame has been seen to be
+	# marginal here (one failure in five runs, cause not yet pinned down -- PROGRESS "Known
+	# issues"), and the step is measuring the hearth, not the frame scheduler.
+	await get_tree().process_frame
 	await get_tree().process_frame
 	stone.interact(player)
 	var rested: bool = Hearth.last_hearthstone_id == "journey_stone"
@@ -292,16 +296,25 @@ func _step_die_and_recover() -> void:
 	player.global_position = death_spot
 	EventBus.player_died.emit(death_spot)
 	await get_tree().process_frame
+	await get_tree().process_frame
 	var dropped: bool = Hearth.has_echo() and int(Hearth.echo.get("marks", 0)) == marks_before
 	Hearth._respawn()
+	await get_tree().process_frame
 	await get_tree().process_frame
 	var back_at_stone: bool = player.global_position.distance_to(Hearth.respawn_position) < 1.0
 	var marks_gone: bool = int(inventory.get("marks")) == 0 if inventory else true
 	Hearth.recover_echo()
 	await get_tree().process_frame
+	await get_tree().process_frame
 	var recovered: bool = int(inventory.get("marks")) == marks_before if inventory else true
-	_record("die and get your marks back", rested and dropped and back_at_stone and marks_gone and recovered,
-		"rested, dropped %d marks on death, respawned at the stone, recovered them" % marks_before)
+	var whole: bool = rested and dropped and back_at_stone and marks_gone and recovered
+	var how := "rested, dropped %d marks on death, respawned at the stone, recovered them" % marks_before
+	if not whole:
+		# Which half of it broke, so a failure here names itself instead of reading like a mood.
+		how = "rested=%s dropped=%s back_at_stone=%s marks_gone=%s recovered=%s (marks before %d, now %d)" % [
+			rested, dropped, back_at_stone, marks_gone, recovered, marks_before,
+			int(inventory.get("marks")) if inventory else -1]
+	_record("die and get your marks back", whole, how)
 
 
 # 7 ------------------------------------------------------------------------------------

@@ -109,8 +109,11 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
    schedules ran, dispositions changed and guards noticed crimes in villages that contained no
    bodies at all. `NpcStreamer` follows whoever the world is streaming around and keeps people
    standing in a 240 m ring (330 m before they are taken down again), capped at 48. What is
-   untuned is how many and how busy: a village of 23 residents currently stands 23 people in
-   it at once, which is every single villager outdoors at all hours.
+   untuned is how many and how busy. Whoever the hour has indoors is not stood up in the
+   street — so a village genuinely empties at three in the morning, and rain sends the idlers
+   home — and going through a door stands the residents up in the room their hour calls for.
+   Nobody is placed inside an interior they do not live in, so an inn at midday has its
+   landlord and no drinkers.
 6. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
    score: the downs currently read as bare ground with trees on it.
 
@@ -128,6 +131,12 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
 
 ## Known issues
 
+* **The journey's death step has failed once in five runs**, and I have not pinned down why.
+  It rests at a Hearthstone, dies, respawns and recovers the echo, and one run in five one of
+  those five conditions came back false. The step now names which one when it fails instead of
+  printing the success sentence, and each settling point waits two frames rather than one,
+  which has held for every run since — but "it stopped happening" is not a diagnosis and it is
+  recorded here as unexplained rather than fixed.
 * **The exterior is over the primitive budget, badly.** DESIGN §11 sets 1.5 M primitives and
   2000 draw calls. Interiors are all comfortably inside it (the Cantor's Seat is the worst at
   1.17 M and 61 draws). The country is not: Merrowby from the air is **5.14 M primitives**

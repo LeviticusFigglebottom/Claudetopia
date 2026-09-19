@@ -140,3 +140,91 @@ func test_the_world_installs_the_streamer_with_its_other_services() -> void:
 	assert_true(GameServices.ORDER.any(func(pair: Array) -> bool:
 			return str(pair[0]) == "NpcStreamer"),
 			"nothing installs the streamer, so nothing will stand the villagers up")
+
+
+# --- indoors -------------------------------------------------------------------------------------
+
+func _set_hour(h: float) -> void:
+	WorldClock.set_time(h)
+	NpcRegistry.ensure().simulate_all("clear")
+
+
+func test_a_village_empties_at_three_in_the_morning() -> void:
+	var w := _world()
+	await w.world_ready
+	var registry := NpcRegistry.ensure()
+	registry.despawn_all()
+	var anchor := _anchor_at(w, w.place_position(MERROWBY))
+	var streamer := _streamer()
+
+	_set_hour(13.0)
+	streamer.refresh()
+	var by_day := registry.spawned.size()
+	assert_gt(by_day, 2, "the village has people out in the afternoon")
+
+	_set_hour(3.0)
+	streamer.refresh()
+	var by_night := registry.spawned.size()
+	assert_true(by_night < by_day,
+			"at three in the morning %d of %d were still standing outside" % [by_night, by_day])
+	for id in registry.spawned.keys():
+		assert_false(registry.is_indoors(str(id)), "%s is asleep and standing in the street" % id)
+
+	registry.despawn_all()
+	anchor.queue_free()
+	_set_hour(9.0)
+	await _drop(w)
+
+
+func test_the_schedule_says_who_is_under_a_roof() -> void:
+	var sleeping := {"activity": "sleep", "spot": "bed"}
+	var at_home := {"activity": "idle", "spot": "home"}
+	var marked := {"activity": "work", "spot": "in:stillroom"}
+	var flagged := {"activity": "work", "spot": "forge", "indoors": true}
+	var outside := {"activity": "work", "spot": "eel_racks"}
+	assert_true(Schedules.is_indoors(sleeping), "asleep is indoors")
+	assert_true(Schedules.is_indoors(at_home), "at home is indoors")
+	assert_true(Schedules.is_indoors(marked), "an in: spot is indoors")
+	assert_true(Schedules.is_indoors(flagged), "an explicit flag is indoors")
+	assert_false(Schedules.is_indoors(outside), "the eel racks are not indoors")
+
+
+func test_the_resolved_entry_carries_indoors_through() -> void:
+	var entry := Schedules.resolve({"activity": "sleep", "spot": "bed"}, "clear", "core:place/merrowby")
+	assert_true(bool(entry.get("indoors", false)), "resolve() dropped indoors")
+	# rain sends an idler home, and home is under a roof
+	var wet := Schedules.resolve({"activity": "idle", "spot": "green"}, "rain", "core:place/merrowby")
+	assert_true(bool(wet.get("indoors", false)), "rain sent them home but not inside")
+
+
+func test_you_find_the_resident_at_home() -> void:
+	var w := _world()
+	await w.world_ready
+	var registry := NpcRegistry.ensure()
+	registry.despawn_all()
+	var anchor := _anchor_at(w, w.place_position(MERROWBY))
+	var streamer := _streamer()
+	# a house whose resident the roster knows, and an hour they are in it
+	var home := ""
+	var who := ""
+	for def in ContentDB.all("interior"):
+		var resident := str(def.get("resident", ""))
+		if resident != "" and ContentDB.has(resident):
+			home = str(def.get("id", ""))
+			who = resident
+			break
+	assert_true(home != "", "some interior has a named resident")
+	_set_hour(3.0)
+	assert_true(registry.is_indoors(who), "%s should be asleep at three" % who)
+
+	# Standing inside that building is all the streamer reads; the pocket itself is the
+	# interior manager's business and does not have to be loaded for its people to exist.
+	GameState.current_interior_id = home
+	streamer.refresh()
+	assert_true(registry.is_spawned(who), "%s was not at home in their own house" % who)
+
+	GameState.current_interior_id = ""
+	registry.despawn_all()
+	anchor.queue_free()
+	_set_hour(9.0)
+	await _drop(w)

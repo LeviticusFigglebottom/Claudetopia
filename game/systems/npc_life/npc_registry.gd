@@ -74,6 +74,7 @@ func _fresh_state(def: Dictionary) -> Dictionary:
 		"place": str(def.get("home_place", "")),
 		"activity": "idle",
 		"spot": "",
+		"indoors": false,
 		"alive": true,
 		"disposition": int(def.get("disposition", 0)),
 		"last_seen_player_deed": "",
@@ -110,6 +111,12 @@ func place_of(npc_id: String) -> String:
 
 func activity_of(npc_id: String) -> String:
 	return str(state(npc_id).get("activity", "idle"))
+
+
+## Is this person under a roof right now? Their schedule decides it (Schedules.is_indoors),
+## and it is what keeps a sleeping villager out of the village square at three in the morning.
+func is_indoors(npc_id: String) -> bool:
+	return bool(state(npc_id).get("indoors", false))
 
 
 func disposition_of(npc_id: String) -> int:
@@ -219,6 +226,7 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 	s["place"] = entry["place"]
 	s["activity"] = entry["activity"]
 	s["spot"] = entry["spot"]
+	s["indoors"] = bool(entry.get("indoors", false))
 	s["travelling"] = entry["travelling"]
 	if moved:
 		state_changed.emit(npc_id)
