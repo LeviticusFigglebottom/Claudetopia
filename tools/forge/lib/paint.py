@@ -407,9 +407,13 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
         # fingers, under the jaw.  Without this the skin is one flat value.
         if scene is not None:
             ao = sdf_occlusion(scene, p, nrm, radius=occ_radius, samples=5, strength=0.95)
-            c = mix(c, np.clip(t["shadow"] * 0.82, 0, 1), (1.0 - ao) * 0.55)
+            # A face gets a third of the body's dose.  Every hollow on a head is an eye
+            # socket or a temple, and painting those at full strength is how a warm
+            # complexion turns into a skull at the distance the player is standing.
+            deep, lift = (0.20, 0.26) if face else (0.55, 0.18)
+            c = mix(c, np.clip(t["shadow"] * 0.82, 0, 1), (1.0 - ao) * deep)
             # and the opposite: the exposed high points bleach a little towards the light
-            c = mix(c, np.clip(t["base"] * 1.12 + 0.04, 0, 1), exposure(ao, 3.0) * 0.18)
+            c = mix(c, np.clip(t["base"] * 1.12 + 0.04, 0, 1), exposure(ao, 3.0) * lift)
         # downward-facing surfaces sit in their own shadow: cheap, and it reads as painted form
         down = np.clip(-nrm[:, 2], 0, 1)
         c = mix(c, t["shadow"], 0.16 * down)
