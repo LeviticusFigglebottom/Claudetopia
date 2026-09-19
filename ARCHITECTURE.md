@@ -65,6 +65,11 @@ captures/                 screenshot output (gitignored)
 | `SaveSystem` | `save_system.gd` | slots in `user://saves/`, `register(section, obj)`, `take_pending()` for late joiners |
 | `Hearth` | `systems/hearth/hearth_system.gd` | Hearthstones, respawn point, the Echo (dropped marks), lit stones; section `hearth` |
 | `Interiors` | `systems/interiors/interior_manager.gd` | interior cells in a far pocket, door transitions, return point; section `interiors` |
+| `Social` | `systems/social/social.gd` | factions, standing, gossip, quests and dialogue under one name; sections `quests`, `factions`, `standing`, `gossip` |
+| `Music` | `systems/audio/music_director.gd` | region stems, combat and deep layers, boss music, stingers |
+| `Ambience` | `systems/audio/ambience_mixer.gd` | region beds and one-shot pools by time, weather and interior |
+| `Foley` | `systems/audio/foley.gd` | `play(id, pos)`, `play_ui(id)`, `footstep(surface, pos)`, `surface_at(pos)` |
+| `UI` | `ui/ui.gd` | the CanvasLayer stack, `open(menu)`, `close()`, theme variant, screen fade |
 | `Debug` | `tools_gd/debug_console.tscn` | in-game console (backquote), `Debug.register(name, callable, help)`, `-- --cmd="..."` scripting |
 
 Static helper classes (not nodes): `Ids`, `Schemas`, `Migrations`.
