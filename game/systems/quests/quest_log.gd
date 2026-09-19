@@ -41,6 +41,8 @@ var quests: Dictionary = {}
 var ctx: SocialContext = null
 ## Duck-typed: position() -> Vector3. Used for `reach` objectives.
 var position_provider: Object = null
+## The board generator, whose board cooldowns ride along in this system's save section.
+var radiant: RadiantGenerator = null
 
 var _poll := 0.0
 
@@ -120,6 +122,9 @@ func start(quest_id: String) -> bool:
 	var def := definition(quest_id)
 	if def.is_empty() or not def.has("stages"):
 		Log.warn("Quests", "cannot start unknown quest '%s' (content problem)" % quest_id)
+		return false
+	if not QuestConditions.can_start(def, ctx, self):
+		Log.info("Quests", "%s is not available yet (its requirements are unmet)" % quest_id)
 		return false
 	if not quests.has(quest_id):
 		quests[quest_id] = _blank_record(quest_id)
@@ -523,6 +528,11 @@ func complete_objective(quest_id: String, key: Variant) -> void:
 	Log.warn("Quests", "%s: no objective matching '%s' in stage %d (content problem)" % [quest_id, wanted, index])
 
 
+## Forgets a finished quest so a repeatable one can be taken again (boards re-post work).
+func forget(quest_id: String) -> void:
+	quests.erase(quest_id)
+
+
 ## Records a choice (the `choice` objective type) and completes the matching objective.
 func choose(quest_id: String, option: String) -> void:
 	if not is_active(quest_id):
@@ -714,11 +724,16 @@ func reset_for_new_game() -> void:
 # --- save --------------------------------------------------------------------------------------
 
 func to_save() -> Dictionary:
-	return {"quests": quests.duplicate(true)}
+	var out: Dictionary = {"quests": quests.duplicate(true)}
+	if radiant != null:
+		out["radiant"] = radiant.to_save()
+	return out
 
 
 func from_save(d: Dictionary) -> void:
 	quests.clear()
+	if radiant != null:
+		radiant.from_save(d.get("radiant", {}))
 	var saved: Dictionary = d.get("quests", {})
 	for quest_id in saved:
 		var rec: Dictionary = _blank_record(str(quest_id))
