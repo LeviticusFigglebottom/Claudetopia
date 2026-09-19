@@ -150,10 +150,13 @@ func _setup_water() -> void:
 
 
 func _setup_target() -> void:
-	var players := get_tree().get_nodes_in_group("player")
-	if not players.is_empty() and players[0] is Node3D:
-		target = players[0]
-		return
+	# The player leads the streaming when there is one; a test or tool can put a bare probe in
+	# the "streamer_target" group instead; otherwise the world flies itself.
+	for group in ["player", "streamer_target"]:
+		var found := get_tree().get_nodes_in_group(group)
+		if not found.is_empty() and found[0] is Node3D:
+			target = found[0]
+			return
 	fly_camera = FlyCamera.new()
 	fly_camera.name = "FlyCamera"
 	fly_camera.provider = provider
@@ -220,6 +223,12 @@ func move_target(pos: Vector3, look_at: Variant = null) -> void:
 		target.global_position = pos
 	if streamer:
 		streamer.refresh()
+
+
+## Streams as though whatever the streamer follows were standing here. Headless tools and the
+## smoke run call this to sweep the map without a player.
+func force_stream_around(pos: Vector3) -> void:
+	move_target(pos)
 
 
 func _on_region_entered(region_id: String, _previous: String) -> void:
