@@ -286,43 +286,56 @@ def body_mesh(skel: Skeleton, style: Optional[BodyStyle] = None, spacing: float 
 
 
 def head_landmarks(skel: Skeleton, hs: Optional[HeadStyle] = None) -> dict:
-    """Key positions for the head builder, the eyes, hair, beards and the face painter.
+    """Key positions for the head builder, eyes, hair, beards and the face painter.
 
-    The Head bone starts at the skull pivot (about ear level); the jaw and chin hang below
-    it, so the visible head runs from `chin_z` to `top`."""
+    Everything is expressed as a fraction of the *visible* head height V (chin to crown),
+    using the classic head canon: eyes at V/2, nose base at 0.33 V, mouth at 0.21 V,
+    brow at 0.60 V, ears spanning brow to nose base.  The Head bone starts at the skull
+    pivot (about ear level), so the jaw hangs below its origin."""
     hs = hs or HeadStyle()
     p = skel.props
     s = p.height / rig.DEFAULT_HEIGHT * p.head_size
     fem = p.feminine
     head = skel.J["Head"]
-    top = skel.J["HeadTop"]
-    hl = float(top[2] - head[2])
+    top = float(skel.J["HeadTop"][2])
+    hl = top - float(head[2])
     chin_z = float(head[2]) - 0.022 * s
-    visible = float(top[2]) - chin_z                      # ~0.265 m at 1.78 m
-    eye_z = chin_z + visible * 0.505
-    skull_r = np.array([0.0815 * hs.skull_width * (1 - 0.03 * fem), 0.0965 * hs.skull_depth,
-                        0.1010 * (0.96 + 0.08 * hs.forehead)]) * s
-    skull_c = np.array([0.0, 0.014 * s, float(top[2]) - skull_r[2] * 0.985])
-    face_y = skull_c[1] - skull_r[1] * 0.99
-    jaw_z = chin_z + visible * 0.175
-    mouth_z = chin_z + visible * 0.245
+    V = top - chin_z                                   # ~0.265 m at 1.78 m -> 6.7 heads
+    w = 0.0850 * hs.skull_width * (1 - 0.03 * fem) * s   # half width at the temples
+    d = 0.0930 * hs.skull_depth * s                      # half depth at the temples
+    cy = 0.009 * s                                       # skull axis offset (back of head is deeper)
+    eye_z = chin_z + V * 0.500
+    face_y = cy - d * 0.985                              # face surface y at the eye line
     return {
-        "s": s, "head": head, "top": top, "hl": hl, "visible": visible,
-        "eye_z": eye_z, "skull_c": skull_c, "skull_r": skull_r, "face_y": face_y,
-        "eye_x": 0.0315 * hs.eye_spacing * s, "eye_r": 0.0133 * hs.eye_size * s,
-        "eye_c_y": face_y + 0.0165 * s,
-        "nose_root": np.array([0.0, face_y + 0.012 * s, eye_z + 0.014 * s]),
-        "nose_tip": np.array([0.0, face_y - (0.018 + 0.009 * hs.nose) * s, eye_z - 0.046 * s]),
-        "mouth_z": mouth_z, "mouth_w": 0.0265 * hs.mouth_width * s,
-        "chin_z": chin_z, "jaw_z": jaw_z,
-        "brow_z": eye_z + 0.0235 * s,
-        "ear_c": np.array([0.0775 * hs.skull_width * s, 0.020 * s, eye_z - 0.006 * s]),
-        "ear_r": np.array([0.0070 * s, 0.0160 * hs.ears * s, 0.0285 * hs.ears * s]),
+        "s": s, "head": head, "top": np.array([0.0, 0.0, top]), "hl": hl, "visible": V,
+        "V": V, "half_w": w, "half_d": d, "cy": cy,
+        "eye_z": eye_z, "skull_c": np.array([0.0, cy, chin_z + V * 0.66]),
+        "skull_r": np.array([w, d, V * 0.34]),
+        "face_y": face_y,
+        # Stylised eyes: a shade larger than life, which reads as expressive rather than
+        # beady at gameplay distance and survives the mesh resolution around the lids.
+        "eye_x": 0.0325 * hs.eye_spacing * s, "eye_r": 0.0165 * hs.eye_size * s,
+        "eye_c_y": face_y + 0.0135 * s,
+        "brow_z": chin_z + V * 0.600,
+        "nose_root_z": chin_z + V * 0.545,
+        "nose_base_z": chin_z + V * 0.360,
+        "nose_tip": np.array([0.0, face_y + (0.004 - 0.005 * hs.nose) * s, chin_z + V * 0.378]),
+        "mouth_z": chin_z + V * 0.240, "mouth_w": 0.0265 * hs.mouth_width * s,
+        "chin_z": chin_z, "jaw_z": chin_z + V * 0.135,
+        "cheek_z": chin_z + V * 0.385,
+        "ear_c": np.array([w * 0.955, cy + 0.006 * s, chin_z + V * 0.415]),
+        "ear_r": np.array([0.0095 * s, 0.0150 * hs.ears * s, V * 0.105 * hs.ears]),
+        "hairline_z": chin_z + V * 0.715,
+        "nape_z": chin_z + V * 0.300,
     }
 
 
 def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool = True) -> Scene:
-    """Head as an SDF scene: a cranium/jaw mass, then features blended onto it."""
+    """Head as an SDF scene.
+
+    The skull and face are ONE loft from chin to crown, so the cranium can never overhang
+    the face; features (brow, nose, lips, ears, eye mounds) are blended onto it and the
+    detail (eye openings, mouth line, philtrum, nostrils) is carved out afterwards."""
     hs = hs or HeadStyle()
     L = head_landmarks(skel, hs)
     p = skel.props
@@ -330,117 +343,168 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     fem = p.feminine
     old = p.age
     heavy = p.build
-    c, r = L["skull_c"], L["skull_r"]
+    V, w, d, cy = L["V"], L["half_w"], L["half_d"], L["cy"]
+    z0 = L["chin_z"]
     eye_z, face_y = L["eye_z"], L["face_y"]
-    chin_z, mouth_z, jaw_z = L["chin_z"], L["mouth_z"], L["jaw_z"]
+    mouth_z, jaw_z = L["mouth_z"], L["jaw_z"]
+    jw = hs.jaw_width * (1 - 0.06 * fem) * (1 + 0.05 * heavy)
+    fh = 0.96 + 0.08 * hs.forehead
     sc = Scene()
 
-    # -- skull + jaw as one mass ---------------------------------------------------------
-    jw = hs.jaw_width * (1 - 0.07 * fem) * (1 + 0.05 * heavy)
-    skull = sdf.ellipsoid(c, r)
-    # the face block: a vertical loft from inside the cranium down to the chin, so its top
-    # never breaks the skull surface (which would leave a ring)
-    face = sdf.loft([
-        (np.array([0.0, c[1], eye_z + 0.055 * s]), r[0] * 0.70, r[1] * 0.70),
-        (np.array([0.0, c[1] - 0.004 * s, eye_z + 0.012 * s]), 0.0690 * s, 0.0845 * s),
-        (np.array([0.0, c[1] - 0.006 * s, eye_z - 0.026 * s]), 0.0680 * jw * s, 0.0830 * s),
-        (np.array([0.0, c[1] - 0.012 * s, jaw_z + 0.014 * s]), 0.0600 * jw * s, 0.0745 * s),
-        (np.array([0.0, c[1] - 0.026 * s, mouth_z - 0.016 * s]), 0.0470 * jw * s, 0.0610 * s),
-        (np.array([0.0, c[1] - 0.040 * hs.chin * s, chin_z + 0.012 * s]), 0.0305 * jw * s, 0.0395 * s),
-    ], LEFT)
-    mass = [skull, sdf.Prim(face.fn, face.lo, face.hi, "union", 0.022 * s)]
-    # occiput
-    mass.append(sdf.ellipsoid(c + np.array([0.0, 0.020 * s, -0.016 * s]),
-                              [r[0] * 0.92, r[1] * 0.86, r[2] * 0.84], k=0.03 * s))
-    # chin button
-    mass.append(sdf.ellipsoid([0.0, face_y + (0.020 - 0.008 * hs.chin) * s, chin_z + 0.016 * s],
-                              [0.020 * s, 0.018 * hs.chin * s, 0.019 * hs.chin * s], k=0.025 * s))
+    # Profile stations as (height fraction of V, width factor, depth factor, y offset).
+    # A sphere sweep reaches sqrt(ru*rv) beyond its end stations, so the first and last
+    # stations are placed exactly that far inside the chin and the crown: the end caps then
+    # form the jaw underside and the dome of the skull instead of overshooting them.
+    def st(fz: float, fw: float, fd: float, yo: float) -> Tuple[np.ndarray, float, float]:
+        return (np.array([0.0, cy + yo * s, z0 + V * fz]), w * fw, d * fd)
+
+    bot_w, bot_d = 0.760 * jw, 0.790
+    top_w, top_d = 0.930 * fh, 0.950
+    fz_bot = 0.255 + math.sqrt((w * bot_w) * (d * bot_d)) / V * 0.0    # cap sits inside the jaw
+    fz_top = 1.0 - math.sqrt((w * top_w) * (d * top_d)) / V
+    skull = sdf.loft([
+        st(fz_bot, bot_w, bot_d, -0.004),          # upper jaw / mouth level
+        st(0.370, 0.880, 0.905, 0.001),            # cheekbone / nose base
+        st(0.500, 0.960, 0.965, 0.004),            # eye line (zygomatic arch: nearly full width)
+        st(0.610, 1.000, 1.000, 0.006),            # temples: widest
+        st(fz_top, top_w, top_d, 0.008),           # its end cap forms the crown dome
+    ], LEFT, axis=UP)
+    mass: List[sdf.Prim] = [skull]
+    # back of the skull: fuller behind, and a flatter forehead plane
+    mass.append(sdf.ellipsoid([0.0, cy + 0.022 * s, z0 + V * 0.68], [w * 0.92, d * 0.80, V * 0.29], k=0.030 * s))
     # cheekbones
     for sx in (1, -1):
-        mass.append(sdf.ellipsoid([sx * 0.050 * s, face_y + 0.030 * s, eye_z - 0.020 * s],
-                                  [0.026 * hs.cheeks * s, 0.028 * s, 0.022 * s], k=0.028 * s))
-    cheek_amt = 0.30 + 0.55 * heavy - 0.28 * old
+        mass.append(sdf.ellipsoid([sx * w * 0.615, face_y + 0.032 * s, L["cheek_z"]],
+                                  [0.026 * hs.cheeks * s, 0.030 * s, 0.023 * s], k=0.026 * s))
+    cheek_amt = 0.30 + 0.55 * heavy - 0.30 * old
     if cheek_amt > 0.08:
         for sx in (1, -1):
-            mass.append(sdf.ellipsoid([sx * 0.044 * s, face_y + 0.024 * s, mouth_z + 0.014 * s],
-                                      [0.025 * s, 0.024 * s, 0.024 * s * (0.8 + 0.5 * cheek_amt)], k=0.032 * s))
+            mass.append(sdf.ellipsoid([sx * w * 0.530, face_y + 0.030 * s, mouth_z + 0.014 * s],
+                                      [0.022 * s, 0.024 * s, 0.024 * s * (0.8 + 0.5 * cheek_amt)], k=0.028 * s))
+    # Jaw: a horseshoe running from one gonial angle round the chin to the other.  A sweep
+    # cannot make a jaw (its end cap would be a hemisphere where the chin should be a wedge),
+    # so the lower face is this tube blended into the skull mass.
+    gon_z = z0 + V * 0.255
+    chin_front = face_y + (0.032 - 0.008 * hs.chin) * s
+    jaw_pts, jaw_r = [], []
+    for sx in (1, -1):
+        jaw_pts.append([sx * w * 0.780 * jw, cy + 0.030 * s, gon_z + V * 0.055])
+        jaw_pts.append([sx * w * 0.755 * jw, cy + 0.020 * s, gon_z])
+        jaw_pts.append([sx * w * 0.690 * jw, cy - 0.016 * s, z0 + V * 0.175])
+        jaw_pts.append([sx * w * 0.480 * jw, face_y + 0.046 * s, z0 + V * 0.105])
+        jaw_pts.append([sx * w * 0.230 * jw, chin_front + 0.006 * s, z0 + V * 0.078])
+        jaw_r.extend([0.0180 * jw * s, 0.0190 * jw * s, 0.0182 * jw * s, 0.0168 * jw * s, 0.0160 * jw * s])
+    order = list(range(5)) + list(range(9, 4, -1))
+    jaw_pts = [jaw_pts[i] for i in order][::-1]
+    jaw_r = [jaw_r[i] for i in order][::-1]
+    mass.append(sdf.tube_path(jaw_pts, jaw_r, k=0.028 * s))
+    for sx in (1, -1):
+        mass.append(sdf.ellipsoid([sx * w * 0.700 * jw, cy + 0.010 * s, z0 + V * 0.300],
+                                  [0.020 * s, 0.030 * s, 0.032 * s], k=0.030 * s))
+    # chin pad
+    mass.append(sdf.ellipsoid([0.0, chin_front + 0.004 * s, z0 + V * 0.082],
+                              [0.026 * jw * s, 0.014 * hs.chin * s, 0.019 * hs.chin * s], k=0.022 * s))
+    # soft tissue under the chin / throat, so the jaw is not a floating wire
+    mass.append(sdf.ellipsoid([0.0, cy - 0.006 * s, z0 + V * 0.130],
+                              [w * 0.48 * jw, d * 0.44, V * 0.100], k=0.030 * s))
     # brow ridge
-    brow_r = (0.0095 + 0.0050 * hs.brow - 0.0035 * fem) * s
+    brow_r = (0.0092 + 0.0048 * hs.brow - 0.0032 * fem) * s
     for sx in (1, -1):
-        mass.append(sdf.round_cone([sx * 0.005 * s, face_y + 0.010 * s, L["brow_z"] - 0.003 * s],
-                                   [sx * 0.049 * s, face_y + 0.022 * s, L["brow_z"] + 0.003 * s],
-                                   brow_r * 1.05, brow_r * 0.75, k=0.018 * s))
-    # nose
-    root, tip = L["nose_root"], L["nose_tip"]
-    bridge_r = (0.0080 + 0.0035 * hs.nose_bridge) * s
-    mass.append(sdf.chain([root + np.array([0.0, 0.012 * s, 0.010 * s]),
-                           (root + tip) * 0.5 + np.array([0.0, 0.006 * s, 0.0]), tip],
-                          [bridge_r * 0.80, bridge_r * 1.00, (0.0115 + 0.0045 * hs.nose) * s], k=0.014 * s))
-    for sx in (1, -1):
-        mass.append(sdf.ellipsoid(tip + np.array([sx * 0.0125 * hs.nose * s, 0.011 * s, -0.001 * s]),
-                                  [0.0092 * hs.nose * s, 0.0100 * s, 0.0082 * s], k=0.009 * s))
-    # lips
-    mw = L["mouth_w"]
-    lip_y = face_y + 0.022 * s
-    lip = 0.7 + 0.5 * hs.lips + 0.25 * fem
-    mass.append(sdf.elliptic_cone([-mw * 0.82, lip_y, mouth_z + 0.0072 * s], [mw * 0.82, lip_y, mouth_z + 0.0072 * s],
-                                  0.0072 * lip * s, 0.0058 * lip * s, 0.0072 * lip * s, 0.0058 * lip * s, FWD, k=0.012 * s))
-    mass.append(sdf.elliptic_cone([-mw * 0.74, lip_y + 0.001 * s, mouth_z - 0.0085 * s],
-                                  [mw * 0.74, lip_y + 0.001 * s, mouth_z - 0.0085 * s],
-                                  0.0082 * lip * s, 0.0066 * lip * s, 0.0082 * lip * s, 0.0066 * lip * s, FWD, k=0.012 * s))
-    # eyeballs (the lids are built around them)
+        mass.append(sdf.round_cone([sx * 0.004 * s, face_y + 0.013 * s, L["brow_z"] - 0.003 * s],
+                                   [sx * w * 0.60, face_y + 0.028 * s, L["brow_z"] + 0.002 * s],
+                                   brow_r * 1.05, brow_r * 0.70, k=0.016 * s))
+    # eye mounds (the lids sit on the eyeball)
+    er = L["eye_r"]
     for sx in (1, -1):
         ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
-        mass.append(sdf.sphere(ec, L["eye_r"] * 1.02, k=0.010 * s))
+        mass.append(sdf.ellipsoid(ec, [er * 1.20, er * 1.22, er * 1.10], k=0.010 * s))
+    # nose
+    root = np.array([0.0, face_y + 0.016 * s, L["nose_root_z"]])
+    tip = L["nose_tip"]
+    bridge_r = (0.0078 + 0.0034 * hs.nose_bridge) * s
+    mass.append(sdf.tube_path([root, (root + tip) * 0.5 + np.array([0.0, 0.007 * s, 0.0]), tip],
+                              [bridge_r * 0.78, bridge_r * 1.00, (0.0090 + 0.0032 * hs.nose) * s], k=0.013 * s))
+    for sx in (1, -1):
+        mass.append(sdf.ellipsoid(tip + np.array([sx * 0.0112 * hs.nose * s, 0.0095 * s, -0.0020 * s]),
+                                  [0.0080 * hs.nose * s, 0.0090 * s, 0.0072 * s], k=0.008 * s))
+    # lips
+    mw = L["mouth_w"]
+    lip_y = face_y + 0.024 * s
+    lip = 0.7 + 0.5 * hs.lips + 0.25 * fem
+    # Lips follow the curve of the jaw: the corners sit further back and a little lower than
+    # the centre, so the mouth reads as a mouth rather than a band across the face.
+    def lip_arc(z_off: float, half_w: float, r: float, back: float, drop: float):
+        pts, rr = [], []
+        for f in (-1.0, -0.55, 0.0, 0.55, 1.0):
+            pts.append([f * half_w, lip_y + back * (f * f) * s, mouth_z + z_off - drop * (f * f) * s])
+            rr.append(r * (0.55 + 0.45 * (1.0 - f * f)))
+        return sdf.tube_path(pts, rr, k=0.010 * s)
+    mass.append(lip_arc(0.0070 * s, mw * 0.82, 0.0072 * lip * s, 0.0060, 0.0035))
+    mass.append(lip_arc(-0.0082 * s, mw * 0.72, 0.0082 * lip * s, 0.0055, 0.0020))
     # ears
     for sx in (1, -1):
         e = L["ear_c"] * np.array([sx, 1, 1])
-        rot = rig.rot_axis(UP, math.radians(-16.0 * sx)) @ rig.rot_axis(FWD, math.radians(10.0 * sx))
-        mass.append(sdf.ellipsoid(e, L["ear_r"], rot=rot, k=0.012 * s))
+        rot = rig.rot_axis(UP, math.radians(-15.0 * sx)) @ rig.rot_axis(FWD, math.radians(9.0 * sx))
+        mass.append(sdf.ellipsoid(e, L["ear_r"], rot=rot, k=0.013 * s))
+        mass.append(sdf.ellipsoid(e + np.array([sx * 0.001 * s, 0.002 * s, -L["ear_r"][2] * 0.82]),
+                                  [L["ear_r"][0] * 1.05, L["ear_r"][1] * 0.72, L["ear_r"][2] * 0.28], rot=rot, k=0.008 * s))
     if with_neck:
-        nr = (0.054 - 0.007 * fem) * p.bulk * s
-        mass.append(sdf.round_cone(L["head"] + np.array([0.0, 0.012 * s, -0.075 * s]),
-                                   L["head"] + np.array([0.0, 0.006 * s, 0.010 * s]), nr * 1.10, nr * 1.02, k=0.030 * s))
-    sc.union(sdf.group(mass, internal_k=0.020 * s))
+        bs = p.height / rig.DEFAULT_HEIGHT
+        nr = (0.0575 - 0.007 * fem - 0.004 * old) * p.bulk * bs
+        mass.append(sdf.round_cone(L["head"] + np.array([0.0, 0.008 * bs, -0.090 * bs]),
+                                   L["head"] + np.array([0.0, 0.004 * bs, 0.010 * bs]), nr * 1.08, nr * 0.98, k=0.028 * s))
+    sc.union(sdf.group(mass, internal_k=0.018 * s))
 
-    # -- carved detail (subtractions come after the whole mass) ---------------------------
-    # eye sockets: a dish around each eyeball, deeper towards the nose
+    # -- carved detail --------------------------------------------------------------------
+    # eye opening: an almond pocket in the mound; its rim reads as the lids and the separate
+    # eyeball mesh sits inside it
     for sx in (1, -1):
         ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
-        sc.subtract(sdf.ellipsoid(ec + np.array([-sx * 0.006 * s, -0.018 * s, 0.001 * s]),
-                                  [0.0215 * s, 0.017 * s, 0.0145 * s]), k=0.011 * s)
-        # tear duct notch
-        sc.subtract(sdf.sphere(ec + np.array([-sx * 0.015 * s, -0.010 * s, -0.002 * s]), 0.0062 * s), k=0.006 * s)
+        tilt = rig.rot_axis(FWD, math.radians(8.0 * sx))
+        # the opening: a shallow almond window cut forward of the eyeball centre, so the lid
+        # rim stays thick enough to survive decimation.  Lashes and the lid line are painted.
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.30, 0.0]),
+                                  [er * 1.16, er * 1.05, er * 0.66], rot=tilt), k=0.0030 * s)
+        # upper lid crease
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, 0.004 * s, er * 1.10]),
+                                  [er * 1.16, er * 0.75, er * 0.32], rot=tilt), k=0.005 * s)
+        # inner corner
+        sc.subtract(sdf.sphere(ec + np.array([-sx * er * 1.14, -er * 0.25, -0.002 * s]), er * 0.34), k=0.0035 * s)
     # mouth line
-    sc.subtract(sdf.elliptic_cone([-mw * 0.88, lip_y - 0.007 * s, mouth_z], [mw * 0.88, lip_y - 0.007 * s, mouth_z],
-                                  0.0060 * s, 0.0018 * s, 0.0060 * s, 0.0018 * s, FWD), k=0.005 * s)
+    line_pts, line_r = [], []
+    for f in (-1.0, -0.5, 0.0, 0.5, 1.0):
+        line_pts.append([f * mw * 0.88, lip_y - 0.010 * s + 0.0070 * (f * f) * s, mouth_z - 0.0030 * (f * f) * s])
+        line_r.append(0.0032 * s)
+    sc.subtract(sdf.tube_path(line_pts, line_r), k=0.004 * s)
     # philtrum
-    sc.subtract(sdf.capsule([0.0, face_y + 0.014 * s, mouth_z + 0.011 * s],
-                            [0.0, face_y + 0.014 * s, mouth_z + 0.022 * s], 0.0042 * s), k=0.007 * s)
+    sc.subtract(sdf.capsule([0.0, face_y + 0.019 * s, mouth_z + 0.010 * s],
+                            [0.0, face_y + 0.019 * s, mouth_z + 0.017 * s], 0.0032 * s), k=0.005 * s)
     # nostrils
     for sx in (1, -1):
-        sc.subtract(sdf.sphere(tip + np.array([sx * 0.0085 * s, 0.007 * s, -0.008 * s]), 0.0042 * s), k=0.004 * s)
+        sc.subtract(sdf.sphere(tip + np.array([sx * 0.0078 * s, 0.0075 * s, -0.0068 * s]), 0.0036 * s), k=0.0030 * s)
     # ear bowl
     for sx in (1, -1):
         e = L["ear_c"] * np.array([sx, 1, 1])
-        rot = rig.rot_axis(UP, math.radians(-16.0 * sx)) @ rig.rot_axis(FWD, math.radians(10.0 * sx))
-        sc.subtract(sdf.ellipsoid(e + rot @ np.array([sx * 0.0045 * s, -0.003 * s, -0.003 * s]),
-                                  [0.0055 * s, 0.0085 * hs.ears * s, 0.0155 * hs.ears * s], rot=rot), k=0.005 * s)
-    # naso-labial crease for older faces
+        rot = rig.rot_axis(UP, math.radians(-15.0 * sx)) @ rig.rot_axis(FWD, math.radians(9.0 * sx))
+        sc.subtract(sdf.ellipsoid(e + rot @ np.array([sx * 0.0055 * s, -0.002 * s, -0.003 * s]),
+                                  [0.0060 * s, 0.0082 * hs.ears * s, L["ear_r"][2] * 0.52], rot=rot), k=0.0045 * s)
+    # naso-labial crease with age
     if old > 0.45:
         amt = (old - 0.45) / 0.55
         for sx in (1, -1):
-            sc.subtract(sdf.round_cone([sx * 0.016 * s, face_y + 0.016 * s, mouth_z + 0.026 * s],
-                                       [sx * 0.030 * s, face_y + 0.022 * s, mouth_z - 0.014 * s],
-                                       0.0035 * amt * s, 0.0045 * amt * s), k=0.006 * s)
+            sc.subtract(sdf.round_cone([sx * (mw * 0.55), face_y + 0.018 * s, mouth_z + 0.028 * s],
+                                       [sx * (mw * 1.20), face_y + 0.026 * s, mouth_z - 0.012 * s],
+                                       0.0030 * amt * s, 0.0042 * amt * s), k=0.005 * s)
     return sc
 
 
-def head_mesh(skel: Skeleton, hs: Optional[HeadStyle] = None, spacing: float = 0.0038,
+def head_mesh(skel: Skeleton, hs: Optional[HeadStyle] = None, spacing: float = 0.0032,
               smooth: int = 4) -> Tuple[np.ndarray, np.ndarray]:
     sc = head_scene(skel, hs)
     s = skel.props.height / rig.DEFAULT_HEIGHT * skel.props.head_size
     return sdf.mesh_from_scene(sc, spacing * s, smooth_iters=smooth, project=1)
+
+
 
 
 # --------------------------------------------------------------------------------------

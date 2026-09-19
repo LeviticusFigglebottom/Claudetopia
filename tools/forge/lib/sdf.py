@@ -62,13 +62,20 @@ def ellipsoid(c, r, k: float = 0.0, op: str = "union", rot: Optional[np.ndarray]
 
 
 def round_cone(a, b, ra: float, rb: float, k: float = 0.0, op: str = "union") -> Prim:
-    """Capsule with different end radii (exact SDF)."""
+    """Capsule with different end radii (exact SDF).
+
+    Degenerate case: when |ra - rb| >= |b - a| one end sphere contains the other and the
+    closed-form below would take the square root of a negative number, so the shape is the
+    containing sphere instead."""
     a = np.asarray(a, float)
     b = np.asarray(b, float)
     ba = b - a
     l2 = float(np.dot(ba, ba))
     rr = ra - rb
     a2 = l2 - rr * rr
+    if a2 <= 1e-9:
+        c, r = (a, ra) if ra >= rb else (b, rb)
+        return sphere(c, r, k, op)
     il2 = 1.0 / max(l2, 1e-12)
 
     def fn(P):
@@ -133,33 +140,61 @@ def elliptic_cone(a, b, ru1: float, rv1: float, ru2: float, rv2: float, u: Vec, 
     return Prim(fn, lo, hi, op, k)
 
 
-def loft(stations: Sequence[Tuple[Vec, float, float]], u: Vec, k: float = 0.0, op: str = "union",
-         squash_v_neg: float = 0.0, internal_k: float = 0.0, axis: Optional[Vec] = None) -> Prim:
-    """One primitive swept through (centre, ru, rv) stations.
+def _catmull_rom(pts: np.ndarray, t: np.ndarray) -> np.ndarray:
+    """Centripetal-ish Catmull-Rom through `pts` (n, d) sampled at parameter t in [0, n-1]."""
+    n = len(pts)
+    i = np.clip(np.floor(t).astype(int), 0, n - 2)
+    f = (t - i)[:, None]
+    p0 = pts[np.clip(i - 1, 0, n - 1)]
+    p1 = pts[i]
+    p2 = pts[np.clip(i + 1, 0, n - 1)]
+    p3 = pts[np.clip(i + 2, 0, n - 1)]
+    f2 = f * f
+    f3 = f2 * f
+    return 0.5 * ((2 * p1) + (-p0 + p2) * f + (2 * p0 - 5 * p1 + 4 * p2 - p3) * f2 + (-p0 + 3 * p1 - 3 * p2 + p3) * f3)
 
-    The whole sweep is evaluated in ONE anisotropically scaled space (aspect from the mean
-    of the stations), so consecutive segments agree exactly at their shared stations: no
-    rings, no banding.  Segments are combined with a plain min, since smooth-min of two
-    coincident surfaces would inflate the result by k/2.  `k` is the blend used when this
-    primitive is joined to the rest of the scene.
 
-    `u` is the in-plane axis carrying the `ru` radii; `axis` is the sweep direction used to
-    build the frame (default: first station to last)."""
-    cs = [np.asarray(c, float) for c, _, _ in stations]
-    rus = np.array([ru for _, ru, _ in stations], float)
-    rvs = np.array([rv for _, _, rv in stations], float)
+def sweep(stations: Sequence[Tuple[Vec, float, float]], u: Vec, k: float = 0.0, op: str = "union",
+          squash_v_neg: float = 0.0, axis: Optional[Vec] = None, density: int = 5,
+          max_spheres: int = 220, smooth_profile: bool = True) -> Prim:
+    """A swept volume through (centre, ru, rv) stations: the envelope of a dense chain of
+    spheres in one anisotropically scaled space.
+
+    Spheres (rather than round cones) because a cone between two stations is undefined when
+    the radius changes faster than the distance — which happens at every dome, like the top
+    of a skull — and produces flat disc artefacts.  A chain dense enough that the spacing is
+    a small fraction of the radius is smooth to well under a voxel, and never degenerates.
+    The profile runs through the stations as a Catmull-Rom spline, so there are no creases
+    at the stations either."""
+    cs = np.array([np.asarray(c, float) for c, _, _ in stations])
+    rus = np.array([float(ru) for _, ru, _ in stations])
+    rvs = np.array([float(rv) for _, _, rv in stations])
     w = _unit(np.asarray(axis, float) if axis is not None else (cs[-1] - cs[0]))
     uu = np.asarray(u, float)
     uu = _unit(uu - np.dot(uu, w) * w)
+    if np.linalg.norm(uu) < 1e-6:
+        uu = _unit(np.cross(w, np.array([0.0, 0.0, 1.0]) if abs(w[2]) < 0.9 else np.array([1.0, 0.0, 0.0])))
     vv = np.cross(w, uu)
     su, sv = float(rus.mean()), float(rvs.mean())
     g = math.sqrt(max(su * sv, 1e-12))
     ku, kv = su / g, sv / g
-    M = np.stack([uu / ku, vv / kv, w], axis=0)          # world -> scaled space (rows)
+    M = np.stack([uu / ku, vv / kv, w], axis=0)
     origin = cs[0]
-    pts = [(c - origin) @ M.T for c in cs]
-    radii = [math.sqrt(max((rus[i] / ku) * (rvs[i] / kv), 1e-12)) for i in range(len(cs))]
-    segs = [round_cone(pts[i], pts[i + 1], radii[i], radii[i + 1]) for i in range(len(pts) - 1)]
+    pts = (cs - origin) @ M.T
+    radii = np.sqrt(np.maximum((rus / ku) * (rvs / kv), 1e-12))
+    # resample
+    seg_len = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+    total = float(seg_len.sum())
+    step = max(float(radii.min()) / max(density, 1), total / max_spheres, 1e-4)
+    n = int(np.clip(math.ceil(total / step), len(pts), max_spheres))
+    tt = np.linspace(0.0, len(pts) - 1.0, n)
+    if smooth_profile and len(pts) > 2:
+        C = _catmull_rom(pts, tt)
+        R = _catmull_rom(radii[:, None], tt)[:, 0]
+    else:
+        C = np.stack([np.interp(tt, np.arange(len(pts)), pts[:, i]) for i in range(3)], axis=1)
+        R = np.interp(tt, np.arange(len(pts)), radii)
+    R = np.maximum(R, 1e-4)
     scale = min(ku, kv)
 
     def fn(P):
@@ -168,15 +203,53 @@ def loft(stations: Sequence[Tuple[Vec, float, float]], u: Vec, k: float = 0.0, o
             neg = q[:, 1] < 0
             q = q.copy()
             q[neg, 1] /= max(1.0 - squash_v_neg, 0.05)
-        d = segs[0].fn(q)
-        for sgm in segs[1:]:
-            d = smin(d, sgm.fn(q), internal_k)
+        d = np.full(len(q), 1e6)
+        for i in range(len(C)):
+            np.minimum(d, np.linalg.norm(q - C[i], axis=1) - R[i], out=d)
         return d * scale
     rmax = float(max(rus.max(), rvs.max()))
-    allc = np.stack(cs)
-    lo = allc.min(axis=0) - rmax
-    hi = allc.max(axis=0) + rmax
+    lo = cs.min(axis=0) - rmax
+    hi = cs.max(axis=0) + rmax
     return Prim(fn, lo, hi, op, k)
+
+
+def tube_path(points: Sequence[Vec], radii, k: float = 0.0, op: str = "union", density: int = 5,
+              max_spheres: int = 260, closed: bool = False, smooth_profile: bool = True) -> Prim:
+    """A round tube along an arbitrary 3D path (isotropic radii), as a dense sphere chain.
+
+    Used for anything that curves through space: the jaw horseshoe, belts and straps, hair
+    locks and braids, horns, halos.  `radii` is a scalar or one value per point."""
+    P = np.array([np.asarray(p, float) for p in points])
+    R = np.full(len(P), float(radii)) if np.isscalar(radii) else np.asarray(radii, float)
+    if closed:
+        P = np.concatenate([P, P[:1]], axis=0)
+        R = np.concatenate([R, R[:1]], axis=0)
+    seg = np.linalg.norm(np.diff(P, axis=0), axis=1)
+    total = float(seg.sum())
+    step = max(float(R.min()) / max(density, 1), total / max_spheres, 1e-4)
+    n = int(np.clip(math.ceil(total / step), len(P), max_spheres))
+    tt = np.linspace(0.0, len(P) - 1.0, n)
+    if smooth_profile and len(P) > 2:
+        C = _catmull_rom(P, tt)
+        RR = np.maximum(_catmull_rom(R[:, None], tt)[:, 0], 1e-4)
+    else:
+        C = np.stack([np.interp(tt, np.arange(len(P)), P[:, i]) for i in range(3)], axis=1)
+        RR = np.interp(tt, np.arange(len(P)), R)
+
+    def fn(Q):
+        d = np.full(len(Q), 1e6)
+        for i in range(len(C)):
+            np.minimum(d, np.linalg.norm(Q - C[i], axis=1) - RR[i], out=d)
+        return d
+    rmax = float(R.max())
+    return Prim(fn, P.min(axis=0) - rmax, P.max(axis=0) + rmax, op, k)
+
+
+def loft(stations: Sequence[Tuple[Vec, float, float]], u: Vec, k: float = 0.0, op: str = "union",
+         squash_v_neg: float = 0.0, internal_k: float = 0.0, axis: Optional[Vec] = None) -> Prim:
+    """Swept solid through (centre, ru, rv) stations.  Alias of `sweep`; `internal_k` is
+    accepted for call-site symmetry and ignored (a sphere sweep has no internal seams)."""
+    return sweep(stations, u, k=k, op=op, squash_v_neg=squash_v_neg, axis=axis)
 
 
 def group(prims: Sequence[Prim], k: float = 0.0, op: str = "union", internal_k: float = 0.0) -> Prim:
