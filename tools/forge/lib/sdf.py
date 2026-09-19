@@ -428,6 +428,62 @@ class Scene:
         return F, origin, spacing
 
 
+class SampledField:
+    """A scene's distance field cached on a grid and read back by trilinear interpolation.
+
+    Clothing is built by offsetting the body's field, and the body is forty-odd primitives
+    with hundreds of spheres between them; evaluating that per garment voxel is hopeless.
+    Sampling it once and interpolating is both fast and accurate enough — the interpolation
+    error of a distance field is second order in the spacing, and garment shells sit
+    millimetres off a surface that was itself meshed at this resolution."""
+
+    def __init__(self, scene: "Scene", spacing: float = 0.005, margin: float = 0.06):
+        self.F, self.origin, self.spacing = scene.grid(spacing, margin)
+        self.shape = np.array(self.F.shape)
+        self.far = float(np.max(self.F))
+
+    def eval(self, P: np.ndarray) -> np.ndarray:
+        q = (np.asarray(P, float) - self.origin) / self.spacing
+        i0 = np.floor(q).astype(np.int64)
+        f = q - i0
+        out_of = np.any((i0 < 0) | (i0 >= self.shape - 1), axis=1)
+        i0 = np.clip(i0, 0, self.shape - 2)
+        F = self.F
+        c = {}
+        for dx in (0, 1):
+            for dy in (0, 1):
+                for dz in (0, 1):
+                    c[(dx, dy, dz)] = F[i0[:, 0] + dx, i0[:, 1] + dy, i0[:, 2] + dz]
+        x00 = c[(0, 0, 0)] + (c[(1, 0, 0)] - c[(0, 0, 0)]) * f[:, 0]
+        x10 = c[(0, 1, 0)] + (c[(1, 1, 0)] - c[(0, 1, 0)]) * f[:, 0]
+        x01 = c[(0, 0, 1)] + (c[(1, 0, 1)] - c[(0, 0, 1)]) * f[:, 0]
+        x11 = c[(0, 1, 1)] + (c[(1, 1, 1)] - c[(0, 1, 1)]) * f[:, 0]
+        y0 = x00 + (x10 - x00) * f[:, 1]
+        y1 = x01 + (x11 - x01) * f[:, 1]
+        d = y0 + (y1 - y0) * f[:, 2]
+        # outside the cached box, fall back to the distance to the box itself
+        if out_of.any():
+            lo = self.origin
+            hi = self.origin + (self.shape - 1) * self.spacing
+            p = np.asarray(P, float)[out_of]
+            outside = np.linalg.norm(np.maximum(np.maximum(lo - p, p - hi), 0.0), axis=1)
+            d[out_of] = np.maximum(d[out_of], outside)
+        return d
+
+    def gradient(self, P: np.ndarray, eps: Optional[float] = None) -> np.ndarray:
+        e = eps if eps is not None else self.spacing
+        g = np.empty_like(np.asarray(P, float))
+        for a in range(3):
+            o = np.zeros(3)
+            o[a] = e
+            g[:, a] = (self.eval(P + o) - self.eval(P - o)) / (2 * e)
+        return g / np.maximum(np.linalg.norm(g, axis=1, keepdims=True), 1e-9)
+
+    def bounds(self, margin: float = 0.0) -> Tuple[np.ndarray, np.ndarray]:
+        hi = self.origin + (self.shape - 1) * self.spacing
+        return self.origin - margin, hi + margin
+
+
 # --------------------------------------------------------------------------------------
 # surface nets
 # --------------------------------------------------------------------------------------

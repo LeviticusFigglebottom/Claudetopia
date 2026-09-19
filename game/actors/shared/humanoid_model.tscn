@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_humanoid_model"]
+
+[ext_resource type="Script" path="res://actors/shared/humanoid_model.gd" id="1_humanoid"]
+
+; The model faces +Z, as glTF export leaves it (CONTRACTS.md §1). Actor scenes put this
+; under a `Model` Node3D rotated 180 degrees about Y so gameplay forward is -Z.
+[node name="HumanoidModel" type="Node3D"]
+script = ExtResource("1_humanoid")
