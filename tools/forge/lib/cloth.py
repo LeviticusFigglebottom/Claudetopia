@@ -263,6 +263,22 @@ def legs_region(skel: Skeleton, *, top: float = 0.60, length: float = 1.0, soft:
                       near_bones(skel, ["UpperLeg.L", "UpperLeg.R", "LowerLeg.L", "LowerLeg.R", "Hips"], 0.17 * s, 0.05 * s))
 
 
+def ragged_floor(z: float, amp: float, teeth: int, phase: float = 0.0) -> Prim:
+    """A hem cut that wobbles with the angle round the body, so a garment ends in torn
+    points instead of a machined line.
+
+    Biting notches out with spheres, which is the obvious thing to try, punches holes
+    straight through a solid garment where the sphere happens to be thicker than the cloth.
+    Varying the height of the cut cannot."""
+    def fn(P):
+        a = np.arctan2(P[:, 1], P[:, 0])
+        thr = z + amp * (0.62 * np.cos(teeth * a + phase) + 0.38 * np.cos(2 * teeth * a - phase))
+        return thr - P[:, 2]
+    lo = np.array([-1e3, -1e3, z - abs(amp) * 1.2])
+    hi = np.array([1e3, 1e3, 1e3])
+    return Prim(fn, lo, hi, "intersect", 0.0)
+
+
 def _ring(rx: float, ry: float, z: float, n: int = 28) -> List[List[float]]:
     """A closed elliptical path at height z, for hem and belt rings."""
     pts = []
@@ -292,7 +308,7 @@ def garment_edges(skel: Skeleton, *, hem_z: Optional[float] = None, collar_z: Op
             sh = skel.J[f"UpperArm.{side}"]
             wr = skel.J[f"Hand.{side}"]
             cuffs.append(sh + (wr - sh) * sleeve_end)
-        parts.append(relief_around(cuffs, 0.042 * s, edge * 1.3 * s, 0.016 * s))
+        parts.append(relief_around(cuffs, 0.030 * s, edge * 0.85 * s, 0.020 * s))
     if abs(waist) > 1e-6:
         wz = float(skel.J["Spine"][2])
         parts.append(relief_band(wz - 0.070 * s, wz + 0.055 * s, -waist * s, 0.032 * s))
@@ -417,16 +433,18 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30) -> G
     shoulder_x = float(skel.J["UpperArm.L"][0])
     # a cape hanging off the shoulders: wide at the back, open at the front
     outer = sdf.loft([
-        (np.array([0.0, 0.014 * s, neck + 0.030 * s]), 0.150 * s, 0.118 * s),
-        (np.array([0.0, 0.016 * s, neck - 0.020 * s]), (shoulder_x + 0.045) * s, 0.130 * s),
-        (np.array([0.0, 0.018 * s, chest - 0.05 * s]), (shoulder_x + 0.060) * s, 0.145 * s),
-        (np.array([0.0, 0.020 * s, (chest + z_hem) * 0.5]), (shoulder_x + 0.055) * s, 0.150 * s),
-        (np.array([0.0, 0.022 * s, z_hem + 0.03 * s]), (shoulder_x + 0.075) * s, 0.165 * s),
-        (np.array([0.0, 0.022 * s, z_hem]), (shoulder_x + 0.076) * s, 0.166 * s),
+        (np.array([0.0, 0.016 * s, neck + 0.030 * s]), 0.118 * s, 0.104 * s),
+        (np.array([0.0, 0.018 * s, neck - 0.020 * s]), (shoulder_x + 0.016) * s, 0.122 * s),
+        (np.array([0.0, 0.020 * s, chest - 0.05 * s]), (shoulder_x + 0.040) * s, 0.132 * s),
+        (np.array([0.0, 0.024 * s, (chest + z_hem) * 0.5]), (shoulder_x + 0.032) * s, 0.134 * s),
+        (np.array([0.0, 0.028 * s, z_hem + 0.03 * s]), (shoulder_x + 0.044) * s, 0.142 * s),
+        (np.array([0.0, 0.028 * s, z_hem]), (shoulder_x + 0.045) * s, 0.143 * s),
     ], LEFT, axis=UP)
     sc.union(outer)
-    # open down the front
-    sc.subtract(sdf.box([0.0, -0.40 * s, (neck + z_hem) * 0.5], [0.085 * s, 0.30 * s, (neck - z_hem) * 0.6],
+    # Open down the front, and WIDE: the old opening was narrower than the body, so the cape
+    # closed over the chest and read as a barrel with a slot in it rather than as a cape.
+    sc.subtract(sdf.box([0.0, -0.32 * s, (neck + z_hem) * 0.5],
+                        [0.150 * s, 0.262 * s, (neck - z_hem) * 0.6],
                         round_r=0.02 * s), k=0.02 * s)
     for i in range(7):
         a = math.pi * (0.25 + 0.5 * i / 6)
@@ -434,6 +452,9 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30) -> G
         sc.subtract(sdf.tube_path([d * 0.16 * s + np.array([0, 0, chest]),
                                    d * (shoulder_x + 0.072) * s + np.array([0, 0.02 * s, z_hem])],
                                   0.014 * s), k=0.022 * s)
+    sc.union(sdf.tube_path(_ring((shoulder_x + 0.045) * s, 0.143 * s, z_hem + 0.010 * s),
+                           0.0060 * s), k=0.006 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     g = Garment("hooded_cloak" if hooded else "cloak", sc, spacing=0.0080, target_tris=3600, material="cloth")
     if hooded:
         g.scene.union(hood_prim(skel, body, up=True), k=0.02 * s)
@@ -832,7 +853,7 @@ def build_beard(skel: Skeleton, style: str) -> Garment:
 # you could name from across a field.
 # --------------------------------------------------------------------------------------
 
-def coat(skel: Skeleton, body, *, hem: float = 0.30) -> Garment:
+def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
     """Lakefolk: a long straight coat with a standing collar.  It falls to the shin without
     narrowing, which is the opposite of everyone else's belted taper."""
     s = _s(skel)
@@ -842,19 +863,21 @@ def coat(skel: Skeleton, body, *, hem: float = 0.30) -> Garment:
     neck = float(skel.J["Neck"][2])
     reg = torso_region(skel, top=0.92, hem=0.52, sleeves=0.96, collar=0.030)
     sc.union(offset_shell(body, reg, 0.011 * s, gap=0.005 * s,
+                          # no waist at all: the whole point of this coat is that it is a
+                          # column, where every other culture's garment is held in
                           relief=garment_edges(skel, collar_z=neck + 0.012 * s, sleeve_end=0.98,
-                                               waist=0.004),
+                                               waist=-0.004),
                           bounds=zbox(skel, 0.50 * skel.props.height, 0.96 * skel.props.height, xy=0.64)))
     # the skirt of the coat: straight sides, no flare, so it reads as a column
     sc.union(sdf.loft([
-        (np.array([0.0, 0.006 * s, hip + 0.14 * s]), 0.142 * s, 0.108 * s),
-        (np.array([0.0, 0.004 * s, hip - 0.04 * s]), 0.150 * s, 0.114 * s),
-        (np.array([0.0, 0.002 * s, z_hem + 0.06 * s]), 0.152 * s, 0.116 * s),
-        (np.array([0.0, 0.0, z_hem]), 0.150 * s, 0.114 * s),
+        (np.array([0.0, 0.006 * s, hip + 0.16 * s]), 0.150 * s, 0.114 * s),
+        (np.array([0.0, 0.004 * s, hip - 0.04 * s]), 0.162 * s, 0.122 * s),
+        (np.array([0.0, 0.002 * s, z_hem + 0.10 * s]), 0.166 * s, 0.126 * s),
+        (np.array([0.0, 0.0, z_hem]), 0.164 * s, 0.124 * s),
     ], LEFT, axis=UP), k=0.012 * s)
-    sc.union(sdf.tube_path(_ring(0.152 * s, 0.116 * s, z_hem + 0.012 * s), 0.0060 * s), k=0.006 * s)
+    sc.union(sdf.tube_path(_ring(0.166 * s, 0.126 * s, z_hem + 0.014 * s), 0.0064 * s), k=0.006 * s)
     # standing collar: a band that rises past the jaw
-    sc.union(sdf.tube_path(_ring(0.072 * s, 0.064 * s, neck + 0.050 * s), 0.012 * s), k=0.010 * s)
+    sc.union(sdf.tube_path(_ring(0.074 * s, 0.066 * s, neck + 0.056 * s), 0.014 * s), k=0.010 * s)
     # the front split, so the coat has a centre line down the middle of the silhouette
     sc.subtract(sdf.box([0.0, -0.140 * s, (hip + z_hem) * 0.5],
                         [0.007 * s, 0.045 * s, (hip - z_hem) * 0.62]), k=0.005 * s)
@@ -870,15 +893,21 @@ def shoulder_cape(skel: Skeleton, body) -> Garment:
     neck = float(skel.J["Neck"][2])
     chest = float(skel.J["Chest"][2])
     z_bot = chest - 0.10 * s
+    sx = float(skel.J["UpperArm.L"][0])
     sc.union(sdf.loft([
-        (np.array([0.0, 0.010 * s, neck + 0.030 * s]), 0.082 * s, 0.072 * s),
-        (np.array([0.0, 0.008 * s, neck - 0.020 * s]), 0.170 * s, 0.118 * s),
-        (np.array([0.0, 0.004 * s, chest + 0.030 * s]), 0.198 * s, 0.134 * s),
-        (np.array([0.0, 0.0, z_bot + 0.020 * s]), 0.208 * s, 0.142 * s),
-        (np.array([0.0, 0.0, z_bot]), 0.204 * s, 0.139 * s),
+        (np.array([0.0, 0.010 * s, neck + 0.014 * s]), 0.086 * s, 0.076 * s),
+        (np.array([0.0, 0.008 * s, neck - 0.022 * s]), (sx + 0.055) * s, 0.128 * s),
+        (np.array([0.0, 0.004 * s, chest + 0.030 * s]), (sx + 0.086) * s, 0.146 * s),
+        (np.array([0.0, 0.0, z_bot + 0.020 * s]), (sx + 0.094) * s, 0.152 * s),
+        (np.array([0.0, 0.0, z_bot]), (sx + 0.090) * s, 0.149 * s),
     ], LEFT, axis=UP))
-    sc.union(sdf.tube_path(_ring(0.208 * s, 0.142 * s, z_bot + 0.010 * s), 0.0058 * s), k=0.006 * s)
-    sc.subtract(sdf.sphere([0.0, 0.012 * s, neck + 0.075 * s], 0.080 * s), k=0.008 * s)
+    sc.union(sdf.tube_path(_ring((sx + 0.094) * s, 0.152 * s, z_bot + 0.010 * s), 0.0060 * s), k=0.006 * s)
+    # The neck hole has to be a shaft, not a dimple -- and the sweep's top cap has to come
+    # off, because a hemisphere of its own radius rises past the chin and the cape ends up
+    # wearing the wearer's face.
+    sc.subtract(sdf.capsule([0.0, 0.012 * s, neck - 0.030 * s],
+                            [0.0, 0.012 * s, neck + 0.40 * s], 0.082 * s), k=0.010 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, neck + 0.006 * s], [0.0, 0.0, 1.0]))
     sc.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]))
     return Garment("shoulder_cape", sc, spacing=0.0060, target_tris=2000, material="cloth")
 
@@ -966,25 +995,46 @@ def plaid(skel: Skeleton, body) -> Garment:
     shx, shz = float(sh[0]), float(sh[2])
     neck = float(skel.J["Neck"][2])
     knee = float(skel.J["LowerLeg.L"][2])
+    chest = float(skel.J["Chest"][2])
+    waist = float(skel.J["Spine"][2])
+    # the blanket itself, hanging down the back
     sc.union(sdf.loft([
-        (np.array([shx * 0.75, 0.020 * s, shz + 0.038 * s]), 0.074 * s, 0.064 * s),
-        (np.array([shx * 0.40, 0.055 * s, neck - 0.06 * s]), 0.134 * s, 0.098 * s),
-        (np.array([-0.010 * s, 0.078 * s, neck - 0.28 * s]), 0.152 * s, 0.072 * s),
-        (np.array([-0.020 * s, 0.086 * s, knee + 0.22 * s]), 0.150 * s, 0.062 * s),
-        (np.array([-0.026 * s, 0.090 * s, knee + 0.04 * s]), 0.138 * s, 0.056 * s),
+        (np.array([shx * 0.62, 0.030 * s, shz + 0.026 * s]), 0.090 * s, 0.070 * s),
+        (np.array([shx * 0.34, 0.058 * s, neck - 0.08 * s]), 0.140 * s, 0.092 * s),
+        (np.array([-0.010 * s, 0.080 * s, neck - 0.30 * s]), 0.154 * s, 0.068 * s),
+        (np.array([-0.020 * s, 0.088 * s, knee + 0.22 * s]), 0.152 * s, 0.060 * s),
+        (np.array([-0.026 * s, 0.092 * s, knee + 0.05 * s]), 0.140 * s, 0.054 * s),
     ], LEFT, axis=UP), k=0.010 * s)
+    sc.intersect(sdf.plane([0.0, 0.0, knee + 0.05 * s], [0.0, 0.0, -1.0]))
+    # The length that comes OVER the shoulder and across the chest.  Without it the plaid is
+    # a panel hanging behind the man and does not exist at all from the front, which is the
+    # only angle the player usually has.
+    sc.union(sdf.tube_path([[shx * 0.38, 0.072 * s, waist - 0.02 * s],
+                            [shx * 0.72, 0.048 * s, chest - 0.02 * s],
+                            [shx * 0.92, -0.004 * s, shz + 0.030 * s],
+                            [shx * 0.66, -0.088 * s, chest - 0.01 * s],
+                            [shx * 0.10, -0.122 * s, waist + 0.02 * s],
+                            [-shx * 0.42, -0.086 * s, waist - 0.08 * s]],
+                           [0.030 * s, 0.036 * s, 0.038 * s, 0.036 * s, 0.032 * s, 0.026 * s]),
+             k=0.014 * s)
     # the pin at the shoulder, which is where the eye goes
-    sc.union(sdf.torus([shx * 0.80, -0.022 * s, shz + 0.032 * s], 0.021 * s, 0.0065 * s,
+    sc.union(sdf.torus([shx * 0.86, -0.052 * s, shz + 0.020 * s], 0.022 * s, 0.0070 * s,
                        axis=np.array([0.0, 1.0, 0.0])), k=0.004 * s)
-    sc.intersect(sdf.plane([0.0, 0.0, knee + 0.04 * s], [0.0, 0.0, -1.0]))
     return Garment("plaid", sc, spacing=0.0065, target_tris=2600, material="cloth")
 
 
 def leg_wraps(skel: Skeleton, body) -> Garment:
-    """Woodfolk: strips wound from the ankle to below the knee, so the leg reads as banded
-    rather than as one smooth trouser."""
+    """Woodfolk: a trouser with strips wound over it from the ankle to below the knee, so
+    the leg reads as banded rather than as one smooth tube.
+
+    It carries the trouser itself because it occupies the `legs` slot: wraps alone would
+    leave the thigh bare, which reads as a man who has lost his trousers rather than as a
+    forester."""
     s = _s(skel)
     sc = Scene()
+    reg = legs_region(skel, top=0.575, length=0.92)
+    sc.union(offset_shell(body, reg, 0.010 * s, gap=0.003 * s,
+                          bounds=zbox(skel, 0.02, 0.60 * skel.props.height, xy=0.26)))
     for side in ("L", "R"):
         an = skel.J["Foot.%s" % side]
         kn = skel.J["LowerLeg.%s" % side]
@@ -995,18 +1045,15 @@ def leg_wraps(skel: Skeleton, body) -> Garment:
             r = (0.050 - 0.006 * t) * s
             sc.union(sdf.torus(c, r, 0.0130 * s,
                                axis=np.array([0.10 * (1 if i % 2 else -1), 0.05, 1.0])), k=0.007 * s)
-    return Garment("leg_wraps", sc, spacing=0.0045, target_tris=2400, material="cloth")
+    return Garment("leg_wraps", sc, spacing=0.0060, target_tris=3800, material="cloth")
 
 
-def ragged_hem(skel: Skeleton, g: Garment, z_hem: float, teeth: int = 13,
+def ragged_hem(skel: Skeleton, g: Garment, z_hem: float, teeth: int = 9,
                depth: float = 0.05) -> Garment:
-    """Woodfolk: bite a row of notches out of a hem so it reads as torn leaf-shapes."""
+    """Woodfolk: a hem torn into leaf-shaped points rather than cut straight."""
     s = _s(skel)
-    for i in range(teeth):
-        a = 2 * math.pi * (i + 0.5) / teeth
-        dvec = np.array([math.cos(a), math.sin(a), 0.0])
-        g.scene.subtract(sdf.ellipsoid(dvec * 0.215 * s + np.array([0, 0, z_hem - 0.006 * s]),
-                                       [0.058 * s, 0.058 * s, depth * s]), k=0.010 * s)
+    g.scene.intersect(ragged_floor(z_hem + depth * 0.45 * s, depth * 0.55 * s, teeth, phase=0.7))
+    g.name = "ragged_cloak"
     return g
 
 
