@@ -11,6 +11,14 @@ const START_PLACES := [
 	"core:poi/tumbled_watchtower", "core:poi/whitecut_falls", "core:poi/bell_meadow_stones",
 ]
 
+## A working Sayer's repertoire: two schools well in hand, one saying from a third and
+## nothing at all from Calling, so the screen shows a character and not the whole pack.
+const REVIEW_SAYINGS := [
+	"core:spell/kindle_bolt", "core:spell/ember_fan", "core:spell/hearth_brand",
+	"core:spell/hush_frost", "core:spell/ward", "core:spell/quiet_the_blood", "core:spell/mend",
+]
+
+
 var player: Node3D
 var bag: Inventory
 var doll: Equipment
@@ -129,6 +137,8 @@ func _progression() -> void:
 			["kindling", 180.0], ["mending", 120.0], ["armour", 260.0]]:
 		progression.award(str(pair[0]), float(pair[1]))
 
+	_teach_sayings()
+
 	crafting = Crafting.new()
 	crafting.name = "Crafting"
 	add_child(crafting)
@@ -171,7 +181,22 @@ func _dialogue() -> void:
 	add_child(runner)
 
 
+func _teach_sayings() -> void:
+	for saying in REVIEW_SAYINGS:
+		progression.learn_spell(saying)
+	if player and player.has_method("equip_spell"):
+		player.equip_spell("core:spell/ember_fan")
+
+
 func set_state(state: String) -> void:
+	if state == "no_sayings":
+		# the page a character who has never been taught anything actually sees
+		progression.known_spells.clear()
+		progression.sayings_changed.emit()
+		if player:
+			player.equip_spell("")
+	elif progression.known_spells.is_empty():
+		_teach_sayings()
 	if player:
 		player.set_state(state)
 
@@ -195,6 +220,7 @@ class FakePlayer:
 	extends Node3D
 	signal stats_changed
 	signal lock_on_changed(target: Node3D)
+	signal spell_readied(spell_id: String)
 
 	var health := 92.0
 	var max_health := 140.0
@@ -202,6 +228,7 @@ class FakePlayer:
 	var max_stamina := 116.0
 	var mana := 54.0
 	var max_mana := 96.0
+	var equipped_spell := ""
 	var poise := 42.0
 	var max_poise := 60.0
 	var interactor: Node
@@ -243,6 +270,12 @@ class FakePlayer:
 
 	func is_dead() -> bool:
 		return false
+
+	## The sayings screen readies through this, exactly as it does on the real player.
+	func equip_spell(spell_id: String) -> bool:
+		equipped_spell = spell_id
+		spell_readied.emit(spell_id)
+		return true
 
 	class FakeInteractor:
 		extends Node

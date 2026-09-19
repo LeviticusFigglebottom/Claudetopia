@@ -175,6 +175,12 @@ func _spawn_player() -> void:
 	player.equip_weapon("core:item/iron_sword")
 	player.equip_offhand("core:item/round_shield")
 	player.equip_armour("core:item/wool_tunic")
+	# The arena's Foundling is a Sayer for the purposes of the checks: a saying has to be
+	# taught before it can be readied, so teach the four this bench uses.
+	var prog := player.progression()
+	if prog != null and prog.has_method("learn_spell"):
+		for saying in ["core:spell/kindle_bolt", "core:spell/hush_frost", "core:spell/mend", "core:spell/ward"]:
+			prog.call("learn_spell", saying)
 	player.equip_spell("core:spell/kindle_bolt")
 	player.set_quick_slot(0, "core:spell/kindle_bolt")
 	player.set_quick_slot(1, "core:spell/hush_frost")

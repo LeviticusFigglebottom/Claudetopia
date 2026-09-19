@@ -124,16 +124,26 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 * `spell`: `{id, name, school (kindling|hush|binding|mending|calling), cast_type (projectile|self|aura|target|summon), cost, cast_time?, range?, speed?, radius?, duration?, clip?, description, effects[]}`.
   Effect shapes: `{"type": "damage", "kind", "amount", "poise"}`, `{"type": "status", "id", "duration", "magnitude"}`, `{"type": "heal", "amount"}`, `{"type": "shield", "amount", "duration"}`, `{"type": "cleanse", "ids": []}`, `{"type": "summon", "enemy": "core:enemy/x", "count", "duration", "radius"}`.
   A summon stands an ordinary `enemy` def up on the caster's side for `duration` seconds; it joins the `summon_ally` group, drops nothing, and lets go rather than dying. An enemy attack may carry the same block as `attack.summons{enemy, count, radius, cap}` to call help at the moment the blow lands.
+  **A spell is not castable until the caster has been taught it.** Known sayings live on the `progression` node (`learn_spell` / `knows_spell` / `spells()`), ride in the `progression` save section as `known_spells[]`, and gate `SpellRuntime.can_cast(..., known)` — which answers `{"ok": false, "reason": "not_known"}`. An enemy caster's own spells need no teaching: `SpellCaster.known_lookup` defaults to yes.
+* `book`: `{id, title, author, category: "book", body (markdown-lite), teaches_skill?, teaches_spell?, quest_hook?}`.
+  `teaches_spell` is a full `core:spell/*` id: the first opening of that book teaches the saying, wherever it is opened (out of the bag, off a shelf, by a quest). An item reaches a book through its own `reads: <book id>`, or by being a `book`-category item whose short name matches a book id.
+* `calling`: `{id, name, culture, home_region, skill_bonuses, signature_item, starting_items[], starting_reputation{}, starting_marks, starting_spells?[], description}`.
+  `starting_spells` are `core:spell/*` ids the character comes up already knowing; only callings whose `skill_bonuses` include that saying's school should carry one.
 * `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}}`
 * `quest`: `{id, name, layer (main|faction|side|radiant), stages[{id, journal, objectives[{type, target, count}], on_enter[], on_complete[]}], rewards}`
 * `dialogue`: `{id, nodes{node_id: {speaker, text, conditions[], effects[], choices[{text, next, conditions[]}], next}}, start}`
 Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 `{"quest_at": ["core:quest/toll_hums", 2]}`, `{"rep_min": ["core:faction/wardens", 20]}`,
 `{"renown_min": 50}`, `{"morality_min": 10}`, `{"skill_min": ["speech", 25]}`,
-`{"has_item": ["core:item/x", 1]}`, `{"time_between": [20, 6]}`; effects:
+`{"has_item": ["core:item/x", 1]}`, `{"time_between": [20, 6]}`,
+`{"knows_spell": "core:spell/x"}`; effects:
 `{"set_flag": ...}`, `{"give_item": [...]}`, `{"quest_stage": [...]}`,
 `{"rep": [faction, delta]}`, `{"morality": delta}`, `{"renown": delta}`,
-`{"marks": delta}`, `{"start_quest": id}`, `{"teach_recipe": id}`.
+`{"marks": delta}`, `{"start_quest": id}`, `{"teach_recipe": id}`,
+`{"teach_spell": "core:spell/x"}`.
+`teach_spell` and `knows_spell` go through the context's **`sayings`** provider, which `Social`
+binds to the first node in the `progression` group. A quest grants a saying the same way, through
+its `rewards.effects[]`.
 
 ## 8. System discovery contract (pinned by tests)
 
@@ -143,10 +153,10 @@ other streams.
 
 | Group | Node | Methods other systems call |
 |---|---|---|
-| `player` | the player actor | `full_restore()`, `respawn(pos, yaw)`, `set_input_enabled(bool)`, `is_dead()`, `teleport(pos, yaw)`, `save_summary()` |
-| `inventory` | the **player's** bag only | `marks`, `add_marks(n)`, `remove_marks(n)->int`, `add/remove/count/has`, `items()`, `weight()`, `capacity()`, `use(item)`, `drop(item, count)` |
+| `player` | the player actor | `full_restore()`, `respawn(pos, yaw)`, `set_input_enabled(bool)`, `is_dead()`, `teleport(pos, yaw)`, `save_summary()`, `equip_spell(id) -> bool`, `knows_spell(id)`, `equipped_spell`, signal `spell_readied(id)` |
+| `inventory` | the **player's** bag only | `marks`, `add_marks(n)`, `remove_marks(n)->int`, `add/remove/count/has`, `items()`, `weight()`, `capacity()`, `use(item)`, `read(item)`, `drop(item, count)` |
 | `equipment` | the player's paper doll | `slots()`, `equip(item, slot)`, `unequip(slot)`, `armour_total()`, `stability()`, `weight_class()`, `main_weapon()` |
-| `progression` | skills/levels/perks | `skills()`, `level`, `attribute_points`, `perk_points`, `perks_for(skill)`, `take_perk(id)`, `spend_attribute(name)`, `mods` |
+| `progression` | skills/levels/perks/sayings | `skills()`, `level`, `attribute_points`, `perk_points`, `perks_for(skill)`, `take_perk(id)`, `spend_attribute(name)`, `mods`, `learn_spell(id)`, `knows_spell(id)`, `spells()`, `known_spells` |
 | `crafting` | recipes/alchemy/enchanting | `recipes_for(station)`, `craft(id)`, `known_effects(item)`, `combine(ids)`, `enchant(...)`, `disenchant(item)`, `consume_charge(item)` |
 | `quest_log` | quests | `active_quests()`, `completed_quests()`, `active_markers()` |
 | `dialogue_runner` | dialogue | `choose(index)`, `advance()`; signals `line_shown`, `choice_needed`, `ended` |

@@ -432,6 +432,8 @@ func use(item: Variant) -> bool:
 		if eq != null and eq.has_method("equip"):
 			return bool(eq.call("equip", s))
 		return false
+	if s.is_readable():
+		return read(s)
 	if not s.is_consumable():
 		return false
 	if s.is_ingredient():
@@ -445,6 +447,20 @@ func use(item: Variant) -> bool:
 	item_used.emit(item_id, effects)
 	if is_player:
 		EventBus.item_used.emit(item_id, effects)
+	return true
+
+
+## Opens a book that is being carried. The book is not used up: what it teaches — a skill, a
+## saying — is the progression node's business, hung off EventBus.book_opened so that reading
+## one off a shelf and reading one out of the bag teach exactly the same thing.
+func read(item: Variant) -> bool:
+	var s := resolve(item)
+	if s == null:
+		return false
+	var book := s.reads_book()
+	if book == "":
+		return false
+	EventBus.book_opened.emit(book)
 	return true
 
 

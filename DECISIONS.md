@@ -164,3 +164,35 @@ gets a small number of strong lamps plus one vault light and one fill, not a sca
 **Why.** Compatibility silently drops lights past the cap, so a large chamber stayed
 black no matter how much light was added. Discovering that cost an hour; the rendering
 notes now say so plainly.
+
+## 2026-09-19 · Known sayings live on Progression, not on the player actor
+**Decision.** The list of sayings a character has been taught (`known_spells`) lives on the
+`Progression` node beside skills, levels and perks, with `learn_spell` / `knows_spell` /
+`spells()` mirroring Crafting's `known_recipes` / `learn_recipe` / `knows_recipe`. Which
+saying is *readied* stays on the player actor as `equipped_spell`, because that is a thing
+about the body and not about the character.
+**Why.** A saying is something the character learned, like a skill or a recipe — not
+something they are carrying. Progression already saves under its own section, is discovered
+by group, and already owns the five magic schools the sayings belong to, so the screen, the
+dialogue vocabulary, the tomes and the quest rewards all reach one owner. Putting it on the
+player actor would have tied it to the body, which dies, respawns and is reconfigured.
+**Consequences.** `SpellCaster` gained a `known_lookup` callable and `SpellRuntime.can_cast`
+a `known` argument returning the reason `"not_known"`, so a saying nobody taught is refused
+however its id reached the slot — a console, an old save, a quick slot. Enemy casters leave
+`known_lookup` unset, which means yes: their spells are part of their def and nothing has to
+teach them. The save schema went to v3; `Migrations._v2_to_v3` seeds `known_spells` from
+whatever saying an old character had readied.
+
+## 2026-09-19 · A spell tome is a book, not a potion
+**Decision.** Each of the fifteen sayings has a `core:book/saying_*` def with the working
+actually written out in it, and a `core:item/tome_*` that `reads` it. Reading teaches the
+saying through `EventBus.book_opened`, the same path an ordinary book takes, and the book is
+not consumed.
+**Why.** The pack already had one way to read a thing. A tome that vanished when used would
+be a second, parallel path with its own rules, and would have made the most interesting
+objects in the magic system unreadable — the point of *Off the Roll* is the six owners' lines
+inside it, not the item tooltip. Keeping the book means a tome can be sold on, given away or
+left on a shelf, which is what the fiction says happens to them.
+**Consequences.** Teaching hangs off `book_opened` in `Progression`, so a tome read off a
+shelf and a tome read out of the bag teach exactly the same thing. Re-reading one says so
+rather than silently doing nothing.

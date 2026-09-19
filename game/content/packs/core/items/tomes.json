@@ -1,0 +1,229 @@
+[
+  {
+    "id": "core:item/tome_kindle_bolt",
+    "name": "A Spark, Thrown",
+    "category": "book",
+    "weight": 0.5,
+    "value": 24,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "kindling"
+    ],
+    "reads": "core:book/saying_kindle_bolt",
+    "description": "Forty pages in a Listener's hand, the same working copied out four times over because the Circle makes you write a new saying three times before you use it and Perran Loam could not count. It is the cheapest book in Tollmere and the most bought. The binder on Lantern Row keeps a stack under the counter and has stopped asking what for."
+  },
+  {
+    "id": "core:item/tome_ember_fan",
+    "name": "For Being Surrounded",
+    "category": "book",
+    "weight": 0.7,
+    "value": 110,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "kindling"
+    ],
+    "reads": "core:book/saying_ember_fan",
+    "description": "Written out by a Sayer who walked the Briarwold road alone for nine years and, in the tenth, did not. She dedicates it to the four men who came out of the hedge that night, by name, because she learned their names afterwards and thought they ought to be on something."
+  },
+  {
+    "id": "core:item/tome_hearth_brand",
+    "name": "The Long Insistence",
+    "category": "book",
+    "weight": 1.2,
+    "value": 240,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "kindling"
+    ],
+    "reads": "core:book/saying_hearth_brand",
+    "description": "A Vale prayer-book with the prayer struck out and the working written round it in a firmer hand. The original asked a hearth to catch on a wet morning; the annotator, a Circle Sayer of no great manners, notes in the margin that the prayer always worked and that this is the interesting part. Six pages are scorched at the same corner, which is either a warning or a boast."
+  },
+  {
+    "id": "core:item/tome_hush_frost",
+    "name": "Under the Breath",
+    "category": "book",
+    "weight": 0.5,
+    "value": 26,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "hush"
+    ],
+    "reads": "core:book/saying_hush_frost",
+    "description": "A reed-paper pamphlet, unsigned, sewn with fishing line. The Quiet Hands run them off in the Undercroft and leave copies where somebody who has just been robbed might find one, which they hold to be a kindness and the Tallymen hold to be advertising. The last page is blank and says so."
+  },
+  {
+    "id": "core:item/tome_still_tongue",
+    "name": "A Room With Nowhere To Land",
+    "category": "book",
+    "weight": 0.6,
+    "value": 95,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "hush"
+    ],
+    "reads": "core:book/saying_still_tongue",
+    "description": "Half-Ell of the Undercroft dictated this to a scribe who was not told her name and did not ask. She calls the saying 'the manners', and holds that a Sayer who has had it used on them is better company for a month. The scribe has added, very small, that she made him say it back to her before he was allowed to go home."
+  },
+  {
+    "id": "core:item/tome_winters_argument",
+    "name": "The Slow Case",
+    "category": "book",
+    "weight": 0.8,
+    "value": 160,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "hush"
+    ],
+    "reads": "core:book/saying_winters_argument",
+    "description": "Copied at the Sayers' Spire from an older copy taken from an older one, each scribe adding a line about how cold the room was while they worked. There are nineteen such lines. The working takes four pages; the complaints take eleven, and the Circle has never cut them, on the grounds that they are evidence."
+  },
+  {
+    "id": "core:item/tome_ward",
+    "name": "Where You End",
+    "category": "book",
+    "weight": 0.6,
+    "value": 28,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "binding"
+    ],
+    "reads": "core:book/saying_ward",
+    "description": "A Tollmere clerk's exercise book, ruled for accounts and used for this instead; the working runs down the money column. Whoever owned it has drawn a small firm box round their own name on the flyleaf, twice. The second box is the steadier of the two."
+  },
+  {
+    "id": "core:item/tome_binding_word",
+    "name": "One Short Sentence",
+    "category": "book",
+    "weight": 0.7,
+    "value": 120,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "binding"
+    ],
+    "reads": "core:book/saying_binding_word",
+    "description": "A drover's manual, of all things: written by a Hearthvale man who spent thirty years turning cattle at gates and worked out that the useful half of Binding is knowing exactly where you want the thing to stop before you open your mouth. The Circle was rude about it for a decade and now sets it for first-year Listeners."
+  },
+  {
+    "id": "core:item/tome_keepers_bond",
+    "name": "Standing Orders for a Barrow",
+    "category": "book",
+    "weight": 0.9,
+    "value": 175,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "binding",
+      "wardens"
+    ],
+    "reads": "core:book/saying_keepers_bond",
+    "description": "Bound in the Wardens' oxblood leather with the Roll's knot stamped on the board. It is not a book of magic, it is a book of procedure: the saying is set out as step four of going into a barrow, between checking the rope and lighting the second lantern. Wardens' Rest issues one to each Roll-Warden and expects it back."
+  },
+  {
+    "id": "core:item/tome_quiet_the_blood",
+    "name": "An Instruction to the Excitable",
+    "category": "book",
+    "weight": 0.5,
+    "value": 26,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "mending"
+    ],
+    "reads": "core:book/saying_quiet_the_blood",
+    "description": "A midwife's chapbook out of Merrowby, printed cheap because Ansel Wick's widow paid for the run and wanted one in every house in the Vale. Between the working and a recipe for a poultice she has written: this will not save anybody. It will buy you the time to fetch somebody who can."
+  },
+  {
+    "id": "core:item/tome_mend",
+    "name": "The Body, Being Vain",
+    "category": "book",
+    "weight": 0.7,
+    "value": 100,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "mending"
+    ],
+    "reads": "core:book/saying_mend",
+    "description": "A field copy, water-stained to the spine, carried by a sister of the Tolling Order through two winters in the Cinderlea. She has written the names of the people she used it on inside the back board and ruled a line through the ones it did not answer for. There are more names above the lines than below them, which she plainly thought worth recording."
+  },
+  {
+    "id": "core:item/tome_kind_word",
+    "name": "You Have To Mean It",
+    "category": "book",
+    "weight": 0.8,
+    "value": 185,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "mending"
+    ],
+    "reads": "core:book/saying_kind_word",
+    "description": "Bennick Cresswell's own fair copy, made to be given away, which is why there are eleven of them about and no two say quite the same thing. The working is four lines. The rest of the book is about how to mean a thing you are saying to a stranger who is bleeding on you, and the Circle has twice voted to have that part cut, and twice not quite managed it."
+  },
+  {
+    "id": "core:item/tome_call_the_hound",
+    "name": "The Dog Nobody Owned",
+    "category": "book",
+    "weight": 0.9,
+    "value": 260,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "calling"
+    ],
+    "reads": "core:book/saying_call_the_hound",
+    "description": "Ismay Ondrael's transcript of eleven Vale villages' accounts of the same dog, set in columns side by side, with the saying drawn out of what all eleven agreed on. The dog's name is different in every column. She notes that this does not matter, and that finding out why it does not matter took her four years."
+  },
+  {
+    "id": "core:item/tome_raise_the_buried",
+    "name": "They Come Up Holding It",
+    "category": "book",
+    "weight": 1.1,
+    "value": 430,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "calling"
+    ],
+    "reads": "core:book/saying_raise_the_buried",
+    "description": "A grave-warden's register out of a village the Roll no longer answers, with the working written in between the burials in a later hand. Each entry sets down what the dead were buried holding. Beside the last one, in the margin: they are not pleased, they were not pleased before, do not take it personally and do not do this near a house."
+  },
+  {
+    "id": "core:item/tome_call_a_name",
+    "name": "Off the Roll",
+    "category": "book",
+    "weight": 1.4,
+    "value": 900,
+    "stack": 1,
+    "tags": [
+      "tome",
+      "saying",
+      "calling",
+      "wardens"
+    ],
+    "reads": "core:book/saying_call_a_name",
+    "description": "Three folded sheets in a Warden's hand, sewn into a board cut down from something larger and older. It is a copy of one page of the Roll with a single working laid over it like a gloss. The Wardens hold that making it was a crime and that burning it would be a worse one. Six pairs of hands have had it, and every one of them has added a line saying who to give it to next."
+  }
+]

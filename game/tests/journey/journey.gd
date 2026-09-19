@@ -59,6 +59,7 @@ func _ready() -> void:
 	await _step_buy_a_house()
 	await _step_clear_a_dungeon()
 	await _step_fight_a_boss()
+	await _step_learn_and_say()
 	await _step_save_and_load()
 	_report()
 
@@ -424,22 +425,117 @@ func _step_fight_a_boss() -> void:
 
 
 # 12 -----------------------------------------------------------------------------------
+## The whole of magic in one pass: a saying you have not been taught is not castable, a tome
+## teaches it, the screen's Ready it puts it in the slot, and the cast key lands it on something.
+func _step_learn_and_say() -> void:
+	const SAYING := "core:spell/kindle_bolt"
+	const TOME := "core:item/tome_kindle_bolt"
+	if player == null or progression == null or inventory == null:
+		_record("learn a saying and Say it", false, "no player, bag or progression")
+		return
+	if not ResourceLoader.exists("res://actors/enemy/enemy.tscn") or not ContentDB.has(TOME):
+		_record("learn a saying and Say it", false, "no enemy scene or no tome in the pack")
+		return
+
+	# 1. untaught is uncastable, however the id gets into the slot
+	var refused_before: bool = not bool(player.equip_spell(SAYING))
+	var knew_nothing: bool = not bool(progression.knows_spell(SAYING))
+
+	# 2. taught by a tome, read out of the bag the way the inventory screen reads one
+	inventory.add(TOME, 1)
+	inventory.use(TOME)
+	await get_tree().process_frame
+	var learned: bool = progression.knows_spell(SAYING)
+	var kept_the_book: bool = inventory.count(TOME) == 1
+	# a tome is a book: reading one opens the reader over the world, and the player shuts it
+	var opened_the_book: bool = UI.is_menu_open("book")
+	UI.close_all()
+	await get_tree().process_frame
+
+	# 3. readied: this is what the sayings screen's Ready it does
+	var readied: bool = bool(player.equip_spell(SAYING)) and str(player.equipped_spell) == SAYING
+
+	# 4. Said at something, through the cast key, and landing like any other hit
+	player.global_position = Vector3(0, 1.0, 0)
+	player.rotation.y = 0.0
+	player.camera_rig.yaw = 0.0
+	var mark := (load("res://actors/enemy/enemy.tscn") as PackedScene).instantiate()
+	mark.configure("core:enemy/ash_wight")
+	host.add_child(mark)
+	(mark as Node3D).global_position = player.global_position + Vector3(0, 0, -4.0)
+	await get_tree().physics_frame
+	player.lock.acquire(player.global_position, -player.global_transform.basis.z)
+	var locked: bool = player.lock.is_locked()
+	var before: float = float(mark.get("health"))
+	var mana_before: float = float(player.get("mana"))
+	var mana_low := mana_before
+
+	Input.action_press("cast")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	Input.action_release("cast")
+	var landed := false
+	for i in 300:
+		await get_tree().physics_frame
+		mana_low = minf(mana_low, float(player.get("mana")))
+		if float(mark.get("health")) < before:
+			landed = true
+			break
+	# breath comes back as you stand there, so what matters is that it was spent at all
+	var spent: bool = mana_low < mana_before
+	var damage: float = before - float(mark.get("health"))
+	if is_instance_valid(mark):
+		mark.queue_free()
+	player.lock.clear()
+	await get_tree().process_frame
+
+	var trouble: Array[String] = []
+	if not (refused_before and knew_nothing):
+		trouble.append("a saying nobody taught was readied anyway")
+	if not learned:
+		trouble.append("the tome taught nothing")
+	if not kept_the_book:
+		trouble.append("reading the tome consumed it")
+	if not opened_the_book:
+		trouble.append("the tome did not open the reader")
+	if not readied:
+		trouble.append("could not ready it")
+	if not locked:
+		trouble.append("could not lock on")
+	if not spent:
+		trouble.append("the cast cost no breath")
+	if not landed:
+		trouble.append("the bolt never landed")
+	_record("learn a saying, ready it and Say it", trouble.is_empty(),
+		"read a tome, readied %s, cast it for %.1f damage" % [
+			str(ContentDB.get_or_empty(SAYING).get("name", SAYING)), damage] if trouble.is_empty() else ", ".join(trouble))
+
+
+# 13 -----------------------------------------------------------------------------------
 func _step_save_and_load() -> void:
 	GameState.set_flag("journey_marker", "kept")
 	WorldClock.set_time(17.25, 9)
 	if inventory and inventory.has_method("add_marks"):
 		inventory.add_marks(333)
 	var marks_before: int = int(inventory.get("marks")) if inventory else 0
+	var saying_before: String = str(player.equipped_spell) if player else ""
 	var saved := SaveSystem.save_to_slot("journey") == OK
 	GameState.set_flag("journey_marker", "lost")
 	WorldClock.set_time(3.0, 1)
 	if inventory and inventory.has_method("remove_marks"):
 		inventory.remove_marks(marks_before)
+	if player:
+		player.equip_spell("")
+	if progression:
+		progression.forget_spell(saying_before)
 	var loaded := SaveSystem.load_from_slot("journey") == OK
+	await get_tree().process_frame
 	await get_tree().process_frame
 	var flag_back: bool = str(GameState.get_flag("journey_marker", "")) == "kept"
 	var clock_back: bool = WorldClock.day == 9 and absf(WorldClock.time_hours - 17.25) < 0.01
 	var marks_back: bool = int(inventory.get("marks")) == marks_before if inventory else true
+	var saying_back: bool = saying_before == "" or (
+		progression.knows_spell(saying_before) and str(player.equipped_spell) == saying_before)
 	SaveSystem.delete_slot("journey")
 	var parts: Array[String] = []
 	if not saved:
@@ -452,8 +548,10 @@ func _step_save_and_load() -> void:
 		parts.append("clock lost (day %d, %.2f)" % [WorldClock.day, WorldClock.time_hours])
 	if not marks_back:
 		parts.append("marks lost (%d of %d)" % [int(inventory.get("marks")) if inventory else 0, marks_before])
-	_record("save and load", saved and loaded and flag_back and clock_back and marks_back,
-		"flags, clock and %d marks survived" % marks_before if parts.is_empty() else ", ".join(parts))
+	if not saying_back:
+		parts.append("the readied saying did not come back (%s)" % saying_before)
+	_record("save and load", saved and loaded and flag_back and clock_back and marks_back and saying_back,
+		"flags, clock, %d marks and the readied saying survived" % marks_before if parts.is_empty() else ", ".join(parts))
 
 
 func _report() -> void:

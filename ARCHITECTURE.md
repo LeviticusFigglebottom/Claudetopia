@@ -45,8 +45,8 @@ captures/                 screenshot output (gitignored)
    through the autoload singletons.
 5. **Everything saveable registers with `SaveSystem`** under a section name and
    implements `to_save()`/`from_save()` with plain Dictionaries (copies, not
-   references). Save files are JSON with `schema_version`; `Migrations` is a
-   pure chain of `vN -> vN+1` functions with fixture tests.
+   references). Save files are JSON with `schema_version` (currently **3**);
+   `Migrations` is a pure chain of `vN -> vN+1` functions with fixture tests.
 6. **Data drives visuals.** Region identity (palette, light, weather, flora,
    ambience) is data; generators and shaders consume it.
 7. **Nothing fake.** If a feature is not implemented, it is absent and listed in

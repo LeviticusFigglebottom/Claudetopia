@@ -15,8 +15,8 @@ normative; everything tunable is content, everything pure is a `static func`.
 | `poise_component.gd` | Poise damage, 4/s regen after 1.5 s, stagger at 0 (then resets), hyper-armour threshold. |
 | `status_effects.gd` | burning, chilled, bleeding, poisoned, silenced, quieted, stagger, knockdown, warded — durations, ticks and stacking rules in one `RULES` table. |
 | `projectile.gd`, `arrow.tscn` | Swept-ray kinematic projectile with a gravity arc; arrows stick into geometry, bolts vanish. |
-| `spell_runtime.gd` | Pure spell rules: cost and cast time by skill, silence check, school → skill and damage kind, effect → `HitData`. |
-| `spell_caster.gd` | Runtime casting: mana pool, cast timer, and the four implemented cast types (`projectile`, `self`, `aura`, `target`). `summon` is deliberately refused, not faked. |
+| `spell_runtime.gd` | Pure spell rules: cost and cast time by skill, silence check, whether the saying has been taught, school → skill and damage kind, effect → `HitData`. |
+| `spell_caster.gd` | Runtime casting: mana pool, cast timer, and the five implemented cast types (`projectile`, `self`, `aura`, `target`, `summon`). `known_lookup` asks whether this caster was ever taught the saying; unset means yes, which is what an enemy's own def wants. |
 | `lock_on.gd` | Targeting service: best target in a 30 m cone, cycling left/right with wrap, drops dead or distant targets. |
 
 Actors live in `actors/`: `actors/shared/actor.gd` (the base that owns these components and
@@ -31,7 +31,9 @@ resolves hits), `actors/player/`, `actors/enemy/`.
 * `enemy` defs — `stats`, `attacks[{name, clip, damage, poise_damage, range, min_range?,
   hit_range?, telegraph, hit_window, recovery, cooldown, weight, knockdown?, statuses?, kind?}]`,
   `perception`, `behaviour`, `phases[]` for bosses.
-* `spell` defs — `{school, cast_type, cost, cast_time, range, speed, radius, duration, effects[]}`
+* `spell` defs — `{school, cast_type, cost, cast_time, range, speed, radius, duration, effects[]}`.
+  Who may cast one is not in the def: the player's `SpellCaster.known_lookup` asks the
+  `progression` node, so `can_cast` refuses with `"not_known"` whatever put the id in the slot.
   with effect types `damage`, `status`, `heal`, `shield`, `cleanse`.
 
 Weapon and attack timing is placeholder-generated from `speed` and the attack's telegraph until

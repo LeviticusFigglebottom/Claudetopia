@@ -21,8 +21,8 @@ economy streams one name to call. It is the only addition this stream makes to `
 
 ## Binding the systems other streams own
 
-The context reads the player, the inventory, the crime system's bounties and the crafting
-system's recipes through duck-typed providers. A system binds itself either way:
+The context reads the player, the inventory, the crime system's bounties, the crafting system's
+recipes and the progression node's skills and sayings through duck-typed providers. A system binds itself either way:
 
 ```gdscript
 Social.bind("inventory", self)   # explicit
@@ -35,6 +35,7 @@ add_to_group("inventory")        # or just join the group; Social picks it up
 | `equipment` | `equipment` | `slots()` → `{slot: item_id}`, read for `wearing_tag` when the bag does not answer it |
 | `player` | `player` | `display_name()`, and a position: a `position()` method **or** any Node3D. Binding it also feeds `reach` objectives. |
 | `progression` | `skills` | `skill_level(id)` |
+| `progression` | `sayings` | `learn_spell(id)` for `teach_spell`, `knows_spell(id)` for the condition |
 | `crime` | `bounty` | `bounty_for(faction_id)` |
 | `crafting` | `recipes` | `teach(recipe_id)` |
 

@@ -18,7 +18,9 @@
 ## Data read
 
 * `core:item/*` — CONTRACTS §7 shape. Extra keys this system uses: `stack`, `tags`,
-  `material` (what tempering consumes), `ranged.ammo`, `light`, `ember.charge`, `model`.
+  `material` (what tempering consumes), `ranged.ammo`, `light`, `ember.charge`, `model`,
+  `reads` (the `core:book/*` this item opens; `use()` routes it to `read()`, which emits
+  `EventBus.book_opened` and leaves the book in the bag — a spell tome teaches from there).
 * `core:loot/*` — `{rolls, entries[], guaranteed[]}`; see the header of `loot_table.gd`.
 * `core:enemy/*` — `loot` (a loot id) and `marks` ([min, max]), read by `LootDrops`.
 * `core:effect/*` — an item's `effects[]` and its enchantment turn into modifiers through each
@@ -55,6 +57,7 @@ so `get_tree().get_first_node_in_group("inventory")` is always the player's.
 ```gdscript
 # Inventory
 add(item_id, count := 1, data := {}) -> ItemStack      remove(item_id, count := 1, data_filter := {}) -> int
+read(item) -> bool                                     # opens the book an item `reads`; never consumes it
 remove_stack(stack, count := -1) -> int                has(item_id, count := 1) -> bool
 count(item_id) -> int                                  items() -> Array[Dictionary]
 stacks() -> Array[ItemStack]                           find(uid) / find_first(item_id) -> ItemStack

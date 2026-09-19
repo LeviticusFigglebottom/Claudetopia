@@ -15,6 +15,7 @@ extends RefCounted
 ##   {"marks": delta}                        positive gives, negative takes (inventory owns marks)
 ##   {"start_quest": quest_id}
 ##   {"teach_recipe": recipe_id}
+##   {"teach_spell": spell_id}              a Sayer teaches a saying (progression owns the list)
 ## Extensions required by this stream:
 ##   {"gesture_reply": gesture_id}           the NPC answers with a gesture (runner emits it)
 ##   {"rumour": rumour_id}                   seeds the current place's rumour pool
@@ -30,7 +31,7 @@ const TOPIC_PREFIX := "topic/"
 
 const KNOWN := [
 	"set_flag", "give_item", "quest_stage", "rep", "morality", "renown", "marks", "start_quest",
-	"teach_recipe", "gesture_reply", "rumour", "unlock_topic", "end",
+	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
 ]
@@ -95,6 +96,8 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 			ctx.add_marks(int(arg))
 		"teach_recipe":
 			ctx.teach_recipe(str(arg))
+		"teach_spell":
+			ctx.teach_spell(str(arg))
 
 		# --- quests ---
 		"start_quest":

@@ -82,12 +82,17 @@ static func color_for(def: Dictionary) -> Color:
 	return SCHOOL_COLOR.get(school_of(def), Color.WHITE)
 
 
-## Whether a cast may start. Returns {"ok": bool, "reason": ""|"silenced"|"mana"|"unknown"|"cast_type"|"busy"}.
-static func can_cast(def: Dictionary, mana: float, silenced: bool, skill: float = 0.0, busy: bool = false) -> Dictionary:
+## Whether a cast may start. Returns
+## {"ok": bool, "reason": ""|"unknown"|"cast_type"|"not_known"|"busy"|"silenced"|"mana"}.
+## `known` is whether this caster has been taught the saying: a saying nobody taught you is
+## not castable however the id got into the slot (DESIGN §5.3 — a Saying is something learned).
+static func can_cast(def: Dictionary, mana: float, silenced: bool, skill: float = 0.0, busy: bool = false, known: bool = true) -> Dictionary:
 	if def.is_empty():
 		return {"ok": false, "reason": "unknown"}
 	if not IMPLEMENTED_CAST_TYPES.has(str(def.get("cast_type", ""))):
 		return {"ok": false, "reason": "cast_type"}
+	if not known:
+		return {"ok": false, "reason": "not_known"}
 	if busy:
 		return {"ok": false, "reason": "busy"}
 	if silenced:
