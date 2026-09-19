@@ -214,6 +214,20 @@ static func place_name(place_id: String) -> String:
 	return str(def.get("name", place_id.get_slice("/", 1).replace("_", " ")))
 
 
+## Do people live here? Deep places, landmarks and soft edges do not gossip.
+func is_settled(place_id: String) -> bool:
+	return str(ContentDB.get_or_empty(place_id).get("kind", "")) in SETTLED_KINDS
+
+
+## The settlements of a region, in content order.
+func settlements_of(region_id: String) -> Array[String]:
+	var out: Array[String] = []
+	for p in ContentDB.all("place"):
+		if str(p.get("region", "")) == region_id and str(p.get("kind", "")) in SETTLED_KINDS:
+			out.append(str(p["id"]))
+	return out
+
+
 func places_talking() -> Array[String]:
 	var out: Array[String] = []
 	for p in pools:

@@ -71,8 +71,11 @@ static func _greet(social: Node, args: Array) -> String:
 	if args.is_empty():
 		return "greet <npc_id>"
 	var npc_id := _id(str(args[0]), "npc")
+	social.set_place(social.place_id())
 	var row: Dictionary = Greetings.select_row(npc_id, social.ctx)
-	return "%s\n  (row: %s)" % [social.greet(npc_id), str(row.get("id", "?"))]
+	if row.is_empty():
+		return "(no greeting matched, which should not happen)"
+	return "%s\n  (row: %s)" % [social.ctx.substitute(Greetings.pick_line(row, npc_id, social.ctx)), str(row.get("id", "?"))]
 
 
 static func _gesture(social: Node, args: Array) -> String:

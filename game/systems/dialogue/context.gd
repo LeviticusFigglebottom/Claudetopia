@@ -268,7 +268,7 @@ func add_renown(delta: int, reason: String = "") -> void:
 	_call("standing", "add_renown", [delta, reason])
 
 
-func apply_deed(deed: String, witnesses: Array = [], place: String = "") -> Dictionary:
+func apply_deed(deed: String, witnesses: Variant = [], place: String = "") -> Dictionary:
 	if not _has("standing", "apply_deed"):
 		problem("deed '%s' lost: no standing provider" % deed)
 		return {}

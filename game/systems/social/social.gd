@@ -128,6 +128,13 @@ func place_id() -> String:
 			return near
 	if ctx.place_id != "":
 		return ctx.place_id
+	# No player bound yet (a menu, a test, the console): fall back to a settlement of the region
+	# the game says we are in, so a deed still lands somewhere people can talk about it.
+	var region := GameState.current_region_id
+	if region != "":
+		var settlements: Array = gossip.settlements_of(region)
+		if not settlements.is_empty():
+			return str(settlements[0])
 	return ""
 
 
@@ -158,8 +165,9 @@ func do_gesture(gesture_id: String, npc_id: String = "", witnesses: Array = []) 
 	return Gestures.perform(gesture_id, npc_id, ctx, witnesses)
 
 
-## Records a deed (the crime, combat and quest systems call this).
-func apply_deed(deed_id: String, witnesses: Array = [], place: String = "") -> Dictionary:
+## Records a deed (the crime, combat and quest systems call this). `witnesses` is either the NPC
+## ids who saw it or a plain count when the caller only knows how many were in the room.
+func apply_deed(deed_id: String, witnesses: Variant = [], place: String = "") -> Dictionary:
 	return standing.apply_deed(deed_id, witnesses, place if place != "" else place_id())
 
 
