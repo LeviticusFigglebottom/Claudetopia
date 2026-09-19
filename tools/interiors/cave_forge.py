@@ -489,7 +489,7 @@ def build(recipe: dict, out_root: str, voxel_override: float | None = None, quie
     # throw away the rooms you are not standing in.
     # Decimation flattens rock into planes, so the budget is generous: chunking is what
     # buys the performance, and a cap only stops a runaway.
-    target = int(recipe.get("target_tris", 0)) or min(len(mesh.faces), 95_000 * max(len(chambers), 1))
+    target = int(recipe.get("target_tris", 0)) or min(len(mesh.faces), 50_000 * max(len(chambers), 1))
     if len(mesh.faces) > target * 1.15:
         mesh = decimate_keeping_colour(mesh, target)
     chunks = split_by_chamber(mesh, chambers)
