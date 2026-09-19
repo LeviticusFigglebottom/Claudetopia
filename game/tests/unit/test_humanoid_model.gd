@@ -253,6 +253,34 @@ func test_animation_tree_and_api() -> void:
 	assert_false(m.play_intent("No_Such_Clip"), "unknown clips must be rejected")
 
 
+## The clip_event / clip_finished contract: events fire once each, in order, and the
+## one-shot ends by itself.
+func test_one_shot_fires_events_then_finishes() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var clip := "Attack_1H_Light_1"
+	if not m.has_clip(clip):
+		return
+	var fired: Array[String] = []
+	var finished: Array[String] = []
+	m.clip_event.connect(func(n: String) -> void: fired.append(n))
+	m.clip_finished.connect(func(n: String) -> void: finished.append(n))
+	assert_true(m.play_intent(clip))
+	var length := m.clip_length(clip)
+	var step := 1.0 / 60.0
+	var t := 0.0
+	while t < length + 0.2:
+		m._process(step)
+		t += step
+	var expected: Array[String] = []
+	for e in m.clip_events(clip):
+		expected.append(str((e as Dictionary).get("name", "")))
+	assert_eq(fired, expected, "events must fire once each, in clip order")
+	assert_eq(finished, [clip] as Array[String], "the one-shot must report finishing once")
+	assert_eq(m.current_intent(), "", "the model returns to locomotion when a one-shot ends")
+
+
 func test_appearance_composes() -> void:
 	if not _rig_built():
 		return
