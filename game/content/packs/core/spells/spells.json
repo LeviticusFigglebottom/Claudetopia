@@ -1,0 +1,58 @@
+[
+  {
+    "id": "core:spell/kindle_bolt",
+    "name": "Kindle-Bolt",
+    "school": "kindling",
+    "cast_type": "projectile",
+    "cost": 12,
+    "cast_time": 0.55,
+    "range": 30.0,
+    "speed": 26.0,
+    "description": "The first thing every Sayer learns and the last thing most of them are good at: a spoken spark, thrown. Kindling is the loudest school because fire is the loudest thing a small voice can make.",
+    "effects": [
+      {"type": "damage", "kind": "fire", "amount": 18.0, "poise": 8.0},
+      {"type": "status", "id": "burning", "duration": 4.0, "magnitude": 3.0}
+    ]
+  },
+  {
+    "id": "core:spell/hush_frost",
+    "name": "Hush-Frost",
+    "school": "hush",
+    "cast_type": "projectile",
+    "cost": 14,
+    "cast_time": 0.7,
+    "range": 26.0,
+    "speed": 22.0,
+    "description": "Said under the breath, as Hush must be. The cold is not the point; the cold is what is left when the saying takes the noise out of a thing's blood and it forgets to be quick.",
+    "effects": [
+      {"type": "damage", "kind": "frost", "amount": 12.0, "poise": 6.0},
+      {"type": "status", "id": "chilled", "duration": 5.0}
+    ]
+  },
+  {
+    "id": "core:spell/mend",
+    "name": "Mend",
+    "school": "mending",
+    "cast_type": "self",
+    "cost": 20,
+    "cast_time": 1.1,
+    "description": "Mending does not close a wound. It reminds the body what shape it was in when it was last spoken of kindly, and the body, being vain, obliges.",
+    "effects": [
+      {"type": "heal", "amount": 35.0},
+      {"type": "cleanse", "ids": ["bleeding", "poisoned"]}
+    ]
+  },
+  {
+    "id": "core:spell/ward",
+    "name": "Ward",
+    "school": "binding",
+    "cast_type": "self",
+    "cost": 18,
+    "cast_time": 0.8,
+    "duration": 12.0,
+    "description": "A Binding said around yourself: a short sentence about where you end. For as long as it holds, the world argues with the sentence instead of with you.",
+    "effects": [
+      {"type": "shield", "amount": 40.0, "duration": 12.0}
+    ]
+  }
+]

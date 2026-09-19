@@ -1,0 +1,279 @@
+{
+  "id": "core:dialogue/wren_tallow",
+  "speaker_name": "Wren Tallow",
+  "notes": "Main-quest guide across The Naming (1), The Toll Hums (2) and Louder Than Books (3). Stage indices are 1-based into each quest's stages array. The hub is 'hub'; topic nodes return to it; 'bye' ends.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"quest_at": ["core:quest/the_naming", 1]}], "text": "There you are. Eyes working? Good. Don't look behind you yet."},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", 2]}], "text": "Sword up. Talk after."},
+    {"conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}], "text": "Merrowby's talking. That's Merrowby's whole trade, but it's talking louder than usual."},
+    {"conditions": [{"flag": "seen_the_roll"}], "text": "Four lines on the Roll this year. I'd like it to stay four."},
+    {"conditions": [{"renown_min": 300}], "text": "They're saying your name in Gullhithe now. Gullhithe. That's forty miles and a lake."},
+    {"conditions": [{"morality_min": 40}], "text": "You've got that look people get when they've been kind somewhere and think nobody counted it. Somebody counted it."},
+    {"conditions": [{"flag": "hamlet_name_struck"}], "text": "Mullbourne's struck and clean. Pellam won't speak to me. That's mine to carry, not yours."},
+    {"conditions": [{"time_between": [20, 6]}], "text": "Late. I'm counting bells. Seventeen. Sixteen since spring, but I say seventeen and see if it argues."}
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "Wren Tallow",
+      "text": "Muddy boots, straight back, no idea where you are. You'll do.",
+      "next": "hub"
+    },
+
+    "hub": {
+      "speaker": "Wren Tallow",
+      "text": "Well? Ask.",
+      "choices": [
+        {"text": "Who are you?", "next": "who_are_you"},
+        {"text": "What is this place? What's the mist?", "next": "the_hush", "conditions": [{"quest_at": ["core:quest/the_naming", 1]}]},
+        {"text": "What am I supposed to call myself?", "next": "the_naming_q", "conditions": [{"quest_at": ["core:quest/the_naming", 1]}]},
+        {"text": "Those things are waving at me.", "next": "the_wights", "conditions": [{"quest_at": ["core:quest/the_naming", 2]}]},
+        {"text": "The stone at the camp. What is it?", "next": "hearthstones", "conditions": [{"quest_at": ["core:quest/the_naming", 3]}]},
+        {"text": "I'm ready for the cart.", "next": "the_cart", "conditions": [{"quest_at": ["core:quest/the_naming", 4]}]},
+        {"text": "The bell is humming. What does the village think?", "next": "the_hum", "conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}]},
+        {"text": "I found a black stone tine in the Toll's crown.", "next": "the_tine", "conditions": [{"flag": "found_tuning_tine"}]},
+        {"text": "Tell me about the Roll.", "next": "the_roll", "conditions": [{"flag": "seen_the_roll"}]},
+        {"text": "Harewell. Eleven households. Who were they?", "next": "harewell", "conditions": [{"flag": "learned_harewell"}]},
+        {"text": "Why send me to the Sayers and not go yourself?", "next": "why_me", "conditions": [{"quest_at": ["core:quest/the_toll_hums", 5]}]},
+        {"text": "What do you make of the Circle?", "next": "the_circle", "conditions": [{"flag": "circle_heard_you"}]},
+        {"text": "Tell me about the Wardens.", "next": "the_wardens"},
+        {"text": "I have a name for the Roll. Mullbourne.", "next": "mullbourne", "conditions": [{"flag": "learned_mullbourne"}]},
+        {"text": "People are saying my name now.", "next": "on_renown", "conditions": [{"renown_min": 250}]},
+        {"text": "Do you ever think about what I walked out of?", "next": "the_foundling", "conditions": [{"flag": "first_hearthstone"}]},
+        {"text": "Nothing. Carry on counting.", "next": "bye"}
+      ]
+    },
+
+    "who_are_you": {
+      "speaker": "Wren Tallow",
+      "text": "Wren Tallow. Warden of the Hearth, which sounds grander than it is. We keep a book of the names of villages, and we walk about making sure the villages are still under them. Mostly I chase bandits off the Larkbourne road and write down how many chickens a fox had. Twice in my life I've had to write a line in the Roll for a place that stopped being there. You are the third strange thing that has happened to me, and the other two were that.",
+      "next": "hub"
+    },
+
+    "the_hush": {
+      "speaker": "Wren Tallow",
+      "text": "That's the Hushline. South of here colour goes out of things, and sound, and then the things. Walk into it and the whisper turns you around, which is the kindest thing about it. Nobody comes out of it. I've stood at the top of that stair for nineteen years on and off and watched grey people walk down it, and I have never once watched anyone walk up.",
+      "choices": [
+        {"text": "Until now.", "next": "the_hush_2"},
+        {"text": "What's on the other side?", "next": "the_hush_3"}
+      ]
+    },
+    "the_hush_2": {
+      "speaker": "Wren Tallow",
+      "text": "Until now. Yes. I've been standing here for a while deciding whether to write you down, and in what book. Don't let that trouble you. It troubles me enough for both of us.",
+      "next": "hub"
+    },
+    "the_hush_3": {
+      "speaker": "Wren Tallow",
+      "text": "The songs say colour comes back further south. Songs say a lot. What's certainly on the other side is the Builders' city, the Choir, and a thing the Order sits up all night watching. You'd know better than me. You came from there.",
+      "effects": [{"set_flag": "wren_asked_south"}],
+      "next": "hub"
+    },
+
+    "the_naming_q": {
+      "speaker": "Wren Tallow",
+      "text": "You pick. That's not me being soft; that's how it works here. A name is not a label, it's a rope. Things that are named and spoken of stay put. Things nobody says go quiet, and then go. You came out of the quiet with nothing on you, so we tie the rope now, and we tie it in front of a witness, and I'm the witness. Say it clearly. I'll say it back and then it's done.",
+      "effects": [{"set_flag": "wren_explained_naming"}],
+      "next": "hub"
+    },
+
+    "the_wights": {
+      "speaker": "Wren Tallow",
+      "text": "Greyfold's people. They sat down to wait out the Ash Winter a hundred and seventy years ago and they are still waiting and they still wave. They're slow, they're weak, and there are always more. Keep something in your legs. Swing when they stumble, not before. And don't feel clever about it afterwards; that's the part that goes wrong in people.",
+      "choices": [
+        {"text": "They were farmers.", "next": "the_wights_2"},
+        {"text": "Understood.", "next": "hub"}
+      ]
+    },
+    "the_wights_2": {
+      "speaker": "Wren Tallow",
+      "text": "They were. Every one. That's why we walk them down instead of burning the heath, and why the Order counts bells over them instead of saying prayers at them. Nobody's owed a prayer out here. Everyone's owed a count.",
+      "next": "hub"
+    },
+
+    "hearthstones": {
+      "speaker": "Wren Tallow",
+      "text": "A Hearthstone. Put your hand flat on it and say your name aloud, so the stone has it too. Then if you die, and you will, you wake up at the last stone that heard you, with your teeth and your temper and nothing in your purse. Your marks stay where you fell, standing up in the shape of you until you fetch them. Die again on the way and the Echo goes quiet and your marks go with it. I've fetched mine three times. Two of them I had to fight past the thing that made me drop them, which is the joke.",
+      "next": "hub"
+    },
+
+    "the_cart": {
+      "speaker": "Wren Tallow",
+      "text": "Carter's going north with a load of pilgrims' bells for melting; grey folk leave them at the line and someone has to make spoons out of them eventually. I've bought your seat with Wardens' marks, which means you owe the Wardens and not me, which is deliberate. The Vale is warmer than this. That is not saying much, but it is saying something.",
+      "effects": [{"set_flag": "cart_arranged"}],
+      "next": "hub"
+    },
+
+    "the_hum": {
+      "speaker": "Wren Tallow",
+      "text": "Forty metres of bronze in a hole in the ground and it's humming like a fly in a jug. Maud Brambling says it means a hard winter. Corwen Mullard says it means the Sayers have been at something. Old Pellam says he heard it once as a boy and won't say what happened after, which is the only answer I take seriously. Go and collect the village's opinions before the Wardens have one; once we have one, nobody says theirs.",
+      "choices": [
+        {"text": "What do you think it means?", "next": "the_hum_2"},
+        {"text": "I'll ask around.", "next": "hub"}
+      ]
+    },
+    "the_hum_2": {
+      "speaker": "Wren Tallow",
+      "text": "I think a bell that has been silent for a thousand and forty-three years does not start up for nothing, and I think you walked out of the south about a fortnight before it did. I'm not accusing you. I'm counting. Counting is what I do instead of worrying, and it is not working as well as usual.",
+      "effects": [{"set_flag": "wren_counted_you"}],
+      "next": "hub"
+    },
+
+    "the_tine": {
+      "speaker": "Wren Tallow",
+      "text": "Black stone, cold, sitting in a cradle up in the crown where nobody's climbed since Pellam's father. And it hums a half-note under the bell. Not with it. Under it, like two people singing who've stopped agreeing about the tune. The Builders made everything to hold a note. This one is holding the wrong one, or the bell is, and I don't know enough to say which and I'm not going to pretend otherwise in front of you.",
+      "choices": [
+        {"text": "Could it be stopped?", "next": "the_tine_2"},
+        {"text": "Who would know?", "next": "the_tine_3"}
+      ]
+    },
+    "the_tine_2": {
+      "speaker": "Wren Tallow",
+      "text": "You could wrap it in wool. I did. It hummed through the wool. I put it in the Roll room's iron box overnight and Pellam came down in the morning and asked who'd been singing.",
+      "next": "hub"
+    },
+    "the_tine_3": {
+      "speaker": "Wren Tallow",
+      "text": "The Sayers' Circle in Tollmere. They're mages, after a fashion: they hold that saying a thing loudly enough makes it more so. They'll know, and they'll charge, and they'll disagree with each other at length while they do it. That's not me being unkind. They're proud of it.",
+      "next": "hub"
+    },
+
+    "the_roll": {
+      "speaker": "Wren Tallow",
+      "text": "Every settlement in Hearthvale, in one book, in ink, since the Tending. When a place goes quiet, we don't cross it out; we write the line deeper and read it aloud on Tollday so that somebody living has said it that week. There are four lines like that now. Larkstead. Gosford. Mullbourne, which nobody has been able to find for a year. And Harewell, which is new since last Tollday.",
+      "choices": [
+        {"text": "Does reading them aloud work?", "next": "the_roll_2"},
+        {"text": "Tell me about Harewell.", "next": "harewell", "conditions": [{"flag": "learned_harewell"}]},
+        {"text": "I see.", "next": "hub"}
+      ]
+    },
+    "the_roll_2": {
+      "speaker": "Wren Tallow",
+      "text": "Pellam would say yes. Pellam has said those names at that bell every dawn for fifty years and there are still four of them, so you could equally say it hasn't. I'll tell you what I actually believe, and I'd thank you not to repeat it at the Rest: I think it works on us. I think a village that hears a dead village's name every week keeps its own doors painted.",
+      "effects": [{"set_flag": "wren_roll_doubt"}],
+      "next": "hub"
+    },
+
+    "harewell": {
+      "speaker": "Wren Tallow",
+      "text": "Harewell. On the down between here and Tamwick. Eleven households, a well with a hare cut on the lip, and a woman called Cille who sold hedge-honey at the Merrowby market on Tolldays. I bought honey from her. I cannot tell you what she looked like and I cannot find anyone who can, and last month I walked the down for two days and came back with nothing but a chalk doorstep worn hollow by feet, which is in the Roll room now in a box. You want to know what frightens a Warden? That. Not the barrows. That.",
+      "choices": [
+        {"text": "How does a place just go?", "next": "harewell_2"},
+        {"text": "What happens to people who lived there?", "next": "harewell_3"}
+      ]
+    },
+    "harewell_2": {
+      "speaker": "Wren Tallow",
+      "text": "Quietly, and over about a generation, and everybody's busy. The road stops going there because the carter dies and the new carter has his own route. The Tollday stall isn't taken and nobody notices which one. Then one year the hedge grows across the lane and there's no lane. Nobody does it on purpose. That's what I hate about it. There's nobody to arrest.",
+      "next": "hub"
+    },
+    "harewell_3": {
+      "speaker": "Wren Tallow",
+      "text": "That's the part the books skip. Some of them are elsewhere and have been for years and answer to other place-names now. Some of them are in the barrows, working. And some of them, I think, are simply not, in the way that a word you have forgotten is not. I put that question to a Sayer once. He talked for an hour. I came away knowing less, but more elegantly.",
+      "next": "hub"
+    },
+
+    "why_me": {
+      "speaker": "Wren Tallow",
+      "text": "Three reasons, and you get all three because you'd work them out. One: the Circle charges Wardens double and always has, over a matter from before I was born involving a bridge. Two: a letter is cheaper than a Warden and I'm needed on the Larkbourne road, where the Boys are back. Three, and this is the real one: they'll want to look at you. Somebody walked up the Hushline Stair and a fortnight later the Toll started humming. If I take them the tine, they'll put it in a drawer. If you take them the tine, they'll put you in a chair and talk for three days, and somewhere in the third day one of them will say something true by accident.",
+      "effects": [{"set_flag": "wren_explained_errand"}],
+      "next": "hub"
+    },
+
+    "the_circle": {
+      "speaker": "Wren Tallow",
+      "text": "Three lectures and three answers and every one of them delivered like it's the only one in the building. Don't let it sour you. The Circle is honest in an odd way: they teach all three accounts and forbid you to prefer one out loud, which is more than the Order does and considerably more than I do. Sulion will be right about the bell. Cresswell will be right about the village. Ondrael will be right about the deep places, and she'll look ill while she says it.",
+      "choices": [
+        {"text": "Which do you believe?", "next": "the_circle_2"},
+        {"text": "Noted.", "next": "hub"}
+      ]
+    },
+    "the_circle_2": {
+      "speaker": "Wren Tallow",
+      "text": "The Candle, on weekdays. A village that talks stays warm; I've watched it be true for nineteen years. On Tollday, when I'm at the Rest reading four names aloud to an empty room, I believe the Breath, and I go home early.",
+      "next": "hub"
+    },
+
+    "the_wardens": {
+      "speaker": "Wren Tallow",
+      "text": "Eighty-odd of us across the Vale, a fort at the Rest that's really a waystation with opinions, and one book. We're the law here, which mostly means fines, a cell with a window, and telling two farmers which of them owns a ditch. The Roll is the real work. Everything else is what we do between Tolldays so that we're fit enough to walk to the places on it.",
+      "choices": [
+        {"text": "Could I join?", "next": "the_wardens_2"},
+        {"text": "Who else keeps the Roll?", "next": "the_wardens_3"}
+      ]
+    },
+    "the_wardens_2": {
+      "speaker": "Wren Tallow",
+      "text": "Ask me again when you've done something in this valley that somebody else will describe to a third person. That's not a riddle, it's the actual requirement. A Warden who isn't talked about can't do the job; nobody opens a door to a stranger with a book.",
+      "next": "hub"
+    },
+    "the_wardens_3": {
+      "speaker": "Wren Tallow",
+      "text": "Pellam Ashcombe kept it for forty years and his hands have gone, so I copy for him and he corrects me, which he enjoys enormously. He's up at the crater rim every dawn saying the quiet names to the bell. If you want to understand this valley faster than I can explain it, go and stand next to him at first light and don't talk.",
+      "next": "hub"
+    },
+
+    "mullbourne": {
+      "speaker": "Wren Tallow",
+      "text": "Mullbourne. Say it again. — Mullbourne. Nine households, soft ground, a mill that never worked. That's a year of my life you've just handed back to me in three syllables. Now the hard half. Custom says a found name with nobody living to tend it gets written in fresh ink, read aloud once by a Warden, and struck through, so that it is kept and finished and nobody spends another year walking a down for it. Pellam says a struck name is a place that never was. Pellam is eighty-one and says the names at dawn because the alternative is not saying them.",
+      "choices": [
+        {"text": "Then don't strike it. Let Pellam have it.", "next": "mullbourne_keep"},
+        {"text": "Strike it. Let the walking stop.", "next": "mullbourne_strike"},
+        {"text": "I haven't decided.", "next": "hub"}
+      ]
+    },
+    "mullbourne_keep": {
+      "speaker": "Wren Tallow",
+      "text": "Then it stays open and I keep walking, and one of these years I'll find a doorstep. Fine. Tell him yourself; he'd rather hear it from you, and he'll make you say it twice.",
+      "effects": [{"set_flag": "wren_agreed_keep_mullbourne"}],
+      "next": "hub"
+    },
+    "mullbourne_strike": {
+      "speaker": "Wren Tallow",
+      "text": "Fresh ink, read once, line through. I'll do it on Tollday with the door open so it's witnessed. And I'll be the one who tells Pellam, not you; that's a Warden's job and I'd like to keep one or two of them. He won't speak to me for a season. He'll still correct my copying. That's Pellam.",
+      "effects": [{"set_flag": "wren_agreed_strike_mullbourne"}, {"rep": ["core:faction/wardens", 5]}],
+      "next": "hub"
+    },
+
+    "on_renown": {
+      "speaker": "Wren Tallow",
+      "text": "They are. Bessa Tamwick had a version of you at market that was eight feet tall and Bennick Cresswell has a worse one going round Tollmere. Good. I mean that plainly: it's good. You're a person who came out of the quiet with no rope on them, and every mouth that says your name is another hand on it. Enjoy it, don't believe it, and remember that the ones who spread it can stop.",
+      "choices": [
+        {"text": "Does it go the other way too?", "next": "on_renown_2"},
+        {"text": "I'll try to stay unimpressed with myself.", "next": "hub"}
+      ]
+    },
+    "on_renown_2": {
+      "speaker": "Wren Tallow",
+      "text": "You've seen a Hollow village, have you? Doors barred at noon, dogs sent in, children counted twice. A name can be a rope or a rope can be a thing round a neck, and the valley decides which, not you. I've never seen anyone talk their way out of what they did in front of witnesses. I have seen people outlive it. Takes about a decade and a lot of carrying things for other people.",
+      "conditions": [{"morality_min": -100}],
+      "next": "hub"
+    },
+
+    "the_foundling": {
+      "speaker": "Wren Tallow",
+      "text": "Every night, since you ask, which I wish you hadn't. Here's where I've got to. Either you are someone who was so thoroughly unsaid that there was nothing left to hold you there, and you drifted out the way a boat comes off a slipway. Or something in the south let go of you on purpose and I walked it up the stair by the hand and gave it a name and a cart fare. I've decided to act as though it's the first. If I'm wrong, I'd rather be wrong having been decent about it.",
+      "choices": [
+        {"text": "That's a lot of trust.", "next": "the_foundling_2"},
+        {"text": "It might be the second.", "next": "the_foundling_3"}
+      ]
+    },
+    "the_foundling_2": {
+      "speaker": "Wren Tallow",
+      "text": "It's not trust, it's method. Wardens name things. It's the only tool in the bag. When a thing comes out of the dark, you say what it is as loudly and specifically as you can, in front of other people, and then you all know where you stand with it. That's all I did to you. Don't make me regret the method; I haven't got another.",
+      "next": "hub"
+    },
+    "the_foundling_3": {
+      "speaker": "Wren Tallow",
+      "text": "Then it made one mistake, which was letting go of you in front of a woman with a book. You're written down now. Whatever you were before, there are eleven people in Merrowby who would notice if you stopped coming to market, and that is not nothing. That is, as far as anyone in this valley can tell, the only thing that has ever worked.",
+      "effects": [{"set_flag": "wren_said_the_kind_thing"}, {"renown": 5}],
+      "next": "hub"
+    },
+
+    "bye": {
+      "speaker": "Wren Tallow",
+      "text": "Go on. Mind the road past the mill; the Boys are back and they're getting brave about it.",
+      "next": "hub"
+    }
+  }
+}

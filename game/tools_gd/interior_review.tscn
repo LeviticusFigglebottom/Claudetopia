@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_interior_review"]
+
+[ext_resource type="Script" path="res://tools_gd/interior_review.gd" id="1"]
+
+[node name="InteriorReview" type="Node3D"]
+script = ExtResource("1")
