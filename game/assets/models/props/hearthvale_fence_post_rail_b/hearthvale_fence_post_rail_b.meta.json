@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 1.201,
+  "max": [
+   2.464,
+   1.201,
+   0.924
+  ],
+  "min": [
+   -2.46,
+   0.0,
+   -0.061
+  ],
+  "radius": 2.582
+ },
+ "built_seconds": 22.03,
+ "category": "props",
+ "collision": "hearthvale_fence_post_rail_b_col.glb",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_fence_post_rail_b.glb",
+ "hash": "ce427d319212123f",
+ "kind": "fence_post_rail",
+ "materials": [
+  "hearthvale_fence_post_rail_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_fence_post_rail_b",
+   "tris": 432
+  },
+  {
+   "name": "hearthvale_fence_post_rail_b_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_fence_post_rail_b_LOD2",
+   "tris": 120
+  }
+ ],
+ "modular": true,
+ "module_width_m": 2.4,
+ "name": "hearthvale_fence_post_rail_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 5630,
+ "textures": [
+  "hearthvale_fence_post_rail_b_albedo.png",
+  "hearthvale_fence_post_rail_b_normal.png",
+  "hearthvale_fence_post_rail_b_orm.png"
+ ],
+ "tris": [
+  432,
+  300,
+  120
+ ],
+ "version": 3
+}

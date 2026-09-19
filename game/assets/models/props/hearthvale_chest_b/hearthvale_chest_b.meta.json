@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.524,
+  "max": [
+   0.489,
+   0.524,
+   0.563
+  ],
+  "min": [
+   -0.489,
+   0.0,
+   -0.263
+  ],
+  "radius": 0.692
+ },
+ "built_seconds": 30.12,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_chest_b.glb",
+ "hash": "102c654992748c29",
+ "kind": "chest",
+ "materials": [
+  "hearthvale_chest_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_chest_b",
+   "tris": 1788
+  },
+  {
+   "name": "hearthvale_chest_b_LOD1",
+   "tris": 714
+  },
+  {
+   "name": "hearthvale_chest_b_LOD2",
+   "tris": 268
+  }
+ ],
+ "name": "hearthvale_chest_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 3987,
+ "textures": [
+  "hearthvale_chest_b_albedo.png",
+  "hearthvale_chest_b_normal.png",
+  "hearthvale_chest_b_orm.png"
+ ],
+ "tris": [
+  1788,
+  714,
+  268
+ ],
+ "version": 3
+}

@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.765,
+  "max": [
+   0.519,
+   0.765,
+   0.454
+  ],
+  "min": [
+   -0.45,
+   0.0,
+   -0.446
+  ],
+  "radius": 0.764
+ },
+ "built_seconds": 0.08,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "briarwold_fern_a.glb",
+ "hash": "2814ba300f8ed93e",
+ "kind": "fern",
+ "materials": [
+  "briarwold_fern_a_fern_foliage"
+ ],
+ "materials_used": [
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_fern_a_cards",
+   "tris": 14
+  },
+  {
+   "name": "briarwold_fern_a_cards_LOD1",
+   "tris": 8
+  },
+  {
+   "name": "briarwold_fern_a_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "briarwold_fern_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 2486,
+ "textures": [
+  "briarwold_fern_a_atlas_albedo.png",
+  "briarwold_fern_a_atlas_normal.png",
+  "briarwold_fern_a_atlas_orm.png"
+ ],
+ "tris": [
+  14,
+  8,
+  4
+ ],
+ "version": 3
+}

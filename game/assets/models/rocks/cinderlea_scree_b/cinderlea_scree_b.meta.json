@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.482,
+  "max": [
+   1.98,
+   0.482,
+   1.525
+  ],
+  "min": [
+   -1.725,
+   0.0,
+   -1.573
+  ],
+  "radius": 2.427
+ },
+ "built_seconds": 22.51,
+ "category": "rocks",
+ "collision": "trimesh",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "cinderlea_scree_b.glb",
+ "hash": "ec2db4cc46ee9a60",
+ "kind": "scree",
+ "materials": [
+  "cinderlea_scree_b_mat"
+ ],
+ "materials_used": [
+  "fused_stone"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_scree_b",
+   "tris": 3106
+  },
+  {
+   "name": "cinderlea_scree_b_LOD1",
+   "tris": 1242
+  },
+  {
+   "name": "cinderlea_scree_b_LOD2",
+   "tris": 464
+  }
+ ],
+ "name": "cinderlea_scree_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 1496,
+ "textures": [
+  "cinderlea_scree_b_albedo.png",
+  "cinderlea_scree_b_normal.png",
+  "cinderlea_scree_b_orm.png"
+ ],
+ "tris": [
+  3106,
+  1242,
+  464
+ ],
+ "version": 3
+}

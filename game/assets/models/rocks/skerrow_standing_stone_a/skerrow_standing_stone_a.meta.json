@@ -1,0 +1,82 @@
+{
+ "bounds": {
+  "height": 3.234,
+  "max": [
+   0.829,
+   3.234,
+   0.654
+  ],
+  "min": [
+   -0.838,
+   0.0,
+   -0.686
+  ],
+  "radius": 1.939
+ },
+ "built_seconds": 13.5,
+ "carved": false,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "skerrow_standing_stone_a.glb",
+ "hash": "0b636333649d8e87",
+ "kind": "standing_stone",
+ "materials": [
+  "skerrow_standing_stone_a_mat"
+ ],
+ "materials_used": [
+  "limestone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_standing_stone_a",
+   "tris": 3580
+  },
+  {
+   "name": "skerrow_standing_stone_a_LOD1",
+   "tris": 1432
+  },
+  {
+   "name": "skerrow_standing_stone_a_LOD2",
+   "tris": 536
+  }
+ ],
+ "name": "skerrow_standing_stone_a",
+ "params": {
+  "carved": false
+ },
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 1691,
+ "textures": [
+  "skerrow_standing_stone_a_albedo.png",
+  "skerrow_standing_stone_a_normal.png",
+  "skerrow_standing_stone_a_orm.png"
+ ],
+ "tris": [
+  3580,
+  1432,
+  536
+ ],
+ "version": 3
+}

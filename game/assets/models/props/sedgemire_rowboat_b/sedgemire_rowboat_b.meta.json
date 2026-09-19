@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.658,
+  "max": [
+   1.787,
+   0.658,
+   1.168
+  ],
+  "min": [
+   -1.787,
+   0.0,
+   -1.172
+  ],
+  "radius": 2.161
+ },
+ "built_seconds": 12.93,
+ "category": "props",
+ "collision": "sedgemire_rowboat_b_col.glb",
+ "collision_params": {},
+ "floats": true,
+ "generator": "gen_props",
+ "glb": "sedgemire_rowboat_b.glb",
+ "hash": "307430af5fa6765a",
+ "kind": "rowboat",
+ "materials": [
+  "sedgemire_rowboat_b_mat"
+ ],
+ "materials_used": [
+  "driftwood"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_rowboat_b",
+   "tris": 2980
+  },
+  {
+   "name": "sedgemire_rowboat_b_LOD1",
+   "tris": 1192
+  },
+  {
+   "name": "sedgemire_rowboat_b_LOD2",
+   "tris": 446
+  }
+ ],
+ "name": "sedgemire_rowboat_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 6054,
+ "textures": [
+  "sedgemire_rowboat_b_albedo.png",
+  "sedgemire_rowboat_b_normal.png",
+  "sedgemire_rowboat_b_orm.png"
+ ],
+ "tris": [
+  2980,
+  1192,
+  446
+ ],
+ "version": 3
+}

@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.011,
+  "max": [
+   0.607,
+   1.011,
+   0.144
+  ],
+  "min": [
+   -0.607,
+   0.0,
+   -0.144
+  ],
+  "radius": 0.803
+ },
+ "built_seconds": 16.8,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_shelf_a.glb",
+ "hash": "3a4d7b844a89db11",
+ "kind": "shelf",
+ "materials": [
+  "hearthvale_shelf_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_shelf_a",
+   "tris": 1740
+  },
+  {
+   "name": "hearthvale_shelf_a_LOD1",
+   "tris": 696
+  },
+  {
+   "name": "hearthvale_shelf_a_LOD2",
+   "tris": 260
+  }
+ ],
+ "name": "hearthvale_shelf_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4553,
+ "textures": [
+  "hearthvale_shelf_a_albedo.png",
+  "hearthvale_shelf_a_normal.png",
+  "hearthvale_shelf_a_orm.png"
+ ],
+ "tris": [
+  1740,
+  696,
+  260
+ ],
+ "version": 3
+}

@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 6.736,
+  "max": [
+   4.172,
+   6.736,
+   0.64
+  ],
+  "min": [
+   -4.987,
+   0.0,
+   -0.844
+  ],
+  "radius": 5.733
+ },
+ "built_seconds": 9.95,
+ "category": "rocks",
+ "collision": "skerrow_bone_rib_c_col.glb",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "skerrow_bone_rib_c.glb",
+ "hash": "9ccaee7e4c19b5cc",
+ "kind": "bone_rib",
+ "materials": [
+  "skerrow_bone_rib_c_mat"
+ ],
+ "materials_used": [
+  "bone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_bone_rib_c",
+   "tris": 656
+  },
+  {
+   "name": "skerrow_bone_rib_c_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "skerrow_bone_rib_c_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "skerrow_bone_rib_c",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 1778,
+ "textures": [
+  "skerrow_bone_rib_c_albedo.png",
+  "skerrow_bone_rib_c_normal.png",
+  "skerrow_bone_rib_c_orm.png"
+ ],
+ "tris": [
+  656,
+  300,
+  120
+ ],
+ "version": 3
+}

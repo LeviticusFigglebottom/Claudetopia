@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.333,
+  "max": [
+   0.565,
+   1.333,
+   0.501
+  ],
+  "min": [
+   -0.504,
+   0.0,
+   -0.501
+  ],
+  "radius": 0.99
+ },
+ "built_seconds": 36.96,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "cinderlea_bell_medium_a.glb",
+ "hash": "847b31cc378719a5",
+ "kind": "bell_medium",
+ "materials": [
+  "cinderlea_bell_medium_a_mat"
+ ],
+ "materials_used": [
+  "bell_bronze_patina",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_bell_medium_a",
+   "tris": 2128
+  },
+  {
+   "name": "cinderlea_bell_medium_a_LOD1",
+   "tris": 850
+  },
+  {
+   "name": "cinderlea_bell_medium_a_LOD2",
+   "tris": 317
+  }
+ ],
+ "name": "cinderlea_bell_medium_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 6302,
+ "textures": [
+  "cinderlea_bell_medium_a_albedo.png",
+  "cinderlea_bell_medium_a_normal.png",
+  "cinderlea_bell_medium_a_orm.png"
+ ],
+ "tris": [
+  2128,
+  850,
+  317
+ ],
+ "version": 3
+}

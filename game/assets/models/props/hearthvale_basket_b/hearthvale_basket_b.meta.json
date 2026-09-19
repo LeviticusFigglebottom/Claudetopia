@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.4,
+  "max": [
+   0.269,
+   0.4,
+   0.267
+  ],
+  "min": [
+   -0.269,
+   0.0,
+   -0.267
+  ],
+  "radius": 0.428
+ },
+ "built_seconds": 9.13,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_basket_b.glb",
+ "hash": "cac3f5a8ae4dbadc",
+ "kind": "basket",
+ "materials": [
+  "hearthvale_basket_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_basket_b",
+   "tris": 6206
+  },
+  {
+   "name": "hearthvale_basket_b_LOD1",
+   "tris": 2482
+  },
+  {
+   "name": "hearthvale_basket_b_LOD2",
+   "tris": 913
+  }
+ ],
+ "name": "hearthvale_basket_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 3828,
+ "textures": [
+  "hearthvale_basket_b_albedo.png",
+  "hearthvale_basket_b_normal.png",
+  "hearthvale_basket_b_orm.png"
+ ],
+ "tris": [
+  6206,
+  2482,
+  913
+ ],
+ "version": 3
+}

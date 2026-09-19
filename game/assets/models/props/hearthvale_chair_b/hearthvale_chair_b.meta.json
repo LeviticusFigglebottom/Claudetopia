@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 1.054,
+  "max": [
+   0.226,
+   1.054,
+   0.225
+  ],
+  "min": [
+   -0.227,
+   0.0,
+   -0.225
+  ],
+  "radius": 0.616
+ },
+ "built_seconds": 15.27,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_chair_b.glb",
+ "hash": "59a5c1de6a0e8671",
+ "kind": "chair",
+ "materials": [
+  "hearthvale_chair_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_chair_b",
+   "tris": 1784
+  },
+  {
+   "name": "hearthvale_chair_b_LOD1",
+   "tris": 712
+  },
+  {
+   "name": "hearthvale_chair_b_LOD2",
+   "tris": 266
+  }
+ ],
+ "name": "hearthvale_chair_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4411,
+ "textures": [
+  "hearthvale_chair_b_albedo.png",
+  "hearthvale_chair_b_normal.png",
+  "hearthvale_chair_b_orm.png"
+ ],
+ "tris": [
+  1784,
+  712,
+  266
+ ],
+ "version": 3
+}

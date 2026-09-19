@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 0.484,
+  "max": [
+   0.585,
+   0.484,
+   0.242
+  ],
+  "min": [
+   -0.586,
+   0.0,
+   -0.234
+  ],
+  "radius": 0.677
+ },
+ "built_seconds": 15.38,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "cinderlea_bedroll_a.glb",
+ "hash": "59682a4c50a7de5a",
+ "kind": "bedroll",
+ "materials": [
+  "cinderlea_bedroll_a_mat"
+ ],
+ "materials_used": [
+  "dyed_cloth",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_bedroll_a",
+   "tris": 524
+  },
+  {
+   "name": "cinderlea_bedroll_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "cinderlea_bedroll_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "cinderlea_bedroll_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "rolled": true,
+ "seed": 6143,
+ "textures": [
+  "cinderlea_bedroll_a_albedo.png",
+  "cinderlea_bedroll_a_normal.png",
+  "cinderlea_bedroll_a_orm.png"
+ ],
+ "tris": [
+  524,
+  300,
+  120
+ ],
+ "version": 3
+}

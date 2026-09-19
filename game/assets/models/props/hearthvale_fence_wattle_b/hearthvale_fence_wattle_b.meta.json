@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 1.226,
+  "max": [
+   1.781,
+   1.226,
+   0.046
+  ],
+  "min": [
+   -1.78,
+   0.0,
+   -0.049
+  ],
+  "radius": 1.884
+ },
+ "built_seconds": 9.6,
+ "category": "props",
+ "collision": "hearthvale_fence_wattle_b_col.glb",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_fence_wattle_b.glb",
+ "hash": "dd95f41440ea2f6d",
+ "kind": "fence_wattle",
+ "materials": [
+  "hearthvale_fence_wattle_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_fence_wattle_b",
+   "tris": 3448
+  },
+  {
+   "name": "hearthvale_fence_wattle_b_LOD1",
+   "tris": 1378
+  },
+  {
+   "name": "hearthvale_fence_wattle_b_LOD2",
+   "tris": 508
+  }
+ ],
+ "modular": true,
+ "module_width_m": 2.0,
+ "name": "hearthvale_fence_wattle_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 5577,
+ "textures": [
+  "hearthvale_fence_wattle_b_albedo.png",
+  "hearthvale_fence_wattle_b_normal.png",
+  "hearthvale_fence_wattle_b_orm.png"
+ ],
+ "tris": [
+  3448,
+  1378,
+  508
+ ],
+ "version": 3
+}

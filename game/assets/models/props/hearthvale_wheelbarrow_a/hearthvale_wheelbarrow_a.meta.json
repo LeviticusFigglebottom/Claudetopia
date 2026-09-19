@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.658,
+  "max": [
+   0.935,
+   0.658,
+   0.404
+  ],
+  "min": [
+   -0.999,
+   0.0,
+   -0.404
+  ],
+  "radius": 1.098
+ },
+ "built_seconds": 36.39,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_wheelbarrow_a.glb",
+ "hash": "58764146dca7bb45",
+ "kind": "wheelbarrow",
+ "materials": [
+  "hearthvale_wheelbarrow_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_wheelbarrow_a",
+   "tris": 1080
+  },
+  {
+   "name": "hearthvale_wheelbarrow_a_LOD1",
+   "tris": 432
+  },
+  {
+   "name": "hearthvale_wheelbarrow_a_LOD2",
+   "tris": 162
+  }
+ ],
+ "name": "hearthvale_wheelbarrow_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 5242,
+ "textures": [
+  "hearthvale_wheelbarrow_a_albedo.png",
+  "hearthvale_wheelbarrow_a_normal.png",
+  "hearthvale_wheelbarrow_a_orm.png"
+ ],
+ "tris": [
+  1080,
+  432,
+  162
+ ],
+ "version": 3
+}

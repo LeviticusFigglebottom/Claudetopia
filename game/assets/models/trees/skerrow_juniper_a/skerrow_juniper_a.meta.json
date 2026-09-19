@@ -1,0 +1,102 @@
+{
+ "bounds": {
+  "height": 1.35,
+  "max": [
+   1.156,
+   1.35,
+   1.082
+  ],
+  "min": [
+   -1.334,
+   0.0,
+   -1.184
+  ],
+  "radius": 1.814
+ },
+ "built_seconds": 2.61,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 1.34,
+  "radius": 1.373
+ },
+ "generator": "gen_trees",
+ "glb": "skerrow_juniper_a.glb",
+ "hash": "cf5f0f5f88b7a1b0",
+ "height_m": 1.87,
+ "kind": "juniper",
+ "materials": [
+  "skerrow_juniper_a_leaf_foliage",
+  "skerrow_juniper_a_mat",
+  "skerrow_juniper_a_impostor_foliage"
+ ],
+ "materials_used": [
+  "pine_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_juniper_a_cards",
+   "tris": 1520
+  },
+  {
+   "name": "skerrow_juniper_a",
+   "tris": 5000
+  },
+  {
+   "name": "skerrow_juniper_a_LOD2",
+   "tris": 4
+  },
+  {
+   "name": "skerrow_juniper_a_LOD1",
+   "tris": 3818
+  },
+  {
+   "name": "skerrow_juniper_a_cards_LOD1",
+   "tris": 684
+  }
+ ],
+ "name": "skerrow_juniper_a",
+ "params": {},
+ "region": "skerrow",
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 525,
+ "species": "juniper",
+ "textures": [
+  "skerrow_juniper_a_albedo.png",
+  "skerrow_juniper_a_normal.png",
+  "skerrow_juniper_a_orm.png",
+  "skerrow_juniper_a_leaf_albedo.png",
+  "skerrow_juniper_a_leaf_normal.png",
+  "skerrow_juniper_a_leaf_orm.png",
+  "skerrow_juniper_a_impostor_albedo.png",
+  "skerrow_juniper_a_impostor_normal.png",
+  "skerrow_juniper_a_impostor_orm.png"
+ ],
+ "tris": [
+  6520,
+  4502,
+  4
+ ],
+ "version": 3
+}

@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 0.282,
+  "max": [
+   0.116,
+   0.282,
+   0.115
+  ],
+  "min": [
+   -0.116,
+   0.0,
+   -0.115
+  ],
+  "radius": 0.216
+ },
+ "built_seconds": 7.08,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_bell_small_b.glb",
+ "hangs": true,
+ "hash": "027883752ed18abe",
+ "kind": "bell_small",
+ "materials": [
+  "hearthvale_bell_small_b_mat"
+ ],
+ "materials_used": [
+  "bell_bronze_patina",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_bell_small_b",
+   "tris": 2292
+  },
+  {
+   "name": "hearthvale_bell_small_b_LOD1",
+   "tris": 916
+  },
+  {
+   "name": "hearthvale_bell_small_b_LOD2",
+   "tris": 341
+  }
+ ],
+ "name": "hearthvale_bell_small_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 6266,
+ "textures": [
+  "hearthvale_bell_small_b_albedo.png",
+  "hearthvale_bell_small_b_normal.png",
+  "hearthvale_bell_small_b_orm.png"
+ ],
+ "tris": [
+  2292,
+  916,
+  341
+ ],
+ "version": 3
+}

@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.091,
+  "max": [
+   0.727,
+   0.091,
+   0.727
+  ],
+  "min": [
+   -0.727,
+   0.0,
+   -0.727
+  ],
+  "radius": 1.029
+ },
+ "built_seconds": 39.74,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "sedgemire_moss_patch_a.glb",
+ "hash": "ee9843c15273db2c",
+ "kind": "moss_patch",
+ "materials": [
+  "sedgemire_moss_patch_a_mat"
+ ],
+ "materials_used": [
+  "moss"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_moss_patch_a",
+   "tris": 242
+  },
+  {
+   "name": "sedgemire_moss_patch_a_LOD1",
+   "tris": 242
+  },
+  {
+   "name": "sedgemire_moss_patch_a_LOD2",
+   "tris": 119
+  }
+ ],
+ "name": "sedgemire_moss_patch_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 3334,
+ "textures": [
+  "sedgemire_moss_patch_a_albedo.png",
+  "sedgemire_moss_patch_a_normal.png",
+  "sedgemire_moss_patch_a_orm.png"
+ ],
+ "tris": [
+  242,
+  242,
+  119
+ ],
+ "version": 3
+}

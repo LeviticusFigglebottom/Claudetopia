@@ -1,0 +1,102 @@
+{
+ "bounds": {
+  "height": 9.889,
+  "max": [
+   4.737,
+   9.889,
+   5.508
+  ],
+  "min": [
+   -5.888,
+   0.0,
+   -4.927
+  ],
+  "radius": 8.938
+ },
+ "built_seconds": 2.84,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 9.63,
+  "radius": 2.746
+ },
+ "generator": "gen_trees",
+ "glb": "brightwater_lime_b.glb",
+ "hash": "cca56fba1f9bfcd7",
+ "height_m": 9.0,
+ "kind": "lime",
+ "materials": [
+  "brightwater_lime_b_leaf_foliage",
+  "brightwater_lime_b_mat",
+  "brightwater_lime_b_impostor_foliage"
+ ],
+ "materials_used": [
+  "oak_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "brightwater_lime_b_cards",
+   "tris": 2300
+  },
+  {
+   "name": "brightwater_lime_b",
+   "tris": 5000
+  },
+  {
+   "name": "brightwater_lime_b_LOD2",
+   "tris": 4
+  },
+  {
+   "name": "brightwater_lime_b_LOD1",
+   "tris": 3640
+  },
+  {
+   "name": "brightwater_lime_b_cards_LOD1",
+   "tris": 1034
+  }
+ ],
+ "name": "brightwater_lime_b",
+ "params": {},
+ "region": "brightwater",
+ "region_palette": {
+  "colors": [
+   "#3f7fb5",
+   "#f1ece0",
+   "#5d6470",
+   "#b08a3e",
+   "#c76a44",
+   "#274a6b"
+  ],
+  "id": "core:region/brightwater",
+  "roles": {
+   "accent": "#c76a44",
+   "cool": "#3f7fb5",
+   "dark": "#274a6b",
+   "earth": "#c76a44",
+   "green": "#f1ece0",
+   "light": "#f1ece0",
+   "mid": "#c76a44",
+   "warm": "#c76a44"
+  }
+ },
+ "seed": 860,
+ "species": "lime",
+ "textures": [
+  "brightwater_lime_b_albedo.png",
+  "brightwater_lime_b_normal.png",
+  "brightwater_lime_b_orm.png",
+  "brightwater_lime_b_leaf_albedo.png",
+  "brightwater_lime_b_leaf_normal.png",
+  "brightwater_lime_b_leaf_orm.png",
+  "brightwater_lime_b_impostor_albedo.png",
+  "brightwater_lime_b_impostor_normal.png",
+  "brightwater_lime_b_impostor_orm.png"
+ ],
+ "tris": [
+  7300,
+  4674,
+  4
+ ],
+ "version": 3
+}

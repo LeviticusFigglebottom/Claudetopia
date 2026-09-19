@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 1.741,
+  "max": [
+   1.82,
+   1.741,
+   1.322
+  ],
+  "min": [
+   -1.316,
+   0.0,
+   -1.462
+  ],
+  "radius": 2.271
+ },
+ "built_seconds": 15.18,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "brightwater_boulder_a.glb",
+ "hash": "3f6351cb5f6b633b",
+ "kind": "boulder",
+ "materials": [
+  "brightwater_boulder_a_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "brightwater_boulder_a",
+   "tris": 2552
+  },
+  {
+   "name": "brightwater_boulder_a_LOD1",
+   "tris": 1020
+  },
+  {
+   "name": "brightwater_boulder_a_LOD2",
+   "tris": 382
+  }
+ ],
+ "name": "brightwater_boulder_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#3f7fb5",
+   "#f1ece0",
+   "#5d6470",
+   "#b08a3e",
+   "#c76a44",
+   "#274a6b"
+  ],
+  "id": "core:region/brightwater",
+  "roles": {
+   "accent": "#c76a44",
+   "cool": "#3f7fb5",
+   "dark": "#274a6b",
+   "earth": "#c76a44",
+   "green": "#f1ece0",
+   "light": "#f1ece0",
+   "mid": "#c76a44",
+   "warm": "#c76a44"
+  }
+ },
+ "seed": 1108,
+ "textures": [
+  "brightwater_boulder_a_albedo.png",
+  "brightwater_boulder_a_normal.png",
+  "brightwater_boulder_a_orm.png"
+ ],
+ "tris": [
+  2552,
+  1020,
+  382
+ ],
+ "version": 3
+}

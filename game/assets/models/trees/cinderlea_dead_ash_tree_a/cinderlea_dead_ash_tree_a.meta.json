@@ -1,0 +1,90 @@
+{
+ "bounds": {
+  "height": 10.024,
+  "max": [
+   4.932,
+   10.024,
+   6.17
+  ],
+  "min": [
+   -5.703,
+   0.0,
+   -5.835
+  ],
+  "radius": 9.457
+ },
+ "built_seconds": 2.75,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 10.02,
+  "radius": 5.312
+ },
+ "generator": "gen_trees",
+ "glb": "cinderlea_dead_ash_tree_a.glb",
+ "hash": "dddf8a5e83ab6aa5",
+ "height_m": 8.62,
+ "kind": "dead_ash_tree",
+ "materials": [
+  "cinderlea_dead_ash_tree_a_mat",
+  "cinderlea_dead_ash_tree_a_impostor_foliage"
+ ],
+ "materials_used": [
+  "dead_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_dead_ash_tree_a",
+   "tris": 6156
+  },
+  {
+   "name": "cinderlea_dead_ash_tree_a_LOD2",
+   "tris": 4
+  },
+  {
+   "name": "cinderlea_dead_ash_tree_a_LOD1",
+   "tris": 5332
+  }
+ ],
+ "name": "cinderlea_dead_ash_tree_a",
+ "params": {},
+ "region": "cinderlea",
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 684,
+ "species": "dead_ash_tree",
+ "textures": [
+  "cinderlea_dead_ash_tree_a_albedo.png",
+  "cinderlea_dead_ash_tree_a_normal.png",
+  "cinderlea_dead_ash_tree_a_orm.png",
+  "cinderlea_dead_ash_tree_a_impostor_albedo.png",
+  "cinderlea_dead_ash_tree_a_impostor_normal.png",
+  "cinderlea_dead_ash_tree_a_impostor_orm.png"
+ ],
+ "tris": [
+  6156,
+  5332,
+  4
+ ],
+ "version": 3
+}

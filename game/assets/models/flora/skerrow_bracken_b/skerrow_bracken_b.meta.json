@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.924,
+  "max": [
+   0.602,
+   0.924,
+   0.572
+  ],
+  "min": [
+   -0.631,
+   0.0,
+   -0.704
+  ],
+  "radius": 1.0
+ },
+ "built_seconds": 0.24,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "skerrow_bracken_b.glb",
+ "hash": "62f9b029cd4e6563",
+ "kind": "bracken",
+ "materials": [
+  "skerrow_bracken_b_bracken_foliage"
+ ],
+ "materials_used": [
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_bracken_b_cards",
+   "tris": 10
+  },
+  {
+   "name": "skerrow_bracken_b_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "skerrow_bracken_b_cards_LOD2",
+   "tris": 2
+  }
+ ],
+ "name": "skerrow_bracken_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 2662,
+ "textures": [
+  "skerrow_bracken_b_atlas_albedo.png",
+  "skerrow_bracken_b_atlas_normal.png",
+  "skerrow_bracken_b_atlas_orm.png"
+ ],
+ "tris": [
+  10,
+  6,
+  2
+ ],
+ "version": 3
+}

@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.497,
+  "max": [
+   0.352,
+   0.497,
+   0.362
+  ],
+  "min": [
+   -0.362,
+   0.0,
+   -0.386
+  ],
+  "radius": 0.574
+ },
+ "built_seconds": 0.16,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "cinderlea_grey_grass_b.glb",
+ "hash": "dd3728c218fc0604",
+ "kind": "grey_grass",
+ "materials": [
+  "cinderlea_grey_grass_b_greygrass_foliage"
+ ],
+ "materials_used": [
+  "grass_blades"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_grey_grass_b_cards",
+   "tris": 10
+  },
+  {
+   "name": "cinderlea_grey_grass_b_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "cinderlea_grey_grass_b_cards_LOD2",
+   "tris": 2
+  }
+ ],
+ "name": "cinderlea_grey_grass_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 2238,
+ "textures": [
+  "cinderlea_grey_grass_b_atlas_albedo.png",
+  "cinderlea_grey_grass_b_atlas_normal.png",
+  "cinderlea_grey_grass_b_atlas_orm.png"
+ ],
+ "tris": [
+  10,
+  6,
+  2
+ ],
+ "version": 3
+}

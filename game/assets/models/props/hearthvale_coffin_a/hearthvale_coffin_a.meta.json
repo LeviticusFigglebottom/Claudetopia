@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.803,
+  "max": [
+   1.126,
+   0.803,
+   0.284
+  ],
+  "min": [
+   -1.126,
+   0.0,
+   -0.283
+  ],
+  "radius": 1.228
+ },
+ "built_seconds": 20.91,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_coffin_a.glb",
+ "hash": "5f28f2a4ab0d85c2",
+ "kind": "coffin",
+ "materials": [
+  "hearthvale_coffin_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_coffin_a",
+   "tris": 1836
+  },
+  {
+   "name": "hearthvale_coffin_a_LOD1",
+   "tris": 734
+  },
+  {
+   "name": "hearthvale_coffin_a_LOD2",
+   "tris": 274
+  }
+ ],
+ "name": "hearthvale_coffin_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 6408,
+ "textures": [
+  "hearthvale_coffin_a_albedo.png",
+  "hearthvale_coffin_a_normal.png",
+  "hearthvale_coffin_a_orm.png"
+ ],
+ "tris": [
+  1836,
+  734,
+  274
+ ],
+ "version": 3
+}

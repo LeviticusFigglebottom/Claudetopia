@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 2.164,
+  "max": [
+   0.799,
+   2.164,
+   0.559
+  ],
+  "min": [
+   -0.596,
+   0.0,
+   -0.614
+  ],
+  "radius": 1.414
+ },
+ "built_seconds": 9.57,
+ "carved": true,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "briarwold_standing_stone_a.glb",
+ "hash": "19edfbb1df13dfa8",
+ "kind": "standing_stone",
+ "materials": [
+  "briarwold_standing_stone_a_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_standing_stone_a",
+   "tris": 2425
+  },
+  {
+   "name": "briarwold_standing_stone_a_LOD1",
+   "tris": 967
+  },
+  {
+   "name": "briarwold_standing_stone_a_LOD2",
+   "tris": 361
+  }
+ ],
+ "name": "briarwold_standing_stone_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 1585,
+ "textures": [
+  "briarwold_standing_stone_a_albedo.png",
+  "briarwold_standing_stone_a_normal.png",
+  "briarwold_standing_stone_a_orm.png"
+ ],
+ "tris": [
+  2425,
+  967,
+  361
+ ],
+ "version": 3
+}

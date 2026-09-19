@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.006,
+  "max": [
+   0.586,
+   0.006,
+   0.586
+  ],
+  "min": [
+   -0.586,
+   0.0,
+   -0.586
+  ],
+  "radius": 0.828
+ },
+ "built_seconds": 18.81,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "skerrow_lichen_crust_b.glb",
+ "hash": "c70d1890a301bea7",
+ "kind": "lichen_crust",
+ "materials": [
+  "skerrow_lichen_crust_b_mat"
+ ],
+ "materials_used": [
+  "moss"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_lichen_crust_b",
+   "tris": 98
+  },
+  {
+   "name": "skerrow_lichen_crust_b_LOD1",
+   "tris": 98
+  },
+  {
+   "name": "skerrow_lichen_crust_b_LOD2",
+   "tris": 98
+  }
+ ],
+ "name": "skerrow_lichen_crust_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 3510,
+ "textures": [
+  "skerrow_lichen_crust_b_albedo.png",
+  "skerrow_lichen_crust_b_normal.png",
+  "skerrow_lichen_crust_b_orm.png"
+ ],
+ "tris": [
+  98,
+  98,
+  98
+ ],
+ "version": 3
+}

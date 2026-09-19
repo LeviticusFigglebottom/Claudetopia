@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 2.363,
+  "max": [
+   1.817,
+   2.363,
+   1.66
+  ],
+  "min": [
+   -2.024,
+   0.0,
+   -1.717
+  ],
+  "radius": 2.817
+ },
+ "built_seconds": 38.02,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "sedgemire_boulder_b.glb",
+ "hash": "67c851f819c76ae4",
+ "kind": "boulder",
+ "materials": [
+  "sedgemire_boulder_b_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_boulder_b",
+   "tris": 2578
+  },
+  {
+   "name": "sedgemire_boulder_b_LOD1",
+   "tris": 1030
+  },
+  {
+   "name": "sedgemire_boulder_b_LOD2",
+   "tris": 386
+  }
+ ],
+ "name": "sedgemire_boulder_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 1178,
+ "textures": [
+  "sedgemire_boulder_b_albedo.png",
+  "sedgemire_boulder_b_normal.png",
+  "sedgemire_boulder_b_orm.png"
+ ],
+ "tris": [
+  2578,
+  1030,
+  386
+ ],
+ "version": 3
+}

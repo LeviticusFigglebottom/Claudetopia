@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.204,
+  "max": [
+   0.1,
+   0.204,
+   0.143
+  ],
+  "min": [
+   -0.1,
+   0.0,
+   -0.143
+  ],
+  "radius": 0.202
+ },
+ "built_seconds": 18.13,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_book_stack_a.glb",
+ "hash": "68e792802358e238",
+ "kind": "book_stack",
+ "materials": [
+  "hearthvale_book_stack_a_mat"
+ ],
+ "materials_used": [
+  "leather",
+  "parchment"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_book_stack_a",
+   "tris": 1296
+  },
+  {
+   "name": "hearthvale_book_stack_a_LOD1",
+   "tris": 518
+  },
+  {
+   "name": "hearthvale_book_stack_a_LOD2",
+   "tris": 194
+  }
+ ],
+ "name": "hearthvale_book_stack_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 5454,
+ "textures": [
+  "hearthvale_book_stack_a_albedo.png",
+  "hearthvale_book_stack_a_normal.png",
+  "hearthvale_book_stack_a_orm.png"
+ ],
+ "tris": [
+  1296,
+  518,
+  194
+ ],
+ "version": 3
+}

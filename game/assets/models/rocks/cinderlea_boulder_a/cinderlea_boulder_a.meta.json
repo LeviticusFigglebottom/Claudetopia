@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 2.981,
+  "max": [
+   1.952,
+   2.981,
+   2.062
+  ],
+  "min": [
+   -2.525,
+   0.0,
+   -1.456
+  ],
+  "radius": 3.213
+ },
+ "built_seconds": 36.06,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "cinderlea_boulder_a.glb",
+ "hash": "e9b7994c4c4fab3c",
+ "kind": "boulder",
+ "materials": [
+  "cinderlea_boulder_a_mat"
+ ],
+ "materials_used": [
+  "fused_stone"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_boulder_a",
+   "tris": 2822
+  },
+  {
+   "name": "cinderlea_boulder_a_LOD1",
+   "tris": 1128
+  },
+  {
+   "name": "cinderlea_boulder_a_LOD2",
+   "tris": 422
+  }
+ ],
+ "name": "cinderlea_boulder_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 1055,
+ "textures": [
+  "cinderlea_boulder_a_albedo.png",
+  "cinderlea_boulder_a_normal.png",
+  "cinderlea_boulder_a_orm.png"
+ ],
+ "tris": [
+  2822,
+  1128,
+  422
+ ],
+ "version": 3
+}

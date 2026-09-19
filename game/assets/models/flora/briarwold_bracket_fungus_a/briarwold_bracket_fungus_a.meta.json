@@ -1,0 +1,80 @@
+{
+ "attaches_to": "trunk",
+ "bounds": {
+  "height": 1.01,
+  "max": [
+   0.667,
+   1.096,
+   0.977
+  ],
+  "min": [
+   -0.88,
+   0.086,
+   0.058
+  ],
+  "radius": 1.032
+ },
+ "built_seconds": 0.18,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "briarwold_bracket_fungus_a.glb",
+ "hash": "a34614fc4610d3c5",
+ "kind": "bracket_fungus",
+ "materials": [
+  "briarwold_bracket_fungus_a_fungus_foliage"
+ ],
+ "materials_used": [
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_bracket_fungus_a_cards",
+   "tris": 10
+  },
+  {
+   "name": "briarwold_bracket_fungus_a_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "briarwold_bracket_fungus_a_cards_LOD2",
+   "tris": 2
+  }
+ ],
+ "name": "briarwold_bracket_fungus_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 3122,
+ "textures": [
+  "briarwold_bracket_fungus_a_atlas_albedo.png",
+  "briarwold_bracket_fungus_a_atlas_normal.png",
+  "briarwold_bracket_fungus_a_atlas_orm.png"
+ ],
+ "tris": [
+  10,
+  6,
+  2
+ ],
+ "version": 3
+}

@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.034,
+  "max": [
+   0.121,
+   0.034,
+   0.121
+  ],
+  "min": [
+   -0.121,
+   0.0,
+   -0.121
+  ],
+  "radius": 0.172
+ },
+ "built_seconds": 3.17,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_plate_a.glb",
+ "hash": "58ac174fb5a77e09",
+ "kind": "plate",
+ "materials": [
+  "hearthvale_plate_a_mat"
+ ],
+ "materials_used": [
+  "ceramic"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_plate_a",
+   "tris": 336
+  },
+  {
+   "name": "hearthvale_plate_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_plate_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_plate_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4076,
+ "textures": [
+  "hearthvale_plate_a_albedo.png",
+  "hearthvale_plate_a_normal.png",
+  "hearthvale_plate_a_orm.png"
+ ],
+ "tris": [
+  336,
+  300,
+  120
+ ],
+ "version": 3
+}

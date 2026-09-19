@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.393,
+  "max": [
+   1.892,
+   0.393,
+   1.566
+  ],
+  "min": [
+   -1.447,
+   0.0,
+   -1.201
+  ],
+  "radius": 2.177
+ },
+ "built_seconds": 12.7,
+ "category": "rocks",
+ "collision": "trimesh",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "briarwold_scree_a.glb",
+ "hash": "139682bc5220521c",
+ "kind": "scree",
+ "materials": [
+  "briarwold_scree_a_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_scree_a",
+   "tris": 2600
+  },
+  {
+   "name": "briarwold_scree_a_LOD1",
+   "tris": 1040
+  },
+  {
+   "name": "briarwold_scree_a_LOD2",
+   "tris": 390
+  }
+ ],
+ "name": "briarwold_scree_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 1532,
+ "textures": [
+  "briarwold_scree_a_albedo.png",
+  "briarwold_scree_a_normal.png",
+  "briarwold_scree_a_orm.png"
+ ],
+ "tris": [
+  2600,
+  1040,
+  390
+ ],
+ "version": 3
+}

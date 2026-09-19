@@ -1,0 +1,90 @@
+{
+ "bounds": {
+  "height": 0.702,
+  "max": [
+   0.107,
+   0.702,
+   0.117
+  ],
+  "min": [
+   -0.127,
+   0.0,
+   -0.163
+  ],
+  "radius": 0.395
+ },
+ "built_seconds": 5.77,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 0.7,
+  "radius": 0.12
+ },
+ "generator": "gen_trees",
+ "glb": "cinderlea_char_stump_a.glb",
+ "hash": "65b2c9b97f0390b3",
+ "height_m": 1.62,
+ "kind": "char_stump",
+ "materials": [
+  "cinderlea_char_stump_a_mat",
+  "cinderlea_char_stump_a_impostor_foliage"
+ ],
+ "materials_used": [
+  "dead_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_char_stump_a",
+   "tris": 2676
+  },
+  {
+   "name": "cinderlea_char_stump_a_LOD2",
+   "tris": 4
+  },
+  {
+   "name": "cinderlea_char_stump_a_LOD1",
+   "tris": 855
+  }
+ ],
+ "name": "cinderlea_char_stump_a",
+ "params": {},
+ "region": "cinderlea",
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 737,
+ "species": "char_stump",
+ "textures": [
+  "cinderlea_char_stump_a_albedo.png",
+  "cinderlea_char_stump_a_normal.png",
+  "cinderlea_char_stump_a_orm.png",
+  "cinderlea_char_stump_a_impostor_albedo.png",
+  "cinderlea_char_stump_a_impostor_normal.png",
+  "cinderlea_char_stump_a_impostor_orm.png"
+ ],
+ "tris": [
+  2676,
+  855,
+  4
+ ],
+ "version": 3
+}

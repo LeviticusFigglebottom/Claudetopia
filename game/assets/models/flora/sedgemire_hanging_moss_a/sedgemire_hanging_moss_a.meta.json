@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 2.069,
+  "max": [
+   0.451,
+   0.399,
+   0.483
+  ],
+  "min": [
+   -0.47,
+   -1.67,
+   -0.508
+  ],
+  "radius": 1.236
+ },
+ "built_seconds": 0.36,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "sedgemire_hanging_moss_a.glb",
+ "hangs": true,
+ "hash": "140a741e55d8bb20",
+ "kind": "hanging_moss",
+ "materials": [
+  "sedgemire_hanging_moss_a_moss_foliage"
+ ],
+ "materials_used": [
+  "moss"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_hanging_moss_a_cards",
+   "tris": 8
+  },
+  {
+   "name": "sedgemire_hanging_moss_a_cards_LOD1",
+   "tris": 4
+  },
+  {
+   "name": "sedgemire_hanging_moss_a_cards_LOD2",
+   "tris": 2
+  }
+ ],
+ "name": "sedgemire_hanging_moss_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 3228,
+ "textures": [
+  "sedgemire_hanging_moss_a_atlas_albedo.png",
+  "sedgemire_hanging_moss_a_atlas_normal.png",
+  "sedgemire_hanging_moss_a_atlas_orm.png"
+ ],
+ "tris": [
+  8,
+  4,
+  2
+ ],
+ "version": 3
+}

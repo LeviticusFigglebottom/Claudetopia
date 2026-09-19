@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.111,
+  "max": [
+   0.89,
+   0.111,
+   0.89
+  ],
+  "min": [
+   -0.89,
+   0.0,
+   -0.89
+  ],
+  "radius": 1.259
+ },
+ "built_seconds": 54.24,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "briarwold_moss_patch_a.glb",
+ "hash": "0b68997308f4d3f7",
+ "kind": "moss_patch",
+ "materials": [
+  "briarwold_moss_patch_a_mat"
+ ],
+ "materials_used": [
+  "moss"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_moss_patch_a",
+   "tris": 242
+  },
+  {
+   "name": "briarwold_moss_patch_a_LOD1",
+   "tris": 242
+  },
+  {
+   "name": "briarwold_moss_patch_a_LOD2",
+   "tris": 119
+  }
+ ],
+ "name": "briarwold_moss_patch_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 3281,
+ "textures": [
+  "briarwold_moss_patch_a_albedo.png",
+  "briarwold_moss_patch_a_normal.png",
+  "briarwold_moss_patch_a_orm.png"
+ ],
+ "tris": [
+  242,
+  242,
+  119
+ ],
+ "version": 3
+}

@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 0.521,
+  "max": [
+   0.57,
+   0.521,
+   0.616
+  ],
+  "min": [
+   -0.569,
+   0.0,
+   -0.662
+  ],
+  "radius": 0.895
+ },
+ "built_seconds": 51.95,
+ "category": "props",
+ "collision": "trimesh",
+ "collision_params": {},
+ "emissive": true,
+ "generator": "gen_props",
+ "glb": "hearthvale_campfire_a.glb",
+ "hash": "7752dd3533522934",
+ "kind": "campfire",
+ "materials": [
+  "hearthvale_campfire_a_mat"
+ ],
+ "materials_used": [
+  "granite",
+  "wood_planks",
+  "ember"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_campfire_a",
+   "tris": 1084
+  },
+  {
+   "name": "hearthvale_campfire_a_LOD1",
+   "tris": 432
+  },
+  {
+   "name": "hearthvale_campfire_a_LOD2",
+   "tris": 162
+  }
+ ],
+ "name": "hearthvale_campfire_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4977,
+ "textures": [
+  "hearthvale_campfire_a_albedo.png",
+  "hearthvale_campfire_a_normal.png",
+  "hearthvale_campfire_a_orm.png",
+  "hearthvale_campfire_a_emission.png"
+ ],
+ "tris": [
+  1084,
+  432,
+  162
+ ],
+ "version": 3
+}

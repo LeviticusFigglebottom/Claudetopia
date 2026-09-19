@@ -1,0 +1,1710 @@
+{
+ "version": 1,
+ "note": "Wickmere generated assets. Edit tools/forge/make_manifest.py, not this file. Build with ./run.sh assets.",
+ "assets": [
+  {
+   "generator": "gen_trees",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 101
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 118
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 135
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "apple",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 154
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "apple",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 171
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "apple",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 188
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hawthorn",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 207
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hawthorn",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 224
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "yew",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 260
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "yew",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 277
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "giant_oak",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 313
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "giant_oak",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 330
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "black_ash",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 366
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "black_ash",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 383
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "black_ash",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 400
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hardy_pine",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 419
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hardy_pine",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 436
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hardy_pine",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 453
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "rowan",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 472
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "rowan",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 489
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "juniper",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 525
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "juniper",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 542
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "willow",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 578
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "willow",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 595
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "alder",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 631
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "alder",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 648
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "dead_ash_tree",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 684
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "dead_ash_tree",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 701
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "dead_ash_tree",
+   "palette": "core:region/cinderlea",
+   "variant": "c",
+   "seed": 718
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "char_stump",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 737
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "char_stump",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 754
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "willow_pollard",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 790
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "willow_pollard",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 807
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "lime",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 843
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "lime",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 860
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 896
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 913
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 949
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 966
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 1002
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 1019
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 1036
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 1055
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 1072
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 1108
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 1125
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 1161
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "boulder",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 1178
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 1214
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 1231
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 1248
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 1267,
+   "params": {
+    "stone": "chalk_rock"
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 1284,
+   "params": {
+    "stone": "chalk_rock"
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 1320,
+   "params": {
+    "stone": "granite"
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 1337,
+   "params": {
+    "stone": "granite"
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 1373
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_slab",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 1390
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "scree",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 1426
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "scree",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 1443
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "scree",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 1460
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "scree",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 1479
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "scree",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 1496
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "scree",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 1532
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "scree",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 1549
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "standing_stone",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 1585
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "standing_stone",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 1602
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "standing_stone",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 1619
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "standing_stone",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 1638,
+   "params": {
+    "carved": false
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "standing_stone",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 1655,
+   "params": {
+    "carved": false
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "standing_stone",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 1691,
+   "params": {
+    "carved": false
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "standing_stone",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 1708,
+   "params": {
+    "carved": false
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_rib",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 1744
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_rib",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 1761
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_rib",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 1778
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_finger",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 1797
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_finger",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 1814
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_skull_fragment",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 1850
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_skull_fragment",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 1867
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_vertebra",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 1903
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "bone_vertebra",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 1920
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 1956
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 1973
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 1990
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 2009
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 2026
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 2062
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 2079
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 2115
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 2132
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 2168
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grass_clump",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 2185
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grey_grass",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 2221
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grey_grass",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 2238
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "grey_grass",
+   "palette": "core:region/cinderlea",
+   "variant": "c",
+   "seed": 2255
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "barley_tuft",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 2274
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "barley_tuft",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 2291
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "reeds",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 2327
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "reeds",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 2344
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "reeds",
+   "palette": "core:region/sedgemire",
+   "variant": "c",
+   "seed": 2361
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "reeds",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 2380
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "reeds",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 2397
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "bulrush",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 2433
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "bulrush",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 2450
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "fern",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 2486
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "fern",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 2503
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "fern",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 2520
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "fern",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 2539
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "fern",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 2556
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "bracken",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 2592
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "bracken",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 2609
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "bracken",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 2645
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "bracken",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 2662
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "foxglove",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 2698
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "foxglove",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 2715
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "poppy",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 2751
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "poppy",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 2768
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "red_poppy_single",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 2804
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "cow_parsley",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 2857
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "cow_parsley",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 2874
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "cow_parsley",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 2910
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "heather",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 2963
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "heather",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 2980
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "heather",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 2997
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "marsh_marigold",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 3016
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "marsh_marigold",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 3033
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "briar_vine",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 3069
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "briar_vine",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 3086
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "briar_vine",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 3103
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "bracket_fungus",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 3122
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "bracket_fungus",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 3139
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "hanging_moss",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 3175
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "hanging_moss",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 3192
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "hanging_moss",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 3228
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "moss_patch",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 3281
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "moss_patch",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 3298
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "moss_patch",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 3334
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "waterlily_pad",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 3387
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "waterlily_pad",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 3404
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "waterlily_pad",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 3440
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "lichen_crust",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 3493
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "lichen_crust",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 3510
+  },
+  {
+   "generator": "gen_props",
+   "kind": "barrel",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 3546
+  },
+  {
+   "generator": "gen_props",
+   "kind": "barrel",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 3563
+  },
+  {
+   "generator": "gen_props",
+   "kind": "barrel",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 3599
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crate",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 3652
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crate",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 3669
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crate",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 3705
+  },
+  {
+   "generator": "gen_props",
+   "kind": "sack",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 3758
+  },
+  {
+   "generator": "gen_props",
+   "kind": "sack",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 3775
+  },
+  {
+   "generator": "gen_props",
+   "kind": "basket",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 3811
+  },
+  {
+   "generator": "gen_props",
+   "kind": "basket",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 3828
+  },
+  {
+   "generator": "gen_props",
+   "kind": "basket",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 3864
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bucket",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 3917
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bucket",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 3934
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chest",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 3970
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chest",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 3987
+  },
+  {
+   "generator": "gen_props",
+   "kind": "cooking_pot",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4023
+  },
+  {
+   "generator": "gen_props",
+   "kind": "plate",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4076
+  },
+  {
+   "generator": "gen_props",
+   "kind": "mug",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4129
+  },
+  {
+   "generator": "gen_props",
+   "kind": "mug",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 4146
+  },
+  {
+   "generator": "gen_props",
+   "kind": "jug",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4182
+  },
+  {
+   "generator": "gen_props",
+   "kind": "table_trestle",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4235
+  },
+  {
+   "generator": "gen_props",
+   "kind": "table_trestle",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 4252
+  },
+  {
+   "generator": "gen_props",
+   "kind": "table_round",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4288
+  },
+  {
+   "generator": "gen_props",
+   "kind": "stool",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4341
+  },
+  {
+   "generator": "gen_props",
+   "kind": "stool",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 4358
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chair",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4394
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chair",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 4411
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bench",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4447
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bench",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 4464
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bed",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4500
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bed",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 4517
+  },
+  {
+   "generator": "gen_props",
+   "kind": "shelf",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4553
+  },
+  {
+   "generator": "gen_props",
+   "kind": "cupboard",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4606
+  },
+  {
+   "generator": "gen_props",
+   "kind": "candle",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4659
+  },
+  {
+   "generator": "gen_props",
+   "kind": "candlestick",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4712
+  },
+  {
+   "generator": "gen_props",
+   "kind": "candlestick",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 4729
+  },
+  {
+   "generator": "gen_props",
+   "kind": "lantern_hanging",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 4765
+  },
+  {
+   "generator": "gen_props",
+   "kind": "lantern_hanging",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 4782
+  },
+  {
+   "generator": "gen_props",
+   "kind": "lantern_standing",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 4818
+  },
+  {
+   "generator": "gen_props",
+   "kind": "lantern_standing",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 4835
+  },
+  {
+   "generator": "gen_props",
+   "kind": "brazier",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 4871
+  },
+  {
+   "generator": "gen_props",
+   "kind": "brazier",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 4888
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chandelier",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 4924
+  },
+  {
+   "generator": "gen_props",
+   "kind": "campfire",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 4977
+  },
+  {
+   "generator": "gen_props",
+   "kind": "campfire",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 4994
+  },
+  {
+   "generator": "gen_props",
+   "kind": "anvil",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5030
+  },
+  {
+   "generator": "gen_props",
+   "kind": "forge_hearth",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5083
+  },
+  {
+   "generator": "gen_props",
+   "kind": "alembic",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 5136
+  },
+  {
+   "generator": "gen_props",
+   "kind": "rope_coil",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 5189
+  },
+  {
+   "generator": "gen_props",
+   "kind": "rope_coil",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 5206
+  },
+  {
+   "generator": "gen_props",
+   "kind": "wheelbarrow",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5242
+  },
+  {
+   "generator": "gen_props",
+   "kind": "cart",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5295
+  },
+  {
+   "generator": "gen_props",
+   "kind": "cart",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 5312
+  },
+  {
+   "generator": "gen_props",
+   "kind": "hay_bale",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5348
+  },
+  {
+   "generator": "gen_props",
+   "kind": "hay_bale",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 5365
+  },
+  {
+   "generator": "gen_props",
+   "kind": "book",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5401
+  },
+  {
+   "generator": "gen_props",
+   "kind": "book",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 5418
+  },
+  {
+   "generator": "gen_props",
+   "kind": "book_stack",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5454
+  },
+  {
+   "generator": "gen_props",
+   "kind": "book_stack",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 5471
+  },
+  {
+   "generator": "gen_props",
+   "kind": "scroll",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 5507
+  },
+  {
+   "generator": "gen_props",
+   "kind": "scroll",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 5524
+  },
+  {
+   "generator": "gen_props",
+   "kind": "fence_wattle",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5560
+  },
+  {
+   "generator": "gen_props",
+   "kind": "fence_wattle",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 5577
+  },
+  {
+   "generator": "gen_props",
+   "kind": "fence_post_rail",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5613
+  },
+  {
+   "generator": "gen_props",
+   "kind": "fence_post_rail",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 5630
+  },
+  {
+   "generator": "gen_props",
+   "kind": "drystone_wall",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 5666
+  },
+  {
+   "generator": "gen_props",
+   "kind": "drystone_wall",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 5683
+  },
+  {
+   "generator": "gen_props",
+   "kind": "drystone_wall_end",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 5719
+  },
+  {
+   "generator": "gen_props",
+   "kind": "well",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5772
+  },
+  {
+   "generator": "gen_props",
+   "kind": "signpost",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 5825
+  },
+  {
+   "generator": "gen_props",
+   "kind": "signpost",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 5842
+  },
+  {
+   "generator": "gen_props",
+   "kind": "market_stall",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 5878
+  },
+  {
+   "generator": "gen_props",
+   "kind": "market_stall",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 5895
+  },
+  {
+   "generator": "gen_props",
+   "kind": "dock_post",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 5931
+  },
+  {
+   "generator": "gen_props",
+   "kind": "dock_post",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 5948
+  },
+  {
+   "generator": "gen_props",
+   "kind": "boardwalk_plank",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 5984
+  },
+  {
+   "generator": "gen_props",
+   "kind": "boardwalk_plank",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 6001
+  },
+  {
+   "generator": "gen_props",
+   "kind": "rowboat",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 6037
+  },
+  {
+   "generator": "gen_props",
+   "kind": "rowboat",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 6054
+  },
+  {
+   "generator": "gen_props",
+   "kind": "tent",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 6090
+  },
+  {
+   "generator": "gen_props",
+   "kind": "tent",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 6107
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bedroll",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 6143
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bedroll",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 6160
+  },
+  {
+   "generator": "gen_props",
+   "kind": "banner",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 6196
+  },
+  {
+   "generator": "gen_props",
+   "kind": "banner",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 6213
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bell_small",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 6249
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bell_small",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 6266
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bell_medium",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 6302
+  },
+  {
+   "generator": "gen_props",
+   "kind": "gravestone",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 6355
+  },
+  {
+   "generator": "gen_props",
+   "kind": "gravestone",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 6372
+  },
+  {
+   "generator": "gen_props",
+   "kind": "gravestone",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 6389
+  },
+  {
+   "generator": "gen_props",
+   "kind": "coffin",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 6408
+  },
+  {
+   "generator": "gen_props",
+   "kind": "sarcophagus",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 6461
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "cracked_toll",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 6514
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "fallen_hand",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 6567
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "choir_colossus",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 6620
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "choir_colossus",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 6637
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "the_lamp",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 6673
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "sayers_spire",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 6726
+  }
+ ]
+}

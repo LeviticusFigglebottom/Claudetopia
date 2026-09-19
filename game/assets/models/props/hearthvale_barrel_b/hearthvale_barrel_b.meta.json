@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.046,
+  "max": [
+   0.393,
+   1.046,
+   0.393
+  ],
+  "min": [
+   -0.393,
+   0.0,
+   -0.392
+  ],
+  "radius": 0.762
+ },
+ "built_seconds": 21.02,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_barrel_b.glb",
+ "hash": "7408fa28b577ac46",
+ "kind": "barrel",
+ "materials": [
+  "hearthvale_barrel_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_barrel_b",
+   "tris": 2700
+  },
+  {
+   "name": "hearthvale_barrel_b_LOD1",
+   "tris": 1080
+  },
+  {
+   "name": "hearthvale_barrel_b_LOD2",
+   "tris": 403
+  }
+ ],
+ "name": "hearthvale_barrel_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 3563,
+ "textures": [
+  "hearthvale_barrel_b_albedo.png",
+  "hearthvale_barrel_b_normal.png",
+  "hearthvale_barrel_b_orm.png"
+ ],
+ "tris": [
+  2700,
+  1080,
+  403
+ ],
+ "version": 3
+}

@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.517,
+  "max": [
+   0.269,
+   0.517,
+   0.225
+  ],
+  "min": [
+   -0.236,
+   0.0,
+   -0.226
+  ],
+  "radius": 0.426
+ },
+ "built_seconds": 0.09,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "hearthvale_poppy_b.glb",
+ "hash": "06aad12d1da03203",
+ "kind": "poppy",
+ "materials": [
+  "hearthvale_poppy_b_poppy_foliage"
+ ],
+ "materials_used": [
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_poppy_b_cards",
+   "tris": 10
+  },
+  {
+   "name": "hearthvale_poppy_b_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "hearthvale_poppy_b_cards_LOD2",
+   "tris": 2
+  }
+ ],
+ "name": "hearthvale_poppy_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 2768,
+ "textures": [
+  "hearthvale_poppy_b_atlas_albedo.png",
+  "hearthvale_poppy_b_atlas_normal.png",
+  "hearthvale_poppy_b_atlas_orm.png"
+ ],
+ "tris": [
+  10,
+  6,
+  2
+ ],
+ "version": 3
+}

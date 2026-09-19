@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.461,
+  "max": [
+   0.292,
+   0.461,
+   0.31
+  ],
+  "min": [
+   -0.295,
+   0.0,
+   -0.326
+  ],
+  "radius": 0.49
+ },
+ "built_seconds": 0.07,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "briarwold_grass_clump_a.glb",
+ "hash": "38f2c52b38cf6cfa",
+ "kind": "grass_clump",
+ "materials": [
+  "briarwold_grass_clump_a_grass_foliage"
+ ],
+ "materials_used": [
+  "grass_blades"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_grass_clump_a_cards",
+   "tris": 12
+  },
+  {
+   "name": "briarwold_grass_clump_a_cards_LOD1",
+   "tris": 6
+  },
+  {
+   "name": "briarwold_grass_clump_a_cards_LOD2",
+   "tris": 4
+  }
+ ],
+ "name": "briarwold_grass_clump_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 2009,
+ "textures": [
+  "briarwold_grass_clump_a_atlas_albedo.png",
+  "briarwold_grass_clump_a_atlas_normal.png",
+  "briarwold_grass_clump_a_atlas_orm.png"
+ ],
+ "tris": [
+  12,
+  6,
+  4
+ ],
+ "version": 3
+}
