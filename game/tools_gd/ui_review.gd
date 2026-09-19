@@ -89,6 +89,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "settings_video", "menu": "settings", "args": {"tab": 0}},
 		{"name": "settings_audio", "menu": "settings", "args": {"tab": 1}},
 		{"name": "settings_controls", "menu": "settings", "args": {"tab": 2}},
+		{"name": "settings_bindings", "menu": "settings", "args": {"tab": 2, "scroll": 330}},
 		{"name": "settings_gameplay", "menu": "settings", "args": {"tab": 3}},
 		{"name": "settings_accessibility", "menu": "settings", "args": {"tab": 4}},
 		{"name": "save_load", "menu": "save_load", "args": {"mode": "save"}},
