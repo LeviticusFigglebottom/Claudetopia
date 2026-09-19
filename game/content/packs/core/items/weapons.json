@@ -80,6 +80,9 @@
    "weapon": {"class": "shield", "damage": 8, "poise_damage": 14, "stamina_light": 14, "stamina_heavy": 24, "speed": 0.8, "reach": 1.0, "clips_set": "1H", "parry": true, "stability": 0.8},
    "description": "Oak faced with plates of giant-bone. The bone takes a blow the way a wall takes wind; the clans carve their remembered names on the inside."},
 
+  {"id": "core:item/kingbone_greatsword", "name": "Kingbone Greatsword", "category": "weapon", "weight": 6.5, "value": 900, "tags": ["greatsword", "bone", "two_handed", "unique", "clan"], "tier": 3, "material": "core:item/kingbone",
+   "weapon": {"class": "greatsword", "damage": 38, "poise_damage": 44, "stamina_light": 26, "stamina_heavy": 44, "speed": 0.75, "reach": 2.3, "clips_set": "2H", "parry": true, "stability": 0.45},
+   "description": "Cut from the bone of the thing that stood up in Oskeld's singing shaft and would not lie down again. Kharrow smiths worked it in silence and gave it back its name at the Moot; the clans say a blade of kingbone remembers standing, which is why it does not break."},
   {"id": "core:item/reeves_bell_hammer", "name": "The Reeve's Bell-Hammer", "category": "weapon", "weight": 9.0, "value": 800, "tags": ["mace", "bell_bronze", "two_handed", "unique", "boss_drop", "oroth"], "tier": 3, "material": "core:item/bell_bronze_scrap",
    "weapon": {"class": "greathammer", "damage": 34, "poise_damage": 60, "stamina_light": 28, "stamina_heavy": 48, "speed": 0.6, "reach": 2.0, "clips_set": "2H", "parry": false, "stability": 0.5},
    "description": "An Oroth bell the size of a man's head, hafted on barrow yew. Each blow rings once. Under Hollin Barrow the Reeve kept ringing it for a thousand years so the dead below would know he was still on watch."}

@@ -37,6 +37,8 @@
    "inputs": [{"item": "core:item/bell_bronze_scrap", "count": 3}, {"item": "core:item/iron_ingot", "count": 1}, {"item": "core:item/leather", "count": 1}], "output": {"item": "core:item/bell_bronze_sword", "count": 1}},
   {"id": "core:recipe/clan_plate", "name": "Clan Plate", "station": "forge", "skill": "smithing", "requires_level": 55, "xp": 60, "known_by_default": false,
    "inputs": [{"item": "core:item/iron_ingot", "count": 8}, {"item": "core:item/giant_bone_shard", "count": 6}, {"item": "core:item/wool", "count": 2}], "output": {"item": "core:item/clan_plate", "count": 1}},
+  {"id": "core:recipe/kingbone_greatsword", "name": "Kingbone Greatsword", "station": "forge", "skill": "smithing", "requires_level": 75, "xp": 90, "known_by_default": false,
+   "inputs": [{"item": "core:item/kingbone", "count": 1}, {"item": "core:item/iron_ingot", "count": 4}, {"item": "core:item/leather", "count": 2}], "output": {"item": "core:item/kingbone_greatsword", "count": 1}},
   {"id": "core:recipe/clan_bow", "name": "Clan Bow", "station": "forge", "skill": "smithing", "requires_level": 35, "xp": 30, "known_by_default": false,
    "inputs": [{"item": "core:item/giant_bone_shard", "count": 2}, {"item": "core:item/ash_wood", "count": 2}, {"item": "core:item/leather", "count": 1}], "output": {"item": "core:item/clan_bow", "count": 1}}
 ]
