@@ -16,6 +16,12 @@ const PLAYER := "player"
 var registry: Dictionary = {}   # id -> {"faction": String, "npc": String}
 
 
+static func ensure() -> Ownership:
+	if instance != null and is_instance_valid(instance):
+		return instance
+	return Service.ensure(load("res://systems/crime/ownership.gd"), "Ownership") as Ownership
+
+
 func _enter_tree() -> void:
 	instance = self
 

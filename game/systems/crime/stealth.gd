@@ -31,6 +31,12 @@ var sky_exposure_override := -1.0   # tests and interiors: 0..1 forces the value
 var lights: Array[Node3D] = []
 
 
+static func ensure() -> Stealth:
+	if instance != null and is_instance_valid(instance):
+		return instance
+	return Service.ensure(load("res://systems/crime/stealth.gd"), "Stealth") as Stealth
+
+
 func _enter_tree() -> void:
 	instance = self
 	add_to_group("stealth")

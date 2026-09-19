@@ -24,6 +24,13 @@ var known: Dictionary = {}            # key -> {place_id: true}
 var history: Array[Dictionary] = []   # {kind, key, severity, day, hour, witnessed}
 
 
+## The bounty service, installing one under the scene root if the world has not added it.
+static func ensure() -> Bounty:
+	if instance != null and is_instance_valid(instance):
+		return instance
+	return Service.ensure(load("res://systems/crime/bounty.gd"), "Bounty") as Bounty
+
+
 func _enter_tree() -> void:
 	instance = self
 	add_to_group("crime")
