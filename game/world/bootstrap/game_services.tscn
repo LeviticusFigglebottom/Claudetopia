@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_game_services"]
+
+[ext_resource type="Script" path="res://world/bootstrap/game_services.gd" id="1"]
+
+[node name="GameServices" type="Node"]
+script = ExtResource("1")

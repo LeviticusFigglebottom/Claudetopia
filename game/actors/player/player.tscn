@@ -1,13 +1,18 @@
-[gd_scene load_steps=6 format=3 uid="uid://wm_player_scene"]
+[gd_scene load_steps=10 format=3 uid="uid://wm_player_scene"]
 
 [ext_resource type="Script" path="res://actors/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://actors/player/camera_rig.gd" id="2"]
 [ext_resource type="Script" path="res://actors/player/lock_on.gd" id="3"]
 [ext_resource type="Script" path="res://actors/player/interactor.gd" id="4"]
+[ext_resource type="Script" path="res://systems/inventory/inventory.gd" id="10"]
+[ext_resource type="Script" path="res://systems/inventory/equipment.gd" id="11"]
+[ext_resource type="Script" path="res://systems/progression/progression.gd" id="12"]
+[ext_resource type="Script" path="res://systems/crafting/crafting.gd" id="13"]
 
 [sub_resource type="CapsuleShape3D" id="body_capsule"]
 radius = 0.35
 height = 1.8
+
 
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 collision_layer = 2
@@ -38,3 +43,17 @@ target_position = Vector3(0, 0, -2.6)
 collision_mask = 16
 collide_with_areas = true
 script = ExtResource("4")
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("10")
+is_player = true
+
+[node name="Equipment" type="Node" parent="."]
+script = ExtResource("11")
+is_player = true
+
+[node name="Progression" type="Node" parent="."]
+script = ExtResource("12")
+
+[node name="Crafting" type="Node" parent="."]
+script = ExtResource("13")

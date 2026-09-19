@@ -149,7 +149,7 @@
     "unique_habit": "Says good evening to the sul-stone when she uncovers it and good morning when she covers it; it brightens for the first and never for the second.",
     "personality": {"traits": ["brave", "generous", "cynical", "gossip", "humble", "kind"]},
     "appearance": {"seed": 2109, "build": "weathered", "age": 59, "hair": "salt_grey_knotted", "notes": "oilskin, eel-scale glitter on the sleeves, eyes that squint even indoors"},
-    "merchant": {"stock": "core:table/stock_fish", "marks": 80, "buys": ["consumable", "ingredient"]},
+    "merchant": {"stock": "core:table/stock_fishmonger", "marks": 80, "buys": ["consumable", "ingredient"]},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/the_lamp", "activity": "sleep", "spot": "keepers_cot"},
       {"days": "all", "hour": 12, "place": "core:place/gullhithe", "activity": "eat", "spot": "eel_racks"},

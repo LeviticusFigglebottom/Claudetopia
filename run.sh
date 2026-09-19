@@ -3,6 +3,7 @@
 #   ./run.sh            run the game (generates world/assets if missing)
 #   ./run.sh test       import + unit tests
 #   ./run.sh smoke      load every region and interior headlessly, fail on errors
+#   ./run.sh journey    scripted playthrough of every promise in DESIGN's done list
 #   ./run.sh shots      headless capture plan -> captures/
 #   ./run.sh world      rebuild terrain/world data from recipes
 #   ./run.sh assets     rebuild generated assets (needs Blender)
@@ -43,6 +44,9 @@ case "$cmd" in
   test)
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/run_tests.tscn -- "$@" ;;
+  journey)
+    import_project
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/journey/journey.tscn -- "$@" ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"

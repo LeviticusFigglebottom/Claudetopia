@@ -1,7 +1,8 @@
-.PHONY: run test smoke shots world assets interiors import
+.PHONY: run test journey smoke shots world assets interiors import
 run: ; ./run.sh run
 test: ; ./run.sh test
 smoke: ; ./run.sh smoke
+journey: ; ./run.sh journey
 shots: ; ./run.sh shots
 world: ; ./run.sh world
 assets: ; ./run.sh assets

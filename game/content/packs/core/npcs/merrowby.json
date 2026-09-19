@@ -110,7 +110,7 @@
     "unique_habit": "Closes the bar by ringing a tiny bronze cousin of the Toll, and has never once rung it at the same hour two nights running.",
     "personality": {"traits": ["timid", "generous", "cynical", "gossip", "humble", "kind"]},
     "appearance": {"seed": 1106, "build": "tall_soft", "age": 47, "hair": "sandy_receding", "notes": "a bar-cloth over the shoulder, a brass bell on a cord at the belt"},
-    "merchant": {"stock": "core:table/stock_inn", "marks": 200, "buys": ["consumable"]},
+    "merchant": {"stock": "core:table/stock_innkeeper", "marks": 200, "buys": ["consumable"]},
     "roles": ["innkeeper", "rents_rooms"],
     "schedule": [
       {"days": "all", "hour": 8, "place": "core:place/merrowby", "activity": "eat", "spot": "toll_lip_kitchen"},

@@ -129,6 +129,7 @@ func _ready() -> void:
 		equip_weapon("")
 	add_to_group("player")
 	SaveSystem.register(SAVE_SECTION, self)
+	_register_character_sections()
 	if DisplayServer.get_name() != "headless" and input_enabled:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	call_deferred("_announce")
@@ -953,6 +954,17 @@ func _on_camera_mode_changed(fp: bool) -> void:
 
 
 # --- save ---------------------------------------------------------------------------------------
+
+## The bag, the paper doll, the skills and the known recipes ride with the character, not
+## with the world, so the player owns their save sections. Each is registered under its
+## own name so a future pack can add one without touching this file.
+func _register_character_sections() -> void:
+	for pair in [["inventory", "Inventory"], ["equipment", "Equipment"],
+			["progression", "Progression"], ["crafting", "Crafting"]]:
+		var node := get_node_or_null(NodePath(pair[1]))
+		if node and node.has_method("to_save"):
+			SaveSystem.register(str(pair[0]), node)
+
 
 func to_save() -> Dictionary:
 	var d := super.to_save()
