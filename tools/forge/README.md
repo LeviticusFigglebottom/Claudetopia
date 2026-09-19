@@ -8,11 +8,11 @@ directly with PIL. Nothing third-party is used or downloaded.
 
 ```
 ./run.sh assets                       # everything missing or stale
-./run.sh assets -- --only trees       # one category, generator, palette or name
-./run.sh assets -- --jobs 2 --force   # rebuild everything, two Blender processes
-./run.sh assets -- --list             # what would be built, and what is current
+./run.sh assets --only trees          # one category, generator, palette or name
+./run.sh assets --jobs 2 --force      # rebuild everything, two Blender processes
+./run.sh assets --list                # what would be built, and what is current
 python3 tools/forge/make_manifest.py  # regenerate manifest.json from the tables
-python3 -m unittest discover -s tools/forge/tests -t tools/forge
+python3 tools/forge/tests/run.py      # the test suite (--fast skips the Blender run)
 ```
 
 A single asset, for iterating:
@@ -80,6 +80,25 @@ The finest layer is a low-contrast grain; there is no photographic micro-noise a
 Every builder takes a `Palette` and mixes a role colour into its base tones by a small
 `tint`, so the same generator gives a Hearthvale oak fence or a Briarwold black-ash one:
 the region changes the palette, not the language.
+
+## Tests
+
+```
+python3 tools/forge/tests/run.py          # everything
+python3 tools/forge/tests/run.py --fast   # pure Python only, no Blender
+```
+
+* `test_palette` — colour maths, role derivation, and that the six regions stay separable
+  and in character (Hearthvale's warm is warm, Cinderlea is the least saturated).
+* `test_paths` — naming, seeds, output layout against CONTRACTS §4, asset hashing, the
+  manifest, and the GLB reader/writer.
+* `test_output` — runs over whatever is in `game/assets/models`: triangle budgets, LOD
+  ordering, grounding, texture sizes, external texture references, foliage material
+  naming, variant distinctness, and the repository weight ceiling. Skips when nothing has
+  been generated.
+* `test_generation` — builds a mug, a boulder pair and a grass clump for real under
+  `blender -b` and checks the files, the meta, the LOD meshes, determinism and the alpha
+  cut-out. Skips when Blender is not on PATH.
 
 ## Contracts this keeps
 
