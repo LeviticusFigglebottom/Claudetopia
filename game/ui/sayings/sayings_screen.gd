@@ -25,6 +25,9 @@ const CAST_TYPE_SHORT := {
 	"projectile": "thrown", "self": "over yourself", "aura": "outward",
 	"target": "at your mark", "summon": "calls",
 }
+## Blank paper left under the last line of lore, so a page that overflows is cut by the fold
+## and not by the Ready it button sitting under it.
+const BOTTOM_PADDING := 18.0
 ## Status ids a saying can leave behind, in plain words rather than as an id.
 const STATUS_WORDS := {
 	"burning": "leaves it burning", "chilled": "leaves it slow", "silenced": "leaves it unable to Say",
@@ -94,7 +97,9 @@ func _build() -> void:
 	_readied_label = UiKit.label("", "Emphasis")
 	plate_row.add_child(_readied_label)
 
-	_columns = UiKit.row(18)
+	# wide enough that the list's own scrollbar and the rule between the columns read as two
+	# things rather than one thick edge
+	_columns = UiKit.row(26)
 	_columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(_columns)
 
@@ -111,10 +116,14 @@ func _build() -> void:
 	# A fixed reading width. Everything outside the scroll (the heading, the buttons) is
 	# clipped rather than wrapped, because anything that wraps hands its own idea of a
 	# minimum width up to the column and pushes the page off the side of the frame.
-	var detail_col := UiKit.column(8)
-	detail_col.custom_minimum_size = Vector2(560, 0)
-	detail_col.size_flags_horizontal = Control.SIZE_FILL
-	_columns.add_child(detail_col)
+	var detail_col := UiKit.column(14)
+	detail_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# inset from the frame by the same margin the list's own scrollbar sits at, so the two
+	# bars read as a pair of column edges rather than one of them clinging to the brass
+	var detail_inset := UiKit.margins(detail_col, 0, 0, 14, 0)
+	detail_inset.custom_minimum_size = Vector2(574, 0)
+	detail_inset.size_flags_horizontal = Control.SIZE_FILL
+	_columns.add_child(detail_inset)
 	_detail_head = UiKit.row(12)
 	detail_col.add_child(_detail_head)
 	_detail_box = UiKit.column(4)
@@ -268,6 +277,7 @@ func _make_row(s: Dictionary) -> Button:
 	var b := UiKit.button("", "FlatButton")
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.custom_minimum_size = Vector2(0, 34)
+	b.clip_contents = true
 	b.tooltip_text = "%s\n%s" % [str(s["name"]), str(s["description"])]
 	b.pressed.connect(func() -> void:
 			_selected = id
@@ -276,9 +286,21 @@ func _make_row(s: Dictionary) -> Button:
 	var line := UiKit.row(8)
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.set_anchors_preset(Control.PRESET_FULL_RECT)
-	line.offset_left = 12.0
+	line.offset_left = 4.0
 	line.offset_right = -10.0
 	b.add_child(line)
+	# the page's own brass lozenge, ticked in the margin against the saying in your mouth.
+	# State belongs in the gutter; the ledger columns say what a saying is, not how it stands.
+	var tick := TextureRect.new()
+	tick.texture = ThemeBuilder.texture("rule_mark" if UI.theme_variant == "warm" else "rule_mark_deep")
+	tick.custom_minimum_size = Vector2(14, 14)
+	tick.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tick.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tick.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# kept in the layout when it has nothing to say, or every other row would shuffle left
+	tick.modulate = Color(1, 1, 1, 1.0 if readied else 0.0)
+	line.add_child(tick)
 	var mark := SchoolMark.new()
 	mark.school = str(s["school"])
 	mark.custom_minimum_size = Vector2(18, 18)
@@ -287,18 +309,18 @@ func _make_row(s: Dictionary) -> Button:
 	var name_label := UiKit.label(str(s["name"]), "Emphasis" if readied else "Body")
 	# a clipped Label reports no minimum width at all, so it is given one by hand or it
 	# collapses to nothing the moment anything beside it wants room
-	name_label.custom_minimum_size = Vector2(200, 0)
+	name_label.custom_minimum_size = Vector2(180, 0)
 	name_label.clip_text = true
 	line.add_child(name_label)
-	# what kind of saying it is, so that a short name does not leave a bare gap before the numbers
-	var kind := UiKit.label(str(CAST_TYPE_SHORT.get(str(s["cast_type"]), "")), "Tiny", HORIZONTAL_ALIGNMENT_RIGHT)
+	# what kind of saying it is, kept beside the name: both describe the saying, and the
+	# leader space belongs between the words and the figures, as it does in any ledger.
+	# The cell expands and the word sits at its left, so the space falls before the numbers.
+	var kind := UiKit.label(str(CAST_TYPE_SHORT.get(str(s["cast_type"]), "")), "Tiny")
+	kind.custom_minimum_size = Vector2(100, 0)
 	kind.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	kind.clip_text = true
 	kind.modulate = Color(1, 1, 1, 0.7)
 	line.add_child(kind)
-	# the same width on every row, readied or not, so the numbers stay in one column
-	var flag := UiKit.label("readied" if readied else "", "Tiny", HORIZONTAL_ALIGNMENT_RIGHT)
-	flag.custom_minimum_size = Vector2(50, 0)
-	line.add_child(flag)
 	var cost_label := UiKit.label("%d" % roundi(cost), "Small", HORIZONTAL_ALIGNMENT_RIGHT)
 	cost_label.custom_minimum_size = Vector2(34, 0)
 	if not affordable:
@@ -367,6 +389,8 @@ func _refresh_detail() -> void:
 		_detail_box.add_child(UiKit.wrapped("·   " + line, "Body"))
 	_detail_box.add_child(UiKit.spacer(4.0, true))
 	_detail_box.add_child(UiKit.wrapped(str(s["description"]), "Journal"))
+	# the lore ends on padding, not on the button: what the fold cuts is a line of paper
+	_detail_box.add_child(UiKit.spacer(BOTTOM_PADDING, true))
 
 	if str(s["id"]) == _readied():
 		var put_away := UiKit.button("Put it away", "FlatButton")
