@@ -100,12 +100,15 @@ def render_voice(voice: str, midi: int, seconds: float, vel: float, cfg: dict,
                         release=min(2.0, seconds * 0.9))
     if inst_name == "drone":
         return inst.drone(midi, seconds, amp=0.24 * amp, rng=rng, voices=2, fifth=False)
+    # A Karplus-Strong string loses its energy through the loop filter as well as the loop
+    # gain, so a high note rings far shorter than the decay asked for -- correctly, but it
+    # means the request has to be generous or an arpeggio leaves gaps between its notes.
     if inst_name == "harp":
-        return inst.pluck(midi, seconds + 1.2, amp=0.42 * amp, rng=rng, damping=0.3,
-                          brightness=0.55, decay=min(3.5, seconds + 1.0))
+        return inst.pluck(midi, seconds + 2.0, amp=0.42 * amp, rng=rng, damping=0.25,
+                          brightness=0.55, decay=min(5.5, seconds + 3.0))
     if inst_name == "pluck":
-        return inst.pluck(midi, seconds + 0.8, amp=0.40 * amp, rng=rng, damping=0.45,
-                          brightness=0.45, decay=min(2.5, seconds + 0.8))
+        return inst.pluck(midi, seconds + 1.6, amp=0.40 * amp, rng=rng, damping=0.35,
+                          brightness=0.45, decay=min(4.5, seconds + 2.5))
     if inst_name == "bell":
         ring = float(np.clip(seconds * 1.8, 1.5, 9.0))
         if midi >= 72:

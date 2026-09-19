@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://dgccnh66mrp64"
+path="res://.godot/imported/ui_hover_tick_04.ogg-b8d69c0edd2a4632ab7eb4a28b5b536d.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/ui_hover_tick/ui_hover_tick_04.ogg"
+dest_files=["res://.godot/imported/ui_hover_tick_04.ogg-b8d69c0edd2a4632ab7eb4a28b5b536d.oggvorbisstr"]
 
 [params]
 

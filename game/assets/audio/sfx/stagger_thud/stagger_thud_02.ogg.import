@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://c5t485l87wbxs"
+path="res://.godot/imported/stagger_thud_02.ogg-49547ddd49b3c45e53deae746b12e65b.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/stagger_thud/stagger_thud_02.ogg"
+dest_files=["res://.godot/imported/stagger_thud_02.ogg-49547ddd49b3c45e53deae746b12e65b.oggvorbisstr"]
 
 [params]
 

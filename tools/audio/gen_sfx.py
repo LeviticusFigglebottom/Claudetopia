@@ -843,8 +843,21 @@ def res_path(abs_path: str) -> str:
     return os.path.relpath(abs_path, os.path.join(ROOT, "game")).replace(os.sep, "/")
 
 
+def _load_manifest() -> dict:
+    path = os.path.join(OUT_ROOT, "manifest.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
 def build(only=None, force: bool = False) -> dict:
-    manifest = {}
+    # Start from what is already there, so rendering one id with --only does not drop the
+    # other 69 rows from core:table/sfx.
+    manifest = _load_manifest()
     t_all = time.time()
     for name, spec in CATALOGUE.items():
         if only and name not in only:

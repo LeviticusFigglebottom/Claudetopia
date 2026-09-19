@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://hcm0popsdmgo"
+path="res://.godot/imported/spell_cast_mending_03.ogg-b29ee1514473c87188cfab4b399243c3.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/spell_cast_mending/spell_cast_mending_03.ogg"
+dest_files=["res://.godot/imported/spell_cast_mending_03.ogg-b29ee1514473c87188cfab4b399243c3.oggvorbisstr"]
 
 [params]
 

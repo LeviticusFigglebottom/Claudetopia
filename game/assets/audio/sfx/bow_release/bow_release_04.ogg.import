@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://dghomniaq1n7j"
+path="res://.godot/imported/bow_release_04.ogg-9db32f0d68c45ed476f88abaec19662a.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/bow_release/bow_release_04.ogg"
+dest_files=["res://.godot/imported/bow_release_04.ogg-9db32f0d68c45ed476f88abaec19662a.oggvorbisstr"]
 
 [params]
 

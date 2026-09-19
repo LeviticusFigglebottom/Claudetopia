@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://dxv01u61vmtro"
+path="res://.godot/imported/armour_heavy_04.ogg-55f95bcdc4fe165bf7c14cd523c0cfef.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/armour_heavy/armour_heavy_04.ogg"
+dest_files=["res://.godot/imported/armour_heavy_04.ogg-55f95bcdc4fe165bf7c14cd523c0cfef.oggvorbisstr"]
 
 [params]
 

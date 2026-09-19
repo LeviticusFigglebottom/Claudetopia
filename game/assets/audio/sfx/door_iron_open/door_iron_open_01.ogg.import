@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://d1pnhyu0vbvjf"
+path="res://.godot/imported/door_iron_open_01.ogg-572435613834000010b4ee6d95d91b61.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/door_iron_open/door_iron_open_01.ogg"
+dest_files=["res://.godot/imported/door_iron_open_01.ogg-572435613834000010b4ee6d95d91b61.oggvorbisstr"]
 
 [params]
 

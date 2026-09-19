@@ -23,9 +23,12 @@ func _ready() -> void:
 	var t0 := Time.get_ticks_msec()
 	for path in files:
 		var script: GDScript = load(path)
-		if script == null:
-			failures.append("%s: failed to load" % path)
+		# A script with a parse error still loads, as a GDScript that cannot be instantiated;
+		# calling new() on it takes the whole run down instead of failing that one file.
+		if script == null or not script.can_instantiate():
+			failures.append("%s: failed to load (parse error?)" % path)
 			failed += 1
+			print("  FAIL %s (did not compile)" % path)
 			continue
 		var inst: TestCase = script.new()
 		for m in script.get_script_method_list():

@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://cxl3ramx8qwws"
+path="res://.godot/imported/footstep_water_01.ogg-f6303a23048f593889446a722e0c9a04.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/footstep_water/footstep_water_01.ogg"
+dest_files=["res://.godot/imported/footstep_water_01.ogg-f6303a23048f593889446a722e0c9a04.oggvorbisstr"]
 
 [params]
 

@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://dpob3huu4tcu1"
+path="res://.godot/imported/bell_tavern_01.ogg-7bc128bdc6e6ca79c1b40481082be262.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/bell_tavern/bell_tavern_01.ogg"
+dest_files=["res://.godot/imported/bell_tavern_01.ogg-7bc128bdc6e6ca79c1b40481082be262.oggvorbisstr"]
 
 [params]
 

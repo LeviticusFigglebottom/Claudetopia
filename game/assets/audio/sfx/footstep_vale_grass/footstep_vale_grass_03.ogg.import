@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://cxnt77m4pybvf"
+path="res://.godot/imported/footstep_vale_grass_03.ogg-4d0169d46e9c90770d976ff448221742.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/footstep_vale_grass/footstep_vale_grass_03.ogg"
+dest_files=["res://.godot/imported/footstep_vale_grass_03.ogg-4d0169d46e9c90770d976ff448221742.oggvorbisstr"]
 
 [params]
 

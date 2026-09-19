@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://gic5ngwrplj2"
+path="res://.godot/imported/pick_up_02.ogg-c5927ec1d2d79aca4e5a512eac683699.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/pick_up/pick_up_02.ogg"
+dest_files=["res://.godot/imported/pick_up_02.ogg-c5927ec1d2d79aca4e5a512eac683699.oggvorbisstr"]
 
 [params]
 

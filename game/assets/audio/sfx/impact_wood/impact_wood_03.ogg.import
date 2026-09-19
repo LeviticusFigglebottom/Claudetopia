@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://66fnybx7baqu"
+path="res://.godot/imported/impact_wood_03.ogg-ae27477739d609471f7e9484e83ac60a.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/impact_wood/impact_wood_03.ogg"
+dest_files=["res://.godot/imported/impact_wood_03.ogg-ae27477739d609471f7e9484e83ac60a.oggvorbisstr"]
 
 [params]
 

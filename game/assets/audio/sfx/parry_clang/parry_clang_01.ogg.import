@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://daewn54iqajk0"
+path="res://.godot/imported/parry_clang_01.ogg-cd70574aedf9d56fb3efffefd7571206.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/parry_clang/parry_clang_01.ogg"
+dest_files=["res://.godot/imported/parry_clang_01.ogg-cd70574aedf9d56fb3efffefd7571206.oggvorbisstr"]
 
 [params]
 

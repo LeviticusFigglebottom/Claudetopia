@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://c1pd605215b74"
+path="res://.godot/imported/water_splash_03.ogg-cee221b19187264ef3008ad081d64a18.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/water_splash/water_splash_03.ogg"
+dest_files=["res://.godot/imported/water_splash_03.ogg-cee221b19187264ef3008ad081d64a18.oggvorbisstr"]
 
 [params]
 

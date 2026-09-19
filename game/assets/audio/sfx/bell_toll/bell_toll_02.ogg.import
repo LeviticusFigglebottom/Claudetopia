@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://dq0rm1fobqd1e"
+path="res://.godot/imported/bell_toll_02.ogg-5628e55692aa293c135c2638afce0245.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/bell_toll/bell_toll_02.ogg"
+dest_files=["res://.godot/imported/bell_toll_02.ogg-5628e55692aa293c135c2638afce0245.oggvorbisstr"]
 
 [params]
 

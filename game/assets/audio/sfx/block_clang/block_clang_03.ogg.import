@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://bim05ka0uo7fg"
+path="res://.godot/imported/block_clang_03.ogg-3fba4049cf66024b54374451b74b6fe3.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/block_clang/block_clang_03.ogg"
+dest_files=["res://.godot/imported/block_clang_03.ogg-3fba4049cf66024b54374451b74b6fe3.oggvorbisstr"]
 
 [params]
 

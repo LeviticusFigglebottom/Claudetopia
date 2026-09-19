@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://csn585kvfeewq"
+path="res://.godot/imported/footstep_dirt_04.ogg-4e71ffd4c1339957112dd3d830dca7d8.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/footstep_dirt/footstep_dirt_04.ogg"
+dest_files=["res://.godot/imported/footstep_dirt_04.ogg-4e71ffd4c1339957112dd3d830dca7d8.oggvorbisstr"]
 
 [params]
 

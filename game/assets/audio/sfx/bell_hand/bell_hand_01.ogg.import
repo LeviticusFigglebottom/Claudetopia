@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://mjydk2u63qwy"
+path="res://.godot/imported/bell_hand_01.ogg-bb26644cdcf604e1aa879ae518a81db6.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/bell_hand/bell_hand_01.ogg"
+dest_files=["res://.godot/imported/bell_hand_01.ogg-bb26644cdcf604e1aa879ae518a81db6.oggvorbisstr"]
 
 [params]
 

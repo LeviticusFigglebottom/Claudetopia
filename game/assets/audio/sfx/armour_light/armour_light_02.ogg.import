@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://co2p633te3b0s"
+path="res://.godot/imported/armour_light_02.ogg-8d57542cd2507ee9b9f136c034e07c8f.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/armour_light/armour_light_02.ogg"
+dest_files=["res://.godot/imported/armour_light_02.ogg-8d57542cd2507ee9b9f136c034e07c8f.oggvorbisstr"]
 
 [params]
 

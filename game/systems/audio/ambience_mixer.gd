@@ -408,24 +408,39 @@ func cutoff_hz() -> float:
 ## Godot reports it as a leak at exit.
 func release() -> void:
 	stop_all()
-	for p in _pool_players:
-		if is_instance_valid(p):
-			p.stop()
-			p.stream = null
+	_release_players()
 	_manifest.clear()
+
+## Stop and detach every player under this node, whichever code path made it.
+## A stream that is still playing keeps its decoder alive, and a node queue_freed during
+## shutdown never reaches its deferred free, so both show up as leaks when the engine exits.
+func _release_players() -> void:
+	for child in get_children():
+		if child is AudioStreamPlayer or child is AudioStreamPlayer3D or child is AudioStreamPlayer2D:
+			child.stop()
+			child.stream = null
 
 
 func _exit_tree() -> void:
 	release()
 
 
+## Finish with a bed player for good. Freed now rather than deferred: a queue_free() issued
+## during shutdown never reaches its deferred call, and the stream playback the player still
+## holds is then reported as a leak at exit.
+func _discard(p: AudioStreamPlayer) -> void:
+	if not is_instance_valid(p):
+		return
+	p.stop()
+	p.stream = null
+	if p.get_parent() == self:
+		remove_child(p)
+	p.free()
+
+
 func stop_all() -> void:
 	for key: String in _beds.keys():
-		var p: AudioStreamPlayer = _beds[key]
-		if is_instance_valid(p):
-			p.stop()
-			p.stream = null
-			p.queue_free()
+		_discard(_beds[key])
 	_beds.clear()
 	_bed_targets.clear()
 	_pools.clear()

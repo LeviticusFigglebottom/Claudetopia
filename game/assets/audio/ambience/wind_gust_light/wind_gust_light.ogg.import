@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://bptsj75tcvfkh"
+path="res://.godot/imported/wind_gust_light.ogg-98c8a3b0d9f9af87fe2eb495ce9f04b6.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/ambience/wind_gust_light/wind_gust_light.ogg"
+dest_files=["res://.godot/imported/wind_gust_light.ogg-98c8a3b0d9f9af87fe2eb495ce9f04b6.oggvorbisstr"]
 
 [params]
 

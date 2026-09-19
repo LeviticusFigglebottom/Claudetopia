@@ -78,6 +78,7 @@ REGIONS = {
         progression=[0, 1, 5, 3, 0, 4, 1, 0],
         lead="flute", pad_voice="pad", texture="harp", bass="cello",
         reverb="valley", reverb_mix=0.24, centre=57, lead_octave=12,
+        arp_density=4,
         colour="warm and lyrical: a flute over a harp, the small bells the Vale hangs in trees",
     ),
     "brightwater": dict(
@@ -87,6 +88,7 @@ REGIONS = {
         progression=[0, 4, 5, 3, 0, 3, 4, 0],
         lead="whistle", pad_voice="pad", texture="pluck", bass="cello",
         reverb="chamber", reverb_mix=0.20, centre=59, lead_octave=12,
+        arp_density=4,
         colour="bright and busy: water light on white walls, a whistle and a quick pluck",
     ),
     "sedgemire": dict(
@@ -97,6 +99,7 @@ REGIONS = {
         progression=[0, 3, 6, 0, 5, 3, 4, 0],
         lead="flute", pad_voice="choir", texture="pluck", bass="cello",
         reverb="marsh", reverb_mix=0.34, centre=55, lead_octave=12,
+        arp_density=3,
         colour="misty and modal: a breathy flute a long way off over still water",
     ),
     "briarwold": dict(
@@ -106,6 +109,7 @@ REGIONS = {
         progression=[0, 5, 2, 6, 0, 3, 4, 0],
         lead="cello", pad_voice="choir", texture="pluck", bass="cello",
         reverb="cave", reverb_mix=0.30, centre=50, lead_octave=12,
+        arp_density=3,
         colour="deep and hushed: low strings under a canopy, almost nothing above them",
     ),
     "skerrow": dict(
@@ -116,6 +120,7 @@ REGIONS = {
         progression=[0, 6, 3, 0, 6, 4, 3, 0],
         lead="pipes", pad_voice="glass", texture="pluck", bass="drone",
         reverb="hall", reverb_mix=0.26, centre=57, lead_octave=12,
+        arp_density=4,
         colour="cold and open: pipes over a drone, wind on a high moor",
     ),
     "cinderlea": dict(
@@ -126,6 +131,7 @@ REGIONS = {
         progression=[0, 1, 0, 6, 0, 1, 5, 0],
         lead="hum", pad_voice="glass", texture="bell", bass="drone",
         reverb="cinder", reverb_mix=0.42, centre=52, lead_octave=12,
+        arp_density=2,
         colour="hollow and sparse: a held note, ash, and one bell every few minutes",
     ),
 }
@@ -403,13 +409,15 @@ def region_score(key: str) -> Score:
         ci = bar % len(prog)
         chord = chords[ci]
         beat = bar * bpb
-        # an arpeggio whose density follows the region's tempo: fast places move more
-        density = 2 if cfg["bpm"] < 62 else 4
-        pattern = [0, 2, 1, 2][:density] if density == 4 else [0, 2]
+        # How busy the arpeggio is belongs to the region, not to its tempo: deriving it from
+        # bpm left the slow places with one note every two seconds, which at the pitches a
+        # plucked string actually sustains is a hole rather than a texture.
+        density = int(cfg.get("arp_density", 4))
+        pattern = [0, 2, 1, 2, 0, 1][:density]
         for i, idx in enumerate(pattern):
-            b = beat + i * (bpb / density)
+            b = beat + i * (bpb / float(density))
             midi = chord[idx % len(chord)] + (12 if i % 4 == 3 else 0)
-            texture.append(Note(b, bpb / density * 0.9, midi, 0.46 - 0.035 * i, "arp"))
+            texture.append(Note(b, bpb / float(density) * 0.9, midi, 0.46 - 0.035 * i, "arp"))
         # a bell marks the start of every phrase: the ringing the region is made of
         if bar % phrase_bars == 0:
             texture.append(Note(beat, bpb * 2.0, tonic + 12, 0.36 if bar else 0.44, "bell"))

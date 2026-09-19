@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://ctm37letkaxvn"
+path="res://.godot/imported/footstep_snow_04.ogg-e7edde858060eaa36526262873bcbc44.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/footstep_snow/footstep_snow_04.ogg"
+dest_files=["res://.godot/imported/footstep_snow_04.ogg-e7edde858060eaa36526262873bcbc44.oggvorbisstr"]
 
 [params]
 

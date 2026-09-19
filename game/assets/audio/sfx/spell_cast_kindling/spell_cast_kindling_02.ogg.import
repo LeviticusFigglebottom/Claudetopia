@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://c0t7c4ykgos1q"
+path="res://.godot/imported/spell_cast_kindling_02.ogg-31dc099a6685ca06fb87ce8b4ca4017a.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/spell_cast_kindling/spell_cast_kindling_02.ogg"
+dest_files=["res://.godot/imported/spell_cast_kindling_02.ogg-31dc099a6685ca06fb87ce8b4ca4017a.oggvorbisstr"]
 
 [params]
 

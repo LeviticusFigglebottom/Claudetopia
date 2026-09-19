@@ -1,0 +1,160 @@
+[
+  {
+    "bars": 24,
+    "bpm": 54.0,
+    "colour": "deep and hushed: low strings under a canopy, almost nothing above them",
+    "id": "core:music/briarwold",
+    "loop_seconds": 106.667,
+    "mode": "aeolian_deep",
+    "name": "Under the Grandfather",
+    "region": "core:region/briarwold",
+    "stems": {
+      "combat": "res://assets/audio/music/briarwold/combat.ogg",
+      "deep": "res://assets/audio/music/briarwold/deep.ogg",
+      "melody": "res://assets/audio/music/briarwold/melody.ogg",
+      "pad": "res://assets/audio/music/briarwold/pad.ogg",
+      "texture": "res://assets/audio/music/briarwold/texture.ogg"
+    }
+  },
+  {
+    "bars": 40,
+    "bpm": 92.0,
+    "colour": "bright and busy: water light on white walls, a whistle and a quick pluck",
+    "id": "core:music/brightwater",
+    "loop_seconds": 104.348,
+    "mode": "ionian_bright",
+    "name": "The Long Stride",
+    "region": "core:region/brightwater",
+    "stems": {
+      "combat": "res://assets/audio/music/brightwater/combat.ogg",
+      "deep": "res://assets/audio/music/brightwater/deep.ogg",
+      "melody": "res://assets/audio/music/brightwater/melody.ogg",
+      "pad": "res://assets/audio/music/brightwater/pad.ogg",
+      "texture": "res://assets/audio/music/brightwater/texture.ogg"
+    }
+  },
+  {
+    "bars": 20,
+    "bpm": 44.0,
+    "colour": "hollow and sparse: a held note, ash, and one bell every few minutes",
+    "id": "core:music/cinderlea",
+    "loop_seconds": 109.091,
+    "mode": "phrygian_hollow",
+    "name": "The Held Note",
+    "region": "core:region/cinderlea",
+    "stems": {
+      "combat": "res://assets/audio/music/cinderlea/combat.ogg",
+      "deep": "res://assets/audio/music/cinderlea/deep.ogg",
+      "melody": "res://assets/audio/music/cinderlea/melody.ogg",
+      "pad": "res://assets/audio/music/cinderlea/pad.ogg",
+      "texture": "res://assets/audio/music/cinderlea/texture.ogg"
+    }
+  },
+  {
+    "bars": 32,
+    "bpm": 76.0,
+    "colour": "warm and lyrical: a flute over a harp, the small bells the Vale hangs in trees",
+    "id": "core:music/hearthvale",
+    "loop_seconds": 101.053,
+    "mode": "lydian_warm",
+    "name": "Tended Light",
+    "region": "core:region/hearthvale",
+    "stems": {
+      "combat": "res://assets/audio/music/hearthvale/combat.ogg",
+      "deep": "res://assets/audio/music/hearthvale/deep.ogg",
+      "melody": "res://assets/audio/music/hearthvale/melody.ogg",
+      "pad": "res://assets/audio/music/hearthvale/pad.ogg",
+      "texture": "res://assets/audio/music/hearthvale/texture.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 60.0,
+    "colour": "misty and modal: a breathy flute a long way off over still water",
+    "id": "core:music/sedgemire",
+    "loop_seconds": 96.0,
+    "mode": "dorian_misty",
+    "name": "What the Water Kept",
+    "region": "core:region/sedgemire",
+    "stems": {
+      "combat": "res://assets/audio/music/sedgemire/combat.ogg",
+      "deep": "res://assets/audio/music/sedgemire/deep.ogg",
+      "melody": "res://assets/audio/music/sedgemire/melody.ogg",
+      "pad": "res://assets/audio/music/sedgemire/pad.ogg",
+      "texture": "res://assets/audio/music/sedgemire/texture.ogg"
+    }
+  },
+  {
+    "bars": 28,
+    "bpm": 68.0,
+    "colour": "cold and open: pipes over a drone, wind on a high moor",
+    "id": "core:music/skerrow",
+    "loop_seconds": 98.824,
+    "mode": "mixolydian_cold",
+    "name": "A Hand on the Rope",
+    "region": "core:region/skerrow",
+    "stems": {
+      "combat": "res://assets/audio/music/skerrow/combat.ogg",
+      "deep": "res://assets/audio/music/skerrow/deep.ogg",
+      "melody": "res://assets/audio/music/skerrow/melody.ogg",
+      "pad": "res://assets/audio/music/skerrow/pad.ogg",
+      "texture": "res://assets/audio/music/skerrow/texture.ogg"
+    }
+  },
+  {
+    "bpm": 70.0,
+    "id": "core:music/main_theme",
+    "loop_seconds": 109.714,
+    "mode": "lydian_warm",
+    "name": "Wickmere",
+    "stems": {
+      "main": "res://assets/audio/music/theme/main_theme.ogg"
+    }
+  },
+  {
+    "bpm": 50.0,
+    "id": "core:music/naming",
+    "loop_seconds": 76.8,
+    "mode": "phrygian_hollow",
+    "name": "The Naming",
+    "stems": {
+      "main": "res://assets/audio/music/theme/naming.ogg"
+    }
+  },
+  {
+    "bpm": 100.0,
+    "id": "core:music/boss_1",
+    "loop_seconds": 57.6,
+    "mode": "phrygian_hollow",
+    "name": "The Holder of a Note",
+    "stems": {
+      "main": "res://assets/audio/music/theme/boss_1.ogg"
+    }
+  },
+  {
+    "bpm": 116.0,
+    "id": "core:music/boss_2",
+    "loop_seconds": 49.655,
+    "mode": "phrygian_hollow",
+    "name": "The Note Itself",
+    "stems": {
+      "main": "res://assets/audio/music/theme/boss_2.ogg"
+    }
+  },
+  {
+    "bpm": 0.0,
+    "id": "core:music/stingers",
+    "mode": "ionian_bright",
+    "name": "Stingers",
+    "stems": {},
+    "stingers": {
+      "death": "res://assets/audio/music/stingers/death.ogg",
+      "echo": "res://assets/audio/music/stingers/echo.ogg",
+      "level_up": "res://assets/audio/music/stingers/level_up.ogg",
+      "menu_select": "res://assets/audio/music/stingers/menu_select.ogg",
+      "quest_update": "res://assets/audio/music/stingers/quest_update.ogg",
+      "rest": "res://assets/audio/music/stingers/rest.ogg",
+      "victory": "res://assets/audio/music/stingers/victory.ogg"
+    }
+  }
+]

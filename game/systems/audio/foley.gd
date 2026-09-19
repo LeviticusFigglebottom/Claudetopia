@@ -256,13 +256,17 @@ func surface_of(node: Object) -> String:
 ## Cached streams and playing players both hold decoders open, so both go on the way out.
 func release() -> void:
 	stop_all()
-	for p in _pool3d:
-		if is_instance_valid(p):
-			p.stream = null
-	for p in _pool2d:
-		if is_instance_valid(p):
-			p.stream = null
+	_release_players()
 	_cache.clear()
+
+## Stop and detach every player under this node, whichever code path made it.
+## A stream that is still playing keeps its decoder alive, and a node queue_freed during
+## shutdown never reaches its deferred free, so both show up as leaks when the engine exits.
+func _release_players() -> void:
+	for child in get_children():
+		if child is AudioStreamPlayer or child is AudioStreamPlayer3D or child is AudioStreamPlayer2D:
+			child.stop()
+			child.stream = null
 
 
 func _exit_tree() -> void:

@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://dryqvdicj1q61"
+path="res://.godot/imported/sword_swing_heavy_04.ogg-6400011d74dc5972dfa19885b08ce02c.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/sword_swing_heavy/sword_swing_heavy_04.ogg"
+dest_files=["res://.godot/imported/sword_swing_heavy_04.ogg-6400011d74dc5972dfa19885b08ce02c.oggvorbisstr"]
 
 [params]
 

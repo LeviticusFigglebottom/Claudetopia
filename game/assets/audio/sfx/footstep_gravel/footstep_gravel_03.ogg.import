@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://1n61l4dr7eeg"
+path="res://.godot/imported/footstep_gravel_03.ogg-88b98e5229cbfd6bda0b7c34b6494b9e.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/footstep_gravel/footstep_gravel_03.ogg"
+dest_files=["res://.godot/imported/footstep_gravel_03.ogg-88b98e5229cbfd6bda0b7c34b6494b9e.oggvorbisstr"]
 
 [params]
 

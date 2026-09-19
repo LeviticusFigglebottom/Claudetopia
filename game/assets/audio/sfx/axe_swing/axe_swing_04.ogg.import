@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://m0b1c57836ll"
+path="res://.godot/imported/axe_swing_04.ogg-fb93ad74bbfde250795a613d614c146a.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/axe_swing/axe_swing_04.ogg"
+dest_files=["res://.godot/imported/axe_swing_04.ogg-fb93ad74bbfde250795a613d614c146a.oggvorbisstr"]
 
 [params]
 

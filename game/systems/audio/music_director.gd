@@ -134,12 +134,23 @@ func _retire_current(instant: bool) -> void:
 	for stem: String in _players:
 		var p: AudioStreamPlayer = _players[stem]
 		if instant:
-			p.stop()
-			p.stream = null
-			p.queue_free()
+			_discard(p)
 		else:
 			_outgoing.append(p)
 	_players.clear()
+
+
+## Finish with a player for good: stop it, drop its stream, and free it now rather than at the
+## end of the frame. A queue_free() issued while the game is shutting down never reaches its
+## deferred call, and the stream playback it was still holding is reported as a leak.
+func _discard(p: AudioStreamPlayer) -> void:
+	if not is_instance_valid(p):
+		return
+	p.stop()
+	p.stream = null
+	if p.get_parent() == self:
+		remove_child(p)
+	p.free()
 
 
 # --- mode ------------------------------------------------------------------------------------
@@ -215,11 +226,7 @@ func _process(delta: float) -> void:
 			continue
 		p.volume_db = move_toward(p.volume_db, SILENCE_DB, out_step)
 		if p.volume_db <= SILENCE_DB:
-			# stop before freeing: a player freed while still playing leaves its stream
-			# playback registered with the AudioServer, which Godot reports as a leak
-			p.stop()
-			p.stream = null
-			p.queue_free()
+			_discard(p)
 		else:
 			still.append(p)
 	_outgoing = still
@@ -409,11 +416,17 @@ func overlay_kind() -> String:
 ## out; otherwise Godot reports leaked Ogg playbacks at exit and the smoke run fails on them.
 func release() -> void:
 	stop_all()
-	for p in [_overlay, _stinger]:
-		if is_instance_valid(p):
-			p.stop()
-			p.stream = null
+	_release_players()
 	_music_defs.clear()
+
+## Stop and detach every player under this node, whichever code path made it.
+## A stream that is still playing keeps its decoder alive, and a node queue_freed during
+## shutdown never reaches its deferred free, so both show up as leaks when the engine exits.
+func _release_players() -> void:
+	for child in get_children():
+		if child is AudioStreamPlayer or child is AudioStreamPlayer3D or child is AudioStreamPlayer2D:
+			child.stop()
+			child.stream = null
 
 
 func _exit_tree() -> void:
@@ -425,10 +438,7 @@ func stop_all() -> void:
 	# The stems of the region being crossfaded away are held in _outgoing, not _players, and
 	# would otherwise keep playing (and keep their decoders open) after everything else stopped.
 	for p in _outgoing:
-		if is_instance_valid(p):
-			p.stop()
-			p.stream = null
-			p.queue_free()
+		_discard(p)
 	_outgoing.clear()
 	_set_overlay("", "")
 	if is_instance_valid(_overlay):

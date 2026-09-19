@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://d2rhjqal2gpad"
+path="res://.godot/imported/spell_impact_calling_01.ogg-843c7bee939f0a71793be3033bd0adda.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/spell_impact_calling/spell_impact_calling_01.ogg"
+dest_files=["res://.godot/imported/spell_impact_calling_01.ogg-843c7bee939f0a71793be3033bd0adda.oggvorbisstr"]
 
 [params]
 

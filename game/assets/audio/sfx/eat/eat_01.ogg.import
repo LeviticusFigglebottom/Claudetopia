@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://l5nbc5umwebx"
+path="res://.godot/imported/eat_01.ogg-ef8a0aa7a8ee5fcbeb822beaf778615a.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/eat/eat_01.ogg"
+dest_files=["res://.godot/imported/eat_01.ogg-ef8a0aa7a8ee5fcbeb822beaf778615a.oggvorbisstr"]
 
 [params]
 

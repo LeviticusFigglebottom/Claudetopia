@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://cdqtm43c4o26r"
+path="res://.godot/imported/wood_creak_01.ogg-73175796b59a954abe478422777ddeb0.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/wood_creak/wood_creak_01.ogg"
+dest_files=["res://.godot/imported/wood_creak_01.ogg-73175796b59a954abe478422777ddeb0.oggvorbisstr"]
 
 [params]
 

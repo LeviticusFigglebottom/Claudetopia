@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://b0idtdqpmbkp"
+path="res://.godot/imported/potion_drink_03.ogg-240846ae63715c0e1f554736499bcfba.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/potion_drink/potion_drink_03.ogg"
+dest_files=["res://.godot/imported/potion_drink_03.ogg-240846ae63715c0e1f554736499bcfba.oggvorbisstr"]
 
 [params]
 

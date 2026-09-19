@@ -205,7 +205,9 @@ def spectral_balance(x: np.ndarray, bands=((20, 120), (120, 500), (500, 2000), (
     """Energy per band in dB relative to the total (a cheap tonal-balance check)."""
     mono = to_mono(np.asarray(x, dtype=np.float64))
     n = min(len(mono), SR * 30)
-    f, p = signal.welch(mono[:n], SR, nperseg=8192)
+    # a short one-shot is shorter than the window, so the window follows the signal
+    nper = int(min(8192, max(256, 2 ** int(np.log2(max(n, 256))))))
+    f, p = signal.welch(mono[:n], SR, nperseg=nper)
     total = np.trapezoid(p, f) + 1e-18
     out = {}
     for lo, hi in bands:

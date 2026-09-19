@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://dpd4ealonymv"
+path="res://.godot/imported/sword_swing_light_01.ogg-d0737fca95e4325a4547360d7ddcd21e.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/sword_swing_light/sword_swing_light_01.ogg"
+dest_files=["res://.godot/imported/sword_swing_light_01.ogg-d0737fca95e4325a4547360d7ddcd21e.oggvorbisstr"]
 
 [params]
 

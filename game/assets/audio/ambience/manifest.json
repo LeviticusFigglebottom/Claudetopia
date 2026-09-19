@@ -1,16 +1,366 @@
 {
+  "ash_hiss": {
+    "bytes": 665790,
+    "files": [
+      "res://assets/audio/ambience/ash_hiss/ash_hiss.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "bees": {
+    "bytes": 506968,
+    "files": [
+      "res://assets/audio/ambience/bees/bees.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "bell_rare": {
+    "bytes": 330268,
+    "files": [
+      "res://assets/audio/ambience/bell_rare/bell_rare_01.ogg",
+      "res://assets/audio/ambience/bell_rare/bell_rare_02.ogg",
+      "res://assets/audio/ambience/bell_rare/bell_rare_03.ogg",
+      "res://assets/audio/ambience/bell_rare/bell_rare_04.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "bittern": {
+    "bytes": 65745,
+    "files": [
+      "res://assets/audio/ambience/bittern/bittern_01.ogg",
+      "res://assets/audio/ambience/bittern/bittern_02.ogg",
+      "res://assets/audio/ambience/bittern/bittern_03.ogg",
+      "res://assets/audio/ambience/bittern/bittern_04.ogg",
+      "res://assets/audio/ambience/bittern/bittern_05.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "buoy_bell": {
+    "bytes": 142582,
+    "files": [
+      "res://assets/audio/ambience/buoy_bell/buoy_bell_01.ogg",
+      "res://assets/audio/ambience/buoy_bell/buoy_bell_02.ogg",
+      "res://assets/audio/ambience/buoy_bell/buoy_bell_03.ogg",
+      "res://assets/audio/ambience/buoy_bell/buoy_bell_04.ogg",
+      "res://assets/audio/ambience/buoy_bell/buoy_bell_05.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
   "canopy_wind": {
     "bytes": 597382,
     "files": [
       "res://assets/audio/ambience/canopy_wind/canopy_wind.ogg"
     ],
     "kind": "bed",
-    "loop": true,
-    "lufs": -30.0,
-    "peak_db": -15.64,
-    "seam_click_db": -2.16,
-    "seam_rms_db": 0.714,
-    "seconds": 42.0
+    "loop": true
+  },
+  "chain_clink": {
+    "bytes": 42012,
+    "files": [
+      "res://assets/audio/ambience/chain_clink/chain_clink.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "creak": {
+    "bytes": 99524,
+    "files": [
+      "res://assets/audio/ambience/creak/creak_01.ogg",
+      "res://assets/audio/ambience/creak/creak_02.ogg",
+      "res://assets/audio/ambience/creak/creak_03.ogg",
+      "res://assets/audio/ambience/creak/creak_04.ogg",
+      "res://assets/audio/ambience/creak/creak_05.ogg",
+      "res://assets/audio/ambience/creak/creak_06.ogg",
+      "res://assets/audio/ambience/creak/creak_07.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "crows": {
+    "bytes": 35285,
+    "files": [
+      "res://assets/audio/ambience/crows/crows_01.ogg",
+      "res://assets/audio/ambience/crows/crows_02.ogg",
+      "res://assets/audio/ambience/crows/crows_03.ogg",
+      "res://assets/audio/ambience/crows/crows_04.ogg",
+      "res://assets/audio/ambience/crows/crows_05.ogg",
+      "res://assets/audio/ambience/crows/crows_06.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "dawn_chorus": {
+    "bytes": 71895,
+    "files": [
+      "res://assets/audio/ambience/dawn_chorus/dawn_chorus_01.ogg",
+      "res://assets/audio/ambience/dawn_chorus/dawn_chorus_02.ogg",
+      "res://assets/audio/ambience/dawn_chorus/dawn_chorus_03.ogg",
+      "res://assets/audio/ambience/dawn_chorus/dawn_chorus_04.ogg",
+      "res://assets/audio/ambience/dawn_chorus/dawn_chorus_05.ogg",
+      "res://assets/audio/ambience/dawn_chorus/dawn_chorus_06.ogg",
+      "res://assets/audio/ambience/dawn_chorus/dawn_chorus_07.ogg",
+      "res://assets/audio/ambience/dawn_chorus/dawn_chorus_08.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "distant_falls": {
+    "bytes": 538264,
+    "files": [
+      "res://assets/audio/ambience/distant_falls/distant_falls.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "drip": {
+    "bytes": 31359,
+    "files": [
+      "res://assets/audio/ambience/drip/drip.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "frogs": {
+    "bytes": 255198,
+    "files": [
+      "res://assets/audio/ambience/frogs/frogs.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "gulls": {
+    "bytes": 43400,
+    "files": [
+      "res://assets/audio/ambience/gulls/gulls_01.ogg",
+      "res://assets/audio/ambience/gulls/gulls_02.ogg",
+      "res://assets/audio/ambience/gulls/gulls_03.ogg",
+      "res://assets/audio/ambience/gulls/gulls_04.ogg",
+      "res://assets/audio/ambience/gulls/gulls_05.ogg",
+      "res://assets/audio/ambience/gulls/gulls_06.ogg",
+      "res://assets/audio/ambience/gulls/gulls_07.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "hammer_distant": {
+    "bytes": 213922,
+    "files": [
+      "res://assets/audio/ambience/hammer_distant/hammer_distant_01.ogg",
+      "res://assets/audio/ambience/hammer_distant/hammer_distant_02.ogg",
+      "res://assets/audio/ambience/hammer_distant/hammer_distant_03.ogg",
+      "res://assets/audio/ambience/hammer_distant/hammer_distant_04.ogg",
+      "res://assets/audio/ambience/hammer_distant/hammer_distant_05.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "hearth_fire": {
+    "bytes": 649410,
+    "files": [
+      "res://assets/audio/ambience/hearth_fire/hearth_fire.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "leaves_broad": {
+    "bytes": 657418,
+    "files": [
+      "res://assets/audio/ambience/leaves_broad/leaves_broad.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "market_murmur": {
+    "bytes": 516125,
+    "files": [
+      "res://assets/audio/ambience/market_murmur/market_murmur.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "night_insects": {
+    "bytes": 609216,
+    "files": [
+      "res://assets/audio/ambience/night_insects/night_insects.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "night_insects_marsh": {
+    "bytes": 588777,
+    "files": [
+      "res://assets/audio/ambience/night_insects_marsh/night_insects_marsh.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "owl": {
+    "bytes": 51358,
+    "files": [
+      "res://assets/audio/ambience/owl/owl_01.ogg",
+      "res://assets/audio/ambience/owl/owl_02.ogg",
+      "res://assets/audio/ambience/owl/owl_03.ogg",
+      "res://assets/audio/ambience/owl/owl_04.ogg",
+      "res://assets/audio/ambience/owl/owl_05.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "pipes_night": {
+    "bytes": 227287,
+    "files": [
+      "res://assets/audio/ambience/pipes_night/pipes_night_01.ogg",
+      "res://assets/audio/ambience/pipes_night/pipes_night_02.ogg",
+      "res://assets/audio/ambience/pipes_night/pipes_night_03.ogg",
+      "res://assets/audio/ambience/pipes_night/pipes_night_04.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "rain_canvas": {
+    "bytes": 701035,
+    "files": [
+      "res://assets/audio/ambience/rain_canvas/rain_canvas.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "rain_heavy": {
+    "bytes": 662950,
+    "files": [
+      "res://assets/audio/ambience/rain_heavy/rain_heavy.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "rain_light": {
+    "bytes": 683937,
+    "files": [
+      "res://assets/audio/ambience/rain_light/rain_light.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "rain_stone": {
+    "bytes": 684018,
+    "files": [
+      "res://assets/audio/ambience/rain_stone/rain_stone.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "rain_water": {
+    "bytes": 682026,
+    "files": [
+      "res://assets/audio/ambience/rain_water/rain_water.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "room_tone": {
+    "bytes": 571784,
+    "files": [
+      "res://assets/audio/ambience/room_tone/room_tone.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "rope_creak": {
+    "bytes": 149403,
+    "files": [
+      "res://assets/audio/ambience/rope_creak/rope_creak.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "silence_bed": {
+    "bytes": 545038,
+    "files": [
+      "res://assets/audio/ambience/silence_bed/silence_bed.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "skylark": {
+    "bytes": 154446,
+    "files": [
+      "res://assets/audio/ambience/skylark/skylark_01.ogg",
+      "res://assets/audio/ambience/skylark/skylark_02.ogg",
+      "res://assets/audio/ambience/skylark/skylark_03.ogg",
+      "res://assets/audio/ambience/skylark/skylark_04.ogg",
+      "res://assets/audio/ambience/skylark/skylark_05.ogg",
+      "res://assets/audio/ambience/skylark/skylark_06.ogg",
+      "res://assets/audio/ambience/skylark/skylark_07.ogg",
+      "res://assets/audio/ambience/skylark/skylark_08.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "snow_hush": {
+    "bytes": 702373,
+    "files": [
+      "res://assets/audio/ambience/snow_hush/snow_hush.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "sustained_note": {
+    "bytes": 391436,
+    "files": [
+      "res://assets/audio/ambience/sustained_note/sustained_note.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "thunder_far": {
+    "bytes": 145666,
+    "files": [
+      "res://assets/audio/ambience/thunder_far/thunder_far_01.ogg",
+      "res://assets/audio/ambience/thunder_far/thunder_far_02.ogg",
+      "res://assets/audio/ambience/thunder_far/thunder_far_03.ogg",
+      "res://assets/audio/ambience/thunder_far/thunder_far_04.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "thunder_near": {
+    "bytes": 151854,
+    "files": [
+      "res://assets/audio/ambience/thunder_near/thunder_near_01.ogg",
+      "res://assets/audio/ambience/thunder_near/thunder_near_02.ogg",
+      "res://assets/audio/ambience/thunder_near/thunder_near_03.ogg",
+      "res://assets/audio/ambience/thunder_near/thunder_near_04.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
+  },
+  "water_lap": {
+    "bytes": 558800,
+    "files": [
+      "res://assets/audio/ambience/water_lap/water_lap.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "water_still": {
+    "bytes": 445494,
+    "files": [
+      "res://assets/audio/ambience/water_still/water_still.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
+  },
+  "waterfall": {
+    "bytes": 584839,
+    "files": [
+      "res://assets/audio/ambience/waterfall/waterfall.ogg"
+    ],
+    "kind": "bed",
+    "loop": true
   },
   "wind_gust_light": {
     "bytes": 581069,
@@ -18,12 +368,7 @@
       "res://assets/audio/ambience/wind_gust_light/wind_gust_light.ogg"
     ],
     "kind": "bed",
-    "loop": true,
-    "lufs": -30.0,
-    "peak_db": -13.5,
-    "seam_click_db": -9.26,
-    "seam_rms_db": 0.677,
-    "seconds": 42.0
+    "loop": true
   },
   "wind_gust_strong": {
     "bytes": 605268,
@@ -31,12 +376,7 @@
       "res://assets/audio/ambience/wind_gust_strong/wind_gust_strong.ogg"
     ],
     "kind": "bed",
-    "loop": true,
-    "lufs": -30.0,
-    "peak_db": -15.46,
-    "seam_click_db": -58.65,
-    "seam_rms_db": 1.041,
-    "seconds": 42.0
+    "loop": true
   },
   "wind_high": {
     "bytes": 610758,
@@ -44,12 +384,7 @@
       "res://assets/audio/ambience/wind_high/wind_high.ogg"
     ],
     "kind": "bed",
-    "loop": true,
-    "lufs": -30.0,
-    "peak_db": -15.65,
-    "seam_click_db": -10.64,
-    "seam_rms_db": 0.17,
-    "seconds": 42.0
+    "loop": true
   },
   "wind_soft": {
     "bytes": 557556,
@@ -57,11 +392,19 @@
       "res://assets/audio/ambience/wind_soft/wind_soft.ogg"
     ],
     "kind": "bed",
-    "loop": true,
-    "lufs": -30.0,
-    "peak_db": -15.14,
-    "seam_click_db": -23.28,
-    "seam_rms_db": 2.357,
-    "seconds": 42.0
+    "loop": true
+  },
+  "woodpecker": {
+    "bytes": 43815,
+    "files": [
+      "res://assets/audio/ambience/woodpecker/woodpecker_01.ogg",
+      "res://assets/audio/ambience/woodpecker/woodpecker_02.ogg",
+      "res://assets/audio/ambience/woodpecker/woodpecker_03.ogg",
+      "res://assets/audio/ambience/woodpecker/woodpecker_04.ogg",
+      "res://assets/audio/ambience/woodpecker/woodpecker_05.ogg",
+      "res://assets/audio/ambience/woodpecker/woodpecker_06.ogg"
+    ],
+    "kind": "pool",
+    "loop": false
   }
 }

@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://hkxjd8nrxgft"
+path="res://.godot/imported/bell_tower_01.ogg-81eb26a0978afd21db38bb97946e61b9.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/bell_tower/bell_tower_01.ogg"
+dest_files=["res://.godot/imported/bell_tower_01.ogg-81eb26a0978afd21db38bb97946e61b9.oggvorbisstr"]
 
 [params]
 

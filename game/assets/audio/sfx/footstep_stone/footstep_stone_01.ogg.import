@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://bgtb5x2df22gm"
+path="res://.godot/imported/footstep_stone_01.ogg-ced956ca15ac740a26611a0fb27d93fe.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/footstep_stone/footstep_stone_01.ogg"
+dest_files=["res://.godot/imported/footstep_stone_01.ogg-ced956ca15ac740a26611a0fb27d93fe.oggvorbisstr"]
 
 [params]
 
