@@ -24,6 +24,9 @@ const DROP_IN := 0.6
 @export var install_services: bool = true
 ## A capture or a tool that wants the country without anybody in it turns this off.
 @export var enabled: bool = true
+## ...but a village with nobody in it cannot be judged, so a capture can ask for the world's
+## services — and therefore its people — without a player body standing in the shot.
+@export var services_without_a_body: bool = false
 
 var player: Node3D = null
 
@@ -31,6 +34,11 @@ var player: Node3D = null
 func _ready() -> void:
 	add_to_group("player_spawn")
 	if not enabled:
+		if services_without_a_body and install_services:
+			var host := _world()
+			if host != null and not host.is_world_ready:
+				await host.world_ready
+			_install_services()
 		return
 	# A child is ready before its parent, so World.instance is not set yet and the terrain
 	# certainly is not: a body placed now lands at zero metres in the middle of the map.

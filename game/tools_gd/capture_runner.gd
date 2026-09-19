@@ -100,6 +100,9 @@ func _load_world() -> World:
 	var spawn: Node = w.get_node_or_null("PlayerSpawn")
 	if spawn != null:
 		spawn.set("enabled", false)
+		# ...but the world's services still go in, because they are what stands the villagers
+		# up, and a photograph of a village with nobody in it is a photograph of a model.
+		spawn.set("services_without_a_body", true)
 	add_child(w)
 	await get_tree().process_frame
 	await get_tree().process_frame
