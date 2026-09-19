@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bi5xy7k8rejgv"
+path.s3tc="res://.godot/imported/brightwater_sayers_spire_a_albedo.png-2b41d0970a261065a4557240c1820a4d.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/landmarks/brightwater_sayers_spire_a/brightwater_sayers_spire_a_albedo.png"
+dest_files=["res://.godot/imported/brightwater_sayers_spire_a_albedo.png-2b41d0970a261065a4557240c1820a4d.s3tc.ctex"]
 
 [params]
 

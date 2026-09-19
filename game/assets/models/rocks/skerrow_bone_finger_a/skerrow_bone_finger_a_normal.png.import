@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://sokf3rei6mnn"
+path.s3tc="res://.godot/imported/skerrow_bone_finger_a_normal.png-0bcfcf07c22403c08317eb3e99a298ef.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_bone_finger_a/skerrow_bone_finger_a_normal.png"
+dest_files=["res://.godot/imported/skerrow_bone_finger_a_normal.png-0bcfcf07c22403c08317eb3e99a298ef.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://hsm4jx8wm65y"
+path.s3tc="res://.godot/imported/sedgemire_willow_b_impostor_orm.png-0a556a3a3578402f516a4d7ad31aea5f.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/sedgemire_willow_b/sedgemire_willow_b_impostor_orm.png"
+dest_files=["res://.godot/imported/sedgemire_willow_b_impostor_orm.png-0a556a3a3578402f516a4d7ad31aea5f.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ch50n2dky4gcs"
+path.s3tc="res://.godot/imported/brightwater_willow_pollard_b_orm.png-40bbfd60d18239980c78b664af490c52.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/brightwater_willow_pollard_b/brightwater_willow_pollard_b_orm.png"
+dest_files=["res://.godot/imported/brightwater_willow_pollard_b_orm.png-40bbfd60d18239980c78b664af490c52.s3tc.ctex"]
 
 [params]
 

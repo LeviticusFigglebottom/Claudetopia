@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://d3h6w165ibb3q"
+path="res://.godot/imported/skerrow_bone_finger_b.glb-e3f85bc7b2bef3b121c498e6eefab9da.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_bone_finger_b/skerrow_bone_finger_b.glb"
+dest_files=["res://.godot/imported/skerrow_bone_finger_b.glb-e3f85bc7b2bef3b121c498e6eefab9da.scn"]
 
 [params]
 

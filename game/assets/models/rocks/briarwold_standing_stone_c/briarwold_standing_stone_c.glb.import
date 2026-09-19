@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dn3kggqr4lws8"
+path="res://.godot/imported/briarwold_standing_stone_c.glb-9d0fa2812e4d0bd72251485217d0d9bc.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/briarwold_standing_stone_c/briarwold_standing_stone_c.glb"
+dest_files=["res://.godot/imported/briarwold_standing_stone_c.glb-9d0fa2812e4d0bd72251485217d0d9bc.scn"]
 
 [params]
 

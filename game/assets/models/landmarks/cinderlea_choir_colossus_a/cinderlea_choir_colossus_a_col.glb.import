@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://vu6qalwrxt3v"
+path="res://.godot/imported/cinderlea_choir_colossus_a_col.glb-8b9dec1229be774fccc22d0927473c60.scn"
 
 [deps]
 
 source_file="res://assets/models/landmarks/cinderlea_choir_colossus_a/cinderlea_choir_colossus_a_col.glb"
+dest_files=["res://.godot/imported/cinderlea_choir_colossus_a_col.glb-8b9dec1229be774fccc22d0927473c60.scn"]
 
 [params]
 

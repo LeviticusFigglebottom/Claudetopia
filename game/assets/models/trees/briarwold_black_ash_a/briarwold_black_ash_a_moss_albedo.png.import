@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://da0d4ve01gjvj"
+path.s3tc="res://.godot/imported/briarwold_black_ash_a_moss_albedo.png-24c4f42f2585b362896a4a8dd1bc3c5c.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/briarwold_black_ash_a/briarwold_black_ash_a_moss_albedo.png"
+dest_files=["res://.godot/imported/briarwold_black_ash_a_moss_albedo.png-24c4f42f2585b362896a4a8dd1bc3c5c.s3tc.ctex"]
 
 [params]
 

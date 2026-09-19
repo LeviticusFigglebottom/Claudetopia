@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ce6sbo4mh3rvb"
+path.s3tc="res://.godot/imported/skerrow_standing_stone_a_orm.png-b213d73037ace1f782ab849fc9aa63ab.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_standing_stone_a/skerrow_standing_stone_a_orm.png"
+dest_files=["res://.godot/imported/skerrow_standing_stone_a_orm.png-b213d73037ace1f782ab849fc9aa63ab.s3tc.ctex"]
 
 [params]
 

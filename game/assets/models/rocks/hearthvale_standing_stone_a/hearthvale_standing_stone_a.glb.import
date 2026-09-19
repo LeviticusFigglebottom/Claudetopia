@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://3cfcdsocxv2d"
+path="res://.godot/imported/hearthvale_standing_stone_a.glb-9ef53232cc6f1dc2a1ca02e187bcace1.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/hearthvale_standing_stone_a/hearthvale_standing_stone_a.glb"
+dest_files=["res://.godot/imported/hearthvale_standing_stone_a.glb-9ef53232cc6f1dc2a1ca02e187bcace1.scn"]
 
 [params]
 

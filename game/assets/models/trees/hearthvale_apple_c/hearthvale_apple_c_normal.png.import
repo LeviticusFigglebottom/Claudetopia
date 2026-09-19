@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkt66wb50a3rc"
+path.s3tc="res://.godot/imported/hearthvale_apple_c_normal.png-b04e676c51098020271729ac8873673c.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_apple_c/hearthvale_apple_c_normal.png"
+dest_files=["res://.godot/imported/hearthvale_apple_c_normal.png-b04e676c51098020271729ac8873673c.s3tc.ctex"]
 
 [params]
 

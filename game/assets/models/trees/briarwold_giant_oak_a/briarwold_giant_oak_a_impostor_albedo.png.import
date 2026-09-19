@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://xqd3ks303uat"
+path.s3tc="res://.godot/imported/briarwold_giant_oak_a_impostor_albedo.png-71e49dc044795a2dbc3d91875f5ea33e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/briarwold_giant_oak_a/briarwold_giant_oak_a_impostor_albedo.png"
+dest_files=["res://.godot/imported/briarwold_giant_oak_a_impostor_albedo.png-71e49dc044795a2dbc3d91875f5ea33e.s3tc.ctex"]
 
 [params]
 

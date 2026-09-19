@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://og0mq12vt4qe"
+path.s3tc="res://.godot/imported/briarwold_giant_oak_a_leaf_normal.png-bec81e5fa7660eb3dd4dff130ce51135.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/briarwold_giant_oak_a/briarwold_giant_oak_a_leaf_normal.png"
+dest_files=["res://.godot/imported/briarwold_giant_oak_a_leaf_normal.png-bec81e5fa7660eb3dd4dff130ce51135.s3tc.ctex"]
 
 [params]
 

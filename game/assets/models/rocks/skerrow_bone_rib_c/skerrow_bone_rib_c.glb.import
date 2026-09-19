@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cfm26xbbxglr5"
+path="res://.godot/imported/skerrow_bone_rib_c.glb-b8a7f4e6a8160a1a6dd36ea1aea09d7e.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_bone_rib_c/skerrow_bone_rib_c.glb"
+dest_files=["res://.godot/imported/skerrow_bone_rib_c.glb-b8a7f4e6a8160a1a6dd36ea1aea09d7e.scn"]
 
 [params]
 

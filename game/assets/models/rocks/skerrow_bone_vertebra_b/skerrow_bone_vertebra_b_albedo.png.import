@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://xlv325j08um2"
+path.s3tc="res://.godot/imported/skerrow_bone_vertebra_b_albedo.png-f6baa16d087b892220211aac5398a745.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/skerrow_bone_vertebra_b/skerrow_bone_vertebra_b_albedo.png"
+dest_files=["res://.godot/imported/skerrow_bone_vertebra_b_albedo.png-f6baa16d087b892220211aac5398a745.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://btg2qscsgcyg3"
+path.s3tc="res://.godot/imported/skerrow_rowan_b_normal.png-294b0344c01127bf7ffd2cc028ca4796.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_rowan_b/skerrow_rowan_b_normal.png"
+dest_files=["res://.godot/imported/skerrow_rowan_b_normal.png-294b0344c01127bf7ffd2cc028ca4796.s3tc.ctex"]
 
 [params]
 

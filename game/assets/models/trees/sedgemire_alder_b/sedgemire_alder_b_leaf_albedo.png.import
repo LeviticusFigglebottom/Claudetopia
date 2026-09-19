@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnekismck38xq"
+path.s3tc="res://.godot/imported/sedgemire_alder_b_leaf_albedo.png-b0846f145f3c704c0b6b08dc51b3cd98.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/sedgemire_alder_b/sedgemire_alder_b_leaf_albedo.png"
+dest_files=["res://.godot/imported/sedgemire_alder_b_leaf_albedo.png-b0846f145f3c704c0b6b08dc51b3cd98.s3tc.ctex"]
 
 [params]
 

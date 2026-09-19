@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b3n7lxfiqnynq"
+path="res://.godot/imported/hearthvale_yew_a.glb-ac813d9018645a68efef794c6329bcab.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_yew_a/hearthvale_yew_a.glb"
+dest_files=["res://.godot/imported/hearthvale_yew_a.glb-ac813d9018645a68efef794c6329bcab.scn"]
 
 [params]
 
