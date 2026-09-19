@@ -63,19 +63,27 @@ def flow_accumulation(h: np.ndarray, cell_m: float) -> np.ndarray:
     return acc.reshape(n, n)
 
 
-def valley_carve(h: np.ndarray, cell_m: float, strength: np.ndarray, max_depth: float = 30.0,
-                 knee: float = 60.0, power: float = 0.42) -> tuple:
-    """Deepen the drainage network. Returns (carved heights, 0..1 channel-ness)."""
+def channel_field(h: np.ndarray, cell_m: float, knee: float = 60.0, power: float = 0.42) -> np.ndarray:
+    """0..1 "how much of a valley is this": log-scaled, normalised flow accumulation.
+
+    Unitless on purpose -- the caller multiplies it by a per-region depth in metres, so the
+    result has to mean the same thing at 2 m and at 32 m per texel.
+    """
     filled = fill_sinks(ndimage.gaussian_filter(h, 1.0))
     acc = flow_accumulation(filled, cell_m)
-    # normalised channel strength: log so trunk valleys are only a few times deeper than heads
     a = np.log1p(acc / knee)
     a = a / max(float(np.percentile(a, 99.9)), 1e-6)
     chan = np.clip(a, 0.0, 1.0) ** power
-    chan = ndimage.gaussian_filter(chan, 1.2)
-    depth = max_depth * chan * strength
-    carved = h - depth
-    # the valley floor should be smoother than the ridges it cuts through
+    return ndimage.gaussian_filter(chan, 1.2).astype(np.float32)
+
+
+def valley_carve(h: np.ndarray, cell_m: float, depth_m: np.ndarray, strength: np.ndarray,
+                 knee: float = 60.0, power: float = 0.42) -> tuple:
+    """Deepen the drainage network by up to depth_m metres. Returns (heights, channel field)."""
+    chan = channel_field(h, cell_m, knee, power)
+    carved = h - depth_m * chan * strength
+    # a valley floor is smoother than the ridges it cuts through (metres either way: this is
+    # a blend between two height fields, never scaled by the depth again)
     smooth = ndimage.gaussian_filter(carved, 2.0)
     out = carved + (smooth - carved) * (0.55 * chan)
-    return out.astype(np.float32), chan.astype(np.float32)
+    return out.astype(np.float32), chan

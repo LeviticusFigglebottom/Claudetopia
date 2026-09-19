@@ -14,7 +14,7 @@ import numpy as np
 from scipy import ndimage
 
 from .grid import Grid, lerp, smoothstep
-from .noise import NoiseBank, downsample
+from .noise import downsample
 from . import paths
 
 PAD_RADIUS = {

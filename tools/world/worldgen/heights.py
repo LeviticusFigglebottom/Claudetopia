@@ -10,9 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
-from scipy import ndimage
 
 from .grid import Grid, lerp, smoothstep
+from .erosion import valley_carve
 from .noise import NoiseBank, downsample, ridged, terrace, upsample, warp
 from .regions import RegionDef, RegionField
 
@@ -327,7 +327,6 @@ EROSION_DEPTH = {"downs": 24.0, "lake_basin": 8.0, "delta": 4.0, "forest_rise": 
 
 def apply_drainage(ctx: HeightContext, h: np.ndarray, work_n: int = 1024) -> tuple:
     """Cut a dendritic valley network into the blended land (see worldgen/erosion.py)."""
-    from .erosion import valley_carve
     n = ctx.grid.n
     g = ctx.grid.with_n(min(n, work_n))
     hw = downsample(h, g.n)
@@ -342,9 +341,8 @@ def apply_drainage(ctx: HeightContext, h: np.ndarray, work_n: int = 1024) -> tup
     lake_sd_w = downsample(ctx.lake.sd, g.n)
     dry = smoothstep(-20.0, 220.0, lake_sd_w) * smoothstep(LAKE_LEVEL - 1.0, LAKE_LEVEL + 7.0, hw)
     strength = strength * dry
-    carved, chan = valley_carve(hw, g.spacing, strength, max_depth=1.0)
-    delta = (carved - hw) * depth_by                    # per-region valley depth
-    delta = np.minimum(delta, 0.0)
+    carved, chan = valley_carve(hw, g.spacing, depth_by, strength)
+    delta = carved - hw
     if g.n != n:
         delta = upsample(delta, n, order=3)
         chan = upsample(chan, n, order=1)

@@ -32,7 +32,7 @@ from worldgen import output as OUT
 from worldgen import roads as RD
 from worldgen import surface as SF
 from worldgen.grid import Grid, sample_bilinear
-from worldgen.noise import NoiseBank, downsample
+from worldgen.noise import NoiseBank
 from worldgen.regions import compute_regions, dithered_owner, load_places, load_regions
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -145,6 +145,9 @@ def build(args) -> dict:
         river_w = np.zeros((n, n), dtype=np.float32)
         road_d = np.full((n, n), 1e6, dtype=np.float32)
         road_w = np.zeros((n, n), dtype=np.float32)
+        # rivers and roads are reloaded from their splines only to rebuild the distance
+        # fields the texture rules read; their widths and surfaces are interpolated, which is
+        # accurate enough for that and never written back.
         for path, target in (("rivers.json", "rivers"), ("roads.json", "roads")):
             fp = os.path.join(out_dir, path)
             if os.path.exists(fp):

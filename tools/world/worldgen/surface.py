@@ -12,7 +12,6 @@ exist a screenshot says which region it is.
 from __future__ import annotations
 
 import numpy as np
-from scipy import ndimage
 
 from .grid import Grid, lerp, smoothstep
 from .noise import NoiseBank, downsample, upsample
