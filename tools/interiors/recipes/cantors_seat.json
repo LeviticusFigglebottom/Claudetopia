@@ -1,0 +1,200 @@
+{
+  "id": "core:interior/cantors_seat",
+  "name": "The Cantor's Seat",
+  "place": "core:place/cantors_seat",
+  "region": "core:region/cinderlea",
+  "formed_by": "builder",
+  "seed": 1043,
+  "voxel": 0.55,
+  "formed_by_story": "The last Harmony, and the only one that worked. Cut whole out of the plateau, not built on it: there are no joints anywhere in it, which is the detail that frightens the Sayers most.",
+  "who_was_here": "The Choir, once, all of them. And since then one person, who has not left.",
+  "story": "Everything in the Seat is tuned. The corridors are lengths, the chambers are bodies, the doors are stops. Walk it and you are walking through an instrument that is still being played, and the note it is holding is the wrong one, and it has been held for a thousand years by someone who cannot put it down.",
+  "unique_object": "the note-light: a cold blue that has no source and casts no shadow",
+  "palette": [
+    "#8f8b84",
+    "#2b2926",
+    "#c4bfb5",
+    "#4a7fa8",
+    "#a08a4a"
+  ],
+  "ambience": [
+    "sustained_note",
+    "silence_bed",
+    "bell_rare"
+  ],
+  "start_heading_deg": 90,
+  "beats": [
+    {
+      "id": "threshold",
+      "role": "entrance",
+      "size": "medium",
+      "drop": 0,
+      "note": "A doorway with no hinges and no door, and a sill worn by feet that were not the Order's."
+    },
+    {
+      "id": "first_length",
+      "role": "passage",
+      "size": "tight",
+      "drop": -1.0,
+      "link_radius": 2.6,
+      "note": "A corridor of an exact length. Your footsteps come back to you a beat late, tuned."
+    },
+    {
+      "id": "antechoir",
+      "role": "chamber",
+      "size": "large",
+      "drop": -2.0,
+      "note": "The antechoir. Twelve stone stalls, all facing a wall with nothing on it."
+    },
+    {
+      "id": "stop_hall",
+      "role": "chamber",
+      "size": "huge",
+      "drop": -3.0,
+      "light_shaft": false,
+      "note": "A hall of stops: bronze plates in the floor, each one a note, each one pressed by weight."
+    },
+    {
+      "id": "second_length",
+      "role": "passage",
+      "size": "squeeze",
+      "drop": -4.0,
+      "note": "A length that narrows as it descends, until the walls touch your shoulders and the note gets louder."
+    },
+    {
+      "id": "gallery",
+      "role": "chamber",
+      "size": "large",
+      "drop": -2.0,
+      "note": "A balcony gallery above the seat itself, where the choristers stood. You can see him from here. He does not look up."
+    },
+    {
+      "id": "seat",
+      "role": "boss",
+      "size": "cathedral",
+      "drop": -8.0,
+      "light_shaft": true,
+      "shaft_radius": 4.0,
+      "note": "The Cantor's Seat. A chair cut from the floor, a man in it, and a cold blue light with no source that has never once flickered."
+    },
+    {
+      "id": "vestry",
+      "role": "treasure",
+      "size": "medium",
+      "drop": -1.0,
+      "branch_from": "antechoir",
+      "note": "A vestry the Order has been using for two hundred years, which is to say camping in, politely, in a room that is not theirs."
+    },
+    {
+      "id": "return_length",
+      "role": "passage",
+      "size": "tight",
+      "drop": 12.0,
+      "branch_from": "seat",
+      "note": "A length that climbs. The Builders left a way out of the Seat, which means they expected somebody to want one."
+    }
+  ],
+  "links": [
+    [
+      "threshold",
+      "first_length"
+    ],
+    [
+      "first_length",
+      "antechoir"
+    ],
+    [
+      "antechoir",
+      "stop_hall"
+    ],
+    [
+      "stop_hall",
+      "second_length"
+    ],
+    [
+      "second_length",
+      "gallery"
+    ],
+    [
+      "gallery",
+      "seat"
+    ],
+    [
+      "antechoir",
+      "vestry"
+    ],
+    [
+      "seat",
+      "return_length"
+    ],
+    [
+      "return_length",
+      "threshold"
+    ]
+  ],
+  "shortcut": {
+    "from": "return_length",
+    "to": "threshold",
+    "kind": "stop",
+    "note": "A stop in the floor that opens the length when weight is put on it, and stays open."
+  },
+  "encounters": [
+    {
+      "chamber": "antechoir",
+      "enemy": "core:enemy/ash_wight",
+      "count": 4,
+      "group": "antechoir",
+      "note": "Choristers in the stalls, facing the blank wall. They do not turn until the second one is struck."
+    },
+    {
+      "chamber": "stop_hall",
+      "enemy": "core:enemy/ash_wight",
+      "count": 5,
+      "group": "stops",
+      "note": "They walk the stops, and every step they take plays a note that damages."
+    },
+    {
+      "chamber": "gallery",
+      "enemy": "core:enemy/roadside_bandit",
+      "count": 2,
+      "group": "gallery",
+      "role": "elite",
+      "note": "Fallen Tolling knights, who will let you pass if you do not draw."
+    },
+    {
+      "chamber": "seat",
+      "enemy": "core:boss/last_cantor",
+      "count": 1,
+      "role": "boss",
+      "group": "boss"
+    }
+  ],
+  "features": [
+    {
+      "kind": "exit",
+      "chamber": "threshold",
+      "anchor": 0,
+      "name": "the threshold"
+    },
+    {
+      "kind": "hearthstone",
+      "chamber": "vestry",
+      "id": "hearth_cantors_vestry",
+      "name": "The Order's Vestry",
+      "place": "core:place/cantors_seat"
+    },
+    {
+      "kind": "marker",
+      "chamber": "seat",
+      "name": "FogGate",
+      "anchor": 6
+    },
+    {
+      "kind": "marker",
+      "chamber": "seat",
+      "name": "EndingChoice",
+      "anchor": 0
+    }
+  ],
+  "smoothing": 2
+}

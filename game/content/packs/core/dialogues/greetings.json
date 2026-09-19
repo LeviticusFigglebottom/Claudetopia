@@ -1,0 +1,288 @@
+{
+  "id": "core:table/greetings",
+  "name": "Greetings",
+  "description": "The personality x standing matrix that decides what a villager says when you walk up (DESIGN §5.9). Each row lists the conditions under which it may be said; the most specific matching row wins, with weight breaking ties. Every row holds several lines so the same shopkeeper does not greet you identically twice. Tokens: {player}, {title}, {npc}, {place}, {region}.",
+  "rows": [
+    {"id": "plain_default", "weight": 1.0, "lines": [
+      "Aye.",
+      "Morning. Or afternoon. One of them.",
+      "Yes?",
+      "Mind the step there, it's older than the house."
+    ]},
+
+    {"id": "trait_gossip", "traits": ["gossip"], "weight": 1.2, "lines": [
+      "Oh good, a new face. Sit down, you won't believe what the miller's done.",
+      "You're not from the lane, are you. Go on, then. Where from?",
+      "I'll tell you something, and then you tell me something. That's how it works here."
+    ]},
+    {"id": "trait_quiet", "traits": ["quiet"], "lines": [
+      "Mm.",
+      "...",
+      "Aye. Weather's weather."
+    ]},
+    {"id": "trait_timid", "traits": ["timid"], "lines": [
+      "Oh — hello. Sorry. Hello.",
+      "I wasn't — did you want something? It's fine if you do.",
+      "You walk quietly. That's not a complaint. It nearly is."
+    ]},
+    {"id": "trait_brave", "traits": ["brave"], "lines": [
+      "You look like you've walked a way. Sit or don't.",
+      "If you're trouble, be quick about it. I've bread in the oven.",
+      "Come on in. The dog bites, but only the once."
+    ]},
+    {"id": "trait_proud", "traits": ["proud"], "lines": [
+      "You'll want something. They always want something.",
+      "I am busy and important and you may have a moment of it.",
+      "Speak up, then. I've a name to keep up."
+    ]},
+    {"id": "trait_humble", "traits": ["humble"], "lines": [
+      "Don't mind me. Nobody else does, and we get on fine.",
+      "Hello. There's tea if you want it. It's mostly hot.",
+      "Oh, you don't want to talk to me, I only do the fences."
+    ]},
+    {"id": "trait_greedy", "traits": ["greedy"], "lines": [
+      "Buying or selling? Those are the two things there are.",
+      "Everything's for sale. Some of it's even mine.",
+      "Marks first, friendliness after. That's not rudeness, that's bookkeeping."
+    ]},
+    {"id": "trait_generous", "traits": ["generous"], "lines": [
+      "You look half-starved. Sit down before you fall down.",
+      "Take an apple. No, take it, they'll only go over.",
+      "Come in out of it. Whatever it is, it keeps better indoors."
+    ]},
+    {"id": "trait_pious", "traits": ["pious"], "lines": [
+      "Keep warm, stranger. Say somebody's name today.",
+      "The hearth's lit and there's a place at it. That's all any of it is.",
+      "You've the look of somebody the world's forgotten to introduce itself to."
+    ]},
+    {"id": "trait_kind", "traits": ["kind"], "weight": 1.1, "lines": [
+      "You've walked a long way on those. Sit down, I'll not charge you for the chair.",
+      "Hello, love. Have you eaten? Don't lie to me, I can tell.",
+      "Whatever it is, it'll keep until you're warm.",
+      "Come in. The kettle's the only thing in this house that works properly."
+    ]},
+    {"id": "kind_to_the_hollow", "traits": ["kind"], "morality_tier": [-3, -2], "weight": 1.4, "lines": [
+      "I'm not going to pretend I can't see it. Sit down anyway.",
+      "They're saying things about you. I'd rather hear them from you, with tea.",
+      "Whatever's gone cold in you — it came from somewhere. Things that come from somewhere can go back."
+    ]},
+    {"id": "kind_to_the_named", "traits": ["kind"], "renown_tier": [3, 4], "weight": 1.3, "lines": [
+      "Look at you, {title}, and still nobody's fed you. Sit.",
+      "Famous, and thin as a rake. The two usually travel together.",
+      "They'll all want something from you. I want you to eat something first."
+    ]},
+
+    {"id": "trait_cynical", "traits": ["cynical"], "lines": [
+      "Let me guess. You're here to fix something and it'll cost us.",
+      "New face. New face means news, and news has never once been good.",
+      "Say what you want plainly and I'll say no plainly and we'll both save an hour."
+    ]},
+
+    {"id": "renown_heard_of", "renown_tier": [1, 1], "lines": [
+      "Someone said your name in here last week. Only the once, mind.",
+      "You're the one from — no. No, it's gone. But you're the one.",
+      "I know your face from somebody else's mouth."
+    ]},
+    {"id": "renown_heard_of_gossip", "renown_tier": [1, 1], "traits": ["gossip"], "weight": 1.3, "lines": [
+      "You're {player}! I told them you were real and they laughed at me.",
+      "I've been hearing about you in the half-sentences people use when they're not sure."
+    ]},
+    {"id": "renown_known", "renown_tier": [2, 2], "lines": [
+      "{player}. Aye, I know the name.",
+      "Well. {player} {title}, in my doorway. My mother would have swept.",
+      "You'll not need introducing round here any more."
+    ]},
+    {"id": "renown_known_cynical", "renown_tier": [2, 2], "traits": ["cynical"], "lines": [
+      "{player}, is it. I'll believe half of it and still be impressed, which annoys me.",
+      "Famous, are we. Does famous pay for ale? It does not."
+    ]},
+    {"id": "renown_spoken_of", "renown_tier": [3, 3], "lines": [
+      "{player} {title}. They've a verse about you at the inn and two of the rhymes are a crime.",
+      "You're spoken of. Do you know what that does to a village? It warms it. Sit down.",
+      "There's children playing at being you in the lane. Badly."
+    ]},
+    {"id": "renown_spoken_of_proud", "renown_tier": [3, 3], "traits": ["proud"], "lines": [
+      "I knew you before they did. I want that written down somewhere.",
+      "{title}, they're calling you. I shall use it and I shall be the first."
+    ]},
+    {"id": "renown_named", "renown_tier": [4, 4], "lines": [
+      "{player} {title}. I'll tell my grandchildren where I was standing.",
+      "They say your name at the Hearthstone to keep the stone warm. I've heard them do it.",
+      "You've got the look of somebody the world has decided to keep. Sit. Please."
+    ]},
+    {"id": "renown_named_pious", "renown_tier": [4, 4], "traits": ["pious"], "lines": [
+      "There are four or five people whose names hold a village up. You're one, {title}.",
+      "Be careful what you are remembered for. It sets, like plaster."
+    ]},
+
+    {"id": "hearth_warm", "morality_tier": [2, 3], "lines": [
+      "There's a kindness that comes off you. My cat's noticed it and my cat notices nothing.",
+      "You've the warm look. Whatever you've been doing, do more of it.",
+      "Door's open to you. It isn't for everyone."
+    ]},
+    {"id": "hearth_warm_generous", "morality_tier": [2, 3], "traits": ["generous"], "lines": [
+      "Ha! Good, another one of us. Take the chair by the fire, you've earned the good chair."
+    ]},
+    {"id": "hearth_kept", "morality_tier": [3, 3], "lines": [
+      "They say when you sleep somewhere the fire needs less wood. I don't believe it. I half believe it.",
+      "Bless you, and I don't say that. Ask anyone."
+    ]},
+    {"id": "hollow_cold", "morality_tier": [-1, -1], "lines": [
+      "You're a cold one, aren't you. Not rude. Cold.",
+      "Keep your distance and we'll keep being friendly.",
+      "Something's gone quiet in you. That's not a judgement, it's a description."
+    ]},
+    {"id": "hollow_quiet_eyed", "morality_tier": [-2, -2], "lines": [
+      "Quiet-eyed. That's what my mother would have called you, and then locked the door.",
+      "You'll want to move along. The children are at the window.",
+      "I'll talk to you. I'd rather do it out here, though."
+    ]},
+    {"id": "hollow_hollow", "morality_tier": [-3, -3], "lines": [
+      "Go on. Go on, now. There's nothing for you here and we both know why.",
+      "Hollow. Somebody had to say it and it might as well be me, from behind this door.",
+      "You put the fire out just standing near it. Please go."
+    ]},
+    {"id": "hollow_timid", "morality_tier": [-2, -3], "traits": ["timid"], "weight": 1.4, "lines": [
+      "Please — I've nothing, I've said nothing about you to anyone —",
+      "I'm going inside now. I'm going inside."
+    ]},
+    {"id": "hollow_brave", "morality_tier": [-2, -3], "traits": ["brave"], "weight": 1.3, "lines": [
+      "I know what you are and I'm still standing here. Say your piece.",
+      "You don't frighten me. You do frighten my neighbours, and that's worse."
+    ]},
+
+    {"id": "bounty_small", "bounty_min": 20, "lines": [
+      "You've a price on you, haven't you. Small one. Still a price.",
+      "The Watch were asking after somebody with your walk."
+    ]},
+    {"id": "bounty_large", "bounty_min": 100, "weight": 1.5, "lines": [
+      "You shouldn't be standing in daylight, you. Not with what's on your head.",
+      "I've seen the notice. I've seen the number on the notice. Go.",
+      "If anyone asks, you came in the back and I was asleep."
+    ]},
+    {"id": "witnessed_crime", "witnessed": true, "weight": 2.0, "lines": [
+      "I saw what you did. I haven't slept right since, and here you are saying hello.",
+      "Don't. Whatever it is you want, don't. I know.",
+      "You've a nerve, coming to me with a greeting."
+    ]},
+    {"id": "gossip_knows_murder", "knows_deed": "murder", "weight": 1.8, "lines": [
+      "They're saying there was blood at the door and your name in the same breath.",
+      "Nobody in this street will write it down, but everybody in this street has said it."
+    ]},
+    {"id": "gossip_knows_boss", "knows_deed": "boss_kill", "weight": 1.6, "lines": [
+      "The thing under the hill has a killer and the killer is standing in my shop. Marvellous day.",
+      "We heard. We all heard. The fiddler's already ruined it with a tune."
+    ]},
+    {"id": "gossip_knows_child", "knows_deed": "child_returned", "weight": 1.7, "lines": [
+      "You brought that child home. Whatever else you are, you brought that child home.",
+      "There's a family three doors up who will not let you pay for anything ever again."
+    ]},
+    {"id": "gossip_knows_theft", "knows_deed": "steal", "weight": 1.3, "lines": [
+      "Things go missing when you're about, they say. I'm just repeating it. I'm also counting the spoons.",
+      "Not accusing. Just — everything's where I can see it, that's all."
+    ]},
+    {"id": "gossip_knows_mercy", "knows_deed": "mercy", "weight": 1.4, "lines": [
+      "They say you had one at your mercy and let them walk. That's rarer than the killing.",
+      "Soft, some are calling it. I'd call it something else, but not loudly."
+    ]},
+
+    {"id": "warden_member", "faction": "core:faction/wardens", "faction_rank_min": 1, "lines": [
+      "Warden. There's a lamp lit at the Rest for you, as always.",
+      "Your boots are muddy and the Wardens' boots are muddy. I'm just saying.",
+      "Any names to add? No? Good. Good."
+    ]},
+    {"id": "warden_high", "faction": "core:faction/wardens", "faction_rank_min": 3, "weight": 1.4, "lines": [
+      "Roll-Warden. We'd a hamlet go quiet up the valley. You'll want to hear it from Hesk.",
+      "They say you can name a Hearthstone now. That's not a small thing to be able to do."
+    ]},
+    {"id": "sayers_member", "faction": "core:faction/sayers", "faction_rank_min": 1, "lines": [
+      "One of the Circle. Say something loud, then. That's the joke. We all make it.",
+      "Careful with the words in here, we've only the one roof."
+    ]},
+    {"id": "quiet_hands_member", "faction": "core:faction/quiet_hands", "faction_rank_min": 1, "lines": [
+      "I don't know you. That's the correct answer and I'll give it again if anyone asks.",
+      "Evening. Nothing's happened here and nobody's been in."
+    ]},
+    {"id": "tolling_member", "faction": "core:faction/tolling_order", "faction_rank_min": 1, "lines": [
+      "Bell-sworn. You'll want the grey soup, everyone does, nobody knows why.",
+      "You keep the vigil, then. Somebody should and it's never going to be me."
+    ]},
+    {"id": "tallymen_liked", "faction": "core:faction/tallymen", "faction_rank_min": 0, "rep_min": 40, "lines": [
+      "The Guild speaks well of you, which costs them nothing, so it must be true.",
+      "Your credit's good in three streets. Don't spend that carelessly."
+    ]},
+    {"id": "clan_liked", "faction": "core:faction/clan_moot", "rep_min": 40, "lines": [
+      "The Moot remembers you, which is the only currency up here.",
+      "You've a name in Kharrow. Carry it carefully, it's heavier than it looks."
+    ]},
+    {"id": "reed_liked", "faction": "core:faction/reed_council", "rep_min": 40, "lines": [
+      "You waited, last time. People notice waiting.",
+      "The boardwalk's yours. Mind the third plank, it's a liar."
+    ]},
+    {"id": "woodfolk_liked", "faction": "core:faction/woodfolk", "rep_min": 40, "lines": [
+      "You take only what you need. We watched. We always watch.",
+      "The Wold's quiet with you in it. That's as much as we say to anyone."
+    ]},
+    {"id": "faction_disliked", "rep_max": -40, "lines": [
+      "We know what you did to ours. Say your piece from there.",
+      "You've friends here. None of them are in this room."
+    ]},
+
+    {"id": "night", "time": [21, 5], "lines": [
+      "It's late for walking about. Not wrong. Late.",
+      "Everything's shut but me and I'm shutting.",
+      "Whatever it is, could it be it in the morning?"
+    ]},
+    {"id": "night_timid", "time": [21, 5], "traits": ["timid"], "weight": 1.3, "lines": [
+      "Who's — oh. Oh, it's you. Don't do that at this hour.",
+      "I nearly hit you with a pan. I want you to know how close it was."
+    ]},
+    {"id": "early", "time": [5, 8], "lines": [
+      "You're up with the larks and the liars.",
+      "Bread's not out yet. Nothing's out yet. I'm barely out yet.",
+      "Morning. First one I've said today, so mind how you answer it."
+    ]},
+    {"id": "evening", "time": [18, 21], "lines": [
+      "Long day, was it. They're all long now.",
+      "Come in, the light's going and the fire isn't.",
+      "That's the last of the sun. Say what you came to say by it."
+    ]},
+
+    {"id": "wearing_hollow_relic", "wearing_tag": "hollow", "weight": 1.6, "lines": [
+      "That thing you're wearing. Take it off before you come further in. Please.",
+      "My grandmother had a word for what's on your shoulders and I won't repeat it indoors."
+    ]},
+    {"id": "wearing_warden", "wearing_tag": "warden", "lines": [
+      "Warden's colours. Right. What's gone wrong, then?",
+      "Lamp on your coat. That's either very good news or very bad."
+    ]},
+    {"id": "wearing_fine", "wearing_tag": "fine", "lines": [
+      "Look at the cloth on you. Tollmere, is it? It's always Tollmere.",
+      "You'll not want to lean on anything in here, dressed like that."
+    ]},
+    {"id": "wearing_bloody", "wearing_tag": "bloody", "weight": 1.5, "lines": [
+      "There's blood on you. I'm going to carry on as if there isn't.",
+      "Whatever that is down your front, it is not coming into my kitchen."
+    ]},
+    {"id": "wearing_indigo", "wearing_tag": "indigo", "lines": [
+      "Marsh indigo. You've been out to the stilts, then. How's the water sitting?",
+      "That dye's Isseva's and nobody else's. Did you wait properly for it?"
+    ]},
+
+    {"id": "undiscovered_stranger", "renown_tier": [0, 0], "morality_tier": [0, 0], "lines": [
+      "Don't know you.",
+      "You'll be passing through, then. Everyone is, lately.",
+      "No name on you yet. Give it time, this lot will find one."
+    ]},
+    {"id": "high_disposition", "disposition_min": 40, "weight": 1.3, "lines": [
+      "There you are! I was only saying about you this morning.",
+      "Ah, good. Somebody I actually want to see.",
+      "Sit down, sit down. There's a pie and you're having some of it."
+    ]},
+    {"id": "low_disposition", "disposition_max": -30, "weight": 1.3, "lines": [
+      "You again.",
+      "I've nothing for you and I'd like the doorway back.",
+      "We are not friends. I want that established before you start."
+    ]}
+  ]
+}

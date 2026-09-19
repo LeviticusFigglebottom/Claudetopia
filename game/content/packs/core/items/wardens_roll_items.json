@@ -1,0 +1,34 @@
+[
+  {
+    "id": "core:item/wardens_hand_bell",
+    "name": "Warden's Hand-Bell",
+    "category": "key",
+    "weight": 1.2,
+    "value": 40,
+    "stack": 1,
+    "tags": ["quest", "warden", "bell"],
+    "quest_item": true,
+    "description": "A small bronze bell on a leather grip, green at the lip. Wardens ring it once before reading the roll, so that everyone in earshot is a witness to the names. This one has been used as a drinking cup and still holds a rolled page in its throat."
+  },
+  {
+    "id": "core:item/wardens_roll_page",
+    "name": "Page of the Roll",
+    "category": "key",
+    "weight": 0.05,
+    "value": 0,
+    "stack": 1,
+    "tags": ["quest", "warden", "paper"],
+    "quest_item": true,
+    "description": "Wardens' rag-paper, ruled in four columns: name, place, who spoke for them, the season it was read. One line is scored through hard enough to cut the sheet below, and the sheet below says the same name in a different hand."
+  },
+  {
+    "id": "core:item/wardens_lantern_badge",
+    "name": "Lantern-Bearer's Badge",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 25,
+    "stack": 1,
+    "tags": ["warden", "faction", "badge"],
+    "description": "A pewter lamp the size of a thumbnail, pinned to a strip of oiled green cloth. It means the lowest rank the Wardens have, and the right to be handed a lantern and told where to stand."
+  }
+]

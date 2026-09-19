@@ -1,0 +1,851 @@
+[
+  {
+    "id": "core:item/arrow",
+    "name": "Arrow",
+    "category": "misc",
+    "weight": 0.05,
+    "value": 1,
+    "stack": 99,
+    "tags": [
+      "ammo",
+      "arrow"
+    ],
+    "description": "Goose-fletched, iron-piled, and marked at the nock with the owner's line so a quarrel over a deer stays a quarrel over a deer.",
+    "projectile": {
+      "scene": "res://systems/combat/arrow.tscn",
+      "damage": 12.0,
+      "poise_damage": 6.0,
+      "kind": "pierce",
+      "gravity": 9.81
+    }
+  },
+  {
+    "id": "core:item/ash_greatsword",
+    "name": "Ash Greatsword",
+    "category": "weapon",
+    "weight": 9.4,
+    "value": 210,
+    "tags": [
+      "weapon",
+      "two_handed",
+      "greatsword",
+      "pilgrim"
+    ],
+    "description": "Carried south by the Tolling Order and left where its carrier stopped. The grey bloom on the blade is Cinderlea ash that will not polish out; pilgrims say a sword that has stood in the Choir keeps a little of the note, and swings heavier for it.",
+    "weapon": {
+      "class": "greatsword",
+      "damage": 30.0,
+      "poise_damage": 34.0,
+      "stamina_light": 26.0,
+      "stamina_heavy": 44.0,
+      "speed": 0.66,
+      "reach": 2.7,
+      "clips_set": "2H",
+      "parry": false,
+      "stability": 0.45
+    }
+  },
+  {
+    "id": "core:item/ash_staff",
+    "name": "Ash Staff",
+    "category": "weapon",
+    "weight": 1.8,
+    "value": 40,
+    "tags": [
+      "staff",
+      "casting",
+      "two_handed"
+    ],
+    "tier": 1,
+    "material": "core:item/ash_wood",
+    "weapon": {
+      "class": "staff",
+      "damage": 8,
+      "poise_damage": 8,
+      "stamina_light": 12,
+      "stamina_heavy": 20,
+      "speed": 1.0,
+      "reach": 1.8,
+      "clips_set": "staff",
+      "parry": false,
+      "stability": 0.2
+    },
+    "casting": {
+      "school": "kindling",
+      "power_mult": 1.1
+    },
+    "description": "A Sayer's staff of ash capped with a brass ferrule. The Circle teaches that a word spoken through wood carries further."
+  },
+  {
+    "id": "core:item/ashen_axe",
+    "name": "Ashen Axe",
+    "category": "weapon",
+    "weight": 3.5,
+    "value": 140,
+    "tags": [
+      "axe",
+      "ashen",
+      "one_handed"
+    ],
+    "tier": 2,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "axe",
+      "damage": 20,
+      "poise_damage": 18,
+      "stamina_light": 20,
+      "stamina_heavy": 34,
+      "speed": 0.9,
+      "reach": 1.5,
+      "clips_set": "1H",
+      "parry": false,
+      "stability": 0.3
+    },
+    "description": "Bell-ash quench on an ash haft charred at the grip. Carried by the Order's vigils on the long walks around the Choir."
+  },
+  {
+    "id": "core:item/ashen_dagger",
+    "name": "Ashen Dagger",
+    "category": "weapon",
+    "weight": 1.0,
+    "value": 75,
+    "tags": [
+      "dagger",
+      "ashen",
+      "one_handed"
+    ],
+    "tier": 2,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "dagger",
+      "damage": 11,
+      "poise_damage": 7,
+      "stamina_light": 12,
+      "stamina_heavy": 22,
+      "speed": 1.3,
+      "reach": 1.1,
+      "clips_set": "dagger",
+      "parry": true,
+      "stability": 0.15
+    },
+    "description": "Quenched in ash, a dagger the Quiet Hands would call honest: it does not glint."
+  },
+  {
+    "id": "core:item/ashen_greatsword",
+    "name": "Ashen Greatsword",
+    "category": "weapon",
+    "weight": 7.0,
+    "value": 350,
+    "tags": [
+      "greatsword",
+      "ashen",
+      "two_handed"
+    ],
+    "tier": 2,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "greatsword",
+      "damage": 33,
+      "poise_damage": 32,
+      "stamina_light": 26,
+      "stamina_heavy": 44,
+      "speed": 0.7,
+      "reach": 2.2,
+      "clips_set": "2H",
+      "parry": true,
+      "stability": 0.45
+    },
+    "description": "The Order's long blade, black from the quench, the fuller cut with the twelve marks of the Choir."
+  },
+  {
+    "id": "core:item/ashen_mace",
+    "name": "Ashen Mace",
+    "category": "weapon",
+    "weight": 4.0,
+    "value": 140,
+    "tags": [
+      "mace",
+      "ashen",
+      "one_handed"
+    ],
+    "tier": 2,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "mace",
+      "damage": 19,
+      "poise_damage": 25,
+      "stamina_light": 20,
+      "stamina_heavy": 34,
+      "speed": 0.85,
+      "reach": 1.4,
+      "clips_set": "1H",
+      "parry": false,
+      "stability": 0.35
+    },
+    "description": "A knight's mace of the Tolling Order, ash-black, its head cast in the shape of a small closed bell."
+  },
+  {
+    "id": "core:item/ashen_spear",
+    "name": "Ashen Spear",
+    "category": "weapon",
+    "weight": 4.0,
+    "value": 125,
+    "tags": [
+      "spear",
+      "ashen",
+      "two_handed"
+    ],
+    "tier": 2,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "spear",
+      "damage": 19,
+      "poise_damage": 14,
+      "stamina_light": 18,
+      "stamina_heavy": 30,
+      "speed": 0.95,
+      "reach": 2.4,
+      "clips_set": "2H",
+      "parry": false,
+      "stability": 0.25
+    },
+    "description": "A pilgrim's spear from Pilgrim's Ash, black head, grey wrap. Long enough to keep an ash-wight at the length it deserves."
+  },
+  {
+    "id": "core:item/ashen_sword",
+    "name": "Ashen Sword",
+    "category": "weapon",
+    "weight": 3.0,
+    "value": 150,
+    "tags": [
+      "sword",
+      "ashen",
+      "one_handed"
+    ],
+    "tier": 2,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "sword",
+      "damage": 18,
+      "poise_damage": 14,
+      "stamina_light": 18,
+      "stamina_heavy": 32,
+      "speed": 1.0,
+      "reach": 1.6,
+      "clips_set": "1H",
+      "parry": true,
+      "stability": 0.35
+    },
+    "description": "Iron quenched in bell-ash at Pilgrim's Ash, black to the hilt. The Tolling Order's smiths say the ash teaches a blade to keep quiet."
+  },
+  {
+    "id": "core:item/bell_bronze_axe",
+    "name": "Bell-Bronze Axe",
+    "category": "weapon",
+    "weight": 3.3,
+    "value": 330,
+    "tags": [
+      "axe",
+      "bell_bronze",
+      "one_handed",
+      "oroth"
+    ],
+    "tier": 3,
+    "material": "core:item/bell_bronze_scrap",
+    "weapon": {
+      "class": "axe",
+      "damage": 25,
+      "poise_damage": 22,
+      "stamina_light": 20,
+      "stamina_heavy": 34,
+      "speed": 0.9,
+      "reach": 1.5,
+      "clips_set": "1H",
+      "parry": false,
+      "stability": 0.3
+    },
+    "description": "Bell-metal on an ash haft. It splits shields with a sound like a struck cup."
+  },
+  {
+    "id": "core:item/bell_bronze_dagger",
+    "name": "Bell-Bronze Dagger",
+    "category": "weapon",
+    "weight": 0.95,
+    "value": 180,
+    "tags": [
+      "dagger",
+      "bell_bronze",
+      "one_handed",
+      "oroth"
+    ],
+    "tier": 3,
+    "material": "core:item/bell_bronze_scrap",
+    "weapon": {
+      "class": "dagger",
+      "damage": 14,
+      "poise_damage": 8,
+      "stamina_light": 12,
+      "stamina_heavy": 22,
+      "speed": 1.3,
+      "reach": 1.1,
+      "clips_set": "dagger",
+      "parry": true,
+      "stability": 0.15
+    },
+    "description": "A sliver of Oroth bell. Struck home, it sounds a single note that only the one struck can hear."
+  },
+  {
+    "id": "core:item/bell_bronze_greatsword",
+    "name": "Bell-Bronze Greatsword",
+    "category": "weapon",
+    "weight": 6.7,
+    "value": 840,
+    "tags": [
+      "greatsword",
+      "bell_bronze",
+      "two_handed",
+      "oroth"
+    ],
+    "tier": 3,
+    "material": "core:item/bell_bronze_scrap",
+    "weapon": {
+      "class": "greatsword",
+      "damage": 40,
+      "poise_damage": 39,
+      "stamina_light": 26,
+      "stamina_heavy": 44,
+      "speed": 0.7,
+      "reach": 2.2,
+      "clips_set": "2H",
+      "parry": true,
+      "stability": 0.45
+    },
+    "description": "A slab of recast Oroth bell hammered thin enough to swing. It hums in the scabbard; the Order sleeps with theirs wrapped in wool."
+  },
+  {
+    "id": "core:item/bell_bronze_mace",
+    "name": "Bell-Bronze Mace",
+    "category": "weapon",
+    "weight": 3.8,
+    "value": 330,
+    "tags": [
+      "mace",
+      "bell_bronze",
+      "one_handed",
+      "oroth"
+    ],
+    "tier": 3,
+    "material": "core:item/bell_bronze_scrap",
+    "weapon": {
+      "class": "mace",
+      "damage": 23,
+      "poise_damage": 31,
+      "stamina_light": 20,
+      "stamina_heavy": 34,
+      "speed": 0.85,
+      "reach": 1.4,
+      "clips_set": "1H",
+      "parry": false,
+      "stability": 0.35
+    },
+    "description": "The head is a whole small bell, cast solid. When it strikes, the note hangs in the air and the struck stagger as if they had been named."
+  },
+  {
+    "id": "core:item/bell_bronze_spear",
+    "name": "Bell-Bronze Spear",
+    "category": "weapon",
+    "weight": 3.8,
+    "value": 300,
+    "tags": [
+      "spear",
+      "bell_bronze",
+      "two_handed",
+      "oroth"
+    ],
+    "tier": 3,
+    "material": "core:item/bell_bronze_scrap",
+    "weapon": {
+      "class": "spear",
+      "damage": 23,
+      "poise_damage": 17,
+      "stamina_light": 18,
+      "stamina_heavy": 30,
+      "speed": 0.95,
+      "reach": 2.4,
+      "clips_set": "2H",
+      "parry": false,
+      "stability": 0.25
+    },
+    "description": "Bell-metal head on a bone-capped shaft. The Hart-Knights of the Briarwold covet these and will not say why."
+  },
+  {
+    "id": "core:item/bell_bronze_sword",
+    "name": "Bell-Bronze Sword",
+    "category": "weapon",
+    "weight": 2.9,
+    "value": 360,
+    "tags": [
+      "sword",
+      "bell_bronze",
+      "one_handed",
+      "oroth"
+    ],
+    "tier": 3,
+    "material": "core:item/bell_bronze_scrap",
+    "weapon": {
+      "class": "sword",
+      "damage": 22,
+      "poise_damage": 17,
+      "stamina_light": 18,
+      "stamina_heavy": 32,
+      "speed": 1.0,
+      "reach": 1.6,
+      "clips_set": "1H",
+      "parry": true,
+      "stability": 0.35
+    },
+    "description": "Recast from a shard of Oroth bell. It rings when it bites, a note that goes on a moment too long, and things in the deep places turn their heads."
+  },
+  {
+    "id": "core:item/clan_bow",
+    "name": "Clan Bow",
+    "category": "weapon",
+    "weight": 2.0,
+    "value": 160,
+    "tags": [
+      "bow",
+      "ranged",
+      "two_handed"
+    ],
+    "tier": 2,
+    "material": "core:item/giant_bone_shard",
+    "weapon": {
+      "class": "bow",
+      "damage": 26,
+      "poise_damage": 12,
+      "stamina_light": 16,
+      "stamina_heavy": 16,
+      "speed": 0.9,
+      "reach": 36.0,
+      "clips_set": "bow",
+      "parry": false,
+      "stability": 0.1
+    },
+    "ranged": {
+      "draw_time": 1.2,
+      "ammo_item": "core:item/iron_arrow"
+    },
+    "description": "A short bow laminated with giant-bone and backed with sinew. Skerrow's chain-bridge guards can put an arrow through a raider at three hundred paces in a crosswind."
+  },
+  {
+    "id": "core:item/clan_shield",
+    "name": "Clan Bone Shield",
+    "category": "weapon",
+    "weight": 5.0,
+    "value": 120,
+    "tags": [
+      "shield",
+      "bone",
+      "off_hand"
+    ],
+    "tier": 2,
+    "material": "core:item/giant_bone_shard",
+    "weapon": {
+      "class": "shield",
+      "damage": 8,
+      "poise_damage": 14,
+      "stamina_light": 14,
+      "stamina_heavy": 24,
+      "speed": 0.8,
+      "reach": 1.0,
+      "clips_set": "1H",
+      "parry": true,
+      "stability": 0.8
+    },
+    "description": "Oak faced with plates of giant-bone. The bone takes a blow the way a wall takes wind; the clans carve their remembered names on the inside."
+  },
+  {
+    "id": "core:item/crossbow",
+    "name": "Tollmere Crossbow",
+    "category": "weapon",
+    "weight": 4.5,
+    "value": 190,
+    "tags": [
+      "crossbow",
+      "ranged",
+      "two_handed"
+    ],
+    "tier": 2,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "crossbow",
+      "damage": 32,
+      "poise_damage": 20,
+      "stamina_light": 10,
+      "stamina_heavy": 10,
+      "speed": 0.6,
+      "reach": 34.0,
+      "clips_set": "bow",
+      "parry": false,
+      "stability": 0.15
+    },
+    "ranged": {
+      "draw_time": 0.0,
+      "reload_time": 2.2,
+      "ammo_item": "core:item/crossbow_bolt"
+    },
+    "description": "Guild-made, with a brass tally-plate let into the stock. The Tallymen's paid watch carries these; it is law you can hear being cocked."
+  },
+  {
+    "id": "core:item/hunting_bow",
+    "name": "Hunting Bow",
+    "category": "weapon",
+    "weight": 1.5,
+    "value": 45,
+    "tags": [
+      "bow",
+      "ranged",
+      "two_handed"
+    ],
+    "tier": 1,
+    "material": "core:item/ash_wood",
+    "weapon": {
+      "class": "bow",
+      "damage": 18,
+      "poise_damage": 8,
+      "stamina_light": 14,
+      "stamina_heavy": 14,
+      "speed": 1.0,
+      "reach": 1.4,
+      "clips_set": "bow",
+      "parry": false,
+      "stability": 0.1
+    },
+    "ranged": {
+      "draw_time": 0.9,
+      "ammo_item": "core:item/iron_arrow"
+    },
+    "description": "Briarwold yew, backed with sinew and waxed against the wet. The Woodfolk have no law and no jail; they have this, and a custom about where they aim first."
+  },
+  {
+    "id": "core:item/hunting_knife",
+    "name": "Hunting Knife",
+    "category": "weapon",
+    "weight": 0.8,
+    "value": 22,
+    "tags": [
+      "weapon",
+      "dagger",
+      "tool",
+      "common"
+    ],
+    "description": "For skinning, cutting cord, and eating cheese in that order. Held low and out of the light it does the fourth thing it is for, which nobody in the Vale writes down.",
+    "weapon": {
+      "class": "dagger",
+      "damage": 9.0,
+      "poise_damage": 6.0,
+      "stamina_light": 12.0,
+      "stamina_heavy": 22.0,
+      "speed": 1.45,
+      "reach": 1.25,
+      "clips_set": "dagger",
+      "parry": true,
+      "stability": 0.15
+    }
+  },
+  {
+    "id": "core:item/iron_axe",
+    "name": "Iron Axe",
+    "category": "weapon",
+    "weight": 3.5,
+    "value": 55,
+    "tags": [
+      "axe",
+      "iron",
+      "one_handed"
+    ],
+    "tier": 1,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "axe",
+      "damage": 16,
+      "poise_damage": 16,
+      "stamina_light": 20,
+      "stamina_heavy": 34,
+      "speed": 0.9,
+      "reach": 1.5,
+      "clips_set": "1H",
+      "parry": false,
+      "stability": 0.3
+    },
+    "description": "A woodsman's axe with a fighting edge, Hearthvale pattern. Most bandit blood in the Vale is on tools like this one."
+  },
+  {
+    "id": "core:item/iron_dagger",
+    "name": "Iron Dagger",
+    "category": "weapon",
+    "weight": 1.0,
+    "value": 30,
+    "tags": [
+      "dagger",
+      "iron",
+      "one_handed"
+    ],
+    "tier": 1,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "dagger",
+      "damage": 9,
+      "poise_damage": 6,
+      "stamina_light": 12,
+      "stamina_heavy": 22,
+      "speed": 1.3,
+      "reach": 1.1,
+      "clips_set": "dagger",
+      "parry": true,
+      "stability": 0.15
+    },
+    "description": "A plain knife with a bell stamp, the kind every Vale child is given on Naming Day and told not to lose."
+  },
+  {
+    "id": "core:item/iron_greatsword",
+    "name": "Iron Greatsword",
+    "category": "weapon",
+    "weight": 7.0,
+    "value": 140,
+    "tags": [
+      "greatsword",
+      "iron",
+      "two_handed"
+    ],
+    "tier": 1,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "greatsword",
+      "damage": 26,
+      "poise_damage": 28,
+      "stamina_light": 26,
+      "stamina_heavy": 44,
+      "speed": 0.7,
+      "reach": 2.2,
+      "clips_set": "2H",
+      "parry": true,
+      "stability": 0.45
+    },
+    "description": "Two hands of Vale iron. Too long for a doorway, which is why Merrowby's inn keeps one behind the bar and never has to use it."
+  },
+  {
+    "id": "core:item/iron_mace",
+    "name": "Iron Mace",
+    "category": "weapon",
+    "weight": 4.0,
+    "value": 55,
+    "tags": [
+      "mace",
+      "iron",
+      "one_handed"
+    ],
+    "tier": 1,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "mace",
+      "damage": 15,
+      "poise_damage": 22,
+      "stamina_light": 20,
+      "stamina_heavy": 34,
+      "speed": 0.85,
+      "reach": 1.4,
+      "clips_set": "1H",
+      "parry": false,
+      "stability": 0.35
+    },
+    "description": "Flanged iron on oak. The Wardens' watch prefers it: it stops a hedge-wight without cutting what used to be a neighbour."
+  },
+  {
+    "id": "core:item/iron_spear",
+    "name": "Iron Spear",
+    "category": "weapon",
+    "weight": 4.0,
+    "value": 50,
+    "tags": [
+      "spear",
+      "iron",
+      "two_handed"
+    ],
+    "tier": 1,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "spear",
+      "damage": 15,
+      "poise_damage": 12,
+      "stamina_light": 18,
+      "stamina_heavy": 30,
+      "speed": 0.95,
+      "reach": 2.4,
+      "clips_set": "2H",
+      "parry": false,
+      "stability": 0.25
+    },
+    "description": "Ash shaft, iron leaf-head, a cross-bar below the blade because a bristleback keeps coming."
+  },
+  {
+    "id": "core:item/iron_sword",
+    "name": "Iron Sword",
+    "category": "weapon",
+    "weight": 3.0,
+    "value": 60,
+    "tags": [
+      "sword",
+      "iron",
+      "one_handed"
+    ],
+    "tier": 1,
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "sword",
+      "damage": 14,
+      "poise_damage": 12,
+      "stamina_light": 18,
+      "stamina_heavy": 32,
+      "speed": 1.0,
+      "reach": 1.9,
+      "clips_set": "1H",
+      "parry": true,
+      "stability": 0.35
+    },
+    "description": "A Merrowby smith's honest work: flat iron, a leather grip, a maker's mark of three struck lines. Every third house in the Vale keeps one behind the door and calls it the thatching knife, in case anyone asks."
+  },
+  {
+    "id": "core:item/kingbone_greatsword",
+    "name": "Kingbone Greatsword",
+    "category": "weapon",
+    "weight": 6.5,
+    "value": 900,
+    "tags": [
+      "greatsword",
+      "bone",
+      "two_handed",
+      "unique",
+      "clan"
+    ],
+    "tier": 3,
+    "material": "core:item/kingbone",
+    "weapon": {
+      "class": "greatsword",
+      "damage": 38,
+      "poise_damage": 44,
+      "stamina_light": 26,
+      "stamina_heavy": 44,
+      "speed": 0.75,
+      "reach": 2.3,
+      "clips_set": "2H",
+      "parry": true,
+      "stability": 0.45
+    },
+    "description": "Cut from the bone of the thing that stood up in Oskeld's singing shaft and would not lie down again. Kharrow smiths worked it in silence and gave it back its name at the Moot; the clans say a blade of kingbone remembers standing, which is why it does not break."
+  },
+  {
+    "id": "core:item/oak_round_shield",
+    "name": "Oak Round Shield",
+    "category": "weapon",
+    "weight": 4.0,
+    "value": 40,
+    "tags": [
+      "shield",
+      "oak",
+      "off_hand"
+    ],
+    "tier": 1,
+    "material": "core:item/oak_plank",
+    "weapon": {
+      "class": "shield",
+      "damage": 6,
+      "poise_damage": 10,
+      "stamina_light": 14,
+      "stamina_heavy": 24,
+      "speed": 0.8,
+      "reach": 1.0,
+      "clips_set": "1H",
+      "parry": true,
+      "stability": 0.7
+    },
+    "description": "Hedgerow oak with an iron rim, the face painted a door-colour so the Wardens can tell whose family stood where."
+  },
+  {
+    "id": "core:item/reeves_bell_hammer",
+    "name": "The Reeve's Bell-Hammer",
+    "category": "weapon",
+    "weight": 9.0,
+    "value": 800,
+    "tags": [
+      "mace",
+      "bell_bronze",
+      "two_handed",
+      "unique",
+      "boss_drop",
+      "oroth"
+    ],
+    "tier": 3,
+    "material": "core:item/bell_bronze_scrap",
+    "weapon": {
+      "class": "greathammer",
+      "damage": 34,
+      "poise_damage": 60,
+      "stamina_light": 28,
+      "stamina_heavy": 48,
+      "speed": 0.6,
+      "reach": 2.0,
+      "clips_set": "2H",
+      "parry": false,
+      "stability": 0.5
+    },
+    "description": "An Oroth bell the size of a man's head, hafted on barrow yew. Each blow rings once. Under Hollin Barrow the Reeve kept ringing it for a thousand years so the dead below would know he was still on watch."
+  },
+  {
+    "id": "core:item/round_shield",
+    "name": "Round Shield",
+    "category": "armour",
+    "weight": 4.0,
+    "value": 70,
+    "tags": [
+      "shield",
+      "off_hand",
+      "common"
+    ],
+    "description": "Lime boards, a rawhide rim, an iron boss dented twice. Warden recruits paint theirs with the name of their village, so that if the shield comes home alone the village is still said aloud.",
+    "armour": {
+      "slot": "off_hand",
+      "armour": 1.0,
+      "weight_class": "medium",
+      "stability": 0.8,
+      "parry": true
+    }
+  },
+  {
+    "id": "core:item/woodsmans_axe",
+    "name": "Woodsman's Axe",
+    "category": "weapon",
+    "weight": 4.6,
+    "value": 48,
+    "tags": [
+      "weapon",
+      "one_handed",
+      "axe",
+      "tool",
+      "common"
+    ],
+    "description": "Hedge-laying steel on an ash haft, meant for hawthorn and used on worse. Slower than a sword and it does not care: what it reaches, it opens. Woodfolk sharpen theirs on the standing stones and do not explain why.",
+    "weapon": {
+      "class": "axe",
+      "damage": 18.0,
+      "poise_damage": 20.0,
+      "stamina_light": 22.0,
+      "stamina_heavy": 36.0,
+      "speed": 0.82,
+      "reach": 1.8,
+      "clips_set": "1H",
+      "parry": false,
+      "stability": 0.28
+    }
+  }
+]

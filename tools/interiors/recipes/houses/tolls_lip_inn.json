@@ -1,0 +1,26 @@
+{
+  "id": "core:house/tolls_lip",
+  "name": "The Toll's Lip",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/tobin_cresswell",
+  "trade": "innkeeper",
+  "wealth": 2,
+  "household": 4,
+  "seed": 1201,
+  "habits": [
+    "keeps_the_fire_in",
+    "counts_everything",
+    "has_a_dog",
+    "leaves_boots_by_the_door"
+  ],
+  "width_limit": 13.0,
+  "extra_rooms": [
+    "store"
+  ],
+  "story": "The inn is built into the crater rim, and its cellar is the inside of the Toll's lip: forty feet of bronze for a back wall, which keeps the ale at one temperature all year and makes every conversation down there sound like it matters.",
+  "who_was_here": "Three generations of Cresswells, and everyone in Merrowby, most nights.",
+  "unique_object": "a cellar wall of bronze bell, with two hundred years of names scratched into it at sitting height",
+  "culture": "vale",
+  "children": 0,
+  "name_slug": "tolls_lip_inn"
+}

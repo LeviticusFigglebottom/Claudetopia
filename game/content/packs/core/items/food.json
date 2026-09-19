@@ -1,0 +1,23 @@
+[
+  {"id": "core:item/bread", "name": "Vale Loaf", "category": "consumable", "weight": 0.4, "value": 3, "stack": 10, "tags": ["food"],
+   "effects": [{"effect": "core:effect/restore_health", "magnitude": 8, "duration": 0}],
+   "description": "Merrowby bread from the blue-door mill's flour. Still the measure of whether a village is being tended: if the bread is good, so is the talk."},
+  {"id": "core:item/cider", "name": "Tamwick Cider", "category": "consumable", "weight": 0.5, "value": 5, "stack": 10, "tags": ["food", "drink"],
+   "effects": [{"effect": "core:effect/restore_stamina", "magnitude": 15, "duration": 0}, {"effect": "core:effect/fortify_speech", "magnitude": 5, "duration": 60}],
+   "description": "From the only cider press in Wickmere. Tamwick says one cup makes you honest and two make you a Sayer."},
+  {"id": "core:item/eel_pie", "name": "Gullhithe Eel Pie", "category": "consumable", "weight": 0.5, "value": 6, "stack": 10, "tags": ["food"],
+   "effects": [{"effect": "core:effect/restore_health", "magnitude": 15, "duration": 0}, {"effect": "core:effect/restore_stamina", "magnitude": 10, "duration": 0}],
+   "description": "Lake-eel in a hot-water crust, sold on Tollmere's quays by the tally. Clerks eat them standing up."},
+  {"id": "core:item/oatcake", "name": "Clan Oatcake", "category": "consumable", "weight": 0.2, "value": 2, "stack": 10, "tags": ["food"],
+   "effects": [{"effect": "core:effect/restore_stamina", "magnitude": 10, "duration": 0}],
+   "description": "Skerrow oats baked hard on a griddle. Keeps for a season in a satchel and is remembered fondly by nobody."},
+  {"id": "core:item/mutton", "name": "Roast Mutton", "category": "consumable", "weight": 0.6, "value": 7, "stack": 10, "tags": ["food"],
+   "effects": [{"effect": "core:effect/restore_health", "magnitude": 20, "duration": 0}],
+   "description": "Heather-fed Skerrow mutton. The clans roast a whole one when a name is added to the Moot."},
+  {"id": "core:item/ash_cake", "name": "Pilgrim's Ash-Cake", "category": "consumable", "weight": 0.2, "value": 3, "stack": 10, "tags": ["food"],
+   "effects": [{"effect": "core:effect/restore_health", "magnitude": 6, "duration": 0}, {"effect": "core:effect/resist_fire", "magnitude": 10, "duration": 60}],
+   "description": "Flatbread baked in Cinderlea's warm ash. It tastes of nothing much, which the Order counts as a mercy."},
+  {"id": "core:item/raw_meat", "name": "Raw Meat", "category": "consumable", "weight": 0.5, "value": 2, "stack": 10, "tags": ["food", "raw"],
+   "effects": [{"effect": "core:effect/restore_health", "magnitude": 3, "duration": 0}],
+   "description": "Cut from a wolf or a bristleback. Better roasted over a hearth, where somebody can ask you where you got it."}
+]

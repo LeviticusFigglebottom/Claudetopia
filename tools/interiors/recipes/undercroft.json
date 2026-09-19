@@ -1,0 +1,193 @@
+{
+  "id": "core:interior/undercroft",
+  "name": "The Undercroft",
+  "place": "core:place/undercroft",
+  "region": "core:region/brightwater",
+  "formed_by": "builder",
+  "seed": 9031,
+  "voxel": 0.45,
+  "formed_by_story": "The Oroth foundation Tollmere is built on. The guilds cut sewers into it because it was easier than cutting new stone, and stopped where the old work refused the pick.",
+  "who_was_here": "Everyone, eventually. Clerks dumping ledgers, thieves keeping them, and the Builders who laid the floor nobody has managed to lift.",
+  "story": "Under the city, a hall inside a bell. The Quiet Hands took the Undercroft because it is the one place in Tollmere the Tallymen cannot price: no charter covers ground that predates the charter. The hinge-less door at the far end opens for names, and the Hands have been guessing at names for eighty years.",
+  "unique_object": "the Unsaid Ledger: every price the law of Tollmere has ever taken, in eleven hands",
+  "palette": [
+    "#5a5f66",
+    "#2f3338",
+    "#8f959c",
+    "#3e5a6b",
+    "#b08a3e"
+  ],
+  "ambience": [
+    "drip",
+    "water_still",
+    "rope_creak"
+  ],
+  "start_heading_deg": 20,
+  "beats": [
+    {
+      "id": "grate",
+      "role": "entrance",
+      "size": "small",
+      "drop": 0,
+      "light_shaft": true,
+      "shaft_radius": 0.8,
+      "note": "A canal grate, dropped through from Lantern Row. The ladder is a rope, and it is not always there."
+    },
+    {
+      "id": "sewer_run",
+      "role": "passage",
+      "size": "tight",
+      "drop": -2.0,
+      "water": 0.3,
+      "note": "Guild sewer: brick above, Oroth stone below, and the join is a straight line nobody cut."
+    },
+    {
+      "id": "cistern",
+      "role": "chamber",
+      "size": "large",
+      "drop": -2.5,
+      "water": 1.4,
+      "note": "A flooded cistern with a walkway two handspans wide around it. Gutter drakes nest in the brick."
+    },
+    {
+      "id": "ledger_fall",
+      "role": "chamber",
+      "size": "medium",
+      "drop": -1.0,
+      "note": "Where the guilds threw their old ledgers. Waist-deep in paper. Every sheet is a price."
+    },
+    {
+      "id": "bell_hall",
+      "role": "camp",
+      "size": "huge",
+      "drop": -3.0,
+      "note": "The Hands' hall, inside a bell the size of a guildhall, hung mouth-down in the foundation. They light it with stolen lamps and nobody speaks above the note it still holds."
+    },
+    {
+      "id": "long_stair",
+      "role": "passage",
+      "size": "tight",
+      "drop": -5.0,
+      "note": "Oroth steps, each one exactly a handspan, descending past three sealed doors."
+    },
+    {
+      "id": "door_hall",
+      "role": "shrine",
+      "size": "large",
+      "drop": -2.0,
+      "light_shaft": false,
+      "note": "The hinge-less door. Nine name-slots in its face, six of them filled with names that did not work."
+    },
+    {
+      "id": "drake_warren",
+      "role": "chamber",
+      "size": "medium",
+      "drop": -1.5,
+      "branch_from": "cistern",
+      "note": "A collapsed side-vault the drakes have made their own, floored in fishbones and coins."
+    },
+    {
+      "id": "back_grate",
+      "role": "passage",
+      "size": "tight",
+      "drop": 8.0,
+      "branch_from": "bell_hall",
+      "note": "A shaft the Hands cut to Gull Lane, barred at the top by a grate only they have the key to."
+    }
+  ],
+  "links": [
+    [
+      "grate",
+      "sewer_run"
+    ],
+    [
+      "sewer_run",
+      "cistern"
+    ],
+    [
+      "cistern",
+      "ledger_fall"
+    ],
+    [
+      "ledger_fall",
+      "bell_hall"
+    ],
+    [
+      "bell_hall",
+      "long_stair"
+    ],
+    [
+      "long_stair",
+      "door_hall"
+    ],
+    [
+      "cistern",
+      "drake_warren"
+    ],
+    [
+      "bell_hall",
+      "back_grate"
+    ],
+    [
+      "back_grate",
+      "grate"
+    ]
+  ],
+  "shortcut": {
+    "from": "back_grate",
+    "to": "grate",
+    "kind": "barred_grate",
+    "note": "Opens from inside. The Hands will pretend they always meant you to have it."
+  },
+  "encounters": [
+    {
+      "chamber": "cistern",
+      "enemy": "core:enemy/down_wolf",
+      "count": 3,
+      "group": "cistern",
+      "note": "Gutter drakes, in the bestiary's terms a pack; they come along the walkway so only two can reach you."
+    },
+    {
+      "chamber": "drake_warren",
+      "enemy": "core:enemy/down_wolf",
+      "count": 4,
+      "group": "warren",
+      "ambush": true
+    },
+    {
+      "chamber": "ledger_fall",
+      "enemy": "core:enemy/roadside_bandit",
+      "count": 2,
+      "group": "paper",
+      "note": "Two Hands who did not get the message that you are expected."
+    }
+  ],
+  "features": [
+    {
+      "kind": "exit",
+      "chamber": "grate",
+      "anchor": 0,
+      "name": "the canal grate"
+    },
+    {
+      "kind": "hearthstone",
+      "chamber": "bell_hall",
+      "id": "hearth_undercroft",
+      "name": "The Bell Hall",
+      "place": "core:place/undercroft"
+    },
+    {
+      "kind": "marker",
+      "chamber": "door_hall",
+      "name": "HingelessDoor",
+      "anchor": 0
+    },
+    {
+      "kind": "prop",
+      "asset": "res://assets/models/props/ledger/ledger.glb",
+      "chamber": "ledger_fall",
+      "anchor": 5
+    }
+  ],
+  "smoothing": 2
+}

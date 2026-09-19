@@ -1,0 +1,106 @@
+[
+{
+  "id": "core:dialogue/tallissa_oul",
+  "speaker_name": "Tallissa Oul",
+  "notes": "Reed Council elder; the Tide account (WORLD_BIBLE 1.4) and main quest 4. She will not answer until the player has sat down; the pauses are written into the text.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "waited_at_isseva"}], "text": "You slept on the boards and heard the lanterns go out. Now you may ask me things."},
+    {"conditions": [{"flag": "nave_bell_to_water"}], "text": "The bell is under the jetty with a lantern on it. The marsh is quieter by exactly one bell. Sit."},
+    {"conditions": [{"flag": "nave_bell_to_circle"}], "text": "It is on a shelf in Tollmere. — Sit down anyway. I am not angry. I am old, and being angry takes a whole afternoon."},
+    {"conditions": [{"flag": "nave_bell_kept"}], "text": "You still have it. I can hear it from here when you stop talking. That is not an accusation; it is simply what I can hear."},
+    {"conditions": [{"renown_min": 300}], "text": "You came in loud. Everyone comes in loud. Sit down and it will go off you in about an hour."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Tallissa Oul", "text": "...Sit down. — No. Properly. On the boards, with your legs over the water, the way you would sit if you had nowhere else to be.", "next": "hub"},
+    "hub": {"speaker": "Tallissa Oul", "text": "...Now. Ask.", "choices": [
+      {"text": "Give me the reedfolk's account of the Dwindling.", "next": "lecture"},
+      {"text": "Why must I sit down first?", "next": "sitting"},
+      {"text": "Tell me about the Drowned Nave.", "next": "the_nave"},
+      {"text": "About She Who Waits.", "next": "she_who_waits"},
+      {"text": "What is the Seat holding?", "next": "the_holding", "conditions": [{"flag": "nave_bell_taken"}]},
+      {"text": "Tell me about the lanterns.", "next": "the_lanterns"},
+      {"text": "I'll sit a while longer.", "next": "bye"}
+    ]},
+    "lecture": {"speaker": "Tallissa Oul", "text": "The world is a shore, and the Dwindling is the tide going out. — What is left on the sand is strange and beautiful and does not belong to the air, and that is what your Sayers call the deep places, and they go into them with lamps and come out with opinions. Things return with the flood. That is all of it. — We do not fear the going-out. We built on stilts, which is a way of agreeing with water. We fish what is stranded. Some here believe the flood is coming back and that the drowned will walk, and I have buried forty-one people in that water and I will tell you plainly that I do not believe it and that I have never once said so at a burial.", "effects": [{"set_flag": "heard_lecture_tide"}], "choices": [
+      {"text": "Your account fails too. There has never been a flood.", "next": "the_failure"},
+      {"text": "That is a patient way to live.", "next": "hub"}
+    ]},
+    "the_failure": {"speaker": "Tallissa Oul", "text": "...No. There has not. Not in any record, ours or theirs. — A Sayer came here nine years before you were born and sat where you are sitting and said exactly that sentence, and she said it kindly, and she stayed eleven days. Tessane. She said our account was the only one nobody had seriously tried to disprove, because nobody had thought it worth the boat fare. Then she went back to Tollmere and they scraped her name off a page. — So: yes. My account has never predicted anything. It has kept a town of people from despairing for four hundred years, which is not the same as being true, and I have had a long time to sit with the difference.", "effects": [{"set_flag": "tallissa_knew_tessane"}, {"renown": 10}], "next": "hub"},
+    "sitting": {"speaker": "Tallissa Oul", "text": "Because a standing person is leaving. — You would not think it was a rule; it is only that in four hundred years everything worth knowing here has been said to somebody sitting down, and so we have stopped bothering to say things to people who are not. It is not a test. It is a filter, and it is a very good one, and the Circle has never got past it, which is why they send letters.", "next": "hub"},
+    "the_nave": {"speaker": "Tallissa Oul", "text": "Isse-Anthe. The Drowned Choir. A hundred and twenty yards of Builder's spire leaning fifteen degrees out of the marsh, and the lower half is water and the upper half is where the birds will not nest. — Our name for it is the same word as theirs, which should trouble the Sayers more than it does: isse is water in Sedgish and isse is water in Oroth, and we are supposed to have had no contact with the Builders at all. Ask your Circle about that and watch them look at the ceiling. The water in it rises when there is singing. I have not been inside since I was thirty-one and I will not tell you what I went in for.", "effects": [{"set_flag": "tallissa_isse_clue"}], "next": "hub"},
+    "she_who_waits": {"speaker": "Tallissa Oul", "text": "She was on that altar before Isseva had a name and she will be there after. — She is not your enemy. She is in your way, which in this marsh is true of nearly everything and is a distinction people from the downs find difficult. She sings, and the singing mends her, and if you let her finish a hymn you will be there all day. Break it. Damage or silence, either. — And when she goes down, do not stand over her. It is a small thing and it costs you nothing and I will know.", "effects": [{"set_flag": "tallissa_nave_advice"}], "next": "hub"},
+    "the_holding": {"speaker": "Tallissa Oul", "text": "...Now I will tell you the thing you waited for, and you did wait, so it is yours. — The tide takes everything back in its time. Everything. That is not a threat, it is a comfort, it is the only comfort there is out here. And there is one thing in this world the tide does not reach, and it is in the south, and it is a note. — A held thing does not rot. That sounds like a blessing until you have watched a man hold his father's hand for three days after the man was dead. A held thing does not rot and it does not rest, and whatever is sitting in the Builders' Seat with its fist closed has been holding something for a thousand years, and my account says: open the hand. Not because the hand is wicked. Because the thing in it is tired.", "effects": [{"set_flag": "seat_is_holding"}, {"set_flag": "learned_tide_account"}, {"renown": 15}], "next": "hub"},
+    "the_lanterns": {"speaker": "Tallissa Oul", "text": "Indigo paper, eel-oil, a reed float. We put our dead out on the water with one lit, and we do not go back to look, and by morning most have gone out and a few are still burning somewhere in the fog. — I count them at first light. Every day since I was sixty. Not for the dead; the dead are finished, that is the entire point of the ceremony. I count them because a person should know how many small lights are still going in the direction they cannot see, and there is no other way to find out.", "effects": [{"give_item": ["core:item/reed_lantern", 1]}, {"set_flag": "tallissa_gave_lantern"}], "next": "hub"},
+    "bye": {"speaker": "Tallissa Oul", "text": "Stay as long as you like. Nobody here will ask you to move and nobody will ask you what you are doing. That is the whole of our hospitality and it is better than a bed.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/dunna_ko_kharrow",
+  "speaker_name": "Dunna ko-Kharrow",
+  "notes": "Clan Kharrow's memory-keeper; main quest 5. Measures strangers by deeds she has heard of, so her hub gates hard on renown.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "ghorr_remembered"}], "text": "Ghorr. The children have the eighth verse by heart already and they sing it too fast. Come in, sit at the hearth, you are owed a hearth for the rest of your life."},
+    {"conditions": [{"flag": "ghorr_unsaid"}], "text": "The shaft is quiet and the song still has its hole in it. You chose. I will not unpick a choice I asked you to make."},
+    {"conditions": [{"flag": "held_by_the_hand"}], "text": "You have the Hand's mark on your back and the cold still in you. Now I will sing to you."},
+    {"conditions": [{"renown_min": 200}], "text": "I have heard of you. Twice, from two different roads, which is the only kind of hearing that counts."},
+    {"conditions": [{"renown_min": 1}], "text": "I have not heard of you. That is not an insult; it is a measurement, and it can change by summer."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Dunna ko-Kharrow", "text": "Dunna ko-Kharrow. I keep what Kharrow remembers. Tell me your name and something you have done, in that order, and do not pad the second part.", "next": "hub"},
+    "hub": {"speaker": "Dunna ko-Kharrow", "text": "Go on.", "choices": [
+      {"text": "Give me the clans' account of the Dwindling.", "next": "lecture"},
+      {"text": "What is the Rope-Song?", "next": "rope_song"},
+      {"text": "Why must the mountain hold me first?", "next": "the_hand", "conditions": [{"renown_min": 100}]},
+      {"text": "Tell me about the hole in the song.", "next": "the_gap", "conditions": [{"flag": "held_by_the_hand"}]},
+      {"text": "What is the Stone-Thrall King?", "next": "the_king", "conditions": [{"flag": "heard_rope_song"}]},
+      {"text": "Why the knots in your belt?", "next": "the_knots"},
+      {"text": "Enough for now.", "next": "bye"}
+    ]},
+    "lecture": {"speaker": "Dunna ko-Kharrow", "text": "Something vast breathed the world out and is breathing it in again. What is nearest the mouth goes first: the very old, the very deep, the forgotten. — The giants who raised these mountains were breathed in long ago. Their bones are still here. That is what is left when a thing is taken back but its weight is not, and you may walk through a ribcage two valleys east and stand in a skull and shout, and the shout will come back to you, and it will come back wrong. — We keep long memories because memory is a hand on the rope. Not a prayer. A hand, on a rope, and the rope is going out, and we are seven clans holding on and singing so that we all pull at the same time.", "effects": [{"set_flag": "heard_lecture_breath_clan"}], "next": "hub"},
+    "rope_song": {"speaker": "Dunna ko-Kharrow", "text": "Seven verses, one for each clan, sung every morning before food by whoever keeps the memory. Each verse is a list: the clan's name, its hold, its dead of note, its debts unpaid and its debts forgiven. Mine is four hundred lines and I have had it since I was eleven. — It is not art. Art you may improve. If I improve the Rope-Song, somebody's grandmother is gone by Tollday, and there is nobody to notice but me, and I would notice, and I would have to live with it.", "next": "hub"},
+    "the_hand": {"speaker": "Dunna ko-Kharrow", "text": "Because we do not sing to people the mountain has not held. — Go up to the Fallen Hand. Lie the night in the palm where the shrine is, on the stone, not on a bedroll like a Tollmere man. Come back with the cold still in you and the mark on your back, which takes a week to fade and which I can see through a shirt. — It is not a trial. You will not be tested and nothing will attack you, probably. It is this: I am about to give you four hundred lines of other people's dead, and I would like to know first that you can be still and cold and uncomfortable for one night without deciding it means something about you.", "effects": [{"set_flag": "dunna_sent_to_hand"}], "next": "hub"},
+    "the_gap": {"speaker": "Dunna ko-Kharrow", "text": "Seven verses. There should be eight. — You will not find that written; there is no gap in a song, there is only a place where the singer breathes. But the eighth breath is longer than the others and every memory-keeper for a thousand years has taken it, and none of us has ever been able to say why, and we have all been able to say exactly how long. — What we have is this: an eighth clan went down into the Choir when the Choir was new, to sing with the Builders. They did not come back and they were breathed in, and what came back up the shaft at Oskeld is their weight without their name.", "effects": [{"set_flag": "heard_rope_song"}], "next": "hub"},
+    "the_king": {"speaker": "Dunna ko-Kharrow", "text": "Bone and rock that walks, in the singing shaft, and about half this hold will tell you it is not a person and the other half will not say either way in front of children. — Break what you can off it. It fights differently with what is left, which is the clearest proof I know that there is something in there choosing. And when the shaft's echo starts to take your feet from under you, go up. There is a cart chain. It will hold; my uncle's crew hung it and my uncle was a coward about chains, which is the best thing you can be about chains. — Whatever name is in it, bring it out. Then you will decide what to do with it, not me, and I will not stand behind you and breathe while you decide.", "next": "hub"},
+    "the_knots": {"speaker": "Dunna ko-Kharrow", "text": "A knot for every name I hear. A knot untied for every name I lose. — In fifty-one years this belt has never once been shorter at the end of a year than at the start. I want you to understand what that means, because a Sayer wrote to me about it and got it wrong in a beautiful hand. It does not mean I have a good memory. It means I have never yet had to untie two in a week, and I know of keepers in other holds who have, and one of them stopped keeping and went to herd goats and nobody in her hold thinks the less of her.", "effects": [{"set_flag": "dunna_explained_knots"}], "next": "hub"},
+    "bye": {"speaker": "Dunna ko-Kharrow", "text": "Go. And if you do a thing worth a verse, do it where a clan can see it, or it is only a thing that happened.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/cadwen_ash",
+  "speaker_name": "Cadwen Ash",
+  "notes": "Toll-Knight; gives Vigil and main quest 7. Grim, kind, doomed, and does not make a fuss about it. Counts every bell she hears, the Toll's hum as a half.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "kept_vigil_before_seat"}], "text": "Four hundred and six since you came. The hum counts as a half; I have argued this with three chapter-masters and won twice."},
+    {"conditions": [{"flag": "aud_walked_south"}], "text": "You walked her down and came back up. That is the whole of the Order's work and most of us never do it once."},
+    {"conditions": [{"flag": "aud_bell_rung"}], "text": "You rang it. Out of custom, in the wrong month, in a chapter-house of people who count. — Nobody has slept. Nobody has complained either."},
+    {"conditions": [{"renown_min": 400}], "text": "The door opens for names, and yours is getting very large. I would rather you knew that before you stood in front of it."},
+    {"conditions": [{"morality_min": 40}], "text": "You have been kind somewhere and walked away before they could thank you. I know the shape of that. Sit by the brazier."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Cadwen Ash", "text": "Cadwen Ash. Toll-Knight. Grey plate, bound clapper, nineteen years of nights, and no, it is not a burden; people ask.", "next": "hub"},
+    "hub": {"speaker": "Cadwen Ash", "text": "Ask, and speak up. The ash takes the edges off a voice.", "choices": [
+      {"text": "What does the Order actually do?", "next": "the_order"},
+      {"text": "Why do you count the bells?", "next": "counting"},
+      {"text": "I'd stand a night's vigil.", "next": "the_vigil"},
+      {"text": "There is a pilgrim who wants walking south.", "next": "the_pilgrim", "conditions": [{"flag": "stood_vigil"}]},
+      {"text": "What is the Cantor?", "next": "the_cantor", "conditions": [{"flag": "aud_walked_south"}]},
+      {"text": "How does the Seat open?", "next": "the_door", "conditions": [{"flag": "vigil_done"}]},
+      {"text": "Why grey?", "next": "the_grey"},
+      {"text": "I'll let you keep watch.", "next": "bye"}
+    ]},
+    "the_order": {"speaker": "Cadwen Ash", "text": "We keep vigil over the Choir and we count. That is the whole of the rule and it takes about four seconds to learn and nineteen years to do. — We were founded by the ones who turned back. In the Ash Winter, Greyfold's people walked south into the Hush singing, and some walked with them and stopped at the ring and came back, and were ashamed, and founded an order rather than go home. That is not the version on the chapter wall. It is the version the chapter-master tells you on your first night, so that you know what you have joined.", "next": "hub"},
+    "counting": {"speaker": "Cadwen Ash", "text": "Because a counted thing is a kept thing. — There is one bell every few minutes out there and nobody rings it. Ask me what rings it and I will tell you honestly that after nineteen years I do not know. So I count. Four hundred and six today. If the number changes shape, if there are fewer on a Hushday than a Skerrday, somebody will have four decades of figures to look at, and that somebody will not be me, and that is the correct way round for this work. — The Toll's hum counts as a half. Sulion of the Circle wrote to me about that. I wrote back. We have been corresponding pleasantly for eleven years and neither of us has moved an inch.", "effects": [{"set_flag": "cadwen_explained_counting"}], "next": "hub"},
+    "the_vigil": {"speaker": "Cadwen Ash", "text": "Then you stand the night at the ring with me. Twelve headless colossi, a bell every few minutes, and the note underneath everything that you will stop hearing after an hour and then hear again at about four in the morning, which is the hour that takes people. — The ash-wights come up from Greyfold when a bell sounds. They are weak and they are many and they still wave. Put them down between bells and count out loud so I can hear you doing it. Most who fail this, fail by trying to do more.", "effects": [{"start_quest": "core:quest/vigil"}], "next": "hub"},
+    "the_pilgrim": {"speaker": "Cadwen Ash", "text": "Aud Fennick, of Merrowby, in grey, mending other people's grey. She has asked for the Order's escort to the line. — We do not stop pilgrims. We do not encourage them either; I want that plain, because the Circle says we do and it is a slander and it is nearly true. We walk with them, so that the last thing they hear is a voice saying something ordinary. That is the whole of the service. She will leave something at the line. Bring it back; we hang what pilgrims leave in the chapter-bell and ring them once a year, on the night of the Ash Winter, all at once. It is very loud and it is the only loud thing we do.", "effects": [{"set_flag": "cadwen_asked_escort"}], "next": "hub"},
+    "the_cantor": {"speaker": "Cadwen Ash", "text": "Not a machine. Not a god. A person, or what a person becomes after a thousand years of not being allowed to stop. — The founders turned back in the Ash Winter because a voice in the Seat asked them to, by name. Every name. Forty-one people it had never met, and it asked them to stay and keep count, and eleven did, and the rest walked into the grey. That is in the chapter book in eleven different hands because nobody could finish writing it in one sitting. — He is holding a note. He has been holding it since before Merrowby had a name. He is tired, and he is the reason the deep places are still standing, and both of those are true at once and I have had nineteen years to get used to it and I have not.", "effects": [{"set_flag": "learned_what_cantor_is"}, {"renown": 15}], "next": "hub"},
+    "the_door": {"speaker": "Cadwen Ash", "text": "It has no hinges and it opens for names. — You say them at it: your own, the Order's, the knights who went in and did not come back. It does not open for the loudest and it does not open for the oldest. As far as four generations of us can tell, it opens for the ones who are known, which is the cruellest possible criterion, because it means the door has been waiting a hundred and seventy years for somebody sufficiently talked about to walk up to it, while eleven people who kept faith with it every night went grey and died at the ring. — I will say your name at it. I have thought about this for some time and I would rather be the one who says it.", "effects": [{"set_flag": "cadwen_will_open_door"}], "next": "hub"},
+    "the_grey": {"speaker": "Cadwen Ash", "text": "Because the heath is grey and a knight in colour out there is a thing the wights walk toward. — And because when I swore, I took the name Ash, which is what we do, and my own went into the chapter book and has not been said aloud since by anyone living. Do not look like that. It was nineteen years ago and I chose it and I would choose it again. — Although. When the bells go at the Ash Winter, all of them at once, in that little stone room — I have caught myself listening for it. Nineteen years. Still listening for it. That is not despair, that is just an accurate report.", "effects": [{"set_flag": "cadwen_real_name"}, {"morality": 3}], "next": "hub"},
+    "bye": {"speaker": "Cadwen Ash", "text": "Go on. If you are out at the ring after dark, say something ordinary out loud now and then. It helps. I cannot tell you why and it helps.", "next": "hub"}
+  }
+}
+]

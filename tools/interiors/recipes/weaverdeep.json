@@ -1,0 +1,181 @@
+{
+  "id": "core:interior/weaverdeep",
+  "name": "Weaverdeep",
+  "place": "core:place/weaverdeep",
+  "region": "core:region/briarwold",
+  "formed_by": "creature",
+  "seed": 5540,
+  "voxel": 0.42,
+  "formed_by_story": "Root caverns under the Grandfather, hollowed where the great tree's roots died back, then widened by generations of weavers who dig with their forelegs and line what they dig with silk.",
+  "who_was_here": "A Woodfolk hunting party, all of them, in one autumn. Their bows are still strung.",
+  "story": "The Grandfather's roots go down further than the tree ever went up. Between them the weavers have strung a town of their own: silk bridges over root chasms, larders in the hollows, and a hum in the silk that is almost exactly the note the Standing Moot makes. Nobody has explained that.",
+  "unique_object": "a silk bridge that hums on the Moot's note when anything crosses it",
+  "palette": [
+    "#3a2f26",
+    "#1a1410",
+    "#6b5a3e",
+    "#8a7a5a",
+    "#6b3f8a"
+  ],
+  "ambience": [
+    "creak",
+    "canopy_wind",
+    "drip"
+  ],
+  "start_heading_deg": 300,
+  "beats": [
+    {
+      "id": "root_mouth",
+      "role": "entrance",
+      "size": "small",
+      "drop": 0,
+      "note": "A gap between two roots each as thick as a house, breathing cold air out."
+    },
+    {
+      "id": "first_hollow",
+      "role": "chamber",
+      "size": "medium",
+      "drop": -4.0,
+      "note": "A dead root's hollow, floored in a century of bark fall. Silk in the corners, old and grey."
+    },
+    {
+      "id": "span",
+      "role": "passage",
+      "size": "tight",
+      "drop": -1.0,
+      "link_radius": 2.4,
+      "note": "The first silk bridge, over a chasm whose bottom the lamp does not find. It takes your weight. It hums."
+    },
+    {
+      "id": "larder",
+      "role": "chamber",
+      "size": "large",
+      "drop": -3.0,
+      "note": "The larder. What is wrapped here is mostly deer. Mostly."
+    },
+    {
+      "id": "deep_span",
+      "role": "passage",
+      "size": "squeeze",
+      "drop": -4.5,
+      "note": "A silk tube through a root, barely shoulder-wide, sticky in a way that slows a roll."
+    },
+    {
+      "id": "heart_root",
+      "role": "chamber",
+      "size": "huge",
+      "drop": -2.0,
+      "light_shaft": true,
+      "shaft_radius": 1.4,
+      "note": "The Grandfather's heart-root, dead and hollow, with a shaft of daylight coming ninety metres down through the trunk above."
+    },
+    {
+      "id": "nursery",
+      "role": "boss",
+      "size": "large",
+      "drop": -5.0,
+      "note": "Where the silk is new and white. The hunting party is here, and so is everything that made the hunting party quiet."
+    },
+    {
+      "id": "cut_rope",
+      "role": "passage",
+      "size": "tight",
+      "drop": 7.0,
+      "branch_from": "heart_root",
+      "note": "A Woodfolk rope ladder still nailed to the root, running up toward the mouth."
+    }
+  ],
+  "links": [
+    [
+      "root_mouth",
+      "first_hollow"
+    ],
+    [
+      "first_hollow",
+      "span"
+    ],
+    [
+      "span",
+      "larder"
+    ],
+    [
+      "larder",
+      "deep_span"
+    ],
+    [
+      "deep_span",
+      "heart_root"
+    ],
+    [
+      "heart_root",
+      "nursery"
+    ],
+    [
+      "heart_root",
+      "cut_rope"
+    ],
+    [
+      "cut_rope",
+      "root_mouth"
+    ]
+  ],
+  "shortcut": {
+    "from": "cut_rope",
+    "to": "root_mouth",
+    "kind": "ladder",
+    "note": "The hunting party's own ladder, which they cut from the top so nothing could follow them up. Somebody will have to nail it back."
+  },
+  "encounters": [
+    {
+      "chamber": "first_hollow",
+      "enemy": "core:enemy/down_wolf",
+      "count": 2,
+      "group": "hollow",
+      "note": "Weavers; they drop, so the fight starts above you."
+    },
+    {
+      "chamber": "span",
+      "enemy": "core:enemy/down_wolf",
+      "count": 2,
+      "ambush": true,
+      "group": "span",
+      "note": "On the bridge, where there is nowhere to dodge but along it."
+    },
+    {
+      "chamber": "larder",
+      "enemy": "core:enemy/down_wolf",
+      "count": 4,
+      "group": "larder"
+    },
+    {
+      "chamber": "nursery",
+      "enemy": "core:enemy/down_wolf",
+      "count": 6,
+      "group": "nursery",
+      "role": "swarm"
+    }
+  ],
+  "features": [
+    {
+      "kind": "exit",
+      "chamber": "root_mouth",
+      "anchor": 0,
+      "name": "the root mouth"
+    },
+    {
+      "kind": "hearthstone",
+      "chamber": "heart_root",
+      "id": "hearth_weaverdeep",
+      "name": "The Heart-Root",
+      "place": "core:place/weaverdeep"
+    },
+    {
+      "kind": "prop",
+      "asset": "res://assets/models/props/bow_stand/bow_stand.glb",
+      "chamber": "nursery",
+      "anchor": 2,
+      "note": "Five bows, still strung, stood against the wall in a row somebody made neat."
+    }
+  ],
+  "smoothing": 2
+}

@@ -1,0 +1,32 @@
+{
+  "id": "core:house/alder_antler_lodge",
+  "name": "The Antler Hall",
+  "place": "core:place/fernhold",
+  "culture": "woodfolk",
+  "resident": "core:npc/alder_wyke",
+  "trade": "farmer",
+  "wealth": 2,
+  "household": 4,
+  "seed": 1213,
+  "habits": [
+    "sharpens_obsessively",
+    "has_a_dog",
+    "leaves_boots_by_the_door",
+    "mends_at_night"
+  ],
+  "extra_rooms": [
+    "hall"
+  ],
+  "extra_fixtures": {
+    "hall": [
+      "weapon_rack",
+      "long_table",
+      "bench"
+    ]
+  },
+  "story": "Every hart taken in the Briarwold for a hundred years has left its antlers on this wall, and Alder can tell you the year of each one. The gap in the middle of the wall is deliberate, and it is the size of the Hart of Thorns.",
+  "who_was_here": "The Wyke line, and two hundred harts.",
+  "unique_object": "a gap in a wall of antlers, kept clear, exactly the size of one head",
+  "children": 0,
+  "name_slug": "alder_antler_lodge"
+}

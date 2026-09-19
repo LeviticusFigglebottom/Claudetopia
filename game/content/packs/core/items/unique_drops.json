@@ -1,0 +1,70 @@
+[
+  {
+    "id": "core:item/hart_spear",
+    "name": "The Hart's Spear",
+    "category": "weapon",
+    "weight": 7.5,
+    "value": 900,
+    "tags": [
+      "spear",
+      "two_handed",
+      "unique",
+      "briarwold"
+    ],
+    "tier": 4,
+    "material": "core:item/ash_wood",
+    "weapon": {
+      "class": "spear",
+      "damage": 34,
+      "poise_damage": 30,
+      "stamina_light": 22,
+      "stamina_heavy": 38,
+      "speed": 0.85,
+      "reach": 3.4,
+      "clips_set": "2H",
+      "parry": false,
+      "stability": 0.25
+    },
+    "description": "Longer than is sensible indoors, and grown rather than forged: the shaft is one piece of black ash with the bark still on at the butt. The Woodfolk will not take it as payment, and will not say why, and will look at it the whole time you are in the room."
+  },
+  {
+    "id": "core:item/antler_crown",
+    "name": "The Antler Crown",
+    "category": "armour",
+    "weight": 4.0,
+    "value": 850,
+    "tags": [
+      "head",
+      "unique",
+      "briarwold",
+      "hollow"
+    ],
+    "tier": 4,
+    "armour": {
+      "slot": "head",
+      "armour": 16,
+      "weight_class": "medium",
+      "stability": 0.1
+    },
+    "effects": [
+      "core:effect/fortify_stamina"
+    ],
+    "description": "Eight points, and the plate they are set into was shaped around a head that is no longer available for measurement. Wearing it, you notice that villagers count the points before they meet your eye, and that they get the number right."
+  },
+  {
+    "id": "core:item/the_held_note",
+    "name": "The Held Note",
+    "category": "misc",
+    "weight": 0.0,
+    "value": 0,
+    "tags": [
+      "unique",
+      "quest",
+      "ending",
+      "cinderlea"
+    ],
+    "stack": 1,
+    "tier": 5,
+    "description": "It has no weight and it will not go in a pocket; it simply goes with you, the way a tune does. Somebody held this for a thousand years so that the rest of it could keep going. Now you are holding it, and the question the Cantor asked you is no longer rhetorical."
+  }
+]

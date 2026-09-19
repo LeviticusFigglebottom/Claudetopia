@@ -1,0 +1,352 @@
+[
+  {
+    "id": "core:enemy/roadside_bandit",
+    "name": "Roadside Bandit",
+    "archetype": "skirmisher",
+    "rig": "humanoid",
+    "faction": "bandits",
+    "tint": "#6b5a3e",
+    "lore": "Tell them it was the Larkbourne Boys. Nobody remembers the Larkbourne Boys, and that is the whole of the grievance: a road crew paid off when the Toll fell, struck from the Wardens' Roll one winter, and robbing the Merrowby road ever since to be spoken of again. They take marks, boots and names, in that order.",
+    "region": "core:region/hearthvale",
+    "stats": {
+      "hp": 55,
+      "stamina": 80,
+      "poise": 24,
+      "armour": 2,
+      "speed": 3.6
+    },
+    "perception": {
+      "sight_range": 24.0,
+      "sight_fov": 115.0,
+      "hearing": 16.0,
+      "alertness": 1.0
+    },
+    "behaviour": {
+      "engage_range": 2.1,
+      "circle": 0.6,
+      "retreat_threshold": 0.3,
+      "patience": 3.5,
+      "leash": 34.0,
+      "retreat_time": 1.3,
+      "aggression": 0.75
+    },
+    "attacks": [
+      {
+        "name": "slash",
+        "clip": "Attack_1H_Light_1",
+        "weapon_class": "sword",
+        "damage": 11.0,
+        "poise_damage": 10.0,
+        "range": 2.1,
+        "telegraph": 0.45,
+        "hit_window": 0.16,
+        "recovery": 0.5,
+        "cooldown": 1.6,
+        "gcd": 0.5,
+        "weight": 3.0,
+        "lunge": 1.8
+      },
+      {
+        "name": "overhead",
+        "clip": "Attack_1H_Heavy",
+        "weapon_class": "sword",
+        "damage": 18.0,
+        "poise_damage": 18.0,
+        "heavy": true,
+        "range": 2.3,
+        "telegraph": 0.85,
+        "hit_window": 0.18,
+        "recovery": 0.75,
+        "cooldown": 4.5,
+        "gcd": 0.8,
+        "weight": 1.0,
+        "lunge": 2.4,
+        "knockback": 1.2
+      }
+    ],
+    "marks": [
+      8,
+      22
+    ],
+    "tags": [
+      "bandit",
+      "humanoid",
+      "person"
+    ]
+  },
+  {
+    "id": "core:enemy/down_wolf",
+    "name": "Down Wolf",
+    "archetype": "pack",
+    "rig": "custom",
+    "body": "quadruped",
+    "body_variant": "wolf",
+    "faction": "beasts",
+    "tint": "#8a8073",
+    "scale": 1.0,
+    "height": 1.0,
+    "radius": 0.45,
+    "clips": [
+      "Idle",
+      "Walk",
+      "Run",
+      "Attack_1",
+      "Attack_2",
+      "Hit",
+      "Death"
+    ],
+    "lore": "Lean, grey-gold, and patient as weather. Down wolves work the dry valleys in fours and have learned what the hedgerows teach: circle, wait, and take whoever turns their back on the hedge. Vale shepherds do not hate them. They count them, which is worse.",
+    "region": "core:region/hearthvale",
+    "stats": {
+      "hp": 38,
+      "stamina": 70,
+      "poise": 14,
+      "armour": 0,
+      "speed": 4.6
+    },
+    "perception": {
+      "sight_range": 26.0,
+      "sight_fov": 130.0,
+      "hearing": 22.0,
+      "alertness": 1.2
+    },
+    "behaviour": {
+      "engage_range": 1.9,
+      "circle": 0.9,
+      "retreat_threshold": 0.25,
+      "patience": 4.0,
+      "leash": 40.0,
+      "flank": true,
+      "spread": 3.2,
+      "strafe_speed": 1.2,
+      "aggression": 0.5
+    },
+    "attacks": [
+      {
+        "name": "bite",
+        "clip": "Attack_1",
+        "weapon_class": "bite",
+        "damage": 9.0,
+        "poise_damage": 8.0,
+        "range": 1.9,
+        "telegraph": 0.4,
+        "hit_window": 0.14,
+        "recovery": 0.45,
+        "cooldown": 2.2,
+        "gcd": 0.4,
+        "weight": 3.0,
+        "lunge": 3.0
+      },
+      {
+        "name": "lunge",
+        "clip": "Attack_2",
+        "weapon_class": "bite",
+        "damage": 13.0,
+        "poise_damage": 14.0,
+        "range": 2.4,
+        "min_range": 1.6,
+        "telegraph": 0.65,
+        "hit_window": 0.16,
+        "recovery": 0.6,
+        "cooldown": 5.0,
+        "gcd": 0.7,
+        "weight": 1.0,
+        "lunge": 5.0,
+        "knockback": 1.6
+      }
+    ],
+    "marks": [
+      0,
+      4
+    ],
+    "tags": [
+      "beast",
+      "pack",
+      "quadruped"
+    ]
+  },
+  {
+    "id": "core:enemy/hedge_wight",
+    "name": "Hedge-Wight",
+    "archetype": "brute",
+    "rig": "humanoid",
+    "faction": "unquiet",
+    "tint": "#4d5347",
+    "scale": 1.15,
+    "height": 2.0,
+    "lore": "A farmer buried with his tools who did not stop working. The Vale buries its own at the hedge line with a scythe or a spade, so the dead have something to be known by; when the ringing thins, some of them get up and go on with it. He is not angry. He is behind on the cutting, and you are standing in the row.",
+    "region": "core:region/hearthvale",
+    "stats": {
+      "hp": 130,
+      "stamina": 100,
+      "poise": 70,
+      "armour": 5,
+      "speed": 2.1
+    },
+    "perception": {
+      "sight_range": 18.0,
+      "sight_fov": 95.0,
+      "hearing": 14.0,
+      "alertness": 0.7
+    },
+    "behaviour": {
+      "engage_range": 2.9,
+      "circle": 0.05,
+      "retreat_threshold": 0.0,
+      "patience": 2.5,
+      "leash": 26.0,
+      "hyper_armour": 14.0,
+      "aggression": 0.85,
+      "strafe_speed": 0.35
+    },
+    "attacks": [
+      {
+        "name": "scythe_sweep",
+        "clip": "Attack_2H_Light_1",
+        "weapon_class": "scythe",
+        "damage": 20.0,
+        "poise_damage": 26.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 3.0,
+        "telegraph": 1.0,
+        "hit_window": 0.22,
+        "recovery": 0.85,
+        "cooldown": 3.2,
+        "gcd": 0.9,
+        "weight": 3.0,
+        "lunge": 1.6,
+        "statuses": [
+          {
+            "id": "bleeding",
+            "duration": 6.0,
+            "magnitude": 2.0
+          }
+        ]
+      },
+      {
+        "name": "reaping_step",
+        "clip": "Attack_2H_Heavy",
+        "weapon_class": "scythe",
+        "damage": 30.0,
+        "poise_damage": 40.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 3.2,
+        "telegraph": 1.45,
+        "hit_window": 0.24,
+        "recovery": 1.1,
+        "cooldown": 7.0,
+        "gcd": 1.2,
+        "weight": 1.0,
+        "lunge": 3.2,
+        "knockdown": true,
+        "knockback": 3.0
+      }
+    ],
+    "marks": [
+      14,
+      30
+    ],
+    "tags": [
+      "humanoid",
+      "revenant",
+      "undead"
+    ]
+  },
+  {
+    "id": "core:enemy/bristleback",
+    "name": "Bristleback",
+    "archetype": "charger",
+    "rig": "custom",
+    "body": "quadruped",
+    "body_variant": "boar",
+    "faction": "beasts",
+    "tint": "#5a4436",
+    "scale": 1.1,
+    "height": 1.1,
+    "radius": 0.5,
+    "clips": [
+      "Idle",
+      "Walk",
+      "Run",
+      "Attack_1",
+      "Attack_2",
+      "Hit",
+      "Death"
+    ],
+    "lore": "A boar armoured in its own stiff hair, which the Vale claims will turn an arrow and which has turned enough arrows that nobody argues. It gives one warning: the bristles go up along the spine like a hedge standing to attention. Then it is already coming, tusks up, and the only correct answer is a tree.",
+    "region": "core:region/hearthvale",
+    "stats": {
+      "hp": 90,
+      "stamina": 90,
+      "poise": 45,
+      "armour": 4,
+      "speed": 3.4
+    },
+    "perception": {
+      "sight_range": 20.0,
+      "sight_fov": 105.0,
+      "hearing": 20.0,
+      "alertness": 0.9
+    },
+    "behaviour": {
+      "engage_range": 2.6,
+      "circle": 0.1,
+      "retreat_threshold": 0.0,
+      "patience": 2.0,
+      "leash": 34.0,
+      "charge_range": 12.0,
+      "hyper_armour": 12.0,
+      "aggression": 0.9,
+      "strafe_speed": 0.3
+    },
+    "attacks": [
+      {
+        "name": "tusk_charge",
+        "kind": "charge",
+        "clip": "Attack_2",
+        "weapon_class": "tusk",
+        "damage": 22.0,
+        "poise_damage": 40.0,
+        "heavy": true,
+        "range": 12.0,
+        "min_range": 4.5,
+        "hit_range": 2.6,
+        "telegraph": 0.9,
+        "hit_window": 0.2,
+        "recovery": 0.9,
+        "cooldown": 6.0,
+        "gcd": 1.0,
+        "weight": 3.0,
+        "knockdown": true,
+        "knockback": 4.0
+      },
+      {
+        "name": "gore",
+        "clip": "Attack_1",
+        "weapon_class": "tusk",
+        "damage": 14.0,
+        "poise_damage": 18.0,
+        "range": 2.4,
+        "telegraph": 0.55,
+        "hit_window": 0.16,
+        "recovery": 0.6,
+        "cooldown": 2.4,
+        "gcd": 0.5,
+        "weight": 2.0,
+        "lunge": 2.2,
+        "knockback": 1.4
+      }
+    ],
+    "marks": [
+      0,
+      6
+    ],
+    "tags": [
+      "beast",
+      "boar",
+      "quadruped"
+    ]
+  }
+]

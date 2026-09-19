@@ -1,0 +1,150 @@
+[
+{
+  "id": "core:dialogue/alder_wyke",
+  "speaker_name": "Alder Wyke",
+  "notes": "Woodfolk forester at Fernhold; main quest 6. Restraint as a virtue and a vice: the notched bow-stave and the silence that lets wrongs stand.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "moot_keeper_woodfolk"}], "text": "You named me keeper of a circle I have oiled for thirty years and never stood in the middle of. I have stood in the middle of it now. Once."},
+    {"conditions": [{"flag": "moot_left_empty"}], "text": "Empty centre. The Wold has not decided what it thinks. Neither have I, and I am usually faster than the Wold."},
+    {"conditions": [{"flag": "hart_fallen"}], "text": "The Hart is down. Thirty years I walked round that circle at a distance out of manners. Come in; there is meat and you will eat it."},
+    {"conditions": [{"flag": "seen_briar_grey"}], "text": "Nineteen grey patches. It was fourteen at midwinter. You have seen it now, so I need not describe it, which I am glad of."},
+    {"conditions": [{"morality_min": -40}], "text": "You may stand at the rail. There is a rail for a reason and today you are the reason."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Alder Wyke", "text": "Wyke. Fernhold's forester. We have no law here, only custom and bows, and you will find the custom is mostly common sense and the bows are mostly mine.", "next": "hub"},
+    "hub": {"speaker": "Alder Wyke", "text": "Say it.", "choices": [
+      {"text": "Tell me about the Briar.", "next": "the_briar"},
+      {"text": "Why are you notching your bow-stave?", "next": "the_notches"},
+      {"text": "What is the Standing Moot's custom?", "next": "the_moot"},
+      {"text": "What is the Hart of Thorns?", "next": "the_hart", "conditions": [{"flag": "told_moot_custom"}]},
+      {"text": "The Woodfolk have no law at all?", "next": "no_law"},
+      {"text": "I'll walk on.", "next": "bye"}
+    ]},
+    "the_briar": {"speaker": "Alder Wyke", "text": "A wall of living thorn along the whole eastern rim, vines thick as your arm, grown on purpose by people who wrote no purpose down. — I walk it every morning and count the grey patches: where the thorn has gone brittle and colourless and the birds go round. Fourteen at midwinter. Nineteen now. — The Oroth books say it was raised to keep something out. The Sedgish songs say it was raised to keep the Dwindling in, in the south, where it started. I have walked that wall for thirty years and I will tell you which way the dead thorn falls, which is inward, and you may make of that what a forester makes of it.", "effects": [{"set_flag": "alder_briar_count"}], "next": "hub"},
+    "the_notches": {"speaker": "Alder Wyke", "text": "One for every animal I chose not to shoot. — It is nearly through in one place and I will have to start a second stave, which I have been putting off for two years like a coward. — Restraint is our virtue. You will hear us say so. What we say less is the other side of it: a people who are very good at not acting are also very good at watching a thing go wrong for eleven years and saying nothing, out of manners. I have a notch for every hare. I have no mark at all for the years I watched the grey patches spread and told nobody outside this wood.", "effects": [{"set_flag": "alder_admitted_silence"}, {"morality": 3}], "next": "hub"},
+    "the_moot": {"speaker": "Alder Wyke", "text": "The stones hum if you stand in the middle. Custom says the circle will answer one question of whoever stands at the centre at dusk and is still standing at dark. — Nobody has ever managed it, because the Hart of Thorns keeps that circle and has kept it since before we had a word for keeping. We oil the stones. We do not stand in them. That is thirty years of my life summarised for a stranger in nine words and it does not sound like very much when it is said aloud.", "effects": [{"set_flag": "told_moot_custom"}, {"start_quest": "core:quest/the_briars_purpose"}], "next": "hub"},
+    "the_hart": {"speaker": "Alder Wyke", "text": "Antlered plate, a spear, and a charge that will put you through a stone. — He is not a villain. I want that said before you go up there with a weapon in your hand. He is a keeper who has forgotten what he is keeping the circle from, and that is a thing that happens to keepers, and it will happen to me if I am lucky enough to last. — Use the stones. He charges straight and he cannot help it. And when the Briar grows across the ring in the second half of it, count the ground you have left, because it will be half what you think.", "next": "hub"},
+    "no_law": {"speaker": "Alder Wyke", "text": "None. No court, no fine, no cell. If you take more than you need out of this wood, the first time somebody tells you. The second time nobody tells you anything, and you will find the lodges shut and the paths harder than you remember, and that goes on until you leave or learn. — It works. I will not pretend it is kind. A man at the charcoal camp beat his wife for six years and what we did about it was stop selling him rope, and she left in the end on her own feet and no thanks to any of us and I think about it most weeks.", "effects": [{"set_flag": "alder_told_charcoal_story"}], "next": "hub"},
+    "bye": {"speaker": "Alder Wyke", "text": "Go quietly. Not for the deer. There are things in the deep of this wood that only wake for a loud walker, and you would not be the first to teach them the shape of a person.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/half_ell",
+  "speaker_name": "Half-Ell",
+  "notes": "Quiet Hands door-keeper; gives The Unsaid Ledger. Never says her own name or the player's, and calls everyone by the last thing they touched.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "daybook_to_hands"}], "text": "Thimble. Sit on the step. There is a step for people who have carried something."},
+    {"conditions": [{"flag": "daybook_to_quill"}], "text": "...Door. The door is behind you and it is the last thing you touched and it is the last thing you will touch down here."},
+    {"conditions": [{"flag": "daybook_returned"}], "text": "Railing. You put it back. That is not nothing and it is not enough, and both of those are going in the book."},
+    {"conditions": [{"flag": "learned_first_hush"}], "text": "Lamp-post. You are standing in the light again. We have discussed the light."},
+    {"conditions": [{"renown_min": 300}], "text": "Loud one. You cannot Hush at that volume; it is like asking a bonfire to be a candle. We shall have to find you other work."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Half-Ell", "text": "Handrail. — That is you, now, until you touch something else. I do not use names down here and neither will you, and you will find out why on your own, which is the only way anybody believes it.", "next": "hub"},
+    "hub": {"speaker": "Half-Ell", "text": "Well, handrail?", "choices": [
+      {"text": "Why won't you use names?", "next": "the_names"},
+      {"text": "What is the door that opens for names?", "next": "the_door"},
+      {"text": "Teach me Hush.", "next": "the_hush"},
+      {"text": "What is the Unsaid Ledger?", "next": "the_ledger"},
+      {"text": "Give me work.", "next": "the_job", "conditions": [{"flag": "learned_first_hush"}]},
+      {"text": "I'm going up.", "next": "bye"}
+    ]},
+    "the_names": {"speaker": "Half-Ell", "text": "Because every soul above this ceiling believes that being spoken of keeps you warm, and they are right, and warm things are easy to find. — We do the other thing. A Hand who is not named is not looked for, and a Hand who is not looked for can stand in a counting-house at noon. It costs. I have not heard my whole name said aloud in twenty years and there are mornings I have to write it down to be sure of it. That is the fee. I paid it. Nobody made me and nobody thanked me.", "effects": [{"set_flag": "half_ell_explained_names"}], "next": "hub"},
+    "the_door": {"speaker": "Half-Ell", "text": "Builder-work. No hinges, and it opens for names — say one at it and it considers. Yours works if you are known. If you are not, say the name of somebody who has wronged you; it finds that funny, and I have never once been able to explain why, and I have watched it happen four hundred times. — We built the hall behind it inside a fallen bell, which the guilds have never found, because the guilds look for doors.", "next": "hub"},
+    "the_hush": {"speaker": "Half-Ell", "text": "It is not magic, whatever the Circle sells. — You stand where nobody is looking, and you let the not-looking do the work. That is the first Hush and it is nine-tenths of all of it. People do not see what they have no reason to see; a man carrying a crate past a clerk is a crate. The rest is knowing which part of a room has no reason in it. — Come at the hour before the watch changes and I will show you the counting-house from the outside and you will see the place in the wall where nobody's eye goes. Then it is yours and I cannot take it back off you.", "effects": [{"set_flag": "learned_first_hush"}, {"start_quest": "core:quest/the_unsaid_ledger"}, {"rep": ["core:faction/quiet_hands", 5]}], "next": "hub"},
+    "the_ledger": {"speaker": "Half-Ell", "text": "Every price the law has ever taken in this city, in one book, kept by us, added to since the Charter. — Not bribes. Prices. A fine of four marks for a Merrowby carter and forty for a Gullhithe fisher, same barrow, same street, same week, with a note in the margin about who each of them knows. The Tallymen do not hide it; they write it down, because a thing written down in a ledger stops looking like a decision. — We have been copying it for three hundred years and we have never published it, and the argument about whether to is the only argument the Hands have ever had that lasted longer than a night.", "effects": [{"set_flag": "heard_of_ledger"}], "next": "hub"},
+    "the_job": {"speaker": "Half-Ell", "text": "Lantern Row. Steward Quill's day-book: one week of prices, fines and favours, in a small tidy hand, on a desk he does not lock because locking it would suggest something. — Take it without being seen. Not without being suspected; suspected is fine, suspected is most of my working life. Seen is what we mind. — And read it before you bring it down. The Hands will not object; a thing read by one more person is louder, and that book is meant to be loud one day.", "effects": [{"set_flag": "half_ell_gave_job"}], "next": "hub"},
+    "bye": {"speaker": "Half-Ell", "text": "Mind the fourth step. It is not trapped. It is simply a bad step and we have all decided to keep it, because a bad step is worth two guards.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/tamsin_wick",
+  "speaker_name": "Tamsin Wick",
+  "notes": "Lamp keeper at Gullhithe; holds the lost name of Mullbourne in The Last Name side quest.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "hamlet_name_restored"}], "text": "They say the old Warden's saying three names again of a morning. Over in Merrowby. Forty mile off. And I'm the one who said it out loud first, on my own slipway, after fifty years of not."},
+    {"conditions": [{"flag": "learned_mullbourne"}], "text": "I said it. I've said it now. It's out and it can go where it likes."},
+    {"conditions": [{"renown_min": 200}], "text": "You're the one off the song. We got the song a month back off a Tollmere boat with two extra verses and a different tune, which is how everything gets here."},
+    {"conditions": [{"time_between": [18, 23]}], "text": "Come up. Mind the rail, it's wet, it's always wet. She's just lit and she's at her best in the first hour."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Tamsin Wick", "text": "Eels on the racks, light in the tower, and if you've come for either you're forty minutes early or two hours late, which is Gullhithe all over.", "next": "hub"},
+    "hub": {"speaker": "Tamsin Wick", "text": "What is it?", "choices": [
+      {"text": "Tell me about the Lamp.", "next": "the_lamp"},
+      {"text": "You say good evening to a stone.", "next": "the_stone"},
+      {"text": "Your family came off soft ground, inland.", "next": "the_knife", "conditions": [{"flag": "merrick_remembered_wedding"}]},
+      {"text": "What do the boats bring in?", "next": "the_talk"},
+      {"text": "Right, I'll leave you to the eels.", "next": "bye"}
+    ]},
+    "the_lamp": {"speaker": "Tamsin Wick", "text": "Builder-work in a human tower. The light's a sul-stone, about the size of a loaf, and it's been going since before there was a Gullhithe to shine at. I don't fuel it. I uncover it at dusk and cover it at dawn and turn the mirror by hand all night, and that's the whole trade, and it's thirty years of my life and I'd not swap it. — It's dimmer than it was. I'll say that to you and not to a Sayer, because a Sayer would want to come and measure it and I've seen what their measuring does to a thing that was working.", "effects": [{"set_flag": "lamp_dimming"}], "next": "hub"},
+    "the_stone": {"speaker": "Tamsin Wick", "text": "Good evening when I uncover it, good morning when I cover it. Thirty years. — And it brightens for the good evening. Not for the good morning. Every night, a little lift, like a dog hearing the door. I've tested it and I've kept quiet at it and it doesn't lift, and I've said it in other words and it doesn't lift, and I've had my sister say it and it lifts for her too, so it's not me. — I don't know what that means and I've stopped needing to. Something in there likes being spoken to at the start of its work. There's worse things to be.", "effects": [{"set_flag": "sulstone_answers"}], "next": "hub"},
+    "the_knife": {"speaker": "Tamsin Wick", "text": "...My mother's mother. Come off the soft ground when the mill there failed, which is what they always said, the mill that never worked. Married a Gullhithe man and never went back and never talked of it. — There's a knife. Eel-knife, worn thin as a leaf, and the name's cut into the handle. I've had it in my hand every working day of my life. — And nobody has ever asked me. Fifty-eight years and not one soul has asked what's on the handle, and I never said it, because who says a thing nobody's asked? — Mullbourne. That's it. Mullbourne. Nine households and a well that tasted of iron. — Take it to the old man. Go on, before I want it back.", "effects": [{"set_flag": "learned_mullbourne"}, {"renown": 10}, {"morality": 5}], "next": "hub"},
+    "the_talk": {"speaker": "Tamsin Wick", "text": "Prices, weather, and whatever Tollmere's arguing about, three days stale. — And this, which you'll not get on the quay: the eels are running short and early, and the buoy bells out on the Mere have been ringing on still nights. Still nights. No swell. Four of us have heard it and we've agreed not to make anything of it, and I'm making something of it now, to you, because you've a sword and a look about you and you'll be gone by Tollday.", "effects": [{"set_flag": "buoy_bells_ringing"}], "next": "hub"},
+    "bye": {"speaker": "Tamsin Wick", "text": "Go on. And if you're on the water after dark, watch for the sweep and count it: eleven seconds. If it's not eleven, come and tell me and I'll not thank you for it.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/orrin_quill",
+  "speaker_name": "Orrin Quill",
+  "notes": "Tallymen steward of Lantern Row. The mark he is lifted from in The Unsaid Ledger; not a villain, and his defence of the charter-board is the faction's best argument.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "daybook_to_quill"}], "text": "The man who handed it back with the name of who wanted it. The Guild has noted it. I have noted that the Guild noted it."},
+    {"conditions": [{"flag": "lifted_daybook"}], "text": "Good day. — You will forgive me; I am counting something and I find I am counting it twice today."},
+    {"conditions": [{"renown_min": 300}], "text": "A celebrated person. Celebrated persons pay the posted price, which is the entire point of posting it."},
+    {"conditions": [{"morality_min": -40}], "text": "The watch is at the end of the row and the watch is paid by the hour and I have written down the hour."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Orrin Quill", "text": "Quill, steward of Lantern Row. Prices are on the board, the board is posted at first light, and I do not adjust it for charm.", "next": "hub"},
+    "hub": {"speaker": "Orrin Quill", "text": "Your business?", "choices": [
+      {"text": "Explain the charter-board.", "next": "the_board"},
+      {"text": "You price the law differently for different people.", "next": "the_prices"},
+      {"text": "You're totalling our conversation.", "next": "the_book"},
+      {"text": "What do the Tallymen want?", "next": "the_guild"},
+      {"text": "Good day.", "next": "bye"}
+    ]},
+    "the_board": {"speaker": "Orrin Quill", "text": "Every price the city charges, in public, at first light, in a hand large enough to read from the bridge. Fines, tolls, wharfage, the cost of a watchman for a night. — People call it cold. It is the most honest object in Tollmere and I will defend it to anyone who has lived somewhere without one. In a village the price of a thing is what the miller feels about you. Here it is on a board, and a Gullhithe fisher who cannot read can have it read to him by a stranger and know he has not been singled out. That is not a small thing. That is the only protection a poor man has ever had in this city.", "effects": [{"set_flag": "quill_defended_board"}], "next": "hub"},
+    "the_prices": {"speaker": "Orrin Quill", "text": "...We do. It is on the board, so I will not pretend otherwise; the pretending is what I would find shameful. — Four marks for a Merrowby carter, forty for a Gullhithe fisher, the same barrow in the same street. The reasoning written down is that the fisher's trade is unlicensed and the carter's is chartered. The reasoning is real and it is also a wall built where a wall was wanted. — I have raised it twice at the Guild. I was heard, courteously, both times, and the figure did not move, and I went back to my desk and wrote the figure up in a large clear hand at first light, because the alternative was not writing it up. I am not asking you to think well of that. I have not managed it myself.", "effects": [{"set_flag": "quill_admitted_prices"}, {"renown": 5}], "next": "hub"},
+    "the_book": {"speaker": "Orrin Quill", "text": "I am. Greeting, four minutes, two questions of substance. I can show you the figure if you like; most people ask to see it and then wish they had not. — It is not avarice. It is that I was a clerk's son in Gullhithe and I watched my father be charged whatever a man felt like that morning for eleven years, and I decided that I would count everything and write it down where it could be seen. It has made me the least liked man on this row. My father could not have told you what anything cost. I can tell you what a conversation costs. One of us was cheated daily and it was not me.", "effects": [{"set_flag": "quill_backstory"}], "next": "hub"},
+    "the_guild": {"speaker": "Orrin Quill", "text": "Property, trade, prices, and a watch that is paid and therefore predictable, which is more than the Wardens' virtue will ever be. — We are not loved. We are the reason a woman in Isseva can send eels to Kharrow Hold and be paid a price she agreed to before the boat left. Every account of the Dwindling in that spire up there says the world holds together by being spoken of. Fine. A contract is a thing spoken of, in writing, by two people who do not trust each other, and it holds. Let the Circle put that in a lecture.", "next": "hub"},
+    "bye": {"speaker": "Orrin Quill", "text": "Good day. The board is reposted at first light; anything you were told before then was yesterday's.", "next": "hub"}
+  }
+},
+
+{
+  "id": "core:dialogue/aud_fennick",
+  "speaker_name": "Aud Fennick",
+  "notes": "The last Fennick, in pilgrim grey at Pilgrim's Ash. Endpoint of Seventeen Bells and the escort in Vigil. Cheerful, unhurried, not to be talked out of it.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "fennick_bell_to_aud"}], "text": "You carried it all this way and it never rang once. Well. It may ring on the other side. I shall listen for it."},
+    {"conditions": [{"flag": "aud_bell_rung"}], "text": "They rang my bell in the chapter-house, out of custom, in the wrong month. I am told it woke everyone. I am delighted."},
+    {"conditions": [{"flag": "found_aud_fennick"}], "text": "You again. Sit on the stone; the tents are full of people being solemn at each other."},
+    {"conditions": [{"flag": "reached_merrowby"}], "text": "Merrowby on you. The chalk dust sits in a seam on the shoulder and nowhere else. Forty years I brushed that off a doorstep."},
+    {"conditions": [{"morality_min": 40}], "text": "You have kind hands. That is not a compliment, it is a diagnosis; I have been mending grey for six months and I can tell."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Aud Fennick", "text": "Aud Fennick, late of Merrowby, presently of a tent. Mind where you sit; that one's Brannock's and he's particular and he's dead, but he was particular.", "next": "hub"},
+    "hub": {"speaker": "Aud Fennick", "text": "Go on, ask. Everyone wants to and nobody does.", "choices": [
+      {"text": "Why did you come south?", "next": "why"},
+      {"text": "Your family's bell has stopped ringing.", "next": "the_bell", "conditions": [{"flag": "found_aud_fennick"}]},
+      {"text": "You're humming a grace with no words in it.", "next": "the_grace"},
+      {"text": "Will you let me walk you to the line?", "next": "the_walk", "conditions": [{"flag": "cadwen_asked_escort"}]},
+      {"text": "Is there nothing that would turn you round?", "next": "turning"},
+      {"text": "I'll sit a while.", "next": "bye"}
+    ]},
+    "why": {"speaker": "Aud Fennick", "text": "Because I was the last one, dear, and being the last one is a job, and I had done it for eleven years and I had got tired. — That is not sadness. Everybody wants it to be sadness and then they can do something about it. I buried a brother, two sisters and a husband, and I kept the door painted and I went to market and I answered to the name, and one Tollday I was standing at the trestle and I thought: there is nobody this is for. And it was quite a light feeling. I sold the house to Wynstead, gave the linen to Hesta Hollins, and walked.", "effects": [{"set_flag": "aud_explained"}], "next": "hub"},
+    "the_bell": {"speaker": "Aud Fennick", "text": "Has it! — Well, that's neat. It stopped when I stopped answering to the name, I expect; that's how they work, whatever the Wardens say about bronze. — Hesta will be polishing it every dawn and losing sleep over the custom, because she is exactly that sort of woman and it is why I gave her the linen. Tell her from me: take it down, say the name, and go to bed. — Or don't, if you think she'd rather have the seventeen. Or bring it to me and I'll carry it in with me and it can be silent somewhere it matters. — There. Three answers and all of them mine, so none of them are binding. Do as you like. I have given up telling people what to do; it was the other job I was tired of.", "effects": [{"set_flag": "aud_gave_her_answer"}], "next": "hub"},
+    "the_grace": {"speaker": "Aud Fennick", "text": "The Long Table grace. Merrowby sings it before harvest supper, three hundred people, and it is not a good tune. — I have left the words out. Don't supply them; people try, and then I have to stop. — The words are all names, you see. Whose field, whose oven, whose table, whose year. I can carry the shape of it south. I cannot carry three hundred names into the grey and I will not try and fail at it on the last day. So: the shape, hummed, and everybody who ought to be in it is in it, and nobody has to be named to be there. That is my whole theology and it took me six months in a tent to work out.", "effects": [{"set_flag": "aud_grace"}, {"morality": 3}], "next": "hub"},
+    "the_walk": {"speaker": "Aud Fennick", "text": "Yes. Tomorrow, early, before the tents are up and being solemn. — The Order sends someone so that the last thing a body hears is a voice saying something ordinary, and they are quite right, and I have asked for it, and I would like you to know that I asked. Talk about the weather. Talk about the eels. Say something dull and say it the whole way and do not make a speech at the end, and if you cry I shall be very kind about it and I shall also not stop walking.", "effects": [{"set_flag": "aud_agreed_to_walk"}], "next": "hub"},
+    "turning": {"speaker": "Aud Fennick", "text": "You are a dear for asking and you are the fourth. — No. And I will tell you why not, since you have been decent: because the thing that would turn me round is somebody in Merrowby needing me on a particular Tollday for a particular thing, and there is not one, and there has not been for eleven years, and the whole valley would be very sorry to hear it and not one of them would be able to invent one. That is not cruelty, it is arithmetic. — Now. If you find me one, mind, I am not proud. I would come back for something real. I would not come back for a fuss.", "effects": [{"set_flag": "aud_would_return_for_a_reason"}], "next": "hub"},
+    "bye": {"speaker": "Aud Fennick", "text": "Go on. And if you are ever at the Long Table, hum the tune and leave the words out and see who looks up.", "next": "hub"}
+  }
+}
+]
