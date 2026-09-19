@@ -253,7 +253,7 @@ def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_dista
     # and metallic are low-frequency and are written to the ORM map at half size anyway, so
     # they are baked at that size: the AO pass is the most expensive one by far and this
     # cuts it to a quarter of the rays for no visible loss.
-    orm_size = max(128, int(size * orm_scale))
+    orm_size = max(64, int(size * orm_scale))
 
     img = bpy.data.images.new("%s_bake" % name, size, size, alpha=True, float_buffer=True)
     img.colorspace_settings.name = "Non-Color"
