@@ -75,6 +75,18 @@ func _ready() -> void:
 	for letter in CARDINALS.values():
 		_cardinal_tex[letter] = ThemeBuilder.texture("compass_" + str(letter))
 
+	# The strip is pale parchment, and against a bright sky it disappears. A soft dark scrim
+	# behind it gives the glyphs something to sit on without putting a box on the screen.
+	var scrim := ColorRect.new()
+	scrim.color = Color(0.07, 0.06, 0.05, 0.22)
+	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scrim.offset_left = 18.0
+	scrim.offset_right = -18.0
+	scrim.offset_top = 4.0
+	scrim.offset_bottom = -6.0
+	scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(scrim)
+
 	_strip = TextureRect.new()
 	_strip.texture = ThemeBuilder.texture("compass_strip")
 	_strip.set_anchors_preset(Control.PRESET_FULL_RECT)

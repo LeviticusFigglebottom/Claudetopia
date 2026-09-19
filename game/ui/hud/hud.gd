@@ -96,12 +96,21 @@ func _build() -> void:
 	bars.offset_bottom = -26.0
 	bars.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bars)
+	# The three bars sit in one brass-framed plate, the way the quick slots and the toasts do.
+	# Loose troughs on the grass read as a programmer's overlay against the painted country.
+	var bar_plate := UiKit.panel("ChromePanel")
+	bar_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bars.add_child(bar_plate)
+	var bar_column := UiKit.column(4)
+	bar_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar_column.add_theme_constant_override("margin_left", 6)
+	bar_plate.add_child(bar_column)
 	for kind: String in ["health", "stamina", "mana"]:
 		var bar := StatBar.new()
 		bar.kind = kind
-		bar.custom_minimum_size = Vector2(280, 22 if kind == "health" else 17)
+		bar.custom_minimum_size = Vector2(268, 20 if kind == "health" else 15)
 		bar.show_value = kind == "health"
-		bars.add_child(bar)
+		bar_column.add_child(bar)
 		_bars[kind] = bar
 
 	_status_row = UiKit.row(6)

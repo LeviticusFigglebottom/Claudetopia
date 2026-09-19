@@ -94,6 +94,12 @@ func _load_world() -> World:
 	if packed == null:
 		return null
 	var w: Node = packed.instantiate()
+	# A capture is a photograph of the country, taken from a planned camera. A body standing in
+	# it would both block the shot and take the streaming off the plan, so the world is loaded
+	# without one and keeps its fly camera.
+	var spawn: Node = w.get_node_or_null("PlayerSpawn")
+	if spawn != null:
+		spawn.set("enabled", false)
 	add_child(w)
 	await get_tree().process_frame
 	await get_tree().process_frame

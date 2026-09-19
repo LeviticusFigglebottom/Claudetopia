@@ -22,12 +22,16 @@ const DROP_IN := 0.6
 
 @export var spawn_place: String = ""
 @export var install_services: bool = true
+## A capture or a tool that wants the country without anybody in it turns this off.
+@export var enabled: bool = true
 
 var player: Node3D = null
 
 
 func _ready() -> void:
 	add_to_group("player_spawn")
+	if not enabled:
+		return
 	# A child is ready before its parent, so World.instance is not set yet and the terrain
 	# certainly is not: a body placed now lands at zero metres in the middle of the map.
 	var world := _world()
