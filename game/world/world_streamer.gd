@@ -127,10 +127,12 @@ func refresh() -> void:
 	for c in wanted:
 		var ring: int = wanted[c]
 		if _loaded.has(c):
-			var node: Node3D = _loaded[c]
-			if int(node.get_meta("ring", 0)) != ring:
-				node.set_meta("ring", ring)
-				_apply_ring(node, ring)
+			# A cell built for the far ring has no grass in it at all (and thinned instances
+			# elsewhere), so moving between rings means rebuilding it rather than patching
+			# what is there.
+			if int(_loaded[c].get_meta("ring", 0)) != ring:
+				_unload(c)
+				_request(c, ring)
 			continue
 		if _pending.has(c) or _parsed.has(c):
 			continue
@@ -307,17 +309,6 @@ static func asset_kind(asset_path: String) -> String:
 		if asset_path.contains(bush):
 			return "bush"
 	return "herb"
-
-
-func _apply_ring(node: Node3D, ring: int) -> void:
-	for child in node.get_children():
-		if child is MultiMeshInstance3D:
-			var mmi: MultiMeshInstance3D = child
-			var kind := asset_kind(str(mmi.get_meta("asset_path", mmi.name)))
-			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
-				if (ring <= full_ring and kind in ["tree", "rock", "prop"]) \
-				else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			mmi.lod_bias = 1.0 if ring <= full_ring else lod_bias_far
 
 
 func _unload(cell: Vector2i) -> void:
