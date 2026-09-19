@@ -23,9 +23,27 @@ def _write(path: str, data: bytes) -> int:
     return len(data)
 
 
+def pack_control(base: np.ndarray, overlay: np.ndarray, blend: np.ndarray, nav: np.ndarray | None = None,
+                 hole: np.ndarray | None = None) -> np.ndarray:
+    """Terrain3D's packed control word (see its docs/controlmap_format.md).
+
+    base id  bits 32-28, overlay id 27-23, blend 22-15, uv angle 14-11, uv scale 10-8,
+    hole bit 3, navigation bit 2, autoshader bit 1. Packing it here (rather than in GDScript,
+    a pixel at a time) is the difference between a second and several minutes on a 4096 map.
+    """
+    c = ((base.astype(np.uint32) & 0x1F) << 27) \
+        | ((overlay.astype(np.uint32) & 0x1F) << 22) \
+        | ((blend.astype(np.uint32) & 0xFF) << 14)
+    if nav is not None:
+        c |= (nav.astype(np.uint32) & 1) << 1
+    if hole is not None:
+        c |= (hole.astype(np.uint32) & 1) << 2
+    return c.astype("<u4")
+
+
 def write_maps(out_dir: str, grid: Grid, H: np.ndarray, region_mask: np.ndarray, base: np.ndarray,
                overlay: np.ndarray, blend: np.ndarray, colour: np.ndarray, water: np.ndarray,
-               flow: np.ndarray) -> dict:
+               flow: np.ndarray, nav: np.ndarray | None = None) -> dict:
     os.makedirs(out_dir, exist_ok=True)
     sizes = {}
     sizes["heights.r32"] = _write(os.path.join(out_dir, "heights.r32"), np.ascontiguousarray(H, dtype="<f4").tobytes())
@@ -36,6 +54,10 @@ def write_maps(out_dir: str, grid: Grid, H: np.ndarray, region_mask: np.ndarray,
     sizes["color.rgba8"] = _write(os.path.join(out_dir, "color.rgba8"), np.ascontiguousarray(colour, dtype=np.uint8).tobytes())
     sizes["water_mask.u8"] = _write(os.path.join(out_dir, "water_mask.u8"), np.ascontiguousarray(water, dtype=np.uint8).tobytes())
     sizes["flow.rg8"] = _write(os.path.join(out_dir, "flow.rg8"), np.ascontiguousarray(flow, dtype=np.uint8).tobytes())
+    # control.u32: the same three maps packed the way Terrain3D stores them, so the in-engine
+    # import tool can hand the bytes straight to an Image without touching a pixel.
+    ctrl = pack_control(base, overlay, blend, nav)
+    sizes["control.u32"] = _write(os.path.join(out_dir, "control.u32"), np.ascontiguousarray(ctrl).tobytes())
     return sizes
 
 

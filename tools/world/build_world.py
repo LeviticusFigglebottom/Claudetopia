@@ -228,7 +228,9 @@ def build(args) -> dict:
         blend = np.zeros((n, n), dtype=np.uint8)
         colour = np.full((n, n, 4), 128, dtype=np.uint8)
         colour[..., :3] = 255
-    OUT.write_maps(out_dir, grid, H, region_mask, base, overlay, blend, colour, water.mask, water.flow)
+    # navigation bit: walkable ground (gentle, dry, not a cliff) for future nav baking
+    nav = ((ctx.slope < 0.55) & (water.mask == 0)).astype(np.uint8)
+    OUT.write_maps(out_dir, grid, H, region_mask, base, overlay, blend, colour, water.mask, water.flow, nav)
     runtime = OUT.write_runtime(out_dir, grid, H, region_mask, water.mask, water.level)
     OUT.write_splines(out_dir, rivers, roads_list)
     OUT.write_pois(out_dir, poi_out)
