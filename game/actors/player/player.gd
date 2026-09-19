@@ -667,6 +667,14 @@ func die(killer: Node = null) -> void:
 	EventBus.player_died.emit(global_position)
 
 
+## Debug/scripted death (the Debug console's `die` command).
+func kill() -> void:
+	if not dead:
+		health = 0.0
+		die(null)
+
+
+## Called by the Hearth autoload after the death delay; Hearth owns the respawn point and Echo.
 func respawn(position: Vector3, yaw: float) -> void:
 	global_position = position
 	rotation.y = yaw
