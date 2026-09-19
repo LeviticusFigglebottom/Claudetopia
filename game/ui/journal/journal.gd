@@ -126,9 +126,25 @@ func _rumours() -> Array[Dictionary]:
 	return out
 
 
+## Rumours are written as templates with {player} and {place} slots; the gossip stream fills
+## them when a rumour actually spreads. Until it hands the journal filled text, fill what we
+## can ourselves so the page reads as talk and not as a form.
+func rumour_text(def: Dictionary) -> String:
+	var text := str(def.get("text", ""))
+	if not text.contains("{"):
+		return text
+	var who := str(GameState.get_flag("player_name", ""))
+	if who.is_empty():
+		who = "the Foundling"
+	var where := str(ContentDB.get_or_empty(str(def.get("place", ""))).get("name", ""))
+	if where.is_empty():
+		where = str(ContentDB.get_or_empty(GameState.current_region_id).get("name", "the valley"))
+	return text.replace("{player}", who).replace("{place}", where).replace("{npc}", "somebody")
+
+
 ## Rumours are overheard talk, so the entry is titled with the talk itself, cut short.
 func _rumour_title(def: Dictionary) -> String:
-	var text := str(def.get("text", "")).strip_edges()
+	var text := rumour_text(def).strip_edges()
 	var cut := text.find(". ")
 	if cut < 12 or cut > 46:
 		cut = text.rfind(" ", 44)
@@ -265,7 +281,7 @@ func _detail_rumour(e: Dictionary) -> void:
 			words.append(str(t).capitalize())
 		_detail_box.add_child(UiKit.label("  ·  ".join(words), "Small"))
 	_detail_box.add_child(UiKit.divider())
-	_detail_box.add_child(UiKit.wrapped("“%s”" % str(def.get("text", "")), "Journal"))
+	_detail_box.add_child(UiKit.wrapped("“%s”" % rumour_text(def), "Journal"))
 	for key in ["place", "region"]:
 		var where := ContentDB.get_or_empty(str(def.get(key, "")))
 		if not where.is_empty():

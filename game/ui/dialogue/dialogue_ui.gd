@@ -102,8 +102,8 @@ func _build_wheel() -> void:
 	_wheel_label.anchor_bottom = 0.5
 	_wheel_label.offset_left = -170.0
 	_wheel_label.offset_right = 170.0
-	_wheel_label.offset_top = -26.0
-	_wheel_label.offset_bottom = 26.0
+	_wheel_label.offset_top = 192.0
+	_wheel_label.offset_bottom = 238.0
 	_wheel_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_wheel_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_wheel.add_child(_wheel_label)
@@ -117,8 +117,8 @@ func _build_wheel() -> void:
 	_wheel_desc.anchor_bottom = 0.5
 	_wheel_desc.offset_left = -280.0
 	_wheel_desc.offset_right = 280.0
-	_wheel_desc.offset_top = 206.0
-	_wheel_desc.offset_bottom = 282.0
+	_wheel_desc.offset_top = 242.0
+	_wheel_desc.offset_bottom = 320.0
 	_wheel_desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_wheel.add_child(_wheel_desc)
 
