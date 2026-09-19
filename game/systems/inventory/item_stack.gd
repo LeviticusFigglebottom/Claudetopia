@@ -157,6 +157,22 @@ func is_consumable() -> bool:
 	return category() == "consumable" or category() == "ingredient"
 
 
+## The book this stack opens, if any: `reads` names one outright, and a `book` item with no
+## `reads` is assumed to be the book of the same name (core:item/x -> core:book/x).
+func reads_book() -> String:
+	var named := str(def().get("reads", ""))
+	if not named.is_empty():
+		return named
+	if category() != "book":
+		return ""
+	var guess := "core:book/" + Ids.name_of(id)
+	return guess if ContentDB.has(guess) else ""
+
+
+func is_readable() -> bool:
+	return not reads_book().is_empty()
+
+
 func is_ingredient() -> bool:
 	return category() == "ingredient" and def().has("alchemy")
 
@@ -248,4 +264,5 @@ func summary() -> Dictionary:
 		"weight": weight(), "unit_weight": unit_weight(), "value": value(), "unit_value": unit_value(),
 		"tags": tags().duplicate(), "description": description(), "data": data.duplicate(true),
 		"equippable": is_equippable(), "consumable": is_consumable(), "two_handed": is_two_handed(),
+		"readable": is_readable(), "reads": reads_book(),
 	}

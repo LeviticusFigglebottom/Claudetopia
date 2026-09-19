@@ -37,11 +37,15 @@ func _ready() -> void:
 	SaveSystem.register(SAVE_SECTION, self)
 	if listen_to_event_bus and not EventBus.skill_used.is_connected(_on_skill_used):
 		EventBus.skill_used.connect(_on_skill_used)
+	if listen_to_event_bus and not EventBus.book_opened.is_connected(_on_book_opened):
+		EventBus.book_opened.connect(_on_book_opened)
 
 
 func _exit_tree() -> void:
 	if EventBus.skill_used.is_connected(_on_skill_used):
 		EventBus.skill_used.disconnect(_on_skill_used)
+	if EventBus.book_opened.is_connected(_on_book_opened):
+		EventBus.book_opened.disconnect(_on_book_opened)
 	if SaveSystem.participants.get(SAVE_SECTION) == self:
 		SaveSystem.unregister(SAVE_SECTION)
 
@@ -95,6 +99,24 @@ func reset_for_new_game() -> void:
 
 func _on_skill_used(skill_id: String, xp: float) -> void:
 	award(skill_id, xp)
+
+
+## A book that teaches (`teaches_skill` on the book def) is worth one level of that skill, the
+## first time it is read and never again. The flag it sets is also what dialogue and quests
+## key on to know you have read a thing.
+func _on_book_opened(book_id: String) -> void:
+	var flag := "read:" + book_id
+	if GameState.has_flag(flag):
+		return
+	GameState.set_flag(flag, true)
+	var def := ContentDB.get_or_empty(book_id)
+	var skill := Skills.normalise(str(def.get("teaches_skill", "")))
+	if skill == "":
+		return
+	var gained := award(skill, Skills.xp_for_level(skill_set.level(skill)))
+	if gained > 0:
+		var skill_name := str(Skills.def(skill).get("name", Ids.name_of(skill)))
+		EventBus.notify.emit("%s taught you something. %s is %d." % [str(def.get("title", "The book")), skill_name, skill_set.level(skill)], "book")
 
 
 ## Grants skill XP, levels the skill up and, through the gain total, the character.

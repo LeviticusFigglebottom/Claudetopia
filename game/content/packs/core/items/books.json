@@ -1,0 +1,293 @@
+[
+  {
+    "id": "core:item/the_struck_bell",
+    "name": "The Struck Bell",
+    "category": "book",
+    "weight": 1.6,
+    "value": 220,
+    "reads": "core:book/the_struck_bell",
+    "tags": [
+      "book",
+      "sayers",
+      "account",
+      "tollmere"
+    ],
+    "description": "A Circle copy: good paper, bad binding, the signatures sewn in a hurry by somebody who wanted it out of the building. Sulion's name is on the title page and has been inked over twice by two different hands, neither of which managed to make it illegible."
+  },
+  {
+    "id": "core:item/the_candle_book",
+    "name": "The Candle Book",
+    "category": "book",
+    "weight": 0.8,
+    "value": 60,
+    "reads": "core:book/the_candle_book",
+    "tags": [
+      "book",
+      "vale",
+      "hearth",
+      "common"
+    ],
+    "description": "Everybody's grandmother had one and no two are the same. This one is a stack of folded leaves stitched through the middle with red thread, the corners gone soft as cloth from being handed down a table. Somebody has drawn a candle on the last page, badly, in charcoal, at about the height a child sits."
+  },
+  {
+    "id": "core:item/the_long_breath",
+    "name": "The Long Breath",
+    "category": "book",
+    "weight": 2.1,
+    "value": 260,
+    "reads": "core:book/the_long_breath",
+    "tags": [
+      "book",
+      "clans",
+      "skerrow",
+      "account"
+    ],
+    "description": "Clan work: goat vellum, sewn over cord, a wooden board front and back with the grain running the wrong way so it will not warp in wet air. Dunna ko-Kharrow set it down because the Vale kept asking for it written, and the last line of her preface says she does not think writing it will help."
+  },
+  {
+    "id": "core:item/the_going_out",
+    "name": "The Going Out",
+    "category": "book",
+    "weight": 1.0,
+    "value": 180,
+    "reads": "core:book/the_going_out",
+    "tags": [
+      "book",
+      "reedfolk",
+      "sedgemire",
+      "account"
+    ],
+    "description": "Reed-board covers, waxed against the damp, and it has still been damp: the lower third of every page has gone wavy and the ink there has feathered. Isseva copies are always like this. The reedfolk do not consider a book that has never been out on the water to be a serious book."
+  },
+  {
+    "id": "core:item/lip_inscription",
+    "name": "The Writing in the Crown",
+    "category": "book",
+    "weight": 1.3,
+    "value": 400,
+    "reads": "core:book/lip_inscription",
+    "tags": [
+      "book",
+      "oroth",
+      "deep",
+      "scholarly",
+      "rare"
+    ],
+    "description": "A transcription, not an original: forty pages of Oroth characters copied by hand from the inside of a bell the size of a barn, with the copyist's notes running alongside in a much smaller and much less confident script. Twice the notes simply say: I do not think this line is a word."
+  },
+  {
+    "id": "core:item/ash_winter_chronicle",
+    "name": "The Ash Winter",
+    "category": "book",
+    "weight": 2.8,
+    "value": 340,
+    "reads": "core:book/ash_winter_chronicle",
+    "tags": [
+      "book",
+      "pilgrims",
+      "cinderlea",
+      "chronicle",
+      "rare"
+    ],
+    "description": "The chapter book of Pilgrim's Ash, eleven hands across one winter, each one taking over where the last stopped. You can tell where the writers changed by the pens and by the handwriting getting worse. The eleventh hand does not finish its sentence and nobody has ever added to it."
+  },
+  {
+    "id": "core:item/letter_from_greyfold",
+    "name": "A letter that was never sent",
+    "category": "book",
+    "weight": 0.1,
+    "value": 150,
+    "reads": "core:book/letter_from_greyfold",
+    "tags": [
+      "book",
+      "cinderlea",
+      "greyfold",
+      "letter",
+      "quest"
+    ],
+    "description": "One sheet, folded three times, found under a plate at a table where the meal was never cleared. The fold lines have gone brown. It is addressed on the outside to a name and a house, and the house is not standing, and the name is on no roll anybody keeps."
+  },
+  {
+    "id": "core:item/briar_keeps_out",
+    "name": "The Briar Keeps Out",
+    "category": "book",
+    "weight": 0.9,
+    "value": 120,
+    "reads": "core:book/briar_keeps_out",
+    "tags": [
+      "book",
+      "sayers",
+      "briarwold",
+      "pamphlet"
+    ],
+    "description": "A Circle pamphlet with delusions of being a book: printed cover, thirty pages, and a tone throughout of a man explaining something slowly to someone he considers a fool. Wold copies are usually found with the margins written in."
+  },
+  {
+    "id": "core:item/briar_keeps_in",
+    "name": "The Briar Keeps In",
+    "category": "book",
+    "weight": 0.9,
+    "value": 120,
+    "reads": "core:book/briar_keeps_in",
+    "tags": [
+      "book",
+      "briarwold",
+      "woodfolk",
+      "pamphlet"
+    ],
+    "description": "Fernhold's answer, set down from the Sedgish and bound in undyed linen, with no printer's mark because no printer in Tollmere would take it. It is shorter than the pamphlet it answers and it does not raise its voice once."
+  },
+  {
+    "id": "core:item/wardens_roll_excerpt",
+    "name": "The Roll of Names (excerpt)",
+    "category": "book",
+    "weight": 1.4,
+    "value": 0,
+    "reads": "core:book/wardens_roll_excerpt",
+    "tags": [
+      "book",
+      "wardens",
+      "roll",
+      "quest",
+      "no_sale"
+    ],
+    "description": "Not the Roll. A fair copy of one district of it, made at the Rest so the real book need not leave the room, in Pell's careful clerk's hand with the rules he was taught: no crossings-out, no abbreviations, and a name written wrong is written again below, never over."
+  },
+  {
+    "id": "core:item/lecture_on_saying",
+    "name": "The First Lecture: On Saying",
+    "category": "book",
+    "weight": 1.1,
+    "value": 200,
+    "reads": "core:book/lecture_on_saying",
+    "tags": [
+      "book",
+      "sayers",
+      "tollmere",
+      "instruction"
+    ],
+    "description": "What the Circle gives every new student, printed cheaply enough that losing one is not a disaster, which students do. The margins of this copy carry three separate arguments in three hands, and one of them has been rubbed out so thoroughly that the paper has worn through."
+  },
+  {
+    "id": "core:item/the_vigil_book",
+    "name": "The Vigil Book",
+    "category": "book",
+    "weight": 1.8,
+    "value": 240,
+    "reads": "core:book/the_vigil_book",
+    "tags": [
+      "book",
+      "tolling_order",
+      "cinderlea",
+      "liturgy"
+    ],
+    "description": "Black boards, brass corners worn to the colour of the brass underneath, a strap and no clasp. The Order reads it aloud at the ring at the turn of every year, and this copy has been read from so often that it falls open at the same four places."
+  },
+  {
+    "id": "core:item/kharrow_memory_song",
+    "name": "The Rope-Song",
+    "category": "book",
+    "weight": 1.5,
+    "value": 300,
+    "reads": "core:book/kharrow_memory_song",
+    "tags": [
+      "book",
+      "clans",
+      "skerrow",
+      "song",
+      "rare"
+    ],
+    "description": "A song has no business being a book and the clans will tell you so. It was written down anyway, at the Vale's request, on good paper in a hand that slows visibly at the seventh verse and then leaves a whole page blank where the eighth would go."
+  },
+  {
+    "id": "core:item/the_reed_round",
+    "name": "The Round of Sa'oul",
+    "category": "book",
+    "weight": 0.7,
+    "value": 110,
+    "reads": "core:book/the_reed_round",
+    "tags": [
+      "book",
+      "reedfolk",
+      "sedgemire",
+      "song"
+    ],
+    "description": "Four voices printed on four facing quarters of the page so a boat's crew can read it round between them. There are water marks on all four quarters and thumb marks on only one, which tells you which part whoever owned this always sang."
+  },
+  {
+    "id": "core:item/naming_day_primer",
+    "name": "A Primer for Naming Day",
+    "category": "book",
+    "weight": 0.5,
+    "value": 45,
+    "reads": "core:book/naming_day_primer",
+    "tags": [
+      "book",
+      "vale",
+      "children",
+      "common"
+    ],
+    "description": "Large letters, short words, and a page at the back for the child to practise writing their own name on. This copy's back page has one name written eleven times, getting steadily better, and then a twelfth attempt in an adult's hand showing how the last letter ought to go."
+  },
+  {
+    "id": "core:item/hearthvale_cookery",
+    "name": "The Long Table Book",
+    "category": "book",
+    "weight": 1.7,
+    "value": 130,
+    "reads": "core:book/hearthvale_cookery",
+    "tags": [
+      "book",
+      "vale",
+      "cookery",
+      "alchemy"
+    ],
+    "description": "Maud Brambling's, and every copy of it is fat with other people's additions: loose leaves, a recipe on the back of a tally, a note pinned in with a thorn. The spine has been broken open at the bread and never quite closes flat again."
+  },
+  {
+    "id": "core:item/unreliable_bestiary",
+    "name": "A True and Compleat Account",
+    "category": "book",
+    "weight": 1.2,
+    "value": 90,
+    "reads": "core:book/unreliable_bestiary",
+    "tags": [
+      "book",
+      "vale",
+      "bestiary",
+      "archery"
+    ],
+    "description": "Hob Larkin, hunter, of no fixed lodge, on every beast in the Basin, illustrated by Hob Larkin, who cannot draw. Roughly half of it is correct. Nobody agrees on which half, and two men have been killed over the entry for the bristleback."
+  },
+  {
+    "id": "core:item/the_falling_of_the_toll",
+    "name": "The Falling of the Toll: a play",
+    "category": "book",
+    "weight": 1.0,
+    "value": 100,
+    "reads": "core:book/the_falling_of_the_toll",
+    "tags": [
+      "book",
+      "vale",
+      "play",
+      "speech"
+    ],
+    "description": "A playing copy, not a reading copy: the speeches for one part are marked down the side in blue and the rest is thumbed grey. Gosling's version is shorter than the old one, funnier than the old one, and ends in exactly the same place."
+  },
+  {
+    "id": "core:item/salt_isles_guide",
+    "name": "Charts and Cautions for the Salt Isles",
+    "category": "book",
+    "weight": 1.9,
+    "value": 280,
+    "reads": "core:book/salt_isles_guide",
+    "tags": [
+      "book",
+      "brightwater",
+      "charts",
+      "beyond",
+      "rare"
+    ],
+    "description": "Folding charts bound in at the back, three of them, and the third has been folded out so often it has parted along the crease and been backed with linen. Nauve Mor has been three times and come back twice, which the title page states without further comment."
+  }
+]

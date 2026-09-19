@@ -427,6 +427,8 @@ func use(item: Variant) -> bool:
 	var s := resolve(item)
 	if s == null:
 		return false
+	if s.is_readable():
+		return read(s)
 	if s.is_equippable():
 		var eq := _equipment_node()
 		if eq != null and eq.has_method("equip"):
@@ -445,6 +447,16 @@ func use(item: Variant) -> bool:
 	item_used.emit(item_id, effects)
 	if is_player:
 		EventBus.item_used.emit(item_id, effects)
+	return true
+
+
+## Opens what a carried book holds. A book is not spent by being read, and the quest log and
+## the skill it teaches both hang off EventBus.book_opened, so this is the whole of it.
+func read(item: Variant) -> bool:
+	var s := resolve(item)
+	if s == null or not s.is_readable():
+		return false
+	EventBus.book_opened.emit(s.reads_book())
 	return true
 
 

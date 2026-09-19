@@ -305,6 +305,10 @@ func _refresh_detail() -> void:
 		var use := UiKit.button("Use")
 		use.pressed.connect(func() -> void: _use(int(it["uid"])))
 		actions.add_child(use)
+	if bool(it.get("readable", false)):
+		var read := UiKit.button("Read")
+		read.pressed.connect(func() -> void: _read(int(it["uid"])))
+		actions.add_child(read)
 	var drop := UiKit.button("Drop", "FlatButton")
 	drop.pressed.connect(func() -> void: _drop(int(it["uid"])))
 	actions.add_child(drop)
@@ -346,6 +350,11 @@ func _use(uid: int) -> void:
 	if _bag and _bag.has_method("use"):
 		_bag.call("use", uid)
 	_refresh()
+
+
+func _read(uid: int) -> void:
+	if _bag and _bag.has_method("read"):
+		_bag.call("read", uid)
 
 
 func _drop(uid: int) -> void:
