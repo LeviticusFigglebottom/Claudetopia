@@ -1,8 +1,10 @@
 extends Node3D
 ## Renders a built interior from several viewpoints so it can be judged as a place.
-##   xvfb-run -a -s "-screen 0 1600x900x24" godot --path game --rendering-driver opengl3 \
-##     --audio-driver Dummy res://tools_gd/interior_review.tscn -- \
-##     --meta=<abs meta.json> --out=<abs dir> [--label=name]
+##   xvfb-run -a -s "-screen 0 1600x900x24" godot --path game --audio-driver Dummy \
+##     res://tools_gd/interior_review.tscn -- --meta=<abs meta.json> --out=<abs dir>
+##
+## Run on Forward+ (the default), NOT --rendering-driver opengl3: Compatibility caps omni
+## lights per object and silently drops the rest, which makes a lit room look unlit.
 
 var cave: Node3D          # CaveInterior or HouseInterior
 var is_house := false
@@ -57,7 +59,9 @@ func _environment() -> void:
 	env.ambient_light_color = Color(0.52, 0.56, 0.64) if interior_is_house else Color(0.36, 0.44, 0.60)
 	env.ambient_light_energy = 0.75 if interior_is_house else 0.85
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_white = 6.0
+	# A white point set for open daylight maps a lit interior wall to a sixth of its
+	# value. Indoors the brightest thing in the room is a lamp, not the sun.
+	env.tonemap_white = 2.0
 	env.fog_enabled = true
 	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
 	env.fog_light_color = Color(0.14, 0.16, 0.22)

@@ -190,7 +190,17 @@ effects, equipment attachment points, `AnimationDriver` (maps intents like
 
 ## 10. Rendering notes for this container
 
-No GPU. Forward+ runs on lavapipe but Terrain3D's shader crashes lavapipe's JIT
-(not a Godot/Terrain3D bug), so **headless captures use
-`--rendering-driver opengl3`** (Compatibility). The shipped default is Forward+.
-Keep every material and effect working on Compatibility as well.
+No GPU. Forward+ runs on lavapipe (software Vulkan) and is the shipped default.
+
+* **Terrain3D crashes lavapipe's shader JIT**, so anything that loads the terrain must be
+  captured with `--rendering-driver opengl3` (Compatibility). That is a limitation of the
+  software rasteriser, not a Godot or Terrain3D bug.
+* **Everything else, including interiors, is reviewed on Forward+**, because Compatibility
+  caps omni lights per object (`rendering/limits/opengl/max_lights_per_object`, raised to
+  12 here). Past that cap it silently drops lights, which reads as a correctly lit floor
+  under an unlit vault, and no amount of extra light fixes it. If an interior looks black
+  under `opengl3` but fine under Forward+, that cap is why.
+* Keep materials and effects working under Compatibility as well: it is the low-end
+  target, and its lighting limits are a design constraint on how many lamps a room gets.
+* Interiors set a tonemap white point of 2.0 against the outdoor 6.0. A white point tuned
+  for daylight maps a lamp-lit wall to a sixth of its value.

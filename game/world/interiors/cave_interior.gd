@@ -291,7 +291,10 @@ func _build_chamber_lighting() -> void:
 		var centre := _vec(ch["centre"])
 		var radii := _vec(ch["radii"])
 		var recipe := _light_recipe(role)
-		var count: int = clampi(int(radii.x / 4.0) + 1, 1, 5)
+		# A cathedral needs more than a cottage's lamp: light count, reach and strength all
+		# follow the room, or the far wall of a big chamber is simply not there.
+		var spread: float = maxf(radii.x, radii.z)
+		var count: int = clampi(int(spread / 3.5) + 1, 2, 8)
 		for i in count:
 			var at := centre
 			if count > 1:
@@ -301,8 +304,8 @@ func _build_chamber_lighting() -> void:
 			var lamp := OmniLight3D.new()
 			lamp.position = at + Vector3(0, minf(radii.y * 0.5, 2.4), 0)
 			lamp.light_color = recipe["color"]
-			lamp.light_energy = float(recipe["energy"])
-			lamp.omni_range = float(recipe["range"]) + radii.x * 0.4
+			lamp.light_energy = float(recipe["energy"]) * (1.0 + clampf(spread / 24.0, 0.0, 1.2))
+			lamp.omni_range = maxf(float(recipe["range"]), radii.length() * 1.05)
 			lamp.shadow_enabled = bool(recipe["shadow"]) and i == 0
 			lamp.light_specular = 0.3
 			lamp.set_meta("flicker", float(recipe["flicker"]))
@@ -312,13 +315,24 @@ func _build_chamber_lighting() -> void:
 				# A cold, weak fill: rock is never truly lightless in a place people
 				# have lit for centuries, and the player must read the room's shape.
 				var fill := OmniLight3D.new()
-				fill.position = centre + Vector3(0, radii.y * 0.55, 0)
+				fill.position = centre + Vector3(0, radii.y * 0.7, 0)
 				fill.light_color = Color(0.58, 0.64, 0.78)
-				fill.light_energy = 0.28
-				fill.omni_range = radii.length() * 1.5
+				fill.light_energy = 0.9 + clampf(spread / 16.0, 0.0, 1.4)
+				fill.omni_range = radii.length() * 2.6
 				fill.shadow_enabled = false
 				fill.light_specular = 0.0
 				holder.add_child(fill)
+			if i == 0 and radii.y > 6.0:
+				# A big chamber needs something up in the roof, or the vault above the
+				# lamps is simply missing and the room reads as a lit floor in a void.
+				var high := OmniLight3D.new()
+				high.position = centre + Vector3(0, radii.y * 1.25, 0)
+				high.light_color = (recipe["color"] as Color).lerp(Color(0.7, 0.78, 0.95), 0.55)
+				high.light_energy = float(recipe["energy"]) * 0.7 * (1.0 + clampf(spread / 20.0, 0.0, 1.0))
+				high.omni_range = radii.length() * 2.0
+				high.shadow_enabled = false
+				high.light_specular = 0.1
+				holder.add_child(high)
 			if bool(recipe["ember"]):
 				var ember := MeshInstance3D.new()
 				var sm := SphereMesh.new()
