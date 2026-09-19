@@ -12,12 +12,12 @@ const GENERATED := "res://world/generated"
 
 ## Region look: deep colour, shallow colour, and how quickly depth reads as deep.
 const REGION_WATER := {
-	"core:region/brightwater": {"deep": "#12405f", "shallow": "#4d93a8", "fade": 6.5},
-	"core:region/sedgemire": {"deep": "#14322f", "shallow": "#3f7f72", "fade": 2.2},
-	"core:region/hearthvale": {"deep": "#1b4a52", "shallow": "#5a9a86", "fade": 3.0},
-	"core:region/briarwold": {"deep": "#12301f", "shallow": "#3f6f4a", "fade": 3.0},
-	"core:region/skerrow": {"deep": "#1b3550", "shallow": "#5c8fae", "fade": 4.0},
-	"core:region/cinderlea": {"deep": "#25292c", "shallow": "#5c6a70", "fade": 3.0},
+	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0},
+	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0},
+	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6},
+	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6},
+	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4},
+	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6},
 }
 
 @export var sheet_subdivisions: int = 96

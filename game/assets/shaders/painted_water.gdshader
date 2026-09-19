@@ -26,14 +26,15 @@ uniform vec4 region_tint : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec4 foam_colour : source_color = vec4(0.92, 0.95, 0.96, 1.0);
 uniform float depth_fade_m = 5.0;      // metres of water before the colour reads as deep
 uniform float foam_width_m = 1.6;
-uniform float wave_scale = 0.09;
-uniform float wave_speed = 0.55;
-uniform float wave_strength = 0.55;
-uniform float ripple_scale = 0.9;
-uniform float opacity_shallow = 0.45;
-uniform float opacity_deep = 0.93;
-uniform float roughness_water = 0.06;
-uniform float specular_boost = 0.6;
+uniform float wave_scale = 0.07;
+uniform float wave_speed = 0.5;
+uniform float wave_strength = 0.42;
+uniform float ripple_scale = 0.8;
+uniform float opacity_shallow = 0.55;
+uniform float opacity_deep = 0.97;
+uniform float roughness_water = 0.10;
+uniform float specular_boost = 0.32;
+uniform float distance_calm_m = 260.0;   // ripples flatten with distance instead of aliasing
 uniform vec2 flow = vec2(0.0, 0.0);    // rivers push their waves downstream
 
 varying vec3 v_world;
@@ -77,8 +78,11 @@ void fragment() {
 	}
 	float t = TIME * wave_speed;
 	vec3 n = wave_normal(v_world.xz + flow * TIME * 2.0, t);
+	// far water should read as one calm sheet, not as a field of shimmering pixels
+	float far = clamp(length(VERTEX) / distance_calm_m, 0.0, 1.0);
+	n = normalize(mix(n, vec3(0.0, 1.0, 0.0), far * 0.8));
 	NORMAL_MAP = n * 0.5 + 0.5;
-	NORMAL_MAP_DEPTH = 1.0;
+	NORMAL_MAP_DEPTH = mix(1.0, 0.25, far);
 
 	float depth_t = clamp(v_depth / depth_fade_m, 0.0, 1.0);
 	vec3 base = mix(shallow_colour.rgb, deep_colour.rgb, depth_t) * region_tint.rgb;
@@ -93,8 +97,8 @@ void fragment() {
 	vec3 sky_rim = mix(base, region_tint.rgb * vec3(0.72, 0.82, 0.92), clamp(fres, 0.0, 1.0));
 
 	ALBEDO = mix(sky_rim, foam_colour.rgb, foam);
-	ROUGHNESS = clamp(roughness_water + foam * 0.55 + (1.0 - depth_t) * 0.10, 0.02, 1.0);
-	SPECULAR = clamp(0.5 + specular_boost * (1.0 - foam), 0.0, 1.0);
+	ROUGHNESS = clamp(roughness_water + foam * 0.55 + (1.0 - depth_t) * 0.10 + far * 0.12, 0.02, 1.0);
+	SPECULAR = clamp(0.4 + specular_boost * (1.0 - foam) * (1.0 - far * 0.5), 0.0, 1.0);
 	METALLIC = 0.0;
 	ALPHA = clamp(mix(opacity_shallow, opacity_deep, depth_t) + foam * 0.5, 0.0, 1.0);
 }

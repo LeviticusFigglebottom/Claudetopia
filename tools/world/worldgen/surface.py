@@ -138,8 +138,8 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(70.0, 105.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * smoothstep(-400.0, -1200.0, ctx.Z)
     yield SLOTS["barley"], downs * 1.25 * ctx.patch(402, 90, 380) ** 2 * flat * dry * (1.0 - smoothstep(75.0, 95.0, H))
-    yield SLOTS["orchard_grass"], downs * 1.4 * ctx.near_place({"tamwick", "merrowby", "wardens_rest"}, 340.0) * flat \
-        + basin * 0.8 * ctx.near_place({"gullhithe"}, 240.0) * flat
+    yield SLOTS["orchard_grass"], downs * 1.25 * ctx.near_place({"tamwick", "merrowby"}, 210.0) * flat \
+        + basin * 0.7 * ctx.near_place({"gullhithe"}, 170.0) * flat
 
     # --- Brightwater: the Mere, its shingle shores, the black island -------------------
     under_water = ctx.water.astype(np.float32)
@@ -148,7 +148,9 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["shingle"], 1.9 * shore_band * (1.0 - steep) + 0.9 * river_band * (1.0 - ctx.water) * basin \
         + basin * 0.55 * ctx.patch(411, 40, 180) ** 2 * (1.0 - smoothstep(120.0, 500.0, ctx.lake.sd))
     yield SLOTS["fused_stone"], 2.4 * (ctx.lake.island_sd < 20.0).astype(np.float32) \
-        + ash * (0.55 * ctx.patch(403, 60, 260) ** 2 + 1.6 * ctx.near_place({"sunken_choir", "cantors_seat"}, 420.0))
+        + ash * (0.5 * ctx.patch(403, 60, 260) ** 2
+                 + 1.5 * ctx.near_place({"sunken_choir", "cantors_seat"}, 190.0)
+                 + 0.9 * ctx.near_place({"greyfold", "pilgrims_ash"}, 150.0))
     yield SLOTS["cobbles"], 2.6 * ctx.town * (1.0 - steep) + 1.8 * (ctx.on_road & ctx.town) \
         + 2.0 * (np.abs(ctx.X) < 12.0) * (ctx.lake.sd < 60.0) * (ctx.Z > -160.0) * (ctx.Z < 1400.0)
 
@@ -184,7 +186,7 @@ def _weights(ctx: SurfaceContext):
         + 1.4 * ctx.pad * (1.0 - ctx.town) * (1.0 - steep) * ctx.patch(409, 30, 120)
 
 
-def control_maps(ctx: SurfaceContext, blend_sharpness: float = 1.6):
+def control_maps(ctx: SurfaceContext, blend_sharpness: float = 2.6):
     """base id, overlay id and blend (0-255) per texel, from the two strongest materials."""
     n = ctx.n
     best = np.zeros((n, n), dtype=np.float32)
@@ -226,7 +228,7 @@ COLOUR_VOICES = {
 }
 
 
-def colour_map(ctx: SurfaceContext, rf, strength: float = 0.62, work_n: int = 1024) -> np.ndarray:
+def colour_map(ctx: SurfaceContext, rf, strength: float = 0.78, work_n: int = 1024) -> np.ndarray:
     """RGBA8 tint map: region palettes broken up by low-frequency noise; alpha = wetness.
 
     Computed on a coarse lattice (the tint is all low-frequency) and upsampled to the grid.
@@ -247,16 +249,23 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.62, work_n: int = 10
         b = 0.5 + 0.5 * np.tanh(ctx.bank.field(620 + r.index, beta=1.8, wl_min=90, wl_max=380, n=n))
         i0, i1, i2, accent = COLOUR_VOICES.get(r.shape, (0, 1, 2, 0.3))
         c0, c1, c2 = pal[i0 % len(pal)], pal[i1 % len(pal)], pal[i2 % len(pal)]
-        # ground colour washed with a second voice, then dashed with the accent
-        mix = (c0[None, None, :] * (1.0 - a)[..., None] + c1[None, None, :] * a[..., None])
-        mix = mix * (1.0 - accent * b)[..., None] + c2[None, None, :] * (accent * b)[..., None]
+        # the ground colour leads; the second voice and the accent only shade it, otherwise
+        # averaging three palette entries lands on grey and every region tints the same
+        a2 = a * 0.55
+        mix = (c0[None, None, :] * (1.0 - a2)[..., None] + c1[None, None, :] * a2[..., None])
+        b2 = accent * b * 0.5
+        mix = mix * (1.0 - b2)[..., None] + c2[None, None, :] * b2[..., None]
         acc += mix * w[..., None]
         total += w
     acc /= np.maximum(total, 1e-6)[..., None]
     # Terrain3D multiplies this map over the albedo, so the tint must shift chroma without
     # darkening: normalise each palette colour to mean 1, then blend from neutral toward it.
     chroma = acc / np.maximum(acc.mean(axis=-1, keepdims=True), 0.04)
-    chroma = np.clip(chroma, 0.25, 2.2)
+    # a tint, not a paint: the multiplier stays near 1 so the terrain textures still set the
+    # value -- but the hue deviation is amplified, or a palette that is nearly neutral (slate,
+    # bone, ash) would tint nothing at all and the regions would look alike under one sun.
+    chroma = 1.0 + (chroma - 1.0) * 1.7
+    chroma = np.clip(chroma, 0.45, 1.85)
     tint = lerp(np.ones_like(acc), chroma, strength)
     # height and slope shading so the land reads even under flat light
     shade = 1.0 + 0.10 * np.tanh((H - 60.0) / 260.0) - 0.10 * smoothstep(0.35, 1.1, slope)

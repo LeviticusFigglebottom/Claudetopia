@@ -21,28 +21,30 @@ const REGION_SIZE := 1024
 const VERTEX_SPACING := 2.0
 
 ## Slot order is binding (docs/CONTRACTS.md §5); uv_scale is 1 / tile size in metres.
+## `value` is an albedo multiplier that keeps bright materials (chalk, snow, limestone) from
+## blowing out under the atmosphere's sun, and `rough` nudges the material's roughness.
 const SLOTS: Array = [
-	{"name": "vale_grass", "tile_m": 2.6},
-	{"name": "chalk", "tile_m": 3.0},
-	{"name": "dirt_path", "tile_m": 2.8},
-	{"name": "mud", "tile_m": 2.4},
-	{"name": "peat", "tile_m": 2.6},
-	{"name": "forest_floor", "tile_m": 2.8},
-	{"name": "moss", "tile_m": 1.8},
-	{"name": "granite", "tile_m": 3.4},
-	{"name": "limestone", "tile_m": 3.6},
-	{"name": "scree", "tile_m": 2.4},
-	{"name": "snow", "tile_m": 3.2},
-	{"name": "heather", "tile_m": 2.2},
-	{"name": "ash_soil", "tile_m": 2.6},
-	{"name": "grey_grass", "tile_m": 2.4},
-	{"name": "fused_stone", "tile_m": 4.0},
-	{"name": "shingle", "tile_m": 2.0},
-	{"name": "cobbles", "tile_m": 2.6},
-	{"name": "barley", "tile_m": 2.4},
-	{"name": "orchard_grass", "tile_m": 2.4},
-	{"name": "lake_bed", "tile_m": 2.8},
-	{"name": "sand_flats", "tile_m": 3.0},
+	{"name": "vale_grass", "tile_m": 2.6, "value": 0.46, "roughness_mod": 0.0},
+	{"name": "chalk", "tile_m": 3.0, "value": 0.42, "roughness_mod": 0.0},
+	{"name": "dirt_path", "tile_m": 2.8, "value": 0.53, "roughness_mod": 0.0},
+	{"name": "mud", "tile_m": 2.4, "value": 0.56, "roughness_mod": -0.05},
+	{"name": "peat", "tile_m": 2.6, "value": 0.58, "roughness_mod": 0.0},
+	{"name": "forest_floor", "tile_m": 2.8, "value": 0.46, "roughness_mod": 0.0},
+	{"name": "moss", "tile_m": 1.8, "value": 0.44, "roughness_mod": 0.0},
+	{"name": "granite", "tile_m": 3.4, "value": 0.54, "roughness_mod": 0.0},
+	{"name": "limestone", "tile_m": 3.6, "value": 0.40, "roughness_mod": 0.0},
+	{"name": "scree", "tile_m": 2.4, "value": 0.44, "roughness_mod": 0.0},
+	{"name": "snow", "tile_m": 3.2, "value": 0.62, "roughness_mod": -0.1},
+	{"name": "heather", "tile_m": 2.2, "value": 0.51, "roughness_mod": 0.0},
+	{"name": "ash_soil", "tile_m": 2.6, "value": 0.45, "roughness_mod": 0.05},
+	{"name": "grey_grass", "tile_m": 2.4, "value": 0.46, "roughness_mod": 0.0},
+	{"name": "fused_stone", "tile_m": 4.0, "value": 0.42, "roughness_mod": 0.25},
+	{"name": "shingle", "tile_m": 2.0, "value": 0.51, "roughness_mod": 0.0},
+	{"name": "cobbles", "tile_m": 2.6, "value": 0.53, "roughness_mod": 0.0},
+	{"name": "barley", "tile_m": 2.4, "value": 0.49, "roughness_mod": 0.0},
+	{"name": "orchard_grass", "tile_m": 2.4, "value": 0.47, "roughness_mod": 0.0},
+	{"name": "lake_bed", "tile_m": 2.8, "value": 0.53, "roughness_mod": 0.1},
+	{"name": "sand_flats", "tile_m": 3.0, "value": 0.50, "roughness_mod": 0.0},
 ]
 
 
@@ -176,6 +178,8 @@ func _build_assets() -> Resource:
 		tex.set("normal_depth", float(slot.get("normal_depth", 0.55)))
 		tex.set("ao_strength", float(slot.get("ao", 0.5)))
 		tex.set("roughness", float(slot.get("roughness_mod", 0.0)))
+		var v := float(slot.get("value", 1.0))
+		tex.set("albedo_color", Color(v, v, v, 1.0))
 		assets.call("set_texture", i, tex)
 	if not missing.is_empty():
 		Log.error("ImportTerrain", "missing terrain textures: %s (run tools/world/gen_terrain_textures.py)"

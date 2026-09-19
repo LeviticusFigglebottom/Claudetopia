@@ -12,6 +12,7 @@ static var instance: World = null
 
 const GENERATED := "res://world/generated"
 const TERRAIN_DATA := "res://terrain_data"
+const ASSETS_RESOURCE := "res://world/terrain_assets.tres"
 const ATMOSPHERE_SCENE := "res://systems/atmosphere/atmosphere.tscn"
 
 @export var spawn_place: String = "core:place/merrowby"
@@ -39,10 +40,10 @@ func _ready() -> void:
 	provider.name = "TerrainProvider"
 	add_child(provider)        # TerrainProvider loads its maps in _ready
 	_load_pois()
-	_setup_terrain()
+	_setup_target()            # before the terrain: Terrain3D looks for a camera on its first frame
+	await _setup_terrain()
 	_setup_atmosphere()
 	_setup_water()
-	_setup_target()
 	_setup_streamer()
 	EventBus.region_entered.connect(_on_region_entered)
 	var start := _spawn_position()
@@ -68,8 +69,13 @@ func _setup_terrain() -> void:
 		return
 	terrain_node = ClassDB.instantiate("Terrain3D")
 	terrain_node.name = "Terrain3D"
-	if ResourceLoader.exists("res://world/terrain_assets.tres"):
-		terrain_node.set("assets", load("res://world/terrain_assets.tres"))
+	# Terrain3D frees the source textures in NOTIFICATION_READY, which lands before its data
+	# object exists in a runtime-built node -- the texture arrays would then be built from an
+	# empty list and the ground would render as the debug checkerboard. We keep the sources,
+	# build the arrays ourselves below, and free them once they are safely in VRAM.
+	terrain_node.set("free_editor_textures", false)
+	if ResourceLoader.exists(ASSETS_RESOURCE):
+		terrain_node.set("assets", load(ASSETS_RESOURCE))
 	add_child(terrain_node)
 	terrain_node.set("data_directory", TERRAIN_DATA)
 	terrain_node.set("vertex_spacing", 2.0)
@@ -92,6 +98,33 @@ func _setup_terrain() -> void:
 		collision.set("mode", 1)                 # dynamic collision around the camera/player
 		collision.set("radius", 96)
 	provider.bind_terrain(terrain_node)
+	if fly_camera:
+		terrain_node.call("set_camera", fly_camera)
+	elif target is Camera3D:
+		terrain_node.call("set_camera", target)
+	await get_tree().process_frame
+	_build_texture_arrays(mat)
+
+
+## Builds the terrain texture arrays and then releases the source images.
+func _build_texture_arrays(mat: Object) -> void:
+	var assets: Object = terrain_node.get("assets")
+	if assets == null:
+		return
+	if int(assets.call("get_texture_count")) == 0 and ResourceLoader.exists(ASSETS_RESOURCE):
+		# Terrain3D cleared the list before the arrays were made: put it back and rebuild
+		assets = ResourceLoader.load(ASSETS_RESOURCE, "", ResourceLoader.CACHE_MODE_IGNORE)
+		terrain_node.set("assets", assets)
+	assets.call("update_texture_list")
+	var slots := int(assets.call("get_texture_count"))
+	var albedo_rid: RID = assets.call("get_albedo_array_rid")
+	if not albedo_rid.is_valid():
+		Log.error("World", "terrain texture array was not built (%d slots); the ground will be checkered" % slots)
+		return
+	if mat:
+		mat.set("show_checkered", false)
+	assets.call("clear_textures", false)      # arrays are in VRAM; drop the source images
+	Log.info("World", "terrain textures ready: %d slots" % slots)
 
 
 func _setup_atmosphere() -> void:
@@ -126,8 +159,6 @@ func _setup_target() -> void:
 	var start := _spawn_position()
 	fly_camera.move_to(start + Vector3(0.0, 12.0, 60.0), start + Vector3(0.0, 6.0, 0.0))
 	target = fly_camera
-	if terrain_node:
-		terrain_node.call("set_camera", fly_camera)
 
 
 func _setup_streamer() -> void:
