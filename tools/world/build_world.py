@@ -26,6 +26,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from worldgen import cells as CELLS
+from worldgen import encounters as ENC
 from worldgen import heights as HM
 from worldgen import hydro as HY
 from worldgen import output as OUT
@@ -229,6 +230,10 @@ def build(args) -> dict:
         t.mark("scatter")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope, bank, regions)
     cell_regions = CELLS.cell_region_ids(sw2, regions)
+    # Who is standing out there: the region's own creatures, off the roads and away from the
+    # hearths, in the groups their kind keeps.
+    spawns_by_cell = ENC.place(sw2, regions, places, PACK, seed)
+    t.mark("encounters")
     scenes_by_cell: dict = {}
     for entry in poi_out:
         if "scene" not in entry:
@@ -262,7 +267,7 @@ def build(args) -> dict:
     n_cells = 0
     if want_cells:
         OUT.write_pois(out_dir, poi_out)
-        n_cells = OUT.write_cells(out_dir, grid, buckets, cell_regions, scenes_by_cell)
+        n_cells = OUT.write_cells(out_dir, grid, buckets, cell_regions, scenes_by_cell, spawns_by_cell)
     instances = int(sum(len(v) for b in buckets.values() for v in b.values()))
     stats = {
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -271,6 +276,7 @@ def build(args) -> dict:
         "water_fraction": round(float(water.mask.mean()), 4),
         "rivers": len(rivers), "roads": len(roads_list), "pois": len(poi_out),
         "scatter_instances": instances,
+        "encounters": int(sum(len(v) for v in spawns_by_cell.values())),
         "texture_slots": SF.SLOT_NAMES,
         "only": args.only or "all",
     }

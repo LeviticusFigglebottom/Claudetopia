@@ -127,3 +127,71 @@ func test_a_locked_house_is_somebody_in_particular_s_house() -> void:
 			assert_true(ContentDB.has(lock.owner_npc), "%s is locked against a nobody" % door.interior_id)
 	assert_gt(locked, 0, "some doors in the Vale are shut")
 	await _drop(w)
+
+
+# --- what is out there -----------------------------------------------------------------------------
+
+func test_the_country_has_things_in_it_that_will_fight_you() -> void:
+	var w := _world()
+	await w.world_ready
+	# Walk the streamer to a piece of country the builder actually put somebody in.
+	var where := _a_cell_with_spawns()
+	assert_true(where != Vector3.INF, "the built world has encounters in it")
+	w.force_stream_around(where)
+	for i in 120:
+		await _tree().process_frame
+	var enemies := _tree().get_nodes_in_group("enemy")
+	print("DBG cells=", w.streamer.loaded_count(), " target=", w.streamer.target, " at=", where, " enemies=", enemies.size())
+	for cellnode in w.streamer.get_children():
+		if cellnode.get_node_or_null("Encounters") != null:
+			print("DBG cell with encounters: ", cellnode.name)
+	assert_gt(enemies.size(), 0, "somebody is out on the downs")
+	for e in enemies:
+		var body := e as Node3D
+		var ground := World.terrain().get_height(body.global_position.x, body.global_position.z)
+		assert_true(absf(body.global_position.y - ground) < 3.0, "%s stands on the ground" % e.name)
+	await _drop(w)
+
+
+func test_encounters_keep_off_the_roads_and_out_of_the_villages() -> void:
+	# The rule the placer works to, checked against the built data rather than the code that
+	# wrote it: nothing camps in the square outside the inn.
+	var spawns := 0
+	var dir := DirAccess.open("res://world/generated/cells")
+	assert_true(dir != null, "the world has been built")
+	var places: Array = []
+	for p in ContentDB.all("place"):
+		if ["city", "town", "village", "hamlet"].has(str(p.get("kind", ""))):
+			places.append(p)
+	for file in dir.get_files():
+		var text := FileAccess.get_file_as_string("res://world/generated/cells/" + file)
+		var parsed: Variant = JSON.parse_string(text)
+		if typeof(parsed) != TYPE_DICTIONARY:
+			continue
+		for entry in (parsed as Dictionary).get("spawns", []):
+			spawns += 1
+			var p: Array = (entry as Dictionary).get("pos", [0, 0, 0])
+			var at := Vector2(float(p[0]), float(p[2]))
+			for place in places:
+				var xz: Array = place.get("position", [0, 0])
+				var d := at.distance_to(Vector2(float(xz[0]), float(xz[1])))
+				assert_true(d > 35.0, "%s is camped in %s" % [entry.get("def", "?"), place.get("name", "?")])
+	assert_gt(spawns, 100, "the world is not empty")
+
+
+## The middle of some cell the builder wrote encounters into, in world coordinates.
+func _a_cell_with_spawns() -> Vector3:
+	var dir := DirAccess.open("res://world/generated/cells")
+	if dir == null:
+		return Vector3.INF
+	for file in dir.get_files():
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/cells/" + file))
+		if typeof(parsed) != TYPE_DICTIONARY:
+			continue
+		var spawns: Array = (parsed as Dictionary).get("spawns", [])
+		if spawns.size() < 3:
+			continue
+		var p: Array = (spawns[0] as Dictionary).get("pos", [])
+		if p.size() == 3:
+			return Vector3(float(p[0]), float(p[1]), float(p[2]))
+	return Vector3.INF

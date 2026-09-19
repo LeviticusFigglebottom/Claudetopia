@@ -220,7 +220,38 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	if ring <= full_ring:
 		for entry in data.get("scenes", []):
 			_build_scene(node, entry)
+		_build_spawns(node, data.get("spawns", []))
 	EventBus.cell_loaded.emit(cell)
+
+
+## What is standing in this cell waiting for you. Only the near ring: a wolf three hundred
+## metres away that you cannot see does not need a body, and it gets one the moment the cell
+## comes into the full-detail ring. They hang off the cell node, so unloading takes them with
+## it and the world does not fill up with everything you have ever walked past.
+func _build_spawns(parent: Node3D, spawns: Array) -> void:
+	if spawns.is_empty():
+		return
+	var spawner := EnemySpawner.new()
+	spawner.name = "Encounters"
+	spawner.spawn_on_ready = false
+	spawner.respawn_on_rest = true
+	spawner.drop_to_ground = false
+	parent.add_child(spawner)
+	for entry in spawns:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var spawn: Dictionary = entry
+		if str(spawn.get("kind", "enemy")) != "enemy":
+			continue          # npc and animal spawns belong to their own systems
+		var def_id := str(spawn.get("def", ""))
+		if def_id == "" or not ContentDB.has(def_id):
+			continue
+		var p: Array = spawn.get("pos", [])
+		if p.size() < 3:
+			continue
+		var at := Vector3(float(p[0]), float(p[1]), float(p[2]))
+		spawner.spawn_one(def_id, at, deg_to_rad(float(spawn.get("yaw", 0.0))),
+				{"group": str(spawn.get("group", ""))})
 
 
 func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Array, ring: int) -> void:

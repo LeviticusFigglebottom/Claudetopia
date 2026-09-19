@@ -30,6 +30,10 @@ class RegionDef:
     palette: list
     flora: list
     light: dict = field(default_factory=dict)
+    ## How hard the country is, 1 (the starting valley) to 5 (the ash). Encounter density
+    ## reads it: a dangerous region is not only fought by worse things, it is fought oftener.
+    danger: int = 1
+    ecology: list = field(default_factory=list)
 
     @property
     def short(self) -> str:
@@ -51,6 +55,7 @@ def load_regions(path: str) -> list[RegionDef]:
             water_table=float(m.get("water_table", 0)), lake_radius=float(m.get("lake_radius", 0)),
             palette=list(ident.get("palette", [])), flora=list(ident.get("flora", [])),
             light=dict(ident.get("light", {})),
+            danger=int(r.get("danger", 1) or 1), ecology=list(r.get("enemy_ecology", [])),
         ))
     return out
 
