@@ -830,7 +830,9 @@ func _fire_arrow(drawn: float) -> void:
 		return
 	get_tree().current_scene.add_child(arrow)
 	var hit := HitData.new()
-	var base := weapon.damage + float(proj.get("damage", 12.0))
+	# The shaft's own contribution: `damage` for a self-contained projectile, `damage_mult` for
+	# ammunition whose worth is in the head it carries. Both were in the pack; only one was read.
+	var base := (weapon.damage + float(proj.get("damage", 0.0))) * float(proj.get("damage_mult", 1.0))
 	hit.amount = DamageModel.raw_damage(base, get_skill(weapon.skill_id), lerpf(0.5, 1.0, drawn), 1.0)
 	hit.kind = str(proj.get("kind", "pierce"))
 	hit.poise_damage = weapon.poise_damage + float(proj.get("poise_damage", 0.0))
@@ -988,6 +990,20 @@ func toggle_lantern() -> bool:
 ## Seconds before the weapon can be loosed again; 0 for a bow, which is drawn instead.
 func reload_left() -> float:
 	return maxf(_reload_until - now(), 0.0)
+
+
+## How much the thing in your hand adds to a saying. A staff carries a `casting` block naming
+## the school it was cut for; holding the right one for the saying is worth its power_mult.
+func casting_power(school: String = "") -> float:
+	if weapon == null:
+		return 1.0
+	var casting: Dictionary = weapon.item_def.get("casting", {})
+	if casting.is_empty():
+		return 1.0
+	var cut_for := str(casting.get("school", ""))
+	if cut_for != "" and school != "" and cut_for != school:
+		return 1.0
+	return float(casting.get("power_mult", 1.0))
 
 
 ## The Progression node that keeps what this character has learned, if there is one.

@@ -255,3 +255,28 @@ func test_every_school_has_three_spells() -> void:
 		counts[school] = int(counts.get(school, 0)) + 1
 	for school: String in SpellRuntime.SCHOOLS:
 		assert_eq(int(counts.get(school, 0)), 3, "%s should have three spells" % school)
+
+
+# --- what is in your hand ------------------------------------------------------------------------
+
+func test_a_staff_lends_a_saying_its_power_and_a_sword_lends_nothing() -> void:
+	# `casting: {school, power_mult}` was written on the ash staff and read by nothing, so a
+	# Sayer with a staff cast exactly as well bare-handed.
+	var p := Player.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(p)
+	p.equip_weapon("core:item/ash_staff")
+	assert_near(p.casting_power("kindling"), 1.1, 0.001, "cut for Kindling")
+	assert_near(p.casting_power("hush"), 1.0, 0.001, "and for nothing else")
+	p.equip_weapon("core:item/iron_sword")
+	assert_near(p.casting_power("kindling"), 1.0, 0.001, "a sword is not an instrument")
+	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
+	p.free()
+
+
+func test_an_arrow_multiplies_the_bow_rather_than_adding_to_it() -> void:
+	# Ammunition carries `damage_mult`: the shaft is worth what the head is worth. The player
+	# was adding a flat 12 instead, so every arrow in the game hit the same.
+	var arrow := ContentDB.get_or_empty("core:item/iron_arrow")
+	assert_true(arrow.get("projectile", {}).has("damage_mult"))
+	var bolt := ContentDB.get_or_empty("core:item/crossbow_bolt")
+	assert_true(bolt.get("projectile", {}).has("damage_mult"))

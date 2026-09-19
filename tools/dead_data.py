@@ -28,7 +28,9 @@ STRUCTURAL = {"id", "name", "description", "notes", "_doc", "entries", "extends"
 # Dictionaries whose keys are content the author chose (dialogue node ids, table row names),
 # not field names the code looks up. Their children's names are skipped; their grandchildren
 # are still fields and are still checked.
-MAP_VALUED = {"nodes", "rows", "greetings", "lines", "pools", "by_region", "by_culture"}
+MAP_VALUED = {"nodes", "rows", "greetings", "lines", "pools", "by_region", "by_culture",
+              "targets", "gestures", "skill_bonuses", "starting_reputation", "resists",
+              "stock", "prices", "palette"}
 
 
 def defs():

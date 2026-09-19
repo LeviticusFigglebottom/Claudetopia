@@ -143,6 +143,21 @@ func _release() -> void:
 	cast_released.emit(spell_id)
 
 
+## The hit a saying delivers, with whatever is in the caster's hand behind it.
+func _hit_for(def: Dictionary, skill: float) -> HitData:
+	var hit := SpellRuntime.build_hit(def, actor, skill)
+	hit.amount *= _instrument(def)
+	return hit
+
+
+## What the caster is holding, as a multiplier: a staff cut for this saying's school lends it
+## its `casting.power_mult` (CONTRACTS §7), and a fist or a sword lends nothing.
+func _instrument(def: Dictionary) -> float:
+	if actor == null or not actor.has_method("casting_power"):
+		return 1.0
+	return float(actor.call("casting_power", SpellRuntime.school_of(def)))
+
+
 func _origin_and_direction() -> Array:
 	var origin: Vector3 = Vector3.ZERO
 	var dir: Vector3 = Vector3.FORWARD
@@ -171,7 +186,7 @@ func _cast_projectile(def: Dictionary) -> void:
 	var tree := actor.get_tree()
 	var parent: Node = tree.current_scene if tree.current_scene != null else tree.root
 	parent.add_child(p)
-	var hit := SpellRuntime.build_hit(def, actor, skill_for(def))
+	var hit := _hit_for(def, skill_for(def))
 	p.launch(origin + dir * 0.6, dir, SpellRuntime.speed_of(def), hit, float(def.get("gravity", 0.0)))
 
 
@@ -291,10 +306,10 @@ func _apply_effects(target: Node, def: Dictionary, friendly: bool, scale: float 
 		match str(e.get("type", "")):
 			"heal":
 				if friendly and target.has_method("heal"):
-					target.heal(SpellRuntime.heal_amount(e, skill) * scale)
+					target.heal(SpellRuntime.heal_amount(e, skill) * scale * _instrument(def))
 			"shield":
 				if friendly and target.has_method("add_shield"):
-					target.add_shield(float(e.get("amount", 0.0)) * DamageModel.skill_mult(skill), float(e.get("duration", 10.0)))
+					target.add_shield(float(e.get("amount", 0.0)) * DamageModel.skill_mult(skill) * _instrument(def), float(e.get("duration", 10.0)))
 			"cleanse":
 				var st: Node = target.get("status")
 				if friendly and st != null and st.has_method("clear_many"):
@@ -303,7 +318,7 @@ func _apply_effects(target: Node, def: Dictionary, friendly: bool, scale: float 
 				if not friendly:
 					hit_needed = true
 	if hit_needed and target.has_method("take_hit"):
-		var hit := SpellRuntime.build_hit(def, actor, skill)
+		var hit := _hit_for(def, skill)
 		hit.amount *= scale
 		hit.poise_damage *= scale
 		hit.dodgeable = false
