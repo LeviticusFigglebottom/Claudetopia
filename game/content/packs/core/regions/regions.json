@@ -21,9 +21,10 @@
         "fog_color": "#e9dcbd",
         "fog_density": 0.0011,
         "ambient_tint": "#fff0d6",
-        "saturation": 1.08,
+        "saturation": 1.12,
         "contrast": 1.0,
-        "bloom": 0.25
+        "bloom": 0.25,
+        "sky_tint": "#fff0d2"
       },
       "weather": {
         "clear": 45,
@@ -100,9 +101,10 @@
         "fog_color": "#c9d6e2",
         "fog_density": 0.0007,
         "ambient_tint": "#e8f0ff",
-        "saturation": 1.05,
+        "saturation": 1.06,
         "contrast": 1.08,
-        "bloom": 0.2
+        "bloom": 0.2,
+        "sky_tint": "#eaf4ff"
       },
       "weather": {
         "clear": 55,
@@ -177,12 +179,13 @@
         "sun_color": "#e9e2d0",
         "sun_elevation_bias": -8,
         "fog_color": "#a9c1b8",
-        "fog_density": 0.0032,
+        "fog_density": 0.0024,
         "ambient_tint": "#cfe3dc",
         "saturation": 0.95,
         "contrast": 0.92,
         "bloom": 0.35,
-        "sun_elevation_scale": 0.85
+        "sun_elevation_scale": 0.85,
+        "sky_tint": "#cfe2dc"
       },
       "weather": {
         "fog": 40,
@@ -259,13 +262,14 @@
         "sun_color": "#ffd98a",
         "sun_elevation_bias": 0,
         "fog_color": "#5f7a4a",
-        "fog_density": 0.0026,
+        "fog_density": 0.0021,
         "ambient_tint": "#3f5a3a",
-        "saturation": 1.1,
+        "saturation": 1.08,
         "contrast": 1.12,
         "bloom": 0.45,
         "god_rays": true,
-        "sun_elevation_scale": 0.9
+        "sun_elevation_scale": 0.9,
+        "sky_tint": "#dcebd0"
       },
       "weather": {
         "still": 40,
@@ -347,7 +351,8 @@
         "ambient_tint": "#d8e2f2",
         "saturation": 0.92,
         "contrast": 1.15,
-        "bloom": 0.15
+        "bloom": 0.15,
+        "sky_tint": "#dfe7f6"
       },
       "weather": {
         "wind": 35,
@@ -424,13 +429,14 @@
         "sun_color": "#e2d8c8",
         "sun_elevation_bias": -14,
         "fog_color": "#9a9793",
-        "fog_density": 0.0024,
+        "fog_density": 0.0017,
         "ambient_tint": "#b6b2ac",
         "saturation": 0.55,
         "contrast": 0.95,
         "bloom": 0.3,
         "grain": 0.06,
-        "sun_elevation_scale": 0.5
+        "sun_elevation_scale": 0.5,
+        "sky_tint": "#cbc8c2"
       },
       "weather": {
         "ashfall": 35,

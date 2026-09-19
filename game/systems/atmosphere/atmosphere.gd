@@ -9,16 +9,16 @@ const WEATHER_BLEND_GAME_MINUTES := 3.0
 
 ## Day cycle keyframes: hour -> [top, horizon, sun_color, sun_energy, ambient_energy, stars]
 const DAY_KEYS := [
-	[0.0,  Color(0.05, 0.07, 0.14), Color(0.12, 0.14, 0.22), Color(0.6, 0.7, 1.0), 0.0,  0.18, 1.0],
-	[4.5,  Color(0.06, 0.08, 0.16), Color(0.16, 0.16, 0.24), Color(0.7, 0.7, 0.9), 0.0,  0.22, 0.9],
-	[6.0,  Color(0.30, 0.40, 0.62), Color(0.95, 0.68, 0.48), Color(1.0, 0.72, 0.45), 0.55, 0.45, 0.2],
-	[7.5,  Color(0.38, 0.56, 0.82), Color(0.92, 0.84, 0.70), Color(1.0, 0.88, 0.70), 1.0,  0.75, 0.0],
-	[12.0, Color(0.30, 0.52, 0.86), Color(0.82, 0.86, 0.92), Color(1.0, 0.97, 0.90), 1.3,  1.0,  0.0],
-	[16.5, Color(0.34, 0.54, 0.84), Color(0.88, 0.84, 0.72), Color(1.0, 0.92, 0.78), 1.15, 0.9,  0.0],
-	[18.5, Color(0.36, 0.42, 0.66), Color(0.98, 0.62, 0.40), Color(1.0, 0.64, 0.36), 0.7,  0.55, 0.05],
-	[20.0, Color(0.16, 0.18, 0.34), Color(0.55, 0.36, 0.42), Color(0.9, 0.55, 0.45), 0.15, 0.3,  0.5],
-	[21.5, Color(0.06, 0.08, 0.17), Color(0.14, 0.15, 0.24), Color(0.6, 0.7, 1.0), 0.0,  0.2,  0.95],
-	[24.0, Color(0.05, 0.07, 0.14), Color(0.12, 0.14, 0.22), Color(0.6, 0.7, 1.0), 0.0,  0.18, 1.0],
+	[0.0,  Color(0.04, 0.06, 0.13), Color(0.10, 0.12, 0.20), Color(0.6, 0.7, 1.0), 0.0,  0.30, 1.0],
+	[4.5,  Color(0.05, 0.07, 0.15), Color(0.14, 0.14, 0.22), Color(0.7, 0.7, 0.9), 0.0,  0.32, 0.9],
+	[6.0,  Color(0.26, 0.38, 0.64), Color(0.98, 0.62, 0.38), Color(1.0, 0.66, 0.36), 0.8,  0.5,  0.2],
+	[7.5,  Color(0.30, 0.52, 0.86), Color(0.93, 0.82, 0.66), Color(1.0, 0.86, 0.66), 1.05, 0.78, 0.0],
+	[12.0, Color(0.20, 0.44, 0.88), Color(0.70, 0.80, 0.92), Color(1.0, 0.97, 0.90), 1.3,  1.0,  0.0],
+	[16.5, Color(0.26, 0.50, 0.86), Color(0.90, 0.82, 0.66), Color(1.0, 0.90, 0.72), 1.15, 0.9,  0.0],
+	[18.5, Color(0.32, 0.38, 0.66), Color(1.00, 0.56, 0.32), Color(1.0, 0.58, 0.30), 0.9,  0.55, 0.05],
+	[20.0, Color(0.14, 0.16, 0.34), Color(0.52, 0.32, 0.40), Color(0.9, 0.55, 0.45), 0.15, 0.36, 0.5],
+	[21.5, Color(0.05, 0.07, 0.16), Color(0.12, 0.13, 0.22), Color(0.6, 0.7, 1.0), 0.0,  0.30, 0.95],
+	[24.0, Color(0.04, 0.06, 0.13), Color(0.10, 0.12, 0.20), Color(0.6, 0.7, 1.0), 0.0,  0.30, 1.0],
 ]
 
 var sun: DirectionalLight3D
@@ -177,10 +177,12 @@ static func _look_from_region(def: Dictionary) -> Dictionary:
 		if light.has(key):
 			out[key] = float(light[key])
 	out["god_rays"] = bool(light.get("god_rays", false))
-	var pal: Array = ident.get("palette", [])
-	if pal.size() >= 3:
-		var c := Color.html(str(pal[2]))
-		out["tint"] = c.lerp(Color.WHITE, 0.7)
+	if light.has("sky_tint"):
+		out["tint"] = Color.html(str(light["sky_tint"]))
+	else:
+		var pal: Array = ident.get("palette", [])
+		if pal.size() >= 3:
+			out["tint"] = Color.html(str(pal[2])).lerp(Color.WHITE, 0.8)
 	return out
 
 
@@ -325,7 +327,7 @@ func _apply(_delta: float) -> void:
 	sun.visible = sun.light_energy > 0.01
 	var moon_dir := Vector3(-sun_dir.x, absf(sun_dir.y) * 0.8 + 0.2, -sun_dir.z * 0.6).normalized()
 	moon.global_transform = Transform3D(Basis.looking_at(-moon_dir, Vector3.UP), Vector3.ZERO)
-	moon.light_energy = 0.22 * stars * (0.4 + 0.6 * float(w["sun_mult"]))
+	moon.light_energy = 0.38 * stars * (0.4 + 0.6 * float(w["sun_mult"]))
 	moon.visible = moon.light_energy > 0.005
 
 	# sky
@@ -334,7 +336,8 @@ func _apply(_delta: float) -> void:
 	var cloudy := float(w["cloud_coverage"])
 	var top_c := top * tint
 	var hor_c := horizon.lerp(fogc, 0.35) * tint
-	top_c = top_c.lerp(hor_c.lerp(Color(0.5, 0.52, 0.55), 0.3), cloudy * 0.55)
+	top_c = top_c.lerp(hor_c.lerp(Color(0.5, 0.52, 0.55), 0.3), clampf((cloudy - 0.3) / 0.7, 0.0, 1.0) * 0.6)
+	sky_mat.set_shader_parameter("horizon_sharpness", 3.2)
 	sky_mat.set_shader_parameter("top_color", top_c)
 	sky_mat.set_shader_parameter("horizon_color", hor_c)
 	sky_mat.set_shader_parameter("ground_horizon_color", hor_c.darkened(0.25))
@@ -342,12 +345,12 @@ func _apply(_delta: float) -> void:
 	sky_mat.set_shader_parameter("sun_disc_color", sun_col.lightened(0.3))
 	sky_mat.set_shader_parameter("sun_glow_color", sun_col)
 	sky_mat.set_shader_parameter("sun_glow", 0.35 + 0.9 * (1.0 - low) + 0.3 * cloudy)
-	sky_mat.set_shader_parameter("haze", 0.3 + 0.5 * clampf(float(w["fog_mult"]) / 3.0, 0.0, 1.0))
+	sky_mat.set_shader_parameter("haze", 0.15 + 0.6 * clampf((float(w["fog_mult"]) - 1.0) / 2.0, 0.0, 1.0))
 	sky_mat.set_shader_parameter("cloud_coverage", cloudy)
 	sky_mat.set_shader_parameter("cloud_softness", float(w["cloud_softness"]))
 	sky_mat.set_shader_parameter("cloud_speed", 0.004 + 0.03 * float(w["wind"]))
-	sky_mat.set_shader_parameter("cloud_lit_color", Color(1, 0.98, 0.94).lerp(sun_col, 0.5 * (1.0 - low)))
-	sky_mat.set_shader_parameter("cloud_shade_color", hor_c.lerp(Color(0.4, 0.44, 0.52), 0.6) * (0.5 + 0.5 * ambient_energy))
+	sky_mat.set_shader_parameter("cloud_lit_color", Color(1.08, 1.04, 0.98).lerp(sun_col * 1.1, 0.6 * (1.0 - low)))
+	sky_mat.set_shader_parameter("cloud_shade_color", hor_c.lerp(Color(0.36, 0.40, 0.50), 0.7) * (0.35 + 0.65 * ambient_energy))
 	sky_mat.set_shader_parameter("cloud_opacity", 0.9)
 	sky_mat.set_shader_parameter("stars", stars * (1.0 - cloudy * 0.8))
 	sky_mat.set_shader_parameter("moon_dir", moon_dir)
