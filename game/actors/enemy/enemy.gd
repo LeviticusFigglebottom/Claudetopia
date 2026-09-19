@@ -12,6 +12,7 @@ signal telegraph(attack_name: String, duration: float)
 signal attack_launched(attack_name: String)
 signal phase_changed(index: int, phase: Dictionary)
 signal mark_dropped(enemy_id: String, position: Vector3)
+signal summoned(enemies: Array)
 
 const TURN_SPEED := 7.0
 const ACCEL := 12.0
@@ -25,6 +26,9 @@ const CHARGE_MAX_TIME := 2.2
 const AMBUSH_ROUSE := 0.35
 const RETREAT_DISTANCE := 5.0
 const PACK_CALL_RADIUS := 18.0
+## Where summoned help stands up, and how many of them a summoner may have out at once.
+const SUMMON_RADIUS := 4.5
+const SUMMON_DEFAULT_CAP := 6
 const GROUND_MASK := (1 << 0) | (1 << 10)
 
 @export var enemy_id: String = ""
@@ -48,6 +52,7 @@ var spawn_yaw: float = 0.0
 var target: Node3D = null
 var inactive: bool = false            # ambusher waiting
 var pack_group: String = ""
+var summons_alive: Array[Enemy] = []
 
 var _attack_cooldowns: Dictionary = {}
 var _current_attack: Dictionary = {}
@@ -616,8 +621,69 @@ func _open_hitbox() -> void:
 	hit.label = "%s:%s" % [Ids.name_of(enemy_id), str(a.get("name", "attack"))]
 	hit.statuses = a.get("statuses", [])
 	_weapon_hitbox().begin_swing(hit)
+	if a.has("summons"):
+		_summon(a["summons"])
 	attack_launched.emit(str(a.get("name", "attack")))
 	_make_noise(0.5)
+
+
+## Calls up help in a ring, at the moment the attack lands: {enemy, count, radius, cap}.
+## The ring is walked outward from the summoner so nobody arrives inside them, and the spawner
+## that placed this enemy is reused so the adds reset and save like any other encounter.
+func _summon(spec_v: Variant) -> void:
+	if typeof(spec_v) != TYPE_DICTIONARY:
+		return
+	var spec: Dictionary = spec_v
+	var add_id := str(spec.get("enemy", ""))
+	if add_id.is_empty():
+		return
+	var spawner := _summon_spawner()
+	if spawner == null:
+		Log.warn("Enemy", "%s has nowhere to put its summons" % enemy_id)
+		return
+	var still: Array[Enemy] = []
+	for e in summons_alive:
+		if is_instance_valid(e) and not e.dead:
+			still.append(e)
+	summons_alive = still
+	var cap := int(spec.get("cap", SUMMON_DEFAULT_CAP))
+	var want := mini(int(spec.get("count", 1)), maxi(cap - summons_alive.size(), 0))
+	if want <= 0:
+		return
+	var radius := float(spec.get("radius", SUMMON_RADIUS))
+	var made: Array = []
+	for i in want:
+		var a := TAU * (float(i) + randf() * 0.35) / float(want) + rotation.y
+		var at := global_position + Vector3(cos(a), 0.0, sin(a)) * radius
+		var add := spawner.spawn_one(add_id, at, a + PI, {"group": "summons:" + enemy_id})
+		if add == null:
+			continue
+		add.rotation.y = a + PI
+		if target != null:
+			add.perception.alert_to(target.global_position, target)
+		summons_alive.append(add)
+		made.append(add)
+	if not made.is_empty():
+		summoned.emit(made)
+
+
+## The spawner that owns this enemy, or any spawner in the scene, or one made on the spot so a
+## summoner in a hand-built room still works.
+func _summon_spawner() -> EnemySpawner:
+	var n := get_parent()
+	while n != null:
+		if n is EnemySpawner:
+			return n as EnemySpawner
+		n = n.get_parent()
+	for node: Node in get_tree().get_nodes_in_group("enemy_spawner"):
+		if node is EnemySpawner:
+			return node as EnemySpawner
+	var made := EnemySpawner.new()
+	made.name = "SummonSpawner"
+	made.spawn_on_ready = false
+	made.respawn_on_rest = false
+	get_parent().add_child(made)
+	return made
 
 
 func _close_hitbox() -> void:
