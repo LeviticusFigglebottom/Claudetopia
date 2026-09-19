@@ -1,16 +1,17 @@
 # PROGRESS.md — state of Wickmere
 
-_Updated 2026-09-19 (session 1, early)._
+_Updated 2026-09-19 (session 1)._
 
 ## State
 
-**Unit tests green, 0 content problems. The smoke run builds all 24 shipping
-interiors clean (6 regions, 34 places). The scripted journey passes all 13 of
-DESIGN's done-list promises. The performance probe's worst interior costs 90 draw
-calls and 1.17M primitives against budgets of 2000 and 1.5M. 16/16 combat-arena
-checks pass. 722 content definitions across 24 types, including the full
-bestiary (26 creatures over six regions), five bosses, and fifteen spells across
-all five schools.**
+**910 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
+clean and sweeps all six regions and 34 places. The scripted journey passes all 13 of
+DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
+of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
+definitions. The world is 16 Terrain3D regions over 8 km square, built deterministically in
+about two and a half minutes, with 404,000 scatter instances of 79 forged assets, 596
+creatures in 247 groups, 24 interiors with doors in the ground, and the worst captured frame
+costing 95 draw calls and 0.2M primitives against budgets of 2000 and 1.5M.**
 
 Verify the whole thing with four commands:
 
@@ -73,27 +74,39 @@ Merged and working on the main branch:
   drop-test checker, the naming generator with a banned-name check, review scenes for
   atmosphere, interiors and the combat arena.
 
-## In flight (parallel worktree streams, session 1)
+## In flight
 
-World builder + Terrain3D import + streaming + capture/smoke runners · Asset forge
-library + trees/rocks/flora/props/landmarks · Character forge + humanoid clip
-library · Player/cameras/combat core/enemy AI · Inventory/progression/crafting ·
-Dialogue/quests/factions/standing · NPC life/crime/stealth/economy · Narrative
-content (Merrowby roster, dialogue, quests, books) · UI (theme, HUD, menus, map,
-Naming) · Audio (synth toolkit, music, ambience, SFX, directors).
-Integrator (main branch) owns: atmosphere system (done, first pass), merging,
-hearthstones/death/echo, docs.
+Two streams are still polishing what they landed, against captures taken in the built world:
+the terrain surface (the texture boundaries read as a pixel staircase, the road as a painted
+stripe, the horizon as a white band) and the trees (they read as winter scrub at distance
+rather than the Vale's orchards and hedgerows). Everything else is merged.
 
 ## Next
 
-1. Merge the remaining streams as they land: world/terrain, asset forge, character
-   forge, dialogue/quests/factions, NPC life/crime/economy, UI, audio.
-2. Place the interiors in the world: doors on the settlement buildings and at each
-   deep place's mouth, wired to the `interior` defs.
-3. Merge the world, asset forge and character forge streams as they land.
-4. Place the interiors in the world through `core:table/door_plan_*`.
-4. Region fly-throughs, the drop test, and a pass of art direction on the overworld.
-5. The smoke run over every region and every interior, and the performance budgets.
+1. The surface and tree passes above, then re-shoot and judge the six regions again.
+2. Hedgerows and field boundaries in Hearthvale: the bible's defining feature, and the thing
+   that would most change how the downs read.
+3. **Nothing named is standing in the world.** `game/world/pois/` is empty, so `scene_for()`
+   in the world build never resolves a scene and all 34 places and 48 POIs are flattened pads
+   with nothing on them. The forge has built the six landmark meshes — the Cracked Toll, the
+   Lamp, the Sayer's Spire, both Choir Colossi, the Fallen Hand — and seven standing stones,
+   and no code places any of them. You can stand on the exact coordinates of a forty-metre
+   bronze bell that the main quest turns on and see a bald hillside. This is the largest
+   remaining hole in the world and the one the drop test most depends on. Assigned to the
+   world stream: resolve a landmark `.glb` as the place's scene, give it collision and a
+   deliberate yaw, and place standing stones as hand-authored sets rather than scatter.
+4. **The settlements are built but not planned.** Eleven places now carry a fabric of
+   generated houses around their hand-built interiors — 54 slate roofs in Tollmere, 34 thatched
+   ones in Merrowby, with the culture's walls, a plinth, a framed door and the carts, hay,
+   fences and market stalls the forge has made. What they do not have is a *street*: the roads
+   stop at the edge of the flattened pad instead of running through it, so the layout falls back
+   to a ring around a green every time. `Settlement._along_road` already fronts houses onto a
+   road correctly when one crosses the pad (there is a test for it) — the roads simply do not.
+   Second: the pads are far wider than the towns on them and are paved edge to edge, so every
+   village sits in the middle of a two-hundred-metre cobbled disc.
+5. NPC and encounter density tuning once there is somebody to walk the country and feel it.
+6. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
+   score: the downs currently read as bare ground with trees on it.
 
 ## Deliberately not done (pass two)
 
@@ -109,6 +122,13 @@ hearthstones/death/echo, docs.
 
 ## Known issues
 
+* **The drop test does not pass.** `tools/uniqueness_check.py` now scores colour and landform
+  separately (DESIGN §10.1). On the eighteen region captures as they stand: colour 0.61,
+  landform 0.50, together 0.56, against a 0.17 chance line and a 0.80 bar. Skerrow and
+  Cinderlea read as each other, and Briarwold and Sedgemire are the closest pair in the world.
+  Those captures were taken from a country with no stones in it and nothing named standing up,
+  so the number should move a long way once the rock scatter, the landmarks and the surface
+  pass land — but it is 0.56 today and it is recorded as 0.56 today.
 * Terrain3D + lavapipe (software Vulkan) crashes in JIT code; use OpenGL for
   headless captures (ARCHITECTURE.md §10).
 * Cave floors show a faint dune ripple where the shell noise is applied before the

@@ -23,7 +23,12 @@ class Step:
 		detail = d
 		skipped = s
 
+const WORLD_SCENE := "res://world/world.tscn"
+const WORLD_MANIFEST := "res://world/generated/world_manifest.json"
+
 var steps: Array[Step] = []
+var world: World = null
+var in_the_world := false
 var host: Node3D
 var player: Node3D
 var inventory: Node
@@ -37,14 +42,7 @@ func _ready() -> void:
 		await ContentDB.loaded
 	await get_tree().process_frame
 	_errors_at_start = Log.error_count
-	host = Node3D.new()
-	host.name = "JourneyWorld"
-	host.add_to_group("world_dynamic")
-	add_child(host)
-	# The world's services: law, ownership, stealth, NPC life, market, property.
-	var services := GameServices.new()
-	services.name = "GameServices"
-	add_child(services)
+	await _make_host()
 	await get_tree().process_frame
 	print("JOURNEY: starting")
 
@@ -62,6 +60,29 @@ func _ready() -> void:
 	await _step_learn_and_say()
 	await _step_save_and_load()
 	_report()
+
+
+## The ground this run happens on. The real world when it has been built — which is the whole
+## point of the run: the promises are about the game, not about a slab of test floor — and a
+## bare host with a floor under it when it has not, so the journey still reports honestly on a
+## checkout where nobody has run `./run.sh world` yet.
+func _make_host() -> void:
+	if ResourceLoader.exists(WORLD_SCENE) and FileAccess.file_exists(WORLD_MANIFEST):
+		var w: Node = (load(WORLD_SCENE) as PackedScene).instantiate()
+		add_child(w)
+		world = w as World
+		if not world.is_world_ready:
+			await world.world_ready
+		host = world
+		in_the_world = true
+		return
+	host = Node3D.new()
+	host.name = "JourneyWorld"
+	host.add_to_group("world_dynamic")
+	add_child(host)
+	var services := GameServices.new()
+	services.name = "GameServices"
+	add_child(services)
 
 
 ## A real hit, built the way a weapon builds one.
@@ -109,19 +130,22 @@ func _step_spawn_player() -> void:
 	if not ResourceLoader.exists("res://actors/player/player.tscn"):
 		_record("spawn the player", false, "player scene missing")
 		return
-	var ground := StaticBody3D.new()
-	var cs := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(400, 2, 400)
-	cs.shape = box
-	cs.position.y = -1.0
-	ground.add_child(cs)
-	ground.collision_layer = 1
-	host.add_child(ground)
-
-	player = (load("res://actors/player/player.tscn") as PackedScene).instantiate()
-	host.add_child(player)
-	player.global_position = Vector3(0, 1.0, 0)
+	if in_the_world:
+		# The world stands its own body up at the place the story opens.
+		player = get_tree().get_first_node_in_group("player") as Node3D
+	else:
+		var ground := StaticBody3D.new()
+		var cs := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(400, 2, 400)
+		cs.shape = box
+		cs.position.y = -1.0
+		ground.add_child(cs)
+		ground.collision_layer = 1
+		host.add_child(ground)
+		player = (load("res://actors/player/player.tscn") as PackedScene).instantiate()
+		host.add_child(player)
+		player.global_position = Vector3(0, 1.0, 0)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	inventory = get_tree().get_first_node_in_group("inventory")
@@ -153,10 +177,54 @@ func _step_leave_the_start() -> void:
 		if player.global_position.distance_to(start) > 50.0:
 			reached += 1
 	player.global_position = start
-	# The world is the thing you leave into; say honestly whether there is one yet.
-	var world_exists := ResourceLoader.exists("res://world/world.tscn")
-	_record("leave the starting area in any direction", reached == 4,
-		"moved freely in %d of 4 directions%s" % [reached, "" if world_exists else "; no streamed world scene yet"])
+	if not in_the_world:
+		_record("leave the starting area in any direction", reached == 4,
+			"moved freely in %d of 4 directions; no world built, so this was flat ground" % reached)
+		return
+	# In the built world, leaving means the country changes around you: new ground under your
+	# feet, cells loading, and eventually another region's name on the compass.
+	var walk := await _walk_out_of_the_region()
+	# Let the ring finish arriving before counting it, so the number is the country that is
+	# actually standing around the body rather than whatever was mid-parse.
+	for i in 30:
+		await get_tree().process_frame
+	var cells: int = world.streamer.loaded_count() if world.streamer else 0
+	_record("leave the starting area in any direction",
+		reached == 4 and float(walk["walked"]) > 100.0 and cells > 0,
+		"walked %.0f m over real ground, %d cells streamed, %s -> %s"
+			% [float(walk["walked"]), cells, Ids.name_of(str(walk["from"])), Ids.name_of(str(walk["to"]))])
+
+
+## Walks the body out of the region it woke in, a step at a time, letting the world stream and
+## the ground hold it up. Returns the distance covered.
+func _walk_out_of_the_region() -> Dictionary:
+	var from := player.global_position
+	var provider := World.terrain()
+	# Character creation resets the world state, so say plainly where the body is standing
+	# before asking whether it has gone anywhere.
+	if provider != null:
+		GameState.enter_region(provider.nearest_region_id_at(from.x, from.z))
+	var began := GameState.current_region_id
+	var step := 120.0
+	var heading := Vector3.FORWARD
+	# Head towards the middle of the map, so a body that wakes at the edge walks inland.
+	if provider != null:
+		heading = (Vector3.ZERO - from)
+		heading.y = 0.0
+		heading = heading.normalized() if heading.length() > 1.0 else Vector3.FORWARD
+	for i in 40:
+		var to := player.global_position + heading * step
+		if provider != null:
+			to.y = provider.get_height(to.x, to.z)
+		player.global_position = to
+		world.force_stream_around(to)
+		await get_tree().process_frame
+		if provider != null:
+			GameState.enter_region(provider.nearest_region_id_at(to.x, to.z))
+		if GameState.current_region_id != began:
+			break
+	return {"walked": from.distance_to(player.global_position), "from": began,
+			"to": GameState.current_region_id}
 
 
 # 4 ------------------------------------------------------------------------------------

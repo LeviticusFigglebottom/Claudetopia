@@ -18,3 +18,4 @@ tools/out/
 Thumbs.db
 # local tool state
 .claude/worktrees/
+captures_prev/
