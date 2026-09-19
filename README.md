@@ -25,7 +25,7 @@ meshes, not to play.
 
 | Command | What it proves |
 |---|---|
-| `./run.sh test` | 922 unit tests. Content validation runs here too, so a dangling id fails the build. |
+| `./run.sh test` | 928 unit tests. Content validation runs here too, so a dangling id fails the build. |
 | `./run.sh journey` | One scripted run through every promise in the design's done list, in the built world: create a character, wake at the Hushline Stair and walk out of the region, fight, level up, die and recover your marks, join a faction, commit a crime and pay for it, buy a house, clear a dungeon, fight a boss, learn a saying and cast it, save and load. |
 | `./run.sh smoke` | Builds all 24 shipping interiors for real and fails if one has no geometry, no collision, no light or no way out. |
 | `./run.sh perf` | Measures draw calls and primitives against the budgets in `DESIGN.md` §11. |

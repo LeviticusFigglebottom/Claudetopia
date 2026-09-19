@@ -9,8 +9,9 @@ extends Node
 ## scripted journey) adds a single instance of it.
 ##
 ## Order matters: ownership before crime (crime asks who owns the thing), the NPC
-## registry before reactions (reactions read NPC state), the economy before property
-## (a deed is bought with marks at a price).
+## registry before reactions (reactions read NPC state), the streamer after both (it
+## stands bodies up and they are reacted to), the economy before property (a deed is
+## bought with marks at a price).
 
 signal installed
 ## Fired once, on the first frame of a new game, after the opening has been set up.
@@ -22,6 +23,8 @@ const ORDER := [
 	["Stealth", "res://systems/crime/stealth.gd"],
 	["NpcRegistry", "res://systems/npc_life/npc_registry.gd"],
 	["Reactions", "res://systems/npc_life/reactions.gd"],
+	# The registry can stand people up and never did outside a test; this is what calls it.
+	["NpcStreamer", "res://systems/npc_life/npc_streamer.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 ]

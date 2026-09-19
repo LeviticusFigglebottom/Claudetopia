@@ -104,7 +104,13 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
    road correctly when one crosses the pad (there is a test for it) — the roads simply do not.
    Second: the pads are far wider than the towns on them and are paved edge to edge, so every
    village sits in the middle of a two-hundred-metre cobbled disc.
-5. NPC and encounter density tuning once there is somebody to walk the country and feel it.
+5. NPC and encounter density tuning. There is now somebody to walk the country and feel it:
+   until this pass **nothing outside a test had ever called `NpcRegistry.spawn()`**, so the
+   schedules ran, dispositions changed and guards noticed crimes in villages that contained no
+   bodies at all. `NpcStreamer` follows whoever the world is streaming around and keeps people
+   standing in a 240 m ring (330 m before they are taken down again), capped at 48. What is
+   untuned is how many and how busy: a village of 23 residents currently stands 23 people in
+   it at once, which is every single villager outdoors at all hours.
 6. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
    score: the downs currently read as bare ground with trees on it.
 
