@@ -280,7 +280,7 @@ def apply_lake(ctx: HeightContext, h: np.ndarray) -> np.ndarray:
     # Tollmere is a stack of fused stone, not a smooth dome: broken ledges step up to a
     # fractured crown, and the relief dies out before it reaches the waterline
     inner = smoothstep(-6.0, -55.0, lk.island_sd)
-    ledges = terrace(6.0 * ctx.f(174, 1.7, 40.0, 200.0), 2.2, 0.45)
+    ledges = terrace(np.clip(7.0 * ctx.f(174, 1.7, 40.0, 200.0), 0.0, None), 2.2, 0.45)
     fracture = 1.2 * np.abs(ctx.f(175, 1.5, 9.0, 48.0))
     island_h = island_h + (ledges + fracture) * inner
     h2 = np.maximum(h2, lerp(h2, island_h, isl))

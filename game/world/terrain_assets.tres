@@ -45,7 +45,7 @@
 
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_u5isv"]
 name = "vale_grass"
-albedo_color = Color(0.46, 0.46, 0.46, 1)
+albedo_color = Color(0.42, 0.42, 0.42, 1)
 albedo_texture = ExtResource("1_wkgk5")
 normal_texture = ExtResource("2_qwob7")
 normal_depth = 0.55
@@ -67,7 +67,7 @@ detiling_shift = 0.08
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_80r77"]
 name = "dirt_path"
 id = 2
-albedo_color = Color(0.53, 0.53, 0.53, 1)
+albedo_color = Color(0.45, 0.45, 0.45, 1)
 albedo_texture = ExtResource("5_qj8vf")
 normal_texture = ExtResource("6_y5x2p")
 normal_depth = 0.55
@@ -101,7 +101,7 @@ detiling_shift = 0.08
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_7jnsd"]
 name = "forest_floor"
 id = 5
-albedo_color = Color(0.46, 0.46, 0.46, 1)
+albedo_color = Color(0.5, 0.5, 0.5, 1)
 albedo_texture = ExtResource("11_tst34")
 normal_texture = ExtResource("12_niyam")
 normal_depth = 0.55
@@ -123,7 +123,7 @@ detiling_shift = 0.08
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_chm0c"]
 name = "granite"
 id = 7
-albedo_color = Color(0.54, 0.54, 0.54, 1)
+albedo_color = Color(0.58, 0.58, 0.58, 1)
 albedo_texture = ExtResource("15_gfvki")
 normal_texture = ExtResource("16_e8tgc")
 normal_depth = 0.55
@@ -145,7 +145,7 @@ detiling_shift = 0.08
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_0wkxd"]
 name = "scree"
 id = 9
-albedo_color = Color(0.44, 0.44, 0.44, 1)
+albedo_color = Color(0.5, 0.5, 0.5, 1)
 albedo_texture = ExtResource("19_1lm0p")
 normal_texture = ExtResource("20_6csbm")
 normal_depth = 0.55
@@ -156,11 +156,11 @@ detiling_shift = 0.08
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_8b4py"]
 name = "snow"
 id = 10
-albedo_color = Color(0.62, 0.62, 0.62, 1)
+albedo_color = Color(0.58, 0.58, 0.58, 1)
 albedo_texture = ExtResource("21_dbugu")
 normal_texture = ExtResource("22_g6ejt")
 normal_depth = 0.55
-roughness = -0.1
+roughness = 0.18
 uv_scale = 0.3125
 detiling_rotation = 0.12
 detiling_shift = 0.08
@@ -247,7 +247,7 @@ detiling_shift = 0.08
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_b03c5"]
 name = "orchard_grass"
 id = 18
-albedo_color = Color(0.47, 0.47, 0.47, 1)
+albedo_color = Color(0.44, 0.44, 0.44, 1)
 albedo_texture = ExtResource("37_2jdgo")
 normal_texture = ExtResource("38_d7l7k")
 normal_depth = 0.55
