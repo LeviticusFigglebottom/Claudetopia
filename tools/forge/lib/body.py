@@ -32,7 +32,7 @@ BACK = -FWD
 class BodyStyle:
     """Shape knobs beyond `Proportions`."""
     muscle: float = 0.35        # 0 soft .. 1 defined
-    belly: float = 0.14
+    belly: float = 0.09
     chest: float = 0.5
     shoulders: float = 0.5
     hands: float = 1.12         # slightly large hands read well
@@ -86,9 +86,10 @@ class HeadStyle:
 def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bool = True) -> Scene:
     """The naked body as an SDF scene (Blender space, feet at z=0).
 
-    Structure: each anatomical part is one primitive (a loft or a chain, combined internally
-    with a plain min so no station rings appear), and the parts are joined to the scene with
-    a small smooth blend that acts as a fillet at the armpit, groin, neck and wrists."""
+    Built from named anatomical masses rather than one smooth tube, because a capsule with
+    limbs is exactly what a character looks like when it has no clavicle, no ribcage taper
+    and no joints: a melted silhouette that reads the same from every angle.  What carries
+    the read at gameplay distance is the shoulder shelf, the waist, and the joints."""
     st = style or BodyStyle()
     p = skel.props
     J = skel.J
@@ -104,36 +105,39 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
     td = b * (0.88 + 0.34 * heavy)        # torso depth factor
     lb = b * (0.92 + 0.20 * heavy)        # limb factor
     hipj = J["UpperLeg.L"][2]
-    waist_z = J["Spine"][2] + 0.015 * s
+    waist_z = J["Spine"][2] + 0.022 * s
     chest_z = J["Chest"][2]
     neck_z = J["Neck"][2]
-    crotch_z = hipj - 0.065 * s
+    crotch_z = hipj - 0.020 * s           # high and narrow: the legs make the crotch
 
-    hipw = (0.150 + 0.022 * fem) * (0.9 + 0.2 * p.hip_width) * tw * s
-    shw = (0.186 + 0.020 * st.shoulders) * (0.86 + 0.28 * p.shoulder_width) * (1 - 0.06 * fem) * tw * s
-    chw = (0.168 + 0.016 * st.chest) * (1 - 0.03 * fem) * tw * s
+    # A ribcage is wider than the waist and the waist narrower than the hips; that contrast
+    # is the whole silhouette.  Half-widths in metres at 1.78 m.
+    hipw = (0.148 + 0.020 * fem) * (0.9 + 0.2 * p.hip_width) * tw * s
+    waistw = (0.116 - 0.014 * fem + 0.040 * heavy) * tw * s
+    chw = (0.166 + 0.016 * st.chest) * (1 - 0.03 * fem) * tw * s
+    shw = (0.182 + 0.020 * st.shoulders) * (0.86 + 0.28 * p.shoulder_width) * (1 - 0.06 * fem) * tw * s
 
-    # -- torso ---------------------------------------------------------------------------
+    # -- torso: pelvis, waist, ribcage -----------------------------------------------------
     stations = [
-        (np.array([0.0, 0.014 * s, crotch_z]), hipw * 0.74, 0.082 * td * s),
-        (np.array([0.0, 0.016 * s, hipj + 0.010 * s]), hipw, 0.108 * td * s),
-        (np.array([0.0, 0.010 * s, hipj + 0.070 * s]), hipw * 0.93, 0.106 * td * s),
-        (np.array([0.0, 0.0, waist_z]), (0.126 - 0.016 * fem + 0.034 * heavy) * tw * s, (0.092 + 0.024 * heavy) * td * s),
-        (np.array([0.0, -0.006 * s, chest_z - 0.025 * s]), chw * 0.95, 0.104 * td * s),
-        (np.array([0.0, -0.010 * s, chest_z + 0.050 * s]), chw, (0.112 + 0.012 * st.chest) * td * s),
-        (np.array([0.0, -0.004 * s, chest_z + 0.115 * s]), shw * 0.92, 0.104 * td * s),
-        (np.array([0.0, 0.006 * s, neck_z - 0.006 * s]), shw * 0.74, 0.088 * td * s),
-        (np.array([0.0, 0.012 * s, neck_z + 0.026 * s]), 0.080 * b * s, 0.072 * b * s),
+        (np.array([0.0, 0.014 * s, crotch_z]), hipw * 0.62, 0.076 * td * s),
+        (np.array([0.0, 0.016 * s, hipj + 0.028 * s]), hipw * 0.96, 0.094 * td * s),
+        (np.array([0.0, 0.010 * s, hipj + 0.080 * s]), hipw * 0.88, 0.090 * td * s),
+        (np.array([0.0, 0.0, waist_z]), waistw, (0.076 + 0.026 * heavy) * td * s),
+        (np.array([0.0, -0.008 * s, chest_z - 0.030 * s]), chw * 0.92, 0.092 * td * s),
+        (np.array([0.0, -0.012 * s, chest_z + 0.048 * s]), chw, (0.099 + 0.012 * st.chest) * td * s),
+        (np.array([0.0, -0.004 * s, chest_z + 0.112 * s]), chw * 0.94, 0.094 * td * s),
+        (np.array([0.0, 0.006 * s, neck_z - 0.010 * s]), 0.104 * tw * s, 0.086 * td * s),
+        (np.array([0.0, 0.012 * s, neck_z + 0.020 * s]), 0.074 * b * s, 0.068 * b * s),
     ]
     torso_parts = [sdf.loft(stations, LEFT)]
     for sx in (1, -1):
-        torso_parts.append(sdf.ellipsoid([sx * 0.070 * s, 0.072 * td * s, hipj + 0.010 * s],
-                                         [0.078 * tw * s, (0.056 + 0.022 * heavy) * td * s, 0.082 * s], k=0.05 * s))
+        torso_parts.append(sdf.ellipsoid([sx * 0.064 * s, 0.062 * td * s, hipj + 0.018 * s],
+                                         [0.066 * tw * s, (0.042 + 0.022 * heavy) * td * s, 0.068 * s], k=0.05 * s))
     belly_amt = st.belly * (0.4 + 1.1 * heavy) + 0.22 * old * heavy
     if belly_amt > 0.06:
-        torso_parts.append(sdf.ellipsoid([0.0, -(0.044 + 0.036 * belly_amt) * td * s, waist_z - 0.045 * s],
-                                         [(0.094 + 0.028 * belly_amt) * s, (0.040 + 0.050 * belly_amt) * s,
-                                          (0.090 + 0.020 * belly_amt) * s], k=0.06 * s))
+        torso_parts.append(sdf.ellipsoid([0.0, -(0.040 + 0.036 * belly_amt) * td * s, waist_z - 0.052 * s],
+                                         [(0.086 + 0.028 * belly_amt) * s, (0.034 + 0.050 * belly_amt) * s,
+                                          (0.082 + 0.020 * belly_amt) * s], k=0.06 * s))
     if fem > 0.05:
         for sx in (1, -1):
             torso_parts.append(sdf.ellipsoid([sx * 0.062 * s, -(0.092 + 0.020 * fem) * td * s, chest_z + 0.038 * s],
@@ -141,75 +145,102 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
                                               (0.044 + 0.020 * fem) * s], k=0.04 * s))
     if mus > 0.25:
         for sx in (1, -1):
-            torso_parts.append(sdf.ellipsoid([sx * 0.058 * s, -0.094 * td * s, chest_z + 0.050 * s],
-                                             [0.066 * s, 0.026 * s, 0.040 * s], k=0.05 * s))
-        # latissimus / back mass
-        torso_parts.append(sdf.ellipsoid([0.0, 0.070 * td * s, chest_z + 0.030 * s],
-                                         [0.150 * s, 0.040 * s, 0.075 * s], k=0.06 * s))
+            torso_parts.append(sdf.ellipsoid([sx * 0.058 * s, -0.094 * td * s, chest_z + 0.044 * s],
+                                             [0.066 * s, 0.026 * s, 0.038 * s], k=0.05 * s))
+        torso_parts.append(sdf.ellipsoid([0.0, 0.066 * td * s, chest_z + 0.026 * s],
+                                         [0.142 * s, 0.038 * s, 0.072 * s], k=0.06 * s))
     sc.union(sdf.group(torso_parts), k=0.02 * s)
 
-    # -- neck ----------------------------------------------------------------------------
-    nr = (0.054 + 0.010 * mus - 0.007 * fem - 0.004 * old) * b * s
-    sc.union(sdf.round_cone(J["Neck"] + np.array([0.0, 0.008 * s, -0.030 * s]),
-                            J["Head"] + np.array([0.0, 0.004 * s, 0.020 * s]), nr * 1.12, nr * 0.96), k=0.035 * s)
+    # -- neck: a column with the trapezius flaring into the shoulders ----------------------
+    nr = (0.050 + 0.009 * mus - 0.007 * fem - 0.004 * old) * b * s
+    sc.union(sdf.round_cone(J["Neck"] + np.array([0.0, 0.010 * s, -0.036 * s]),
+                            J["Head"] + np.array([0.0, 0.004 * s, 0.010 * s]), nr * 1.16, nr * 0.94), k=0.030 * s)
 
-    # -- shoulders and arms --------------------------------------------------------------
+    # -- the shoulder shelf: clavicle in front, trapezius behind, deltoid cap on top -------
+    for side, sx in (("L", 1), ("R", -1)):
+        sh = J[f"UpperArm.{side}"]
+        # clavicle: sternum notch out to the point of the shoulder, sitting proud
+        sc.union(sdf.tube_path([[sx * 0.014 * s, -0.070 * td * s, neck_z - 0.018 * s],
+                                [sx * 0.070 * s, -0.062 * td * s, neck_z - 0.010 * s],
+                                [sx * 0.140 * s, -0.036 * td * s, neck_z - 0.014 * s],
+                                [sh[0] * 0.96, -0.010 * s, sh[2] + 0.014 * s]],
+                               [0.014 * b * s, 0.013 * b * s, 0.013 * b * s, 0.017 * b * s]), k=0.030 * s)
+        # trapezius: a flatter slope than before, so the shoulder line is a shelf not a ramp
+        sc.union(sdf.tube_path([[sx * 0.026 * s, 0.020 * s, neck_z + 0.014 * s],
+                                [sx * 0.090 * s, 0.026 * s, neck_z - 0.004 * s],
+                                [sh[0] * 0.92, 0.016 * s, sh[2] + 0.016 * s]],
+                               [0.042 * b * s, 0.040 * b * s, 0.038 * b * s]), k=0.045 * s)
+        # deltoid: a cap that sits over the joint and carries the width
+        sc.union(sdf.ellipsoid(sh + np.array([sx * 0.014 * s, 0.0, 0.010 * s]),
+                               [(0.062 + 0.016 * mus) * lb * s, (0.060 + 0.012 * mus) * lb * s,
+                                (0.066 + 0.014 * mus) * lb * s], rot=rig.rot_axis(FWD, math.radians(-18.0 * sx))),
+                 k=0.040 * s)
+
+    # -- arms -------------------------------------------------------------------------------
     for side, sx in (("L", 1), ("R", -1)):
         sh = J[f"UpperArm.{side}"]
         el = J[f"LowerArm.{side}"]
         wr = J[f"Hand.{side}"]
-        tip = J[f"HandTip.{side}"]
         d = sdf._unit(el - sh)
         fwd, up = _arm_frame(d)
-        ua = (0.050 + 0.014 * mus + 0.012 * heavy - 0.004 * fem) * lb * s
-        el_r = (0.040 + 0.006 * mus + 0.006 * heavy) * lb * s
-        fa = (0.045 + 0.011 * mus + 0.009 * heavy - 0.003 * fem) * lb * s
-        wrist = (0.030 + 0.004 * mus + 0.004 * heavy - 0.002 * fem) * lb * s
+        ua = (0.048 + 0.014 * mus + 0.012 * heavy - 0.004 * fem) * lb * s
+        el_r = (0.036 + 0.005 * mus + 0.005 * heavy) * lb * s
+        fa = (0.044 + 0.011 * mus + 0.009 * heavy - 0.003 * fem) * lb * s
+        wrist = (0.026 + 0.004 * mus + 0.004 * heavy - 0.002 * fem) * lb * s
+        ua_len = float(np.linalg.norm(el - sh))
+        fa_len = float(np.linalg.norm(wr - el))
         parts = [
-            # trapezius slope into the shoulder
-            sdf.round_cone(np.array([sx * 0.030 * s, 0.014 * s, neck_z + 0.008 * s]),
-                           sh + np.array([0.0, 0.0, 0.006 * s]), 0.046 * b * s, 0.054 * b * s),
-            # deltoid cap
-            sdf.ellipsoid(sh + np.array([sx * 0.008 * s, 0.0, 0.006 * s]),
-                          [(0.058 + 0.014 * mus) * lb * s, (0.058 + 0.010 * mus) * lb * s,
-                           (0.060 + 0.012 * mus) * lb * s], k=0.035 * s),
-            sdf.chain([sh + d * 0.015 * s, sh + d * 0.42 * np.linalg.norm(el - sh), el, el + d * 0.10 * np.linalg.norm(wr - el), wr],
-                      [ua * 1.02, ua, el_r, fa, wrist], k=0.0),
+            sdf.chain([sh + d * 0.02 * s, sh + d * (0.40 * ua_len), el - d * 0.02 * s,
+                       el + d * (0.10 * fa_len), el + d * (0.32 * fa_len), wr],
+                      [ua * 1.02, ua, el_r, fa, fa * 0.94, wrist], k=0.0),
+            # elbow: a real mass, so the arm has a joint instead of a kink
+            sdf.ellipsoid(el + up * 0.008 * s, [el_r * 1.30, el_r * 1.26, el_r * 1.30], k=0.026 * s),
+            # forearm belly, thickest just below the elbow
+            sdf.ellipsoid(el + d * (0.26 * fa_len) + fwd * 0.006 * s,
+                          [fa * 1.10, fa * 1.08, fa * 1.14], k=0.034 * s),
+            # wrist: narrow, which is what makes the hand read as a hand
+            sdf.ellipsoid(wr - d * 0.012 * s, [wrist * 1.12, wrist * 0.92, wrist * 1.10], k=0.020 * s),
         ]
         if mus > 0.2:
-            parts.append(sdf.ellipsoid(sh + d * (0.36 * np.linalg.norm(el - sh)) + fwd * 0.016 * s,
-                                       [0.038 * s, 0.036 * s, 0.036 * s], k=0.04 * s))
-            parts.append(sdf.ellipsoid(el + d * (0.22 * np.linalg.norm(wr - el)) + fwd * 0.012 * s,
-                                       [0.034 * s, 0.032 * s, 0.032 * s], k=0.04 * s))
-        parts.extend(_hand_parts(skel, st, wr, d, fwd, up))
-        sc.union(sdf.group(parts, internal_k=0.018 * s), k=0.028 * s)
+            parts.append(sdf.ellipsoid(sh + d * (0.38 * ua_len) + fwd * 0.014 * s,
+                                       [0.036 * s, 0.034 * s, 0.034 * s], k=0.038 * s))
+            parts.append(sdf.ellipsoid(sh + d * (0.42 * ua_len) - fwd * 0.014 * s,
+                                       [0.032 * s, 0.030 * s, 0.038 * s], k=0.038 * s))
+        parts.extend(_hand_parts(skel, st, wr, d, fwd, up, sx))
+        sc.union(sdf.group(parts, internal_k=0.016 * s), k=0.026 * s)
 
-    # -- legs ----------------------------------------------------------------------------
+    # -- legs ---------------------------------------------------------------------------------
     for side, sx in (("L", 1), ("R", -1)):
         hj = J[f"UpperLeg.{side}"]
         kn = J[f"LowerLeg.{side}"]
         an = J[f"Foot.{side}"]
-        th = (0.086 + 0.012 * mus + 0.024 * heavy + 0.010 * fem) * lb * s
-        kr = (0.054 + 0.005 * mus + 0.009 * heavy) * lb * s
-        ar = (0.036 + 0.003 * mus + 0.006 * heavy) * lb * s
-        leg_dir = sdf._unit(kn - hj)
+        th = (0.082 + 0.012 * mus + 0.022 * heavy + 0.010 * fem) * lb * s
+        kr = (0.048 + 0.005 * mus + 0.008 * heavy) * lb * s
+        ar = (0.030 + 0.003 * mus + 0.005 * heavy) * lb * s
+        leg_len = float(kn[2] - an[2])
         parts = [
-            sdf.chain([hj + np.array([0.0, 0.004 * s, 0.050 * s]), hj - np.array([0.0, 0.0, 0.10 * s]),
-                       kn + np.array([0.0, 0.004 * s, 0.075 * s]), kn, kn - np.array([0.0, -0.004 * s, 0.10 * s]),
-                       an + np.array([0.0, 0.0, 0.055 * s]), an + np.array([0.0, 0.0, 0.012 * s])],
-                      [th * 1.05, th * 0.99, kr * 1.16, kr, kr * 0.94, ar * 1.10, ar]),
-            # calf
-            sdf.ellipsoid([kn[0], 0.030 * s + 0.008 * mus * s, kn[2] - (kn[2] - an[2]) * 0.30],
-                          [(0.042 + 0.008 * mus) * lb * s, (0.036 + 0.012 * mus) * lb * s, (0.082 + 0.012 * mus) * s],
-                          k=0.05 * s),
-            # knee cap
-            sdf.ellipsoid(kn + np.array([0.0, -0.016 * s, 0.004 * s]), [0.042 * lb * s, 0.030 * lb * s, 0.044 * lb * s], k=0.04 * s),
+            sdf.chain([hj + np.array([0.0, 0.004 * s, 0.056 * s]), hj - np.array([0.0, 0.0, 0.09 * s]),
+                       kn + np.array([0.0, 0.004 * s, 0.070 * s]), kn, kn - np.array([0.0, -0.004 * s, 0.09 * s]),
+                       an + np.array([0.0, 0.0, 0.060 * s]), an + np.array([0.0, 0.0, 0.016 * s])],
+                      [th * 1.04, th * 0.98, kr * 1.20, kr, kr * 0.92, ar * 1.14, ar]),
+            # knee: cap in front, hollow behind
+            sdf.ellipsoid(kn + np.array([0.0, -0.016 * s, 0.006 * s]),
+                          [kr * 1.06, kr * 0.86, kr * 1.16], k=0.030 * s),
+            # calf, high and to the inside as it really sits
+            sdf.ellipsoid([kn[0] - sx * 0.004 * s, 0.030 * s + 0.008 * mus * s, an[2] + leg_len * 0.66],
+                          [(0.040 + 0.008 * mus) * lb * s, (0.034 + 0.012 * mus) * lb * s,
+                           (0.078 + 0.012 * mus) * s], k=0.048 * s),
+            # ankle: a narrow waist above the foot, with the bone showing
+            sdf.ellipsoid(an + np.array([0.0, 0.004 * s, 0.026 * s]),
+                          [ar * 1.14, ar * 1.10, ar * 1.20], k=0.020 * s),
         ]
         if mus > 0.2:
-            parts.append(sdf.ellipsoid([hj[0] + sx * 0.008 * s, -0.030 * s, hj[2] - 0.13 * s],
-                                       [0.050 * s, 0.038 * s, 0.085 * s], k=0.05 * s))
+            parts.append(sdf.ellipsoid([hj[0] + sx * 0.010 * s, -0.028 * s, hj[2] - 0.12 * s],
+                                       [0.046 * s, 0.034 * s, 0.078 * s], k=0.048 * s))
+            parts.append(sdf.ellipsoid([hj[0] - sx * 0.004 * s, 0.026 * s, hj[2] - 0.16 * s],
+                                       [0.040 * s, 0.032 * s, 0.070 * s], k=0.048 * s))
         parts.extend(_foot_parts(skel, st, side))
-        sc.union(sdf.group(parts, internal_k=0.020 * s), k=0.030 * s)
+        sc.union(sdf.group(parts, internal_k=0.018 * s), k=0.028 * s)
 
     if ground_cut:
         sc.intersect(sdf.plane([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]), k=0.008 * s)
@@ -225,36 +256,56 @@ def _arm_frame(d: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
 
 def _hand_parts(skel: Skeleton, st: BodyStyle, wr: np.ndarray, d: np.ndarray,
-                fwd: np.ndarray, up: np.ndarray) -> List[sdf.Prim]:
-    """Mitten hand: a flat palm/finger slab in the (d, fwd) plane plus a thumb.
-    Slightly large, which reads well at gameplay distance."""
+                fwd: np.ndarray, up: np.ndarray, sx: float = 1.0) -> List[sdf.Prim]:
+    """A hand, not a paddle: a palm, four fingers as one softly grooved mass with a knuckle
+    ridge, and a thumb that is its own mass set against the palm.  The fingers rest in a
+    relaxed curl, which is what a hand does when an arm hangs."""
     p = skel.props
     s = p.height / rig.DEFAULT_HEIGHT
     hs = st.hands * p.hand_size * s
-    L = 0.175 * hs                 # wrist to fingertip
-    w = 0.053 * hs                 # half width across the fingers
-    t = 0.030 * hs                 # half thickness
-    slab = sdf.loft([
-        (wr - d * 0.010 * L, 0.037 * hs, 0.027 * hs),
-        (wr + d * 0.22 * L, w * 0.95, t * 1.05),
-        (wr + d * 0.55 * L, w, t),
-        (wr + d * 0.84 * L, w * 0.97, t * 0.94),
-        (wr + d * 1.00 * L, w * 0.86, t * 0.84),
+    L = 0.170 * hs                 # wrist to fingertip, straight
+    pw = 0.046 * hs                # half width across the palm
+    pt = 0.024 * hs                # half thickness
+    # `fwd` points to the character's front; the palm faces `-up` (inwards, towards the leg)
+    parts: List[sdf.Prim] = []
+    # palm: a wedge, thicker at the thumb side, thinning towards the little finger
+    palm = sdf.loft([
+        (wr - d * 0.020 * L, 0.030 * hs, 0.022 * hs),
+        (wr + d * 0.16 * L, pw * 0.92, pt * 1.04),
+        (wr + d * 0.42 * L, pw, pt),
     ], fwd)
-    parts = [slab]
-    # finger separation groove (between the middle and ring finger)
-    parts.append(sdf.capsule(wr + d * 0.62 * L - fwd * 0.005 * hs, wr + d * 1.05 * L - fwd * 0.005 * hs,
-                             0.0055 * hs, k=0.008 * s, op="subtract"))
-    # knuckle swell
-    parts.append(sdf.ellipsoid(wr + d * 0.52 * L, [0.050 * hs, 0.028 * hs, 0.028 * hs], k=0.02 * s))
-    # thumb
-    tb0 = wr + d * 0.20 * L + fwd * 0.028 * hs
-    tb1 = tb0 + sdf._unit(fwd * 0.72 + d * 0.66 - up * 0.10) * 0.098 * hs
-    parts.append(sdf.round_cone(tb0, tb1, 0.023 * hs, 0.018 * hs, k=0.022 * s))
+    parts.append(palm)
+    # the knuckle ridge across the top of the palm
+    parts.append(sdf.tube_path([wr + d * 0.46 * L + fwd * pw * 0.88,
+                                wr + d * 0.50 * L + fwd * pw * 0.10,
+                                wr + d * 0.47 * L - fwd * pw * 0.80],
+                               [0.013 * hs, 0.015 * hs, 0.012 * hs], k=0.012 * s))
+    # the finger mass, curling slightly: a relaxed hand is never flat
+    curl = -up * 0.030 * hs
+    fing = sdf.loft([
+        (wr + d * 0.50 * L, pw * 0.98, pt * 0.92),
+        (wr + d * 0.72 * L + curl * 0.35, pw * 0.94, pt * 0.86),
+        (wr + d * 0.90 * L + curl * 0.80, pw * 0.84, pt * 0.76),
+        (wr + d * 1.00 * L + curl * 1.25, pw * 0.62, pt * 0.62),
+    ], fwd)
+    parts.append(sdf.Prim(fing.fn, fing.lo, fing.hi, "union", 0.010 * s))
+    # three grooves between the fingers, deepest at the tips
+    for i, f in enumerate((0.48, 0.02, -0.46)):
+        a = wr + d * 0.55 * L + fwd * (pw * f)
+        c = wr + d * 1.01 * L + fwd * (pw * f * 0.72) + curl * 1.25
+        parts.append(sdf.tube_path([a, (a + c) * 0.5 + curl * 0.35, c],
+                                   [0.0035 * hs, 0.0050 * hs, 0.0060 * hs], k=0.008 * s, op="subtract"))
+    # thumb: its own mass, set low and across the palm, with a visible web
+    tb0 = wr + d * 0.20 * L + fwd * pw * 0.80
+    tb1 = tb0 + sdf._unit(fwd * 0.52 + d * 0.78 - up * 0.22) * 0.070 * hs
+    tb2 = tb1 + sdf._unit(fwd * 0.16 + d * 0.86 - up * 0.46) * 0.056 * hs
+    parts.append(sdf.tube_path([tb0, tb1, tb2], [0.021 * hs, 0.018 * hs, 0.014 * hs], k=0.016 * s))
+    parts.append(sdf.ellipsoid(tb0 - fwd * 0.004 * hs, [0.020 * hs, 0.020 * hs, 0.018 * hs], k=0.018 * s))
     return parts
 
 
 def _foot_parts(skel: Skeleton, st: BodyStyle, side: str) -> List[sdf.Prim]:
+    """A foot with an ankle, an arch and a toe break, rather than a slipper."""
     p = skel.props
     s = p.height / rig.DEFAULT_HEIGHT
     fs = st.feet * p.foot_size * s
@@ -263,24 +314,49 @@ def _foot_parts(skel: Skeleton, st: BodyStyle, side: str) -> List[sdf.Prim]:
     ball = J[f"Toe.{side}"]
     tip = J[f"ToeTip.{side}"]
     x = float(an[0])
-    heel = np.array([x, an[1] + 0.055 * fs, 0.036 * fs])
+    sx = 1.0 if side == "L" else -1.0
+    heel = np.array([x, an[1] + 0.056 * fs, 0.034 * fs])
+    # the sole: narrow at the heel, waisted at the arch, widest at the ball
     sole = sdf.loft([
-        (heel + np.array([0.0, 0.012 * fs, 0.0]), 0.036 * fs, 0.034 * fs),
-        (np.array([x, an[1], 0.036 * fs]), 0.042 * fs, 0.034 * fs),
-        (np.array([x, (an[1] + ball[1]) * 0.5, 0.033 * fs]), 0.047 * fs, 0.031 * fs),
-        (np.array([ball[0], ball[1], 0.029 * fs]), 0.050 * fs, 0.028 * fs),
-        (np.array([tip[0], tip[1] + 0.026 * fs, 0.026 * fs]), 0.043 * fs, 0.024 * fs),
+        (heel + np.array([0.0, 0.010 * fs, 0.0]), 0.031 * fs, 0.030 * fs),
+        (np.array([x, an[1] + 0.012 * fs, 0.030 * fs]), 0.036 * fs, 0.030 * fs),
+        (np.array([x - sx * 0.004 * fs, (an[1] + ball[1]) * 0.5, 0.026 * fs]), 0.036 * fs, 0.026 * fs),
+        (np.array([ball[0], ball[1] + 0.010 * fs, 0.024 * fs]), 0.048 * fs, 0.024 * fs),
+        (np.array([tip[0], tip[1] + 0.030 * fs, 0.023 * fs]), 0.044 * fs, 0.022 * fs),
     ], LEFT)
-    return [
-        sdf.round_cone(an, heel, 0.038 * fs, 0.034 * fs, k=0.025 * s),
+    parts = [
+        # heel and Achilles
+        sdf.round_cone(an + np.array([0.0, 0.006 * fs, 0.010 * fs]), heel, 0.031 * fs, 0.030 * fs, k=0.022 * s),
         sole,
-        # instep / arch
-        sdf.ellipsoid([x, an[1] - 0.028 * fs, 0.048 * fs], [0.038 * fs, 0.045 * fs, 0.028 * fs], k=0.03 * s),
+        # instep, rising from the toes to the ankle
+        sdf.loft([
+            (np.array([x, ball[1] + 0.020 * fs, 0.030 * fs]), 0.040 * fs, 0.014 * fs),
+            (np.array([x, an[1] - 0.040 * fs, 0.042 * fs]), 0.036 * fs, 0.026 * fs),
+            (np.array([x, an[1] - 0.006 * fs, 0.056 * fs]), 0.032 * fs, 0.030 * fs),
+        ], LEFT, k=0.026 * s),
+        # ankle bones: the inner one sits higher than the outer, which reads even small
+        sdf.ellipsoid([x + sx * 0.026 * fs, an[1], 0.080 * fs], [0.013 * fs, 0.016 * fs, 0.015 * fs], k=0.018 * s),
+        sdf.ellipsoid([x - sx * 0.026 * fs, an[1], 0.070 * fs], [0.012 * fs, 0.015 * fs, 0.014 * fs], k=0.018 * s),
+        # the arch: lift the inner edge of the sole off the ground
+        sdf.ellipsoid([x + sx * 0.040 * fs, (an[1] + ball[1]) * 0.5, 0.004 * fs],
+                      [0.024 * fs, 0.050 * fs, 0.020 * fs], k=0.020 * s, op="subtract"),
+        # the toe break, and a big toe that is bigger than the rest
+        sdf.tube_path([[x - sx * 0.042 * fs, ball[1] + 0.004 * fs, 0.022 * fs],
+                       [x + sx * 0.040 * fs, ball[1] - 0.002 * fs, 0.024 * fs]],
+                      0.0045 * fs, k=0.010 * s, op="subtract"),
+        sdf.ellipsoid([x + sx * 0.026 * fs, tip[1] + 0.020 * fs, 0.024 * fs],
+                      [0.017 * fs, 0.022 * fs, 0.018 * fs], k=0.016 * s),
     ]
+    for i in range(3):
+        tx = x - sx * (0.004 + 0.016 * i) * fs
+        parts.append(sdf.tube_path([[tx, ball[1] + 0.006 * fs, 0.021 * fs],
+                                    [tx, tip[1] + 0.028 * fs, 0.020 * fs]],
+                                   0.0030 * fs, k=0.007 * s, op="subtract"))
+    return parts
 
 
-def body_mesh(skel: Skeleton, style: Optional[BodyStyle] = None, spacing: float = 0.0080,
-              smooth: int = 5) -> Tuple[np.ndarray, np.ndarray]:
+def body_mesh(skel: Skeleton, style: Optional[BodyStyle] = None, spacing: float = 0.0070,
+              smooth: int = 4) -> Tuple[np.ndarray, np.ndarray]:
     sc = body_scene(skel, style)
     return sdf.mesh_from_scene(sc, spacing * (skel.props.height / rig.DEFAULT_HEIGHT), smooth_iters=smooth, project=1)
 
@@ -315,7 +391,7 @@ def head_landmarks(skel: Skeleton, hs: Optional[HeadStyle] = None) -> dict:
         # Stylised eyes: a shade larger than life, which reads as expressive rather than
         # beady at gameplay distance and survives the mesh resolution around the lids.
         "eye_x": 0.0325 * hs.eye_spacing * s, "eye_r": 0.0165 * hs.eye_size * s,
-        "eye_c_y": face_y + 0.0135 * s,
+        "eye_c_y": face_y + 0.0190 * s,
         "brow_z": chin_z + V * 0.600,
         "nose_root_z": chin_z + V * 0.545,
         "nose_base_z": chin_z + V * 0.360,
@@ -376,11 +452,11 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     for sx in (1, -1):
         mass.append(sdf.ellipsoid([sx * w * 0.615, face_y + 0.032 * s, L["cheek_z"]],
                                   [0.026 * hs.cheeks * s, 0.030 * s, 0.023 * s], k=0.026 * s))
-    cheek_amt = 0.30 + 0.55 * heavy - 0.30 * old
+    cheek_amt = 0.16 + 0.42 * heavy - 0.24 * old
     if cheek_amt > 0.08:
         for sx in (1, -1):
-            mass.append(sdf.ellipsoid([sx * w * 0.530, face_y + 0.030 * s, mouth_z + 0.014 * s],
-                                      [0.022 * s, 0.024 * s, 0.024 * s * (0.8 + 0.5 * cheek_amt)], k=0.028 * s))
+            mass.append(sdf.ellipsoid([sx * w * 0.500, face_y + 0.034 * s, mouth_z + 0.020 * s],
+                                      [0.018 * s, 0.020 * s, 0.021 * s * (0.8 + 0.5 * cheek_amt)], k=0.026 * s))
     # Jaw: a horseshoe running from one gonial angle round the chin to the other.  A sweep
     # cannot make a jaw (its end cap would be a hemisphere where the chin should be a wedge),
     # so the lower face is this tube blended into the skull mass.
@@ -399,14 +475,14 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     jaw_r = [jaw_r[i] for i in order][::-1]
     mass.append(sdf.tube_path(jaw_pts, jaw_r, k=0.028 * s))
     for sx in (1, -1):
-        mass.append(sdf.ellipsoid([sx * w * 0.700 * jw, cy + 0.010 * s, z0 + V * 0.300],
-                                  [0.020 * s, 0.030 * s, 0.032 * s], k=0.030 * s))
+        mass.append(sdf.ellipsoid([sx * w * 0.690 * jw, cy + 0.012 * s, z0 + V * 0.310],
+                                  [0.015 * s, 0.026 * s, 0.028 * s], k=0.030 * s))
     # chin pad
     mass.append(sdf.ellipsoid([0.0, chin_front + 0.004 * s, z0 + V * 0.082],
                               [0.026 * jw * s, 0.014 * hs.chin * s, 0.019 * hs.chin * s], k=0.022 * s))
     # soft tissue under the chin / throat, so the jaw is not a floating wire
-    mass.append(sdf.ellipsoid([0.0, cy - 0.006 * s, z0 + V * 0.130],
-                              [w * 0.48 * jw, d * 0.44, V * 0.100], k=0.030 * s))
+    mass.append(sdf.ellipsoid([0.0, cy - 0.004 * s, z0 + V * 0.120],
+                              [w * 0.40 * jw, d * 0.38, V * 0.088], k=0.030 * s))
     # brow ridge
     brow_r = (0.0092 + 0.0048 * hs.brow - 0.0032 * fem) * s
     for sx in (1, -1):
@@ -417,7 +493,7 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     er = L["eye_r"]
     for sx in (1, -1):
         ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
-        mass.append(sdf.ellipsoid(ec, [er * 1.20, er * 1.22, er * 1.10], k=0.010 * s))
+        mass.append(sdf.ellipsoid(ec, [er * 1.26, er * 1.20, er * 1.06], k=0.010 * s))
     # nose
     root = np.array([0.0, face_y + 0.016 * s, L["nose_root_z"]])
     tip = L["nose_tip"]
@@ -463,8 +539,8 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         tilt = rig.rot_axis(FWD, math.radians(8.0 * sx))
         # the opening: a shallow almond window cut forward of the eyeball centre, so the lid
         # rim stays thick enough to survive decimation.  Lashes and the lid line are painted.
-        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.30, 0.0]),
-                                  [er * 1.16, er * 1.05, er * 0.66], rot=tilt), k=0.0030 * s)
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.34, 0.0]),
+                                  [er * 1.34, er * 1.10, er * 0.60], rot=tilt), k=0.0030 * s)
         # upper lid crease
         sc.subtract(sdf.ellipsoid(ec + np.array([0.0, 0.004 * s, er * 1.10]),
                                   [er * 1.16, er * 0.75, er * 0.32], rot=tilt), k=0.005 * s)
@@ -486,8 +562,8 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     for sx in (1, -1):
         e = L["ear_c"] * np.array([sx, 1, 1])
         rot = rig.rot_axis(UP, math.radians(-15.0 * sx)) @ rig.rot_axis(FWD, math.radians(9.0 * sx))
-        sc.subtract(sdf.ellipsoid(e + rot @ np.array([sx * 0.0055 * s, -0.002 * s, -0.003 * s]),
-                                  [0.0060 * s, 0.0082 * hs.ears * s, L["ear_r"][2] * 0.52], rot=rot), k=0.0045 * s)
+        sc.subtract(sdf.ellipsoid(e + rot @ np.array([sx * 0.0050 * s, -0.0035 * s, -0.002 * s]),
+                                  [0.0042 * s, 0.0062 * hs.ears * s, L["ear_r"][2] * 0.44], rot=rot), k=0.0055 * s)
     # naso-labial crease with age
     if old > 0.45:
         amt = (old - 0.45) / 0.55

@@ -136,10 +136,74 @@ def gauss(p: np.ndarray, c, s) -> np.ndarray:
     return np.exp(-0.5 * np.sum(d * d, axis=1))
 
 
+def stroke_xz(p: np.ndarray, pts: Sequence[Tuple[float, float]], width: float,
+              soft: float = 0.45, y_centre: float = 0.0, y_depth: float = 0.03,
+              taper: bool = True) -> np.ndarray:
+    """A brush stroke through control points in the (x, z) plane of the face.
+
+    Face features are *lines* — a brow, a lash, the seam of the lips — and a line painted as
+    a chain of gaussian blobs (what this used to do) spreads into a smudge that reads as a
+    bruise at any distance.  This measures the real distance to the polyline instead, so a
+    stroke has a width and an end, and `taper` thins it towards the ends like a brush lifting.
+    """
+    P = np.asarray(pts, float)
+    x, z = p[:, 0], p[:, 2]
+    best = np.full(len(p), 1e9)
+    frac = np.zeros(len(p))
+    total = float(np.sum(np.linalg.norm(np.diff(P, axis=0), axis=1))) or 1.0
+    walked = 0.0
+    for i in range(len(P) - 1):
+        a, b = P[i], P[i + 1]
+        ab = b - a
+        l2 = max(float(ab @ ab), 1e-12)
+        t = np.clip(((x - a[0]) * ab[0] + (z - a[1]) * ab[1]) / l2, 0.0, 1.0)
+        d = np.hypot(x - (a[0] + t * ab[0]), z - (a[1] + t * ab[1]))
+        seg = float(math.sqrt(l2))
+        closer = d < best
+        frac = np.where(closer, (walked + t * seg) / total, frac)
+        best = np.minimum(best, d)
+        walked += seg
+    w = width
+    if taper:
+        w = width * (0.35 + 0.65 * np.sin(np.clip(frac, 0, 1) * math.pi) ** 0.55)
+    m = 1.0 - smoothstep(1.0 - soft, 1.0, best / np.maximum(w, 1e-9))
+    # only on the front of the face; the same (x, z) exists again on the back of the skull
+    near = 1.0 - smoothstep(y_depth * 0.6, y_depth, np.abs(p[:, 1] - y_centre))
+    return m * near
+
+
 def ellipse_mask(p: np.ndarray, c, r, soft: float = 0.25) -> np.ndarray:
     """1 inside an axis-aligned ellipsoid, fading over `soft` of the radius."""
     d = np.linalg.norm((p - np.asarray(c, float)) / np.asarray(r, float), axis=1)
     return 1.0 - smoothstep(1.0 - soft, 1.0, d)
+
+
+def sdf_occlusion(scene, p: np.ndarray, nrm: np.ndarray, radius: float = 0.05,
+                  samples: int = 5, strength: float = 1.0) -> np.ndarray:
+    """Ambient occlusion straight from the shape's own distance field.
+
+    Step out along the surface normal; wherever the field says we are still close to
+    material, the point is in a crease.  This is what turns a flat-coloured garment into a
+    painted one — an armpit, the inside of an elbow, the fold under a hem and the gap
+    between two fingers all darken because the geometry says they should, and it costs a
+    handful of field lookups instead of a ray tracer.
+
+    Returns 0 (fully occluded) .. 1 (open).
+    """
+    occ = np.zeros(len(p))
+    total = 0.0
+    for i in range(1, samples + 1):
+        h = radius * i / samples
+        w = 1.0 / (2.0 ** i)
+        d = scene.eval(p + nrm * h)
+        occ += w * np.clip((h - d) / max(h, 1e-6), 0.0, 1.0)
+        total += w
+    return np.clip(1.0 - strength * (occ / max(total, 1e-9)), 0.0, 1.0)
+
+
+def exposure(occ: np.ndarray, power: float = 2.0) -> np.ndarray:
+    """Where a surface sticks out — the places that scuff, fade and catch light."""
+    return np.clip(occ, 0, 1) ** power
 
 
 # --------------------------------------------------------------------------------------
@@ -313,7 +377,8 @@ def morality_tint(rgb: np.ndarray, hearth: float = 0.0, hollow: float = 0.0) -> 
 def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: bool = True,
                brow_colour: str = "dark_brown", age: float = 0.3, hearth: float = 0.0,
                hollow: float = 0.0, veins: float = 0.0, freckles: float = 0.0,
-               lip_strength: float = 1.0, stubble: float = 0.0, beard_colour: Optional[str] = None) -> PaintFn:
+               lip_strength: float = 1.0, stubble: float = 0.0, beard_colour: Optional[str] = None,
+               scene=None, occ_radius: float = 0.05, warm_points: Optional[Sequence] = None) -> PaintFn:
     """Paint function for skin.
 
     Painted rather than modelled, per DESIGN.md §7: the eyelids, lashes, brows and lips are
@@ -336,13 +401,26 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
         # large-scale painterly variation and a little fine grain
         big = n.fbm(p, freq=6.0, octaves=3)
         fine = n.fbm(p, freq=48.0, octaves=2)
-        c = mix(base, t["shadow"], 0.18 * big + 0.05 * fine)
+        c = mix(base, t["shadow"], 0.16 * big + 0.04 * fine)
         c = c * (0.97 + 0.06 * big)[:, None]
+        # real occlusion: armpits, the inside of the elbow, behind the knee, between the
+        # fingers, under the jaw.  Without this the skin is one flat value.
+        if scene is not None:
+            ao = sdf_occlusion(scene, p, nrm, radius=occ_radius, samples=5, strength=0.95)
+            c = mix(c, np.clip(t["shadow"] * 0.82, 0, 1), (1.0 - ao) * 0.55)
+            # and the opposite: the exposed high points bleach a little towards the light
+            c = mix(c, np.clip(t["base"] * 1.12 + 0.04, 0, 1), exposure(ao, 3.0) * 0.18)
         # downward-facing surfaces sit in their own shadow: cheap, and it reads as painted form
         down = np.clip(-nrm[:, 2], 0, 1)
-        c = mix(c, t["shadow"], 0.22 * down)
+        c = mix(c, t["shadow"], 0.16 * down)
         up = np.clip(nrm[:, 2], 0, 1)
-        c = mix(c, np.clip(c * 1.10 + 0.03, 0, 1), 0.25 * up)
+        c = mix(c, np.clip(c * 1.10 + 0.03, 0, 1), 0.22 * up)
+        # warmth where the blood runs close to the surface: hands, feet, knees, elbows
+        if warm_points:
+            warm = np.zeros(len(p))
+            for wc, wr in warm_points:
+                warm = np.maximum(warm, gauss(p, wc, wr))
+            c = mix(c, t["blush"], np.clip(warm, 0, 1) * 0.30)
         if freckles > 0.01:
             f = n.at(p, 260.0)
             spots = smoothstep(0.62, 0.72, f) * freckles
@@ -351,57 +429,102 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 gauss(p, [0.0, face_y, eye_z - 0.02 * s], [0.03 * s, 0.05 * s, 0.03 * s]) * 0.8
             c = mix(c, t["shadow"] * 0.85, np.clip(spots * np.clip(cheeks, 0, 1), 0, 1) * 0.55)
         if face:
-            # cheek and nose warmth
-            blush = (gauss(p, [eye_x * 1.55, face_y + 0.024 * s, eye_z - 0.050 * s], [0.032 * s, 0.035 * s, 0.028 * s]) +
-                     gauss(p, [-eye_x * 1.55, face_y + 0.024 * s, eye_z - 0.050 * s], [0.032 * s, 0.035 * s, 0.028 * s]) +
-                     0.7 * gauss(p, [0.0, face_y - 0.004 * s, L["nose_tip"][2]], [0.022 * s, 0.03 * s, 0.020 * s]) +
-                     0.5 * gauss(p, [L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.02 * s, 0.03 * s, 0.03 * s]) +
-                     0.5 * gauss(p, [-L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.02 * s, 0.03 * s, 0.03 * s]))
-            c = mix(c, t["blush"], np.clip(blush, 0, 1) * 0.42)
-            # eye socket shading
+            fy = face_y
+            # -- warmth first: the base for a storybook face is a warm, lit complexion, and
+            # every dark mark below is kept small and soft so it never wins at 30 pixels.
+            lit = (gauss(p, [0.0, fy - 0.004 * s, L["brow_z"] + 0.030 * s], [0.055 * s, 0.045 * s, 0.030 * s]) * 0.8 +
+                   gauss(p, [0.0, fy - 0.010 * s, L["nose_tip"][2] + 0.020 * s], [0.018 * s, 0.030 * s, 0.030 * s]) * 0.7 +
+                   gauss(p, [eye_x * 1.45, fy + 0.012 * s, eye_z - 0.038 * s], [0.030 * s, 0.032 * s, 0.026 * s]) * 0.9 +
+                   gauss(p, [-eye_x * 1.45, fy + 0.012 * s, eye_z - 0.038 * s], [0.030 * s, 0.032 * s, 0.026 * s]) * 0.9 +
+                   gauss(p, [0.0, fy + 0.004 * s, chin_z + 0.030 * s], [0.026 * s, 0.030 * s, 0.022 * s]) * 0.6)
+            highlight = np.clip(t["base"] * 1.10 + 0.045, 0, 1)
+            c = mix(c, highlight, np.clip(lit, 0, 1) * 0.40)
+            # cheek, nose and ear warmth — where the blood is near the surface
+            blush = (gauss(p, [eye_x * 1.50, fy + 0.020 * s, eye_z - 0.046 * s], [0.026 * s, 0.028 * s, 0.022 * s]) +
+                     gauss(p, [-eye_x * 1.50, fy + 0.020 * s, eye_z - 0.046 * s], [0.026 * s, 0.028 * s, 0.022 * s]) +
+                     0.55 * gauss(p, [0.0, fy - 0.004 * s, L["nose_tip"][2]], [0.016 * s, 0.022 * s, 0.015 * s]) +
+                     0.45 * gauss(p, [L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]) +
+                     0.45 * gauss(p, [-L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]))
+            c = mix(c, t["blush"], np.clip(blush, 0, 1) * 0.30)
+            # -- eyes -------------------------------------------------------------------
             for sx in (1, -1):
-                sock = gauss(p, [sx * eye_x, face_y + 0.012 * s, eye_z + 0.002 * s],
-                             [eye_r * 2.1, 0.022 * s, eye_r * 1.5])
-                c = mix(c, t["shadow"], np.clip(sock, 0, 1) * 0.20)
-            # lids and lashes: a dark rim around the eye opening, heavier above
+                ex = sx * eye_x
+                inner, outer = ex - sx * eye_r * 1.15, ex + sx * eye_r * 1.30
+                # a soft, warm recess under the brow only: not a ring round the whole eye
+                sock = gauss(p, [ex, fy + 0.010 * s, eye_z + eye_r * 0.85],
+                             [eye_r * 1.25, 0.016 * s, eye_r * 0.85])
+                c = mix(c, t["shadow"], np.clip(sock, 0, 1) * 0.16)
+                # upper lash: a thin arc hugging the top of the opening, thickest mid-eye
+                lash = stroke_xz(p, [(inner, eye_z + eye_r * 0.20),
+                                     (ex - sx * eye_r * 0.30, eye_z + eye_r * 0.62),
+                                     (ex + sx * eye_r * 0.45, eye_z + eye_r * 0.55),
+                                     (outer, eye_z + eye_r * 0.10)],
+                                 width=eye_r * 0.20, soft=0.75, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
+                c = mix(c, np.clip(hair_rgb * 0.85 + 0.03, 0, 1), np.clip(lash, 0, 1) * 0.60)
+                # lower lid: a light catch, which is what stops an eye reading as a hole
+                lid = stroke_xz(p, [(inner + sx * eye_r * 0.15, eye_z - eye_r * 0.52),
+                                    (ex, eye_z - eye_r * 0.66),
+                                    (outer - sx * eye_r * 0.20, eye_z - eye_r * 0.44)],
+                                width=eye_r * 0.16, soft=0.85, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
+                c = mix(c, np.clip(t["base"] * 1.16 + 0.05, 0, 1), np.clip(lid, 0, 1) * 0.50)
+                # brow: a soft stroke that rises from the inner end and falls away outside
+                bz = L["brow_z"]
+                brow = stroke_xz(p, [(ex - sx * eye_r * 0.95, bz - 0.004 * s),
+                                     (ex - sx * eye_r * 0.20, bz + 0.004 * s),
+                                     (ex + sx * eye_r * 0.65, bz + 0.005 * s),
+                                     (ex + sx * eye_r * 1.55, bz - 0.006 * s)],
+                                 width=0.0052 * s, soft=0.80, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
+                brow_col = mix(np.clip(hair_rgb * 1.15 + 0.02, 0, 1), t["shadow"], 0.35)
+                c = mix(c, brow_col, np.clip(brow, 0, 1) * (0.62 - 0.12 * float(age > 0.7)))
+            # -- mouth ------------------------------------------------------------------
+            mw = mouth_w
+            lip_y = fy + 0.020 * s
+            # the lips themselves: a soft warm shape, upper a little darker than lower
+            upper = np.exp(-0.5 * ((((p[:, 2] - (mouth_z + 0.0060 * s)) / (0.0052 * s)) ** 2) +
+                                   (((p[:, 1] - lip_y) / (0.018 * s)) ** 2))) * \
+                (1.0 - smoothstep(0.80, 1.05, np.abs(p[:, 0]) / (mw * 0.86)))
+            lower = np.exp(-0.5 * ((((p[:, 2] - (mouth_z - 0.0070 * s)) / (0.0060 * s)) ** 2) +
+                                   (((p[:, 1] - lip_y) / (0.018 * s)) ** 2))) * \
+                (1.0 - smoothstep(0.80, 1.05, np.abs(p[:, 0]) / (mw * 0.78)))
+            c = mix(c, np.clip(t["lip"] * 0.94, 0, 1), np.clip(upper, 0, 1) * 0.66 * lip_strength)
+            c = mix(c, np.clip(t["lip"] * 1.06 + 0.02, 0, 1), np.clip(lower, 0, 1) * 0.62 * lip_strength)
+            # the seam: a soft warm line that curves with the mouth, never a black slot
+            seam = stroke_xz(p, [(-mw * 0.86, mouth_z - 0.0028 * s),
+                                 (-mw * 0.40, mouth_z + 0.0012 * s),
+                                 (0.0, mouth_z),
+                                 (mw * 0.40, mouth_z + 0.0012 * s),
+                                 (mw * 0.86, mouth_z - 0.0028 * s)],
+                             width=0.0030 * s, soft=0.75, y_centre=lip_y, y_depth=0.024 * s)
+            c = mix(c, np.clip(t["lip"] * 0.52, 0, 1), np.clip(seam, 0, 1) * 0.62 * lip_strength)
+            # a light catch on the lower lip and a soft shadow under it: this is what makes
+            # a closed mouth read as lips rather than a cut
+            shine = stroke_xz(p, [(-mw * 0.34, mouth_z - 0.0072 * s), (mw * 0.34, mouth_z - 0.0072 * s)],
+                              width=0.0030 * s, soft=0.9, y_centre=lip_y - 0.002 * s, y_depth=0.020 * s)
+            c = mix(c, np.clip(t["base"] * 1.18 + 0.06, 0, 1), np.clip(shine, 0, 1) * 0.30)
+            under = np.exp(-0.5 * ((((p[:, 2] - (mouth_z - 0.0155 * s)) / (0.0055 * s)) ** 2) +
+                                   (((p[:, 1] - (lip_y + 0.004 * s)) / (0.020 * s)) ** 2))) * \
+                (1.0 - smoothstep(0.7, 1.0, np.abs(p[:, 0]) / (mw * 0.85)))
+            c = mix(c, t["shadow"], np.clip(under, 0, 1) * 0.22)
+            # nostril hints, kept tiny
             for sx in (1, -1):
-                d = (p - np.array([sx * eye_x, L["eye_c_y"], eye_z])) / np.array([eye_r * 1.30, eye_r * 1.9, eye_r * 0.80])
-                rad = np.linalg.norm(d[:, [0, 2]], axis=1)
-                near = np.exp(-0.5 * (d[:, 1] ** 2))
-                rim = smoothstep(0.62, 0.95, rad) * (1.0 - smoothstep(1.02, 1.30, rad)) * near
-                upper = np.clip((p[:, 2] - eye_z) / (eye_r * 0.7), -1, 1)
-                weight = np.clip(0.45 + 0.55 * upper, 0, 1)
-                c = mix(c, np.clip(hair_rgb * 0.75, 0, 1), np.clip(rim * weight, 0, 1) * 0.62)
-            # brows
-            for sx in (1, -1):
-                bx = (p[:, 0] - sx * eye_x * 1.02) / (eye_r * 2.0)
-                arch = brow_z + 0.004 * s - 0.010 * s * np.clip(bx * sx, -1.2, 1.2) ** 2
-                bz = (p[:, 2] - arch) / (0.0072 * s)
-                by = (p[:, 1] - (face_y + 0.016 * s)) / (0.030 * s)
-                m = np.exp(-0.5 * (bz ** 2 + by ** 2)) * (1.0 - smoothstep(0.80, 1.25, np.abs(bx)))
-                thick = 1.0 - 0.35 * smoothstep(0.3, 1.1, np.abs(bx))
-                c = mix(c, hair_rgb, np.clip(m * thick, 0, 1) * 0.80)
-            # lips
-            lipd = np.abs(p[:, 2] - mouth_z) / (0.011 * s)
-            lipx = np.abs(p[:, 0]) / (mouth_w * 0.92)
-            lipy = (p[:, 1] - (face_y + 0.022 * s)) / (0.020 * s)
-            lipm = np.exp(-0.5 * (lipd ** 2 + lipy ** 2)) * (1.0 - smoothstep(0.85, 1.15, lipx))
-            c = mix(c, t["lip"], np.clip(lipm, 0, 1) * 0.85 * lip_strength)
-            line = np.exp(-0.5 * (((p[:, 2] - mouth_z) / (0.0030 * s)) ** 2 + lipy ** 2)) * (1.0 - smoothstep(0.8, 1.05, lipx))
-            c = mix(c, np.clip(t["lip"] * 0.45, 0, 1), np.clip(line, 0, 1) * 0.8)
+                nos = gauss(p, [sx * 0.0082 * s, L["nose_tip"][1] + 0.008 * s, L["nose_tip"][2] - 0.0065 * s],
+                            [0.0042 * s, 0.008 * s, 0.0036 * s])
+                c = mix(c, t["shadow"], np.clip(nos, 0, 1) * 0.42)
             if stubble > 0.01:
                 jaw = (1.0 - smoothstep(mouth_z + 0.018 * s, mouth_z + 0.050 * s, p[:, 2])) * \
                     smoothstep(chin_z - 0.05 * s, chin_z - 0.01 * s, p[:, 2]) * \
                     (1.0 - smoothstep(0.02 * s, 0.06 * s, p[:, 1]))
-                nolip = 1.0 - np.clip(lipm * 1.4, 0, 1)
+                nolip = 1.0 - np.clip((upper + lower) * 1.4, 0, 1)
                 grain = 0.5 + 0.5 * n.at(p, 320.0)
-                c = mix(c, beard_rgb, np.clip(jaw * nolip * grain, 0, 1) * 0.42 * stubble)
+                c = mix(c, beard_rgb, np.clip(jaw * nolip * grain, 0, 1) * 0.38 * stubble)
             if age > 0.5:
                 a = (age - 0.5) / 0.5
-                crease = np.exp(-0.5 * (((p[:, 2] - (brow_z + 0.020 * s)) / (0.006 * s)) ** 2)) * \
-                    (1.0 - smoothstep(0.045 * s, 0.075 * s, np.abs(p[:, 0]))) * \
-                    (1.0 - smoothstep(0.02 * s, 0.05 * s, p[:, 1]))
-                c = mix(c, t["shadow"], np.clip(crease, 0, 1) * 0.30 * a)
+                for dz in (0.020, 0.030):
+                    crease = stroke_xz(p, [(-0.040 * s, L["brow_z"] + dz * s),
+                                           (0.0, L["brow_z"] + (dz + 0.003) * s),
+                                           (0.040 * s, L["brow_z"] + dz * s)],
+                                       width=0.0026 * s, soft=0.9, y_centre=fy + 0.012 * s, y_depth=0.030 * s)
+                    c = mix(c, t["shadow"], np.clip(crease, 0, 1) * 0.22 * a)
         if veins > 0.01:
             # DESIGN.md §5.11: Hollow tiers show dark veins under the skin
             v = n.fbm(p, freq=22.0, octaves=3)
@@ -414,13 +537,32 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
     return fn
 
 
-def skin_orm(landmarks: dict, seed: int = 0, age: float = 0.3, oily: float = 0.35) -> Tuple[PaintFn, PaintFn]:
+def warm_points_for(skel, landmarks: dict) -> List[Tuple[np.ndarray, Tuple[float, float, float]]]:
+    """Where skin reddens: knuckles, the heel of the hand, elbows, knees, the ball of the
+    foot, ears and the nose.  Painting these keeps a limb from being one plastic value."""
+    s = float(skel.props.height / 1.78)
+    J = skel.J
+    out: List[Tuple[np.ndarray, Tuple[float, float, float]]] = []
+    r_hand = (0.055 * s, 0.055 * s, 0.055 * s)
+    r_joint = (0.060 * s, 0.060 * s, 0.055 * s)
+    for side in ("L", "R"):
+        out.append((J[f"Hand.{side}"] * 0.35 + J[f"HandTip.{side}"] * 0.65, r_hand))
+        out.append((J[f"LowerArm.{side}"], r_joint))
+        out.append((J[f"LowerLeg.{side}"] + np.array([0.0, -0.02 * s, 0.0]), r_joint))
+        out.append((J[f"Toe.{side}"], (0.055 * s, 0.070 * s, 0.040 * s)))
+    return out
+
+
+def skin_orm(landmarks: dict, seed: int = 0, age: float = 0.3, oily: float = 0.35,
+             scene=None, occ_radius: float = 0.05) -> Tuple[PaintFn, PaintFn]:
     """(occlusion, roughness) paint functions for skin; metallic is always zero."""
     n = Noise(seed + 77, 32)
 
     def occ(p, nrm):
         down = np.clip(-nrm[:, 2], 0, 1)
-        v = 1.0 - 0.30 * down - 0.10 * n.fbm(p, freq=9.0, octaves=2)
+        v = 1.0 - 0.22 * down - 0.08 * n.fbm(p, freq=9.0, octaves=2)
+        if scene is not None:
+            v = v * (0.30 + 0.70 * sdf_occlusion(scene, p, nrm, radius=occ_radius, samples=5))
         return np.repeat(np.clip(v, 0, 1)[:, None], 3, axis=1)
 
     def rough(p, nrm):
@@ -444,7 +586,7 @@ def iris_texture(size: int = 256, colour: str = "brown", seed: int = 0, glint: f
     img = np.zeros((size, size, 3))
     sclera = np.array([0.93, 0.92, 0.89])
     # v is the polar angle / pi: 0 at the pupil centre
-    pupil_r, iris_r, limb_r = 0.055, 0.135, 0.150
+    pupil_r, iris_r, limb_r = 0.072, 0.205, 0.224
     fibre = 0.5 + 0.5 * np.sin(U * 2 * math.pi * 38 + rng.random() * 6.28)
     fibre = fibre * (0.5 + 0.5 * np.sin(U * 2 * math.pi * 17 + 1.7))
     radial = np.clip((V - pupil_r) / max(iris_r - pupil_r, 1e-6), 0, 1)
@@ -454,14 +596,16 @@ def iris_texture(size: int = 256, colour: str = "brown", seed: int = 0, glint: f
     iris = iris * (0.82 + 0.30 * fibre[..., None] * radial[..., None])
     out = np.where((V < iris_r)[..., None], iris, sclera.reshape(1, 1, 3))
     # limbal ring, pupil, corner shading of the sclera
-    ring = smoothstep(iris_r - 0.022, iris_r, V) * (1.0 - smoothstep(limb_r, limb_r + 0.012, V))
+    ring = smoothstep(iris_r - 0.030, iris_r, V) * (1.0 - smoothstep(limb_r, limb_r + 0.016, V))
     out = out * (1.0 - 0.75 * ring[..., None])
-    pup = 1.0 - smoothstep(pupil_r - 0.012, pupil_r, V)
+    pup = 1.0 - smoothstep(pupil_r - 0.016, pupil_r, V)
     out = out * (1.0 - 0.94 * pup[..., None])
     shade = smoothstep(0.30, 0.62, V)
     out = out * (1.0 - 0.30 * shade[..., None])
+    spec = np.exp(-0.5 * ((((U - 0.17) % 1.0 - 0.0) / 0.022) ** 2 + ((V - 0.095) / 0.028) ** 2))
+    out = np.clip(out + spec[..., None] * np.array([1.0, 0.99, 0.95]) * 0.85, 0, 1)
     if glint > 0.01:
-        g = np.exp(-0.5 * ((((U - 0.30) % 1.0 - 0.0) / 0.03) ** 2 + ((V - 0.055) / 0.03) ** 2))
+        g = np.exp(-0.5 * ((((U - 0.30) % 1.0 - 0.0) / 0.03) ** 2 + ((V - 0.075) / 0.035) ** 2))
         out = np.clip(out + g[..., None] * np.array([1.0, 0.92, 0.72]) * glint, 0, 1)
     return np.clip(out, 0, 1)
 
