@@ -285,7 +285,7 @@ def _hand_parts(skel: Skeleton, st: BodyStyle, wr: np.ndarray, d: np.ndarray,
     # the finger mass, curling slightly: a relaxed hand is never flat
     curl = -up * 0.030 * hs
     fing = sdf.loft([
-        (wr + d * 0.50 * L, pw * 0.98, pt * 0.92),
+        (wr + d * 0.50 * L, pw * 0.94, pt * 0.92),
         (wr + d * 0.72 * L + curl * 0.35, pw * 0.94, pt * 0.86),
         (wr + d * 0.90 * L + curl * 0.80, pw * 0.84, pt * 0.76),
         (wr + d * 1.00 * L + curl * 1.25, pw * 0.62, pt * 0.62),
@@ -296,7 +296,7 @@ def _hand_parts(skel: Skeleton, st: BodyStyle, wr: np.ndarray, d: np.ndarray,
         a = wr + d * 0.55 * L + fwd * (pw * f)
         c = wr + d * 1.01 * L + fwd * (pw * f * 0.72) + curl * 1.25
         parts.append(sdf.tube_path([a, (a + c) * 0.5 + curl * 0.35, c],
-                                   [0.0035 * hs, 0.0050 * hs, 0.0060 * hs], k=0.008 * s, op="subtract"))
+                                   [0.0042 * hs, 0.0062 * hs, 0.0078 * hs], k=0.0055 * s, op="subtract"))
     # thumb: its own mass, set low and across the palm, with a visible web
     tb0 = wr + d * 0.20 * L + fwd * pw * 0.80
     tb1 = tb0 + sdf._unit(fwd * 0.52 + d * 0.78 - up * 0.22) * 0.070 * hs
@@ -324,7 +324,7 @@ def _foot_parts(skel: Skeleton, st: BodyStyle, side: str) -> List[sdf.Prim]:
         (np.array([x, an[1] + 0.012 * fs, 0.030 * fs]), 0.036 * fs, 0.030 * fs),
         (np.array([x - sx * 0.004 * fs, (an[1] + ball[1]) * 0.5, 0.026 * fs]), 0.036 * fs, 0.026 * fs),
         (np.array([ball[0], ball[1] + 0.010 * fs, 0.024 * fs]), 0.048 * fs, 0.024 * fs),
-        (np.array([tip[0], tip[1] + 0.030 * fs, 0.023 * fs]), 0.044 * fs, 0.022 * fs),
+        (np.array([tip[0], tip[1] + 0.032 * fs, 0.023 * fs]), 0.037 * fs, 0.021 * fs),
     ], LEFT)
     parts = [
         # heel and Achilles
@@ -345,15 +345,15 @@ def _foot_parts(skel: Skeleton, st: BodyStyle, side: str) -> List[sdf.Prim]:
         # the toe break, and a big toe that is bigger than the rest
         sdf.tube_path([[x - sx * 0.042 * fs, ball[1] + 0.004 * fs, 0.022 * fs],
                        [x + sx * 0.040 * fs, ball[1] - 0.002 * fs, 0.024 * fs]],
-                      0.0045 * fs, k=0.010 * s, op="subtract"),
-        sdf.ellipsoid([x + sx * 0.026 * fs, tip[1] + 0.020 * fs, 0.024 * fs],
-                      [0.017 * fs, 0.022 * fs, 0.018 * fs], k=0.016 * s),
+                      0.0038 * fs, k=0.009 * s, op="subtract"),
+        sdf.ellipsoid([x + sx * 0.024 * fs, tip[1] + 0.028 * fs, 0.023 * fs],
+                      [0.014 * fs, 0.018 * fs, 0.015 * fs], k=0.011 * s),
     ]
     for i in range(3):
         tx = x - sx * (0.004 + 0.016 * i) * fs
-        parts.append(sdf.tube_path([[tx, ball[1] + 0.006 * fs, 0.021 * fs],
-                                    [tx, tip[1] + 0.028 * fs, 0.020 * fs]],
-                                   0.0030 * fs, k=0.007 * s, op="subtract"))
+        parts.append(sdf.tube_path([[tx, ball[1] + 0.002 * fs, 0.021 * fs],
+                                    [tx, tip[1] + 0.030 * fs, 0.020 * fs]],
+                                   [0.0022 * fs, 0.0042 * fs], k=0.0055 * s, op="subtract"))
     return parts
 
 
