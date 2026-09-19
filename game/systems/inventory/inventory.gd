@@ -434,6 +434,11 @@ func use(item: Variant) -> bool:
 		return false
 	if not s.is_consumable():
 		return false
+	if s.is_ingredient():
+		# eating an ingredient can teach an effect, which is the crafting node's business
+		var crafting := _crafting_node()
+		if crafting != null and crafting.has_method("eat_ingredient"):
+			return bool(crafting.call("eat_ingredient", s.id)["ok"])
 	var effects := use_effects(s)
 	var item_id := s.id
 	remove_stack(s, 1)
@@ -521,6 +526,16 @@ func _equipment_node() -> Node:
 		return null
 	for n in get_tree().get_nodes_in_group("equipment"):
 		if n.get("inventory") == self:
+			return n
+	return null
+
+
+## The crafting node working out of this bag, if there is one.
+func _crafting_node() -> Node:
+	if not is_inside_tree():
+		return null
+	for n in get_tree().get_nodes_in_group("crafting"):
+		if n.has_method("bag") and n.call("bag") == self:
 			return n
 	return null
 

@@ -201,6 +201,21 @@ func test_a_saved_discovery_of_a_vanished_ingredient_is_dropped() -> void:
 	assert_eq(other.known_effects(APPLE).size(), 2)
 
 
+func test_eating_from_the_bag_still_discovers() -> void:
+	var holder := Node.new()
+	var bag := Inventory.new()
+	var c := Crafting.new()
+	holder.add_child(bag)
+	holder.add_child(c)
+	(Engine.get_main_loop() as SceneTree).root.add_child(holder)
+	bag.add(WATERCRESS, 2)
+	assert_eq(c.known_effects(WATERCRESS).size(), 1)
+	assert_true(bag.use(WATERCRESS), "the inventory screen's Eat button")
+	assert_eq(bag.count(WATERCRESS), 1)
+	assert_eq(c.known_effects(WATERCRESS).size(), 2, "eating from the bag teaches the same as the alembic")
+	holder.free()
+
+
 func test_crafting_node_eats_combines_and_broadcasts() -> void:
 	var holder := Node.new()
 	var bag := Inventory.new()
