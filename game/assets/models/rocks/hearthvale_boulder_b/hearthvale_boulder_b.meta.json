@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 1.451,
+  "max": [
+   0.915,
+   1.451,
+   0.907
+  ],
+  "min": [
+   -0.911,
+   0.0,
+   -0.884
+  ],
+  "radius": 1.47
+ },
+ "built_seconds": 22.87,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "hearthvale_boulder_b.glb",
+ "hash": "28ec0b177b8e708a",
+ "kind": "boulder",
+ "materials": [
+  "hearthvale_boulder_b_mat"
+ ],
+ "materials_used": [
+  "chalk_rock"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_boulder_b",
+   "tris": 2460
+  },
+  {
+   "name": "hearthvale_boulder_b_LOD1",
+   "tris": 984
+  },
+  {
+   "name": "hearthvale_boulder_b_LOD2",
+   "tris": 368
+  }
+ ],
+ "name": "hearthvale_boulder_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 913,
+ "textures": [
+  "hearthvale_boulder_b_albedo.png",
+  "hearthvale_boulder_b_normal.png",
+  "hearthvale_boulder_b_orm.png"
+ ],
+ "tris": [
+  2460,
+  984,
+  368
+ ],
+ "version": 3
+}

@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bjql74cu8bub1"
-path.s3tc="res://.godot/imported/sedgemire_marsh_marigold_a_atlas_orm.png-f0a6d998ef3fe567fcab67a7cc7943ce.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_marsh_marigold_a/sedgemire_marsh_marigold_a_atlas_orm.png"
-dest_files=["res://.godot/imported/sedgemire_marsh_marigold_a_atlas_orm.png-f0a6d998ef3fe567fcab67a7cc7943ce.s3tc.ctex"]
 
 [params]
 

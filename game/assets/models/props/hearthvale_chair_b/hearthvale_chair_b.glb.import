@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://drgm35065f58b"
-path="res://.godot/imported/hearthvale_chair_b.glb-e5f93f232b2652ab49c02bef8a70efaf.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_chair_b/hearthvale_chair_b.glb"
-dest_files=["res://.godot/imported/hearthvale_chair_b.glb-e5f93f232b2652ab49c02bef8a70efaf.scn"]
 
 [params]
 

@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bkc34nbw2ba5a"
-path="res://.godot/imported/brightwater_reeds_a.glb-b9a095cdb9b378ac792973a79008c189.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/brightwater_reeds_a/brightwater_reeds_a.glb"
-dest_files=["res://.godot/imported/brightwater_reeds_a.glb-b9a095cdb9b378ac792973a79008c189.scn"]
 
 [params]
 

@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cwfsckll0p71y"
-path="res://.godot/imported/hearthvale_well_a_col.glb-c3dd3900e728c7d02124d6b144db25bd.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_well_a/hearthvale_well_a_col.glb"
-dest_files=["res://.godot/imported/hearthvale_well_a_col.glb-c3dd3900e728c7d02124d6b144db25bd.scn"]
 
 [params]
 

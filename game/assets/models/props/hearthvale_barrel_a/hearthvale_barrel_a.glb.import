@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bio328wvxtl2r"
-path="res://.godot/imported/hearthvale_barrel_a.glb-a0231d773539a813a63fd64603538374.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_barrel_a/hearthvale_barrel_a.glb"
-dest_files=["res://.godot/imported/hearthvale_barrel_a.glb-a0231d773539a813a63fd64603538374.scn"]
 
 [params]
 

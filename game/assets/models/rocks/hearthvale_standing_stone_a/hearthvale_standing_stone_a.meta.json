@@ -1,0 +1,82 @@
+{
+ "bounds": {
+  "height": 4.053,
+  "max": [
+   0.941,
+   4.053,
+   0.577
+  ],
+  "min": [
+   -0.737,
+   0.0,
+   -0.856
+  ],
+  "radius": 2.308
+ },
+ "built_seconds": 16.75,
+ "carved": false,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "hearthvale_standing_stone_a.glb",
+ "hash": "3d42a668f886b184",
+ "kind": "standing_stone",
+ "materials": [
+  "hearthvale_standing_stone_a_mat"
+ ],
+ "materials_used": [
+  "chalk_rock"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_standing_stone_a",
+   "tris": 3400
+  },
+  {
+   "name": "hearthvale_standing_stone_a_LOD1",
+   "tris": 1360
+  },
+  {
+   "name": "hearthvale_standing_stone_a_LOD2",
+   "tris": 510
+  }
+ ],
+ "name": "hearthvale_standing_stone_a",
+ "params": {
+  "carved": false
+ },
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 1638,
+ "textures": [
+  "hearthvale_standing_stone_a_albedo.png",
+  "hearthvale_standing_stone_a_normal.png",
+  "hearthvale_standing_stone_a_orm.png"
+ ],
+ "tris": [
+  3400,
+  1360,
+  510
+ ],
+ "version": 3
+}

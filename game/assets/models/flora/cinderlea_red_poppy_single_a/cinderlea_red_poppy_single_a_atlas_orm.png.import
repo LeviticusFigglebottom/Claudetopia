@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://di3jvbl0ro6hs"
-path.s3tc="res://.godot/imported/cinderlea_red_poppy_single_a_atlas_orm.png-59d744cf947714301646de73308cd3b8.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/cinderlea_red_poppy_single_a/cinderlea_red_poppy_single_a_atlas_orm.png"
-dest_files=["res://.godot/imported/cinderlea_red_poppy_single_a_atlas_orm.png-59d744cf947714301646de73308cd3b8.s3tc.ctex"]
 
 [params]
 

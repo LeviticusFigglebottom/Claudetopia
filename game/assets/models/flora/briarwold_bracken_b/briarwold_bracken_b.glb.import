@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c08gcr66o72n6"
-path="res://.godot/imported/briarwold_bracken_b.glb-2acf39aafdbdba601db6b8c8ab58f162.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_bracken_b/briarwold_bracken_b.glb"
-dest_files=["res://.godot/imported/briarwold_bracken_b.glb-2acf39aafdbdba601db6b8c8ab58f162.scn"]
 
 [params]
 

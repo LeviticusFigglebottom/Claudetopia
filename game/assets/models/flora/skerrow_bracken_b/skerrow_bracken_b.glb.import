@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://byxx6a2faxtn8"
-path="res://.godot/imported/skerrow_bracken_b.glb-c89baa03737048a700c3104c4bfa525a.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/skerrow_bracken_b/skerrow_bracken_b.glb"
-dest_files=["res://.godot/imported/skerrow_bracken_b.glb-c89baa03737048a700c3104c4bfa525a.scn"]
 
 [params]
 

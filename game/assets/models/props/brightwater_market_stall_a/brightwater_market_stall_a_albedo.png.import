@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bx8nmwbgp6h8s"
-path.s3tc="res://.godot/imported/brightwater_market_stall_a_albedo.png-f8207f9c0c548e1a5d4b034ce1631018.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_market_stall_a/brightwater_market_stall_a_albedo.png"
-dest_files=["res://.godot/imported/brightwater_market_stall_a_albedo.png-f8207f9c0c548e1a5d4b034ce1631018.s3tc.ctex"]
 
 [params]
 

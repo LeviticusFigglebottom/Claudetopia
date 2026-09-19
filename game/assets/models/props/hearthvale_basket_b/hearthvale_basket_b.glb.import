@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cxinaiu2ergtd"
-path="res://.godot/imported/hearthvale_basket_b.glb-1708af5fac5104c2bb4ba28fcd13e78d.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_basket_b/hearthvale_basket_b.glb"
-dest_files=["res://.godot/imported/hearthvale_basket_b.glb-1708af5fac5104c2bb4ba28fcd13e78d.scn"]
 
 [params]
 

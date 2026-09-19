@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bl7gfnbr2m58s"
-path.s3tc="res://.godot/imported/hearthvale_bench_a_normal.png-ce11827b88698d21083d1abe0d815362.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_bench_a/hearthvale_bench_a_normal.png"
-dest_files=["res://.godot/imported/hearthvale_bench_a_normal.png-ce11827b88698d21083d1abe0d815362.s3tc.ctex"]
 
 [params]
 

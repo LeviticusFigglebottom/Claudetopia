@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c2i63nffkvgbq"
-path.s3tc="res://.godot/imported/sedgemire_basket_a_orm.png-3e58ccfc60982fcb0bd7ce62f42913b4.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_basket_a/sedgemire_basket_a_orm.png"
-dest_files=["res://.godot/imported/sedgemire_basket_a_orm.png-3e58ccfc60982fcb0bd7ce62f42913b4.s3tc.ctex"]
 
 [params]
 

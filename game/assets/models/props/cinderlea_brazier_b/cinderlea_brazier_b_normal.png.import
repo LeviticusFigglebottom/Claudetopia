@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qual8u1v6s01"
-path.s3tc="res://.godot/imported/cinderlea_brazier_b_normal.png-dd8130b1887bccb4fb55f220b73c1d5a.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/cinderlea_brazier_b/cinderlea_brazier_b_normal.png"
-dest_files=["res://.godot/imported/cinderlea_brazier_b_normal.png-dd8130b1887bccb4fb55f220b73c1d5a.s3tc.ctex"]
 
 [params]
 

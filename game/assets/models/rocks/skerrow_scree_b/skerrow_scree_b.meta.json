@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.482,
+  "max": [
+   1.889,
+   0.482,
+   2.023
+  ],
+  "min": [
+   -1.767,
+   0.0,
+   -1.742
+  ],
+  "radius": 2.635
+ },
+ "built_seconds": 61.47,
+ "category": "rocks",
+ "collision": "trimesh",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "skerrow_scree_b.glb",
+ "hash": "48212cb50b87d796",
+ "kind": "scree",
+ "materials": [
+  "skerrow_scree_b_mat"
+ ],
+ "materials_used": [
+  "limestone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_scree_b",
+   "tris": 3060
+  },
+  {
+   "name": "skerrow_scree_b_LOD1",
+   "tris": 1224
+  },
+  {
+   "name": "skerrow_scree_b_LOD2",
+   "tris": 458
+  }
+ ],
+ "name": "skerrow_scree_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 1443,
+ "textures": [
+  "skerrow_scree_b_albedo.png",
+  "skerrow_scree_b_normal.png",
+  "skerrow_scree_b_orm.png"
+ ],
+ "tris": [
+  3060,
+  1224,
+  458
+ ],
+ "version": 3
+}

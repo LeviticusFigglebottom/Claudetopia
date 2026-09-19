@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b530cgnlxxcpa"
-path.s3tc="res://.godot/imported/sedgemire_lantern_hanging_a_normal.png-4f7ade85598a7f6f38fc44c4d4434f3f.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a_normal.png"
-dest_files=["res://.godot/imported/sedgemire_lantern_hanging_a_normal.png-4f7ade85598a7f6f38fc44c4d4434f3f.s3tc.ctex"]
 
 [params]
 

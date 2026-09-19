@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 1.189,
+  "max": [
+   5.045,
+   1.189,
+   0.418
+  ],
+  "min": [
+   -0.329,
+   0.0,
+   -0.424
+  ],
+  "radius": 2.784
+ },
+ "built_seconds": 35.43,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "skerrow_bone_finger_a.glb",
+ "hash": "0a7e2a1807e0ceea",
+ "kind": "bone_finger",
+ "materials": [
+  "skerrow_bone_finger_a_mat"
+ ],
+ "materials_used": [
+  "bone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_bone_finger_a",
+   "tris": 2088
+  },
+  {
+   "name": "skerrow_bone_finger_a_LOD1",
+   "tris": 834
+  },
+  {
+   "name": "skerrow_bone_finger_a_LOD2",
+   "tris": 312
+  }
+ ],
+ "name": "skerrow_bone_finger_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 1797,
+ "textures": [
+  "skerrow_bone_finger_a_albedo.png",
+  "skerrow_bone_finger_a_normal.png",
+  "skerrow_bone_finger_a_orm.png"
+ ],
+ "tris": [
+  2088,
+  834,
+  312
+ ],
+ "version": 3
+}

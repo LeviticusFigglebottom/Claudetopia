@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bn8eo25x2a3od"
-path.s3tc="res://.godot/imported/hearthvale_mug_b_albedo.png-8943cddaaea78cbb0aa1f9f45b50d1d6.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_mug_b/hearthvale_mug_b_albedo.png"
-dest_files=["res://.godot/imported/hearthvale_mug_b_albedo.png-8943cddaaea78cbb0aa1f9f45b50d1d6.s3tc.ctex"]
 
 [params]
 

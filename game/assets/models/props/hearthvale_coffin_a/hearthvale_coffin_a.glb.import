@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b58kxq4m1kvr6"
-path="res://.godot/imported/hearthvale_coffin_a.glb-4229c96ffe8a8255f2ecf66c7c6e47b6.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_coffin_a/hearthvale_coffin_a.glb"
-dest_files=["res://.godot/imported/hearthvale_coffin_a.glb-4229c96ffe8a8255f2ecf66c7c6e47b6.scn"]
 
 [params]
 

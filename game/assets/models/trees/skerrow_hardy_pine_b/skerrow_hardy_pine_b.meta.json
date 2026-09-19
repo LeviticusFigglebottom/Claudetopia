@@ -1,0 +1,102 @@
+{
+ "bounds": {
+  "height": 10.369,
+  "max": [
+   3.569,
+   10.369,
+   2.791
+  ],
+  "min": [
+   -3.788,
+   0.0,
+   -3.349
+  ],
+  "radius": 7.059
+ },
+ "built_seconds": 1.24,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 10.28,
+  "radius": 0.262
+ },
+ "generator": "gen_trees",
+ "glb": "skerrow_hardy_pine_b.glb",
+ "hash": "3214514fba18d0e2",
+ "height_m": 11.61,
+ "kind": "hardy_pine",
+ "materials": [
+  "skerrow_hardy_pine_b_leaf_foliage",
+  "skerrow_hardy_pine_b_mat",
+  "skerrow_hardy_pine_b_impostor_foliage"
+ ],
+ "materials_used": [
+  "pine_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_hardy_pine_b_cards",
+   "tris": 1004
+  },
+  {
+   "name": "skerrow_hardy_pine_b",
+   "tris": 4999
+  },
+  {
+   "name": "skerrow_hardy_pine_b_LOD2",
+   "tris": 4
+  },
+  {
+   "name": "skerrow_hardy_pine_b_LOD1",
+   "tris": 1916
+  },
+  {
+   "name": "skerrow_hardy_pine_b_cards_LOD1",
+   "tris": 450
+  }
+ ],
+ "name": "skerrow_hardy_pine_b",
+ "params": {},
+ "region": "skerrow",
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 436,
+ "species": "hardy_pine",
+ "textures": [
+  "skerrow_hardy_pine_b_albedo.png",
+  "skerrow_hardy_pine_b_normal.png",
+  "skerrow_hardy_pine_b_orm.png",
+  "skerrow_hardy_pine_b_leaf_albedo.png",
+  "skerrow_hardy_pine_b_leaf_normal.png",
+  "skerrow_hardy_pine_b_leaf_orm.png",
+  "skerrow_hardy_pine_b_impostor_albedo.png",
+  "skerrow_hardy_pine_b_impostor_normal.png",
+  "skerrow_hardy_pine_b_impostor_orm.png"
+ ],
+ "tris": [
+  6003,
+  2366,
+  4
+ ],
+ "version": 3
+}

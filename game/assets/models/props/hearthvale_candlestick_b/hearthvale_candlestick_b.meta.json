@@ -3,17 +3,17 @@
   "height": 0.356,
   "max": [
    0.06,
-   0.361,
+   0.356,
    0.059
   ],
   "min": [
    -0.06,
-   0.005,
+   0.0,
    -0.059
   ],
   "radius": 0.197
  },
- "built_seconds": 4.77,
+ "built_seconds": 10.3,
  "category": "props",
  "collision": "convex",
  "collision_params": {},

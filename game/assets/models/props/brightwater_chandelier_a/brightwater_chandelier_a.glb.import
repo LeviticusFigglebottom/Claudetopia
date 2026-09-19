@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cjp51pvxqikw8"
-path="res://.godot/imported/brightwater_chandelier_a.glb-1158aa3d15d8caff443a6e02824f9f94.scn"
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_chandelier_a/brightwater_chandelier_a.glb"
-dest_files=["res://.godot/imported/brightwater_chandelier_a.glb-1158aa3d15d8caff443a6e02824f9f94.scn"]
 
 [params]
 

@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ch6lwjx5us3h8"
-path.s3tc="res://.godot/imported/hearthvale_cow_parsley_a_atlas_orm.png-e75ad6afe43473f33c06a8ba505ab18b.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/hearthvale_cow_parsley_a/hearthvale_cow_parsley_a_atlas_orm.png"
-dest_files=["res://.godot/imported/hearthvale_cow_parsley_a_atlas_orm.png-e75ad6afe43473f33c06a8ba505ab18b.s3tc.ctex"]
 
 [params]
 

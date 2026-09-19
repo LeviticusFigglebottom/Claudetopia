@@ -1,0 +1,102 @@
+{
+ "bounds": {
+  "height": 5.628,
+  "max": [
+   2.329,
+   5.628,
+   2.644
+  ],
+  "min": [
+   -2.144,
+   0.0,
+   -2.527
+  ],
+  "radius": 4.428
+ },
+ "built_seconds": 8.82,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 4.4,
+  "radius": 2.37
+ },
+ "generator": "gen_trees",
+ "glb": "hearthvale_apple_b.glb",
+ "hash": "6245f5c69bc635c0",
+ "height_m": 5.42,
+ "kind": "apple",
+ "materials": [
+  "hearthvale_apple_b_leaf_foliage",
+  "hearthvale_apple_b_mat",
+  "hearthvale_apple_b_impostor_foliage"
+ ],
+ "materials_used": [
+  "oak_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_apple_b_cards",
+   "tris": 918
+  },
+  {
+   "name": "hearthvale_apple_b",
+   "tris": 5000
+  },
+  {
+   "name": "hearthvale_apple_b_LOD2",
+   "tris": 4
+  },
+  {
+   "name": "hearthvale_apple_b_LOD1",
+   "tris": 4002
+  },
+  {
+   "name": "hearthvale_apple_b_cards_LOD1",
+   "tris": 412
+  }
+ ],
+ "name": "hearthvale_apple_b",
+ "params": {},
+ "region": "hearthvale",
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 171,
+ "species": "apple",
+ "textures": [
+  "hearthvale_apple_b_albedo.png",
+  "hearthvale_apple_b_normal.png",
+  "hearthvale_apple_b_orm.png",
+  "hearthvale_apple_b_leaf_albedo.png",
+  "hearthvale_apple_b_leaf_normal.png",
+  "hearthvale_apple_b_leaf_orm.png",
+  "hearthvale_apple_b_impostor_albedo.png",
+  "hearthvale_apple_b_impostor_normal.png",
+  "hearthvale_apple_b_impostor_orm.png"
+ ],
+ "tris": [
+  5918,
+  4414,
+  4
+ ],
+ "version": 3
+}

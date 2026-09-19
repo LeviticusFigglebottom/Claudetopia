@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c7nnswscf23do"
-path="res://.godot/imported/briarwold_fern_c.glb-aeb22dbe536829f2b26d6bd6c5d151aa.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_fern_c/briarwold_fern_c.glb"
-dest_files=["res://.godot/imported/briarwold_fern_c.glb-aeb22dbe536829f2b26d6bd6c5d151aa.scn"]
 
 [params]
 

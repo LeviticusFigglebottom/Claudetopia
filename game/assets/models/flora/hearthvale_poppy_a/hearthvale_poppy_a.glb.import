@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bwk4asbpawlj1"
-path="res://.godot/imported/hearthvale_poppy_a.glb-5125761073e6e5920b720510fe5fd7e4.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/hearthvale_poppy_a/hearthvale_poppy_a.glb"
-dest_files=["res://.godot/imported/hearthvale_poppy_a.glb-5125761073e6e5920b720510fe5fd7e4.scn"]
 
 [params]
 

@@ -1,0 +1,106 @@
+{
+ "bounds": {
+  "height": 18.724,
+  "max": [
+   7.541,
+   18.724,
+   6.923
+  ],
+  "min": [
+   -7.576,
+   0.0,
+   -6.951
+  ],
+  "radius": 13.889
+ },
+ "built_seconds": 5.0,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 18.06,
+  "radius": 0.735
+ },
+ "generator": "gen_trees",
+ "glb": "briarwold_black_ash_a.glb",
+ "hash": "4f949ede0234cef4",
+ "height_m": 15.76,
+ "kind": "black_ash",
+ "materials": [
+  "briarwold_black_ash_a_leaf_foliage",
+  "briarwold_black_ash_a_moss_foliage",
+  "briarwold_black_ash_a_mat",
+  "briarwold_black_ash_a_impostor_foliage"
+ ],
+ "materials_used": [
+  "black_ash_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_black_ash_a_cards",
+   "tris": 1576
+  },
+  {
+   "name": "briarwold_black_ash_a",
+   "tris": 9856
+  },
+  {
+   "name": "briarwold_black_ash_a_LOD2",
+   "tris": 4
+  },
+  {
+   "name": "briarwold_black_ash_a_LOD1",
+   "tris": 6514
+  },
+  {
+   "name": "briarwold_black_ash_a_cards_LOD1",
+   "tris": 708
+  }
+ ],
+ "name": "briarwold_black_ash_a",
+ "params": {},
+ "region": "briarwold",
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 366,
+ "species": "black_ash",
+ "textures": [
+  "briarwold_black_ash_a_albedo.png",
+  "briarwold_black_ash_a_normal.png",
+  "briarwold_black_ash_a_orm.png",
+  "briarwold_black_ash_a_leaf_albedo.png",
+  "briarwold_black_ash_a_leaf_normal.png",
+  "briarwold_black_ash_a_leaf_orm.png",
+  "briarwold_black_ash_a_moss_albedo.png",
+  "briarwold_black_ash_a_moss_normal.png",
+  "briarwold_black_ash_a_moss_orm.png",
+  "briarwold_black_ash_a_impostor_albedo.png",
+  "briarwold_black_ash_a_impostor_normal.png",
+  "briarwold_black_ash_a_impostor_orm.png"
+ ],
+ "tris": [
+  11432,
+  7222,
+  4
+ ],
+ "version": 3
+}

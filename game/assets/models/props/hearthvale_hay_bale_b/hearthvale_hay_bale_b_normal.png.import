@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgf8oa7dtsyro"
-path.s3tc="res://.godot/imported/hearthvale_hay_bale_b_normal.png-243aee4dafb57b575a3a9f6e94d24fc3.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_hay_bale_b/hearthvale_hay_bale_b_normal.png"
-dest_files=["res://.godot/imported/hearthvale_hay_bale_b_normal.png-243aee4dafb57b575a3a9f6e94d24fc3.s3tc.ctex"]
 
 [params]
 

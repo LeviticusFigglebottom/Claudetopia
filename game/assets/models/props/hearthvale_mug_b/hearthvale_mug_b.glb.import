@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c0eb5bfewh3du"
-path="res://.godot/imported/hearthvale_mug_b.glb-c2681934e53f644219da7b6743b05b36.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_mug_b/hearthvale_mug_b.glb"
-dest_files=["res://.godot/imported/hearthvale_mug_b.glb-c2681934e53f644219da7b6743b05b36.scn"]
 
 [params]
 

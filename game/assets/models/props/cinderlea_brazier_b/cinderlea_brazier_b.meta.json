@@ -13,7 +13,7 @@
   ],
   "radius": 0.665
  },
- "built_seconds": 65.82,
+ "built_seconds": 60.76,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
@@ -40,7 +40,7 @@
   },
   {
    "name": "cinderlea_brazier_b_LOD2",
-   "tris": 119
+   "tris": 118
   }
  ],
  "name": "cinderlea_brazier_b",
@@ -76,7 +76,7 @@
  "tris": [
   816,
   326,
-  119
+  118
  ],
  "version": 3
 }

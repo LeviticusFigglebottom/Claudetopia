@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dxbb1gcowdt11"
-path="res://.godot/imported/sedgemire_moss_patch_a.glb-afd8c1b055a8dc8c648d1009f78a80c5.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_moss_patch_a/sedgemire_moss_patch_a.glb"
-dest_files=["res://.godot/imported/sedgemire_moss_patch_a.glb-afd8c1b055a8dc8c648d1009f78a80c5.scn"]
 
 [params]
 

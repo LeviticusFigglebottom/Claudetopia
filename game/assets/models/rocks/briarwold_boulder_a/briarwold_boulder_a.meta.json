@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 2.101,
+  "max": [
+   1.226,
+   2.101,
+   1.519
+  ],
+  "min": [
+   -1.236,
+   0.0,
+   -1.419
+  ],
+  "radius": 2.186
+ },
+ "built_seconds": 17.81,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "briarwold_boulder_a.glb",
+ "hash": "5328717280d035fb",
+ "kind": "boulder",
+ "materials": [
+  "briarwold_boulder_a_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_boulder_a",
+   "tris": 2980
+  },
+  {
+   "name": "briarwold_boulder_a_LOD1",
+   "tris": 1192
+  },
+  {
+   "name": "briarwold_boulder_a_LOD2",
+   "tris": 446
+  }
+ ],
+ "name": "briarwold_boulder_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 949,
+ "textures": [
+  "briarwold_boulder_a_albedo.png",
+  "briarwold_boulder_a_normal.png",
+  "briarwold_boulder_a_orm.png"
+ ],
+ "tris": [
+  2980,
+  1192,
+  446
+ ],
+ "version": 3
+}

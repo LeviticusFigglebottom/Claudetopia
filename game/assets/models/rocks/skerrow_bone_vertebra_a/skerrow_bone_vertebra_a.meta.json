@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 6.664,
+  "max": [
+   2.711,
+   6.664,
+   1.837
+  ],
+  "min": [
+   -2.718,
+   0.0,
+   -1.903
+  ],
+  "radius": 4.687
+ },
+ "built_seconds": 48.87,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "skerrow_bone_vertebra_a.glb",
+ "hash": "a31889dbec88f5c1",
+ "kind": "bone_vertebra",
+ "materials": [
+  "skerrow_bone_vertebra_a_mat"
+ ],
+ "materials_used": [
+  "bone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_bone_vertebra_a",
+   "tris": 636
+  },
+  {
+   "name": "skerrow_bone_vertebra_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "skerrow_bone_vertebra_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "skerrow_bone_vertebra_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 1903,
+ "textures": [
+  "skerrow_bone_vertebra_a_albedo.png",
+  "skerrow_bone_vertebra_a_normal.png",
+  "skerrow_bone_vertebra_a_orm.png"
+ ],
+ "tris": [
+  636,
+  300,
+  120
+ ],
+ "version": 3
+}

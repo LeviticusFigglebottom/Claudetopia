@@ -8,12 +8,12 @@
   ],
   "min": [
    -0.219,
-   -0.0,
+   0.0,
    -0.214
   ],
   "radius": 0.382
  },
- "built_seconds": 11.52,
+ "built_seconds": 22.78,
  "category": "props",
  "collision": "convex",
  "collision_params": {},

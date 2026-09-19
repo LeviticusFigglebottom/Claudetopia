@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 6.431,
+  "max": [
+   2.0,
+   6.431,
+   2.198
+  ],
+  "min": [
+   -2.0,
+   0.0,
+   -1.213
+  ],
+  "radius": 4.153
+ },
+ "built_seconds": 42.2,
+ "category": "rocks",
+ "collision": "hearthvale_cliff_slab_b_col.glb",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "hearthvale_cliff_slab_b.glb",
+ "hash": "9f60b89b9dffd30b",
+ "kind": "cliff_slab",
+ "materials": [
+  "hearthvale_cliff_slab_b_mat"
+ ],
+ "materials_used": [
+  "chalk_rock"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_cliff_slab_b",
+   "tris": 4100
+  },
+  {
+   "name": "hearthvale_cliff_slab_b_LOD1",
+   "tris": 1640
+  },
+  {
+   "name": "hearthvale_cliff_slab_b_LOD2",
+   "tris": 614
+  }
+ ],
+ "modular": true,
+ "module_width_m": 4.0,
+ "name": "hearthvale_cliff_slab_b",
+ "params": {
+  "stone": "chalk_rock"
+ },
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 1284,
+ "textures": [
+  "hearthvale_cliff_slab_b_albedo.png",
+  "hearthvale_cliff_slab_b_normal.png",
+  "hearthvale_cliff_slab_b_orm.png"
+ ],
+ "tris": [
+  4100,
+  1640,
+  614
+ ],
+ "version": 3
+}

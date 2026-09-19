@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://5sla5vc0622v"
-path.s3tc="res://.godot/imported/hearthvale_chair_b_albedo.png-7e577b372664ba9db44d226b83e6b3f6.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_chair_b/hearthvale_chair_b_albedo.png"
-dest_files=["res://.godot/imported/hearthvale_chair_b_albedo.png-7e577b372664ba9db44d226b83e6b3f6.s3tc.ctex"]
 
 [params]
 

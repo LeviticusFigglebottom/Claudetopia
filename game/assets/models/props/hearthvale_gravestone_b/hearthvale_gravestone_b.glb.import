@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://blswu1mog76l4"
-path="res://.godot/imported/hearthvale_gravestone_b.glb-eb122ec26a674daa01fab491c729e035.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_gravestone_b/hearthvale_gravestone_b.glb"
-dest_files=["res://.godot/imported/hearthvale_gravestone_b.glb-eb122ec26a674daa01fab491c729e035.scn"]
 
 [params]
 

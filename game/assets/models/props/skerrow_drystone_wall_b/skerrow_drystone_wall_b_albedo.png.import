@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cme8hpqxtl74c"
-path.s3tc="res://.godot/imported/skerrow_drystone_wall_b_albedo.png-5136a71072e1fe6e855e6fc53039e3e6.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/skerrow_drystone_wall_b/skerrow_drystone_wall_b_albedo.png"
-dest_files=["res://.godot/imported/skerrow_drystone_wall_b_albedo.png-5136a71072e1fe6e855e6fc53039e3e6.s3tc.ctex"]
 
 [params]
 

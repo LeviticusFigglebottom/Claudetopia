@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bwmkc04ncbsqg"
-path="res://.godot/imported/skerrow_lichen_crust_a.glb-8845eea8b1ed65b84b6680ac37f5f6a6.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/skerrow_lichen_crust_a/skerrow_lichen_crust_a.glb"
-dest_files=["res://.godot/imported/skerrow_lichen_crust_a.glb-8845eea8b1ed65b84b6680ac37f5f6a6.scn"]
 
 [params]
 

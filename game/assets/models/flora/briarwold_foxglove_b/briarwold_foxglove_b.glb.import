@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://jh5uhtgehoki"
-path="res://.godot/imported/briarwold_foxglove_b.glb-532b8523ca8b2f6dd33a5ac17c7c43c2.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_foxglove_b/briarwold_foxglove_b.glb"
-dest_files=["res://.godot/imported/briarwold_foxglove_b.glb-532b8523ca8b2f6dd33a5ac17c7c43c2.scn"]
 
 [params]
 

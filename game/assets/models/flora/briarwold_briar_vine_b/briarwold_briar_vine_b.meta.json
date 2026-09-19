@@ -3,17 +3,17 @@
   "height": 1.843,
   "max": [
    1.531,
-   1.793,
+   1.843,
    0.892
   ],
   "min": [
    -1.575,
-   -0.05,
+   0.0,
    -1.133
   ],
   "radius": 2.07
  },
- "built_seconds": 24.56,
+ "built_seconds": 4.6,
  "category": "flora",
  "collision": "trimesh",
  "collision_params": {},

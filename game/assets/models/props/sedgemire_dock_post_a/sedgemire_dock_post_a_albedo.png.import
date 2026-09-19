@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ckpf8aiqoyx6q"
-path.s3tc="res://.godot/imported/sedgemire_dock_post_a_albedo.png-08a7fbac03c384ee508c188293a9272a.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_dock_post_a/sedgemire_dock_post_a_albedo.png"
-dest_files=["res://.godot/imported/sedgemire_dock_post_a_albedo.png-08a7fbac03c384ee508c188293a9272a.s3tc.ctex"]
 
 [params]
 

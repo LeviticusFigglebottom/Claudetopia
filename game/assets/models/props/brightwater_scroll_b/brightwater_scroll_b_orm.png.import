@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bg577wuocqnah"
-path.s3tc="res://.godot/imported/brightwater_scroll_b_orm.png-f0e201eb4e2c66c67fea20820384fcae.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_scroll_b/brightwater_scroll_b_orm.png"
-dest_files=["res://.godot/imported/brightwater_scroll_b_orm.png-f0e201eb4e2c66c67fea20820384fcae.s3tc.ctex"]
 
 [params]
 

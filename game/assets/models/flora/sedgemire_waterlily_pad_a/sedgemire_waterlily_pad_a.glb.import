@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dpwbjmxq8ywgh"
-path="res://.godot/imported/sedgemire_waterlily_pad_a.glb-299f90dcb3386d32f4f3a6b21d0bf1f8.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_waterlily_pad_a/sedgemire_waterlily_pad_a.glb"
-dest_files=["res://.godot/imported/sedgemire_waterlily_pad_a.glb-299f90dcb3386d32f4f3a6b21d0bf1f8.scn"]
 
 [params]
 

@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://ncli4fyw44e"
-path="res://.godot/imported/hearthvale_cooking_pot_a.glb-b35986b6911fcb390959c45dd28e7272.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_cooking_pot_a/hearthvale_cooking_pot_a.glb"
-dest_files=["res://.godot/imported/hearthvale_cooking_pot_a.glb-b35986b6911fcb390959c45dd28e7272.scn"]
 
 [params]
 

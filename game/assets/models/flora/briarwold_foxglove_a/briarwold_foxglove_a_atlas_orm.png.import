@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dsbjlu0q60sjr"
-path.s3tc="res://.godot/imported/briarwold_foxglove_a_atlas_orm.png-18714e545566c09d05fbd3043c93c69f.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_foxglove_a/briarwold_foxglove_a_atlas_orm.png"
-dest_files=["res://.godot/imported/briarwold_foxglove_a_atlas_orm.png-18714e545566c09d05fbd3043c93c69f.s3tc.ctex"]
 
 [params]
 

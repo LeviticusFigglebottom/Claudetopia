@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://blfwv5x1vwh3a"
-path.s3tc="res://.godot/imported/brightwater_waterlily_pad_b_atlas_normal.png-80677b362803df3a3efd65c2e5dbe592.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/brightwater_waterlily_pad_b/brightwater_waterlily_pad_b_atlas_normal.png"
-dest_files=["res://.godot/imported/brightwater_waterlily_pad_b_atlas_normal.png-80677b362803df3a3efd65c2e5dbe592.s3tc.ctex"]
 
 [params]
 

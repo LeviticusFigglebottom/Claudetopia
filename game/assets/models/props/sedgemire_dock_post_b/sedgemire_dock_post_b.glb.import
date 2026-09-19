@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://ry6m67ehyiw5"
-path="res://.godot/imported/sedgemire_dock_post_b.glb-33e2de65772177e096156332e6770260.scn"
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_dock_post_b/sedgemire_dock_post_b.glb"
-dest_files=["res://.godot/imported/sedgemire_dock_post_b.glb-33e2de65772177e096156332e6770260.scn"]
 
 [params]
 

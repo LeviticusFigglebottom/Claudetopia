@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://chw4dwrwgs7j4"
-path.s3tc="res://.godot/imported/sedgemire_fern_b_atlas_albedo.png-7eb87a8d581d708317233c7b62990eab.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_fern_b/sedgemire_fern_b_atlas_albedo.png"
-dest_files=["res://.godot/imported/sedgemire_fern_b_atlas_albedo.png-7eb87a8d581d708317233c7b62990eab.s3tc.ctex"]
 
 [params]
 

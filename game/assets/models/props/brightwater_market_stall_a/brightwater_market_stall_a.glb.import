@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cc0tcdak8qvud"
-path="res://.godot/imported/brightwater_market_stall_a.glb-de4b0bc2f8dfa14299459f07794fc882.scn"
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_market_stall_a/brightwater_market_stall_a.glb"
-dest_files=["res://.godot/imported/brightwater_market_stall_a.glb-de4b0bc2f8dfa14299459f07794fc882.scn"]
 
 [params]
 

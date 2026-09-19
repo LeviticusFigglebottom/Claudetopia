@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 4.063,
+  "max": [
+   3.491,
+   4.063,
+   1.582
+  ],
+  "min": [
+   -3.012,
+   0.0,
+   -3.768
+  ],
+  "radius": 4.675
+ },
+ "built_seconds": 41.54,
+ "category": "rocks",
+ "collision": "skerrow_bone_skull_fragment_b_col.glb",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "skerrow_bone_skull_fragment_b.glb",
+ "hash": "d668939a75f50a11",
+ "kind": "bone_skull_fragment",
+ "materials": [
+  "skerrow_bone_skull_fragment_b_mat"
+ ],
+ "materials_used": [
+  "bone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_bone_skull_fragment_b",
+   "tris": 790
+  },
+  {
+   "name": "skerrow_bone_skull_fragment_b_LOD1",
+   "tris": 316
+  },
+  {
+   "name": "skerrow_bone_skull_fragment_b_LOD2",
+   "tris": 118
+  }
+ ],
+ "name": "skerrow_bone_skull_fragment_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 1867,
+ "textures": [
+  "skerrow_bone_skull_fragment_b_albedo.png",
+  "skerrow_bone_skull_fragment_b_normal.png",
+  "skerrow_bone_skull_fragment_b_orm.png"
+ ],
+ "tris": [
+  790,
+  316,
+  118
+ ],
+ "version": 3
+}

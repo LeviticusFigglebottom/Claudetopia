@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbk2lkj5x8e5p"
-path.s3tc="res://.godot/imported/hearthvale_bed_a_orm.png-f645aa013a5e16702cc81a96505da0e2.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_bed_a/hearthvale_bed_a_orm.png"
-dest_files=["res://.godot/imported/hearthvale_bed_a_orm.png-f645aa013a5e16702cc81a96505da0e2.s3tc.ctex"]
 
 [params]
 

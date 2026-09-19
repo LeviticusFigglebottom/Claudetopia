@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bwhhlpje3u311"
-path="res://.godot/imported/hearthvale_fence_post_rail_b_col.glb-9e013f7309f65abef789440f1e824eb4.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_fence_post_rail_b/hearthvale_fence_post_rail_b_col.glb"
-dest_files=["res://.godot/imported/hearthvale_fence_post_rail_b_col.glb-9e013f7309f65abef789440f1e824eb4.scn"]
 
 [params]
 

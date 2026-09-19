@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c37w8ge0jbibu"
-path="res://.godot/imported/hearthvale_barley_tuft_a.glb-bf7ba36039407b591a05246b4920c754.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/hearthvale_barley_tuft_a/hearthvale_barley_tuft_a.glb"
-dest_files=["res://.godot/imported/hearthvale_barley_tuft_a.glb-bf7ba36039407b591a05246b4920c754.scn"]
 
 [params]
 

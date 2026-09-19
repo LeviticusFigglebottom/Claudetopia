@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bq6k55cl1e7d"
-path.s3tc="res://.godot/imported/brightwater_reeds_b_atlas_albedo.png-c73751c2a74145267b1b0ff6048448fd.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/brightwater_reeds_b/brightwater_reeds_b_atlas_albedo.png"
-dest_files=["res://.godot/imported/brightwater_reeds_b_atlas_albedo.png-c73751c2a74145267b1b0ff6048448fd.s3tc.ctex"]
 
 [params]
 

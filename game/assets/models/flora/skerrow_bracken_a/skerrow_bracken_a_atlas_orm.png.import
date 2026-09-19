@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cj16qrytabpag"
-path.s3tc="res://.godot/imported/skerrow_bracken_a_atlas_orm.png-345fa14a445cb54f6405aedd7330518e.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/skerrow_bracken_a/skerrow_bracken_a_atlas_orm.png"
-dest_files=["res://.godot/imported/skerrow_bracken_a_atlas_orm.png-345fa14a445cb54f6405aedd7330518e.s3tc.ctex"]
 
 [params]
 

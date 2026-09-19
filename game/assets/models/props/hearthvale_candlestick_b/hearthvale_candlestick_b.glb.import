@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cd16cxiw0dlaa"
-path="res://.godot/imported/hearthvale_candlestick_b.glb-9ee99bfd1f2aac2fef6031cf05e8ce31.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_candlestick_b/hearthvale_candlestick_b.glb"
-dest_files=["res://.godot/imported/hearthvale_candlestick_b.glb-9ee99bfd1f2aac2fef6031cf05e8ce31.scn"]
 
 [params]
 

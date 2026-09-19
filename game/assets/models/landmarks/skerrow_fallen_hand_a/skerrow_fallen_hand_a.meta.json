@@ -3,17 +3,17 @@
   "height": 13.975,
   "max": [
    14.347,
-   14.734,
+   13.975,
    12.209
   ],
   "min": [
    -25.877,
-   0.759,
+   0.0,
    -36.059
   ],
   "radius": 32.183
  },
- "built_seconds": 694.76,
+ "built_seconds": 76.01,
  "category": "landmarks",
  "collision": "skerrow_fallen_hand_a_col.glb",
  "collision_params": {},

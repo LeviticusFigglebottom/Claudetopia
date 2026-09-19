@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dj2d3sejs8tb1"
-path.s3tc="res://.godot/imported/briarwold_bracket_fungus_a_atlas_orm.png-d8a15278b5c01158608051d47134148a.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_bracket_fungus_a/briarwold_bracket_fungus_a_atlas_orm.png"
-dest_files=["res://.godot/imported/briarwold_bracket_fungus_a_atlas_orm.png-d8a15278b5c01158608051d47134148a.s3tc.ctex"]
 
 [params]
 

@@ -13,7 +13,7 @@
   ],
   "radius": 20.946
  },
- "built_seconds": 632.97,
+ "built_seconds": 180.9,
  "category": "landmarks",
  "collision": "brightwater_the_lamp_a_col.glb",
  "collision_params": {},
@@ -39,7 +39,7 @@
   },
   {
    "name": "brightwater_the_lamp_a_LOD1",
-   "tris": 1197
+   "tris": 1198
   },
   {
    "name": "brightwater_the_lamp_a_LOD2",
@@ -79,7 +79,7 @@
  ],
  "tris": [
   2996,
-  1197,
+  1198,
   413
  ],
  "version": 3

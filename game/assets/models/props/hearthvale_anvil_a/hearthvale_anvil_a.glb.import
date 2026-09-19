@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bp67g2ybb05mp"
-path="res://.godot/imported/hearthvale_anvil_a.glb-a0e1c20c908e69e59bbb4a8c025d5a72.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_anvil_a/hearthvale_anvil_a.glb"
-dest_files=["res://.godot/imported/hearthvale_anvil_a.glb-a0e1c20c908e69e59bbb4a8c025d5a72.scn"]
 
 [params]
 

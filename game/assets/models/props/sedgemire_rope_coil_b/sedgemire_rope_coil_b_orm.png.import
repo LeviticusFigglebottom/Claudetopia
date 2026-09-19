@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://du58ndx6873hd"
-path.s3tc="res://.godot/imported/sedgemire_rope_coil_b_orm.png-46dcc02989bb04270d4d13d6d53d6622.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_rope_coil_b/sedgemire_rope_coil_b_orm.png"
-dest_files=["res://.godot/imported/sedgemire_rope_coil_b_orm.png-46dcc02989bb04270d4d13d6d53d6622.s3tc.ctex"]
 
 [params]
 

@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dkiw0pksjb85t"
-path.s3tc="res://.godot/imported/brightwater_alembic_a_orm.png-f05f141b37de919c0fd02a519af95fe3.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_alembic_a/brightwater_alembic_a_orm.png"
-dest_files=["res://.godot/imported/brightwater_alembic_a_orm.png-f05f141b37de919c0fd02a519af95fe3.s3tc.ctex"]
 
 [params]
 

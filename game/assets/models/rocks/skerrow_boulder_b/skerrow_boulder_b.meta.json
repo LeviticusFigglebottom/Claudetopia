@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 1.351,
+  "max": [
+   1.026,
+   1.351,
+   0.905
+  ],
+  "min": [
+   -1.156,
+   0.0,
+   -0.876
+  ],
+  "radius": 1.562
+ },
+ "built_seconds": 26.73,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "skerrow_boulder_b.glb",
+ "hash": "09d0a95267f1fe27",
+ "kind": "boulder",
+ "materials": [
+  "skerrow_boulder_b_mat"
+ ],
+ "materials_used": [
+  "limestone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_boulder_b",
+   "tris": 2980
+  },
+  {
+   "name": "skerrow_boulder_b_LOD1",
+   "tris": 1192
+  },
+  {
+   "name": "skerrow_boulder_b_LOD2",
+   "tris": 446
+  }
+ ],
+ "name": "skerrow_boulder_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 1019,
+ "textures": [
+  "skerrow_boulder_b_albedo.png",
+  "skerrow_boulder_b_normal.png",
+  "skerrow_boulder_b_orm.png"
+ ],
+ "tris": [
+  2980,
+  1192,
+  446
+ ],
+ "version": 3
+}

@@ -3,17 +3,17 @@
   "height": 3.526,
   "max": [
    0.595,
-   3.54,
+   3.526,
    0.545
   ],
   "min": [
    -0.504,
-   0.014,
+   0.0,
    -0.165
   ],
   "radius": 1.881
  },
- "built_seconds": 74.86,
+ "built_seconds": 11.03,
  "category": "props",
  "collision": "capsule",
  "collision_params": {

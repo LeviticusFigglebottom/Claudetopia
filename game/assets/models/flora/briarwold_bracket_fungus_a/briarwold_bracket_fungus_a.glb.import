@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bup5tvdnu6kv3"
-path="res://.godot/imported/briarwold_bracket_fungus_a.glb-f395b2eeb952e8729030ee5abc4fb419.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_bracket_fungus_a/briarwold_bracket_fungus_a.glb"
-dest_files=["res://.godot/imported/briarwold_bracket_fungus_a.glb-f395b2eeb952e8729030ee5abc4fb419.scn"]
 
 [params]
 

@@ -3,17 +3,17 @@
   "height": 0.111,
   "max": [
    0.89,
-   0.107,
+   0.111,
    0.89
   ],
   "min": [
    -0.89,
-   -0.004,
+   0.0,
    -0.89
   ],
   "radius": 1.259
  },
- "built_seconds": 130.93,
+ "built_seconds": 54.24,
  "category": "flora",
  "collision": "none",
  "collision_params": {},

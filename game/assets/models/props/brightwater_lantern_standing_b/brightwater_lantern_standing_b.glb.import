@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://tslew0j4ju2y"
-path="res://.godot/imported/brightwater_lantern_standing_b.glb-e502f4f6f2c1ef0bd36cbaf2911bee2b.scn"
 
 [deps]
 
 source_file="res://assets/models/props/brightwater_lantern_standing_b/brightwater_lantern_standing_b.glb"
-dest_files=["res://.godot/imported/brightwater_lantern_standing_b.glb-e502f4f6f2c1ef0bd36cbaf2911bee2b.scn"]
 
 [params]
 

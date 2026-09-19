@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://fbug1xmsk24x"
-path.s3tc="res://.godot/imported/sedgemire_waterlily_pad_a_atlas_orm.png-c964de08a6e8f6ac4d885982b7f46dfa.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_waterlily_pad_a/sedgemire_waterlily_pad_a_atlas_orm.png"
-dest_files=["res://.godot/imported/sedgemire_waterlily_pad_a_atlas_orm.png-c964de08a6e8f6ac4d885982b7f46dfa.s3tc.ctex"]
 
 [params]
 

@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://qq6mdmukuoip"
-path="res://.godot/imported/hearthvale_bell_small_a.glb-55118ad40d270057c2138659b0afcd00.scn"
 
 [deps]
 
 source_file="res://assets/models/props/hearthvale_bell_small_a/hearthvale_bell_small_a.glb"
-dest_files=["res://.godot/imported/hearthvale_bell_small_a.glb-55118ad40d270057c2138659b0afcd00.scn"]
 
 [params]
 

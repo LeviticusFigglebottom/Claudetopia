@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://btjmsrfjj2igt"
-path="res://.godot/imported/sedgemire_basket_a.glb-e9e532cfaa43c28924ac45dc42c29344.scn"
 
 [deps]
 
 source_file="res://assets/models/props/sedgemire_basket_a/sedgemire_basket_a.glb"
-dest_files=["res://.godot/imported/sedgemire_basket_a.glb-e9e532cfaa43c28924ac45dc42c29344.scn"]
 
 [params]
 

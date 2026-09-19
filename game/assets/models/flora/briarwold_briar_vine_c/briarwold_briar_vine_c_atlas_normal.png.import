@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b50hr351gh0lb"
-path.s3tc="res://.godot/imported/briarwold_briar_vine_c_atlas_normal.png-bd302ae96b260c5d50a97da7b20f5f47.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/flora/briarwold_briar_vine_c/briarwold_briar_vine_c_atlas_normal.png"
-dest_files=["res://.godot/imported/briarwold_briar_vine_c_atlas_normal.png-bd302ae96b260c5d50a97da7b20f5f47.s3tc.ctex"]
 
 [params]
 
