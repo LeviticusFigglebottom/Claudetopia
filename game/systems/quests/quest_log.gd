@@ -145,13 +145,18 @@ func set_stage(quest_id: String, stage: Variant) -> void:
 			return
 		if str(quests[quest_id].get("state", "")) != "active":
 			return
-	var index := stage if typeof(stage) == TYPE_INT else stage_index_of_id(quest_id, str(stage))
-	if typeof(stage) == TYPE_FLOAT:
-		index = int(stage)
-	if typeof(index) != TYPE_INT or int(index) < 0:
+	var index := -1
+	match typeof(stage):
+		TYPE_INT, TYPE_FLOAT:
+			index = int(stage)
+		TYPE_STRING, TYPE_STRING_NAME:
+			index = stage_index_of_id(quest_id, str(stage))
+		_:
+			index = -1
+	if index < 0:
 		Log.warn("Quests", "%s: unknown stage '%s' (content problem)" % [quest_id, str(stage)])
 		return
-	_enter_stage(quest_id, int(index))
+	_enter_stage(quest_id, index)
 
 
 ## Advances to the next stage, completing the quest after the last one.
