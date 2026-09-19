@@ -1,0 +1,395 @@
+[
+  {
+    "id": "core:dialogue/wardens_q1_hesk",
+    "name": "Roll-Keeper Hesk",
+    "npc": "core:npc/wardens_hesk",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "{greeting} Mind the desk, the ink is wet and the page is older than the fort.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Well?",
+        "choices": [
+          {
+            "text": "They said you wanted anyone with legs.",
+            "conditions": [{"not": {"quest_active": "core:quest/wardens_roll_of_names"}}, {"not": {"quest_done": "core:quest/wardens_roll_of_names"}}],
+            "next": "offer"
+          },
+          {
+            "text": "I have your bell. There was a page in it.",
+            "conditions": [{"quest_at": ["core:quest/wardens_roll_of_names", "bring_it_back"]}, {"has_item": ["core:item/wardens_hand_bell", 1]}],
+            "next": "returned"
+          },
+          {
+            "text": "Who strikes a name out of the Roll?",
+            "conditions": [{"quest_at": ["core:quest/wardens_roll_of_names", "who_struck_it"]}],
+            "next": "who_strikes"
+          },
+          {
+            "text": "About Ryn Larkbourne. I have decided.",
+            "conditions": [{"quest_at": ["core:quest/wardens_roll_of_names", "the_pen"]}],
+            "next": "the_pen"
+          },
+          {
+            "text": "What is the Roll, exactly?",
+            "conditions": [{"flag": "topic/wardens_roll"}],
+            "next": "about_the_roll"
+          },
+          {
+            "text": "The Wardens take people on, I hear.",
+            "conditions": [{"not_member_of": "core:faction/wardens"}, {"quest_done": "core:quest/wardens_roll_of_names"}],
+            "next": "join_talk"
+          },
+          {"text": "Nothing. Keep warm, Roll-Keeper.", "effects": [{"end": true}]}
+        ]
+      },
+
+      "offer": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "I did. A tower of ours fell on its side about nine years ago, down the dry valley, and everyone stopped saying its name, and then everyone stopped saying its garrison's names, and now there is a hole in my Roll the shape of eleven people. The hand-bell is still in the ruin. There is a page rolled inside it. I want them both, and I want them in that order, because the page will be ruined if it gets wet and the bell will not.",
+        "effects": [{"unlock_topic": "wardens_roll"}],
+        "choices": [
+          {
+            "text": "Bandits in it, I take it.",
+            "next": "bandits"
+          },
+          {
+            "text": "I will bring them back.",
+            "effects": [
+              {"start_quest": "core:quest/wardens_roll_of_names"},
+              {"quest_stage": ["core:quest/wardens_roll_of_names", "the_tumbled_watch"]},
+              {"set_flag": "met_hesk"}
+            ],
+            "next": "accepted"
+          },
+          {"text": "Find somebody else.", "next": "hub"}
+        ]
+      },
+      "bandits": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "The Larkbourne Boys, yes. They sleep in the stair, which lies sideways now like a corridor, and they use my bell for a cup. I am not asking you to kill anybody. I am asking you to come back with a bell. What happens between those two sentences is between you and them.",
+        "choices": [
+          {
+            "text": "I will bring them back.",
+            "effects": [
+              {"start_quest": "core:quest/wardens_roll_of_names"},
+              {"quest_stage": ["core:quest/wardens_roll_of_names", "the_tumbled_watch"]},
+              {"set_flag": "met_hesk"}
+            ],
+            "next": "accepted"
+          },
+          {"text": "Not for nothing, I hope.", "next": "pay"},
+          {"text": "Find somebody else.", "next": "hub"}
+        ]
+      },
+      "pay": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "A hundred and forty marks, a badge you will pretend not to be pleased about, and your name read out at the next season's reading in front of everybody. Two of those three are worth more than they sound.",
+        "choices": [
+          {
+            "text": "Done.",
+            "effects": [
+              {"start_quest": "core:quest/wardens_roll_of_names"},
+              {"quest_stage": ["core:quest/wardens_roll_of_names", "the_tumbled_watch"]},
+              {"set_flag": "met_hesk"}
+            ],
+            "next": "accepted"
+          },
+          {"text": "I will think about it.", "next": "hub"}
+        ]
+      },
+      "accepted": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "West, down the dry valley, and look for a stair going the wrong way. Take a lantern. Come back before you are somebody I have to write down as gone.",
+        "next": "hub"
+      },
+
+      "returned": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "That is it. That is the bell. And the — ah. Ah. Look at that. Somebody has taken a pen to a name and leaned on it. Through the sheet, and into the sheet beneath, which also carries that name, which means whoever did it knew exactly how the Roll is bound and went on anyway.",
+        "effects": [
+          {"take_item": ["core:item/wardens_hand_bell", 1]},
+          {"give_item": ["core:item/wardens_roll_page", 1]},
+          {"rep": ["core:faction/wardens", 8]},
+          {"quest_stage": ["core:quest/wardens_roll_of_names", "who_struck_it"]}
+        ],
+        "next": "hub"
+      },
+      "who_strikes": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "A Warden's hand. Only a Warden's. Three of us have had that pen this year and I am one, and I did not, and I would like you to believe that without me having to say it twice. Ask Dole. He drinks at Merrowby on the evenings he is not at the gate, and he has held opinions about this Roll since before you could read.",
+        "choices": [
+          {
+            "text": "You suspect him.",
+            "next": "suspect"
+          },
+          {
+            "text": "I will ask him.",
+            "effects": [{"quest_stage": ["core:quest/wardens_roll_of_names", "find_the_name"]}, {"end": true}]
+          }
+        ]
+      },
+      "suspect": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "I suspect everyone and I accuse nobody; that is the whole of my character and it has cost me friends. Dole is a good Warden. Good Wardens are exactly the people who do a thing like this, because they have decided it will help.",
+        "effects": [{"quest_stage": ["core:quest/wardens_roll_of_names", "find_the_name"]}],
+        "next": "hub"
+      },
+
+      "the_pen": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "The Roll is open. The pen is by the lamp. I am going to see about the fire, which does not need seeing about. Whatever you write, write it clearly: the hand matters as much as the name, and in fifty years somebody will read it out loud and mean it.",
+        "choices": [
+          {
+            "text": "Put Ryn Larkbourne back on the Roll.",
+            "effects": [
+              {"quest_choice": ["core:quest/wardens_roll_of_names", "restore"]},
+              {"set_flag": ["wardens_roll_ryn", "restored"]}
+            ],
+            "next": "restored"
+          },
+          {
+            "text": "Strike it properly, and be done.",
+            "effects": [
+              {"quest_choice": ["core:quest/wardens_roll_of_names", "strike"]},
+              {"set_flag": ["wardens_roll_ryn", "struck"]}
+            ],
+            "next": "struck"
+          },
+          {"text": "Give me the night to think.", "next": "hub"}
+        ]
+      },
+      "restored": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "There. Written, and witnessed, and read aloud badly by me. Whatever Ryn Larkbourne does with a name back is Ryn Larkbourne's to do. That is not comfort. It is just how it works.",
+        "effects": [{"end": true}]
+      },
+      "struck": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Then it is struck, and I will sign under it so that the hand is mine as well as yours, because I will not let you carry that alone. It is the safer thing. I do not think it is the right one, and I have been wrong about which is which before.",
+        "effects": [{"end": true}]
+      },
+
+      "about_the_roll": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Every settlement in the basin, written down, with who spoke for it and the season it was read. We read it aloud at the Rest four times a year, all of it, out of the window, badly. People laugh at us. Then a hamlet goes quiet on the fringe and everyone comes here to find out what it was called, and nobody laughs that week.",
+        "choices": [
+          {"text": "Does it work?", "next": "does_it_work"},
+          {"text": "Back to it.", "next": "hub"}
+        ]
+      },
+      "does_it_work": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Three hamlets have gone quiet since I took the pen. I can still say all three names. My predecessor could say four, and two of those have people living in them again. Make of that what you like; the Sayers certainly do.",
+        "next": "hub"
+      },
+      "join_talk": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "We do. It is not a dashing life. You will hold a lantern, you will walk a road at night, and once a season you will stand in a cold yard while somebody reads out five hundred names and gets some of them wrong.",
+        "choices": [
+          {
+            "text": "Put me down for it.",
+            "effects": [{"join_faction": "core:faction/wardens"}, {"rep": ["core:faction/wardens", 5]}],
+            "next": "joined"
+          },
+          {"text": "I will think about it.", "next": "hub"}
+        ]
+      },
+      "joined": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Then you are a Lantern-bearer, and your name is on the inside cover where we keep our own. Try not to make me move it to the other list.",
+        "next": "hub"
+      }
+    }
+  },
+
+  {
+    "id": "core:dialogue/wardens_q1_dole",
+    "name": "Sergeant Dole",
+    "npc": "core:npc/wardens_dole",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "{greeting}",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "Say it, then.",
+        "choices": [
+          {
+            "text": "You struck a name out of the Roll.",
+            "conditions": [{"quest_at": ["core:quest/wardens_roll_of_names", "who_struck_it"]}],
+            "next": "admits"
+          },
+          {
+            "text": "You struck a name out of the Roll.",
+            "conditions": [{"quest_at": ["core:quest/wardens_roll_of_names", "find_the_name"]}],
+            "next": "admits"
+          },
+          {
+            "text": "Hesk speaks well of you, mostly.",
+            "conditions": [{"flag": "met_hesk"}],
+            "next": "about_hesk"
+          },
+          {"text": "Nothing. Enjoy your evening.", "effects": [{"end": true}]}
+        ]
+      },
+      "admits": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "I did. Sit down, you are making the room look at us. Yes, I struck Ryn Larkbourne, and I pressed hard, and I would do it again on a worse evening than this one. You have read what the Roll is for. Now think about what it does. A name holds a thing together. Put a bandit's name in a book that four hundred people hear read out and you have not recorded a bandit, you have built one a banner.",
+        "choices": [
+          {
+            "text": "So you took a person apart to stop a band forming.",
+            "next": "took_apart"
+          },
+          {
+            "text": "That was not your pen to use that way.",
+            "next": "not_your_pen"
+          },
+          {
+            "text": "You have done this before.",
+            "conditions": [{"skill_min": ["speech", 25]}],
+            "tag": "speech",
+            "next": "before"
+          }
+        ]
+      },
+      "took_apart": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "I took a banner down. Whether there was a person behind it is a thing the Roll does not measure and neither do I, standing on the Larkbourne road at two in the morning with a carter bleeding into my coat. Go and look at Ryn, if you like. Gosling Pit, under the Hound. Look properly, and then tell me I am the one doing the damage.",
+        "effects": [{"quest_stage": ["core:quest/wardens_roll_of_names", "find_the_name"]}],
+        "next": "hub"
+      },
+      "not_your_pen": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "No. It was Hesk's, and Hesk would have said no with his whole chest and then gone back to his ink. Tell him. He will write my name in a smaller column and we will both keep doing this until one of us is quiet. Ryn is at Gosling Pit. See it yourself before you decide anything with a pen.",
+        "effects": [{"quest_stage": ["core:quest/wardens_roll_of_names", "find_the_name"]}, {"rep": ["core:faction/wardens", 3]}],
+        "next": "hub"
+      },
+      "before": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "...Twice. The other one deserved it more and it worked less. You are quick. Do not be quick at Hesk, he takes it badly. Ryn is at Gosling Pit. Go and see what a struck name looks like when it is still walking about.",
+        "effects": [
+          {"quest_stage": ["core:quest/wardens_roll_of_names", "find_the_name"]},
+          {"set_flag": "dole_admitted_twice"},
+          {"renown": 2}
+        ],
+        "next": "hub"
+      },
+      "about_hesk": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "He is the best of us and he has never once stood on a road at night. Both of those are true and he knows both of them, which is why I drink here and he reads there.",
+        "next": "hub"
+      }
+    }
+  },
+
+  {
+    "id": "core:dialogue/wardens_q1_ryn",
+    "name": "Ryn Larkbourne",
+    "npc": "core:npc/wardens_ryn",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "Stop there. Hands where the fire can see them.",
+        "conditions": [{"quest_active": "core:quest/wardens_roll_of_names"}],
+        "else": "not_now",
+        "next": "hub"
+      },
+      "not_now": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "Wrong pit, wrong evening. Go on.",
+        "effects": [{"end": true}]
+      },
+      "hub": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "Well? You are not a carter and you are not the Watch, so you are something newer and worse.",
+        "choices": [
+          {
+            "text": "A Warden struck your name out of the Roll.",
+            "conditions": [{"quest_at": ["core:quest/wardens_roll_of_names", "find_the_name"]}],
+            "next": "the_striking"
+          },
+          {
+            "text": "What is happening to you?",
+            "conditions": [{"flag": "ryn_knows"}],
+            "next": "fading"
+          },
+          {
+            "text": "The mill wheel. Pennywort wants it back.",
+            "conditions": [{"flag": "ryn_knows"}],
+            "next": "wheel"
+          },
+          {"text": "Nothing yet.", "effects": [{"end": true}]}
+        ]
+      },
+      "the_striking": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "I know. I have known since the spring, because that is when the boys started calling me you. Not Ryn. You. And when I say the name to them they agree with it, politely, the way you agree with a drunk about the weather. Somebody put a pen through me and I have been thinning out ever since, and the worst of it is that it is working. Nobody is riding out to join me. There is no band. There is a pit, a wheel, and four lads who cannot hold my name in their heads past a rainy afternoon.",
+        "effects": [{"set_flag": "ryn_knows"}, {"unlock_topic": "wardens_roll"}],
+        "choices": [
+          {"text": "You put a thumb in a carter's ribs for a mill wheel.", "next": "the_carter"},
+          {"text": "What do you want written?", "next": "what_you_want"}
+        ]
+      },
+      "the_carter": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "Tam did that, and Tam is dead of it, and I have not said that out loud to anyone because there is nobody left who can hold on to a sentence about me for long enough to hear the end of it. I am not asking to be forgiven. I am asking to be findable. Strike me properly if you must, but somebody ought to be able to say what it was they struck.",
+        "next": "hub"
+      },
+      "what_you_want": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "My name back, and then the Watch can come and take it off me honestly, in front of people, with my name being said the whole time. That is the difference and I know how thin it sounds. A person who is hanged is remembered. A person who is rubbed out is not even that.",
+        "effects": [{"set_flag": "ryn_asked_for_name"}, {"quest_stage": ["core:quest/wardens_roll_of_names", "the_pen"]}],
+        "choices": [
+          {
+            "text": "I will put you back on the Roll.",
+            "effects": [{"set_flag": "ryn_promised"}, {"morality": 2}],
+            "next": "promised"
+          },
+          {
+            "text": "I have not decided.",
+            "next": "undecided"
+          },
+          {
+            "text": "You are safer rubbed out, and so is everyone else.",
+            "effects": [{"disposition": -25}],
+            "next": "refused"
+          }
+        ]
+      },
+      "promised": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "Then say it in the yard where they can hear it, not in a pit where only I can. And tell Dole it was a good idea. It very nearly worked.",
+        "effects": [{"end": true}]
+      },
+      "undecided": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "Decide soon. I have started forgetting which of my brothers is the tall one.",
+        "effects": [{"end": true}]
+      },
+      "refused": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "Aye. Probably. Go on then, and mind the loose chalk on the way up, because it would be a poor joke if the pit got you and nobody could say who it got.",
+        "effects": [{"end": true}]
+      },
+      "fading": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "I go quiet. Bit by bit, the way the hamlets do. It is not dying; it is being mislaid. Ask your Roll-Keeper what he thinks that means about the rest of us, and watch his face do the thing where it stops.",
+        "next": "hub"
+      },
+      "wheel": {
+        "speaker": "core:npc/wardens_ryn",
+        "text": "It is a table now. Take it if you can lift it, and tell Pennywort the flour was better when the wheel was stopped, which is a joke, and which he will not find funny, which is also the joke.",
+        "next": "hub"
+      }
+    }
+  }
+]

@@ -115,7 +115,7 @@
     "stages": [
       {"id": "carry", "journal": "{journal}", "on_enter": [{"give_item": ["{goods}", 1]}],
        "objectives": [{"type": "reach", "target": "{destination}", "text": "{objective_text}", "radius": 90}]},
-      {"id": "handed_over", "journal": "Handed over at {destination}, knot intact.", "on_enter": [{"take_item": ["{goods}", 1]}], "objectives": []}
+      {"id": "handed_over", "auto": true, "journal": "Handed over at {destination}, knot intact.", "on_enter": [{"take_item": ["{goods}", 1]}], "objectives": []}
     ],
     "rewards": {"marks": 0, "renown": 0}
   },
@@ -201,7 +201,7 @@
       {"id": "set_out", "journal": "{journal}", "objectives": [{"type": "talk", "target": "{traveller}", "text": "Tell {traveller} you are ready"}]},
       {"id": "on_the_road", "journal": "On the road to {destination} with {traveller} talking.",
        "objectives": [{"type": "escort", "target": "{traveller}", "place": "{destination}", "text": "{objective_text}"}]},
-      {"id": "arrived", "journal": "{traveller} is at {destination}, whole, and still talking.", "objectives": []}
+      {"id": "arrived", "auto": true, "journal": "{traveller} is at {destination}, whole, and still talking.", "objectives": []}
     ],
     "rewards": {"marks": 0, "renown": 0}
   },

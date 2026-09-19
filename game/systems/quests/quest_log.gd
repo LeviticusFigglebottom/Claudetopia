@@ -568,7 +568,11 @@ func _check_stage_complete(quest_id: String) -> void:
 	var stage := stage_def(quest_id, index)
 	var objs: Array = stage.get("objectives", [])
 	if objs.is_empty():
-		return  # an empty stage waits for a dialogue or script to move it on
+		# An empty stage waits for a dialogue or a script to move it on, unless it is marked
+		# "auto": a closing stage whose only job is to say what happened.
+		if bool(stage.get("auto", false)):
+			advance(quest_id)
+		return
 	for i in objs.size():
 		var o: Dictionary = objs[i]
 		if bool(o.get("optional", false)):
