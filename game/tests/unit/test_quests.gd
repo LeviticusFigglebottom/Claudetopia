@@ -11,8 +11,8 @@ const BELL := "core:item/wardens_hand_bell"
 var log_node: Node
 var radiant: RadiantGenerator
 var ctx: SocialContext
-var inventory: SocialFakes.Inventory
-var player: SocialFakes.Player
+var inventory: SocialFakes.FakeInventory
+var player: SocialFakes.FakePlayer
 var started: Array[String] = []
 var stage_changes: Array = []
 var completed: Array = []
@@ -26,8 +26,8 @@ func before_each() -> void:
 	Social.standing.reset_for_new_game()
 	Social.factions.reset_for_new_game()
 	Social.gossip.reset_for_new_game()
-	inventory = SocialFakes.Inventory.new()
-	player = SocialFakes.Player.new()
+	inventory = SocialFakes.FakeInventory.new()
+	player = SocialFakes.FakePlayer.new()
 	Social.bind("inventory", inventory)
 	Social.bind("player", player)
 	started = []

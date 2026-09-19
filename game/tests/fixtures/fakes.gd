@@ -213,7 +213,7 @@ class Gossip extends RefCounted:
 		return "core:place/merrowby"
 
 
-class Inventory extends RefCounted:
+class FakeInventory extends RefCounted:
 	var items: Dictionary = {}
 	var marks_value := 0
 	var equipped_tags: Array[String] = []
@@ -245,7 +245,7 @@ class Inventory extends RefCounted:
 		marks_value -= n
 
 
-class Player extends RefCounted:
+class FakePlayer extends RefCounted:
 	var name_value := "Wren"
 	var pos := Vector3.ZERO
 	var skills: Dictionary = {}
@@ -337,8 +337,8 @@ static func context(rng_seed: int = 12345) -> SocialContext:
 	ctx.set_provider("factions", Factions.new())
 	ctx.set_provider("standing", Standing.new())
 	ctx.set_provider("gossip", Gossip.new())
-	ctx.set_provider("inventory", Inventory.new())
-	ctx.set_provider("player", Player.new())
+	ctx.set_provider("inventory", FakeInventory.new())
+	ctx.set_provider("player", FakePlayer.new())
 	ctx.set_provider("bounty", Bounty.new())
 	ctx.set_provider("recipes", Recipes.new())
 	ctx.set_provider("clock", Clock.new())

@@ -324,8 +324,25 @@ func take_item(item: String, n: int = 1) -> int:
 	return int(_call("inventory", "remove", [item, n], 0))
 
 
+## Is the player wearing or holding something with this tag? Asks the inventory if it answers
+## that question itself, otherwise reads the equipment slots and the items' own tags.
 func wearing_tag(tag: String) -> bool:
-	return bool(_call("inventory", "has_equipped_tag", [tag], false))
+	if _has("inventory", "has_equipped_tag"):
+		return bool(_call("inventory", "has_equipped_tag", [tag], false))
+	var equipment := provider("equipment")
+	if equipment == null or not equipment.has_method("slots"):
+		return false
+	var slots: Variant = equipment.call("slots")
+	if typeof(slots) != TYPE_DICTIONARY:
+		return false
+	for slot in (slots as Dictionary):
+		var item_id := str((slots as Dictionary)[slot])
+		if item_id == "":
+			continue
+		var tags: Variant = content_def(item_id).get("tags", [])
+		if typeof(tags) == TYPE_ARRAY and (tags as Array).has(tag):
+			return true
+	return false
 
 
 ## The inventory stream owns marks; it may expose them as a method or as a plain property.
@@ -381,7 +398,10 @@ static func can_locate(obj: Object) -> bool:
 	return obj.has_method("position") or obj is Node3D or ("global_position" in obj) or ("position" in obj)
 
 
+## Skills live in the progression system; some player doubles answer for themselves.
 func skill_level(skill: String) -> int:
+	if _has("skills", "skill_level"):
+		return int(_call("skills", "skill_level", [skill], 0))
 	return int(_call("player", "skill_level", [skill], 0))
 
 

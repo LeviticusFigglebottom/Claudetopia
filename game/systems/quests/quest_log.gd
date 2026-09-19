@@ -682,7 +682,7 @@ func _on_book_opened(book_id: String) -> void:
 			_progress(quest_id, i, 1))
 
 
-func _on_item_used(item_id: String) -> void:
+func _on_item_used(item_id: String, _effects: Array = []) -> void:
 	_for_each_objective("use_item", func(quest_id: String, i: int, o: Dictionary) -> void:
 		if _matches(str(o.get("target", "")), item_id):
 			_progress(quest_id, i, 1))

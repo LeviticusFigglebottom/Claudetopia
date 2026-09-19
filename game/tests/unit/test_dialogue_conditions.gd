@@ -11,8 +11,8 @@ var quests: SocialFakes.Quests
 var factions: SocialFakes.Factions
 var standing: SocialFakes.Standing
 var gossip: SocialFakes.Gossip
-var inventory: SocialFakes.Inventory
-var player: SocialFakes.Player
+var inventory: SocialFakes.FakeInventory
+var player: SocialFakes.FakePlayer
 var bounty: SocialFakes.Bounty
 var clock: SocialFakes.Clock
 

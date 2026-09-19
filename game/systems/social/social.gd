@@ -17,7 +17,9 @@ extends Node
 
 const PROVIDER_GROUPS := {
 	"inventory": "inventory",
+	"equipment": "equipment",
 	"player": "player",
+	"skills": "progression",
 	"bounty": "crime",
 	"recipes": "crafting",
 }
@@ -122,8 +124,8 @@ func _on_region_entered(_region_id: String, _previous: String) -> void:
 ## position when one is bound, otherwise the current region's main settlement.
 func place_id() -> String:
 	var player := ctx.provider("player")
-	if player != null and player.has_method("position") and gossip.has_method("nearest_place"):
-		var near := str(gossip.nearest_place(player.call("position")))
+	if SocialContext.can_locate(player):
+		var near := str(gossip.nearest_place(SocialContext.position_of(player)))
 		if near != "":
 			return near
 	if ctx.place_id != "":

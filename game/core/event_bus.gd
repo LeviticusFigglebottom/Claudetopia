@@ -40,7 +40,6 @@ signal item_crafted(recipe_id: String, item_id: String, count: int)
 signal item_enchanted(item_id: String, effect_id: String)
 signal enchantment_learned(effect_id: String)
 signal marks_changed(new_total: int, delta: int)
-signal item_used(item_id: String)
 signal attribute_raised(attribute: String, new_value: int)
 signal perk_taken(perk_id: String)
 
