@@ -118,7 +118,8 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 
 ## 7. Content definitions that other streams depend on
 
-* `item`: `{id, name, category (weapon|armour|consumable|ingredient|material|book|key|misc|tool), weight, value, description, model?, icon?, stack?, tags[], weapon?{class, damage, poise_damage, stamina_light, stamina_heavy, speed, reach, clips_set (1H|2H|dagger|bow|staff|unarmed), parry: bool, stability}, armour?{slot, armour, weight_class, stability}, effects?[], alchemy?{effects:[4 ids]}}`
+* `item`: `{id, name, category (weapon|armour|consumable|ingredient|material|book|key|misc|tool), weight, value, description, model?, icon?, stack?, tags[], tier?, material? (what tempering consumes), weapon?{class, damage, poise_damage, stamina_light, stamina_heavy, speed, reach, clips_set (1H|2H|dagger|bow|staff|unarmed), parry: bool, stability}, ranged?{draw_time, reload_time, ammo}, armour?{slot, armour, weight_class, stability}, light?{range, energy, color}, ember?{charge}, effects?[], alchemy?{effects:[4 ids]}, origin? (ingredient's region)}`.
+  Per-instance state lives on the stack, not the definition: `data{temper, enchant, effects, name, quality}`.
 * `enemy`: `{id, name, archetype, model, rig (humanoid|custom), stats{hp, stamina, poise, armour, speed}, attacks[{name, clip, damage, poise_damage, range, telegraph, recovery}], perception{sight_range, sight_fov, hearing}, behaviour{...}, loot: loot id, marks:[min,max], lore}`
 * `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}}`
 * `quest`: `{id, name, layer (main|faction|side|radiant), stages[{id, journal, objectives[{type, target, count}], on_enter[], on_complete[]}], rewards}`
@@ -130,3 +131,33 @@ Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 `{"set_flag": ...}`, `{"give_item": [...]}`, `{"quest_stage": [...]}`,
 `{"rep": [faction, delta]}`, `{"morality": delta}`, `{"renown": delta}`,
 `{"marks": delta}`, `{"start_quest": id}`, `{"teach_recipe": id}`.
+
+## 8. System discovery contract (pinned by tests)
+
+Systems find each other by group, never by node path. These names and methods are pinned
+by `game/tests/unit/test_inventory_contract.gd` and equivalents; changing one breaks
+other streams.
+
+| Group | Node | Methods other systems call |
+|---|---|---|
+| `player` | the player actor | `full_restore()`, `respawn(pos, yaw)`, `set_input_enabled(bool)`, `is_dead()`, `teleport(pos, yaw)`, `save_summary()` |
+| `inventory` | the **player's** bag only | `marks`, `add_marks(n)`, `remove_marks(n)->int`, `add/remove/count/has`, `items()`, `weight()`, `capacity()`, `use(item)`, `drop(item, count)` |
+| `equipment` | the player's paper doll | `slots()`, `equip(item, slot)`, `unequip(slot)`, `armour_total()`, `stability()`, `weight_class()`, `main_weapon()` |
+| `progression` | skills/levels/perks | `skills()`, `level`, `attribute_points`, `perk_points`, `perks_for(skill)`, `take_perk(id)`, `spend_attribute(name)`, `mods` |
+| `crafting` | recipes/alchemy/enchanting | `recipes_for(station)`, `craft(id)`, `known_effects(item)`, `combine(ids)`, `enchant(...)`, `disenchant(item)`, `consume_charge(item)` |
+| `quest_log` | quests | `active_quests()`, `completed_quests()`, `active_markers()` |
+| `dialogue_runner` | dialogue | `choose(index)`, `advance()`; signals `line_shown`, `choice_needed`, `ended` |
+| `factions` | reputation & law | `reputation(id)`, `rank(id)`, `is_member(id)`, `law_faction_for_region(id)` |
+| `standing` | morality & renown | `reaction_profile()` -> `{renown, renown_tier, morality, morality_tier, title}` |
+| `crime` | bounty | `bounty(faction)`, `report_crime(dict)`, `pay_bounty(faction)` |
+| `stealth` | visibility | `player_visibility()`, `player_noise()` |
+| `atmosphere` | sky/weather | `weather_params()`, `set_region(id, instant)`, `force_weather(id)`, `set_interior(bool)`, `light_level_at(pos)` |
+| `world` | terrain/streaming | `get_height(x, z)`, `region_id_at(x, z)`, `is_water(x, z)` |
+
+Containers, corpses and merchant bags use the same `Inventory` class but must NOT join the
+`inventory` group: only the player's bag does, so a lookup can never grab a chest.
+
+### Loot table shape
+
+`{id, entries:[{item|table, weight, count:[min,max], conditions:{region, min_level, luck, flag, quest_at}}], guaranteed:[...], rolls:[min,max]}`.
+Rolls are deterministic for a given `RandomNumberGenerator`.

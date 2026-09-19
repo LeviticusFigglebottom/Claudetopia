@@ -189,7 +189,7 @@ are normative for pass one and live in `game/systems/*`.
 * Echoes can be seen from a distance (a faint standing figure with a light).
 
 ### 5.6 Progression
-* Skills (15): One-Handed, Two-Handed, Archery, Block, Armour, Sneak, Speech,
+* Skills (16): One-Handed, Two-Handed, Archery, Block, Armour, Sneak, Speech,
   Alchemy, Smithing, Enchanting, Athletics, Kindling, Hush, Binding, Mending,
   Calling. (Calling and Mending share XP with use of their spells.)
 * Use grants skill XP; XP to next skill level = `40 · 1.12^level`. Skill gains add
