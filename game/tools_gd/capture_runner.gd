@@ -23,7 +23,6 @@ var out_dir := "captures"
 var _world: World = null
 var _perf: Array = []
 var _failures: Array[String] = []
-var _fog_base: Dictionary = {}
 
 
 func _ready() -> void:
@@ -107,7 +106,6 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		WorldClock.set_time(float(shot["time"]))
 	if shot.has("weather"):
 		_force_weather(str(shot["weather"]))
-	_set_fog_scale(float(shot.get("fog_scale", 1.0)))
 	var pos := _shot_position(shot)
 	var cam := _world.fly_camera
 	if cam == null:
@@ -145,12 +143,14 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 ## Review shots look a long way, where the region fog densities turn the land into haze.
 ## A plan can thin the fog for a shot; the world itself is untouched.
 func _set_fog_scale(scale: float) -> void:
+	if is_equal_approx(scale, 1.0):
+		return
 	var env := _environment()
 	if env == null:
 		return
-	if not _fog_base.has(env):
-		_fog_base[env] = env.fog_density
-	env.fog_density = float(_fog_base[env]) * scale
+	# multiply what the atmosphere just wrote for this region and weather, not a remembered
+	# value from an earlier shot in another region
+	env.fog_density *= scale
 
 
 func _pause_atmosphere(paused: bool) -> void:
