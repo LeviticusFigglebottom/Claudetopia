@@ -27,6 +27,8 @@ var _fakes: Node
 
 
 func _ready() -> void:
+	# full-screen screens pause the tree, so the harness has to keep running through it
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
@@ -94,7 +96,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "journal_rumours", "menu": "journal", "args": {"tab": 1}},
 		{"name": "journal_bestiary", "menu": "journal", "args": {"tab": 2}},
 		{"name": "journal_books", "menu": "journal", "args": {"tab": 3}},
-		{"name": "book_reader", "menu": "book", "args": {"book_id": "core:book/four_accounts"}},
+		{"name": "book_reader", "menu": "book", "args": {"book_id": "core:book/the_falling_of_the_toll"}},
 		{"name": "inventory", "menu": "inventory"},
 		{"name": "skills", "menu": "skills"},
 		{"name": "crafting_forge", "menu": "crafting", "args": {"station": "forge"}},

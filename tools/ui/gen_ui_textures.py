@@ -138,10 +138,11 @@ def to_image(rgb: np.ndarray, alpha: np.ndarray | None = None) -> Image.Image:
 
 def parchment(w: int, h: int, rng: np.random.Generator, pal: dict, *, vignette: float = 0.30,
               stains: int = 3, fibre: float = 0.16, edge: float = 0.0,
-              wrap: bool = False) -> Image.Image:
-    """A sheet of fibrous, faintly stained paper."""
+              wrap: bool = False, tone_amount: float = 1.0) -> Image.Image:
+    """A sheet of fibrous, faintly stained paper. `tone_amount` flattens the large-scale
+    blotching, which matters for a nine-patch centre that will be stretched a long way."""
     blotch = fbm(w, h, rng, octaves=5, base=3, persistence=0.55, wrap=wrap)
-    tone = np.clip(blotch * 0.9 + 0.05, 0.0, 1.0)
+    tone = np.clip((blotch * 0.9 + 0.05) * tone_amount + (1.0 - tone_amount) * 0.35, 0.0, 1.0)
     rgb = _lerp_rgb(pal["paper_hi"], pal["paper_lo"], tone)
 
     # fibres: long thin streaks both ways, a paper grain rather than a pattern
@@ -388,7 +389,7 @@ def panel(rng, pal, *, frame: str | None, size: int = PANEL_SIZE, margin: int = 
           rule: bool = True, paper_vignette: float = 0.0) -> Image.Image:
     """Parchment nine-patch, optionally banded with brass ('metal') or oak ('wood')."""
     img = parchment(size, size, rng, pal, vignette=paper_vignette, stains=0, fibre=0.08,
-                    wrap=True, edge=(margin * 0.92) / size)
+                    wrap=True, edge=(margin * 0.92) / size, tone_amount=0.30)
     if rule:
         nib = Nib(size, size, rng)
         inset = (margin * 0.55 if frame else margin * 0.42) / size
@@ -408,7 +409,7 @@ def small_panel(rng, pal, *, frame: str = "metal", size: int = SMALL_SIZE,
     """A light nine-patch for HUD chrome — quick slots, prompts, toasts — where the full
     brass moulding would swallow the thing it frames."""
     img = parchment(size, size, rng, pal, vignette=0.0, stains=0, fibre=0.07, wrap=True,
-                    edge=(margin * 0.9) / size)
+                    edge=(margin * 0.9) / size, tone_amount=0.35)
     band = moulding(size, size, margin, rng, pal, frame, studs=False, inner_rule=False)
     return over(img, band)
 
@@ -417,7 +418,8 @@ def button(rng, pal, state: str, w: int = 160, h: int = 56, margin: int = 18) ->
     """Normal / hover / pressed / disabled: a small paper tablet held by a metal rule."""
     tone = {"normal": 0.0, "hover": 0.10, "pressed": -0.13, "disabled": -0.06}[state]
     img = parchment(w, h, rng, pal, vignette=0.0, stains=0, fibre=0.07, wrap=True,
-                    edge=(margin * 0.8) / min(w, h) * (1.5 if state == "pressed" else 1.0))
+                    edge=(margin * 0.8) / min(w, h) * (1.5 if state == "pressed" else 1.0),
+                    tone_amount=0.35)
     arr = np.asarray(img, np.float32)
     if state == "disabled":  # washed out and greyer
         grey = arr[..., :3].mean(axis=2, keepdims=True)
@@ -495,7 +497,7 @@ def radio(rng, pal, checked: bool, size: int = 32) -> Image.Image:
 
 def tab(rng, pal, active: bool, w: int = 96, h: int = 44, margin: int = 14) -> Image.Image:
     img = parchment(w, h, rng, pal, vignette=0.0, stains=0, fibre=0.10, wrap=True,
-                    edge=(margin * 0.75) / min(w, h) * (0.8 if active else 1.4))
+                    edge=(margin * 0.75) / min(w, h) * (0.8 if active else 1.4), tone_amount=0.35)
     arr = np.asarray(img, np.float32)
     if not active:
         grey = arr[..., :3].mean(axis=2, keepdims=True)
@@ -515,7 +517,7 @@ def tab(rng, pal, active: bool, w: int = 96, h: int = 44, margin: int = 14) -> I
 
 def tooltip(rng, pal, size: int = 96, margin: int = 20) -> Image.Image:
     img = parchment(size, size, rng, pal, vignette=0.0, stains=0, fibre=0.13, wrap=True,
-                    edge=(margin * 0.85) / size)
+                    edge=(margin * 0.85) / size, tone_amount=0.35)
     arr = np.asarray(img, np.float32)
     arr[..., :3] = np.clip(arr[..., :3] * 0.92, 0, 255)
     img = Image.fromarray(arr.astype(np.uint8), "RGBA")
@@ -1209,6 +1211,22 @@ def bell_mark(rng, pal, size: int = 256) -> Image.Image:
     return nib.bake(grain=0.30, blur=0.6)
 
 
+def rule_line(rng, pal, w: int = 64, h: int = 16) -> Image.Image:
+    """The stretchable part of a rule: an inked line with a little wobble."""
+    nib = Nib(w, h, rng)
+    nib.stroke([(0.0, 0.5), (1.0, 0.5)], 0.20, pal["ink"], jitter=0.004, taper=0.0)
+    return nib.bake(grain=0.24, blur=0.4)
+
+
+def rule_mark(rng, pal, w: int = 40, h: int = 24) -> Image.Image:
+    """The brass lozenge that sits in the middle of a rule."""
+    nib = Nib(w, h, rng)
+    dia = [(0.50, 0.12), (0.80, 0.5), (0.50, 0.88), (0.20, 0.5)]
+    nib.poly(dia, pal["metal"], jitter=0.004)
+    nib.stroke(dia, 0.10, pal["ink"], closed=True, jitter=0.004)
+    return nib.bake(grain=0.20, blur=0.45)
+
+
 def divider(rng, pal, w: int = 384, h: int = 24) -> Image.Image:
     nib = Nib(w, h, rng)
     nib.stroke([(0.02, 0.5), (0.43, 0.5)], 0.22, pal["ink"], jitter=0.004, taper=0.5)
@@ -1446,11 +1464,15 @@ def build(out: Path, only: str = "") -> dict:
             if variant == "warm":
                 put("mark_bell", bell_mark(_rng("bellmark"), pal))
                 put("divider", divider(_rng("divider"), pal), margin=[24, 0, 24, 0])
+                put("rule_line", rule_line(_rng("rule_line"), pal), margin=[8, 0, 8, 0])
+                put("rule_mark", rule_mark(_rng("rule_mark"), pal))
                 put("smudge", smudge(_rng("smudge"), pal))
                 put("cursor", cursor(_rng("cursor"), pal))
                 put("menu_backdrop", menu_backdrop(_rng("backdrop"), pal))
             else:
                 put("divider_deep", divider(_rng("divider_deep"), pal), margin=[24, 0, 24, 0])
+                put("rule_line_deep", rule_line(_rng("rule_line_deep"), pal), margin=[8, 0, 8, 0])
+                put("rule_mark_deep", rule_mark(_rng("rule_mark_deep"), pal))
                 put("smudge_deep", smudge(_rng("smudge_deep"), pal))
 
         manifest["variants"].setdefault(variant, {}).update(v)

@@ -507,6 +507,26 @@
     0
    ]
   },
+  "rule_line": {
+   "file": "rule_line.png",
+   "size": [
+    64,
+    16
+   ],
+   "margin": [
+    8,
+    0,
+    8,
+    0
+   ]
+  },
+  "rule_mark": {
+   "file": "rule_mark.png",
+   "size": [
+    40,
+    24
+   ]
+  },
   "smudge": {
    "file": "smudge.png",
    "size": [
@@ -871,6 +891,26 @@
     0,
     24,
     0
+   ]
+  },
+  "rule_line_deep": {
+   "file": "rule_line_deep.png",
+   "size": [
+    64,
+    16
+   ],
+   "margin": [
+    8,
+    0,
+    8,
+    0
+   ]
+  },
+  "rule_mark_deep": {
+   "file": "rule_mark_deep.png",
+   "size": [
+    40,
+    24
    ]
   },
   "smudge_deep": {

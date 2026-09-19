@@ -108,16 +108,42 @@ static func spacer(min_size := 0.0, vertical := false) -> Control:
 	return c
 
 
-## The inked rule with a brass lozenge, used to break a page.
-static func divider(width := 0.0) -> TextureRect:
-	var t := TextureRect.new()
-	t.texture = ThemeBuilder.texture("divider" if UI.theme_variant == "warm" else "divider_deep")
-	t.stretch_mode = TextureRect.STRETCH_SCALE
-	t.custom_minimum_size = Vector2(width, 16)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	t.modulate.a = 0.85
-	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return t
+## The inked rule with a brass lozenge, used to break a page. The line stretches to any
+## width; the lozenge keeps its size and stays in the middle.
+static func divider(width := 0.0) -> Control:
+	var deep := UI.theme_variant != "warm"
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(width, 20)
+	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var line := NinePatchRect.new()
+	line.texture = ThemeBuilder.texture("rule_line_deep" if deep else "rule_line")
+	line.patch_margin_left = 8
+	line.patch_margin_right = 8
+	line.set_anchors_preset(Control.PRESET_FULL_RECT)
+	line.offset_top = 2.0
+	line.offset_bottom = -2.0
+	line.modulate.a = 0.8
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(line)
+
+	var mark := TextureRect.new()
+	mark.texture = ThemeBuilder.texture("rule_mark_deep" if deep else "rule_mark")
+	mark.set_anchors_preset(Control.PRESET_CENTER)
+	mark.anchor_left = 0.5
+	mark.anchor_right = 0.5
+	mark.anchor_top = 0.5
+	mark.anchor_bottom = 0.5
+	mark.offset_left = -20.0
+	mark.offset_right = 20.0
+	mark.offset_top = -12.0
+	mark.offset_bottom = 12.0
+	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(mark)
+	return holder
 
 
 static func scroll(child: Control, horizontal := false) -> ScrollContainer:
@@ -293,7 +319,9 @@ static func markdown_lite(text: String) -> String:
 	var out := PackedStringArray()
 	for raw in text.split("\n"):
 		var line := raw.strip_edges(false, true)
-		if line.begins_with("### "):
+		if line.begins_with("---") and line.strip_edges().replace("-", "").is_empty():
+			out.append("[center]·   ·   ·[/center]")
+		elif line.begins_with("### "):
 			out.append("[font_size=19][b]%s[/b][/font_size]" % _inline(line.substr(4)))
 		elif line.begins_with("## "):
 			out.append("[font_size=22][b]%s[/b][/font_size]" % _inline(line.substr(3)))

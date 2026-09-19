@@ -41,8 +41,15 @@ func _world_state() -> void:
 	GameState.set_flag("player_calling", "core:calling/hearthkeeper")
 	GameState.set_flag("surveyed:core:place/chalk_hound", true)
 	GameState.set_flag("surveyed:core:place/the_lamp", true)
-	GameState.mark_book_read("core:book/the_roll")
-	GameState.mark_book_read("core:book/on_bells")
+	for book in ["core:book/naming_day_primer", "core:book/hearthvale_cookery",
+			"core:book/unreliable_bestiary", "core:book/the_falling_of_the_toll"]:
+		if ContentDB.has(book):
+			GameState.mark_book_read(book)
+	for enemy in ContentDB.ids_of("enemy"):
+		GameState.set_flag("bestiary:" + enemy, true)
+		GameState.inc("killed:" + enemy, 3 + enemy.length() % 7)
+	for rumour in ContentDB.ids_of("rumour"):
+		GameState.set_flag("rumour:" + rumour, true)
 	GameState.play_time_seconds = 4.0 * 3600.0 + 37.0 * 60.0
 	WorldClock.set_time(17.6, 12)
 	WorldClock.running = false
@@ -238,6 +245,9 @@ class FakePlayer:
 
 class FakeQuestLog:
 	extends Node
+
+	func _init() -> void:
+		add_to_group("quest_log")
 
 	var _active: Array[Dictionary] = [
 		{"id": "core:quest/toll_hums", "name": "The Toll Hums", "layer": "main", "stage": 2,
