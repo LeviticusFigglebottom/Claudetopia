@@ -58,3 +58,47 @@ func test_late_joiner_pending() -> void:
 	SaveSystem.deserialize({"schema_version": SaveSystem.SCHEMA_VERSION, "sections": {"ghost_section": {"x": 1}}})
 	assert_eq(SaveSystem.take_pending("ghost_section"), {"x": 1})
 	assert_eq(SaveSystem.take_pending("ghost_section"), {})
+
+
+# --- the bound keys ------------------------------------------------------------------------------
+
+func test_quick_save_and_load_use_the_quick_slot() -> void:
+	# F5/F9 are bound in default_bindings.json; before this they did nothing at all.
+	var had := SaveSystem.slot_exists(SaveSystem.QUICK_SLOT)
+	var kept := FileAccess.get_file_as_bytes(SaveSystem.slot_path(SaveSystem.QUICK_SLOT)) if had else PackedByteArray()
+	GameState.set_flag("quick_save_probe", true)
+	var heard: Array = []
+	var handler := func(text: String, kind: String) -> void: heard.append([text, kind])
+	EventBus.notify.connect(handler)
+	UI.quick_save()
+	assert_true(SaveSystem.slot_exists(SaveSystem.QUICK_SLOT))
+	GameState.set_flag("quick_save_probe", false)
+	UI.quick_load()
+	EventBus.notify.disconnect(handler)
+	assert_true(GameState.has_flag("quick_save_probe"), "the quick slot came back")
+	assert_eq(heard.size(), 2, "the player is told both times")
+	for entry in heard:
+		assert_eq(str(entry[1]), "save")
+	GameState.set_flag("quick_save_probe", false)
+	if had:
+		var f := FileAccess.open(SaveSystem.slot_path(SaveSystem.QUICK_SLOT), FileAccess.WRITE)
+		f.store_buffer(kept)
+		f.close()
+	else:
+		SaveSystem.delete_slot(SaveSystem.QUICK_SLOT)
+
+
+func test_quick_load_with_nothing_saved_says_so() -> void:
+	var had := SaveSystem.slot_exists(SaveSystem.QUICK_SLOT)
+	var kept := FileAccess.get_file_as_bytes(SaveSystem.slot_path(SaveSystem.QUICK_SLOT)) if had else PackedByteArray()
+	SaveSystem.delete_slot(SaveSystem.QUICK_SLOT)
+	var heard: Array = []
+	var handler := func(_text: String, kind: String) -> void: heard.append(kind)
+	EventBus.notify.connect(handler)
+	UI.quick_load()
+	EventBus.notify.disconnect(handler)
+	assert_eq(heard, ["warning"], "an empty slot warns instead of failing silently")
+	if had:
+		var f := FileAccess.open(SaveSystem.slot_path(SaveSystem.QUICK_SLOT), FileAccess.WRITE)
+		f.store_buffer(kept)
+		f.close()

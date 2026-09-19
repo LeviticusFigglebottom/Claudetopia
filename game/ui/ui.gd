@@ -47,6 +47,9 @@ const MENUS := {
 ## Actions that open their screen straight from the world.
 const MENU_ACTIONS := {"inventory": "inventory", "journal": "journal", "map": "map", "skills": "skills"}
 
+## Where a screenshot taken with the bound key lands.
+const SHOT_DIR := "user://captures/shots"
+
 var hud_layer: CanvasLayer
 var dialogue_layer: CanvasLayer
 var menu_layer: CanvasLayer
@@ -349,7 +352,8 @@ func _on_player_spawned(_player: Node) -> void:
 
 # --- toasts -------------------------------------------------------------------------------
 
-const TOAST_ICONS := {"info": "bell", "quest": "quest", "item": "coin", "warning": "skull", "book": "book"}
+const TOAST_ICONS := {"info": "bell", "quest": "quest", "item": "coin", "warning": "skull", "book": "book",
+	"save": "save", "spell": "staff", "boss": "skull"}
 
 
 func _on_notify(text: String, kind: String) -> void:
@@ -454,6 +458,55 @@ func _unhandled_input(event: InputEvent) -> void:
 			open(str(MENU_ACTIONS[action]))
 			get_viewport().set_input_as_handled()
 			return
+	if InputMap.has_action("quick_save") and event.is_action_pressed("quick_save"):
+		quick_save()
+		get_viewport().set_input_as_handled()
+	elif InputMap.has_action("quick_load") and event.is_action_pressed("quick_load"):
+		quick_load()
+		get_viewport().set_input_as_handled()
+	elif InputMap.has_action("screenshot") and event.is_action_pressed("screenshot"):
+		take_screenshot()
+		get_viewport().set_input_as_handled()
+
+
+## The bound quick-save key. It writes the same slot the menu calls "quick", and says so,
+## because a save you are not told about is a save you do not trust.
+func quick_save() -> void:
+	var err := SaveSystem.save_to_slot(SaveSystem.QUICK_SLOT)
+	if err == OK:
+		EventBus.notify.emit("Saved.", "save")
+	else:
+		EventBus.notify.emit("Could not save (%s)." % error_string(err), "warning")
+
+
+func quick_load() -> void:
+	if not SaveSystem.slot_exists(SaveSystem.QUICK_SLOT):
+		EventBus.notify.emit("Nothing saved there yet.", "warning")
+		return
+	var err := SaveSystem.load_from_slot(SaveSystem.QUICK_SLOT)
+	if err == OK:
+		EventBus.notify.emit("Loaded.", "save")
+	else:
+		EventBus.notify.emit("Could not load (%s)." % error_string(err), "warning")
+
+
+## Writes the frame to user://captures/shots. Returns the path, or "" when there was no frame
+## to take (headless runs have no viewport texture).
+func take_screenshot() -> String:
+	var vp := get_viewport()
+	if vp == null:
+		return ""
+	var image := vp.get_texture().get_image() if vp.get_texture() != null else null
+	if image == null:
+		return ""
+	DirAccess.make_dir_recursive_absolute(SHOT_DIR)
+	var stamp := Time.get_datetime_string_from_system(false, true).replace(":", "-").replace(" ", "_")
+	var path := "%s/wickmere_%s.png" % [SHOT_DIR, stamp]
+	if image.save_png(path) != OK:
+		EventBus.notify.emit("Could not write the screenshot.", "warning")
+		return ""
+	EventBus.notify.emit("Screenshot saved.", "save")
+	return path
 
 
 func _dialogue_running() -> bool:
