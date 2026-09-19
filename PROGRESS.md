@@ -4,8 +4,18 @@ _Updated 2026-09-19 (session 1, early)._
 
 ## State
 
-**Tests: 314 unit tests green, 0 content problems. 16/16 scripted combat-arena checks
-pass. 483+ content definitions across 21 types.**
+**603 unit tests green, 0 content problems. The smoke run builds all 24 shipping
+interiors clean. The scripted journey passes all 12 of DESIGN's done-list promises.
+16/16 combat-arena checks pass. 620+ content definitions across 23 types.**
+
+Verify the whole thing with four commands:
+
+```
+./run.sh test       # 603 unit tests, and content validation fails the build
+./run.sh smoke      # build every interior for real; fail on any error
+./run.sh journey    # one scripted run through every promise in the done list
+./run.sh perf       # draw calls and primitives against the budgets
+```
 
 Merged and working on the main branch:
 
@@ -19,11 +29,18 @@ Merged and working on the main branch:
 * **Hearth** — Hearthstones, death, and the Echo that holds your marks until a second death
   lets it go quiet.
 * **Interiors** — a far-pocket loader and doors; the cave forge (nine deep places, each
-  with its own formation, beats, shortcut and boss) and the house forge (fifteen houses
-  whose plan and contents follow from the resident's trade, wealth, household and habits).
+  with its own formation grammar, beats, shortcut and boss) and the house forge (fifteen
+  houses whose plan and contents follow from the resident's trade, wealth, household and
+  habits). 3.4 M triangles of authored cave, chunked per chamber so it culls.
+* **Integration** — `GameServices` installs law, ownership, stealth, NPC life, market and
+  property in dependency order; the player carries and saves their own bag, paper doll,
+  skills and recipes. Both existed only because the journey found them missing.
 * **Inventory, progression, crafting** — stacks with per-instance state, 13 equipment
   slots, deterministic loot tables, 16 use-based skills with 34 perks, six callings,
   smithing with tempering, alchemy with effect discovery, enchanting with mote charge.
+* **Bosses** — five, with phases that swap attack sets, breakable limbs on the
+  Stone-Thrall King, channelled attacks that must be interrupted or silenced, and unique
+  drops that carry the fight they came out of.
 * **Combat and actors** — the full melee, ranged and magic loop with stamina, committed
   attacks, dodge i-frames, block, parry and riposte, poise and stagger, nine status
   effects; player with first and third person cameras, lock-on, mantling and interaction;

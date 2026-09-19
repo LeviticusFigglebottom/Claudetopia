@@ -5,6 +5,7 @@
 #   ./run.sh smoke      load every region and interior headlessly, fail on errors
 #   ./run.sh journey    scripted playthrough of every promise in DESIGN's done list
 #   ./run.sh shots      headless capture plan -> captures/
+#   ./run.sh perf       measure draw calls and primitives against the budgets
 #   ./run.sh world      rebuild terrain/world data from recipes
 #   ./run.sh assets     rebuild generated assets (needs Blender)
 #   ./run.sh interiors  rebuild every cave and house from its recipe
@@ -53,6 +54,11 @@ case "$cmd" in
     if echo "$out" | grep -qE "SCRIPT ERROR|SMOKE: FAIL"; then echo "[smoke] FAIL"; exit 1; fi
     if ! echo "$out" | grep -q "SMOKE: PASS"; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
     echo "[smoke] PASS" ;;
+  perf)
+    import_project
+    mkdir -p "$ROOT/captures"
+    xvfb "$GODOT" --path "$GAME" --audio-driver Dummy --resolution 1600x900 \
+      res://tools_gd/perf_probe.tscn -- "--out=$ROOT/captures" ;;
   shots)
     import_project
     mkdir -p "$ROOT/captures"
