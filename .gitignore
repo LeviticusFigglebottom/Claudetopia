@@ -16,3 +16,5 @@ tools/out/
 # OS
 .DS_Store
 Thumbs.db
+# local tool state
+.claude/worktrees/

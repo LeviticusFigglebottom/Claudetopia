@@ -1,0 +1,11 @@
+{
+  "id": "core:interior/test_cell",
+  "name": "Test Cell",
+  "scene": "res://tests/fixtures/test_interior.tscn",
+  "resident": "nobody",
+  "trade": "none",
+  "wealth": 0,
+  "story": "A bare room used only by the automated tests. Nothing happened here, on purpose.",
+  "unique_object": "the only room in Wickmere with nothing in it",
+  "test_only": true
+}
