@@ -147,19 +147,19 @@ func _frac(event_name: String, fallback: float) -> float:
 	return fallback
 
 
-func update(delta: float, current_clip: String, p: float, elapsed: float, locomotion: Vector2, sneaking: bool, is_held: bool) -> void:
+func update(delta: float, current_clip: String, p: float, locomotion: Vector2, sneaking: bool) -> void:
 	_time += delta
-	if current_clip != clip:
-		begin(current_clip, events if current_clip == clip else {}, clip_length)
+	# play_intent() always calls begin() with the clip's timing; this only resyncs the name.
+	clip = current_clip
 	for k in pose.keys():
 		pose[k] = Vector3.ZERO
 		pose_pos[k] = Vector3.ZERO
 	var mag := clampf(locomotion.length(), 0.0, 1.0)
 	_phase += delta * (4.0 + 9.0 * mag) * (1.0 if mag > 0.05 else 0.0)
 	if kind == "quadruped":
-		_pose_quadruped(current_clip, p, mag, is_held)
+		_pose_quadruped(current_clip, p, mag)
 	else:
-		_pose_humanoid(current_clip, p, mag, sneaking, is_held)
+		_pose_humanoid(current_clip, p, mag, sneaking)
 	var k := 1.0 - exp(-18.0 * delta)
 	for part_name in parts.keys():
 		var n: Node3D = parts[part_name]
@@ -167,7 +167,7 @@ func update(delta: float, current_clip: String, p: float, elapsed: float, locomo
 		n.position = n.position.lerp(base_pos[part_name] + pose_pos[part_name], k)
 
 
-func _pose_humanoid(c: String, p: float, mag: float, sneaking: bool, is_held: bool) -> void:
+func _pose_humanoid(c: String, p: float, mag: float, sneaking: bool) -> void:
 	var s := sin(_phase)
 	var leg_amp := 0.35 + 0.55 * mag
 	var arm_amp := 0.25 + 0.4 * mag
@@ -305,11 +305,8 @@ func _pose_humanoid(c: String, p: float, mag: float, sneaking: bool, is_held: bo
 			pose_pos["hips"].y = -0.65
 		_:
 			pass
-	if is_held and (c == "Death_A" or c == "Death" or c == "Death_B" or c == "Knockdown"):
-		pass
 
-
-func _pose_quadruped(c: String, p: float, mag: float, is_held: bool) -> void:
+func _pose_quadruped(c: String, p: float, mag: float) -> void:
 	var s := sin(_phase)
 	var amp := 0.3 + 0.6 * mag
 	if mag > 0.05:
@@ -371,8 +368,6 @@ func _pose_quadruped(c: String, p: float, mag: float, is_held: bool) -> void:
 			pose_pos["hips"].y -= 0.15
 		_:
 			pass
-	if is_held:
-		pass
 
 
 ## Arm swing profile: wind up to `back` before hit_start, sweep to `front` by hit_end, recover.

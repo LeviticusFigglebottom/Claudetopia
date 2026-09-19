@@ -205,7 +205,7 @@ func _physics_process(delta: float) -> void:
 					current_clip = ""
 				clip_finished.emit(finished)
 	if placeholder != null:
-		placeholder.update(delta, current_clip, progress(), elapsed, locomotion, sneaking, held)
+		placeholder.update(delta, current_clip, progress(), locomotion, sneaking)
 
 
 func _on_model_event(event_name: String) -> void:
