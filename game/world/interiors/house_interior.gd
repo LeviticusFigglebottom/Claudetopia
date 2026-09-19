@@ -38,6 +38,8 @@ var meta: Dictionary = {}
 var rooms: Dictionary = {}
 var _missing: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
+var _props := PropLibrary.new()
+var _variant := 0
 
 
 func _ready() -> void:
@@ -261,6 +263,14 @@ func _instance(path: String, kind: String) -> Node3D:
 		return null
 	if ResourceLoader.exists(path):
 		return (load(path) as PackedScene).instantiate() as Node3D
+	# The recipe asked for a plain kind; the forge builds them per region. Ask the library
+	# for this region's version before giving up and drawing a labelled stand-in.
+	_variant += 1
+	var found := _props.resolve(kind, str(meta.get("culture", "")), _variant)
+	if found.is_empty():
+		found = _props.resolve(kind, _region_of_place(), _variant)
+	if not found.is_empty():
+		return (load(found) as PackedScene).instantiate() as Node3D
 	if not _missing.has(path):
 		_missing[path] = true
 	var size := _placeholder_size(kind)
@@ -305,6 +315,14 @@ static func _placeholder_size(kind: String) -> Vector3:
 static func _vec(a: Variant) -> Vector3:
 	var arr: Array = a
 	return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
+
+
+## The region a house stands in, for choosing the local timber and stone.
+func _region_of_place() -> String:
+	var place := str(meta.get("place", ""))
+	if place.is_empty() or not ContentDB.has(place):
+		return ""
+	return str(ContentDB.get_def(place).get("region", ""))
 
 
 func missing_assets() -> Array:

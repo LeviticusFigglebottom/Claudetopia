@@ -489,7 +489,11 @@ def build(recipe: dict, out_root: str, voxel_override: float | None = None, quie
     # throw away the rooms you are not standing in.
     # Decimation flattens rock into planes, so the budget is generous: chunking is what
     # buys the performance, and a cap only stops a runaway.
-    target = int(recipe.get("target_tris", 0)) or min(len(mesh.faces), 50_000 * max(len(chambers), 1))
+    # The budget is for the whole shell, not per chamber: standing in one chamber you see
+    # through the openings into several others, so a ten-chamber dungeon is not allowed
+    # ten chambers' worth of triangles in view. Measured by tools_gd/perf_probe.
+    target = int(recipe.get("target_tris", 0)) or min(len(mesh.faces),
+        max(200_000, 40_000 * max(len(chambers), 1)), 360_000)
     if len(mesh.faces) > target * 1.15:
         mesh = decimate_keeping_colour(mesh, target)
     chunks = split_by_chamber(mesh, chambers)

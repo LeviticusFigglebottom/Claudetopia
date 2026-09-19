@@ -44,6 +44,8 @@ var meta: Dictionary = {}
 var chambers: Dictionary = {}
 var _missing_assets: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
+var _props := PropLibrary.new()
+var _variant := 0
 
 
 func _ready() -> void:
@@ -449,6 +451,16 @@ func _instance_asset(path: String, at: Vector3, yaw: float, scale: float) -> Nod
 	if path.is_empty():
 		return null
 	if not ResourceLoader.exists(path):
+		# Ask the forge's library for this region's version of the kind first.
+		_variant += 1
+		var kind := path.get_base_dir().get_file()
+		var found := _props.resolve(kind, _region_id(), _variant)
+		if not found.is_empty():
+			var real := (load(found) as PackedScene).instantiate() as Node3D
+			real.position = at
+			real.rotation.y = deg_to_rad(yaw)
+			real.scale = Vector3.ONE * scale
+			return real
 		if not _missing_assets.has(path):
 			_missing_assets[path] = true
 			Log.warn("CaveInterior", "asset not built yet, using a placeholder: %s" % path)
@@ -508,6 +520,13 @@ func _lowest_floor() -> float:
 	for id in chambers:
 		lowest = minf(lowest, float(chambers[id].get("floor_y", INF)))
 	return 0.0 if is_inf(lowest) else lowest
+
+
+func _region_id() -> String:
+	var place := str(meta.get("place", ""))
+	if not place.is_empty() and ContentDB.has(place):
+		return str(ContentDB.get_def(place).get("region", ""))
+	return ""
 
 
 static func _vec(a: Variant) -> Vector3:
