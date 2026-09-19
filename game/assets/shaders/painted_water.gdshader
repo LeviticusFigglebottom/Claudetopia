@@ -35,10 +35,12 @@ uniform float opacity_deep = 0.97;
 uniform float roughness_water = 0.10;
 uniform float specular_boost = 0.32;
 uniform float distance_calm_m = 260.0;   // ripples flatten with distance instead of aliasing
-uniform vec2 flow = vec2(0.0, 0.0);    // rivers push their waves downstream
+uniform bool flow_along_uv = false;    // rivers: run the waves down the ribbon's own UV
+uniform float flow_speed = 0.35;       // metres of wave travel per second, downstream
 
 varying vec3 v_world;
 varying float v_depth;
+varying vec2 v_uv;
 
 vec2 world_uv(vec2 xz) {
 	return (xz - world_origin) / world_size;
@@ -60,6 +62,7 @@ vec3 wave_normal(vec2 p, float t) {
 
 void vertex() {
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	v_uv = UV;
 	if (follow_level) {
 		float lvl = texture(level_tex, world_uv(v_world.xz)).r;
 		v_world.y = lvl;
@@ -77,7 +80,11 @@ void fragment() {
 		discard;
 	}
 	float t = TIME * wave_speed;
-	vec3 n = wave_normal(v_world.xz + flow * TIME * 2.0, t);
+	// a river's waves run with the current: its ribbon UV is x across, y along the channel
+	vec2 wave_pos = flow_along_uv
+		? vec2(v_uv.x * 6.0, v_uv.y * 2.0 - TIME * flow_speed * 4.0)
+		: v_world.xz;
+	vec3 n = wave_normal(wave_pos, t);
 	// far water should read as one calm sheet, not as a field of shimmering pixels
 	float far = clamp(length(VERTEX) / distance_calm_m, 0.0, 1.0);
 	n = normalize(mix(n, vec3(0.0, 1.0, 0.0), far * 0.8));

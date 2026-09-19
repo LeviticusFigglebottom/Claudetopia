@@ -125,6 +125,10 @@ func _build_rivers() -> void:
 		mat.set_shader_parameter("wave_speed", 1.1)
 		mat.set_shader_parameter("opacity_shallow", 0.5)
 		mat.set_shader_parameter("opacity_deep", 0.8)
+		mat.set_shader_parameter("flow_along_uv", true)
+		# steeper rivers run faster: the Skerrow water drops far more than the Mere's outflow
+		var drop := absf(float(entry.get("surface_from_m", 0.0)) - float(entry.get("surface_to_m", 0.0)))
+		mat.set_shader_parameter("flow_speed", clampf(0.25 + drop * 0.002, 0.25, 0.9))
 		mi.material_override = mat
 		_river_materials.append(mat)
 		rivers_root.add_child(mi)
