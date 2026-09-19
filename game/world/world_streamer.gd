@@ -21,6 +21,12 @@ const GENERATED := "res://world/generated"
 @export var lod_bias_far: float = 0.6
 @export var enabled: bool = true
 
+## How far each kind of scatter is worth drawing (metres). A grass tuft is invisible at
+## 80 m but still costs a draw call and its share of the primitive budget, so the ranges are
+## what keep a forest cell inside DESIGN.md §11 rather than the instance counts alone.
+const VIEW_RANGE := {"tree": 340.0, "bush": 180.0, "rock": 220.0, "prop": 200.0, "herb": 80.0}
+const VIEW_RANGE_FAR := {"tree": 300.0, "bush": 120.0, "rock": 160.0, "prop": 140.0, "herb": 0.0}
+
 var target: Node3D = null
 var provider: TerrainProvider = null
 
@@ -232,13 +238,21 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 		var row: Array = rows[int(floor(float(i) * step))]
 		mm.set_instance_transform(i, instance_transform(row, origin3))
 		mm.set_instance_color(i, instance_tint(row))
+	var kind := asset_kind(asset_path)
+	var range_end: float = float(VIEW_RANGE.get(kind, 220.0)) if ring <= full_ring \
+		else float(VIEW_RANGE_FAR.get(kind, 160.0))
+	if range_end <= 0.0:
+		return                                   # not worth drawing this far out at all
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = asset_path.get_file().get_basename()
+	mmi.set_meta("asset_path", asset_path)
 	mmi.multimesh = mm
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if ring <= full_ring \
+	# only trees and rocks in the near ring cast shadows; grass shadows cost more than they show
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
+		if (ring <= full_ring and kind in ["tree", "rock", "prop"]) \
 		else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.visibility_range_end = (cell_size * 3.0) if ring <= full_ring else (cell_size * 2.2)
-	mmi.visibility_range_end_margin = cell_size * 0.35
+	mmi.visibility_range_end = range_end
+	mmi.visibility_range_end_margin = range_end * 0.15
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	mmi.lod_bias = 1.0 if ring <= full_ring else lod_bias_far
 	parent.add_child(mmi)
@@ -280,11 +294,28 @@ func _build_scene(parent: Node3D, entry: Variant) -> void:
 	parent.add_child(inst)
 
 
+## The kind of thing an asset is, from where the forge files it. Scatter rules put trees in
+## models/trees, foliage in models/flora, rocks in models/rocks and everything else in props.
+static func asset_kind(asset_path: String) -> String:
+	if asset_path.contains("/trees/"):
+		return "tree"
+	if asset_path.contains("/rocks/"):
+		return "rock"
+	if asset_path.contains("/props/"):
+		return "prop"
+	for bush in ["briar", "juniper", "hawthorn", "bush"]:
+		if asset_path.contains(bush):
+			return "bush"
+	return "herb"
+
+
 func _apply_ring(node: Node3D, ring: int) -> void:
 	for child in node.get_children():
 		if child is MultiMeshInstance3D:
 			var mmi: MultiMeshInstance3D = child
-			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if ring <= full_ring \
+			var kind := asset_kind(str(mmi.get_meta("asset_path", mmi.name)))
+			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
+				if (ring <= full_ring and kind in ["tree", "rock", "prop"]) \
 				else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			mmi.lod_bias = 1.0 if ring <= full_ring else lod_bias_far
 

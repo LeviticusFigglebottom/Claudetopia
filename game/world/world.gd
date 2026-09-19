@@ -8,6 +8,9 @@ extends Node3D
 ##
 ## Access from anywhere with `World.instance`; prefer `World.terrain()` for ground queries.
 
+## Emitted once the terrain, water, atmosphere and streamer are all in place.
+signal world_ready
+
 static var instance: World = null
 
 const GENERATED := "res://world/generated"
@@ -26,8 +29,9 @@ var atmosphere: Node = null
 var fly_camera: FlyCamera = null
 var target: Node3D = null
 
+var is_world_ready := false
+
 var _pois: Array = []
-var _ready_done := false
 
 
 static func terrain() -> TerrainProvider:
@@ -48,9 +52,10 @@ func _ready() -> void:
 	EventBus.region_entered.connect(_on_region_entered)
 	var start := _spawn_position()
 	GameState.enter_region(provider.nearest_region_id_at(start.x, start.z))
-	_ready_done = true
+	is_world_ready = true
 	Log.info("World", "ready: terrain=%s, %d pois, target=%s"
 		% [str(provider.has_terrain()), _pois.size(), target.name if target else "none"])
+	world_ready.emit()
 
 
 func _exit_tree() -> void:

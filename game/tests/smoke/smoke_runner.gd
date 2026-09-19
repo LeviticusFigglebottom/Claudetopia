@@ -44,6 +44,8 @@ func run() -> int:
 	add_child(_world)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if _world.streamer:
+		_world.streamer.cells_per_frame = 12      # the smoke run teleports; build at full speed
 	if _world.provider == null or _world.provider.manifest.is_empty():
 		_fail("world data missing; run ./run.sh world")
 		return _finish(t0)

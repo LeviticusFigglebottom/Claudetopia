@@ -46,6 +46,10 @@ func run() -> int:
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")
 		return 1
+	if _world.streamer:
+		# a capture teleports across the world between shots, so build cells as fast as the
+		# machine allows rather than at the gameplay drip rate
+		_world.streamer.cells_per_frame = 12
 	var shots: Array = plan.get("shots", [])
 	Log.info("Capture", "%d shots -> %s" % [shots.size(), out_dir])
 	var index := 0
