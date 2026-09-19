@@ -32,8 +32,11 @@ class SurfaceContext:
     def __init__(self, grid: Grid, bank: NoiseBank, H: np.ndarray, regions: list, owner: np.ndarray,
                  water_mask: np.ndarray, water_level: np.ndarray, moisture: np.ndarray,
                  river_d: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
-                 lake, places: list, rf=None):
+                 lake, places: list, rf=None, field_labels=None, field_d=None):
         self.rf = rf
+        # the enclosed patchwork (worldgen/fields.py): which parcel, and how far to its edge
+        self.field_labels = field_labels
+        self.field_d = field_d if field_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
         self.grid = grid
         self.bank = bank
         self.H = H
@@ -59,13 +62,23 @@ class SurfaceContext:
         self.on_road = road_d <= road_w * 0.5 + 0.6
         self.near_road = road_d <= road_w * 0.5 + 3.5
         self._road_t = None
-        # settlement footprints (cobbles, trodden ground)
-        self.town = np.zeros((n, n), dtype=bool)
+        # Settlement footprints. `town` is the ground a settlement stands on; `market` is the
+        # small open middle of a market town. Paving follows the streets and the market, not the
+        # whole disc: a village green is grass, and a hard cobbled circle two hundred metres
+        # across with cottages in the middle of it is the most artificial shape a generator can
+        # put in a landscape.
+        self.town = np.zeros((n, n), dtype=np.float32)
+        self.market = np.zeros((n, n), dtype=np.float32)
         for p in places:
-            if p.get("kind") in ("city", "town", "village"):
-                r = 70.0 if p["kind"] != "village" else 42.0
-                d2 = (self.X - p["position"][0]) ** 2 + (self.Z - p["position"][1]) ** 2
-                self.town |= d2 < r * r
+            kind = p.get("kind")
+            if kind not in ("city", "town", "village", "hamlet", "fort", "lodge", "ruin_village"):
+                continue
+            from .roads import pad_radius as _pad_radius
+            r = _pad_radius(p)
+            d = np.sqrt((self.X - p["position"][0]) ** 2 + (self.Z - p["position"][1]) ** 2)
+            self.town = np.maximum(self.town, 1.0 - smoothstep(r * 0.8, r * 1.05, d))
+            if kind in ("city", "town"):
+                self.market = np.maximum(self.market, 1.0 - smoothstep(r * 0.16, r * 0.30, d))
 
     def region(self, shape: str) -> np.ndarray:
         i = self.idx.get(shape, -1)
@@ -120,6 +133,17 @@ class SurfaceContext:
         base = self._patch_cache["dither"]
         return np.roll(base, (salt * 37 + 11, salt * 53 + 7), axis=(0, 1))
 
+    def parcel(self, salt: int) -> np.ndarray:
+        """A stable 0..1 per enclosed field, for deciding what that field carries."""
+        key = ("parcel", salt)
+        if key not in self._patch_cache:
+            if self.field_labels is None:
+                self._patch_cache[key] = self.patch(salt, 90, 380)
+            else:
+                from .fields import parcel_value
+                self._patch_cache[key] = parcel_value(self.field_labels, salt)
+        return self._patch_cache[key]
+
     def road_t(self) -> np.ndarray:
         """Distance from the road centre as a fraction of its half-width: 0 at the crown, 1 at
         the edge of the worn surface, more beyond it.
@@ -170,6 +194,10 @@ def _weights(ctx: SurfaceContext):
     # A 4-6 m road is only two or three control texels wide, so two thin wheel ruts cannot be
     # drawn; what reads at that resolution is a carriageway whose surface varies along its
     # length, and a verge wide enough to be seen.
+    # Along every field boundary there is a strip the plough never reaches: rough grass, nettles
+    # and the foot of a hedge. It is what makes the patchwork visible from a hilltop.
+    hedge_line = np.exp(-(ctx.field_d / 3.2) ** 2)
+
     road_t = ctx.road_t()
     out_town = 1.0 - ctx.town
     carriage = 1.0 - smoothstep(0.70, 1.15, road_t)
@@ -177,12 +205,18 @@ def _weights(ctx: SurfaceContext):
     verge = smoothstep(1.0, 1.4, road_t) * (1.0 - smoothstep(2.0, 3.4, road_t))
 
     # --- Hearthvale: chalk downs, barley, orchards -------------------------------------
-    yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat) \
-        + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band)
+    yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat + 0.9 * hedge_line) \
+        + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band) \
+        + basin * 0.8 * hedge_line
     yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(70.0, 105.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * smoothstep(-400.0, -1200.0, ctx.Z) \
         + downs * out_town * 2.2 * worn
-    yield SLOTS["barley"], downs * 1.25 * ctx.patch(402, 90, 380) ** 2 * flat * dry * (1.0 - smoothstep(75.0, 95.0, H))
+    # Crops go in by the field. A parcel carries barley or it does not, all the way to its
+    # hedge; a noise blob that runs across three fields and stops in the middle of a fourth is
+    # the thing that makes farmed country read as wallpaper.
+    sown = smoothstep(0.52, 0.62, ctx.parcel(402)) * (1.0 - hedge_line)
+    yield SLOTS["barley"], downs * 1.7 * sown * flat * dry * (1.0 - smoothstep(75.0, 95.0, H)) \
+        * (0.7 + 0.5 * ctx.patch(403, 30, 140))
     yield SLOTS["orchard_grass"], downs * 1.25 * ctx.near_place({"tamwick", "merrowby"}, 210.0) * flat \
         + basin * (0.7 * ctx.near_place({"gullhithe"}, 170.0) * flat
                    + 0.45 * ctx.patch(413, 45, 210) ** 2 * flat) \
@@ -198,7 +232,11 @@ def _weights(ctx: SurfaceContext):
         + ash * (0.5 * ctx.patch(403, 60, 260) ** 2
                  + 1.5 * ctx.near_place({"sunken_choir", "cantors_seat"}, 190.0)
                  + 0.9 * ctx.near_place({"greyfold", "pilgrims_ash"}, 150.0))
-    yield SLOTS["cobbles"], 2.6 * ctx.town * (1.0 - steep) + 1.8 * (ctx.on_road & ctx.town) \
+    # Paving goes where feet and wheels go: the streets that cross the place, the market in the
+    # middle of a market town, and the Long Stride causeway. The rest of a settlement's ground
+    # is the region's own turf with trodden patches in it.
+    yield SLOTS["cobbles"], 3.0 * ctx.town * carriage + 2.4 * ctx.market * (1.0 - steep) \
+        + 0.8 * ctx.town * (1.0 - steep) * np.clip(ctx.patch(420, 12, 60) - 0.62, 0.0, 1.0) * 3.0 \
         + 2.0 * (np.abs(ctx.X) < 12.0) * (ctx.lake.sd < 60.0) * (ctx.Z > -160.0) * (ctx.Z < 1400.0)
 
     # --- Sedgemire: peat, mud, tide-flats ----------------------------------------------
@@ -355,6 +393,15 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     # than one texel of the coarse tint lattice and would smear into the fields either side.
     # A used road is lighter and greyer along its crown, where the surface is packed and dusty,
     # and throws a little pale dust onto the verge; the wheel tracks stay darker and damper.
+    # Along every field boundary there is a strip the plough never reaches: rough grass, nettles
+    # and the foot of a hedge. It is what makes the patchwork visible from a hilltop.
+    hedge_line = np.exp(-(ctx.field_d / 3.2) ** 2)
+
+    # A hedge and its shadow are darker than the field either side, and that single dark line
+    # is what tells a hilltop view that the country is farmed.
+    hedge = np.exp(-(ctx.field_d / 2.6) ** 2) * (0.55 + 0.75 * ctx.patch(419, 12, 60))
+    rgba[..., :3] *= (1.0 - 0.16 * np.clip(hedge, 0.0, 1.0))[..., None]
+
     road_t = ctx.road_t()
     out_town = 1.0 - ctx.town
     crown = (1.0 - smoothstep(0.15, 1.15, road_t)) * out_town

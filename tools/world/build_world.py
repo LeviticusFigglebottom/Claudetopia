@@ -22,11 +22,13 @@ import sys
 import time
 
 import numpy as np
+from scipy import ndimage
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from worldgen import cells as CELLS
 from worldgen import encounters as ENC
+from worldgen import fields as FL
 from worldgen import heights as HM
 from worldgen import hydro as HY
 from worldgen import output as OUT
@@ -181,6 +183,9 @@ def build(args) -> dict:
         rough_water = ((H < HM.SEA_LEVEL) | ((lake.sd < 0) & (H < HM.LAKE_LEVEL))
                        | (river_d <= river_w * 0.5 + 1.0)).astype(np.uint8)
         roads_list = RD.plan_roads(grid, H, pad_targets, rough_water, pad_levels)
+        # and through each settlement, so a town is somewhere a road passes rather than three
+        # spokes meeting at a point
+        roads_list = RD.add_streets(roads_list, pad_targets, pad_levels)
         H, road_d, road_w = RD.carve_roads(grid, H, roads_list)
         # pads again: roads must not tilt a settlement platform
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
@@ -195,8 +200,15 @@ def build(args) -> dict:
     open_water = (water.mask > 0) & ((lake.sd < 0) | (H < HM.SEA_LEVEL))
     region_mask[open_water] = OPEN_WATER
 
+    # the enclosed patchwork: one pattern read by the crops, the hedges and the colour map
+    field_labels, field_d = FL.field_map(grid, bank, owner, regions)
+    # how far to any water at all -- river, mere or sea -- for the trees that follow it
+    water_d = (ndimage.distance_transform_edt(water.mask == 0) * grid.spacing).astype(np.float32)
+    t.mark("fields")
+
     ctx = SF.SurfaceContext(grid, bank, H, regions, owner, water.mask, water.level, moist,
-                            river_d, road_d, road_w, pad_mask, lake, places, rf=rf)
+                            river_d, road_d, road_w, pad_mask, lake, places, rf=rf,
+                            field_labels=field_labels, field_d=field_d)
     base = overlay = blend = None
     colour = None
     if args.only in (None, "all", "heights", "textures", "cells"):
@@ -225,10 +237,11 @@ def build(args) -> dict:
     if args.only in (None, "all", "cells"):
         rules = CELLS.load_rules(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scatter_rules.json"))
         sw = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask,
-                                ctx.slope, bank, regions)
+                                ctx.slope, bank, regions, water_d=water_d, field_d=field_d)
         buckets = CELLS.scatter(sw, rules, regions, seed, repo_root=REPO)
         t.mark("scatter")
-    sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope, bank, regions)
+    sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
+                             bank, regions, water_d=water_d, field_d=field_d)
     cell_regions = CELLS.cell_region_ids(sw2, regions)
     # Who is standing out there: the region's own creatures, off the roads and away from the
     # hearths, in the groups their kind keeps.

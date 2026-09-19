@@ -8,6 +8,7 @@ profile) and cut into the terrain 4-6 m wide with soft shoulders.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -17,9 +18,13 @@ from .grid import Grid, lerp, smoothstep
 from .noise import downsample
 from . import paths
 
-PAD_RADIUS = {
-    "city": 90.0, "town": 90.0, "village": 50.0, "hamlet": 50.0, "lodge": 40.0,
-    "ruin_village": 50.0, "camp": 35.0, "fort": 45.0,
+## How many buildings the settlement builder raises at a place of each kind. Kept in step with
+## FABRIC in game/world/exteriors/settlement.gd: the flattened ground should be the size of the
+## town that will stand on it, not a fixed disc per kind. A town of thirty-four houses on a
+## ninety-metre pad is a cottage in a car park.
+FABRIC_COUNT = {
+    "city": 54, "town": 34, "village": 16, "hamlet": 8, "fort": 10, "lodge": 5,
+    "ruin_village": 9, "camp": 0,
 }
 PAD_DEFAULT = 25.0
 ROAD_KINDS = ("city", "town", "village", "hamlet", "fort", "camp", "lodge", "ruin_village")
@@ -36,7 +41,19 @@ class Road:
 
 
 def pad_radius(place: dict) -> float:
-    return PAD_RADIUS.get(str(place.get("kind", "")), PAD_DEFAULT)
+    """Enough flat ground for the houses that will stand here, and no more.
+
+    Frontage rather than area is what a street plan needs: n houses at about eight metres of
+    frontage, along two sides of one or two streets, is a street length of roughly 2n metres,
+    so the radius grows with the square root of the count and not with the count itself.
+    """
+    kind = str(place.get("kind", ""))
+    count = FABRIC_COUNT.get(kind)
+    if count is None:
+        return PAD_DEFAULT
+    if count <= 0:
+        return 30.0
+    return float(min(max(20.0 + 7.5 * math.sqrt(count), 26.0), 80.0))
 
 
 def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None = None) -> tuple:
@@ -158,6 +175,69 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
         roads.append(Road(id="core:road/%s_%s" % (towns[a]["id"].split("/")[-1], towns[b]["id"].split("/")[-1]),
                           points=pts, width=w, elevation=elev))
     return roads
+
+
+def add_streets(roads: list, places: list, levels: dict) -> list:
+    """Carry every road through its settlement instead of stopping it at the middle.
+
+    A road planned between two towns ends exactly on the second town's centre, so a place with
+    three roads has three spokes meeting at a point. That is not a street plan: a settlement is
+    somewhere a road passes *through*, and a town where two routes meet has a crossing.
+
+    For each settlement this lays a street along the dominant pair of approach bearings, from
+    one side of the pad to the other, and a cross street where a third road arrives at enough
+    of an angle to justify one. The result is a polyline that enters the pad, crosses it and
+    leaves, which is what the settlement builder needs to lay plots along a frontage, and which
+    the surface rules pave.
+    """
+    by_place: dict = {}
+    for r in roads:
+        for end, other in ((0, -1), (-1, 0)):
+            p = r.points[end]
+            for pl in places:
+                if pl.get("kind") not in ROAD_KINDS:
+                    continue
+                cx, cz = float(pl["position"][0]), float(pl["position"][1])
+                if abs(p[0] - cx) < 1.0 and abs(p[1] - cz) < 1.0:
+                    # the bearing the road arrives on, taken far enough back to ignore the
+                    # last smoothing wiggle
+                    step = min(6, len(r.points) - 1)
+                    away = r.points[end - step] if end == -1 else r.points[step]
+                    v = np.array([away[0] - cx, away[1] - cz], dtype=np.float64)
+                    nrm = float(np.hypot(v[0], v[1]))
+                    if nrm > 1e-3:
+                        by_place.setdefault(pl["id"], (pl, []))[1].append(v / nrm)
+    out: list[Road] = []
+    for pid, (place, dirs) in by_place.items():
+        short = pid.split("/")[-1]
+        r_pad = pad_radius(place) * 0.94
+        cx, cz = float(place["position"][0]), float(place["position"][1])
+        level = float(levels.get(pid, 0.0))
+        width = ROAD_WIDTH.get(str(place.get("kind", "")), 4.5)
+        # the most opposed pair of approaches is the through route
+        best = (2.0, dirs[0], -dirs[0])
+        for i in range(len(dirs)):
+            for j in range(i + 1, len(dirs)):
+                dot = float(np.dot(dirs[i], dirs[j]))
+                if dot < best[0]:
+                    best = (dot, dirs[i], dirs[j])
+        streets = [(best[1], best[2])]
+        # a third road arriving across the grain earns a cross street
+        for d in dirs:
+            if abs(float(np.dot(d, best[1]))) < 0.55 and abs(float(np.dot(d, best[2]))) < 0.55:
+                streets.append((d, -d))
+                break
+        for n, (a, b) in enumerate(streets):
+            pts = []
+            for t in np.linspace(-1.0, 1.0, 13):
+                d = a if t < 0 else b
+                pts.append([cx + d[0] * r_pad * abs(t), cz + d[1] * r_pad * abs(t)])
+            pts = np.array(pts, dtype=np.float64)
+            # a street is level: it is laid on the flattened ground of the place itself
+            elev = np.full(pts.shape[0], level, dtype=np.float64)
+            out.append(Road(id="core:road/%s_street%s" % (short, "" if n == 0 else "_cross"),
+                            points=pts, width=width, elevation=elev))
+    return roads + out
 
 
 def carve_roads(grid: Grid, H: np.ndarray, roads: list) -> tuple:
