@@ -2,9 +2,9 @@
   {
     "id": "core:opening/new_game",
     "role": "new_game",
-    "description": "What a new game begins with. The Naming hands over a named character; this says what happens next, so a content pack can open its own story somewhere else entirely without touching code.",
+    "description": "What a new game begins with. The Naming hands over a named character; this says where the story opens and on what quest, so a content pack can open somewhere else entirely without touching code. The Foundling wakes at the top of the Hushline Stair, in the ash, and is walked out of it.",
     "quest": "core:quest/the_naming",
     "place": "core:poi/hushline_stair",
-    "region": "core:region/hearthvale"
+    "region": "core:region/cinderlea"
   }
 ]
