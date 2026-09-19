@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 3.526,
+  "max": [
+   0.595,
+   3.54,
+   0.545
+  ],
+  "min": [
+   -0.504,
+   0.014,
+   -0.165
+  ],
+  "radius": 1.881
+ },
+ "built_seconds": 74.86,
+ "category": "props",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 3.526,
+  "radius": 0.549
+ },
+ "generator": "gen_props",
+ "glb": "hearthvale_signpost_b.glb",
+ "hash": "3fa9d9c80dd26660",
+ "kind": "signpost",
+ "materials": [
+  "hearthvale_signpost_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_signpost_b",
+   "tris": 416
+  },
+  {
+   "name": "hearthvale_signpost_b_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_signpost_b_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_signpost_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 5842,
+ "textures": [
+  "hearthvale_signpost_b_albedo.png",
+  "hearthvale_signpost_b_normal.png",
+  "hearthvale_signpost_b_orm.png"
+ ],
+ "tris": [
+  416,
+  300,
+  120
+ ],
+ "version": 3
+}

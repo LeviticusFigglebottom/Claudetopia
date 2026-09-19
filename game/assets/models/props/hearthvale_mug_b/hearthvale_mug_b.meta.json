@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.105,
+  "max": [
+   0.077,
+   0.105,
+   0.048
+  ],
+  "min": [
+   -0.049,
+   0.0,
+   -0.048
+  ],
+  "radius": 0.095
+ },
+ "built_seconds": 3.27,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_mug_b.glb",
+ "hash": "7ed5cac21306fbbd",
+ "kind": "mug",
+ "materials": [
+  "hearthvale_mug_b_mat"
+ ],
+ "materials_used": [
+  "ceramic"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_mug_b",
+   "tris": 344
+  },
+  {
+   "name": "hearthvale_mug_b_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_mug_b_LOD2",
+   "tris": 118
+  }
+ ],
+ "name": "hearthvale_mug_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4146,
+ "textures": [
+  "hearthvale_mug_b_albedo.png",
+  "hearthvale_mug_b_normal.png",
+  "hearthvale_mug_b_orm.png"
+ ],
+ "tris": [
+  344,
+  300,
+  118
+ ],
+ "version": 3
+}

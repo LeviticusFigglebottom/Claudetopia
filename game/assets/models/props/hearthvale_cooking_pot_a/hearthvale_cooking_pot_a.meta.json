@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.459,
+  "max": [
+   0.219,
+   0.459,
+   0.214
+  ],
+  "min": [
+   -0.219,
+   -0.0,
+   -0.214
+  ],
+  "radius": 0.382
+ },
+ "built_seconds": 11.52,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_cooking_pot_a.glb",
+ "hash": "51c5ae28d85351da",
+ "kind": "cooking_pot",
+ "materials": [
+  "hearthvale_cooking_pot_a_mat"
+ ],
+ "materials_used": [
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_cooking_pot_a",
+   "tris": 876
+  },
+  {
+   "name": "hearthvale_cooking_pot_a_LOD1",
+   "tris": 350
+  },
+  {
+   "name": "hearthvale_cooking_pot_a_LOD2",
+   "tris": 127
+  }
+ ],
+ "name": "hearthvale_cooking_pot_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4023,
+ "textures": [
+  "hearthvale_cooking_pot_a_albedo.png",
+  "hearthvale_cooking_pot_a_normal.png",
+  "hearthvale_cooking_pot_a_orm.png"
+ ],
+ "tris": [
+  876,
+  350,
+  127
+ ],
+ "version": 3
+}

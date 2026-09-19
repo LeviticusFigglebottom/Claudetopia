@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 0.382,
+  "max": [
+   0.109,
+   0.404,
+   0.109
+  ],
+  "min": [
+   -0.109,
+   0.022,
+   -0.109
+  ],
+  "radius": 0.246
+ },
+ "built_seconds": 7.52,
+ "category": "props",
+ "collision": "none",
+ "collision_params": {},
+ "emissive": true,
+ "generator": "gen_props",
+ "glb": "sedgemire_lantern_hanging_a.glb",
+ "hangs": true,
+ "hash": "74e7d999669095bb",
+ "kind": "lantern_hanging",
+ "materials": [
+  "sedgemire_lantern_hanging_a_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "glass"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_lantern_hanging_a",
+   "tris": 516
+  },
+  {
+   "name": "sedgemire_lantern_hanging_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "sedgemire_lantern_hanging_a_LOD2",
+   "tris": 115
+  }
+ ],
+ "name": "sedgemire_lantern_hanging_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 4765,
+ "textures": [
+  "sedgemire_lantern_hanging_a_albedo.png",
+  "sedgemire_lantern_hanging_a_normal.png",
+  "sedgemire_lantern_hanging_a_orm.png",
+  "sedgemire_lantern_hanging_a_emission.png"
+ ],
+ "tris": [
+  516,
+  300,
+  115
+ ],
+ "version": 3
+}

@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.401,
+  "max": [
+   0.263,
+   0.404,
+   0.261
+  ],
+  "min": [
+   -0.263,
+   0.003,
+   -0.261
+  ],
+  "radius": 0.421
+ },
+ "built_seconds": 5.91,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "sedgemire_basket_a.glb",
+ "hash": "10afd79279897d66",
+ "kind": "basket",
+ "materials": [
+  "sedgemire_basket_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_basket_a",
+   "tris": 6206
+  },
+  {
+   "name": "sedgemire_basket_a_LOD1",
+   "tris": 2482
+  },
+  {
+   "name": "sedgemire_basket_a_LOD2",
+   "tris": 913
+  }
+ ],
+ "name": "sedgemire_basket_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 3864,
+ "textures": [
+  "sedgemire_basket_a_albedo.png",
+  "sedgemire_basket_a_normal.png",
+  "sedgemire_basket_a_orm.png"
+ ],
+ "tris": [
+  6206,
+  2482,
+  913
+ ],
+ "version": 3
+}

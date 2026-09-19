@@ -290,7 +290,7 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
                  alpha: bool = False, orm_scale: float = 0.5, write_import: bool = True, extra_meta: dict | None = None,
                  version: int = FORGE_VERSION, rng=None, materials_used: list[str] | None = None,
                  impostor=None, impostor_textures: dict | None = None,
-                 unwrap_mode: str = "smart") -> dict:
+                 unwrap_mode: str = "smart", ground: bool = True) -> dict:
     """Bake, LOD, export and describe one asset. Returns the meta dict written to disk.
 
     opaque_objs: procedural-material parts, joined into one mesh and baked to one atlas.
@@ -312,6 +312,15 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     if impostor is not None:
         lod_ratios = lod_ratios[:1]
         card_keep = card_keep[:1]
+    # Grounding is settled once, here, over every part of the asset together. Generators
+    # that drop their own parts can still be wrong: a part added after the drop, or one
+    # whose transform is applied later, leaves the asset hovering, and a floating barrel
+    # is not something a placement can correct.
+    if ground:
+        incoming = list(opaque_objs or []) + list(card_objs or [])
+        incoming += [b[0] if isinstance(b, tuple) else b for b in (baked_objs or [])]
+        if incoming:
+            S.drop_to_ground(incoming)
     meta_textures: list[str] = []
     slot_map: dict = {}
     parts: list[list] = []  # list of LOD chains

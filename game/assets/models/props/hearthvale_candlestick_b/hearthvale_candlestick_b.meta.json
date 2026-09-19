@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.356,
+  "max": [
+   0.06,
+   0.361,
+   0.059
+  ],
+  "min": [
+   -0.06,
+   0.005,
+   -0.059
+  ],
+  "radius": 0.197
+ },
+ "built_seconds": 4.77,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_candlestick_b.glb",
+ "hash": "1042860dace61fdd",
+ "kind": "candlestick",
+ "materials": [
+  "hearthvale_candlestick_b_mat"
+ ],
+ "materials_used": [
+  "brass",
+  "wax"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_candlestick_b",
+   "tris": 512
+  },
+  {
+   "name": "hearthvale_candlestick_b_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_candlestick_b_LOD2",
+   "tris": 119
+  }
+ ],
+ "name": "hearthvale_candlestick_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4729,
+ "textures": [
+  "hearthvale_candlestick_b_albedo.png",
+  "hearthvale_candlestick_b_normal.png",
+  "hearthvale_candlestick_b_orm.png"
+ ],
+ "tris": [
+  512,
+  300,
+  119
+ ],
+ "version": 3
+}

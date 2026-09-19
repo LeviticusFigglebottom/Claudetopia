@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 0.624,
+  "max": [
+   1.062,
+   0.624,
+   0.534
+  ],
+  "min": [
+   -1.062,
+   0.0,
+   -0.534
+  ],
+  "radius": 1.229
+ },
+ "built_seconds": 15.37,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_bed_b.glb",
+ "hash": "637b01996acd2504",
+ "kind": "bed",
+ "materials": [
+  "hearthvale_bed_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "canvas",
+  "dyed_cloth"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_bed_b",
+   "tris": 1844
+  },
+  {
+   "name": "hearthvale_bed_b_LOD1",
+   "tris": 736
+  },
+  {
+   "name": "hearthvale_bed_b_LOD2",
+   "tris": 276
+  }
+ ],
+ "name": "hearthvale_bed_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4517,
+ "textures": [
+  "hearthvale_bed_b_albedo.png",
+  "hearthvale_bed_b_normal.png",
+  "hearthvale_bed_b_orm.png"
+ ],
+ "tris": [
+  1844,
+  736,
+  276
+ ],
+ "version": 3
+}

@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.481,
+  "max": [
+   0.237,
+   0.506,
+   0.15
+  ],
+  "min": [
+   -0.15,
+   0.025,
+   -0.15
+  ],
+  "radius": 0.343
+ },
+ "built_seconds": 31.96,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "brightwater_alembic_a.glb",
+ "hash": "85b56799c12d2eee",
+ "kind": "alembic",
+ "materials": [
+  "brightwater_alembic_a_mat"
+ ],
+ "materials_used": [
+  "glass",
+  "brass"
+ ],
+ "meshes": [
+  {
+   "name": "brightwater_alembic_a",
+   "tris": 616
+  },
+  {
+   "name": "brightwater_alembic_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "brightwater_alembic_a_LOD2",
+   "tris": 117
+  }
+ ],
+ "name": "brightwater_alembic_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#3f7fb5",
+   "#f1ece0",
+   "#5d6470",
+   "#b08a3e",
+   "#c76a44",
+   "#274a6b"
+  ],
+  "id": "core:region/brightwater",
+  "roles": {
+   "accent": "#c76a44",
+   "cool": "#3f7fb5",
+   "dark": "#274a6b",
+   "earth": "#c76a44",
+   "green": "#f1ece0",
+   "light": "#f1ece0",
+   "mid": "#c76a44",
+   "warm": "#c76a44"
+  }
+ },
+ "seed": 5136,
+ "textures": [
+  "brightwater_alembic_a_albedo.png",
+  "brightwater_alembic_a_normal.png",
+  "brightwater_alembic_a_orm.png"
+ ],
+ "tris": [
+  616,
+  300,
+  117
+ ],
+ "version": 3
+}

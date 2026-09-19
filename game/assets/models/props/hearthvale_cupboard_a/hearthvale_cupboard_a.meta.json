@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.833,
+  "max": [
+   0.503,
+   1.833,
+   0.256
+  ],
+  "min": [
+   -0.503,
+   0.0,
+   -0.22
+  ],
+  "radius": 1.072
+ },
+ "built_seconds": 13.62,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_cupboard_a.glb",
+ "hash": "e82b68e2b1c277cc",
+ "kind": "cupboard",
+ "materials": [
+  "hearthvale_cupboard_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_cupboard_a",
+   "tris": 2236
+  },
+  {
+   "name": "hearthvale_cupboard_a_LOD1",
+   "tris": 894
+  },
+  {
+   "name": "hearthvale_cupboard_a_LOD2",
+   "tris": 334
+  }
+ ],
+ "name": "hearthvale_cupboard_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4606,
+ "textures": [
+  "hearthvale_cupboard_a_albedo.png",
+  "hearthvale_cupboard_a_normal.png",
+  "hearthvale_cupboard_a_orm.png"
+ ],
+ "tris": [
+  2236,
+  894,
+  334
+ ],
+ "version": 3
+}

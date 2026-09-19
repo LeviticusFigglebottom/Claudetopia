@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 2.176,
+  "max": [
+   0.232,
+   2.176,
+   0.149
+  ],
+  "min": [
+   -0.149,
+   0.0,
+   -0.144
+  ],
+  "radius": 1.114
+ },
+ "built_seconds": 17.28,
+ "category": "props",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 2.176,
+  "radius": 0.19
+ },
+ "generator": "gen_props",
+ "glb": "sedgemire_dock_post_a.glb",
+ "hash": "eb1a23727691d2c1",
+ "kind": "dock_post",
+ "materials": [
+  "sedgemire_dock_post_a_mat"
+ ],
+ "materials_used": [
+  "driftwood",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_dock_post_a",
+   "tris": 1044
+  },
+  {
+   "name": "sedgemire_dock_post_a_LOD1",
+   "tris": 416
+  },
+  {
+   "name": "sedgemire_dock_post_a_LOD2",
+   "tris": 155
+  }
+ ],
+ "name": "sedgemire_dock_post_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 5931,
+ "textures": [
+  "sedgemire_dock_post_a_albedo.png",
+  "sedgemire_dock_post_a_normal.png",
+  "sedgemire_dock_post_a_orm.png"
+ ],
+ "tris": [
+  1044,
+  416,
+  155
+ ],
+ "version": 3
+}

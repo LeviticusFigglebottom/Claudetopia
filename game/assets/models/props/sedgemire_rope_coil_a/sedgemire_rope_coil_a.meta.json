@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.21,
+  "max": [
+   0.493,
+   0.21,
+   0.298
+  ],
+  "min": [
+   -0.305,
+   0.0,
+   -0.305
+  ],
+  "radius": 0.511
+ },
+ "built_seconds": 11.36,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "sedgemire_rope_coil_a.glb",
+ "hash": "af559d4ffa6b92b6",
+ "kind": "rope_coil",
+ "materials": [
+  "sedgemire_rope_coil_a_mat"
+ ],
+ "materials_used": [
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_rope_coil_a",
+   "tris": 1510
+  },
+  {
+   "name": "sedgemire_rope_coil_a_LOD1",
+   "tris": 604
+  },
+  {
+   "name": "sedgemire_rope_coil_a_LOD2",
+   "tris": 226
+  }
+ ],
+ "name": "sedgemire_rope_coil_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 5189,
+ "textures": [
+  "sedgemire_rope_coil_a_albedo.png",
+  "sedgemire_rope_coil_a_normal.png",
+  "sedgemire_rope_coil_a_orm.png"
+ ],
+ "tris": [
+  1510,
+  604,
+  226
+ ],
+ "version": 3
+}

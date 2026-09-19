@@ -1,0 +1,84 @@
+{
+ "bounds": {
+  "height": 2.71,
+  "max": [
+   0.506,
+   2.77,
+   0.034
+  ],
+  "min": [
+   -0.506,
+   0.06,
+   -0.033
+  ],
+  "radius": 1.447
+ },
+ "built_seconds": 34.84,
+ "category": "props",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 2.71,
+  "radius": 0.506
+ },
+ "generator": "gen_props",
+ "glb": "brightwater_banner_a.glb",
+ "hash": "b242aa7207b46d1d",
+ "kind": "banner",
+ "materials": [
+  "brightwater_banner_a_mat"
+ ],
+ "materials_used": [
+  "dyed_cloth",
+  "wood_planks",
+  "brass"
+ ],
+ "meshes": [
+  {
+   "name": "brightwater_banner_a",
+   "tris": 734
+  },
+  {
+   "name": "brightwater_banner_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "brightwater_banner_a_LOD2",
+   "tris": 118
+  }
+ ],
+ "name": "brightwater_banner_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#3f7fb5",
+   "#f1ece0",
+   "#5d6470",
+   "#b08a3e",
+   "#c76a44",
+   "#274a6b"
+  ],
+  "id": "core:region/brightwater",
+  "roles": {
+   "accent": "#c76a44",
+   "cool": "#3f7fb5",
+   "dark": "#274a6b",
+   "earth": "#c76a44",
+   "green": "#f1ece0",
+   "light": "#f1ece0",
+   "mid": "#c76a44",
+   "warm": "#c76a44"
+  }
+ },
+ "seed": 6196,
+ "textures": [
+  "brightwater_banner_a_albedo.png",
+  "brightwater_banner_a_normal.png",
+  "brightwater_banner_a_orm.png"
+ ],
+ "tris": [
+  734,
+  300,
+  118
+ ],
+ "version": 3
+}

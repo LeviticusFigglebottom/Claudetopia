@@ -1,0 +1,82 @@
+{
+ "bounds": {
+  "height": 1.325,
+  "max": [
+   0.457,
+   1.325,
+   0.276
+  ],
+  "min": [
+   -0.458,
+   0.0,
+   -0.282
+  ],
+  "radius": 0.852
+ },
+ "built_seconds": 43.24,
+ "category": "props",
+ "collision": "skerrow_drystone_wall_end_a_col.glb",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "skerrow_drystone_wall_end_a.glb",
+ "hash": "e27b58c741ced418",
+ "is_end": true,
+ "kind": "drystone_wall_end",
+ "materials": [
+  "skerrow_drystone_wall_end_a_mat"
+ ],
+ "materials_used": [
+  "drystone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_drystone_wall_end_a",
+   "tris": 2700
+  },
+  {
+   "name": "skerrow_drystone_wall_end_a_LOD1",
+   "tris": 1080
+  },
+  {
+   "name": "skerrow_drystone_wall_end_a_LOD2",
+   "tris": 404
+  }
+ ],
+ "modular": true,
+ "module_width_m": 0.9,
+ "name": "skerrow_drystone_wall_end_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 5719,
+ "textures": [
+  "skerrow_drystone_wall_end_a_albedo.png",
+  "skerrow_drystone_wall_end_a_normal.png",
+  "skerrow_drystone_wall_end_a_orm.png"
+ ],
+ "tris": [
+  2700,
+  1080,
+  404
+ ],
+ "version": 3
+}

@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 0.115,
+  "max": [
+   1.0,
+   0.615,
+   0.789
+  ],
+  "min": [
+   -1.0,
+   0.5,
+   -0.789
+  ],
+  "radius": 1.275
+ },
+ "built_seconds": 41.14,
+ "category": "props",
+ "collision": "sedgemire_boardwalk_plank_a_col.glb",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "sedgemire_boardwalk_plank_a.glb",
+ "hash": "e031b4b4580568c4",
+ "kind": "boardwalk_plank",
+ "materials": [
+  "sedgemire_boardwalk_plank_a_mat"
+ ],
+ "materials_used": [
+  "driftwood"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_boardwalk_plank_a",
+   "tris": 780
+  },
+  {
+   "name": "sedgemire_boardwalk_plank_a_LOD1",
+   "tris": 312
+  },
+  {
+   "name": "sedgemire_boardwalk_plank_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "modular": true,
+ "module_width_m": 2.0,
+ "name": "sedgemire_boardwalk_plank_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 5984,
+ "textures": [
+  "sedgemire_boardwalk_plank_a_albedo.png",
+  "sedgemire_boardwalk_plank_a_normal.png",
+  "sedgemire_boardwalk_plank_a_orm.png"
+ ],
+ "tris": [
+  780,
+  312,
+  120
+ ],
+ "version": 3
+}

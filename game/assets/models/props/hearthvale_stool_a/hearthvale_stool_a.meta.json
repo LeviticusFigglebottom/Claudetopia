@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.539,
+  "max": [
+   0.254,
+   0.539,
+   0.211
+  ],
+  "min": [
+   -0.183,
+   0.0,
+   -0.218
+  ],
+  "radius": 0.408
+ },
+ "built_seconds": 12.55,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_stool_a.glb",
+ "hash": "c6f9e6dca1665a53",
+ "kind": "stool",
+ "materials": [
+  "hearthvale_stool_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_stool_a",
+   "tris": 296
+  },
+  {
+   "name": "hearthvale_stool_a_LOD1",
+   "tris": 296
+  },
+  {
+   "name": "hearthvale_stool_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_stool_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4341,
+ "textures": [
+  "hearthvale_stool_a_albedo.png",
+  "hearthvale_stool_a_normal.png",
+  "hearthvale_stool_a_orm.png"
+ ],
+ "tris": [
+  296,
+  296,
+  120
+ ],
+ "version": 3
+}

@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.502,
+  "max": [
+   0.856,
+   0.502,
+   0.195
+  ],
+  "min": [
+   -0.856,
+   0.0,
+   -0.196
+  ],
+  "radius": 0.913
+ },
+ "built_seconds": 11.16,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_bench_a.glb",
+ "hash": "f4cc7e33f38a6e15",
+ "kind": "bench",
+ "materials": [
+  "hearthvale_bench_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_bench_a",
+   "tris": 444
+  },
+  {
+   "name": "hearthvale_bench_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_bench_a_LOD2",
+   "tris": 118
+  }
+ ],
+ "name": "hearthvale_bench_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4447,
+ "textures": [
+  "hearthvale_bench_a_albedo.png",
+  "hearthvale_bench_a_normal.png",
+  "hearthvale_bench_a_orm.png"
+ ],
+ "tris": [
+  444,
+  300,
+  118
+ ],
+ "version": 3
+}

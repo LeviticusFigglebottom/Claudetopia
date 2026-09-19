@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.632,
+  "max": [
+   0.409,
+   0.632,
+   0.387
+  ],
+  "min": [
+   -0.409,
+   0.0,
+   -0.387
+  ],
+  "radius": 0.645
+ },
+ "built_seconds": 8.57,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "brightwater_crate_a.glb",
+ "hash": "bf0de449b3f82fc5",
+ "kind": "crate",
+ "materials": [
+  "brightwater_crate_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "brightwater_crate_a",
+   "tris": 2376
+  },
+  {
+   "name": "brightwater_crate_a_LOD1",
+   "tris": 950
+  },
+  {
+   "name": "brightwater_crate_a_LOD2",
+   "tris": 356
+  }
+ ],
+ "name": "brightwater_crate_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#3f7fb5",
+   "#f1ece0",
+   "#5d6470",
+   "#b08a3e",
+   "#c76a44",
+   "#274a6b"
+  ],
+  "id": "core:region/brightwater",
+  "roles": {
+   "accent": "#c76a44",
+   "cool": "#3f7fb5",
+   "dark": "#274a6b",
+   "earth": "#c76a44",
+   "green": "#f1ece0",
+   "light": "#f1ece0",
+   "mid": "#c76a44",
+   "warm": "#c76a44"
+  }
+ },
+ "seed": 3705,
+ "textures": [
+  "brightwater_crate_a_albedo.png",
+  "brightwater_crate_a_normal.png",
+  "brightwater_crate_a_orm.png"
+ ],
+ "tris": [
+  2376,
+  950,
+  356
+ ],
+ "version": 3
+}

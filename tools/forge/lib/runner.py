@@ -34,12 +34,16 @@ def run_generator(description: str, kinds: dict, category: str, generator: str, 
     spec = dict(spec)
     tier = spec.pop("tier", None)
     unwrap_mode = spec.pop("unwrap_mode", "smart")
+    # An asset that hangs from a beam or floats on water has no ground contact to settle.
+    extra = spec.get("extra_meta") or {}
+    ground = spec.pop("ground", not (extra.get("hangs") or extra.get("floats")
+                                     or extra.get("attaches_to")))
     try:
         meta = export.finish_asset(
             out_root=args.out, category=args.category or category, name=name, generator=generator, seed=args.seed,
             kind=kind, params=args.params, pal=pal, quick=args.quick, res=args.res,
-            tier=tier, unwrap_mode=unwrap_mode, write_import=not args.no_import_files, rng=rng,
-            version=version, **spec)
+            tier=tier, unwrap_mode=unwrap_mode, ground=ground,
+            write_import=not args.no_import_files, rng=rng, version=version, **spec)
     except Exception:
         traceback.print_exc()
         print("FORGE_FAIL %s/%s (finish)" % (category, name))

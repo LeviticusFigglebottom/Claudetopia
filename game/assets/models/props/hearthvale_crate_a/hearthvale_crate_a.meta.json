@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.628,
+  "max": [
+   0.377,
+   0.628,
+   0.403
+  ],
+  "min": [
+   -0.377,
+   0.0,
+   -0.403
+  ],
+  "radius": 0.635
+ },
+ "built_seconds": 22.82,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_crate_a.glb",
+ "hash": "42b503f9daedcb42",
+ "kind": "crate",
+ "materials": [
+  "hearthvale_crate_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_crate_a",
+   "tris": 2376
+  },
+  {
+   "name": "hearthvale_crate_a_LOD1",
+   "tris": 950
+  },
+  {
+   "name": "hearthvale_crate_a_LOD2",
+   "tris": 356
+  }
+ ],
+ "name": "hearthvale_crate_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 3652,
+ "textures": [
+  "hearthvale_crate_a_albedo.png",
+  "hearthvale_crate_a_normal.png",
+  "hearthvale_crate_a_orm.png"
+ ],
+ "tris": [
+  2376,
+  950,
+  356
+ ],
+ "version": 3
+}

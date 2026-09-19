@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.894,
+  "max": [
+   0.256,
+   0.894,
+   0.092
+  ],
+  "min": [
+   -0.256,
+   0.0,
+   -0.144
+  ],
+  "radius": 0.528
+ },
+ "built_seconds": 79.18,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_gravestone_a.glb",
+ "hash": "ea7fe19da34ad111",
+ "kind": "gravestone",
+ "materials": [
+  "hearthvale_gravestone_a_mat"
+ ],
+ "materials_used": [
+  "limestone"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_gravestone_a",
+   "tris": 528
+  },
+  {
+   "name": "hearthvale_gravestone_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_gravestone_a_LOD2",
+   "tris": 123
+  }
+ ],
+ "name": "hearthvale_gravestone_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 6355,
+ "shape": "round",
+ "textures": [
+  "hearthvale_gravestone_a_albedo.png",
+  "hearthvale_gravestone_a_normal.png",
+  "hearthvale_gravestone_a_orm.png"
+ ],
+ "tris": [
+  528,
+  300,
+  123
+ ],
+ "version": 3
+}

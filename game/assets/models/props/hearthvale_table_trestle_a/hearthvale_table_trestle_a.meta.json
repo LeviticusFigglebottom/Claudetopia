@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.832,
+  "max": [
+   1.051,
+   0.832,
+   0.434
+  ],
+  "min": [
+   -1.051,
+   0.0,
+   -0.434
+  ],
+  "radius": 1.211
+ },
+ "built_seconds": 8.27,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_table_trestle_a.glb",
+ "hash": "9574fb0761d0d682",
+ "kind": "table_trestle",
+ "materials": [
+  "hearthvale_table_trestle_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_table_trestle_a",
+   "tris": 1956
+  },
+  {
+   "name": "hearthvale_table_trestle_a_LOD1",
+   "tris": 782
+  },
+  {
+   "name": "hearthvale_table_trestle_a_LOD2",
+   "tris": 292
+  }
+ ],
+ "name": "hearthvale_table_trestle_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 4235,
+ "textures": [
+  "hearthvale_table_trestle_a_albedo.png",
+  "hearthvale_table_trestle_a_normal.png",
+  "hearthvale_table_trestle_a_orm.png"
+ ],
+ "tris": [
+  1956,
+  782,
+  292
+ ],
+ "version": 3
+}

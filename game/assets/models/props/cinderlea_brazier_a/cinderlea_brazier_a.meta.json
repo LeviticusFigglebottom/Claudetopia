@@ -1,0 +1,82 @@
+{
+ "bounds": {
+  "height": 0.893,
+  "max": [
+   0.318,
+   0.893,
+   0.31
+  ],
+  "min": [
+   -0.31,
+   0.0,
+   -0.31
+  ],
+  "radius": 0.628
+ },
+ "built_seconds": 64.0,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "emissive": true,
+ "generator": "gen_props",
+ "glb": "cinderlea_brazier_a.glb",
+ "hash": "a06950cfe571bf6f",
+ "kind": "brazier",
+ "materials": [
+  "cinderlea_brazier_a_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "ember"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_brazier_a",
+   "tris": 816
+  },
+  {
+   "name": "cinderlea_brazier_a_LOD1",
+   "tris": 326
+  },
+  {
+   "name": "cinderlea_brazier_a_LOD2",
+   "tris": 118
+  }
+ ],
+ "name": "cinderlea_brazier_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 4871,
+ "textures": [
+  "cinderlea_brazier_a_albedo.png",
+  "cinderlea_brazier_a_normal.png",
+  "cinderlea_brazier_a_orm.png",
+  "cinderlea_brazier_a_emission.png"
+ ],
+ "tris": [
+  816,
+  326,
+  118
+ ],
+ "version": 3
+}

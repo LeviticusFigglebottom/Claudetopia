@@ -419,7 +419,9 @@ def main():
     out_dir = cli.asset_dir(args.out, category, name)
     ctx = {"out_dir": out_dir, "name": name, "quick": args.quick, "pal": pal}
     spec = KINDS[kind](pal, rng, dict(args.params), args.variant_index, ctx)
-    E.finish_asset(out_root=args.out, category=category, name=name, generator="gen_flora",
+    extra = spec.get("extra_meta") or {}
+    ground = not (extra.get("hangs") or extra.get("floats") or extra.get("attaches_to"))
+    E.finish_asset(ground=ground, out_root=args.out, category=category, name=name, generator="gen_flora",
                    seed=args.seed, kind=kind, params=dict(args.params), pal=pal, quick=args.quick,
                    res=args.res, write_import=not args.no_import_files, rng=rng,
                    card_keep=(0.6, 0.35), **spec)

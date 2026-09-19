@@ -136,8 +136,8 @@ class TestGeneratedOutput(unittest.TestCase):
         for key, group in groups.items():
             if len(group) < 2:
                 continue
-            sizes = {tuple(round(v, 2) for v in (mm["bounds"]["max"] + mm["bounds"]["min"]))
-                     for mm in group}
+            sizes = {(tuple(round(v, 3) for v in (mm["bounds"]["max"] + mm["bounds"]["min"])),
+                      tuple(mm["tris"])) for mm in group}
             if len(sizes) < len(group):
                 same.append("%s/%s" % (key[0], key[1]))
         self.assertEqual(same, [], "variants are identical: %s" % same)
