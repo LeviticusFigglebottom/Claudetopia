@@ -1,0 +1,492 @@
+[
+  {
+    "id": "core:enemy/crag_wolf",
+    "name": "Crag-Wolf",
+    "archetype": "pack",
+    "rig": "custom",
+    "body": "quadruped",
+    "body_variant": "crag_wolf",
+    "faction": "beasts",
+    "tint": "#d6d9dd",
+    "scale": 1.25,
+    "height": 1.15,
+    "radius": 0.5,
+    "clips": [
+      "Idle",
+      "Walk",
+      "Run",
+      "Attack_1",
+      "Attack_2",
+      "Hit",
+      "Death"
+    ],
+    "lore": "Bigger than a Vale wolf and white the year round, which on a limestone pavement is less camouflage than arithmetic: by the time you have resolved one of them, three others have positions. They do not worry at you and they do not circle for long. They come in shoulder-first at a run and take the fight to the ground, where their teeth are and your sword is not.",
+    "region": "core:region/skerrow",
+    "stats": {
+      "hp": 112,
+      "stamina": 110,
+      "poise": 34,
+      "armour": 4,
+      "speed": 5.2
+    },
+    "perception": {
+      "sight_range": 32.0,
+      "sight_fov": 135.0,
+      "hearing": 28.0,
+      "alertness": 1.3
+    },
+    "behaviour": {
+      "engage_range": 2.2,
+      "circle": 0.8,
+      "retreat_threshold": 0.15,
+      "patience": 5.0,
+      "leash": 48.0,
+      "flank": true,
+      "spread": 4.0,
+      "strafe_speed": 1.3,
+      "aggression": 0.7
+    },
+    "attacks": [
+      {
+        "name": "snap",
+        "clip": "Attack_1",
+        "weapon_class": "bite",
+        "damage": 21.0,
+        "poise_damage": 18.0,
+        "range": 2.2,
+        "telegraph": 0.4,
+        "hit_window": 0.14,
+        "recovery": 0.45,
+        "cooldown": 2.0,
+        "gcd": 0.45,
+        "weight": 3.0,
+        "lunge": 3.6
+      },
+      {
+        "name": "bowl_over",
+        "clip": "Attack_2",
+        "weapon_class": "bite",
+        "damage": 29.0,
+        "poise_damage": 40.0,
+        "heavy": true,
+        "range": 3.0,
+        "min_range": 1.8,
+        "telegraph": 0.72,
+        "hit_window": 0.18,
+        "recovery": 0.7,
+        "cooldown": 6.5,
+        "gcd": 0.8,
+        "weight": 1.0,
+        "lunge": 6.0,
+        "knockdown": true,
+        "knockback": 3.4
+      }
+    ],
+    "loot": "core:loot/crag_wolf",
+    "marks": [
+      0,
+      6
+    ],
+    "tags": [
+      "beast",
+      "pack",
+      "quadruped"
+    ]
+  },
+  {
+    "id": "core:enemy/scree_hag",
+    "name": "Scree-Hag",
+    "archetype": "ambusher",
+    "rig": "humanoid",
+    "faction": "unquiet",
+    "tint": "#7d7466",
+    "scale": 0.9,
+    "lore": "She lives on the face, not the path — fingers in the joints of the limestone, kept out of your cone of vision by a habit older than any of the holds. The stones come first, from above, to find out whether you are the sort who looks up. The shriek comes when you do. A man with a word in his mouth and nothing left to say it with is only a man standing in a gorge.",
+    "region": "core:region/skerrow",
+    "stats": {
+      "hp": 98,
+      "stamina": 100,
+      "poise": 22,
+      "armour": 3,
+      "speed": 3.9
+    },
+    "perception": {
+      "sight_range": 36.0,
+      "sight_fov": 130.0,
+      "hearing": 26.0,
+      "alertness": 1.1
+    },
+    "behaviour": {
+      "engage_range": 11.0,
+      "circle": 0.6,
+      "retreat_threshold": 0.4,
+      "patience": 7.0,
+      "leash": 34.0,
+      "keep_distance": 11.0,
+      "ambush_range": 7.0,
+      "strafe_speed": 1.0,
+      "retreat_time": 1.8,
+      "aggression": 0.8
+    },
+    "attacks": [
+      {
+        "name": "thrown_stone",
+        "kind": "projectile",
+        "clip": "Throw",
+        "weapon_class": "club",
+        "damage": 25.0,
+        "poise_damage": 22.0,
+        "range": 23.0,
+        "min_range": 6.0,
+        "speed": 30.0,
+        "gravity": 9.81,
+        "projectile_colour": "#b8b2a4",
+        "projectile_radius": 0.13,
+        "telegraph": 0.68,
+        "hit_window": 0.12,
+        "recovery": 0.5,
+        "cooldown": 2.8,
+        "gcd": 0.7,
+        "weight": 4.0
+      },
+      {
+        "name": "the_shriek",
+        "kind": "burst",
+        "clip": "Cast_Long",
+        "voice": true,
+        "kind_damage": "silence",
+        "radius": 7.5,
+        "range": 6.5,
+        "damage": 11.0,
+        "poise_damage": 28.0,
+        "telegraph": 0.95,
+        "hit_window": 0.18,
+        "recovery": 0.9,
+        "cooldown": 13.0,
+        "gcd": 1.1,
+        "weight": 2.0,
+        "noise": 1.5,
+        "unparryable": true,
+        "statuses": [
+          {
+            "id": "silenced",
+            "duration": 9.0
+          }
+        ]
+      },
+      {
+        "name": "clawing",
+        "clip": "Attack_Unarmed_1",
+        "weapon_class": "claw",
+        "damage": 19.0,
+        "poise_damage": 14.0,
+        "range": 2.1,
+        "telegraph": 0.45,
+        "hit_window": 0.14,
+        "recovery": 0.5,
+        "cooldown": 2.4,
+        "gcd": 0.5,
+        "weight": 2.0,
+        "lunge": 2.0
+      }
+    ],
+    "loot": "core:loot/scree_hag",
+    "marks": [
+      18,
+      45
+    ],
+    "tags": [
+      "caster",
+      "humanoid",
+      "person"
+    ]
+  },
+  {
+    "id": "core:enemy/stone_thrall",
+    "name": "Stone-Thrall",
+    "archetype": "brute",
+    "rig": "custom",
+    "body": "thrall",
+    "body_variant": "stone",
+    "faction": "unquiet",
+    "tint": "#8c8578",
+    "scale": 2.2,
+    "height": 3.4,
+    "radius": 0.8,
+    "clips": [
+      "Idle",
+      "Walk",
+      "Run",
+      "Attack_1",
+      "Attack_2",
+      "Attack_3",
+      "Attack_4",
+      "Attack_5",
+      "Hit",
+      "Death"
+    ],
+    "lore": "Giant bone and mountain rock, walking because the Breath took the giant and left the weight behind. The clans will not call them dead; they call them owed. It has no trick and no temper, and that is not the same as having no weakness — a thing that is put together can be taken apart, and every time you knock the footing out from under it, something goes bouncing away down the scree that it would rather have kept.",
+    "region": "core:region/skerrow",
+    "stats": {
+      "hp": 300,
+      "stamina": 120,
+      "poise": 92,
+      "armour": 14,
+      "speed": 2.0
+    },
+    "perception": {
+      "sight_range": 20.0,
+      "sight_fov": 110.0,
+      "hearing": 26.0,
+      "alertness": 0.7
+    },
+    "behaviour": {
+      "engage_range": 3.2,
+      "circle": 0.05,
+      "retreat_threshold": 0.0,
+      "patience": 3.0,
+      "leash": 30.0,
+      "hyper_armour": 26.0,
+      "aggression": 0.85,
+      "strafe_speed": 0.3
+    },
+    "attacks": [
+      {
+        "name": "hammerfall",
+        "clip": "Attack_1",
+        "weapon_class": "hammer",
+        "damage": 41.0,
+        "poise_damage": 62.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 3.2,
+        "telegraph": 1.3,
+        "hit_window": 0.22,
+        "recovery": 1.2,
+        "cooldown": 6.0,
+        "gcd": 1.1,
+        "weight": 1.5,
+        "lunge": 1.6,
+        "knockdown": true,
+        "knockback": 2.6
+      },
+      {
+        "name": "backhand",
+        "clip": "Attack_2",
+        "weapon_class": "club",
+        "damage": 30.0,
+        "poise_damage": 40.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 3.4,
+        "telegraph": 0.9,
+        "hit_window": 0.2,
+        "recovery": 0.85,
+        "cooldown": 3.0,
+        "gcd": 0.9,
+        "weight": 3.0,
+        "lunge": 1.2,
+        "knockback": 2.2
+      }
+    ],
+    "limbs": [
+      {
+        "name": "right arm",
+        "remove_attacks": [
+          "hammerfall"
+        ],
+        "add_attacks": [
+          {
+            "name": "stone_sweep",
+            "clip": "Attack_3",
+            "weapon_class": "club",
+            "damage": 28.0,
+            "poise_damage": 36.0,
+            "heavy": true,
+            "hyper_armour": true,
+            "range": 3.2,
+            "telegraph": 0.8,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 2.6,
+            "gcd": 0.8,
+            "weight": 3.0,
+            "lunge": 1.6,
+            "knockback": 1.8
+          }
+        ],
+        "poise_loss": 22.0,
+        "speed_mult": 1.12,
+        "say": "The thrall's right arm goes off at the shoulder and keeps moving in the scree."
+      },
+      {
+        "name": "left arm",
+        "remove_attacks": [
+          "backhand"
+        ],
+        "add_attacks": [
+          {
+            "name": "headbutt",
+            "clip": "Attack_4",
+            "weapon_class": "hammer",
+            "damage": 27.0,
+            "poise_damage": 38.0,
+            "heavy": true,
+            "range": 2.6,
+            "telegraph": 0.62,
+            "hit_window": 0.16,
+            "recovery": 0.6,
+            "cooldown": 2.2,
+            "gcd": 0.6,
+            "weight": 3.0,
+            "lunge": 2.6,
+            "knockback": 2.4
+          }
+        ],
+        "poise_loss": 22.0,
+        "speed_mult": 1.1,
+        "say": "The other arm follows it. What is left of the thrall comes on faster."
+      },
+      {
+        "name": "left leg",
+        "remove_attacks": [
+          "stone_sweep"
+        ],
+        "add_attacks": [
+          {
+            "name": "crawling_sweep",
+            "clip": "Attack_5",
+            "weapon_class": "club",
+            "damage": 25.0,
+            "poise_damage": 44.0,
+            "heavy": true,
+            "hyper_armour": true,
+            "range": 3.6,
+            "telegraph": 0.92,
+            "hit_window": 0.24,
+            "recovery": 0.9,
+            "cooldown": 3.2,
+            "gcd": 0.9,
+            "weight": 3.0,
+            "knockdown": true,
+            "knockback": 2.0
+          }
+        ],
+        "poise_loss": 30.0,
+        "speed_mult": 0.45,
+        "say": "The leg splits at the knee. It does not stop; it lowers itself and comes on along the ground."
+      }
+    ],
+    "loot": "core:loot/stone_thrall",
+    "marks": [
+      0,
+      0
+    ],
+    "tags": [
+      "brute",
+      "construct",
+      "stone",
+      "unquiet"
+    ]
+  },
+  {
+    "id": "core:enemy/clanless_raider",
+    "name": "Clanless Raider",
+    "archetype": "elite",
+    "rig": "humanoid",
+    "faction": "clanless",
+    "tint": "#4e4a52",
+    "scale": 1.05,
+    "lore": "Blood-price is the whole of Skerrow law: a name is set against a debt, the Moot hears it, and the matter is closed. A man who cannot pay and will not be heard is struck from the verse, and after that he is nothing at all — which he carries about in plate and answers with a two-handed sword. He will not steal from a host. Out here there are no hosts.",
+    "region": "core:region/skerrow",
+    "stats": {
+      "hp": 232,
+      "stamina": 145,
+      "poise": 82,
+      "armour": 14,
+      "speed": 3.3
+    },
+    "perception": {
+      "sight_range": 30.0,
+      "sight_fov": 115.0,
+      "hearing": 20.0,
+      "alertness": 1.0
+    },
+    "behaviour": {
+      "engage_range": 3.0,
+      "circle": 0.4,
+      "retreat_threshold": 0.0,
+      "patience": 5.0,
+      "leash": 40.0,
+      "hyper_armour": 24.0,
+      "strafe_speed": 0.85,
+      "aggression": 0.85,
+      "parries": true,
+      "parry_chance": 0.35,
+      "parry_delay": 0.31,
+      "guard_stability": 0.65
+    },
+    "attacks": [
+      {
+        "name": "great_cleave",
+        "clip": "Attack_2H_Light_1",
+        "weapon_class": "greatsword",
+        "damage": 34.0,
+        "poise_damage": 38.0,
+        "range": 3.0,
+        "telegraph": 0.75,
+        "hit_window": 0.18,
+        "recovery": 0.75,
+        "cooldown": 2.6,
+        "gcd": 0.7,
+        "weight": 3.0,
+        "lunge": 2.0
+      },
+      {
+        "name": "step_through",
+        "clip": "Attack_2H_Light_2",
+        "weapon_class": "greatsword",
+        "damage": 28.0,
+        "poise_damage": 32.0,
+        "range": 3.2,
+        "telegraph": 0.6,
+        "hit_window": 0.16,
+        "recovery": 0.65,
+        "cooldown": 3.4,
+        "gcd": 0.6,
+        "weight": 2.0,
+        "lunge": 3.4
+      },
+      {
+        "name": "hewing_blow",
+        "clip": "Attack_2H_Heavy",
+        "weapon_class": "greatsword",
+        "damage": 48.0,
+        "poise_damage": 66.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 3.2,
+        "telegraph": 1.25,
+        "hit_window": 0.2,
+        "recovery": 1.15,
+        "cooldown": 6.5,
+        "gcd": 1.1,
+        "weight": 1.0,
+        "lunge": 2.4,
+        "knockback": 3.2
+      }
+    ],
+    "loot": "core:loot/clanless_raider",
+    "marks": [
+      80,
+      180
+    ],
+    "tags": [
+      "raider",
+      "bandit",
+      "outlaw",
+      "humanoid",
+      "person"
+    ]
+  }
+]

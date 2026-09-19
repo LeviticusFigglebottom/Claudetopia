@@ -1,0 +1,249 @@
+[
+  {
+    "id": "core:item/drake_scale",
+    "name": "Drake Scale",
+    "category": "material",
+    "weight": 0.1,
+    "value": 6,
+    "stack": 50,
+    "tags": [
+      "hide",
+      "smithing"
+    ],
+    "description": "A palm-sized scale off a gutter drake, black and slick and faintly warm to hold. Undercroft water runs off it as though insulted. Tollmere's cobblers sew them into boot soles, charge extra, and call it a guild secret."
+  },
+  {
+    "id": "core:item/tollmere_rapier",
+    "name": "Tollmere Rapier",
+    "category": "weapon",
+    "weight": 2.2,
+    "value": 240,
+    "tags": [
+      "weapon",
+      "one_handed",
+      "rapier",
+      "tollmere"
+    ],
+    "material": "core:item/iron_ingot",
+    "weapon": {
+      "class": "rapier",
+      "damage": 17.0,
+      "poise_damage": 9.0,
+      "stamina_light": 15.0,
+      "stamina_heavy": 27.0,
+      "speed": 1.15,
+      "reach": 2.0,
+      "clips_set": "1H",
+      "parry": true,
+      "stability": 0.3
+    },
+    "description": "A needle of guild steel with a charter number stamped beneath the guard, because in Tollmere even a killing is a matter of record. Bravos file the number off. The Tallymen keep a list of the numbers that have been filed off, and it is longer than the list of bravos."
+  },
+  {
+    "id": "core:item/forged_charter_chit",
+    "name": "Forged Charter Chit",
+    "category": "misc",
+    "weight": 0.05,
+    "value": 35,
+    "stack": 20,
+    "tags": [
+      "trade",
+      "contraband"
+    ],
+    "description": "A brass chit saying a cargo was weighed, taxed and sealed. It says so in the correct hand, with the correct bell stamped in the correct corner, and it is a lie from edge to edge. The sayers who cut them price them by how long they will hold, not by what they claim."
+  },
+  {
+    "id": "core:item/sallow_hide",
+    "name": "Sallow Hide",
+    "category": "material",
+    "weight": 2.5,
+    "value": 34,
+    "stack": 20,
+    "tags": [
+      "hide",
+      "smithing"
+    ],
+    "description": "Ridged hide off a sallowjaw, the exact colour of a channel bottom, which is the point of it. Isseva's boatwrights nail a length over a hull's cutwater, where it turns the snag that would have opened the planks — which is what it was doing before anyone nailed it anywhere."
+  },
+  {
+    "id": "core:item/leech_gland",
+    "name": "Leech Gland",
+    "category": "ingredient",
+    "weight": 0.1,
+    "value": 9,
+    "stack": 30,
+    "tags": [
+      "ingredient",
+      "animal"
+    ],
+    "origin": "core:region/sedgemire",
+    "alchemy": {
+      "effects": [
+        "core:effect/damage_stamina",
+        "core:effect/restore_health",
+        "core:effect/slow",
+        "core:effect/fortify_speed"
+      ]
+    },
+    "description": "The pale gland behind a leech-hound's jaw, which is where the tiredness goes. Reedfolk bonesetters will buy them and will not say what for. Whatever it is they do with it, the patient sleeps."
+  },
+  {
+    "id": "core:item/wisp_glim",
+    "name": "Wisp-Glim",
+    "category": "material",
+    "weight": 0.0,
+    "value": 70,
+    "stack": 99,
+    "tags": [
+      "ember",
+      "enchanting"
+    ],
+    "ember": {
+      "charge": 40
+    },
+    "description": "What is left when a wisp is put out: a cold bead that lights nothing and is bright regardless. Hold it up to your eye and the marsh behind it looks a few seconds older than the marsh beside it. Enchanters bind frost with them and sleep badly afterwards."
+  },
+  {
+    "id": "core:item/weaver_silk",
+    "name": "Weaver Silk",
+    "category": "material",
+    "weight": 0.3,
+    "value": 28,
+    "stack": 50,
+    "tags": [
+      "cloth",
+      "smithing",
+      "enchanting"
+    ],
+    "description": "A hank of Weaverdeep line, grey and dry and strong enough to hold a grown woman over a drop. The foresters cut their rope-walks from it and mend them at dusk, when the weavers are elsewhere and the light is honest about where the strands are."
+  },
+  {
+    "id": "core:item/heartwood_knot",
+    "name": "Heartwood Knot",
+    "category": "material",
+    "weight": 1.6,
+    "value": 120,
+    "stack": 10,
+    "tags": [
+      "wood",
+      "smithing",
+      "enchanting"
+    ],
+    "description": "A knot out of a Warden's trunk, hard as a hammer-head and still damp in the middle. It keeps the ring-count of a tree that was old when the Toll came down. Fernhold will trade for one, and will ask, politely, what you were doing near the stones."
+  },
+  {
+    "id": "core:item/snare_wire",
+    "name": "Snare Wire",
+    "category": "tool",
+    "weight": 0.2,
+    "value": 12,
+    "stack": 20,
+    "tags": [
+      "tool",
+      "hunting"
+    ],
+    "description": "Brass wire on a wooden toggle, set at a hare's height and left. The Briarwold has no law about snares, only custom: you walk what you set, every day, without fail. A poacher's coil is always longer than his round."
+  },
+  {
+    "id": "core:item/shed_antler",
+    "name": "Shed Antler",
+    "category": "material",
+    "weight": 1.1,
+    "value": 40,
+    "stack": 20,
+    "tags": [
+      "bone",
+      "smithing"
+    ],
+    "description": "A tine off a Hart-Knight's helm, or off the beast the helm is copying. Nobody in the Briarwold will tell you which, and the difference matters less every year. It carves well and it smells of nothing at all."
+  },
+  {
+    "id": "core:item/crag_pelt",
+    "name": "Crag Pelt",
+    "category": "material",
+    "weight": 1.8,
+    "value": 45,
+    "stack": 20,
+    "tags": [
+      "hide",
+      "smithing"
+    ],
+    "description": "White winter pelt off a crag-wolf, thick enough to stand a night on the tops in. Brindlecrag lines its mine-coats with them. No clan will take one in blood-price: a pelt is not a name, and only a name settles a debt."
+  },
+  {
+    "id": "core:item/hag_stone",
+    "name": "Hag Stone",
+    "category": "ingredient",
+    "weight": 0.4,
+    "value": 22,
+    "stack": 30,
+    "tags": [
+      "ingredient",
+      "stone"
+    ],
+    "origin": "core:region/skerrow",
+    "alchemy": {
+      "effects": [
+        "core:effect/silence",
+        "core:effect/resist_frost",
+        "core:effect/damage_health",
+        "core:effect/fortify_armour"
+      ]
+    },
+    "description": "A river-holed pebble a scree-hag carried in her cheek for the weight of it. Look through the hole and the gorge on the far side is quieter than the gorge you are standing in. Clan children are told not to, and do."
+  },
+  {
+    "id": "core:item/greyfold_spoon",
+    "name": "Greyfold Spoon",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 4,
+    "stack": 20,
+    "tags": [
+      "trinket",
+      "cinderlea"
+    ],
+    "description": "A horn spoon from a table in Greyfold that is still laid for six. The bowl is worn to a slant by a right hand. The wights carry them about the village and set them down again, and it is the setting-down that stays with you."
+  },
+  {
+    "id": "core:item/grey_hymn_sheet",
+    "name": "Grey Hymn Sheet",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 30,
+    "stack": 20,
+    "tags": [
+      "trade",
+      "tolling_order"
+    ],
+    "description": "One leaf of a chorister's hymnal, the ink gone the colour of the sky above it. The notation is Oroth and the words are not; somebody translated it badly four hundred years ago and the Order has been singing the translation ever since. Sayers pay well for a leaf and read it with the window open."
+  },
+  {
+    "id": "core:item/bearers_clapper",
+    "name": "Bearer's Clapper",
+    "category": "weapon",
+    "weight": 14.0,
+    "value": 780,
+    "tags": [
+      "weapon",
+      "two_handed",
+      "hammer",
+      "bell_bronze"
+    ],
+    "tier": 4,
+    "material": "core:item/bell_bronze_scrap",
+    "weapon": {
+      "class": "hammer",
+      "damage": 36.0,
+      "poise_damage": 58.0,
+      "stamina_light": 28.0,
+      "stamina_heavy": 46.0,
+      "speed": 0.62,
+      "reach": 2.1,
+      "clips_set": "2H",
+      "parry": false,
+      "stability": 0.5
+    },
+    "description": "The tongue out of a bell-bearer's bell: a bar of bronze as long as a man's leg with a pear of metal on the end of it. It has struck one note several thousand times and has not finished striking it. Swing it hard and something in the ground answers, a beat late, from somewhere under Cinderlea."
+  }
+]
