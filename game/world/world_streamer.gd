@@ -102,6 +102,12 @@ func loaded_count() -> int:
 	return _loaded.size()
 
 
+## Whether one cell's contents are standing in the world yet. Anything waiting on a cell — a
+## capture, a test, a tool — should ask this rather than counting frames.
+func is_loaded(cell: Vector2i) -> bool:
+	return _loaded.has(cell)
+
+
 func instance_count() -> int:
 	var total := 0
 	for cell in _loaded:
@@ -250,6 +256,12 @@ func _build_spawns(parent: Node3D, spawns: Array) -> void:
 		if p.size() < 3:
 			continue
 		var at := Vector3(float(p[0]), float(p[1]), float(p[2]))
+		# The builder samples the ground at full resolution and the runtime reads a quarter-res
+		# copy, so on a slope the two disagree by a few metres. The ground under your feet is
+		# the one that counts: ask it rather than trusting what was written down.
+		var provider := World.terrain()
+		if provider != null:
+			at.y = provider.get_height(at.x, at.z)
 		spawner.spawn_one(def_id, at, deg_to_rad(float(spawn.get("yaw", 0.0))),
 				{"group": str(spawn.get("group", ""))})
 

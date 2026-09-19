@@ -216,6 +216,7 @@ func _physics_process(delta: float) -> void:
 		_damp(delta, 8.0)
 		apply_gravity(delta)
 		move_and_slide()
+		snap_to_terrain()
 		return
 	_tick_timers(delta)
 	_check_phase()
@@ -239,6 +240,7 @@ func _physics_process(delta: float) -> void:
 	apply_gravity(delta)
 	integrate_shove(delta)
 	move_and_slide()
+	snap_to_terrain()
 	_update_anim()
 
 

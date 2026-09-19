@@ -31,6 +31,8 @@ const BODY_MASK := LAYER_WORLD | LAYER_PLAYER | LAYER_ENEMY | LAYER_NPC | LAYER_
 const KNOCKDOWN_DURATION := 1.6
 const GET_UP_DURATION := 0.8
 const RIPOSTE_VICTIM_STUN := 1.2
+## How far above the heightfield still counts as standing on it.
+const GROUND_SKIN := 0.12
 
 @export var display_name: String = "Actor"
 @export var faction: String = "neutral"
@@ -622,6 +624,27 @@ func apply_gravity(delta: float) -> void:
 		velocity.y -= gravity * delta
 	elif velocity.y < 0.0:
 		velocity.y = -0.5
+
+
+## The terrain is a heightfield with no collision body under it — Terrain3D builds collision as
+## a moving shape around the camera and we do not use it — so a body walking the overworld has
+## nothing to stand on and sinks. This puts it back on the ground, and only ever upward: an
+## interior sits in its own pocket high above the map, and a body on a bridge or a roof is
+## above the ground rather than below it, so neither is disturbed.
+## Returns true when the ground was what held the body up this frame.
+func snap_to_terrain() -> bool:
+	if not is_inside_tree():
+		return false
+	var provider: Object = World.terrain()
+	if provider == null or not provider.has_method("get_height"):
+		return false
+	var ground: float = float(provider.call("get_height", global_position.x, global_position.z))
+	if global_position.y > ground + GROUND_SKIN:
+		return false
+	global_position.y = ground
+	if velocity.y < 0.0:
+		velocity.y = 0.0
+	return true
 
 
 ## Adds the pending shove (knockback) to the horizontal velocity and decays it.

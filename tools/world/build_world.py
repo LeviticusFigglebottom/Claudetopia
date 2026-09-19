@@ -226,7 +226,7 @@ def build(args) -> dict:
         rules = CELLS.load_rules(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scatter_rules.json"))
         sw = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask,
                                 ctx.slope, bank, regions)
-        buckets = CELLS.scatter(sw, rules, regions, seed)
+        buckets = CELLS.scatter(sw, rules, regions, seed, repo_root=REPO)
         t.mark("scatter")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope, bank, regions)
     cell_regions = CELLS.cell_region_ids(sw2, regions)

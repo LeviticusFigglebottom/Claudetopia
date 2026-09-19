@@ -138,13 +138,14 @@ func test_the_country_has_things_in_it_that_will_fight_you() -> void:
 	var where := _a_cell_with_spawns()
 	assert_true(where != Vector3.INF, "the built world has encounters in it")
 	w.force_stream_around(where)
-	for i in 120:
+	# Cells parse on worker threads and build a bounded number per frame, and a full run has
+	# other suites' work in the queue; wait for the cell itself rather than a frame count.
+	var wanted := w.streamer.cell_of(where)
+	for i in 600:
 		await _tree().process_frame
+		if w.streamer.is_loaded(wanted):
+			break
 	var enemies := _tree().get_nodes_in_group("enemy")
-	print("DBG cells=", w.streamer.loaded_count(), " target=", w.streamer.target, " at=", where, " enemies=", enemies.size())
-	for cellnode in w.streamer.get_children():
-		if cellnode.get_node_or_null("Encounters") != null:
-			print("DBG cell with encounters: ", cellnode.name)
 	assert_gt(enemies.size(), 0, "somebody is out on the downs")
 	for e in enemies:
 		var body := e as Node3D

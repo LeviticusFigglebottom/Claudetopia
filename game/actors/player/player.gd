@@ -249,6 +249,7 @@ func _physics_process(delta: float) -> void:
 		apply_gravity(delta)
 		integrate_shove(delta)
 		move_and_slide()
+		snap_to_terrain()
 	_update_locomotion_anim(delta)
 	_noise_timer -= delta
 

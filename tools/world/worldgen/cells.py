@@ -9,17 +9,85 @@ from __future__ import annotations
 
 import json
 import math
+import os
 
 import numpy as np
 
 from .grid import Grid, sample_bilinear, sample_nearest, smoothstep
 
 HECTARE = 10000.0
+## Where the forge puts what it makes. A rule names a kind ("trees/oak"); the forge builds that
+## kind once per region with two or three variants ("trees/hearthvale_oak_a"), because a
+## region's oaks are its own colour and one oak repeated is a wallpaper.
+MODELS_DIR = "game/assets/models"
 
 
 def load_rules(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def asset_index(repo_root: str) -> dict:
+    """category -> {name: path}, read off what the forge has actually built."""
+    out: dict = {}
+    base = os.path.join(repo_root, MODELS_DIR)
+    if not os.path.isdir(base):
+        return out
+    for category in sorted(os.listdir(base)):
+        cat_dir = os.path.join(base, category)
+        if not os.path.isdir(cat_dir):
+            continue
+        names = {}
+        for name in sorted(os.listdir(cat_dir)):
+            if os.path.exists(os.path.join(cat_dir, name, name + ".glb")):
+                names[name] = "res://assets/models/%s/%s/%s.glb" % (category, name, name)
+        if names:
+            out[category] = names
+    return out
+
+
+## Where a rule and the forge call the same thing by different names, or where the forge has
+## nothing and the nearest honest neighbour will do. A missing plant is a bald hillside, so a
+## sundew standing in for a marsh marigold is the better of the two wrongs — but only inside
+## the same habit: nothing here substitutes a tree for a herb.
+ASSET_ALIASES = {
+    "flora/reed": "flora/reeds",
+    "flora/briar": "flora/briar_vine",
+    "flora/lichen": "flora/lichen_crust",
+    "flora/red_poppy": "flora/red_poppy_single",
+    "flora/waterlily": "flora/waterlily_pad",
+    "flora/hawthorn": "trees/hawthorn",
+    "flora/juniper": "trees/juniper",
+    "props/char_stump": "trees/char_stump",
+    "trees/dead_ash": "trees/dead_ash_tree",
+    # No asset of their own; these are the nearest thing growing in the same ground.
+    "flora/bladderwort": "flora/marsh_marigold",
+    "flora/sundew": "flora/bracket_fungus",
+    "flora/cottongrass": "flora/grey_grass",
+    "flora/clover": "flora/grass_clump",
+    "flora/market_herbs": "flora/cow_parsley",
+}
+
+
+def assets_for(index: dict, rule_asset: str, region_short: str) -> list:
+    """Every file a rule may draw on in this region, best match first.
+
+    A rule asks for `trees/oak`. This region's own oaks win; another region's oaks are better
+    than no oak at all (a hawthorn is a hawthorn); an exact name is taken as written, which is
+    how a one-off asset with no variants still works.
+    """
+    rule_asset = ASSET_ALIASES.get(rule_asset, rule_asset)
+    category, _, kind = rule_asset.partition("/")
+    names = index.get(category, {})
+    if not names:
+        return []
+    if kind in names:
+        return [names[kind]]
+    mine = [p for n, p in names.items() if n.startswith(region_short + "_" + kind + "_")]
+    if mine:
+        return mine
+    anyones = [p for n, p in names.items() if n.endswith("_" + kind) or ("_" + kind + "_") in n]
+    return anyones
 
 
 def _hex(c) -> str:
@@ -79,9 +147,12 @@ def _candidates(rng: np.random.Generator, size_m: float, spacing: float) -> tupl
     return x, z
 
 
-def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_noise_salt: int = 700) -> dict:
+def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_noise_salt: int = 700,
+            repo_root: str = ".") -> dict:
     """Returns {(cx, cz): {asset_path: [[x, y, z, yaw, scale, tint], ...]}}."""
     grid = world.grid
+    index = asset_index(repo_root)
+    unmatched: set = set()
     defaults = rules.get("defaults", {})
     region_mult = rules.get("region_density", {})
     out: dict = {}
@@ -147,7 +218,13 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         base_col = pal[1] if pal.shape[0] > 1 else pal[0]
         jit = float(cfg.get("tint_jitter", 0.07))
         tints = np.clip(base_col[None, :] * (1.0 + rng.normal(0.0, jit, (x.size, 3))), 0.25, 1.0)
-        asset = "res://assets/models/%s/%s.glb" % (cfg["asset"], cfg["asset"].split("/")[-1])
+        # This region's own variants of the thing the rule names. Spreading the instances over
+        # them is what stops a hillside being one tree printed four hundred times.
+        variants = assets_for(index, str(cfg["asset"]), region.short)
+        if not variants:
+            unmatched.add(str(cfg["asset"]))
+            continue
+        pick = rng.integers(0, len(variants), x.shape)
         cx, cz = grid.cell_of(x, z)
         cx = np.clip(cx, 0, grid.cells - 1)
         cz = np.clip(cz, 0, grid.cells - 1)
@@ -162,10 +239,12 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             sel = order[lo:hi]
             ccx, ccz = int(k // grid.cells), int(k % grid.cells)
             bucket = out.setdefault((ccx, ccz), {})
-            lst = bucket.setdefault(asset, [])
             for t in sel:
+                lst = bucket.setdefault(variants[int(pick[t])], [])
                 lst.append([round(float(x[t]), 2), round(float(y[t]), 2), round(float(z[t]), 2),
                             round(float(yaw[t]), 1), round(float(scale[t]), 3), _hex(tints[t])])
+    if unmatched:
+        print("[world] no asset for: %s" % ", ".join(sorted(unmatched)), flush=True)
     return out
 
 

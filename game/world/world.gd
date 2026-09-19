@@ -237,10 +237,15 @@ func _spawn_position() -> Vector3:
 
 ## Moves whatever the streamer follows (the fly camera, or the player) to a world position.
 func move_target(pos: Vector3, look_at: Variant = null) -> void:
-	if fly_camera:
+	# Move whatever the streaming is actually following. Once a body has spawned, the fly
+	# camera is still in the scene but is nobody's eye: moving it moved nothing at all and the
+	# world went on streaming around the player standing where they were.
+	if target == fly_camera and fly_camera != null:
 		fly_camera.move_to(pos, look_at)
-	elif target:
+	elif target != null:
 		target.global_position = pos
+	elif fly_camera != null:
+		fly_camera.move_to(pos, look_at)
 	if streamer:
 		streamer.refresh()
 
