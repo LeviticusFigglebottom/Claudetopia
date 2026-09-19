@@ -63,6 +63,9 @@ captures/                 screenshot output (gitignored)
 | `WorldClock` | `world_clock.gd` | game time (48 real min/day), `hour_changed`, `new_day`, `wait_until()`, sun elevation |
 | `GameState` | `game_state.gd` | flags, counters, discovered places, read books, current region/interior |
 | `SaveSystem` | `save_system.gd` | slots in `user://saves/`, `register(section, obj)`, `take_pending()` for late joiners |
+| `Hearth` | `systems/hearth/hearth_system.gd` | Hearthstones, respawn point, the Echo (dropped marks), lit stones; section `hearth` |
+| `Interiors` | `systems/interiors/interior_manager.gd` | interior cells in a far pocket, door transitions, return point; section `interiors` |
+| `Debug` | `tools_gd/debug_console.tscn` | in-game console (backquote), `Debug.register(name, callable, help)`, `-- --cmd="..."` scripting |
 
 Static helper classes (not nodes): `Ids`, `Schemas`, `Migrations`.
 
@@ -102,7 +105,9 @@ rolls) lives in `static func`s or `RefCounted` classes so tests need no scene.
 | Economy | `systems/economy` | `Merchant`, `Pricing` (pure), `Property`, `Jobs` | `economy`, `property` |
 | Time & weather | `systems/atmosphere` | `Weather`, `SkyController`, `RegionLook` (applies identity light) | `world` |
 | Audio | `systems/audio` | `MusicDirector`, `AmbienceMixer`, `Foley` | none |
-| Death & shrines | `systems/hearth` | `Hearthstones`, `Echo` | `hearth` |
+| Death & shrines | `systems/hearth` | `Hearth` autoload, `Hearthstone`, `Echo` | `hearth` |
+| Interiors | `systems/interiors` | `Interiors` autoload, `Door` (+ `DoorLock` child from crime) | `interiors` |
+| Atmosphere | `systems/atmosphere` | `Atmosphere` node: sky shader, sun/moon, region look, weather | `world` |
 | Streaming | `world/streaming` | `WorldStreamer`, `Cell`, `TerrainProvider`, `Interiors` | `world_cells` |
 
 ## 6. World data pipeline
