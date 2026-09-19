@@ -14,7 +14,8 @@ normative; everything tunable is content, everything pure is a `static func`.
 | `stamina_component.gd` | Pool, costs, sprint drain, 30/s regen after 0.8 s (halved while blocking). |
 | `poise_component.gd` | Poise damage, 4/s regen after 1.5 s, stagger at 0 (then resets), hyper-armour threshold. |
 | `status_effects.gd` | burning, chilled, webbed, bleeding, poisoned, silenced, quieted, stagger, knockdown, warded — durations, ticks and stacking rules in one `RULES` table. |
-| `enemy_abilities.gd` | `EnemyAbilities`: the pure decisions behind the bestiary's special behaviours — whether a voice attack may be used, how much a cutpurse takes, what a lure does this frame, whether greed has roused a guardian, when a duelist presses its guard, which limb comes off next. No state, no nodes; `Enemy` does the acting. |
+| `enemy_abilities.gd` | `EnemyAbilities`: the pure decisions behind the bestiary's special behaviours and the boss fights — whether a voice attack may be used, how much a cutpurse takes, what a lure does this frame, whether greed has roused a guardian, when a duelist presses its guard, which limb comes off next, what breaks a held note, how wide a shockwave reaches, whether a combo's second beat may be thrown, how many lights a renown tier keeps burning. No state, no nodes; `Enemy` and `BossArena` do the acting. |
+| `../actors/enemy/boss_arena.gd` | `BossArena`: the fog gate, and the floor of the fight. `radius`/`shrink()` hold the player to a piece of ground and put whoever leaves it in the thorns; `light_by_renown()` puts the room out except for the few lamps their renown keeps burning, and `lit_at()` answers whether a point is standing in one. `for_boss()` finds a placed arena or improvises one around the boss. |
 | `projectile.gd`, `arrow.tscn` | Swept-ray kinematic projectile with a gravity arc; arrows stick into geometry, bolts vanish. |
 | `spell_runtime.gd` | Pure spell rules: cost and cast time by skill, silence check, school → skill and damage kind, effect → `HitData`. |
 | `spell_caster.gd` | Runtime casting: mana pool, cast timer, and the four implemented cast types (`projectile`, `self`, `aura`, `target`). `summon` is deliberately refused, not faked. |
@@ -42,8 +43,22 @@ resolves hits), `actors/player/`, `actors/enemy/`.
   `behaviour` adds `lure{lure_distance, lure_break, lure_patience, lure_speed}` (a wisp keeps its
   distance while you follow), `guards{radius, wrath}` (a sentinel roused by looting near its
   post), `parries{parry_chance, parry_delay, guard_stability}` (an elite that guards between its
-  own swings) and `flee_after_steal`/`flee_time`. `limbs[{name, remove_attacks[], add_attacks[],
-  poise_loss, speed_mult, say}]` come off one per poise break, changing the moveset as they go.
+  own swings) and `flee_after_steal`/`flee_time`. `limbs[{name, breaks_at, damage,
+  remove_attacks[], add_attacks[], poise_loss, speed_mult, say}]` come off one at a time —
+  when the creature's poise breaks (`breaks_at: "poise"`, the default) or once it has taken
+  `damage` since the last one went (`breaks_at: "damage"`) — and a phase change re-applies
+  them, so nothing grows back.
+* `boss` defs — everything an `enemy` def has, plus `arena` (the place it is fought in), `drops`
+  (unique items handed over on death, guaranteed, never rolled), `resists` and
+  `phases[{name, hp, say, attacks[], engage_range, circle, aggression, hyper_armour,
+  retreat_threshold, speed, renown_lights_arena}]`. Boss attacks add `channel` (seconds held:
+  it pulses every `channel_tick`, heals `heals_self` spread evenly across those pulses, and is
+  cut short by a silence when it is a `voice` note or by `interrupt_damage` when it is
+  `interruptible`), `shockwave` (metres of radial follow-through at `shockwave_share` of the
+  blow that threw it), `arena_wide` (the radius is the arena's), `combo_from`/`combo_window`
+  (may only be thrown after a named other attack), `shrinks_arena` (metres of floor taken and
+  kept), `spares_lit` (the share of the damage that lands on anyone standing in a surviving
+  light) and `summons{enemy, count, radius, cap}`.
 * `spell` defs — `{school, cast_type, cost, cast_time, range, speed, radius, duration, effects[]}`
   with effect types `damage`, `status`, `heal`, `shield`, `cleanse`.
 
@@ -62,7 +77,9 @@ Consumes: `EventBus.hearthstone_rested(id)` — non-boss enemies reset to their 
 
 Local signals worth connecting to: `Actor.health_changed/stats_changed/died/hit_taken/staggered/
 knocked_down/riposte_opened`, `Player.state_changed/lock_on_changed/attack_started/dodge_started`,
-`Enemy.telegraph/attack_launched/phase_changed/limb_broken/mark_dropped`, `Interactor.prompt_changed`.
+`Enemy.telegraph/attack_launched/phase_changed/limb_broken/summoned/channel_started/
+channel_pulse/channel_ended/mark_dropped`, `BossArena.arena_entered/arena_cleared/bound_changed/
+lights_dimmed`, `Interactor.prompt_changed`.
 
 ## Save
 

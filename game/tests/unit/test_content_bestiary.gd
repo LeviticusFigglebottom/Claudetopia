@@ -318,3 +318,154 @@ func test_nothing_can_kill_a_careful_player_in_one_blow_or_survive_a_patient_one
 		for a in def.get("attacks", []):
 			best = maxf(best, float((a as Dictionary).get("damage", 0.0)))
 		assert_gt(best, 5.0, "%s cannot hurt anybody" % id)
+
+
+# --- the bosses, held to the same contract ----------------------------------------------------------
+
+## Bosses are enemies filed under another type. Everything the bestiary must satisfy about clips,
+## attack kinds, statuses and archetypes, a boss must satisfy too — and nothing did, because the
+## checks above only walk `all("enemy")`.
+func _bosses() -> Array:
+	return ContentDB.all("boss")
+
+
+func test_every_boss_in_the_bible_exists_with_a_fight_in_it() -> void:
+	const PROMISED: Array[String] = [
+		"core:boss/barrow_reeve", "core:boss/she_who_waits", "core:boss/hart_of_thorns",
+		"core:boss/stone_thrall_king", "core:boss/last_cantor",
+	]
+	for id in PROMISED:
+		assert_true(ContentDB.has(id), "WORLD_BIBLE §9 promises %s" % id)
+		var def := ContentDB.get_or_empty(id)
+		assert_true(ContentDB.has(str(def.get("arena", ""))), "%s fights nowhere" % id)
+		assert_true(ContentDB.has(str(def.get("region", ""))), "%s belongs to no region" % id)
+		var phases: Array = def.get("phases", [])
+		assert_gt(phases.size(), 1, "%s needs a fight with turns in it" % id)
+		assert_false((def.get("attacks", []) as Array).is_empty(), "%s opens with nothing to throw" % id)
+		for i in phases.size():
+			var p: Dictionary = phases[i]
+			assert_has(p, "say", "%s has a phase that says nothing" % id)
+			# The first phase may fight with the def's own attack set; a later one that adds
+			# nothing is a phase change the player cannot see.
+			if i > 0:
+				assert_false((p.get("attacks", []) as Array).is_empty(), "%s phase %d changes nothing" % [id, i])
+	assert_eq(_bosses().size(), PROMISED.size(), "the bible lists five bosses")
+
+
+func test_every_boss_attack_names_a_clip_that_exists() -> void:
+	for def in _bosses():
+		var id := str(def["id"])
+		var allowed: Array = HUMANOID_CLIPS.duplicate()
+		if str(def.get("rig", "humanoid")) != "humanoid":
+			allowed = def.get("clips", [])
+			assert_false(allowed.is_empty(), "%s uses a creature rig and must declare its clips" % id)
+			for required in CREATURE_CLIPS:
+				assert_true(allowed.has(required), "%s clips are missing the required %s" % [id, required])
+		for list in _attack_lists(def):
+			for attack in list:
+				var clip := str((attack as Dictionary).get("clip", ""))
+				assert_true(allowed.has(clip), "%s/%s names clip '%s', which is not in its contract" % [id, (attack as Dictionary).get("name", "?"), clip])
+
+
+func test_every_boss_attack_is_built_out_of_parts_the_code_runs() -> void:
+	const KINDS: Array[String] = ["", "charge", "leap", "burst", "projectile", "spell"]
+	for def in _bosses():
+		var id := str(def["id"])
+		for list in _attack_lists(def):
+			for a in list:
+				var attack: Dictionary = a
+				var name := str(attack.get("name", "?"))
+				assert_true(KINDS.has(str(attack.get("kind", ""))), "%s/%s has unknown kind '%s'" % [id, name, attack.get("kind", "")])
+				if attack.has("kind_damage"):
+					assert_true(DamageModel.KINDS.has(str(attack["kind_damage"])), "%s/%s deals unknown damage kind" % [id, name])
+				for s in attack.get("statuses", []):
+					assert_true(StatusEffects.RULES.has(str((s as Dictionary).get("id", ""))), "%s/%s applies unknown status" % [id, name])
+				if attack.has("summons"):
+					assert_true(ContentDB.has(str((attack["summons"] as Dictionary).get("enemy", ""))), "%s/%s calls up nothing that exists" % [id, name])
+				if attack.has("spell"):
+					assert_true(ContentDB.has(str(attack["spell"])), "%s/%s casts an unknown spell" % [id, name])
+				assert_gt(float(attack.get("telegraph", 0.0)), 0.3, "%s/%s has no wind-up" % [id, name])
+				# A second beat must name a first beat that this boss actually has.
+				var after := str(attack.get("combo_from", ""))
+				if after != "":
+					assert_false(_attack_named(def, after).is_empty(), "%s/%s follows '%s', which it cannot throw" % [id, name, after])
+
+
+func test_every_boss_archetype_and_limb_is_one_the_code_knows() -> void:
+	for def in _bosses():
+		var id := str(def["id"])
+		assert_has(Brain.ARCHETYPES, str(def.get("archetype", "")), "%s has an unknown archetype" % id)
+		for limb in def.get("limbs", []):
+			var l: Dictionary = limb
+			assert_true(["poise", "damage"].has(EnemyAbilities.limb_trigger(l)), "%s limb '%s' breaks on nothing the code checks" % [id, l.get("name", "?")])
+			if not EnemyAbilities.limb_breaks_on_poise(l):
+				assert_gt(EnemyAbilities.limb_damage_needed(l), 1.0, "%s limb '%s' needs a damage threshold" % [id, l.get("name", "?")])
+			for removed in l.get("remove_attacks", []):
+				assert_false(_attack_named(def, str(removed)).is_empty(), "%s limb '%s' removes '%s', which it never had" % [id, l.get("name", "?"), removed])
+
+
+func test_every_boss_provides_what_the_boss_code_reads() -> void:
+	# The reverse of the dead-data check: fields the code looks up that a def must supply.
+	for def in _bosses():
+		var id := str(def["id"])
+		for key in ["name", "archetype", "stats", "behaviour", "perception", "attacks", "phases", "marks", "tags", "drops", "arena", "region", "lore"]:
+			assert_has(def, key, "%s is missing '%s'" % [id, key])
+		for key in ["hp", "stamina", "poise", "armour", "speed"]:
+			assert_has(def["stats"], key, "%s stats missing %s" % [id, key])
+		if str(def.get("rig", "humanoid")) != "humanoid":
+			# A custom rig with no body kind is drawn as a quadruped, which no boss is.
+			assert_has(def, "body", "%s uses a creature rig and must say what body it is" % id)
+		if def.has("loot"):
+			assert_true(ContentDB.has(str(def["loot"])), "%s points at a missing loot table" % id)
+		# What it is made of, so that what you bring to the fight matters.
+		assert_has(def, "resists", "%s takes a dagger exactly as well as a hammer" % id)
+		var weak := false
+		for kind in def["resists"]:
+			assert_true(DamageModel.KINDS.has(str(kind)), "%s resists unknown damage kind '%s'" % [id, kind])
+			if float(def["resists"][kind]) < 0.0:
+				weak = true
+		assert_true(weak, "%s has no weakness; there is nothing to work out" % id)
+
+
+func test_a_channel_is_stoppable_or_says_plainly_that_it_is_not() -> void:
+	# `channel`, `heals_self`, `interruptible` and `voice` only mean something together: a note
+	# that heals and cannot be stopped by anything is a fight the player cannot win.
+	for def in _bosses():
+		var id := str(def["id"])
+		for list in _attack_lists(def):
+			for a in list:
+				var attack: Dictionary = a
+				if not EnemyAbilities.is_channel(attack):
+					continue
+				var name := str(attack.get("name", "?"))
+				assert_gt(EnemyAbilities.channel_pulses(attack), 0, "%s/%s is a channel with no beats" % [id, name])
+				if float(attack.get("heals_self", 0.0)) > 0.0:
+					var stoppable := bool(attack.get("voice", false)) or bool(attack.get("interruptible", false))
+					assert_true(stoppable, "%s/%s heals and cannot be stopped" % [id, name])
+				assert_has(attack, "note", "%s/%s should say in the data how it is meant to be answered" % [id, name])
+
+
+func test_the_bosses_get_harder_in_the_order_the_thread_meets_them() -> void:
+	# The main thread's order: Hollin Barrow, the Nave, the Moot, Oskeld, the Seat.
+	const ORDER: Array[String] = [
+		"core:boss/barrow_reeve", "core:boss/she_who_waits", "core:boss/hart_of_thorns",
+		"core:boss/stone_thrall_king", "core:boss/last_cantor",
+	]
+	var last := 0.0
+	for id in ORDER:
+		var def := ContentDB.get_or_empty(id)
+		var worst := 0.0
+		for list in _attack_lists(def):
+			for a in list:
+				worst = maxf(worst, float((a as Dictionary).get("damage", 0.0)))
+		var weight := float(def["stats"]["hp"]) * 0.05 + worst
+		assert_gt(weight, last, "%s is not a step up from the one before it" % id)
+		last = weight
+
+
+func _attack_named(def: Dictionary, name: String) -> Dictionary:
+	for list in _attack_lists(def):
+		for a in list:
+			if str((a as Dictionary).get("name", "")) == name:
+				return a
+	return {}

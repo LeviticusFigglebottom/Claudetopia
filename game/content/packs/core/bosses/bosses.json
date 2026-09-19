@@ -25,6 +25,11 @@
       "armour": 6,
       "speed": 2.0
     },
+    "resists": {
+      "slash": 0.3,
+      "pierce": 0.2,
+      "blunt": -0.15
+    },
     "perception": {
       "sight_range": 22.0,
       "sight_fov": 120.0,
@@ -256,7 +261,12 @@
       "poise": 130,
       "armour": 12,
       "speed": 2.4,
-      "mana": 400
+      "will": 57
+    },
+    "resists": {
+      "frost": 0.45,
+      "poison": 0.35,
+      "silence": -0.4
     },
     "perception": {
       "sight_range": 30.0,
@@ -301,7 +311,6 @@
         "cooldown": 6.0,
         "gcd": 0.9,
         "weight": 2.0,
-        "kind": "frost",
         "statuses": [
           {
             "id": "chilled",
@@ -309,7 +318,8 @@
             "magnitude": 0.35
           }
         ],
-        "note": "Drags the player a step toward the deep end of the nave."
+        "note": "Drags the player a step toward the deep end of the nave.",
+        "kind_damage": "frost"
       },
       {
         "name": "drowning_hand",
@@ -323,14 +333,14 @@
         "cooldown": 9.0,
         "gcd": 0.9,
         "weight": 1.5,
-        "kind": "frost",
         "statuses": [
           {
             "id": "bleeding",
             "duration": 5.0,
             "magnitude": 3.0
           }
-        ]
+        ],
+        "kind_damage": "frost"
       }
     ],
     "phases": [
@@ -375,11 +385,11 @@
             "cooldown": 5.0,
             "gcd": 0.9,
             "weight": 2.5,
-            "kind": "frost"
+            "kind_damage": "frost"
           },
           {
             "name": "summon_drowned",
-            "clip": "Cast_Summon",
+            "clip": "Cast_Long",
             "damage": 0.0,
             "poise_damage": 0.0,
             "range": 20.0,
@@ -390,8 +400,10 @@
             "gcd": 0.9,
             "weight": 1.0,
             "summons": {
-              "enemy": "core:enemy/hedge_wight",
-              "count": 3
+              "enemy": "core:enemy/bog_drowned",
+              "count": 3,
+              "radius": 5.5,
+              "cap": 4
             }
           }
         ]
@@ -406,7 +418,7 @@
           {
             "name": "the_hymn",
             "clip": "Cast_Loop",
-            "damage": 12.0,
+            "damage": 7.0,
             "poise_damage": 8.0,
             "range": 24.0,
             "telegraph": 2.4,
@@ -416,10 +428,12 @@
             "gcd": 0.9,
             "weight": 4.0,
             "channel": 6.0,
+            "voice": true,
             "heals_self": 140.0,
             "interruptible": true,
-            "silence_stops": true,
-            "note": "Interrupt it or she closes what you opened."
+            "note": "Interrupt it or she closes what you opened.",
+            "radius": 14.0,
+            "interrupt_damage": 90.0
           },
           {
             "name": "drowning_hand",
@@ -433,7 +447,7 @@
             "cooldown": 7.0,
             "gcd": 0.9,
             "weight": 2.0,
-            "kind": "frost"
+            "kind_damage": "frost"
           },
           {
             "name": "censer_sweep",
@@ -485,6 +499,11 @@
       "armour": 22,
       "speed": 3.6
     },
+    "resists": {
+      "slash": 0.25,
+      "poison": 0.4,
+      "fire": -0.35
+    },
     "perception": {
       "sight_range": 34.0,
       "sight_fov": 120.0,
@@ -514,11 +533,11 @@
         "cooldown": 7.0,
         "gcd": 0.9,
         "weight": 3.0,
-        "charge": true,
         "min_range": 6.0,
         "hit_range": 3.0,
         "knockdown": true,
-        "note": "A straight run. The standing stones will stop him; you will not."
+        "note": "A straight run. The standing stones will stop him; you will not.",
+        "kind": "charge"
       },
       {
         "name": "spear_thrust",
@@ -576,10 +595,10 @@
             "cooldown": 5.5,
             "gcd": 0.9,
             "weight": 3.5,
-            "charge": true,
             "min_range": 6.0,
             "hit_range": 3.0,
-            "knockdown": true
+            "knockdown": true,
+            "kind": "charge"
           },
           {
             "name": "spear_thrust",
@@ -604,7 +623,7 @@
           },
           {
             "name": "briar_lash",
-            "clip": "Attack_2H_Light_3",
+            "clip": "Attack_2H_Light_2",
             "damage": 24.0,
             "poise_damage": 20.0,
             "range": 6.0,
@@ -635,7 +654,8 @@
             "gcd": 0.9,
             "weight": 1.0,
             "shrinks_arena": 3.0,
-            "note": "The circle loses three metres of floor, and keeps it."
+            "note": "The circle loses three metres of floor, and keeps it.",
+            "unparryable": true
           }
         ]
       }
@@ -675,6 +695,11 @@
       "armour": 30,
       "speed": 1.9
     },
+    "resists": {
+      "slash": 0.5,
+      "pierce": 0.45,
+      "blunt": -0.25
+    },
     "perception": {
       "sight_range": 26.0,
       "sight_fov": 140.0,
@@ -691,30 +716,10 @@
       "aggression": 0.8,
       "strafe_speed": 0.2
     },
-    "breakable_parts": [
-      {
-        "name": "left_arm",
-        "bone": "UpperArm.L",
-        "hp": 260,
-        "removes_attack": "sweeping_arm"
-      },
-      {
-        "name": "right_arm",
-        "bone": "UpperArm.R",
-        "hp": 260,
-        "removes_attack": "overhead_slam"
-      },
-      {
-        "name": "jaw",
-        "bone": "Head",
-        "hp": 180,
-        "removes_attack": "bone_roar"
-      }
-    ],
     "attacks": [
       {
         "name": "overhead_slam",
-        "clip": "Attack_2H_Heavy",
+        "clip": "Attack_1",
         "damage": 55.0,
         "poise_damage": 90.0,
         "range": 6.0,
@@ -731,7 +736,7 @@
       },
       {
         "name": "sweeping_arm",
-        "clip": "Attack_2H_Light_1",
+        "clip": "Attack_2",
         "damage": 40.0,
         "poise_damage": 60.0,
         "range": 7.5,
@@ -745,7 +750,7 @@
       },
       {
         "name": "bone_roar",
-        "clip": "Taunt",
+        "clip": "Attack_3",
         "damage": 14.0,
         "poise_damage": 30.0,
         "range": 12.0,
@@ -755,14 +760,14 @@
         "cooldown": 12.0,
         "gcd": 0.9,
         "weight": 1.5,
-        "kind": "blunt",
         "statuses": [
           {
             "id": "stagger",
             "duration": 1.2,
             "magnitude": 1.0
           }
-        ]
+        ],
+        "kind_damage": "blunt"
       }
     ],
     "phases": [
@@ -781,7 +786,7 @@
         "attacks": [
           {
             "name": "rib_club",
-            "clip": "Attack_2H_Light_2",
+            "clip": "Attack_4",
             "damage": 48.0,
             "poise_damage": 70.0,
             "range": 6.5,
@@ -795,7 +800,7 @@
           },
           {
             "name": "overhead_slam",
-            "clip": "Attack_2H_Heavy",
+            "clip": "Attack_1",
             "damage": 58.0,
             "poise_damage": 95.0,
             "range": 6.0,
@@ -812,7 +817,7 @@
           },
           {
             "name": "scree_throw",
-            "clip": "Throw",
+            "clip": "Attack_5",
             "damage": 30.0,
             "poise_damage": 24.0,
             "range": 20.0,
@@ -834,8 +839,8 @@
         "attacks": [
           {
             "name": "the_echo",
-            "clip": "Cast_Loop",
-            "damage": 22.0,
+            "clip": "Attack_6",
+            "damage": 14.0,
             "poise_damage": 55.0,
             "range": 26.0,
             "telegraph": 2.2,
@@ -845,8 +850,7 @@
             "gcd": 0.9,
             "weight": 3.0,
             "channel": 4.0,
-            "kind": "blunt",
-            "silence_stops": true,
+            "voice": true,
             "arena_wide": true,
             "statuses": [
               {
@@ -855,11 +859,13 @@
                 "magnitude": 1.0
               }
             ],
-            "note": "The shaft carries it everywhere. Silence it or get behind the ore cart."
+            "note": "The shaft carries it everywhere. Silence it or get behind the ore cart.",
+            "kind_damage": "blunt",
+            "channel_tick": 2.0
           },
           {
             "name": "overhead_slam",
-            "clip": "Attack_2H_Heavy",
+            "clip": "Attack_1",
             "damage": 62.0,
             "poise_damage": 100.0,
             "range": 6.2,
@@ -884,6 +890,56 @@
     "loot": "core:loot/rich_chest",
     "drops": [
       "core:item/kingbone"
+    ],
+    "clips": [
+      "Idle",
+      "Walk",
+      "Run",
+      "Attack_1",
+      "Attack_2",
+      "Attack_3",
+      "Attack_4",
+      "Attack_5",
+      "Attack_6",
+      "Hit",
+      "Death"
+    ],
+    "body": "thrall",
+    "body_variant": "kingbone",
+    "limbs": [
+      {
+        "name": "left arm",
+        "breaks_at": "damage",
+        "damage": 260.0,
+        "remove_attacks": [
+          "sweeping_arm"
+        ],
+        "poise_loss": 45.0,
+        "speed_mult": 1.05,
+        "say": "The King's left arm goes at the shoulder and lies where it falls, still holding the shape of a fist."
+      },
+      {
+        "name": "right arm",
+        "breaks_at": "damage",
+        "damage": 260.0,
+        "remove_attacks": [
+          "overhead_slam"
+        ],
+        "poise_loss": 45.0,
+        "speed_mult": 1.05,
+        "say": "The right arm follows it down the shaft. Whatever it was going to bring down, it is not bringing down now."
+      },
+      {
+        "name": "jaw",
+        "breaks_at": "damage",
+        "damage": 180.0,
+        "remove_attacks": [
+          "bone_roar"
+        ],
+        "poise_loss": 30.0,
+        "speed_mult": 1.0,
+        "say": "The jaw comes away. The shaft stops answering it."
+      }
     ]
   },
   {
@@ -911,7 +967,12 @@
       "poise": 210,
       "armour": 26,
       "speed": 3.4,
-      "mana": 900
+      "will": 140
+    },
+    "resists": {
+      "silence": 0.75,
+      "frost": 0.3,
+      "blunt": -0.2
     },
     "perception": {
       "sight_range": 40.0,
@@ -972,7 +1033,6 @@
         "gcd": 0.9,
         "weight": 2.5,
         "heavy": true,
-        "parryable": true,
         "note": "The one attack with a beat you can hear coming. Parry it."
       }
     ],
@@ -1016,12 +1076,11 @@
             "cooldown": 4.5,
             "gcd": 0.9,
             "weight": 2.5,
-            "heavy": true,
-            "parryable": true
+            "heavy": true
           },
           {
             "name": "call_the_choir",
-            "clip": "Cast_Summon",
+            "clip": "Cast_Long",
             "damage": 0.0,
             "poise_damage": 0.0,
             "range": 30.0,
@@ -1050,7 +1109,7 @@
           {
             "name": "the_held_note",
             "clip": "Cast_Loop",
-            "damage": 30.0,
+            "damage": 9.0,
             "poise_damage": 45.0,
             "range": 40.0,
             "telegraph": 2.6,
@@ -1060,9 +1119,7 @@
             "gcd": 0.9,
             "weight": 3.0,
             "channel": 7.0,
-            "kind": "silence",
             "arena_wide": true,
-            "silence_stops": false,
             "statuses": [
               {
                 "id": "quieted",
@@ -1070,7 +1127,9 @@
                 "magnitude": 1.0
               }
             ],
-            "note": "Unsilenceable: this is the note, not a spell. Stand on the lit stones, which are the deeds you are known for."
+            "note": "Unsilenceable: this is the note, not a spell. Stand on the lit stones, which are the deeds you are known for.",
+            "kind_damage": "silence",
+            "spares_lit": 0.3
           },
           {
             "name": "bell_blade",
@@ -1098,8 +1157,7 @@
             "cooldown": 4.0,
             "gcd": 0.9,
             "weight": 3.0,
-            "heavy": true,
-            "parryable": true
+            "heavy": true
           }
         ]
       }
