@@ -1,0 +1,21 @@
+{
+  "id": "core:house/corwen_brewhouse",
+  "name": "Mullard's Yellow Door",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/corwen_mullard",
+  "trade": "brewer",
+  "wealth": 2,
+  "household": 3,
+  "seed": 1205,
+  "habits": [
+    "counts_everything",
+    "drinks_alone",
+    "keeps_the_fire_in"
+  ],
+  "story": "A yellow door, as the trade requires, and behind it a brewer who considers the Tallymen's excise a personal insult and keeps two sets of books about it, one of which is accurate.",
+  "who_was_here": "His mother, who started the second set of books.",
+  "unique_object": "two ledgers in the same hand, one of them true, kept in different rooms",
+  "culture": "vale",
+  "children": 0,
+  "name_slug": "corwen_brewhouse"
+}

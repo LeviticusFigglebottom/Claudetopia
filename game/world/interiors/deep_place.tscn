@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_deep_place"]
+
+[ext_resource type="Script" path="res://world/interiors/deep_place.gd" id="1"]
+
+[node name="DeepPlace" type="Node3D"]
+script = ExtResource("1")

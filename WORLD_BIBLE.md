@@ -105,6 +105,12 @@ brewer). Festivals: **Naming Day** (spring), **Long Table** (harvest), **Candle
 Night** (midwinter, every window lit). Virtue: tending. Vice: talk that curdles
 into cruelty. Attitude to the player: measured entirely by renown and Hearth.
 
+Merrowby keeps **seventeen family bells**, one per household of the founding rolls, hung
+in trees and over doors. At the Long Table a family whose line has ended has its bell
+buried under the table's foot rather than rehung, so the village can say it is still
+there. The baker sets the first loaf of the day on the Toll's rim-stone and leaves it
+until noon; nobody will say why, and everybody does it.
+
 ### 3.2 The Lakefolk of Tollmere (Brightwater; Valish with Oroth loanwords)
 Guildsmen, clerks, fishers, watchmen, thieves. Believe in charters and ledgers.
 White-lime walls, slate roofs, brass lamps, canals. Tollmere sits on an Oroth
@@ -133,6 +139,18 @@ anyone who takes more than they need.
 ### 3.6 The Ash-Pilgrims (Cinderlea; mixed)
 Not a culture but a remnant: pilgrims, the Tolling Order, hermits, the mad.
 Wear grey. Speak softly. Count bells.
+
+### 3.6a Two names that matter more than their bearers
+
+* **Tessane** (Sedgish-born, Y.T. 902–941?), a Sayer who taught the Tide account in
+  Tollmere and was **unsaid** by the Circle: her name struck from the rolls, her lectures
+  burned, her students reassigned. She appears in four surviving books, three of which do
+  not name her. Whether being unsaid killed her, or she simply left for Isseva, is the
+  question the Sayers' line turns on.
+* **Ghorr**, the Bone Clan. Skerrish *gh-* + *orr* (bone). The eighth clan, whose verse is
+  missing from the Rope-Song the memory-keepers sing: seven clans, eight verses' worth of
+  metre. The Stone-Thrall King has been holding the missing verse, which is to say the
+  clan's name, which is to say the clan.
 
 ### 3.7 The Oroth (gone)
 The Old Builders. Left Harmonies, statues, roads of fused stone, doors with no
@@ -401,7 +419,32 @@ Each sheet is also data in `content/packs/core/regions/<id>.json`. The
 | `core:place/cantors_seat` | The Cantor's Seat | Cinderlea | deep place (final) | the note-light |
 | `core:place/hushline` | The Hushline | Cinderlea | soft edge | colour drains |
 
+### 7.1 The quiet villages (on the Roll, not on the map)
+
+Four names the Wardens still read out, for places that can no longer be found. They are
+the spine of the Wardens' line and of several books; a player can stand where the Roll
+says they were and find nothing but ground.
+
+| Name | Meaning | What the Roll says |
+|---|---|---|
+| **Mullbourne** | *mull* (soft soil) + *-bourne* | A mill that never worked, on a stream that moved. Went quiet first; the Roll's oldest struck entry. |
+| **Harewell** | *hare* + *-well* | A hare was cut into the well lip. Nobody now living has seen the well. |
+| **Larkstead** | *lark* + *-stead* | Known for its singing. The Roll notes, in a different hand, "they stopped." |
+| **Gosford** | *gos* (goose) + *-ford* | Went quiet during the eleven days the Toll hummed in Y.T. 981 — the only quiet village with a date, which is why the Toll humming again in 1043 frightens the Wardens more than it frightens anyone else. |
+
 ---
+
+### 7.2 The Toll's inscription
+
+Around the crown of the Cracked Toll, in Oroth, where the bronze is thickest:
+
+> **VAEL-OROTH · ANTHE SUL · HESK-MORN THAEL · ONDRAEL ISSE · CANTOR VAELETH · ORR**
+
+Read word by word: *the kept note · the choir's light · the stone door of silence · the
+deep water · the holder holds · bone*. The Sayers read the first four as a dedication and
+the last two as a signature. The Tolling Order reads the last two as a **status report** —
+present tense, still true — which is why they keep vigil and the Sayers do not. Both Briar
+pamphlets quote it, and neither quotes the last word.
 
 ## 8. Bestiary
 

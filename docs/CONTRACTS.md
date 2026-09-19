@@ -157,6 +157,13 @@ other streams.
 Containers, corpses and merchant bags use the same `Inventory` class but must NOT join the
 `inventory` group: only the player's bag does, so a lookup can never grab a chest.
 
+### Every reference is a full namespaced id
+
+Anywhere one definition names another, it uses the whole id (`core:effect/resist_cold`),
+never a bare name. The one exception is `teaches_skill` on a book and `clips_set` on a
+weapon, which are plain strings by design. Bare names silently skip validation, so a test
+that resolves them is the only thing that catches the mistake.
+
 ### Loot table shape
 
 `{id, entries:[{item|table, weight, count:[min,max], conditions:{region, min_level, luck, flag, quest_at}}], guaranteed:[...], rolls:[min,max]}`.

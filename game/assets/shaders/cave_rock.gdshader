@@ -104,6 +104,9 @@ void fragment() {
 	vec3 p = world_pos;
 	float view_dist = length(VERTEX);
 	float grain_fade = 1.0 - smoothstep(grain_fade_start, grain_fade_end, view_dist);
+	// Floors are walked on: they wear smooth, and a floor full of shader dimples reads
+	// as sand. Keep the fine relief for walls and ceilings.
+	grain_fade *= mix(1.0, 0.25, clamp(abs(world_normal.y), 0.0, 1.0));
 	float h = rock_height(p, grain_fade);
 
 	float e = 0.14;

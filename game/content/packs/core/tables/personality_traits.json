@@ -1,0 +1,31 @@
+{
+  "id": "core:table/personality_traits",
+  "role": "personality_traits",
+  "description": "Personality trait behaviour: greeting pool bias, disposition response to gestures, price bias, crime reaction and fear. Six axes; an NPC carries at most one side of each.",
+  "rows": [
+    {"trait": "brave", "opposite": "timid", "greeting": "bold", "gestures": {"bow": 1, "wave": 1, "rude": -2, "dance": 0, "laugh": 1, "flex": 2}, "price_bias": 0.0, "crime_reaction": "confront", "fear": -0.3,
+     "notes": "Meets your eye. Steps toward trouble. Laughs at a flex because it is trying."},
+    {"trait": "timid", "opposite": "brave", "greeting": "wary", "gestures": {"bow": 2, "wave": 1, "rude": -6, "dance": 0, "laugh": 0, "flex": -2}, "price_bias": 0.0, "crime_reaction": "flee", "fear": 0.4,
+     "notes": "Backs away from anyone with a bounty or a Hollow look; reports later, from a distance."},
+    {"trait": "greedy", "opposite": "generous", "greeting": "sly", "gestures": {"bow": 1, "wave": 0, "rude": -3, "dance": 0, "laugh": 0, "flex": 1}, "price_bias": 0.10, "crime_reaction": "report", "fear": 0.0,
+     "notes": "Prices up a tenth. Will report a theft because a theft is a loss."},
+    {"trait": "generous", "opposite": "greedy", "greeting": "warm", "gestures": {"bow": 2, "wave": 2, "rude": -4, "dance": 1, "laugh": 2, "flex": 0}, "price_bias": -0.10, "crime_reaction": "report", "fear": 0.0,
+     "notes": "Prices down a tenth. Throws in a word with the pie."},
+    {"trait": "pious", "opposite": "cynical", "greeting": "pious", "gestures": {"bow": 3, "wave": 1, "rude": -6, "dance": -1, "laugh": 0, "flex": 0}, "price_bias": 0.0, "crime_reaction": "report", "fear": 0.0,
+     "notes": "Speaks of tending and the Named. A bow is answered with a bow."},
+    {"trait": "cynical", "opposite": "pious", "greeting": "curt", "gestures": {"bow": -1, "wave": 0, "rude": -1, "dance": 0, "laugh": 2, "flex": -1}, "price_bias": 0.05, "crime_reaction": "ignore", "fear": -0.1,
+     "notes": "Has seen it before. Looks the other way unless it was their purse."},
+    {"trait": "gossip", "opposite": "quiet", "greeting": "nosy", "gestures": {"bow": 0, "wave": 2, "rude": -4, "dance": 2, "laugh": 2, "flex": 0}, "price_bias": 0.0, "crime_reaction": "report", "fear": 0.0,
+     "notes": "Knows your boots were muddy. Spreads what they saw by supper."},
+    {"trait": "quiet", "opposite": "gossip", "greeting": "curt", "gestures": {"bow": 1, "wave": 0, "rude": -2, "dance": -1, "laugh": -1, "flex": 0}, "price_bias": 0.0, "crime_reaction": "ignore", "fear": 0.1,
+     "notes": "Says little. Reedfolk and Woodfolk lean this way."},
+    {"trait": "proud", "opposite": "humble", "greeting": "bold", "gestures": {"bow": 3, "wave": 0, "rude": -8, "dance": 0, "laugh": -1, "flex": -1}, "price_bias": 0.05, "crime_reaction": "confront", "fear": -0.2,
+     "notes": "A bow pleases; a rude gesture is remembered for a season. Clans lean this way."},
+    {"trait": "humble", "opposite": "proud", "greeting": "warm", "gestures": {"bow": 0, "wave": 2, "rude": -3, "dance": 1, "laugh": 1, "flex": -1}, "price_bias": -0.05, "crime_reaction": "report", "fear": 0.1,
+     "notes": "Embarrassed by bows. Waves back."},
+    {"trait": "kind", "opposite": "cruel", "greeting": "warm", "gestures": {"bow": 1, "wave": 2, "rude": -3, "dance": 1, "laugh": 1, "flex": 0}, "price_bias": -0.05, "crime_reaction": "report", "fear": 0.0,
+     "notes": "Asks whether you have eaten."},
+    {"trait": "cruel", "opposite": "kind", "greeting": "cold", "gestures": {"bow": -1, "wave": -1, "rude": 1, "dance": 0, "laugh": 1, "flex": 0}, "price_bias": 0.05, "crime_reaction": "ignore", "fear": -0.1,
+     "notes": "Enjoys a rude gesture more than is decent. Rare in the Vale; found in Tollmere's counting houses."}
+  ]
+}

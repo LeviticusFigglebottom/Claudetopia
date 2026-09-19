@@ -1,0 +1,22 @@
+{
+  "id": "core:house/hallam_forge",
+  "name": "Ashdown's Forge",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/hallam_ashdown",
+  "trade": "smith",
+  "wealth": 2,
+  "household": 3,
+  "children": 1,
+  "seed": 1202,
+  "habits": [
+    "sharpens_obsessively",
+    "has_children",
+    "leaves_boots_by_the_door",
+    "works_at_the_table"
+  ],
+  "story": "Hallam shoes horses and mends ploughs and has made exactly one sword, which he did not sell and will not talk about. It hangs over the hearth in the house, not the shop, which tells you what he thinks it is.",
+  "who_was_here": "His father, who made no swords at all, and was happier.",
+  "unique_object": "one sword hanging over a domestic hearth, unsold, with a name on the blade that is not a Vale name",
+  "culture": "vale",
+  "name_slug": "hallam_forge"
+}

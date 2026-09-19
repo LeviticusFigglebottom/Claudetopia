@@ -55,6 +55,10 @@ signal faction_rank_changed(faction_id: String, new_rank: int)
 signal morality_changed(new_value: int, delta: int, reason: String)
 signal renown_changed(new_value: int, delta: int, reason: String)
 signal rumour_spread(rumour_id: String, place_id: String)
+signal npc_gesture(npc_id: String, gesture_id: String)
+signal disposition_changed(npc_id: String, new_value: int, delta: int)
+signal deed_applied(deed_id: String, hearth_delta: int, renown_delta: int, witnesses: int)
+signal escort_arrived(npc_id: String, place_id: String)
 
 # crime & stealth
 signal crime_committed(crime: Dictionary)

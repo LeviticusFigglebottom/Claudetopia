@@ -1,0 +1,76 @@
+[
+  {
+    "id": "core:table/stock_general",
+    "role": "merchant_stock",
+    "description": "A Vale general store: rope, candles, torches, cloth, bread and nails-and-flint. What a village needs on a Tuesday.",
+    "rows": [
+      {"item": "core:item/rope", "count": [2, 5], "restock_hours": 48},
+      {"item": "core:item/candle", "count": [8, 20], "restock_hours": 24},
+      {"item": "core:item/torch", "count": [4, 12], "restock_hours": 24},
+      {"item": "core:item/lantern", "count": [1, 3], "restock_hours": 72},
+      {"item": "core:item/linen", "count": [2, 6], "restock_hours": 72},
+      {"item": "core:item/wool", "count": [2, 6], "restock_hours": 72},
+      {"item": "core:item/bread", "count": [3, 8], "restock_hours": 12},
+      {"item": "core:item/flint", "count": [4, 10], "restock_hours": 48},
+      {"item": "core:item/lockpick", "count": [0, 2], "restock_hours": 120, "chance": 0.4}
+    ]
+  },
+  {
+    "id": "core:table/stock_smith",
+    "role": "merchant_stock",
+    "description": "A village smithy: iron, leather, planks, a working blade or two, and whatever armour has not been claimed.",
+    "rows": [
+      {"item": "core:item/iron_ingot", "count": [3, 8], "restock_hours": 72},
+      {"item": "core:item/leather", "count": [2, 6], "restock_hours": 48},
+      {"item": "core:item/oak_plank", "count": [4, 10], "restock_hours": 48},
+      {"item": "core:item/flint", "count": [4, 12], "restock_hours": 48},
+      {"item": "core:item/iron_dagger", "count": [1, 3], "restock_hours": 96},
+      {"item": "core:item/iron_axe", "count": [1, 2], "restock_hours": 120},
+      {"item": "core:item/iron_sword", "count": [0, 2], "restock_hours": 168, "chance": 0.7},
+      {"item": "core:item/leather_cap", "count": [0, 2], "restock_hours": 168, "chance": 0.7},
+      {"item": "core:item/oak_round_shield", "count": [0, 1], "restock_hours": 168, "chance": 0.5}
+    ]
+  },
+  {
+    "id": "core:table/stock_alchemist",
+    "role": "merchant_stock",
+    "description": "A herbwife's table: cut herbs from the Larkbourne and the hedges, and a few made draughts for those who cannot brew.",
+    "rows": [
+      {"item": "core:item/watercress", "count": [4, 10], "restock_hours": 24},
+      {"item": "core:item/marsh_marigold", "count": [2, 8], "restock_hours": 36},
+      {"item": "core:item/hawthorn_berry", "count": [3, 9], "restock_hours": 36},
+      {"item": "core:item/foxglove", "count": [1, 5], "restock_hours": 48},
+      {"item": "core:item/bracket_fungus", "count": [2, 6], "restock_hours": 48},
+      {"item": "core:item/potion_restore_health", "count": [1, 4], "restock_hours": 48},
+      {"item": "core:item/potion_restore_stamina", "count": [1, 3], "restock_hours": 48},
+      {"item": "core:item/potion_cure_poison", "count": [0, 2], "restock_hours": 120, "chance": 0.6}
+    ]
+  },
+  {
+    "id": "core:table/stock_innkeeper",
+    "role": "merchant_stock",
+    "description": "An inn's board: bread, cider, a hot plate, candles for the room, and a torch for whoever is leaving at a foolish hour.",
+    "rows": [
+      {"item": "core:item/bread", "count": [4, 10], "restock_hours": 12},
+      {"item": "core:item/cider", "count": [6, 15], "restock_hours": 12},
+      {"item": "core:item/mutton", "count": [2, 6], "restock_hours": 12},
+      {"item": "core:item/oatcake", "count": [2, 8], "restock_hours": 24},
+      {"item": "core:item/apple", "count": [3, 9], "restock_hours": 24},
+      {"item": "core:item/candle", "count": [4, 10], "restock_hours": 48},
+      {"item": "core:item/torch", "count": [2, 6], "restock_hours": 48}
+    ]
+  },
+  {
+    "id": "core:table/stock_fishmonger",
+    "role": "merchant_stock",
+    "description": "Lake-eel on the racks, hooks, and a net for anyone who means it.",
+    "rows": [
+      {"item": "core:item/eel_pie", "count": [2, 6], "restock_hours": 12},
+      {"item": "core:item/eel_liver", "count": [3, 8], "restock_hours": 24},
+      {"item": "core:item/raw_meat", "count": [2, 6], "restock_hours": 12},
+      {"item": "core:item/econ_fish_hooks", "count": [6, 20], "restock_hours": 72},
+      {"item": "core:item/econ_reed_net", "count": [0, 2], "restock_hours": 168, "chance": 0.6},
+      {"item": "core:item/rope", "count": [1, 4], "restock_hours": 72}
+    ]
+  }
+]

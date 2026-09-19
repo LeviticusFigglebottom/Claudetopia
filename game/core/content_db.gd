@@ -97,8 +97,11 @@ func where(type: String, key: String, value: Variant) -> Array:
 		if not d.has(key):
 			continue
 		var v: Variant = d[key]
-		if typeof(v) == TYPE_ARRAY and v.has(value):
-			out.append(d)
+		if typeof(v) == TYPE_ARRAY:
+			# An array field matches when it contains the value; comparing an Array to a
+			# String raises, so this branch must not fall through.
+			if v.has(value):
+				out.append(d)
 		elif v == value:
 			out.append(d)
 	return out

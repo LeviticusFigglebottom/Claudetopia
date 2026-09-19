@@ -1,0 +1,22 @@
+{
+  "id": "core:house/merrick_lodging",
+  "name": "The Bard's Room",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/merrick_gosling",
+  "trade": "none",
+  "wealth": 0,
+  "household": 1,
+  "seed": 1209,
+  "habits": [
+    "never_finishes_a_job",
+    "drinks_alone",
+    "works_at_the_table",
+    "reads_late"
+  ],
+  "story": "One rented room over the Lip's stable. Merrick has written a verse about everyone in Merrowby except himself, and the unfinished one on the table is about the person reading it.",
+  "who_was_here": "A succession of people who could not pay the Lip's rates, of whom Merrick is the current.",
+  "unique_object": "an unfinished verse on the table whose subject is left blank",
+  "culture": "vale",
+  "children": 0,
+  "name_slug": "merrick_lodging"
+}

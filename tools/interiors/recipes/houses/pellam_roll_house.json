@@ -1,0 +1,22 @@
+{
+  "id": "core:house/pellam_roll_house",
+  "name": "Old Ashcombe's",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/pellam_ashcombe",
+  "trade": "warden",
+  "wealth": 1,
+  "household": 1,
+  "seed": 1208,
+  "habits": [
+    "reads_late",
+    "counts_everything",
+    "sleeps_badly",
+    "hoards_string"
+  ],
+  "story": "Pellam kept the Wardens' Roll for forty years and still says the quiet villages' names aloud each morning, in order, because that is the job and nobody told him to stop.",
+  "who_was_here": "Nobody else, ever. He has not had a guest since his wife died.",
+  "unique_object": "a wall of tally sticks, four hundred of them, one per morning since he retired",
+  "culture": "vale",
+  "children": 0,
+  "name_slug": "pellam_roll_house"
+}

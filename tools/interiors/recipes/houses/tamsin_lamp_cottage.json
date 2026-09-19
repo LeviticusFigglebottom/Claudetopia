@@ -1,0 +1,22 @@
+{
+  "id": "core:house/tamsin_lamp",
+  "name": "The Lamp Keeper's Cottage",
+  "place": "core:place/gullhithe",
+  "culture": "lakefolk",
+  "resident": "core:npc/tamsin_wick",
+  "trade": "fisher",
+  "wealth": 1,
+  "household": 1,
+  "seed": 1210,
+  "habits": [
+    "sleeps_badly",
+    "keeps_the_fire_in",
+    "counts_everything",
+    "feeds_the_birds"
+  ],
+  "story": "Tamsin wakes the sul-stone every dusk and turns it all night, and once, nine years ago, did not, and a fishing smack found the shingle the hard way. She says she was asleep. The gulls disagree, and so does the second logbook.",
+  "who_was_here": "Six keepers before her, all of whom kept one logbook.",
+  "unique_object": "two logbooks for the same nine years, kept in different handwriting by the same hand",
+  "children": 0,
+  "name_slug": "tamsin_lamp_cottage"
+}

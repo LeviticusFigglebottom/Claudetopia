@@ -1,0 +1,1015 @@
+{
+  "id": "core:house/tolls_lip",
+  "name": "The Toll's Lip",
+  "generator": "house_forge",
+  "version": 1,
+  "seed": 1201,
+  "resident": "core:npc/tobin_cresswell",
+  "trade": "innkeeper",
+  "wealth": 2,
+  "household": 4,
+  "story": "The inn is built into the crater rim, and its cellar is the inside of the Toll's lip: forty feet of bronze for a back wall, which keeps the ale at one temperature all year and makes every conversation down there sound like it matters.",
+  "who_was_here": "Three generations of Cresswells, and everyone in Merrowby, most nights.",
+  "unique_object": "a cellar wall of bronze bell, with two hundred years of names scratched into it at sitting height",
+  "habits": [
+    "keeps_the_fire_in",
+    "counts_everything",
+    "has_a_dog",
+    "leaves_boots_by_the_door"
+  ],
+  "culture": "vale",
+  "place": "core:place/merrowby",
+  "tris": 1442,
+  "has_timber": true,
+  "rooms": [
+    {
+      "id": "tap_room",
+      "kind": "tap_room",
+      "x": 0.0,
+      "z": 0.0,
+      "w": 7.5171212927795485,
+      "d": 5.8063874409558425,
+      "storey": 0,
+      "wear": 0.95,
+      "centre": [
+        3.76,
+        0.0,
+        2.9
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "kitchen",
+      "kind": "kitchen",
+      "x": 7.5171212927795485,
+      "z": 0.0,
+      "w": 4.0955394992195515,
+      "d": 3.790899604593477,
+      "storey": 0,
+      "wear": 0.8,
+      "centre": [
+        9.56,
+        0.0,
+        1.9
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "cellar",
+      "kind": "cellar",
+      "x": 0.0,
+      "z": 6.086387440955843,
+      "w": 4.053828056263431,
+      "d": 3.6799128971480473,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        2.03,
+        0.0,
+        7.93
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "guest_room",
+      "kind": "guest_room",
+      "x": 0.0,
+      "z": 0.0,
+      "w": 3.4650401186538557,
+      "d": 3.238662623553996,
+      "storey": 1,
+      "wear": 0.25,
+      "centre": [
+        1.73,
+        2.75,
+        1.62
+      ],
+      "floor_y": 2.75
+    },
+    {
+      "id": "bed",
+      "kind": "bed",
+      "x": 3.4650401186538557,
+      "z": 0.0,
+      "w": 3.5494095589557455,
+      "d": 3.0891459434828157,
+      "storey": 1,
+      "wear": 0.25,
+      "centre": [
+        5.24,
+        2.75,
+        1.54
+      ],
+      "floor_y": 2.75
+    },
+    {
+      "id": "bed_2",
+      "kind": "bed",
+      "x": 7.014449677609601,
+      "z": 0.0,
+      "w": 3.768411700856393,
+      "d": 3.3491666361451156,
+      "storey": 1,
+      "wear": 0.25,
+      "centre": [
+        8.9,
+        2.75,
+        1.67
+      ],
+      "floor_y": 2.75
+    },
+    {
+      "id": "store",
+      "kind": "store",
+      "x": 3.768411700856393,
+      "z": 10.04630033810389,
+      "w": 2.6815099473916075,
+      "d": 2.6510201287016275,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        5.11,
+        0.0,
+        11.37
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "landing",
+      "kind": "landing",
+      "x": 10.782861378465995,
+      "z": 0.0,
+      "w": 2.4,
+      "d": 2.4,
+      "storey": 1,
+      "wear": 0.2,
+      "centre": [
+        11.98,
+        2.75,
+        1.2
+      ],
+      "floor_y": 2.75
+    }
+  ],
+  "doors": [
+    {
+      "between": [
+        "tap_room",
+        "kitchen"
+      ],
+      "at": [
+        7.52,
+        1.02,
+        1.9
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "tap_room",
+        "cellar"
+      ],
+      "at": [
+        2.03,
+        1.02,
+        5.95
+      ],
+      "yaw": 0.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "guest_room",
+        "bed"
+      ],
+      "at": [
+        3.47,
+        3.77,
+        1.54
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "bed",
+        "bed_2"
+      ],
+      "at": [
+        7.01,
+        3.77,
+        1.54
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "bed_2",
+        "landing"
+      ],
+      "at": [
+        10.78,
+        3.77,
+        1.2
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "outside",
+        "tap_room"
+      ],
+      "at": [
+        3.76,
+        0.0,
+        -0.28
+      ],
+      "yaw": 0.0,
+      "kind": "front"
+    }
+  ],
+  "windows": [
+    {
+      "room": "tap_room",
+      "at": [
+        0.0,
+        1.48,
+        2.9
+      ],
+      "yaw": 90.0,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "room": "bed",
+      "at": [
+        5.24,
+        4.23,
+        3.09
+      ],
+      "yaw": 0.0,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "room": "guest_room",
+      "at": [
+        0.0,
+        4.23,
+        1.62
+      ],
+      "yaw": 90.0,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "asset": "res://assets/models/props/bar/bar.glb",
+      "fixture": "bar",
+      "room": "tap_room",
+      "at": [
+        5.82,
+        0.0,
+        2.44
+      ],
+      "yaw": 270.0,
+      "wear": 0.92
+    },
+    {
+      "asset": "res://assets/models/props/bench/bench.glb",
+      "fixture": "bench",
+      "room": "tap_room",
+      "at": [
+        3.76,
+        0.0,
+        3.9
+      ],
+      "yaw": 180.0,
+      "wear": 0.92
+    },
+    {
+      "asset": "res://assets/models/props/hearth/hearth.glb",
+      "fixture": "hearth",
+      "room": "tap_room",
+      "at": [
+        4.08,
+        0.0,
+        5.26
+      ],
+      "yaw": 180.0,
+      "wear": 0.89
+    },
+    {
+      "asset": "res://assets/models/props/board/board.glb",
+      "fixture": "board",
+      "room": "tap_room",
+      "at": [
+        0.6,
+        1.4,
+        2.53
+      ],
+      "yaw": 90.0,
+      "wear": 0.92
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "tap_room",
+      "on": "bar",
+      "at": [
+        5.71,
+        0.78,
+        3.75
+      ],
+      "yaw": 103.5,
+      "group": "bar_0"
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "tap_room",
+      "on": "bar",
+      "at": [
+        5.83,
+        0.78,
+        3.21
+      ],
+      "yaw": 154.6,
+      "group": "bar_0"
+    },
+    {
+      "asset": "res://assets/models/props/jug/jug.glb",
+      "prop": "jug",
+      "room": "tap_room",
+      "on": "bar",
+      "at": [
+        5.69,
+        0.78,
+        2.88
+      ],
+      "yaw": 62.3,
+      "group": "bar_0"
+    },
+    {
+      "asset": "res://assets/models/props/tally_stick/tally_stick.glb",
+      "prop": "tally_stick",
+      "room": "tap_room",
+      "on": "bar",
+      "at": [
+        5.97,
+        0.78,
+        2.16
+      ],
+      "yaw": 151.1,
+      "group": "bar_1"
+    },
+    {
+      "asset": "res://assets/models/props/rag/rag.glb",
+      "prop": "rag",
+      "room": "tap_room",
+      "on": "bar",
+      "at": [
+        5.76,
+        0.78,
+        1.66
+      ],
+      "yaw": 94.5,
+      "group": "bar_1"
+    },
+    {
+      "asset": "res://assets/models/props/cook_hearth/cook_hearth.glb",
+      "fixture": "cook_hearth",
+      "room": "kitchen",
+      "at": [
+        10.71,
+        0.0,
+        2.03
+      ],
+      "yaw": 270.0,
+      "wear": 0.77
+    },
+    {
+      "asset": "res://assets/models/props/prep_table/prep_table.glb",
+      "fixture": "prep_table",
+      "room": "kitchen",
+      "at": [
+        9.46,
+        0.0,
+        1.08
+      ],
+      "yaw": 186.5,
+      "wear": 0.88
+    },
+    {
+      "asset": "res://assets/models/props/pot_rack/pot_rack.glb",
+      "fixture": "pot_rack",
+      "room": "kitchen",
+      "at": [
+        8.82,
+        1.8,
+        3.49
+      ],
+      "yaw": 180.0,
+      "wear": 0.74
+    },
+    {
+      "asset": "res://assets/models/props/knife/knife.glb",
+      "prop": "knife",
+      "room": "kitchen",
+      "on": "prep_table",
+      "at": [
+        9.24,
+        0.78,
+        0.93
+      ],
+      "yaw": 280.8,
+      "group": "prep_table_0"
+    },
+    {
+      "asset": "res://assets/models/props/board/board.glb",
+      "prop": "board",
+      "room": "kitchen",
+      "on": "prep_table",
+      "at": [
+        8.99,
+        0.78,
+        1.16
+      ],
+      "yaw": 254.2,
+      "group": "prep_table_0"
+    },
+    {
+      "asset": "res://assets/models/props/onion/onion.glb",
+      "prop": "onion",
+      "room": "kitchen",
+      "on": "prep_table",
+      "at": [
+        8.89,
+        0.78,
+        1.05
+      ],
+      "yaw": 223.5,
+      "group": "prep_table_0"
+    },
+    {
+      "asset": "res://assets/models/props/onion/onion.glb",
+      "prop": "onion",
+      "room": "kitchen",
+      "on": "prep_table",
+      "at": [
+        8.68,
+        0.78,
+        0.97
+      ],
+      "yaw": 357.1,
+      "group": "prep_table_0"
+    },
+    {
+      "asset": "res://assets/models/props/bowl/bowl.glb",
+      "prop": "bowl",
+      "room": "kitchen",
+      "on": "prep_table",
+      "at": [
+        9.05,
+        0.78,
+        0.97
+      ],
+      "yaw": 328.3,
+      "group": "prep_table_1"
+    },
+    {
+      "asset": "res://assets/models/props/cloth/cloth.glb",
+      "prop": "cloth",
+      "room": "kitchen",
+      "on": "prep_table",
+      "at": [
+        8.78,
+        0.78,
+        1.12
+      ],
+      "yaw": 329.6,
+      "group": "prep_table_1"
+    },
+    {
+      "asset": "res://assets/models/props/pot/pot.glb",
+      "prop": "pot",
+      "room": "kitchen",
+      "on": "pot_rack",
+      "at": [
+        8.97,
+        1.86,
+        3.57
+      ],
+      "yaw": 103.7,
+      "group": "pot_rack_0"
+    },
+    {
+      "asset": "res://assets/models/props/pan/pan.glb",
+      "prop": "pan",
+      "room": "kitchen",
+      "on": "pot_rack",
+      "at": [
+        8.77,
+        1.86,
+        3.56
+      ],
+      "yaw": 290.8,
+      "group": "pot_rack_0"
+    },
+    {
+      "asset": "res://assets/models/props/ladle/ladle.glb",
+      "prop": "ladle",
+      "room": "kitchen",
+      "on": "pot_rack",
+      "at": [
+        8.65,
+        1.86,
+        3.46
+      ],
+      "yaw": 270.3,
+      "group": "pot_rack_0"
+    },
+    {
+      "asset": "res://assets/models/props/barrel_rack/barrel_rack.glb",
+      "fixture": "barrel_rack",
+      "room": "cellar",
+      "at": [
+        2.2,
+        0.0,
+        9.22
+      ],
+      "yaw": 180.0,
+      "wear": 0.21
+    },
+    {
+      "asset": "res://assets/models/props/barrel/barrel.glb",
+      "fixture": "barrel",
+      "room": "cellar",
+      "at": [
+        3.6,
+        0.0,
+        6.84
+      ],
+      "yaw": 270.0,
+      "wear": 0.28
+    },
+    {
+      "asset": "res://assets/models/props/bed/bed.glb",
+      "fixture": "bed",
+      "room": "guest_room",
+      "at": [
+        2.07,
+        2.75,
+        2.59
+      ],
+      "yaw": 180.0,
+      "wear": 0.22
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "guest_room",
+      "at": [
+        0.6,
+        2.75,
+        0.73
+      ],
+      "yaw": 90.0,
+      "wear": 0.16
+    },
+    {
+      "asset": "res://assets/models/props/washstand/washstand.glb",
+      "fixture": "washstand",
+      "room": "guest_room",
+      "at": [
+        0.45,
+        2.75,
+        1.77
+      ],
+      "yaw": 90.0,
+      "wear": 0.29
+    },
+    {
+      "asset": "res://assets/models/props/basin/basin.glb",
+      "prop": "basin",
+      "room": "guest_room",
+      "on": "washstand",
+      "at": [
+        0.41,
+        3.53,
+        1.87
+      ],
+      "yaw": 119.3,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/ewer/ewer.glb",
+      "prop": "ewer",
+      "room": "guest_room",
+      "on": "washstand",
+      "at": [
+        0.34,
+        3.53,
+        1.97
+      ],
+      "yaw": 33.3,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/cloth/cloth.glb",
+      "prop": "cloth",
+      "room": "guest_room",
+      "on": "washstand",
+      "at": [
+        0.48,
+        3.53,
+        2.04
+      ],
+      "yaw": 248.6,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/bed/bed.glb",
+      "fixture": "bed",
+      "room": "bed",
+      "at": [
+        5.91,
+        2.75,
+        1.81
+      ],
+      "yaw": 270.0,
+      "wear": 0.25
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "bed",
+      "at": [
+        4.07,
+        2.75,
+        1.16
+      ],
+      "yaw": 90.0,
+      "wear": 0.35
+    },
+    {
+      "asset": "res://assets/models/props/washstand/washstand.glb",
+      "fixture": "washstand",
+      "room": "bed",
+      "at": [
+        4.98,
+        2.75,
+        0.35
+      ],
+      "yaw": 0.0,
+      "wear": 0.29
+    },
+    {
+      "asset": "res://assets/models/props/basin/basin.glb",
+      "prop": "basin",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        5.07,
+        3.53,
+        0.35
+      ],
+      "yaw": 209.1,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/ewer/ewer.glb",
+      "prop": "ewer",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        5.16,
+        3.53,
+        0.41
+      ],
+      "yaw": 270.1,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/cloth/cloth.glb",
+      "prop": "cloth",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        5.24,
+        3.53,
+        0.32
+      ],
+      "yaw": 40.5,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/bed/bed.glb",
+      "fixture": "bed",
+      "room": "bed_2",
+      "at": [
+        9.68,
+        2.75,
+        1.84
+      ],
+      "yaw": 270.0,
+      "wear": 0.22
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "bed_2",
+      "at": [
+        7.61,
+        2.75,
+        1.64
+      ],
+      "yaw": 90.0,
+      "wear": 0.17
+    },
+    {
+      "asset": "res://assets/models/props/washstand/washstand.glb",
+      "fixture": "washstand",
+      "room": "bed_2",
+      "at": [
+        9.58,
+        2.75,
+        0.35
+      ],
+      "yaw": 0.0,
+      "wear": 0.23
+    },
+    {
+      "asset": "res://assets/models/props/basin/basin.glb",
+      "prop": "basin",
+      "room": "bed_2",
+      "on": "washstand",
+      "at": [
+        9.39,
+        3.53,
+        0.45
+      ],
+      "yaw": 102.0,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/ewer/ewer.glb",
+      "prop": "ewer",
+      "room": "bed_2",
+      "on": "washstand",
+      "at": [
+        9.46,
+        3.53,
+        0.31
+      ],
+      "yaw": 38.1,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/cloth/cloth.glb",
+      "prop": "cloth",
+      "room": "bed_2",
+      "on": "washstand",
+      "at": [
+        9.58,
+        3.53,
+        0.28
+      ],
+      "yaw": 172.6,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/crate/crate.glb",
+      "fixture": "crate",
+      "room": "store",
+      "at": [
+        5.95,
+        0.0,
+        11.34
+      ],
+      "yaw": 270.0,
+      "wear": 0.17
+    },
+    {
+      "asset": "res://assets/models/props/barrel/barrel.glb",
+      "fixture": "barrel",
+      "room": "store",
+      "at": [
+        5.74,
+        0.0,
+        10.5
+      ],
+      "yaw": 0.0,
+      "wear": 0.24
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "store",
+      "at": [
+        4.37,
+        0.0,
+        11.46
+      ],
+      "yaw": 90.0,
+      "wear": 0.24
+    },
+    {
+      "asset": "res://assets/models/props/banked_embers/banked_embers.glb",
+      "prop": "banked_embers",
+      "room": "tap_room",
+      "habit": "keeps_the_fire_in",
+      "at": [
+        1.57,
+        0.0,
+        2.08
+      ],
+      "yaw": 26.7
+    },
+    {
+      "asset": "res://assets/models/props/kindling_basket/kindling_basket.glb",
+      "prop": "kindling_basket",
+      "room": "tap_room",
+      "habit": "keeps_the_fire_in",
+      "at": [
+        3.08,
+        0.0,
+        1.31
+      ],
+      "yaw": 166.4
+    },
+    {
+      "asset": "res://assets/models/props/tally_sticks/tally_sticks.glb",
+      "prop": "tally_sticks",
+      "room": "tap_room",
+      "habit": "counts_everything",
+      "at": [
+        6.31,
+        1.2,
+        3.4
+      ],
+      "yaw": 6.5
+    },
+    {
+      "asset": "res://assets/models/props/dog_bowl/dog_bowl.glb",
+      "prop": "dog_bowl",
+      "room": "tap_room",
+      "habit": "has_a_dog",
+      "at": [
+        5.97,
+        0.0,
+        1.96
+      ],
+      "yaw": 276.2
+    },
+    {
+      "asset": "res://assets/models/props/chewed_stick/chewed_stick.glb",
+      "prop": "chewed_stick",
+      "room": "tap_room",
+      "habit": "has_a_dog",
+      "at": [
+        3.62,
+        0.0,
+        4.19
+      ],
+      "yaw": 177.8
+    },
+    {
+      "asset": "res://assets/models/props/boots/boots.glb",
+      "prop": "boots",
+      "room": "tap_room",
+      "habit": "leaves_boots_by_the_door",
+      "at": [
+        7.86,
+        0.0,
+        2.43
+      ],
+      "yaw": 92.8
+    }
+  ],
+  "lights": [
+    {
+      "room": "tap_room",
+      "at": [
+        4.08,
+        0.6,
+        5.26
+      ],
+      "color": "#ff9a42",
+      "energy": 3.0,
+      "range": 9.0,
+      "flicker": 0.4,
+      "shadow": true
+    },
+    {
+      "room": "kitchen",
+      "at": [
+        10.71,
+        0.6,
+        2.03
+      ],
+      "color": "#ff9a42",
+      "energy": 3.0,
+      "range": 9.0,
+      "flicker": 0.4,
+      "shadow": true
+    },
+    {
+      "room": "cellar",
+      "at": [
+        2.03,
+        2.2,
+        7.93
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "guest_room",
+      "at": [
+        1.73,
+        4.95,
+        1.62
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "bed",
+      "at": [
+        5.24,
+        4.95,
+        1.54
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "bed_2",
+      "at": [
+        8.9,
+        4.95,
+        1.67
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "store",
+      "at": [
+        5.11,
+        2.2,
+        11.37
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "landing",
+      "at": [
+        11.98,
+        4.95,
+        1.2
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    }
+  ],
+  "features": [],
+  "entrance": [
+    7.52,
+    1.02,
+    1.9
+  ]
+}

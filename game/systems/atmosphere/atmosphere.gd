@@ -104,7 +104,7 @@ func _build_nodes() -> void:
 	env.ambient_light_sky_contribution = 0.8
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_white = 6.0
+	env.tonemap_white = 6.0   # outdoors; _apply() drops it indoors
 	env.tonemap_exposure = 1.0
 	env.fog_enabled = true
 	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
@@ -363,12 +363,15 @@ func _apply(_delta: float) -> void:
 	sky_mat.set_shader_parameter("moon_strength", stars)
 
 	# environment
-	env.ambient_light_energy = ambient_energy * float(w["ambient_mult"]) * (0.45 if interior else 1.0)
+	env.ambient_light_energy = ambient_energy * float(w["ambient_mult"]) * (0.62 if interior else 1.0)
 	env.ambient_light_color = (_look["ambient_tint"] as Color)
 	env.fog_light_color = hor_c.lerp(fogc, 0.5).lerp(top_c, 0.15 * (1.0 - cloudy))
 	env.fog_light_energy = lerpf(0.35, 1.0, ambient_energy)
 	env.fog_density = float(_look["fog_density"]) * float(w["fog_mult"]) * lerpf(1.4, 1.0, ambient_energy) * (0.12 if interior else 1.0)
 	env.fog_sun_scatter = 0.1 + 0.4 * (1.0 - low) * low
+	# Indoors the brightest thing is a lamp, so the white point comes down with it or
+	# every lit wall reads as a sixth of its value.
+	env.tonemap_white = 2.0 if interior else 6.0
 	env.adjustment_saturation = float(_look["saturation"]) * float(w["saturation_mult"])
 	env.adjustment_contrast = float(_look["contrast"])
 	env.adjustment_brightness = 1.0

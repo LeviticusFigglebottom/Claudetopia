@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_job_station"]
+
+[ext_resource type="Script" path="res://systems/economy/job_station.gd" id="1"]
+
+[node name="JobStation" type="StaticBody3D" groups=["interactable", "job_station"]]
+collision_layer = 17
+collision_mask = 0
+script = ExtResource("1")

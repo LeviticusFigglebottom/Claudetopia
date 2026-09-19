@@ -1,4 +1,5 @@
 [
+<<<<<<< HEAD
   {"id": "core:gesture/bow", "name": "Bow", "animation": "Bow_Gesture", "icon": "gesture", "order": 0,
    "description": "The Vale bow: shallow, quick, eyes up. Deeper is for lords and for jokes.",
    "disposition": {"proud": 6, "pious": 5, "humble": 3, "cynical": -2}},
@@ -17,4 +18,158 @@
   {"id": "core:gesture/rude", "name": "Rude", "animation": "Rude", "icon": "skull", "order": 5,
    "description": "The old Vale insult: two fingers and a turn of the wrist. It is remembered.",
    "disposition": {"cynical": 5, "brave": 1, "pious": -8, "timid": -6, "proud": -7}}
+=======
+  {
+    "id": "core:gesture/bow", "name": "Bow", "animation": "Bow_Gesture", "animation_fallback": "Interact",
+    "description": "A short bow from the waist. In the Vale it is courtesy; in Skerrow it is what you do before you are told a long story.",
+    "base": 3, "loud": false,
+    "reactions": {"proud": 5, "pious": 4, "humble": -1, "cynical": -2, "brave": 1, "timid": 2, "greedy": 0, "generous": 2, "gossip": 1, "quiet": 2},
+    "replies": {
+      "proud": ["Well. Somebody was raised properly.", "Yes. Yes, quite right."],
+      "pious": ["Bow to the hearth, not to me. But thank you.", "Kept, and kindly meant."],
+      "humble": ["Oh, don't. I'm nobody. Stand up.", "Stop that, you'll start something."],
+      "cynical": ["What do you want?", "Courtesy. That's usually the opening of a request."],
+      "timid": ["Oh! Oh, that's — hello.", "Goodness. Hello."],
+      "gossip": ["Manners like that don't come from round here. Where are you from, then?"],
+      "default": ["Good day to you.", "And to you, whoever you are.", "Politeness. Rarer than gold and cheaper to give."]
+    },
+    "reply_gestures": {"proud": "core:gesture/bow", "default": ""}
+  },
+  {
+    "id": "core:gesture/wave", "name": "Wave", "animation": "Wave", "animation_fallback": "Interact",
+    "description": "An open hand raised. The Vale's whole diplomatic tradition in one movement.",
+    "base": 2, "loud": false,
+    "reactions": {"gossip": 4, "generous": 3, "timid": 3, "quiet": 0, "cynical": -1, "proud": 0, "brave": 2, "greedy": 0, "pious": 1, "humble": 2},
+    "replies": {
+      "gossip": ["Hello! Come here, you'll want to hear this.", "There you are. People have been saying things."],
+      "timid": ["Hello. Sorry. Hello."],
+      "cynical": ["Waving. Marvellous. That'll fix the roof."],
+      "quiet": ["Mm."],
+      "default": ["Hello to you.", "Morning. Or whatever it is now.", "Hello, stranger.", "Aye, hello."]
+    },
+    "reply_gestures": {"gossip": "core:gesture/wave", "generous": "core:gesture/wave", "default": "core:gesture/wave"}
+  },
+  {
+    "id": "core:gesture/rude", "name": "Rude gesture", "animation": "Rude", "animation_fallback": "Point",
+    "description": "Two fingers and no explanation. Universally understood, universally remembered.",
+    "base": -8, "loud": true, "deed": "gesture_offence",
+    "reactions": {"proud": -12, "pious": -10, "timid": -6, "brave": -4, "cynical": 1, "gossip": -2, "quiet": -5, "greedy": -4, "generous": -6, "humble": -3},
+    "replies": {
+      "proud": ["Do that again and we will find out which of us is faster.", "I have a name. You have just made sure I remember yours."],
+      "pious": ["The hearth hears that sort of thing, you know.", "That's how a village goes cold. One rudeness at a time."],
+      "timid": ["I — what did I — I'm sorry?"],
+      "cynical": ["Ha! At least you're honest.", "Finally, someone says what they mean."],
+      "gossip": ["Oh, that's going round the whole street. Thank you. Genuinely."],
+      "brave": ["Try it outside.", "Charming. Come here and say it."],
+      "default": ["Charming.", "And the same to you, then.", "That's a way to get yourself talked about."]
+    },
+    "reply_gestures": {"cynical": "core:gesture/rude", "brave": "core:gesture/threaten", "default": ""}
+  },
+  {
+    "id": "core:gesture/dance", "name": "Dance", "animation": "Dance", "animation_fallback": "Cheer",
+    "description": "A few steps of a Long Table reel, danced alone, which is the funny part.",
+    "base": 2, "loud": true, "deed": "gesture_delight",
+    "reactions": {"gossip": 6, "generous": 4, "brave": 3, "cynical": -3, "proud": -4, "pious": -2, "timid": 1, "quiet": -2, "greedy": 0, "humble": 3},
+    "replies": {
+      "gossip": ["Right. That is the best thing I have seen all week and I am telling everyone.", "Do it again, my sister's coming."],
+      "proud": ["In the middle of the street. In daylight.", "There is a time and a place and this is neither."],
+      "cynical": ["Wonderful. Now do something useful."],
+      "pious": ["Save it for Candle Night, would you."],
+      "brave": ["Ha! Go on then!"],
+      "timid": ["Oh — oh you're just doing it, aren't you."],
+      "default": ["You're a strange one.", "Well, the day's improved.", "Mind the cobbles, they're loose there."]
+    },
+    "reply_gestures": {"gossip": "core:gesture/cheer", "brave": "core:gesture/cheer", "default": "core:gesture/laugh"}
+  },
+  {
+    "id": "core:gesture/laugh", "name": "Laugh", "animation": "Laugh", "animation_fallback": "Cheer",
+    "description": "A real one, head back. The Vale account holds that this is a small act of tending.",
+    "base": 3, "loud": true, "deed": "gesture_delight",
+    "reactions": {"gossip": 5, "generous": 4, "humble": 3, "brave": 2, "cynical": 2, "proud": -2, "pious": 0, "timid": 1, "quiet": -1, "greedy": 0},
+    "replies": {
+      "gossip": ["Isn't it? That's what I said!", "You laugh now. Wait until you hear the rest of it."],
+      "cynical": ["Something funny? Tell me, I'd like to know what that's like."],
+      "proud": ["I fail to see it."],
+      "quiet": ["Mm. Keep it down."],
+      "default": ["Ha! Aye.", "That's better than crying about it.", "You've a good laugh on you."]
+    },
+    "reply_gestures": {"gossip": "core:gesture/laugh", "generous": "core:gesture/laugh", "default": ""}
+  },
+  {
+    "id": "core:gesture/flex", "name": "Flex", "animation": "Flex", "animation_fallback": "Cheer",
+    "description": "An arm held up and admired. Popular in Skerrow, where it is nearly a greeting.",
+    "base": 0, "loud": true,
+    "reactions": {"brave": 5, "proud": 3, "gossip": 3, "humble": -3, "pious": -3, "cynical": -4, "timid": -2, "quiet": -2, "greedy": 0, "generous": 0},
+    "replies": {
+      "brave": ["Aye, all right. Not bad.", "Come to the Moot and show somebody who'll answer it."],
+      "proud": ["Mine are better. Ask anyone."],
+      "cynical": ["Marvellous. Can you lift a debt?"],
+      "pious": ["Vanity is a cold fire. Warms nobody, not even you."],
+      "timid": ["Yes. Very — yes."],
+      "gossip": ["Is that what they teach down south? Do it again, slower."],
+      "default": ["All right, all right.", "Very impressive. Truly.", "Somebody's pleased with themselves."]
+    },
+    "reply_gestures": {"brave": "core:gesture/flex", "default": ""}
+  },
+  {
+    "id": "core:gesture/cheer", "name": "Cheer", "animation": "Cheer", "animation_fallback": "Wave",
+    "description": "Both arms up, one shout. It carries, which is the point: a cheer is renown's small change.",
+    "base": 2, "loud": true, "deed": "gesture_delight",
+    "reactions": {"gossip": 5, "brave": 4, "generous": 3, "humble": 1, "quiet": -4, "cynical": -2, "pious": -1, "proud": 1, "timid": -1, "greedy": 0},
+    "replies": {
+      "gossip": ["What are we cheering? Never mind, I'm in.", "Hurrah for whatever it is!"],
+      "quiet": ["Some of us are working.", "Must you."],
+      "brave": ["Aye! Go on!"],
+      "timid": ["Oh — was that at me?"],
+      "default": ["Steady on.", "Somebody's had a good morning.", "Hurrah, then, I suppose."]
+    },
+    "reply_gestures": {"gossip": "core:gesture/cheer", "brave": "core:gesture/cheer", "default": ""}
+  },
+  {
+    "id": "core:gesture/point", "name": "Point", "animation": "Point", "animation_fallback": "Interact",
+    "description": "A finger at a thing, or at a person. Context does all the work.",
+    "base": 0, "loud": false,
+    "reactions": {"gossip": 3, "cynical": 1, "timid": -3, "proud": -4, "quiet": -1, "brave": 0, "greedy": 1, "generous": 0, "pious": -1, "humble": -1},
+    "replies": {
+      "gossip": ["That? Oh, I can tell you about that.", "Pointing's how conversations start round here. Go on."],
+      "proud": ["Do not point at me.", "Put it down."],
+      "timid": ["Me? Is it me? What have I done?"],
+      "cynical": ["It's over there, yes. Well spotted."],
+      "default": ["Aye, that's the way.", "What about it?", "Yes? What am I looking at?"]
+    },
+    "reply_gestures": {"default": ""}
+  },
+  {
+    "id": "core:gesture/threaten", "name": "Threaten", "animation": "Threaten", "animation_fallback": "Rude",
+    "description": "A hand moved to a hilt and left there. Nothing is said, which is the threat.",
+    "base": -10, "loud": true, "deed": "threaten",
+    "reactions": {"timid": -14, "generous": -10, "pious": -10, "humble": -8, "gossip": -6, "quiet": -8, "proud": -12, "brave": -5, "cynical": -4, "greedy": -6},
+    "replies": {
+      "timid": ["Don't — please — I've nothing, I've nothing worth it.", "I'll go. I'm going."],
+      "brave": ["Draw it or take your hand off it.", "You'd better be quick and you'd better be right."],
+      "proud": ["In my own street. My own street."],
+      "pious": ["Put it away. Whatever's cold in you, this won't warm it."],
+      "cynical": ["There it is. I said to my wife: that one's a problem."],
+      "gossip": ["Everyone saw that. Everyone. Do you understand how this works here?"],
+      "default": ["Steady. Steady, now.", "That's not how we do things.", "Back away, friend. Please."]
+    },
+    "reply_gestures": {"timid": "core:gesture/apologise", "brave": "core:gesture/threaten", "default": ""}
+  },
+  {
+    "id": "core:gesture/apologise", "name": "Apologise", "animation": "Apologise", "animation_fallback": "Bow_Gesture",
+    "description": "Palms open, head down. Worth more here than anywhere, and it does not work twice in a day.",
+    "base": 5, "loud": false, "forgives": true,
+    "reactions": {"generous": 8, "pious": 7, "humble": 6, "timid": 5, "gossip": 3, "quiet": 3, "proud": 2, "brave": 1, "cynical": -1, "greedy": 0},
+    "replies": {
+      "generous": ["All right. All right. Come in out of the wet.", "Said and done with. Don't make a habit of it."],
+      "pious": ["Then it's mended. That's how mending works.", "A word given back is worth two taken."],
+      "cynical": ["Sorry's free. Try being sorry with your hands."],
+      "proud": ["Noted. Not forgotten, but noted."],
+      "timid": ["Oh — it's fine, it's fine, really."],
+      "gossip": ["Well, that's the other half of the story, isn't it. I'll pass it on."],
+      "default": ["We'll say no more about it.", "Hm. Fair enough.", "Aye. All right."]
+    },
+    "reply_gestures": {"generous": "core:gesture/wave", "default": ""}
+  }
+>>>>>>> 7872c0d439d3e3b6e12305b217b8b73914cac008
 ]

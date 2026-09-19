@@ -1,0 +1,22 @@
+{
+  "id": "core:house/nell_stillroom",
+  "name": "Harebell's Stillroom",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/nell_harebell",
+  "trade": "alchemist",
+  "wealth": 1,
+  "household": 1,
+  "seed": 1204,
+  "habits": [
+    "reads_late",
+    "hoards_string",
+    "never_finishes_a_job",
+    "keeps_a_shrine"
+  ],
+  "story": "Nell cures fevers and sells salves and refuses, absolutely, to sell anything that thins the blood, because her cousin in Foxglove Dell grows the things that do and Nell has opinions about her cousin.",
+  "who_was_here": "A line of hedge-witches, none of whom wrote anything down, which Nell says is the point.",
+  "unique_object": "a shelf of unlabelled jars that Nell can identify by weight in the dark",
+  "culture": "vale",
+  "children": 0,
+  "name_slug": "nell_stillroom"
+}

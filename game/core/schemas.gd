@@ -20,6 +20,7 @@ const REQUIRED := {
 	"calling": ["name", "skill_bonuses", "description"],
 	"encounter": ["place", "spawns"],
 	"interior": ["name", "scene", "resident", "story", "unique_object"],
+	"house": ["name", "scene", "resident", "story", "unique_object"],
 	"gesture": ["name", "animation"],
 	"rumour": ["text"],
 	"weather": ["name"],

@@ -76,7 +76,12 @@
       "shape": "downs",
       "water_table": 6
     },
-    "enemy_ecology": [],
+    "enemy_ecology": [
+      "core:enemy/roadside_bandit",
+      "core:enemy/down_wolf",
+      "core:enemy/bristleback",
+      "core:enemy/hedge_wight"
+    ],
     "danger": 1
   },
   {
@@ -486,7 +491,9 @@
       "shape": "ash_plateau",
       "water_table": 0
     },
-    "enemy_ecology": [],
+    "enemy_ecology": [
+      "core:enemy/ash_wight"
+    ],
     "danger": 5
   }
 ]

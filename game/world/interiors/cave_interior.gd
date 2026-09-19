@@ -13,6 +13,29 @@ const SHAFT_SHADER := preload("res://assets/shaders/light_shaft.gdshader")
 const HEARTHSTONE := preload("res://systems/hearth/hearthstone.tscn")
 const DOOR := preload("res://systems/interiors/door.tscn")
 
+## Surface parameters per formation: what cut the rock decides how the rock reads.
+const ROCK_BY_FORMATION := {
+	"water": {"bed_scale": 0.14, "bed_strength": 0.30, "block_scale": 0.34, "block_strength": 0.40,
+			  "grain_scale": 6.0, "grain_strength": 0.22, "bump_strength": 0.75, "roughness_base": 0.82,
+			  "occlusion": 0.70, "brightness": 1.10, "vein_amount": 0.14},
+	"mining": {"bed_scale": 0.10, "bed_strength": 0.22, "block_scale": 0.55, "block_strength": 0.80,
+			   "grain_scale": 9.0, "grain_strength": 0.30, "bump_strength": 0.85, "roughness_base": 0.93,
+			   "occlusion": 0.72, "brightness": 1.05, "vein_amount": 0.26},
+	"creature": {"bed_scale": 0.07, "bed_strength": 0.10, "block_scale": 0.28, "block_strength": 0.55,
+				 "grain_scale": 5.0, "grain_strength": 0.34, "bump_strength": 1.05, "roughness_base": 0.88,
+				 "occlusion": 0.78, "brightness": 1.00, "vein_amount": 0.08},
+	"crypt": {"bed_scale": 0.22, "bed_strength": 0.45, "block_scale": 0.46, "block_strength": 0.70,
+			  "grain_scale": 7.5, "grain_strength": 0.26, "bump_strength": 0.90, "roughness_base": 0.90,
+			  "occlusion": 0.74, "brightness": 1.12, "vein_amount": 0.20},
+	# Oroth: cut whole, no joints anywhere, courses you could lie down on.
+	"builder": {"bed_scale": 0.045, "bed_strength": 0.55, "block_scale": 0.085, "block_strength": 1.05,
+				"grain_scale": 3.0, "grain_strength": 0.10, "bump_strength": 1.25, "roughness_base": 0.62,
+				"occlusion": 0.60, "brightness": 1.22, "vein_amount": 0.05},
+	"ice": {"bed_scale": 0.09, "bed_strength": 0.38, "block_scale": 0.30, "block_strength": 0.30,
+			"grain_scale": 4.5, "grain_strength": 0.14, "bump_strength": 0.60, "roughness_base": 0.22,
+			"occlusion": 0.45, "brightness": 1.45, "vein_amount": 0.10},
+}
+
 @export_file("*.json") var meta_path := ""
 @export var build_on_ready := true
 @export var spawn_encounters := true
@@ -68,19 +91,11 @@ func _build_shell(dir: String, slug: String) -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = ROCK_SHADER
 	var palette: Array = meta.get("palette", [])
-	mat.set_shader_parameter("bed_scale", 0.12)
-	mat.set_shader_parameter("bed_strength", 0.16)
-	mat.set_shader_parameter("block_scale", 0.40)
-	mat.set_shader_parameter("block_strength", 0.45)
-	mat.set_shader_parameter("bump_strength", 0.7)
-	mat.set_shader_parameter("roughness_base", 0.86)
-	mat.set_shader_parameter("occlusion", 0.72)
-	mat.set_shader_parameter("grain_strength", 0.2)
-	mat.set_shader_parameter("grain_scale", 7.0)
-	mat.set_shader_parameter("brightness", 1.0)
-	mat.set_shader_parameter("vein_amount", 0.16)
-	if palette.size() > 4:
-		mat.set_shader_parameter("vein_color", Color.html(str(palette[4])))
+	# Each formation gets its own surface. Oroth work is vast regular ashlar; a mined
+	# adit is blocky and dusty; a water cave is rounded; ice is smooth and bright.
+	var tuned: Dictionary = ROCK_BY_FORMATION.get(str(meta.get("formed_by", "water")), ROCK_BY_FORMATION["water"])
+	for key in tuned:
+		mat.set_shader_parameter(key, tuned[key])
 	var lowest := _lowest_floor()
 	var wet := lowest
 	for w in meta.get("water", []):
@@ -276,7 +291,10 @@ func _build_chamber_lighting() -> void:
 		var centre := _vec(ch["centre"])
 		var radii := _vec(ch["radii"])
 		var recipe := _light_recipe(role)
-		var count: int = clampi(int(radii.x / 4.0) + 1, 1, 5)
+		# A cathedral needs more than a cottage's lamp: light count, reach and strength all
+		# follow the room, or the far wall of a big chamber is simply not there.
+		var spread: float = maxf(radii.x, radii.z)
+		var count: int = clampi(int(spread / 3.5) + 1, 2, 8)
 		for i in count:
 			var at := centre
 			if count > 1:
@@ -286,8 +304,8 @@ func _build_chamber_lighting() -> void:
 			var lamp := OmniLight3D.new()
 			lamp.position = at + Vector3(0, minf(radii.y * 0.5, 2.4), 0)
 			lamp.light_color = recipe["color"]
-			lamp.light_energy = float(recipe["energy"])
-			lamp.omni_range = float(recipe["range"]) + radii.x * 0.4
+			lamp.light_energy = float(recipe["energy"]) * (1.0 + clampf(spread / 24.0, 0.0, 1.2))
+			lamp.omni_range = maxf(float(recipe["range"]), radii.length() * 1.05)
 			lamp.shadow_enabled = bool(recipe["shadow"]) and i == 0
 			lamp.light_specular = 0.3
 			lamp.set_meta("flicker", float(recipe["flicker"]))
@@ -297,13 +315,24 @@ func _build_chamber_lighting() -> void:
 				# A cold, weak fill: rock is never truly lightless in a place people
 				# have lit for centuries, and the player must read the room's shape.
 				var fill := OmniLight3D.new()
-				fill.position = centre + Vector3(0, radii.y * 0.55, 0)
-				fill.light_color = Color(0.45, 0.58, 0.8)
-				fill.light_energy = 0.55
-				fill.omni_range = radii.length() * 1.5
+				fill.position = centre + Vector3(0, radii.y * 0.7, 0)
+				fill.light_color = Color(0.58, 0.64, 0.78)
+				fill.light_energy = 0.9 + clampf(spread / 16.0, 0.0, 1.4)
+				fill.omni_range = radii.length() * 2.6
 				fill.shadow_enabled = false
 				fill.light_specular = 0.0
 				holder.add_child(fill)
+			if i == 0 and radii.y > 6.0:
+				# A big chamber needs something up in the roof, or the vault above the
+				# lamps is simply missing and the room reads as a lit floor in a void.
+				var high := OmniLight3D.new()
+				high.position = centre + Vector3(0, radii.y * 1.25, 0)
+				high.light_color = (recipe["color"] as Color).lerp(Color(0.7, 0.78, 0.95), 0.55)
+				high.light_energy = float(recipe["energy"]) * 0.7 * (1.0 + clampf(spread / 20.0, 0.0, 1.0))
+				high.omni_range = radii.length() * 2.0
+				high.shadow_enabled = false
+				high.light_specular = 0.1
+				holder.add_child(high)
 			if bool(recipe["ember"]):
 				var ember := MeshInstance3D.new()
 				var sm := SphereMesh.new()
@@ -325,9 +354,9 @@ func _light_recipe(role: String) -> Dictionary:
 		"entrance":
 			return {"color": Color(0.85, 0.92, 1.0), "energy": 1.8, "range": 20.0, "flicker": 0.0, "shadow": false, "ember": false}
 		"camp":
-			return {"color": Color(1.0, 0.62, 0.28), "energy": 3.0, "range": 17.0, "flicker": 0.35, "shadow": true, "ember": true}
+			return {"color": Color(1.0, 0.62, 0.28), "energy": 4.0, "range": 18.0, "flicker": 0.35, "shadow": true, "ember": true}
 		"boss":
-			return {"color": Color(0.55, 0.72, 1.0), "energy": 2.4, "range": 24.0, "flicker": 0.08, "shadow": true, "ember": true}
+			return {"color": Color(0.55, 0.72, 1.0), "energy": 3.2, "range": 26.0, "flicker": 0.08, "shadow": true, "ember": true}
 		"treasure":
 			return {"color": Color(1.0, 0.82, 0.45), "energy": 1.9, "range": 14.0, "flicker": 0.15, "shadow": false, "ember": true}
 		"shrine":
@@ -335,11 +364,11 @@ func _light_recipe(role: String) -> Dictionary:
 		"flooded", "pool":
 			return {"color": Color(0.5, 0.8, 0.82), "energy": 1.5, "range": 15.0, "flicker": 0.05, "shadow": false, "ember": false}
 		"passage":
-			return {"color": Color(1.0, 0.7, 0.4), "energy": 1.3, "range": 11.0, "flicker": 0.25, "shadow": false, "ember": true}
+			return {"color": Color(1.0, 0.7, 0.4), "energy": 1.8, "range": 12.0, "flicker": 0.25, "shadow": false, "ember": true}
 		"deep", "chamber":
-			return {"color": Color(1.0, 0.68, 0.36), "energy": 2.4, "range": 17.0, "flicker": 0.28, "shadow": false, "ember": true}
+			return {"color": Color(1.0, 0.68, 0.36), "energy": 3.2, "range": 18.0, "flicker": 0.28, "shadow": false, "ember": true}
 		_:
-			return {"color": Color(1.0, 0.68, 0.36), "energy": 2.4, "range": 17.0, "flicker": 0.28, "shadow": false, "ember": true}
+			return {"color": Color(1.0, 0.68, 0.36), "energy": 3.2, "range": 18.0, "flicker": 0.28, "shadow": false, "ember": true}
 
 
 func _build_features() -> void:

@@ -1,0 +1,883 @@
+[
+  {
+    "id": "core:boss/she_who_waits",
+    "name": "She Who Waits in the Nave",
+    "archetype": "boss",
+    "rig": "humanoid",
+    "faction": "drowned",
+    "tint": "#2f5f5a",
+    "scale": 1.25,
+    "height": 2.2,
+    "arena": "core:place/drowned_nave",
+    "region": "core:region/sedgemire",
+    "tags": [
+      "undead",
+      "humanoid",
+      "caster",
+      "boss"
+    ],
+    "lore": "A priestess of a church that sank with its congregation still in it, and she has been holding the service ever since. The reedfolk do not say she is wicked. They say she is punctual, and that the water knows her hours. Her hymn closes wounds; it does not ask whose.",
+    "stats": {
+      "hp": 900,
+      "stamina": 200,
+      "poise": 130,
+      "armour": 12,
+      "speed": 2.4,
+      "mana": 400
+    },
+    "perception": {
+      "sight_range": 30.0,
+      "sight_fov": 170.0,
+      "hearing": 26.0,
+      "alertness": 1.0
+    },
+    "behaviour": {
+      "engage_range": 9.0,
+      "circle": 0.5,
+      "retreat_threshold": 0.0,
+      "patience": 6.0,
+      "leash": 60.0,
+      "hyper_armour": 20.0,
+      "aggression": 0.6,
+      "strafe_speed": 0.7
+    },
+    "attacks": [
+      {
+        "name": "censer_sweep",
+        "clip": "Attack_2H_Light_1",
+        "damage": 26.0,
+        "poise_damage": 30.0,
+        "range": 3.4,
+        "telegraph": 0.85,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 3.0,
+        "gcd": 0.9,
+        "weight": 3.0,
+        "lunge": 1.4
+      },
+      {
+        "name": "tide_pull",
+        "clip": "Cast_Quick",
+        "damage": 18.0,
+        "poise_damage": 12.0,
+        "range": 14.0,
+        "telegraph": 1.1,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 6.0,
+        "gcd": 0.9,
+        "weight": 2.0,
+        "kind": "frost",
+        "statuses": [
+          {
+            "id": "chilled",
+            "duration": 6.0,
+            "magnitude": 0.35
+          }
+        ],
+        "note": "Drags the player a step toward the deep end of the nave."
+      },
+      {
+        "name": "drowning_hand",
+        "clip": "Cast_Long",
+        "damage": 34.0,
+        "poise_damage": 40.0,
+        "range": 6.0,
+        "telegraph": 1.5,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 9.0,
+        "gcd": 0.9,
+        "weight": 1.5,
+        "kind": "frost",
+        "statuses": [
+          {
+            "id": "bleeding",
+            "duration": 5.0,
+            "magnitude": 3.0
+          }
+        ]
+      }
+    ],
+    "phases": [
+      {
+        "name": "the altar",
+        "hp": 1.0,
+        "say": "She does not look up from the book.",
+        "aggression": 0.55,
+        "engage_range": 9.0
+      },
+      {
+        "name": "the water rises",
+        "hp": 0.66,
+        "say": "The water comes in. The pews are the floor now.",
+        "aggression": 0.75,
+        "engage_range": 6.0,
+        "speed": 2.8,
+        "attacks": [
+          {
+            "name": "censer_sweep",
+            "clip": "Attack_2H_Light_1",
+            "damage": 26.0,
+            "poise_damage": 30.0,
+            "range": 3.4,
+            "telegraph": 0.8,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 3.0,
+            "gcd": 0.9,
+            "weight": 3.0,
+            "lunge": 1.6
+          },
+          {
+            "name": "tide_pull",
+            "clip": "Cast_Quick",
+            "damage": 20.0,
+            "poise_damage": 12.0,
+            "range": 16.0,
+            "telegraph": 1.0,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 5.0,
+            "gcd": 0.9,
+            "weight": 2.5,
+            "kind": "frost"
+          },
+          {
+            "name": "summon_drowned",
+            "clip": "Cast_Summon",
+            "damage": 0.0,
+            "poise_damage": 0.0,
+            "range": 20.0,
+            "telegraph": 1.8,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 16.0,
+            "gcd": 0.9,
+            "weight": 1.0,
+            "summons": {
+              "enemy": "core:enemy/hedge_wight",
+              "count": 3
+            }
+          }
+        ]
+      },
+      {
+        "name": "the hymn",
+        "hp": 0.33,
+        "say": "She begins the hymn. Stop her, or endure it.",
+        "aggression": 0.9,
+        "hyper_armour": 40.0,
+        "attacks": [
+          {
+            "name": "the_hymn",
+            "clip": "Cast_Loop",
+            "damage": 12.0,
+            "poise_damage": 8.0,
+            "range": 24.0,
+            "telegraph": 2.4,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 14.0,
+            "gcd": 0.9,
+            "weight": 4.0,
+            "channel": 6.0,
+            "heals_self": 140.0,
+            "interruptible": true,
+            "silence_stops": true,
+            "note": "Interrupt it or she closes what you opened."
+          },
+          {
+            "name": "drowning_hand",
+            "clip": "Cast_Long",
+            "damage": 38.0,
+            "poise_damage": 44.0,
+            "range": 6.5,
+            "telegraph": 1.3,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 7.0,
+            "gcd": 0.9,
+            "weight": 2.0,
+            "kind": "frost"
+          },
+          {
+            "name": "censer_sweep",
+            "clip": "Attack_2H_Light_1",
+            "damage": 28.0,
+            "poise_damage": 32.0,
+            "range": 3.6,
+            "telegraph": 0.75,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 3.0,
+            "gcd": 0.9,
+            "weight": 2.5
+          }
+        ]
+      }
+    ],
+    "marks": [
+      900,
+      1200
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/nave_bell"
+    ]
+  },
+  {
+    "id": "core:boss/hart_of_thorns",
+    "name": "The Hart of Thorns",
+    "archetype": "boss",
+    "rig": "humanoid",
+    "faction": "briar",
+    "tint": "#3a4a2a",
+    "scale": 1.35,
+    "height": 2.4,
+    "arena": "core:place/standing_moot",
+    "region": "core:region/briarwold",
+    "tags": [
+      "knight",
+      "humanoid",
+      "charger",
+      "boss"
+    ],
+    "lore": "Antlered plate, a spear the length of a boat, and a way of standing in the middle of the stone circle as though he had been issued it. The Woodfolk have no word for what he is doing. The nearest they have is keeping, which is what they call oiling the stones, and they do not enjoy the comparison.",
+    "stats": {
+      "hp": 1100,
+      "stamina": 260,
+      "poise": 190,
+      "armour": 22,
+      "speed": 3.6
+    },
+    "perception": {
+      "sight_range": 34.0,
+      "sight_fov": 120.0,
+      "hearing": 22.0,
+      "alertness": 1.0
+    },
+    "behaviour": {
+      "engage_range": 3.6,
+      "circle": 0.25,
+      "retreat_threshold": 0.0,
+      "patience": 3.0,
+      "leash": 70.0,
+      "hyper_armour": 34.0,
+      "aggression": 0.95,
+      "strafe_speed": 0.55
+    },
+    "attacks": [
+      {
+        "name": "antler_charge",
+        "clip": "Attack_2H_Heavy",
+        "damage": 42.0,
+        "poise_damage": 60.0,
+        "range": 16.0,
+        "telegraph": 1.2,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 7.0,
+        "gcd": 0.9,
+        "weight": 3.0,
+        "charge": true,
+        "min_range": 6.0,
+        "hit_range": 3.0,
+        "knockdown": true,
+        "note": "A straight run. The standing stones will stop him; you will not."
+      },
+      {
+        "name": "spear_thrust",
+        "clip": "Attack_2H_Light_1",
+        "damage": 28.0,
+        "poise_damage": 28.0,
+        "range": 4.2,
+        "telegraph": 0.6,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 3.0,
+        "gcd": 0.9,
+        "weight": 3.5,
+        "lunge": 2.2
+      },
+      {
+        "name": "crown_sweep",
+        "clip": "Attack_2H_Light_2",
+        "damage": 32.0,
+        "poise_damage": 38.0,
+        "range": 3.4,
+        "telegraph": 0.75,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 3.0,
+        "gcd": 0.9,
+        "weight": 2.5,
+        "heavy": true
+      }
+    ],
+    "phases": [
+      {
+        "name": "the charge",
+        "hp": 1.0,
+        "say": "He lowers the crown and picks his line.",
+        "aggression": 0.95
+      },
+      {
+        "name": "the Briar grows",
+        "hp": 0.5,
+        "say": "Thorns come up through the circle. The ground is getting smaller.",
+        "aggression": 1.0,
+        "speed": 3.9,
+        "hyper_armour": 46.0,
+        "attacks": [
+          {
+            "name": "antler_charge",
+            "clip": "Attack_2H_Heavy",
+            "damage": 46.0,
+            "poise_damage": 66.0,
+            "range": 18.0,
+            "telegraph": 1.0,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 5.5,
+            "gcd": 0.9,
+            "weight": 3.5,
+            "charge": true,
+            "min_range": 6.0,
+            "hit_range": 3.0,
+            "knockdown": true
+          },
+          {
+            "name": "spear_thrust",
+            "clip": "Attack_2H_Light_1",
+            "damage": 30.0,
+            "poise_damage": 30.0,
+            "range": 4.4,
+            "telegraph": 0.5,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 3.0,
+            "gcd": 0.9,
+            "weight": 3.5,
+            "lunge": 2.4,
+            "statuses": [
+              {
+                "id": "bleeding",
+                "duration": 8.0,
+                "magnitude": 3.0
+              }
+            ]
+          },
+          {
+            "name": "briar_lash",
+            "clip": "Attack_2H_Light_3",
+            "damage": 24.0,
+            "poise_damage": 20.0,
+            "range": 6.0,
+            "telegraph": 0.7,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 3.0,
+            "gcd": 0.9,
+            "weight": 2.0,
+            "statuses": [
+              {
+                "id": "bleeding",
+                "duration": 6.0,
+                "magnitude": 2.0
+              }
+            ]
+          },
+          {
+            "name": "thorn_wall",
+            "clip": "Cast_Quick",
+            "damage": 0.0,
+            "poise_damage": 0.0,
+            "range": 22.0,
+            "telegraph": 1.6,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 18.0,
+            "gcd": 0.9,
+            "weight": 1.0,
+            "shrinks_arena": 3.0,
+            "note": "The circle loses three metres of floor, and keeps it."
+          }
+        ]
+      }
+    ],
+    "marks": [
+      1000,
+      1400
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/hart_spear",
+      "core:item/antler_crown"
+    ]
+  },
+  {
+    "id": "core:boss/stone_thrall_king",
+    "name": "The Stone-Thrall King",
+    "archetype": "boss",
+    "rig": "custom",
+    "model": "res://assets/models/creatures/stone_thrall/stone_thrall.glb",
+    "faction": "unquiet",
+    "tint": "#7e7768",
+    "scale": 3.2,
+    "height": 6.5,
+    "arena": "core:place/oskeld_mine",
+    "region": "core:region/skerrow",
+    "tags": [
+      "construct",
+      "brute",
+      "boss"
+    ],
+    "lore": "Giant bone with the mine's rock grown into it, standing at the foot of the singing shaft the way a man stands at a door he is not going to open. Clan Kharrow's memory-keeper will tell you it is holding a name. She will not tell you whose until you have taken it back.",
+    "stats": {
+      "hp": 1600,
+      "stamina": 300,
+      "poise": 320,
+      "armour": 30,
+      "speed": 1.9
+    },
+    "perception": {
+      "sight_range": 26.0,
+      "sight_fov": 140.0,
+      "hearing": 30.0,
+      "alertness": 0.9
+    },
+    "behaviour": {
+      "engage_range": 5.5,
+      "circle": 0.0,
+      "retreat_threshold": 0.0,
+      "patience": 8.0,
+      "leash": 80.0,
+      "hyper_armour": 70.0,
+      "aggression": 0.8,
+      "strafe_speed": 0.2
+    },
+    "breakable_parts": [
+      {
+        "name": "left_arm",
+        "bone": "UpperArm.L",
+        "hp": 260,
+        "removes_attack": "sweeping_arm"
+      },
+      {
+        "name": "right_arm",
+        "bone": "UpperArm.R",
+        "hp": 260,
+        "removes_attack": "overhead_slam"
+      },
+      {
+        "name": "jaw",
+        "bone": "Head",
+        "hp": 180,
+        "removes_attack": "bone_roar"
+      }
+    ],
+    "attacks": [
+      {
+        "name": "overhead_slam",
+        "clip": "Attack_2H_Heavy",
+        "damage": 55.0,
+        "poise_damage": 90.0,
+        "range": 6.0,
+        "telegraph": 1.6,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 6.0,
+        "gcd": 0.9,
+        "weight": 3.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "shockwave": 4.0,
+        "knockdown": true
+      },
+      {
+        "name": "sweeping_arm",
+        "clip": "Attack_2H_Light_1",
+        "damage": 40.0,
+        "poise_damage": 60.0,
+        "range": 7.5,
+        "telegraph": 1.1,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 3.0,
+        "gcd": 0.9,
+        "weight": 3.0,
+        "heavy": true
+      },
+      {
+        "name": "bone_roar",
+        "clip": "Taunt",
+        "damage": 14.0,
+        "poise_damage": 30.0,
+        "range": 12.0,
+        "telegraph": 1.4,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 12.0,
+        "gcd": 0.9,
+        "weight": 1.5,
+        "kind": "blunt",
+        "statuses": [
+          {
+            "id": "stagger",
+            "duration": 1.2,
+            "magnitude": 1.0
+          }
+        ]
+      }
+    ],
+    "phases": [
+      {
+        "name": "the walking bone",
+        "hp": 1.0,
+        "say": "It turns, and the shaft takes up the sound.",
+        "aggression": 0.7
+      },
+      {
+        "name": "broken limbs",
+        "hp": 0.6,
+        "say": "What you have broken off it, it is now swinging.",
+        "aggression": 0.85,
+        "speed": 2.3,
+        "attacks": [
+          {
+            "name": "rib_club",
+            "clip": "Attack_2H_Light_2",
+            "damage": 48.0,
+            "poise_damage": 70.0,
+            "range": 6.5,
+            "telegraph": 0.9,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 3.0,
+            "gcd": 0.9,
+            "weight": 3.5,
+            "heavy": true
+          },
+          {
+            "name": "overhead_slam",
+            "clip": "Attack_2H_Heavy",
+            "damage": 58.0,
+            "poise_damage": 95.0,
+            "range": 6.0,
+            "telegraph": 1.4,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 5.0,
+            "gcd": 0.9,
+            "weight": 2.5,
+            "heavy": true,
+            "hyper_armour": true,
+            "shockwave": 5.0,
+            "knockdown": true
+          },
+          {
+            "name": "scree_throw",
+            "clip": "Throw",
+            "damage": 30.0,
+            "poise_damage": 24.0,
+            "range": 20.0,
+            "telegraph": 1.2,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 8.0,
+            "gcd": 0.9,
+            "weight": 2.0
+          }
+        ]
+      },
+      {
+        "name": "the shaft's echo",
+        "hp": 0.3,
+        "say": "It puts a hand on the shaft wall and lets the note do the work.",
+        "aggression": 0.9,
+        "hyper_armour": 95.0,
+        "attacks": [
+          {
+            "name": "the_echo",
+            "clip": "Cast_Loop",
+            "damage": 22.0,
+            "poise_damage": 55.0,
+            "range": 26.0,
+            "telegraph": 2.2,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 11.0,
+            "gcd": 0.9,
+            "weight": 3.0,
+            "channel": 4.0,
+            "kind": "blunt",
+            "silence_stops": true,
+            "arena_wide": true,
+            "statuses": [
+              {
+                "id": "stagger",
+                "duration": 1.6,
+                "magnitude": 1.0
+              }
+            ],
+            "note": "The shaft carries it everywhere. Silence it or get behind the ore cart."
+          },
+          {
+            "name": "overhead_slam",
+            "clip": "Attack_2H_Heavy",
+            "damage": 62.0,
+            "poise_damage": 100.0,
+            "range": 6.2,
+            "telegraph": 1.3,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 4.5,
+            "gcd": 0.9,
+            "weight": 3.0,
+            "heavy": true,
+            "hyper_armour": true,
+            "shockwave": 6.0,
+            "knockdown": true
+          }
+        ]
+      }
+    ],
+    "marks": [
+      1400,
+      1900
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/kingbone"
+    ]
+  },
+  {
+    "id": "core:boss/last_cantor",
+    "name": "The Last Cantor",
+    "archetype": "boss",
+    "rig": "humanoid",
+    "faction": "oroth",
+    "tint": "#b9b2a4",
+    "scale": 1.1,
+    "height": 1.95,
+    "arena": "core:place/cantors_seat",
+    "region": "core:region/cinderlea",
+    "tags": [
+      "oroth",
+      "humanoid",
+      "elite",
+      "boss",
+      "final"
+    ],
+    "lore": "He is not cruel and he is not mad. He took the seat because somebody had to and the note was already going wrong, and he has been holding it for a thousand years with the patience of a man waiting for a relief who is not coming. He will ask you, once, whether you have come to take over.",
+    "stats": {
+      "hp": 2000,
+      "stamina": 400,
+      "poise": 210,
+      "armour": 26,
+      "speed": 3.4,
+      "mana": 900
+    },
+    "perception": {
+      "sight_range": 40.0,
+      "sight_fov": 180.0,
+      "hearing": 40.0,
+      "alertness": 1.0
+    },
+    "behaviour": {
+      "engage_range": 3.2,
+      "circle": 0.6,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 200.0,
+      "hyper_armour": 38.0,
+      "aggression": 0.85,
+      "strafe_speed": 0.9
+    },
+    "attacks": [
+      {
+        "name": "bell_blade",
+        "clip": "Attack_1H_Light_1",
+        "damage": 34.0,
+        "poise_damage": 30.0,
+        "range": 2.8,
+        "telegraph": 0.5,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 3.0,
+        "gcd": 0.9,
+        "weight": 4.0,
+        "lunge": 1.6,
+        "note": "A blade with a bell cast into the hilt. It rings on the beat of his combo, which is how you learn the beat."
+      },
+      {
+        "name": "bell_blade_two",
+        "clip": "Attack_1H_Light_2",
+        "damage": 36.0,
+        "poise_damage": 32.0,
+        "range": 2.8,
+        "telegraph": 0.35,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 3.0,
+        "gcd": 0.9,
+        "weight": 3.5,
+        "combo_from": "bell_blade"
+      },
+      {
+        "name": "quarter_tone",
+        "clip": "Attack_1H_Heavy",
+        "damage": 48.0,
+        "poise_damage": 52.0,
+        "range": 3.4,
+        "telegraph": 1.0,
+        "hit_window": 0.2,
+        "recovery": 0.8,
+        "cooldown": 5.0,
+        "gcd": 0.9,
+        "weight": 2.5,
+        "heavy": true,
+        "parryable": true,
+        "note": "The one attack with a beat you can hear coming. Parry it."
+      }
+    ],
+    "phases": [
+      {
+        "name": "the bell-blade",
+        "hp": 1.0,
+        "say": "\"You came a long way to be asked a question.\"",
+        "aggression": 0.8
+      },
+      {
+        "name": "the Choir joins",
+        "hp": 0.66,
+        "say": "The stalls fill. They were always going to.",
+        "aggression": 0.85,
+        "speed": 3.6,
+        "attacks": [
+          {
+            "name": "bell_blade",
+            "clip": "Attack_1H_Light_1",
+            "damage": 34.0,
+            "poise_damage": 30.0,
+            "range": 2.8,
+            "telegraph": 0.45,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 3.0,
+            "gcd": 0.9,
+            "weight": 4.0,
+            "lunge": 1.8
+          },
+          {
+            "name": "quarter_tone",
+            "clip": "Attack_1H_Heavy",
+            "damage": 50.0,
+            "poise_damage": 55.0,
+            "range": 3.4,
+            "telegraph": 0.95,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 4.5,
+            "gcd": 0.9,
+            "weight": 2.5,
+            "heavy": true,
+            "parryable": true
+          },
+          {
+            "name": "call_the_choir",
+            "clip": "Cast_Summon",
+            "damage": 0.0,
+            "poise_damage": 0.0,
+            "range": 30.0,
+            "telegraph": 2.0,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 22.0,
+            "gcd": 0.9,
+            "weight": 1.5,
+            "summons": {
+              "enemy": "core:enemy/ash_wight",
+              "count": 4
+            },
+            "note": "Choristers on the gallery. Silence them or endure the note while you fight him."
+          }
+        ]
+      },
+      {
+        "name": "the note itself",
+        "hp": 0.33,
+        "say": "The colour goes out of the room. Only what you are known for stays lit.",
+        "aggression": 0.95,
+        "hyper_armour": 60.0,
+        "renown_lights_arena": true,
+        "attacks": [
+          {
+            "name": "the_held_note",
+            "clip": "Cast_Loop",
+            "damage": 30.0,
+            "poise_damage": 45.0,
+            "range": 40.0,
+            "telegraph": 2.6,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 13.0,
+            "gcd": 0.9,
+            "weight": 3.0,
+            "channel": 7.0,
+            "kind": "silence",
+            "arena_wide": true,
+            "silence_stops": false,
+            "statuses": [
+              {
+                "id": "quieted",
+                "duration": 10.0,
+                "magnitude": 1.0
+              }
+            ],
+            "note": "Unsilenceable: this is the note, not a spell. Stand on the lit stones, which are the deeds you are known for."
+          },
+          {
+            "name": "bell_blade",
+            "clip": "Attack_1H_Light_1",
+            "damage": 36.0,
+            "poise_damage": 32.0,
+            "range": 3.0,
+            "telegraph": 0.4,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 3.0,
+            "gcd": 0.9,
+            "weight": 4.0,
+            "lunge": 2.0
+          },
+          {
+            "name": "quarter_tone",
+            "clip": "Attack_1H_Heavy",
+            "damage": 54.0,
+            "poise_damage": 60.0,
+            "range": 3.6,
+            "telegraph": 0.9,
+            "hit_window": 0.2,
+            "recovery": 0.8,
+            "cooldown": 4.0,
+            "gcd": 0.9,
+            "weight": 3.0,
+            "heavy": true,
+            "parryable": true
+          }
+        ]
+      }
+    ],
+    "marks": [
+      0,
+      0
+    ],
+    "drops": [
+      "core:item/the_held_note"
+    ],
+    "note": "He drops no marks. There is nothing here he wanted."
+  }
+]

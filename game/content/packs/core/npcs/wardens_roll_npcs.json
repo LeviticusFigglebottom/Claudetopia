@@ -1,0 +1,109 @@
+[
+  {
+    "id": "core:npc/wardens_hesk",
+    "name": "Roll-Keeper Hesk",
+    "home_place": "core:place/wardens_rest",
+    "faction": "core:faction/wardens",
+    "dialogue": "core:dialogue/wardens_q1_hesk",
+    "personality": {
+      "traits": [
+        "pious",
+        "quiet",
+        "humble"
+      ]
+    },
+    "lore": "Keeps the Roll of Names at Wardens' Rest: every settlement in the basin, written and read aloud once a season so that none of them can go quiet. Has ink on three fingers permanently and will tell you which three.",
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:place/wardens_rest",
+        "activity": "work",
+        "spot": "roll_room"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:place/wardens_rest",
+        "activity": "eat",
+        "spot": "hall"
+      },
+      {
+        "days": "all",
+        "hour": 15,
+        "place": "core:place/wardens_rest",
+        "activity": "work",
+        "spot": "roll_room"
+      },
+      {
+        "days": "all",
+        "hour": 23,
+        "place": "core:place/wardens_rest",
+        "activity": "sleep",
+        "spot": "keeper_bed"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/wardens_dole",
+    "name": "Sergeant Dole",
+    "home_place": "core:place/wardens_rest",
+    "faction": "core:faction/wardens",
+    "dialogue": "core:dialogue/wardens_q1_dole",
+    "personality": {
+      "traits": [
+        "brave",
+        "cynical",
+        "proud"
+      ]
+    },
+    "lore": "Twenty-one years a Warden, most of them on the Larkbourne road. Believes the Roll is a tool and not a scripture, which is the kind of opinion that ends careers at the Rest.",
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 8,
+        "place": "core:place/wardens_rest",
+        "activity": "patrol",
+        "spot": "gate"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:place/merrowby",
+        "activity": "socialise",
+        "spot": "tavern"
+      },
+      {
+        "days": "all",
+        "hour": 0.0,
+        "place": "core:place/wardens_rest",
+        "activity": "sleep",
+        "spot": "barracks"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/wardens_ryn",
+    "name": "Ryn Larkbourne",
+    "home_place": "core:place/merrowby",
+    "dialogue": "core:dialogue/wardens_q1_ryn",
+    "personality": {
+      "traits": [
+        "brave",
+        "gossip",
+        "greedy"
+      ]
+    },
+    "no_radiant": true,
+    "lore": "Had a name, a band named after the name, and a stolen mill wheel for a table. Since the ink went through the page, people have begun to forget the face over an evening, and Ryn has begun to notice them doing it.",
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:place/merrowby",
+        "activity": "idle",
+        "spot": "gosling_pit"
+      }
+    ]
+  }
+]

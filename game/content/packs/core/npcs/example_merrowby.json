@@ -1,0 +1,117 @@
+[
+  {
+    "id": "core:npc/example_thatcher_bram", "example": true, "name": "Bram Thatchen", "home_place": "core:place/merrowby",
+    "tags": ["vale", "trade"], "personality": {"traits": ["gossip", "kind", "humble"]},
+    "work_clip": "Work_Hammer",
+    "description": "PLACEHOLDER (delete when the writer stream's Merrowby NPCs land). Thatcher, and therefore on everybody's roof and in everybody's business. Believes the Toll's hum means rain.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "home", "activity": "eat", "spot": "table"},
+      {"days": "workdays", "hour": 7, "place": "core:place/merrowby", "activity": "work", "spot": "roof_row"},
+      {"days": "workdays", "hour": 13, "place": "core:place/merrowby", "activity": "eat", "spot": "inn_bench"},
+      {"days": "workdays", "hour": 14, "place": "core:place/merrowby", "activity": "work", "spot": "roof_row"},
+      {"days": "all", "hour": 18, "place": "core:place/merrowby", "activity": "socialise", "spot": "inn_fire"},
+      {"days": "all", "hour": 22, "place": "home", "activity": "sleep", "spot": "bed"}
+    ]
+  },
+  {
+    "id": "core:npc/example_grocer_nell", "example": true, "name": "Nell Cresswell", "home_place": "core:place/merrowby",
+    "tags": ["vale", "merchant"], "personality": {"traits": ["greedy", "gossip", "proud"]},
+    "merchant": {"stock": "core:table/stock_general", "marks": 240, "buys": ["tool", "material", "misc", "food", "ingredient"]},
+    "work_clip": "Work_Stir",
+    "description": "PLACEHOLDER (delete when the writer stream's Merrowby NPCs land). Keeps the general store on the market square, and a ledger of who has not paid, which she reads aloud when bored.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "home", "activity": "eat", "spot": "table"},
+      {"days": "workdays", "hour": 8, "place": "core:place/merrowby", "activity": "shop", "spot": "market_stall"},
+      {"days": "workdays", "hour": 13, "place": "core:place/merrowby", "activity": "eat", "spot": "market_stall"},
+      {"days": "workdays", "hour": 14, "place": "core:place/merrowby", "activity": "shop", "spot": "market_stall"},
+      {"days": "hushday", "hour": 10, "place": "core:place/tamwick", "activity": "shop", "spot": "cider_press"},
+      {"days": "all", "hour": 19, "place": "core:place/merrowby", "activity": "socialise", "spot": "inn_fire"},
+      {"days": "all", "hour": 22, "place": "home", "activity": "sleep", "spot": "bed"}
+    ]
+  },
+  {
+    "id": "core:npc/example_smith_osric", "example": true, "name": "Osric Pennywort", "home_place": "core:place/merrowby",
+    "tags": ["vale", "merchant"], "personality": {"traits": ["quiet", "generous", "brave"]},
+    "merchant": {"stock": "core:table/stock_smith", "marks": 320, "buys": ["weapon", "armour", "material", "metal", "smithing"]},
+    "work_clip": "Work_Hammer",
+    "description": "PLACEHOLDER (delete when the writer stream's Merrowby NPCs land). Smith with a red door, as is proper. Says ten words a day and four of them are the price.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "home", "activity": "eat", "spot": "table"},
+      {"days": "workdays", "hour": 7, "place": "core:place/merrowby", "activity": "work", "spot": "forge"},
+      {"days": "workdays", "hour": 13, "place": "core:place/merrowby", "activity": "eat", "spot": "forge_step"},
+      {"days": "workdays", "hour": 14, "place": "core:place/merrowby", "activity": "work", "spot": "forge"},
+      {"days": "hushday", "hour": 9, "place": "core:place/merrowby", "activity": "work", "spot": "forge"},
+      {"days": "all", "hour": 20, "place": "home", "activity": "idle", "spot": "doorstep"},
+      {"days": "all", "hour": 22, "place": "home", "activity": "sleep", "spot": "bed"}
+    ]
+  },
+  {
+    "id": "core:npc/example_innkeep_maud", "example": true, "name": "Maud Brambling", "home_place": "core:place/merrowby",
+    "tags": ["vale", "merchant"], "personality": {"traits": ["gossip", "generous", "brave"]},
+    "merchant": {"stock": "core:table/stock_innkeeper", "marks": 280, "buys": ["food", "drink", "ingredient", "fish"]},
+    "work_clip": "Work_Stir",
+    "description": "PLACEHOLDER (delete when the writer stream's Merrowby NPCs land). Keeps the inn whose cellar is the lip of the bell. Pours first and asks after.",
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/merrowby", "activity": "work", "spot": "inn_kitchen"},
+      {"days": "all", "hour": 11, "place": "core:place/merrowby", "activity": "shop", "spot": "inn_bar"},
+      {"days": "all", "hour": 15, "place": "core:place/merrowby", "activity": "eat", "spot": "inn_kitchen"},
+      {"days": "all", "hour": 16, "place": "core:place/merrowby", "activity": "shop", "spot": "inn_bar"},
+      {"days": "all", "hour": 23, "place": "core:place/merrowby", "activity": "sleep", "spot": "inn_room"}
+    ]
+  },
+  {
+    "id": "core:npc/example_herbwife_wren", "example": true, "name": "Wren Tallow", "home_place": "core:place/merrowby",
+    "tags": ["vale", "merchant"], "personality": {"traits": ["pious", "kind", "quiet"]},
+    "merchant": {"stock": "core:table/stock_alchemist", "marks": 190, "buys": ["ingredient", "herb", "alchemy", "consumable"]},
+    "work_clip": "Work_Stir",
+    "description": "PLACEHOLDER (delete when the writer stream's Merrowby NPCs land; the writer's Wren Tallow is the real one). Herbwife who walks the Larkbourne at dawn for watercress.",
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/merrowby", "activity": "work", "spot": "larkbourne_shallows"},
+      {"days": "all", "hour": 9, "place": "core:place/merrowby", "activity": "shop", "spot": "herb_table"},
+      {"days": "all", "hour": 13, "place": "core:place/merrowby", "activity": "eat", "spot": "herb_table"},
+      {"days": "all", "hour": 14, "place": "core:place/merrowby", "activity": "shop", "spot": "herb_table"},
+      {"days": "tollday", "hour": 10, "place": "core:place/cracked_toll", "activity": "pray", "spot": "bell_lip"},
+      {"days": "all", "hour": 21, "place": "home", "activity": "sleep", "spot": "bed"}
+    ]
+  },
+  {
+    "id": "core:npc/example_child_tibb", "example": true, "name": "Tibb", "home_place": "core:place/merrowby",
+    "tags": ["vale", "child"], "personality": {"traits": ["timid", "gossip"]},
+    "description": "PLACEHOLDER (delete when the writer stream's Merrowby NPCs land). Eight years old and the fastest runner in Merrowby, a fact he will tell you unprompted.",
+    "schedule": [
+      {"days": "all", "hour": 7, "place": "home", "activity": "eat", "spot": "table"},
+      {"days": "workdays", "hour": 8, "place": "core:place/merrowby", "activity": "idle", "spot": "green"},
+      {"days": "workdays", "hour": 12, "place": "home", "activity": "eat", "spot": "table"},
+      {"days": "workdays", "hour": 13, "place": "core:place/merrowby", "activity": "idle", "spot": "crater_rim"},
+      {"days": "hushday", "hour": 9, "place": "core:place/merrowby", "activity": "idle", "spot": "crater_rim"},
+      {"days": "all", "hour": 19, "place": "home", "activity": "socialise", "spot": "hearth"},
+      {"days": "all", "hour": 20, "place": "home", "activity": "sleep", "spot": "cot"}
+    ]
+  },
+  {
+    "id": "core:npc/example_dog_gosling", "example": true, "name": "Gosling", "home_place": "core:place/merrowby",
+    "tags": ["vale", "dog", "animal"], "personality": {"traits": ["brave", "kind"]},
+    "description": "PLACEHOLDER (delete when the writer stream's Merrowby NPCs land). The inn's dog. Named for a goose he once lost a fight to, and nobody has let it go.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/merrowby", "activity": "idle", "spot": "inn_door"},
+      {"days": "all", "hour": 11, "place": "core:place/merrowby", "activity": "idle", "spot": "market_square"},
+      {"days": "all", "hour": 17, "place": "core:place/merrowby", "activity": "eat", "spot": "inn_kitchen"},
+      {"days": "all", "hour": 19, "place": "core:place/merrowby", "activity": "idle", "spot": "inn_fire"},
+      {"days": "all", "hour": 23, "place": "core:place/merrowby", "activity": "sleep", "spot": "inn_fire"}
+    ]
+  },
+  {
+    "id": "core:npc/example_reeve_ansel", "example": true, "name": "Ansel Ashdown", "home_place": "core:place/merrowby",
+    "tags": ["vale", "steward"], "personality": {"traits": ["proud", "pious", "generous"]},
+    "description": "PLACEHOLDER (delete when the writer stream's Merrowby NPCs land). Reeve of Merrowby, which means he holds the deeds, the rents and a very great deal of opinion about both.",
+    "schedule": [
+      {"days": "all", "hour": 7, "place": "home", "activity": "eat", "spot": "table"},
+      {"days": "workdays", "hour": 9, "place": "core:place/merrowby", "activity": "work", "spot": "reeve_office"},
+      {"days": "workdays", "hour": 13, "place": "core:place/merrowby", "activity": "eat", "spot": "inn_bench"},
+      {"days": "workdays", "hour": 14, "place": "core:place/merrowby", "activity": "work", "spot": "reeve_office"},
+      {"days": "tollday", "hour": 10, "place": "core:place/merrowby", "activity": "pray", "spot": "green"},
+      {"days": "all", "hour": 19, "place": "core:place/merrowby", "activity": "socialise", "spot": "inn_fire"},
+      {"days": "all", "hour": 22, "place": "home", "activity": "sleep", "spot": "bed"}
+    ]
+  }
+]

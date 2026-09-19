@@ -1,84 +1,424 @@
 [
-  {"id": "core:effect/restore_health", "name": "Restore Health", "kind": "instant", "magnitude_base": 20, "duration_base": 0, "unit": "points", "stat": "health",
-   "potion": "core:item/potion_restore_health", "tags": ["alchemy", "restore"],
-   "description": "Warmth comes back into the blood the way it comes back into a room where someone has just said your name."},
-  {"id": "core:effect/restore_stamina", "name": "Restore Stamina", "kind": "instant", "magnitude_base": 25, "duration_base": 0, "unit": "points", "stat": "stamina",
-   "potion": "core:item/potion_restore_stamina", "tags": ["alchemy", "restore"],
-   "description": "The breath steadies. Chain-bridge runners call it the second wind and swear it comes from Windgate."},
-  {"id": "core:effect/restore_mana", "name": "Restore Mana", "kind": "instant", "magnitude_base": 20, "duration_base": 0, "unit": "points", "stat": "mana",
-   "potion": "core:item/potion_restore_mana", "tags": ["alchemy", "restore"],
-   "description": "Saying-breath returns. The Circle teaches that mana is only the part of your voice the world has not heard yet."},
-  {"id": "core:effect/fortify_vigour", "name": "Fortify Vigour", "kind": "buff", "magnitude_base": 5, "duration_base": 60, "unit": "points",
-   "modifier": {"stat": "vigour", "op": "add", "scale": 1.0},
-   "potion": "core:item/potion_fortify_vigour", "tags": ["alchemy", "fortify"],
-   "description": "The heart beats like a mill-wheel with the sluice open."},
-  {"id": "core:effect/resist_fire", "name": "Resist Fire", "kind": "buff", "magnitude_base": 25, "duration_base": 60, "unit": "percent",
-   "modifier": {"stat": "resist_fire", "op": "add", "scale": 0.01},
-   "enchant": true, "enchant_slots": ["armour", "shield", "jewellery"], "charge_cost": 0, "mote_cost": 2,
-   "potion": "core:item/potion_resist_fire", "tags": ["alchemy", "resist", "enchantment"],
-   "description": "Heat slides off as rain slides off a Tolling knight's grey cloak. The Order wrote this note into their rings before the Ash Winter."},
-  {"id": "core:effect/damage_health", "name": "Damage Health", "kind": "harm", "magnitude_base": 5, "duration_base": 8, "unit": "per_second", "status": "poisoned",
-   "potion": "core:item/potion_damage_health", "tags": ["alchemy", "poison"],
-   "description": "Poison. In the Vale it is not sold; it is found, in the cellars of people who were owed something."},
-  {"id": "core:effect/invisibility", "name": "Invisibility", "kind": "buff", "magnitude_base": 1, "duration_base": 20, "unit": "flag", "status": "invisible",
-   "potion": "core:item/potion_invisibility", "tags": ["alchemy", "hush"],
-   "description": "You do not vanish. You become the kind of thing nobody mentions, which in Wickmere is nearly the same."},
-  {"id": "core:effect/night_eye", "name": "Night Eye", "kind": "buff", "magnitude_base": 1, "duration_base": 60, "unit": "flag", "status": "night_eye",
-   "potion": "core:item/potion_night_eye", "tags": ["alchemy"],
-   "description": "The dark goes eel-grey and legible. Gullhithe fishers take it when the Lamp's beam swings away."},
-  {"id": "core:effect/fortify_speech", "name": "Fortify Speech", "kind": "buff", "magnitude_base": 15, "duration_base": 90, "unit": "points",
-   "modifier": {"stat": "skill_speech", "op": "add", "scale": 1.0},
-   "potion": "core:item/potion_fortify_speech", "tags": ["alchemy", "fortify"],
-   "description": "Everything you say sounds like it was already agreed. The Tallymen call it the Charter's cousin."},
-  {"id": "core:effect/cure_poison", "name": "Cure Poison", "kind": "instant", "magnitude_base": 1, "duration_base": 0, "unit": "flag", "cures": ["poisoned"],
-   "potion": "core:item/potion_cure_poison", "tags": ["alchemy", "cure"],
-   "description": "Sharp enough to make you cough the wrong thing out."},
-  {"id": "core:effect/waterbreathing", "name": "Waterbreathing", "kind": "buff", "magnitude_base": 1, "duration_base": 60, "unit": "flag", "status": "waterbreathing",
-   "potion": "core:item/potion_waterbreathing", "tags": ["alchemy"],
-   "description": "Reedfolk divers use it to visit the drowned and come back. The coming back is the point."},
-  {"id": "core:effect/slow", "name": "Slow", "kind": "harm", "magnitude_base": 30, "duration_base": 8, "unit": "percent", "status": "slowed",
-   "modifier": {"stat": "move_speed", "op": "mult", "scale": -0.01},
-   "potion": "core:item/potion_slow", "tags": ["alchemy", "poison"],
-   "description": "The legs go heavy as marsh-boots. Poachers put it on arrows so the hart can be walked down."},
-  {"id": "core:effect/regen_health", "name": "Regenerate Health", "kind": "buff", "magnitude_base": 1, "duration_base": 30, "unit": "per_second",
-   "modifier": {"stat": "health_regen", "op": "add", "scale": 1.0},
-   "potion": "core:item/potion_regen_health", "tags": ["alchemy", "restore"],
-   "description": "Slow mending, the kind a hearth does. Woodfolk hermits live on this and silence."},
-  {"id": "core:effect/fortify_armour", "name": "Fortify Armour", "kind": "buff", "magnitude_base": 15, "duration_base": 60, "unit": "points",
-   "modifier": {"stat": "armour", "op": "add", "scale": 1.0},
-   "enchant": true, "enchant_slots": ["armour", "shield"], "charge_cost": 0, "mote_cost": 2,
-   "potion": "core:item/potion_fortify_armour", "tags": ["alchemy", "fortify", "enchantment"],
-   "description": "The skin takes a blow like drystone takes wind. Clan warriors drink it before a blood-price is settled."},
-  {"id": "core:effect/ember_burst", "name": "Ember Burst", "kind": "harm", "magnitude_base": 8, "duration_base": 3, "unit": "points",
-   "enchant": true, "enchant_slots": ["weapon"], "charge_cost": 3, "mote_cost": 2,
-   "on_hit": {"damage_type": "fire", "status": "burning"},
-   "tags": ["enchantment", "kindling"],
-   "description": "A Kindling word written into an edge. Each blow spends a little of a slain thing's last warmth and gives it to the next."},
-  {"id": "core:effect/fortify_stamina", "name": "Fortify Stamina", "kind": "buff", "magnitude_base": 20, "duration_base": 60, "unit": "points",
-   "modifier": {"stat": "max_stamina", "op": "add", "scale": 1.0},
-   "potion": "core:item/potion_fortify_stamina", "tags": ["alchemy", "fortify"],
-   "description": "The breath goes deeper for an hour, as it does on the high moor once you stop noticing the cold."},
-  {"id": "core:effect/damage_stamina", "name": "Damage Stamina", "kind": "harm", "magnitude_base": 15, "duration_base": 0, "unit": "points", "stat": "stamina",
-   "potion": "core:item/potion_damage_stamina", "tags": ["alchemy", "poison"],
-   "description": "The wind goes out of a body all at once. The Woodfolk's answer to a poacher who runs."},
-  {"id": "core:effect/fortify_sneak", "name": "Fortify Sneak", "kind": "buff", "magnitude_base": 15, "duration_base": 60, "unit": "points",
-   "modifier": {"stat": "skill_sneak", "op": "add", "scale": 1.0},
-   "potion": "core:item/potion_fortify_sneak", "tags": ["alchemy", "fortify", "hush"],
-   "description": "The boards stop creaking, or seem to. The Quiet Hands keep the recipe in the Unsaid Ledger."},
-  {"id": "core:effect/resist_frost", "name": "Resist Frost", "kind": "buff", "magnitude_base": 25, "duration_base": 60, "unit": "percent",
-   "modifier": {"stat": "resist_frost", "op": "add", "scale": 0.01},
-   "potion": "core:item/potion_resist_frost", "tags": ["alchemy", "resist"],
-   "description": "Clan-runners drink it at Windgate and go up into the snow in their shirts."},
-  {"id": "core:effect/silence", "name": "Silence", "kind": "harm", "magnitude_base": 1, "duration_base": 6, "unit": "flag", "status": "silenced",
-   "potion": "core:item/potion_silence", "tags": ["alchemy", "hush", "poison"],
-   "description": "The Saying will not come. The Circle forbids this brew and keeps a cellar of it."},
-  {"id": "core:effect/fortify_speed", "name": "Fortify Speed", "kind": "buff", "magnitude_base": 10, "duration_base": 30, "unit": "percent",
-   "modifier": {"stat": "move_speed", "op": "mult", "scale": 0.01},
-   "potion": "core:item/potion_fortify_speed", "tags": ["alchemy", "fortify"],
-   "description": "The legs go light and the road goes short."},
-  {"id": "core:effect/cold_bite", "name": "Cold Bite", "kind": "harm", "magnitude_base": 6, "duration_base": 4, "unit": "points",
-   "enchant": true, "enchant_slots": ["weapon"], "charge_cost": 3, "mote_cost": 2,
-   "on_hit": {"damage_type": "frost", "status": "chilled"},
-   "tags": ["enchantment", "hush"],
-   "description": "A Hush word written into an edge. What it cuts goes quiet and slow, as things do at the Hushline."}
+  {
+    "id": "core:effect/restore_health",
+    "name": "Restore Health",
+    "kind": "instant",
+    "magnitude_base": 20,
+    "duration_base": 0,
+    "unit": "points",
+    "stat": "health",
+    "potion": "core:item/potion_restore_health",
+    "tags": [
+      "alchemy",
+      "restore"
+    ],
+    "description": "Warmth comes back into the blood the way it comes back into a room where someone has just said your name."
+  },
+  {
+    "id": "core:effect/restore_stamina",
+    "name": "Restore Stamina",
+    "kind": "instant",
+    "magnitude_base": 25,
+    "duration_base": 0,
+    "unit": "points",
+    "stat": "stamina",
+    "potion": "core:item/potion_restore_stamina",
+    "tags": [
+      "alchemy",
+      "restore"
+    ],
+    "description": "The breath steadies. Chain-bridge runners call it the second wind and swear it comes from Windgate."
+  },
+  {
+    "id": "core:effect/restore_mana",
+    "name": "Restore Mana",
+    "kind": "instant",
+    "magnitude_base": 20,
+    "duration_base": 0,
+    "unit": "points",
+    "stat": "mana",
+    "potion": "core:item/potion_restore_mana",
+    "tags": [
+      "alchemy",
+      "restore"
+    ],
+    "description": "Saying-breath returns. The Circle teaches that mana is only the part of your voice the world has not heard yet."
+  },
+  {
+    "id": "core:effect/fortify_vigour",
+    "name": "Fortify Vigour",
+    "kind": "buff",
+    "magnitude_base": 5,
+    "duration_base": 60,
+    "unit": "points",
+    "modifier": {
+      "stat": "vigour",
+      "op": "add",
+      "scale": 1.0
+    },
+    "potion": "core:item/potion_fortify_vigour",
+    "tags": [
+      "alchemy",
+      "fortify"
+    ],
+    "description": "The heart beats like a mill-wheel with the sluice open."
+  },
+  {
+    "id": "core:effect/resist_fire",
+    "name": "Resist Fire",
+    "kind": "buff",
+    "magnitude_base": 25,
+    "duration_base": 60,
+    "unit": "percent",
+    "modifier": {
+      "stat": "resist_fire",
+      "op": "add",
+      "scale": 0.01
+    },
+    "enchant": true,
+    "enchant_slots": [
+      "armour",
+      "shield",
+      "jewellery"
+    ],
+    "charge_cost": 0,
+    "mote_cost": 2,
+    "potion": "core:item/potion_resist_fire",
+    "tags": [
+      "alchemy",
+      "resist",
+      "enchantment"
+    ],
+    "description": "Heat slides off as rain slides off a Tolling knight's grey cloak. The Order wrote this note into their rings before the Ash Winter."
+  },
+  {
+    "id": "core:effect/damage_health",
+    "name": "Damage Health",
+    "kind": "harm",
+    "magnitude_base": 5,
+    "duration_base": 8,
+    "unit": "per_second",
+    "status": "poisoned",
+    "potion": "core:item/potion_damage_health",
+    "tags": [
+      "alchemy",
+      "poison"
+    ],
+    "description": "Poison. In the Vale it is not sold; it is found, in the cellars of people who were owed something."
+  },
+  {
+    "id": "core:effect/invisibility",
+    "name": "Invisibility",
+    "kind": "buff",
+    "magnitude_base": 1,
+    "duration_base": 20,
+    "unit": "flag",
+    "status": "invisible",
+    "potion": "core:item/potion_invisibility",
+    "tags": [
+      "alchemy",
+      "hush"
+    ],
+    "description": "You do not vanish. You become the kind of thing nobody mentions, which in Wickmere is nearly the same."
+  },
+  {
+    "id": "core:effect/night_eye",
+    "name": "Night Eye",
+    "kind": "buff",
+    "magnitude_base": 1,
+    "duration_base": 60,
+    "unit": "flag",
+    "status": "night_eye",
+    "potion": "core:item/potion_night_eye",
+    "tags": [
+      "alchemy"
+    ],
+    "description": "The dark goes eel-grey and legible. Gullhithe fishers take it when the Lamp's beam swings away."
+  },
+  {
+    "id": "core:effect/fortify_speech",
+    "name": "Fortify Speech",
+    "kind": "buff",
+    "magnitude_base": 15,
+    "duration_base": 90,
+    "unit": "points",
+    "modifier": {
+      "stat": "skill_speech",
+      "op": "add",
+      "scale": 1.0
+    },
+    "potion": "core:item/potion_fortify_speech",
+    "tags": [
+      "alchemy",
+      "fortify"
+    ],
+    "description": "Everything you say sounds like it was already agreed. The Tallymen call it the Charter's cousin."
+  },
+  {
+    "id": "core:effect/cure_poison",
+    "name": "Cure Poison",
+    "kind": "instant",
+    "magnitude_base": 1,
+    "duration_base": 0,
+    "unit": "flag",
+    "cures": [
+      "poisoned"
+    ],
+    "potion": "core:item/potion_cure_poison",
+    "tags": [
+      "alchemy",
+      "cure"
+    ],
+    "description": "Sharp enough to make you cough the wrong thing out."
+  },
+  {
+    "id": "core:effect/waterbreathing",
+    "name": "Waterbreathing",
+    "kind": "buff",
+    "magnitude_base": 1,
+    "duration_base": 60,
+    "unit": "flag",
+    "status": "waterbreathing",
+    "potion": "core:item/potion_waterbreathing",
+    "tags": [
+      "alchemy"
+    ],
+    "description": "Reedfolk divers use it to visit the drowned and come back. The coming back is the point."
+  },
+  {
+    "id": "core:effect/slow",
+    "name": "Slow",
+    "kind": "harm",
+    "magnitude_base": 30,
+    "duration_base": 8,
+    "unit": "percent",
+    "status": "slowed",
+    "modifier": {
+      "stat": "move_speed",
+      "op": "mult",
+      "scale": -0.01
+    },
+    "potion": "core:item/potion_slow",
+    "tags": [
+      "alchemy",
+      "poison"
+    ],
+    "description": "The legs go heavy as marsh-boots. Poachers put it on arrows so the hart can be walked down."
+  },
+  {
+    "id": "core:effect/regen_health",
+    "name": "Regenerate Health",
+    "kind": "buff",
+    "magnitude_base": 1,
+    "duration_base": 30,
+    "unit": "per_second",
+    "modifier": {
+      "stat": "health_regen",
+      "op": "add",
+      "scale": 1.0
+    },
+    "potion": "core:item/potion_regen_health",
+    "tags": [
+      "alchemy",
+      "restore"
+    ],
+    "description": "Slow mending, the kind a hearth does. Woodfolk hermits live on this and silence."
+  },
+  {
+    "id": "core:effect/fortify_armour",
+    "name": "Fortify Armour",
+    "kind": "buff",
+    "magnitude_base": 15,
+    "duration_base": 60,
+    "unit": "points",
+    "modifier": {
+      "stat": "armour",
+      "op": "add",
+      "scale": 1.0
+    },
+    "enchant": true,
+    "enchant_slots": [
+      "armour",
+      "shield"
+    ],
+    "charge_cost": 0,
+    "mote_cost": 2,
+    "potion": "core:item/potion_fortify_armour",
+    "tags": [
+      "alchemy",
+      "fortify",
+      "enchantment"
+    ],
+    "description": "The skin takes a blow like drystone takes wind. Clan warriors drink it before a blood-price is settled."
+  },
+  {
+    "id": "core:effect/ember_burst",
+    "name": "Ember Burst",
+    "kind": "harm",
+    "magnitude_base": 8,
+    "duration_base": 3,
+    "unit": "points",
+    "enchant": true,
+    "enchant_slots": [
+      "weapon"
+    ],
+    "charge_cost": 3,
+    "mote_cost": 2,
+    "on_hit": {
+      "damage_type": "fire",
+      "status": "burning"
+    },
+    "tags": [
+      "enchantment",
+      "kindling"
+    ],
+    "description": "A Kindling word written into an edge. Each blow spends a little of a slain thing's last warmth and gives it to the next."
+  },
+  {
+    "id": "core:effect/fortify_stamina",
+    "name": "Fortify Stamina",
+    "kind": "buff",
+    "magnitude_base": 20,
+    "duration_base": 60,
+    "unit": "points",
+    "modifier": {
+      "stat": "max_stamina",
+      "op": "add",
+      "scale": 1.0
+    },
+    "potion": "core:item/potion_fortify_stamina",
+    "tags": [
+      "alchemy",
+      "fortify"
+    ],
+    "description": "The breath goes deeper for an hour, as it does on the high moor once you stop noticing the cold."
+  },
+  {
+    "id": "core:effect/damage_stamina",
+    "name": "Damage Stamina",
+    "kind": "harm",
+    "magnitude_base": 15,
+    "duration_base": 0,
+    "unit": "points",
+    "stat": "stamina",
+    "potion": "core:item/potion_damage_stamina",
+    "tags": [
+      "alchemy",
+      "poison"
+    ],
+    "description": "The wind goes out of a body all at once. The Woodfolk's answer to a poacher who runs."
+  },
+  {
+    "id": "core:effect/fortify_sneak",
+    "name": "Fortify Sneak",
+    "kind": "buff",
+    "magnitude_base": 15,
+    "duration_base": 60,
+    "unit": "points",
+    "modifier": {
+      "stat": "skill_sneak",
+      "op": "add",
+      "scale": 1.0
+    },
+    "potion": "core:item/potion_fortify_sneak",
+    "tags": [
+      "alchemy",
+      "fortify",
+      "hush"
+    ],
+    "description": "The boards stop creaking, or seem to. The Quiet Hands keep the recipe in the Unsaid Ledger."
+  },
+  {
+    "id": "core:effect/resist_frost",
+    "name": "Resist Frost",
+    "kind": "buff",
+    "magnitude_base": 25,
+    "duration_base": 60,
+    "unit": "percent",
+    "modifier": {
+      "stat": "resist_frost",
+      "op": "add",
+      "scale": 0.01
+    },
+    "potion": "core:item/potion_resist_frost",
+    "tags": [
+      "alchemy",
+      "resist"
+    ],
+    "description": "Clan-runners drink it at Windgate and go up into the snow in their shirts."
+  },
+  {
+    "id": "core:effect/silence",
+    "name": "Silence",
+    "kind": "harm",
+    "magnitude_base": 1,
+    "duration_base": 6,
+    "unit": "flag",
+    "status": "silenced",
+    "potion": "core:item/potion_silence",
+    "tags": [
+      "alchemy",
+      "hush",
+      "poison"
+    ],
+    "description": "The Saying will not come. The Circle forbids this brew and keeps a cellar of it."
+  },
+  {
+    "id": "core:effect/fortify_speed",
+    "name": "Fortify Speed",
+    "kind": "buff",
+    "magnitude_base": 10,
+    "duration_base": 30,
+    "unit": "percent",
+    "modifier": {
+      "stat": "move_speed",
+      "op": "mult",
+      "scale": 0.01
+    },
+    "potion": "core:item/potion_fortify_speed",
+    "tags": [
+      "alchemy",
+      "fortify"
+    ],
+    "description": "The legs go light and the road goes short."
+  },
+  {
+    "id": "core:effect/cold_bite",
+    "name": "Cold Bite",
+    "kind": "harm",
+    "magnitude_base": 6,
+    "duration_base": 4,
+    "unit": "points",
+    "enchant": true,
+    "enchant_slots": [
+      "weapon"
+    ],
+    "charge_cost": 3,
+    "mote_cost": 2,
+    "on_hit": {
+      "damage_type": "frost",
+      "status": "chilled"
+    },
+    "tags": [
+      "enchantment",
+      "hush"
+    ],
+    "description": "A Hush word written into an edge. What it cuts goes quiet and slow, as things do at the Hushline."
+  },
+  {
+    "id": "core:effect/resist_cold",
+    "name": "Resist Cold",
+    "kind": "buff",
+    "magnitude_base": 20.0,
+    "duration_base": 90.0,
+    "description": "Warmth that stays where it is put. A clan remedy: what the Heights take, the Heights also teach you to keep."
+  },
+  {
+    "id": "core:effect/drain_warmth",
+    "name": "Drain Warmth",
+    "kind": "harm",
+    "magnitude_base": 8.0,
+    "duration_base": 20.0,
+    "description": "Cold that comes from inward, as if something had been taken out and not put back. The Frostmother's own, in a smaller hand."
+  }
 ]
