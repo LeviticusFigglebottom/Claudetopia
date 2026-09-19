@@ -110,6 +110,9 @@ static func nearest_place(pos: Vector3, max_distance_m: float = INF) -> Dictiona
 static func law_of_region(region_id: String) -> Dictionary:
 	var r := ContentDB.get_or_empty(region_id)
 	var fid := str(r.get("law_faction", ""))
+	var from_factions: Variant = Peers.law_faction_for_region(region_id)
+	if from_factions != null:
+		fid = str(from_factions)
 	if fid.is_empty():
 		return {"faction_id": "", "law": {"style": "none", "region": region_id, "arrest_threshold": 0, "fine_multiplier": 0.0, "jail_days_per_100": 0, "jail_place": ""}}
 	var f := ContentDB.get_or_empty(fid)
