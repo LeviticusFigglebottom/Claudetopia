@@ -35,6 +35,7 @@ uniform float opacity_deep = 0.97;
 uniform float roughness_water = 0.10;
 uniform float specular_boost = 0.32;
 uniform float distance_calm_m = 260.0;   // ripples flatten with distance instead of aliasing
+uniform float rim_strength = 0.5;      // how much sky the grazing-angle rim may add
 uniform bool flow_along_uv = false;    // rivers: run the waves down the ribbon's own UV
 uniform float flow_speed = 0.35;       // metres of wave travel per second, downstream
 
@@ -100,8 +101,13 @@ void fragment() {
 	foam *= 0.85;
 
 	vec3 view = normalize(VIEW);
-	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), view), 0.0, 1.0), 4.0);
-	vec3 sky_rim = mix(base, region_tint.rgb * vec3(0.72, 0.82, 0.92), clamp(fres, 0.0, 1.0));
+	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), view), 0.0, 1.0), 5.0);
+	// Looking across a big lake from a hilltop, every texel is at a grazing angle, so an
+	// uncapped Fresnel rim turns the whole Mere into a white sheet that reads as snow. The rim
+	// is capped, damped with distance, and carries the water's own colour into the sky tint.
+	fres = clamp(fres, 0.0, 1.0) * mix(rim_strength, rim_strength * 0.5, far);
+	vec3 rim = mix(region_tint.rgb * vec3(0.46, 0.60, 0.74), base, 0.3);
+	vec3 sky_rim = mix(base, rim, fres);
 
 	ALBEDO = mix(sky_rim, foam_colour.rgb, foam);
 	ROUGHNESS = clamp(roughness_water + foam * 0.55 + (1.0 - depth_t) * 0.10 + far * 0.12, 0.02, 1.0);

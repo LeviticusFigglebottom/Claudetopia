@@ -91,7 +91,7 @@ func _setup_terrain() -> void:
 	if mat:
 		mat.set("world_background", 1)          # FLAT: the world keeps going past the regions
 		mat.set("auto_shader", false)
-		mat.call("set_shader_param", "blend_sharpness", 0.82)
+		mat.call("set_shader_param", "blend_sharpness", 0.62)
 		mat.call("set_shader_param", "enable_macro_variation", true)
 		mat.call("set_shader_param", "macro_variation1", Color(0.95, 0.97, 0.91))
 		mat.call("set_shader_param", "macro_variation2", Color(0.92, 0.90, 0.87))

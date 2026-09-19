@@ -25,17 +25,17 @@ const VERTEX_SPACING := 2.0
 ## `roughness_mod` nudges the material's roughness (the fused Oroth stone would otherwise be
 ## a mirror; ash and lake bed want the opposite).
 const SLOTS: Array = [
-	{"name": "vale_grass", "tile_m": 2.6, "value": 0.46, "roughness_mod": 0.0},
+	{"name": "vale_grass", "tile_m": 2.6, "value": 0.42, "roughness_mod": 0.0},
 	{"name": "chalk", "tile_m": 3.0, "value": 0.42, "roughness_mod": 0.0},
-	{"name": "dirt_path", "tile_m": 2.8, "value": 0.53, "roughness_mod": 0.0},
+	{"name": "dirt_path", "tile_m": 2.8, "value": 0.45, "roughness_mod": 0.0},
 	{"name": "mud", "tile_m": 2.4, "value": 0.56, "roughness_mod": -0.05},
 	{"name": "peat", "tile_m": 2.6, "value": 0.58, "roughness_mod": 0.0},
-	{"name": "forest_floor", "tile_m": 2.8, "value": 0.46, "roughness_mod": 0.0},
+	{"name": "forest_floor", "tile_m": 2.8, "value": 0.50, "roughness_mod": 0.0},
 	{"name": "moss", "tile_m": 1.8, "value": 0.44, "roughness_mod": 0.0},
-	{"name": "granite", "tile_m": 3.4, "value": 0.54, "roughness_mod": 0.0},
+	{"name": "granite", "tile_m": 3.4, "value": 0.58, "roughness_mod": 0.0},
 	{"name": "limestone", "tile_m": 3.6, "value": 0.40, "roughness_mod": 0.0},
-	{"name": "scree", "tile_m": 2.4, "value": 0.44, "roughness_mod": 0.0},
-	{"name": "snow", "tile_m": 3.2, "value": 0.62, "roughness_mod": -0.1},
+	{"name": "scree", "tile_m": 2.4, "value": 0.50, "roughness_mod": 0.0},
+	{"name": "snow", "tile_m": 3.2, "value": 0.58, "roughness_mod": 0.18},
 	{"name": "heather", "tile_m": 2.2, "value": 0.51, "roughness_mod": 0.0},
 	{"name": "ash_soil", "tile_m": 2.6, "value": 0.45, "roughness_mod": 0.05},
 	{"name": "grey_grass", "tile_m": 2.4, "value": 0.46, "roughness_mod": 0.0},
@@ -43,7 +43,7 @@ const SLOTS: Array = [
 	{"name": "shingle", "tile_m": 2.0, "value": 0.51, "roughness_mod": 0.0},
 	{"name": "cobbles", "tile_m": 2.6, "value": 0.53, "roughness_mod": 0.0},
 	{"name": "barley", "tile_m": 2.4, "value": 0.49, "roughness_mod": 0.0},
-	{"name": "orchard_grass", "tile_m": 2.4, "value": 0.47, "roughness_mod": 0.0},
+	{"name": "orchard_grass", "tile_m": 2.4, "value": 0.44, "roughness_mod": 0.0},
 	{"name": "lake_bed", "tile_m": 2.8, "value": 0.53, "roughness_mod": 0.1},
 	{"name": "sand_flats", "tile_m": 3.0, "value": 0.50, "roughness_mod": 0.0},
 ]
@@ -205,7 +205,7 @@ func _configure_material(mat: Object) -> void:
 	mat.set("dual_scaling", false)
 	mat.set("texture_filtering", 0)           # linear
 	mat.set("show_checkered", false)
-	mat.call("set_shader_param", "blend_sharpness", 0.82)
+	mat.call("set_shader_param", "blend_sharpness", 0.62)
 	mat.call("set_shader_param", "enable_macro_variation", true)
 	mat.call("set_shader_param", "macro_variation1", Color(0.94, 0.96, 0.90))
 	mat.call("set_shader_param", "macro_variation2", Color(0.92, 0.90, 0.86))

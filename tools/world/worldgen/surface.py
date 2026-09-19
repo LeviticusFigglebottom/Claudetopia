@@ -133,12 +133,13 @@ def _weights(ctx: SurfaceContext):
 
     # --- Hearthvale: chalk downs, barley, orchards -------------------------------------
     yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat) \
-        + basin * (0.30 + 0.45 * ctx.patch(410, 60, 300)) * (1.0 - 0.5 * shore_band)
+        + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band)
     yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(70.0, 105.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * smoothstep(-400.0, -1200.0, ctx.Z)
     yield SLOTS["barley"], downs * 1.25 * ctx.patch(402, 90, 380) ** 2 * flat * dry * (1.0 - smoothstep(75.0, 95.0, H))
     yield SLOTS["orchard_grass"], downs * 1.25 * ctx.near_place({"tamwick", "merrowby"}, 210.0) * flat \
-        + basin * 0.7 * ctx.near_place({"gullhithe"}, 170.0) * flat
+        + basin * (0.7 * ctx.near_place({"gullhithe"}, 170.0) * flat
+                   + 0.45 * ctx.patch(413, 45, 210) ** 2 * flat)
 
     # --- Brightwater: the Mere, its shingle shores, the black island -------------------
     under_water = ctx.water.astype(np.float32)
@@ -173,7 +174,7 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["scree"], karst * (1.9 * steep + 1.1 * smoothstep(0.55, 1.1, s) * smoothstep(250.0, 420.0, H))
     yield SLOTS["heather"], karst * 2.1 * flat * ctx.patch(407, 70, 300) ** 0.8 * smoothstep(110.0, 210.0, H) \
         * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(78.0, 98.0, H) \
-        + basin * 0.5 * ctx.patch(407, 70, 300) ** 2 * smoothstep(20.0, 45.0, H)
+        + basin * 0.75 * ctx.patch(407, 70, 300) ** 1.6 * smoothstep(16.0, 40.0, H)
     yield SLOTS["snow"], 2.6 * smoothstep(SNOW_LINE - 40.0, SNOW_LINE + 70.0, H) * (1.0 - 0.6 * verysteep)
 
     # --- Cinderlea: ash and grey grass --------------------------------------------------
@@ -182,21 +183,24 @@ def _weights(ctx: SurfaceContext):
 
     # --- roads everywhere ---------------------------------------------------------------
     yield SLOTS["dirt_path"], 3.0 * ctx.on_road * (1.0 - ctx.town) + 1.1 * ctx.near_road * (1.0 - ctx.town) \
-        + 1.4 * ctx.pad * (1.0 - ctx.town) * (1.0 - steep) * ctx.patch(409, 30, 120)
+        + 1.4 * ctx.pad * (1.0 - ctx.town) * (1.0 - steep) * ctx.patch(409, 30, 120) \
+        + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.72, 0.0, 1.0) * 3.0 * (1.0 - flat * 0.4)
 
 
-def control_maps(ctx: SurfaceContext, blend_sharpness: float = 2.6):
+def control_maps(ctx: SurfaceContext, blend_sharpness: float = 1.9):
     """base id, overlay id and blend (0-255) per texel, from the two strongest materials."""
     n = ctx.n
     best = np.zeros((n, n), dtype=np.float32)
     second = np.zeros((n, n), dtype=np.float32)
     base = np.zeros((n, n), dtype=np.uint8)
     overlay = np.zeros((n, n), dtype=np.uint8)
-    jitter_scale = 0.14
+    jitter_scale = 0.22
     for slot, w in _weights(ctx):
         w = np.asarray(w, dtype=np.float32)
-        # three shared jitter fields (one per slot would cost seconds and look the same)
-        w = w * (1.0 + jitter_scale * (ctx.patch(500 + (slot % 3), 22, 90) - 0.5))
+        # three shared jitter fields at two scales: material borders should wander and fray,
+        # not step along the texel grid (one field per slot would cost seconds and look the same)
+        w = w * (1.0 + jitter_scale * (ctx.patch(500 + (slot % 3), 22, 90) - 0.5)
+                 + 0.5 * jitter_scale * (ctx.patch(510 + (slot % 3), 6, 26) - 0.5))
         is_best = w > best
         is_second = (~is_best) & (w > second)
         # the old best slides down into second place; a mid-ranking slot takes second only

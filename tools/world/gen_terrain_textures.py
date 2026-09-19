@@ -395,13 +395,13 @@ RECIPES = {"grass": mat_grass, "soil": mat_soil, "rock": mat_rock, "pebbles": ma
 
 # The 21 slots of docs/CONTRACTS.md section 5, in id order.
 MATERIALS = {
-    "vale_grass": {"recipe": "grass", "tile_m": 2.6, "colors": ["#3f6a2c", "#5f8a3c", "#79a24a", "#9bb358"],
-                   "tip": "#b6c45e", "blades": 3000, "flowers": ("#e8e2b0", 130), "angle": 35.0},
+    "vale_grass": {"recipe": "grass", "tile_m": 2.6, "colors": ["#43613a", "#5b7c46", "#6f8f52", "#88a05e"],
+                   "tip": "#9fae66", "blades": 3000, "flowers": ("#ded8b0", 130), "angle": 35.0},
     "chalk": {"recipe": "soil", "tile_m": 3.0, "colors": ["#b6b09c", "#cbc5b1", "#dcd6c2", "#e9e3d2"],
               "grit": 1200, "grit_colour": "#fbf8ee", "cracks": 0.4, "crack_cells": 6, "crack_seam": 0.035, "crack_warp": 0.1,
               "rough": 0.84, "normal_strength": 1.6},
-    "dirt_path": {"recipe": "soil", "tile_m": 2.8, "colors": ["#5a452e", "#6d5636", "#836a44", "#9a8055"],
-                  "grit": 1500, "grit_colour": "#a89170", "cracks": 0.25, "rough": 0.9},
+    "dirt_path": {"recipe": "soil", "tile_m": 2.8, "colors": ["#4e4436", "#5e5241", "#70634e", "#84755d"],
+                  "grit": 1500, "grit_colour": "#93856c", "cracks": 0.25, "rough": 0.9},
     "mud": {"recipe": "soil", "tile_m": 2.4, "colors": ["#2f261c", "#423526", "#584634", "#6b563f"],
             "grit": 500, "grit_colour": "#75604a", "cracks": 0.75, "crack_cells": 8, "crack_seam": 0.045,
             "crack_warp": 0.12, "rough": 0.6, "normal_strength": 2.2},
@@ -444,8 +444,8 @@ MATERIALS = {
     "barley": {"recipe": "grass", "tile_m": 2.4, "colors": ["#8a7a34", "#a8963f", "#c2ab4c", "#d8c05c"],
                "tip": "#efd97a", "blades": 3600, "blade_len": 0.11, "blade_w": 0.009, "angle": 80.0,
                "normal_strength": 1.7},
-    "orchard_grass": {"recipe": "grass", "tile_m": 2.4, "colors": ["#3b6a2a", "#548a38", "#6da045", "#8ab857"],
-                      "tip": "#a8c85f", "blades": 3400, "flowers": ("#e8d8a8", 220), "angle": 20.0},
+    "orchard_grass": {"recipe": "grass", "tile_m": 2.4, "colors": ["#3f6236", "#537c42", "#688f4e", "#7fa25c"],
+                      "tip": "#9dba62", "blades": 3400, "flowers": ("#ded0a4", 220), "angle": 20.0},
     "lake_bed": {"recipe": "soil", "tile_m": 2.8, "colors": ["#24312e", "#33433d", "#43554c", "#55675b"],
                  "grit": 1100, "grit_colour": "#6b7a6a", "cracks": 0.1, "rough": 0.45,
                  "normal_strength": 1.5},
