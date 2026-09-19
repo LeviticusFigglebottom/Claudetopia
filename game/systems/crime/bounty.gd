@@ -83,13 +83,18 @@ func report_crime(crime: Dictionary) -> Dictionary:
 	return commit(kind, pos, opts)
 
 
-## Pays the fine for a faction's bounty from the player's marks and clears it.
+## Pays the fine for a faction's bounty from the player's marks and clears it. Ill-feeling in
+## a lawless region cannot be paid off: there is nobody to pay, and it wears away by itself.
 func pay_bounty(faction_id: String, payer: Object = null) -> bool:
 	var t := total(faction_id)
 	if t <= 0:
 		return true
 	var law: Dictionary = law_for_key(faction_id)["law"]
+	if not Crimes.style_is_lawful(str(law.get("style", "none"))):
+		return false
 	var due := Crimes.fine(t, float(law.get("fine_multiplier", 1.0)))
+	if due <= 0:
+		return false
 	if payer == null:
 		payer = Peers.player()
 	if not Purse.pay(payer, due):
@@ -229,7 +234,7 @@ func commit(kind: String, position: Vector3, opts: Dictionary = {}) -> Dictionar
 		var near := WorldProbe.nearest_place(position, PLACE_SEARCH_M)
 		place_id = str(near.get("id", ""))
 	crime["place"] = place_id
-	var witnesses := evaluate_witnesses(crime, opts.get("witnesses", null))
+	var witnesses := evaluate_witnesses(crime, opts.get("witnesses", null), opts.get("extra_witnesses", []))
 	var ids: Array = []
 	for w in witnesses:
 		ids.append(w["npc_id"])
@@ -252,14 +257,23 @@ func commit(kind: String, position: Vector3, opts: Dictionary = {}) -> Dictionar
 
 ## Witness descriptors {npc_id, detection, line_of_sight, is_guard, reaction, place_id, alive}
 ## from explicit dicts or from NPC nodes exposing `detection` and `can_see_point(pos)`.
-func evaluate_witnesses(crime: Dictionary, candidates: Variant = null) -> Array[Dictionary]:
+## `candidates` replaces the default scan of the "npc" group; `extra` is added to it, for a
+## witness who saw it whatever their meter says (the victim of a fumbled pickpocket).
+func evaluate_witnesses(crime: Dictionary, candidates: Variant = null, extra: Array = []) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
+	# Built element by element: `get_nodes_in_group` hands back an Array[Node], which would
+	# silently refuse the Dictionary descriptors in `extra`.
 	var list: Array = []
 	if candidates == null:
 		if is_inside_tree():
-			list = get_tree().get_nodes_in_group("npc")
+			for n in get_tree().get_nodes_in_group("npc"):
+				list.append(n)
 	else:
-		list = candidates
+		for c in candidates:
+			list.append(c)
+	for e in extra:
+		list.append(e)
+	var seen := {}
 	for c in list:
 		var w := _describe_witness(c, crime)
 		if w.is_empty():
@@ -268,7 +282,10 @@ func evaluate_witnesses(crime: Dictionary, candidates: Variant = null) -> Array[
 			continue
 		if w["npc_id"] == crime.get("victim", "") and crime["kind"] == "murder":
 			continue
+		if seen.has(w["npc_id"]) and not str(w["npc_id"]).is_empty():
+			continue
 		if Crimes.is_witness(float(w["detection"]), bool(w["line_of_sight"])):
+			seen[w["npc_id"]] = true
 			out.append(w)
 	return out
 
@@ -415,7 +432,12 @@ func from_save(d: Dictionary) -> void:
 	pending.assign(d.get("pending", []))
 	known = d.get("known", {}).duplicate(true)
 	history.assign(d.get("history", []))
-	if d.has("ownership") and Ownership.instance != null:
-		Ownership.instance.from_dict(d["ownership"])
+	if d.has("ownership"):
+		# The registry may not exist yet on a load; install it rather than drop what is saved.
+		var reg := Ownership.ensure()
+		if reg != null:
+			reg.from_dict(d["ownership"])
+		else:
+			Log.warn("Crime", "no scene tree to restore the ownership registry into")
 	for k in totals:
 		changed.emit(k, totals[k])

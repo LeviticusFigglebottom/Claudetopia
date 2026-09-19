@@ -120,8 +120,7 @@ static func gossip_targets(place_id: String, places: Array, known: Dictionary, r
 			break
 	if origin.is_empty():
 		return out
-	var oxz: Array = origin.get("position", [0, 0])
-	var o := Vector2(float(oxz[0]), float(oxz[1]))
+	var o := WorldProbe.xz_of(origin)
 	for p in places:
 		var pid := str(p.get("id", ""))
 		if pid == place_id or known.has(pid):
@@ -130,8 +129,7 @@ static func gossip_targets(place_id: String, places: Array, known: Dictionary, r
 			continue
 		if not str(p.get("kind", "")) in SETTLEMENT_KINDS:
 			continue
-		var xz: Array = p.get("position", [0, 0])
-		if o.distance_to(Vector2(float(xz[0]), float(xz[1]))) <= range_m:
+		if o.distance_to(WorldProbe.xz_of(p)) <= range_m:
 			out.append(pid)
 	out.sort()
 	return out

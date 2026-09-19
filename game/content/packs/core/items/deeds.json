@@ -3,7 +3,7 @@
     "id": "core:item/deed_merrowby_crater_cottage", "name": "Deed: the Crater Cottage", "category": "key", "weight": 0.1, "value": 1400, "stack": 1,
     "tags": ["deed", "property", "hearthvale"],
     "description": "A one-room cottage on the lip of the bell's crater, chalk-cob and thatch with a blue door somebody painted for a miller who has been dead forty years. The hearth draws badly when the wind is in the east. Signed over by the Merrowby reeve, witnessed twice, as the Vale requires.",
-    "property": {"place": "core:place/merrowby", "interior": "core:place/merrowby", "name": "the Crater Cottage", "price": 1400, "rent": 6,
+    "property": {"place": "core:place/merrowby", "interior": "merrowby_crater_cottage", "name": "the Crater Cottage", "price": 1400, "rent": 6,
       "key": "core:item/econ_key_crater_cottage", "storage": "core:place/merrowby#crater_cottage_chest", "bed": "core:place/merrowby#crater_cottage_bed",
       "rooms": 1, "beds": 1, "story": "The miller's widow kept it swept for thirty years after there was nobody to sweep for."}
   },
@@ -11,7 +11,7 @@
     "id": "core:item/deed_merrowby_bellrow_house", "name": "Deed: the House on Bell Row", "category": "key", "weight": 0.1, "value": 3200, "stack": 1,
     "tags": ["deed", "property", "hearthvale"],
     "description": "Two storeys on the row above the market, with a yellow brewer's door, a cellar that is a slice of the Toll's own lip, and a window that looks straight up the hill at the bell. Cold in the cellar, warm everywhere else. The reeve will want to know you intend to stay.",
-    "property": {"place": "core:place/merrowby", "interior": "core:place/merrowby", "name": "the House on Bell Row", "price": 3200, "rent": 14,
+    "property": {"place": "core:place/merrowby", "interior": "merrowby_bellrow_house", "name": "the House on Bell Row", "price": 3200, "rent": 14,
       "key": "core:item/econ_key_bellrow_house", "storage": "core:place/merrowby#bellrow_chest", "bed": "core:place/merrowby#bellrow_bed",
       "rooms": 4, "beds": 2, "story": "The cellar wall is bronze. On a still night the whole house hums, and the family who built it learned to sing the note back."}
   },
@@ -19,7 +19,7 @@
     "id": "core:item/deed_tollmere_canal_rooms", "name": "Deed: the Canal Rooms", "category": "key", "weight": 0.1, "value": 4800, "stack": 1,
     "tags": ["deed", "property", "brightwater"],
     "description": "Three rooms over a chandler's on the Lantern Row canal, lime-washed, with a brass lamp bracket and a mooring ring under the window. Registered with the Tallymen, whose charter fee is folded into the price and mentioned only in the smallest hand.",
-    "property": {"place": "core:place/tollmere", "interior": "core:place/tollmere", "name": "the Canal Rooms", "price": 4800, "rent": 22,
+    "property": {"place": "core:place/tollmere", "interior": "tollmere_canal_rooms", "name": "the Canal Rooms", "price": 4800, "rent": 22,
       "key": "core:item/econ_key_canal_rooms", "storage": "core:place/tollmere#canal_rooms_chest", "bed": "core:place/tollmere#canal_rooms_bed",
       "rooms": 3, "beds": 1, "story": "Every previous owner is listed on the deed's reverse, in the Tallymen's hand, back to the Charter. The third name from the end has been scraped out."}
   },
@@ -27,7 +27,7 @@
     "id": "core:item/deed_isseva_stilt_house", "name": "Deed: the Stilt House", "category": "key", "weight": 0.1, "value": 2100, "stack": 1,
     "tags": ["deed", "property", "sedgemire"],
     "description": "A one-room house on six alder legs at the quiet end of the boardwalk, indigo shutters, a lantern hook, and a hatch in the floor for a boat you do not yet own. The Reed Council does not sell property so much as agree to stop asking when you will leave.",
-    "property": {"place": "core:place/isseva", "interior": "core:place/isseva", "name": "the Stilt House", "price": 2100, "rent": 9,
+    "property": {"place": "core:place/isseva", "interior": "isseva_stilt_house", "name": "the Stilt House", "price": 2100, "rent": 9,
       "key": "core:item/econ_key_stilt_house", "storage": "core:place/isseva#stilt_house_chest", "bed": "core:place/isseva#stilt_house_bed",
       "rooms": 1, "beds": 1, "story": "The previous tenant went into the water with a lantern, as is proper, and the Council waited the customary year before speaking of the house at all."}
   },
@@ -35,7 +35,7 @@
     "id": "core:item/deed_kharrow_cliff_cell", "name": "Deed: the Cliff Cell", "category": "key", "weight": 0.1, "value": 1800, "stack": 1,
     "tags": ["deed", "property", "skerrow"],
     "description": "A room cut into the cliff below the Moot hall: drystone hearth, turf-stopped window, bone lintel over the door with a clan mark you are not entitled to and are expected to keep clean anyway. Bought from the Moot, who record the sale as a loan of stone.",
-    "property": {"place": "core:place/kharrow_hold", "interior": "core:place/kharrow_hold", "name": "the Cliff Cell", "price": 1800, "rent": 8,
+    "property": {"place": "core:place/kharrow_hold", "interior": "kharrow_cliff_cell", "name": "the Cliff Cell", "price": 1800, "rent": 8,
       "key": "core:item/econ_key_cliff_cell", "storage": "core:place/kharrow_hold#cliff_cell_chest", "bed": "core:place/kharrow_hold#cliff_cell_bed",
       "rooms": 1, "beds": 1, "story": "The mark over the door is Oskel. There are no Oskels left to mind, which is precisely why the Moot minds."}
   },
@@ -43,7 +43,7 @@
     "id": "core:item/deed_hollow_knot_room", "name": "Deed: the Knot Room", "category": "key", "weight": 0.1, "value": 2600, "stack": 1,
     "tags": ["deed", "property", "briarwold"],
     "description": "A round room in a knot of the Grandfather, forty feet up a rope walk, with a shuttered knot-hole for a window and a floor of one enormous ring of dead heartwood. The Woodfolk have no deeds; this is a carved token and the word of three foresters, which is stronger.",
-    "property": {"place": "core:place/grandfather_hollow", "interior": "core:place/grandfather_hollow", "name": "the Knot Room", "price": 2600, "rent": 11,
+    "property": {"place": "core:place/grandfather_hollow", "interior": "grandfather_knot_room", "name": "the Knot Room", "price": 2600, "rent": 11,
       "key": "core:item/econ_key_knot_room", "storage": "core:place/grandfather_hollow#knot_room_chest", "bed": "core:place/grandfather_hollow#knot_room_bed",
       "rooms": 1, "beds": 1, "story": "Count the rings in the floor and you get eleven hundred years. The Woodfolk let visitors count; it is the only sermon they preach."}
   },

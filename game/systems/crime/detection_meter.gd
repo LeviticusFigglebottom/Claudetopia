@@ -62,7 +62,9 @@ func hear(loudness: float, distance: float, hearing_range: float, source_positio
 	if capped > level:
 		level = capped
 		last_known_position = source_position
-	_hold = HOLD_SECONDS
+		# Only a noise that actually told them something keeps the meter from falling; an
+		# already-alert observer can still be left behind by breaking line of sight.
+		_hold = HOLD_SECONDS
 	return level
 
 

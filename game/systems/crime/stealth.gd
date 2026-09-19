@@ -29,6 +29,8 @@ var weather_factor := 1.0
 var raining := false
 var sky_exposure_override := -1.0   # tests and interiors: 0..1 forces the value
 var lights: Array[Node3D] = []
+var _visibility_cached := 0.0
+var _visibility_frame := -1
 
 
 static func ensure() -> Stealth:
@@ -243,22 +245,29 @@ func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGen
 	var ok := pickpocket_roll(chance, rng)
 	var victim_id := str(victim.get("npc_id")) if victim != null and "npc_id" in victim else ""
 	var pos := (victim as Node3D).global_position if victim is Node3D else Vector3.ZERO
+	if ok and Peers.inventory_of(thief) == null:
+		# Nowhere to put it: better to fumble than to make the item vanish.
+		ok = false
 	EventBus.skill_used.emit("sneak", 6.0 + float(value) * 0.05)
 	if ok:
 		if not Peers.take_item(victim, item_id, 1):
 			return {"ok": false, "chance": chance, "caught": false, "item_id": item_id}
-		Peers.give_item(thief, item_id, 1)
+		if not Peers.give_item(thief, item_id, 1):
+			Peers.give_item(victim, item_id, 1)   # put it back rather than destroy it
+			ok = false
+	if ok:
 		EventBus.notify.emit("Taken.", "stealth")
 	else:
 		EventBus.notify.emit("A hand closes on your wrist.", "stealth")
 		if victim != null and "detection" in victim:
 			victim.set("detection", 1.0)
 	if Bounty.instance != null:
-		var witnesses: Variant = null
+		var opts := {"victim": victim_id, "target": item_id, "value": value}
 		if not ok and not victim_id.is_empty():
-			# Caught in the act: the victim is a witness whatever else they were doing.
-			witnesses = [{"npc_id": victim_id, "detection": 1.0, "line_of_sight": true, "is_guard": victim.is_in_group("guard"), "reaction": "report"}]
-		Bounty.instance.commit("pickpocket", pos, {"victim": victim_id, "target": item_id, "value": value, "witnesses": witnesses})
+			# Caught in the act: the victim witnesses it whatever else they were doing, and
+			# so does anyone else with a view — `extra_witnesses` adds to the usual scan.
+			opts["extra_witnesses"] = [{"npc_id": victim_id, "detection": 1.0, "line_of_sight": true, "is_guard": victim is Node and (victim as Node).is_in_group("guard"), "reaction": "report"}]
+		Bounty.instance.commit("pickpocket", pos, opts)
 	return {"ok": ok, "chance": chance, "caught": not ok, "item_id": item_id}
 
 
@@ -339,8 +348,14 @@ func player_light() -> float:
 	return light_level((p as Node3D).global_position)
 
 
+## How visible the player is right now. Every observer asks this every physics frame and the
+## answer is a property of the player, not of the asker, so it is computed once per frame
+## (the light sample alone costs a raycast).
 func player_visibility() -> float:
+	var frame := Engine.get_physics_frames()
+	if frame == _visibility_frame:
+		return _visibility_cached
 	var p := Peers.player()
-	if p == null:
-		return 0.0
-	return visibility(player_light(), player_noise(), is_crouched(p), Peers.skill_level("sneak"))
+	_visibility_cached = 0.0 if p == null else visibility(player_light(), player_noise(), is_crouched(p), Peers.skill_level("sneak"))
+	_visibility_frame = frame
+	return _visibility_cached

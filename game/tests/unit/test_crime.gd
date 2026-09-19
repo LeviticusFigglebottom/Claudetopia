@@ -206,6 +206,29 @@ func _npc_stub_script() -> GDScript:
 	return s
 
 
+func test_extra_witnesses_add_to_the_scan_rather_than_replace_it() -> void:
+	var b := _bounty()
+	var s := GDScript.new()
+	s.source_code = "extends Node3D\nvar npc_id := \"core:npc/watching_guard\"\nvar detection := 0.9\nvar alive := true\nvar place_id := \"core:place/merrowby\"\nvar personality = null\nfunc can_see_point(p: Vector3) -> bool:\n\treturn true\n"
+	s.reload()
+	var guard := Node3D.new()
+	guard.set_script(s)
+	guard.add_to_group("npc")
+	guard.add_to_group("guard")
+	_root().add_child(guard)
+	_nodes.append(guard)
+	guard.global_position = MERROWBY_POS
+	var crime := b.commit("pickpocket", MERROWBY_POS, {
+		"victim": "core:npc/mark",
+		"extra_witnesses": [_witness("core:npc/mark", 1.0)],
+	})
+	assert_true("core:npc/mark" in crime["witnesses"], "the victim felt it")
+	assert_true("core:npc/watching_guard" in crime["witnesses"], "and the guard across the square saw it")
+	assert_eq(crime["witnesses"].size(), 2)
+	var twice := b.commit("pickpocket", MERROWBY_POS, {"extra_witnesses": [_witness("core:npc/watching_guard", 1.0)]})
+	assert_eq(twice["witnesses"].size(), 1, "one witness is one witness, however they were found")
+
+
 func test_node_witnesses_via_perception_interface() -> void:
 	var b := _bounty()
 	var s := GDScript.new()

@@ -18,6 +18,7 @@ var working := false
 var last_worked_hours := -1000.0
 var _rng := RandomNumberGenerator.new()
 var _timer: SceneTreeTimer = null
+var _shift := 0
 
 
 func _ready() -> void:
@@ -74,17 +75,22 @@ func interact(actor: Node) -> bool:
 		EventBus.notify.emit("That is not your work to do.", "info")
 		return false
 	working = true
+	_shift += 1
 	var seconds := Jobs.station_seconds(kind)
 	started.emit(kind, seconds, Jobs.station_clip(kind))
 	if is_inside_tree() and seconds > 0.0:
 		_timer = get_tree().create_timer(seconds)
-		_timer.timeout.connect(_on_shift_done.bind(actor), CONNECT_ONE_SHOT)
+		_timer.timeout.connect(_on_shift_done.bind(actor, _shift), CONNECT_ONE_SHOT)
 	else:
-		_on_shift_done(actor)
+		_on_shift_done(actor, _shift)
 	return true
 
 
-func _on_shift_done(actor: Node) -> void:
+## A cancelled shift's timer still fires, so it names the shift it belongs to and a stale
+## one is ignored.
+func _on_shift_done(actor: Node, shift: int) -> void:
+	if shift != _shift or not working:
+		return
 	finish(actor)
 
 
@@ -112,3 +118,5 @@ func finish(actor: Node = null) -> int:
 
 func cancel() -> void:
 	working = false
+	_shift += 1
+	_timer = null

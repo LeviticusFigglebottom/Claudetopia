@@ -57,15 +57,23 @@ static func region_id_at(pos: Vector3) -> String:
 	return nearest_region_id(pos)
 
 
+## An [x, z] pair from content, tolerating a missing or malformed value.
+static func xz_of(def: Dictionary, key: String = "position") -> Vector2:
+	var raw: Variant = def.get(key, [])
+	if typeof(raw) != TYPE_ARRAY or raw.size() < 2:
+		return Vector2.ZERO
+	return Vector2(float(raw[0]), float(raw[1]))
+
+
 ## Region whose map centre is nearest in units of its own radius.
 static func nearest_region_id(pos: Vector3) -> String:
 	var best := ""
 	var best_score := INF
 	for r in ContentDB.all("region"):
 		var m: Dictionary = r.get("map", {})
-		var c: Array = m.get("center", [0, 0])
 		var radius := maxf(float(m.get("radius", 1000.0)), 1.0)
-		var d := Vector2(pos.x - float(c[0]), pos.z - float(c[1])).length() / radius
+		var c := xz_of(m, "center")
+		var d := Vector2(pos.x - c.x, pos.z - c.y).length() / radius
 		if d < best_score:
 			best_score = d
 			best = r["id"]
@@ -77,11 +85,8 @@ static func cell_of(pos: Vector3) -> Vector2i:
 
 
 static func place_position(place_id: String) -> Vector3:
-	var p := ContentDB.get_or_empty(place_id)
-	var xz: Array = p.get("position", [0, 0])
-	var x := float(xz[0]) if xz.size() > 0 else 0.0
-	var z := float(xz[1]) if xz.size() > 1 else 0.0
-	return Vector3(x, get_height(x, z), z)
+	var xz := xz_of(ContentDB.get_or_empty(place_id))
+	return Vector3(xz.x, get_height(xz.x, xz.y), xz.y)
 
 
 static func cell_of_place(place_id: String) -> Vector2i:
@@ -97,8 +102,8 @@ static func nearest_place(pos: Vector3, max_distance_m: float = INF) -> Dictiona
 	var best: Dictionary = {}
 	var best_d := max_distance_m
 	for p in ContentDB.all("place"):
-		var xz: Array = p.get("position", [0, 0])
-		var d := Vector2(pos.x - float(xz[0]), pos.z - float(xz[1])).length()
+		var xz := xz_of(p)
+		var d := Vector2(pos.x - xz.x, pos.z - xz.y).length()
 		if d < best_d:
 			best_d = d
 			best = p

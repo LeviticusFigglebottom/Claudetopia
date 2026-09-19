@@ -186,6 +186,29 @@ func test_cells_spawn_and_despawn_actors() -> void:
 	reg.abstract_only = true
 
 
+func test_the_dead_stay_dead_and_leave_a_body() -> void:
+	var reg := NpcRegistry.instance
+	reg.abstract_only = false
+	WorldClock.set_time(10.0, 2)
+	reg.simulate_all("clear")
+	var cell := WorldProbe.cell_of_place(MERROWBY)
+	EventBus.cell_loaded.emit(cell)
+	assert_true(reg.is_spawned(BRAM))
+	reg.kill(BRAM)
+	assert_false(reg.is_alive(BRAM))
+	var body := reg.actor(BRAM)
+	assert_true(body != null, "the body is left where it fell, for looting and for the sight of it")
+	assert_false(bool(body.get("alive")))
+	assert_false(body.is_in_group("interactable"), "you cannot chat with a corpse")
+	EventBus.cell_unloaded.emit(cell)
+	assert_false(reg.is_alive(BRAM), "unloading the cell must not write the body's state back over death")
+	EventBus.cell_loaded.emit(cell)
+	assert_false(reg.is_spawned(BRAM), "and the dead do not come back with the cell")
+	assert_false(reg.is_alive(BRAM))
+	reg.despawn_all()
+	reg.abstract_only = true
+
+
 func test_guards_spawn_with_the_guard_script() -> void:
 	var reg := NpcRegistry.instance
 	reg.abstract_only = false

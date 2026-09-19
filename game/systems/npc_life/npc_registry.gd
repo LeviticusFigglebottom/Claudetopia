@@ -152,14 +152,21 @@ func is_hostile(npc_id: String) -> bool:
 	return bool(state(npc_id).get("hostile", false))
 
 
+## Marks an NPC dead. The body is left where it fell — a corpse other streams can loot and
+## the player can see — and is freed with its cell; `spawn` refuses the dead, so it never
+## comes back. The actor is told first so its own `alive` cannot be written back over this.
 func kill(npc_id: String) -> void:
 	var s := state(npc_id)
 	if s.is_empty() or not s["alive"]:
 		return
 	s["alive"] = false
 	s["hostile"] = false
+	var node := actor(npc_id)
+	if node != null and node.has_method("die"):
+		node.call("die")
+	elif node != null and "alive" in node:
+		node.set("alive", false)
 	GameState.inc("npcs_dead")
-	despawn(npc_id)
 	state_changed.emit(npc_id)
 
 
@@ -342,7 +349,12 @@ func despawn(npc_id: String) -> void:
 		if node.has_method("collect_state"):
 			var s: Variant = node.call("collect_state")
 			if typeof(s) == TYPE_DICTIONARY:
-				state(npc_id).merge(s, true)
+				var target := state(npc_id)
+				# A dead NPC stays dead whatever the body says.
+				if not bool(target.get("alive", true)):
+					s.erase("alive")
+					s.erase("hostile")
+				target.merge(s, true)
 		node.queue_free()
 	npc_despawned.emit(npc_id)
 

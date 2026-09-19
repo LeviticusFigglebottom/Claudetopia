@@ -8,17 +8,29 @@ class_name ContentQuery
 ## core/content_db.gd is to guard the `elif` with `typeof(v) != TYPE_ARRAY`.
 
 static var _tag_cache: Dictionary = {}
+## The pack generation the cache was built from, so a reload of ContentDB invalidates it.
+static var _cache_stamp: int = -1
 
 
 static func clear_cache() -> void:
 	_tag_cache.clear()
+	_cache_stamp = -1
 
 
-## Every definition of `type` whose "tags" array contains `tag`, ordered by id.
+static func _stamp() -> int:
+	return ContentDB.all("item").size() * 31 + ContentDB.packs.size()
+
+
+## Every definition of `type` whose "tags" array contains `tag`, ordered by id. The returned
+## array is a copy: callers may sort or filter it without corrupting the cache.
 static func with_tag(type: String, tag: String) -> Array[Dictionary]:
+	var stamp := _stamp()
+	if stamp != _cache_stamp:
+		_tag_cache.clear()
+		_cache_stamp = stamp
 	var key := type + "|" + tag
 	if _tag_cache.has(key):
-		return _tag_cache[key]
+		return (_tag_cache[key] as Array[Dictionary]).duplicate()
 	var out: Array[Dictionary] = []
 	for d in ContentDB.all(type):
 		var tags: Variant = d.get("tags", [])
@@ -26,7 +38,7 @@ static func with_tag(type: String, tag: String) -> Array[Dictionary]:
 			out.append(d)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.get("id", "")) < str(b.get("id", "")))
 	_tag_cache[key] = out
-	return out
+	return out.duplicate()
 
 
 static func first_with_tag(type: String, tag: String) -> Dictionary:

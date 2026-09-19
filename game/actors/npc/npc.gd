@@ -420,11 +420,15 @@ func receive_gesture(gesture: String) -> int:
 	return delta
 
 
+## The body stays where it fell: the registry marks the NPC dead but leaves the actor for
+## the loot and quest streams, and it is freed with its cell.
 func die() -> void:
 	if not alive:
 		return
 	alive = false
+	hostile = false
 	stop()
+	remove_from_group("interactable")
 	play_intent("Death_A")
 	if NpcRegistry.instance != null and not npc_id.is_empty():
 		NpcRegistry.instance.kill(npc_id)

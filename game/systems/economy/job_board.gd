@@ -9,6 +9,9 @@ extends StaticBody3D
 signal jobs_listed(jobs: Array)
 signal job_taken(job: Dictionary)
 
+## How near a settlement's centre counts as being in it, for delivery.
+const ARRIVAL_M := 120.0
+
 @export var place_id := ""
 @export var count := Jobs.BOARD_JOB_COUNT
 @export var display_name := "Job board"
@@ -34,6 +37,14 @@ func _ready() -> void:
 		add_child(col)
 
 
+## The settlement the carrier is standing in, or "" when they are out in the country.
+static func place_of_carrier(actor: Node) -> String:
+	if actor == null or not is_instance_valid(actor) or not (actor is Node3D):
+		return ""
+	var near := WorldProbe.nearest_place((actor as Node3D).global_position, ARRIVAL_M)
+	return str(near.get("id", ""))
+
+
 func offers() -> Array[Dictionary]:
 	if _cache_day == WorldClock.day and not _cache.is_empty():
 		return _cache
@@ -52,12 +63,22 @@ func interact(_actor: Node) -> Array[Dictionary]:
 	return list
 
 
+func has_taken(job_id: String) -> bool:
+	for j in taken:
+		if str(j.get("id", "")) == job_id:
+			return true
+	return false
+
+
 ## Accepts the job at `index`: hands over the parcel for a delivery, or starts the quest.
 func take(index: int, actor: Node = null) -> Dictionary:
 	var list := offers()
 	if index < 0 or index >= list.size():
 		return {}
 	var job: Dictionary = list[index].duplicate()
+	if has_taken(str(job.get("id", ""))):
+		EventBus.notify.emit("You are already carrying that one.", "info")
+		return {}
 	if str(job.get("kind", "")) == "delivery":
 		var item := str(job.get("item", Jobs.DELIVERY_PARCEL))
 		if not Peers.give_item(actor, item, 1):
@@ -74,11 +95,14 @@ func take(index: int, actor: Node = null) -> Dictionary:
 	return job
 
 
-## Completes a delivery when the carrier is at (or names) the destination.
+## Completes a delivery, but only where it was addressed. `at_place` names where the carrier
+## is; left out, it is read from the carrier's own position, so handing a parcel back over
+## the counter it came from pays nothing.
 func deliver(job: Dictionary, actor: Node = null, at_place := "") -> int:
 	if at_place.is_empty():
-		at_place = str(job.get("to", ""))
-	if str(job.get("to", "")) != at_place:
+		at_place = place_of_carrier(actor)
+	if str(job.get("to", "")) != at_place or at_place.is_empty():
+		EventBus.notify.emit("That is not where it is going.", "info")
 		return 0
 	var item := str(job.get("item", Jobs.DELIVERY_PARCEL))
 	if Peers.item_count(actor, item) < 1:

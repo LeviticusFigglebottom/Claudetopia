@@ -58,8 +58,8 @@ func test_deed_content_is_complete() -> void:
 		for key in ["place", "interior", "name", "price", "key", "storage", "bed"]:
 			assert_has(b, key, "%s missing property.%s" % [d["id"], key])
 		assert_true(ContentDB.has(b["place"]), "%s: unknown place" % d["id"])
-		assert_true(ContentDB.has(b["interior"]), "%s: unknown interior/place" % d["id"])
 		assert_true(ContentDB.has(b["key"]), "%s: key item missing" % d["id"])
+		assert_false(ContentDB.has(b["interior"]), "%s: an interior id is a plain string until real interiors land, never a place" % d["id"])
 		assert_gt(int(b["price"]), 0)
 		assert_gt(PropertyRegistry.rent_per_day(d["id"]), 0)
 		by_place[b["place"]] = int(by_place.get(b["place"], 0)) + 1
@@ -69,6 +69,22 @@ func test_deed_content_is_complete() -> void:
 	assert_eq(int(by_place["core:place/kharrow_hold"]), 1)
 	assert_eq(int(by_place["core:place/grandfather_hollow"]), 1)
 	assert_eq(PropertyRegistry.deeds_at("core:place/merrowby").size(), 2)
+	# Two houses in one village must not share a door, a chest or a bed.
+	var ids := {}
+	for d in deeds:
+		for f in [PropertyRegistry.interior_of(d["id"]), PropertyRegistry.door_id_of(d["id"]), PropertyRegistry.storage_id_of(d["id"]), PropertyRegistry.bed_id_of(d["id"])]:
+			assert_false(ids.has(f), "%s shares %s with %s" % [d["id"], f, ids.get(f, "")])
+			ids[f] = d["id"]
+
+
+func test_buying_a_house_does_not_claim_the_village() -> void:
+	var reg := PropertyRegistry.ensure()
+	var buyer := _buyer(9000)
+	assert_true(reg.buy(buyer, COTTAGE)["ok"])
+	assert_false(Ownership.instance.is_player_owned("core:place/merrowby"), "a cottage is not the whole town")
+	assert_false(Ownership.instance.is_player_owned(PropertyRegistry.door_id_of(BELLROW)), "nor the neighbour's door")
+	assert_false(reg.owns_bed(PropertyRegistry.bed_id_of(BELLROW)))
+	assert_true(Ownership.instance.is_player_owned(PropertyRegistry.door_id_of(COTTAGE)))
 
 
 func test_accessors() -> void:

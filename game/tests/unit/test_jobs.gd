@@ -203,6 +203,32 @@ func test_board_take_and_deliver() -> void:
 	EventBus.job_completed.disconnect(cb)
 
 
+func test_a_parcel_must_actually_be_carried_somewhere() -> void:
+	var board: JobBoard = load("res://systems/economy/job_board.tscn").instantiate()
+	board.place_id = MERROWBY
+	_root().add_child(board)
+	_nodes.append(board)
+	var carrier := CharacterBody3D.new()
+	var s := GDScript.new()
+	s.source_code = "extends CharacterBody3D\nvar marks := 0\nvar bag := {}\nfunc add_marks(n: int) -> void:\n\tmarks += n\nfunc add(id: String, n: int) -> void:\n\tbag[id] = bag.get(id, 0) + n\nfunc remove(id: String, n: int) -> int:\n\tvar have: int = bag.get(id, 0)\n\tvar t: int = mini(have, n)\n\tbag[id] = have - t\n\treturn t\nfunc count(id: String) -> int:\n\treturn bag.get(id, 0)\n"
+	s.reload()
+	carrier.set_script(s)
+	_root().add_child(carrier)
+	_nodes.append(carrier)
+	carrier.global_position = WorldProbe.place_position(MERROWBY)
+	var job := board.take(0, carrier)
+	assert_false(job.is_empty())
+	assert_eq(board.deliver(job, carrier), 0, "handing it back across the same counter pays nothing")
+	assert_eq(int(carrier.get("marks")), 0)
+	assert_eq(carrier.call("count", Jobs.DELIVERY_PARCEL), 1, "and you still have it")
+	assert_true(board.take(0, carrier).is_empty(), "nor can you take the same notice twice")
+	carrier.global_position = WorldProbe.place_position(str(job["to"]))
+	var paid := board.deliver(job, carrier)
+	assert_eq(paid, int(job["pay"]), "walk it there and you are paid")
+	assert_eq(int(carrier.get("marks")), paid)
+	assert_eq(carrier.call("count", Jobs.DELIVERY_PARCEL), 0)
+
+
 func test_board_offers_are_cached_per_day() -> void:
 	var board: JobBoard = load("res://systems/economy/job_board.tscn").instantiate()
 	board.place_id = MERROWBY

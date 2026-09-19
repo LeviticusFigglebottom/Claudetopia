@@ -73,8 +73,7 @@ static func delivery_offers(place_id: String, count: int, day: int) -> Array[Dic
 	var origin := ContentDB.get_or_empty(place_id)
 	if origin.is_empty():
 		return out
-	var oxz: Array = origin.get("position", [0, 0])
-	var o := Vector2(float(oxz[0]), float(oxz[1]))
+	var o := WorldProbe.xz_of(origin)
 	var candidates: Array[Dictionary] = []
 	for p in ContentDB.all("place"):
 		if str(p["id"]) == place_id:
@@ -97,8 +96,7 @@ static func delivery_offers(place_id: String, count: int, day: int) -> Array[Dic
 				already = true
 		if already:
 			continue
-		var txz: Array = target.get("position", [0, 0])
-		var distance := o.distance_to(Vector2(float(txz[0]), float(txz[1])))
+		var distance := o.distance_to(WorldProbe.xz_of(target))
 		out.append({
 			"id": "delivery:%s:%s:%d" % [place_id, Ids.name_of(str(target["id"])), day],
 			"kind": "delivery",

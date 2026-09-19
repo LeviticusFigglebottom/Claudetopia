@@ -199,11 +199,10 @@ static func give_item(actor: Object, item_id: String, count: int) -> bool:
 		return false
 	var before := int(inv.call("count", item_id))
 	var r: Variant = inv.call("add", item_id, count)
-	match typeof(r):
-		TYPE_BOOL:
-			return r
-		TYPE_INT:
-			return int(r) == OK or int(r) >= count
+	if typeof(r) == TYPE_BOOL:
+		return r
+	# An int may be an Error (0 = OK) or a units-added count (0 = nothing added), so the
+	# bag itself decides.
 	return int(inv.call("count", item_id)) > before
 
 
