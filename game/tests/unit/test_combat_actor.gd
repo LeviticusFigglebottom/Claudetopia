@@ -45,10 +45,11 @@ func test_model_pivot_faces_gameplay_forward() -> void:
 	assert_near(actor.forward().z, -1.0, 0.01, "gameplay forward is -Z")
 
 
-func test_placeholder_body_stands_in_for_the_missing_rig() -> void:
-	# The forge's humanoid_model.tscn does not exist yet; the driver must still animate something.
-	assert_false(actor.anim.has_real_model(), "no real model is expected in this pass")
-	assert_true(actor.anim.placeholder != null, "a placeholder body is built instead")
+func test_the_forged_rig_is_used_when_it_exists() -> void:
+	# The character forge has landed, so an actor wears the real rig. The placeholder body stays
+	# in the code for anything the forge has not made yet, and must not be built alongside it.
+	assert_true(actor.anim.has_real_model(), "the forged humanoid model is in the tree")
+	assert_true(actor.anim.placeholder == null, "no placeholder is built next to a real rig")
 
 
 func test_equipment_sockets_use_the_contract_names() -> void:
@@ -57,7 +58,8 @@ func test_equipment_sockets_use_the_contract_names() -> void:
 		assert_true(socket != null, "missing socket %s" % socket_name)
 		# Node names cannot contain '.', so the contract name is sanitised for the node only.
 		assert_eq(socket.name, Actor.socket_node_name(socket_name))
-		assert_true(socket is Marker3D, "%s should be a Marker3D placeholder until the rig exists" % socket_name)
+		assert_true(socket is BoneAttachment3D, "%s should hang off the rig's bone" % socket_name)
+		assert_eq((socket as BoneAttachment3D).bone_name, socket_name, "attached to the contract bone")
 	# Looked up twice, the same node comes back (no duplicates piling up under Model).
 	assert_eq(actor.get_socket("Socket.WeaponR"), actor.get_socket("Socket.WeaponR"))
 

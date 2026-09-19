@@ -35,6 +35,10 @@ Body proportions vary per character (the forge scales bone lengths); clips are
 authored on the default proportions and retarget by bone-local rotation, so
 they must not bake bone translations except `Hips` (vertical bob) and `Root`
 (none; all locomotion is in-place, movement is driven by code).
+No mesh object may be named after a bone. Godot's glTF importer renames the
+*bone* when a mesh shares its name (a mesh called `Head` renamed the `Head`
+bone to `Head_2`), which silently breaks every animation track that targets it.
+The forge suffixes such meshes.
 
 ## 3. Animation clip contract (humanoid)
 
@@ -67,11 +71,18 @@ Creatures use their own rigs; their clips must include `Idle`, `Walk`, `Run`,
 `Attack_1`, `Attack_2`, `Hit`, `Death`, plus archetype extras listed in the
 enemy def under `clips`.
 
+Godot strips a `_Loop`, `-loop` or `_cycle` suffix from an imported animation
+name and sets the clip looping instead, so `Jump_Loop` arrives as `Jump` and
+would collide with another clip. The contract names stay as written here; every
+loader restores them from the `.clips.json` sidecar (`HumanoidModel` does this
+in `_restore_contract_clip_names()`). Any other animated asset with such a name
+needs the same treatment.
+
 ## 4. Forge output layout
 
 ```
 game/assets/models/<category>/<name>/<name>.glb        LOD0 (+ LOD1/2 as separate meshes named <mesh>_LOD1...)
-game/assets/models/<category>/<name>/<name>_*.png      baked textures (albedo, normal, orm)
+game/assets/models/<category>/<name>/<name>_*.png      baked textures (albedo, normal?, orm)
 game/assets/models/<category>/<name>/<name>.meta.json  {generator, version, seed, params, tris:[lod0,lod1,lod2], collision, bounds, region_palette}
 game/assets/models/<category>/<name>/<name>.clips.json (animated only)
 ```
