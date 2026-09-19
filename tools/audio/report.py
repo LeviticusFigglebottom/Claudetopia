@@ -114,6 +114,30 @@ def draw_plot(path_out: str, x: np.ndarray, title: str, subtitle: str = "") -> s
     return path_out
 
 
+def _looping_files() -> set:
+    """Which files are actually loops, from the manifests, so a one-shot is not measured as
+    one. An ambience pool variant starts and ends in silence by design; asking what its level
+    does across a "wrap" it never has produces a large and meaningless number."""
+    loops: set = set()
+    amb = os.path.join(AUDIO_ROOT, "ambience", "manifest.json")
+    if os.path.exists(amb):
+        with open(amb) as f:
+            for key, entry in json.load(f).items():
+                if str(entry.get("kind", "")) == "bed":
+                    for p in entry.get("files", []):
+                        loops.add(str(p).replace("res://assets/audio/", ""))
+    music = os.path.join(AUDIO_ROOT, "music", "manifest.json")
+    if os.path.exists(music):
+        with open(music) as f:
+            m = json.load(f)
+        for entry in m.get("regions", {}).values():
+            for v in entry.get("stems", {}).values():
+                loops.add(str(v.get("path", "")).replace("res://assets/audio/", ""))
+        for v in m.get("pieces", {}).values():
+            loops.add(str(v.get("path", "")).replace("res://assets/audio/", ""))
+    return {p for p in loops if p}
+
+
 def walk_audio(only=None):
     for dirpath, _dirs, files in os.walk(AUDIO_ROOT):
         for f in sorted(files):
@@ -137,12 +161,12 @@ def main() -> int:
     os.makedirs(OUT_DIR, exist_ok=True)
     rows = []
     made = 0
+    loops = _looping_files()
     for path, rel in walk_audio(args.only):
         audio, sr = load_audio(path)
         info = render.analyse(audio)
         info.update(render.spectral_balance(audio))
-        looped = rel.startswith(("music/", "ambience/")) and "stingers" not in rel
-        if looped:
+        if rel in loops:
             info.update(render.seam_report(audio))
         info["file"] = rel
         info["bytes"] = os.path.getsize(path)

@@ -33,6 +33,12 @@ var current_region_id := ""
 var mode := "explore"                 ## explore | combat | deep | deep_combat
 var enabled := true
 
+## Two fixed banks of stem players, created once. A region change hands the current bank to
+## _outgoing to fade away and fills the other; nothing is ever allocated or freed while the
+## game runs. (Freeing a player also turned out to strand the stream playback the AudioServer
+## was still holding, which showed up as a leak on every headless run.)
+var _banks: Array[Dictionary] = [{}, {}]
+var _bank := 0
 var _players: Dictionary = {}         ## stem -> AudioStreamPlayer (current region)
 var _outgoing: Array[AudioStreamPlayer] = []
 var _targets: Dictionary = {}         ## stem -> target dB
@@ -52,6 +58,9 @@ func _ready() -> void:
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
 	_index_content()
+	for b in 2:
+		for stem in STEMS:
+			_banks[b][stem] = _make_player("Bank%d_%s" % [b, stem])
 	_overlay = _make_player("Overlay")
 	_stinger = _make_player("Stinger")
 	EventBus.region_entered.connect(_on_region_entered)
@@ -102,6 +111,7 @@ func play_region(region_id: String, instant := false) -> bool:
 	current_region_id = region_id
 	current_music_id = str(def.get("id", ""))
 	_retire_current(instant)
+	_bank = 1 - _bank
 	var stems: Dictionary = def.get("stems", {})
 	for stem in STEMS:
 		if not stems.has(stem):
@@ -109,7 +119,8 @@ func play_region(region_id: String, instant := false) -> bool:
 		var stream := _load_stream(str(stems[stem]))
 		if stream == null:
 			continue
-		var p := _make_player("Stem_" + stem)
+		var p: AudioStreamPlayer = _banks[_bank][stem]
+		p.stop()
 		p.stream = stream
 		p.volume_db = SILENCE_DB
 		p.play()
@@ -140,17 +151,13 @@ func _retire_current(instant: bool) -> void:
 	_players.clear()
 
 
-## Finish with a player for good: stop it, drop its stream, and free it now rather than at the
-## end of the frame. A queue_free() issued while the game is shutting down never reaches its
-## deferred call, and the stream playback it was still holding is reported as a leak.
+## Finish with a player: stop it and drop its stream. The node itself stays, to be used again
+## by the next region -- see the note on _banks.
 func _discard(p: AudioStreamPlayer) -> void:
 	if not is_instance_valid(p):
 		return
 	p.stop()
 	p.stream = null
-	if p.get_parent() == self:
-		remove_child(p)
-	p.free()
 
 
 # --- mode ------------------------------------------------------------------------------------
@@ -282,6 +289,10 @@ func _set_overlay(kind: String, music_id: String) -> void:
 	if stream == null:
 		_overlay_kind = ""
 		return
+	# Stop before restarting: assigning a new stream to a player that is still playing leaves
+	# the old stream playback alive with nothing to stop it, in the running game as much as at
+	# exit. Every play() in this file is preceded by a stop() for that reason.
+	_overlay.stop()
 	_overlay.stream = stream
 	_overlay.volume_db = SILENCE_DB
 	_overlay.play()
@@ -357,6 +368,7 @@ func play_stinger(kind: String) -> bool:
 	var stream := _load_stream(str(_stingers[kind]))
 	if stream == null:
 		return false
+	_stinger.stop()
 	_stinger.stream = stream
 	_stinger.volume_db = 0.0
 	_stinger.play()
@@ -415,6 +427,10 @@ func overlay_kind() -> String:
 ## A playing stream keeps its decoder alive, so everything is stopped and detached on the way
 ## out; otherwise Godot reports leaked Ogg playbacks at exit and the smoke run fails on them.
 func release() -> void:
+	# Nothing may start again after this: a frame running between the release and the
+	# engine shutting down would put streams back and they would be reported as leaks.
+	enabled = false
+	set_process(false)
 	stop_all()
 	_release_players()
 	_music_defs.clear()

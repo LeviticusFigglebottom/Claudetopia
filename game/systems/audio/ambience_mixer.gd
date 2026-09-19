@@ -286,7 +286,19 @@ func _refresh() -> void:
 
 
 func _ensure_bed(key: String) -> void:
-	if _beds.has(key) and is_instance_valid(_beds[key]):
+	if _beds.has(key) and is_instance_valid(_beds[key]) and _beds[key].stream != null:
+		return
+	# a player for this key may already exist from an earlier visit, emptied by stop_all
+	var existing: AudioStreamPlayer = get_node_or_null("Bed_" + key) as AudioStreamPlayer
+	if existing != null:
+		var entry_again: Dictionary = _manifest.get(key, {})
+		var files_again: Array = entry_again.get("files", [])
+		if not files_again.is_empty():
+			existing.stop()
+			existing.stream = _load(str(files_again[0]))
+			existing.volume_db = SILENCE_DB
+			existing.play()
+			_beds[key] = existing
 		return
 	var entry: Dictionary = _manifest.get(key, {})
 	var files: Array = entry.get("files", [])
@@ -365,6 +377,9 @@ func _fire_oneshot(key: String, db: float) -> bool:
 	var p := _free_player()
 	if p == null:
 		return false
+	# stop first: handing a new stream to a player that is still playing strands the old
+	# stream playback, which nothing then releases
+	p.stop()
 	p.stream = stream
 	p.volume_db = db + (ONESHOT_DB - BED_DB) + (-9.0 if interior else 0.0)
 	p.pitch_scale = _rng.randf_range(0.94, 1.07)
@@ -407,6 +422,10 @@ func cutoff_hz() -> float:
 ## Stop and detach every stream on the way out; a playing Ogg keeps its decoder alive and
 ## Godot reports it as a leak at exit.
 func release() -> void:
+	# Nothing may start again after this: a frame running between the release and the
+	# engine shutting down would put streams back and they would be reported as leaks.
+	enabled = false
+	set_process(false)
 	stop_all()
 	_release_players()
 	_manifest.clear()
@@ -425,17 +444,15 @@ func _exit_tree() -> void:
 	release()
 
 
-## Finish with a bed player for good. Freed now rather than deferred: a queue_free() issued
-## during shutdown never reaches its deferred call, and the stream playback the player still
-## holds is then reported as a leak at exit.
+## Silence a bed player and let go of its stream, keeping the node itself for when that layer
+## comes back. Freeing it instead strands the stream playback the AudioServer still holds,
+## which the engine reports as a leak; and a bed key returns often enough (dusk, weather) that
+## keeping one empty player per key is cheaper than rebuilding it.
 func _discard(p: AudioStreamPlayer) -> void:
 	if not is_instance_valid(p):
 		return
 	p.stop()
 	p.stream = null
-	if p.get_parent() == self:
-		remove_child(p)
-	p.free()
 
 
 func stop_all() -> void:

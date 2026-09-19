@@ -94,6 +94,8 @@ func play(id: String, position: Vector3 = Vector3.INF, volume_db := 0.0) -> Node
 	var p := _free_3d()
 	if p == null:
 		return null
+	# a stolen player is still playing; stopping it first releases the playback it holds
+	p.stop()
 	p.stream = stream
 	p.global_position = position
 	p.volume_db = float(row.get("volume_db", 0.0)) + volume_db
@@ -130,6 +132,7 @@ func _play_2d(stream: AudioStream, row: Dictionary, volume_db: float, bus: Strin
 	var p := _free_2d()
 	if p == null:
 		return null
+	p.stop()
 	p.stream = stream
 	p.volume_db = float(row.get("volume_db", 0.0)) + volume_db
 	p.pitch_scale = _pitch(row)
@@ -255,6 +258,9 @@ func surface_of(node: Object) -> String:
 
 ## Cached streams and playing players both hold decoders open, so both go on the way out.
 func release() -> void:
+	# Nothing may start again after this: a frame running between the release and the
+	# engine shutting down would put streams back and they would be reported as leaks.
+	enabled = false
 	stop_all()
 	_release_players()
 	_cache.clear()
