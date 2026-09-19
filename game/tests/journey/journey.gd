@@ -49,6 +49,7 @@ func _ready() -> void:
 	await _step_character_creation()
 	await _step_spawn_player()
 	await _step_leave_the_start()
+	await _step_meet_somebody()
 	await _step_fight()
 	await _step_level_up()
 	await _step_die_and_recover()
@@ -228,6 +229,91 @@ func _walk_out_of_the_region() -> Dictionary:
 
 
 # 4 ------------------------------------------------------------------------------------
+## Walk into a village and meet somebody who lives there. Every part of this was already
+## tested on its own -- the roster, the greetings, the dialogue graph -- and none of it had
+## ever been run against a body standing on real ground in a real village, which is the only
+## arrangement a player will ever see it in.
+func _step_meet_somebody() -> void:
+	var name := "meet somebody who lives here"
+	if player == null:
+		_record(name, false, "no player")
+		return
+	# Social is an autoload, not a group member: it is always there, and reaching for it by
+	# group is how this step spent its first run reporting that talking was not installed.
+	var social: Node = Social
+	if social == null:
+		_record(name, false, "no social autoload")
+		return
+	var registry := NpcRegistry.ensure()
+	var streamer := NpcStreamer.ensure()
+	if registry == null or streamer == null:
+		_record(name, false, "the roster or the streamer is not installed")
+		return
+
+	var village := "core:place/merrowby"
+	if in_the_world:
+		var world := World.instance
+		if world != null:
+			var at := world.place_position(village)
+			player.global_position = at + Vector3(0.0, 1.0, 0.0)
+			world.move_target(player.global_position)
+			await get_tree().process_frame
+	# midday, so the village is out of doors rather than asleep
+	WorldClock.set_time(12.0)
+	registry.simulate_all("clear")
+	streamer.refresh()
+	await get_tree().process_frame
+
+	var standing: Array[String] = []
+	for id in registry.spawned.keys():
+		if registry.place_of(str(id)) == village:
+			standing.append(str(id))
+	if standing.is_empty():
+		_record(name, false, "nobody was standing in %s at noon" % village)
+		return
+	standing.sort()
+
+	# Walk up to them in turn until somebody has something to say. A villager whose only
+	# dialogue is gated behind a quest you have not taken closes the conversation at once,
+	# which is correct of them and useless as evidence that talking works at all.
+	social.set_place(village)
+	var met := ""
+	var who := ""
+	var hello := ""
+	# A GDScript lambda captures locals by value, so a captured String is written to a copy and
+	# the caller never sees it. An Array's reference is copied instead, and appending to it is
+	# visible here — which is how this step spent two runs reporting that a village of
+	# twenty-three people had nothing to say.
+	var sink: Array = []
+	var listen := func(_speaker: String, text: String, _choices: Array) -> void:
+		sink.append(text)
+	social.dialogue.line_shown.connect(listen)
+	for candidate in standing:
+		sink.clear()
+		hello = str(social.greet(candidate))
+		social.talk(candidate)
+		await get_tree().process_frame
+		if not sink.is_empty() and not hello.is_empty():
+			met = candidate
+			who = str(ContentDB.get_or_empty(candidate).get("name", candidate))
+			break
+	social.dialogue.line_shown.disconnect(listen)
+	var spoken: String = str(sink[0]) if not sink.is_empty() else ""
+	if met == "":
+		_record(name, false, "%d villagers were standing there and none of them said anything"
+				% standing.size())
+		return
+
+	var body := registry.actor(met)
+	var on_the_ground := true
+	if in_the_world and body is Node3D:
+		var at2: Vector3 = (body as Node3D).global_position
+		on_the_ground = absf(at2.y - World.get_height(at2.x, at2.z)) < 2.5
+	_record(name, on_the_ground,
+		"%d in the street; %s said \"%s\"" % [standing.size(), who, spoken.substr(0, 52).strip_edges()])
+
+
+# 5 ------------------------------------------------------------------------------------
 func _step_fight() -> void:
 	if player == null or not ResourceLoader.exists("res://actors/enemy/enemy.tscn"):
 		_record("fight something", false, "no player or no enemy scene")

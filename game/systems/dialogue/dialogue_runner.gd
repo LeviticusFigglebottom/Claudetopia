@@ -33,6 +33,11 @@ var _def: Dictionary = {}
 ## The hub the talk choice was asked from, so the conversation comes back to it.
 var _talk_return_to: String = ""
 var _running := false
+## True while the opening node (and any `else` it chains to) is being entered. If that whole
+## chain fails its conditions, the conversation must not simply close in the player's face:
+## a villager whose only lines are gated behind a quest you have not taken still owes you a
+## hello, which is what `_show_bare_greeting` is for.
+var _opening := false
 var _visits: Dictionary = {}            # node_id -> times entered this conversation
 var _taken: Dictionary = {}             # "node:index" -> true, for `once` choices this run
 
@@ -104,7 +109,9 @@ func _begin(new_dialogue_id: String, def_override: Dictionary, new_npc_id: Strin
 			return true
 		Log.warn("Dialogue", "%s has no start node '%s' (content problem); using '%s'" % [dialogue_id, first, str(keys[0])])
 		first = str(keys[0])
+	_opening = true
 	_enter(first)
+	_opening = false
 	return true
 
 
@@ -139,6 +146,8 @@ func _enter(node_id: String) -> void:
 		var alt := str(node.get("else", ""))
 		if alt != "" and alt != node_id:
 			_enter(alt)
+		elif _opening:
+			_show_bare_greeting()
 		else:
 			stop()
 		return
@@ -152,6 +161,7 @@ func _enter(node_id: String) -> void:
 			stop()
 		return
 	_visits[node_id] = visits + 1
+	_opening = false
 
 	current_node_id = node_id
 	history.append(node_id)
