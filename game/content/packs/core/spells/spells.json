@@ -10,8 +10,18 @@
     "speed": 26.0,
     "description": "The first thing every Sayer learns and the last thing most of them are good at: a spoken spark, thrown. Kindling is the loudest school because fire is the loudest thing a small voice can make.",
     "effects": [
-      {"type": "damage", "kind": "fire", "amount": 18.0, "poise": 8.0},
-      {"type": "status", "id": "burning", "duration": 4.0, "magnitude": 3.0}
+      {
+        "type": "damage",
+        "kind": "fire",
+        "amount": 18.0,
+        "poise": 8.0
+      },
+      {
+        "type": "status",
+        "id": "burning",
+        "duration": 4.0,
+        "magnitude": 3.0
+      }
     ]
   },
   {
@@ -25,8 +35,17 @@
     "speed": 22.0,
     "description": "Said under the breath, as Hush must be. The cold is not the point; the cold is what is left when the saying takes the noise out of a thing's blood and it forgets to be quick.",
     "effects": [
-      {"type": "damage", "kind": "frost", "amount": 12.0, "poise": 6.0},
-      {"type": "status", "id": "chilled", "duration": 5.0}
+      {
+        "type": "damage",
+        "kind": "frost",
+        "amount": 12.0,
+        "poise": 6.0
+      },
+      {
+        "type": "status",
+        "id": "chilled",
+        "duration": 5.0
+      }
     ]
   },
   {
@@ -38,8 +57,17 @@
     "cast_time": 1.1,
     "description": "Mending does not close a wound. It reminds the body what shape it was in when it was last spoken of kindly, and the body, being vain, obliges.",
     "effects": [
-      {"type": "heal", "amount": 35.0},
-      {"type": "cleanse", "ids": ["bleeding", "poisoned"]}
+      {
+        "type": "heal",
+        "amount": 35.0
+      },
+      {
+        "type": "cleanse",
+        "ids": [
+          "bleeding",
+          "poisoned"
+        ]
+      }
     ]
   },
   {
@@ -52,7 +80,254 @@
     "duration": 12.0,
     "description": "A Binding said around yourself: a short sentence about where you end. For as long as it holds, the world argues with the sentence instead of with you.",
     "effects": [
-      {"type": "shield", "amount": 40.0, "duration": 12.0}
+      {
+        "type": "shield",
+        "amount": 40.0,
+        "duration": 12.0
+      }
+    ]
+  },
+  {
+    "id": "core:spell/ember_fan",
+    "name": "Ember-Fan",
+    "school": "kindling",
+    "cast_type": "aura",
+    "cost": 22,
+    "cast_time": 0.9,
+    "radius": 4.5,
+    "duration": 6.0,
+    "description": "Said outward instead of forward, so the spark does not travel but stands. Sayers teach it to anyone who has been surrounded once and did not care for it. It is not a strong saying. It is a loud one, and there are nights when loud is the whole of what you need.",
+    "effects": [
+      {
+        "type": "damage",
+        "kind": "fire",
+        "amount": 9.0,
+        "poise": 2.0
+      },
+      {
+        "type": "status",
+        "id": "burning",
+        "duration": 3.0,
+        "magnitude": 2.0
+      }
+    ]
+  },
+  {
+    "id": "core:spell/hearth_brand",
+    "name": "Hearth-Brand",
+    "school": "kindling",
+    "cast_type": "target",
+    "cost": 34,
+    "cast_time": 1.5,
+    "range": 22.0,
+    "description": "The long saying, the one the Sayers took from a Vale prayer for a fire that will not catch. Spoken at a thing instead of a hearth it does what it always did: it insists, at length, that this is the moment the burning starts.",
+    "effects": [
+      {
+        "type": "damage",
+        "kind": "fire",
+        "amount": 46.0,
+        "poise": 24.0
+      },
+      {
+        "type": "status",
+        "id": "burning",
+        "duration": 6.0,
+        "magnitude": 5.0
+      }
+    ]
+  },
+  {
+    "id": "core:spell/still_tongue",
+    "name": "Still Tongue",
+    "school": "hush",
+    "cast_type": "target",
+    "cost": 18,
+    "cast_time": 0.9,
+    "range": 24.0,
+    "description": "Hush does not stop a mouth. It takes the room the words would have gone into, and a saying with nowhere to land is only breath. Sayers loathe having it used on them, which is the most reliable thing anyone knows about Sayers.",
+    "effects": [
+      {
+        "type": "damage",
+        "kind": "frost",
+        "amount": 8.0,
+        "poise": 10.0
+      },
+      {
+        "type": "status",
+        "id": "silenced",
+        "duration": 8.0,
+        "magnitude": 1.0
+      }
+    ]
+  },
+  {
+    "id": "core:spell/winters_argument",
+    "name": "Winter's Argument",
+    "school": "hush",
+    "cast_type": "aura",
+    "cost": 26,
+    "cast_time": 1.0,
+    "radius": 5.0,
+    "duration": 8.0,
+    "description": "A slow case, made quietly, that nothing here needs to be in such a hurry. Most things agree. The ones that do not are usually already cold.",
+    "effects": [
+      {
+        "type": "damage",
+        "kind": "frost",
+        "amount": 6.0,
+        "poise": 3.0
+      },
+      {
+        "type": "status",
+        "id": "chilled",
+        "duration": 5.0,
+        "magnitude": 0.5
+      }
+    ]
+  },
+  {
+    "id": "core:spell/binding_word",
+    "name": "Binding-Word",
+    "school": "binding",
+    "cast_type": "target",
+    "cost": 24,
+    "cast_time": 1.0,
+    "range": 20.0,
+    "description": "One short sentence about where a thing stops. Said at a charging boar it is the difference between a story you tell and a story told about you. It does no harm worth the name. It simply takes the next step away.",
+    "effects": [
+      {
+        "type": "damage",
+        "kind": "blunt",
+        "amount": 10.0,
+        "poise": 45.0
+      },
+      {
+        "type": "status",
+        "id": "stagger",
+        "duration": 1.0,
+        "magnitude": 1.0
+      }
+    ]
+  },
+  {
+    "id": "core:spell/keepers_bond",
+    "name": "Keeper's Bond",
+    "school": "binding",
+    "cast_type": "target",
+    "cost": 26,
+    "cast_time": 1.2,
+    "range": 18.0,
+    "duration": 14.0,
+    "description": "The Wardens' own Binding, said over the one going in first. It is a promise in the grammatical sense: it holds until it is broken, and then it is only a thing somebody said.",
+    "effects": [
+      {
+        "type": "shield",
+        "amount": 55.0,
+        "duration": 14.0
+      }
+    ]
+  },
+  {
+    "id": "core:spell/quiet_the_blood",
+    "name": "Quiet the Blood",
+    "school": "mending",
+    "cast_type": "self",
+    "cost": 16,
+    "cast_time": 0.7,
+    "description": "Not a healing. An instruction, issued firmly, to the parts of you that have become excitable. Mendings work best on things that are embarrassed to be making a fuss, which is why this one works so well on bleeding and so poorly on grief.",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 12.0
+      },
+      {
+        "type": "cleanse",
+        "ids": [
+          "bleeding",
+          "poisoned",
+          "burning"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "core:spell/kind_word",
+    "name": "A Kind Word",
+    "school": "mending",
+    "cast_type": "target",
+    "cost": 28,
+    "cast_time": 1.3,
+    "range": 16.0,
+    "description": "Said over somebody else, which is harder, because you have to mean it. The Candle account says this is the whole of Mending and the rest is technique: a thing spoken of kindly holds together a little longer than it has any business doing.",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 50.0
+      },
+      {
+        "type": "cleanse",
+        "ids": [
+          "bleeding",
+          "poisoned"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "core:spell/call_the_hound",
+    "name": "Call the Hound",
+    "school": "calling",
+    "cast_type": "summon",
+    "cost": 30,
+    "cast_time": 1.4,
+    "duration": 45.0,
+    "description": "Every valley has a dog in it that everyone remembers and nobody owned. Calling does not make one; it asks the one already in everybody's mouth to come, and something that has been spoken of that often does not need much asking.",
+    "effects": [
+      {
+        "type": "summon",
+        "enemy": "core:enemy/down_wolf",
+        "count": 1,
+        "duration": 45.0,
+        "radius": 2.5
+      }
+    ]
+  },
+  {
+    "id": "core:spell/raise_the_buried",
+    "name": "Raise the Buried",
+    "school": "calling",
+    "cast_type": "summon",
+    "cost": 44,
+    "cast_time": 2.0,
+    "duration": 60.0,
+    "description": "The Vale buries its people with the tool of their work so the ringing will know them by it. A Calling said over that ground is only a reminder of the arrangement. They come up holding the scythe. They are not pleased, and they were not pleased before, either.",
+    "effects": [
+      {
+        "type": "summon",
+        "enemy": "core:enemy/hedge_wight",
+        "count": 1,
+        "duration": 60.0,
+        "radius": 3.0
+      }
+    ]
+  },
+  {
+    "id": "core:spell/call_a_name",
+    "name": "Call a Name",
+    "school": "calling",
+    "cast_type": "summon",
+    "cost": 60,
+    "cast_time": 2.6,
+    "duration": 75.0,
+    "description": "The highest Calling and the shortest: you say a name off the Roll and wait. What comes is not the person. It is the shape a thousand evenings of being spoken of left behind, wearing the lantern and the tabard, and it will stand where you point and go out when the saying runs down. Sayers who do this often are known for being quiet afterwards.",
+    "effects": [
+      {
+        "type": "summon",
+        "enemy": "core:enemy/remembered_warden",
+        "count": 1,
+        "duration": 75.0,
+        "radius": 3.0
+      }
     ]
   }
 ]

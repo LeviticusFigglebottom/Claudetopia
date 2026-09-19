@@ -1,7 +1,7 @@
 class_name SpellCaster
 extends Node
-## Runtime spell casting for one actor: mana pool, cast timer, and execution of the four
-## implemented cast types (projectile, self, aura, target). Rules come from SpellRuntime.
+## Runtime spell casting for one actor: mana pool, cast timer, and execution of the five
+## implemented cast types (projectile, self, aura, target, summon). Rules come from SpellRuntime.
 ## Emits EventBus.skill_used(school skill, xp) on every completed cast.
 
 signal cast_started(spell_id: String, cast_time: float)
@@ -126,6 +126,8 @@ func _release() -> void:
 			_start_aura(def)
 		"target":
 			_cast_target(def)
+		"summon":
+			_cast_summon(def)
 	EventBus.skill_used.emit(SpellRuntime.skill_for(def), SpellRuntime.xp_for(def))
 	cast_released.emit(spell_id)
 
@@ -171,6 +173,37 @@ func _cast_target(def: Dictionary) -> void:
 		return
 	var friendly: bool = actor != null and actor.has_method("is_hostile_to") and not actor.is_hostile_to(t)
 	_apply_effects(t, def, friendly)
+
+
+## Calling: the spell names something and it stands up beside the caster for a while. The
+## called body is an ordinary enemy def turned to the caster's side, so it fights, takes hits
+## and dies like anything else — it simply lets go when its time is up and leaves nothing.
+func _cast_summon(def: Dictionary) -> void:
+	if not (actor is Node3D):
+		return
+	var spawner := EnemySpawner.for_node(actor)
+	if spawner == null:
+		Log.warn("SpellCaster", "nothing to hold the called: %s" % str(def.get("id", "")))
+		return
+	var host := actor as Node3D
+	var forward := -host.global_transform.basis.z
+	for e in SpellRuntime.effects_of(def):
+		if str(e.get("type", "")) != "summon":
+			continue
+		var enemy_id := str(e.get("enemy", ""))
+		if enemy_id.is_empty():
+			continue
+		var count := maxi(int(e.get("count", 1)), 1)
+		var radius := float(e.get("radius", 2.5))
+		var seconds := float(e.get("duration", def.get("duration", SpellRuntime.DEFAULT_SUMMON_SECONDS)))
+		for i in count:
+			var spread := deg_to_rad(40.0) * (float(i) - float(count - 1) * 0.5)
+			var at := host.global_position + forward.rotated(Vector3.UP, spread) * radius
+			var called := spawner.spawn_one(enemy_id, at, host.rotation.y, {"group": "called:" + str(def.get("id", ""))})
+			if called == null:
+				continue
+			called.become_ally(seconds)
+			EventBus.notify.emit("%s answers." % called.display_name, "spell")
 
 
 func _start_aura(def: Dictionary) -> void:

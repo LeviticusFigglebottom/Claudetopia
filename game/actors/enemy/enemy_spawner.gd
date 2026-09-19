@@ -70,6 +70,31 @@ func spawn_one(def_id: String, position: Vector3, yaw: float, options: Dictionar
 	return enemy
 
 
+## The spawner that owns `node`, or any spawner in the scene, or a fresh one parented beside it.
+## Summoners (a boss calling its dead, a Sayer calling help) all come through here so summoned
+## bodies are tracked, reset and cleared like every other spawn.
+static func for_node(node: Node) -> EnemySpawner:
+	if node == null or not node.is_inside_tree():
+		return null
+	var n := node.get_parent()
+	while n != null:
+		if n is EnemySpawner:
+			return n as EnemySpawner
+		n = n.get_parent()
+	for other: Node in node.get_tree().get_nodes_in_group("enemy_spawner"):
+		if other is EnemySpawner:
+			return other as EnemySpawner
+	var made := EnemySpawner.new()
+	made.name = "SummonSpawner"
+	made.spawn_on_ready = false
+	made.respawn_on_rest = false
+	var host: Node = node.get_parent()
+	if host == null:
+		host = node.get_tree().current_scene if node.get_tree().current_scene != null else node.get_tree().root
+	host.add_child(made)
+	return made
+
+
 func _grounded(position: Vector3) -> Vector3:
 	if not drop_to_ground or not is_inside_tree():
 		return position

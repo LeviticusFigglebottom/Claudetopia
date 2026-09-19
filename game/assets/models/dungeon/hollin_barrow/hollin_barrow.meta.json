@@ -22,19 +22,19 @@
       25.48
     ]
   ],
-  "tris": 500000,
-  "collision_tris": 110000,
+  "tris": 360000,
+  "collision_tris": 79200,
   "chunks": {
-    "mouth": 95408,
-    "stair": 66750,
-    "first_cist": 24843,
-    "root_run": 31134,
-    "tool_hall": 40691,
-    "sump": 39022,
-    "squeeze": 48036,
-    "bell_cist": 37175,
-    "reeve_hall": 63313,
-    "back_stair": 53628
+    "mouth": 86398,
+    "stair": 45696,
+    "first_cist": 14972,
+    "root_run": 18631,
+    "tool_hall": 24013,
+    "sump": 24079,
+    "squeeze": 31037,
+    "bell_cist": 23556,
+    "reeve_hall": 45581,
+    "back_stair": 46037
   },
   "entrance": [
     0.0,

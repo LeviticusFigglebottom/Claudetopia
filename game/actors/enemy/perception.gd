@@ -15,6 +15,10 @@ const EYE_HEIGHT := 1.55
 const BASE_GAIN := 0.9
 const BASE_DECAY := 0.22
 const MEMORY := 6.0
+## Group a summoned ally joins: hostiles hunt it, and it hunts them (DESIGN §5.3, Calling).
+const ALLY_GROUP := "summon_ally"
+## How often the candidate sweep runs. Between sweeps the current quarry is kept if it lives.
+const SCAN_INTERVAL := 0.4
 
 @export var sight_range: float = 22.0
 @export var sight_fov: float = 110.0
@@ -35,6 +39,9 @@ var enabled: bool = true
 
 var _was_detected: bool = false
 var _was_suspicious: bool = false
+var _scan_left: float = 0.0
+var _candidate: Node3D = null
+var _candidate_group: String = "player"
 
 
 func setup(actor: Node3D, def: Dictionary) -> void:
@@ -73,6 +80,7 @@ func _physics_process(delta: float) -> void:
 	if not enabled or owner_actor == null:
 		return
 	time_since_seen += delta
+	_scan_left -= delta
 	var t := _find_target()
 	can_see_target = t != null and can_see(t)
 	if can_see_target:
@@ -103,19 +111,51 @@ func eye_position() -> Vector3:
 	return owner_actor.global_position + Vector3.UP * eye_offset
 
 
+## The nearest living thing this one is hostile to. The player is always a candidate; summoned
+## allies are candidates for anything that hunts them, and anything hostile is a candidate for
+## an ally. The sweep is throttled because it runs per enemy per frame and the answer rarely
+## changes between sweeps.
 func _find_target() -> Node3D:
 	if owner_actor == null or not owner_actor.is_inside_tree():
 		return null
+	if _scan_left > 0.0 and _is_live_quarry(_candidate, _candidate_group):
+		return _candidate
+	_scan_left = SCAN_INTERVAL
+	var tree := owner_actor.get_tree()
+	var groups: Array[String] = ["player"]
+	if not tree.get_nodes_in_group(ALLY_GROUP).is_empty():
+		groups.append(ALLY_GROUP)
+		if owner_actor.is_in_group(ALLY_GROUP):
+			groups.append("enemy")
 	var best: Node3D = null
 	var best_d := INF
-	for n in owner_actor.get_tree().get_nodes_in_group("player"):
-		if not (n is Node3D) or (n.has_method("is_alive") and not n.is_alive()):
-			continue
-		var d: float = owner_actor.global_position.distance_to((n as Node3D).global_position)
-		if d < best_d:
-			best_d = d
-			best = n
+	for group: String in groups:
+		for n in tree.get_nodes_in_group(group):
+			if not _is_live_quarry(n, group):
+				continue
+			var d: float = owner_actor.global_position.distance_to((n as Node3D).global_position)
+			if d < best_d:
+				best_d = d
+				best = n as Node3D
+				_candidate_group = group
+	_candidate = best
 	return best
+
+
+## A candidate has to be a living body. Everything hunts the player by default — that rule
+## predates factions and stand-in player nodes in tests rely on it — but an ally the player
+## called does not, and the ally/hostile groups are filtered by the faction rule.
+func _is_live_quarry(n: Variant, group: String) -> bool:
+	if not (n is Node3D) or not is_instance_valid(n) or n == owner_actor:
+		return false
+	var node := n as Node3D
+	if node.has_method("is_alive") and not node.is_alive():
+		return false
+	if group == "player" and not owner_actor.is_in_group(ALLY_GROUP):
+		return true
+	if owner_actor.has_method("is_hostile_to") and not owner_actor.is_hostile_to(node):
+		return false
+	return true
 
 
 func can_see(t: Node3D) -> bool:

@@ -44,27 +44,32 @@ func test_unknown_spell_is_refused() -> void:
 
 
 func test_unimplemented_cast_types_are_refused_not_faked() -> void:
-	# Summons are not implemented in this pass; they must fail loudly, not pretend.
-	var summon := {"name": "x", "school": "calling", "cost": 1, "cast_type": "summon", "effects": []}
-	var r := SpellRuntime.can_cast(summon, 100.0, false)
+	# A cast type with no code behind it must fail loudly rather than pretend to work.
+	var made_up := {"name": "x", "school": "calling", "cost": 1, "cast_type": "geas", "effects": []}
+	var r := SpellRuntime.can_cast(made_up, 100.0, false)
 	assert_false(bool(r["ok"]))
 	assert_eq(str(r["reason"]), "cast_type")
-	for t in ["projectile", "self", "aura", "target"]:
+	for t in ["projectile", "self", "aura", "target", "summon"]:
 		assert_true(SpellRuntime.IMPLEMENTED_CAST_TYPES.has(t), "%s must be implemented" % t)
+	# Calling is implemented now: a summon spell is allowed to start.
+	var call_spell := {"name": "x", "school": "calling", "cost": 1, "cast_type": "summon", "effects": []}
+	assert_true(bool(SpellRuntime.can_cast(call_spell, 100.0, false)["ok"]))
 
 
 # --- schools and effects ----------------------------------------------------------------------
 
 func test_every_core_spell_is_valid() -> void:
 	var spells := ContentDB.all("spell")
-	assert_gt(spells.size(), 3, "expected the four pass-one spells")
+	assert_gt(spells.size(), 14, "DESIGN §12 asks for fifteen spells, three per school")
 	for s in spells:
 		assert_true(SpellRuntime.SCHOOLS.has(str(s["school"])), "%s has unknown school %s" % [s["id"], s["school"]])
 		assert_true(SpellRuntime.CAST_TYPES.has(str(s["cast_type"])), "%s has unknown cast type" % s["id"])
 		assert_gt(float(s["cost"]), 0.0, "%s must cost something" % s["id"])
 		assert_gt(str(s["description"]).length(), 40, "%s needs a lore description" % s["id"])
 		for e in s.get("effects", []):
-			assert_true(["damage", "status", "heal", "shield", "cleanse"].has(str(e.get("type", ""))), "%s has an unknown effect type" % s["id"])
+			assert_true(["damage", "status", "heal", "shield", "cleanse", "summon"].has(str(e.get("type", ""))), "%s has an unknown effect type" % s["id"])
+			if str(e.get("type", "")) == "summon":
+				assert_true(ContentDB.has(str(e.get("enemy", ""))), "%s calls something that does not exist" % s["id"])
 
 
 func test_school_maps_to_a_skill_and_a_damage_kind() -> void:
@@ -240,3 +245,13 @@ func test_every_core_weapon_and_armour_is_well_formed() -> void:
 			var a: Dictionary = item["armour"]
 			for key in ["slot", "armour", "weight_class", "stability"]:
 				assert_has(a, key, "%s armour block is missing %s" % [item["id"], key])
+
+
+func test_every_school_has_three_spells() -> void:
+	# DESIGN §12 scope: five schools, three spells each. A school with none is a dead skill.
+	var counts := {}
+	for s in ContentDB.all("spell"):
+		var school := str(s["school"])
+		counts[school] = int(counts.get(school, 0)) + 1
+	for school: String in SpellRuntime.SCHOOLS:
+		assert_eq(int(counts.get(school, 0)), 3, "%s should have three spells" % school)

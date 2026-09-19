@@ -53,6 +53,8 @@ var target: Node3D = null
 var inactive: bool = false            # ambusher waiting
 var pack_group: String = ""
 var summons_alive: Array[Enemy] = []
+## Seconds a called thing has left before it goes back where it came from; 0 means it stays.
+var life_left: float = 0.0
 
 var _attack_cooldowns: Dictionary = {}
 var _current_attack: Dictionary = {}
@@ -206,6 +208,11 @@ func _physics_process(delta: float) -> void:
 
 
 func _tick_timers(delta: float) -> void:
+	if life_left > 0.0:
+		life_left -= delta
+		if life_left <= 0.0:
+			dismiss()
+			return
 	_global_cooldown = maxf(_global_cooldown - delta, 0.0)
 	_strafe_timer -= delta
 	_retreat_timer = maxf(_retreat_timer - delta, 0.0)
@@ -637,7 +644,7 @@ func _summon(spec_v: Variant) -> void:
 	var add_id := str(spec.get("enemy", ""))
 	if add_id.is_empty():
 		return
-	var spawner := _summon_spawner()
+	var spawner := EnemySpawner.for_node(self)
 	if spawner == null:
 		Log.warn("Enemy", "%s has nowhere to put its summons" % enemy_id)
 		return
@@ -665,25 +672,6 @@ func _summon(spec_v: Variant) -> void:
 		made.append(add)
 	if not made.is_empty():
 		summoned.emit(made)
-
-
-## The spawner that owns this enemy, or any spawner in the scene, or one made on the spot so a
-## summoner in a hand-built room still works.
-func _summon_spawner() -> EnemySpawner:
-	var n := get_parent()
-	while n != null:
-		if n is EnemySpawner:
-			return n as EnemySpawner
-		n = n.get_parent()
-	for node: Node in get_tree().get_nodes_in_group("enemy_spawner"):
-		if node is EnemySpawner:
-			return node as EnemySpawner
-	var made := EnemySpawner.new()
-	made.name = "SummonSpawner"
-	made.spawn_on_ready = false
-	made.respawn_on_rest = false
-	get_parent().add_child(made)
-	return made
 
 
 func _close_hitbox() -> void:
@@ -866,6 +854,29 @@ func _enter_phase(index: int) -> void:
 	phase_changed.emit(index, phase)
 	if phase.has("say"):
 		EventBus.notify.emit(str(phase["say"]), "boss")
+
+
+## Turns this one into something the player called: it fights for them, hostiles hunt it, and
+## after `seconds` it lets go. Called before the body enters the tree where possible.
+func become_ally(seconds: float = 0.0) -> void:
+	faction = "player"
+	life_left = maxf(seconds, 0.0)
+	add_to_group(Perception.ALLY_GROUP)
+	marks_range = [0, 0]
+	if perception != null:
+		perception.target = null
+
+
+## The end of a called thing's time: no death, no marks, no loot — it simply stops being here.
+func dismiss() -> void:
+	if dead:
+		return
+	dead = true
+	life_left = 0.0
+	if perception != null:
+		perception.enabled = false
+	EventBus.summon_dismissed.emit(enemy_id, self)
+	queue_free()
 
 
 func _on_died(killer: Node) -> void:

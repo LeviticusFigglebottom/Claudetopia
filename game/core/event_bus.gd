@@ -24,6 +24,8 @@ signal entity_killed(victim: Node, killer: Node, enemy_id: String)
 signal boss_started(boss_id: String)
 signal boss_defeated(boss_id: String)
 signal status_applied(target: Node, effect_id: String)
+## A called thing's time ran out and it let go (Calling; no death, no marks).
+signal summon_dismissed(enemy_id: String, summon: Node)
 
 # progression & items
 signal skill_used(skill_id: String, xp: float)

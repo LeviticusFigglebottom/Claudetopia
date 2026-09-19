@@ -1,0 +1,72 @@
+[
+  {
+    "id": "core:enemy/remembered_warden",
+    "name": "A Remembered Warden",
+    "archetype": "elite",
+    "rig": "humanoid",
+    "faction": "unquiet",
+    "tint": "#7d8492",
+    "scale": 1.0,
+    "height": 1.85,
+    "lore": "Not the man. The shape a thousand evenings of being spoken of left behind: the tabard, the lantern held low and out, the habit of going first. It does not answer to the name it came for. It goes where you are looking and stands there until the saying runs down, and the Order would rather you did not do this at all.",
+    "summon_only": true,
+    "stats": {
+      "hp": 150,
+      "stamina": 110,
+      "poise": 40,
+      "armour": 6,
+      "speed": 3.6
+    },
+    "perception": {
+      "sight_range": 26.0,
+      "sight_fov": 130.0,
+      "hearing": 20.0,
+      "alertness": 1.3
+    },
+    "behaviour": {
+      "engage_range": 2.3,
+      "circle": 0.35,
+      "retreat_threshold": 0.0,
+      "patience": 3.0,
+      "leash": 200.0,
+      "aggression": 0.9,
+      "strafe_speed": 0.9
+    },
+    "attacks": [
+      {
+        "name": "lantern_guard",
+        "clip": "Attack_1H_Light_1",
+        "weapon_class": "sword",
+        "damage": 15.0,
+        "poise_damage": 14.0,
+        "range": 2.3,
+        "telegraph": 0.38,
+        "hit_window": 0.16,
+        "recovery": 0.42,
+        "cooldown": 1.4,
+        "gcd": 0.45,
+        "weight": 3.0,
+        "lunge": 1.8
+      },
+      {
+        "name": "went_first",
+        "clip": "Attack_1H_Heavy",
+        "weapon_class": "sword",
+        "damage": 26.0,
+        "poise_damage": 30.0,
+        "heavy": true,
+        "range": 2.6,
+        "telegraph": 0.75,
+        "hit_window": 0.18,
+        "recovery": 0.7,
+        "cooldown": 5.0,
+        "gcd": 0.8,
+        "weight": 1.0,
+        "lunge": 3.0,
+        "knockback": 1.6
+      }
+    ],
+    "marks": [0, 0],
+    "tags": ["undead", "humanoid", "warden", "called"]
+  }
+]

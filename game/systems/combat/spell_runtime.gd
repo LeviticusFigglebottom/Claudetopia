@@ -7,10 +7,13 @@ class_name SpellRuntime
 ##   {"type": "heal", "amount": 30}
 ##   {"type": "shield", "amount": 40, "duration": 12}
 ##   {"type": "cleanse", "ids": ["bleeding", "poisoned"]}
+##   {"type": "summon", "enemy": "core:enemy/x", "count": 1, "duration": 45, "radius": 2.5}
 
 const SCHOOLS: Array[String] = ["kindling", "hush", "binding", "mending", "calling"]
 const CAST_TYPES: Array[String] = ["projectile", "self", "aura", "target", "summon"]
-const IMPLEMENTED_CAST_TYPES: Array[String] = ["projectile", "self", "aura", "target"]
+const IMPLEMENTED_CAST_TYPES: Array[String] = ["projectile", "self", "aura", "target", "summon"]
+## How long a called thing stays when its spell does not say.
+const DEFAULT_SUMMON_SECONDS := 45.0
 const SCHOOL_KIND := {"kindling": "fire", "hush": "frost", "binding": "blunt", "mending": "blunt", "calling": "pierce"}
 const SCHOOL_COLOR := {"kindling": Color(1.0, 0.55, 0.2), "hush": Color(0.6, 0.85, 1.0), "binding": Color(0.85, 0.75, 0.4), "mending": Color(0.7, 1.0, 0.6), "calling": Color(0.75, 0.6, 0.95)}
 const MANA_REGEN_PER_S := 3.0
