@@ -132,12 +132,20 @@ Two traps worth knowing, both of which produced black models before they were fo
 
 ## Costs and weight (this container, 4 contended cores)
 
-Roughly 10-40 s per asset. The bake dominates: albedo at the asset's resolution, the
-normal at half, occlusion/roughness/metallic at half (occlusion is low-frequency, and the
-ORM map is written at half size anyway, which turns the most expensive pass into a quarter
-of the rays). Only hero pieces bake at 2048; bark is capped at 512.
+Roughly 10-40 s per asset, and the bake dominates. Every generated file is committed, so
+the size each map is *written* at is a design decision, not an afterthought:
 
-Generated output is committed, so weight matters. A tree is the heaviest ordinary asset at
-roughly 1.5 MB, and most of that is mesh: smooth shading splits a branching trunk at
-nearly every vertex, so triangles cost about 2.5 vertices each in the GLB. That is why the
-trunk budget is 5 000 triangles rather than the 40 000 a hero piece is allowed.
+| Map | Size | Why |
+|---|---|---|
+| albedo | the asset's resolution (256 / 512 / 1024, 1536 for a landmark) | it carries the whole read; nothing else is worth spending bytes on |
+| normal | a quarter of the albedo above 1024, a half below | painterly relief is broad and soft, so the downscale supersamples it rather than losing it |
+| ORM | the same | occlusion, roughness and metallic all vary slowly, and baking occlusion at a quarter is a quarter of the rays as well as a quarter of the bytes |
+
+Those three rules took a boulder from 1.6 MB to 0.42 MB with no visible change, which is
+the difference between a 190 MB library and a 130 MB one.
+
+The other lever is the mesh. A tree is the heaviest ordinary asset at roughly 1.4 MB and
+most of that is vertices: smooth shading splits a branching trunk at nearly every vertex,
+so a triangle costs about 2.5 vertices in the GLB. That is why the trunk budget is 5 000
+triangles rather than the 40 000 a hero piece is allowed, and why the export strips the
+pre-bake UV set — a second TEXCOORD nothing samples is eight bytes a vertex.
