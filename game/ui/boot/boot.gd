@@ -11,6 +11,8 @@ extends Node
 func _ready() -> void:
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
+	# never change scene from inside _ready: the tree is still building
+	await get_tree().process_frame
 	label.text = "Wickmere\n%d definitions in %d packs" % [ContentDB.all("region").size() + ContentDB.all("place").size(), ContentDB.packs.size()]
 	var args := _user_args()
 	if args.has("smoke"):

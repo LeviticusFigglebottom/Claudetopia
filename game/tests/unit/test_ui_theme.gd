@@ -86,3 +86,71 @@ func test_ui_autoload_is_wired() -> void:
 		var path: String = UI.MENUS[menu_id]["scene"]
 		assert_true(ResourceLoader.exists(path), "menu '%s' scene missing: %s" % [menu_id, path])
 	assert_false(UI.is_menu_open())
+
+
+## TestCase is a RefCounted, so the tree comes from the main loop.
+func _tree() -> SceneTree:
+	return Engine.get_main_loop() as SceneTree
+
+
+func test_opening_a_screen_pauses_the_world_and_closing_lets_go() -> void:
+	var opened: Array[String] = []
+	var closed: Array[String] = []
+	var on_open := func(id: String) -> void: opened.append(id)
+	var on_close := func(id: String) -> void: closed.append(id)
+	EventBus.menu_opened.connect(on_open)
+	EventBus.menu_closed.connect(on_close)
+
+	assert_false(UI.is_menu_open(), "nothing should be open to begin with")
+	var screen := UI.open("journal")
+	assert_true(screen != null, "the journal should open")
+	assert_true(UI.is_menu_open(), "the stack should know it is open")
+	assert_true(UI.is_menu_open("journal"))
+	assert_eq(UI.top_menu(), "journal")
+	assert_true(_tree().paused, "a full-screen screen pauses the world")
+	assert_eq(opened, ["journal"] as Array[String])
+
+	# a second screen stacks on top and the first is still open underneath
+	UI.open("skills")
+	assert_eq(UI.top_menu(), "skills")
+	assert_true(UI.is_menu_open("journal"))
+	UI.close()
+	assert_eq(UI.top_menu(), "journal")
+	assert_true(_tree().paused, "still paused while one remains")
+
+	UI.close()
+	assert_false(UI.is_menu_open())
+	assert_false(_tree().paused, "closing the last screen lets the world run")
+	assert_eq(closed, ["skills", "journal"] as Array[String])
+
+	# opening the same screen twice gives back the same one rather than stacking it
+	var first := UI.open("journal")
+	var second := UI.open("journal")
+	assert_eq(first, second)
+	UI.close_all()
+	assert_false(UI.is_menu_open())
+	assert_false(_tree().paused)
+
+	EventBus.menu_opened.disconnect(on_open)
+	EventBus.menu_closed.disconnect(on_close)
+
+
+func test_a_book_opens_the_reader_through_the_event_bus() -> void:
+	var books := ContentDB.ids_of("book")
+	assert_gt(books.size(), 0, "the pack should have books")
+	EventBus.book_opened.emit(books[0])
+	assert_true(UI.is_menu_open("book"), "EventBus.book_opened should open the reader")
+	assert_true(GameState.read_books.has(books[0]), "opening a book marks it read")
+	UI.close_all()
+	assert_false(_tree().paused)
+
+
+func test_the_theme_variant_follows_the_danger_of_the_region() -> void:
+	var before := GameState.current_region_id
+	GameState.enter_region("core:region/hearthvale")
+	assert_eq(UI.theme_variant, "warm", "a settled region keeps brass and oak")
+	GameState.enter_region("core:region/cinderlea")
+	assert_eq(UI.theme_variant, "deep", "danger 5 swaps to cold bronze and ash")
+	GameState.enter_region("core:region/hearthvale")
+	assert_eq(UI.theme_variant, "warm")
+	GameState.current_region_id = before

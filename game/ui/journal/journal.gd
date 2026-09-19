@@ -126,11 +126,18 @@ func _rumours() -> Array[Dictionary]:
 	return out
 
 
+## Rumours are overheard talk, so the entry is titled with the talk itself, cut short.
 func _rumour_title(def: Dictionary) -> String:
-	var place := ContentDB.get_or_empty(str(def.get("place", "")))
-	var where := str(place.get("name", ""))
-	var kind := str(def.get("kind", "talk")).capitalize()
-	return "%s — %s" % [where, kind] if where != "" else kind
+	var text := str(def.get("text", "")).strip_edges()
+	var cut := text.find(". ")
+	if cut < 12 or cut > 46:
+		cut = text.rfind(" ", 44)
+	if cut < 12:
+		cut = mini(text.length(), 44)
+	var title := text.substr(0, cut).strip_edges()
+	if title.length() < text.length():
+		title += "…"
+	return title
 
 
 func _bestiary() -> Array[Dictionary]:
@@ -219,7 +226,7 @@ func _rebuild_detail() -> void:
 
 
 func _detail_quest(e: Dictionary) -> void:
-	_detail_box.add_child(UiKit.label(str(e.get("name", "")), "Title"))
+	_detail_box.add_child(UiKit.wrapped(str(e.get("name", "")), "Title"))
 	var layer := str(e.get("layer", ""))
 	if layer != "":
 		_detail_box.add_child(UiKit.label(layer.capitalize() + (" · finished" if e.get("done", false) else ""), "Small"))
@@ -250,17 +257,25 @@ func _detail_quest(e: Dictionary) -> void:
 
 func _detail_rumour(e: Dictionary) -> void:
 	var def: Dictionary = e["def"]
-	_detail_box.add_child(UiKit.label(str(e.get("name", "")), "Title"))
+	_detail_box.add_child(UiKit.label("Talk", "Title"))
+	var tags: Array = def.get("tags", [])
+	if not tags.is_empty():
+		var words := PackedStringArray()
+		for t in tags:
+			words.append(str(t).capitalize())
+		_detail_box.add_child(UiKit.label("  ·  ".join(words), "Small"))
 	_detail_box.add_child(UiKit.divider())
 	_detail_box.add_child(UiKit.wrapped("“%s”" % str(def.get("text", "")), "Journal"))
-	var region := ContentDB.get_or_empty(str(def.get("region", "")))
-	if not region.is_empty():
-		_detail_box.add_child(UiKit.label("Heard in %s" % str(region.get("name", "")), "Small"))
+	for key in ["place", "region"]:
+		var where := ContentDB.get_or_empty(str(def.get(key, "")))
+		if not where.is_empty():
+			_detail_box.add_child(UiKit.label("Heard in %s" % str(where.get("name", "")), "Small"))
+			break
 
 
 func _detail_beast(e: Dictionary) -> void:
 	var def: Dictionary = e["def"]
-	_detail_box.add_child(UiKit.label(str(e.get("name", "")), "Title"))
+	_detail_box.add_child(UiKit.wrapped(str(e.get("name", "")), "Title"))
 	var sub := str(def.get("archetype", "")).capitalize()
 	if int(e.get("count", 0)) > 0:
 		sub += " · %d put down" % int(e["count"])
@@ -282,14 +297,16 @@ func _detail_beast(e: Dictionary) -> void:
 
 func _detail_book(e: Dictionary) -> void:
 	var def: Dictionary = e["def"]
-	_detail_box.add_child(UiKit.label(str(def.get("title", "")), "Title"))
-	_detail_box.add_child(UiKit.label(str(def.get("author", "")), "Small"))
+	_detail_box.add_child(UiKit.wrapped(str(def.get("title", "")), "Title"))
+	_detail_box.add_child(UiKit.wrapped(str(def.get("author", "")), "Small"))
 	_detail_box.add_child(UiKit.divider())
 	var body := str(def.get("body", ""))
 	var taste := body.substr(0, 320)
 	if body.length() > 320:
 		taste += "…"
-	_detail_box.add_child(UiKit.wrapped(UiKit.markdown_lite(taste), "Journal"))
+	var page := UiKit.rich(UiKit.markdown_lite(taste))
+	page.add_theme_font_override("normal_font", ThemeBuilder.body_font(ThemeBuilder.FONT_ITALIC))
+	_detail_box.add_child(page)
 	var open := UiKit.button("Read it again")
 	open.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	var id := str(e.get("id", ""))

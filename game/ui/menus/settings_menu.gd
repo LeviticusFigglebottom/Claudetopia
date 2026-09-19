@@ -202,7 +202,6 @@ func _build_accessibility() -> void:
 			"changes the bar colours only")
 	_slider("accessibility", "ui_scale", "Size of the UI", 0.8, 1.4, 0.05, "%")
 	_check("accessibility", "reduce_flashing", "Less flashing")
-	_check("gameplay", "subtitles", "Subtitles")
 	_content.add_child(UiKit.divider())
 	_content.add_child(UiKit.wrapped(
 			"The UI scale applies the next time a screen is opened. Colour-blind palettes " +
