@@ -1,4 +1,4 @@
-[gd_resource type="AudioBusLayout" format=3]
+[gd_resource type="AudioBusLayout" format=3 uid="uid://d0ecnvkl6ce43"]
 
 [sub_resource type="AudioEffectLowPassFilter" id="AudioEffectLowPassFilter_j3pel"]
 cutoff_hz = 20000.0
