@@ -121,9 +121,11 @@ height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamles
 * `region_mask.u8` region index per texel (255 = open water).
 * `texture_base.u8`, `texture_overlay.u8`, `texture_blend.u8` (0–255) per texel.
 * `color.rgba8` colour-map tint per texel.
+* `control.u32` the same three texture maps pre-packed into Terrain3D's uint32 control format (`base << 27 | overlay << 22 | blend << 14 | hole << 2 | nav << 1 | auto`), so the import tool hands the image straight to `Terrain3DData.import_images`.
+* `runtime/heights_1024.r32`, `runtime/regions_1024.u8`, `runtime/water_1024.u8`, `runtime/water_level_1024.r32`: quarter-resolution copies the runtime queries without Terrain3D (`TerrainProvider`), so height, region, water and water-level lookups work headlessly and in tests. `world_manifest.json` lists them under `"runtime"`.
 * `water_mask.u8` (1 = water surface at lake/sea/river level), `flow.rg8` (river direction).
 * `rivers.json`, `roads.json`: `[{"id", "points": [[x, z], ...], "width_m"}]`.
-* `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m"}]`.
+* `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it..
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
 Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 

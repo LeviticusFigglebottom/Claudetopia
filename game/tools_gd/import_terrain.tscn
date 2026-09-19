@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_import_terrain"]
+
+[ext_resource type="Script" path="res://tools_gd/import_terrain.gd" id="1"]
+
+[node name="ImportTerrain" type="Node"]
+script = ExtResource("1")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 400, 0)
+current = true

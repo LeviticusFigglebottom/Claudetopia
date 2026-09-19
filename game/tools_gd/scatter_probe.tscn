@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_scatter_probe"]
+
+[ext_resource type="Script" path="res://tools_gd/scatter_probe.gd" id="1"]
+
+[node name="ScatterProbe" type="Node"]
+script = ExtResource("1")
