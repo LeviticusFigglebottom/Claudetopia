@@ -1,0 +1,22 @@
+{
+  "id": "core:house/maud_bakehouse",
+  "name": "Brambling's Bakehouse",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/maud_brambling",
+  "trade": "baker",
+  "wealth": 2,
+  "household": 2,
+  "seed": 1203,
+  "habits": [
+    "feeds_the_birds",
+    "keeps_the_fire_in",
+    "drinks_alone",
+    "mends_at_night"
+  ],
+  "story": "Maud bakes for the whole of Merrowby and knows what everyone eats, which is the same as knowing everything. The first loaf goes on the Toll's rim-stone every morning and is still there at noon, and she will not say why, and neither will anyone else.",
+  "who_was_here": "Her husband, an unreliable huntsman, whose coat is still on the door hook.",
+  "unique_object": "a coat on a hook by the door belonging to a man who has been gone nine years",
+  "culture": "vale",
+  "children": 0,
+  "name_slug": "maud_bakehouse"
+}

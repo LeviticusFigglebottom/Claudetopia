@@ -1,0 +1,32 @@
+{
+  "id": "core:house/hesta_bell_house",
+  "name": "The Bell-Keeper's House",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/hesta_hollins",
+  "trade": "none",
+  "wealth": 1,
+  "household": 1,
+  "seed": 1207,
+  "habits": [
+    "keeps_a_shrine",
+    "mends_at_night",
+    "feeds_the_birds",
+    "sleeps_badly"
+  ],
+  "extra_rooms": [
+    "store"
+  ],
+  "extra_fixtures": {
+    "store": [
+      "shelf",
+      "shelf",
+      "chest"
+    ]
+  },
+  "story": "Seventeen small bells, one for each founding family, and Hesta keeps them all: oiled, rehung, rung on the right days. Two of the seventeen are buried under the Long Table's foot. She still oils the hooks they hung from.",
+  "who_was_here": "Her aunt, who taught her which bell is which by its note alone.",
+  "unique_object": "seventeen hooks, fifteen of them holding a bell",
+  "culture": "vale",
+  "children": 0,
+  "name_slug": "hesta_bell_house"
+}

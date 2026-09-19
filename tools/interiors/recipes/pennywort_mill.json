@@ -1,0 +1,169 @@
+{
+  "id": "core:interior/pennywort_mill",
+  "name": "Pennywort's Mill",
+  "place": "core:place/pennywort_mill",
+  "region": "core:region/hearthvale",
+  "formed_by": "mining",
+  "seed": 7712,
+  "voxel": 0.34,
+  "formed_by_story": "Not dug at all: the Pennyworts cut a cellar under the mill to keep the meal cool, then kept cutting when they found the chalk gave easily, and then found what the chalk was giving way into.",
+  "who_was_here": "Four generations of millers, and something older that the mill was built on top of without anyone asking why the ground was flat there.",
+  "story": "The wheel turns with no water. It has turned for eleven days. Beneath the meal cellar the miller's grandfather cut into an Oroth drain, and the drain is where the turning comes from. The mill is grinding something, and the sacks in the cellar are full.",
+  "unique_object": "a sack of cold flour, ground from nothing, that keeps for a month and tastes of no grain",
+  "palette": [
+    "#d6cdb4",
+    "#8a7a5c",
+    "#efe9d8",
+    "#6f7a68",
+    "#c9a24a"
+  ],
+  "ambience": [
+    "creak",
+    "drip"
+  ],
+  "start_heading_deg": 140,
+  "beats": [
+    {
+      "id": "cellar",
+      "role": "entrance",
+      "size": "medium",
+      "drop": 0,
+      "note": "The meal cellar. Sacks stacked to the ceiling, all of them full, none of them delivered."
+    },
+    {
+      "id": "gear_pit",
+      "role": "chamber",
+      "size": "medium",
+      "drop": -3.5,
+      "note": "The gear pit under the millstone. The great wooden crown-wheel is turning. There is no water within forty feet of it."
+    },
+    {
+      "id": "cut",
+      "role": "passage",
+      "size": "tight",
+      "drop": -2.5,
+      "note": "The grandfather's cut: pick marks, a rotted prop, and a lamp hook every three paces."
+    },
+    {
+      "id": "drain",
+      "role": "chamber",
+      "size": "large",
+      "drop": -4.0,
+      "water": 0.4,
+      "light_shaft": true,
+      "shaft_radius": 0.9,
+      "note": "An Oroth drain, square-cut and perfectly level, running further than the lamp reaches. Ankle-deep in water that is going somewhere."
+    },
+    {
+      "id": "sluice",
+      "role": "passage",
+      "size": "tight",
+      "drop": -1.0,
+      "note": "A sluice gate, closed, with a handle worn smooth by a hand that was not a miller's."
+    },
+    {
+      "id": "wheelhouse",
+      "role": "boss",
+      "size": "large",
+      "drop": -2.0,
+      "note": "The chamber the turning comes from: a bronze wheel in the floor, bigger than the mill's, sunk in dry stone and moving."
+    },
+    {
+      "id": "crawl",
+      "role": "passage",
+      "size": "squeeze",
+      "drop": 6.5,
+      "branch_from": "wheelhouse",
+      "note": "A chalk crawl up toward the light, ending under the mill's floorboards."
+    }
+  ],
+  "links": [
+    [
+      "cellar",
+      "gear_pit"
+    ],
+    [
+      "gear_pit",
+      "cut"
+    ],
+    [
+      "cut",
+      "drain"
+    ],
+    [
+      "drain",
+      "sluice"
+    ],
+    [
+      "sluice",
+      "wheelhouse"
+    ],
+    [
+      "wheelhouse",
+      "crawl"
+    ],
+    [
+      "crawl",
+      "cellar"
+    ]
+  ],
+  "shortcut": {
+    "from": "crawl",
+    "to": "cellar",
+    "kind": "trapdoor",
+    "note": "A trapdoor under the meal sacks, pushed open from below once and never closed again."
+  },
+  "encounters": [
+    {
+      "chamber": "gear_pit",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 1,
+      "role": "sentry",
+      "group": "mill",
+      "note": "The grandfather, still feeding the hopper."
+    },
+    {
+      "chamber": "drain",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 3,
+      "group": "drain",
+      "note": "Standing in the running water, facing the way it flows."
+    },
+    {
+      "chamber": "wheelhouse",
+      "enemy": "core:enemy/hedge_wight",
+      "count": 4,
+      "group": "wheel",
+      "role": "elite"
+    }
+  ],
+  "features": [
+    {
+      "kind": "exit",
+      "chamber": "cellar",
+      "anchor": 0,
+      "name": "the cellar steps"
+    },
+    {
+      "kind": "hearthstone",
+      "chamber": "drain",
+      "id": "hearth_pennywort_drain",
+      "name": "The Lamp Hook",
+      "place": "core:place/pennywort_mill"
+    },
+    {
+      "kind": "item",
+      "item": "core:item/cold_flour",
+      "chamber": "cellar",
+      "anchor": 3,
+      "asset": "res://assets/models/props/flour_sacks/flour_sacks.glb"
+    },
+    {
+      "kind": "marker",
+      "chamber": "wheelhouse",
+      "name": "BronzeWheel",
+      "anchor": 0
+    }
+  ],
+  "smoothing": 2
+}

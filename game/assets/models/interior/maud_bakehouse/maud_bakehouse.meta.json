@@ -1,0 +1,816 @@
+{
+  "id": "core:house/maud_bakehouse",
+  "name": "Brambling's Bakehouse",
+  "generator": "house_forge",
+  "version": 1,
+  "seed": 1203,
+  "resident": "core:npc/maud_brambling",
+  "trade": "baker",
+  "wealth": 2,
+  "household": 2,
+  "story": "Maud bakes for the whole of Merrowby and knows what everyone eats, which is the same as knowing everything. The first loaf goes on the Toll's rim-stone every morning and is still there at noon, and she will not say why, and neither will anyone else.",
+  "who_was_here": "Her husband, an unreliable huntsman, whose coat is still on the door hook.",
+  "unique_object": "a coat on a hook by the door belonging to a man who has been gone nine years",
+  "habits": [
+    "feeds_the_birds",
+    "keeps_the_fire_in",
+    "drinks_alone",
+    "mends_at_night"
+  ],
+  "culture": "vale",
+  "place": "core:place/merrowby",
+  "tris": 912,
+  "has_timber": true,
+  "rooms": [
+    {
+      "id": "bakehouse",
+      "kind": "bakehouse",
+      "x": 0.0,
+      "z": 0.0,
+      "w": 4.552667556387071,
+      "d": 4.301756179973209,
+      "storey": 0,
+      "wear": 0.8,
+      "centre": [
+        2.28,
+        0.0,
+        2.15
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "shop_front",
+      "kind": "shop_front",
+      "x": 4.552667556387071,
+      "z": 0.0,
+      "w": 4.046055253620833,
+      "d": 3.441823656058648,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        6.58,
+        0.0,
+        1.72
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "hearth_room",
+      "kind": "hearth_room",
+      "x": 0.0,
+      "z": 4.581756179973209,
+      "w": 5.07470170888494,
+      "d": 4.436940176141842,
+      "storey": 0,
+      "wear": 0.25,
+      "centre": [
+        2.54,
+        0.0,
+        6.8
+      ],
+      "floor_y": 0.0
+    },
+    {
+      "id": "bed",
+      "kind": "bed",
+      "x": 0.0,
+      "z": 0.0,
+      "w": 3.884374407282975,
+      "d": 3.10687025657899,
+      "storey": 1,
+      "wear": 0.25,
+      "centre": [
+        1.94,
+        2.75,
+        1.55
+      ],
+      "floor_y": 2.75
+    },
+    {
+      "id": "landing",
+      "kind": "landing",
+      "x": 3.884374407282975,
+      "z": 0.0,
+      "w": 2.4,
+      "d": 2.4,
+      "storey": 1,
+      "wear": 0.2,
+      "centre": [
+        5.08,
+        2.75,
+        1.2
+      ],
+      "floor_y": 2.75
+    }
+  ],
+  "doors": [
+    {
+      "between": [
+        "bakehouse",
+        "shop_front"
+      ],
+      "at": [
+        4.55,
+        1.02,
+        1.72
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "bakehouse",
+        "hearth_room"
+      ],
+      "at": [
+        2.28,
+        1.02,
+        4.44
+      ],
+      "yaw": 0.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "bed",
+        "landing"
+      ],
+      "at": [
+        3.88,
+        3.77,
+        1.2
+      ],
+      "yaw": 90.0,
+      "kind": "internal"
+    },
+    {
+      "between": [
+        "outside",
+        "bakehouse"
+      ],
+      "at": [
+        2.28,
+        0.0,
+        -0.28
+      ],
+      "yaw": 0.0,
+      "kind": "front"
+    }
+  ],
+  "windows": [
+    {
+      "room": "hearth_room",
+      "at": [
+        0.0,
+        1.48,
+        6.8
+      ],
+      "yaw": 90.0,
+      "normal": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "room": "bed",
+      "at": [
+        1.94,
+        4.23,
+        3.11
+      ],
+      "yaw": 0.0,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "room": "shop_front",
+      "at": [
+        6.58,
+        1.48,
+        3.44
+      ],
+      "yaw": 0.0,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "asset": "res://assets/models/props/bread_oven/bread_oven.glb",
+      "fixture": "bread_oven",
+      "room": "bakehouse",
+      "at": [
+        2.3,
+        0.0,
+        0.9
+      ],
+      "yaw": 0.0,
+      "wear": 0.71
+    },
+    {
+      "asset": "res://assets/models/props/kneading_table/kneading_table.glb",
+      "fixture": "kneading_table",
+      "room": "bakehouse",
+      "at": [
+        1.93,
+        0.0,
+        2.27
+      ],
+      "yaw": 288.5,
+      "wear": 0.72
+    },
+    {
+      "asset": "res://assets/models/props/flour_sacks/flour_sacks.glb",
+      "fixture": "flour_sacks",
+      "room": "bakehouse",
+      "at": [
+        3.8,
+        0.0,
+        3.65
+      ],
+      "yaw": 0.0,
+      "wear": 0.86
+    },
+    {
+      "asset": "res://assets/models/props/peel_rack/peel_rack.glb",
+      "fixture": "peel_rack",
+      "room": "bakehouse",
+      "at": [
+        0.6,
+        1.2,
+        1.61
+      ],
+      "yaw": 90.0,
+      "wear": 0.79
+    },
+    {
+      "asset": "res://assets/models/props/dough_ball/dough_ball.glb",
+      "prop": "dough_ball",
+      "room": "bakehouse",
+      "on": "kneading_table",
+      "at": [
+        1.82,
+        0.78,
+        2.52
+      ],
+      "yaw": 85.2,
+      "group": "kneading_table_0"
+    },
+    {
+      "asset": "res://assets/models/props/flour_scoop/flour_scoop.glb",
+      "prop": "flour_scoop",
+      "room": "bakehouse",
+      "on": "kneading_table",
+      "at": [
+        1.8,
+        0.78,
+        2.26
+      ],
+      "yaw": 48.1,
+      "group": "kneading_table_0"
+    },
+    {
+      "asset": "res://assets/models/props/cloth/cloth.glb",
+      "prop": "cloth",
+      "room": "bakehouse",
+      "on": "kneading_table",
+      "at": [
+        1.92,
+        0.78,
+        1.93
+      ],
+      "yaw": 196.7,
+      "group": "kneading_table_0"
+    },
+    {
+      "asset": "res://assets/models/props/loaf_tin/loaf_tin.glb",
+      "prop": "loaf_tin",
+      "room": "bakehouse",
+      "on": "kneading_table",
+      "at": [
+        1.9,
+        0.78,
+        1.9
+      ],
+      "yaw": 283.9,
+      "group": "kneading_table_1"
+    },
+    {
+      "asset": "res://assets/models/props/loaf_tin/loaf_tin.glb",
+      "prop": "loaf_tin",
+      "room": "bakehouse",
+      "on": "kneading_table",
+      "at": [
+        2.23,
+        0.78,
+        1.75
+      ],
+      "yaw": 21.0,
+      "group": "kneading_table_1"
+    },
+    {
+      "asset": "res://assets/models/props/counter/counter.glb",
+      "fixture": "counter",
+      "room": "shop_front",
+      "at": [
+        5.85,
+        0.0,
+        1.72
+      ],
+      "yaw": 90.0,
+      "wear": 0.24
+    },
+    {
+      "asset": "res://assets/models/props/bread_shelf/bread_shelf.glb",
+      "fixture": "bread_shelf",
+      "room": "shop_front",
+      "at": [
+        6.22,
+        1.0,
+        0.3
+      ],
+      "yaw": 0.0,
+      "wear": 0.26
+    },
+    {
+      "asset": "res://assets/models/props/scales/scales.glb",
+      "prop": "scales",
+      "room": "shop_front",
+      "on": "counter",
+      "at": [
+        5.83,
+        0.78,
+        1.7
+      ],
+      "yaw": 243.0,
+      "group": "counter_0"
+    },
+    {
+      "asset": "res://assets/models/props/coin_few/coin_few.glb",
+      "prop": "coin_few",
+      "room": "shop_front",
+      "on": "counter",
+      "at": [
+        5.88,
+        0.78,
+        1.91
+      ],
+      "yaw": 29.4,
+      "group": "counter_0"
+    },
+    {
+      "asset": "res://assets/models/props/wrapped_loaf/wrapped_loaf.glb",
+      "prop": "wrapped_loaf",
+      "room": "shop_front",
+      "on": "counter",
+      "at": [
+        5.88,
+        0.78,
+        2.62
+      ],
+      "yaw": 311.2,
+      "group": "counter_1"
+    },
+    {
+      "asset": "res://assets/models/props/wrapped_loaf/wrapped_loaf.glb",
+      "prop": "wrapped_loaf",
+      "room": "shop_front",
+      "on": "counter",
+      "at": [
+        5.83,
+        0.78,
+        2.93
+      ],
+      "yaw": 340.6,
+      "group": "counter_1"
+    },
+    {
+      "asset": "res://assets/models/props/hearth/hearth.glb",
+      "fixture": "hearth",
+      "room": "hearth_room",
+      "at": [
+        0.9,
+        0.0,
+        5.76
+      ],
+      "yaw": 90.0,
+      "wear": 0.2
+    },
+    {
+      "asset": "res://assets/models/props/table/table.glb",
+      "fixture": "table",
+      "room": "hearth_room",
+      "at": [
+        2.16,
+        0.0,
+        7.08
+      ],
+      "yaw": 0.0,
+      "wear": 0.16
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        1.96,
+        0.0,
+        7.77
+      ],
+      "yaw": 180.0,
+      "wear": 0.17
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        2.7,
+        0.0,
+        6.39
+      ],
+      "yaw": 0.0,
+      "wear": 0.2
+    },
+    {
+      "asset": "res://assets/models/props/cupboard/cupboard.glb",
+      "fixture": "cupboard",
+      "room": "hearth_room",
+      "at": [
+        3.52,
+        0.0,
+        4.93
+      ],
+      "yaw": 0.0,
+      "wear": 0.32
+    },
+    {
+      "asset": "res://assets/models/props/settle/settle.glb",
+      "fixture": "settle",
+      "room": "hearth_room",
+      "at": [
+        1.68,
+        0.0,
+        4.98
+      ],
+      "yaw": 0.0,
+      "wear": 0.15
+    },
+    {
+      "asset": "res://assets/models/props/bowl/bowl.glb",
+      "prop": "bowl",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        1.85,
+        0.78,
+        7.11
+      ],
+      "yaw": 44.4,
+      "group": "table_0"
+    },
+    {
+      "asset": "res://assets/models/props/spoon/spoon.glb",
+      "prop": "spoon",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        2.07,
+        0.78,
+        7.28
+      ],
+      "yaw": 85.3,
+      "group": "table_0"
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        2.19,
+        0.78,
+        6.93
+      ],
+      "yaw": 229.1,
+      "group": "table_0"
+    },
+    {
+      "asset": "res://assets/models/props/candlestick/candlestick.glb",
+      "prop": "candlestick",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        2.12,
+        0.78,
+        7.25
+      ],
+      "yaw": 131.3,
+      "group": "table_1"
+    },
+    {
+      "asset": "res://assets/models/props/candle_stub/candle_stub.glb",
+      "prop": "candle_stub",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        2.29,
+        0.78,
+        6.96
+      ],
+      "yaw": 198.0,
+      "group": "table_1"
+    },
+    {
+      "asset": "res://assets/models/props/bread_heel/bread_heel.glb",
+      "prop": "bread_heel",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        2.94,
+        0.78,
+        6.96
+      ],
+      "yaw": 246.2,
+      "group": "table_2"
+    },
+    {
+      "asset": "res://assets/models/props/cheese_end/cheese_end.glb",
+      "prop": "cheese_end",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        3.17,
+        0.78,
+        6.99
+      ],
+      "yaw": 83.5,
+      "group": "table_2"
+    },
+    {
+      "asset": "res://assets/models/props/bed/bed.glb",
+      "fixture": "bed",
+      "room": "bed",
+      "at": [
+        2.78,
+        2.75,
+        1.71
+      ],
+      "yaw": 270.0,
+      "wear": 0.34
+    },
+    {
+      "asset": "res://assets/models/props/chest/chest.glb",
+      "fixture": "chest",
+      "room": "bed",
+      "at": [
+        0.6,
+        2.75,
+        1.61
+      ],
+      "yaw": 90.0,
+      "wear": 0.33
+    },
+    {
+      "asset": "res://assets/models/props/washstand/washstand.glb",
+      "fixture": "washstand",
+      "room": "bed",
+      "at": [
+        1.73,
+        2.75,
+        2.76
+      ],
+      "yaw": 180.0,
+      "wear": 0.3
+    },
+    {
+      "asset": "res://assets/models/props/basin/basin.glb",
+      "prop": "basin",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        1.48,
+        3.53,
+        2.71
+      ],
+      "yaw": 346.0,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/ewer/ewer.glb",
+      "prop": "ewer",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        1.39,
+        3.53,
+        2.76
+      ],
+      "yaw": 189.6,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/cloth/cloth.glb",
+      "prop": "cloth",
+      "room": "bed",
+      "on": "washstand",
+      "at": [
+        1.3,
+        3.53,
+        2.79
+      ],
+      "yaw": 315.6,
+      "group": "washstand_0"
+    },
+    {
+      "asset": "res://assets/models/props/crumb_bowl/crumb_bowl.glb",
+      "prop": "crumb_bowl",
+      "room": "hearth_room",
+      "habit": "feeds_the_birds",
+      "at": [
+        3.05,
+        0.95,
+        5.95
+      ],
+      "yaw": 106.5
+    },
+    {
+      "asset": "res://assets/models/props/banked_embers/banked_embers.glb",
+      "prop": "banked_embers",
+      "room": "hearth_room",
+      "habit": "keeps_the_fire_in",
+      "at": [
+        4.32,
+        0.0,
+        5.46
+      ],
+      "yaw": 314.5
+    },
+    {
+      "asset": "res://assets/models/props/kindling_basket/kindling_basket.glb",
+      "prop": "kindling_basket",
+      "room": "hearth_room",
+      "habit": "keeps_the_fire_in",
+      "at": [
+        2.57,
+        0.0,
+        6.87
+      ],
+      "yaw": 92.9
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "hearth_room",
+      "habit": "drinks_alone",
+      "at": [
+        4.27,
+        0.45,
+        6.01
+      ],
+      "yaw": 251.7
+    },
+    {
+      "asset": "res://assets/models/props/jug/jug.glb",
+      "prop": "jug",
+      "room": "hearth_room",
+      "habit": "drinks_alone",
+      "at": [
+        4.39,
+        0.45,
+        7.19
+      ],
+      "yaw": 293.5
+    },
+    {
+      "asset": "res://assets/models/props/mending_basket/mending_basket.glb",
+      "prop": "mending_basket",
+      "room": "hearth_room",
+      "habit": "mends_at_night",
+      "at": [
+        1.21,
+        0.0,
+        6.23
+      ],
+      "yaw": 46.7
+    },
+    {
+      "asset": "res://assets/models/props/candle_stub/candle_stub.glb",
+      "prop": "candle_stub",
+      "room": "hearth_room",
+      "habit": "mends_at_night",
+      "at": [
+        2.79,
+        0.75,
+        8.26
+      ],
+      "yaw": 13.9
+    }
+  ],
+  "lights": [
+    {
+      "room": "bakehouse",
+      "at": [
+        2.3,
+        0.6,
+        0.9
+      ],
+      "color": "#ff9a42",
+      "energy": 3.0,
+      "range": 9.0,
+      "flicker": 0.4,
+      "shadow": true
+    },
+    {
+      "room": "shop_front",
+      "at": [
+        6.58,
+        2.2,
+        1.72
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        0.9,
+        0.6,
+        5.76
+      ],
+      "color": "#ff9a42",
+      "energy": 3.0,
+      "range": 9.0,
+      "flicker": 0.4,
+      "shadow": true
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        2.12,
+        1.03,
+        7.25
+      ],
+      "color": "#ffca7a",
+      "energy": 1.1,
+      "range": 4.5,
+      "flicker": 0.35,
+      "shadow": false
+    },
+    {
+      "room": "hearth_room",
+      "at": [
+        2.29,
+        1.03,
+        6.96
+      ],
+      "color": "#ffca7a",
+      "energy": 1.1,
+      "range": 4.5,
+      "flicker": 0.35,
+      "shadow": false
+    },
+    {
+      "room": "bed",
+      "at": [
+        1.94,
+        4.95,
+        1.55
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    },
+    {
+      "room": "landing",
+      "at": [
+        5.08,
+        4.95,
+        1.2
+      ],
+      "color": "#ffd9a0",
+      "energy": 0.8,
+      "range": 6.0,
+      "flicker": 0.0,
+      "shadow": false
+    }
+  ],
+  "features": [],
+  "entrance": [
+    4.55,
+    1.02,
+    1.72
+  ]
+}

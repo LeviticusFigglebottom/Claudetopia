@@ -1,0 +1,21 @@
+{
+  "id": "core:house/ellard_steward",
+  "name": "The Steward's House",
+  "place": "core:place/merrowby",
+  "resident": "core:npc/ellard_wynstead",
+  "trade": "steward",
+  "wealth": 3,
+  "household": 2,
+  "seed": 1206,
+  "habits": [
+    "counts_everything",
+    "works_at_the_table",
+    "reads_late"
+  ],
+  "story": "Merrowby's deeds, weights and grudges live in one room with a brass key that Ellard polishes at noon whether it needs it or not. He is not corrupt. He is worse: he is exact.",
+  "who_was_here": "Four stewards before him, each of whom left the deed chest fuller.",
+  "unique_object": "the deed chest, whose lid has a map of Merrowby's fields cut into it, updated with a knife",
+  "culture": "vale",
+  "children": 0,
+  "name_slug": "ellard_steward_house"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "core:house/dunna_cliff_hold",
+  "name": "The Memory-Keeper's Room",
+  "place": "core:place/kharrow_hold",
+  "culture": "clans",
+  "resident": "core:npc/dunna_ko_kharrow",
+  "trade": "none",
+  "wealth": 2,
+  "household": 2,
+  "seed": 1212,
+  "habits": [
+    "reads_late",
+    "counts_everything",
+    "keeps_the_fire_in",
+    "keeps_a_shrine"
+  ],
+  "extra_rooms": [
+    "study"
+  ],
+  "story": "Cut into the cliff, one window, and a wall of knotted cords: the Rope-Song, every verse of it. There is metre in the song for eight clans and only seven cords, and Dunna will show you the gap if you ask twice.",
+  "who_was_here": "Every memory-keeper of Clan Kharrow, each of whom added a cord and none of whom added the eighth.",
+  "unique_object": "a wall of knotted cords with a gap where the eighth verse should hang",
+  "children": 0,
+  "name_slug": "dunna_cliff_hold"
+}
