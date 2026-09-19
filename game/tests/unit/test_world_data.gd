@@ -21,10 +21,16 @@ func add_child_for_test(node: Node) -> void:
 	_scratch.add_child(node)
 
 
+static var _warned_missing := false
+
+
 func before_each() -> void:
 	if provider != null:
 		return
 	if not FileAccess.file_exists("%s/world_manifest.json" % GENERATED):
+		if not _warned_missing:
+			_warned_missing = true
+			print("  (world data missing: run ./run.sh world; world tests skipped)")
 		return
 	provider = TerrainProvider.new()
 	provider.load_data()
