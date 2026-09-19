@@ -49,6 +49,11 @@ func _ready() -> void:
 	_build_camera()
 	_build_shots()
 	print("asset_review: %d assets, %d shots -> %s" % [entries.size(), shots.size(), out_dir])
+	for e in entries:
+		var b: AABB = e["aabb"]
+		print("  %s x=%.1f size=%v" % [String(e["path"]).get_file(), float(e["x"]), b.size])
+	for s in shots:
+		print("  shot %s centre=%v dist=%.1f angle=%d" % [s["name"], s["centre"], float(s["dist"]), int(s["angle"])])
 
 
 func _parse_args() -> void:
@@ -168,27 +173,25 @@ func _place_lineup(paths: Array[String]) -> void:
 		loaded.append({"path": p, "node": inst, "aabb": box})
 	if loaded.is_empty():
 		return
-	var gap := 0.0
-	for e in loaded:
-		var box: AABB = e["aabb"]
-		gap = maxf(gap, maxf(box.size.x, box.size.z))
-	gap = clampf(gap * 1.35, 1.2, 26.0)
+	# Space neighbours by their own footprints, not by the largest in the set: one 13 m
+	# giant bone must not push a 0.4 m mug half a screen away from its neighbour.
 	var cursor := 0.0
 	var max_h := 0.0
+	var prev_half := 0.0
 	for i in loaded.size():
 		var e: Dictionary = loaded[i]
 		var box: AABB = e["aabb"]
 		var half := maxf(box.size.x, box.size.z) * 0.5
 		if i > 0:
-			cursor += half + gap * 0.25
+			cursor += prev_half + half + maxf(0.35, maxf(prev_half, half) * 0.35)
 		var node: Node3D = e["node"]
 		# Centre each asset on its own footprint and sit it on the ground.
 		node.position = Vector3(cursor - box.position.x - box.size.x * 0.5, -box.position.y, 0.0)
 		max_h = maxf(max_h, box.size.y)
 		e["x"] = cursor
 		entries.append(e)
-		cursor += half + gap * 0.25
-	stage_radius = maxf(cursor * 0.5, 2.0)
+		prev_half = half
+	stage_radius = maxf(cursor * 0.5 + prev_half, 2.0)
 	stage_centre = Vector3(cursor * 0.5, 0.0, 0.0)
 	stage_height = max_h
 
@@ -207,6 +210,11 @@ func _apply_lod(root: Node3D) -> void:
 			level = 3
 		m.visible = level == lod_level
 		if m.visible:
+			# The importer gives each level a distance band; a lineup is shot from far
+			# enough away that LOD0 would be culled, so the forced level ignores the band.
+			m.visibility_range_begin = 0.0
+			m.visibility_range_end = 0.0
+			m.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 			_fix_materials(m)
 
 
@@ -302,12 +310,16 @@ func _aim(shot: Dictionary) -> void:
 
 func _process(_delta: float) -> void:
 	frames += 1
-	# Two frames per shot: one to settle the camera and stream materials, one to capture.
-	if frames % 3 != 0:
-		if frames % 3 == 1 and shot_index + 1 < shots.size():
-			_aim(shots[shot_index + 1])
-		return
-	if shot_index >= 0 and shot_index < shots.size():
+	# Three frames per shot: aim, let the frame render with the new camera, then capture.
+	var phase := frames % 3
+	if phase == 1:
+		shot_index += 1
+		if shot_index >= shots.size():
+			print("asset_review: done")
+			get_tree().quit(0)
+			return
+		_aim(shots[shot_index])
+	elif phase == 0 and shot_index >= 0 and shot_index < shots.size():
 		var img := get_viewport().get_texture().get_image()
 		var path := "%s/%s.png" % [out_dir, shots[shot_index]["name"]]
 		var err := img.save_png(path)
@@ -315,7 +327,3 @@ func _process(_delta: float) -> void:
 			push_error("asset_review: cannot write %s (%d)" % [path, err])
 		else:
 			print("SHOT %s" % path)
-	shot_index += 1
-	if shot_index >= shots.size():
-		print("asset_review: done")
-		get_tree().quit(0)

@@ -95,6 +95,10 @@ def mesh_from_pydata(name: str, verts, faces, edges=(), mat=None, smooth: bool =
 
 
 def bm_to_object(bm: bmesh.types.BMesh, name: str, mat=None, smooth: bool = True) -> bpy.types.Object:
+    # Primitives come with a UV layer and bmesh geometry does not; joining the two would
+    # otherwise leave half an object's faces at UV (0, 0). Give every mesh a layer.
+    if not bm.loops.layers.uv:
+        bm.loops.layers.uv.new("UVMap")
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me)
     bm.free()

@@ -52,13 +52,24 @@ def pick_resolution(radius_m: float, override: int = 0, quick: bool = False, tie
 
 # --- UV ---------------------------------------------------------------------------------
 
-def unwrap(obj, angle_deg: float = 66.0, margin: float = 0.02) -> None:
-    """Smart UV project the whole object into one 0..1 atlas."""
+def unwrap(obj, angle_deg: float = 66.0, margin: float = 0.006) -> None:
+    """Smart UV project the whole object into one 0..1 atlas.
+
+    Smart project alone packs badly on assets made of many separate parts: a long tube next
+    to a small sphere leaves most of the atlas empty and the tube lands on unbaked black.
+    Averaging island scale first gives every part the same texel density, and repacking with
+    rotation fills the sheet, so the baked resolution is actually spent on the model."""
     S.select_only([obj])
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.uv.smart_project(angle_limit=math.radians(angle_deg), island_margin=margin,
-                             area_weight=0.0, correct_aspect=True, scale_to_bounds=False)
+    bpy.ops.uv.smart_project(angle_limit=math.radians(angle_deg), island_margin=0.0,
+                             area_weight=1.0, correct_aspect=True, scale_to_bounds=False)
+    bpy.ops.uv.select_all(action="SELECT")
+    bpy.ops.uv.average_islands_scale()
+    try:
+        bpy.ops.uv.pack_islands(rotate=True, margin=margin, scale=True)
+    except TypeError:  # older signature
+        bpy.ops.uv.pack_islands(rotate=True, margin=margin)
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
@@ -208,7 +219,7 @@ def only_visible(obj, occluders=()):
 
 def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_distance: float | None = None,
                orm_scale: float = 0.5, alpha: bool = False, samples: int | None = None,
-               texture_prefix: str | None = None, occluders=()) -> dict:
+               texture_prefix: str | None = None, occluders=(), keep_uv: bool = False) -> dict:
     """Bake `obj` (all material slots) into <out_dir>/<prefix>_{albedo,normal,orm}.png and
     replace its materials with one baked Principled material named <name>_mat."""
     t0 = time.time()
@@ -217,7 +228,14 @@ def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_dista
     mats = [m for m in obj.data.materials if m is not None]
     if not mats:
         raise RuntimeError("bake_atlas: %s has no materials" % obj.name)
-    if not has_uv(obj):
+    # Always unwrap unless the caller authored the UVs. Trusting an existing layer is a
+    # trap: joining a primitive (which carries a default UV layer) with a bmesh-built part
+    # (which does not) yields an object that *has* a UV layer while half its faces sit at
+    # (0, 0) - which bakes as a black model.
+    if keep_uv and has_uv(obj):
+        if TRACE:
+            print("FORGE_BAKE  unwrap skipped (authored UVs)", flush=True)
+    else:
         t_uv = time.time()
         unwrap(obj)
         if TRACE:
