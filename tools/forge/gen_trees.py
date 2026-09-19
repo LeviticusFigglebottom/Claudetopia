@@ -222,6 +222,19 @@ SPECIES = {
     ),
 }
 
+# A canopy has to be a mass, not a scattering. Sapling's own leaf count is per parent
+# branch, so the card count is set here instead: these are the numbers that make the crown
+# read as foliage rather than as a bare frame with decorations on it.
+CARDS_BIG = 760      # trees over 6 m
+CARDS_SMALL = 460    # shrubs and small trees
+CARD_SCALE = 1.75    # multiplies each species' own relative card size
+# A cluster card stands in for a hand of foliage, so it needs many small leaves rather
+# than a few large ones: at a metre and a half across, six big leaves make an oak look
+# like a houseplant.
+LEAF_SCALE = 0.68    # multiplies each species' own relative leaf size within the atlas
+LEAVES_PER_CELL = 135
+
+
 # Which region each species belongs to (used by the manifest and for sanity checks).
 REGION_OF = {
     "oak": "hearthvale", "apple": "hearthvale", "hawthorn": "hearthvale", "yew": "hearthvale",
@@ -245,9 +258,11 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
                            ("small" if height < 4.0 else "normal"))
     sap = TR.cap_resolution(sap, budget_tier, quick)
     # Sapling's leaf count is per parent branch; ask for plenty and thin to `cards_target`.
-    cards_target = int(spec.get("cards_target", 190 if height > 6 else 130) * (0.45 if quick else 1.0))
+    cards_target = int(spec.get("cards_target", CARDS_BIG if height > 6 else CARDS_SMALL)
+                       * (0.35 if quick else 1.0))
     if spec.get("leaf_hex"):
-        sap["leaves"] = 6
+        # enough leaf points that thinning to cards_target still samples the whole crown
+        sap["leaves"] = 14
     trunk, leaves = TR.grow(sap, rng.randrange(99999))
     trunk_budget = int(spec.get("trunk_budget", 16000 if spec.get("tier") == "hero" else 7500))
     if quick:
@@ -281,7 +296,8 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
         names = T.leaf_cluster_atlas(
             out_dir, atlas_prefix, P.lin(spec["leaf_hex"]), shapes=spec.get("leaf_shapes", ("oval",)),
             seed=rng.randrange(99999), size=size, cells=cells,
-            leaves_per_cell=int(70 * (0.6 if quick else 1.0)), leaf_scale=spec.get("leaf_scale", 0.15),
+            leaves_per_cell=int(LEAVES_PER_CELL * (0.45 if quick else 1.0)),
+            leaf_scale=spec.get("leaf_scale", 0.15) * LEAF_SCALE,
             autumn=P.lin(spec["autumn_hex"]) if spec.get("autumn_hex") else None,
             autumn_amount=spec.get("autumn", 0.0),
             fruit=P.lin(spec["fruit_hex"]) if spec.get("fruit_hex") else None,
@@ -293,8 +309,8 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
         leaf_mat["forge_textures"] = dict(names)
         card_tex = dict(names)
         TR.cards_from_leaves(leaves, "%s_leaves" % name, leaf_mat, rng, cells=cells,
-                             scale=spec.get("card", 1.0), droop_deg=spec.get("droop", 0.0),
-                             target=cards_target)
+                             scale=spec.get("card", 1.0) * CARD_SCALE,
+                             droop_deg=spec.get("droop", 0.0), target=cards_target)
         cards.append(leaves)
         # weeping curtains (willow) and hanging moss (Briarwold giants)
         if spec.get("weep") and not quick:
