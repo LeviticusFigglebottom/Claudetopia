@@ -42,6 +42,10 @@ def slab(name, mat, size=1.0):
     S.solidify(ob, thickness=size * 0.12, offset=-1.0)
     S.bevel(ob, width=size * 0.02, segments=2, angle_deg=35)
     S.shade_smooth(ob, 40.0)
+    # The swatch renderer looks along -Y, so tilt the slab up to face it; edge-on a
+    # surface shows nothing but its silhouette.
+    ob.rotation_euler = (math.radians(-62.0), 0.0, 0.0)
+    S.apply_transforms(ob)
     return ob
 
 

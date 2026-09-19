@@ -496,11 +496,13 @@ def birch_bark(pal=None, age=0.4, tint=0.1, name=None, **_):
     return nb.finish(col, rough_var(nb, v, 0.7, 0.08), 0.0, normal)
 
 
-def plaster_limewash(pal=None, wear=0.4, age=0.4, tint=0.35, scale=1.0, name=None, base_hex="#ece6d8", under_hex="#b9a98c", **_):
+def plaster_limewash(pal=None, wear=0.4, age=0.4, tint=0.35, scale=1.0, name=None, base_hex="#e4dcc9", under_hex="#8f7a52", **_):
     pal = _pal(pal)
     nb = NB(name or "plaster_limewash")
     base = pal.tint(P.lin(base_hex), "light", tint)
-    dark, mid, light = trio(base, 0.45)
+    # A white wall still needs a painter's range in it; at low spread the whole surface
+    # collapses to one value and reads as blank paper.
+    dark, mid, light = trio(base, 1.0)
     v = nb.coord(1.0 / scale)
     col = paint_blocks(nb, nb.coord(0.6 / scale), [dark, mid, light], distortion=1.4)
     # water streaks running down
@@ -509,38 +511,45 @@ def plaster_limewash(pal=None, wear=0.4, age=0.4, tint=0.35, scale=1.0, name=Non
     col = nb.mix(0.6 * age, col, nb.mix(1.0, col, streak, blend="MULTIPLY"))
     col = strokes(nb, 1.0 / scale, col, strength=0.06, scale=3.0, along="Z")
     # chipped plaster shows the cob/under colour on edges and in noisy patches
-    under = pal.tint(P.lin(under_hex), "earth", 0.25)
-    col, _ = edge_wear(nb, col, under, amount=wear, lo=0.52, hi=0.66, breakup_vec=v, breakup_scale=4.0)
-    pn = nb.noise(nb.coord(1.5 / scale), scale=1.0, detail=2.0, rough=0.5)
-    patch = nb.map_range(pn.outputs["Fac"], 0.72 - 0.12 * wear, 0.82, 0.0, 1.0)
+    under = pal.tint(P.lin(under_hex), "earth", 0.3)
+    col, _ = edge_wear(nb, col, under, amount=wear * 1.3, lo=0.52, hi=0.66, breakup_vec=v, breakup_scale=4.0)
+    pn = nb.noise(nb.coord(1.5 / scale), scale=1.0, detail=3.0, rough=0.55, distortion=0.6)
+    patch = nb.map_range(pn.outputs["Fac"], 0.62 - 0.22 * wear, 0.72, 0.0, 1.0)
     col = nb.mix(patch, col, under)
+    # a darker halo just inside each chip, where the lime has lifted but not fallen away
+    halo = nb.math("SUBTRACT", nb.map_range(pn.outputs["Fac"], 0.56 - 0.22 * wear, 0.68, 0.0, 1.0), patch,
+                   clamp=True)
+    col = nb.mix(nb.math("MULTIPLY", halo, 0.7), col, shade(under, 0.72, 1.1))
     col = base_grime(nb, col, shade(dark, 0.7, 1.1), 0.0, 0.6, amount=0.5 * age, vec=v)
     col, _ = cavity_dirt(nb, col, shade(dark, 0.7), amount=0.35, distance=0.2)
-    height = nb.math("ADD", nb.math("MULTIPLY", nb.noise(nb.coord(3.0 / scale), scale=1.0, detail=2.0, rough=0.5).outputs["Fac"], 0.6),
-                     nb.math("MULTIPLY", patch, 0.8))
-    normal = nb.bump(height, strength=0.2, distance=0.01)
+    height = nb.math("ADD", nb.math("MULTIPLY", nb.noise(nb.coord(3.0 / scale), scale=1.0, detail=2.0, rough=0.5).outputs["Fac"], 0.45),
+                     nb.math("MULTIPLY", nb.invert(patch), 0.55))
+    normal = nb.bump(height, strength=0.45, distance=0.014)
     return nb.finish(col, rough_var(nb, v, 0.82, 0.06), 0.0, normal)
 
 
 def chalk_cob(pal=None, wear=0.4, age=0.5, tint=0.3, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "chalk_cob")
-    base = pal.tint(P.lin("#e2d8c2"), "light", tint)
-    dark, mid, light = trio(base, 0.5)
+    base = pal.tint(P.lin("#d2c4a4"), "light", tint)
+    dark, mid, light = trio(base, 1.15)
     v = nb.coord(1.0 / scale)
     col = paint_blocks(nb, nb.coord(0.7 / scale), [dark, mid, light], distortion=1.0)
     # straw flecks
-    vor = nb.voronoi(nb.coord(18.0 / scale), scale=1.0, feature="F1")
-    fleck = nb.map_range(vor.outputs["Distance"], 0.08, 0.16, 1.0, 0.0)
+    # Straw in the cob: short stretched cells, not round specks, and enough of them to see.
+    fv = nb.coord((11.0 / scale, 1.6 / scale, 11.0 / scale))
+    vor = nb.voronoi(fv, scale=1.0, feature="F1")
+    fleck = nb.map_range(vor.outputs["Distance"], 0.04, 0.26, 1.0, 0.0)
     gate = nb.noise(nb.coord(2.0 / scale), scale=1.0, detail=1.0, rough=0.5)
-    fleck = nb.math("MULTIPLY", fleck, nb.map_range(gate.outputs["Fac"], 0.5, 0.7, 0.0, 0.6), clamp=True)
-    col = nb.mix(fleck, col, pal.tint(P.lin("#b89a55"), "warm", 0.3))
-    col = strokes(nb, 1.0 / scale, col, strength=0.07, scale=2.5, along="Z")
-    col = base_grime(nb, col, shade(dark, 0.6, 1.1), 0.0, 0.7, amount=0.6 * age, vec=v)
+    fleck = nb.math("MULTIPLY", fleck, nb.map_range(gate.outputs["Fac"], 0.35, 0.65, 0.0, 1.0), clamp=True)
+    col = nb.mix(fleck, col, pal.tint(P.lin("#a8842e"), "warm", 0.35))
+    col = strokes(nb, 1.0 / scale, col, strength=0.12, scale=2.5, along="Z")
+    col = base_grime(nb, col, shade(dark, 0.55, 1.15), 0.0, 0.7, amount=0.7 * age, vec=v)
     col, _ = edge_wear(nb, col, shade(light, 1.05, 0.8), amount=wear * 0.6, breakup_vec=v)
     col, _ = cavity_dirt(nb, col, shade(dark, 0.65), amount=0.4, distance=0.2)
     lump = nb.noise(nb.coord(2.5 / scale), scale=1.0, detail=2.0, rough=0.45)
-    normal = nb.bump(lump.outputs["Fac"], strength=0.35, distance=0.02)
+    normal = nb.bump(nb.math("ADD", nb.math("MULTIPLY", lump.outputs["Fac"], 0.75),
+                             nb.math("MULTIPLY", fleck, 0.25)), strength=0.55, distance=0.025)
     return nb.finish(col, rough_var(nb, v, 0.85, 0.06), 0.0, normal)
 
 
@@ -682,13 +691,14 @@ def fused_stone(pal=None, wear=0.4, age=0.7, tint=0.15, scale=1.0, gilding=0.0, 
     """Oroth builder-stone: black, glassy, faintly flowing, with old gilding in the hollows."""
     pal = _pal(pal)
     nb = NB(name or "fused_stone")
-    base = pal.tint(P.lin("#2a2a2e"), "dark", tint)
-    dark, mid, light = trio(base, 0.9)
+    base = pal.tint(P.lin("#1d1d21"), "dark", tint)
+    dark, mid, light = trio(base, 1.5)
     v = nb.coord(1.0 / scale)
     col = paint_blocks(nb, nb.coord(0.4 / scale), [dark, mid, light], distortion=1.6)
     w = nb.wave(nb.coord((0.8 / scale, 0.8 / scale, 0.8 / scale)), scale=2.0, distortion=6.0, detail=2.0, detail_scale=0.5, direction="Z")
-    flow = nb.ramp(w.outputs["Fac"], [(0.3, 0.9), (0.55, 1.0), (0.8, 1.18)], interp="EASE")
-    col = nb.mix(0.6, col, nb.mix(1.0, col, flow, blend="MULTIPLY"))
+    # The Builders' stone is poured, not cut: the flow lines are the whole point of it.
+    flow = nb.ramp(w.outputs["Fac"], [(0.18, 0.55), (0.5, 1.0), (0.85, 1.85)], interp="EASE")
+    col = nb.mix(0.95, col, nb.mix(1.0, col, flow, blend="MULTIPLY"))
     col = strokes(nb, 1.0 / scale, col, strength=0.06, scale=3.0, along="Z")
     col, _ = edge_wear(nb, col, shade(light, 1.25, 0.6), amount=wear * 0.7, lo=0.5, hi=0.6, breakup_vec=v)
     if gilding > 0:
@@ -703,10 +713,13 @@ def fused_stone(pal=None, wear=0.4, age=0.7, tint=0.15, scale=1.0, gilding=0.0, 
         metal = 0.0
     col = base_grime(nb, col, P.lin("#5a5652"), 0.0, 0.8, amount=0.5 * age, vec=v)
     col, _ = cavity_dirt(nb, col, P.lin("#6a6660"), amount=0.35, distance=0.4, breakup_vec=v)
-    normal = nb.bump(nb.math("ADD", nb.math("MULTIPLY", w.outputs["Fac"], 0.5),
-                             nb.math("MULTIPLY", nb.noise(nb.coord(1.5 / scale), scale=1.0, detail=2.0).outputs["Fac"], 0.5)),
-                     strength=0.2, distance=0.02)
-    rough = nb.mix(nb.pointiness(0.5, 0.6), rough_var(nb, v, 0.42, 0.1), 0.25)
+    normal = nb.bump(nb.math("ADD", nb.math("MULTIPLY", w.outputs["Fac"], 0.65),
+                             nb.math("MULTIPLY", nb.noise(nb.coord(1.5 / scale), scale=1.0, detail=2.0).outputs["Fac"], 0.35)),
+                     strength=0.45, distance=0.03)
+    # Glassy: low roughness overall, polished further on the ridges, with the flow lines
+    # themselves catching light differently from the hollows.
+    rough = nb.mix(nb.map_range(w.outputs["Fac"], 0.2, 0.8, 0.0, 1.0), rough_var(nb, v, 0.22, 0.06), 0.46)
+    rough = nb.mix(nb.pointiness(0.5, 0.6), rough, 0.14)
     return nb.finish(col, rough, metal, normal)
 
 
@@ -730,43 +743,61 @@ def slate_tiles(pal=None, wear=0.4, age=0.5, tint=0.25, scale=1.0, tile_w=0.3, t
     return nb.finish(col, rough_var(nb, v, 0.6, 0.1), 0.0, normal)
 
 
-def _thatch_common(nb, pal, base, age, scale, along, fibre_scale, grey_hex):
+def _thatch_common(nb, pal, base, age, scale, along, fibre_scale, grey_hex, courses=0.0):
+    """Thatch and straw are bundles of stems, so the surface needs discrete strands rather
+    than a smooth grain: a Voronoi field squashed hard along the lay direction gives each
+    stem its own tone and its own edge, and a coarse band on top reads as the courses a
+    thatcher lays."""
     dark, mid, light = trio(base, 1.0)
     v = nb.coord(1.0 / scale)
     col = paint_blocks(nb, nb.coord(0.6 / scale), [dark, mid, light], distortion=0.8)
-    s = {"X": (0.12, 1.0, 1.0), "Y": (1.0, 0.12, 1.0), "Z": (1.0, 1.0, 0.12)}[along]
-    fv = nb.coord((fibre_scale * s[0] / scale, fibre_scale * s[1] / scale, fibre_scale * s[2] / scale))
-    fib = nb.noise(fv, scale=1.0, detail=3.0, rough=0.6, distortion=0.4)
-    tone = nb.ramp(fib.outputs["Fac"], [(0.3, 0.72), (0.5, 1.0), (0.7, 1.2)], interp="EASE")
-    col = nb.mix(1.0, col, tone, blend="MULTIPLY")
+    # squash across the lay direction so cells become long stems
+    s = {"X": (0.06, 1.0, 1.0), "Y": (1.0, 0.06, 1.0), "Z": (1.0, 1.0, 0.06)}[along]
+    sv = nb.coord((fibre_scale * s[0] / scale, fibre_scale * s[1] / scale, fibre_scale * s[2] / scale))
+    stems = nb.voronoi(sv, scale=1.0, feature="F1", randomness=1.0)
+    stem_tone = nb.ramp(stems.outputs["Color"], [(0.0, 0.62), (0.45, 0.95), (1.0, 1.22)], interp="LINEAR")
+    col = nb.mix(1.0, col, stem_tone, blend="MULTIPLY")
+    edge = nb.voronoi(sv, scale=1.0, feature="DISTANCE_TO_EDGE")
+    gap = nb.map_range(edge.outputs["Distance"], 0.0, 0.05, 0.0, 1.0)
+    col = nb.mix(nb.invert(gap), col, shade(dark, 0.45, 1.1))
+    fib = nb.noise(sv, scale=2.0, detail=3.0, rough=0.6, distortion=0.4)
+    col = nb.mix(0.35, col, nb.mix(1.0, col, nb.ramp(fib.outputs["Fac"], [(0.3, 0.85), (0.7, 1.12)]),
+                                   blend="MULTIPLY"))
+    if courses > 0.0:
+        cw = nb.wave(nb.coord((0.9 / scale, 0.9 / scale, 0.9 / scale)), scale=3.2, distortion=1.4,
+                     detail=1.0, direction="Z", profile="SAW")
+        col = nb.mix(courses, col, nb.mix(1.0, col,
+                     nb.ramp(cw.outputs["Fac"], [(0.05, 0.72), (0.35, 1.0), (1.0, 1.08)], interp="EASE"),
+                     blend="MULTIPLY"))
     grey = P.lin(grey_hex)
     gn = nb.noise(nb.coord(0.9 / scale), scale=1.0, detail=2.0, rough=0.5, distortion=0.7)
     gm = nb.map_range(gn.outputs["Fac"], 0.55 - 0.2 * age, 0.75, 0.0, age)
     col = nb.mix(gm, col, grey)
-    col, _ = cavity_dirt(nb, col, shade(dark, 0.55), amount=0.45, distance=0.25)
-    normal = nb.bump(fib.outputs["Fac"], strength=0.5, distance=0.02)
-    return nb.finish(col, rough_var(nb, v, 0.9, 0.05), 0.0, normal)
+    col, _ = cavity_dirt(nb, col, shade(dark, 0.55), amount=0.45, distance=0.25, cheap=True)
+    height = nb.math("ADD", nb.math("MULTIPLY", gap, 0.7), nb.math("MULTIPLY", fib.outputs["Fac"], 0.3))
+    normal = nb.bump(height, strength=0.85, distance=0.035)
+    return nb.finish(col, rough_var(nb, v, 0.92, 0.05), 0.0, normal)
 
 
 def thatch(pal=None, age=0.5, tint=0.3, scale=1.0, along="Y", name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "thatch")
-    base = pal.tint(P.lin("#a8843f"), "warm", tint)
-    return _thatch_common(nb, pal, base, age, scale, along, 6.0, "#8a8574")
+    base = pal.tint(P.lin("#c19a45"), "warm", tint)
+    return _thatch_common(nb, pal, base, age * 0.8, scale, along, 22.0, "#8a8574", courses=0.7)
 
 
 def reed_thatch(pal=None, age=0.5, tint=0.3, scale=1.0, along="Y", name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "reed_thatch")
     base = pal.tint(P.lin("#8f8a55"), "accent", tint * 0.5)
-    return _thatch_common(nb, pal, base, age, scale, along, 9.0, "#6f7468")
+    return _thatch_common(nb, pal, base, age, scale, along, 36.0, "#6f7468", courses=0.55)
 
 
 def straw(pal=None, age=0.3, tint=0.3, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "straw")
     base = pal.tint(P.lin("#c9a852"), "warm", tint)
-    return _thatch_common(nb, pal, base, age, scale, "X", 7.0, "#9a9070")
+    return _thatch_common(nb, pal, base, age, scale, "X", 30.0, "#9a9070")
 
 
 def _metal_common(nb, pal, base, rough_base, age, wear, corrosion_col, corrosion_rough, dent=0.25, scale=1.0,
