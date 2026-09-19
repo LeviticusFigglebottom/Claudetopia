@@ -28,6 +28,8 @@ import numpy as np
 from . import rig
 from .rig import Skeleton, FWD, UP, LEFT
 
+BACKWARD = -FWD
+
 Pose = Dict[str, Tuple[float, ...]]
 FPS = 30
 HIPS_POS = "Hips@pos"
@@ -169,7 +171,11 @@ class Track:
         the channel holds the channel's value from the previous key (rest before the first
         mention), so a channel first keyed at K_j eases in from rest at K_{j-1}."""
         ks = []
-        prev = np.zeros(3)
+        # Angle channels default to rest (zero) before their first mention, so a bone keyed
+        # late eases in from rest.  Target channels ("Hand.R@ik" and friends) have no rest
+        # pose, so they hold their first keyed value instead.
+        first = next((np.asarray(k.pose[c], float) for k in self.keys if c in k.pose), np.zeros(3))
+        prev = first.copy() if "@" in c and c != HIPS_POS else np.zeros(3)
         for k in self.keys:
             if c in k.pose:
                 prev = np.asarray(k.pose[c], float)
@@ -365,7 +371,7 @@ class ClipBuilder:
         pose = self.sample_pose(t) if pose is None else pose
         local: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
         for bone, v in pose.items():
-            if bone == HIPS_POS:
+            if "@" in bone:
                 continue
             if bone not in sk.bones:
                 raise KeyError(f"{self.name}: unknown bone {bone}")
@@ -374,6 +380,21 @@ class ClipBuilder:
         hips_world = FWD * hp[0] + LEFT * hp[1] + UP * hp[2]
         R_h = local.get("Hips", (None, None))[0]
         local["Hips"] = (R_h, sk.local_translation("Hips", hips_world))
+        for side in ("L", "R"):
+            if f"Hand.{side}@grip" in pose:
+                # authored by where the weapon grip should be: solve for the hand that puts
+                # the socket there (two passes are enough, the offset is short and rigid)
+                p2 = dict(pose)
+                p2[f"Hand.{side}@ik"] = tuple(np.asarray(pose[f"Hand.{side}@grip"], float))
+                for _ in range(2):
+                    self._solve_arm(local, side, p2)
+                    Wg = sk.fk(local)
+                    socket = "Socket.WeaponL" if side == "L" else "Socket.WeaponR"
+                    off = sk.joint_world(Wg, socket) - sk.joint_world(Wg, f"Hand.{side}")
+                    p2[f"Hand.{side}@ik"] = tuple(np.asarray(pose[f"Hand.{side}@grip"], float) - off)
+                self._solve_arm(local, side, p2)
+            elif f"Hand.{side}@ik" in pose:
+                self._solve_arm(local, side, pose)
         if self.grounded:
             W = sk.fk(local)
             for side in ("L", "R"):
@@ -383,6 +404,45 @@ class ClipBuilder:
             W = sk.fk(local)
             s(t, W, local)
         return local
+
+    def _solve_arm(self, local, side: str, pose: Pose) -> None:
+        """Place the hand at `Hand.S@ik` (armature space) by two-bone IK, then, if
+        `Hand.S@aim` is given, roll the hand so the weapon socket's +Y (the blade) points
+        that way; `Hand.S@roll` twists about the blade."""
+        sk = self.skel
+        up, lo, hand = f"UpperArm.{side}", f"LowerArm.{side}", f"Hand.{side}"
+        target = np.asarray(pose[f"Hand.{side}@ik"], float)
+        W = sk.fk(local)
+        sh = sk.joint_world(W, up)
+        to = target - sh
+        pole = pose.get(f"Hand.{side}@pole")
+        if pole is None:
+            # elbow hangs down and back, and out to the side, relative to the reach direction
+            out = LEFT if side == "L" else -LEFT
+            p = -UP * 1.0 + BACKWARD * 0.55 + out * 0.45
+            # when reaching high the elbow swings outward rather than down
+            if to[2] > 0.15:
+                p = out * 1.0 - UP * 0.35 + BACKWARD * 0.3
+            pole = p
+        pole = np.asarray(pole, float)
+        Ru, Rl = sk.ik_two_bone(W, up, lo, target, pole)
+        local[up] = (Ru, None)
+        local[lo] = (Rl, None)
+        aim = pose.get(f"Hand.{side}@aim")
+        if aim is None:
+            local[hand] = (sk.pose_rotation(hand, *pose.get(hand, (0.0, 0.0, 0.0))), None)
+            return
+        W2 = sk.fk(local)
+        socket = "Socket.WeaponL" if side == "L" else "Socket.WeaponR"
+        srl = sk.bones[socket].rest_local[:3, :3]
+        v_hand = srl @ np.array([0.0, 1.0, 0.0])          # blade direction in Hand-local space
+        parent_R = (W2[lo] @ sk.bones[hand].rest_local)[:3, :3]
+        a_local = parent_R.T @ rig._unit(np.asarray(aim, float))
+        R = rig.min_rot(v_hand, a_local)
+        roll = float(pose.get(f"Hand.{side}@roll", (0.0, 0.0, 0.0))[0]) if f"Hand.{side}@roll" in pose else 0.0
+        if abs(roll) > 1e-6:
+            R = rig.rot_axis(a_local, math.radians(roll)) @ R
+        local[hand] = (R, None)
 
     def _solve_leg(self, W, local, side: str, fs: FootState) -> None:
         sk = self.skel
@@ -444,6 +504,31 @@ class ClipBuilder:
                 if b == "Hips" and tr is not None:
                     hips[i] = tr
         return BakedClip(self.name, self.length, self.loop, self.fps, list(self.events), bones, quats, hips, dict(self.extra))
+
+
+# --------------------------------------------------------------------------------------
+# body-relative authoring helpers
+# --------------------------------------------------------------------------------------
+
+def body_point(skel: Skeleton, fwd: float, left: float, up: float, origin: str = "Chest") -> np.ndarray:
+    """A point in armature space from body-relative offsets (metres at the default height,
+    scaled with the character).  Handy for authoring where a hand or a weapon should be."""
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    return skel.J[origin] + (FWD * fwd + LEFT * left + UP * up) * s
+
+
+def arc_point(centre: np.ndarray, normal: np.ndarray, ref: np.ndarray, radius: float, angle_deg: float) -> np.ndarray:
+    """A point on a circle: `ref` is the direction from the centre at angle 0, `normal` the
+    axis the angle turns about (right-handed)."""
+    n = rig._unit(np.asarray(normal, float))
+    r0 = np.asarray(ref, float)
+    r0 = rig._unit(r0 - np.dot(r0, n) * n)
+    return np.asarray(centre, float) + (rig.rot_axis(n, math.radians(angle_deg)) @ r0) * radius
+
+
+def two_hand_grip(right_hand: np.ndarray, blade_dir: np.ndarray, sep: float = 0.135) -> np.ndarray:
+    """Where the left hand goes on a two-handed grip: below the right hand on the haft."""
+    return np.asarray(right_hand, float) - rig._unit(np.asarray(blade_dir, float)) * sep
 
 
 # --------------------------------------------------------------------------------------

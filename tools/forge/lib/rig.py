@@ -222,6 +222,22 @@ def quat_to_mat(q: np.ndarray) -> np.ndarray:
         [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
 
 
+def min_rot(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Smallest rotation matrix taking unit vector `a` onto unit vector `b`."""
+    a = _unit(np.asarray(a, float))
+    b = _unit(np.asarray(b, float))
+    v = np.cross(a, b)
+    c = float(np.dot(a, b))
+    if c < -0.999999:
+        axis = np.cross(a, UP if abs(a[2]) < 0.9 else LEFT)
+        return rot_axis(axis, math.pi)
+    s = float(np.linalg.norm(v))
+    if s < 1e-9:
+        return np.eye(3)
+    vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    return np.eye(3) + vx + vx @ vx * ((1 - c) / (s * s))
+
+
 def quat_slerp(a: np.ndarray, b: np.ndarray, t: float) -> np.ndarray:
     d = float(np.dot(a, b))
     if d < 0:
