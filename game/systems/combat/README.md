@@ -13,7 +13,8 @@ normative; everything tunable is content, everything pure is a `static func`.
 | `weapon_instance.gd` | `WeaponInstance`: reads an item's `weapon` block, owns the hitbox sized by `reach`, maps attacks to CONTRACTS §3 clip names, supplies per-attack timing and builds the `HitData`. |
 | `stamina_component.gd` | Pool, costs, sprint drain, 30/s regen after 0.8 s (halved while blocking). |
 | `poise_component.gd` | Poise damage, 4/s regen after 1.5 s, stagger at 0 (then resets), hyper-armour threshold. |
-| `status_effects.gd` | burning, chilled, bleeding, poisoned, silenced, quieted, stagger, knockdown, warded — durations, ticks and stacking rules in one `RULES` table. |
+| `status_effects.gd` | burning, chilled, webbed, bleeding, poisoned, silenced, quieted, stagger, knockdown, warded — durations, ticks and stacking rules in one `RULES` table. |
+| `enemy_abilities.gd` | `EnemyAbilities`: the pure decisions behind the bestiary's special behaviours — whether a voice attack may be used, how much a cutpurse takes, what a lure does this frame, whether greed has roused a guardian, when a duelist presses its guard, which limb comes off next. No state, no nodes; `Enemy` does the acting. |
 | `projectile.gd`, `arrow.tscn` | Swept-ray kinematic projectile with a gravity arc; arrows stick into geometry, bolts vanish. |
 | `spell_runtime.gd` | Pure spell rules: cost and cast time by skill, silence check, school → skill and damage kind, effect → `HitData`. |
 | `spell_caster.gd` | Runtime casting: mana pool, cast timer, and the four implemented cast types (`projectile`, `self`, `aura`, `target`). `summon` is deliberately refused, not faked. |
@@ -30,7 +31,19 @@ resolves hits), `actors/player/`, `actors/enemy/`.
   poise_damage, gravity}` on ammo.
 * `enemy` defs — `stats`, `attacks[{name, clip, damage, poise_damage, range, min_range?,
   hit_range?, telegraph, hit_window, recovery, cooldown, weight, knockdown?, statuses?, kind?}]`,
-  `perception`, `behaviour`, `phases[]` for bosses.
+  `perception`, `behaviour`, `loot`, `marks`, `limbs[]`, `phases[]` for bosses.
+  An attack's `kind` is one of `charge` (run them down), `leap` (a charge with `leap_up` metres
+  per second of lift: the weaver's drop), `burst` (everything inside `radius` at once: the
+  scree-hag's shriek, the bell-bearer's toll), `projectile` (`speed`, `gravity`, `sticks`,
+  `projectile_colour`: an arrow, a thrown stone, a sung note), `spell` (`spell` is a spell id,
+  cast through `SpellCaster`), or absent for an ordinary swing. An attack may also carry
+  `voice: true` (refused while the attacker is `silenced`), `steal{marks:[min,max], share?}`
+  (cuts the player's purse and adds it to what the body drops) and `drain_stamina`/`drain_heal`.
+  `behaviour` adds `lure{lure_distance, lure_break, lure_patience, lure_speed}` (a wisp keeps its
+  distance while you follow), `guards{radius, wrath}` (a sentinel roused by looting near its
+  post), `parries{parry_chance, parry_delay, guard_stability}` (an elite that guards between its
+  own swings) and `flee_after_steal`/`flee_time`. `limbs[{name, remove_attacks[], add_attacks[],
+  poise_loss, speed_mult, say}]` come off one per poise break, changing the moveset as they go.
 * `spell` defs — `{school, cast_type, cost, cast_time, range, speed, radius, duration, effects[]}`
   with effect types `damage`, `status`, `heal`, `shield`, `cleanse`.
 
@@ -49,7 +62,7 @@ Consumes: `EventBus.hearthstone_rested(id)` — non-boss enemies reset to their 
 
 Local signals worth connecting to: `Actor.health_changed/stats_changed/died/hit_taken/staggered/
 knocked_down/riposte_opened`, `Player.state_changed/lock_on_changed/attack_started/dodge_started`,
-`Enemy.telegraph/attack_launched/phase_changed/mark_dropped`, `Interactor.prompt_changed`.
+`Enemy.telegraph/attack_launched/phase_changed/limb_broken/mark_dropped`, `Interactor.prompt_changed`.
 
 ## Save
 
@@ -63,7 +76,7 @@ emits `EventBus.player_died(position)` and implements `full_restore()` / `respaw
 ## Running it
 
 ```
-./run.sh test                                   # 141 unit tests, content validation included
+./run.sh test                                   # unit tests, content validation included
 godot --path game -- --arena                    # play the flat test arena
 xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
   --audio-driver Dummy -- --arena --verify --out=$PWD/captures/arena

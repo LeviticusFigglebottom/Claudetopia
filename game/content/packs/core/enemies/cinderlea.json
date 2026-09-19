@@ -1,0 +1,404 @@
+[
+  {
+    "id": "core:enemy/ash_wight",
+    "name": "Ash-Wight",
+    "archetype": "swarm",
+    "rig": "humanoid",
+    "faction": "unquiet",
+    "tint": "#8a8478",
+    "lore": "Greyfold's tables are still laid for supper and Greyfold's people still have somewhere to be. They are not strong and they do not last — a shove puts one down, and it gets up and carries on — but they come out of the ash in twenties and they are going about their evening while they do it. One of them will raise a hand to you as it comes. That is the part the pilgrims go home about.",
+    "region": "core:region/cinderlea",
+    "stats": {
+      "hp": 44,
+      "stamina": 50,
+      "poise": 10,
+      "armour": 1,
+      "speed": 3.0
+    },
+    "perception": {
+      "sight_range": 18.0,
+      "sight_fov": 140.0,
+      "hearing": 20.0,
+      "alertness": 0.9
+    },
+    "behaviour": {
+      "engage_range": 2.0,
+      "circle": 0.35,
+      "retreat_threshold": 0.0,
+      "patience": 3.5,
+      "leash": 30.0,
+      "spread": 1.7,
+      "strafe_speed": 0.8,
+      "aggression": 0.95,
+      "flank": true
+    },
+    "attacks": [
+      {
+        "name": "reaching_hand",
+        "clip": "Attack_Unarmed_1",
+        "weapon_class": "unarmed",
+        "damage": 15.0,
+        "poise_damage": 8.0,
+        "range": 2.0,
+        "telegraph": 0.5,
+        "hit_window": 0.14,
+        "recovery": 0.5,
+        "cooldown": 2.0,
+        "gcd": 0.45,
+        "weight": 4.0,
+        "lunge": 1.8
+      },
+      {
+        "name": "the_clutch",
+        "clip": "Attack_Unarmed_2",
+        "weapon_class": "unarmed",
+        "damage": 21.0,
+        "poise_damage": 16.0,
+        "range": 2.1,
+        "telegraph": 0.82,
+        "hit_window": 0.16,
+        "recovery": 0.7,
+        "cooldown": 6.0,
+        "gcd": 0.75,
+        "weight": 1.0,
+        "lunge": 2.2,
+        "statuses": [
+          {
+            "id": "quieted",
+            "duration": 30.0
+          }
+        ]
+      }
+    ],
+    "loot": "core:loot/ash_wight",
+    "marks": [
+      0,
+      3
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "swarm"
+    ]
+  },
+  {
+    "id": "core:enemy/chorister",
+    "name": "Chorister",
+    "archetype": "caster",
+    "rig": "humanoid",
+    "faction": "tolling_order",
+    "tint": "#6e6a63",
+    "lore": "The Order teaches that the note must be held, and the Order's choristers have taken that instruction somewhere the Order does not visit. Hooded, grey, mouth open, and what comes out arrives as a pressure rather than a sound; it gets into the chest and pushes. Anything that shuts the throat shuts the whole of it, which is the first genuinely useful thing a Hush-word has ever done for a pilgrim.",
+    "region": "core:region/cinderlea",
+    "stats": {
+      "hp": 115,
+      "stamina": 90,
+      "poise": 26,
+      "armour": 3,
+      "speed": 3.0,
+      "will": 26
+    },
+    "perception": {
+      "sight_range": 34.0,
+      "sight_fov": 115.0,
+      "hearing": 26.0,
+      "alertness": 1.0
+    },
+    "behaviour": {
+      "engage_range": 12.0,
+      "circle": 0.45,
+      "retreat_threshold": 0.35,
+      "patience": 6.0,
+      "leash": 34.0,
+      "keep_distance": 12.0,
+      "strafe_speed": 0.9,
+      "retreat_time": 1.6,
+      "aggression": 0.8
+    },
+    "attacks": [
+      {
+        "name": "the_held_note",
+        "kind": "projectile",
+        "clip": "Cast_Long",
+        "voice": true,
+        "weapon_class": "staff",
+        "kind_damage": "silence",
+        "damage": 31.0,
+        "poise_damage": 22.0,
+        "range": 25.0,
+        "min_range": 5.0,
+        "speed": 20.0,
+        "gravity": 0.0,
+        "projectile_colour": "#bcd4e2",
+        "projectile_radius": 0.16,
+        "telegraph": 1.05,
+        "hit_window": 0.14,
+        "recovery": 0.7,
+        "cooldown": 3.6,
+        "gcd": 1.2,
+        "weight": 4.0
+      },
+      {
+        "name": "swelling_chord",
+        "kind": "burst",
+        "clip": "Cast_Long",
+        "voice": true,
+        "kind_damage": "silence",
+        "radius": 8.0,
+        "range": 7.0,
+        "damage": 24.0,
+        "poise_damage": 34.0,
+        "heavy": true,
+        "telegraph": 1.5,
+        "hit_window": 0.2,
+        "recovery": 1.1,
+        "cooldown": 12.0,
+        "gcd": 1.3,
+        "weight": 2.0,
+        "noise": 1.4,
+        "unparryable": true,
+        "statuses": [
+          {
+            "id": "silenced",
+            "duration": 6.0
+          }
+        ]
+      },
+      {
+        "name": "censer_swing",
+        "clip": "Attack_1H_Light_1",
+        "weapon_class": "mace",
+        "damage": 21.0,
+        "poise_damage": 22.0,
+        "range": 2.3,
+        "telegraph": 0.52,
+        "hit_window": 0.14,
+        "recovery": 0.55,
+        "cooldown": 2.4,
+        "gcd": 0.5,
+        "weight": 2.0,
+        "lunge": 1.8
+      }
+    ],
+    "loot": "core:loot/chorister",
+    "marks": [
+      40,
+      90
+    ],
+    "tags": [
+      "caster",
+      "humanoid",
+      "person",
+      "tolling_order"
+    ]
+  },
+  {
+    "id": "core:enemy/tolling_knight",
+    "name": "Tolling Knight",
+    "archetype": "elite",
+    "rig": "humanoid",
+    "faction": "unquiet",
+    "tint": "#5b5f66",
+    "scale": 1.05,
+    "lore": "They kept the vigil. That was the whole arrangement — keep the vigil and the note keeps you — and both halves of it turned out to be true. A fallen knight still salutes before he swings, still gives ground where the form says give ground, still will not strike a man whose guard is down. None of that is mercy. It is the form, and the form is all that is left in there.",
+    "region": "core:region/cinderlea",
+    "stats": {
+      "hp": 285,
+      "stamina": 155,
+      "poise": 96,
+      "armour": 16,
+      "speed": 3.4
+    },
+    "perception": {
+      "sight_range": 30.0,
+      "sight_fov": 120.0,
+      "hearing": 20.0,
+      "alertness": 1.0
+    },
+    "behaviour": {
+      "engage_range": 2.6,
+      "circle": 0.5,
+      "retreat_threshold": 0.0,
+      "patience": 6.0,
+      "leash": 36.0,
+      "hyper_armour": 26.0,
+      "strafe_speed": 1.0,
+      "aggression": 0.8,
+      "parries": true,
+      "parry_chance": 0.5,
+      "parry_delay": 0.3,
+      "guard_stability": 0.75
+    },
+    "attacks": [
+      {
+        "name": "bell_mace",
+        "clip": "Attack_1H_Light_1",
+        "weapon_class": "mace",
+        "damage": 36.0,
+        "poise_damage": 46.0,
+        "range": 2.6,
+        "telegraph": 0.6,
+        "hit_window": 0.16,
+        "recovery": 0.6,
+        "cooldown": 2.2,
+        "gcd": 0.55,
+        "weight": 3.0,
+        "lunge": 2.2
+      },
+      {
+        "name": "second_hour_form",
+        "clip": "Attack_1H_Light_2",
+        "weapon_class": "mace",
+        "damage": 30.0,
+        "poise_damage": 38.0,
+        "range": 2.8,
+        "telegraph": 0.52,
+        "hit_window": 0.14,
+        "recovery": 0.55,
+        "cooldown": 3.2,
+        "gcd": 0.55,
+        "weight": 2.0,
+        "lunge": 3.0
+      },
+      {
+        "name": "the_tolling_blow",
+        "clip": "Attack_1H_Heavy",
+        "weapon_class": "mace",
+        "damage": 52.0,
+        "poise_damage": 74.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 2.9,
+        "telegraph": 1.1,
+        "hit_window": 0.18,
+        "recovery": 1.0,
+        "cooldown": 5.5,
+        "gcd": 1.0,
+        "weight": 1.0,
+        "lunge": 2.6,
+        "knockback": 2.8
+      }
+    ],
+    "loot": "core:loot/tolling_knight",
+    "marks": [
+      90,
+      200
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "knight"
+    ]
+  },
+  {
+    "id": "core:enemy/bell_bearer",
+    "name": "Bell-Bearer",
+    "archetype": "brute",
+    "rig": "humanoid",
+    "faction": "unquiet",
+    "tint": "#6b5a3f",
+    "scale": 1.55,
+    "height": 2.6,
+    "radius": 0.55,
+    "lore": "A bell the size of a cart, strapped to a back that gave out under it a long time ago and went on carrying it regardless. The Order used bearers to walk the Choir's perimeter and sound the hours, and the hours have not stopped. When it rings, everything inside the sound goes down. The bearer walks out of its own note at the pace it walked in, and by the time you are up it is already standing over you.",
+    "region": "core:region/cinderlea",
+    "stats": {
+      "hp": 430,
+      "stamina": 160,
+      "poise": 155,
+      "armour": 15,
+      "speed": 2.0
+    },
+    "perception": {
+      "sight_range": 24.0,
+      "sight_fov": 110.0,
+      "hearing": 28.0,
+      "alertness": 0.8
+    },
+    "behaviour": {
+      "engage_range": 3.4,
+      "circle": 0.05,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 34.0,
+      "hyper_armour": 32.0,
+      "aggression": 0.9,
+      "strafe_speed": 0.3
+    },
+    "attacks": [
+      {
+        "name": "the_toll",
+        "kind": "burst",
+        "clip": "Attack_2H_Heavy",
+        "weapon_class": "hammer",
+        "radius": 9.5,
+        "range": 7.5,
+        "damage": 28.0,
+        "poise_damage": 88.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "telegraph": 1.75,
+        "hit_window": 0.22,
+        "recovery": 1.5,
+        "cooldown": 14.0,
+        "gcd": 1.4,
+        "weight": 2.5,
+        "noise": 1.6,
+        "unparryable": true,
+        "knockdown": true,
+        "knockback": 3.0
+      },
+      {
+        "name": "bell_swing",
+        "clip": "Attack_2H_Light_1",
+        "weapon_class": "hammer",
+        "damage": 44.0,
+        "poise_damage": 72.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 3.6,
+        "telegraph": 1.1,
+        "hit_window": 0.2,
+        "recovery": 1.05,
+        "cooldown": 3.2,
+        "gcd": 1.0,
+        "weight": 3.0,
+        "lunge": 1.8,
+        "knockback": 2.2
+      },
+      {
+        "name": "crushing_step",
+        "clip": "Attack_2H_Light_2",
+        "weapon_class": "hammer",
+        "damage": 58.0,
+        "poise_damage": 96.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 3.4,
+        "telegraph": 1.6,
+        "hit_window": 0.22,
+        "recovery": 1.3,
+        "cooldown": 8.0,
+        "gcd": 1.2,
+        "weight": 1.0,
+        "lunge": 2.8,
+        "knockdown": true,
+        "knockback": 3.4
+      }
+    ],
+    "loot": "core:loot/bell_bearer",
+    "marks": [
+      150,
+      320
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "brute",
+      "miniboss"
+    ]
+  }
+]

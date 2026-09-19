@@ -64,6 +64,7 @@
         "knockback": 1.2
       }
     ],
+    "loot": "core:loot/bandit_pockets",
     "marks": [
       8,
       22
@@ -155,6 +156,7 @@
         "knockback": 1.6
       }
     ],
+    "loot": "core:loot/wolf_carcass",
     "marks": [
       0,
       4
@@ -244,6 +246,7 @@
         "knockback": 3.0
       }
     ],
+    "loot": "core:loot/wight_barrow",
     "marks": [
       14,
       30
@@ -339,6 +342,7 @@
         "knockback": 1.4
       }
     ],
+    "loot": "core:loot/boar",
     "marks": [
       0,
       6

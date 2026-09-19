@@ -163,8 +163,9 @@ are normative for pass one and live in `game/systems/*`.
   Hush (frost, silence, stealth), Binding (wards, shields, snares), Mending
   (heal, cleanse), Calling (summon, animate). Spells are data with cast type
   (projectile, self, aura, target, summon), cost, cast time, school, effects.
-* **Status effects**: burning, chilled (slow), silenced (no casting), bleeding,
-  poisoned, quieted (renown drain in deep places), stagger, knockdown.
+* **Status effects**: burning, chilled (slow), webbed (slow, from the Briarwold
+  weavers), silenced (no casting), bleeding, poisoned, quieted (renown drain in
+  deep places), stagger, knockdown.
 
 ### 5.4 Enemies & AI
 * Archetypes (data): `brute`, `skirmisher`, `pack`, `charger`, `ambusher`,
