@@ -140,9 +140,12 @@ static func knows_deed(place_id: String, deed: String) -> bool:
 	return false
 
 
-## Inventory API: add(item_id, count), remove(item_id, count) -> int, count(item_id) -> int.
-## Resolves, in order: an `inventory` property on the actor, the actor itself, the
-## "inventory" group node / registered section. Returns null when nothing offers the API.
+## The bag belonging to `actor`. Inventory API: add(item_id, count),
+## remove(item_id, count), count(item_id). Resolved in order: an `inventory` property, the
+## actor itself, a child node offering the API (the usual shape — an Inventory node under
+## the actor). Only for the player, or when no actor is given, does this fall back to the
+## registered "inventory" group node: an NPC without a bag must never resolve to the
+## player's, or a pickpocket would rob the thief.
 static func inventory_of(actor: Object) -> Object:
 	if actor != null and is_instance_valid(actor):
 		var inv: Variant = actor.get("inventory")
@@ -150,9 +153,28 @@ static func inventory_of(actor: Object) -> Object:
 			return inv
 		if _has_inventory_api(actor):
 			return actor
+		if actor is Node:
+			var child := _child_inventory(actor as Node)
+			if child != null:
+				return child
+			if not (actor as Node).is_in_group("player"):
+				return null
 	var reg := inventory()
 	if reg != null and _has_inventory_api(reg):
 		return reg
+	return null
+
+
+## A direct child (or grandchild) offering the inventory API.
+static func _child_inventory(node: Node, depth: int = 2) -> Object:
+	for c in node.get_children():
+		if _has_inventory_api(c):
+			return c
+	if depth > 1:
+		for c in node.get_children():
+			var found := _child_inventory(c, depth - 1)
+			if found != null:
+				return found
 	return null
 
 
@@ -165,30 +187,43 @@ static func item_count(actor: Object, item_id: String) -> int:
 	return int(inv.call("count", item_id)) if inv != null else 0
 
 
+## Adds items and reports whether they arrived. Inventories differ in what `add` returns —
+## an ItemStack, a bool, an Error, or nothing, and `Inventory.add` returns null for an
+## unknown item — so the result is judged by what the bag holds afterwards. An explicit
+## `false` or a non-OK error is honoured directly.
 static func give_item(actor: Object, item_id: String, count: int) -> bool:
+	if count <= 0:
+		return true
 	var inv := inventory_of(actor)
 	if inv == null:
 		return false
+	var before := int(inv.call("count", item_id))
 	var r: Variant = inv.call("add", item_id, count)
 	match typeof(r):
 		TYPE_BOOL:
 			return r
 		TYPE_INT:
 			return int(r) == OK or int(r) >= count
-	return true
+	return int(inv.call("count", item_id)) > before
 
 
+## Takes items and reports whether they left, judged the same way.
 static func take_item(actor: Object, item_id: String, count: int) -> bool:
+	if count <= 0:
+		return true
 	var inv := inventory_of(actor)
-	if inv == null or item_count(actor, item_id) < count:
+	if inv == null:
+		return false
+	var before := int(inv.call("count", item_id))
+	if before < count:
 		return false
 	var r: Variant = inv.call("remove", item_id, count)
 	match typeof(r):
 		TYPE_BOOL:
 			return r
 		TYPE_INT:
-			return int(r) >= count or int(r) == OK and item_count(actor, item_id) >= 0
-	return true
+			return int(r) >= count
+	return int(inv.call("count", item_id)) <= before - count
 
 
 ## Items held, as [{item_id, count}] when the inventory offers items(); else [].
