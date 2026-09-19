@@ -74,7 +74,11 @@ Specificity is weighted so that what this villager *saw* (4) beats what the vill
 A row that matches only because you are unremarkable (renown tier 0, morality tier 0) scores no
 specificity, so it is a fallback rather than an answer.
 
+`wearing_tag` asks the inventory if it answers that question itself, otherwise it reads the
+equipment slots and the items' own `tags`. `skill_min` reads the progression system.
+
 ## Tests
 
 `tests/unit/test_dialogue_conditions.gd` (24), `tests/unit/test_dialogue_runner.gd` (21),
-fakes in `tests/fixtures/fakes.gd`.
+`tests/unit/test_social_integration.gd` (9, against the real bag, doll and skills), fakes in
+`tests/fixtures/fakes.gd`.

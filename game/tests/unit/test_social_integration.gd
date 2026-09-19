@@ -109,6 +109,25 @@ func test_a_deed_lands_where_the_player_is_standing() -> void:
 		"the village nearest the deed is the one that talks about it")
 
 
+func test_world_events_that_are_deeds_in_their_own_right() -> void:
+	var renown_before: int = Social.standing.renown()
+	EventBus.place_discovered.emit("core:poi/singing_yew")
+	assert_gt(Social.standing.renown(), renown_before, "walking somewhere nobody goes is worth a little")
+
+	GameState.clear_flag("boss_deed/core:boss/barrow_reeve")
+	var before_boss: int = Social.standing.renown()
+	EventBus.boss_defeated.emit("core:boss/barrow_reeve")
+	var after_boss: int = Social.standing.renown()
+	assert_gt(after_boss, before_boss + 20, "a named thing put down is the loudest deed there is")
+	EventBus.boss_defeated.emit("core:boss/barrow_reeve")
+	assert_eq(Social.standing.renown(), after_boss, "and it only counts once")
+	GameState.clear_flag("boss_deed/core:boss/barrow_reeve")
+
+	var renown_high: int = Social.standing.renown()
+	EventBus.player_died.emit(Vector3.ZERO)
+	assert_true(Social.standing.renown() < renown_high, "being seen to fall costs a little")
+
+
 func test_quest_rewards_reach_the_real_bag() -> void:
 	bag.marks = 0
 	Social.quests.register_runtime({

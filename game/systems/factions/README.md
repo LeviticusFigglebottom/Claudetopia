@@ -88,6 +88,16 @@ Social.gossip.advance_hours(hours)   # the hour signal does this in play; tests 
 `reaction_profile()` is the contract other streams read for morality visuals, prices, guard
 tolerance and greetings.
 
+`Social.apply_deed` takes either a list of NPC ids or a plain count of witnesses.
+
+## Who applies a deed
+
+Social applies `boss_kill`, `place_discovered` and `died` from the matching world events.
+Everything else is applied by the system that knows about it — the crime system for theft,
+assault and murder, the quest log for a finished quest's layer, gestures for manners — so no
+deed is counted twice.
+
 ## Tests
 
-`tests/unit/test_factions.gd` (18), `tests/unit/test_standing.gd` (28).
+`tests/unit/test_factions.gd` (18), `tests/unit/test_standing.gd` (28), and the cross-stream
+seams in `tests/unit/test_social_integration.gd`.

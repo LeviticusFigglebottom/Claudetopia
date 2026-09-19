@@ -29,12 +29,34 @@ Social.bind("inventory", self)   # explicit
 add_to_group("inventory")        # or just join the group; Social picks it up
 ```
 
-Groups looked for: `inventory` → the `inventory` provider (`count`, `add`, `remove`,
-`has_equipped_tag`, `marks`, `add_marks`, `remove_marks`), `player` → `player`
-(`display_name`, `position`, `skill_level`; binding it also feeds `reach` objectives),
-`crime` → `bounty` (`bounty_for`), `crafting` → `recipes` (`teach`).
+| group | provider | what is called |
+|---|---|---|
+| `inventory` | `inventory` | `count(id)`, `add(id, n)`, `remove(id, n)`, `marks` (method or property), `add_marks(n)`, `remove_marks(n)`, optionally `has_equipped_tag(tag)` |
+| `equipment` | `equipment` | `slots()` → `{slot: item_id}`, read for `wearing_tag` when the bag does not answer it |
+| `player` | `player` | `display_name()`, and a position: a `position()` method **or** any Node3D. Binding it also feeds `reach` objectives. |
+| `progression` | `skills` | `skill_level(id)` |
+| `crime` | `bounty` | `bounty_for(faction_id)` |
+| `crafting` | `recipes` | `teach(recipe_id)` |
+
 Anything missing degrades safely: the read returns a default and a write is logged as a lost
-effect rather than silently succeeding.
+effect rather than silently succeeding. `SocialContext.position_of(obj)` / `can_locate(obj)` are
+the helpers that accept either shape of "where are you".
+
+## World events that are deeds
+
+Social applies three deeds itself, so renown moves without every stream knowing the table:
+`boss_defeated` → `boss_kill` (once per boss, guarded by a `boss_deed/<id>` flag),
+`place_discovered` → `place_discovered`, `player_died` → `died`. **Everything else**
+(crimes, kindnesses, ordinary kills) is applied by the system that knows about it, through
+`Social.apply_deed(deed_id, witnesses, place)`, so nothing is counted twice. Quest completion
+applies its layer's deed from the quest log's reward step.
+
+## Debug console
+
+`systems/social/debug_commands.gd` registers `talk`, `next`, `say`, `greet`, `gesture`,
+`standing`, `deed`, `rep`, `join`, `quests`, `quest`, `board` and `rumours` with the optional
+`Debug` autoload, so a conversation or a reputation can be driven by hand:
+`./run.sh run -- --cmd="region core:region/hearthvale; talk wardens_hesk; next; say 0"`.
 
 ## Public API
 

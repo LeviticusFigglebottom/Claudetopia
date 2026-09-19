@@ -74,6 +74,12 @@ func _ready() -> void:
 
 	EventBus.player_spawned.connect(_on_player_spawned)
 	EventBus.region_entered.connect(_on_region_entered)
+	# The world events that are deeds in their own right. Everything else (crimes, kindnesses,
+	# kills worth talking about) is applied by the system that knows about it, through
+	# Social.apply_deed, so nothing is counted twice.
+	EventBus.boss_defeated.connect(_on_boss_defeated)
+	EventBus.place_discovered.connect(_on_place_discovered)
+	EventBus.player_died.connect(_on_player_died)
 	call_deferred("refresh_providers")
 	call_deferred("_register_debug_commands")
 
@@ -116,6 +122,25 @@ func _on_player_spawned(player: Node) -> void:
 
 func _on_region_entered(_region_id: String, _previous: String) -> void:
 	refresh_providers()
+
+
+## Putting down a thing with a name is the loudest deed there is, and it counts once.
+func _on_boss_defeated(boss_id: String) -> void:
+	if GameState.has_flag("boss_deed/" + boss_id):
+		return
+	GameState.set_flag("boss_deed/" + boss_id)
+	apply_deed("boss_kill", [])
+
+
+func _on_place_discovered(place_id: String) -> void:
+	if Ids.type_of(place_id) == "" :
+		return
+	apply_deed("place_discovered", [], place_id if gossip.is_settled(place_id) else "")
+
+
+## Being seen to fall costs a little of what holds you (DESIGN §5.11); the Echo does the rest.
+func _on_player_died(_position: Vector3) -> void:
+	apply_deed("died", [])
 
 
 # --- where the player is ---------------------------------------------------------------------
