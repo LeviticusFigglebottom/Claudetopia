@@ -454,6 +454,52 @@ MATERIALS = {
 }
 
 
+# Godot import settings for these PNGs. The alpha channel carries height/roughness *data*,
+# so alpha-border fixing must be off (it would bleed colour where alpha is dark), and every
+# texture must import identically or Terrain3D cannot build one texture array from them.
+IMPORT_PARAMS = {
+    "compress/mode": "0",                 # lossless RGBA8: works headless, no editor codecs
+    "compress/normal_map": "0",
+    "compress/channel_pack": "1",         # channels are independent data, not colour+alpha
+    "mipmaps/generate": "true",
+    "process/fix_alpha_border": "false",
+    "process/premult_alpha": "false",
+    "process/normal_map_invert_y": "false",
+    "detect_3d/compress_to": "0",         # never silently re-import when used in 3D
+}
+
+
+def write_import_settings(png_path: str) -> None:
+    """Create or update <png>.import so Godot imports every slot the same way."""
+    path = png_path + ".import"
+    lines: list = []
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    else:
+        lines = ["[remap]", "", 'importer="texture"', 'type="CompressedTexture2D"', "",
+                 "[deps]", "", 'source_file="res://%s"' % os.path.relpath(
+                     png_path, os.path.join(REPO, "game")).replace(os.sep, "/"), "", "[params]", ""]
+    seen = set()
+    out: list = []
+    in_params = False
+    for line in lines:
+        if line.startswith("["):
+            in_params = line.strip() == "[params]"
+        if in_params and "=" in line:
+            key = line.split("=", 1)[0].strip()
+            if key in IMPORT_PARAMS:
+                out.append("%s=%s" % (key, IMPORT_PARAMS[key]))
+                seen.add(key)
+                continue
+        out.append(line)
+    for key, value in IMPORT_PARAMS.items():
+        if key not in seen:
+            out.append("%s=%s" % (key, value))
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(out).rstrip() + "\n")
+
+
 def generate(name: str, size: int, out_dir: str, seed: int = SEED) -> tuple:
     spec = MATERIALS[name]
     p = Painter(name, size, float(spec.get("tile_m", 2.5)), seed)
@@ -471,6 +517,9 @@ def generate(name: str, size: int, out_dir: str, seed: int = SEED) -> tuple:
     n_path = os.path.join(out_dir, "%s_normal_rough.png" % name)
     Image.fromarray((albedo_height * 255.0 + 0.5).astype(np.uint8), "RGBA").save(a_path, optimize=True)
     Image.fromarray((normal_rough * 255.0 + 0.5).astype(np.uint8), "RGBA").save(n_path, optimize=True)
+    if os.path.abspath(out_dir).startswith(os.path.join(REPO, "game")):
+        write_import_settings(a_path)
+        write_import_settings(n_path)
     return a_path, n_path
 
 
