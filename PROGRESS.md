@@ -11,8 +11,22 @@ _Updated 2026-09-19 (session 1, early)._
 * Project skeleton: autoloads (Log, ContentDB, EventBus, Settings, WorldClock,
   GameState, SaveSystem), content pack `core` with 6 regions, 8 factions,
   34 places; test runner with 17 unit tests; `run.sh`.
+* Atmosphere system: painted sky shader, sun/moon cycle, per-region light
+  recipes, data-driven weather with precipitation; review sheet in
+  captures/atmosphere (regenerate with tools_gd/atmosphere_review.tscn).
 * Asset forge prototypes: Sapling tree, displaced rock, Skin-modifier humanoid
   with code-authored Walk/Idle/Attack clips exported to GLB and playing in Godot.
+
+## In flight (parallel worktree streams, session 1)
+
+World builder + Terrain3D import + streaming + capture/smoke runners · Asset forge
+library + trees/rocks/flora/props/landmarks · Character forge + humanoid clip
+library · Player/cameras/combat core/enemy AI · Inventory/progression/crafting ·
+Dialogue/quests/factions/standing · NPC life/crime/stealth/economy · Narrative
+content (Merrowby roster, dialogue, quests, books) · UI (theme, HUD, menus, map,
+Naming) · Audio (synth toolkit, music, ambience, SFX, directors).
+Integrator (main branch) owns: atmosphere system (done, first pass), merging,
+hearthstones/death/echo, docs.
 
 ## Next
 

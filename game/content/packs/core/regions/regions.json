@@ -7,19 +7,75 @@
     "law_faction": "core:faction/wardens",
     "identity": {
       "geology": "Chalk downland: whale-backed hills, dry valleys, a clear chalk stream (the Larkbourne) with watercress, and a white scar where the falling Toll cut the hill.",
-      "palette": ["#c9a24a", "#5f8a3c", "#efe7d2", "#2f4a25", "#b23a2e", "#a5773a"],
-      "light": {"sun_color": "#ffe6b8", "sun_elevation_bias": -4, "fog_color": "#e9dcbd", "fog_density": 0.0011, "ambient_tint": "#fff0d6", "saturation": 1.08, "contrast": 1.0, "bloom": 0.25},
-      "weather": {"clear": 45, "overcast": 25, "rain": 20, "mist": 10},
-      "flora": ["oak", "apple", "hawthorn", "cow_parsley", "poppy", "barley", "yew", "clover"],
+      "palette": [
+        "#c9a24a",
+        "#5f8a3c",
+        "#efe7d2",
+        "#2f4a25",
+        "#b23a2e",
+        "#a5773a"
+      ],
+      "light": {
+        "sun_color": "#ffe6b8",
+        "sun_elevation_bias": -4,
+        "fog_color": "#e9dcbd",
+        "fog_density": 0.0011,
+        "ambient_tint": "#fff0d6",
+        "saturation": 1.12,
+        "contrast": 1.0,
+        "bloom": 0.25,
+        "sky_tint": "#fff0d2"
+      },
+      "weather": {
+        "clear": 45,
+        "overcast": 25,
+        "rain": 20,
+        "mist": 10
+      },
+      "flora": [
+        "oak",
+        "apple",
+        "hawthorn",
+        "cow_parsley",
+        "poppy",
+        "barley",
+        "yew",
+        "clover"
+      ],
       "architecture": "Chalk-cob walls, thatch, painted doors by trade (blue miller, red smith, green grower, yellow brewer), wattle fences, a stone mill, dovecotes.",
-      "materials": ["chalk_cob", "thatch", "oak", "flint"],
+      "materials": [
+        "chalk_cob",
+        "thatch",
+        "oak",
+        "flint"
+      ],
       "soundscape": "Skylarks, bees, a mill wheel, small bells hung in trees, fiddles at the inn.",
-      "ambience": ["skylark", "bees", "wind_soft", "leaves_broad"],
+      "ambience": [
+        "skylark",
+        "bees",
+        "wind_soft",
+        "leaves_broad"
+      ],
       "music_mode": "lydian_warm",
       "landmark": "core:place/cracked_toll",
-      "unique_features": ["the only apple trees in Wickmere", "the Chalk Hound hill figure", "the Wardens' Roll"]
+      "unique_features": [
+        "the only apple trees in Wickmere",
+        "the Chalk Hound hill figure",
+        "the Wardens' Roll"
+      ]
     },
-    "map": {"center": [1100, 2500], "radius": 2200, "base_height": 38, "relief": 55, "roughness": 0.30, "shape": "downs", "water_table": 6},
+    "map": {
+      "center": [
+        1100,
+        2500
+      ],
+      "radius": 2200,
+      "base_height": 38,
+      "relief": 55,
+      "roughness": 0.3,
+      "shape": "downs",
+      "water_table": 6
+    },
     "enemy_ecology": [],
     "danger": 1
   },
@@ -31,19 +87,75 @@
     "law_faction": "core:faction/tallymen",
     "identity": {
       "geology": "A wide lake in an Oroth-shaped basin; shingle shores, reed fringes to the west, low cliffs to the north; Tollmere island of fused black stone joined by the Long Stride causeway.",
-      "palette": ["#3f7fb5", "#f1ece0", "#5d6470", "#b08a3e", "#c76a44", "#274a6b"],
-      "light": {"sun_color": "#fff5e6", "sun_elevation_bias": 4, "fog_color": "#c9d6e2", "fog_density": 0.0007, "ambient_tint": "#e8f0ff", "saturation": 1.05, "contrast": 1.08, "bloom": 0.2},
-      "weather": {"clear": 55, "overcast": 25, "squall": 15, "fog": 5},
-      "flora": ["willow_pollard", "lime", "waterlily", "market_herbs", "reed_sparse"],
+      "palette": [
+        "#3f7fb5",
+        "#f1ece0",
+        "#5d6470",
+        "#b08a3e",
+        "#c76a44",
+        "#274a6b"
+      ],
+      "light": {
+        "sun_color": "#fff5e6",
+        "sun_elevation_bias": 4,
+        "fog_color": "#c9d6e2",
+        "fog_density": 0.0007,
+        "ambient_tint": "#e8f0ff",
+        "saturation": 1.06,
+        "contrast": 1.08,
+        "bloom": 0.2,
+        "sky_tint": "#eaf4ff"
+      },
+      "weather": {
+        "clear": 55,
+        "overcast": 25,
+        "squall": 15,
+        "fog": 5
+      },
+      "flora": [
+        "willow_pollard",
+        "lime",
+        "waterlily",
+        "market_herbs",
+        "reed_sparse"
+      ],
       "architecture": "Lime-washed walls, slate roofs, brass lamps, canals with iron bridges, guild halls with charter-boards, the Oroth-built Sayers' Spire, the Lamp lighthouse.",
-      "materials": ["limewash", "slate", "brass", "black_stone", "iron"],
+      "materials": [
+        "limewash",
+        "slate",
+        "brass",
+        "black_stone",
+        "iron"
+      ],
       "soundscape": "Gulls, bells on buoys, market cries, water slapping stone, clerks' bells.",
-      "ambience": ["gulls", "water_lap", "market_murmur", "buoy_bell"],
+      "ambience": [
+        "gulls",
+        "water_lap",
+        "market_murmur",
+        "buoy_bell"
+      ],
       "music_mode": "ionian_bright",
       "landmark": "core:place/sayers_spire",
-      "unique_features": ["the only city", "canals", "the hinge-less Oroth door", "the Ledger of Prices"]
+      "unique_features": [
+        "the only city",
+        "canals",
+        "the hinge-less Oroth door",
+        "the Ledger of Prices"
+      ]
     },
-    "map": {"center": [0, -200], "radius": 1900, "base_height": 10, "relief": 18, "roughness": 0.15, "shape": "lake_basin", "water_table": 8, "lake_radius": 1250},
+    "map": {
+      "center": [
+        0,
+        -200
+      ],
+      "radius": 1900,
+      "base_height": 10,
+      "relief": 18,
+      "roughness": 0.15,
+      "shape": "lake_basin",
+      "water_table": 8,
+      "lake_radius": 1250
+    },
     "enemy_ecology": [],
     "danger": 1
   },
@@ -55,19 +167,78 @@
     "law_faction": "core:faction/reed_council",
     "identity": {
       "geology": "Delta marsh: reed beds, meandering channels, peat islands, brackish tide-flats to the west, sunken Oroth masonry everywhere.",
-      "palette": ["#2f7f78", "#c9b26a", "#3b3a6e", "#6b4a7a", "#e8a93f", "#1b3a3a"],
-      "light": {"sun_color": "#e9e2d0", "sun_elevation_bias": -8, "fog_color": "#a9c1b8", "fog_density": 0.0032, "ambient_tint": "#cfe3dc", "saturation": 0.95, "contrast": 0.92, "bloom": 0.35},
-      "weather": {"fog": 40, "drizzle": 25, "overcast": 20, "clear": 15},
-      "flora": ["reed", "willow", "alder", "marsh_marigold", "bladderwort", "sundew", "bulrush"],
+      "palette": [
+        "#2f7f78",
+        "#c9b26a",
+        "#3b3a6e",
+        "#6b4a7a",
+        "#e8a93f",
+        "#1b3a3a"
+      ],
+      "light": {
+        "sun_color": "#e9e2d0",
+        "sun_elevation_bias": -8,
+        "fog_color": "#a9c1b8",
+        "fog_density": 0.0024,
+        "ambient_tint": "#cfe3dc",
+        "saturation": 0.95,
+        "contrast": 0.92,
+        "bloom": 0.35,
+        "sun_elevation_scale": 0.85,
+        "sky_tint": "#cfe2dc"
+      },
+      "weather": {
+        "fog": 40,
+        "drizzle": 25,
+        "overcast": 20,
+        "clear": 15
+      },
+      "flora": [
+        "reed",
+        "willow",
+        "alder",
+        "marsh_marigold",
+        "bladderwort",
+        "sundew",
+        "bulrush"
+      ],
       "architecture": "Stilts, boardwalks, rope bridges, indigo-dyed cloth, lantern poles, upturned boats as roofs, water-burial jetties.",
-      "materials": ["driftwood", "rope", "indigo_cloth", "reed_thatch", "tar"],
+      "materials": [
+        "driftwood",
+        "rope",
+        "indigo_cloth",
+        "reed_thatch",
+        "tar"
+      ],
       "soundscape": "Frogs, bitterns, dripping, rope creak, rounds sung across water, a submerged bell now and then.",
-      "ambience": ["frogs", "bittern", "drip", "rope_creak", "water_still"],
+      "ambience": [
+        "frogs",
+        "bittern",
+        "drip",
+        "rope_creak",
+        "water_still"
+      ],
       "music_mode": "dorian_misty",
       "landmark": "core:place/drowned_nave",
-      "unique_features": ["the stilt-town", "lantern water-burials", "the only indigo", "the Eelfathom Pool's delayed reflection"]
+      "unique_features": [
+        "the stilt-town",
+        "lantern water-burials",
+        "the only indigo",
+        "the Eelfathom Pool's delayed reflection"
+      ]
     },
-    "map": {"center": [-3000, -600], "radius": 2200, "base_height": 3, "relief": 6, "roughness": 0.2, "shape": "delta", "water_table": 2},
+    "map": {
+      "center": [
+        -3000,
+        -600
+      ],
+      "radius": 2200,
+      "base_height": 3,
+      "relief": 6,
+      "roughness": 0.2,
+      "shape": "delta",
+      "water_table": 2
+    },
     "enemy_ecology": [],
     "danger": 2
   },
@@ -79,19 +250,80 @@
     "law_faction": "",
     "identity": {
       "geology": "Old forest on rising ground over granite; ravines with waterfalls, mossy boulders, root-caves, the Briar wall on the eastern rim.",
-      "palette": ["#1f3d22", "#2b211c", "#e0a23a", "#8ab34a", "#8c4a2a", "#6b3f8a"],
-      "light": {"sun_color": "#ffd98a", "sun_elevation_bias": 0, "fog_color": "#5f7a4a", "fog_density": 0.0026, "ambient_tint": "#3f5a3a", "saturation": 1.1, "contrast": 1.12, "bloom": 0.45, "god_rays": true},
-      "weather": {"still": 40, "rain": 30, "mist": 20, "storm": 10},
-      "flora": ["giant_oak", "black_ash", "fern", "bracken", "foxglove", "bracket_fungus", "hanging_moss", "briar"],
+      "palette": [
+        "#1f3d22",
+        "#2b211c",
+        "#e0a23a",
+        "#8ab34a",
+        "#8c4a2a",
+        "#6b3f8a"
+      ],
+      "light": {
+        "sun_color": "#ffd98a",
+        "sun_elevation_bias": 0,
+        "fog_color": "#5f7a4a",
+        "fog_density": 0.0021,
+        "ambient_tint": "#3f5a3a",
+        "saturation": 1.08,
+        "contrast": 1.12,
+        "bloom": 0.45,
+        "god_rays": true,
+        "sun_elevation_scale": 0.9,
+        "sky_tint": "#dcebd0"
+      },
+      "weather": {
+        "still": 40,
+        "rain": 30,
+        "mist": 20,
+        "storm": 10
+      },
+      "flora": [
+        "giant_oak",
+        "black_ash",
+        "fern",
+        "bracken",
+        "foxglove",
+        "bracket_fungus",
+        "hanging_moss",
+        "briar"
+      ],
       "architecture": "Wood-carved lodges, rope walks inside the Grandfather, bark shingles, antler hooks, oiled stone circles.",
-      "materials": ["carved_oak", "bark_shingle", "antler", "moss_stone", "rope"],
+      "materials": [
+        "carved_oak",
+        "bark_shingle",
+        "antler",
+        "moss_stone",
+        "rope"
+      ],
       "soundscape": "Wind in a high canopy, woodpeckers, distant falls, creaks, an owl at noon.",
-      "ambience": ["canopy_wind", "woodpecker", "distant_falls", "creak", "owl"],
+      "ambience": [
+        "canopy_wind",
+        "woodpecker",
+        "distant_falls",
+        "creak",
+        "owl"
+      ],
       "music_mode": "aeolian_deep",
       "landmark": "core:place/grandfather",
-      "unique_features": ["the tree-town", "the Briar", "a stone circle that hums", "Weaverdeep's silk bridges"]
+      "unique_features": [
+        "the tree-town",
+        "the Briar",
+        "a stone circle that hums",
+        "Weaverdeep's silk bridges"
+      ]
     },
-    "map": {"center": [3000, 300], "radius": 2300, "base_height": 60, "relief": 120, "roughness": 0.45, "shape": "forest_rise", "water_table": 6},
+    "map": {
+      "center": [
+        3000,
+        300
+      ],
+      "radius": 2300,
+      "base_height": 60,
+      "relief": 120,
+      "roughness": 0.45,
+      "shape": "forest_rise",
+      "water_table": 6
+    },
     "enemy_ecology": [],
     "danger": 3
   },
@@ -103,19 +335,77 @@
     "law_faction": "core:faction/clan_moot",
     "identity": {
       "geology": "Karst limestone: pavements, sinkholes, gorges, terraced waterfalls, high moor with snow on the tops; mines in the veins; giant bones in the scree.",
-      "palette": ["#4a5b74", "#e8e4d8", "#6e4a8a", "#8a4a2e", "#f4f6f8", "#2c3440"],
-      "light": {"sun_color": "#eef2ff", "sun_elevation_bias": 2, "fog_color": "#b8c4d4", "fog_density": 0.0009, "ambient_tint": "#d8e2f2", "saturation": 0.92, "contrast": 1.15, "bloom": 0.15},
-      "weather": {"wind": 35, "clear_cold": 30, "snow": 20, "rain": 15},
-      "flora": ["heather", "hardy_pine", "juniper", "lichen", "cottongrass", "rowan"],
+      "palette": [
+        "#4a5b74",
+        "#e8e4d8",
+        "#6e4a8a",
+        "#8a4a2e",
+        "#f4f6f8",
+        "#2c3440"
+      ],
+      "light": {
+        "sun_color": "#eef2ff",
+        "sun_elevation_bias": 2,
+        "fog_color": "#b8c4d4",
+        "fog_density": 0.0009,
+        "ambient_tint": "#d8e2f2",
+        "saturation": 0.92,
+        "contrast": 1.15,
+        "bloom": 0.15,
+        "sky_tint": "#dfe7f6"
+      },
+      "weather": {
+        "wind": 35,
+        "clear_cold": 30,
+        "snow": 20,
+        "rain": 15
+      },
+      "flora": [
+        "heather",
+        "hardy_pine",
+        "juniper",
+        "lichen",
+        "cottongrass",
+        "rowan"
+      ],
       "architecture": "Cliff-carved holds, chain bridges, drystone, turf roofs, bone lintels, mine headframes.",
-      "materials": ["limestone", "drystone", "turf", "bone", "iron_chain"],
+      "materials": [
+        "limestone",
+        "drystone",
+        "turf",
+        "bone",
+        "iron_chain"
+      ],
       "soundscape": "Wind, chains, waterfalls, distant hammering, pipes at night.",
-      "ambience": ["wind_high", "chain_clink", "waterfall", "hammer_distant", "pipes_night"],
+      "ambience": [
+        "wind_high",
+        "chain_clink",
+        "waterfall",
+        "hammer_distant",
+        "pipes_night"
+      ],
       "music_mode": "mixolydian_cold",
       "landmark": "core:place/fallen_hand",
-      "unique_features": ["chain bridges", "walkable giant bones", "the only snow", "blood-price law", "the singing shaft"]
+      "unique_features": [
+        "chain bridges",
+        "walkable giant bones",
+        "the only snow",
+        "blood-price law",
+        "the singing shaft"
+      ]
     },
-    "map": {"center": [200, -3000], "radius": 2400, "base_height": 180, "relief": 520, "roughness": 0.6, "shape": "mountains", "water_table": 10},
+    "map": {
+      "center": [
+        200,
+        -3000
+      ],
+      "radius": 2400,
+      "base_height": 180,
+      "relief": 520,
+      "roughness": 0.6,
+      "shape": "mountains",
+      "water_table": 10
+    },
     "enemy_ecology": [],
     "danger": 4
   },
@@ -127,19 +417,75 @@
     "law_faction": "",
     "identity": {
       "geology": "Ash heath over the Builders' city; black soil, grey grass, fused stone roads, sunken plazas, the Choir ring, cliffs down to the Hushline.",
-      "palette": ["#8b8a86", "#1e1c1b", "#d8cfbf", "#a08a4a", "#4a7fa8", "#5a5652"],
-      "light": {"sun_color": "#e2d8c8", "sun_elevation_bias": -14, "fog_color": "#9a9793", "fog_density": 0.0024, "ambient_tint": "#b6b2ac", "saturation": 0.55, "contrast": 0.95, "bloom": 0.3, "grain": 0.06},
-      "weather": {"ashfall": 35, "still_grey": 35, "dry_wind": 20, "thin_sun": 10},
-      "flora": ["dead_ash_tree", "grey_grass", "red_poppy_single", "char_stump"],
+      "palette": [
+        "#8b8a86",
+        "#1e1c1b",
+        "#d8cfbf",
+        "#a08a4a",
+        "#4a7fa8",
+        "#5a5652"
+      ],
+      "light": {
+        "sun_color": "#e2d8c8",
+        "sun_elevation_bias": -14,
+        "fog_color": "#9a9793",
+        "fog_density": 0.0017,
+        "ambient_tint": "#b6b2ac",
+        "saturation": 0.55,
+        "contrast": 0.95,
+        "bloom": 0.3,
+        "grain": 0.06,
+        "sun_elevation_scale": 0.5,
+        "sky_tint": "#cbc8c2"
+      },
+      "weather": {
+        "ashfall": 35,
+        "still_grey": 35,
+        "dry_wind": 20,
+        "thin_sun": 10
+      },
+      "flora": [
+        "dead_ash_tree",
+        "grey_grass",
+        "red_poppy_single",
+        "char_stump"
+      ],
       "architecture": "Oroth monumental: headless colossi, hinge-less doors, bells the size of houses; pilgrim tents; the Order's chapter-house inside a bell.",
-      "materials": ["fused_stone", "old_gilding", "bronze_bell", "grey_canvas", "ash"],
+      "materials": [
+        "fused_stone",
+        "old_gilding",
+        "bronze_bell",
+        "grey_canvas",
+        "ash"
+      ],
       "soundscape": "Near silence, ash hiss, one bell every few minutes, footsteps too loud, a sustained note under everything near the Seat.",
-      "ambience": ["ash_hiss", "bell_rare", "silence_bed", "sustained_note"],
+      "ambience": [
+        "ash_hiss",
+        "bell_rare",
+        "silence_bed",
+        "sustained_note"
+      ],
       "music_mode": "phrygian_hollow",
       "landmark": "core:place/sunken_choir",
-      "unique_features": ["the Hushline", "the sustained note", "no respawn after a boss", "the one red poppy"]
+      "unique_features": [
+        "the Hushline",
+        "the sustained note",
+        "no respawn after a boss",
+        "the one red poppy"
+      ]
     },
-    "map": {"center": [-1900, 2600], "radius": 2200, "base_height": 70, "relief": 45, "roughness": 0.25, "shape": "ash_plateau", "water_table": 0},
+    "map": {
+      "center": [
+        -1900,
+        2600
+      ],
+      "radius": 2200,
+      "base_height": 70,
+      "relief": 45,
+      "roughness": 0.25,
+      "shape": "ash_plateau",
+      "water_table": 0
+    },
     "enemy_ecology": [],
     "danger": 5
   }
