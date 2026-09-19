@@ -532,23 +532,30 @@ func _on_clip_finished(_clip: String) -> void:
 
 # --- sockets ------------------------------------------------------------------------------------
 
+## Node names cannot contain '.', so the contract's `Socket.WeaponR` becomes the node
+## `Socket_WeaponR`. The BoneAttachment3D still targets the exact bone name from CONTRACTS §2.
+static func socket_node_name(socket_name: String) -> String:
+	return socket_name.replace(".", "_")
+
+
 ## Equipment attachment point (CONTRACTS §2): a BoneAttachment3D when the rig exists, else a
-## Marker3D placeholder at the rig's approximate position.
+## Marker3D placeholder at the rig's approximate position. Look up by the contract name.
 func get_socket(socket_name: String) -> Node3D:
 	if _sockets.has(socket_name) and is_instance_valid(_sockets[socket_name]):
 		return _sockets[socket_name]
-	var found := model.find_child(socket_name, true, false) as Node3D
+	var node_name := socket_node_name(socket_name)
+	var found := model.find_child(node_name, true, false) as Node3D
 	if found == null:
 		var skeleton := _find_skeleton(model)
 		if skeleton != null and skeleton.find_bone(socket_name) >= 0:
 			var att := BoneAttachment3D.new()
-			att.name = socket_name
+			att.name = node_name
 			att.bone_name = socket_name
 			skeleton.add_child(att)
 			found = att
 	if found == null:
 		var marker := Marker3D.new()
-		marker.name = socket_name
+		marker.name = node_name
 		marker.position = PLACEHOLDER_SOCKETS.get(socket_name, Vector3(0.0, 1.0, 0.0)) * body_scale
 		model.add_child(marker)
 		found = marker

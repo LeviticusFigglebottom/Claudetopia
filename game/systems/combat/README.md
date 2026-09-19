@@ -63,7 +63,7 @@ emits `EventBus.player_died(position)` and implements `full_restore()` / `respaw
 ## Running it
 
 ```
-./run.sh test                                   # 119 unit tests, content validation included
+./run.sh test                                   # 141 unit tests, content validation included
 godot --path game -- --arena                    # play the flat test arena
 xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
   --audio-driver Dummy -- --arena --verify --out=$PWD/captures/arena
