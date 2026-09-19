@@ -1,0 +1,20 @@
+{
+ "file": "world_map.png",
+ "size_px": 1536,
+ "size_m": 8192.0,
+ "origin": [
+  -4096.0,
+  -4096.0
+ ],
+ "regions": [
+  "core:region/hearthvale",
+  "core:region/brightwater",
+  "core:region/sedgemire",
+  "core:region/briarwold",
+  "core:region/skerrow",
+  "core:region/cinderlea"
+ ],
+ "lake_level": 8.0,
+ "synthetic": true,
+ "_doc": "world to pixel: px = (world_xz - origin) / size_m * size_px, z is +south"
+}

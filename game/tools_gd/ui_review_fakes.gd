@@ -59,6 +59,10 @@ func _player() -> void:
 	player = FakePlayer.new()
 	player.name = "FakePlayer"
 	add_child(player)
+	# standing on the Merrowby road, looking north-east, so the compass and the chart
+	# have something to show
+	player.global_position = Vector3(980.0, 42.0, 2280.0)
+	player.rotation.y = deg_to_rad(-38.0)
 
 
 func _bags() -> void:
