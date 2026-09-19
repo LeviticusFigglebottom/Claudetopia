@@ -120,7 +120,7 @@ def compute_regions(regions: list[RegionDef], grid: Grid, bank: NoiseBank, lake_
     return RegionField(grid=grid, weights=weights, owner=owner, scores=scores)
 
 
-def dithered_owner(rf: RegionField, n: int, bank: NoiseBank, amount: float = 0.22) -> np.ndarray:
+def dithered_owner(rf: RegionField, n: int, bank: NoiseBank, amount: float = 0.30) -> np.ndarray:
     """Owner mask where borders dissolve into patches (for texture rules and scatter)."""
     R = rf.weights.shape[0]
     best = np.full((n, n), -1e9, dtype=np.float32)
@@ -128,7 +128,8 @@ def dithered_owner(rf: RegionField, n: int, bank: NoiseBank, amount: float = 0.2
     for r in range(R):
         w = rf.weight_at(r, n)
         if r > 0:
-            w = w + amount * bank.field_at(300 + r, n, beta=1.6, wl_min=25, wl_max=140)
+            w = w + amount * (0.7 * bank.field_at(300 + r, n, beta=1.7, wl_min=45, wl_max=260)
+                              + 0.3 * bank.field_at(320 + r, n, beta=1.6, wl_min=18, wl_max=80))
         better = w > best
         out[better] = r
         best = np.where(better, w, best)

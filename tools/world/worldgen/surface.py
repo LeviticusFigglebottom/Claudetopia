@@ -15,7 +15,7 @@ import numpy as np
 from scipy import ndimage
 
 from .grid import Grid, lerp, smoothstep
-from .noise import NoiseBank
+from .noise import NoiseBank, downsample, upsample
 
 SLOTS = {
     "vale_grass": 0, "chalk": 1, "dirt_path": 2, "mud": 3, "peat": 4, "forest_floor": 5,
@@ -33,7 +33,8 @@ class SurfaceContext:
     def __init__(self, grid: Grid, bank: NoiseBank, H: np.ndarray, regions: list, owner: np.ndarray,
                  water_mask: np.ndarray, water_level: np.ndarray, moisture: np.ndarray,
                  river_d: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
-                 lake, places: list):
+                 lake, places: list, rf=None):
+        self.rf = rf
         self.grid = grid
         self.bank = bank
         self.H = H
@@ -70,12 +71,37 @@ class SurfaceContext:
         i = self.idx.get(shape, -1)
         return (self.owner == i) if i >= 0 else np.zeros((self.n, self.n), dtype=bool)
 
+    def region_w(self, shape: str) -> np.ndarray:
+        """Soft region membership, 0..1, with a noisy border so materials interlock.
+
+        Using the blended weights (rather than the hard owner mask) is what stops a region
+        boundary from reading as a stencil cut across the ground.
+        """
+        key = ("rw", shape)
+        if key in self._patch_cache:
+            return self._patch_cache[key]
+        i = self.idx.get(shape, -1)
+        if i < 0 or self.rf is None:
+            out = self.region(shape).astype(np.float32)
+        else:
+            w = self.rf.weight_at(i, self.n)
+            d = 0.5 * (self.patch(560 + i, 45, 260) - 0.5) + 0.22 * (self.patch(580 + i, 16, 70) - 0.5)
+            out = np.clip(smoothstep(0.24, 0.62, w + d), 0.0, 1.0).astype(np.float32)
+        self._patch_cache[key] = out
+        return out
+
     def patch(self, salt: int, wl_min: float = 40.0, wl_max: float = 220.0) -> np.ndarray:
-        """0..1 patchy noise for breaking up material boundaries."""
+        """0..1 patchy noise for breaking up material boundaries.
+
+        Generated on a 1024 lattice and upsampled linearly: patches are hundreds of metres
+        across, so the extra resolution would cost seconds and show nothing.
+        """
         key = (salt, wl_min, wl_max)
         if key not in self._patch_cache:
-            f = self.bank.detail(salt, self.n, wl_min=wl_min, wl_max=wl_max, beta=1.6)
-            self._patch_cache[key] = (0.5 + 0.5 * np.tanh(f)).astype(np.float32)
+            gen = min(self.n, 1024)
+            f = self.bank.field(salt, beta=1.6, wl_min=wl_min, wl_max=wl_max, n=gen)
+            v = (0.5 + 0.5 * np.tanh(f)).astype(np.float32)
+            self._patch_cache[key] = upsample(v, self.n, order=1)
         return self._patch_cache[key]
 
     def near_place(self, short_ids, radius: float) -> np.ndarray:
@@ -97,17 +123,18 @@ def _weights(ctx: SurfaceContext):
     verysteep = smoothstep(0.7, 1.3, s)
     dry = 1.0 - m
 
-    downs = ctx.region("downs").astype(np.float32)
-    basin = ctx.region("lake_basin").astype(np.float32)
-    delta = ctx.region("delta").astype(np.float32)
-    forest = ctx.region("forest_rise").astype(np.float32)
-    karst = ctx.region("mountains").astype(np.float32)
-    ash = ctx.region("ash_plateau").astype(np.float32)
+    downs = ctx.region_w("downs")
+    basin = ctx.region_w("lake_basin")
+    delta = ctx.region_w("delta")
+    forest = ctx.region_w("forest_rise")
+    karst = ctx.region_w("mountains")
+    ash = ctx.region_w("ash_plateau")
     shore_band = np.exp(-((ctx.lake.sd) / 55.0) ** 2)
     river_band = np.exp(-(ctx.river_d / 14.0) ** 2)
 
     # --- Hearthvale: chalk downs, barley, orchards -------------------------------------
-    yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat) + basin * 0.5 * (1.0 - shore_band)
+    yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat) \
+        + basin * (0.30 + 0.45 * ctx.patch(410, 60, 300)) * (1.0 - 0.5 * shore_band)
     yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(70.0, 105.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * smoothstep(-400.0, -1200.0, ctx.Z)
     yield SLOTS["barley"], downs * 1.25 * ctx.patch(402, 90, 380) ** 2 * flat * dry * (1.0 - smoothstep(75.0, 95.0, H))
@@ -118,7 +145,8 @@ def _weights(ctx: SurfaceContext):
     under_water = ctx.water.astype(np.float32)
     yield SLOTS["lake_bed"], 2.2 * under_water * (1.0 - smoothstep(0.0, 1.0, np.abs(ctx.lake.sd) / 4000.0)) \
         * (ctx.lake.sd < 0).astype(np.float32) + 0.9 * under_water * (H > -1.0)
-    yield SLOTS["shingle"], 1.9 * shore_band * (1.0 - steep) + 0.9 * river_band * (1.0 - ctx.water) * basin
+    yield SLOTS["shingle"], 1.9 * shore_band * (1.0 - steep) + 0.9 * river_band * (1.0 - ctx.water) * basin \
+        + basin * 0.55 * ctx.patch(411, 40, 180) ** 2 * (1.0 - smoothstep(120.0, 500.0, ctx.lake.sd))
     yield SLOTS["fused_stone"], 2.4 * (ctx.lake.island_sd < 20.0).astype(np.float32) \
         + ash * (0.55 * ctx.patch(403, 60, 260) ** 2 + 1.6 * ctx.near_place({"sunken_choir", "cantors_seat"}, 420.0))
     yield SLOTS["cobbles"], 2.6 * ctx.town * (1.0 - steep) + 1.8 * (ctx.on_road & ctx.town) \
@@ -126,8 +154,8 @@ def _weights(ctx: SurfaceContext):
 
     # --- Sedgemire: peat, mud, tide-flats ----------------------------------------------
     yield SLOTS["peat"], delta * (1.1 + 0.8 * ctx.patch(404) * flat) * (1.0 - smoothstep(-3300.0, -3700.0, ctx.X))
-    yield SLOTS["mud"], delta * (0.6 + 1.7 * m * (1.0 - flat * 0.3)) + 1.2 * river_band * (delta + basin * 0.4) \
-        + 0.8 * m * downs * (1.0 - flat) * 0.3
+    yield SLOTS["mud"], delta * (0.6 + 1.7 * m * (1.0 - flat * 0.3)) + 1.2 * river_band * (delta + basin * 0.6) \
+        + 0.8 * m * downs * (1.0 - flat) * 0.3 + basin * 0.7 * m * ctx.patch(412, 40, 190) ** 2
     yield SLOTS["sand_flats"], delta * 2.4 * smoothstep(-3150.0, -3600.0, ctx.X) \
         + 1.6 * (H < 0.6) * (ctx.X < -3300.0)
 
@@ -142,13 +170,14 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["limestone"], karst * (0.95 + 0.9 * flat * smoothstep(180.0, 320.0, H)) \
         * (1.0 - smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 40.0, H))
     yield SLOTS["scree"], karst * (1.9 * steep + 1.1 * smoothstep(0.55, 1.1, s) * smoothstep(250.0, 420.0, H))
-    yield SLOTS["heather"], karst * 1.5 * flat * ctx.patch(407, 70, 300) * smoothstep(120.0, 220.0, H) \
-        * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.35 * ctx.patch(407, 70, 300) * smoothstep(80.0, 100.0, H)
+    yield SLOTS["heather"], karst * 2.1 * flat * ctx.patch(407, 70, 300) ** 0.8 * smoothstep(110.0, 210.0, H) \
+        * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(78.0, 98.0, H) \
+        + basin * 0.5 * ctx.patch(407, 70, 300) ** 2 * smoothstep(20.0, 45.0, H)
     yield SLOTS["snow"], 2.6 * smoothstep(SNOW_LINE - 40.0, SNOW_LINE + 70.0, H) * (1.0 - 0.6 * verysteep)
 
     # --- Cinderlea: ash and grey grass --------------------------------------------------
-    yield SLOTS["ash_soil"], ash * (1.2 + 0.7 * dry * (1.0 - flat))
-    yield SLOTS["grey_grass"], ash * 1.5 * flat * ctx.patch(408, 80, 320) + ash * 0.4
+    yield SLOTS["ash_soil"], ash * (0.95 + 0.7 * dry * (1.0 - flat))
+    yield SLOTS["grey_grass"], ash * (0.75 + 1.5 * flat * ctx.patch(408, 80, 320) ** 0.7)
 
     # --- roads everywhere ---------------------------------------------------------------
     yield SLOTS["dirt_path"], 3.0 * ctx.on_road * (1.0 - ctx.town) + 1.1 * ctx.near_road * (1.0 - ctx.town) \
@@ -162,10 +191,11 @@ def control_maps(ctx: SurfaceContext, blend_sharpness: float = 1.6):
     second = np.zeros((n, n), dtype=np.float32)
     base = np.zeros((n, n), dtype=np.uint8)
     overlay = np.zeros((n, n), dtype=np.uint8)
-    jitter_scale = 0.12
+    jitter_scale = 0.14
     for slot, w in _weights(ctx):
         w = np.asarray(w, dtype=np.float32)
-        w = w * (1.0 + jitter_scale * (ctx.patch(500 + slot, 18, 70) - 0.5))
+        # three shared jitter fields (one per slot would cost seconds and look the same)
+        w = w * (1.0 + jitter_scale * (ctx.patch(500 + (slot % 3), 22, 90) - 0.5))
         is_best = w > best
         is_second = (~is_best) & (w > second)
         # the old best slides down into second place; a mid-ranking slot takes second only
@@ -184,9 +214,28 @@ def _hex_to_rgb(h: str) -> np.ndarray:
     return np.array([int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4)], dtype=np.float32)
 
 
-def colour_map(ctx: SurfaceContext, rf, strength: float = 0.34) -> np.ndarray:
-    """RGBA8 tint map: region palettes broken up by low-frequency noise; alpha = wetness."""
-    n = ctx.n
+# Which palette entries carry each region's ground colour, its second voice and its accent.
+# (Region palettes are ordered as written in the region defs; see WORLD_BIBLE.md section 6.)
+COLOUR_VOICES = {
+    "downs": (1, 0, 2, 0.30),          # clover green, harvest gold, chalk white
+    "lake_basin": (1, 2, 3, 0.26),     # lime white, slate, brass
+    "delta": (0, 1, 3, 0.34),          # teal, reed gold, bruise purple
+    "forest_rise": (0, 3, 1, 0.34),    # deep green, moss lime, black-ash bark
+    "mountains": (0, 1, 2, 0.30),      # slate blue, bone white, heather purple
+    "ash_plateau": (0, 2, 1, 0.26),    # ash grey, bone, char black
+}
+
+
+def colour_map(ctx: SurfaceContext, rf, strength: float = 0.62, work_n: int = 1024) -> np.ndarray:
+    """RGBA8 tint map: region palettes broken up by low-frequency noise; alpha = wetness.
+
+    Computed on a coarse lattice (the tint is all low-frequency) and upsampled to the grid.
+    """
+    n = min(ctx.n, work_n)
+    H = downsample(ctx.H, n)
+    slope = downsample(ctx.slope, n)
+    moist = downsample(ctx.moisture, n)
+    water = downsample(ctx.water.astype(np.float32), n)
     acc = np.zeros((n, n, 3), dtype=np.float32)
     total = np.zeros((n, n), dtype=np.float32)
     for r in ctx.regions:
@@ -194,24 +243,29 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.34) -> np.ndarray:
         while len(pal) < 6:
             pal.append(pal[-1])
         w = rf.weight_at(r.index, n)
-        a = 0.5 + 0.5 * np.tanh(ctx.bank.field_at(600 + r.index, n, beta=1.9, wl_min=240, wl_max=1100))
-        b = 0.5 + 0.5 * np.tanh(ctx.bank.field_at(620 + r.index, n, beta=1.8, wl_min=90, wl_max=380))
-        # three palette voices: the region's ground colour, its foil and its accent
-        c0 = pal[1] if r.shape in ("downs", "forest_rise") else pal[0]
-        c1 = pal[0] if r.shape in ("downs", "forest_rise") else pal[2]
-        c2 = pal[3]
+        a = 0.5 + 0.5 * np.tanh(ctx.bank.field(600 + r.index, beta=1.9, wl_min=240, wl_max=1100, n=n))
+        b = 0.5 + 0.5 * np.tanh(ctx.bank.field(620 + r.index, beta=1.8, wl_min=90, wl_max=380, n=n))
+        i0, i1, i2, accent = COLOUR_VOICES.get(r.shape, (0, 1, 2, 0.3))
+        c0, c1, c2 = pal[i0 % len(pal)], pal[i1 % len(pal)], pal[i2 % len(pal)]
+        # ground colour washed with a second voice, then dashed with the accent
         mix = (c0[None, None, :] * (1.0 - a)[..., None] + c1[None, None, :] * a[..., None])
-        mix = mix * (1.0 - 0.35 * b)[..., None] + c2[None, None, :] * (0.35 * b)[..., None]
+        mix = mix * (1.0 - accent * b)[..., None] + c2[None, None, :] * (accent * b)[..., None]
         acc += mix * w[..., None]
         total += w
     acc /= np.maximum(total, 1e-6)[..., None]
-    tint = lerp(np.ones_like(acc), acc, strength)
-    # height and slope shading so the land reads even on flat light
-    shade = 1.0 + 0.10 * np.tanh((ctx.H - 60.0) / 260.0) - 0.10 * smoothstep(0.35, 1.1, ctx.slope)
+    # Terrain3D multiplies this map over the albedo, so the tint must shift chroma without
+    # darkening: normalise each palette colour to mean 1, then blend from neutral toward it.
+    chroma = acc / np.maximum(acc.mean(axis=-1, keepdims=True), 0.04)
+    chroma = np.clip(chroma, 0.25, 2.2)
+    tint = lerp(np.ones_like(acc), chroma, strength)
+    # height and slope shading so the land reads even under flat light
+    shade = 1.0 + 0.10 * np.tanh((H - 60.0) / 260.0) - 0.10 * smoothstep(0.35, 1.1, slope)
     tint *= shade[..., None]
-    # snow and water lighten; ash darkens the accent
-    tint = lerp(tint, np.ones_like(tint), smoothstep(SNOW_LINE - 20.0, SNOW_LINE + 80.0, ctx.H)[..., None] * 0.8)
-    wet = np.clip(0.75 * ctx.moisture + 0.9 * ctx.water, 0.0, 1.0)
+    # snow lightens everything it covers
+    tint = lerp(tint, np.ones_like(tint), smoothstep(SNOW_LINE - 20.0, SNOW_LINE + 80.0, H)[..., None] * 0.8)
+    wet = np.clip(0.75 * moist + 0.9 * water, 0.0, 1.0)
     alpha = np.clip(0.5 - 0.38 * wet, 0.0, 1.0)
     rgba = np.concatenate([np.clip(tint, 0.0, 1.0), alpha[..., None]], axis=-1)
-    return (rgba * 255.0 + 0.5).astype(np.uint8)
+    if n != ctx.n:
+        rgba = np.stack([upsample(rgba[..., c], ctx.n, order=1) for c in range(4)], axis=-1)
+    return (np.clip(rgba, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)

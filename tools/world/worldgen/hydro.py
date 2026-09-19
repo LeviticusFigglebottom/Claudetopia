@@ -159,17 +159,37 @@ def water_maps(grid: Grid, H: np.ndarray, lake, rivers: list, river_d: np.ndarra
     in_lake = (lake.sd < 0.0) & (H < LAKE_LEVEL) & (lake.island_sd > 0.0)
     level[in_lake] = LAKE_LEVEL
     mask |= in_lake
-    # marsh pools: standing water in Sedgemire hollows
+    # marsh pools: coherent sheets of standing water in Sedgemire's hollows, not speckle
     marsh_idx = next((r.index for r in regions if r.shape == "delta"), -1)
     if marsh_idx >= 0:
-        pools = (owner == marsh_idx) & (H < 1.35) & ~mask
-        pools = ndimage.binary_opening(pools, np.ones((3, 3), bool))
-        level[pools] = np.maximum(level[pools], 1.35)
+        smooth_h = ndimage.gaussian_filter(H, max(2.0, 8.0 / grid.spacing))
+        table = 1.25 + 0.25 * np.tanh(bank.field_at(232, n, beta=2.0, wl_min=200, wl_max=900))
+        pools = (owner == marsh_idx) & (smooth_h < table) & (H < table + 0.25) & ~mask
+        k = max(3, int(round(12.0 / grid.spacing)) | 1)
+        disc = np.hypot(*np.ogrid[-(k // 2):k // 2 + 1, -(k // 2):k // 2 + 1]) <= k / 2.0
+        pools = ndimage.binary_opening(pools, disc)
+        pools = ndimage.binary_closing(pools, disc)
+        lab, nlab = ndimage.label(pools)
+        if nlab:
+            sizes = np.bincount(lab.ravel())
+            small = np.flatnonzero(sizes < max(12, int(600.0 / (grid.spacing ** 2))))
+            pools &= ~np.isin(lab, small)
+        level = np.where(pools & (table > level), table, level)
         mask |= pools
     # rivers
     riv = (river_d <= river_w * 0.5 + 0.5) & (H < river_surf + 0.25)
     level = np.where(riv & (river_surf > level), river_surf, level)
     mask |= riv
+    # drop specks: a single wet texel is noise, not a pool
+    min_px = max(4, int(round(40.0 / (grid.spacing ** 2))))
+    lab, nlab = ndimage.label(mask)
+    if nlab:
+        sizes = np.bincount(lab.ravel())
+        tiny = np.flatnonzero(sizes < min_px)
+        if tiny.size:
+            drop = np.isin(lab, tiny)
+            mask &= ~drop
+            level[drop] = -1000.0
     # flow directions
     flow = np.full((n, n, 2), 128, dtype=np.uint8)
     for r in rivers:

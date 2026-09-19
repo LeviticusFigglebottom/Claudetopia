@@ -13,7 +13,7 @@ import numpy as np
 from scipy import ndimage
 
 from .grid import Grid, lerp, smoothstep
-from .noise import NoiseBank, ridged, terrace, upsample, warp
+from .noise import NoiseBank, downsample, ridged, terrace, upsample, warp
 from .regions import RegionDef, RegionField
 
 LAKE_LEVEL = 8.0
@@ -120,14 +120,10 @@ def asym(v, up: float = 1.0, down: float = 0.35, k: float = 2.0):
 
 def shape_downs(ctx: HeightContext, r: RegionDef) -> np.ndarray:
     """Chalk downs: long whale-backed hills (rounded tops), narrow dry valleys."""
-    v = ctx.warped(111, 700, 2200, 90.0, beta=2.0, aniso=(35.0, 3.0))
+    v = ctx.warped(111, None, 2200, 90.0, beta=2.1, aniso=(35.0, 3.0))
     dome = (0.5 + 0.5 * np.tanh(v / 1.1)) ** 0.8          # broad rounded whale-backs
     h = (r.base_height - 0.4 * r.relief) + 1.0 * r.relief * dome
-    h += 0.07 * r.relief * sc(ctx.f(112, 1.8, 200, 700), 1.5) + 0.03 * r.relief * sc(ctx.f(113, 1.7, 50, 170))
-    # dry valleys: long connected V-shaped lines along the grain of the downs
-    vf = ctx.warped(114, 250, 800, 70.0, beta=1.8, aniso=(35.0, 2.0))
-    valley = np.exp(-(vf / 0.28) ** 2) * (1.0 - 0.55 * dome)
-    h -= 11.0 * valley
+    h += 0.10 * r.relief * sc(ctx.f(112, 2.0, None, 800), 1.5) + 0.05 * r.relief * sc(ctx.f(115, 2.0, 120, 420), 1.5)
     # the Cracked Toll: the bell's crater in the hill above Merrowby
     toll = ctx.place("cracked_toll")
     if toll:
@@ -139,7 +135,7 @@ def shape_downs(ctx: HeightContext, r: RegionDef) -> np.ndarray:
 
 def shape_lake_basin(ctx: HeightContext, r: RegionDef) -> np.ndarray:
     """Low land around the Mere; the lake itself is carved globally in apply_lake()."""
-    mix = 0.6 * ctx.f(121, 1.8, 150, 550) + 0.4 * ctx.f(122, 1.9, 500, 1600)
+    mix = 0.45 * ctx.f(121, 2.0, None, 600) + 0.55 * ctx.f(122, 2.1, None, 1800)
     h = 13.0 + 5.0 * np.tanh(0.6 * mix)
     # rises toward the northern cliffs and the eastern headland of the Lamp
     h += 14.0 * smoothstep(-800.0, -1500.0, ctx.Z)
@@ -151,14 +147,14 @@ def shape_lake_basin(ctx: HeightContext, r: RegionDef) -> np.ndarray:
 
 def shape_delta(ctx: HeightContext, r: RegionDef) -> np.ndarray:
     """Marsh delta near sea level: braided channels, peat islands, tide-flats to the west."""
-    mix = 0.6 * ctx.f(131, 1.8, 150, 550) + 0.4 * ctx.f(132, 1.9, 500, 1600)
+    mix = 0.5 * ctx.f(131, 2.0, None, 600) + 0.5 * ctx.f(132, 2.1, None, 1800)
     # the delta tilts gently down toward the sea in the west
     h = 1.3 + 1.8 * smoothstep(-3600.0, -2000.0, ctx.X) + 0.8 * np.tanh(0.8 * mix)
-    c1 = ctx.warped(133, 200, 600, 120.0, beta=1.7, aniso=(0.0, 1.6))
-    c2 = ctx.warped(134, 350, 900, 160.0, beta=1.7, aniso=(0.0, 1.2))
+    c1 = ctx.warped(133, 240, 700, 120.0, beta=1.7, aniso=(0.0, 1.6))
+    c2 = ctx.warped(134, 400, 1100, 160.0, beta=1.7, aniso=(0.0, 1.2))
     chan1 = np.exp(-(c1 / 0.22) ** 2)
     chan2 = np.exp(-(c2 / 0.16) ** 2)
-    islands = 2.2 * np.clip(ctx.f(135, 1.7, 50, 170) - 0.6, 0.0, 1.2) ** 1.2
+    islands = 2.2 * np.clip(ctx.f(135, 1.9, None, 260) - 0.6, 0.0, 1.2) ** 1.2
     h = h + islands - 2.2 * chan1 - 1.8 * chan2
     # tide-flats: everything sinks toward the west
     h = lerp(h, 0.5 + 0.25 * ctx.f(136, 1.6, 50, 170), smoothstep(-3050.0, -3500.0, ctx.X))
@@ -168,13 +164,13 @@ def shape_delta(ctx: HeightContext, r: RegionDef) -> np.ndarray:
 def shape_forest_rise(ctx: HeightContext, r: RegionDef) -> np.ndarray:
     """Old forest on rising granite: ravines with falls, tors, climbing to the Briar."""
     rise = 0.05 * np.clip(ctx.X - 900.0, 0.0, None)
-    mix = 0.65 * ctx.f(141, 2.0, 600, 2000) + 0.28 * ctx.f(142, 1.8, 200, 650) + 0.07 * ctx.f(143, 1.7, 50, 170)
+    mix = 0.62 * ctx.f(141, 2.2, None, 2400) + 0.26 * ctx.f(142, 2.0, None, 800) + 0.12 * ctx.f(147, 2.0, 120, 460)
     h = 30.0 + rise + 0.8 * r.relief * asym(mix / 0.71, 0.6, 0.25)
     # ravines: a few long clefts running down toward the lake, with falls where the land steps
     rav = np.exp(-(ctx.warped(144, 500, 1500, 150.0, beta=1.8, aniso=(0.0, 2.0)) / 0.09) ** 2)
-    rav *= smoothstep(1300.0, 2200.0, ctx.X) * smoothstep(0.1, 0.6, ctx.f(146, 2.0, 800, 2400))
+    rav *= smoothstep(1300.0, 2200.0, ctx.X) * smoothstep(0.1, 0.6, ctx.f(146, 2.2, None, 2400))
     h -= 26.0 * rav
-    tors = 20.0 * np.clip(ctx.f(145, 1.6, 60, 160) - 1.6, 0.0, 1.0) ** 2
+    tors = 20.0 * np.clip(ctx.f(145, 1.8, 30, 190) - 1.6, 0.0, 1.0) ** 2
     h += tors
     return h.astype(np.float32)
 
@@ -183,25 +179,26 @@ def shape_mountains(ctx: HeightContext, r: RegionDef) -> np.ndarray:
     """Karst mountains: ridges, terraces, gorges, sinkholes, high moor; peaks toward the north."""
     e = smoothstep(-1100.0, -3900.0, ctx.Z)
     # broad massifs, a few sharp crest lines on top of them, small crags on the slopes
-    bulk = 0.5 + 0.5 * np.tanh(ctx.f(151, 2.0, 900, 3000) / 1.2)
-    crest = ridged(ctx.warped(157, 500, 1600, 160.0, beta=1.9, aniso=(15.0, 1.6)), 2.2)
-    crags = ridged(ctx.f(152, 1.7, 50, 170), 1.2)
-    l2 = sc(ctx.f(153, 1.9, 500, 1600))
+    bulk = 0.5 + 0.5 * np.tanh(ctx.f(151, 2.3, None, 3200) / 1.1)
+    crest = ridged(ctx.f(157, 2.2, None, 1800, aniso=(15.0, 1.6)), 1.8)
+    crags = ridged(ctx.f(152, 2.0, 60, 400), 1.1)
+    l2 = sc(ctx.f(153, 2.1, None, 1800))
     relief = r.relief * (0.35 + 0.65 * e)
-    h = 40.0 + 130.0 * e + relief * ((0.55 + 0.15 * e) * bulk + 0.3 * crest * (0.25 + 0.75 * bulk)
-                                     + 0.06 * crags * (0.3 + 0.7 * crest) + 0.05 * l2)
+    h = 40.0 + 130.0 * e + relief * ((0.6 + 0.15 * e) * bulk + 0.28 * crest * (0.25 + 0.75 * bulk)
+                                     + 0.035 * crags * (0.3 + 0.7 * crest) + 0.05 * l2)
     # high moor: away from the crests, the middle heights flatten into a rolling plateau
     moor = smoothstep(0.5, 0.2, crest) * smoothstep(0.2, 0.5, e) * (1.0 - smoothstep(0.8, 0.95, e))
-    moor_h = 255.0 + 25.0 * l2 + 8.0 * sc(ctx.f(158, 1.7, 150, 550))
+    moor_h = 255.0 + 25.0 * l2 + 8.0 * sc(ctx.f(158, 2.0, None, 700))
     h = lerp(h, moor_h, 0.6 * moor)
     # karst terraces (limestone pavements) in the middle band
-    pav = ctx.f(154, 1.7, 150, 550)
-    band = smoothstep(220.0, 300.0, h) * (1.0 - smoothstep(460.0, 540.0, h)) * smoothstep(0.2, 0.7, pav)
-    h = lerp(h, terrace(h, 28.0, 0.3), 0.45 * band)
+    pav = ctx.f(154, 2.0, None, 700)
+    gentle = 1.0 - smoothstep(0.25, 0.6, np.hypot(*np.gradient(h, ctx.grid.spacing)))
+    band = smoothstep(220.0, 300.0, h) * (1.0 - smoothstep(460.0, 540.0, h)) * smoothstep(0.35, 0.85, pav) * gentle
+    h = lerp(h, terrace(h, 34.0, 0.4), 0.28 * band)
     # gorges: a few narrow slots cut through the mid heights
     g = np.exp(-(ctx.warped(155, 300, 1000, 120.0, beta=1.7, aniso=(80.0, 1.6)) / 0.14) ** 2)
     g *= smoothstep(200.0, 300.0, h) * (1.0 - smoothstep(500.0, 600.0, h))
-    g *= smoothstep(0.5, 1.0, ctx.f(159, 2.0, 800, 2400))
+    g *= smoothstep(0.5, 1.0, ctx.f(159, 2.2, None, 2400))
     h -= 42.0 * g
     # sinkholes
     rng = ctx.rng(156)
@@ -215,13 +212,14 @@ def shape_mountains(ctx: HeightContext, r: RegionDef) -> np.ndarray:
 
 def shape_ash_plateau(ctx: HeightContext, r: RegionDef) -> np.ndarray:
     """Ash plateau over the Builders' city: terraces, sunken plazas, the Choir ring."""
-    mix = 0.7 * ctx.f(161, 1.9, 500, 1600) + 0.3 * ctx.f(162, 1.8, 150, 550)
-    h = 88.0 + 24.0 * np.tanh(1.3 * mix) + 5.0 * sc(ctx.f(162, 1.8, 150, 550)) + 2.0 * sc(ctx.f(163, 1.7, 50, 170))
+    mix = 0.7 * ctx.f(161, 2.2, None, 1900) + 0.3 * ctx.f(162, 2.0, None, 700)
+    h = 88.0 + 24.0 * np.tanh(1.3 * mix) + 5.0 * sc(ctx.f(162, 2.0, None, 700)) \
+        + 3.0 * sc(ctx.f(166, 2.0, 140, 520), 1.5) + 1.5 * sc(ctx.f(163, 1.8, 40, 220))
     # the Builders' city shows through as terraces near the Choir
     choir = ctx.place("sunken_choir")
     ccx, ccz = choir["position"] if choir else r.center
     dchoir = np.sqrt((ctx.X - ccx) ** 2 + (ctx.Z - ccz) ** 2)
-    t = smoothstep(0.2, 0.6, ctx.warped(164, 300, 900, 80.0, beta=1.8)) * (1.0 - smoothstep(900.0, 1600.0, dchoir))
+    t = smoothstep(0.2, 0.6, ctx.warped(164, 300, 1100, 80.0, beta=1.9)) * (1.0 - smoothstep(900.0, 1600.0, dchoir))
     h = lerp(h, terrace(h, 9.0, 0.3), 0.85 * t)
     rng = ctx.rng(165)
     cx, cz = r.center
@@ -261,7 +259,7 @@ def apply_lake(ctx: HeightContext, h: np.ndarray) -> np.ndarray:
     sd = lk.sd
     inside = 1.0 - smoothstep(-40.0, 0.0, sd)  # 1 well inside, 0 on land
     depth_t = np.clip(-sd / (lk.radius * 0.75), 0.0, 1.0)
-    bed = LAKE_LEVEL - 14.0 * smoothstep(0.0, 1.0, depth_t) ** 0.8 - 0.6 * ctx.f(171, 1.7, 50, 170)
+    bed = LAKE_LEVEL - 14.0 * smoothstep(0.0, 1.0, depth_t) ** 0.8 - 0.6 * ctx.f(171, 1.9, None, 260)
     # western reed shelf stays shallow
     shelf = (LAKE_LEVEL - 1.3) * np.ones_like(bed)
     bed = lerp(bed, np.maximum(bed, shelf), lk.westness * (1.0 - smoothstep(60.0, 220.0, -sd)))
@@ -272,13 +270,13 @@ def apply_lake(ctx: HeightContext, h: np.ndarray) -> np.ndarray:
     near = 1.0 - smoothstep(250.0, 700.0, sd)
     land = lerp(land, np.maximum(land, LAKE_LEVEL + 1.5), near)
     # northern cliff shore: a sharp 7-10 m step right at the water
-    cliff = (7.0 + 3.0 * ctx.f(172, 1.7, 50, 170)) * smoothstep(0.0, 10.0, sd)
+    cliff = (7.0 + 3.0 * ctx.f(172, 1.9, None, 260)) * smoothstep(0.0, 10.0, sd)
     land = land + cliff * lk.northness * (1.0 - smoothstep(40.0, 260.0, sd))
     h2 = lerp(land, np.minimum(bed, land), inside)
     # the island of black stone
     isl = 1.0 - smoothstep(-30.0, 25.0, lk.island_sd)
     island_h = LAKE_LEVEL + 9.0 * smoothstep(0.0, 0.4, np.clip(-lk.island_sd / ISLAND_RADIUS, 0, 1)) ** 0.7
-    island_h += 1.5 * ctx.f(173, 1.7, 50, 170) * smoothstep(-20.0, -80.0, lk.island_sd)
+    island_h += 1.5 * ctx.f(173, 1.9, None, 260) * smoothstep(-20.0, -80.0, lk.island_sd)
     h2 = np.maximum(h2, lerp(h2, island_h, isl))
     # the Long Stride causeway: a straight raised deck with sloped sides
     deck = CAUSEWAY_DECK + 0.3 * smoothstep(0.0, 400.0, ctx.Z)
@@ -291,8 +289,8 @@ def apply_lake(ctx: HeightContext, h: np.ndarray) -> np.ndarray:
 def apply_edges(ctx: HeightContext, h: np.ndarray) -> np.ndarray:
     """Soft edges (DESIGN 4.2): mountain wall N, cliffs S, sea W, rising forest E."""
     X, Z = ctx.X, ctx.Z
-    wob = ctx.f(181, 2.0, 500, 1800)
-    ridge = ridged(ctx.f(182, 1.8, 150, 550), 1.3)
+    wob = ctx.f(181, 2.2, None, 2000)
+    ridge = ridged(ctx.f(182, 2.0, None, 700), 1.3)
     # east: the Thornmarch rampart (the forest keeps rising into the Briar wall)
     se = smoothstep(3350.0, 4096.0, X + 120.0 * wob)
     rampart = 190.0 + 130.0 * se + 50.0 * ridge
@@ -316,9 +314,41 @@ def apply_edges(ctx: HeightContext, h: np.ndarray) -> np.ndarray:
 
 
 def detail_amplitude(owner: np.ndarray, regions: list) -> np.ndarray:
-    amp_by_shape = {"downs": 0.7, "lake_basin": 0.35, "delta": 0.12, "forest_rise": 1.6, "mountains": 3.2, "ash_plateau": 0.45}
+    amp_by_shape = {"downs": 0.5, "lake_basin": 0.3, "delta": 0.1, "forest_rise": 1.0, "mountains": 1.5, "ash_plateau": 0.35}
     table = np.array([amp_by_shape.get(r.shape, 0.5) for r in regions], dtype=np.float32)
     return table[owner]
+
+
+EROSION_STRENGTH = {"downs": 1.0, "lake_basin": 0.35, "delta": 0.25, "forest_rise": 1.05,
+                    "mountains": 1.25, "ash_plateau": 0.45}
+EROSION_DEPTH = {"downs": 24.0, "lake_basin": 8.0, "delta": 4.0, "forest_rise": 32.0,
+                 "mountains": 52.0, "ash_plateau": 12.0}
+
+
+def apply_drainage(ctx: HeightContext, h: np.ndarray, work_n: int = 1024) -> tuple:
+    """Cut a dendritic valley network into the blended land (see worldgen/erosion.py)."""
+    from .erosion import valley_carve
+    n = ctx.grid.n
+    g = ctx.grid.with_n(min(n, work_n))
+    hw = downsample(h, g.n)
+    owner_w = ctx.rf.owner_at(g.n)
+    strength = np.zeros((g.n, g.n), dtype=np.float32)
+    depth_by = np.zeros((g.n, g.n), dtype=np.float32)
+    for r in ctx.regions:
+        m = owner_w == r.index
+        strength[m] = EROSION_STRENGTH.get(r.shape, 0.8)
+        depth_by[m] = EROSION_DEPTH.get(r.shape, 15.0)
+    # no carving in standing water or on the shore shelf
+    lake_sd_w = downsample(ctx.lake.sd, g.n)
+    dry = smoothstep(-20.0, 220.0, lake_sd_w) * smoothstep(LAKE_LEVEL - 1.0, LAKE_LEVEL + 7.0, hw)
+    strength = strength * dry
+    carved, chan = valley_carve(hw, g.spacing, strength, max_depth=1.0)
+    delta = (carved - hw) * depth_by                    # per-region valley depth
+    delta = np.minimum(delta, 0.0)
+    if g.n != n:
+        delta = upsample(delta, n, order=3)
+        chan = upsample(chan, n, order=1)
+    return (h + delta).astype(np.float32), chan.astype(np.float32)
 
 
 def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, regions: list, rf: RegionField, lake_c: LakeGeometry,
@@ -328,6 +358,8 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, regions: list, rf
     h = blend_regions(ctx)
     h = apply_lake(ctx, h)
     h = apply_edges(ctx, h)
+    h, _chan = apply_drainage(ctx, h)
+    h = apply_lake(ctx, h)          # the Mere, its shores and the causeway win over the valleys
     bank.forget()
     H = upsample(h, grid.n, order=3)
     # full-resolution detail band, damped on water and steep-scaled in the mountains
@@ -336,9 +368,6 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, regions: list, rf
     d = bank.detail(190, grid.n, wl_min=max(3.0 * grid.spacing, 6.0), wl_max=64.0, beta=1.5)
     water = 1.0 - smoothstep(-6.0, 6.0, lake_f.sd)
     H += d * amp * (1.0 - 0.85 * water)
-    # a gentle slope-driven roughening for mountains (rock texture in the silhouette)
-    slope = np.hypot(*np.gradient(H, grid.spacing))
-    H += d * np.clip(slope - 0.5, 0.0, 1.0) * 2.0 * (owner == _shape_index(regions, "mountains"))
     return H.astype(np.float32)
 
 
