@@ -1,0 +1,97 @@
+{
+  "id": "core:quest/wardens_roll_of_names",
+  "name": "The Roll of Names",
+  "layer": "faction",
+  "faction": "core:faction/wardens",
+  "giver": "core:npc/wardens_hesk",
+  "region": "core:region/hearthvale",
+  "summary": "The Wardens keep a roll of every settlement's name so that none can go quiet. A page of it is missing, and a name on that page was struck out on purpose.",
+  "requires": [{"not": {"quest_done": "core:quest/wardens_roll_of_names"}}],
+  "stages": [
+    {
+      "id": "summons",
+      "journal": "There is a lamp burning late in the Roll room at Wardens' Rest. Roll-Keeper Hesk has asked for anyone with legs and no strong opinions about bandits.",
+      "objectives": [
+        {"type": "talk", "target": "core:npc/wardens_hesk", "text": "Hear Hesk out at Wardens' Rest"}
+      ],
+      "marker": {"place_id": "core:place/wardens_rest", "radius": 120}
+    },
+    {
+      "id": "the_tumbled_watch",
+      "journal": "A Warden tower fell on its side in the Quiet Villages years, and its garrison stopped being talked about. The hand-bell that called the roll there is still in it, and so are the Larkbourne Boys. Hesk wants the bell, and the page that was kept rolled inside it.",
+      "objectives": [
+        {"type": "reach", "target": "core:poi/tumbled_watchtower", "radius": 140, "text": "Find the Tumbled Watch, down the dry valley west of the Rest"},
+        {"type": "collect", "target": "core:item/wardens_hand_bell", "count": 1, "text": "Recover the Wardens' hand-bell"}
+      ]
+    },
+    {
+      "id": "bring_it_back",
+      "journal": "The bell was in the fallen stair, under a bandit's blanket, being used as a cup. The page inside it is real, and there is a name on it scored through so hard the pen went into the sheet below.",
+      "objectives": [
+        {"type": "talk", "target": "core:npc/wardens_hesk", "text": "Bring the bell and the page back to Hesk"}
+      ],
+      "marker": {"place_id": "core:place/wardens_rest", "radius": 120}
+    },
+    {
+      "id": "who_struck_it",
+      "journal": "Hesk says a name is only struck by a Warden's hand, and only three hands have held that pen this year. One of them is Sergeant Dole's, and Dole drinks at Merrowby when he is not at the Rest.",
+      "objectives": [
+        {"type": "talk", "target": "core:npc/wardens_dole", "text": "Ask Sergeant Dole about the struck name"}
+      ],
+      "marker": {"place_id": "core:place/merrowby", "radius": 160}
+    },
+    {
+      "id": "find_the_name",
+      "journal": "Dole struck the name of Ryn Larkbourne out of the roll after the Larkbourne Boys took the Pennywort mill wheel and a carter's thumb with it. He says an unnamed bandit cannot gather a band behind a name. He is not entirely wrong, which is the trouble. Ryn is camped in the chalk pit under the Chalk Hound.",
+      "objectives": [
+        {"type": "reach", "target": "core:poi/gosling_pit", "radius": 140, "text": "Find the camp in Gosling Pit"},
+        {"type": "talk", "target": "core:npc/wardens_ryn", "text": "Hear what Ryn Larkbourne has to say for a struck name"}
+      ]
+    },
+    {
+      "id": "the_pen",
+      "journal": "Ryn Larkbourne has been getting thinner and harder to describe since the ink went through the page, and knows exactly why. Hesk has left the Roll open on the desk and gone to see about the fire, pointedly. The pen is there. So is the knife.",
+      "objectives": [
+        {
+          "type": "choice",
+          "target": "roll_of_names",
+          "text": "Decide what the Roll says about Ryn Larkbourne",
+          "options": ["restore", "strike"],
+          "effects_by_option": {
+            "restore": [
+              {"set_flag": ["wardens_roll_ryn", "restored"]},
+              {"deed": ["name_restored", 2]},
+              {"rep": ["core:faction/wardens", 15]},
+              {"rumour": "core:rumour/name_restored"}
+            ],
+            "strike": [
+              {"set_flag": ["wardens_roll_ryn", "struck"]},
+              {"deed": ["name_struck", 2]},
+              {"rep": ["core:faction/wardens", 20]},
+              {"rumour": "core:rumour/name_struck"}
+            ]
+          }
+        }
+      ],
+      "marker": {"place_id": "core:place/wardens_rest", "radius": 120}
+    },
+    {
+      "id": "done",
+      "auto": true,
+      "journal": "It is written, and writing is the whole of what the Wardens do. Hesk has put a lantern-bearer's badge on the desk and is pretending it was always there.",
+      "objectives": [],
+      "on_enter": [
+        {"set_flag": "wardens_q1_done"},
+        {"join_faction": "core:faction/wardens"},
+        {"unlock_topic": "wardens_roll"}
+      ]
+    }
+  ],
+  "rewards": {
+    "marks": 140,
+    "renown": 12,
+    "rep": [["core:faction/wardens", 25]],
+    "items": [["core:item/wardens_lantern_badge", 1]],
+    "deed": "quest_complete_faction"
+  }
+}
