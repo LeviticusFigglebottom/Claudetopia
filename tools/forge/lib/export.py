@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import time
 from pathlib import Path
 
@@ -298,6 +299,12 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
                  when given, only one decimated level is generated below LOD0.
     """
     t0 = time.time()
+    verbose = bool(os.environ.get("FORGE_TRACE"))
+
+    def stage(label):
+        if verbose:
+            print("FORGE_STAGE %6.1fs %s" % (time.time() - t0, label), flush=True)
+
     if collision not in COLLISION_KINDS:
         raise ValueError("collision must be one of %s" % (COLLISION_KINDS,))
     out_dir = cli.asset_dir(out_root, category, name)
@@ -310,13 +317,17 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     main = None
 
     if opaque_objs:
+        stage("join %d opaque parts" % len(opaque_objs))
         main = S.join(list(opaque_objs), name)
         S.shade_smooth(main, smooth_angle)
         radius = S.radius_of([main])
         size = B.pick_resolution(radius, res, quick, tier)
+        stage("bake atlas %d px (%d tris)" % (size, S.tri_count(main)))
         info = B.bake_atlas(main, out_dir, name, size, quick=quick, alpha=alpha, orm_scale=orm_scale)
+        stage("baked in %ss" % info["seconds"])
         meta_textures += list(info["textures"].values())
         slot_map.update(texture_slots(info["material"], info["textures"]))
+        stage("lods")
         parts.append(make_lods(main, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [main])
     for bo in (baked_objs or []):
         obj, textures = bo if isinstance(bo, tuple) else (bo, {})
@@ -327,6 +338,7 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
             meta_textures += [t for t in textures.values() if t not in meta_textures]
         parts.append(make_lods(obj, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [obj])
     if card_objs:
+        stage("join %d card parts" % len(card_objs))
         cards = S.join(list(card_objs), "%s_cards" % name)
         for m in cards.data.materials:
             if m is None:
@@ -352,7 +364,9 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
             meta_textures += [t for t in impostor_textures.values() if t not in meta_textures]
         all_objs.append(impostor)
     glb_path = out_dir / ("%s.glb" % name)
+    stage("export %d objects" % len(all_objs))
     export_info = export_glb(all_objs, glb_path, slot_map)
+    stage("exported")
 
     extra_glbs = []
     col_value = collision

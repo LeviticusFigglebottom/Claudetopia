@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""Regenerate tools/forge/manifest.json from the region/species tables below.
+
+The manifest is committed; this script exists so the set of assets is edited in one
+readable place (which species, which regions, how many variants) rather than by hand in
+JSON. Seeds are derived from a walking counter so adding a line does not reshuffle the
+assets before it.
+
+    python3 tools/forge/make_manifest.py
+"""
+from __future__ import annotations
+
+import json
+from collections import Counter
+from pathlib import Path
+
+FORGE = Path(__file__).resolve().parent
+LETTERS = "abcdefghij"
+
+
+def region(r: str) -> str:
+    return "core:region/%s" % r
+
+
+# (kind, region, variants, params) ----------------------------------------------------------
+
+TREES = [
+    ("oak", "hearthvale", 3, None),
+    ("apple", "hearthvale", 3, None),
+    ("hawthorn", "hearthvale", 2, None),
+    ("yew", "hearthvale", 2, None),
+    ("giant_oak", "briarwold", 2, None),
+    ("black_ash", "briarwold", 3, None),
+    ("hardy_pine", "skerrow", 3, None),
+    ("rowan", "skerrow", 2, None),
+    ("juniper", "skerrow", 2, None),
+    ("willow", "sedgemire", 2, None),
+    ("alder", "sedgemire", 2, None),
+    ("dead_ash_tree", "cinderlea", 3, None),
+    ("char_stump", "cinderlea", 2, None),
+    ("willow_pollard", "brightwater", 2, None),
+    ("lime", "brightwater", 2, None),
+]
+
+ROCKS = [
+    ("boulder", "hearthvale", 2, None),
+    ("boulder", "briarwold", 2, None),
+    ("boulder", "skerrow", 3, None),
+    ("boulder", "cinderlea", 2, None),
+    ("boulder", "brightwater", 2, None),
+    ("boulder", "sedgemire", 2, None),
+    ("cliff_slab", "skerrow", 3, None),
+    ("cliff_slab", "hearthvale", 2, {"stone": "chalk_rock"}),
+    ("cliff_slab", "briarwold", 2, {"stone": "granite"}),
+    ("cliff_slab", "cinderlea", 2, None),
+    ("scree", "skerrow", 3, None),
+    ("scree", "cinderlea", 2, None),
+    ("scree", "briarwold", 2, None),
+    ("standing_stone", "briarwold", 3, None),
+    ("standing_stone", "hearthvale", 2, {"carved": False}),
+    ("standing_stone", "skerrow", 2, {"carved": False}),
+    ("bone_rib", "skerrow", 3, None),
+    ("bone_finger", "skerrow", 2, None),
+    ("bone_skull_fragment", "skerrow", 2, None),
+    ("bone_vertebra", "skerrow", 2, None),
+]
+
+FLORA = [
+    ("grass_clump", "hearthvale", 3, None),
+    ("grass_clump", "briarwold", 2, None),
+    ("grass_clump", "brightwater", 2, None),
+    ("grass_clump", "sedgemire", 2, None),
+    ("grass_clump", "skerrow", 2, None),
+    ("grey_grass", "cinderlea", 3, None),
+    ("barley_tuft", "hearthvale", 2, None),
+    ("reeds", "sedgemire", 3, None),
+    ("reeds", "brightwater", 2, None),
+    ("bulrush", "sedgemire", 2, None),
+    ("fern", "briarwold", 3, None),
+    ("fern", "sedgemire", 2, None),
+    ("bracken", "briarwold", 2, None),
+    ("bracken", "skerrow", 2, None),
+    ("foxglove", "briarwold", 2, None),
+    ("poppy", "hearthvale", 2, None),
+    ("red_poppy_single", "cinderlea", 1, None),
+    ("cow_parsley", "hearthvale", 2, None),
+    ("cow_parsley", "brightwater", 1, None),
+    ("heather", "skerrow", 3, None),
+    ("marsh_marigold", "sedgemire", 2, None),
+    ("briar_vine", "briarwold", 3, None),
+    ("bracket_fungus", "briarwold", 2, None),
+    ("hanging_moss", "briarwold", 2, None),
+    ("hanging_moss", "sedgemire", 1, None),
+    ("moss_patch", "briarwold", 2, None),
+    ("moss_patch", "sedgemire", 1, None),
+    ("waterlily_pad", "brightwater", 2, None),
+    ("waterlily_pad", "sedgemire", 1, None),
+    ("lichen_crust", "skerrow", 2, None),
+]
+
+# Props are largely region-neutral objects tinted by whoever made them; the palette picks
+# the wood, iron and cloth tones, so the same generator gives a Vale barrel or a Reedfolk one.
+PROPS = [
+    # containers and vessels
+    ("barrel", "hearthvale", 2, None), ("barrel", "brightwater", 1, None),
+    ("crate", "hearthvale", 2, None), ("crate", "brightwater", 1, None),
+    ("sack", "hearthvale", 2, None),
+    ("basket", "hearthvale", 2, None), ("basket", "sedgemire", 1, None),
+    ("bucket", "hearthvale", 2, None),
+    ("chest", "hearthvale", 2, None),
+    ("cooking_pot", "hearthvale", 1, None),
+    ("plate", "hearthvale", 1, None), ("mug", "hearthvale", 2, None), ("jug", "hearthvale", 1, None),
+    # furniture
+    ("table_trestle", "hearthvale", 2, None), ("table_round", "hearthvale", 1, None),
+    ("stool", "hearthvale", 2, None), ("chair", "hearthvale", 2, None),
+    ("bench", "hearthvale", 2, None), ("bed", "hearthvale", 2, None),
+    ("shelf", "hearthvale", 1, None), ("cupboard", "hearthvale", 1, None),
+    # light
+    ("candle", "hearthvale", 1, None), ("candlestick", "hearthvale", 2, None),
+    ("lantern_hanging", "sedgemire", 2, None), ("lantern_standing", "brightwater", 2, None),
+    ("brazier", "cinderlea", 2, None), ("chandelier", "brightwater", 1, None),
+    ("campfire", "hearthvale", 2, None),
+    # work
+    ("anvil", "hearthvale", 1, None), ("forge_hearth", "hearthvale", 1, None),
+    ("alembic", "brightwater", 1, None), ("rope_coil", "sedgemire", 2, None),
+    ("wheelbarrow", "hearthvale", 1, None), ("cart", "hearthvale", 2, None),
+    ("hay_bale", "hearthvale", 2, None),
+    # books and paper
+    ("book", "hearthvale", 2, None), ("book_stack", "hearthvale", 2, None),
+    ("scroll", "brightwater", 2, None),
+    # structures and outdoor
+    ("fence_wattle", "hearthvale", 2, None), ("fence_post_rail", "hearthvale", 2, None),
+    ("drystone_wall", "skerrow", 2, None), ("drystone_wall_end", "skerrow", 1, None),
+    ("well", "hearthvale", 1, None), ("signpost", "hearthvale", 2, None),
+    ("market_stall", "brightwater", 2, None),
+    ("dock_post", "sedgemire", 2, None), ("boardwalk_plank", "sedgemire", 2, None),
+    ("rowboat", "sedgemire", 2, None),
+    ("tent", "cinderlea", 2, None), ("bedroll", "cinderlea", 2, None),
+    ("banner", "brightwater", 2, None),
+    # bells and burial
+    ("bell_small", "hearthvale", 2, None), ("bell_medium", "cinderlea", 1, None),
+    ("gravestone", "hearthvale", 3, None), ("coffin", "hearthvale", 1, None),
+    ("sarcophagus", "cinderlea", 1, None),
+]
+
+LANDMARKS = [
+    ("cracked_toll", "hearthvale", 1, None),
+    ("fallen_hand", "skerrow", 1, None),
+    ("choir_colossus", "cinderlea", 2, None),
+    ("the_lamp", "brightwater", 1, None),
+    ("sayers_spire", "brightwater", 1, None),
+]
+
+TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
+          ("gen_props", PROPS), ("gen_landmarks", LANDMARKS)]
+
+
+def build() -> list[dict]:
+    entries: list[dict] = []
+    seed = 101
+    for generator, table in TABLES:
+        for kind, reg, variants, params in table:
+            for i in range(variants):
+                e = {"generator": generator, "kind": kind, "palette": region(reg),
+                     "variant": LETTERS[i], "seed": seed + i * 17}
+                if params:
+                    e["params"] = params
+                entries.append(e)
+            seed += 53
+    return entries
+
+
+def main() -> None:
+    entries = build()
+    out = {
+        "version": 1,
+        "note": "Wickmere generated assets. Edit tools/forge/make_manifest.py, not this file. "
+                "Build with ./run.sh assets.",
+        "assets": entries,
+    }
+    path = FORGE / "manifest.json"
+    path.write_text(json.dumps(out, indent=1) + "\n", encoding="utf-8")
+    counts = Counter(e["generator"] for e in entries)
+    print("wrote %d entries to %s" % (len(entries), path))
+    for g, n in sorted(counts.items()):
+        print("  %-16s %3d" % (g, n))
+
+
+if __name__ == "__main__":
+    main()
