@@ -52,24 +52,40 @@ def pick_resolution(radius_m: float, override: int = 0, quick: bool = False, tie
 
 # --- UV ---------------------------------------------------------------------------------
 
-def unwrap(obj, angle_deg: float = 66.0, margin: float = 0.006) -> None:
-    """Smart UV project the whole object into one 0..1 atlas.
+def unwrap(obj, angle_deg: float = 66.0, margin: float = 0.006, mode: str = "smart") -> None:
+    """Lay the object out in one 0..1 atlas.
 
-    Smart project alone packs badly on assets made of many separate parts: a long tube next
-    to a small sphere leaves most of the atlas empty and the tube lands on unbaked black.
-    Averaging island scale first gives every part the same texel density, and repacking with
-    rotation fills the sheet, so the baked resolution is actually spent on the model."""
+    `mode` picks the projection, because one strategy does not fit every shape:
+
+    * ``smart`` - smart UV project. Right for anything with flat panels (crates, tables,
+      walls): those give a few large islands. On a displaced rock it degenerates into a
+      thousand face-sized islands.
+    * ``sphere`` - spherical projection. Right for blobs: a boulder, a bone, a lathed
+      stone. One seam and some pole stretch, which a painterly noise surface does not
+      show, in exchange for ~80% coverage in three islands instead of 45% in nine hundred.
+    * ``cube`` - box projection, for rectilinear assets whose faces are axis-aligned.
+
+    In every mode island scale is averaged first, so texel density is even across parts
+    (the trunk of a tree gets the texels, not its twigs), and the islands are then packed
+    with rotation so the sheet is actually filled.
+    """
     S.select_only([obj])
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.uv.smart_project(angle_limit=math.radians(angle_deg), island_margin=0.0,
-                             area_weight=1.0, correct_aspect=True, scale_to_bounds=False)
+    if mode == "sphere":
+        bpy.ops.uv.sphere_project(direction="ALIGN_TO_OBJECT", correct_aspect=True)
+    elif mode == "cube":
+        bpy.ops.uv.cube_project(cube_size=1.0, correct_aspect=True)
+    else:
+        bpy.ops.uv.smart_project(angle_limit=math.radians(angle_deg), island_margin=0.0,
+                                 area_weight=1.0, correct_aspect=True, scale_to_bounds=False)
     bpy.ops.uv.select_all(action="SELECT")
-    bpy.ops.uv.average_islands_scale()
+    if mode != "sphere":
+        bpy.ops.uv.average_islands_scale()
     try:
-        bpy.ops.uv.pack_islands(rotate=True, margin=margin, scale=True)
+        bpy.ops.uv.pack_islands(rotate=mode != "sphere", margin=margin, scale=True)
     except TypeError:  # older signature
-        bpy.ops.uv.pack_islands(rotate=True, margin=margin)
+        bpy.ops.uv.pack_islands(rotate=mode != "sphere", margin=margin)
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
@@ -219,7 +235,8 @@ def only_visible(obj, occluders=()):
 
 def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_distance: float | None = None,
                orm_scale: float = 0.5, alpha: bool = False, samples: int | None = None,
-               texture_prefix: str | None = None, occluders=(), keep_uv: bool = False) -> dict:
+               texture_prefix: str | None = None, occluders=(), keep_uv: bool = False,
+               unwrap_mode: str = "smart") -> dict:
     """Bake `obj` (all material slots) into <out_dir>/<prefix>_{albedo,normal,orm}.png and
     replace its materials with one baked Principled material named <name>_mat."""
     t0 = time.time()
@@ -237,9 +254,9 @@ def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_dista
             print("FORGE_BAKE  unwrap skipped (authored UVs)", flush=True)
     else:
         t_uv = time.time()
-        unwrap(obj)
+        unwrap(obj, mode=unwrap_mode)
         if TRACE:
-            print("FORGE_BAKE  unwrap %5.1fs" % (time.time() - t_uv), flush=True)
+            print("FORGE_BAKE  unwrap %-6s %5.1fs" % (unwrap_mode, time.time() - t_uv), flush=True)
     # A procedural material without the AO node is deterministic, so a couple of samples
     # only serve to antialias within a texel; materials that do trace AO need more.
     uses_ao = any(bool(m.get("forge_uses_ao")) for m in mats)

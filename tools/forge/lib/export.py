@@ -289,7 +289,8 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
                  lods: bool = True, lod_ratios=LOD_RATIOS, card_keep=(0.55, 0.25), smooth_angle: float = 35.0,
                  alpha: bool = False, orm_scale: float = 0.5, write_import: bool = True, extra_meta: dict | None = None,
                  version: int = FORGE_VERSION, rng=None, materials_used: list[str] | None = None,
-                 impostor=None, impostor_textures: dict | None = None) -> dict:
+                 impostor=None, impostor_textures: dict | None = None,
+                 unwrap_mode: str = "smart") -> dict:
     """Bake, LOD, export and describe one asset. Returns the meta dict written to disk.
 
     opaque_objs: procedural-material parts, joined into one mesh and baked to one atlas.
@@ -323,7 +324,8 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
         radius = S.radius_of([main])
         size = B.pick_resolution(radius, res, quick, tier)
         stage("bake atlas %d px (%d tris)" % (size, S.tri_count(main)))
-        info = B.bake_atlas(main, out_dir, name, size, quick=quick, alpha=alpha, orm_scale=orm_scale)
+        info = B.bake_atlas(main, out_dir, name, size, quick=quick, alpha=alpha, orm_scale=orm_scale,
+                            unwrap_mode=unwrap_mode)
         stage("baked in %ss" % info["seconds"])
         meta_textures += list(info["textures"].values())
         slot_map.update(texture_slots(info["material"], info["textures"]))

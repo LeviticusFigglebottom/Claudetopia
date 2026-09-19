@@ -47,10 +47,19 @@ def shade(c, value=1.0, sat=1.0, hue=0.0):
 
 def trio(c, spread=1.0):
     """Painter's three: shadow (darker, a touch more saturated and cooler), base, light
-    (lighter, less saturated, warmer). Used as ramp stops everywhere."""
-    dark = shade(c, value=1.0 - 0.35 * spread, sat=1.0 + 0.25 * spread, hue=-0.015 * spread)
-    light = shade(c, value=1.0 + 0.30 * spread, sat=1.0 - 0.30 * spread, hue=0.012 * spread)
+    (lighter, less saturated, warmer). Used as ramp stops everywhere.
+
+    The highlight is pulled back from the top of the range on purpose: a pale surface whose
+    light stop clips to white loses all its modelling and reads as flat paper, which is the
+    commonest way a painted material goes wrong."""
+    dark = shade(c, value=1.0 - 0.42 * spread, sat=1.0 + 0.30 * spread, hue=-0.015 * spread)
+    light_v = min(1.0 + 0.30 * spread, 0.93 / max(0.35, _value_of(c)))
+    light = shade(c, value=light_v, sat=1.0 - 0.28 * spread, hue=0.012 * spread)
     return dark, c, light
+
+
+def _value_of(c):
+    return max(P.linear_to_srgb(c[:3]))
 
 
 def _pal(pal):
@@ -586,7 +595,8 @@ def drystone(pal=None, wear=0.4, age=0.5, tint=0.2, scale=1.0, name=None, base_h
 
 
 def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0, speckle_col=None,
-                 bands=0.0, pits=0.3, lichen=0.0, lichen_col=None, sheen=0.0, scale=1.0, cavity=0.5, grime=0.5):
+                 bands=0.0, pits=0.3, lichen=0.0, lichen_col=None, sheen=0.0, scale=1.0, cavity=0.5,
+                 grime=0.5, facet=0.45, bed_relief=0.0):
     dark, mid, light = trio(base, spread)
     v = nb.coord(1.0 / scale)
     col = paint_blocks(nb, nb.coord(0.45 / scale), [dark, mid, light], distortion=1.3, detail=2.0)
@@ -617,11 +627,22 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
     col, _ = edge_wear(nb, col, shade(light, 1.08, 0.75), amount=wear, lo=0.51, hi=0.6, breakup_vec=v, breakup_scale=3.0)
     col = base_grime(nb, col, shade(dark, 0.6, 1.15), 0.0, 0.4, amount=grime * age, vec=v)
     col, _ = cavity_dirt(nb, col, shade(dark, 0.5, 1.1), amount=cavity, distance=0.35, breakup_vec=v)
+    # Relief: broad lumps plus the edges of a Voronoi cell field, so the surface has facets
+    # and grain rather than a soft haze. Without the cell term the baked normal map comes
+    # out almost flat and the stone reads as painted paper.
     hn = nb.noise(nb.coord(2.0 / scale), scale=1.0, detail=3.0, rough=0.5)
-    height = nb.math("MULTIPLY", hn.outputs["Fac"], 1.0)
+    cell = nb.voronoi(nb.coord(3.2 / scale), scale=1.0, feature="DISTANCE_TO_EDGE")
+    facet_mask = nb.map_range(cell.outputs["Distance"], 0.0, 0.14, 0.0, 1.0)
+    height = nb.math("ADD", nb.math("MULTIPLY", hn.outputs["Fac"], 1.0 - facet),
+                     nb.math("MULTIPLY", facet_mask, facet))
+    if bed_relief > 0.0:
+        # Karst limestone is bedded: the ledges are what make a pavement read as one.
+        bw = nb.wave(nb.coord((0.5 / scale, 0.5 / scale, 2.4 / scale)), scale=2.0, distortion=2.0,
+                     detail=1.0, direction="Z", profile="SAW")
+        height = nb.math("ADD", height, nb.math("MULTIPLY", bw.outputs["Fac"], bed_relief))
     if pit is not None:
-        height = nb.math("SUBTRACT", height, nb.math("MULTIPLY", pit, 0.5))
-    normal = nb.bump(height, strength=0.35, distance=0.03)
+        height = nb.math("SUBTRACT", height, nb.math("MULTIPLY", pit, 0.4))
+    normal = nb.bump(height, strength=0.8, distance=0.075)
     rough = rough_var(nb, v, 0.85 - 0.4 * sheen, 0.08)
     if sheen > 0:
         rough = nb.mix(nb.pointiness(0.5, 0.6), rough, 0.35)
@@ -631,25 +652,30 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
 def granite(pal=None, wear=0.5, age=0.5, tint=0.18, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "granite")
-    base = pal.tint(P.lin("#7d7a76"), "cool", tint)
-    return _rock_common(nb, pal, base, 0.9, "cool", tint, wear, age, speckle=0.6, speckle_col=P.lin("#3b3a3c"),
-                        pits=0.2, lichen=0.35, lichen_col=P.lin("#a3a878"), scale=scale)
+    base = pal.tint(P.lin("#6f6d6a"), "cool", tint)
+    return _rock_common(nb, pal, base, 1.05, "cool", tint, wear, age, speckle=0.75,
+                        speckle_col=P.lin("#2e2d30"), pits=0.25, lichen=0.35,
+                        lichen_col=P.lin("#a3a878"), scale=scale, facet=0.6)
 
 
-def limestone(pal=None, wear=0.5, age=0.5, tint=0.2, scale=1.0, name=None, **_):
+def limestone(pal=None, wear=0.5, age=0.5, tint=0.12, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "limestone")
-    base = pal.tint(P.lin("#b3ada0"), "light", tint)
-    return _rock_common(nb, pal, base, 0.8, "light", tint, wear, age, bands=1.0, pits=0.45, lichen=0.25,
-                        lichen_col=P.lin("#c2b96a"), scale=scale)
+    base = pal.tint(P.lin("#9a9382"), "light", tint)
+    return _rock_common(nb, pal, base, 1.0, "light", tint, wear, age, bands=1.2, pits=0.5, lichen=0.3,
+                        lichen_col=P.lin("#b0a758"), scale=scale, facet=0.35, bed_relief=0.55)
 
 
-def chalk_rock(pal=None, wear=0.5, age=0.4, tint=0.2, scale=1.0, name=None, **_):
+def chalk_rock(pal=None, wear=0.5, age=0.4, tint=0.12, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "chalk_rock")
-    base = pal.tint(P.lin("#e7e2d5"), "light", tint)
-    m = _rock_common(nb, pal, base, 0.45, "light", tint, wear, age, bands=0.5, pits=0.2, scale=scale, grime=0.7)
-    return m
+    # Chalk is the brightest stone in the game, which makes it the easiest to blow out;
+    # the base sits well below white so the highlight has somewhere to go.
+    base = pal.tint(P.lin("#cdc7b4"), "light", tint)
+    # Chalk weathers round, not faceted: soft lumps, flint specks, no crystal edges.
+    return _rock_common(nb, pal, base, 0.9, "light", tint, wear, age, bands=0.5, pits=0.3,
+                        speckle=0.3, speckle_col=P.lin("#5a564e"), scale=scale, grime=0.7,
+                        facet=0.12)
 
 
 def fused_stone(pal=None, wear=0.4, age=0.7, tint=0.15, scale=1.0, gilding=0.0, name=None, **_):

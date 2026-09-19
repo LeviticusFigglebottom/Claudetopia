@@ -70,10 +70,11 @@ def main(argv=None) -> int:
     ap.add_argument("--cols", type=int, default=3)
     ap.add_argument("--width", type=int, default=1800)
     ap.add_argument("--per-angle", action="store_true", help="also write one sheet per camera angle")
+    ap.add_argument("--glob", default="*.png", help="which PNGs to include (default all)")
     args = ap.parse_args(argv)
 
     d = Path(args.directory)
-    files = sorted(p for p in d.glob("*.png") if not p.stem.startswith("_sheet"))
+    files = sorted(p for p in d.glob(args.glob) if not p.stem.startswith("_sheet"))
     if not files:
         print("no renders in %s" % d)
         return 1

@@ -106,7 +106,9 @@ def boulder(pal, rng, params, variant):
         S.apply_transforms(c)
         parts.append(c)
     S.drop_to_ground(parts)
-    return {"opaque_objs": parts, "collision": "convex", "materials_used": [stone]}
+    # A displaced blob unwraps far better as a sphere than as a thousand face islands.
+    return {"opaque_objs": parts, "collision": "convex", "materials_used": [stone],
+            "unwrap_mode": "sphere"}
 
 
 def cliff_slab(pal, rng, params, variant):
@@ -181,7 +183,8 @@ def scree(pal, rng, params, variant):
         S.apply_transforms(c)
         parts.append(c)
     S.drop_to_ground(parts)
-    return {"opaque_objs": parts, "collision": "trimesh", "materials_used": [stone]}
+    return {"opaque_objs": parts, "collision": "trimesh", "materials_used": [stone],
+            "unwrap_mode": "sphere"}
 
 
 def standing_stone(pal, rng, params, variant):
@@ -236,7 +239,7 @@ def standing_stone(pal, rng, params, variant):
     S.tilt(ob, rng, max_deg=3.5)
     S.drop_to_ground(parts)
     return {"opaque_objs": parts, "collision": "convex", "materials_used": [stone],
-            "extra_meta": {"carved": bool(carve)}}
+            "unwrap_mode": "sphere", "extra_meta": {"carved": bool(carve)}}
 
 
 # --- giant bones (Skerrow: bones you can walk inside) ---------------------------------------
@@ -269,7 +272,8 @@ def bone_rib(pal, rng, params, variant):
     for p in parts:
         S.jitter_verts(p, amount=r0 * 0.09, scale=span * 0.35, seed=rng.randrange(999))
     S.drop_to_ground(parts)
-    return {"opaque_objs": parts, "collision": "col_glb", "materials_used": ["bone"]}
+    return {"opaque_objs": parts, "collision": "col_glb", "materials_used": ["bone"],
+            "unwrap_mode": "sphere"}
 
 
 def bone_finger(pal, rng, params, variant):
@@ -296,7 +300,8 @@ def bone_finger(pal, rng, params, variant):
     for p in parts:
         p.rotation_euler = Euler((0, math.radians(joined_rot), math.radians(rng.uniform(0, 360) * 0)), "XYZ")
     S.drop_to_ground(parts)
-    return {"opaque_objs": parts, "collision": "convex", "materials_used": ["bone"]}
+    return {"opaque_objs": parts, "collision": "convex", "materials_used": ["bone"],
+            "unwrap_mode": "sphere"}
 
 
 def bone_skull_fragment(pal, rng, params, variant):
@@ -326,7 +331,8 @@ def bone_skull_fragment(pal, rng, params, variant):
         S.shade_smooth(dome, 36.0)
     S.tilt(dome, rng, max_deg=18.0)
     S.drop_to_ground([dome])
-    return {"opaque_objs": [dome], "collision": "col_glb", "materials_used": ["bone"]}
+    return {"opaque_objs": [dome], "collision": "col_glb", "materials_used": ["bone"],
+            "unwrap_mode": "sphere"}
 
 
 def bone_vertebra(pal, rng, params, variant):
@@ -354,7 +360,8 @@ def bone_vertebra(pal, rng, params, variant):
         S.jitter_verts(p, amount=r * 0.02, scale=r * 0.8, seed=rng.randrange(999))
     S.tilt(body, rng, max_deg=10.0)
     S.drop_to_ground(parts)
-    return {"opaque_objs": parts, "collision": "convex", "materials_used": ["bone"]}
+    return {"opaque_objs": parts, "collision": "convex", "materials_used": ["bone"],
+            "unwrap_mode": "sphere"}
 
 
 KINDS = {

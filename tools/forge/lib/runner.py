@@ -33,11 +33,13 @@ def run_generator(description: str, kinds: dict, category: str, generator: str, 
         sys.exit(3)
     spec = dict(spec)
     tier = spec.pop("tier", None)
+    unwrap_mode = spec.pop("unwrap_mode", "smart")
     try:
         meta = export.finish_asset(
             out_root=args.out, category=args.category or category, name=name, generator=generator, seed=args.seed,
             kind=kind, params=args.params, pal=pal, quick=args.quick, res=args.res,
-            tier=tier, write_import=not args.no_import_files, rng=rng, version=version, **spec)
+            tier=tier, unwrap_mode=unwrap_mode, write_import=not args.no_import_files, rng=rng,
+            version=version, **spec)
     except Exception:
         traceback.print_exc()
         print("FORGE_FAIL %s/%s (finish)" % (category, name))
