@@ -4,16 +4,18 @@ _Updated 2026-09-19 (session 1, early)._
 
 ## State
 
-**716 unit tests green, 0 content problems. The smoke run builds all 24 shipping
+**793 unit tests green, 0 content problems. The smoke run builds all 24 shipping
 interiors clean (6 regions, 34 places). The scripted journey passes all 12 of
 DESIGN's done-list promises. The performance probe's worst interior costs 90 draw
 calls and 1.17M primitives against budgets of 2000 and 1.5M. 16/16 combat-arena
-checks pass. 656 content definitions across 23 types.**
+checks pass. 722 content definitions across 24 types, including the full
+bestiary (26 creatures over six regions), five bosses, and fifteen spells across
+all five schools.**
 
 Verify the whole thing with four commands:
 
 ```
-./run.sh test       # 716 unit tests, and content validation fails the build
+./run.sh test       # 793 unit tests, and content validation fails the build
 ./run.sh smoke      # build every interior for real; fail on any error
 ./run.sh journey    # one scripted run through every promise in the done list
 ./run.sh perf       # draw calls and primitives against the budgets
