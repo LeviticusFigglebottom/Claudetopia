@@ -283,6 +283,52 @@ class Clock extends RefCounted:
 		return hour_value
 
 
+## A content registry that answers like ContentDB but with extra definitions layered on top.
+## Used to cover the radiant target pools (enemies, items) that other streams have not authored
+## yet, so the generator's whole surface is tested rather than only the parts content reaches.
+class ContentWith extends RefCounted:
+	var extra: Array = []
+
+	func _init(extra_defs: Array = []) -> void:
+		extra = extra_defs
+
+	func all(type: String) -> Array:
+		var out: Array = ContentDB.all(type).duplicate()
+		for d in extra:
+			if Ids.type_of(str((d as Dictionary)["id"])) == type:
+				out.append(d)
+		return out
+
+	func get_or_empty(id: String) -> Dictionary:
+		for d in extra:
+			if str((d as Dictionary)["id"]) == id:
+				return d
+		return ContentDB.get_or_empty(id)
+
+	func has(id: String) -> bool:
+		for d in extra:
+			if str((d as Dictionary)["id"]) == id:
+				return true
+		return ContentDB.has(id)
+
+
+## Enemies and items in Hearthvale, shaped like the bestiary and item contracts (CONTRACTS §7),
+## for tests that need the radiant pools populated.
+static func hearthvale_content() -> ContentWith:
+	return ContentWith.new([
+		{"id": "core:enemy/_test_bandit", "name": "Roadside bandit", "archetype": "skirmisher",
+		 "region": "core:region/hearthvale", "tags": ["humanoid", "bandit"], "stats": {"hp": 60}},
+		{"id": "core:enemy/_test_wolf", "name": "Down wolf", "archetype": "pack",
+		 "region": "core:region/hearthvale", "tags": ["beast", "pack"], "stats": {"hp": 40}},
+		{"id": "core:enemy/_test_wight", "name": "Hedge-wight", "archetype": "brute",
+		 "region": "core:region/hearthvale", "tags": ["undead", "brute"], "stats": {"hp": 120}},
+		{"id": "core:item/_test_cider", "name": "Tamwick cider", "category": "consumable",
+		 "weight": 1.0, "value": 8, "tags": ["trade", "food"], "description": "A stoppered jug."},
+		{"id": "core:item/_test_wort", "name": "Pennywort", "category": "ingredient",
+		 "weight": 0.1, "value": 3, "tags": ["herb", "ingredient"], "description": "Grows by the Larkbourne."},
+	])
+
+
 ## A context with every provider faked and a fixed rng seed.
 static func context(rng_seed: int = 12345) -> SocialContext:
 	var ctx := SocialContext.new()
