@@ -6,6 +6,8 @@ extends StaticBody3D
 ## one, `deliver(job, actor)` completes a delivery when the carrier reaches the other town.
 ## Offers refresh once per game day, so a board read twice in an afternoon reads the same.
 
+const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
+
 signal jobs_listed(jobs: Array)
 signal job_taken(job: Dictionary)
 
@@ -23,6 +25,11 @@ var _cache_day := -1
 
 func _ready() -> void:
 	add_to_group("interactable")
+	# The physics layer the player's interaction ray masks. It used to be set only in this
+	# class's .tscn, so a node built with `.new()` kept Godot's default layer 1 and the ray
+	# went straight through it — visible, in the group, with an `interact()` method, and
+	# impossible to walk up to. `container.gd` and `world_item.gd` always set their own.
+	collision_layer = INTERACT_LAYER
 	add_to_group("job_board")
 	if place_id.is_empty():
 		var near := WorldProbe.nearest_place(global_position, 500.0)

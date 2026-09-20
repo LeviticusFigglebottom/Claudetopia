@@ -5,6 +5,8 @@ extends StaticBody3D
 ## `Jobs.station_seconds(kind)` the worker is paid marks and skill XP. One shift per station
 ## per cooldown, so the player cannot farm it; the station remembers when it was last worked.
 
+const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
+
 signal started(kind: String, seconds: float, clip: String)
 signal finished(kind: String, pay: int)
 
@@ -23,6 +25,11 @@ var _shift := 0
 
 func _ready() -> void:
 	add_to_group("interactable")
+	# The physics layer the player's interaction ray masks. It used to be set only in this
+	# class's .tscn, so a node built with `.new()` kept Godot's default layer 1 and the ray
+	# went straight through it — visible, in the group, with an `interact()` method, and
+	# impossible to walk up to. `container.gd` and `world_item.gd` always set their own.
+	collision_layer = INTERACT_LAYER
 	add_to_group("job_station")
 	_rng.randomize()
 	if not owner_faction.is_empty() or not owner_npc.is_empty():

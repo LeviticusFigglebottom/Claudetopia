@@ -65,6 +65,17 @@ func _ready() -> void:
 		inventory.name = "Inventory"
 		inventory.capacity_override = 10000.0
 		add_child(inventory)
+	# A body with no shape is a body the ray goes through. `house_interior.gd` gives its
+	# chests a shape the size of the prop, which is better than anything this can guess — but
+	# a caller that does not know to is left with a chest you cannot open, and that is the
+	# same failure as being on the wrong physics layer. A default is better than nothing.
+	if find_children("*", "CollisionShape3D", true, false).is_empty():
+		var shape := CollisionShape3D.new()
+		var form := BoxShape3D.new()
+		form.size = Vector3(0.9, 0.6, 0.55)
+		shape.shape = form
+		shape.position.y = form.size.y * 0.5
+		add_child(shape)
 	register_store()
 	restore_state()
 	inventory.changed.connect(_persist)

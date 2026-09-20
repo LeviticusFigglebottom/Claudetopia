@@ -2,6 +2,8 @@ class_name Door
 extends StaticBody3D
 ## A door between the overworld and an interior (or an exit inside one).
 
+const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
+
 @export var interior_id := ""
 @export var spawn_marker := "Entrance"
 @export var is_exit := false
@@ -12,6 +14,11 @@ extends StaticBody3D
 
 func _ready() -> void:
 	add_to_group("interactable")
+	# The physics layer the player's interaction ray masks. It used to be set only in this
+	# class's .tscn, so a node built with `.new()` kept Godot's default layer 1 and the ray
+	# went straight through it — visible, in the group, with an `interact()` method, and
+	# impossible to walk up to. `container.gd` and `world_item.gd` always set their own.
+	collision_layer = INTERACT_LAYER
 	add_to_group("door")
 	if get_node_or_null("CollisionShape3D") == null:
 		var col := CollisionShape3D.new()
