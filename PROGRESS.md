@@ -186,6 +186,27 @@ that nothing outside a test ever asks for. Run both before calling anything fini
 is a compiler, so read the output rather than trusting it — an accessor nobody calls is dead
 weight, but a verb nobody calls is a feature that does not happen.
 
+## The forge, as handed over
+
+The asset forge is finished and stood down. `python3 tools/forge/build_assets.py --list` is
+the authoritative inventory (250 entries, 145.6 MB across five categories) and
+`tools/forge/README.md` has the build, review and texture-weight rules. Four weaknesses are
+recorded rather than hidden, each with its reason:
+
+* **Tree LOD1 is 1288 triangles, not the 800 I asked for.** Deliberate: at 800 the woody part
+  gets about 420 and the trunk shatters into flat shards that catch the sun. It was rendered
+  and judged worse than what it replaced. The honest route to the last 500 is an authored LOD1
+  trunk, and it is not urgent at 0.75 M primitives.
+* **Cliff faces read as a stack of ledges** rather than as a face with a fallen block or two in
+  front of it. Much better than the shattered glass they were; not yet Skerrow's best.
+* **Ten material builders take no feature scale** (`painted_wood`, `carved_wood`, `canvas`,
+  `wax`, `glass`, `ember`, `soot`, `snow`, `water_still`, `driftwood`). Left that way on
+  purpose: they are near-featureless or only ever used at prop scale, and a parameter nobody
+  passes is noise. The moment a hero piece wants one — a fifty-metre sail, a frozen lake — is
+  the moment to add it, and it is one line each now.
+* **Skerrow is judged slate, not lilac**, so `limestone` is to be left alone. Recorded because
+  it is the kind of thing somebody re-litigates from a bad screenshot.
+
 ## Known issues
 
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.
