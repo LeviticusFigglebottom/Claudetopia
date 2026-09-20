@@ -99,6 +99,23 @@ step swaps in the wind shader.
 Region palettes: generators accept `--palette <region_id>` and read the six
 hex colours from the region def; outputs record `region_palette`.
 
+
+### LOD0 is one mesh, and it is the first one
+
+A forge asset's `.glb` holds its **LOD0 as a single MeshInstance3D with one surface per
+material**, and that first MeshInstance3D is the whole asset. `WorldStreamer` takes the first
+mesh it finds and hands it to a MultiMesh; anything in a second mesh is silently dropped.
+
+This is load-bearing and invisible from the file layout, and its violation is what emptied the
+country: a tree exported as a trunk mesh plus a leaf-card mesh scattered as a bare trunk, four
+hundred thousand times, and read as "the trees look like winter scrub" for a week.
+
+Two consequences for the exporter. Joining meshes whose UV layers are named differently gives
+the result both layers, each half-blank, so the layer name is normalised before the join —
+otherwise every leaf card samples the bark atlas. And a prop that stands on the ground is
+exported with `bounds.min[1] == 0.0`, enforced by a forge test, so nothing placing a prop has
+to measure it.
+
 ## 5. Terrain texture slots (Terrain3D asset ids)
 
 | id | name | id | name | id | name |

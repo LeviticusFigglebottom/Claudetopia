@@ -342,31 +342,6 @@ func _strew(plan: Dictionary) -> void:
 			prop.position = _prop_spot(str(row.get("where", "green")), green)
 			prop.rotation.y = _rng.randf_range(0.0, TAU)
 			add_child(prop)
-			_sit_on_the_ground(prop)
-
-
-## Drops a prop until its lowest point is on the ground. The forge centres a mesh on its own
-## origin, which for a cart is the axle, so placing one at ground height leaves it hovering with
-## its wheels in the air. Nothing else in the world knows where the bottom of a cart is, so we
-## measure it.
-static func _sit_on_the_ground(prop: Node3D) -> void:
-	var low := 1e9
-	for child in _all_visuals(prop):
-		var box := child.get_aabb()
-		var corner := child.transform * box.position
-		low = minf(low, corner.y)
-		low = minf(low, (child.transform * (box.position + box.size)).y)
-	if low < 1e8:
-		prop.position.y -= low
-
-
-static func _all_visuals(node: Node) -> Array[VisualInstance3D]:
-	var out: Array[VisualInstance3D] = []
-	for child in node.get_children():
-		if child is VisualInstance3D:
-			out.append(child)
-		out.append_array(_all_visuals(child))
-	return out
 
 
 ## Both variants of a prop, if the forge built them. Naming is `<region>_<kind>_<a|b>` and a
