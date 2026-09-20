@@ -205,28 +205,54 @@ static func _weighted_hair(rng: RandomNumberGenerator, culture: String, age_v: f
 	return pool[rng.randi() % pool.size()]
 
 
+## Each culture dresses in ONE shape you could name from across a field, because that is
+## the distance the player actually sees a crowd from and a colour carries no further than
+## a few metres (WORLD_BIBLE.md §3, DESIGN.md §7).  Six recolours of a tunic is one people.
 static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bool) -> Dictionary:
 	var d := {"head": "default", "feet": "shoes" if rng.randf() < 0.5 else "boots"}
 	d["hair"] = HAIR_STYLES[rng.randi() % HAIR_STYLES.size()]
-	if fem and rng.randf() < 0.55:
-		d["torso"] = "dress"
-	else:
-		d["torso"] = "tunic" if rng.randf() < 0.7 else "shirt"
-		d["legs"] = "trousers"
-	if rng.randf() < 0.6:
-		d["belt"] = "belt"
 	match culture:
+		"lakefolk":
+			# a straight column with square shoulders
+			d["torso"] = "coat"
+			d["legs"] = "trousers"
+			d["feet"] = "shoes"
+			if rng.randf() < 0.7:
+				d["back"] = "shoulder_cape"
 		"reedfolk":
-			if rng.randf() < 0.35:
-				d["back"] = "cloak"
-		"ash_pilgrims":
-			d["torso"] = "robe"
-			d.erase("legs")
-			d["back"] = "hooded_cloak"
-		"woodfolk":
-			if rng.randf() < 0.5:
-				d["back"] = "hooded_cloak"
+			# asymmetric, one bare shoulder, over a long wrap
+			d["torso"] = "wrap_torso"
+			d["legs"] = "wrap_skirt"
+			d["feet"] = "shoes"
+			d["belt"] = "belt"
 		"clans":
-			if rng.randf() < 0.4:
+			# a diagonal drape over bare knees
+			d["torso"] = "shirt"
+			d["legs"] = "kilt"
+			d["feet"] = "boots"
+			d["belt"] = "belt"
+			if rng.randf() < 0.75:
+				d["back"] = "plaid"
+		"woodfolk":
+			# hooded, banded legs, a torn hem
+			d["torso"] = "shirt"
+			d["legs"] = "leg_wraps"
+			d["feet"] = "boots"
+			d["belt"] = "belt"
+			d["back"] = "ragged_cloak" if rng.randf() < 0.7 else "hooded_cloak"
+		"ash_pilgrims":
+			# enveloped and cowled, with no waist at all
+			d["torso"] = "robe"
+			d["feet"] = "boots"
+			d["back"] = "hooded_cloak"
+		_:
+			# the Vale: belted and knee-length, the baseline everyone else departs from
+			if fem and rng.randf() < 0.55:
+				d["torso"] = "dress"
+			else:
+				d["torso"] = "tunic" if rng.randf() < 0.72 else "shirt"
+				d["legs"] = "trousers"
+			d["belt"] = "belt"
+			if rng.randf() < 0.25:
 				d["back"] = "cloak"
 	return d
