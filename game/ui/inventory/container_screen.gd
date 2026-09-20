@@ -11,6 +11,7 @@ extends Control
 ## keeps a tally while the screen is open and reports it when the screen closes.
 
 const ROW_HEIGHT := 34
+const CHROME_H := 316.0
 
 var _container: Node = null
 var _bag: Node = null
@@ -18,7 +19,9 @@ var _actor: Node = null
 var _list: VBoxContainer
 var _title: Label
 var _foot: Label
+var _whose: Label
 var _take_all: Button
+var _frame: PanelContainer
 
 
 func setup(args: Dictionary) -> void:
@@ -46,18 +49,20 @@ func _exit_tree() -> void:
 
 func _build() -> void:
 	var page := UiKit.page("What Is In It")
-	var frame: PanelContainer = page["frame"]
-	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 150.0
-	frame.offset_top = 70.0
-	frame.offset_right = -150.0
-	frame.offset_bottom = -70.0
-	add_child(frame)
+	_frame = page["frame"]
+	_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_frame.offset_left = 150.0
+	_frame.offset_right = -150.0
+	add_child(_frame)
 	var body: VBoxContainer = page["body"]
 
 	_title = UiKit.label("", "Subtitle")
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.add_child(_title)
+
+	_whose = UiKit.label("", "Small")
+	_whose.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.add_child(_whose)
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -123,6 +128,24 @@ func _refresh() -> void:
 		_list.add_child(empty)
 	_take_all.disabled = rows == 0
 	_foot.text = _carry_line()
+	_whose.text = "This is not yours." if _is_somebody_elses() else ""
+	_size_to_content(rows)
+
+
+## A chest with four things in it should not be a page of empty paper. The frame takes the
+## height its contents need, between a sensible floor and most of the screen.
+func _size_to_content(rows: int) -> void:
+	if _frame == null:
+		return
+	# The chrome is the framed header, the two small lines, the buttons and the page's padding;
+	# measured rather than guessed, because guessing it low puts a scrollbar on a chest with
+	# four things in it.
+	var wanted := CHROME_H + float(maxi(rows, 1)) * float(ROW_HEIGHT + 12)
+	var available := size.y if size.y > 0.0 else 720.0
+	var height := clampf(wanted, 280.0, available - 80.0)
+	var margin := maxf((available - height) * 0.5, 40.0)
+	_frame.offset_top = margin
+	_frame.offset_bottom = -margin
 
 
 ## One line: what it is, what it is worth, and a button that takes it.
@@ -157,8 +180,6 @@ func _carry_line() -> String:
 	var line := "You are carrying %.1f of %.1f" % [float(_bag.weight()), float(_bag.capacity())]
 	if bool(_bag.is_overloaded()):
 		line += " — overloaded"
-	if _is_somebody_elses():
-		line += "    ·    this is not yours"
 	return line
 
 

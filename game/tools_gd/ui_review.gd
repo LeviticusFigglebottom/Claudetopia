@@ -23,6 +23,7 @@ var _wait := 0.0
 var _frames := 0
 var _host: Control
 var _current: Node = null
+var _chest: Node = null
 var _fakes: Node
 
 
@@ -111,6 +112,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "crafting_enchanting", "menu": "crafting", "args": {"station": "name_table"}},
 		{"name": "trade", "menu": "trade", "args": {"merchant_id": "core:npc/review_merchant"}},
 		{"name": "deed", "menu": "deed", "args": {"property_id": "core:property/merrowby_cottage", "name": "The Cottage by the Toll", "place": "Merrowby", "price": 980}},
+		{"name": "container", "menu": "container", "state": "chest"},
 		{"name": "map", "menu": "map"},
 	]
 	if only.is_empty():
@@ -168,10 +170,35 @@ func _setup(shot: Dictionary) -> void:
 		if state != "default":
 			_fakes.set_state(state)
 		UI.show_hud()
-		UI.open(str(shot["menu"]), shot.get("args", {}))
+		var args: Dictionary = shot.get("args", {}).duplicate()
+		# The container screen is shown a real container, because a list of items with no
+		# chest behind it would prove nothing about the screen that matters.
+		if str(shot["menu"]) == "container":
+			args["container"] = _review_chest()
+		UI.open(str(shot["menu"]), args)
+
+
+## A chest with a believable haul in it, standing in for the one you would have opened.
+func _review_chest() -> Node:
+	if _chest != null and is_instance_valid(_chest):
+		_chest.queue_free()
+	var chest := WorldContainer.new()
+	chest.container_id = "review:container/kist"
+	chest.owner_npc = "core:npc/ellard_wynstead"
+	_host.add_child(chest)
+	for pair in [["core:item/iron_sword", 1], ["core:item/bread", 3],
+			["core:item/linen_bandage", 2], ["core:item/oak_round_shield", 1]]:
+		if ContentDB.has(str(pair[0])):
+			chest.inventory.add(str(pair[0]), int(pair[1]))
+	chest.inventory.add_marks(64)
+	_chest = chest
+	return chest
 
 
 func _teardown() -> void:
+	if _chest != null and is_instance_valid(_chest):
+		_chest.queue_free()
+		_chest = null
 	_fakes.set_state("default")
 	EventBus.boss_defeated.emit("")
 	UI.set_variant("warm")

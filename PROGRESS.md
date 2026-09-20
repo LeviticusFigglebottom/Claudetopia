@@ -170,13 +170,19 @@ weight, but a verb nobody calls is a feature that does not happen.
   ash pad with little flora, sits inside budget at 1.07 M, which confirms where it comes from.
   The fix is a cheap far variant per scatter asset, not fewer plants; it is with the world and
   forge streams and it is not done.
-* **The drop test does not pass.** `tools/uniqueness_check.py` now scores colour and landform
-  separately (DESIGN §10.1). On the eighteen region captures as they stand: colour 0.61,
-  landform 0.50, together 0.56, against a 0.17 chance line and a 0.80 bar. Skerrow and
-  Cinderlea read as each other, and Briarwold and Sedgemire are the closest pair in the world.
-  Those captures were taken from a country with no stones in it and nothing named standing up,
-  so the number should move a long way once the rock scatter, the landmarks and the surface
-  pass land — but it is 0.56 today and it is recorded as 0.56 today.
+* **The drop test does not pass**, and half of it cannot yet be measured. `uniqueness_check.py`
+  scores colour and landform separately (DESIGN §10.1). Today: colour 0.57, together 0.43,
+  against a 0.17 chance line and a 0.80 bar — so the combined bar fails, plainly.
+  The landform figure is 0.10, which is *below* chance, and that is a statement about the
+  sample rather than about the country: there are three images per region, so leave-one-out
+  over six regions turns on one or two frames. The tool now says so and refuses to fail the
+  run on it. Getting a real landform reading needs six or more shots per region, which is
+  cheap and is not done. The confusion pairs are informative meanwhile: Brightwater reads as
+  Cinderlea, and Briarwold as Sedgemire and as Hearthvale.
+  I also removed the absolute horizon height and the sky fraction from the landform signature
+  after the world stream pointed out that changing the vista camera moved the score by a
+  factor of eight. Those two terms were measuring how high the camera stood, which is the
+  photographer's choice and not the place's.
 * Terrain3D + lavapipe (software Vulkan) crashes in JIT code; use OpenGL for
   headless captures (ARCHITECTURE.md §10).
 * Cave floors show a faint dune ripple where the shell noise is applied before the
