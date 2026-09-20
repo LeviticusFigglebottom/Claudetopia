@@ -8,7 +8,7 @@
   "bio": "Bone-smith on Kharrow's third ledge and the fourth to carry the name Ordda, which comes with the bench and not with the mother; she faces clan plate and backs clan bows with giant-bone off the Brindlecrag scree and has never sold a split of it down the pass.",
   "unique_habit": "Weighs every piece of bone before she cuts it and after, keeps the difference in a horn cup, and walks the dust back up the scree when there is a handful of it.",
   "personality": {
-    "traits": ["brave", "greedy", "pious", "quiet", "proud", "kind"]
+    "traits": ["proud", "quiet", "pious"]
   },
   "appearance": {
     "seed": 2112,
@@ -44,7 +44,7 @@
   "bio": "Makes the paid watch's crossbows under guild charter at the canal end of Lantern Row, and has cut the brass tally-plate into every stock that has left her counter since she was twenty-three.",
   "unique_habit": "Knows every watchman in Tollmere by the number on their stock instead of their face, greets them by it, and apologises for it immediately every time.",
   "personality": {
-    "traits": ["brave", "greedy", "cynical", "gossip", "proud", "kind"]
+    "traits": ["cynical", "proud", "gossip"]
   },
   "appearance": {
     "seed": 3313,

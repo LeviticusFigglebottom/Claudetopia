@@ -496,3 +496,108 @@ func test_a_taught_recipe_is_one_the_forge_will_now_accept() -> void:
 			"unknown, the forge turns it away")
 	assert_eq(Smithing.blocker("core:recipe/ashen_sword", crafting.bag(), 30, "forge", true), "missing_materials",
 			"known, the only thing left in the way is the iron")
+
+
+# --- finding the teachers at all --------------------------------------------------------------------
+
+## The gates were the easy half. Nothing in the world told you these five people existed, so the
+## talk has to carry them: somebody in each region puts the rumour into the local pool, it walks
+## to the neighbouring settlements on its own, and hearing it writes it into the journal.
+
+const DISCOVERY := {
+	"core:rumour/lantern_row_numbers": "core:npc/orrin_quill",
+	"core:rumour/kharrow_bone_bench": "core:npc/dunna_ko_kharrow",
+	"core:rumour/black_blades": "core:npc/cadwen_ash",
+	"core:rumour/smith_hung_his_sword": "core:npc/maud_brambling",
+}
+
+
+func seeded_rumours() -> Dictionary:
+	# rumour id -> [{dialogue, node}]
+	var out: Dictionary = {}
+	for def in ContentDB.all("dialogue"):
+		var nodes: Dictionary = def.get("nodes", {})
+		for node_id in nodes:
+			var node: Dictionary = nodes[node_id]
+			for e in node.get("effects", []):
+				if typeof(e) != TYPE_DICTIONARY or not (e as Dictionary).has("rumour"):
+					continue
+				var arg: Variant = (e as Dictionary)["rumour"]
+				var rid: String = str(arg[0]) if typeof(arg) == TYPE_ARRAY and (arg as Array).size() > 0 else str(arg)
+				if not out.has(rid):
+					out[rid] = []
+				out[rid].append({"dialogue": str(def["id"]), "node": node_id})
+	return out
+
+
+func test_every_rumour_a_conversation_seeds_is_a_rumour_that_exists() -> void:
+	for rid in seeded_rumours():
+		assert_true(ContentDB.has(rid), "a dialogue seeds %s, which is not in the pack" % rid)
+
+
+func test_each_teacher_has_somebody_who_puts_them_into_the_talk() -> void:
+	var seeded := seeded_rumours()
+	for rid in DISCOVERY:
+		assert_true(ContentDB.has(rid), "%s is missing" % rid)
+		assert_true(seeded.has(rid), "%s is written but nobody ever says it" % rid)
+		var speakers: Array[String] = []
+		for where in seeded[rid]:
+			var def: Dictionary = ContentDB.get_or_empty(str(where["dialogue"]))
+			assert_true(_reachable(def, false).has(str(where["node"])),
+					"%s.%s seeds %s and cannot be reached" % [where["dialogue"], where["node"], rid])
+			speakers.append(str(where["dialogue"]))
+		var owner: Dictionary = ContentDB.get_or_empty(str(DISCOVERY[rid]))
+		assert_true(speakers.has(str(owner.get("dialogue", ""))),
+				"%s was meant to come from %s" % [rid, DISCOVERY[rid]])
+
+
+func test_the_rumours_are_written_out_and_not_left_as_stubs() -> void:
+	for rid in DISCOVERY:
+		var def: Dictionary = ContentDB.get_or_empty(rid)
+		assert_gt(str(def.get("text", "")).length(), 80, "%s is a stub" % rid)
+		assert_ne(str(def.get("name", "")), "", "%s has no journal title" % rid)
+		assert_true(["warm", "neutral", "cold"].has(str(def.get("tone", ""))), "%s has no usable tone" % rid)
+
+
+func test_quill_names_the_woman_at_the_canal_end() -> void:
+	talk("core:npc/orrin_quill")
+	pick("Who on this row works under charter")
+	assert_true(said("Lathe"), transcript())
+	var gossip: SocialFakes.Gossip = ctx.provider("gossip")
+	var seeded: Array[String] = []
+	for r in gossip.added:
+		seeded.append(str((r as Dictionary)["rumour"]))
+	assert_true(seeded.has("core:rumour/lantern_row_numbers"), "and the row starts saying it")
+	assert_clean()
+
+
+func test_maud_only_has_the_sword_story_after_hallam_has_hung_it() -> void:
+	talk("core:npc/maud_brambling")
+	assert_eq(choice_at("hung a sword over his bellows"), -1, "it has not happened yet")
+	assert_clean()
+
+
+func test_maud_carries_the_sword_story_once_it_is_true() -> void:
+	flags().set_flag("hallam_sword_out")
+	talk("core:npc/maud_brambling")
+	pick("hung a sword over his bellows")
+	assert_true(said("Nineteen years that was under a bed"), transcript())
+	var gossip: SocialFakes.Gossip = ctx.provider("gossip")
+	var seeded: Array[String] = []
+	for r in gossip.added:
+		seeded.append(str((r as Dictionary)["rumour"]))
+	assert_true(seeded.has("core:rumour/smith_hung_his_sword"), "the valley's news exchange does its job")
+	assert_clean()
+
+
+func test_teaching_hallam_is_what_makes_maud_have_something_to_say() -> void:
+	# The whole loop in one test: the gate opens, the sword comes out, and the village hears.
+	flags().set_flag("hallam_anvil_flat")
+	player().skills["smithing"] = 60
+	inventory().add(SCRAP, 1)
+	talk(HALLAM)
+	pick("Teach me to work bell-bronze")
+	assert_true(crafting.knows_recipe("core:recipe/bell_bronze_sword"))
+	talk("core:npc/maud_brambling")
+	assert_true(choice_at("hung a sword over his bellows") >= 0, "she knows because it happened")
+	assert_clean()

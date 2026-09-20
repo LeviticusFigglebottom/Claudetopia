@@ -135,7 +135,7 @@ func _enter(node_id: String) -> void:
 		stop()
 		return
 	var nodes: Dictionary = _def.get("nodes", {})
-	if not nodes.has(node_id) and node_id != TALK_NODE:
+	if not nodes.has(node_id) and node_id != TALK_NODE and node_id != TRADE_NODE:
 		Log.warn("Dialogue", "%s: no node '%s' (content problem)" % [dialogue_id, node_id])
 		stop()
 		return
@@ -251,6 +251,8 @@ func gesture(gesture_id: String, witnesses: Array = []) -> Dictionary:
 func _node(node_id: String) -> Dictionary:
 	if node_id == TALK_NODE:
 		return _talk_node()
+	if node_id == TRADE_NODE:
+		return _trade_node()
 	var nodes: Dictionary = _def.get("nodes", {})
 	var n: Variant = nodes.get(node_id, {})
 	return n if typeof(n) == TYPE_DICTIONARY else {}
@@ -295,6 +297,13 @@ func _npc_name() -> String:
 ## journal, which is what the rumour page has always keyed on.
 const TALK_CHOICE := "What are people saying?"
 const TALK_NODE := "__talk"
+## The shop. An NPC with a `merchant` block carries a stock table, a float of marks and a
+## price list, and until now there was no way to reach any of it: nothing in the game opened
+## the trade screen, so every shopkeeper in Wickmere was a person you could only chat to.
+## Offered at any hub that does not turn it down, like the talk of the place, so a merchant is
+## reachable whether or not their author remembered to write the topic.
+const TRADE_CHOICE := "Let me see what you have."
+const TRADE_NODE := "__trade"
 const TALK_FRAMING := {
 	"warm": "%s",
 	"neutral": "%s",
@@ -304,6 +313,32 @@ const TALK_FRAMING := {
 
 func _talk_choice() -> Dictionary:
 	return {"text": TALK_CHOICE, "next": TALK_NODE, "talk": true}
+
+
+func _trade_choice() -> Dictionary:
+	return {"text": TRADE_CHOICE, "next": TRADE_NODE, "talk": true}
+
+
+## Opening the shop is a thing that happens in the world, not a line of dialogue, so this asks
+## for it and then puts the conversation back where it was. Whoever is listening -- the UI in
+## the game, a test in the suite -- decides what a shop looks like.
+func _trade_node() -> Dictionary:
+	EventBus.trade_requested.emit(npc_id)
+	return {"speaker": "npc", "text": _trade_line(), "next": _talk_return_to}
+
+
+func _trade_line() -> String:
+	var traits: Array = ctx.npc.get("personality", {}).get("traits", [])
+	if traits.has("gruff") or traits.has("cynical"):
+		return "Look, then. Do not handle what you are not buying."
+	if traits.has("kind") or traits.has("warm"):
+		return "Of course. Take your time over it, there is no one behind you."
+	return "Everything is out. The prices are what they are."
+
+
+## Whether this person keeps a shop at all.
+func _sells_things() -> bool:
+	return typeof(ctx.npc.get("merchant", null)) == TYPE_DICTIONARY
 
 
 ## Builds the node the talk choice goes to, so the rumour is picked at the moment it is asked
@@ -341,6 +376,10 @@ func _visible_choices(node: Dictionary) -> Array[Dictionary]:
 		var talk := _talk_choice()
 		talk["source_index"] = -1
 		out.insert(maxi(out.size() - 1, 0), talk)
+	if not out.is_empty() and not bool(node.get("no_trade", false)) and _sells_things():
+		var trade := _trade_choice()
+		trade["source_index"] = -2
+		out.insert(maxi(out.size() - 1, 0), trade)
 	return out
 
 
