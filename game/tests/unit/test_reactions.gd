@@ -7,8 +7,9 @@ func before_each() -> void:
 	Peers.overrides.clear()
 	GameState.reset_for_new_game(1)
 	WorldClock.set_time(12.0, 3)
-	if Bounty.instance != null:
-		Bounty.instance.clear_all()
+	var ledger := Bounty.ensure()
+	if ledger != null:
+		ledger.clear_all()
 	# The NPC registry outlives a single test file; start from fresh dispositions and
 	# nobody hostile, or another file's hostility decides these reactions.
 	var reg := NpcRegistry.instance
@@ -27,8 +28,9 @@ func after_each() -> void:
 	Peers.overrides.clear()
 	if Reactions.instance != null:
 		Reactions.instance.forget_all()
-	if Bounty.instance != null:
-		Bounty.instance.clear_all()
+	var ledger := Bounty.ensure()
+	if ledger != null:
+		ledger.clear_all()
 
 
 func _root() -> Node:

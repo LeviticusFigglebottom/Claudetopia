@@ -261,13 +261,16 @@ func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGen
 		EventBus.notify.emit("A hand closes on your wrist.", "stealth")
 		if victim != null and "detection" in victim:
 			victim.set("detection", 1.0)
-	if Bounty.instance != null:
+	# `ensure()` rather than `instance`: a pickpocketing that goes unrecorded because the
+	# ledger happened not to be up is the silence this whole area keeps producing.
+	var ledger := Bounty.ensure()
+	if ledger != null:
 		var opts := {"victim": victim_id, "target": item_id, "value": value}
 		if not ok and not victim_id.is_empty():
 			# Caught in the act: the victim witnesses it whatever else they were doing, and
 			# so does anyone else with a view — `extra_witnesses` adds to the usual scan.
 			opts["extra_witnesses"] = [{"npc_id": victim_id, "detection": 1.0, "line_of_sight": true, "is_guard": victim is Node and (victim as Node).is_in_group("guard"), "reaction": "report"}]
-		Bounty.instance.commit("pickpocket", pos, opts)
+		ledger.commit("pickpocket", pos, opts)
 	return {"ok": ok, "chance": chance, "caught": not ok, "item_id": item_id}
 
 

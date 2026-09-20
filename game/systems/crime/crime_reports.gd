@@ -77,12 +77,14 @@ func _on_killed(victim: Node, killer: Node, _content_id: String) -> void:
 
 # --- plumbing ---------------------------------------------------------------------------------
 
+## Hands the crime to the ledger, installing one if the host has not. Reaching for
+## `Bounty.instance` and giving up when it is null would make the report depend on the order
+## things happened to be created in, and a crime that evaporates because a service was not up
+## yet is exactly the class of silence this whole file exists to end.
 static func _commit(kind: String, at: Vector3, opts: Dictionary) -> void:
-	var bounty := Bounty.instance
+	var bounty := Bounty.ensure()
 	if bounty == null:
-		# No law installed (a bare test host, the arena). Doing nothing is right; saying
-		# nothing is not, because a crime that silently evaporates is how this got missed.
-		Log.warn("CrimeReports", "%s at %s with no Bounty installed" % [kind, at])
+		Log.warn("CrimeReports", "%s at %s and no ledger could be installed" % [kind, at])
 		return
 	bounty.commit(kind, at, opts)
 

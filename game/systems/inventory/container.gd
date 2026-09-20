@@ -99,6 +99,10 @@ func prompt_text() -> String:
 	return "Open %s" % label
 
 
+## What has been taken out of here since it was opened, in marks, and not yet reported.
+var _stolen := 0
+
+
 func is_owned() -> bool:
 	return owner_faction != "" or owner_npc != ""
 
@@ -142,24 +146,63 @@ func take_all(actor: Node) -> int:
 		return 0
 	var worth := _worth_of_contents()
 	var moved := inventory.transfer_all_to(inv)
+	_stolen += worth
 	looted.emit(self, actor)
-	# `moved` counts units of items and not marks, so a strongbox holding nothing but money
-	# would otherwise be emptied without a word. What was in it is the test, not what it was.
-	if worth > 0:
-		CrimeReports.theft(actor, global_position, worth, owner_npc, owner_faction, container_id)
+	close_up(actor)
 	return moved
+
+
+## Moves one stack into the actor's bag. Returns false when it will not fit or is not here.
+func take(stack: Variant, actor: Node) -> bool:
+	var inv := Inventory.for_actor(actor)
+	if inv == null:
+		return false
+	var s: ItemStack = inventory.resolve(stack)
+	if s == null or not inventory.holds(s):
+		return false
+	var worth := int(s.value())
+	# Read the stack before removing it: `remove_stack` empties it, and an emptied stack adds
+	# nothing to the bag on the other side.
+	var id := s.id
+	var how_many := s.count
+	var extra := s.data.duplicate(true)
+	inventory.remove_stack(s)
+	if inv.add(id, how_many, extra) == null:
+		inventory.add(id, how_many, extra)      # it would not fit; put it back
+		return false
+	_stolen += worth
+	looted.emit(self, actor)
+	return true
+
+
+## Takes the money. Kept apart from the stacks because marks are not an item.
+func take_marks(actor: Node) -> int:
+	var inv := Inventory.for_actor(actor)
+	if inv == null or inventory.marks <= 0:
+		return 0
+	var taken := inventory.remove_marks(inventory.marks)
+	inv.add_marks(taken)
+	_stolen += taken
+	looted.emit(self, actor)
+	return taken
+
+
+## Called when the player is finished with the chest. Emptying somebody's strongbox item by
+## item is one theft, not nine: the law hears about the visit, not each handful, or a chest
+## with nine things in it would put nine separate accounts in front of the same witness.
+func close_up(actor: Node) -> void:
+	if _stolen <= 0:
+		_stolen = 0
+		return
+	var worth := _stolen
+	_stolen = 0
+	CrimeReports.theft(actor, global_position, worth, owner_npc, owner_faction, container_id)
 
 
 ## What is in here, in marks. The bounty for a theft is a fraction of what was taken, so an
 ## empty crate in a stranger's byre is not the same crime as their strongbox.
 func _worth_of_contents() -> int:
-	var total := 0
-	for stack in inventory.stacks():
-		if stack == null:
-			continue
-		total += int(stack.value())
-	total += int(inventory.marks)
-	return total
+	return int(inventory.total_value()) + int(inventory.marks)
 
 
 # --- loot --------------------------------------------------------------------------------
