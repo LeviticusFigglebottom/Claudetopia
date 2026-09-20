@@ -407,9 +407,11 @@ MATERIALS = {
             "crack_warp": 0.12, "rough": 0.6, "normal_strength": 2.2},
     "peat": {"recipe": "soil", "tile_m": 2.6, "colors": ["#1b1f13", "#282d1a", "#374024", "#47522e"],
              "grit": 700, "grit_colour": "#5f6b3e", "cracks": 0.35, "rough": 0.8},
-    "forest_floor": {"recipe": "soil", "tile_m": 2.8, "colors": ["#241c14", "#32261b", "#42311f", "#533d27"],
-                     "grit": 1600, "grit_colour": "#7a5a34", "cracks": 0.15, "rough": 0.88,
-                     "normal_strength": 2.2},
+    # Leaf litter, moss, exposed root and bare earth -- ochres and greens with structure in
+    # them. A single brown is what says "texture" instead of "place".
+    "forest_floor": {"recipe": "soil", "tile_m": 2.8, "colors": ["#2a3021", "#3c4226", "#5a4f2b", "#6f6338"],
+                     "grit": 2600, "grit_colour": "#7e8a49", "cracks": 0.12, "rough": 0.88,
+                     "normal_strength": 2.4},
     "moss": {"recipe": "grass", "tile_m": 1.8, "colors": ["#1f3a1c", "#2f5526", "#437032", "#5c8a3c"],
              "tip": "#7fa24a", "blades": 5200, "blade_len": 0.035, "blade_w": 0.006, "angle": 70.0,
              "normal_strength": 1.9},

@@ -306,3 +306,24 @@ chance line — which means noise, not a bad country.
 refuses to fail the run on it, and the confusion pairs are the part worth reading meanwhile.
 Six shots a region is cheap and is the next thing to do. The cost of this honesty is that half
 the drop test is currently unmeasured, and PROGRESS.md says so.
+
+## 2026-09-20 · The land is built last, and the places land on it
+**Decision.** The Hearthvale escarpment is generated from the region's own shape function with
+no reference to where anything stands: a bearing, a wandering crest, a face, a dip slope and
+a set of dry valleys. The places are not moved to suit it, and it is not moved to suit them.
+The pads flatten wherever a place already was, and the land arrives underneath.
+**Why.** The alternative — placing the scarp to miss the villages, or nudging a village off the
+face — is the thing that makes a generated world feel arranged. A landscape is not negotiated
+with its inhabitants; people settle where the ground lets them, and a generator that guarantees
+a comfortable outcome guarantees a bland one. The risk was real: a seventy-metre face across
+the middle of the start region could have put the first town on a cliff, and the answer to that
+is the pad and the slope-cost roads, not a special case.
+**Consequences.** The region sorted itself. Merrowby, Warden's Rest, Pennywort's Mill and the
+Cracked Toll are in the vale at 18 to 30 m under the face; Tamwick, Hollin Barrow and the Chalk
+Hound are up on the tops at 100 to 121. The roads climb the scarp through the coombes because
+that is where the slope cost is lowest, which is why real roads go through them. None of that
+is authored anywhere, and if the seed changes it will sort itself differently and still be
+coherent. The height thresholds in the downs' texture rules had to move with the land — barley
+stops below the crest now rather than above 95 m — and that is the maintenance cost of building
+the land first: anything written against absolute heights is written against the landform, and
+has to move when the landform does.

@@ -13,6 +13,7 @@ import argparse
 import json
 import math
 import os
+import zlib
 
 import numpy as np
 
@@ -121,6 +122,63 @@ class Heights:
         return best
 
 
+class Scatter:
+    """Where everything the world planted is standing, for keeping a camera out of it.
+
+    A camera at eye height inside a region at thirty stems a hectare will sometimes be inside
+    a tree, and a frame of leaves is not a photograph of a place. Loading the cells is cheap
+    (the plan is generated once) and lets a shot step along its own bearing until it is in the
+    open.
+    """
+
+    def __init__(self, cell_m: float = 256.0, world_m: float = 8192.0):
+        self.cell_m = cell_m
+        self.half = world_m / 2.0
+        self.cells: dict = {}
+
+    def _cell(self, cx: int, cz: int) -> list:
+        key = (cx, cz)
+        if key in self.cells:
+            return self.cells[key]
+        path = os.path.join(GEN, "cells", "%d_%d.json" % (cx, cz))
+        pts: list = []
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for asset, rows in data.get("instances", {}).items():
+                # only the things big enough to stand in front of a lens
+                if "/flora/" in asset and "reed" not in asset:
+                    continue
+                for r in rows:
+                    pts.append((float(r[0]), float(r[2])))
+        self.cells[key] = pts
+        return pts
+
+    def nearest(self, x: float, z: float) -> float:
+        cx = int((x + self.half) // self.cell_m)
+        cz = int((z + self.half) // self.cell_m)
+        best = 1e9
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                for px, pz in self._cell(cx + dx, cz + dz):
+                    d = math.hypot(px - x, pz - z)
+                    if d < best:
+                        best = d
+        return best
+
+    def clear_spot(self, x: float, z: float, bearing_deg: float, want: float = 5.0,
+                   step: float = 9.0, tries: int = 14):
+        """Step along the bearing until nothing is standing within `want` metres."""
+        a = math.radians(bearing_deg)
+        for k in range(tries):
+            px, pz = x + math.cos(a) * step * k, z + math.sin(a) * step * k
+            if abs(px) > self.half - 40.0 or abs(pz) > self.half - 40.0:
+                break
+            if self.nearest(px, pz) >= want:
+                return px, pz
+        return x, z
+
+
 def load_places() -> dict:
     with open(os.path.join(PACK, "places", "places.json"), "r", encoding="utf-8") as f:
         return {p["id"]: p for p in json.load(f)}
@@ -148,6 +206,7 @@ def shot(label: str, pos, look, fov: float, hour: float, weather: str, fog_scale
 def build_plan() -> dict:
     hh = Heights()
     places = load_places()
+    scatter = Scatter()
     shots = []
     for region_id, (landmark, vista, settlement, hour, weather, bearing) in REGION_SHOTS.items():
         short = region_id.split("/")[-1]
@@ -174,26 +233,46 @@ def build_plan() -> dict:
         lx, lz, lh = hh.low_point(hx, hz, 1500.0)
         tx, tz = float(places[settlement]["position"][0]), float(places[settlement]["position"][1])
         ax, az = lx * 0.4 + tx * 0.6, lz * 0.4 + tz * 0.6
-        # aim short of it, so the drop between here and there fills the lower frame
         mx, mz = hx + (ax - hx) * 0.92, hz + (az - hz) * 0.92
-        shots.append(shot("%s_vista" % short, (hx, hy + 12.0, hz), (mx, hh.at(mx, mz) + 4.0, mz),
+        # Look out, not down. Aiming at ground four hundred metres away from twelve metres up
+        # puts the horizon in the top fifth of the frame and fills the other four fifths with
+        # the grass at your feet; aiming a little under your own eye height puts it at about
+        # two fifths, which is where a person standing on a hill actually sees it.
+        cam_y = hy + 12.0
+        shots.append(shot("%s_vista" % short, (hx, cam_y, hz), (mx, cam_y - 9.0, mz),
                           62.0, hour, weather, 1.0, region_id))
         # 3. the approach to the settlement, 420 m out and 28 m up, looking down on it
         sx, sz = tx, tz
         a2 = math.atan2(hz - sz, hx - sx)
         ax, az = sx + math.cos(a2) * 420.0, sz + math.sin(a2) * 420.0
+        ax, az = scatter.clear_spot(ax, az, math.degrees(a2) + 180.0, want=9.0)
         shots.append(shot("%s_approach" % short, (ax, hh.at(ax, az) + 28.0, az),
                           (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 1.0, region_id))
+    # One shot standing in the middle of each region's settlement, which is the only frame in
+    # the sheet close enough for the villagers to be in it (they are kept up within 240 m) and
+    # the only one that shows what a town actually looks like from the street.
+    for region_id, (landmark, vista, settlement, hour, weather, bearing) in REGION_SHOTS.items():
+        short = region_id.split("/")[-1]
+        sp = places[settlement]
+        sx, sz = float(sp["position"][0]), float(sp["position"][1])
+        ang = math.radians(bearing + 35.0)
+        ex, ez = sx - math.cos(ang) * 46.0, sz - math.sin(ang) * 46.0
+        shots.append(shot("%s_street" % short, (ex, hh.at(ex, ez) + 1.7, ez),
+                          (sx, hh.at(sx, sz) + 2.5, sz), 58.0, hour, weather, 1.0, region_id))
+
     # Three more per region, taken from the region's own ground rather than from its places,
     # so the drop test has six images of six different parts of a region instead of three
     # views of one hill. Below six a region, the landform axis is noise (DESIGN 10.1).
     for region_id, (landmark, vista, settlement, hour, weather, bearing) in REGION_SHOTS.items():
         short = region_id.split("/")[-1]
         idx = hh.region_index.get(region_id, -1)
-        spots = hh.sample_region(idx, 3, seed=abs(hash(short)) % (2 ** 31))
+        # crc32 rather than hash(): a salted hash would draw different ground shots on
+        # every run and the sheet would not be comparable with the last one
+        spots = hh.sample_region(idx, 3, seed=zlib.crc32(short.encode("utf-8")))
         for n, (sx, sz) in enumerate(spots):
             # stand on the ground and look out along it, each one on its own bearing
             ang = math.radians(bearing + 90.0 + n * 117.0)
+            sx, sz = scatter.clear_spot(sx, sz, bearing + 90.0 + n * 117.0 + 180.0, want=5.5)
             tx, tz = sx + math.cos(ang) * 520.0, sz + math.sin(ang) * 520.0
             eye = hh.at(sx, sz) + 2.2
             shots.append(shot("%s_ground%d" % (short, n + 1), (sx, eye, sz),

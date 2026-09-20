@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from scipy import ndimage
+
 from .grid import Grid, lerp, smoothstep
 from .noise import NoiseBank, downsample, upsample
 
@@ -217,7 +219,13 @@ def _weights(ctx: SurfaceContext):
     # Crops go in by the field. A parcel carries barley or it does not, all the way to its
     # hedge; a noise blob that runs across three fields and stops in the middle of a fourth is
     # the thing that makes farmed country read as wallpaper.
-    sown = smoothstep(0.52, 0.62, ctx.parcel(402)) * (1.0 - hedge_line)
+    # About a quarter of parcels carry a crop and a few more are bare under the plough. A
+    # patchwork of two values reads as a chequerboard; the third value -- turned earth -- is
+    # what makes it read as a year's work in progress.
+    parcel = ctx.parcel(402)
+    sown = smoothstep(0.70, 0.79, parcel) * (1.0 - hedge_line)
+    ploughed = smoothstep(0.60, 0.67, parcel) * (1.0 - smoothstep(0.67, 0.72, parcel)) \
+        * (1.0 - hedge_line)
     yield SLOTS["barley"], downs * 1.7 * sown * flat * dry * (1.0 - smoothstep(128.0, 154.0, H)) \
         * (0.7 + 0.5 * ctx.patch(403, 30, 140))
     yield SLOTS["orchard_grass"], downs * 1.25 * ctx.near_place({"tamwick", "merrowby"}, 210.0) * flat \
@@ -263,14 +271,28 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["heather"], karst * 2.1 * flat * ctx.patch(407, 70, 300) ** 0.8 * smoothstep(110.0, 210.0, H) \
         * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(120.0, 146.0, H) \
         + basin * 0.75 * ctx.patch(407, 70, 300) ** 1.6 * smoothstep(16.0, 40.0, H)
-    yield SLOTS["snow"], 2.6 * smoothstep(SNOW_LINE - 40.0, SNOW_LINE + 70.0, H) * (1.0 - 0.6 * verysteep)
+    # Snow lies where snow can lie. It slides off anything steep, it fills hollows and ledges,
+    # and it survives longest on the shaded side -- so a face that faces away from the sun keeps
+    # it hundreds of metres lower than one that faces into it. Scattering it evenly across steep
+    # rock at a single height reads as a dither over the mountain rather than as weather on it.
+    gz, gx = np.gradient(H, ctx.grid.spacing)
+    grad = np.hypot(gx, gz) + 1e-4
+    # +Z is south (CONTRACTS 1), so a slope whose gradient points north faces away from the sun
+    shaded = np.clip(-gz / grad, 0.0, 1.0)
+    # concavity: a hollow collects, a nose sheds
+    hollow = np.clip(-ndimage.laplace(downsample(H, min(ctx.n, 1024))), 0.0, None)
+    hollow = upsample(hollow / (hollow.max() + 1e-6), ctx.n, order=1)
+    line = SNOW_LINE - 90.0 * shaded - 60.0 * np.clip(hollow * 3.0, 0.0, 1.0)
+    holds = (1.0 - smoothstep(0.55, 1.05, s)) * (0.45 + 0.75 * np.clip(hollow * 2.5, 0.0, 1.0))
+    yield SLOTS["snow"], 3.0 * smoothstep(0.0, 130.0, H - line) * np.clip(holds, 0.0, 1.4)
 
     # --- Cinderlea: ash and grey grass --------------------------------------------------
     yield SLOTS["ash_soil"], ash * (0.95 + 0.7 * dry * (1.0 - flat))
     yield SLOTS["grey_grass"], ash * (0.75 + 1.5 * flat * ctx.patch(408, 80, 320) ** 0.7)
 
     # --- roads everywhere ---------------------------------------------------------------
-    yield SLOTS["dirt_path"], out_town * (3.0 * carriage + 0.85 * verge) \
+    yield SLOTS["dirt_path"], downs * 1.5 * ploughed * flat * (0.75 + 0.5 * ctx.patch(421, 6, 30)) \
+        + out_town * (3.0 * carriage + 0.85 * verge) \
         + 1.4 * ctx.pad * out_town * (1.0 - steep) * ctx.patch(409, 30, 120) \
         + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.82, 0.0, 1.0) * 1.4 * (1.0 - flat * 0.4)
 
@@ -386,7 +408,11 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     shade = 1.0 + 0.10 * np.tanh((H - 60.0) / 260.0) - 0.10 * smoothstep(0.35, 1.1, slope)
     tint *= shade[..., None]
     # snow lightens everything it covers
-    tint = lerp(tint, np.ones_like(tint), smoothstep(SNOW_LINE - 20.0, SNOW_LINE + 80.0, H)[..., None] * 0.8)
+    # Snow is not neutral: its lit face is warm-white and its shadow side is blue, and a snow
+    # field with no blue in it blows out to paper against dark rock.
+    snow_t = smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 80.0, H)[..., None]
+    cold = np.array([0.90, 0.95, 1.06], dtype=np.float32)[None, None, :]
+    tint = lerp(tint, np.broadcast_to(cold, tint.shape), snow_t * 0.72)
     wet = np.clip(0.75 * moist + 0.9 * water, 0.0, 1.0)
     alpha = np.clip(0.5 - 0.38 * wet, 0.0, 1.0)
     rgba = np.concatenate([np.clip(tint, 0.0, 1.0), alpha[..., None]], axis=-1)
