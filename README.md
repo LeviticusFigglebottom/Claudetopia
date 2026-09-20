@@ -51,6 +51,7 @@ meshes, not to play.
 | `ARCHITECTURE.md` | How the code is organised, and how to pick it up cold. |
 | `docs/CONTRACTS.md` | The binding interfaces between systems: units, the rig, clip names, asset layout, world data, content shapes, system discovery. |
 | `PROGRESS.md` | Where things stand, what is next, what is known to be missing. |
+| `ASSESSMENT.md` | A candid assessment: what is good, what is weak, what I got wrong, what to do next. Read this one first if you are deciding whether to continue it. |
 | `DECISIONS.md` | Every significant choice, why it was made, and what it cost. |
 | `LICENSES.md` | The three third-party things and their licences. |
 
