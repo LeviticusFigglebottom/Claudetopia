@@ -233,9 +233,14 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 		if mesh == null:
 			continue
 		_build_multimesh(node, str(asset_path), mesh, rows, ring)
+	# A landmark is the one thing that has to be visible from outside the near ring -- a
+	# hundred-and-twenty-metre spire in a marsh is a skyline, and the shot that shows it stands
+	# 360 m off, which is often the far ring. There are thirty-four POIs in the whole world, so
+	# building them out to the edge of what is streamed costs almost nothing. Encounters stay
+	# near: a wolf you cannot see does not need a body.
+	for entry in data.get("scenes", []):
+		_build_scene(node, entry)
 	if ring <= full_ring:
-		for entry in data.get("scenes", []):
-			_build_scene(node, entry)
 		_build_spawns(node, data.get("spawns", []))
 	EventBus.cell_loaded.emit(cell)
 
