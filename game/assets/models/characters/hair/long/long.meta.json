@@ -1,10 +1,10 @@
 {
  "bounds": [
-  -0.108,
-  -0.0823,
+  -0.1097,
+  -0.0822,
   1.4735,
-  0.1043,
-  0.1117,
+  0.1062,
+  0.1116,
   1.8193
  ],
  "collision": "none",
@@ -16,7 +16,7 @@
   "material": "hair"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 9973,
+ "seed": 3343,
  "slot_hint": "attachment",
  "tris": [
   2200,
