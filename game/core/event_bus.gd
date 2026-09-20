@@ -36,6 +36,8 @@ signal item_removed(item_id: String, count: int)
 signal item_equipped(slot: String, item_id: String)
 signal item_used(item_id: String, effects: Array)
 signal container_opened(container: Node, actor: Node)
+## A notice post or charter-board read: the UI draws the day's work from it.
+signal job_board_opened(board: Node, actor: Node)
 signal recipe_learned(recipe_id: String)
 ## A saying (spell) was added to what the character knows; Progression owns the list.
 signal spell_learned(spell_id: String)

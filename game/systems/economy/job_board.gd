@@ -57,9 +57,12 @@ func prompt_text() -> String:
 	return "%s (%d notices)" % [display_name, offers().size()]
 
 
-func interact(_actor: Node) -> Array[Dictionary]:
+func interact(actor: Node) -> Array[Dictionary]:
 	var list := offers()
 	jobs_listed.emit(list)
+	# The signal is for anything that wants the list; this is what puts it in front of a
+	# player, and without it the board was a post you could walk up to and read nothing on.
+	EventBus.job_board_opened.emit(self, actor)
 	return list
 
 

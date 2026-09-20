@@ -36,6 +36,7 @@ const MENUS := {
 	"save_load": {"scene": "res://ui/menus/save_load.tscn", "full": true},
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
 	"container": {"scene": "res://ui/inventory/container_screen.tscn", "full": true},
+	"job_board": {"scene": "res://ui/jobs/job_board_screen.tscn", "full": true},
 	"journal": {"scene": "res://ui/journal/journal.tscn", "full": true},
 	"skills": {"scene": "res://ui/skills/skills_screen.tscn", "full": true},
 	"sayings": {"scene": "res://ui/sayings/sayings_screen.tscn", "full": true},
@@ -79,6 +80,7 @@ func _ready() -> void:
 	EventBus.notify.connect(_on_notify)
 	EventBus.book_opened.connect(_on_book_opened)
 	EventBus.container_opened.connect(_on_container_opened)
+	EventBus.job_board_opened.connect(_on_job_board_opened)
 	EventBus.trade_requested.connect(_on_trade_requested)
 	EventBus.region_entered.connect(func(id: String, _p: String) -> void: _refresh_variant())
 	EventBus.interior_entered.connect(func(_id: String) -> void: _refresh_variant())
@@ -444,6 +446,14 @@ func _on_container_opened(container: Node, actor: Node) -> void:
 	if container == null or not is_instance_valid(container):
 		return
 	open("container", {"container": container, "actor": actor})
+
+
+## A notice post read. `JobBoard.offers()` and `take()` were complete and tested and no screen
+## ever drew them, because nothing in the world placed a board to read.
+func _on_job_board_opened(board: Node, actor: Node) -> void:
+	if board == null or not is_instance_valid(board):
+		return
+	open("job_board", {"board": board, "actor": actor})
 
 
 func _on_book_opened(book_id: String) -> void:

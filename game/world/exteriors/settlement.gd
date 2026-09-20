@@ -91,6 +91,33 @@ const CULTURE_BY_REGION := {
 	"core:region/cinderlea": "pilgrims",
 }
 
+## Work you can stand up and do. `Jobs` knows five kinds of station and `JobBoard` lists the
+## day's radiant work, and both were complete, tested and placed by nothing at all: no notice
+## post stood in any village and no bellows, mash tun or eel trap existed outside a unit test.
+## The interiors know every resident's trade, so a settlement's work follows from who lives in
+## it rather than from a second list that can disagree.
+const STATION_FOR_TRADE := {
+	"smith": "smith", "brewer": "brew", "fisher": "fish", "farmer": "chop", "baker": "chop",
+}
+## Every settlement has work of its own even where nobody in it has an authored trade: the
+## reed beds are cut, the Briarwold is coppiced, the Skerrow digs peat off the ledges.
+const STATION_BY_CULTURE := {
+	"vale": "chop", "lakefolk": "fish", "reedfolk": "dig",
+	"woodfolk": "chop", "clans": "dig", "pilgrims": "dig",
+}
+## What the forge has that reads as the work from a few paces off. A chopping block and a peat
+## bank are still owed — a crate of billets and a bucket at the cut are standing in, and they
+## are written down here rather than quietly chosen.
+const STATION_PROP := {
+	"smith": "anvil", "brew": "barrel", "fish": "dock_post", "chop": "crate", "dig": "bucket",
+}
+## A hamlet of eight houses has no charter-board; a lodge in the woods has no notices.
+const BOARD_KINDS := ["city", "town", "village", "fort"]
+## The most stations one settlement gets, so Merrowby's ten authored interiors do not turn the
+## green into a workshop floor.
+const MAX_STATIONS := 4
+
+
 var place_id := ""
 var kind := "village"
 var culture := "vale"
@@ -132,6 +159,7 @@ func _ready() -> void:
 		return
 	_build(plan)
 	_strew(plan)
+	_put_to_work()
 
 
 # --- where the houses go --------------------------------------------------------------------
@@ -397,6 +425,65 @@ func _prop_spot(where: String, green: float) -> Vector3:
 				* (rect.size.x * 0.5 + _rng.randf_range(0.6, 2.0))
 	var world := Vector2(local.x + global_position.x, local.y + global_position.z)
 	return Vector3(local.x, _ground_at(world) - global_position.y, local.y)
+
+
+# --- work -------------------------------------------------------------------------------------
+
+## A notice post on the green and a place to do the settlement's own work in the yards.
+func _put_to_work() -> void:
+	var green := maxf(_inner_radius() - 2.0, 3.0)
+	if kind in BOARD_KINDS:
+		var board := JobBoard.new()
+		board.name = "JobBoard"
+		board.place_id = place_id
+		board.display_name = "the charter-board" if kind == "city" else "the notice post"
+		board.position = _prop_spot("green", green)
+		_give_a_body(board, "signpost")
+		add_child(board)
+	for station_kind in _work_here():
+		var station := JobStation.new()
+		station.kind = station_kind
+		station.name = "JobStation_" + station_kind
+		station.position = _prop_spot("yard", green)
+		station.rotation.y = _rng.randf_range(0.0, TAU)
+		_give_a_body(station, str(STATION_PROP.get(station_kind, "crate")))
+		add_child(station)
+
+
+## The kinds of work this settlement offers: one per trade among the people who live here,
+## and its region's own work when nobody in it has an authored trade at all.
+func _work_here() -> Array[String]:
+	var out: Array[String] = []
+	for def in ContentDB.all("interior"):
+		if str(def.get("place", "")) != place_id:
+			continue
+		var station := str(STATION_FOR_TRADE.get(str(def.get("trade", "")), ""))
+		if station != "" and not out.has(station) and out.size() < MAX_STATIONS:
+			out.append(station)
+	if out.is_empty():
+		var own := str(STATION_BY_CULTURE.get(culture, ""))
+		if own != "":
+			out.append(own)
+	return out
+
+
+## A `JobBoard` and a `JobStation` are a collision shape and a signal each, with nothing to
+## look at: they were written to be dropped into a hand-built scene beside a mesh. Out here
+## they have to carry their own, so each takes the forge prop that reads as the work.
+func _give_a_body(node: Node3D, prop_kind: String) -> void:
+	var paths := _prop_paths(str(PROP_PREFIX.get(culture, "hearthvale")), prop_kind)
+	if paths.is_empty():
+		paths = _prop_paths("hearthvale", prop_kind)
+	if paths.is_empty():
+		return
+	var packed := load(paths[0]) as PackedScene
+	if packed == null:
+		return
+	var body := packed.instantiate()
+	if body is Node3D:
+		node.add_child(body)
+	else:
+		body.queue_free()
 
 
 # --- surfaces -------------------------------------------------------------------------------
