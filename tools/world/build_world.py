@@ -21,6 +21,7 @@ import math
 import os
 import sys
 import time
+import zlib
 
 import numpy as np
 from scipy import ndimage
@@ -211,7 +212,9 @@ def landmark_yaw(place: dict, facing, H, water_d, grid, places_by_id: dict) -> f
         vx = -float(H[i, j + 1] - H[i, j - 1])
         vz = -float(H[i + 1, j] - H[i - 1, j])
     if abs(vx) < 1e-9 and abs(vz) < 1e-9:
-        return float(abs(hash(place.get("id", ""))) % 360)
+        # zlib.crc32, not hash(): Python salts string hashing per process, and a world
+        # that faces its landmarks differently on every build is not deterministic.
+        return float(zlib.crc32(str(place.get("id", "")).encode("utf-8")) % 360)
     return float(round(math.degrees(math.atan2(vx, vz)), 1))
 
 

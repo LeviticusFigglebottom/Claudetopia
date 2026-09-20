@@ -13,6 +13,7 @@ import argparse
 import json
 import math
 import os
+import zlib
 
 import numpy as np
 
@@ -265,7 +266,9 @@ def build_plan() -> dict:
     for region_id, (landmark, vista, settlement, hour, weather, bearing) in REGION_SHOTS.items():
         short = region_id.split("/")[-1]
         idx = hh.region_index.get(region_id, -1)
-        spots = hh.sample_region(idx, 3, seed=abs(hash(short)) % (2 ** 31))
+        # crc32 rather than hash(): a salted hash would draw different ground shots on
+        # every run and the sheet would not be comparable with the last one
+        spots = hh.sample_region(idx, 3, seed=zlib.crc32(short.encode("utf-8")))
         for n, (sx, sz) in enumerate(spots):
             # stand on the ground and look out along it, each one on its own bearing
             ang = math.radians(bearing + 90.0 + n * 117.0)
