@@ -156,6 +156,14 @@ read:
   know this particular miller's water has come back — and `Greetings` only ever read
   `core:table/greetings`. They are rows now, keyed to whoever owns the dialogue, which makes
   them the most specific match whenever their conditions hold.
+* **Sixty-five rumours and no way to hear most of them.** A rumour only ever entered a place's
+  pool because the player spoke to whoever seeds it, so a village nobody had questioned was
+  silent. Walking into a region now stocks its settlements with their own talk at a heat below
+  the spreading threshold — local colour, not news — and the journal's rumour page checks a
+  rumour's conditions before printing it, which it never did.
+* **Every shopkeeper was somebody you could only talk to.** Thirteen people in the pack keep
+  shops, `Merchant` registers with the economy, the trade screen is built and themed, and
+  nothing opened it.
 * **Seventy-eight schedule entries never applied.** They say `"days": "weekdays"`, and
   `Schedules` knew `workdays` and fell through to false for anything else, so a large part of
   the roster's working day was quietly dropped — invisible, because the fallback is a
