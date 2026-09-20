@@ -143,7 +143,25 @@ green test suite says so.
   witness model, the guard confrontation, the fine, the jail term and the morality hit were
   all working perfectly on events that never arrived. `CrimeReports` is the join.
 
-A third was smaller: **letting and rent were built and had nowhere to be done from.** Standing
+Three more turned up the same way, all of them content that had been written and then never
+read:
+
+* **Every chest in the world was a mesh.** `WorldContainer` could roll loot, lock itself and be
+  emptied, and no interior ever attached one to the chest standing in the room — and no screen
+  ever showed you the inside of one. Twenty-three chests, fourteen cupboards, strongboxes and
+  sacks across the twenty-four interiors. They open now, they belong to whoever lives there,
+  and emptying somebody's is one theft rather than nine.
+* **A hundred and forty-seven greeting lines had never been said.** Every dialogue in the pack
+  carries a `greetings` array written beside the conversation it belongs to — the lines that
+  know this particular miller's water has come back — and `Greetings` only ever read
+  `core:table/greetings`. They are rows now, keyed to whoever owns the dialogue, which makes
+  them the most specific match whenever their conditions hold.
+* **Seventy-eight schedule entries never applied.** They say `"days": "weekdays"`, and
+  `Schedules` knew `workdays` and fell through to false for anything else, so a large part of
+  the roster's working day was quietly dropped — invisible, because the fallback is a
+  plausible schedule rather than an error.
+
+And one smaller: **letting and rent were built and had nowhere to be done from.** Standing
 at the board outside a house you own told you that you owned it. It is now a landlord's board —
 collect the rent that is waiting, or put the word out that the place is to let.
 

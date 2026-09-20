@@ -1,7 +1,8 @@
 class_name Schedules
 ## Pure schedule logic (DESIGN §5.12). An NPC def carries
 ##   schedule: [{days, hour, place, activity, spot}]   (CONTRACTS §7)
-## days: "all" | "workdays" | a day name | an int 0..6 (0 = Kindleday) | "1-4" | "0,2,4" |
+## days: "all" | "workdays" (or "weekdays") | a day name | an int 0..6 (0 = Kindleday) |
+##       "1-4" | "0,2,4" |
 ##       an array of any of those. hour: float 0..24. place: a place id or "home".
 ## activity: sleep | work | eat | idle | pray | socialise | patrol | shop (travel is derived).
 ## Rules: the current entry is the latest one at or before the hour (wrapping to earlier days);
@@ -43,7 +44,11 @@ static func _string_applies(spec: String, weekday: int) -> bool:
 	var s := spec.strip_edges().to_lower()
 	if s in ["", "all", "any", "daily", "every"]:
 		return true
-	if s == "workdays":
+	# "weekdays" is what seventy-eight entries in the pack actually say, and it used to fall
+	# through every branch below and return false — so a large part of the roster's working
+	# day simply never applied and nobody noticed, because the fallback is a plausible
+	# schedule rather than an error.
+	if s == "workdays" or s == "weekdays":
 		return weekday <= 5
 	if s == "restday":
 		return weekday == 6

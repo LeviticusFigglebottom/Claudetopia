@@ -38,6 +38,10 @@ func test_villagers_stand_at_their_own_place_on_the_ground() -> void:
 	var w := _world()
 	await w.world_ready
 	var registry := NpcRegistry.ensure()
+	# `NpcStreamer` is a world service now and may already have stood these people up, and
+	# `spawn()` refuses somebody who is already standing. This test is about the standing, so
+	# it starts from an empty street.
+	registry.despawn_all()
 	var living := registry.npcs_at(MERROWBY)
 	assert_gt(living.size(), 3, "Merrowby has people in it")
 	var stood := 0

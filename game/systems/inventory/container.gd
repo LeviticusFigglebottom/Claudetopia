@@ -101,6 +101,10 @@ func prompt_text() -> String:
 
 ## What has been taken out of here since it was opened, in marks, and not yet reported.
 var _stolen := 0
+## Whether this container's loot table has already been rolled. Persisted, because it is the
+## difference between a chest you have already looked in and one that is about to mint a
+## second haul on top of the first.
+var rolled := false
 
 
 func is_owned() -> bool:
@@ -207,10 +211,14 @@ func _worth_of_contents() -> int:
 
 # --- loot --------------------------------------------------------------------------------
 
-## Rolls the loot table if this container has never been opened, or if it respawns and
-## enough hours have passed since the last opening. Deterministic per container and opening.
+## Rolls the loot table once, and again only if this container respawns and enough hours have
+## passed since it was last opened. Deterministic per container and opening.
+##
+## The test is `rolled`, not `opened_count == 0`. A container can hold its haul without ever
+## having been opened — a chest whose contents were rolled and then saved — and reading the
+## count would roll a second haul on top of the restored one the first time anybody looked.
 func ensure_loot() -> void:
-	var needs := opened_count == 0
+	var needs := not rolled
 	if not needs and respawn and last_opened_hours >= 0.0 and now_hours() - last_opened_hours >= respawn_hours:
 		inventory.clear()
 		needs = true
@@ -223,6 +231,8 @@ func ensure_loot() -> void:
 			inventory.add_marks(int(r["marks"]))
 		else:
 			inventory.add(str(r["item"]), int(r["count"]), r.get("data", {}))
+	rolled = true
+	_persist()
 
 
 func loot_context() -> Dictionary:
@@ -238,7 +248,7 @@ static func now_hours() -> float:
 func _persist() -> void:
 	store.states[container_id] = {
 		"opened_count": opened_count, "last_opened_hours": last_opened_hours, "locked": locked,
-		"inventory": inventory.to_save(),
+		"rolled": rolled, "inventory": inventory.to_save(),
 	}
 
 
@@ -248,6 +258,8 @@ func restore_state() -> void:
 		return
 	var st: Dictionary = store.states[container_id]
 	opened_count = int(st.get("opened_count", 0))
+	# An old save has no `rolled`; a container it recorded as opened had certainly rolled.
+	rolled = bool(st.get("rolled", opened_count > 0))
 	last_opened_hours = float(st.get("last_opened_hours", -1.0))
 	locked = bool(st.get("locked", locked))
 	var inv: Variant = st.get("inventory", {})

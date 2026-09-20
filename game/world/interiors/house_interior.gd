@@ -41,6 +41,22 @@ var _rng := RandomNumberGenerator.new()
 var _props := PropLibrary.new()
 ## Prop kinds that are a book somebody could pick up and read.
 const BOOK_PROPS := ["book_single", "book_stack", "roll_book", "ledger"]
+
+## Furniture you can open, and what it is worth opening. A house's chests were meshes until
+## now: the container system could roll loot, lock itself and be emptied, and nothing in an
+## interior ever attached one to the chest standing in the room. `wealth` shifts the table, so
+## a cottager's chest is not the steward's.
+const OPENABLE := {
+	"chest": "common", "deed_chest": "rich", "strongbox": "rich", "coffer": "rich",
+	"cupboard": "common", "crate": "poor", "root_crate": "poor", "barrel": "poor",
+	"barrel_rack": "poor", "hop_sacks": "poor", "seed_sacks": "poor", "flour_sacks": "poor",
+	"washstand": "poor",
+}
+## Which loot table a tier draws from. "poor" gets none: a sack of flour holds flour, and an
+## empty crate that says "Empty." is more honest than a crate that mints a dagger.
+const TIER_LOOT := {"common": "core:loot/common_chest", "rich": "core:loot/rich_chest"}
+## The ones a resident would actually lock.
+const LOCKED := ["strongbox", "coffer", "deed_chest"]
 var _shelf_index := 0
 var _variant := 0
 
@@ -242,7 +258,43 @@ func _build_props() -> void:
 			node.set_meta("habit", p["habit"])
 		node.set_meta("room", p.get("room", ""))
 		holder.add_child(node)
-		_make_readable(node, str(p.get("fixture", p.get("prop", ""))), p)
+		var kind := str(p.get("fixture", p.get("prop", "")))
+		_make_readable(node, kind, p)
+		_make_openable(node, kind, p)
+
+
+## A chest that opens. The id is built from the house and the thing's own place in it, so the
+## same chest holds the same contents every time you come back to it and across a save; the
+## owner is the resident, which is what makes taking from it a theft rather than a pickup.
+func _make_openable(node: Node3D, kind: String, placement: Dictionary) -> void:
+	if not OPENABLE.has(kind):
+		return
+	var tier := str(OPENABLE[kind])
+	var box := WorldContainer.new()
+	box.name = "Container"
+	var at: Vector3 = node.position
+	box.container_id = "%s/%s@%d_%d" % [str(meta.get("id", "interior")), kind,
+			roundi(at.x * 10.0), roundi(at.z * 10.0)]
+	var owner_npc := str(meta.get("resident", ""))
+	if owner_npc != "":
+		box.owner_npc = owner_npc
+	var table := str(TIER_LOOT.get(tier, ""))
+	# A wealthy house's ordinary chests are worth more than a poor one's best.
+	if tier == "common" and int(meta.get("wealth", 2)) >= 3:
+		table = str(TIER_LOOT["rich"])
+	box.loot_table = table
+	if LOCKED.has(kind):
+		box.locked = true
+		box.key_item = str(placement.get("key_item", ""))
+	# The prop is a mesh; the body that the interaction ray hits has to be the container's own,
+	# and it needs a shape or the ray goes straight through the chest.
+	var shape := CollisionShape3D.new()
+	var form := BoxShape3D.new()
+	form.size = _placeholder_size(kind)
+	shape.shape = form
+	shape.position.y = form.size.y * 0.5
+	box.add_child(shape)
+	node.add_child(box)
 
 
 ## Book props are the only ones worth walking across a room for, so they carry the book they
