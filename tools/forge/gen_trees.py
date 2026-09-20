@@ -291,6 +291,12 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
     # bark
     bark_kw = dict(spec.get("bark_kw", {}))
     bark_kw.setdefault("age", 0.4 + 0.4 * rng.random())
+    # Bark at the size of the tree it is on. Every bark material was fixed at one-metre
+    # features, which is right for a hawthorn and wrong for a thirty-metre giant oak: the
+    # fissures came out a thirtieth of the trunk's width and read as speckle rather than as
+    # bark. This is the same fault as the canopy and the branch angles -- one constant,
+    # stated once, correct at ordinary scale and hopeless past it.
+    bark_kw.setdefault("scale", max(1.0, (height / 9.0) ** 0.75))
     bark = M.by_name(spec["bark"], pal, **bark_kw)
     trunk.data.materials.clear()
     trunk.data.materials.append(bark)
