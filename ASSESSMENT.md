@@ -23,7 +23,7 @@ This one says what I think it is actually worth, where it is weak, and what I go
 
 ## The one thing I would tell you before anything else
 
-**Nine finished systems in this project had never once run.**
+**Fourteen finished systems in this project had never once run.**
 
 Not broken. Not half-built. Complete, correct, covered by passing tests, and never called by
 anything in the running game. The suite was green the entire time.
@@ -49,6 +49,35 @@ anything in the running game. The suite was green the entire time.
 * `teach_recipe` called a method `Crafting` has never had, so six craftable items had no way
   into a player's hands.
 
+Nine was the count after the first day's sweep. A second pass with the same two questions
+found five more, and there is no reason to think it is finished:
+
+* **The belt.** `Equipment` binds a quick slot, counts what is in the bag behind it, uses it,
+  saves it and tells the HUD; the HUD draws four slots and dims the empty ones. Both ends were
+  shut. The inventory screen offers Equip only to things `is_equippable()` calls equippable —
+  weapons and armour — so a potion got a Use button and nothing else, and at the other end the
+  quick keys read a *second* `quick_slots` array on the Player that nothing filled. Four dim
+  slots on screen read exactly like "you have nothing worth putting there".
+* **Finding places by going to them.** `GameState.discover()` had two callers: a dialogue
+  effect, and resting at a Hearthstone. You could walk the length of the country and arrive
+  with blank paper. The `surveyed:<place>` flag the map reads for its much wider reveal was set
+  by nothing outside the UI review's fake save, and the 90 authored `visible_from` sightlines
+  that DESIGN §4 mandates were read by no code at all.
+* **Work.** `JobBoard` and `JobStation` are complete, tested, self-placing nodes and **no file
+  in the project outside their own two scripts and the tests ever named either class.** There
+  was no notice post in any settlement and no bellows, mash tun or eel trap in eight kilometres
+  of country.
+* **Buying a house from the world.** `PropertySign` was placed by nothing; `deed_confirm.tscn`
+  was opened by nothing; and the screen's own Take-the-key was a *second implementation* of
+  buying a house that took the marks, set a flag `owns:<id>` that nothing else reads, and left
+  `PropertyRegistry.owns()` saying no. The journey passed throughout, because it calls `buy()`
+  directly — the one way in that a player cannot use.
+* **Shopping.** `Merchant` is the whole of DESIGN §5.14 — region, stock, disposition, Speech,
+  temper, what they deal in, what they can afford, and the Vale's refusal to serve the deeply
+  Hollow. The trade screen was handed an npc id and went looking for *"any Inventory that is
+  not the player's"*, so a shop opened against whatever bag was first in the scene tree at base
+  value times a flat multiplier. `buy_price_of` had ten passing tests and no caller.
+
 Every one was invisible because the fallback was plausible. A villager standing at their home
 place instead of their work spot looks like a schedule. A bare trunk looks like winter. A
 conversation that ends immediately looks like a terse NPC. **A green test suite tells you
@@ -57,8 +86,24 @@ of that I have seen. `tools/unwired.py` exists now to ask the question directly 
 anything outside a test ever call this?* — as a counterpart to `tools/dead_data.py`, which
 asks what the data promises that the code never reads. Run both before believing anything.
 
-If you continue this project, that is the habit to keep. It found more real defects in one
-day than any amount of additional test writing would have.
+The five in the second pass sharpen the lesson rather than repeating it. Three of them were
+found by a question narrower than "is this called?": **does anything place this in the world?**
+A `JobBoard` is not a function you forget to call, it is a node nobody puts anywhere, and no
+amount of reading `job_board.gd` tells you that. Two more were found by the opposite question —
+*is there a second implementation of this?* The deed screen and the trade screen had each
+quietly grown their own version of a system that already existed, and both versions passed
+their own tests.
+
+There is a third habit now, and it is the one I would insist on. **Write the test that presses
+the button.** Every one of the five had a passing test of the function underneath the button,
+and the button either did not exist or called something else. `test_inventory_screen.gd`,
+`test_job_board_screen.gd`, `test_deed_screen.gd` and `test_trade_screen.gd` find the control
+by the words on it, press it, and then ask the *system* — not the screen — whether anything
+happened. They are slower and clumsier than calling the function directly and they are the only
+kind of test that would have caught what was actually wrong.
+
+If you continue this project, those are the habits to keep. Between them they found more real
+defects in two days than any amount of additional test writing would have.
 
 ## What is genuinely good
 
@@ -191,16 +236,20 @@ In the order I would do them.
    now cross the pads.
 4. **Calibrate.** One playthrough with instrumentation gives you the economy curve, the
    difficulty curve and the pacing, and every guessed number in the content becomes a tuned one.
-5. **Keep running `unwired.py` and `dead_data.py`.** They found nine dead systems in a day and
-   there is no reason to believe they are finished.
+5. **Keep running `unwired.py` and `dead_data.py`, and keep asking the third question.** The
+   two tools ask what is never called and what the data promises that nothing reads. The third
+   is *what does nothing place in the world?* — it found three of the last five, because a
+   node nobody instantiates is invisible to both tools. Fourteen dead systems in two days, and
+   no reason to believe the list is finished.
 
 ## The honest summary
 
 This is a large, coherent, entirely original world with a great deal of specific writing in it,
 a generation pipeline that produces a landscape whose settlements sit where the land says they
 should, and every system in the design document implemented and tested. It is also a project in
-which nine of those systems had never once executed, which should tell you how much of "it is
-implemented" is worth without somebody going and looking.
+which fourteen of those systems had never once executed, found over two days by two people
+asking the same question, which should tell you how much of "it is implemented" is worth
+without somebody going and looking.
 
 What it is not yet is a game anybody has played. The systems are wired together now and the
 world is populated and the country reads as country. Whether it is any good is a question the

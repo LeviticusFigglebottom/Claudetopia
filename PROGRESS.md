@@ -4,7 +4,7 @@ _Updated 2026-09-19 (session 1)._
 
 ## State
 
-**1055 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
+**1066 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
 clean and sweeps all six regions and 34 places. The scripted journey passes all 15 of
 DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
 of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
@@ -346,6 +346,35 @@ re-investigates them:
 The distinction worth keeping: `visible_from` was **mandated by DESIGN §4 and read by nothing**,
 which is a dead feature. These six are data that describes the world without promising
 behaviour, which is not the same thing and should not be treated as one.
+
+## The shop traded against whatever bag was first in the scene tree
+
+`Merchant` is the whole of DESIGN §5.14, tested to the corners, and nothing a player can do
+ever reached it. It prices by region, stock on hand, disposition, your Speech, the shopkeeper's
+own temper and how Hollow you have become; it buys only what it deals in; when the till is
+short it buys what it can afford one unit at a time; and it turns a deeply Hollow customer
+away in a Vale village. `buy_price_of` had ten passing tests and no caller.
+
+The trade screen was handed an npc id and went looking for **"any Inventory that is not the
+player's"** — a bridge someone left in with a comment saying the economy stream would replace
+it, and nobody did. So a shop opened against whatever bag happened to be first in the scene
+tree, and priced everything at base value times a flat multiplier.
+
+`EconomyService.merchant_for()` finds the live shopkeeper behind an npc id now, and the screen
+hands buying and selling to them. The bag-to-bag path stays for chests, corpses and review
+scenes, which is what it was always for.
+
+Two smaller things found on the way:
+
+* **A loaded interior joins the `interior_root` group now.** The NPC streamer looked it up
+  there and fell back to matching the node's *name*. The fallback worked, so the name was
+  load-bearing: renaming it would have quietly emptied every house in the country of the
+  people who live in it, and nothing would have gone red.
+* **`HouseInterior._instance()` instantiated whatever `load()` returned.** A path that exists
+  is not a path that loads — a prop whose albedo was half-written came back null and three
+  script errors failed a smoke run that this function exists to survive. It draws the labelled
+  stand-in now and names the file that would not load, once. That named the file in one line:
+  a zero-byte texture on a new prop.
 
 ## Known issues
 
