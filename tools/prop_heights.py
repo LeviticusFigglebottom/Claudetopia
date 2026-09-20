@@ -104,6 +104,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tolerance", type=float, default=0.25,
                     help="fractional difference from the expected height before it is reported")
+    ap.add_argument("--floor", type=float, default=0.04,
+                    help="absolute difference in metres below which nothing is reported")
     a = ap.parse_args()
     want = expected()
     have = built()
@@ -116,6 +118,13 @@ def main() -> int:
             continue
         for slug, height in sorted(match_for(kind, have, subs)):
             off = (height - target) / target
+            # A fraction is the wrong measure at small scales: fourteen millimetres between a
+            # plate and a few coins is 70% and nobody will ever see it, while the same fraction
+            # on an anvil is the difference between working at your knuckles and at your knees.
+            # Both bars have to be cleared. (This is the forge's own recurring fault — a
+            # constant that is right at ordinary scale — turned on a measurement.)
+            if abs(height - target) < a.floor:
+                continue
             if abs(off) >= a.tolerance and (kind, slug) not in seen:
                 seen.add((kind, slug))
                 rows.append((abs(off), kind, slug, height, target, off))

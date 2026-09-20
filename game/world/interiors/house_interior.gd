@@ -441,9 +441,17 @@ func _instance(path: String, kind: String) -> Node3D:
 	return root
 
 
+## The box drawn when the forge has not built a prop yet — and, because it is the only written
+## record of how big these things are, the specification the mesh is checked against by
+## `tools/prop_heights.py`. So it has to describe *the object that will replace the box*, not
+## the idea of the object: a chair with a back on it is a metre tall even though its seat is at
+## 480 mm, and a hearth is the whole chimney breast even though the fire-opening is 1.4.
+## Where a kind resolves through `PropLibrary.STAND_IN`, the size is the one the stand-in will
+## actually draw, so a disagreement means a stand-in that lies about scale rather than a bad
+## number here.
 static func _placeholder_size(kind: String) -> Vector3:
 	match kind:
-		"forge", "bread_oven", "cook_hearth", "hearth": return Vector3(1.6, 1.4, 1.0)
+		"forge", "bread_oven", "cook_hearth", "hearth": return Vector3(1.6, 2.1, 1.0)
 		"anvil": return Vector3(0.8, 0.75, 0.4)
 		"bed": return Vector3(2.0, 0.55, 1.1)
 		"table", "long_table", "kneading_table", "prep_table": return Vector3(1.7, 0.78, 0.9)
@@ -451,13 +459,17 @@ static func _placeholder_size(kind: String) -> Vector3:
 		"bar", "counter": return Vector3(2.4, 1.05, 0.7)
 		"barrel", "mash_tun", "copper": return Vector3(0.7, 0.95, 0.7)
 		"chest", "deed_chest", "strongbox": return Vector3(0.95, 0.55, 0.5)
-		"stool", "chair": return Vector3(0.42, 0.48, 0.42)
+		"stool": return Vector3(0.42, 0.48, 0.42)
+		"chair": return Vector3(0.46, 1.06, 0.48)
 		"bench", "settle": return Vector3(1.9, 0.5, 0.45)
-		"shelf", "bread_shelf", "bottle_shelf", "ingredient_shelf", "tool_rack", "weapon_rack": return Vector3(1.6, 0.35, 0.32)
+		"shelf", "bread_shelf", "bottle_shelf", "ingredient_shelf", "tool_rack", "weapon_rack": return Vector3(1.6, 1.02, 0.32)
 		"millstone": return Vector3(2.0, 0.4, 2.0)
 		"cupboard", "sideboard": return Vector3(1.2, 1.4, 0.5)
-		"mug", "phial", "candle_stub", "jar", "coin_few": return Vector3(0.09, 0.13, 0.09)
-		"jug", "candlestick", "lantern", "inkpot", "mortar": return Vector3(0.14, 0.22, 0.14)
+		"mug", "phial", "candle_stub", "jar": return Vector3(0.09, 0.13, 0.09)
+		"coin_few": return Vector3(0.08, 0.02, 0.08)
+		"jug", "inkpot": return Vector3(0.16, 0.28, 0.16)
+		"lantern", "mortar": return Vector3(0.14, 0.22, 0.14)
+		"candlestick": return Vector3(0.12, 0.34, 0.12)
 		"bowl", "plate_stack", "loaf", "wrapped_loaf": return Vector3(0.2, 0.09, 0.2)
 		"book_single", "ledger", "roll_book", "paper_stack": return Vector3(0.22, 0.06, 0.16)
 		"boots", "small_boots": return Vector3(0.25, 0.18, 0.32)

@@ -88,3 +88,44 @@ func test_every_stand_in_points_at_something_built() -> void:
 			dead.append("%s -> %s" % [kind, substitute])
 	assert_true(dead.is_empty(),
 		"stand-ins pointing at a kind the forge never built: %s" % ", ".join(dead))
+
+
+## A stand-in that lies about *scale* is worse than a labelled box, because a box admits what
+## it is. A pair of boots drawn as a three-quarter-metre sack does not. `_placeholder_size` is
+## the written spec and `tools/prop_heights.py` is the full report; this is the ratchet that
+## stops the count climbing while the forge works through what is owed.
+const STAND_IN_SCALE_LIES := 7
+
+func test_no_more_stand_ins_lie_about_how_big_they_are() -> void:
+	var lib := PropLibrary.new()
+	lib.scan()
+	if lib.kinds_built() == 0:
+		return
+	var lies: Array[String] = []
+	# `_placeholder_size` falls through to a 0.35 m cube for anything nobody has written a
+	# size for. That is an honest "no opinion" and comparing a mesh against it says nothing —
+	# the first version of this test read 79 lies, and sixty of them were that fallback.
+	var no_opinion := HouseInterior._placeholder_size("nothing_is_called_this")
+	for kind in PropLibrary.STAND_IN:
+		var spec := HouseInterior._placeholder_size(str(kind))
+		if spec == no_opinion:
+			continue
+		var wanted := spec.y
+		if wanted <= 0.0:
+			continue
+		var path := lib.resolve(str(kind))
+		if path.is_empty():
+			continue
+		var meta_path := path.replace(".glb", ".meta.json")
+		if not FileAccess.file_exists(meta_path):
+			continue
+		var meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+		var got := float(meta.get("bounds", {}).get("height", 0.0))
+		if got <= 0.0 or absf(got - wanted) < 0.04:
+			continue
+		if absf(got - wanted) / wanted >= 0.25:
+			lies.append("%s %.2f m for a %.2f m thing" % [kind, got, wanted])
+	print("  stand-ins that lie about scale: %d (%s)" % [lies.size(), ", ".join(lies.slice(0, 4))])
+	assert_true(lies.size() <= STAND_IN_SCALE_LIES,
+		"%d stand-ins lie about scale, up from %d: %s"
+			% [lies.size(), STAND_IN_SCALE_LIES, ", ".join(lies)])
