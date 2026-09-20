@@ -94,6 +94,19 @@ the roof slabs tilted into open wings, the leg-of-mutton sleeves, the 434 white 
 the downs, the camera inside a hawthorn. None of them would have been caught by a metric, and
 two of them were caught *against* a metric that said the geometry was fine.
 
+The sharpest statement of this came from the person who built the forge, about their own work,
+and it is worth quoting: **the forge had no bug that a careful reading would have caught, and
+none that a screenshot did not.** Their four were a two-mesh asset handed to a one-mesh API,
+`attractUp` set negative in all fifteen species tables, a bark feature size fixed at one metre,
+and a rock noise scale that divided by radius so that larger rocks got finer noise. Every one
+is defensible line by line and obvious the moment it is drawn.
+
+There is a corollary worth keeping. When I named that pattern to them — a constant that is
+right at ordinary scale and hopeless past it — they did not agree with me, they went and
+audited all 43 material builders and found fourteen more instances, four of them barks they had
+already fixed for one hero asset and left everywhere else. Naming a class of fault is only
+useful if somebody then goes looking for the rest of the class.
+
 ## What is weak, or absent
 
 **The drop test does not pass, and half of it cannot yet be measured.** Colour separates the
