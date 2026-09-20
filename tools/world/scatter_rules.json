@@ -73,7 +73,7 @@
       "kind": "bush",
       "near_hedge": [
         0.0,
-        3.4,
+        5.0,
         0.86
       ]
     },
@@ -621,10 +621,10 @@
         "asset": "rocks/chalk_boulder",
         "density": 2.0,
         "scale": [
-          0.8,
-          1.6
+          0.6,
+          1.2
         ],
-        "slope_min": 0.3
+        "slope_min": 0.22
       }
     ],
     "lake_basin": [
@@ -642,21 +642,21 @@
       },
       {
         "asset": "rocks/black_stone_shard",
-        "density": 2.5,
+        "density": 1.12,
         "scale": [
-          0.7,
-          1.5
+          0.45,
+          0.85
         ],
-        "slope_min": 0.2
+        "slope_min": 0.55
       }
     ],
     "delta": [
       {
         "asset": "rocks/sunken_masonry",
-        "density": 1.6,
+        "density": 0.72,
         "scale": [
-          0.9,
-          1.8
+          0.45,
+          0.85
         ],
         "slope_max": 0.3
       },
@@ -688,27 +688,28 @@
       },
       {
         "asset": "rocks/granite_slab",
-        "density": 3.0,
+        "density": 1.35,
         "scale": [
-          0.9,
-          1.9
+          0.45,
+          0.85
         ],
-        "slope_min": 0.3
+        "slope_min": 0.55
       }
     ],
     "mountains": [
       {
         "asset": "rocks/limestone_clint",
-        "density": 12.0,
+        "density": 5.4,
         "scale": [
-          0.7,
-          1.7
+          0.45,
+          0.85
         ],
         "slope_max": 0.4,
         "height": [
           160,
           520
-        ]
+        ],
+        "slope_min": 0.55
       },
       {
         "asset": "rocks/scree_rubble",
@@ -735,11 +736,12 @@
     "ash_plateau": [
       {
         "asset": "rocks/fused_block",
-        "density": 4.0,
+        "density": 1.8,
         "scale": [
-          0.8,
-          1.7
-        ]
+          0.45,
+          0.85
+        ],
+        "slope_min": 0.55
       },
       {
         "asset": "rocks/ash_drift",

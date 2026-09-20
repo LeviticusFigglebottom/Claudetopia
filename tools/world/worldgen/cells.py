@@ -72,7 +72,9 @@ ASSET_ALIASES = {
     # the region that owns them. "rocks/bone" is deliberately a prefix: it catches every bone
     # kind Skerrow has, so the giants' remains are fingers and ribs and skulls, not one bone.
     "rocks/flint_nodule": "rocks/boulder",
-    "rocks/chalk_boulder": "rocks/cliff_slab",
+    # a chalk boulder is a boulder: the forge's cliff_slab is a 6.5 m upright slab, and
+    # scattering that across rolling downland puts white monoliths on a lawn
+    "rocks/chalk_boulder": "rocks/boulder",
     "rocks/shore_cobble": "rocks/boulder",
     "rocks/black_stone_shard": "rocks/cliff_slab",
     "rocks/sunken_masonry": "rocks/cliff_slab",

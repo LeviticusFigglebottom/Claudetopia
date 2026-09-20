@@ -196,7 +196,10 @@ def _weights(ctx: SurfaceContext):
     # length, and a verge wide enough to be seen.
     # Along every field boundary there is a strip the plough never reaches: rough grass, nettles
     # and the foot of a hedge. It is what makes the patchwork visible from a hilltop.
-    hedge_line = np.exp(-(ctx.field_d / 3.2) ** 2)
+    # wide enough to survive being seen from a kilometre away: a hedge, its bank and the
+    # strip either side of it that the plough never reaches is six or seven metres, and
+    # at 2 m texels anything narrower is a line that disappears at any distance
+    hedge_line = np.exp(-(ctx.field_d / 6.5) ** 2)
 
     road_t = ctx.road_t()
     out_town = 1.0 - ctx.town
@@ -208,14 +211,14 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat + 0.9 * hedge_line) \
         + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band) \
         + basin * 0.8 * hedge_line
-    yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(70.0, 105.0, H) * dry * ctx.patch(401)) \
+    yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * smoothstep(-400.0, -1200.0, ctx.Z) \
         + downs * out_town * 2.2 * worn
     # Crops go in by the field. A parcel carries barley or it does not, all the way to its
     # hedge; a noise blob that runs across three fields and stops in the middle of a fourth is
     # the thing that makes farmed country read as wallpaper.
     sown = smoothstep(0.52, 0.62, ctx.parcel(402)) * (1.0 - hedge_line)
-    yield SLOTS["barley"], downs * 1.7 * sown * flat * dry * (1.0 - smoothstep(75.0, 95.0, H)) \
+    yield SLOTS["barley"], downs * 1.7 * sown * flat * dry * (1.0 - smoothstep(128.0, 154.0, H)) \
         * (0.7 + 0.5 * ctx.patch(403, 30, 140))
     yield SLOTS["orchard_grass"], downs * 1.25 * ctx.near_place({"tamwick", "merrowby"}, 210.0) * flat \
         + basin * (0.7 * ctx.near_place({"gullhithe"}, 170.0) * flat
@@ -258,7 +261,7 @@ def _weights(ctx: SurfaceContext):
         * (1.0 - smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 40.0, H))
     yield SLOTS["scree"], karst * (1.9 * steep + 1.1 * smoothstep(0.55, 1.1, s) * smoothstep(250.0, 420.0, H))
     yield SLOTS["heather"], karst * 2.1 * flat * ctx.patch(407, 70, 300) ** 0.8 * smoothstep(110.0, 210.0, H) \
-        * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(78.0, 98.0, H) \
+        * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(120.0, 146.0, H) \
         + basin * 0.75 * ctx.patch(407, 70, 300) ** 1.6 * smoothstep(16.0, 40.0, H)
     yield SLOTS["snow"], 2.6 * smoothstep(SNOW_LINE - 40.0, SNOW_LINE + 70.0, H) * (1.0 - 0.6 * verysteep)
 
@@ -395,12 +398,15 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     # and throws a little pale dust onto the verge; the wheel tracks stay darker and damper.
     # Along every field boundary there is a strip the plough never reaches: rough grass, nettles
     # and the foot of a hedge. It is what makes the patchwork visible from a hilltop.
-    hedge_line = np.exp(-(ctx.field_d / 3.2) ** 2)
+    # wide enough to survive being seen from a kilometre away: a hedge, its bank and the
+    # strip either side of it that the plough never reaches is six or seven metres, and
+    # at 2 m texels anything narrower is a line that disappears at any distance
+    hedge_line = np.exp(-(ctx.field_d / 6.5) ** 2)
 
     # A hedge and its shadow are darker than the field either side, and that single dark line
     # is what tells a hilltop view that the country is farmed.
-    hedge = np.exp(-(ctx.field_d / 2.6) ** 2) * (0.55 + 0.75 * ctx.patch(419, 12, 60))
-    rgba[..., :3] *= (1.0 - 0.16 * np.clip(hedge, 0.0, 1.0))[..., None]
+    hedge = np.exp(-(ctx.field_d / 5.0) ** 2) * (0.55 + 0.75 * ctx.patch(419, 12, 60))
+    rgba[..., :3] *= (1.0 - 0.30 * np.clip(hedge, 0.0, 1.0))[..., None]
 
     road_t = ctx.road_t()
     out_town = 1.0 - ctx.town

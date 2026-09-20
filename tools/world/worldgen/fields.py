@@ -29,7 +29,7 @@ from .noise import upsample
 
 
 def field_map(grid: Grid, bank, owner: np.ndarray, regions: list, shapes=("downs", "lake_basin"),
-              spacing_m: float = 165.0, warp_m: float = 55.0, salt: int = 820,
+              spacing_m: float = 150.0, warp_m: float = 26.0, salt: int = 820,
               work_n: int = 2048) -> tuple:
     """Returns (labels int32, edge_d float32) at the full grid resolution.
 

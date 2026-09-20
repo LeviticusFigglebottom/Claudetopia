@@ -108,14 +108,19 @@ def build_plan() -> dict:
         cx, cz = lx + math.cos(ang) * dist, lz + math.sin(ang) * dist
         cam_h = max(hh.at(cx, cz), lh) + 55.0
         shots.append(shot("%s_landmark" % short, (cx, cam_h, cz), (lx, lh + 8.0, lz), 58.0, hour, weather, 1.0, region_id))
-        # 2. a vista from the highest ground near the region's viewpoint, over the settlement
+        # 2. a vista from the highest ground near the region's viewpoint, over the settlement.
+        # Eye height on the hill, not forty-eight metres above it: from a drone every region
+        # is a hazy panorama with the same composition, and the thing that tells a marsh from a
+        # downland is its own near ground filling the bottom of the frame and its own skyline
+        # cutting the top. That is the shot a person standing there actually gets.
         vp = places[vista]
         vx, vz = float(vp["position"][0]), float(vp["position"][1])
         hx, hz, hy = hh.high_point(vx, vz, 600.0)
         tx, tz = float(places[settlement]["position"][0]), float(places[settlement]["position"][1])
         # look at a point part-way to the settlement so the near ground is in frame too
-        mx, mz = hx + (tx - hx) * 0.45, hz + (tz - hz) * 0.45
-        shots.append(shot("%s_vista" % short, (hx, hy + 48.0, hz), (mx, hh.at(mx, mz), mz), 68.0, hour, weather, 1.0, region_id))
+        mx, mz = hx + (tx - hx) * 0.35, hz + (tz - hz) * 0.35
+        shots.append(shot("%s_vista" % short, (hx, hy + 12.0, hz), (mx, hh.at(mx, mz) + 6.0, mz),
+                          62.0, hour, weather, 1.0, region_id))
         # 3. the approach to the settlement, 420 m out and 28 m up, looking down on it
         sx, sz = tx, tz
         a2 = math.atan2(hz - sz, hx - sx)

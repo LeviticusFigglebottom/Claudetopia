@@ -24,15 +24,15 @@
    "region": "core:region/hearthvale",
    "pos": [
     1523.0,
-    113.8,
+    77.8,
     2896.4
    ],
    "look_at": [
-    1242.6,
-    64.5,
-    2650.5
+    1304.9,
+    69.9,
+    2705.1
    ],
-   "fov": 68.0,
+   "fov": 62.0,
    "time": 9.0,
    "weather": "core:weather/clear",
    "fog_scale": 1.0
@@ -78,15 +78,15 @@
    "region": "core:region/brightwater",
    "pos": [
     1867.5,
-    185.6,
+    149.6,
     -1673.9
    ],
    "look_at": [
-    1702.1,
-    36.7,
-    -1325.6
+    1738.8,
+    43.4,
+    -1403.0
    ],
-   "fov": 68.0,
+   "fov": 62.0,
    "time": 12.0,
    "weather": "core:weather/clear",
    "fog_scale": 1.0
@@ -132,15 +132,15 @@
    "region": "core:region/sedgemire",
    "pos": [
     -2445.1,
-    53.3,
+    17.3,
     -1970.9
    ],
    "look_at": [
-    -2649.8,
-    5.0,
-    -1309.0
+    -2604.3,
+    9.5,
+    -1456.1
    ],
-   "fov": 68.0,
+   "fov": 62.0,
    "time": 7.5,
    "weather": "core:weather/overcast",
    "fog_scale": 1.0
@@ -186,15 +186,15 @@
    "region": "core:region/briarwold",
    "pos": [
     3938.2,
-    409.4,
+    373.4,
     1872.1
    ],
    "look_at": [
-    3201.0,
-    204.6,
-    1524.6
+    3364.8,
+    218.1,
+    1601.8
    ],
-   "fov": 68.0,
+   "fov": 62.0,
    "time": 10.5,
    "weather": "core:weather/still",
    "fog_scale": 1.0
@@ -240,15 +240,15 @@
    "region": "core:region/skerrow",
    "pos": [
     682.4,
-    722.6,
+    686.6,
     -4101.0
    ],
    "look_at": [
-    555.3,
-    388.1,
-    -3470.6
+    583.6,
+    508.4,
+    -3610.7
    ],
-   "fov": 68.0,
+   "fov": 62.0,
    "time": 14.0,
    "weather": "core:weather/clear_cold",
    "fog_scale": 1.0
@@ -294,15 +294,15 @@
    "region": "core:region/cinderlea",
    "pos": [
     -2863.0,
-    168.4,
+    132.4,
     3021.4
    ],
    "look_at": [
-    -2249.6,
-    71.5,
-    2651.8
+    -2385.9,
+    66.3,
+    2733.9
    ],
-   "fov": 68.0,
+   "fov": 62.0,
    "time": 16.5,
    "weather": "core:weather/dry_wind",
    "fog_scale": 1.0
