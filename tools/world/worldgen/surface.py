@@ -219,7 +219,13 @@ def _weights(ctx: SurfaceContext):
     # Crops go in by the field. A parcel carries barley or it does not, all the way to its
     # hedge; a noise blob that runs across three fields and stops in the middle of a fourth is
     # the thing that makes farmed country read as wallpaper.
-    sown = smoothstep(0.52, 0.62, ctx.parcel(402)) * (1.0 - hedge_line)
+    # About a quarter of parcels carry a crop and a few more are bare under the plough. A
+    # patchwork of two values reads as a chequerboard; the third value -- turned earth -- is
+    # what makes it read as a year's work in progress.
+    parcel = ctx.parcel(402)
+    sown = smoothstep(0.70, 0.79, parcel) * (1.0 - hedge_line)
+    ploughed = smoothstep(0.60, 0.67, parcel) * (1.0 - smoothstep(0.67, 0.72, parcel)) \
+        * (1.0 - hedge_line)
     yield SLOTS["barley"], downs * 1.7 * sown * flat * dry * (1.0 - smoothstep(128.0, 154.0, H)) \
         * (0.7 + 0.5 * ctx.patch(403, 30, 140))
     yield SLOTS["orchard_grass"], downs * 1.25 * ctx.near_place({"tamwick", "merrowby"}, 210.0) * flat \
@@ -285,7 +291,8 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["grey_grass"], ash * (0.75 + 1.5 * flat * ctx.patch(408, 80, 320) ** 0.7)
 
     # --- roads everywhere ---------------------------------------------------------------
-    yield SLOTS["dirt_path"], out_town * (3.0 * carriage + 0.85 * verge) \
+    yield SLOTS["dirt_path"], downs * 1.5 * ploughed * flat * (0.75 + 0.5 * ctx.patch(421, 6, 30)) \
+        + out_town * (3.0 * carriage + 0.85 * verge) \
         + 1.4 * ctx.pad * out_town * (1.0 - steep) * ctx.patch(409, 30, 120) \
         + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.82, 0.0, 1.0) * 1.4 * (1.0 - flat * 0.4)
 
