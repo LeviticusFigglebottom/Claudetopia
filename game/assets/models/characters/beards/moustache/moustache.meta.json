@@ -16,7 +16,7 @@
   "material": "hair"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 6641,
+ "seed": 4096,
  "slot_hint": "attachment",
  "tris": [
   900,
