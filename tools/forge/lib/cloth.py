@@ -62,6 +62,23 @@ def near_bones(skel: Skeleton, bones: Sequence[str], radius: float, soft: float 
     return fn
 
 
+def near_segments(segs: Sequence[Tuple[np.ndarray, np.ndarray]], radius: float,
+                  soft: float = 0.03) -> RegionFn:
+    """1 near any of the given segments.  Like `near_bones`, but on arbitrary points, for
+    when a region has to start part of the way down a bone rather than at its head."""
+    pairs = [(np.asarray(a, float), np.asarray(b, float)) for a, b in segs]
+
+    def fn(P):
+        d = np.full(len(P), 1e6)
+        for a, t in pairs:
+            ab = t - a
+            l2 = max(float(np.dot(ab, ab)), 1e-9)
+            u = np.clip(((P - a) @ ab) / l2, 0.0, 1.0)
+            np.minimum(d, np.linalg.norm(P - (a + u[:, None] * ab), axis=1), out=d)
+        return 1.0 - sdf_smoothstep(radius - soft, radius + soft, d)
+    return fn
+
+
 def region_or(*fns: RegionFn) -> RegionFn:
     def fn(P):
         out = np.zeros(len(P))
@@ -602,10 +619,22 @@ def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
     chest = float(skel.J["Chest"][2])
     waist = float(skel.J["Spine"][2])
     hip = float(skel.J["UpperLeg.L"][2])
-    reg = region_and(band_z(hip + 0.02 * s, float(skel.J["Neck"][2]) - 0.01 * s, 0.018 * s),
-                     region_not(near_bones(skel, ["UpperArm.L", "UpperArm.R"], 0.085 * s, 0.03 * s)))
+    # The arm used to be excluded from the REGION, by an 85 mm capsule around the whole
+    # upper-arm bone.  That carved the shoulder and the outer chest off the breastplate --
+    # an armoured man bare from the collarbone out, which reads as unfinished rather than as
+    # a style -- and any region boundary on a limb ends in a flat flange anyway, because
+    # `offset_shell` cuts perpendicular to nothing.  The plate now covers the shoulder and a
+    # rounded armhole is CARVED out of it below, which is how a cuirass is actually shaped.
+    reg = band_z(hip + 0.02 * s, float(skel.J["Neck"][2]) - 0.01 * s, 0.018 * s)
     sc.union(offset_shell(body, reg, 0.016 * s, gap=0.014 * s,
                           bounds=zbox(skel, hip - 0.16 * s, float(skel.J["Neck"][2]) + 0.04 * s, xy=0.30)))
+    for side, sx in (("L", 1), ("R", -1)):
+        sh = skel.J["UpperArm.%s" % side]
+        el = skel.J["LowerArm.%s" % side]
+        d = (el - sh) / max(float(np.linalg.norm(el - sh)), 1e-6)
+        sc.subtract(sdf.capsule(sh + d * 0.052 * s + np.array([sx * 0.030 * s, 0.0, 0.0]),
+                                sh + d * 0.46 * float(np.linalg.norm(el - sh)) + np.array([sx * 0.070 * s, 0.0, 0.0]),
+                                0.082 * s), k=0.018 * s)
     # a breastplate keel and a raised neck edge
     sc.union(sdf.loft([
         (np.array([0.0, -0.128 * s, chest + 0.085 * s]), 0.070 * s, 0.020 * s),
@@ -620,16 +649,19 @@ def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
             d = np.array([math.cos(a), math.sin(a) * 0.78, 0.0])
             sc.union(sdf.sphere(d * 0.175 * s + np.array([0, 0, z]), 0.0075 * s), k=0.004 * s)
     else:
-        for i in range(3):
-            z = waist - 0.01 * s - i * 0.045 * s
-            sc.union(sdf.loft([
-                (np.array([0.0, 0.0, z]), (0.175 + 0.008 * i) * s, (0.132 + 0.006 * i) * s),
-                (np.array([0.0, 0.0, z - 0.030 * s]), (0.180 + 0.008 * i) * s, (0.136 + 0.006 * i) * s),
-            ], LEFT, axis=UP), k=0.010 * s)
-            sc.subtract(sdf.loft([
-                (np.array([0.0, 0.0, z + 0.004 * s]), (0.162 + 0.008 * i) * s, (0.120 + 0.006 * i) * s),
-                (np.array([0.0, 0.0, z - 0.034 * s]), (0.168 + 0.008 * i) * s, (0.124 + 0.006 * i) * s),
-            ], LEFT, axis=UP), k=0.004 * s)
+        z_top = waist - 0.005 * s
+        z_bot = z_top - 0.135 * s
+        sc.union(sdf.loft([
+            (np.array([0.0, 0.0, z_top]), 0.172 * s, 0.130 * s),
+            (np.array([0.0, 0.0, (z_top + z_bot) * 0.5]), 0.186 * s, 0.140 * s),
+            (np.array([0.0, 0.0, z_bot]), 0.196 * s, 0.148 * s),
+        ], LEFT, axis=UP), k=0.014 * s)
+        # two scored lines, which is all a lamellar fauld needs to read as layered
+        for i in range(2):
+            zr = z_top - (0.045 + 0.045 * i) * s
+            sc.subtract(sdf.tube_path(_ring((0.180 + 0.008 * i) * s, (0.136 + 0.006 * i) * s, zr),
+                                      0.0055 * s), k=0.006 * s)
+        sc.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]), k=0.004 * s)
     return Garment("brigandine" if brigandine else "plate_torso", sc, spacing=0.0075,
                    target_tris=4000, material="iron")
 
