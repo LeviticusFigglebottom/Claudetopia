@@ -14,6 +14,16 @@ extends RefCounted
 const ROOT := "res://assets/models/props"
 const REGIONS := ["hearthvale", "brightwater", "sedgemire", "briarwold", "skerrow", "cinderlea"]
 
+## An interior knows its culture; the forge names its output by region. Callers were handing
+## `resolve()` a culture ("reedfolk") where it wanted a region, which is not an error the
+## function can see: it falls through to "any region at all" and answers with a plausible
+## barrel from somewhere else entirely. Translating here means neither caller has to know.
+## `test_prop_library.gd` asserts this is the exact inverse of `Settlement.CULTURE_BY_REGION`.
+const REGION_BY_CULTURE := {
+	"vale": "hearthvale", "lakefolk": "brightwater", "reedfolk": "sedgemire",
+	"woodfolk": "briarwold", "clans": "skerrow", "pilgrims": "cinderlea",
+}
+
 ## Things the forge does not build under that exact name, and what to use instead. The
 ## substitute has to make sense in the room, not merely fill the hole: a tally stick is a
 ## scroll, but a kneading table is a table, not a workbench from another trade.
@@ -94,6 +104,7 @@ func scan() -> void:
 func resolve(kind: String, region_id := "", variant := 0) -> String:
 	scan()
 	var region := Ids.name_of(region_id) if region_id.contains("/") else region_id
+	region = str(REGION_BY_CULTURE.get(region, region))
 	for candidate in [kind, str(STAND_IN.get(kind, ""))]:
 		if candidate.is_empty() or not _index.has(candidate):
 			continue

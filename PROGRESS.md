@@ -227,6 +227,43 @@ keeping in this shape because the measurements are all here:
   re-measure. The other three contacts for reference — Work_Chop z 0.910 / 64%, Work_Dig
   z 0.808 / 85%, Work_Stir z 1.230 / 88%.
 
+## Why the smith has no hammer: eleven tools pointed at one that was never built
+
+The hammer above is not a single oversight. Following it out with `tools/prop_heights.py`
+gives the shape of the whole gap, measured rather than guessed:
+
+* **54 of 516 prop placements across the 15 shipping house interiors draw a labelled box**
+  rather than a mesh — 10%. Worst are the two smithies and the lodge: Hallam's forge 9 of 38,
+  Alder's antler lodge 8 of 45, Osric's smithy 7 of 34, the Toll's Lip inn 7 of 50.
+* **Seventeen kinds have nothing to draw, but they are not seventeen gaps.** Ten of them are
+  dead substitution chains in `PropLibrary.STAND_IN`: `hammer`, `chisel`, `punch`, `file`,
+  `knife`, `whetstone` and `bung_mallet` all point at `tongs`, `ladle` and `flour_scoop` at
+  `spoon`, `rag` and `oil_rag` at `cloth`, `scythe` at `pitchfork` — and **`tongs`, `spoon`,
+  `cloth` and `pitchfork` were never built**. Three meshes close fifteen of the seventeen
+  kinds and fifty of the fifty-four placements. A stand-in pointing at nothing is worse than
+  no stand-in: it reads as coverage in the source and delivers none in the room.
+* `test_prop_library.test_every_stand_in_points_at_something_built` **is red on purpose** and
+  names all twelve dead chains. It stays red until the forge lands the meshes. It is the test
+  that would have caught this the day the map was written, and it did not exist.
+* **The per-region material system has almost nothing to choose between.** 53 prop kinds are
+  built; exactly three (`barrel`, `basket`, `crate`) exist in more than one region. Hearthvale
+  has 35 of them, Brightwater 8, Sedgemire 6, Cinderlea 5, Skerrow 2, and **Briarwold none at
+  all** — every prop in a woodfolk house is borrowed.
+* **`HouseInterior._instance()` was handing `resolve()` a culture where it wants a region.**
+  `resolve("barrel", "vale")` returned `brightwater_barrel_a`; `resolve("barrel",
+  "hearthvale")` returns `hearthvale_barrel_a`. Not an error the function can see — it falls
+  through to "any region at all" and answers with a perfectly good barrel from the wrong part
+  of the country. `PropLibrary` now translates culture to region itself, so neither caller has
+  to know, and a test asserts the map is the exact inverse of `Settlement.CULTURE_BY_REGION`.
+  This bites on three kinds today and on every kind the forge adds from now on.
+
+One correction to the record, because it was nearly written down: an earlier pass through this
+counted **127 of 516 placements with no mesh**, and then a larger one. Both were wrong. They
+were computed without reading `STAND_IN` at all, so every kind that resolves through a
+substitute was counted as missing. `tools/prop_heights.py` now reads the map out of the
+GDScript and follows `resolve()`'s own rule — the kind, then its stand-in, and nothing looser.
+The real number is 54.
+
 ## Known issues
 
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.
