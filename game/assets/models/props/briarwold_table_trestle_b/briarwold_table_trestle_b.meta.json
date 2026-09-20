@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.834,
+  "max": [
+   1.048,
+   0.834,
+   0.429
+  ],
+  "min": [
+   -1.048,
+   0.0,
+   -0.425
+  ],
+  "radius": 1.206
+ },
+ "built_seconds": 18.51,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "briarwold_table_trestle_b.glb",
+ "hash": "8d3445261d18da59",
+ "kind": "table_trestle",
+ "materials": [
+  "briarwold_table_trestle_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_table_trestle_b",
+   "tris": 1956
+  },
+  {
+   "name": "briarwold_table_trestle_b_LOD1",
+   "tris": 780
+  },
+  {
+   "name": "briarwold_table_trestle_b_LOD2",
+   "tris": 292
+  }
+ ],
+ "name": "briarwold_table_trestle_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 7856,
+ "textures": [
+  "briarwold_table_trestle_b_albedo.png",
+  "briarwold_table_trestle_b_normal.png",
+  "briarwold_table_trestle_b_orm.png"
+ ],
+ "tris": [
+  1956,
+  780,
+  292
+ ],
+ "version": 3
+}

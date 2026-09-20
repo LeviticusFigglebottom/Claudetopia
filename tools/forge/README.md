@@ -109,6 +109,34 @@ python3 tools/forge/tests/run.py --fast   # pure Python only, no Blender
   foliage materials are named `*_foliage` and `tools_gd/glb_post_import.gd` swaps in
   `assets/shaders/foliage_wind.gdshader`.
 
+## The scale constant: the forge's one recurring bug
+
+Three times now the same fault has shipped, and every time it was invisible in the code and
+obvious in the first render: **a number that is a length in metres, written as a constant,
+used at a size it was never chosen for.** A bark feature size fixed at one metre. A rock's
+noise scale divided by its radius. And, when the forge first made things small enough to
+hold:
+
+* `wood_planks` bumps its normal over an absolute 15 mm. On a table top that is grain; on a
+  16 mm hammer haft it is a screw thread. `relief` scales it.
+* `wood_planks` lays its grain down as a wave banding every `scale`/22.5 metres. `scale` is
+  the feature size, so shrinking it makes the rings *finer*, never fewer: a 0.55 m scale on
+  a 1.4 m spear shaft is fifty-odd rings around a stick. `grain` divides that frequency,
+  and it is the one that survived the first fix, because the rings are in the albedo and
+  `relief` only touches the normal.
+* `lake_stone` bumps its bedding over an absolute 40 mm. On a boulder that is a soft swell;
+  on a 40 mm whetstone it is a flight of steps, and the hone came out as stacked slate.
+* `paint_blocks` works the other way. It lays three tones down over `scale` × 1.43 metres,
+  so a scale near the object's own size drops the whole object on one arbitrary stop of the
+  ramp and it bakes out flat.
+
+Every one of these is a parameter now, defaulting to the value that keeps existing assets
+byte-identical, so there is no excuse for the fourth. The rule when adding a material
+parameter that is a length: **either it scales with `scale`, or it takes a multiplier and
+the docstring says what size it was chosen for.**
+
+And the way you find it is to look. A contact sheet you did not open is worth nothing.
+
 ## Unwrapping: one strategy does not fit every shape
 
 `bake.unwrap` takes a mode, and generators choose it, because the default is wrong for

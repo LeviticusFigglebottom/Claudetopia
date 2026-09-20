@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 0.784,
+  "max": [
+   0.401,
+   0.784,
+   0.096
+  ],
+  "min": [
+   -0.401,
+   0.0,
+   -0.099
+  ],
+  "radius": 0.569
+ },
+ "built_seconds": 6.91,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_shield_b.glb",
+ "hash": "2e1ad16af1aeebcb",
+ "kind": "shield",
+ "materials": [
+  "hearthvale_shield_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_shield_b",
+   "tris": 2330
+  },
+  {
+   "name": "hearthvale_shield_b_LOD1",
+   "tris": 932
+  },
+  {
+   "name": "hearthvale_shield_b_LOD2",
+   "tris": 348
+  }
+ ],
+ "name": "hearthvale_shield_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7432,
+ "textures": [
+  "hearthvale_shield_b_albedo.png",
+  "hearthvale_shield_b_normal.png",
+  "hearthvale_shield_b_orm.png"
+ ],
+ "tris": [
+  2330,
+  932,
+  348
+ ],
+ "version": 3
+}

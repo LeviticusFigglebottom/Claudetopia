@@ -48,8 +48,12 @@ const STAND_IN := {
 	"washstand": "table_trestle", "loom": "table_trestle", "spinning_wheel": "stool",
 	"cradle": "basket", "mending_basket": "basket", "kindling_basket": "basket",
 	"crumb_bowl": "plate", "dog_bowl": "plate", "bowl": "plate", "plate_stack": "plate",
-	"loaf_tin": "plate", "wrapped_loaf": "plate", "bread_heel": "plate", "cheese_end": "plate",
-	"onion": "plate", "dough_ball": "plate", "pan": "cooking_pot", "pot": "cooking_pot",
+	# Bread has its own mesh now. A wrapped loaf, the heel of one and a ball of proved
+	# dough are all loaf-shaped and were all standing in as a 34 mm plate -- a quarter of
+	# the height each of them is written down as. An empty loaf tin is not bread and keeps
+	# the plate.
+	"loaf_tin": "plate", "wrapped_loaf": "loaf", "bread_heel": "loaf", "cheese_end": "plate",
+	"onion": "plate", "dough_ball": "loaf", "pan": "cooking_pot", "pot": "cooking_pot",
 	"book_single": "book", "ledger": "book", "roll_book": "book", "paper_stack": "scroll",
 	"tally_stick": "scroll", "tally_sticks": "scroll", "quill": "scroll", "seal": "scroll",
 	"candle_stub": "candle", "lantern": "lantern_standing", "banked_embers": "campfire",

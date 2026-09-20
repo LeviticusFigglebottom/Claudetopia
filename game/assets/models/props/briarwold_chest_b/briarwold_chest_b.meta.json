@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.517,
+  "max": [
+   0.458,
+   0.517,
+   0.575
+  ],
+  "min": [
+   -0.458,
+   0.0,
+   -0.28
+  ],
+  "radius": 0.678
+ },
+ "built_seconds": 26.39,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "briarwold_chest_b.glb",
+ "hash": "ed37fe5c3b367527",
+ "kind": "chest",
+ "materials": [
+  "briarwold_chest_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_chest_b",
+   "tris": 1788
+  },
+  {
+   "name": "briarwold_chest_b_LOD1",
+   "tris": 714
+  },
+  {
+   "name": "briarwold_chest_b_LOD2",
+   "tris": 268
+  }
+ ],
+ "name": "briarwold_chest_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 8068,
+ "textures": [
+  "briarwold_chest_b_albedo.png",
+  "briarwold_chest_b_normal.png",
+  "briarwold_chest_b_orm.png"
+ ],
+ "tris": [
+  1788,
+  714,
+  268
+ ],
+ "version": 3
+}

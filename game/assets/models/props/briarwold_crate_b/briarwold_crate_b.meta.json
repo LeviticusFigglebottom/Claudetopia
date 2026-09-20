@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.629,
+  "max": [
+   0.406,
+   0.629,
+   0.375
+  ],
+  "min": [
+   -0.406,
+   0.0,
+   -0.375
+  ],
+  "radius": 0.636
+ },
+ "built_seconds": 13.31,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "briarwold_crate_b.glb",
+ "hash": "cc76fbd73b17b7a0",
+ "kind": "crate",
+ "materials": [
+  "briarwold_crate_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_crate_b",
+   "tris": 2376
+  },
+  {
+   "name": "briarwold_crate_b_LOD1",
+   "tris": 948
+  },
+  {
+   "name": "briarwold_crate_b_LOD2",
+   "tris": 354
+  }
+ ],
+ "name": "briarwold_crate_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 8227,
+ "textures": [
+  "briarwold_crate_b_albedo.png",
+  "briarwold_crate_b_normal.png",
+  "briarwold_crate_b_orm.png"
+ ],
+ "tris": [
+  2376,
+  948,
+  354
+ ],
+ "version": 3
+}

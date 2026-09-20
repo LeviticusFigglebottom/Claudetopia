@@ -216,8 +216,16 @@ def save_png(arr: np.ndarray, path, size: int | None = None) -> None:
     im = Image.fromarray(arr)
     if size and size != im.size[0]:
         im = im.resize((size, size), Image.LANCZOS)
+    # Written to a neighbour and moved into place, so the destination either holds the last
+    # good map or the new one and never half of one. PIL truncates the file it is given
+    # before it writes a byte, so a build killed here -- which is how a container dies --
+    # left a 0-byte albedo behind, and a 0-byte albedo stops the whole .glb loading in
+    # Godot and takes down every interior that asked for the prop.
+    path = Path(path)
+    tmp = path.with_name(path.name + ".part")
     # optimize= re-runs the deflate filters; worth it on small maps, far too slow on large.
-    im.save(str(path), optimize=im.size[0] <= 1024, compress_level=6)
+    im.save(str(tmp), format="PNG", optimize=im.size[0] <= 1024, compress_level=6)
+    os.replace(tmp, path)
 
 
 # --- main entry -------------------------------------------------------------------------

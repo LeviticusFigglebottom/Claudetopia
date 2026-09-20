@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.031,
+  "max": [
+   0.241,
+   1.031,
+   0.225
+  ],
+  "min": [
+   -0.325,
+   0.0,
+   -0.381
+  ],
+  "radius": 0.662
+ },
+ "built_seconds": 9.86,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_chopping_block_a.glb",
+ "hash": "6e6c4cec66b9833d",
+ "kind": "chopping_block",
+ "materials": [
+  "hearthvale_chopping_block_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_chopping_block_a",
+   "tris": 422
+  },
+  {
+   "name": "hearthvale_chopping_block_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_chopping_block_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_chopping_block_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7680,
+ "textures": [
+  "hearthvale_chopping_block_a_albedo.png",
+  "hearthvale_chopping_block_a_normal.png",
+  "hearthvale_chopping_block_a_orm.png"
+ ],
+ "tris": [
+  422,
+  300,
+  120
+ ],
+ "version": 3
+}

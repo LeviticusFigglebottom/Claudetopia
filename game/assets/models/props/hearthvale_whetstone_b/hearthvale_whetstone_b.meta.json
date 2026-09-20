@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.066,
+  "max": [
+   0.13,
+   0.066,
+   0.07
+  ],
+  "min": [
+   -0.129,
+   0.0,
+   -0.071
+  ],
+  "radius": 0.151
+ },
+ "built_seconds": 6.63,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_whetstone_b.glb",
+ "hash": "22fc0a4f162a99d8",
+ "kind": "whetstone",
+ "materials": [
+  "hearthvale_whetstone_b_mat"
+ ],
+ "materials_used": [
+  "lake_stone",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_whetstone_b",
+   "tris": 516
+  },
+  {
+   "name": "hearthvale_whetstone_b_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_whetstone_b_LOD2",
+   "tris": 108
+  }
+ ],
+ "name": "hearthvale_whetstone_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7538,
+ "textures": [
+  "hearthvale_whetstone_b_albedo.png",
+  "hearthvale_whetstone_b_normal.png",
+  "hearthvale_whetstone_b_orm.png"
+ ],
+ "tris": [
+  516,
+  300,
+  108
+ ],
+ "version": 3
+}

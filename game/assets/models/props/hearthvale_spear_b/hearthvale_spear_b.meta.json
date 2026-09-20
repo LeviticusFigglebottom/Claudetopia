@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 1.574,
+  "max": [
+   0.047,
+   1.574,
+   0.171
+  ],
+  "min": [
+   -0.047,
+   0.0,
+   -0.021
+  ],
+  "radius": 0.794
+ },
+ "built_seconds": 5.53,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_spear_b.glb",
+ "hash": "25c014a4bfbefcdf",
+ "kind": "spear",
+ "materials": [
+  "hearthvale_spear_b_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_spear_b",
+   "tris": 1244
+  },
+  {
+   "name": "hearthvale_spear_b_LOD1",
+   "tris": 496
+  },
+  {
+   "name": "hearthvale_spear_b_LOD2",
+   "tris": 184
+  }
+ ],
+ "name": "hearthvale_spear_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7379,
+ "textures": [
+  "hearthvale_spear_b_albedo.png",
+  "hearthvale_spear_b_normal.png",
+  "hearthvale_spear_b_orm.png"
+ ],
+ "tris": [
+  1244,
+  496,
+  184
+ ],
+ "version": 3
+}

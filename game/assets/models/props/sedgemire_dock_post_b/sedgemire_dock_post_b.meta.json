@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 2.219,
+  "height": 2.214,
   "max": [
-   0.288,
-   2.219,
-   0.16
+   0.252,
+   2.214,
+   0.23
   ],
   "min": [
    -0.16,
    0.0,
-   -0.164
+   -0.139
   ],
-  "radius": 1.144
+  "radius": 1.141
  },
- "built_seconds": 18.07,
+ "built_seconds": 7.57,
  "category": "props",
  "collision": "capsule",
  "collision_params": {
-  "height": 2.219,
-  "radius": 0.224
+  "height": 2.214,
+  "radius": 0.206
  },
  "generator": "gen_props",
  "glb": "sedgemire_dock_post_b.glb",
@@ -42,7 +42,7 @@
   },
   {
    "name": "sedgemire_dock_post_b_LOD2",
-   "tris": 155
+   "tris": 148
   }
  ],
  "name": "sedgemire_dock_post_b",
@@ -77,7 +77,7 @@
  "tris": [
   1044,
   416,
-  156
+  148
  ],
  "version": 3
 }

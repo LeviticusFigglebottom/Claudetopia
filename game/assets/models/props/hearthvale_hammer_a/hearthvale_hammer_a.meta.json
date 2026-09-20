@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.048,
+  "max": [
+   0.363,
+   0.048,
+   0.086
+  ],
+  "min": [
+   -0.021,
+   0.0,
+   -0.062
+  ],
+  "radius": 0.207
+ },
+ "built_seconds": 3.27,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_hammer_a.glb",
+ "hash": "7637b0a4f89473fa",
+ "kind": "hammer",
+ "materials": [
+  "hearthvale_hammer_a_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_hammer_a",
+   "tris": 678
+  },
+  {
+   "name": "hearthvale_hammer_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_hammer_a_LOD2",
+   "tris": 118
+  }
+ ],
+ "name": "hearthvale_hammer_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7309,
+ "textures": [
+  "hearthvale_hammer_a_albedo.png",
+  "hearthvale_hammer_a_normal.png",
+  "hearthvale_hammer_a_orm.png"
+ ],
+ "tris": [
+  678,
+  300,
+  118
+ ],
+ "version": 3
+}

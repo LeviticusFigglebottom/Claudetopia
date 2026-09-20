@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.072,
+  "max": [
+   0.149,
+   0.072,
+   0.126
+  ],
+  "min": [
+   -0.154,
+   0.0,
+   -0.127
+  ],
+  "radius": 0.201
+ },
+ "built_seconds": 3.89,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "crumpled": false,
+ "generator": "gen_props",
+ "glb": "hearthvale_cloth_a.glb",
+ "hash": "1122278500b409ed",
+ "kind": "cloth",
+ "materials": [
+  "hearthvale_cloth_a_mat"
+ ],
+ "materials_used": [
+  "canvas"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_cloth_a",
+   "tris": 2648
+  },
+  {
+   "name": "hearthvale_cloth_a_LOD1",
+   "tris": 1058
+  },
+  {
+   "name": "hearthvale_cloth_a_LOD2",
+   "tris": 396
+  }
+ ],
+ "name": "hearthvale_cloth_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7150,
+ "textures": [
+  "hearthvale_cloth_a_albedo.png",
+  "hearthvale_cloth_a_normal.png",
+  "hearthvale_cloth_a_orm.png"
+ ],
+ "tris": [
+  2648,
+  1058,
+  396
+ ],
+ "version": 3
+}

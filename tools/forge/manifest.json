@@ -1793,6 +1793,272 @@
    "palette": "core:region/sedgemire",
    "variant": "a",
    "seed": 7097
+  },
+  {
+   "generator": "gen_props",
+   "kind": "cloth",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7150
+  },
+  {
+   "generator": "gen_props",
+   "kind": "cloth",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7167
+  },
+  {
+   "generator": "gen_props",
+   "kind": "spoon",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7203
+  },
+  {
+   "generator": "gen_props",
+   "kind": "spoon",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7220
+  },
+  {
+   "generator": "gen_props",
+   "kind": "tongs",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7256
+  },
+  {
+   "generator": "gen_props",
+   "kind": "tongs",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7273
+  },
+  {
+   "generator": "gen_props",
+   "kind": "hammer",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7309
+  },
+  {
+   "generator": "gen_props",
+   "kind": "hammer",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7326
+  },
+  {
+   "generator": "gen_props",
+   "kind": "spear",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7362
+  },
+  {
+   "generator": "gen_props",
+   "kind": "spear",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7379
+  },
+  {
+   "generator": "gen_props",
+   "kind": "shield",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7415
+  },
+  {
+   "generator": "gen_props",
+   "kind": "shield",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7432
+  },
+  {
+   "generator": "gen_props",
+   "kind": "pitchfork",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7468
+  },
+  {
+   "generator": "gen_props",
+   "kind": "whetstone",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7521
+  },
+  {
+   "generator": "gen_props",
+   "kind": "whetstone",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7538
+  },
+  {
+   "generator": "gen_props",
+   "kind": "loaf",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7574
+  },
+  {
+   "generator": "gen_props",
+   "kind": "loaf",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7591
+  },
+  {
+   "generator": "gen_props",
+   "kind": "millstone",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7627
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chopping_block",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 7680
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chopping_block",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 7697
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chopping_block",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 7733
+  },
+  {
+   "generator": "gen_props",
+   "kind": "peat_stack",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 7786
+  },
+  {
+   "generator": "gen_props",
+   "kind": "peat_stack",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 7803
+  },
+  {
+   "generator": "gen_props",
+   "kind": "table_trestle",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 7839
+  },
+  {
+   "generator": "gen_props",
+   "kind": "table_trestle",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 7856
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chair",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 7892
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chair",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 7909
+  },
+  {
+   "generator": "gen_props",
+   "kind": "stool",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 7945
+  },
+  {
+   "generator": "gen_props",
+   "kind": "stool",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 7962
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bed",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 7998
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bed",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 8015
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chest",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 8051
+  },
+  {
+   "generator": "gen_props",
+   "kind": "chest",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 8068
+  },
+  {
+   "generator": "gen_props",
+   "kind": "shelf",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 8104
+  },
+  {
+   "generator": "gen_props",
+   "kind": "barrel",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 8157
+  },
+  {
+   "generator": "gen_props",
+   "kind": "barrel",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 8174
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crate",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 8210
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crate",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 8227
   }
  ]
 }

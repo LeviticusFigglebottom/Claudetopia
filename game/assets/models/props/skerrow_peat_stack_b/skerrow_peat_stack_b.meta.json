@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 1.338,
+  "max": [
+   0.936,
+   1.338,
+   0.364
+  ],
+  "min": [
+   -0.575,
+   0.0,
+   -0.33
+  ],
+  "radius": 1.067
+ },
+ "built_seconds": 1.38,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "skerrow_peat_stack_b.glb",
+ "hash": "4d050f9f8570c677",
+ "kind": "peat_stack",
+ "materials": [
+  "skerrow_peat_stack_b_mat"
+ ],
+ "materials_used": [
+  "wet_mud",
+  "iron",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_peat_stack_b",
+   "tris": 8144
+  },
+  {
+   "name": "skerrow_peat_stack_b_LOD1",
+   "tris": 3256
+  },
+  {
+   "name": "skerrow_peat_stack_b_LOD2",
+   "tris": 1220
+  }
+ ],
+ "name": "skerrow_peat_stack_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 7803,
+ "textures": [
+  "skerrow_peat_stack_b_albedo.png",
+  "skerrow_peat_stack_b_normal.png",
+  "skerrow_peat_stack_b_orm.png"
+ ],
+ "tris": [
+  8144,
+  3256,
+  1220
+ ],
+ "version": 3
+}

@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.037,
+  "max": [
+   0.349,
+   0.037,
+   0.041
+  ],
+  "min": [
+   -0.13,
+   0.0,
+   -0.04
+  ],
+  "radius": 0.244
+ },
+ "built_seconds": 1.81,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_tongs_a.glb",
+ "gripping": false,
+ "hash": "8d7f2db8f5b0c3c3",
+ "kind": "tongs",
+ "materials": [
+  "hearthvale_tongs_a_mat"
+ ],
+ "materials_used": [
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_tongs_a",
+   "tris": 412
+  },
+  {
+   "name": "hearthvale_tongs_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_tongs_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_tongs_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7256,
+ "textures": [
+  "hearthvale_tongs_a_albedo.png",
+  "hearthvale_tongs_a_normal.png",
+  "hearthvale_tongs_a_orm.png"
+ ],
+ "tris": [
+  412,
+  300,
+  120
+ ],
+ "version": 3
+}

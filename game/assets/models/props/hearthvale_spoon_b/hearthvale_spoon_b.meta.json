@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.036,
+  "max": [
+   0.145,
+   0.036,
+   0.038
+  ],
+  "min": [
+   -0.136,
+   0.0,
+   -0.038
+  ],
+  "radius": 0.146
+ },
+ "built_seconds": 5.39,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_spoon_b.glb",
+ "hash": "29fae0e1bedfd607",
+ "kind": "spoon",
+ "materials": [
+  "hearthvale_spoon_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_spoon_b",
+   "tris": 464
+  },
+  {
+   "name": "hearthvale_spoon_b_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_spoon_b_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_spoon_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7220,
+ "textures": [
+  "hearthvale_spoon_b_albedo.png",
+  "hearthvale_spoon_b_normal.png",
+  "hearthvale_spoon_b_orm.png"
+ ],
+ "tris": [
+  464,
+  300,
+  120
+ ],
+ "version": 3
+}

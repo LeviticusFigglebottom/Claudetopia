@@ -13,7 +13,7 @@
   ],
   "radius": 0.201
  },
- "built_seconds": 19.58,
+ "built_seconds": 9.67,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
@@ -40,7 +40,7 @@
   },
   {
    "name": "hearthvale_bell_small_a_LOD2",
-   "tris": 341
+   "tris": 342
   }
  ],
  "name": "hearthvale_bell_small_a",

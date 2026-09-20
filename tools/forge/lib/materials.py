@@ -296,7 +296,10 @@ def paint_blocks(nb: NB, vec, colors, distortion=0.9, detail=1.5, rough=0.45, po
 def strokes(nb: NB, vec_scale, base, strength=0.12, scale=5.0, along="Z", detail=1.0):
     """Directional brush streaks: noise stretched along one axis, applied as a soft
     multiply/screen so the surface reads as laid-in strokes rather than spray."""
-    s = {"X": (0.15, 1.0, 1.0), "Y": (1.0, 0.15, 1.0), "Z": (1.0, 1.0, 0.15)}[along]
+    # "XZ" names a plane rather than an axis (see wood_planks); the strokes still run along
+    # its first axis, so it stretches the same way "X" does.
+    s = {"X": (0.15, 1.0, 1.0), "Y": (1.0, 0.15, 1.0), "Z": (1.0, 1.0, 0.15),
+         "XZ": (0.15, 1.0, 1.0)}[along]
     v = nb.coord((vec_scale * s[0], vec_scale * s[1], vec_scale * s[2]))
     n = nb.noise(v, scale=scale, detail=detail, rough=0.4, distortion=0.3)
     tone = nb.ramp(n.outputs["Fac"], [(0.35, 1.0 - strength), (0.65, 1.0 + strength)], interp="EASE")
@@ -359,8 +362,24 @@ def rough_var(nb: NB, vec, base=0.7, spread=0.12, scale=2.0):
 # ---------------------------------------------------------------------------------------
 
 def wood_planks(pal=None, wear=0.4, age=0.5, scale=1.0, tint=0.18, plank_len=1.2, plank_w=0.18,
-                paint=None, name=None, along="Z", base_hex="#8a6a42", **_):
-    """Sawn oak planks. `paint` = linear colour of a painted finish (chips off at edges)."""
+                paint=None, name=None, along="Z", base_hex="#8a6a42", relief=1.0, grain=1.0, **_):
+    """Sawn oak planks. `paint` = linear colour of a painted finish (chips off at edges).
+
+    `relief` scales the grain and plank bump, whose distance is an absolute 15 mm. That is
+    right for a table top and absurd for a spoon: the bump's amplitude does not follow
+    `scale`, so shrinking the features only makes the corrugation finer, never shallower,
+    and a 16 mm handle comes out fluted. Anything hand-sized wants a tenth of it.
+
+    `grain` is the other half of the same fault and the half that survived the first pass,
+    because it is in the albedo and a lowered `relief` cannot touch it. The grain is a wave
+    laid down in a space scaled by `scale`, so its bands land every `scale`/22.5 metres --
+    31 mm at the 0.70 a hammer haft asks for, on a haft 18 mm thick. Ten dark rings around
+    a stick is not ash; it is a screw thread, and it was plain in the first render of the
+    hammer, the spear and the spoon. `grain` divides that frequency: a quarter puts two or
+    three soft bands along a haft, which is what one length of cleft ash looks like.
+
+    Both default to 1.0 so every board, barrel, cart and landmark built before this bakes
+    to exactly the same maps as it did."""
     nb = NB(name or "wood_planks")
     pal = _pal(pal)
     base = pal.tint(P.lin(base_hex), "earth", tint)
@@ -369,13 +388,20 @@ def wood_planks(pal=None, wear=0.4, age=0.5, scale=1.0, tint=0.18, plank_len=1.2
     v = nb.coord(1.0 / scale)
     blocks = paint_blocks(nb, nb.coord(0.7 / scale), [dark, mid, light])
     # planks: long bricks along `along`; each plank gets its own tone through Color1/Color2
-    rot = {"Z": (0, 90, 0), "X": (0, 0, 0), "Y": (0, 0, 90)}[along]
+    # `along` names the direction the boards run. The three axis names put the boards in the
+    # plane of the two remaining axes taken in the obvious order; "XZ" is the odd one out and
+    # says boards along X stacked up Z, which is what a panel standing on its edge needs. A
+    # shield built flat and then stood up carries its own rotation into object space, so
+    # "X" would run its planks through the twelve millimetres of board thickness and show
+    # nothing at all.
+    rot = {"Z": (0, 90, 0), "X": (0, 0, 0), "Y": (0, 0, 90), "XZ": (90, 0, 0)}[along]
     pv = nb.coord(1.0 / scale, rotation=rot)
     br = nb.brick(pv, scale=1.0 / plank_w, c1=(1.0, 1.0, 1.0), c2=(0.78, 0.74, 0.70), mortar=(0.35, 0.3, 0.28),
                   mortar_size=0.012, mortar_smooth=0.6, bias=0.0, width=plank_len / plank_w, height=1.0, offset=0.45)
     col = nb.mix(1.0, blocks, br.outputs["Color"], blend="MULTIPLY")
     # grain: soft wave bands along the plank direction
-    gv = nb.coord((2.5 / scale, 2.5 / scale, 2.5 / scale), rotation=rot)
+    g = 2.5 * grain / scale
+    gv = nb.coord((g, g, g), rotation=rot)
     wave = nb.wave(gv, scale=9.0, distortion=4.0, detail=1.5, detail_scale=0.6, direction="X")
     grain = nb.ramp(wave.outputs["Fac"], [(0.3, 0.88), (0.6, 1.0), (0.9, 1.08)], interp="EASE")
     col = nb.mix(0.7, col, nb.mix(1.0, col, grain, blend="MULTIPLY"))
@@ -392,7 +418,7 @@ def wood_planks(pal=None, wear=0.4, age=0.5, scale=1.0, tint=0.18, plank_len=1.2
     col, _ = edge_wear(nb, col, shade(light, 1.12, 0.7), amount=wear * 0.8, breakup_vec=v)
     col, _ = cavity_dirt(nb, col, shade(dark, 0.55, 1.1), amount=0.35 + 0.4 * age, distance=0.12)
     height = nb.math("ADD", nb.math("MULTIPLY", wave.outputs["Fac"], 0.35), nb.math("MULTIPLY", br.outputs["Fac"], 0.65))
-    normal = nb.bump(height, strength=0.25, distance=0.015)
+    normal = nb.bump(height, strength=0.25, distance=0.015 * relief)
     rough = rough_var(nb, v, 0.62 + 0.15 * age, 0.1)
     return nb.finish(col, rough, 0.0, normal)
 
@@ -693,13 +719,18 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
     return nb.finish(col, rough, 0.0, normal)
 
 
-def granite(pal=None, wear=0.5, age=0.5, tint=0.18, scale=1.0, name=None, **_):
+def granite(pal=None, wear=0.5, age=0.5, tint=0.18, scale=1.0, name=None, lichen=0.35,
+            base_hex="#6f6d6a", tint_role="cool", facet=0.6, **_):
+    """Weathered granite. `lichen`, `base_hex` and `tint_role` are for the same stone put
+    to a different use: a boulder on a hillside has spent a century growing lichen, and a
+    millstone under a roof, wetted and dressed and swept every day, has grown none at all
+    and is the warmer, drier colour of a quarried grit. The defaults are the hillside."""
     pal = _pal(pal)
     nb = NB(name or "granite")
-    base = pal.tint(P.lin("#6f6d6a"), "cool", tint)
-    return _rock_common(nb, pal, base, 1.05, "cool", tint, wear, age, speckle=0.75,
-                        speckle_col=P.lin("#2e2d30"), pits=0.25, lichen=0.35,
-                        lichen_col=P.lin("#a3a878"), scale=scale, facet=0.6)
+    base = pal.tint(P.lin(base_hex), tint_role, tint)
+    return _rock_common(nb, pal, base, 1.05, tint_role, tint, wear, age, speckle=0.75,
+                        speckle_col=P.lin("#2e2d30"), pits=0.25, lichen=lichen,
+                        lichen_col=P.lin("#a3a878"), scale=scale, facet=facet)
 
 
 def limestone(pal=None, wear=0.5, age=0.5, tint=0.12, scale=1.0, name=None, **_):
@@ -724,13 +755,19 @@ def chalk_rock(pal=None, wear=0.5, age=0.4, tint=0.12, scale=1.0, name=None, **_
                         facet=0.12)
 
 
-def lake_stone(pal=None, wear=0.35, age=0.6, tint=0.16, scale=1.0, name=None, **_):
+def lake_stone(pal=None, wear=0.35, age=0.6, tint=0.16, scale=1.0, name=None, relief=1.0, **_):
     """Brightwater's lake stone: near-black, close-grained, never quite dry.
 
     The region is named for the water and this is the stone under it. It is not the warm
     grey of the other rocks and it must not be mistaken for a slab that happens to be dark:
     what makes it read as lake stone is that the light coming back off a wet edge is the
     sky's, so the highlight is cold and blue while the body stays almost black.
+
+    `relief` scales the bedding bump, whose distance is an absolute 40 mm and does not
+    follow `scale`. That is a soft swell on a boulder and a flight of steps on a hone: the
+    first whetstone the forge made was a 40 mm block carrying a 40 mm bump, and its sides
+    came out as courses of stacked slate. Anything hand-sized wants about a tenth. The
+    default is 1.0 so every slab and step built before this bakes as it did.
     """
     pal = _pal(pal)
     nb = NB(name or "lake_stone")
@@ -754,7 +791,7 @@ def lake_stone(pal=None, wear=0.35, age=0.6, tint=0.16, scale=1.0, name=None, **
                       detail=1.0, direction="Z", profile="SAW")
     height = nb.math("ADD", nb.math("MULTIPLY", hn.outputs["Fac"], 0.55),
                      nb.math("MULTIPLY", bedding.outputs["Fac"], 0.45))
-    normal = nb.bump(height, strength=0.4, distance=0.04)
+    normal = nb.bump(height, strength=0.4, distance=0.04 * relief)
     # Wet: low roughness everywhere, lower still on the edges the water runs off.
     rough = rough_var(nb, v, 0.4, 0.1)
     rough = nb.mix(nb.pointiness(0.5, 0.62), rough, 0.16)
@@ -1044,10 +1081,13 @@ def moss(pal=None, age=0.3, tint=0.35, scale=1.0, name=None, **_):
     return nb.finish(col, rough_var(nb, v, 0.95, 0.03), 0.0, normal)
 
 
-def wet_mud(pal=None, age=0.5, tint=0.2, scale=1.0, name=None, **_):
+def wet_mud(pal=None, age=0.5, tint=0.2, scale=1.0, name=None, base_hex="#4a3a2a", **_):
+    """Churned wet ground. `base_hex` is for the other thing this surface is: cut peat,
+    which is the same substance dug out and stood up to dry and is two stops darker than
+    a puddle's edge."""
     pal = _pal(pal)
     nb = NB(name or "wet_mud")
-    base = pal.tint(P.lin("#4a3a2a"), "dark", tint)
+    base = pal.tint(P.lin(base_hex), "dark", tint)
     dark, mid, light = trio(base, 0.8)
     v = nb.coord(1.0 / scale)
     col = paint_blocks(nb, nb.coord(1.0 / scale), [dark, mid, light], distortion=1.4)
@@ -1117,6 +1157,43 @@ def parchment(pal=None, age=0.5, tint=0.15, scale=1.0, name=None, **_):
     col = nb.mix(nb.map_range(fox.outputs["Fac"], 0.66, 0.8, 0.0, 0.7 * age), col, P.lin("#8a6a42"))
     col, _ = edge_wear(nb, col, shade(dark, 0.8), amount=0.4 * age, breakup_vec=v)
     return nb.finish(col, rough_var(nb, v, 0.85, 0.05), 0.0, nb.bump(fox.outputs["Fac"], strength=0.08, distance=0.003))
+
+
+def bread(pal=None, bake=0.6, flour=0.4, tint=0.14, scale=1.0, name=None, **_):
+    """A baked crust: dark where the oven caught it, pale where the flour stayed.
+
+    Bread is the one surface in the library whose whole read is a *gradient within one
+    object* rather than a pattern laid across many. A loaf is not a material with loaves
+    cut out of it; it is a thing that was pale, went brown from the outside in, and kept
+    flour on the parts the blade did not open. So the tone comes off the surface's own
+    curvature -- the crown is baked and the crease under the score is not -- with the
+    paint blocks only breaking up what the curvature gives. `bake` is how long it was in;
+    `flour` is how much was thrown on the peel.
+
+    Deliberately no bump beyond a fine one: the split crust is modelled geometry in
+    `gen_props.loaf`, and adding a second, finer crust relief on top of it turned the
+    scores into gravel at the only distance a loaf on a shelf is ever seen from."""
+    pal = _pal(pal)
+    nb = NB(name or "bread")
+    crumb = pal.tint(P.lin("#e3cfa2"), "light", tint * 0.7)
+    crust = pal.tint(P.lin("#8a5322"), "earth", tint)
+    crust = shade(crust, value=1.0 - 0.30 * bake, sat=1.0 + 0.18 * bake)
+    dark, mid, light = trio(crust, 0.8)
+    v = nb.coord(1.0 / scale)
+    col = paint_blocks(nb, nb.coord(1.1 / scale), [dark, mid, light], distortion=1.1, detail=2.0)
+    # The crown catches the heat: convex is browner, and the shaded crease keeps the crumb.
+    col, _ = edge_wear(nb, col, shade(dark, 0.72, 1.12), amount=0.45 * bake, lo=0.52, hi=0.66,
+                       breakup_vec=v)
+    col, _ = cavity_dirt(nb, col, crumb, amount=0.55 + 0.35 * flour, distance=0.05,
+                         breakup_vec=v)
+    # Flour: a soft dusting, broken up so it sits in patches the way thrown flour does.
+    dust = nb.noise(nb.coord(3.4 / scale), scale=1.0, detail=3.0, rough=0.6)
+    col = nb.mix(nb.map_range(dust.outputs["Fac"], 0.52, 0.80, 0.0, 0.75 * flour), col,
+                 shade(crumb, 1.06, 0.55))
+    col = strokes(nb, 1.0 / scale, col, strength=0.06, scale=4.0, along="X")
+    grain = nb.noise(nb.coord(11.0 / scale), scale=1.0, detail=3.0, rough=0.55)
+    normal = nb.bump(grain.outputs["Fac"], strength=0.22, distance=0.0016)
+    return nb.finish(col, rough_var(nb, v, 0.78 - 0.10 * bake, 0.07), 0.0, normal)
 
 
 def wax(pal=None, color=None, name=None, **_):

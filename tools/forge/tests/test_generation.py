@@ -163,7 +163,12 @@ class TestEndToEnd(unittest.TestCase):
         glb_import = Path(str(p["glb"]) + ".import")
         self.assertIn("import_script/path=\"res://tools_gd/glb_post_import.gd\"",
                       glb_import.read_text())
-        self.assertIn("meshes/generate_lods=false", glb_import.read_text())
+        # True, and it has been since "a real LOD ladder for trees, and mesh LODs for the
+        # scatter" turned it on -- "a MultiMesh has no visibility ranges and was drawing
+        # LOD0 to the horizon". The sidecar writer was changed there and this assertion was
+        # not, so the end-to-end suite has been red ever since; it only runs where Blender
+        # is on PATH, which is why nothing noticed.
+        self.assertIn("meshes/generate_lods=true", glb_import.read_text())
         normal_import = Path(str(p["normal"]) + ".import").read_text()
         self.assertIn("compress/normal_map=1", normal_import)
 

@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 0.211,
+  "height": 0.191,
   "max": [
    0.483,
-   0.211,
+   0.191,
    0.3
   ],
   "min": [
-   -0.293,
+   -0.294,
    0.0,
    -0.292
   ],
-  "radius": 0.5
+  "radius": 0.498
  },
- "built_seconds": 22.96,
+ "built_seconds": 10.96,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
@@ -38,7 +38,7 @@
   },
   {
    "name": "sedgemire_rope_coil_b_LOD2",
-   "tris": 226
+   "tris": 224
   }
  ],
  "name": "sedgemire_rope_coil_b",
@@ -73,7 +73,7 @@
  "tris": [
   1510,
   604,
-  226
+  224
  ],
  "version": 3
 }

@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 0.624,
+  "max": [
+   1.106,
+   0.624,
+   0.52
+  ],
+  "min": [
+   -1.106,
+   0.0,
+   -0.52
+  ],
+  "radius": 1.261
+ },
+ "built_seconds": 31.52,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "briarwold_bed_b.glb",
+ "hash": "c609f48f09a2b75d",
+ "kind": "bed",
+ "materials": [
+  "briarwold_bed_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "canvas",
+  "dyed_cloth"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_bed_b",
+   "tris": 1844
+  },
+  {
+   "name": "briarwold_bed_b_LOD1",
+   "tris": 736
+  },
+  {
+   "name": "briarwold_bed_b_LOD2",
+   "tris": 276
+  }
+ ],
+ "name": "briarwold_bed_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 8015,
+ "textures": [
+  "briarwold_bed_b_albedo.png",
+  "briarwold_bed_b_normal.png",
+  "briarwold_bed_b_orm.png"
+ ],
+ "tris": [
+  1844,
+  736,
+  276
+ ],
+ "version": 3
+}

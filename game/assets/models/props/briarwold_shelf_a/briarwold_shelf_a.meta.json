@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.045,
+  "max": [
+   0.597,
+   1.045,
+   0.145
+  ],
+  "min": [
+   -0.596,
+   0.0,
+   -0.145
+  ],
+  "radius": 0.806
+ },
+ "built_seconds": 21.43,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "briarwold_shelf_a.glb",
+ "hash": "e8ce2af79c7b2a49",
+ "kind": "shelf",
+ "materials": [
+  "briarwold_shelf_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_shelf_a",
+   "tris": 1740
+  },
+  {
+   "name": "briarwold_shelf_a_LOD1",
+   "tris": 696
+  },
+  {
+   "name": "briarwold_shelf_a_LOD2",
+   "tris": 260
+  }
+ ],
+ "name": "briarwold_shelf_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 8104,
+ "textures": [
+  "briarwold_shelf_a_albedo.png",
+  "briarwold_shelf_a_normal.png",
+  "briarwold_shelf_a_orm.png"
+ ],
+ "tris": [
+  1740,
+  696,
+  260
+ ],
+ "version": 3
+}

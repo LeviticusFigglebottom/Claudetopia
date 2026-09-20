@@ -1,22 +1,23 @@
 {
  "bounds": {
-  "height": 0.371,
+  "height": 0.745,
   "max": [
    0.252,
-   0.371,
-   0.199
+   0.745,
+   0.176
   ],
   "min": [
    -0.372,
    0.0,
-   -0.199
+   -0.176
   ],
-  "radius": 0.414
+  "radius": 0.517
  },
- "built_seconds": 53.82,
+ "built_seconds": 15.24,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
+ "face_height": 0.72,
  "generator": "gen_props",
  "glb": "hearthvale_anvil_a.glb",
  "hash": "09f322bad544c704",
@@ -31,15 +32,15 @@
  "meshes": [
   {
    "name": "hearthvale_anvil_a",
-   "tris": 564
+   "tris": 1518
   },
   {
    "name": "hearthvale_anvil_a_LOD1",
-   "tris": 300
+   "tris": 606
   },
   {
    "name": "hearthvale_anvil_a_LOD2",
-   "tris": 120
+   "tris": 226
   }
  ],
  "name": "hearthvale_anvil_a",
@@ -72,9 +73,9 @@
   "hearthvale_anvil_a_orm.png"
  ],
  "tris": [
-  564,
-  300,
-  120
+  1518,
+  606,
+  226
  ],
  "version": 3
 }

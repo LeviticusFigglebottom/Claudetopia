@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.749,
+  "max": [
+   0.093,
+   1.749,
+   0.021
+  ],
+  "min": [
+   -0.093,
+   0.0,
+   -0.187
+  ],
+  "radius": 0.886
+ },
+ "built_seconds": 3.1,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_pitchfork_a.glb",
+ "hash": "d230ae0d8aba31b1",
+ "kind": "pitchfork",
+ "materials": [
+  "hearthvale_pitchfork_a_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_pitchfork_a",
+   "tris": 844
+  },
+  {
+   "name": "hearthvale_pitchfork_a_LOD1",
+   "tris": 336
+  },
+  {
+   "name": "hearthvale_pitchfork_a_LOD2",
+   "tris": 126
+  }
+ ],
+ "name": "hearthvale_pitchfork_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7468,
+ "textures": [
+  "hearthvale_pitchfork_a_albedo.png",
+  "hearthvale_pitchfork_a_normal.png",
+  "hearthvale_pitchfork_a_orm.png"
+ ],
+ "tris": [
+  844,
+  336,
+  126
+ ],
+ "version": 3
+}

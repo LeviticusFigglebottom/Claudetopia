@@ -66,9 +66,24 @@ def entry_hash(e: dict, version: int) -> str:
                           e["palette"])
 
 
+def _written(path: Path) -> bool:
+    """A file that is there and has bytes in it.
+
+    Existence alone is not enough. A build killed part-way through leaves the meta.json --
+    which is what carries the hash -- already written and a texture truncated to nothing,
+    and the truncated texture is the one file in the set whose emptiness takes a whole
+    scene down: Godot will not load a .glb whose material points at a 0-byte PNG, and the
+    interior that asked for the prop fails rather than falling back. Before this, a
+    zero-length albedo read as "current" for ever, because nothing ever looked."""
+    try:
+        return path.stat().st_size > 0
+    except OSError:
+        return False
+
+
 def is_current(e: dict, out_root: Path, version: int) -> bool:
     paths = cli.output_paths(out_root, e["category"], e["name"])
-    if not paths["meta"].exists() or not paths["glb"].exists():
+    if not _written(paths["meta"]) or not _written(paths["glb"]):
         return False
     try:
         meta = json.loads(paths["meta"].read_text(encoding="utf-8"))
@@ -77,7 +92,7 @@ def is_current(e: dict, out_root: Path, version: int) -> bool:
     if meta.get("hash") != entry_hash(e, version):
         return False
     for t in meta.get("textures", []):
-        if not (paths["dir"] / t).exists():
+        if not _written(paths["dir"] / t):
             return False
     return True
 

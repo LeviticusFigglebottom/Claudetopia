@@ -1,9 +1,9 @@
 {
  "bounds": {
-  "height": 0.716,
+  "height": 0.708,
   "max": [
    0.237,
-   0.716,
+   0.708,
    0.23
   ],
   "min": [
@@ -11,9 +11,9 @@
    0.0,
    -0.231
   ],
-  "radius": 0.485
+  "radius": 0.481
  },
- "built_seconds": 52.65,
+ "built_seconds": 18.48,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
@@ -39,7 +39,7 @@
   },
   {
    "name": "hearthvale_sack_a_LOD2",
-   "tris": 118
+   "tris": 120
   }
  ],
  "name": "hearthvale_sack_a",
@@ -74,7 +74,7 @@
  "tris": [
   740,
   300,
-  118
+  120
  ],
  "version": 3
 }

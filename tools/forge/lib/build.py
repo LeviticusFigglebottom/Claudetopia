@@ -158,14 +158,25 @@ def wattle_panel(name, width, height, mat=None, uprights=7, weaves=9, rod_r=0.01
 
 def rope_loop(name, radius, thickness, mat=None, location=(0, 0, 0), turns=1, segments=28,
               sag=0.0, rng=None):
+    """A ring of rope: a hank, a lashing, a whipping, one turn of a coil.
+
+    `location` is swept into the points rather than left on the object. It used to be
+    accepted and then silently dropped, and every caller that placed a loop somewhere other
+    than the origin got it at the origin instead: a rope coil's four turns all lay in one
+    plane on the ground with its loose end hanging in the air above nothing, a sack's neck
+    tie sat inside the sack's base, a dock post's four lashings were buried in the mud and a
+    spear's grip whipping was five rings stacked at the butt. Sweeping it in also means the
+    loop's vertices are in world coordinates, so a caller that rotates a whole prop at the
+    end rotates the loop about the prop's origin and not about the loop's own."""
     pts = []
+    ox, oy, oz = location
     n = segments * max(1, turns)
     for i in range(n + 1):
         t = i / n
         a = TAU * turns * t
         r = radius * (1.0 + 0.02 * math.sin(a * 3))
         z = sag * math.sin(math.pi * t)
-        pts.append((math.cos(a) * r, math.sin(a) * r, z))
+        pts.append((ox + math.cos(a) * r, oy + math.sin(a) * r, oz + z))
     return S.tube_along(name, pts, radius=thickness, segments=6, mat=mat, cap=True)
 
 
@@ -210,6 +221,69 @@ def cloth_sheet(name, width, height, mat=None, location=(0, 0, 0), rotation=None
     ob.location = Vector(location)
     S.apply_transforms(ob)
     return ob
+
+
+def cloth_run(name, path, width, mat=None, rng=None, ripple=0.006, across=9,
+              thickness=0.0035, edge_droop=0.0, wander=0.02, smooth=True):
+    """A cloth swept along a path that may double back on itself: a folded or heaped cloth.
+
+    `path` is [(x, z), ...] running along the cloth's own length, *including* the arcs where
+    it turns back, so every fold is a real roll of geometry with a curved edge and not a
+    crease drawn on a stack of slabs. `ripple` displaces the surface along its own normal,
+    which is what keeps the folded face from reading as a plane at a metre's distance; it is
+    a length in metres, so it stays in proportion whether this is a napkin or a bolt.
+
+    Both faces and the hem are built here rather than by a Solidify modifier. Solidify is
+    used everywhere else in this file with `use_even_offset`, which divides the offset by
+    the cosine of the crease angle: harmless on a board, and on the near-180-degree turn at
+    a fold it threw single vertices tens of metres out of the mesh.
+    """
+    rng = rng or random.Random(0)
+    pts = [Vector((p[0], 0.0, p[1])) for p in path]
+    n = len(pts)
+    if n < 2:
+        raise ValueError("cloth_run needs 2+ path points")
+    # The sweep's own frame: Y across the cloth, and the perpendicular to the path in XZ,
+    # which is the surface normal because the cloth only ever bends along its length.
+    normals = []
+    for i in range(n):
+        t = pts[min(n - 1, i + 1)] - pts[max(0, i - 1)]
+        t.y = 0.0
+        t = t.normalized() if t.length > 1e-9 else Vector((1.0, 0.0, 0.0))
+        normals.append(Vector((-t.z, 0.0, t.x)))
+    phase = rng.uniform(0.0, TAU)
+    half = thickness * 0.5
+    bm = bmesh.new()
+    face_a, face_b = [], []
+    for i, p in enumerate(pts):
+        s = i / (n - 1)
+        ra, rb = [], []
+        for j in range(across + 1):
+            u = j / across
+            # two ripples out of phase, drifting along the length so no crease runs straight
+            r = (math.sin(u * TAU * 1.6 + s * 5.3 + phase) * 0.6
+                 + math.sin(u * TAU * 3.1 - s * 2.7 + phase * 1.7) * 0.4)
+            d = ripple * r + edge_droop * abs(u - 0.5) ** 3 * 8.0
+            y = (u - 0.5) * width + math.sin(s * 4.1 + u * 2.3 + phase) * width * wander
+            a = p + normals[i] * (d + half)
+            b = p + normals[i] * (d - half)
+            a.y = b.y = y
+            ra.append(bm.verts.new(a))
+            rb.append(bm.verts.new(b))
+        face_a.append(ra)
+        face_b.append(rb)
+    for i in range(n - 1):
+        for j in range(across):
+            bm.faces.new((face_a[i][j], face_a[i][j + 1], face_a[i + 1][j + 1], face_a[i + 1][j]))
+            bm.faces.new((face_b[i + 1][j], face_b[i + 1][j + 1], face_b[i][j + 1], face_b[i][j]))
+    for j in range(across):                                   # the two cut ends
+        bm.faces.new((face_a[0][j], face_b[0][j], face_b[0][j + 1], face_a[0][j + 1]))
+        bm.faces.new((face_a[n - 1][j + 1], face_b[n - 1][j + 1], face_b[n - 1][j], face_a[n - 1][j]))
+    for i in range(n - 1):                                    # the two selvedges
+        bm.faces.new((face_a[i][0], face_a[i + 1][0], face_b[i + 1][0], face_b[i][0]))
+        bm.faces.new((face_b[i][across], face_b[i + 1][across], face_a[i + 1][across], face_a[i][across]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return S.bm_to_object(bm, name, mat, smooth=smooth)
 
 
 def stone_course(name, length, height, depth, mat=None, rows=4, rng=None, location=(0, 0, 0),

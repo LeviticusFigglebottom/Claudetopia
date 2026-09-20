@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.507,
+  "max": [
+   0.246,
+   0.507,
+   0.213
+  ],
+  "min": [
+   -0.177,
+   0.0,
+   -0.208
+  ],
+  "radius": 0.392
+ },
+ "built_seconds": 11.45,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "briarwold_stool_b.glb",
+ "hash": "186291b748282245",
+ "kind": "stool",
+ "materials": [
+  "briarwold_stool_b_mat"
+ ],
+ "materials_used": [
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_stool_b",
+   "tris": 296
+  },
+  {
+   "name": "briarwold_stool_b_LOD1",
+   "tris": 296
+  },
+  {
+   "name": "briarwold_stool_b_LOD2",
+   "tris": 84
+  }
+ ],
+ "name": "briarwold_stool_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 7962,
+ "textures": [
+  "briarwold_stool_b_albedo.png",
+  "briarwold_stool_b_normal.png",
+  "briarwold_stool_b_orm.png"
+ ],
+ "tris": [
+  296,
+  296,
+  84
+ ],
+ "version": 3
+}

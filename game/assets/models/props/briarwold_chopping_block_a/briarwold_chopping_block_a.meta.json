@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.977,
+  "max": [
+   0.366,
+   0.977,
+   0.245
+  ],
+  "min": [
+   -0.237,
+   0.0,
+   -0.354
+  ],
+  "radius": 0.647
+ },
+ "built_seconds": 18.29,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "briarwold_chopping_block_a.glb",
+ "hash": "d1d9ec2b61bc1ebe",
+ "kind": "chopping_block",
+ "materials": [
+  "briarwold_chopping_block_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_chopping_block_a",
+   "tris": 422
+  },
+  {
+   "name": "briarwold_chopping_block_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "briarwold_chopping_block_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "briarwold_chopping_block_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 7733,
+ "textures": [
+  "briarwold_chopping_block_a_albedo.png",
+  "briarwold_chopping_block_a_normal.png",
+  "briarwold_chopping_block_a_orm.png"
+ ],
+ "tris": [
+  422,
+  300,
+  120
+ ],
+ "version": 3
+}

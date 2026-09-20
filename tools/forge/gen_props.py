@@ -31,9 +31,30 @@ def jit(rng, v, pct=0.06):
     return v * (1.0 + rng.uniform(-pct, pct))
 
 
+# The timber a region's joiners actually work in, where the palette alone does not say it.
+#
+# `wood_planks` starts from one oak-brown and mixes in a fifth of the palette's `earth`
+# role, and the six regions' earth roles are all a red-brown within a few percent of each
+# other: measured off the baked albedo, a Briarwold trestle came out eight units of 255
+# from a Hearthvale one. Nobody would call that "a Hearthvale oak fence or a Briarwold
+# black-ash one", which is what tools/forge/README.md promises and what makes a per-region
+# prop worth building at all -- a second set of meshes in the same colour gives
+# `PropLibrary` nothing to choose between but the seed.
+#
+# So a region whose identity names a timber gets that timber. Briarwold's flora list opens
+# `giant_oak, black_ash`: the wood under the canopy is the dark, olive-brown, close-grained
+# ash it is named for. Only regions listed here differ, and only props built after this
+# change, so no asset already in the tree moves.
+TIMBER = {
+    "briarwold": {"base_hex": "#4a3b28", "tint": 0.34},
+}
+
+
 def wood(pal, rng, wear=None, age=None, **kw):
     kw.setdefault("wear", wear if wear is not None else 0.35 + 0.4 * rng.random())
     kw.setdefault("age", age if age is not None else 0.3 + 0.45 * rng.random())
+    for k, v in TIMBER.get(getattr(pal, "short", ""), {}).items():
+        kw.setdefault(k, v)
     return M.wood_planks(pal, **kw)
 
 
@@ -43,7 +64,68 @@ def iron(pal, rng, **kw):
     return M.iron(pal, **kw)
 
 
-def cloth(pal, rng, role="accent", **kw):
+def tool_wood(pal, rng, scale=0.8, wear=0.30, age=0.55, base_hex="#7a5c34", relief=0.10,
+              name="tool_wood", **kw):
+    """Timber for something you hold: a haft, a shaft, a carved bowl, a block.
+
+    Every length in `wood_planks` is in units of `scale`, and `scale` is itself a feature
+    size in metres whose default of 1.0 means "features a metre across". Picking it for a
+    hand-sized object is squeezed from both ends and the middle is narrow:
+
+    * too large and `paint_blocks` lays its three tones down across more than the whole
+      object, so the thing takes one arbitrary stop of the ramp. That is what made the
+      anvil's stump a flat cream drum, and it is why anything over about a quarter of a
+      metre wants a scale well under its own size;
+    * too small and the brush strokes quilt: they land every `scale`/4 metres, so a
+      quarter-metre scale draws upholstery across a whetstone's block.
+
+    Under about 0.3 m across, stay near 0.8 and let the object be one tone -- a spoon *is*
+    one tone. Past that, come down to roughly a third of the object's size.
+
+    `relief` is separate and is the one that bit hardest. `wood_planks` bumps its normal
+    over an absolute 15 mm, which does not follow `scale` at all, so shrinking the grain
+    only makes the corrugation finer and never shallower: at any scale a spoon came out
+    fluted like a scallop shell. A tenth is about right for anything hand-sized.
+
+    `relief` was only half of that fault, and the render said so: a hammer haft, a spear
+    shaft and a spoon all still came out of the first build ringed like a screw thread,
+    because the grain that draws those rings is in the *albedo* and `relief` only touches
+    the normal. The grain wave bands every `scale`/22.5 metres -- 31 mm at the 0.70 a haft
+    asks for, around a haft 18 mm thick. `grain` divides that frequency, and a quarter is
+    about right: two or three soft lengthwise tones, which is one cleft stave.
+
+    The plank size is set past anything this is used for, because nothing here is a sawn
+    board: a spoon is carved from one billet and a haft cleft from one stave, and a plank
+    joint crossing either is a lie. `wear` is low for the same reason the stump was cream:
+    edge wear lightens convex edges, and a hand-sized object bevelled all over is convex
+    nearly everywhere, so a wear of 0.7 bleaches the whole of it."""
+    kw.setdefault("plank_len", 12.0)
+    kw.setdefault("plank_w", 4.0)
+    kw.setdefault("grain", 0.25)
+    return M.wood_planks(pal, wear=wear, age=age, scale=scale, base_hex=base_hex, name=name, **kw)
+
+
+def stand_up(parts, deg_x):
+    """Tip a whole prop back by `deg_x` about the world origin, every part together.
+
+    The obvious spelling -- set `rotation_euler` on each part and apply -- is wrong for any
+    part that still carries an object-level placement, and about half of what this file
+    builds does: `S.sphere(location=...)`, `B.board(location=...)` and every other
+    primitive keep their `location` on the object, so applying a rotation turns them about
+    their own origin and leaves them exactly where they were while the rest of the prop
+    swings away. Baking the placement into the vertices first puts every part in world
+    coordinates, and then one rotation about the origin moves them all.
+
+    Until this existed a spear's socket rivet hung in the air a hand's breadth off the
+    shaft, and a shield's six boss rivets stayed in a flat ring at the height the boss had
+    been before the shield stood up -- four of the six floating clear of the board."""
+    for p in parts:
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((math.radians(deg_x), 0.0, 0.0))
+        S.apply_transforms(p)
+
+
+def cloth_mat(pal, rng, role="accent", **kw):
     kw.setdefault("age", 0.3 + 0.4 * rng.random())
     kw.setdefault("wear", 0.25 + 0.35 * rng.random())
     return M.dyed_cloth(pal, role=role, **kw)
@@ -424,7 +506,7 @@ def bed(pal, rng, params, variant):
     h = 0.42 * CHUNK
     mat = wood(pal, rng, plank_len=l, plank_w=0.14, along="X")
     linen = M.canvas(pal, age=0.35, wear=0.3, scale=0.6)
-    blanket = cloth(pal, rng, role="accent", scale=0.5)
+    blanket = cloth_mat(pal, rng, role="accent", scale=0.5)
     t = 0.05
     parts = [S.cube("rail_l", (l, t, h * 0.55), (0, -w_ / 2 + t / 2, h * 0.32), mat=mat),
              S.cube("rail_r", (l, t, h * 0.55), (0, w_ / 2 - t / 2, h * 0.32), mat=mat),
@@ -700,25 +782,85 @@ def campfire(pal, rng, params, variant):
 # =========================================================================================
 
 def anvil(pal, rng, params, variant):
+    """An anvil on its stump.
+
+    The iron is about 0.30 m from foot to face, which is what an anvil *is*; the rest of a
+    smith's working height is the block it stands on, and that block was missing. Without it
+    the face sat at 0.371 m and the work clips — authored against the 0.750 m placeholder in
+    `HouseInterior._placeholder_size` — had the smith hammering at his knees.
+
+    So `face_height` is fixed rather than jittered and chunked: it is an ergonomic
+    measurement (knuckle height, near enough), not a stylisation. The chunkiness goes into
+    the iron and the timber, and the stump takes up whatever is left over."""
     l = jit(rng, 0.62) * CHUNK
-    h = jit(rng, 0.32) * CHUNK
-    metal = iron(pal, rng, age=0.6, wear=0.75)
-    wood_mat = wood(pal, rng, age=0.8, plank_len=0.5, plank_w=0.3, along="Z")
-    body = S.box_centered("body", (l * 0.52, l * 0.22, h * 0.34), (0, 0, h * 0.78), mat=metal)
-    S.bevel(body, width=h * 0.03, segments=2)
-    waist = S.box_centered("waist", (l * 0.3, l * 0.16, h * 0.3), (0, 0, h * 0.5), mat=metal)
-    S.bevel(waist, width=h * 0.05, segments=2)
-    foot = S.box_centered("foot", (l * 0.44, l * 0.24, h * 0.22), (0, 0, h * 0.26), mat=metal)
-    S.bevel(foot, width=h * 0.04, segments=2)
+    ah = jit(rng, 0.30) * CHUNK                          # foot to face, the iron alone
+    face = float(params.get("face_height", 0.72))        # where the work lands
+    sh = max(0.12, face - ah)                            # so the stump is the difference
+    metal = iron(pal, rng, age=0.6, wear=0.75, scale=0.22)
+    # 0.20 and not the stump's own 0.4 m: `paint_blocks` lays its three tones down at the
+    # material's `scale`, so a scale near the object's size drops the whole thing on one
+    # arbitrary stop of the ramp -- which is how the stump first came out a flat cream.
+    #
+    # It came out cream anyway, because that was not the whole of it. Hearthvale timber is
+    # a pale honey by design -- the trestle table is the same colour and is meant to be --
+    # and a stump dressed in it reads as a plinth of soft stone with an anvil balanced on
+    # top. What tells you it is a block of oak is that it is darker than the furniture:
+    # this one stands in a forge under fifty years of scale and quench water. So the base
+    # goes to a wet dark brown and the wear that lightens convex edges comes down to almost
+    # nothing, because a nine-sided billet is convex everywhere and edge wear was bleaching
+    # the whole of it back to cream. `age` stays middling on purpose although this is an
+    # old block: age takes saturation out as well as value (`sat = 1 - 0.2 * age`), and at
+    # 0.95 the dark brown came back as a grey-olive, which reads as wet stone and lands
+    # the block back where it started.
+    oak = tool_wood(pal, rng, scale=0.20, wear=0.10, age=0.50, base_hex="#402c16",
+                    tint=0.16, relief=0.30, grain=0.45, along="Z", name="stump_oak")
+    parts = []
+    # A length of vale oak hewn to nine flats and stood on the beaten floor. Nine sides put
+    # 40 degrees between facets, more than the exporter's 35 degree smoothing angle, so it
+    # stays faceted and reads as axe-work; an odd number and a per-facet radius keep it from
+    # reading as a turned drum, and one band rather than two keeps it from reading as a keg.
+    # As wide as the anvil's own foot and no wider. At l * 0.30 the block was 0.41 m across
+    # and 0.39 m tall -- as broad as it was high, which is a keg or a plinth and not a
+    # length of trunk. The foot is l * 0.46 long, so a block a little narrower than the
+    # anvil is long stands the iron on timber with nothing to spare, which is what a
+    # smith's block looks like from across a yard.
+    sr = max(l * 0.245, 0.155)
+    sides = 9
+    log = S.lathe("stump", [(sr * 1.10, 0.0), (sr * 1.02, sh * 0.13), (sr * 0.97, sh * 0.52),
+                            (sr * 0.99, sh * 0.86), (sr * 0.955, sh)],
+                  segments=sides, mat=oak, close=True)
+    facet = [rng.uniform(0.93, 1.05) for _ in range(sides)]
+    for v in log.data.vertices:
+        rr = math.hypot(v.co.x, v.co.y)
+        if rr > 1e-6:
+            f = facet[int(round((math.atan2(v.co.y, v.co.x) % TAU) / TAU * sides)) % sides]
+            v.co.x *= f
+            v.co.y *= f
+    S.jitter_verts(log, amount=sr * 0.04, scale=0.22, seed=rng.randrange(999))
+    parts.append(log)
+    band_metal = iron(pal, rng, age=0.85, wear=0.5, scale=0.14)
+    parts.append(B.hoop("band", sr * 1.0, 0.013, mat=band_metal,
+                        location=(0, 0, sh * 0.84), segments=20, flatten=2.6))
+    # Foot, waist and body overlap by a few millimetres each. They did not, at first, and
+    # the daylight through the joint between the foot and the waist was plain in the render.
+    body = S.box_centered("body", (l * 0.52, l * 0.22, ah * 0.38), (0, 0, sh + ah * 0.81), mat=metal)
+    S.bevel(body, width=ah * 0.03, segments=2)
+    waist = S.box_centered("waist", (l * 0.3, l * 0.16, ah * 0.42), (0, 0, sh + ah * 0.45), mat=metal)
+    S.bevel(waist, width=ah * 0.05, segments=2)
+    foot = S.box_centered("foot", (l * 0.46, l * 0.26, ah * 0.26), (0, 0, sh + ah * 0.13), mat=metal)
+    S.bevel(foot, width=ah * 0.04, segments=2)
     horn = S.cylinder("horn", radius=l * 0.1, radius_top=l * 0.015, depth=l * 0.3, vertices=14,
-                      location=(-l * 0.26, 0, h * 0.78), rotation=(0, -90, 0), mat=metal)
-    heel = S.box_centered("heel", (l * 0.16, l * 0.2, h * 0.3), (l * 0.3, 0, h * 0.76), mat=metal)
-    S.bevel(heel, width=h * 0.03, segments=2)
-    hardy = S.cube("hardy", (0.028, 0.028, h * 0.1), (l * 0.2, 0, h * 0.9), mat=metal)
-    stump = S.lathe("stump", [(l * 0.3, 0.0), (l * 0.28, h * 0.08), (l * 0.26, h * 0.15)],
-                    segments=12, mat=wood_mat, close=True)
-    parts = [body, waist, foot, horn, heel, hardy, stump]
-    return finish(parts, rng, "convex", ["iron", "wood_planks"], jitter=0.002)
+                      location=(-l * 0.26, 0, sh + ah * 0.81), rotation=(0, -90, 0), mat=metal)
+    heel = S.box_centered("heel", (l * 0.16, l * 0.2, ah * 0.34), (l * 0.3, 0, sh + ah * 0.79), mat=metal)
+    S.bevel(heel, width=ah * 0.03, segments=2)
+    hardy = S.cube("hardy", (0.028, 0.028, ah * 0.09), (l * 0.2, 0, sh + ah * 0.98), mat=metal)
+    parts += [foot, waist, body, horn, heel, hardy]
+    # Staples over the base, which is how an anvil is actually held to its block.
+    for sx in (-1, 1):
+        parts.append(B.iron_strap("staple_%d" % sx, l * 0.30, 0.026, 0.007, mat=band_metal,
+                                  location=(sx * l * 0.20, 0, sh + ah * 0.02), rotation=(0, 0, 90)))
+    return finish(parts, rng, "convex", ["iron", "wood_planks"], jitter=0.002,
+                  extra={"face_height": round(sh + ah, 3)})
 
 
 def forge_hearth(pal, rng, params, variant):
@@ -918,6 +1060,916 @@ def hay_bale(pal, rng, params, variant):
         S.apply_transforms(loop)
         parts.append(loop)
     return finish(parts, rng, "convex", ["straw", "rope"])
+
+
+# =========================================================================================
+# hand tools, arms and linen
+#
+# Everything here is between 0.05 m and 1.8 m, which is a tenth of what the rest of this
+# file makes, and that matters to the *materials* more than to the geometry: every builder
+# in materials.py sizes its paint blocks, grain and grit off `scale`, in metres, and the
+# default of 1.0 means "features a metre across". On a 0.25 m spoon that is one flat tone
+# and no grain at all. So each of these passes a scale near its own size, and the plank
+# parameters are given in the scaled space (a length in metres is `metres / scale`).
+# =========================================================================================
+
+def _fold_path(rng, length, layers, gap, slack=0.0, rough=0.0, fold_w=1.0):
+    """A cloth's own centre-line as it is folded: runs, and the arcs where it turns back.
+
+    Returned as [(x, z), ...]. The turn is a half-ellipse rather than a crease, so the fold
+    is a roll you can see round. `rough` unsettles it: the layers take their own thicknesses
+    and their own slow undulation, which is the difference between linen put away and a rag
+    dropped where it was finished with."""
+    pts = []
+    n_run, n_fold = 12, 6
+    d = 1
+    half = length * 0.5
+    z = 0.0
+    for k in range(layers):
+        g = gap * (1.0 + rough * rng.uniform(-0.25, 0.75))
+        f = 1.0 - slack * rng.random()
+        xa, xb = (-half, half * f) if d > 0 else (half, -half * f)
+        k1, k2 = rng.uniform(1.4, 2.6), rng.uniform(3.1, 4.7)
+        p1, p2 = rng.uniform(0, TAU), rng.uniform(0, TAU)
+        for i in range(n_run + 1):
+            t = i / n_run
+            wob = math.sin(t * math.pi) * g * 0.12
+            wob += rough * g * (math.sin(t * math.pi * k1 + p1) * 0.45
+                                + math.sin(t * math.pi * k2 + p2) * 0.25)
+            pts.append((xa + (xb - xa) * t, z + wob))
+        if k == layers - 1:
+            break
+        r = g * 0.5
+        for i in range(1, n_fold + 1):
+            phi = -math.pi * 0.5 + math.pi * i / n_fold
+            pts.append((xb + d * math.cos(phi) * r * fold_w, z + r + math.sin(phi) * r))
+        z += g
+        d = -d
+    return pts
+
+
+def cloth(pal, rng, params, variant):
+    """Folded linen, or a rag dropped where it was put down.
+
+    The folds are geometry: the cloth is one strip swept along a path that doubles back on
+    itself, so each fold is a roll you can see round, and the face carries ripples along its
+    own normal. A flat plane with a cloth texture on it reads as paper at any distance."""
+    crumpled = bool(params.get("crumpled", variant % 2 == 1))
+    w_ = jit(rng, params.get("width", 0.21)) * CHUNK
+    l = jit(rng, params.get("length", 0.25)) * CHUNK
+    if crumpled:
+        # A working rag. Layers of one even thickness read as folded card however good the
+        # material is, so these differ in thickness, undulate along their own length, and
+        # are then broken up by a jitter at 5 cm -- smaller than the rag, which is the
+        # point: `finish`'s own jitter is fixed at 0.5 m and would only shift it sideways.
+        mat = cloth_mat(pal, rng, role="earth", tint=0.5, age=0.85, wear=0.55, scale=0.30)
+        used = "dyed_cloth"
+        # The layers must not eat each other: the ripple runs on both faces of a fold with
+        # no phase relation between them, so twice the ripple has to stay inside the
+        # thinnest gap `rough` can produce, or the rag opens black slits where it folds.
+        gap = 0.027 * CHUNK
+        path = _fold_path(rng, l, 3, gap, slack=0.42, rough=0.62, fold_w=1.30)
+        ripple, droop, jit_a = 0.0085, 0.006, 0.0026
+    else:
+        # washstand linen, folded and put away; its folds are pressed, not rolled
+        mat = M.canvas(pal, age=0.35 + 0.3 * rng.random(), wear=0.30, scale=0.30)
+        used = "canvas"
+        gap = 0.019 * CHUNK
+        path = _fold_path(rng, l, 3, gap, slack=0.06, rough=0.22, fold_w=0.85)
+        ripple, droop, jit_a = 0.0085, 0.005, 0.0016
+    body = B.cloth_run("cloth", path, w_, mat=mat, rng=rng, ripple=ripple, across=12,
+                       thickness=0.0035, edge_droop=droop, wander=0.032 if crumpled else 0.018)
+    S.shade_smooth(body, 50.0)
+    S.jitter_verts(body, amount=jit_a, scale=0.05, seed=rng.randrange(999))
+    if crumpled:
+        S.tilt(body, rng, max_deg=3.0)
+    else:
+        body.rotation_euler = Euler((0, 0, rng.uniform(0.0, TAU)))
+        S.apply_transforms(body)
+    return finish([body], rng, "convex", [used], extra={"crumpled": crumpled})
+
+
+def spoon(pal, rng, params, variant):
+    """A carved wooden spoon, lying bowl-down.
+
+    It stands in for the ladle and the flour scoop as well, so the bowl is deep and wide
+    rather than delicate: a shallow tasting spoon would look wrong hanging on a pot rack."""
+    l = jit(rng, params.get("length", 0.25)) * CHUNK
+    br = jit(rng, 0.042) * CHUNK          # bowl radius before it is drawn out into an oval
+    depth = br * 0.68
+    # No plank joint should ever cross a spoon: it is carved from one billet. The grain
+    # wave in wood_planks is tied to `scale`, which is what gives it any grain at all here.
+    mat = tool_wood(pal, rng, scale=0.80, wear=0.28, age=0.5, relief=0.06,
+                    along="X", name="spoon_wood")
+    t = br * 0.16                          # wall thickness
+    prof = [(0.0, 0.0), (br * 0.45, depth * 0.10), (br * 0.80, depth * 0.40),
+            (br * 0.97, depth * 0.86), (br, depth * 1.02),
+            (br * 0.90, depth * 1.03), (br * 0.80, depth * 0.72),
+            (br * 0.46, depth * 0.34), (0.0, t)]
+    bowl = S.lathe("bowl", prof, segments=22, mat=mat, close=False)
+    bowl.scale = Vector((1.28, 0.86, 1.0))
+    S.apply_transforms(bowl)
+    S.shade_smooth(bowl, 45.0)
+    bowl.location = Vector((-l * 0.30, 0.0, 0.0))
+    S.apply_transforms(bowl)
+    # The handle leaves the bowl at its rim and settles again at the tip, so the spoon rests
+    # on the bowl's underside and on its knob the way one actually lies on a table.
+    #
+    # It starts *in* the wall, not over the middle of the dish. It used to begin a bowl
+    # radius in and a bowl depth up, which put the open mouth of the tube four millimetres
+    # clear of the bowl's inner floor: the first render showed a handle hanging in the air
+    # above an empty dish with a dark hole at its end. The bowl is scaled 1.28 in x after
+    # it is lathed, so the wall on the handle's side stands at x = 0.90 * br * 1.28 from
+    # the bowl's centre, and at that radius its two surfaces are at 0.67 and 1.03 of the
+    # depth -- which is the band the tube's axis has to be in to be inside the timber.
+    bowl_cx = -l * 0.30
+    x0, x1 = bowl_cx + br * 1.28 * 0.90, l * 0.52
+    path = [(x0, 0.0, depth * 0.85), (x0 + (x1 - x0) * 0.24, 0.0, depth * 0.94),
+            (x0 + (x1 - x0) * 0.52, 0.0, depth * 0.84),
+            (x0 + (x1 - x0) * 0.79, 0.0, depth * 0.64), (x1, 0.0, depth * 0.56)]
+    handle = S.tube_along("handle", path, radius=br * 0.21, segments=8,
+                          radius_end=br * 0.30, mat=mat)
+    # Oval in section, wide across and thin through: a round dowel reads as a lollipop.
+    _oval_along_x(handle, path, flat=0.72, wide=1.16)
+    S.shade_smooth(handle, 45.0)
+    knob = S.sphere("knob", radius=br * 0.30, subdivisions=2, location=(x1, 0, depth * 0.56),
+                    mat=mat, scale=(0.7, 1.16, 0.74))
+    S.apply_transforms(knob)
+    parts = [bowl, handle, knob]
+    for p in parts:
+        S.jitter_verts(p, amount=0.0009, scale=0.09, seed=rng.randrange(999))
+    return finish(parts, rng, "convex", ["wood_planks"])
+
+
+def _oval_along_x(ob, path, flat=0.75, wide=1.15):
+    """Squash a swept tube into an oval section about its own centre-line.
+
+    `tube_along` sweeps a circle, and a circular section is what makes a carved handle or a
+    hammer haft read as a dowel. The centre-line height is interpolated from the path so the
+    squash follows the curve instead of flattening the whole object onto one plane."""
+    xs = [p[0] for p in path]
+    zs = [p[2] for p in path]
+
+    def cz(x):
+        if x <= xs[0]:
+            return zs[0]
+        for i in range(len(xs) - 1):
+            if x <= xs[i + 1]:
+                t = (x - xs[i]) / max(1e-9, xs[i + 1] - xs[i])
+                return zs[i] + (zs[i + 1] - zs[i]) * t
+        return zs[-1]
+
+    for v in ob.data.vertices:
+        c = cz(v.co.x)
+        v.co.z = c + (v.co.z - c) * flat
+        v.co.y *= wide
+
+
+def _forged_leg(name, plan, z_mid, thick, mat, r_boss, r_tip):
+    """One leg of a pair of tongs: a bar swept through a plan curve, then flattened.
+
+    `plan` is [(x, y), ...] from the jaw tip to the rein end, passing through the boss at
+    the origin; the bar is thickest at the boss and drawn down at both ends, which is the
+    shape a leg takes under the hammer."""
+    n = len(plan)
+    pts = [(x, y, z_mid) for (x, y) in plan]
+    ob = S.tube_along(name, pts, radius=r_boss, segments=7, mat=mat)
+    # radius profile by hand: tube_along only tapers linearly end to end
+    for v in ob.data.vertices:
+        d = min(range(n), key=lambda i: (plan[i][0] - v.co.x) ** 2 + (plan[i][1] - v.co.y) ** 2)
+        t = d / (n - 1)
+        # 1.0 at the boss (mid), r_tip/r_boss at either end
+        f = r_tip / r_boss + (1.0 - r_tip / r_boss) * math.sin(math.pi * t) ** 0.7
+        v.co.x = plan[d][0] + (v.co.x - plan[d][0]) * f
+        v.co.y = plan[d][1] + (v.co.y - plan[d][1]) * f
+        v.co.z = z_mid + (v.co.z - z_mid) * f * thick
+    return ob
+
+
+def tongs(pal, rng, params, variant):
+    """A smith's tongs, lying flat as they lie on the tool rack.
+
+    Two legs riveted at the boss, jaws one side and reins the other, each leg a flat forged
+    bar. The pair sit one above the other through their whole length, which is what a rivet
+    through two bars actually gives you."""
+    l = jit(rng, params.get("length", 0.46)) * CHUNK
+    jaw = l * 0.27
+    rein = l * 0.73
+    metal = iron(pal, rng, age=0.55, wear=0.8, scale=0.14)
+    bar = 0.009 * CHUNK
+    parts = []
+    # Jaws open a little, as tongs left on a rack are -- except the pair that still has the
+    # work in them, which close on it. The docstring claimed that pair existed before the
+    # code did; `variant` was not read at all and both pairs came out the same shape.
+    gripping = bool(params.get("gripping", variant % 2 == 1))
+    spread = params.get("spread", (bar * 1.15 if gripping else 0.016 + 0.020 * rng.random()))
+    for sgn in (1, -1):
+        plan = [(-jaw, sgn * spread * 0.55), (-jaw * 0.66, sgn * spread * 0.80),
+                (-jaw * 0.30, sgn * spread * 0.55), (0.0, 0.0),
+                (rein * 0.18, -sgn * bar * 1.5), (rein * 0.45, -sgn * bar * 2.6),
+                (rein * 0.74, -sgn * bar * 3.2), (rein, -sgn * bar * 3.5)]
+        z = bar * (1.55 if sgn > 0 else 0.55)
+        leg = _forged_leg("leg_%d" % sgn, plan, z, 0.80, metal, bar * 1.25, bar * 0.62)
+        S.shade_smooth(leg, 34.0)
+        parts.append(leg)
+    parts.append(S.cylinder("rivet", radius=bar * 0.72, depth=bar * 2.9, vertices=10,
+                            location=(0, 0, -bar * 0.15), mat=metal))
+    for z in (-bar * 0.2, bar * 2.7):
+        parts.append(S.sphere("rivet_head", radius=bar * 0.95, subdivisions=2,
+                              location=(0, 0, z), mat=metal, scale=(1, 1, 0.45)))
+    if gripping:
+        # A short bar of stock held in the jaws, standing out past the tips: it is what
+        # makes the second pair a different silhouette and not merely a different seed.
+        stock = S.box_centered("stock", (jaw * 1.30, bar * 0.95, bar * 1.05),
+                               (-jaw * 1.05, 0.0, bar * 1.05), mat=metal)
+        S.bevel(stock, width=bar * 0.16, segments=2, angle_deg=45)
+        S.apply_transforms(stock)
+        parts.append(stock)
+    for p in parts:
+        S.apply_transforms(p)
+        S.jitter_verts(p, amount=0.0007, scale=0.07, seed=rng.randrange(999))
+    return finish(parts, rng, "convex", ["iron"], extra={"gripping": gripping})
+
+
+def hammer(pal, rng, params, variant):
+    """A smith's cross-peen hand hammer, lying on its side.
+
+    Built as its own thing and not as a pair of tongs: the smith's work clips are authored
+    around a hammer, and a hammer is a head with an eye and a haft through it, which is a
+    different silhouette from anything else on the rack (PROGRESS: "The smith has no
+    hammer")."""
+    haft_l = jit(rng, params.get("length", 0.33)) * CHUNK
+    hw = jit(rng, 0.062) * CHUNK          # half the head's length, along Y
+    hz = jit(rng, 0.022) * CHUNK          # half the head's depth
+    metal = iron(pal, rng, age=0.5, wear=0.85, scale=0.10)
+    ash = tool_wood(pal, rng, scale=0.70, wear=0.26, age=0.45, base_hex="#8a6c3e",
+                    relief=0.08, along="X", name="haft_wood")
+    parts = []
+    eye = S.box_centered("eye", (hz * 1.66, hw * 0.62, hz * 2.0), (0, 0, 0), mat=metal)
+    S.bevel(eye, width=hz * 0.13, segments=2, angle_deg=45)
+    parts.append(eye)
+    # A primitive keeps its `location` as an object transform, so a vertex edit after one is
+    # built is in the primitive's OWN coordinates and not the ones its location implies. Both
+    # of these tapers were first written against the placed coordinates, matched nothing at
+    # all, and shipped a hammer whose head was a plain brick at both ends.
+    face = S.box_centered("face", (hz * 1.58, hw * 0.60, hz * 1.80), (0, hw * 0.60, 0), mat=metal)
+    for v in face.data.vertices:                       # local y in [-0.30, +0.30] * hw
+        if v.co.y > hw * 0.24:
+            v.co.x *= 0.87
+            v.co.z *= 0.87
+    S.bevel(face, width=hz * 0.17, segments=3, angle_deg=45)
+    parts.append(face)
+    # the peen: drawn down to a rounded chisel edge lying across the haft
+    peen = S.box_centered("peen", (hz * 1.46, hw * 0.96, hz * 1.70), (0, -hw * 0.78, 0), mat=metal)
+    for v in peen.data.vertices:                       # local y in [-0.48, +0.48] * hw
+        if v.co.y < -hw * 0.30:
+            k = (-v.co.y / hw - 0.30) / 0.18
+            v.co.x *= 1.0 - 0.86 * min(1.0, k)
+            v.co.z *= 1.0 - 0.10 * min(1.0, k)
+    S.bevel(peen, width=hz * 0.09, segments=3, angle_deg=45)
+    parts.append(peen)
+    x0, x1 = -hz * 0.9, haft_l
+    path = [(x0, 0, 0), (hz * 1.6, 0, -hz * 0.06), (haft_l * 0.45, 0, -hz * 0.16),
+            (haft_l * 0.80, 0, -hz * 0.22), (x1, 0, -hz * 0.26)]
+    haft = S.tube_along("haft", path, radius=hz * 0.42, segments=9, radius_end=hz * 0.56, mat=ash)
+    _oval_along_x(haft, path, flat=1.12, wide=0.80)
+    S.shade_smooth(haft, 45.0)
+    parts.append(haft)
+    # the wedge that holds the head on, stood proud of the eye
+    wedge = S.box_centered("wedge", (hz * 0.28, hw * 0.48, hz * 0.34), (0, 0, hz * 0.95), mat=metal)
+    S.bevel(wedge, width=hz * 0.04, segments=2)
+    parts.append(wedge)
+    for p in parts:
+        S.jitter_verts(p, amount=0.0008, scale=0.08, seed=rng.randrange(999))
+    return finish(parts, rng, "convex", ["iron", "wood_planks"])
+
+
+def _leaf_blade(name, length, width, thick, mat, base_z=0.0, rib=1.0):
+    """A leaf-shaped blade with a diamond section: spear heads, and any socketed point.
+
+    Built ring by ring rather than as a solidified outline, because the section *is* the
+    blade — a flat plate with a bevel around it reads as a cardboard cut-out."""
+    prof = []
+    n = 11
+    for i in range(n + 1):
+        t = i / n
+        f = ((1.0 - t) ** 0.55) * (0.62 + 0.90 * math.sin(math.pi * t ** 0.8))
+        prof.append((t, f))
+    peak = max(f for _, f in prof)
+    verts = []
+    faces = []
+    for i, (t, f) in enumerate(prof):
+        z = base_z + t * length
+        w = width * 0.5 * f / peak
+        th = thick * 0.5 * (1.0 - t) ** 0.45 * (0.55 + 0.45 * rib)
+        if i == n:
+            verts.append((0.0, 0.0, z))
+            break
+        verts += [(w, 0.0, z), (0.0, th, z), (-w, 0.0, z), (0.0, -th, z)]
+    tip = len(verts) - 1
+    for i in range(n - 1):
+        a, b = i * 4, (i + 1) * 4
+        for k in range(4):
+            faces.append((a + k, a + (k + 1) % 4, b + (k + 1) % 4, b + k))
+    a = (n - 1) * 4
+    for k in range(4):
+        faces.append((a + k, a + (k + 1) % 4, tip))
+    faces.append((3, 2, 1, 0))
+    ob = S.mesh_from_pydata(name, verts, faces, mat=mat, smooth=False)
+    S.shade_smooth(ob, 32.0)
+    return ob
+
+
+def spear(pal, rng, params, variant):
+    """An ash spear standing on its butt, leaning as a spear leans in a rack.
+
+    Upright and not laid flat: the rack these go on is 1.8 m of wall and the placement
+    gives every item its own random yaw, so a two-metre shaft laid down would swing out
+    across the room. Standing, it keeps a hand's-breadth footprint at any yaw."""
+    # Length is not chunked. A storey is 2.75 m, the rack stands things 0.78 m up and the
+    # ceiling joists hang at about 2.6 m, so 1.1x here is the difference between a spear in
+    # a rack and a spear through the ceiling. The stylisation goes into the shaft instead.
+    h = jit(rng, params.get("height", 1.62))
+    blade_l = h * 0.145
+    shaft_r = 0.0165 * CHUNK
+    metal = iron(pal, rng, age=0.45, wear=0.7, scale=0.12)
+    # grain 0.09, for the same reason as the pitchfork: on a shaft this long even a quarter
+    # of the default frequency is thirteen bands, and thirteen bands around a stick is a
+    # thread, not ash.
+    ash = tool_wood(pal, rng, scale=0.55, wear=0.25, age=0.5, base_hex="#8a6c3e",
+                    relief=0.10, grain=0.09, along="Z", name="shaft_wood")
+    cord = M.rope(pal, age=0.6, scale=0.05)
+    shaft_top = h - blade_l - h * 0.035
+    bow = h * 0.012 * rng.uniform(-1.0, 1.0)
+    path = [(math.sin(i / 8.0 * math.pi) * bow, 0.0, shaft_top * i / 8.0) for i in range(9)]
+    shaft = S.tube_along("shaft", path, radius=shaft_r * 1.06, segments=9,
+                         radius_end=shaft_r * 0.92, mat=ash)
+    S.shade_smooth(shaft, 45.0)
+    parts = [shaft]
+    # socket: a cone swaged down onto the shaft, with its seam rivet
+    parts.append(S.lathe("socket", [(shaft_r * 1.18, shaft_top - h * 0.055),
+                                    (shaft_r * 1.22, shaft_top - h * 0.030),
+                                    (shaft_r * 1.05, shaft_top + h * 0.012),
+                                    (shaft_r * 0.85, shaft_top + h * 0.034)],
+                         segments=12, mat=metal, close=True))
+    _zr = shaft_top - h * 0.030
+    parts.append(S.sphere("socket_rivet", radius=shaft_r * 0.30, subdivisions=2,
+                          location=(math.sin(_zr / shaft_top * math.pi) * bow + shaft_r * 1.1,
+                                    0, _zr), mat=metal, scale=(0.5, 1, 1)))
+    # A leaf, not a needle. At h * 0.036 the blade was four times as long as it was wide
+    # and the render gave a knitting needle on a stick; a spear head you can name at a
+    # glance is nearer two and a half to one.
+    blade = _leaf_blade("blade", blade_l, h * 0.060, shaft_r * 1.05, metal,
+                        base_z=shaft_top + h * 0.020, rib=1.0)
+    blade.rotation_euler = Euler((0, 0, rng.uniform(0, TAU)))
+    S.apply_transforms(blade)
+    parts.append(blade)
+    # butt ferrule, and a grip whipping of cord two hands down from the head
+    parts.append(S.lathe("ferrule", [(shaft_r * 1.16, 0.0), (shaft_r * 1.20, h * 0.022),
+                                     (shaft_r * 1.03, h * 0.050)],
+                         segments=12, mat=metal, close=True))
+    # On the shaft's own centre-line, not on the Z axis: the shaft is bowed by up to a
+    # whole shaft radius at mid-height, so a ring hung on the axis bites into the stave on
+    # one side and hangs off it on the other.
+    for k in range(5):
+        z = shaft_top * 0.62 + k * shaft_r * 0.66
+        parts.append(B.rope_loop("whip_%d" % k, shaft_r * 1.05, shaft_r * 0.30, mat=cord,
+                                 segments=12,
+                                 location=(math.sin(z / shaft_top * math.pi) * bow, 0.0, z)))
+    lean = params.get("lean", rng.uniform(3.5, 7.5)) * (1 if rng.random() < 0.5 else -1)
+    stand_up(parts, lean)
+    return finish(parts, rng, "convex", ["iron", "wood_planks", "rope"])
+
+
+def _dome_strap(name, length, width, thick, dome, angle, mat, rng, rivets=3, steps=16):
+    """An iron strap laid across a dished shield, following the dish.
+
+    A straight bar set at one height over a domed board sinks into it at the middle and
+    lifts off it at the ends: what you get is four floating tabs round a boss, not two
+    straps crossing. So the bar is swept along the board's own surface.
+
+    Built as a four-sided bar divided only along its length, which is the shape a strap
+    actually is and costs a few dozen triangles. A box put through a subdivision fine enough
+    to follow the dish is also divided across its width and through its thickness, and the
+    first shield built that way came out at ten thousand triangles for a three-quarter-metre
+    prop, against the five hundred to six thousand DESIGN 7.0 allows an ordinary one."""
+    hw, ht = width * 0.5, thick
+    verts, faces = [], []
+    for i in range(steps + 1):
+        x = (i / steps - 0.5) * length
+        z0 = dome(abs(x)) - thick * 0.25
+        verts += [(x, -hw, z0), (x, hw, z0), (x, hw, z0 + ht), (x, -hw, z0 + ht)]
+    for i in range(steps):
+        a, b = i * 4, (i + 1) * 4
+        for k in range(4):
+            faces.append((a + k, b + k, b + (k + 1) % 4, a + (k + 1) % 4))
+    faces.append((3, 2, 1, 0))
+    e = steps * 4
+    faces.append((e, e + 1, e + 2, e + 3))
+    ob = S.mesh_from_pydata(name, verts, faces, mat=mat, smooth=False)
+    S.bevel(ob, width=thick * 0.30, segments=2, angle_deg=35)
+    parts = [ob]
+    for i in range(rivets):
+        f = (i + 0.5) / rivets
+        x = length * 0.5 * (0.18 + 0.78 * f)
+        for sx in (-1, 1):
+            parts.append(S.sphere("%s_rivet_%d_%d" % (name, i, sx), radius=thick * 0.62,
+                                  subdivisions=1, location=(sx * x, 0, dome(x) + thick * 0.7),
+                                  mat=mat, scale=(1, 1, 0.55)))
+    joined = S.join(parts, name)
+    joined.rotation_euler = Euler((0, 0, angle))
+    S.apply_transforms(joined)
+    return joined
+
+
+def shield(pal, rng, params, variant):
+    """A round board shield, stood on its rim and leaning back against what is behind it.
+
+    Dished rather than flat, with an iron boss, a hide-bound rim and two straps across the
+    face. Standing is the honest pose: on a rack at chest height a leaning shield reads as
+    hung on the wall, which is where a shield lives, and it keeps a small footprint at the
+    random yaw the placement gives it."""
+    r = jit(rng, params.get("radius", 0.34)) * CHUNK
+    # `along="XZ"`, not "X": the board is lathed flat and then stood up, and that rotation
+    # is applied into object space, so plank rows asked for in the XY plane would run
+    # through the twelve millimetres of board thickness and never be seen.
+    # grain 0.08 across a 0.75 m board. The quarter a hand tool wants bands it every 53 mm,
+    # which on a face this wide is fourteen stripes and reads as corduroy rather than as
+    # boards; at 0.08 it is four soft tones across the face and the plank joints, which are
+    # a separate pattern, are what the eye picks up.
+    board = tool_wood(pal, rng, scale=0.30, wear=0.30, age=0.6, base_hex="#7d6138",
+                      relief=0.16, grain=0.08, plank_len=2.6, plank_w=0.52, along="XZ",
+                      name="shield_board")
+    metal = iron(pal, rng, age=0.6, wear=0.7, scale=0.16)
+    hide = M.leather(pal, age=0.75, wear=0.4, scale=0.10, base_hex="#4a3320")
+    face_z = r * 0.075
+    front = [(0.0, 1.00), (0.40, 0.86), (0.74, 0.54), (0.95, 0.10), (1.0, -0.16)]
+
+    def dome(rr):
+        """The height of the board's front face at radius `rr`, from the lathe profile."""
+        t = min(1.0, rr / r)
+        for (a, za), (b, zb) in zip(front, front[1:]):
+            if t <= b:
+                k = (t - a) / max(1e-9, b - a)
+                return face_z * (za + (zb - za) * k)
+        return face_z * front[-1][1]
+
+    prof = [(r * a, face_z * z) for (a, z) in front]
+    prof += [(r * 0.985, -face_z * 0.52), (r * 0.72, -face_z * 0.26),
+             (r * 0.38, -face_z * 0.05), (0.0, face_z * 0.05)]
+    disc = S.lathe("board", prof, segments=28, mat=board, close=False)
+    S.shade_smooth(disc, 42.0)
+    S.jitter_verts(disc, amount=r * 0.008, scale=0.12, seed=rng.randrange(999))
+    parts = [disc]
+    parts.append(B.hoop("rim", r * 0.995, r * 0.030, mat=hide, location=(0, 0, -face_z * 0.05),
+                        segments=28, flatten=1.45))
+    for i, a in enumerate((0.42, 2.51)):
+        parts.append(_dome_strap("strap_%d" % i, r * 1.88, r * 0.125, r * 0.028, dome, a,
+                                 metal, rng))
+    bo = r * 0.23
+    seat = dome(bo * 1.42)
+    parts.append(S.lathe("boss", [(bo * 1.42, seat), (bo * 1.36, seat + face_z * 0.22),
+                                  (bo * 1.00, seat + face_z * 0.36), (bo * 0.86, seat + face_z * 0.82),
+                                  (bo * 0.44, seat + face_z * 1.16), (0.0, seat + face_z * 1.24)],
+                         segments=20, mat=metal, close=True))
+    S.shade_smooth(parts[-1], 40.0)
+    for i in range(6):
+        a = TAU * i / 6 + 0.3
+        rr = bo * 1.22
+        parts.append(S.sphere("boss_rivet_%d" % i, radius=bo * 0.11, subdivisions=1,
+                              location=(math.cos(a) * rr, math.sin(a) * rr, dome(rr)),
+                              mat=metal, scale=(1, 1, 0.55)))
+    # the grip behind the boss, seen when the shield is leaned face-out
+    parts.append(B.board("grip", r * 0.86, r * 0.10, r * 0.035, mat=board,
+                         location=(0, 0, -face_z * 0.42), rotation=(0, 0, 90)))
+    lean = params.get("lean", rng.uniform(9.0, 15.0))
+    stand_up(parts, 90.0 - lean)
+    return finish(parts, rng, "convex", ["wood_planks", "iron", "leather"])
+
+
+def pitchfork(pal, rng, params, variant):
+    """A hayfork: ash shaft, forged socket, three drawn tines, stood tines-up.
+
+    Also the written stand-in for a scythe, so the head is kept plainly agricultural rather
+    than specific to hay."""
+    h = jit(rng, params.get("height", 1.68)) * CHUNK
+    shaft_r = 0.0185 * CHUNK
+    tine_l = h * 0.21
+    metal = iron(pal, rng, age=0.7, wear=0.8, scale=0.13)
+    # grain 0.09: the wave bands every scale/(22.5*grain) metres, so on a 1.4 m shaft the
+    # 0.25 a hand tool wants would still be thirteen rings of tone around a stick. Five is
+    # a stave; thirteen is a screw thread, which is what the first render showed.
+    ash = tool_wood(pal, rng, scale=0.55, wear=0.28, age=0.65, base_hex="#7f6236",
+                    relief=0.10, grain=0.09, along="Z", name="shaft_wood")
+    shaft_top = h - tine_l - h * 0.045
+    bow = h * 0.016 * rng.uniform(-1.0, 1.0)
+    # Sixteen segments, not eight: the hand swell below is the shaft's own vertices, and
+    # eight rings over a metre and a half put two of them inside the grip.
+    path = [(math.sin(i / 16.0 * math.pi) * bow, 0.0, shaft_top * i / 16.0) for i in range(17)]
+    shaft = S.tube_along("shaft", path, radius=shaft_r * 1.10, segments=9,
+                         radius_end=shaft_r * 0.94, mat=ash)
+    S.shade_smooth(shaft, 45.0)
+    parts = [shaft]
+    parts.append(S.lathe("socket", [(shaft_r * 1.20, shaft_top - h * 0.060),
+                                    (shaft_r * 1.26, shaft_top - h * 0.028),
+                                    (shaft_r * 1.10, shaft_top + h * 0.018),
+                                    (shaft_r * 0.96, shaft_top + h * 0.042)],
+                         segments=12, mat=metal, close=True))
+    spread = h * 0.052
+    z0 = shaft_top + h * 0.036
+    for i in (-1, 0, 1):
+        pts = []
+        for k in range(7):
+            t = k / 6.0
+            pts.append((i * spread * t ** 0.75, 0.0,
+                        z0 + tine_l * t - tine_l * 0.06 * math.sin(math.pi * t)))
+        parts.append(S.tube_along("tine_%d" % i, pts, radius=shaft_r * 0.46, segments=7,
+                                  radius_end=shaft_r * 0.06, mat=metal))
+    parts.append(B.hoop("collar", shaft_r * 1.22, shaft_r * 0.16, mat=metal,
+                        location=(0, 0, shaft_top - h * 0.050), segments=14, flatten=1.6))
+    # A worn swell where two generations of hands have held it -- and it is the shaft's own
+    # vertices, not a separate piece. As its own lathe on the Z axis it was inside the
+    # shaft at one end and outside it at the other, because the shaft tapers and bows
+    # besides, and the two surfaces crossing drew a hard dark seam down the render. Swept
+    # along the shaft's real centre-line instead it stayed concentric but still left the
+    # crevice where a ten-sided sleeve cuts a nine-sided stick: a sawtooth ring of ambient
+    # occlusion at each end of the grip, which is not what worn ash looks like. One
+    # surface has no crevice to occlude.
+    gz0, gz1 = h * 0.16, h * 0.35
+    for v in shaft.data.vertices:
+        if gz0 <= v.co.z <= gz1:
+            t = (v.co.z - gz0) / (gz1 - gz0)
+            cx = math.sin(v.co.z / shaft_top * math.pi) * bow
+            f = 1.0 + 0.16 * math.sin(math.pi * t) ** 0.7
+            v.co.x = cx + (v.co.x - cx) * f
+            v.co.y *= f
+    lean = params.get("lean", rng.uniform(4.0, 9.0)) * (1 if rng.random() < 0.5 else -1)
+    stand_up(parts, lean)
+    return finish(parts, rng, "convex", ["iron", "wood_planks"])
+
+
+def whetstone(pal, rng, params, variant):
+    """A hone stone, dished in the middle by years of the same stroke.
+
+    Its own mesh rather than a stand-in, because a whetstone is a 0.2 m block and the thing
+    it used to borrow was a 0.46 m pair of tongs."""
+    l = jit(rng, params.get("length", 0.20)) * CHUNK
+    w_ = jit(rng, 0.052) * CHUNK
+    t = jit(rng, 0.040) * CHUNK
+    # Not granite. Granite carries a heavy speckle, a yellow lichen and a strong facet
+    # field; at a 0.2 m object's scale those turn a hone into a lump of coal in snow. Lake
+    # stone is the substance a hone actually is -- dark, close-grained, faintly glossy where
+    # it has been rubbed -- and it takes the local palette like every other material here.
+    #
+    # `scale` is a feature size in metres and 0.10 was near the stone's own thickness, so
+    # lake_stone's bedding banded it every seven millimetres and its 40 mm bedding bump --
+    # an absolute, not a fraction of `scale` -- stood the bands proud: the first render
+    # gave a hone whose sides were courses of stacked slate. A hone is close-grained; it
+    # wants one tone, so the features go well past the object and the relief comes down.
+    stone = M.lake_stone(pal, wear=0.30, age=0.35, tint=0.10, scale=0.45, relief=0.10,
+                         name="hone_stone")
+    body = S.box_centered("hone", (l, w_, t), (0, 0, 0), mat=stone)
+    S.subdivide(body, levels=3, simple=True)   # dissolved back to the dish below
+    dish = t * params.get("dish", 0.20 + 0.16 * rng.random())
+    for v in body.data.vertices:
+        u = abs(v.co.x) / (l * 0.5)
+        k = abs(v.co.y) / (w_ * 0.5)
+        hollow = dish * max(0.0, 1.0 - u ** 2.2) * max(0.0, 1.0 - k ** 3.0)
+        if v.co.z > 0:
+            v.co.z -= hollow
+        else:
+            v.co.z += hollow * 0.35
+    # Everything but the dished face is still flat, and a flat face cut into sixty-four
+    # pieces is sixty-three wasted triangles on a 0.2 m object. The planar dissolve keeps
+    # the curvature and gives the rest back.
+    S.decimate(body, ratio=1.0, planar_deg=4.0)
+    S.bevel(body, width=min(w_, t) * 0.16, segments=2, angle_deg=40)
+    S.jitter_verts(body, amount=0.0012, scale=0.05, seed=rng.randrange(999))
+    S.shade_smooth(body, 36.0)
+    parts = [body]
+    if params.get("bedded", variant % 2 == 1):
+        # bedded in an oak block, the way a hone that lives on one bench is kept
+        oak = tool_wood(pal, rng, scale=0.60, wear=0.25, age=0.7, relief=0.09,
+                        along="X", name="hone_block")
+        bed = S.box_centered("block", (l * 1.18, w_ * 2.1, t * 0.72), (0, 0, -t * 0.62), mat=oak)
+        S.bevel(bed, width=t * 0.07, segments=2, angle_deg=40)
+        S.jitter_verts(bed, amount=0.0012, scale=0.08, seed=rng.randrange(999))
+        parts.append(bed)
+    # One tilt for the whole assembly, not one for the hone alone: tilting the stone inside
+    # its block sank one end of it into the oak and lifted the other clear of it.
+    rot = Euler((math.radians(rng.uniform(-2.0, 2.0)), math.radians(rng.uniform(-2.0, 2.0)),
+                 rng.uniform(0.0, TAU)), "XYZ")
+    for p in parts:
+        S.apply_transforms(p)
+        p.rotation_euler = rot
+        S.apply_transforms(p)
+    return finish(parts, rng, "convex", ["lake_stone", "wood_planks"])
+
+
+# =========================================================================================
+# the mill, the bakehouse, the woodpile and the peat bank
+#
+# The last four kinds an interior asks for by name and the forge had never made. The first
+# two were drawn as labelled placeholders in Maud's bakehouse and Pennywort's Mill; the
+# other two were worn by a village work station as a crate and a bucket, because a chopping
+# block and a peat bank did not exist to wear.
+# =========================================================================================
+
+def _hewn_billet(name, radius, height, mat, rng, sides=9, taper=0.955, jitter=0.04):
+    """A length of trunk hewn to an odd number of flats and stood on its end.
+
+    Nine sides put 40 degrees between facets, more than the exporter's 35 degree smoothing
+    angle, so it stays faceted and reads as axe-work rather than as a turned drum; an odd
+    number and a per-facet radius stop it reading as a barrel."""
+    log = S.lathe(name, [(radius * 1.10, 0.0), (radius * 1.02, height * 0.13),
+                         (radius * 0.97, height * 0.52), (radius * 0.99, height * 0.86),
+                         (radius * taper, height)],
+                  segments=sides, mat=mat, close=True)
+    facet = [rng.uniform(0.93, 1.05) for _ in range(sides)]
+    for v in log.data.vertices:
+        rr = math.hypot(v.co.x, v.co.y)
+        if rr > 1e-6:
+            f = facet[int(round((math.atan2(v.co.y, v.co.x) % TAU) / TAU * sides)) % sides]
+            v.co.x *= f
+            v.co.y *= f
+    S.jitter_verts(log, amount=radius * jitter, scale=0.22, seed=rng.randrange(999))
+    return log
+
+
+def loaf(pal, rng, params, variant):
+    """A baked loaf, risen and scored, for Maud's bread shelf.
+
+    Three of these stand in a row on one shelf, so the two variants have to differ in
+    silhouette and not only in seed: a round cob scored with a cross, and a long batch loaf
+    with diagonal slashes down its back. The scores are cut into the mesh rather than drawn
+    in the texture, because what says `bread` at two metres is the split crust catching the
+    light along its edge, and a painted line does not catch anything."""
+    long_loaf = bool(params.get("long", variant % 2 == 1))
+    w_ = jit(rng, params.get("width", 0.20))
+    l = w_ * (1.55 if long_loaf else 1.0)
+    # 0.076 and not the 0.090 `HouseInterior._placeholder_size` writes down, because the
+    # written size is the finished loaf and this one is the dough: the scores lift a
+    # shoulder either side of every cut, and at 0.090 the baked loaf came out at 0.114 m
+    # and 27% over its own spec.
+    h = jit(rng, params.get("height", 0.076))
+    crust = M.bread(pal, bake=0.55 + 0.35 * rng.random(), flour=0.35 + 0.3 * rng.random(),
+                    scale=0.22, name="loaf_crust")
+    # Five subdivisions and then decimated back: the scores are cut into the mesh, and at
+    # four the sphere had too few vertices across a score to carry one.
+    body = S.sphere("loaf", radius=0.5, subdivisions=5, mat=crust)
+    S.apply_transforms(body)
+    # The dough sits down on the tray and rises up and outward: wider at the waist than at
+    # the foot, and flat underneath. A plain squashed ball reads as a stone.
+    for v in body.data.vertices:
+        t = v.co.z + 0.5                        # 0 at the bottom of the ball, 1 at the top
+        flare = 0.82 + 0.30 * math.sin(math.pi * min(1.0, t * 0.92))
+        v.co.x *= l * flare
+        v.co.y *= w_ * flare
+        # The underside is flat: the bottom fifth of the ball is folded onto the peel, so
+        # the loaf sits on a base the width of its waist instead of balancing on a point.
+        v.co.z = h * max(0.0, t - 0.20) / 0.80
+    # The scores: valleys where the baker's blade opened the crust, with the crust lifted
+    # into a shoulder on either side. One smooth function of the distance from the cut, and
+    # not a valley term plus a separate lip term: the first pass added the lip only to the
+    # vertices that fell in a narrow band, and on a sphere whose vertices are nowhere near
+    # a grid that gave a ring of spikes -- a bread roll in a paper crown. (u^2 - 1)e^(-u^2/2)
+    # is -1 at the cut, rises to a shoulder about one and a half widths out and dies away,
+    # and every vertex is somewhere on it.
+    cuts = ([(0.0, 1.0), (1.0, 0.0)] if not long_loaf
+            else [(0.80, 0.60)] * 3)
+    offs = [0.0, 0.0] if not long_loaf else [-l * 0.62, 0.0, l * 0.62]
+    sigma = w_ * 0.115
+    for (dx, dy), off in zip(cuts, offs):
+        n = math.hypot(dx, dy)
+        dx, dy = dx / n, dy / n
+        for v in body.data.vertices:
+            # fades out down the sides: a blade opens the crown, not the waist
+            lift = min(1.0, max(0.0, (v.co.z / h - 0.30) / 0.50))
+            if lift <= 0.0:
+                continue
+            u = abs((v.co.x - off) * dy - v.co.y * dx) / sigma
+            if u > 3.2:
+                continue
+            v.co.z += h * 0.34 * lift * (u * u - 1.0) * math.exp(-u * u * 0.5)
+    S.jitter_verts(body, amount=w_ * 0.010, scale=0.09, seed=rng.randrange(999))
+    S.shade_smooth(body, 38.0)
+    S.decimate(body, ratio=0.30)
+    body.rotation_euler = Euler((0, 0, rng.uniform(0.0, TAU)))
+    S.apply_transforms(body)
+    return finish([body], rng, "convex", ["bread"], extra={"long": long_loaf})
+
+
+def millstone(pal, rng, params, variant):
+    """A dressed millstone lying flat on the mill floor: two metres across, eyed and harped.
+
+    The thing that makes a disc of gritstone a millstone is the dressing -- the furrows cut
+    from the eye out to the skirt in straight-sided groups, so the meal is cut and driven
+    outward rather than merely crushed. They are cut into the mesh for the same reason the
+    loaf's scores are: this stone is the centre of a room a player walks around, and a
+    furrow that is only a dark line in the albedo vanishes the moment the light moves."""
+    r = jit(rng, params.get("radius", 1.0))
+    h = jit(rng, params.get("thickness", 0.40))
+    eye = r * params.get("eye", 0.21)
+    harps = int(params.get("harps", 12))
+    # Granite's defaults are a boulder's: grey, cool and a third covered in yellow lichen,
+    # which on a two-metre disc under a mill roof read as a pale mossy cheese. A working
+    # stone is swept, wetted and dressed every week and grows nothing; it is the warm dry
+    # colour of quarried grit. Same rock, different life.
+    stone = M.granite(pal, wear=0.45, age=0.7, tint=0.16, tint_role="earth",
+                      base_hex="#5d544a", lichen=0.0, facet=0.35, scale=0.60,
+                      name="mill_grit")
+    metal = iron(pal, rng, age=0.85, wear=0.55, scale=0.18)
+    segs = 120        # ten segments to a furrow group, so the land has a shape to read
+    # An annulus in section: up the eye, out across the grinding face, down the skirt and
+    # back under. The profile closes on itself, so no cap is wanted at either end.
+    face_ring = [0.30, 0.52, 0.72, 0.87, 0.96]
+    prof = [(eye, h * 0.06), (eye * 1.03, h * 0.94), (eye * 1.12, h)]
+    for f in face_ring:
+        # The face is worn hollow: a stone that has ground for a generation is lowest a
+        # third of the way out and lifts again at the skirt where the meal leaves it.
+        prof.append((r * f, h - h * 0.045 * math.sin(math.pi * min(1.0, f / 0.96))))
+    prof += [(r, h * 0.88), (r, h * 0.12), (r * 0.96, 0.0),
+             (eye * 1.30, 0.0), (eye, h * 0.06)]
+    disc = S.lathe("stone", prof, segments=segs, mat=stone, close=False)
+    # the harp: groups of furrows, each group a straight-sided land falling to a deep edge
+    for v in disc.data.vertices:
+        rr = math.hypot(v.co.x, v.co.y)
+        if v.co.z < h * 0.80 or rr < eye * 1.25 or rr > r * 0.99:
+            continue
+        a = (math.atan2(v.co.y, v.co.x) % TAU) / TAU * harps
+        t = a - math.floor(a)                    # 0 at the cutting edge, 1 at the back
+        # Deep enough to be seen from standing height across a mill floor. At a fortieth of
+        # the thickness the dressing was there in the mesh and invisible in the render,
+        # which is the same as not being there.
+        v.co.z -= h * 0.16 * (1.0 - t) ** 2.2
+    S.jitter_verts(disc, amount=r * 0.004, scale=0.35, seed=rng.randrange(999))
+    # 22 degrees, not 30: the furrow's cutting edge is a hard step and the smoothing angle
+    # is what decides whether it stays one.
+    S.shade_smooth(disc, 22.0)
+    parts = [disc]
+    # The rynd: the iron cross bedded in the eye that the spindle drives the stone by.
+    for i in range(2):
+        parts.append(B.iron_strap("rynd_%d" % i, eye * 2.5, eye * 0.42, eye * 0.16,
+                                  mat=metal, location=(0, 0, h - eye * 0.10),
+                                  rotation=(0, 0, 90 * i)))
+    parts.append(S.lathe("rynd_boss", [(eye * 0.52, h - eye * 0.16), (eye * 0.58, h + eye * 0.10),
+                                       (eye * 0.30, h + eye * 0.16), (0.0, h + eye * 0.16)],
+                         segments=16, mat=metal, close=True))
+    # a lifting band round the skirt, and the two eyes it is slung from
+    parts.append(B.hoop("band", r * 1.005, h * 0.045, mat=metal,
+                        location=(0, 0, h * 0.50), segments=segs // 2, flatten=2.4))
+    for sx in (-1, 1):
+        parts.append(S.sphere("lug_%d" % sx, radius=h * 0.085, subdivisions=2,
+                              location=(sx * r * 1.01, 0, h * 0.50), mat=metal,
+                              scale=(0.6, 1.0, 1.0)))
+    return finish(parts, rng, "trimesh", ["granite", "iron"])
+
+
+def chopping_block(pal, rng, params, variant):
+    """A block with an axe left standing in it: the shape that says `firewood` at a glance.
+
+    A village work station wears one prop and has to be read across a yard, so the axe is
+    what the prop is for -- a bare stump is a seat, a bollard or a bit of scenery, and only
+    the helve standing out of the end names the work. It is left bitten in at an angle,
+    because an axe parked upright in a block looks placed and an axe leaning looks used."""
+    r = jit(rng, params.get("radius", 0.21)) * CHUNK
+    h = jit(rng, params.get("height", 0.44)) * CHUNK
+    oak = tool_wood(pal, rng, scale=0.24, wear=0.12, age=0.55, base_hex="#4a331c",
+                    tint=0.16, relief=0.28, grain=0.40, along="Z", name="block_oak")
+    end = tool_wood(pal, rng, scale=0.20, wear=0.18, age=0.35, base_hex="#7a5c34",
+                    tint=0.22, relief=0.10, grain=0.30, along="Z", name="block_end")
+    metal = iron(pal, rng, age=0.5, wear=0.85, scale=0.11)
+    helve_wood = tool_wood(pal, rng, scale=0.55, wear=0.24, age=0.45, base_hex="#8a6c3e",
+                           relief=0.08, grain=0.12, along="X", name="helve_wood")
+    block = _hewn_billet("block", r, h, oak, rng, sides=9)
+    # The end grain is a different surface from the bark side and a chopping block is all
+    # end grain on top: pale, split and hacked. It is a second material on the billet's own
+    # top faces, not a disc laid over them -- a disc standing two millimetres proud read as
+    # a lid, and the block as a barrel.
+    S.assign_material_to_faces(block, end,
+                               lambda f: f.normal.z > 0.7 and f.center.z > h * 0.90)
+    parts = [block]
+    # the axe, bitten in off centre and leaning back over the block
+    lean = params.get("lean", rng.uniform(26.0, 38.0))
+    bx = r * rng.uniform(-0.25, 0.25)
+    hl = jit(rng, 0.46) * CHUNK
+    hlen, bw, bd = 0.150, 0.056, 0.016      # head length, half its depth, half its thickness
+    bite = 0.026                            # how far the edge is in, measured from the top
+    # The head is built with its edge on the local z=0 plane and its eye above, so placing
+    # the axe is a matter of saying where the edge bit and not of solving for the middle.
+    # Built centred on the origin, the first version buried all but a couple of millimetres
+    # of a hand's-breadth head in the block: the render gave a stick standing in a stump.
+    head = S.box_centered("axe_head", (hlen, bd * 2.0, bw * 2.0), (0, 0, bw), mat=metal)
+    for v in head.data.vertices:            # drawn down to a cutting edge at -x, and flared
+        if v.co.x < -hlen * 0.14:
+            v.co.y *= 0.22
+            v.co.z = bw + (v.co.z - bw) * 1.24
+    S.bevel(head, width=0.005, segments=2, angle_deg=45)
+    eye = S.cylinder("axe_eye", radius=bd * 1.55, radius_top=bd * 1.40, depth=bw * 1.7,
+                     vertices=10, location=(hlen * 0.40, 0, bw * 0.35), mat=metal)
+    helve = S.tube_along("helve", [(hlen * 0.40, 0.0, bw * 0.6), (hlen * 0.40, 0.0, bw + hl * 0.40),
+                                   (hlen * 0.34, 0.0, bw + hl * 0.72), (hlen * 0.24, 0.0, bw + hl)],
+                         radius=bd * 0.98, segments=8, radius_end=bd * 1.25, mat=helve_wood)
+    S.shade_smooth(helve, 45.0)
+    axe = [head, eye, helve]
+    yaw = rng.uniform(0.0, TAU)
+    for p in axe:
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((0.0, math.radians(-lean), 0.0))
+        S.apply_transforms(p)
+        p.location = Vector((bx, 0.0, h - bite))
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((0.0, 0.0, yaw))
+        S.apply_transforms(p)
+    parts += axe
+    # splits and a chip or two left where they fell
+    chip_wood = tool_wood(pal, rng, scale=0.30, wear=0.22, age=0.4, base_hex="#7a5c34",
+                          relief=0.10, grain=0.30, along="X", name="chip_wood")
+    for i in range(int(params.get("chips", 3))):
+        a = rng.uniform(0, TAU)
+        d = r * rng.uniform(1.15, 1.75)
+        c = S.box_centered("chip_%d" % i, (rng.uniform(0.05, 0.09), rng.uniform(0.018, 0.032),
+                                           rng.uniform(0.012, 0.022)),
+                           (math.cos(a) * d, math.sin(a) * d, 0.010), mat=chip_wood)
+        S.bevel(c, width=0.003, segments=1, angle_deg=40)
+        S.apply_transforms(c)
+        S.tilt(c, rng, max_deg=22.0)
+        S.jitter_verts(c, amount=0.002, scale=0.06, seed=rng.randrange(999))
+        parts.append(c)
+    return finish(parts, rng, "convex", ["wood_planks", "iron"])
+
+
+def peat_stack(pal, rng, params, variant):
+    """Cut peat stacked to dry, with the spade left standing in the bank beside it.
+
+    A peat rickle is built loose on purpose -- turves laid across each other with the wind
+    left a way through -- so this is not a wall of bricks: each course crosses the one
+    under it, every turf is its own slab with its own lean, and the top course is short
+    because a stack is built until the barrow is empty."""
+    w_ = jit(rng, params.get("width", 0.96)) * CHUNK
+    d = jit(rng, params.get("depth", 0.62)) * CHUNK
+    courses = int(params.get("courses", 5))
+    # One turf is a brick, not a sleeper. Cut with a spade it comes out about the length of
+    # a forearm and a hand across; the first pass ran each one the whole depth of the stack
+    # and gave a timber crib with a peat texture on it.
+    tw, tt = 0.135, 0.078                                 # a turf across, and its thickness
+    peat = M.wet_mud(pal, age=0.85, tint=0.12, scale=0.30, base_hex="#241a12",
+                     name="cut_peat")
+    parts = []
+    for c in range(courses):
+        z = tt * (c + 0.5) * 0.98
+        across = (c % 2 == 0)
+        span, run = (w_, d) if across else (d, w_)
+        n = max(3, int(span / (tw * 1.10)) - (1 if c == courses - 1 else 0))
+        rows = max(2, int(round(run / (tw * 2.1))))
+        for i in range(n):
+            off = -span * 0.5 + span * (i + 0.5) / n
+            for j in range(rows):
+                roff = -run * 0.5 + run * (j + 0.5) / rows
+                tl = (run / rows) * rng.uniform(0.86, 0.97)
+                loc = (off, roff, z) if across else (roff, off, z)
+                tww = tw * rng.uniform(0.84, 0.96)
+                size = (tww, tl, tt * rng.uniform(0.86, 1.0)) if across \
+                    else (tl, tww, tt * rng.uniform(0.86, 1.0))
+                t = S.box_centered("turf_%d_%d_%d" % (c, i, j), size, loc, mat=peat)
+                S.bevel(t, width=0.007, segments=2, angle_deg=40)
+                S.apply_transforms(t)
+                t.rotation_euler = Euler((math.radians(rng.uniform(-4, 4)),
+                                          math.radians(rng.uniform(-4, 4)),
+                                          math.radians(rng.uniform(-6, 6))))
+                S.apply_transforms(t)
+                S.jitter_verts(t, amount=0.006, scale=0.07, seed=rng.randrange(999))
+                parts.append(t)
+    # the tusker: a long-handled peat spade with a wing on one side of the blade
+    metal = iron(pal, rng, age=0.7, wear=0.85, scale=0.11)
+    ash = tool_wood(pal, rng, scale=0.55, wear=0.26, age=0.5, base_hex="#8a6c3e",
+                    relief=0.10, grain=0.09, along="Z", name="tusker_wood")
+    sx = w_ * 0.52 + 0.11
+    sh = jit(rng, 1.24)
+    shaft_r = 0.019
+    shaft = S.tube_along("tusker", [(sx, 0.0, 0.10), (sx, 0.0, sh * 0.55), (sx, 0.0, sh)],
+                         radius=shaft_r * 1.05, segments=8, radius_end=shaft_r * 0.92, mat=ash)
+    S.shade_smooth(shaft, 45.0)
+    parts.append(shaft)
+    parts.append(B.board("tusker_grip", 0.15, 0.036, 0.026, mat=ash,
+                         location=(sx, 0, sh), rotation=(0, 0, 90), chamfer=0.006))
+    blade = S.box_centered("tusker_blade", (0.052, 0.008, 0.26), (sx, 0.0, 0.10), mat=metal)
+    S.bevel(blade, width=0.004, segments=2, angle_deg=45)
+    parts.append(blade)
+    wing = S.box_centered("tusker_wing", (0.008, 0.075, 0.175), (sx - 0.026, 0.036, 0.13),
+                          mat=metal)
+    S.bevel(wing, width=0.003, segments=2, angle_deg=45)
+    parts.append(wing)
+    for p in parts[-4:]:
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((0.0, math.radians(params.get("spade_lean", 11.0)), 0.0))
+        S.apply_transforms(p)
+    # `tier="tiny"` forces a 256 atlas although the stack is more than a metre across.
+    # `pick_resolution` goes on the bounding radius, which is the right rule for a prop
+    # whose surface is one continuous thing; this one is fifty separate blocks of one dark,
+    # near-featureless peat, and at 512 it was the heaviest asset in the props tree for no
+    # visible return. Checked against the 512 bake side by side before it was cut.
+    return finish(parts, rng, "convex", ["wet_mud", "iron", "wood_planks"], tier="tiny")
 
 
 # =========================================================================================
@@ -1147,7 +2199,7 @@ def market_stall(pal, rng, params, variant):
     d = jit(rng, 1.3) * CHUNK
     h = jit(rng, 2.2) * CHUNK
     mat = wood(pal, rng, age=0.5, plank_len=w_, plank_w=0.13, along="X")
-    awning = cloth(pal, rng, role="accent", scale=0.8)
+    awning = cloth_mat(pal, rng, role="accent", scale=0.8)
     parts = []
     table_h = 0.85 * CHUNK
     parts += B.plank_run("counter", 4, w_, d / 4, 0.03, mat=mat, rng=rng, origin=(0, 0, table_h))
@@ -1184,7 +2236,6 @@ def dock_post(pal, rng, params, variant):
     post = S.lathe("post", [(r * 1.1, 0.0), (r, h * 0.3), (r * 0.94, h * 0.7),
                             (r * 0.96, h * 0.92), (r * 0.82, h)], segments=12, mat=mat, close=True)
     S.jitter_verts(post, amount=r * 0.09, scale=1.2, seed=rng.randrange(999))
-    S.tilt(post, rng, max_deg=5.0)
     parts = [post]
     for i in range(int(params.get("rope_turns", 4))):
         parts.append(B.rope_loop("lash_%d" % i, r * 1.16, 0.014, mat=cord, segments=18,
@@ -1192,6 +2243,12 @@ def dock_post(pal, rng, params, variant):
     # a stub of rope trailing down
     parts.append(S.tube_along("tail", [(r * 1.1, 0, h * 0.62), (r * 1.6, r * 0.4, h * 0.3),
                                        (r * 1.9, r * 0.7, h * 0.05)], radius=0.014, segments=6, mat=cord))
+    # The whole post leans, lashings and all, and the lean comes last. Tilting the post
+    # first and then hanging the ropes on the Z axis puts the rings a hand's breadth off
+    # the timber at two metres up: they missed it entirely and hung in the air beside it.
+    # That was invisible only because `rope_loop` was also dropping their height and
+    # burying them in the mud at the foot, where five degrees of lean moves nothing.
+    stand_up(parts, rng.uniform(-5.0, 5.0))
     return finish(parts, rng, "capsule", ["driftwood", "rope"])
 
 
@@ -1306,7 +2363,7 @@ def bedroll(pal, rng, params, variant):
     l = jit(rng, 1.85) * CHUNK
     w_ = jit(rng, 0.68) * CHUNK
     canvas_mat = M.canvas(pal, age=0.55, wear=0.5, scale=0.6)
-    blanket = cloth(pal, rng, role="earth", scale=0.5)
+    blanket = cloth_mat(pal, rng, role="earth", scale=0.5)
     cord = M.rope(pal, age=0.5, scale=0.12)
     if params.get("rolled", rng.random() < 0.45):
         r = w_ * 0.28
@@ -1338,7 +2395,7 @@ def bedroll(pal, rng, params, variant):
 def banner(pal, rng, params, variant):
     w_ = jit(rng, 0.8) * CHUNK
     h = jit(rng, 2.1) * CHUNK
-    fabric = cloth(pal, rng, role="accent", scale=1.2)
+    fabric = cloth_mat(pal, rng, role="accent", scale=1.2)
     mat = wood(pal, rng, age=0.5, plank_len=1.0, plank_w=0.06, along="X")
     metal = M.brass(pal, age=0.5, wear=0.4, scale=0.06)
     sheet = B.cloth_sheet("banner", w_, h, mat=fabric, location=(0, 0, h * 1.05), rng=rng,
@@ -1524,6 +2581,12 @@ KINDS = {
     # work
     "anvil": anvil, "forge_hearth": forge_hearth, "alembic": alembic, "rope_coil": rope_coil,
     "wheelbarrow": wheelbarrow, "cart": cart, "hay_bale": hay_bale,
+    # hand tools, arms and linen
+    "cloth": cloth, "spoon": spoon, "tongs": tongs, "hammer": hammer, "spear": spear,
+    "shield": shield, "pitchfork": pitchfork, "whetstone": whetstone,
+    # the mill, the bakehouse, the woodpile and the peat bank
+    "loaf": loaf, "millstone": millstone, "chopping_block": chopping_block,
+    "peat_stack": peat_stack,
     # books and paper
     "book": book, "book_stack": book_stack, "scroll": scroll,
     # structures and outdoor

@@ -151,6 +151,51 @@ PROPS = [
     ("sarcophagus", "cinderlea", 1, None),
 ]
 
+# Hand tools, arms and linen: what the shipping house interiors ask for by the dozen and
+# the forge had never made. A second props table rather than eight more lines in PROPS,
+# because `build()` walks the tables in order to derive seeds from one walking counter: a
+# line added anywhere but the very end renumbers everything after it, and appending inside
+# PROPS would have quietly reseeded -- and so rebuilt, differently -- all ten landmarks.
+PROP_TOOLS = [
+    ("cloth", "hearthvale", 2, None),
+    ("spoon", "hearthvale", 2, None),
+    ("tongs", "hearthvale", 2, None),
+    ("hammer", "hearthvale", 2, None),
+    ("spear", "hearthvale", 2, None),
+    ("shield", "hearthvale", 2, None),
+    ("pitchfork", "hearthvale", 1, None),
+    ("whetstone", "hearthvale", 2, None),
+]
+
+# The last four kinds a shipping room asks for by name. `loaf` and `millstone` were drawn
+# as labelled placeholders in Maud's bakehouse and Pennywort's Mill; `chopping_block` and
+# `peat_stack` are what a village work station wants to wear instead of the crate and the
+# bucket `settlement.gd` dresses `chop` and `dig` in for want of anything better.
+PROP_WORK = [
+    ("loaf", "hearthvale", 2, None),
+    ("millstone", "hearthvale", 1, None),
+    ("chopping_block", "hearthvale", 2, None),
+    ("chopping_block", "briarwold", 1, None),
+    ("peat_stack", "skerrow", 2, None),
+]
+
+# Briarwold's own furniture. Of the kinds the forge built, Briarwold was the only one of
+# the six regions with none at all, so every prop in a woodfolk room was borrowed out of
+# another region's timber and `PropLibrary`'s per-region choice had nothing to choose
+# between. These are the eight kinds the shipping interiors ask for most often. It is the
+# same generator with a different palette, which is the whole point of the palette: a
+# black-ash trestle instead of a vale oak one, from one table.
+PROPS_BRIARWOLD = [
+    ("table_trestle", "briarwold", 2, None),
+    ("chair", "briarwold", 2, None),
+    ("stool", "briarwold", 2, None),
+    ("bed", "briarwold", 2, None),
+    ("chest", "briarwold", 2, None),
+    ("shelf", "briarwold", 1, None),
+    ("barrel", "briarwold", 2, None),
+    ("crate", "briarwold", 2, None),
+]
+
 LANDMARKS = [
     ("cracked_toll", "hearthvale", 1, None),
     ("fallen_hand", "skerrow", 1, None),
@@ -165,8 +210,12 @@ LANDMARKS = [
     ("eelfathom", "sedgemire", 1, None),
 ]
 
+# Order is load-bearing: `build()` walks the tables with one running counter to derive
+# seeds, so a line added anywhere but at the end of the last table renumbers -- and so
+# rebuilds, differently -- everything after it. New work goes on the end.
 TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
-          ("gen_props", PROPS), ("gen_landmarks", LANDMARKS)]
+          ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
+          ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD)]
 
 
 def build() -> list[dict]:

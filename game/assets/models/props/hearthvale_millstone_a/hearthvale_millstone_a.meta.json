@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.417,
+  "max": [
+   1.087,
+   0.417,
+   1.08
+  ],
+  "min": [
+   -1.087,
+   0.0,
+   -1.08
+  ],
+  "radius": 1.546
+ },
+ "built_seconds": 9.73,
+ "category": "props",
+ "collision": "trimesh",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_millstone_a.glb",
+ "hash": "1c1583c11837f168",
+ "kind": "millstone",
+ "materials": [
+  "hearthvale_millstone_a_mat"
+ ],
+ "materials_used": [
+  "granite",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_millstone_a",
+   "tris": 4390
+  },
+  {
+   "name": "hearthvale_millstone_a_LOD1",
+   "tris": 1510
+  },
+  {
+   "name": "hearthvale_millstone_a_LOD2",
+   "tris": 658
+  }
+ ],
+ "name": "hearthvale_millstone_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 7627,
+ "textures": [
+  "hearthvale_millstone_a_albedo.png",
+  "hearthvale_millstone_a_normal.png",
+  "hearthvale_millstone_a_orm.png"
+ ],
+ "tris": [
+  4390,
+  1510,
+  658
+ ],
+ "version": 3
+}
