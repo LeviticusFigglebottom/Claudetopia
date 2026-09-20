@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 6.457,
+  "height": 6.426,
   "max": [
    2.0,
-   6.457,
-   2.052
+   6.426,
+   1.836
   ],
   "min": [
    -2.0,
    0.0,
-   -1.294
+   -1.246
   ],
-  "radius": 4.15
+  "radius": 4.086
  },
- "built_seconds": 47.88,
+ "built_seconds": 118.08,
  "category": "rocks",
  "collision": "skerrow_cliff_slab_a_col.glb",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "skerrow_cliff_slab_a",
-   "tris": 2386
+   "tris": 2180
   },
   {
    "name": "skerrow_cliff_slab_a_LOD1",
-   "tris": 954
+   "tris": 872
   },
   {
    "name": "skerrow_cliff_slab_a_LOD2",
-   "tris": 356
+   "tris": 326
   }
  ],
  "modular": true,
@@ -73,9 +73,9 @@
   "skerrow_cliff_slab_a_orm.png"
  ],
  "tris": [
-  2386,
-  954,
-  356
+  2180,
+  872,
+  326
  ],
  "version": 3
 }

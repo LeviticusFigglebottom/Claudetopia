@@ -13,7 +13,7 @@
   ],
   "radius": 2.118
  },
- "built_seconds": 40.68,
+ "built_seconds": 23.92,
  "carved": false,
  "category": "rocks",
  "collision": "convex",
@@ -35,7 +35,7 @@
   },
   {
    "name": "hearthvale_standing_stone_b_LOD1",
-   "tris": 1508
+   "tris": 1506
   },
   {
    "name": "hearthvale_standing_stone_b_LOD2",
@@ -75,7 +75,7 @@
  ],
  "tris": [
   3770,
-  1508,
+  1506,
   564
  ],
  "version": 3

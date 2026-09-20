@@ -624,7 +624,9 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
     col = paint_blocks(nb, nb.coord(0.45 / scale), [dark, mid, light], distortion=1.3, detail=2.0)
     col = strokes(nb, 1.0 / scale, col, strength=0.09, scale=2.5, along="X")
     if bands > 0:
-        w = nb.wave(nb.coord((0.6 / scale, 0.6 / scale, 0.6 / scale)), scale=3.0, distortion=2.5, detail=1.0, direction="Z")
+        # Nearly two bands a metre painted every stone with corduroy. A bedded rock shows a
+        # few broad partings, not a woven cloth.
+        w = nb.wave(nb.coord((0.6 / scale, 0.6 / scale, 0.6 / scale)), scale=1.1, distortion=2.5, detail=1.0, direction="Z")
         band = nb.ramp(w.outputs["Fac"], [(0.3, 1.0 - 0.14 * bands), (0.7, 1.0 + 0.06 * bands)], interp="EASE")
         col = nb.mix(1.0, col, band, blend="MULTIPLY")
     if speckle > 0:
@@ -665,7 +667,9 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
                      nb.math("MULTIPLY", facet_mask, facet))
     if bed_relief > 0.0:
         # Karst limestone is bedded: the ledges are what make a pavement read as one.
-        bw = nb.wave(nb.coord((0.5 / scale, 0.5 / scale, 2.4 / scale)), scale=2.0, distortion=2.0,
+        # Coarse. At 2.4 cycles a metre the bedding came out as corduroy over the whole
+        # rock rather than as the few partings a bedded stone actually shows.
+        bw = nb.wave(nb.coord((0.5 / scale, 0.5 / scale, 0.7 / scale)), scale=2.0, distortion=2.0,
                      detail=1.0, direction="Z", profile="SAW")
         height = nb.math("ADD", height, nb.math("MULTIPLY", bw.outputs["Fac"], bed_relief))
     if pit is not None:
