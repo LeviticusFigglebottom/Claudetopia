@@ -4,7 +4,7 @@ _Updated 2026-09-19 (session 1)._
 
 ## State
 
-**1045 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
+**1055 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
 clean and sweeps all six regions and 34 places. The scripted journey passes all 15 of
 DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
 of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
@@ -306,6 +306,46 @@ trust, and this is where it gets interesting:
   recorded because it is the evidence that the numbers were not fitted to.
 * A hidden valley is called hidden. Three of them are invisible from everywhere and the tool
   says so separately rather than counting it against the placement.
+
+## No village in the country had any work in it
+
+`JobBoard` and `JobStation` are complete, tested, self-placing nodes. **No file in the project
+outside their own two scripts and the tests ever named either class.** There was no notice post
+in any settlement and no bellows, mash tun, chopping block or eel trap anywhere in eight
+kilometres of country, so `Jobs` generated work that could not be handed to anybody and
+DESIGN §5.15's jobs were a unit test.
+
+`Settlement` places both now. The work follows who lives there — the interiors carry each
+resident's trade — so Merrowby's two smithies put a bellows in a yard and its brewhouse a mash
+tun, and a place whose people have no authored trade gets its region's own work instead. A
+hamlet gets no charter-board. `ui/jobs/job_board_screen.gd` draws the notices; `interact()`
+goes through the event bus now, the way an opened chest does, because the node signal it
+emitted had no listener outside a test.
+
+**Still owed:** the forge has no chopping block and no peat bank, so `chop` and `dig` stations
+wear a crate of billets and a bucket at the cut. The substitution is a named constant in
+`settlement.gd` rather than a quiet choice.
+
+## The rest of what `dead_data.py` found, and why most of it is not a bug
+
+Seven content keys had no reader. One was `visible_from` and is now the discovery system
+above. The other six are descriptive rather than promised, and are recorded here so nobody
+re-investigates them:
+
+* `home_region` (6 callings) — where your Calling is from. DESIGN §5.1 says a Calling sets
+  skill bonuses, a signature item and starting reputations; it does not say it moves where you
+  wake, and the opening is one fixed place by design. Flavour, correctly inert.
+* `unlocks` (1 item) — the Merrowby house key naming what it opens. Doors and containers
+  declare their own `key_item`, and `PropertyRegistry.key_item_of()` derives the key from the
+  deed, so the item's own field is a duplicate of a fact held elsewhere.
+* `sells_deeds` (1 NPC) — Ellard the steward. Deeds are sold by the property sign, which the
+  journey buys a house through; the flag on the man is unused.
+* `unique_features` (6 regions), `beds` (6 items), `opposite` (12 table rows) — description
+  and authoring notes.
+
+The distinction worth keeping: `visible_from` was **mandated by DESIGN §4 and read by nothing**,
+which is a dead feature. These six are data that describes the world without promising
+behaviour, which is not the same thing and should not be treated as one.
 
 ## Known issues
 
