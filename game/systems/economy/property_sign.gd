@@ -79,6 +79,9 @@ func interact(actor: Node) -> void:
 		EventBus.dialogue_started.emit(steward_npc)
 		return
 	offer_made.emit(property_id, price())
+	# The node signal had no listener outside a test, so a board with `confirm_required` set
+	# quoted a price into the air and nothing was drawn. The deed screen listens on the bus.
+	EventBus.property_offered.emit(property_id, price())
 	if not confirm_required:
 		accept(actor)
 

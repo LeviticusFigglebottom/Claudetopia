@@ -87,11 +87,24 @@ func _marks() -> int:
 	return 0
 
 
+## Buying goes through `PropertyRegistry`, which is the thing that knows what owning a house
+## means: the deed in your bag, the key with it, the door and the bed and the chest claimed in
+## your name so taking your own things is not theft, and rent owed by the day. This screen used
+## to take the marks itself, set a flag called `owns:<id>` that nothing else reads, and emit
+## the purchase signal — a second kind of ownership that left the registry, and therefore
+## `property.owns()`, saying you did not own it.
 func _buy() -> void:
-	var bag := get_tree().get_first_node_in_group("inventory")
-	if bag and bag.has_method("remove_marks"):
-		bag.call("remove_marks", price)
-	GameState.set_flag("owns:" + property_id, true)
-	EventBus.property_purchased.emit(property_id)
-	EventBus.emit_notify("%s is yours." % property_name, "quest")
+	var registry := get_tree().get_first_node_in_group("property")
+	var player := get_tree().get_first_node_in_group("player")
+	if registry != null and registry.has_method("buy"):
+		var result: Dictionary = registry.call("buy", player, property_id)
+		if not bool(result.get("ok", false)):
+			UI.close("deed")
+			return
+		EventBus.emit_notify("%s is yours." % property_name, "quest")
+		UI.close("deed")
+		return
+	# No registry in the tree — the UI review and its made-up save. Say what happened rather
+	# than pretending a house changed hands.
+	Log.warn("UI", "deed screen bought %s with no PropertyRegistry to record it" % property_id)
 	UI.close("deed")

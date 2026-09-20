@@ -78,3 +78,26 @@ func test_everything_placed_is_interactable() -> void:
 			+ s.find_children("*", "JobStation", true, false):
 		assert_true(node.is_in_group("interactable"), "%s cannot be walked up to" % node.name)
 	s.queue_free()
+
+
+# --- houses for sale ----------------------------------------------------------------------
+
+## `PropertySign` is a third complete, tested, self-placing node that nothing placed. Six
+## deeds are authored and the only way to buy one was to call `PropertyRegistry.buy()`, which
+## the journey does and a player cannot.
+func test_a_house_for_sale_has_a_board_outside_it() -> void:
+	var s := _raise(MERROWBY, "village", "core:region/hearthvale")
+	var signs := s.find_children("*", "PropertySign", true, false)
+	assert_eq(signs.size(), 2, "Merrowby has two deeds and %d boards" % signs.size())
+	for node in signs:
+		assert_true(str(node.get("property_id")).begins_with("core:item/deed_"),
+			"a for-sale board with no deed behind it")
+		assert_true(node.is_in_group("interactable"), "the board cannot be walked up to")
+	s.queue_free()
+
+
+func test_a_place_with_nothing_for_sale_has_no_boards() -> void:
+	var s := _raise("core:place/tamwick", "village", "core:region/hearthvale")
+	assert_empty(s.find_children("*", "PropertySign", true, false),
+		"a village with no deed behind it was advertising houses")
+	s.queue_free()

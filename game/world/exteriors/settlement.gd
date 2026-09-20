@@ -160,6 +160,7 @@ func _ready() -> void:
 	_build(plan)
 	_strew(plan)
 	_put_to_work()
+	_offer_the_empty_houses()
 
 
 # --- where the houses go --------------------------------------------------------------------
@@ -448,6 +449,25 @@ func _put_to_work() -> void:
 		station.rotation.y = _rng.randf_range(0.0, TAU)
 		_give_a_body(station, str(STATION_PROP.get(station_kind, "crate")))
 		add_child(station)
+
+
+## A "for sale" board outside each house in this settlement that has a deed behind it.
+## `PropertySign` was another complete, tested, self-placing node that nothing placed: six
+## deeds are authored and the only way to buy one was to call `PropertyRegistry.buy()`, which
+## a player cannot do. A steward still sells the same deed through dialogue; this is the board
+## you walk past.
+func _offer_the_empty_houses() -> void:
+	var green := maxf(_inner_radius() - 2.0, 3.0)
+	for def in ContentDB.all("item"):
+		var property: Dictionary = def.get("property", {})
+		if property.is_empty() or str(property.get("place", "")) != place_id:
+			continue
+		var sign_node := PropertySign.new()
+		sign_node.property_id = str(def.get("id", ""))
+		sign_node.name = "ForSale_" + Ids.name_of(str(def.get("id", "")))
+		sign_node.position = _prop_spot("yard", green)
+		sign_node.rotation.y = _rng.randf_range(0.0, TAU)
+		add_child(sign_node)
 
 
 ## The kinds of work this settlement offers: one per trade among the people who live here,

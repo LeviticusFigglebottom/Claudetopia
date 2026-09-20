@@ -81,6 +81,7 @@ func _ready() -> void:
 	EventBus.book_opened.connect(_on_book_opened)
 	EventBus.container_opened.connect(_on_container_opened)
 	EventBus.job_board_opened.connect(_on_job_board_opened)
+	EventBus.property_offered.connect(_on_property_offered)
 	EventBus.trade_requested.connect(_on_trade_requested)
 	EventBus.region_entered.connect(func(id: String, _p: String) -> void: _refresh_variant())
 	EventBus.interior_entered.connect(func(_id: String) -> void: _refresh_variant())
@@ -454,6 +455,18 @@ func _on_job_board_opened(board: Node, actor: Node) -> void:
 	if board == null or not is_instance_valid(board):
 		return
 	open("job_board", {"board": board, "actor": actor})
+
+
+## A for-sale board read. `deed_confirm.tscn` has always existed and nothing ever opened it.
+func _on_property_offered(property_id: String, price: int) -> void:
+	var def := ContentDB.get_or_empty(property_id)
+	var property: Dictionary = def.get("property", {})
+	open("deed", {
+		"property_id": property_id,
+		"name": str(property.get("name", def.get("name", "the house"))),
+		"place": str(ContentDB.get_or_empty(str(property.get("place", ""))).get("name", "")),
+		"price": price,
+	})
 
 
 func _on_book_opened(book_id: String) -> void:
