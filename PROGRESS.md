@@ -161,6 +161,13 @@ read:
   silent. Walking into a region now stocks its settlements with their own talk at a heat below
   the spreading threshold — local colour, not news — and the journal's rumour page checks a
   rumour's conditions before printing it, which it never did.
+* **Every villager was naked.** `apply_appearance` is what dresses the humanoid rig, and
+  outside the character-creation screen nothing had ever called it — so every NPC the world
+  stood up was the bare body. They now take a roll seeded from their own def, with whatever
+  numbers that def states laid over it; the prose in an appearance block (`"build":
+  "short_thick"`, a note about bone dust in the creases of both hands) is for the writer and
+  is not applied as a part name. They also stood in a ten-metre scrum on the green, because
+  the spawn radius was two to ten metres for a village of twenty-three; it is six to forty now.
 * **Every shopkeeper was somebody you could only talk to.** Thirteen people in the pack keep
   shops, `Merchant` registers with the economy, the trade screen is built and themed, and
   nothing opened it.
