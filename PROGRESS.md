@@ -4,8 +4,8 @@ _Updated 2026-09-19 (session 1)._
 
 ## State
 
-**910 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
-clean and sweeps all six regions and 34 places. The scripted journey passes all 13 of
+**1045 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
+clean and sweeps all six regions and 34 places. The scripted journey passes all 15 of
 DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
 of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
 definitions. The world is 16 Terrain3D regions over 8 km square, built deterministically in

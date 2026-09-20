@@ -49,6 +49,7 @@ func _ready() -> void:
 	await _step_character_creation()
 	await _step_spawn_player()
 	await _step_leave_the_start()
+	await _step_find_the_country()
 	await _step_meet_somebody()
 	await _step_fight()
 	await _step_level_up()
@@ -226,6 +227,61 @@ func _walk_out_of_the_region() -> Dictionary:
 			break
 	return {"walked": from.distance_to(player.global_position), "from": began,
 			"to": GameState.current_region_id}
+
+
+# 3b -----------------------------------------------------------------------------------
+## Finding the country by walking in it, and reading it off high ground. Nothing in the game
+## discovered a place by going to one — the chart filled up by being told about places — and
+## the survey flag the map reads for its wider reveal was set by nothing outside a fake save.
+## Both are only true if they happen to a body standing on the real ground, which is here.
+func _step_find_the_country() -> void:
+	if player == null or not in_the_world:
+		_skip("find the country by walking in it", "no player in a built world")
+		return
+	var disco := PlaceDiscovery.ensure()
+	if disco == null:
+		_record("find the country by walking in it", false, "nothing installs PlaceDiscovery")
+		return
+	disco.enabled = false          # driven a step at a time here rather than per frame
+
+	# A village you have not been told about, walked into.
+	var target := ""
+	for def in ContentDB.all("place"):
+		var id := str(def.get("id", ""))
+		if disco.position_of(id) != Vector3.ZERO and not GameState.is_discovered(id):
+			target = id
+			break
+	var arrived := false
+	if target != "":
+		var at := disco.position_of(target)
+		player.global_position = at
+		world.force_stream_around(at)
+		await get_tree().process_frame
+		disco.look_around(at)
+		arrived = GameState.is_discovered(target)
+
+	# High ground, and what it shows you. The vista is whichever one the land actually agrees
+	# with, because 36 of the 90 authored sightlines are blocked by it (tools/sightlines.py).
+	var vantage := ""
+	var revealed: Array[String] = []
+	for v in disco.vistas():
+		var from := disco.position_of(v)
+		if from == Vector3.ZERO:
+			continue
+		GameState.discover(v)
+		player.global_position = from
+		world.force_stream_around(from)
+		await get_tree().process_frame
+		revealed = disco.survey(v)
+		if not revealed.is_empty():
+			vantage = v
+			break
+	var surveyed := vantage != "" and GameState.has_flag("surveyed:" + vantage)
+	_record("find the country by walking in it and looking out from it",
+		arrived and surveyed and not revealed.is_empty(),
+		"walked into %s; surveyed %s and made out %d more: %s"
+			% [Ids.name_of(target), Ids.name_of(vantage), revealed.size(),
+				", ".join(revealed.map(func(i: String) -> String: return Ids.name_of(i)))])
 
 
 # 4 ------------------------------------------------------------------------------------
