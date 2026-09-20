@@ -4,7 +4,7 @@ _Updated 2026-09-19 (session 1)._
 
 ## State
 
-**1077 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
+**1080 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
 clean and sweeps all six regions and 34 places. The scripted journey passes all 15 of
 DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
 of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
@@ -453,6 +453,53 @@ fun. Those need hands on a controller and nothing in this file substitutes for t
 
 I have deliberately not retuned anything on the strength of these numbers. Changing balance
 without playing is how a considered guess becomes a worse considered guess.
+
+## What the forge stream found by opening the renders
+
+The measurable part of the prop pass was right before anybody looked at it: `prop_heights.py`
+reported nothing unbuilt and no dead stand-in. The **visual** part was not, and three of the
+faults were the exact class `ASSESSMENT.md` warns about — obvious in the first image, invisible
+in a careful reading.
+
+* **The scale constant, still live, in a place `relief` cannot reach.** `wood_planks` lays a
+  grain wave in the *albedo* every `scale`/22.5 m. On a 0.33 m hammer haft that is eleven rings
+  at 31 mm pitch around an 18 mm stick; the spear and pitchfork shafts carried fifty-odd; the
+  shield read as corduroy and the spoon's bowl as a scallop shell. `lake_stone` had the same
+  fault in its normal: a 40 mm bedding bump, absolute, on a 40 mm whetstone, so the hone came
+  out as courses of stacked slate. Both take a multiplier now, and the forge README has a
+  section listing all four known instances of this fault with the rule for new parameters.
+* **Three props with parts floating in mid-air**, from one mistake: `rotation_euler` +
+  `apply_transforms` on a part rotates it about *its own* origin and leaves it where it was.
+  The spear's socket rivet hung 0.14 m off the shaft; the shield's six boss rivets sat in a
+  flat ring in the plane the boss occupied *before* the shield stood up, four of them clear of
+  the board. `stand_up()` bakes placement into vertices first.
+* **`B.rope_loop` accepted a `location` and silently dropped it**, and that had shipped in four
+  committed props: the Sedgemire rope coil was four flat turns on the ground with its end
+  hanging over nothing, the sack's neck tie was inside the sack, the dock post's lashings were
+  buried in the mud and the small bell's hanger was at its mouth.
+* **The 0-byte albedo I found was two defects.** `save_png` wrote in place, so a kill mid-bake
+  truncates the file; and `is_current` trusted the meta's hash and checked textures with
+  `.exists()`, so nothing could ever notice. It writes to a neighbour and renames now, and
+  checks size.
+* **Briarwold's own timber.** A second set of meshes in the same wood is a different *seed*,
+  not a different material — the first Briarwold trestle came out eight units of 255 from the
+  Hearthvale one, because `wood_planks` mixes a fifth of the palette's `earth` role and all six
+  regions' earth roles are the same red-brown. A `TIMBER` table keyed on the region gives
+  Briarwold the black ash its flora list names. Measured after: 82/56/41 against 103/82/57.
+
+**Accepted, with the way back written down:** the asset weight ceiling went from 150 MB to 165.
+The committed library was already at 145.8 MB, so the next thing built was going to break it
+whatever it was, and the twenty-three new props cost 0.31 MB each against a library averaging
+0.55. Two levers remain and are written into the test rather than left as a magic number: the
+drawn leaf and grass atlases write their normals at full size where everything baked writes at
+half (~3 MB across 85 assets), and the ten landmarks carry 1536 px albedos and are 27 MB
+between them — a fifth of the library for ten objects (~10 MB back at 1024).
+
+**A warning for the next person reviewing a material:** the exposure in `asset_review.tscn`
+makes every diffuse surface read about two stops lighter than its albedo. It cost the forge
+stream two rebuild cycles on the anvil's stump before they rendered a trestle table next to it
+and found that Hearthvale's pale honey timber is the house style and not a bug. Render a known
+reference beside anything you are judging in that scene.
 
 ## Known issues
 

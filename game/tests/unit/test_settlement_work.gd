@@ -101,3 +101,26 @@ func test_a_place_with_nothing_for_sale_has_no_boards() -> void:
 	assert_empty(s.find_children("*", "PropertySign", true, false),
 		"a village with no deed behind it was advertising houses")
 	s.queue_free()
+
+
+## The chopping block and the peat stack were standing in as a crate and a bucket while the
+## forge owed them. They are built now, and a station wearing the wrong prop is the kind of
+## thing that stays wrong for months because nothing goes red.
+func test_every_station_wears_the_prop_that_reads_as_its_work() -> void:
+	var lib := PropLibrary.new()
+	lib.scan()
+	if lib.kinds_built() == 0:
+		return
+	var missing: Array[String] = []
+	for kind in Settlement.STATION_PROP:
+		if lib.resolve(str(Settlement.STATION_PROP[kind])).is_empty():
+			missing.append("%s -> %s" % [kind, Settlement.STATION_PROP[kind]])
+	assert_true(missing.is_empty(),
+		"these stations are dressed in a prop the forge never built: %s" % ", ".join(missing))
+
+
+func test_the_station_props_are_the_work_and_not_a_stand_in() -> void:
+	assert_eq(str(Settlement.STATION_PROP["chop"]), "chopping_block",
+		"the woodpile is still a crate of billets")
+	assert_eq(str(Settlement.STATION_PROP["dig"]), "peat_stack",
+		"the peat cut is still a bucket")

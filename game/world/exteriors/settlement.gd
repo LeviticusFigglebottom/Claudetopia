@@ -105,12 +105,17 @@ const STATION_BY_CULTURE := {
 	"vale": "chop", "lakefolk": "fish", "reedfolk": "dig",
 	"woodfolk": "chop", "clans": "dig", "pilgrims": "dig",
 }
-## What the forge has that reads as the work from a few paces off. A chopping block and a peat
-## bank are still owed — a crate of billets and a bucket at the cut are standing in, and they
-## are written down here rather than quietly chosen.
+## What the forge has that reads as the work from a few paces off. The chopping block and the
+## peat stack were owed and are built now — a nine-flat hewn billet with an axe bitten into it,
+## and crossed courses of cut turves with the tusker standing beside them — so nothing here is
+## standing in for anything any more.
 const STATION_PROP := {
-	"smith": "anvil", "brew": "barrel", "fish": "dock_post", "chop": "crate", "dig": "bucket",
+	"smith": "anvil", "brew": "barrel", "fish": "dock_post",
+	"chop": "chopping_block", "dig": "peat_stack",
 }
+## The peat stack is a metre across and 1.27 m tall with its spade, so it wants its own ground
+## rather than a doorstep; the block is 0.6 m and can sit anywhere a cart could.
+const ROOMY_STATIONS := ["dig"]
 ## A hamlet of eight houses has no charter-board; a lodge in the woods has no notices.
 const BOARD_KINDS := ["city", "town", "village", "fort"]
 ## The most stations one settlement gets, so Merrowby's ten authored interiors do not turn the
@@ -445,7 +450,7 @@ func _put_to_work() -> void:
 		var station := JobStation.new()
 		station.kind = station_kind
 		station.name = "JobStation_" + station_kind
-		station.position = _prop_spot("yard", green)
+		station.position = _prop_spot("edge" if ROOMY_STATIONS.has(station_kind) else "yard", green)
 		station.rotation.y = _rng.randf_range(0.0, TAU)
 		_give_a_body(station, str(STATION_PROP.get(station_kind, "crate")))
 		add_child(station)
