@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.679,
+  "height": 0.506,
   "max": [
-   1.87,
-   0.679,
-   1.796
+   1.832,
+   0.506,
+   1.199
   ],
   "min": [
-   -1.763,
+   -1.482,
    0.0,
-   -1.971
+   -1.538
   ],
-  "radius": 2.638
+  "radius": 2.164
  },
- "built_seconds": 21.26,
+ "built_seconds": 73.34,
  "category": "rocks",
  "collision": "trimesh",
  "collision_params": {},
  "generator": "gen_rocks",
  "glb": "briarwold_scree_b.glb",
- "hash": "3b4e55c6a51d46fd",
+ "hash": "9fe54bfe6937edcf",
  "kind": "scree",
  "materials": [
   "briarwold_scree_b_mat"
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "briarwold_scree_b",
-   "tris": 3302
+   "tris": 2758
   },
   {
    "name": "briarwold_scree_b_LOD1",
-   "tris": 1320
+   "tris": 1102
   },
   {
    "name": "briarwold_scree_b_LOD2",
-   "tris": 494
+   "tris": 412
   }
  ],
  "name": "briarwold_scree_b",
@@ -64,16 +64,16 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 1549,
+ "seed": 1655,
  "textures": [
   "briarwold_scree_b_albedo.png",
   "briarwold_scree_b_normal.png",
   "briarwold_scree_b_orm.png"
  ],
  "tris": [
-  3302,
-  1320,
-  494
+  2758,
+  1102,
+  412
  ],
  "version": 3
 }

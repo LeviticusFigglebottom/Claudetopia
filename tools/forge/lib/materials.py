@@ -710,6 +710,69 @@ def chalk_rock(pal=None, wear=0.5, age=0.4, tint=0.12, scale=1.0, name=None, **_
                         facet=0.12)
 
 
+def lake_stone(pal=None, wear=0.35, age=0.6, tint=0.16, scale=1.0, name=None, **_):
+    """Brightwater's lake stone: near-black, close-grained, never quite dry.
+
+    The region is named for the water and this is the stone under it. It is not the warm
+    grey of the other rocks and it must not be mistaken for a slab that happens to be dark:
+    what makes it read as lake stone is that the light coming back off a wet edge is the
+    sky's, so the highlight is cold and blue while the body stays almost black.
+    """
+    pal = _pal(pal)
+    nb = NB(name or "lake_stone")
+    base = pal.tint(P.lin("#1a1f25"), "cool", tint)
+    dark, mid, light = trio(base, 1.3)
+    cold = P.lin("#7796b0")
+    light = tuple(l * 0.42 + c * 0.58 for l, c in zip(light, cold))
+    v = nb.coord(1.0 / scale)
+    col = paint_blocks(nb, nb.coord(0.5 / scale), [dark, mid, light], distortion=1.1, detail=2.0)
+    # Close grain: fine parallel bedding rather than the blocky facets of a quarried stone.
+    w = nb.wave(nb.coord((0.7 / scale, 0.7 / scale, 5.0 / scale)), scale=3.0, distortion=1.6,
+                detail=2.0, detail_scale=0.6, direction="Z")
+    band = nb.ramp(w.outputs["Fac"], [(0.25, 0.8), (0.6, 1.0), (0.9, 1.25)], interp="EASE")
+    col = nb.mix(0.9, col, nb.mix(1.0, col, band, blend="MULTIPLY"))
+    col = strokes(nb, 1.0 / scale, col, strength=0.07, scale=3.0, along="X")
+    col, _ = edge_wear(nb, col, light, amount=wear * 0.85, lo=0.5, hi=0.58, breakup_vec=v)
+    col = base_grime(nb, col, P.lin("#2a3a32"), 0.0, 0.45, amount=0.5 * age, vec=v)
+    col, _ = cavity_dirt(nb, col, shade(dark, 0.6, 1.1), amount=0.35, distance=0.3, breakup_vec=v)
+    hn = nb.noise(nb.coord(2.4 / scale), scale=1.0, detail=3.0, rough=0.5)
+    bedding = nb.wave(nb.coord((0.6 / scale, 0.6 / scale, 4.0 / scale)), scale=2.5, distortion=1.2,
+                      detail=1.0, direction="Z", profile="SAW")
+    height = nb.math("ADD", nb.math("MULTIPLY", hn.outputs["Fac"], 0.55),
+                     nb.math("MULTIPLY", bedding.outputs["Fac"], 0.45))
+    normal = nb.bump(height, strength=0.4, distance=0.04)
+    # Wet: low roughness everywhere, lower still on the edges the water runs off.
+    rough = rough_var(nb, v, 0.4, 0.1)
+    rough = nb.mix(nb.pointiness(0.5, 0.62), rough, 0.16)
+    return nb.finish(col, rough, 0.0, normal)
+
+
+def drowned_stone(pal=None, wear=0.3, age=0.8, tint=0.3, scale=1.0, name=None, **_):
+    """The part of a stone that has been under peat water: green-black, slick, silted.
+
+    Paired with a dressed stone above the silt line, this is what says the fen came up and
+    took something that was built.
+    """
+    pal = _pal(pal)
+    nb = NB(name or "drowned_stone")
+    base = pal.tint(P.lin("#22302a"), "green", tint)
+    dark, mid, light = trio(base, 1.15)
+    v = nb.coord(1.0 / scale)
+    col = paint_blocks(nb, nb.coord(0.7 / scale), [dark, mid, light], distortion=1.5, detail=2.5)
+    # weed and silt clinging in patches rather than an even coat
+    wn = nb.noise(nb.coord(2.6 / scale), scale=1.0, detail=3.0, rough=0.6, distortion=0.8)
+    weed = nb.map_range(wn.outputs["Fac"], 0.48, 0.72, 0.0, 1.0)
+    col = nb.mix(weed, col, pal.tint(P.lin("#3d5a2e"), "green", 0.35))
+    silt = nb.noise(nb.coord(1.1 / scale), scale=1.0, detail=2.0, rough=0.5)
+    col = nb.mix(nb.map_range(silt.outputs["Fac"], 0.55, 0.78, 0.0, 0.55), col,
+                 P.lin("#4a4433"))
+    col, _ = cavity_dirt(nb, col, P.lin("#141c18"), amount=0.55, distance=0.25, breakup_vec=v)
+    hn = nb.noise(nb.coord(3.2 / scale), scale=1.0, detail=3.0, rough=0.55)
+    normal = nb.bump(hn.outputs["Fac"], strength=0.3, distance=0.03)
+    rough = rough_var(nb, v, 0.3, 0.12)
+    return nb.finish(col, rough, 0.0, normal)
+
+
 def fused_stone(pal=None, wear=0.4, age=0.7, tint=0.15, scale=1.0, gilding=0.0, name=None, **_):
     """Oroth builder-stone: black, glassy, faintly flowing, with old gilding in the hollows."""
     pal = _pal(pal)
@@ -1182,6 +1245,7 @@ def foliage_material(name, albedo_path, normal_path=None, orm_path=None, thresho
 # ---------------------------------------------------------------------------------------
 
 BUILDERS = {
+    "lake_stone": lake_stone, "drowned_stone": drowned_stone,
     "wood_planks": wood_planks, "painted_wood": painted_wood, "carved_wood": carved_wood, "driftwood": driftwood,
     "oak_bark": oak_bark, "black_ash_bark": black_ash_bark, "birch_bark": birch_bark, "pine_bark": pine_bark,
     "willow_bark": willow_bark, "dead_bark": dead_bark,

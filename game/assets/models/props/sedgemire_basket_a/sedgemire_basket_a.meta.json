@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.401,
+  "height": 0.392,
   "max": [
-   0.263,
-   0.401,
-   0.261
+   0.255,
+   0.392,
+   0.253
   ],
   "min": [
-   -0.263,
+   -0.255,
    0.0,
-   -0.261
+   -0.253
   ],
-  "radius": 0.421
+  "radius": 0.409
  },
- "built_seconds": 8.14,
+ "built_seconds": 20.33,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "sedgemire_basket_a.glb",
- "hash": "10afd79279897d66",
+ "hash": "7de53b454fd14438",
  "kind": "basket",
  "materials": [
   "sedgemire_basket_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 3864,
+ "seed": 4023,
  "textures": [
   "sedgemire_basket_a_albedo.png",
   "sedgemire_basket_a_normal.png",
@@ -73,7 +73,7 @@
  "tris": [
   6206,
   2482,
-  913
+  928
  ],
  "version": 3
 }

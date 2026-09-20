@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.284,
+  "height": 0.286,
   "max": [
-   0.133,
-   0.284,
-   0.095
+   0.134,
+   0.286,
+   0.096
   ],
   "min": [
-   -0.095,
+   -0.096,
    0.0,
-   -0.095
+   -0.096
   ],
-  "radius": 0.205
+  "radius": 0.207
  },
- "built_seconds": 12.86,
+ "built_seconds": 12.52,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_jug_a.glb",
- "hash": "6b2aac8ee6ee365d",
+ "hash": "8ba035a74e6566aa",
  "kind": "jug",
  "materials": [
   "hearthvale_jug_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4182,
+ "seed": 4341,
  "textures": [
   "hearthvale_jug_a_albedo.png",
   "hearthvale_jug_a_normal.png",

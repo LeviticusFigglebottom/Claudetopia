@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 2.057,
+  "height": 2.099,
   "max": [
-   0.837,
-   2.057,
-   0.702
+   0.847,
+   2.099,
+   0.703
   ],
   "min": [
-   -0.834,
+   -0.845,
    0.0,
-   -0.702
+   -0.703
   ],
-  "radius": 1.5
+  "radius": 1.52
  },
- "built_seconds": 27.64,
+ "built_seconds": 52.74,
  "category": "props",
  "collision": "hearthvale_forge_hearth_a_col.glb",
  "collision_params": {},
  "emissive": true,
  "generator": "gen_props",
  "glb": "hearthvale_forge_hearth_a.glb",
- "hash": "885f1fc892e1f78e",
+ "hash": "93602c2dceade53e",
  "kind": "forge_hearth",
  "materials": [
   "hearthvale_forge_hearth_a_mat"
@@ -33,15 +33,15 @@
  "meshes": [
   {
    "name": "hearthvale_forge_hearth_a",
-   "tris": 4000
+   "tris": 3676
   },
   {
    "name": "hearthvale_forge_hearth_a_LOD1",
-   "tris": 1600
+   "tris": 1470
   },
   {
    "name": "hearthvale_forge_hearth_a_LOD2",
-   "tris": 600
+   "tris": 550
   }
  ],
  "name": "hearthvale_forge_hearth_a",
@@ -67,7 +67,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5083,
+ "seed": 5242,
  "textures": [
   "hearthvale_forge_hearth_a_albedo.png",
   "hearthvale_forge_hearth_a_normal.png",
@@ -75,9 +75,9 @@
   "hearthvale_forge_hearth_a_emission.png"
  ],
  "tris": [
-  4000,
-  1600,
-  600
+  3676,
+  1470,
+  550
  ],
  "version": 3
 }

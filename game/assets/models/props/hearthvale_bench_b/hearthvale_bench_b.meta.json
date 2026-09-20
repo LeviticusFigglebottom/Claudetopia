@@ -2,24 +2,24 @@
  "bounds": {
   "height": 0.503,
   "max": [
-   0.896,
+   0.85,
    0.503,
-   0.184
+   0.199
   ],
   "min": [
-   -0.895,
+   -0.849,
    0.0,
-   -0.189
+   -0.196
   ],
-  "radius": 0.949
+  "radius": 0.908
  },
- "built_seconds": 19.15,
+ "built_seconds": 38.4,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_bench_b.glb",
- "hash": "d92929f2deca3771",
+ "hash": "e037e3696ab6d150",
  "kind": "bench",
  "materials": [
   "hearthvale_bench_b_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4464,
+ "seed": 4623,
  "textures": [
   "hearthvale_bench_b_albedo.png",
   "hearthvale_bench_b_normal.png",

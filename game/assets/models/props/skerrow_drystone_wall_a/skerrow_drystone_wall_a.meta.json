@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.428,
+  "height": 1.421,
   "max": [
-   1.256,
-   1.428,
-   0.265
+   1.257,
+   1.421,
+   0.267
   ],
   "min": [
-   -1.26,
+   -1.258,
    0.0,
-   -0.273
+   -0.275
   ],
-  "radius": 1.471
+  "radius": 1.47
  },
- "built_seconds": 23.04,
+ "built_seconds": 39.59,
  "category": "props",
  "collision": "skerrow_drystone_wall_a_col.glb",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "skerrow_drystone_wall_a.glb",
- "hash": "f970b3b5c38dc7c2",
+ "hash": "77b5cc3ad39aad8c",
  "kind": "drystone_wall",
  "materials": [
   "skerrow_drystone_wall_a_mat"
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "skerrow_drystone_wall_a",
-   "tris": 5724
+   "tris": 5832
   },
   {
    "name": "skerrow_drystone_wall_a_LOD1",
-   "tris": 2288
+   "tris": 2332
   },
   {
    "name": "skerrow_drystone_wall_a_LOD2",
-   "tris": 858
+   "tris": 874
   }
  ],
  "modular": true,
@@ -66,16 +66,16 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 5666,
+ "seed": 5825,
  "textures": [
   "skerrow_drystone_wall_a_albedo.png",
   "skerrow_drystone_wall_a_normal.png",
   "skerrow_drystone_wall_a_orm.png"
  ],
  "tris": [
-  5724,
-  2288,
-  858
+  5832,
+  2332,
+  874
  ],
  "version": 3
 }

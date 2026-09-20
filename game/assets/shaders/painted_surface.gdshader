@@ -67,14 +67,22 @@ vec4 surface(vec3 p, vec3 n) {
 		float fine = fbm3(p * 11.0, 2);
 		col = mix(base_color.rgb, accent_color.rgb, clamp((m - 0.45) * variation * 0.9 + 0.12, 0.0, 1.0));
 		col *= 0.97 + fine * 0.06;
-		// Cracks are lines, not patches: a narrow band around a noise contour.
-		float c = fbm3(p * vec3(2.2, 2.2, 2.2), 3);
-		float crack = smoothstep(0.015, 0.0, abs(c - 0.5)) * smoothstep(0.35, 0.6, fbm3(p * 0.7, 2));
-		col = mix(col, grout_color.rgb, crack * 0.45);
+		// Cracks are lines, not patches, and in limewashed cob they fall vertically from
+		// the lintels and the corners. Compressing the contour's lookup hard in x and z
+		// while stretching it in y is what turns a contour that wanders in every direction
+		// into a split that runs down the wall. The second noise keeps them short.
+		//
+		// They are also darker than the wall and shallow. Cutting a deep groove made the
+		// lit lip of the groove catch the sun, and the crack read as a pale worm crawling
+		// over the render rather than as a split in it.
+		float c = fbm3(p * vec3(7.0, 0.85, 7.0), 3);
+		float crack = smoothstep(0.02, 0.0, abs(c - 0.5))
+				* smoothstep(0.44, 0.7, fbm3(p * vec3(1.7, 0.45, 1.7), 2));
+		col = mix(col, grout_color.rgb * 0.55, crack * 0.8);
 		// Lime bloom gathers low on a cob wall where the damp rises.
 		float rise = clamp(1.0 - (p.y - floor(p.y / 2.75) * 2.75) / 0.9, 0.0, 1.0);
 		col = mix(col, col * vec3(0.94, 0.93, 0.9) + vec3(0.03), rise * 0.35 * fine);
-		h = (m - 0.5) * 0.18 + (fine - 0.5) * 0.12 - crack * 0.9;
+		h = (m - 0.5) * 0.18 + (fine - 0.5) * 0.12 - crack * 0.25;
 	} else if (pattern == 1) {   // floorboards: long boards, joints, per-board tone
 		vec2 uv = (an.y > 0.5) ? p.xz : ((an.x > an.z) ? p.zy : p.xy);
 		float board = floor(uv.y / unit_size);

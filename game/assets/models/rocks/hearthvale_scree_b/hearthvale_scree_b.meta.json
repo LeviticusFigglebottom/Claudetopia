@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 0.671,
+  "max": [
+   1.482,
+   0.671,
+   1.794
+  ],
+  "min": [
+   -1.586,
+   0.0,
+   -1.776
+  ],
+  "radius": 2.377
+ },
+ "built_seconds": 74.93,
+ "category": "rocks",
+ "collision": "trimesh",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "hearthvale_scree_b.glb",
+ "hash": "6adede2b37bbb928",
+ "kind": "scree",
+ "materials": [
+  "hearthvale_scree_b_mat"
+ ],
+ "materials_used": [
+  "chalk_rock"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_scree_b",
+   "tris": 2574
+  },
+  {
+   "name": "hearthvale_scree_b_LOD1",
+   "tris": 1028
+  },
+  {
+   "name": "hearthvale_scree_b_LOD2",
+   "tris": 384
+  }
+ ],
+ "name": "hearthvale_scree_b",
+ "params": {
+  "stone": "chalk_rock"
+ },
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 1708,
+ "textures": [
+  "hearthvale_scree_b_albedo.png",
+  "hearthvale_scree_b_normal.png",
+  "hearthvale_scree_b_orm.png"
+ ],
+ "tris": [
+  2574,
+  1028,
+  384
+ ],
+ "version": 3
+}

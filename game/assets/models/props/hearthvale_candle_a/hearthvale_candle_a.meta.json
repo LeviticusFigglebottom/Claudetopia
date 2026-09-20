@@ -1,9 +1,9 @@
 {
  "bounds": {
-  "height": 0.19,
+  "height": 0.181,
   "max": [
    0.019,
-   0.19,
+   0.181,
    0.019
   ],
   "min": [
@@ -11,15 +11,15 @@
    0.0,
    -0.019
   ],
-  "radius": 0.099
+  "radius": 0.094
  },
- "built_seconds": 3.57,
+ "built_seconds": 6.68,
  "category": "props",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_candle_a.glb",
- "hash": "3d77379596cda62a",
+ "hash": "1c2a803562faebb2",
  "kind": "candle",
  "materials": [
   "hearthvale_candle_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4659,
+ "seed": 4818,
  "textures": [
   "hearthvale_candle_a_albedo.png",
   "hearthvale_candle_a_normal.png",

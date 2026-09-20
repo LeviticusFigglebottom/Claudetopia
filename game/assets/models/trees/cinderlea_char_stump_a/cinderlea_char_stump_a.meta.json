@@ -13,7 +13,7 @@
   ],
   "radius": 0.395
  },
- "built_seconds": 5.77,
+ "built_seconds": 16.24,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -40,11 +40,11 @@
   },
   {
    "name": "cinderlea_char_stump_a_LOD2",
-   "tris": 4
+   "tris": 8
   },
   {
    "name": "cinderlea_char_stump_a_LOD1",
-   "tris": 855
+   "tris": 898
   }
  ],
  "name": "cinderlea_char_stump_a",
@@ -83,8 +83,8 @@
  ],
  "tris": [
   2676,
-  855,
-  4
+  898,
+  8
  ],
  "version": 3
 }

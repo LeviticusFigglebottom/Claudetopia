@@ -1,0 +1,82 @@
+{
+ "blocks": 2,
+ "bounds": {
+  "height": 0.791,
+  "max": [
+   1.609,
+   0.791,
+   0.793
+  ],
+  "min": [
+   -0.789,
+   0.0,
+   -0.701
+  ],
+  "radius": 1.467
+ },
+ "built_seconds": 70.17,
+ "category": "rocks",
+ "collision": "sedgemire_sunken_masonry_b_col.glb",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "sedgemire_sunken_masonry_b.glb",
+ "hash": "b132e55e5d24bc08",
+ "kind": "sunken_masonry",
+ "materials": [
+  "sedgemire_sunken_masonry_b_mat"
+ ],
+ "materials_used": [
+  "stone_blocks",
+  "drowned_stone"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_sunken_masonry_b",
+   "tris": 4024
+  },
+  {
+   "name": "sedgemire_sunken_masonry_b_LOD1",
+   "tris": 1608
+  },
+  {
+   "name": "sedgemire_sunken_masonry_b_LOD2",
+   "tris": 602
+  }
+ ],
+ "name": "sedgemire_sunken_masonry_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 1496,
+ "silt_line_m": 0.271,
+ "textures": [
+  "sedgemire_sunken_masonry_b_albedo.png",
+  "sedgemire_sunken_masonry_b_normal.png",
+  "sedgemire_sunken_masonry_b_orm.png"
+ ],
+ "tris": [
+  4024,
+  1608,
+  602
+ ],
+ "version": 3
+}

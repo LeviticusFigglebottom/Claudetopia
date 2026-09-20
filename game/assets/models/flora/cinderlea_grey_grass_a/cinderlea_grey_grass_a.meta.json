@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.468,
+  "height": 0.388,
   "max": [
-   0.379,
-   0.468,
-   0.283
+   0.263,
+   0.388,
+   0.276
   ],
   "min": [
-   -0.35,
+   -0.236,
    0.0,
-   -0.305
+   -0.281
   ],
-  "radius": 0.524
+  "radius": 0.421
  },
- "built_seconds": 0.07,
+ "built_seconds": 0.21,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "cinderlea_grey_grass_a.glb",
- "hash": "834d0bfd1618dc48",
+ "hash": "2b5381fcf6b16764",
  "kind": "grey_grass",
  "materials": [
   "cinderlea_grey_grass_a_greygrass_foliage"
@@ -64,7 +64,7 @@
    "warm": "#a08a4a"
   }
  },
- "seed": 2221,
+ "seed": 2380,
  "textures": [
   "cinderlea_grey_grass_a_atlas_albedo.png",
   "cinderlea_grey_grass_a_atlas_normal.png",

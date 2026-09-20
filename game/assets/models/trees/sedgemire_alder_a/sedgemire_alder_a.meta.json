@@ -1,9 +1,9 @@
 {
  "bounds": {
-  "height": 6.696,
+  "height": 6.7,
   "max": [
    3.395,
-   6.696,
+   6.7,
    3.16
   ],
   "min": [
@@ -11,9 +11,9 @@
    0.0,
    -3.119
   ],
-  "radius": 5.694
+  "radius": 5.695
  },
- "built_seconds": 3.0,
+ "built_seconds": 22.12,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -26,8 +26,8 @@
  "height_m": 6.71,
  "kind": "alder",
  "materials": [
-  "sedgemire_alder_a_leaf_foliage",
   "sedgemire_alder_a_mat",
+  "sedgemire_alder_a_leaf_foliage",
   "sedgemire_alder_a_impostor_foliage"
  ],
  "materials_used": [
@@ -36,24 +36,20 @@
  ],
  "meshes": [
   {
-   "name": "sedgemire_alder_a_cards",
-   "tris": 2300
-  },
-  {
    "name": "sedgemire_alder_a",
-   "tris": 5000
+   "tris": 6500
   },
   {
    "name": "sedgemire_alder_a_LOD2",
-   "tris": 4
+   "tris": 8
   },
   {
    "name": "sedgemire_alder_a_LOD1",
-   "tris": 3678
+   "tris": 896
   },
   {
    "name": "sedgemire_alder_a_cards_LOD1",
-   "tris": 1034
+   "tris": 420
   }
  ],
  "name": "sedgemire_alder_a",
@@ -94,9 +90,9 @@
   "sedgemire_alder_a_impostor_orm.png"
  ],
  "tris": [
-  7300,
-  4712,
-  4
+  6500,
+  1316,
+  8
  ],
  "version": 3
 }

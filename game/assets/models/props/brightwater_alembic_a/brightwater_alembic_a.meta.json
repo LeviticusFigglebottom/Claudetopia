@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.481,
+  "height": 0.469,
   "max": [
-   0.237,
-   0.481,
-   0.15
+   0.231,
+   0.469,
+   0.146
   ],
   "min": [
-   -0.15,
+   -0.146,
    0.0,
-   -0.15
+   -0.146
   ],
-  "radius": 0.343
+  "radius": 0.335
  },
- "built_seconds": 22.56,
+ "built_seconds": 43.93,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "brightwater_alembic_a.glb",
- "hash": "85b56799c12d2eee",
+ "hash": "dbb859e15a1a31bb",
  "kind": "alembic",
  "materials": [
   "brightwater_alembic_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 5136,
+ "seed": 5295,
  "textures": [
   "brightwater_alembic_a_albedo.png",
   "brightwater_alembic_a_normal.png",
@@ -74,7 +74,7 @@
  "tris": [
   616,
   300,
-  117
+  120
  ],
  "version": 3
 }

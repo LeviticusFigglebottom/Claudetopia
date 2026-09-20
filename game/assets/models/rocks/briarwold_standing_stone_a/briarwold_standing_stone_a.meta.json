@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 2.164,
+  "height": 2.231,
   "max": [
-   0.799,
-   2.164,
-   0.559
+   0.715,
+   2.231,
+   0.312
   ],
   "min": [
-   -0.596,
+   -0.632,
    0.0,
-   -0.614
+   -0.486
   ],
-  "radius": 1.414
+  "radius": 1.363
  },
- "built_seconds": 9.57,
+ "built_seconds": 72.03,
  "carved": true,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_rocks",
  "glb": "briarwold_standing_stone_a.glb",
- "hash": "19edfbb1df13dfa8",
+ "hash": "a5998966b7dd200d",
  "kind": "standing_stone",
  "materials": [
   "briarwold_standing_stone_a_mat"
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "briarwold_standing_stone_a",
-   "tris": 2425
+   "tris": 2828
   },
   {
    "name": "briarwold_standing_stone_a_LOD1",
-   "tris": 967
+   "tris": 1127
   },
   {
    "name": "briarwold_standing_stone_a_LOD2",
-   "tris": 361
+   "tris": 421
   }
  ],
  "name": "briarwold_standing_stone_a",
@@ -65,16 +65,16 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 1585,
+ "seed": 1744,
  "textures": [
   "briarwold_standing_stone_a_albedo.png",
   "briarwold_standing_stone_a_normal.png",
   "briarwold_standing_stone_a_orm.png"
  ],
  "tris": [
-  2425,
-  967,
-  361
+  2830,
+  1129,
+  423
  ],
  "version": 3
 }

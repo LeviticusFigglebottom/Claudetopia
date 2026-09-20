@@ -13,7 +13,7 @@
   ],
   "radius": 2.927
  },
- "built_seconds": 8.1,
+ "built_seconds": 19.97,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -26,8 +26,8 @@
  "height_m": 4.16,
  "kind": "hawthorn",
  "materials": [
-  "hearthvale_hawthorn_a_leaf_foliage",
   "hearthvale_hawthorn_a_mat",
+  "hearthvale_hawthorn_a_leaf_foliage",
   "hearthvale_hawthorn_a_impostor_foliage"
  ],
  "materials_used": [
@@ -36,24 +36,20 @@
  ],
  "meshes": [
   {
-   "name": "hearthvale_hawthorn_a_cards",
-   "tris": 1410
-  },
-  {
    "name": "hearthvale_hawthorn_a",
-   "tris": 4999
+   "tris": 5610
   },
   {
    "name": "hearthvale_hawthorn_a_LOD2",
-   "tris": 4
+   "tris": 8
   },
   {
    "name": "hearthvale_hawthorn_a_LOD1",
-   "tris": 1642
+   "tris": 899
   },
   {
    "name": "hearthvale_hawthorn_a_cards_LOD1",
-   "tris": 634
+   "tris": 420
   }
  ],
  "name": "hearthvale_hawthorn_a",
@@ -94,9 +90,9 @@
   "hearthvale_hawthorn_a_impostor_orm.png"
  ],
  "tris": [
-  6409,
-  2276,
-  4
+  5610,
+  1319,
+  8
  ],
  "version": 3
 }

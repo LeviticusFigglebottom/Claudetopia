@@ -13,14 +13,14 @@
   ],
   "radius": 20.946
  },
- "built_seconds": 158.46,
+ "built_seconds": 115.84,
  "category": "landmarks",
  "collision": "brightwater_the_lamp_a_col.glb",
  "collision_params": {},
  "emissive": true,
  "generator": "gen_landmarks",
  "glb": "brightwater_the_lamp_a.glb",
- "hash": "d5466b47422bbaa9",
+ "hash": "431fa6be10be3798",
  "height_m": 34.0,
  "kind": "the_lamp",
  "materials": [
@@ -70,7 +70,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 6673,
+ "seed": 6832,
  "textures": [
   "brightwater_the_lamp_a_albedo.png",
   "brightwater_the_lamp_a_normal.png",
@@ -80,7 +80,7 @@
  "tris": [
   2996,
   1198,
-  413
+  448
  ],
  "version": 3
 }

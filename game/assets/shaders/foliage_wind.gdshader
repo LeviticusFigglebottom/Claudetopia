@@ -12,6 +12,17 @@ uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap, repeat_dis
 uniform sampler2D orm_texture : hint_default_white, filter_linear_mipmap, repeat_disable;
 uniform vec4 tint : source_color = vec4(1.0);
 uniform float alpha_scissor : hint_range(0.0, 1.0) = 0.52;
+// Mipmaps average a leaf-cluster card's alpha down towards its coverage, and a cluster
+// covers well under half of its atlas cell. Past a few tens of metres every card in the
+// canopy therefore falls below a fixed cut-off and disappears, leaving a bare trunk: four
+// hundred thousand of them, in the first world capture. Relaxing the cut-off with distance
+// keeps a crisp leaf edge close up and a solid canopy far away, which is the only place it
+// matters. `alpha_sharpen` rescales alpha about the threshold so the edge itself stays
+// hard instead of turning to fringe as the threshold drops.
+uniform float alpha_scissor_far : hint_range(0.0, 1.0) = 0.08;
+uniform float scissor_fade_start = 18.0;
+uniform float scissor_fade_end = 90.0;
+uniform float alpha_sharpen : hint_range(1.0, 16.0) = 5.0;
 uniform float roughness_mult : hint_range(0.0, 2.0) = 1.0;
 uniform float normal_depth : hint_range(0.0, 2.0) = 0.8;
 uniform float wind_strength : hint_range(0.0, 1.0) = 0.10;
@@ -42,8 +53,11 @@ void vertex() {
 void fragment() {
 	vec4 alb = texture(albedo_texture, UV) * tint;
 	ALBEDO = alb.rgb;
-	ALPHA = alb.a;
-	ALPHA_SCISSOR_THRESHOLD = alpha_scissor;
+	float fade = clamp((length(VERTEX) - scissor_fade_start)
+			/ max(scissor_fade_end - scissor_fade_start, 0.01), 0.0, 1.0);
+	float cut = mix(alpha_scissor, alpha_scissor_far, fade);
+	ALPHA = clamp((alb.a - cut) * alpha_sharpen + 0.5, 0.0, 1.0);
+	ALPHA_SCISSOR_THRESHOLD = 0.5;
 	vec3 orm = texture(orm_texture, UV).rgb;
 	AO = orm.r;
 	AO_LIGHT_AFFECT = 0.4;

@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 0.646,
+  "height": 0.666,
   "max": [
-   1.938,
-   0.646,
-   1.091
+   1.942,
+   0.666,
+   1.183
   ],
   "min": [
-   -1.938,
+   -1.942,
    0.0,
-   -1.096
+   -1.187
   ],
-  "radius": 2.248
+  "radius": 2.299
  },
- "built_seconds": 12.37,
+ "built_seconds": 17.74,
  "category": "props",
  "collision": "sedgemire_rowboat_a_col.glb",
  "collision_params": {},
  "floats": true,
  "generator": "gen_props",
  "glb": "sedgemire_rowboat_a.glb",
- "hash": "ca06b6120f4472d8",
+ "hash": "e2d84ef446afe256",
  "kind": "rowboat",
  "materials": [
   "sedgemire_rowboat_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 6037,
+ "seed": 6196,
  "textures": [
   "sedgemire_rowboat_a_albedo.png",
   "sedgemire_rowboat_a_normal.png",

@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.817,
+  "height": 0.925,
   "max": [
-   0.496,
-   0.817,
-   0.447
+   0.494,
+   0.925,
+   0.512
   ],
   "min": [
-   -0.463,
+   -0.466,
    0.0,
-   -0.487
+   -0.58
   ],
-  "radius": 0.784
+  "radius": 0.861
  },
- "built_seconds": 0.08,
+ "built_seconds": 0.22,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "sedgemire_fern_a.glb",
- "hash": "b9ecb13915796a5c",
+ "hash": "18d2bc71c8c2ef0e",
  "kind": "fern",
  "materials": [
   "sedgemire_fern_a_fern_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 2539,
+ "seed": 2698,
  "textures": [
   "sedgemire_fern_a_atlas_albedo.png",
   "sedgemire_fern_a_atlas_normal.png",

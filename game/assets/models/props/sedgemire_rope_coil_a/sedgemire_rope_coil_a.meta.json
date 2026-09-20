@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.21,
+  "height": 0.219,
   "max": [
-   0.493,
-   0.21,
-   0.298
+   0.508,
+   0.219,
+   0.305
   ],
   "min": [
-   -0.305,
+   -0.313,
    0.0,
-   -0.305
+   -0.316
   ],
-  "radius": 0.511
+  "radius": 0.526
  },
- "built_seconds": 8.13,
+ "built_seconds": 17.87,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "sedgemire_rope_coil_a.glb",
- "hash": "af559d4ffa6b92b6",
+ "hash": "90a0c9e1ff834320",
  "kind": "rope_coil",
  "materials": [
   "sedgemire_rope_coil_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 5189,
+ "seed": 5348,
  "textures": [
   "sedgemire_rope_coil_a_albedo.png",
   "sedgemire_rope_coil_a_normal.png",

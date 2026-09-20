@@ -13,7 +13,7 @@
   ],
   "radius": 5.86
  },
- "built_seconds": 2.75,
+ "built_seconds": 12.29,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -26,8 +26,8 @@
  "height_m": 6.72,
  "kind": "rowan",
  "materials": [
-  "skerrow_rowan_a_leaf_foliage",
   "skerrow_rowan_a_mat",
+  "skerrow_rowan_a_leaf_foliage",
   "skerrow_rowan_a_impostor_foliage"
  ],
  "materials_used": [
@@ -36,24 +36,20 @@
  ],
  "meshes": [
   {
-   "name": "skerrow_rowan_a_cards",
-   "tris": 2300
-  },
-  {
    "name": "skerrow_rowan_a",
-   "tris": 5000
+   "tris": 6500
   },
   {
    "name": "skerrow_rowan_a_LOD2",
-   "tris": 4
+   "tris": 8
   },
   {
    "name": "skerrow_rowan_a_LOD1",
-   "tris": 2876
+   "tris": 1124
   },
   {
    "name": "skerrow_rowan_a_cards_LOD1",
-   "tris": 1034
+   "tris": 420
   }
  ],
  "name": "skerrow_rowan_a",
@@ -94,9 +90,9 @@
   "skerrow_rowan_a_impostor_orm.png"
  ],
  "tris": [
-  7300,
-  3910,
-  4
+  6500,
+  1544,
+  8
  ],
  "version": 3
 }

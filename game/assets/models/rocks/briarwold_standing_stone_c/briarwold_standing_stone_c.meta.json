@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 0.249,
+  "height": 0.384,
   "max": [
-   0.615,
-   0.249,
-   0.459
+   0.834,
+   0.384,
+   0.609
   ],
   "min": [
-   -0.457,
+   -0.676,
    0.0,
-   -0.464
+   -0.695
   ],
-  "radius": 0.718
+  "radius": 1.016
  },
- "built_seconds": 9.4,
+ "built_seconds": 78.38,
  "carved": true,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_rocks",
  "glb": "briarwold_standing_stone_c.glb",
- "hash": "43c5f11782ebe24f",
+ "hash": "ef1c0eaa18e847a9",
  "kind": "standing_stone",
  "materials": [
   "briarwold_standing_stone_c_mat"
@@ -65,7 +65,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 1619,
+ "seed": 1778,
  "textures": [
   "briarwold_standing_stone_c_albedo.png",
   "briarwold_standing_stone_c_normal.png",

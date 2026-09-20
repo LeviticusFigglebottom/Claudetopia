@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.046,
+  "height": 0.961,
   "max": [
-   0.393,
-   1.046,
-   0.393
+   0.41,
+   0.961,
+   0.41
   ],
   "min": [
-   -0.393,
+   -0.41,
    0.0,
-   -0.392
+   -0.41
   ],
-  "radius": 0.762
+  "radius": 0.753
  },
- "built_seconds": 21.02,
+ "built_seconds": 55.0,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_barrel_b.glb",
- "hash": "7408fa28b577ac46",
+ "hash": "b4d405cad369fc9c",
  "kind": "barrel",
  "materials": [
   "hearthvale_barrel_b_mat"
@@ -39,7 +39,7 @@
   },
   {
    "name": "hearthvale_barrel_b_LOD2",
-   "tris": 403
+   "tris": 404
   }
  ],
  "name": "hearthvale_barrel_b",
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 3563,
+ "seed": 3722,
  "textures": [
   "hearthvale_barrel_b_albedo.png",
   "hearthvale_barrel_b_normal.png",
@@ -74,7 +74,7 @@
  "tris": [
   2700,
   1080,
-  403
+  405
  ],
  "version": 3
 }

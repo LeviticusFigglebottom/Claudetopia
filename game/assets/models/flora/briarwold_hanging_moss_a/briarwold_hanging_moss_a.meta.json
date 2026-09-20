@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 1.497,
+  "height": 1.865,
   "max": [
-   0.396,
-   0.138,
-   0.384
+   0.51,
+   0.208,
+   0.374
   ],
   "min": [
-   -0.347,
-   -1.358,
-   -0.346
+   -0.483,
+   -1.656,
+   -0.375
   ],
-  "radius": 0.912
+  "radius": 1.121
  },
- "built_seconds": 0.07,
+ "built_seconds": 0.9,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "briarwold_hanging_moss_a.glb",
  "hangs": true,
- "hash": "7339737143ddf5ce",
+ "hash": "0043ced6ecbc2136",
  "kind": "hanging_moss",
  "materials": [
   "briarwold_hanging_moss_a_moss_foliage"
@@ -65,7 +65,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 3175,
+ "seed": 3334,
  "textures": [
   "briarwold_hanging_moss_a_atlas_albedo.png",
   "briarwold_hanging_moss_a_atlas_normal.png",

@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.052,
+  "height": 0.05,
   "max": [
-   0.087,
-   0.052,
-   0.127
+   0.092,
+   0.05,
+   0.122
   ],
   "min": [
    -0.214,
    0.0,
-   -0.127
+   -0.122
   ],
-  "radius": 0.199
+  "radius": 0.197
  },
- "built_seconds": 64.52,
+ "built_seconds": 91.04,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_book_a.glb",
- "hash": "60efff8d9206a744",
+ "hash": "fae7efa9d6283dfc",
  "kind": "book",
  "materials": [
   "hearthvale_book_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5401,
+ "seed": 5560,
  "textures": [
   "hearthvale_book_a_albedo.png",
   "hearthvale_book_a_normal.png",

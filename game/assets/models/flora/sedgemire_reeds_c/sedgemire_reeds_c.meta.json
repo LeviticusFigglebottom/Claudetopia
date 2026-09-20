@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.622,
+  "height": 2.087,
   "max": [
-   0.408,
-   1.622,
-   0.375
+   0.453,
+   2.087,
+   0.467
   ],
   "min": [
-   -0.523,
+   -0.399,
    0.0,
-   -0.375
+   -0.519
   ],
-  "radius": 1.007
+  "radius": 1.23
  },
- "built_seconds": 0.08,
+ "built_seconds": 0.19,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "sedgemire_reeds_c.glb",
- "hash": "df1fd408243621de",
+ "hash": "b11be1668c1e1303",
  "kind": "reeds",
  "materials": [
   "sedgemire_reeds_c_reed_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 2361,
+ "seed": 2520,
  "textures": [
   "sedgemire_reeds_c_atlas_albedo.png",
   "sedgemire_reeds_c_atlas_normal.png",

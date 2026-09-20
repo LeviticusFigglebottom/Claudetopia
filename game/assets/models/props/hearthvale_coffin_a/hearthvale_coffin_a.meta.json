@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.803,
+  "height": 0.808,
   "max": [
-   1.126,
-   0.803,
-   0.284
+   1.113,
+   0.808,
+   0.295
   ],
   "min": [
-   -1.126,
+   -1.113,
    0.0,
-   -0.283
+   -0.295
   ],
-  "radius": 1.228
+  "radius": 1.221
  },
- "built_seconds": 20.91,
+ "built_seconds": 22.53,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_coffin_a.glb",
- "hash": "5f28f2a4ab0d85c2",
+ "hash": "3706c1ca0b0b45d8",
  "kind": "coffin",
  "materials": [
   "hearthvale_coffin_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 6408,
+ "seed": 6567,
  "textures": [
   "hearthvale_coffin_a_albedo.png",
   "hearthvale_coffin_a_normal.png",

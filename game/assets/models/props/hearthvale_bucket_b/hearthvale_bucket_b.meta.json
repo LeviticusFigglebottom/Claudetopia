@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.511,
+  "height": 0.514,
   "max": [
-   0.181,
-   0.511,
-   0.176
+   0.192,
+   0.514,
+   0.187
   ],
   "min": [
-   -0.181,
+   -0.192,
    0.0,
-   -0.176
+   -0.187
   ],
-  "radius": 0.359
+  "radius": 0.371
  },
- "built_seconds": 26.05,
+ "built_seconds": 19.91,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_bucket_b.glb",
- "hash": "7f1cf7ec81ffc36e",
+ "hash": "f914ac46e0676ebf",
  "kind": "bucket",
  "materials": [
   "hearthvale_bucket_b_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 3934,
+ "seed": 4093,
  "textures": [
   "hearthvale_bucket_b_albedo.png",
   "hearthvale_bucket_b_normal.png",

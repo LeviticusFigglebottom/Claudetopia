@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 0.893,
+  "height": 0.9,
   "max": [
-   0.318,
-   0.893,
-   0.31
+   0.321,
+   0.9,
+   0.313
   ],
   "min": [
-   -0.31,
+   -0.313,
    0.0,
-   -0.31
+   -0.313
   ],
-  "radius": 0.628
+  "radius": 0.633
  },
- "built_seconds": 51.62,
+ "built_seconds": 54.2,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "emissive": true,
  "generator": "gen_props",
  "glb": "cinderlea_brazier_a.glb",
- "hash": "a06950cfe571bf6f",
+ "hash": "ab3b29bb170a78a4",
  "kind": "brazier",
  "materials": [
   "cinderlea_brazier_a_mat"
@@ -66,7 +66,7 @@
    "warm": "#a08a4a"
   }
  },
- "seed": 4871,
+ "seed": 5030,
  "textures": [
   "cinderlea_brazier_a_albedo.png",
   "cinderlea_brazier_a_normal.png",
@@ -76,7 +76,7 @@
  "tris": [
   816,
   326,
-  119
+  122
  ],
  "version": 3
 }

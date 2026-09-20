@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.002,
+  "height": 0.942,
   "max": [
-   0.388,
-   1.002,
-   0.388
+   0.391,
+   0.942,
+   0.391
   ],
   "min": [
-   -0.388,
+   -0.39,
    0.0,
-   -0.388
+   -0.391
   ],
-  "radius": 0.743
+  "radius": 0.726
  },
- "built_seconds": 24.38,
+ "built_seconds": 63.87,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "brightwater_barrel_a.glb",
- "hash": "6c079a09b3a28eca",
+ "hash": "8b12ae7b2e53b1fc",
  "kind": "barrel",
  "materials": [
   "brightwater_barrel_a_mat"
@@ -39,7 +39,7 @@
   },
   {
    "name": "brightwater_barrel_a_LOD2",
-   "tris": 404
+   "tris": 405
   }
  ],
  "name": "brightwater_barrel_a",
@@ -65,7 +65,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 3599,
+ "seed": 3758,
  "textures": [
   "brightwater_barrel_a_albedo.png",
   "brightwater_barrel_a_normal.png",
@@ -74,7 +74,7 @@
  "tris": [
   2700,
   1080,
-  404
+  405
  ],
  "version": 3
 }

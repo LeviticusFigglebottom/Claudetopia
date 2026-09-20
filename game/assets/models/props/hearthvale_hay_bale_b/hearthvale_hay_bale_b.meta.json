@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.156,
+  "height": 1.249,
   "max": [
-   0.578,
-   1.156,
-   0.523
+   0.624,
+   1.249,
+   0.521
   ],
   "min": [
-   -0.578,
+   -0.625,
    0.0,
-   -0.523
+   -0.521
   ],
-  "radius": 0.97
+  "radius": 1.025
  },
- "built_seconds": 25.96,
+ "built_seconds": 21.56,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_hay_bale_b.glb",
- "hash": "7a802bfc36d70760",
+ "hash": "61949c19a08bcb7a",
  "kind": "hay_bale",
  "materials": [
   "hearthvale_hay_bale_b_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5365,
+ "seed": 5524,
  "textures": [
   "hearthvale_hay_bale_b_albedo.png",
   "hearthvale_hay_bale_b_normal.png",
