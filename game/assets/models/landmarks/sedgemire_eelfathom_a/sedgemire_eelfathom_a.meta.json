@@ -1,0 +1,92 @@
+{
+ "bounds": {
+  "height": 6.622,
+  "max": [
+   6.704,
+   6.622,
+   0.18
+  ],
+  "min": [
+   -6.39,
+   0.0,
+   -18.666
+  ],
+  "radius": 11.942
+ },
+ "built_seconds": 77.24,
+ "category": "landmarks",
+ "collision": "sedgemire_eelfathom_a_col.glb",
+ "collision_params": {},
+ "generator": "gen_landmarks",
+ "glb": "sedgemire_eelfathom_a.glb",
+ "hash": "b673ea99ec13019b",
+ "kind": "eelfathom",
+ "materials": [
+  "sedgemire_eelfathom_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "driftwood",
+  "iron",
+  "glass",
+  "ember",
+  "drowned_stone"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_eelfathom_a",
+   "tris": 2124
+  },
+  {
+   "name": "sedgemire_eelfathom_a_LOD1",
+   "tris": 848
+  },
+  {
+   "name": "sedgemire_eelfathom_a_LOD2",
+   "tris": 318
+  }
+ ],
+ "name": "sedgemire_eelfathom_a",
+ "params": {},
+ "place": "core:place/eelfathom",
+ "reach_m": 14.0,
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 7097,
+ "stands_in_water": true,
+ "textures": [
+  "sedgemire_eelfathom_a_albedo.png",
+  "sedgemire_eelfathom_a_normal.png",
+  "sedgemire_eelfathom_a_orm.png",
+  "sedgemire_eelfathom_a_emission.png"
+ ],
+ "tris": [
+  2124,
+  848,
+  318
+ ],
+ "version": 3,
+ "walkable": [
+  "board",
+  "stringer"
+ ]
+}

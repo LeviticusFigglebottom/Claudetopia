@@ -1,0 +1,85 @@
+{
+ "bounds": {
+  "height": 119.505,
+  "max": [
+   22.295,
+   119.505,
+   43.472
+  ],
+  "min": [
+   -40.828,
+   0.0,
+   -24.128
+  ],
+  "radius": 75.557
+ },
+ "built_seconds": 96.87,
+ "category": "landmarks",
+ "collision": "sedgemire_drowned_nave_a_col.glb",
+ "collision_params": {},
+ "generator": "gen_landmarks",
+ "glb": "sedgemire_drowned_nave_a.glb",
+ "hash": "7b7810747e026824",
+ "height_m": 120.0,
+ "kind": "drowned_nave",
+ "leads_to_deep_place": true,
+ "lean_deg": 15.0,
+ "materials": [
+  "sedgemire_drowned_nave_a_mat"
+ ],
+ "materials_used": [
+  "fused_stone",
+  "drowned_stone"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_drowned_nave_a",
+   "tris": 1602
+  },
+  {
+   "name": "sedgemire_drowned_nave_a_LOD1",
+   "tris": 640
+  },
+  {
+   "name": "sedgemire_drowned_nave_a_LOD2",
+   "tris": 240
+  }
+ ],
+ "name": "sedgemire_drowned_nave_a",
+ "params": {},
+ "place": "core:place/drowned_nave",
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 7044,
+ "textures": [
+  "sedgemire_drowned_nave_a_albedo.png",
+  "sedgemire_drowned_nave_a_normal.png",
+  "sedgemire_drowned_nave_a_orm.png"
+ ],
+ "tris": [
+  1602,
+  640,
+  240
+ ],
+ "version": 3,
+ "waterline_m": 57.6
+}

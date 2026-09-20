@@ -1765,6 +1765,34 @@
    "palette": "core:region/brightwater",
    "variant": "a",
    "seed": 6885
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "grandfather",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 6938
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "chalk_hound",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 6991
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "drowned_nave",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 7044
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "eelfathom",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 7097
   }
  ]
 }
