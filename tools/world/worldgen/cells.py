@@ -72,7 +72,9 @@ ASSET_ALIASES = {
     # the region that owns them. "rocks/bone" is deliberately a prefix: it catches every bone
     # kind Skerrow has, so the giants' remains are fingers and ribs and skulls, not one bone.
     "rocks/flint_nodule": "rocks/boulder",
-    "rocks/chalk_boulder": "rocks/cliff_slab",
+    # a chalk boulder is a boulder: the forge's cliff_slab is a 6.5 m upright slab, and
+    # scattering that across rolling downland puts white monoliths on a lawn
+    "rocks/chalk_boulder": "rocks/boulder",
     "rocks/shore_cobble": "rocks/boulder",
     "rocks/black_stone_shard": "rocks/cliff_slab",
     "rocks/sunken_masonry": "rocks/cliff_slab",
@@ -126,7 +128,7 @@ class ScatterWorld:
 
     def __init__(self, grid: Grid, H: np.ndarray, owner: np.ndarray, moisture: np.ndarray,
                  water: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
-                 slope: np.ndarray, bank, regions: list):
+                 slope: np.ndarray, bank, regions: list, water_d=None, field_d=None):
         self.grid = grid
         self.H = H
         self.owner = owner
@@ -138,6 +140,9 @@ class ScatterWorld:
         self.slope = slope
         self.bank = bank
         self.regions = regions
+        # distance to any water at all (river, mere, sea) and to the nearest field boundary
+        self.water_d = water_d if water_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
+        self.field_d = field_d if field_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
 
     def sample(self, x, z) -> dict:
         g = self.grid
@@ -150,6 +155,8 @@ class ScatterWorld:
             "road_w": sample_nearest(self.road_w, g, x, z),
             "pad": sample_nearest(self.pad.astype(np.uint8), g, x, z),
             "slope": sample_bilinear(self.slope, g, x, z),
+            "water_d": sample_bilinear(self.water_d, g, x, z),
+            "field_d": sample_bilinear(self.field_d, g, x, z),
         }
 
 
@@ -187,7 +194,10 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
     for n, (region, key, rule, mult) in enumerate(entries):
         cfg = dict(defaults)
         cfg.update(rule)
-        density = float(cfg.get("density", 1.0)) * mult
+        # a rule may say what it is worth in a particular region: a wood is not a downland
+        # copse at a slightly higher density, it is a different order of thing
+        per_region = cfg.get("region_density", {})
+        density = float(cfg.get("density", 1.0)) * float(per_region.get(region.shape, mult))
         if density <= 0.0:
             continue
         spacing = math.sqrt(HECTARE / density)
@@ -215,6 +225,21 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         # keep off roads, pads and the immediate verge
         acc *= s["road_d"] > (s["road_w"] * 0.5 + 2.5)
         acc *= s["pad"] == 0
+        # Attraction bands. A landscape's strongest line-work is what grows *along* things:
+        # willows and alders following every watercourse, thorn along a field boundary, a row
+        # of trees marking a lane. Exclusion alone can only ever produce an even sprinkle.
+        for field_key, band_key in (("water_d", "near_water"), ("field_d", "near_hedge"),
+                                    ("road_d", "near_lane")):
+            band = cfg.get(band_key)
+            if not band:
+                continue
+            lo, hi = float(band[0]), float(band[1])
+            strength = float(band[2]) if len(band) > 2 else 1.0
+            d = s[field_key]
+            # 1 inside the band, falling away either side over a third of its width
+            soft = max((hi - lo) * 0.35, 1.5)
+            inside = smoothstep(lo - soft, lo + soft * 0.3, d) * (1.0 - smoothstep(hi - soft * 0.3, hi + soft, d))
+            acc *= (1.0 - strength) + strength * inside
         # clustering: a low-frequency field decides where this species actually grows
         cl = float(cfg.get("cluster", 0.35))
         if cl > 0.0:
@@ -222,7 +247,13 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
                                         wl_min=float(cfg.get("rows", 60.0)), wl_max=420.0)
             g2 = grid.with_n(field.shape[0])
             cf = 0.5 + 0.5 * np.tanh(sample_bilinear(field, g2, x, z))
-            acc *= (1.0 - cl) + cl * 2.0 * cf
+            # A gate, not a gentle multiplier. Trees come in copses and shelter belts with real
+            # open ground between them; scaling every candidate by 0.45 to 1.45 only produces an
+            # even sprinkle that is slightly lumpy. Below the threshold the species is simply
+            # absent, above it the ground is thick with it.
+            thresh = float(cfg.get("cluster_threshold", 0.46))
+            gate = smoothstep(thresh, thresh + float(cfg.get("cluster_edge", 0.16)), cf)
+            acc *= (1.0 - cl) + cl * gate * float(cfg.get("cluster_boost", 2.6))
         draw = rng.random(x.shape).astype(np.float32)
         take = draw < np.clip(acc, 0.0, 1.0)
         if not take.any():

@@ -32,8 +32,11 @@ class SurfaceContext:
     def __init__(self, grid: Grid, bank: NoiseBank, H: np.ndarray, regions: list, owner: np.ndarray,
                  water_mask: np.ndarray, water_level: np.ndarray, moisture: np.ndarray,
                  river_d: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
-                 lake, places: list, rf=None):
+                 lake, places: list, rf=None, field_labels=None, field_d=None):
         self.rf = rf
+        # the enclosed patchwork (worldgen/fields.py): which parcel, and how far to its edge
+        self.field_labels = field_labels
+        self.field_d = field_d if field_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
         self.grid = grid
         self.bank = bank
         self.H = H
@@ -58,13 +61,24 @@ class SurfaceContext:
         # roads: on the carriageway, and a slightly wider verge
         self.on_road = road_d <= road_w * 0.5 + 0.6
         self.near_road = road_d <= road_w * 0.5 + 3.5
-        # settlement footprints (cobbles, trodden ground)
-        self.town = np.zeros((n, n), dtype=bool)
+        self._road_t = None
+        # Settlement footprints. `town` is the ground a settlement stands on; `market` is the
+        # small open middle of a market town. Paving follows the streets and the market, not the
+        # whole disc: a village green is grass, and a hard cobbled circle two hundred metres
+        # across with cottages in the middle of it is the most artificial shape a generator can
+        # put in a landscape.
+        self.town = np.zeros((n, n), dtype=np.float32)
+        self.market = np.zeros((n, n), dtype=np.float32)
         for p in places:
-            if p.get("kind") in ("city", "town", "village"):
-                r = 70.0 if p["kind"] != "village" else 42.0
-                d2 = (self.X - p["position"][0]) ** 2 + (self.Z - p["position"][1]) ** 2
-                self.town |= d2 < r * r
+            kind = p.get("kind")
+            if kind not in ("city", "town", "village", "hamlet", "fort", "lodge", "ruin_village"):
+                continue
+            from .roads import pad_radius as _pad_radius
+            r = _pad_radius(p)
+            d = np.sqrt((self.X - p["position"][0]) ** 2 + (self.Z - p["position"][1]) ** 2)
+            self.town = np.maximum(self.town, 1.0 - smoothstep(r * 0.8, r * 1.05, d))
+            if kind in ("city", "town"):
+                self.market = np.maximum(self.market, 1.0 - smoothstep(r * 0.16, r * 0.30, d))
 
     def region(self, shape: str) -> np.ndarray:
         i = self.idx.get(shape, -1)
@@ -103,6 +117,48 @@ class SurfaceContext:
             self._patch_cache[key] = upsample(v, self.n, order=1)
         return self._patch_cache[key]
 
+    def dither(self, salt: int) -> np.ndarray:
+        """White noise at one value per texel, for breaking the control map's own grid.
+
+        Terrain3D only interpolates between neighbouring control texels on Forward+; on the
+        Compatibility renderer each texel takes its own base, overlay and blend, so a material
+        boundary is a hard staircase at texel resolution unless the boundary itself is
+        dithered. One field is generated and rolled per slot: rolling decorrelates the slots
+        (a shared field would scale every weight alike and change no ranking at all) without
+        paying for a second full-resolution array.
+        """
+        if "dither" not in self._patch_cache:
+            rng = np.random.default_rng(self.bank.seed ^ 0x5EED)
+            self._patch_cache["dither"] = rng.random((self.n, self.n), dtype=np.float32)
+        base = self._patch_cache["dither"]
+        return np.roll(base, (salt * 37 + 11, salt * 53 + 7), axis=(0, 1))
+
+    def parcel(self, salt: int) -> np.ndarray:
+        """A stable 0..1 per enclosed field, for deciding what that field carries."""
+        key = ("parcel", salt)
+        if key not in self._patch_cache:
+            if self.field_labels is None:
+                self._patch_cache[key] = self.patch(salt, 90, 380)
+            else:
+                from .fields import parcel_value
+                self._patch_cache[key] = parcel_value(self.field_labels, salt)
+        return self._patch_cache[key]
+
+    def road_t(self) -> np.ndarray:
+        """Distance from the road centre as a fraction of its half-width: 0 at the crown, 1 at
+        the edge of the worn surface, more beyond it.
+
+        The half-width wanders along the road, because a road worn by carts is not a stencil
+        of constant width. Everything that draws a road -- the carriageway, the ruts, the
+        verge, the crown lightening in the colour map -- reads this one profile, so they
+        cannot disagree about where the road is.
+        """
+        if self._road_t is None:
+            wobble = 0.80 + 0.40 * self.patch(416, 22, 130)
+            half = np.maximum(self.road_w * 0.5 * wobble, 1.2)
+            self._road_t = (self.road_d / half).astype(np.float32)
+        return self._road_t
+
     def near_place(self, short_ids, radius: float) -> np.ndarray:
         out = np.zeros((self.n, self.n), dtype=bool)
         for p in self.places:
@@ -131,15 +187,43 @@ def _weights(ctx: SurfaceContext):
     shore_band = np.exp(-((ctx.lake.sd) / 34.0) ** 2)
     river_band = np.exp(-(ctx.river_d / 14.0) ** 2)
 
+    # A road is a worn surface with a verge of trodden grass, not a stripe of one material.
+    # The carriageway wanders in width and fades out rather than ending, and where the downs'
+    # turf is worn through, the chalk under it shows. Each slot may only be yielded once
+    # below, so these terms are folded into the material rules that own them.
+    # A 4-6 m road is only two or three control texels wide, so two thin wheel ruts cannot be
+    # drawn; what reads at that resolution is a carriageway whose surface varies along its
+    # length, and a verge wide enough to be seen.
+    # Along every field boundary there is a strip the plough never reaches: rough grass, nettles
+    # and the foot of a hedge. It is what makes the patchwork visible from a hilltop.
+    # wide enough to survive being seen from a kilometre away: a hedge, its bank and the
+    # strip either side of it that the plough never reaches is six or seven metres, and
+    # at 2 m texels anything narrower is a line that disappears at any distance
+    hedge_line = np.exp(-(ctx.field_d / 6.5) ** 2)
+
+    road_t = ctx.road_t()
+    out_town = 1.0 - ctx.town
+    carriage = 1.0 - smoothstep(0.70, 1.15, road_t)
+    worn = carriage * (0.30 + 0.85 * ctx.patch(417, 14, 70) ** 1.3)
+    verge = smoothstep(1.0, 1.4, road_t) * (1.0 - smoothstep(2.0, 3.4, road_t))
+
     # --- Hearthvale: chalk downs, barley, orchards -------------------------------------
-    yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat) \
-        + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band)
-    yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(70.0, 105.0, H) * dry * ctx.patch(401)) \
-        + basin * 1.3 * verysteep * smoothstep(-400.0, -1200.0, ctx.Z)
-    yield SLOTS["barley"], downs * 1.25 * ctx.patch(402, 90, 380) ** 2 * flat * dry * (1.0 - smoothstep(75.0, 95.0, H))
+    yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat + 0.9 * hedge_line) \
+        + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band) \
+        + basin * 0.8 * hedge_line
+    yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
+        + basin * 1.3 * verysteep * smoothstep(-400.0, -1200.0, ctx.Z) \
+        + downs * out_town * 2.2 * worn
+    # Crops go in by the field. A parcel carries barley or it does not, all the way to its
+    # hedge; a noise blob that runs across three fields and stops in the middle of a fourth is
+    # the thing that makes farmed country read as wallpaper.
+    sown = smoothstep(0.52, 0.62, ctx.parcel(402)) * (1.0 - hedge_line)
+    yield SLOTS["barley"], downs * 1.7 * sown * flat * dry * (1.0 - smoothstep(128.0, 154.0, H)) \
+        * (0.7 + 0.5 * ctx.patch(403, 30, 140))
     yield SLOTS["orchard_grass"], downs * 1.25 * ctx.near_place({"tamwick", "merrowby"}, 210.0) * flat \
         + basin * (0.7 * ctx.near_place({"gullhithe"}, 170.0) * flat
-                   + 0.45 * ctx.patch(413, 45, 210) ** 2 * flat)
+                   + 0.45 * ctx.patch(413, 45, 210) ** 2 * flat) \
+        + (downs + basin) * out_town * 1.1 * verge * flat
 
     # --- Brightwater: the Mere, its shingle shores, the black island -------------------
     under_water = ctx.water.astype(np.float32)
@@ -151,7 +235,11 @@ def _weights(ctx: SurfaceContext):
         + ash * (0.5 * ctx.patch(403, 60, 260) ** 2
                  + 1.5 * ctx.near_place({"sunken_choir", "cantors_seat"}, 190.0)
                  + 0.9 * ctx.near_place({"greyfold", "pilgrims_ash"}, 150.0))
-    yield SLOTS["cobbles"], 2.6 * ctx.town * (1.0 - steep) + 1.8 * (ctx.on_road & ctx.town) \
+    # Paving goes where feet and wheels go: the streets that cross the place, the market in the
+    # middle of a market town, and the Long Stride causeway. The rest of a settlement's ground
+    # is the region's own turf with trodden patches in it.
+    yield SLOTS["cobbles"], 3.0 * ctx.town * carriage + 2.4 * ctx.market * (1.0 - steep) \
+        + 0.8 * ctx.town * (1.0 - steep) * np.clip(ctx.patch(420, 12, 60) - 0.62, 0.0, 1.0) * 3.0 \
         + 2.0 * (np.abs(ctx.X) < 12.0) * (ctx.lake.sd < 60.0) * (ctx.Z > -160.0) * (ctx.Z < 1400.0)
 
     # --- Sedgemire: peat, mud, tide-flats ----------------------------------------------
@@ -173,7 +261,7 @@ def _weights(ctx: SurfaceContext):
         * (1.0 - smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 40.0, H))
     yield SLOTS["scree"], karst * (1.9 * steep + 1.1 * smoothstep(0.55, 1.1, s) * smoothstep(250.0, 420.0, H))
     yield SLOTS["heather"], karst * 2.1 * flat * ctx.patch(407, 70, 300) ** 0.8 * smoothstep(110.0, 210.0, H) \
-        * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(78.0, 98.0, H) \
+        * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(120.0, 146.0, H) \
         + basin * 0.75 * ctx.patch(407, 70, 300) ** 1.6 * smoothstep(16.0, 40.0, H)
     yield SLOTS["snow"], 2.6 * smoothstep(SNOW_LINE - 40.0, SNOW_LINE + 70.0, H) * (1.0 - 0.6 * verysteep)
 
@@ -182,13 +270,30 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["grey_grass"], ash * (0.75 + 1.5 * flat * ctx.patch(408, 80, 320) ** 0.7)
 
     # --- roads everywhere ---------------------------------------------------------------
-    yield SLOTS["dirt_path"], 3.0 * ctx.on_road * (1.0 - ctx.town) + 1.1 * ctx.near_road * (1.0 - ctx.town) \
-        + 1.4 * ctx.pad * (1.0 - ctx.town) * (1.0 - steep) * ctx.patch(409, 30, 120) \
+    yield SLOTS["dirt_path"], out_town * (3.0 * carriage + 0.85 * verge) \
+        + 1.4 * ctx.pad * out_town * (1.0 - steep) * ctx.patch(409, 30, 120) \
         + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.82, 0.0, 1.0) * 1.4 * (1.0 - flat * 0.4)
 
 
-def control_maps(ctx: SurfaceContext, blend_sharpness: float = 1.9):
-    """base id, overlay id and blend (0-255) per texel, from the two strongest materials."""
+def control_maps(ctx: SurfaceContext, blend_curve: float = 0.7, dither_scale: float = 0.30):
+    """base id, overlay id and blend (0-255) per texel, from the two strongest materials.
+
+    Two things decide whether a material boundary reads as landscape or as a jigsaw.
+
+    The blend byte is the *fraction of the overlay*: Terrain3D weights the base by
+    ``1 - blend/255`` and the overlay by ``blend/255``. Where two materials are equally
+    strong the honest value is therefore 127 -- half of each. Driving it to 255 there (as
+    the old ratio curve did) makes each side of the seam show the other side's material at
+    full strength, which mirrors the two materials across the boundary and is exactly the
+    hard edge it was meant to soften.
+
+    And the boundary's shape is broken at texel resolution. Terrain3D only interpolates
+    between neighbouring control texels on Forward+; on Compatibility each texel takes its
+    own base and overlay, so a smoothly-moving boundary lands on the texel grid as
+    right-angled steps 2 m across. Jittering each slot's weight by per-texel white noise
+    flips the ranking only where the top two are already within the jitter, so the seam
+    frays into a dither a few texels wide and dissolves at any distance.
+    """
     n = ctx.n
     best = np.zeros((n, n), dtype=np.float32)
     second = np.zeros((n, n), dtype=np.float32)
@@ -197,10 +302,11 @@ def control_maps(ctx: SurfaceContext, blend_sharpness: float = 1.9):
     jitter_scale = 0.22
     for slot, w in _weights(ctx):
         w = np.asarray(w, dtype=np.float32)
-        # three shared jitter fields at two scales: material borders should wander and fray,
-        # not step along the texel grid (one field per slot would cost seconds and look the same)
+        # three shared patch fields make the boundary wander over tens of metres...
         w = w * (1.0 + jitter_scale * (ctx.patch(500 + (slot % 3), 22, 90) - 0.5)
                  + 0.5 * jitter_scale * (ctx.patch(510 + (slot % 3), 6, 26) - 0.5))
+        # ...and a per-slot dither breaks it at the texel itself
+        w = w * (1.0 + dither_scale * (ctx.dither(slot) - 0.5))
         is_best = w > best
         is_second = (~is_best) & (w > second)
         # the old best slides down into second place; a mid-ranking slot takes second only
@@ -208,9 +314,15 @@ def control_maps(ctx: SurfaceContext, blend_sharpness: float = 1.9):
         second = np.where(is_best, best, np.where(is_second, w, second))
         base = np.where(is_best, np.uint8(slot), base).astype(np.uint8)
         best = np.where(is_best, w, best)
-    ratio = np.divide(second, np.maximum(best, 1e-4), dtype=np.float32)
-    blend = np.clip(np.power(np.clip(ratio, 0.0, 1.0), blend_sharpness) * 255.0, 0, 255).astype(np.uint8)
+    # overlay fraction, 0 where nothing competes and 0.5 where the two are equal
+    frac = np.divide(second, np.maximum(best + second, 1e-4), dtype=np.float32)
+    # a curve below 1 widens the band in which both materials are visible at all
+    blend = np.clip(0.5 * np.power(np.clip(2.0 * frac, 0.0, 1.0), blend_curve) * 255.0,
+                    0, 255).astype(np.uint8)
     overlay = np.where(second <= 1e-4, base, overlay).astype(np.uint8)
+    # Terrain3D skips the overlay lookup when the two ids match, and would then draw the base
+    # at only 1 - blend; a texel with no real second material must say so.
+    blend = np.where(overlay == base, np.uint8(0), blend).astype(np.uint8)
     return base.astype(np.uint8), overlay, blend
 
 
@@ -280,4 +392,34 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     rgba = np.concatenate([np.clip(tint, 0.0, 1.0), alpha[..., None]], axis=-1)
     if n != ctx.n:
         rgba = np.stack([upsample(rgba[..., c], ctx.n, order=1) for c in range(4)], axis=-1)
+    # The road is drawn at full resolution, after the upsample: a 5 m carriageway is smaller
+    # than one texel of the coarse tint lattice and would smear into the fields either side.
+    # A used road is lighter and greyer along its crown, where the surface is packed and dusty,
+    # and throws a little pale dust onto the verge; the wheel tracks stay darker and damper.
+    # Along every field boundary there is a strip the plough never reaches: rough grass, nettles
+    # and the foot of a hedge. It is what makes the patchwork visible from a hilltop.
+    # wide enough to survive being seen from a kilometre away: a hedge, its bank and the
+    # strip either side of it that the plough never reaches is six or seven metres, and
+    # at 2 m texels anything narrower is a line that disappears at any distance
+    hedge_line = np.exp(-(ctx.field_d / 6.5) ** 2)
+
+    # A hedge and its shadow are darker than the field either side, and that single dark line
+    # is what tells a hilltop view that the country is farmed.
+    hedge = np.exp(-(ctx.field_d / 5.0) ** 2) * (0.55 + 0.75 * ctx.patch(419, 12, 60))
+    rgba[..., :3] *= (1.0 - 0.30 * np.clip(hedge, 0.0, 1.0))[..., None]
+
+    road_t = ctx.road_t()
+    out_town = 1.0 - ctx.town
+    crown = (1.0 - smoothstep(0.15, 1.15, road_t)) * out_town
+    ruts = np.exp(-((road_t - 0.75) / 0.34) ** 2) * out_town
+    dust = np.exp(-((road_t - 1.45) / 0.55) ** 2) * out_town
+    grain = 0.85 + 0.3 * ctx.patch(418, 8, 44)
+    # packed dust carries less of the region's colour than the turf either side...
+    neutral = np.clip(0.70 * crown + 0.35 * dust, 0.0, 0.8)
+    rgba[..., :3] = lerp(rgba[..., :3], np.ones_like(rgba[..., :3]), neutral[..., None])
+    # ...and then the crown is lifted, so the road reads lighter than the field, not darker
+    lift = 1.0 + (0.22 * crown + 0.11 * dust - 0.09 * ruts) * grain
+    rgba[..., :3] *= lift[..., None]
+    # the ruts hold water: rougher there, drier on the crown
+    rgba[..., 3] = np.clip(rgba[..., 3] + 0.12 * crown - 0.10 * ruts, 0.0, 1.0)
     return (np.clip(rgba, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)

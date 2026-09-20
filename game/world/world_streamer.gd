@@ -21,11 +21,21 @@ const GENERATED := "res://world/generated"
 @export var lod_bias_far: float = 0.6
 @export var enabled: bool = true
 
-## How far each kind of scatter is worth drawing (metres). A grass tuft is invisible at
-## 80 m but still costs a draw call and its share of the primitive budget, so the ranges are
-## what keep a forest cell inside DESIGN.md §11 rather than the instance counts alone.
-const VIEW_RANGE := {"tree": 340.0, "bush": 180.0, "rock": 220.0, "prop": 200.0, "herb": 80.0}
-const VIEW_RANGE_FAR := {"tree": 300.0, "bush": 120.0, "rock": 160.0, "prop": 140.0, "herb": 0.0}
+## How far each kind of scatter is worth drawing (metres). A grass tuft is invisible at 80 m
+## but still costs a draw call and its share of the primitive budget, so the ranges are what
+## keep a forest cell inside DESIGN.md §11 rather than the instance counts alone.
+##
+## The far-ring numbers are measured from the camera to the cell, and a far-ring cell is
+## between 384 m and 905 m away: a range *shorter* than that hides the whole ring. They were,
+## which is why a wooded region could be shot from a hilltop and show eight trees. The far
+## ring's cost is controlled by `far_density` and by drawing it at a lower LOD, not by a range
+## that cuts it off before it begins.
+const VIEW_RANGE := {"tree": 340.0, "bush": 190.0, "rock": 230.0, "prop": 200.0, "herb": 70.0}
+const VIEW_RANGE_FAR := {"tree": 920.0, "bush": 430.0, "rock": 480.0, "prop": 400.0, "herb": 0.0}
+## and how much of the far ring is worth keeping, per kind: a wood reads as a wood from a
+## kilometre away at a fraction of its stems, and trees are much the most expensive thing in
+## the world -- the forge's are seven to fifteen thousand triangles each.
+const FAR_KEEP := {"tree": 0.35, "bush": 0.3, "rock": 0.4, "prop": 0.4, "herb": 0.0}
 
 var target: Node3D = null
 var provider: TerrainProvider = null
@@ -219,7 +229,7 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 		var rows: Array = instances[asset_path]
 		if rows.is_empty():
 			continue
-		var mesh := _mesh_for(str(asset_path))
+		var mesh := _mesh_for(str(asset_path), ring)
 		if mesh == null:
 			continue
 		_build_multimesh(node, str(asset_path), mesh, rows, ring)
@@ -269,7 +279,8 @@ func _build_spawns(parent: Node3D, spawns: Array) -> void:
 func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Array, ring: int) -> void:
 	var keep := rows.size()
 	if ring > full_ring:
-		keep = int(ceil(float(rows.size()) * far_density))
+		var kind := asset_kind(asset_path)
+		keep = int(ceil(float(rows.size()) * float(FAR_KEEP.get(kind, far_density))))
 	if keep <= 0:
 		return
 	var mm := MultiMesh.new()
@@ -337,6 +348,43 @@ func _build_scene(parent: Node3D, entry: Variant) -> void:
 	if not props.is_empty() and inst.has_method("configure"):
 		inst.call("configure", props)
 	parent.add_child(inst)
+	_add_collision(inst, str(entry.get("collision", "")))
+
+
+## A landmark you can walk through is worse than a landmark that is not there. The forge builds
+## a separate low-triangle collision mesh beside each landmark and names it in its meta file,
+## which the world builder copies into the cell entry; here it becomes a static body under the
+## instance. Building it from the visible mesh instead would put ten thousand triangles into
+## the physics world for something you mostly walk around.
+func _add_collision(inst: Node, path: String) -> void:
+	if path.is_empty() or not (inst is Node3D):
+		return
+	if not ResourceLoader.exists(path):
+		if not _missing_assets.has(path):
+			_missing_assets[path] = true
+			Log.warn("WorldStreamer", "landmark collision missing, skipping: %s" % path)
+		return
+	var packed: PackedScene = load(path)
+	if packed == null:
+		return
+	var source: Node = packed.instantiate()
+	var body := StaticBody3D.new()
+	body.name = "Collision"
+	var shapes := 0
+	for m in source.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (m as MeshInstance3D).mesh
+		if mesh == null:
+			continue
+		var shape := CollisionShape3D.new()
+		shape.shape = mesh.create_trimesh_shape()
+		shape.transform = (m as MeshInstance3D).global_transform
+		body.add_child(shape)
+		shapes += 1
+	source.queue_free()
+	if shapes == 0:
+		body.queue_free()
+		return
+	(inst as Node3D).add_child(body)
 
 
 ## The kind of thing an asset is, from where the forge files it. Scatter rules put trees in
@@ -363,34 +411,98 @@ func _unload(cell: Vector2i) -> void:
 
 
 ## Loads the mesh for a scatter asset, warning exactly once per missing asset.
-func _mesh_for(asset_path: String) -> Mesh:
-	if _mesh_cache.has(asset_path):
-		return _mesh_cache[asset_path]
+## The mesh to draw one of these with, at the detail this ring deserves.
+##
+## The forge builds every scatter asset with LOD1 and LOD2 meshes beside the full one, named
+## after it. A tree is about 150 triangles at LOD0 and a fifth of that at LOD2, and a tree
+## three hundred metres away across a valley is four pixels tall, so the far ring takes the
+## cheap one. That is what buys the Briarwold its density: the budget is spent on the wood you
+## are standing in rather than on the one on the far hill.
+func _mesh_for(asset_path: String, ring: int = 0) -> Mesh:
+	# Only the cell you are standing in gets the full mesh. The eight around it are already
+	# a hundred metres away, where the difference between fifteen thousand triangles and five
+	# is a tree you cannot tell apart, and there are eight times as many of them.
+	# Godot's own per-surface mesh LODs do the distance work inside a MultiMesh, and the
+	# forge's LOD0 is a single mesh carrying every material of the asset. So the near rings
+	# take the full mesh and let the renderer decimate it; only the far ring, which is past
+	# 384 m and where a stem is a couple of pixels, asks for a cheaper rung explicitly.
+	var want_lod := 0 if ring <= full_ring else 2
+	var key := "%s#%d" % [asset_path, want_lod]
+	if _mesh_cache.has(key):
+		return _mesh_cache[key]
 	var mesh: Mesh = null
 	if ResourceLoader.exists(asset_path):
 		var res: Resource = load(asset_path)
 		if res is Mesh:
 			mesh = res
 		elif res is PackedScene:
-			mesh = _first_mesh_of(res)
+			mesh = _mesh_of(res, want_lod)
 	if mesh == null and not _missing_assets.has(asset_path):
 		_missing_assets[asset_path] = true
 		Log.warn("WorldStreamer", "scatter asset missing, skipping: %s" % asset_path)
-	_mesh_cache[asset_path] = mesh
+	_mesh_cache[key] = mesh
 	return mesh
 
 
-static func _first_mesh_of(packed: PackedScene) -> Mesh:
+## The cheapest mesh in the scene that is still worth drawing, for a far-ring instance; the
+## full one for the near ring.
+##
+## LOD ladders arrive in whatever shape the generator gave them, and not every rung is usable:
+## some of the forge's trees collapse to four triangles at LOD2, which is not a distant tree,
+## it is nothing. So a rung is only taken if it still has a silhouette, and otherwise the next
+## one up is used. Falling back rather than failing matters -- a missing LOD should cost
+## triangles, not a bald hillside.
+const MIN_LOD_TRIS := 12
+
+
+static func _tri_count(mesh: Mesh) -> int:
+	var am := mesh as ArrayMesh
+	if am == null:
+		return MIN_LOD_TRIS          # not an ArrayMesh: assume it is worth drawing
+	var tris := 0
+	for si in am.get_surface_count():
+		var n := am.surface_get_array_index_len(si)
+		if n == 0:
+			n = am.surface_get_array_len(si)
+		tris += n / 3
+	return tris
+
+
+static func _mesh_of(packed: PackedScene, want_lod: int) -> Mesh:
 	var state := packed.get_state()
+	var full: Mesh = null
+	var by_lod: Dictionary = {}
 	for i in state.get_node_count():
 		if state.get_node_type(i) != "MeshInstance3D":
 			continue
+		var node_name := str(state.get_node_name(i))
 		for p in state.get_node_property_count(i):
-			if state.get_node_property_name(i, p) == "mesh":
-				var v: Variant = state.get_node_property_value(i, p)
-				if v is Mesh:
-					return v
-	return null
+			if state.get_node_property_name(i, p) != "mesh":
+				continue
+			var v: Variant = state.get_node_property_value(i, p)
+			if not (v is Mesh):
+				continue
+			var at := node_name.rfind("_LOD")
+			if at < 0:
+				if full == null:
+					full = v
+			else:
+				by_lod[int(node_name.substr(at + 4).to_int())] = v
+	if want_lod <= 0:
+		if full != null:
+			return full
+		return by_lod.get(1, by_lod.values()[0] if not by_lod.is_empty() else null)
+	# walk down from the wanted rung to the full mesh, taking the first that still has a shape
+	var rungs: Array = by_lod.keys()
+	rungs.sort()
+	rungs.reverse()
+	for lod in rungs:
+		if lod > want_lod:
+			continue
+		var m: Mesh = by_lod[lod]
+		if _tri_count(m) >= MIN_LOD_TRIS:
+			return m
+	return full
 
 
 func _scene_for(path: String) -> PackedScene:

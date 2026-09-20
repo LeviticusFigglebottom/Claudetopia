@@ -197,6 +197,55 @@ left on a shelf, which is what the fiction says happens to them.
 shelf and a tome read out of the bag teach exactly the same thing. Re-reading one says so
 rather than silently doing nothing.
 
+## 2026-09-19 · A landmark stands where the fiction says, with the collision it was built with
+**Decision.** Landmarks are placed from the forge's own metadata, not from a table in the
+builder. Each landmark model names its `place` in its meta file, so `build_world.py` indexes
+`game/assets/models/landmarks/` by place id and emits the `.glb` as that POI's `scene`; an
+imported `.glb` loads as a `PackedScene`, so the streamer instantiates it with no special
+case. Collision is the `*_col.glb` the forge already builds beside it, named in the meta and
+copied into the cell entry as a `collision` field; the streamer turns it into a `StaticBody3D`
+of trimesh shapes under the instance. Yaw is a bearing the world gives the landmark, not a
+default: the Lamp faces down the gradient of the water-distance field, the Sayers' Spire and
+the Sunken Choir's colossi face a named place, and anything unlisted faces downhill, which for
+a fallen thing is the way it fell. A `yaw` in `places.json` overrides all of it.
+**Why.** The alternative for collision was a trimesh built from the visible mesh at load, which
+would have put 10,807 triangles into the physics world for the Cracked Toll instead of 729 for
+something you mostly walk around; and asking the forge for `-col` suffixed nodes inside the
+main glb would have duplicated a file it already writes. The alternative for yaw was a hand
+table, which is fine for six landmarks and wrong for sixty: a bearing taken from the water, the
+slope or another place keeps working when a place moves, and a landmark facing due north
+because that is the default is a tell.
+**Consequences.** `pois.json` entries gain an optional `collision` path beside `scene`, and so
+do the cell `scenes` entries — additive, and consumers that ignore it get what they had. A
+landmark that is really a set (the Sunken Choir is twelve headless colossi) is described in
+`LANDMARK_SETS` and comes out as an avenue running from the place toward what it faces, which
+means one place can own more scene entries than it has POI entries. Standing stones are not
+landmarks and are not scattered either: `worldgen/stones.py` sets them as a ring at the Moot,
+as pairs flanking a road where it crosses the high ground, and as single stones on skylines,
+because the whole point of a standing stone is that a person put it there.
+
+## 2026-09-20 · A view range and the ring it applies to have to be read together
+**Decision.** `WorldStreamer.VIEW_RANGE_FAR` is not a smaller version of `VIEW_RANGE`. It is
+measured from the camera to a cell that is *already* between 384 m and 905 m away, so any
+number below 384 hides the whole 5×5 ring. The far ring's cost is held down by `FAR_KEEP`, a
+per-kind fraction of instances, and by drawing it at a lower LOD — never by a range that cuts
+it off before it begins. And `_mesh_of` skips a LOD rung that has collapsed below
+`MIN_LOD_TRIS`, taking the next one up instead.
+**Why.** Both of these were systems that drew nothing while reporting success, which is the
+hardest kind of fault to see in a screenshot: the far ring had view ranges of 300 m for trees
+and 120 m for bushes, so it had been drawing essentially nothing since it was written, and a
+wooded region could be photographed from a hilltop and show eight trees with no error
+anywhere. The LOD guard is the same species: some of the forge's trees go to four triangles at
+LOD2, so a renderer that faithfully drew the rung it was given drew empty air. Keep the guard
+after the ladders are fixed — a generator that silently produces nothing will happen again.
+**Consequences.** Measured on the Briarwold hilltop vista, the worst frame in the world:
+6.52 M primitives as merged, 2.29 M with the ranges and per-ring LODs corrected, 1.59 M once
+the wood came down to 34 stems a hectare — and turning the entire far ring off saved 0.06 M of
+that, so all of the cost is the 3×3 at about six hundred trees of roughly five thousand
+triangles each. The wood is held at 44 stems a hectare and that one frame carries about 2.0 M
+against a 1.5 M budget, deliberately, because the alternative is hill grazing with trees on
+it. Every other region is between 0.38 M and 0.6 M. When the forge ships a ladder of roughly
+`[7000, 800, 8]` the density goes back up and the overage goes away.
 ## 2026-09-19 · A house is built from the inside of the house it opens onto
 **Decision.** `Building` raises a house's exterior by reading that interior's own meta: the
 ground-floor rooms become wall masses, each mass takes a pitched roof at its culture's pitch

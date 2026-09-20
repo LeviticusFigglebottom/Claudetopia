@@ -24,8 +24,10 @@ const REGION_WATER := {
 
 var provider: TerrainProvider
 var sheet: MeshInstance3D
+var skirt: MeshInstance3D
 var rivers_root: Node3D
 var _sheet_material: ShaderMaterial
+var _skirt_material: ShaderMaterial
 var _river_materials: Array[ShaderMaterial] = []
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
@@ -38,8 +40,13 @@ func build(p: TerrainProvider) -> void:
 		return
 	_build_textures()
 	_build_sheet()
+	_build_skirt()
 	_build_rivers()
 	set_region_look(GameState.current_region_id)
+	var skirt_aabb := skirt.get_aabb() if skirt else AABB()
+	Log.info("WaterSurface", "sheet %.0f m, sea skirt %.0f m (%d verts), %d rivers, sea level %.1f m"
+		% [provider.size_m + 512.0, skirt_aabb.size.x, 0 if skirt == null else skirt.mesh.get_faces().size(),
+			_river_materials.size(), provider.sea_level])
 
 
 func _build_textures() -> void:
@@ -96,6 +103,54 @@ func _build_sheet() -> void:
 	_sheet_material = _make_material(true, true)
 	sheet.material_override = _sheet_material
 	add_child(sheet)
+
+
+## The Grey Sea runs to the horizon, not to the edge of the heightmap.
+##
+## The sheet stops where the world does, so from any hill the far edge of the ocean was a
+## straight grey bar with sky under it. This is a flat ring of water outside the world, at sea
+## level, big enough that its own edge is over the horizon. The shader's maps are sampled with
+## clamp-to-edge, so a skirt texel takes the mask, level and ground height of the nearest world
+## edge texel: it is water exactly where the coast is water, and discards where the world ends
+## in land (the mountain wall north, the cliffs south).
+func _build_skirt() -> void:
+	var r_in := (provider.size_m + 512.0) * 0.5
+	var r_out := provider.size_m * 6.0
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# eight pieces: four sides and four corners, each subdivided so distance fog has something
+	# to interpolate over
+	var bands: Array = [
+		[-r_out, -r_out, -r_in, -r_in], [-r_in, -r_out, r_in, -r_in], [r_in, -r_out, r_out, -r_in],
+		[-r_out, -r_in, -r_in, r_in], [r_in, -r_in, r_out, r_in],
+		[-r_out, r_in, -r_in, r_out], [-r_in, r_in, r_in, r_out], [r_in, r_in, r_out, r_out],
+	]
+	for b in bands:
+		_add_quad(st, float(b[0]), float(b[1]), float(b[2]), float(b[3]), 6)
+	skirt = MeshInstance3D.new()
+	skirt.name = "SeaSkirt"
+	skirt.mesh = st.commit()
+	skirt.position = Vector3(0.0, provider.sea_level, 0.0)
+	skirt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	skirt.extra_cull_margin = r_out
+	_skirt_material = _make_material(false, true)
+	skirt.material_override = _skirt_material
+	add_child(skirt)
+
+
+func _add_quad(st: SurfaceTool, x0: float, z0: float, x1: float, z1: float, steps: int) -> void:
+	for i in steps:
+		for j in steps:
+			var ax := lerpf(x0, x1, float(i) / float(steps))
+			var bx := lerpf(x0, x1, float(i + 1) / float(steps))
+			var az := lerpf(z0, z1, float(j) / float(steps))
+			var bz := lerpf(z0, z1, float(j + 1) / float(steps))
+			for corner in [[ax, az], [ax, bz], [bx, bz], [ax, az], [bx, bz], [bx, az]]:
+				# the shader culls nothing, so the winding does not matter, but the normal
+				# does: a generated one could come out pointing at the sea bed
+				st.set_normal(Vector3.UP)
+				st.set_uv(Vector2(float(corner[0]), float(corner[1])))
+				st.add_vertex(Vector3(float(corner[0]), 0.0, float(corner[1])))
 
 
 func _build_rivers() -> void:
@@ -201,7 +256,7 @@ func set_region_look(region_id: String) -> void:
 	for mat in _all_materials():
 		mat.set_shader_parameter("deep_colour", deep)
 		mat.set_shader_parameter("shallow_colour", shallow)
-		if mat == _sheet_material:
+		if mat == _sheet_material or mat == _skirt_material:
 			mat.set_shader_parameter("depth_fade_m", fade)
 
 
@@ -209,5 +264,7 @@ func _all_materials() -> Array[ShaderMaterial]:
 	var out: Array[ShaderMaterial] = []
 	if _sheet_material:
 		out.append(_sheet_material)
+	if _skirt_material:
+		out.append(_skirt_material)
 	out.append_array(_river_materials)
 	return out

@@ -7,6 +7,7 @@ All heights are metres above sea level; the Mere's surface is LAKE_LEVEL.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -118,12 +119,66 @@ def asym(v, up: float = 1.0, down: float = 0.35, k: float = 2.0):
 
 # --- shapes ----------------------------------------------------------------------------------
 
+## The bearing the Hearthvale escarpment runs on, measured clockwise from +Z. The face looks
+## out to the north-west, over the vale and away toward the Mere, which is the direction the
+## land falls; the dip slope runs back to the south-east under the Briarwold.
+SCARP_BEARING = 38.0
+## How far the crest stands above the vale at its foot.
+SCARP_RISE = 72.0
+
+
 def shape_downs(ctx: HeightContext, r: RegionDef) -> np.ndarray:
-    """Chalk downs: long whale-backed hills (rounded tops), narrow dry valleys."""
+    """Chalk downs: an escarpment with dry valleys cut into it, and whale-backs behind.
+
+    A chalk country is not a field of rounded hills. It is one long escarpment: a steep face
+    on the weather side, a crest you can walk for miles, and a dip slope running away behind
+    it for kilometres at a grade you barely notice. Dry valleys -- coombes -- bite back into
+    the face, and they are dry because chalk takes its water underground, so no river in this
+    world runs down one. That profile is the Hearthvale skyline, and it is a silhouette no
+    other region in Wickmere has.
+    """
     v = ctx.warped(111, None, 2200, 90.0, beta=2.1, aniso=(35.0, 3.0))
     dome = (0.5 + 0.5 * np.tanh(v / 1.1)) ** 0.8          # broad rounded whale-backs
-    h = (r.base_height - 0.4 * r.relief) + 1.0 * r.relief * dome
+
+    # --- the escarpment, which is the region's primary landform ------------------------
+    th = math.radians(SCARP_BEARING)
+    cx0, cz0 = r.center
+    across = (ctx.X - cx0) * math.cos(th) + (ctx.Z - cz0) * math.sin(th)
+    along = -(ctx.X - cx0) * math.sin(th) + (ctx.Z - cz0) * math.cos(th)
+    # the crest wanders: a scarp follows the geology, not a ruler
+    wander = (230.0 * np.sin(along / 940.0) + 130.0 * np.sin(along / 395.0 + 1.7)
+              + 210.0 * ctx.f(117, 2.0, 600, 2600))
+    sd = across - wander                                   # <0 below the face, >0 dip slope
+    face = 165.0 + 85.0 * ctx.f(118, 2.0, 400, 1800)       # how far the face falls over
+    on_top = smoothstep(-face, 30.0, sd)                   # 0 in the vale, 1 on the crest
+    # Seventy metres of rise over about two hundred of ground: about one in three, which is
+    # steep enough to walk up sideways and to stand against the sky from a long way off.
+    h = (r.base_height - 10.0) + SCARP_RISE * on_top
+    # the long dip slope behind the crest, at a grade you would not notice underfoot
+    h = h - 0.020 * np.clip(sd - 160.0, 0.0, 2600.0) ** 0.92
+    # whale-backs, mostly on the dip slope: the face itself is one clean sweep of chalk
+    h = h + 0.45 * r.relief * dome * (0.3 + 0.7 * on_top)
     h += 0.10 * r.relief * sc(ctx.f(112, 2.0, None, 800), 1.5) + 0.05 * r.relief * sc(ctx.f(115, 2.0, 120, 420), 1.5)
+
+    # --- dry valleys biting into the face ----------------------------------------------
+    # Their spacing along the crest comes from a one-dimensional field, so a coombe is a
+    # notch across the crest line rather than a dent somewhere on the hillside.
+    line_w = np.linspace(float(along.min()), float(along.max()), 512)
+    rng = ctx.rng(121)
+    phase = rng.uniform(0.0, 2.0 * np.pi, 5)
+    freq = np.array([1.0 / 560.0, 1.0 / 880.0, 1.0 / 1480.0, 1.0 / 310.0, 1.0 / 205.0])
+    line = np.zeros_like(line_w)
+    for fq, ph in zip(freq, phase):
+        line += np.sin(line_w * fq + ph)
+    span = max(float(line.max() - line.min()), 1e-6)
+    line = (line - line.min()) / span
+    notch = np.interp(along, line_w, line) ** 3.4          # sparse and sharp, not corrugated
+    coombe = np.exp(-((sd + 70.0) / 430.0) ** 2)           # deepest just under the crest
+    h = h - 0.46 * SCARP_RISE * notch * coombe
+
+    # the vale must not fall under its own water table, and a hard floor would be a plateau
+    h = 11.0 + 0.5 * ((h - 11.0) + np.sqrt((h - 11.0) ** 2 + 40.0))
+
     # the Cracked Toll: the bell's crater in the hill above Merrowby
     toll = ctx.place("cracked_toll")
     if toll:

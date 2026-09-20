@@ -47,6 +47,40 @@ class Heights:
         self.spacing = float(self.man["spacing_m"])
         self.origin = self.man["origin"]
         self.h = np.fromfile(os.path.join(GEN, "heights.r32"), dtype="<f4").reshape(self.n, self.n)
+        self.mask = np.fromfile(os.path.join(GEN, "region_mask.u8"),
+                                dtype=np.uint8).reshape(self.n, self.n)
+        self.water = np.fromfile(os.path.join(GEN, "water_mask.u8"),
+                                 dtype=np.uint8).reshape(self.n, self.n)
+        self.region_index = {rid: i for i, rid in enumerate(self.man.get("regions", []))}
+
+    def xz_of(self, i: int, j: int):
+        return (self.origin[0] + j * self.spacing, self.origin[1] + i * self.spacing)
+
+    def sample_region(self, region: int, count: int, seed: int, want_water=None):
+        """`count` places drawn from a region's own ground, spread out rather than clustered.
+
+        The drop test turns on having several shots of a region that are not three views of
+        the same hill, so these are drawn from the whole of it and thinned by distance.
+        """
+        if region < 0:
+            return []
+        sel = self.mask == region
+        if want_water is not None:
+            sel = sel & ((self.water > 0) if want_water else (self.water == 0))
+        rows, cols = np.nonzero(sel)
+        if rows.size == 0:
+            return []
+        rng = np.random.default_rng(seed)
+        pick = rng.choice(rows.size, size=min(700, rows.size), replace=False)
+        out = []
+        for k in pick:
+            x, z = self.xz_of(int(rows[k]), int(cols[k]))
+            if any(math.hypot(x - ox, z - oz) < 1100.0 for ox, oz in out):
+                continue
+            out.append((x, z))
+            if len(out) >= count:
+                break
+        return out
 
     def at(self, x: float, z: float) -> float:
         j = int(round((x - self.origin[0]) / self.spacing))
@@ -68,13 +102,31 @@ class Heights:
                 best = (px, pz, h)
         return best
 
+    def low_point(self, x: float, z: float, radius: float, samples: int = 140):
+        """The lowest ground within `radius`, for pointing a camera off a vantage.
+
+        A view from high ground is only a view if it looks at the drop. Aiming at the lowest
+        ground in range is what puts an escarpment face, a valley floor or a shoreline in the
+        frame instead of the back of the hill the camera is standing on.
+        """
+        rng = np.random.default_rng(11)
+        best = (x, z, self.at(x, z))
+        for _ in range(samples):
+            a = rng.uniform(0, 2 * math.pi)
+            r = radius * math.sqrt(rng.uniform(0.25, 1.0))
+            px, pz = x + math.cos(a) * r, z + math.sin(a) * r
+            h = self.at(px, pz)
+            if h < best[2]:
+                best = (px, pz, h)
+        return best
+
 
 def load_places() -> dict:
     with open(os.path.join(PACK, "places", "places.json"), "r", encoding="utf-8") as f:
         return {p["id"]: p for p in json.load(f)}
 
 
-def shot(label: str, pos, look, fov: float, hour: float, weather: str, fog_scale: float = 0.35,
+def shot(label: str, pos, look, fov: float, hour: float, weather: str, fog_scale: float = 1.0,
          region: str = "") -> dict:
     return {
         "label": label,
@@ -86,8 +138,9 @@ def shot(label: str, pos, look, fov: float, hour: float, weather: str, fog_scale
         "fov": fov,
         "time": hour,
         "weather": weather,
-        # these are review shots looking 400-900 m: at full region fog density the land
-        # dissolves into haze, so the sheet is shot on a clearer day than average
+        # The region fog densities are now written for a country you can see across, so the
+        # sheet is shot at the light each region actually has. This override is kept for a
+        # plan that wants to look further than the weather allows.
         "fog_scale": fog_scale,
     }
 
@@ -106,21 +159,46 @@ def build_plan() -> dict:
         dist = 360.0
         cx, cz = lx + math.cos(ang) * dist, lz + math.sin(ang) * dist
         cam_h = max(hh.at(cx, cz), lh) + 55.0
-        shots.append(shot("%s_landmark" % short, (cx, cam_h, cz), (lx, lh + 8.0, lz), 58.0, hour, weather, 0.3, region_id))
-        # 2. a vista from the highest ground near the region's viewpoint, over the settlement
+        shots.append(shot("%s_landmark" % short, (cx, cam_h, cz), (lx, lh + 8.0, lz), 58.0, hour, weather, 1.0, region_id))
+        # 2. a vista from the highest ground near the region's viewpoint, over the settlement.
+        # Eye height on the hill, not forty-eight metres above it: from a drone every region
+        # is a hazy panorama with the same composition, and the thing that tells a marsh from a
+        # downland is its own near ground filling the bottom of the frame and its own skyline
+        # cutting the top. That is the shot a person standing there actually gets.
         vp = places[vista]
         vx, vz = float(vp["position"][0]), float(vp["position"][1])
         hx, hz, hy = hh.high_point(vx, vz, 600.0)
+        # Look off the vantage at the lowest ground within a kilometre and a half, biased toward
+        # the settlement so the shot is still about somewhere. Standing on a crest and facing
+        # the back of your own hill is how six regions end up looking like one field.
+        lx, lz, lh = hh.low_point(hx, hz, 1500.0)
         tx, tz = float(places[settlement]["position"][0]), float(places[settlement]["position"][1])
-        # look at a point part-way to the settlement so the near ground is in frame too
-        mx, mz = hx + (tx - hx) * 0.45, hz + (tz - hz) * 0.45
-        shots.append(shot("%s_vista" % short, (hx, hy + 48.0, hz), (mx, hh.at(mx, mz), mz), 68.0, hour, weather, 0.25, region_id))
+        ax, az = lx * 0.4 + tx * 0.6, lz * 0.4 + tz * 0.6
+        # aim short of it, so the drop between here and there fills the lower frame
+        mx, mz = hx + (ax - hx) * 0.92, hz + (az - hz) * 0.92
+        shots.append(shot("%s_vista" % short, (hx, hy + 12.0, hz), (mx, hh.at(mx, mz) + 4.0, mz),
+                          62.0, hour, weather, 1.0, region_id))
         # 3. the approach to the settlement, 420 m out and 28 m up, looking down on it
         sx, sz = tx, tz
         a2 = math.atan2(hz - sz, hx - sx)
         ax, az = sx + math.cos(a2) * 420.0, sz + math.sin(a2) * 420.0
         shots.append(shot("%s_approach" % short, (ax, hh.at(ax, az) + 28.0, az),
-                          (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 0.45, region_id))
+                          (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 1.0, region_id))
+    # Three more per region, taken from the region's own ground rather than from its places,
+    # so the drop test has six images of six different parts of a region instead of three
+    # views of one hill. Below six a region, the landform axis is noise (DESIGN 10.1).
+    for region_id, (landmark, vista, settlement, hour, weather, bearing) in REGION_SHOTS.items():
+        short = region_id.split("/")[-1]
+        idx = hh.region_index.get(region_id, -1)
+        spots = hh.sample_region(idx, 3, seed=abs(hash(short)) % (2 ** 31))
+        for n, (sx, sz) in enumerate(spots):
+            # stand on the ground and look out along it, each one on its own bearing
+            ang = math.radians(bearing + 90.0 + n * 117.0)
+            tx, tz = sx + math.cos(ang) * 520.0, sz + math.sin(ang) * 520.0
+            eye = hh.at(sx, sz) + 2.2
+            shots.append(shot("%s_ground%d" % (short, n + 1), (sx, eye, sz),
+                              (tx, hh.at(tx, tz) + 2.0, tz), 60.0, hour, weather, 1.0, region_id))
+
     # a flythrough that crosses every region, high enough to read the landforms
     waypoints = []
     for region_id in REGION_SHOTS:
@@ -132,7 +210,7 @@ def build_plan() -> dict:
         "_doc": "Generated by tools/capture/make_default_plan.py; edit freely, it is committed.",
         "shots": shots,
         "flythrough": {"path": waypoints, "frames": 12, "look_ahead": True, "time": 9.5,
-                       "weather": "core:weather/clear", "fog_scale": 0.3},
+                       "weather": "core:weather/clear", "fog_scale": 1.0},
     }
 
 

@@ -105,13 +105,20 @@ func _setup_terrain() -> void:
 	terrain_node.set("data_directory", TERRAIN_DATA)
 	terrain_node.set("vertex_spacing", 2.0)
 	terrain_node.set("cast_shadows", GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
-	terrain_node.set("mesh_lods", 7)
-	terrain_node.set("mesh_size", 48)
+	# The clipmap has to cover the whole world, not a circle around the camera. At 7 LODs and
+	# 2 m spacing it reached about 6 km, so from any hill the terrain stopped in a dead straight
+	# line with a visible corner -- a flat shelf across the distance with the land cut off
+	# behind it. Wickmere's diagonal is 11.6 km; 8 LODs reach 12.3 km, so the ground now runs
+	# to the edge of the world from anywhere in it. One more ring costs one more strip of the
+	# same vertex count at twice the spacing.
+	terrain_node.set("mesh_lods", 9)
+	terrain_node.set("mesh_size", 32)
 	var mat: Object = terrain_node.get("material")
 	if mat:
-		mat.set("world_background", 1)          # FLAT: the world keeps going past the regions
+		# NONE: see tools_gd/import_terrain.gd. FLAT draws a shelf across the far distance.
+		mat.set("world_background", 0)
 		mat.set("auto_shader", false)
-		mat.call("set_shader_param", "blend_sharpness", 0.62)
+		mat.call("set_shader_param", "blend_sharpness", 0.34)
 		mat.call("set_shader_param", "enable_macro_variation", true)
 		mat.call("set_shader_param", "macro_variation1", Color(0.95, 0.97, 0.91))
 		mat.call("set_shader_param", "macro_variation2", Color(0.92, 0.90, 0.87))
@@ -180,8 +187,10 @@ func _setup_target() -> void:
 	fly_camera = FlyCamera.new()
 	fly_camera.name = "FlyCamera"
 	fly_camera.provider = provider
-	fly_camera.far = 6000.0
-	fly_camera.near = 0.2
+	# far enough to see the whole world from a peak; by 12 km even the clearest region's fog is
+	# at 95%, so the far plane falls where nothing is left to cut
+	fly_camera.far = 12000.0
+	fly_camera.near = 0.25
 	fly_camera.fov = float(Settings.get_value("video", "fov", 75.0))
 	add_child(fly_camera)
 	var start := _spawn_position()

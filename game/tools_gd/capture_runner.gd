@@ -22,6 +22,10 @@ var plan_path := ""
 var out_dir := "captures"
 var _world: World = null
 var _perf: Array = []
+## `--no-people` shoots the same plan with the villagers left out. It is how you find out what
+## a frame costs in terrain and what it costs in people, which is not a question you can answer
+## by looking at the picture.
+var people := true
 var _failures: Array[String] = []
 
 
@@ -32,6 +36,8 @@ func _ready() -> void:
 			out_dir = a.substr(6)
 		elif a.begins_with("--capture=") and plan_path.is_empty():
 			plan_path = a.substr(10)
+		elif a == "--no-people":
+			people = false
 	var code: int = await run()
 	get_tree().quit(code)
 
@@ -49,6 +55,14 @@ func run() -> int:
 		# a capture teleports across the world between shots, so build cells as fast as the
 		# machine allows rather than at the gameplay drip rate
 		_world.streamer.cells_per_frame = 12
+	if not people:
+		var crowd := get_tree().root.find_child("NpcStreamer", true, false)
+		if crowd:
+			crowd.set("enabled", false)
+			var registry := get_tree().root.find_child("NpcRegistry", true, false)
+			if registry and registry.has_method("despawn_all"):
+				registry.call("despawn_all")
+			Log.info("Capture", "shooting with the villagers left out")
 	var shots: Array = plan.get("shots", [])
 	Log.info("Capture", "%d shots -> %s" % [shots.size(), out_dir])
 	var index := 0
