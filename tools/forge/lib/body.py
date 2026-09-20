@@ -406,12 +406,12 @@ def head_landmarks(skel: Skeleton, hs: Optional[HeadStyle] = None) -> dict:
         "brow_z": chin_z + V * 0.600,
         "nose_root_z": chin_z + V * 0.512,
         "nose_base_z": chin_z + V * 0.360,
-        "nose_tip": np.array([0.0, face_y - (0.003 + 0.004 * hs.nose) * s, chin_z + V * 0.392]),
+        "nose_tip": np.array([0.0, face_y - (0.013 + 0.005 * hs.nose) * s, chin_z + V * 0.392]),
         "mouth_z": chin_z + V * 0.240, "mouth_w": 0.0265 * hs.mouth_width * s,
         "chin_z": chin_z, "jaw_z": chin_z + V * 0.135,
         "cheek_z": chin_z + V * 0.385,
         "ear_c": np.array([w * 0.925, cy + 0.012 * s, chin_z + V * 0.425]),
-        "ear_r": np.array([0.0052 * s, 0.0145 * hs.ears * s, V * 0.098 * hs.ears]),
+        "ear_r": np.array([0.0055 * s, 0.0165 * hs.ears * s, V * 0.116 * hs.ears]),
         "hairline_z": chin_z + V * 0.715,
         "nape_z": chin_z + V * 0.300,
     }
@@ -528,7 +528,7 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                                   [0.0082 * hs.nose * s, 0.0082 * s, 0.0066 * s], k=0.0055 * s))
     # lips
     mw = L["mouth_w"]
-    lip_y = face_y + 0.001 * s
+    lip_y = face_y + 0.004 * s
     lip = 0.7 + 0.5 * hs.lips + 0.25 * fem
     # Lips follow the curve of the jaw: the corners sit further back and a little lower than
     # the centre, so the mouth reads as a mouth rather than a band across the face.
