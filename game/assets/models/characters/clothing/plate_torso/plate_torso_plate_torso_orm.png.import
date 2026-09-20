@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3x1g2mawlg4o"
-path="res://.godot/imported/brigandine_brigandine_orm.png-b32b79c703d032789fbb1f5ada1ff582.ctex"
+uid="uid://c2h8pt2gm4r22"
+path="res://.godot/imported/plate_torso_plate_torso_orm.png-218cb53d5f0b9a2cda86d27aa4754e06.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "6419195da4c99d7f87d7f01afae49f48"
+"md5": "69493f34bfaa62bef9220405d3ef354c"
 }
 
 [deps]
 
-source_file="res://assets/models/characters/clothing/brigandine/brigandine_brigandine_orm.png"
-dest_files=["res://.godot/imported/brigandine_brigandine_orm.png-b32b79c703d032789fbb1f5ada1ff582.ctex"]
+source_file="res://assets/models/characters/clothing/plate_torso/plate_torso_plate_torso_orm.png"
+dest_files=["res://.godot/imported/plate_torso_plate_torso_orm.png-218cb53d5f0b9a2cda86d27aa4754e06.ctex"]
 
 [params]
 
