@@ -945,7 +945,11 @@ def work_cycle(skel: Skeleton, name: str, length: float, *, hand_path: Sequence[
     torso_at = {t: p for t, p in torso}
     off_at = {t: a for t, a in (off_hand or ())}
     for t, off, ez in hand_path:
-        p = body_point(skel, *off)
+        # Anchored to the HIPS, not the chest.  An anvil, a quern and a loom stand at fixed
+        # heights, so where a working hand goes has to depend only on how far the body is
+        # off the ground.  Anchored to the chest, every contact drifted the moment the head
+        # or the neck changed length -- which is exactly what happened this pass.
+        p = body_point(skel, *off, origin="Hips")
         a = np.asarray(aim_at.get(t, tuple(rig._unit(p - skel.J["Chest"]))), float)
         pose: Pose = dict(b)
         pose.update(torso_at.get(t, {}))
@@ -1057,9 +1061,9 @@ def life_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     # -- work ------------------------------------------------------------------------------
     out["Work_Hammer"] = work_cycle(
         skel, "Work_Hammer", 1.05,
-        hand_path=[(0.00, (0.34, -0.14, 0.02), "smooth"), (0.34, (0.16, -0.20, 0.34), "out2"),
-                   (0.46, (0.14, -0.21, 0.36), "smooth"), (0.62, (0.36, -0.12, -0.10), "snap"),
-                   (0.72, (0.38, -0.11, -0.13), "out"), (1.00, (0.34, -0.14, 0.02), "smooth")],
+        hand_path=[(0.00, (0.34, -0.14, 0.2876), "smooth"), (0.34, (0.16, -0.20, 0.6076), "out2"),
+                   (0.46, (0.14, -0.21, 0.6276), "smooth"), (0.62, (0.36, -0.12, 0.1676), "snap"),
+                   (0.72, (0.38, -0.11, 0.1376), "out"), (1.00, (0.34, -0.14, 0.2876), "smooth")],
         aim=[(0.00, tuple(rig._unit(FWD - UP * 0.4))), (0.34, tuple(rig._unit(UP + BACK * 0.3))),
              (0.46, tuple(rig._unit(UP + BACK * 0.35))), (0.62, tuple(rig._unit(FWD * 0.3 - UP))),
              (0.72, tuple(-UP)), (1.00, tuple(rig._unit(FWD - UP * 0.4)))],
@@ -1075,9 +1079,9 @@ def life_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
     out["Work_Chop"] = work_cycle(
         skel, "Work_Chop", 1.35, two_handed=True, grip_sep=0.17, stance="wide",
-        hand_path=[(0.00, (0.30, -0.06, 0.06), "smooth"), (0.36, (0.02, -0.16, 0.44), "out2"),
-                   (0.50, (0.00, -0.17, 0.46), "smooth"), (0.68, (0.34, -0.04, -0.34), "snap"),
-                   (0.78, (0.36, -0.03, -0.38), "out"), (1.00, (0.30, -0.06, 0.06), "smooth")],
+        hand_path=[(0.00, (0.30, -0.06, 0.3276), "smooth"), (0.36, (0.02, -0.16, 0.7076), "out2"),
+                   (0.50, (0.00, -0.17, 0.7276), "smooth"), (0.68, (0.34, -0.04, -0.0724), "snap"),
+                   (0.78, (0.36, -0.03, -0.1124), "out"), (1.00, (0.30, -0.06, 0.3276), "smooth")],
         aim=[(0.00, tuple(rig._unit(FWD - UP * 0.2))), (0.36, tuple(rig._unit(UP + BACK * 0.45))),
              (0.50, tuple(rig._unit(UP + BACK * 0.5))), (0.68, tuple(rig._unit(FWD * 0.25 - UP))),
              (0.78, tuple(-UP)), (1.00, tuple(rig._unit(FWD - UP * 0.2)))],
@@ -1095,9 +1099,13 @@ def life_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
     out["Work_Stir"] = work_cycle(
         skel, "Work_Stir", 2.0, stance="idle",
-        hand_path=[(0.00, (0.40, -0.14, -0.14), "linear"), (0.25, (0.48, -0.02, -0.14), "linear"),
-                   (0.50, (0.40, 0.10, -0.14), "linear"), (0.75, (0.32, -0.02, -0.14), "linear"),
-                   (1.00, (0.40, -0.14, -0.14), "linear")],
+        # The stir circle used to sit 9 cm beyond the arm's reach, so the IK locked the
+        # elbow straight for the whole loop and the hand ended up wherever the arm stopped
+        # rather than on the target -- which is why this was the one work clip that still
+        # drifted when the shoulder moved.  It now runs at about 88% extension.
+        hand_path=[(0.00, (0.28, -0.11, 0.2600), "linear"), (0.25, (0.33, -0.02, 0.2600), "linear"),
+                   (0.50, (0.28, 0.07, 0.2600), "linear"), (0.75, (0.23, -0.02, 0.2600), "linear"),
+                   (1.00, (0.28, -0.11, 0.2600), "linear")],
         aim=[(t, tuple(rig._unit(-UP + FWD * 0.25))) for t in (0.0, 0.25, 0.5, 0.75, 1.0)],
         torso=[(0.00, {"Spine": (16, 0, -6), "Chest": (8, 0, -6), "Neck": (-12, 0, 4), "Head": (-8, 0, 4)}),
                (0.50, {"Spine": (18, 0, 2), "Chest": (9, 0, 2), "Neck": (-13, 0, -2), "Head": (-9, 0, -2)}),
@@ -1106,10 +1114,10 @@ def life_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
     out["Work_Dig"] = work_cycle(
         skel, "Work_Dig", 1.85, two_handed=True, grip_sep=0.22, stance="wide",
-        hand_path=[(0.00, (0.32, -0.02, -0.20), "smooth"), (0.20, (0.30, -0.06, 0.04), "out2"),
-                   (0.36, (0.34, -0.02, -0.44), "snap"), (0.46, (0.34, -0.02, -0.48), "out"),
-                   (0.66, (0.24, 0.10, -0.18), "smooth"), (0.82, (0.14, 0.24, 0.02), "out"),
-                   (1.00, (0.32, -0.02, -0.20), "smooth")],
+        hand_path=[(0.00, (0.32, -0.02, 0.0676), "smooth"), (0.20, (0.30, -0.06, 0.3076), "out2"),
+                   (0.36, (0.34, -0.02, -0.1724), "snap"), (0.46, (0.34, -0.02, -0.2124), "out"),
+                   (0.66, (0.24, 0.10, 0.0876), "smooth"), (0.82, (0.14, 0.24, 0.2876), "out"),
+                   (1.00, (0.32, -0.02, 0.0676), "smooth")],
         aim=[(0.00, tuple(rig._unit(FWD * 0.4 - UP))), (0.20, tuple(rig._unit(FWD * 0.3 - UP))),
              (0.36, tuple(rig._unit(FWD * 0.2 - UP))), (0.46, tuple(rig._unit(FWD * 0.2 - UP))),
              (0.66, tuple(rig._unit(FWD * 0.2 - UP * 0.6))), (0.82, tuple(rig._unit(LEFT * 0.5 - UP * 0.4))),
