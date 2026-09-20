@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 26.541,
+  "height": 26.488,
   "max": [
-   14.928,
-   26.541,
-   13.508
+   14.277,
+   26.488,
+   14.775
   ],
   "min": [
-   -15.449,
+   -12.745,
    0.0,
-   -15.104
+   -14.111
   ],
-  "radius": 24.728
+  "radius": 23.802
  },
- "built_seconds": 40.25,
+ "built_seconds": 11.71,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 25.93,
-  "radius": 17.49
+  "height": 25.5,
+  "radius": 11.158
  },
  "generator": "gen_trees",
  "glb": "briarwold_giant_oak_a.glb",
@@ -38,7 +38,7 @@
  "meshes": [
   {
    "name": "briarwold_giant_oak_a",
-   "tris": 8346
+   "tris": 8754
   },
   {
    "name": "briarwold_giant_oak_a_LOD2",
@@ -94,7 +94,7 @@
   "briarwold_giant_oak_a_impostor_orm.png"
  ],
  "tris": [
-  8346,
+  8754,
   1318,
   8
  ],

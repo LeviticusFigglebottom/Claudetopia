@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 3.859,
+  "height": 3.753,
   "max": [
-   2.137,
-   3.859,
-   2.435
+   2.407,
+   3.753,
+   2.891
   ],
   "min": [
-   -1.95,
+   -2.564,
    0.0,
-   -2.37
+   -2.833
   ],
-  "radius": 3.697
+  "radius": 4.23
  },
- "built_seconds": 18.22,
+ "built_seconds": 9.4,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 3.61,
-  "radius": 1.86
+  "radius": 2.931
  },
  "generator": "gen_trees",
  "glb": "hearthvale_apple_b.glb",
@@ -37,7 +37,7 @@
  "meshes": [
   {
    "name": "hearthvale_apple_b",
-   "tris": 5476
+   "tris": 5720
   },
   {
    "name": "hearthvale_apple_b_LOD2",
@@ -45,7 +45,7 @@
   },
   {
    "name": "hearthvale_apple_b_LOD1",
-   "tris": 899
+   "tris": 980
   },
   {
    "name": "hearthvale_apple_b_cards_LOD1",
@@ -90,8 +90,8 @@
   "hearthvale_apple_b_impostor_orm.png"
  ],
  "tris": [
-  5476,
-  1319,
+  5720,
+  1400,
   8
  ],
  "version": 3

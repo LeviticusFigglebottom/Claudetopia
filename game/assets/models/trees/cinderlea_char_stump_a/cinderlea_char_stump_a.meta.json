@@ -13,7 +13,7 @@
   ],
   "radius": 0.395
  },
- "built_seconds": 16.24,
+ "built_seconds": 4.78,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
