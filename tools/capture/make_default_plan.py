@@ -68,6 +68,24 @@ class Heights:
                 best = (px, pz, h)
         return best
 
+    def low_point(self, x: float, z: float, radius: float, samples: int = 140):
+        """The lowest ground within `radius`, for pointing a camera off a vantage.
+
+        A view from high ground is only a view if it looks at the drop. Aiming at the lowest
+        ground in range is what puts an escarpment face, a valley floor or a shoreline in the
+        frame instead of the back of the hill the camera is standing on.
+        """
+        rng = np.random.default_rng(11)
+        best = (x, z, self.at(x, z))
+        for _ in range(samples):
+            a = rng.uniform(0, 2 * math.pi)
+            r = radius * math.sqrt(rng.uniform(0.25, 1.0))
+            px, pz = x + math.cos(a) * r, z + math.sin(a) * r
+            h = self.at(px, pz)
+            if h < best[2]:
+                best = (px, pz, h)
+        return best
+
 
 def load_places() -> dict:
     with open(os.path.join(PACK, "places", "places.json"), "r", encoding="utf-8") as f:
@@ -116,10 +134,15 @@ def build_plan() -> dict:
         vp = places[vista]
         vx, vz = float(vp["position"][0]), float(vp["position"][1])
         hx, hz, hy = hh.high_point(vx, vz, 600.0)
+        # Look off the vantage at the lowest ground within a kilometre and a half, biased toward
+        # the settlement so the shot is still about somewhere. Standing on a crest and facing
+        # the back of your own hill is how six regions end up looking like one field.
+        lx, lz, lh = hh.low_point(hx, hz, 1500.0)
         tx, tz = float(places[settlement]["position"][0]), float(places[settlement]["position"][1])
-        # look at a point part-way to the settlement so the near ground is in frame too
-        mx, mz = hx + (tx - hx) * 0.35, hz + (tz - hz) * 0.35
-        shots.append(shot("%s_vista" % short, (hx, hy + 12.0, hz), (mx, hh.at(mx, mz) + 6.0, mz),
+        ax, az = lx * 0.4 + tx * 0.6, lz * 0.4 + tz * 0.6
+        # aim short of it, so the drop between here and there fills the lower frame
+        mx, mz = hx + (ax - hx) * 0.92, hz + (az - hz) * 0.92
+        shots.append(shot("%s_vista" % short, (hx, hy + 12.0, hz), (mx, hh.at(mx, mz) + 4.0, mz),
                           62.0, hour, weather, 1.0, region_id))
         # 3. the approach to the settlement, 420 m out and 28 m up, looking down on it
         sx, sz = tx, tz
