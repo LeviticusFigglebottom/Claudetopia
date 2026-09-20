@@ -30,12 +30,12 @@ const GENERATED := "res://world/generated"
 ## which is why a wooded region could be shot from a hilltop and show eight trees. The far
 ## ring's cost is controlled by `far_density` and by drawing it at a lower LOD, not by a range
 ## that cuts it off before it begins.
-const VIEW_RANGE := {"tree": 185.0, "bush": 120.0, "rock": 160.0, "prop": 145.0, "herb": 58.0}
+const VIEW_RANGE := {"tree": 340.0, "bush": 190.0, "rock": 230.0, "prop": 200.0, "herb": 70.0}
 const VIEW_RANGE_FAR := {"tree": 920.0, "bush": 430.0, "rock": 480.0, "prop": 400.0, "herb": 0.0}
 ## and how much of the far ring is worth keeping, per kind: a wood reads as a wood from a
 ## kilometre away at a fraction of its stems, and trees are much the most expensive thing in
 ## the world -- the forge's are seven to fifteen thousand triangles each.
-const FAR_KEEP := {"tree": 0.14, "bush": 0.14, "rock": 0.3, "prop": 0.3, "herb": 0.0}
+const FAR_KEEP := {"tree": 0.35, "bush": 0.3, "rock": 0.4, "prop": 0.4, "herb": 0.0}
 
 var target: Node3D = null
 var provider: TerrainProvider = null
@@ -422,7 +422,11 @@ func _mesh_for(asset_path: String, ring: int = 0) -> Mesh:
 	# Only the cell you are standing in gets the full mesh. The eight around it are already
 	# a hundred metres away, where the difference between fifteen thousand triangles and five
 	# is a tree you cannot tell apart, and there are eight times as many of them.
-	var want_lod := 0 if ring <= 0 else (1 if ring <= full_ring else 2)
+	# Godot's own per-surface mesh LODs do the distance work inside a MultiMesh, and the
+	# forge's LOD0 is a single mesh carrying every material of the asset. So the near rings
+	# take the full mesh and let the renderer decimate it; only the far ring, which is past
+	# 384 m and where a stem is a couple of pixels, asks for a cheaper rung explicitly.
+	var want_lod := 0 if ring <= full_ring else 2
 	var key := "%s#%d" % [asset_path, want_lod]
 	if _mesh_cache.has(key):
 		return _mesh_cache[key]
