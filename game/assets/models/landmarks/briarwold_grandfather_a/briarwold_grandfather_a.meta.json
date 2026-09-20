@@ -1,0 +1,91 @@
+{
+ "across_m": 30.0,
+ "bounds": {
+  "height": 94.049,
+  "max": [
+   34.704,
+   94.049,
+   38.804
+  ],
+  "min": [
+   -27.601,
+   0.0,
+   -28.457
+  ],
+  "radius": 65.672
+ },
+ "built_seconds": 150.12,
+ "category": "landmarks",
+ "collision": "briarwold_grandfather_a_col.glb",
+ "collision_params": {},
+ "generator": "gen_landmarks",
+ "glb": "briarwold_grandfather_a.glb",
+ "hash": "da25e78ed2866e1a",
+ "height_m": 90.0,
+ "hollow": true,
+ "kind": "grandfather",
+ "materials": [
+  "briarwold_grandfather_a_mat"
+ ],
+ "materials_used": [
+  "dead_bark",
+  "driftwood",
+  "wood_planks",
+  "ember"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_grandfather_a",
+   "tris": 11098
+  },
+  {
+   "name": "briarwold_grandfather_a_LOD1",
+   "tris": 4438
+  },
+  {
+   "name": "briarwold_grandfather_a_LOD2",
+   "tris": 1663
+  }
+ ],
+ "name": "briarwold_grandfather_a",
+ "params": {},
+ "place": "core:place/grandfather",
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 6938,
+ "textures": [
+  "briarwold_grandfather_a_albedo.png",
+  "briarwold_grandfather_a_normal.png",
+  "briarwold_grandfather_a_orm.png",
+  "briarwold_grandfather_a_emission.png"
+ ],
+ "tris": [
+  11098,
+  4438,
+  1663
+ ],
+ "version": 3,
+ "walkable": [
+  "landing",
+  "walk"
+ ]
+}
