@@ -23,7 +23,7 @@ extends RefCounted
 ##              marks() add_marks(n) remove_marks(n)
 ##   player     display_name() position() -> Vector3 skill_level(skill) -> int
 ##   bounty     bounty_for(faction) -> int
-##   recipes    teach(recipe) -> bool
+##   recipes    learn_recipe(recipe) -> bool  knows_recipe(recipe) -> bool   (the crafting node)
 ##   sayings    learn_spell(spell) -> bool  knows_spell(spell) -> bool   (the progression node)
 ##   clock      hour() day (property or method)
 ##   content    get_or_empty(id) has(id) all(type)   (defaults to ContentDB)
@@ -420,11 +420,14 @@ func skill_level(skill: String) -> int:
 	return int(_call("player", "skill_level", [skill], 0))
 
 
+## Teaches a recipe (DESIGN §5.9). The provider method is `learn_recipe`, to match the sayings
+## provider's `learn_spell` below — it used to ask for `teach`, which `Crafting` has never had,
+## so every `teach_recipe` effect an author wrote would have been quietly lost.
 func teach_recipe(recipe: String) -> bool:
-	if not _has("recipes", "teach"):
+	if not _has("recipes", "learn_recipe"):
 		problem("teach_recipe '%s' lost: no recipes provider" % recipe)
 		return false
-	return bool(_call("recipes", "teach", [recipe], false))
+	return bool(_call("recipes", "learn_recipe", [recipe], false))
 
 
 ## Teaches a saying (DESIGN §5.3). False when it was already known or nobody is listening.
@@ -437,6 +440,12 @@ func teach_spell(spell: String) -> bool:
 
 func knows_spell(spell: String) -> bool:
 	return bool(_call("sayings", "knows_spell", [spell], false))
+
+
+## Whether the character already has this recipe, so a smith does not offer to teach you a
+## thing you can already make.
+func knows_recipe(recipe: String) -> bool:
+	return bool(_call("recipes", "knows_recipe", [recipe], false))
 
 
 # --- time ----------------------------------------------------------------------------------
