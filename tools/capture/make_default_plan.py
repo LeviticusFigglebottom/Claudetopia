@@ -184,6 +184,18 @@ def build_plan() -> dict:
         ax, az = sx + math.cos(a2) * 420.0, sz + math.sin(a2) * 420.0
         shots.append(shot("%s_approach" % short, (ax, hh.at(ax, az) + 28.0, az),
                           (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 1.0, region_id))
+    # One shot standing in the middle of each region's settlement, which is the only frame in
+    # the sheet close enough for the villagers to be in it (they are kept up within 240 m) and
+    # the only one that shows what a town actually looks like from the street.
+    for region_id, (landmark, vista, settlement, hour, weather, bearing) in REGION_SHOTS.items():
+        short = region_id.split("/")[-1]
+        sp = places[settlement]
+        sx, sz = float(sp["position"][0]), float(sp["position"][1])
+        ang = math.radians(bearing + 35.0)
+        ex, ez = sx - math.cos(ang) * 46.0, sz - math.sin(ang) * 46.0
+        shots.append(shot("%s_street" % short, (ex, hh.at(ex, ez) + 1.7, ez),
+                          (sx, hh.at(sx, sz) + 2.5, sz), 58.0, hour, weather, 1.0, region_id))
+
     # Three more per region, taken from the region's own ground rather than from its places,
     # so the drop test has six images of six different parts of a region instead of three
     # views of one hill. Below six a region, the landform axis is noise (DESIGN 10.1).
