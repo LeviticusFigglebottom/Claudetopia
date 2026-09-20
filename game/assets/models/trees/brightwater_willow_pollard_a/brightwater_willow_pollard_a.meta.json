@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 5.237,
+  "height": 4.885,
   "max": [
-   1.139,
-   5.237,
-   1.418
+   1.05,
+   4.885,
+   1.268
   ],
   "min": [
-   -1.096,
+   -1.014,
    0.0,
-   -1.215
+   -1.1
   ],
-  "radius": 3.137
+  "radius": 2.904
  },
- "built_seconds": 15.06,
+ "built_seconds": 4.34,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 5.13,
-  "radius": 0.257
+  "height": 4.76,
+  "radius": 0.255
  },
  "generator": "gen_trees",
  "glb": "brightwater_willow_pollard_a.glb",

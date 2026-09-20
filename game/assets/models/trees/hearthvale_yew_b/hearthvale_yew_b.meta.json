@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 3.154,
+  "height": 3.125,
   "max": [
-   2.293,
-   3.154,
-   1.907
+   2.289,
+   3.125,
+   2.109
   ],
   "min": [
-   -2.354,
+   -2.181,
    0.0,
-   -1.904
+   -1.921
   ],
-  "radius": 3.394
+  "radius": 3.391
  },
- "built_seconds": 28.31,
+ "built_seconds": 13.88,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 3.15,
-  "radius": 2.135
+  "height": 3.13,
+  "radius": 2.184
  },
  "generator": "gen_trees",
  "glb": "hearthvale_yew_b.glb",
@@ -45,7 +45,7 @@
   },
   {
    "name": "hearthvale_yew_b_LOD1",
-   "tris": 899
+   "tris": 1161
   },
   {
    "name": "hearthvale_yew_b_cards_LOD1",
@@ -91,7 +91,7 @@
  ],
  "tris": [
   5719,
-  1319,
+  1581,
   8
  ],
  "version": 3

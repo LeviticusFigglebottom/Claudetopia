@@ -157,6 +157,12 @@ LANDMARKS = [
     ("choir_colossus", "cinderlea", 2, None),
     ("the_lamp", "brightwater", 1, None),
     ("sayers_spire", "brightwater", 1, None),
+    # The four the placer names and had nothing to place: a tree-town, a hill figure, a
+    # flooded nave and the mark the Reedfolk left at a pool they do not trust.
+    ("grandfather", "briarwold", 1, None),
+    ("chalk_hound", "hearthvale", 1, None),
+    ("drowned_nave", "sedgemire", 1, None),
+    ("eelfathom", "sedgemire", 1, None),
 ]
 
 TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),

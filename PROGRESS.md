@@ -156,6 +156,21 @@ read:
   know this particular miller's water has come back — and `Greetings` only ever read
   `core:table/greetings`. They are rows now, keyed to whoever owns the dialogue, which makes
   them the most specific match whenever their conditions hold.
+* **Sixty-five rumours and no way to hear most of them.** A rumour only ever entered a place's
+  pool because the player spoke to whoever seeds it, so a village nobody had questioned was
+  silent. Walking into a region now stocks its settlements with their own talk at a heat below
+  the spreading threshold — local colour, not news — and the journal's rumour page checks a
+  rumour's conditions before printing it, which it never did.
+* **Every villager was naked.** `apply_appearance` is what dresses the humanoid rig, and
+  outside the character-creation screen nothing had ever called it — so every NPC the world
+  stood up was the bare body. They now take a roll seeded from their own def, with whatever
+  numbers that def states laid over it; the prose in an appearance block (`"build":
+  "short_thick"`, a note about bone dust in the creases of both hands) is for the writer and
+  is not applied as a part name. They also stood in a ten-metre scrum on the green, because
+  the spawn radius was two to ten metres for a village of twenty-three; it is six to forty now.
+* **Every shopkeeper was somebody you could only talk to.** Thirteen people in the pack keep
+  shops, `Merchant` registers with the economy, the trade screen is built and themed, and
+  nothing opened it.
 * **Seventy-eight schedule entries never applied.** They say `"days": "weekdays"`, and
   `Schedules` knew `workdays` and fell through to false for anything else, so a large part of
   the roster's working day was quietly dropped — invisible, because the fallback is a

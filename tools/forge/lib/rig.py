@@ -100,14 +100,14 @@ def joint_positions(p: Proportions) -> Dict[str, np.ndarray]:
     # Head bone: from the skull pivot (about ear level) to the crown.  The jaw and chin of the
     # head mesh hang below its origin, so the *visible* head is ~0.26 m at 1.78 m: a shade under
     # seven heads tall, which is the storybook proportion we want (see DESIGN.md §7).
-    head_len = 0.243 * p.head_size * s
-    neck_len = 0.077 * p.neck_length * s
+    head_len = 0.231 * p.head_size * s
+    neck_len = 0.066 * p.neck_length * s
     leg = 0.955 * p.limb_length * s              # ground -> hip joint
     leg = min(leg, p.height - head_len - neck_len - 0.36 * s)  # keep a real torso
     torso = p.height - head_len - neck_len - leg  # hip joint -> neck base (C7-ish)
     torso = max(torso, 0.30 * s)
 
-    hip_x = 0.100 * (0.9 + 0.2 * p.hip_width) * (1.0 + 0.10 * p.feminine) * s
+    hip_x = 0.088 * (0.9 + 0.2 * p.hip_width) * (1.0 + 0.12 * p.feminine) * s
     shoulder_x = 0.205 * (0.8 + 0.2 * p.shoulder_width) * (1.0 - 0.09 * p.feminine) * s
     hip_z = leg
     pelvis_z = hip_z + 0.025 * s

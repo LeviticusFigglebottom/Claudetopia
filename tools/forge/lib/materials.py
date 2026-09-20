@@ -416,10 +416,18 @@ def driftwood(pal=None, **kw):
     return wood_planks(pal, name=kw.pop("name", "driftwood"), **kw)
 
 
-def _bark_common(nb, pal, base, fissure_scale, stretch, depth, tint, moss=0.35, lichen=0.0, lichen_col=None):
+def _bark_common(nb, pal, base, fissure_scale, stretch, depth, tint, moss=0.35, lichen=0.0,
+                 lichen_col=None, scale=1.0):
+    """`scale` is the size of the bark's features in metres.
+
+    Every bark was fixed at one metre, which is right for an ordinary trunk and hopeless on
+    a thirty-metre bole: the Grandfather came out speckled like concrete because its
+    fissures were a thirtieth of its width. Hero pieces pass a larger scale; everything
+    else keeps 1.0 and is unchanged.
+    """
     dark, mid, light = trio(base, 1.1)
-    v = nb.coord(1.0)
-    blocks = paint_blocks(nb, nb.coord(0.8), [dark, mid, light], distortion=1.2)
+    v = nb.coord(1.0 / scale)
+    blocks = paint_blocks(nb, nb.coord(0.8 / scale), [dark, mid, light], distortion=1.2)
     fv = nb.coord((fissure_scale, fissure_scale, fissure_scale * stretch))
     vor = nb.voronoi(fv, scale=1.0, feature="DISTANCE_TO_EDGE", randomness=1.0)
     fis = nb.map_range(vor.outputs["Distance"], 0.0, 0.18, 0.0, 1.0)  # 0 in cracks
@@ -457,12 +465,12 @@ def oak_bark(pal=None, age=0.5, tint=0.15, name=None, **_):
     return _bark_common(nb, pal, base, fissure_scale=4.0, stretch=0.22, depth=0.55, tint=tint, moss=0.3 + 0.3 * age)
 
 
-def black_ash_bark(pal=None, age=0.5, tint=0.2, name=None, **_):
+def black_ash_bark(pal=None, age=0.5, tint=0.2, scale=1.0, name=None, **_):
     pal = _pal(pal)
     base = pal.tint(P.lin("#2a2320"), "dark", tint)
     nb = NB(name or "black_ash_bark")
     return _bark_common(nb, pal, base, fissure_scale=3.0, stretch=0.35, depth=0.5, tint=tint, moss=0.25,
-                        lichen=0.5, lichen_col=P.lin("#8f9a8a"))
+                        lichen=0.5, lichen_col=P.lin("#8f9a8a"), scale=scale)
 
 
 def pine_bark(pal=None, age=0.5, tint=0.15, name=None, **_):
@@ -479,12 +487,13 @@ def willow_bark(pal=None, age=0.5, tint=0.15, name=None, **_):
     return _bark_common(nb, pal, base, fissure_scale=3.5, stretch=0.15, depth=0.5, tint=tint, moss=0.45)
 
 
-def dead_bark(pal=None, age=0.9, tint=0.25, name=None, **_):
+def dead_bark(pal=None, age=0.9, tint=0.25, scale=1.0, name=None, **_):
     """White-grey barkless dead wood (Cinderlea ash trees)."""
     pal = _pal(pal)
     base = pal.tint(P.lin("#b9b3a8"), "light", tint)
     nb = NB(name or "dead_bark")
-    return _bark_common(nb, pal, base, fissure_scale=5.0, stretch=0.12, depth=0.4, tint=tint, moss=0.0, lichen=0.0)
+    return _bark_common(nb, pal, base, fissure_scale=5.0, stretch=0.12, depth=0.4, tint=tint, moss=0.0,
+                        lichen=0.0, scale=scale)
 
 
 def birch_bark(pal=None, age=0.4, tint=0.1, name=None, **_):
@@ -624,7 +633,9 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
     col = paint_blocks(nb, nb.coord(0.45 / scale), [dark, mid, light], distortion=1.3, detail=2.0)
     col = strokes(nb, 1.0 / scale, col, strength=0.09, scale=2.5, along="X")
     if bands > 0:
-        w = nb.wave(nb.coord((0.6 / scale, 0.6 / scale, 0.6 / scale)), scale=3.0, distortion=2.5, detail=1.0, direction="Z")
+        # Nearly two bands a metre painted every stone with corduroy. A bedded rock shows a
+        # few broad partings, not a woven cloth.
+        w = nb.wave(nb.coord((0.6 / scale, 0.6 / scale, 0.6 / scale)), scale=1.1, distortion=2.5, detail=1.0, direction="Z")
         band = nb.ramp(w.outputs["Fac"], [(0.3, 1.0 - 0.14 * bands), (0.7, 1.0 + 0.06 * bands)], interp="EASE")
         col = nb.mix(1.0, col, band, blend="MULTIPLY")
     if speckle > 0:
@@ -665,7 +676,9 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
                      nb.math("MULTIPLY", facet_mask, facet))
     if bed_relief > 0.0:
         # Karst limestone is bedded: the ledges are what make a pavement read as one.
-        bw = nb.wave(nb.coord((0.5 / scale, 0.5 / scale, 2.4 / scale)), scale=2.0, distortion=2.0,
+        # Coarse. At 2.4 cycles a metre the bedding came out as corduroy over the whole
+        # rock rather than as the few partings a bedded stone actually shows.
+        bw = nb.wave(nb.coord((0.5 / scale, 0.5 / scale, 0.7 / scale)), scale=2.0, distortion=2.0,
                      detail=1.0, direction="Z", profile="SAW")
         height = nb.math("ADD", height, nb.math("MULTIPLY", bw.outputs["Fac"], bed_relief))
     if pit is not None:

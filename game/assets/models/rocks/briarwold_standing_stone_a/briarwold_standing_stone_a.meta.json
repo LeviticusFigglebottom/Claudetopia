@@ -13,7 +13,7 @@
   ],
   "radius": 1.363
  },
- "built_seconds": 72.03,
+ "built_seconds": 22.17,
  "carved": true,
  "category": "rocks",
  "collision": "convex",
@@ -39,7 +39,7 @@
   },
   {
    "name": "briarwold_standing_stone_a_LOD2",
-   "tris": 421
+   "tris": 423
   }
  ],
  "name": "briarwold_standing_stone_a",

@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 13.061,
+  "height": 13.012,
   "max": [
-   4.262,
-   13.061,
-   3.742
+   2.843,
+   13.012,
+   2.551
   ],
   "min": [
-   -4.203,
+   -2.593,
    0.0,
-   -3.522
+   -2.132
   ],
-  "radius": 8.588
+  "radius": 7.43
  },
- "built_seconds": 8.28,
+ "built_seconds": 2.77,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 12.91,
-  "radius": 0.308
+  "height": 12.87,
+  "radius": 0.312
  },
  "generator": "gen_trees",
  "glb": "skerrow_hardy_pine_a.glb",

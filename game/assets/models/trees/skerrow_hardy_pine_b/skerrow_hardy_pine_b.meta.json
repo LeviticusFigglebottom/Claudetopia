@@ -1,23 +1,23 @@
 {
  "bounds": {
-  "height": 10.471,
+  "height": 10.444,
   "max": [
-   3.603,
-   10.471,
-   2.696
+   2.172,
+   10.444,
+   1.67
   ],
   "min": [
-   -3.692,
+   -2.272,
    0.0,
-   -3.239
+   -2.157
   ],
-  "radius": 7.037
+  "radius": 5.989
  },
- "built_seconds": 3.65,
+ "built_seconds": 2.06,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 10.28,
+  "height": 10.25,
   "radius": 0.262
  },
  "generator": "gen_trees",
@@ -45,7 +45,7 @@
   },
   {
    "name": "skerrow_hardy_pine_b_LOD1",
-   "tris": 900
+   "tris": 899
   },
   {
    "name": "skerrow_hardy_pine_b_cards_LOD1",
@@ -91,7 +91,7 @@
  ],
  "tris": [
   5203,
-  1320,
+  1319,
   8
  ],
  "version": 3

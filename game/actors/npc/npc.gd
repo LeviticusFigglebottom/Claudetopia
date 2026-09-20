@@ -115,7 +115,32 @@ func _build_placeholder() -> void:
 			_model.add_child(m)
 			# CONTRACTS §1: models face +Z after export; gameplay forward is -Z.
 			_model.rotation.y = PI
+			if m.has_method("apply_appearance"):
+				m.call("apply_appearance", appearance_of())
 		return
+
+
+## What this person looks like. The rig on its own is a naked body: `apply_appearance` is what
+## puts clothes on it, and nothing outside the character-creation screen had ever called it —
+## so every villager in Wickmere stood in the street with nothing on.
+##
+## The roll comes first and the def's own numbers are laid over it. A def's `appearance` block
+## is written for a person reading it (`"build": "short_thick"`, `"hair": "red_grey_shaved
+## _sides"`, a `notes` line about bone dust in the creases of both hands), so only the keys
+## that are actually numbers are applied; the prose is for the writer, not for the mesh.
+func appearance_of() -> CharacterAppearance:
+	var raw: Variant = def.get("appearance", {})
+	var block: Dictionary = raw if typeof(raw) == TYPE_DICTIONARY else {}
+	var from_seed := int(block.get("seed", abs(npc_id.hash())))
+	var look := CharacterAppearance.random(from_seed, culture())
+	for key in ["age", "height", "bulk", "feminine", "shoulder_width", "hip_width",
+			"limb_length", "neck_length", "head_size", "hearth", "hollow"]:
+		if not block.has(key):
+			continue
+		var v: Variant = block[key]
+		if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
+			look.set(key, float(v))
+	return look
 	if _model.get_node_or_null("Placeholder") != null:
 		return
 	var mesh := MeshInstance3D.new()

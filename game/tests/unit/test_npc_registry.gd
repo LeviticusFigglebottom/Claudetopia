@@ -229,7 +229,11 @@ func test_spawn_positions_are_spread_and_stable() -> void:
 	var b := reg.spawn_position(NELL)
 	assert_gt(a.distance_to(b), 0.5, "a village does not stand in one spot")
 	assert_eq(reg.spawn_position(BRAM), a, "and everyone keeps their place")
-	assert_true(a.distance_to(WorldProbe.place_position(MERROWBY)) <= 11.0)
+	# A settlement is sixty to a hundred metres across and its people stand across it, not in
+	# a ten-metre scrum on the green — but they stay inside their own village.
+	assert_true(a.distance_to(WorldProbe.place_position(MERROWBY)) <= 42.0,
+			"%s stands %.1f m from the middle of their own village"
+			% [BRAM, a.distance_to(WorldProbe.place_position(MERROWBY))])
 
 
 # --- save ------------------------------------------------------------------------------------------

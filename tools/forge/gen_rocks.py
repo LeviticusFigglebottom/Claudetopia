@@ -141,23 +141,52 @@ def cliff_slab(pal, rng, params, variant):
     S.subdivide(ob, levels=4, simple=True)
     # Displace only the front face and the top: the sides and back stay flat so slabs tile.
     vg = ob.vertex_groups.new(name="front")
+    weights = {}
     for v in ob.data.vertices:
         edge_x = 1.0 - min(1.0, abs(v.co.x) / (w * 0.5) * 1.12)
         front = max(0.0, -v.co.y / (d * 0.5))
         top = max(0.0, (v.co.z - h * 0.6) / (h * 0.4))
         w8 = max(0.0, min(1.0, max(front, top) * edge_x))
+        weights[v.index] = w8
         vg.add([v.index], w8, "REPLACE")
+
+    # A cliff face is bedded, then jointed: horizontal ledges where the beds part, cut by
+    # near-vertical joints into blocks that stand proud or have fallen away. That is a
+    # structure with a horizon in it, and no noise texture has one -- displacing a Voronoi
+    # field along the normal gave cells radiating every way, which is why these slabs read
+    # as shattered glass rather than as stone. Blender's legacy wood texture only bands
+    # along X, so the beds are built directly from the vertex height instead, which is
+    # exact and needs no coordinate gymnastics.
+    beds = rng.randint(7, 11)
+    bed_phase = rng.uniform(0.0, 1.0)
+    blocks = rng.randint(4, 7)
+    for v in ob.data.vertices:
+        w8 = weights.get(v.index, 0.0)
+        if w8 <= 0.0:
+            continue
+        t = v.co.z / max(h, 1e-6)
+        course = t * beds + bed_phase
+        row = math.floor(course)
+        # Each bed steps out from the one above: a sawtooth, eased so the ledge has a lip.
+        # Beds are not all the same thickness, and a face where they are reads as shelving.
+        thick = 0.55 + 0.55 * ((((row * 2179) % 53) / 53.0))
+        ledge = (((course - row) ** thick) - 0.5)
+        # Blocks along the bed, offset course by course so the joints never line up. A
+        # cheap integer hash keeps it deterministic without another random stream.
+        col = math.floor((v.co.x / max(w, 1e-6) + 0.5) * blocks + row * 0.37)
+        jog = (((col * 1367 + row * 911) % 97) / 97.0) - 0.5
+        v.co.y -= w8 * (ledge * w * 0.11 + jog * w * 0.15)
     seed = rng.randrange(9999)
-    t1 = S.new_texture("cfacet_%d" % seed, "VORONOI", noise_scale=w * 0.42, noise_intensity=1.0)
-    t1.distance_metric = "DISTANCE"
-    m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=w * 0.28, mid_level=0.5,
+    # A cliff face is bedded, then jointed: horizontal ledges where the beds part, cut by
+    # vertical joints into blocks that stand out or fall away. A Voronoi field displaced
+    # along the normal gives none of that -- it gives shattered glass, cells radiating in
+    # every direction with no horizon in them, which is what these slabs read as. The three
+    # layers below are the three things a quarry face actually has.
+    #
+    # A little rough over the beds, so the blocks are quarried and not machined.
+    t1 = S.new_texture("crough_%d" % seed, "CLOUDS", noise_scale=w * 0.13, noise_depth=3)
+    m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=w * 0.07, mid_level=0.5,
                        direction="NORMAL", texture_coords="LOCAL", vertex_group="front")
-    S.apply_modifier(ob, m)
-    t2 = S.new_texture("cbed_%d" % seed, "WOOD", noise_scale=h * 0.3)
-    t2.wood_type = "BANDS"
-    t2.noise_basis_2 = "SIN"
-    m = S.add_modifier(ob, "DISPLACE", "d2", texture=t2, strength=w * 0.14, mid_level=0.5,
-                       direction="Y", texture_coords="LOCAL", vertex_group="front")
     S.apply_modifier(ob, m)
     # Break the crest. A straight top edge is what made a slab read as a poster on a stand
     # rather than as the end of a cliff; the sides stay flat so slabs still tile.

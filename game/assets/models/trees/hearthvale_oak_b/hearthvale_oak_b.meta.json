@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 8.634,
+  "height": 8.59,
   "max": [
-   4.866,
-   8.634,
-   5.593
+   4.589,
+   8.59,
+   4.465
   ],
   "min": [
-   -5.545,
+   -4.302,
    0.0,
-   -4.653
+   -4.887
   ],
-  "radius": 8.484
+  "radius": 7.751
  },
- "built_seconds": 11.03,
+ "built_seconds": 19.37,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 8.32,
-  "radius": 6.214
+  "height": 8.25,
+  "radius": 0.359
  },
  "generator": "gen_trees",
  "glb": "hearthvale_oak_b.glb",
@@ -45,7 +45,7 @@
   },
   {
    "name": "hearthvale_oak_b_LOD1",
-   "tris": 898
+   "tris": 900
   },
   {
    "name": "hearthvale_oak_b_cards_LOD1",
@@ -91,7 +91,7 @@
  ],
  "tris": [
   6500,
-  1318,
+  1320,
   8
  ],
  "version": 3

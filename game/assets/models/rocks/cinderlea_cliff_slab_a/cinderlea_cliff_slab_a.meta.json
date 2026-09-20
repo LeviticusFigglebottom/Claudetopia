@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 6.512,
+  "height": 6.416,
   "max": [
    2.0,
-   6.512,
-   2.023
+   6.416,
+   2.026
   ],
   "min": [
    -2.0,
    0.0,
-   -1.294
+   -1.21
   ],
-  "radius": 4.165
+  "radius": 4.112
  },
- "built_seconds": 36.81,
+ "built_seconds": 51.58,
  "category": "rocks",
  "collision": "cinderlea_cliff_slab_a_col.glb",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "cinderlea_cliff_slab_a",
-   "tris": 1770
+   "tris": 1754
   },
   {
    "name": "cinderlea_cliff_slab_a_LOD1",
-   "tris": 708
+   "tris": 700
   },
   {
    "name": "cinderlea_cliff_slab_a_LOD2",
-   "tris": 264
+   "tris": 262
   }
  ],
  "modular": true,
@@ -73,9 +73,9 @@
   "cinderlea_cliff_slab_a_orm.png"
  ],
  "tris": [
-  1770,
-  708,
-  264
+  1754,
+  700,
+  262
  ],
  "version": 3
 }

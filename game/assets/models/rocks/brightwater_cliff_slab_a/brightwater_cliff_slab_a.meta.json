@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 4.632,
+  "height": 4.627,
   "max": [
    1.6,
-   4.632,
-   1.924
+   4.627,
+   1.86
   ],
   "min": [
    -1.6,
    0.0,
-   -1.064
+   -0.947
   ],
-  "radius": 3.187
+  "radius": 3.144
  },
- "built_seconds": 152.03,
+ "built_seconds": 53.63,
  "category": "rocks",
  "collision": "brightwater_cliff_slab_a_col.glb",
  "collision_params": {},
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "brightwater_cliff_slab_a",
-   "tris": 1984
+   "tris": 2146
   },
   {
    "name": "brightwater_cliff_slab_a_LOD1",
-   "tris": 792
+   "tris": 858
   },
   {
    "name": "brightwater_cliff_slab_a_LOD2",
-   "tris": 296
+   "tris": 320
   }
  ],
  "modular": true,
@@ -78,9 +78,9 @@
   "brightwater_cliff_slab_a_orm.png"
  ],
  "tris": [
-  1984,
-  792,
-  296
+  2146,
+  858,
+  320
  ],
  "version": 3
 }

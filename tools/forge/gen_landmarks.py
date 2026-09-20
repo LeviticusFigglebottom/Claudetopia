@@ -484,12 +484,522 @@ def sayers_spire(pal, rng, params, variant):
             "extra_meta": {"height_m": h, "place": "core:place/sayers_spire"}}
 
 
+# --- the Grandfather (Briarwold) ----------------------------------------------------------
+
+def grandfather(pal, rng, params, variant):
+    """The dead tree the Woodfolk live in: 90 m tall, 30 m across, hollow, lit in its knots.
+
+    WORLD_BIBLE Briarwold. This is the largest single object in the game and it has to read
+    from most of the region, so the silhouette does the work: a colossal flared bole, a
+    trunk that snapped rather than tapered away, and three heavy limbs left of a crown that
+    is long gone. Close to, it has to read as a town -- the split in the bole is a doorway
+    the height of a house, the knots are windows with light behind them, and the rope walks
+    spiral the outside, because a town inside a tree has to get up it somehow.
+
+    The bole is a shell, not a post: it is hollowed, so from the doorway you see up inside.
+    """
+    h = params.get("height", 90.0)
+    across = params.get("across", 30.0)
+    # Briarwold's own tree, dead but still barked: black ash, deep-fissured, lichened. At
+    # the default one-metre feature size a thirty-metre bole bakes out speckled like
+    # concrete, so the bark is scaled to the thing it is on.
+    bark = M.black_ash_bark(pal, age=0.9, tint=0.28, scale=3.4)
+    inner = M.driftwood(pal, wear=0.7, age=0.85, scale=h * 0.03, name="grandfather_inner")
+    deck = M.wood_planks(pal, wear=0.65, age=0.7, scale=1.2, name="grandfather_deck")
+    glow = M.ember(pal, heat=1.15, name="grandfather_knot_light")
+    parts = []
+
+    # The bole. Widest at the root flare, drawn in hard above it, then near-parallel to the
+    # break: a dead trunk that lost its crown keeps its girth far further up than a live one.
+    r = across * 0.5
+    prof = [
+        (r * 1.00, 0.0), (r * 0.94, h * 0.015), (r * 0.80, h * 0.05),
+        (r * 0.68, h * 0.11), (r * 0.60, h * 0.20), (r * 0.55, h * 0.32),
+        (r * 0.51, h * 0.45), (r * 0.47, h * 0.58), (r * 0.43, h * 0.70),
+        (r * 0.39, h * 0.80), (r * 0.35, h * 0.88), (r * 0.30, h * 0.95),
+        (r * 0.26, h * 0.99),
+    ]
+    segs = int(params.get("segments", 40))
+    trunk = S.lathe("bole", prof, segments=segs, mat=bark, close=False,
+                    twist=rng.uniform(-0.06, 0.06))
+    # Lean the whole tree a little: nothing this old stands plumb.
+    trunk.rotation_euler = Euler((math.radians(rng.uniform(1.6, 3.4)), 0.0,
+                                  rng.uniform(0, TAU)), "XYZ")
+    S.apply_transforms(trunk)
+
+    # Hollow it. A shell about a metre and a half thick, which is what the rooms are cut into.
+    wall = params.get("wall", 1.6)
+    void = S.lathe("void", [(max(0.4, rr - wall), zz) for (rr, zz) in prof],
+                   segments=segs, close=True)
+    void.rotation_euler = trunk.rotation_euler.copy()
+    S.apply_transforms(void)
+    S.boolean(trunk, void, "DIFFERENCE")
+
+    # The doorway: a split in the bole the height of a house, and the way in.
+    door_h = h * 0.1
+    door = S.box_centered("door", size=(across * 0.26, across * 1.2, door_h),
+                          location=(0.0, -r * 0.75, door_h * 0.5 - 0.4))
+    S.boolean(trunk, door, "DIFFERENCE")
+    # An arched head to it, so it reads as a door and not as a saw cut.
+    arch = S.cylinder("arch", radius=across * 0.13, depth=across * 1.2, vertices=16,
+                      location=(0.0, -r * 1.35, door_h - 0.4), rotation=(-90, 0, 0), centered=False)
+    S.boolean(trunk, arch, "DIFFERENCE")
+
+    # Knots: the windows, scattered up the trunk on every side, each with a light behind it.
+    knots = int(params.get("knots", 26))
+    lights = []
+    for i in range(knots):
+        f = 0.10 + 0.82 * (i / max(1, knots - 1)) ** 0.85
+        a = rng.uniform(0, TAU)
+        rad = _profile_radius(prof, f * h) * 1.25
+        kr = across * rng.uniform(0.018, 0.045)
+        pos = Vector((math.cos(a) * rad, math.sin(a) * rad, f * h))
+        cut = S.uv_sphere("knot_%d" % i, radius=kr, segments=12, rings=8,
+                          scale=(1.0, 1.0, rng.uniform(0.6, 1.1)))
+        S.apply_transforms(cut)
+        cut.location = pos
+        S.apply_transforms(cut)
+        S.boolean(trunk, cut, "DIFFERENCE")
+        # The light sits just inside the hole, so the knot glows from within.
+        if rng.random() < 0.72:
+            lamp = S.uv_sphere("knotlight_%d" % i, radius=kr * 0.72, segments=10, rings=6,
+                               mat=glow)
+            lamp.location = Vector((pos.x * 0.86, pos.y * 0.86, pos.z))
+            S.apply_transforms(lamp)
+            lights.append(lamp)
+
+    # The break. A dead giant did not taper away politely, it snapped, and this is the edge
+    # the region sees against the sky -- the one silhouette detail worth paying for.
+    for i in range(int(params.get("break_teeth", 7))):
+        a = TAU * (i + rng.uniform(-0.25, 0.25)) / int(params.get("break_teeth", 7))
+        top_r = _profile_radius(prof, h)
+        bite = S.box_centered("break_%d" % i,
+                              size=(top_r * rng.uniform(0.5, 1.1), top_r * rng.uniform(0.5, 1.2),
+                                    h * rng.uniform(0.02, 0.07)),
+                              location=(math.cos(a) * top_r * rng.uniform(0.55, 1.05),
+                                        math.sin(a) * top_r * rng.uniform(0.55, 1.05), h),
+                              rotation=(rng.uniform(-22, 22), rng.uniform(-22, 22), 0))
+        S.boolean(trunk, bite, "DIFFERENCE")
+    S.shade_smooth(trunk, 38.0)
+    _weather(trunk, rng, amount=across * 0.022, scale=h * 0.09, seed=rng.randrange(999))
+    parts.append(trunk)
+    parts += lights
+
+    # A sleeve of the inner wood showing through the doorway, so the bole is not a paper
+    # tube when you stand in the opening.
+    sleeve = S.lathe("sleeve", [(max(0.35, rr - wall - 0.25), zz) for (rr, zz) in prof],
+                     segments=max(12, segs // 2), mat=inner, close=False)
+    sleeve.rotation_euler = trunk.rotation_euler.copy()
+    S.apply_transforms(sleeve)
+    S.shade_smooth(sleeve, 38.0)
+    parts.append(sleeve)
+
+    # Root buttresses: what makes thirty metres across believable at the foot.
+    roots = int(params.get("roots", 9))
+    for i in range(roots):
+        a = TAU * (i + rng.uniform(-0.18, 0.18)) / roots
+        rh = h * rng.uniform(0.055, 0.11)
+        reach = r * rng.uniform(0.55, 1.0)
+        bm = bmesh.new()
+        steps = 8
+        inner_e, outer_e = [], []
+        for k in range(steps + 1):
+            f = k / steps
+            z = rh * (f ** 0.75)
+            inner_e.append(bm.verts.new((r * 0.86, 0.0, z)))
+            outer_e.append(bm.verts.new((r * 0.86 + reach * (1 - f) ** 1.7, 0.0, z * 0.2)))
+        for a0, b0, a1, b1 in zip(inner_e, outer_e, inner_e[1:], outer_e[1:]):
+            bm.faces.new((a0, b0, b1, a1))
+        root = S.bm_to_object(bm, "root_%d" % i, bark, smooth=True)
+        S.solidify(root, thickness=r * rng.uniform(0.12, 0.2), offset=0.0)
+        S.bevel(root, width=r * 0.03, segments=2, angle_deg=40)
+        root.rotation_euler = Euler((0, 0, a), "XYZ")
+        S.apply_transforms(root)
+        S.jitter_verts(root, amount=r * 0.02, scale=3.0, seed=rng.randrange(999))
+        parts.append(root)
+
+    # Three heavy limbs, all that is left of the crown, and the broken stubs of others.
+    for i in range(3):
+        a = TAU * i / 3 + rng.uniform(-0.3, 0.3)
+        base_z = h * rng.uniform(0.62, 0.80)
+        rad0 = _profile_radius(prof, base_z)
+        start = Vector((math.cos(a) * rad0 * 0.9, math.sin(a) * rad0 * 0.9, base_z))
+        reach = across * rng.uniform(0.9, 1.5)
+        rise = h * rng.uniform(0.06, 0.13)
+        pts = [start,
+               start + Vector((math.cos(a) * reach * 0.42, math.sin(a) * reach * 0.42, rise * 0.7)),
+               start + Vector((math.cos(a + 0.22) * reach * 0.78, math.sin(a + 0.22) * reach * 0.78, rise)),
+               start + Vector((math.cos(a + 0.5) * reach, math.sin(a + 0.5) * reach, rise * 0.78))]
+        limb = S.tube_along("limb_%d" % i, pts, radius=rad0 * 0.46, segments=12,
+                            radius_end=rad0 * 0.17, mat=bark)
+        S.shade_smooth(limb, 40.0)
+        parts.append(limb)
+    for i in range(int(params.get("stubs", 6))):
+        a = rng.uniform(0, TAU)
+        z = h * rng.uniform(0.35, 0.9)
+        rad0 = _profile_radius(prof, z)
+        stub = S.cylinder("stub_%d" % i, radius=rad0 * rng.uniform(0.11, 0.2),
+                          radius_top=rad0 * rng.uniform(0.05, 0.11),
+                          depth=rad0 * rng.uniform(0.5, 1.2), vertices=9,
+                          location=(math.cos(a) * rad0 * 0.85, math.sin(a) * rad0 * 0.85, z),
+                          rotation=(0, 74, math.degrees(a)), mat=bark)
+        parts.append(stub)
+
+    # The rope walks. A town inside a tree has to get up it, and from a distance these are
+    # the thing that says someone lives here rather than that a tree died here.
+    turns = params.get("walk_turns", 2.4)
+    walk_lo, walk_hi = h * 0.06, h * 0.78
+    ring = int(params.get("walk_segments", 96))
+    prev = None
+    for i in range(ring + 1):
+        f = i / ring
+        z = walk_lo + (walk_hi - walk_lo) * f
+        a = TAU * turns * f
+        rad = _profile_radius(prof, z) * 1.06
+        pos = Vector((math.cos(a) * rad, math.sin(a) * rad, z))
+        if prev is not None and i % 2 == 0:
+            span = (pos - prev).length
+            plank = S.box_centered("walk_%d" % i, size=(across * 0.09, span * 1.5, 0.22),
+                                   mat=deck)
+            ang = math.atan2(pos.y - prev.y, pos.x - prev.x)
+            plank.rotation_euler = Euler((0, 0, ang - math.pi / 2), "XYZ")
+            S.apply_transforms(plank)
+            plank.location = (pos + prev) * 0.5
+            S.apply_transforms(plank)
+            parts.append(plank)
+            mid = (pos + prev) * 0.5
+            if i % 6 == 0:
+                parts.append(S.cylinder("walkpost_%d" % i, radius=0.22, depth=h * 0.035,
+                                        vertices=7,
+                                        location=(mid.x, mid.y, mid.z - h * 0.035), mat=deck))
+                # the handrail post, which is what gives the spiral its edge against the sky
+                parts.append(S.cylinder("rail_%d" % i, radius=0.14, depth=1.1, vertices=6,
+                                        location=(mid.x, mid.y, mid.z + 0.1), mat=deck))
+        prev = pos
+    # A landing outside the doorway, where the walks start.
+    parts.append(S.box_centered("landing", size=(across * 0.34, across * 0.2, 0.16),
+                                location=(0.0, -r * 0.92, h * 0.055), mat=deck))
+
+    S.drop_to_ground(parts)
+    return {"opaque_objs": parts, "collision": "col_glb", "tier": "hero",
+            "materials_used": ["dead_bark", "driftwood", "wood_planks", "ember"],
+            "extra_meta": {"walkable": ["landing", "walk"], "height_m": h,
+                           "across_m": across, "hollow": True,
+                           "place": "core:place/grandfather"}}
+
+
+def _profile_radius(prof, z):
+    """Radius of a lathe profile at height z, linearly interpolated."""
+    if z <= prof[0][1]:
+        return prof[0][0]
+    for (r0, z0), (r1, z1) in zip(prof, prof[1:]):
+        if z <= z1:
+            t = (z - z0) / max(1e-6, z1 - z0)
+            return r0 + (r1 - r0) * t
+    return prof[-1][0]
+
+
+# --- the Chalk Hound (Hearthvale) ---------------------------------------------------------
+
+def chalk_hound(pal, rng, params, variant):
+    """A hill figure: turf cut away to show the chalk under the down.
+
+    WORLD_BIBLE Hearthvale. This is not an object standing on the ground, it is a figure
+    *in* it, so it is built as a shallow shell that lies on the slope -- a trench floor of
+    bare chalk with a turf lip round it. From the far side of the valley the outline has to
+    read as a hound; standing in it you are in a chalk cutting a little deeper than a grave,
+    and the eye is a ring you can lie down in.
+
+    It is laid out flat in XY, running nose-east, so a placer can drop it on a slope and
+    rotate it to the fall of the hill.
+    """
+    length = params.get("length", 58.0)
+    scale = length / 58.0
+    chalk = M.chalk_rock(pal, wear=0.3, age=0.35, scale=6.0, name="hound_chalk")
+    depth = params.get("depth", 0.55)
+    parts = []
+
+    # The figure, as the strokes a hill-cutter would actually cut: a long body, a deep
+    # chest, a thrown-back head, four legs at full stretch, a tail up.
+    # (x, y, half-width) polylines in metres, nose towards +x.
+    strokes = [
+        # body and haunch
+        ([(-16, 0.5), (-8, 1.4), (0, 1.6), (8, 1.2), (15, 0.4)], 3.4),
+        # chest and shoulder
+        ([(9, 0.0), (13, 1.8), (16, 2.6)], 2.6),
+        # neck and head, thrown back and up
+        ([(15, 1.0), (20, 3.4), (24, 5.6), (27.5, 6.2)], 1.9),
+        # muzzle
+        ([(27, 6.2), (30.5, 6.0)], 1.1),
+        # foreleg, forward
+        ([(13, -0.6), (17, -5.0), (21, -8.6)], 1.3),
+        # foreleg, tucked
+        ([(10.5, -0.6), (12, -4.4), (10, -7.8)], 1.2),
+        # hind leg, driving back
+        ([(-11, -0.4), (-16, -4.2), (-22, -6.8)], 1.5),
+        # hind leg, gathered
+        ([(-7, -0.6), (-8.5, -4.6), (-12, -7.4)], 1.3),
+        # tail, up and streaming
+        ([(-16, 0.8), (-22, 2.6), (-27, 5.4)], 1.0),
+    ]
+    bm = bmesh.new()
+    for (pts, half) in strokes:
+        pts = [(x * scale, y * scale) for (x, y) in pts]
+        hw = half * scale
+        left, right = [], []
+        n = len(pts)
+        for i, (x, y) in enumerate(pts):
+            # taper the stroke towards its far end, the way a cut limb thins
+            t = i / max(1, n - 1)
+            w = hw * (1.0 - 0.45 * t)
+            if i == 0:
+                dx, dy = pts[1][0] - x, pts[1][1] - y
+            elif i == n - 1:
+                dx, dy = x - pts[-2][0], y - pts[-2][1]
+            else:
+                dx, dy = pts[i + 1][0] - pts[i - 1][0], pts[i + 1][1] - pts[i - 1][1]
+            ln = math.hypot(dx, dy) or 1.0
+            nx, ny = -dy / ln, dx / ln
+            left.append(bm.verts.new((x + nx * w, y + ny * w, 0.0)))
+            right.append(bm.verts.new((x - nx * w, y - ny * w, 0.0)))
+        for a0, b0, a1, b1 in zip(left, right, left[1:], right[1:]):
+            bm.faces.new((a0, b0, b1, a1))
+    floor = S.bm_to_object(bm, "hound_floor", chalk, smooth=False)
+    # Sink it: the figure is a cutting, so its floor sits below the turf line, and give it
+    # walls by thickening downward -- those cut faces are the sides of the trench.
+    #
+    # What it must NOT have is a turf skin over the top. The first cut of this laid a
+    # copy of the whole figure in grass above the chalk, so the hound was a green hound on
+    # a green down, which is no hill figure at all. The white is the entire point; the turf
+    # around it is the terrain's job, not the forge's.
+    for v in floor.data.vertices:
+        v.co.z -= depth
+    S.subdivide(floor, levels=2, simple=False)
+    S.jitter_verts(floor, amount=depth * 0.22, scale=2.0, seed=rng.randrange(999))
+    S.solidify(floor, thickness=depth * 1.25, offset=1.0)
+    parts.append(floor)
+
+    # There is deliberately no turf here. A hill figure is the chalk; the grass around it
+    # is the down, which is the terrain's, not the forge's. Two attempts at a turf lip both
+    # ended up skinning the whole figure green -- a green hound on a green down, which is
+    # no hill figure at all -- and the honest answer is that the forge should ship the cut
+    # and nothing else.
+
+    # The eye: a ring of cut chalk with a hollow in the middle, sized so a person fits.
+    eye = Vector((26.0 * scale, 5.4 * scale, -depth))
+    socket = S.lathe("eye", [(0.0, 0.0), (1.05, 0.0), (1.25, 0.34), (1.9, 0.44), (2.0, 0.0)],
+                     segments=22, mat=chalk, close=True)
+    socket.location = eye
+    S.apply_transforms(socket)
+    S.jitter_verts(socket, amount=0.06, scale=1.2, seed=rng.randrange(999))
+    parts.append(socket)
+
+    S.drop_to_ground(parts)
+    return {"opaque_objs": parts, "collision": "trimesh", "tier": "hero",
+            "materials_used": ["chalk_rock"],
+            "extra_meta": {"lies_on_ground": True, "length_m": length, "cut_depth_m": depth,
+                           "eye_centre_m": [round(eye.x, 2), round(eye.y, 2)],
+                           "place": "core:place/chalk_hound"}}
+
+
+# --- the Drowned Nave (Sedgemire) ----------------------------------------------------------
+
+def drowned_nave(pal, rng, params, variant):
+    """An Oroth spire leaning fifteen degrees out of the marsh, its lower half flooded.
+
+    WORLD_BIBLE Sedgemire: 120 m, leaning 15 degrees, lower half under water. What is built
+    here is what shows -- the upper spire and the tops of the nave arcade around its foot,
+    with the waterline written on the stone: black weed below it, pale fused stone above.
+    It is the thing you see before you go down, so the lean is the whole silhouette and it
+    must be unmistakable from across the fen.
+    """
+    h = params.get("height", 120.0)
+    lean = math.radians(params.get("lean_deg", 15.0))
+    # How much of it stands above the fen. The rest is the deep place.
+    show = params.get("above_water", 0.52)
+    stone = M.fused_stone(pal, wear=0.4, age=0.8, gilding=params.get("gilding", 0.18), scale=h * 0.045)
+    drowned = M.drowned_stone(pal, age=0.9, scale=h * 0.03, name="nave_drowned")
+    parts = []
+
+    # The spire: an Oroth tower, square-shouldered at the base and drawn to a point, with
+    # the flutes that mark Builders' work.
+    flutes = int(params.get("flutes", 16))
+    # A hundred-and-twenty-metre tower ten metres across its foot. At h * 0.055 it came out
+    # a needle: correct in height and unreadable as a building, which for the thing the fen
+    # is named after is the wrong failure.
+    base_r = h * 0.092
+    # Square-shouldered for two thirds and then drawn to a point: a tower with a spire on
+    # it, which is a different silhouette from a cone and the one a nave actually has.
+    prof = [
+        (base_r * 1.22, 0.0), (base_r * 1.12, h * 0.05), (base_r * 1.04, h * 0.14),
+        (base_r * 1.00, h * 0.28), (base_r * 0.97, h * 0.44), (base_r * 0.95, h * 0.58),
+        (base_r * 1.06, h * 0.62), (base_r * 0.99, h * 0.655),
+        (base_r * 0.74, h * 0.72), (base_r * 0.52, h * 0.82), (base_r * 0.30, h * 0.91),
+        (base_r * 0.12, h * 0.97), (0.0, h),
+    ]
+    spire = S.lathe("spire", prof, segments=flutes * 2, mat=stone, close=True)
+    for v in spire.data.vertices:
+        a = math.atan2(v.co.y, v.co.x)
+        f = 1.0 + 0.045 * math.cos(a * flutes)
+        v.co.x *= f
+        v.co.y *= f
+    S.shade_smooth(spire, 34.0)
+    _weather(spire, rng, amount=base_r * 0.05, scale=h * 0.08, seed=rng.randrange(999))
+    # Below the waterline the stone is black with weed. The line is the point of the thing.
+    water_z = h * (1.0 - show)
+    S.assign_material_to_faces(spire, drowned, lambda poly: poly.center.z < water_z)
+    parts.append(spire)
+
+    # The nave arcade: what is left of the church around the spire's foot, gable ends and
+    # column tops breaking the water in two rows.
+    bays = int(params.get("bays", 9))
+    span = base_r * 1.9
+    for row in (-1, 1):
+        for i in range(bays):
+            t = (i - (bays - 1) * 0.5) / max(1, bays - 1)
+            x = t * h * 0.30
+            drop = abs(t) * h * 0.06          # the far bays have sunk further
+            col_h = h * 0.13 - drop + rng.uniform(-1.5, 1.5)
+            if col_h < h * 0.02:
+                continue
+            col = S.cylinder("pier_%d_%d" % (row, i), radius=base_r * 0.17,
+                             radius_top=base_r * 0.145, depth=col_h, vertices=10,
+                             location=(x, row * span, water_z - h * 0.03), mat=stone)
+            S.assign_material_to_faces(col, drowned, lambda poly: poly.center.z < water_z)
+            parts.append(col)
+            # a broken length of the arcade's head, where the arch has not yet fallen
+            if rng.random() < 0.55:
+                cap = S.box_centered("arcade_%d_%d" % (row, i),
+                                     size=(base_r * rng.uniform(0.5, 1.0), base_r * 0.5,
+                                           base_r * 0.34),
+                                     location=(x, row * span, water_z - h * 0.03 + col_h),
+                                     rotation=(rng.uniform(-8, 8), rng.uniform(-6, 6), 0),
+                                     mat=stone)
+                parts.append(cap)
+    # The west gable, the one wall still standing to its full height.
+    gable_verts = [(-h * 0.34, 0.0, water_z - h * 0.04), (-h * 0.34, 0.0, water_z + h * 0.16),
+                   (-h * 0.30, 0.0, water_z + h * 0.24), (-h * 0.26, 0.0, water_z + h * 0.15),
+                   (-h * 0.26, 0.0, water_z - h * 0.04)]
+    gable = S.mesh_from_pydata("gable", [(x, -span * 1.05, z) for (x, _y, z) in gable_verts],
+                               [(0, 1, 2, 3, 4)], smooth=False)
+    gable.data.materials.append(stone)
+    S.solidify(gable, thickness=span * 2.1, offset=1.0)
+    S.bevel(gable, width=base_r * 0.05, segments=2, angle_deg=40)
+    _weather(gable, rng, amount=base_r * 0.06, scale=h * 0.05, seed=rng.randrange(999))
+    S.assign_material_to_faces(gable, drowned, lambda poly: poly.center.z < water_z)
+    parts.append(gable)
+
+    # Lean the whole ruin. Everything tilts together: it went down as one building.
+    for o in parts:
+        o.rotation_euler = Euler((lean, 0.0, 0.0), "XYZ")
+        S.apply_transforms(o)
+    S.drop_to_ground(parts)
+    return {"opaque_objs": parts, "collision": "col_glb", "tier": "hero",
+            "materials_used": ["fused_stone", "drowned_stone"],
+            "extra_meta": {"height_m": h, "lean_deg": params.get("lean_deg", 15.0),
+                           "waterline_m": round(water_z, 2), "leads_to_deep_place": True,
+                           "place": "core:place/drowned_nave"}}
+
+
+# --- Eelfathom Pool (Sedgemire) ------------------------------------------------------------
+
+def eelfathom(pal, rng, params, variant):
+    """What the Reedfolk built at the pool that answers a few seconds late.
+
+    WORLD_BIBLE Sedgemire: the pool itself is terrain; this is the mark on it. Reedfolk
+    build in stilts, boardwalk and lantern pole, and they bury their dead off jetties, so
+    what stands at a pool nobody trusts is a water-burial jetty: a walk out over the water
+    that stops short, lantern poles down its length, and a ring of stones set in the shallows
+    where the reflection is watched. Built around the origin so a placer can sit it on the
+    pool's own edge.
+    """
+    reach = params.get("reach", 14.0)
+    deck = M.wood_planks(pal, wear=0.7, age=0.8, scale=1.0, plank_len=1.6, plank_w=0.22,
+                         name="eelfathom_deck")
+    post = M.driftwood(pal, wear=0.75, age=0.85, scale=0.9, name="eelfathom_post")
+    iron = M.iron(pal, age=0.85, wear=0.7, scale=0.3, name="eelfathom_iron")
+    glass = M.glass(pal, name="eelfathom_glass")
+    flame = M.ember(pal, heat=0.9, name="eelfathom_flame")
+    stone = M.drowned_stone(pal, age=0.8, scale=1.4, name="eelfathom_stone")
+    parts = []
+
+    width = params.get("width", 2.1)
+    # The walk. It stops short of the middle, because nobody goes further.
+    boards = int(reach / 0.42)
+    for i in range(boards):
+        y = i * 0.42
+        sag = (i / max(1, boards - 1)) ** 2 * 0.22
+        b = S.box_centered("board_%d" % i, size=(width, 0.36, 0.06),
+                           location=(rng.uniform(-0.03, 0.03), y, -sag),
+                           rotation=(0, rng.uniform(-1.4, 1.4), 0), mat=deck)
+        parts.append(b)
+    for sx in (-1, 1):
+        parts.append(S.box_centered("stringer_%d" % sx, size=(0.12, reach, 0.16),
+                                    location=(sx * width * 0.42, reach * 0.5, -0.16), mat=deck))
+    # Stilts, driven in pairs, deeper and more crooked the further out they go.
+    pairs = max(3, int(reach / 3.2))
+    for i in range(pairs):
+        y = (i + 0.4) * (reach / pairs)
+        f = i / max(1, pairs - 1)
+        for sx in (-1, 1):
+            p = S.cylinder("stilt_%d_%d" % (i, sx), radius=0.15, radius_top=0.12,
+                           depth=1.4 + f * 1.6, vertices=8,
+                           location=(sx * width * 0.42, y, -(1.4 + f * 1.6) - 0.16),
+                           rotation=(rng.uniform(-4, 4), rng.uniform(-4, 4), 0), mat=post)
+            parts.append(p)
+    # Lantern poles down the length: the one thing visible across a fen at night.
+    for i in range(int(params.get("lanterns", 4))):
+        y = reach * (0.18 + 0.72 * i / max(1, int(params.get("lanterns", 4)) - 1))
+        sx = 1 if i % 2 == 0 else -1
+        ph = rng.uniform(2.6, 3.4)
+        parts.append(S.cylinder("pole_%d" % i, radius=0.09, depth=ph, vertices=7,
+                                location=(sx * width * 0.5, y, 0.0),
+                                rotation=(rng.uniform(-3, 3), rng.uniform(-3, 3), 0), mat=post))
+        top = Vector((sx * width * 0.5, y, ph))
+        parts.append(S.torus("hook_%d" % i, major=0.16, minor=0.03, seg_major=12, seg_minor=6,
+                             location=(top.x - sx * 0.13, top.y, top.z - 0.04),
+                             rotation=(90, 0, 0), mat=iron))
+        parts.append(S.cylinder("lantern_%d" % i, radius=0.17, depth=0.34, vertices=8,
+                                location=(top.x - sx * 0.26, top.y, top.z - 0.42), mat=glass))
+        parts.append(S.uv_sphere("flame_%d" % i, radius=0.08, segments=8, rings=5,
+                                 location=(top.x - sx * 0.26, top.y, top.z - 0.26), mat=flame))
+    # The watching ring: stones set in the shallows around the jetty's head, where the
+    # reflection is looked at. Set, not scattered -- somebody placed these.
+    ring_n = int(params.get("ring", 9))
+    for i in range(ring_n):
+        a = TAU * i / ring_n
+        rr = reach * 0.46
+        sh = rng.uniform(0.5, 1.1)
+        st = S.cylinder("set_%d" % i, radius=rng.uniform(0.2, 0.34),
+                        radius_top=rng.uniform(0.14, 0.26), depth=sh, vertices=7,
+                        location=(math.cos(a) * rr, reach + math.sin(a) * rr * 0.7, -0.35),
+                        rotation=(rng.uniform(-9, 9), rng.uniform(-9, 9), 0), mat=stone)
+        S.jitter_verts(st, amount=0.05, scale=0.8, seed=rng.randrange(999))
+        parts.append(st)
+    # The end post, taller than the rest, where the dead are let go.
+    parts.append(S.cylinder("endpost", radius=0.2, radius_top=0.16, depth=3.6, vertices=9,
+                            location=(0.0, reach + 0.3, -0.2), mat=post))
+    parts.append(S.torus("endring", major=0.3, minor=0.05, seg_major=16, seg_minor=6,
+                         location=(0.0, reach + 0.3, 3.1), rotation=(90, 0, 0), mat=iron))
+
+    S.drop_to_ground(parts)
+    return {"opaque_objs": parts, "collision": "col_glb",
+            "materials_used": ["wood_planks", "driftwood", "iron", "glass", "ember",
+                               "drowned_stone"],
+            "extra_meta": {"walkable": ["board", "stringer"], "reach_m": reach,
+                           "stands_in_water": True, "place": "core:place/eelfathom"}}
+
+
 KINDS = {
     "cracked_toll": cracked_toll,
     "fallen_hand": fallen_hand,
     "choir_colossus": choir_colossus,
     "the_lamp": the_lamp,
     "sayers_spire": sayers_spire,
+    "grandfather": grandfather,
+    "chalk_hound": chalk_hound,
+    "drowned_nave": drowned_nave,
+    "eelfathom": eelfathom,
 }
 
 

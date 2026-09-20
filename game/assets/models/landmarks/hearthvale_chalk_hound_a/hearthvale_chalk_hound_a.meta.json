@@ -1,0 +1,87 @@
+{
+ "bounds": {
+  "height": 0.76,
+  "max": [
+   30.354,
+   0.76,
+   8.547
+  ],
+  "min": [
+   -26.792,
+   0.0,
+   -7.379
+  ],
+  "radius": 29.664
+ },
+ "built_seconds": 171.52,
+ "category": "landmarks",
+ "collision": "trimesh",
+ "collision_params": {},
+ "cut_depth_m": 0.55,
+ "eye_centre_m": [
+  26.0,
+  5.4
+ ],
+ "generator": "gen_landmarks",
+ "glb": "hearthvale_chalk_hound_a.glb",
+ "hash": "c729d42dd028e96d",
+ "kind": "chalk_hound",
+ "length_m": 58.0,
+ "lies_on_ground": true,
+ "materials": [
+  "hearthvale_chalk_hound_a_mat"
+ ],
+ "materials_used": [
+  "chalk_rock"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_chalk_hound_a",
+   "tris": 1918
+  },
+  {
+   "name": "hearthvale_chalk_hound_a_LOD1",
+   "tris": 766
+  },
+  {
+   "name": "hearthvale_chalk_hound_a_LOD2",
+   "tris": 286
+  }
+ ],
+ "name": "hearthvale_chalk_hound_a",
+ "params": {},
+ "place": "core:place/chalk_hound",
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 6991,
+ "textures": [
+  "hearthvale_chalk_hound_a_albedo.png",
+  "hearthvale_chalk_hound_a_normal.png",
+  "hearthvale_chalk_hound_a_orm.png"
+ ],
+ "tris": [
+  1918,
+  766,
+  286
+ ],
+ "version": 3
+}

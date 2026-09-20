@@ -341,8 +341,11 @@ func spawn_position(npc_id: String) -> Vector3:
 	var base := WorldProbe.place_position(place_of(npc_id))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(npc_id)
+	# Two to ten metres put a village of twenty-three people in one scrum on the green. A
+	# settlement is sixty to a hundred metres across, so they stand across it — still
+	# deterministic, so everyone is where they were when you last looked.
 	var angle := rng.randf() * TAU
-	var radius := 2.0 + rng.randf() * 8.0
+	var radius := 6.0 + sqrt(rng.randf()) * 34.0
 	var pos := base + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 	pos.y = WorldProbe.get_height(pos.x, pos.z, base.y)
 	return pos

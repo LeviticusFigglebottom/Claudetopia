@@ -294,3 +294,66 @@ func test_appearance_composes() -> void:
 	var before := m.skeleton.get_child_count()
 	m.apply_appearance(a.to_dict())
 	assert_eq(m.skeleton.get_child_count(), before, "re-applying an appearance leaked nodes")
+
+
+## A walking actor used to push one engine error per frame -- "Grouped
+## AnimationNodeStateMachinePlayback must be handled by parent
+## AnimationNodeStateMachinePlayback" -- because the tree root was typed GROUPED, so every
+## travel() and start() on it was rejected outright.  An arena run logged 1207 of them from
+## one bandit walking about.  Errors cannot be counted from GDScript, so this asserts the
+## thing that is impossible while they are firing: that the playback actually MOVES.
+func test_locomotion_and_an_attack_drive_the_state_machine() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	if m == null:
+		return
+	var root := m.anim_tree.tree_root as AnimationNodeStateMachine
+	assert_eq(root.state_machine_type, AnimationNodeStateMachine.STATE_MACHINE_TYPE_ROOT,
+			"a grouped state machine at the tree root is rejected on every travel()")
+	var play: AnimationNodeStateMachinePlayback = m.anim_tree.get("parameters/playback")
+	assert_true(play != null, "no playback")
+	var step := 1.0 / 60.0
+	for i in 120:
+		var t := float(i) * step
+		m.set_locomotion(Vector2(sin(t * 2.0) * 0.5, 0.4 + 0.6 * absf(sin(t))), i % 40 > 30)
+		m._process(step)
+		m.anim_tree.advance(step)     # the tree is not stepped by the loop in a sync test
+	assert_eq(play.get_current_node(), HumanoidModel.LOCOMOTION_STATE,
+			"three seconds of walking must leave the machine in Locomotion")
+	if not m.has_clip("Attack_1H_Light_1"):
+		return
+	assert_true(m.play_intent("Attack_1H_Light_1"))
+	m._process(step)
+	m.anim_tree.advance(step)
+	assert_eq(play.get_current_node(), "Attack_1H_Light_1", "play_intent must reach the clip")
+	var length := m.clip_length("Attack_1H_Light_1")
+	var t2 := 0.0
+	while t2 < length + 0.3:
+		m._process(step)
+		m.set_locomotion(Vector2(0.0, 1.0), false)
+		m.anim_tree.advance(step)
+		t2 += step
+	assert_eq(m.current_intent(), "", "the one-shot must end")
+	assert_eq(play.get_current_node(), HumanoidModel.LOCOMOTION_STATE,
+			"and the machine must travel back to Locomotion")
+
+
+## Every one-shot clip must be reachable from Locomotion: travel() with no transition falls
+## back to a hard cut, which is how the graph silently loses its cross-fades.
+func test_every_one_shot_has_a_transition_both_ways() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	if m == null:
+		return
+	var root := m.anim_tree.tree_root as AnimationNodeStateMachine
+	var missing: Array[String] = []
+	for name in root.get_node_list():
+		if name == HumanoidModel.LOCOMOTION_STATE or name.begins_with("Start") or name.begins_with("End"):
+			continue
+		if not root.has_transition(HumanoidModel.LOCOMOTION_STATE, name):
+			missing.append("-> " + name)
+		if not root.has_transition(name, HumanoidModel.LOCOMOTION_STATE):
+			missing.append(name + " ->")
+	assert_empty(missing, "clips with no transition to or from Locomotion: %s" % str(missing))

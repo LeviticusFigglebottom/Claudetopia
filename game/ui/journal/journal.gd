@@ -126,6 +126,12 @@ func _rumours() -> Array[Dictionary]:
 		var heard: bool = GameState.has_flag("rumour:" + str(def.get("id", "")))
 		if not heard and not (place != "" and GameState.is_discovered(place)):
 			continue
+		# A rumour can be gated — the smith has not hung his sword up yet — and the page used
+		# to ignore that, so arriving in the town would have printed news that had not
+		# happened. Something you have actually heard stays on the page whatever the gate says
+		# now, because you did hear it.
+		if not heard and not Conditions.all_of(def.get("conditions", []), Social.ctx):
+			continue
 		out.append({"id": str(def.get("id", "")), "name": _rumour_title(def), "def": def})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 			return int(a["def"].get("heat", 0)) > int(b["def"].get("heat", 0)))

@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 9.894,
+  "height": 9.623,
   "max": [
-   4.737,
-   9.894,
-   5.508
+   3.862,
+   9.623,
+   4.223
   ],
   "min": [
-   -5.888,
+   -3.935,
    0.0,
-   -4.927
+   -4.093
   ],
-  "radius": 8.94
+  "radius": 7.459
  },
- "built_seconds": 4.01,
+ "built_seconds": 2.78,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 9.64,
-  "radius": 2.746
+  "height": 9.38,
+  "radius": 0.387
  },
  "generator": "gen_trees",
  "glb": "brightwater_lime_b.glb",
@@ -45,7 +45,7 @@
   },
   {
    "name": "brightwater_lime_b_LOD1",
-   "tris": 900
+   "tris": 898
   },
   {
    "name": "brightwater_lime_b_cards_LOD1",
@@ -91,7 +91,7 @@
  ],
  "tris": [
   6500,
-  1320,
+  1318,
   8
  ],
  "version": 3

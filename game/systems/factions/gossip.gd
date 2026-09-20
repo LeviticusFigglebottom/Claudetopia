@@ -46,11 +46,81 @@ var rng := RandomNumberGenerator.new()
 ## Entry shape: {heat, peak, deed, age, spread{place_id: true}, day, hour}
 
 
+## How hot the talk of a place starts. Under SPREAD_THRESHOLD on purpose: local colour does
+## not travel to the next valley, it just is what people there are saying.
+const LOCAL_HEAT := 0.22
+## How many of a region's own rumours a settlement keeps going at once.
+const LOCAL_PER_PLACE := 3
+
+
 func _ready() -> void:
 	add_to_group("gossip")
 	SaveSystem.register("gossip", self)
 	if not EventBus.hour_changed.is_connected(_on_hour_changed):
 		EventBus.hour_changed.connect(_on_hour_changed)
+	if not EventBus.region_entered.is_connected(_on_region_entered):
+		EventBus.region_entered.connect(_on_region_entered)
+
+
+func _on_region_entered(region_id: String, _previous: String) -> void:
+	stock_region(region_id)
+
+
+## The talk of a place, as opposed to the news about you.
+##
+## A rumour only ever entered a pool because the player spoke to whoever seeds it, so a village
+## nobody had questioned was silent — sixty-five written rumours and no way to hear all but a
+## handful of them. Walking into a region now stocks its settlements with a few of the region's
+## own rumours at a low heat, so people are talking about their own place before you ask.
+##
+## Re-stocked on every entry rather than once, because this is standing local talk and not
+## news: it should be there again when you come back, and it decays away while you are gone.
+## Deed rumours (the ones that mention you) are never seeded — those have to be earned.
+func stock_region(region_id: String) -> int:
+	if region_id.is_empty():
+		return 0
+	var short := region_id.split("/")[-1]
+	var candidates: Array[String] = []
+	for def in ContentDB.all("rumour"):
+		var d: Dictionary = def
+		if not _is_local_colour(d, short):
+			continue
+		candidates.append(str(d.get("id", "")))
+	if candidates.is_empty():
+		return 0
+	candidates.sort()
+	var seeded := 0
+	for place_id in settlements_of(region_id):
+		var pick := RandomNumberGenerator.new()
+		pick.seed = hash(place_id) ^ hash(region_id)
+		var taken: Dictionary = {}
+		for i in range(mini(LOCAL_PER_PLACE, candidates.size())):
+			var id: String = candidates[pick.randi_range(0, candidates.size() - 1)]
+			if taken.has(id):
+				continue
+			taken[id] = true
+			if heat_of(place_id, id) < LOCAL_HEAT:
+				add_rumour(id, place_id, LOCAL_HEAT)
+				seeded += 1
+	return seeded
+
+
+## A rumour that belongs to this region and is about the place rather than about the player.
+## A conditional rumour is only seeded when the conditions can actually be checked and pass —
+## a gate nobody can evaluate is a gate, not an invitation.
+func _is_local_colour(def: Dictionary, region_short: String) -> bool:
+	var tags: Variant = def.get("tags", [])
+	if typeof(tags) != TYPE_ARRAY or not (tags as Array).has(region_short):
+		return false
+	if str(def.get("text", "")).contains("{player}"):
+		return false
+	var conditions: Variant = def.get("conditions", [])
+	if typeof(conditions) == TYPE_ARRAY and not (conditions as Array).is_empty():
+		var ctx: SocialContext = Social.ctx if Social != null else null
+		if ctx == null:
+			return false
+		return Conditions.all_of(conditions as Array, ctx)
+	return true
 
 
 func _on_hour_changed(_hour: int) -> void:

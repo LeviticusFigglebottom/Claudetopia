@@ -1,11 +1,11 @@
 {
  "bounds": [
-  -0.1928,
-  -0.2708,
-  -0.0,
-  0.1923,
-  0.1064,
-  0.1095
+  -0.177,
+  -0.2633,
+  0.0,
+  0.1762,
+  0.1061,
+  0.1098
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -16,7 +16,7 @@
   "material": "leather"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 5424,
+ "seed": 4990,
  "slot_hint": "feet",
  "tris": [
   1100,

@@ -25,7 +25,7 @@ meshes, not to play.
 
 | Command | What it proves |
 |---|---|
-| `./run.sh test` | 993 unit tests. Content validation runs here too, so a dangling id fails the build. |
+| `./run.sh test` | 1022 unit tests. Content validation runs here too, so a dangling id fails the build. |
 | `./run.sh journey` | One scripted run through every promise in the design's done list, in the built world: create a character, wake at the Hushline Stair and walk out of the region, meet somebody who lives here, fight, level up, die and recover your marks, join a faction, commit a crime and pay for it, buy a house, clear a dungeon, fight a boss, learn a saying and cast it, save and load. |
 | `./run.sh smoke` | Builds all 24 shipping interiors for real and fails if one has no geometry, no collision, no light or no way out. |
 | `./run.sh perf` | Measures draw calls and primitives against the budgets in `DESIGN.md` §11. |
@@ -51,6 +51,7 @@ meshes, not to play.
 | `ARCHITECTURE.md` | How the code is organised, and how to pick it up cold. |
 | `docs/CONTRACTS.md` | The binding interfaces between systems: units, the rig, clip names, asset layout, world data, content shapes, system discovery. |
 | `PROGRESS.md` | Where things stand, what is next, what is known to be missing. |
+| `ASSESSMENT.md` | A candid assessment: what is good, what is weak, what I got wrong, what to do next. Read this one first if you are deciding whether to continue it. |
 | `DECISIONS.md` | Every significant choice, why it was made, and what it cost. |
 | `LICENSES.md` | The three third-party things and their licences. |
 
