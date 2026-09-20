@@ -47,6 +47,40 @@ class Heights:
         self.spacing = float(self.man["spacing_m"])
         self.origin = self.man["origin"]
         self.h = np.fromfile(os.path.join(GEN, "heights.r32"), dtype="<f4").reshape(self.n, self.n)
+        self.mask = np.fromfile(os.path.join(GEN, "region_mask.u8"),
+                                dtype=np.uint8).reshape(self.n, self.n)
+        self.water = np.fromfile(os.path.join(GEN, "water_mask.u8"),
+                                 dtype=np.uint8).reshape(self.n, self.n)
+        self.region_index = {rid: i for i, rid in enumerate(self.man.get("regions", []))}
+
+    def xz_of(self, i: int, j: int):
+        return (self.origin[0] + j * self.spacing, self.origin[1] + i * self.spacing)
+
+    def sample_region(self, region: int, count: int, seed: int, want_water=None):
+        """`count` places drawn from a region's own ground, spread out rather than clustered.
+
+        The drop test turns on having several shots of a region that are not three views of
+        the same hill, so these are drawn from the whole of it and thinned by distance.
+        """
+        if region < 0:
+            return []
+        sel = self.mask == region
+        if want_water is not None:
+            sel = sel & ((self.water > 0) if want_water else (self.water == 0))
+        rows, cols = np.nonzero(sel)
+        if rows.size == 0:
+            return []
+        rng = np.random.default_rng(seed)
+        pick = rng.choice(rows.size, size=min(700, rows.size), replace=False)
+        out = []
+        for k in pick:
+            x, z = self.xz_of(int(rows[k]), int(cols[k]))
+            if any(math.hypot(x - ox, z - oz) < 1100.0 for ox, oz in out):
+                continue
+            out.append((x, z))
+            if len(out) >= count:
+                break
+        return out
 
     def at(self, x: float, z: float) -> float:
         j = int(round((x - self.origin[0]) / self.spacing))
@@ -150,6 +184,21 @@ def build_plan() -> dict:
         ax, az = sx + math.cos(a2) * 420.0, sz + math.sin(a2) * 420.0
         shots.append(shot("%s_approach" % short, (ax, hh.at(ax, az) + 28.0, az),
                           (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 1.0, region_id))
+    # Three more per region, taken from the region's own ground rather than from its places,
+    # so the drop test has six images of six different parts of a region instead of three
+    # views of one hill. Below six a region, the landform axis is noise (DESIGN 10.1).
+    for region_id, (landmark, vista, settlement, hour, weather, bearing) in REGION_SHOTS.items():
+        short = region_id.split("/")[-1]
+        idx = hh.region_index.get(region_id, -1)
+        spots = hh.sample_region(idx, 3, seed=abs(hash(short)) % (2 ** 31))
+        for n, (sx, sz) in enumerate(spots):
+            # stand on the ground and look out along it, each one on its own bearing
+            ang = math.radians(bearing + 90.0 + n * 117.0)
+            tx, tz = sx + math.cos(ang) * 520.0, sz + math.sin(ang) * 520.0
+            eye = hh.at(sx, sz) + 2.2
+            shots.append(shot("%s_ground%d" % (short, n + 1), (sx, eye, sz),
+                              (tx, hh.at(tx, tz) + 2.0, tz), 60.0, hour, weather, 1.0, region_id))
+
     # a flythrough that crosses every region, high enough to read the landforms
     waypoints = []
     for region_id in REGION_SHOTS:
