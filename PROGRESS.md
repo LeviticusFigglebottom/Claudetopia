@@ -207,6 +207,26 @@ recorded rather than hidden, each with its reason:
 * **Skerrow is judged slate, not lilac**, so `limestone` is to be left alone. Recorded because
   it is the kind of thing somebody re-litigates from a bad screenshot.
 
+## The smith has no hammer, and his anvil is at his knees
+
+Found by checking the one thing the character stream said it had not verified, and worth
+keeping in this shape because the measurements are all here:
+
+* **There is no hammer prop.** `game/assets/models/props/` holds an anvil and a forge hearth
+  and no hammer of any kind. The only hammer in the pack is `core:item/reeves_bell_hammer`,
+  a quest object with `model: null`. `Work_Hammer` is the most-used work clip in the game and
+  it aims a tool socket at a point in space with nothing in the hand.
+* **The anvil is 371 mm tall and stands on the floor.** `hearthvale_anvil_a` has
+  `bounds.height 0.371` with `min[1] == 0.0`, and both Hallam's forge and Osric's smithy place
+  it at `y = 0.0`. A working anvil is about that much iron standing on a *stump* that brings
+  the face to knuckle height; the stump is missing. At the hammer strike the clip's socket
+  sits 765 mm above the anvil face.
+* **The clip is probably right and the world under it is wrong.** A socket at 1.136 m with 63%
+  arm extension is a person working at a normal bench height. Do not re-tune the clips against
+  the current anvil: fix the anvil (a stump, or place it raised) and build a hammer, then
+  re-measure. The other three contacts for reference — Work_Chop z 0.910 / 64%, Work_Dig
+  z 0.808 / 85%, Work_Stir z 1.230 / 88%.
+
 ## Known issues
 
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.
