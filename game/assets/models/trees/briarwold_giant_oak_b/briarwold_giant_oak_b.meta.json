@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 29.002,
+  "height": 28.409,
   "max": [
-   16.907,
-   29.002,
-   15.397
+   13.543,
+   28.409,
+   13.272
   ],
   "min": [
-   -16.198,
+   -13.744,
    0.0,
-   -16.181
+   -13.871
   ],
-  "radius": 27.084
+  "radius": 23.919
  },
- "built_seconds": 23.76,
+ "built_seconds": 11.42,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 27.98,
-  "radius": 17.332
+  "height": 27.61,
+  "radius": 2.168
  },
  "generator": "gen_trees",
  "glb": "briarwold_giant_oak_b.glb",

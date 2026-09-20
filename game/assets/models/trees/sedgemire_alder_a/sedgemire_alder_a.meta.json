@@ -1,24 +1,24 @@
 {
  "bounds": {
-  "height": 6.7,
+  "height": 6.616,
   "max": [
-   3.395,
-   6.7,
-   3.16
+   2.845,
+   6.616,
+   2.722
   ],
   "min": [
-   -3.346,
+   -2.905,
    0.0,
-   -3.119
+   -2.244
   ],
-  "radius": 5.695
+  "radius": 5.037
  },
- "built_seconds": 22.12,
+ "built_seconds": 4.24,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 6.57,
-  "radius": 3.438
+  "height": 6.45,
+  "radius": 0.404
  },
  "generator": "gen_trees",
  "glb": "sedgemire_alder_a.glb",
@@ -45,7 +45,7 @@
   },
   {
    "name": "sedgemire_alder_a_LOD1",
-   "tris": 896
+   "tris": 900
   },
   {
    "name": "sedgemire_alder_a_cards_LOD1",
@@ -91,7 +91,7 @@
  ],
  "tris": [
   6500,
-  1316,
+  1320,
   8
  ],
  "version": 3

@@ -257,7 +257,7 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
     spec.update({k: v for k, v in params.items() if k in spec or k in ("height", "leaves", "card")})
     h0, h1 = spec["height"]
     height = params.get("height_m") or rng.uniform(h0, h1)
-    sap = dict(spec["sapling"])
+    sap = upright(dict(spec["sapling"]), spec, height)
     sap["scale"] = height
     sap["scaleV"] = height * 0.06
     # Sapling tapers its last branches to 1.5 mm. At that width a twig is a one-pixel black
@@ -426,6 +426,42 @@ def main():
         materials_used=[spec["bark"], "foliage_leaf_card"],
         extra_meta={"species": kind, "region": REGION_OF.get(kind, ""), "height_m": round(height, 2)})
     return meta
+
+
+def upright(sap: dict, spec: dict, height: float) -> dict:
+    """Lift a crown off the ground without flattening the species' own habit.
+
+    Every species table asks for branches that leave the trunk at fifty to seventy degrees
+    and are then attracted *downward* -- `attractUp` is negative in all fifteen of them.
+    On a ten-metre tree that gives five-metre limbs sweeping out and down, so the crown
+    ends up wider than the tree is tall: hedgerow shape, not woodland. Scaling the angles
+    towards vertical and taking a little off the first level's length raises the crown
+    while leaving the relative differences between species intact.
+
+    Shrubs and weepers are exempt, because broad and low is what they are: a juniper that
+    stands to attention is not a juniper.
+    """
+    if spec.get("shrub") or spec.get("weep") or height < 4.5:
+        return sap
+    lift = float(spec.get("crown_lift", 1.0))
+    if lift <= 0.0:
+        return sap
+    down = list(sap.get("downAngle", (0, 55, 48, 42)))
+    # Towards vertical, hardest on the first level, which is the one that sets the width.
+    for i, f in ((1, 0.62), (2, 0.78), (3, 0.88)):
+        if i < len(down):
+            down[i] = down[i] * (1.0 - (1.0 - f) * lift)
+    sap["downAngle"] = tuple(down)
+    up = list(sap.get("attractUp", (0.0, 0.0, 0.0, 0.0)))
+    for i, add in ((1, 0.55), (2, 0.75), (3, 0.6)):
+        if i < len(up):
+            up[i] = up[i] + add * lift
+    sap["attractUp"] = tuple(up)
+    ln = list(sap.get("length", (0.85, 0.55, 0.6, 0.45)))
+    if len(ln) > 1:
+        ln[1] = ln[1] * (1.0 - 0.14 * lift)
+    sap["length"] = tuple(ln)
+    return sap
 
 
 def params_true(params, key, default):
