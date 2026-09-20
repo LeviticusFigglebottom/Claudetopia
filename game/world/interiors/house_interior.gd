@@ -363,21 +363,40 @@ func _build_doors() -> void:
 		holder.add_child(door)
 
 
+## A path that exists is not a path that loads. A `.glb` whose import has not finished, or
+## has produced something that is not a scene, used to come back null and be instantiated
+## anyway — three script errors and a failed smoke run for what this function was written to
+## survive. A prop that will not load takes the same road as a prop that was never built: a
+## labelled box, and the name of the thing that would not load, said once.
+func _scene_at(path: String) -> Node3D:
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return null
+	var packed := load(path) as PackedScene
+	if packed == null:
+		if not _missing.has(path):
+			_missing[path] = true
+			Log.warn("Interiors", "%s is not a scene, drawing a stand-in" % path)
+		return null
+	return packed.instantiate() as Node3D
+
+
 ## Props the forge has not built yet get a labelled stand-in sized like the real thing,
 ## so the room still reads and the gap is obvious in a review render.
 func _instance(path: String, kind: String) -> Node3D:
 	if path.is_empty():
 		return null
-	if ResourceLoader.exists(path):
-		return (load(path) as PackedScene).instantiate() as Node3D
+	var direct := _scene_at(path)
+	if direct != null:
+		return direct
 	# The recipe asked for a plain kind; the forge builds them per region. Ask the library
 	# for this region's version before giving up and drawing a labelled stand-in.
 	_variant += 1
 	var found := _props.resolve(kind, str(meta.get("culture", "")), _variant)
 	if found.is_empty():
 		found = _props.resolve(kind, _region_of_place(), _variant)
-	if not found.is_empty():
-		return (load(found) as PackedScene).instantiate() as Node3D
+	var real := _scene_at(found)
+	if real != null:
+		return real
 	if not _missing.has(path):
 		_missing[path] = true
 	var size := _placeholder_size(kind)

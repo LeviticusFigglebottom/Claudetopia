@@ -104,6 +104,10 @@ func _load(interior_id: String) -> Node3D:
 		return null
 	root.name = "Interior_%s" % Ids.name_of(interior_id)
 	root.set_meta("interior_id", interior_id)
+	# The NPC streamer looks up loaded interiors by this group and falls back to matching the
+	# node's name. Nothing ever joined the group, so the name was load-bearing and a rename
+	# would have quietly emptied every house of the people who live in it.
+	root.add_to_group("interior_root")
 	var parent := _dynamic_parent()
 	parent.add_child(root)
 	root.global_position = pocket_for(interior_id)

@@ -228,3 +228,22 @@ func test_you_find_the_resident_at_home() -> void:
 	anchor.queue_free()
 	_set_hour(9.0)
 	await _drop(w)
+
+
+## The streamer finds a loaded interior by the "interior_root" group, and falls back to
+## matching the node's *name* when the group is empty — which it always was. The fallback
+## worked, so renaming the node would have quietly emptied every house in the country of the
+## people who live in it and nothing would have gone red.
+func test_a_loaded_interior_is_findable_by_its_group() -> void:
+	var interiors := ContentDB.all("interior")
+	if interiors.is_empty():
+		return
+	var id := str(interiors[0].get("id", ""))
+	var root: Node3D = Interiors.call("_load", id)
+	if root == null:
+		return
+	assert_true(root.is_in_group("interior_root"),
+		"a loaded interior is only findable by its node name")
+	assert_eq(str(root.get_meta("interior_id", "")), id,
+		"the group is no use without the meta that says which interior it is")
+	Interiors.unload_all()

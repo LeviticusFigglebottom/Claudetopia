@@ -53,6 +53,17 @@ static func unregister_merchant(m: Merchant) -> void:
 		instance._remove(m)
 
 
+## The live shopkeeper behind an npc id, or null. The trade screen was handed only the id and
+## went looking for "any Inventory that is not the player's", so it shopped against whatever
+## bag happened to be first in the tree and priced from base value — none of `Merchant`'s
+## region, stock, disposition, Speech or personality ever reached a player.
+static func merchant_for(merchant_id: String) -> Merchant:
+	if instance == null or not is_instance_valid(instance):
+		return null
+	var m: Variant = instance.merchants.get(merchant_id, null)
+	return m as Merchant if m is Merchant and is_instance_valid(m) else null
+
+
 static func request_trade(m: Merchant, player: Node = null) -> void:
 	var svc := ensure()
 	if svc == null:

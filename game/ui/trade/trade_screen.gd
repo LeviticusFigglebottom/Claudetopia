@@ -3,8 +3,17 @@ extends Control
 ## this. With `prices` on it is a shop (DESIGN §5.14); with it off it is just moving things
 ## from one bag to another.
 ##
-## setup({other: Inventory | Node, merchant_id, title, prices: bool, buy_mult, sell_mult}).
-## Every sale emits EventBus.transaction(merchant_id, item_id, count, price, bought).
+## setup({other: Inventory | Node, merchant_id, merchant: Merchant, title, prices, buy_mult,
+## sell_mult}). Every sale emits EventBus.transaction(merchant_id, item_id, count, price, bought).
+##
+## When there is a live `Merchant` behind the counter — a shopkeeper, as against a chest or a
+## corpse — the shop is *theirs*: their stock, their marks, their prices, their refusals.
+## This screen used to be handed only an npc id and go looking for "any Inventory that is not
+## the player's", which meant it traded against whatever bag happened to be first in the tree
+## and priced everything off base value with a flat multiplier. `Merchant` has always priced by
+## region, stock on hand, disposition, your Speech, the shopkeeper's own temper and how Hollow
+## you have become, buys only what it deals in, pays out only what it can afford and refuses a
+## Hollow customer in a Vale village — all of DESIGN §5.14, tested, and reached by nothing.
 
 var other: Node = null
 var merchant_id := ""
@@ -14,6 +23,7 @@ var buy_mult := 1.0
 var sell_mult := 0.45
 
 var _bag: Node = null
+var _merchant: Node = null
 var _mine_box: VBoxContainer
 var _theirs_box: VBoxContainer
 var _mine_marks: Label
@@ -24,19 +34,22 @@ var _note: Label
 func setup(args: Dictionary) -> void:
 	merchant_id = str(args.get("merchant_id", ""))
 	other = args.get("other", null)
+	_merchant = args.get("merchant", null)
+	if _merchant == null and merchant_id != "":
+		_merchant = EconomyService.merchant_for(merchant_id)
 	title = str(args.get("title", title))
 	prices = bool(args.get("prices", prices))
 	buy_mult = float(args.get("buy_mult", buy_mult))
 	sell_mult = float(args.get("sell_mult", sell_mult))
-	if other == null and merchant_id != "":
+	if _merchant == null and other == null and merchant_id != "":
 		other = _find_merchant_bag()
 	if is_inside_tree():
 		_refresh()
 
 
+## Only for what is not a shopkeeper: a review scene's made-up stall, or a bag handed over
+## without one. A real merchant comes from `EconomyService` and never gets here.
 func _find_merchant_bag() -> Node:
-	# the economy stream will hand us the merchant's own bag; until it does, any Inventory
-	# that is not the player's will do, so containers and review data both work
 	for node in get_tree().get_nodes_in_group("merchant_bag"):
 		return node
 	var root := get_tree().root
@@ -50,7 +63,9 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.dim())
 	_bag = get_tree().get_first_node_in_group("inventory")
-	if other == null:
+	if _merchant == null and merchant_id != "":
+		_merchant = EconomyService.merchant_for(merchant_id)
+	if _merchant == null and other == null:
 		other = _find_merchant_bag()
 	_build()
 	_refresh()
@@ -121,10 +136,12 @@ func _title_text() -> String:
 
 # --- pricing --------------------------------------------------------------------------------
 
-## DESIGN §5.14 without the parts other streams own yet: base value, the merchant's own
-## multiplier and what Speech buys you. Region, supply and disposition arrive with the
-## economy stream and slot in here.
+## A shopkeeper prices their own stock. Without one — a chest, a corpse, a review scene — this
+## is base value, a flat multiplier and what Speech buys you.
 func price_of(item_id: String, count: int, buying: bool) -> int:
+	if _merchant != null and is_instance_valid(_merchant):
+		var unit := int(_merchant.call("buy_price_of" if buying else "sell_price_of", item_id))
+		return maxi(1, unit * maxi(count, 1))
 	var def := ContentDB.get_or_empty(item_id)
 	var base := float(def.get("value", 0)) * float(count)
 	var speech := 0.0
@@ -142,11 +159,31 @@ func _refresh() -> void:
 	var head := find_child("Head", true, false) as Label
 	if head:
 		head.text = _title_text()
-	_note.text = "Prices as they stand today." if prices else "Take what you like."
-	_fill(_mine_box, _bag, true)
-	_fill(_theirs_box, other, false)
+	_note.text = _note_text()
+	_fill(_mine_box, _rows(_bag), true)
+	_fill(_theirs_box, _rows(_merchant if _merchant != null else other), false)
 	_mine_marks.text = "%s marks" % UiKit.marks(_marks(_bag))
-	_theirs_marks.text = ("%s marks" % UiKit.marks(_marks(other))) if prices else ""
+	_theirs_marks.text = ("%s marks" % UiKit.marks(_marks(_their_purse()))) if prices else ""
+
+
+func _note_text() -> String:
+	if not prices:
+		return "Take what you like."
+	if _refused():
+		return "They will not trade with you."
+	return "Prices as they stand today."
+
+
+## A Hollow customer is turned away in a Vale village (DESIGN §5.11). The merchant has always
+## known this and the screen never asked, so the shop opened and every purchase was refused
+## one at a time with no explanation on the page.
+func _refused() -> bool:
+	return _merchant != null and is_instance_valid(_merchant) \
+		and _merchant.has_method("refuses_trade") and bool(_merchant.call("refuses_trade"))
+
+
+func _their_purse() -> Node:
+	return _merchant if _merchant != null else other
 
 
 func _marks(bag: Node) -> int:
@@ -155,13 +192,31 @@ func _marks(bag: Node) -> int:
 	return 0
 
 
-func _fill(box: VBoxContainer, bag: Node, mine: bool) -> void:
+## One shape for both sides. A bag's rows arrive with a uid and everything on them; a
+## shopkeeper's stock is item ids and counts, so the rest is read from the pack.
+func _rows(source: Node) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if source == null or not is_instance_valid(source) or not source.has_method("items"):
+		return out
+	for entry in source.call("items") as Array:
+		var row: Dictionary = entry
+		if row.has("name"):
+			out.append(row)
+			continue
+		var def := ContentDB.get_or_empty(str(row.get("item_id", "")))
+		out.append({
+			"item_id": str(row.get("item_id", "")),
+			"name": str(def.get("name", row.get("item_id", ""))),
+			"description": str(def.get("description", "")),
+			"count": int(row.get("count", 1)),
+			"uid": -1,
+		})
+	return out
+
+
+func _fill(box: VBoxContainer, items: Array[Dictionary], mine: bool) -> void:
 	for child in box.get_children():
 		child.queue_free()
-	if bag == null or not is_instance_valid(bag) or not bag.has_method("items"):
-		box.add_child(UiKit.wrapped("Nothing here.", "Journal"))
-		return
-	var items: Array = bag.call("items")
 	if items.is_empty():
 		box.add_child(UiKit.wrapped("Nothing here.", "Journal"))
 		return
@@ -175,7 +230,9 @@ func _fill(box: VBoxContainer, bag: Node, mine: bool) -> void:
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.tooltip_text = "%s\n%s" % [str(it["name"]), str(it.get("description", ""))]
 		var uid := int(it["uid"])
-		b.pressed.connect(func() -> void: _move(uid, mine))
+		var item_id := str(it["item_id"])
+		b.pressed.connect(func() -> void: _move(uid, item_id, mine))
+		b.disabled = prices and _refused()
 		var line := UiKit.row(8)
 		line.set_anchors_preset(Control.PRESET_FULL_RECT)
 		line.offset_left = 8.0
@@ -202,7 +259,17 @@ func _fill(box: VBoxContainer, bag: Node, mine: bool) -> void:
 
 # --- moving things ------------------------------------------------------------------------------
 
-func _move(uid: int, mine: bool) -> void:
+func _move(uid: int, item_id: String, mine: bool) -> void:
+	# A shopkeeper does their own trading: stock, marks, disposition and the reasons they say
+	# no all live on the Merchant, and none of it is this screen's to reimplement.
+	if _merchant != null and is_instance_valid(_merchant):
+		var player := get_tree().get_first_node_in_group("player")
+		var result: Dictionary = _merchant.call("sell" if mine else "buy", player, item_id, 1)
+		if bool(result.get("ok", false)):
+			EventBus.transaction.emit(merchant_id, item_id, int(result.get("count", 1)),
+				int(result.get("price", 0)), not mine)
+		_refresh()
+		return
 	var from: Node = _bag if mine else other
 	var to: Node = other if mine else _bag
 	if from == null or to == null or not from.has_method("find"):
@@ -210,8 +277,8 @@ func _move(uid: int, mine: bool) -> void:
 	var stack: Object = from.call("find", uid)
 	if stack == null:
 		return
-	var item_id := str(stack.get("id"))
-	var price := price_of(item_id, 1, not mine)
+	var moving := str(stack.get("id"))
+	var price := price_of(moving, 1, not mine)
 	if prices:
 		var payer: Node = to if mine else _bag
 		if payer and payer.get("marks") != null and int(payer.get("marks")) < price:
@@ -230,7 +297,7 @@ func _move(uid: int, mine: bool) -> void:
 				_bag.call("remove_marks", price)
 			if other.has_method("add_marks"):
 				other.call("add_marks", price)
-		EventBus.transaction.emit(merchant_id, item_id, 1, price, not mine)
+		EventBus.transaction.emit(merchant_id, moving, 1, price, not mine)
 	_refresh()
 
 
