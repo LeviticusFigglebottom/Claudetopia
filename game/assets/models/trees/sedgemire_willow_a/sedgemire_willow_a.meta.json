@@ -13,7 +13,7 @@
   ],
   "radius": 14.027
  },
- "built_seconds": 6.25,
+ "built_seconds": 3.1,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -45,7 +45,7 @@
   },
   {
    "name": "sedgemire_willow_a_LOD1",
-   "tris": 900
+   "tris": 898
   },
   {
    "name": "sedgemire_willow_a_cards_LOD1",
@@ -91,7 +91,7 @@
  ],
  "tris": [
   6610,
-  1320,
+  1318,
   8
  ],
  "version": 3

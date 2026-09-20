@@ -409,11 +409,11 @@ def carved_wood(pal=None, **kw):
     return wood_planks(pal, name=kw.pop("name", "carved_wood"), **kw)
 
 
-def driftwood(pal=None, **kw):
+def driftwood(pal=None, scale=1.0, **kw):
     kw.setdefault("base_hex", "#8b8577")
     kw.setdefault("age", 0.9)
     kw.setdefault("wear", 0.7)
-    return wood_planks(pal, name=kw.pop("name", "driftwood"), **kw)
+    return wood_planks(pal, name=kw.pop("name", "driftwood"), scale=scale, **kw)
 
 
 def _bark_common(nb, pal, base, fissure_scale, stretch, depth, tint, moss=0.35, lichen=0.0,
@@ -458,11 +458,11 @@ def _bark_common(nb, pal, base, fissure_scale, stretch, depth, tint, moss=0.35, 
     return nb.finish(col, rough, 0.0, normal)
 
 
-def oak_bark(pal=None, age=0.5, tint=0.15, name=None, **_):
+def oak_bark(pal=None, age=0.5, tint=0.15, scale=1.0, name=None, **_):
     pal = _pal(pal)
     base = pal.tint(P.lin("#5b4a3a"), "earth", tint)
     nb = NB(name or "oak_bark")
-    return _bark_common(nb, pal, base, fissure_scale=4.0, stretch=0.22, depth=0.55, tint=tint, moss=0.3 + 0.3 * age)
+    return _bark_common(nb, pal, base, fissure_scale=4.0, stretch=0.22, depth=0.55, tint=tint, moss=0.3 + 0.3 * age, scale=scale)
 
 
 def black_ash_bark(pal=None, age=0.5, tint=0.2, scale=1.0, name=None, **_):
@@ -473,18 +473,18 @@ def black_ash_bark(pal=None, age=0.5, tint=0.2, scale=1.0, name=None, **_):
                         lichen=0.5, lichen_col=P.lin("#8f9a8a"), scale=scale)
 
 
-def pine_bark(pal=None, age=0.5, tint=0.15, name=None, **_):
+def pine_bark(pal=None, age=0.5, tint=0.15, scale=1.0, name=None, **_):
     pal = _pal(pal)
     base = pal.tint(P.lin("#6e4a33"), "warm", tint)
     nb = NB(name or "pine_bark")
-    return _bark_common(nb, pal, base, fissure_scale=6.0, stretch=0.6, depth=0.45, tint=tint, moss=0.1, lichen=0.2)
+    return _bark_common(nb, pal, base, fissure_scale=6.0, stretch=0.6, depth=0.45, tint=tint, moss=0.1, lichen=0.2, scale=scale)
 
 
-def willow_bark(pal=None, age=0.5, tint=0.15, name=None, **_):
+def willow_bark(pal=None, age=0.5, tint=0.15, scale=1.0, name=None, **_):
     pal = _pal(pal)
     base = pal.tint(P.lin("#6b6455"), "mid", tint)
     nb = NB(name or "willow_bark")
-    return _bark_common(nb, pal, base, fissure_scale=3.5, stretch=0.15, depth=0.5, tint=tint, moss=0.45)
+    return _bark_common(nb, pal, base, fissure_scale=3.5, stretch=0.15, depth=0.5, tint=tint, moss=0.45, scale=scale)
 
 
 def dead_bark(pal=None, age=0.9, tint=0.25, scale=1.0, name=None, **_):
@@ -496,17 +496,18 @@ def dead_bark(pal=None, age=0.9, tint=0.25, scale=1.0, name=None, **_):
                         lichen=0.0, scale=scale)
 
 
-def birch_bark(pal=None, age=0.4, tint=0.1, name=None, **_):
+def birch_bark(pal=None, age=0.4, tint=0.1, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "birch_bark")
     base = pal.tint(P.lin("#e6e2d8"), "light", tint)
     dark, mid, light = trio(base, 0.6)
-    v = nb.coord(1.0)
-    col = paint_blocks(nb, nb.coord(0.9), [dark, mid, light])
+    v = nb.coord(1.0 / scale)
+    col = paint_blocks(nb, nb.coord(0.9 / scale), [dark, mid, light])
     # horizontal lenticels: wave bands along Z, distorted, thresholded soft
-    w = nb.wave(nb.coord((1.0, 1.0, 1.0)), scale=14.0, distortion=2.5, detail=2.0, detail_scale=1.5, direction="Z")
+    w = nb.wave(nb.coord((1.0 / scale, 1.0 / scale, 1.0 / scale)), scale=14.0, distortion=2.5,
+                detail=2.0, detail_scale=1.5, direction="Z")
     band = nb.map_range(w.outputs["Fac"], 0.78, 0.92, 0.0, 1.0)
-    gate = nb.noise(nb.coord(2.0), scale=1.0, detail=1.0, rough=0.5)
+    gate = nb.noise(nb.coord(2.0 / scale), scale=1.0, detail=1.0, rough=0.5)
     band = nb.math("MULTIPLY", band, nb.map_range(gate.outputs["Fac"], 0.35, 0.6, 0.0, 1.0), clamp=True)
     col = nb.mix(band, col, P.lin("#3a322c"))
     # peel patches
