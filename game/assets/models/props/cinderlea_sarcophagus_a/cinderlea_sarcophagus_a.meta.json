@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.842,
+  "height": 0.877,
   "max": [
-   1.271,
-   0.842,
-   0.499
+   1.282,
+   0.877,
+   0.495
   ],
   "min": [
-   -1.271,
+   -1.281,
    0.0,
-   -0.499
+   -0.495
   ],
-  "radius": 1.429
+  "radius": 1.442
  },
- "built_seconds": 17.69,
+ "built_seconds": 27.31,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "cinderlea_sarcophagus_a.glb",
- "hash": "fca62f710b319597",
+ "hash": "f02e07fc86510297",
  "kind": "sarcophagus",
  "materials": [
   "cinderlea_sarcophagus_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#a08a4a"
   }
  },
- "seed": 6461,
+ "seed": 6620,
  "textures": [
   "cinderlea_sarcophagus_a_albedo.png",
   "cinderlea_sarcophagus_a_normal.png",

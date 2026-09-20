@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 0.009,
+  "height": 0.014,
   "max": [
-   0.634,
-   0.01,
-   0.455
+   1.125,
+   0.014,
+   0.89
   ],
   "min": [
-   -0.64,
+   -0.599,
    0.001,
-   -0.682
+   -0.742
   ],
-  "radius": 0.854
+  "radius": 1.187
  },
- "built_seconds": 1.04,
+ "built_seconds": 1.54,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "floats": true,
  "generator": "gen_flora",
  "glb": "brightwater_waterlily_pad_b.glb",
- "hash": "211f87d2ae132dfd",
+ "hash": "b9069ff729156335",
  "kind": "waterlily_pad",
  "materials": [
   "brightwater_waterlily_pad_b_lily_foliage"
@@ -65,7 +65,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 3404,
+ "seed": 3563,
  "textures": [
   "brightwater_waterlily_pad_b_atlas_albedo.png",
   "brightwater_waterlily_pad_b_atlas_normal.png",

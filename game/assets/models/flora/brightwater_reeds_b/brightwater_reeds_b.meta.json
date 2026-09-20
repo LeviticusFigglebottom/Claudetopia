@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.638,
+  "height": 2.197,
   "max": [
-   0.437,
-   1.638,
-   0.406
+   0.608,
+   2.197,
+   0.528
   ],
   "min": [
-   -0.355,
+   -0.715,
    0.0,
-   -0.407
+   -0.528
   ],
-  "radius": 0.997
+  "radius": 1.387
  },
- "built_seconds": 0.08,
+ "built_seconds": 0.19,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "brightwater_reeds_b.glb",
- "hash": "717c476352f9376b",
+ "hash": "0f9d6468bdcfeb4c",
  "kind": "reeds",
  "materials": [
   "brightwater_reeds_b_reed_foliage"
@@ -64,7 +64,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 2397,
+ "seed": 2556,
  "textures": [
   "brightwater_reeds_b_atlas_albedo.png",
   "brightwater_reeds_b_atlas_normal.png",

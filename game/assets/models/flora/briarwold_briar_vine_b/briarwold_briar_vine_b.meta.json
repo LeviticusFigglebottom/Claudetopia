@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.843,
+  "height": 1.151,
   "max": [
-   1.531,
-   1.843,
-   0.892
+   0.978,
+   1.151,
+   0.893
   ],
   "min": [
-   -1.575,
+   -0.919,
    0.0,
-   -1.133
+   -0.973
   ],
-  "radius": 2.07
+  "radius": 1.449
  },
- "built_seconds": 4.6,
+ "built_seconds": 24.91,
  "category": "flora",
  "collision": "trimesh",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "briarwold_briar_vine_b.glb",
- "hash": "aa7b5f51f87744b8",
+ "hash": "0676024bdf5e094f",
  "kind": "briar_vine",
  "materials": [
   "briarwold_briar_vine_b_mat",
@@ -32,19 +32,15 @@
  "meshes": [
   {
    "name": "briarwold_briar_vine_b",
-   "tris": 384
-  },
-  {
-   "name": "briarwold_briar_vine_b_cards",
-   "tris": 16
+   "tris": 588
   },
   {
    "name": "briarwold_briar_vine_b_LOD1",
-   "tris": 300
+   "tris": 282
   },
   {
    "name": "briarwold_briar_vine_b_LOD2",
-   "tris": 101
+   "tris": 92
   },
   {
    "name": "briarwold_briar_vine_b_cards_LOD1",
@@ -78,7 +74,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 3086,
+ "seed": 3245,
  "textures": [
   "briarwold_briar_vine_b_albedo.png",
   "briarwold_briar_vine_b_normal.png",
@@ -88,9 +84,9 @@
   "briarwold_briar_vine_b_atlas_orm.png"
  ],
  "tris": [
-  400,
+  588,
   308,
-  105
+  124
  ],
  "version": 3
 }

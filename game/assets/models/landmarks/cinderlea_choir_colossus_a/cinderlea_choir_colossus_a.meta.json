@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 52.39,
+  "height": 52.392,
   "max": [
-   13.407,
-   52.39,
-   13.498
+   13.404,
+   52.392,
+   13.491
   ],
   "min": [
-   -13.411,
+   -13.425,
    0.0,
-   -13.467
+   -13.5
   ],
-  "radius": 32.369
+  "radius": 32.378
  },
- "built_seconds": 107.16,
+ "built_seconds": 77.29,
  "category": "landmarks",
  "collision": "cinderlea_choir_colossus_a_col.glb",
  "collision_params": {},
  "generator": "gen_landmarks",
  "glb": "cinderlea_choir_colossus_a.glb",
- "hash": "c279e360a25f3445",
+ "hash": "cb849597429ae237",
  "headless": true,
  "height_m": 50.0,
  "kind": "choir_colossus",
@@ -68,7 +68,7 @@
   }
  },
  "ring_count": 12,
- "seed": 6620,
+ "seed": 6779,
  "textures": [
   "cinderlea_choir_colossus_a_albedo.png",
   "cinderlea_choir_colossus_a_normal.png",

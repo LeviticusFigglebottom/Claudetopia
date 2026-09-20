@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.318,
+  "height": 1.415,
   "max": [
-   0.587,
-   1.318,
-   0.607
+   0.661,
+   1.415,
+   0.731
   ],
   "min": [
-   -0.681,
+   -0.536,
    0.0,
-   -0.724
+   -0.719
   ],
-  "radius": 1.131
+  "radius": 1.177
  },
- "built_seconds": 0.23,
+ "built_seconds": 0.06,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "brightwater_cow_parsley_a.glb",
- "hash": "97c84aa4a3ea710b",
+ "hash": "972862c9894746b6",
  "kind": "cow_parsley",
  "materials": [
   "brightwater_cow_parsley_a_parsley_foliage"
@@ -64,7 +64,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 2910,
+ "seed": 3069,
  "textures": [
   "brightwater_cow_parsley_a_atlas_albedo.png",
   "brightwater_cow_parsley_a_atlas_normal.png",

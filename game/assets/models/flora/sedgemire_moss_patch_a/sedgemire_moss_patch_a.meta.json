@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.091,
+  "height": 0.079,
   "max": [
-   0.727,
-   0.091,
-   0.727
+   0.604,
+   0.079,
+   0.604
   ],
   "min": [
-   -0.727,
+   -0.604,
    0.0,
-   -0.727
+   -0.604
   ],
-  "radius": 1.029
+  "radius": 0.855
  },
- "built_seconds": 39.74,
+ "built_seconds": 105.49,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "sedgemire_moss_patch_a.glb",
- "hash": "ee9843c15273db2c",
+ "hash": "1d37a7c1e63f6205",
  "kind": "moss_patch",
  "materials": [
   "sedgemire_moss_patch_a_mat"
@@ -38,7 +38,7 @@
   },
   {
    "name": "sedgemire_moss_patch_a_LOD2",
-   "tris": 119
+   "tris": 120
   }
  ],
  "name": "sedgemire_moss_patch_a",
@@ -64,7 +64,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 3334,
+ "seed": 3493,
  "textures": [
   "sedgemire_moss_patch_a_albedo.png",
   "sedgemire_moss_patch_a_normal.png",
@@ -73,7 +73,7 @@
  "tris": [
   242,
   242,
-  119
+  120
  ],
  "version": 3
 }

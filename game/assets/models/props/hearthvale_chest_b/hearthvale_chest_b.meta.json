@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.524,
+  "height": 0.499,
   "max": [
-   0.489,
-   0.524,
-   0.563
+   0.464,
+   0.499,
+   0.541
   ],
   "min": [
-   -0.489,
+   -0.464,
    0.0,
-   -0.263
+   -0.255
   ],
-  "radius": 0.692
+  "radius": 0.66
  },
- "built_seconds": 30.12,
+ "built_seconds": 35.74,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_chest_b.glb",
- "hash": "102c654992748c29",
+ "hash": "363047b1fe2c3028",
  "kind": "chest",
  "materials": [
   "hearthvale_chest_b_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 3987,
+ "seed": 4146,
  "textures": [
   "hearthvale_chest_b_albedo.png",
   "hearthvale_chest_b_normal.png",

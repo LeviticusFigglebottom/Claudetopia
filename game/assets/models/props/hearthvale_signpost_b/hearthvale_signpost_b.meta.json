@@ -1,28 +1,28 @@
 {
  "bounds": {
-  "height": 3.526,
+  "height": 3.66,
   "max": [
-   0.595,
-   3.526,
-   0.545
+   0.194,
+   3.66,
+   0.587
   ],
   "min": [
-   -0.504,
+   -0.471,
    0.0,
-   -0.165
+   -0.573
   ],
-  "radius": 1.881
+  "radius": 1.948
  },
- "built_seconds": 11.03,
+ "built_seconds": 15.34,
  "category": "props",
  "collision": "capsule",
  "collision_params": {
-  "height": 3.526,
-  "radius": 0.549
+  "height": 3.66,
+  "radius": 0.58
  },
  "generator": "gen_props",
  "glb": "hearthvale_signpost_b.glb",
- "hash": "3fa9d9c80dd26660",
+ "hash": "fe4a27cd70206156",
  "kind": "signpost",
  "materials": [
   "hearthvale_signpost_b_mat"
@@ -68,7 +68,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5842,
+ "seed": 6001,
  "textures": [
   "hearthvale_signpost_b_albedo.png",
   "hearthvale_signpost_b_normal.png",

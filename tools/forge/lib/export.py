@@ -30,18 +30,110 @@ COLLISION_KINDS = ("convex", "trimesh", "capsule", "none", "col_glb")
 
 # --- LODs -------------------------------------------------------------------------------
 
+def drop_small_parts(obj, target_tris: int) -> None:
+    """Delete the smallest connected pieces of a mesh until it fits a triangle budget.
+
+    Size is the piece's longest bounding-box edge, not its triangle count: a long limb
+    built cheaply must outrank a short twig built expensively, because it is the limb the
+    silhouette needs.
+    """
+    me = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.faces.ensure_lookup_table()
+    seen = set()
+    parts = []
+    for f0 in bm.faces:
+        if f0 in seen:
+            continue
+        stack = [f0]
+        group = []
+        while stack:
+            f = stack.pop()
+            if f in seen:
+                continue
+            seen.add(f)
+            group.append(f)
+            for e in f.edges:
+                for nf in e.link_faces:
+                    if nf not in seen:
+                        stack.append(nf)
+        lo = [1e18] * 3
+        hi = [-1e18] * 3
+        tris = 0
+        for f in group:
+            tris += max(1, len(f.verts) - 2)
+            for v in f.verts:
+                for k in range(3):
+                    lo[k] = min(lo[k], v.co[k])
+                    hi[k] = max(hi[k], v.co[k])
+        parts.append((max(hi[k] - lo[k] for k in range(3)), tris, group))
+    if len(parts) < 2:
+        bm.free()
+        return
+    parts.sort(key=lambda t: t[0], reverse=True)
+    kept = 0
+    doomed = []
+    for (_size, tris, group) in parts:
+        if kept and kept + tris > target_tris:
+            doomed.extend(group)
+        else:
+            kept += tris
+    if doomed and len(doomed) < len(bm.faces):
+        bmesh.ops.delete(bm, geom=doomed, context="FACES")
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+
+
 def make_lods(obj, ratios=LOD_RATIOS, floors=LOD_MIN_TRIS, smooth_angle: float = 35.0) -> list:
-    """Decimated copies named <obj>_LOD1, _LOD2. Small meshes get lighter decimation so
-    they keep their silhouette."""
+    """Decimated copies named <obj>_LOD1, _LOD2, hitting a triangle target rather than
+    merely asking for one.
+
+    One pass of Blender's collapse decimator does not reach its ratio on a mesh made of
+    many disconnected pieces -- a branching trunk is the worst case, and asking for 0.06
+    of it returned 0.45. Each pass is relative to the mesh it is given, so repeating until
+    the count stops falling converges on the budget. Without this the LOD1 rung is not a
+    level of detail at all, just a slightly smaller tree at a third of full price.
+    """
     lods = [obj]
     base = S.tri_count(obj)
     for i, r in enumerate(ratios, start=1):
         floor = floors[i - 1] if i - 1 < len(floors) else 100
         target = max(floor, int(base * r))
         d = S.duplicate(obj, "%s_LOD%d" % (obj.name, i))
-        if target < base:
-            S.decimate(d, ratio=target / float(base))
+        tris = base
+        if target < base * 0.5:
+            # Drop the small pieces before decimating, not after. A collapse cannot take a
+            # closed tube below its minimal form, so on a branching trunk it spends its
+            # whole budget shattering the trunk into shards while the twigs survive intact.
+            # Removing the twigs first leaves the limbs enough triangles to stay limbs.
+            drop_small_parts(d, int(target * 2.0))
+            tris = S.tri_count(d)
+        for _ in range(6):
+            if tris <= target:
+                break
+            S.decimate(d, ratio=max(0.08, target / float(tris)))
+            got = S.tri_count(d)
+            if got >= tris * 0.97:  # no further progress to be had
+                break
+            tris = got
+        if tris > target * 1.4:
+            # Still over: the decimator has stalled on what is left, so drop pieces again.
+            drop_small_parts(d, target)
+            tris = S.tri_count(d)
         S.shade_smooth(d, smooth_angle)
+        got = S.tri_count(d)
+        if base > 200 and got < 24:
+            # A rung that decimates to nothing is a generator failure, not a cheap level of
+            # detail: the far ring renders empty air and nobody notices until a capture is
+            # taken. If a budget cannot be met with a silhouette, it must be authored.
+            raise RuntimeError("make_lods: %s LOD%d collapsed to %d triangles from %d; "
+                               "author that rung instead of decimating it"
+                               % (obj.name, i, got, base))
         lods.append(d)
     return lods
 
@@ -203,7 +295,7 @@ nodes/import_as_skeleton_bones=false
 nodes/use_name_suffixes=true
 nodes/use_node_type_suffixes=true
 meshes/ensure_tangents=true
-meshes/generate_lods=false
+meshes/generate_lods=true
 meshes/create_shadow_meshes=true
 meshes/light_baking=1
 meshes/lightmap_texel_size=0.2

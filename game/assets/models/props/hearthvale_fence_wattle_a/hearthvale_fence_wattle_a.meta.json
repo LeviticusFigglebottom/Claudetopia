@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.276,
+  "height": 1.321,
   "max": [
-   1.782,
-   1.276,
-   0.05
+   1.767,
+   1.321,
+   0.04
   ],
   "min": [
-   -1.767,
+   -1.769,
    0.0,
-   -0.05
+   -0.048
   ],
-  "radius": 1.886
+  "radius": 1.888
  },
- "built_seconds": 12.3,
+ "built_seconds": 14.25,
  "category": "props",
  "collision": "hearthvale_fence_wattle_a_col.glb",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_fence_wattle_a.glb",
- "hash": "17f5332f52704245",
+ "hash": "f4bda3f3a9398f10",
  "kind": "fence_wattle",
  "materials": [
   "hearthvale_fence_wattle_a_mat"
@@ -66,7 +66,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5560,
+ "seed": 5719,
  "textures": [
   "hearthvale_fence_wattle_a_albedo.png",
   "hearthvale_fence_wattle_a_normal.png",
@@ -75,7 +75,7 @@
  "tris": [
   3448,
   1378,
-  508
+  516
  ],
  "version": 3
 }

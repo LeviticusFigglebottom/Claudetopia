@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.343,
+  "height": 0.331,
   "max": [
-   0.057,
-   0.343,
-   0.057
+   0.056,
+   0.331,
+   0.055
   ],
   "min": [
-   -0.057,
+   -0.056,
    0.0,
-   -0.057
+   -0.055
   ],
-  "radius": 0.189
+  "radius": 0.183
  },
- "built_seconds": 10.76,
+ "built_seconds": 18.86,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_candlestick_a.glb",
- "hash": "f0815be2ab3ac8cc",
+ "hash": "00821b9250cfd472",
  "kind": "candlestick",
  "materials": [
   "hearthvale_candlestick_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4712,
+ "seed": 4871,
  "textures": [
   "hearthvale_candlestick_a_albedo.png",
   "hearthvale_candlestick_a_normal.png",
@@ -74,7 +74,7 @@
  "tris": [
   512,
   300,
-  119
+  120
  ],
  "version": 3
 }

@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.956,
+  "height": 0.906,
   "max": [
-   0.334,
-   0.956,
-   0.087
+   0.325,
+   0.906,
+   0.153
   ],
   "min": [
-   -0.334,
+   -0.326,
    0.0,
-   -0.087
+   -0.086
   ],
-  "radius": 0.59
+  "radius": 0.571
  },
- "built_seconds": 25.17,
+ "built_seconds": 47.81,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_gravestone_c.glb",
- "hash": "4d0c45ebfb1e71a2",
+ "hash": "6a94d47b0ffba9ef",
  "kind": "gravestone",
  "materials": [
   "hearthvale_gravestone_c_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 6389,
+ "seed": 6548,
  "shape": "slab",
  "textures": [
   "hearthvale_gravestone_c_albedo.png",

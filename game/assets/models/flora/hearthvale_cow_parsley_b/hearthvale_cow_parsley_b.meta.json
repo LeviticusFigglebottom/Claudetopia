@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.186,
+  "height": 1.023,
   "max": [
-   0.713,
-   1.186,
-   0.605
+   0.466,
+   1.023,
+   0.609
   ],
   "min": [
-   -0.618,
+   -0.473,
    0.0,
-   -0.623
+   -0.543
   ],
-  "radius": 1.083
+  "radius": 0.902
  },
- "built_seconds": 0.18,
+ "built_seconds": 0.24,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "hearthvale_cow_parsley_b.glb",
- "hash": "603017dba2a5dda9",
+ "hash": "5f7b34186bbfcdc4",
  "kind": "cow_parsley",
  "materials": [
   "hearthvale_cow_parsley_b_parsley_foliage"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 2874,
+ "seed": 3033,
  "textures": [
   "hearthvale_cow_parsley_b_atlas_albedo.png",
   "hearthvale_cow_parsley_b_atlas_normal.png",

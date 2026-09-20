@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.327,
+  "height": 0.343,
   "max": [
-   0.227,
-   0.327,
+   0.239,
+   0.343,
    0.032
   ],
   "min": [
-   -0.227,
+   -0.239,
    0.0,
    -0.072
   ],
-  "radius": 0.285
+  "radius": 0.299
  },
- "built_seconds": 3.38,
+ "built_seconds": 5.29,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "brightwater_scroll_b.glb",
- "hash": "e13d7d28dc7b8b49",
+ "hash": "2ed1bf9046cc9a67",
  "kind": "scroll",
  "materials": [
   "brightwater_scroll_b_mat"
@@ -65,7 +65,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 5524,
+ "seed": 5683,
  "textures": [
   "brightwater_scroll_b_albedo.png",
   "brightwater_scroll_b_normal.png",

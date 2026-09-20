@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.396,
+  "height": 0.4,
   "max": [
-   0.242,
-   0.396,
-   0.241
+   0.247,
+   0.4,
+   0.246
   ],
   "min": [
-   -0.242,
+   -0.247,
    0.0,
-   -0.241
+   -0.246
   ],
-  "radius": 0.395
+  "radius": 0.402
  },
- "built_seconds": 10.82,
+ "built_seconds": 44.75,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_basket_a.glb",
- "hash": "de63ccac013ae666",
+ "hash": "2f694498b724cc5b",
  "kind": "basket",
  "materials": [
   "hearthvale_basket_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 3811,
+ "seed": 3970,
  "textures": [
   "hearthvale_basket_a_albedo.png",
   "hearthvale_basket_a_normal.png",
@@ -73,7 +73,7 @@
  "tris": [
   6206,
   2482,
-  913
+  928
  ],
  "version": 3
 }

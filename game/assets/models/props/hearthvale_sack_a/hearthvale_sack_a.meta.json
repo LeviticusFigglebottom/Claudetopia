@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.673,
+  "height": 0.716,
   "max": [
-   0.217,
-   0.673,
-   0.213
+   0.237,
+   0.716,
+   0.23
   ],
   "min": [
-   -0.207,
+   -0.224,
    0.0,
-   -0.212
+   -0.231
   ],
-  "radius": 0.451
+  "radius": 0.485
  },
- "built_seconds": 11.03,
+ "built_seconds": 52.65,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_sack_a.glb",
- "hash": "ea4ff43f2193256c",
+ "hash": "d89aaf330543d6e5",
  "kind": "sack",
  "materials": [
   "hearthvale_sack_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 3758,
+ "seed": 3917,
  "textures": [
   "hearthvale_sack_a_albedo.png",
   "hearthvale_sack_a_normal.png",

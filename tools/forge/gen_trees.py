@@ -225,6 +225,12 @@ SPECIES = {
 # A canopy has to be a mass, not a scattering. Sapling's own leaf count is per parent
 # branch, so the card count is set here instead: these are the numbers that make the crown
 # read as foliage rather than as a bare frame with decorations on it.
+# The LOD1 budget, in triangles, split between the woody part and the canopy cards. This
+# is the rung that decides what a wooded region costs: everything in the near 3x3 ring that
+# is not right in front of the player is drawn at it.
+LOD1_TRUNK_TRIS = 900
+LOD1_CARD_TRIS = 420
+
 CARDS_BIG = 1150     # trees over 6 m
 CARDS_SMALL = 760    # shrubs and small trees
 CARD_SCALE = 1.25    # multiplies each species' own relative card size
@@ -272,7 +278,9 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
     # A branching trunk splits almost every vertex when it is smooth-shaded (a junction is
     # a hard edge), so triangles cost roughly 2.5 vertices each in the exported file. The
     # budget is set with that multiplier in mind rather than from the triangle count alone.
-    trunk_budget = int(spec.get("trunk_budget", 11000 if spec.get("tier") == "hero" else 5000))
+    # Nothing in this game gets close enough to a canopy to need fifteen thousand triangles
+    # of trunk; the giant oak was costing twice what it could show.
+    trunk_budget = int(spec.get("trunk_budget", 3800 if spec.get("tier") == "hero" else 4200))
     if quick:
         trunk_budget //= 3
     clear_bole = spec.get("clear_bole", 0.0 if spec.get("shrub") else 0.18)
@@ -389,8 +397,23 @@ def main():
     if not args.quick and params_true(args.params, "impostor", True):
         all_parts = list(opaque) + card_objs
         size = 512 if height > 12 else 256
+        # Four crossed quads, not two. Two reads as a flat sheet that disappears when the
+        # camera lines up with it; at eight triangles the billboard has a silhouette from
+        # every angle and still costs nothing.
         lod2, impostor_tex = IMP.crossed_cards(all_parts, out_dir, "%s_impostor" % name, name,
-                                               size=size, samples=20 if height < 15 else 28)
+                                               size=size, samples=20 if height < 15 else 28,
+                                               cards=4)
+
+    # The LOD ladder is set from the triangles actually present, not from a fixed ratio.
+    # A ratio gives LOD1 a third of LOD0, which is not a level of detail but a slightly
+    # smaller tree: at forty metres nobody can tell a fifteen-thousand-triangle oak from a
+    # fifteen-hundred one, and the near ring is where every triangle in a wooded region is
+    # spent. LOD1 is a fixed budget instead -- trunk and main limbs, the canopy carrying
+    # the rest -- so a giant oak and a hawthorn cost the same at distance.
+    trunk_tris = sum(S.tri_count(o) for o in opaque)
+    card_tris = sum(S.tri_count(o) for o in card_objs) or 1
+    lod1_trunk = min(0.5, max(0.02, LOD1_TRUNK_TRIS / max(trunk_tris, 1)))
+    lod1_cards = min(0.5, max(0.04, (LOD1_CARD_TRIS / card_tris)))
 
     meta = E.finish_asset(
         out_root=args.out, category=args.category or "trees", name=name, generator="gen_trees",
@@ -399,7 +422,7 @@ def main():
         collision_params=trunk_capsule(opaque[0], height), quick=args.quick,
         res=args.res or (1024 if spec.get("tier") == "hero" else 512), unwrap_mode="cylinder",
         tier=spec.get("tier"), rng=rng, smooth_angle=62.0,
-        lod_ratios=(0.32, 0.2), card_keep=(0.45, 0.0), impostor=lod2, impostor_textures=impostor_tex,
+        lod_ratios=(lod1_trunk,), card_keep=(lod1_cards,), impostor=lod2, impostor_textures=impostor_tex,
         materials_used=[spec["bark"], "foliage_leaf_card"],
         extra_meta={"species": kind, "region": REGION_OF.get(kind, ""), "height_m": round(height, 2)})
     return meta

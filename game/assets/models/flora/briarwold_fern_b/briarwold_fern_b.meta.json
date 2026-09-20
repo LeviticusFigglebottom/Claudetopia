@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.866,
+  "height": 0.559,
   "max": [
-   0.498,
-   0.866,
-   0.543
+   0.378,
+   0.559,
+   0.324
   ],
   "min": [
-   -0.557,
+   -0.312,
    0.0,
-   -0.483
+   -0.275
   ],
-  "radius": 0.854
+  "radius": 0.536
  },
- "built_seconds": 0.07,
+ "built_seconds": 0.26,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "briarwold_fern_b.glb",
- "hash": "49d03cab621305eb",
+ "hash": "8a11de10a6e4256d",
  "kind": "fern",
  "materials": [
   "briarwold_fern_b_fern_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 2503,
+ "seed": 2662,
  "textures": [
   "briarwold_fern_b_atlas_albedo.png",
   "briarwold_fern_b_atlas_normal.png",

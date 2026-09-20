@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.517,
+  "height": 0.502,
   "max": [
-   0.269,
-   0.517,
+   0.236,
+   0.502,
    0.225
   ],
   "min": [
-   -0.236,
+   -0.243,
    0.0,
-   -0.226
+   -0.244
   ],
-  "radius": 0.426
+  "radius": 0.419
  },
- "built_seconds": 0.09,
+ "built_seconds": 0.64,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "hearthvale_poppy_b.glb",
- "hash": "06aad12d1da03203",
+ "hash": "e6b9dccca05613c7",
  "kind": "poppy",
  "materials": [
   "hearthvale_poppy_b_poppy_foliage"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 2768,
+ "seed": 2927,
  "textures": [
   "hearthvale_poppy_b_atlas_albedo.png",
   "hearthvale_poppy_b_atlas_normal.png",

@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.494,
+  "height": 0.507,
   "max": [
-   0.349,
-   0.494,
-   0.284
+   0.36,
+   0.507,
+   0.337
   ],
   "min": [
-   -0.378,
+   -0.347,
    0.0,
-   -0.256
+   -0.355
   ],
-  "radius": 0.516
+  "radius": 0.556
  },
- "built_seconds": 0.07,
+ "built_seconds": 0.39,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "brightwater_grass_clump_b.glb",
- "hash": "4266b59a4cdcef4f",
+ "hash": "d33c16d37b515d3c",
  "kind": "grass_clump",
  "materials": [
   "brightwater_grass_clump_b_grass_foliage"
@@ -64,7 +64,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 2079,
+ "seed": 2238,
  "textures": [
   "brightwater_grass_clump_b_atlas_albedo.png",
   "brightwater_grass_clump_b_atlas_normal.png",

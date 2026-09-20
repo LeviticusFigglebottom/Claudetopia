@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 2.436,
+  "height": 2.269,
   "max": [
-   2.088,
-   2.436,
-   2.078
+   2.155,
+   2.269,
+   1.964
   ],
   "min": [
-   -2.088,
+   -2.155,
    0.0,
-   -2.078
+   -1.964
   ],
-  "radius": 3.188
+  "radius": 3.129
  },
- "built_seconds": 53.54,
+ "built_seconds": 63.56,
  "category": "props",
  "collision": "cinderlea_tent_b_col.glb",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "cinderlea_tent_b.glb",
- "hash": "eb913bafce445346",
+ "hash": "929d2a7554784c97",
  "kind": "tent",
  "materials": [
   "cinderlea_tent_b_mat"
@@ -66,7 +66,7 @@
    "warm": "#a08a4a"
   }
  },
- "seed": 6107,
+ "seed": 6266,
  "textures": [
   "cinderlea_tent_b_albedo.png",
   "cinderlea_tent_b_normal.png",
@@ -75,7 +75,7 @@
  "tris": [
   1340,
   536,
-  199
+  200
  ],
  "version": 3
 }

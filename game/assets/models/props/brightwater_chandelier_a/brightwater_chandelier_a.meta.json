@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 0.553,
+  "height": 0.579,
   "max": [
-   0.477,
-   0.553,
-   0.45
+   0.5,
+   0.579,
+   0.472
   ],
   "min": [
-   -0.477,
+   -0.5,
    0.0,
-   -0.45
+   -0.472
   ],
-  "radius": 0.712
+  "radius": 0.746
  },
- "built_seconds": 22.45,
+ "built_seconds": 18.42,
  "category": "props",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "brightwater_chandelier_a.glb",
  "hangs": true,
- "hash": "c2b066344d048405",
+ "hash": "0a81412192ec5f0b",
  "kind": "chandelier",
  "materials": [
   "brightwater_chandelier_a_mat"
@@ -40,7 +40,7 @@
   },
   {
    "name": "brightwater_chandelier_a_LOD2",
-   "tris": 229
+   "tris": 231
   }
  ],
  "name": "brightwater_chandelier_a",
@@ -66,7 +66,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 4924,
+ "seed": 5083,
  "textures": [
   "brightwater_chandelier_a_albedo.png",
   "brightwater_chandelier_a_normal.png",
@@ -75,7 +75,7 @@
  "tris": [
   1566,
   626,
-  229
+  234
  ],
  "version": 3
 }

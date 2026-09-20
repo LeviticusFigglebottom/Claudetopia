@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 0.284,
+  "height": 0.263,
   "max": [
-   0.116,
-   0.284,
-   0.115
+   0.108,
+   0.263,
+   0.107
   ],
   "min": [
-   -0.116,
+   -0.108,
    0.0,
-   -0.115
+   -0.107
   ],
-  "radius": 0.217
+  "radius": 0.201
  },
- "built_seconds": 7.47,
+ "built_seconds": 19.58,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_bell_small_a.glb",
  "hangs": true,
- "hash": "82d353a122befee3",
+ "hash": "1627760b40de85b0",
  "kind": "bell_small",
  "materials": [
   "hearthvale_bell_small_a_mat"
@@ -66,7 +66,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 6249,
+ "seed": 6408,
  "textures": [
   "hearthvale_bell_small_a_albedo.png",
   "hearthvale_bell_small_a_normal.png",
@@ -75,7 +75,7 @@
  "tris": [
   2292,
   916,
-  341
+  342
  ],
  "version": 3
 }

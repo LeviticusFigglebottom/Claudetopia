@@ -1,26 +1,26 @@
 {
  "attaches_to": "trunk",
  "bounds": {
-  "height": 1.01,
+  "height": 0.923,
   "max": [
-   0.667,
-   1.096,
-   0.977
+   0.436,
+   1.08,
+   0.837
   ],
   "min": [
-   -0.88,
-   0.086,
-   0.058
+   -0.414,
+   0.157,
+   0.332
   ],
-  "radius": 1.032
+  "radius": 0.676
  },
- "built_seconds": 0.18,
+ "built_seconds": 0.4,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "briarwold_bracket_fungus_a.glb",
- "hash": "a34614fc4610d3c5",
+ "hash": "13681ebbc271269b",
  "kind": "bracket_fungus",
  "materials": [
   "briarwold_bracket_fungus_a_fungus_foliage"
@@ -65,7 +65,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 3122,
+ "seed": 3281,
  "textures": [
   "briarwold_bracket_fungus_a_atlas_albedo.png",
   "briarwold_bracket_fungus_a_atlas_normal.png",

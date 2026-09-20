@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.111,
+  "height": 0.098,
   "max": [
-   0.89,
-   0.111,
-   0.89
+   0.777,
+   0.098,
+   0.777
   ],
   "min": [
-   -0.89,
+   -0.777,
    0.0,
-   -0.89
+   -0.777
   ],
-  "radius": 1.259
+  "radius": 1.1
  },
- "built_seconds": 54.24,
+ "built_seconds": 124.91,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "briarwold_moss_patch_a.glb",
- "hash": "0b68997308f4d3f7",
+ "hash": "3fd4dc38db7167bf",
  "kind": "moss_patch",
  "materials": [
   "briarwold_moss_patch_a_mat"
@@ -38,7 +38,7 @@
   },
   {
    "name": "briarwold_moss_patch_a_LOD2",
-   "tris": 119
+   "tris": 120
   }
  ],
  "name": "briarwold_moss_patch_a",
@@ -64,7 +64,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 3281,
+ "seed": 3440,
  "textures": [
   "briarwold_moss_patch_a_albedo.png",
   "briarwold_moss_patch_a_normal.png",
@@ -73,7 +73,7 @@
  "tris": [
   242,
   242,
-  119
+  120
  ],
  "version": 3
 }

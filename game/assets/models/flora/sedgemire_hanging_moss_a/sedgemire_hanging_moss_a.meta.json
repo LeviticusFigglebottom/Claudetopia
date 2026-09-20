@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 2.069,
+  "height": 2.355,
   "max": [
-   0.451,
-   0.399,
-   0.483
+   0.579,
+   0.15,
+   0.49
   ],
   "min": [
-   -0.47,
-   -1.67,
-   -0.508
+   -0.623,
+   -2.205,
+   -0.619
   ],
-  "radius": 1.236
+  "radius": 1.434
  },
- "built_seconds": 0.36,
+ "built_seconds": 0.08,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "sedgemire_hanging_moss_a.glb",
  "hangs": true,
- "hash": "140a741e55d8bb20",
+ "hash": "3c4fd57d69a541af",
  "kind": "hanging_moss",
  "materials": [
   "sedgemire_hanging_moss_a_moss_foliage"
@@ -65,7 +65,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 3228,
+ "seed": 3387,
  "textures": [
   "sedgemire_hanging_moss_a_atlas_albedo.png",
   "sedgemire_hanging_moss_a_atlas_normal.png",

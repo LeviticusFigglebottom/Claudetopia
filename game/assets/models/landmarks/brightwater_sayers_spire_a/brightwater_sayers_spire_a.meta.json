@@ -13,13 +13,13 @@
   ],
   "radius": 36.371
  },
- "built_seconds": 96.83,
+ "built_seconds": 70.17,
  "category": "landmarks",
  "collision": "brightwater_sayers_spire_a_col.glb",
  "collision_params": {},
  "generator": "gen_landmarks",
  "glb": "brightwater_sayers_spire_a.glb",
- "hash": "ebdcab881468ae0d",
+ "hash": "b1a49ce770be0502",
  "height_m": 68.0,
  "kind": "sayers_spire",
  "materials": [
@@ -67,7 +67,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 6726,
+ "seed": 6885,
  "textures": [
   "brightwater_sayers_spire_a_albedo.png",
   "brightwater_sayers_spire_a_normal.png",
@@ -76,7 +76,7 @@
  "tris": [
   3358,
   1342,
-  501
+  502
  ],
  "version": 3
 }

@@ -2,27 +2,27 @@
  "bounds": {
   "height": 2.176,
   "max": [
-   0.232,
+   0.243,
    2.176,
-   0.149
+   0.174
   ],
   "min": [
-   -0.149,
+   -0.158,
    0.0,
-   -0.144
+   -0.15
   ],
-  "radius": 1.114
+  "radius": 1.118
  },
- "built_seconds": 8.44,
+ "built_seconds": 17.53,
  "category": "props",
  "collision": "capsule",
  "collision_params": {
   "height": 2.176,
-  "radius": 0.19
+  "radius": 0.201
  },
  "generator": "gen_props",
  "glb": "sedgemire_dock_post_a.glb",
- "hash": "eb1a23727691d2c1",
+ "hash": "51ea9b75f1df87be",
  "kind": "dock_post",
  "materials": [
   "sedgemire_dock_post_a_mat"
@@ -68,7 +68,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 5931,
+ "seed": 6090,
  "textures": [
   "sedgemire_dock_post_a_albedo.png",
   "sedgemire_dock_post_a_normal.png",
@@ -77,7 +77,7 @@
  "tris": [
   1044,
   416,
-  155
+  156
  ],
  "version": 3
 }

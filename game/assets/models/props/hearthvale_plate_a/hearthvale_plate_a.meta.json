@@ -13,13 +13,13 @@
   ],
   "radius": 0.172
  },
- "built_seconds": 3.17,
+ "built_seconds": 4.38,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_plate_a.glb",
- "hash": "58ac174fb5a77e09",
+ "hash": "3eb9cd305382964a",
  "kind": "plate",
  "materials": [
   "hearthvale_plate_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4076,
+ "seed": 4235,
  "textures": [
   "hearthvale_plate_a_albedo.png",
   "hearthvale_plate_a_normal.png",

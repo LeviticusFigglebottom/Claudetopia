@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 0.521,
+  "height": 0.555,
   "max": [
-   0.57,
-   0.521,
-   0.616
+   0.525,
+   0.555,
+   0.649
   ],
   "min": [
-   -0.569,
+   -0.548,
    0.0,
-   -0.662
+   -0.659
   ],
-  "radius": 0.895
+  "radius": 0.89
  },
- "built_seconds": 51.95,
+ "built_seconds": 55.54,
  "category": "props",
  "collision": "trimesh",
  "collision_params": {},
  "emissive": true,
  "generator": "gen_props",
  "glb": "hearthvale_campfire_a.glb",
- "hash": "7752dd3533522934",
+ "hash": "c30a2aa1cff09943",
  "kind": "campfire",
  "materials": [
   "hearthvale_campfire_a_mat"
@@ -67,7 +67,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4977,
+ "seed": 5136,
  "textures": [
   "hearthvale_campfire_a_albedo.png",
   "hearthvale_campfire_a_normal.png",

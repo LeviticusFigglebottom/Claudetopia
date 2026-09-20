@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.349,
+  "height": 0.919,
   "max": [
-   0.663,
-   1.349,
-   0.711
+   0.594,
+   0.919,
+   0.586
   ],
   "min": [
-   -0.658,
+   -0.532,
    0.0,
-   -0.656
+   -0.524
   ],
-  "radius": 1.166
+  "radius": 0.914
  },
- "built_seconds": 0.07,
+ "built_seconds": 0.59,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "briarwold_foxglove_a.glb",
- "hash": "e33bfa816359f497",
+ "hash": "05b0973f8257c956",
  "kind": "foxglove",
  "materials": [
   "briarwold_foxglove_a_foxglove_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 2698,
+ "seed": 2857,
  "textures": [
   "briarwold_foxglove_a_atlas_albedo.png",
   "briarwold_foxglove_a_atlas_normal.png",

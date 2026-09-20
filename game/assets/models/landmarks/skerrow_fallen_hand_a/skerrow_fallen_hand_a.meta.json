@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 13.975,
+  "height": 14.027,
   "max": [
-   14.347,
-   13.975,
-   12.209
+   14.341,
+   14.027,
+   12.214
   ],
   "min": [
-   -25.877,
+   -25.869,
    0.0,
-   -36.059
+   -36.074
   ],
-  "radius": 32.183
+  "radius": 32.192
  },
- "built_seconds": 131.23,
+ "built_seconds": 92.31,
  "category": "landmarks",
  "collision": "skerrow_fallen_hand_a_col.glb",
  "collision_params": {},
  "generator": "gen_landmarks",
  "glb": "skerrow_fallen_hand_a.glb",
- "hash": "d702e8ddf00a392b",
+ "hash": "4ad5062a602f3423",
  "kind": "fallen_hand",
  "length_m": 60.0,
  "materials": [
@@ -66,7 +66,7 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 6567,
+ "seed": 6726,
  "textures": [
   "skerrow_fallen_hand_a_albedo.png",
   "skerrow_fallen_hand_a_normal.png",

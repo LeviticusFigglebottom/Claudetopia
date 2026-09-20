@@ -3,32 +3,30 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://5hgo03y1pmjh"
-path="res://.godot/imported/halo_halo_orm.png-948fc6585cd997f52fc8d98390c31858.ctex"
+path.s3tc="res://.godot/imported/halo_halo_orm.png-948fc6585cd997f52fc8d98390c31858.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "b104c17385980942e23cbf154bd632cd"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/characters/attachments/halo/halo_halo_orm.png"
-dest_files=["res://.godot/imported/halo_halo_orm.png-948fc6585cd997f52fc8d98390c31858.ctex"]
+dest_files=["res://.godot/imported/halo_halo_orm.png-948fc6585cd997f52fc8d98390c31858.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
-compress/channel_pack=0
+compress/normal_map=2
+compress/channel_pack=1
 mipmaps/generate=true
 mipmaps/limit=-1
-roughness/mode=0
+roughness/mode=1
 roughness/src_normal=""
 process/channel_remap/red=0
 process/channel_remap/green=1
@@ -40,4 +38,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.204,
+  "height": 0.184,
   "max": [
-   0.1,
-   0.204,
-   0.143
+   0.109,
+   0.184,
+   0.133
   ],
   "min": [
-   -0.1,
+   -0.109,
    0.0,
-   -0.143
+   -0.133
   ],
-  "radius": 0.202
+  "radius": 0.196
  },
- "built_seconds": 18.13,
+ "built_seconds": 23.18,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_book_stack_a.glb",
- "hash": "68e792802358e238",
+ "hash": "e56665a4960615cb",
  "kind": "book_stack",
  "materials": [
   "hearthvale_book_stack_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5454,
+ "seed": 5613,
  "textures": [
   "hearthvale_book_stack_a_albedo.png",
   "hearthvale_book_stack_a_normal.png",

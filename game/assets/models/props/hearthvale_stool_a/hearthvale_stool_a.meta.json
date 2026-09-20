@@ -2,24 +2,24 @@
  "bounds": {
   "height": 0.539,
   "max": [
-   0.254,
+   0.252,
    0.539,
-   0.211
+   0.232
   ],
   "min": [
-   -0.183,
+   -0.182,
    0.0,
-   -0.218
+   -0.213
   ],
-  "radius": 0.408
+  "radius": 0.411
  },
- "built_seconds": 25.33,
+ "built_seconds": 30.33,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_stool_a.glb",
- "hash": "c6f9e6dca1665a53",
+ "hash": "d58377b1c7d0efa8",
  "kind": "stool",
  "materials": [
   "hearthvale_stool_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4341,
+ "seed": 4500,
  "textures": [
   "hearthvale_stool_a_albedo.png",
   "hearthvale_stool_a_normal.png",

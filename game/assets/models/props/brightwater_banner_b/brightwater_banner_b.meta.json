@@ -1,28 +1,28 @@
 {
  "bounds": {
-  "height": 2.619,
+  "height": 2.706,
   "max": [
-   0.487,
-   2.619,
-   0.033
+   0.463,
+   2.706,
+   0.031
   ],
   "min": [
-   -0.487,
+   -0.463,
    0.0,
-   -0.032
+   -0.03
   ],
-  "radius": 1.398
+  "radius": 1.43
  },
- "built_seconds": 9.03,
+ "built_seconds": 20.62,
  "category": "props",
  "collision": "capsule",
  "collision_params": {
-  "height": 2.619,
-  "radius": 0.487
+  "height": 2.706,
+  "radius": 0.463
  },
  "generator": "gen_props",
  "glb": "brightwater_banner_b.glb",
- "hash": "7bbb091fc03c27e9",
+ "hash": "70f0437d79db6ab1",
  "kind": "banner",
  "materials": [
   "brightwater_banner_b_mat"
@@ -69,7 +69,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 6213,
+ "seed": 6372,
  "textures": [
   "brightwater_banner_b_albedo.png",
   "brightwater_banner_b_normal.png",

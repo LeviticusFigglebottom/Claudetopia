@@ -1,37 +1,37 @@
 {
  "bounds": {
-  "height": 0.484,
+  "height": 0.163,
   "max": [
-   0.585,
-   0.484,
-   0.242
+   1.049,
+   0.163,
+   0.397
   ],
   "min": [
-   -0.586,
+   -1.049,
    0.0,
-   -0.234
+   -0.397
   ],
-  "radius": 0.677
+  "radius": 1.125
  },
- "built_seconds": 15.38,
+ "built_seconds": 63.1,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "cinderlea_bedroll_a.glb",
- "hash": "59682a4c50a7de5a",
+ "hash": "1b5abdba344b691c",
  "kind": "bedroll",
  "materials": [
   "cinderlea_bedroll_a_mat"
  ],
  "materials_used": [
-  "dyed_cloth",
-  "rope"
+  "canvas",
+  "dyed_cloth"
  ],
  "meshes": [
   {
    "name": "cinderlea_bedroll_a",
-   "tris": 524
+   "tris": 564
   },
   {
    "name": "cinderlea_bedroll_a_LOD1",
@@ -65,15 +65,14 @@
    "warm": "#a08a4a"
   }
  },
- "rolled": true,
- "seed": 6143,
+ "seed": 6302,
  "textures": [
   "cinderlea_bedroll_a_albedo.png",
   "cinderlea_bedroll_a_normal.png",
   "cinderlea_bedroll_a_orm.png"
  ],
  "tris": [
-  524,
+  564,
   300,
   120
  ],

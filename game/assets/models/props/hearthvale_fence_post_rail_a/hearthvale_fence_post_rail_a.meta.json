@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.328,
+  "height": 1.272,
   "max": [
-   2.48,
-   1.328,
-   1.018
+   2.46,
+   1.272,
+   0.977
   ],
   "min": [
-   -2.51,
+   -2.457,
    0.0,
-   -0.064
+   -0.06
   ],
-  "radius": 2.638
+  "radius": 2.592
  },
- "built_seconds": 20.49,
+ "built_seconds": 44.58,
  "category": "props",
  "collision": "hearthvale_fence_post_rail_a_col.glb",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_fence_post_rail_a.glb",
- "hash": "a7104e88f6a22a9f",
+ "hash": "6aeaf8c907ed998b",
  "kind": "fence_post_rail",
  "materials": [
   "hearthvale_fence_post_rail_a_mat"
@@ -66,7 +66,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5613,
+ "seed": 5772,
  "textures": [
   "hearthvale_fence_post_rail_a_albedo.png",
   "hearthvale_fence_post_rail_a_normal.png",

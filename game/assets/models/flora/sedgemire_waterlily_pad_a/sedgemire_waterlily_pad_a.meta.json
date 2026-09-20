@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 0.014,
+  "height": 0.004,
   "max": [
-   1.006,
-   0.015,
-   1.087
+   0.62,
+   0.014,
+   0.689
   ],
   "min": [
-   -0.953,
-   0.0,
-   -0.878
+   -0.819,
+   0.011,
+   -0.925
   ],
-  "radius": 1.387
+  "radius": 1.081
  },
- "built_seconds": 0.29,
+ "built_seconds": 0.5,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "floats": true,
  "generator": "gen_flora",
  "glb": "sedgemire_waterlily_pad_a.glb",
- "hash": "991b8f38662c7b1d",
+ "hash": "505df44bf055f518",
  "kind": "waterlily_pad",
  "materials": [
   "sedgemire_waterlily_pad_a_lily_foliage"
@@ -65,7 +65,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 3440,
+ "seed": 3599,
  "textures": [
   "sedgemire_waterlily_pad_a_atlas_albedo.png",
   "sedgemire_waterlily_pad_a_atlas_normal.png",
