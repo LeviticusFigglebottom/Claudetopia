@@ -29,6 +29,9 @@ const ORDER := [
 	["NpcStreamer", "res://systems/npc_life/npc_streamer.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
+	# The chart was filled by being told about places, never by going to one or looking out
+	# from high ground; this is what walks the world and reads it.
+	["PlaceDiscovery", "res://systems/exploration/place_discovery.gd"],
 ]
 
 ## The one thing a new game needs that no system owns: the opening quest, named in data so

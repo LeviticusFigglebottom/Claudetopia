@@ -264,6 +264,49 @@ substitute was counted as missing. `tools/prop_heights.py` now reads the map out
 GDScript and follows `resolve()`'s own rule — the kind, then its stand-in, and nothing looser.
 The real number is 54.
 
+## The chart filled up by conversation only
+
+`GameState.discover()` had two callers in the whole game: a dialogue effect, and resting at a
+Hearthstone. Nothing found a place by *going* to it. You could walk from Merrowby to Tollmere
+and arrive with blank paper, because the only way to learn that a place existed was for
+somebody to tell you about it.
+
+The half of DESIGN §5.16 that says "you fill it by looking from high places (surveying at
+vistas)" was worse off than that. `map_screen.gd` reads a `surveyed:<place>` flag for its much
+wider reveal, and the only thing in the project that ever set one was the UI review's fake
+save. The larger reveal had never been drawn in play. Alongside it, every one of the 48 POIs
+carries a `visible_from` list — 90 authored sightlines, the composition rule from DESIGN §4 —
+and no code read the key at all; `tools/dead_data.py` had it at 48 uses and no reader.
+
+`game/systems/exploration/place_discovery.gd` is the thing that was missing. Walking inside a
+place's own footprint finds it. Standing at a vista — which is any place a POI names as
+somewhere it can be seen from, so the authored data doubles as the vista list rather than
+needing a second one that can disagree with it — sets the survey flag and reveals what the
+country actually shows you from there.
+
+**Actually shows you.** The sightline is marched over the built heightmap rather than taken on
+trust, and this is where it gets interesting:
+
+* **54 of the 90 authored sightlines survive contact with the terrain. 36 do not, and 10 POIs
+  cannot be seen from anywhere at all.** `tools/sightlines.py` lists every one with how far
+  the ground stands over the line. Some are unarguable — the Three Sisters claims to see the
+  Seven Stones 707 m away through 178 m of mountain. Most are small: a 4 m swell of chalk
+  downland between Merrowby and Larkbourne Ford, which is exactly what downland does.
+* That is a world-building question and not a code one. Move the POI, raise it, or drop the
+  line; the tool only finds them. Until somebody answers it, those sightlines reveal nothing
+  and the POIs behind them are found by walking to them, which is the right way for the
+  feature to degrade.
+* The model's parameters are stated rather than fitted: eye at 1.65 m, a per-kind landmark
+  height (a beacon tower is 18 m and a charcoal camp is 2.5 m — a flat 6 m for everything made
+  the falls invisible and the campfires monumental), 2 m of clearance, and the first 140 m
+  from the vantage ignored, because a person reading the country off a quay takes the few
+  paces needed to see past the bank at their feet. The Python tool reads all of them out of the
+  GDScript so the audit and the game cannot drift apart. Adding the per-kind heights made the
+  clear count *worse* (49 to 46) before the foreground rule brought it to 54; that order is
+  recorded because it is the evidence that the numbers were not fitted to.
+* A hidden valley is called hidden. Three of them are invisible from everywhere and the tool
+  says so separately rather than counting it against the placement.
+
 ## Known issues
 
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.
