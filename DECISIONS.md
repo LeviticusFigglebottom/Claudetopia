@@ -223,3 +223,26 @@ means one place can own more scene entries than it has POI entries. Standing sto
 landmarks and are not scattered either: `worldgen/stones.py` sets them as a ring at the Moot,
 as pairs flanking a road where it crosses the high ground, and as single stones on skylines,
 because the whole point of a standing stone is that a person put it there.
+
+## 2026-09-20 · A view range and the ring it applies to have to be read together
+**Decision.** `WorldStreamer.VIEW_RANGE_FAR` is not a smaller version of `VIEW_RANGE`. It is
+measured from the camera to a cell that is *already* between 384 m and 905 m away, so any
+number below 384 hides the whole 5×5 ring. The far ring's cost is held down by `FAR_KEEP`, a
+per-kind fraction of instances, and by drawing it at a lower LOD — never by a range that cuts
+it off before it begins. And `_mesh_of` skips a LOD rung that has collapsed below
+`MIN_LOD_TRIS`, taking the next one up instead.
+**Why.** Both of these were systems that drew nothing while reporting success, which is the
+hardest kind of fault to see in a screenshot: the far ring had view ranges of 300 m for trees
+and 120 m for bushes, so it had been drawing essentially nothing since it was written, and a
+wooded region could be photographed from a hilltop and show eight trees with no error
+anywhere. The LOD guard is the same species: some of the forge's trees go to four triangles at
+LOD2, so a renderer that faithfully drew the rung it was given drew empty air. Keep the guard
+after the ladders are fixed — a generator that silently produces nothing will happen again.
+**Consequences.** Measured on the Briarwold hilltop vista, the worst frame in the world:
+6.52 M primitives as merged, 2.29 M with the ranges and per-ring LODs corrected, 1.59 M once
+the wood came down to 34 stems a hectare — and turning the entire far ring off saved 0.06 M of
+that, so all of the cost is the 3×3 at about six hundred trees of roughly five thousand
+triangles each. The wood is held at 44 stems a hectare and that one frame carries about 2.0 M
+against a 1.5 M budget, deliberately, because the alternative is hill grazing with trees on
+it. Every other region is between 0.38 M and 0.6 M. When the forge ships a ladder of roughly
+`[7000, 800, 8]` the density goes back up and the overage goes away.
