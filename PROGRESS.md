@@ -415,6 +415,45 @@ and asserts the four things that only matter at the moment a player points at so
 layer, a shape to hit, the group, and a method to call. It also asserts that the mask in the
 interactor and the layer in each class are the same number, because they live in eight files.
 
+## The first calibration numbers this project has ever had
+
+`ASSESSMENT.md` says every threshold in the game is a considered guess because there has never
+been a playthrough to calibrate against. That is still true of *pacing*. It did not have to be
+true of the numbers: damage, health, armour, loot, prices and XP are all data, and the formulas
+that combine them are three static functions. `tools/balance.py` reads them and prints the
+curves. It duplicates the formulas from the GDScript on purpose — a second opinion is the
+point — and says plainly what it cannot know.
+
+Three things are out of shape, and the tool states them itself rather than leaving them to be
+noticed:
+
+* **Brightwater is safer than Hearthvale.** 13.1 hits to kill you against 6.9, and the world
+  puts Brightwater second. Sedgemire, at danger 2, is also gentler than the starting region at
+  9.2. The danger rating on a region is a promise to the player and the first three regions do
+  not keep it.
+* **Sedgemire pays less than Brightwater and less than Hearthvale** — 19 marks a fight against
+  74 and 25 — while being more dangerous than both. Brightwater is a city full of Bravos with
+  purses, which explains its number without excusing Sedgemire's.
+* **Flat armour takes the light/heavy choice away in late fights.** Against the Stone-Thrall
+  King's 30 armour the best weapon in Wickmere (40 damage) lands 27 as a light and 107 as a
+  fully charged heavy. At mid gear — an ashen sword, skill 50 — a light attack does not get
+  through the armour *at all* and is clamped to the 1-point minimum: 1600 hits against 67. A
+  player who has not found the best weapon in the game cannot light-attack the last two
+  bosses. That is what flat subtraction does at these magnitudes, and whether it is the
+  intended shape of a late fight is a design question, not a bug report.
+
+What the tool measured and found healthy: the worst single hit rises evenly from 30% of your
+health in Hearthvale to 58% in Cinderlea; bosses with late gear and charged heavies are 7 to
+34 hits, which is a Souls-shaped fight; and a house is 57 to 195 Hearthvale fights, which is a
+lot and is meant to be.
+
+**What it still cannot tell you** is how long a fight takes, whether there are enough bandits
+on the Merrowby road to earn a house without it becoming a job, or whether any of it is any
+fun. Those need hands on a controller and nothing in this file substitutes for them.
+
+I have deliberately not retuned anything on the strength of these numbers. Changing balance
+without playing is how a considered guess becomes a worse considered guess.
+
 ## Known issues
 
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.

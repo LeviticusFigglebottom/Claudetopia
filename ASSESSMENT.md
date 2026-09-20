@@ -191,11 +191,19 @@ under them, the shoulder cape reads as a lampshade, and the plate breastplate st
 collarbone with bare shoulders above it. The 70 animation clips were not re-tuned against the
 new proportions, so hand-to-prop contacts may have drifted.
 
-**Balance is uncalibrated.** Every threshold in the game — the marks a recipe costs, the
-reputation a teacher wants, the renown gate on the clan plate, enemy damage numbers — is a
-considered guess. There has never been a playthrough to calibrate against, so there is no
-economy curve, no difficulty curve and no pacing data. The numbers are defensible and they are
-not tuned.
+**Balance is uncalibrated, and now at least it is measured.** There has still never been a
+playthrough, so there is no pacing data and no idea whether a fight is fun. But the numbers
+themselves are data and the formulas are three static functions, so `tools/balance.py` reads
+the curves out of the pack. Three things are out of shape and it says so itself:
+**Brightwater is safer than Hearthvale** (13.1 hits to kill you against 6.9) though the world
+puts it second; **Sedgemire pays less than either** at 19 marks a fight while being more
+dangerous than both; and **flat armour takes the light/heavy choice away in late fights** —
+against the Stone-Thrall King's 30 armour a mid-gear light attack does not get through at all
+and is clamped to the 1-point minimum, 1600 hits against 67 for a charged heavy. The rest
+reads healthy: the worst single hit rises evenly from 30% of your health to 58% across the six
+regions, and a boss with late gear is 7 to 34 heavy hits. Nothing has been retuned on the
+strength of this, because changing balance without playing is how a considered guess becomes a
+worse one.
 
 **Audio is indexed, not judged.** Six region themes, seven stingers, 43 ambience entries and
 70 foley ids exist and load. Nobody has listened to them in the world.
