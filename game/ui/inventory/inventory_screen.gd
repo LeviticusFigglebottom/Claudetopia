@@ -30,8 +30,15 @@ var _load_label: Label
 var _marks_label: Label
 
 
+## `bag` and `doll` are for a caller that has a particular pair in mind — a test pressing the
+## buttons, a review scene with a made-up character. In the game nothing passes them and the
+## screen finds the real ones by their groups.
 func setup(args: Dictionary) -> void:
 	_filter = str(args.get("filter", "all"))
+	if args.get("bag", null) != null:
+		_bag = args["bag"]
+	if args.get("doll", null) != null:
+		_doll = args["doll"]
 	if is_inside_tree():
 		_refresh()
 
@@ -39,8 +46,10 @@ func setup(args: Dictionary) -> void:
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.dim())
-	_bag = get_tree().get_first_node_in_group("inventory")
-	_doll = get_tree().get_first_node_in_group("equipment")
+	if _bag == null:
+		_bag = get_tree().get_first_node_in_group("inventory")
+	if _doll == null:
+		_doll = get_tree().get_first_node_in_group("equipment")
 	_build()
 	if _bag and _bag.has_signal("changed"):
 		_bag.connect("changed", _refresh)
@@ -312,6 +321,13 @@ func _refresh_detail() -> void:
 		var use := UiKit.button("Use")
 		use.pressed.connect(func() -> void: _use(int(it["uid"])))
 		actions.add_child(use)
+		# Only weapons and armour are `equippable`, so the Equip button above never appeared
+		# for a potion and nothing else in the game called `bind_quick`. Four slots were drawn
+		# on the HUD, dimmed, which reads as "you have nothing worth putting there".
+		var bound := _belt_slot_of(str(it.get("item_id", "")))
+		var belt := UiKit.button("Off the belt" if bound != "" else "To the belt", "FlatButton")
+		belt.pressed.connect(func() -> void: _belt(str(it.get("item_id", "")), bound))
+		actions.add_child(belt)
 	if bool(it.get("readable", false)):
 		var read := UiKit.button("Read")
 		read.pressed.connect(func() -> void: _read(int(it["uid"])))
@@ -356,6 +372,38 @@ func _equip(uid: int) -> void:
 func _use(uid: int) -> void:
 	if _bag and _bag.has_method("use"):
 		_bag.call("use", uid)
+	_refresh()
+
+
+## Which belt slot this item already sits in, or "".
+func _belt_slot_of(item_id: String) -> String:
+	if item_id.is_empty() or _doll == null or not _doll.has_method("quick_item"):
+		return ""
+	for i in 4:
+		var slot := "quick_%d" % (i + 1)
+		if str(_doll.call("quick_item", slot)) == item_id:
+			return slot
+	return ""
+
+
+## On, or off again. A thing already on the belt comes off; otherwise it takes the first empty
+## slot, and when all four are full it takes the last, because the alternative is a button that
+## does nothing and says nothing about why.
+func _belt(item_id: String, bound: String) -> void:
+	if item_id.is_empty() or _doll == null or not _doll.has_method("bind_quick"):
+		return
+	if bound != "":
+		_doll.call("clear_quick", bound)
+		_refresh()
+		return
+	var target := "quick_4"
+	for i in 4:
+		var slot := "quick_%d" % (i + 1)
+		if str(_doll.call("quick_item", slot)).is_empty():
+			target = slot
+			break
+	if not bool(_doll.call("bind_quick", target, item_id)):
+		EventBus.notify.emit("That does not go on a belt.", "info")
 	_refresh()
 
 

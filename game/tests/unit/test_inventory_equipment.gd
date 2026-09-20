@@ -394,3 +394,65 @@ func test_an_enchanted_blade_burns_and_runs_down() -> void:
 	assert_eq(spent.enchant_cost, 0)
 	(Engine.get_main_loop() as SceneTree).root.remove_child(p)
 	p.free()
+
+
+# --- the belt ---------------------------------------------------------------------------------
+
+## The belt was implemented twice and reachable from neither end. `Equipment` bound it,
+## counted it, used it, saved it and told the HUD about it; the HUD drew four slots. But
+## nothing in the game ever called `bind_quick` — the inventory screen only offers Equip to
+## things `is_equippable()` calls equippable, and that is weapons and armour — and the quick
+## keys read a *second* array on the Player that nothing filled. Four dim slots on screen
+## read exactly like "you have nothing worth putting there".
+func test_a_quick_key_drinks_the_potion_on_the_belt() -> void:
+	var p := _player_with_gear()
+	var bag: Inventory = p.get_node("Inventory")
+	var doll: Equipment = p.get_node("Equipment")
+	bag.add(POTION, 2)
+	p.set_quick_slot(0, POTION)
+	assert_eq(doll.quick_item("quick_1"), POTION,
+		"binding a belt slot on the player did not reach the doll the HUD reads")
+	p.use_quick_slot(0)
+	assert_eq(bag.count(POTION), 1, "the quick key did not drink anything")
+	p.queue_free()
+
+
+## The keys used to read the player's own array; the HUD read the doll. Whichever one a future
+## caller fills, the other must not disagree, because a belt you can see and cannot fire is
+## worse than no belt at all.
+func test_the_belt_the_hud_draws_is_the_belt_the_keys_fire() -> void:
+	var p := _player_with_gear()
+	var bag: Inventory = p.get_node("Inventory")
+	var doll: Equipment = p.get_node("Equipment")
+	bag.add(POTION, 1)
+	doll.bind_quick("quick_2", POTION)
+	# An Array, not a String: a lambda captures a local by value, so a captured String is
+	# written to a copy and the assertion reads the empty original.
+	var fired: Array[String] = []
+	p.quick_slot_used.connect(func(_i: int, id: String) -> void: fired.append(id))
+	p.use_quick_slot(1)
+	assert_eq(fired, [POTION] as Array[String], "the key fired a different slot than the HUD draws")
+	p.queue_free()
+
+
+## A saying is not an item and has no place on the paper doll, so the player's own array is
+## still the right home for one. Binding it must not try to put it on the doll and fail.
+func test_a_saying_still_rides_the_players_own_slot() -> void:
+	var p := _player_with_gear()
+	var doll: Equipment = p.get_node("Equipment")
+	p.set_quick_slot(2, "core:spell/emberlight")
+	assert_eq(doll.quick_item("quick_3"), "", "a saying was pushed onto the paper doll")
+	assert_eq(str(p.quick_slots[2]), "core:spell/emberlight")
+	p.queue_free()
+
+
+## Taking it off again is the other half of putting it on, and it was equally unreachable.
+func test_clearing_a_belt_slot_reaches_the_doll() -> void:
+	var p := _player_with_gear()
+	var bag: Inventory = p.get_node("Inventory")
+	var doll: Equipment = p.get_node("Equipment")
+	bag.add(POTION, 1)
+	p.set_quick_slot(0, POTION)
+	p.set_quick_slot(0, "")
+	assert_eq(doll.quick_item("quick_1"), "", "the slot was cleared on the player and not the doll")
+	p.queue_free()

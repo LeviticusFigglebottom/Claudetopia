@@ -1079,21 +1079,49 @@ func _recompute_load() -> void:
 	load_ratio = weight / (LOAD_CAPACITY_BASE + LOAD_CAPACITY_PER_ENDURANCE * float(endurance))
 
 
+## The belt lives on the equipment doll: `Equipment` binds it, persists it, and the HUD draws
+## what it holds. This node kept a second `quick_slots` array of its own, and the keys read
+## *that* one — which nothing ever filled — so four slots were drawn on screen, saved to disk
+## and could not be loaded or fired from either end. The array stays for the arena and for a
+## saying, which is not an item and has no place on the doll; the doll is asked first.
+func _doll() -> Node:
+	return get_node_or_null(NodePath("Equipment"))
+
+
 func set_quick_slot(index: int, item_id: String) -> void:
-	if index >= 0 and index < quick_slots.size():
-		quick_slots[index] = item_id
+	if index < 0 or index >= quick_slots.size():
+		return
+	quick_slots[index] = item_id
+	var eq := _doll()
+	if eq == null:
+		return
+	var slot := "quick_%d" % (index + 1)
+	if item_id.is_empty():
+		eq.call("clear_quick", slot)
+	elif Ids.type_of(item_id) != "spell":
+		eq.call("bind_quick", slot, item_id)
 
 
 func use_quick_slot(index: int) -> void:
 	if index < 0 or index >= quick_slots.size():
 		return
-	var id: String = quick_slots[index]
+	var eq := _doll()
+	var slot := "quick_%d" % (index + 1)
+	var id: String = str(eq.call("quick_item", slot)) if eq != null else ""
+	if id.is_empty():
+		id = quick_slots[index]
 	quick_slot_used.emit(index, id)
 	if quick_slot_handler.is_valid():
 		quick_slot_handler.call(index, id)
-	elif not id.is_empty() and Ids.type_of(id) == "spell":
+		return
+	if id.is_empty():
+		return
+	if Ids.type_of(id) == "spell":
 		if equip_spell(id):
 			EventBus.notify.emit("Readied %s." % ContentDB.get_or_empty(id).get("name", id), "info")
+		return
+	if eq == null or not bool(eq.call("use_quick", slot)):
+		EventBus.notify.emit("None left.", "info")
 
 
 func _emit_noise(loudness: float) -> void:
