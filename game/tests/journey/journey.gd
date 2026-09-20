@@ -59,6 +59,7 @@ func _ready() -> void:
 	await _step_buy_a_house()
 	await _step_clear_a_dungeon()
 	await _step_fight_a_boss()
+	await _step_make_something()
 	await _step_learn_and_say()
 	await _step_save_and_load()
 	_report()
