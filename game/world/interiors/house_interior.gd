@@ -46,6 +46,16 @@ const BOOK_PROPS := ["book_single", "book_stack", "roll_book", "ledger"]
 ## now: the container system could roll loot, lock itself and be emptied, and nothing in an
 ## interior ever attached one to the chest standing in the room. `wealth` shifts the table, so
 ## a cottager's chest is not the steward's.
+## Which fixture is a working station, and which screen it opens (DESIGN §5.8). The anvil and
+## not the hearth, because the anvil is the thing a smith stands at and the hearth is the thing
+## that is hot. Nothing in the game opened the working screen at all, so twenty-one recipes,
+## the whole alembic and the whole of enchanting were behind a door with no handle.
+const WORKABLE := {
+	"anvil": "forge",
+	"alembic": "alembic",
+	"name_table": "name_table",
+}
+
 const OPENABLE := {
 	"chest": "common", "deed_chest": "rich", "strongbox": "rich", "coffer": "rich",
 	"cupboard": "common", "crate": "poor", "root_crate": "poor", "barrel": "poor",
@@ -261,6 +271,21 @@ func _build_props() -> void:
 		var kind := str(p.get("fixture", p.get("prop", "")))
 		_make_readable(node, kind, p)
 		_make_openable(node, kind, p)
+		_make_workable(node, kind)
+
+
+## A bench you can work at. The station rides the prop it belongs to, so what you walk up to
+## is the thing you were looking at rather than an invisible trigger beside it. The resident
+## owns their own tools; using a smith's anvil is not theft, but the law can be told about it.
+func _make_workable(node: Node3D, kind: String) -> void:
+	if not WORKABLE.has(kind):
+		return
+	var bench := CraftingStation.new()
+	bench.name = "Station"
+	bench.station = str(WORKABLE[kind])
+	bench.size = _placeholder_size(kind)
+	bench.owner_npc = str(meta.get("resident", ""))
+	node.add_child(bench)
 
 
 ## A chest that opens. The id is built from the house and the thing's own place in it, so the
@@ -422,6 +447,7 @@ static func _placeholder_size(kind: String) -> Vector3:
 		"anvil": return Vector3(0.8, 0.75, 0.4)
 		"bed": return Vector3(2.0, 0.55, 1.1)
 		"table", "long_table", "kneading_table", "prep_table": return Vector3(1.7, 0.78, 0.9)
+		"name_table": return Vector3(1.4, 0.82, 0.8)
 		"bar", "counter": return Vector3(2.4, 1.05, 0.7)
 		"barrel", "mash_tun", "copper": return Vector3(0.7, 0.95, 0.7)
 		"chest", "deed_chest", "strongbox": return Vector3(0.95, 0.55, 0.5)

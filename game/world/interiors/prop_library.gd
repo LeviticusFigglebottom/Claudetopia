@@ -31,6 +31,9 @@ const STAND_IN := {
 	"table": "table_trestle", "long_table": "table_trestle", "kneading_table": "table_trestle",
 	"prep_table": "table_trestle", "mortar_bench": "table_trestle", "tap_bench": "table_trestle",
 	"writing_desk": "table_trestle", "roll_desk": "table_trestle", "ledger_desk": "table_trestle",
+	# A Name-table is a heavy bench a Toll-Knight writes into iron at; the forge has no mesh
+	# for one yet, and a trestle is nearer than anything else it has built.
+	"name_table": "table_trestle",
 	"counter": "table_trestle", "bar": "table_trestle", "sideboard": "cupboard",
 	"deed_chest": "chest", "strongbox": "chest", "grain_bin": "chest",
 	"bread_shelf": "shelf", "bottle_shelf": "shelf", "ingredient_shelf": "shelf",
@@ -57,8 +60,13 @@ const STAND_IN := {
 	"inkpot": "jug", "ewer": "jug", "basin": "plate", "funnel": "jug", "tar_pot": "cooking_pot",
 	"oar_rack": "shelf", "drying_line": "rope_coil", "yoke": "rope_coil", "string_ball": "rope_coil",
 	"herb_bundle": "rope_coil", "oil_rag": "cloth", "rag": "cloth",
-	"hammer": "tongs", "chisel": "tongs", "punch": "tongs", "file": "tongs", "knife": "tongs",
-	"whetstone": "tongs", "bung_mallet": "tongs", "ladle": "spoon", "flour_scoop": "spoon",
+	# The smith's bench. `hammer` and `whetstone` are the forge's own meshes now and need no
+	# stand-in at all; a mallet is a hammer and not a pair of tongs. A chisel, a punch and a
+	# file are all drawn-down bars of about a tongs' length and read well enough as one; a
+	# kitchen knife does not, and a carved wooden-handled spoon on a prep table is nearer to
+	# it than half a metre of smith's tongs ever was.
+	"chisel": "tongs", "punch": "tongs", "file": "tongs", "knife": "spoon",
+	"bung_mallet": "hammer", "ladle": "spoon", "flour_scoop": "spoon",
 	"scythe": "pitchfork", "bellows": "sack", "dice_cup": "mug", "cold_tea": "mug",
 	"coin_few": "plate", "wooden_toy": "book", "chewed_stick": "rope_coil",
 	"half_made_thing": "crate", "work_in_progress": "crate", "jar": "jug",

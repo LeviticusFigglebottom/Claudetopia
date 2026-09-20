@@ -82,6 +82,7 @@ func _ready() -> void:
 	EventBus.container_opened.connect(_on_container_opened)
 	EventBus.job_board_opened.connect(_on_job_board_opened)
 	EventBus.property_offered.connect(_on_property_offered)
+	EventBus.crafting_station_used.connect(_on_crafting_station_used)
 	EventBus.trade_requested.connect(_on_trade_requested)
 	EventBus.region_entered.connect(func(id: String, _p: String) -> void: _refresh_variant())
 	EventBus.interior_entered.connect(func(_id: String) -> void: _refresh_variant())
@@ -455,6 +456,13 @@ func _on_job_board_opened(board: Node, actor: Node) -> void:
 	if board == null or not is_instance_valid(board):
 		return
 	open("job_board", {"board": board, "actor": actor})
+
+
+## A forge, alembic or Name-table walked up to. The working screen has always existed, has
+## always been registered here, and nothing in the game ever opened it — so smithing, alchemy
+## and enchanting were three finished systems behind a door with no handle.
+func _on_crafting_station_used(station: String, _node: Node) -> void:
+	open("crafting", {"station": station})
 
 
 ## A for-sale board read. `deed_confirm.tscn` has always existed and nothing ever opened it.

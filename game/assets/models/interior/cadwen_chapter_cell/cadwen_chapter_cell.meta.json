@@ -220,17 +220,16 @@
       "wear": 0.51
     },
     {
-      "asset": "res://assets/models/props/spear/spear.glb",
-      "prop": "spear",
+      "asset": "res://assets/models/props/name_table/name_table.glb",
+      "fixture": "name_table",
       "room": "muster_room",
-      "on": "weapon_rack",
       "at": [
-        3.13,
-        0.78,
-        1.62
+        3.01,
+        0.0,
+        0.4
       ],
-      "yaw": 105.4,
-      "group": "weapon_rack_0"
+      "yaw": 0.0,
+      "wear": 0.6
     },
     {
       "asset": "res://assets/models/props/spear/spear.glb",
@@ -240,9 +239,22 @@
       "at": [
         3.18,
         0.78,
-        1.45
+        2.33
       ],
       "yaw": 54.4,
+      "group": "weapon_rack_0"
+    },
+    {
+      "asset": "res://assets/models/props/spear/spear.glb",
+      "prop": "spear",
+      "room": "muster_room",
+      "on": "weapon_rack",
+      "at": [
+        3.25,
+        0.78,
+        2.09
+      ],
+      "yaw": 135.0,
       "group": "weapon_rack_0"
     },
     {
@@ -251,11 +263,11 @@
       "room": "muster_room",
       "on": "weapon_rack",
       "at": [
-        3.25,
+        3.17,
         0.78,
-        1.21
+        1.85
       ],
-      "yaw": 135.0,
+      "yaw": 28.1,
       "group": "weapon_rack_0"
     },
     {
@@ -264,11 +276,11 @@
       "room": "muster_room",
       "on": "roll_desk",
       "at": [
-        0.89,
+        0.82,
         0.78,
-        2.26
+        2.24
       ],
-      "yaw": 113.4,
+      "yaw": 351.2,
       "group": "roll_desk_0"
     },
     {
@@ -277,11 +289,11 @@
       "room": "muster_room",
       "on": "roll_desk",
       "at": [
-        0.82,
+        0.63,
         0.78,
-        2.47
+        2.43
       ],
-      "yaw": 351.2,
+      "yaw": 55.3,
       "group": "roll_desk_0"
     },
     {
@@ -290,132 +302,196 @@
       "room": "muster_room",
       "on": "roll_desk",
       "at": [
-        0.63,
+        0.75,
         0.78,
-        2.66
+        2.61
       ],
-      "yaw": 55.3,
+      "yaw": 329.8,
       "group": "roll_desk_0"
+    },
+    {
+      "asset": "res://assets/models/props/lantern/lantern.glb",
+      "prop": "lantern",
+      "room": "muster_room",
+      "on": "roll_desk",
+      "at": [
+        0.95,
+        0.78,
+        2.42
+      ],
+      "yaw": 345.5,
+      "group": "roll_desk_1"
     },
     {
       "asset": "res://assets/models/props/hearth/hearth.glb",
       "fixture": "hearth",
       "room": "hearth_room",
       "at": [
-        7.18,
+        5.32,
         0.0,
-        1.29
-      ],
-      "yaw": 270.0,
-      "wear": 0.16
-    },
-    {
-      "asset": "res://assets/models/props/stool/stool.glb",
-      "fixture": "stool",
-      "room": "hearth_room",
-      "at": [
-        7.2,
-        0.0,
-        0.6
+        0.55
       ],
       "yaw": 0.0,
-      "wear": 0.32
+      "wear": 0.31
+    },
+    {
+      "asset": "res://assets/models/props/table/table.glb",
+      "fixture": "table",
+      "room": "hearth_room",
+      "at": [
+        6.52,
+        0.0,
+        1.61
+      ],
+      "yaw": 0.0,
+      "wear": 0.19
     },
     {
       "asset": "res://assets/models/props/stool/stool.glb",
       "fixture": "stool",
       "room": "hearth_room",
       "at": [
-        7.73,
+        5.52,
         0.0,
-        1.98
+        1.24
       ],
       "yaw": 180.0,
-      "wear": 0.23
+      "wear": 0.19
+    },
+    {
+      "asset": "res://assets/models/props/stool/stool.glb",
+      "fixture": "stool",
+      "room": "hearth_room",
+      "at": [
+        5.09,
+        0.0,
+        1.24
+      ],
+      "yaw": 180.0,
+      "wear": 0.18
     },
     {
       "asset": "res://assets/models/props/cupboard/cupboard.glb",
       "fixture": "cupboard",
       "room": "hearth_room",
       "at": [
-        5.45,
+        6.99,
         0.0,
         3.03
       ],
       "yaw": 180.0,
-      "wear": 0.21
+      "wear": 0.34
     },
     {
       "asset": "res://assets/models/props/settle/settle.glb",
       "fixture": "settle",
       "room": "hearth_room",
       "at": [
-        5.19,
+        5.35,
         0.0,
-        1.46
+        2.98
       ],
-      "yaw": 90.0,
-      "wear": 0.25
+      "yaw": 180.0,
+      "wear": 0.16
+    },
+    {
+      "asset": "res://assets/models/props/bowl/bowl.glb",
+      "prop": "bowl",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        6.48,
+        0.78,
+        1.56
+      ],
+      "yaw": 26.3,
+      "group": "table_0"
+    },
+    {
+      "asset": "res://assets/models/props/spoon/spoon.glb",
+      "prop": "spoon",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        6.71,
+        0.78,
+        1.45
+      ],
+      "yaw": 274.6,
+      "group": "table_0"
+    },
+    {
+      "asset": "res://assets/models/props/mug/mug.glb",
+      "prop": "mug",
+      "room": "hearth_room",
+      "on": "table",
+      "at": [
+        6.91,
+        0.78,
+        1.67
+      ],
+      "yaw": 308.4,
+      "group": "table_0"
     },
     {
       "asset": "res://assets/models/props/crate/crate.glb",
       "fixture": "crate",
       "room": "store",
       "at": [
-        1.29,
+        0.5,
         0.0,
-        5.45
+        4.86
       ],
-      "yaw": 180.0,
-      "wear": 0.19
+      "yaw": 90.0,
+      "wear": 0.29
     },
     {
       "asset": "res://assets/models/props/barrel/barrel.glb",
       "fixture": "barrel",
       "room": "store",
       "at": [
-        0.45,
+        1.8,
         0.0,
-        5.06
+        4.65
       ],
-      "yaw": 90.0,
-      "wear": 0.2
+      "yaw": 270.0,
+      "wear": 0.28
     },
     {
       "asset": "res://assets/models/props/chest/chest.glb",
       "fixture": "chest",
       "room": "store",
       "at": [
-        0.76,
+        0.81,
         0.0,
-        4.33
+        5.6
       ],
-      "yaw": 0.0,
-      "wear": 0.35
+      "yaw": 180.0,
+      "wear": 0.25
     },
     {
       "asset": "res://assets/models/props/bed/bed.glb",
       "fixture": "bed",
       "room": "bed",
       "at": [
-        3.35,
+        4.03,
         0.0,
         5.18
       ],
-      "yaw": 90.0,
-      "wear": 0.28
+      "yaw": 270.0,
+      "wear": 0.21
     },
     {
       "asset": "res://assets/models/props/chest/chest.glb",
       "fixture": "chest",
       "room": "bed",
       "at": [
-        3.68,
+        3.72,
         0.0,
         6.03
       ],
       "yaw": 180.0,
-      "wear": 0.27
+      "wear": 0.32
     },
     {
       "asset": "res://assets/models/props/small_bell/small_bell.glb",
@@ -423,11 +499,11 @@
       "room": "hearth_room",
       "habit": "keeps_a_shrine",
       "at": [
-        7.21,
+        7.31,
         1.5,
-        2.48
+        2.69
       ],
-      "yaw": 278.2
+      "yaw": 143.8
     },
     {
       "asset": "res://assets/models/props/candle_stub/candle_stub.glb",
@@ -435,11 +511,11 @@
       "room": "hearth_room",
       "habit": "keeps_a_shrine",
       "at": [
-        5.24,
+        6.61,
         1.5,
-        2.05
+        1.58
       ],
-      "yaw": 250.3
+      "yaw": 71.8
     },
     {
       "asset": "res://assets/models/props/blanket_heap/blanket_heap.glb",
@@ -447,11 +523,11 @@
       "room": "bed",
       "habit": "sleeps_badly",
       "at": [
-        4.42,
+        3.35,
         0.5,
-        5.64
+        5.38
       ],
-      "yaw": 181.6
+      "yaw": 140.5
     },
     {
       "asset": "res://assets/models/props/cold_tea/cold_tea.glb",
@@ -459,11 +535,11 @@
       "room": "bed",
       "habit": "sleeps_badly",
       "at": [
-        4.32,
+        4.37,
         0.5,
-        4.93
+        5.3
       ],
-      "yaw": 208.4
+      "yaw": 231.0
     },
     {
       "asset": "res://assets/models/props/whetstone/whetstone.glb",
@@ -471,11 +547,11 @@
       "room": "hearth_room",
       "habit": "sharpens_obsessively",
       "at": [
-        6.1,
+        7.3,
         0.0,
-        0.95
+        1.26
       ],
-      "yaw": 16.3
+      "yaw": 185.2
     },
     {
       "asset": "res://assets/models/props/oil_rag/oil_rag.glb",
@@ -483,11 +559,11 @@
       "room": "hearth_room",
       "habit": "sharpens_obsessively",
       "at": [
-        7.35,
+        7.09,
         0.0,
-        1.11
+        2.04
       ],
-      "yaw": 357.4
+      "yaw": 75.2
     },
     {
       "asset": "res://assets/models/props/book_single/book_single.glb",
@@ -495,11 +571,11 @@
       "room": "bed",
       "habit": "reads_late",
       "at": [
-        3.53,
+        3.28,
         0.55,
-        5.68
+        5.01
       ],
-      "yaw": 110.9
+      "yaw": 21.7
     },
     {
       "asset": "res://assets/models/props/candle_stub/candle_stub.glb",
@@ -507,33 +583,33 @@
       "room": "bed",
       "habit": "reads_late",
       "at": [
-        3.46,
+        2.85,
         0.55,
-        5.43
+        5.38
       ],
-      "yaw": 195.0
+      "yaw": 181.7
     }
   ],
   "lights": [
     {
       "room": "muster_room",
       "at": [
-        2.1,
-        2.2,
-        1.85
+        0.95,
+        1.03,
+        2.42
       ],
-      "color": "#ffd9a0",
-      "energy": 0.8,
-      "range": 6.0,
-      "flicker": 0.0,
+      "color": "#ffca7a",
+      "energy": 1.1,
+      "range": 4.5,
+      "flicker": 0.35,
       "shadow": false
     },
     {
       "room": "hearth_room",
       "at": [
-        7.18,
+        5.32,
         0.6,
-        1.29
+        0.55
       ],
       "color": "#ff9a42",
       "energy": 3.0,
@@ -544,9 +620,9 @@
     {
       "room": "hearth_room",
       "at": [
-        5.24,
+        6.61,
         1.75,
-        2.05
+        1.58
       ],
       "color": "#ffca7a",
       "energy": 1.1,
@@ -570,9 +646,9 @@
     {
       "room": "bed",
       "at": [
-        3.46,
+        2.85,
         0.8,
-        5.43
+        5.38
       ],
       "color": "#ffca7a",
       "energy": 1.1,

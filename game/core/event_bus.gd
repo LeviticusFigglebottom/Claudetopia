@@ -40,6 +40,8 @@ signal container_opened(container: Node, actor: Node)
 signal job_board_opened(board: Node, actor: Node)
 ## A for-sale board read: the UI asks whether to take the key.
 signal property_offered(property_id: String, price: int)
+## A forge, alembic or Name-table walked up to: the UI opens the working screen at it.
+signal crafting_station_used(station: String, node: Node)
 signal recipe_learned(recipe_id: String)
 ## A saying (spell) was added to what the character knows; Progression owns the list.
 signal spell_learned(spell_id: String)

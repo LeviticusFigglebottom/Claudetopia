@@ -1,22 +1,27 @@
 {
-  "id": "core:house/cadwen_chapter_cell",
-  "name": "The Bell Chapter-House",
-  "place": "core:place/pilgrims_ash",
-  "culture": "pilgrims",
-  "resident": "core:npc/cadwen_ash",
-  "trade": "warden",
-  "wealth": 0,
-  "household": 2,
-  "seed": 1214,
-  "habits": [
-    "keeps_a_shrine",
-    "sleeps_badly",
-    "sharpens_obsessively",
-    "reads_late"
-  ],
-  "story": "The Order sleeps inside a fallen bell. Cadwen took the name Ash when she took the vigil, and her old name is written once, on the inside of the bell, where only someone lying down can read it.",
-  "who_was_here": "Every Toll-Knight since the Ash Winter, each of whom wrote their old name in the same place.",
-  "unique_object": "a hundred and seventy old names written on the inside curve of a bell, readable only lying down",
-  "children": 0,
-  "name_slug": "cadwen_chapter_cell"
+ "id": "core:house/cadwen_chapter_cell",
+ "name": "The Bell Chapter-House",
+ "place": "core:place/pilgrims_ash",
+ "culture": "pilgrims",
+ "resident": "core:npc/cadwen_ash",
+ "trade": "warden",
+ "wealth": 0,
+ "household": 2,
+ "seed": 1214,
+ "habits": [
+  "keeps_a_shrine",
+  "sleeps_badly",
+  "sharpens_obsessively",
+  "reads_late"
+ ],
+ "story": "The Order sleeps inside a fallen bell. Cadwen took the name Ash when she took the vigil, and her old name is written once, on the inside of the bell, where only someone lying down can read it.",
+ "who_was_here": "Every Toll-Knight since the Ash Winter, each of whom wrote their old name in the same place.",
+ "unique_object": "a hundred and seventy old names written on the inside curve of a bell, readable only lying down",
+ "extra_fixtures": {
+  "muster_room": [
+   "name_table"
+  ]
+ },
+ "children": 0,
+ "name_slug": "cadwen_chapter_cell"
 }
