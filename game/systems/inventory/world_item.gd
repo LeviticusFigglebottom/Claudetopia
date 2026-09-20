@@ -14,6 +14,10 @@ const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
 @export var count: int = 1
 @export var marks: int = 0
 @export var bob: bool = true
+## Whose it is, if it is anybody's. A loaf on a stranger's table is theirs; a loaf dropped by a
+## bandit is nobody's, and taking the second is not a crime.
+@export var owner_npc: String = ""
+@export var owner_faction: String = ""
 var data: Dictionary = {}
 
 var _visual: Node3D = null
@@ -83,9 +87,19 @@ func interact(actor: Node) -> bool:
 			return false
 	if marks > 0:
 		inv.add_marks(marks)
+	CrimeReports.theft(actor, global_position, _worth(), owner_npc, owner_faction, item_id)
 	picked_up.emit(actor)
 	queue_free()
 	return true
+
+
+## What taking this is worth to whoever owned it, in marks.
+func _worth() -> int:
+	if marks > 0:
+		return marks
+	if item_id == "":
+		return 0
+	return int(ContentDB.get_or_empty(item_id).get("value", 0)) * maxi(count, 1)
 
 
 ## (Re)builds the visual and collision from the current item.

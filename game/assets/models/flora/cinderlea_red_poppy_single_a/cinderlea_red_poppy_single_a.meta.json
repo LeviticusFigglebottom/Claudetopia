@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.374,
+  "height": 0.345,
   "max": [
-   0.175,
-   0.374,
-   0.195
+   0.137,
+   0.345,
+   0.215
   ],
   "min": [
-   -0.233,
+   -0.19,
    0.0,
-   -0.181
+   -0.187
   ],
-  "radius": 0.335
+  "radius": 0.311
  },
- "built_seconds": 0.09,
+ "built_seconds": 0.23,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "cinderlea_red_poppy_single_a.glb",
- "hash": "7bcc42c495750a11",
+ "hash": "0988be1e2a213040",
  "kind": "red_poppy_single",
  "materials": [
   "cinderlea_red_poppy_single_a_poppy_foliage"
@@ -64,7 +64,7 @@
    "warm": "#a08a4a"
   }
  },
- "seed": 2804,
+ "seed": 2963,
  "textures": [
   "cinderlea_red_poppy_single_a_atlas_albedo.png",
   "cinderlea_red_poppy_single_a_atlas_normal.png",

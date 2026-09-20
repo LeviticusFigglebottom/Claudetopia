@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 2.359,
+  "height": 2.591,
   "max": [
-   1.247,
-   2.359,
-   0.786
+   1.309,
+   2.591,
+   0.783
   ],
   "min": [
-   -1.247,
+   -1.309,
    0.0,
-   -0.755
+   -0.752
   ],
-  "radius": 1.881
+  "radius": 1.996
  },
- "built_seconds": 27.96,
+ "built_seconds": 32.56,
  "category": "props",
  "collision": "brightwater_market_stall_a_col.glb",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "brightwater_market_stall_a.glb",
- "hash": "758051237e0fb8f9",
+ "hash": "f87b3d0af8e95b8d",
  "kind": "market_stall",
  "materials": [
   "brightwater_market_stall_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 5878,
+ "seed": 6037,
  "textures": [
   "brightwater_market_stall_a_albedo.png",
   "brightwater_market_stall_a_normal.png",

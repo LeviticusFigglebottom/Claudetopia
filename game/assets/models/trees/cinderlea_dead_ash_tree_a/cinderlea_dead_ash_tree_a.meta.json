@@ -13,7 +13,7 @@
   ],
   "radius": 9.457
  },
- "built_seconds": 2.75,
+ "built_seconds": 9.12,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -40,11 +40,11 @@
   },
   {
    "name": "cinderlea_dead_ash_tree_a_LOD2",
-   "tris": 4
+   "tris": 8
   },
   {
    "name": "cinderlea_dead_ash_tree_a_LOD1",
-   "tris": 5332
+   "tris": 900
   }
  ],
  "name": "cinderlea_dead_ash_tree_a",
@@ -83,8 +83,8 @@
  ],
  "tris": [
   6156,
-  5332,
-  4
+  900,
+  8
  ],
  "version": 3
 }

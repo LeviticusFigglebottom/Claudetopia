@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.445,
+  "height": 0.463,
   "max": [
-   0.268,
-   0.445,
-   0.257
+   0.256,
+   0.463,
+   0.228
   ],
   "min": [
-   -0.281,
+   -0.282,
    0.0,
-   -0.235
+   -0.269
   ],
-  "radius": 0.431
+  "radius": 0.433
  },
- "built_seconds": 0.21,
+ "built_seconds": 0.33,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "skerrow_heather_a.glb",
- "hash": "d742ceb14d8753f0",
+ "hash": "4f98577af0f49798",
  "kind": "heather",
  "materials": [
   "skerrow_heather_a_heather_foliage"
@@ -64,7 +64,7 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 2963,
+ "seed": 3122,
  "textures": [
   "skerrow_heather_a_atlas_albedo.png",
   "skerrow_heather_a_atlas_normal.png",

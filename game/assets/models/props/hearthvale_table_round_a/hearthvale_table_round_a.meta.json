@@ -2,24 +2,24 @@
  "bounds": {
   "height": 0.815,
   "max": [
-   0.544,
+   0.553,
    0.815,
-   0.545
+   0.554
   ],
   "min": [
-   -0.544,
+   -0.554,
    0.0,
-   -0.544
+   -0.554
   ],
-  "radius": 0.871
+  "radius": 0.883
  },
- "built_seconds": 27.4,
+ "built_seconds": 36.28,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_table_round_a.glb",
- "hash": "94459afd49a48f2c",
+ "hash": "7247cfe7ae38c0a4",
  "kind": "table_round",
  "materials": [
   "hearthvale_table_round_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4288,
+ "seed": 4447,
  "textures": [
   "hearthvale_table_round_a_albedo.png",
   "hearthvale_table_round_a_normal.png",

@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.567,
+  "height": 0.417,
   "max": [
-   0.377,
-   0.567,
-   0.388
+   0.338,
+   0.417,
+   0.328
   ],
   "min": [
-   -0.363,
+   -0.39,
    0.0,
-   -0.345
+   -0.327
   ],
-  "radius": 0.593
+  "radius": 0.532
  },
- "built_seconds": 0.13,
+ "built_seconds": 0.25,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "briarwold_grass_clump_b.glb",
- "hash": "c34fc2f6123205bd",
+ "hash": "6ab4e81a82a12653",
  "kind": "grass_clump",
  "materials": [
   "briarwold_grass_clump_b_grass_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 2026,
+ "seed": 2185,
  "textures": [
   "briarwold_grass_clump_b_atlas_albedo.png",
   "briarwold_grass_clump_b_atlas_normal.png",

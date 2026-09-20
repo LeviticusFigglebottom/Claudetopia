@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 7.658,
+  "height": 6.496,
   "max": [
-   5.684,
-   7.658,
-   0.869
+   4.453,
+   6.496,
+   0.685
   ],
   "min": [
-   -6.807,
+   -5.33,
    0.0,
-   -1.145
+   -0.897
   ],
-  "radius": 7.395
+  "radius": 5.925
  },
- "built_seconds": 8.8,
+ "built_seconds": 31.65,
  "category": "rocks",
  "collision": "skerrow_bone_rib_b_col.glb",
  "collision_params": {},
  "generator": "gen_rocks",
  "glb": "skerrow_bone_rib_b.glb",
- "hash": "34c59e68ce1c4b44",
+ "hash": "eb1dd5b0525d9b02",
  "kind": "bone_rib",
  "materials": [
   "skerrow_bone_rib_b_mat"
@@ -64,7 +64,7 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 1761,
+ "seed": 1920,
  "textures": [
   "skerrow_bone_rib_b_albedo.png",
   "skerrow_bone_rib_b_normal.png",

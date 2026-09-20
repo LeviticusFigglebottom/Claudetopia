@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.026,
+  "height": 0.891,
   "max": [
-   0.497,
-   1.026,
-   0.485
+   0.391,
+   0.891,
+   0.381
   ],
   "min": [
-   -0.476,
+   -0.367,
    0.0,
-   -0.462
+   -0.362
   ],
-  "radius": 0.851
+  "radius": 0.693
  },
- "built_seconds": 0.11,
+ "built_seconds": 0.1,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "hearthvale_barley_tuft_a.glb",
- "hash": "a85d62872bc7ac08",
+ "hash": "0787cc5783a20824",
  "kind": "barley_tuft",
  "materials": [
   "hearthvale_barley_tuft_a_barley_foliage"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 2274,
+ "seed": 2433,
  "textures": [
   "hearthvale_barley_tuft_a_atlas_albedo.png",
   "hearthvale_barley_tuft_a_atlas_normal.png",

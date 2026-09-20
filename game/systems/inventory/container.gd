@@ -99,6 +99,14 @@ func prompt_text() -> String:
 	return "Open %s" % label
 
 
+## What has been taken out of here since it was opened, in marks, and not yet reported.
+var _stolen := 0
+## Whether this container's loot table has already been rolled. Persisted, because it is the
+## difference between a chest you have already looked in and one that is about to mint a
+## second haul on top of the first.
+var rolled := false
+
+
 func is_owned() -> bool:
 	return owner_faction != "" or owner_npc != ""
 
@@ -140,17 +148,77 @@ func take_all(actor: Node) -> int:
 	var inv := Inventory.for_actor(actor)
 	if inv == null:
 		return 0
+	var worth := _worth_of_contents()
 	var moved := inventory.transfer_all_to(inv)
+	_stolen += worth
 	looted.emit(self, actor)
+	close_up(actor)
 	return moved
+
+
+## Moves one stack into the actor's bag. Returns false when it will not fit or is not here.
+func take(stack: Variant, actor: Node) -> bool:
+	var inv := Inventory.for_actor(actor)
+	if inv == null:
+		return false
+	var s: ItemStack = inventory.resolve(stack)
+	if s == null or not inventory.holds(s):
+		return false
+	var worth := int(s.value())
+	# Read the stack before removing it: `remove_stack` empties it, and an emptied stack adds
+	# nothing to the bag on the other side.
+	var id := s.id
+	var how_many := s.count
+	var extra := s.data.duplicate(true)
+	inventory.remove_stack(s)
+	if inv.add(id, how_many, extra) == null:
+		inventory.add(id, how_many, extra)      # it would not fit; put it back
+		return false
+	_stolen += worth
+	looted.emit(self, actor)
+	return true
+
+
+## Takes the money. Kept apart from the stacks because marks are not an item.
+func take_marks(actor: Node) -> int:
+	var inv := Inventory.for_actor(actor)
+	if inv == null or inventory.marks <= 0:
+		return 0
+	var taken := inventory.remove_marks(inventory.marks)
+	inv.add_marks(taken)
+	_stolen += taken
+	looted.emit(self, actor)
+	return taken
+
+
+## Called when the player is finished with the chest. Emptying somebody's strongbox item by
+## item is one theft, not nine: the law hears about the visit, not each handful, or a chest
+## with nine things in it would put nine separate accounts in front of the same witness.
+func close_up(actor: Node) -> void:
+	if _stolen <= 0:
+		_stolen = 0
+		return
+	var worth := _stolen
+	_stolen = 0
+	CrimeReports.theft(actor, global_position, worth, owner_npc, owner_faction, container_id)
+
+
+## What is in here, in marks. The bounty for a theft is a fraction of what was taken, so an
+## empty crate in a stranger's byre is not the same crime as their strongbox.
+func _worth_of_contents() -> int:
+	return int(inventory.total_value()) + int(inventory.marks)
 
 
 # --- loot --------------------------------------------------------------------------------
 
-## Rolls the loot table if this container has never been opened, or if it respawns and
-## enough hours have passed since the last opening. Deterministic per container and opening.
+## Rolls the loot table once, and again only if this container respawns and enough hours have
+## passed since it was last opened. Deterministic per container and opening.
+##
+## The test is `rolled`, not `opened_count == 0`. A container can hold its haul without ever
+## having been opened — a chest whose contents were rolled and then saved — and reading the
+## count would roll a second haul on top of the restored one the first time anybody looked.
 func ensure_loot() -> void:
-	var needs := opened_count == 0
+	var needs := not rolled
 	if not needs and respawn and last_opened_hours >= 0.0 and now_hours() - last_opened_hours >= respawn_hours:
 		inventory.clear()
 		needs = true
@@ -163,6 +231,8 @@ func ensure_loot() -> void:
 			inventory.add_marks(int(r["marks"]))
 		else:
 			inventory.add(str(r["item"]), int(r["count"]), r.get("data", {}))
+	rolled = true
+	_persist()
 
 
 func loot_context() -> Dictionary:
@@ -178,7 +248,7 @@ static func now_hours() -> float:
 func _persist() -> void:
 	store.states[container_id] = {
 		"opened_count": opened_count, "last_opened_hours": last_opened_hours, "locked": locked,
-		"inventory": inventory.to_save(),
+		"rolled": rolled, "inventory": inventory.to_save(),
 	}
 
 
@@ -188,6 +258,8 @@ func restore_state() -> void:
 		return
 	var st: Dictionary = store.states[container_id]
 	opened_count = int(st.get("opened_count", 0))
+	# An old save has no `rolled`; a container it recorded as opened had certainly rolled.
+	rolled = bool(st.get("rolled", opened_count > 0))
 	last_opened_hours = float(st.get("last_opened_hours", -1.0))
 	locked = bool(st.get("locked", locked))
 	var inv: Variant = st.get("inventory", {})

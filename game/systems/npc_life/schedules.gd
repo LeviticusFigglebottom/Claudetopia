@@ -1,7 +1,8 @@
 class_name Schedules
 ## Pure schedule logic (DESIGN §5.12). An NPC def carries
 ##   schedule: [{days, hour, place, activity, spot}]   (CONTRACTS §7)
-## days: "all" | "workdays" | a day name | an int 0..6 (0 = Kindleday) | "1-4" | "0,2,4" |
+## days: "all" | "workdays" (or "weekdays") | a day name | an int 0..6 (0 = Kindleday) |
+##       "1-4" | "0,2,4" |
 ##       an array of any of those. hour: float 0..24. place: a place id or "home".
 ## activity: sleep | work | eat | idle | pray | socialise | patrol | shop (travel is derived).
 ## Rules: the current entry is the latest one at or before the hour (wrapping to earlier days);
@@ -43,7 +44,11 @@ static func _string_applies(spec: String, weekday: int) -> bool:
 	var s := spec.strip_edges().to_lower()
 	if s in ["", "all", "any", "daily", "every"]:
 		return true
-	if s == "workdays":
+	# "weekdays" is what seventy-eight entries in the pack actually say, and it used to fall
+	# through every branch below and return false — so a large part of the roster's working
+	# day simply never applied and nobody noticed, because the fallback is a plausible
+	# schedule rather than an error.
+	if s == "workdays" or s == "weekdays":
 		return weekday <= 5
 	if s == "restday":
 		return weekday == 6
@@ -88,10 +93,14 @@ static func entries_for_day(schedule: Array, weekday: int) -> Array[Dictionary]:
 	return out
 
 
+## Is this hour spent under a roof? Three ways an entry can say so, in the order an author
+## would reach for them: the explicit flag, a spot named `in:<something>`, or the spot being
+## "home" (which is also where the rain override sends people). Sleeping is always indoors.
 static func is_indoors(entry: Dictionary) -> bool:
 	if bool(entry.get("indoors", false)):
 		return true
-	if str(entry.get("spot", "")).begins_with("in:"):
+	var spot := str(entry.get("spot", ""))
+	if spot.begins_with("in:") or spot == "home":
 		return true
 	return str(entry.get("activity", "")) == "sleep"
 
@@ -103,13 +112,15 @@ static func resolve(entry: Dictionary, weather: String, home_place: String) -> D
 		place = home_place
 	var activity := str(entry.get("activity", "idle"))
 	var spot := str(entry.get("spot", ""))
-	var out := {"place": place, "activity": activity, "spot": spot, "weather_override": false}
+	var out := {"place": place, "activity": activity, "spot": spot, "weather_override": false,
+			"indoors": is_indoors(entry)}
 	if entry.has("clip"):
 		out["clip"] = str(entry["clip"])
 	if is_rainy(weather) and activity == "idle" and not is_indoors(entry):
 		out["place"] = home_place if not home_place.is_empty() else place
 		out["spot"] = "home"
 		out["weather_override"] = true
+		out["indoors"] = true
 	return out
 
 
@@ -132,7 +143,7 @@ static func entry_at(schedule: Array, weekday: int, hour: float, weather: String
 				current_start = float(current.get("hour", 0)) - 24.0 * back
 				break
 	if current.is_empty():
-		return {"place": home_place, "activity": "idle", "spot": "home", "hour": 0.0, "travelling": false, "weather_override": false, "next": {}, "after_travel": ""}
+		return {"place": home_place, "activity": "idle", "spot": "home", "hour": 0.0, "travelling": false, "weather_override": false, "indoors": true, "next": {}, "after_travel": ""}
 	var next: Dictionary = {}
 	var next_start := INF
 	for e in today:
@@ -150,7 +161,8 @@ static func entry_at(schedule: Array, weekday: int, hour: float, weather: String
 	var cur := resolve(current, weather, home_place)
 	var out := {
 		"place": cur["place"], "activity": cur["activity"], "spot": cur["spot"], "hour": current_start,
-		"travelling": false, "weather_override": cur["weather_override"], "next": {}, "after_travel": "",
+		"travelling": false, "weather_override": cur["weather_override"],
+		"indoors": bool(cur.get("indoors", false)), "next": {}, "after_travel": "",
 	}
 	if cur.has("clip"):
 		out["clip"] = cur["clip"]

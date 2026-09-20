@@ -21,7 +21,11 @@ from lib import cli  # noqa: E402
 MODELS = cli.DEFAULT_OUT
 # DESIGN §7.0: typical prop 500-6 000 triangles, hero pieces up to 40 000.
 TRI_LIMIT = {"props": 12000, "flora": 2500, "rocks": 12000, "trees": 22000, "landmarks": 60000}
-# The whole generated set is committed; the brief's ceiling is about 150 MB.
+# The categories this forge owns. Other streams write characters, creatures and dungeon
+# kits into the same tree, with their own meta schemas and their own budgets, so every
+# check here is scoped to what gen_*.py produced rather than to whatever is on disk.
+OURS = ("trees", "flora", "rocks", "props", "landmarks")
+# The generated set is committed; the brief's ceiling is about 150 MB for these categories.
 TOTAL_MB_LIMIT = 150.0
 
 
@@ -29,11 +33,14 @@ def metas() -> list[dict]:
     out = []
     if not MODELS.is_dir():
         return out
-    for p in MODELS.glob("*/*/*.meta.json"):
-        try:
-            out.append(json.loads(p.read_text(encoding="utf-8")))
-        except (OSError, json.JSONDecodeError):
-            continue
+    for cat in OURS:
+        for p in (MODELS / cat).glob("*/*.meta.json"):
+            try:
+                m = json.loads(p.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(m, dict) and m.get("category") and str(m.get("generator", "")).startswith("gen_"):
+                out.append(m)
     return out
 
 
@@ -143,7 +150,8 @@ class TestGeneratedOutput(unittest.TestCase):
         self.assertEqual(same, [], "variants are identical: %s" % same)
 
     def test_total_weight(self):
-        total = sum(f.stat().st_size for f in MODELS.rglob("*") if f.is_file())
+        total = sum(f.stat().st_size for cat in OURS
+                    for f in (MODELS / cat).rglob("*") if f.is_file())
         mb = total / (1024 * 1024)
         self.assertLess(mb, TOTAL_MB_LIMIT, "generated assets are %.0f MB" % mb)
 

@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.851,
+  "height": 0.753,
   "max": [
-   0.673,
-   0.851,
-   0.613
+   0.591,
+   0.753,
+   0.625
   ],
   "min": [
-   -0.669,
+   -0.607,
    0.0,
-   -0.699
+   -0.448
   ],
-  "radius": 1.03
+  "radius": 0.888
  },
- "built_seconds": 0.18,
+ "built_seconds": 0.1,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "briarwold_bracken_b.glb",
- "hash": "b17377daf224588e",
+ "hash": "f0e3af34264f45e9",
  "kind": "bracken",
  "materials": [
   "briarwold_bracken_b_bracken_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e0a23a"
   }
  },
- "seed": 2609,
+ "seed": 2768,
  "textures": [
   "briarwold_bracken_b_atlas_albedo.png",
   "briarwold_bracken_b_atlas_normal.png",

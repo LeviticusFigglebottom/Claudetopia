@@ -109,9 +109,10 @@ func attempt(actor: Node, timing_accuracy: float) -> Dictionary:
 	if r["success"]:
 		EventBus.skill_used.emit("sneak", 5.0 + xp_per_level * lock_level)
 		var t := target()
-		if t != null and Ownership.is_owned_by_other(t) and Bounty.instance != null:
+		var ledger := Bounty.ensure()
+		if t != null and ledger != null and Ownership.is_owned_by_other(t):
 			var pos := (t as Node3D).global_position if t is Node3D else Vector3.ZERO
-			Bounty.instance.commit("lockpicking", pos, {"target": str(t.get_path())})
+			ledger.commit("lockpicking", pos, {"target": str(t.get_path())})
 		unlock(actor)
 	attempt_made.emit(r)
 	return r

@@ -72,6 +72,8 @@ signal detection_changed(observer: Node, level: float)
 
 # economy & property
 signal transaction(merchant_id: String, item_id: String, count: int, price: int, bought: bool)
+## Somebody has asked a shopkeeper to see their stock. The UI opens the trade screen on it.
+signal trade_requested(npc_id: String)
 signal property_purchased(property_id: String)
 signal job_completed(job_id: String, pay: int)
 

@@ -294,3 +294,45 @@ func test_gesture_during_a_conversation_is_shown_as_a_line() -> void:
 	var before := shown.size()
 	runner.gesture("core:gesture/wave")
 	assert_eq(shown.size(), before + 1, "the answer appears as a spoken line")
+
+
+# --- a gated opening still owes you a hello ------------------------------------------------------
+
+func test_a_gated_opening_falls_back_to_the_greeting_instead_of_closing() -> void:
+	# Ryn's only lines are behind a quest you have not taken. Before this, walking up to her
+	# opened a conversation and closed it in the same frame, which reads as a bug whatever the
+	# content says.
+	var gated := {"id": "test:dialogue/gated", "start": "locked", "nodes": {
+		"locked": {"speaker": "Ryn", "text": "The thing we discussed.",
+				   "conditions": [{"flag": "a_flag_nobody_has_set"}]},
+	}}
+	runner.start_def(gated, "core:npc/wardens_hesk")
+	assert_eq(shown.size(), 1, "the conversation produced no line at all")
+	assert_false(str(shown[0]["text"]).is_empty(), "and the line it produced was empty")
+	assert_ne(str(shown[0]["text"]), "The thing we discussed.", "the gated line was shown anyway")
+	assert_eq(ended_count, 0, "the conversation closed in the player's face")
+
+
+func test_a_gated_opening_with_an_else_still_takes_the_else() -> void:
+	var gated := {"id": "test:dialogue/gated_else", "start": "locked", "nodes": {
+		"locked": {"speaker": "Ryn", "text": "The thing we discussed.", "else": "plain",
+				   "conditions": [{"flag": "a_flag_nobody_has_set"}]},
+		"plain": {"speaker": "Ryn", "text": "Nothing to report."},
+	}}
+	runner.start_def(gated, "core:npc/wardens_hesk")
+	assert_eq(shown.size(), 1)
+	assert_eq(str(shown[0]["text"]), "Nothing to report.", "the else branch was not taken")
+
+
+func test_a_gate_in_the_middle_of_a_conversation_still_ends_it() -> void:
+	# The fallback is only for the way in. Once somebody has actually said something, a node
+	# that fails its conditions with nowhere to go ends the conversation, as it always did.
+	var mid := {"id": "test:dialogue/mid", "start": "hello", "nodes": {
+		"hello": {"speaker": "Ryn", "text": "Hello.", "next": "locked"},
+		"locked": {"speaker": "Ryn", "text": "Secret.",
+				   "conditions": [{"flag": "a_flag_nobody_has_set"}]},
+	}}
+	runner.start_def(mid, "core:npc/wardens_hesk")
+	assert_eq(str(shown[0]["text"]), "Hello.")
+	runner.advance()
+	assert_eq(ended_count, 1, "a gated node mid-conversation should end it")

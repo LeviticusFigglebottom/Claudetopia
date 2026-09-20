@@ -53,9 +53,17 @@ ROCKS = [
     ("cliff_slab", "hearthvale", 2, {"stone": "chalk_rock"}),
     ("cliff_slab", "briarwold", 2, {"stone": "granite"}),
     ("cliff_slab", "cinderlea", 2, None),
+    # Brightwater's own stone. The region is named for the lake and the rule that scatters
+    # its shore had nothing of its own to land on, so it was borrowing Briarwold's
+    # forest-green granite and Skerrow's mountain grey.
+    ("cliff_slab", "brightwater", 2, {"stone": "lake_stone", "width": 3.2, "height": 4.2,
+                                      "depth": 1.7}),
+    # Dressed stone, not geology: a delta has no cliffs, and the fen took something built.
+    ("sunken_masonry", "sedgemire", 2, None),
     ("scree", "skerrow", 3, None),
     ("scree", "cinderlea", 2, None),
     ("scree", "briarwold", 2, None),
+    ("scree", "hearthvale", 2, {"stone": "chalk_rock"}),
     ("standing_stone", "briarwold", 3, None),
     ("standing_stone", "hearthvale", 2, {"carved": False}),
     ("standing_stone", "skerrow", 2, {"carved": False}),

@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.107,
+  "height": 1.065,
   "max": [
-   0.237,
-   1.107,
-   0.218
+   0.245,
+   1.065,
+   0.212
   ],
   "min": [
-   -0.237,
+   -0.245,
    0.0,
-   -0.218
+   -0.213
   ],
-  "radius": 0.64
+  "radius": 0.624
  },
- "built_seconds": 13.76,
+ "built_seconds": 25.94,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_chair_a.glb",
- "hash": "72e2fc9a8358cfb4",
+ "hash": "3b540e9e31157959",
  "kind": "chair",
  "materials": [
   "hearthvale_chair_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4394,
+ "seed": 4553,
  "textures": [
   "hearthvale_chair_a_albedo.png",
   "hearthvale_chair_a_normal.png",

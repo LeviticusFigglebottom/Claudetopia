@@ -818,8 +818,8 @@ def wheelbarrow(pal, rng, params, variant):
     wheel = S.cylinder("wheel", radius=wheel_r, depth=0.06, vertices=18,
                        location=(-l * 0.46, 0, wheel_r), rotation=(90, 0, 0), mat=mat, centered=True)
     parts.append(wheel)
-    parts.append(B.hoop("tyre", wheel_r * 1.02, 0.016, mat=metal, location=(-l * 0.46, 0, wheel_r),
-                        segments=22, flatten=2.2, rotation=(90, 0, 0)))
+    parts.append(B.hoop("tyre", wheel_r * 1.02, 0.03, mat=metal, location=(-l * 0.46, 0, wheel_r),
+                        segments=22, flatten=1.4, rotation=(90, 0, 0)))
     parts.append(S.cylinder("axle", radius=0.018, depth=w_ * 0.5, vertices=8,
                             location=(-l * 0.46, -w_ * 0.25, wheel_r), rotation=(-90, 0, 0), mat=metal))
     return finish(parts, rng, "convex", ["wood_planks", "iron"], jitter=0.003)
@@ -834,43 +834,68 @@ def cart(pal, rng, params, variant):
     bed_z = wheel_r * 0.98
     parts = B.plank_run("bed", 6, l * 0.8, w_ / 6, 0.032, mat=mat, rng=rng, sag=0.004,
                         origin=(0, 0, bed_z))
+    # Sides that read as sides. A 30 cm rail on a 2.4 m cart is a lip, and from across a
+    # village square the whole thing looked like a shallow trough; a board, a capping rail
+    # on posts above it and a headboard give it a body the eye can name.
+    side_h = 0.46
     for sy in (-1, 1):
-        parts.append(S.cube("rail_%d" % sy, (l * 0.8, 0.03, 0.3), (0, sy * w_ / 2, bed_z + 0.016), mat=mat))
-        parts.append(S.cube("beam_%d" % sy, (l * 0.86, 0.07, 0.07),
-                            (0, sy * w_ * 0.36, bed_z - 0.05), mat=mat))
-    parts.append(S.cube("head", (0.03, w_ * 0.96, 0.4), (-l * 0.4, 0, bed_z + 0.016), mat=mat))
-    parts.append(S.cube("tail", (0.03, w_ * 0.96, 0.28), (l * 0.4, 0, bed_z + 0.016), mat=mat))
+        parts.append(S.cube("board_%d" % sy, (l * 0.8, 0.035, side_h),
+                            (0, sy * w_ / 2, bed_z + 0.016), mat=mat))
+        parts.append(S.cube("cap_%d" % sy, (l * 0.84, 0.075, 0.06),
+                            (0, sy * w_ / 2, bed_z + side_h + 0.016), mat=mat))
+        parts.append(S.cube("beam_%d" % sy, (l * 0.86, 0.09, 0.09),
+                            (0, sy * w_ * 0.36, bed_z - 0.06), mat=mat))
+        for k in range(3):
+            px = (k - 1) * l * 0.28
+            parts.append(S.cube("stake_%d_%d" % (sy, k), (0.06, 0.06, side_h + 0.05),
+                                (px, sy * (w_ / 2 + 0.03), bed_z + 0.016), mat=mat))
+    parts.append(S.cube("head", (0.04, w_ * 0.96, side_h + 0.12), (-l * 0.4, 0, bed_z + 0.016), mat=mat))
+    parts.append(S.cube("tail", (0.04, w_ * 0.96, side_h * 0.8), (l * 0.4, 0, bed_z + 0.016), mat=mat))
     for sy in (-1, 1):
         cx = l * 0.12
         hub = S.cylinder("hub_%d" % sy, radius=wheel_r * 0.17, depth=0.12, vertices=12,
                          location=(cx, sy * (w_ / 2 + 0.05), wheel_r), rotation=(90, 0, 0),
                          mat=mat, centered=True)
         parts.append(hub)
-        parts.append(B.hoop("felloe_%d" % sy, wheel_r * 0.92, wheel_r * 0.09, mat=mat,
-                            location=(cx, sy * (w_ / 2 + 0.05), wheel_r), segments=20, flatten=0.55,
+        # The felloe is the rim the cart actually stands on and it has to be thick enough to
+        # read from ten metres; at wheel_r * 0.09, flattened, it vanished and left the iron
+        # tyre looking like a bare hoop.
+        parts.append(B.hoop("felloe_%d" % sy, wheel_r * 0.86, wheel_r * 0.15, mat=mat,
+                            location=(cx, sy * (w_ / 2 + 0.05), wheel_r), segments=20, flatten=1.0,
                             rotation=(90, 0, 0)))
-        parts.append(B.hoop("tyre_%d" % sy, wheel_r, wheel_r * 0.035, mat=metal,
-                            location=(cx, sy * (w_ / 2 + 0.05), wheel_r), segments=26, flatten=1.6,
+        parts.append(B.hoop("tyre_%d" % sy, wheel_r, wheel_r * 0.055, mat=metal,
+                            location=(cx, sy * (w_ / 2 + 0.05), wheel_r), segments=26, flatten=1.3,
                             rotation=(90, 0, 0)))
         for k in range(8):
             a = TAU * k / 8 + rng.uniform(-0.05, 0.05)
-            spoke = S.cylinder("spoke", radius=wheel_r * 0.035, depth=wheel_r * 0.86, vertices=6,
-                               location=(cx, sy * (w_ / 2 + 0.05), wheel_r),
-                               rotation=(0, 0, 0), mat=mat, centered=True)
-            spoke.rotation_euler = Euler((0, math.pi / 2, 0))
-            S.apply_transforms(spoke)
-            spoke.rotation_euler = Euler((0, 0, 0))
+            # Lay the spoke along X, spin it in the wheel's plane, and only then move it out
+            # to the hub. Spinning the vertices after the transform had been applied turned
+            # them about the world origin instead, which threw all sixteen spokes onto the
+            # ground beside the cart -- the loose sticks under the axle.
+            spoke = S.cylinder("spoke", radius=wheel_r * 0.06, depth=wheel_r * 0.8, vertices=6,
+                               location=(0, 0, 0), mat=mat, centered=True)
+            # Push it out along its own axis first, so it runs hub to felloe rather than
+            # straddling the axle and stopping halfway to the rim.
             for v in spoke.data.vertices:
-                x, z = v.co.x, v.co.z
-                v.co.x = x * math.cos(a) - z * math.sin(a)
-                v.co.z = x * math.sin(a) + z * math.cos(a)
+                v.co.z += wheel_r * 0.5
+            spoke.rotation_euler = Euler((0, math.pi / 2 + a, 0), "XYZ")
+            S.apply_transforms(spoke)
+            spoke.location = Vector((cx, sy * (w_ / 2 + 0.05), wheel_r))
+            S.apply_transforms(spoke)
             parts.append(spoke)
     parts.append(S.cylinder("axle", radius=0.05, depth=w_ + 0.18, vertices=10,
                             location=(l * 0.12, -(w_ / 2 + 0.09), wheel_r), rotation=(-90, 0, 0), mat=mat))
+    # Shafts run forward and level, to where a horse would stand, and they are long enough
+    # to say so. They used to drop towards the ground over half a metre, which read as
+    # broken sticks dangling under the axle rather than as the front of a cart.
     for sy in (-1, 1):
-        shaft = [(-l * 0.4, sy * w_ * 0.3, bed_z - 0.06), (-l * 0.75, sy * w_ * 0.26, bed_z - 0.12),
-                 (-l * 0.95, sy * w_ * 0.22, bed_z - 0.2)]
-        parts.append(S.tube_along("shaft_%d" % sy, shaft, radius=0.04, segments=7, mat=mat))
+        shaft = [(-l * 0.38, sy * w_ * 0.34, bed_z - 0.05),
+                 (-l * 0.75, sy * w_ * 0.30, bed_z - 0.03),
+                 (-l * 1.15, sy * w_ * 0.26, bed_z - 0.02),
+                 (-l * 1.45, sy * w_ * 0.24, bed_z)]
+        parts.append(S.tube_along("shaft_%d" % sy, shaft, radius=0.055, segments=8, mat=mat))
+    # the swingle bar across the shaft ends, so the pair reads as a harness and not two poles
+    parts.append(S.cube("swingle", (0.07, w_ * 0.52, 0.07), (-l * 1.42, 0, bed_z), mat=mat))
     return finish(parts, rng, "convex", ["wood_planks", "iron"], jitter=0.003)
 
 

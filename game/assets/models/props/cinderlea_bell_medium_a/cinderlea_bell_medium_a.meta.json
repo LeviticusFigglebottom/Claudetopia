@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.333,
+  "height": 1.343,
   "max": [
-   0.565,
-   1.333,
-   0.501
+   0.569,
+   1.343,
+   0.504
   ],
   "min": [
-   -0.504,
+   -0.508,
    0.0,
-   -0.501
+   -0.504
   ],
-  "radius": 0.99
+  "radius": 0.997
  },
- "built_seconds": 36.96,
+ "built_seconds": 72.91,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "cinderlea_bell_medium_a.glb",
- "hash": "847b31cc378719a5",
+ "hash": "f0324213f1dd295b",
  "kind": "bell_medium",
  "materials": [
   "cinderlea_bell_medium_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#a08a4a"
   }
  },
- "seed": 6302,
+ "seed": 6461,
  "textures": [
   "cinderlea_bell_medium_a_albedo.png",
   "cinderlea_bell_medium_a_normal.png",
@@ -74,7 +74,7 @@
  "tris": [
   2128,
   850,
-  317
+  318
  ],
  "version": 3
 }

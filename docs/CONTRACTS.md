@@ -99,6 +99,23 @@ step swaps in the wind shader.
 Region palettes: generators accept `--palette <region_id>` and read the six
 hex colours from the region def; outputs record `region_palette`.
 
+
+### LOD0 is one mesh, and it is the first one
+
+A forge asset's `.glb` holds its **LOD0 as a single MeshInstance3D with one surface per
+material**, and that first MeshInstance3D is the whole asset. `WorldStreamer` takes the first
+mesh it finds and hands it to a MultiMesh; anything in a second mesh is silently dropped.
+
+This is load-bearing and invisible from the file layout, and its violation is what emptied the
+country: a tree exported as a trunk mesh plus a leaf-card mesh scattered as a bare trunk, four
+hundred thousand times, and read as "the trees look like winter scrub" for a week.
+
+Two consequences for the exporter. Joining meshes whose UV layers are named differently gives
+the result both layers, each half-blank, so the layer name is normalised before the join —
+otherwise every leaf card samples the bark atlas. And a prop that stands on the ground is
+exported with `bounds.min[1] == 0.0`, enforced by a forge test, so nothing placing a prop has
+to measure it.
+
 ## 5. Terrain texture slots (Terrain3D asset ids)
 
 | id | name | id | name | id | name |
@@ -149,12 +166,14 @@ Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 `{"quest_at": ["core:quest/toll_hums", 2]}`, `{"rep_min": ["core:faction/wardens", 20]}`,
 `{"renown_min": 50}`, `{"morality_min": 10}`, `{"skill_min": ["speech", 25]}`,
 `{"has_item": ["core:item/x", 1]}`, `{"time_between": [20, 6]}`,
-`{"knows_spell": "core:spell/x"}`; effects:
+`{"knows_spell": "core:spell/x"}`, `{"knows_recipe": "core:recipe/x"}`; effects:
 `{"set_flag": ...}`, `{"give_item": [...]}`, `{"quest_stage": [...]}`,
 `{"rep": [faction, delta]}`, `{"morality": delta}`, `{"renown": delta}`,
 `{"marks": delta}`, `{"start_quest": id}`, `{"teach_recipe": id}`,
 `{"teach_spell": "core:spell/x"}`.
-`teach_spell` and `knows_spell` go through the context's **`sayings`** provider, which `Social`
+`teach_recipe` and `knows_recipe` go through the context's **`recipes`** provider, which
+`Social` binds to the first node in the `crafting` group, and whose methods are
+`learn_recipe` / `knows_recipe`. `teach_spell` and `knows_spell` go through the context's **`sayings`** provider, which `Social`
 binds to the first node in the `progression` group. A quest grants a saying the same way, through
 its `rewards.effects[]`.
 

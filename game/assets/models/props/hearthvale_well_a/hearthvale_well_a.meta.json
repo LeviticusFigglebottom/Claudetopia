@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 2.871,
+  "height": 2.878,
   "max": [
-   0.882,
-   2.871,
-   0.91
+   0.907,
+   2.878,
+   0.935
   ],
   "min": [
-   -0.882,
+   -0.907,
    0.0,
-   -1.07
+   -1.091
   ],
-  "radius": 1.954
+  "radius": 1.98
  },
- "built_seconds": 23.1,
+ "built_seconds": 34.4,
  "category": "props",
  "collision": "hearthvale_well_a_col.glb",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_well_a.glb",
- "hash": "e0ca7e6ae6a06c2c",
+ "hash": "68e2809e1aefa247",
  "kind": "well",
  "materials": [
   "hearthvale_well_a_mat"
@@ -67,7 +67,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5772,
+ "seed": 5931,
  "textures": [
   "hearthvale_well_a_albedo.png",
   "hearthvale_well_a_normal.png",

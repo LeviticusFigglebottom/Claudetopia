@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.658,
+  "height": 0.673,
   "max": [
-   0.935,
-   0.658,
-   0.404
+   0.883,
+   0.673,
+   0.413
   ],
   "min": [
-   -0.999,
+   -0.973,
    0.0,
-   -0.404
+   -0.412
   ],
-  "radius": 1.098
+  "radius": 1.07
  },
- "built_seconds": 36.39,
+ "built_seconds": 51.85,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_wheelbarrow_a.glb",
- "hash": "58764146dca7bb45",
+ "hash": "d8ed10e997ac6b08",
  "kind": "wheelbarrow",
  "materials": [
   "hearthvale_wheelbarrow_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5242,
+ "seed": 5401,
  "textures": [
   "hearthvale_wheelbarrow_a_albedo.png",
   "hearthvale_wheelbarrow_a_normal.png",

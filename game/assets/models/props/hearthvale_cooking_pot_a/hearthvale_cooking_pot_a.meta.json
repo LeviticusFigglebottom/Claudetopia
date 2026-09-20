@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.459,
+  "height": 0.456,
   "max": [
-   0.219,
-   0.459,
-   0.214
+   0.217,
+   0.456,
+   0.213
   ],
   "min": [
-   -0.219,
+   -0.217,
    0.0,
-   -0.214
+   -0.213
   ],
-  "radius": 0.382
+  "radius": 0.38
  },
- "built_seconds": 22.78,
+ "built_seconds": 47.43,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_cooking_pot_a.glb",
- "hash": "51c5ae28d85351da",
+ "hash": "71abbf43e1abeed3",
  "kind": "cooking_pot",
  "materials": [
   "hearthvale_cooking_pot_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4023,
+ "seed": 4182,
  "textures": [
   "hearthvale_cooking_pot_a_albedo.png",
   "hearthvale_cooking_pot_a_normal.png",
@@ -73,7 +73,7 @@
  "tris": [
   876,
   350,
-  127
+  130
  ],
  "version": 3
 }

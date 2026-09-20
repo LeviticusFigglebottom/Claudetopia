@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 2.089,
+  "height": 1.267,
   "max": [
-   1.2,
-   2.089,
-   0.778
+   1.168,
+   1.267,
+   0.821
   ],
   "min": [
-   -2.658,
+   -3.94,
    0.0,
-   -0.778
+   -0.821
   ],
-  "radius": 2.327
+  "radius": 2.756
  },
- "built_seconds": 17.94,
+ "built_seconds": 65.12,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_cart_b.glb",
- "hash": "920143e67477f0c6",
+ "hash": "f80f98e447185837",
  "kind": "cart",
  "materials": [
   "hearthvale_cart_b_mat"
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "hearthvale_cart_b",
-   "tris": 2344
+   "tris": 2496
   },
   {
    "name": "hearthvale_cart_b_LOD1",
-   "tris": 936
+   "tris": 996
   },
   {
    "name": "hearthvale_cart_b_LOD2",
-   "tris": 332
+   "tris": 347
   }
  ],
  "name": "hearthvale_cart_b",
@@ -65,16 +65,16 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5312,
+ "seed": 5471,
  "textures": [
   "hearthvale_cart_b_albedo.png",
   "hearthvale_cart_b_normal.png",
   "hearthvale_cart_b_orm.png"
  ],
  "tris": [
-  2344,
-  936,
-  332
+  2496,
+  996,
+  374
  ],
  "version": 3
 }

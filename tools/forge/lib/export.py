@@ -30,18 +30,110 @@ COLLISION_KINDS = ("convex", "trimesh", "capsule", "none", "col_glb")
 
 # --- LODs -------------------------------------------------------------------------------
 
+def drop_small_parts(obj, target_tris: int) -> None:
+    """Delete the smallest connected pieces of a mesh until it fits a triangle budget.
+
+    Size is the piece's longest bounding-box edge, not its triangle count: a long limb
+    built cheaply must outrank a short twig built expensively, because it is the limb the
+    silhouette needs.
+    """
+    me = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.faces.ensure_lookup_table()
+    seen = set()
+    parts = []
+    for f0 in bm.faces:
+        if f0 in seen:
+            continue
+        stack = [f0]
+        group = []
+        while stack:
+            f = stack.pop()
+            if f in seen:
+                continue
+            seen.add(f)
+            group.append(f)
+            for e in f.edges:
+                for nf in e.link_faces:
+                    if nf not in seen:
+                        stack.append(nf)
+        lo = [1e18] * 3
+        hi = [-1e18] * 3
+        tris = 0
+        for f in group:
+            tris += max(1, len(f.verts) - 2)
+            for v in f.verts:
+                for k in range(3):
+                    lo[k] = min(lo[k], v.co[k])
+                    hi[k] = max(hi[k], v.co[k])
+        parts.append((max(hi[k] - lo[k] for k in range(3)), tris, group))
+    if len(parts) < 2:
+        bm.free()
+        return
+    parts.sort(key=lambda t: t[0], reverse=True)
+    kept = 0
+    doomed = []
+    for (_size, tris, group) in parts:
+        if kept and kept + tris > target_tris:
+            doomed.extend(group)
+        else:
+            kept += tris
+    if doomed and len(doomed) < len(bm.faces):
+        bmesh.ops.delete(bm, geom=doomed, context="FACES")
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+
+
 def make_lods(obj, ratios=LOD_RATIOS, floors=LOD_MIN_TRIS, smooth_angle: float = 35.0) -> list:
-    """Decimated copies named <obj>_LOD1, _LOD2. Small meshes get lighter decimation so
-    they keep their silhouette."""
+    """Decimated copies named <obj>_LOD1, _LOD2, hitting a triangle target rather than
+    merely asking for one.
+
+    One pass of Blender's collapse decimator does not reach its ratio on a mesh made of
+    many disconnected pieces -- a branching trunk is the worst case, and asking for 0.06
+    of it returned 0.45. Each pass is relative to the mesh it is given, so repeating until
+    the count stops falling converges on the budget. Without this the LOD1 rung is not a
+    level of detail at all, just a slightly smaller tree at a third of full price.
+    """
     lods = [obj]
     base = S.tri_count(obj)
     for i, r in enumerate(ratios, start=1):
         floor = floors[i - 1] if i - 1 < len(floors) else 100
         target = max(floor, int(base * r))
         d = S.duplicate(obj, "%s_LOD%d" % (obj.name, i))
-        if target < base:
-            S.decimate(d, ratio=target / float(base))
+        tris = base
+        if target < base * 0.5:
+            # Drop the small pieces before decimating, not after. A collapse cannot take a
+            # closed tube below its minimal form, so on a branching trunk it spends its
+            # whole budget shattering the trunk into shards while the twigs survive intact.
+            # Removing the twigs first leaves the limbs enough triangles to stay limbs.
+            drop_small_parts(d, int(target * 2.0))
+            tris = S.tri_count(d)
+        for _ in range(6):
+            if tris <= target:
+                break
+            S.decimate(d, ratio=max(0.08, target / float(tris)))
+            got = S.tri_count(d)
+            if got >= tris * 0.97:  # no further progress to be had
+                break
+            tris = got
+        if tris > target * 1.4:
+            # Still over: the decimator has stalled on what is left, so drop pieces again.
+            drop_small_parts(d, target)
+            tris = S.tri_count(d)
         S.shade_smooth(d, smooth_angle)
+        got = S.tri_count(d)
+        if base > 200 and got < 24:
+            # A rung that decimates to nothing is a generator failure, not a cheap level of
+            # detail: the far ring renders empty air and nobody notices until a capture is
+            # taken. If a budget cannot be met with a silhouette, it must be authored.
+            raise RuntimeError("make_lods: %s LOD%d collapsed to %d triangles from %d; "
+                               "author that rung instead of decimating it"
+                               % (obj.name, i, got, base))
         lods.append(d)
     return lods
 
@@ -108,6 +200,38 @@ def capsule_params(objs) -> dict:
 
 # --- glTF ----------------------------------------------------------------------------------
 
+UV_LAYER = "UVMap"
+
+
+def single_uv(obj) -> None:
+    """Leave the mesh with exactly one UV layer, the one the bake reads, called UVMap.
+
+    Two reasons, and both of them have cost a day. Baking leaves the pre-bake layer behind
+    and the exporter writes it as a TEXCOORD_1 nothing samples -- eight bytes a vertex,
+    a fifth of a tree's file. Worse, joining two meshes whose UV layers have different
+    names gives the result *both* layers with half the loops blank in each, so when the
+    stale one is dropped a leaf card ends up reading the bark atlas. Normalising the name
+    first means a join merges the layers instead of stacking them.
+
+    Removing a layer reshuffles the collection, so this works by name throughout: holding a
+    reference across a removal deletes the wrong one and strips every UV off the mesh.
+    """
+    if obj.type != "MESH":
+        return
+    uvs = obj.data.uv_layers
+    if not len(uvs):
+        return
+    keep = next((u.name for u in uvs if u.active_render), None) or uvs.active.name
+    for name in [u.name for u in uvs if u.name != keep]:
+        layer = uvs.get(name)
+        if layer is not None:
+            uvs.remove(layer)
+    layer = uvs.get(keep)
+    if layer is not None:
+        layer.name = UV_LAYER
+        uvs.active = uvs[UV_LAYER]
+
+
 def export_glb(objs, path, material_textures: dict | None = None) -> dict:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -115,21 +239,7 @@ def export_glb(objs, path, material_textures: dict | None = None) -> dict:
         o.hide_set(False)
         o.hide_viewport = False
         o.hide_render = False
-        # Baking leaves the pre-bake UV layer behind, and the exporter writes it as
-        # TEXCOORD_1 that nothing ever samples: eight bytes a vertex, which on a tree is a
-        # fifth of the file. Only the active layer survives to the GLB.
-        if o.type == "MESH" and len(o.data.uv_layers) > 1:
-            # The bake reads the render layer, so that is the one that must survive. Work
-            # by name: removing a layer reshuffles the collection, and holding a reference
-            # across a removal deletes the wrong one (which strips every UV off the mesh).
-            uvs = o.data.uv_layers
-            keep = next((u.name for u in uvs if u.active_render), None) or uvs.active.name
-            for name in [u.name for u in uvs if u.name != keep]:
-                layer = uvs.get(name)
-                if layer is not None:
-                    uvs.remove(layer)
-            if uvs.get(keep) is not None:
-                uvs.active = uvs[keep]
+        single_uv(o)
     S.select_only(objs)
     bpy.ops.export_scene.gltf(
         filepath=str(path), export_format="GLB", use_selection=True, export_apply=True, export_yup=True,
@@ -185,7 +295,7 @@ nodes/import_as_skeleton_bones=false
 nodes/use_name_suffixes=true
 nodes/use_node_type_suffixes=true
 meshes/ensure_tangents=true
-meshes/generate_lods=false
+meshes/generate_lods=true
 meshes/create_shadow_meshes=true
 meshes/light_baking=1
 meshes/lightmap_texel_size=0.2
@@ -379,21 +489,9 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     if not lod0:
         raise RuntimeError("finish_asset: nothing to export")
     bnd = bounds_dict(lod0)
-    all_objs = [o for chain in parts for o in chain]
-    if impostor is not None:
-        impostor.name = "%s_LOD%d" % (name, len(lod_ratios) + 1)
-        impostor.data.name = impostor.name
-        if impostor_textures:
-            for m in impostor.data.materials:
-                if m is not None:
-                    slot_map.update(texture_slots(m.name, dict(impostor_textures)))
-            meta_textures += [t for t in impostor_textures.values() if t not in meta_textures]
-        all_objs.append(impostor)
-    glb_path = out_dir / ("%s.glb" % name)
-    stage("export %d objects" % len(all_objs))
-    export_info = export_glb(all_objs, glb_path, slot_map)
-    stage("exported")
 
+    # Collision and the triangle counts are settled here, before LOD0 is merged below,
+    # because both of them need the parts as the separate objects they were built as.
     extra_glbs = []
     col_value = collision
     col_params = dict(collision_params or {})
@@ -415,6 +513,37 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
         tris.append(S.tri_count(impostor))
     while len(tris) < 3:
         tris.append(tris[-1])
+
+    # LOD0 is exported as ONE mesh with one surface per material. The world streamer
+    # scatters an asset by taking the first MeshInstance3D out of the imported scene and
+    # handing its mesh to a MultiMesh, so a tree split into a trunk mesh and a leaf-card
+    # mesh arrived in the world as a bare trunk -- four hundred thousand bare trunks, as it
+    # turned out. Merging costs nothing (the surfaces are what the materials were anyway)
+    # and it means whatever the streamer grabs is the whole plant. The LOD1/LOD2 meshes
+    # stay as separate nodes, for whatever instantiates the scene and uses their
+    # visibility ranges.
+    tails = [o for chain in parts for o in chain[1:]]
+    if len(lod0) > 1:
+        # Every part must carry the same, singular UV layer before they are joined, or the
+        # join stacks two layers and the cards end up reading the trunk's atlas.
+        for o in lod0:
+            single_uv(o)
+        all_objs = [S.join(lod0, name)] + tails
+    else:
+        all_objs = lod0 + tails
+    if impostor is not None:
+        impostor.name = "%s_LOD%d" % (name, len(lod_ratios) + 1)
+        impostor.data.name = impostor.name
+        if impostor_textures:
+            for m in impostor.data.materials:
+                if m is not None:
+                    slot_map.update(texture_slots(m.name, dict(impostor_textures)))
+            meta_textures += [t for t in impostor_textures.values() if t not in meta_textures]
+        all_objs.append(impostor)
+    glb_path = out_dir / ("%s.glb" % name)
+    stage("export %d objects" % len(all_objs))
+    export_info = export_glb(all_objs, glb_path, slot_map)
+    stage("exported")
 
     meta = {
         "name": name,

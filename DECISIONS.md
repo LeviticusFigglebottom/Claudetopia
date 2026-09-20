@@ -246,3 +246,63 @@ triangles each. The wood is held at 44 stems a hectare and that one frame carrie
 against a 1.5 M budget, deliberately, because the alternative is hill grazing with trees on
 it. Every other region is between 0.38 M and 0.6 M. When the forge ships a ladder of roughly
 `[7000, 800, 8]` the density goes back up and the overage goes away.
+## 2026-09-19 · A house is built from the inside of the house it opens onto
+**Decision.** `Building` raises a house's exterior by reading that interior's own meta: the
+ground-floor rooms become wall masses, each mass takes a pitched roof at its culture's pitch
+and depth, the hearth room takes a chimney, and the door and windows are placed where the
+interior says they are. No exterior is modelled or authored separately.
+**Why.** The alternative is a library of house meshes and a rule for choosing between them,
+which guarantees that the cottage you walk up to is not the cottage you walk into. Reading
+the interior means a one-room cottage is small outside and the steward's eight-room house is
+not, for free, and a change to the house forge changes both sides at once.
+**Consequences.** The outside is plain massing with painted surfaces rather than a modelled
+asset — what a village needs first is silhouette, mass and a door in the right wall. Two
+bugs came out of writing it and both were invisible except by looking: the painted_surface
+uniforms are spelled `base_color`, so setting `base_colour` was silently a no-op and every
+wall and roof in Merrowby came out the shader's default grey; and the roof slabs were tilted
+the wrong way, which turns a cottage into a pair of open wings.
+
+## 2026-09-19 · The rest of a town is generated, and it is two draw calls a house
+**Decision.** Twenty-four hand-built interiors cannot furnish eleven settlements, so
+`Settlement` raises the other roofs: plots along any road that crosses the place's pad, a
+ring around a green where none does, counts and sizes by the place's `kind`. Every filler
+house is merged into two meshes — one per material — rather than instanced as parts.
+**Why.** A settlement is fifty roofs of which four open. Without them, Tollmere the capital
+was a paved circle with three doors on it. Merging per material means fifty of them cost
+what six full `Building`s would, which is the only reason a city is affordable at all.
+**Consequences.** Filler houses cannot be entered and have no interior; that is honest, and
+the ones that can be entered are exactly the ones the content pack authored. Props are
+placed against the houses rather than against the pad, because the flattened ground is far
+wider than the town standing on it, and each is dropped by its own AABB until it sits on the
+ground — the forge centres a cart on its axle, so a cart placed at ground height hovers.
+
+## 2026-09-19 · Ask what nothing outside a test ever calls
+**Decision.** `tools/unwired.py` reports public functions in `game/` that only the tests
+reach, with a `--verbs` mode for the ones that are actions rather than accessors. It is the
+counterpart to `tools/dead_data.py`: that one asks what the data promises that the code never
+reads, this one asks what the code can do that nothing ever asks for.
+**Why.** A system can be complete, correct, covered by tests and completely inert, and a green
+suite says nothing about it. Three things in this project were in exactly that state:
+`NpcRegistry.spawn()` had one caller and it was a test, so every village was empty while its
+schedules ran; `Bounty.commit()` was reached by picking a lock and picking a pocket but not
+by emptying a chest or killing a villager; and `WorldContainer.take_all()` had no caller at
+all, so every chest in the world was scenery.
+**Consequences.** It is a text scan and not a compiler, so it has false positives — an
+accessor nobody calls is dead weight, but a verb nobody calls is a feature that does not
+happen, and that distinction is the whole value. Running it also exposed a related habit:
+five places reached for `Bounty.instance` and gave up quietly when it was null, so crimes
+were being committed and dropped. Everything goes through `Bounty.ensure()` now.
+
+## 2026-09-20 · A landform score must be blind to where the camera stood
+**Decision.** The drop test's landform axis dropped the absolute horizon height and the sky
+fraction from its signature, and the landform bar only binds at six or more images per region.
+**Why.** Moving the review camera from 48 m above a hilltop to eye height moved the score by a
+factor of eight. A metric that swings when the photographer moves is measuring the photograph.
+The terms that did it encode how high the camera stood and how far it tilted, and neither is
+anything the place does. Separately, three images per region over six regions makes
+leave-one-out turn on one or two frames, and the figure lands anywhere including below the
+chance line — which means noise, not a bad country.
+**Consequences.** The tool now says out loud when the sample cannot support the number and
+refuses to fail the run on it, and the confusion pairs are the part worth reading meanwhile.
+Six shots a region is cheap and is the next thing to do. The cost of this honesty is that half
+the drop test is currently unmeasured, and PROGRESS.md says so.

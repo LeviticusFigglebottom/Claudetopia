@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.509,
+  "height": 0.457,
   "max": [
-   0.363,
-   0.509,
-   0.389
+   0.323,
+   0.457,
+   0.34
   ],
   "min": [
-   -0.302,
+   -0.41,
    0.0,
-   -0.384
+   -0.364
   ],
-  "radius": 0.57
+  "radius": 0.557
  },
- "built_seconds": 0.08,
+ "built_seconds": 0.28,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "sedgemire_grass_clump_a.glb",
- "hash": "544b411950c90922",
+ "hash": "193f59ba7353a422",
  "kind": "grass_clump",
  "materials": [
   "sedgemire_grass_clump_a_grass_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 2115,
+ "seed": 2274,
  "textures": [
   "sedgemire_grass_clump_a_atlas_albedo.png",
   "sedgemire_grass_clump_a_atlas_normal.png",

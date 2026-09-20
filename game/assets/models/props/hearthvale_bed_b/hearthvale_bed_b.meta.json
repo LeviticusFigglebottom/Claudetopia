@@ -2,24 +2,24 @@
  "bounds": {
   "height": 0.624,
   "max": [
-   1.062,
+   1.027,
    0.624,
-   0.534
+   0.535
   ],
   "min": [
-   -1.062,
+   -1.027,
    0.0,
-   -0.534
+   -0.535
   ],
-  "radius": 1.229
+  "radius": 1.199
  },
- "built_seconds": 23.78,
+ "built_seconds": 32.31,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_bed_b.glb",
- "hash": "637b01996acd2504",
+ "hash": "27e205d8661f97b5",
  "kind": "bed",
  "materials": [
   "hearthvale_bed_b_mat"
@@ -66,7 +66,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4517,
+ "seed": 4676,
  "textures": [
   "hearthvale_bed_b_albedo.png",
   "hearthvale_bed_b_normal.png",

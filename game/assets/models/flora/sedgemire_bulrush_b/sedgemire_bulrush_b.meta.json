@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 2.238,
+  "height": 2.36,
   "max": [
-   0.56,
-   2.238,
-   0.397
+   0.561,
+   2.36,
+   0.46
   ],
   "min": [
-   -0.433,
+   -0.447,
    0.0,
-   -0.429
+   -0.478
   ],
-  "radius": 1.292
+  "radius": 1.366
  },
- "built_seconds": 0.07,
+ "built_seconds": 0.15,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "sedgemire_bulrush_b.glb",
- "hash": "3dfbc2ce3da6796a",
+ "hash": "5afacd7d64a39807",
  "kind": "bulrush",
  "materials": [
   "sedgemire_bulrush_b_bulrush_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 2450,
+ "seed": 2609,
  "textures": [
   "sedgemire_bulrush_b_atlas_albedo.png",
   "sedgemire_bulrush_b_atlas_normal.png",

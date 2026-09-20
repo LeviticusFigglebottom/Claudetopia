@@ -394,11 +394,18 @@ unlisted in `STYLE_EXCEPTIONS.md`.
    must be sortable by region by a reviewer. Automated proxy in
    `tools/uniqueness_check.py`, which scores two axes separately: **colour**
    (palette histograms) and **landform** (skyline profile, ruggedness, where
-   the detail sits in the frame, sky area -- computed on per-image-normalised
-   luminance, so it is blind to tint). Leave-one-out nearest-centroid accuracy
-   on the two together must reach 0.80; landform alone must reach 0.55. The
-   second bar exists because a region that separates on colour alone is a
-   region that would vanish if you desaturated it, and a filter is not a place.
+   the detail sits down the frame -- computed on per-image-normalised luminance,
+   so it is blind to tint, and deliberately blind to the absolute horizon height
+   and the sky fraction, which are the photographer's choices and not the
+   place's). Leave-one-out nearest-centroid accuracy on the two together must
+   reach 0.80; landform alone must reach 0.55. The second bar exists because a
+   region that separates on colour alone is a region that would vanish if you
+   desaturated it, and a filter is not a place.
+   **The landform bar only binds at six or more images per region.** Below that,
+   leave-one-out over six regions turns on one or two frames and the figure lands
+   anywhere, including below the chance line; it is printed and explained and is
+   not allowed to fail the run, and the confusion pairs are the part worth
+   reading. Never steer the world by a number the sample cannot support.
 2. **Named-place test**: each named location's data declares its `unique_feature`;
    the check fails if any two locations share one.
 3. **Interior test**: every interior declares `resident`, `trade`, `wealth`,

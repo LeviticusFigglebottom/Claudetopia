@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 0.382,
+  "height": 0.404,
   "max": [
-   0.109,
-   0.382,
-   0.109
+   0.115,
+   0.404,
+   0.115
   ],
   "min": [
-   -0.109,
+   -0.115,
    0.0,
-   -0.109
+   -0.115
   ],
-  "radius": 0.246
+  "radius": 0.259
  },
- "built_seconds": 11.96,
+ "built_seconds": 21.89,
  "category": "props",
  "collision": "none",
  "collision_params": {},
@@ -21,7 +21,7 @@
  "generator": "gen_props",
  "glb": "sedgemire_lantern_hanging_a.glb",
  "hangs": true,
- "hash": "74e7d999669095bb",
+ "hash": "123dc83b2ee9c20c",
  "kind": "lantern_hanging",
  "materials": [
   "sedgemire_lantern_hanging_a_mat"
@@ -67,7 +67,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 4765,
+ "seed": 4924,
  "textures": [
   "sedgemire_lantern_hanging_a_albedo.png",
   "sedgemire_lantern_hanging_a_normal.png",
@@ -77,7 +77,7 @@
  "tris": [
   516,
   300,
-  115
+  120
  ],
  "version": 3
 }

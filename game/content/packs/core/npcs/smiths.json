@@ -1,0 +1,73 @@
+[
+{
+  "id": "core:npc/ordda_ko_brindle",
+  "name": "Ordda ko-Brindle",
+  "home_place": "core:place/kharrow_hold",
+  "faction": "core:faction/clan_moot",
+  "dialogue": "core:dialogue/ordda_ko_brindle",
+  "bio": "Bone-smith on Kharrow's third ledge and the fourth to carry the name Ordda, which comes with the bench and not with the mother; she faces clan plate and backs clan bows with giant-bone off the Brindlecrag scree and has never sold a split of it down the pass.",
+  "unique_habit": "Weighs every piece of bone before she cuts it and after, keeps the difference in a horn cup, and walks the dust back up the scree when there is a handful of it.",
+  "personality": {
+    "traits": ["proud", "quiet", "pious"]
+  },
+  "appearance": {
+    "seed": 2112,
+    "build": "short_thick",
+    "age": 51,
+    "hair": "red_grey_shaved_sides",
+    "notes": "bone dust worked white into the creases of both hands, a horn cup on a thong at the belt, one Brindle token among a hold full of Kharrow ones"
+  },
+  "merchant": {
+    "stock": "core:table/stock_smith",
+    "marks": 260,
+    "buys": ["material", "weapon", "armour"]
+  },
+  "schedule": [
+    {"days": "all", "hour": 6, "place": "core:place/kharrow_hold", "activity": "pray", "spot": "moot_hall", "notes": "the Rope-Song, at the back, half a beat behind"},
+    {"days": "all", "hour": 7, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+    {"days": "workdays", "hour": 8, "place": "core:place/kharrow_hold", "activity": "work", "spot": "bone_bench"},
+    {"days": "workdays", "hour": 13, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "bone_bench", "notes": "standing, over the work, which Dunna has mentioned"},
+    {"days": "workdays", "hour": 14, "place": "core:place/kharrow_hold", "activity": "work", "spot": "bone_bench"},
+    {"days": "tollday", "hour": 9, "place": "core:place/kharrow_hold", "activity": "work", "spot": "chain_bridge_head", "notes": "restringing the bridge-wardens' bows, badly paid, done anyway"},
+    {"days": "tollday", "hour": 14, "place": "core:place/brindlecrag", "activity": "idle", "spot": "scree_path", "notes": "the dust going back"},
+    {"days": "all", "hour": 19, "place": "core:place/kharrow_hold", "activity": "socialise", "spot": "hearth_hall"},
+    {"days": "all", "hour": 22, "place": "core:place/kharrow_hold", "activity": "sleep", "spot": "sleeping_ledge"}
+  ]
+},
+
+{
+  "id": "core:npc/sorrel_lathe",
+  "name": "Sorrel Lathe",
+  "home_place": "core:place/tollmere",
+  "faction": "core:faction/tallymen",
+  "dialogue": "core:dialogue/sorrel_lathe",
+  "bio": "Makes the paid watch's crossbows under guild charter at the canal end of Lantern Row, and has cut the brass tally-plate into every stock that has left her counter since she was twenty-three.",
+  "unique_habit": "Knows every watchman in Tollmere by the number on their stock instead of their face, greets them by it, and apologises for it immediately every time.",
+  "personality": {
+    "traits": ["cynical", "proud", "gossip"]
+  },
+  "appearance": {
+    "seed": 3313,
+    "build": "wiry",
+    "age": 38,
+    "hair": "fair_tied_back",
+    "notes": "brass filings in the apron seam, a hand-vice hung where a purse would be, a register open on the counter with a weight on the page"
+  },
+  "merchant": {
+    "stock": "core:table/stock_smith",
+    "marks": 400,
+    "buys": ["weapon", "material", "tool"]
+  },
+  "schedule": [
+    {"days": "all", "hour": 6, "place": "core:place/tollmere", "activity": "eat", "spot": "arbalest_shop"},
+    {"days": "workdays", "hour": 7, "place": "core:place/tollmere", "activity": "work", "spot": "shop_bench", "notes": "laths first, while the shop is cold"},
+    {"days": "workdays", "hour": 12, "place": "core:place/tollmere", "activity": "eat", "spot": "canal_steps"},
+    {"days": "workdays", "hour": 13, "place": "core:place/tollmere", "activity": "work", "spot": "shop_counter", "notes": "the register, the numbers, and whoever is arguing about a string"},
+    {"days": "workdays", "hour": 18, "place": "core:place/tollmere", "activity": "idle", "spot": "shop_door", "notes": "shutters half down, still talking"},
+    {"days": "tollday", "hour": 9, "place": "core:place/tollmere", "activity": "idle", "spot": "charter_board", "notes": "reading the morning's prices out loud to whoever cannot"},
+    {"days": "tollday", "hour": 13, "place": "core:place/tollmere", "activity": "socialise", "spot": "guild_hall"},
+    {"days": "all", "hour": 20, "place": "core:place/tollmere", "activity": "socialise", "spot": "guild_hall"},
+    {"days": "all", "hour": 23, "place": "core:place/tollmere", "activity": "sleep", "spot": "arbalest_shop"}
+  ]
+}
+]

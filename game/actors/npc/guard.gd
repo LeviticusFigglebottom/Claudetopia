@@ -53,7 +53,8 @@ func law() -> Dictionary:
 
 
 func bounty() -> int:
-	return Bounty.instance.total(law_faction) if Bounty.instance != null else 0
+	var ledger := Bounty.ensure()
+	return ledger.total(law_faction) if ledger != null else 0
 
 
 func should_confront() -> bool:
@@ -147,8 +148,9 @@ func resolve(option_id: String, player: Node = null) -> Dictionary:
 
 
 func _clear_bounty() -> void:
-	if Bounty.instance != null:
-		Bounty.instance.clear(law_faction)
+	var ledger := Bounty.ensure()
+	if ledger != null:
+		ledger.clear(law_faction)
 
 
 ## Time passes, the bounty is cleared, and the player wakes in the jail place. Skill practice
@@ -195,8 +197,9 @@ func become_hostile() -> void:
 	play_intent("Idle_Combat")
 	if NpcRegistry.instance != null and not npc_id.is_empty():
 		NpcRegistry.instance.set_hostile(npc_id, true)
-	if Bounty.instance != null:
-		Bounty.instance.add(law_faction, Crimes.SEVERITY["assault"], place_id)
+	var ledger := Bounty.ensure()
+	if ledger != null:
+		ledger.add(law_faction, Crimes.SEVERITY["assault"], place_id)
 	EventBus.notify.emit("\"Have it your way, then.\"", "crime")
 
 

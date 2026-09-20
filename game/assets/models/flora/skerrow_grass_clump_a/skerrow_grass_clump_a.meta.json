@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.585,
+  "height": 0.438,
   "max": [
-   0.405,
-   0.585,
-   0.339
+   0.286,
+   0.438,
+   0.303
   ],
   "min": [
-   -0.423,
+   -0.359,
    0.0,
-   -0.344
+   -0.278
   ],
-  "radius": 0.611
+  "radius": 0.486
  },
- "built_seconds": 0.07,
+ "built_seconds": 0.19,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "skerrow_grass_clump_a.glb",
- "hash": "d4f3e7910045b313",
+ "hash": "57c24b64f9b8dc64",
  "kind": "grass_clump",
  "materials": [
   "skerrow_grass_clump_a_grass_foliage"
@@ -64,7 +64,7 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 2168,
+ "seed": 2327,
  "textures": [
   "skerrow_grass_clump_a_atlas_albedo.png",
   "skerrow_grass_clump_a_atlas_normal.png",

@@ -1,29 +1,29 @@
 {
  "bounds": {
-  "height": 1.911,
+  "height": 2.03,
   "max": [
-   0.153,
-   1.911,
-   0.153
+   0.163,
+   2.03,
+   0.163
   ],
   "min": [
-   -0.153,
+   -0.163,
    0.0,
-   -0.153
+   -0.163
   ],
-  "radius": 0.98
+  "radius": 1.041
  },
- "built_seconds": 35.0,
+ "built_seconds": 46.88,
  "category": "props",
  "collision": "capsule",
  "collision_params": {
-  "height": 1.911,
-  "radius": 0.153
+  "height": 2.03,
+  "radius": 0.163
  },
  "emissive": true,
  "generator": "gen_props",
  "glb": "brightwater_lantern_standing_b.glb",
- "hash": "27263d5fc588a364",
+ "hash": "6a02d2356b2d2f88",
  "kind": "lantern_standing",
  "materials": [
   "brightwater_lantern_standing_b_mat"
@@ -69,7 +69,7 @@
    "warm": "#c76a44"
   }
  },
- "seed": 4835,
+ "seed": 4994,
  "textures": [
   "brightwater_lantern_standing_b_albedo.png",
   "brightwater_lantern_standing_b_normal.png",
@@ -79,7 +79,7 @@
  "tris": [
   464,
   300,
-  114
+  118
  ],
  "version": 3
 }

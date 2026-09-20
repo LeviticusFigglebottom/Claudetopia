@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.369,
+  "height": 0.389,
   "max": [
-   0.202,
-   0.369,
-   0.189
+   0.248,
+   0.389,
+   0.242
   ],
   "min": [
-   -0.169,
+   -0.203,
    0.0,
-   -0.21
+   -0.2
   ],
-  "radius": 0.329
+  "radius": 0.371
  },
- "built_seconds": 0.13,
+ "built_seconds": 0.53,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "sedgemire_marsh_marigold_a.glb",
- "hash": "5a4e89b1d6dd6b5d",
+ "hash": "af17206b6c9788b9",
  "kind": "marsh_marigold",
  "materials": [
   "sedgemire_marsh_marigold_a_marigold_foliage"
@@ -64,7 +64,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 3016,
+ "seed": 3175,
  "textures": [
   "sedgemire_marsh_marigold_a_atlas_albedo.png",
   "sedgemire_marsh_marigold_a_atlas_normal.png",

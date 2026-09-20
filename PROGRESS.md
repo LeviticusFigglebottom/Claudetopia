@@ -109,8 +109,11 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
    schedules ran, dispositions changed and guards noticed crimes in villages that contained no
    bodies at all. `NpcStreamer` follows whoever the world is streaming around and keeps people
    standing in a 240 m ring (330 m before they are taken down again), capped at 48. What is
-   untuned is how many and how busy: a village of 23 residents currently stands 23 people in
-   it at once, which is every single villager outdoors at all hours.
+   untuned is how many and how busy. Whoever the hour has indoors is not stood up in the
+   street — so a village genuinely empties at three in the morning, and rain sends the idlers
+   home — and going through a door stands the residents up in the room their hour calls for.
+   Nobody is placed inside an interior they do not live in, so an inn at midday has its
+   landlord and no drinkers.
 6. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
    score: the downs currently read as bare ground with trees on it.
 
@@ -126,8 +129,56 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
   Kindling spells are fire. A `light` effect is a small addition once someone wants
   a lantern spell.
 
+## Two things that were built and never connected
+
+Both were found the same way: by asking which public functions in the systems are called
+only by the tests. A system can be complete, correct, covered and inert, and nothing in a
+green test suite says so.
+
+* **Nobody was standing in the villages.** `NpcRegistry.spawn()` had one caller in the
+  repository and it was a unit test. Fixed by `NpcStreamer` (see above).
+* **Nothing told the law.** `Bounty.commit()` had two callers — picking a lock and picking a
+  pocket — and neither of the two crimes a player is most likely to commit. Emptying a
+  stranger's chest and killing a villager in their own kitchen both went unreported, so the
+  witness model, the guard confrontation, the fine, the jail term and the morality hit were
+  all working perfectly on events that never arrived. `CrimeReports` is the join.
+
+Three more turned up the same way, all of them content that had been written and then never
+read:
+
+* **Every chest in the world was a mesh.** `WorldContainer` could roll loot, lock itself and be
+  emptied, and no interior ever attached one to the chest standing in the room — and no screen
+  ever showed you the inside of one. Twenty-three chests, fourteen cupboards, strongboxes and
+  sacks across the twenty-four interiors. They open now, they belong to whoever lives there,
+  and emptying somebody's is one theft rather than nine.
+* **A hundred and forty-seven greeting lines had never been said.** Every dialogue in the pack
+  carries a `greetings` array written beside the conversation it belongs to — the lines that
+  know this particular miller's water has come back — and `Greetings` only ever read
+  `core:table/greetings`. They are rows now, keyed to whoever owns the dialogue, which makes
+  them the most specific match whenever their conditions hold.
+* **Seventy-eight schedule entries never applied.** They say `"days": "weekdays"`, and
+  `Schedules` knew `workdays` and fell through to false for anything else, so a large part of
+  the roster's working day was quietly dropped — invisible, because the fallback is a
+  plausible schedule rather than an error.
+
+And one smaller: **letting and rent were built and had nowhere to be done from.** Standing
+at the board outside a house you own told you that you owned it. It is now a landlord's board —
+collect the rent that is waiting, or put the word out that the place is to let.
+
+The audit is `tools/unwired.py`, a sibling in spirit to `tools/dead_data.py`: the first asks
+what the *data* promises that the code never reads, the second asks what the *code* can do
+that nothing outside a test ever asks for. Run both before calling anything finished. Neither
+is a compiler, so read the output rather than trusting it — an accessor nobody calls is dead
+weight, but a verb nobody calls is a feature that does not happen.
+
 ## Known issues
 
+* **The journey's death step has failed once in five runs**, and I have not pinned down why.
+  It rests at a Hearthstone, dies, respawns and recovers the echo, and one run in five one of
+  those five conditions came back false. The step now names which one when it fails instead of
+  printing the success sentence, and each settling point waits two frames rather than one,
+  which has held for every run since — but "it stopped happening" is not a diagnosis and it is
+  recorded here as unexplained rather than fixed.
 * **The exterior is over the primitive budget, badly.** DESIGN §11 sets 1.5 M primitives and
   2000 draw calls. Interiors are all comfortably inside it (the Cantor's Seat is the worst at
   1.17 M and 61 draws). The country is not: Merrowby from the air is **5.14 M primitives**
@@ -137,13 +188,19 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
   ash pad with little flora, sits inside budget at 1.07 M, which confirms where it comes from.
   The fix is a cheap far variant per scatter asset, not fewer plants; it is with the world and
   forge streams and it is not done.
-* **The drop test does not pass.** `tools/uniqueness_check.py` now scores colour and landform
-  separately (DESIGN §10.1). On the eighteen region captures as they stand: colour 0.61,
-  landform 0.50, together 0.56, against a 0.17 chance line and a 0.80 bar. Skerrow and
-  Cinderlea read as each other, and Briarwold and Sedgemire are the closest pair in the world.
-  Those captures were taken from a country with no stones in it and nothing named standing up,
-  so the number should move a long way once the rock scatter, the landmarks and the surface
-  pass land — but it is 0.56 today and it is recorded as 0.56 today.
+* **The drop test does not pass**, and half of it cannot yet be measured. `uniqueness_check.py`
+  scores colour and landform separately (DESIGN §10.1). Today: colour 0.57, together 0.43,
+  against a 0.17 chance line and a 0.80 bar — so the combined bar fails, plainly.
+  The landform figure is 0.10, which is *below* chance, and that is a statement about the
+  sample rather than about the country: there are three images per region, so leave-one-out
+  over six regions turns on one or two frames. The tool now says so and refuses to fail the
+  run on it. Getting a real landform reading needs six or more shots per region, which is
+  cheap and is not done. The confusion pairs are informative meanwhile: Brightwater reads as
+  Cinderlea, and Briarwold as Sedgemire and as Hearthvale.
+  I also removed the absolute horizon height and the sky fraction from the landform signature
+  after the world stream pointed out that changing the vista camera moved the score by a
+  factor of eight. Those two terms were measuring how high the camera stood, which is the
+  photographer's choice and not the place's.
 * Terrain3D + lavapipe (software Vulkan) crashes in JIT code; use OpenGL for
   headless captures (ARCHITECTURE.md §10).
 * Cave floors show a faint dune ripple where the shell noise is applied before the

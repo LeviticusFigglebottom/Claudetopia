@@ -2,24 +2,24 @@
  "bounds": {
   "height": 0.006,
   "max": [
-   0.626,
+   0.559,
    0.006,
-   0.626
+   0.559
   ],
   "min": [
-   -0.626,
+   -0.559,
    0.0,
-   -0.626
+   -0.559
   ],
-  "radius": 0.886
+  "radius": 0.79
  },
- "built_seconds": 31.78,
+ "built_seconds": 113.14,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "skerrow_lichen_crust_a.glb",
- "hash": "7bf696e161b0ba32",
+ "hash": "23287edba6305222",
  "kind": "lichen_crust",
  "materials": [
   "skerrow_lichen_crust_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 3493,
+ "seed": 3652,
  "textures": [
   "skerrow_lichen_crust_a_albedo.png",
   "skerrow_lichen_crust_a_normal.png",

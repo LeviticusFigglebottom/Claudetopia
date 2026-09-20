@@ -35,6 +35,7 @@ const MENUS := {
 	"settings": {"scene": "res://ui/menus/settings_menu.tscn", "full": true},
 	"save_load": {"scene": "res://ui/menus/save_load.tscn", "full": true},
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
+	"container": {"scene": "res://ui/inventory/container_screen.tscn", "full": true},
 	"journal": {"scene": "res://ui/journal/journal.tscn", "full": true},
 	"skills": {"scene": "res://ui/skills/skills_screen.tscn", "full": true},
 	"sayings": {"scene": "res://ui/sayings/sayings_screen.tscn", "full": true},
@@ -77,6 +78,8 @@ func _ready() -> void:
 	set_variant("warm", true)
 	EventBus.notify.connect(_on_notify)
 	EventBus.book_opened.connect(_on_book_opened)
+	EventBus.container_opened.connect(_on_container_opened)
+	EventBus.trade_requested.connect(_on_trade_requested)
 	EventBus.region_entered.connect(func(id: String, _p: String) -> void: _refresh_variant())
 	EventBus.interior_entered.connect(func(_id: String) -> void: _refresh_variant())
 	EventBus.interior_exited.connect(func(_id: String) -> void: _refresh_variant())
@@ -426,6 +429,22 @@ func _on_interior_transition(phase: String, _interior_id: String) -> void:
 
 
 # --- books --------------------------------------------------------------------------------
+
+## Asking a shopkeeper to see their stock opens the shop. Nothing opened the trade screen
+## before, so every merchant in the world was somebody you could only talk to.
+func _on_trade_requested(npc_id: String) -> void:
+	if npc_id.is_empty():
+		return
+	open("trade", {"merchant_id": npc_id})
+
+
+## A chest that has been opened shows what is in it. Nothing did this before, so a container
+## rolled its loot, emitted its signal and stayed shut as far as the player was concerned.
+func _on_container_opened(container: Node, actor: Node) -> void:
+	if container == null or not is_instance_valid(container):
+		return
+	open("container", {"container": container, "actor": actor})
+
 
 func _on_book_opened(book_id: String) -> void:
 	open("book", {"book_id": book_id})

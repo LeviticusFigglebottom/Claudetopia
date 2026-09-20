@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 4.568,
+  "height": 6.257,
   "max": [
-   1.862,
-   4.568,
-   1.25
+   2.568,
+   6.257,
+   1.798
   ],
   "min": [
-   -1.859,
+   -2.576,
    0.0,
-   -1.348
+   -1.723
   ],
-  "radius": 3.22
+  "radius": 4.416
  },
- "built_seconds": 17.66,
+ "built_seconds": 51.34,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_rocks",
  "glb": "skerrow_bone_vertebra_b.glb",
- "hash": "f49aae8820c9886d",
+ "hash": "1a6f25f480e246e0",
  "kind": "bone_vertebra",
  "materials": [
   "skerrow_bone_vertebra_b_mat"
@@ -64,7 +64,7 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 1920,
+ "seed": 2079,
  "textures": [
   "skerrow_bone_vertebra_b_albedo.png",
   "skerrow_bone_vertebra_b_normal.png",

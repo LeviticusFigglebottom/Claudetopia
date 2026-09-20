@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 1.833,
+  "height": 1.747,
   "max": [
-   0.503,
-   1.833,
-   0.256
+   0.502,
+   1.747,
+   0.27
   ],
   "min": [
-   -0.503,
+   -0.502,
    0.0,
-   -0.22
+   -0.234
   ],
-  "radius": 1.072
+  "radius": 1.038
  },
- "built_seconds": 23.82,
+ "built_seconds": 49.8,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_cupboard_a.glb",
- "hash": "e82b68e2b1c277cc",
+ "hash": "7de9f16bf88492c5",
  "kind": "cupboard",
  "materials": [
   "hearthvale_cupboard_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4606,
+ "seed": 4765,
  "textures": [
   "hearthvale_cupboard_a_albedo.png",
   "hearthvale_cupboard_a_normal.png",

@@ -19,6 +19,8 @@ extends RefCounted
 const TABLE := "core:table/greetings"
 
 static var _last_line: Dictionary = {}     # npc_id -> last line said
+static var _dialogue_rows: Array = []
+static var _dialogue_rows_built := false
 
 
 ## The line this NPC greets the player with. Returns "" only when the table is missing.
@@ -56,7 +58,49 @@ static func select_row(npc_id: String, ctx: SocialContext) -> Dictionary:
 static func table_rows() -> Array:
 	var table := ContentDB.get_or_empty(TABLE)
 	var rows: Variant = table.get("rows", [])
-	return rows if typeof(rows) == TYPE_ARRAY else []
+	var base: Array = rows if typeof(rows) == TYPE_ARRAY else []
+	return base + dialogue_rows()
+
+
+## Greetings written next to the conversation they belong to. Every dialogue in the pack
+## carries a `greetings` array of `{conditions, text}` — a hundred and forty-seven lines of
+## them — and nothing had ever read one: `Greetings` only looked at `core:table/greetings`, so
+## the most specific writing in the pack, the lines that know this particular miller's water
+## has come back, were dead data.
+##
+## They become ordinary rows here, with the `npc` of whoever the dialogue belongs to. That
+## makes them the most specific match whenever their conditions hold, which is the right
+## answer: a line written for this person and this moment should beat the personality matrix.
+static func dialogue_rows() -> Array:
+	if _dialogue_rows_built:
+		return _dialogue_rows
+	_dialogue_rows_built = true
+	_dialogue_rows = []
+	var speaker: Dictionary = {}
+	for npc in ContentDB.all("npc"):
+		var d := str((npc as Dictionary).get("dialogue", ""))
+		if d != "":
+			speaker[d] = str((npc as Dictionary).get("id", ""))
+	for entry in ContentDB.all("dialogue"):
+		var dialogue: Dictionary = entry
+		var lines: Variant = dialogue.get("greetings", [])
+		if typeof(lines) != TYPE_ARRAY:
+			continue
+		var who := str(speaker.get(str(dialogue.get("id", "")), ""))
+		if who == "":
+			continue      # a dialogue nobody owns has nobody to greet you with it
+		for i in range((lines as Array).size()):
+			var g: Dictionary = (lines as Array)[i]
+			var text := str(g.get("text", ""))
+			if text.is_empty():
+				continue
+			_dialogue_rows.append({
+				"id": "%s#greeting%d" % [str(dialogue.get("id", "?")), i],
+				"npc": who, "lines": [text],
+				"conditions": g.get("conditions", []),
+				"weight": float(g.get("weight", 1.0)),
+			})
+	return _dialogue_rows
 
 
 ## How much each kind of constraint counts towards a row being the most specific match. What a
@@ -211,6 +255,9 @@ static func pick_line(row: Dictionary, npc_id: String, ctx: SocialContext) -> St
 static func forget(npc_id: String = "") -> void:
 	if npc_id == "":
 		_last_line.clear()
+		# The pack can be reloaded between tests, so the synthesised rows go with the memory.
+		_dialogue_rows.clear()
+		_dialogue_rows_built = false
 	else:
 		_last_line.erase(npc_id)
 

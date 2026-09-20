@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 4.063,
+  "height": 2.903,
   "max": [
-   3.491,
-   4.063,
-   1.582
+   0.492,
+   2.903,
+   2.633
   ],
   "min": [
-   -3.012,
+   -3.054,
    0.0,
-   -3.768
+   -2.681
   ],
-  "radius": 4.675
+  "radius": 3.509
  },
- "built_seconds": 21.42,
+ "built_seconds": 108.89,
  "category": "rocks",
  "collision": "skerrow_bone_skull_fragment_b_col.glb",
  "collision_params": {},
  "generator": "gen_rocks",
  "glb": "skerrow_bone_skull_fragment_b.glb",
- "hash": "d668939a75f50a11",
+ "hash": "5454ff675c1fb9d3",
  "kind": "bone_skull_fragment",
  "materials": [
   "skerrow_bone_skull_fragment_b_mat"
@@ -30,15 +30,15 @@
  "meshes": [
   {
    "name": "skerrow_bone_skull_fragment_b",
-   "tris": 790
+   "tris": 816
   },
   {
    "name": "skerrow_bone_skull_fragment_b_LOD1",
-   "tris": 316
+   "tris": 326
   },
   {
    "name": "skerrow_bone_skull_fragment_b_LOD2",
-   "tris": 118
+   "tris": 122
   }
  ],
  "name": "skerrow_bone_skull_fragment_b",
@@ -64,16 +64,16 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 1867,
+ "seed": 2026,
  "textures": [
   "skerrow_bone_skull_fragment_b_albedo.png",
   "skerrow_bone_skull_fragment_b_normal.png",
   "skerrow_bone_skull_fragment_b_orm.png"
  ],
  "tris": [
-  790,
-  316,
-  118
+  816,
+  326,
+  122
  ],
  "version": 3
 }

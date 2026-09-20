@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.253,
+  "height": 0.173,
   "max": [
-   0.12,
-   0.253,
-   0.151
+   0.115,
+   0.173,
+   0.153
   ],
   "min": [
-   -0.12,
+   -0.115,
    0.0,
-   -0.151
+   -0.153
   ],
-  "radius": 0.23
+  "radius": 0.21
  },
- "built_seconds": 10.99,
+ "built_seconds": 42.28,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_book_stack_b.glb",
- "hash": "9941dccdcd0be9ec",
+ "hash": "274231bd6cdab938",
  "kind": "book_stack",
  "materials": [
   "hearthvale_book_stack_b_mat"
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "hearthvale_book_stack_b",
-   "tris": 1620
+   "tris": 972
   },
   {
    "name": "hearthvale_book_stack_b_LOD1",
-   "tris": 648
+   "tris": 388
   },
   {
    "name": "hearthvale_book_stack_b_LOD2",
-   "tris": 242
+   "tris": 144
   }
  ],
  "name": "hearthvale_book_stack_b",
@@ -65,16 +65,16 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5471,
+ "seed": 5630,
  "textures": [
   "hearthvale_book_stack_b_albedo.png",
   "hearthvale_book_stack_b_normal.png",
   "hearthvale_book_stack_b_orm.png"
  ],
  "tris": [
-  1620,
-  648,
-  242
+  972,
+  388,
+  144
  ],
  "version": 3
 }

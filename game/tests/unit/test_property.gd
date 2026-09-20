@@ -232,7 +232,9 @@ func test_property_sign_offers_and_sells() -> void:
 	assert_true(r["ok"])
 	assert_true(reg.is_owned(STILT))
 	assert_eq(int(buyer.get("marks")), 400)
-	assert_eq(sign_node.prompt_text(), "the Stilt House (yours)")
+	# Once it is yours the board stops being a shop and becomes a landlord's business.
+	assert_true(sign_node.prompt_text().begins_with("Let the Stilt House"),
+			"got '%s'" % sign_node.prompt_text())
 	var steward_sign: PropertySign = load("res://systems/economy/property_sign.tscn").instantiate()
 	steward_sign.property_id = COTTAGE
 	steward_sign.steward_npc = "core:npc/example_reeve"
@@ -267,3 +269,51 @@ func test_save_round_trip_restores_ownership() -> void:
 	assert_eq(reg.rent_due(COTTAGE), 12, "two days at six marks survived the save")
 	assert_true(Ownership.instance.is_player_owned(PropertyRegistry.storage_id_of(COTTAGE)), "the chest is still yours")
 	assert_true(reg.owns_bed(PropertyRegistry.bed_id_of(COTTAGE)))
+
+
+# --- the board outside a house you own -----------------------------------------------------------
+
+func _own_sign(property_id: String) -> PropertySign:
+	var reg := PropertyRegistry.ensure()
+	reg.grant(property_id)
+	var sign := PropertySign.new()
+	sign.property_id = property_id
+	_root().add_child(sign)
+	_nodes.append(sign)
+	return sign
+
+
+func test_your_own_board_offers_to_let_the_house() -> void:
+	var sign := _own_sign(COTTAGE)
+	assert_true(sign.prompt_text().begins_with("Let "), "got '%s'" % sign.prompt_text())
+	sign.interact(null)
+	assert_true(PropertyRegistry.ensure().is_let(COTTAGE), "the board did not let the house")
+	assert_true(sign.prompt_text().contains("(let"), "got '%s'" % sign.prompt_text())
+
+
+func test_letting_can_be_undone_from_the_same_board() -> void:
+	var sign := _own_sign(COTTAGE)
+	sign.interact(null)
+	sign.interact(null)
+	assert_false(PropertyRegistry.ensure().is_let(COTTAGE), "the house could not be taken back")
+
+
+func test_rent_is_collected_from_the_board_before_anything_else() -> void:
+	var reg := PropertyRegistry.ensure()
+	var sign := _own_sign(COTTAGE)
+	sign.interact(null)                       # let it
+	WorldClock.set_time(9.0, 14)              # four days pass
+	var due := reg.rent_due(COTTAGE)
+	assert_gt(due, 0, "no rent accrued over four days")
+	assert_true(sign.prompt_text().begins_with("Collect "), "got '%s'" % sign.prompt_text())
+	sign.interact(null)
+	assert_eq(reg.rent_due(COTTAGE), 0, "the rent was not collected")
+	assert_true(reg.is_let(COTTAGE), "collecting rent also ended the tenancy")
+
+
+func test_a_board_for_a_house_you_do_not_own_still_sells_it() -> void:
+	var sign := PropertySign.new()
+	sign.property_id = BELLROW
+	_root().add_child(sign)
+	_nodes.append(sign)
+	assert_true(sign.prompt_text().begins_with("Buy "), "got '%s'" % sign.prompt_text())

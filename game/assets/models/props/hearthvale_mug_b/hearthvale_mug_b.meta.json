@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.105,
+  "height": 0.113,
   "max": [
-   0.077,
-   0.105,
-   0.048
+   0.083,
+   0.113,
+   0.052
   ],
   "min": [
-   -0.049,
+   -0.052,
    0.0,
-   -0.048
+   -0.052
   ],
-  "radius": 0.095
+  "radius": 0.102
  },
- "built_seconds": 9.29,
+ "built_seconds": 14.49,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_mug_b.glb",
- "hash": "7ed5cac21306fbbd",
+ "hash": "a15df2d7ea13a036",
  "kind": "mug",
  "materials": [
   "hearthvale_mug_b_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 4146,
+ "seed": 4305,
  "textures": [
   "hearthvale_mug_b_albedo.png",
   "hearthvale_mug_b_normal.png",

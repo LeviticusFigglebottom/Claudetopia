@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.628,
+  "height": 0.651,
   "max": [
-   0.377,
-   0.628,
-   0.403
+   0.37,
+   0.651,
+   0.394
   ],
   "min": [
-   -0.377,
+   -0.37,
    0.0,
-   -0.403
+   -0.393
   ],
-  "radius": 0.635
+  "radius": 0.631
  },
- "built_seconds": 24.11,
+ "built_seconds": 65.64,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_crate_a.glb",
- "hash": "42b503f9daedcb42",
+ "hash": "e886a1de9e58cf77",
  "kind": "crate",
  "materials": [
   "hearthvale_crate_a_mat"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 3652,
+ "seed": 3811,
  "textures": [
   "hearthvale_crate_a_albedo.png",
   "hearthvale_crate_a_normal.png",

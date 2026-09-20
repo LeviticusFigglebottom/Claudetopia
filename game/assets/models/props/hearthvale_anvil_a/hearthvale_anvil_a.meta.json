@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.345,
+  "height": 0.371,
   "max": [
-   0.248,
-   0.345,
-   0.196
+   0.252,
+   0.371,
+   0.199
   ],
   "min": [
-   -0.366,
+   -0.372,
    0.0,
-   -0.196
+   -0.199
   ],
-  "radius": 0.403
+  "radius": 0.414
  },
- "built_seconds": 35.64,
+ "built_seconds": 53.82,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "hearthvale_anvil_a.glb",
- "hash": "d2fc0405cb8ec112",
+ "hash": "09f322bad544c704",
  "kind": "anvil",
  "materials": [
   "hearthvale_anvil_a_mat"
@@ -65,7 +65,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 5030,
+ "seed": 5189,
  "textures": [
   "hearthvale_anvil_a_albedo.png",
   "hearthvale_anvil_a_normal.png",

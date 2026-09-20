@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 44.158,
+  "height": 44.19,
   "max": [
-   57.052,
-   44.158,
-   27.624
+   56.937,
+   44.19,
+   27.616
   ],
   "min": [
-   -57.056,
+   -56.949,
    0.0,
-   -73.705
+   -73.665
   ],
-  "radius": 79.433
+  "radius": 79.342
  },
- "built_seconds": 182.45,
+ "built_seconds": 130.96,
  "category": "landmarks",
  "collision": "hearthvale_cracked_toll_a_col.glb",
  "collision_params": {},
  "generator": "gen_landmarks",
  "glb": "hearthvale_cracked_toll_a.glb",
- "hash": "3811d5e02a1f231a",
+ "hash": "543152f4bf20d607",
  "height_m": 40.0,
  "kind": "cracked_toll",
  "materials": [
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "hearthvale_cracked_toll_a",
-   "tris": 6974
+   "tris": 6998
   },
   {
    "name": "hearthvale_cracked_toll_a_LOD1",
-   "tris": 2788
+   "tris": 2799
   },
   {
    "name": "hearthvale_cracked_toll_a_LOD2",
-   "tris": 1045
+   "tris": 1048
   }
  ],
  "name": "hearthvale_cracked_toll_a",
@@ -67,16 +67,16 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 6514,
+ "seed": 6673,
  "textures": [
   "hearthvale_cracked_toll_a_albedo.png",
   "hearthvale_cracked_toll_a_normal.png",
   "hearthvale_cracked_toll_a_orm.png"
  ],
  "tris": [
-  6974,
-  2788,
-  1045
+  6998,
+  2799,
+  1048
  ],
  "version": 3,
  "walkable": [

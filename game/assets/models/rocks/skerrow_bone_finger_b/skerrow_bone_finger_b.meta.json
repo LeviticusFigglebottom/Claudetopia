@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.884,
+  "height": 1.102,
   "max": [
-   4.995,
-   0.884,
-   0.417
+   7.043,
+   1.102,
+   0.588
   ],
   "min": [
-   -0.324,
+   -0.452,
    0.0,
-   -0.413
+   -0.578
   ],
-  "radius": 2.728
+  "radius": 3.832
  },
- "built_seconds": 32.21,
+ "built_seconds": 101.89,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
  "generator": "gen_rocks",
  "glb": "skerrow_bone_finger_b.glb",
- "hash": "7d90abc76b542714",
+ "hash": "091a4dc5a2ed5e4f",
  "kind": "bone_finger",
  "materials": [
   "skerrow_bone_finger_b_mat"
@@ -64,7 +64,7 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 1814,
+ "seed": 1973,
  "textures": [
   "skerrow_bone_finger_b_albedo.png",
   "skerrow_bone_finger_b_normal.png",

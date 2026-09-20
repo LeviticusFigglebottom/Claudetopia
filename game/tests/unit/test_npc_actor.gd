@@ -15,8 +15,9 @@ func before_each() -> void:
 	Peers.overrides.clear()
 	GameState.reset_for_new_game(1)
 	WorldClock.set_time(10.0, 2)
-	if Bounty.instance != null:
-		Bounty.instance.clear_all()
+	var ledger := Bounty.ensure()
+	if ledger != null:
+		ledger.clear_all()
 	var reg := NpcRegistry.instance
 	if reg != null:
 		reg.despawn_all()
@@ -33,8 +34,9 @@ func after_each() -> void:
 			n.free()
 	_nodes.clear()
 	Peers.overrides.clear()
-	if Bounty.instance != null:
-		Bounty.instance.clear_all()
+	var ledger := Bounty.ensure()
+	if ledger != null:
+		ledger.clear_all()
 	if Reactions.instance != null:
 		Reactions.instance.forget_all()
 

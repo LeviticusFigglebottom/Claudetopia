@@ -14,6 +14,7 @@ extends RefCounted
 ##   {"morality_min": n}                      Hearth/Hollow >= n (negative n tests the Hollow side)
 ##   {"skill_min": [skill_id, n]}             skill level >= n
 ##   {"knows_spell": spell_id}                the character has been taught that saying
+##   {"knows_recipe": recipe_id}              the character has been taught that recipe
 ##   {"has_item": [item_id, n]}               at least n in inventory
 ##   {"time_between": [from_hour, to_hour]}   game hour in [from, to), wrapping past midnight
 ## Extensions required by this stream:
@@ -36,7 +37,7 @@ extends RefCounted
 const KNOWN := [
 	"flag", "quest_at", "rep_min", "renown_min", "morality_min", "skill_min", "has_item", "time_between",
 	"not", "any", "all", "personality", "faction_rank_min", "bounty_min", "counter_min", "discovered",
-	"wearing_tag", "random", "knows_spell",
+	"wearing_tag", "random", "knows_spell", "knows_recipe",
 	"flag_not", "flag_equals", "quest_active", "quest_done", "quest_not_done", "quest_min_stage",
 	"quest_outcome", "rep_max", "renown_max", "morality_max", "member_of", "not_member_of",
 	"has_no_item", "marks_min", "is_night", "knows_deed", "book_read", "in_region", "at_place",
@@ -191,6 +192,8 @@ static func _one(key: String, arg: Variant, ctx: SocialContext) -> bool:
 			return ctx.wearing_tag(str(arg))
 		"knows_spell":
 			return ctx.knows_spell(str(arg))
+		"knows_recipe":
+			return ctx.knows_recipe(str(arg))
 		"marks_min":
 			return ctx.marks() >= int(arg)
 

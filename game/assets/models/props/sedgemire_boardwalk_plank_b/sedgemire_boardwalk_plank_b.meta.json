@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.116,
+  "height": 0.115,
   "max": [
    1.0,
-   0.116,
-   0.741
+   0.115,
+   0.751
   ],
   "min": [
    -1.0,
    0.0,
-   -0.741
+   -0.751
   ],
-  "radius": 1.246
+  "radius": 1.252
  },
- "built_seconds": 16.07,
+ "built_seconds": 32.86,
  "category": "props",
  "collision": "sedgemire_boardwalk_plank_b_col.glb",
  "collision_params": {},
  "generator": "gen_props",
  "glb": "sedgemire_boardwalk_plank_b.glb",
- "hash": "727346b086192dc8",
+ "hash": "e479a09a0f2fd54e",
  "kind": "boardwalk_plank",
  "materials": [
   "sedgemire_boardwalk_plank_b_mat"
@@ -66,7 +66,7 @@
    "warm": "#e8a93f"
   }
  },
- "seed": 6001,
+ "seed": 6160,
  "textures": [
   "sedgemire_boardwalk_plank_b_albedo.png",
   "sedgemire_boardwalk_plank_b_normal.png",

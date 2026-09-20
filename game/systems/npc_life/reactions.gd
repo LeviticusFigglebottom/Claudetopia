@@ -167,23 +167,23 @@ static func intent_for(kind: String) -> String:
 # --- the service ------------------------------------------------------------------------------
 
 func bounty_here(region_id := "") -> int:
-	if Bounty.instance == null:
+	if Bounty.ensure() == null:
 		return 0
 	if region_id.is_empty():
 		region_id = GameState.current_region_id
 	if region_id.is_empty():
 		return 0
-	return Bounty.instance.total_for_region(region_id)
+	return Bounty.ensure().total_for_region(region_id)
 
 
 func wanted_here(region_id := "") -> bool:
-	if Bounty.instance == null:
+	if Bounty.ensure() == null:
 		return false
 	if region_id.is_empty():
 		region_id = GameState.current_region_id
 	if region_id.is_empty():
 		return false
-	return Bounty.instance.is_wanted(Bounty.key_for_region(region_id))
+	return Bounty.ensure().is_wanted(Bounty.key_for_region(region_id))
 
 
 ## Builds the context for one NPC actor (or npc id) and chooses its behaviour.

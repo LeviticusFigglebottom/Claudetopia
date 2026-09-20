@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.429,
+  "height": 0.509,
   "max": [
-   0.334,
-   0.429,
-   0.278
+   0.363,
+   0.509,
+   0.389
   ],
   "min": [
-   -0.297,
+   -0.302,
    0.0,
-   -0.291
+   -0.384
   ],
-  "radius": 0.476
+  "radius": 0.57
  },
- "built_seconds": 0.07,
+ "built_seconds": 0.08,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "hearthvale_grass_clump_a.glb",
- "hash": "0503995d9d78ce21",
+ "hash": "e103452f5b43a7a7",
  "kind": "grass_clump",
  "materials": [
   "hearthvale_grass_clump_a_grass_foliage"
@@ -64,7 +64,7 @@
    "warm": "#b23a2e"
   }
  },
- "seed": 1956,
+ "seed": 2115,
  "textures": [
   "hearthvale_grass_clump_a_atlas_albedo.png",
   "hearthvale_grass_clump_a_atlas_normal.png",

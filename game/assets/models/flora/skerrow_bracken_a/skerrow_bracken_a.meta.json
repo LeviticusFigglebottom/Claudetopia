@@ -1,25 +1,25 @@
 {
  "bounds": {
-  "height": 0.974,
+  "height": 1.129,
   "max": [
-   0.721,
-   0.974,
-   0.7
+   0.938,
+   1.129,
+   0.723
   ],
   "min": [
-   -0.744,
+   -0.829,
    0.0,
-   -0.807
+   -0.927
   ],
-  "radius": 1.158
+  "radius": 1.334
  },
- "built_seconds": 0.2,
+ "built_seconds": 0.19,
  "category": "flora",
  "collision": "none",
  "collision_params": {},
  "generator": "gen_flora",
  "glb": "skerrow_bracken_a.glb",
- "hash": "4f335faa7416b526",
+ "hash": "c9082a6f8131bddd",
  "kind": "bracken",
  "materials": [
   "skerrow_bracken_a_bracken_foliage"
@@ -64,7 +64,7 @@
    "warm": "#8a4a2e"
   }
  },
- "seed": 2645,
+ "seed": 2804,
  "textures": [
   "skerrow_bracken_a_atlas_albedo.png",
   "skerrow_bracken_a_atlas_normal.png",

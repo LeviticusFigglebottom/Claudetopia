@@ -389,11 +389,67 @@ def bone_vertebra(pal, rng, params, variant):
             "unwrap_mode": "sphere"}
 
 
+def sunken_masonry(pal, rng, params, variant):
+    """Cut and squared blocks half-drowned in the fen.
+
+    Not a rock shape, and deliberately so: a delta has no cliffs, and this is a story
+    object rather than geology -- something was built here and the fen came up and took it.
+    The dressed faces stay readable, with the silt line doing the talking: pale worked
+    stone above it, green-black and slick below. Flat on the bottom so it sits in the peat,
+    and tilted differently per variant so a field of them never lines up.
+    """
+    dressed = M.stone_blocks(pal, wear=0.5, age=0.75, scale=0.9, block_w=0.85, block_h=0.42,
+                             name="masonry_dressed")
+    drowned = M.drowned_stone(pal, age=0.85, scale=0.8, name="masonry_drowned")
+    n = int(params.get("blocks", rng.randint(2, 3)))
+    # Where the water sat. Everything under it went green; the line itself is the point.
+    silt = params.get("silt_line", rng.uniform(0.26, 0.42))
+    parts = []
+    cursor = 0.0
+    for i in range(n):
+        w = rng.uniform(0.85, 1.5)
+        d = rng.uniform(0.55, 0.9)
+        h = rng.uniform(0.45, 0.8)
+        ob = S.box_centered("block_%d" % i, size=(w, d, h), location=(0, 0, h * 0.5), mat=dressed)
+        S.bevel(ob, width=min(w, d, h) * 0.055, segments=2, angle_deg=50)
+        S.subdivide(ob, levels=2, simple=True)
+        # Weathering, not erosion: the block keeps its corners and its cut faces, it has
+        # only lost its polish. A displaced blob here would throw away the whole point.
+        S.jitter_verts(ob, amount=min(w, d) * 0.022, scale=0.5, seed=rng.randrange(999))
+        ob.location = Vector((cursor, rng.uniform(-0.25, 0.25), 0.0))
+        ob.rotation_euler = Euler((math.radians(rng.uniform(-9, 9) + (variant % 2) * 4.0),
+                                   math.radians(rng.uniform(-7, 7)),
+                                   math.radians(rng.uniform(0, 360))), "XYZ")
+        S.apply_transforms(ob)
+        # Sit it back on the ground: the tilt lifted a corner.
+        S.drop_to_ground([ob])
+        S.assign_material_to_faces(ob, drowned, lambda poly: poly.center.z < silt)
+        parts.append(ob)
+        cursor += w * rng.uniform(0.55, 0.95)
+    # A course of smaller rubble spilled off the end, so it reads as a ruin and not a crate.
+    for i in range(rng.randint(2, 4)):
+        c = _rock_body("rubble_%d" % i, rng, radius=rng.uniform(0.12, 0.26), subdiv=3,
+                       squash=(1.0, rng.uniform(0.7, 1.0), rng.uniform(0.45, 0.8)),
+                       facet=0.5, mass=0.16, grain=0.04, mat=drowned,
+                       seed=rng.randrange(9999), budget=200)
+        a = rng.uniform(0, math.tau)
+        c.location = Vector((cursor * rng.uniform(-0.1, 1.05) + math.cos(a) * 0.5,
+                             math.sin(a) * 0.6, 0.0))
+        S.tilt(c, rng, max_deg=25.0)
+        S.apply_transforms(c)
+        parts.append(c)
+    S.drop_to_ground(parts)
+    return {"opaque_objs": parts, "collision": "col_glb",
+            "materials_used": ["stone_blocks", "drowned_stone"],
+            "extra_meta": {"silt_line_m": round(silt, 3), "blocks": n}}
+
+
 KINDS = {
     "boulder": boulder,
     "cliff_slab": cliff_slab,
     "scree": scree,
     "standing_stone": standing_stone,
+    "sunken_masonry": sunken_masonry,
     "bone_rib": bone_rib,
     "bone_finger": bone_finger,
     "bone_skull_fragment": bone_skull_fragment,
