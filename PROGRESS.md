@@ -4,7 +4,7 @@ _Updated 2026-09-19 (session 1)._
 
 ## State
 
-**1066 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
+**1077 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
 clean and sweeps all six regions and 34 places. The scripted journey passes all 15 of
 DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
 of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
@@ -375,6 +375,45 @@ Two smaller things found on the way:
   script errors failed a smoke run that this function exists to survive. It draws the labelled
   stand-in now and names the file that would not load, once. That named the file in one line:
   a zero-byte texture on a new prop.
+
+## Smithing, alchemy and enchanting were behind a door with no handle
+
+`station_screen.tscn` draws all three working screens (DESIGN §5.8). `UI.MENUS` has had
+`"crafting"` registered from the start. **Nothing in the game ever called
+`UI.open("crafting")`.** There was no forge, no still and no bench anywhere in the country
+that a player could walk up to, so three complete systems and twenty-one recipes were
+unreachable, each with its own passing tests.
+
+`CraftingStation` rides the prop it belongs to — the anvil in Hallam's forge and Osric's
+smithy, the alembic in Nell's stillroom — so what you walk up to is the thing you were
+looking at rather than an invisible trigger beside it. The anvil and not the hearth: the
+anvil is where a smith stands and the hearth is what is hot.
+
+Enchanting was worse off than unreachable. The Name-table is named in DESIGN §5.8, in the
+enchanting skill's own definition and in two item descriptions, and **no interior in the
+world contained one**. The Tolling Order writes notes into iron, so the Bell Chapter-House at
+Pilgrim's Ash has one now — added to Cadwen's own recipe rather than to the warden trade,
+because Pellam keeps the Wardens' Roll and that is a different order entirely. There is no
+Name-table *mesh* yet; it stands in as a trestle and is written down as owed.
+
+A note on the tests, because it is the same failure one level up: two of the tests I wrote for
+this passed while asserting nothing — one iterated an empty list of stations, one built the
+interior a way that never produced any. Both say so out loud now. A test that cannot provoke
+the thing it tests is not a test.
+
+## The notice post was on a layer the interaction ray does not read
+
+Found by asking what a `.tscn` carries that a `.new()` does not. The player's interaction ray
+masks one physics layer. Five of the eight interactable classes set that layer **only in their
+own scene file**, and three of those five are instantiated from a scene nowhere in the game —
+so the job board, the job station and the for-sale board placed the same day kept Godot's
+default layer 1. They stood in the village, drew their props, joined the "interactable" group,
+answered `interact()`, and the ray went straight through all three.
+
+Each class sets its own layer now, and `test_interactables.gd` builds all seven with `.new()`
+and asserts the four things that only matter at the moment a player points at something: the
+layer, a shape to hit, the group, and a method to call. It also asserts that the mask in the
+interactor and the layer in each class are the same number, because they live in eight files.
 
 ## Known issues
 
