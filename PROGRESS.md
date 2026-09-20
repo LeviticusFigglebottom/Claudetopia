@@ -143,9 +143,15 @@ green test suite says so.
   witness model, the guard confrontation, the fine, the jail term and the morality hit were
   all working perfectly on events that never arrived. `CrimeReports` is the join.
 
-The audit script is `tools/dead_data.py`'s sibling in spirit and lives in this session's notes
-rather than the repo; the discipline it encodes — *does anything outside a test ever call
-this?* — is worth running again before the next milestone.
+A third was smaller: **letting and rent were built and had nowhere to be done from.** Standing
+at the board outside a house you own told you that you owned it. It is now a landlord's board —
+collect the rent that is waiting, or put the word out that the place is to let.
+
+The audit is `tools/unwired.py`, a sibling in spirit to `tools/dead_data.py`: the first asks
+what the *data* promises that the code never reads, the second asks what the *code* can do
+that nothing outside a test ever asks for. Run both before calling anything finished. Neither
+is a compiler, so read the output rather than trusting it — an accessor nobody calls is dead
+weight, but a verb nobody calls is a feature that does not happen.
 
 ## Known issues
 

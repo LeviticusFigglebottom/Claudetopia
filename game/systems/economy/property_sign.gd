@@ -56,7 +56,13 @@ func prompt_text() -> String:
 		return "A weathered board"
 	var reg := registry()
 	if reg != null and reg.is_owned(property_id):
-		return "%s (yours)" % PropertyRegistry.display_name(property_id)
+		var name := PropertyRegistry.display_name(property_id)
+		var due := reg.rent_due(property_id)
+		if due > 0:
+			return "Collect %d marks of rent from %s" % [due, name]
+		if reg.is_let(property_id):
+			return "%s (let, %d marks a day)" % [name, PropertyRegistry.rent_per_day(property_id)]
+		return "Let %s (%d marks a day)" % [name, PropertyRegistry.rent_per_day(property_id)]
 	if not steward_npc.is_empty():
 		return "%s — ask the steward (%d marks)" % [PropertyRegistry.display_name(property_id), price()]
 	return "Buy %s (%d marks)" % [PropertyRegistry.display_name(property_id), price()]
@@ -67,7 +73,7 @@ func interact(actor: Node) -> void:
 	if reg == null or property_id.is_empty():
 		return
 	if reg.is_owned(property_id):
-		EventBus.notify.emit("%s is already yours." % PropertyRegistry.display_name(property_id), "property")
+		_landlord(reg, actor)
 		return
 	if not steward_npc.is_empty():
 		EventBus.dialogue_started.emit(steward_npc)
@@ -75,6 +81,25 @@ func interact(actor: Node) -> void:
 	offer_made.emit(property_id, price())
 	if not confirm_required:
 		accept(actor)
+
+
+## The board outside a house you already own is the only place the game asks you to be a
+## landlord. Letting and rent were built and had nowhere to be done from, so standing at your
+## own sign used to tell you that you owned it and nothing else. Rent first, because money
+## waiting is what you came for; otherwise the board is where you put the word out.
+func _landlord(reg: PropertyRegistry, actor: Node) -> void:
+	var name := PropertyRegistry.display_name(property_id)
+	var due := reg.rent_due(property_id)
+	if due > 0:
+		reg.collect_rent(actor, property_id)
+		return
+	if reg.is_let(property_id):
+		reg.set_let(property_id, false)
+		EventBus.notify.emit("You take %s off the market. Your own key again." % name, "property")
+		return
+	reg.set_let(property_id, true)
+	EventBus.notify.emit("%s is to let, at %d marks a day."
+			% [name, PropertyRegistry.rent_per_day(property_id)], "property")
 
 
 func accept(actor: Node) -> Dictionary:
