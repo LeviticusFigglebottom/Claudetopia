@@ -130,3 +130,34 @@ func test_all_three_working_screens_exist_somewhere_in_the_world() -> void:
 			missing.append(str(station))
 	assert_true(missing.is_empty(),
 		"the working screen draws these and nowhere in the world has one: %s" % [missing])
+
+
+## The station opens the screen; the screen is no use unless a recipe actually runs against a
+## real bag. Twenty-one forge recipes existed and none had ever been made in the game.
+func test_a_forge_recipe_runs_against_a_real_bag() -> void:
+	var player := Node3D.new()
+	player.add_to_group("player")
+	_tree().root.add_child(player)
+	var bag := Inventory.new()
+	bag.name = "Inventory"
+	bag.add_to_group("inventory")
+	player.add_child(bag)
+	var crafting := Crafting.new()
+	crafting.name = "Crafting"
+	player.add_child(crafting)
+	await _tree().process_frame
+
+	var made := ""
+	for entry in crafting.recipes_for("forge"):
+		var row: Dictionary = entry
+		var recipe_id := str(row.get("id", ""))
+		if recipe_id.is_empty():
+			continue
+		for i in Smithing.inputs_for(recipe_id, null):
+			bag.add(str(i["item"]), int(i["count"]))
+		if crafting.craft(recipe_id):
+			made = str(Smithing.def(recipe_id).get("output", {}).get("item", ""))
+			break
+	assert_ne(made, "", "not one of the forge's recipes could be made at it")
+	assert_gt(bag.count(made), 0, "the thing that was made is not in the bag")
+	player.queue_free()
