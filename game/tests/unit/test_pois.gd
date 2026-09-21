@@ -232,7 +232,6 @@ func test_world_pois_indexes_every_dressable_entry_by_its_cell() -> void:
 	if _skip():
 		return
 	var wp := WorldPois.new()
-	wp.enabled = false
 	_host().add_child(wp)
 	var n := wp.index(pois, provider, roads)
 	assert_eq(n, WorldPois.candidates(pois).size())
@@ -250,7 +249,6 @@ func test_the_streamer_raises_the_dressings_of_a_cell_it_builds() -> void:
 	if _skip():
 		return
 	var wp := WorldPois.new()
-	wp.enabled = false
 	_host().add_child(wp)
 	wp.index(pois, provider, roads)
 	var streamer := WorldStreamer.new()
@@ -271,14 +269,19 @@ func test_the_streamer_raises_the_dressings_of_a_cell_it_builds() -> void:
 		assert_false(d.far, "the near ring should get the full camp")
 		assert_true(d.global_position.distance_to(at) < 0.01, "the camp stands %s, its data says %s" % [str(d.global_position), str(at)])
 		assert_gt(d.mesh_count(), 0)
-	# and the far ring gets the silhouette
-	streamer._build_cell(Vector2i(cell.x, cell.y + 1), 2, {"cell": [cell.x, cell.y + 1], "region": "", "instances": {}, "scenes": [], "spawns": []})
-	streamer.unload_all()
-	var far_cell := streamer.cell_of(at)
-	streamer._build_cell(far_cell, 2, data)
-	var far_node: Node3D = streamer.get_node_or_null("Cell_%d_%d" % [far_cell.x, far_cell.y])
+	# and the far ring gets the silhouette (a second streamer: unloading only queues the first
+	# one's cell node for freeing, and a new node of the same name would be renamed around it)
+	var far_streamer := WorldStreamer.new()
+	_host().add_child(far_streamer)
+	far_streamer.setup(provider, null)
+	far_streamer._build_cell(cell, 2, data)
+	var far_node: Node3D = far_streamer.get_node_or_null("Cell_%d_%d" % [cell.x, cell.y])
 	var far_dressing: Node = far_node.get_node_or_null("Poi_gosling_pit") if far_node != null else null
 	assert_true(far_dressing is PoiDressing and (far_dressing as PoiDressing).far, "the far ring should raise a silhouette")
+	if far_dressing is PoiDressing:
+		assert_true((far_dressing as PoiDressing).lights().is_empty(), "a far cell should carry no lights")
 	streamer.unload_all()
+	far_streamer.unload_all()
 	_drop(streamer)
+	_drop(far_streamer)
 	_drop(wp)

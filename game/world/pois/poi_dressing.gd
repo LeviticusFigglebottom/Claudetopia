@@ -137,10 +137,13 @@ func lights() -> Array:
 
 
 ## A flat description of everything standing here, for comparing two raisings of one POI.
+## A node Godot had to name itself (`@Node3D@1034`) carries a counter that is never the same
+## twice, so those are described by class alone; what is compared is what stands where.
 func signature() -> Array:
 	var out: Array = []
 	for node in find_children("*", "", true, false):
 		if node is Node3D:
 			var n3 := node as Node3D
-			out.append("%s@%s" % [n3.name, str(n3.position.snapped(Vector3.ONE * 0.001))])
+			var label := n3.get_class() if n3.name.begins_with("@") else str(n3.name)
+			out.append("%s@%s" % [label, str(n3.position.snapped(Vector3.ONE * 0.001))])
 	return out

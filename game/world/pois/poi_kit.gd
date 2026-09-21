@@ -401,20 +401,39 @@ func scatter(path: String, transforms: Array, collide := false, silhouette := fa
 	return mmi
 
 
-func _far_range(gi: GeometryInstance3D) -> void:
-	gi.visibility_range_end = FAR_RANGE
-	gi.visibility_range_end_margin = 60.0
-	gi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-	gi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	# the forge's own LOD bands would blank a far piece past 260 m; the whole point of a far
-	# piece is to be seen from there
-	for mi in gi.find_children("*", "MeshInstance3D", true, false):
-		var m3: MeshInstance3D = mi
-		if m3.visibility_range_begin > 0.0:
-			m3.visible = false
-		else:
-			m3.visibility_range_end = 0.0
-			m3.visibility_range_begin = 0.0
+## A silhouette piece in the far ring: drawn out to the far range, no shadow. A forge asset
+## carries LOD0/1/2 siblings whose import bands would blank it past 260 m, which is where a
+## far piece lives; the middle rung is kept alone and drawn all the way out.
+func _far_range(node: Node3D) -> void:
+	var meshes: Array = []
+	if node is GeometryInstance3D:
+		meshes.append(node)
+	for mi in node.find_children("*", "MeshInstance3D", true, false):
+		if mi != node:
+			meshes.append(mi)
+	var by_level: Dictionary = {}
+	for gi_v in meshes:
+		var gi: GeometryInstance3D = gi_v
+		gi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var level := 0
+		var n := str(gi.name)
+		for suffix in ["_LOD1", "_LOD2", "_LOD3"]:
+			if n.ends_with(suffix):
+				level = int(suffix.substr(4))
+		by_level.get_or_add(level, []).append(gi)
+	var keep := 1 if by_level.has(1) else 0
+	for level in by_level:
+		for gi_v in by_level[level]:
+			var gi: GeometryInstance3D = gi_v
+			if int(level) != keep:
+				gi.visible = false
+				continue
+			gi.visible = true
+			gi.visibility_range_begin = 0.0
+			gi.visibility_range_begin_margin = 0.0
+			gi.visibility_range_end = FAR_RANGE
+			gi.visibility_range_end_margin = 60.0
+			gi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 
 
 func _collide(inst: Node3D, path: String, scale: float) -> void:
