@@ -6,6 +6,7 @@ build/
 # Generated world data (rebuilt by `make world`)
 game/terrain_data/**/*.res
 game/world/generated/
+game/world/terrain_assets.tres
 # Python
 __pycache__/
 *.pyc
