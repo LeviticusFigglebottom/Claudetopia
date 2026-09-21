@@ -10,6 +10,12 @@ extends Node3D
 ##
 ## It is deliberately plain geometry with painted surfaces rather than a modelled asset: what
 ## a village needs first is mass, silhouette, and a door in the right wall.
+##
+## However many rooms and windows it has, a building is four draw calls: one mesh in the wall
+## surface (masses and gables), one roof (slabs and ridge), one stone (plinths, chimney, sills,
+## step) and one of joinery (door, frames, shutters). Before that every part was its own
+## MeshInstance3D, and the eleven houses in view on Merrowby's street were 358 of them, drawn
+## again for each of the sun's cascades — the worst frame in the game.
 
 const WALL_SHADER := "res://assets/shaders/painted_surface.gdshader"
 const STOREY_M := 2.6
@@ -88,32 +94,33 @@ func _ready() -> void:
 	# The door the plan placed is this building's front door, so the house is offset to put
 	# its own entrance under that point.
 	var front := _front_door_local()
+	var fabric := FabricMesh.new()
 	for room in rooms:
-		_raise_room(room, front)
-	_add_chimney(rooms, front)
-	_add_door()
-	_add_windows(front)
+		_raise_room(fabric, room, front)
+	_add_chimney(fabric, rooms, front)
+	_add_door(fabric)
+	_add_windows(fabric, front)
+	fabric.commit(self, "wall", _surface(_wall_spec(), 0.35, true), "Walls")
+	fabric.commit(self, "roof", _surface(_roof_spec(), 0.5, false), "Roof")
+	fabric.commit(self, "stone", _surface(_plinth_spec(), 0.6, false), "Stone")
+	var joinery := fabric.commit(self, "joinery", FabricMesh.joinery_material(), "Joinery")
+	if joinery != null:
+		FabricMesh.near_only(joinery, FabricMesh.JOINERY_RANGE_M, false)
 
 
 # --- the parts ------------------------------------------------------------------------------------
 
-func _raise_room(room: Dictionary, front: Vector2) -> void:
+func _raise_room(fabric: FabricMesh, room: Dictionary, front: Vector2) -> void:
 	var w := float(room["w"])
 	var d := float(room["d"])
 	var storeys := 2 if _has_upper(room) else 1
 	var h := STOREY_M * storeys
 	var centre := Vector3(float(room["x"]) + w * 0.5 - front.x, 0.0, float(room["z"]) + d * 0.5 - front.y)
-	var walls := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(w + WALL_THICK, h, d + WALL_THICK)
-	walls.mesh = box
-	walls.position = centre + Vector3(0.0, h * 0.5, 0.0)
-	walls.material_override = _surface(_wall_spec(), 0.35, true)
-	walls.name = "Walls_" + str(room.get("id", "room"))
-	add_child(walls)
-	_add_plinth(centre, w, d)
-	_add_body(walls.position, box.size)
-	_add_roof(centre, w, d, h)
+	var size := Vector3(w + WALL_THICK, h, d + WALL_THICK)
+	fabric.box("wall", Transform3D(Basis(), centre + Vector3(0.0, h * 0.5, 0.0)), size)
+	_add_plinth(fabric, centre, w, d)
+	_add_body(centre + Vector3(0.0, h * 0.5, 0.0), size)
+	_add_roof(fabric, centre, w, d, h)
 
 
 ## A pitched roof over one mass, ridged along its longer axis.
@@ -122,7 +129,7 @@ func _raise_room(room: Dictionary, front: Vector2) -> void:
 ## throw a shadow line along it, and the gable ends are filled in the wall's own surface. A
 ## thatching culture gets a rolled ridge along the top. This is the silhouette a village is
 ## read by at four hundred metres, so it is built rather than implied.
-func _add_roof(centre: Vector3, w: float, d: float, wall_h: float) -> void:
+func _add_roof(fabric: FabricMesh, centre: Vector3, w: float, d: float, wall_h: float) -> void:
 	var spec := _roof_spec()
 	var pitch := float(spec.get("pitch", ROOF_PITCH))
 	var thick := float(spec.get("thick", 0.2))
@@ -134,81 +141,47 @@ func _add_roof(centre: Vector3, w: float, d: float, wall_h: float) -> void:
 	var hs := span * 0.5
 	var slope := sqrt(hs * hs + rise * rise)
 	var angle := atan2(rise, hs)
-	var mat := _surface(spec, 0.5, false)
+	# roof space: x along the ridge, the origin at the eaves line over the middle of the mass
+	var roof := Transform3D(Basis(Vector3.UP, 0.0 if along_x else PI * 0.5), centre + Vector3(0.0, wall_h, 0.0))
 
-	var roof := Node3D.new()
-	roof.name = "Roof"
-	roof.position = centre + Vector3(0.0, wall_h, 0.0)
-	if not along_x:
-		roof.rotation.y = PI * 0.5
-	add_child(roof)
-
-	for side in [-1.0, 1.0]:
-		var slab := MeshInstance3D.new()
-		var box := BoxMesh.new()
-		# a little past the ridge so the two slabs meet in a closed apex
-		box.size = Vector3(length, thick, slope + thick * 0.6)
-		slab.mesh = box
-		slab.material_override = mat
-		slab.name = "Slope%d" % int(side)
-		# the top face runs ridge -> eave; drop the slab half its depth along that face's normal
-		var mid := Vector3(0.0, rise * 0.5, side * hs * 0.5)
-		var normal := Vector3(0.0, hs, side * rise).normalized()
-		slab.position = mid - normal * (thick * 0.5)
+	for side_v in [-1.0, 1.0]:
+		var side := float(side_v)
+		# the top face runs ridge -> eave; drop the slab half its depth along that face's normal.
 		# +side tilts the slab down toward its own eave; the sign is the difference between a
 		# roof and a pair of open wings.
-		slab.rotation.x = side * angle
-		roof.add_child(slab)
+		var mid := Vector3(0.0, rise * 0.5, side * hs * 0.5)
+		var normal := Vector3(0.0, hs, side * rise).normalized()
+		var local := Transform3D(Basis(Vector3.RIGHT, side * angle), mid - normal * (thick * 0.5))
+		# a little past the ridge so the two slabs meet in a closed apex
+		fabric.box("roof", roof * local, Vector3(length, thick, slope + thick * 0.6))
 
 	# the triangle of wall between the eaves and the ridge, at each gable end
 	var hl := length * 0.5 - EAVES_M
 	var hw := wall_span * 0.5
 	var gable_rise := hw * pitch
-	for end in [-1.0, 1.0]:
-		var st := SurfaceTool.new()
-		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var a := Vector3(end * hl, 0.0, -hw)
-		var b := Vector3(end * hl, 0.0, hw)
-		var c := Vector3(end * hl, gable_rise, 0.0)
+	for end_v in [-1.0, 1.0]:
+		var end := float(end_v)
+		var a := roof * Vector3(end * hl, 0.0, -hw)
+		var b := roof * Vector3(end * hl, 0.0, hw)
+		var c := roof * Vector3(end * hl, gable_rise, 0.0)
 		if end > 0.0:
-			_tri(st, a, b, c)
+			fabric.tri("wall", a, b, c)
 		else:
-			_tri(st, b, a, c)
-		st.generate_normals()
-		var gable := MeshInstance3D.new()
-		gable.mesh = st.commit()
-		gable.material_override = _surface(_wall_spec(), 0.35, true)
-		gable.name = "Gable%d" % int(end)
-		roof.add_child(gable)
+			fabric.tri("wall", b, a, c)
 
 	if bool(spec.get("ridge", false)):
-		var cap := MeshInstance3D.new()
-		var cbox := BoxMesh.new()
-		cbox.size = Vector3(length * 0.98, thick * 0.9, thick * 2.2)
-		cap.mesh = cbox
-		var cap_spec := spec.duplicate()
-		cap_spec["base"] = str(spec.get("accent", spec.get("base", "#8e7749")))
-		cap.material_override = _surface(cap_spec, 0.62, false)
-		cap.position = Vector3(0.0, rise - thick * 0.25, 0.0)
-		cap.name = "Ridge"
-		roof.add_child(cap)
+		fabric.box("roof", roof * Transform3D(Basis(), Vector3(0.0, rise - thick * 0.25, 0.0)),
+				Vector3(length * 0.98, thick * 0.9, thick * 2.2), accent_tint(spec))
 
 
 ## A course of stone under the walls, so the house stands in the ground rather than on it.
-func _add_plinth(centre: Vector3, w: float, d: float) -> void:
-	var plinth := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(w + WALL_THICK + 0.16, PLINTH_H, d + WALL_THICK + 0.16)
-	plinth.mesh = box
-	plinth.name = "Plinth"
-	plinth.material_override = _surface(
-			PLINTH_BY_CULTURE.get(culture, PLINTH_BY_CULTURE["vale"]), 0.55, false)
+func _add_plinth(fabric: FabricMesh, centre: Vector3, w: float, d: float) -> void:
 	# sunk a little, so the grass meets stone and not a floating edge
-	plinth.position = centre + Vector3(0.0, PLINTH_H * 0.5 - 0.14, 0.0)
-	add_child(plinth)
+	fabric.box("stone", Transform3D(Basis(), centre + Vector3(0.0, PLINTH_H * 0.5 - 0.14, 0.0)),
+			Vector3(w + WALL_THICK + 0.16, PLINTH_H, d + WALL_THICK + 0.16))
 
 
-func _add_chimney(rooms: Array, front: Vector2) -> void:
+func _add_chimney(fabric: FabricMesh, rooms: Array, front: Vector2) -> void:
 	var hearth: Dictionary = {}
 	for r in rooms:
 		var room: Dictionary = r
@@ -221,63 +194,21 @@ func _add_chimney(rooms: Array, front: Vector2) -> void:
 	var d := float(hearth["d"])
 	var pitch := float(_roof_spec().get("pitch", ROOF_PITCH))
 	var top := STOREY_M * (2 if _has_upper(hearth) else 1) + minf(w, d) * 0.5 * pitch + 1.1
-	var stack := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(CHIMNEY_W, top, CHIMNEY_W)
-	stack.mesh = box
-	stack.name = "Chimney"
-	stack.material_override = _surface(
-			PLINTH_BY_CULTURE.get(culture, PLINTH_BY_CULTURE["vale"]), 0.7, false)
 	# On the gable end rather than in the middle of the roof.
-	stack.position = Vector3(float(hearth["x"]) + w - 0.5 - front.x, top * 0.5,
-			float(hearth["z"]) + d * 0.5 - front.y)
-	add_child(stack)
+	var at := Vector3(float(hearth["x"]) + w - 0.5 - front.x, top * 0.5, float(hearth["z"]) + d * 0.5 - front.y)
+	fabric.box("stone", Transform3D(Basis(), at), Vector3(CHIMNEY_W, top, CHIMNEY_W))
 
 
-## The way in, where the interior's own front door is: a plank door in a timber frame under a
-## lintel. A dark rectangle painted on a wall reads as a hole; a frame reads as a door, and the
-## door is the thing a player walks toward from across the green.
-func _add_door() -> void:
-	var face := -WALL_THICK * 0.5
-	var frame := MeshInstance3D.new()
-	var fbox := BoxMesh.new()
-	fbox.size = Vector3(1.34, 2.28, 0.14)
-	frame.mesh = fbox
-	frame.name = "DoorFrame"
-	frame.material_override = _timber(0.34, 0.26, 0.18)
-	frame.position = Vector3(0.0, 1.14, face - 0.03)
-	add_child(frame)
-
-	var lintel := MeshInstance3D.new()
-	var lbox := BoxMesh.new()
-	lbox.size = Vector3(1.6, 0.2, 0.24)
-	lintel.mesh = lbox
-	lintel.name = "DoorLintel"
-	lintel.material_override = _timber(0.24, 0.18, 0.12)
-	lintel.position = Vector3(0.0, 2.34, face - 0.05)
-	add_child(lintel)
-
-	var panel := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(1.05, 2.05, 0.12)
-	panel.mesh = box
-	panel.name = "DoorPanel"
-	panel.material_override = _timber(0.2, 0.14, 0.085)
-	panel.position = Vector3(0.0, 1.03, face - 0.08)
-	add_child(panel)
-
-	var step := MeshInstance3D.new()
-	var sbox := BoxMesh.new()
-	sbox.size = Vector3(1.5, 0.16, 0.6)
-	step.mesh = sbox
-	step.name = "DoorStep"
-	step.material_override = _surface(
-			PLINTH_BY_CULTURE.get(culture, PLINTH_BY_CULTURE["vale"]), 0.8, false)
-	step.position = Vector3(0.0, 0.05, face - 0.3)
-	add_child(step)
+## The way in, where the interior's own front door is. A dark rectangle painted on a wall reads
+## as a hole; a frame reads as a door, and the door is the thing a player walks toward from
+## across the green.
+func _add_door(fabric: FabricMesh) -> void:
+	door_at(fabric, Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, 0.0, -WALL_THICK * 0.5)),
+			timber_tints(culture), Color.WHITE)
 
 
-func _add_windows(front: Vector2) -> void:
+func _add_windows(fabric: FabricMesh, front: Vector2) -> void:
+	var timber := timber_tints(culture)
 	for entry in meta.get("windows", []):
 		var win: Dictionary = entry
 		var at: Array = win.get("at", [])
@@ -286,42 +217,70 @@ func _add_windows(front: Vector2) -> void:
 		var normal: Array = win.get("normal", [0, 0, 1])
 		var n := Vector3(float(normal[0]), 0.0, float(normal[2])).normalized()
 		var base := Vector3(float(at[0]) - front.x, float(at[1]), float(at[2]) - front.y)
-		var yaw := atan2(n.x, n.z)
+		var face := Transform3D(Basis(Vector3.UP, atan2(n.x, n.z)), base + n * (WALL_THICK * 0.5))
+		window_at(fabric, face, timber, Color.WHITE, float(at[1]) < STOREY_M)
 
-		var frame := MeshInstance3D.new()
-		var fbox := BoxMesh.new()
-		fbox.size = Vector3(1.06, 0.96, 0.1)
-		frame.mesh = fbox
-		frame.name = "WindowFrame"
-		frame.material_override = _timber(0.33, 0.27, 0.2)
-		frame.position = base + n * (WALL_THICK * 0.5 + 0.02)
-		frame.rotation.y = yaw
-		add_child(frame)
 
-		var pane := MeshInstance3D.new()
-		var box := BoxMesh.new()
-		box.size = Vector3(0.86, 0.76, 0.1)
-		pane.mesh = box
-		var mat := StandardMaterial3D.new()
-		# Not glass: a shutter-dark opening that the interior's own lamps warm at night.
-		mat.albedo_color = Color(0.1, 0.095, 0.088)
-		mat.roughness = 0.6
-		pane.material_override = mat
-		pane.name = "Window"
-		pane.position = base + n * (WALL_THICK * 0.5 + 0.045)
-		pane.rotation.y = yaw
-		add_child(pane)
+# --- the openings, shared with the fabric -----------------------------------------------------------
 
-		var sill := MeshInstance3D.new()
-		var sbox := BoxMesh.new()
-		sbox.size = Vector3(1.24, 0.11, 0.3)
-		sill.mesh = sbox
-		sill.name = "WindowSill"
-		sill.material_override = _surface(
-				PLINTH_BY_CULTURE.get(culture, PLINTH_BY_CULTURE["vale"]), 0.5, false)
-		sill.position = base + n * (WALL_THICK * 0.5 + 0.06) + Vector3(0.0, -0.53, 0.0)
-		sill.rotation.y = yaw
-		add_child(sill)
+## A plank door in a timber frame under a lintel, on a stone step. `at` has its origin at the
+## foot of the opening on the wall's face and +z pointing out of the wall. The panel sits back
+## behind the frame's lips, so the doorway reads as a doorway and not as paint.
+static func door_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, stone: Color) -> void:
+	for side_v in [-1.0, 1.0]:
+		var side := float(side_v)
+		fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.61, 1.12, 0.05)),
+				Vector3(0.12, 2.24, 0.1), timber["frame"])
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 2.3, 0.05)), Vector3(1.34, 0.14, 0.1), timber["frame"])
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 1.03, 0.02)), Vector3(1.06, 2.06, 0.04), timber["panel"])
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 2.47, 0.07)), Vector3(1.7, 0.2, 0.14), timber["lintel"])
+	fabric.box("stone", at * Transform3D(Basis(), Vector3(0.0, 0.06, 0.32)), Vector3(1.5, 0.16, 0.6), stone)
+
+
+## A shuttered opening: a dark pane set back behind a timber frame, on a stone sill, with a
+## shutter leaf either side where asked. `at` has its origin at the centre of the opening on
+## the wall's face and +z pointing out of the wall.
+static func window_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, stone: Color,
+		shutters: bool) -> void:
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 0.0, 0.012)), Vector3(0.8, 0.84, 0.024), timber["pane"])
+	for side_v in [-1.0, 1.0]:
+		var side := float(side_v)
+		fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.45, 0.0, 0.05)),
+				Vector3(0.1, 1.0, 0.1), timber["frame"])
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 0.47, 0.05)), Vector3(1.0, 0.1, 0.1), timber["frame"])
+	fabric.box("stone", at * Transform3D(Basis(), Vector3(0.0, -0.5, 0.09)), Vector3(1.18, 0.1, 0.26), stone)
+	if shutters:
+		for side_v in [-1.0, 1.0]:
+			var side := float(side_v)
+			fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.74, 0.02, 0.04)),
+					Vector3(0.44, 0.92, 0.05), timber["shutter"])
+
+
+## Worked timber in the culture's own wood: the interior's beam colour, lighter for a frame,
+## darker for a lintel and darker still for a plank door; the pane is a shutter-dark opening
+## that the interior's own lamps warm at night, not glass.
+static func timber_tints(culture: String) -> Dictionary:
+	var by_culture: Dictionary = HouseInterior.CULTURE_SURFACES.get(culture, HouseInterior.CULTURE_SURFACES["vale"])
+	var beam: Dictionary = by_culture.get("beam", {})
+	var c := Color.html(str(beam.get("base", "#5e452c")))
+	return {
+		"frame": _scaled(c, 1.12), "lintel": _scaled(c, 0.82), "panel": _scaled(c, 0.6),
+		"shutter": _scaled(c, 0.9), "pane": Color(0.085, 0.08, 0.075),
+	}
+
+
+## What multiplies a surface's base colour into its accent: the tint a ridge takes so it can
+## share the roof's draw.
+static func accent_tint(spec: Dictionary) -> Color:
+	var base := Color.html(str(spec.get("base", "#cccccc")))
+	var accent := Color.html(str(spec.get("accent", "#999999")))
+	return Color(clampf(accent.r / maxf(base.r, 0.01), 0.0, 1.0),
+			clampf(accent.g / maxf(base.g, 0.01), 0.0, 1.0),
+			clampf(accent.b / maxf(base.b, 0.01), 0.0, 1.0))
+
+
+static func _scaled(c: Color, k: float) -> Color:
+	return Color(clampf(c.r * k, 0.0, 1.0), clampf(c.g * k, 0.0, 1.0), clampf(c.b * k, 0.0, 1.0))
 
 
 # --- reading the interior ---------------------------------------------------------------------
@@ -386,6 +345,10 @@ func _roof_spec() -> Dictionary:
 	return ROOF_BY_CULTURE.get(culture, ROOF_BY_CULTURE["vale"])
 
 
+func _plinth_spec() -> Dictionary:
+	return PLINTH_BY_CULTURE.get(culture, PLINTH_BY_CULTURE["vale"])
+
+
 ## This house's own mix of the culture's colour. Limewash is mixed in a bucket, and the bucket
 ## is never twice the same, so a row of cottages is a row of slightly different creams. The
 ## shift is small on purpose: enough to break the terrace, not enough to break the culture.
@@ -416,15 +379,6 @@ func _surface(spec: Dictionary, wear: float, vary: bool) -> ShaderMaterial:
 	return mat
 
 
-## Worked timber: door, frame, lintel, shutters. Plain material, since a door is small and what
-## it has to do is read as a different substance from the wall around it.
-static func _timber(r: float, g: float, b: float) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(r, g, b)
-	mat.roughness = 0.88
-	return mat
-
-
 ## Walls you cannot walk through: the only collision a settlement has until its props grow one.
 func _add_body(at: Vector3, size: Vector3) -> void:
 	var body := StaticBody3D.new()
@@ -436,14 +390,3 @@ func _add_body(at: Vector3, size: Vector3) -> void:
 	body.add_child(shape)
 	body.position = at
 	add_child(body)
-
-
-static func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
-	_tri(st, a, b, c)
-	_tri(st, a, c, d)
-
-
-static func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
-	st.add_vertex(a)
-	st.add_vertex(b)
-	st.add_vertex(c)

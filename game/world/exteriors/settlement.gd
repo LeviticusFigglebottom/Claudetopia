@@ -12,15 +12,19 @@ extends Node3D
 ## their gable or their long wall to it depending on how tight the frontage is. Where no road
 ## crosses the pad the fallback is a ring around a green, which is also a real village plan.
 ##
-## Each filler building is two draw calls: everything in the wall material merged into one
-## mesh, everything in the roof material into another. Fifty of them cost what six of
-## `Building`'s full houses would, which is the whole reason they are a separate thing.
+## The whole fabric is four draw calls, however many houses are in it: everything in the wall
+## surface is one mesh, the roofs another, the stone (plinths, chimneys, sills, steps) a third
+## and the joinery (doors, frames, shutters) a fourth, each house carrying its own tint as a
+## vertex colour so the street is not one house printed fifty times. The props are one
+## `MultiMesh` per forge asset. Only the collision bodies, and the boards, stations and signs
+## you can walk up to, are nodes of their own.
 
 const STOREY_M := 2.6
 const SETBACK_M := 3.2                ## from the road edge to the front wall
 const ROAD_HALF_M := 3.0
 const GAP_M := 2.4                    ## between neighbours along a frontage
 const PLINTH_H := 0.4
+const EAVES_M := 0.5                  ## how far the roof overhangs the wall
 
 ## How many roofs a place of each kind carries, and how big they are. A city house is tall and
 ## narrow because land inside a wall is dear; a hamlet's is wide and low because it is not.
@@ -259,12 +263,7 @@ func _try_plot(centre: Vector2, w: float, d: float, yaw: float) -> void:
 
 func _build(plan: Dictionary) -> void:
 	var storeys: Array = plan.get("storeys", [1, 1])
-	var walls := SurfaceTool.new()
-	var roofs := SurfaceTool.new()
-	walls.begin(Mesh.PRIMITIVE_TRIANGLES)
-	roofs.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var unit := BoxMesh.new()
-	unit.size = Vector3.ONE
+	var fabric := FabricMesh.new()
 	var raised := 0
 	for i in range(_plots.size()):
 		var rect := _plots[i]
@@ -275,63 +274,117 @@ func _build(plan: Dictionary) -> void:
 		var n := int(_rng.randi_range(int(storeys[0]), int(storeys[1])))
 		# A ruin is a house with its roof gone and a wall down; it is still a plan on the ground.
 		var standing := not ruined or _rng.randf() > 0.45
-		_one_house(walls, roofs, unit, centre, w, d, n, _yaws[i], standing)
+		_one_house(fabric, centre, w, d, n, _yaws[i], standing)
 		raised += 1
 	if raised == 0:
 		return
-	_commit(walls, _surface(_wall_spec(), 0.45), "Walls")
-	_commit(roofs, _surface(_roof_spec(), 0.5), "Roofs")
+	fabric.commit(self, "wall", _surface(_wall_spec(), 0.45), "Walls")
+	fabric.commit(self, "roof", _surface(_roof_spec(), 0.5), "Roofs")
+	fabric.commit(self, "stone", _surface(_stone_spec(), 0.6), "Stone")
+	var joinery := fabric.commit(self, "joinery", FabricMesh.joinery_material(), "Joinery")
+	if joinery != null:
+		FabricMesh.near_only(joinery, FabricMesh.JOINERY_RANGE_M, false)
 
 
-func _one_house(walls: SurfaceTool, roofs: SurfaceTool, unit: BoxMesh, centre: Vector2,
-		w: float, d: float, storeys: int, yaw: float, standing: bool) -> void:
+## One house in the fabric. House space has x along the ridge, -z toward the street, y up
+## from the ground; everything goes into the shared meshes and only the body is a node.
+func _one_house(fabric: FabricMesh, centre: Vector2, w: float, d: float, storeys: int,
+		yaw: float, standing: bool) -> void:
 	var ground := _ground_at(centre) - global_position.y
 	var h := STOREY_M * storeys
 	var basis := Basis(Vector3.UP, yaw)
 	var origin := Vector3(centre.x - global_position.x, ground, centre.y - global_position.z)
+	var at := Transform3D(basis, origin)
+	var wash := _wash()
+	var stone := _stone_tint()
 
-	var plinth := Transform3D(basis, origin + Vector3(0.0, PLINTH_H * 0.5 - 0.14, 0.0))
-	walls.append_from(unit, 0, plinth.scaled_local(Vector3(w + 0.16, PLINTH_H, d + 0.16)))
-	var body := Transform3D(basis, origin + Vector3(0.0, h * 0.5, 0.0))
-	walls.append_from(unit, 0, body.scaled_local(Vector3(w, h, d)))
-	var stack := Transform3D(basis, origin + basis * Vector3(w * 0.5 - 0.5, 0.0, 0.0)
-			+ Vector3(0.0, (h + d * 0.5 * _pitch() + 1.0) * 0.5, 0.0))
-	walls.append_from(unit, 0, stack.scaled_local(
-			Vector3(0.62, h + d * 0.5 * _pitch() + 1.0, 0.62)))
-	# a shuttered opening, so the wall is not blank from the street
-	var face := Transform3D(basis, origin + basis * Vector3(0.0, 0.0, -d * 0.5 - 0.06)
-			+ Vector3(0.0, 1.05, 0.0))
-	walls.append_from(unit, 0, face.scaled_local(Vector3(1.1, 2.1, 0.12)))
+	# a plinth that varies: a course of dark stone, higher here and wider there
+	var plinth_h := _rng.randf_range(0.28, 0.55)
+	var plinth_out := _rng.randf_range(0.1, 0.22)
+	fabric.box("stone", at * Transform3D(Basis(), Vector3(0.0, plinth_h * 0.5 - 0.14, 0.0)),
+			Vector3(w + plinth_out * 2.0, plinth_h, d + plinth_out * 2.0), stone)
+	fabric.box("wall", at * Transform3D(Basis(), Vector3(0.0, h * 0.5, 0.0)), Vector3(w, h, d), wash)
+	_body(origin + Vector3(0.0, h * 0.5, 0.0), basis, Vector3(w, h, d))
 	if not standing:
 		return
 
 	var pitch := _pitch()
 	var thick := _roof_thick()
-	var span := d + 0.9
-	var length := w + 0.9
+	var span := d + EAVES_M * 2.0
+	var length := w + EAVES_M * 2.0
 	var rise := span * 0.5 * pitch
+	# the triangle of wall under each end of the roof, in the wall's own surface
+	var apex := h + d * 0.5 * pitch
+	var ne := at * Vector3(w * 0.5, h, -d * 0.5)
+	var se := at * Vector3(w * 0.5, h, d * 0.5)
+	var te := at * Vector3(w * 0.5, apex, 0.0)
+	fabric.tri("wall", ne, se, te, wash)
+	var nw := at * Vector3(-w * 0.5, h, -d * 0.5)
+	var sw := at * Vector3(-w * 0.5, h, d * 0.5)
+	var tw := at * Vector3(-w * 0.5, apex, 0.0)
+	fabric.tri("wall", sw, nw, tw, wash)
+	# two slabs with depth, overhanging the wall, meeting in a closed apex
 	var slope := sqrt(span * span * 0.25 + rise * rise)
 	var angle := atan2(rise, span * 0.5)
+	var eaves := at * Transform3D(Basis(), Vector3(0.0, h, 0.0))
 	for side_v in [-1.0, 1.0]:
 		var side := float(side_v)
 		var normal := Vector3(0.0, span * 0.5, side * rise).normalized()
 		var mid := Vector3(0.0, rise * 0.5, side * span * 0.25)
 		var local := Transform3D(Basis(Vector3.RIGHT, side * angle), mid - normal * (thick * 0.5))
-		var xf := Transform3D(basis, origin + Vector3(0.0, h, 0.0)) * local
-		roofs.append_from(unit, 0, xf.scaled_local(Vector3(length, thick, slope + thick * 0.6)))
-	_body(origin + Vector3(0.0, h * 0.5, 0.0), basis, Vector3(w, h, d))
+		fabric.box("roof", eaves * local, Vector3(length, thick, slope + thick * 0.6))
+	if bool(_roof_spec().get("ridge", false)):
+		fabric.box("roof", eaves * Transform3D(Basis(), Vector3(0.0, rise - thick * 0.25, 0.0)),
+				Vector3(length * 0.98, thick * 0.9, thick * 2.2), Building.accent_tint(_roof_spec()))
+	# the chimney stands at the hearth end, against the gable, clear of the ridge
+	var hearth := 1.0 if _rng.randf() < 0.5 else -1.0
+	var top := h + rise + 0.8
+	fabric.box("stone", at * Transform3D(Basis(), Vector3(hearth * (w * 0.5 + 0.16), top * 0.5, 0.0)),
+			Vector3(0.72, top, 0.72), stone)
+	# the street front is bays: the door takes one, the windows the rest, framed and shuttered
+	var timber := Building.timber_tints(culture)
+	var slots := _window_slots(w)
+	var door_slot := _rng.randi_range(0, slots.size() - 1)
+	var door_x := slots[door_slot]
+	Building.door_at(fabric, at * Transform3D(Basis(Vector3.UP, PI), Vector3(door_x, 0.0, -d * 0.5)), timber, stone)
+	# upstairs every bay has a window; at the back fewer; one in the gable away from the hearth
+	for s in range(storeys):
+		var cy := STOREY_M * float(s) + 1.45
+		for i in range(slots.size()):
+			if s == 0 and i == door_slot:
+				continue
+			Building.window_at(fabric, at * Transform3D(Basis(Vector3.UP, PI), Vector3(slots[i], cy, -d * 0.5)),
+					timber, stone, s == 0)
+		for x_v in slots:
+			if _rng.randf() < 0.55:
+				Building.window_at(fabric, at * Transform3D(Basis(), Vector3(float(x_v), cy, d * 0.5)),
+						timber, stone, false)
+		if d > 4.5:
+			Building.window_at(fabric, at * Transform3D(Basis(Vector3.UP, -hearth * PI * 0.5),
+					Vector3(-hearth * w * 0.5, cy, 0.0)), timber, stone, false)
 
 
-func _commit(st: SurfaceTool, mat: Material, node_name: String) -> void:
-	st.generate_normals()
-	var mesh := st.commit()
-	if mesh == null or mesh.get_surface_count() == 0:
-		return
-	var inst := MeshInstance3D.new()
-	inst.mesh = mesh
-	inst.material_override = mat
-	inst.name = node_name
-	add_child(inst)
+## The bays along a frontage: evenly spaced, two metres or more apart, so a door with its
+## frame and a shuttered window can stand side by side without touching.
+func _window_slots(w: float) -> Array[float]:
+	var out: Array[float] = []
+	var n := clampi(int((w - 1.8) / 2.0), 1, 3)
+	for i in range(n):
+		out.append(-w * 0.5 + 0.9 + (w - 1.8) * (float(i) + 0.5) / float(n))
+	return out
+
+
+## This house's bucket of limewash: a little warmer and lighter, or cooler and darker, than
+## its neighbour's. Enough to break the terrace, not enough to break the culture. A vertex
+## colour is stored at eight bits and clamps at one, so the range sits just under white.
+func _wash() -> Color:
+	var k := _rng.randf_range(-1.0, 1.0)
+	return Color(0.93 + 0.07 * k, 0.945 + 0.055 * k, 0.97 + 0.03 * k)
+
+
+func _stone_tint() -> Color:
+	var k := _rng.randf_range(-1.0, 1.0)
+	return Color(0.93 + 0.07 * k, 0.935 + 0.065 * k, 0.94 + 0.06 * k)
 
 
 func _body(at: Vector3, basis: Basis, size: Vector3) -> void:
@@ -349,7 +402,8 @@ func _body(at: Vector3, basis: Basis, size: Vector3) -> void:
 # --- what is lying about -----------------------------------------------------------------------
 
 ## Buckets, carts, hay, a well. Scaled to the size of the place, so a hamlet gets a cart and a
-## city gets a market; a prop the forge has not built is skipped rather than faked.
+## city gets a market; a prop the forge has not built is skipped rather than faked. Every prop
+## of one forge asset is one `MultiMesh`, so eighteen hurdles of wattle fence are one draw.
 func _strew(plan: Dictionary) -> void:
 	var share := clampf(float(int(plan.get("count", 10))) / 26.0, 0.35, 1.6)
 	var prefix := str(PROP_PREFIX.get(culture, "hearthvale"))
@@ -357,25 +411,47 @@ func _strew(plan: Dictionary) -> void:
 	# wider than the village standing on it, and props strewn across the pad end up in an empty
 	# field a hundred metres from the nearest door.
 	var green := maxf(_inner_radius() - 2.0, 3.0)
+	var placed: Dictionary = {}          # asset path -> Array[Transform3D]
 	for entry in PROPS_BY_CULTURE.get(culture, []):
 		var row: Dictionary = entry
-		var kind := str(row.get("kind", ""))
-		var paths := _prop_paths(prefix, kind)
+		var paths := _prop_paths(prefix, str(row.get("kind", "")))
 		if paths.is_empty():
 			continue
 		var n := int(round(float(int(row.get("n", 1))) * share))
 		for i in range(n):
-			var packed := load(paths[_rng.randi_range(0, paths.size() - 1)]) as PackedScene
-			if packed == null:
-				continue
-			var node := packed.instantiate()
-			if not (node is Node3D):
-				node.queue_free()
-				continue
-			var prop: Node3D = node
-			prop.position = _prop_spot(str(row.get("where", "green")), green)
-			prop.rotation.y = _rng.randf_range(0.0, TAU)
-			add_child(prop)
+			var path: String = paths[_rng.randi_range(0, paths.size() - 1)]
+			var spot := _prop_spot(str(row.get("where", "green")), green)
+			var yaw := _rng.randf_range(0.0, TAU)
+			if not placed.has(path):
+				placed[path] = []
+			(placed[path] as Array).append(Transform3D(Basis(Vector3.UP, yaw), spot))
+	for path in placed:
+		_strew_one_kind(str(path), placed[path])
+
+
+func _strew_one_kind(path: String, transforms: Array) -> void:
+	var packed := load(path) as PackedScene
+	if packed == null:
+		return
+	var mesh := WorldStreamer._mesh_of(packed, 0)
+	if mesh == null:
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = transforms.size()
+	# The forge exports a standing prop with its feet at y = 0 (CONTRACTS §4). One that reaches
+	# below is lifted by its own box, so a cart centred on its axle still sits on the ground.
+	var lift := maxf(0.0, -mesh.get_aabb().position.y)
+	for i in transforms.size():
+		var xf: Transform3D = transforms[i]
+		xf.origin.y += lift
+		mm.set_instance_transform(i, xf)
+	var inst := MultiMeshInstance3D.new()
+	inst.name = path.get_file().get_basename()
+	inst.multimesh = mm
+	FabricMesh.near_only(inst, FabricMesh.PROP_RANGE_M, true)
+	add_child(inst)
 
 
 ## Both variants of a prop, if the forge built them. Naming is `<region>_<kind>_<a|b>` and a
@@ -521,6 +597,10 @@ func _wall_spec() -> Dictionary:
 
 func _roof_spec() -> Dictionary:
 	return Building.ROOF_BY_CULTURE.get(culture, Building.ROOF_BY_CULTURE["vale"])
+
+
+func _stone_spec() -> Dictionary:
+	return Building.PLINTH_BY_CULTURE.get(culture, Building.PLINTH_BY_CULTURE["vale"])
 
 
 func _pitch() -> float:
