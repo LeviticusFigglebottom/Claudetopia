@@ -26,6 +26,11 @@ var _perf: Array = []
 ## a frame costs in terrain and what it costs in people, which is not a question you can answer
 ## by looking at the picture.
 var people := true
+## `--attribute` follows every shot with `DrawAttribution`: a census of what the camera sees
+## by owning script, and the measured cost of each owner with its shadow passes, printed and
+## written to <out>/attribution.json. A draw-call total on its own names nobody.
+var attribute := false
+var _attribution: Array = []
 var _failures: Array[String] = []
 
 
@@ -38,6 +43,8 @@ func _ready() -> void:
 			plan_path = a.substr(10)
 		elif a == "--no-people":
 			people = false
+		elif a == "--attribute":
+			attribute = true
 	var code: int = await run()
 	get_tree().quit(code)
 
@@ -164,6 +171,23 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	_write_region_copy(img, str(shot.get("region", "")), label)
 	Log.info("Capture", "%s: %s (%d draw calls, %.2f M primitives, %d frames waited)"
 		% [label, path.get_file(), int(_perf[-1]["draw_calls"]), float(_perf[-1]["primitives"]) / 1e6, waited])
+	if attribute:
+		await _attribute_shot(label, cam)
+
+
+## Who the draw calls belong to, for one shot: the census first (cheap, colour pass only),
+## then the measured cost of hiding each owner, which is the number that includes the sun.
+func _attribute_shot(label: String, cam: Camera3D) -> void:
+	# from the root, not the world: the villagers hang off the services, not off the terrain
+	var rows := DrawAttribution.census(cam, get_tree().root)
+	var measured: Dictionary = await DrawAttribution.measure(_world)
+	print("ATTRIBUTION %s\n%s\n%s" % [label, DrawAttribution.census_table(rows),
+			DrawAttribution.measure_table(measured)])
+	_attribution.append({"label": label, "census": rows.values(), "measured": measured})
+	var f := FileAccess.open("%s/attribution.json" % out_dir, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(_attribution, "  "))
+		f.close()
 
 
 ## Review shots look a long way, where the region fog densities turn the land into haze.

@@ -222,6 +222,20 @@ func _register_builtins() -> void:
 			Performance.get_monitor(Performance.TIME_FPS), Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 			Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
 			Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, Performance.get_monitor(Performance.OBJECT_NODE_COUNT)], "render/perf stats")
+	register("draws", func(a: Array) -> String:
+		var cam := get_viewport().get_camera_3d()
+		var world := World.instance
+		if cam == null or world == null:
+			return "no camera or no world"
+		var text := DrawAttribution.census_table(DrawAttribution.census(cam, get_tree().root))
+		if a.size() > 0 and a[0] == "measure":
+			# hides each owner for a frame in turn, so the answer arrives a moment later
+			var measuring := func() -> void:
+				var m: Dictionary = await DrawAttribution.measure(world)
+				log_line(DrawAttribution.measure_table(m))
+			measuring.call()
+			text += "\n(measuring...)"
+		return text, "draws [measure]: who the frame's draw calls belong to")
 	register("screenshot", func(a: Array) -> String:
 		var path: String = a[0] if a.size() > 0 else "user://screenshot_%d.png" % Time.get_ticks_msec()
 		get_viewport().get_texture().get_image().save_png(path)
