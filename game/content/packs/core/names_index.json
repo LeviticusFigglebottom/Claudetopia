@@ -471,6 +471,86 @@
       "rule": "named for the feature it is built into",
       "derivation": "the Hollow's hearth in the biggest knot of the Grandfather's trunk; the Woodfolk's inn insofar as they have one",
       "used_by": "core:dialogue/gil_larkfold"
+    },
+    {
+      "name": "Mella Lissa",
+      "language": "sedgish",
+      "kind": "person",
+      "rule": "5.4 people: soft, vowel-final, doubled consonant for length; second name from a marsh word",
+      "derivation": "namegen candidate (seed 11); Mella (doubled -ll-) + lissa 'reed'",
+      "used_by": "core:npc/mella_lissa"
+    },
+    {
+      "name": "Issa Mor",
+      "language": "sedgish",
+      "kind": "person",
+      "rule": "5.4 people: doubled consonant, marsh-word second name",
+      "derivation": "Issa (from isse 'water', bible example Issa Tal) + mor 'eel': the eel-wife's name is her trade",
+      "used_by": "core:npc/issa_mor"
+    },
+    {
+      "name": "Auti Sa",
+      "language": "sedgish",
+      "kind": "person",
+      "rule": "5.4 people: vowel-final given name; second name taken with the bench",
+      "derivation": "namegen candidate Auti + sa 'lantern', the lantern-maker's name taken with her mother's bench",
+      "used_by": "core:npc/auti_sa"
+    },
+    {
+      "name": "Loa Oul",
+      "language": "sedgish",
+      "kind": "person",
+      "rule": "5.4 people: vowel-final, family second name",
+      "derivation": "Loa (soft, open) + oul 'deep pool', Tallissa Oul's family",
+      "used_by": "core:npc/loa_oul"
+    },
+    {
+      "name": "Mia Mor",
+      "language": "sedgish",
+      "kind": "person",
+      "rule": "5.4 people: child's short vowel-final name, family second name",
+      "derivation": "namegen candidate; Mor as her grandmother Issa's",
+      "used_by": "core:npc/mia_mor"
+    },
+    {
+      "name": "Ollo Nauve",
+      "language": "sedgish",
+      "kind": "person",
+      "rule": "5.4 people: doubled consonant; the Landing's own family name",
+      "derivation": "Ollo (doubled -ll-) + nauve 'channel'; the boatwright line Nauve's Landing is named for",
+      "used_by": "core:npc/ollo_nauve"
+    },
+    {
+      "name": "Sia Nauve",
+      "language": "sedgish",
+      "kind": "person",
+      "rule": "5.4 people: vowel-final, married into the Nauve name",
+      "derivation": "Sia (sibilant, open) + Nauve",
+      "used_by": "core:npc/sia_nauve"
+    },
+    {
+      "name": "Alle Nauve",
+      "language": "sedgish",
+      "kind": "person",
+      "rule": "5.4 people: child's doubled-consonant name",
+      "derivation": "namegen candidate Alle + Nauve, her father's",
+      "used_by": "core:npc/alle_nauve"
+    },
+    {
+      "name": "Stays",
+      "language": "valish",
+      "kind": "landmark",
+      "rule": "child's coinage, plain word",
+      "derivation": "Alle Nauve's name for the Said bridge at Nauve's Landing that stayed where the channel did not",
+      "used_by": "core:dialogue/alle_nauve"
+    },
+    {
+      "name": "Greyheron",
+      "language": "valish",
+      "kind": "by_name",
+      "rule": "child's coinage, plain compound",
+      "derivation": "the name Alle Nauve chalks for the player: walks as if unsure of the ground, and herons never fall in",
+      "used_by": "core:dialogue/alle_nauve"
     }
   ]
 }
