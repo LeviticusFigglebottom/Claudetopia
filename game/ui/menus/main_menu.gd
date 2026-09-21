@@ -9,6 +9,8 @@ const WORLD_SCENE := "res://world/world.tscn"
 const NAMING_SCENE := "res://ui/character/naming.tscn"
 
 const BACKDROP_INSET := Vector2(-150.0, -110.0)
+## What the loading caption says while a saved name is read back in.
+const LOADING_LINE := "The Roll is read again, and your name is in it."
 
 var _backdrop: TextureRect
 var _buttons: Array[Control] = []
@@ -183,7 +185,9 @@ func _enter_world(args: Dictionary) -> void:
 		return
 	if args.has("load"):
 		GameState.set_flag("_pending_load_slot", str(args["load"]))
-	UI.fade_to_black(0.3)
+	for b in _buttons:
+		b.disabled = true
+	UI.fade_to_black(0.3, LOADING_LINE)
 	await get_tree().create_timer(0.32).timeout
 	get_tree().change_scene_to_file(WORLD_SCENE)
 

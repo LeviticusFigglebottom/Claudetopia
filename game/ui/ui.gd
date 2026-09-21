@@ -70,6 +70,14 @@ var _dialogue: Node = null
 var _toast_box: VBoxContainer
 var _fade: ColorRect
 var _fade_tween: Tween = null
+## The loading caption: a sheet over the black with a line in the world's voice, a mark that
+## breathes, and what the world has stood up so far. Menus that hand over to the world ask
+## for it with `fade_to_black(seconds, line)`; the body arriving takes it down.
+var _loading: Control = null
+var _loading_line: Label
+var _loading_progress: Label
+var _loading_mark: TextureRect
+var _loading_tween: Tween = null
 var _hud_visible := true
 var _mouse_was_captured := false
 
@@ -129,6 +137,126 @@ func _build_layers() -> void:
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fade.visible = false
 	fade_layer.add_child(_fade)
+	_build_loading()
+
+
+## Between "Be named" and the first look at the world the screen used to be a dead black
+## rectangle for as long as the terrain took, which a player reads as the game having hung.
+func _build_loading() -> void:
+	_loading = CenterContainer.new()
+	_loading.name = "Loading"
+	_loading.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_loading.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_loading.theme = theme_for(theme_variant)
+	_loading.visible = false
+	fade_layer.add_child(_loading)
+
+	var sheet := PanelContainer.new()
+	sheet.theme_type_variation = &"SheetPanel"
+	sheet.custom_minimum_size = Vector2(560, 0)
+	sheet.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_loading.add_child(sheet)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 10)
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	sheet.add_child(col)
+
+	_loading_mark = TextureRect.new()
+	_loading_mark.texture = ThemeBuilder.texture("mark_bell")
+	_loading_mark.custom_minimum_size = Vector2(0, 76)
+	_loading_mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_loading_mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_loading_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_loading_mark.resized.connect(func() -> void: _loading_mark.pivot_offset = _loading_mark.size * 0.5)
+	col.add_child(_loading_mark)
+
+	_loading_line = Label.new()
+	_loading_line.theme_type_variation = &"Journal"
+	_loading_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_loading_line.custom_minimum_size = Vector2(500, 0)
+	col.add_child(_loading_line)
+
+	var rule := Control.new()
+	rule.custom_minimum_size = Vector2(0, 14)
+	var line := NinePatchRect.new()
+	line.texture = ThemeBuilder.texture("rule_line")
+	line.patch_margin_left = 8
+	line.patch_margin_right = 8
+	line.set_anchors_preset(Control.PRESET_FULL_RECT)
+	line.offset_left = 120.0
+	line.offset_right = -120.0
+	line.modulate.a = 0.7
+	rule.add_child(line)
+	col.add_child(rule)
+
+	_loading_progress = Label.new()
+	_loading_progress.theme_type_variation = &"Small"
+	_loading_progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_loading_progress)
+
+
+func _show_loading(line: String) -> void:
+	_loading_line.text = line
+	_loading_progress.text = _loading_progress_text()
+	_loading.theme = theme_for(theme_variant)
+	_loading.visible = true
+	_loading.modulate = Color(1, 1, 1, 1)
+	if _loading_tween != null and _loading_tween.is_valid():
+		_loading_tween.kill()
+	# the mark sways like a bell that has just stopped ringing: enough to say "alive", not
+	# enough to say "look at me"
+	_loading_mark.rotation = -0.05
+	_loading_tween = create_tween().set_loops()
+	_loading_tween.tween_property(_loading_mark, "rotation", 0.05, 1.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_loading_tween.tween_property(_loading_mark, "rotation", -0.05, 1.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _hide_loading(seconds := 0.0) -> void:
+	if _loading == null or not _loading.visible:
+		return
+	if _loading_tween != null and _loading_tween.is_valid():
+		_loading_tween.kill()
+	if seconds <= 0.0:
+		_loading.visible = false
+		return
+	var tw := create_tween()
+	tw.tween_property(_loading, "modulate:a", 0.0, seconds)
+	tw.tween_callback(func() -> void: _loading.visible = false)
+
+
+## What the world has stood up so far, in its own words.
+func _loading_progress_text() -> String:
+	var world: Node = null
+	var world_script := load("res://world/world.gd") as GDScript
+	if world_script != null:
+		world = world_script.get("instance")
+	if world == null or not bool(world.get("is_world_ready")):
+		return "Raising the ground…"
+	var streamer: Node = world.get("streamer")
+	var cells: int = int(streamer.call("loaded_count")) if streamer != null and streamer.has_method("loaded_count") else 0
+	var people := get_tree().get_nodes_in_group("npc").size()
+	var text := "Laying the country: %d cells" % cells
+	if people > 0:
+		text += ", %d people about" % people
+	return text + "…"
+
+
+func _process(_delta: float) -> void:
+	if _loading != null and _loading.visible and _loading_progress != null:
+		_loading_progress.text = _loading_progress_text()
+
+
+## Whether the loading caption is on the screen.
+func is_loading_shown() -> bool:
+	return _loading != null and _loading.visible
+
+
+## The caption's words, for a test or a probe: the line and the progress under it.
+func loading_text() -> String:
+	if not is_loading_shown():
+		return ""
+	return "%s\n%s" % [_loading_line.text, _loading_progress.text]
 
 
 func _make_layer(node_name: String, layer_index: int) -> CanvasLayer:
@@ -357,6 +485,9 @@ func show_dialogue() -> Node:
 func _on_player_spawned(_player: Node) -> void:
 	show_hud()
 	show_dialogue()
+	# A load puts the region back without a region_entered, so a game saved in a dangerous
+	# region came back wearing the warm frame. The body standing is when the context is known.
+	_refresh_variant()
 	# The main menu and the Naming fade to black before they change scene, and this layer is
 	# an autoload, so the black outlives the scene change. Nothing lifted it: the world stood
 	# up and ran behind an opaque rectangle. A body standing in the world is the moment the
@@ -419,15 +550,22 @@ func toast(text: String, kind := "info") -> void:
 
 # --- screen fade --------------------------------------------------------------------------
 
-func fade_to_black(seconds := 0.35) -> void:
+## `loading_line`, when given, puts the loading caption over the black with that line in it:
+## the menus say it on the way into the world, and it stays up until the body arrives.
+func fade_to_black(seconds := 0.35, loading_line := "") -> void:
 	_fade.visible = true
 	if _fade_tween != null and _fade_tween.is_valid():
 		_fade_tween.kill()
 	_fade_tween = create_tween()
 	_fade_tween.tween_property(_fade, "color:a", 1.0, seconds)
+	if loading_line.is_empty():
+		_hide_loading()
+	else:
+		_show_loading(loading_line)
 
 
 func fade_from_black(seconds := 0.5) -> void:
+	_hide_loading(seconds * 0.6)
 	if not _fade.visible and _fade.color.a <= 0.0:
 		return
 	_fade.visible = true
