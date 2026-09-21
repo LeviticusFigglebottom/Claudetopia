@@ -62,6 +62,7 @@ func _world() -> World:
 ## Puts the body down and hands back whatever is now standing in the world (an existing player
 ## is left alone, so a scene that ships its own is not given a second one).
 func spawn() -> Node3D:
+	load_pending_slot()
 	var existing := get_tree().get_first_node_in_group("player")
 	if existing is Node3D:
 		player = existing
@@ -88,6 +89,24 @@ func spawn() -> Node3D:
 	Log.info("PlayerSpawn", "%s stands at %s" % [player.name, str(player.global_position.round())])
 	player_spawned.emit(player)
 	return player
+
+
+## The slot the title menu's Continue and Load, and `--load=<slot>`, asked for. They wrote the
+## flag and nothing read it, so every one of them stood a new Foundling up at the Hushline
+## Stair with the save untouched on disk. Read here, before the body: the save's sections then
+## reach the autoloads at once and wait in `SaveSystem.pending` for the player and its systems,
+## which is what `_saved_position` and `Player._ready` expect. Returns the slot that was loaded.
+static func load_pending_slot() -> String:
+	var slot := str(GameState.get_flag("_pending_load_slot", ""))
+	if slot.is_empty():
+		return ""
+	GameState.clear_flag("_pending_load_slot")
+	var err := SaveSystem.load_from_slot(slot)
+	if err != OK:
+		Log.error("PlayerSpawn", "could not load slot '%s': %s" % [slot, error_string(err)])
+		EventBus.emit_notify("That save could not be read (%s)." % error_string(err), "warning")
+		return ""
+	return slot
 
 
 ## Where the character starts, and on the ground.

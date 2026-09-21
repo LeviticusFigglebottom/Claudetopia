@@ -32,6 +32,8 @@ const SOCKETS := {
 	"Socket.WeaponR": "WeaponR", "Socket.WeaponL": "WeaponL", "Socket.ShieldL": "ShieldL",
 	"Socket.Back": "Back", "Socket.HipL": "HipL", "Socket.Head": "Head", "Socket.Lantern": "Lantern",
 }
+## Recolours the iris band of an eyeball and leaves the white alone (see the shader).
+const IRIS_SHADER := preload("res://assets/shaders/eye_iris.gdshader")
 const DEFAULT_BLEND := 0.12
 ## Cross-fades on the state machine edges: into a one-shot fast, back to locomotion softer.
 const ONE_SHOT_BLEND_IN := 0.08
@@ -53,6 +55,7 @@ var _rig_root: Node3D
 var _state_machine: AnimationNodeStateMachinePlayback
 var _clip_data: Dictionary = {}          ## clip name -> {loop, length, events[]}
 var _default_meshes: Dictionary = {}     ## logical name -> MeshInstance3D from the rig GLB
+var _default_eyes: Array[MeshInstance3D] = []   ## both of the rig's eyeballs
 var _part_meshes: Dictionary = {}        ## slot -> Array[MeshInstance3D]
 var _sockets: Dictionary = {}            ## socket bone name -> BoneAttachment3D
 var _one_shot := ""
@@ -91,7 +94,12 @@ func build() -> void:
 		return
 	for mi in _rig_root.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
-		_default_meshes[_logical_name(m.name)] = m
+		var logical := _logical_name(m.name)
+		if logical == "eyes":
+			# two eyeballs share one logical name; keyed by it, the left one was lost
+			_default_eyes.append(m)
+		else:
+			_default_meshes[logical] = m
 	_clip_data = _load_clip_data()
 	_restore_contract_clip_names()
 	_apply_loop_flags()
@@ -253,7 +261,11 @@ func apply_appearance(d: Variant) -> void:
 			continue
 		_add_part(slot, part_name)
 	_apply_morality_parts()
-	_show_default(_default_meshes.get("head"), appearance.part("head").is_empty() or appearance.part("head") == "default")
+	var own_head: bool = appearance.part("head").is_empty() or appearance.part("head") == "default"
+	_show_default(_default_meshes.get("head"), own_head)
+	# a head part brings its own eyes; the rig's pair stayed on underneath, two irises deep
+	for eye in _default_eyes:
+		_show_default(eye, own_head)
 	_apply_colours()
 	_apply_proportions()
 	appearance_changed.emit()
@@ -320,19 +332,50 @@ func _add_part(slot: String, part_name: String) -> bool:
 	return true
 
 
+## Every rig, head, hair shell and garment is baked once, in one colour: the record's skin,
+## eyes and hair are tints relative to those bakes, and cloth takes the palette's colour for
+## its role. Skin used to be applied only when a palette spelled out `skin_tint`, so the tone
+## the record named was never seen on a body, and a head part fell through to the cloth
+## palette's primary.
 func _apply_colours() -> void:
 	var pal := appearance.palette
+	var skin := appearance.skin_tint()
 	for slot in _part_meshes:
 		for mi in _part_meshes[slot]:
+			if slot == "head":
+				if _is_eye(mi):
+					_tint_iris(mi)
+				else:
+					_tint(mi, skin)
+				continue
 			var key := _colour_key_for(slot)
 			if pal.has(key):
 				_tint(mi, pal[key] as Color)
 			elif slot == "hair" or slot == "beard":
-				_tint(mi, _hair_colour())
-	if pal.has("skin_tint"):
-		for logical in ["body", "head"]:
-			if _default_meshes.has(logical):
-				_tint(_default_meshes[logical], pal["skin_tint"] as Color)
+				_tint(mi, appearance.hair_tint())
+	for logical in ["body", "head"]:
+		if _default_meshes.has(logical):
+			_tint(_default_meshes[logical], skin)
+	for eye in _default_eyes:
+		_tint_iris(eye)
+
+
+func _is_eye(mi: MeshInstance3D) -> bool:
+	return mi.name.to_lower().contains("eye")
+
+
+## The eyeball keeps its baked texture; only the iris band is recoloured.
+func _tint_iris(mi: MeshInstance3D) -> void:
+	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
+	var tint := appearance.iris_tint()
+	for i in count:
+		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
+		var m := ShaderMaterial.new()
+		m.shader = IRIS_SHADER
+		if base != null and base.albedo_texture != null:
+			m.set_shader_parameter("albedo_tex", base.albedo_texture)
+		m.set_shader_parameter("iris_tint", Vector3(tint.r, tint.g, tint.b))
+		mi.set_surface_override_material(i, m)
 
 
 func _colour_key_for(slot: String) -> String:
@@ -350,15 +393,6 @@ func _colour_key_for(slot: String) -> String:
 	return "primary"
 
 
-func _hair_colour() -> Color:
-	const TABLE := {
-		"black": "1d1917", "soot": "2a2521", "dark_brown": "3b2a1e", "brown": "5a3b25",
-		"chestnut": "6d3f22", "auburn": "8a3f22", "ginger": "a8501f", "sand": "a98a58",
-		"flax": "c7ab74", "ash_blond": "cdbf9a", "grey": "9a958e", "white": "d9d5cd",
-	}
-	return Color(str(TABLE.get(appearance.hair_colour, "3b2a1e")))
-
-
 func _tint(mi: MeshInstance3D, c: Color) -> void:
 	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
 	for i in count:
@@ -371,12 +405,16 @@ func _tint(mi: MeshInstance3D, c: Color) -> void:
 
 
 ## Runtime bone scaling would break clips authored on the default proportions
-## (CONTRACTS.md §2), so overall size is a uniform scale and finer shape differences come
-## from the exported body variants.
+## (CONTRACTS.md §2), so overall size is a uniform scale. Finer shape was to come from the
+## exported body variants (`CharacterAppearance.body_variant()`), but the three the forge has
+## written so far (bodies/child, heavy, slight) hold a skeleton and no mesh, so until they
+## arrive build is a modest widening of the whole rig: enough to read across a room, small
+## enough that the clips still sit right.
 func _apply_proportions() -> void:
 	var s: float = appearance.height / 1.78
+	var wide: float = lerpf(0.93, 1.09, clampf(appearance.build, 0.0, 1.0))
 	if _rig_root != null:
-		_rig_root.scale = Vector3(s, s, s)
+		_rig_root.scale = Vector3(s * wide, s, s * wide)
 
 
 # ---------------------------------------------------------------------------------------
