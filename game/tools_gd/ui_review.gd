@@ -126,6 +126,9 @@ func _plan() -> Array[Dictionary]:
 
 func _process(delta: float) -> void:
 	if _index >= _shots.size():
+		# the two review saves go in the real save directory so the title menu has a Continue
+		# to draw; left behind, they are what a player's Continue then loads
+		_fakes.clear_slots()
 		print("[ui_review] done")
 		get_tree().quit(0)
 		return
