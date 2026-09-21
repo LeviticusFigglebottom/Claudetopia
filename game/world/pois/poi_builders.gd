@@ -10,7 +10,7 @@ extends RefCounted
 
 ## The kinds a builder exists for. `PoiDressing.KINDS` is the whole list the design names;
 ## `test_pois.gd` reports the difference as still to be dressed.
-const KINDS_BUILT := ["camp", "shrine", "hearth"]
+const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge"]
 
 
 static func build(d: PoiDressing) -> void:
@@ -21,6 +21,10 @@ static func build(d: PoiDressing) -> void:
 			shrine(d)
 		"hearth":
 			hearth(d)
+		"tower":
+			tower(d)
+		"bridge":
+			bridge(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
 
@@ -205,21 +209,21 @@ static func shrine(d: PoiDressing) -> void:
 	elif PoiKit.brief_says(brief, ["pebble", "shingle"]):
 		# a cairn of lake pebbles, each a name; the stone stands out of its top
 		var pebbles: Array = []
-		var cairn_r := 1.7
-		for i in 110:
+		var cairn_r := 2.5
+		for i in 190:
 			var u := k.rng.randf()
 			var r := cairn_r * sqrt(u)
 			var a := k.rng.randf_range(0.0, TAU)
-			var h := 1.05 * maxf(1.0 - r / cairn_r, 0.0) * k.rng.randf_range(0.75, 1.0)
+			var h := 1.5 * maxf(1.0 - r / cairn_r, 0.0) * k.rng.randf_range(0.75, 1.0)
 			pebbles.append(PoiKit.transform_at(k.on_ground(stone_at.x + sin(a) * r, stone_at.y + cos(a) * r, h),
-					k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.11, 0.19),
+					k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.13, 0.22),
 					Vector3(k.rng.randf_range(-0.5, 0.5), 0.0, k.rng.randf_range(-0.5, 0.5))))
 		k.scatter(k.rock("boulder"), pebbles, false, true)
 		var cyl := CylinderShape3D.new()
 		cyl.radius = cairn_r * 0.9
-		cyl.height = 0.9
-		k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(stone_at.x, stone_at.y, 0.45)))
-		k.hearthstone(k.on_ground(stone_at.x, stone_at.y, 0.55), approach, d.poi_id, d.display_name)
+		cyl.height = 1.2
+		k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(stone_at.x, stone_at.y, 0.6)))
+		k.hearthstone(k.on_ground(stone_at.x, stone_at.y, 0.95), approach, d.poi_id, d.display_name)
 		placed_hearth = true
 		# the newest pebbles, not yet on the heap
 		var spill: Array = []
@@ -281,12 +285,15 @@ static func shrine(d: PoiDressing) -> void:
 		k.scatter(k.flora("moss_patch"), moss, false, false, false)
 	elif PoiKit.brief_says(brief, ["finger"]):
 		# the sinkhole's rim: slabs leaning in; the giant's finger stands in the middle
+		# the rim is open on the approach side, so the stone can be seen and walked to
 		var slabs: Array = []
-		for p in k.ring(11, 8.6, stone_at, 0.1):
+		for p in k.ring(13, 8.6, stone_at, 0.1):
 			var pp: Vector2 = p
 			var to_c := (stone_at - pp).normalized()
-			slabs.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y, -0.4), PoiKit.yaw_of(to_c),
-					k.rng.randf_range(0.8, 1.15), Vector3(k.rng.randf_range(0.25, 0.4), 0.0, k.rng.randf_range(-0.1, 0.1))))
+			if absf(angle_difference(PoiKit.yaw_of(pp - stone_at), PoiKit.yaw_of(grain))) < 0.55:
+				continue
+			slabs.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y, -0.6), PoiKit.yaw_of(to_c),
+					k.rng.randf_range(0.5, 0.75), Vector3(k.rng.randf_range(0.35, 0.55), 0.0, k.rng.randf_range(-0.15, 0.15))))
 		k.scatter(k.rock("cliff_slab"), slabs, true, true)
 		var finger := k.rock("bone_finger")
 		var fh := PoiKit.height_of(finger)
@@ -310,7 +317,7 @@ static func shrine(d: PoiDressing) -> void:
 		# a bell the size of a house on its side, its mouth to the approach; the stone inside
 		var bell := k.prop("bell_medium")
 		var bs := 6.0
-		var br := PoiKit.radius_of(bell) * bs
+		var br := PoiKit.half_width_of(bell) * bs
 		var bh := PoiKit.height_of(bell) * bs
 		# the bell lies along the grain with its mouth toward the approach: the standing bell's
 		# up (mouth to crown) is turned onto local +Z, and local +Z faces away from the approach
@@ -441,3 +448,684 @@ static func _landmark_clearance(d: PoiDressing) -> float:
 			continue
 		reach = maxf(reach, PoiKit.radius_of(str(entry["scene"])))
 	return reach
+
+
+# --- towers ----------------------------------------------------------------------------------------
+
+## Something to climb or to see from: a drum of stone courses standing, broken or lying down
+## its valley; a lookout on stilts; a hide in a living oak; a toll-house under snow; a
+## colossus's head with a window for an eye. Every tower is a silhouette piece, because a
+## tower's whole job is to be seen from the next POI over.
+static func tower(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var b := d.brief
+	var grain := k.grain()
+	var approach := PoiKit.yaw_of(grain) + PI
+	if PoiKit.brief_says(b, ["lying on its side", "fell", "tumbled"]):
+		_tower_tumbled(d, grain)
+	elif PoiKit.brief_says(b, ["stilts"]):
+		_tower_stilts(d, grain)
+	elif PoiKit.brief_says(b, ["living trunk", "hide"]):
+		_tower_hide(d, grain)
+	elif PoiKit.brief_says(b, ["snow"]):
+		_tower_toll_house(d, grain)
+	elif PoiKit.brief_says(b, ["head", "eye"]):
+		_tower_head(d, grain)
+	else:
+		# a beacon or a plain watch: a drum with a broken crown and a door to the approach
+		var stone := m.begin()
+		var g := k.on_ground(0.0, 0.0)
+		var r := 2.9
+		var h := 7.6
+		m.drum(stone, Transform3D(Basis.IDENTITY, g), r, h, 0.3, approach)
+		m.commit(stone, k.surface("stone", 0.6), "Drum", true)
+		var rubble: Array = []
+		for i in 14:
+			var a := k.rng.randf_range(0.0, TAU)
+			var rr := r + k.rng.randf_range(0.6, 4.5)
+			rubble.append(PoiKit.transform_at(k.on_ground(sin(a) * rr, cos(a) * rr), k.rng.randf_range(0.0, TAU),
+					k.rng.randf_range(0.25, 0.6)))
+		k.scatter(k.rock("boulder"), rubble, true)
+		if PoiKit.brief_says(b, ["bell", "fire-bowl", "beacon"]):
+			# the fire-bowl: an Oroth bell upturned on the crown, and the fire in it
+			var bell := k.prop("bell_medium")
+			var bs := 2.6
+			var bh := PoiKit.height_of(bell) * bs
+			var top := g + Vector3(0.0, h * (1.0 - 0.3 * 0.5) + bh, 0.0)
+			k.place(bell, top, 0.0, bs, false, Vector3(PI, 0.0, 0.0), true)
+			k.light(top + Vector3(0.0, 0.6, 0.0), Color(1.0, 0.6, 0.28), 4.5, 26.0)
+			k.puffs(top + Vector3(0.0, 0.5, 0.0), Vector3(0.4, 0.1, 0.4), 1.4, 16, Color(0.4, 0.38, 0.36, 0.45), 2.2, 6.0)
+		# whoever uses it now left their stores by the door
+		var door := grain * (r + 1.6)
+		k.place(k.prop("barrel"), k.on_ground(door.x + 1.2, door.y), k.rng.randf_range(0.0, TAU))
+		k.place(k.prop("crate"), k.on_ground(door.x - 1.3, door.y + 0.3), k.rng.randf_range(0.0, TAU))
+		k.place(k.prop("rope_coil"), k.on_ground(door.x - 1.3, door.y + 1.1), k.rng.randf_range(0.0, TAU), 1.0, false)
+
+
+## The drum fell and lies down the valley, its stair a corridor: a hollow tube of courses on
+## its side, open at both ends, the stump it broke from still standing.
+static func _tower_tumbled(d: PoiDressing, grain: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var down := k.downhill()
+	if down == Vector2.ZERO:
+		down = grain
+	var r := 2.6
+	var length := 16.0
+	var stone := m.begin()
+	# the stump, at the pad's centre
+	var base := k.on_ground(-down.x * 3.0, -down.y * 3.0)
+	m.drum(stone, Transform3D(Basis.IDENTITY, base), r + 0.15, 3.2, 0.55, PoiKit.yaw_of(down) + PI)
+	# the fallen drum, its axis along the fall; the frame's Y runs along the drum
+	var start := down * 1.5
+	var mid := start + down * (length * 0.5)
+	var g_mid := k.on_ground(mid.x, mid.y)
+	var yaw := PoiKit.yaw_of(down)
+	var frame := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, PI * 0.5),
+			Vector3(start.x, g_mid.y + r * 0.9, start.y))
+	m.drum(stone, frame, r, length, 0.22, NAN)
+	m.commit(stone, k.surface("stone", 0.7), "Drum", true)
+	# the break: rubble between stump and drum, and along the fall
+	var rubble: Array = []
+	for i in 22:
+		var t := k.rng.randf_range(-0.2, 1.1)
+		var side := k.rng.randf_range(-1.0, 1.0) * (r + 1.8) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+		var p := start + down * (length * t) + Vector2(-down.y, down.x) * side
+		rubble.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.25, 0.7)))
+	k.scatter(k.rock("boulder"), rubble, true)
+	var scree: Array = []
+	for i in 12:
+		var p := start + down * k.rng.randf_range(-3.0, 4.0) + Vector2(-down.y, down.x) * k.rng.randf_range(-4.0, 4.0)
+		scree.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.7, 1.2)))
+	k.scatter(k.rock("scree"), scree)
+	# the bell the Wardens want back, rolled out of the top
+	var bell_at := start + down * (length + 2.5) + Vector2(-down.y, down.x) * 2.0
+	k.place(k.prop("bell_medium"), k.on_ground(bell_at.x, bell_at.y), k.rng.randf_range(0.0, TAU), 1.7, true,
+			Vector3(0.0, 0.0, 1.25))
+	# somebody lives in the corridor now
+	var inside := start + down * (length * 0.5)
+	k.place(k.prop("bedroll"), k.on_ground(inside.x, inside.y), yaw)
+	k.place(k.prop("crate"), k.on_ground(inside.x + down.x * 2.0, inside.y + down.y * 2.0), yaw)
+	var fire := start + down * (length + 1.0)
+	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0)
+	k.light(k.on_ground(fire.x, fire.y, 0.8), Color(1.0, 0.66, 0.34), 2.4, 12.0)
+
+
+## A reedfolk lookout on stilts: a plank platform seven metres up on four posts, a roof, a
+## ladder, a bell the bittern nests in.
+static func _tower_stilts(d: PoiDressing, grain: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var planks := m.begin()
+	var posts := m.begin()
+	var yaw := PoiKit.yaw_of(grain)
+	var side := Vector2(-grain.y, grain.x)
+	var deck_y := k.on_ground(0.0, 0.0).y + 6.8
+	var half := 1.7
+	m.plank_deck(planks, posts, -grain * half, grain * half, half * 2.0, deck_y, 3.4, true)
+	# a pitched roof of planks over it, on two more posts
+	var basis := Basis(Vector3.UP, yaw)
+	for s in [-1.0, 1.0]:
+		var xf := Transform3D(basis * Basis(Vector3.BACK, float(s) * 0.62),
+				Vector3(side.x, 0.0, side.y) * float(s) * 0.85 + Vector3(0.0, deck_y + 2.6, 0.0))
+		m.block(planks, xf, Vector3(2.2, 0.08, half * 2.0 + 0.8))
+	for s in [-1.0, 1.0]:
+		var p := side * float(s) * 1.55
+		m.post(posts, p, 3.0 + (deck_y - k.on_ground(p.x, p.y).y), 0.14)
+	# the ladder, leaning on the approach side
+	var foot := grain * (half + 2.2)
+	var g := k.on_ground(foot.x, foot.y)
+	var top := Vector3(grain.x * half, deck_y, grain.y * half)
+	var rail_len := g.distance_to(top)
+	var lean := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, -atan2(2.2, deck_y - g.y))
+	for s in [-1.0, 1.0]:
+		var at := (g + top) * 0.5 + Vector3(side.x, 0.0, side.y) * float(s) * 0.28
+		m.block(posts, Transform3D(lean, at), Vector3(0.07, rail_len, 0.07))
+	for i in range(1, int(rail_len / 0.38)):
+		var t := float(i) * 0.38 / rail_len
+		m.block(posts, Transform3D(lean, g.lerp(top, t)), Vector3(0.6, 0.05, 0.05))
+	k.collider(Vector3(0.7, rail_len, 0.2), Transform3D(lean, (g + top) * 0.5))
+	m.commit(planks, k.surface("planks", 0.7), "Planks", true)
+	m.commit(posts, k.surface("timber", 0.6), "Posts", true)
+	# the bell under the roof, and what a lookout keeps up there
+	k.place(k.prop("bell_small"), Vector3(0.0, deck_y + 2.0, 0.0), yaw, 1.3, false)
+	k.place(k.prop("basket"), Vector3(-side.x * 0.9, deck_y, -side.y * 0.9), yaw, 1.0, false)
+	k.place(k.prop("lantern_hanging"), Vector3(grain.x * half * 0.8, deck_y + 1.9, grain.y * half * 0.8), yaw, 1.0, false)
+	k.light(Vector3(grain.x * half * 0.8, deck_y + 1.7, grain.y * half * 0.8), Color(1.0, 0.8, 0.5), 1.8, 10.0)
+	var reeds: Array = []
+	for i in 46:
+		var a := k.rng.randf_range(0.0, TAU)
+		var r := k.rng.randf_range(2.5, 9.0)
+		reeds.append(PoiKit.transform_at(k.on_ground(sin(a) * r, cos(a) * r), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
+	k.scatter(k.flora("reeds"), reeds, false, false, false)
+	k.place(k.prop("rowboat"), k.on_ground(-grain.x * 6.0 + side.x * 2.0, -grain.y * 6.0 + side.y * 2.0), yaw + 0.4)
+
+
+## A hide built round a living trunk: a giant oak with a railed platform about it nine metres
+## up, and the rope ladder pulled up after them.
+static func _tower_hide(d: PoiDressing, grain: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var oak := k.tree("giant_oak")
+	if oak == "":
+		oak = k.tree("oak")
+	k.place(oak, k.on_ground(0.0, 0.0), k.rng.randf_range(0.0, TAU), 1.0, true, Vector3.ZERO, true)
+	var planks := m.begin()
+	var posts := m.begin()
+	var deck_y := k.on_ground(0.0, 0.0).y + 9.0
+	var inner := 1.9
+	var outer := 4.6
+	var yaw := PoiKit.yaw_of(grain)
+	var basis := Basis(Vector3.UP, yaw)
+	for i in 4:
+		var side_basis := basis * Basis(Vector3.UP, PI * 0.5 * float(i))
+		var centre := side_basis * Vector3(0.0, 0.0, (inner + outer) * 0.5)
+		var xf := Transform3D(side_basis, Vector3(centre.x, deck_y - 0.05, centre.z))
+		m.block(planks, xf, Vector3(outer * 2.0, 0.1, outer - inner))
+		k.collider(Vector3(outer * 2.0, 0.2, outer - inner), xf)
+		var rail := side_basis * Vector3(0.0, 0.0, outer - 0.1)
+		m.block(posts, Transform3D(side_basis, Vector3(rail.x, deck_y + 0.95, rail.z)), Vector3(outer * 2.0, 0.08, 0.08))
+		for s in [-1.0, 1.0]:
+			var p := side_basis * Vector3(float(s) * (outer - 0.1), 0.0, outer - 0.1)
+			m.block(posts, Transform3D(side_basis, Vector3(p.x, deck_y + 0.5, p.z)), Vector3(0.1, 1.0, 0.1))
+		# a strut from the platform's edge back to the trunk
+		var strut_from := side_basis * Vector3(0.0, 0.0, outer - 0.3)
+		var strut_to := side_basis * Vector3(0.0, 0.0, inner * 0.5)
+		var mid := (strut_from + strut_to) * 0.5
+		var pitch := atan2(2.2, outer - 0.3 - inner * 0.5)
+		m.block(posts, Transform3D(side_basis * Basis(Vector3.RIGHT, -pitch), Vector3(mid.x, deck_y - 1.15, mid.z)),
+				Vector3(0.16, 0.16, (strut_from - strut_to).length() * 1.05))
+	m.commit(planks, k.surface("planks", 0.6), "Planks", true)
+	m.commit(posts, k.surface("timber", 0.5), "Timber", true)
+	# the rope ladder, pulled up: coiled on the edge with a stub hanging
+	var edge := basis * Vector3(0.0, 0.0, outer - 0.6)
+	k.place(k.prop("rope_coil"), Vector3(edge.x, deck_y, edge.z), yaw, 1.6, false)
+	var rope := m.begin()
+	m.rod(rope, Transform3D(Basis.IDENTITY, Vector3(edge.x, deck_y - 1.4, edge.z)), 0.03, 2.6)
+	m.commit(rope, PoiKit.plain(Color(0.5, 0.42, 0.3), 0.9), "Rope")
+	# what the poachers keep up there, and what they left below
+	k.place(k.prop("crate"), Vector3(-edge.x, deck_y, -edge.z), yaw, 1.0, false)
+	k.place(k.prop("spear"), Vector3(-edge.z * 0.9, deck_y, edge.x * 0.9), yaw, 1.0, false, Vector3(0.0, 0.0, 0.3))
+	var below := -grain * 5.5
+	k.place(k.prop("campfire"), k.on_ground(below.x, below.y), 0.0)
+	k.place(k.prop("sack"), k.on_ground(below.x + 1.1, below.y - 0.4), 0.0)
+	var ferns: Array = []
+	for i in 30:
+		var a := k.rng.randf_range(0.0, TAU)
+		var r := k.rng.randf_range(3.0, 11.0)
+		ferns.append(PoiKit.transform_at(k.on_ground(sin(a) * r, cos(a) * r), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
+	k.scatter(k.flora("fern"), ferns, false, false, false)
+
+
+## The clan toll-house at the pass: a square drystone tower half under old snow, its bell in
+## a frame on the top, stopped mid-swing.
+static func _tower_toll_house(d: PoiDressing, grain: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var yaw := PoiKit.yaw_of(grain)
+	var basis := Basis(Vector3.UP, yaw)
+	var half := 3.2
+	var h := 6.2
+	var stone := m.begin()
+	var corners: Array = []
+	for i in 4:
+		var c := basis * Vector3(half * (1.0 if i in [0, 1] else -1.0), 0.0, half * (1.0 if i in [1, 2] else -1.0))
+		corners.append(Vector2(c.x, c.z))
+	for i in 4:
+		var a: Vector2 = corners[i]
+		var b: Vector2 = corners[(i + 1) % 4]
+		m.wall(stone, a, b, h, 0.12 if i == 2 else 0.0, true, 0.38)
+	m.doorway(stone, grain * (half + 0.05), yaw, 1.3, 2.2)
+	# a slab roof, half gone
+	var roof := Transform3D(basis, Vector3(0.0, k.on_ground(0.0, 0.0).y + h + 0.15, 0.0))
+	m.block(stone, roof.translated_local(Vector3(-half * 0.5, 0.0, 0.0)), Vector3(half + 0.6, 0.3, half * 2.0 + 0.6))
+	m.commit(stone, k.surface("stone", 0.55), "Walls", true)
+	var timber := m.begin()
+	var hang := m.frame(timber, Vector2.ZERO, yaw, 1.6, h + 2.4, 0.2)
+	m.commit(timber, k.surface("timber"), "Frame", true)
+	# the bell, frozen mid-swing
+	var bell := k.prop("bell_medium")
+	var bs := 1.6
+	k.place(bell, hang - Vector3(0.0, PoiKit.height_of(bell) * bs, 0.0) + basis * Vector3(0.0, 0.35, 0.4), yaw, bs, false,
+			Vector3(0.62, 0.0, 0.0), true)
+	# old snow, drifted against the walls and over the roof
+	var snow := PoiKit.plain(Color(0.93, 0.95, 0.99), 0.55)
+	for i in 4:
+		var a: Vector2 = corners[i]
+		var b: Vector2 = corners[(i + 1) % 4]
+		var mid := (a + b) * 0.5
+		var out := mid.normalized()
+		var at := mid + out * 1.4
+		m.mound(k.on_ground(at.x, at.y, -0.2), 3.4, 2.2 + k.rng.randf_range(-0.4, 0.6), snow, "Drift", true, 1.9, 5, 14, true)
+	for c in corners:
+		var cc: Vector2 = c
+		var at := cc * 1.25
+		m.mound(k.on_ground(at.x, at.y, -0.2), 2.4, 1.4, snow, "Drift", true, 1.9, 4, 12, true)
+	m.mound(Vector3(0.0, k.on_ground(0.0, 0.0).y + h + 0.3, 0.0) + basis * Vector3(-half * 0.5, 0.0, 0.0), half * 1.1, 0.9,
+			snow, "RoofSnow", false, 2.2, 4, 12, true)
+	# the gate-warden's things by the door
+	var door := grain * (half + 2.0)
+	k.place(k.prop("brazier"), k.on_ground(door.x + 1.2, door.y), 0.0)
+	k.light(k.on_ground(door.x + 1.2, door.y, 1.1), Color(1.0, 0.62, 0.3), 2.0, 9.0)
+	k.place(k.prop("signpost"), k.on_ground(door.x - 2.2, door.y + 1.0), yaw + PI)
+	k.place(k.prop("drystone_wall"), k.on_ground(door.x - 4.0, door.y - 1.0), yaw + PI * 0.5)
+	k.place(k.prop("drystone_wall"), k.on_ground(door.x + 4.4, door.y - 1.0), yaw + PI * 0.5)
+
+
+## A colossus's fallen head, hollowed for a watch: a great stone head sunk to the jaw in ash,
+## its eye a lit window, a stair of slabs up to it.
+static func _tower_head(d: PoiDressing, grain: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var yaw := PoiKit.yaw_of(grain)
+	var basis := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, 0.18) * Basis(Vector3.BACK, -0.12)
+	var g := k.on_ground(0.0, 0.0)
+	var rx := 5.6
+	var ry := 7.0
+	var rz := 6.2
+	var centre := g + Vector3(0.0, ry - 3.4, 0.0)
+	var st := m.begin()
+	var sphere := SphereMesh.new()
+	sphere.radius = 1.0
+	sphere.height = 2.0
+	sphere.radial_segments = 28
+	sphere.rings = 16
+	st.append_from(sphere, 0, Transform3D(basis, centre).scaled_local(Vector3(rx, ry, rz)))
+	# brow, nose and the stump of the neck
+	m.block(st, Transform3D(basis, centre + basis * Vector3(0.0, 1.6, rz * 0.82)), Vector3(rx * 1.5, 1.1, 1.6))
+	m.block(st, Transform3D(basis * Basis(Vector3.RIGHT, 0.35), centre + basis * Vector3(0.0, -0.6, rz * 0.98)), Vector3(1.6, 4.2, 1.5))
+	m.block(st, Transform3D(basis, centre + basis * Vector3(0.0, -ry * 0.75, -rz * 0.3)), Vector3(rx * 1.1, 3.0, rz * 0.9))
+	m.commit(st, k.surface("oroth", 0.7), "Head", true)
+	# a wall of the head's reach: a squashed sphere has no shape of its own
+	k.collider(Vector3(rx * 1.9, ry * 1.9, rz * 1.9), Transform3D(basis, centre))
+	# the eye: a dark socket with the vigil's light in it, facing the approach
+	var eye_at := centre + basis * Vector3(rx * 0.42, 1.3, rz * 0.93)
+	var eye := m.begin()
+	var disc := CylinderMesh.new()
+	disc.top_radius = 1.0
+	disc.bottom_radius = 1.0
+	disc.height = 0.3
+	disc.radial_segments = 20
+	eye.append_from(disc, 0, Transform3D(basis * Basis(Vector3.RIGHT, PI * 0.5), eye_at).scaled_local(Vector3(1.25, 1.0, 0.9)))
+	m.commit(eye, PoiKit.plain(Color(0.03, 0.03, 0.035), 0.9, 0.0, Color(0.55, 0.75, 1.0), 0.6), "Eye", true)
+	k.light(eye_at + basis * Vector3(0.0, 0.0, 0.8), Color(0.6, 0.78, 1.0), 2.2, 12.0)
+	# a stair of slabs up the ash toward the eye's ledge
+	var stair_from := grain * 11.0 + Vector2(-grain.y, grain.x) * 3.5
+	var stair := m.begin()
+	m.steps(stair, stair_from, -grain, k.on_ground(stair_from.x, stair_from.y).y, 9, 0.34, 0.9, 1.6)
+	m.commit(stair, k.surface("oroth", 0.6), "Stair", true)
+	# the Order's vigil: braziers at the foot and a bench for the relief who never comes
+	for s in [-1.0, 1.0]:
+		var at := grain * 9.5 + Vector2(-grain.y, grain.x) * float(s) * 4.5
+		k.place(k.prop("brazier"), k.on_ground(at.x, at.y), 0.0)
+		k.light(k.on_ground(at.x, at.y, 1.1), Color(1.0, 0.62, 0.3), 1.8, 9.0)
+	var bench := grain * 13.0
+	k.place(k.prop("bench"), k.on_ground(bench.x, bench.y), yaw)
+	var ash: Array = []
+	for i in 24:
+		var a := k.rng.randf_range(0.0, TAU)
+		var r := k.rng.randf_range(rx + 1.0, 14.0)
+		ash.append(PoiKit.transform_at(k.on_ground(sin(a) * r, cos(a) * r), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.4, 0.9)))
+	k.scatter(k.rock("scree"), ash)
+
+
+# --- bridges ----------------------------------------------------------------------------------------
+
+## Something to cross on. A bridge lies along the road that crosses it; where water is within
+## reach it spans that water from bank to bank, and where the pad is dry (the world builder
+## set most of these some way from their river) it is still a bridge you walk over, with the
+## thing under it that the brief names. Every deck carries collision so it can be crossed.
+static func bridge(d: PoiDressing) -> void:
+	var k := d.kit
+	var b := d.brief
+	var road := k.road_direction(90.0)
+	var water := k.water_direction(70.0)
+	var axis := road if road != Vector2.ZERO else (water if water != Vector2.ZERO else k.grain())
+	if PoiKit.brief_says(b, ["causeway"]):
+		_bridge_causeway(d, axis, water)
+	elif PoiKit.brief_says(b, ["weir"]):
+		_bridge_weir(d, water if water != Vector2.ZERO else axis)
+	elif PoiKit.brief_says(b, ["boardwalk"]):
+		_bridge_boardwalk(d, axis)
+	elif PoiKit.brief_says(b, ["natural", "granite arch"]):
+		_bridge_natural_arch(d, axis)
+	elif PoiKit.brief_says(b, ["chain"]):
+		_bridge_chains(d, axis)
+	else:
+		_bridge_arch(d, axis, water)
+
+
+## Where the deck goes: across the water if any lies within reach along `water`, else a span
+## centred on the pad along `axis`. Returns [a, b] in local xz.
+static func _span(k: PoiKit, axis: Vector2, water: Vector2, length: float) -> Array:
+	if water != Vector2.ZERO:
+		var s := k.water_span(water, 60.0)
+		if s.x >= 0.0 and s.y > s.x:
+			var a := water * maxf(s.x - 3.0, -length * 0.5)
+			var b := water * (s.y + 3.0)
+			if a.distance_to(b) <= 64.0:
+				return [a, b]
+	return [-axis * length * 0.5, axis * length * 0.5]
+
+
+## A stone arch with parapets, and under it what the brief says is there: the Toll's fallen
+## clapper, half sunk and paved round; a dry riverbed of black glass.
+static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var oroth := PoiKit.brief_says(d.brief, ["oroth", "fused"])
+	var ends := _span(k, axis, water, 15.0)
+	var a: Vector2 = ends[0]
+	var b: Vector2 = ends[1]
+	var dir := (b - a).normalized()
+	var perp := Vector2(-dir.y, dir.x)
+	var mid := (a + b) * 0.5
+	var stone := m.begin()
+	m.arch_bridge(stone, a, b, 3.4, 1.5)
+	m.commit(stone, k.surface("oroth" if oroth else "stone", 0.55), "Bridge", true)
+	if PoiKit.brief_says(d.brief, ["glass"]):
+		# the riverbed the Ash Winter sang dry, sharp and black, running under the arch
+		var bed := m.begin()
+		for i in 9:
+			var t := (float(i) - 4.0) * 5.0
+			var p := mid + perp * t
+			var gg := k.on_ground(p.x, p.y)
+			m.block(bed, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(perp)), gg + Vector3(0.0, 0.05, 0.0)),
+					Vector3(5.5 + k.rng.randf_range(-0.8, 0.8), 0.14, 5.2))
+		m.commit(bed, PoiKit.plain(PoiKit.GLASS, 0.08), "GlassBed", true)
+		var shards: Array = []
+		for i in 26:
+			var p := mid + perp * k.rng.randf_range(-22.0, 22.0) + dir * k.rng.randf_range(-3.6, 3.6) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+			shards.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.7)))
+		k.scatter(k.rock("scree"), shards)
+		for s in [-1.0, 1.0]:
+			var t := mid + perp * float(s) * 14.0 + dir * 4.0
+			k.place(k.tree("dead_ash_tree"), k.on_ground(t.x, t.y), k.rng.randf_range(0.0, TAU), 1.0, true, Vector3.ZERO, true)
+	elif PoiKit.brief_says(d.brief, ["bell", "clapper"]):
+		# the Toll's clapper under the arch, too big to move, so they paved round it
+		var bell := k.prop("bell_medium")
+		var g := k.on_ground(mid.x, mid.y)
+		k.place(bell, g + Vector3(0.0, -0.9, 0.0), k.rng.randf_range(0.0, TAU), 2.2, true, Vector3(0.0, 0.0, 1.05), true)
+		var paving := m.begin()
+		for i in 7:
+			var t := (float(i) - 3.0) * 3.2
+			var p := mid + perp * t
+			var gg := k.on_ground(p.x, p.y)
+			m.block(paving, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(perp)), gg + Vector3(0.0, 0.04, 0.0)),
+					Vector3(3.3, 0.12, 4.6))
+		m.commit(paving, k.surface("stone", 0.85), "Paving")
+	# a road's furniture at the near end
+	var near := a - dir * 2.5
+	k.place(k.prop("signpost"), k.on_ground(near.x + perp.x * 2.6, near.y + perp.y * 2.6), PoiKit.yaw_of(dir))
+	if not oroth:
+		var cart := a - dir * 6.0 + perp * 3.2
+		k.place(k.prop("cart"), k.on_ground(cart.x, cart.y), PoiKit.yaw_of(dir) + k.rng.randf_range(-0.2, 0.2))
+	# reeds or grass where the banks are
+	var bank := k.flora("reeds") if water != Vector2.ZERO else ""
+	if bank != "":
+		var reeds: Array = []
+		for i in 30:
+			var t := k.rng.randf_range(0.1, 0.9)
+			var p := a.lerp(b, t) + perp * k.rng.randf_range(2.6, 6.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+			reeds.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
+		k.scatter(bank, reeds, false, false, false)
+
+
+## The Long Stride: an Oroth causeway striding out over the water on piers, its hinge-less
+## lamp posts one after another along it, each lit.
+static func _bridge_causeway(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var dir := water if water != Vector2.ZERO else axis
+	var s := k.water_span(dir, 70.0) if water != Vector2.ZERO else Vector2(-1.0, -1.0)
+	var start := -dir * 8.0
+	var end := dir * (minf(s.y, 62.0) if s.y > 0.0 else 40.0)
+	var wl := k.water_y(dir.x * 30.0, dir.y * 30.0)
+	var deck_y := maxf(k.on_ground(start.x, start.y).y + 0.3, (wl if not is_nan(wl) else 0.0) + 1.3)
+	var stone := m.begin()
+	m.arch_bridge(stone, start, end, 4.2, 0.1, deck_y, true, false)
+	# piers every eight metres down to the bed
+	var yaw := PoiKit.yaw_of(dir)
+	var length := start.distance_to(end)
+	var n := int(length / 8.0)
+	for i in range(1, n):
+		var p := start + dir * (length * float(i) / float(n))
+		var bed := k.on_ground(p.x, p.y).y
+		var h := deck_y - bed + 0.3
+		m.block(stone, Transform3D(Basis(Vector3.UP, yaw), Vector3(p.x, deck_y - h * 0.5 - 0.2, p.y)), Vector3(4.6, h, 2.0))
+	m.commit(stone, k.surface("oroth", 0.5), "Causeway", true)
+	# the lamp posts, alternating sides, and their lights
+	var lamp := k.prop("lantern_standing")
+	var perp := Vector2(-dir.y, dir.x)
+	var k_posts := int(length / 7.0)
+	var posts: Array = []
+	for i in range(k_posts + 1):
+		var t := float(i) / float(maxi(k_posts, 1))
+		var side := 1.0 if i % 2 == 0 else -1.0
+		var p := start.lerp(end, t) + perp * side * 1.75
+		posts.append(PoiKit.transform_at(Vector3(p.x, deck_y + 0.21, p.y), yaw, 1.35))
+		if i % 2 == 0 or k_posts < 6:
+			k.light(Vector3(p.x, deck_y + 0.21 + PoiKit.height_of(lamp) * 1.35 - 0.2, p.y), Color(1.0, 0.82, 0.55), 1.6, 9.0)
+	k.scatter(lamp, posts, true, true)
+	# the toll: a table at the landward end, and the queue's litter
+	var gate := start + dir * 3.0
+	k.place(k.prop("table_trestle"), Vector3(gate.x + perp.x * 0.9, deck_y + 0.21, gate.y + perp.y * 0.9), yaw + PI * 0.5)
+	k.place(k.prop("chest"), Vector3(gate.x + perp.x * 0.9, deck_y + 0.21, gate.y + perp.y * 0.9) + Vector3(dir.x, 0.0, dir.y) * 1.2, yaw)
+	k.place(k.prop("banner"), Vector3(gate.x - perp.x * 1.6, deck_y + 0.21, gate.y - perp.y * 1.6), yaw, 1.0, false)
+	k.place(k.prop("crate"), k.on_ground(start.x - dir.x * 3.0 + perp.x * 3.0, start.y - dir.y * 3.0 + perp.y * 3.0), k.rng.randf_range(0.0, TAU))
+
+
+## The Eelweir: dock posts across the outflow with wicker panels between them, a walkway of
+## planks on top, and the eel traps hung from every post.
+static func _bridge_weir(d: PoiDressing, dir: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var length := 26.0
+	var a := -dir * (length * 0.5)
+	var b := dir * (length * 0.5)
+	var yaw := PoiKit.yaw_of(dir)
+	var planks := m.begin()
+	var posts := m.begin()
+	var deck_y := maxf(k.on_ground(a.x, a.y).y, k.on_ground(b.x, b.y).y) + 1.1
+	m.plank_deck(planks, posts, a, b, 1.6, deck_y, 2.6, true)
+	m.commit(planks, k.surface("planks", 0.75), "Walkway", true)
+	m.commit(posts, k.surface("timber", 0.7), "Posts", true)
+	# wicker below the walkway, on the upstream side
+	var perp := Vector2(-dir.y, dir.x)
+	var panels: Array = []
+	var wattle := k.prop("fence_wattle", 0)
+	var pw := PoiKit.half_width_of(wattle) * 2.0
+	var n := int(length / maxf(pw * 0.92, 1.0))
+	for i in n:
+		var p := a + dir * (pw * 0.92 * (float(i) + 0.5)) + perp * 0.95
+		panels.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.3), yaw, 1.0))
+		var p2 := p - dir * pw * 0.05
+		panels.append(PoiKit.transform_at(k.on_ground(p2.x, p2.y, 0.6), yaw, 1.0))
+	k.scatter(wattle, panels, true, true)
+	# the traps
+	var traps: Array = []
+	var trap := k.prop("basket", 0)
+	for i in range(int(length / 2.6) + 1):
+		var p := a + dir * (2.6 * float(i)) - perp * 1.0
+		traps.append(PoiKit.transform_at(Vector3(p.x, deck_y - 0.75 - k.rng.randf_range(0.0, 0.3), p.y), yaw + k.rng.randf_range(-0.4, 0.4), 1.1))
+	k.scatter(trap, traps)
+	for s in [-1.0, 1.0]:
+		var e: Vector2 = (a if float(s) < 0.0 else b) + dir * float(s) * 2.4
+		k.place(k.prop("dock_post"), k.on_ground(e.x, e.y), yaw, 1.15)
+		k.place(k.prop("rope_coil"), k.on_ground(e.x + perp.x * 1.2, e.y + perp.y * 1.2), k.rng.randf_range(0.0, TAU), 1.0, false)
+	k.place(k.prop("rowboat"), k.on_ground(a.x - perp.x * 4.0, a.y - perp.y * 4.0), yaw + 0.6)
+	var reeds: Array = []
+	for i in 50:
+		var t := k.rng.randf_range(-0.1, 1.1)
+		var p := a.lerp(b, t) + perp * k.rng.randf_range(2.0, 8.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+		reeds.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
+	k.scatter(k.flora("reeds"), reeds, false, false, false)
+
+
+## The Lantern Causeway: a boardwalk of planks on posts over the marsh, lantern poles along
+## it, each lit at dusk by somebody who sings as she goes.
+static func _bridge_boardwalk(d: PoiDressing, axis: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var length := 36.0
+	var a := -axis * (length * 0.5)
+	var b := axis * (length * 0.5)
+	var yaw := PoiKit.yaw_of(axis)
+	var perp := Vector2(-axis.y, axis.x)
+	var planks := m.begin()
+	var posts := m.begin()
+	var deck_y := maxf(k.on_ground(a.x, a.y).y, maxf(k.on_ground(b.x, b.y).y, k.on_ground(0.0, 0.0).y)) + 0.9
+	m.plank_deck(planks, posts, a, b, 2.2, deck_y, 3.0, false)
+	# the poles, alternating sides, with a lantern hung from each and a rope between
+	var n := int(length / 6.0)
+	var lanterns: Array = []
+	var last := Vector3.INF
+	for i in range(n + 1):
+		var t := float(i) / float(n)
+		var side := 1.0 if i % 2 == 0 else -1.0
+		var p := a.lerp(b, t) + perp * side * 1.0
+		var top := m.post(posts, p, deck_y - k.on_ground(p.x, p.y).y + 2.6, 0.13)
+		var arm := Vector3(perp.x, 0.0, perp.y) * side * 0.5
+		m.block(posts, Transform3D(Basis(Vector3.UP, yaw), top + arm * 0.5 - Vector3(0.0, 0.05, 0.0)), Vector3(0.9, 0.07, 0.07))
+		lanterns.append(PoiKit.transform_at(top + arm - Vector3(0.0, 0.5, 0.0), yaw, 1.0))
+		k.light(top + arm - Vector3(0.0, 0.3, 0.0), Color(1.0, 0.78, 0.45), 1.5, 8.0)
+		if last != Vector3.INF:
+			var rope := m.begin()
+			var mid := (last + top) * 0.5 - Vector3(0.0, 0.25, 0.0)
+			var seg := top - last
+			var pitch := atan2(seg.y, Vector2(seg.x, seg.z).length())
+			m.rod(rope, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(Vector2(seg.x, seg.z))) * Basis(Vector3.RIGHT, PI * 0.5 - pitch), mid),
+					0.015, seg.length())
+			m.commit(rope, PoiKit.plain(Color(0.42, 0.36, 0.28), 0.9), "Rope")
+		last = top
+	m.commit(planks, k.surface("planks", 0.7), "Boardwalk", true)
+	m.commit(posts, k.surface("timber", 0.6), "Poles", true)
+	k.scatter(k.prop("lantern_hanging"), lanterns)
+	var reeds: Array = []
+	for i in 70:
+		var t := k.rng.randf_range(-0.1, 1.1)
+		var p := a.lerp(b, t) + perp * k.rng.randf_range(1.8, 9.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+		reeds.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
+	k.scatter(k.flora("reeds"), reeds, false, false, false)
+	var lilies: Array = []
+	for i in 12:
+		var t := k.rng.randf_range(0.0, 1.0)
+		var p := a.lerp(b, t) + perp * k.rng.randf_range(3.0, 7.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+		var wy := k.water_y(p.x, p.y)
+		if is_nan(wy):
+			continue
+		lilies.append(PoiKit.transform_at(Vector3(p.x, wy + 0.02, p.y), k.rng.randf_range(0.0, TAU), 1.0))
+	k.scatter(k.flora("waterlily_pad"), lilies, false, false, false)
+
+
+## Mossbridge: a natural granite arch across the way, moss on its back, a great tree rooted
+## at each end.
+static func _bridge_natural_arch(d: PoiDressing, axis: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var perp := Vector2(-axis.y, axis.x)
+	var a := -perp * 10.0
+	var b := perp * 10.0
+	var stone := m.begin()
+	m.arch_bridge(stone, a, b, 3.6, 4.4, NAN, false, true, 1.0)
+	var granite := k.surface("stone", 0.8)
+	granite.set_shader_parameter("unit_size", 0.9)
+	m.commit(stone, granite, "Arch", true)
+	# boulders at the feet where the arch grows out of the ground, moss along its back
+	var feet: Array = []
+	for end in [a, b]:
+		var e: Vector2 = end
+		for i in 6:
+			var p := e + k.jitter(2.6)
+			feet.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.3), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.6, 1.3)))
+	k.scatter(k.rock("boulder"), feet, true, true)
+	var moss: Array = []
+	for i in 40:
+		var t := k.rng.randf_range(0.05, 0.95)
+		var p := a.lerp(b, t) + axis * k.rng.randf_range(-1.5, 1.5)
+		var y := PoiMasonry._hump(t, k.on_ground(a.x, a.y).y, k.on_ground(b.x, b.y).y, 4.4) + 0.22
+		moss.append(PoiKit.transform_at(Vector3(p.x, y, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.4)))
+	k.scatter(k.flora("moss_patch"), moss, false, false, false)
+	var hanging := k.flora("hanging_moss")
+	if hanging != "":
+		var beards: Array = []
+		for i in 10:
+			var t := k.rng.randf_range(0.25, 0.75)
+			var p := a.lerp(b, t) + axis * k.rng.randf_range(-1.6, 1.6)
+			var y := PoiMasonry._hump(t, k.on_ground(a.x, a.y).y, k.on_ground(b.x, b.y).y, 4.4) - 1.2
+			beards.append(PoiKit.transform_at(Vector3(p.x, y, p.y), k.rng.randf_range(0.0, TAU), 1.0))
+		k.scatter(hanging, beards, false, false, false)
+	# the wardens' places: a great tree at each end
+	var tree := k.tree("giant_oak")
+	if tree == "":
+		tree = k.tree("black_ash")
+	for end in [a, b]:
+		var e: Vector2 = end
+		var t := e + e.normalized() * 4.5
+		k.place(tree, k.on_ground(t.x, t.y), k.rng.randf_range(0.0, TAU), 0.72, true, Vector3.ZERO, true)
+	var ferns: Array = []
+	for i in 30:
+		var p := k.jitter(13.0)
+		ferns.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
+	k.scatter(k.flora("fern"), ferns, false, false, false)
+
+
+## The Chain Bridge: a plank deck slung between two pairs of stone pylons across the gorge,
+## hung on four chains, one forged by each clan.
+static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var down := k.downhill()
+	var dir := down if down != Vector2.ZERO else axis
+	var a := dir * 4.0
+	var b := dir * 30.0
+	var yaw := PoiKit.yaw_of(dir)
+	var perp := Vector2(-dir.y, dir.x)
+	var deck_y := k.on_ground(a.x, a.y).y + 0.6
+	var planks := m.begin()
+	m.arch_bridge(planks, a, b, 2.4, -0.7, deck_y, false, false)
+	m.commit(planks, k.surface("planks", 0.8), "Deck", true)
+	# pylons
+	var stone := m.begin()
+	var tops: Array = []
+	for end in [a, b]:
+		var e: Vector2 = end
+		for s in [-1.0, 1.0]:
+			var p := e + perp * float(s) * 1.9
+			var g := k.on_ground(p.x, p.y)
+			var h := deck_y - g.y + 4.6
+			m.drum(stone, Transform3D(Basis.IDENTITY, g), 1.05, h, 0.0, NAN, true, 0.36)
+			tops.append(Vector3(p.x, g.y + h, p.y))
+	m.commit(stone, k.surface("stone", 0.6), "Pylons", true)
+	# the four chains: links along a catenary from pylon top to pylon top, touching the deck
+	var link := TorusMesh.new()
+	link.inner_radius = 0.07
+	link.outer_radius = 0.19
+	link.rings = 8
+	link.ring_segments = 6
+	var chains := m.begin()
+	var count := 0
+	for s_v in [-1.0, 1.0]:
+		var s := float(s_v)
+		for lane_v in [0.0, 0.55]:
+			var lane := float(lane_v)
+			var p0: Vector3 = tops[0 if s < 0.0 else 1] + Vector3(perp.x, 0.0, perp.y) * s * -lane
+			var p1: Vector3 = tops[2 if s < 0.0 else 3] + Vector3(perp.x, 0.0, perp.y) * s * -lane
+			var steps := 46
+			for i in steps:
+				var t := (float(i) + 0.5) / float(steps)
+				var p := p0.lerp(p1, t)
+				p.y -= (4.6 - 0.2) * (1.0 - pow(2.0 * t - 1.0, 2.0)) * (0.9 + lane * 0.3)
+				var along := (p1 - p0).normalized()
+				chains.append_from(link, 0, Transform3D(Basis.looking_at(along, Vector3.UP) * Basis(Vector3.BACK, PI * 0.5 * float(i % 2)), p))
+				count += 1
+	m.commit(chains, PoiKit.plain(Color(0.28, 0.26, 0.25), 0.55, 0.85), "Chains", true)
+	# handropes from the chains down to the deck at the middle, and a toll-keeper's post
+	var keeper := a - dir * 3.0 + perp * 3.0
+	k.place(k.prop("brazier"), k.on_ground(keeper.x, keeper.y), 0.0)
+	k.light(k.on_ground(keeper.x, keeper.y, 1.1), Color(1.0, 0.62, 0.3), 2.0, 9.0)
+	k.place(k.prop("stool"), k.on_ground(keeper.x + perp.x, keeper.y + perp.y), yaw)
+	k.place(k.prop("chest"), k.on_ground(keeper.x - dir.x * 1.4, keeper.y - dir.y * 1.4), yaw)
+	k.place(k.prop("drystone_wall"), k.on_ground(keeper.x + perp.x * 2.6, keeper.y + perp.y * 2.6), yaw)
+	k.place(k.prop("signpost"), k.on_ground(a.x - dir.x * 4.0 - perp.x * 2.6, a.y - dir.y * 4.0 - perp.y * 2.6), yaw)

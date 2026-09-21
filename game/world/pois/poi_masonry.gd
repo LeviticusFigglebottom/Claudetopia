@@ -164,7 +164,7 @@ func doorway(st: SurfaceTool, at: Vector2, yaw: float, width := 1.4, height := 2
 ## or on `deck_y` where given). Parapets either side, an arch ring beneath, abutments at the
 ## ends. Collision follows the deck so it can be crossed.
 func arch_bridge(st: SurfaceTool, a: Vector2, b: Vector2, width: float, rise: float,
-		deck_y := NAN, parapet := true, arch := true) -> void:
+		deck_y := NAN, parapet := true, arch := true, arch_sag := NAN) -> void:
 	var seg := b - a
 	var length := seg.length()
 	if length < 2.0:
@@ -196,7 +196,7 @@ func arch_bridge(st: SurfaceTool, a: Vector2, b: Vector2, width: float, rise: fl
 	if arch:
 		# the ring under the deck: voussoirs on an arc from one abutment to the other
 		var span := length * 0.72
-		var sag := maxf(rise, 0.8) + 1.6
+		var sag := arch_sag if not is_nan(arch_sag) else maxf(rise, 0.8) + 1.6
 		var k := maxi(int(span / 0.9), 6)
 		for i in k:
 			var t := (float(i) + 0.5) / float(k)

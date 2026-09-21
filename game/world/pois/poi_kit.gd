@@ -321,9 +321,19 @@ static func height_of(path: String) -> float:
 	return float(b.get("height", 1.0))
 
 
+## The forge's `radius` is a bounding sphere about the asset's centre, so it is the number to
+## keep clear of, not the asset's half-width.
 static func radius_of(path: String) -> float:
 	var b: Dictionary = meta(path).get("bounds", {})
 	return float(b.get("radius", 0.5))
+
+
+## Half the asset's footprint across its wider axis: what lifts a thing laid on its side.
+static func half_width_of(path: String) -> float:
+	var b: Dictionary = meta(path).get("bounds", {})
+	var lo: Array = b.get("min", [-0.5, 0.0, -0.5])
+	var hi: Array = b.get("max", [0.5, 1.0, 0.5])
+	return maxf(float(hi[0]) - float(lo[0]), float(hi[2]) - float(lo[2])) * 0.5
 
 
 # --- standing things up --------------------------------------------------------------------
@@ -651,7 +661,7 @@ func light(at: Vector3, colour := Color(1.0, 0.72, 0.42), energy := 2.2, reach :
 	l.light_color = colour
 	l.light_energy = energy
 	l.omni_range = reach
-	l.omni_attenuation = 1.3
+	l.omni_attenuation = 0.9
 	l.shadow_enabled = false
 	l.distance_fade_enabled = true
 	l.distance_fade_begin = 55.0
