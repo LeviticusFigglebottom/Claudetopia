@@ -69,6 +69,7 @@ var _hud: Node = null
 var _dialogue: Node = null
 var _toast_box: VBoxContainer
 var _fade: ColorRect
+var _fade_tween: Tween = null
 var _hud_visible := true
 var _mouse_was_captured := false
 
@@ -356,6 +357,12 @@ func show_dialogue() -> Node:
 func _on_player_spawned(_player: Node) -> void:
 	show_hud()
 	show_dialogue()
+	# The main menu and the Naming fade to black before they change scene, and this layer is
+	# an autoload, so the black outlives the scene change. Nothing lifted it: the world stood
+	# up and ran behind an opaque rectangle. A body standing in the world is the moment the
+	# player is owed the view.
+	if _fade.visible:
+		fade_from_black(0.8)
 
 
 # --- toasts -------------------------------------------------------------------------------
@@ -414,15 +421,26 @@ func toast(text: String, kind := "info") -> void:
 
 func fade_to_black(seconds := 0.35) -> void:
 	_fade.visible = true
-	var tw := create_tween()
-	tw.tween_property(_fade, "color:a", 1.0, seconds)
+	if _fade_tween != null and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(_fade, "color:a", 1.0, seconds)
 
 
 func fade_from_black(seconds := 0.5) -> void:
+	if not _fade.visible and _fade.color.a <= 0.0:
+		return
 	_fade.visible = true
-	var tw := create_tween()
-	tw.tween_property(_fade, "color:a", 0.0, seconds)
-	tw.tween_callback(func() -> void: _fade.visible = false)
+	if _fade_tween != null and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(_fade, "color:a", 0.0, seconds)
+	_fade_tween.tween_callback(func() -> void: _fade.visible = false)
+
+
+## Whether the screen is (or is going) black: the menus ask before handing over to the world.
+func is_faded_out() -> bool:
+	return _fade.visible and _fade.color.a > 0.0
 
 
 func _on_interior_transition(phase: String, _interior_id: String) -> void:
