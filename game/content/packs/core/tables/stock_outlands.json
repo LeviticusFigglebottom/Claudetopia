@@ -1,0 +1,52 @@
+[
+  {
+    "id": "core:table/stock_hollow_trader",
+    "role": "merchant_stock",
+    "description": "Dorrie Cooper's ledge in Grandfather Hollow: what comes up the ridge road on a hand-cart (rope, candles, planks, cloth, flint, a cask of Tamwick cider) and what the Wold parts with (moss, fungus, thorn cuttings), with a knot of heartwood or a length of weaver silk when somebody has taken no more than they needed from the deep.",
+    "rows": [
+      {"item": "core:item/rope", "count": [2, 5], "restock_hours": 48},
+      {"item": "core:item/candle", "count": [6, 16], "restock_hours": 24},
+      {"item": "core:item/torch", "count": [4, 10], "restock_hours": 24},
+      {"item": "core:item/oak_plank", "count": [3, 8], "restock_hours": 72},
+      {"item": "core:item/linen", "count": [1, 4], "restock_hours": 96},
+      {"item": "core:item/wool", "count": [2, 6], "restock_hours": 72},
+      {"item": "core:item/flint", "count": [3, 8], "restock_hours": 48},
+      {"item": "core:item/cider", "count": [2, 6], "restock_hours": 72},
+      {"item": "core:item/bracket_fungus", "count": [2, 6], "restock_hours": 36},
+      {"item": "core:item/hanging_moss", "count": [2, 6], "restock_hours": 36},
+      {"item": "core:item/briar_thorn", "count": [3, 9], "restock_hours": 48},
+      {"item": "core:item/heartwood_knot", "count": [0, 1], "restock_hours": 240, "chance": 0.3},
+      {"item": "core:item/weaver_silk", "count": [0, 1], "restock_hours": 168, "chance": 0.35}
+    ]
+  },
+  {
+    "id": "core:table/stock_hollow_hearth",
+    "role": "merchant_stock",
+    "description": "The Knot-Hearth's pot and what stands beside it: bread and meat from the one fire that has not gone out in eleven years, hawthorn when the berries are on, Tamwick cider when Dorrie has brought a cask up, and a candle or a torch for whoever is going down the ridge road at a foolish hour.",
+    "rows": [
+      {"item": "core:item/bread", "count": [3, 8], "restock_hours": 12},
+      {"item": "core:item/mutton", "count": [2, 5], "restock_hours": 12},
+      {"item": "core:item/raw_meat", "count": [2, 6], "restock_hours": 12},
+      {"item": "core:item/oatcake", "count": [2, 6], "restock_hours": 24},
+      {"item": "core:item/hawthorn_berry", "count": [3, 8], "restock_hours": 24},
+      {"item": "core:item/cider", "count": [4, 10], "restock_hours": 24},
+      {"item": "core:item/candle", "count": [3, 8], "restock_hours": 48},
+      {"item": "core:item/torch", "count": [2, 5], "restock_hours": 48}
+    ]
+  },
+  {
+    "id": "core:table/stock_bowyer",
+    "role": "merchant_stock",
+    "description": "Edric Fletcher's bench: bows made for one hand each and sold, grudgingly, to another; arrows by the score; snare wire and a knife for the hunter who means it; antler and leather off the Wold's kills; and, when he has made one he is not ashamed of, a woodsman's axe.",
+    "rows": [
+      {"item": "core:item/hunting_bow", "count": [1, 2], "restock_hours": 120},
+      {"item": "core:item/arrow", "count": [20, 60], "restock_hours": 24},
+      {"item": "core:item/iron_arrow", "count": [6, 20], "restock_hours": 72},
+      {"item": "core:item/hunting_knife", "count": [1, 3], "restock_hours": 96},
+      {"item": "core:item/snare_wire", "count": [2, 6], "restock_hours": 72},
+      {"item": "core:item/leather", "count": [2, 5], "restock_hours": 72},
+      {"item": "core:item/shed_antler", "count": [1, 3], "restock_hours": 120},
+      {"item": "core:item/woodsmans_axe", "count": [0, 1], "restock_hours": 168, "chance": 0.6}
+    ]
+  }
+]

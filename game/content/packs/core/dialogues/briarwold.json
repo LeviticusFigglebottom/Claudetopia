@@ -1,0 +1,300 @@
+[
+{
+  "id": "core:dialogue/aldous_hollin",
+  "speaker_name": "Aldous Hollin",
+  "notes": "Elder of Grandfather Hollow (WORLD_BIBLE 3.5, 6.4). The stump, the cutting-roll, and a dead tree that is the only account the Woodfolk have. Custom not law; the vice is the silence that lets wrongs stand, and he knows it.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [21, 5]}], "text": "The stump is empty after dark. Whatever it is will keep until it is not."},
+    {"conditions": [{"morality_max": -30}], "text": "You have taken more than you needed, somewhere. It shows in the way you stand in a doorway. Nobody here will sell you rope; do not ask them why."},
+    {"conditions": [{"flag": "hart_fallen"}], "text": "The Hart is down and the middle of the Moot is empty for the first time since there was a Wold. I have not decided whether to be glad. I am too old to decide quickly and too old to pretend I have."},
+    {"conditions": [{"renown_min": 200}], "text": "They say your name at the Knot-Hearth now, between the count of the lights and the count of the grey. Sit. That is not an honour; the bench is just where the talking is."},
+    {"conditions": [{"flag": "hollow_told_custom"}], "text": "You again. Good. You listened the first time, which is rarer than you would think in a person carrying a blade."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Aldous Hollin", "text": "Hollin. I sit on the stump at dusk, which makes me whatever you want to call it. You are inside a tree ninety metres tall that has been dead four hundred years. Mind the ropes; they are older than you and better tied.", "next": "hub"},
+    "hub": {"speaker": "Aldous Hollin", "text": "Say what you came to say. Slowly is fine.", "choices": [
+      {"text": "Who keeps order in the Hollow?", "next": "custom", "conditions": [{"flag_not": "hollow_told_custom"}]},
+      {"text": "Tell me about the Grandfather.", "next": "grandfather"},
+      {"text": "What is decided on the stump?", "next": "stump", "conditions": [{"flag": "hollow_told_custom"}]},
+      {"text": "What does the Dwindling look like from a tree?", "next": "dwindling"},
+      {"text": "What is the cutting-roll?", "next": "cutting_roll"},
+      {"text": "I'll leave you to your stump.", "next": "bye"}
+    ]},
+    "custom": {"speaker": "Aldous Hollin", "text": "Nobody. We have custom, which is what law is before somebody writes it down and starts charging for it. Take what you need from the Wold and the tree keeps the rest. Take more than you need and the first time somebody tells you, and the second time nobody tells you anything at all, and you find the paths harder and the hearth cold and no rope for sale. — It works. It is slow. It has let things stand that should have been knocked down in a week, because a people who are very good at not acting are very good at not acting. Alder Wyke will tell you about the charcoal camp if you have an afternoon. I was on the stump for four of those six years and I said nothing, and I have been on it every dusk since to make sure I do not say nothing again.", "effects": [{"set_flag": "hollow_told_custom"}, {"rep": ["core:faction/woodfolk", 2]}], "next": "hub"},
+    "stump": {"speaker": "Aldous Hollin", "text": "Who cuts where. Whose goat got into whose moss. Whether Edric's price for a bow is a price or a grudge, which it usually is. Whether a stranger who has been sleeping in Gil's back room three nights is taking more than he needs, which is the one that matters and the one I get wrong most. — I do not decide. I sit, and people say things in front of a man sitting down, and by dark they have usually decided it themselves. A stump is a very good tool for that. A chair would not work; a chair says somebody is in charge.", "next": "hub"},
+    "grandfather": {"speaker": "Aldous Hollin", "text": "It died before there was a Wold worth the name. Ninety metres, thirty across, hollow to the crown, and it has not fallen, which no dead tree of my acquaintance has managed for four hundred years. — The town moved in during the Tending, when the Vale folk were learning that a place people talk about lasts. Our grandmothers took it further: live inside the thing you are keeping, and it will keep you back. Two hundred and six lights in the knots, one for each hearth that has ever been lit in here, and Cille relights any that go out from the one beside it, so it is all one fire. — Whether that is why it stands, I do not know. I put my hand on the bark every morning and count to ninety and I do not know. But I have never once missed a morning, and neither did my mother.", "effects": [{"set_flag": "hollow_told_grandfather"}], "next": "hub"},
+    "dwindling": {"speaker": "Aldous Hollin", "text": "The Vale says a candle, the clans say a breath, the reedfolk say a tide and the Spire says a bell. We say a tree. — Something died a long time ago and has not fallen, and the question is not why it died. The question is what is holding it up, and whether that thing is getting tired. Alder counts the grey in the Briar going up. Pip counts the lights and the night one went out. I put my hand on the wood and it is a little colder each winter than a dead tree has any business being. — That is not an account. Accounts are for people who live in stone. We live in the evidence.", "next": "hub"},
+    "cutting_roll": {"speaker": "Aldous Hollin", "text": "The list of who may take what this year: so many deer, so many staves of yew, so much bark for shingles, so much moss. It is in my head. It has never been written down and it will not be, because a written roll is a thing you can argue with, and the point of the roll is that it is what the Wold can spare, and the Wold does not argue. — Wren Tallow's people keep a roll of names at the Rest that they read aloud so the names will not go. Ours is the other way about: we keep a roll of what we did not take, so that the Wold does not go. I think they are the same roll. I have never said so to a Warden.", "effects": [{"set_flag": "hollow_told_cutting_roll"}], "next": "hub"},
+    "bye": {"speaker": "Aldous Hollin", "text": "Go on. Take the low walk, not the high one; the high one is Pip's, and she will tell you so from above.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/cille_tamwood",
+  "speaker_name": "Cille Tamwood",
+  "notes": "Keeper of Knots: the two hundred and six lights, the rope walks, the drip. One fire carried since the town moved in. The night a light went out is the Hollow's own small piece of the Dwindling.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [18, 20]}], "text": "Evening round. Walk with me if you like, but do not talk to me while the taper is lit; I count while it burns."},
+    {"conditions": [{"flag": "hollow_light_out_told"}], "text": "You know about the light. Then you know as much as I do, which is the number and the night and nothing else."},
+    {"conditions": [{"morality_min": 40}], "text": "Gil says you carried water for him without being asked. In here that is a light lit. I have not got a knot for you yet. Do not make me need one."},
+    {"conditions": [{"morality_max": -30}], "text": "Stay off the ropes. I am not being unkind. The ropes are mine to keep and I keep them for people the tree would want on them."},
+    {"conditions": [{"has_item": ["core:item/candle", 1]}], "text": "You have a candle on you. Keep it. If you find one of my lights out and no one about, light it from the one beside it, not from yours. Yours is a different fire."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Cille Tamwood", "text": "Tamwood. I oil things. Ropes, hinges, the lights when the tallow goes thin. The town calls it keeping and I let them, because keeping sounds like it might be finished one day and oiling does not.", "next": "hub"},
+    "hub": {"speaker": "Cille Tamwood", "text": "Ask. My hands can work while my mouth does.", "choices": [
+      {"text": "Why do you light every knot from the one beside it?", "next": "one_fire"},
+      {"text": "How many lights are there?", "next": "the_count"},
+      {"text": "Has one ever gone out?", "next": "light_out", "conditions": [{"flag": "hollow_told_the_count"}]},
+      {"text": "Do the rope walks ever fail?", "next": "ropes"},
+      {"text": "What do you make of the Dwindling?", "next": "dwindling"},
+      {"text": "I'll let you work.", "next": "bye"}
+    ]},
+    "one_fire": {"speaker": "Cille Tamwood", "text": "Because then it is all one fire. The women who moved the town in here carried a coal from Fernhold in a clay pot, and lit the first knot from it, and the second from the first. Every light in this tree is that coal. If I let one die and lit it new from a flint, that knot would be a different fire, and the tree would have two fires in it, and I do not know what a tree makes of that and I am not going to be the one who finds out. — The Vale would call it tending. We do not have a word for it. We have a taper.", "effects": [{"set_flag": "hollow_told_one_fire"}], "next": "hub"},
+    "the_count": {"speaker": "Cille Tamwood", "text": "Two hundred and six. One for each hearth that has ever been lit in the Hollow, whether or not anyone still sits at it. Pip counts them from the high walk every night and tells her grandfather like a sentry reporting, and she is never wrong, and I have stopped checking behind her, which is the highest thing I can say of a ten-year-old.", "effects": [{"set_flag": "hollow_told_the_count"}], "next": "hub"},
+    "light_out": {"speaker": "Cille Tamwood", "text": "Once. Thornday before last. Pip came down the ropes white and said two hundred and five, and I went up with the taper and found it, and it was the oldest knot, the one the coal from Fernhold lit first, and there was tallow enough in it to burn a week. It had not run dry. It had gone out. — I lit it from the one beside it. I did not tell Aldous which knot it was, and I am telling you because you are not from here and will carry it off somewhere, and I would rather it was carried than sat on. That is a Woodfolk thing to want and I know it.", "effects": [{"set_flag": "hollow_light_out_told"}, {"rumour": ["core:rumour/hollow_light_out", 0.5]}], "next": "hub"},
+    "ropes": {"speaker": "Cille Tamwood", "text": "A rope fails when nobody has had their weight on it for a season. That is not a saying; it is what happens to hemp in a damp tree. So the walks are walked. Aldous does the low one at midday and pretends it is a stroll, Pip does the high one at dusk and pretends it is forbidden, and I do them all before dawn and do not pretend anything. — In twenty years we have lost one rope, in the winter the drip came through the north wall, and nobody was on it. The tree gave us that much warning. It is a courteous tree.", "next": "hub"},
+    "dwindling": {"speaker": "Cille Tamwood", "text": "I light things from the light beside them. That is all I know about it and I think it might be all there is to know. The Sayers have four accounts and the Wardens have a roll and the clans have a song, and every one of them is somebody carrying a taper from a knot that is lit to a knot that has gone dark. — The Briar is going grey from the outside in. The tree went out from the oldest knot. Everything goes from the edge and from the old end, and what holds is the bit somebody is standing next to with a flame. Stand next to things. That is my account. It fits on a taper.", "next": "hub"},
+    "bye": {"speaker": "Cille Tamwood", "text": "Mind the third rope on the low walk; it is fine, but it creaks, and people jump, and jumping is the only thing on a rope walk that is actually dangerous.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/dorrie_cooper",
+  "speaker_name": "Dorrie Cooper",
+  "notes": "The Hollow's trader, Tamwick-born. Marks in a town that swaps; the slate of what the ridge road has eaten; Vale gossip in a quiet people's tree. The shop is reached through the trade choice the runner adds.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [7, 9]}], "text": "Early. Good; the moss is still damp and weighs more, so you are getting a bargain, if you are buying moss, which nobody is."},
+    {"conditions": [{"renown_min": 150}], "text": "I know who you are. Everyone in this tree knows who you are and none of them will say so, so I am saying so. There. Now buy something."},
+    {"conditions": [{"morality_max": -30}], "text": "I will sell to you. I am from Tamwick and marks are marks. But I will not sell you rope, and if you ask me why I will say I am out, and I am not."},
+    {"conditions": [{"discovered": "core:place/tamwick"}], "text": "You have been to Tamwick. Is the press still going? Is Bessa still arguing with the brewer? Do not answer the second one, I know the answer to the second one."},
+    {"conditions": [{"flag": "hollow_told_slate"}], "text": "Back again. The road took two pounds off the flour on the way up this week. Two. I have written it down."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Dorrie Cooper", "text": "Cooper. Trader, which in the Hollow means the one woman who says a number out loud. Everyone else swaps and nods and I stand here with a slate like a heathen. Twenty years married in and I am still 'the Tamwick woman'. I have stopped minding. Mostly.", "next": "hub"},
+    "hub": {"speaker": "Dorrie Cooper", "text": "What'll it be? Talk's free; it is the only thing here that is priced the way I like.", "choices": [
+      {"text": "What do you carry up the ridge road?", "next": "the_road"},
+      {"text": "What is the slate for?", "next": "the_slate", "conditions": [{"flag_not": "hollow_told_slate"}]},
+      {"text": "How does a trader get on with people who don't buy?", "next": "swapping"},
+      {"text": "What's the news from the Vale?", "next": "vale_news"},
+      {"text": "Does the Dwindling reach a tree?", "next": "dwindling"},
+      {"text": "That's all.", "next": "bye"}
+    ]},
+    "the_road": {"speaker": "Dorrie Cooper", "text": "Rope, candles, planks, linen, flint, and a cask of my sister-in-law's cider when she will part with one, which is when Corwen Mullard has annoyed her. Down goes moss, bracket fungus, thorn cuttings for hedging, and charcoal from Fenwick's clamps, which is the only thing in the Wold that Tollmere actually wants and the only thing the Wold does not want to sell them. — Three hours up with the cart. Two down, if the brake holds. It has not always held.", "next": "hub"},
+    "the_slate": {"speaker": "Dorrie Cooper", "text": "I weigh every load at the bottom of the road and again at the top, and I write down the difference. Spillage, damp, a sack that split, a candle I ate. Twenty years of it. The road has taken a cart and a half of goods off me and I have it in chalk to the pound. — Nobody pays for the road. Nobody owns it. When I say I mean to be paid for it one day, Aldous smiles the way he does, and I know he is right and I keep the slate anyway, because a thing written down is a thing that happened, and I am from the Vale and we do not let things not have happened.", "effects": [{"set_flag": "hollow_told_slate"}], "next": "hub"},
+    "swapping": {"speaker": "Dorrie Cooper", "text": "Badly, the first five years. I would say 'four marks' and they would look at me as if I had said it in Oroth. Then I understood that they were not refusing the marks; they were waiting for me to say what I needed instead. Say 'I need a hide and I have a coil of rope' and the deal is done and they think you are a person. Say 'four marks' and you are a Tallyman. — So now I do both. Marks for strangers, and for the Woodfolk I say what I need, and I write the marks on the slate afterwards where they cannot see, so that I know.", "next": "hub"},
+    "vale_news": {"speaker": "Dorrie Cooper", "text": "The Toll is humming; you will have heard. Maud Brambling still puts the first loaf on the rim-stone. Bessa's grafted tree has a twelfth kind of apple on it this year and she did not graft it, and she is pretending not to be frightened, and she is frightened. — And the Wardens have a fourth line in the deep part of the roll. Harewell. Between Merrowby and Tamwick, and I drove past it every market day for six years and I cannot tell you what was there. I can tell you the honey was good. Everybody can tell you the honey was good.", "effects": [{"rumour": ["core:rumour/grafted_tree_twelfth", 0.4]}], "next": "hub"},
+    "dwindling": {"speaker": "Dorrie Cooper", "text": "In the Vale we say a candle and we tend it by talking. Up here they say nothing and put their hands on the bark. I thought for years that meant they did not have an account. — They do. They just do not say it out loud, because saying it out loud is taking more than you need. That took me twelve years to understand and I still think they are wrong, and I still put my hand on the bark when I come in through the root gate, because I have a Vale head and Woodfolk hands now, and you cannot trade either of them back down the road.", "next": "hub"},
+    "bye": {"speaker": "Dorrie Cooper", "text": "Mind how you go. If you are going down the ridge road, walk on the uphill side of the cart ruts; the downhill side is where the brake let go.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/gil_larkfold",
+  "speaker_name": "Gil Larkfold",
+  "notes": "Keeper of the Knot-Hearth. Cooks for whoever is there; lets the back room to strangers on Woodfolk terms; banks the fire into a bell and will not say why. Merrowby-adjacent secret, never spelled out.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [16, 19]}], "text": "Pot's on. It is what it is; it is mostly what Tansy brought in and what Tam did not eat. Sit anywhere the benches have not already decided is somebody's."},
+    {"conditions": [{"time_between": [23, 1]}], "text": "I am banking the fire. You can watch. Do not ask about the shape; everyone asks about the shape."},
+    {"conditions": [{"morality_min": 40}], "text": "There is a bowl kept warm for you. No, do not pay. You paid when you carried the water. That is how it goes here."},
+    {"conditions": [{"morality_max": -30}], "text": "You can eat. Everybody eats. The back room is taken, and it will go on being taken while you are in the Hollow, and I am sorry about that and I am not going to change it."},
+    {"conditions": [{"flag": "hollow_stayed_the_night"}], "text": "You slept in the back room and left it as you found it. That is noticed. Nobody will say it is noticed. It is noticed."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Gil Larkfold", "text": "Larkfold. This is the Knot-Hearth. It is not an inn; the Woodfolk do not have inns; it is a fire in the biggest knot in the trunk with benches round it and a pot on it and a man who has never in his life let a pot run dry. I am the man. Eat.", "next": "hub"},
+    "hub": {"speaker": "Gil Larkfold", "text": "Well?", "choices": [
+      {"text": "Is there a bed to be had?", "next": "the_room"},
+      {"text": "What's in the pot?", "next": "the_pot"},
+      {"text": "Why do you bank the fire in the shape of a bell?", "next": "the_bell"},
+      {"text": "Who comes to the hearth of an evening?", "next": "evenings"},
+      {"text": "Does the Dwindling trouble a cook?", "next": "dwindling"},
+      {"text": "That's all, thank you.", "next": "bye"}
+    ]},
+    "the_room": {"speaker": "Gil Larkfold", "text": "There is a room off the back of the knot with a bed in it and a door that shuts. It is not let for marks. It is let to a stranger who has not, so far as the Hollow can see, taken more than they need, and it goes on being let for exactly as long as that stays true. Nobody will tell you when it stops being true; you will come back and find your pack outside the door. — That has happened twice in eleven years. Both times I would have told them if telling were what we did. It is not what we do, and I have never been sure we are right.", "effects": [{"set_flag": "hollow_stayed_the_night"}], "next": "hub"},
+    "the_pot": {"speaker": "Gil Larkfold", "text": "Venison from Tansy, if it is winter. Hare and fungus if it is not. Barley Dorrie brings up, bracket fungus that Tam finds and swears has no face in it, hawthorn when the berries are on, and salt from the pass at a price I do not say aloud because Dorrie would want it on her slate. — It is never the same pot twice and it is never a different pot either. I have kept it going eleven years from the same fire. Cille would tell you that matters. I would tell you it is a pot.", "next": "hub"},
+    "the_bell": {"speaker": "Gil Larkfold", "text": "Everybody asks. — I bank it lip down, the way a bell hangs when it has fallen, and I put one ember under the lip where the clapper would be, and in the morning that ember is what I wake the fire from. It is a good way to bank a fire; it holds heat. It is also not a Woodfolk way to bank a fire, and where a man from this tree learned it, from whom, and what she was to him, is the one thing in this hall I keep for myself. — The pot is for everyone. The bell is mine.", "effects": [{"set_flag": "hollow_asked_the_bell"}], "next": "hub"},
+    "evenings": {"speaker": "Gil Larkfold", "text": "Everyone, in the end, and in an order. Fenwick first, at dusk, for the one meal he takes in the tree, and then straight back down to his clamps. Edric, who sits at the end of the bench and does not speak until somebody says something wrong about yew. Dorrie, who talks for the whole tree and is forgiven for it because it means nobody else has to. Tansy, late, from the root gate. Cille, later, smelling of tallow. Aldous last, from the stump, and when he sits down the day is over, and I have never once seen him sit before the last dispute had walked away satisfied or at least walked away.", "next": "hub"},
+    "dwindling": {"speaker": "Gil Larkfold", "text": "I keep a fire that has not gone out in eleven years and I feed people from it and I do not think about it more than that, because thinking about it more than that is how you end up at the Spire in a black gown. — But I will say this. The pot feeds fewer than it did. Not because there is less in it. Because there are fewer at the benches. Two hearths went dark in the Hollow in my time and Cille keeps their knots lit and I keep their places on the bench, and the pot does not know they are gone, and I do.", "next": "hub"},
+    "bye": {"speaker": "Gil Larkfold", "text": "Go well. Take an oatcake; they do not keep, and I would rather you had it than the crows.", "effects": [{"give_item": ["core:item/oatcake", 1]}], "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/edric_fletcher",
+  "speaker_name": "Edric Fletcher",
+  "notes": "Bowyer to the Wold. Proud, sparing, right about yew. The root full of forty years of arrows he never fetched. Sells through the trade choice; the hub offers his opinion, which is the dearer thing.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"skill_min": ["core:skill/archery", 30]}], "text": "You draw with the back, not the arm. Somebody taught you or you hurt yourself learning. Either way you may stand at the bench."},
+    {"conditions": [{"has_item": ["core:item/hunting_bow", 1]}], "text": "That bow was not made for your hand. I can see it from here. Whoever it was made for had shorter fingers and pulled to the chin. Do not tell me you bought it; I know you bought it."},
+    {"conditions": [{"time_between": [6, 7]}], "text": "Wait. One arrow. Then you can talk."},
+    {"conditions": [{"morality_max": -30}], "text": "I make bows for hunters. A hunter takes what the Wold can spare. You are not that, so I do not make bows for you, and I will not string one for you either."},
+    {"conditions": [{"renown_min": 250}], "text": "They talk about you at the hearth. Talk is not a draw-weight. Show me your hands."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Edric Fletcher", "text": "Fletcher. Bows, and the arrows that go with them, for everyone in the Wold but Alder Wyke, who makes his own, badly, out of principle. What do you want with a bow?", "next": "hub"},
+    "hub": {"speaker": "Edric Fletcher", "text": "Well.", "choices": [
+      {"text": "What makes a good bow?", "next": "good_bow"},
+      {"text": "Why is there a root full of arrows outside?", "next": "arrow_root"},
+      {"text": "Why is a bow an honest tool?", "next": "honest_tool"},
+      {"text": "What do you know about the Hart-Knights?", "next": "hart_knights"},
+      {"text": "Does the Dwindling touch your trade?", "next": "dwindling"},
+      {"text": "Nothing today.", "next": "bye"}
+    ]},
+    "good_bow": {"speaker": "Edric Fletcher", "text": "Yew, from a tree that grew slow on the north side of something. Heartwood on the belly, sapwood on the back, and the line between them following the grain and not the bowyer's idea of where the grain ought to be. A year drying. Another year of me looking at it before I touch it. — Then it is made for one hand. Not a size; a hand. I can tell you whose bow a bow is from the wear on the grip, and I can tell you when a bow has been sold on, because the wear stops matching the hand, and the arrow starts going where the wood wants and not where the eye does.", "effects": [{"set_flag": "hollow_told_good_bow"}], "next": "hub"},
+    "arrow_root": {"speaker": "Edric Fletcher", "text": "I shoot one arrow a day at the same knot on the same root. First thing, before food. I have done it forty years, since my father put the first bow in my hand and pointed. I have never once gone to fetch one. — There are near fifteen thousand arrows in that root. The wood has grown round the oldest so you cannot see the fletching. Pip counts them on restdays and gets a different number every time and I have told her the tree is keeping count of something, and I meant it as a thing you say to a child, and I have started to believe it, and I would rather not know what it is counting.", "effects": [{"set_flag": "hollow_told_arrow_root"}], "next": "hub"},
+    "honest_tool": {"speaker": "Edric Fletcher", "text": "A sword can be drawn in temper. An axe falls where you were not looking. A bow does nothing until you have chosen a thing, looked at it long enough to know what it is, drawn, held, and let go, and every one of those is a decision you could stop making. Nobody has ever killed anything with a bow by accident. — That is the whole Woodfolk custom in a piece of yew: you may take what you need, and a bow makes you decide, every time, what you need. I would not sell one to a man who wanted it for anything else. I have not always been able to tell.", "next": "hub"},
+    "hart_knights": {"speaker": "Edric Fletcher", "text": "Antlered plate and a spear, out past the Standing Moot, and they charge straight because a hart charges straight. Their bows are terrible. I have seen two, off the dead; they are made by somebody who knew what a bow was for and not what a bow was. — They keep the Moot for the Hart. What the Hart keeps the Moot for, nobody in this tree will say, and Alder Wyke will say it at length if you go to Fernhold, and you will be none the wiser, and neither is he.", "effects": [{"discover": "core:place/standing_moot"}], "next": "hub"},
+    "dwindling": {"speaker": "Edric Fletcher", "text": "The yew is coming up shorter. Not fewer trees; shorter, with the heartwood thin, as if the tree had stopped bothering. I have a stave drying now from the north side of the ravine that I would have thrown out twenty years ago and it is the best I have. — Everyone in Wickmere has a count that is going the wrong way. Alder's grey patches. Pip's lights. Dunna's knots up in the Hold, if you have been. Mine is the width of a yew's heartwood, and it does not sound like much, and it is the same count.", "next": "hub"},
+    "bye": {"speaker": "Edric Fletcher", "text": "If you buy a bow anywhere else, do not bring it here to be mended. I will mend it. I will not enjoy it.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/tansy_thornby",
+  "speaker_name": "Tansy Thornby",
+  "notes": "The Hollow's hunter: what the town needs, decided by one woman with a bow. The heart on the stone for the thornhounds; the Thornmarch's fourth gate and what is on the other side.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [11, 13]}], "text": "Give me a moment. The heart goes on the stone first and then I talk; the hound does not wait and you can."},
+    {"conditions": [{"discovered": "core:place/thornmarch"}], "text": "You have been out to the wall. Then you have seen the grey. Good. I am tired of describing it to people who nod."},
+    {"conditions": [{"morality_max": -30}], "text": "I hunt for the Hollow. What it needs, no more. If you are here to take, the hounds will know before I do, and I will not call them off."},
+    {"conditions": [{"renown_min": 150}], "text": "They say you kill things. So do I. The difference is I know why, every time, and I am asking you, without asking, whether you do."},
+    {"conditions": [{"flag": "hollow_told_fourth_gate"}], "text": "Still here. Still thinking about the gate, I would guess. So am I. Every day since I was nineteen."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Tansy Thornby", "text": "Thornby. I hunt for the Hollow. One deer a week in winter, none in the fawning months, whatever anyone's stomach says about it, and hare and fowl in between. That is not a boast; it is the amount.", "next": "hub"},
+    "hub": {"speaker": "Tansy Thornby", "text": "Go on.", "choices": [
+      {"text": "Why do you leave the heart on the stone?", "next": "the_heart"},
+      {"text": "How do you decide what the Hollow needs?", "next": "the_amount"},
+      {"text": "You've been to the Thornmarch?", "next": "fourth_gate"},
+      {"text": "What lives in the Wold that I should fear?", "next": "the_wold"},
+      {"text": "What does the Dwindling look like to a hunter?", "next": "dwindling"},
+      {"text": "Good hunting.", "next": "bye"}
+    ]},
+    "the_heart": {"speaker": "Tansy Thornby", "text": "For the thornhounds. Every kill, the heart goes on the flat stone by the root gate and I sit ten paces off and wait, and one comes out of the bracken with its bark-skin up and takes it and goes. They have never once taken anything else from the Hollow. Not a goat, not a child, not a hen. — Nobody agreed this. My mother did it and hers did it and the hounds' mothers came for it. It is the only treaty the Wold has ever kept, and it was never spoken, and I think that is why it holds.", "effects": [{"set_flag": "hollow_told_the_heart"}, {"morality": 1}], "next": "hub"},
+    "the_amount": {"speaker": "Tansy Thornby", "text": "I count. Not the deer; the Hollow. How many at the benches, how many children, who is ill and needs the liver. Then I count the deer, which takes longer and is mostly listening. Then I take the smaller number and shoot that. — Aldous keeps the cutting-roll in his head and says it is the Wold's roll of what we did not take. Mine is written on the heart-stone in what the hounds leave, which is nothing, so it is a very short roll and it is the same as his.", "next": "hub"},
+    "fourth_gate": {"speaker": "Tansy Thornby", "text": "Four gates in the Briar, all on our side, wide enough for a cart, kept for nine hundred years by somebody. I have stood in the fourth. — Through it the thorn is thin and old and grey, and past it the ground is the same ground, and the trees are the same trees, and none of them have leaves and none of them are dead. They are waiting. The deer come to the gate for the soft thorn and will not go through. The hounds will not go through. I went through once, ten paces, at nineteen, and everything on the other side was very quiet, and I have decided ever since that I am a hunter and not the other thing, and I come back to the gate every workday to make sure I still mean it.", "effects": [{"set_flag": "hollow_told_fourth_gate"}, {"discover": "core:place/thornmarch"}], "next": "hub"},
+    "the_wold": {"speaker": "Tansy Thornby", "text": "Thornhounds, which will bleed you and which will leave you alone if you leave the Hollow's stone alone. Weavers, which drop from the canopy and which you will not see, so walk under open sky where you can. Poachers, who are men, and the worst of the list. The wardens — the tree-kind, not Wren Tallow's — which do not chase, and which you cannot kill, and which will break you against a stone if you take from a shrine. — And the Hart-Knights past the Moot, and the Hart. Do not go to the Moot for the view. Go to the Moot when you know what question you would ask it, and then do not go.", "effects": [{"discover": "core:place/weaverdeep"}], "next": "hub"},
+    "dwindling": {"speaker": "Tansy Thornby", "text": "The deer are coming to the gate for the grey thorn. That is new. The soft thorn is on the green side and always was, and this spring they stood at the fourth gate with their heads through it, eating what is dead. — Everyone else counts things. I watch what the animals want, because animals do not have accounts. They want the grey. Whatever is on the other side of that wall, something in them thinks it is food, and I do not know what to do with that and neither does Alder and neither does the Spire, and I go on shooting one a week and leaving the heart, because the treaty is the only thing I have that still works.", "next": "hub"},
+    "bye": {"speaker": "Tansy Thornby", "text": "Keep to the paths under open sky. If you hear an owl at noon, it is not a warning; it is just the Wold. If you hear nothing at all, that is the warning.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/fenwick_collier",
+  "speaker_name": "Fenwick Collier",
+  "notes": "Charcoal-burner below the south root. Took the pits after the last burner was frozen out (Alder Wyke's charcoal-camp story). Sleeps by the clamp. The Wold's silence, seen from the man it was silent for.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [20, 4]}], "text": "Speak quiet. The clamp is drawing and I am listening to it. You can hear a clamp go wrong before you can see it, if you have not been talking."},
+    {"conditions": [{"flag": "alder_told_charcoal_story"}], "text": "Wyke told you about the camp. He tells everyone. He is right to. I am the man who took the pits after, and I am not the man he told you about, and I know you were wondering."},
+    {"conditions": [{"morality_max": -30}], "text": "I do not sell to you and I do not know you. Both of those are the custom. I did not make it and I have been on the other end of it and I keep it anyway."},
+    {"conditions": [{"has_item": ["core:item/ash_wood", 1]}], "text": "That is Cinderlea wood you are carrying. It will not burn. Nothing from down there burns; it has been burnt already, all the way through, and it is only keeping the shape."},
+    {"conditions": [{"morality_min": 40}], "text": "Gil says you are all right. Gil does not say that. Sit on the turf; it is warm from underneath."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Fenwick Collier", "text": "Collier. Charcoal. The clamps below the south root, and the smell, which is me, and which I stopped saying sorry for some years ago. What do you want with a burner?", "next": "hub"},
+    "hub": {"speaker": "Fenwick Collier", "text": "Ask, then.", "choices": [
+      {"text": "How is charcoal made?", "next": "the_work"},
+      {"text": "Why do you sleep out here and not in the tree?", "next": "the_clamp"},
+      {"text": "Who burned here before you?", "next": "the_last_burner"},
+      {"text": "Where does the charcoal go?", "next": "where_it_goes"},
+      {"text": "What does the Dwindling look like from a fire?", "next": "dwindling"},
+      {"text": "I'll leave you to your smoke.", "next": "bye"}
+    ]},
+    "the_work": {"speaker": "Fenwick Collier", "text": "You stack the cordwood round a chimney of sticks, a stack the size of a house, and you turf it over so it cannot breathe more than you let it, and you light the chimney and you stop it up, and then for six days you do not sleep. You watch the smoke. White is wet, blue is burning right, yellow is a hole in the turf and you have a quarter-hour to find it before the whole stack goes to ash. — At the end you have a house-sized stack of black that weighs a quarter of what went in and burns three times as hot. That is the trade. It is a trade of taking most of a thing away and keeping what matters, and I have thought about that more than a burner should.", "next": "hub"},
+    "the_clamp": {"speaker": "Fenwick Collier", "text": "Because a clamp goes wrong at night, and a man in a bed in a tree eighty yards away does not smell yellow smoke. I sleep on the turf beside it. Every two hours I am awake, looking at the colour, and I could not tell you how; I have never in twenty years heard myself wake. — The Hollow thinks it is a penance. Let them. It is a good bed, warm from underneath, and I have never once lost a stack, and the man before me lost three.", "next": "hub"},
+    "the_last_burner": {"speaker": "Fenwick Collier", "text": "A man whose name I will not say, because the Wold does not say it, and I have come to think that is the one thing the Wold got right about him. He beat his wife for six years in the camp below the root. Nobody stopped him. That is not what we do. What we did was stop selling him rope, and then turf, and then anything, and she left in the end on her own feet and he went down the pass and did not come back. — I took the pits the week after. I did not ask. Nobody said I could. Aldous came down and looked at my first stack and went away again, and that is a Woodfolk yes, and I have never known whether I was given the pits or given the guilt to keep warm. Both, I expect. It is a good fire for it.", "effects": [{"set_flag": "hollow_told_last_burner"}, {"morality": 2}], "next": "hub"},
+    "where_it_goes": {"speaker": "Fenwick Collier", "text": "Dorrie weighs it twice and takes it down the ridge road, and from Tamwick it goes to Merrowby for the forges, and from Merrowby some of it goes to Tollmere, where they pay four times what Dorrie gets and would pay eight if the Wold would sell them more. The Wold will not. Charcoal is the one thing we make that a city wants, and the custom says take what you need, and the Tallymen do not have a word for enough. — Hallam Ashdown's one sword was tempered on my charcoal. He does not know that. I do not know what the sword is for. I think about the two things together sometimes at night.", "effects": [{"rumour": ["core:rumour/collier_blue_smoke", 0.4]}], "next": "hub"},
+    "dwindling": {"speaker": "Fenwick Collier", "text": "A clamp burned blue for an hour on Hushday with the turf sound and the wood dry, and blue is right, and it was the wrong blue. Colder. The colour a thing is when it has stopped and not finished. — I have burned wood from every part of this Wold and I can tell you where a log grew by the smoke. The wood from near the Briar smokes grey now, and there is no grey in a fire; there is white and there is blue and there is black. Grey is what you get when the colour has gone out of the burning itself. That is my account. It is not a good one. It is the one I have.", "next": "hub"},
+    "bye": {"speaker": "Fenwick Collier", "text": "Go round the clamps, not over. The turf looks solid and it is a foot of ash over a fire that would take your leg to the knee.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/pip_hollin",
+  "speaker_name": "Pip Hollin",
+  "notes": "Ten; the elder's granddaughter; the count of the lights from the high rope walk. The night it was two hundred and five is the Hollow's own small Dwindling, told by the person who saw it first.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [20, 21]}], "text": "Shh. I'm counting. Two hundred and — no. Start again. You made me start again."},
+    {"conditions": [{"renown_min": 100}], "text": "You're the one! Dorrie said. Can you climb? Everybody who's anybody can climb. Grandfather can't any more but he could."},
+    {"conditions": [{"morality_max": -30}], "text": "I'm not supposed to talk to you. Nobody said. But nobody said about you at the hearth either and they say about everyone, so."},
+    {"conditions": [{"flag": "hollow_light_out_told"}], "text": "Cille told you. About the light. She said she wouldn't tell Grandfather which one and she didn't and I didn't either and now you know and you're not even from here."},
+    {"conditions": [{"time_between": [8, 10]}], "text": "Don't tell Cille I'm up here. Don't tell Grandfather. Don't tell anyone, actually, that's easiest."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Pip Hollin", "text": "Pip. Hollin, like Grandfather. I do the lights. Not the lighting, Cille does the lighting, I do the counting, which is harder because you have to do it all at once or they move.", "next": "hub"},
+    "hub": {"speaker": "Pip Hollin", "text": "What?", "choices": [
+      {"text": "How many lights are there?", "next": "the_count"},
+      {"text": "What's it like on the high rope walk?", "next": "high_walk"},
+      {"text": "Did the count ever change?", "next": "the_night", "conditions": [{"flag": "hollow_pip_told_count"}]},
+      {"text": "What do you want to be when you're grown?", "next": "grown"},
+      {"text": "Have you ever been outside the Wold?", "next": "outside"},
+      {"text": "I'll let you get back to it.", "next": "bye"}
+    ]},
+    "the_count": {"speaker": "Pip Hollin", "text": "Two hundred and six. One for every hearth there's ever been in the Hollow, even the ones nobody sits at now, Cille keeps those lit too. I count from the high walk every night at the hour when the last one's lit and I tell Grandfather the number and he says 'good' like a sentry. He doesn't know how many there are. He says he does. He says two hundred. He's wrong by six and I've never told him.", "effects": [{"set_flag": "hollow_pip_told_count"}], "next": "hub"},
+    "high_walk": {"speaker": "Pip Hollin", "text": "It's the best place in the world. You're sixty metres up inside the tree and the lights are all below you like — like the ground's the sky. And it sways. Cille says it doesn't sway and she's right that the ropes don't but the tree does, a tiny bit, in wind, and you can feel it if you lie flat and stop breathing. I'm forbidden it after dark. Eleven times. I'm up there every night. Grandfather knows. He's never once looked up.", "next": "hub"},
+    "the_night": {"speaker": "Pip Hollin", "text": "Once. Thornday before last. I counted and it was two hundred and five and I thought I'd done it wrong so I did it again and it was two hundred and five again. I came down the ropes faster than I've ever come down and I didn't fall and I told Cille and not Grandfather, and Cille went up with the taper. — It was the oldest one. The first knot. It had tallow. Cille said it had tallow. It just wasn't lit. She lit it from the one next to it and it's been two hundred and six since and every night when I get to two hundred and six I have to sit down for a bit before I tell him.", "effects": [{"set_flag": "hollow_light_out_told"}, {"rumour": ["core:rumour/hollow_light_out", 0.5]}], "next": "hub"},
+    "grown": {"speaker": "Pip Hollin", "text": "Cille. Not a keeper; Cille. Or a hunter like Tansy, but Tansy says you have to be able to sit still for an hour and I can't sit still for the count, I do it standing. — Grandfather says I'll sit on the stump one day. I don't want the stump. Everyone comes to the stump when they're cross. I want the ropes, where everyone comes when they're brave.", "next": "hub"},
+    "outside": {"speaker": "Pip Hollin", "text": "Once, to Fernhold, which is still the Wold so it doesn't count. Dorrie says there's a bell in the Vale as big as the Grandfather is wide and it's humming. I'd like to see that. Tansy says past the Briar everything's quiet and the trees are waiting. I wouldn't like to see that. — Do they count things where you're from? Grandfather says everyone counts something. He says it's how you know a place is still there.", "next": "hub"},
+    "bye": {"speaker": "Pip Hollin", "text": "If you go up the high walk, go when I'm there. Not because it's dangerous. Because it's mine and I want to see your face.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/tam_larkfold",
+  "speaker_name": "Tam Larkfold",
+  "notes": "Seven; the hearth-keeper's son; the ladle and the fungus faces on the moss stair. Afraid of the dark inside the tree and not outside it.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [18, 19]}], "text": "Da says I have to eat before I can talk to anybody. I'm eating. This counts."},
+    {"conditions": [{"morality_max": -30}], "text": "..."},
+    {"conditions": [{"renown_min": 100}], "text": "Pip says you're famous. Are you? What's it like? Do people count you?"},
+    {"conditions": [{"has_item": ["core:item/bracket_fungus", 1]}], "text": "You've got a fungus. Has it got a face? Let me see. — It hasn't. That one's just a fungus. You can still eat it."},
+    {"conditions": [{"flag": "hollow_tam_showed_faces"}], "text": "The frightened one moved up a step. On its own. Pip says I did it in my sleep. I don't sleep on the stair."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Tam Larkfold", "text": "I'm Tam. That's Da's ladle. He lets me hold it when he's not using it and he hasn't asked for it back yet today so it's still mine.", "next": "hub"},
+    "hub": {"speaker": "Tam Larkfold", "text": "Um.", "choices": [
+      {"text": "What are those on the stair?", "next": "the_faces"},
+      {"text": "Are you afraid of the dark?", "next": "the_dark"},
+      {"text": "What does your father cook?", "next": "the_pot"},
+      {"text": "Who's your friend?", "next": "pip"},
+      {"text": "Bye, Tam.", "next": "bye"}
+    ]},
+    "the_faces": {"speaker": "Tam Larkfold", "text": "Bracket fungus with faces in. Not all of them have. You have to look from underneath. I put them on the moss stair in a line, frightened ones at the bottom and brave ones at the top, and when one gets braver I move it up. — That one at the bottom has been frightened for a long time. I don't know what of. I sit with it sometimes. Pip says it's a fungus. Pip counts lights and talks to them so she can't say anything.", "effects": [{"set_flag": "hollow_tam_showed_faces"}], "next": "hub"},
+    "the_dark": {"speaker": "Tam Larkfold", "text": "Inside the tree, yes. Not outside. Outside the dark has things in it and you know what they are, Tansy told me every one, and they don't come to the Hollow because of the heart on the stone. Inside the tree the dark is between the lights and there's nothing in it and that's worse. Da says that's the right way round to be frightened. He says most people are frightened of the wrong dark.", "next": "hub"},
+    "the_pot": {"speaker": "Tam Larkfold", "text": "Everything. It's never empty. I've looked in it in the night with the fire banked and it's still got a bit in the bottom, warm. Da says the pot's older than me and the fire's older than the pot and the tree's older than everything, and I asked what was older than the tree and he said 'the ember' and wouldn't say any more, and I think that's a joke but I don't know which bit.", "next": "hub"},
+    "pip": {"speaker": "Tam Larkfold", "text": "Pip. She's ten and she can go on the high walk and I can't. She counts the lights. One night she came down really fast and didn't say anything to anyone except Cille, and she sat with me on the stair after and moved the frightened fungus down a step and said 'that's where it goes now', and I let her, because she'd gone very white.", "next": "hub"},
+    "bye": {"speaker": "Tam Larkfold", "text": "If you see a fungus with a face you can bring it. I'll tell you where it goes.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/rosen_wyke",
+  "speaker_name": "Rosen Wyke",
+  "notes": "Alder Wyke's daughter, the hunter who shoots. The two staves on one hook: his notches for what he spared, hers for what she took. Restraint seen from the person who feeds the lodge.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"flag": "alder_admitted_silence"}], "text": "He told you about the notches, then. Did he tell you there are two staves on that hook? No. He never does. Mine is the one with the notches on the other edge."},
+    {"conditions": [{"flag": "hart_fallen"}], "text": "The Hart is down. My father walked round that circle for thirty years and would not go in, and you went in. I do not know yet what I think of you. I know what I think of him, and it is worse than it was."},
+    {"conditions": [{"morality_max": -30}], "text": "I shoot things that take more than they need. That is what a hunter is for. I am telling you so you know what I am for."},
+    {"conditions": [{"skill_min": ["core:skill/archery", 30]}], "text": "You hold a bow like somebody who has used one on something that was looking at them. Good. We can talk."},
+    {"conditions": [{"time_between": [6, 10]}], "text": "I am just off the wall. Give me a moment; the grey does not leave your eyes at once."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Rosen Wyke", "text": "Wyke. The other one. My father counts the grey and the things he did not kill, and somebody in this lodge has to bring in what it eats, and it is me, and he has never once said so. That is not a complaint. It is just the arithmetic of Fernhold.", "next": "hub"},
+    "hub": {"speaker": "Rosen Wyke", "text": "Well?", "choices": [
+      {"text": "Why two staves on one hook?", "next": "two_staves"},
+      {"text": "What do you make of your father's restraint?", "next": "restraint"},
+      {"text": "You walk the Briar too?", "next": "the_wall"},
+      {"text": "Tell me about the Hart of Thorns.", "next": "the_hart"},
+      {"text": "What's the Dwindling to a hunter?", "next": "dwindling"},
+      {"text": "Good hunting.", "next": "bye"}
+    ]},
+    "two_staves": {"speaker": "Rosen Wyke", "text": "His has a notch for every animal he chose not to shoot. Mine has a notch for every one I did, on the other edge, so that if you hold them together the notches do not line up and you can see both counts at once. — I started it at fifteen, to be cruel, because he had never said thank you for a meal. I keep it at thirty-three because I understood, somewhere in the middle, that it is the same stave. What he spared and what I took are the same number of deer. The Wold spared them and the Wold took them and we are just the two hands. He knows that. He will not say it. I say it every time I cut a notch, aloud, and he hears me.", "effects": [{"set_flag": "fernhold_told_two_staves"}, {"morality": 2}], "next": "hub"},
+    "restraint": {"speaker": "Rosen Wyke", "text": "It is a virtue and I was raised in it and I would not trade it for whatever the Vale has. — It is also the reason a man beat his wife for six years within a mile of this hall while my father counted grey patches and notched a stave for hares. I was nine. I remember her face. Restraint is a bow you never draw, and a bow you never draw is a stick, and my father is the finest man I know and he has been a stick more often than he has been a bow, and he knows it, and he told you so, I expect, because he tells everyone now. Telling is the one thing he has learned to do about it. It is something. It is not a lot.", "next": "hub"},
+    "the_wall": {"speaker": "Rosen Wyke", "text": "Every workday, with him or without. He counts the grey; I hunt the edge, because the deer come to the soft thorn and I can take one clean in the open. — The grey is at nineteen patches. He will have told you. What he does not say, because he counts and does not look, is that the deer are eating it. The grey thorn. They stand at the fourth gate with their heads through and eat what is dead, and Tansy Thornby at the Hollow has seen the same, and neither of us has told him, because he would count it, and it is not a thing that wants counting. It wants shooting, or it wants running from, and I do not know which.", "effects": [{"discover": "core:place/thornmarch"}], "next": "hub"},
+    "the_hart": {"speaker": "Rosen Wyke", "text": "A knight in antlered plate who keeps the Standing Moot and has kept it since before there were words. He charges straight. He is enormous. My father says he is not a villain; he is a keeper who forgot what he was keeping. — I have had him in my sights twice, from the tree-line, at two hundred paces, with a wind I know. I did not shoot. Not out of restraint. Because a bow that would go through a stag will not go through that plate, and I am a hunter and not a fool, and those are different from being my father's daughter and not shooting anything. I would like that written down somewhere.", "effects": [{"discover": "core:place/standing_moot"}], "next": "hub"},
+    "dwindling": {"speaker": "Rosen Wyke", "text": "The kills are lighter. Same deer, same season, same arrow, and I carry them in on my shoulders and they weigh less than my mother's did at my age; my father wrote her weights on the frame post and I write mine beside them. Not thinner. Lighter. As if some of what a deer is had gone out of it before the arrow. — Everybody here has a count going the wrong way. My father's grey, Cille's light, Edric's yew. Mine is the weight of a dead thing, and the only comfort in it is that the notches still match: what he spares and what I take are still the same deer. When that stops being true I will know the Wold has gone, and I will tell him, and he will count it.", "next": "hub"},
+    "bye": {"speaker": "Rosen Wyke", "text": "If you go up to the Moot, go at dusk and stand outside the ring and watch which way the Hart faces. He faces east. He always faces east. Nobody here will tell you what is east.", "next": "hub"}
+  }
+}
+]

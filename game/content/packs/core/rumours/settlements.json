@@ -1,0 +1,170 @@
+[
+  {
+    "id": "core:rumour/hollow_light_out", "name": "Two hundred and five", "tone": "neutral", "tags": ["briarwold"],
+    "text": "Pip Hollin counted two hundred and five lights in the Grandfather on Thornday before last. It has been two hundred and six since midsummer. Cille Tamwood was up the ropes with a taper before dawn and will not say which one it was.",
+    "variants": [
+      "One of the lights in the tree went out. Not ran dry; went out. The Keeper of Knots relit it from the one beside and has not said which, and in this tree not saying which is saying a great deal."
+    ]
+  },
+  {
+    "id": "core:rumour/briar_grey_count", "name": "Nineteen", "tone": "cold", "tags": ["briarwold"],
+    "text": "Alder Wyke's count of the grey in the Briar went up again. Nineteen patches. He said it at the Knot-Hearth like a man reading out a price, and then he ate, and nobody said anything, which is how the Wold shouts.",
+    "variants": [
+      "Nineteen grey patches on the wall, and the Fernhold hunter says the deer are eating them. Eating the dead thorn. Nobody has told her father."
+    ]
+  },
+  {
+    "id": "core:rumour/weaverdeep_silk", "name": "Somebody is cutting silk", "tone": "cold", "tags": ["briarwold"],
+    "text": "Somebody has been cutting silk off the Weaverdeep bridges to sell down the pass. Custom says the first time you are told. Nobody has been told, which means nobody knows who, which is worse than knowing.",
+    "variants": [
+      "Weaver silk turned up at a Tollmere stall with a Wold knot in it. Somebody took more than they needed out of the deep and nobody in the tree will say a name, because nobody has one."
+    ]
+  },
+  {
+    "id": "core:rumour/hart_at_the_moot", "name": "Standing in the middle", "tone": "neutral", "tags": ["briarwold"],
+    "text": "A hunter from Fernhold saw the Hart standing in the middle of the Standing Moot at dusk. Just standing, antlers down, as if he were listening. The stones were not humming. That is the part she keeps saying.",
+    "variants": [
+      "The Hart of Thorns was seen inside the ring, still, with his head down. The circle answers one question of whoever stands at the centre at dark. Nobody wants to know what he asked it."
+    ]
+  },
+  {
+    "id": "core:rumour/collier_blue_smoke", "name": "The wrong blue", "tone": "neutral", "tags": ["briarwold"],
+    "text": "Fenwick Collier's clamp burned blue for an hour on Hushday night, with the wood dry and the turf sound. Blue is right. He says it was the wrong blue, colder, and Fenwick has never once said a thing about smoke that was not so.",
+    "variants": [
+      "The charcoal-burner says wood from near the Briar smokes grey now. There is no grey in a fire, he says. There is white and blue and black. He said it and went back down to his clamps."
+    ]
+  },
+  {
+    "id": "core:rumour/lantern_still_lit", "name": "One still burning", "tone": "neutral", "tags": ["sedgemire"],
+    "text": "A lantern went out from the burial jetty on Tollday and it was still burning at dawn. They all go out by dawn; that is what the oil is measured for. Loa Oul said nothing and put another cup of oil in it.",
+    "variants": [
+      "The round says one light is nobody's and still burning at dawn. On Tollday there was one. Loa filled it again. Nobody asked her whose."
+    ]
+  },
+  {
+    "id": "core:rumour/eelfathom_ahead", "name": "The reflection was early", "tone": "cold", "tags": ["sedgemire"],
+    "text": "The Eelfathom reflection was ahead of Tallissa Oul on Tollday. Ahead. She lifted her hand and the water had already lifted it. She sat down on the bank for a long time after, and she is not a woman who sits down on banks.",
+    "variants": [
+      "The pool that runs behind ran ahead. Only for the Eldest, only the once. Mella Lissa says the water is showing off. Mella says that about the water when she is frightened of it."
+    ]
+  },
+  {
+    "id": "core:rumour/nave_bell_twice", "name": "Twice, close together", "tone": "cold", "tags": ["sedgemire"],
+    "text": "The bell under the Drowned Nave rang twice in the night, close together. It rings once, when it rings. Ollo Nauve says his keel felt it through the mud before his ears did.",
+    "variants": [
+      "Two strokes from under the marsh, and the boatwright at the Landing had his hand on the hull and says the second was lower than the first. A bell does not have two notes. That one did."
+    ]
+  },
+  {
+    "id": "core:rumour/council_argued", "name": "What flood", "tone": "neutral", "tags": ["sedgemire"],
+    "text": "Mella Lissa and the Eldest argued on the council platform in front of everyone, about the boats. Mella wants them all tarred for the flood. Tallissa said 'what flood', and Mella said 'exactly', and neither of them has spoken to the other since Thornday.",
+    "variants": [
+      "The Reed Council disagreed out loud, which it does not do. Boats for a flood that has never come, against nets for a marsh that is here. Both of them are right and both of them know it, which is why it is still going."
+    ]
+  },
+  {
+    "id": "core:rumour/indigo_pale", "name": "Two dips for one", "tone": "neutral", "tags": ["sedgemire"],
+    "text": "The indigo is coming up pale in the north beds. Two dips for the colour of one. Issa Mor says it is the fog. Issa says everything is the fog, and she has been right about the fog more often than not.",
+    "variants": [
+      "The dyers are dipping twice this year and the cloth still comes up the colour of a bruise going. There is one indigo in the world and it is this one and it is going pale."
+    ]
+  },
+  {
+    "id": "core:rumour/chain_count_wrong", "name": "Four hundred and eleven", "tone": "neutral", "tags": ["skerrow"],
+    "text": "Skardd ko-Skarl counted the bridge on Kindleday and got four hundred and eleven links. It is four hundred and twelve; it has always been four hundred and twelve. He counted it again and got four hundred and twelve and has not slept properly since.",
+    "variants": [
+      "The bridge-warden lost a link and found it again in the same hour. Chains do not do that. Bridge-wardens do not say so unless they have checked, and Skardd checks."
+    ]
+  },
+  {
+    "id": "core:rumour/shaft_note_lower", "name": "A note lower", "tone": "cold", "tags": ["skerrow"],
+    "text": "Brodd ko-Brindle says the Oskeld shaft is singing a note lower than it was at midwinter. He hums it back at the rock face before his shift. The old miners say do not answer it. Brodd says somebody should.",
+    "variants": [
+      "The singing shaft has dropped its note. Three valleys over a Brindlecrag miner can hear it through the stone, and hums it, and the memory-keeper up at the Hold asked him to stop."
+    ]
+  },
+  {
+    "id": "core:rumour/eighth_cup", "name": "The stones drank it faster", "tone": "neutral", "tags": ["skerrow"],
+    "text": "Ghan ko-Oskel's hearth-stones drank the eighth cup faster this brewing. She pours one for the clan that is not sung and the stones take it, and this time they took it before she had straightened up. She says it is the heat. Dunna ko-Kharrow watched them do it and said nothing, and Dunna always says something.",
+    "variants": [
+      "The eighth cup went into the stones like water into sand. It usually sits a moment. The brewer says heat. The memory-keeper said nothing, which in Dunna is a whole verse."
+    ]
+  },
+  {
+    "id": "core:rumour/lintel_answered", "name": "It knocked back", "tone": "cold", "tags": ["skerrow"],
+    "text": "Ghalorn ko-Rudd knocked three times on the new bone lintel at the third headframe and says it knocked back. Once. He is sixty-seven and has knocked on every lintel in Skerrow and this is the first time he has said that about any of them.",
+    "variants": [
+      "A door under bone is a door the dead have agreed to, the lintel-setter says. He set one at Brindlecrag on Kindleday and something agreed a little too readily."
+    ]
+  },
+  {
+    "id": "core:rumour/rudd_fosterling", "name": "A debt in a child", "tone": "neutral", "tags": ["skerrow"],
+    "text": "Clan Rudd's fosterling in the Hold wears a bone token cut for a grown man. That is a debt being paid in a child. Rudd says the winter of the long snow is forgiven. Kharrow says a thing is not forgiven until it is paid. The boy is nine and walks so the token does not knock.",
+    "variants": [
+      "Kun ko-Rudd is the quietest thing in Kharrow Hold, because a token cut for a man knocks on a boy's chest and he has learned to walk so it does not. Forty head and a hearth, and a child, and Rudd calls it forgiven."
+    ]
+  },
+  {
+    "id": "core:rumour/greyfold_forty_second", "name": "The forty-second place", "tone": "cold", "tags": ["cinderlea"],
+    "text": "Nan Greyfold laid a forty-second place at the tables on Hushday. There are forty-one. She will not say who it is for, and the wights went and stood round it, all of them, and waved at it.",
+    "variants": [
+      "There is an extra place laid at Greyfold and the woman who lays them will not say whose. The dead of the village stood round it as if they knew. They may know."
+    ]
+  },
+  {
+    "id": "core:rumour/knight_vinegar", "name": "A bottle a year", "tone": "warm", "tags": ["cinderlea"],
+    "text": "Toren Ash got his bottle from Tamwick again. Cider vinegar, no letter. Nineteen years, a bottle a year, and not one word with it. He says the vinegar is the word. He polishes his clapper-cloth with it and it smells of the Vale for a week.",
+    "variants": [
+      "The Tamwick knight's sister sent the vinegar again. She does not write. He says she does not need to; the bottle arrives, and that is a sentence, and three would be a friendship, and one a year is exactly what he has earned."
+    ]
+  },
+  {
+    "id": "core:rumour/eleven_bells", "name": "Eleven", "tone": "cold", "tags": ["cinderlea"],
+    "text": "Deseith counted eleven bells between the noon and the dusk. The Order counts twelve; it has always counted twelve. Cadwen Ash made him count again, aloud, with her, and it was eleven again, and she has not said what she thinks about that.",
+    "variants": [
+      "One of the Choir's bells did not sound on Skerrday. A pilgrim who answers to any bell in earshot turned eleven times and stood waiting for the twelfth and it did not come."
+    ]
+  },
+  {
+    "id": "core:rumour/poppy_eaten", "name": "She ate it", "tone": "warm", "tags": ["cinderlea"],
+    "text": "A pilgrim found the red poppy west of the Choir. The red one; there is one to a square kilometre and most people go a year without. Wat Thatcher offered her forty marks for it on the spot and she looked at him and ate it.",
+    "variants": [
+      "Somebody found the poppy. The sutler tried to buy it. She ate it in front of him, petals and all, and said it tasted of nothing, and that was the point."
+    ]
+  },
+  {
+    "id": "core:rumour/lamp_brightened_covering", "name": "It brightened at the covering", "tone": "cold", "tags": ["brightwater"],
+    "text": "The Lamp brightened at dawn on Merrowday when Tamsin Wick covered the stone. It brightens for good evening and never for good morning; thirty years it has never once. Elsie Wick saw it from the slipway and will not go down there now.",
+    "variants": [
+      "The sul-stone answered the wrong greeting. Tamsin said good morning and covered it and it flared under the cloth. She has not said what she thinks and she has two logbooks to not say it in."
+    ]
+  },
+  {
+    "id": "core:rumour/wick_barrow", "name": "Forty marks", "tone": "neutral", "tags": ["brightwater"],
+    "text": "Jory Wick's barrow is still under distraint at Lantern Row. Forty marks, for leaving it standing in the row. A Merrowby carter paid four for the same thing the day before, and Jory has the notice nailed up inside the boat-house and reads the figure out every time he pushes off.",
+    "variants": [
+      "Same street, same offence, same week: four marks for a carter under charter, forty for a fisher without one. The steward wrote in his own book that the reasoning is real and is also a wall. The fisher has the wall nailed to his door."
+    ]
+  },
+  {
+    "id": "core:rumour/racks_face_the_lamp", "name": "All facing the Lamp", "tone": "warm", "tags": ["brightwater"],
+    "text": "Lettie Wick has turned every eel on the racks so the split side faces the Lamp. Says they dry even. Tamsin says superstition, and turned hers the same way when she thought nobody was looking, and Elsie was looking.",
+    "variants": [
+      "Every eel in Gullhithe is facing the lighthouse. The niece says it is for the drying. The aunt says nonsense. Both racks face the same way."
+    ]
+  },
+  {
+    "id": "core:rumour/press_lost_count", "name": "Nineteen turns", "tone": "neutral", "tags": ["hearthvale"],
+    "text": "Hob Tamwick lost count on the press screw on Skerrday and started again from one. Nineteen turns, one for each hearth on Tamwick's line of the Roll, and he will not go past nineteen or stop short. Bessa says the cider came out sharper and will not say whether that is good.",
+    "variants": [
+      "The press-hand at Tamwick counts a turn of the screw for every hearth in the hamlet and starts again if he loses his place. He lost it. The pressing took till dark. Nobody told him to hurry."
+    ]
+  },
+  {
+    "id": "core:rumour/grafted_tree_twelfth", "name": "A twelfth kind", "tone": "cold", "tags": ["hearthvale"],
+    "text": "The Grafted Tree at Tamwick is carrying a twelfth kind of apple this year. Bessa Tamwick grafts a twig from every tree that dies onto it and can name the dead by taste, and she did not graft this one. Nobody did. She has not tasted it.",
+    "variants": [
+      "There is a branch on Bessa's tree that nobody put there, fruiting. Eleven kinds she can name. The twelfth she walks past. Her brother picked one and she took it out of his hand."
+    ]
+  }
+]
