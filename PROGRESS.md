@@ -537,3 +537,69 @@ reference beside anything you are judging in that scene.
   floor is flattened. It reads as drifted sand rather than stone in the flattest
   chambers; the fix is to flatten first and noise the walls only.
 * Compatibility renderer lacks SSAO/volumetric fog; the look must not depend on them.
+
+## Exteriors: the fabric under budget
+
+The worst frame in the game was a village street: Merrowby from the road, **2438 draw
+calls** against DESIGN §11's 2000 (ASSESSMENT.md recorded 2678 on the previous machine).
+Primitives were inside budget at 1.15 M; this was object count, and nobody had broken it
+down. `tools_gd/draw_attribution.gd` does now — a census of what the camera sees by owning
+script, and the measured cost of hiding each owner, which is the number that includes the
+sun's four shadow cascades. `-- --attribute` on any capture writes `attribution.json`;
+`draws measure` in the console prints the same. Measured on gl_compatibility at 1600x900
+(no Vulkan in this container; object counts do not depend on the renderer), Merrowby's
+2441 draws were:
+
+| owner | draws | what it was |
+|---|---|---|
+| `Building` (11 entered houses in view) | 1093 | 358 MeshInstance3Ds: 31 room masses, 31 plinths, 62 roof slabs, 62 gables, 30 ridges, 11 chimneys, 44 door parts, 33 window parts — each drawn for the eye and again per cascade |
+| villagers (`HumanoidModel`) | 583 | 20 in view, about nine skinned meshes each (body, head, two eyes, torso, legs, feet, belt, hair…), all shadow-casting |
+| scatter MultiMeshes (`WorldStreamer`) | 325 | 373 MultiMeshInstance3Ds across 25 cells, trees and rocks in the near ring casting |
+| `Settlement` (fabric, props, boards, stations) | 244 | two merged meshes per settlement, but ~100 props as instantiated scenes with no visibility range, so seven other settlements' fences and barrels were in the frame from kilometres off |
+| `Terrain3D` | 151 | the clipmap |
+| doors, water, landmarks, sky, UI | ~45 | |
+| **of which shadow passes** | **1535** | sun shadows off: 2441 → 906 |
+
+**What changed.** `FabricMesh` gathers boxes and triangles under a surface key and commits one
+`MeshInstance3D` per key with a vertex colour per piece; `painted_surface.gdshader` multiplies
+by `COLOR`, which is white wherever a mesh carries none, so interiors are untouched. A
+`Building` is four meshes (walls, roof, stone, joinery) plus a body a room; a `Settlement`'s
+filler houses are the same four meshes for the whole settlement, each house in its own bucket
+of limewash; props are one `MultiMesh` per forge asset (lifted by the mesh's own box where it
+reaches below the ground). Joinery and props carry a visibility range and the joinery casts no
+shadow; walls and roofs still go to the horizon, because a village is read by its roofs from
+the next hill. `JobBoard`, `JobStation` and `PropertySign` stay their own bodies on the
+interaction layer. The filler houses, which the capture showed as windowless plaster boxes,
+got a plinth that varies, gables, overhanging eaves, a chimney at the hearth end, a framed
+plank door under a lintel on a stone step, and framed, shuttered windows in bays along the
+street with fewer at the back and one in the far gable — all inside the merged meshes, at no
+draw cost. Villagers' eyes no longer cast shadows (they fall inside the head's).
+
+**Measured, the six `*_street` shots of `tools/capture/plans/streets.json`, before → after:**
+
+| shot | draw calls | primitives | what is left (after) |
+|---|---|---|---|
+| hearthvale_street (Merrowby) | **2438 → 1328** | 1.15 M → 1.18 M | villagers 590, scatter 332, terrain 160, buildings 120, fabric 110 |
+| brightwater_street (Tollmere) | 479 → 283 | 0.34 M → 0.34 M | terrain 105, scatter 68, fabric 61, villager 26, buildings 16 |
+| sedgemire_street | 660 → 498 | 0.73 M → 0.73 M | terrain 184, scatter 182, fabric 60, villagers 53, buildings 12 |
+| briarwold_street | 764 → 547 | 0.80 M → 0.79 M | scatter 316, terrain 154, fabric 54, buildings 16 |
+| skerrow_street | 609 → 433 | 0.37 M → 0.45 M | scatter 136, terrain 126, villagers 95, fabric 59, buildings 18 |
+| cinderlea_street | 515 → 405 | 0.63 M → 0.62 M | terrain 170, scatter 123, villagers 56, buildings 11, fabric 10 |
+
+Every shot is inside the 2000 budget with margin and the worst is under 1500. Buildings went
+from 1093 to 120 draws on the worst frame and the fabric from 244 to 110 (the 110 is
+Merrowby's own four meshes, nine prop MultiMeshes, a board, three stations and two signs
+with their cascades, plus the other ten settlements' walls and roofs at a few draws each).
+`test_settlements.gd` ratchets a village of Merrowby's kind at **31** mesh nodes and pins
+the rest: four meshes for a city and a hamlet alike, six or more distinct washes in the merged
+walls, near-only shadowless joinery, one MultiMesh per prop asset within the pad, boards and
+stations and signs as separate bodies on the interaction layer, the inn as four meshes and a
+body a room, and every box in the fabric facing outward.
+
+**What is left belongs elsewhere.** The residue on Merrowby's street is people, plants and
+ground. Villagers are the largest: about nine skinned `MeshInstance3D`s each under
+`HumanoidModel`, all casting into up to four cascades, so twenty in view are ~590 draws — a
+merged body per appearance, or shadows from a single proxy mesh, would take most of that
+(NPC appearance is the boot/UX stream's). Scatter is 332 draws for 373 MultiMeshes across 25
+cells, most of them a handful of instances each; merging a cell's small kinds or ranging the
+far ring's is the world-look stream's. Terrain3D's clipmap is 105–184 draws and not ours.
