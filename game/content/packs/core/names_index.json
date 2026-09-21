@@ -607,6 +607,38 @@
       "rule": "5.3 people: ghal 'chain' as onset, clan after ko-",
       "derivation": "namegen candidate (seed 11); a Rudd among Brindles",
       "used_by": "core:npc/ghalorn_ko_rudd"
+    },
+    {
+      "name": "Toren Ash",
+      "language": "valish",
+      "kind": "person",
+      "rule": "5.1 people: masculine -en; the Order's taken surname (3.6, Cadwen Ash)",
+      "derivation": "born Toren Tamwick at the cider press, Bessa's brother; Ash as every Toll-Knight takes when they swear",
+      "used_by": "core:npc/toren_ash"
+    },
+    {
+      "name": "Wat Thatcher",
+      "language": "valish",
+      "kind": "person",
+      "rule": "5.1 people: short Vale masculine, trade surname",
+      "derivation": "namegen candidate Wat + Thatcher, his old trade at Larkbourne Ford",
+      "used_by": "core:npc/wat_thatcher"
+    },
+    {
+      "name": "Deseith",
+      "language": "oroth",
+      "kind": "person",
+      "rule": "5.2: open syllables, -eth ending; a pilgrim's taken name",
+      "derivation": "namegen candidate (oroth, seed 3); the name a Tollmere clerk says he heard in the note under the Seat",
+      "used_by": "core:npc/deseith"
+    },
+    {
+      "name": "Nan Greyfold",
+      "language": "valish",
+      "kind": "person",
+      "rule": "5.1 people: short Vale feminine; a place taken as a surname",
+      "derivation": "Nan, a Vale pet-name; Greyfold, the dead village's name, taken because nobody else would carry it",
+      "used_by": "core:npc/nan_greyfold"
     }
   ]
 }

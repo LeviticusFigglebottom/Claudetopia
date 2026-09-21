@@ -642,5 +642,103 @@
         "chance": 0.2
       }
     ]
+  },
+  {
+    "id": "core:table/stock_pilgrim_sutler",
+    "role": "merchant_stock",
+    "description": "Wat Thatcher's hand-cart at Pilgrim's Ash: what a person needs to give up everything. Ash-cake because that is what there is, candles and torches by the gross from Merrowby, grey wool for the ones whose hoods leak, hymn sheets the Order lets him copy, bell-mould and grey-grass seed off the heath, and once in a long while a vigil cloak or an ash poppy's petals that somebody did not eat.",
+    "rows": [
+      {
+        "item": "core:item/ash_cake",
+        "count": [
+          4,
+          12
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/candle",
+        "count": [
+          8,
+          24
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/torch",
+        "count": [
+          3,
+          9
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/wool_hood",
+        "count": [
+          1,
+          4
+        ],
+        "restock_hours": 96
+      },
+      {
+        "item": "core:item/wool_shoes",
+        "count": [
+          1,
+          3
+        ],
+        "restock_hours": 96
+      },
+      {
+        "item": "core:item/wool_tunic",
+        "count": [
+          1,
+          3
+        ],
+        "restock_hours": 96
+      },
+      {
+        "item": "core:item/grey_hymn_sheet",
+        "count": [
+          0,
+          2
+        ],
+        "restock_hours": 120,
+        "chance": 0.6
+      },
+      {
+        "item": "core:item/bell_mould",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/grey_grass_seed",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/vigil_cloak",
+        "count": [
+          0,
+          1
+        ],
+        "restock_hours": 240,
+        "chance": 0.3
+      },
+      {
+        "item": "core:item/ash_poppy_petal",
+        "count": [
+          0,
+          1
+        ],
+        "restock_hours": 336,
+        "chance": 0.15
+      }
+    ]
   }
 ]
