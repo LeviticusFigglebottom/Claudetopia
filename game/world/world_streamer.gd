@@ -240,6 +240,12 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	# near: a wolf you cannot see does not need a body.
 	for entry in data.get("scenes", []):
 		_build_scene(node, entry)
+	# What stands at the points of interest in this cell is raised here, from the POI data,
+	# and hangs off the cell node so it streams and unloads with the ring; the far ring gets
+	# silhouettes only. See world/pois/world_pois.gd.
+	var pois := get_tree().get_first_node_in_group(WorldPois.GROUP) if is_inside_tree() else null
+	if pois != null and pois.has_method("raise_in_cell"):
+		pois.call("raise_in_cell", node, cell, ring > full_ring)
 	if ring <= full_ring:
 		_build_spawns(node, data.get("spawns", []))
 	EventBus.cell_loaded.emit(cell)
