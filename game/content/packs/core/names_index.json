@@ -551,6 +551,62 @@
       "rule": "child's coinage, plain compound",
       "derivation": "the name Alle Nauve chalks for the player: walks as if unsure of the ground, and herons never fall in",
       "used_by": "core:dialogue/alle_nauve"
+    },
+    {
+      "name": "Torkh ko-Kharrow",
+      "language": "skerrish",
+      "kind": "person",
+      "rule": "5.3 people: kh cluster, first-syllable stress, clan after ko-; a name that comes with a duty (3.4)",
+      "derivation": "namegen candidate (seed 11); the Moot-Speaker's name, carried with the speaking-bone",
+      "used_by": "core:npc/torkh_ko_kharrow"
+    },
+    {
+      "name": "Skardd ko-Skarl",
+      "language": "skerrish",
+      "kind": "person",
+      "rule": "5.3 people: sk onset, dd coda, clan after ko-",
+      "derivation": "namegen stem Skardd + Skarl, the clan that by custom keeps another clan's gate",
+      "used_by": "core:npc/skardd_ko_skarl"
+    },
+    {
+      "name": "Ghan ko-Oskel",
+      "language": "skerrish",
+      "kind": "person",
+      "rule": "5.3 people: gh onset, short word, clan after ko-",
+      "derivation": "namegen stem Ghan + Oskel, the clan of the singing mine; an Oskel at a Kharrow hearth",
+      "used_by": "core:npc/ghan_ko_oskel"
+    },
+    {
+      "name": "Kun ko-Rudd",
+      "language": "skerrish",
+      "kind": "person",
+      "rule": "5.3 people: short word, u vowel, clan after ko-",
+      "derivation": "namegen stem Kun + Rudd, the clan Kharrow owes for the winter of the long snow",
+      "used_by": "core:npc/kun_ko_rudd"
+    },
+    {
+      "name": "Oskarth ko-Brindle",
+      "language": "skerrish",
+      "kind": "person",
+      "rule": "5.3 people: Osk- onset, th coda, clan after ko-",
+      "derivation": "namegen stem Oskarth + Brindle, the mining clan of Brindlecrag",
+      "used_by": "core:npc/oskarth_ko_brindle"
+    },
+    {
+      "name": "Brodd ko-Brindle",
+      "language": "skerrish",
+      "kind": "person",
+      "rule": "5.3 people: br onset, dd coda, clan after ko-",
+      "derivation": "namegen candidate (seed 11)",
+      "used_by": "core:npc/brodd_ko_brindle"
+    },
+    {
+      "name": "Ghalorn ko-Rudd",
+      "language": "skerrish",
+      "kind": "person",
+      "rule": "5.3 people: ghal 'chain' as onset, clan after ko-",
+      "derivation": "namegen candidate (seed 11); a Rudd among Brindles",
+      "used_by": "core:npc/ghalorn_ko_rudd"
     }
   ]
 }

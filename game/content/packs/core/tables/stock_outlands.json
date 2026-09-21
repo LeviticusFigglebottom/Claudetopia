@@ -470,5 +470,177 @@
         "restock_hours": 48
       }
     ]
+  },
+  {
+    "id": "core:table/stock_clan_hearth",
+    "role": "merchant_stock",
+    "description": "Ghan ko-Oskel's hearth-hall at Kharrow Hold: heather honey off the Oskel moors, oatcake and mutton for the benches, cold flour and raw meat for whoever is going down the pass, candles and torches for the cliff stair, and wool against the wind off the tops. The honey-brew itself is poured by the cup and never sold in a cask.",
+    "rows": [
+      {
+        "item": "core:item/heather_honey",
+        "count": [
+          3,
+          8
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/oatcake",
+        "count": [
+          3,
+          9
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/mutton",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 12
+      },
+      {
+        "item": "core:item/raw_meat",
+        "count": [
+          2,
+          5
+        ],
+        "restock_hours": 12
+      },
+      {
+        "item": "core:item/cold_flour",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/candle",
+        "count": [
+          3,
+          8
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/torch",
+        "count": [
+          2,
+          5
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/wool_mittens",
+        "count": [
+          0,
+          2
+        ],
+        "restock_hours": 120,
+        "chance": 0.6
+      },
+      {
+        "item": "core:item/wool_hood",
+        "count": [
+          0,
+          2
+        ],
+        "restock_hours": 120,
+        "chance": 0.6
+      }
+    ]
+  },
+  {
+    "id": "core:table/stock_brindlecrag",
+    "role": "merchant_stock",
+    "description": "Oskarth ko-Brindle's winding-house: what the veins give up (iron, silver, and the giant-bone the silver runs into), flint, rope, torches and a lantern for the adits, a crag-wolf pelt when the Moot-Sworn have been up the ridge, and now and then a ring or a helm of clan bone that somebody did not come up to claim.",
+    "rows": [
+      {
+        "item": "core:item/iron_ingot",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 72
+      },
+      {
+        "item": "core:item/silver_ore",
+        "count": [
+          1,
+          4
+        ],
+        "restock_hours": 96
+      },
+      {
+        "item": "core:item/giant_bone_shard",
+        "count": [
+          1,
+          3
+        ],
+        "restock_hours": 120,
+        "chance": 0.7
+      },
+      {
+        "item": "core:item/flint",
+        "count": [
+          4,
+          10
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/rope",
+        "count": [
+          2,
+          5
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/torch",
+        "count": [
+          4,
+          12
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/lantern",
+        "count": [
+          1,
+          2
+        ],
+        "restock_hours": 96
+      },
+      {
+        "item": "core:item/crag_pelt",
+        "count": [
+          0,
+          2
+        ],
+        "restock_hours": 120,
+        "chance": 0.5
+      },
+      {
+        "item": "core:item/ring_cragborn_bone",
+        "count": [
+          0,
+          1
+        ],
+        "restock_hours": 240,
+        "chance": 0.2
+      },
+      {
+        "item": "core:item/clan_bone_helm",
+        "count": [
+          0,
+          1
+        ],
+        "restock_hours": 240,
+        "chance": 0.2
+      }
+    ]
   }
 ]

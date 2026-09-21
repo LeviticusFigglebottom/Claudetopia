@@ -1,0 +1,212 @@
+[
+{
+  "id": "core:dialogue/torkh_ko_kharrow",
+  "speaker_name": "Torkh ko-Kharrow",
+  "notes": "Moot-Speaker of Kharrow Hold (WORLD_BIBLE 3.4, 4). The speaking-bone, blood-price, the price cairn, the debt to Rudd that Rudd calls forgiven, and the Breath account. Names come with duties.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"bounty_min": ["core:faction/clan_moot", 1]}], "text": "There is a stone on my cairn with your name under it. You may pay it or you may carry it. There is no third thing, and the Moot-Sworn know your face."},
+    {"conditions": [{"quest_done": "core:quest/a_hand_on_the_rope"}], "text": "You brought a name up out of the shaft. It went into the song in a morning. I have carried the bone for nineteen years and I never thought I would speak a verse I had not been taught."},
+    {"conditions": [{"has_item": ["core:item/kharrow_bone_token", 1]}], "text": "You carry a Kharrow token. Somebody gave you that; nobody sells one. Then you are a guest of this hearth, and a guest who steals from a host is the only thing the Moot does not price."},
+    {"conditions": [{"renown_min": 200}], "text": "Your deeds came up the chain ahead of you. That is how the clans measure a stranger: not by the face, by what has been heard. A good deal has been heard."},
+    {"conditions": [{"time_between": [6, 7]}], "text": "The song is not finished. Stand where you are and do not speak through the breath."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Torkh ko-Kharrow", "text": "Torkh. The name comes with the bone; I am the ninth to carry it. When the seven clans sit, whoever holds this speaks, and when blood has been spilled I say the price. You are in Kharrow Hold, three hundred years in the cutting and nine in the hanging. Mind the edge.", "next": "hub"},
+    "hub": {"speaker": "Torkh ko-Kharrow", "text": "Speak. I am holding the bone, so I am listening.", "choices": [
+      {"text": "What is the Moot?", "next": "the_moot"},
+      {"text": "What is blood-price?", "next": "blood_price"},
+      {"text": "What is the cairn on the ledge?", "next": "the_cairn", "conditions": [{"flag": "hold_told_blood_price"}]},
+      {"text": "Why does the Hold owe Clan Rudd?", "next": "the_debt"},
+      {"text": "What is the Dwindling, to the clans?", "next": "dwindling"},
+      {"text": "I have said what I came to say.", "next": "bye"}
+    ]},
+    "the_moot": {"speaker": "Torkh ko-Kharrow", "text": "Seven clans, one Moot. Dreugh, Kharrow, Oskel, Brindle, Ghast, Rudd, Skarl. Each keeps its own hold and its own memory and its own grudges, and once a season they send who they send up the chain to sit in that hall and pass this bone from hand to hand, and whoever holds it is heard, and nobody else is. — It is not a court. Courts have a book. We have a song with four hundred lines and a breath in it, and a bone, and the fact that nobody in Skerrow has ever forgotten anything. That is enough law for a mountain. It is too much for most people.", "effects": [{"set_flag": "hold_told_the_moot"}], "next": "hub"},
+    "blood_price": {"speaker": "Torkh ko-Kharrow", "text": "There is no jail on a cliff. There is what you did, and what it weighs, and who you did it to. The Moot says the weight, in marks or in head or in a hearth, and you pay it to the clan you wronged, twice over, and it is remembered either way. — Pay and it is remembered that you paid. Refuse and it is remembered that you refused, and that goes into the song, and your children's children will hear it sung before food every morning of their lives by people who have never met you. Most pay. The ones who do not go down the pass, and the Moot-Sworn watch them go, and they are called clanless after, and the crag-wolves know the word.", "effects": [{"set_flag": "hold_told_blood_price"}, {"rep": ["core:faction/clan_moot", 2]}], "next": "hub"},
+    "the_cairn": {"speaker": "Torkh ko-Kharrow", "text": "One stone for every price the Moot has set and not yet seen paid. Fourteen this season. — When a price is paid I take the stone off the cairn and carry it down the cliff stair myself and set it on the wronged clan's hearth, and I do not send a boy, and I do not wait for the weather. Nine years ago I carried one to Ghastfell in a snow that took the skin off my face. It was a small stone. The Moot said the price; the Moot carries it to the door. If I sent the stone by another hand the price would be a thing that happened to somebody else, and that is how prices stop being paid.", "effects": [{"set_flag": "hold_told_the_cairn"}, {"morality": 2}], "next": "hub"},
+    "the_debt": {"speaker": "Torkh ko-Kharrow", "text": "The winter of the long snow. Forty head of sheep and a hearth. Rudd fed Kharrow when Kharrow could not feed itself, and it is in the song, in our verse, under the debts unpaid. — Rudd has been asked three times what we owe and has three times said it is forgiven. It is not forgiven until we have paid it. That is not pride. A debt forgiven is a debt that lives in the other clan's memory and not in yours, and a clan that lets its debts live elsewhere is a clan that has begun to forget, and forgetting is the one thing on this mountain we are for stopping. — They sent us a boy. Kun. Nine years old, with a token cut for a man, to say forgiven with his feet. We have kept him, and we feed him, and we will pay the forty head, and Rudd will not take them, and the boy will grow up in the middle of that, and it will be a verse one day. A good one, I think.", "effects": [{"set_flag": "hold_told_the_debt"}, {"rumour": ["core:rumour/rudd_fosterling", 0.4]}], "next": "hub"},
+    "dwindling": {"speaker": "Torkh ko-Kharrow", "text": "Something breathed the world out and is breathing it in. What is nearest the mouth goes first: the very old, the very deep, the forgotten. The giants went first; their bones are in the scree and in our lintels and in this bone in my hands, and they are what is left when a thing is taken back but its weight is not. — So we remember. A name is a hand on the rope. Seven clans pull. There should be eight, and every morning before food the whole hold takes four beats of silence for a name nobody knows, and has done for a thousand years. The Sayers call that sentiment. It is the longest piece of work in Wickmere and it has never been paid for. Ask Dunna. Ask her twice; she will show you the gap.", "next": "hub"},
+    "bye": {"speaker": "Torkh ko-Kharrow", "text": "Go with the wall on your right on the stair. Everyone who has gone over the edge of Kharrow Hold went over on the left, and I have set the price for two of them, and there was nobody to pay it.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/skardd_ko_skarl",
+  "speaker_name": "Skardd ko-Skarl",
+  "notes": "Bridge-warden; a Skarl at a Kharrow gate by custom. Four hundred and twelve links, Brann who would not be roped, the count that came up one short and then did not.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [5, 7]}], "text": "Nobody crosses until I have looked along the links. Stand off the head-plate; it is not a doorstep."},
+    {"conditions": [{"flag": "hold_told_the_count"}], "text": "You know about the count. I have done it every morning since, not only Kindleday. Four hundred and twelve, every time. I am not reassured."},
+    {"conditions": [{"morality_max": -30}], "text": "The bridge carries anyone. That is what a bridge is. I am telling you that so you know it is the bridge that is letting you across and not me."},
+    {"conditions": [{"discovered": "core:place/windgate"}], "text": "You have been up to Windgate. Then you have crossed my bridge going and coming, and I did not see you go. I see everyone go. I am wondering about that."},
+    {"conditions": [{"renown_min": 150}], "text": "I heard your deeds come up the chain. I hear everything that comes up the chain; it is four hundred and twelve links and every one of them talks."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Skardd ko-Skarl", "text": "Skardd. Bridge-warden. A Skarl, because no clan keeps its own gate; that is the custom and it is a good one. Four hundred and twelve links between the gorge wall and the Hold, and every one of them is mine to grease and count and know. You crossed forty of them without looking down. Most do not manage forty.", "next": "hub"},
+    "hub": {"speaker": "Skardd ko-Skarl", "text": "Ask. I can watch the bridge and listen; I have done both for twenty years.", "choices": [
+      {"text": "Tell me about the bridge.", "next": "the_bridge"},
+      {"text": "Who was Brann ko-Kharrow?", "next": "brann"},
+      {"text": "You count the links?", "next": "the_count"},
+      {"text": "What comes over the bridge?", "next": "what_crosses"},
+      {"text": "What is the Dwindling to a bridge-warden?", "next": "dwindling"},
+      {"text": "I'll cross back.", "next": "bye"}
+    ]},
+    "the_bridge": {"speaker": "Skardd ko-Skarl", "text": "Two chains and a deck of bone-pinned planks, hung across the gorge in the Chain Years, nine years in the hanging after three hundred in the cutting of the Hold it reaches. Four hundred and twelve links a side, forged at Brindlecrag when Brindlecrag still had iron worth the name. — It moves. Everyone feels it move and thinks it is failing. It is not failing; a chain that did not move would snap in the first wind off the tops. The bridge is alive the way a rope is alive, and I grease it so that it stays that way, a link at a time, by hand, with mutton fat, because oil freezes and fat does not.", "next": "hub"},
+    "brann": {"speaker": "Skardd ko-Skarl", "text": "He hung the first chain. He would not be roped while he did it; he said a man who trusts a rope will not trust his hands. He was wrong to refuse and he is sung for anyway, in the Kharrow verse, under the dead of note. — I am a Skarl. I have no verse for him. So when I grease the first link and the last I say his name to them, 'Brann ko-Kharrow, roped, which he was not', and that is the only prayer a Skarl says at a Kharrow bridge, and I have said it every season for twenty years, and if he minds he has not said.", "effects": [{"set_flag": "hold_told_brann"}], "next": "hub"},
+    "the_count": {"speaker": "Skardd ko-Skarl", "text": "Every Kindleday, a side at a time, on my knees on the deck with a hand on each link. Four hundred and twelve. It has been four hundred and twelve since the hanging. — On Kindleday last I counted four hundred and eleven. I counted again and it was four hundred and twelve. I have looked at every link since with a lamp and there is no new link and no mended one and nothing has been done to that chain but grease and weather since before my grandfather. A chain does not lose a link and find it in the same hour. I did not tell Torkh. I am telling you because you are crossing it and it seems to me you should know what you are standing on.", "effects": [{"set_flag": "hold_told_the_count"}, {"rumour": ["core:rumour/chain_count_wrong", 0.5]}], "next": "hub"},
+    "what_crosses": {"speaker": "Skardd ko-Skarl", "text": "Wool down and iron up. Honey from the Oskel moors for Ghan's vats. Bone from Brindlecrag for Ordda's bench. Tallymen from the lake twice a year with a ledger and a face on them, who pay the Windgate toll going up and complain about it coming down, and have never once been given a discount and have never once stopped coming. — And people with a grievance, up the stair to Torkh, and people with a stone in their hands, down the stair from him. I see every one. I know what a paid price looks like on a face and what an unpaid one does. The unpaid ones walk faster on the bridge. They should not. It does not like it.", "effects": [{"discover": "core:place/windgate"}], "next": "hub"},
+    "dwindling": {"speaker": "Skardd ko-Skarl", "text": "A link went missing for an hour and came back. Say that to a Sayer and they will write it down. Say it to a clansman and he will ask you which link, and I cannot tell him, and that is the part that keeps me on the deck at night with a lamp. — The Breath takes the old and the deep and the forgotten first. This chain is old. The gorge under it is deep. And a link is a thing nobody has ever had to remember, because it was always there. I think it was breathed at. I think it came back because I count them. I am not a memory-keeper. I am a man with mutton fat on his hands who says one name twice a season. It seems to have been enough, this time.", "next": "hub"},
+    "bye": {"speaker": "Skardd ko-Skarl", "text": "Cross slow. Not because it is unsafe. Because it is polite, and the bridge has been here longer than your clan, whoever they are.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/ghan_ko_oskel",
+  "speaker_name": "Ghan ko-Oskel",
+  "notes": "Hearth-hall keeper and brewer; an Oskel at a Kharrow hearth. The honey-brew, the seven benches, the eighth cup into the stones for the clan that is not sung. Sells through the trade choice.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [19, 23]}], "text": "Sit on the Skarl bench; it is the one with room, and Skarls do not mind. A cup is coming. Nobody sits in this hall with empty hands."},
+    {"conditions": [{"bounty_min": ["core:faction/clan_moot", 1]}], "text": "You have a price against your name and you are in my hall. Eat. A hearth does not price anyone. Pay Torkh before you sleep, or do not sleep here."},
+    {"conditions": [{"rep_min": ["core:faction/clan_moot", 20]}], "text": "You again. The clans have decided you are worth a cup. That took them less time than it took them to decide about me, and I married in."},
+    {"conditions": [{"discovered": "core:place/oskeld_mine"}], "text": "You have been to the Oskeld shaft. My clan's mine. Did it sing for you? It sings for everyone. Do not tell me the note; I will hear it in my sleep."},
+    {"conditions": [{"flag": "hold_told_eighth_cup"}], "text": "Back for the eighth cup, are you. It is not for you. Sit down and I will pour you the first."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Ghan ko-Oskel", "text": "Ghan. Oskel by birth, Kharrow by hearth, and I pour the same for both, and for the other five. This is the hearth-hall: seven benches, one fire, and the honey-brew, which is the only thing on this mountain that everyone agrees about. Sit. You are letting the heat out standing.", "next": "hub"},
+    "hub": {"speaker": "Ghan ko-Oskel", "text": "Well? The ladle is not getting any lighter.", "choices": [
+      {"text": "What is the honey-brew?", "next": "the_brew"},
+      {"text": "Why seven benches?", "next": "the_benches"},
+      {"text": "What is the eighth cup for?", "next": "eighth_cup", "conditions": [{"flag": "hold_told_benches"}]},
+      {"text": "Tell me about the Oskeld mine.", "next": "the_mine"},
+      {"text": "What does the Dwindling look like from a hearth?", "next": "dwindling"},
+      {"text": "That's all I'll have.", "next": "bye"}
+    ]},
+    "the_brew": {"speaker": "Ghan ko-Oskel", "text": "Heather honey off the Oskel moors, water off the tops where the snow lies, and three weeks in a vat that has never been scrubbed, because the vat is the recipe. It comes out the colour of the moor in the evening and it is stronger than it tastes and it is what the clans drink, at the Moot and at a burial and at a price paid. — Tollmere would pay a great deal for a cask. Tollmere has never had one. The brew does not go down the chain. That is not custom; it is that I will not sell it to anyone who has not sat on one of those benches, and Tallymen do not sit.", "next": "hub"},
+    "the_benches": {"speaker": "Ghan ko-Oskel", "text": "One a clan. Dreugh by the door because they always leave first; Kharrow by the fire because it is their hold; Oskel under the honey-shelf, which is my doing; Brindle where the light is good for looking at bone; Ghast and Rudd on the same side of the fire, which took two hundred years and a forgiveness in the song; Skarl wherever there is room, because a Skarl will sit anywhere and mean it. — Seven benches. There is room in this hall for eight. Everyone who has ever kept this hearth has left that room, and none of them could have told you why, and I can, because I pour.", "effects": [{"set_flag": "hold_told_benches"}], "next": "hub"},
+    "eighth_cup": {"speaker": "Ghan ko-Oskel", "text": "Every first brewing I pour eight cups. Seven go to the benches. The eighth I pour into the hearth-stones, at the back, where the room for the eighth bench is, for the clan that is not sung. — The stones take it. They always take it; it is hot stone. But I watch how fast, and it used to sit a moment and steam, and this brewing it went in before I had straightened up, like water into sand. Dunna was watching me watch. She said nothing, and Dunna always says something. — I do not know what I am watching for. I know that something under this mountain is thirstier than it was, and I know that I am the only one who pours for it, and I have not missed a brewing in thirty years.", "effects": [{"set_flag": "hold_told_eighth_cup"}, {"rumour": ["core:rumour/eighth_cup", 0.5]}], "next": "hub"},
+    "the_mine": {"speaker": "Ghan ko-Oskel", "text": "My clan's. A silver vein that runs into giant bone and does not stop, and a shaft that sings; you can hear it three valleys off if the wind is right, and a Brindlecrag miner hums it back and the old men tell him not to. — What came up the shaft after the Choir fell walks. It is a weight without a name. Half this hold says it is not a person. I am Oskel and I have stood at the shaft head as a girl and heard it, and I say it is somebody, and I pour it a cup, and I will not go down there, and I will not stop anyone who does. My brother went down. He is in the Oskel verse now, under the ones who did not come out. It is a short line. He was a short man.", "effects": [{"discover": "core:place/oskeld_mine"}], "next": "hub"},
+    "dwindling": {"speaker": "Ghan ko-Oskel", "text": "The honey is thinner. Not less; the moors give what they gave. Thinner, so that the brew takes four weeks to come to what it came to in three, and I have not told the benches, and they have not noticed, and both of those are a kind of Dwindling too. — Something is breathing in. Fine. A hearth is where you breathe out. Every night this hall is full of seven clans breathing out at each other over my brew, and I have come to think that is the whole of what a hearth is for, and that the Sayers with their four accounts have never once sat on a bench long enough to notice it.", "next": "hub"},
+    "bye": {"speaker": "Ghan ko-Oskel", "text": "Go steady on the stair; the brew is stronger than it tastes and the edge is nearer than it looks. Both of those are the mountain's joke and neither is funny.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/kun_ko_rudd",
+  "speaker_name": "Kun ko-Rudd",
+  "notes": "Nine; Clan Rudd's fosterling at Kharrow's hearth. The token cut for a man; the verse a week into the wall; a debt paid in a child that both clans call something different.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [20, 21]}], "text": "I'm doing the verse. Into the wall. You can listen but don't hum it, you'll get it wrong and then the wall will have it wrong."},
+    {"conditions": [{"quest_done": "core:quest/a_hand_on_the_rope"}], "text": "Dunna's teaching everybody the eighth verse. The one from the shaft. She cried when she taught it, and Dunna doesn't. I've got it already. I've got it in the wall."},
+    {"conditions": [{"morality_max": -30}], "text": "Torkh says I'm not to talk to anyone with a stone on the cairn. Have you got one? You've got the face for one."},
+    {"conditions": [{"renown_min": 100}], "text": "You're in the talk. Not the song, the talk. Skardd says the links told him about you before you crossed. Skardd says that about everyone but he meant it about you."},
+    {"conditions": [{"flag": "hold_kun_told_token"}], "text": "You asked about the token. Nobody asks. They look and don't ask. Dunna says that's the clan way and it's the worst part of it."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Kun ko-Rudd", "text": "Kun. Ko-Rudd, not ko-Kharrow, whatever the bench says. I'm the fosterling. That means Rudd sent me up the chain to say sorry with my feet, Ghan says, except it isn't sorry, it's the other thing, forgiven, and Kharrow won't have it. I'm nine. Don't bump the token.", "next": "hub"},
+    "hub": {"speaker": "Kun ko-Rudd", "text": "What do you want?", "choices": [
+      {"text": "Why is your token so big?", "next": "the_token"},
+      {"text": "What's it like being a Rudd here?", "next": "a_rudd_here"},
+      {"text": "You're learning the Rope-Song?", "next": "the_song"},
+      {"text": "What's the breath in the song?", "next": "the_breath", "conditions": [{"flag": "hold_kun_told_song"}]},
+      {"text": "What are you afraid of?", "next": "afraid"},
+      {"text": "I'll let you be.", "next": "bye"}
+    ]},
+    "the_token": {"speaker": "Kun ko-Rudd", "text": "It was cut for my father. Rudd cuts a token for a man when he's grown and my father was grown and then he wasn't anything, in the long snow, the second one, not the one in the song. So they sent his up with me. To show Kharrow it was forgiven: a man's token on a boy, look, we've got nothing left to want from you. — It knocks. Against here, when I walk. I learned to walk so it doesn't. Torkh saw me doing it on the stair and went and stood at the cairn for a long time, and Ghan says that's the nearest Torkh comes to crying.", "effects": [{"set_flag": "hold_kun_told_token"}, {"rumour": ["core:rumour/rudd_fosterling", 0.4]}], "next": "hub"},
+    "a_rudd_here": {"speaker": "Kun ko-Rudd", "text": "They feed me. Ghan feeds me twice, she thinks I don't notice. Dunna teaches me. Skardd lets me stand at the bridge head and not past the first link. Torkh looks at me like I'm a stone he's got to carry down the stair and can't find the door for. — Nobody's unkind. Nobody's ever unkind. That's the clans. They just remember, all the time, out loud, before food, that I'm a debt. I'd rather be a boy. Dunna says I'll be a verse. I'd rather be a boy.", "effects": [{"morality": 1}], "next": "hub"},
+    "the_song": {"speaker": "Kun ko-Rudd", "text": "One verse a week from Dunna. I've got Kharrow's and Rudd's and half of Oskel's. Four hundred lines all together and I'm at a hundred and thirty. — Every night before I lie down I hum the week's verse into the cliff wall by my ledge. So the mountain's got it too. In case I forget. Dunna says nobody in the Hold has ever forgotten a verse and I said nobody in the Hold has ever been a Rudd learning Kharrow's verse either, and she didn't say anything, and then she tied a knot in her belt, and I don't know if that was for me or for what I said.", "effects": [{"set_flag": "hold_kun_told_song"}], "next": "hub"},
+    "the_breath": {"speaker": "Kun ko-Rudd", "text": "Four beats. After Kharrow's verse, before the next. Everyone stops and breathes and nobody says anything and it's for a clan nobody remembers. The eighth one. — I asked Dunna why we breathe for somebody we don't remember and she said 'because if we stopped we would be remembering that we had stopped, and that is worse', and I thought about that for a whole week instead of learning my verse and she didn't mind. — I hum the breath into the wall too. Four beats of nothing. I think the wall likes that bit best. It's the bit it already knows.", "next": "hub"},
+    "afraid": {"speaker": "Kun ko-Rudd", "text": "The shaft. Not the wolves; wolves are just wolves. The Oskeld shaft sings and you can hear it from the bridge head on a still night and Ghan says it's somebody and Skardd says it's a note and Torkh says nothing, and I'm afraid of it because it sounds like the breath. The four beats. Except it doesn't stop. — Don't tell them I said. Rudd are supposed to be afraid of nothing; that's our verse. Kharrow are supposed to remember everything. I'm the only one who's both, and I don't know what I'm supposed to be.", "next": "hub"},
+    "bye": {"speaker": "Kun ko-Rudd", "text": "If you go down the stair, go slow past the cairn. Not because Torkh says. Because the stones are people, and you don't hurry past people.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/oskarth_ko_brindle",
+  "speaker_name": "Oskarth ko-Brindle",
+  "notes": "Headframe-keeper of Brindlecrag. Bone on the winding chain, never iron; the veins that run into giant bone; a death in the shaft is the mountain's price. Sells through the trade choice.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [5, 6]}], "text": "Stand clear of the chain. The shift is going down and I am about to strike, and the bone does not care whose head is in the way."},
+    {"conditions": [{"has_item": ["core:item/giant_bone_shard", 1]}], "text": "That is bone off our scree in your pack. Bought or found? Found is fine. Bought, I want to know who sold it, because it was not me."},
+    {"conditions": [{"has_item": ["core:item/kingbone", 1]}], "text": "You have kingbone on you. I can smell it; it smells of the shaft. Then you went down where my eleven are, and you came up, and I do not know what to say to that, so I will sell you rope."},
+    {"conditions": [{"morality_max": -30}], "text": "Brindlecrag has three headframes and one law, and the law is that you do not go down my shaft. You will not be going down my shaft."},
+    {"conditions": [{"discovered": "core:place/oskeld_mine"}], "text": "You have been to Oskeld. The singing shaft. Then you know why I strike bone and not iron. Iron rings. Nothing under this village needs to hear anything ring."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Oskarth ko-Brindle", "text": "Oskarth. The headframes are mine, and the chains under them, and the brake, and the bell, which is not a bell. Iron, silver and bone come up; miners go down; most of them come up. That is Brindlecrag. What do you want off a mountain?", "next": "hub"},
+    "hub": {"speaker": "Oskarth ko-Brindle", "text": "Speak up. The winding-house is loud even when it is not.", "choices": [
+      {"text": "What do the veins give?", "next": "the_veins"},
+      {"text": "Why strike the chain with bone?", "next": "bone_not_iron"},
+      {"text": "What happens when a miner dies down there?", "next": "the_eleven"},
+      {"text": "Tell me about the Oskeld shaft.", "next": "the_shaft"},
+      {"text": "What is the Dwindling to a mine?", "next": "dwindling"},
+      {"text": "Nothing today.", "next": "bye"}
+    ]},
+    "the_veins": {"speaker": "Oskarth ko-Brindle", "text": "Iron, near the top, poor and plentiful; the chains on Kharrow's bridge came out of it when it was better. Silver, deeper, in a vein that runs west towards Oskeld and does not stop. — And where the silver runs it runs into bone. Giant bone, in the rock, the way a root runs through soil. You cut silver and the pick goes into something that is not stone and rings differently and you are through a giant's thigh. We bring it up. Ordda faces plate with it. Ghalorn sets it over doors. I strike the chain with it. There is more bone under Skerrow than there is Skerrow, and every clan knows it, and nobody says it at the Moot.", "next": "hub"},
+    "bone_not_iron": {"speaker": "Oskarth ko-Brindle", "text": "Iron on iron rings. A ring is a note, and a note carries, and there is a thing under Oskeld three valleys west that has been holding a note since the Choir fell and does not need to hear another one. So the shift is called with bone on chain, which does not ring; it knocks. The mountain hears a knock and knows it is us, and not them. — I have broken nine bones on that chain in thirty years and I have every piece on a cord, because a thing that has called a shift for years is not thrown on the scree. That is not superstition. That is not wanting to find out what is.", "effects": [{"set_flag": "brindlecrag_told_bone_not_iron"}], "next": "hub"},
+    "the_eleven": {"speaker": "Oskarth ko-Brindle", "text": "Eleven in my time. A fall, a bad chain twice, the wet, and once a man who went down and did not come to the bottom, and we did not find him, and we set his lintel anyway. — There is no price. Blood-price is for blood spilled by a hand; a death in the shaft is the mountain's and the mountain pays it, in silver, to the clan, for as long as the vein runs. That is old law and I have never liked it and I have never once argued it at the Moot, because the alternative is that I set a price on myself for every chain I did not see fail, and I would be carrying stones down Torkh's stair for the rest of my life.", "effects": [{"set_flag": "brindlecrag_told_the_eleven"}], "next": "hub"},
+    "the_shaft": {"speaker": "Oskarth ko-Brindle", "text": "West, over the ridge. Oskel's mine, on the same vein as mine, followed deeper than anyone should have followed it, into bone that was not a thigh. It sings. One note, always, and lower than it was. — What came up the shaft when the Choir fell is bone and rock walking, and it holds a name it will not give, and the Oskel say it is somebody and the Brindle say it is a weight and I say it is why I strike bone on the chain and do not ring. Brodd hums the note. I have told him to stop. He is thirty-four and I was thirty-four once and I hummed it too, and the mountain did not answer me, and I am not sure it will not answer him.", "effects": [{"discover": "core:place/oskeld_mine"}, {"rumour": ["core:rumour/shaft_note_lower", 0.4]}], "next": "hub"},
+    "dwindling": {"speaker": "Oskarth ko-Brindle", "text": "The vein is thinning. Every miner in the world will tell you a vein is thinning. This one is thinning towards the bone; the silver is going and what is left is the giant, as if the mountain were breathing the metal in and leaving the weight. — The clans say something breathed the world out and is breathing it in, and the old go first, and the deep, and the forgotten. A mine is all three. I keep three headframes over a thing that is being taken back, and I call the shift with bone so that whatever is doing the taking hears us knock and knows there are still people in the way. That is my account. It is a headframe-keeper's account and I would not give a clan's brewer's for it.", "next": "hub"},
+    "bye": {"speaker": "Oskarth ko-Brindle", "text": "Stay off the scree above the second frame. It moves. Everything on this mountain that is not bone moves, and the bone is the only part I trust.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/brodd_ko_brindle",
+  "speaker_name": "Brodd ko-Brindle",
+  "notes": "Miner at the second headframe; hears the singing shaft through the rock and hums it back; the chalk lines going down the post. The Breath as a working man hears it.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [6, 7]}], "text": "Hold on. — There. That is the line for today. Lower again. Now I can talk."},
+    {"conditions": [{"quest_done": "core:quest/a_hand_on_the_rope"}], "text": "The shaft stopped. Did you know that? The day the name came up it stopped singing, and I stood at the face and hummed the note and nothing hummed back, and I have never been so glad and so lonely in my life."},
+    {"conditions": [{"morality_max": -30}], "text": "Oskarth says you are not going down. I say fine; there is nothing down there you can carry, and one thing that can carry you."},
+    {"conditions": [{"discovered": "core:place/oskeld_mine"}], "text": "You have been to the shaft head. Did you hum it? Everybody hums it. Nobody admits it. Hum it now; I want to hear if you have the note right."},
+    {"conditions": [{"flag": "brindlecrag_told_the_lines"}], "text": "You saw the post. Two lines lower since. I have stopped telling Oskarth. He knows; he strikes the chain harder."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Brodd ko-Brindle", "text": "Brodd. Second headframe, morning shift, silver face. And I hear the shaft. Everybody here hears the shaft; I am the one who says so. Sit on the ore, it is warmer than the rock.", "next": "hub"},
+    "hub": {"speaker": "Brodd ko-Brindle", "text": "Go on.", "choices": [
+      {"text": "You can hear the Oskeld shaft from here?", "next": "the_singing"},
+      {"text": "What are the chalk lines on the post?", "next": "the_lines"},
+      {"text": "What is a stone-thrall?", "next": "stone_thralls"},
+      {"text": "What's it like at the face?", "next": "the_face"},
+      {"text": "What is the Dwindling, to a miner?", "next": "dwindling"},
+      {"text": "Good digging.", "next": "bye"}
+    ]},
+    "the_singing": {"speaker": "Brodd ko-Brindle", "text": "Through the rock. Three valleys of it. Put your hand flat on the face at the end of the second adit and wait and you will feel it before you hear it: one note, held, the way a man holds a note when he has forgotten he is singing. — The old miners say do not answer it. I answer it. Every morning before the shift I hum it back into the face. Somebody should. If it is a person, it has been singing alone for a thousand years and somebody should hum back. If it is not a person, then I am humming at a rock, and I have done worse things at six in the morning.", "effects": [{"set_flag": "brindlecrag_told_the_singing"}], "next": "hub"},
+    "the_lines": {"speaker": "Brodd ko-Brindle", "text": "I hum the note and my throat finds it at a height, and I chalk the post where my throat is. Like measuring a child against a door. — Midwinter the line was here, at my collar. It is at my breastbone now. The note is going down. Not softer; lower. Whatever is singing is running out of the note it had and finding a deeper one. I have not rubbed out a single line and I will not, because the post is the only record in Skerrow of a thing the memory-keepers will not sing, and a Brindle miner with a bit of chalk is what the mountain has instead of a Sayer.", "effects": [{"set_flag": "brindlecrag_told_the_lines"}, {"rumour": ["core:rumour/shaft_note_lower", 0.5]}], "next": "hub"},
+    "stone_thralls": {"speaker": "Brodd ko-Brindle", "text": "Giant bone and rock, walking. A thigh for a leg and scree for a chest and nothing where a face would be. They come out of the Oskeld workings and down the ridge in a bad year and the Moot-Sworn go up with chains and bring back what they can break off, and Ordda will not touch any of it. — The clans say a giant's bone is what is left when a thing is taken back but its weight is not. A thrall is that, got up and walking. Weight without a name. When one comes down the ridge I hum the note at it. It stops. Every time. Then it comes on, but it stops first, and nobody but me has ever seen one stop, and nobody but me has ever hummed at one, so.", "next": "hub"},
+    "the_face": {"speaker": "Brodd ko-Brindle", "text": "Dark, wet, the lamp on your cap throwing your own shadow onto the thing you are trying to hit. Silver comes out grey and looks like nothing until Oskarth's boys wash it. And the bone. You are picking at stone and the pick goes in wrong, soft and ringing at once, and you have cut into something that was alive when the world was loud. We bring it up. It is a good living. I have never once cut into a bone and not said sorry, and I have never once meant it, and I think that is the right amount.", "next": "hub"},
+    "dwindling": {"speaker": "Brodd ko-Brindle", "text": "The note is going down the post. That is the whole of it for me. — The Breath takes the old and the deep and the forgotten. That shaft is all three and it is still singing, which Torkh says means the Breath cannot explain the Seat and Dunna says means somebody is holding on. I say a thing that is being breathed in sings lower as it goes, the way a man's voice drops when the wind takes his breath off him, and I have the chalk to prove it, and in a year the line will be at my belt, and I will hum it there, and then I do not know.", "next": "hub"},
+    "bye": {"speaker": "Brodd ko-Brindle", "text": "If you hear it on a still night, from the bridge head or the scree, do not hum it back unless you mean to keep doing it. It notices when you stop. I have not stopped.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/ghalorn_ko_rudd",
+  "speaker_name": "Ghalorn ko-Rudd",
+  "notes": "Lintel-setter; a Rudd among Brindles. A door under bone is a door the dead have agreed to; the three knocks; the lintel that knocked back.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [6, 7]}], "text": "Wait. — Three. Now. You were about to walk under it without knocking, I saw your feet."},
+    {"conditions": [{"discovered": "core:place/fallen_hand"}], "text": "You have stood in the Hand. In the palm. Then you have stood under the biggest lintel in the world and I hope you knocked, and I know you did not."},
+    {"conditions": [{"morality_max": -30}], "text": "I set lintels for the dead to agree to. I would not set one over your door. That is not a curse. It is a craftsman declining a job."},
+    {"conditions": [{"flag": "brindlecrag_told_knocked_back"}], "text": "You know about the lintel. I have knocked on it every morning since and it has not answered again. I do not know whether that is better."},
+    {"conditions": [{"discovered": "core:place/frostmothers_cradle"}], "text": "You have been to the Cradle. Ice that holds the shapes of what froze in it. That is a lintel too, of a kind, and nobody knocked on it, and look."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Ghalorn ko-Rudd", "text": "Ghalorn. Rudd, at a Brindle mine, which is a joke about a winter and I have heard it. I set the lintels: every bone over every door in Skerrow for forty years is mine. Knock when you go under one. Three times. I am not asking.", "next": "hub"},
+    "hub": {"speaker": "Ghalorn ko-Rudd", "text": "Ask. Slowly; I am sixty-seven and I have knocked on every door on this mountain, and it takes something out of a man.", "choices": [
+      {"text": "Why bone over the doors?", "next": "why_bone"},
+      {"text": "Why knock three times?", "next": "the_knock"},
+      {"text": "Has a lintel ever answered?", "next": "knocked_back", "conditions": [{"flag": "brindlecrag_told_the_knock"}]},
+      {"text": "Tell me about the Fallen Hand.", "next": "fallen_hand"},
+      {"text": "What is the Dwindling, to a lintel-setter?", "next": "dwindling"},
+      {"text": "I'll knock on my way out.", "next": "bye"}
+    ]},
+    "why_bone": {"speaker": "Ghalorn ko-Rudd", "text": "Because a door is a hole in a wall, and a hole in a wall is a place where something can come in, and the only thing in Skerrow that everything under the mountain respects is the giants. They were breathed in first. Their bone is what is left when a thing is taken back but its weight stays. A door under bone is a door the dead have agreed to: whatever walks at night comes to it and finds the oldest dead already there, and turns round. — That is the whole craft. Choose the bone, cut it true, set it level, and ask. The asking is the part they do not teach.", "effects": [{"set_flag": "brindlecrag_told_why_bone"}], "next": "hub"},
+    "the_knock": {"speaker": "Ghalorn ko-Rudd", "text": "Once to say you are there. Once to say you are a person and not a weight. Once to say you are coming through. — Three knocks on every lintel I pass under, and I will not pass under one I have not knocked on, and on the cliff stair at Kharrow, which has sixty doors, that is a morning's work, and Torkh waits for me at the top every Hushday with a cup and has never once said hurry. It is not superstition. Superstition is when you do a thing and could not tell you why. I can tell you why. Whether it works is a different question and I have not been dragged under any doors yet.", "effects": [{"set_flag": "brindlecrag_told_the_knock"}], "next": "hub"},
+    "knocked_back": {"speaker": "Ghalorn ko-Rudd", "text": "On Kindleday. The new lintel at the third headframe, a thigh-piece off the scree, cut and set and level, and I knocked three times and it knocked back. Once. From inside the bone. — I have set two hundred lintels and knocked on all of them every time I passed for forty years and none of them has ever answered. I stood there with my hand up for a long time. Then I said 'coming through', and went, because that is what you do. — A door under bone is a door the dead have agreed to. I have always said it. I had never before had one agree out loud, and I am telling you plainly that I did not like it, and I am telling you because you will go, and I want it said to somebody who will not have to walk under it tomorrow.", "effects": [{"set_flag": "brindlecrag_told_knocked_back"}, {"rumour": ["core:rumour/lintel_answered", 0.5]}], "next": "hub"},
+    "fallen_hand": {"speaker": "Ghalorn ko-Rudd", "text": "A giant's hand, sixty metres, palm up in the scree east of the Hold, fingers tall as headframes, and a shrine in the cup where the clans go on Tollday. It was found when the Oskeld glacier went back in the Chain Years. Nobody has found the rest of him. — Stand in the palm and look up. The fingers are a lintel. The whole hand is a door, open, and the dead agreed to it before there were clans, and I go and knock on the thumb every Tollday because somebody should, and Dunna sings, and Torkh stands, and it is the only time in the week I see the Moot-Speaker with nothing in his hands.", "effects": [{"discover": "core:place/fallen_hand"}], "next": "hub"},
+    "dwindling": {"speaker": "Ghalorn ko-Rudd", "text": "The bone is coming up softer. Not rotten; bone does not rot in this rock. Softer, the way a thing is soft that is being let go of. A thigh-piece I would have taken a day to cut when I was thirty I cut now in a morning, and I do not like the morning I save. — The clans say something is breathing in, and the old go first. Nothing on this mountain is older than the giants. If they are going soft, then whatever was holding them is loosening its grip, and every door in Skerrow is under a lintel that is a little less agreed to than it was. So I knock harder. That is not an account. It is what I have.", "next": "hub"},
+    "bye": {"speaker": "Ghalorn ko-Rudd", "text": "Three times. On the way out and on the way in. If you forget, come back and do it. The door will still be there. That is the point of the door.", "next": "hub"}
+  }
+}
+]
