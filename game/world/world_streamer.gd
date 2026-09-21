@@ -382,7 +382,9 @@ func _add_collision(inst: Node, path: String) -> void:
 			continue
 		var shape := CollisionShape3D.new()
 		shape.shape = mesh.create_trimesh_shape()
-		shape.transform = (m as MeshInstance3D).global_transform
+		# `source` is never in the tree, so its meshes have no global transform to read;
+		# compose the local transforms up to the collision scene's root instead.
+		shape.transform = _transform_within(m as Node3D, source)
 		body.add_child(shape)
 		shapes += 1
 	source.queue_free()
@@ -390,6 +392,19 @@ func _add_collision(inst: Node, path: String) -> void:
 		body.queue_free()
 		return
 	(inst as Node3D).add_child(body)
+
+
+## A node's transform relative to `root`, for scenes that are not (and will not be) in the
+## tree: `global_transform` errors there and returns identity, which silently put every
+## landmark's collision at the landmark's origin.
+static func _transform_within(node: Node3D, root: Node) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var n: Node = node
+	while n != null and n != root:
+		if n is Node3D:
+			t = (n as Node3D).transform * t
+		n = n.get_parent()
+	return t
 
 
 ## The kind of thing an asset is, from where the forge files it. Scatter rules put trees in
