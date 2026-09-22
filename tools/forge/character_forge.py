@@ -43,6 +43,7 @@ except ImportError:                                   # allows --help and unit i
     HAVE_BPY = False
 
 from forge.lib import rig, sdf, body as bodylib, paint, anim, anim_clips, cloth as clothlib
+from forge.lib import glb as glbfile
 from forge.lib.rig import Skeleton, FWD, UP, LEFT
 
 OUT_ROOT = os.path.join(ROOT, "game", "assets", "models", "characters")
@@ -142,6 +143,15 @@ def export_glb(path: str, objects: Sequence, with_animation: bool = False) -> st
         export_normals=True, export_tangents=False, export_materials='EXPORT',
         export_image_format='AUTO', export_texcoords=True, export_extras=False,
         export_cameras=False, export_lights=False)
+    # CONTRACTS §4: textures are files beside the model, not a second copy inside it. The
+    # exporter embeds every image in GLB mode; they are the forge's own PNGs, so point at them.
+    glbfile.externalise_by_name(path)
+    # The exporter's other silent failure: a mesh it judges invalid is left out of the file
+    # with a warning on stdout and nothing else, which shipped three body variants, three
+    # beards, the pauldrons and the ragged cloak as a skeleton holding nothing. A part that
+    # was built to be seen and exported no triangles is a failed build.
+    if glbfile.mesh_triangles(path) == 0 and any(getattr(o, "type", "") == "MESH" for o in objects):
+        raise SystemExit("export wrote no mesh into %s: the glTF exporter dropped it as invalid" % path)
     return path
 
 
@@ -437,10 +447,13 @@ def export_part(name: str, kind: str, objs: Sequence, arm, params: dict, seed: i
                 extra: Optional[dict] = None) -> str:
     out_dir = part_dir(kind, name)
     glb = export_glb(os.path.join(out_dir, "%s.glb" % name), [arm] + list(objs), with_animation=False)
-    tris = sum(bodylib.tri_count(o) for o in objs)
+    # counted off the file, not off the live objects: the objects exist whether or not the
+    # exporter kept them, which is how an empty GLB once shipped with 7 798 triangles in its meta
+    tris = glbfile.mesh_triangles(glb)
     write_meta(os.path.join(out_dir, "%s.meta.json" % name), name, params, [tris, 0, 0],
                collision="none", bounds=object_bounds(objs[0]), seed=seed,
-               extra=dict(extra or {}, rig=rig.RIG_ID, kind=kind))
+               extra=dict(extra or {}, rig=rig.RIG_ID, kind=kind,
+                          textures=glbfile.summary(glb)["images"]))
     log("part %-16s %-11s %5d tris -> %s" % (name, kind, tris, os.path.relpath(glb, ROOT)))
     return glb
 

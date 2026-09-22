@@ -20,6 +20,14 @@ extends Node
 ## fade is still down once the body stands, the HUD is not up, or the body standing in the
 ## world is not the one the Naming made. With --load=<slot> or --continue it skips the Naming
 ## and holds the loaded character against what the New Game run wrote to flow_state.json.
+##
+## With --naming-tour it stops at the Naming instead: it makes a run of complete looks there --
+## each Calling with a face, a hair style, a beard, tones and a build -- through the screen's own
+## controls, checks the preview body took every choice, captures each look whole, and quits
+## without standing the world up. That is how the first screen a player sees gets looked at:
+##
+##   xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
+##       --audio-driver Dummy --resolution 1280x720 -- --flow=captures/naming --naming-tour
 
 const BLACK := 0.06
 const NAME := "Tam Cresswell"
@@ -29,6 +37,26 @@ const EYES := "green"
 const CALLING := "core:calling/cragborn"
 const SLOT := "flow"
 const SAMPLE_SECONDS := [2.0, 5.0, 10.0, 20.0, 40.0]
+## The looks --naming-tour makes, one per Calling and then a few that push the extremes: every
+## face, hair style and beard the choosers offer appears at least once across the run.
+const TOUR := [
+	{"calling": "core:calling/hearthkeeper", "head": "round", "hair": "short", "beard": "",
+		"skin": "fair", "hair_colour": "sand", "eyes": "blue", "build": 0.5, "height": 1.74},
+	{"calling": "core:calling/wayfarer", "head": "angular", "hair": "tousled", "beard": "stubble",
+		"skin": "wheat", "hair_colour": "brown", "eyes": "hazel", "build": 0.45, "height": 1.80},
+	{"calling": "core:calling/reedborn", "head": "narrow", "hair": "long", "beard": "",
+		"skin": "olive", "hair_colour": "black", "eyes": "dark_brown", "build": 0.35, "height": 1.70},
+	{"calling": "core:calling/cragborn", "head": "broad", "hair": "braid", "beard": "short_beard",
+		"skin": "fair", "hair_colour": "ginger", "eyes": "grey_green", "build": 0.8, "height": 1.84},
+	{"calling": "core:calling/ashwalker", "head": "hawk", "hair": "cropped", "beard": "long_beard",
+		"skin": "deep", "hair_colour": "soot", "eyes": "grey", "build": 0.4, "height": 1.78},
+	{"calling": "core:calling/lantern_clerk", "head": "soft", "hair": "bun", "beard": "",
+		"skin": "porcelain", "hair_colour": "ash_blond", "eyes": "pale_blue", "build": 0.2, "height": 1.66},
+	{"calling": "core:calling/hearthkeeper", "head": "heavy_brow", "hair": "hood_friendly", "beard": "moustache",
+		"skin": "umber", "hair_colour": "grey", "eyes": "brown", "build": 0.95, "height": 1.62},
+	{"calling": "core:calling/reedborn", "head": "default", "hair": "braid", "beard": "",
+		"skin": "ebony", "hair_colour": "white", "eyes": "amber", "build": 0.1, "height": 1.92},
+]
 const WORLD_TIMEOUT := 420.0
 
 var out_dir := "captures/flow"
@@ -58,6 +86,8 @@ func _ready() -> void:
 			mode = "continue"
 		elif a == "--new-game":
 			mode = "new-game"
+		elif a == "--naming-tour":
+			mode = "naming-tour"
 	out_dir = _absolute(out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_errors_at_start = Log.error_count
@@ -74,6 +104,8 @@ func _run() -> void:
 			await _new_game_flow()
 		"continue":
 			await _continue_flow()
+		"naming-tour":
+			await _naming_tour()
 		_:
 			await _straight_in_flow()
 	_finish()
@@ -174,6 +206,80 @@ func _continue_flow() -> void:
 	else:
 		_verify_body(expected)
 	await _portrait()
+
+
+## --naming-tour: title, New Game, and then the Naming through every look in TOUR.
+func _naming_tour() -> void:
+	var menu := await _wait_for_scene("main_menu.gd", 90.0)
+	if not _check(menu != null, "the title menu comes up from boot"):
+		return
+	await _settle(2.2)
+	var new_game := _button(menu, "New Game")
+	if not _check(new_game != null and not new_game.disabled, "New Game is on the title menu"):
+		return
+	await _click(new_game)
+	var naming := await _wait_for_scene("naming.gd", 30.0)
+	if not _check(naming != null, "clicking New Game opens the Naming"):
+		return
+	await _settle(2.0)
+	await _capture("as_it_opens")
+	for i in TOUR.size():
+		var look: Dictionary = TOUR[i]
+		await _make_look(naming, look)
+		await _settle(1.2)
+		var label := "%s_%s_%s" % [Ids.name_of(str(look["calling"])), look["head"], look["hair"]]
+		await _capture(label)
+		_check_look(naming, look, label)
+
+
+## Makes one look through the controls a player would use, in the order they sit on the page.
+func _make_look(naming: Node, look: Dictionary) -> void:
+	for pair in [["Skin", "skin"], ["Hair", "hair_colour"], ["Eyes", "eyes"]]:
+		var label := _label(naming, str(pair[0]))
+		var swatch := _find_meta(label.get_parent(), "tone", str(look[pair[1]])) if label != null else null
+		if _check(swatch != null, "the %s row has a %s swatch" % [pair[0], look[pair[1]]]):
+			(swatch as Button).pressed.emit()
+	var options := {"hair": CharacterAppearance.HAIR_STYLES, "head": CharacterAppearance.HEADS,
+		"beard": [""] + CharacterAppearance.BEARD_STYLES}
+	for slot in options:
+		var o := _chooser(naming, slot)
+		var index: int = (options[slot] as Array).find(str(look[slot]))
+		if _check(o != null and index >= 0, "the %s chooser offers '%s'" % [slot, look[slot]]):
+			o.select(index)
+			o.item_selected.emit(index)
+	for key in ["build", "height"]:
+		var s := _slider(naming, key)
+		if _check(s != null, "the %s slider is there" % key):
+			s.value = float(look[key])
+	var card := _find_meta(naming, "calling", str(look["calling"]))
+	if _check(card != null, "there is a card for %s" % look["calling"]):
+		(card as Button).pressed.emit()
+	await _frames(3)
+
+
+## The preview body wears exactly what was chosen, and every part it was asked for is on it.
+func _check_look(naming: Node, look: Dictionary, label: String) -> void:
+	var model: Node = naming.get("_model")
+	if not _check(model != null, "%s: the Naming has a preview body" % label):
+		return
+	var worn: CharacterAppearance = model.get("appearance")
+	_check(worn.skin == str(look["skin"]) and worn.hair_colour == str(look["hair_colour"])
+			and worn.eye_colour == str(look["eyes"]),
+			"%s: the body's tones are the swatches pressed (%s, %s, %s)" % [label, worn.skin, worn.hair_colour, worn.eye_colour])
+	for slot in ["head", "hair", "beard"]:
+		_check(worn.part(slot) == str(look[slot]),
+				"%s: the body's %s is '%s' (it is '%s')" % [label, slot, look[slot], worn.part(slot)])
+	var parts: Dictionary = model.get("_part_meshes")
+	for slot in ["hair", "beard", "torso"]:
+		if worn.part(slot).is_empty():
+			continue
+		var meshes: Array = parts.get(slot, [])
+		var drawn := 0
+		for mi in meshes:
+			var m := mi as MeshInstance3D
+			if m != null and m.mesh != null and m.mesh.get_surface_count() > 0:
+				drawn += 1
+		_check(drawn > 0, "%s: the %s '%s' is on the body with a mesh to draw" % [label, slot, worn.part(slot)])
 
 
 ## --load=<slot> and --new-game: boot goes straight to the world, no menu in between.
