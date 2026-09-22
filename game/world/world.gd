@@ -179,11 +179,16 @@ func _setup_water() -> void:
 func _setup_target() -> void:
 	# The player leads the streaming when there is one; a test or tool can put a bare probe in
 	# the "streamer_target" group instead; otherwise the world flies itself.
+	# A body in this world, not any body anywhere. The group is global, so a player another
+	# scene stood up — a test's, a tool's, a review harness's — was adopted as this world's
+	# eye, and then the streaming followed it wherever it was standing. That is how a suite
+	# run came to stream twenty-five cells around somebody else's player while the cell it had
+	# been asked for never arrived at all.
 	for group in ["player", "streamer_target"]:
-		var found := get_tree().get_nodes_in_group(group)
-		if not found.is_empty() and found[0] is Node3D:
-			target = found[0]
-			return
+		for found in get_tree().get_nodes_in_group(group):
+			if found is Node3D and is_ancestor_of(found):
+				target = found
+				return
 	fly_camera = FlyCamera.new()
 	fly_camera.name = "FlyCamera"
 	fly_camera.provider = provider

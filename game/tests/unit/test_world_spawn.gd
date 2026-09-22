@@ -137,6 +137,16 @@ func test_the_country_has_things_in_it_that_will_fight_you() -> void:
 	# Walk the streamer to a piece of country the builder actually put somebody in.
 	var where := _a_cell_with_spawns()
 	assert_true(where != Vector3.INF, "the built world has encounters in it")
+	# Let the world finish standing its own body up first. `PlayerSpawn` also waits on
+	# `world_ready` and puts the player at the opening place, and the streamer follows whatever
+	# body this world owns — so moving the target in the same frame moved it, and then the
+	# spawn put the player back in the Cinderlea and the streaming went with it. Twenty-five
+	# cells would load, none of them the one asked for, for thirty seconds.
+	var settle := Time.get_ticks_msec() + 5000
+	while Time.get_ticks_msec() < settle:
+		await _tree().process_frame
+		if w.is_ancestor_of(_tree().get_first_node_in_group("player") as Node) if _tree().get_first_node_in_group("player") != null else false:
+			break
 	w.force_stream_around(where)
 	# Cells parse on worker threads and build a bounded number per frame, and a full run has
 	# other suites' work in the queue; wait for the cell itself rather than a frame count.
@@ -153,7 +163,13 @@ func test_the_country_has_things_in_it_that_will_fight_you() -> void:
 		if w.streamer.is_loaded(wanted):
 			loaded = true
 			break
-	assert_true(loaded, "cell %s never finished streaming in 30 s, so this test proved nothing" % wanted)
+	# If this ever fails, the first question is whether the tree was paused: `process_frame`
+	# still fires while paused and `_physics_process` does not, and the streamer drains its
+	# parsed cells from physics — so a screen left open by an earlier test stops the world
+	# arriving while this loop spins happily.
+	assert_true(loaded, "cell %s never finished streaming in 30 s (tree paused: %s, streamer enabled: %s, target: %s, loaded cells: %d), so this test proved nothing"
+		% [wanted, _tree().paused, w.streamer.enabled,
+			w.streamer.target.name if w.streamer.target != null else "none", w.streamer.loaded_count()])
 	# The cell being loaded is not the same as the bodies in it standing up: the spawner builds
 	# them over the frames after the parse, so breaking on `is_loaded` and counting immediately
 	# is a race that a loaded machine loses. Wait for the thing being asserted on.
