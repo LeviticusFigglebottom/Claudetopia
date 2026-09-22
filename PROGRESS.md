@@ -548,6 +548,13 @@ the Calling cards' wrapping focus chain trapped Tab for ever.
 
 ## Known issues
 
+* **Sixteen `Parameter "material" is null` messages a headless run**, one per NPC actor freed
+  in `test_npc_actor`'s teardown, raised inside Godot's *dummy* material storage
+  (`material_get_instance_shader_parameters`). Nothing in this project sets an instance
+  shader parameter anywhere, and the bodies it frees all carry a `material_override`, so this
+  is the headless renderer's own teardown path rather than ours. Recorded so the next person
+  does not spend an hour on it; it does not appear under a real renderer and it fails nothing.
+
 * **A record from before that vocabulary existed** — `{"skin": 3, "hair": 2}`, which is what
   the Naming used to write and what the journey still writes — is converted at the edge now
   (an index means the tone it indexed). Any save still carrying the older shape makes a proper
