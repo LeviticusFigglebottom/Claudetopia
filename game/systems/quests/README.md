@@ -5,6 +5,7 @@
 | `quest_log.gd` | Every quest started: stage, objective progress, journal, markers, rewards. Group `quest_log`, save section `quests`. |
 | `radiant.gd` | `RadiantGenerator`: turns the six radiant templates into real quests with region-appropriate targets and written text. |
 | `quest_conditions.gd` | `QuestConditions`: the glue between quest data and the dialogue condition vocabulary (`requires`, `hidden_until`, `fails_if`, `repeatable`). |
+| `quest_routes.gd` | `QuestRoutes`: which deliveries and decisions the pack's dialogue closes by hand, and who hosts the ones nobody wrote a line for. |
 
 ## Data
 
@@ -28,9 +29,12 @@ Objective types and what closes them:
 | `reach` | place or poi id | the position provider (`radius`, default 45 m) or `place_discovered` |
 | `kill` | enemy id, `""`/`any`, or `tag:<tag>` | `entity_killed` |
 | `collect` | item id | `item_acquired`, and what is already in the pack when the stage opens |
-| `deliver` | npc id (+`item`) | a dialogue effect (`complete_objective`) or `deliver()` |
-| `escort` | npc id (+`place`) | `escort_arrived` |
-| `choice` | option id (+`options`, `effects_by_option`) | `choose()` |
+| `deliver` | npc id (+`item`) | a dialogue effect (`complete_objective`); where no author wrote one, finishing a conversation with the person while carrying the item hands it over (`QuestRoutes`) |
+| `escort` | npc id (+`place`, `radius?`, `requires?`) | `escort_arrived`, said by `Escorts` (systems/npc_life) when the person walking with you gets there |
+| `choice` | option id (+`options`, `effects_by_option`, `with?`) | `choose()`: an authored `quest_choice` button, or, where nobody wrote one, the open options offered at the host's hub |
+| `use_item` | item id | `item_used`; a `tool` is used without being used up |
+| `rest_at` | hearthstone/place id | `hearthstone_rested` |
+| `read_book` | book id | `book_opened` |
 
 **Naming a stage.** Content names a stage by its id or by its *number*, and numbers count from
 one: `{"quest_at": ["core:quest/the_naming", 1]}` is the waking, the first stage.
@@ -49,9 +53,6 @@ An option is written either as a plain id, with its consequences in the objectiv
 are answered by `choose()`, which refuses an option whose `conditions` are unmet; a branching
 quest names the stage it jumps to in the option's own effects, by stage id.
 `open_options(quest_id)` lists the options a dialogue should actually offer.
-| `use_item` | item id | `item_used` |
-| `rest_at` | hearthstone/place id | `hearthstone_rested` |
-| `read_book` | book id | `book_opened` |
 
 A stage closes when every non-optional objective is done (unless `manual_advance`), runs its
 `on_complete`, and the next stage's `on_enter` fires. A stage with no objectives waits for a

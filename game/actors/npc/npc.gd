@@ -17,6 +17,9 @@ const TRAVEL_SPEED := 3.4
 const FLEE_SPEED := 5.0
 const ARRIVE_M := 1.2
 const GRAVITY := 9.81
+## Walking with somebody: how close to keep, and how far behind before hurrying.
+const FOLLOW_GAP_M := 2.4
+const FOLLOW_HURRY_M := 6.0
 const CULTURE_COLOURS := {
 	"vale": Color(0.78, 0.62, 0.36), "lakefolk": Color(0.72, 0.76, 0.82), "reedfolk": Color(0.28, 0.45, 0.48),
 	"clans": Color(0.46, 0.44, 0.40), "woodfolk": Color(0.30, 0.38, 0.24), "pilgrims": Color(0.62, 0.60, 0.56),
@@ -40,6 +43,8 @@ var meter := DetectionMeter.new()
 var target_position := Vector3.ZERO
 var has_target := false
 var fleeing := false
+## Whoever this person is walking beside, when they are (Escorts sets it through `follow`).
+var follow_target: Node3D = null
 
 var _model: Node3D = null
 var _agent: NavigationAgent3D = null
@@ -261,13 +266,89 @@ func stop() -> void:
 func move_speed() -> float:
 	if fleeing:
 		return FLEE_SPEED
+	if is_following():
+		# keep up: a walk at your elbow, a trot when you have got ahead, a run when well ahead
+		var gap := _flat_distance(follow_target.global_position)
+		if gap > FOLLOW_HURRY_M * 2.0:
+			return FLEE_SPEED
+		return TRAVEL_SPEED if gap > FOLLOW_HURRY_M else WALK_SPEED
 	return TRAVEL_SPEED if activity == "travel" else WALK_SPEED
+
+
+# --- walking with somebody (Escorts) ------------------------------------------------------------
+
+## Falls in a step behind `leader` and keeps there until told otherwise. Escorts decides when an
+## escort starts, pauses and ends; this is only the walking.
+func follow(leader: Node3D) -> void:
+	follow_target = leader
+	fleeing = false
+
+
+func stop_following() -> void:
+	follow_target = null
+	stop()
+
+
+func is_following() -> bool:
+	return follow_target != null and is_instance_valid(follow_target) and follow_target.is_inside_tree()
+
+
+## Aims a gap short of the leader along the line between, and stands still inside the gap.
+func update_follow() -> void:
+	if not is_following():
+		follow_target = null
+		return
+	var to := follow_target.global_position - global_position
+	to.y = 0.0
+	if to.length() <= FOLLOW_GAP_M:
+		if has_target:
+			stop()
+		return
+	var aim := follow_target.global_position - to.normalized() * (FOLLOW_GAP_M * 0.8)
+	if not has_target or target_position.distance_to(aim) > 1.0:
+		set_move_target(aim)
+
+
+func _flat_distance(to: Vector3) -> float:
+	return Vector2(to.x - global_position.x, to.z - global_position.z).length()
+
+
+# --- standing on something that is not the ground -------------------------------------------------
+
+var _floor_marker: Node3D = null
+var _floor_spot := "~"
+
+## The height of the deck or mound this person's spot stands on when that is not the ground: the
+## hermit's fire on the crown of an island, which the terrain under it puts at the bottom of the
+## lake. A dressing marks such a spot `raised`, with the `radius` it holds for. -INF for a spot on
+## the ground, which is nearly everybody's, or once they have walked off it.
+func _raised_floor() -> float:
+	var stale := _floor_marker != null and not is_instance_valid(_floor_marker)
+	if _floor_spot != spot or stale or (_floor_marker == null and Engine.get_physics_frames() % 60 == 0):
+		_floor_spot = spot
+		_floor_marker = _spot_marker_node(spot)
+	if _floor_marker == null or not bool(_floor_marker.get_meta("raised", false)):
+		return -INF
+	if _flat_distance(_floor_marker.global_position) > float(_floor_marker.get_meta("radius", 3.0)):
+		return -INF
+	return _floor_marker.global_position.y
+
+
+func _spot_marker_node(marker_name: String) -> Node3D:
+	if marker_name.is_empty() or not is_inside_tree():
+		return null
+	for node in get_tree().get_nodes_in_group(NpcRegistry.SPOT_GROUP):
+		if node is Node3D and str(node.name) == marker_name:
+			return node as Node3D
+	return null
 
 
 func _physics_process(delta: float) -> void:
 	if not alive:
 		return
 	_sense(delta)
+	if is_following():
+		update_follow()
 	if has_target:
 		_step_towards(delta)
 	else:
@@ -287,7 +368,9 @@ func _step_towards(delta: float) -> void:
 		has_target = false
 		velocity.x = 0.0
 		velocity.z = 0.0
-		arrived.emit(place_id)
+		# a step behind somebody is not somewhere you have arrived
+		if not is_following():
+			arrived.emit(place_id)
 		play_intent(Schedules.intent_for(activity, {}, def))
 		return
 	var dir := to.normalized()
@@ -303,7 +386,7 @@ func _step_towards(delta: float) -> void:
 func _apply_gravity_or_snap(delta: float) -> void:
 	if WorldProbe.has_world():
 		var h := WorldProbe.get_height(global_position.x, global_position.z, global_position.y)
-		global_position.y = h
+		global_position.y = maxf(h, _raised_floor())
 		velocity.y = 0.0
 		return
 	if is_on_floor():

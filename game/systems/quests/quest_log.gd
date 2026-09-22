@@ -657,6 +657,64 @@ func deliver(quest_id: String, npc_id: String) -> void:
 	complete_objective(quest_id, "deliver:%s" % npc_id)
 
 
+## A line in a quest's journal that no stage wrote: something that happened on the way (Escorts
+## writes who was left behind where). The same line twice running is written once.
+func note(quest_id: String, line: String) -> void:
+	if not quests.has(quest_id) or line.strip_edges() == "":
+		return
+	var entries: Array = quests[quest_id]["journal"]
+	if entries.is_empty() or str(entries[entries.size() - 1]) != line:
+		entries.append(line)
+
+
+## Is objective `index` of this quest's current stage done?
+func objective_done(quest_id: String, index: int) -> bool:
+	if not is_active(quest_id):
+		return false
+	var at := stage_of(quest_id)
+	return _count_for(quest_id, at, index) >= maxi(1, int(_objective(quest_id, at, index).get("count", 1)))
+
+
+## The objectives of every active quest's current stage, of one type or of all:
+## [{quest_id, stage, index, objective, done}]. What another system reads to see what the
+## journal is waiting for, without reaching into the records.
+func current_objectives(type := "") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for quest_id in quests.keys():
+		if not is_active(quest_id):
+			continue
+		var at := stage_of(quest_id)
+		var objectives: Array = stage_def(quest_id, at).get("objectives", [])
+		for i in objectives.size():
+			var o: Dictionary = objectives[i]
+			if type != "" and str(o.get("type", "")) != type:
+				continue
+			out.append({"quest_id": str(quest_id), "stage": at, "index": i, "objective": o,
+					"done": _count_for(quest_id, at, i) >= maxi(1, int(o.get("count", 1)))})
+	return out
+
+
+## The open options of every choice this NPC hosts and nobody wrote a button for, as
+## [{quest_id, id, text}] — what the dialogue runner offers at their hub (see QuestRoutes).
+func unwritten_choices_for(npc_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if npc_id == "":
+		return out
+	for entry in current_objectives("choice"):
+		if bool(entry["done"]):
+			continue
+		var quest_id: String = entry["quest_id"]
+		var stage := stage_def(quest_id, int(entry["stage"]))
+		var objective: Dictionary = entry["objective"]
+		if QuestRoutes.dialogue_offers(quest_id, objective):
+			continue
+		if QuestRoutes.host_of(definition(quest_id), stage, objective) != npc_id:
+			continue
+		for option in open_options(quest_id):
+			out.append({"quest_id": quest_id, "id": str(option["id"]), "text": str(option["text"])})
+	return out
+
+
 func _check_stage_complete(quest_id: String) -> void:
 	if not is_active(quest_id):
 		return
@@ -759,6 +817,34 @@ func _on_dialogue_ended(npc_id: String) -> void:
 	_for_each_objective("talk", func(quest_id: String, i: int, o: Dictionary) -> void:
 		if _matches(str(o.get("target", "")), npc_id):
 			_progress(quest_id, i, 1))
+	_hand_over(npc_id)
+
+
+## A delivery closes when you have spoken to the person it is for while carrying what they are
+## owed; the goods change hands then. Five of the pack's deliveries had no line anywhere to hand
+## the thing over on — the letter to the Circle, Aud's bell to Cadwen, the Fennick bell, the press
+## screw, the three loaves — so they could never close. Where an author did write the hand-over
+## (Nan Greyfold's basket, Tessane's lantern on the lectern) this stands aside for it.
+func _hand_over(npc_id: String) -> void:
+	if npc_id == "":
+		return
+	for entry in current_objectives("deliver"):
+		if bool(entry["done"]):
+			continue
+		var quest_id: String = entry["quest_id"]
+		var o: Dictionary = entry["objective"]
+		if str(o.get("target", "")) != npc_id or not is_active(quest_id) or stage_of(quest_id) != int(entry["stage"]):
+			continue
+		if QuestRoutes.dialogue_closes(quest_id, stage_def(quest_id, int(entry["stage"])), int(entry["index"])):
+			continue
+		var needed: int = maxi(1, int(o.get("count", 1)))
+		var item := str(o.get("item", ""))
+		if item != "":
+			if ctx == null or ctx.item_count(item) < needed:
+				continue
+			ctx.take_item(item, needed)
+		Log.info("Quests", "%s: handed over to %s" % [quest_id, npc_id])
+		_progress(quest_id, int(entry["index"]), needed, true)
 
 
 func _on_hearthstone_rested(hearthstone_id: String) -> void:

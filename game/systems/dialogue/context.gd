@@ -160,6 +160,13 @@ func quest_stage_index(quest: String, stage: Variant) -> int:
 	return int(_call("quests", "stage_index", [quest, stage], -1))
 
 
+## The open options of the decisions this NPC hosts that nobody wrote a button for:
+## [{quest_id, id, text}] (QuestLog.unwritten_choices_for).
+func quest_offers(npc: String) -> Array:
+	var r: Variant = _call("quests", "unwritten_choices_for", [npc], [])
+	return r if typeof(r) == TYPE_ARRAY else []
+
+
 func quest_active(quest: String) -> bool:
 	return bool(_call("quests", "is_active", [quest], false))
 

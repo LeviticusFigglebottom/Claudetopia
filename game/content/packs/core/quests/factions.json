@@ -54,7 +54,7 @@
        "on_complete": [{"rep": ["core:faction/tolling_order", 10]}, {"renown": 10}, {"set_flag": "stood_vigil"}]},
       {"id": "the_pilgrim",
        "journal": "A Vale woman in pilgrim grey, Aud Fennick of Merrowby, has asked for the Order's escort to the Hushline. The Order does not stop pilgrims and does not encourage them; it walks with them, so that the last thing they hear is a voice. Cadwen asks you to walk her. She will leave something at the line. Bring it back.",
-       "objectives": [{"type": "talk", "target": "core:npc/aud_fennick", "count": 1}, {"type": "escort", "target": "core:npc/aud_fennick", "place": "core:place/hushline", "count": 1, "text": "Walk Aud Fennick down to the Hushline"}],
+       "objectives": [{"type": "talk", "target": "core:npc/aud_fennick", "count": 1}, {"type": "escort", "target": "core:npc/aud_fennick", "place": "core:place/hushline", "count": 1, "text": "Walk Aud Fennick down to the Hushline", "requires": [{"flag": "aud_agreed_to_walk"}]}],
        "on_enter": [],
        "on_complete": [{"set_flag": "aud_walked_south"}]},
       {"id": "what_she_left",
