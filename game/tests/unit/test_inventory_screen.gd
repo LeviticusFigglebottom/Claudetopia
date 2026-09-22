@@ -68,7 +68,7 @@ func test_a_potion_offers_the_belt_and_a_sword_does_not() -> void:
 		"a potion in the bag offered no way onto the belt, so the four HUD slots stay empty")
 	assert_true(_button("Use") != null, "a potion should still be drinkable from the bag")
 
-	bag.remove_all(POTION)
+	bag.remove(POTION, bag.count(POTION))
 	bag.add(SWORD, 1)
 	await _tree().process_frame
 	assert_true(_button("To the belt") == null, "a sword was offered a belt slot it cannot take")
