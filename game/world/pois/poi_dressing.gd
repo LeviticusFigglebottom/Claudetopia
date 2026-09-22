@@ -14,6 +14,16 @@ extends Node3D
 ## system; in the far ring only the silhouette pieces are built.
 
 const GROUP := "poi_dressing"
+## The builders are reached by path at runtime, not by their class name.
+##
+## Every builder takes a `PoiDressing`, so naming `PoiBuilders` here makes the two scripts
+## name each other, and GDScript cannot always resolve that: it parses whichever it reaches
+## first, fails on the half-built other, and reports "Could not resolve class PoiBuilders,
+## because of a parser error" — against `test_pois.gd`, which merely mentions both. It only
+## bites once an import has rebuilt the global class cache, so the tests pass when run
+## directly and the whole suite fails after `./run.sh test` imports. Loading by path leaves
+## the dependency one-way and the cycle gone.
+const BUILDERS_PATH := "res://world/pois/poi_builders.gd"
 
 ## Every kind a POI can be, and whether the thing built is something you can bump into. A kind
 ## missing here is a POI that stays a flattened pad, and `test_pois.gd` fails on it.
@@ -24,6 +34,13 @@ const KINDS := {
 	## the Hearthstone a settlement or landmark keeps, for a place tagged `shrine`
 	"hearth": true,
 }
+
+## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
+## difference is what is still to be dressed, and `test_pois.gd` prints it rather than hiding
+## it. It lives here rather than on the builders because that script has no global name (see
+## `poi_builders.gd`), and this is the type everything else already speaks to.
+const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
+		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange"]
 
 var poi_id := ""
 var kind := ""
@@ -96,7 +113,11 @@ func build() -> void:
 	built = true
 	kit = PoiKit.new(self, world_position, pad_radius, region, far, poi_id, _provider, _roads)
 	masonry = PoiMasonry.new(kit)
-	PoiBuilders.build(self)
+	var builders: GDScript = load(BUILDERS_PATH)
+	if builders == null:
+		Log.error("PoiDressing", "%s: the builders did not load from %s" % [poi_id, BUILDERS_PATH])
+		return
+	builders.build(self)
 	if wants_hearthstone and not far and hearthstones().is_empty():
 		# a builder that did not find a better place for the stone gets the plain one: at the
 		# pad's centre, off the exact middle so nothing spawning there stands inside it

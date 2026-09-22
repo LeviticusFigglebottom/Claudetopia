@@ -1,4 +1,3 @@
-class_name PoiBuilders
 extends RefCounted
 ## One builder per kind of point of interest. Each takes the dressing (its kit, its masonry,
 ## its brief) and stands the place up out of the forge's assets and a little runtime masonry.
@@ -7,11 +6,15 @@ extends RefCounted
 ## the thing you see. So a camp with "a stolen mill wheel as a table" gets a millstone laid on
 ## a barrel, and a shrine "built of lake pebbles" is a cairn rather than a standing stone.
 ## Everything else follows from the kind and the region's culture.
-
-## The kinds a builder exists for. `PoiDressing.KINDS` is the whole list the design names;
-## `test_pois.gd` reports the difference as still to be dressed.
-const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
-		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange"]
+##
+## **This script deliberately has no `class_name`.** Every builder below takes a
+## `PoiDressing`, so a global name here is one half of a pair of scripts that name each other,
+## and GDScript cannot always resolve that: after an import rebuilds the global class cache it
+## parses one, fails on the half-built other, and reports `Could not resolve class
+## "PoiBuilders", because of a parser error` — against whatever third file mentioned the name,
+## which was `test_pois.gd`. `PoiDressing` loads this by path (`BUILDERS_PATH`) and the list
+## of kinds a builder exists for lives on `PoiDressing.KINDS_BUILT`, so nothing outside this
+## file needs the name at all.
 
 
 static func build(d: PoiDressing) -> void:
@@ -920,7 +923,9 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 		# apron twenty metres long, which is what a seven-block run of 3.3 × 4.6 came out as
 		var paving := m.begin()
 		for i in 22:
-			# not `a`: the span's near end is already called that in this function
+			# `ang`, not `a`: the near end of the span is already `a` at function scope, and
+			# GDScript refuses the second declaration — which stops the whole script compiling,
+			# so nothing that draws a point of interest loads at all
 			var ang := k.rng.randf_range(0.0, TAU)
 			var r := 1.2 + 3.4 * sqrt(k.rng.randf())
 			var p := mid + Vector2(sin(ang), cos(ang)) * r
@@ -1279,7 +1284,6 @@ static func waterfall(d: PoiDressing) -> void:
 ## depth well away from its neighbours, and there is a bank of ground behind it so the lip is
 ## the top of a hillside rather than the top of a wall.
 static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float, height: float) -> Vector3:
-	var m := PoiMasonry.new(k)
 	var slab := k.rock("cliff_slab")
 	var slab_h := PoiKit.height_of(slab)
 	var perp := Vector2(-facing.y, facing.x)
@@ -1305,10 +1309,11 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 					yaw + atan(8.0 * bow * t / maxf(width, 1.0)) + k.rng.randf_range(-0.45, 0.45),
 					s, Vector3(k.rng.randf_range(-0.14, 0.06), 0.0, k.rng.randf_range(-0.16, 0.16))))
 	k.scatter(slab, slabs, true, true)
-	# the ground behind the face, so the lip is a hillside's edge
-	var back := centre - facing * (height * 0.55)
-	m.mound(k.on_ground(back.x, back.y, -1.5), height * 0.95, (top_y - k.on_ground(back.x, back.y).y) + 1.0,
-			k.surface("earth", 0.6), "Bank", true, 2.4, 7, 20, true, 0.14)
+	# No earth bank behind the face. One was tried — a mound as tall as the fall, six metres
+	# back — to make the lip read as a hillside's edge, and it photographed as a smooth brown
+	# cone standing in front of the cliff and swallowing the water entirely. The arc is what
+	# stops the face reading as a wall; the ground behind it is the world builder's business,
+	# and a POI dressing that raises its own hill will always fight the terrain it stands on.
 	# boulders tumbled at the foot, thickest under the middle where the water lands
 	var feet: Array = []
 	for i in 14:
@@ -1928,7 +1933,11 @@ static func _tree_singing_yew(d: PoiDressing) -> void:
 	var grain := k.grain()
 	var yaw := PoiKit.yaw_of(grain)
 	var yew := k.tree("yew")
-	var scale := 3.1
+	# 2.2, not 3.1: a tree's leaf cards scale with it, and past about twice its built size the
+	# cards stop reading as foliage and start reading as spikes — the yew photographed as a
+	# dark thorn-ball. Twice over is still half again the tallest hedge yew around it, which
+	# is what makes it an event.
+	var scale := 2.2
 	k.place(yew, k.on_ground(0.0, 0.0), k.rng.randf_range(0.0, TAU), scale, true, Vector3.ZERO, true)
 	# the split in the trunk, and the bell the tree ate, deep in it
 	var bell := k.prop("bell_small")
@@ -2027,7 +2036,10 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 	m.mound(Vector3(0.0, 0.0, 0.0), isle_r, top + 0.4, k.surface("earth", 0.6), "Isle", true, 1.7, 8, 22, true)
 	# the willow on the crown of it, at the size of a barn
 	var crown := Vector3(0.0, top, 0.0)
-	k.place(k.tree("willow_pollard"), crown, k.rng.randf_range(0.0, TAU), 2.6, true, Vector3.ZERO, true)
+	# 2.1 for the same reason as the Singing Yew: a leaf card scaled much past twice its built
+	# size reads as a shard rather than foliage. A pollarded willow at 2.1 is ten metres over
+	# an islet you can walk round in twenty paces, which is barn-sized enough.
+	k.place(k.tree("willow_pollard"), crown, k.rng.randf_range(0.0, TAU), 2.1, true, Vector3.ZERO, true)
 	# the hermit's boat moored in the roots, on the water
 	var moor := grain.rotated(0.8) * (isle_r - 2.0)
 	k.place(k.prop("rowboat"), Vector3(moor.x, lake - g.y - 0.12, moor.y), PoiKit.yaw_of(-grain) + 0.5, 1.0, true, Vector3.ZERO, true)
