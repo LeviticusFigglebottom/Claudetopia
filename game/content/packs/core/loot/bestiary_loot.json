@@ -220,10 +220,6 @@
         "weight": 3
       },
       {
-        "item": "core:item/lantern",
-        "weight": 2
-      },
-      {
         "item": "core:item/eel_liver",
         "weight": 3,
         "count": [
@@ -243,6 +239,12 @@
       {
         "nothing": true,
         "weight": 5
+      }
+    ],
+    "guaranteed": [
+      {
+        "item": "core:item/lantern",
+        "chance": 0.5
       }
     ]
   },
@@ -274,7 +276,7 @@
     "guaranteed": [
       {
         "item": "core:item/sallow_hide",
-        "chance": 0.7
+        "chance": 0.9
       }
     ]
   },
