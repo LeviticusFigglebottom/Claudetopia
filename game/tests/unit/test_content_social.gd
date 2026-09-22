@@ -164,13 +164,18 @@ func test_every_authored_quest_starts_and_walks_its_stages() -> void:
 	var log_node: Node = Social.quests
 	var bag := SocialFakes.FakeInventory.new()
 	Social.bind("inventory", bag)
+	# Opening a line's gate finishes the quests before it, and a finished quest pays its
+	# rewards, several of which teach a saying. An effect with nowhere to land is a content
+	# problem, and it would be this test's own doing.
+	Social.bind("sayings", SocialFakes.Sayings.new())
 	var problems_before: int = Social.ctx.problems.size()
 	for def in _authored_quests():
 		log_node.reset_for_new_game()
 		Social.standing.reset_for_new_game()
 		Social.factions.reset_for_new_game()
 		var quest_id := str(def["id"])
-		assert_true(log_node.start(quest_id), "%s cannot be started" % quest_id)
+		open_the_gate(def)
+		assert_true(log_node.start(quest_id), "%s cannot be started, and its own `requires` do not say why" % quest_id)
 		for stage in def.get("stages", []):
 			var sid := str((stage as Dictionary).get("id", ""))
 			if not log_node.is_active(quest_id):
@@ -184,7 +189,36 @@ func test_every_authored_quest_starts_and_walks_its_stages() -> void:
 	Social.standing.reset_for_new_game()
 	Social.factions.reset_for_new_game()
 	Social.bind("inventory", null)
+	Social.bind("sayings", null)
+	Social.refresh_providers()
 	assert_eq(Social.ctx.problems.size(), problems_before, "walking the authored quests raised content problems: %s" % str(Social.ctx.problems.slice(problems_before)))
+
+
+## Makes a quest's own `requires` true, so that a quest which waits for the one before it in a
+## faction line can still be walked here. Only the conditions a quest may state as a gate are
+## honoured; anything else is left alone, and the start below fails and says so.
+func open_the_gate(def: Dictionary) -> void:
+	for cond_v in def.get("requires", []):
+		if typeof(cond_v) != TYPE_DICTIONARY:
+			continue
+		var cond: Dictionary = cond_v
+		if cond.has("quest_done"):
+			# A line's third quest waits on its second, which waits on its first.
+			var earlier := str(cond["quest_done"])
+			if not Social.quests.is_completed(earlier):
+				open_the_gate(ContentDB.get_or_empty(earlier))
+				if Social.quests.start(earlier):
+					Social.quests.complete(earlier)
+		if cond.has("rep_min"):
+			var pair: Array = cond["rep_min"]
+			Social.factions.set_reputation(str(pair[0]), int(pair[1]))
+		if cond.has("faction_rank_min") or cond.has("member_of"):
+			var faction: Variant = cond.get("member_of", (cond.get("faction_rank_min", ["", 0]) as Array)[0])
+			Social.factions.join(str(faction))
+		if cond.has("flag"):
+			GameState.set_flag(str(cond["flag"]))
+		if cond.has("renown_min"):
+			Social.standing.add_renown(int(cond["renown_min"]), "test")
 
 
 # --- helpers ------------------------------------------------------------------------------------

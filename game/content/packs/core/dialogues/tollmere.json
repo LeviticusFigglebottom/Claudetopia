@@ -69,6 +69,11 @@
             "next": "buying"
           },
           {
+            "text": "The Guild's entry for the Lantern Row strongroom.",
+            "conditions": [{"quest_at": ["core:quest/against_the_bell", "the_charter_entry"]}],
+            "next": "the_strongroom_entry"
+          },
+          {
             "text": "Nothing today.",
             "next": "bye"
           }
@@ -102,6 +107,21 @@
       "the_vale_books": {
         "speaker": "Cassa Binder",
         "text": "The cookery, always. The bestiary, to men who intend to go out on the downs and would rather be lied to first. The play, in spring, when the Long Table's coming and everybody wants to be the one who knows the extra stanza. — And the Candle Book, which nobody buys. They come in and read a page of it standing up and put it back and go home to their grandmother's copy. I keep two on the shelf for that exact purpose and I have never sold one in nine years.",
+        "next": "hub"
+      },
+      "the_strongroom_entry": {
+        "speaker": "Cassa Binder",
+        "text": "Nine hundred and ninety-eight, the eleventh month. Four leaves. — I have copied that entry eleven times in nine years: for clerks, for a Sayer, and twice for men who did not give a reason and paid in old marks. Two sheets of paper and the sitting, which is six, and you may have it in the cheap wrapper because you will be carrying it somewhere wet, everybody who wants that entry is going somewhere wet.",
+        "effects": [{"give_item": ["core:item/charter_strongroom_entry", 1]}, {"set_flag": "cassa_copied_the_entry"}],
+        "choices": [
+          {"text": "Eleven times and nobody has asked you the question?", "next": "the_fourth_wall"},
+          {"text": "Six marks. Done.", "next": "hub"}
+        ]
+      },
+      "the_fourth_wall": {
+        "speaker": "Cassa Binder",
+        "text": "Not once, and I have waited, and I am going to say it to you for nothing because nine years is long enough. — Three walls of coursed limestone and a fourth they did not build. Fused black stone. Curved. Of no known thickness. Eleven feet down at the foot of Lantern Row, and the mason said he would strike the black stone at eleven and did, and the Guild wrote it up as a saving. — There is one curved black Builder thing under that end of this city and it is not a wall. I have set it down at the foot of my own copy in my own hand and nobody has ever read the foot of the last leaf, which tells you everything about clerks.",
+        "effects": [{"set_flag": "cassa_said_it_is_a_bell"}, {"morality": 2}, {"rumour": ["core:rumour/hinge_less_door", 0.5]}],
         "next": "hub"
       },
       "buying": {

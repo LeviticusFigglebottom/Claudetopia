@@ -70,5 +70,135 @@
       "no_sale"
     ],
     "description": "An Isseva burial lantern of indigo paper on an alder frame, relit every year for ninety-odd years by a family who could not have told you whose it was. A reed stands uncut in the oil-well, which in the marsh means a drowned person nobody could bury, and Tessane did not drown."
+  },
+  {
+    "id": "core:item/charter_strongroom_entry",
+    "name": "Charter Entry, the Row Strongroom",
+    "category": "book",
+    "weight": 0.6,
+    "value": 18,
+    "tags": [
+      "quest",
+      "tallymen",
+      "charter",
+      "tollmere"
+    ],
+    "reads": "core:book/charter_strongroom",
+    "description": "Four leaves in a paper wrapper, copied out by a binder who copies everything: the Guild's own charter entry for the building of the Lantern Row strongroom in Y.T. 998, with the mason's costs, the depth of the footings, and one sentence about the back wall that the Guild has never read carefully."
+  },
+  {
+    "id": "core:item/ledger_of_prices",
+    "name": "The Ledger of Prices",
+    "category": "book",
+    "weight": 6.5,
+    "value": 0,
+    "tags": [
+      "quest",
+      "tallymen",
+      "quiet_hands",
+      "ledger",
+      "no_sale"
+    ],
+    "reads": "core:book/ledger_of_prices",
+    "description": "Oak boards, brass corners, a strap and a lock that has been cut: ninety-one years of what the law of Tollmere has cost and who paid it, in eleven stewards' hands, each of them tidy. It is heavy in the way a thing is heavy when you are carrying it out of a room you should not be in."
+  },
+  {
+    "id": "core:item/unsaid_glove",
+    "name": "The Unsaid's Glove",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "quiet_hands",
+      "faction",
+      "token",
+      "no_sale"
+    ],
+    "description": "One glove, left-handed, grey kid leather worn through at the finger-ends on purpose so that the fingers can feel a ward through it. The Hands give one glove and keep the other, and nobody in the Undercroft will tell you where the other one is."
+  },
+  {
+    "id": "core:item/the_chapter_roll",
+    "name": "The Chapter Roll",
+    "category": "book",
+    "weight": 1.8,
+    "value": 0,
+    "tags": [
+      "quest",
+      "tolling_order",
+      "cinderlea",
+      "roll",
+      "no_sale"
+    ],
+    "reads": "core:book/chapter_roll",
+    "description": "Black boards and a brass clasp, the twin of the Vigil Book and never shown to pilgrims: the Order's own list of who is standing the watch, with eleven names on the standing side that have been on it for longer than anyone standing. Grey thumb-marks down the edge where it is read every night."
+  },
+  {
+    "id": "core:item/salissas_lantern",
+    "name": "Sa'lissa's Lantern",
+    "category": "misc",
+    "weight": 1.5,
+    "value": 0,
+    "tags": [
+      "quest",
+      "sedgemire",
+      "lantern",
+      "no_sale"
+    ],
+    "description": "A burial lantern that was pushed off the Isseva jetty and came back up the channel still burning, which the reedfolk say is not possible for more than an hour and which this one did for a night and a day. The oil-well is dry now. The wick is not burnt."
+  },
+  {
+    "id": "core:item/clan_forged_link",
+    "name": "Clan-Forged Link",
+    "category": "material",
+    "weight": 4.0,
+    "value": 40,
+    "tags": [
+      "metal",
+      "clan",
+      "chain",
+      "smithing"
+    ],
+    "description": "A bridge link out of Brindlecrag: iron drawn, folded and closed hot, with the smith's clan-mark struck across the weld so that a bridge can be read link by link afterwards and every hand on it named."
+  },
+  {
+    "id": "core:item/loosened_link",
+    "name": "A Link Nobody Marked",
+    "category": "material",
+    "weight": 3.6,
+    "value": 4,
+    "tags": [
+      "metal",
+      "chain",
+      "quest"
+    ],
+    "description": "A bridge link of the right size and the wrong weight, closed cold and filed smooth where a clan-mark should be. Whoever made it knew exactly which of the four chains nobody walks on in winter."
+  },
+  {
+    "id": "core:item/wats_tally_stick",
+    "name": "Wat's Tally Stick",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 0,
+    "tags": [
+      "quest",
+      "cinderlea",
+      "tally",
+      "no_sale"
+    ],
+    "description": "A split hazel stick with six notches down the outside and six down the in, so that the debtor keeps one half and the sutler the other and neither can cut a notch off without the halves failing to meet. Both halves are in your hand, which is the whole of the trouble."
+  },
+  {
+    "id": "core:item/sul_stone_sliver",
+    "name": "Sliver of Sul-Stone",
+    "category": "material",
+    "weight": 0.1,
+    "value": 160,
+    "tags": [
+      "ember",
+      "oroth",
+      "rare",
+      "enchanting"
+    ],
+    "description": "A chip of Oroth sul-stone the size of a thumbnail, cold, and bright from the back as well as the front, so that it cannot be shaded and cannot be put in a pocket without the pocket showing. There is one lawful source of it on the Mere and it is a lighthouse."
   }
 ]
