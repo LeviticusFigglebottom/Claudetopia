@@ -40,6 +40,9 @@
         {"text": "I have a name for the Roll. Mullbourne.", "next": "mullbourne", "conditions": [{"flag": "learned_mullbourne"}]},
         {"text": "People are saying my name now.", "next": "on_renown", "conditions": [{"renown_min": 250}]},
         {"text": "Do you ever think about what I walked out of?", "next": "the_foundling", "conditions": [{"flag": "first_hearthstone"}]},
+        {"text": "Harewell. You walked that down for two days.", "next": "harewell_offer", "conditions": [{"quest_done": "core:quest/wardens_roll_of_names"}, {"rep_min": ["core:faction/wardens", 20]}, {"quest_not_done": "core:quest/the_lane_that_isnt"}, {"not": {"quest_active": "core:quest/the_lane_that_isnt"}}]},
+        {"text": "I have been out to Harewell's lane. There is a lane.", "next": "harewell_line", "conditions": [{"quest_at": ["core:quest/the_lane_that_isnt", "what_a_warden_writes"]}]},
+        {"text": "Say that again about the hedge-wights.", "next": "harewell_after", "conditions": [{"flag": "wren_named_the_wights"}]},
         {"text": "Nothing. Carry on counting.", "next": "bye"}
       ]
     },
@@ -270,6 +273,50 @@
       "next": "hub"
     },
 
+    "harewell_offer": {
+      "speaker": "Wren Tallow",
+      "text": "Two days, and a chalk doorstep in a box, and eleven people I cannot describe. — I'll tell you the part I've not written. I went out there twice more. Both times I walked the down from the shrine to the scarp and came back and could not have told you whether there was a lane in it. Not 'there was no lane'. Could not have told you. That is not a thing that happens to me; I count for a living. So I stopped going, which I am not proud of, and I have been waiting for somebody who never bought honey off Cille to go and look at the same ground with eyes that have nothing in them.",
+      "choices": [
+        {"text": "I'll walk it. What am I looking for?", "next": "harewell_accept"},
+        {"text": "You want a witness, not a Warden.", "next": "harewell_witness"},
+        {"text": "Not today.", "next": "hub"}
+      ]
+    },
+    "harewell_witness": {
+      "speaker": "Wren Tallow",
+      "text": "I want both and I'll take either. — A Warden goes and writes down what is there. A witness goes and is somebody the thing happened in front of. I have been the first one out there three times and got nothing, and it has occurred to me lately, at about four in the morning, that a place which goes quiet when nobody says its name might also go quiet in the eye of somebody who has been saying it wrong for a year. I have been saying Harewell every Tollday since it went on. Perhaps I have worn it smooth.",
+      "choices": [
+        {"text": "Then I'll go. What am I looking for?", "next": "harewell_accept"},
+        {"text": "I'll think about it.", "next": "hub"}
+      ]
+    },
+    "harewell_accept": {
+      "speaker": "Wren Tallow",
+      "text": "The doorstep first. It's in the Roll room at the Rest, on the shelf under the window, in a box, and Hesk will want it back and will say so twice. Carry it out to the hedge shrine — Ansel's, the hawthorn grown through the stone chair — and then walk east along the hedge line until the ground goes flat in a square, and stand the doorstep where you think the lane was. — And mind what's working those hedges. I've seen it. It has a billhook and it doesn't stop for a greeting, and I want it written down that I told you and not that you found out.",
+      "effects": [{"start_quest": "core:quest/the_lane_that_isnt"}, {"quest_stage": ["core:quest/the_lane_that_isnt", "the_doorstep"]}, {"set_flag": "wren_sent_you_to_harewell"}],
+      "next": "hub"
+    },
+    "harewell_line": {
+      "speaker": "Wren Tallow",
+      "text": "There is a lane. Say it again where I can write it. — Right. Then here is the Roll room's question and I'd rather have your answer than mine, because mine has been the same for a year and has got us a box on a shelf. What does the line say? That a Warden walked the ground and found it, with the doorstep stood up where the lane runs, for anybody who comes after to trip over. Or that the doorstep is evidence and goes back in the box, and the line stays as it is, which is honest and which is a shelf. Or you take it to Tamwick, where some steward wrote 'ask Tamwick' in a margin thirteen years ago and never did, and make Tamwick keep it.",
+      "choices": [
+        {"text": "Stand it in the lane. A Warden walked the ground and found it.", "effects": [{"quest_choice": ["core:quest/the_lane_that_isnt", "walked"]}], "next": "harewell_written"},
+        {"text": "Back in the box. It is evidence, not a grave marker.", "effects": [{"quest_choice": ["core:quest/the_lane_that_isnt", "box"]}], "next": "harewell_written"},
+        {"text": "Tamwick keeps it. Somebody there owes that margin an answer.", "effects": [{"quest_choice": ["core:quest/the_lane_that_isnt", "tamwick"]}], "next": "harewell_written"},
+        {"text": "Give me a day on it.", "next": "hub"}
+      ]
+    },
+    "harewell_written": {
+      "speaker": "Wren Tallow",
+      "text": "Written, and read back, and I'll read it out on Tollday with the door open. — Walk with me as far as the ford. I have got something the wrong way round for a year and I would like to say it out loud to somebody who will not be kind about it.",
+      "next": "harewell_after"
+    },
+    "harewell_after": {
+      "speaker": "Wren Tallow",
+      "text": "A hedge-wight is a farmer who did not stop. That is not folklore, that is the Rest's own bestiary page and I have written it out for recruits. — Harewell had eleven households. I have now met four of them, out on that down, working a hedge that has no field behind it, with their own tools. I put two of them down myself in 1039 and wrote 'wights, two' in the day-book and went home and had my supper. — I am not going to make a speech. I would like it noted that I did not see it, that you did, and that the difference between us is that you had never bought honey off any of them.",
+      "effects": [{"set_flag": "wren_named_the_wights"}, {"renown": 5}, {"morality": 3}],
+      "next": "hub"
+    },
     "bye": {
       "speaker": "Wren Tallow",
       "text": "Go on. Mind the road past the mill; the Boys are back and they're getting brave about it.",

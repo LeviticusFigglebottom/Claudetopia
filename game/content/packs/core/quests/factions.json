@@ -33,7 +33,7 @@
          {"id": "tide", "text": "Profess the Tide, in Tessane's name. Say the scraped name aloud.", "conditions": [{"flag": "found_tessane"}], "effects": [{"set_flag": "sayer_professed_tide"}, {"rep": ["core:faction/sayers", 5]}, {"renown": 20}]}
        ]}, {"type": "talk", "target": "core:npc/aldith_sulion", "count": 1}],
        "on_enter": [],
-       "on_complete": [{"set_flag": "ranked_in_a_faction"}, {"set_flag": "louder_done"}, {"give_item": ["core:item/circle_listeners_ring", 1]}, {"renown": 20}]}
+       "on_complete": [{"join_faction": "core:faction/sayers"}, {"set_flag": "ranked_in_a_faction"}, {"set_flag": "louder_done"}, {"give_item": ["core:item/circle_listeners_ring", 1]}, {"renown": 20}]}
     ],
     "rewards": {"renown": 25, "rep": [["core:faction/sayers", 20]], "items": [["core:item/circle_listeners_ring", 1]], "effects": [{"teach_spell": "core:spell/hearth_brand"}, {"notify": "The Circle says the long one over you, three times, and then makes you say it back."}]}
   },

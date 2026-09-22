@@ -1,0 +1,371 @@
+[
+  {
+    "id": "core:quest/the_long_measurement",
+    "name": "The Long Measurement",
+    "layer": "faction",
+    "faction": "core:faction/sayers",
+    "giver": "core:npc/ismay_ondrael",
+    "region": "core:region/brightwater",
+    "summary": "Ismay Ondrael has timed her own held breath every evening for forty-one years and will not publish, because the instrument is frightened. Take the glass into a warm room and a cold one, write the figures in your own hand, and decide whose name goes on them.",
+    "notes": "Sayers' line, second of four. Gated on Louder being finished and on rank Speaker. Both figures are taken at real Hearthstones: the Undercroft's Bell Hall stone is hearth_undercroft, out of that interior's own meta, so the rest closes on a real rest.",
+    "requires": [
+      {"quest_done": "core:quest/louder"},
+      {"rep_min": ["core:faction/sayers", 20]}
+    ],
+    "stages": [
+      {
+        "id": "the_glass",
+        "journal": "Forty-one years of an evening, a quarter-minute glass and one set of lungs, and the result is that breath is shortening by rather more than a woman going from three to forty-four should account for. She has not published it and she has told you exactly why: she is the instrument, the instrument is frightened, and a frightened instrument reads low. What is wanted is somebody young and unfrightened to take the same glass somewhere else.",
+        "objectives": [{"type": "talk", "target": "core:npc/ismay_ondrael", "text": "Take the glass off Ondrael"}],
+        "on_enter": [{"give_item": ["core:item/ondraels_sand_glass", 1]}],
+        "marker": {"place_id": "core:place/sayers_spire", "radius": 120}
+      },
+      {
+        "id": "the_warm_room",
+        "journal": "The fourth column of her book is the room, and the room matters more than the year. So: the warmest, loudest room in the basin, which is an inn inside a bell in Merrowby on a night when the Vale is talking. Ten to the hour, hold the breath, turn the glass, write the figure yourself in your own hand so that it is not hers. Tobin Cresswell will want to know what you are doing and will tell everybody, which Ondrael says improves the measurement.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/merrowby", "radius": 160, "text": "Take the first figure at Merrowby"},
+          {"type": "talk", "target": "core:npc/tobin_cresswell", "text": "Let the Toll's Lip watch you do it"}
+        ],
+        "on_complete": [{"set_flag": "measured_in_the_warm"}]
+      },
+      {
+        "id": "the_quiet_place",
+        "journal": "And the coldest, quietest room she could name: the Undercroft, under the city, twenty paces from running water, where the Hands keep a hall inside a bell and sound dies sooner than it should. Ondrael says the Hands will not mind a woman with a sand-glass, which is either true or the most frightening sentence she has ever said to you. The gutter drakes will mind. Rest at the stone in the bell hall and take the figure there.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/undercroft", "radius": 140, "text": "Go down into the Undercroft"},
+          {"type": "kill", "target": "core:enemy/gutter_drake", "count": 3, "text": "Clear the crawl to the bell hall"},
+          {"type": "rest_at", "target": "hearth_undercroft", "text": "Take the second figure at the bell hall stone"}
+        ],
+        "on_complete": [{"set_flag": "measured_in_the_deep"}, {"renown": 10}]
+      },
+      {
+        "id": "the_figures",
+        "journal": "Two figures in your own hand, and the difference between them is larger than the difference between her at thirty and her at forty-four. Read the book before you say anything to her about it: forty-one years of four columns, and the ruinous result written into the middle of her own account by the woman whose account it ruins.",
+        "objectives": [
+          {"type": "read_book", "target": "core:book/ondraels_figures", "text": "Read the Figures"},
+          {"type": "talk", "target": "core:npc/ismay_ondrael", "text": "Tell Ondrael what the two rooms said"}
+        ],
+        "on_enter": [{"give_item": ["core:item/ondraels_figures", 1]}],
+        "on_complete": [{"set_flag": "read_ondraels_figures"}]
+      },
+      {
+        "id": "whose_name_on_it",
+        "journal": "She has gone quiet, which for Ondrael means she is agreeing with you. The result stands: it is the room and not the year, which is the Candle's answer arriving in the Breath's own figures, taken by a Sayer of the Breath, over forty-one years. Somebody has to put a name on it. Hers, and the Circle will take it apart in a fortnight and she will be in the room while they do. Yours, and it is a Speaker's first paper and she keeps her peace. Or nobody's, and it goes back in the drawer, which is what she asked you to decide and not what she asked you to decide.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "whose_name_on_the_figures",
+            "text": "Decide whose name goes on the measurement",
+            "options": [
+              {
+                "id": "hers",
+                "text": "Her name. Forty-one years is hers and so is the argument.",
+                "effects": [
+                  {"set_flag": "figures_published_as_hers"},
+                  {"rep": ["core:faction/sayers", 15]},
+                  {"renown": 15},
+                  {"morality": 5}
+                ]
+              },
+              {
+                "id": "yours",
+                "text": "Your name. A Speaker's first paper, and she keeps her peace.",
+                "effects": [
+                  {"set_flag": "figures_published_as_yours"},
+                  {"rep": ["core:faction/sayers", 10]},
+                  {"renown": 30}
+                ]
+              },
+              {
+                "id": "both",
+                "text": "Both names, hers first. The instrument and the hand that read it.",
+                "effects": [
+                  {"set_flag": "figures_published_as_both"},
+                  {"rep": ["core:faction/sayers", 20]},
+                  {"renown": 20},
+                  {"morality": 3}
+                ]
+              },
+              {
+                "id": "drawer",
+                "text": "Nobody's. It is not finished, and she is right that it is not finished.",
+                "effects": [
+                  {"set_flag": "figures_left_in_the_drawer"},
+                  {"rep": ["core:faction/sayers", 5]},
+                  {"morality": -3}
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "the_glass_goes_back",
+        "auto": true,
+        "journal": "The glass goes back on her table, which she does not comment on, and there is a second glass beside it now, newer, with a pear-wood frame like the first and nobody's figures in it yet.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "long_measurement_done"}, {"unlock_topic": "the_figures"}]
+      }
+    ],
+    "rewards": {
+      "marks": 90,
+      "renown": 20,
+      "rep": [["core:faction/sayers", 15]],
+      "deed": "quest_complete_faction",
+      "effects": [
+        {"teach_spell": "core:spell/winters_argument"},
+        {"notify": "Ondrael teaches you the slow case, under the breath, and says it is the only saying that gets better the longer you are prepared to be patient about it."}
+      ]
+    }
+  },
+
+  {
+    "id": "core:quest/in_council",
+    "name": "In Council",
+    "layer": "faction",
+    "faction": "core:faction/sayers",
+    "giver": "core:npc/aldith_sulion",
+    "region": "core:region/brightwater",
+    "summary": "Three Sayers who disagree will not convene for a question, only for an object, and the Circle's object is half an object: a bell with no hymn. Fetch the one written copy of the Round of Sa'oul from the woman who wrote it down, and mind her price.",
+    "notes": "Sayers' line, third of four. Uses the Round that already exists as an item and a book; Auti Sa's price is the condition the council's minutes turn on, which is what sets up the last quest. Works whether or not the main thread's bell went to the Circle: Sulion says so either way.",
+    "requires": [
+      {"quest_done": "core:quest/the_long_measurement"},
+      {"rep_min": ["core:faction/sayers", 45]}
+    ],
+    "stages": [
+      {
+        "id": "the_object",
+        "journal": "Sulion will convene the Circle on the tine and the hum together, in council, in front of students, which has happened four times in her career. The trouble is the object. A bell is a bell; what the Sayers have never had is what the bell was rung to. The Nave's hymn was never written down by anybody in Tollmere, and the Circle has spent three hundred years wanting an object and not once asking the people who still sing it.",
+        "objectives": [{"type": "talk", "target": "core:npc/aldith_sulion", "text": "Hear what the council needs"}],
+        "marker": {"place_id": "core:place/sayers_spire", "radius": 120}
+      },
+      {
+        "id": "the_round",
+        "journal": "There is one written copy of the Round of Sa'oul and it was made at Isseva by a lantern-maker's daughter, against her mother's wish, on the grounds that a round sung by four voices across water is not safe in four mouths. Her name is Auti Sa and she keeps her mother's bench. Ask for it. Do not offer her marks; the Circle's last two envoys did.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/isseva", "radius": 140, "text": "Walk the boards at Isseva"},
+          {"type": "talk", "target": "core:npc/auti_sa", "text": "Ask Auti Sa for the Round"},
+          {"type": "collect", "target": "core:item/the_reed_round", "count": 1, "text": "Carry the written Round"}
+        ],
+        "on_complete": [{"set_flag": "carried_the_round_to_tollmere"}, {"rep": ["core:faction/reed_council", 5]}]
+      },
+      {
+        "id": "read_it",
+        "journal": "Four voices printed on four facing quarters of a page so that a boat's crew can read it round. Auti Sa's price is in the margin of the fourth line, in her own hand: *the second voice goes flat here, and it is meant to, and a Sayer told me in 941 that it was a mistake.* Read it before the council. She will ask you afterwards what the Circle said about the fourth line, and she will know if you did not raise it.",
+        "objectives": [{"type": "read_book", "target": "core:book/the_reed_round", "text": "Read the Round of Sa'oul"}],
+        "on_complete": [{"set_flag": "read_the_round"}]
+      },
+      {
+        "id": "the_council",
+        "journal": "The council sits in the lecture hall with the object on the lectern, the tine in a wooden cradle, and nineteen students in the gallery being extremely quiet. Sulion for the Bell, Cresswell for the Candle, Ondrael for the Breath, an hour and a half each, and the whole point of convening is that all three have to stay in the room while the other two are wrong. Somebody has to keep the minutes. You are the only person present who has not sworn to an account.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/sayers_spire", "radius": 120, "text": "Be at the Spire for the council"},
+          {"type": "talk", "target": "core:npc/aldith_sulion", "text": "Hear Sulion for the Bell"},
+          {"type": "talk", "target": "core:npc/bennick_cresswell", "text": "Hear Cresswell for the Candle"},
+          {"type": "talk", "target": "core:npc/ismay_ondrael", "text": "Hear Ondrael for the Breath"}
+        ],
+        "on_complete": [{"set_flag": "circle_sat_in_council"}, {"renown": 20}]
+      },
+      {
+        "id": "the_minutes",
+        "journal": "The verdict came in triplicate and contradictory, which Sulion says is the only honest form an answer has ever come in: a note is shifting, the Vale is talking about it, and something is breathing in. All three signed. Then the fourth line came up, as Auti Sa knew it would, and the hall went quiet in a way that is not about acoustics, and the minutes are open in front of you and nobody has offered to write them.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_minutes_of_the_council",
+            "text": "Write the minutes of the council",
+            "options": [
+              {
+                "id": "tessanes_way",
+                "text": "Record that the flat fourth is sung the way Tessane sang it, and say her name in the hall.",
+                "conditions": [{"flag": "found_tessane"}],
+                "effects": [
+                  {"set_flag": "minutes_name_tessane"},
+                  {"rep": ["core:faction/sayers", 10]},
+                  {"renown": 25},
+                  {"morality": 5}
+                ]
+              },
+              {
+                "id": "the_reedfolks_way",
+                "text": "Record it as the reedfolk's, and Auti Sa's, and name the bench it was written at.",
+                "effects": [
+                  {"set_flag": "minutes_name_isseva"},
+                  {"rep": ["core:faction/sayers", 20]},
+                  {"rep": ["core:faction/reed_council", 15]},
+                  {"renown": 10}
+                ]
+              },
+              {
+                "id": "the_circles_way",
+                "text": "Record it as the Circle does: a marsh variant, unattributed, noted for the record.",
+                "effects": [
+                  {"set_flag": "minutes_unattributed"},
+                  {"rep": ["core:faction/sayers", 25]},
+                  {"rep": ["core:faction/reed_council", -10]},
+                  {"morality": -5}
+                ]
+              },
+              {
+                "id": "no_minutes",
+                "text": "Write no minutes. Three people disagreed for four hours and that is the finding.",
+                "effects": [
+                  {"set_flag": "minutes_refused"},
+                  {"rep": ["core:faction/sayers", 5]},
+                  {"renown": 15}
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "what_is_on_the_shelf",
+        "auto": true,
+        "journal": "The minutes are in the library under Y.T. 1043, with the Round beside them on the shelf where the Circle keeps things it has been given rather than taken, which is a short shelf. Sulion says the council was the fifth of her career and the first where anybody wrote down where the object came from.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "in_council_done"}, {"unlock_topic": "the_council"}]
+      }
+    ],
+    "rewards": {
+      "marks": 120,
+      "renown": 25,
+      "rep": [["core:faction/sayers", 20]],
+      "deed": "quest_complete_faction"
+    }
+  },
+
+  {
+    "id": "core:quest/the_unsaid_woman",
+    "name": "The Unsaid Woman",
+    "layer": "faction",
+    "faction": "core:faction/sayers",
+    "giver": "core:npc/ismay_ondrael",
+    "region": "core:region/sedgemire",
+    "summary": "The Circle used its own craft on a member to make her quieter, in 941, and it worked. Find what is left of Tessane where she went, bring it into the lecture hall, and settle which account the Sayers' Circle teaches.",
+    "notes": "Sayers' line, last of four, and the ending WORLD_BIBLE 4.1 sets: the player chooses which account the Circle teaches. Gated on the scraped line having been found in Louder, because a name you have not found cannot be carried anywhere.",
+    "requires": [
+      {"quest_done": "core:quest/in_council"},
+      {"rep_min": ["core:faction/sayers", 70]},
+      {"flag": "found_tessane"}
+    ],
+    "stages": [
+      {
+        "id": "the_page",
+        "journal": "Ondrael has the scraped page out on the table beside her sand-glass, which is the first time in twenty-two years she has had both out at once. The Circle unsaid Tessane in 941: her line scraped to the vellum, her lectures withdrawn, her students told to attribute the useful parts to the Circle generally. It worked. That is the most successful experiment in the history of the Sayers' Circle and it is written down nowhere. Ondrael says the woman went to Isseva for eleven days, and that is the last of her anybody can point at.",
+        "objectives": [{"type": "talk", "target": "core:npc/ismay_ondrael", "text": "Hear Ondrael out on Tessane"}],
+        "marker": {"place_id": "core:place/sayers_spire", "radius": 120}
+      },
+      {
+        "id": "the_eleven_days",
+        "journal": "Eleven days on the boards at Isseva, in which she wrote down the reedfolk's account for the first time — the book is on the Circle's own shelves, and the flyleaf says *written down by Tessane, Sayer of the Tide, in the eleven days she stayed* — and taught a lantern-maker's daughter to sing the fourth line flat, and then was not in Tollmere again. The Eldest was a girl when she came. Auti Sa learned the line from her mother, who learned it from her.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/isseva", "radius": 140, "text": "Go back to Isseva"},
+          {"type": "talk", "target": "core:npc/auti_sa", "text": "Ask Auti Sa what Tessane left at the bench"},
+          {"type": "talk", "target": "core:npc/tallissa_oul", "text": "Ask the Eldest what she remembers of the eleven days"}
+        ],
+        "on_complete": [{"set_flag": "learned_what_tessane_left"}, {"rep": ["core:faction/reed_council", 10]}]
+      },
+      {
+        "id": "the_lantern",
+        "journal": "She did not drown and she has no grave, and the marsh has exactly one way of keeping a person it could not bury: a lantern on the jetty with an uncut reed standing in the oil-well, relit once a year. Loa Oul keeps the jetty and has relit that one every year since her aunt gave her the measure, and could not until this week have told you whose it was, because nobody said the name and the reed is the mark you use when you cannot.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/loa_oul", "text": "Ask the jetty-keeper for the lantern with the uncut reed"},
+          {"type": "collect", "target": "core:item/tessanes_lantern", "count": 1, "text": "Carry Tessane's lantern"}
+        ],
+        "on_complete": [{"set_flag": "carried_tessanes_lantern"}, {"morality": 5}]
+      },
+      {
+        "id": "the_hall",
+        "journal": "Carry it up the Long Stride and into the lecture hall and put it on the lectern where the object goes. Sulion will not stop you. Ondrael has told the students there is a lecture. Cresswell has told everybody else, which is his whole craft, so the hall is fuller than it was for the council and there are two Tallymen at the back who have no business being there.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/sayers_spire", "radius": 120, "text": "Carry the lantern to the Spire"},
+          {"type": "deliver", "target": "core:npc/aldith_sulion", "item": "core:item/tessanes_lantern", "count": 1, "text": "Set the lantern on the lectern"}
+        ],
+        "on_complete": [{"set_flag": "lantern_on_the_lectern"}, {"renown": 25}]
+      },
+      {
+        "id": "which_account",
+        "journal": "The hall is waiting, the lantern is lit, and the three of them have stood up rather than sitting, which students say has not happened. The Circle holds three accounts and teaches all three and forbids preferring one out loud, and the reason the fourth is not on the list is in a lantern on the lectern with a reed standing in it. What the Circle teaches after this afternoon is being decided by whoever speaks next, and Sulion has just said, in her lecturing voice, that the floor is yours.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "which_account_the_circle_teaches",
+            "text": "Say which account the Sayers' Circle teaches",
+            "options": [
+              {
+                "id": "teach_four",
+                "text": "Four. Put the Tide back on the list and her line back in the roll.",
+                "effects": [
+                  {"set_flag": "circle_teaches_four"},
+                  {"set_flag": "tessane_restored"},
+                  {"rep": ["core:faction/sayers", 25]},
+                  {"rep": ["core:faction/reed_council", 15]},
+                  {"renown": 40},
+                  {"morality": 10},
+                  {"deed": ["name_restored", 3]},
+                  {"rumour": ["core:rumour/name_restored", 0.9]}
+                ]
+              },
+              {
+                "id": "teach_three_and_name_her",
+                "text": "Three, and her name in the roll with the reason written under it.",
+                "effects": [
+                  {"set_flag": "circle_teaches_three_named"},
+                  {"set_flag": "tessane_restored"},
+                  {"rep": ["core:faction/sayers", 30]},
+                  {"renown": 25},
+                  {"morality": 5},
+                  {"deed": ["name_restored", 2]}
+                ]
+              },
+              {
+                "id": "teach_the_bell",
+                "text": "One. Teach the Bell and stop pretending the other two are taught fairly.",
+                "effects": [
+                  {"set_flag": "circle_teaches_the_bell"},
+                  {"rep": ["core:faction/sayers", 15]},
+                  {"renown": 30},
+                  {"morality": -5}
+                ]
+              },
+              {
+                "id": "unsay_her_again",
+                "text": "Say nothing. Blow the lantern out and let the line stay scraped.",
+                "effects": [
+                  {"set_flag": "circle_unsaid_her_again"},
+                  {"rep": ["core:faction/sayers", 5]},
+                  {"morality": -15},
+                  {"deed": ["name_struck", 3]},
+                  {"rumour": ["core:rumour/name_struck", 0.9]}
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "the_voice_of_the_circle",
+        "auto": true,
+        "journal": "Whatever was said, it was said in a full hall by somebody who had not sworn to an account, which is the only voice the Circle's own law allows to say it. The lantern goes back to Isseva on the next boat, with the reed, because Loa Oul lent it and said so twice.",
+        "objectives": [],
+        "on_enter": [
+          {"set_flag": "sayers_line_done"},
+          {"set_flag": "ranked_in_a_faction"},
+          {"unlock_topic": "tessane"}
+        ]
+      }
+    ],
+    "rewards": {
+      "marks": 160,
+      "renown": 40,
+      "rep": [["core:faction/sayers", 25]],
+      "deed": "quest_complete_faction",
+      "effects": [
+        {"teach_spell": "core:spell/call_the_hound"},
+        {"notify": "Ondrael teaches you her own Calling: eleven accounts of a dog nobody owned, set in columns, with the working drawn out of the places where they agree."}
+      ]
+    }
+  }
+]

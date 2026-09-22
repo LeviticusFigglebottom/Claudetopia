@@ -44,8 +44,183 @@
             "conditions": [{"not_member_of": "core:faction/wardens"}, {"quest_done": "core:quest/wardens_roll_of_names"}],
             "next": "join_talk"
           },
+          {
+            "text": "Wren wants the Harewell doorstep out of your box.",
+            "conditions": [{"quest_at": ["core:quest/the_lane_that_isnt", "the_doorstep"]}],
+            "next": "the_doorstep"
+          },
+          {
+            "text": "Who kept the rolls before the Rest did?",
+            "conditions": [{"quest_done": "core:quest/the_lane_that_isnt"}, {"rep_min": ["core:faction/wardens", 45]}, {"quest_not_done": "core:quest/the_deep_lines"}, {"not": {"quest_active": "core:quest/the_deep_lines"}}],
+            "next": "barrow_keepers_offer"
+          },
+          {
+            "text": "I have the Barrow Reeve's roll. A hundred and forty names.",
+            "conditions": [{"quest_at": ["core:quest/the_deep_lines", "a_hundred_and_forty_names"]}],
+            "next": "the_barrow_names"
+          },
+          {
+            "text": "Who reads at the turn of the season?",
+            "conditions": [{"quest_done": "core:quest/the_deep_lines"}, {"rep_min": ["core:faction/wardens", 70]}, {"quest_not_done": "core:quest/the_reading"}, {"not": {"quest_active": "core:quest/the_reading"}}],
+            "next": "the_reading_offer"
+          },
+          {
+            "text": "Say the privilege again. Slowly.",
+            "conditions": [{"quest_at": ["core:quest/the_reading", "the_privilege"]}],
+            "next": "the_privilege"
+          },
+          {
+            "text": "My hand is on the stone. Hear the name.",
+            "conditions": [{"quest_at": ["core:quest/the_reading", "the_name_on_the_stone"]}],
+            "next": "the_name_on_the_stone"
+          },
+          {
+            "text": "About the four hundred years of letters.",
+            "conditions": [{"flag": "topic/barrow_keepers"}],
+            "next": "the_letter"
+          },
           {"text": "Nothing. Keep warm, Roll-Keeper.", "effects": [{"end": true}]}
         ]
+      },
+
+      "the_doorstep": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "She does. She sent a note about it and the note is longer than the entry the doorstep belongs to. — Shelf under the window, box with the lid that does not fit. Take it. And bring it back, or tell me where it is and who has it, in those words, because the day this room starts holding things that are somewhere else is the day it stops being a Roll room and starts being a cupboard.",
+        "effects": [{"give_item": ["core:item/harewell_doorstep_stone", 1]}, {"set_flag": "hesk_lent_the_doorstep"}],
+        "next": "hub"
+      },
+
+      "barrow_keepers_offer": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Barrow-keepers. Reeves. — Before there was a Rest, there was a Reeve to every burying ground, and each of them kept a roll of the people under it, and read it aloud at the turn of the season with the tools written in beside the names. Then somebody at this fort decided that a roll of places was the serious work and a roll of the dead was sentiment, and we split, four hundred years ago, in writing, unpleasantly. — Hollin Barrow never got the letter. There is something down there with a hammer that is still doing the reading, and it is on the forty-first name, and it has been on the forty-first name since before my predecessor's predecessor.",
+        "choices": [
+          {"text": "You want me to go down and stop it.", "next": "barrow_keepers_stop"},
+          {"text": "You want the roll.", "next": "barrow_keepers_roll"},
+          {"text": "Another time.", "next": "hub"}
+        ]
+      },
+      "barrow_keepers_stop": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "I want the reading to be done by somebody who can stop. — That is not the same as stopping it, and I am aware I have said a soft thing in a hard voice. He cannot finish. He gets to the end and starts again, and he has been doing it in the cold in the dark for four hundred years, and if you want the Wardens' position on that in one sentence it is this: the office is the reading, not the reader, and an office nobody can be relieved of is not an office, it is a sentence.",
+        "choices": [
+          {"text": "Then I'll go down and relieve him.", "next": "barrow_keepers_accept"},
+          {"text": "Let me think about it.", "next": "hub"}
+        ]
+      },
+      "barrow_keepers_roll": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "I want the roll, yes, and I want you to have read it before you hand it over, because I am going to ask you a question afterwards and I will not have it answered by somebody who thinks a hundred and forty is a number. — Take the Standing Orders. They are mostly about lamps. The ninth page is the Keeper's Bond, which is ours, and which is said over whoever goes in first, and which I am not able to say over you because I have never been in first in my life.",
+        "choices": [
+          {"text": "Then I'll go in first and read it myself.", "next": "barrow_keepers_accept"},
+          {"text": "Let me think about it.", "next": "hub"}
+        ]
+      },
+      "barrow_keepers_accept": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Take a lamp that will not go out in a draught, and read the orders before the gate and not on the way down. The bell in the cist is hung, not fallen — somebody put it up there on purpose and it is the only warm thing in that ground, and I have wondered for eleven years which of them thought of it.",
+        "effects": [
+          {"start_quest": "core:quest/the_deep_lines"},
+          {"quest_stage": ["core:quest/the_deep_lines", "read_the_orders"]},
+          {"unlock_topic": "barrow_keepers"}
+        ],
+        "next": "hub"
+      },
+
+      "the_barrow_names": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "A hundred and forty. — Forty minutes. On top of an hour and forty, four times a year, out of that window, to a yard with eleven people and a dog in it. The arithmetic is not the objection and I have now done the arithmetic twice in front of you, so let me be honest about what the objection is: a Roll that takes all afternoon stops being read properly. People start skipping. I have watched a Warden skip and I have never told anybody until this minute. — So. Your hand is on the pen and mine is going to sign under whatever it writes.",
+        "choices": [
+          {
+            "text": "All hundred and forty. A longer reading is what a reading is.",
+            "effects": [{"quest_choice": ["core:quest/the_deep_lines", "enter_them"]}],
+            "next": "barrow_names_written"
+          },
+          {
+            "text": "One line. Hollin Barrow, a hundred and forty, held in the cist.",
+            "effects": [{"quest_choice": ["core:quest/the_deep_lines", "one_line"]}],
+            "next": "barrow_names_written"
+          },
+          {
+            "text": "Leave them out. The Roll keeps places, and a barrow is not a place.",
+            "effects": [{"quest_choice": ["core:quest/the_deep_lines", "leave_them"]}],
+            "next": "barrow_names_written"
+          },
+          {"text": "Give me the night to think.", "next": "hub"}
+        ]
+      },
+      "barrow_names_written": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Then that is what the Roll says, and my name goes under yours, and in fifty years somebody will read it out loud and mean it. — The Barrow Roll goes on the shelf under the window, next to a chalk doorstep in a box. I have a shelf of things that are the ends of arguments now. Come back at the turn of the season. Somebody has to read.",
+        "effects": [{"end": true}]
+      },
+
+      "the_reading_offer": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "I do. I have read it every season for nineteen years and I am going to hand it sideways to you this time, which is how this fort promotes anybody and why nobody here has ever had a ceremony. — Five hundred names. An hour and forty. The deep lines first and slowly. Your voice will go at about the fortieth and you will keep going, and that is the entire examination.",
+        "choices": [
+          {
+            "text": "Give me the book.",
+            "effects": [
+              {"start_quest": "core:quest/the_reading"},
+              {"quest_stage": ["core:quest/the_reading", "you_read"]},
+              {"set_flag": "hesk_handed_over_the_roll"}
+            ],
+            "next": "the_reading_accept"
+          },
+          {"text": "Not this season.", "next": "hub"}
+        ]
+      },
+      "the_reading_accept": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Out of the window. Not at the yard; out of the window, at the valley. The yard is not the audience and never was. — Dole will be at the back. He always is, and he never comes in, and he has never once said why, and if he says something to you afterwards you should listen to it, because he has said four things to me in twenty-one years and all four were right.",
+        "next": "hub"
+      },
+
+      "the_privilege": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Slowly, then. A Roll-Warden may set a name on a Hearthstone. Hand flat on the stone, say the name aloud, and the stone has it the way it has yours. — Nine times in four hundred years. Twice it was done wrong and I will not be drawn on how, and you may take it from my not being drawn that it was not wrong in a way that hurt the stone. — The one I mean is in the Bell Cist under the hung bell, in the ground with the hundred and forty in it. I will come down as far as the gate and no further, and I would like that on the record as cowardice rather than dignity.",
+        "next": "hub"
+      },
+
+      "the_name_on_the_stone": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "I am at the gate and I can hear you perfectly, which I would like you to know I regret. — Say it flat and say it once. A stone is not a yard full of people; it does not need to be convinced. And whatever you say, I will enter in the Roll that it was said, with the date, because the nine times this has been done are the only nine times anybody has written anything down about it.",
+        "choices": [
+          {
+            "text": "Harewell. Eleven households and a well with a hare on the lip.",
+            "effects": [{"quest_choice": ["core:quest/the_reading", "harewell"]}],
+            "next": "the_name_said"
+          },
+          {
+            "text": "My own. I came up out of the quiet with no rope on me.",
+            "effects": [{"quest_choice": ["core:quest/the_reading", "your_own"]}],
+            "next": "the_name_said"
+          },
+          {
+            "text": "Ryn Larkbourne. In ink upstairs, and now in stone.",
+            "conditions": [{"flag_equals": ["wardens_roll_ryn", "restored"]}],
+            "effects": [{"quest_choice": ["core:quest/the_reading", "ryn"]}],
+            "next": "the_name_said"
+          },
+          {
+            "text": "Nothing. A name in one stone is a name in one place.",
+            "effects": [{"quest_choice": ["core:quest/the_reading", "no_name"]}],
+            "next": "the_name_said"
+          },
+          {"text": "Give me a moment down here.", "next": "hub"}
+        ]
+      },
+      "the_name_said": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Then that is nine and one. — Come up. The seal is on my desk and has been since the reading, and I am not going to make a speech about it, because there is nobody above you to make one and I have checked.",
+        "effects": [{"end": true}]
+      },
+
+      "the_letter": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "Four hundred years of them, in the second press, tied with tape. Ours are shorter than theirs and worse. — The last one from a Reeve is 1041, in a hand I would have said was four hundred years old, and it asks the Rest to send somebody to read at the turn of the season because the writer is finding the forty-first name difficult. It is filed under correspondence, unsolicited. By me. In 1041. I remember doing it and I remember what I thought, and what I thought was that somebody at Hollin was having a joke.",
+        "effects": [{"set_flag": "hesk_admitted_the_letter"}, {"morality": 2}],
+        "next": "hub"
       },
 
       "offer": {
@@ -237,6 +412,11 @@
             "conditions": [{"flag": "met_hesk"}],
             "next": "about_hesk"
           },
+          {
+            "text": "You were at the back of the yard. Say it, then.",
+            "conditions": [{"quest_at": ["core:quest/the_reading", "you_read"]}],
+            "next": "the_yard"
+          },
           {"text": "Nothing. Enjoy your evening.", "effects": [{"end": true}]}
         ]
       },
@@ -282,6 +462,13 @@
         ],
         "next": "hub"
       },
+      "the_yard": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "Your voice went at Larkstead and you carried on. Good. — I stand at the back because I can hear which names the reader hurries. Hesk hurries Gosford, every season, nineteen years, and does not know he does it, and I have never told him because he would stop reading it altogether rather than read it badly. You hurried nothing. You hurried nothing and you were slower on Harewell than on the others, which is the first time anybody has been, and I noticed, and now you know that somebody in that yard is counting as well as listening.",
+        "effects": [{"set_flag": "dole_heard_the_reading"}, {"renown": 5}, {"rep": ["core:faction/wardens", 3]}],
+        "next": "hub"
+      },
+
       "about_hesk": {
         "speaker": "core:npc/wardens_dole",
         "text": "He is the best of us and he has never once stood on a road at night. Both of those are true and he knows both of them, which is why I drink here and he reads there.",

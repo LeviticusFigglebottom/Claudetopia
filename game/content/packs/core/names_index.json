@@ -88,6 +88,7 @@
     {"name": "Jory Wick", "language": "valish", "kind": "person", "rule": "5.1 people: short Vale masculine; place-suffix surname (3.2 Lakefolk)", "derivation": "namegen candidate Jory + Wick, Tamsin Wick's family; the J. Wick of the Lantern Row day-book", "used_by": "core:npc/jory_wick"},
     {"name": "Lettie Wick", "language": "valish", "kind": "person", "rule": "5.1 people: feminine -ie; married into a lake surname", "derivation": "namegen candidate Lettie; Merrowby-born, a midwife's daughter, Wick by marriage", "used_by": "core:npc/lettie_wick"},
     {"name": "Elsie Wick", "language": "valish", "kind": "person", "rule": "5.1 people: child's feminine -ie, family surname", "derivation": "namegen candidate Elsie + Wick, her father's", "used_by": "core:npc/elsie_wick"},
-    {"name": "Hob Tamwick", "language": "valish", "kind": "person", "rule": "5.1 people: short Vale masculine; the orchard's place-name as a surname", "derivation": "namegen candidate Hob + Tamwick, as his sister Bessa's: tam 'oak' + -wick 'dwelling'", "used_by": "core:npc/hob_tamwick"}
+    {"name": "Hob Tamwick", "language": "valish", "kind": "person", "rule": "5.1 people: short Vale masculine; the orchard's place-name as a surname", "derivation": "namegen candidate Hob + Tamwick, as his sister Bessa's: tam 'oak' + -wick 'dwelling'", "used_by": "core:npc/hob_tamwick"},
+    {"name": "Orm Hollin", "language": "valish", "kind": "person", "rule": "5.1 people: short Vale masculine -orm root; the family the barrow is named for", "derivation": "namegen root orm + hollin (holly), as Hollin Barrow; his wife Maud and son Ansel take Vale first names already in use, which is how Vale naming works", "used_by": "core:book/barrow_roll"}
   ]
 }
