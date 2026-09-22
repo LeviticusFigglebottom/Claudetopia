@@ -808,14 +808,43 @@ visible by looking:
   each course, and the stones are the shader's, the way `Settlement` does a house.
 * **A cliff was a wall.** The waterfall face was slabs at even spacing all turned one way on a
   straight line: brickwork in a field. It is an arc now whose ends come forward, every slab
-  turned to the tangent and then well off it, scaled 0.78–1.22 and staggered in depth, with a
-  bank of ground behind it.
+  turned to the tangent and then well off it, scaled 0.78–1.22 and staggered in depth.
+* **And then the fix for that was worse.** An earth bank was put behind the face so the lip
+  would read as a hillside's edge, and Whitecut Falls came back as a smooth brown cone with
+  no rock and no water visible at all — a mound as tall as the fall, six metres behind it,
+  simply swallows it. The bank is gone. A dressing that raises its own hill fights the
+  terrain it stands on, and the ground behind a waterfall is the world builder's business.
 * **Old snow was a marshmallow.** `mound` drew perfect domes. It swells and dips in broad
   lobes now, jitters its rim, and the drifts lie long and low against the walls.
+* **Two trees were thorn-balls.** A tree's leaf cards scale with the tree, and much past twice
+  its built size they stop reading as foliage and start reading as shards. The Singing Yew
+  came down from 3.1 to 2.2 and Willow Isle's pollard from 2.6 to 2.1; both are still half
+  again anything around them, which is all "strange" needs.
+* **A colossus's head was an egg.** What a head faces is decided by the ground and where you
+  walk up from is not, so a brow, a nose and one eye on the front face photographed from
+  behind as a smooth ovoid with brick coursing on it. It has a brow band right round, cheeks,
+  a jaw, a chin and a socket on both sides now, and carved stone at a 3.4 m unit rather than
+  the Oroth 1.1 m, which was bricking a face.
 * **Dusk at 19:00 is night.** The first camp and shrine shots were black ground under a violet
-  sky. The plan's dusk hour is 18:00, and it scores every camera bearing by how flat its
-  ground is rather than taking the approach side blind — a camera forty metres up a slope
-  photographs a map, which is what the first Chain Bridge shot was.
+  sky. The plan's dusk hour is 17:10 — the last hour where a fire reads against the sky and
+  the ground still does — any POI whose own feature text is about a light gets it whatever its
+  kind, and every camera bearing is scored by how flat its ground is rather than taking the
+  approach side blind, because a camera forty metres up a slope photographs a map.
+
+### Two GDScript traps this work walked into, both worth knowing
+
+* **Two `class_name` scripts that name each other may not resolve, and the error lands on a
+  third file.** Every builder takes a `PoiDressing` and `PoiDressing` called
+  `PoiBuilders.build()`. GDScript resolved that pair when the POI tests ran alone and failed
+  once an import had rebuilt the global class cache, reporting `Could not resolve class
+  "PoiBuilders", because of a parser error` against `test_pois.gd` — which merely mentions the
+  name. `poi_builders.gd` has no `class_name` at all now: `PoiDressing` loads it by path and
+  the list of built kinds lives on `PoiDressing.KINDS_BUILT`.
+* **A loop variable that shadows one in the same function stops the whole script compiling.**
+  `_bridge_arch` holds the near end of its span in `a` and a later loop declared `a` again.
+  Nothing that draws a point of interest loads when that happens, the test runner reports
+  "did not compile" rather than a failure, and neither branch held both declarations at once
+  so neither branch saw it — only the integration branch did.
 
 ### What is still wanting
 
