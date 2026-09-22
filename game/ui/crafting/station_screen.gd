@@ -18,6 +18,7 @@ var _detail_box: VBoxContainer
 var _title: Label
 var _foot: Label
 
+const TEMPER_PREFIX := "temper:"
 const TITLES := {"forge": "The Forge", "alembic": "The Alembic", "name_table": "The Name-Table"}
 const BLURB := {
 	"forge": "Iron does what it is told, if you tell it the same thing often enough.",
@@ -26,6 +27,9 @@ const BLURB := {
 }
 
 
+## `crafting` and `bag` are for a caller that has a particular pair in mind -- a test pressing
+## the buttons, a review scene with a made-up character. In the game nothing passes them and
+## the screen finds the real ones by their groups.
 func setup(args: Dictionary) -> void:
 	var wanted := str(args.get("station", "forge"))
 	if wanted != station:
@@ -33,6 +37,10 @@ func setup(args: Dictionary) -> void:
 		_picked.clear()
 		set_meta("enchant_target", 0)
 	station = wanted
+	if args.get("crafting", null) != null:
+		_crafting = args["crafting"]
+	if args.get("bag", null) != null:
+		_bag = args["bag"]
 	if is_inside_tree():
 		_rebuild()
 
@@ -40,8 +48,10 @@ func setup(args: Dictionary) -> void:
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.dim())
-	_crafting = get_tree().get_first_node_in_group("crafting")
-	_bag = get_tree().get_first_node_in_group("inventory")
+	if _crafting == null:
+		_crafting = get_tree().get_first_node_in_group("crafting")
+	if _bag == null:
+		_bag = get_tree().get_first_node_in_group("inventory")
 	_build()
 	if _crafting and _crafting.has_signal("known_changed"):
 		_crafting.connect("known_changed", _rebuild)
@@ -112,13 +122,72 @@ func _recipes() -> Array:
 	return []
 
 
+## Everything in the bag this forge could take a hammer to, with what the next tier costs.
+## `temper_preview` answers "not_temperable" for anything that is not a weapon or a piece of
+## armour, and that is the whole filter: the list is your gear, whatever else you are carrying.
+func _temperable() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if _bag == null or not is_instance_valid(_bag) or not _bag.has_method("items"):
+		return out
+	if _crafting == null or not is_instance_valid(_crafting) or not _crafting.has_method("temper_preview"):
+		return out
+	for raw in _bag.call("items"):
+		var it: Dictionary = raw
+		var uid := int(it.get("uid", 0))
+		var preview: Dictionary = _crafting.call("temper_preview", uid)
+		if str(preview.get("reason", "")) in ["not_temperable", "no_item"]:
+			continue
+		out.append({"item": it, "preview": preview})
+	return out
+
+
 func _build_recipes() -> void:
 	var recipes := _recipes()
-	if recipes.is_empty():
+	var gear := _temperable()
+	if recipes.is_empty() and gear.is_empty():
 		_list_box.add_child(UiKit.wrapped("Nothing here you know how to make.", "Journal"))
 		return
 	var buttons: Array[Control] = []
 	var i := 0
+	# Tempering what you already own (DESIGN 5.8). `Crafting.temper` and `temper_preview` were
+	# a whole system with tests and no way in: no file under game/ui called either, so the
+	# forge could make you a sword and could not improve the one on your hip.
+	if not gear.is_empty():
+		_list_box.add_child(UiKit.label("What you carry", "Small"))
+		for row in gear:
+			var it: Dictionary = row["item"]
+			var preview: Dictionary = row["preview"]
+			var uid := int(it.get("uid", 0))
+			var can := bool(preview.get("ok", false))
+			var b := UiKit.button("", "FlatButton")
+			b.custom_minimum_size = Vector2(0, 36)
+			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			b.pressed.connect(_select.bind(TEMPER_PREFIX + str(uid)))
+			var line := UiKit.row(8)
+			line.set_anchors_preset(Control.PRESET_FULL_RECT)
+			line.offset_left = 8.0
+			line.offset_right = -8.0
+			line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(line)
+			var def := ContentDB.get_or_empty(str(it.get("item_id", "")))
+			line.add_child(UiKit.icon_rect(UiKit.item_icon_name(def), 24,
+					Color(1, 1, 1, 1.0 if can else 0.45)))
+			var name_label := UiKit.label(_temper_name(it, preview), "Body")
+			name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			name_label.modulate = Color(1, 1, 1, 1.0 if can else 0.5)
+			line.add_child(name_label)
+			line.add_child(UiKit.label(_temper_blocker(preview) if not can
+					else "%d %s" % [int(preview.get("cost", 0)),
+					_material_name(str(preview.get("material", "")))], "Tiny"))
+			_list_box.add_child(b)
+			buttons.append(b)
+			if i < 16:
+				UiKit.ink_in(b, 0.012 * i, 0.2)
+			i += 1
+		if not recipes.is_empty():
+			_list_box.add_child(UiKit.divider())
+			_list_box.add_child(UiKit.label("What you can make", "Small"))
+
 	for r in recipes:
 		var can := bool(r.get("can_craft", false))
 		var b := UiKit.button("", "FlatButton")
@@ -148,10 +217,40 @@ func _build_recipes() -> void:
 		if i < 16:
 			UiKit.ink_in(b, 0.012 * i, 0.2)
 		i += 1
+
 	UiKit.focus_chain(buttons)
 	if _selected.is_empty():
-		_selected = str(recipes[0]["id"])
+		# What you already own comes first, at the forge and in the list: it is why most people
+		# walk up to an anvil, and it is the half that had no control at all until now.
+		_selected = TEMPER_PREFIX + str(int((gear[0]["item"] as Dictionary).get("uid", 0))) \
+				if not gear.is_empty() else str(recipes[0]["id"])
 	_show_recipe()
+
+
+## A method reference rather than a closure, so a list rebuilt out from under a press
+## cannot take the screen with it.
+func _select(what: String) -> void:
+	_selected = what
+	_show_recipe()
+
+
+func _temper_name(it: Dictionary, preview: Dictionary) -> String:
+	var tier := int(preview.get("tier", 0))
+	return str(it.get("name", "")) if tier <= 0 else "%s +%d" % [str(it.get("name", "")), tier]
+
+
+func _material_name(item_id: String) -> String:
+	var def := ContentDB.get_or_empty(item_id)
+	return str(def.get("name", Ids.name_of(item_id).capitalize()))
+
+
+func _temper_blocker(preview: Dictionary) -> String:
+	match str(preview.get("reason", "")):
+		"max_temper": return "as good as it goes"
+		"skill_too_low": return "smithing %d" % (int(preview.get("next_tier", 1)) * 10)
+		"missing_materials": return "short"
+		"no_inventory": return "no bag"
+	return ""
 
 
 func _recipe_blocker(r: Dictionary) -> String:
@@ -164,6 +263,9 @@ func _recipe_blocker(r: Dictionary) -> String:
 
 
 func _show_recipe() -> void:
+	if _selected.begins_with(TEMPER_PREFIX):
+		_show_temper(int(_selected.substr(TEMPER_PREFIX.length())))
+		return
 	for child in _detail_box.get_children():
 		child.queue_free()
 	var recipe: Dictionary = {}
@@ -205,6 +307,76 @@ func _show_recipe() -> void:
 				_crafting.call("craft", id)
 			_rebuild())
 	_detail_box.add_child(make)
+
+
+## What tempering this piece would cost and what it would make it. The tier the preview
+## reports is the system's answer, not the screen's arithmetic: `temper_preview` is what it
+## is for, and nothing called it.
+func _show_temper(uid: int) -> void:
+	for child in _detail_box.get_children():
+		child.queue_free()
+	var found: Dictionary = {}
+	for row in _temperable():
+		if int((row["item"] as Dictionary).get("uid", 0)) == uid:
+			found = row
+	if found.is_empty():
+		return
+	var it: Dictionary = found["item"]
+	var preview: Dictionary = found["preview"]
+	var def := ContentDB.get_or_empty(str(it.get("item_id", "")))
+	var head := UiKit.row(10)
+	head.add_child(UiKit.icon_rect(UiKit.item_icon_name(def), 44))
+	var titles := UiKit.column(0)
+	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	titles.add_child(UiKit.wrapped(_temper_name(it, preview), "Heading"))
+	titles.add_child(UiKit.label("Tempering  ·  smithing", "Small"))
+	head.add_child(titles)
+	_detail_box.add_child(head)
+	_detail_box.add_child(UiKit.divider())
+
+	var material := str(preview.get("material", ""))
+	var cost := int(preview.get("cost", 0))
+	var have := int(_bag.call("count", material)) if _bag and _bag.has_method("count") else 0
+	_detail_box.add_child(UiKit.label("It takes", "Small"))
+	var row := UiKit.row(8)
+	row.add_child(UiKit.icon_rect(UiKit.item_icon_name(ContentDB.get_or_empty(material)), 20))
+	var mat_label := UiKit.label("%s  %d / %d" % [_material_name(material), have, cost], "Body")
+	mat_label.modulate = Color(1, 1, 1, 1.0 if have >= cost else 0.55)
+	row.add_child(mat_label)
+	_detail_box.add_child(row)
+	_detail_box.add_child(UiKit.divider())
+
+	var tier := int(preview.get("tier", 0))
+	var next_tier := int(preview.get("next_tier", tier + 1))
+	var per_tier := int(round(float(preview.get("bonus_per_tier", 0.1)) * 100.0))
+	if str(preview.get("reason", "")) == "max_temper":
+		_detail_box.add_child(UiKit.wrapped(
+				"+%d is as far as iron goes. There is nothing left to tell it." % tier, "Journal"))
+	else:
+		_detail_box.add_child(UiKit.wrapped(
+				"+%d becomes +%d. Each tier is worth %d%% more, and the ceiling your smithing "
+				% [tier, next_tier, per_tier]
+				+ "allows is +%d." % int(preview.get("max_tier", 0)), "Journal"))
+	var blocker := _temper_blocker(preview)
+	if blocker != "":
+		_detail_box.add_child(UiKit.label(blocker, "Small"))
+
+	var strike := UiKit.button("Temper it")
+	strike.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	strike.disabled = not bool(preview.get("ok", false))
+	strike.pressed.connect(_temper.bind(uid))
+	_detail_box.add_child(strike)
+
+
+func _temper(uid: int) -> void:
+	if _crafting and is_instance_valid(_crafting) and _crafting.has_method("temper"):
+		var r: Dictionary = _crafting.call("temper", uid)
+		if bool(r.get("ok", false)):
+			# Tempering splits a stack, so the piece that was improved has a new uid.
+			var stack: Variant = r.get("stack")
+			if stack != null and is_instance_valid(stack):
+				_selected = TEMPER_PREFIX + str(int(stack.uid))
+	_rebuild()
 
 
 # --- the alembic --------------------------------------------------------------------------

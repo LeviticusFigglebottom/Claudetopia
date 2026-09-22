@@ -12,6 +12,7 @@ const WATER_SHADER := preload("res://assets/shaders/still_water.gdshader")
 const SHAFT_SHADER := preload("res://assets/shaders/light_shaft.gdshader")
 const HEARTHSTONE := preload("res://systems/hearth/hearthstone.tscn")
 const DOOR := preload("res://systems/interiors/door.tscn")
+const BOSS_ARENA := preload("res://actors/enemy/boss_arena.tscn")
 
 ## Surface parameters per formation: what cut the rock decides how the rock reads.
 const ROCK_BY_FORMATION := {
@@ -77,6 +78,7 @@ func build(path: String) -> bool:
 	_build_features()
 	if spawn_encounters:
 		_build_encounters()
+	_build_boss_arenas()
 	Log.info("CaveInterior", "%s built: %d chambers, %d tris" % [meta.get("name", slug), chambers.size(), int(meta.get("tris", 0))])
 	return true
 
@@ -445,6 +447,91 @@ func _build_encounters() -> void:
 			marker.set_meta("ambush", bool(e.get("ambush", false)))
 			marker.add_to_group("enemy_spawn")
 			holder.add_child(marker)
+
+
+## DESIGN 5.4 promises a boss "a fog gate, a name card, a bespoke arena scene, a unique drop".
+## `boss_arena.tscn` has been in the project from the beginning and nothing anywhere instantiated
+## it, so every fight improvised an unbounded bound around wherever the boss happened to wake --
+## no threshold, no gate, nothing to tell a player the fight had begun and nothing to stop them
+## strolling back up the tunnel mid-swing. The forge already knows everything the arena needs:
+## the chamber it gave the role "boss" is the floor, and `beats` (the order the place is walked)
+## and `links` (what joins what) between them say which tunnel is the way in.
+##
+## Only a chamber with a *boss* in it gets one. Three of the nine deep places have a boss-role
+## chamber holding elites or a swarm instead, and a fog gate across a room full of hedge-wights
+## would be a promise the fight does not keep.
+func _build_boss_arenas() -> void:
+	var order := {}
+	var beats: Array = meta.get("beats", [])
+	for i in beats.size():
+		order[str((beats[i] as Dictionary).get("id", ""))] = i
+	for raw in meta.get("encounters", []):
+		var e: Dictionary = raw
+		if str(e.get("role", "")) != "boss":
+			continue
+		var ch_id := str(e.get("chamber", ""))
+		var boss_id := str(e.get("enemy", ""))
+		if not chambers.has(ch_id) or boss_id.is_empty():
+			continue
+		var approach := _approach_chamber(ch_id, order)
+		if approach.is_empty():
+			Log.warn("CaveInterior", "%s has no way into it, so no fog gate" % ch_id)
+			continue
+		var ch: Dictionary = chambers[ch_id]
+		var centre := _vec(ch["centre"])
+		var radii := _vec(ch["radii"])
+		var toward := _vec((chambers[approach] as Dictionary)["centre"]) - centre
+		toward.y = 0.0
+		if toward.length() < 0.01:
+			continue
+		toward = toward.normalized()
+		var arena := BOSS_ARENA.instantiate() as BossArena
+		arena.name = "BossArena_" + ch_id
+		arena.boss_id = boss_id
+		arena.centre = centre
+		# The chamber is an ellipsoid; the larger of its two ground radii is the circle that
+		# holds all of it, so nothing standing in the room is standing outside the fight.
+		arena.radius = maxf(radii.x, radii.z)
+		arena.min_radius = minf(BossArena.MIN_RADIUS, arena.radius)
+		arena.position = Vector3(0.0, float(ch.get("floor_y", centre.y)), 0.0) \
+				+ Vector3(centre.x, 0.0, centre.z) + toward * _edge_along(radii, toward)
+		# The gate is a plane across the tunnel: its thin axis lies along the way in.
+		arena.rotation.y = atan2(toward.x, toward.z)
+		add_child(arena)
+
+
+## The chamber a player comes *from* to reach this one: of everything joined to it, the one
+## the authored walk-through reaches first. A boss chamber has two tunnels -- the approach and
+## the way out to the shortcut -- and the gate belongs on the approach.
+func _approach_chamber(ch_id: String, order: Dictionary) -> String:
+	var mine := int(order.get(ch_id, 1 << 20))
+	var best := ""
+	var best_order := 1 << 20
+	for raw in meta.get("links", []):
+		var link: Array = raw
+		if link.size() < 2:
+			continue
+		var other := ""
+		if str(link[0]) == ch_id:
+			other = str(link[1])
+		elif str(link[1]) == ch_id:
+			other = str(link[0])
+		if other.is_empty() or not chambers.has(other):
+			continue
+		var theirs := int(order.get(other, 1 << 20))
+		if theirs < mine and theirs < best_order:
+			best = other
+			best_order = theirs
+	return best
+
+
+## How far the chamber's wall is from its centre in this direction, for an ellipse with these
+## ground radii. A gate placed at a flat `radius` would hang in the rock on the long axis.
+static func _edge_along(radii: Vector3, direction: Vector3) -> float:
+	var rx := maxf(radii.x, 0.5)
+	var rz := maxf(radii.z, 0.5)
+	var k := pow(direction.x / rx, 2.0) + pow(direction.z / rz, 2.0)
+	return 1.0 / sqrt(k) if k > 0.0 else rx
 
 
 func _instance_asset(path: String, at: Vector3, yaw: float, scale: float) -> Node3D:

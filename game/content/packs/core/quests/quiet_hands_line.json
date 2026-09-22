@@ -1,0 +1,316 @@
+[
+  {
+    "id": "core:quest/a_thing_nobody_reported",
+    "name": "A Thing Nobody Reported",
+    "layer": "faction",
+    "faction": "core:faction/quiet_hands",
+    "giver": "core:npc/half_ell",
+    "region": "core:region/brightwater",
+    "summary": "Four marks for a Merrowby carter and forty for a Gullhithe fisher, same barrow, same street, same week. The Hands want to know what the fisher saw in the Row that morning, and what was landed on the shingle that the Guild's own seal says was weighed.",
+    "notes": "Quiet Hands' line, second of four. Gated on the Unsaid Ledger and on rank Palm, which the day-book's other two endings do not pay for: a player who put it back on Quill's desk or handed it to him has closed this line, and that is the consequence. The chit is a real drop off the smugglers' own table.",
+    "requires": [
+      {"quest_done": "core:quest/the_unsaid_ledger"},
+      {"rep_min": ["core:faction/quiet_hands", 20]}
+    ],
+    "stages": [
+      {
+        "id": "two_fines",
+        "journal": "Half-Ell has the day-book open at the ninth month and one finger on two lines. Four marks and forty, and the margin says the reasoning: chartered trade against unchartered, which is real and is also a wall built where a wall was wanted. She does not care about the wall. She cares that a fisher with no charter and no purse was fined the price of a boat and paid it, and that a man who pays a fine that size without going to the Guild hall to shout about it is a man who was buying something.",
+        "objectives": [{"type": "talk", "target": "core:npc/half_ell", "text": "Hear Half-Ell out on the two fines"}],
+        "marker": {"place_id": "core:place/undercroft", "radius": 140}
+      },
+      {
+        "id": "the_fisher",
+        "journal": "Gullhithe: eel racks, gulls, and a man who says the figure out loud every morning when he pushes off, because a thing said aloud does not go quiet. That is Vale doctrine in a lake man's mouth and he knows it and does it anyway. He has the notice nailed up in his boat-house. He will not tell the Guild what he saw in the Row. He may tell somebody who has read the page.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/gullhithe", "radius": 140, "text": "Find Jory Wick at Gullhithe"},
+          {"type": "talk", "target": "core:npc/jory_wick", "text": "Ask the fisher what he saw in the Row"}
+        ],
+        "on_complete": [{"set_flag": "jory_told_what_he_saw"}]
+      },
+      {
+        "id": "the_wreck",
+        "journal": "What he saw was a cargo going into the tally-house yard at four in the morning with the seal already on it, which means it was weighed somewhere that is not the Row. He was fined forty marks that afternoon by a watchman who had never fined anybody before. The landing is the old smack broken on the shingle under the Lamp, where the nets are full of gulls and the men on it are Spire dropouts with charter-stamps.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/gullhithe_wreck", "radius": 140, "text": "Go out to the wreck on the shingle"},
+          {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "text": "Settle with the sayers on the wreck"},
+          {"type": "collect", "target": "core:item/forged_charter_chit", "count": 1, "text": "Take a chit off them"}
+        ],
+        "on_complete": [{"set_flag": "took_the_chit"}, {"renown": 10}]
+      },
+      {
+        "id": "whose_hand",
+        "journal": "The chit says a cargo was weighed, taxed and sealed, and it says so in the correct hand, and the correct hand is Orrin Quill's. Half-Ell has laid it beside a page of the day-book and is looking at the two of them the way a mason looks at a crack. A steward who forges his own Guild's seals is not a thief. He is a price. The question is what the Hands do with a price.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "whose_hand_is_on_the_chit",
+            "text": "Decide what the Hands do with the steward's hand",
+            "options": [
+              {
+                "id": "leverage",
+                "text": "Keep it. A steward who can be shown his own hand is a door.",
+                "effects": [
+                  {"set_flag": "quill_held_over"},
+                  {"rep": ["core:faction/quiet_hands", 20]},
+                  {"morality": -5}
+                ]
+              },
+              {
+                "id": "to_the_watch",
+                "text": "Give it to the paid watch. Let the law price its own steward.",
+                "effects": [
+                  {"set_flag": "quill_reported"},
+                  {"rep": ["core:faction/quiet_hands", 5]},
+                  {"rep": ["core:faction/tallymen", 10]},
+                  {"renown": 15},
+                  {"morality": 5}
+                ]
+              },
+              {
+                "id": "to_the_fisher",
+                "text": "Give it to Jory Wick. It is worth forty marks to exactly one man.",
+                "effects": [
+                  {"set_flag": "chit_to_jory"},
+                  {"rep": ["core:faction/quiet_hands", 10]},
+                  {"renown": 20},
+                  {"morality": 10},
+                  {"rumour": ["core:rumour/wick_barrow", 0.8]}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/undercroft", "radius": 140}
+      },
+      {
+        "id": "a_palm",
+        "auto": true,
+        "journal": "Half-Ell says Palm, which is the second rank of five and the first one that is a hand rather than a finger, and then says that the promotion is not for the chit. It is for going to Gullhithe at all, because the Hands have had that page for two years and nobody had thought to go and ask the man whose name was on it.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "nobody_reported_done"}, {"unlock_topic": "lantern_row"}]
+      }
+    ],
+    "rewards": {
+      "marks": 110,
+      "renown": 10,
+      "rep": [["core:faction/quiet_hands", 15]],
+      "items": [["core:item/lockpick", 3]],
+      "deed": "quest_complete_faction"
+    }
+  },
+
+  {
+    "id": "core:quest/against_the_bell",
+    "name": "Against the Bell",
+    "layer": "faction",
+    "faction": "core:faction/quiet_hands",
+    "giver": "core:npc/half_ell",
+    "region": "core:region/brightwater",
+    "summary": "The Tallymen built their strongroom against a curved black wall eleven feet under Lantern Row, and there is exactly one curved black Oroth thing under that end of the city. Find the charter entry that says so, and get to the back of the wall the Hands live inside.",
+    "notes": "Quiet Hands' line, third of four. The charter entry is Cassa Binder's copy, which she will hand over because she copies everything; the wall it describes is the outside of the Undercroft's bell, which is where the last heist goes in from.",
+    "requires": [
+      {"quest_done": "core:quest/a_thing_nobody_reported"},
+      {"rep_min": ["core:faction/quiet_hands", 45]}
+    ],
+    "stages": [
+      {
+        "id": "the_wall",
+        "journal": "Half-Ell has been in the Undercroft for twenty years and has never been all the way round the outside of the bell hall, because there is a place at the back of it where the stone is new and coursed and nobody cut it. Guild work. She wants to know what the Guild thinks it built there, and the Guild writes everything down, and everything the Guild writes down gets copied on Lantern Row by a woman who copies everything.",
+        "objectives": [{"type": "talk", "target": "core:npc/half_ell", "text": "Hear what is behind the bell hall"}],
+        "marker": {"place_id": "core:place/undercroft", "radius": 140}
+      },
+      {
+        "id": "the_charter_entry",
+        "journal": "Cassa Binder has copied charter entry 998/xi eleven times in nine years, for clerks, for a Sayer, and twice for men who gave no reason. She will copy it again and she will charge you for the paper. She has also written a note at the foot of her own copy that she has never charged anybody for, and she will tell you she has never once been asked the question it answers.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/tollmere", "radius": 160, "text": "Go up to the binder on Lantern Row"},
+          {"type": "talk", "target": "core:npc/cassa_binder", "text": "Ask Cassa Binder for the strongroom entry"},
+          {"type": "read_book", "target": "core:book/charter_strongroom", "text": "Read the charter entry"}
+        ],
+        "on_complete": [{"set_flag": "read_the_strongroom_entry"}]
+      },
+      {
+        "id": "behind_the_bell",
+        "journal": "Footings eleven feet deep, three walls of coursed limestone, and a fourth wall the Guild did not build: fused black stone, curved, of no known thickness, which the mason objected to and then was pleased about. There is one curved black Oroth thing eleven feet under that end of the city. The Guild built its strongroom against the outside of the bell the Hands live in, and both parties have known for ninety years, and neither has ever mentioned it. The crawl round the back of the hall is drake country.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/undercroft", "radius": 140, "text": "Go down and round the back of the bell hall"},
+          {"type": "kill", "target": "core:enemy/gutter_drake", "count": 4, "text": "Clear the crawl behind the bell"}
+        ],
+        "on_complete": [{"set_flag": "found_the_strongroom_wall"}, {"renown": 10}]
+      },
+      {
+        "id": "whose_name",
+        "journal": "The crawl ends at a hinge-less door in the bell's side that is not the Hands' door. Smaller. Builder-work, and it opens for names, and the Guild has coursed its strongroom's back wall straight across it without ever seeing it, because the Guild looks for doors. On the other side of it is the room where the Ledger of Prices lives. Half-Ell says a name has to be said to it and she is not going to be the one who says one, and that this is not superstition, it is that the door remembers.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "whose_name_goes_to_the_door",
+            "text": "Decide what name the door hears",
+            "options": [
+              {
+                "id": "your_own",
+                "text": "Your own. It opens for the known, and you are getting known.",
+                "effects": [
+                  {"set_flag": "door_heard_your_name"},
+                  {"rep": ["core:faction/quiet_hands", 15]},
+                  {"renown": 15}
+                ]
+              },
+              {
+                "id": "quills",
+                "text": "Orrin Quill's. If the Guild has been through it, his name will open it.",
+                "effects": [
+                  {"set_flag": "door_heard_quills_name"},
+                  {"rep": ["core:faction/quiet_hands", 20]},
+                  {"morality": -3}
+                ]
+              },
+              {
+                "id": "cut_the_wall",
+                "text": "No name. Cut the Guild's own coursing out and go in through their wall.",
+                "effects": [
+                  {"set_flag": "cut_the_guild_wall"},
+                  {"rep": ["core:faction/quiet_hands", 10]},
+                  {"renown": 10},
+                  {"rumour": ["core:rumour/hinge_less_door", 0.7]}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/undercroft", "radius": 140}
+      },
+      {
+        "id": "a_quiet_hand",
+        "auto": true,
+        "journal": "The way in is open and nobody has gone in, because Half-Ell wants one night to sit in the bell hall knowing that the wall she has leaned on for twenty years has the Guild's own strongroom on the other side of it. She says Quiet Hand, which is the middle rank, and then says that the middle rank is the only one where anybody is any use.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "against_the_bell_done"}, {"unlock_topic": "the_strongroom"}]
+      }
+    ],
+    "rewards": {
+      "marks": 150,
+      "renown": 15,
+      "rep": [["core:faction/quiet_hands", 20]],
+      "items": [["core:item/lockpick", 4]],
+      "deed": "quest_complete_faction"
+    }
+  },
+
+  {
+    "id": "core:quest/every_price",
+    "name": "Every Price the Law Has Taken",
+    "layer": "faction",
+    "faction": "core:faction/quiet_hands",
+    "giver": "core:npc/half_ell",
+    "region": "core:region/brightwater",
+    "summary": "Ninety-one years of what the law of Tollmere cost and who paid it, eleven feet under Lantern Row, behind a wall the Guild built against a bell. Take the Ledger of Prices, read it, and decide who reads it after you.",
+    "notes": "Quiet Hands' line, last of four: the heist WORLD_BIBLE 4.1 ends on, and the decision whether to publish. The Hands' whole power is a reading they have not done yet, which is the argument the line has been having with itself since the first day-book.",
+    "requires": [
+      {"quest_done": "core:quest/against_the_bell"},
+      {"rep_min": ["core:faction/quiet_hands", 70]}
+    ],
+    "stages": [
+      {
+        "id": "the_last_heist",
+        "journal": "Half-Ell has been sitting with it for a week and has come out the other side in a bad temper. The Hands have copied the Ledger for three hundred years and never taken it, and the argument about whether to publish is the only argument they have had that lasted longer than a night, and she is about to hand the whole of it to somebody who has been down here for a season. She says that is not sentiment, it is arithmetic: she is forty and has not heard her own name in twenty years, and a book that is going to be loud should be carried by somebody who can still be heard.",
+        "objectives": [{"type": "talk", "target": "core:npc/half_ell", "text": "Take the last heist off Half-Ell"}],
+        "marker": {"place_id": "core:place/undercroft", "radius": 140}
+      },
+      {
+        "id": "the_strongroom",
+        "journal": "In through the bell's side, along the Guild's own footings, and up into a dry room with a lamp bracket and no lamp. Oak boards, brass corners, a strap, a lock of three wards. And two men the Guild pays to stand in a room nobody can get into, who have been playing at counters for nine years and are very fast, and who are within their charter: a duel is lawful if both parties consent and a Tallyman witnesses it, and there is a Tallyman on the wall in a frame.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/undercroft", "radius": 140, "text": "Go in through the bell's side"},
+          {"type": "kill", "target": "core:enemy/bravo", "count": 2, "text": "Get past the Guild's two bravos"},
+          {"type": "collect", "target": "core:item/ledger_of_prices", "count": 1, "text": "Take the Ledger of Prices"}
+        ],
+        "on_complete": [{"set_flag": "took_the_ledger"}, {"renown": 30}]
+      },
+      {
+        "id": "read_it",
+        "journal": "Read it before you decide anything. Eleven stewards' hands, all tidy, and a fourth column headed *regard* in which each of them wrote down what the payer was owed or owing, socially, at the time. Without that column it is a tax roll and the Guild would nail it to the charter-board tomorrow with justified pride. The last line in it is in Orrin Quill's hand and it is not about anybody else: he has totalled the fourth column for ninety-one years and worked out what being thought well of in Tollmere is worth in the pound, and he has shown it to nobody, and he posts everything.",
+        "objectives": [{"type": "read_book", "target": "core:book/ledger_of_prices", "text": "Read the Ledger of Prices"}],
+        "on_complete": [{"set_flag": "read_the_ledger"}]
+      },
+      {
+        "id": "who_reads_it",
+        "journal": "Thirty-one marks in the pound. That is what standing is worth in this city, averaged over ninety-one years, in the Guild's own arithmetic, and it is the one number in the basin that says out loud what everybody from the Vale to the Choir has been arranging their lives around. Half-Ell is on the step. She has not said what she wants, which after a season down here you know is deliberate.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "who_reads_the_ledger",
+            "text": "Decide who reads the Ledger of Prices",
+            "options": [
+              {
+                "id": "publish",
+                "text": "Nail it to the charter-board. Let the city read what its law costs.",
+                "effects": [
+                  {"set_flag": "ledger_published"},
+                  {"rep": ["core:faction/quiet_hands", 25]},
+                  {"rep": ["core:faction/tallymen", -30]},
+                  {"renown": 50},
+                  {"morality": 10},
+                  {"rumour": ["core:rumour/lantern_row_numbers", 0.95]}
+                ]
+              },
+              {
+                "id": "keep_it_unsaid",
+                "text": "The Hands keep it. Their whole power is a reading they have not done yet.",
+                "effects": [
+                  {"set_flag": "ledger_unsaid"},
+                  {"rep": ["core:faction/quiet_hands", 30]},
+                  {"morality": -5}
+                ]
+              },
+              {
+                "id": "sell_it_back",
+                "text": "Sell it back to the Guild. They will pay more than the Hands can.",
+                "effects": [
+                  {"set_flag": "ledger_sold_back"},
+                  {"rep": ["core:faction/quiet_hands", -40]},
+                  {"rep": ["core:faction/tallymen", 25]},
+                  {"marks": 600},
+                  {"morality": -15},
+                  {"deed": ["betrayal", 2]}
+                ]
+              },
+              {
+                "id": "burn_it",
+                "text": "Burn it. Nobody should be able to look a price like that up.",
+                "effects": [
+                  {"set_flag": "ledger_burned"},
+                  {"rep": ["core:faction/quiet_hands", -10]},
+                  {"rep": ["core:faction/tallymen", -10]},
+                  {"renown": 20},
+                  {"morality": 5}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/undercroft", "radius": 140}
+      },
+      {
+        "id": "the_unsaid",
+        "auto": true,
+        "journal": "Whatever became of the book, the crawl behind the bell is bricked up from the inside now, by the Hands, in one night, with the Guild's own limestone. Half-Ell put one glove on the step and kept the other, which is what the Hands do, and would not say where the other one is.",
+        "objectives": [],
+        "on_enter": [
+          {"set_flag": "every_price_done"},
+          {"set_flag": "quiet_hands_line_done"},
+          {"set_flag": "ranked_in_a_faction"},
+          {"unlock_topic": "the_unsaid"}
+        ]
+      }
+    ],
+    "rewards": {
+      "marks": 250,
+      "renown": 25,
+      "rep": [["core:faction/quiet_hands", 25]],
+      "items": [["core:item/unsaid_glove", 1]],
+      "deed": "quest_complete_faction"
+    }
+  }
+]

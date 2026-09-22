@@ -25,7 +25,7 @@ const PARTS_ROOT := "res://assets/models/characters/"
 const SLOT_DIRS := {
 	"head": "heads", "hair": "hair", "beard": "beards", "torso": "clothing", "legs": "clothing",
 	"feet": "clothing", "hands": "clothing", "belt": "clothing", "back": "clothing",
-	"headgear": "clothing", "attachment": "attachments",
+	"headgear": "clothing", "attachment": "attachments", "body": "bodies",
 }
 ## CONTRACTS.md §2 socket bones, exposed as BoneAttachment3D children.
 const SOCKETS := {
@@ -57,6 +57,10 @@ var _clip_data: Dictionary = {}          ## clip name -> {loop, length, events[]
 var _default_meshes: Dictionary = {}     ## logical name -> MeshInstance3D from the rig GLB
 var _default_eyes: Array[MeshInstance3D] = []   ## both of the rig's eyeballs
 var _part_meshes: Dictionary = {}        ## slot -> Array[MeshInstance3D]
+## Which `bodies/*` mesh is standing in for the rig's own body, or "" for the rig's own.
+## Readable because the part node cannot answer it: every variant's mesh is called `Body`
+## inside its own glTF, so they all arrive here named `body_Body`.
+var body_variant_worn := ""
 var _sockets: Dictionary = {}            ## socket bone name -> BoneAttachment3D
 var _one_shot := ""
 var _one_shot_time := 0.0
@@ -265,6 +269,7 @@ func apply_appearance(d: Variant) -> void:
 			continue
 		_add_part(slot, part_name)
 	_apply_morality_parts()
+	_apply_body_variant()
 	var own_head: bool = appearance.part("head").is_empty() or appearance.part("head") == "default"
 	_show_default(_default_meshes.get("head"), own_head)
 	# a head part brings its own eyes; the rig's pair stayed on underneath, two irises deep
@@ -346,6 +351,12 @@ func _apply_colours() -> void:
 	var skin := appearance.skin_tint()
 	for slot in _part_meshes:
 		for mi in _part_meshes[slot]:
+			# A body variant is skin, not cloth. Without this it falls through to
+			# `_colour_key_for`, which has no key for it, and a heavy villager keeps the
+			# bake's own default tone while his face takes the record's.
+			if slot == "body":
+				_tint(mi, skin)
+				continue
 			if slot == "head":
 				if _is_eye(mi):
 					_tint_iris(mi)
@@ -408,15 +419,47 @@ func _tint(mi: MeshInstance3D, c: Color) -> void:
 		mi.set_surface_override_material(i, m)
 
 
+## Body variants that may be worn on *this* rig, and the one that may not.
+##
+## `_add_part` re-skins a part's mesh onto the shared `Skeleton3D`, which is only honest
+## when the part was built around the same bones. Measured against the default skeleton,
+## the worst joint in `slight` moves 3.3 mm and in `heavy` 1.9 mm -- they are shape, not
+## skeleton, and they wear straight onto this rig.
+##
+## `child` is a different skeleton: its hips sit at 0.646 m against 0.980, its upper arm is
+## 192 mm against 292, and its worst joint is 476 mm from the adult's, 9.2 m summed over
+## 29 bones. Draping that mesh on adult bones would stretch a child back into an adult and
+## look worse than the honest scale it gets now. A real child needs its own rig *and* its
+## own bake of the clips (CONTRACTS §2 pins the clips to the default proportions), which is
+## a second rig, not a wiring change -- so `body_variant()` still names it, and the model
+## still falls back to scaling for it, deliberately and in one place.
+const WEARABLE_BODIES := ["slight", "heavy"]
+
+
+## The body this record wears, when it is not the default one.
+##
+## `CharacterAppearance.body_variant()` has always named the right one and nothing ever
+## loaded it, because `bodies/child`, `heavy` and `slight` each held a 31-bone skeleton and
+## no mesh at all: the forge built the geometry and the glTF exporter dropped it as invalid
+## without failing the build.
+func _apply_body_variant() -> void:
+	var variant := appearance.body_variant()
+	body_variant_worn = variant if WEARABLE_BODIES.has(variant) and _add_part("body", variant) else ""
+	_show_default(_default_meshes.get("body"), body_variant_worn.is_empty())
+
+
 ## Runtime bone scaling would break clips authored on the default proportions
-## (CONTRACTS.md §2), so overall size is a uniform scale. Finer shape was to come from the
-## exported body variants (`CharacterAppearance.body_variant()`), but the three the forge has
-## written so far (bodies/child, heavy, slight) hold a skeleton and no mesh, so until they
-## arrive build is a modest widening of the whole rig: enough to read across a room, small
-## enough that the clips still sit right.
+## (CONTRACTS.md §2), so overall size is a uniform scale.
+##
+## The widening is the fallback and only the fallback. With a real variant on, the shape is
+## in the mesh -- baked at the proportions the forge was given -- and scaling the rig as
+## well would count the same build twice and hand a heavy villager a second helping of
+## width.
 func _apply_proportions() -> void:
 	var s: float = appearance.height / 1.78
-	var wide: float = lerpf(0.93, 1.09, clampf(appearance.build, 0.0, 1.0))
+	var wide := 1.0
+	if body_variant_worn.is_empty():
+		wide = lerpf(0.93, 1.09, clampf(appearance.build, 0.0, 1.0))
 	if _rig_root != null:
 		_rig_root.scale = Vector3(s * wide, s, s * wide)
 

@@ -22,16 +22,16 @@
       30.93
     ]
   ],
-  "tris": 350000,
-  "collision_tris": 77000,
+  "tris": 279999,
+  "collision_tris": 61599,
   "chunks": {
-    "porch": 88134,
-    "nave_high": 26439,
-    "aisle": 18084,
-    "chapter": 22617,
-    "crossing": 83581,
-    "tower_stair": 49692,
-    "crypt": 61453
+    "porch": 73798,
+    "nave_high": 24037,
+    "aisle": 16800,
+    "chapter": 19527,
+    "crossing": 65738,
+    "tower_stair": 37916,
+    "crypt": 42183
   },
   "entrance": [
     0.0,

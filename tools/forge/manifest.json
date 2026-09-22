@@ -2166,9 +2166,9 @@
    "seed": 8793
   },
   {
-   "generator": "gen_ground_kit",
-   "kind": "hedge_segment",
-   "palette": "core:region/hearthvale",
+   "generator": "gen_props",
+   "kind": "name_table",
+   "palette": "core:region/cinderlea",
    "variant": "a",
    "seed": 8846
   },
@@ -2176,33 +2176,33 @@
    "generator": "gen_ground_kit",
    "kind": "hedge_segment",
    "palette": "core:region/hearthvale",
-   "variant": "b",
-   "seed": 8863
-  },
-  {
-   "generator": "gen_ground_kit",
-   "kind": "hedge_segment",
-   "palette": "core:region/brightwater",
    "variant": "a",
    "seed": 8899
   },
   {
    "generator": "gen_ground_kit",
    "kind": "hedge_segment",
-   "palette": "core:region/brightwater",
+   "palette": "core:region/hearthvale",
    "variant": "b",
    "seed": 8916
   },
   {
    "generator": "gen_ground_kit",
-   "kind": "gate_post",
-   "palette": "core:region/hearthvale",
+   "kind": "hedge_segment",
+   "palette": "core:region/brightwater",
    "variant": "a",
    "seed": 8952
   },
   {
    "generator": "gen_ground_kit",
-   "kind": "milestone",
+   "kind": "hedge_segment",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 8969
+  },
+  {
+   "generator": "gen_ground_kit",
+   "kind": "gate_post",
    "palette": "core:region/hearthvale",
    "variant": "a",
    "seed": 9005
@@ -2211,8 +2211,15 @@
    "generator": "gen_ground_kit",
    "kind": "milestone",
    "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9058
+  },
+  {
+   "generator": "gen_ground_kit",
+   "kind": "milestone",
+   "palette": "core:region/hearthvale",
    "variant": "b",
-   "seed": 9022
+   "seed": 9075
   }
  ]
 }

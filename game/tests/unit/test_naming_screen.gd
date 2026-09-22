@@ -220,18 +220,33 @@ func test_the_height_slider_scales_the_rig() -> void:
 	assert_near(_model()._rig_root.scale.y, 1.60 / 1.78, 0.001, "the rig did not shrink with the slider")
 
 
-func test_the_build_slider_widens_the_rig() -> void:
+## The build slider has to change the body, and it does it two ways now. With the forge's
+## bodies present, a slight or a heavy record *wears a different mesh* -- which is the whole
+## point of baking the variants, and the rig deliberately stops widening then, or the same
+## build would be counted twice. Without them, widening the rig is the fallback.
+##
+## This asserted only the widening, so it pinned the fallback and went red on the day the
+## real bodies arrived. A test that only knows one of two right answers is a test that
+## punishes the fix.
+func test_the_build_slider_changes_the_body() -> void:
 	var s := _slider("build")
 	assert_true(s != null, "no build slider")
 	if s == null or not _forge_built():
 		return
 	s.value = 0.0
 	var slight: Vector3 = _model()._rig_root.scale
-	assert_true(slight.x < slight.y, "a slight build should be narrower than it is tall")
+	var slight_body := _model().body_variant_worn
 	s.value = 1.0
 	var broad: Vector3 = _model()._rig_root.scale
-	assert_true(broad.x > slight.x, "the build slider did not widen the rig")
+	var broad_body := _model().body_variant_worn
 	assert_near(broad.y, slight.y, 0.0001, "build must not change height")
+	if slight_body.is_empty() and broad_body.is_empty():
+		assert_true(slight.x < slight.y, "a slight build should be narrower than it is tall")
+		assert_true(broad.x > slight.x, "the build slider did not widen the rig")
+		return
+	assert_ne(slight_body, broad_body,
+		"the build slider left the same body mesh on at both ends: %s" % slight_body)
+	assert_near(broad.x, broad.y, 0.002, "a variant body was widened by the slider as well")
 
 
 # --- the Calling ----------------------------------------------------------------------------------

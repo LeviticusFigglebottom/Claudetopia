@@ -1,26 +1,32 @@
 # PROGRESS.md — state of Wickmere
 
-_Updated 2026-09-19 (session 1)._
+_Updated 2026-09-22 (session 3)._
 
 ## State
 
-**1080 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
-clean and sweeps all six regions and 34 places. The scripted journey passes all 15 of
-DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
-of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
-definitions. The world is 16 Terrain3D regions over 8 km square, built deterministically in
-about two and a half minutes, with 404,000 scatter instances of 79 forged assets, 596
-creatures in 247 groups, 24 interiors with doors in the ground, and the worst captured frame
-costing 95 draw calls and 0.2M primitives against budgets of 2000 and 1.5M.**
+**1204 unit tests green, 0 failed, 0 content problems and 0 script errors. The smoke run
+builds all 24 shipping interiors clean and sweeps all six regions and 34 places. The scripted
+journey passes all 16 of DESIGN's done-list promises in the built world — including the
+sixteenth, which had never once run, because it was called and never written and the file
+would not parse. 912 content definitions: 236 items, 89 rumours, 76 NPC defs (68 of them
+named people), 64 dialogues, 48 POIs, 40 quests, 40 books, 34 places, 26 enemies, 25
+interiors, 21 recipes, 15 sayings, 8 factions, 6 callings, 5 bosses. The world is 16
+Terrain3D regions over 8 km square, built deterministically in about three and a half
+minutes, with 1024 cells of scatter, 24 interiors with doors in the ground, all 55 points of
+interest dressed and standing, 16 Hearthstones in the open country, and the worst captured
+frame — a village street — costing 1240 draw calls and 1.18 M primitives against budgets of
+2000 and 1.5 M.**
 
-Verify the whole thing with four commands:
+Four commands verify it, and a fifth presses the way in:
 
 ```
-./run.sh test       # the unit suite; content validation fails the build
+./run.sh test       # the unit suite; content problems and logged errors both fail the run
 ./run.sh smoke      # build every interior for real; fail on any error
 ./run.sh journey    # one scripted run through every promise in the done list
+./run.sh flow       # boot, the Naming, and the world appearing, in captures
 ./run.sh perf       # draw calls and primitives against the budgets
 ```
+
 
 Merged and working on the main branch:
 
@@ -60,9 +66,11 @@ Merged and working on the main branch:
 * **Narrative** — 64 NPCs with weekly schedules and dialogue graphs of their own, living in
   every settlement of the six regions (DESIGN §6's sixty are met: Grandfather Hollow,
   Brindlecrag, Nauve's Landing and Greyfold had nobody at all, and every city, town and
-  village now has at least three residents and a shop), the seven main quests, three faction
-  lines, six side quests, 20 books carrying the four contradictory accounts, 89 rumours of
-  which the local ones are seeded into a region's settlements when you walk in.
+  village now has at least three residents and a shop), the seven main quests, four faction
+  lines of four quests each, eleven side quests across all six regions, 25 books carrying the
+  four contradictory accounts, 89 rumours of which the local ones are seeded into a region's
+  settlements when you walk in. Every faction and side quest is taken off a choice in its
+  giver's own dialogue and every decision one asks for is on a button in front of somebody.
 * **Audio** — a full synthesis toolkit (no sample or recording enters the project): six
   region themes in five stems each, built on a five-note bell motif from the Toll and
   developed per region's mode; 43 ambience beds and one-shot pools by time, weather and
@@ -86,39 +94,33 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
 
 ## Next
 
-1. The surface and tree passes above, then re-shoot and judge the six regions again.
-2. Hedgerows and field boundaries in Hearthvale: the bible's defining feature, and the thing
-   that would most change how the downs read.
-3. **Nothing named is standing in the world.** `game/world/pois/` is empty, so `scene_for()`
-   in the world build never resolves a scene and all 34 places and 48 POIs are flattened pads
-   with nothing on them. The forge has built the six landmark meshes — the Cracked Toll, the
-   Lamp, the Sayer's Spire, both Choir Colossi, the Fallen Hand — and seven standing stones,
-   and no code places any of them. You can stand on the exact coordinates of a forty-metre
-   bronze bell that the main quest turns on and see a bald hillside. This is the largest
-   remaining hole in the world and the one the drop test most depends on. Assigned to the
-   world stream: resolve a landmark `.glb` as the place's scene, give it collision and a
-   deliberate yaw, and place standing stones as hand-authored sets rather than scatter.
-4. **The settlements are built but not planned.** Eleven places now carry a fabric of
-   generated houses around their hand-built interiors — 54 slate roofs in Tollmere, 34 thatched
-   ones in Merrowby, with the culture's walls, a plinth, a framed door and the carts, hay,
-   fences and market stalls the forge has made. What they do not have is a *street*: the roads
-   stop at the edge of the flattened pad instead of running through it, so the layout falls back
-   to a ring around a green every time. `Settlement._along_road` already fronts houses onto a
-   road correctly when one crosses the pad (there is a test for it) — the roads simply do not.
-   Second: the pads are far wider than the towns on them and are paved edge to edge, so every
-   village sits in the middle of a two-hundred-metre cobbled disc.
-5. NPC and encounter density tuning. There is now somebody to walk the country and feel it:
-   until this pass **nothing outside a test had ever called `NpcRegistry.spawn()`**, so the
-   schedules ran, dispositions changed and guards noticed crimes in villages that contained no
-   bodies at all. `NpcStreamer` follows whoever the world is streaming around and keeps people
-   standing in a 240 m ring (330 m before they are taken down again), capped at 48. What is
-   untuned is how many and how busy. Whoever the hour has indoors is not stood up in the
-   street — so a village genuinely empties at three in the morning, and rain sends the idlers
-   home — and going through a door stands the residents up in the room their hour calls for.
-   Nobody is placed inside an interior they do not live in, so an inn at midday has its
-   landlord and no drinkers.
-6. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
-   score: the downs currently read as bare ground with trees on it.
+Items 3, 4 and 5 of the previous list are done and are written up in their own sections at
+the end of this file: every place and POI now has something standing on it, the settlement
+fabric is inside the draw-call budget with windows and chimneys on it, and the country has
+sixty-eight named people in it instead of forty-three. What is left, in the order it is
+worth doing:
+
+1. **Play it.** Still the first item, and still nobody has. The journey proves sixteen
+   promises hold; it cannot tell you whether swinging a sword feels like anything.
+2. **Hedgerows, ground cover and light.** The downs read as bare ground with trees on it and
+   the country casts no shadow at all, which is the single largest reason a frame reads flat.
+   In hand.
+3. **A graded road can stand a hundred metres above the ground.** `carve_roads` limits a
+   road's profile to 11% and writes it into the heightmap; where the ground falls faster than
+   the road descends — the spur out of Kharrow Hold toward Gullhithe — the road becomes an
+   arête that nothing in the region's shape function put there. Invisible to every audit we
+   have and obvious from the ground.
+4. **The quest plumbing three.** `quest_at` with an integer stage is off by one across the
+   pack (the context returns a 0-based index; the content is written 1-based), nothing in the
+   game emits `escort_arrived`, and the authored quest items that `collect` objectives name
+   are placed in the world by nothing.
+5. **Close the drop test.** Colour was 0.64 and landform 0.21 against bars of 0.80 and 0.55,
+   measured before any of this session's work; both want re-measuring once the ground cover
+   and light land, and the landform proposal in `## Sightlines, answered` is the honest next
+   step for the axis that is barely above chance.
+6. **Encounters and people at the points of interest.** Every POI's `encounter` sentence and
+   its named NPC — the lamplighter, the toll-keeper, the knight in the eye, the hermit — are
+   still absent, so the props are set out as if somebody had just stepped away.
 
 ## Deliberately not done (pass two)
 
@@ -396,8 +398,12 @@ Enchanting was worse off than unreachable. The Name-table is named in DESIGN §5
 enchanting skill's own definition and in two item descriptions, and **no interior in the
 world contained one**. The Tolling Order writes notes into iron, so the Bell Chapter-House at
 Pilgrim's Ash has one now — added to Cadwen's own recipe rather than to the warden trade,
-because Pellam keeps the Wardens' Roll and that is a different order entirely. There is no
-Name-table *mesh* yet; it stands in as a trestle and is written down as owed.
+because Pellam keeps the Wardens' Roll and that is a different order entirely. ~~There is no
+Name-table *mesh* yet; it stands in as a trestle and is written down as owed.~~ **Paid:**
+`gen_props.name_table` builds it in Cinderlea's palette — one heavy baulk of near-black
+timber on four iron-strapped posts, a plate of bell bronze let into the top with the
+Order's note cut into it, and a small bronze bowl for the Ember Motes that pay for the
+writing — and the chapter cell's muster room is regenerated around it.
 
 A note on the tests, because it is the same failure one level up: two of the tests I wrote for
 this passed while asserting nothing — one iterated an empty list of stations, one built the
@@ -546,6 +552,13 @@ the Calling cards' wrapping focus chain trapped Tab for ever.
 
 ## Known issues
 
+* **Sixteen `Parameter "material" is null` messages a headless run**, one per NPC actor freed
+  in `test_npc_actor`'s teardown, raised inside Godot's *dummy* material storage
+  (`material_get_instance_shader_parameters`). Nothing in this project sets an instance
+  shader parameter anywhere, and the bodies it frees all carry a `material_override`, so this
+  is the headless renderer's own teardown path rather than ours. Recorded so the next person
+  does not spend an hour on it; it does not appear under a real renderer and it fails nothing.
+
 * **A record from before that vocabulary existed** — `{"skin": 3, "hair": 2}`, which is what
   the Naming used to write and what the journey still writes — is converted at the edge now
   (an index means the tone it indexed). Any save still carrying the older shape makes a proper
@@ -594,9 +607,17 @@ the Calling cards' wrapping focus chain trapped Tab for ever.
   photographer's choice and not the place's.
 * Terrain3D + lavapipe (software Vulkan) crashes in JIT code; use OpenGL for
   headless captures (ARCHITECTURE.md §10).
-* Cave floors show a faint dune ripple where the shell noise is applied before the
-  floor is flattened. It reads as drifted sand rather than stone in the flattest
-  chambers; the fix is to flatten first and noise the walls only.
+* ~~Cave floors show a faint dune ripple where the shell noise is applied before the
+  floor is flattened.~~ **Fixed, and the diagnosis was wrong.** The floors were flat all
+  along -- measured off the shell, the lowest surface in every square metre of the
+  Undercroft's bell hall and Hollin Barrow's reeve hall is flat to one millimetre over
+  five hundred cells, and masking the noise around them changes nothing you can see. What
+  the shells did not have was **normals**: `trimesh` writes a NORMAL attribute only if the
+  mesh already has vertex normals cached, nothing ever asked for them, and glTF says a
+  reader must then compute flat ones -- so Godot was shading three hundred thousand
+  separate facets per cave. On a wall that passes for broken rock; on a flat floor it is
+  drifted sand. `include_normals=True` on the export, all nine rebuilt, structure
+  unchanged to the centimetre.
 * Compatibility renderer lacks SSAO/volumetric fog; the look must not depend on them.
 
 ## Exteriors: the fabric under budget
@@ -808,14 +829,43 @@ visible by looking:
   each course, and the stones are the shader's, the way `Settlement` does a house.
 * **A cliff was a wall.** The waterfall face was slabs at even spacing all turned one way on a
   straight line: brickwork in a field. It is an arc now whose ends come forward, every slab
-  turned to the tangent and then well off it, scaled 0.78–1.22 and staggered in depth, with a
-  bank of ground behind it.
+  turned to the tangent and then well off it, scaled 0.78–1.22 and staggered in depth.
+* **And then the fix for that was worse.** An earth bank was put behind the face so the lip
+  would read as a hillside's edge, and Whitecut Falls came back as a smooth brown cone with
+  no rock and no water visible at all — a mound as tall as the fall, six metres behind it,
+  simply swallows it. The bank is gone. A dressing that raises its own hill fights the
+  terrain it stands on, and the ground behind a waterfall is the world builder's business.
 * **Old snow was a marshmallow.** `mound` drew perfect domes. It swells and dips in broad
   lobes now, jitters its rim, and the drifts lie long and low against the walls.
+* **Two trees were thorn-balls.** A tree's leaf cards scale with the tree, and much past twice
+  its built size they stop reading as foliage and start reading as shards. The Singing Yew
+  came down from 3.1 to 2.2 and Willow Isle's pollard from 2.6 to 2.1; both are still half
+  again anything around them, which is all "strange" needs.
+* **A colossus's head was an egg.** What a head faces is decided by the ground and where you
+  walk up from is not, so a brow, a nose and one eye on the front face photographed from
+  behind as a smooth ovoid with brick coursing on it. It has a brow band right round, cheeks,
+  a jaw, a chin and a socket on both sides now, and carved stone at a 3.4 m unit rather than
+  the Oroth 1.1 m, which was bricking a face.
 * **Dusk at 19:00 is night.** The first camp and shrine shots were black ground under a violet
-  sky. The plan's dusk hour is 18:00, and it scores every camera bearing by how flat its
-  ground is rather than taking the approach side blind — a camera forty metres up a slope
-  photographs a map, which is what the first Chain Bridge shot was.
+  sky. The plan's dusk hour is 17:10 — the last hour where a fire reads against the sky and
+  the ground still does — any POI whose own feature text is about a light gets it whatever its
+  kind, and every camera bearing is scored by how flat its ground is rather than taking the
+  approach side blind, because a camera forty metres up a slope photographs a map.
+
+### Two GDScript traps this work walked into, both worth knowing
+
+* **Two `class_name` scripts that name each other may not resolve, and the error lands on a
+  third file.** Every builder takes a `PoiDressing` and `PoiDressing` called
+  `PoiBuilders.build()`. GDScript resolved that pair when the POI tests ran alone and failed
+  once an import had rebuilt the global class cache, reporting `Could not resolve class
+  "PoiBuilders", because of a parser error` against `test_pois.gd` — which merely mentions the
+  name. `poi_builders.gd` has no `class_name` at all now: `PoiDressing` loads it by path and
+  the list of built kinds lives on `PoiDressing.KINDS_BUILT`.
+* **A loop variable that shadows one in the same function stops the whole script compiling.**
+  `_bridge_arch` holds the near end of its span in `a` and a later loop declared `a` again.
+  Nothing that draws a point of interest loads when that happens, the test runner reports
+  "did not compile" rather than a failure, and neither branch held both declarations at once
+  so neither branch saw it — only the integration branch did.
 
 ### What is still wanting
 
@@ -839,6 +889,20 @@ visible by looking:
   the Chain Bridge, the knight in the Headless Watch's eye and the hermit of Willow Isle are
   all named in the data and all absent; their props are set out as though they had just
   stepped away. That is the content stream's.
+* **The One Poppy does not read from thirty metres.** The dressing is honest to the fiction —
+  one red poppy in a square kilometre of grey grass, with a ring of stones somebody set round
+  it and a cup of water beside it — and photographed from the plan's distance the poppy is a
+  speck and the ring is pebbles. It wants a mark a person would see: the ring at three times
+  the size, or a low cairn. That was not changed blind, because the last unverified
+  improvement in this work (the bank behind the waterfall) was worse than the fault.
+* **The Headless Watch reads as a head now, and a little like a helmet.** The brow band that
+  fixed the egg is a continuous ridge, which from the approach reads as a visor, and the
+  carved stone at a 3.4 m unit is very smooth beside the region's other Oroth work. Breaking
+  the band over the sockets and coarsening the surface would finish it.
+* **The Thirteenth reads as fallen masonry, not as a body.** The torso, arms and legs are
+  boxes at a colossus's scale and from most angles they merge into one long mass. The
+  excavation, the spoil and the Sayer camp at its head carry the scene; the figure does not.
+  It wants separated limbs and a shoulder taper.
 * **The far ring builds silhouettes but they are not impostors.** A far-ring dressing draws its
   LOD1 meshes out to 950 m, which is cheap enough at 55 POIs but is not what a proper
   impostor would cost.
@@ -991,3 +1055,247 @@ The world build went from 217 s to 260 s and from 346 306 scatter instances to 3
   particular: the asset has arms, but nothing writes the names of the places the road goes to
   onto them, though the road data knows both ends.
 * **Bridge abutments were not done.** The road crossings are left clear, as asked.
+## Sightlines, answered
+
+DESIGN §4 ends "placed with sightlines: each POI names at least one other POI it should be
+visible from", and `tools/sightlines.py` had been saying for a while that the land did not
+agree: **90 authored sightlines, 54 clear, 36 the ground refused, and 10 POIs that no vantage
+could see at all.** Until they were answered, surveying from those vistas found nothing and
+the POIs behind them could only be found by walking into them, which is the right way for the
+feature to degrade and no way to leave it.
+
+They are answered. The tool now reads **90 authored sightlines: 87 the land honours, 0 it
+refuses, 3 into hidden valleys.** Every POI outside those three can be seen from somewhere.
+
+### First, the heights were guesses
+
+`LANDMARK_M` — how far a thing of each kind stands above its own ground — was written before a
+single POI had geometry. Now that all 55 are dressed, `poi_builders.gd` is the authority, and
+four of the twelve numbers were wrong by a factor. A watch drum is 7.6 m and carries its
+fire-bowl to about 10, not 18; the Tumbled Watch is 5, because it is lying down. A waterfall's
+face is 11 to 13 m, not 24. A standing gable is 4.6 m and the tallest Oroth column 7.2, not 8
+across the board. A bell buoy is a barrel with a post and a cage on it and the One Poppy is a
+poppy, so `strange` is 2.5 and not 6. Three went the other way: the Hart Bones' antlers reach
+15 m, a menhir set at 1.15–1.55 scale stands 5, and the Chain Bridge's pylons are 7.8 m over
+their deck.
+
+Correcting them made the reading **worse** before it made it better — 53 clear and 37 refused,
+with the Glass Falls joining the POIs nothing could see. That order is recorded because it is
+the evidence that these are measurements and not a fit, which is the same reason the per-kind
+heights' own arrival is recorded above.
+
+### Then, every line
+
+Nineteen POIs moved and seven vantages were replaced. No POI was deleted and no line dropped —
+the authored count is still 90 — and the terrain generator was not touched, because the land is
+built last and the places land on it (DECISIONS, 2026-09-20).
+
+| line | what was wrong | what was done |
+|---|---|---|
+| Three Sisters → Seven Stones | 178 m of mountain at 707 m; the stones lay in a bowl at 464 m that nothing in the world could see into | the stones moved 161 m onto the ridge at 577 m, where a setting of stones belongs; the line replaced by the Clanless Camp, who have no stone of their own and can see all seven |
+| Watch of the Gate → Seven Stones | 96 m over | the same move answers it |
+| Hidden Tarn → Watch of the Gate | 90 m of mountain | the Watch moved 70 m along the pass shoulder; its second vantage is the Seven Stones at 470 m, and the two see each other |
+| Chain Bridge → Three Sisters | 135 m of ridge | replaced by the Clanless Camp, 1044 m |
+| Kharrow Hold → Chain Bridge | 21 m — the hold's own level platform hides a bridge 112 m off and 47 m below it | the bridge moved 102 m onto the lower shelf, 192 m out, where the hold looks down on it |
+| Three Sisters → Chain Bridge | 141 m of ridge, and nothing in Skerrow can see into that hollow | the line went to the Breach, which carried only one vantage and can hold Weaverdeep's; the Chain Bridge keeps the one its own brief names |
+| Thornmarch → Breach | 30 m over | the Breach moved 172 m north along the Briar |
+| Foxfire Falls ↔ Charcoal Camp | 55 m and 49 m, both ways | Foxfire Falls moved 161 m up its ravine to 164 m; both ways clear, and Weaverdeep's line with them |
+| Weaverdeep → Foxfire Falls | 39 m over | the same move |
+| Thornmarch / Standing Moot / Hunters' Stand → Hart Bones | 42, 22 and 14 m over; the skull lay in a hollow only Brightwater, 3.4 km off, could see | the Hart Bones moved 228 m onto the rise at 196 m |
+| Hart Bones → Hunters' Stand | 13 m over | the same move |
+| Sunken Choir → Thirteenth | 23 m over | the Thirteenth moved 291 m onto the shelf at 116 m, still 420 m from the ring it walked away from |
+| Headless Watch → Thirteenth | 20 m over | the same move, and the Watch's own below |
+| Sunken Choir → Headless Watch | 12 m over | the Headless Watch moved 102 m |
+| Glass Bridge → Glass Falls, Sunken Choir → Glass Falls | 14 m and 7 m over | the Glass Falls moved 100 m along the scarp |
+| Greyfold → Cold Fire, One Poppy → Cold Fire | 14 m and 3 m over | the camp moved 72 m toward Greyfold, whose people sat down in it |
+| Cracked Toll → Bell Meadow Stones, Merrowby → Bell Meadow Stones | 9 m and 8 m of chalk; the stones lay in a hollow at 27 m | moved 89 m onto the rise at 34 m, nearer the crater whose crown they carry |
+| Fallen Hand → Rib Cathedral | 9 m over | the ribs moved 40 m |
+| Fernhold → Mossbridge, Oiled Stone → Mossbridge | 8 m and 3 m over | Mossbridge moved 120 m, still 101 m off the road it carries |
+| Pilgrim's Ash → Pilgrims' Bell | 7 m over | the bell moved 80 m along the pilgrim road |
+| Tollmere → Bell Buoys | 6 m of the city's own shore, and there is no water Tollmere can see to move them onto | replaced by the Sayers' Spire at 655 m: the Sayers tuned the buoys, so it is their spire that watches them |
+| Gullhithe → Bell Buoys | 5 m over | replaced by the Long Stride at 1342 m: you cross the causeway and the field of bells is off the rail |
+| Tollmere → North Cliff Beacon | 6 m over | the beacon moved 28 m along the cliff |
+| Merrowby → Larkbourne Ford | 3 m of chalk — and the ford stood 335 m from the Larkbourne | moved 337 m onto the river it is named for, which answers the dressing stream's complaint as well |
+| Wardens' Rest → Tumbled Watch | 3 m over at 1005 m | the tower moved 82 m further down its dry valley |
+| Tollmere → Willow Isle | 3 m over | the islet moved 20 m |
+| Singing Yew → Ansel's Hedge Shrine | 3 m over | the shrine moved 20 m |
+| Singing Yew → Foxglove Dell | 3 m over | left refused: it is a hidden valley |
+| Frostmother's Cradle → Hidden Tarn | 146 m over | left refused: it is a hidden valley |
+| Cantor's Seat → Hushline Stair | 42 m over | left refused: it is a hidden valley |
+
+Every POI stayed in its region and in character: the ford is on its river, the bridges on
+crossings, the stones on skylines, the camps in hollows.
+
+### Two things the first pass got wrong
+
+**A pad flattens the ground under the POI it moves to**, so the height a POI is aimed at is not
+the height it lands at. Mossbridge and the Watch of the Gate were placed on ground that read
+clear before the build and came up 2 m and 5 m short after it, because their new pads took 2
+and 5 metres off the knoll each was standing on. They were re-aimed at ground that clears
+whatever the pad does to it — every candidate re-tested at ±3 m of pad level — and the second
+build held. Anything else that picks positions off `heights.r32` should expect the same.
+
+**The released Chain Bridge line was first pointed at the bridge from Weaverdeep**, 3.7 km away
+through a mountain, which is the same mistake in miniature: a line is not answered by being
+given to somebody else's name, only by being given to ground that can hold it. It went to the
+Breach instead, which is 240 m from the Thornmarch and had only one vantage.
+
+### What the tool says now, and what keeps it saying it
+
+`tools/sightlines.py` counts the three hidden-valley lines apart rather than as faults. It
+already made that distinction for the POIs and not for the lines, which is why a valley doing
+its job read as a placement error.
+
+`tools/world/tests/test_sightlines.py` marches the same audit over the built world and fails if
+any line is refused, if any POI outside the hidden valleys loses its last vantage, if the
+authored count falls under 90, or if anything but a hidden valley claims that exemption. It
+reads the full 4096 build rather than building its own at 1024 the way `test_build.py` does,
+because a coarse build smooths exactly the hills that were in the way.
+
+**Some of it is thin.** Nine of the 87 clear lines clear the ground by less than half a metre
+— Pilgrim's Ash to the Pilgrims' Bell by 0.15 m, the Choir to the Thirteenth by 0.17. Widening
+them means moving POIs that are currently right, and moving a POI moves its pad, which is what
+went wrong the first time. They are left as they are and the test is what notices if they go.
+Two of them (the Thornmarch's lines to the Hart Bones and the Breach) fall the other way on the
+quarter-resolution `runtime/heights_1024.r32` that a headless run samples when Terrain3D is not
+loaded; both targets have another vantage, so nothing goes dark either way.
+
+### What moving a POI touches
+
+Nothing needed a code change: the dressing reads its position, pad radius and region out of
+`pois.json` at runtime, so a moved POI arrives dressed where it now stands.
+`tools/capture/plans/pois.json` bakes camera positions and was regenerated. Two quest
+objectives name POIs that moved — the Tumbled Watch (`reach`, radius 140) and the Breach — and
+both still sit where their own text says they are. One side effect is worth knowing: `camp` is
+in `ROAD_KINDS`, so moving the Cold Fire moved a road with it.
+
+### Two things found in passing
+
+**A graded road can become a levee.** `carve_roads` limits a road's elevation profile to 11%
+and writes it into the heightmap. Where the natural ground falls away faster than the road
+descends — the spur out of Kharrow Hold toward Gullhithe is the one that showed up — the road
+becomes an embankment standing as much as 100 m above the ground on both sides of it, which
+samples as a knife-edge arête that nothing in the region's shape function put there. It is
+invisible to a sightline audit, because the road holds the line of sight open, and would be
+very visible from the ground. That is the roads stream's.
+
+**`poi_builders.gd` did not parse.** A paving loop under the Toll's clapper declared `var a`
+for an angle in a function whose span end is already called `a`. `poi_dressing.gd` could not
+then resolve `PoiBuilders`, so `world_pois.gd`, `world_streamer.gd`, `world.gd` and the debug
+console failed to compile behind it and `test_pois.gd` would not load: the suite read 1143
+tests with 2 failures instead of 1152 with 1. Renamed and noted here because the file belongs
+to the dressing stream.
+
+### A landform apiece, proposed and not built
+
+The drop test's landform axis (DESIGN §10.1) reads 0.21 against a 0.55 bar. This is a proposal
+and nothing here is implemented. `tools/uniqueness_check.py` was not run for it — it wants six
+frames a region and the capture stream is using the display — so the regions named are the ones
+whose *shape functions* have the least silhouette to give, not measured confusion pairs. Each
+is a term the region's own shape could grow, in the manner of the Hearthvale escarpment
+(DECISIONS, 2026-09-20): one primary landform the region has and nobody else does, generated
+from the region's own geometry with no reference to where anything stands.
+
+* **Brightwater — the Mere's raised beaches.** `shape_lake_basin` is a 13 m plane with a tanh
+  wobble on it: in silhouette a straight line, which is why a lake cannot be told from a marsh
+  with the colour taken out. The Mere has fallen since the Toll came down, and a lake that
+  falls leaves strandlines. Terrace the basin against the lake's own signed distance field,
+  which the shape already holds: three or four level benches 2.5–4 m apart out to about 900 m
+  from the water, each cut through by the streams off the downs. The skyline becomes a flight
+  of steps down to the water and the causeway has something to climb.
+* **Sedgemire — levees.** `shape_delta` carves two braided channels; what a real delta has and
+  this one does not is the silt bank either side of each channel, a metre or two above the
+  marsh, which is the only dry line in the country and exactly what a boardwalk town gets built
+  along. A ring term on the same channel field — up where the channel distance is 0.20–0.30,
+  down inside it — gives a flat horizon *striped* by long low banks. Nothing else in Wickmere
+  makes that shape, and it explains Isseva.
+* **Briarwold — the granite stair.** `shape_forest_rise` climbs to the Briar on a clean ramp
+  (`0.05 * clip(X - 900)`) with tor blobs sprinkled over it. Old granite does not ramp; it goes
+  up in benches. Terrace the rise at about 18 m with a soft knee and put the existing tors on
+  the tread edges rather than at random, so the region reads as stacked flats with rock on
+  every lip — and the ravines the falls need already step where the benches do.
+* **Cinderlea — the street plan under the ash.** `shape_ash_plateau` terraces near the Choir
+  and pits elsewhere, which at a distance is noise. The region is ash lying over a Builders'
+  city: give the whole plateau a very low rectilinear ripple, ±1.2 m on one bearing at a 60–90 m
+  period, damped where the terraces already bite. At the metre scale the ground is
+  unnaturally straight and repeating, which no natural landform does and no other region here
+  would show.
+
+Skerrow and Hearthvale are left alone: the karst has ridges, terraces, gorges, sinkholes and a
+moor, and the downs have the escarpment. Two costs are real and should be counted before any
+of it is built: terracing Brightwater moves the shore that the Long Stride, the Shingle Shrine
+and Tollmere's own pad stand on, and levees in Sedgemire will push the marsh roads onto them,
+which is correct but is a change to where the roads go. If the axis is still under the bar with
+four new landforms in, the next thing to suspect is the sample — six frames a region, as §10.1
+says.
+
+## What the forge owed, and the four diagnoses that did not survive measurement
+
+Six things were owed by the forge, and four of the six turned out to be a different fault
+than the one written down. That is the pattern worth carrying forward more than any of the
+individual fixes: every one of these was recorded by somebody who had reasoned about it
+carefully, and the measurement disagreed each time.
+
+**The forge could not build anything at all on the machine it runs on.** Every generator died
+on its first object. The forge is written against Blender 4.0 and 4.2.3 is what is installed:
+`Mesh.use_auto_smooth` is gone (4.1 replaced it with the `shade_smooth_by_angle` operator),
+the glTF exporter renamed `export_colors`, and Blender's bundled Python has no Pillow, so
+every bake ended in `'NoneType' object has no attribute 'fromarray'` with no mention of what
+was missing. Three version guards in `lib/scene.py`, `lib/export.py` and `lib/__init__.py`,
+and `lib/bake.py` now names Pillow and the interpreter that needs it instead of dying on a
+None. Worth knowing before anyone rebuilds an old asset: a thing rebuilt under 4.2 is *not*
+byte-identical to its 4.0 twin — the mug came back 0.108 m instead of 0.110 and its LOD2
+differs by two triangles — so the rule that untouched assets stay byte-identical means
+untouched, not rebuilt-and-compared.
+
+**Eleven stand-ins lied about their size.** `test_prop_library` has been red on this for a
+while: `PropLibrary.STAND_IN` pointed a lantern at a `bucket`, a pair of boots at a `crate`,
+a brewing copper at a `barrel`, and the written size in `HouseInterior._placeholder_size` was
+out by more than a quarter in each case. The answer is not a better substitution table; the
+forge builds them. Ten new kinds in `gen_props.py` — `bowl`, `plate_stack`, `paper_stack`,
+`phial`, `jar`, `mortar`, `candle_stub`, `boots`, `lantern_hand`, `copper` — at the forge's
+own texture weights, grounded, and every one rendered in `asset_review.tscn` beside a known
+trestle. Five of them failed that review and were rebuilt: the boots read as bleached planks
+with soles, the mortar as a dark vase, the candle stub as a fresh candle, the paper stack as
+more planks, and the copper's setting had daylight showing between its blocks. `prop_heights.py`
+now reads *52 prop kinds have a written size; 0 meshes differ by 25% or more*.
+
+**Cave floors, the dune ripple.** Covered above under Known issues: the floors were flat all
+along and the shells had no normals. Two attempts at the recorded fix — masking the noise
+around the floor, then flattening the shader's `broad_fade` — changed nothing measurable and
+were reverted rather than kept as decoration.
+
+**The tunic's sleeves.** ASSESSMENT lists "tunic sleeves are wider than the forearm under
+them", and a finished character does show a leg-of-mutton shoulder. Distance from every sleeve
+vertex to the body surface beneath it, median: tunic 19/14/13 mm at shoulder, upper arm and
+forearm, against its own design of 11. The garment that stands off is the **gambeson** at
+31–38 mm, which is a padded jack and is meant to; half the presets in the lineup wear one. The
+robe's 40 mm forearm is its sleeve bells. Nothing was widened or narrowed — the numbers went
+into `lib/cloth.torso_region`'s docstring and ASSESSMENT's weak list is corrected, so the next
+screenshot does not re-open it. Two earlier measurements of mine were wrong before the third
+was right, which is in the commit message.
+
+**Three body variants shipped as a skeleton with nothing on it.**
+`game/assets/models/characters/bodies/{child,heavy,slight}` each held a rig and no geometry, so
+`CharacterAppearance.body_variant()` had nothing to select and the build slider was a uniform
+widening of one rig. `slight` and `heavy` are built and skinned to `WM_Humanoid_v1` and
+`HumanoidModel` wears them (worst joint displacement 3.3 mm and 1.9 mm — they ride the shared
+rig honestly). **`child` is left undone on purpose**: at child proportions the worst joint is
+476 mm out and the summed error over 29 bones is 9.2 m. A child is not a scaled adult, and
+doing it properly means its own skeleton and its own bake of the 70 clips, which is a piece of
+work and not a wiring change. A child NPC is still a small adult until that is done.
+
+**The Name-table** now exists as a mesh as well as a name — see above.
+
+### Left for others, found in passing
+
+* **`game/world/pois/poi_builders.gd:923` does not compile.** A variable named `a` is
+  re-declared inside a `for i in 22:` loop. `test_pois.gd` therefore fails to load, and
+  `./run.sh smoke` exits 1 because of it *while printing* `SMOKE: PASS` with zero logged
+  errors over all 24 interiors. Anyone reading that exit code is reading the parse error, not
+  the interiors.
+* **Character body GLBs embed their textures** (bufferView, no uri) instead of referencing the
+  external PNGs as CONTRACTS §4 requires, which leaves the loose PNGs beside them unreferenced
+  — including stale doubled ones such as `heavy_heavy_albedo.png`.
+* **Two dependencies were undeclared**: `scikit-image` and `fast_simplification` (trimesh 5
+  moved `simplify_quadric_decimation` out). Both are in `tools/requirements.txt` now.

@@ -48,9 +48,13 @@ func _ready() -> void:
 	_label.modulate = Color(1, 1, 1, 0.8)
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_label)
-	UI.variant_changed.connect(func(v: String) -> void:
-			_track.texture = ThemeBuilder.variant_texture(v, ["bar_track"]))
+	# A method reference, not a closure: freeing the bar takes the connection with it.
+	UI.variant_changed.connect(_on_variant_changed)
 	_apply()
+
+
+func _on_variant_changed(variant: String) -> void:
+	_track.texture = ThemeBuilder.variant_texture(variant, ["bar_track"])
 
 
 func _make_bar(tex: Texture2D) -> TextureProgressBar:

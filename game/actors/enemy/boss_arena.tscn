@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://wm_boss_arena"]
+[gd_scene load_steps=6 format=3 uid="uid://wm_boss_arena"]
 
 [ext_resource type="Script" path="res://actors/enemy/boss_arena.gd" id="1"]
 
@@ -6,6 +6,9 @@
 size = Vector3(4, 4, 1.5)
 
 [sub_resource type="BoxShape3D" id="gate_box"]
+size = Vector3(4, 4, 0.4)
+
+[sub_resource type="BoxMesh" id="gate_mesh"]
 size = Vector3(4, 4, 0.4)
 
 [sub_resource type="StandardMaterial3D" id="fog_mat"]
@@ -32,7 +35,7 @@ collision_mask = 0
 visible = false
 
 [node name="Plane" type="MeshInstance3D" parent="FogGate"]
-mesh = SubResource("gate_box")
+mesh = SubResource("gate_mesh")
 surface_material_override/0 = SubResource("fog_mat")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="FogGate"]

@@ -22,16 +22,16 @@
       75.71
     ]
   ],
-  "tris": 349999,
-  "collision_tris": 76999,
+  "tris": 279999,
+  "collision_tris": 61599,
   "chunks": {
-    "melt_mouth": 42530,
-    "blue_run": 31744,
-    "gallery": 46489,
-    "pinch": 36415,
-    "cistern": 35569,
-    "cradle": 91362,
-    "crevasse": 65890
+    "melt_mouth": 42206,
+    "blue_run": 22787,
+    "gallery": 35853,
+    "pinch": 23913,
+    "cistern": 22582,
+    "cradle": 83239,
+    "crevasse": 49419
   },
   "entrance": [
     0.0,

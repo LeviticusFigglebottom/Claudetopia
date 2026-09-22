@@ -60,6 +60,16 @@ case "$cmd" in
       code=1
     fi
     echo "[test] script errors: $n"
+    # A closure the engine calls after the object it captured has been freed says so on stderr
+    # and nowhere else: it is not a SCRIPT ERROR, GDScript cannot count it, and the run stayed
+    # green through 139 of them. The listener is still connected, so whatever the closure was
+    # for silently does not happen. Read it here, for the same reason as the line above.
+    l="$(echo "$out" | grep -c "Lambda capture at index" || true)"
+    if [ "$l" -gt 0 ]; then
+      echo "[test] $l lambda capture(s) fired after the object they captured was freed"
+      code=1
+    fi
+    echo "[test] dead lambda captures: $l"
     exit $code ;;
   journey)
     import_project

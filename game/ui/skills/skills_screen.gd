@@ -34,7 +34,13 @@ func _ready() -> void:
 		if _prog.has_signal("skills_changed"):
 			_prog.connect("skills_changed", _refresh)
 		if _prog.has_signal("points_changed"):
-			_prog.connect("points_changed", func(_a: int, _p: int) -> void: _refresh())
+			# A method reference, not a closure: the progression node outlives this screen,
+			# and a closure it holds is not disconnected when the screen is freed.
+			_prog.connect("points_changed", _on_points_changed)
+	_refresh()
+
+
+func _on_points_changed(_attribute_points: int, _perk_points: int) -> void:
 	_refresh()
 
 

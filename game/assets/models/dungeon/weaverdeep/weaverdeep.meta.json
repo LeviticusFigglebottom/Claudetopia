@@ -22,17 +22,17 @@
       48.75
     ]
   ],
-  "tris": 399999,
-  "collision_tris": 87999,
+  "tris": 319999,
+  "collision_tris": 70399,
   "chunks": {
-    "root_mouth": 54721,
-    "first_hollow": 20459,
-    "span": 52004,
-    "larder": 40919,
-    "deep_span": 63154,
-    "heart_root": 14579,
+    "root_mouth": 38822,
+    "first_hollow": 12890,
+    "span": 36156,
+    "larder": 27134,
+    "deep_span": 57066,
+    "heart_root": 10809,
     "nursery": 99651,
-    "cut_rope": 54512
+    "cut_rope": 37471
   },
   "entrance": [
     0.0,

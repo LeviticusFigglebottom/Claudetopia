@@ -22,18 +22,18 @@
       108.99
     ]
   ],
-  "tris": 449999,
-  "collision_tris": 98999,
+  "tris": 360000,
+  "collision_tris": 79200,
   "chunks": {
-    "adit": 80122,
-    "level_one": 50628,
-    "stope": 29319,
-    "ladderway": 57991,
+    "adit": 63718,
+    "level_one": 40127,
+    "stope": 28238,
+    "ladderway": 52423,
     "pump_house": 27541,
-    "bone_level": 20344,
-    "shaft_foot": 60507,
-    "cart_run": 42272,
-    "pay_seam": 81275
+    "bone_level": 19120,
+    "shaft_foot": 36153,
+    "cart_run": 31778,
+    "pay_seam": 60902
   },
   "entrance": [
     0.0,

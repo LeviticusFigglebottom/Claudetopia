@@ -178,13 +178,13 @@
 
       "the_privilege": {
         "speaker": "core:npc/wardens_hesk",
-        "text": "Slowly, then. A Roll-Warden may set a name on a Hearthstone. Hand flat on the stone, say the name aloud, and the stone has it the way it has yours. — Nine times in four hundred years. Twice it was done wrong and I will not be drawn on how, and you may take it from my not being drawn that it was not wrong in a way that hurt the stone. — The one I mean is in the Bell Cist under the hung bell, in the ground with the hundred and forty in it. I will come down as far as the gate and no further, and I would like that on the record as cowardice rather than dignity.",
+        "text": "Slowly, then. A Roll-Warden may set a name on a Hearthstone. Hand flat on the stone, say the name aloud, and the stone has it the way it has yours. — Nine times in four hundred years. Twice it was done wrong and I will not be drawn on how, and you may take it from my not being drawn that it was not wrong in a way that hurt the stone. — The one I mean is Ansel's, out on the down between here and Tamwick: a hawthorn grown up through a stone chair with the stone in its lap. It is the only thing left standing on that stretch that anybody walks to on purpose, and I want you to think about why the privilege exists and where I have just sent you with it, and I am not going to say the rest of that sentence.",
         "next": "hub"
       },
 
       "the_name_on_the_stone": {
         "speaker": "core:npc/wardens_hesk",
-        "text": "I am at the gate and I can hear you perfectly, which I would like you to know I regret. — Say it flat and say it once. A stone is not a yard full of people; it does not need to be convinced. And whatever you say, I will enter in the Roll that it was said, with the date, because the nine times this has been done are the only nine times anybody has written anything down about it.",
+        "text": "I am at the field gate and I can hear you perfectly, which I would like you to know I regret. — Say it flat and say it once. A stone is not a yard full of people; it does not need to be convinced. And whatever you say, I will enter in the Roll that it was said, with the date, because the nine times this has been done are the only nine times anybody has written anything down about it.",
         "choices": [
           {
             "text": "Harewell. Eleven households and a well with a hare on the lip.",

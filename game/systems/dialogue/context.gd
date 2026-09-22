@@ -397,7 +397,10 @@ static func position_of(obj: Object) -> Vector3:
 		if typeof(p) == TYPE_VECTOR3:
 			return p
 	if obj is Node3D:
-		return (obj as Node3D).global_position
+		# A body out of the tree has no global transform: asking for one is an engine error and
+		# an identity matrix, which reads as the middle of the map rather than as "do not know".
+		var n3 := obj as Node3D
+		return n3.global_position if n3.is_inside_tree() else n3.position
 	for prop in ["global_position", "position"]:
 		if prop in obj:
 			var v: Variant = obj.get(prop)

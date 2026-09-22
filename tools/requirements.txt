@@ -4,3 +4,15 @@ scipy>=1.11
 opensimplex>=0.4
 trimesh>=4
 pygltflib>=1.16
+# The cave forge meshes its signed-distance field with marching cubes, and
+# `skimage.measure.marching_cubes` is the implementation it has always used
+# (tools/interiors/cave_forge.py). It was missing from this list, so a clone that
+# installed exactly what the file asked for could not build a single deep place --
+# `./run.sh` calls the cave forge on a first run, so that is the whole game.
+scikit-image>=0.22
+# Both forges decimate with `trimesh.simplify_quadric_decimation`, and trimesh 5 moved
+# that call's implementation out to this package. `trimesh>=4` is satisfied by 5.x, so a
+# fresh install gets a trimesh whose decimator raises ModuleNotFoundError on the first
+# cave and on any house shell over 4 000 faces.
+fast_simplification>=0.1
+

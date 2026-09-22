@@ -33,7 +33,7 @@
          {"id": "tide", "text": "Profess the Tide, in Tessane's name. Say the scraped name aloud.", "conditions": [{"flag": "found_tessane"}], "effects": [{"set_flag": "sayer_professed_tide"}, {"rep": ["core:faction/sayers", 5]}, {"renown": 20}]}
        ]}, {"type": "talk", "target": "core:npc/aldith_sulion", "count": 1}],
        "on_enter": [],
-       "on_complete": [{"join_faction": "core:faction/sayers"}, {"set_flag": "ranked_in_a_faction"}, {"set_flag": "louder_done"}, {"give_item": ["core:item/circle_listeners_ring", 1]}, {"renown": 20}]}
+       "on_complete": [{"join_faction": "core:faction/sayers"}, {"set_flag": "ranked_in_a_faction"}, {"set_flag": "louder_done"}, {"renown": 20}]}
     ],
     "rewards": {"renown": 25, "rep": [["core:faction/sayers", 20]], "items": [["core:item/circle_listeners_ring", 1]], "effects": [{"teach_spell": "core:spell/hearth_brand"}, {"notify": "The Circle says the long one over you, three times, and then makes you say it back."}]}
   },
@@ -54,7 +54,7 @@
        "on_complete": [{"rep": ["core:faction/tolling_order", 10]}, {"renown": 10}, {"set_flag": "stood_vigil"}]},
       {"id": "the_pilgrim",
        "journal": "A Vale woman in pilgrim grey, Aud Fennick of Merrowby, has asked for the Order's escort to the Hushline. The Order does not stop pilgrims and does not encourage them; it walks with them, so that the last thing they hear is a voice. Cadwen asks you to walk her. She will leave something at the line. Bring it back.",
-       "objectives": [{"type": "talk", "target": "core:npc/aud_fennick", "count": 1}, {"type": "escort", "target": "core:npc/aud_fennick", "to": "core:place/hushline", "count": 1}],
+       "objectives": [{"type": "talk", "target": "core:npc/aud_fennick", "count": 1}, {"type": "escort", "target": "core:npc/aud_fennick", "place": "core:place/hushline", "count": 1, "text": "Walk Aud Fennick down to the Hushline"}],
        "on_enter": [],
        "on_complete": [{"set_flag": "aud_walked_south"}]},
       {"id": "what_she_left",
@@ -69,7 +69,7 @@
          {"id": "hang_silent", "text": "Hang it silent, by custom. It will ring with the others in winter.", "effects": [{"set_flag": "aud_bell_hung"}, {"rep": ["core:faction/tolling_order", 15]}]}
        ]}, {"type": "talk", "target": "core:npc/cadwen_ash", "count": 1}],
        "on_enter": [],
-       "on_complete": [{"set_flag": "ranked_in_a_faction"}, {"set_flag": "vigil_done"}, {"give_item": ["core:item/vigil_cloak", 1]}, {"renown": 20}]}
+       "on_complete": [{"join_faction": "core:faction/tolling_order"}, {"set_flag": "ranked_in_a_faction"}, {"set_flag": "vigil_done"}, {"renown": 20}]}
     ],
     "rewards": {"renown": 25, "rep": [["core:faction/tolling_order", 20]], "items": [["core:item/vigil_cloak", 1]], "effects": [{"teach_spell": "core:spell/mend"}, {"notify": "The Order teaches its Mending to everyone who stands the watch. It is the only thing they give away."}]}
   },
@@ -101,7 +101,7 @@
       {"id": "what_it_costs",
        "journal": "The day-book prices a fine at four marks for a Merrowby carter and forty for a Gullhithe fisher for the same barrow in the same street, with a note in Quill's hand about who each of them knows. Half-Ell is waiting in the Undercroft. So, in a way, is Quill.",
        "objectives": [{"type": "choice", "target": "the_daybook", "options": [
-         {"id": "to_hands", "text": "Give the day-book to Half-Ell. Let it be read.", "effects": [{"set_flag": "daybook_to_hands"}, {"set_flag": "ranked_in_a_faction"}, {"rep": ["core:faction/quiet_hands", 20]}, {"renown": 5}, {"give_item": ["core:item/half_ells_thimble", 1]}]},
+         {"id": "to_hands", "text": "Give the day-book to Half-Ell. Let it be read.", "effects": [{"join_faction": "core:faction/quiet_hands"}, {"set_flag": "daybook_to_hands"}, {"set_flag": "ranked_in_a_faction"}, {"rep": ["core:faction/quiet_hands", 20]}, {"renown": 5}, {"give_item": ["core:item/half_ells_thimble", 1]}]},
          {"id": "return_it", "text": "Put it back on Quill's desk. Tell Half-Ell you could not.", "effects": [{"set_flag": "daybook_returned"}, {"rep": ["core:faction/quiet_hands", -10]}, {"rep": ["core:faction/tallymen", 5]}, {"morality": 5}]},
          {"id": "to_quill", "text": "Hand it to Quill openly and tell him who wanted it.", "effects": [{"set_flag": "daybook_to_quill"}, {"rep": ["core:faction/tallymen", 15]}, {"rep": ["core:faction/quiet_hands", -30]}, {"marks": 50}]}
        ]}],

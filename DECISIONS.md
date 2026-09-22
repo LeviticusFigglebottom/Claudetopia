@@ -429,6 +429,24 @@ the downs' 31.
   change what the column means rather than correct a misreading, so it is not counted, and
   this is the honest reason a per-kind mean flatters Brightwater.
 
+## 2026-09-22 · A signal listener is a method reference, never a closure
+**Decision.** Nothing in `game/` connects a lambda to a signal on an object that outlives the
+node making the connection, and `run.sh test` fails the run on "Lambda capture at index N was
+freed" the same way it fails on SCRIPT ERROR.
+**Why.** A full test run printed that message 139 times and the suite was green throughout, so
+the count was not being read by anything. All of them came from one closure: the toast fade in
+`ui.gd` was started on UI, which is an autoload and never goes, and its last step was a closure
+holding the toast panel -- which a sixth toast throws away five and a half seconds early. The
+`is_instance_valid` guard inside the closure was never reached, because the engine checks the
+captures before running the body.
+**Consequences.** Godot *does* drop a connection whose callable was made from an object that is
+then freed, including a lambda that captured `self`, so the eleven sites this was first blamed
+on were not leaking. The one it does not catch is a lambda that captured some *other* object, or
+a tween or scene-tree timer belonging to a node that outlives what it animates. A tween that
+frees a node belongs to that node. `tests/unit/test_signal_hygiene.gd` takes a census of every
+autoload signal around building and freeing a HUD, a streamer, a stat bar and a Hearthstone, and
+asks the SceneTree how many toast fades are still running over panels that are gone.
+
 ## 2026-09-22 · A region's `sun_elevation_scale` is its latitude, not a mood dial
 **Decision.** Every region states a `sun_elevation_scale` that pulls the day's arc down to
 the elevation its identity sheet describes, and the default falls from 1.0 to 0.55.

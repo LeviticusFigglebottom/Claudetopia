@@ -131,7 +131,10 @@ func add_timed_modifier(source: String, mods: Array, duration: float) -> void:
 	self.mods.set_source(source, mods)
 	modifiers_changed.emit()
 	var timer := get_tree().create_timer(duration, false)
-	timer.timeout.connect(func() -> void: _expire_modifier(source))
+	# Bound to a method rather than a closure, for the reason `enemy.gd` gives about its parry
+	# timer: a scene-tree timer outlives the node that asked for it, and freeing that node
+	# takes a method connection with it but leaves a closure on the timer to fire into nothing.
+	timer.timeout.connect(_expire_modifier.bind(source))
 
 
 func _expire_modifier(source: String) -> void:

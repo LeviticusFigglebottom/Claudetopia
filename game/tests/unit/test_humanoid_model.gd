@@ -281,6 +281,74 @@ func test_one_shot_fires_events_then_finishes() -> void:
 	assert_eq(m.current_intent(), "", "the model returns to locomotion when a one-shot ends")
 
 
+## `body_variant()` has always named the right body and nothing ever loaded one, because
+## `bodies/child`, `heavy` and `slight` each held a 31-bone skeleton and no mesh at all --
+## the forge built the geometry, the glTF exporter refused it as invalid, and the meta
+## beside it recorded the triangles anyway because they were counted off the live object
+## after the export that dropped them. So the build slider was a uniform widening of one
+## rig and a child was a small adult.
+##
+## This is the assertion that would have caught it: a part with no mesh in it is not a part.
+func test_every_body_variant_has_geometry_in_it() -> void:
+	var empty: Array[String] = []
+	for variant in ["child", "heavy", "slight"]:
+		var path := "res://assets/models/characters/bodies/%s/%s.glb" % [variant, variant]
+		if not ResourceLoader.exists(path):
+			continue
+		var inst := (load(path) as PackedScene).instantiate()
+		var tris := 0
+		for mi in inst.find_children("*", "MeshInstance3D", true, false):
+			var mesh: Mesh = (mi as MeshInstance3D).mesh
+			if mesh == null:
+				continue
+			for s in mesh.get_surface_count():
+				tris += mesh.surface_get_array_len(s)
+		if tris <= 0:
+			empty.append(variant)
+		inst.queue_free()
+	assert_true(empty.is_empty(), "body variants with a rig and no geometry: %s" % [empty])
+
+
+## And the model must actually put one on. A heavy record wears the heavy body instead of
+## being one rig widened by a slider.
+func test_a_heavy_record_wears_the_heavy_body() -> void:
+	if not _rig_built():
+		return
+	if not ResourceLoader.exists("res://assets/models/characters/bodies/heavy/heavy.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.build = 0.9
+	assert_eq(a.body_variant(), "heavy")
+	m.apply_appearance(a.to_dict())
+	assert_eq(m.body_variant_worn, "heavy", "a build of 0.9 is still wearing the default body")
+	# With a real variant on, the rig is scaled by height alone: widening it as well would
+	# count the same build twice. The skeleton hangs under the rig root, so it carries
+	# whatever scale was applied there.
+	var s := m.skeleton.global_transform.basis.get_scale()
+	assert_near(s.x, s.y, 0.002, "a variant body was widened by the build slider as well")
+
+
+## A part is only wearable on this rig if it was built around this rig's bones. `slight`
+## and `heavy` are shape: their worst joint sits 3.3 mm and 1.9 mm from the default's.
+## `child` is a different skeleton -- hips at 0.646 m against 0.980, worst joint 476 mm
+## out -- so re-skinning it onto adult bones would stretch a child back into an adult.
+## It needs its own rig and its own clips, and until it has them the model must not wear it.
+func test_a_child_is_not_draped_over_the_adult_skeleton() -> void:
+	assert_false(HumanoidModel.WEARABLE_BODIES.has("child"),
+		"the child body is built around its own skeleton and cannot ride this one")
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.height = 1.30
+	assert_eq(a.body_variant(), "child", "the record still knows what it is")
+	m.apply_appearance(a.to_dict())
+	assert_eq(m.body_variant_worn, "", "a child body was put on the adult rig after all")
+
+
 func test_appearance_composes() -> void:
 	if not _rig_built():
 		return
