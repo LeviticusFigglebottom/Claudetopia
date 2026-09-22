@@ -7,6 +7,11 @@ var _nodes: Array[Node] = []
 
 func before_each() -> void:
 	Peers.overrides.clear()
+	# Most of this file is about the board's own delivery machinery — the parcel, where it is
+	# addressed, what it pays — so the radiant generator is kept out of the way. A real board
+	# in the game asks the social façade first and lists bounties and hunts; the two tests at
+	# the end of the board section are the ones that check that.
+	Peers.overrides["social"] = null
 	GameState.reset_for_new_game(1)
 	WorldClock.set_time(9.0, 6)
 
@@ -170,6 +175,33 @@ func test_board_prefers_the_quest_system_when_present() -> void:
 	Peers.overrides.erase("quests")
 	var fallback := Jobs.board_offers(MERROWBY, 3, 6)
 	assert_eq(str(fallback[0]["kind"]), "delivery", "no quest system: the board still has work")
+
+
+## The path a board in the game actually takes. `QuestLog` has no `generate()` — it holds the
+## RadiantGenerator, and `Social.board_jobs()` drives it — so before this was wired every
+## board in Wickmere fell through to the delivery fallback and DESIGN §5.10's radiant layer
+## never reached a notice post.
+func test_the_board_asks_the_social_facade_for_its_radiant_work() -> void:
+	Peers.overrides.erase("social")
+	var offers := Jobs.board_offers(MERROWBY, 3)
+	assert_gt(offers.size(), 0, "the façade offered the board nothing")
+	var kinds: Array[String] = []
+	for job in offers:
+		kinds.append(str(job["kind"]))
+		assert_false(str(job["id"]).is_empty(), "a notice with no quest behind it")
+		assert_gt(int(job["pay"]), 0,
+			"%s is posted at nought marks: its pay is in rewards.marks" % str(job["id"]))
+	assert_false(kinds.has("delivery"),
+		"the board fell back to its own deliveries with a generator right there: %s" % str(kinds))
+
+
+## `QuestLog` still has no `generate()`, which is the whole reason the façade is asked. If it
+## grows one, the duck-typed hook in `board_offers` picks it up and this can go.
+func test_the_quest_log_is_not_the_thing_that_generates() -> void:
+	assert_false(Social.quests.has_method("generate"),
+		"QuestLog has a generate() now: board_offers can ask the participant directly")
+	assert_true(Social.has_method("board_jobs") and Social.has_method("take_quest"),
+		"the façade's board pair is what the economy stream calls")
 
 
 func test_board_take_and_deliver() -> void:

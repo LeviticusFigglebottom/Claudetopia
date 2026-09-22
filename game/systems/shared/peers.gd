@@ -59,6 +59,20 @@ static func quests() -> Object:
 	return participant("quests")
 
 
+## The social façade (`Social`), for the two things it owns that no child node does: the work
+## a board generates and the accepting of it. Found by name off the tree root rather than by
+## the autoload identifier, so this file still has no dependency on the social stream and a
+## test can put a stand-in in `overrides["social"]`.
+static func social() -> Object:
+	if overrides.has("social"):
+		var o: Variant = overrides["social"]
+		return o if o is Object and is_instance_valid(o) else null
+	var tree := _tree()
+	if tree == null or tree.root == null:
+		return null
+	return tree.root.get_node_or_null("Social")
+
+
 static func progression() -> Object:
 	return participant("progression")
 

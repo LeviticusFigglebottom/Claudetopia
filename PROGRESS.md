@@ -57,9 +57,12 @@ Merged and working on the main branch:
   attacks, dodge i-frames, block, parry and riposte, poise and stagger, nine status
   effects; player with first and third person cameras, lock-on, mantling and interaction;
   enemy brains for every archetype, pack flanking, chargers, and phased bosses.
-* **Narrative** — 25 NPCs with weekly schedules, 25 dialogue graphs, the seven main
-  quests, three faction lines, six side quests, 20 books carrying the four contradictory
-  accounts, 22 rumours.
+* **Narrative** — 64 NPCs with weekly schedules and dialogue graphs of their own, living in
+  every settlement of the six regions (DESIGN §6's sixty are met: Grandfather Hollow,
+  Brindlecrag, Nauve's Landing and Greyfold had nobody at all, and every city, town and
+  village now has at least three residents and a shop), the seven main quests, three faction
+  lines, six side quests, 20 books carrying the four contradictory accounts, 89 rumours of
+  which the local ones are seeded into a region's settlements when you walk in.
 * **Audio** — a full synthesis toolkit (no sample or recording enters the project): six
   region themes in five stems each, built on a five-note bell motif from the Toll and
   developed per region's mode; 43 ambience beds and one-shot pools by time, weather and
@@ -454,6 +457,13 @@ fun. Those need hands on a controller and nothing in this file substitutes for t
 I have deliberately not retuned anything on the strength of these numbers. Changing balance
 without playing is how a considered guess becomes a worse considered guess.
 
+*Since written:* the two ordering complaints are fixed and most of both was the tool, not the
+data — see "Four small holes" below. The flat-armour one stands, unretuned, as a design
+question. The healthy readings hold, except that a house now reads 46 to 157 Hearthvale
+fights rather than 57 to 195: no house price changed, but the tool's estimate of what a
+Hearthvale fight pays rose from 25 to 31 marks once it started counting the loot every kill
+guarantees.
+
 ## What the forge stream found by opening the renders
 
 The measurable part of the prop pass was right before anybody looked at it: `prop_heights.py`
@@ -501,14 +511,65 @@ stream two rebuild cycles on the anvil's stump before they rendered a trestle ta
 and found that Hearthvale's pale honey timber is the house style and not a bug. Render a known
 reference beside anything you are judging in that scene.
 
+## The way in had never been pressed
+
+The main menu, the Naming and the world were three screens nobody had walked between. The
+journey drives systems directly and the UI review renders screens with believable data; no
+test and no tool had ever started at `boot.tscn` and clicked New Game. Four things were wrong
+at once, and a player met all four in the first minute:
+
+* **The Naming spoke a vocabulary the body does not read.** It kept swatch indices, a
+  `height_m` and a face named after a culture, and handed that to
+  `HumanoidModel.apply_appearance`, which reads `CharacterAppearance`: `skin` arrived as the
+  string "1", `height` was never set, and with no `parts` there was no hair and no clothes. The
+  preview was the naked rig whatever you chose. `CharacterAppearance` is the one vocabulary now
+  — it carries the forge's colour tables, the head presets and the culture palettes, and dresses
+  a character for its people — and the Naming edits that record in place.
+* **Nothing read the Naming's flags.** `player_name`, `player_calling` and `player_appearance`
+  were written by the screen and read by no one, so the body at the Hushline Stair was the bare
+  rig with the default head, with no name, none of the Calling's three skill bonuses and none of
+  its items. `Player._take_the_naming` reads them when the body stands.
+* **Continue, Load and `--load=<slot>` did not load.** All three wrote
+  `_pending_load_slot` and nothing ever read it: every one of them stood a new Foundling up
+  with the save untouched on disk. `PlayerSpawn.load_pending_slot` reads it before the body.
+* **The screen was a dead black rectangle** from "Be named" until the world stood — ten to
+  fifty seconds of it, with no frame drawn at all while the terrain comes up. The fade layer
+  carries a loading caption now: a sheet of paper, a line in the world's voice, the bell mark
+  swaying, and what the world has raised so far.
+
+`./run.sh flow` is the test that presses it: three runs from `boot.tscn` (New Game through the
+Naming, then `--load`, then Continue), clicking by the words on the buttons, typing a name,
+working a chooser with the arrow keys, dragging both sliders, walking Tab round the form, and
+then asking the *body* in the world whether it is the character that was made. Every step is a
+PNG in `captures/flow/`. It found two of its own: the Naming gave nothing keyboard focus, and
+the Calling cards' wrapping focus chain trapped Tab for ever.
+
 ## Known issues
 
-* **The journey's death step has failed once in five runs**, and I have not pinned down why.
-  It rests at a Hearthstone, dies, respawns and recovers the echo, and one run in five one of
-  those five conditions came back false. The step now names which one when it fails instead of
-  printing the success sentence, and each settling point waits two frames rather than one,
-  which has held for every run since — but "it stopped happening" is not a diagnosis and it is
-  recorded here as unexplained rather than fixed.
+* **A record from before that vocabulary existed** — `{"skin": 3, "hair": 2}`, which is what
+  the Naming used to write and what the journey still writes — is converted at the edge now
+  (an index means the tone it indexed). Any save still carrying the older shape makes a proper
+  body, but the journey's own shorthand should be brought up to the record's spelling.
+* **`./run.sh flow`'s Continue run depends on what else has saved.** Continue promises the
+  newest slot, so a journey run or another session writing into the same `user://saves` takes
+  that place; the probe reports which slot it got and falls back to checking that slot's own
+  summary. Tools that write saves should clear them (the UI review does now).
+* ~~**The journey's death step has failed once in five runs**~~ **Diagnosed and fixed: the Echo
+  noticed its own player.** It was never a frame-scheduling accident. The Echo is an `Area3D`
+  spawned at the spot the player fell, and for the three seconds of `RESPAWN_DELAY` the body is
+  still lying on that spot — so the area woke up around its own player, `body_entered` fired and
+  `recover_echo()` returned every mark before the player had stood up. Death has therefore never
+  cost anything in play: the Echo you are meant to walk back to went quiet within a frame of your
+  falling. The journey sees the same fault as `dropped=false`, as `marks_gone=false` or as a
+  clean pass depending only on whether a physics tick lands between two of the step's checks,
+  which is why more frames appeared to help and why five runs could not settle it. An Echo is
+  something you come back to, so `Hearth` now arms it on respawn (one restored from a save is
+  armed at once) and `recover_echo()` refuses outright while a death is unresolved. Two tests in
+  `test_hearth.gd` pin it, and they need a body the physics server can see, because an `Area3D`
+  never notices the bare `Node3D` the old fakes used. The same seam gave up a second fault:
+  `_respawn()` was not idempotent and the death delay's timer cannot be cancelled, so anything
+  that brought the player back sooner — a load, a scripted respawn, the journey's own — was
+  undone three seconds later when the timer yanked the body to the Hearthstone mid-stride.
 * **The exterior is over the primitive budget, badly.** DESIGN §11 sets 1.5 M primitives and
   2000 draw calls. Interiors are all comfortably inside it (the Cantor's Seat is the worst at
   1.17 M and 61 draws). The country is not: Merrowby from the air is **5.14 M primitives**
@@ -538,6 +599,77 @@ reference beside anything you are judging in that scene.
   chambers; the fix is to flatten first and noise the walls only.
 * Compatibility renderer lacks SSAO/volumetric fog; the look must not depend on them.
 
+## Exteriors: the fabric under budget
+
+The worst frame in the game was a village street: Merrowby from the road, **2438 draw
+calls** against DESIGN §11's 2000 (ASSESSMENT.md recorded 2678 on the previous machine).
+Primitives were inside budget at 1.15 M; this was object count, and nobody had broken it
+down. `tools_gd/draw_attribution.gd` does now — a census of what the camera sees by owning
+script, and the measured cost of hiding each owner, which is the number that includes the
+sun's four shadow cascades. `-- --attribute` on any capture writes `attribution.json`;
+`draws measure` in the console prints the same. Measured on gl_compatibility at 1600x900
+(no Vulkan in this container; object counts do not depend on the renderer), Merrowby's
+2441 draws were:
+
+| owner | draws | what it was |
+|---|---|---|
+| `Building` (11 entered houses in view) | 1093 | 358 MeshInstance3Ds: 31 room masses, 31 plinths, 62 roof slabs, 62 gables, 30 ridges, 11 chimneys, 44 door parts, 33 window parts — each drawn for the eye and again per cascade |
+| villagers (`HumanoidModel`) | 583 | 20 in view, about nine skinned meshes each (body, head, two eyes, torso, legs, feet, belt, hair…), all shadow-casting |
+| scatter MultiMeshes (`WorldStreamer`) | 325 | 373 MultiMeshInstance3Ds across 25 cells, trees and rocks in the near ring casting |
+| `Settlement` (fabric, props, boards, stations) | 244 | two merged meshes per settlement, but ~100 props as instantiated scenes with no visibility range, so seven other settlements' fences and barrels were in the frame from kilometres off |
+| `Terrain3D` | 151 | the clipmap |
+| doors, water, landmarks, sky, UI | ~45 | |
+| **of which shadow passes** | **1535** | sun shadows off: 2441 → 906 |
+
+**What changed.** `FabricMesh` gathers boxes and triangles under a surface key and commits one
+`MeshInstance3D` per key with a vertex colour per piece; `painted_surface.gdshader` multiplies
+by `COLOR`, which is white wherever a mesh carries none, so interiors are untouched. A
+`Building` is four meshes (walls, roof, stone, joinery) plus a body a room; a `Settlement`'s
+filler houses are the same four meshes for the whole settlement, each house in its own bucket
+of limewash; props are one `MultiMesh` per forge asset (lifted by the mesh's own box where it
+reaches below the ground). Joinery and props carry a visibility range and the joinery casts no
+shadow; walls and roofs still go to the horizon, because a village is read by its roofs from
+the next hill. `JobBoard`, `JobStation` and `PropertySign` stay their own bodies on the
+interaction layer. The filler houses, which the capture showed as windowless plaster boxes,
+got a plinth that varies, gables, overhanging eaves, a chimney at the hearth end, a framed
+plank door under a lintel on a stone step, and framed, shuttered windows in bays along the
+street with fewer at the back and one in the far gable — all inside the merged meshes, at no
+draw cost. Villagers' eyes no longer cast shadows (they fall inside the head's).
+
+**Measured, the six `*_street` shots of `tools/capture/plans/streets.json`, before → after:**
+
+| shot | draw calls | primitives | what is left (after) |
+|---|---|---|---|
+| hearthvale_street (Merrowby) | **2438 → 1328 → 1240** | 1.15 M → 1.18 M | villagers 590, scatter 332, terrain 160, buildings 120, fabric 110 |
+| brightwater_street (Tollmere) | 479 → 283 | 0.34 M → 0.34 M | terrain 105, scatter 68, fabric 61, villager 26, buildings 16 |
+| sedgemire_street | 660 → 498 | 0.73 M → 0.73 M | terrain 184, scatter 182, fabric 60, villagers 53, buildings 12 |
+| briarwold_street | 764 → 547 | 0.80 M → 0.79 M | scatter 316, terrain 154, fabric 54, buildings 16 |
+| skerrow_street | 609 → 433 | 0.37 M → 0.45 M | scatter 136, terrain 126, villagers 95, fabric 59, buildings 18 |
+| cinderlea_street | 515 → 405 | 0.63 M → 0.62 M | terrain 170, scatter 123, villagers 56, buildings 11, fabric 10 |
+
+Merrowby's three numbers are the original, the figure after the fabric was merged, and the
+figure after villagers' eyes stopped casting a shadow into the head they sit in. The first
+measurement of the same shot on the integrated branch, with nine other streams' work in it,
+read 1330: the gap is their scatter, their points of interest and their light, not the
+fabric, whose own contribution `--attribute` will name at any time.
+
+Every shot is inside the 2000 budget with margin and the worst is under 1500. Buildings went
+from 1093 to 120 draws on the worst frame and the fabric from 244 to 110 (the 110 is
+Merrowby's own four meshes, nine prop MultiMeshes, a board, three stations and two signs
+with their cascades, plus the other ten settlements' walls and roofs at a few draws each).
+`test_settlements.gd` ratchets a village of Merrowby's kind at **31** mesh nodes and pins
+the rest: four meshes for a city and a hamlet alike, six or more distinct washes in the merged
+walls, near-only shadowless joinery, one MultiMesh per prop asset within the pad, boards and
+stations and signs as separate bodies on the interaction layer, the inn as four meshes and a
+body a room, and every box in the fabric facing outward.
+
+**What is left belongs elsewhere.** The residue on Merrowby's street is people, plants and
+ground. Villagers are the largest: about nine skinned `MeshInstance3D`s each under
+`HumanoidModel`, all casting into up to four cascades, so twenty in view are ~590 draws — a
+merged body per appearance, or shadows from a single proxy mesh, would take most of that
+(NPC appearance is the boot/UX stream's). Scatter is 332 draws for 373 MultiMeshes across 25
+cells, most of them a handful of instances each; merging a cell's small kinds or ranging the
+far ring's is the world-look stream's. Terrain3D's clipmap is 105–184 draws and not ours.
 ## Points of interest, dressed
 
 `pois.json` has 82 entries — 34 places and the 48 POIs of the registry — and nine of them
@@ -710,3 +842,67 @@ visible by looking:
 * **The far ring builds silhouettes but they are not impostors.** A far-ring dressing draws its
   LOD1 meshes out to 950 m, which is cheap enough at 55 POIs but is not what a proper
   impostor would cost.
+
+## Four small holes in the systems
+
+All four were found the way the ones above were found: by asking what the code and the data
+promise that nothing in the game actually does. `tools/unwired.py --verbs` went from 43
+test-only verbs to 41, and `tools/dead_data.py` from 6 unread content keys to 6 (the two this
+work could have closed were not the ones it names; see the end).
+
+**Furnishings were promised and unbuyable.** DESIGN §5.14 ends "Furnishings bought".
+`PropertyRegistry.add_furnishing()` and `furnishings()` were written, saved and covered by a
+test, and nothing else in the repository called either — so the promise was a field in a save
+file. Six furnishings ship now (`items/furnishings.json`: a hearth rug, bed hangings, a settle
+chair, a shelf of jars, a book press and a banded oak chest), each naming a prop *kind* the
+forge has already built rather than an asset path, so a rug is woven from whatever cloth its
+region makes. They are sold from the landlord's side of the deed screen — the board outside a
+house you own, which now asks rather than guesses: rent waiting, letting, and the furnishings
+on offer, each its own button. `HouseInterior.dress_furnishings()` puts them in the rooms when
+that house is built, at a spot *derived* from the room (a lattice of candidates scored by
+distance from whatever the dressing pass already put there, deterministic per house) because a
+house you buy has no recipe line for a rug. Nothing but the item ids goes in the save.
+
+The six deeds on sale still name interiors the forge has not built — `property.gd` has always
+said so — so the mechanism is real and the houses to walk into are not there yet.
+`test_furnishings.gd` stands it up against a real house's real rooms and the real positions of
+its resident's things; when those houses are forged, nothing has to change.
+
+**The job boards never listed a job.** `Social.take_quest()` was reached only by tests, and so
+was the whole radiant layer behind it: `Jobs.board_offers()` asked the quest-log participant
+for a `generate()` method that `QuestLog` does not have — it *holds* the RadiantGenerator, and
+`Social.board_jobs()` is what drives it — so every board in the country fell through to the
+economy's own parcel deliveries, every time. Six templates, bounties and hunts with
+region-appropriate quarry, written text and per-board daily cooldowns, and no notice post in
+Wickmere had ever shown one. Both halves go through the façade now.
+
+Wiring it exposed two more: the board announced `quest_started` itself on top of the one
+`QuestLog.start()` already emits, and announced it even when the quest refused to start; and
+`RadiantGenerator` handed notices back out of a board's cache, and restored them from a save,
+without registering them with the quest log — so every job still hanging on a board in a
+loaded game answered "cannot start unknown quest" when taken. A new game cleared the log and
+left the board cache, which is the same divergence.
+
+**Two danger promises the data broke.** Fixed, and most of both was `tools/balance.py` reading
+the wrong numbers: a spell attack's damage lives in the spell, not the attack, so a caster
+scored zero three casts in five; a bleed or a poison goes on taking health after the blow, past
+armour; and `guaranteed` loot was skipped, so a sallowjaw read as worth three marks when the
+hide it always leaves is worth thirty-four. Four enemy numbers then changed, each odd on its
+own terms. DECISIONS.md has the reasoning and what was left alone.
+`tools/tests/test_balance.py` fails the build if either ordering inverts again.
+
+**`systems/exploration` had no README.** Now it has one, and ARCHITECTURE §5 has its row plus
+a note on `GameServices`, which installs the ten non-autoload world services and appeared
+nowhere in ARCHITECTURE at all — the reason a system can ship a working `ensure()` and never
+run. Its save section is deliberately none: everything `PlaceDiscovery` learns is GameState's
+and rides in its section, and what the node holds is a poll timer and a cache rebuilt from the
+content pack on first use.
+
+**Two things found in passing and not fixed.** `test_deed_screen.gd` called
+`registry.owns(DEED)`, which does not exist — the call errored, the test method aborted, and
+the runner counted it green, so the press-the-button test for buying a house had been asserting
+nothing since it was written. It says `is_owned` now and the assertions do run (and pass: the
+behaviour was right all along). And `sells_deeds` on Ellard's def is still dead data: the
+honest use of it is a steward-mediated sale, which would undo the direct board route that was
+just built, so it is left for whoever authors that dialogue. `beds` on the deed items is
+likewise still unread.

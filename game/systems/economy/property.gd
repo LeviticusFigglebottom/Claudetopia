@@ -13,6 +13,7 @@ static var instance: PropertyRegistry
 signal purchased(property_id: String)
 signal rent_collected(property_id: String, marks: int)
 signal let_changed(property_id: String, is_let: bool)
+signal furnished(property_id: String, item_id: String)
 
 const SECTION := "property"
 const RENT_FRACTION := 0.004   # per game day, of the deed price, when let
@@ -258,6 +259,65 @@ func _on_new_day(_day: int) -> void:
 
 
 # --- furnishing ---------------------------------------------------------------------------------
+
+## Every item in the packs that is a furnishing somebody could put in a house, ordered by id.
+## A furnishing is a `misc` item carrying a `furnishing` block (CONTRACTS §7):
+## `{prop, room?, spot?, storage?}` — the prop kind `PropLibrary` draws it as, the room it
+## belongs in, whether it stands on the floor or hangs on a wall, and whether it is storage.
+static func all_furnishings() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for d in ContentDB.all("item"):
+		if typeof(d.get("furnishing")) == TYPE_DICTIONARY and not (d["furnishing"] as Dictionary).is_empty():
+			out.append(d)
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["id"]) < str(b["id"]))
+	return out
+
+
+static func furnishing_block(item_id: String) -> Dictionary:
+	var b: Variant = ContentDB.get_or_empty(item_id).get("furnishing", {})
+	return b if typeof(b) == TYPE_DICTIONARY else {}
+
+
+static func furnishing_price(item_id: String) -> int:
+	return int(ContentDB.get_or_empty(item_id).get("value", 0))
+
+
+## Which property, if any, this interior belongs to the player through. A deed's `interior` is
+## a plain name in pass one and a built house's meta id is a full `core:house/*`, so both
+## spellings match. "" when the player does not own this house.
+func property_for_interior(interior_key: String) -> String:
+	if interior_key.is_empty():
+		return ""
+	var short := Ids.name_of(interior_key) if interior_key.contains("/") else interior_key
+	for id in owned_ids():
+		var mine := interior_of(id)
+		if mine == interior_key or mine == short:
+			return id
+	return ""
+
+
+## Buys a furnishing for a house you own: takes the marks and records it against the property,
+## which is what `HouseInterior` reads when it builds the house you walk into.
+## {ok, reason, price}. reasons: not_owned, unknown, already_there, poor.
+func buy_furnishing(player: Object, property_id: String, item_id: String) -> Dictionary:
+	if not is_owned(property_id):
+		return {"ok": false, "reason": "not_owned", "price": 0}
+	if furnishing_block(item_id).is_empty():
+		return {"ok": false, "reason": "unknown", "price": 0}
+	if item_id in furnishings(property_id):
+		return {"ok": false, "reason": "already_there", "price": 0}
+	var price := furnishing_price(item_id)
+	if not Purse.can_pay(player, price):
+		EventBus.notify.emit("You cannot afford that.", "info")
+		return {"ok": false, "reason": "poor", "price": price}
+	Purse.pay(player, price)
+	add_furnishing(property_id, item_id)
+	var name_of := str(ContentDB.get_or_empty(item_id).get("name", "It"))
+	EventBus.transaction.emit("", item_id, 1, price, true)
+	EventBus.notify.emit("%s, for %s." % [name_of, display_name(property_id)], "property")
+	furnished.emit(property_id, item_id)
+	return {"ok": true, "reason": "", "price": price}
+
 
 func add_furnishing(property_id: String, furnishing_id: String) -> bool:
 	if not is_owned(property_id):

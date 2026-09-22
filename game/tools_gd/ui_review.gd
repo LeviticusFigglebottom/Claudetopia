@@ -8,9 +8,9 @@ extends Node
 ## Arguments (after --): --out=<dir>  --only=<name[,name]>  --frames=<n>
 ##
 ## Where it can, the harness uses the real systems (Inventory, Equipment, Progression,
-## Crafting) loaded with real content, so a screenshot is evidence the screen works and
-## not just that it draws. Only the player, the quest log, the dialogue runner and the
-## merchant are stand-ins, because those streams are still being written.
+## Crafting, QuestLog) loaded with real content, so a screenshot is evidence the screen works
+## and not just that it draws. Only the player, the dialogue runner and the merchant are
+## stand-ins, because those streams are still being written.
 
 const FAKES := "res://tools_gd/ui_review_fakes.gd"
 
@@ -126,6 +126,9 @@ func _plan() -> Array[Dictionary]:
 
 func _process(delta: float) -> void:
 	if _index >= _shots.size():
+		# the two review saves go in the real save directory so the title menu has a Continue
+		# to draw; left behind, they are what a player's Continue then loads
+		_fakes.clear_slots()
 		print("[ui_review] done")
 		get_tree().quit(0)
 		return

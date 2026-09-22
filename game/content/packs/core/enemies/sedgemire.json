@@ -77,8 +77,8 @@
     ],
     "loot": "core:loot/bog_drowned",
     "marks": [
-      4,
-      14
+      14,
+      38
     ],
     "tags": [
       "undead",

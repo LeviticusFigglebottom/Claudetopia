@@ -61,7 +61,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if position_provider == null or not is_instance_valid(position_provider):
+	if _locator() == null:
 		return
 	_poll += delta
 	if _poll < REACH_POLL_S:
@@ -539,26 +539,83 @@ func forget(quest_id: String) -> void:
 
 
 ## Records a choice (the `choice` objective type) and completes the matching objective.
+##
+## An option is authored either as a plain id, with its consequences in the objective's
+## `effects_by_option`, or as an object carrying its own `text`, `conditions` and `effects`.
+## Both shapes are answered here. Only the first was, which meant a quest whose options were
+## written the second way could never be decided at all: `["a", "b"].has(option)` is false for
+## a list of objects, so the objective never closed and the option's own effects never ran.
 func choose(quest_id: String, option: String) -> void:
 	if not is_active(quest_id):
 		return
-	var rec: Dictionary = quests[quest_id]
-	var choices: Dictionary = rec["choices"]
-	choices[stage_id_of(quest_id)] = option
-	rec["outcome"] = option
 	var index := stage_of(quest_id)
 	var objs: Array = stage_def(quest_id, index).get("objectives", [])
 	for i in objs.size():
 		var o: Dictionary = objs[i]
 		if str(o.get("type", "")) != "choice":
 			continue
-		var options: Array = o.get("options", [])
-		if str(o.get("target", "")) == option or options.has(option) or options.is_empty():
-			_progress(quest_id, i, 1, true)
-			var per_option: Variant = o.get("effects_by_option", {})
-			if typeof(per_option) == TYPE_DICTIONARY and (per_option as Dictionary).has(option):
-				_run_effects(quest_id, per_option[option], "quest_choice")
+		if not offers_option(o, option):
+			continue
+		var chosen := option_def(o, option)
+		if ctx != null and not Conditions.all_of(chosen.get("conditions", []), ctx):
+			Log.info("Quests", "%s: option '%s' is not open (its conditions are unmet)" % [quest_id, option])
 			return
+		var rec: Dictionary = quests[quest_id]
+		(rec["choices"] as Dictionary)[stage_id_of(quest_id)] = option
+		rec["outcome"] = option
+		# The option's own effects run before the objective closes, because a branching quest
+		# says where to go next in them, and a stage that has already advanced cannot be sent.
+		_run_effects(quest_id, chosen.get("effects", []), "quest_choice")
+		var per_option: Variant = o.get("effects_by_option", {})
+		if typeof(per_option) == TYPE_DICTIONARY and (per_option as Dictionary).has(option):
+			_run_effects(quest_id, per_option[option], "quest_choice")
+		if stage_of(quest_id) == index:
+			_progress(quest_id, i, 1, true)
+		return
+	Log.warn("Quests", "%s: no choice objective in stage %d offers '%s' (content problem)" % [quest_id, index, option])
+
+
+## Does this choice objective offer that option? True for a plain-id list, for a list of option
+## objects whose `id` matches, and for an objective that names the option as its own `target`.
+static func offers_option(objective: Dictionary, option: String) -> bool:
+	var options: Variant = objective.get("options", [])
+	if typeof(options) != TYPE_ARRAY or (options as Array).is_empty():
+		return true
+	if str(objective.get("target", "")) == option:
+		return true
+	for entry in options as Array:
+		if typeof(entry) == TYPE_DICTIONARY:
+			if str((entry as Dictionary).get("id", "")) == option:
+				return true
+		elif str(entry) == option:
+			return true
+	return false
+
+
+## The option object for an id, or {} when the options are authored as plain ids.
+static func option_def(objective: Dictionary, option: String) -> Dictionary:
+	for entry in objective.get("options", []):
+		if typeof(entry) == TYPE_DICTIONARY and str((entry as Dictionary).get("id", "")) == option:
+			return entry
+	return {}
+
+
+## The options of this stage's choice objective that are open right now, in authored order:
+## [{id, text}]. What a dialogue or the journal should offer, rather than every option written.
+func open_options(quest_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for o in stage_def(quest_id, stage_of(quest_id)).get("objectives", []):
+		if str((o as Dictionary).get("type", "")) != "choice":
+			continue
+		for entry in (o as Dictionary).get("options", []):
+			if typeof(entry) != TYPE_DICTIONARY:
+				out.append({"id": str(entry), "text": str(entry)})
+				continue
+			var option: Dictionary = entry
+			if ctx != null and not Conditions.all_of(option.get("conditions", []), ctx):
+				continue
+			out.append({"id": str(option.get("id", "")), "text": str(option.get("text", ""))})
+	return out
 
 
 ## Marks a delivery made (dialogue usually does this through complete_objective).
@@ -696,14 +753,26 @@ func _on_escort_arrived(npc_id: String, place_id: String) -> void:
 				_progress(quest_id, i, 1))
 
 
+## Where the player is, or nothing at all when what was bound has gone. A body that died and
+## was freed, or a scene that changed, leaves this holding a dead reference -- and handing one to
+## `can_locate` is a script error, once per stage synced, which is where a hundred and nine of a
+## test run's errors came from. A provider that no longer exists is dropped the moment it is
+## noticed, so nothing calls through it twice.
+func _locator() -> Object:
+	if position_provider != null and not is_instance_valid(position_provider):
+		position_provider = null
+	return position_provider
+
+
 ## Asks the position provider where the player is and completes `reach` objectives in range.
 ## Also callable directly with a position (tests, teleports).
 func check_reach(at: Variant = null) -> void:
 	var pos: Vector3
+	var provider := _locator()
 	if typeof(at) == TYPE_VECTOR3:
 		pos = at
-	elif SocialContext.can_locate(position_provider):
-		pos = SocialContext.position_of(position_provider)
+	elif provider != null and SocialContext.can_locate(provider):
+		pos = SocialContext.position_of(provider)
 	else:
 		return
 	_for_each_objective("reach", func(quest_id: String, i: int, o: Dictionary) -> void:
@@ -728,6 +797,10 @@ static func _blank_record(quest_id: String) -> Dictionary:
 
 func reset_for_new_game() -> void:
 	quests.clear()
+	# The generated quests live here; the boards that generated them live there. Clearing one
+	# and not the other left boards holding notices this log had never heard of.
+	if radiant != null and radiant.has_method("reset_for_new_game"):
+		radiant.reset_for_new_game()
 
 
 # --- save --------------------------------------------------------------------------------------

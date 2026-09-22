@@ -38,8 +38,10 @@ python3 tools/forge/contact_sheet.py captures/assets/trees --cols 3
 ```
 
 `--lod=1` or `--lod=2` reviews a LOD level; `--turntable=8` adds a turn; `--only=oak`
-filters. Exposure is fixed in the scene (`tonemap_white ≈ 6`, sun ≈ 1.0): on the
-Compatibility renderer anything brighter clips mid-greys to white.
+filters, and `--only=bowl,table_trestle` takes several, which is how you get the known
+reference the section below insists on into the same frame as the thing you are judging.
+Exposure is fixed in the scene (`tonemap_white ≈ 6`, sun ≈ 1.0): on the Compatibility
+renderer anything brighter clips mid-greys to white.
 
 ## Layout
 
@@ -108,6 +110,36 @@ python3 tools/forge/tests/run.py --fast   # pure Python only, no Blender
 * Materials are Principled BSDF only, so Godot imports them as `StandardMaterial3D`;
   foliage materials are named `*_foliage` and `tools_gd/glb_post_import.gd` swaps in
   `assets/shaders/foliage_wind.gdshader`.
+
+## Which Blender, and the three things 4.1 took away
+
+The forge was written against **Blender 4.0** and this container now has **4.2.3**. Under
+4.2 it could not build anything at all, and the three faults are worth knowing because
+each of them fails in a different place:
+
+| What | Then (4.0) | Now (4.1+) |
+|---|---|---|
+| smoothing angle | `mesh.use_auto_smooth` + `auto_smooth_angle` | `bpy.ops.object.shade_smooth_by_angle(angle, keep_sharp_edges)`, which writes a `sharp_edge` attribute the glTF exporter reads |
+| vertex colours off | `export_scene.gltf(export_colors=False)` | `export_vertex_color="NONE"`; the old keyword makes the operator refuse the call |
+| Pillow | bundled with Blender's Python | not bundled; `lib/__init__` puts the project's own `pillow>=10` on the path (same CPython minor version, so the wheel loads) |
+
+The first one dies in the builder, on the first prop that asks for a smoothing angle. The
+second dies at export, after the bake. The third died *after* the bake as
+`'NoneType' object has no attribute 'fromarray'`, which names neither Pillow nor the
+interpreter; `save_png` says it plainly now. All three are version-guarded, so the same
+tree builds under either Blender.
+
+**An asset rebuilt under 4.2 is not byte-identical to its 4.0 twin.** A mug rebuilt from
+the same seed came out 0.108 m against the committed 0.110 and its LOD2 two triangles
+different: `jitter_verts` displaces along the vertex normals, and the normals are what
+changed hands above. The committed library was baked under 4.0, so **do not rebuild an
+asset you are not deliberately changing** — `build_assets.py` is incremental on the hash
+and will leave them alone unless something moves `FORGE_VERSION` or a manifest line.
+
+A silent version guard is worse than a crash, and there is one in the tree: the character
+forge's `lib/body.py` catches the `AttributeError` from `use_auto_smooth` and passes, so
+under 4.2 every character it builds is fully smoothed with no threshold and nothing says
+so. That is the character stream's to fix.
 
 ## The scale constant: the forge's one recurring bug
 

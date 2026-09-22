@@ -148,7 +148,18 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 
 ## 7. Content definitions that other streams depend on
 
-* `item`: `{id, name, category (weapon|armour|consumable|ingredient|material|book|key|misc|tool), weight, value, description, model?, icon?, stack?, tags[], tier?, material? (what tempering consumes), weapon?{class, damage, poise_damage, stamina_light, stamina_heavy, speed, reach, clips_set (1H|2H|dagger|bow|staff|unarmed), parry: bool, stability}, ranged?{draw_time, reload_time, ammo}, armour?{slot, armour, weight_class, stability}, light?{range, energy, color}, ember?{charge}, effects?[], alchemy?{effects:[4 ids]}, origin? (ingredient's region)}`.
+* `item`: `{id, name, category (weapon|armour|consumable|ingredient|material|book|key|misc|tool), weight, value, description, model?, icon?, stack?, tags[], tier?, material? (what tempering consumes), weapon?{class, damage, poise_damage, stamina_light, stamina_heavy, speed, reach, clips_set (1H|2H|dagger|bow|staff|unarmed), parry: bool, stability}, ranged?{draw_time, reload_time, ammo}, armour?{slot, armour, weight_class, stability}, light?{range, energy, color}, ember?{charge}, effects?[], alchemy?{effects:[4 ids]}, origin? (ingredient's region), furnishing?{prop, room?, spot?, storage?}}`.
+  A **furnishing** is a `misc` item tagged `furnishing`, bought for a house the player owns
+  from the landlord's side of the deed screen and drawn by `HouseInterior` when that house is
+  built. `prop` is a prop *kind* `PropLibrary` can resolve (`cloth`, `chair`, `shelf`,
+  `cupboard`, `chest` — not an asset path, because the forge builds a kind per region and a
+  house you buy has no recipe line for a rug). `room` names the room it belongs in by the id
+  the house forge gives it (`hearth_room`, `bed`, `store`, `study`, `hall`); a house without
+  that room puts it by the hearth, which every house has. `spot` is `floor` (default) or
+  `wall`. `storage: true` gives it a `WorldContainer` of its own, claimed for the player, so a
+  chest you bought is somewhere to put things down. The item's `value` is what it costs; a
+  furnishing rides in the `property` save section under the deed that bought it, not in the
+  bag.
   Per-instance state lives on the stack, not the definition: `data{temper, enchant, effects, name, quality}`.
 * `enemy`: `{id, name, archetype, model, rig (humanoid|custom), stats{hp, stamina, poise, armour, speed}, attacks[{name, clip, damage, poise_damage, range, telegraph, recovery}], perception{sight_range, sight_fov, hearing}, behaviour{...}, loot: loot id, marks:[min,max], lore}`
 * `spell`: `{id, name, school (kindling|hush|binding|mending|calling), cast_type (projectile|self|aura|target|summon), cost, cast_time?, range?, speed?, radius?, duration?, clip?, description, effects[]}`.

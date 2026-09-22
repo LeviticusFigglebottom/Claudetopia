@@ -1,0 +1,150 @@
+[
+  {
+    "id": "core:npc/torkh_ko_kharrow", "name": "Torkh ko-Kharrow", "home_place": "core:place/kharrow_hold", "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/torkh_ko_kharrow",
+    "bio": "Moot-Speaker: the one who holds the speaking-bone when the seven clans sit, and who says the price when blood has been spilled. The name Torkh comes with the bone and not with the father; he is the ninth to carry it and the first from Clan Kharrow in two hundred years, which the other six have not stopped mentioning.",
+    "unique_habit": "Keeps a cairn on the moot-hall ledge with one stone for every blood-price the Moot has set and not yet seen paid, and when one is paid he carries that stone down the cliff stair himself and sets it on the wronged clan's hearth, whatever the weather and whatever his knees say.",
+    "personality": {"traits": ["proud", "brave", "quiet", "pious", "kind"]},
+    "appearance": {"seed": 6101, "build": "broad_heavy", "age": 63, "hair": "grey_braided_with_bone_rings", "notes": "a giant's finger-bone as long as his forearm carried in a sling across the chest, seven clan tokens on one cord and none of them his own, knees that have done the cliff stair too many times"},
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/kharrow_hold", "activity": "pray", "spot": "moot_hall", "notes": "the Rope-Song, all seven verses and the breath"},
+      {"days": "all", "hour": 7, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+      {"days": "workdays", "hour": 8, "place": "core:place/kharrow_hold", "activity": "work", "spot": "moot_hall", "notes": "the Moot's business, with the bone in his lap"},
+      {"days": "workdays", "hour": 12, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+      {"days": "workdays", "hour": 13, "place": "core:place/kharrow_hold", "activity": "work", "spot": "price_cairn", "notes": "hearing whoever has come up the stair with a grievance"},
+      {"days": "restday", "hour": 8, "place": "core:place/fallen_hand", "activity": "pray", "spot": "palm_shrine", "notes": "with Dunna, in the cup of the hand"},
+      {"days": "restday", "hour": 14, "place": "core:place/kharrow_hold", "activity": "work", "spot": "moot_hall"},
+      {"days": "all", "hour": 18, "place": "core:place/kharrow_hold", "activity": "socialise", "spot": "hearth_hall"},
+      {"days": "all", "hour": 22, "place": "core:place/kharrow_hold", "activity": "sleep", "spot": "speakers_cell"}
+    ]
+  },
+  {
+    "id": "core:npc/skardd_ko_skarl", "name": "Skardd ko-Skarl", "home_place": "core:place/kharrow_hold", "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/skardd_ko_skarl",
+    "bio": "Bridge-warden of Kharrow Hold, a Skarl by custom, because no clan keeps its own gate. Four hundred and twelve links of chain hang between the gorge wall and the Hold and every one of them is his, greased by hand, counted on Kindleday, and named for the man who hung the first of them and would not be roped while he did it.",
+    "unique_habit": "Greases every link of the chain bridge with mutton fat by hand once a season, and says Brann ko-Kharrow's name to the first link and the last, 'roped, which he was not', which is the only prayer a Skarl says at a Kharrow bridge.",
+    "personality": {"traits": ["brave", "quiet", "humble", "pious", "kind"]},
+    "appearance": {"seed": 6102, "build": "lean_hard", "age": 45, "hair": "black_cropped_to_the_skull", "notes": "mutton fat worked into the hands so the cold cannot crack them, a Skarl token on a chain instead of a thong, a rope round the waist at all times that is not tied to anything"},
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/kharrow_hold", "activity": "work", "spot": "chain_bridge_head", "notes": "the morning look along the links before anyone crosses"},
+      {"days": "all", "hour": 7, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+      {"days": "workdays", "hour": 8, "place": "core:place/kharrow_hold", "activity": "patrol", "spot": "chain_bridge"},
+      {"days": "kindleday", "hour": 8, "place": "core:place/kharrow_hold", "activity": "work", "spot": "chain_bridge", "notes": "the count: four hundred and twelve"},
+      {"days": "workdays", "hour": 12, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "bridge_wardens_post"},
+      {"days": "workdays", "hour": 13, "place": "core:place/kharrow_hold", "activity": "work", "spot": "chain_bridge", "notes": "grease, a link at a time"},
+      {"days": "restday", "hour": 9, "place": "core:place/kharrow_hold", "activity": "idle", "spot": "moot_fire"},
+      {"days": "restday", "hour": 12, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+      {"days": "restday", "hour": 14, "place": "core:place/kharrow_hold", "activity": "patrol", "spot": "cliff_stair"},
+      {"days": "all", "hour": 18, "place": "core:place/kharrow_hold", "activity": "socialise", "spot": "hearth_hall"},
+      {"days": "all", "hour": 22, "place": "core:place/kharrow_hold", "activity": "sleep", "spot": "skarl_ledge"}
+    ]
+  },
+  {
+    "id": "core:npc/ghan_ko_oskel", "name": "Ghan ko-Oskel", "home_place": "core:place/kharrow_hold", "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/ghan_ko_oskel",
+    "bio": "Keeps the hearth-hall of Kharrow Hold and brews the honey-brew the clans drink at it: heather honey, water off the tops, and a patience the hold does not otherwise have. An Oskel married into a Kharrow hearth, which means she pours for six clans who are not hers and one that is, and pours the same.",
+    "unique_habit": "Pours eight cups from every first brewing, seven for the clans on the benches and an eighth into the hearth-stones for the clan that is not sung, and watches how fast the stones drink it, and has never once said what she is watching for.",
+    "personality": {"traits": ["generous", "proud", "cynical", "gossip", "kind"]},
+    "appearance": {"seed": 6103, "build": "big_soft_strong", "age": 57, "hair": "iron_grey_in_a_single_thick_braid", "notes": "honey in the seams of both hands and heather ash on the forearms, an Oskel token worn on the outside of a Kharrow shawl, a ladle of giant bone that holds exactly one cup"},
+    "merchant": {"stock": "core:table/stock_clan_hearth", "marks": 130, "buys": ["consumable", "ingredient"]},
+    "work_clip": "Work_Stir",
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/kharrow_hold", "activity": "work", "spot": "brew_vats", "notes": "the first stir, before the song"},
+      {"days": "all", "hour": 7, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+      {"days": "workdays", "hour": 8, "place": "core:place/kharrow_hold", "activity": "shop", "spot": "hearth_hall"},
+      {"days": "workdays", "hour": 12, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall", "notes": "standing behind the benches, eating what came back"},
+      {"days": "workdays", "hour": 13, "place": "core:place/kharrow_hold", "activity": "work", "spot": "brew_vats"},
+      {"days": "workdays", "hour": 16, "place": "core:place/kharrow_hold", "activity": "shop", "spot": "hearth_hall"},
+      {"days": "restday", "hour": 9, "place": "core:place/kharrow_hold", "activity": "work", "spot": "honey_store", "notes": "the week's honey, weighed against the week's brew"},
+      {"days": "restday", "hour": 12, "place": "core:place/kharrow_hold", "activity": "shop", "spot": "hearth_hall"},
+      {"days": "all", "hour": 19, "place": "core:place/kharrow_hold", "activity": "socialise", "spot": "hearth_hall", "notes": "pouring; the eighth cup on a brewing night"},
+      {"days": "all", "hour": 23, "place": "core:place/kharrow_hold", "activity": "sleep", "spot": "brew_loft"}
+    ]
+  },
+  {
+    "id": "core:npc/kun_ko_rudd", "name": "Kun ko-Rudd", "home_place": "core:place/kharrow_hold", "faction": "core:faction/clan_moot", "tags": ["child"],
+    "dialogue": "core:dialogue/kun_ko_rudd",
+    "bio": "Nine, Clan Rudd's fosterling at Kharrow's hearth: sent up the chain by his clan to say the debt of the long snow is forgiven, and kept by Kharrow, who say a debt is not forgiven until it is paid. Wears a bone token cut for a grown man and has learned to walk so that it does not knock against his chest.",
+    "unique_habit": "Learns one verse of the Rope-Song from Dunna ko-Kharrow each week and hums it into the cliff wall beside his sleeping ledge every night before he lies down, so that the mountain has it too in case he forgets.",
+    "personality": {"traits": ["quiet", "brave", "humble", "pious", "kind"]},
+    "appearance": {"seed": 6104, "build": "child_small", "age": 9, "hair": "red_brown_cropped_clan_style", "notes": "a Rudd bone token the size of his palm on a thong shortened four times, sleeves rolled to keep them off the token, a way of walking that keeps his chest very still"},
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/kharrow_hold", "activity": "pray", "spot": "moot_hall", "notes": "the Rope-Song, at the back, on the verses he has"},
+      {"days": "all", "hour": 7, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+      {"days": "workdays", "hour": 9, "place": "core:place/kharrow_hold", "activity": "work", "spot": "moot_hall", "notes": "Dunna and the verses"},
+      {"days": "workdays", "hour": 12, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+      {"days": "workdays", "hour": 13, "place": "core:place/kharrow_hold", "activity": "idle", "spot": "cliff_stair", "notes": "running the stair, quietly"},
+      {"days": "workdays", "hour": 15, "place": "core:place/kharrow_hold", "activity": "idle", "spot": "chain_bridge_head", "notes": "watching Skardd grease the links, not allowed past the first"},
+      {"days": "restday", "hour": 9, "place": "core:place/fallen_hand", "activity": "pray", "spot": "palm_shrine", "notes": "with Dunna and Torkh, in the cup of the hand"},
+      {"days": "restday", "hour": 15, "place": "core:place/kharrow_hold", "activity": "idle", "spot": "chain_bridge_head"},
+      {"days": "all", "hour": 19, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
+      {"days": "all", "hour": 20, "place": "core:place/kharrow_hold", "activity": "idle", "spot": "moot_fire", "notes": "the week's verse, into the wall"},
+      {"days": "all", "hour": 21, "place": "core:place/kharrow_hold", "activity": "sleep", "spot": "fosterlings_ledge"}
+    ]
+  },
+  {
+    "id": "core:npc/oskarth_ko_brindle", "name": "Oskarth ko-Brindle", "home_place": "core:place/brindlecrag", "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/oskarth_ko_brindle",
+    "bio": "Keeps Brindlecrag's three headframes and the winding chains under them, and sells what the veins give up: iron, silver, and the giant-bone the silver runs into. Rings the shift by striking the winding chain, and has buried eleven miners under bone lintels and set the price of none of them, because a death in the shaft is the mountain's to pay.",
+    "unique_habit": "Rings every shift by striking the headframe's winding chain with a length of giant bone, never with iron, so that what is under Brindlecrag hears bone and not a bell, and has broken nine bones on the chain in thirty years and kept every piece.",
+    "personality": {"traits": ["proud", "brave", "cynical", "quiet"]},
+    "appearance": {"seed": 6105, "build": "thick_short", "age": 50, "hair": "black_and_grey_tied_back_with_wire", "notes": "chain grease to the elbows, a bone striker as long as a forearm worn through the belt, nine broken bone-ends strung on a cord like teeth"},
+    "merchant": {"stock": "core:table/stock_brindlecrag", "marks": 180, "buys": ["material", "tool", "armour"]},
+    "work_clip": "Work_Hammer",
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/brindlecrag", "activity": "work", "spot": "shift_bell", "notes": "bone on chain; the first shift goes down"},
+      {"days": "all", "hour": 6, "place": "core:place/brindlecrag", "activity": "eat", "spot": "winding_house"},
+      {"days": "workdays", "hour": 7, "place": "core:place/brindlecrag", "activity": "work", "spot": "headframe", "notes": "the chains, the drums, the brake"},
+      {"days": "workdays", "hour": 12, "place": "core:place/brindlecrag", "activity": "eat", "spot": "headframe"},
+      {"days": "workdays", "hour": 13, "place": "core:place/brindlecrag", "activity": "shop", "spot": "winding_house"},
+      {"days": "restday", "hour": 9, "place": "core:place/brindlecrag", "activity": "idle", "spot": "scree_path", "notes": "looking at the bones in the scree, and at what is not there any more"},
+      {"days": "restday", "hour": 12, "place": "core:place/brindlecrag", "activity": "eat", "spot": "winding_house"},
+      {"days": "restday", "hour": 14, "place": "core:place/brindlecrag", "activity": "work", "spot": "headframe_second"},
+      {"days": "all", "hour": 19, "place": "core:place/brindlecrag", "activity": "socialise", "spot": "winding_house"},
+      {"days": "all", "hour": 22, "place": "core:place/brindlecrag", "activity": "sleep", "spot": "keepers_hut"}
+    ]
+  },
+  {
+    "id": "core:npc/brodd_ko_brindle", "name": "Brodd ko-Brindle", "home_place": "core:place/brindlecrag", "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/brodd_ko_brindle",
+    "bio": "Miner at Brindlecrag's second headframe, who can hear the Oskeld shaft singing through three valleys of rock and hums it back at the face before every shift. The old miners say do not answer it. Brodd says somebody should, and is the only one who has said so aloud.",
+    "unique_habit": "Hums the singing shaft's note against the rock face before each shift and chalks a line on the adit post at the height his throat finds it; the lines have been going down the post since midwinter and he has not rubbed one out.",
+    "personality": {"traits": ["brave", "cynical", "gossip", "humble", "kind"]},
+    "appearance": {"seed": 6106, "build": "wiry_stooped", "age": 34, "hair": "dark_cropped_with_rock_dust_in_it", "notes": "chalk on the right thumb always, a lamp-hook on the cap, a Brindle token worn down to the shape of his collarbone"},
+    "work_clip": "Work_Dig",
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/brindlecrag", "activity": "eat", "spot": "winding_house"},
+      {"days": "workdays", "hour": 6, "place": "core:place/brindlecrag", "activity": "idle", "spot": "adit_mouth", "notes": "the note, and the chalk line"},
+      {"days": "workdays", "hour": 7, "place": "core:place/brindlecrag", "activity": "work", "spot": "in:second_adit", "notes": "the morning shift, underground"},
+      {"days": "workdays", "hour": 12, "place": "core:place/brindlecrag", "activity": "eat", "spot": "ore_sorting"},
+      {"days": "workdays", "hour": 13, "place": "core:place/brindlecrag", "activity": "work", "spot": "ore_sorting", "notes": "silver from stone from bone, by hand"},
+      {"days": "restday", "hour": 9, "place": "core:place/brindlecrag", "activity": "idle", "spot": "adit_mouth", "notes": "listening, on the day nobody digs"},
+      {"days": "restday", "hour": 12, "place": "core:place/brindlecrag", "activity": "eat", "spot": "winding_house"},
+      {"days": "restday", "hour": 14, "place": "core:place/oskeld_mine", "activity": "idle", "spot": "shaft_head", "notes": "as near the singing as a living Brindle goes"},
+      {"days": "all", "hour": 18, "place": "core:place/brindlecrag", "activity": "socialise", "spot": "winding_house"},
+      {"days": "all", "hour": 22, "place": "core:place/brindlecrag", "activity": "sleep", "spot": "miners_bunks"}
+    ]
+  },
+  {
+    "id": "core:npc/ghalorn_ko_rudd", "name": "Ghalorn ko-Rudd", "home_place": "core:place/brindlecrag", "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/ghalorn_ko_rudd",
+    "bio": "Sets the bone lintels over Brindlecrag's doors, and has set every lintel raised in Skerrow for forty years, because a door under bone is a door the dead have agreed to and Ghalorn is the one who asks them. A Rudd among Brindles, which at a mine is a joke about who owes whom for a winter.",
+    "unique_habit": "Knocks three times on every lintel he passes under and will not pass under one he has not knocked on, which makes him the slowest man in Skerrow on any stair with doors, and he has never once been hurried.",
+    "personality": {"traits": ["pious", "quiet", "proud", "kind", "brave"]},
+    "appearance": {"seed": 6107, "build": "tall_thin_bent", "age": 67, "hair": "white_shaved_at_the_sides_clan_style", "notes": "bone dust in every crease like Ordda's but older, a mallet with a head of giant knuckle, knuckles of his own gone flat from forty years of knocking"},
+    "work_clip": "Work_Hammer",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/brindlecrag", "activity": "pray", "spot": "bone_lintel_door", "notes": "three knocks on the oldest lintel in the village"},
+      {"days": "all", "hour": 7, "place": "core:place/brindlecrag", "activity": "eat", "spot": "winding_house"},
+      {"days": "workdays", "hour": 8, "place": "core:place/brindlecrag", "activity": "work", "spot": "lintel_yard"},
+      {"days": "workdays", "hour": 12, "place": "core:place/brindlecrag", "activity": "eat", "spot": "lintel_yard"},
+      {"days": "workdays", "hour": 13, "place": "core:place/brindlecrag", "activity": "work", "spot": "lintel_yard"},
+      {"days": "hushday", "hour": 8, "place": "core:place/kharrow_hold", "activity": "work", "spot": "cliff_stair", "notes": "the Hold's lintels, one knock at a time; it takes the day"},
+      {"days": "hushday", "hour": 16, "place": "core:place/brindlecrag", "activity": "idle", "spot": "scree_path"},
+      {"days": "restday", "hour": 9, "place": "core:place/fallen_hand", "activity": "pray", "spot": "palm_shrine"},
+      {"days": "restday", "hour": 14, "place": "core:place/brindlecrag", "activity": "idle", "spot": "bone_lintel_door"},
+      {"days": "all", "hour": 19, "place": "core:place/brindlecrag", "activity": "socialise", "spot": "winding_house"},
+      {"days": "all", "hour": 21, "place": "core:place/brindlecrag", "activity": "sleep", "spot": "rudd_lintel_house"}
+    ]
+  }
+]

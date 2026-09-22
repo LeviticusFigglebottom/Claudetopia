@@ -2059,6 +2059,111 @@
    "palette": "core:region/briarwold",
    "variant": "b",
    "seed": 8227
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bowl",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8263
+  },
+  {
+   "generator": "gen_props",
+   "kind": "bowl",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 8280
+  },
+  {
+   "generator": "gen_props",
+   "kind": "plate_stack",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8316
+  },
+  {
+   "generator": "gen_props",
+   "kind": "paper_stack",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8369
+  },
+  {
+   "generator": "gen_props",
+   "kind": "phial",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8422
+  },
+  {
+   "generator": "gen_props",
+   "kind": "phial",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 8439
+  },
+  {
+   "generator": "gen_props",
+   "kind": "jar",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8475
+  },
+  {
+   "generator": "gen_props",
+   "kind": "mortar",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8528
+  },
+  {
+   "generator": "gen_props",
+   "kind": "candle_stub",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8581
+  },
+  {
+   "generator": "gen_props",
+   "kind": "candle_stub",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 8598
+  },
+  {
+   "generator": "gen_props",
+   "kind": "boots",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8634
+  },
+  {
+   "generator": "gen_props",
+   "kind": "boots",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 8651
+  },
+  {
+   "generator": "gen_props",
+   "kind": "lantern_hand",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8687
+  },
+  {
+   "generator": "gen_props",
+   "kind": "lantern_hand",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 8740
+  },
+  {
+   "generator": "gen_props",
+   "kind": "copper",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 8793
   }
  ]
 }

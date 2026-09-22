@@ -108,30 +108,62 @@ static func delivery_offers(place_id: String, count: int, day: int) -> Array[Dic
 	return out
 
 
-## Radiant jobs for a board: the quest system's `generate(region_id, count)` when one is
-## registered, else deliveries. Quest entries are normalised to the same shape.
+## Radiant jobs for a board: the bounties, hunts and errands the quest system generates for
+## this board, and simple deliveries when there is no quest system to ask. Quest rows are
+## normalised to the delivery shape, so the board and its screen need not know which it got.
+##
+## This used to ask only `Peers.quests()` for a method called `generate`. `QuestLog` has no
+## such method — it *holds* the `RadiantGenerator`, and `Social.board_jobs()` is what drives
+## it, with the per-board daily cooldown that rides in the save. So every board in the game
+## fell straight through to the delivery fallback, and the whole of DESIGN §5.10's radiant
+## layer — six templates, bounties and hunts with region-appropriate quarry — never reached a
+## notice post. The façade is asked now; the duck-typed hook is kept, and tried first, so a
+## test can still put its own generator in front.
 static func board_offers(place_id: String, count: int = BOARD_JOB_COUNT, day: int = -1) -> Array[Dictionary]:
 	if day < 0:
 		day = WorldClock.day
 	var region := WorldProbe.region_of_place(place_id)
+	var generated: Variant = null
 	var q := Peers.quests()
 	if q != null and q.has_method("generate"):
-		var generated: Variant = q.call("generate", region, count)
-		if typeof(generated) == TYPE_ARRAY and not generated.is_empty():
-			var out: Array[Dictionary] = []
-			for g in generated:
-				if typeof(g) == TYPE_DICTIONARY:
-					var e: Dictionary = g.duplicate()
-					e["kind"] = str(e.get("kind", "quest"))
-					e["id"] = str(e.get("id", ""))
-					e["title"] = str(e.get("title", e.get("name", "Work")))
-					e["pay"] = int(e.get("pay", e.get("reward_marks", 0)))
-					out.append(e)
-				elif typeof(g) == TYPE_STRING:
-					var def := ContentDB.get_or_empty(str(g))
-					out.append({"id": str(g), "kind": "quest", "title": str(def.get("name", "Work")), "pay": int(def.get("rewards", {}).get("marks", 0))})
-			return out
+		generated = q.call("generate", region, count)
+	if not _has_rows(generated):
+		var social := Peers.social()
+		if social != null and social.has_method("board_jobs"):
+			generated = social.call("board_jobs", place_id, region, count)
+	if _has_rows(generated):
+		var out: Array[Dictionary] = []
+		for g in generated:
+			if typeof(g) == TYPE_DICTIONARY:
+				out.append(normalise_offer(g))
+			elif typeof(g) == TYPE_STRING:
+				out.append(normalise_offer(ContentDB.get_or_empty(str(g))))
+		return out
 	return delivery_offers(place_id, count, day)
+
+
+static func _has_rows(v: Variant) -> bool:
+	return typeof(v) == TYPE_ARRAY and not (v as Array).is_empty()
+
+
+## One board row out of a quest definition. A generated quest says what it pays in
+## `rewards.marks`, which is where the board has to look: reading only `pay`/`reward_marks`
+## would list every bounty in the country at nought marks.
+static func normalise_offer(def: Dictionary) -> Dictionary:
+	var e: Dictionary = def.duplicate()
+	e["id"] = str(e.get("id", ""))
+	e["kind"] = str(e.get("kind", "quest"))
+	e["title"] = str(e.get("title", e.get("name", "Work")))
+	var rewards: Variant = e.get("rewards", {})
+	var from_rewards := 0
+	if typeof(rewards) == TYPE_DICTIONARY:
+		from_rewards = int((rewards as Dictionary).get("marks", 0))
+	e["pay"] = int(e.get("pay", e.get("reward_marks", from_rewards)))
+	if int(e["pay"]) <= 0:
+		e["pay"] = from_rewards
+	if not e.has("summary") and str(e.get("board_line", "")) != "":
+		e["summary"] = str(e["board_line"])
+	return e
 
 
 ## Completes a job: pays the marks, emits job_completed, counts it in GameState.

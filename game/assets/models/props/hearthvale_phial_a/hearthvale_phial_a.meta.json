@@ -1,0 +1,82 @@
+{
+ "bounds": {
+  "height": 0.143,
+  "max": [
+   0.027,
+   0.143,
+   0.027
+  ],
+  "min": [
+   -0.027,
+   0.0,
+   -0.027
+  ],
+  "radius": 0.081
+ },
+ "built_seconds": 4.92,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_phial_a.glb",
+ "hash": "498d86a4765f5acd",
+ "kind": "phial",
+ "materials": [
+  "hearthvale_phial_a_mat"
+ ],
+ "materials_used": [
+  "glass",
+  "wood_planks",
+  "wax"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_phial_a",
+   "tris": 592
+  },
+  {
+   "name": "hearthvale_phial_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_phial_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_phial_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 8422,
+ "squat": false,
+ "textures": [
+  "hearthvale_phial_a_albedo.png",
+  "hearthvale_phial_a_normal.png",
+  "hearthvale_phial_a_orm.png"
+ ],
+ "tris": [
+  592,
+  300,
+  120
+ ],
+ "version": 3
+}

@@ -262,7 +262,35 @@ uniforms are spelled `base_color`, so setting `base_colour` was silently a no-op
 wall and roof in Merrowby came out the shader's default grey; and the roof slabs were tilted
 the wrong way, which turns a cottage into a pair of open wings.
 
-## 2026-09-19 · The rest of a town is generated, and it is two draw calls a house
+## 2026-09-21 · A settlement's fabric is four draw calls, and so is a house
+**Decision.** `Building` and `Settlement` both build through `FabricMesh`: every box and
+triangle goes into one `SurfaceTool` per surface (walls, roof, stone, joinery) and each
+surface is committed as a single `MeshInstance3D`, with a vertex colour per piece that the
+painted shader multiplies in. So an entered house is four meshes plus a collision body per
+room, whatever its room and window count, and a whole settlement's filler houses are the same
+four meshes for all of them, each house in its own bucket of limewash. Props are one
+`MultiMesh` per forge asset per settlement. Joinery and props carry a visibility range and the
+joinery casts no shadow; walls and roofs are drawn to the horizon. Only collision bodies and
+the interactables (`JobBoard`, `JobStation`, `PropertySign`) remain nodes of their own.
+**Why.** Merrowby's street was the worst frame in the game at 2438 draw calls against DESIGN
+§11's 2000, and until `DrawAttribution` (`--attribute` on a capture, `draws measure` in the
+console) nobody could say what they were. Measured: 1093 were the eleven entered houses in
+view — walls, plinths, slabs, gables, ridges, chimneys, door parts and window parts as 358
+separate MeshInstance3Ds, each drawn once for the eye and about twice more for the sun's
+cascades; 1535 of the 2441 draws were shadow passes. Merging per material rather than per
+part is the only change that scales: a city of fifty-four houses costs what a hamlet does.
+**Consequences.** The per-building tone shift is a vertex colour now rather than a material
+per building, and the shader change (`ALBEDO *= COLOR`) is invisible to every mesh that
+carries no colour. The filler houses gained their windows, chimneys, lintels, eaves and
+varied plinths at the same time, at no draw cost, because inside a merged mesh geometry is
+free and draws are not. Measured on gl_compatibility at 1600x900, the six street shots went
+2438/479/660/764/609/515 -> 1328/283/498/547/433/405. What is left in Merrowby's 1328 is
+villagers (590: about nine skinned meshes each, all shadow-casting, so twenty in view is
+nearly six hundred draws), scatter MultiMeshes (332) and Terrain3D (160); the buildings are
+120 and the fabric 110. `test_settlements.gd` ratchets a village of Merrowby's kind at 31
+mesh nodes.
+
+## 2026-09-19 · (SUPERSEDED, see above) The rest of a town is generated, and it is two draw calls a house
 **Decision.** Twenty-four hand-built interiors cannot furnish eleven settlements, so
 `Settlement` raises the other roofs: plots along any road that crosses the place's pad, a
 ring around a green where none does, counts and sizes by the place's `kind`. Every filler
@@ -327,3 +355,76 @@ coherent. The height thresholds in the downs' texture rules had to move with the
 stops below the crest now rather than above 95 m — and that is the maintenance cost of building
 the land first: anything written against absolute heights is written against the landform, and
 has to move when the landform does.
+
+## 2026-09-22 · Two orderings the data broke, and the reading that hid them
+**Decision.** `tools/balance.py` now reads three things the game acts on and the tool scored as
+zero, and four enemy numbers changed to restore the two orderings a region's `danger` rating
+promises. No formula moved: `hp_max`, `skill_mult`, `hit` and `level_threshold` are still
+DESIGN §5.3 and §5.6 mirrored term for term, and the magnitudes stay the uncalibrated guesses
+`ASSESSMENT.md` calls them. `tools/tests/test_balance.py` fails the build if either ordering
+inverts again.
+
+**Why the reading came first.** The tool said Brightwater was twice as safe as the starting
+downs and the marsh paid a quarter of what the lake did. Most of both readings was the tool.
+
+* A spell attack carries no `damage` of its own — `enemy.gd` sends it through the caster and
+  the spell's own effects are what land (CONTRACTS §7). Read flat, the Smuggler Sayer and the
+  Wisp did nothing three casts in five, and the two regions that field a caster read far safer
+  than they are. Brightwater 13.1 → 10.3 hits to kill you, Sedgemire 9.2 → 6.4, on no data
+  change at all.
+* A bleed, a burn or a poison goes on taking health after the blow, and takes it raw, past
+  armour. A Bravo's one real thrust is 25 in the moment and 12 more over six seconds.
+* `guaranteed` loot entries were skipped, so a sallowjaw read as worth three marks when the
+  hide it always leaves is worth thirty-four — the whole reason Isseva hunts one.
+
+Tuning data against a reading we knew to be wrong would have been the wrong work. The
+hardest-single-hit column deliberately keeps the aftermath *out*: whether a blow kills you
+outright is decided by the blow, so `attack_impact` is the impact and `attack_damage` is both.
+That column is unchanged at 30/25/34/35/48/58, and so are the bosses at 7–34 heavy hits.
+
+**Why these four numbers.** Each is explainable in the creature's own terms, and each was odd
+on its own before any curve was consulted.
+
+* The **Bravo** is the only elite in a region rated as dangerous as the starting downs, and his
+  measured thrust landed for 15 where a Hearthvale roadside bandit's slash lands for 11. A
+  Tollmere rapier in a bought duellist's hand: 18. His one real blow stays at 25, so
+  Brightwater's hardest single hit is still 25% of your health.
+* The **Smuggler Sayer**'s staff rap is a two-handed staff with knockback and did less than a
+  cutpurse's dagger: 17.
+* The **Cutpurse** opens you to get at your belt, with the iron dagger his own takings drop,
+  and was gentler than a boy with a hedge-knife: 9 and 15.
+* The **Gutter Drake** stays cat-sized and stays weak in the jaw — its bite is still 6. What
+  was missing is what its lore already said: "they eat what the city sends them". A mouthful of
+  the Undercroft goes septic, so the ankle snap carries `poisoned` for eight seconds. The
+  drake's danger is in the wound, not in muscle, and nothing about a vermin swarm had to be
+  inflated to a wolf's bite to make the region keep its promise.
+* The **Bog-Drowned** is the brute of a region one step past the start and carried 4–14 marks,
+  less than a Hearthvale bandit. The Reedfolk go into the water with their things: 14–38. And
+  their burial rite puts a lantern in with them — "sometimes the lantern goes out first" — so
+  the lantern is `guaranteed` at the half-chance the lore names rather than one weighted pick
+  in twenty-one.
+
+Brightwater now reads 6.8 hits to kill you against Hearthvale's 6.6, inside the half-hit slack
+the tool allows two regions written for the same point in the curve; the marsh pays 34 against
+the downs' 31.
+
+**What was deliberately left alone.**
+
+* **Flat armour is still a design question and stays open.** The best weapon in Wickmere lands
+  27 as a light and 107 as a charged heavy against the Stone-Thrall King's 30 armour, a
+  four-fold spread, and the tool still says so on every run. Subtracting armour before
+  everything else is DESIGN §5.3 and normative; whether a late boss should make the charged
+  heavy the only real answer is a question for a playthrough, not for a tuning pass.
+* **Brightwater pays 2.5 times what Hearthvale does at the same danger rating**, and the tool
+  still reports the marsh after it as paying less. That is not the marsh being poor: three of
+  Brightwater's four kinds are city criminals who carry purses, and three of Hearthvale's are
+  animals who do not. Closing it means either taking the fee off a paid duellist or giving
+  Sedgemire a human outlaw to kill — the marsh has none, only three beasts and a corpse, which
+  is why its takings are hides and glands rather than marks. Inventing an enemy is content
+  authoring and not a calibration, so the pair is exempted by name in the test and the reason
+  is written there.
+* **Encounter group sizes.** `tools/world/worldgen/encounters.py` already authors them: a swarm
+  stands 4–7 together, a brute alone. So "hits to kill you" per body is not what the country
+  sends at you, and a region of swarms reads safer than it plays. Counting the group would
+  change what the column means rather than correct a misreading, so it is not counted, and
+  this is the honest reason a per-kind mean flatters Brightwater.

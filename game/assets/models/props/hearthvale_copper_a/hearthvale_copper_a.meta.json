@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 0.95,
+  "max": [
+   0.428,
+   0.95,
+   0.413
+  ],
+  "min": [
+   -0.402,
+   0.0,
+   -0.413
+  ],
+  "radius": 0.754
+ },
+ "built_seconds": 29.02,
+ "category": "props",
+ "collision": "hearthvale_copper_a_col.glb",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_copper_a.glb",
+ "hash": "a7b370a10cb4c89d",
+ "kind": "copper",
+ "materials": [
+  "hearthvale_copper_a_mat"
+ ],
+ "materials_used": [
+  "stone_blocks",
+  "bronze",
+  "iron",
+  "soot"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_copper_a",
+   "tris": 4380
+  },
+  {
+   "name": "hearthvale_copper_a_LOD1",
+   "tris": 1752
+  },
+  {
+   "name": "hearthvale_copper_a_LOD2",
+   "tris": 656
+  }
+ ],
+ "name": "hearthvale_copper_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "rim_height": 0.95,
+ "seed": 8793,
+ "textures": [
+  "hearthvale_copper_a_albedo.png",
+  "hearthvale_copper_a_normal.png",
+  "hearthvale_copper_a_orm.png"
+ ],
+ "tris": [
+  4380,
+  1752,
+  656
+ ],
+ "version": 3
+}

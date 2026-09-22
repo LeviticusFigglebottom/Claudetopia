@@ -31,6 +31,12 @@ Objective types and what closes them:
 | `deliver` | npc id (+`item`) | a dialogue effect (`complete_objective`) or `deliver()` |
 | `escort` | npc id (+`place`) | `escort_arrived` |
 | `choice` | option id (+`options`, `effects_by_option`) | `choose()` |
+
+An option is written either as a plain id, with its consequences in the objective's
+`effects_by_option`, or as an object `{id, text, conditions?, effects?}` carrying its own. Both
+are answered by `choose()`, which refuses an option whose `conditions` are unmet; a branching
+quest names the stage it jumps to in the option's own effects, by stage id.
+`open_options(quest_id)` lists the options a dialogue should actually offer.
 | `use_item` | item id | `item_used` |
 | `rest_at` | hearthstone/place id | `hearthstone_rested` |
 | `read_book` | book id | `book_opened` |
@@ -57,6 +63,16 @@ Rewards scale with the region's `danger`, the count, and the distance from the b
 Generation is deterministic for a seed; boards derive theirs from region, board and day, so the
 same board offers the same work all day (`DEFAULT_COOLDOWN_HOURS` 48).
 
+**How a board reaches this.** The economy stream's `JobBoard` asks `Jobs.board_offers()`, which
+asks `Social.board_jobs()` — the façade, because `QuestLog` has no `generate()`; it *holds* the
+generator. `JobBoard.take()` then accepts through `Social.take_quest()`. Both halves used to be
+unreachable: `board_offers` looked for a `generate()` method on the quest-log participant, found
+none, and fell through to the economy's own parcel deliveries every time, so no board in the
+game ever listed a bounty. A generated quest has no content-pack definition, so anything the
+generator hands out is registered with the log on the way — including notices handed back out of
+a board's cache and notices restored from a save, which were not, so every job still hanging on
+a board in a loaded game answered "cannot start unknown quest" when taken.
+
 ## Signals
 
 Emits `EventBus.quest_started(id)`, `quest_stage_changed(id, stage)`, `quest_completed(id, outcome)`.
@@ -77,6 +93,7 @@ Social.quests.set_stage(quest_id, stage)       # index or stage id
 Social.quests.advance(quest_id)
 Social.quests.complete(quest_id, outcome := "") / fail(quest_id, reason) / abandon(quest_id)
 Social.quests.choose(quest_id, option) / complete_objective(quest_id, key) / deliver(quest_id, npc_id)
+Social.quests.open_options(quest_id) -> [{id, text}]   # the choices open right now
 Social.quests.is_active/is_completed/is_failed/is_known(quest_id) -> bool
 Social.quests.stage_of/stage_id_of/outcome_of(quest_id)
 Social.quests.active_quests() / completed_quests() / failed_quests() -> Array[Dictionary]

@@ -1,0 +1,713 @@
+extends Node
+## The way in, pressed the way a player presses it.
+##
+##   ./run.sh flow
+##   xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
+##       --audio-driver Dummy --resolution 1280x720 -- --flow=captures/flow [--load=<slot> | --continue]
+##
+## Boot attaches this at the root when it sees --flow and then boots exactly as it does with no
+## arguments. From there the probe does what a player does and nothing a player cannot: it waits
+## for the title menu, finds New Game by the words on it and clicks it; waits for the Naming,
+## clicks the name field and types, rolls the other names, clicks a swatch of each kind, opens
+## a chooser and picks with the keys, drags a slider, clicks a Calling card, clicks Be named;
+## then watches the world stand up, sampling the frame at 2, 5, 10, 20 and 40 seconds from the
+## press. Every step is a PNG in --flow=<dir>, and the run ends with the body turned to face the
+## camera so the PNG can be held against the Naming's.
+##
+## It fails, printing FLOW: FAIL and exiting 1, when a button cannot be found or does nothing,
+## the screen is black where a caption or the world should be (mean luminance under BLACK:
+## the fade's own rectangle measures 0.042, so anything under 0.06 is the fade or nothing), the
+## fade is still down once the body stands, the HUD is not up, or the body standing in the
+## world is not the one the Naming made. With --load=<slot> or --continue it skips the Naming
+## and holds the loaded character against what the New Game run wrote to flow_state.json.
+
+const BLACK := 0.06
+const NAME := "Tam Cresswell"
+const SKIN := "amber"
+const HAIR_COLOUR := "ginger"
+const EYES := "green"
+const CALLING := "core:calling/cragborn"
+const SLOT := "flow"
+const SAMPLE_SECONDS := [2.0, 5.0, 10.0, 20.0, 40.0]
+const WORLD_TIMEOUT := 420.0
+
+var out_dir := "captures/flow"
+var mode := "new"            # new | load | continue | new-game
+var load_slot := ""
+
+var _checks: Array[Dictionary] = []
+var _notes: Array[String] = []
+var _shot := 0
+var _t0 := 0
+var _errors_at_start := 0
+var _spawned: Node = null
+var _spawned_at_ms := -1
+var _mouse := Vector2.ZERO
+var _last_frame_ms := 0
+var _gap_ms := 0
+var _gap_from_ms := 0
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--load="):
+			mode = "load"
+			load_slot = a.substr(7)
+		elif a == "--continue":
+			mode = "continue"
+		elif a == "--new-game":
+			mode = "new-game"
+	out_dir = _absolute(out_dir)
+	DirAccess.make_dir_recursive_absolute(out_dir)
+	_errors_at_start = Log.error_count
+	EventBus.player_spawned.connect(func(p: Node) -> void:
+			_spawned = p
+			_spawned_at_ms = Time.get_ticks_msec())
+	_run()
+
+
+func _run() -> void:
+	print("[flow] mode=%s -> %s" % [mode, out_dir])
+	match mode:
+		"new":
+			await _new_game_flow()
+		"continue":
+			await _continue_flow()
+		_:
+			await _straight_in_flow()
+	_finish()
+
+
+# --- the three ways in ------------------------------------------------------------------------
+
+func _new_game_flow() -> void:
+	var menu := await _wait_for_scene("main_menu.gd", 90.0)
+	if not _check(menu != null, "the title menu comes up from boot"):
+		return
+	await _settle(2.2)      # the words ink in over about a second and a half
+	await _capture("title")
+	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "the mouse is free on the title menu")
+	var new_game := _button(menu, "New Game")
+	if not _check(new_game != null and not new_game.disabled, "New Game is on the title menu, by name, and enabled"):
+		return
+	await _click(new_game)
+	var naming := await _wait_for_scene("naming.gd", 30.0)
+	if not _check(naming != null, "clicking New Game opens the Naming"):
+		return
+	await _settle(1.6)
+	await _capture("naming")
+	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "the mouse is free on the Naming")
+	var focus := get_viewport().gui_get_focus_owner()
+	_check(focus is LineEdit, "the Naming opens with the keyboard in the name field, so a pad has somewhere to start (focus: %s)"
+			% (focus.get_class() if focus != null else "nothing"))
+	await _fill_the_naming(naming)
+	await _settle(0.6)
+	await _capture("naming_filled")
+	var expected: Dictionary = naming.call("appearance_dict")
+	expected["name"] = NAME
+	expected["calling"] = str(naming.get("calling_id"))
+	var be_named := _button(naming, "Be named")
+	if not _check(be_named != null and not be_named.disabled, "Be named is there, by name, and enabled"):
+		return
+	await _click(be_named)
+	_t0 = Time.get_ticks_msec()
+	# The Naming fades for half a second and then changes scene, and the world's _ready then
+	# blocks the loop until the ground is up: whatever frame was drawn last is what the player
+	# looks at for the whole of that. So the caption is captured here, inside the fade, and the
+	# gap in frames is reported below rather than hidden.
+	var shown := await _wait_until(func() -> bool: return UI.is_loading_shown(), 2.0)
+	_check(shown, "Be named puts the loading caption up at once")
+	_check(UI.is_faded_out() or _spawned != null, "Be named fades the Naming out")
+	await _capture("be_named_pressed")
+	await _settle(0.42)
+	var luma := await _capture("loading_caption")
+	_check(UI.is_loading_shown() and luma > BLACK,
+			"the last frame before the world is the caption over the black, not a dead screen (luma %.3f: %s)"
+			% [luma, UI.loading_text().replace("\n", " / ")])
+	await _watch_the_world_stand_up()
+	if _spawned == null:
+		return
+	_verify_body(expected)
+	await _portrait()
+	var err := SaveSystem.save_to_slot(SLOT)
+	_check(err == OK, "the character saves to slot '%s' for the load runs" % SLOT)
+	var f := FileAccess.open("%s/flow_state.json" % out_dir, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(expected, "  "))
+
+
+func _continue_flow() -> void:
+	# Continue promises the newest slot, which is not necessarily the one the New Game run
+	# wrote: anything else that saves — a journey run, another session on the same user://
+	# directory, a quick save — takes that place. So the probe reads what Continue is about
+	# to pick and holds the body against *that* character, fully when it is the flow slot
+	# and by its saved summary otherwise.
+	var newest := _newest_slot()
+	if not _check(not newest.is_empty(), "there is a saved name for Continue to load"):
+		return
+	var expected := {}
+	if str(newest.get("slot", "")) == SLOT:
+		expected = _expected_from_the_first_run()
+		if expected.is_empty():
+			return
+	else:
+		_notes.append("Continue picked '%s' (saved %s), not this run's '%s': something else wrote a newer save, so the body is checked against that slot's own summary"
+				% [newest.get("slot", ""), newest.get("saved_at", ""), SLOT])
+	var menu := await _wait_for_scene("main_menu.gd", 90.0)
+	if not _check(menu != null, "the title menu comes up from boot"):
+		return
+	await _settle(2.2)
+	await _capture("title")
+	var cont := _button(menu, "Continue")
+	if not _check(cont != null and not cont.disabled, "Continue is on the title menu, by name, and enabled now that a name is saved"):
+		return
+	await _click(cont)
+	_t0 = Time.get_ticks_msec()
+	await _settle(0.8)
+	await _capture("continue_pressed")
+	await _watch_the_world_stand_up()
+	if _spawned == null:
+		return
+	if expected.is_empty():
+		_verify_body_against_slot(newest)
+	else:
+		_verify_body(expected)
+	await _portrait()
+
+
+## --load=<slot> and --new-game: boot goes straight to the world, no menu in between.
+func _straight_in_flow() -> void:
+	var expected := {}
+	if mode == "load":
+		expected = _expected_from_the_first_run()
+		if expected.is_empty():
+			return
+	_t0 = Time.get_ticks_msec()
+	await _settle(0.8)
+	await _capture("boot")
+	await _watch_the_world_stand_up()
+	if _spawned == null:
+		return
+	if mode == "load":
+		_verify_body(expected)
+	else:
+		_check(_spawned.call("body_model") != null, "a --new-game Foundling has a forge body")
+		var look: CharacterAppearance = _spawned.get("appearance")
+		_check(look != null and not look.part("torso").is_empty(), "and is dressed rather than the naked rig")
+	await _portrait()
+
+
+## The slot Continue will take: the newest, as the title menu sorts them.
+func _newest_slot() -> Dictionary:
+	var slots := SaveSystem.list_slots()
+	return slots[0] if slots.size() > 0 else {}
+
+
+## What can be asked of a character this run did not make: that the body standing there is the
+## one that slot's summary names, dressed by the forge rather than a placeholder.
+func _verify_body_against_slot(slot: Dictionary) -> void:
+	var summary: Dictionary = slot.get("summary", {})
+	var name := str(summary.get("name", ""))
+	_check(str(_spawned.get("display_name")) == name,
+			"the body is the one slot '%s' saved, %s (it answers to '%s')"
+			% [slot.get("slot", ""), name, _spawned.get("display_name")])
+	var model: Node = _spawned.call("body_model") if _spawned.has_method("body_model") else null
+	if not _check(model != null, "the loaded player has a forge body, not a placeholder"):
+		return
+	var look: CharacterAppearance = model.get("appearance")
+	_check(look != null and not look.part("torso").is_empty(),
+			"and is dressed rather than the naked rig (torso: %s)" % (look.part("torso") if look else "none"))
+	_check(look != null and look.skin in CharacterAppearance.SKIN_TONES,
+			"and its skin is a tone the body's own vocabulary knows (%s)" % (look.skin if look else "none"))
+
+
+func _expected_from_the_first_run() -> Dictionary:
+	var path := "%s/flow_state.json" % out_dir
+	if not FileAccess.file_exists(path):
+		_check(false, "flow_state.json from the New Game run is at %s (run the new-game flow first)" % path)
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		_check(false, "flow_state.json is readable")
+		return {}
+	return parsed
+
+
+# --- the Naming, control by control ------------------------------------------------------------
+
+func _fill_the_naming(naming: Node) -> void:
+	# the name: click the field, select what is there, type over it
+	var edit := _first_of(naming, "LineEdit") as LineEdit
+	if _check(edit != null, "the name field is on the Naming"):
+		await _click(edit)
+		_check(edit.has_focus(), "clicking the name field gives it the keyboard")
+		await _key(KEY_A, true)
+		await _type(NAME)
+		_check(edit.text == NAME, "typing puts the name in the field (it reads '%s')" % edit.text)
+		_check(str(naming.get("player_name")) == NAME, "and the Naming hears it")
+
+	# the other names roll
+	var before := _suggestions(naming)
+	var again := _button_with_tooltip(naming, "other names")
+	if _check(again != null, "the 'other names' button is there"):
+		await _click(again)
+		await _frames(2)
+		_check(_suggestions(naming) != before, "'other names' rolls three new names")
+
+	# one swatch of each kind
+	await _press_swatch(naming, "Skin", SKIN)
+	_check(_look(naming).skin == SKIN, "the skin swatch sets the skin (record says %s)" % _look(naming).skin)
+	_check(_model_look(naming) != null and _model_look(naming).skin == SKIN, "and the preview body takes it")
+	await _press_swatch(naming, "Hair", HAIR_COLOUR)
+	_check(_look(naming).hair_colour == HAIR_COLOUR, "the hair swatch sets the hair colour (%s)" % _look(naming).hair_colour)
+	_check(_model_look(naming) != null and _model_look(naming).hair_colour == HAIR_COLOUR, "and the preview body takes it")
+	await _press_swatch(naming, "Eyes", EYES)
+	_check(_look(naming).eye_colour == EYES, "the eye swatch sets the eyes (%s)" % _look(naming).eye_colour)
+
+	# a chooser, clicked open and worked with the keys. Opened by the mouse, a list starts with
+	# nothing highlighted, so the first press down lands on its first item (engine behaviour,
+	# and what a mouse-and-keys player sees); the second moves on from there.
+	var hair := _chooser(naming, "hair")
+	if _check(hair != null, "the hair chooser is there"):
+		var was := _look(naming).part("hair")
+		await _click(hair)
+		await _frames(3)
+		_check(hair.get_popup().visible, "clicking the hair chooser opens its list")
+		await _key(KEY_DOWN)
+		await _key(KEY_DOWN)
+		await _key(KEY_DOWN)
+		await _key(KEY_ENTER)
+		await _frames(2)
+		var now := _look(naming).part("hair")
+		_check(now != was and now == CharacterAppearance.HAIR_STYLES[2],
+				"three presses down and Enter pick the third hair style (%s -> %s)" % [was, now])
+		_check(_model_look(naming) != null and _model_look(naming).part("hair") == now, "and the preview body wears it")
+	var face := _chooser(naming, "head")
+	if _check(face != null, "the face chooser is there"):
+		await _click(face)
+		await _frames(3)
+		await _key(KEY_DOWN)
+		await _key(KEY_DOWN)
+		await _key(KEY_ENTER)
+		await _frames(2)
+		_check(_look(naming).part("head") == CharacterAppearance.HEADS[1],
+				"two presses down and Enter pick the second face (%s)" % _look(naming).part("head"))
+		_check(_model_look(naming) != null and _model_look(naming).part("head") == CharacterAppearance.HEADS[1],
+				"and the preview body wears that head")
+
+	# a slider, dragged
+	var height := _slider(naming, "height")
+	if _check(height != null, "the height slider is there"):
+		await _drag(height, 0.12, 0.94)
+		_check(_look(naming).height > 1.85, "dragging the height slider raises the height (%.2f m)" % _look(naming).height)
+		var model: Node = naming.get("_model")
+		var rig: Node3D = model.get("_rig_root") if model != null else null
+		_check(rig != null and rig.scale.y > 1.03, "and the preview body grows (scale %.3f)" % (rig.scale.y if rig else 0.0))
+	var build := _slider(naming, "build")
+	if _check(build != null, "the build slider is there"):
+		await _drag(build, 0.5, 0.95)
+		_check(_look(naming).build > 0.8, "dragging the build slider broadens the build (%.2f)" % _look(naming).build)
+
+	# a Calling card
+	var card := _find_meta(naming, "calling", CALLING)
+	if _check(card != null, "the Cragborn card is there"):
+		await _click(card)
+		await _frames(2)
+		_check(str(naming.get("calling_id")) == CALLING, "clicking a Calling card selects it")
+		_check(_model_look(naming) != null and _model_look(naming).culture == "clans",
+				"and the preview dresses for its people (%s)" % (_model_look(naming).culture if _model_look(naming) else "no body"))
+
+	# the pad's way round: from the name field, Tab must be able to reach one of everything
+	# and get out again to Be named, without being trapped in a wrapping chain
+	if edit != null:
+		await _click(edit)
+		var reached := {}
+		var last: Control = null
+		for i in 90:
+			await _key(KEY_TAB)
+			var f := get_viewport().gui_get_focus_owner()
+			if f == null or f == last:
+				continue
+			last = f
+			reached[_kind_of(f)] = true
+			if f is Button and (f as Button).text == "Be named":
+				break
+		var kinds := ["swatch", "chooser", "slider", "card", "Back", "Be named"]
+		var missing: Array[String] = []
+		for k in kinds:
+			if not reached.has(k):
+				missing.append(k)
+		_check(missing.is_empty(), "Tab from the name field reaches a swatch, a chooser, a slider, a Calling card, Back and Be named (missing: %s)" % ", ".join(missing))
+
+
+func _kind_of(c: Control) -> String:
+	if c.has_meta("tone"):
+		return "swatch"
+	if c.has_meta("calling"):
+		return "card"
+	if c is OptionButton:
+		return "chooser"
+	if c is HSlider:
+		return "slider"
+	if c is Button and not (c as Button).text.is_empty():
+		return (c as Button).text
+	if c is LineEdit:
+		return "name"
+	return c.get_class()
+
+
+func _look(naming: Node) -> CharacterAppearance:
+	return naming.get("appearance") as CharacterAppearance
+
+
+func _model_look(naming: Node) -> CharacterAppearance:
+	var model: Node = naming.get("_model")
+	return model.get("appearance") as CharacterAppearance if model != null else null
+
+
+func _suggestions(naming: Node) -> PackedStringArray:
+	var out := PackedStringArray()
+	var row: Node = naming.get("_suggest_row")
+	if row == null:
+		return out
+	for c in row.get_children():
+		if c is Button and not (c as Button).text.is_empty():
+			out.append((c as Button).text)
+	return out
+
+
+func _press_swatch(naming: Node, label_text: String, tone: String) -> void:
+	var label := _label(naming, label_text)
+	if not _check(label != null, "the %s swatches are labelled" % label_text):
+		return
+	var swatch := _find_meta(label.get_parent(), "tone", tone)
+	if not _check(swatch != null, "the %s row has a %s swatch" % [label_text, tone]):
+		return
+	await _click(swatch)
+	await _frames(2)
+
+
+func _chooser(root: Node, slot: String) -> OptionButton:
+	return _find_meta(root, "slot", slot) as OptionButton
+
+
+func _slider(root: Node, key: String) -> HSlider:
+	return _find_meta(root, "key", key) as HSlider
+
+
+# --- the world -----------------------------------------------------------------------------------
+
+## Samples the frame on the clock from the press, then waits for a body and a lifted fade.
+func _watch_the_world_stand_up() -> void:
+	for at in SAMPLE_SECONDS:
+		while _elapsed() < float(at):
+			await get_tree().process_frame
+		var luma := await _capture("world_%02ds" % int(at))
+		var actual := _elapsed()
+		if _spawned != null:
+			_notes.append("%.0f s sample (drawn at %.1f s): the body is up, luma %.3f" % [float(at), actual, luma])
+			# mid-lift the black is still going; a black frame with the fade gone is dead
+			_check(luma > BLACK or UI.is_faded_out(), "%.0f s in, the world is not a black screen (luma %.3f)" % [float(at), luma])
+			continue
+		_check(UI.is_loading_shown(), "%.0f s in (%.1f s), the loading caption is up: %s"
+				% [float(at), actual, UI.loading_text().replace("\n", " / ")])
+		_check(luma > BLACK, "%.0f s in, the screen is not black (luma %.3f)" % [float(at), luma])
+	while _spawned == null and _elapsed() < WORLD_TIMEOUT:
+		await get_tree().process_frame
+	if not _check(_spawned != null, "a body stands in the world within %d s (took %.0f s)"
+			% [int(WORLD_TIMEOUT), (_spawned_at_ms - _t0) / 1000.0 if _spawned != null else _elapsed()]):
+		return
+	var lifted := await _wait_until(func() -> bool: return not UI.is_faded_out(), 15.0)
+	_check(lifted, "the fade lifts once the body stands")
+	await _settle(2.5)
+	var luma := await _capture("world_standing")
+	_check(luma > BLACK, "the world is on the screen with the fade up (luma %.3f)" % luma)
+	_check(UI.hud() != null and UI.hud().visible, "the HUD is up")
+	_check(not UI.is_loading_shown(), "the loading caption has gone")
+	_check(not UI.is_faded_out(), "the fade is not still down")
+	_notes.append("body stood at %.1f s from the press; %d cells streamed"
+			% [(_spawned_at_ms - _t0) / 1000.0, _cells()])
+	if _gap_ms > 1500:
+		_notes.append("no frame was drawn between %.1f s and %.1f s after the press: the world stands up synchronously, and the caption drawn last is what the player looks at for all of it"
+				% [(_gap_from_ms - _t0) / 1000.0, (_gap_from_ms + _gap_ms - _t0) / 1000.0])
+
+
+## The longest stretch without a frame, so the report can say how long the screen stood still.
+func _process(_delta: float) -> void:
+	var now := Time.get_ticks_msec()
+	if _last_frame_ms > 0 and _t0 > 0 and now - _last_frame_ms > _gap_ms:
+		_gap_ms = now - _last_frame_ms
+		_gap_from_ms = _last_frame_ms
+	_last_frame_ms = now
+
+
+func _cells() -> int:
+	var world_script := load("res://world/world.gd") as GDScript
+	var world: Node = world_script.get("instance") if world_script != null else null
+	if world == null:
+		return 0
+	var streamer: Node = world.get("streamer")
+	return int(streamer.call("loaded_count")) if streamer != null else 0
+
+
+## Is the body standing there the one that was made?
+func _verify_body(expected: Dictionary) -> void:
+	var player := _spawned
+	_check(str(player.get("display_name")) == str(expected.get("name", "")),
+			"the body is called %s (it answers to '%s')" % [expected.get("name", ""), player.get("display_name")])
+	var model: Node = player.call("body_model") if player.has_method("body_model") else null
+	if not _check(model != null, "the player has a forge body, not a placeholder"):
+		return
+	var look: CharacterAppearance = model.get("appearance")
+	for key in ["skin", "hair_colour", "eye_colour", "culture"]:
+		_check(str(look.get(key)) == str(expected.get(key, "")),
+				"the body's %s is %s (it is %s)" % [key, expected.get(key, ""), look.get(key)])
+	var parts: Dictionary = expected.get("parts", {})
+	for slot in ["hair", "head", "torso"]:
+		_check(look.part(slot) == str(parts.get(slot, "")),
+				"the body's %s is %s (it is %s)" % [slot, parts.get(slot, ""), look.part(slot)])
+	_check(absf(look.height - float(expected.get("height", 0.0))) < 0.011,
+			"the body is %.2f m tall (it is %.2f m)" % [float(expected.get("height", 0.0)), look.height])
+	var calling := str(expected.get("calling", ""))
+	var signature := str(ContentDB.get_or_empty(calling).get("signature_item", ""))
+	var bag: Node = player.get_node_or_null("Inventory")
+	_check(bag != null and bool(bag.call("has", signature)),
+			"the Calling's signature item (%s) is in the bag" % Ids.name_of(signature))
+	var prog: Node = player.get_node_or_null("Progression")
+	_check(prog != null and str(prog.get("calling_id")) == calling, "the Calling %s is applied" % Ids.name_of(calling))
+
+
+## Turns the camera round to look the body in the face, for the eye rather than for a check.
+func _portrait() -> void:
+	var rig: Node = _spawned.get("camera_rig")
+	if rig == null:
+		return
+	var was: float = float(rig.get("yaw"))
+	rig.set("yaw", was + PI)
+	await _settle(2.0)
+	await _capture("portrait")
+	rig.set("yaw", was)
+
+
+# --- pressing things -----------------------------------------------------------------------------
+
+## A click: move the mouse there, press, release, the way a hand does it.
+func _click(c: Control) -> void:
+	await _reveal(c)
+	var p := c.get_global_rect().get_center()
+	await _mouse_move(p)
+	await _mouse_button(p, true)
+	await _frames(2)
+	await _mouse_button(p, false)
+	await _frames(2)
+
+
+## A drag along a slider from one fraction of its width to another.
+func _drag(s: Control, from_ratio: float, to_ratio: float) -> void:
+	await _reveal(s)
+	var r := s.get_global_rect()
+	var y := r.get_center().y
+	var x0 := r.position.x + r.size.x * from_ratio
+	var x1 := r.position.x + r.size.x * to_ratio
+	await _mouse_move(Vector2(x0, y))
+	await _mouse_button(Vector2(x0, y), true)
+	for i in 8:
+		await _mouse_move(Vector2(lerpf(x0, x1, float(i + 1) / 8.0), y))
+	await _mouse_button(Vector2(x1, y), false)
+	await _frames(2)
+
+
+func _mouse_move(p: Vector2) -> void:
+	var ev := InputEventMouseMotion.new()
+	ev.position = p
+	ev.global_position = p
+	ev.relative = p - _mouse
+	ev.button_mask = 0
+	_mouse = p
+	Input.warp_mouse(p)
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
+	await get_tree().process_frame
+
+
+func _mouse_button(p: Vector2, pressed: bool) -> void:
+	var ev := InputEventMouseButton.new()
+	ev.position = p
+	ev.global_position = p
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = pressed
+	ev.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
+	await get_tree().process_frame
+
+
+func _key(keycode: Key, ctrl := false) -> void:
+	for pressed in [true, false]:
+		var ev := InputEventKey.new()
+		ev.keycode = keycode
+		ev.physical_keycode = keycode
+		ev.key_label = keycode
+		ev.ctrl_pressed = ctrl
+		ev.pressed = pressed
+		Input.parse_input_event(ev)
+		Input.flush_buffered_events()
+		await get_tree().process_frame
+
+
+func _type(text: String) -> void:
+	for i in text.length():
+		for pressed in [true, false]:
+			var ev := InputEventKey.new()
+			ev.unicode = text.unicode_at(i)
+			ev.pressed = pressed
+			Input.parse_input_event(ev)
+			Input.flush_buffered_events()
+			await get_tree().process_frame
+
+
+## A control below the fold is scrolled to, as a wheel would; that it had to be is noted.
+func _reveal(c: Control) -> void:
+	var n: Node = c.get_parent()
+	while n != null and not (n is ScrollContainer):
+		n = n.get_parent()
+	if n == null:
+		return
+	var sc := n as ScrollContainer
+	if not sc.get_global_rect().encloses(c.get_global_rect()):
+		_notes.append("had to scroll to reach %s" % _describe(c))
+		sc.ensure_control_visible(c)
+		await get_tree().process_frame
+		await get_tree().process_frame
+
+
+func _describe(c: Control) -> String:
+	if c is Button and not (c as Button).text.is_empty():
+		return "the '%s' button" % (c as Button).text
+	for key in ["tone", "slot", "key", "calling"]:
+		if c.has_meta(key):
+			return "%s %s" % [key, c.get_meta(key)]
+	return c.get_class()
+
+
+# --- finding things ------------------------------------------------------------------------------
+
+func _wait_for_scene(script_file: String, timeout: float) -> Node:
+	var deadline := Time.get_ticks_msec() + int(timeout * 1000.0)
+	while Time.get_ticks_msec() < deadline:
+		var s := get_tree().current_scene
+		if s != null and s.get_script() != null and str((s.get_script() as Script).resource_path).ends_with(script_file):
+			return s
+		await get_tree().process_frame
+	return null
+
+
+func _wait_until(pred: Callable, timeout: float) -> bool:
+	var deadline := Time.get_ticks_msec() + int(timeout * 1000.0)
+	while Time.get_ticks_msec() < deadline:
+		if bool(pred.call()):
+			return true
+		await get_tree().process_frame
+	return bool(pred.call())
+
+
+func _walk(root: Node, pred: Callable) -> Node:
+	var stack: Array[Node] = [root]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if bool(pred.call(n)):
+			return n
+		var kids := n.get_children()
+		for i in range(kids.size() - 1, -1, -1):
+			stack.append(kids[i])
+	return null
+
+
+func _button(root: Node, text: String) -> Button:
+	return _walk(root, func(n: Node) -> bool: return n is Button and (n as Button).text == text) as Button
+
+
+func _button_with_tooltip(root: Node, tip: String) -> Button:
+	return _walk(root, func(n: Node) -> bool: return n is Button and (n as Button).tooltip_text == tip) as Button
+
+
+func _label(root: Node, text: String) -> Label:
+	return _walk(root, func(n: Node) -> bool: return n is Label and (n as Label).text == text) as Label
+
+
+func _first_of(root: Node, cls: String) -> Node:
+	return _walk(root, func(n: Node) -> bool: return n.is_class(cls))
+
+
+func _find_meta(root: Node, key: String, value: String) -> Control:
+	return _walk(root, func(n: Node) -> bool: return n is Control and n.has_meta(key) and str(n.get_meta(key)) == value) as Control
+
+
+# --- looking and reporting -----------------------------------------------------------------------
+
+## Writes the frame and returns its mean luminance (0..1), computed on a 64x36 reduction.
+func _capture(name: String) -> float:
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	_shot += 1
+	var path := "%s/%s_%02d_%s.png" % [out_dir, mode, _shot, name]
+	img.save_png(path)
+	var luma := _mean_luma(img)
+	print("[flow] %s  luma=%.3f" % [path, luma])
+	return luma
+
+
+static func _mean_luma(img: Image) -> float:
+	var small := img.duplicate() as Image
+	small.resize(64, 36, Image.INTERPOLATE_BILINEAR)
+	var total := 0.0
+	for y in 36:
+		for x in 64:
+			var c := small.get_pixel(x, y)
+			total += 0.299 * c.r + 0.587 * c.g + 0.114 * c.b
+	return total / (64.0 * 36.0)
+
+
+func _check(ok: bool, what: String) -> bool:
+	_checks.append({"ok": ok, "what": what})
+	print("[flow] %s  %s" % ["ok  " if ok else "FAIL", what])
+	return ok
+
+
+func _elapsed() -> float:
+	return (Time.get_ticks_msec() - _t0) / 1000.0
+
+
+func _settle(seconds: float) -> void:
+	await get_tree().create_timer(seconds).timeout
+
+
+func _frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+
+
+func _absolute(path: String) -> String:
+	if path.is_absolute_path():
+		return path
+	return ProjectSettings.globalize_path("res://../%s" % path)
+
+
+func _finish() -> void:
+	var failed := 0
+	for c in _checks:
+		if not bool(c["ok"]):
+			failed += 1
+	var report := {
+		"mode": mode, "checks": _checks, "notes": _notes,
+		"log_errors": Log.error_count - _errors_at_start, "out": out_dir,
+	}
+	var f := FileAccess.open("%s/flow_report_%s.json" % [out_dir, mode], FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(report, "  "))
+	for n in _notes:
+		print("[flow] note: %s" % n)
+	print("FLOW: %s (%s: %d checks, %d failed, %d errors logged)"
+			% ["PASS" if failed == 0 else "FAIL", mode, _checks.size(), failed, Log.error_count - _errors_at_start])
+	get_tree().quit(0 if failed == 0 else 1)

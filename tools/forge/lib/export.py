@@ -232,6 +232,17 @@ def single_uv(obj) -> None:
         uvs.active = uvs[UV_LAYER]
 
 
+## `export_colors=False` said "no vertex colours" to Blender 4.0's glTF exporter. The
+## option was replaced by `export_vertex_color`, an enum, and passing the old name to 4.2
+## is not ignored -- the operator refuses the call. The forge wants no vertex colours in
+## either spelling: its colour lives in the baked atlas, and a COLOR_0 nothing samples is
+## four more bytes on every vertex.
+_GLTF_COLOR_KW = ({"export_colors": False}
+                  if "export_colors" in {p.identifier
+                                         for p in bpy.ops.export_scene.gltf.get_rna_type().properties}
+                  else {"export_vertex_color": "NONE"})
+
+
 def export_glb(objs, path, material_textures: dict | None = None) -> dict:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -246,7 +257,7 @@ def export_glb(objs, path, material_textures: dict | None = None) -> dict:
         export_texcoords=True, export_normals=True, export_tangents=False, export_materials="EXPORT",
         export_image_format="AUTO", export_animations=False, export_skins=False, export_morph=False,
         export_lights=False, export_cameras=False, export_extras=False, export_draco_mesh_compression_enable=False,
-        export_attributes=False, export_colors=False,
+        export_attributes=False, **_GLTF_COLOR_KW,
     )
     uris = G.externalise_images(path, material_textures or {})
     return {"uris": uris, "summary": G.summary(path)}

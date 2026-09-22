@@ -113,7 +113,17 @@ rolls) lives in `static func`s or `RefCounted` classes so tests need no scene.
 | Death & shrines | `systems/hearth` | `Hearth` autoload, `Hearthstone`, `Echo` | `hearth` |
 | Interiors | `systems/interiors` | `Interiors` autoload, `Door` (+ `DoorLock` child from crime) | `interiors` |
 | Atmosphere | `systems/atmosphere` | `Atmosphere` node: sky shader, sun/moon, region look, weather | `world` |
+| Exploration | `systems/exploration` | `PlaceDiscovery` (arriving, surveying, line of sight over the built terrain) | none (`GameState`) |
 | Streaming | `world/streaming` | `WorldStreamer`, `Cell`, `TerrainProvider`, `Interiors` | `world_cells` |
+
+Most of these are nodes rather than autoloads, each with a `static ensure()` that
+finds or creates its own singleton. Nothing calls those by itself, which is how a
+player ends up in a world with no law and no market, so
+`world/bootstrap/game_services.gd` is the one place that does: its `ORDER` list
+installs ownership, bounty, crime reports, stealth, the NPC registry, reactions,
+the NPC streamer, the economy service, the property registry and place discovery,
+in dependency order. Any host scene — the world, the arena, the smoke run, the
+scripted journey — adds a single `GameServices`.
 
 ## 6. World data pipeline
 
@@ -171,19 +181,35 @@ runtime by `WorldDoors`, from two sources:
   outside and the steward's eight-room house is not, and the building you see is the
   building you enter. Surfaces come from `HouseInterior.CULTURE_SURFACES` and
   `Building.ROOF_BY_CULTURE` through `painted_surface.gdshader`, with a per-building
-  tone shift so a street is not one house printed nine times.
+  tone shift so a street is not one house printed nine times. However many rooms and
+  windows it has, a building is **four meshes**: walls (masses and gables), roof (slabs
+  and ridge), stone (plinths, chimney, sills, step) and joinery (door, frames, shutters),
+  plus one collision body per room.
 * **`settlement.gd` — the town around it.** Twenty-four interiors cannot furnish eleven
   settlements. `Settlement.raise_at()` lays plots along any road polyline that crosses
   the place's pad (plots front the road; the road is the grain of the street) and falls
   back to a ring around a green where none does. Counts and sizes come from the place's
-  `kind` via `Settlement.FABRIC`. Every filler house is merged into **two** meshes — one
-  per material — so fifty of them cost what six full `Building`s would. It then strews
-  the culture's props (`PROPS_BY_CULTURE`), each dropped by its own AABB until it sits
-  on the ground, because the forge centres a cart on its axle.
+  `kind` via `Settlement.FABRIC`. The whole fabric is the same **four meshes** for the
+  whole settlement — fifty houses cost four draws, each house carrying its own wash as a
+  vertex colour (the painted shader multiplies by `COLOR`) — and every filler house has
+  a varied plinth, gables, overhanging eaves, a chimney at its hearth end, a framed door
+  under a lintel and framed, shuttered windows, all inside those meshes. It then strews
+  the culture's props (`PROPS_BY_CULTURE`) as one `MultiMesh` per forge asset; a prop
+  whose mesh reaches below y = 0 is lifted by its own box, though the forge now exports
+  standing props with their feet at zero (CONTRACTS §4). Joinery and props carry a
+  visibility range and the joinery casts no shadow; walls and roofs are drawn to the
+  horizon, because a village is read by its roofs from the next hill. Only the collision
+  bodies and the interactables (`JobBoard`, `JobStation`, `PropertySign`) are nodes.
+* **`fabric_mesh.gd`** is the builder both use: one `SurfaceTool` per surface key, boxes
+  emitted from `BoxMesh`'s own winding with a vertex colour per piece, committed as one
+  `MeshInstance3D` each.
 
 Both are deterministic from the place id, so a town is the same town every time you walk
 back into it; `game/tests/unit/test_settlements.gd` pins that, along with plots not
-overlapping, reserved ground being left alone, and roads actually lining houses up.
+overlapping, reserved ground being left alone, roads actually lining houses up, and the
+mesh count of a village of Merrowby's kind (a ratchet, `MESH_RATCHET`). To see what a
+frame's draw calls belong to, shoot a plan with `-- --attribute` (see §10) or type
+`draws measure` in the debug console.
 
 ## 7. Asset pipeline (tools/forge)
 
@@ -236,3 +262,10 @@ No GPU. Forward+ runs on lavapipe (software Vulkan) and is the shipped default.
   target, and its lighting limits are a design constraint on how many lamps a room gets.
 * Interiors set a tonemap white point of 2.0 against the outdoor 6.0. A white point tuned
   for daylight maps a lamp-lit wall to a sixth of its value.
+* A draw-call total names nobody. `tools_gd/draw_attribution.gd` says who a frame belongs
+  to: a census of what the camera sees by owning script (colour pass), and the measured
+  cost of hiding each owner, which includes the sun's shadow cascades — on a clear day well
+  over half of a village's draws are shadow passes. The capture runner runs it after every
+  shot with `-- --attribute` and writes `<out>/attribution.json`; the console command is
+  `draws [measure]`. `tools/capture/plans/streets.json` is the six street shots, the worst
+  frames in the game, on their own.

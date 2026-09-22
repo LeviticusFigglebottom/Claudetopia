@@ -2,41 +2,55 @@ extends Control
 ## The Naming (DESIGN §5.1). Character creation is in the fiction: a Warden is standing over
 ## you asking what you are called, and what you were before you were pulled out of the Hush.
 ##
-## Writes three GameState flags and nothing else:
+## The look is a `CharacterAppearance`, the same record the humanoid model composes a body
+## from and an NPC def carries inline, edited in place by the controls: every swatch, chooser
+## and slider names a tone, a part or a proportion in that record's own vocabulary. It used to
+## keep a private one (swatch indices, `height_m`, a head named after a culture) and hand that
+## to the model, which read none of it: the preview never changed and neither did the body in
+## the world, whatever was chosen.
+##
+## Writes GameState flags and nothing else:
 ##   player_name        String
 ##   player_calling     a `calling` id
-##   player_appearance  {skin, hair_style, hair_colour, eyes, build, height_m, voice, head}
-## Begin sets the flag "new_game" and changes to the world scene.
+##   player_appearance  CharacterAppearance.to_dict()
+##   new_game           true
+## "Be named" then fades to black and changes to the world scene; the player picks the flags up
+## when it stands (`Player._take_the_naming`).
 
 const WORLD_SCENE := "res://world/world.tscn"
 const MENU_SCENE := "res://ui/menus/main_menu.tscn"
 const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
 
-const SKINS := [Color("#f0d3bb"), Color("#e0b894"), Color("#c99a72"), Color("#a97848"),
-	Color("#7d5432"), Color("#543722")]
-const HAIRS := [Color("#2a2119"), Color("#4a3423"), Color("#7a5230"), Color("#a97b3c"),
-	Color("#c9a24a"), Color("#8c3a24"), Color("#b9b2a6"), Color("#efe7d2")]
-const EYES := [Color("#4a6a3c"), Color("#3f6f8a"), Color("#6b4a2c"), Color("#2f4a25"),
-	Color("#8a7a4a"), Color("#5d6470")]
-const HAIR_STYLES := ["Cropped", "Braided", "Tied back", "Loose", "Shorn", "Topknot", "Plaited crown", "Wild"]
-const HEADS := ["Vale", "Lakefolk", "Reedborn", "Cragborn", "Woodfolk", "Ash-Pilgrim"]
-const VOICES := ["Low and slow", "Quick and dry", "Warm", "Quiet"]
+## What the vocabulary is called out loud.
+const SKIN_NAMES := {"porcelain": "Porcelain", "fair": "Fair", "wheat": "Wheat", "olive": "Olive",
+	"amber": "Amber", "umber": "Umber", "deep": "Deep", "ebony": "Ebony"}
+const HAIR_STYLE_NAMES := {"short": "Short", "cropped": "Cropped", "long": "Loose", "braid": "Braided",
+	"bun": "Tied back", "hood_friendly": "Under a hood", "tousled": "Wild"}
+const HEAD_NAMES := {"default": "Even", "round": "Round", "soft": "Soft", "angular": "Angular",
+	"narrow": "Narrow", "broad": "Broad", "hawk": "Hawkish", "heavy_brow": "Heavy-browed"}
+const BEARD_NAMES := {"": "None", "stubble": "Stubble", "short_beard": "Short", "long_beard": "Long",
+	"moustache": "Moustache"}
+const BUILD_WORDS := ["slight", "lean", "even", "solid", "broad"]
+## What the loading caption says between "Be named" and the first look at the world.
+const LOADING_LINE := "The Warden walks you out of the Hush. Keep up; she does not look back."
 
-var appearance := {
-	"skin": 1, "hair_style": 0, "hair_colour": 1, "eyes": 0,
-	"build": 0.5, "height_m": 1.78, "voice": 0, "head": 0,
-}
+var appearance := CharacterAppearance.new()
 var calling_id := ""
 var player_name := ""
+## Where "Be named" goes. A test points this at "" so the press stops at the flags instead of
+## tearing the test runner down with a scene change.
+var world_scene := WORLD_SCENE
 
 var _name_edit: LineEdit
 var _suggest_row: HBoxContainer
-var _calling_box: VBoxContainer
+var _calling_box: GridContainer
 var _calling_detail: VBoxContainer
 var _preview: SubViewport
 var _mannequin: Node3D
 var _model: Node = null
 var _begin: Button
+var _choosers: Dictionary = {}     # key -> OptionButton
+var _sliders: Dictionary = {}      # key -> HSlider
 var _spin := 0.0
 
 
@@ -46,6 +60,8 @@ func _ready() -> void:
 	UI.close_all()
 	UI.hide_hud()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	appearance.set_part("head", "default")
+	appearance.set_part("hair", "short")
 	var callings := ContentDB.all("calling")
 	if not callings.is_empty():
 		calling_id = str(callings[0].get("id", ""))
@@ -53,6 +69,8 @@ func _ready() -> void:
 	_build()
 	_refresh_calling()
 	_apply_appearance()
+	# somewhere for a pad to start from; nothing had focus, so its first press did nothing
+	_name_edit.grab_focus()
 
 
 # --- construction -----------------------------------------------------------------------------
@@ -69,12 +87,13 @@ func _build() -> void:
 	var page := UiKit.page("")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 44.0
-	frame.offset_top = 26.0
-	frame.offset_right = -44.0
-	frame.offset_bottom = -26.0
+	frame.offset_left = 36.0
+	frame.offset_top = 20.0
+	frame.offset_right = -36.0
+	frame.offset_bottom = -20.0
 	add_child(frame)
 	var body: VBoxContainer = page["body"]
+	body.add_theme_constant_override("separation", 6)
 
 	body.add_child(UiKit.label("The Naming", "Title", HORIZONTAL_ALIGNMENT_CENTER))
 	var blurb := UiKit.label(
@@ -84,7 +103,7 @@ func _build() -> void:
 	body.add_child(blurb)
 	body.add_child(UiKit.divider())
 
-	var columns := UiKit.row(18)
+	var columns := UiKit.row(16)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 	columns.add_child(_build_preview())
@@ -107,19 +126,18 @@ func _build() -> void:
 
 func _build_preview() -> Control:
 	var holder := UiKit.column(6)
-	holder.custom_minimum_size = Vector2(252, 0)
+	holder.custom_minimum_size = Vector2(236, 0)
 
 	var container := SubViewportContainer.new()
 	container.stretch = true
-	container.custom_minimum_size = Vector2(248, 420)
+	container.custom_minimum_size = Vector2(232, 380)
 	container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	holder.add_child(container)
 
 	_preview = SubViewport.new()
-	_preview.size = Vector2i(248, 420)
+	_preview.size = Vector2i(232, 380)
 	_preview.transparent_bg = true
 	_preview.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	_preview.msaa_2d = Viewport.MSAA_2X
 	container.add_child(_preview)
 
 	var world := Node3D.new()
@@ -148,7 +166,7 @@ func _build_preview() -> Control:
 
 	var camera := Camera3D.new()
 	camera.fov = 34.0
-	camera.look_at_from_position(Vector3(0.0, 1.15, 3.2), Vector3(0.0, 1.0, 0.0), Vector3.UP)
+	camera.look_at_from_position(Vector3(0.0, 1.12, 3.3), Vector3(0.0, 0.98, 0.0), Vector3.UP)
 	world.add_child(camera)
 
 	_mannequin = Node3D.new()
@@ -156,82 +174,15 @@ func _build_preview() -> Control:
 	if ResourceLoader.exists(MODEL_SCENE):
 		_model = (load(MODEL_SCENE) as PackedScene).instantiate()
 		_mannequin.add_child(_model)
-	else:
-		_build_stand_in()
 
-	var caption := UiKit.label("A stand-in, until the forge has made you.", "Tiny", HORIZONTAL_ALIGNMENT_CENTER)
+	var caption := UiKit.label("The forge has not made a body yet.", "Tiny", HORIZONTAL_ALIGNMENT_CENTER)
 	caption.visible = _model == null
 	holder.add_child(caption)
 	return holder
 
 
-## A lit wooden mannequin: what a tailor would stand in the corner until the real thing exists.
-func _build_stand_in() -> void:
-	# [position, radius, height, tilt degrees]
-	var parts := {
-		"hips": [Vector3(0, 0.93, 0), 0.125, 0.30, 0.0],
-		"chest": [Vector3(0, 1.26, 0), 0.150, 0.46, 0.0],
-		"neck": [Vector3(0, 1.50, 0), 0.052, 0.13, 0.0],
-		"arm_l": [Vector3(-0.205, 1.22, 0), 0.054, 0.62, 6.0],
-		"arm_r": [Vector3(0.205, 1.22, 0), 0.054, 0.62, -6.0],
-		"leg_l": [Vector3(-0.085, 0.46, 0), 0.072, 0.92, 2.0],
-		"leg_r": [Vector3(0.085, 0.46, 0), 0.072, 0.92, -2.0],
-	}
-	for name: String in parts:
-		var mesh := MeshInstance3D.new()
-		mesh.name = name
-		var capsule := CapsuleMesh.new()
-		capsule.radius = float(parts[name][1])
-		capsule.height = maxf(float(parts[name][2]), float(parts[name][1]) * 2.05)
-		mesh.mesh = capsule
-		mesh.position = parts[name][0]
-		mesh.rotation_degrees = Vector3(0, 0, float(parts[name][3]))
-		mesh.material_override = _skin_material()
-		_mannequin.add_child(mesh)
-
-	var head := MeshInstance3D.new()
-	head.name = "head"
-	var skull := SphereMesh.new()
-	skull.radius = 0.104
-	skull.height = 0.236
-	head.mesh = skull
-	head.position = Vector3(0, 1.62, 0)
-	head.material_override = _skin_material()
-	_mannequin.add_child(head)
-
-	var hair := MeshInstance3D.new()
-	hair.name = "hair"
-	var cap := SphereMesh.new()
-	cap.radius = 0.110
-	cap.height = 0.20
-	hair.mesh = cap
-	hair.position = Vector3(0, 1.655, -0.006)
-	hair.material_override = StandardMaterial3D.new()
-	_mannequin.add_child(hair)
-
-	var base := MeshInstance3D.new()
-	base.name = "base"
-	var disc := CylinderMesh.new()
-	disc.top_radius = 0.26
-	disc.bottom_radius = 0.30
-	disc.height = 0.05
-	base.mesh = disc
-	base.position = Vector3(0, 0.025, 0)
-	var base_material := StandardMaterial3D.new()
-	base_material.albedo_color = Color(0.29, 0.21, 0.14)
-	base_material.roughness = 0.9
-	base.material_override = base_material
-	_mannequin.add_child(base)
-
-
-func _skin_material() -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.roughness = 0.72
-	return material
-
-
 func _build_middle() -> Control:
-	var col := UiKit.column(8)
+	var col := UiKit.column(6)
 	col.custom_minimum_size = Vector2(330, 0)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
@@ -251,21 +202,31 @@ func _build_middle() -> Control:
 
 	col.add_child(UiKit.divider())
 	col.add_child(UiKit.label("What you look like", "Heading"))
-	col.add_child(_swatches("Skin", SKINS, "skin"))
-	col.add_child(_swatches("Hair", HAIRS, "hair_colour"))
-	col.add_child(_swatches("Eyes", EYES, "eyes"))
-	col.add_child(_chooser("Hair", HAIR_STYLES, "hair_style"))
-	col.add_child(_chooser("Face", HEADS, "head"))
-	col.add_child(_chooser("Voice", VOICES, "voice"))
-	col.add_child(_slider("Build", "build", 0.0, 1.0, 0.05))
-	col.add_child(_slider("Height", "height_m", 1.55, 1.95, 0.01))
+	col.add_child(_swatches("Skin", CharacterAppearance.SKIN_TONES, "skin"))
+	col.add_child(_swatches("Hair", CharacterAppearance.HAIR_COLOURS, "hair_colour"))
+	col.add_child(_swatches("Eyes", CharacterAppearance.EYE_COLOURS, "eye_colour"))
+
+	# two to a row: three choosers abreast, each sized to its longest word, wanted more width
+	# than the page has at 1280x720 and pushed the Callings off the right edge
+	var parts := UiKit.row(14)
+	parts.add_child(_chooser("Style", CharacterAppearance.HAIR_STYLES, HAIR_STYLE_NAMES, "hair"))
+	parts.add_child(_chooser("Face", CharacterAppearance.HEADS, HEAD_NAMES, "head"))
+	col.add_child(parts)
+	var beards: Array = [""]
+	beards.append_array(CharacterAppearance.BEARD_STYLES)
+	var more := UiKit.row(14)
+	more.add_child(_chooser("Beard", beards, BEARD_NAMES, "beard"))
+	more.add_child(_slider("Build", "build", 0.0, 1.0, 0.05))
+	col.add_child(more)
+	col.add_child(_slider("Height", "height", 1.55, 1.95, 0.01))
 	return UiKit.scroll(col)
 
 
-func _labelled(text: String, control: Control) -> HBoxContainer:
-	var row := UiKit.row(10)
+func _labelled(text: String, control: Control, label_width := 62.0) -> HBoxContainer:
+	var row := UiKit.row(8)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var label := UiKit.label(text, "Small")
-	label.custom_minimum_size = Vector2(76, 0)
+	label.custom_minimum_size = Vector2(label_width, 0)
 	row.add_child(label)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -273,15 +234,19 @@ func _labelled(text: String, control: Control) -> HBoxContainer:
 	return row
 
 
-func _swatches(text: String, colours: Array, key: String) -> HBoxContainer:
-	var row := UiKit.row(4)
-	for i in colours.size():
+## A row of coloured squares over one of the record's colour tables. The button carries the
+## tone's name in `tone` metadata, so a test or a probe can find "the olive swatch".
+func _swatches(text: String, tones: Array, key: String) -> HBoxContainer:
+	var row := UiKit.row(3)
+	for tone in tones:
+		var name := str(tone)
 		var b := Button.new()
 		b.theme_type_variation = &"FlatButton"
-		b.custom_minimum_size = Vector2(28, 28)
-		b.tooltip_text = "%s %d" % [text, i + 1]
+		b.custom_minimum_size = Vector2(27, 27)
+		b.tooltip_text = "%s: %s" % [text, _tone_name(key, name)]
+		b.set_meta("tone", name)
 		var swatch := ColorRect.new()
-		swatch.color = colours[i]
+		swatch.color = _tone_colour(key, name)
 		swatch.set_anchors_preset(Control.PRESET_FULL_RECT)
 		swatch.offset_left = 4.0
 		swatch.offset_top = 4.0
@@ -289,50 +254,80 @@ func _swatches(text: String, colours: Array, key: String) -> HBoxContainer:
 		swatch.offset_bottom = -4.0
 		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.add_child(swatch)
-		var index := i
 		b.pressed.connect(func() -> void:
-				appearance[key] = index
+				appearance.set(key, name)
 				_apply_appearance())
 		row.add_child(b)
 	return _labelled(text, row)
 
 
-func _chooser(text: String, options: Array, key: String) -> HBoxContainer:
+func _tone_colour(key: String, name: String) -> Color:
+	match key:
+		"skin":
+			return CharacterAppearance.skin_colour(name)
+		"hair_colour":
+			return CharacterAppearance.hair_colour_value(name)
+	return CharacterAppearance.eye_colour_value(name)
+
+
+func _tone_name(key: String, name: String) -> String:
+	if key == "skin":
+		return str(SKIN_NAMES.get(name, name))
+	return name.replace("_", " ").capitalize()
+
+
+## A drop-down over one of the record's part lists; `slot` is the part slot it sets.
+func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> HBoxContainer:
 	var o := OptionButton.new()
-	for name in options:
-		o.add_item(str(name))
-	o.selected = clampi(int(appearance[key]), 0, options.size() - 1)
+	o.set_meta("slot", slot)
+	o.fit_to_longest_item = false
+	o.custom_minimum_size = Vector2(118, 0)
+	for option in options:
+		o.add_item(str(names.get(option, str(option))))
+	var current := options.find(appearance.part(slot))
+	o.selected = maxi(current, 0)
 	o.item_selected.connect(func(index: int) -> void:
-			appearance[key] = index
+			appearance.set_part(slot, str(options[index]))
 			_apply_appearance())
-	return _labelled(text, o)
+	_choosers[slot] = o
+	return _labelled(text, o, 44.0)
 
 
 func _slider(text: String, key: String, low: float, high: float, step: float) -> HBoxContainer:
-	var row := UiKit.row(8)
+	var row := UiKit.row(6)
 	var s := HSlider.new()
+	s.set_meta("key", key)
 	s.min_value = low
 	s.max_value = high
 	s.step = step
-	s.value = float(appearance[key])
-	s.custom_minimum_size = Vector2(150, 20)
+	s.value = float(appearance.get(key))
+	s.custom_minimum_size = Vector2(110, 20)
+	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var value_label := UiKit.label("", "Tiny")
-	value_label.custom_minimum_size = Vector2(56, 0)
-	value_label.text = _value_text(key, float(appearance[key]))
+	value_label.custom_minimum_size = Vector2(50, 0)
+	value_label.text = _value_text(key, float(appearance.get(key)))
 	s.value_changed.connect(func(v: float) -> void:
-			appearance[key] = v
+			appearance.set(key, v)
 			value_label.text = _value_text(key, v)
 			_apply_appearance())
+	# a plain click on the track moves the grabber with its signals blocked; only a drag
+	# reports, so the click is picked up when the button comes back up
+	s.drag_ended.connect(func(_changed: bool) -> void:
+			if not is_equal_approx(float(appearance.get(key)), s.value):
+				appearance.set(key, s.value)
+				value_label.text = _value_text(key, s.value)
+				_apply_appearance())
 	row.add_child(s)
 	row.add_child(value_label)
-	return _labelled(text, row)
+	_sliders[key] = s
+	return _labelled(text, row, 46.0)
 
 
 func _value_text(key: String, value: float) -> String:
-	if key == "height_m":
+	if key == "height":
 		return "%.2f m" % value
-	return ["slight", "lean", "even", "solid", "broad"][clampi(int(value * 4.999), 0, 4)]
+	return BUILD_WORDS[clampi(int(value * 4.999), 0, BUILD_WORDS.size() - 1)]
 
 
 func _roll_suggestions() -> void:
@@ -353,32 +348,35 @@ func _roll_suggestions() -> void:
 
 
 func _build_callings() -> Control:
-	var col := UiKit.column(8)
-	col.custom_minimum_size = Vector2(300, 0)
+	var col := UiKit.column(6)
+	col.custom_minimum_size = Vector2(340, 0)
 	col.add_child(UiKit.label("What were you, before?", "Heading"))
-	_calling_box = UiKit.column(4)
+	_calling_box = GridContainer.new()
+	_calling_box.columns = 2
+	_calling_box.add_theme_constant_override("h_separation", 6)
+	_calling_box.add_theme_constant_override("v_separation", 4)
 	col.add_child(_calling_box)
 	_calling_detail = UiKit.column(4)
 	col.add_child(UiKit.divider())
 	col.add_child(_calling_detail)
 
-	var buttons: Array[Control] = []
 	for def in ContentDB.all("calling"):
 		var id := str(def.get("id", ""))
 		var b := UiKit.button("", "FlatButton")
-		b.custom_minimum_size = Vector2(0, 46)
+		b.custom_minimum_size = Vector2(0, 44)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.set_meta("calling", id)
 		b.pressed.connect(func() -> void:
 				calling_id = id
-				_refresh_calling())
-		var card := UiKit.row(10)
+				_refresh_calling()
+				_apply_appearance())
+		var card := UiKit.row(8)
 		card.set_anchors_preset(Control.PRESET_FULL_RECT)
-		card.offset_left = 10.0
-		card.offset_right = -10.0
+		card.offset_left = 8.0
+		card.offset_right = -6.0
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.add_child(card)
-		card.add_child(UiKit.icon_rect(_calling_icon(def), 24))
+		card.add_child(UiKit.icon_rect(_calling_icon(def), 22))
 		var words := UiKit.column(0)
 		words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		words.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -386,8 +384,9 @@ func _build_callings() -> Control:
 		words.add_child(UiKit.label(str(def.get("name", id)), "Emphasis"))
 		words.add_child(UiKit.label(str(def.get("culture", "")), "Tiny"))
 		_calling_box.add_child(b)
-		buttons.append(b)
-	UiKit.focus_chain(buttons)
+	# No focus chain over the cards: the chain wraps, so once a pad's focus was in the cards
+	# Tab and down went round them for ever and Be named could not be reached. The grid's own
+	# order and the engine's geometric search do the right thing on their own.
 	return UiKit.scroll(col)
 
 
@@ -422,22 +421,25 @@ func _refresh_calling() -> void:
 	var def := ContentDB.get_or_empty(calling_id)
 	if def.is_empty():
 		return
-	_calling_detail.add_child(UiKit.wrapped(str(def.get("description", "")), "Journal"))
+	var description := UiKit.wrapped(str(def.get("description", "")), "Journal")
+	description.add_theme_font_size_override("font_size", 14)
+	_calling_detail.add_child(description)
 	var bonuses: Dictionary = def.get("skill_bonuses", {})
 	if not bonuses.is_empty():
-		_calling_detail.add_child(UiKit.label("You already know something of", "Small"))
+		var known: Array[String] = []
 		for skill: String in bonuses:
 			var skill_def := ContentDB.get_or_empty("core:skill/" + skill)
-			var row := UiKit.row(8)
-			row.add_child(UiKit.icon_rect("book", 18))
-			row.add_child(UiKit.label("%s  +%d" % [str(skill_def.get("name", skill)), int(bonuses[skill])], "Body"))
-			_calling_detail.add_child(row)
+			known.append("%s +%d" % [str(skill_def.get("name", skill)), int(bonuses[skill])])
+		var row := UiKit.row(8)
+		row.add_child(UiKit.icon_rect("book", 18))
+		row.add_child(UiKit.wrapped("You already know something of " + ", ".join(known) + ".", "Small"))
+		_calling_detail.add_child(row)
 	var signature := str(def.get("signature_item", ""))
 	if signature != "":
 		var item := ContentDB.get_or_empty(signature)
 		var row := UiKit.row(8)
 		row.add_child(UiKit.icon_rect(UiKit.item_icon_name(item), 18))
-		row.add_child(UiKit.wrapped("You still have %s." % str(item.get("name", "something")), "Journal"))
+		row.add_child(UiKit.wrapped("You still have %s." % str(item.get("name", "something")), "Small"))
 		_calling_detail.add_child(row)
 	UiKit.ink_in(_calling_detail, 0.0, 0.26)
 	_update_begin()
@@ -450,29 +452,16 @@ func _update_begin() -> void:
 
 # --- the body ----------------------------------------------------------------------------------
 
+## The Calling says where you were raised, and that people dresses you: culture, clothes and
+## cloth colours come from it, deterministically, so the same Calling shows the same coat.
+func _dress_for_calling() -> void:
+	appearance.dress_for_culture(CharacterAppearance.culture_of_calling(calling_id), abs(calling_id.hash()))
+
+
 func _apply_appearance() -> void:
+	_dress_for_calling()
 	if _model and is_instance_valid(_model) and _model.has_method("apply_appearance"):
-		_model.call("apply_appearance", appearance_dict())
-		return
-	if _mannequin == null:
-		return
-	var skin: Color = SKINS[clampi(int(appearance["skin"]), 0, SKINS.size() - 1)]
-	var hair_colour: Color = HAIRS[clampi(int(appearance["hair_colour"]), 0, HAIRS.size() - 1)]
-	var build := float(appearance["build"])
-	var height := float(appearance["height_m"])
-	for child in _mannequin.get_children():
-		if not (child is MeshInstance3D):
-			continue
-		var mesh := child as MeshInstance3D
-		var material: StandardMaterial3D = mesh.material_override
-		if material == null:
-			continue
-		if mesh.name == "hair":
-			material.albedo_color = hair_colour
-			material.roughness = 0.65
-		elif mesh.name != "base":
-			material.albedo_color = skin.lerp(Color(0.55, 0.45, 0.35), 0.12)
-	_mannequin.scale = Vector3(0.90 + build * 0.24, height / 1.78, 0.90 + build * 0.24)
+		_model.call("apply_appearance", appearance.to_dict())
 
 
 func _process(delta: float) -> void:
@@ -483,28 +472,35 @@ func _process(delta: float) -> void:
 
 # --- writing it down -----------------------------------------------------------------------------
 
+## The record as the world will read it.
 func appearance_dict() -> Dictionary:
-	var out := appearance.duplicate(true)
-	out["skin_colour"] = SKINS[clampi(int(appearance["skin"]), 0, SKINS.size() - 1)].to_html(false)
-	out["hair_colour_hex"] = HAIRS[clampi(int(appearance["hair_colour"]), 0, HAIRS.size() - 1)].to_html(false)
-	out["eye_colour_hex"] = EYES[clampi(int(appearance["eyes"]), 0, EYES.size() - 1)].to_html(false)
-	out["hair_style_name"] = HAIR_STYLES[clampi(int(appearance["hair_style"]), 0, HAIR_STYLES.size() - 1)]
-	out["head_name"] = HEADS[clampi(int(appearance["head"]), 0, HEADS.size() - 1)]
-	out["voice_name"] = VOICES[clampi(int(appearance["voice"]), 0, VOICES.size() - 1)]
-	return out
+	_dress_for_calling()
+	return appearance.to_dict()
 
 
-func _begin_game() -> void:
-	GameState.set_flag("player_name", player_name.strip_edges())
+## Writes the character down. A new game starts from a clean slate, so whatever an earlier
+## game in this session left in GameState goes first.
+func commit() -> void:
+	var name := player_name.strip_edges()
+	GameState.reset_for_new_game(abs(("%s|%s" % [name, calling_id]).hash()))
+	GameState.set_flag("player_name", name)
 	GameState.set_flag("player_calling", calling_id)
 	GameState.set_flag("player_appearance", appearance_dict())
 	GameState.set_flag("new_game", true)
-	if not ResourceLoader.exists(WORLD_SCENE):
-		EventBus.emit_notify("Named, but the world is not built yet.", "warning")
+
+
+func _begin_game() -> void:
+	if player_name.strip_edges().is_empty() or calling_id.is_empty():
 		return
-	UI.fade_to_black(0.5)
+	commit()
+	if world_scene.is_empty() or not ResourceLoader.exists(world_scene):
+		if not world_scene.is_empty():
+			EventBus.emit_notify("Named, but the world is not built yet.", "warning")
+		return
+	_begin.disabled = true
+	UI.fade_to_black(0.5, LOADING_LINE)
 	await get_tree().create_timer(0.55).timeout
-	get_tree().change_scene_to_file(WORLD_SCENE)
+	get_tree().change_scene_to_file(world_scene)
 
 
 ## Used by the review harness to show the screen part-way through being filled in.
@@ -514,9 +510,22 @@ func review_state() -> void:
 	var callings := ContentDB.all("calling")
 	if callings.size() > 2:
 		calling_id = str(callings[2].get("id", ""))
-	appearance["skin"] = 3
-	appearance["hair_colour"] = 5
-	appearance["build"] = 0.65
-	appearance["height_m"] = 1.71
+	appearance.skin = "amber"
+	appearance.hair_colour = "auburn"
+	appearance.eye_colour = "green"
+	appearance.set_part("hair", "braid")
+	appearance.set_part("head", "narrow")
+	appearance.build = 0.65
+	appearance.height = 1.71
+	for slot in _choosers:
+		var options: Array = []
+		match slot:
+			"hair": options = CharacterAppearance.HAIR_STYLES
+			"head": options = CharacterAppearance.HEADS
+		var index: int = options.find(appearance.part(slot))
+		if index >= 0:
+			(_choosers[slot] as OptionButton).selected = index
+	for key in _sliders:
+		(_sliders[key] as HSlider).set_value_no_signal(float(appearance.get(key)))
 	_refresh_calling()
 	_apply_appearance()

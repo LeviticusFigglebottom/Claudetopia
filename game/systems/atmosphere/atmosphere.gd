@@ -44,8 +44,17 @@ var _rng := RandomNumberGenerator.new()
 var _forward_plus := false
 var interior := false
 
+## `sun_elevation_scale` flattens the day's arc, and it is the difference between a country
+## with shadows in it and one without. `WorldClock.sun_elevation_deg()` is a bare
+## `-cos(hour)` curve that reaches 90 degrees at noon -- the sun directly overhead, which is
+## a latitude Wickmere is not at. A sun that high casts a shadow 0.2 of the caster's height,
+## straight down and hidden underneath it, so a village street at nine in the morning had no
+## shadow anywhere in the frame and read as flat as a cardboard model. The scale is therefore
+## not a mood dial but the region's latitude: 0.53 puts Hearthvale's noon sun at the 40-odd
+## degrees WORLD_BIBLE section 6.1 asks for, and its nine o'clock sun at 30, where a cottage
+## throws ten metres of shadow across the green.
 const DEFAULT_LOOK := {
-	"sun_color": Color(1, 0.94, 0.85), "sun_elevation_bias": 0.0, "sun_elevation_scale": 1.0,
+	"sun_color": Color(1, 0.94, 0.85), "sun_elevation_bias": 0.0, "sun_elevation_scale": 0.55,
 	"fog_color": Color(0.8, 0.8, 0.78), "fog_density": 0.0012, "ambient_tint": Color(1, 1, 1),
 	"saturation": 1.0, "contrast": 1.0, "bloom": 0.25, "grain": 0.0, "god_rays": false, "tint": Color(1, 1, 1),
 }
@@ -322,7 +331,11 @@ func _apply(_delta: float) -> void:
 	var w := _weather_params
 
 	# sun position
-	var elev := WorldClock.sun_elevation_deg() * float(_look["sun_elevation_scale"]) + float(_look["sun_elevation_bias"])
+	# A positive bias on a region whose noon is already at the top of the arc used to push the
+	# elevation past vertical (Brightwater reached 94 degrees), which flips cos(e) negative and
+	# swings the sun's bearing to the opposite side of the sky between one hour and the next.
+	var elev: float = clampf(WorldClock.sun_elevation_deg() * float(_look["sun_elevation_scale"])
+			+ float(_look["sun_elevation_bias"]), -90.0, 86.0)
 	var theta := PI * (hour - 6.0) / 12.0
 	var e := deg_to_rad(elev)
 	var sun_dir := Vector3(cos(theta) * cos(e), sin(e), 0.35 * cos(e)).normalized()

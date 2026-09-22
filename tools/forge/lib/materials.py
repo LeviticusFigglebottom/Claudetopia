@@ -654,7 +654,13 @@ def drystone(pal=None, wear=0.4, age=0.5, tint=0.2, scale=1.0, name=None, base_h
 
 def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0, speckle_col=None,
                  bands=0.0, pits=0.3, lichen=0.0, lichen_col=None, sheen=0.0, scale=1.0, cavity=0.5,
-                 grime=0.5, facet=0.45, bed_relief=0.0):
+                 grime=0.5, facet=0.45, bed_relief=0.0, relief=1.0):
+    """Shared body of every quarried stone. `relief` scales the surface bump, whose
+    distance is an absolute 50 mm -- chosen for a boulder and a cliff slab, where it is the
+    swell of the rock face, and a quarter of the whole object on a 0.22 m mortar. It is the
+    fifth instance of the fault the forge README's "scale constant" section lists. Only
+    `granite` passes it so far because only `granite` has been asked for at hand size; the
+    others take it in one line each the day something small is built out of them."""
     dark, mid, light = trio(base, spread)
     v = nb.coord(1.0 / scale)
     col = paint_blocks(nb, nb.coord(0.45 / scale), [dark, mid, light], distortion=1.3, detail=2.0)
@@ -712,7 +718,7 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
         height = nb.math("SUBTRACT", height, nb.math("MULTIPLY", pit, 0.4))
     # 0.8 read as embossed sheet metal once the facets were in; the relief has to be felt
     # at a glance and not analysed, so it is strong but well short of self-shadowing.
-    normal = nb.bump(height, strength=0.5, distance=0.05)
+    normal = nb.bump(height, strength=0.5, distance=0.05 * relief)
     rough = rough_var(nb, v, 0.85 - 0.4 * sheen, 0.08)
     if sheen > 0:
         rough = nb.mix(nb.pointiness(0.5, 0.6), rough, 0.35)
@@ -720,17 +726,21 @@ def _rock_common(nb, pal, base, spread, tint_role, tint, wear, age, speckle=0.0,
 
 
 def granite(pal=None, wear=0.5, age=0.5, tint=0.18, scale=1.0, name=None, lichen=0.35,
-            base_hex="#6f6d6a", tint_role="cool", facet=0.6, **_):
+            base_hex="#6f6d6a", tint_role="cool", facet=0.6, relief=1.0, **_):
     """Weathered granite. `lichen`, `base_hex` and `tint_role` are for the same stone put
     to a different use: a boulder on a hillside has spent a century growing lichen, and a
     millstone under a roof, wetted and dressed and swept every day, has grown none at all
-    and is the warmer, drier colour of a quarried grit. The defaults are the hillside."""
+    and is the warmer, drier colour of a quarried grit. The defaults are the hillside.
+
+    `relief` scales the surface bump, an absolute 50 mm: right for the boulder it was
+    chosen for, and a quarter of the whole object on a 0.22 m mortar. A hand-sized stone
+    wants about a fifth of it."""
     pal = _pal(pal)
     nb = NB(name or "granite")
     base = pal.tint(P.lin(base_hex), tint_role, tint)
     return _rock_common(nb, pal, base, 1.05, tint_role, tint, wear, age, speckle=0.75,
                         speckle_col=P.lin("#2e2d30"), pits=0.25, lichen=lichen,
-                        lichen_col=P.lin("#a3a878"), scale=scale, facet=facet)
+                        lichen_col=P.lin("#a3a878"), scale=scale, facet=facet, relief=relief)
 
 
 def limestone(pal=None, wear=0.5, age=0.5, tint=0.12, scale=1.0, name=None, **_):
@@ -1123,8 +1133,23 @@ def bone(pal=None, age=0.5, wear=0.4, tint=0.2, scale=1.0, name=None, **_):
     return nb.finish(col, rough_var(nb, v, 0.55, 0.1), 0.0, normal)
 
 
-def ceramic(pal=None, role="accent", glaze=0.5, age=0.4, tint=0.4, scale=1.0, name=None, base_hex="#a8845c", **_):
-    """Earthenware with a partial glaze in a palette colour (running down from the rim)."""
+def ceramic(pal=None, role="accent", glaze=0.5, age=0.4, tint=0.4, scale=1.0, name=None, base_hex="#a8845c",
+            relief=1.0, glaze_z=(0.05, 0.25), **_):
+    """Earthenware with a partial glaze in a palette colour (running down from the rim).
+
+    Two lengths in metres live in here, and both were chosen for a mug (see the forge
+    README's section on the scale constant, which this is a fourth instance of):
+
+    * `glaze_z` is where the glaze starts and finishes, in **object space metres**, not in
+      units of `scale`. At its default the glaze fades in between 50 mm and 250 mm off the
+      base, which is a mug, a jug and a cooking pot. On a 90 mm bowl every texel is below
+      50 mm, so the whole of that term reads zero and the only glaze left is the drip; on a
+      metre-tall vessel the glaze stops a quarter of the way up. Pass the object's own rim
+      and shoulder heights and the glaze pours from the rim, which is where it is poured.
+    * `relief` scales the fine bump, whose distance is an absolute 4 mm. That is a soft
+      swell on a jug and a cobbled surface on a 90 mm bowl.
+
+    Both default to the values that keep every vessel built before this byte-identical."""
     pal = _pal(pal)
     nb = NB(name or "ceramic")
     clay = pal.tint(P.lin(base_hex), "earth", 0.2)
@@ -1134,14 +1159,15 @@ def ceramic(pal=None, role="accent", glaze=0.5, age=0.4, tint=0.4, scale=1.0, na
     gl = P.mix(P.lin("#6a8a8a"), pal.role(role), tint)
     gdark, gmid, glight = trio(gl, 0.7)
     gcol = paint_blocks(nb, nb.coord(3.0 / scale), [gdark, gmid, glight])
-    top = nb.height_mask(0.05, 0.25)
+    top = nb.height_mask(glaze_z[0], glaze_z[1])
     drip = nb.wave(nb.coord((1.0 / scale, 1.0 / scale, 0.15 / scale)), scale=10.0, distortion=1.0, detail=0.0, direction="X")
     gm = nb.math("ADD", top, nb.math("MULTIPLY", nb.map_range(drip.outputs["Fac"], 0.6, 0.9, 0.0, 1.0), 0.6), clamp=True)
     gm = nb.math("MULTIPLY", gm, glaze * 2.0, clamp=True)
     col = nb.mix(gm, col, gcol)
     col, _ = cavity_dirt(nb, col, shade(dark, 0.6), amount=0.3 * age, distance=0.08)
     rough = nb.mix(gm, rough_var(nb, v, 0.8, 0.05), 0.2)
-    normal = nb.bump(nb.noise(nb.coord(6.0 / scale), scale=1.0, detail=1.0).outputs["Fac"], strength=0.1, distance=0.004)
+    normal = nb.bump(nb.noise(nb.coord(6.0 / scale), scale=1.0, detail=1.0).outputs["Fac"], strength=0.1,
+                     distance=0.004 * relief)
     return nb.finish(col, rough, 0.0, normal)
 
 

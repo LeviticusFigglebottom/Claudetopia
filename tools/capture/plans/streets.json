@@ -1,0 +1,65 @@
+{
+ "_doc": "The six street shots of default.json: the worst frames in the game, for measuring the settlement fabric against DESIGN section 11. Shoot with `-- --attribute` to get the draw-call breakdown per owner in <out>/attribution.json.",
+ "shots": [
+  {
+   "label": "hearthvale_street",
+   "region": "core:region/hearthvale",
+   "pos": [926.4, 31.6, 2387.7],
+   "look_at": [900.0, 32.4, 2350.0],
+   "fov": 58.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "brightwater_street",
+   "region": "core:region/brightwater",
+   "pos": [1545.8, 16.9, -896.0],
+   "look_at": [1500.0, 17.7, -900.0],
+   "fov": 58.0,
+   "time": 12.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "sedgemire_street",
+   "region": "core:region/sedgemire",
+   "pos": [-2896.0, 3.6, -545.8],
+   "look_at": [-2900.0, 4.4, -500.0],
+   "fov": 58.0,
+   "time": 7.5,
+   "weather": "core:weather/overcast",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "briarwold_street",
+   "region": "core:region/briarwold",
+   "pos": [2288.1, 87.5, 1144.4],
+   "look_at": [2300.0, 86.3, 1100.0],
+   "fov": 58.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "skerrow_street",
+   "region": "core:region/skerrow",
+   "pos": [437.7, 360.1, -2726.4],
+   "look_at": [400.0, 360.9, -2700.0],
+   "fov": 58.0,
+   "time": 14.0,
+   "weather": "core:weather/clear_cold",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "cinderlea_street",
+   "region": "core:region/cinderlea",
+   "pos": [-1526.4, 113.2, 2162.3],
+   "look_at": [-1500.0, 109.7, 2200.0],
+   "fov": 58.0,
+   "time": 16.5,
+   "weather": "core:weather/dry_wind",
+   "fog_scale": 1.0
+  }
+ ]
+}

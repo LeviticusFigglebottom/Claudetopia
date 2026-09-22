@@ -426,10 +426,13 @@ func _step_die_and_recover() -> void:
 	host.add_child(stone)
 	(stone as Node3D).global_position = player.global_position + Vector3(3, 0, 0)
 	stone.hearthstone_id = "journey_stone"
-	# Two frames, not one, at each settling point below: a single frame has been seen to be
-	# marginal here (one failure in five runs, cause not yet pinned down -- PROGRESS "Known
-	# issues"), and the step is measuring the hearth, not the frame scheduler.
-	await get_tree().process_frame
+	# One frame at each settling point. This step waited two, on the theory that a single frame
+	# was "marginal" -- it was not: the Echo was an Area3D standing on the body that had just
+	# fallen, so it recovered itself on the first physics tick after the death and which of the
+	# five conditions came back false depended on where that tick landed. The cause is fixed in
+	# `Hearth` (an Echo answers nobody until the player has come back for it) and pinned in
+	# `test_hearth.gd`, so the extra frames are gone: a step that needs padding to pass is not
+	# measuring the hearth, it is measuring the frame scheduler.
 	await get_tree().process_frame
 	stone.interact(player)
 	var rested: bool = Hearth.last_hearthstone_id == "journey_stone"
@@ -439,15 +442,12 @@ func _step_die_and_recover() -> void:
 	player.global_position = death_spot
 	EventBus.player_died.emit(death_spot)
 	await get_tree().process_frame
-	await get_tree().process_frame
 	var dropped: bool = Hearth.has_echo() and int(Hearth.echo.get("marks", 0)) == marks_before
 	Hearth._respawn()
-	await get_tree().process_frame
 	await get_tree().process_frame
 	var back_at_stone: bool = player.global_position.distance_to(Hearth.respawn_position) < 1.0
 	var marks_gone: bool = int(inventory.get("marks")) == 0 if inventory else true
 	Hearth.recover_echo()
-	await get_tree().process_frame
 	await get_tree().process_frame
 	var recovered: bool = int(inventory.get("marks")) == marks_before if inventory else true
 	var whole: bool = rested and dropped and back_at_stone and marks_gone and recovered
@@ -645,6 +645,97 @@ func _step_fight_a_boss() -> void:
 		"%s: %d phases, started and defeated" % [def["name"], phases.size()] if trouble.is_empty() else ", ".join(trouble))
 	if is_instance_valid(boss):
 		boss.queue_free()
+	await get_tree().process_frame
+
+
+# 11b ----------------------------------------------------------------------------------
+## Making something, at the thing you walked up to. `station_screen.tscn` drew all three
+## working screens, `UI.MENUS` had "crafting" registered from the start, and nothing in the
+## game ever opened it, because there was no forge, no still and no bench in eight kilometres
+## of country that a player could reach. So this step refuses to call `craft()` directly: it
+## builds Hallam's forge the way the game builds it, finds the anvil in the room, works at it
+## the way a player's interaction ray does, and only then makes a sword out of what is in the
+## bag — and checks the iron left the bag and the sword arrived in it.
+func _step_make_something() -> void:
+	const SMITHY := "core:interior/hallam_forge"
+	const RECIPE := "core:recipe/iron_sword"
+	var name := "make something at a forge you walked up to"
+	var crafting: Node = get_tree().get_first_node_in_group("crafting")
+	if crafting == null or inventory == null:
+		_record(name, false, "no crafting node or no bag")
+		return
+	var def := ContentDB.get_or_empty(SMITHY)
+	var meta_path := str(def.get("meta", ""))
+	if meta_path.is_empty() or not FileAccess.file_exists(meta_path):
+		_record(name, false, "%s has no built interior (run ./run.sh interiors)" % SMITHY)
+		return
+
+	# The smithy, built from its own meta, the way the smoke run and the door both build it.
+	var room := HouseInterior.new()
+	room.build_on_ready = false
+	host.add_child(room)
+	var built: bool = room.build(meta_path)
+	await get_tree().process_frame
+	var anvil: Node = null
+	for node in room.find_children("*", "CraftingStation", true, false):
+		if str(node.get("station")) == "forge":
+			anvil = node
+			break
+
+	# Working at it: the event the prop emits, and the screen the UI opens off it.
+	var heard: Array[String] = []
+	var listen := func(station: String, _node: Node) -> void: heard.append(station)
+	EventBus.crafting_station_used.connect(listen)
+	if anvil != null:
+		anvil.call("interact", player)
+	await get_tree().process_frame
+	EventBus.crafting_station_used.disconnect(listen)
+	var screen_open: bool = UI.is_menu_open("crafting")
+	UI.close_all()
+	await get_tree().process_frame
+
+	# A recipe against the real bag: the iron goes in, the sword comes out.
+	var recipe := ContentDB.get_or_empty(RECIPE)
+	var made := false
+	var consumed := false
+	var output_id := str((recipe.get("output", {}) as Dictionary).get("item", ""))
+	var had: int = int(inventory.count(output_id)) if output_id != "" else 0
+	var iron_before := 0
+	var iron_id := ""
+	for entry in recipe.get("inputs", []):
+		var row: Dictionary = entry
+		var item := str(row.get("item", ""))
+		var need := int(row.get("count", 1))
+		inventory.add(item, need)
+		if iron_id == "":
+			iron_id = item
+			iron_before = int(inventory.count(item))
+	if crafting.has_method("craft"):
+		made = bool(crafting.call("craft", RECIPE))
+	await get_tree().process_frame
+	if iron_id != "":
+		consumed = int(inventory.count(iron_id)) < iron_before
+	var arrived: bool = output_id != "" and int(inventory.count(output_id)) > had
+
+	var trouble: Array[String] = []
+	if not built:
+		trouble.append("the smithy would not build")
+	if anvil == null:
+		trouble.append("no anvil in Hallam's forge to walk up to")
+	if heard.is_empty():
+		trouble.append("working at the anvil told the UI nothing")
+	if not screen_open:
+		trouble.append("the working screen never opened")
+	if not made:
+		trouble.append("the forge refused %s" % RECIPE)
+	if not consumed:
+		trouble.append("the iron never left the bag")
+	if not arrived:
+		trouble.append("nothing arrived in the bag")
+	_record(name, trouble.is_empty(),
+		"%s at the anvil in Hallam's forge, out of %d rooms" % [
+			str(recipe.get("name", RECIPE)), room.rooms.size()] if trouble.is_empty() else ", ".join(trouble))
+	room.queue_free()
 	await get_tree().process_frame
 
 

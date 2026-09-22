@@ -283,32 +283,32 @@ func _own_sign(property_id: String) -> PropertySign:
 	return sign
 
 
-func test_your_own_board_offers_to_let_the_house() -> void:
+## The board outside a house you own opens the landlord's side of the deed screen, where
+## letting, rent and furnishings are each their own button. It used to act on the registry
+## silently, and which of the three things one press did depended on state the board never
+## showed. `test_deed_screen.gd` presses those buttons; this asserts the board reaches them.
+func test_your_own_board_opens_the_landlords_side() -> void:
 	var sign := _own_sign(COTTAGE)
 	assert_true(sign.prompt_text().begins_with("Let "), "got '%s'" % sign.prompt_text())
+	var offered: Array[String] = []
+	var note := func(id: String, _price: int) -> void: offered.append(id)
+	EventBus.property_offered.connect(note)
 	sign.interact(null)
-	assert_true(PropertyRegistry.ensure().is_let(COTTAGE), "the board did not let the house")
-	assert_true(sign.prompt_text().contains("(let"), "got '%s'" % sign.prompt_text())
+	EventBus.property_offered.disconnect(note)
+	assert_eq(offered, [COTTAGE] as Array[String],
+		"standing at your own board told the UI nothing, so nothing was drawn")
+	assert_true(UI.MENUS.has("deed"), "no screen is registered to answer it")
 
 
-func test_letting_can_be_undone_from_the_same_board() -> void:
-	var sign := _own_sign(COTTAGE)
-	sign.interact(null)
-	sign.interact(null)
-	assert_false(PropertyRegistry.ensure().is_let(COTTAGE), "the house could not be taken back")
-
-
-func test_rent_is_collected_from_the_board_before_anything_else() -> void:
+func test_your_own_board_says_what_is_waiting_before_you_walk_up_to_it() -> void:
 	var reg := PropertyRegistry.ensure()
 	var sign := _own_sign(COTTAGE)
-	sign.interact(null)                       # let it
+	assert_true(sign.prompt_text().begins_with("Let "), "got '%s'" % sign.prompt_text())
+	reg.set_let(COTTAGE, true)
+	assert_true(sign.prompt_text().contains("(let"), "got '%s'" % sign.prompt_text())
 	WorldClock.set_time(9.0, 14)              # four days pass
-	var due := reg.rent_due(COTTAGE)
-	assert_gt(due, 0, "no rent accrued over four days")
+	assert_gt(reg.rent_due(COTTAGE), 0, "no rent accrued over four days")
 	assert_true(sign.prompt_text().begins_with("Collect "), "got '%s'" % sign.prompt_text())
-	sign.interact(null)
-	assert_eq(reg.rent_due(COTTAGE), 0, "the rent was not collected")
-	assert_true(reg.is_let(COTTAGE), "collecting rent also ended the tenancy")
 
 
 func test_a_board_for_a_house_you_do_not_own_still_sells_it() -> void:
