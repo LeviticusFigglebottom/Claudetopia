@@ -70,31 +70,52 @@ func commit(st: SurfaceTool, mat: Material, node_name: String, silhouette := fal
 ## inside is somewhere you can stand. Returns the mesh.
 func drum(st: SurfaceTool, frame: Transform3D, r: float, height: float, broken := 0.0,
 		door_yaw := NAN, collide := true, course_h := COURSE) -> void:
-	var courses := int(ceil(height / course_h))
-	var per := maxi(int(round(TAU * r / BLOCK)), 6)
-	var sectors := 24
+	# A wall is a wall, not a heap of bricks. The shell is one ring of quads inside and out,
+	# stepped in a little at every course so the courses read in silhouette, and the painted
+	# surface's stone-block pattern draws the individual stones. Laying each stone as its own
+	# box instead cost six hundred boxes a tower and photographed as a pile of pillows.
+	var sectors := maxi(int(round(TAU * r / 0.55)), 16)
+	var courses := maxi(int(ceil(height / course_h)), 1)
 	var tops: Array[float] = []
 	var phase := kit.rng.randf_range(0.0, TAU)
 	var freq := kit.rng.randf_range(1.0, 2.2)
+	var door_half := (0.75 / maxf(r, 1.0)) + 0.16
 	for i in sectors:
 		var a := TAU * float(i) / float(sectors)
 		var tear := 0.5 + 0.5 * sin(a * freq + phase) + 0.25 * sin(a * 3.7 + phase * 1.7)
 		tops.append(height * (1.0 - broken * clampf(tear, 0.0, 1.0)))
+	var floors: Array[float] = []
+	for i in sectors:
+		var a := TAU * float(i) / float(sectors)
+		# the doorway: the wall starts above the lintel over the width of the door
+		var in_door := not is_nan(door_yaw) and absf(angle_difference(a, door_yaw)) < door_half
+		floors.append(2.3 if in_door else 0.0)
+
 	for c in courses:
-		var y := course_h * (float(c) + 0.5)
-		var offset := 0.5 if c % 2 == 1 else 0.0
-		for i in per:
-			var a := TAU * (float(i) + offset) / float(per)
-			var sector := int(floor(a / TAU * float(sectors))) % sectors
-			if y > tops[sector]:
+		var y0 := course_h * float(c)
+		var y1 := minf(course_h * float(c + 1), height)
+		# every course sits a few millimetres inside the one below, which is what makes a
+		# drystone drum read as courses rather than as a pipe
+		var out_r := r - float(c) * 0.012
+		var in_r := out_r - THICK
+		for i in sectors:
+			var a0 := TAU * float(i) / float(sectors)
+			var a1 := TAU * float(i + 1) / float(sectors)
+			var top: float = minf(tops[i], tops[(i + 1) % sectors])
+			var floor_y: float = maxf(floors[i], floors[(i + 1) % sectors])
+			if y1 <= floor_y or y0 >= top:
 				continue
-			if not is_nan(door_yaw) and absf(angle_difference(a, door_yaw)) < 0.7 / maxf(r, 1.0) + 0.18 and y < 2.2:
-				continue
-			var rr := r + kit.rng.randf_range(-0.04, 0.04)
-			var local := Transform3D(Basis(Vector3.UP, a + PI * 0.5),
-					Vector3(sin(a) * rr, y, cos(a) * rr))
-			block(st, frame * local, Vector3(BLOCK * 0.94 * (TAU * r / BLOCK) / float(per),
-					course_h * 0.94, THICK))
+			var lo := maxf(y0, floor_y)
+			var hi := minf(y1, top)
+			var wob := kit.rng.randf_range(-0.02, 0.02)
+			_shell_quads(st, frame, a0, a1, lo, hi, out_r + wob, in_r + wob,
+					y0 <= floor_y + 0.001, y1 >= top - 0.001)
+	if not is_nan(door_yaw):
+		# the lintel over the door, and the jambs down its sides
+		var a_mid := door_yaw
+		for s in [-1.0, 1.0]:
+			var a := a_mid + door_half * float(s)
+			_shell_quads(st, frame, a - 0.04, a + 0.04, 0.0, 2.3, r, r - THICK, true, true)
 	if collide and not kit.far:
 		var segs := 12
 		for i in segs:
@@ -107,6 +128,29 @@ func drum(st: SurfaceTool, frame: Transform3D, r: float, height: float, broken :
 			kit.collider(Vector3(TAU * r / float(segs) * 1.02, h, THICK), frame * local)
 
 
+## One sector of a drum's wall: the outer face, the inner face, and the floor and cap where
+## the wall begins and ends, all in `frame`'s space (its Y runs up the drum).
+func _shell_quads(st: SurfaceTool, frame: Transform3D, a0: float, a1: float, y0: float, y1: float,
+		out_r: float, in_r: float, floor_face: bool, cap: bool) -> void:
+	var o0 := Vector3(sin(a0) * out_r, 0.0, cos(a0) * out_r)
+	var o1 := Vector3(sin(a1) * out_r, 0.0, cos(a1) * out_r)
+	var i0 := Vector3(sin(a0) * in_r, 0.0, cos(a0) * in_r)
+	var i1 := Vector3(sin(a1) * in_r, 0.0, cos(a1) * in_r)
+	var lo := Vector3(0.0, y0, 0.0)
+	var hi := Vector3(0.0, y1, 0.0)
+	_quad(st, frame, o0 + lo, o1 + lo, o1 + hi, o0 + hi)          # outside
+	_quad(st, frame, i1 + lo, i0 + lo, i0 + hi, i1 + hi)          # inside
+	if cap:
+		_quad(st, frame, o0 + hi, o1 + hi, i1 + hi, i0 + hi)
+	if floor_face:
+		_quad(st, frame, i0 + lo, i1 + lo, o1 + lo, o0 + lo)
+
+
+static func _quad(st: SurfaceTool, frame: Transform3D, p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3) -> void:
+	for p in [p0, p1, p2, p0, p2, p3]:
+		st.add_vertex(frame * (p as Vector3))
+
+
 ## A straight run of courses from `a` to `b` (local xz) standing on the ground, `height` high,
 ## torn down by `broken` toward one end. Returns nothing; collides as one box.
 func wall(st: SurfaceTool, a: Vector2, b: Vector2, height: float, broken := 0.0,
@@ -117,27 +161,35 @@ func wall(st: SurfaceTool, a: Vector2, b: Vector2, height: float, broken := 0.0,
 		return
 	var dir := seg / length
 	var yaw := atan2(dir.x, dir.y)
-	var per := maxi(int(round(length / BLOCK)), 1)
-	var courses := int(ceil(height / course_h))
+	# As with the drum: one slab per bay, stepped in at each course, with the stones drawn by
+	# the painted surface rather than modelled.
+	var bays := maxi(int(round(length / 1.1)), 1)
+	var courses := maxi(int(ceil(height / course_h)), 1)
 	var ya := kit.ground(kit.origin.x + a.x, kit.origin.z + a.y) - kit.origin.y
 	var yb := kit.ground(kit.origin.x + b.x, kit.origin.z + b.y) - kit.origin.y
 	var tear_from := kit.rng.randf_range(0.2, 0.8)
 	var min_h := height
+	var tops: Array[float] = []
+	for i in bays + 1:
+		var t := float(i) / float(bays)
+		tops.append(height * (1.0 - broken * clampf((t - tear_from) / maxf(1.0 - tear_from, 0.05), 0.0, 1.0)
+				* kit.rng.randf_range(0.6, 1.2)))
 	for c in courses:
-		var offset := 0.5 if c % 2 == 1 else 0.0
-		for i in per:
-			var t := (float(i) + 0.5 + offset) / float(per)
-			if t > 1.0:
+		var y0 := course_h * float(c)
+		var y1 := course_h * float(c + 1)
+		var thick := THICK - float(c) * 0.012
+		for i in bays:
+			var top: float = minf(tops[i], tops[i + 1])
+			if y0 >= top:
 				continue
-			var top := height * (1.0 - broken * clampf((t - tear_from) / maxf(1.0 - tear_from, 0.05), 0.0, 1.0)
-					* kit.rng.randf_range(0.6, 1.2))
-			var y := lerpf(ya, yb, t) + course_h * (float(c) + 0.5)
-			if y - lerpf(ya, yb, t) > top:
-				continue
+			var hi := minf(y1, top)
 			min_h = minf(min_h, top)
+			var t := (float(i) + 0.5) / float(bays)
 			var p := a + dir * (length * t)
-			block(st, Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), Vector3(p.x, y, p.y)),
-					Vector3(BLOCK * 0.94 * length / (float(per) * BLOCK), course_h * 0.94, THICK))
+			var base := lerpf(ya, yb, t)
+			var xf := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5),
+					Vector3(p.x, base + (y0 + hi) * 0.5, p.y))
+			block(st, xf, Vector3(length / float(bays) * 1.01, hi - y0, thick))
 	if collide:
 		var mid := (a + b) * 0.5
 		var h := maxf(min_h, course_h)

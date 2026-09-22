@@ -10,7 +10,7 @@ extends RefCounted
 
 ## The kinds a builder exists for. `PoiDressing.KINDS` is the whole list the design names;
 ## `test_pois.gd` reports the difference as still to be dressed.
-const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall"]
+const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins"]
 
 
 static func build(d: PoiDressing) -> void:
@@ -27,6 +27,8 @@ static func build(d: PoiDressing) -> void:
 			bridge(d)
 		"waterfall":
 			waterfall(d)
+		"ruins":
+			ruins(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
 
@@ -526,7 +528,8 @@ static func _tower_tumbled(d: PoiDressing, grain: Vector2) -> void:
 	var yaw := PoiKit.yaw_of(down)
 	var frame := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, PI * 0.5),
 			Vector3(start.x, g_mid.y + r * 0.9, start.y))
-	m.drum(stone, frame, r, length, 0.22, NAN)
+	# a lying drum's tear is at the open ends, not down its length, so barely any of it
+	m.drum(stone, frame, r, length, 0.07, NAN)
 	m.commit(stone, k.surface("stone", 0.7), "Drum", true)
 	# the break: rubble between stump and drum, and along the fall
 	var rubble: Array = []
@@ -1349,3 +1352,262 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
 	k.scatter(k.flora("grey_grass"), grass, false, false, false)
 	k.place(k.tree("dead_ash_tree"), k.on_ground(face_at.x + perp.x * 11.0, face_at.y + perp.y * 11.0), k.rng.randf_range(0.0, TAU), 1.0, true, Vector3.ZERO, true)
+
+
+# --- ruins -------------------------------------------------------------------------------------------
+
+## What is left of a building: courses standing to the knee where the walls were, the plan
+## still readable on the ground, fallen slabs where they fell, a doorway that still stands
+## because a lintel is the last thing to go, and a hearth nobody has swept.
+static func ruins(d: PoiDressing) -> void:
+	var k := d.kit
+	var b := d.brief
+	if PoiKit.brief_says(b, ["colonnade", "steps", "stair", "processional"]):
+		_ruins_colonnade(d)
+	elif PoiKit.brief_says(b, ["face down", "colossus", "walked away"]):
+		_ruins_colossus(d)
+	elif PoiKit.brief_says(b, ["wardstone", "thorn", "briar", "gap"]):
+		_ruins_breach(d)
+	else:
+		_ruins_hall(d)
+
+
+## A hall or a house: three rooms of courses, one gable still up, the hearth in the middle of
+## what was the hall, and its roof slates in a heap where the roof came down.
+static func _ruins_hall(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var grain := k.grain()
+	var yaw := PoiKit.yaw_of(grain)
+	var perp := Vector2(-grain.y, grain.x)
+	var stone := m.begin()
+	# the plan: a long range with a cross wing, laid out along the grain
+	var w := 7.0
+	var l := 13.0
+	var c0 := -grain * (l * 0.5)
+	var c1 := grain * (l * 0.5)
+	var corners := [
+		c0 - perp * (w * 0.5), c1 - perp * (w * 0.5),
+		c1 + perp * (w * 0.5), c0 + perp * (w * 0.5),
+	]
+	# one gable stands nearly full height; the rest is knee to shoulder
+	var heights := [0.9, 4.6, 1.3, 0.7]
+	var breaks := [0.55, 0.15, 0.6, 0.75]
+	for i in 4:
+		var a: Vector2 = corners[i]
+		var bb: Vector2 = corners[(i + 1) % 4]
+		m.wall(stone, a, bb, float(heights[i]), float(breaks[i]))
+	# the cross wall, and the doorway in the long wall that still has its lintel
+	var mid := (c0 + c1) * 0.5 + grain * 1.5
+	m.wall(stone, mid - perp * (w * 0.5), mid + perp * (w * 0.5), 1.1, 0.5)
+	m.doorway(stone, c0 + grain * 0.1, yaw + PI, 1.3, 2.2)
+	m.commit(stone, k.surface("stone", 0.75), "Courses", true)
+	# the hearth: a ring of stones with the chimney breast behind it in the gable wall
+	var hearth_at := (c0 + c1) * 0.5 - grain * 2.5
+	var breast := m.begin()
+	m.block(breast, Transform3D(Basis(Vector3.UP, yaw), k.on_ground(hearth_at.x - grain.x * 2.0, hearth_at.y - grain.y * 2.0, 0.9)),
+			Vector3(2.4, 1.8, 0.7))
+	m.commit(breast, k.surface("stone", 0.9), "Hearth", true)
+	k.place(k.prop("campfire"), k.on_ground(hearth_at.x, hearth_at.y), k.rng.randf_range(0.0, TAU), 1.0, false)
+	var ring: Array = []
+	for p in k.ring(8, 0.85, hearth_at, 0.1):
+		var pp: Vector2 = p
+		ring.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.1, 0.16)))
+	k.scatter(k.rock("boulder"), ring)
+	# the roof, where it fell: slabs flat inside the walls, and rubble along their feet
+	var fallen: Array = []
+	for i in 16:
+		var p := (c0 + c1) * 0.5 + grain * k.rng.randf_range(-l * 0.45, l * 0.45) + perp * k.rng.randf_range(-w * 0.4, w * 0.4)
+		fallen.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.15), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.55),
+				Vector3(PI * 0.5 + k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.25, 0.25))))
+	k.scatter(k.rock("cliff_slab"), fallen, true)
+	var rubble: Array = []
+	for i in 26:
+		var side := 1.0 if k.rng.randf() > 0.5 else -1.0
+		var p := (c0 + c1) * 0.5 + grain * k.rng.randf_range(-l * 0.6, l * 0.6) + perp * (w * 0.5 + k.rng.randf_range(0.2, 2.2)) * side
+		rubble.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.25, 0.6)))
+	k.scatter(k.rock("boulder", 1), rubble, true)
+	# what is left inside: a sarcophagus or a coffin if this was a barrow's business, else
+	# the household's crocks, and grass growing through all of it
+	if PoiKit.brief_says(d.brief, ["barrow", "tomb", "grave"]):
+		k.place(k.prop("sarcophagus"), k.on_ground(mid.x + grain.x * 2.5, mid.y + grain.y * 2.5), yaw)
+	else:
+		for i in 4:
+			var p := (c0 + c1) * 0.5 + grain * k.rng.randf_range(-3.5, 3.5) + perp * k.rng.randf_range(-2.0, 2.0)
+			k.place(k.prop(["barrel", "crate", "jug", "bucket"][i]), k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), 1.0, i < 2)
+	var grass: Array = []
+	for i in 40:
+		var p := (c0 + c1) * 0.5 + k.jitter(11.0)
+		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.4)))
+	k.scatter(k.flora("grass_clump"), grass, false, false, false)
+
+
+## The Stair of Isse: an Oroth colonnade rising step by step out of the water, its columns
+## broken to different heights, the processional way still going somewhere.
+static func _ruins_colonnade(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var water := k.water_direction(80.0)
+	var up := -water if water != Vector2.ZERO else -k.downhill()
+	if up == Vector2.ZERO:
+		up = k.grain()
+	var perp := Vector2(-up.y, up.x)
+	var yaw := PoiKit.yaw_of(up)
+	var stone := m.begin()
+	# the steps, rising out of the water along `up`
+	var start := -up * 16.0
+	var g0 := k.on_ground(start.x, start.y).y
+	m.steps(stone, start, up, g0 - 1.2, 13, 0.32, 1.5, 9.0, 0.7)
+	# the columns, in two rows flanking the way, broken to different heights
+	var cols := 7
+	for i in cols:
+		var t := float(i)
+		for s in [-1.0, 1.0]:
+			var p := start + up * (2.2 + t * 2.4) + perp * float(s) * 3.6
+			var base := k.on_ground(p.x, p.y).y - 0.3 + 0.32 * minf(t * 1.6, 13.0)
+			var h := float([6.4, 2.1, 5.2, 1.2, 4.0, 6.8, 0.8][i % 7]) * k.rng.randf_range(0.9, 1.1)
+			var frame := Transform3D(Basis.IDENTITY, Vector3(p.x, base, p.y))
+			m.drum(stone, frame, 0.62, h, 0.35, NAN, true, 0.5)
+			# the top drum of a column that is nearly whole
+			if h > 5.0:
+				m.block(stone, Transform3D(Basis(Vector3.UP, yaw), Vector3(p.x, base + h + 0.18, p.y)), Vector3(1.5, 0.36, 1.5))
+	m.commit(stone, k.surface("oroth", 0.6), "Colonnade", true)
+	# the drums that fell, lying where they rolled
+	var drums: Array = []
+	for i in 12:
+		var p := start + up * k.rng.randf_range(2.0, 17.0) + perp * k.rng.randf_range(-7.0, 7.0)
+		drums.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.6, 1.0),
+				Vector3(PI * 0.5, 0.0, k.rng.randf_range(-0.3, 0.3))))
+	k.scatter(k.rock("sunken_masonry"), drums, true, true)
+	# a rope somebody tied to the last dry step and never untied
+	var reeds: Array = []
+	for i in 50:
+		var p := start + up * k.rng.randf_range(-4.0, 18.0) + perp * k.rng.randf_range(-11.0, 11.0)
+		if absf(perp.dot(p - start)) < 3.0:
+			continue
+		reeds.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
+	k.scatter(k.flora("reeds"), reeds, false, false, false)
+	var rope_at := start + up * 2.0 + perp * 2.2
+	k.place(k.prop("rope_coil"), k.on_ground(rope_at.x, rope_at.y, 0.3), k.rng.randf_range(0.0, TAU), 1.0, false)
+	k.place(k.prop("dock_post"), k.on_ground(rope_at.x + perp.x * 1.2, rope_at.y + perp.y * 1.2), yaw, 1.1)
+
+
+## The Thirteenth: a colossus lying face down a long way from the ring, with its head — and
+## it is not the head of the others — buried in the ash, and a Sayer camp digging at it.
+static func _ruins_colossus(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var lie := k.grain()
+	var perp := Vector2(-lie.y, lie.x)
+	var yaw := PoiKit.yaw_of(lie)
+	var basis := Basis(Vector3.UP, yaw)
+	var g := k.on_ground(0.0, 0.0).y
+	var st := m.begin()
+	# the body, face down: a long torso, two arms flung forward, legs behind, half sunk
+	var torso_l := 19.0
+	m.block(st, Transform3D(basis * Basis(Vector3.RIGHT, 0.04), Vector3(0.0, g + 1.5, 0.0)), Vector3(7.4, 4.2, torso_l))
+	m.block(st, Transform3D(basis, Vector3(lie.x * (torso_l * 0.5 + 5.0), g + 1.0, lie.y * (torso_l * 0.5 + 5.0))),
+			Vector3(5.0, 3.0, 9.0))
+	for s in [-1.0, 1.0]:
+		var arm := lie * (torso_l * 0.35) + perp * float(s) * 5.0
+		m.block(st, Transform3D(basis * Basis(Vector3.UP, float(s) * 0.35), Vector3(arm.x, g + 1.0, arm.y)),
+				Vector3(2.8, 2.4, 12.0))
+		var leg := -lie * (torso_l * 0.55) + perp * float(s) * 2.0
+		m.block(st, Transform3D(basis * Basis(Vector3.UP, float(s) * -0.12), Vector3(leg.x, g + 1.1, leg.y)),
+				Vector3(3.0, 2.6, 11.0))
+	m.commit(st, k.surface("oroth", 0.65), "Colossus", true)
+	k.collider(Vector3(7.4, 4.2, torso_l), Transform3D(basis, Vector3(0.0, g + 1.5, 0.0)))
+	# the head, buried to the brow in ash, in the excavation: a dome and the trench round it
+	var head_at := lie * (torso_l * 0.5 + 10.5)
+	var head := m.begin()
+	var sphere := SphereMesh.new()
+	sphere.radius = 1.0
+	sphere.height = 2.0
+	sphere.radial_segments = 24
+	sphere.rings = 12
+	head.append_from(sphere, 0, Transform3D(basis, Vector3(head_at.x, g - 1.1, head_at.y)).scaled_local(Vector3(3.6, 4.0, 3.4)))
+	m.commit(head, k.surface("oroth", 0.5), "Head", true)
+	k.collider(Vector3(6.4, 3.0, 6.0), Transform3D(basis, Vector3(head_at.x, g + 0.6, head_at.y)))
+	# the Sayers' dig: a trench of spoil round the head, tents, lanterns, crates of findings
+	var spoil: Array = []
+	for p in k.ring(14, 6.2, head_at, 0.12):
+		var pp: Vector2 = p
+		spoil.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 0.9)))
+	k.scatter(k.rock("scree"), spoil)
+	for i in 2:
+		var t := head_at + perp * (7.5 * (1.0 if i == 0 else -1.0)) + lie * k.rng.randf_range(-2.0, 2.0)
+		k.place(k.prop("tent"), k.on_ground(t.x, t.y), PoiKit.yaw_of(head_at - t), 1.0, true, Vector3.ZERO, true)
+		var crate := t + (head_at - t).normalized() * 2.8
+		k.place(k.prop("crate"), k.on_ground(crate.x, crate.y), k.rng.randf_range(0.0, TAU))
+	var table := head_at + perp * 4.6
+	k.place(k.prop("table_trestle"), k.on_ground(table.x, table.y), yaw)
+	k.place(k.prop("scroll"), k.on_ground(table.x, table.y, 0.75), yaw, 1.0, false)
+	k.place(k.prop("book"), k.on_ground(table.x + 0.4, table.y + 0.2, 0.75), yaw + 0.5, 1.0, false)
+	var lamp := head_at + perp * 3.0 - lie * 3.0
+	k.place(k.prop("lantern_standing"), k.on_ground(lamp.x, lamp.y), 0.0)
+	k.light(k.on_ground(lamp.x, lamp.y, 1.9), Color(1.0, 0.82, 0.55), 1.8, 10.0)
+	var grass: Array = []
+	for i in 30:
+		var p := k.jitter(18.0)
+		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.3)))
+	k.scatter(k.flora("grey_grass"), grass, false, false, false)
+
+
+## The Breach: broken Oroth wardstones in a gap in the Briar, the thorns dead in a line where
+## something walked through them.
+static func _ruins_breach(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var through := k.grain()
+	var perp := Vector2(-through.y, through.x)
+	var yaw := PoiKit.yaw_of(through)
+	var stone := m.begin()
+	# the wardstones: four great slabs in a line across the gap, two of them snapped
+	for i in 4:
+		var t := float(i) - 1.5
+		var p := perp * (t * 4.6)
+		var h := float([5.4, 1.8, 2.6, 5.0][i])
+		var frame := Transform3D(Basis(Vector3.UP, yaw + k.rng.randf_range(-0.1, 0.1))
+				* Basis(Vector3.BACK, k.rng.randf_range(-0.12, 0.12)), k.on_ground(p.x, p.y, -0.3))
+		m.drum(stone, frame, 1.05, h, 0.5, NAN, true, 0.62)
+	m.commit(stone, k.surface("oroth", 0.7), "Wardstones", true)
+	# the pieces that came off them, lying in the gap
+	var shards: Array = []
+	for i in 14:
+		var p := perp * k.rng.randf_range(-9.0, 9.0) + through * k.rng.randf_range(-4.0, 4.0)
+		shards.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.0),
+				Vector3(k.rng.randf_range(0.6, PI * 0.5), 0.0, k.rng.randf_range(-0.4, 0.4))))
+	k.scatter(k.rock("sunken_masonry"), shards, true, true)
+	# the Briar either side, alive, and dead where the thing walked
+	var briar := k.flora("briar_vine")
+	var living: Array = []
+	var dead: Array = []
+	for i in 90:
+		var across := k.rng.randf_range(-22.0, 22.0)
+		var along := k.rng.randf_range(-7.0, 7.0)
+		var p := perp * across + through * along
+		var xf := PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.1, 2.0))
+		if absf(across) < 9.0:
+			if k.rng.randf() > 0.72:
+				dead.append(xf)
+		else:
+			living.append(xf)
+	k.scatter(briar, living, false, true, false)
+	var withered := k.scatter(briar, dead, false, false, false)
+	if withered != null:
+		# the thorns died where it walked: the same vine, ash-grey
+		var grey := PoiKit.plain(Color(0.42, 0.40, 0.36), 0.95)
+		grey.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		var src := PoiKit.mesh(briar)
+		if src != null and src.get_surface_count() > 0:
+			var m0 := src.surface_get_material(0)
+			if m0 is StandardMaterial3D:
+				grey.albedo_texture = (m0 as StandardMaterial3D).albedo_texture
+				grey.albedo_color = Color(0.55, 0.52, 0.48)
+		withered.material_override = grey
+	# ash-wights a long way from home leave the ash they walk in
+	var ash: Array = []
+	for i in 16:
+		var p := perp * k.rng.randf_range(-6.0, 6.0) + through * k.rng.randf_range(-9.0, 9.0)
+		ash.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.02), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.7, 1.2)))
+	k.scatter(k.flora("grey_grass"), ash, false, false, false)
