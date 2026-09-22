@@ -517,7 +517,12 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
     return albedo, orm
 
 
-def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str = "clothing") -> str:
+def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str = "clothing",
+                       fits: Optional[Dict[str, Tuple[object, object]]] = None) -> str:
+    """Mesh, skin, fit, paint and export one part.
+
+    `fits` maps a morph-target name to (the field the part was built on, the field it should
+    also fit): the heavy and slight bodies for a garment, each face for a beard."""
     verts, quads = g.mesh()
     if len(verts) == 0:
         log("part %s produced no geometry" % g.name)
@@ -527,34 +532,52 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
     bodylib.smart_uv(ob, angle_deg=66.0, margin=0.02)
     if g.bone:
         bodylib.rigid_weights(ob, g.bone, arm)
+    elif g.weight_fn is not None:
+        v, _, _ = bodylib.mesh_arrays(ob)
+        bodylib.custom_weights(ob, g.weight_fn(v), arm)
     else:
         bodylib.transfer_weights(ob, bW[0], bW[1], arm)
+    fitted: List[str] = []
+    if fits:
+        v, _, _ = bodylib.mesh_arrays(ob)
+        fitted = bodylib.add_shape_keys(ob, {name: bodylib.fit_positions(v, a_, b_)
+                                             for name, (a_, b_) in fits.items()})
     out_dir = part_dir(kind, g.name)
-    tex = 256 if g.material in ("hair", "horn", "glow") else 384
-    maps = paint.surface_maps(ob, size=tex, pad=3)
-    occ_map = np.ones((tex, tex))
+    defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
+    n_path = None
     if g.material == "hair":
-        fn = paint.hair_paint("brown", seed=seed)
-        alb = paint.paint(maps, fn, background=(0.35, 0.25, 0.18))
-        rough = np.full((tex, tex), 0.52)
+        # Hair is the first thing looked at on a face after the eyes, so it gets the resolution
+        # and a normal map: the grain runs along the comb and catches the light that way.
+        tex = 512
+        maps = paint.surface_maps(ob, size=tex, pad=3)
+        a_fn, o_fn, h_fn = paint.hair_strands("brown", seed=seed, flow_fn=g.flow_fn, locks=g.locks,
+                                              scalp=g.trim, field=g.field(), s=clothlib._s(skel))
+        alb = paint.paint(maps, a_fn, background=(0.35, 0.25, 0.18))
+        orm3 = paint.paint(maps, o_fn, background=(0.9, 0.7, 0.0))
+        occ, rough = orm3[..., 0], orm3[..., 1]
+        h = paint.paint(maps, lambda P, N: np.repeat(h_fn(P, N)[:, None], 3, axis=1),
+                        background=(0.5, 0.5, 0.5))[..., 0]
+        nrm = normal_from_height(h, strength=0.035)
+        n_path = paint.save_png(nrm, os.path.join(out_dir, "%s_normal.png" % g.name))
     else:
+        tex = 256 if g.material in ("horn", "glow") else 384
+        maps = paint.surface_maps(ob, size=tex, pad=3)
         a_fn, o_fn = _garment_material(g, out_dir, g.name, seed, scene=g.scene)
         alb = paint.paint(maps, a_fn, background=(0.8, 0.8, 0.8))
         orm3 = paint.paint(maps, o_fn, background=(1.0, 0.8, 0.0))
         rough = orm3[..., 1]
-        occ_map = orm3[..., 0]
-    defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
-    # the occlusion channel used to be discarded here for a flat white, which threw away
-    # every crease the material had just worked out
-    occ = occ_map if g.material != "hair" else np.ones((tex, tex))
-    met = np.full((tex, tex), float(defaults["metallic"]))
+        # the occlusion channel used to be discarded here for a flat white, which threw away
+        # every crease the material had just worked out
+        occ = orm3[..., 0]
+    met = np.full(rough.shape, float(defaults["metallic"]))
     a_path = paint.save_png(alb, os.path.join(out_dir, "%s_albedo.png" % g.name))
     o_path = paint.save_png(paint.orm_image(occ, rough, met), os.path.join(out_dir, "%s_orm.png" % g.name))
-    mat = make_material("WM_%s" % g.name, a_path, o_path,
+    mat = make_material("WM_%s" % g.name, a_path, o_path, n_path,
                         roughness=float(defaults["roughness"]), metallic=float(defaults["metallic"]))
     ob.data.materials.append(mat)
     return export_part(g.name, kind, [ob], arm, {"material": g.material, "bone": g.bone},
-                       seed=seed, extra={"material": g.material, "slot_hint": _slot_hint(g.name)})
+                       seed=seed, extra={"material": g.material, "slot_hint": _slot_hint(g.name),
+                                         "fits": fitted})
 
 
 def _slot_hint(name: str) -> str:
@@ -624,36 +647,51 @@ def cmd_parts(args) -> None:
                     extra={"slot_hint": "body"})
 
     # -- everything that is built against the default body --------------------------------
-    skel, arm = _fresh_rig()
-    style = bodylib.BodyStyle()
-    body_ob = build_body(skel, style)
-    bodylib.skin_to_armature(body_ob, arm, skel)
-    bv, bn, bt = bodylib.mesh_arrays(body_ob)
-    bW = (bv, bodylib.weight_matrix(body_ob, rig.DEFORM_NAMES))
-    field = clothlib.body_field(skel, style)
-    log("body field cached %s" % (field.F.shape,))
-    bpy.data.objects.remove(body_ob, do_unlink=True)
-
-    for name, builder in clothlib.CLOTHING_BUILDERS.items():
-        if not want(name) and not want("clothing"):
-            continue
-        g = builder(skel, field)
-        build_garment_part(g, skel, arm, None, bW, seed=abs(hash(name)) % 9999, kind="clothing")
-    for name in clothlib.HAIR_STYLES:
-        if not want(name) and not want("hair"):
-            continue
-        g = clothlib.build_hair(skel, name)
-        build_garment_part(g, skel, arm, None, bW, seed=abs(hash(name)) % 9999, kind="hair")
-    for name in clothlib.BEARD_STYLES:
-        if not want(name) and not want("beards"):
-            continue
-        g = clothlib.build_beard(skel, name)
-        build_garment_part(g, skel, arm, None, bW, seed=abs(hash(name)) % 9999, kind="beard")
-    for name, builder in clothlib.ATTACHMENT_BUILDERS.items():
-        if not want(name) and not want("attachments"):
-            continue
-        g = builder(skel)
-        build_garment_part(g, skel, arm, None, bW, seed=abs(hash(name)) % 9999, kind="attachment")
+    garments = [n for n in clothlib.CLOTHING_BUILDERS if want(n) or want("clothing")]
+    hairs = [n for n in clothlib.HAIR_STYLES if want(n) or want("hair")]
+    beards = [n for n in clothlib.BEARD_STYLES if want(n) or want("beards")]
+    attachments = [n for n in clothlib.ATTACHMENT_BUILDERS if want(n) or want("attachments")]
+    # The body, its weights and its field cost a few minutes and a head needs none of them, so
+    # they are built only when a part is going to be fitted to them.
+    if garments or hairs or beards or attachments:
+        skel, arm = _fresh_rig()
+        style = bodylib.BodyStyle()
+        body_ob = build_body(skel, style)
+        bodylib.skin_to_armature(body_ob, arm, skel)
+        bv, bn, bt = bodylib.mesh_arrays(body_ob)
+        bW = (bv, bodylib.weight_matrix(body_ob, rig.DEFORM_NAMES))
+        field = clothlib.body_field(skel, style)
+        log("body field cached %s" % (field.F.shape,))
+        bpy.data.objects.remove(body_ob, do_unlink=True)
+        # every garment also fits the heavy and the slight body, as morph targets
+        body_fits = {}
+        if garments:
+            for vname in ("heavy", "slight"):
+                vskel = Skeleton(rig.Proportions.from_dict(BODY_VARIANTS[vname]))
+                body_fits[vname] = (field, clothlib.body_field(vskel, style))
+                log("fit field for the %s body" % vname)
+        # a beard lies on a jaw, and the faces' jaws differ: one morph target per face
+        face_fits = {}
+        if beards:
+            base_face = clothlib.head_field(skel)
+            for hname, params in HEAD_PRESETS.items():
+                if hname != "default":
+                    face_fits[hname] = (base_face, clothlib.head_field(skel, bodylib.HeadStyle.from_dict(params)))
+        for name in garments:
+            g = clothlib.CLOTHING_BUILDERS[name](skel, field)
+            fits = body_fits if (g.bone is None and g.weight_fn is None) else None
+            build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="clothing",
+                               fits=fits)
+        for name in hairs:
+            g = clothlib.build_hair(skel, name, body=field)
+            build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="hair")
+        for name in beards:
+            g = clothlib.build_beard(skel, name, body=field)
+            build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="beard",
+                               fits=face_fits)
+        for name in attachments:
+            g = clothlib.ATTACHMENT_BUILDERS[name](skel)
+            build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="attachment")
     log("parts done in %.1fs" % (time.time() - t0))
 
 

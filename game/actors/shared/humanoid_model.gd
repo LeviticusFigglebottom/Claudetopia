@@ -34,6 +34,13 @@ const SOCKETS := {
 }
 ## Recolours the iris band of an eyeball and leaves the white alone (see the shader).
 const IRIS_SHADER := preload("res://assets/shaders/eye_iris.gdshader")
+## Skin: the Compatibility renderer has no subsurface scattering, so the shader wraps the light
+## past the terminator and tints what it adds towards blood (see the shader).
+const SKIN_SHADER := preload("res://assets/shaders/skin.gdshader")
+## Headgear that covers the crown. Hair is combed for a bare head; under one of these the
+## chosen style would stand through the helm or the hood, so the close style is worn instead.
+const COVERS_HEAD := {"headgear": ["helm", "hood"], "back": ["hooded_cloak", "ragged_cloak"]}
+const UNDER_A_HOOD := "hood_friendly"
 const DEFAULT_BLEND := 0.12
 ## Cross-fades on the state machine edges: into a one-shot fast, back to locomotion softer.
 const ONE_SHOT_BLEND_IN := 0.08
@@ -69,6 +76,9 @@ var _fired: Dictionary = {}              ## event index -> true, for the running
 var _locomotion := Vector2.ZERO
 var _sneaking := false
 var _part_cache: Dictionary = {}
+## Which hair part is actually on the head, which is not always the record's: see COVERS_HEAD.
+var hair_worn := ""
+static var _meta_cache: Dictionary = {}
 var _applying := false      ## guards the appearance_dict setter against re-entering
 
 static var _clip_cache: Dictionary = {}
@@ -261,8 +271,9 @@ func apply_appearance(d: Variant) -> void:
 	appearance_dict = appearance.to_dict()
 	_applying = false
 	_clear_parts()
+	hair_worn = _hair_to_wear()
 	for slot in CharacterAppearance.SLOTS:
-		var part_name := appearance.part(slot)
+		var part_name := hair_worn if slot == "hair" else appearance.part(slot)
 		if part_name.is_empty():
 			continue
 		if slot == "head" and part_name == "default":
@@ -276,8 +287,20 @@ func apply_appearance(d: Variant) -> void:
 	for eye in _default_eyes:
 		_show_default(eye, own_head)
 	_apply_colours()
+	_apply_fits()
 	_apply_proportions()
 	appearance_changed.emit()
+
+
+## The hair the record chose, unless something is covering the crown.
+func _hair_to_wear() -> String:
+	var chosen := appearance.part("hair")
+	if chosen.is_empty():
+		return chosen
+	for slot in COVERS_HEAD:
+		if appearance.part(slot) in COVERS_HEAD[slot]:
+			return UNDER_A_HOOD
+	return chosen
 
 
 func _clear_parts() -> void:
@@ -308,6 +331,20 @@ func _part_path(slot: String, part_name: String) -> String:
 	return "%s%s/%s/%s.glb" % [PARTS_ROOT, dir, part_name, part_name]
 
 
+## The forge's meta for a part (what it is made of, its fits), read once per part.
+func _part_meta(slot: String, part_name: String) -> Dictionary:
+	var path := _part_path(slot, part_name).replace(".glb", ".meta.json")
+	if _meta_cache.has(path):
+		return _meta_cache[path]
+	var out := {}
+	if FileAccess.file_exists(path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if typeof(parsed) == TYPE_DICTIONARY:
+			out = parsed
+	_meta_cache[path] = out
+	return out
+
+
 func _add_part(slot: String, part_name: String) -> bool:
 	var path := _part_path(slot, part_name)
 	if not ResourceLoader.exists(path):
@@ -331,6 +368,9 @@ func _add_part(slot: String, part_name: String) -> bool:
 		skeleton.add_child(copy)
 		# every part is skinned to this same rig, so the shared Skeleton3D drives it
 		copy.skeleton = copy.get_path_to(skeleton)
+		copy.set_meta("slot", slot)
+		copy.set_meta("part", part_name)
+		copy.set_meta("material", str(_part_meta(slot, part_name).get("material", "")))
 		added.append(copy)
 	inst.queue_free()
 	if added.is_empty():
@@ -355,24 +395,111 @@ func _apply_colours() -> void:
 			# `_colour_key_for`, which has no key for it, and a heavy villager keeps the
 			# bake's own default tone while his face takes the record's.
 			if slot == "body":
-				_tint(mi, skin)
+				_skin(mi, skin)
 				continue
 			if slot == "head":
 				if _is_eye(mi):
 					_tint_iris(mi)
 				else:
-					_tint(mi, skin)
+					_skin(mi, skin)
 				continue
 			var key := _colour_key_for(slot)
-			if pal.has(key):
-				_tint(mi, pal[key] as Color)
-			elif slot == "hair" or slot == "beard":
-				_tint(mi, appearance.hair_tint())
+			var kind := str(mi.get_meta("material", ""))
+			if slot == "hair" or slot == "beard":
+				_dress(mi, appearance.hair_tint() if not pal.has("hair") else pal["hair"] as Color, "hair")
+			elif pal.has(key):
+				_dress(mi, pal[key] as Color, kind)
 	for logical in ["body", "head"]:
 		if _default_meshes.has(logical):
-			_tint(_default_meshes[logical], skin)
+			_skin(_default_meshes[logical], skin)
 	for eye in _default_eyes:
 		_tint_iris(eye)
+
+
+## Skin wears the skin shader, carrying the bake's own maps across and the record's tone as a
+## tint against the bake.
+func _skin(mi: MeshInstance3D, tint: Color) -> void:
+	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
+	for i in count:
+		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
+		var m := ShaderMaterial.new()
+		m.shader = SKIN_SHADER
+		if base != null:
+			m.set_shader_parameter("albedo_tex", base.albedo_texture)
+			var orm: Texture2D = base.roughness_texture if base.roughness_texture != null else base.ao_texture
+			m.set_shader_parameter("orm_tex", orm)
+			m.set_shader_parameter("use_orm", orm != null)
+			m.set_shader_parameter("normal_tex", base.normal_texture)
+			m.set_shader_parameter("use_normal", base.normal_texture != null)
+		m.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
+		mi.set_surface_override_material(i, m)
+
+
+## What a skin's tint is, from whichever material it is wearing (the tests and the probes ask).
+static func skin_tint_of(mi: MeshInstance3D) -> Color:
+	var m := mi.get_surface_override_material(0)
+	if m is ShaderMaterial:
+		var v: Variant = (m as ShaderMaterial).get_shader_parameter("tint")
+		if v is Vector3:
+			return Color(v.x, v.y, v.z)
+	if m is BaseMaterial3D:
+		return (m as BaseMaterial3D).albedo_color
+	return Color(-1, -1, -1)
+
+
+## Cloth, leather, metal and hair are baked as value and grain; here each is also lit as what it
+## is. Wool and linen catch a soft light along their edges, which is what reads as cloth at a
+## distance; leather takes a tighter sheen; hair a brighter edge where the light comes through
+## it. Metal needs nothing but its own metallic map and something to reflect.
+func _dress(mi: MeshInstance3D, c: Color, kind: String) -> void:
+	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
+	for i in count:
+		var base := mi.mesh.surface_get_material(i)
+		var m := (base.duplicate() if base != null else StandardMaterial3D.new()) as BaseMaterial3D
+		if m == null:
+			continue
+		m.albedo_color = c
+		match kind:
+			"cloth":
+				m.rim_enabled = true
+				m.rim = 0.32
+				m.rim_tint = 0.70
+				m.metallic_specular = 0.25
+			"leather":
+				m.rim_enabled = true
+				m.rim = 0.12
+				m.rim_tint = 0.35
+				m.metallic_specular = 0.55
+			"hair":
+				m.rim_enabled = true
+				m.rim = 0.45
+				m.rim_tint = 0.40
+				m.metallic_specular = 0.40
+			"iron":
+				m.metallic_specular = 0.65
+		mi.set_surface_override_material(i, m)
+
+
+## Every garment is built on the default body and carries the heavy and slight bodies as
+## morph targets, fitted by the forge, so a heavy villager's tunic is cut for him instead of
+## the body standing through it. Beards carry one target per face, because a beard lies on a
+## jaw and the faces' jaws are not one jaw.
+func _apply_fits() -> void:
+	var head := appearance.part("head")
+	for slot in _part_meshes:
+		for mi in _part_meshes[slot]:
+			var m := mi as MeshInstance3D
+			if m == null or m.mesh == null or not (m.mesh is ArrayMesh):
+				continue
+			var shapes := (m.mesh as ArrayMesh).get_blend_shape_count()
+			for b in shapes:
+				var shape := str((m.mesh as ArrayMesh).get_blend_shape_name(b))
+				var on := false
+				if shape == "heavy" or shape == "slight":
+					on = shape == body_variant_worn
+				elif slot == "beard" or slot == "hair":
+					on = shape == head
+				m.set_blend_shape_value(b, 1.0 if on else 0.0)
 
 
 func _is_eye(mi: MeshInstance3D) -> bool:
@@ -406,17 +533,6 @@ func _colour_key_for(slot: String) -> String:
 		"hair", "beard":
 			return "hair"
 	return "primary"
-
-
-func _tint(mi: MeshInstance3D, c: Color) -> void:
-	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
-	for i in count:
-		var base := mi.mesh.surface_get_material(i)
-		var m := (base.duplicate() if base != null else StandardMaterial3D.new()) as BaseMaterial3D
-		if m == null:
-			continue
-		m.albedo_color = c
-		mi.set_surface_override_material(i, m)
 
 
 ## Body variants that may be worn on *this* rig, and the one that may not.

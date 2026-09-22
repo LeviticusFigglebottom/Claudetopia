@@ -81,9 +81,10 @@ func _look() -> CharacterAppearance:
 	return naming.get("appearance") as CharacterAppearance
 
 
+## The colour a part has been given: a cloth or hair part's albedo, or a skin's tint (skin wears
+## the skin shader, not a StandardMaterial3D).
 func _override_albedo(mi: MeshInstance3D) -> Color:
-	var m := mi.get_surface_override_material(0) as BaseMaterial3D
-	return m.albedo_color if m != null else Color(-1, -1, -1)
+	return HumanoidModel.skin_tint_of(mi)
 
 
 func _forge_built() -> bool:

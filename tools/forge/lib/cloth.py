@@ -15,6 +15,7 @@ Regions are smooth 0..1 weights over 3D space (see `Region`), so garment edges c
 from __future__ import annotations
 
 import math
+import zlib
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
@@ -217,9 +218,40 @@ class Garment:
     colour_key: str = "primary"
     bone: Optional[str] = None           # rigid parts (helms, horns) bind to one bone
     double_sided: bool = False
+    # A field whose inside is hidden anyway (the scalp under hair): faces whose centre lies
+    # more than `trim_depth` inside it are dropped after meshing, so a shell that dives under
+    # the skin at its edge does not spend half its triangles on a surface nobody can see.
+    trim: Optional[object] = None
+    trim_depth: float = 0.0012
+    # Per-vertex skin weights over rig.DEFORM_NAMES, for parts that are neither rigid to one
+    # bone nor a copy of the body's weights (hair that hangs past the neck).
+    weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    # What the painter needs to lay strands along: a flow direction anywhere on the part and
+    # the centrelines of the locks it was combed into.
+    flow_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    locks: List[np.ndarray] = field(default_factory=list)
+    _grid: list = field(default_factory=list, repr=False)
+
+    def field(self) -> "sdf.SampledField":
+        """The part's own distance field, from the grid meshing sampled (or sampled now)."""
+        if self._grid:
+            return sdf.SampledField.from_grid(*self._grid)
+        return sdf.SampledField(self.scene, spacing=self.spacing, margin=0.02)
 
     def mesh(self) -> Tuple[np.ndarray, np.ndarray]:
-        return sdf.mesh_from_scene(self.scene, self.spacing, smooth_iters=self.smooth, project=1)
+        self._grid = []
+        verts, quads = sdf.mesh_from_scene(self.scene, self.spacing, smooth_iters=self.smooth, project=1,
+                                           grid_out=self._grid)
+        if self.trim is not None and len(quads):
+            q = np.asarray(quads)
+            centres = verts[q].mean(axis=1)
+            keep = self.trim.eval(centres) > -self.trim_depth
+            quads = q[keep]
+            used = np.unique(quads)
+            remap = -np.ones(len(verts), dtype=np.int64)
+            remap[used] = np.arange(len(used))
+            verts, quads = verts[used], remap[quads]
+        return verts, quads
 
 
 # --------------------------------------------------------------------------------------
@@ -753,47 +785,405 @@ def _head_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None) -> sdf.S
     return head_field(skel, hs)
 
 
-def hair(skel: Skeleton, name: str, *, front: float = 1.0, sides: float = 1.0, back: float = 1.0,
-         thickness: float = 0.016, locks: Sequence[Sequence[Sequence[float]]] = (),
-         lock_radius: float = 0.018, hs: Optional[bodylib.HeadStyle] = None) -> Garment:
-    """A hair shell over the scalp, plus optional locks (a braid, a bun, a fringe)."""
+DOWN = np.array([0.0, 0.0, -1.0])
+
+
+def _unit_rows(v: np.ndarray) -> np.ndarray:
+    return v / np.maximum(np.linalg.norm(v, axis=-1, keepdims=True), 1e-12)
+
+
+def _onto(field, P: np.ndarray, off, iters: int = 3) -> np.ndarray:
+    """Move points onto the level set field == off (off a scalar or one per point)."""
+    P = np.array(P, float)
+    for _ in range(iters):
+        d = field.eval(P) - off
+        P = P - field.gradient(P) * d[:, None]
+    return P
+
+
+@dataclass
+class Groom:
+    """How a style lies on the head.
+
+    A style is a scalp shell -- `base` thick where the hair is full, thinning to a millimetre at
+    a hairline that follows the skull -- and `seeds` locks combed over it along `flow`, each
+    `length` long and `radius` thick at the root, standing `lift` off at the tip. Below
+    `release` (a fraction of the visible head) a lock stops following the skull and hangs,
+    pushed out of the shoulders and back by the body. `extra` adds a braid or a bun, which
+    the locks are combed towards."""
+    base: float
+    flow: str = "radial"
+    front: float = 1.0
+    sides: float = 1.0
+    back: float = 1.0
+    seeds: int = 0
+    length: Tuple[float, float] = (0.04, 0.06)
+    radius: float = 0.006
+    lift: float = 0.004
+    jitter: float = 0.0
+    part_x: float = 0.0
+    release: float = -1.0
+    spill: float = 0.0          # how far past the hairline a lock may fall (a fringe)
+    blend: float = 0.0045       # how far neighbouring locks melt into each other
+    extra: str = ""
+    target_tris: int = 3200
+
+
+def _crown(L: dict) -> np.ndarray:
+    s = L["s"]
+    return np.array([0.0, L["skull_c"][1] + 0.030 * s, L["chin_z"] + 0.965 * L["V"]])
+
+
+def _sink(g: Groom, L: dict) -> Optional[np.ndarray]:
+    s, V, z0, cy = L["s"], L["V"], L["chin_z"], L["skull_c"][1]
+    if g.extra == "bun":
+        return np.array([0.0, cy + 0.114 * s, z0 + 0.720 * V])
+    if g.extra == "braid":
+        return np.array([0.0, cy + 0.078 * s, z0 + 0.330 * V])
+    return None
+
+
+def flow_field(g: Groom, L: dict) -> Callable[[np.ndarray], np.ndarray]:
+    """The direction the hair is combed at any point (not yet projected onto the scalp)."""
+    s = L["s"]
+    crown = _crown(L)
+    sink = _sink(g, L)
+
+    def radial(P):
+        d = P - crown
+        d[:, 2] -= 0.015 * s
+        return _unit_rows(d)
+
+    if g.flow == "radial":
+        return radial
+    if g.flow in ("side_part", "centre_part"):
+        px = g.part_x * s
+        back = 0.35 if g.flow == "side_part" else 0.10
+
+        def parted(P):
+            side = np.where(P[:, 0] >= px, 1.0, -1.0)
+            v = _unit_rows(np.stack([side, np.full(len(P), back), np.full(len(P), -0.30)], axis=1))
+            # behind the crown the hair falls away from the whorl instead
+            wb = np.clip((P[:, 1] - crown[1] + 0.005 * s) / (0.045 * s), 0.0, 1.0)[:, None]
+            return _unit_rows(v * (1.0 - wb) + radial(P) * wb)
+        return parted
+    if g.flow == "back":
+        def combed_back(P):
+            v = np.tile(np.array([0.0, 1.0, -0.22]), (len(P), 1))
+            wb = np.clip((P[:, 1] - crown[1]) / (0.050 * s), 0.0, 1.0)[:, None]
+            return _unit_rows(v * (1.0 - wb) + np.array([0.0, 0.30, -1.0]) * wb)
+        return combed_back
+    if g.flow == "sink" and sink is not None:
+        def to_sink(P):
+            return _unit_rows(sink - P)
+        return to_sink
+    return radial
+
+
+def seed_scalp(head, L: dict, cov_fn, n: int, min_cov: float, rng) -> np.ndarray:
+    """About `n` points spread evenly over the scalp, at least `min_cov` inside the hairline."""
+    if n <= 0:
+        return np.zeros((0, 3))
+    m = n * 5
+    k = np.arange(m) + 0.5
+    phi = np.arccos(1.0 - 2.0 * k / m)
+    th = math.pi * (1.0 + 5 ** 0.5) * k
+    dirs = np.stack([np.cos(th) * np.sin(phi), np.sin(th) * np.sin(phi), np.cos(phi)], axis=1)
+    P = L["skull_c"] + dirs * (L["skull_r"] * 1.06)
+    P = _onto(head, P, 0.0, iters=8)
+    P = P[cov_fn(P) > min_cov]
+    if len(P) > n:
+        P = P[np.sort(rng.choice(len(P), n, replace=False))]
+    return P + rng.normal(0.0, 0.002 * L["s"], P.shape)
+
+
+def comb(head, start: np.ndarray, flow, length: float, off_fn, release_z: float, s: float,
+         body=None, twist: Optional[np.ndarray] = None, stop_fn=None, step: float = 0.004) -> np.ndarray:
+    """One lock's centreline, walked from `start` along the flow.
+
+    Above `release_z` the lock hugs the skull at its own offset, so it lies on the head the way
+    combed hair does. Below it, it hangs: gravity with a little of the flow, and never inside
+    the head or the body -- long hair falls onto the shoulders rather than through them."""
+    n_steps = max(2, int(length / step))
+    p = np.array(start, float)
+    pts = [p.copy()]
+    hanging = p[2] < release_z
+    for i in range(n_steps):
+        u = (i + 1) / n_steps
+        f = flow(p[None])[0]
+        if twist is not None:
+            f = twist @ f
+        if not hanging:
+            nrm = head.gradient(p[None])[0]
+            t = f - nrm * float(np.dot(f, nrm))
+            if np.linalg.norm(t) < 1e-6:
+                t = DOWN - nrm * float(np.dot(DOWN, nrm))
+            q = p + sdf._unit(t) * step
+            q = _onto(head, q[None], off_fn(u), iters=2)[0]
+            if q[2] < release_z:
+                hanging = True
+        else:
+            q = p + sdf._unit(0.22 * f + DOWN) * step
+            o = off_fn(u)
+            dh = float(head.eval(q[None])[0])
+            if dh < o:
+                q = q + head.gradient(q[None])[0] * (o - dh)
+            if body is not None:
+                clear = 0.008 * s + 0.5 * o
+                db = float(body.eval(q[None])[0])
+                if db < clear:
+                    q = q + body.gradient(q[None])[0] * (clear - db)
+        # a projection off a degenerate gradient can throw a point anywhere, and one wild
+        # point is a scene bound the size of a house: a lock that jumps stops where it was
+        if not np.all(np.isfinite(q)) or np.linalg.norm(q - p) > 4.0 * step:
+            break
+        if stop_fn is not None and stop_fn(q, u):
+            break
+        pts.append(q)
+        p = q
+    return np.array(pts)
+
+
+def scalp_shell(head, cov_fn, base: float, s: float, t_min: float = 0.0012, depth: float = 0.004) -> Prim:
+    """The hair's first layer: `base` thick over the scalp, thinning to `t_min` at the hairline
+    over the last 14 mm, cut there, and diving under the skin below it -- so the hairline is a
+    line hair grows out of, not the rim of a cap. Everything under the skin is trimmed off
+    after meshing."""
+    feather = 0.014 * s
+
+    def fn(P):
+        d = head.eval(P)
+        c = cov_fn(P)
+        r = np.clip(c / feather, 0.0, 1.0)
+        t = t_min + (base - t_min) * (r * r * (3.0 - 2.0 * r))
+        shell = np.maximum(d - t, -(d + depth))
+        return np.maximum(shell, -c)
+    lo, hi = head.bounds(0.01)
+    return Prim(fn, lo, hi, "union", 0.0)
+
+
+def _lock_prim(pts: np.ndarray, r0: float, s: float) -> Prim:
+    u = np.linspace(0.0, 1.0, len(pts))
+    radii = r0 * (1.0 - 0.62 * u ** 1.5) + 0.0010 * s
+    return sdf.tube_path(pts, radii, density=2, max_spheres=160)
+
+
+def _braid_prims(start: np.ndarray, body, head, L: dict, s: float, length: float = 0.27) -> Tuple[List[Prim], List[np.ndarray]]:
+    """A three-strand braid hanging from the nape down the back, and its tie and tuft."""
+    centre = comb(head, start, lambda P: np.tile(np.array([0.0, 0.25, -1.0]), (len(P), 1)),
+                  length * s, lambda u: 0.012 * s, release_z=1e9, s=s, body=body, step=0.005)
+    if len(centre) < 4:
+        return [], []
+    seg = np.diff(centre, axis=0)
+    tang = _unit_rows(np.concatenate([seg, seg[-1:]], axis=0))
+    side = _unit_rows(np.cross(tang, np.array([0.0, -1.0, 0.0])))
+    back = _unit_rows(np.cross(side, tang))
+    arc = np.concatenate([[0.0], np.cumsum(np.linalg.norm(seg, axis=1))])
+    prims, lines = [], []
+    amp = 0.0110 * s
+    period = 0.056 * s
+    taper = 1.0 - 0.45 * (arc / max(arc[-1], 1e-6))
+    for k in range(3):
+        ph = 2.0 * math.pi * k / 3.0
+        w = 2.0 * math.pi * arc / period + ph
+        off = side * (amp * taper * np.sin(w))[:, None] + back * (0.45 * amp * taper * np.sin(2.0 * w))[:, None]
+        pts = centre + off
+        prims.append(sdf.tube_path(pts, 0.0086 * s * taper, density=2, max_spheres=200, k=0.002 * s))
+        lines.append(pts)
+    end = centre[-1]
+    prims.append(sdf.torus(end + tang[-1] * 0.002 * s, 0.0080 * s, 0.0034 * s, axis=tang[-1], k=0.002 * s))
+    tuft = [end, end + tang[-1] * 0.024 * s + back[-1] * 0.004 * s, end + tang[-1] * 0.046 * s]
+    prims.append(sdf.tube_path(tuft, [0.0075 * s, 0.0085 * s, 0.0024 * s], density=2, k=0.003 * s))
+    lines.append(np.array(tuft))
+    return prims, lines
+
+
+def _bun_prims(at: np.ndarray, s: float) -> Tuple[List[Prim], List[np.ndarray]]:
+    """A bun: a coil of hair wound round itself, with the turns showing."""
+    prims = [sdf.ellipsoid(at, [0.032 * s, 0.027 * s, 0.030 * s], k=0.006 * s)]
+    lines = []
+    turns = 2.4
+    pts = []
+    for i in range(60):
+        a = 2.0 * math.pi * turns * i / 59.0
+        r = (0.030 - 0.013 * i / 59.0) * s
+        pts.append(at + np.array([r * math.cos(a), 0.010 * s * (0.6 - i / 59.0) + 0.008 * s,
+                                  r * math.sin(a) * 0.95]))
+    pts = np.array(pts)
+    prims.append(sdf.tube_path(pts, 0.0090 * s, density=2, max_spheres=220, k=0.004 * s))
+    lines.append(pts)
+    return prims, lines
+
+
+def _hair_weights(L: dict, hang_below: float) -> Callable[[np.ndarray], np.ndarray]:
+    """Head above the nape; below it the hanging hair goes over to the neck and the chest, so a
+    braid or a length of loose hair lies on the back instead of swinging through it."""
+    bones = list(rig.DEFORM_NAMES)
+    hi = bones.index("Head")
+    ni = bones.index("Neck")
+    ci = bones.index("Chest")
+    s = L["s"]
+
+    def fn(V):
+        W = np.zeros((len(V), len(bones)))
+        z = V[:, 2]
+        wh = np.clip((z - (hang_below - 0.070 * s)) / (0.070 * s), 0.0, 1.0)
+        wh = wh * wh * (3.0 - 2.0 * wh)
+        W[:, hi] = wh
+        W[:, ni] = (1.0 - wh) * 0.30
+        W[:, ci] = (1.0 - wh) * 0.70
+        return W
+    return fn
+
+
+def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.HeadStyle] = None,
+         seed: int = 0) -> Garment:
+    """A hair style: the scalp shell with its hairline, and locks combed over it."""
     s = _s(skel)
     head = _head_field(skel, hs)
     L = bodylib.head_landmarks(skel, hs)
+    rng = np.random.default_rng(seed + 811)
 
-    def region(P):
-        return np.clip(bodylib.scalp_field(P, skel, hs or bodylib.HeadStyle(), front, sides, back) * 0.55 + 0.42, 0.0, 1.0)
+    def cov(P):
+        return bodylib.scalp_field(P, skel, hs, g.front, g.sides, g.back)
     sc = Scene()
-    lo, hi = head.bounds(0.02)
-    sc.union(offset_shell(head, region, thickness * s, gap=0.001 * s, bounds=(lo, hi)))
-    for pts in locks:
-        sc.union(sdf.tube_path([np.asarray(p, float) * s for p in pts], lock_radius * s), k=0.012 * s)
-    return Garment(name, sc, spacing=0.0034, target_tris=2200, material="hair", bone="Head")
+    sc.union(scalp_shell(head, cov, g.base * s, s))
+    flow = flow_field(g, L)
+    sink = _sink(g, L)
+    release_z = L["chin_z"] + L["V"] * g.release if g.release > 0 else -1e9
+    locks: List[np.ndarray] = []
+    starts = seed_scalp(head, L, cov, g.seeds, 0.006 * s, rng)
+    for p0 in starts:
+        length = rng.uniform(*g.length) * s
+        lift = g.lift * s * rng.uniform(0.6, 1.3)
+        r0 = g.radius * s * rng.uniform(0.85, 1.15)
+        off0 = g.base * s * 0.45
+
+        def off_fn(u, off0=off0, lift=lift):
+            return off0 + lift * u ** 1.6
+        twist = None
+        if g.jitter > 0:
+            nrm = head.gradient(p0[None])[0]
+            twist = rig.rot_axis(nrm, math.radians(rng.uniform(-g.jitter, g.jitter)))
+
+        def stop(q, u, sink=sink):
+            if sink is not None and np.linalg.norm(q - sink) < 0.018 * s:
+                return True
+            if q[2] < release_z:
+                return False
+            return float(cov(q[None])[0]) < -g.spill * s
+        pts = comb(head, _onto(head, p0[None], off0)[0], flow, length, off_fn, release_z, s,
+                   body=body, twist=twist, stop_fn=stop)
+        if len(pts) < 3:
+            continue
+        locks.append(pts)
+        sc.union(_lock_prim(pts, r0, s), k=g.blend * s)
+    hang = L["nape_z"]
+    if g.extra == "braid" and sink is not None:
+        prims, lines = _braid_prims(sink, body, head, L, s)
+        for pr in prims:
+            sc.union(pr, k=0.004 * s)
+        locks += lines
+    if g.extra == "bun" and sink is not None:
+        prims, lines = _bun_prims(sink, s)
+        for pr in prims:
+            sc.union(pr, k=0.005 * s)
+        locks += lines
+    hangs = g.release > 0 or g.extra == "braid"
+    gm = Garment(name, sc, spacing=0.0032, smooth=4, target_tris=g.target_tris, material="hair",
+                 bone=None if hangs else "Head", trim=head)
+    if hangs:
+        gm.weight_fn = _hair_weights(L, hang)
+    gm.flow_fn = flow
+    gm.locks = locks
+    return gm
 
 
-def beard(skel: Skeleton, name: str, *, moustache: bool = True, cheeks: float = 1.0, length: float = 1.0,
-          thickness: float = 0.013, hs: Optional[bodylib.HeadStyle] = None) -> Garment:
+@dataclass
+class BeardStyle:
+    base: float
+    region: str = "full"        # full | moustache | chin
+    seeds: int = 0
+    length: Tuple[float, float] = (0.02, 0.03)
+    radius: float = 0.004
+    hang: float = 0.0           # how far below the chin the locks fall (metres at 1.78 m)
+    target_tris: int = 1400
+
+
+def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadStyle] = None,
+          seed: int = 0, body=None) -> Garment:
+    """A beard grown on the beard line: a shell over the jaw, cheeks and lip, and locks combed
+    down it -- off the chin and onto the chest when the style is long."""
     s = _s(skel)
     head = _head_field(skel, hs)
-    hsx = hs or bodylib.HeadStyle()
-    L = bodylib.head_landmarks(skel, hsx)
+    L = bodylib.head_landmarks(skel, hs)
+    rng = np.random.default_rng(seed + 907)
+    if st.region == "moustache":
+        def cov(P):
+            return bodylib.moustache_field(P, skel, hs)
+    else:
+        chin_only = st.region == "chin"
 
-    def region(P):
-        eps = 1e-3
-        d0 = head.eval(P)
-        g = np.stack([(head.eval(P + np.eye(3)[i] * eps) - d0) / eps for i in range(3)], axis=1)
-        g = g / np.maximum(np.linalg.norm(g, axis=1, keepdims=True), 1e-9)
-        f = bodylib.beard_field(P, g, skel, hsx, moustache, cheeks, length)
-        return np.clip(f * 0.8 + 0.4, 0.0, 1.0)
+        def cov(P):
+            return bodylib.beard_field(P, None, skel, hs, moustache=True, chin_only=chin_only)
     sc = Scene()
-    lo, hi = head.bounds(0.02)
-    sc.union(offset_shell(head, region, thickness * s, gap=0.001 * s, bounds=(lo, hi)))
-    if length > 1.2:
-        chin = np.array([0.0, L["face_y"] + 0.02 * s, L["chin_z"]])
-        sc.union(sdf.tube_path([chin, chin + np.array([0.0, 0.006 * s, -0.05 * s * length]),
-                                chin + np.array([0.0, 0.016 * s, -0.10 * s * length])],
-                               [0.028 * s, 0.024 * s, 0.014 * s]), k=0.015 * s)
-    return Garment(name, sc, spacing=0.0036, target_tris=900, material="hair", bone="Head")
+    sc.union(scalp_shell(head, cov, st.base * s, s, t_min=0.0008 * s, depth=0.003 * s))
+    chin = np.array([0.0, L["face_y"] + 0.010 * s, L["chin_z"] + 0.02 * s])
+
+    if st.region == "moustache":
+        mid = np.array([0.0, L["face_y"], L["mouth_z"] + 0.02 * s])
+
+        def flow(P):
+            v = P - mid
+            v[:, 2] = -0.9 * np.abs(v[:, 0]) / 0.03 - 0.4
+            return _unit_rows(v)
+    else:
+        def flow(P):
+            # down the jaw towards the chin, and straight down off it
+            v = np.stack([-0.35 * P[:, 0] / 0.05, np.full(len(P), -0.25), np.full(len(P), -1.0)], axis=1)
+            return _unit_rows(v)
+    locks: List[np.ndarray] = []
+    release_z = L["chin_z"] + 0.004 * s if st.hang > 0 else -1e9
+    starts = np.zeros((0, 3))
+    if st.seeds > 0:
+        # seeds over the beard itself, which the skull-sphere seeding does not reach well
+        cand = _face_points(head, L, rng, st.seeds * 12)
+        cand = cand[cov(cand) > 0.003 * s]
+        if len(cand) > st.seeds:
+            cand = cand[rng.choice(len(cand), st.seeds, replace=False)]
+        starts = cand
+    for p0 in starts:
+        length = rng.uniform(*st.length) * s + (st.hang * s if st.hang > 0 else 0.0)
+        r0 = st.radius * s * rng.uniform(0.8, 1.2)
+        off0 = st.base * s * 0.45
+
+        def off_fn(u, off0=off0):
+            return off0 + 0.002 * s * u
+
+        def stop(q, u):
+            if q[2] < release_z:
+                return False
+            return float(cov(q[None])[0]) < -0.004 * s
+        pts = comb(head, _onto(head, p0[None], off0)[0], flow, length, off_fn, release_z, s,
+                   body=body, stop_fn=stop, step=0.003)
+        if len(pts) < 3:
+            continue
+        locks.append(pts)
+        sc.union(_lock_prim(pts, r0, s), k=0.0035 * s)
+    gm = Garment(name, sc, spacing=0.0028, smooth=4, target_tris=st.target_tris, material="hair",
+                 bone="Head", trim=head)
+    gm.flow_fn = flow
+    gm.locks = locks
+    return gm
+
+
+def _face_points(head, L: dict, rng, n: int) -> np.ndarray:
+    """Random points on the lower face and jaw, for seeding a beard."""
+    s = L["s"]
+    c = np.array([0.0, L["face_y"] + 0.045 * s, L["chin_z"] + 0.30 * L["V"]])
+    d = _unit_rows(rng.normal(0.0, 1.0, (n, 3)) * np.array([1.0, 0.6, 1.0]) + np.array([0.0, -0.55, -0.35]))
+    P = c + d * 0.08 * s
+    return _onto(head, P, 0.0, iters=8)
 
 
 # --------------------------------------------------------------------------------------
@@ -831,69 +1221,53 @@ def halo(skel: Skeleton) -> Garment:
 # the catalogue
 # --------------------------------------------------------------------------------------
 
-HAIR_STYLES: Dict[str, dict] = {
-    "short": dict(front=1.0, sides=1.0, back=1.0, thickness=0.010),
-    "cropped": dict(front=1.15, sides=1.35, back=1.25, thickness=0.005),
-    "long": dict(front=0.9, sides=0.55, back=0.2, thickness=0.015),
-    "braid": dict(front=0.95, sides=0.85, back=0.7, thickness=0.011),
-    "bun": dict(front=0.95, sides=0.95, back=0.9, thickness=0.010),
-    "hood_friendly": dict(front=1.05, sides=1.1, back=1.05, thickness=0.007),
-    "tousled": dict(front=0.85, sides=1.0, back=0.95, thickness=0.014),
+def stable_seed(name: str) -> int:
+    """A seed from a name that is the same in every process. `hash()` on a str is salted per
+    interpreter, so every part seeded with it painted a different texture on every build."""
+    return zlib.crc32(name.encode("utf-8")) % 99991
+
+
+# The styles the Naming offers, by the name it offers them under ("Short", "Cropped", "Loose",
+# "Braided", "Tied back", "Under a hood", "Wild"). Every one covers the scalp to the hairline;
+# they differ in how the hair is combed and how much of it there is.
+HAIR_STYLES: Dict[str, Groom] = {
+    # combed over from a side parting, short at the sides and back
+    "short": Groom(base=0.0068, flow="side_part", part_x=0.030, seeds=80, length=(0.035, 0.065),
+                   radius=0.0060, lift=0.0035, jitter=8.0, target_tris=3400),
+    # a close crop: the shell and the painted grain, with no lock standing proud of it
+    "cropped": Groom(base=0.0040, flow="radial", seeds=0, front=1.02, target_tris=2000),
+    # loose to the shoulders from a centre parting
+    "long": Groom(base=0.0066, flow="centre_part", seeds=74, length=(0.20, 0.34), radius=0.0092,
+                  lift=0.002, jitter=5.0, release=0.46, sides=1.05, blend=0.0080, target_tris=4600),
+    # combed back tight to the nape into one braid down the back
+    "braid": Groom(base=0.0058, flow="sink", seeds=70, length=(0.08, 0.18), radius=0.0050,
+                   lift=0.0, extra="braid", target_tris=4200),
+    # combed back and up into a coiled bun
+    "bun": Groom(base=0.0058, flow="sink", seeds=70, length=(0.08, 0.16), radius=0.0050,
+                 lift=0.0, extra="bun", target_tris=3800),
+    # short and flat, combed back, so a hood or a helm sits over it
+    "hood_friendly": Groom(base=0.0050, flow="back", seeds=55, length=(0.025, 0.045), radius=0.0040,
+                           lift=0.0, target_tris=2800),
+    # thick and every which way, a fringe falling over the brow
+    "tousled": Groom(base=0.0080, flow="radial", seeds=95, length=(0.045, 0.085), radius=0.0064,
+                     lift=0.013, jitter=36.0, spill=0.022, target_tris=4400),
 }
-BEARD_STYLES: Dict[str, dict] = {
-    "stubble": dict(moustache=True, cheeks=1.0, length=0.55, thickness=0.006),
-    "short_beard": dict(moustache=True, cheeks=1.0, length=1.0, thickness=0.013),
-    "long_beard": dict(moustache=True, cheeks=1.0, length=1.6, thickness=0.017),
-    "moustache": dict(moustache=True, cheeks=0.0, length=0.35, thickness=0.011),
+BEARD_STYLES: Dict[str, BeardStyle] = {
+    "stubble": BeardStyle(base=0.0016, target_tris=1000),
+    "short_beard": BeardStyle(base=0.0072, seeds=45, length=(0.018, 0.032), radius=0.0038, target_tris=1900),
+    "long_beard": BeardStyle(base=0.0085, seeds=42, length=(0.030, 0.050), radius=0.0055, hang=0.10,
+                             target_tris=2800),
+    "moustache": BeardStyle(base=0.0034, region="moustache", seeds=14, length=(0.022, 0.034),
+                            radius=0.0030, target_tris=900),
 }
 
 
-def hair_locks(skel: Skeleton, style: str) -> List[List[List[float]]]:
-    """Extra strands for the styles that need them, in units of the body scale."""
-    s = 1.0
-    L = bodylib.head_landmarks(skel)
-    c, r = L["skull_c"] / _s(skel), L["skull_r"] / _s(skel)
-    nape = [0.0, float(c[1]) + float(r[1]) * 0.72, float(c[2]) - float(r[2]) * 0.55]
-    if style == "long":
-        out = []
-        for sx in (1, -1, 0):
-            x = sx * 0.055
-            out.append([[x * 0.7, c[1] + r[1] * 0.55, c[2] + r[2] * 0.30],
-                        [x, c[1] + r[1] * 0.80, c[2] - r[2] * 0.30],
-                        [x, c[1] + r[1] * 0.86, c[2] - r[2] * 1.30],
-                        [x * 0.9, c[1] + r[1] * 0.80, c[2] - r[2] * 2.30]])
-        return out
-    if style == "braid":
-        return [[nape,
-                 [0.0, nape[1] + 0.012, nape[2] - 0.075],
-                 [0.012, nape[1] + 0.020, nape[2] - 0.150],
-                 [-0.010, nape[1] + 0.022, nape[2] - 0.225],
-                 [0.0, nape[1] + 0.020, nape[2] - 0.285]]]
-    if style == "bun":
-        b = [0.0, nape[1] + 0.030, float(c[2]) + float(r[2]) * 0.30]
-        return [[[b[0] - 0.045, b[1], b[2]], [b[0], b[1] + 0.022, b[2] + 0.020],
-                 [b[0] + 0.045, b[1], b[2]], [b[0], b[1] - 0.010, b[2] - 0.020],
-                 [b[0] - 0.045, b[1], b[2]]]]
-    if style == "tousled":
-        rng = np.random.default_rng(3)
-        out = []
-        for i in range(5):
-            a = rng.uniform(-1.0, 1.0)
-            out.append([[a * 0.05, c[1] - r[1] * 0.35, c[2] + r[2] * 0.70],
-                        [a * 0.055, c[1] - r[1] * 0.70, c[2] + r[2] * 0.62],
-                        [a * 0.06, c[1] - r[1] * 0.92, c[2] + r[2] * 0.50]])
-        return out
-    return []
+def build_hair(skel: Skeleton, style: str, body=None, hs: Optional[bodylib.HeadStyle] = None) -> Garment:
+    return hair(skel, style, HAIR_STYLES[style], body=body, hs=hs, seed=stable_seed(style))
 
 
-def build_hair(skel: Skeleton, style: str) -> Garment:
-    kw = dict(HAIR_STYLES[style])
-    locks = hair_locks(skel, style)
-    return hair(skel, style, locks=locks, lock_radius=0.021 if style != "braid" else 0.016, **kw)
-
-
-def build_beard(skel: Skeleton, style: str) -> Garment:
-    return beard(skel, style, **BEARD_STYLES[style])
+def build_beard(skel: Skeleton, style: str, hs: Optional[bodylib.HeadStyle] = None, body=None) -> Garment:
+    return beard(skel, style, BEARD_STYLES[style], hs=hs, seed=stable_seed(style), body=body)
 
 
 # --------------------------------------------------------------------------------------
@@ -938,31 +1312,136 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
     return Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth")
 
 
+class FieldFn:
+    """Anything with `eval(P)`, from a plain function: a trim field, an offset of a field."""
+
+    def __init__(self, fn: Callable[[np.ndarray], np.ndarray]):
+        self.fn = fn
+
+    def eval(self, P: np.ndarray) -> np.ndarray:
+        return self.fn(P)
+
+
+def drape_field(body, skel: Skeleton, flare: float = 0.10, arm_cut_x: float = 0.25) -> sdf.SampledField:
+    """The body as cloth falls from it.
+
+    Every horizontal section of the result is the union of the body's sections above it,
+    pushed out by `flare` metres for every metre of fall -- which is the space a cloth takes
+    when it is laid over the shoulders and let go. The arms below the top of the deltoid are
+    left out, or the cloth would hang from an A-posed arm like a bat's wing: a cape rests on the
+    point of the shoulder and falls past the arm, not from it."""
+    s = _s(skel)
+    F = np.array(body.F, copy=True)
+    o, sp = body.origin, body.spacing
+    xs = o[0] + np.arange(F.shape[0]) * sp
+    zs = o[2] + np.arange(F.shape[2]) * sp
+    zc = float(skel.J["UpperArm.L"][2]) + 0.030 * s
+    arm = (np.abs(xs)[:, None] > arm_cut_x * s) & (zs[None, :] < zc)
+    F = np.where(arm[:, None, :], np.maximum(F, 0.05), F)
+    out = np.empty_like(F)
+    run = np.full(F.shape[:2], 1e3)
+    for k in range(F.shape[2] - 1, -1, -1):
+        run = np.minimum(run - flare * sp, F[:, :, k])
+        out[:, :, k] = run
+    return sdf.SampledField.from_grid(out, o, sp)
+
+
+def _around(P: np.ndarray) -> np.ndarray:
+    """Radians round the body's vertical axis: 0 straight ahead, pi straight behind."""
+    return np.arctan2(np.abs(P[:, 0]), -P[:, 1])
+
+
+def draped_shell(drape, region: RegionFn, thickness: float, gap: float, bounds,
+                 relief: Optional[RegionFn] = None) -> Tuple[Prim, "FieldFn"]:
+    """A cloth sheet `thickness` thick lying `gap` off a drape field, restricted to `region`,
+    and the trim field that removes its inner face after meshing. The result is one sheet of
+    cloth, drawn from both sides, not a solid block with a floor under it -- which is what made
+    the old cape a lampshade."""
+    mid = gap + 0.5 * thickness
+    half = 0.5 * thickness
+
+    def off(P):
+        return mid if relief is None else mid + relief(P)
+
+    def fn(P):
+        d = drape.eval(P)
+        w = np.clip(region(P), 0.0, 1.0)
+        return np.abs(d - off(P)) - half + (1.0 - w) * 0.25
+    lo, hi = bounds
+    trim = FieldFn(lambda P: drape.eval(P) - off(P))
+    return Prim(fn, np.asarray(lo, float), np.asarray(hi, float), "union", 0.0), trim
+
+
+def _cape_weights(skel: Skeleton) -> Callable[[np.ndarray], np.ndarray]:
+    """A cape moves with the chest and the shoulder girdle, and only a little with the top of
+    the arm under it: weighted from the body it would follow the arms and tear at the armpit."""
+    bones = list(rig.DEFORM_NAMES)
+    s = _s(skel)
+    ci, ni = bones.index("Chest"), bones.index("Neck")
+    neck_z = float(skel.J["Neck"][2])
+
+    def fn(V):
+        W = np.zeros((len(V), len(bones)))
+        ax = np.abs(V[:, 0])
+        w_sh = 0.45 * np.clip((ax - 0.09 * s) / (0.12 * s), 0.0, 1.0)
+        w_ua = 0.18 * np.clip((ax - 0.21 * s) / (0.06 * s), 0.0, 1.0) * np.clip((V[:, 2] - (neck_z - 0.09 * s)) / (0.08 * s), 0.0, 1.0)
+        w_nk = np.clip((V[:, 2] - (neck_z + 0.015 * s)) / (0.030 * s), 0.0, 1.0) * np.clip((0.11 * s - ax) / (0.04 * s), 0.0, 1.0)
+        left = V[:, 0] >= 0
+        for side, mask in (("L", left), ("R", ~left)):
+            W[mask, bones.index("Shoulder." + side)] = w_sh[mask]
+            W[mask, bones.index("UpperArm." + side)] = w_ua[mask]
+        W[:, ni] = w_nk
+        W[:, ci] = np.clip(1.0 - w_sh - w_ua - w_nk, 0.0, 1.0)
+        return W
+    return fn
+
+
 def shoulder_cape(skel: Skeleton, body) -> Garment:
-    """Lakefolk: a short cape ending above the elbow.  It squares the shoulders off, and a
-    square shoulder is the one cue that still reads at thirty pixels tall."""
+    """Lakefolk: a short cape that rests on the shoulders and falls to the top of the arm.
+
+    It lies over the drape of the shoulders, so it follows the slope from the neck and breaks
+    over the point of each shoulder before it falls; eleven folds deepen towards a hem that
+    runs lower behind and over the arms than in front; a standing collar closes at the throat
+    with a clasp, and the front is split below it. Squaring the shoulders is still its job,
+    which it does by resting on them rather than by standing off them."""
     s = _s(skel)
     sc = Scene()
     neck = float(skel.J["Neck"][2])
-    chest = float(skel.J["Chest"][2])
-    z_bot = chest - 0.10 * s
-    sx = float(skel.J["UpperArm.L"][0])
-    sc.union(sdf.loft([
-        (np.array([0.0, 0.010 * s, neck + 0.014 * s]), 0.086 * s, 0.076 * s),
-        (np.array([0.0, 0.008 * s, neck - 0.022 * s]), (sx + 0.055) * s, 0.128 * s),
-        (np.array([0.0, 0.004 * s, chest + 0.030 * s]), (sx + 0.086) * s, 0.146 * s),
-        (np.array([0.0, 0.0, z_bot + 0.020 * s]), (sx + 0.094) * s, 0.152 * s),
-        (np.array([0.0, 0.0, z_bot]), (sx + 0.090) * s, 0.149 * s),
-    ], LEFT, axis=UP))
-    sc.union(sdf.tube_path(_ring((sx + 0.094) * s, 0.152 * s, z_bot + 0.010 * s), 0.0060 * s), k=0.006 * s)
-    # The neck hole has to be a shaft, not a dimple -- and the sweep's top cap has to come
-    # off, because a hemisphere of its own radius rises past the chin and the cape ends up
-    # wearing the wearer's face.
-    sc.subtract(sdf.capsule([0.0, 0.012 * s, neck - 0.030 * s],
-                            [0.0, 0.012 * s, neck + 0.40 * s], 0.082 * s), k=0.010 * s)
-    sc.intersect(sdf.plane([0.0, 0.0, neck + 0.006 * s], [0.0, 0.0, 1.0]))
-    sc.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]))
-    return Garment("shoulder_cape", sc, spacing=0.0060, target_tris=2000, material="cloth")
+    drape = drape_field(body, skel, flare=0.10)
+    top = neck + 0.050 * s
+    n_folds = 11
+
+    def hem(P):
+        a = _around(P)
+        z = neck - 0.130 * s - 0.070 * s * (1.0 - np.cos(a)) * 0.5 - 0.022 * s * np.sin(a) ** 2
+        return z + 0.006 * s * np.sin(n_folds * a + 0.6)
+
+    def region(P):
+        r = np.hypot(P[:, 0], P[:, 1] - 0.012 * s)
+        above = np.clip((P[:, 2] - hem(P)) / (0.006 * s), 0.0, 1.0)
+        below_top = np.clip((top - P[:, 2]) / (0.006 * s), 0.0, 1.0)
+        neck_hole = np.clip((r - 0.070 * s) / (0.006 * s), 0.0, 1.0)
+        # the front split, from the clasp down
+        split = np.clip((np.abs(P[:, 0]) - 0.010 * s) / (0.004 * s), 0.0, 1.0)
+        split = np.where((P[:, 1] < -0.04 * s) & (P[:, 2] < neck - 0.010 * s), split, 1.0)
+        return above * below_top * neck_hole * split
+
+    def folds(P):
+        a = _around(P)
+        depth = np.clip((neck - 0.010 * s - P[:, 2]) / (0.13 * s), 0.0, 1.0)
+        return 0.013 * s * depth * (0.5 + 0.5 * np.sin(n_folds * a + 0.6))
+    shell, trim = draped_shell(drape, region, 0.010 * s, 0.006 * s,
+                               zbox(skel, neck - 0.26 * s, top + 0.02 * s, xy=0.42, ymin=-0.30, ymax=0.30),
+                               relief=folds)
+    sc.union(shell)
+    # the standing collar and the clasp that closes it
+    sc.union(sdf.tube_path(_ring(0.078 * s, 0.072 * s, neck + 0.036 * s) , 0.011 * s, closed=False), k=0.008 * s)
+    sc.union(sdf.ellipsoid([0.0, -0.082 * s, neck + 0.012 * s], [0.012 * s, 0.006 * s, 0.012 * s]), k=0.003 * s)
+    g = Garment("shoulder_cape", sc, spacing=0.0045, smooth=4, target_tris=2600, material="cloth",
+                trim=trim, trim_depth=0.0)
+    g.weight_fn = _cape_weights(skel)
+    g.double_sided = True
+    return g
 
 
 def wrap_torso(skel: Skeleton, body) -> Garment:
