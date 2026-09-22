@@ -1,0 +1,242 @@
+[
+{
+  "id": "core:dialogue/mella_lissa",
+  "speaker_name": "Mella Lissa",
+  "notes": "Second of the Reed Council; the flood voice (WORLD_BIBLE 1.4, 3.3). Boats tarred for a tide that has never come; exile as the only sentence; the argument with the Eldest that everyone heard.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [5, 7]}], "text": "Sit, if you are staying. I have a plank to finish before the light is any good for talking."},
+    {"conditions": [{"quest_done": "core:quest/what_the_water_kept"}], "text": "You went into the Nave and came out with the water behind you. That is the flood, small. Do not tell Tallissa I said so."},
+    {"conditions": [{"morality_max": -30}], "text": "Loud strangers are asked to leave. Not by me; by the boards, which get longer. Sit down and be quiet and the boards will be the length they are."},
+    {"conditions": [{"renown_min": 200}], "text": "Your name came up the channel before you did. That happens to very few and it is not always a kindness. Sit."},
+    {"conditions": [{"flag": "isseva_told_flood"}], "text": "You have heard me on the flood already. I will not say it twice in a week; that would be preaching, and we do not."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Mella Lissa", "text": "Lissa. Second of the Council, which means I sit on the platform beside Tallissa Oul and disagree with her quietly for the good of the town. Sit. Nothing here is said to anyone standing up.", "next": "hub"},
+    "hub": {"speaker": "Mella Lissa", "text": "Well. You are sitting. Ask.", "choices": [
+      {"text": "Why keep boats for a flood that has never come?", "next": "the_flood"},
+      {"text": "What is the Council's law?", "next": "exile"},
+      {"text": "What did you and the Eldest argue about?", "next": "the_argument"},
+      {"text": "Tell me about the Drowned Nave.", "next": "the_nave"},
+      {"text": "What does the Dwindling look like from the boards?", "next": "dwindling"},
+      {"text": "I'll leave you to the tar.", "next": "bye"}
+    ]},
+    "the_flood": {"speaker": "Mella Lissa", "text": "Because the tide is going out. Everyone agrees on that; the Vale, the Spire, the clans, all of them, in their own words. And a tide that goes out comes in. That is not belief; that is what a tide is. — There has never been a flood in any record. Tallissa says so and she is right. I say a record is a thing that starts when somebody writes it, and the marsh is older than writing, and I would rather have every boat in Isseva tarred and afloat on the morning the water comes back than be right about records. So I tar. One plank of every boat, every year, with a mark on it. If the flood never comes, my great-granddaughter will find a marsh full of very sound boats, and she can laugh.", "effects": [{"set_flag": "isseva_told_flood"}], "next": "hub"},
+    "exile": {"speaker": "Mella Lissa", "text": "We ask people to leave. That is the whole of it. No fine, because marks mean less out here than a dry blanket. No cell, because you cannot dig one in a marsh. We ask, and the Boardwalkers see that you go, and the boards behind you get longer, and in a marsh that is a long sentence indeed. — It has been done nine times in my life. Twice I thought it wrong. Both times I said so on the platform and was outvoted and both times I walked the person to the last board myself, because a sentence you disagreed with is still yours to carry, or the Council is nothing.", "effects": [{"set_flag": "isseva_told_exile"}, {"rep": ["core:faction/reed_council", 2]}], "next": "hub"},
+    "the_argument": {"speaker": "Mella Lissa", "text": "You heard, then. Everyone heard; it is a platform. — I asked for every hull in Isseva to be tarred before the fogs, for the flood. Tallissa said 'what flood'. I said 'exactly'. That is the whole argument and we have been having it for twenty years, and we had it aloud on Thornday because the indigo is coming up pale and the Eelfathom ran ahead of her and she is frightened, and Tallissa Oul frightened is Tallissa Oul saying 'what flood' in front of forty people. — She is not wrong. I am not wrong. The marsh will settle it, and she and I will both be under it with a lantern by then, and the boats will be sound either way.", "effects": [{"rumour": ["core:rumour/council_argued", 0.4]}], "next": "hub"},
+    "the_nave": {"speaker": "Mella Lissa", "text": "Isse-Anthe. The drowned choir. An Oroth spire leaning out of the marsh to the west, a hundred and twenty metres of it, the lower half under water that rises when you are in it. The Spire in Tollmere would give a great deal for what is inside. — We do not go in. Not from fear. Because the round says the tide leaves things on the sand that do not belong to the air, and you fish what is stranded and you do not go and live in it. Somebody is in there who did not come out when the water went. She is waiting. We let her.", "effects": [{"discover": "core:place/drowned_nave"}], "next": "hub"},
+    "dwindling": {"speaker": "Mella Lissa", "text": "Look at the water at dusk from the long boardwalk. There is a line where the reeds stop being gold and start being grey and it is nearer than it was when I was a girl, and I have never seen it move, and it has moved. That is the tide going out. — What is left on the sand is strange and beautiful and does not belong to the air: the Nave, the pool that shows you a moment late, the lights in the reeds that are not lanterns. We do not fear it. We build higher and we wait. The Sayer who stayed here wrote that patience is our virtue and fatalism our vice, and she was half right, and the half she got wrong is that we are not waiting for the end. We are waiting for the water. Those are different, and you have to have lived on stilts to feel the difference in your feet.", "next": "hub"},
+    "bye": {"speaker": "Mella Lissa", "text": "Go slowly on the north boards; the third from the jetty is mine to replace and I have not yet. If you come back, come back in fog. We are better company in fog.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/issa_mor",
+  "speaker_name": "Issa Mor",
+  "notes": "Eel-wife of Isseva. The talker in a quiet town; the fog; the first eel thrown back; Mor-Oul under its Valish name. The stall is reached through the trade choice.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [4, 7]}], "text": "You are early or the fog is late. Both, probably. Wait there; the traps come up before anybody talks to anybody."},
+    {"conditions": [{"has_item": ["core:item/eel_pie", 1]}], "text": "That is one of mine you are carrying. I can tell by the crimp. Eat it before the fog gets into the crust, it will not keep."},
+    {"conditions": [{"morality_max": -30}], "text": "I will sell to you, sitting down or standing up, I am not particular. I will not sit down with you. That is the difference here and you will not notice it until you do."},
+    {"conditions": [{"discovered": "core:place/eelfathom"}], "text": "You have been to Mor-Oul. Eelfathom, you will call it. Did the water keep up with you? It did not keep up with the Eldest on Tollday, and that is all anyone here is saying, so I will say it too."},
+    {"conditions": [{"renown_min": 150}], "text": "Oh, it is you. The fog said you were coming. Everything the fog says turns out to be true eventually, which is why I listen to it and nobody listens to me."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Issa Mor", "text": "Mor. Eels. Traps in the north channels at dawn and this stall till the light goes, and if you want to know anything about Isseva you have come to the right stall, because I am the only one on these boards who will tell you in words. The rest sing. It is a good round. It is not information.", "next": "hub"},
+    "hub": {"speaker": "Issa Mor", "text": "Go on, then. You are sitting down, more or less.", "choices": [
+      {"text": "Why do you throw the first eel back?", "next": "first_eel"},
+      {"text": "What is the fog, to you?", "next": "the_fog"},
+      {"text": "What is Eelfathom?", "next": "mor_oul"},
+      {"text": "What should I fear in the marsh?", "next": "the_marsh"},
+      {"text": "How does the Dwindling look from a stall?", "next": "dwindling"},
+      {"text": "That's all I wanted.", "next": "bye"}
+    ]},
+    "first_eel": {"speaker": "Issa Mor", "text": "The first eel of every haul goes back into the water and I tell it 'go and tell them'. Tell who? The rest of the eels, that I am here, so they know what they are getting into; that is what I say if a child asks. — What I mean is the ones under the water who are not eels. My mother went in off the north boards when I was nine. No lantern; she was not buried, she was lost, and the round has a line for that and it is not a comfortable one. I have never eaten an eel I caught myself. I do not think they have eaten her. I do not know what they have done with her. I send one back every morning with a message and forty years on I have not had an answer, and I keep sending, because that is what a message is.", "effects": [{"set_flag": "isseva_told_first_eel"}], "next": "hub"},
+    "the_fog": {"speaker": "Issa Mor", "text": "The fog is Isseva. Forty days in a hundred you cannot see the next stilt-house from this stall, and everything you hear comes across the water without a face to it, and you learn to know a person by the way they set a foot on a board. — Everyone says I say everything is the fog. I do. The indigo coming up pale in the north beds: fog. The wisps in the reeds: fog with a light in it. The Eelfathom running ahead: fog on the water doing what fog does, which is show you a thing before you have earned it. — I have been right about the fog more often than the Council has been right about anything, and the Council knows it, and puts me on no platform, and I would not go.", "effects": [{"rumour": ["core:rumour/indigo_pale", 0.4]}], "next": "hub"},
+    "mor_oul": {"speaker": "Issa Mor", "text": "Mor-Oul. The eel pool. The Vale folk who could not say it called it Eelfathom and now everyone does, even us, which tells you something about who names what. — It shows you your reflection a few seconds behind. Lift your hand and the water lifts its hand after you have finished. Children go to frighten themselves and eel-wives go because the eels there are the fattest in the marsh, and I have stood at that pool a thousand mornings and never once seen the water catch up. On Tollday it ran ahead of Tallissa Oul. Ahead. She sat down on the bank. I was not there and I know exactly how she sat.", "effects": [{"discover": "core:place/eelfathom"}, {"rumour": ["core:rumour/eelfathom_ahead", 0.4]}], "next": "hub"},
+    "the_marsh": {"speaker": "Issa Mor", "text": "The drowned, who come up out of the channels slow and take hold and do not let go, and who are only people the water did not finish with. Sallowjaws, which are logs until they are not. Leech-hounds, which will have the strength out of your legs before the teeth are in. And the lights in the reeds that are not lanterns, which are the worst, because they look like us. A lantern on a pole in the fog is a house. A light in the reeds with no pole under it is a thing that has learned what a house looks like. — Stay on the boards. Everything I have just told you is under the boards, and the boards are two hundred years old and have never once given way to anyone who was walking and not running.", "next": "hub"},
+    "dwindling": {"speaker": "Issa Mor", "text": "The eels are fewer and the traps are the same and the channels are the same and I am the same, so it is not me. Twelve a trap when I was a girl. Seven now. Five on a bad week. — The round says the tide goes out and what is left is ours to keep, and I have kept it: I have fished what was stranded for forty years and sold it to people who sing while they eat it. What nobody in the round says, because you cannot sing it, is that a tide that goes out for long enough is called a shore, and a shore is a place where the water used to be. I have not said that to a child. I am saying it to you because you are not from here and you will carry it off, and I would rather it went somewhere than sat in my stall with the eels.", "next": "hub"},
+    "bye": {"speaker": "Issa Mor", "text": "Mind the fog. If you hear singing across the water, it is us. If you hear singing and it stops when you stop, it is not.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/auti_sa",
+  "speaker_name": "Auti Sa",
+  "notes": "Lantern-maker; the lantern-maker's daughter who wrote down the Round of Sa'oul (core:book/the_reed_round). The uncut reed for the drowned; the second voice sung flat on the fourth line the way Tessane sang it. Sells through the trade choice.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"book_read": "core:book/the_reed_round"}], "text": "You have read it. The round. My hand; my mother said do not write it down and I did. You know the fourth line now. Sing it flat, or do not sing it."},
+    {"conditions": [{"has_item": ["core:item/reed_lantern", 1]}], "text": "One of mine at your hip. The reed is cut level, good; that one is for the living. Do not ever carry one with the reed standing. People here would think you had come to be buried."},
+    {"conditions": [{"time_between": [18, 20]}], "text": "The boardwalk lamps first. Sit on the oil-store step and I will come to you when they are lit; a lantern-maker who talks while filling spills."},
+    {"conditions": [{"morality_max": -30}], "text": "I make lanterns for the boards and lanterns for the water. I have not decided which you are for. Sit down, and I will decide slower."},
+    {"conditions": [{"flag": "isseva_told_uncut_reed"}], "text": "You asked about the reed. Nobody asks about the reed. Sit; I have thought about you since."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Auti Sa", "text": "Sa. It means lantern; I took it when I took my mother's bench, the way the Skerrow folk take a name with a duty, though we do not make a song of it. I make the lights that stand on the boards and the lights that go out on the water. They are not the same light. Sit.", "next": "hub"},
+    "hub": {"speaker": "Auti Sa", "text": "Ask, while my hands are busy. They are always busy.", "choices": [
+      {"text": "Why is there a reed standing on some lanterns?", "next": "uncut_reed"},
+      {"text": "You wrote down the round?", "next": "the_round"},
+      {"text": "Tell me about the Sayer who stayed eleven days.", "next": "tessane", "conditions": [{"flag": "isseva_told_the_round"}]},
+      {"text": "What is the apostrophe in Sa'oul?", "next": "the_drowned"},
+      {"text": "What does the Dwindling look like from a lantern-bench?", "next": "dwindling"},
+      {"text": "I'll let you fill them.", "next": "bye"}
+    ]},
+    "uncut_reed": {"speaker": "Auti Sa", "text": "A lantern for the water has one reed left uncut, standing above the rim. My mother did it and hers did it and none of them said why, so I will give you the reason I have made up, which is that the drowned have something to hold. — The ones I sell to the living have the reed cut level before they leave the bench. Always. I have never once sold a standing reed, and twice I have taken a lantern back off a stranger's hip on the boardwalk and cut it there with my knife, because they had bought it from a dead woman's house and did not know what they were carrying. They were not angry. People are not angry when you are quick and do not explain.", "effects": [{"set_flag": "isseva_told_uncut_reed"}], "next": "hub"},
+    "the_round": {"speaker": "Auti Sa", "text": "I did. Every voice, and the notes underneath, and my mother said 'do not write this down' and I wrote that down too, first, so that whoever read it would know what it cost. — A round has no ending. Somebody stops, and then somebody else, and the last voice finishes the line it is on. You cannot write that. What I wrote is the shape of it, the way you can draw a channel and not the water. Tollmere has a copy now and I am told the Sayers sing it at their lectures with all three voices coming in on time, and I would go there to stop them if I thought it would do any good.", "effects": [{"set_flag": "isseva_told_the_round"}], "next": "hub"},
+    "tessane": {"speaker": "Auti Sa", "text": "Before my time; my grandmother's. She came from the Spire, asked the elders for our account, and they asked her to sit down, and eleven days later she had it, and she wrote it down without tidying, which is the only reason it is any use. — We taught her the second voice. She had a poor ear. She came back to the bench every evening for eleven evenings and by the end she could hold it against the first, slightly flat on the fourth line, and then she went home and they scraped her name off a page. — We still sing the fourth line flat. Every voice in Isseva, every night. Nobody decided to. It is simply how the round goes here now, and it is the only monument to her in the world, and it is not written on anything, and I think that is why they could not scrape it.", "effects": [{"set_flag": "isseva_told_tessane"}, {"morality": 2}], "next": "hub"},
+    "the_drowned": {"speaker": "Auti Sa", "text": "The catch in the throat. In Sedgish it appears only in the names of the drowned; a name gets it when its owner goes into the water and does not get it back. Sa'oul. You will hear a stranger say Saoul and know they have been here less than a season, and nobody will correct them; we simply do not say the name in front of them again. — I am Sa without the catch. My mother is Sa with it. When I sing the third voice I count her lantern among the small lights still going in a direction I cannot see, and I have never once, in nine years, got the count wrong, because you do not.", "next": "hub"},
+    "dwindling": {"speaker": "Auti Sa", "text": "The wicks want more oil for the same light. That is the whole of my account and it is a lantern-maker's account and I do not apologise for it. A boardwalk lamp that burned the night on two cups burns it now on two and a half. The oil is the same oil; Loa measures it. The reed is the same reed. The light is the same light and it costs more to keep. — Everyone here has that. Issa's traps, Mella's grey line at dusk, the indigo taking two dips. The tide is going out and everything left on the sand costs a little more each year to keep lit. So we fill them a little fuller. What else would you do. Put them out?", "next": "hub"},
+    "bye": {"speaker": "Auti Sa", "text": "Go well. If you find a lantern on the water with a reed standing, do not take it. It is not lost. It is going somewhere.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/loa_oul",
+  "speaker_name": "Loa Oul",
+  "notes": "Keeper of the water-burial jetty; Tallissa's niece. The spoonful of oil poured back; the one lantern still burning at dawn; the drowned who were buried and the drowned who were not.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [18, 20]}], "text": "Not now. The lanterns are going out on the water and I do not talk while a light is leaving. Sit on the bench and wait, if you can wait."},
+    {"conditions": [{"time_between": [5, 7]}], "text": "She is counting. Do not speak to her until she has the number. You may speak to me; I do not count, I only fill."},
+    {"conditions": [{"quest_done": "core:quest/what_the_water_kept"}], "text": "You went in where the water rose and you came out. Then you have seen one who was never buried, and you know now why I measure so carefully."},
+    {"conditions": [{"morality_max": -30}], "text": "I put people into the water. I have done it forty-one times with my aunt and nineteen alone. I am telling you so you know that nothing you have done frightens me. Sit."},
+    {"conditions": [{"flag": "isseva_told_spoonful"}], "text": "You asked about the spoon. Sit. I have been thinking about how to say the rest of it."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Loa Oul", "text": "Oul. Tallissa's niece; the jetty is mine to keep and hers to count. I measure the oil, I set the lantern in the reed boat, I push off. I am the last hand on everyone who dies in Isseva. Sit down. I will not say anything worth hearing to anyone on their feet.", "next": "hub"},
+    "hub": {"speaker": "Loa Oul", "text": "You are sitting. Good. Ask.", "choices": [
+      {"text": "How is a burial done here?", "next": "the_burial"},
+      {"text": "Why pour a spoonful back?", "next": "the_spoonful", "conditions": [{"flag": "isseva_told_burial"}]},
+      {"text": "One lantern was still burning at dawn?", "next": "still_lit"},
+      {"text": "Do the dead stay under?", "next": "the_drowned"},
+      {"text": "What is the Dwindling to a burial-keeper?", "next": "dwindling"},
+      {"text": "I'll leave you the jetty.", "next": "bye"}
+    ]},
+    "the_burial": {"speaker": "Loa Oul", "text": "At dusk. The body is wrapped in indigo and laid in a reed boat that is not a boat; it is made to come apart. Auti brings the lantern with the reed standing. I measure the oil: one spoon for every year they lived. I light it from the jetty lamp, I set it at the head, and I push off with the pole, and the round is sung, and the boat goes out into the fog with the light on it. — By dawn the reed has opened and the body is in the water and the lantern is floating alone, and Tallissa counts how many are still lit. That is the whole of it. It has been the whole of it since Isse taught the stilts, and I have never wanted to add anything.", "effects": [{"set_flag": "isseva_told_burial"}], "next": "hub"},
+    "the_spoonful": {"speaker": "Loa Oul", "text": "One spoon for every year, and then I pour one spoon back into the marsh before I fill the lamp. Every time. So that every lantern goes out a year early. — My aunt does not know I do it. I began it with my mother, who was the first I put in the water alone, and I could not make myself measure out the whole of her. A year less. The lamp goes out a little before dawn instead of at it and nobody is ever burned for the whole of their life; there is a year of every one of them that the water has and the fire did not. It is not custom. It is mine. I am telling you because you are not from here and will not put it in the round.", "effects": [{"set_flag": "isseva_told_spoonful"}, {"morality": 2}], "next": "hub"},
+    "still_lit": {"speaker": "Loa Oul", "text": "On Tollday. A woman of seventy; seventy spoons less one; she should have gone out an hour before first light and she was burning at dawn when Tallissa counted, and she was burning at noon, and I went out in the punt at dusk and she was burning still, on the open water, with the reed standing, and the oil in her was gone. — I put another cup in. I do not know why. My aunt watched me do it and said nothing, and the round has a line about one that is nobody's, still burning at dawn, and I have sung that line every night of my life and I had never once thought it was about a lantern.", "effects": [{"set_flag": "isseva_told_still_lit"}, {"rumour": ["core:rumour/lantern_still_lit", 0.5]}], "next": "hub"},
+    "the_drowned": {"speaker": "Loa Oul", "text": "The ones I put in stay under. Forty-one with my aunt, nineteen alone, and not one of them has come up out of a channel with its hands out. — The drowned who walk are the ones nobody buried. Fell in, went in, were pushed. No indigo, no lantern, no round, no spoon. The water did not finish with them because nobody asked it to. That is why I measure so carefully. It is not ceremony. It is asking the marsh, properly, in the words it knows, to keep what it has been given. When you see one of them on a channel bank, with the weed on it, that is somebody who was not asked for. I look at their faces. I am the only one here who does.", "effects": [{"discover": "core:place/drowned_nave"}], "next": "hub"},
+    "dwindling": {"speaker": "Loa Oul", "text": "More of them are not staying under. Not ours; the others. When I was a girl you might see one of the drowned walking in a year. Now the Boardwalkers turn them back from the north boards most weeks. Something under the marsh is holding on to what it was given and letting go of what it was not, and the round says a tide leaves things on the sand, and I say a tide leaves things and the things are people. — I do not believe the flood is coming. I have never said so at a burial and I never shall. I believe the water is keeping what we ask it to and losing its grip on the rest, and I fill the lanterns a year short, and I push off, and I do not look back at the boat, because looking back is asking for it to come back, and I have never once wanted that for any of them.", "next": "hub"},
+    "bye": {"speaker": "Loa Oul", "text": "Go quietly off the jetty; the boards here are older than the rest and they know a stranger's foot. If you see a lantern on the water, it is somebody's. Leave it.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/mia_mor",
+  "speaker_name": "Mia Mor",
+  "notes": "Eleven; the eel-wife's granddaughter; the third voice too early. The Nave she has been forbidden by the whole Council in turn.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [9, 12]}], "text": "Count them, count them, count the small — you're early. I mean I'm early. Grandmother says I'm always early. Sit down, you have to sit down, it's a rule."},
+    {"conditions": [{"quest_done": "core:quest/what_the_water_kept"}], "text": "You went in the Nave. You actually went in. Was the water really rising? Did you see her? Did she — no, don't tell me, Grandmother will know I asked."},
+    {"conditions": [{"morality_max": -30}], "text": "I'm not supposed to sit with strangers who don't sit. You're standing. So."},
+    {"conditions": [{"renown_min": 100}], "text": "Everybody's singing about you. Not in the round, the round's for the dead, but in between. Sit down and I'll tell you what they're saying, Grandmother won't."},
+    {"conditions": [{"flag": "isseva_mia_timed_it"}], "text": "Nine breaths. I did it again last night. Nine breaths shorter when I come in early. Nobody believes me and I've got the drip to prove it."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Mia Mor", "text": "Mia. Mor, like Grandmother, like the eels. I've got the third voice. You're meant to get it at eleven, and I'm eleven now, but I got it at nine, because I wouldn't stop singing it anyway and Tallissa said it was less noise to let me. Sit down, you have to.", "next": "hub"},
+    "hub": {"speaker": "Mia Mor", "text": "What?", "choices": [
+      {"text": "What is the round?", "next": "the_round"},
+      {"text": "Why do you start your voice early?", "next": "too_early"},
+      {"text": "You want to see the Drowned Nave?", "next": "the_nave"},
+      {"text": "What's it like living on stilts?", "next": "the_boards"},
+      {"text": "What do you count at the jetty?", "next": "the_count"},
+      {"text": "I'll let you sing.", "next": "bye"}
+    ]},
+    "the_round": {"speaker": "Mia Mor", "text": "Three voices and it never ends. The first one starts and when it gets to the third line the second one starts and when that one gets to the third line I start. Somebody stops and then somebody else and the last one finishes the line they're on. — It's for working. Nets and traps and tar. Grandmother says it's so a reedfolk boat is quiet, because we've got somewhere to put the noise. I've got a lot of noise. That's why I got the third voice early. That's what Tallissa said. She said it nicer.", "next": "hub"},
+    "too_early": {"speaker": "Mia Mor", "text": "Because it's shorter. If I come in before the second voice gets to its line, the whole round goes round faster, and I've timed it. Against the drip off the burial jetty; there's a drip that goes every breath and a half. Nine breaths shorter. — Everyone says a round can't be shorter because it doesn't end. I say a thing that doesn't end can still go faster, and Loa laughed, and Loa never laughs, so I think I'm right.", "effects": [{"set_flag": "isseva_mia_timed_it"}], "next": "hub"},
+    "the_nave": {"speaker": "Mia Mor", "text": "Isse-Anthe. It leans. You can see it from the north boards on a clear day, which is eleven days a year, Grandmother counted. A hundred and twenty metres and the bottom half's under water and the water comes UP when you're in it, Mella says, like the marsh is trying to get you out again. — I've asked everyone on the Council. Tallissa said sit down and then said no. Mella said no and then said 'when you are older', which is worse. Loa said nothing and looked at me and I stopped asking Loa. There's somebody in there waiting. I just want to know what for.", "effects": [{"discover": "core:place/drowned_nave"}], "next": "hub"},
+    "the_boards": {"speaker": "Mia Mor", "text": "You can hear everything. Every foot on every board, and you know whose it is. Grandmother walks like she's angry with the board. Mella walks like she's checking it. Loa doesn't make any noise at all, you just know she's gone past because it's colder. — And in fog you can't see the next house so you sing, and the house sings back, and that's how you know it's still there. I've never been anywhere with walls. Alle at the Landing says the hull hall's got walls and it's horrible, you can't hear anybody coming.", "next": "hub"},
+    "the_count": {"speaker": "Mia Mor", "text": "The lanterns. The ones that are still lit on the water in the morning; that's the third voice's job, counting, and it's supposed to be the eldest who does it at first light and it is, Tallissa does it, but I go at dusk when they go OUT and count them then, so I know how many there were to start with. Nobody asked me to. — On Tollday one was still lit at dusk the next day. Same one. Loa went out in the punt and put more oil in it and didn't say why. I counted it twice to make sure and it was still one.", "effects": [{"rumour": ["core:rumour/lantern_still_lit", 0.4]}], "next": "hub"},
+    "bye": {"speaker": "Mia Mor", "text": "If you hear the round and the third voice comes in early, that's me. If it comes in on time, it isn't, and you should ask who it is, because I don't know either.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/ollo_nauve",
+  "speaker_name": "Ollo Nauve",
+  "notes": "Boatwright of Nauve's Landing; the upturned hull hall; the old plank in every hull; the bridge the Listener Said in 1011 (core:book/lecture_on_saying), told from the Landing's side. Sells through the trade choice.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [6, 12]}], "text": "Sit on the stocks, not the keel. The keel is not yours yet and it knows."},
+    {"conditions": [{"discovered": "core:place/drowned_nave"}], "text": "You have been out towards the Nave. Then you crossed the north channel, and you crossed it in one of mine, because there is no other kind. I hope you thanked it."},
+    {"conditions": [{"morality_max": -30}], "text": "I will sell you rope and plank. I will not sell you a boat. A boat that has carried a person who takes goes wrong in the channels, and I would have to take it back and burn it, and I do not like burning boats."},
+    {"conditions": [{"flag": "landing_told_old_plank"}], "text": "You are back. Have you found the old plank in any hull since? No. You will. Once you know to look, you cannot stop."},
+    {"conditions": [{"renown_min": 200}], "text": "Your name came down the channel before you. In a boat, I expect. Everything comes down the channel in a boat. Sit."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Ollo Nauve", "text": "Nauve. Fifth to work under this hull. Every boat on the marsh water is mine or my father's or his, and the one or two that are not, I can tell you who built them and what is wrong with them. Sit. There is tar on everything; sit anyway.", "next": "hub"},
+    "hub": {"speaker": "Ollo Nauve", "text": "Say what you want. Slowly. I am gluing.", "choices": [
+      {"text": "What is the hull hall?", "next": "hull_hall"},
+      {"text": "Why is there an old plank in every boat?", "next": "old_plank"},
+      {"text": "What happened to the bridge?", "next": "the_bridge"},
+      {"text": "What makes a reedfolk boat?", "next": "the_boat"},
+      {"text": "What does the Dwindling look like from a slipway?", "next": "dwindling"},
+      {"text": "I'll leave you to it.", "next": "bye"}
+    ]},
+    "hull_hall": {"speaker": "Ollo Nauve", "text": "The biggest boat the marsh ever built, turned over. My great-great-grandfather built it for the flood. Forty feet, room for the whole Landing and the goats. He built it for eleven years and he died with the last plank in his hands, and the flood had not come, and his son turned it over and put a door in it and we have lived under it since. — Mella Lissa comes on Hushdays to look at my new boats and she stands under the hull and looks up and does not say anything, and I know exactly what she is not saying. She would build another one. I would let her. I would not help.", "effects": [{"set_flag": "landing_told_hull_hall"}], "next": "hub"},
+    "old_plank": {"speaker": "Ollo Nauve", "text": "Every boat I build has one plank in it from the boat it replaces. Not for luck. A boat with no old wood in it does not know where the channels are; it goes where the pole says and not where the water says, and in this marsh those are different, and the water is right. — I can point to the old plank in every hull on the Sedgemire without looking twice. There is a punt at Isseva with a plank in it from a boat my grandfather's grandfather built, four boats back, and it has never once grounded, and the girl who poles it is nine and thinks it is because she is good.", "effects": [{"set_flag": "landing_told_old_plank"}], "next": "hub"},
+    "the_bridge": {"speaker": "Ollo Nauve", "text": "You have seen it, then: a bridge a hundred paces from any water, over mud, going nowhere. — In the year 1011 a young man from the Spire stood on that bridge, which was our bridge then and over our channel, and Said it. Attend, name, sustain; you know the words if you have read their book. He Said 'bridge' at our bridge forty times a day for a season, and the Circle has four pages about what came of it. The Landing has one sentence: the bridge has not moved a finger's width since, and the channel has. The water went on meandering, as water does, and the bridge stayed exactly where it had been told it was, and we built another. — Nobody crosses the old one. It is not unsafe. It is simply very sure of itself, and the marsh is not, and we live in the marsh.", "effects": [{"set_flag": "landing_told_the_bridge"}], "next": "hub"},
+    "the_boat": {"speaker": "Ollo Nauve", "text": "Flat in the bottom and long in the keel, because there is no depth here and the channels bend. Reed-caulked with Sia's oakum, every seam hummed over. Tarred by Mella once a year whether I like it or not, one plank, with her mark on it. And quiet. A Vale cart you can hear across a valley. A reedfolk boat goes past you in fog and you know it was there because the water moves after. — That is not craft. That is the round. We have somewhere to put the noise, and the boat gets none of it.", "next": "hub"},
+    "dwindling": {"speaker": "Ollo Nauve", "text": "The wood floats higher. Same oak, same seasoning, same slipway, and a hull I put in the water this spring rode a hand higher than its lines said it should. Lighter. Not rotten; I have cut into it. There is less of it, somehow, in the same size of plank. — And the bell under the Nave rang twice in the night, close together, and I had my hand on a keel and felt the second stroke through the mud before I heard it, lower than the first. A bell does not have two notes. That one did. I have not told Mella; she would tar something.", "effects": [{"rumour": ["core:rumour/nave_bell_twice", 0.5]}], "next": "hub"},
+    "bye": {"speaker": "Ollo Nauve", "text": "Go by the new bridge. If you find yourself on the old one, do not hurry off it; it does not like that. Walk to the end and back and it will let you go.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/sia_nauve",
+  "speaker_name": "Sia Nauve",
+  "notes": "Caulker and the Landing's second voice. Every seam hummed; the flood she does not believe in and will not deny at a caulking; the round sung across the water at dusk.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [17, 19]}], "text": "In a moment. The round is going across the water and I have the second voice, and if I stop the Landing hears a hole where I was."},
+    {"conditions": [{"book_read": "core:book/the_reed_round"}], "text": "You have read Auti's writing-down. Then you know the fourth line is flat. It is flat here too. It is flat everywhere the round is sung properly, and nowhere the Spire sings it."},
+    {"conditions": [{"morality_max": -30}], "text": "Sit down there, by the frame, and do not talk. I will caulk and you will listen and at the end you may go, and that will have been a kindness to both of us."},
+    {"conditions": [{"morality_min": 40}], "text": "Ollo says you sat on the stocks and not the keel without being told. Sit. There is a stool with a cushion; it is the only one."},
+    {"conditions": [{"flag": "landing_told_silent_seam"}], "text": "You asked about the silent seams. Since you asked I have found two, and unpicked them, and I had not noticed them for a year. Sit."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Sia Nauve", "text": "Nauve. I caulk. Every seam in every boat Ollo builds is mine, and so is the second voice when the Landing sings across the water at dusk. Sit down; there is a stool. It has oakum on it. Everything has oakum on it.", "next": "hub"},
+    "hub": {"speaker": "Sia Nauve", "text": "Go on. I can caulk and listen; I cannot caulk and talk, so I will stop when I answer.", "choices": [
+      {"text": "Why do you hum while you caulk?", "next": "the_humming"},
+      {"text": "You unpick seams done in silence?", "next": "silent_seam", "conditions": [{"flag": "landing_told_humming"}]},
+      {"text": "Do you believe the flood is coming?", "next": "the_flood"},
+      {"text": "What is the round for?", "next": "the_round"},
+      {"text": "What does the Dwindling look like from a caulking frame?", "next": "dwindling"},
+      {"text": "I'll let you get on.", "next": "bye"}
+    ]},
+    "the_humming": {"speaker": "Sia Nauve", "text": "Because a seam is a thing you attend to, and the humming is how I know I am attending. The second voice, slightly flat on the fourth line, the way Isseva sings it and the way my mother sang it and the way, they say, a Sayer with a poor ear sang it a hundred years ago and nobody has been able to stop since. — Ollo says a boat with no old wood does not know the channels. I say a seam with no voice in it does not know it is a seam. It is oakum in a gap. It will hold a season and then it will remember it was never asked to.", "effects": [{"set_flag": "landing_told_humming"}], "next": "hub"},
+    "silent_seam": {"speaker": "Sia Nauve", "text": "Yes. If I find I have done a length and cannot remember the humming, I unpick it, however good it looks. Especially if it looks good. — It happens more than it did. I will be at the frame with the iron and the mallet and come to the end of a seam and the hum has stopped somewhere in the middle and I did not hear it stop. My mother said that happened to her once a year. It happens to me once a week. I do not know whether that is me getting old or the marsh getting quiet, and I unpick the seam either way, because the boat does not care which.", "effects": [{"set_flag": "landing_told_silent_seam"}], "next": "hub"},
+    "the_flood": {"speaker": "Sia Nauve", "text": "No. — I have never said that at a caulking and I never shall, because a seam is caulked for the water that is coming, whatever water that is, and a caulker who does not believe in water has no business at the frame. And Mella Lissa tars one plank of every boat I have caulked, every year, with her mark on it, and I have never once told her the boat did not need it. — Ollo's great-great-grandfather built the hull we live under for the flood and died with the last plank in his hands. I was married under that hull. I do not believe the flood is coming. I would not say so under that roof for anything you could offer me.", "effects": [{"morality": 1}], "next": "hub"},
+    "the_round": {"speaker": "Sia Nauve", "text": "For working, they will tell you, and it is; and for the dead, and it is; and for hearing where everybody is in the fog. — I will tell you what it is for that nobody says. It is for not planning. A round has no ending because an ending is a thing you decide, and out here you do not decide, you keep the boat mended and the lamp filled and you sing the line you are on. When the first voice stops, you go on. When the second stops, you go on. When you are the last voice you finish the line you are on and that is the end, and you did not choose it, and it was still the right line. That is the account. It is not written down anywhere and I would not let Auti do it if she asked.", "next": "hub"},
+    "dwindling": {"speaker": "Sia Nauve", "text": "The round comes back across the water later than it did. — We sing at dusk from the channel stage and Isseva sings from the long boardwalk, and the water carries it, and there is a moment when you hear their third voice come back over yours, and it is a heartbeat later than when I was a girl. Ollo says the water is lower. Mella says the fog is thicker. I say sound is going out with the tide like everything else, a little, each year, and the round is the only instrument anyone in Wickmere has that can measure it, and we are not the ones who should be measuring anything. We sing the line we are on.", "next": "hub"},
+    "bye": {"speaker": "Sia Nauve", "text": "Go well. If you hear us at dusk from the channel, sing the first voice back if you know it. We will hear a stranger in it and we will not mind.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/alle_nauve",
+  "speaker_name": "Alle Nauve",
+  "notes": "Nine; the boatwright's youngest; chalk names on every hull; the pole she means to carry for the Council one day.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [8, 12]}], "text": "Wait, wait, I have to finish this name. Boats don't like being half-named. — There. Sit down, everyone sits down."},
+    {"conditions": [{"renown_min": 100}], "text": "Are you the one? Mia said. Mia at Isseva, she says everything first. Have you got a boat? I'll name it. I name everything."},
+    {"conditions": [{"morality_max": -30}], "text": "I'm not allowed to name your boat. Da said. He didn't say why but he said it the way he says things about the old bridge."},
+    {"conditions": [{"flag": "landing_alle_named_you"}], "text": "You're Greyheron. I decided. You walk like one. It's a good name, they don't fall in."},
+    {"conditions": [{"time_between": [16, 18]}], "text": "I'm on the bridge. The old one. Da says walk to the end and back and it lets you go, and it does, I've done it a hundred times. Sit on the end with me if you like. It doesn't mind sitting."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Alle Nauve", "text": "Alle. Nauve. Da builds the boats and Ma caulks them and I name them, which is the important part, because a boat with no name doesn't know it's a boat. Sit down. That's the rule and I didn't make it but I like it.", "next": "hub"},
+    "hub": {"speaker": "Alle Nauve", "text": "What?", "choices": [
+      {"text": "Why do you name the boats?", "next": "the_names"},
+      {"text": "What's the pole for?", "next": "the_pole"},
+      {"text": "You've fallen in the water?", "next": "the_water"},
+      {"text": "Tell me about the old bridge.", "next": "the_bridge"},
+      {"text": "Would you name me?", "next": "name_me", "conditions": [{"flag_not": "landing_alle_named_you"}]},
+      {"text": "Bye, Alle.", "next": "bye"}
+    ]},
+    "the_names": {"speaker": "Alle Nauve", "text": "Because Da puts an old plank in every one so it knows where the channels are, and Ma hums into every seam so it knows it's a seam, and nobody was doing the name. So I do. Chalk, on the hull, by the bow. If it rubs off before the boat leaves I do it again and the boat can't go till it's done; Da lets me hold the rope. — I've named eels too but they don't keep the chalk.", "next": "hub"},
+    "the_pole": {"speaker": "Alle Nauve", "text": "It's a Boardwalker's pole. Well, it's a reed. It's the same length as the one the Boardwalker at Isseva carries; I measured it against him when he wasn't looking, he was looking. When I'm grown I'm going to walk the boards for the Council with a pole and no blade and turn back the drowned and ask people to leave. — Ma says asking people to leave is the hardest thing anyone in Isseva does. I think turning back the drowned is harder. Ma says I'll find out. She said it sadly. I don't know why.", "next": "hub"},
+    "the_water": {"speaker": "Alle Nauve", "text": "Four times. Off the slipway, off the channel stage, off the new bridge, and once off a boat I'd just named, which was rude of it. Four in and four out, which Da says is the only count that matters. — The last time I was under for long enough to hear the bell. The one under the marsh. It rang and I heard it in my teeth and I came up and nobody else had heard anything, and Ma held me for a long time and hummed the second voice into my hair, and I never told her about the bell. I'm telling you because you're going to leave.", "effects": [{"set_flag": "landing_alle_told_bell"}], "next": "hub"},
+    "the_bridge": {"speaker": "Alle Nauve", "text": "It goes nowhere. It's over mud, a hundred paces from the channel, because a man from the Spire Said it so hard it stayed where it was and the water didn't. Da tells it better. — I walk it every afternoon with the pole, to the end and back, because Da says it lets you go if you do that and I want to be sure it still does. It always does. It's a very polite bridge. I named it. It's called Stays.", "next": "hub"},
+    "name_me": {"speaker": "Alle Nauve", "text": "Let me look. Stand up. — Walk to there and back. — Greyheron. You put your feet down like you're not sure the ground's there, and herons do that, and herons never fall in. It's a good name. I'll chalk it on the slipway post so it keeps, and if you come back and it's rubbed off I'll do it again, and you can't leave till it's done. That's the rule.", "effects": [{"set_flag": "landing_alle_named_you"}, {"disposition": 10}], "next": "hub"},
+    "bye": {"speaker": "Alle Nauve", "text": "If you go by boat, look at the bow. If there's chalk on it, it's one of ours and it knows the way. If there isn't, it's lost, and so are you.", "next": "hub"}
+  }
+}
+]

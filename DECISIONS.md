@@ -262,7 +262,35 @@ uniforms are spelled `base_color`, so setting `base_colour` was silently a no-op
 wall and roof in Merrowby came out the shader's default grey; and the roof slabs were tilted
 the wrong way, which turns a cottage into a pair of open wings.
 
-## 2026-09-19 · The rest of a town is generated, and it is two draw calls a house
+## 2026-09-21 · A settlement's fabric is four draw calls, and so is a house
+**Decision.** `Building` and `Settlement` both build through `FabricMesh`: every box and
+triangle goes into one `SurfaceTool` per surface (walls, roof, stone, joinery) and each
+surface is committed as a single `MeshInstance3D`, with a vertex colour per piece that the
+painted shader multiplies in. So an entered house is four meshes plus a collision body per
+room, whatever its room and window count, and a whole settlement's filler houses are the same
+four meshes for all of them, each house in its own bucket of limewash. Props are one
+`MultiMesh` per forge asset per settlement. Joinery and props carry a visibility range and the
+joinery casts no shadow; walls and roofs are drawn to the horizon. Only collision bodies and
+the interactables (`JobBoard`, `JobStation`, `PropertySign`) remain nodes of their own.
+**Why.** Merrowby's street was the worst frame in the game at 2438 draw calls against DESIGN
+§11's 2000, and until `DrawAttribution` (`--attribute` on a capture, `draws measure` in the
+console) nobody could say what they were. Measured: 1093 were the eleven entered houses in
+view — walls, plinths, slabs, gables, ridges, chimneys, door parts and window parts as 358
+separate MeshInstance3Ds, each drawn once for the eye and about twice more for the sun's
+cascades; 1535 of the 2441 draws were shadow passes. Merging per material rather than per
+part is the only change that scales: a city of fifty-four houses costs what a hamlet does.
+**Consequences.** The per-building tone shift is a vertex colour now rather than a material
+per building, and the shader change (`ALBEDO *= COLOR`) is invisible to every mesh that
+carries no colour. The filler houses gained their windows, chimneys, lintels, eaves and
+varied plinths at the same time, at no draw cost, because inside a merged mesh geometry is
+free and draws are not. Measured on gl_compatibility at 1600x900, the six street shots went
+2438/479/660/764/609/515 -> 1328/283/498/547/433/405. What is left in Merrowby's 1328 is
+villagers (590: about nine skinned meshes each, all shadow-casting, so twenty in view is
+nearly six hundred draws), scatter MultiMeshes (332) and Terrain3D (160); the buildings are
+120 and the fabric 110. `test_settlements.gd` ratchets a village of Merrowby's kind at 31
+mesh nodes.
+
+## 2026-09-19 · (SUPERSEDED, see above) The rest of a town is generated, and it is two draw calls a house
 **Decision.** Twenty-four hand-built interiors cannot furnish eleven settlements, so
 `Settlement` raises the other roofs: plots along any road that crosses the place's pad, a
 ring around a green where none does, counts and sizes by the place's `kind`. Every filler

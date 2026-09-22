@@ -60,7 +60,11 @@ func _merchant(table := GENERAL, marks := 200, buys: Array[String] = ["all"], on
 
 func test_stock_tables_are_well_formed() -> void:
 	var tables := ContentQuery.where_scalar("table", "role", "merchant_stock")
-	assert_eq(tables.size(), 6, "general, smith, alchemist, innkeeper, fishmonger, binder")
+	# The six the economy shipped with must still be there; the outlands' shelves (a bowyer,
+	# an eel-wife, a clan hearth) were added on top, so the count is a floor and not a total.
+	for wanted in ["general", "smith", "alchemist", "innkeeper", "fishmonger", "binder"]:
+		assert_true(ContentDB.has("core:table/stock_" + wanted), "stock_%s is gone" % wanted)
+	assert_true(tables.size() >= 6, "fewer stock tables than the six the core shipped with")
 	for t in tables:
 		assert_gt(t["rows"].size(), 3, "%s is thin" % t["id"])
 		for row in t["rows"]:

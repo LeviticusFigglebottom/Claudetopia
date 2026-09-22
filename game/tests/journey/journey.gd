@@ -648,6 +648,97 @@ func _step_fight_a_boss() -> void:
 	await get_tree().process_frame
 
 
+# 11b ----------------------------------------------------------------------------------
+## Making something, at the thing you walked up to. `station_screen.tscn` drew all three
+## working screens, `UI.MENUS` had "crafting" registered from the start, and nothing in the
+## game ever opened it, because there was no forge, no still and no bench in eight kilometres
+## of country that a player could reach. So this step refuses to call `craft()` directly: it
+## builds Hallam's forge the way the game builds it, finds the anvil in the room, works at it
+## the way a player's interaction ray does, and only then makes a sword out of what is in the
+## bag — and checks the iron left the bag and the sword arrived in it.
+func _step_make_something() -> void:
+	const SMITHY := "core:interior/hallam_forge"
+	const RECIPE := "core:recipe/iron_sword"
+	var name := "make something at a forge you walked up to"
+	var crafting: Node = get_tree().get_first_node_in_group("crafting")
+	if crafting == null or inventory == null:
+		_record(name, false, "no crafting node or no bag")
+		return
+	var def := ContentDB.get_or_empty(SMITHY)
+	var meta_path := str(def.get("meta", ""))
+	if meta_path.is_empty() or not FileAccess.file_exists(meta_path):
+		_record(name, false, "%s has no built interior (run ./run.sh interiors)" % SMITHY)
+		return
+
+	# The smithy, built from its own meta, the way the smoke run and the door both build it.
+	var room := HouseInterior.new()
+	room.build_on_ready = false
+	host.add_child(room)
+	var built: bool = room.build(meta_path)
+	await get_tree().process_frame
+	var anvil: Node = null
+	for node in room.find_children("*", "CraftingStation", true, false):
+		if str(node.get("station")) == "forge":
+			anvil = node
+			break
+
+	# Working at it: the event the prop emits, and the screen the UI opens off it.
+	var heard: Array[String] = []
+	var listen := func(station: String, _node: Node) -> void: heard.append(station)
+	EventBus.crafting_station_used.connect(listen)
+	if anvil != null:
+		anvil.call("interact", player)
+	await get_tree().process_frame
+	EventBus.crafting_station_used.disconnect(listen)
+	var screen_open: bool = UI.is_menu_open("crafting")
+	UI.close_all()
+	await get_tree().process_frame
+
+	# A recipe against the real bag: the iron goes in, the sword comes out.
+	var recipe := ContentDB.get_or_empty(RECIPE)
+	var made := false
+	var consumed := false
+	var output_id := str((recipe.get("output", {}) as Dictionary).get("item", ""))
+	var had: int = int(inventory.count(output_id)) if output_id != "" else 0
+	var iron_before := 0
+	var iron_id := ""
+	for entry in recipe.get("inputs", []):
+		var row: Dictionary = entry
+		var item := str(row.get("item", ""))
+		var need := int(row.get("count", 1))
+		inventory.add(item, need)
+		if iron_id == "":
+			iron_id = item
+			iron_before = int(inventory.count(item))
+	if crafting.has_method("craft"):
+		made = bool(crafting.call("craft", RECIPE))
+	await get_tree().process_frame
+	if iron_id != "":
+		consumed = int(inventory.count(iron_id)) < iron_before
+	var arrived: bool = output_id != "" and int(inventory.count(output_id)) > had
+
+	var trouble: Array[String] = []
+	if not built:
+		trouble.append("the smithy would not build")
+	if anvil == null:
+		trouble.append("no anvil in Hallam's forge to walk up to")
+	if heard.is_empty():
+		trouble.append("working at the anvil told the UI nothing")
+	if not screen_open:
+		trouble.append("the working screen never opened")
+	if not made:
+		trouble.append("the forge refused %s" % RECIPE)
+	if not consumed:
+		trouble.append("the iron never left the bag")
+	if not arrived:
+		trouble.append("nothing arrived in the bag")
+	_record(name, trouble.is_empty(),
+		"%s at the anvil in Hallam's forge, out of %d rooms" % [
+			str(recipe.get("name", RECIPE)), room.rooms.size()] if trouble.is_empty() else ", ".join(trouble))
+	room.queue_free()
+	await get_tree().process_frame
+
+
 # 12 -----------------------------------------------------------------------------------
 ## The whole of magic in one pass: a saying you have not been taught is not castable, a tome
 ## teaches it, the screen's Ready it puts it in the slot, and the cast key lands it on something.

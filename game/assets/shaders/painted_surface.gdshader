@@ -158,7 +158,10 @@ void fragment() {
 	float soot = clamp((world_pos.y - soot_height) * 0.35, 0.0, 1.0);
 	col = mix(col, col * vec3(0.55, 0.52, 0.5), soot * 0.5);
 
-	ALBEDO = clamp(col, vec3(0.0), vec3(1.0));
+	// A vertex colour, where the mesh carries one, tints the result: it is how a settlement's
+	// houses are one mesh and still each their own bucket of limewash. A mesh without colours
+	// reads COLOR as white, so every interior and every older exterior is unchanged.
+	ALBEDO = clamp(col * COLOR.rgb, vec3(0.0), vec3(1.0));
 	ROUGHNESS = clamp(roughness_base - traffic * 0.35 + s.w * 0.1, 0.12, 1.0);
 	SPECULAR = mix(0.35, 0.55, traffic);
 }

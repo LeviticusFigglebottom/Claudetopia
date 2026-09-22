@@ -1,0 +1,169 @@
+[
+  {
+    "id": "core:npc/mella_lissa", "name": "Mella Lissa", "home_place": "core:place/isseva", "faction": "core:faction/reed_council",
+    "dialogue": "core:dialogue/mella_lissa",
+    "bio": "Second of the Reed Council after Tallissa Oul, thirty years her junior and the one voice on the platform that says the flood is coming. Keeps Isseva's boats, all of them, tarred and afloat for a tide that has never come in any record, and does not find that foolish.",
+    "unique_habit": "Tars one plank of every boat in Isseva with her own hands each year, whether the owner asked or not, and paints a small indigo mark on the plank so that in a hundred years somebody will be able to see which planks were hers.",
+    "personality": {"traits": ["brave", "pious", "proud", "quiet", "kind"]},
+    "appearance": {"seed": 5101, "build": "tall_upright", "age": 49, "hair": "black_going_grey_wrapped_in_indigo", "notes": "indigo to the elbows and tar to the wrists, a lantern-hook at the belt like the Eldest's but newer, feet bare on the boards"},
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/isseva", "activity": "work", "spot": "boat_stages", "notes": "the first plank of the day, at first light"},
+      {"days": "all", "hour": 7, "place": "core:place/isseva", "activity": "eat", "spot": "council_platform"},
+      {"days": "workdays", "hour": 8, "place": "core:place/isseva", "activity": "work", "spot": "council_platform", "notes": "the Council's business, mostly with Tallissa, mostly quietly"},
+      {"days": "workdays", "hour": 12, "place": "core:place/isseva", "activity": "eat", "spot": "long_boardwalk"},
+      {"days": "workdays", "hour": 13, "place": "core:place/isseva", "activity": "work", "spot": "boat_stages", "notes": "tar, and the indigo mark"},
+      {"days": "hushday", "hour": 9, "place": "core:place/nauves_landing", "activity": "work", "spot": "hull_hall", "notes": "seeing the new boat with Ollo Nauve"},
+      {"days": "hushday", "hour": 14, "place": "core:place/isseva", "activity": "idle", "spot": "long_boardwalk"},
+      {"days": "restday", "hour": 8, "place": "core:place/isseva", "activity": "pray", "spot": "burial_jetty"},
+      {"days": "restday", "hour": 13, "place": "core:place/isseva", "activity": "eat", "spot": "council_platform"},
+      {"days": "all", "hour": 18, "place": "core:place/isseva", "activity": "socialise", "spot": "long_boardwalk"},
+      {"days": "all", "hour": 21, "place": "core:place/isseva", "activity": "sleep", "spot": "stilt_house_lissa"}
+    ]
+  },
+  {
+    "id": "core:npc/issa_mor", "name": "Issa Mor", "home_place": "core:place/isseva",
+    "dialogue": "core:dialogue/issa_mor",
+    "bio": "Eel-wife of Isseva: sets the traps at dawn in the north channels, sells from a stall on the long boardwalk, and has an opinion about the fog that she will give you before you have asked and again after. The one talker in a town of people who sing instead.",
+    "unique_habit": "Throws the first eel of every haul back into the water with the words 'go and tell them', and has not eaten one she caught herself in forty years, though she will sell you as many as you like.",
+    "personality": {"traits": ["cynical", "gossip", "generous", "humble", "brave"]},
+    "appearance": {"seed": 5102, "build": "square_short", "age": 54, "hair": "grey_cropped_under_an_indigo_cloth", "notes": "eel-slime shine on an oilskin apron, hands nicked white all over from hooks, an eel-knife on a cord that has worn a groove in the wood of her stall"},
+    "merchant": {"stock": "core:table/stock_eel_wife", "marks": 90, "buys": ["consumable", "ingredient"]},
+    "work_clip": "Work_Stir",
+    "schedule": [
+      {"days": "all", "hour": 4, "place": "core:place/isseva", "activity": "work", "spot": "eel_traps", "notes": "the north channels; the first eel goes back"},
+      {"days": "all", "hour": 7, "place": "core:place/isseva", "activity": "eat", "spot": "eel_stall"},
+      {"days": "workdays", "hour": 8, "place": "core:place/isseva", "activity": "shop", "spot": "eel_stall"},
+      {"days": "workdays", "hour": 12, "place": "core:place/isseva", "activity": "eat", "spot": "eel_stall", "notes": "bread and marigold; never eel"},
+      {"days": "workdays", "hour": 13, "place": "core:place/isseva", "activity": "shop", "spot": "eel_stall"},
+      {"days": "restday", "hour": 8, "place": "core:place/isseva", "activity": "work", "spot": "reed_walk", "notes": "mending traps and talking over the round"},
+      {"days": "restday", "hour": 12, "place": "core:place/isseva", "activity": "eat", "spot": "long_boardwalk"},
+      {"days": "restday", "hour": 14, "place": "core:place/isseva", "activity": "idle", "spot": "jetty_bench"},
+      {"days": "all", "hour": 17, "place": "core:place/isseva", "activity": "work", "spot": "eel_traps", "notes": "setting for the night"},
+      {"days": "all", "hour": 19, "place": "core:place/isseva", "activity": "socialise", "spot": "long_boardwalk"},
+      {"days": "all", "hour": 22, "place": "core:place/isseva", "activity": "sleep", "spot": "stilt_house_mor"}
+    ]
+  },
+  {
+    "id": "core:npc/auti_sa", "name": "Auti Sa", "home_place": "core:place/isseva",
+    "dialogue": "core:dialogue/auti_sa",
+    "bio": "Isseva's lantern-maker, who took the lantern-name when she took her mother's bench, and who wrote down the Round of Sa'oul against her mother's wish. Makes the reed lanterns that light the boardwalks and the ones that go out on the water with the dead, and they are not the same lantern.",
+    "unique_habit": "Leaves one reed uncut, standing above the rim, on every lantern made for a burial, 'so the drowned have something to hold', and cuts that reed off any lantern she sells to the living before it leaves the bench.",
+    "personality": {"traits": ["quiet", "pious", "humble", "generous", "kind"]},
+    "appearance": {"seed": 5103, "build": "slight", "age": 36, "hair": "dark_worn_loose_and_indigo_at_the_ends", "notes": "reed-cuts across both thumbs, oil under every nail, a small unlit lantern hung at the hip with one reed standing above its rim"},
+    "merchant": {"stock": "core:table/stock_lantern_maker", "marks": 120, "buys": ["material", "tool"]},
+    "work_clip": "Work_Hammer",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/isseva", "activity": "eat", "spot": "lantern_bench"},
+      {"days": "workdays", "hour": 7, "place": "core:place/isseva", "activity": "work", "spot": "reed_walk", "notes": "cutting reed while it is wet"},
+      {"days": "workdays", "hour": 9, "place": "core:place/isseva", "activity": "shop", "spot": "lantern_bench"},
+      {"days": "workdays", "hour": 12, "place": "core:place/isseva", "activity": "eat", "spot": "lantern_bench"},
+      {"days": "workdays", "hour": 13, "place": "core:place/isseva", "activity": "shop", "spot": "lantern_bench"},
+      {"days": "restday", "hour": 9, "place": "core:place/isseva", "activity": "pray", "spot": "burial_jetty", "notes": "bringing the week's burial lanterns to Loa, each with its reed"},
+      {"days": "restday", "hour": 13, "place": "core:place/isseva", "activity": "eat", "spot": "council_platform"},
+      {"days": "all", "hour": 18, "place": "core:place/isseva", "activity": "work", "spot": "oil_store", "notes": "filling the boardwalk lanterns for the night"},
+      {"days": "all", "hour": 20, "place": "core:place/isseva", "activity": "socialise", "spot": "long_boardwalk", "notes": "the second voice, slightly flat on the fourth line"},
+      {"days": "all", "hour": 22, "place": "core:place/isseva", "activity": "sleep", "spot": "lantern_loft"}
+    ]
+  },
+  {
+    "id": "core:npc/loa_oul", "name": "Loa Oul", "home_place": "core:place/isseva", "faction": "core:faction/reed_council",
+    "dialogue": "core:dialogue/loa_oul",
+    "bio": "Keeper of the water-burial jetty and Tallissa Oul's niece: she measures the oil, she pushes the boat off, she is the last hand on every one of Isseva's dead. The Eldest counts the lanterns still afloat at first light; Loa is the reason there is a number to count.",
+    "unique_habit": "Measures the oil for each burial lantern in spoonfuls, one for every year the dead person lived, and pours one spoonful back into the marsh before she fills the lamp, so that every lantern goes out a year early and nobody is ever burned for the whole of their life.",
+    "personality": {"traits": ["quiet", "pious", "brave", "humble", "kind"]},
+    "appearance": {"seed": 5104, "build": "lean_weathered", "age": 61, "hair": "white_cut_blunt_at_the_jaw", "notes": "an indigo shawl faded to the colour of a bruise going, a horn spoon on a cord, hands that smell of lamp-oil whatever she has washed them in"},
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/isseva", "activity": "work", "spot": "burial_jetty", "notes": "with the Eldest; she counts, Loa writes nothing down"},
+      {"days": "all", "hour": 7, "place": "core:place/isseva", "activity": "eat", "spot": "council_platform"},
+      {"days": "workdays", "hour": 8, "place": "core:place/isseva", "activity": "work", "spot": "oil_store", "notes": "the spoons"},
+      {"days": "workdays", "hour": 12, "place": "core:place/isseva", "activity": "eat", "spot": "jetty_bench"},
+      {"days": "workdays", "hour": 13, "place": "core:place/isseva", "activity": "work", "spot": "reed_walk", "notes": "reed for the burial boats, which are not boats"},
+      {"days": "restday", "hour": 8, "place": "core:place/isseva", "activity": "pray", "spot": "burial_jetty"},
+      {"days": "restday", "hour": 12, "place": "core:place/isseva", "activity": "eat", "spot": "council_platform"},
+      {"days": "restday", "hour": 14, "place": "core:place/isseva", "activity": "idle", "spot": "burial_jetty"},
+      {"days": "all", "hour": 18, "place": "core:place/isseva", "activity": "pray", "spot": "burial_jetty", "notes": "the lanterns go out on the water at dusk"},
+      {"days": "all", "hour": 21, "place": "core:place/isseva", "activity": "sleep", "spot": "oul_ledge"}
+    ]
+  },
+  {
+    "id": "core:npc/mia_mor", "name": "Mia Mor", "home_place": "core:place/isseva", "tags": ["child"],
+    "dialogue": "core:dialogue/mia_mor",
+    "bio": "Eleven, the eel-wife's granddaughter, given the third voice of the round two years before any child in Isseva is given it, because she would not stop singing it anyway. Wants to see the inside of the Drowned Nave and has been told no by the whole Council in turn.",
+    "unique_habit": "Starts the third voice of the round before the second has reached its line, every time, and claims the round comes out shorter that way and that she has been timing it against the drip off the burial jetty.",
+    "personality": {"traits": ["brave", "gossip", "generous", "proud", "kind"]},
+    "appearance": {"seed": 5105, "build": "child_small", "age": 11, "hair": "black_in_two_indigo_wrapped_tails", "notes": "an eel-scale stuck to her cheek most days, a trap-cord round the wrist, feet that have never worn a shoe"},
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/isseva", "activity": "eat", "spot": "eel_stall"},
+      {"days": "workdays", "hour": 7, "place": "core:place/isseva", "activity": "idle", "spot": "eel_traps", "notes": "with her grandmother, being told to wait"},
+      {"days": "workdays", "hour": 9, "place": "core:place/isseva", "activity": "idle", "spot": "long_boardwalk", "notes": "singing ahead"},
+      {"days": "workdays", "hour": 12, "place": "core:place/isseva", "activity": "eat", "spot": "eel_stall"},
+      {"days": "workdays", "hour": 13, "place": "core:place/isseva", "activity": "idle", "spot": "reed_walk", "notes": "the nets and the round"},
+      {"days": "workdays", "hour": 16, "place": "core:place/isseva", "activity": "idle", "spot": "burial_jetty", "notes": "counting lanterns she is not old enough to count"},
+      {"days": "restday", "hour": 8, "place": "core:place/isseva", "activity": "idle", "spot": "boat_stages", "notes": "watching Mella tar"},
+      {"days": "restday", "hour": 12, "place": "core:place/isseva", "activity": "eat", "spot": "long_boardwalk"},
+      {"days": "restday", "hour": 13, "place": "core:place/isseva", "activity": "idle", "spot": "council_platform", "notes": "listening to the Council not argue"},
+      {"days": "all", "hour": 19, "place": "core:place/isseva", "activity": "eat", "spot": "eel_stall"},
+      {"days": "all", "hour": 20, "place": "core:place/isseva", "activity": "sleep", "spot": "stilt_house_mor_loft"}
+    ]
+  },
+  {
+    "id": "core:npc/ollo_nauve", "name": "Ollo Nauve", "home_place": "core:place/nauves_landing",
+    "dialogue": "core:dialogue/ollo_nauve",
+    "bio": "Boatwright of Nauve's Landing, fifth of the name to work under the upturned hull hall, which is the hull of the biggest boat the marsh ever built, turned over when the man who built it for the flood died still waiting. Every boat on the Sedgemire water came off Ollo's slipway or his father's.",
+    "unique_habit": "Builds every new boat with one plank taken from the boat it replaces, and can point to the old plank in every hull on the marsh without looking twice; he says a boat with no old wood in it does not know where the channels are.",
+    "personality": {"traits": ["quiet", "proud", "generous", "brave", "kind"]},
+    "appearance": {"seed": 5106, "build": "broad_stooped", "age": 58, "hair": "grey_thick_tied_with_tarred_cord", "notes": "tar in the creases of both hands, a caulking iron worn at the hip like a knife, forearms marked with the pale lines of forty years of splinters"},
+    "merchant": {"stock": "core:table/stock_boatwright", "marks": 130, "buys": ["material", "tool"]},
+    "work_clip": "Work_Hammer",
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
+      {"days": "workdays", "hour": 6, "place": "core:place/nauves_landing", "activity": "work", "spot": "slipway", "notes": "the boat on the stocks"},
+      {"days": "workdays", "hour": 12, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
+      {"days": "workdays", "hour": 13, "place": "core:place/nauves_landing", "activity": "shop", "spot": "hull_hall", "notes": "plank, rope and net for whoever poles in"},
+      {"days": "restday", "hour": 8, "place": "core:place/nauves_landing", "activity": "idle", "spot": "old_bridge", "notes": "looking at the bridge that does not move"},
+      {"days": "restday", "hour": 12, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
+      {"days": "restday", "hour": 14, "place": "core:place/nauves_landing", "activity": "work", "spot": "slipway", "notes": "the old plank goes in on a restday; it always has"},
+      {"days": "all", "hour": 18, "place": "core:place/nauves_landing", "activity": "socialise", "spot": "hull_hall"},
+      {"days": "all", "hour": 22, "place": "core:place/nauves_landing", "activity": "sleep", "spot": "hull_hall_bunks"}
+    ]
+  },
+  {
+    "id": "core:npc/sia_nauve", "name": "Sia Nauve", "home_place": "core:place/nauves_landing",
+    "dialogue": "core:dialogue/sia_nauve",
+    "bio": "Caulker of Nauve's Landing and its second voice: every seam on every boat Ollo builds is hers, and so is the line of the round the Landing sings across the water at dusk. Does not believe the flood is coming and has never once said so at a caulking, because a seam is not the place.",
+    "unique_habit": "Caulks every seam humming the second voice of the round, slightly flat on the fourth line the way Isseva sings it, and unpicks any seam she finds she has done in silence, because a quiet seam is a seam she was not attending to.",
+    "personality": {"traits": ["quiet", "generous", "pious", "humble", "kind"]},
+    "appearance": {"seed": 5107, "build": "small_round", "age": 55, "hair": "grey_in_a_single_indigo_wrapped_plait", "notes": "oakum fibres caught in everything she wears, a mallet with a handle polished by one hand, a voice that carries across a channel without ever being raised"},
+    "work_clip": "Work_Hammer",
+    "schedule": [
+      {"days": "all", "hour": 5, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
+      {"days": "workdays", "hour": 6, "place": "core:place/nauves_landing", "activity": "work", "spot": "caulking_frame"},
+      {"days": "workdays", "hour": 12, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
+      {"days": "workdays", "hour": 13, "place": "core:place/nauves_landing", "activity": "work", "spot": "caulking_frame"},
+      {"days": "restday", "hour": 9, "place": "core:place/isseva", "activity": "pray", "spot": "burial_jetty", "notes": "the second voice for the week's dead, if there were any, and if there were not"},
+      {"days": "restday", "hour": 14, "place": "core:place/nauves_landing", "activity": "idle", "spot": "channel_stage"},
+      {"days": "all", "hour": 17, "place": "core:place/nauves_landing", "activity": "work", "spot": "channel_stage", "notes": "the round across the water, at dusk"},
+      {"days": "all", "hour": 20, "place": "core:place/nauves_landing", "activity": "socialise", "spot": "hull_hall"},
+      {"days": "all", "hour": 22, "place": "core:place/nauves_landing", "activity": "sleep", "spot": "hull_hall_bunks_sia"}
+    ]
+  },
+  {
+    "id": "core:npc/alle_nauve", "name": "Alle Nauve", "home_place": "core:place/nauves_landing", "tags": ["child"],
+    "dialogue": "core:dialogue/alle_nauve",
+    "bio": "Nine, the boatwright's youngest, who has named every boat that ever tied up at the Landing and most of the eels, and means to be a Council Boardwalker with a pole of her own. Has been in the water four times and come out four times, which she counts as a record.",
+    "unique_habit": "Chalks a name on the hull of every boat that comes to the Landing, whether or not it has one, and will not let it push off again if the chalk has been rubbed away.",
+    "personality": {"traits": ["brave", "gossip", "generous", "humble", "kind"]},
+    "appearance": {"seed": 5108, "build": "child_small", "age": 9, "hair": "black_cropped_by_her_mother", "notes": "chalk on both hands to the wrist, a reed pole twice her height that she carries everywhere, an indigo cord at the neck with a chalk lump on it"},
+    "schedule": [
+      {"days": "all", "hour": 7, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
+      {"days": "workdays", "hour": 8, "place": "core:place/nauves_landing", "activity": "idle", "spot": "slipway", "notes": "chalking names on the hulls"},
+      {"days": "workdays", "hour": 12, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
+      {"days": "workdays", "hour": 13, "place": "core:place/nauves_landing", "activity": "idle", "spot": "channel_stage", "notes": "naming eels"},
+      {"days": "workdays", "hour": 16, "place": "core:place/nauves_landing", "activity": "idle", "spot": "old_bridge", "notes": "walking the bridge that goes nowhere, with the pole"},
+      {"days": "restday", "hour": 9, "place": "core:place/isseva", "activity": "idle", "spot": "boardwalk_north", "notes": "walking behind the Boardwalker with the pole, at a distance he pretends not to see"},
+      {"days": "restday", "hour": 14, "place": "core:place/nauves_landing", "activity": "idle", "spot": "channel_stage"},
+      {"days": "all", "hour": 18, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
+      {"days": "all", "hour": 19, "place": "core:place/nauves_landing", "activity": "sleep", "spot": "hull_hall_bunks_alle"}
+    ]
+  }
+]
