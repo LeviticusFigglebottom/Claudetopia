@@ -906,3 +906,88 @@ behaviour was right all along). And `sells_deeds` on Ellard's def is still dead 
 honest use of it is a steward-mediated sale, which would undo the direct board route that was
 just built, so it is left for whoever authors that dialogue. `beds` on the deed items is
 likewise still unread.
+
+## The country, looked at
+
+A pass over the land, the cover on it, the roads and the light, judged by opening the
+pictures rather than by reading the numbers off a build. What follows is what moved, with
+what it cost, and what is still wanting.
+
+**There were no shadows anywhere, and the reason was the sun.** Three separate frames were
+reported as flat — a Merrowby street at nine in the morning, a four-pylon chain bridge in a
+steep Skerrow valley at two in the afternoon, the opening view of Cinderlea. In all three the
+shadows were being drawn and were the size of a doormat, because four of the six regions ran
+a sun between 60° and 94° above the horizon at their own review hour. `sun_elevation_scale`
+is the per-region knob for exactly this and only three regions set it, so the rest inherited
+a `-cos(hour)` curve that reaches vertical at noon. At each region's review hour:
+
+| | before | after | shadow as a fraction of height |
+|---|---|---|---|
+| Hearthvale 09:00 | 59.6° | 29.7° | 0.59 → 1.75 |
+| Brightwater 12:00 | 94.0° | 51.7° | past vertical → 0.79 |
+| Briarwold 10:30 | 74.8° | 44.9° | 0.27 → 1.00 |
+| Skerrow 14:00 | 79.9° | 31.6° | 0.18 → 1.62 |
+
+Sedgemire (21.3°) and Cinderlea (3.2°) were already low, which is why neither was among the
+frames that read as flat. A cottage now throws ten metres of shadow across the green instead
+of three. Two hours went into a wrong hypothesis first — that Terrain3D does not receive
+directional shadows on the Compatibility renderer — and `game/tools_gd/shadow_probe.tscn` is
+the instrument that disproved it; it is committed, because "this frame has no shadows" has
+three unrelated causes and a screenshot cannot tell them apart.
+
+**The ground had no cover.** Hearthvale carried 45 flora instances a hectare, one plant per
+26 m², and four regions named no ground carpet in their flora list at all. Measured over 140
+sampled cells, flora per hectare now: Hearthvale 761, Briarwold 565, Cinderlea 464,
+Sedgemire 461, Brightwater 406, Skerrow 295. Villages were the worst of it and for a separate
+reason: scatter was excluded from the whole of a settlement's pad, and the street camera
+stands 46 m inside Merrowby's 63.7 m pad, so that frame contained no growing thing by
+construction. `worldgen/pads.py` now gives a normalised radius rather than a flag, and low
+cover returns to the green inside 0.22 of it and the verge beyond 0.90 — either side of the
+20-to-50 m band the settlement builder rings its houses through.
+
+**The fields have hedges.** This was PROGRESS's "next" item for some time and is DESIGN §4.1's
+first line. `worldgen/hedges.py` lays 122 477 hedge pieces along the parcel boundaries
+`fields.py` has been drawing all along: a run of segments turned to lie *along* the boundary
+(from the tangent of the distance field — laid at random angles they read as loose bushes),
+hawthorn every 27 m, an oak standard every 70, gateways from a low-frequency field, and always
+a gap where a road crosses. Skerrow's boundaries take drystone wall instead, so the moor is
+enclosed too. 774 apple trees stand in rows in Tamwick's parcels. None of it was affordable
+with what existed — the nearest asset to a hedge was a 5 610-triangle hawthorn — so
+`tools/forge/gen_ground_kit.py` builds 2.2 m of hedge in 66 triangles, with a gate post and a
+milestone beside it. `worldgen/roadside.py` adds 6 024 milestones, junction signposts and
+post-and-rail frontages.
+
+**Every per-instance tint had been thrown away.** The builder has always written a distinct
+colour per plant — 88 different greens among 91 grass clumps in one Merrowby cell — and
+`foliage_wind.gdshader` never read `COLOR`. Turning it on immediately exposed two faults that
+had been latent in the data for as long: the jitter drew three independent per-channel
+normals, so it moved hue rather than lightness and the moor came back scattered with yellow,
+violet and blue clumps; and the palette was being applied twice, because the forge already
+builds each asset in its region's colours, which turned gold barley and red poppies into
+orange slabs. Both fixed; rules now carry a `tint_strength`.
+
+**Light.** Each region's recipe now comes from its own identity sheet rather than from a
+narrow band around the middle. Fog density spans 0.00014 (Skerrow, thin cold air) to 0.00125
+(Sedgemire, where the fog is the region) against a previous 0.00016–0.00085.
+
+### What it costs
+
+The Merrowby street, which the new draw attribution confirms is the worst frame: **1330 draws
+and 1.18 M primitives before, 1441 and 1.53 M after**, against a budget of 2000 and 1.5 M. So
+draw calls are comfortable and primitives are 2% over, which is named here rather than hidden.
+The attribution is also what found where it goes — 645 apple trees and 1234 hawthorns in one
+frame at ~5 700 triangles each, against 4399 grass clumps in three draws — which is why the
+orchards went back to Tamwick alone and the hedge trees thinned from every 13 m to every 27.
+The world build went from 217 s to 260 s and from 346 306 scatter instances to 3 472 850.
+
+### Still wanting
+
+* **The ground cover does not yet read as a carpet at eye height.** It reads as tufts on turf.
+  A true carpet needs an order of magnitude more instances than the primitive budget allows at
+  cell granularity, so the honest next lever is the terrain albedo itself, not more instances.
+* **Hedges read as dotted rather than solid at 400 m**, where the far ring keeps 40% of them.
+* **Skerrow's drystone walls are placed but have not been judged in a capture** at close range.
+* **The gate posts mark gaps but no gate hangs in them**, and the signposts point nowhere in
+  particular: the asset has arms, but nothing writes the names of the places the road goes to
+  onto them, though the road data knows both ends.
+* **Bridge abutments were not done.** The road crossings are left clear, as asked.
