@@ -582,12 +582,18 @@ draw cost. Villagers' eyes no longer cast shadows (they fall inside the head's).
 
 | shot | draw calls | primitives | what is left (after) |
 |---|---|---|---|
-| hearthvale_street (Merrowby) | **2438 → 1328** | 1.15 M → 1.18 M | villagers 590, scatter 332, terrain 160, buildings 120, fabric 110 |
+| hearthvale_street (Merrowby) | **2438 → 1328 → 1240** | 1.15 M → 1.18 M | villagers 590, scatter 332, terrain 160, buildings 120, fabric 110 |
 | brightwater_street (Tollmere) | 479 → 283 | 0.34 M → 0.34 M | terrain 105, scatter 68, fabric 61, villager 26, buildings 16 |
 | sedgemire_street | 660 → 498 | 0.73 M → 0.73 M | terrain 184, scatter 182, fabric 60, villagers 53, buildings 12 |
 | briarwold_street | 764 → 547 | 0.80 M → 0.79 M | scatter 316, terrain 154, fabric 54, buildings 16 |
 | skerrow_street | 609 → 433 | 0.37 M → 0.45 M | scatter 136, terrain 126, villagers 95, fabric 59, buildings 18 |
 | cinderlea_street | 515 → 405 | 0.63 M → 0.62 M | terrain 170, scatter 123, villagers 56, buildings 11, fabric 10 |
+
+Merrowby's three numbers are the original, the figure after the fabric was merged, and the
+figure after villagers' eyes stopped casting a shadow into the head they sit in. The first
+measurement of the same shot on the integrated branch, with nine other streams' work in it,
+read 1330: the gap is their scatter, their points of interest and their light, not the
+fabric, whose own contribution `--attribute` will name at any time.
 
 Every shot is inside the 2000 budget with margin and the worst is under 1500. Buildings went
 from 1093 to 120 draws on the worst frame and the fabric from 244 to 110 (the 110 is
