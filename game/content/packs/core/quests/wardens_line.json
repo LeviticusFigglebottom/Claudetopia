@@ -1,0 +1,324 @@
+[
+  {
+    "id": "core:quest/the_lane_that_isnt",
+    "name": "The Lane That Isn't",
+    "layer": "faction",
+    "faction": "core:faction/wardens",
+    "giver": "core:npc/wren_tallow",
+    "region": "core:region/hearthvale",
+    "summary": "Harewell is a line in the Roll and a chalk doorstep in a box. Walk the ground the line points at, put down what is working the hedges there, and decide what a Warden writes about a place that cannot be found.",
+    "notes": "Wardens' line, second of four. Gated on the first quest being done and on rank Watch. quest_at conditions in the dialogues use stage ids, not indices. The hedge-wights at the shrine are Hearthvale ecology, so they stand there in the built world.",
+    "requires": [
+      {"quest_done": "core:quest/wardens_roll_of_names"},
+      {"rep_min": ["core:faction/wardens", 20]}
+    ],
+    "stages": [
+      {
+        "id": "the_asking",
+        "journal": "Wren Tallow walked the down between Merrowby and Tamwick for two days when Harewell went on the Roll, and came back with a chalk doorstep worn hollow by feet and nothing else at all. She has not been out there since. She would like somebody who never bought honey from Cille to go and look at the same ground, because she no longer trusts what she sees on it.",
+        "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "text": "Hear Wren out about Harewell"}],
+        "marker": {"place_id": "core:place/merrowby", "radius": 160}
+      },
+      {
+        "id": "the_doorstep",
+        "journal": "The doorstep is in the Roll room at Wardens' Rest, in a box, on the shelf under the window, and Hesk will want it back. Wren says to carry it out there and stand it where the lane was, if you can find where the lane was, and that she is aware of how that sounds.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/wardens_hesk", "text": "Ask Hesk for the Harewell doorstep"},
+          {"type": "collect", "target": "core:item/harewell_doorstep_stone", "count": 1, "text": "Carry the doorstep out of the Roll room"}
+        ],
+        "marker": {"place_id": "core:place/wardens_rest", "radius": 120}
+      },
+      {
+        "id": "the_stretch",
+        "journal": "Eleven households, a well with a hare cut on the lip, and a hawthorn shrine to Hearth-Mother Ansel that people still walk to because the Hearthstone in its lap is warm. The shrine is on the Roll. Harewell is not on anything. Whatever is working the hedges out there has tools and does not stop for a greeting, and two of them came up the lane at you, which is a lane, which is the thing Wren could not make anyone else see.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/hedge_shrine_of_ansel", "radius": 140, "text": "Walk the down at Ansel's Hedge Shrine"},
+          {"type": "kill", "target": "core:enemy/hedge_wight", "count": 2, "text": "Put down what is still working the Harewell hedges"}
+        ],
+        "on_complete": [{"set_flag": "walked_the_harewell_down"}, {"renown": 10}]
+      },
+      {
+        "id": "what_a_warden_writes",
+        "journal": "There is a lane. It goes from the shrine to a dip where the ground is flat in a square, and there is a well under the bramble with a hare cut on the lip, and there is no village, and standing in it you cannot afterwards say how many houses there were. Wren is at the shrine with her book open and the doorstep at her feet and she has asked you what to write, which is not a thing a Warden asks.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_harewell_line",
+            "text": "Decide what the Roll says about Harewell",
+            "options": [
+              {
+                "id": "walked",
+                "text": "Stand the doorstep where the lane was. Write that a Warden walked the ground and found it.",
+                "effects": [
+                  {"set_flag": "harewell_doorstep_returned"},
+                  {"deed": ["name_restored", 1]},
+                  {"rep": ["core:faction/wardens", 10]},
+                  {"renown": 10},
+                  {"morality": 5},
+                  {"rumour": ["core:rumour/harewell_lane", 0.7]}
+                ]
+              },
+              {
+                "id": "box",
+                "text": "The doorstep goes back in the box. It is evidence, not a grave marker.",
+                "effects": [
+                  {"set_flag": "harewell_doorstep_kept"},
+                  {"rep": ["core:faction/wardens", 15]}
+                ]
+              },
+              {
+                "id": "tamwick",
+                "text": "Carry it to Tamwick. A steward there wrote 'ask Tamwick' in the margin and never did.",
+                "effects": [
+                  {"set_flag": "harewell_doorstep_to_tamwick"},
+                  {"rep": ["core:faction/wardens", 5]},
+                  {"renown": 15},
+                  {"rumour": ["core:rumour/harewell_lane", 0.8]}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/merrowby", "radius": 160}
+      },
+      {
+        "id": "what_she_says_after",
+        "journal": "Wren writes it down, reads it back to you in the flat voice she uses for the Roll, and then says the other thing, which is that the hedges out there are being worked by somebody, and that a hedge-wight is a farmer who did not stop, and that Harewell had eleven households and she has now met four of them.",
+        "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "text": "Hear what Wren worked out on the walk back"}],
+        "on_complete": [{"set_flag": "lane_that_isnt_done"}, {"renown": 5}]
+      }
+    ],
+    "rewards": {
+      "marks": 80,
+      "renown": 15,
+      "rep": [["core:faction/wardens", 15]],
+      "deed": "quest_complete_faction"
+    }
+  },
+
+  {
+    "id": "core:quest/the_deep_lines",
+    "name": "The Deep Lines",
+    "layer": "faction",
+    "faction": "core:faction/wardens",
+    "giver": "core:npc/wardens_hesk",
+    "region": "core:region/hearthvale",
+    "summary": "The Wardens' Roll keeps places. Before there was a Rest to keep it in, a Barrow Reeve kept people, one ground at a time, and the Reeve of Hollin has not stopped reading his roll aloud. Go down and settle what the Rest does about a hundred and forty names.",
+    "notes": "Wardens' line, third of four. The standing orders are the tome that teaches Keeper's Bond, so the saying is taught by the book rather than by a reward. The Reeve's roll is given by the stage that puts him down, which is why the read_book stage after it can close.",
+    "requires": [
+      {"quest_done": "core:quest/the_lane_that_isnt"},
+      {"rep_min": ["core:faction/wardens", 45]}
+    ],
+    "stages": [
+      {
+        "id": "the_standing_orders",
+        "journal": "Hesk has the Standing Orders for a Barrow out on the desk, which is a thin grey book the Wardens issue and expect back, and he has put a finger on the page with the Keeper's Bond in it and left it there while he talks about something else. The Rest split off from the barrow-keepers four hundred years ago over what a roll is for. Hollin Barrow never got the letter.",
+        "objectives": [{"type": "talk", "target": "core:npc/wardens_hesk", "text": "Hear Hesk out on the barrow-keepers"}],
+        "on_enter": [{"give_item": ["core:item/tome_keepers_bond", 1]}],
+        "marker": {"place_id": "core:place/wardens_rest", "radius": 120}
+      },
+      {
+        "id": "read_the_orders",
+        "journal": "Read the orders before you go down. They are mostly about lamps and about not going alone, and on the ninth page there is the Keeper's Bond: the Wardens' own Binding, said over whoever is going in first, which is a promise in the grammatical sense as well as the other one. Hesk says the book is issued and expected back, and then says that in his experience it is never the book that fails to come back.",
+        "objectives": [{"type": "read_book", "target": "core:book/saying_keepers_bond", "text": "Read the Standing Orders for a Barrow"}],
+        "on_complete": [{"set_flag": "read_the_standing_orders"}]
+      },
+      {
+        "id": "the_bell_cist",
+        "journal": "Hollin Barrow is a collapsed crypt cut into chalk with a yew's roots through it, and a long way in there is a cist with a bell hung in it, and the bell is the only warm thing in the ground. The Reeve is in there with a hammer and a roll on a bronze ring, reading. He gets to the end of the forty-first name and starts again. He will not stop for you, because you are not on it.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/hollin_barrow", "radius": 140, "text": "Go down into Hollin Barrow"},
+          {"type": "kill", "target": "core:boss/barrow_reeve", "count": 1, "text": "Settle with the Barrow Reeve"}
+        ],
+        "on_complete": [
+          {"give_item": ["core:item/barrow_roll", 1]},
+          {"set_flag": "took_the_barrow_roll"},
+          {"renown": 25}
+        ]
+      },
+      {
+        "id": "the_roll_of_the_dead",
+        "journal": "A hundred and forty names on limed calfskin sewn to a bronze ring, each with the tool it went down holding: three ladles, a bee-skep, an eel-knife brought up from the Mere, a fiddle. The last forty lines are in the same hand as the first. Fourteen of them are Larkstead's, with *and others* written under them by somebody who was ashamed of the line and would not scratch it out.",
+        "objectives": [{"type": "read_book", "target": "core:book/barrow_roll", "text": "Read the Barrow Roll"}],
+        "on_complete": [{"set_flag": "read_the_barrow_roll"}]
+      },
+      {
+        "id": "a_hundred_and_forty_names",
+        "journal": "Hesk has the Roll open and the Barrow Roll beside it and has not touched either for some time. A hundred and forty names entered in the Wardens' Roll is forty minutes added to a reading that is already an hour, four times a year, for ever, out of a window, to a cold yard. He says the arithmetic is not the objection and then does the arithmetic twice.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_barrow_names",
+            "text": "Decide what the Roll does with a hundred and forty names",
+            "options": [
+              {
+                "id": "enter_them",
+                "text": "Enter all hundred and forty. The reading is longer. That is what a reading is.",
+                "effects": [
+                  {"set_flag": "barrow_names_entered"},
+                  {"deed": ["name_restored", 2]},
+                  {"rep": ["core:faction/wardens", 20]},
+                  {"morality": 8},
+                  {"renown": 15},
+                  {"rumour": ["core:rumour/name_restored", 0.8]}
+                ]
+              },
+              {
+                "id": "one_line",
+                "text": "One line: Hollin Barrow, a hundred and forty, held in the cist.",
+                "effects": [
+                  {"set_flag": "barrow_names_one_line"},
+                  {"rep": ["core:faction/wardens", 25]},
+                  {"morality": -3}
+                ]
+              },
+              {
+                "id": "leave_them",
+                "text": "Leave them out. The Roll keeps places, and a barrow is not a place.",
+                "effects": [
+                  {"set_flag": "barrow_names_left_out"},
+                  {"deed": ["name_struck", 1]},
+                  {"rep": ["core:faction/wardens", 10]},
+                  {"morality": -8}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/wardens_rest", "radius": 120}
+      },
+      {
+        "id": "written",
+        "auto": true,
+        "journal": "It is written, and Hesk has signed under it, and the Barrow Roll is on the shelf under the window next to a chalk doorstep in a box. He says the Rest owes the barrow-keepers a letter four hundred years late and that he is not the man to write it, and then asks you to come back at the turn of the season, because somebody has to read.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "deep_lines_done"}, {"unlock_topic": "barrow_keepers"}]
+      }
+    ],
+    "rewards": {
+      "marks": 140,
+      "renown": 25,
+      "rep": [["core:faction/wardens", 20]],
+      "deed": "quest_complete_faction"
+    }
+  },
+
+  {
+    "id": "core:quest/the_reading",
+    "name": "The Reading",
+    "layer": "faction",
+    "faction": "core:faction/wardens",
+    "giver": "core:npc/wardens_hesk",
+    "region": "core:region/hearthvale",
+    "summary": "Four times a year the Wardens read the whole Roll out of a window to a cold yard. This season you read it. Afterwards you are Roll-Warden, and a Roll-Warden may put a name on a Hearthstone.",
+    "notes": "Wardens' line, last of four; ends with the title and with a name on a stone. Naming a Hearthstone is not a mechanism the game has: what a named stone is, here, is the deed hearthstone_named, the rumour stone_named, a flag saying whose name it took, and the reading that put it there. The rest_at objective is the real Bell Cist stone (hearth_hollin_barrow, from the interior's own meta), so it closes on a real rest.",
+    "requires": [
+      {"quest_done": "core:quest/the_deep_lines"},
+      {"rep_min": ["core:faction/wardens", 70]}
+    ],
+    "stages": [
+      {
+        "id": "the_season",
+        "journal": "The turn of the season. Five hundred names, out of the window of the Roll room, into a yard with eleven people and a dog in it, for an hour and forty minutes. Hesk reads the deep lines and then hands the book sideways without looking up, which is how the Wardens promote anybody.",
+        "objectives": [{"type": "talk", "target": "core:npc/wardens_hesk", "text": "Take the Roll off Hesk at the reading"}],
+        "on_enter": [{"give_item": ["core:item/wardens_roll_excerpt", 1]}],
+        "marker": {"place_id": "core:place/wardens_rest", "radius": 120}
+      },
+      {
+        "id": "you_read",
+        "journal": "Read it. Merrowby, Tamwick, the Rest, Larkbourne Ford, two cottages and a bridge. Then the deep lines, slowly, because they are read first and read slowly: Larkstead, Gosford, Mullbourne, Harewell, and a hundred and forty out of a barrow if you put them in. Your voice goes at about the fortieth name and you keep going, which Dole watches from the back of the yard without comment.",
+        "objectives": [
+          {"type": "read_book", "target": "core:book/wardens_roll_excerpt", "text": "Read the Roll aloud at the Rest"},
+          {"type": "talk", "target": "core:npc/wardens_dole", "text": "Hear what Dole says in the yard afterwards"}
+        ],
+        "on_complete": [{"set_flag": "read_the_roll_aloud"}, {"renown": 15}]
+      },
+      {
+        "id": "the_privilege",
+        "journal": "Hesk explains the privilege on the walk back in, in the tone of a man reading out a clause. A Roll-Warden may set a name on a Hearthstone: put your hand flat on the stone, say the name aloud, and the stone has it, the way it has yours. There are three Roll-Wardens. It has been done nine times in four hundred years and twice it was done wrong, and he will not be drawn on how. The stone he means is the one in the Bell Cist, under the hung bell, in the ground with the hundred and forty in it.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/hollin_barrow", "radius": 140, "text": "Go back down to the Bell Cist"},
+          {"type": "rest_at", "target": "hearth_hollin_barrow", "text": "Put your hand on the stone in the Bell Cist"}
+        ]
+      },
+      {
+        "id": "the_name_on_the_stone",
+        "journal": "The stone is warm and the bell over it is not moving. Whatever name is said here is kept by something that does not forget, does not read aloud, and does not need a yard with eleven people in it. Hesk says that is exactly what is wrong with it, and that he has come down here anyway, and that he will wait outside.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_name_on_the_stone",
+            "text": "Say a name to the stone in the Bell Cist",
+            "options": [
+              {
+                "id": "harewell",
+                "text": "Harewell. Eleven households, a well with a hare on the lip.",
+                "effects": [
+                  {"set_flag": ["stone_named", "harewell"]},
+                  {"deed": ["hearthstone_named", 1]},
+                  {"rumour": ["core:rumour/stone_named", 0.85]},
+                  {"renown": 20},
+                  {"morality": 5},
+                  {"rep": ["core:faction/wardens", 10]}
+                ]
+              },
+              {
+                "id": "your_own",
+                "text": "Your own. You came up out of the quiet with no rope on you.",
+                "effects": [
+                  {"set_flag": ["stone_named", "yourself"]},
+                  {"deed": ["hearthstone_named", 1]},
+                  {"rumour": ["core:rumour/stone_named", 0.9]},
+                  {"renown": 30}
+                ]
+              },
+              {
+                "id": "ryn",
+                "text": "Ryn Larkbourne. Put back on the Roll in ink, and now in stone.",
+                "conditions": [{"flag_equals": ["wardens_roll_ryn", "restored"]}],
+                "effects": [
+                  {"set_flag": ["stone_named", "ryn"]},
+                  {"deed": ["hearthstone_named", 1]},
+                  {"rumour": ["core:rumour/stone_named", 0.8]},
+                  {"renown": 15},
+                  {"morality": 8}
+                ]
+              },
+              {
+                "id": "no_name",
+                "text": "Nothing. A name in one stone is a name in one place. The Wardens read theirs aloud.",
+                "effects": [
+                  {"set_flag": ["stone_named", "nobody"]},
+                  {"rep": ["core:faction/wardens", 15]}
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "roll_warden",
+        "auto": true,
+        "journal": "Roll-Warden, which is a seal, a pen you are not supposed to lend, and the name of whoever reads first at the turn of the season. Hesk has put the seal on the desk and is pretending it was always there, which is the second time he has done that to you and the last, because there is nothing above this one.",
+        "objectives": [],
+        "on_enter": [
+          {"set_flag": "roll_warden"},
+          {"set_flag": "wardens_line_done"},
+          {"set_flag": "ranked_in_a_faction"},
+          {"unlock_topic": "roll_warden"}
+        ]
+      }
+    ],
+    "rewards": {
+      "marks": 200,
+      "renown": 30,
+      "rep": [["core:faction/wardens", 25]],
+      "items": [["core:item/roll_wardens_seal", 1]],
+      "deed": "quest_complete_faction",
+      "effects": [
+        {"teach_spell": "core:spell/call_a_name"},
+        {"notify": "Hesk teaches you the last Calling out of three sheets in a Warden's hand, and makes you say it back, and then asks you not to use it."}
+      ]
+    }
+  }
+]
