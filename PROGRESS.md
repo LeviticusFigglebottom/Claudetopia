@@ -454,6 +454,13 @@ fun. Those need hands on a controller and nothing in this file substitutes for t
 I have deliberately not retuned anything on the strength of these numbers. Changing balance
 without playing is how a considered guess becomes a worse considered guess.
 
+*Since written:* the two ordering complaints are fixed and most of both was the tool, not the
+data — see "Four small holes" below. The flat-armour one stands, unretuned, as a design
+question. The healthy readings hold, except that a house now reads 46 to 157 Hearthvale
+fights rather than 57 to 195: no house price changed, but the tool's estimate of what a
+Hearthvale fight pays rose from 25 to 31 marks once it started counting the loot every kill
+guarantees.
+
 ## What the forge stream found by opening the renders
 
 The measurable part of the prop pass was right before anybody looked at it: `prop_heights.py`
@@ -603,3 +610,67 @@ merged body per appearance, or shadows from a single proxy mesh, would take most
 (NPC appearance is the boot/UX stream's). Scatter is 332 draws for 373 MultiMeshes across 25
 cells, most of them a handful of instances each; merging a cell's small kinds or ranging the
 far ring's is the world-look stream's. Terrain3D's clipmap is 105–184 draws and not ours.
+
+## Four small holes in the systems
+
+All four were found the way the ones above were found: by asking what the code and the data
+promise that nothing in the game actually does. `tools/unwired.py --verbs` went from 43
+test-only verbs to 41, and `tools/dead_data.py` from 6 unread content keys to 6 (the two this
+work could have closed were not the ones it names; see the end).
+
+**Furnishings were promised and unbuyable.** DESIGN §5.14 ends "Furnishings bought".
+`PropertyRegistry.add_furnishing()` and `furnishings()` were written, saved and covered by a
+test, and nothing else in the repository called either — so the promise was a field in a save
+file. Six furnishings ship now (`items/furnishings.json`: a hearth rug, bed hangings, a settle
+chair, a shelf of jars, a book press and a banded oak chest), each naming a prop *kind* the
+forge has already built rather than an asset path, so a rug is woven from whatever cloth its
+region makes. They are sold from the landlord's side of the deed screen — the board outside a
+house you own, which now asks rather than guesses: rent waiting, letting, and the furnishings
+on offer, each its own button. `HouseInterior.dress_furnishings()` puts them in the rooms when
+that house is built, at a spot *derived* from the room (a lattice of candidates scored by
+distance from whatever the dressing pass already put there, deterministic per house) because a
+house you buy has no recipe line for a rug. Nothing but the item ids goes in the save.
+
+The six deeds on sale still name interiors the forge has not built — `property.gd` has always
+said so — so the mechanism is real and the houses to walk into are not there yet.
+`test_furnishings.gd` stands it up against a real house's real rooms and the real positions of
+its resident's things; when those houses are forged, nothing has to change.
+
+**The job boards never listed a job.** `Social.take_quest()` was reached only by tests, and so
+was the whole radiant layer behind it: `Jobs.board_offers()` asked the quest-log participant
+for a `generate()` method that `QuestLog` does not have — it *holds* the RadiantGenerator, and
+`Social.board_jobs()` is what drives it — so every board in the country fell through to the
+economy's own parcel deliveries, every time. Six templates, bounties and hunts with
+region-appropriate quarry, written text and per-board daily cooldowns, and no notice post in
+Wickmere had ever shown one. Both halves go through the façade now.
+
+Wiring it exposed two more: the board announced `quest_started` itself on top of the one
+`QuestLog.start()` already emits, and announced it even when the quest refused to start; and
+`RadiantGenerator` handed notices back out of a board's cache, and restored them from a save,
+without registering them with the quest log — so every job still hanging on a board in a
+loaded game answered "cannot start unknown quest" when taken. A new game cleared the log and
+left the board cache, which is the same divergence.
+
+**Two danger promises the data broke.** Fixed, and most of both was `tools/balance.py` reading
+the wrong numbers: a spell attack's damage lives in the spell, not the attack, so a caster
+scored zero three casts in five; a bleed or a poison goes on taking health after the blow, past
+armour; and `guaranteed` loot was skipped, so a sallowjaw read as worth three marks when the
+hide it always leaves is worth thirty-four. Four enemy numbers then changed, each odd on its
+own terms. DECISIONS.md has the reasoning and what was left alone.
+`tools/tests/test_balance.py` fails the build if either ordering inverts again.
+
+**`systems/exploration` had no README.** Now it has one, and ARCHITECTURE §5 has its row plus
+a note on `GameServices`, which installs the ten non-autoload world services and appeared
+nowhere in ARCHITECTURE at all — the reason a system can ship a working `ensure()` and never
+run. Its save section is deliberately none: everything `PlaceDiscovery` learns is GameState's
+and rides in its section, and what the node holds is a poll timer and a cache rebuilt from the
+content pack on first use.
+
+**Two things found in passing and not fixed.** `test_deed_screen.gd` called
+`registry.owns(DEED)`, which does not exist — the call errored, the test method aborted, and
+the runner counted it green, so the press-the-button test for buying a house had been asserting
+nothing since it was written. It says `is_owned` now and the assertions do run (and pass: the
+behaviour was right all along). And `sells_deeds` on Ellard's def is still dead data: the
+honest use of it is a steward-mediated sale, which would undo the direct board route that was
+just built, so it is left for whoever authors that dialogue. `beds` on the deed items is
+likewise still unread.

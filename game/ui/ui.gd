@@ -483,7 +483,9 @@ func _on_crafting_station_used(station: String, _node: Node) -> void:
 	open("crafting", {"station": station})
 
 
-## A for-sale board read. `deed_confirm.tscn` has always existed and nothing ever opened it.
+## A property board read: for sale, or your own. `deed_confirm.tscn` has always existed and
+## nothing ever opened it; the screen itself decides which of its two moods it is in by asking
+## the registry whether the place is already yours.
 func _on_property_offered(property_id: String, price: int) -> void:
 	var def := ContentDB.get_or_empty(property_id)
 	var property: Dictionary = def.get("property", {})

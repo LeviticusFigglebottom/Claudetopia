@@ -95,21 +95,20 @@ func interact(actor: Node) -> void:
 
 ## The board outside a house you already own is the only place the game asks you to be a
 ## landlord. Letting and rent were built and had nowhere to be done from, so standing at your
-## own sign used to tell you that you owned it and nothing else. Rent first, because money
-## waiting is what you came for; otherwise the board is where you put the word out.
-func _landlord(reg: PropertyRegistry, actor: Node) -> void:
-	var name := PropertyRegistry.display_name(property_id)
-	var due := reg.rent_due(property_id)
-	if due > 0:
-		reg.collect_rent(actor, property_id)
-		return
-	if reg.is_let(property_id):
-		reg.set_let(property_id, false)
-		EventBus.notify.emit("You take %s off the market. Your own key again." % name, "property")
-		return
-	reg.set_let(property_id, true)
-	EventBus.notify.emit("%s is to let, at %d marks a day."
-			% [name, PropertyRegistry.rent_per_day(property_id)], "property")
+## own sign used to tell you that you owned it and nothing else.
+##
+## It used to go through the registry directly and silently, and which of three things one
+## interaction did depended on state the board never showed: the first press collected the
+## rent, the next put the house to let, the next took it off the market. So it opens the same
+## screen the for-sale board opens, in its owner mode — the rent waiting, whether the place is
+## let, and the furnishings on offer for it, each on its own button. `prompt_text()` still
+## says what is waiting, because that is what you read before you walk up to it.
+##
+## The price on the signal is the deed's own posting rather than today's asking price: the
+## screen's owner mode never quotes it, and what a house you already own is worth is what is
+## written on the deed, not what somebody would take for it this afternoon.
+func _landlord(_reg: PropertyRegistry, _actor: Node) -> void:
+	EventBus.property_offered.emit(property_id, PropertyRegistry.price_of(property_id))
 
 
 func accept(actor: Node) -> Dictionary:

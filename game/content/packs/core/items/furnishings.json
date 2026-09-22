@@ -1,0 +1,38 @@
+[
+  {
+    "id": "core:item/furnishing_hearth_rug", "name": "Woven Hearth Rug", "category": "misc", "weight": 6.0, "value": 65, "stack": 1,
+    "tags": ["furnishing", "property", "cloth", "vale"],
+    "description": "Rag-woven in bands of madder and undyed wool, the width of two people sitting. The Vale makes them out of what a household has worn out, so a rug is a record of everything the family stopped wearing.",
+    "furnishing": {"prop": "cloth", "room": "hearth_room", "spot": "floor"}
+  },
+  {
+    "id": "core:item/furnishing_bed_hangings", "name": "Bed Hangings", "category": "misc", "weight": 8.0, "value": 95, "stack": 1,
+    "tags": ["furnishing", "property", "cloth"],
+    "description": "Four lengths of heavy fulled wool and the rail to hang them from. Not decoration: a bed with its curtains drawn is a small warm room inside a cold one, which is the whole of comfort north of Brightwater.",
+    "furnishing": {"prop": "cloth", "room": "bed", "spot": "wall"}
+  },
+  {
+    "id": "core:item/furnishing_hearth_chair", "name": "Settle Chair", "category": "misc", "weight": 14.0, "value": 120, "stack": 1,
+    "tags": ["furnishing", "property", "seat"],
+    "description": "High-backed, panelled, and heavy enough that it stays where it is put. The back is there to keep the draught off your neck while the fire keeps the front of you warm, and it is the chair the head of a household sits in whether or not anybody says so.",
+    "furnishing": {"prop": "chair", "room": "hearth_room", "spot": "floor"}
+  },
+  {
+    "id": "core:item/furnishing_jar_shelf", "name": "Shelf of Jars", "category": "misc", "weight": 18.0, "value": 70, "stack": 1,
+    "tags": ["furnishing", "property", "storage"],
+    "description": "A plain deal shelf and a dozen stoneware jars with waxed cloth lids, the sort a household fills with what it salted, dried or pickled while it had the chance. Empty when you buy it, which is the part that takes a year to put right.",
+    "furnishing": {"prop": "shelf", "room": "store", "spot": "wall"}
+  },
+  {
+    "id": "core:item/furnishing_book_press", "name": "Book Press", "category": "misc", "weight": 40.0, "value": 210, "stack": 1,
+    "tags": ["furnishing", "property", "sayers"],
+    "description": "A standing cupboard with shelves cut for rolls and bound books, and a door that closes against damp and lamp-soot. Tollmere's joiners make them to the Spire's measurements, so a Sayer's roll sits in one without being bent.",
+    "furnishing": {"prop": "cupboard", "room": "study", "spot": "wall"}
+  },
+  {
+    "id": "core:item/furnishing_oak_chest", "name": "Banded Oak Chest", "category": "misc", "weight": 45.0, "value": 155, "stack": 1,
+    "tags": ["furnishing", "property", "storage"],
+    "description": "Riven oak, three iron bands, and a lock whose key is the one already on your ring. What a house of your own is actually for: somewhere to put things down that is not the floor and not your back.",
+    "furnishing": {"prop": "chest", "room": "bed", "spot": "floor", "storage": true}
+  }
+]
