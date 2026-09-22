@@ -35,8 +35,10 @@ REGION_HOUR = {
 }
 # Kinds that carry a fire or a lantern are shot in the last of the light, when a lamp shows
 # and the ground still does (by 19:00 the country is black).
-DUSK_KINDS = {"camp": 18.0, "shrine": 18.0, "hearth": 18.0, "wreck": 17.8}
-DUSK_HOUR = 18.0
+# 18:00 still put the whole foreground in shadow; 17:10 is the last hour where a fire reads
+# against the sky *and* the ground the camp stands on is still lit.
+DUSK_KINDS = {"camp": 17.2, "shrine": 17.2, "hearth": 17.2, "wreck": 17.0}
+DUSK_HOUR = 17.2
 # ...and so is any POI of any kind whose own feature text is about a light. The Lantern
 # Causeway is lit each dusk by a lamplighter who sings as she goes, and photographing it at
 # half past seven in the morning shows poles.
