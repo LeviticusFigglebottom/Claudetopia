@@ -53,12 +53,16 @@ question for whoever placed the POI rather than a silent failure.
   sightlines. Every entry is a full place or POI id (CONTRACTS §8).
 * **`LANDMARK_M`, by the place's `kind`** — how far the thing stands above its
   own ground, which is the difference between a mechanic and a lookup: `tower`
-  18 m, `waterfall` 24, `strange_tree` 14, `giant_bones` 12, `ruins` 8,
-  `strange` 6, `wreck` 5, `standing_stones` 4.5, `bridge` 3.5, `shrine` 3,
+  10 m, `waterfall` 13, `strange_tree` 14, `giant_bones` 13, `ruins` 6,
+  `strange` 2.5, `wreck` 5, `standing_stones` 5, `bridge` 4.5, `shrine` 4,
   `camp` 2.5, `hidden_valley` 1, and `LANDMARK_DEFAULT_M` 6 for anything else.
   A flat six metres for all of them made the falls invisible and the charcoal
   camps monumental, and a hidden valley is called hidden because you cannot see
   into it from anywhere — its sightline is the way in, not the thing itself.
+  Every number is measured off `game/world/pois/poi_builders.gd`, which is what
+  actually stands on the pad: a watch drum is 7.6 m and carries its fire-bowl to
+  about 10, a cliff face is 11 to 13, a standing gable 4.6, a bell buoy is a
+  barrel with a post on it. They were guesses before the POIs were dressed.
 * **`world/generated/pois.json`** — the pads as the world builder actually
   placed them, read straight off disk rather than through `World`, so this
   answers the same in a unit test with no world in the tree, in the scripted
