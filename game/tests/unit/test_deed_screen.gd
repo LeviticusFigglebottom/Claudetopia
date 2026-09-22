@@ -65,7 +65,9 @@ func test_taking_the_key_is_the_same_buying_the_journey_does() -> void:
 	await _tree().process_frame
 	_button("Take the key").pressed.emit()
 	await _tree().process_frame
-	assert_true(registry.owns(DEED), "the screen bought a house the registry never heard of")
+	# `owns` never existed on the registry (`is_owned` does): this line threw, the test stopped
+	# here, and the two lines under it were never reached
+	assert_true(registry.is_owned(DEED), "the screen bought a house the registry never heard of")
 	assert_gt(bag.count(DEED), 0, "no deed in the bag")
 	var key := PropertyRegistry.key_item_of(DEED)
 	assert_gt(bag.count(key), 0, "no key with the deed, so the door stays shut")
@@ -76,7 +78,7 @@ func test_you_cannot_take_a_key_you_cannot_pay_for() -> void:
 	_open(registry.asking_price(DEED))
 	await _tree().process_frame
 	assert_true(_button("Take the key").disabled, "a penniless player was offered the key")
-	assert_false(registry.owns(DEED))
+	assert_false(registry.is_owned(DEED))
 
 
 ## Walking up to the board has to reach the screen. The sign's own `offer_made` signal had no
