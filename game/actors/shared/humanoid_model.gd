@@ -92,6 +92,11 @@ func build() -> void:
 	for mi in _rig_root.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
 		_default_meshes[_logical_name(m.name)] = m
+		# An eye's shadow falls inside the head's. Casting it is two more meshes in every
+		# cascade of the sun for nothing: on Merrowby's street, twenty villagers in view
+		# were 590 of 1328 draw calls, and their eyes about a hundred and thirty of those.
+		if _logical_name(m.name) == "eyes":
+			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_clip_data = _load_clip_data()
 	_restore_contract_clip_names()
 	_apply_loop_flags()
