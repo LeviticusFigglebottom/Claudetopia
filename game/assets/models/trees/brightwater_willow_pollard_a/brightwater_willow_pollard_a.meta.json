@@ -24,11 +24,32 @@
  "glb": "brightwater_willow_pollard_a.glb",
  "hash": "ac0643a5138febdd",
  "height_m": 4.64,
+ "impostor": {
+  "albedo": "brightwater_willow_pollard_a_impostor_albedo.png",
+  "axis": [
+   0.018,
+   0.0843
+  ],
+  "billboard": "upright",
+  "bottom": -0.0488,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "a74cc9502a3143d8",
+  "height": 5.031,
+  "normal": "brightwater_willow_pollard_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "ac0643a5138febdd",
+  "views": 8,
+  "width": 2.5942
+ },
  "kind": "willow_pollard",
  "materials": [
   "brightwater_willow_pollard_a_mat",
   "brightwater_willow_pollard_a_leaf_foliage",
-  "brightwater_willow_pollard_a_impostor_foliage"
+  "brightwater_willow_pollard_a_impostor"
  ],
  "materials_used": [
   "willow_bark",
@@ -41,7 +62,7 @@
   },
   {
    "name": "brightwater_willow_pollard_a_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "brightwater_willow_pollard_a_LOD1",
@@ -86,13 +107,12 @@
   "brightwater_willow_pollard_a_leaf_normal.png",
   "brightwater_willow_pollard_a_leaf_orm.png",
   "brightwater_willow_pollard_a_impostor_albedo.png",
-  "brightwater_willow_pollard_a_impostor_normal.png",
-  "brightwater_willow_pollard_a_impostor_orm.png"
+  "brightwater_willow_pollard_a_impostor_nrm.png"
  ],
  "tris": [
   4114,
   1071,
-  8
+  2
  ],
  "version": 3
 }

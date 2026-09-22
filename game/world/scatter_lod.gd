@@ -29,6 +29,12 @@ const NEAR_MIN := 30.0
 const NEAR_PER_METRE := 4.0
 const FAR_MIN := 70.0
 const FAR_PER_METRE := 10.0
+## Lines no bias moves nearer: a picture is never drawn closer than FAR_FLOOR metres, however far
+## down a player turns the level-of-detail setting (Low's 0.6 would otherwise bring a hawthorn's
+## picture to 42 m, which is the cardboard-at-forty-metres the picture exists to avoid), and the
+## full mesh is never given up closer than NEAR_FLOOR.
+const NEAR_FLOOR := 20.0
+const FAR_FLOOR := 50.0
 ## Opaque ladders: by bounding radius, not height.
 const SOLID_NEAR_MIN := 25.0
 const SOLID_NEAR_PER_METRE := 10.0
@@ -73,8 +79,8 @@ class Ladder extends RefCounted:
 	func set_bias(b: float) -> void:
 		bias = clampf(b, 0.1, 4.0)
 		if tree:
-			near = maxf(NEAR_MIN, NEAR_PER_METRE * size) * bias
-			far = maxf(FAR_MIN, FAR_PER_METRE * size) * bias
+			near = maxf(maxf(NEAR_MIN, NEAR_PER_METRE * size) * bias, NEAR_FLOOR)
+			far = maxf(maxf(FAR_MIN, FAR_PER_METRE * size) * bias, FAR_FLOOR)
 		else:
 			near = maxf(SOLID_NEAR_MIN, SOLID_NEAR_PER_METRE * size) * bias
 			far = maxf(SOLID_FAR_MIN, SOLID_FAR_PER_METRE * size) * bias

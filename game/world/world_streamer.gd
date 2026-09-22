@@ -57,6 +57,9 @@ var provider: TerrainProvider = null
 var view_range := 1.0
 var scatter_density := 1.0
 var lod_bias := 1.0
+## Off, every asset is one MultiMesh a cell as it was before the per-tree levels existed: the
+## capture runner's `--no-lod`, so a frame can be measured and looked at both ways on one build.
+var lod_enabled := true
 var _lod_groups: Array = []
 var _rebuild_queued := false
 
@@ -458,7 +461,7 @@ func _range_for(kind: String, ring: int) -> float:
 ## The ladder a scatter asset is drawn down by distance, or null (world/scatter_lod.gd).
 func _ladder_for(asset_path: String) -> ScatterLod.Ladder:
 	var kind := asset_kind(asset_path)
-	if kind not in ["tree", "rock", "prop"]:
+	if not lod_enabled or kind not in ["tree", "rock", "prop"]:
 		return null
 	var packed := _scene_for(asset_path)
 	return ScatterLod.ladder_for(asset_path, packed, lod_bias) if packed != null else null

@@ -24,11 +24,32 @@
  "glb": "hearthvale_apple_b.glb",
  "hash": "6245f5c69bc635c0",
  "height_m": 5.42,
+ "impostor": {
+  "albedo": "hearthvale_apple_b_impostor_albedo.png",
+  "axis": [
+   -0.0787,
+   0.0288
+  ],
+  "billboard": "upright",
+  "bottom": -0.0375,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "2272562146c09716",
+  "height": 3.8652,
+  "normal": "hearthvale_apple_b_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "6245f5c69bc635c0",
+  "views": 8,
+  "width": 6.2705
+ },
  "kind": "apple",
  "materials": [
   "hearthvale_apple_b_mat",
   "hearthvale_apple_b_leaf_foliage",
-  "hearthvale_apple_b_impostor_foliage"
+  "hearthvale_apple_b_impostor"
  ],
  "materials_used": [
   "oak_bark",
@@ -41,7 +62,7 @@
   },
   {
    "name": "hearthvale_apple_b_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "hearthvale_apple_b_LOD1",
@@ -86,13 +107,12 @@
   "hearthvale_apple_b_leaf_normal.png",
   "hearthvale_apple_b_leaf_orm.png",
   "hearthvale_apple_b_impostor_albedo.png",
-  "hearthvale_apple_b_impostor_normal.png",
-  "hearthvale_apple_b_impostor_orm.png"
+  "hearthvale_apple_b_impostor_nrm.png"
  ],
  "tris": [
   5720,
   1400,
-  8
+  2
  ],
  "version": 3
 }

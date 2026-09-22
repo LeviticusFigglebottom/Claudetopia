@@ -24,10 +24,31 @@
  "glb": "cinderlea_char_stump_b.glb",
  "hash": "32bb974ef6247ded",
  "height_m": 1.93,
+ "impostor": {
+  "albedo": "cinderlea_char_stump_b_impostor_albedo.png",
+  "axis": [
+   -0.0182,
+   -0.0282
+  ],
+  "billboard": "upright",
+  "bottom": -0.0095,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "44bde3aab221afb1",
+  "height": 0.9753,
+  "normal": "cinderlea_char_stump_b_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "32bb974ef6247ded",
+  "views": 8,
+  "width": 0.479
+ },
  "kind": "char_stump",
  "materials": [
   "cinderlea_char_stump_b_mat",
-  "cinderlea_char_stump_b_impostor_foliage"
+  "cinderlea_char_stump_b_impostor"
  ],
  "materials_used": [
   "dead_bark",
@@ -40,7 +61,7 @@
   },
   {
    "name": "cinderlea_char_stump_b_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "cinderlea_char_stump_b_LOD1",
@@ -78,13 +99,12 @@
   "cinderlea_char_stump_b_normal.png",
   "cinderlea_char_stump_b_orm.png",
   "cinderlea_char_stump_b_impostor_albedo.png",
-  "cinderlea_char_stump_b_impostor_normal.png",
-  "cinderlea_char_stump_b_impostor_orm.png"
+  "cinderlea_char_stump_b_impostor_nrm.png"
  ],
  "tris": [
   2904,
   900,
-  8
+  2
  ],
  "version": 3
 }

@@ -24,11 +24,32 @@
  "glb": "skerrow_rowan_a.glb",
  "hash": "eaa7570f607e3f7b",
  "height_m": 6.72,
+ "impostor": {
+  "albedo": "skerrow_rowan_a_impostor_albedo.png",
+  "axis": [
+   0.1328,
+   0.3307
+  ],
+  "billboard": "upright",
+  "bottom": -0.0583,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "a998f61b3ee005e2",
+  "height": 6.0083,
+  "normal": "skerrow_rowan_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "eaa7570f607e3f7b",
+  "views": 8,
+  "width": 7.859
+ },
  "kind": "rowan",
  "materials": [
   "skerrow_rowan_a_mat",
   "skerrow_rowan_a_leaf_foliage",
-  "skerrow_rowan_a_impostor_foliage"
+  "skerrow_rowan_a_impostor"
  ],
  "materials_used": [
   "birch_bark",
@@ -41,7 +62,7 @@
   },
   {
    "name": "skerrow_rowan_a_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "skerrow_rowan_a_LOD1",
@@ -86,13 +107,12 @@
   "skerrow_rowan_a_leaf_normal.png",
   "skerrow_rowan_a_leaf_orm.png",
   "skerrow_rowan_a_impostor_albedo.png",
-  "skerrow_rowan_a_impostor_normal.png",
-  "skerrow_rowan_a_impostor_orm.png"
+  "skerrow_rowan_a_impostor_nrm.png"
  ],
  "tris": [
   6500,
   1478,
-  8
+  2
  ],
  "version": 3
 }

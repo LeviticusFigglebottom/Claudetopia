@@ -24,12 +24,33 @@
  "glb": "briarwold_giant_oak_a.glb",
  "hash": "e3e6fbccfdd2a3d0",
  "height_m": 29.07,
+ "impostor": {
+  "albedo": "briarwold_giant_oak_a_impostor_albedo.png",
+  "axis": [
+   0.766,
+   0.3318
+  ],
+  "billboard": "upright",
+  "bottom": -0.2649,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "42c28799b7dbf62d",
+  "height": 27.2831,
+  "normal": "briarwold_giant_oak_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "e3e6fbccfdd2a3d0",
+  "views": 8,
+  "width": 31.7508
+ },
  "kind": "giant_oak",
  "materials": [
   "briarwold_giant_oak_a_mat",
   "briarwold_giant_oak_a_leaf_foliage",
   "briarwold_giant_oak_a_moss_foliage",
-  "briarwold_giant_oak_a_impostor_foliage"
+  "briarwold_giant_oak_a_impostor"
  ],
  "materials_used": [
   "oak_bark",
@@ -42,7 +63,7 @@
   },
   {
    "name": "briarwold_giant_oak_a_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "briarwold_giant_oak_a_LOD1",
@@ -90,13 +111,12 @@
   "briarwold_giant_oak_a_moss_normal.png",
   "briarwold_giant_oak_a_moss_orm.png",
   "briarwold_giant_oak_a_impostor_albedo.png",
-  "briarwold_giant_oak_a_impostor_normal.png",
-  "briarwold_giant_oak_a_impostor_orm.png"
+  "briarwold_giant_oak_a_impostor_nrm.png"
  ],
  "tris": [
   8754,
   1318,
-  8
+  2
  ],
  "version": 3
 }

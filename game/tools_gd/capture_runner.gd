@@ -36,6 +36,9 @@ var _failures: Array[String] = []
 ## set in memory only: a measurement never writes the player's settings.cfg. Without it the plan
 ## is shot at whatever settings.cfg says, and perf.json records which that was either way.
 var preset := ""
+## `--no-lod` draws the scatter as it was before trees had levels of detail (one MultiMesh a cell
+## and asset), for an A/B of the same frame on the same build.
+var per_tree_lod := true
 
 
 func _ready() -> void:
@@ -51,6 +54,8 @@ func _ready() -> void:
 			attribute = true
 		elif a.begins_with("--preset="):
 			preset = a.substr(9)
+		elif a == "--no-lod":
+			per_tree_lod = false
 	if preset != "":
 		if not Graphics.PRESETS.has(preset):
 			Log.error("Capture", "no graphics preset %s (low, medium, high, painted)" % preset)
@@ -76,6 +81,11 @@ func run() -> int:
 		# a capture teleports across the world between shots, so build cells as fast as the
 		# machine allows rather than at the gameplay drip rate
 		_world.streamer.cells_per_frame = 12
+		if not per_tree_lod:
+			_world.streamer.lod_enabled = false
+			_world.streamer.unload_all()
+			_world.streamer.refresh()
+			Log.info("Capture", "scatter drawn without per-tree levels of detail (--no-lod)")
 	if not people:
 		var crowd := get_tree().root.find_child("NpcStreamer", true, false)
 		if crowd:
