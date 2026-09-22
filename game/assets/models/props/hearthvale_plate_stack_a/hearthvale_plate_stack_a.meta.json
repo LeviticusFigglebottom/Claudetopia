@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.092,
+  "max": [
+   0.105,
+   0.092,
+   0.106
+  ],
+  "min": [
+   -0.106,
+   0.0,
+   -0.106
+  ],
+  "radius": 0.157
+ },
+ "built_seconds": 11.24,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "count": 6,
+ "generator": "gen_props",
+ "glb": "hearthvale_plate_stack_a.glb",
+ "hash": "01ac4d85411976fc",
+ "kind": "plate_stack",
+ "materials": [
+  "hearthvale_plate_stack_a_mat"
+ ],
+ "materials_used": [
+  "ceramic"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_plate_stack_a",
+   "tris": 2160
+  },
+  {
+   "name": "hearthvale_plate_stack_a_LOD1",
+   "tris": 864
+  },
+  {
+   "name": "hearthvale_plate_stack_a_LOD2",
+   "tris": 324
+  }
+ ],
+ "name": "hearthvale_plate_stack_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 8316,
+ "textures": [
+  "hearthvale_plate_stack_a_albedo.png",
+  "hearthvale_plate_stack_a_normal.png",
+  "hearthvale_plate_stack_a_orm.png"
+ ],
+ "tris": [
+  2160,
+  864,
+  324
+ ],
+ "version": 3
+}

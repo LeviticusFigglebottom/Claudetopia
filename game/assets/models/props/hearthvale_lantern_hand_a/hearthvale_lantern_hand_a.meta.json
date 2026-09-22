@@ -1,0 +1,82 @@
+{
+ "bounds": {
+  "height": 0.238,
+  "max": [
+   0.056,
+   0.238,
+   0.056
+  ],
+  "min": [
+   -0.056,
+   0.0,
+   -0.056
+  ],
+  "radius": 0.143
+ },
+ "built_seconds": 21.86,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "emissive": true,
+ "generator": "gen_props",
+ "glb": "hearthvale_lantern_hand_a.glb",
+ "hash": "d9571f80b77f5d82",
+ "kind": "lantern_hand",
+ "materials": [
+  "hearthvale_lantern_hand_a_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "glass"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_lantern_hand_a",
+   "tris": 768
+  },
+  {
+   "name": "hearthvale_lantern_hand_a_LOD1",
+   "tris": 306
+  },
+  {
+   "name": "hearthvale_lantern_hand_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_lantern_hand_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 8687,
+ "textures": [
+  "hearthvale_lantern_hand_a_albedo.png",
+  "hearthvale_lantern_hand_a_normal.png",
+  "hearthvale_lantern_hand_a_orm.png",
+  "hearthvale_lantern_hand_a_emission.png"
+ ],
+ "tris": [
+  768,
+  306,
+  120
+ ],
+ "version": 3
+}

@@ -38,8 +38,10 @@ python3 tools/forge/contact_sheet.py captures/assets/trees --cols 3
 ```
 
 `--lod=1` or `--lod=2` reviews a LOD level; `--turntable=8` adds a turn; `--only=oak`
-filters. Exposure is fixed in the scene (`tonemap_white ≈ 6`, sun ≈ 1.0): on the
-Compatibility renderer anything brighter clips mid-greys to white.
+filters, and `--only=bowl,table_trestle` takes several, which is how you get the known
+reference the section below insists on into the same frame as the thing you are judging.
+Exposure is fixed in the scene (`tonemap_white ≈ 6`, sun ≈ 1.0): on the Compatibility
+renderer anything brighter clips mid-greys to white.
 
 ## Layout
 
