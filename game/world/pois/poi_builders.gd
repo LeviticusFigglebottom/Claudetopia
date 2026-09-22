@@ -10,7 +10,8 @@ extends RefCounted
 
 ## The kinds a builder exists for. `PoiDressing.KINDS` is the whole list the design names;
 ## `test_pois.gd` reports the difference as still to be dressed.
-const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins"]
+const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
+		"giant_bones"]
 
 
 static func build(d: PoiDressing) -> void:
@@ -29,6 +30,8 @@ static func build(d: PoiDressing) -> void:
 			waterfall(d)
 		"ruins":
 			ruins(d)
+		"giant_bones":
+			giant_bones(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
 
@@ -1611,3 +1614,160 @@ static func _ruins_breach(d: PoiDressing) -> void:
 		var p := perp * k.rng.randf_range(-6.0, 6.0) + through * k.rng.randf_range(-9.0, 9.0)
 		ash.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.02), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.7, 1.2)))
 	k.scatter(k.flora("grey_grass"), ash, false, false, false)
+
+
+# --- giant bones ---------------------------------------------------------------------------------------
+
+## One animal, laid out as one animal. The forge built the parts — a rib seven metres tall, a
+## vertebra, a finger, a piece of skull — and a heap of them is a quarry; a spine running away
+## from you with its ribs arching over your head is a nave. So both of these are articulated:
+## the spine is a line of vertebrae with the ribs in pairs along it, and you walk down the
+## inside of it.
+static func giant_bones(d: PoiDressing) -> void:
+	var k := d.kit
+	if PoiKit.brief_says(d.brief, ["skull", "antler"]):
+		_bones_skull(d)
+	else:
+		_bones_ribcage(d)
+
+
+## The spine and ribs, walked through: `count` pairs of ribs along the line, arching in over
+## the middle, with the vertebrae between them and the scapulae at the shoulder.
+static func _bones_ribcage(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var lie := k.grain()
+	var perp := Vector2(-lie.y, lie.x)
+	var yaw := PoiKit.yaw_of(lie)
+	var rib := k.rock("bone_rib")
+	var vert := k.rock("bone_vertebra")
+	var rib_h := PoiKit.height_of(rib)
+	var scale := 1.35
+	var spacing := 3.4
+	var pairs := 9
+	var half := float(pairs - 1) * spacing * 0.5
+	var ribs: Array = []
+	var verts: Array = []
+	# The forge's rib stands with its foot at the origin and curves over; a pair of them set
+	# either side of the line and leaned inward closes over the aisle.
+	for i in pairs:
+		var along := -half + float(i) * spacing
+		var taper := 1.0 - 0.30 * pow(absf(along) / maxf(half, 1.0), 1.6)
+		var s := scale * taper
+		var at := lie * along
+		for side in [-1.0, 1.0]:
+			var foot := at + perp * float(side) * (3.6 * taper)
+			var lean := Vector3(0.0, 0.0, -0.34 * float(side))
+			ribs.append(PoiKit.transform_at(k.on_ground(foot.x, foot.y, -0.35),
+					yaw + (0.0 if side > 0.0 else PI), s, lean))
+		# the vertebra at the top of the arch, on the spine itself
+		var spine_y := k.on_ground(at.x, at.y).y + rib_h * s * 0.92
+		verts.append(PoiKit.transform_at(Vector3(at.x, spine_y, at.y), yaw + PI * 0.5, s * 0.5,
+				Vector3(0.0, 0.0, PI * 0.5)))
+	k.scatter(rib, ribs, true, true)
+	k.scatter(vert, verts, false, true)
+	# the neck running on past the last rib, its vertebrae down into the ground
+	var neck: Array = []
+	for i in 6:
+		var along := half + 2.6 + float(i) * 2.4
+		var at := lie * along
+		var drop := float(i) * 0.5
+		neck.append(PoiKit.transform_at(k.on_ground(at.x, at.y, 1.4 - drop), yaw + PI * 0.5,
+				scale * (0.62 - 0.04 * float(i)), Vector3(0.0, 0.0, PI * 0.5 + 0.1 * float(i))))
+	k.scatter(vert, neck, true, true)
+	# the skull at the end of the neck, its socket a door: the crag-wolves den in it
+	var skull_at := lie * (half + 19.0)
+	var skull := k.rock("bone_skull_fragment")
+	k.place(skull, k.on_ground(skull_at.x, skull_at.y, -0.6), yaw + PI, 2.1, true, Vector3(0.12, 0.0, 0.06), true)
+	# the scapulae, fallen flat at the shoulder
+	for side in [-1.0, 1.0]:
+		var sc := lie * (half * 0.5) + perp * float(side) * 7.5
+		k.place(k.rock("bone_skull_fragment", 1), k.on_ground(sc.x, sc.y, -0.5), yaw + PI * 0.4 * float(side), 1.3,
+				true, Vector3(PI * 0.42, 0.0, 0.0))
+	# the clans hold their oaths here: a hearth on the aisle's floor, a stone to swear on
+	var centre := Vector2.ZERO
+	k.place(k.prop("campfire"), k.on_ground(centre.x, centre.y), k.rng.randf_range(0.0, TAU))
+	k.light(k.on_ground(centre.x, centre.y, 0.9), Color(1.0, 0.66, 0.34), 2.6, 15.0)
+	var stone_at := -lie * (half * 0.55)
+	k.place(k.rock("standing_stone"), k.on_ground(stone_at.x, stone_at.y), yaw + PI, 0.8)
+	for side in [-1.0, 1.0]:
+		var bench := perp * float(side) * 2.2
+		k.place(k.prop("bench"), k.on_ground(bench.x, bench.y), yaw + PI * 0.5)
+	# scree and heather under it all, and the smaller bones that came off
+	var bits: Array = []
+	for i in 22:
+		var p := lie * k.rng.randf_range(-half - 4.0, half + 14.0) + perp * k.rng.randf_range(-9.0, 9.0)
+		bits.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.8),
+				Vector3(k.rng.randf_range(1.2, PI * 0.5), 0.0, k.rng.randf_range(-0.4, 0.4))))
+	k.scatter(k.rock("bone_finger"), bits, true)
+	var scree: Array = []
+	for i in 26:
+		var p := lie * k.rng.randf_range(-half - 6.0, half + 16.0) + perp * k.rng.randf_range(-12.0, 12.0)
+		scree.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.0)))
+	k.scatter(k.rock("scree"), scree)
+	var heather: Array = []
+	for i in 40:
+		var p := lie * k.rng.randf_range(-half - 8.0, half + 18.0) + perp * k.rng.randf_range(-14.0, 14.0)
+		heather.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
+	k.scatter(k.flora("heather"), heather, false, false, false)
+
+
+## The Hart Bones: an antlered skull the size of a hall, jaw in the leaf litter, its antlers
+## going up into the canopy — and a Hart-Knight's vigil kept at it.
+static func _bones_skull(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var face := k.grain()
+	var perp := Vector2(-face.y, face.x)
+	var yaw := PoiKit.yaw_of(face)
+	var skull := k.rock("bone_skull_fragment")
+	var g := k.on_ground(0.0, 0.0)
+	# the skull: two pieces of the forge's cranium set nose to nose, at the size of a hall
+	var s := 3.4
+	k.place(skull, k.on_ground(0.0, 0.0, -0.9), yaw, s, true, Vector3(0.14, 0.0, 0.0), true)
+	k.place(k.rock("bone_skull_fragment", 1), k.on_ground(face.x * 3.2, face.y * 3.2, -1.3), yaw + PI, s * 0.8,
+			true, Vector3(-0.2, 0.0, 0.05), true)
+	# the antlers: the forge's finger bones, branching up and out from the crown in two racks
+	var antlers: Array = []
+	var crown := Vector3(-face.x * 1.2, g.y + PoiKit.height_of(skull) * s * 0.78, -face.y * 1.2)
+	for side in [-1.0, 1.0]:
+		var base := crown + Vector3(perp.x, 0.0, perp.y) * float(side) * 2.2
+		for i in 5:
+			var t := float(i) / 4.0
+			var out := 1.6 + t * 6.5
+			var up := 1.2 + t * 4.2 - t * t * 1.4
+			var tip := base + Vector3(perp.x, 0.0, perp.y) * float(side) * out + Vector3(0.0, up, 0.0) \
+					+ Vector3(face.x, 0.0, face.y) * (t * 2.2 - 0.6)
+			antlers.append(PoiKit.transform_at(tip, yaw + float(side) * (0.4 + t * 0.7), 1.5 - t * 0.5,
+					Vector3(0.0, 0.0, float(side) * (1.15 - t * 0.5))))
+			# a tine off each beam
+			if i % 2 == 1:
+				antlers.append(PoiKit.transform_at(tip + Vector3(0.0, 1.4, 0.0), yaw + float(side) * 1.2, 0.8,
+						Vector3(0.5, 0.0, float(side) * 0.3)))
+	k.scatter(k.rock("bone_finger"), antlers, false, true)
+	# the vigil: a knight's fire, a spear set in the ground, a shield against the jaw
+	var camp := face * 7.0 + perp * 2.5
+	k.place(k.prop("campfire"), k.on_ground(camp.x, camp.y), 0.0)
+	k.light(k.on_ground(camp.x, camp.y, 0.9), Color(1.0, 0.66, 0.34), 2.4, 12.0)
+	k.place(k.prop("bedroll"), k.on_ground(camp.x + perp.x * 1.8, camp.y + perp.y * 1.8), yaw)
+	var spear := camp - perp * 1.6
+	k.place(k.prop("spear"), k.on_ground(spear.x, spear.y), yaw, 1.0, false, Vector3(0.06, 0.0, 0.06))
+	k.place(k.prop("shield"), k.on_ground(face.x * 4.2 + perp.x * -2.0, face.y * 4.2 + perp.y * -2.0), yaw + 0.6,
+			1.0, false, Vector3(-0.3, 0.0, 0.0))
+	# the wood round it: ferns, bracken, and the antlers people have left in its memory
+	var offerings: Array = []
+	for p in k.ring(7, 6.5, Vector2.ZERO, 0.2):
+		var pp: Vector2 = p
+		offerings.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.4, 0.7),
+				Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3))))
+	k.scatter(k.rock("bone_finger", 1), offerings, true)
+	var ferns: Array = []
+	for i in 46:
+		var p := k.jitter(15.0)
+		ferns.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
+	k.scatter(k.flora("fern"), ferns, false, false, false)
+	var moss: Array = []
+	for i in 18:
+		var p := k.jitter(9.0)
+		moss.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.02), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
+	k.scatter(k.flora("moss_patch"), moss, false, false, false)
