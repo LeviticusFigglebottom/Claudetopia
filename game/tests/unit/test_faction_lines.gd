@@ -17,6 +17,11 @@ const LANE := "core:quest/the_lane_that_isnt"
 const DEEP_LINES := "core:quest/the_deep_lines"
 const READING := "core:quest/the_reading"
 
+const LOUDER := "core:quest/louder"
+const MEASUREMENT := "core:quest/the_long_measurement"
+const COUNCIL := "core:quest/in_council"
+const UNSAID := "core:quest/the_unsaid_woman"
+
 var log_node: Node
 var ctx: SocialContext
 var inventory: SocialFakes.FakeInventory
@@ -65,7 +70,12 @@ func talk_to(npc_id: String) -> Node:
 
 
 ## Takes the choice whose text begins with `prefix`, and says so if there is no such choice.
+## Walks past any plain line first, because a player presses on through those.
 func press(runner: Node, prefix: String) -> bool:
+	for i in 8:
+		if not runner.is_running() or not runner.current_choices.is_empty():
+			break
+		runner.advance()
 	var offered: Array[String] = []
 	for i in (runner.current_choices as Array).size():
 		var text := str((runner.current_choices[i] as Dictionary).get("text", ""))
@@ -318,6 +328,220 @@ func test_a_stone_cannot_take_a_name_the_roll_has_struck() -> void:
 		hesk.stop()
 	assert_true(log_node.is_completed(READING))
 	assert_eq(str(ctx.get_flag("stone_named", "")), "nobody")
+
+
+# --- the Sayers' Circle ---------------------------------------------------------------------------
+
+## Louder, taken and professed through Sulion's own hall, which is also the only way its last
+## stage can be answered at all.
+func finish_louder(profession: String = "The Bell.") -> void:
+	var runner := talk_to("core:npc/aldith_sulion")
+	press(runner, "Can I be taught?")
+	if runner.is_running():
+		runner.stop()
+	assert_true(log_node.is_active(LOUDER), "the Circle takes Listeners off a button")
+	log_node.set_stage(LOUDER, "profess")
+	var hall := talk_to("core:npc/aldith_sulion")
+	press(hall, "I am ready to profess.")
+	press(hall, profession)
+	if hall.is_running():
+		hall.stop()
+	assert_true(log_node.is_completed(LOUDER), "professing in the hall finishes Louder")
+
+
+func test_louder_can_finally_be_professed() -> void:
+	finish_louder()
+	assert_true(ctx.has_flag("sayer_professed_bell"), "the option's own effects ran")
+	assert_true(ctx.has_flag("louder_done"))
+	assert_true(ctx.has_flag("ranked_in_a_faction"))
+	assert_gt(Social.factions.reputation(SAYERS), 20, "a Speaker is past the first threshold")
+
+
+func test_the_scraped_name_can_be_professed_only_once_it_is_found() -> void:
+	var runner := talk_to("core:npc/aldith_sulion")
+	press(runner, "Can I be taught?")
+	runner.stop()
+	log_node.set_stage(LOUDER, "profess")
+	var ids: Array[String] = []
+	for o in log_node.open_options(LOUDER):
+		ids.append(str(o["id"]))
+	assert_false(ids.has("tide"), "a scraped name you have not found is not on the list")
+	ctx.set_flag("found_tessane")
+	ids.clear()
+	for o in log_node.open_options(LOUDER):
+		ids.append(str(o["id"]))
+	assert_true(ids.has("tide"), "and it is, once it has been found")
+	var hall := talk_to("core:npc/aldith_sulion")
+	press(hall, "I am ready to profess.")
+	press(hall, "The Tide, in Tessane's name.")
+	if hall.is_running():
+		hall.stop()
+	assert_true(ctx.has_flag("sayer_professed_tide"))
+	assert_true(log_node.is_completed(LOUDER))
+
+
+func test_the_long_measurement_is_taken_in_two_rooms() -> void:
+	finish_louder()
+	rep(SAYERS, 30)
+
+	walk_in("core:npc/ismay_ondrael", ["Who is going to take that measurement for you?", "Why does the room matter?", "Then give me the glass"])
+	assert_true(log_node.is_active(MEASUREMENT), "she has been asking for eleven years and now somebody said yes")
+	assert_eq(stage(MEASUREMENT), "the_warm_room")
+	assert_eq(inventory.count("core:item/ondraels_sand_glass"), 1, "and the glass came off her table")
+
+	arrived("core:place/merrowby")
+	EventBus.dialogue_ended.emit("core:npc/tobin_cresswell")
+	assert_eq(stage(MEASUREMENT), "the_quiet_place")
+	assert_true(ctx.has_flag("measured_in_the_warm"))
+
+	arrived("core:place/undercroft")
+	killed("core:enemy/gutter_drake", 3)
+	assert_eq(stage(MEASUREMENT), "the_quiet_place", "the figure is taken at the stone, not on the stair")
+	EventBus.hearthstone_rested.emit("hearth_undercroft")
+	assert_eq(stage(MEASUREMENT), "the_figures")
+	assert_true(ctx.has_flag("measured_in_the_deep"))
+	assert_eq(inventory.count("core:item/ondraels_figures"), 1)
+
+	read("core:book/ondraels_figures")
+	EventBus.dialogue_ended.emit("core:npc/ismay_ondrael")
+	assert_eq(stage(MEASUREMENT), "whose_name_on_it")
+
+	var her := talk_to("core:npc/ismay_ondrael")
+	press(her, "Two figures, in my own hand.")
+	press(her, "Both. Yours first")
+	if her.is_running():
+		her.stop()
+	assert_true(log_node.is_completed(MEASUREMENT))
+	assert_eq(log_node.outcome_of(MEASUREMENT), "both")
+	assert_true(ctx.has_flag("figures_published_as_both"))
+	assert_true(ctx.has_flag("long_measurement_done"), "the flag the council gates on")
+	assert_true(sayings.knows_spell("core:spell/winters_argument"), "the slow case, for a slow measurement")
+
+
+func test_in_council_buys_the_hymn_with_the_price_it_was_asked() -> void:
+	finish_louder()
+	rep(SAYERS, 50)
+	already_finished(MEASUREMENT)
+	rep(SAYERS, 50)
+
+	walk_in("core:npc/aldith_sulion", ["What would make the Circle sit in council?", "I'll go and ask them."])
+	assert_true(log_node.is_active(COUNCIL))
+	assert_eq(stage(COUNCIL), "the_round")
+
+	arrived("core:place/isseva")
+	var auti := talk_to("core:npc/auti_sa")
+	press(auti, "The Circle wants the round. Written.")
+	press(auti, "What is the fourth line?")
+	auti.stop()
+	assert_eq(inventory.count("core:item/the_reed_round"), 1, "she hands it over for the right reason")
+	assert_true(ctx.has_flag("auti_gave_the_round"))
+	assert_eq(stage(COUNCIL), "read_it")
+
+	read("core:book/the_reed_round")
+	assert_eq(stage(COUNCIL), "the_council")
+
+	arrived("core:place/sayers_spire")
+	for who in ["core:npc/aldith_sulion", "core:npc/bennick_cresswell", "core:npc/ismay_ondrael"]:
+		EventBus.dialogue_ended.emit(who)
+	assert_eq(stage(COUNCIL), "the_minutes", "all three have to stay in the room")
+
+	ctx.set_flag("found_tessane")
+	var sulion := talk_to("core:npc/aldith_sulion")
+	press(sulion, "The minutes. Somebody has to write them.")
+	press(sulion, "The flat fourth is Tessane's.")
+	if sulion.is_running():
+		sulion.stop()
+	assert_true(log_node.is_completed(COUNCIL))
+	assert_true(ctx.has_flag("minutes_name_tessane"))
+	assert_true(ctx.has_flag("in_council_done"))
+
+
+func test_the_circles_way_of_writing_minutes_costs_the_marsh() -> void:
+	finish_louder()
+	rep(SAYERS, 50)
+	already_finished(MEASUREMENT)
+	rep(SAYERS, 50)
+	# She has been twice herself and says so, and the offer is still there afterwards.
+	walk_in("core:npc/aldith_sulion", ["What would make the Circle sit in council?", "Ask them yourself.",
+		"What would make the Circle sit in council?", "I'll go and ask them."])
+	log_node.set_stage(COUNCIL, "the_minutes")
+	var before: int = Social.factions.reputation("core:faction/reed_council")
+	var sulion := talk_to("core:npc/aldith_sulion")
+	press(sulion, "The minutes. Somebody has to write them.")
+	press(sulion, "A marsh variant, unattributed.")
+	if sulion.is_running():
+		sulion.stop()
+	assert_eq(log_node.outcome_of(COUNCIL), "the_circles_way")
+	assert_true(Social.factions.reputation("core:faction/reed_council") < before, "Isseva hears about it")
+	assert_true(Social.standing.morality() < 0)
+
+
+func test_the_unsaid_woman_ends_the_line_on_which_account_is_taught() -> void:
+	finish_louder()
+	ctx.set_flag("found_tessane")
+	rep(SAYERS, 75)
+	already_finished(MEASUREMENT)
+	already_finished(COUNCIL)
+	rep(SAYERS, 75)
+
+	walk_in("core:npc/ismay_ondrael", ["Tessane. Where did she actually go?", "What do you expect me to find?", "I'll go."])
+	assert_true(log_node.is_active(UNSAID))
+	assert_eq(stage(UNSAID), "the_eleven_days")
+
+	arrived("core:place/isseva")
+	var auti := talk_to("core:npc/auti_sa")
+	press(auti, "Tell me what Tessane left at this bench.")
+	auti.stop()
+	assert_true(ctx.has_flag("isseva_told_tessanes_lantern"))
+	EventBus.dialogue_ended.emit("core:npc/tallissa_oul")
+	assert_eq(stage(UNSAID), "the_lantern")
+
+	var loa := talk_to("core:npc/loa_oul")
+	press(loa, "The lantern with the uncut reed.")
+	press(loa, "Say it, then.")
+	loa.stop()
+	assert_true(ctx.has_flag("loa_said_the_name"), "twenty-two years of oil, and now the name out loud")
+	assert_eq(inventory.count("core:item/tessanes_lantern"), 1)
+	assert_eq(stage(UNSAID), "the_hall")
+
+	arrived("core:place/sayers_spire")
+	var sulion := talk_to("core:npc/aldith_sulion")
+	press(sulion, "This is Tessane's lantern.")
+	sulion.stop()
+	assert_true(ctx.has_flag("sulion_took_the_lantern"))
+	assert_eq(stage(UNSAID), "which_account", "the delivery was made in the conversation")
+
+	var hall := talk_to("core:npc/aldith_sulion")
+	press(hall, "You said the floor was mine.")
+	press(hall, "Four accounts.")
+	if hall.is_running():
+		hall.stop()
+	assert_true(log_node.is_completed(UNSAID))
+	assert_true(ctx.has_flag("circle_teaches_four"), "the ending WORLD_BIBLE 4.1 sets")
+	assert_true(ctx.has_flag("tessane_restored"))
+	assert_true(ctx.has_flag("sayers_line_done"))
+	assert_gt(Social.standing.morality(), 0, "putting a name back is a Hearth deed")
+	assert_true(sayings.knows_spell("core:spell/call_the_hound"))
+	assert_eq(Social.factions.rank_name(SAYERS), "Voice of the Circle", "the line ends at the top of the ladder")
+
+
+func test_the_circle_can_unsay_her_a_second_time() -> void:
+	finish_louder()
+	ctx.set_flag("found_tessane")
+	rep(SAYERS, 75)
+	already_finished(MEASUREMENT)
+	already_finished(COUNCIL)
+	rep(SAYERS, 75)
+	walk_in("core:npc/ismay_ondrael", ["Tessane. Where did she actually go?", "Then I'll go and find the rest of them."])
+	log_node.set_stage(UNSAID, "which_account")
+	var hall := talk_to("core:npc/aldith_sulion")
+	press(hall, "You said the floor was mine.")
+	press(hall, "Nothing. Blow the lantern out.")
+	if hall.is_running():
+		hall.stop()
+	assert_true(log_node.is_completed(UNSAID))
+	assert_true(ctx.has_flag("circle_unsaid_her_again"))
+	assert_true(Social.standing.morality() < 0, "doing it twice is worse than doing it once")
 
 
 # --- what every faction line owes a player ---------------------------------------------------------
