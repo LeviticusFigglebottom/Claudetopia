@@ -78,14 +78,14 @@ func test_every_poi_kind_in_the_pack_has_a_builder() -> void:
 static func _pending_kinds() -> Array[String]:
 	var out: Array[String] = []
 	for kind in PoiDressing.KINDS:
-		if not PoiBuilders.KINDS_BUILT.has(kind):
+		if not PoiDressing.KINDS_BUILT.has(kind):
 			out.append(kind)
 	return out
 
 
 func _built(item: Dictionary) -> bool:
 	var entry: Dictionary = item["entry"]
-	return PoiBuilders.KINDS_BUILT.has(PoiDressing.kind_of(str(entry["place_id"]), item["def"]))
+	return PoiDressing.KINDS_BUILT.has(PoiDressing.kind_of(str(entry["place_id"]), item["def"]))
 
 
 func test_every_poi_in_the_world_raises_a_dressing() -> void:

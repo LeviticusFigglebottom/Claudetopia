@@ -1,4 +1,3 @@
-class_name PoiBuilders
 extends RefCounted
 ## One builder per kind of point of interest. Each takes the dressing (its kit, its masonry,
 ## its brief) and stands the place up out of the forge's assets and a little runtime masonry.
@@ -7,11 +6,15 @@ extends RefCounted
 ## the thing you see. So a camp with "a stolen mill wheel as a table" gets a millstone laid on
 ## a barrel, and a shrine "built of lake pebbles" is a cairn rather than a standing stone.
 ## Everything else follows from the kind and the region's culture.
-
-## The kinds a builder exists for. `PoiDressing.KINDS` is the whole list the design names;
-## `test_pois.gd` reports the difference as still to be dressed.
-const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
-		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange"]
+##
+## **This script deliberately has no `class_name`.** Every builder below takes a
+## `PoiDressing`, so a global name here is one half of a pair of scripts that name each other,
+## and GDScript cannot always resolve that: after an import rebuilds the global class cache it
+## parses one, fails on the half-built other, and reports `Could not resolve class
+## "PoiBuilders", because of a parser error` — against whatever third file mentioned the name,
+## which was `test_pois.gd`. `PoiDressing` loads this by path (`BUILDERS_PATH`) and the list
+## of kinds a builder exists for lives on `PoiDressing.KINDS_BUILT`, so nothing outside this
+## file needs the name at all.
 
 
 static func build(d: PoiDressing) -> void:
@@ -920,9 +923,12 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 		# apron twenty metres long, which is what a seven-block run of 3.3 × 4.6 came out as
 		var paving := m.begin()
 		for i in 22:
-			var a := k.rng.randf_range(0.0, TAU)
+			# `ang`, not `a`: the near end of the span is already `a` at function scope, and
+			# GDScript refuses the second declaration — which stops the whole script compiling,
+			# so nothing that draws a point of interest loads at all
+			var ang := k.rng.randf_range(0.0, TAU)
 			var r := 1.2 + 3.4 * sqrt(k.rng.randf())
-			var p := mid + Vector2(sin(a), cos(a)) * r
+			var p := mid + Vector2(sin(ang), cos(ang)) * r
 			var gg := k.on_ground(p.x, p.y)
 			m.block(paving, Transform3D(Basis(Vector3.UP, k.rng.randf_range(0.0, TAU))
 					* Basis(Vector3.BACK, k.rng.randf_range(-0.05, 0.05)), gg - Vector3(0.0, 0.03, 0.0)),
