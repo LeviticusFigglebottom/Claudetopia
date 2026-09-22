@@ -336,20 +336,29 @@ func steps(st: SurfaceTool, start: Vector2, dir: Vector2, y0: float, count: int,
 ## `height` at the centre, sitting at local height `base_y`; `power` shapes it (1 = round,
 ## 3 = flat-topped). Walkable when `collide`.
 func mound(centre: Vector3, r: float, height: float, mat: Material, node_name: String,
-		collide := true, power := 1.6, rings := 7, segments := 20, silhouette := false) -> MeshInstance3D:
+		collide := true, power := 1.6, rings := 7, segments := 20, silhouette := false,
+		rough := 0.06) -> MeshInstance3D:
 	if kit.far and not silhouette:
 		return null
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# A dome with no variation in it is a marshmallow, which is exactly how the first drifts of
+	# snow at the Windgate toll-house photographed. `rough` lifts and drops the surface in a
+	# few broad lobes as well as jittering the rim, so it reads as something the wind piled.
+	var lobes := kit.rng.randf_range(2.0, 4.0)
+	var phase := kit.rng.randf_range(0.0, TAU)
 	var pts: Array = []
 	for i in rings + 1:
 		var f := float(i) / float(rings)
 		var rr := r * f
-		var y := height * pow(maxf(1.0 - f * f, 0.0), power * 0.5)
 		var row: Array = []
 		for j in segments:
 			var a := TAU * float(j) / float(segments)
-			var wob := 1.0 + (kit.rng.randf_range(-0.05, 0.05) if i > 0 else 0.0)
+			var swell := 1.0 + rough * (sin(a * lobes + phase) + 0.6 * sin(a * (lobes * 2.3) - phase))
+			var y := height * pow(maxf(1.0 - f * f, 0.0), power * 0.5) * swell
+			y += height * rough * 0.5 * sin(a * (lobes + 1.7) + phase * 1.3) * f
+			var wob := 1.0 + (kit.rng.randf_range(-rough, rough) if i > 0 else 0.0) \
+					+ (rough * 1.4 * sin(a * lobes + phase) if i == rings else 0.0)
 			row.append(centre + Vector3(sin(a) * rr * wob, y, cos(a) * rr * wob))
 		pts.append(row)
 	for i in rings:

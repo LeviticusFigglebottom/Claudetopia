@@ -700,28 +700,30 @@ static func _tower_toll_house(d: PoiDressing, grain: Vector2) -> void:
 	m.block(stone, roof.translated_local(Vector3(-half * 0.5, 0.0, 0.0)), Vector3(half + 0.6, 0.3, half * 2.0 + 0.6))
 	m.commit(stone, k.surface("stone", 0.55), "Walls", true)
 	var timber := m.begin()
-	var hang := m.frame(timber, Vector2.ZERO, yaw, 1.6, h + 2.4, 0.2)
+	var hang := m.frame(timber, Vector2.ZERO, yaw, 2.4, h + 2.8, 0.3)
 	m.commit(timber, k.surface("timber"), "Frame", true)
 	# the bell, frozen mid-swing
 	var bell := k.prop("bell_medium")
-	var bs := 1.6
+	var bs := 2.2
 	k.place(bell, hang - Vector3(0.0, PoiKit.height_of(bell) * bs, 0.0) + basis * Vector3(0.0, 0.35, 0.4), yaw, bs, false,
 			Vector3(0.62, 0.0, 0.0), true)
-	# old snow, drifted against the walls and over the roof
-	var snow := PoiKit.plain(Color(0.93, 0.95, 0.99), 0.55)
+	# old snow, drifted against the walls and over the roof. Wind-piled snow lies long and low
+	# against a wall rather than heaping up it, and it is never the white of paper.
+	var snow := PoiKit.plain(Color(0.82, 0.85, 0.9), 0.7)
 	for i in 4:
 		var a: Vector2 = corners[i]
 		var b: Vector2 = corners[(i + 1) % 4]
 		var mid := (a + b) * 0.5
 		var out := mid.normalized()
-		var at := mid + out * 1.4
-		m.mound(k.on_ground(at.x, at.y, -0.2), 3.4, 2.2 + k.rng.randf_range(-0.4, 0.6), snow, "Drift", true, 1.9, 5, 14, true)
+		var at := mid + out * 2.2
+		m.mound(k.on_ground(at.x, at.y, -0.35), 4.6, 1.5 + k.rng.randf_range(-0.3, 0.4), snow, "Drift", true,
+				2.6, 6, 18, true, 0.16)
 	for c in corners:
 		var cc: Vector2 = c
-		var at := cc * 1.25
-		m.mound(k.on_ground(at.x, at.y, -0.2), 2.4, 1.4, snow, "Drift", true, 1.9, 4, 12, true)
-	m.mound(Vector3(0.0, k.on_ground(0.0, 0.0).y + h + 0.3, 0.0) + basis * Vector3(-half * 0.5, 0.0, 0.0), half * 1.1, 0.9,
-			snow, "RoofSnow", false, 2.2, 4, 12, true)
+		var at := cc * 1.3
+		m.mound(k.on_ground(at.x, at.y, -0.3), 2.8, 0.95, snow, "Drift", true, 2.4, 5, 14, true, 0.2)
+	m.mound(Vector3(0.0, k.on_ground(0.0, 0.0).y + h + 0.25, 0.0) + basis * Vector3(-half * 0.5, 0.0, 0.0), half * 1.05, 0.55,
+			snow, "RoofSnow", false, 2.6, 4, 14, true, 0.18)
 	# the gate-warden's things by the door
 	var door := grain * (half + 2.0)
 	k.place(k.prop("brazier"), k.on_ground(door.x + 1.2, door.y), 0.0)
@@ -1177,32 +1179,57 @@ static func waterfall(d: PoiDressing) -> void:
 ## A face of slabs across `width`, `height` tall, centred at `centre` (local xz) with its
 ## front toward `facing`; two rows, the back row standing on the front. Returns the lip: the
 ## point at the top front edge, in local space.
+## A cliff is not a wall: the first one built here was slabs at even spacing, all at one yaw,
+## on a straight line, and it photographed as brickwork standing in a field. So the face is an
+## arc that wraps toward the viewer at its ends, every slab is turned and scaled and stepped in
+## depth well away from its neighbours, and there is a bank of ground behind it so the lip is
+## the top of a hillside rather than the top of a wall.
 static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float, height: float) -> Vector3:
+	var m := PoiMasonry.new(k)
 	var slab := k.rock("cliff_slab")
 	var slab_h := PoiKit.height_of(slab)
 	var perp := Vector2(-facing.y, facing.x)
 	var yaw := PoiKit.yaw_of(facing)
-	var rows := maxi(int(ceil(height / (slab_h * 1.25))), 1)
-	var scale := height / (float(rows) * slab_h * 0.92)
+	var bow := width * 0.42                # how far the ends come forward of the middle
+	var rows := maxi(int(ceil(height / (slab_h * 1.15))), 1)
+	var scale := height / (float(rows) * slab_h * 0.8)
 	var slabs: Array = []
-	var top_y := 0.0
+	var top_y := k.on_ground(centre.x, centre.y).y
 	for row in rows:
-		var n := maxi(int(width / (3.2 * scale)) + 1, 2)
+		var n := maxi(int(width / (2.4 * scale)) + 2, 3)
 		for i in n:
-			var t := (float(i) + 0.5) / float(n) - 0.5
-			var p := centre + perp * (t * width) - facing * (float(row) * 1.6 * scale + k.rng.randf_range(0.0, 0.5))
-			var y := k.on_ground(p.x, p.y).y + float(row) * slab_h * scale * 0.86 - 0.4
-			top_y = maxf(top_y, y + slab_h * scale)
-			slabs.append(PoiKit.transform_at(Vector3(p.x, y, p.y), yaw + k.rng.randf_range(-0.12, 0.12),
-					scale * k.rng.randf_range(0.94, 1.06), Vector3(k.rng.randf_range(-0.06, 0.02), 0.0, k.rng.randf_range(-0.05, 0.05))))
+			var t := (float(i) + k.rng.randf_range(0.2, 0.8)) / float(n) - 0.5
+			# the arc, plus a deep stagger so no two neighbours sit on one plane
+			var forward := bow * (4.0 * t * t) + k.rng.randf_range(-1.3, 1.3) - float(row) * 1.5 * scale
+			var p := centre + perp * (t * width) + facing * forward
+			var y := k.on_ground(p.x, p.y).y + float(row) * slab_h * scale * 0.78 - 0.5
+			var s := scale * k.rng.randf_range(0.78, 1.22)
+			if row == rows - 1:
+				top_y = maxf(top_y, y + slab_h * s * 0.92)
+			# turned to the arc's own tangent, then well off it
+			slabs.append(PoiKit.transform_at(Vector3(p.x, y, p.y),
+					yaw + atan(8.0 * bow * t / maxf(width, 1.0)) + k.rng.randf_range(-0.45, 0.45),
+					s, Vector3(k.rng.randf_range(-0.14, 0.06), 0.0, k.rng.randf_range(-0.16, 0.16))))
 	k.scatter(slab, slabs, true, true)
-	# boulders tumbled at the foot either side
+	# the ground behind the face, so the lip is a hillside's edge
+	var back := centre - facing * (height * 0.55)
+	m.mound(k.on_ground(back.x, back.y, -1.5), height * 0.95, (top_y - k.on_ground(back.x, back.y).y) + 1.0,
+			k.surface("earth", 0.6), "Bank", true, 2.4, 7, 20, true, 0.14)
+	# boulders tumbled at the foot, thickest under the middle where the water lands
 	var feet: Array = []
-	for i in 10:
-		var p := centre + perp * k.rng.randf_range(-width * 0.6, width * 0.6) + facing * k.rng.randf_range(1.0, 4.0)
-		feet.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.3), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.1)))
+	for i in 14:
+		var t := k.rng.randf_range(-0.6, 0.6)
+		var p := centre + perp * (t * width) + facing * (bow * (4.0 * t * t) + k.rng.randf_range(1.2, 5.0))
+		feet.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.4), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.3),
+				Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2))))
 	k.scatter(k.rock("boulder"), feet, true, true)
-	return Vector3(centre.x, top_y - 0.3, centre.y) + Vector3(facing.x, 0.0, facing.y) * 0.8
+	var scree: Array = []
+	for i in 16:
+		var t := k.rng.randf_range(-0.7, 0.7)
+		var p := centre + perp * (t * width) + facing * (bow * (4.0 * t * t) + k.rng.randf_range(0.4, 7.0))
+		scree.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.1)))
+	k.scatter(k.rock("scree"), scree)
+	return Vector3(centre.x, top_y - 0.35, centre.y) + Vector3(facing.x, 0.0, facing.y) * 0.9
 
 
 static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void:
