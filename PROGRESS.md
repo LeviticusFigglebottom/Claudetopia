@@ -60,9 +60,11 @@ Merged and working on the main branch:
 * **Narrative** — 64 NPCs with weekly schedules and dialogue graphs of their own, living in
   every settlement of the six regions (DESIGN §6's sixty are met: Grandfather Hollow,
   Brindlecrag, Nauve's Landing and Greyfold had nobody at all, and every city, town and
-  village now has at least three residents and a shop), the seven main quests, three faction
-  lines, six side quests, 20 books carrying the four contradictory accounts, 89 rumours of
-  which the local ones are seeded into a region's settlements when you walk in.
+  village now has at least three residents and a shop), the seven main quests, four faction
+  lines of four quests each, eleven side quests across all six regions, 25 books carrying the
+  four contradictory accounts, 89 rumours of which the local ones are seeded into a region's
+  settlements when you walk in. Every faction and side quest is taken off a choice in its
+  giver's own dialogue and every decision one asks for is on a button in front of somebody.
 * **Audio** — a full synthesis toolkit (no sample or recording enters the project): six
   region themes in five stems each, built on a five-note bell motif from the Toll and
   developed per region's mode; 43 ambience beds and one-shot pools by time, weather and
