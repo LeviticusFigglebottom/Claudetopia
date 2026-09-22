@@ -12,6 +12,7 @@ from __future__ import annotations
 import contextlib
 import math
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -23,7 +24,7 @@ from . import scene as S
 
 try:
     from PIL import Image
-except ImportError:  # pragma: no cover - Blender ships PIL in this container
+except ImportError:  # pragma: no cover - lib/__init__ puts the project's Pillow on the path
     Image = None
 
 
@@ -213,6 +214,14 @@ def _to_lin8(v: np.ndarray) -> np.ndarray:
 
 
 def save_png(arr: np.ndarray, path, size: int | None = None) -> None:
+    if Image is None:
+        # Said here rather than as an AttributeError on None, which is what it used to be:
+        # the bake had already run, so the failure arrived twenty seconds of Cycles after
+        # its cause and named neither Pillow nor Blender's interpreter.
+        raise RuntimeError(
+            "no Pillow in this interpreter (%s). It is in tools/requirements.txt; "
+            "lib/__init__ looks for it on the usual site-packages paths, or set "
+            "FORGE_SITE_PACKAGES to the directory that holds PIL." % sys.executable)
     im = Image.fromarray(arr)
     if size and size != im.size[0]:
         im = im.resize((size, size), Image.LANCZOS)
