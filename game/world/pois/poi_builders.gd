@@ -312,15 +312,22 @@ static func shrine(d: PoiDressing) -> void:
 			slabs.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y, -0.6), PoiKit.yaw_of(to_c),
 					k.rng.randf_range(0.5, 0.75), Vector3(k.rng.randf_range(0.35, 0.55), 0.0, k.rng.randf_range(-0.15, 0.15))))
 		k.scatter(k.rock("cliff_slab"), slabs, true, true)
+		# The finger stood on end. The forge builds it lying along +X with its butt at x = −0.38,
+		# so turning it a quarter about Z puts that butt below the origin: it has to be lifted
+		# by exactly that much or the bone hangs in the air above its own socket.
 		var finger := k.rock("bone_finger")
-		var fh := PoiKit.height_of(finger)
-		var fs := 2.6
-		k.place(finger, k.on_ground(stone_at.x, stone_at.y, 0.42 * fs), approach, fs, true, Vector3(0.0, 0.0, PI * 0.5), true)
+		var meta: Dictionary = PoiKit.meta(finger).get("bounds", {})
+		var lo: Array = meta.get("min", [-0.38, 0.0, 0.0])
+		var hi: Array = meta.get("max", [5.78, 1.6, 0.0])
+		var fs := 2.0
+		var length := (float(hi[0]) - float(lo[0])) * fs
+		k.place(finger, k.on_ground(stone_at.x, stone_at.y, -float(lo[0]) * fs), approach, fs,
+				true, Vector3(0.0, 0.0, PI * 0.5), true)
 		var cyl := CylinderShape3D.new()
-		cyl.radius = fh * fs * 0.45
-		cyl.height = 6.0 * fs
-		k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(stone_at.x, stone_at.y, 3.0 * fs)))
-		var foot := stone_at + grain * (fh * fs * 0.5 + 1.2)
+		cyl.radius = float(hi[1]) * fs * 0.42
+		cyl.height = length
+		k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(stone_at.x, stone_at.y, length * 0.5)))
+		var foot := stone_at + grain * (float(hi[1]) * fs * 0.5 + 1.6)
 		k.hearthstone(k.on_ground(foot.x, foot.y), approach, d.poi_id, d.display_name)
 		placed_hearth = true
 		var crust: Array = []
@@ -505,11 +512,15 @@ static func tower(d: PoiDressing) -> void:
 					k.rng.randf_range(0.25, 0.6)))
 		k.scatter(k.rock("boulder"), rubble, true)
 		if PoiKit.brief_says(b, ["bell", "fire-bowl", "beacon"]):
-			# the fire-bowl: an Oroth bell upturned on the crown, and the fire in it
+			# The fire-bowl: an Oroth bell upturned in the tower's broken crown, crown down and
+			# mouth up, sunk into it rather than balanced on top — measured against the lowest
+			# torn sector (h × (1 − broken)), because measuring against the mean left the bowl
+			# hanging two metres above the masonry with daylight under it.
 			var bell := k.prop("bell_medium")
 			var bs := 2.6
 			var bh := PoiKit.height_of(bell) * bs
-			var top := g + Vector3(0.0, h * (1.0 - 0.3 * 0.5) + bh, 0.0)
+			var rim := g.y + h * 0.7 + bh * 0.45
+			var top := Vector3(0.0, rim, 0.0)
 			k.place(bell, top, 0.0, bs, false, Vector3(PI, 0.0, 0.0), true)
 			k.light(top + Vector3(0.0, 0.6, 0.0), Color(1.0, 0.6, 0.28), 4.5, 26.0)
 			k.puffs(top + Vector3(0.0, 0.5, 0.0), Vector3(0.4, 0.1, 0.4), 1.4, 16, Color(0.4, 0.38, 0.36, 0.45), 2.2, 6.0)
@@ -865,14 +876,16 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var oroth := PoiKit.brief_says(d.brief, ["oroth", "fused"])
-	var ends := _span(k, axis, water, 15.0)
+	# a packhorse bridge that carts cross is 4 m wide and humped enough to read from the road;
+	# the first one was 3.4 m wide with a 1.5 m rise and at thirty paces it was a kerbstone
+	var ends := _span(k, axis, water, 19.0)
 	var a: Vector2 = ends[0]
 	var b: Vector2 = ends[1]
 	var dir := (b - a).normalized()
 	var perp := Vector2(-dir.y, dir.x)
 	var mid := (a + b) * 0.5
 	var stone := m.begin()
-	m.arch_bridge(stone, a, b, 3.4, 1.5)
+	m.arch_bridge(stone, a, b, 4.2, 2.3)
 	m.commit(stone, k.surface("oroth" if oroth else "stone", 0.55), "Bridge", true)
 	if PoiKit.brief_says(d.brief, ["glass"]):
 		# The riverbed the Ash Winter sang dry: a narrow band of broken black glass running
@@ -903,14 +916,20 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 		var bell := k.prop("bell_medium")
 		var g := k.on_ground(mid.x, mid.y)
 		k.place(bell, g + Vector3(0.0, -0.9, 0.0), k.rng.randf_range(0.0, TAU), 2.2, true, Vector3(0.0, 0.0, 1.05), true)
+		# they paved round it rather than move it: setts close about the clapper, not a white
+		# apron twenty metres long, which is what a seven-block run of 3.3 × 4.6 came out as
 		var paving := m.begin()
-		for i in 7:
-			var t := (float(i) - 3.0) * 3.2
-			var p := mid + perp * t
+		for i in 22:
+			var a := k.rng.randf_range(0.0, TAU)
+			var r := 1.2 + 3.4 * sqrt(k.rng.randf())
+			var p := mid + Vector2(sin(a), cos(a)) * r
 			var gg := k.on_ground(p.x, p.y)
-			m.block(paving, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(perp)), gg + Vector3(0.0, 0.04, 0.0)),
-					Vector3(3.3, 0.12, 4.6))
-		m.commit(paving, k.surface("stone", 0.85), "Paving")
+			m.block(paving, Transform3D(Basis(Vector3.UP, k.rng.randf_range(0.0, TAU))
+					* Basis(Vector3.BACK, k.rng.randf_range(-0.05, 0.05)), gg - Vector3(0.0, 0.03, 0.0)),
+					Vector3(k.rng.randf_range(0.7, 1.3), 0.14, k.rng.randf_range(0.7, 1.2)))
+		var setts := k.surface("stone", 0.95)
+		setts.set_shader_parameter("unit_size", 0.5)
+		m.commit(paving, setts, "Paving")
 	# a road's furniture at the near end
 	var near := a - dir * 2.5
 	k.place(k.prop("signpost"), k.on_ground(near.x + perp.x * 2.6, near.y + perp.y * 2.6), PoiKit.yaw_of(dir))
