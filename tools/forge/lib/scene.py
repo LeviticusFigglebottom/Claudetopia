@@ -303,18 +303,44 @@ def duplicate(obj, name: str) -> bpy.types.Object:
     return ob
 
 
+## Blender 4.1 deleted auto-smooth. The forge was written against 4.0, where a smooth
+## mesh carried `use_auto_smooth` plus an angle and the exporter worked the split normals
+## out from it; in 4.1 and later that pair is gone and the same thing is said by marking
+## the edges over the angle as sharp -- which is exactly what `shade_smooth_by_angle`
+## does, and it writes a `sharp_edge` attribute the glTF exporter reads. So the angle
+## still means what it meant, and every place the forge relies on it (a nine-sided billet
+## staying faceted at 40 degrees, a millstone's furrow edge staying a hard step at 22)
+## goes on working.
+##
+## This is not a graceful degradation and must not become one: the character forge's own
+## copy of this call swallows the AttributeError, so under 4.2 everything it builds comes
+## out fully smoothed with no threshold at all, and nothing says so.
+_AUTO_SMOOTH = hasattr(bpy.types.Mesh, "use_auto_smooth")
+
+
 def shade_smooth(obj, angle_deg: float = 35.0) -> None:
     me = obj.data
     for p in me.polygons:
         p.use_smooth = True
-    me.use_auto_smooth = True
-    me.auto_smooth_angle = math.radians(angle_deg)
+    if _AUTO_SMOOTH:                                     # Blender 4.0
+        me.use_auto_smooth = True
+        me.auto_smooth_angle = math.radians(angle_deg)
+        return
+    select_only([obj])                                   # Blender 4.1+
+    bpy.ops.object.shade_smooth_by_angle(angle=math.radians(angle_deg), keep_sharp_edges=True)
 
 
 def shade_flat(obj) -> None:
     for p in obj.data.polygons:
         p.use_smooth = False
-    obj.data.use_auto_smooth = False
+    if _AUTO_SMOOTH:
+        obj.data.use_auto_smooth = False
+        return
+    # A sharp-edge mark left by an earlier smooth pass says nothing once every face is
+    # flat, but it travels through a join, so it is cleared rather than left to confuse.
+    attrs = obj.data.attributes
+    if "sharp_edge" in [a.name for a in attrs]:
+        attrs.remove(attrs["sharp_edge"])
 
 
 def tri_count(obj) -> int:
