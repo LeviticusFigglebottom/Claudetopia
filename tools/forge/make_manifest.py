@@ -196,6 +196,29 @@ PROPS_BRIARWOLD = [
     ("crate", "briarwold", 2, None),
 ]
 
+# The ten kinds whose stand-ins lied about their size. `PropLibrary.STAND_IN` let each of
+# them borrow the nearest mesh the forge had built, and the borrowed mesh was the wrong
+# scale: a hand lantern drew a two-metre standing one, a pair of boots drew a sack, a
+# brewing copper drew a cooking pot a third of its height. Regions are the ones whose
+# interiors actually place the kind (`tools/prop_heights.py`): nearly all of this is vale
+# work, and the one exception is the hand lantern, which the Bell Chapter-House at Pilgrim's
+# Ash wants as well as Pellam's roll house.
+#
+# Two variants where a room stands several of a kind in a row and one everywhere else.
+PROPS_SIZED = [
+    ("bowl", "hearthvale", 2, None),
+    ("plate_stack", "hearthvale", 1, None),
+    ("paper_stack", "hearthvale", 1, None),
+    ("phial", "hearthvale", 2, None),
+    ("jar", "hearthvale", 1, None),
+    ("mortar", "hearthvale", 1, None),
+    ("candle_stub", "hearthvale", 2, None),
+    ("boots", "hearthvale", 2, None),
+    ("lantern_hand", "hearthvale", 1, None),
+    ("lantern_hand", "cinderlea", 1, None),
+    ("copper", "hearthvale", 1, None),
+]
+
 LANDMARKS = [
     ("cracked_toll", "hearthvale", 1, None),
     ("fallen_hand", "skerrow", 1, None),
@@ -215,7 +238,8 @@ LANDMARKS = [
 # rebuilds, differently -- everything after it. New work goes on the end.
 TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
-          ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD)]
+          ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
+          ("gen_props", PROPS_SIZED)]
 
 
 def build() -> list[dict]:

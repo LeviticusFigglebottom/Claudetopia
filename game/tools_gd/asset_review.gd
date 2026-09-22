@@ -17,7 +17,12 @@ const SHOT_NAMES: Array[String] = ["three_quarter", "front", "high"]
 
 var out_dir := "user://assets"
 var category := "props"
-var only := ""
+## Substrings an asset's file name may match, comma separated. Several rather than one
+## because the forge's own rule is to render a known reference beside anything you are
+## judging (`tools/forge/README.md`: the review exposure reads two stops light, and it cost
+## the forge stream two rebuilds of the anvil before they put a trestle in the same frame).
+## With a single filter that is impossible unless the two happen to share a substring.
+var only: PackedStringArray = []
 var per_shot := 4
 var turntable := 0
 var lod_level := 0
@@ -63,7 +68,11 @@ func _parse_args() -> void:
 		elif a.begins_with("--category="):
 			category = a.substr(11)
 		elif a.begins_with("--only="):
-			only = a.substr(7)
+			only.clear()
+			for part in a.substr(7).split(",", false):
+				var s := part.strip_edges()
+				if not s.is_empty():
+					only.append(s)
 		elif a.begins_with("--per-shot="):
 			per_shot = maxi(1, int(a.substr(11)))
 		elif a.begins_with("--turntable="):
@@ -151,9 +160,16 @@ func _scan_dir(dir_path: String, into: Array[String]) -> void:
 	for f in dir.get_files():
 		if not f.ends_with(".glb") or f.ends_with("_col.glb"):
 			continue
-		if only != "" and not f.contains(only):
+		if not only.is_empty() and not _wanted(f):
 			continue
 		into.append("%s/%s" % [dir_path, f])
+
+
+func _wanted(file_name: String) -> bool:
+	for pattern in only:
+		if file_name.contains(pattern):
+			return true
+	return false
 
 
 func _place_lineup(paths: Array[String]) -> void:

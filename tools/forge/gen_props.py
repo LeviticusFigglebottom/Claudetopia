@@ -1973,6 +1973,632 @@ def peat_stack(pal, rng, params, variant):
 
 
 # =========================================================================================
+# the props the stand-ins were lying about the size of
+#
+# `PropLibrary.STAND_IN` lets a kind the forge has not built borrow the nearest mesh it has,
+# and eleven of those borrowings were wrong about *scale*: a pair of boots drawn as a
+# three-quarter-metre sack, a hand lantern as a two-metre standing one, a brewing copper as
+# a cooking pot a third of its height, a bowl as a 34 mm plate. A labelled box admits what
+# it is; a sack pretending to be a boot does not, and it is the character moving past it
+# that gives the lie away.
+#
+# Every one of these is built to the size `HouseInterior._placeholder_size` writes down,
+# because that table is the only written specification of how big these things are. They
+# run from 0.06 m to 0.95 m, so every material takes a feature scale near its own object's
+# size (tools/forge/README.md, "The scale constant").
+# =========================================================================================
+
+def _clay(pal, rng, role, scale, top_z, relief=0.25, name="clay", **kw):
+    """Earthenware for something you could pick up: glaze poured from this object's own rim.
+
+    `ceramic`'s glaze mask is a height in object-space metres and its default band, 50 to
+    250 mm, is a mug's. Below 50 mm -- which is all of a bowl and most of a jar -- the whole
+    term reads zero and the pot comes out unglazed but for the drips."""
+    kw.setdefault("glaze", 0.4 + 0.35 * rng.random())
+    kw.setdefault("age", 0.3 + 0.4 * rng.random())
+    return M.ceramic(pal, role=role, scale=scale, glaze_z=top_z, relief=relief, name=name, **kw)
+
+
+def bowl(pal, rng, params, variant):
+    """A deep earthenware bowl: what is on the table in every hearth room in the country.
+
+    It stood in as `plate`, which is a 34 mm dish for a 90 mm bowl -- the difference between
+    the thing you eat off and the thing you eat out of, and the one that holds the stew."""
+    r = jit(rng, params.get("radius", 0.097)) * CHUNK
+    h = jit(rng, params.get("height", 0.081)) * CHUNK
+    foot = r * 0.44
+    t = r * 0.085                                     # the wall, thrown thick
+    mat = _clay(pal, rng, "cool" if variant % 2 else "earth", 0.30, (h * 0.52, h * 1.02),
+                name="bowl_clay")
+    # Outside up from the foot, over the rim, and back down the inside to the floor. Both
+    # ends of the profile are on the axis, so the poles close the shell without a cap.
+    prof = [(0.0, 0.003), (foot * 0.86, 0.0), (foot, 0.002), (foot * 1.04, h * 0.15),
+            (r * 0.78, h * 0.50), (r * 0.96, h * 0.86), (r, h * 0.97), (r * 0.99, h),
+            (r * 0.99 - t, h * 0.985), (r * 0.94 - t, h * 0.84), (r * 0.76 - t, h * 0.50),
+            (foot * 0.92, h * 0.19), (foot * 0.5, h * 0.155), (0.0, h * 0.15)]
+    body = S.lathe("bowl", prof, segments=26, mat=mat, close=False)
+    S.shade_smooth(body, 42.0)
+    # Thrown, not moulded: the rim is never quite round and never quite level.
+    for v in body.data.vertices:
+        a = math.atan2(v.co.y, v.co.x)
+        f = 1.0 + 0.012 * math.cos(a * 3.0 + 0.7)
+        v.co.x *= f
+        v.co.y *= f
+        v.co.z += 0.004 * h * math.sin(a * 2.0) * (v.co.z / max(h, 1e-6))
+    S.jitter_verts(body, amount=r * 0.008, scale=0.07, seed=rng.randrange(999))
+    body.rotation_euler = Euler((0, 0, rng.uniform(0.0, TAU)))
+    S.apply_transforms(body)
+    return finish([body], rng, "convex", ["ceramic"])
+
+
+def _plate_disc(name, r, rim_h, mat):
+    """One plate: a shallow well, a canted flange and a foot, thin enough to stack."""
+    prof = [(0.0, rim_h * 0.10), (r * 0.30, rim_h * 0.12), (r * 0.46, rim_h * 0.05),
+            (r * 0.52, rim_h * 0.06), (r * 0.58, rim_h * 0.22), (r * 0.86, rim_h * 0.74),
+            (r, rim_h), (r * 0.985, rim_h * 0.92), (r * 0.82, rim_h * 0.60),
+            (r * 0.54, rim_h * 0.12), (r * 0.40, rim_h * 0.02), (0.0, rim_h * 0.04)]
+    ob = S.lathe(name, prof, segments=18, mat=mat, close=False)
+    S.shade_smooth(ob, 40.0)
+    return ob
+
+
+def plate_stack(pal, rng, params, variant):
+    """Plates put away in a stack on the sideboard: six of them, nested, none quite square.
+
+    A stack is not a plate: it borrowed one and came out 34 mm tall for a thing written down
+    at 90. Nesting is what makes six plates 81 mm rather than 204 -- each sits down inside
+    the one below and only its flange shows, which is also what says `stack` at a glance."""
+    n = int(params.get("count", 6 if variant % 2 == 0 else 5))
+    r = jit(rng, params.get("radius", 0.096)) * CHUNK
+    rim = 0.0185 * CHUNK
+    step = 0.0128 * CHUNK
+    # Two clays for the set, not one per plate: a bake is per material slot, and six of
+    # them costs six ambient-occlusion passes for a difference nobody can see. Two
+    # alternating is what a household's plates look like anyway -- bought in twos.
+    clays = [_clay(pal, rng, role, 0.34, (rim * 0.3, rim * 1.1), glaze=0.3 + 0.25 * rng.random(),
+                   name="plate_clay_%d" % k) for k, role in enumerate(("light", "earth"))]
+    parts = []
+    for i in range(n):
+        mat = clays[i % 2]
+        rr = r * rng.uniform(0.975, 1.0)
+        p = _plate_disc("plate_%d" % i, rr, rim, mat)
+        # A hand puts each one down a little off the last: a stack of plates squared up to
+        # the millimetre is a machined column, and the flange edges are the whole read.
+        p.location = Vector((rng.uniform(-1, 1) * r * 0.02, rng.uniform(-1, 1) * r * 0.02,
+                             step * i))
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((math.radians(rng.uniform(-1.1, 1.1)),
+                                  math.radians(rng.uniform(-1.1, 1.1)),
+                                  rng.uniform(0.0, TAU)))
+        S.apply_transforms(p)
+        parts.append(p)
+    return finish(parts, rng, "convex", ["ceramic"], extra={"count": n})
+
+
+def paper_stack(pal, rng, params, variant):
+    """Loose leaves on a writing desk, squared up by hand and not by a press.
+
+    It stood in as a scroll: 340 mm of rolled parchment for a 60 mm pile of flat sheets."""
+    w_ = jit(rng, params.get("width", 0.200))
+    d = jit(rng, params.get("depth", 0.148))
+    loose = int(params.get("loose", 4 if variant % 2 == 0 else 3))
+    parts = []
+    papers = [M.parchment(pal, age=0.30 + 0.22 * k + 0.1 * rng.random(), scale=0.26,
+                          name="leaf_paper_%d" % k) for k in range(3)]
+    # A pile of paper is one block and a few loose sheets, not nine slabs. Nine chamfered
+    # 3.5 mm boards is what the first render showed and it read as a stack of *planks*:
+    # every sheet the same thickness, every edge the same arris, nothing in the pile
+    # thinner than a floorboard. A real sheet is a tenth of a millimetre, so the body of
+    # the pile has to be one mass whose *edge* is where the sheets are, and only the top
+    # few are worth modelling one at a time.
+    block_h = 0.026 * (1.0 + 0.2 * rng.random())
+    block = B.board("block", w_, d, block_h, mat=papers[0], chamfer=0.0006,
+                    location=(0, 0, block_h * 0.5))
+    # The block's sides are not square: a hand-squared pile splays a little, and the splay
+    # is what carries the light down the cut edge and says "many sheets".
+    for v in block.data.vertices:
+        f = 1.0 + 0.020 * (v.co.z / block_h + 0.5)
+        v.co.x *= f
+        v.co.y *= f
+    S.jitter_verts(block, amount=0.0009, scale=0.04, seed=rng.randrange(999))
+    parts.append(block)
+    z = block_h
+    for i in range(loose):
+        t = 0.0016
+        leaf = B.board("leaf_%d" % i, w_ * rng.uniform(0.94, 1.0), d * rng.uniform(0.93, 1.0),
+                       t, mat=papers[(i + 1) % 3], chamfer=0.0004, rng=None,
+                       sag=t * rng.uniform(-0.6, 0.6), warp=t * rng.uniform(-2.4, 2.4))
+        leaf.location = Vector((rng.uniform(-1, 1) * w_ * 0.045, rng.uniform(-1, 1) * d * 0.05,
+                                z + t * 0.5))
+        S.apply_transforms(leaf)
+        leaf.rotation_euler = Euler((0, 0, math.radians(rng.uniform(-5.0, 5.0))))
+        S.apply_transforms(leaf)
+        parts.append(leaf)
+        z += t * rng.uniform(1.1, 1.8)
+    # The top sheet has lifted at one corner, which is the only thing that says paper and
+    # not a block of wood once the light is on it.
+    curl = parts[-1]
+    for v in curl.data.vertices:
+        u = max(0.0, (v.co.x / (w_ * 0.5) + 0.35) / 1.35) * max(0.0, (v.co.y / (d * 0.5) + 0.5) / 1.5)
+        v.co.z += 0.013 * u ** 2.0
+    S.shade_smooth(curl, 50.0)
+    return finish(parts, rng, "convex", ["parchment"], extra={"loose": loose})
+
+
+def phial(pal, rng, params, variant):
+    """A stoppered glass phial with something dark in it: the alchemist's own measure.
+
+    Nell's stillroom stands seven of these on two shelves and they all drew a 286 mm jug for
+    a thing written down at 130. The fill is a second lathe inside the glass rather than a
+    tint on it: what tells you a bottle is not empty is the line across it."""
+    h = jit(rng, params.get("height", 0.112)) * CHUNK
+    r = jit(rng, params.get("radius", 0.026)) * CHUNK
+    squat = bool(params.get("squat", variant % 2 == 1))
+    if squat:
+        r, h = r * 1.28, h * 0.88
+    glass = M.glass(pal, name="phial_glass")
+    fill = M.glass(pal, color=P.lin(params.get("fill_hex", "#4a2f52" if variant % 2 else "#5a5220")),
+                   name="phial_fill")
+    cork = tool_wood(pal, rng, scale=0.8, wear=0.12, age=0.3, base_hex="#b09a68",
+                     relief=0.05, grain=0.2, name="cork_wood")
+    seal = M.wax(pal, color=P.lin("#6a2a22"), name="phial_seal")
+    neck_r = r * 0.42
+    shoulder = h * (0.52 if squat else 0.62)
+    prof = [(0.0, 0.002), (r * 0.78, 0.0), (r * 0.94, h * 0.05), (r, h * 0.22),
+            (r * 0.98, shoulder), (r * 0.62, shoulder + h * 0.10),
+            (neck_r * 1.06, shoulder + h * 0.16), (neck_r, h * 0.92),
+            (neck_r * 1.20, h * 0.96), (neck_r * 1.14, h)]
+    body = S.lathe("phial", prof, segments=18, mat=glass, close=True)
+    S.shade_smooth(body, 40.0)
+    parts = [body]
+    level = h * (0.30 + 0.22 * rng.random())
+    inner = [(0.0, r * 0.02), (r * 0.74, r * 0.01), (r * 0.90, h * 0.06),
+             (r * 0.94, level * 0.7), (r * 0.93, level), (0.0, level)]
+    parts.append(S.lathe("fill", inner, segments=18, mat=fill, close=False))
+    S.shade_smooth(parts[-1], 40.0)
+    parts.append(S.cylinder("cork", radius=neck_r * 0.96, radius_top=neck_r * 0.88,
+                            depth=h * 0.085, location=(0, 0, h - h * 0.02), vertices=12,
+                            mat=cork))
+    # A blob of sealing wax over the cork, pressed down with a thumb and not with a seal:
+    # the Order's plate is a Name-table's business, and this is a herbwife's shelf.
+    blob = S.lathe("seal", [(neck_r * 1.24, h + h * 0.045), (neck_r * 1.30, h + h * 0.065),
+                            (neck_r * 0.92, h + h * 0.095), (0.0, h + h * 0.10)],
+                   segments=14, mat=seal, close=True)
+    S.jitter_verts(blob, amount=neck_r * 0.10, scale=0.05, seed=rng.randrange(999))
+    parts.append(blob)
+    for p in parts:
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((0, 0, rng.uniform(0.0, TAU)))
+        S.apply_transforms(p)
+    return finish(parts, rng, "convex", ["glass", "wood_planks", "wax"],
+                  extra={"squat": squat})
+
+
+def jar(pal, rng, params, variant):
+    """A stoneware ingredient jar with a cloth cover tied over its mouth.
+
+    Written at the same 130 mm as the phial and a different object: wide-shouldered, opaque,
+    and shut with cloth and cord rather than cork and wax, so an ingredient shelf and a
+    bottle shelf in the same stillroom do not draw the same thing twice."""
+    h = jit(rng, params.get("height", 0.108)) * CHUNK
+    r = jit(rng, params.get("radius", 0.040)) * CHUNK
+    clay = _clay(pal, rng, "earth", 0.26, (h * 0.55, h * 1.05), glaze=0.55,
+                 name="jar_clay")
+    linen = M.canvas(pal, age=0.5, wear=0.4, scale=0.16)
+    cord = M.rope(pal, age=0.55, scale=0.05)
+    mouth = r * 0.62
+    t = r * 0.10
+    prof = [(0.0, 0.003), (r * 0.62, 0.0), (r * 0.80, h * 0.06), (r, h * 0.34),
+            (r * 0.96, h * 0.56), (r * 0.70, h * 0.78), (mouth * 1.02, h * 0.88),
+            (mouth, h), (mouth - t, h), (mouth - t, h * 0.90),
+            (r * 0.64 - t, h * 0.78), (r * 0.90 - t, h * 0.54), (r * 0.92 - t, h * 0.32),
+            (r * 0.70 - t, h * 0.08), (0.0, h * 0.06)]
+    body = S.lathe("jar", prof, segments=22, mat=clay, close=False)
+    S.shade_smooth(body, 42.0)
+    parts = [body]
+    # The cover: a disc of linen pushed down into the mouth and sagging in the middle, then
+    # whipped round the neck with cord. Lathed rather than sheeted, because B.cloth_sheet
+    # hangs from its top edge and this one is stretched over a hole.
+    cover = S.lathe("cover", [(0.0, h * 0.965), (mouth * 0.55, h * 0.975),
+                              (mouth * 0.92, h * 1.01), (mouth * 1.12, h * 1.02),
+                              (mouth * 1.30, h * 0.975), (mouth * 1.34, h * 0.93)],
+                    segments=20, mat=linen, close=False)
+    S.solidify(cover, thickness=0.0014, offset=0.0)
+    S.jitter_verts(cover, amount=mouth * 0.05, scale=0.04, seed=rng.randrange(999))
+    S.shade_smooth(cover, 50.0)
+    parts.append(cover)
+    parts.append(B.rope_loop("tie", mouth * 1.22, 0.0028, mat=cord, segments=18,
+                             location=(0, 0, h * 0.945)))
+    for p in parts:
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((0, 0, rng.uniform(0.0, TAU)))
+        S.apply_transforms(p)
+    return finish(parts, rng, "convex", ["ceramic", "canvas", "rope"])
+
+
+def mortar(pal, rng, params, variant):
+    """An apothecary's mortar: a deep, thick-walled stone cup with a pouring lip.
+
+    Tall rather than wide, which is what a mortar for seeds and bark is and what the written
+    140 x 220 mm says. It borrowed a 456 mm cooking pot. No pestle: the room places one of
+    those itself, and a mortar with its pestle standing in it is 320 mm and a lie again."""
+    h = jit(rng, params.get("height", 0.200)) * CHUNK
+    r = jit(rng, params.get("radius", 0.068)) * CHUNK
+    # Quarried grit, not Brightwater's lake stone. The first pass used lake stone for its
+    # `relief` parameter and got what lake stone is: near-black, cold-highlighted, wet. On
+    # a vale herbwife's bench that read as a dark green vase. This is the millstone's route
+    # -- granite with a warm dry base and no lichen, because a mortar lives under a roof and
+    # is washed every day -- and the relief is down to a fifth because `_rock_common` bumps
+    # over an absolute 50 mm, which is a quarter of this object.
+    # Darker than it looks it should be. The review scene reads two stops light (the forge
+    # README's warning), and at #8e877a the mortar came out of it the same value as the wax
+    # candle standing beside it -- which means an albedo near white, and stone is not near
+    # white. The wick and the candle are the reference that catches this.
+    stone = M.granite(pal, wear=0.26, age=0.45, tint=0.13, tint_role="earth",
+                      base_hex="#6b6459", lichen=0.0, facet=0.22, scale=0.36, relief=0.20,
+                      name="mortar_grit")
+    foot = r * 0.62
+    rim = r * 1.30                                    # the mouth is the widest part of it
+    t = r * 0.34                                      # walls a mortar can be hit in
+    # A mortar is a cone with a heavy foot: narrow where it is held, wide where the pestle
+    # works. Built the other way up -- straight-sided and rim-width all the way down -- a
+    # 0.22 m one reads as a vase, which is what the first render showed.
+    prof = [(0.0, 0.004), (foot * 0.86, 0.0), (foot * 1.06, h * 0.03), (foot * 1.02, h * 0.11),
+            (r * 0.74, h * 0.30), (r * 0.98, h * 0.58), (rim * 0.96, h * 0.86),
+            (rim, h * 0.95), (rim * 1.02, h),
+            (rim * 1.02 - t * 0.7, h), (rim * 0.92 - t, h * 0.88), (r * 0.80 - t, h * 0.56),
+            (r * 0.54 - t, h * 0.32), (foot * 0.62, h * 0.20), (foot * 0.34, h * 0.17),
+            (0.0, h * 0.165)]
+    body = S.lathe("mortar", prof, segments=24, mat=stone, close=False)
+    S.shade_smooth(body, 40.0)
+    # The lip: one side of the rim drawn out and dropped, so it pours.
+    for v in body.data.vertices:
+        if v.co.z < h * 0.78:
+            continue
+        a = math.atan2(v.co.y, v.co.x)
+        k = max(0.0, math.cos(a)) ** 4.0
+        f = 1.0 + 0.20 * k
+        v.co.x *= f
+        v.co.y *= f
+        v.co.z -= h * 0.075 * k * (v.co.z - h * 0.78) / (h * 0.22)
+    S.jitter_verts(body, amount=r * 0.010, scale=0.06, seed=rng.randrange(999))
+    body.rotation_euler = Euler((0, 0, rng.uniform(0.0, TAU)))
+    S.apply_transforms(body)
+    return finish([body], rng, "convex", ["lake_stone"])
+
+
+def candle_stub(pal, rng, params, variant):
+    """What is left of a candle, guttered down into a clay saucer.
+
+    Twenty-five of these are scattered through the shipping interiors -- on tables, beside
+    beds, at shrines -- and every one drew a whole fresh 181 mm candle for a thing written
+    down at 130. A stub is not a candle: it is short, it has run down one side, and it sits
+    in a pool of itself. The wick is burnt, so it is black and bent over."""
+    saucer_r = jit(rng, params.get("radius", 0.042)) * CHUNK
+    # Two-thirds burnt and half burnt, not a wick in a puddle: the written 130 mm is the
+    # whole object, so a stub much under 90 mm is a lie in the other direction and a
+    # half-used candle is what is beside a bed anyway.
+    stub = jit(rng, params.get("stub", 0.102 if variant % 2 == 0 else 0.088)) * CHUNK
+    # Fatter than a fresh candle and much shorter: the forge's `candle` is 17 mm across and
+    # 181 mm tall, and the two have to be different objects at a glance on the same table.
+    r = 0.0196 * CHUNK
+    dish = _clay(pal, rng, "light", 0.14, (0.004, 0.016), glaze=0.3, age=0.6,
+                 relief=0.2, name="stub_dish")
+    wax = M.wax(pal, name="stub_wax")
+    parts = []
+    saucer = S.lathe("saucer", [(0.0, 0.0), (saucer_r * 0.62, 0.0011), (saucer_r * 0.82, 0.006),
+                                (saucer_r, 0.013), (saucer_r * 0.96, 0.0125),
+                                (saucer_r * 0.74, 0.0055), (0.0, 0.004)],
+                     segments=18, mat=dish, close=False)
+    S.shade_smooth(saucer, 40.0)
+    parts.append(saucer)
+    base = 0.0045
+    # The pool it has wept into the saucer, then the stub, then the crater the flame burnt
+    # down into the top of it.
+    pool = S.lathe("pool", [(0.0, base), (r * 1.7, base), (r * 2.05, base * 0.7),
+                            (r * 2.1, base * 0.35), (0.0, base * 0.3)],
+                   segments=16, mat=wax, close=False)
+    S.jitter_verts(pool, amount=r * 0.10, scale=0.03, seed=rng.randrange(999))
+    parts.append(pool)
+    top = base + stub
+    # The crater is the whole read: a candle that has burnt is lower in the middle than at
+    # its edge, because the wall stands while the well melts. A straight-sided cylinder
+    # with a domed top is a *new* candle, and that is what the first render gave -- the
+    # thing it was standing in as, at the right height.
+    body = S.lathe("stub", [(0.0, base * 0.9), (r * 1.18, base * 0.9), (r * 1.04, base + stub * 0.20),
+                            (r, base + stub * 0.66), (r * 1.02, top - r * 0.22),
+                            (r * 0.96, top),                       # the standing wall
+                            (r * 0.80, top - r * 0.16),            # and down into the well
+                            (r * 0.46, top - r * 0.52), (r * 0.18, top - r * 0.66),
+                            (0.0, top - r * 0.62)],
+                  segments=16, mat=wax, close=False)
+    S.shade_smooth(body, 45.0)
+    # The wall is burnt down further on one side, so the well is open and the run of wax
+    # has somewhere to come from. One smooth function of the angle: a threshold gives a
+    # notch with two hard corners, which reads as a chip out of a new candle.
+    side = rng.uniform(0.0, TAU)
+    for v in body.data.vertices:
+        a = math.atan2(v.co.y, v.co.x)
+        k = max(0.0, math.cos(a - side)) ** 2.0
+        if v.co.z > top - r * 0.30:
+            v.co.z -= r * 0.62 * k
+        # and a run of wax down that same side, all the way into the pool
+        if v.co.z < top - r * 0.5:
+            f = 1.0 + 0.34 * k * (1.0 - (v.co.z - base) / max(stub, 1e-6)) ** 0.5
+            v.co.x *= f
+            v.co.y *= f
+    S.jitter_verts(body, amount=r * 0.06, scale=0.04, seed=rng.randrange(999))
+    parts.append(body)
+    # The wick: burnt, so it is black, it has bent over, and it stands up out of the well
+    # rather than off the top of a dome. It is four millimetres of geometry and it is the
+    # difference between a candle that has been lit and one that has not.
+    wick_top = top + r * 0.30
+    parts.append(S.tube_along("wick", [(0, 0, top - r * 0.62), (r * 0.08, 0, top - r * 0.10),
+                                       (r * 0.30, r * 0.08, top + r * 0.14),
+                                       (r * 0.62, r * 0.20, wick_top)],
+                              radius=r * 0.085, segments=5, radius_end=r * 0.040,
+                              mat=M.soot(pal, name="wick_soot")))
+    for p in parts:
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((0, 0, rng.uniform(0.0, TAU)))
+        S.apply_transforms(p)
+    return finish(parts, rng, "convex", ["ceramic", "wax", "soot"],
+                  extra={"burnt_down": stub < 0.075})
+
+
+def _boot(name, length, height, mat, sole_mat, rng, slump=0.0):
+    """One boot, stood on its sole.
+
+    What says `boot` from across a room is an **L**: a low foot with an instep, a leg that
+    goes up from the back of it, and a cuff at the top wider than the leg. The first pass
+    had none of those. It laid a plank of a sole the full length of the prop, put one
+    tapering sausage on top of it and then flopped the leg over until it lay along the
+    ground -- and the render gave a pale slumped bundle on a board, which is very nearly the
+    sack it was standing in as. So the sole stops at the toe and the heel, the instep is a
+    separate rise, the leg stands, and only the cuff slumps."""
+    parts = []
+    # A foot is nearly as wide and as deep as it is long is not true, but a *boot* is much
+    # closer to it than the first two passes allowed. At a foot radius of 0.11 of the
+    # length the upper was 57 mm across, the sole board under it was 87 mm, and the render
+    # showed a skinny sausage standing on a plank that stuck out all round it. The foot
+    # governs: the sole is cut to the foot's own footprint and nothing protrudes.
+    r_foot = length * 0.170
+    sole_t = height * 0.070
+    toe_x = length * 0.32
+    ankle_x = -length * 0.20
+    z0 = sole_t
+    path = [(toe_x, 0.0, z0 + r_foot * 0.80), (length * 0.13, 0.0, z0 + r_foot * 0.88),
+            (-length * 0.04, 0.0, z0 + r_foot * 1.10), (ankle_x, 0.0, z0 + r_foot * 1.34)]
+    foot = S.tube_along("%s_foot" % name, path, radius=r_foot, segments=12,
+                        radius_end=r_foot * 0.80, mat=mat)
+    # Squashed down and left full width: a boot is flatter than it is narrow.
+    _oval_along_x(foot, path, flat=0.78, wide=1.00)
+    # And its underside is flat, because the boot has been walked on. This is what lets the
+    # sole be a thin dark line at the bottom of the upper instead of a board underneath it:
+    # a plate the foot merely rests on reads as a plank however well it is cut, and two of
+    # them at two yaws read as a pair of skis, which is what the second render showed.
+    for v in foot.data.vertices:
+        if v.co.z < sole_t * 1.05:
+            v.co.z = sole_t * 1.05
+    # And the toe is round. `tube_along` caps its ends with a flat n-gon, and a swept toe
+    # aimed at the camera showed that cap as a disc -- a boot with the end sawn off. The
+    # last ring is drawn in and forward into a dome instead.
+    for v in foot.data.vertices:
+        if v.co.x > toe_x - 1e-4:
+            dy, dz = v.co.y, v.co.z - (z0 + r_foot * 0.80)
+            v.co.y *= 0.55
+            v.co.z = (z0 + r_foot * 0.80) + dz * 0.55
+            v.co.x += r_foot * 0.42 * (1.0 - min(1.0, math.hypot(dy, dz) / max(r_foot, 1e-6)) ** 2)
+    S.shade_smooth(foot, 46.0)
+    parts.append(foot)
+    foot_lo, foot_hi = ankle_x - r_foot * 0.74, toe_x + r_foot * 0.94
+    sole = B.board("%s_sole" % name, foot_hi - foot_lo, r_foot * 1.94, sole_t * 1.1, mat=sole_mat,
+                   location=((foot_hi + foot_lo) * 0.5, 0, sole_t * 0.55),
+                   chamfer=sole_t * 0.30)
+    # Tapered to a round toe and pinched at the waist. Clamped at both ends: `B.board`
+    # chamfers before it returns, and a chamfer puts vertices a hair outside the board's
+    # own half-length, so `t` went fractionally negative and a negative number to the power
+    # 0.6 is a complex one -- which arrives as "assigned value not a number", a long way
+    # from here.
+    half = (foot_hi - foot_lo) * 0.5
+    for v in sole.data.vertices:
+        t = min(1.0, max(0.0, (v.co.x / half + 1.0) * 0.5))          # 0 heel, 1 toe
+        v.co.y *= 0.70 + 0.30 * math.sin(math.pi * min(1.0, t * 0.86)) ** 0.5
+    S.bevel(sole, width=sole_t * 0.24, segments=2, angle_deg=40)
+    parts.append(sole)
+    # The leg. It stands: a boot pulled off keeps its shape for years, and a leg lying on
+    # the floor is a glove. `slump` leans it back and pulls the cuff over, no further.
+    cuff_r = r_foot * 1.02
+    top = height - cuff_r * 0.30
+    ankle_z = z0 + r_foot * 1.12
+    lean = -length * (0.04 + 0.13 * slump)
+    leg = [(ankle_x, 0.0, ankle_z),
+           (ankle_x + lean * 0.30, slump * length * 0.02, ankle_z + (top - ankle_z) * 0.40),
+           (ankle_x + lean * 0.72, slump * length * 0.05, ankle_z + (top - ankle_z) * 0.76),
+           (ankle_x + lean, slump * length * 0.09, top)]
+    shaft = S.tube_along("%s_leg" % name, leg, radius=r_foot * 0.82, segments=12,
+                         radius_end=cuff_r * 0.94, mat=mat)
+    S.shade_smooth(shaft, 46.0)
+    parts.append(shaft)
+    # The cuff: a rolled rim round the mouth of the leg. It is the one part of a boot that
+    # is bigger than what is under it, and it is what tells the eye the thing is hollow.
+    # Set square to the leg, not to the floor: a rim lying flat on top of a leaning tube
+    # cuts into it on one side and floats off it on the other.
+    tilt_y = math.degrees(math.atan2(lean * 0.28, max(top - ankle_z, 1e-6) * 0.24))
+    cuff = B.hoop("%s_cuff" % name, cuff_r, r_foot * 0.16, mat=mat, segments=20, flatten=1.15,
+                  rotation=(0, tilt_y, 0))
+    cuff.location = Vector((ankle_x + lean, slump * length * 0.09, top))
+    S.apply_transforms(cuff)
+    parts.append(cuff)
+    for p in parts:
+        S.jitter_verts(p, amount=length * 0.004, scale=0.05, seed=rng.randrange(999))
+    return parts
+
+
+def boots(pal, rng, params, variant):
+    """A pair of boots left by the door, which is what four of the shipping houses say
+    about the person who lives in them.
+
+    They drew a sack: 0.71 m of grain for a 0.18 m pair of boots, and a sack is the one
+    shape in the library least like a boot. `small_boots` -- the child's pair in Hallam's
+    forge and Tallissa's stilt-house -- is written at the same height and stands in as
+    these, because a child's boots beside an adult's is a scene and not an error.
+
+    The leather is dark and its edge wear is almost off. This is the anvil stump's lesson
+    again: `edge_wear` lightens convex edges, a boot is convex nearly everywhere, and the
+    first pair came out of the review render the colour of unbleached linen at a wear of
+    0.5 -- which on a pale slumped shape is exactly the sack again."""
+    h = jit(rng, params.get("height", 0.172)) * CHUNK
+    l = jit(rng, params.get("length", 0.255)) * CHUNK
+    hide = M.leather(pal, age=0.80, wear=0.14, tint=0.10, scale=0.20, base_hex="#3a2716",
+                     name="boot_hide")
+    sole = M.leather(pal, age=0.90, wear=0.10, tint=0.08, scale=0.14, base_hex="#241a11",
+                     name="boot_sole")
+    parts = []
+    # Not a mirrored pair: they were kicked off, so they do not stand square to each other
+    # and one has slumped further than the other.
+    for i, sy in enumerate((-1, 1)):
+        slump = (0.20, 0.75)[i] * rng.uniform(0.85, 1.15)
+        boot = _boot("boot_%d" % i, l, h * (1.0 - 0.06 * slump), hide, sole, rng, slump=slump)
+        # A small splay. At twenty-odd degrees each the pair crossed and read as skis.
+        yaw = math.radians(sy * rng.uniform(4.0, 13.0))
+        for p in boot:
+            S.apply_transforms(p)
+            p.rotation_euler = Euler((math.radians(sy * -slump * 5.0), 0.0, yaw))
+            S.apply_transforms(p)
+            p.location = Vector((rng.uniform(-1, 1) * l * 0.04, sy * l * 0.17, 0.0))
+            S.apply_transforms(p)
+        parts += boot
+    return finish(parts, rng, "convex", ["leather"])
+
+
+def lantern_hand(pal, rng, params, variant):
+    """A hand lantern: a candle behind four panes, with a bail to carry it by.
+
+    The kind an interior asks for by the name `lantern` -- one stands on the Bell
+    Chapter-House's roll desk and one on Pellam's -- and it was drawing
+    `lantern_standing`, which is a 2.03 m post with a lamp on the end of it, for a thing
+    written down at 0.22. The bail is most of the difference between a hand lantern and a
+    box with a light in it, and it is included in the written height because it is what you
+    pick the thing up by."""
+    h = jit(rng, params.get("height", 0.168)) * CHUNK
+    metal = iron(pal, rng, age=0.6, wear=0.65, scale=0.10)
+    glass = M.glass(pal)
+    parts, r = _lantern_body(pal, rng, h, metal, glass)
+    # The bail: a half-hoop standing off the roof line, taller than it is wide, which is
+    # what a bucket handle is and what this is.
+    top = float(params.get("bail_top", 0.205)) * CHUNK
+    anchor = h * 0.60
+    pts = B.catenary((-r * 1.02, 0.0, anchor), (r * 1.02, 0.0, anchor), -(top - anchor), steps=11)
+    parts.append(S.tube_along("bail", pts, radius=h * 0.014, segments=6, mat=metal))
+    for sx in (-1, 1):
+        parts.append(S.sphere("bail_eye_%d" % sx, radius=h * 0.026, subdivisions=2,
+                              location=(sx * r * 1.02, 0.0, anchor), mat=metal,
+                              scale=(1.0, 0.55, 1.0)))
+    S.apply_transforms(parts[-1])
+    # A ring at the crown of the bail, for the nail it hangs on when it is not carried.
+    parts.append(S.torus("ring", major=h * 0.032, minor=h * 0.009, seg_major=14, seg_minor=6,
+                         location=(0, 0, top + h * 0.028), rotation=(90, 0, 0), mat=metal))
+    return finish(parts, rng, "convex", ["iron", "glass"], extra={"emissive": True})
+
+
+def copper(pal, rng, params, variant):
+    """A brewing copper on its setting: the vessel Corwen's brewhouse is built around.
+
+    It drew a 0.46 m cooking pot for a 0.95 m vessel, which halved the one object in the
+    room that the room exists for. What makes a copper a copper and not a big pot is that it
+    is *set*: bedded into a low round of stone with a fire mouth under it, so the rim stands
+    at working height and the flames go under the metal and nowhere else."""
+    rim_h = float(params.get("height", 0.95))
+    r = jit(rng, params.get("radius", 0.325))
+    set_h = rim_h * params.get("setting", 0.44)
+    bronze = M.bronze(pal, age=0.62, wear=0.55, scale=0.34, name="copper_metal")
+    stone = M.stone_blocks(pal, wear=0.55, age=0.7, scale=0.45, block_w=0.20, block_h=0.10,
+                           name="setting_stone")
+    sooty = M.soot(pal, name="setting_soot")
+    metal = iron(pal, rng, age=0.8, wear=0.5, scale=0.16)
+    parts = []
+    # The setting, course by course round a circle, with a mouth left in the front two
+    # courses. Leaving the stones out is how the mouth is cut: the setting is forty separate
+    # blocks, so a boolean would have to find them all and a gap is what a mason leaves.
+    rows = 4
+    mouth_half = math.radians(28.0)
+    for row in range(rows):
+        z = set_h * (row + 0.5) / rows
+        n = 15
+        for i in range(n):
+            a = TAU * (i + (row % 2) * 0.5) / n + rng.uniform(-0.02, 0.02)
+            if row < 2 and abs(math.atan2(math.sin(a), math.cos(a))) < mouth_half:
+                continue
+            # The blocks touch. At 0.93 of the arc they stood 7% apart and the staggered
+            # courses lined the gaps up, so the render gave a cairn of loose sugar cubes
+            # with daylight between them holding up half a tonne of copper. Stones in a
+            # setting are bedded in mortar and overlap their neighbours a little; 1.04
+            # with a 0.96 course height leaves the bed joint and closes the perpends.
+            bw = TAU * r / n * 1.04
+            b = S.box_centered("set_%d_%d" % (row, i), (bw, r * 0.30, set_h / rows * 0.96),
+                               (0, 0, z), rotation=(0, 0, math.degrees(a)), mat=stone)
+            b.location = Vector((math.cos(a) * r, math.sin(a) * r, z))
+            S.apply_transforms(b)
+            # One bevel segment, not two. Sixty setting stones at two segments is 108
+            # triangles each and put the whole prop at 8 060 -- twice the forge hearth,
+            # which is the heaviest comparable fixture in the library -- for an arris
+            # nobody can see on a 0.2 m block of a stone setting.
+            S.bevel(b, width=bw * 0.055, segments=1, angle_deg=40)
+            S.jitter_verts(b, amount=bw * 0.03, scale=0.4, seed=rng.randrange(999))
+            parts.append(b)
+    # The back of the fire mouth: a sooted recess, so the gap reads as a hole into a
+    # firebox and not as a hole through the prop.
+    recess = S.lathe("firebox", [(r * 0.86, 0.0), (r * 0.86, set_h * 0.52)], segments=18,
+                     mat=sooty, close=True)
+    parts.append(recess)
+    lintel = S.box_centered("lintel", (r * 0.80, r * 0.34, set_h / rows * 0.8),
+                            (r * 0.97, 0, set_h * 0.5 + set_h / rows * 0.1),
+                            rotation=(0, 0, 90), mat=stone)
+    S.bevel(lintel, width=0.012, segments=2, angle_deg=40)
+    S.jitter_verts(lintel, amount=0.008, scale=0.3, seed=rng.randrange(999))
+    parts.append(lintel)
+    # The vessel: bedded in at the setting's top, bellied, and open at the rim.
+    vr = r * 1.04
+    body_z = set_h * 0.78
+    t = 0.014
+    prof = [(0.0, body_z * 0.62), (r * 0.52, body_z * 0.66), (r * 0.86, body_z * 0.86),
+            (vr * 0.99, set_h * 1.02), (vr, rim_h * 0.76), (vr * 0.965, rim_h * 0.95),
+            (vr * 1.03, rim_h), (vr * 1.03 - t, rim_h),
+            (vr * 0.94 - t, rim_h * 0.94), (vr * 0.975 - t, rim_h * 0.74),
+            (r * 0.84 - t, body_z * 0.88), (r * 0.50, body_z * 0.72), (0.0, body_z * 0.70)]
+    vessel = S.lathe("copper", prof, segments=30, mat=bronze, close=False)
+    S.shade_smooth(vessel, 40.0)
+    S.jitter_verts(vessel, amount=vr * 0.006, scale=0.5, seed=rng.randrange(999))
+    parts.append(vessel)
+    # A riveted band below the rim, and the two lugs it is lifted out by.
+    parts.append(B.hoop("band", vr * 1.005, rim_h * 0.016, mat=bronze,
+                        location=(0, 0, rim_h * 0.86), segments=30, flatten=2.6))
+    for i in range(16):
+        a = TAU * i / 16
+        parts.append(S.sphere("rivet_%d" % i, radius=rim_h * 0.011, subdivisions=1,
+                              location=(math.cos(a) * vr * 1.02, math.sin(a) * vr * 1.02,
+                                        rim_h * 0.86),
+                              mat=bronze, scale=(0.55, 0.55, 1.0)))
+        S.apply_transforms(parts[-1])
+    for sy in (-1, 1):
+        lug = S.torus("lug_%d" % sy, major=rim_h * 0.055, minor=rim_h * 0.011, seg_major=16,
+                      seg_minor=6, location=(0, sy * vr * 1.02, rim_h * 0.80),
+                      rotation=(0, 90, 0), mat=metal)
+        parts.append(lug)
+    # The tap, low on the front where the wort comes off.
+    tap_z = set_h * 1.10
+    parts.append(S.cylinder("tap", radius=rim_h * 0.022, radius_top=rim_h * 0.016,
+                            depth=r * 0.34, location=(vr * 0.92, 0, tap_z),
+                            rotation=(0, 90, 0), vertices=10, mat=metal))
+    parts.append(S.cylinder("tap_key", radius=rim_h * 0.008, depth=rim_h * 0.075,
+                            location=(vr * 1.18, 0, tap_z), rotation=(90, 0, 0), vertices=7,
+                            mat=metal))
+    return finish(parts, rng, "col_glb", ["stone_blocks", "bronze", "iron", "soot"],
+                  extra={"rim_height": round(rim_h, 3)})
+
+
+# =========================================================================================
 # books and paper
 # =========================================================================================
 
@@ -2587,6 +3213,10 @@ KINDS = {
     # the mill, the bakehouse, the woodpile and the peat bank
     "loaf": loaf, "millstone": millstone, "chopping_block": chopping_block,
     "peat_stack": peat_stack,
+    # the kinds the stand-ins were lying about the size of
+    "bowl": bowl, "plate_stack": plate_stack, "paper_stack": paper_stack, "phial": phial,
+    "jar": jar, "mortar": mortar, "candle_stub": candle_stub, "boots": boots,
+    "lantern_hand": lantern_hand, "copper": copper,
     # books and paper
     "book": book, "book_stack": book_stack, "scroll": scroll,
     # structures and outdoor

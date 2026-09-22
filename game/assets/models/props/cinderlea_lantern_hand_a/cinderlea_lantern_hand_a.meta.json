@@ -1,0 +1,82 @@
+{
+ "bounds": {
+  "height": 0.239,
+  "max": [
+   0.058,
+   0.239,
+   0.058
+  ],
+  "min": [
+   -0.058,
+   0.0,
+   -0.058
+  ],
+  "radius": 0.145
+ },
+ "built_seconds": 28.45,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "emissive": true,
+ "generator": "gen_props",
+ "glb": "cinderlea_lantern_hand_a.glb",
+ "hash": "42e62bb0e1bb29f6",
+ "kind": "lantern_hand",
+ "materials": [
+  "cinderlea_lantern_hand_a_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "glass"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_lantern_hand_a",
+   "tris": 768
+  },
+  {
+   "name": "cinderlea_lantern_hand_a_LOD1",
+   "tris": 306
+  },
+  {
+   "name": "cinderlea_lantern_hand_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "cinderlea_lantern_hand_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 8740,
+ "textures": [
+  "cinderlea_lantern_hand_a_albedo.png",
+  "cinderlea_lantern_hand_a_normal.png",
+  "cinderlea_lantern_hand_a_orm.png",
+  "cinderlea_lantern_hand_a_emission.png"
+ ],
+ "tris": [
+  768,
+  306,
+  120
+ ],
+ "version": 3
+}

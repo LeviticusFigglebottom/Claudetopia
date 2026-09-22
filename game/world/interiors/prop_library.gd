@@ -31,9 +31,6 @@ const STAND_IN := {
 	"table": "table_trestle", "long_table": "table_trestle", "kneading_table": "table_trestle",
 	"prep_table": "table_trestle", "mortar_bench": "table_trestle", "tap_bench": "table_trestle",
 	"writing_desk": "table_trestle", "roll_desk": "table_trestle", "ledger_desk": "table_trestle",
-	# A Name-table is a heavy bench a Toll-Knight writes into iron at; the forge has no mesh
-	# for one yet, and a trestle is nearer than anything else it has built.
-	"name_table": "table_trestle",
 	"counter": "table_trestle", "bar": "table_trestle", "sideboard": "cupboard",
 	"deed_chest": "chest", "strongbox": "chest", "grain_bin": "chest",
 	"bread_shelf": "shelf", "bottle_shelf": "shelf", "ingredient_shelf": "shelf",
@@ -41,27 +38,37 @@ const STAND_IN := {
 	"drying_rack": "shelf", "pot_rack": "shelf", "barrel_rack": "shelf", "board": "shelf",
 	"map_board": "shelf", "cooling_trays": "shelf",
 	"hearth": "forge_hearth", "cook_hearth": "forge_hearth", "forge": "forge_hearth",
-	"bread_oven": "forge_hearth", "copper": "cooking_pot", "mash_tun": "barrel",
+	"bread_oven": "forge_hearth", "mash_tun": "barrel",
 	"quench_trough": "barrel", "hop_sacks": "sack", "flour_sacks": "sack",
 	"seed_sacks": "sack", "iron_stock": "crate", "root_crate": "crate", "coal_heap": "sack",
 	"hay_pile": "hay_bale", "stall": "fence_post_rail", "settle": "bench",
 	"washstand": "table_trestle", "loom": "table_trestle", "spinning_wheel": "stool",
 	"cradle": "basket", "mending_basket": "basket", "kindling_basket": "basket",
-	"crumb_bowl": "plate", "dog_bowl": "plate", "bowl": "plate", "plate_stack": "plate",
+	# A bowl is the forge's own mesh now, so the three things that are a bowl by another
+	# name take that instead of the 34 mm plate they were all drawing: what a dog eats out
+	# of, what the crumbs go on the sill in, and a washstand basin.
+	"crumb_bowl": "bowl", "dog_bowl": "bowl", "basin": "bowl",
 	# Bread has its own mesh now. A wrapped loaf, the heel of one and a ball of proved
 	# dough are all loaf-shaped and were all standing in as a 34 mm plate -- a quarter of
 	# the height each of them is written down as. An empty loaf tin is not bread and keeps
 	# the plate.
 	"loaf_tin": "plate", "wrapped_loaf": "loaf", "bread_heel": "loaf", "cheese_end": "plate",
 	"onion": "plate", "dough_ball": "loaf", "pan": "cooking_pot", "pot": "cooking_pot",
-	"book_single": "book", "ledger": "book", "roll_book": "book", "paper_stack": "scroll",
+	"book_single": "book", "ledger": "book", "roll_book": "book",
 	"tally_stick": "scroll", "tally_sticks": "scroll", "quill": "scroll", "seal": "scroll",
-	"candle_stub": "candle", "lantern": "lantern_standing", "banked_embers": "campfire",
+	# A hand lantern is what an interior means by `lantern`: the one on the Bell
+	# Chapter-House's roll desk and the one on Pellam's were both drawing
+	# `lantern_standing`, which is a two-metre post with a lamp on the end of it.
+	"lantern": "lantern_hand",
+	"banked_embers": "campfire",
 	"hand_bell": "bell_small", "small_bell": "bell_small", "medium_bell": "bell_medium",
 	"mine_cart": "cart", "wheelbarrow": "cart", "bow_stand": "shelf",
-	"blanket_heap": "bedroll", "bedroll": "bedroll", "boots": "sack", "small_boots": "sack",
-	"scales": "plate", "mortar": "cooking_pot", "pestle": "candle", "phial": "jug",
-	"inkpot": "jug", "ewer": "jug", "basin": "plate", "funnel": "jug", "tar_pot": "cooking_pot",
+	"blanket_heap": "bedroll", "bedroll": "bedroll",
+	# A child's boots beside an adult's pair is a scene and not an error, and both are
+	# written down at the same height; what they must not both be is a 0.71 m sack.
+	"small_boots": "boots",
+	"scales": "plate", "pestle": "candle",
+	"inkpot": "jug", "ewer": "jug", "funnel": "jug", "tar_pot": "cooking_pot",
 	"oar_rack": "shelf", "drying_line": "rope_coil", "yoke": "rope_coil", "string_ball": "rope_coil",
 	"herb_bundle": "rope_coil", "oil_rag": "cloth", "rag": "cloth",
 	# The smith's bench. `hammer` and `whetstone` are the forge's own meshes now and need no
@@ -73,8 +80,14 @@ const STAND_IN := {
 	"bung_mallet": "hammer", "ladle": "spoon", "flour_scoop": "spoon",
 	"scythe": "pitchfork", "bellows": "sack", "dice_cup": "mug", "cold_tea": "mug",
 	"coin_few": "plate", "wooden_toy": "book", "chewed_stick": "rope_coil",
-	"half_made_thing": "crate", "work_in_progress": "crate", "jar": "jug",
+	"half_made_thing": "crate", "work_in_progress": "crate",
 }
+## Kinds that used to be in the map and are the forge's own meshes now, so they resolve
+## directly and an entry would only be a lie waiting to be believed: `bowl`, `plate_stack`,
+## `paper_stack`, `phial`, `jar`, `mortar`, `candle_stub`, `boots` and `copper`. Every one
+## of them was a stand-in that was the wrong *size* -- a sack for a boot, a cooking pot for
+## a brewing copper, a 34 mm plate for a 90 mm bowl -- which is worse than a labelled box,
+## because a box admits what it is.
 
 var _index: Dictionary = {}       # kind -> {region -> Array[String] of scene paths}
 var _kinds: Dictionary = {}       # kind -> true
