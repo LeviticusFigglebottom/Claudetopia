@@ -168,6 +168,9 @@ def main() -> int:
         print("misclassified:")
         for (r, b), n in sorted(confusions.items(), key=lambda kv: -kv[1]):
             print(f"  {r} read as {b}: {n}")
+    # (these two were read by --json before they were assigned, so --json always raised)
+    per_region = min(len(v) for v in by_region.values())
+    enough = per_region >= a.min_images_per_region
     if a.json:
         json.dump({"accuracy": acc, "colour_accuracy": acc_c, "shape_accuracy": acc_s,
                    "chance": chance, "images_per_region": per_region,
@@ -176,8 +179,6 @@ def main() -> int:
                    "confusions": {f"{r}->{b}": n for (r, b), n in confusions.items()},
                    "shape_confusions": {f"{r}->{b}": n for (r, b), n in conf_s.items()}},
                   open(a.json, "w"), indent=2)
-    per_region = min(len(v) for v in by_region.values())
-    enough = per_region >= a.min_images_per_region
     ok = acc >= a.min_accuracy and (acc_s >= a.min_shape_accuracy or not enough)
     if not enough:
         print(f"landform is advisory: the thinnest region has {per_region} images and the bar "
