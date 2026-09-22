@@ -621,3 +621,55 @@ func test_staggering_a_singer_ends_the_note() -> void:
 	e.stagger(0.8)
 	assert_false(e.is_channelling(), "a stagger takes the note with it")
 	assert_eq(closed, [EnemyAbilities.BROKE_INTERRUPTED] as Array[String])
+
+
+## An arena that has outlived the room it put out.
+##
+## The lights a Cantor puts out are not the arena's own children: they belong to a chamber that
+## can be unloaded, or to a scene a test has finished with. The arena kept a list of them and
+## `restore_lights` asked each one what class it was -- and asking a freed instance that is the
+## error, reached through `_enter_phase` -> `light_by_renown` -> `dim_to`. A lamp that leaves the
+## room comes off the books.
+func test_a_lamp_that_leaves_the_room_comes_off_the_arenas_books() -> void:
+	var arena := BossArena.new()
+	_keep(arena)
+	_tree().root.add_child(arena)
+	arena.centre = Vector3.ZERO
+	arena.set_bound(30.0)
+	var lamps: Array[OmniLight3D] = []
+	for i in 3:
+		var lamp := OmniLight3D.new()
+		lamp.light_energy = 2.0 + float(i)
+		lamp.omni_range = 4.0
+		_tree().root.add_child(lamp)
+		lamp.global_position = Vector3(float(i), 0.0, 0.0)
+		lamps.append(lamp)
+	arena.dim_to(1)
+	assert_eq(arena.lights_out(), 2, "two of the three went out")
+
+	# The room is unloaded around the fight: every lamp in it is freed.
+	for lamp in lamps:
+		lamp.get_parent().remove_child(lamp)
+		lamp.free()
+	assert_eq(arena.lights_out(), 0, "the arena is still holding lights that no longer exist")
+	assert_empty(arena.kept_lights(), "and one it left burning")
+
+	# Dimming again restores first, which is where the freed references were read.
+	arena.dim_to(1)
+	assert_eq(arena.lights_out(), 0, "there is nothing left in the room to put out")
+
+
+## An improvised bound belongs to the fight it was improvised for. Nothing freed it, so one
+## accumulated per boss for the life of the process and the next fight of the same boss found the
+## old one, still holding the lights it had put out in a room that is gone.
+func test_an_improvised_arena_goes_when_its_boss_does() -> void:
+	var cantor := Enemy.new()
+	cantor.configure(CANTOR)
+	cantor.process_mode = Node.PROCESS_MODE_DISABLED
+	_tree().root.add_child(cantor)
+	var bound := cantor.arena()
+	assert_true(bound != null, "a boss with no authored arena gets one improvised")
+	cantor.get_parent().remove_child(cantor)
+	cantor.free()
+	await _tree().process_frame
+	assert_false(is_instance_valid(bound), "the improvised bound outlived the fight it was for")
