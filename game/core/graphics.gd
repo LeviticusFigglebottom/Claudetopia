@@ -134,6 +134,7 @@ static var renderer_override := ""
 ## directional shadow atlas size, the SSAO quality or, in a headless run, vsync), so a test can
 ## check that the setting was applied and not only stored.
 static var last_applied: Dictionary = {}
+static var _server_state: Dictionary = {}
 
 
 static func renderer() -> String:
@@ -221,23 +222,31 @@ static func apply(g: Dictionary, tree: SceneTree) -> void:
 		return
 	var r := renderer()
 	apply_viewport(tree.root, g, r)
+	# The rendering server's own state is only touched when it changes: a slider dragged
+	# across the render scale would otherwise reallocate the shadow atlas at every step.
 	var atlas := int(g.get("shadow_atlas", 4096))
-	RenderingServer.directional_shadow_atlas_set_size(atlas, true)
-	ProjectSettings.set_setting("rendering/lights_and_shadows/directional_shadow/size", atlas)
+	if _server_state.get("shadow_atlas", -1) != atlas:
+		_server_state["shadow_atlas"] = atlas
+		RenderingServer.directional_shadow_atlas_set_size(atlas, true)
+		ProjectSettings.set_setting("rendering/lights_and_shadows/directional_shadow/size", atlas)
 	var filter := clampi(int(g.get("shadow_filter", 2)), 0, 5)
-	RenderingServer.directional_soft_shadow_filter_set_quality(filter as RenderingServer.ShadowQuality)
-	RenderingServer.positional_soft_shadow_filter_set_quality(filter as RenderingServer.ShadowQuality)
-	ProjectSettings.set_setting("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality", filter)
-	ProjectSettings.set_setting("rendering/lights_and_shadows/positional_shadow/soft_shadow_filter_quality", filter)
+	if _server_state.get("shadow_filter", -1) != filter:
+		_server_state["shadow_filter"] = filter
+		RenderingServer.directional_soft_shadow_filter_set_quality(filter as RenderingServer.ShadowQuality)
+		RenderingServer.positional_soft_shadow_filter_set_quality(filter as RenderingServer.ShadowQuality)
+		ProjectSettings.set_setting("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality", filter)
+		ProjectSettings.set_setting("rendering/lights_and_shadows/positional_shadow/soft_shadow_filter_quality", filter)
 	var ao := clampi(int(g.get("ao_quality", 2)), 0, 3)
-	# Quality, half size, adaptive target, blur passes, fade from, fade to: the project defaults
-	# at Medium, full-size buffers at High.
-	RenderingServer.environment_set_ssao_quality(ao as RenderingServer.EnvironmentSSAOQuality,
-			ao < 3, 0.5, 2, 50.0, 300.0)
-	RenderingServer.environment_set_ssil_quality(ao as RenderingServer.EnvironmentSSILQuality,
-			ao < 3, 0.5, 4, 50.0, 300.0)
-	ProjectSettings.set_setting("rendering/environment/ssao/quality", ao)
-	ProjectSettings.set_setting("rendering/environment/ssao/half_size", ao < 3)
+	if _server_state.get("ao_quality", -1) != ao:
+		_server_state["ao_quality"] = ao
+		# Quality, half size, adaptive target, blur passes, fade from, fade to: the project
+		# defaults at Medium, full-size buffers at High.
+		RenderingServer.environment_set_ssao_quality(ao as RenderingServer.EnvironmentSSAOQuality,
+				ao < 3, 0.5, 2, 50.0, 300.0)
+		RenderingServer.environment_set_ssil_quality(ao as RenderingServer.EnvironmentSSILQuality,
+				ao < 3, 0.5, 4, 50.0, 300.0)
+		ProjectSettings.set_setting("rendering/environment/ssao/quality", ao)
+		ProjectSettings.set_setting("rendering/environment/ssao/half_size", ao < 3)
 	Engine.max_fps = maxi(0, int(g.get("fps_cap", 0)))
 	var vsync := DisplayServer.VSYNC_ENABLED if bool(g.get("vsync", true)) else DisplayServer.VSYNC_DISABLED
 	DisplayServer.window_set_vsync_mode(vsync)

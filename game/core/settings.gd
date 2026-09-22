@@ -31,6 +31,8 @@ var bindings: Dictionary = {}   # action -> Array[String] of event strings
 ## Off while the unit tests run and while a tool measures a preset: they change settings in memory
 ## and must never write them into the player's settings.cfg.
 var persist := true
+## The file itself; a test that checks what is written points this somewhere of its own.
+var path := PATH
 var _save_queued := false
 
 
@@ -47,7 +49,7 @@ func load_settings() -> void:
 	data = DEFAULTS.duplicate(true)
 	_load_binding_defs()
 	var cf := ConfigFile.new()
-	if cf.load(PATH) == OK:
+	if cf.load(path) == OK:
 		for section in cf.get_sections():
 			if section == "bindings":
 				for action in cf.get_section_keys(section):
@@ -90,7 +92,7 @@ func save_settings() -> void:
 			cf.set_value(section, key, data[section][key])
 	for action in bindings:
 		cf.set_value("bindings", action, bindings[action])
-	cf.save(PATH)
+	cf.save(path)
 
 
 func get_value(section: String, key: String, default: Variant = null) -> Variant:

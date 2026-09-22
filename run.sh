@@ -7,7 +7,9 @@
 #   ./run.sh flow       boot -> title -> the Naming -> the world, pressing the buttons a player
 #                       would, with a screenshot at every step -> captures/flow/
 #   ./run.sh shots      headless capture plan -> captures/
+#                       (./run.sh shots <plan> --preset=high --attribute  shoots at a graphics preset)
 #   ./run.sh perf       measure draw calls and primitives against the budgets
+#                       (./run.sh perf --preset=low  measures at a graphics preset)
 #   ./run.sh world      rebuild terrain/world data from recipes
 #   ./run.sh assets     rebuild generated assets (needs Blender)
 #   ./run.sh interiors  rebuild every cave and house from its recipe
@@ -104,12 +106,12 @@ case "$cmd" in
     import_project
     mkdir -p "$ROOT/captures"
     xvfb "$GODOT" --path "$GAME" --audio-driver Dummy --resolution 1600x900 \
-      res://tools_gd/perf_probe.tscn -- "--out=$ROOT/captures" ;;
+      res://tools_gd/perf_probe.tscn -- "--out=$ROOT/captures" "$@" ;;
   shots)
     import_project
     mkdir -p "$ROOT/captures"
-    plan="${1:-tools/capture/plans/default.json}"
-    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- "--capture=$plan" "--out=$ROOT/captures" ;;
+    plan="${1:-tools/capture/plans/default.json}"; shift || true
+    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- "--capture=$plan" "--out=$ROOT/captures" "$@" ;;
   world)
     "$PY" "$ROOT/tools/world/build_world.py" "$@" && import_terrain ;;
   assets)

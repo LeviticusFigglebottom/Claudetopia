@@ -32,6 +32,10 @@ var people := true
 var attribute := false
 var _attribution: Array = []
 var _failures: Array[String] = []
+## `--preset=low|medium|high|painted` shoots the plan at that graphics preset (core/graphics.gd),
+## set in memory only: a measurement never writes the player's settings.cfg. Without it the plan
+## is shot at whatever settings.cfg says, and perf.json records which that was either way.
+var preset := ""
 
 
 func _ready() -> void:
@@ -45,6 +49,16 @@ func _ready() -> void:
 			people = false
 		elif a == "--attribute":
 			attribute = true
+		elif a.begins_with("--preset="):
+			preset = a.substr(9)
+	if preset != "":
+		if not Graphics.PRESETS.has(preset):
+			Log.error("Capture", "no graphics preset %s (low, medium, high, painted)" % preset)
+			get_tree().quit(2)
+			return
+		Settings.persist = false
+		Settings.apply_graphics_preset(preset)
+		Log.info("Capture", "graphics preset: %s" % preset)
 	var code: int = await run()
 	get_tree().quit(code)
 
@@ -340,6 +354,8 @@ func _write_perf() -> void:
 		"base_viewport": [int(ProjectSettings.get_setting("display/window/size/viewport_width")),
 			int(ProjectSettings.get_setting("display/window/size/viewport_height"))],
 		"budget": {"draw_calls": 2000, "primitives": 1500000},
+		"graphics_preset": str(Settings.get_value("graphics", "preset", "")),
+		"graphics": (Settings.data.get("graphics", {}) as Dictionary).duplicate(),
 		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
 		"within_budget": worst_draw <= 2000 and worst_prims <= 1500000,
 		"shots": _perf,

@@ -400,25 +400,41 @@ static func make_group(lad: Ladder, cell: Node3D, rows: Array, far_ring: bool, c
 	g.cell = cell
 	g.far_ring = far_ring
 	var n := rows.size()
-	var probe := MultiMesh.new()
-	probe.transform_format = MultiMesh.TRANSFORM_3D
-	probe.use_colors = true
-	probe.instance_count = n
 	var origin := cell.position
 	g.positions.resize(n)
 	g.level_of.resize(n)
+	# The MultiMesh buffer layout (3D transform, then colour), composed here rather than read
+	# back from a MultiMesh: the headless renderer keeps no buffer to read.
+	g.rows.resize(n * STRIDE)
 	var lo := Vector3(INF, INF, INF)
 	var hi := -lo
 	for i in n:
 		var row: Array = rows[i]
-		probe.set_instance_transform(i, WorldStreamer.instance_transform(row, origin))
-		probe.set_instance_color(i, WorldStreamer.instance_tint(row))
+		var t := WorldStreamer.instance_transform(row, origin)
+		var c := WorldStreamer.instance_tint(row)
+		var b := t.basis
+		var o := i * STRIDE
+		g.rows[o] = b.x.x
+		g.rows[o + 1] = b.y.x
+		g.rows[o + 2] = b.z.x
+		g.rows[o + 3] = t.origin.x
+		g.rows[o + 4] = b.x.y
+		g.rows[o + 5] = b.y.y
+		g.rows[o + 6] = b.z.y
+		g.rows[o + 7] = t.origin.y
+		g.rows[o + 8] = b.x.z
+		g.rows[o + 9] = b.y.z
+		g.rows[o + 10] = b.z.z
+		g.rows[o + 11] = t.origin.z
+		g.rows[o + 12] = c.r
+		g.rows[o + 13] = c.g
+		g.rows[o + 14] = c.b
+		g.rows[o + 15] = c.a
 		var p := Vector3(float(row[0]), float(row[1]), float(row[2]))
 		g.positions[i] = p
 		lo = lo.min(p)
 		hi = hi.max(p)
 		g.level_of[i] = 0
-	g.rows = probe.buffer
 	g.box = AABB(lo, hi - lo)
 	var base := asset_path.get_file().get_basename()
 	if far_ring:

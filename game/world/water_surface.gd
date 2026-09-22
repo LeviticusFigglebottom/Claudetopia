@@ -22,6 +22,13 @@ const REGION_WATER := {
 
 @export var sheet_subdivisions: int = 96
 
+## The graphics setting `water_quality` (0 Low .. 3 Painted): how finely the sheet is cut, which
+## is what the swell and the depth colour have to interpolate over, and how much of the finest
+## ripple layer the shader draws. High (2) is the water as it was built.
+const QUALITY_SUBDIVISIONS := [48, 64, 96, 160]
+const QUALITY_DETAIL := [0.0, 0.6, 1.0, 1.0]
+var quality := 2
+
 var provider: TerrainProvider
 var sheet: MeshInstance3D
 var skirt: MeshInstance3D
@@ -38,6 +45,10 @@ func build(p: TerrainProvider) -> void:
 	provider = p
 	if provider == null:
 		return
+	quality = clampi(int(Settings.get_value("graphics", "water_quality", 2)), 0, 3)
+	sheet_subdivisions = QUALITY_SUBDIVISIONS[quality]
+	if not Settings.changed.is_connected(_on_setting_changed):
+		Settings.changed.connect(_on_setting_changed)
 	_build_textures()
 	_build_sheet()
 	_build_skirt()
@@ -85,6 +96,7 @@ func _make_material(follow_level: bool, use_mask: bool) -> ShaderMaterial:
 	mat.set_shader_parameter("world_size", provider.size_m)
 	mat.set_shader_parameter("follow_level", follow_level)
 	mat.set_shader_parameter("use_mask", use_mask)
+	mat.set_shader_parameter("detail", QUALITY_DETAIL[quality])
 	return mat
 
 
@@ -258,6 +270,23 @@ func set_region_look(region_id: String) -> void:
 		mat.set_shader_parameter("shallow_colour", shallow)
 		if mat == _sheet_material or mat == _skirt_material:
 			mat.set_shader_parameter("depth_fade_m", fade)
+
+
+func _on_setting_changed(section: String, key: String, value: Variant) -> void:
+	if section == "graphics" and key == "water_quality":
+		apply_quality(int(value))
+
+
+## Water quality, live: the sheet re-cut to its new subdivision and every surface's ripple
+## detail set. Nothing else is rebuilt.
+func apply_quality(q: int) -> void:
+	quality = clampi(q, 0, 3)
+	sheet_subdivisions = QUALITY_SUBDIVISIONS[quality]
+	if sheet != null and sheet.mesh is PlaneMesh:
+		(sheet.mesh as PlaneMesh).subdivide_width = sheet_subdivisions
+		(sheet.mesh as PlaneMesh).subdivide_depth = sheet_subdivisions
+	for mat in _all_materials():
+		mat.set_shader_parameter("detail", QUALITY_DETAIL[quality])
 
 
 func _all_materials() -> Array[ShaderMaterial]:

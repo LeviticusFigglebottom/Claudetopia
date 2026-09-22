@@ -33,7 +33,7 @@ uniform float alpha_scissor : hint_range(0.0, 1.0) = 0.45;
 uniform float sun_share : hint_range(0.0, 1.0) = 0.55;
 // light through the leaves from behind, as the foliage shader's BACKLIGHT gives the cards
 uniform float translucency : hint_range(0.0, 1.0) = 0.25;
-uniform float specular_value : hint_range(0.0, 1.0) = 0.12;
+uniform float specular_value : hint_range(0.0, 1.0) = 0.3;
 uniform float roughness_value : hint_range(0.0, 1.0) = 0.72;
 uniform vec4 tint : source_color = vec4(1.0);
 // fading in across (start, end) metres from the main camera; (0, 0) is always whole

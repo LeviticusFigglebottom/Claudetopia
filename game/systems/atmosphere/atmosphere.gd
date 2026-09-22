@@ -387,7 +387,8 @@ func _apply(_delta: float) -> void:
 	env.tonemap_white = 2.0 if interior else 6.0
 	env.adjustment_saturation = float(_look["saturation"]) * float(w["saturation_mult"])
 	env.adjustment_contrast = float(_look["contrast"])
-	env.adjustment_brightness = 1.0
+	# the player's brightness (Settings video/brightness); it was a slider that moved nothing
+	env.adjustment_brightness = clampf(float(Settings.get_value("video", "brightness", 1.0)), 0.5, 2.0)
 	env.glow_intensity = 0.35 + float(_look["bloom"])
 	env.glow_bloom = 0.02 + 0.08 * float(_look["bloom"])
 
