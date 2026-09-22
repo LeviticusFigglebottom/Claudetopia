@@ -254,6 +254,13 @@ GROUND_KIT = [
     ("milestone", "hearthvale", 2, None),
 ]
 
+# The picture each tree is drawn as once it is a few dozen pixels tall (gen_impostors.py):
+# eight views of it in an atlas, and its LOD2 made one quad that turns to face the eye. It
+# reads the tree TREES built rather than growing one, so it names the same kind, region and
+# variants, its entry is called <tree>_impostor, and build_assets.py builds it after the trees.
+# `recipe` is the impostor generator's own version: bump it to draw every impostor again.
+IMPOSTORS = [(kind, reg, variants, {"recipe": 1}) for kind, reg, variants, _params in TREES]
+
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
 # rebuilds, differently -- everything after it. New work goes on the end.
@@ -261,7 +268,7 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
-          ("gen_ground_kit", GROUND_KIT)]
+          ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS)]
 
 
 def build() -> list[dict]:
@@ -274,6 +281,8 @@ def build() -> list[dict]:
                      "variant": LETTERS[i], "seed": seed + i * 17}
                 if params:
                     e["params"] = params
+                if generator == "gen_impostors":
+                    e["name"] = "%s_%s_%s_impostor" % (reg, kind, LETTERS[i])
                 entries.append(e)
             seed += 53
     return entries

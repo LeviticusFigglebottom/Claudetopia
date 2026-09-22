@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b66p8gennupkd"
-path.s3tc="res://.godot/imported/hearthvale_hawthorn_a_impostor_orm.png-ec9d7823a7e18f7dd0608521a57ef80a.s3tc.ctex"
+uid="uid://cy6ep7mxtk5fw"
+path.s3tc="res://.godot/imported/hearthvale_hawthorn_a_impostor_nrm.png-9f0780ba57736bc1c0cd4c53ec3395fa.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/trees/hearthvale_hawthorn_a/hearthvale_hawthorn_a_impostor_orm.png"
-dest_files=["res://.godot/imported/hearthvale_hawthorn_a_impostor_orm.png-ec9d7823a7e18f7dd0608521a57ef80a.s3tc.ctex"]
+source_file="res://assets/models/trees/hearthvale_hawthorn_a/hearthvale_hawthorn_a_impostor_nrm.png"
+dest_files=["res://.godot/imported/hearthvale_hawthorn_a_impostor_nrm.png-9f0780ba57736bc1c0cd4c53ec3395fa.s3tc.ctex"]
 
 [params]
 

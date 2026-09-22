@@ -1,5 +1,11 @@
 shader_type spatial;
-render_mode cull_disabled, depth_draw_opaque, diffuse_burley, specular_schlick_ggx;
+// shadows_disabled: the picture does not receive shadows. It casts them -- turned to face the
+// sun in the shadow pass -- and that caster crosses the camera-facing picture at the trunk, so a
+// picture that received shadows lay half in its own: a hard dark wedge through every far tree
+// whenever the sun and the camera were not in line. The crown's shading on itself is done in
+// light() instead. What is lost is a far tree darkened by some other thing's shadow, a house's
+// or a hill's; at the distances pictures are drawn, that is the rarer fault by far.
+render_mode cull_disabled, depth_draw_opaque, shadows_disabled;
 
 // A tree far away: eight pictures of it (tools/forge/gen_impostors.py) on one upright quad that
 // turns about the trunk to face whoever is looking. In the colour pass that is the camera; in
@@ -21,12 +27,14 @@ uniform vec2 frame_axis = vec2(0.0);
 uniform int views = 8;
 uniform int grid = 3;
 uniform float alpha_scissor : hint_range(0.0, 1.0) = 0.45;
-// the baked sky visibility darkens ambient light fully and direct light by this much: the mesh
-// crown shadows its own middle from the sun, and a picture cannot, so it borrows the share
-uniform float ao_light_affect : hint_range(0.0, 1.0) = 0.55;
-uniform float roughness_value : hint_range(0.0, 1.0) = 0.85;
-uniform float specular_value : hint_range(0.0, 1.0) = 0.3;
-uniform float backlight_amount : hint_range(0.0, 1.0) = 0.25;
+// How much of the sun a crown's surface gets, on average, once its own leaves have shadowed
+// it: the mesh levels get this from the shadow map, a picture has to be told. Measured against
+// LOD1 by tools_gd/lod_review.tscn (LODSTATS), not chosen by eye.
+uniform float sun_share : hint_range(0.0, 1.0) = 0.55;
+// light through the leaves from behind, as the foliage shader's BACKLIGHT gives the cards
+uniform float translucency : hint_range(0.0, 1.0) = 0.25;
+uniform float specular_value : hint_range(0.0, 1.0) = 0.12;
+uniform float roughness_value : hint_range(0.0, 1.0) = 0.72;
 uniform vec4 tint : source_color = vec4(1.0);
 // fading in across (start, end) metres from the main camera; (0, 0) is always whole
 uniform vec2 lod_fade_in = vec2(0.0);
@@ -99,10 +107,19 @@ void fragment() {
 	vec3 by = vec3(0.0, 1.0, 0.0);
 	vec3 n_world = normalize(v_bx * n_obj.x + by * n_obj.y + v_bz * n_obj.z);
 	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
+	// the baked sky visibility: the middle of a crown sees less of the sky than its rim
 	AO = n.a;
-	AO_LIGHT_AFFECT = ao_light_affect;
+	AO_LIGHT_AFFECT = 0.0;
 	ROUGHNESS = roughness_value;
 	SPECULAR = specular_value;
 	METALLIC = 0.0;
-	BACKLIGHT = ALBEDO * backlight_amount;
+}
+
+void light() {
+	float ndl = dot(NORMAL, LIGHT);
+	float diffuse = max(ndl, 0.0) * sun_share + max(-ndl, 0.0) * translucency;
+	DIFFUSE_LIGHT += diffuse * ATTENUATION * LIGHT_COLOR / PI;
+	vec3 h = normalize(LIGHT + VIEW);
+	float spec = pow(max(dot(NORMAL, h), 0.0), mix(64.0, 4.0, roughness_value));
+	SPECULAR_LIGHT += spec * specular_value * sun_share * ATTENUATION * LIGHT_COLOR / PI;
 }
