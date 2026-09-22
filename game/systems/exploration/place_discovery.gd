@@ -39,10 +39,31 @@ const EYE_M := 1.65
 ## charcoal camp is not, and a hidden valley is called hidden because you cannot see into it
 ## from anywhere — its sightline is the way in, not the thing itself. A flat six metres for
 ## all of them made the falls invisible and the campfires monumental.
+##
+## The numbers were guesses until the POIs were dressed. They are measured now: every one is
+## what `game/world/pois/poi_builders.gd` actually raises above the pad, taken across the POIs
+## of that kind, so the audit and the game are arguing about the same country.
+##
+## * `tower` — a watch drum is 7.6 m and carries its fire-bowl to about 10; the toll-house's
+##   bell frame is 9.0, the reedfolk platform and its roof 9.5, the colossus head 10.6. The
+##   Tumbled Watch is 5, because it is lying down. Eighteen was nobody's tower.
+## * `waterfall` — a cliff face of 11 m, 13 for the Glass Falls, and the Three Sisters' three
+##   tiers at 4.6 each. Twenty-four was two of them stacked.
+## * `strange_tree` — the Sallow King's willow at 1.5 scale is 24 m, Willow Isle's pollard 13,
+##   the Singing Yew's yew at 3.1 is 9.
+## * `giant_bones` — the Hart Bones' antlers reach 15 above the pad, the Rib Cathedral's arch 11.
+## * `ruins` — a gable still standing is 4.6, the Oroth colonnade's tallest column 7.2, a
+##   wardstone 5.4, and the Thirteenth is face down.
+## * `strange` — a bell buoy is a barrel, a post, a cage and a bell; the One Poppy is a poppy.
+## * `standing_stones` — a menhir of 3.8 m set at 1.15 to 1.55.
+## * `bridge` — an arch and its parapet is 4, Mossbridge's crown 5.4, the Chain Bridge's pylons
+##   7.8 over their deck.
+## * `shrine` — the Pilgrims' Bell lying on its side is 7, a hawthorn through a stone chair 5,
+##   a cairn of lake pebbles 2.
 const LANDMARK_M := {
-	"tower": 18.0, "waterfall": 24.0, "strange_tree": 14.0, "giant_bones": 12.0,
-	"ruins": 8.0, "strange": 6.0, "wreck": 5.0, "standing_stones": 4.5,
-	"bridge": 3.5, "shrine": 3.0, "camp": 2.5, "hidden_valley": 1.0,
+	"tower": 10.0, "waterfall": 13.0, "strange_tree": 14.0, "giant_bones": 13.0,
+	"ruins": 6.0, "strange": 2.5, "wreck": 5.0, "standing_stones": 5.0,
+	"bridge": 4.5, "shrine": 4.0, "camp": 2.5, "hidden_valley": 1.0,
 }
 const LANDMARK_DEFAULT_M := 6.0
 ## Steps along the ray. 64 over eight kilometres is a sample every 125 m, which is coarse for a
