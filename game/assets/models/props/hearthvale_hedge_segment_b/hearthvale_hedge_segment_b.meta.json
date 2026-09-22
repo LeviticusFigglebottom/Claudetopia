@@ -1,0 +1,94 @@
+{
+ "bounds": {
+  "height": 1.884,
+  "max": [
+   1.39,
+   1.884,
+   0.415
+  ],
+  "min": [
+   -1.413,
+   0.0,
+   -0.278
+  ],
+  "radius": 1.724
+ },
+ "built_seconds": 11.81,
+ "category": "props",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_ground_kit",
+ "glb": "hearthvale_hedge_segment_b.glb",
+ "hash": "b0f5aa8d9be28851",
+ "kind": "hedge_segment",
+ "materials": [
+  "hearthvale_hedge_segment_b_mat",
+  "hearthvale_hedge_segment_b_hedge_foliage"
+ ],
+ "materials_used": [
+  "oak_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_hedge_segment_b",
+   "tris": 72
+  },
+  {
+   "name": "hearthvale_hedge_segment_b_LOD1",
+   "tris": 48
+  },
+  {
+   "name": "hearthvale_hedge_segment_b_LOD2",
+   "tris": 48
+  },
+  {
+   "name": "hearthvale_hedge_segment_b_cards_LOD1",
+   "tris": 14
+  },
+  {
+   "name": "hearthvale_hedge_segment_b_cards_LOD2",
+   "tris": 8
+  }
+ ],
+ "modular": true,
+ "module_length_m": 2.2,
+ "name": "hearthvale_hedge_segment_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 8863,
+ "textures": [
+  "hearthvale_hedge_segment_b_albedo.png",
+  "hearthvale_hedge_segment_b_normal.png",
+  "hearthvale_hedge_segment_b_orm.png",
+  "hearthvale_hedge_segment_b_atlas_albedo.png",
+  "hearthvale_hedge_segment_b_atlas_normal.png",
+  "hearthvale_hedge_segment_b_atlas_orm.png"
+ ],
+ "tris": [
+  72,
+  62,
+  56
+ ],
+ "version": 3
+}

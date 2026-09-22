@@ -53,8 +53,13 @@ def load_manifest(path: Path = MANIFEST) -> list[dict]:
 
 
 def default_category(generator: str) -> str:
+    # gen_ground_kit's hedges, gate posts and milestones file under props deliberately: the
+    # streamer reads the category to decide a scatter asset's view range and whether it casts
+    # a shadow, and a hedgerow is line-work that has to read at two hundred metres, not a
+    # herb that stops at a hundred and ten.
     return {"gen_trees": "trees", "gen_rocks": "rocks", "gen_flora": "flora",
-            "gen_props": "props", "gen_landmarks": "landmarks"}.get(generator, "props")
+            "gen_props": "props", "gen_landmarks": "landmarks",
+            "gen_ground_kit": "props"}.get(generator, "props")
 
 
 def short_palette(palette) -> str:

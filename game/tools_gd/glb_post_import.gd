@@ -107,6 +107,11 @@ func _tune_standard(mat: Material) -> void:
 		sm.ao_light_affect = 0.35
 	sm.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	sm.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
+	# Rocks, stumps and the rest of the scattered opaque assets are drawn from MultiMeshes
+	# that carry a per-instance tint (worldgen/cells.py), and a StandardMaterial3D ignores it
+	# unless it is told to use the vertex colour. No forge generator bakes a colour attribute
+	# into a mesh, so for anything not in a MultiMesh this reads as white and changes nothing.
+	sm.vertex_color_use_as_albedo = true
 
 
 func _make_foliage_material(src: Material) -> ShaderMaterial:

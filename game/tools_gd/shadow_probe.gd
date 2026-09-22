@@ -16,9 +16,13 @@ extends Node
 ##   e  b, receiver 8 km across                         -- what Terrain3D's ground instance is
 ##   f  d and e together
 ##
-## On 2026-09-22, under Compatibility, every case shadowed correctly -- which is what proved
-## that the shadowless world frames were the sun's elevation and, for the ground alone, the
-## terrain addon itself. See DECISIONS.md.
+## On 2026-09-22, under Compatibility, every case shadowed correctly. That is the finding:
+## the shadowless world frames were the sun's elevation and nothing else. The terrain was
+## briefly suspected of not receiving shadows at all -- a village street at 16:30 showed a
+## house in shadow standing on lit grass -- and that was wrong: with the sun brought down to
+## the region's own latitude, a hawthorn lays a dappled leaf shadow across the ground with
+## the individual leaf clusters legible in it. What made the ground look unshadowed was a
+## sun 60 to 94 degrees up, which puts every shadow underneath the thing that casts it.
 
 const SKIP_VT_SHADER := """
 shader_type spatial;
