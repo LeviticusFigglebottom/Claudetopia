@@ -272,6 +272,82 @@ func test_at_three_in_the_morning_the_villages_are_asleep_not_dropped() -> void:
 	await _drop(w)
 
 
+# --- the talk of the place -----------------------------------------------------------------------
+
+## Walking into a region seeds its settlements with their own rumours (Gossip.stock_region), so
+## a village nobody has questioned is not silent. Sixty-five rumours shipped and the ones with
+## no region tag can only ever arrive as news about the player, which is why the outlands needed
+## local talk of their own.
+func test_walking_into_a_region_gives_its_villages_something_to_say() -> void:
+	var gossip: Node = Social.gossip
+	gossip.reset_for_new_game()
+	for region in ContentDB.all("region"):
+		var region_id := str(region["id"])
+		gossip.stock_region(region_id)
+		for place_id in gossip.settlements_of(region_id):
+			if _residents_of(str(place_id)).is_empty():
+				continue
+			var pool: Array = gossip.pool_of(str(place_id))
+			assert_true(pool.size() > 0, "%s has people in it and nothing to say" % place_id)
+			for entry in pool:
+				var said := str((entry as Dictionary).get("text", ""))
+				assert_true(said.length() > 20, "%s is saying nothing much: '%s'" % [place_id, said])
+				assert_false(said.contains("{"), "%s left a token in the talk: %s" % [place_id, said])
+	gossip.reset_for_new_game()
+
+
+## Every local rumour is a rumour a place can actually be given: tagged with the short name of a
+## region that exists, and not about the player, because `_is_local_colour` refuses both.
+func test_every_local_rumour_belongs_to_a_region_that_exists() -> void:
+	var shorts: Dictionary = {}
+	for region in ContentDB.all("region"):
+		shorts[str(region["id"]).get_slice("/", 1)] = true
+	var local := 0
+	for def in ContentDB.all("rumour"):
+		var tags: Array = def.get("tags", [])
+		var region_tags := 0
+		for t in tags:
+			if shorts.has(str(t)):
+				region_tags += 1
+		if region_tags == 0:
+			continue
+		local += 1
+		assert_eq(region_tags, 1, "%s is tagged with more than one region" % def["id"])
+		assert_false(str(def.get("text", "")).contains("{player}"),
+			"%s is local colour and about the player, so it can never be seeded" % def["id"])
+	assert_true(local >= 40, "only %d rumours are local colour; the rest can only arrive as news about you" % local)
+
+
+## The talk is reachable in a conversation: at a place that is saying something, a resident's
+## hub offers it and says it (DialogueRunner.TALK_CHOICE).
+func test_a_villager_of_a_new_settlement_repeats_the_local_talk() -> void:
+	var gossip: Node = Social.gossip
+	gossip.reset_for_new_game()
+	gossip.stock_region("core:region/briarwold")
+	var who := "core:npc/dorrie_cooper"          # the Hollow's trader; a gossip, and keeps a shop
+	var place := str(ContentDB.get_or_empty(who).get("home_place", ""))
+	assert_true(gossip.pool_of(place).size() > 0, "%s is saying nothing" % place)
+	var lines: Array = []
+	var listen := func(_speaker: String, text: String, _choices: Array) -> void:
+		lines.append(text)
+	Social.dialogue.line_shown.connect(listen)
+	Social.talk(who, "", place)
+	# `start` is the greet line, which has no choices; the talk is offered at the hub, so this
+	# presses on the way a player does.
+	Social.dialogue.advance()
+	var offered := -1
+	for i in Social.dialogue.current_choices.size():
+		if str(Social.dialogue.current_choices[i]["text"]) == Social.dialogue.TALK_CHOICE:
+			offered = i
+	assert_true(offered >= 0, "the talk of the place was not offered at %s's hub" % who)
+	if offered >= 0:
+		Social.dialogue.choose(offered)
+		assert_true(lines.size() > 1 and str(lines[-1]).length() > 20, "%s was asked for the news and said nothing" % who)
+	Social.dialogue.line_shown.disconnect(listen)
+	Social.dialogue.stop()
+	gossip.reset_for_new_game()
+
+
 # --- the shops open ----------------------------------------------------------------------------------
 
 ## Every shopkeeper's counter can be pressed: the merchant loads their own table, opens with

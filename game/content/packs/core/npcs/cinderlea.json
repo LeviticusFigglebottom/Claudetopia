@@ -2,7 +2,7 @@
   {
     "id": "core:npc/toren_ash", "name": "Toren Ash", "home_place": "core:place/pilgrims_ash", "faction": "core:faction/tolling_order",
     "dialogue": "core:dialogue/toren_ash",
-    "bio": "Toll-Knight of the Tolling Order, born Toren Tamwick at the cider press and sworn at twenty-five under the name every knight takes. Keeps the day watch at the Sunken Choir while Cadwen Ash sleeps off the night one, and drills the pilgrims in the bell yard with a clapper bound in cloth. His sister sends a bottle of cider vinegar every year and no letter.",
+    "bio": "Toll-Knight of the Tolling Order, born Toren Tamwick at the cider press and sworn at twenty-seven under the name every knight takes. Keeps the day watch at the Sunken Choir while Cadwen Ash sleeps off the night one, and drills the pilgrims in the bell yard with a clapper bound in cloth. His sister sends a bottle of cider vinegar every year and no letter.",
     "unique_habit": "Polishes the cloth that binds his bell-mace's clapper with the year's bottle of Tamwick cider vinegar, so that for a week each spring the vigil at the Choir smells of the Vale, and has never once written back.",
     "personality": {"traits": ["brave", "pious", "humble", "quiet", "kind"]},
     "appearance": {"seed": 7101, "build": "tall_broad", "age": 44, "hair": "brown_shorn_ash_grey_at_the_temples", "notes": "grey plate over grey wool like every knight of the Order, a bell-mace with the clapper bound in a cloth that smells faintly of apples, a grower's green thread sewn inside the collar where nobody sees it"},

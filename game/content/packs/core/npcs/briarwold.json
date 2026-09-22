@@ -52,7 +52,7 @@
       {"days": "workdays", "hour": 7, "place": "core:place/grandfather_hollow", "activity": "shop", "spot": "traders_ledge"},
       {"days": "workdays", "hour": 12, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "traders_ledge", "notes": "eats at the stall so as not to miss anyone"},
       {"days": "workdays", "hour": 13, "place": "core:place/grandfather_hollow", "activity": "shop", "spot": "traders_ledge"},
-      {"days": "hushday", "hour": 7, "place": "core:place/tamwick", "activity": "shop", "spot": "press_house", "notes": "cider and news from her sister-in-law's kitchen"},
+      {"days": "hushday", "hour": 7, "place": "core:place/tamwick", "activity": "shop", "spot": "press_house", "notes": "cider from the press, and the Vale's news out of its kitchen"},
       {"days": "hushday", "hour": 14, "place": "core:place/grandfather_hollow", "activity": "work", "spot": "root_gate", "notes": "weighing the load at the top of the road"},
       {"days": "restday", "hour": 9, "place": "core:place/grandfather_hollow", "activity": "idle", "spot": "root_gate", "notes": "mending the cart"},
       {"days": "restday", "hour": 13, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "knot_hearth"},
