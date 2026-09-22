@@ -142,6 +142,10 @@ static func for_boss(enemy: Node3D) -> BossArena:
 		return null
 	parent.add_child(made)
 	made.centre = enemy.global_position
+	# An improvised bound belongs to the fight it was improvised for. Nothing freed it, so one
+	# accumulated per boss for the life of the process and the *next* fight of the same boss
+	# found the old one -- still holding the lights it had put out in a room that is gone.
+	enemy.tree_exiting.connect(made.queue_free, CONNECT_ONE_SHOT)
 	return made
 
 
@@ -224,9 +228,11 @@ func dim_to(keep: int) -> void:
 	for i in lights.size():
 		if i < kept:
 			_kept.append(lights[i])
+			_watch_light(lights[i])
 			continue
 		var light := lights[i]
 		_restore.append({"light": light, "energy": light.light_energy})
+		_watch_light(light)
 		light.light_energy = 0.0
 	dimmed = not _restore.is_empty()
 	lights_dimmed.emit(_kept.size())
@@ -235,11 +241,30 @@ func dim_to(keep: int) -> void:
 func restore_lights() -> void:
 	for entry in _restore:
 		var light: Variant = (entry as Dictionary).get("light")
-		if light is Light3D and is_instance_valid(light):
+		# Validity first: asking what class a freed instance is, is itself the error.
+		if is_instance_valid(light) and light is Light3D:
 			(light as Light3D).light_energy = float((entry as Dictionary).get("energy", 1.0))
 	_restore.clear()
 	_kept.clear()
 	dimmed = false
+
+
+## The lights an arena puts out are not its own children: they belong to a chamber that can be
+## unloaded, or to a scene a test has finished with. A lamp that leaves the room takes itself
+## off this arena's books, because a freed light is a dead reference and not a light to bring
+## back -- `restore_lights` was reached through `_enter_phase` with a list of them.
+func _watch_light(light: Light3D) -> void:
+	var forget := _forget_light.bind(light)
+	if not light.tree_exiting.is_connected(forget):
+		light.tree_exiting.connect(forget, CONNECT_ONE_SHOT)
+
+
+func _forget_light(light: Light3D) -> void:
+	for i in range(_restore.size() - 1, -1, -1):
+		if (_restore[i] as Dictionary).get("light") == light:
+			_restore.remove_at(i)
+	_kept.erase(light)
+	dimmed = not _restore.is_empty()
 
 
 ## The lights this arena left burning, in the order it chose them.

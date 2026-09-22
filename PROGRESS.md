@@ -504,8 +504,49 @@ stream two rebuild cycles on the anvil's stump before they rendered a trestle ta
 and found that Hearthvale's pale honey timber is the house style and not a bug. Render a known
 reference beside anything you are judging in that scene.
 
+## The way in had never been pressed
+
+The main menu, the Naming and the world were three screens nobody had walked between. The
+journey drives systems directly and the UI review renders screens with believable data; no
+test and no tool had ever started at `boot.tscn` and clicked New Game. Four things were wrong
+at once, and a player met all four in the first minute:
+
+* **The Naming spoke a vocabulary the body does not read.** It kept swatch indices, a
+  `height_m` and a face named after a culture, and handed that to
+  `HumanoidModel.apply_appearance`, which reads `CharacterAppearance`: `skin` arrived as the
+  string "1", `height` was never set, and with no `parts` there was no hair and no clothes. The
+  preview was the naked rig whatever you chose. `CharacterAppearance` is the one vocabulary now
+  — it carries the forge's colour tables, the head presets and the culture palettes, and dresses
+  a character for its people — and the Naming edits that record in place.
+* **Nothing read the Naming's flags.** `player_name`, `player_calling` and `player_appearance`
+  were written by the screen and read by no one, so the body at the Hushline Stair was the bare
+  rig with the default head, with no name, none of the Calling's three skill bonuses and none of
+  its items. `Player._take_the_naming` reads them when the body stands.
+* **Continue, Load and `--load=<slot>` did not load.** All three wrote
+  `_pending_load_slot` and nothing ever read it: every one of them stood a new Foundling up
+  with the save untouched on disk. `PlayerSpawn.load_pending_slot` reads it before the body.
+* **The screen was a dead black rectangle** from "Be named" until the world stood — ten to
+  fifty seconds of it, with no frame drawn at all while the terrain comes up. The fade layer
+  carries a loading caption now: a sheet of paper, a line in the world's voice, the bell mark
+  swaying, and what the world has raised so far.
+
+`./run.sh flow` is the test that presses it: three runs from `boot.tscn` (New Game through the
+Naming, then `--load`, then Continue), clicking by the words on the buttons, typing a name,
+working a chooser with the arrow keys, dragging both sliders, walking Tab round the form, and
+then asking the *body* in the world whether it is the character that was made. Every step is a
+PNG in `captures/flow/`. It found two of its own: the Naming gave nothing keyboard focus, and
+the Calling cards' wrapping focus chain trapped Tab for ever.
+
 ## Known issues
 
+* **A record from before that vocabulary existed** — `{"skin": 3, "hair": 2}`, which is what
+  the Naming used to write and what the journey still writes — is converted at the edge now
+  (an index means the tone it indexed). Any save still carrying the older shape makes a proper
+  body, but the journey's own shorthand should be brought up to the record's spelling.
+* **`./run.sh flow`'s Continue run depends on what else has saved.** Continue promises the
+  newest slot, so a journey run or another session writing into the same `user://saves` takes
+  that place; the probe reports which slot it got and falls back to checking that slot's own
+  summary. Tools that write saves should clear them (the UI review does now).
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.
   It rests at a Hearthstone, dies, respawns and recovers the echo, and one run in five one of
   those five conditions came back false. The step now names which one when it fails instead of
@@ -582,12 +623,18 @@ draw cost. Villagers' eyes no longer cast shadows (they fall inside the head's).
 
 | shot | draw calls | primitives | what is left (after) |
 |---|---|---|---|
-| hearthvale_street (Merrowby) | **2438 → 1328** | 1.15 M → 1.18 M | villagers 590, scatter 332, terrain 160, buildings 120, fabric 110 |
+| hearthvale_street (Merrowby) | **2438 → 1328 → 1240** | 1.15 M → 1.18 M | villagers 590, scatter 332, terrain 160, buildings 120, fabric 110 |
 | brightwater_street (Tollmere) | 479 → 283 | 0.34 M → 0.34 M | terrain 105, scatter 68, fabric 61, villager 26, buildings 16 |
 | sedgemire_street | 660 → 498 | 0.73 M → 0.73 M | terrain 184, scatter 182, fabric 60, villagers 53, buildings 12 |
 | briarwold_street | 764 → 547 | 0.80 M → 0.79 M | scatter 316, terrain 154, fabric 54, buildings 16 |
 | skerrow_street | 609 → 433 | 0.37 M → 0.45 M | scatter 136, terrain 126, villagers 95, fabric 59, buildings 18 |
 | cinderlea_street | 515 → 405 | 0.63 M → 0.62 M | terrain 170, scatter 123, villagers 56, buildings 11, fabric 10 |
+
+Merrowby's three numbers are the original, the figure after the fabric was merged, and the
+figure after villagers' eyes stopped casting a shadow into the head they sit in. The first
+measurement of the same shot on the integrated branch, with nine other streams' work in it,
+read 1330: the gap is their scatter, their points of interest and their light, not the
+fabric, whose own contribution `--attribute` will name at any time.
 
 Every shot is inside the 2000 budget with margin and the worst is under 1500. Buildings went
 from 1093 to 120 draws on the worst frame and the fabric from 244 to 110 (the 110 is
@@ -606,3 +653,175 @@ merged body per appearance, or shadows from a single proxy mesh, would take most
 (NPC appearance is the boot/UX stream's). Scatter is 332 draws for 373 MultiMeshes across 25
 cells, most of them a handful of instances each; merging a cell's small kinds or ranging the
 far ring's is the world-look stream's. Terrain3D's clipmap is 105–184 draws and not ours.
+## Points of interest, dressed
+
+`pois.json` has 82 entries — 34 places and the 48 POIs of the registry — and nine of them
+had a scene: the six landmarks and eleven of the Choir's colossi. Everything else was a pad
+the world builder had flattened, with a name on it. Every bridge, shrine, tower, hidden
+valley, camp, waterfall, ruin, strange tree, wreck, giant bone and stone setting is raised
+now, and so is the Hearthstone of every place whose `shrine` tag promised one.
+
+**It is raised at runtime, from the built data, the way a settlement is.** `WorldPois` (a
+node in `world.tscn` beside `WorldDoors`) indexes the dressable entries of `pois.json` by
+cell; `WorldStreamer._build_cell` asks it for that cell's dressings and parents them to the
+cell node. So a camp arrives with the ground it stands on, unloads with it, and in the far
+ring (past 384 m) is built as silhouette pieces only, with no lights, no collision and no
+Hearthstone. The alternative — raising all 55 at startup under one node, as `WorldDoors`
+does for settlements — would keep seventy-odd fires, lanterns and interactables in the tree
+wherever the player was standing, and the ring system already knows what is near. Nothing is
+positioned by a table in code: every dressing reads its position, pad radius and region out
+of `pois.json` and the content pack, so the sightlines stream can move a POI and the dressing
+follows it with no rebuild.
+
+Each builder is deterministic from the POI's id (`rng.seed = abs(poi_id.hash())`), and each
+answers the POI's own `unique_feature` as a brief: the thing the data names is the thing you
+see. `PoiKit` finds the forge's assets, stands them on the real ground with the collision the
+forge authored for them, instances repeats in a MultiMesh, paints runtime masonry with
+`painted_surface`, and puts a light where a fire or a lantern is. `PoiMasonry` builds what the
+forge has no asset for — a drum of courses, a humped arch, a plank deck, a flight of steps, a
+mound, a pool, a hanging sheet — out of one `SurfaceTool` per material, one draw call each.
+
+### What each kind is made of
+
+* **Camps** (4) — a fire ring with its stones, light and smoke; three or four tents turned to
+  the fire with a bedroll in each mouth; crates, barrels and sacks against the tents; a
+  lantern on a post; a cart and a hitching rail on the road side; spears and a shield where
+  the campers fight for a living. The brief on top: the Gosling Pit's stolen mill wheel is a
+  millstone laid on a barrel with the cups still on it; the Charcoal Camp's kilns are turf
+  domes smoking; the Clanless Camp's loosened chain links hang as bells on a line behind a
+  drystone windbreak; the Cold Fire has no light at all — an ash disc, the stools round it and
+  the cup set down.
+* **Shrines** (6) — each keeps a working `Hearthstone` under the POI's own id, with candles, a
+  small bell on a frame, offerings and the region's flowers. Ansel's is a hawthorn grown
+  through a stone chair with the stone in its lap; the Shingle Shrine is a cairn of a hundred
+  and ninety lake pebbles with the stone out of its top; the Drowned Bell is a peat hummock
+  ringed with lantern poles beside a pool where the old bell breaks the surface; the Oiled
+  Stone is oiled to a chestnut shine with the jugs and the rag beside it; the Finger Shrine is
+  a sinkhole rim of leaning slabs round a giant's finger bone stood on end; the Pilgrims' Bell
+  is a bell the size of a house on its side that you walk into through its mouth.
+* **The Hearthstone of a settlement** (7 places tagged `shrine`) — a standing stone and the
+  stone that keeps a name, set off the place's centre beyond whatever landmark stands there,
+  with candles, a bench and a bell.
+* **Towers** (6) — the Tumbled Watch is a hollow drum lying down its valley, open at both
+  ends, its stump still standing, with the Wardens' bell rolled out of the top and somebody
+  living in the corridor; the North Cliff Beacon is a broken drum with an Oroth bell upturned
+  on its crown for a fire-bowl, lit; Heron Watch is a plank platform on stilts with a roof, a
+  ladder and a bell under the eaves; the Hunters' Stand is a railed platform round a giant
+  oak's trunk with its rope ladder pulled up; the Watch of the Gate is a square drystone
+  toll-house under drifts of old snow with its bell frozen mid-swing; the Headless Watch is a
+  colossus's head sunk to the jaw in ash with a cold blue eye and a stair up to it.
+* **Bridges** (7) — where water lies within reach the deck spans it bank to bank; where the
+  builder set the bridge on dry ground it is still a crossing with the thing under it the
+  brief names. The Long Stride strides out over the Mere on piers with a lit Oroth lamp post
+  every seven metres; Larkbourne Ford has the Toll's clapper half sunk and paved round under
+  its arch; the Glass Bridge has a black glass riverbed; the Eelweir is dock posts and wicker
+  with a plank walk on top and the eel traps hung below; the Lantern Causeway is a boardwalk
+  of lantern poles roped pole to pole; Mossbridge is a natural granite arch with a great tree
+  at each end; the Chain Bridge is a plank deck slung between four stone pylons on four
+  chains of links. Every deck has collision, so the road that crosses there can be walked.
+* **Waterfalls** (4) — a face of the region's cliff slabs on an arc, with a sheet off its lip
+  into a pool, spray at the foot and a bank of ground behind so the lip is a hillside's edge.
+  `falling_water.gdshader` streaks down the sheet's own V and froths where it lands. Foxfire's
+  ravine carries bracket fungus with a green light in it; the Three Sisters is three falls one
+  above another, each with a ledge and a stair, and the Hearthstone the sisters carried up on
+  the middle one; the Glass Falls has no water — a still black face with slab ledges for the
+  climb the Order forbids and uses.
+* **Ruins** (4) — a hall of courses to the knee so the plan is readable, one gable still up, a
+  doorway that stands because a lintel is the last thing to go, the hearth and its chimney
+  breast, and the roof slates flat inside the walls. The Pilgrim Stair and the Stair of Isse
+  are an Oroth colonnade rising out of the water, seven pairs of columns broken to seven
+  heights, the drums that fell lying where they rolled. The Thirteenth is a colossus face down
+  in the ash with its head buried to the brow in a trench of spoil and the Sayer camp arguing
+  round it. The Breach is four Oroth wardstones across a gap in the Briar, two snapped, the
+  thorn living either side and ash-grey where something walked through.
+* **Giant bones** (2) — articulated, not heaped. The Rib Cathedral is nine pairs of ribs along
+  a line leaned in over the aisle so they close above your head, a vertebra at the top of each
+  arch, the neck running on past the last rib and the skull at the end of it; the clans' oath
+  hearth is on the aisle floor with a stone to swear on. The Hart Bones is an antlered skull
+  the size of a hall with two racks built out of finger bones, and a Hart-Knight's vigil.
+* **Strange trees** (3) — the Singing Yew at three times a hedge yew's scale with the bell it
+  ate in a split of its trunk and the bark grown round it; the Sallow King, a willow in a ring
+  of seven more with the rooted limb that made each one running back to the king, standing
+  water inside the ring; Willow Isle, a dome of earth out of the lake under a pollarded willow
+  at the size of a barn, with the hermit's boat in its roots and his fire on the crown.
+* **Wrecks** (2) — an open broken hull: a keel, seven or nine pairs of ribs with the weather
+  side snapped to stumps, three strakes left on the lee side, the stem up out of the bow, the
+  mast fallen across her, the cargo down the beach and a lantern still on the stem. The Reed
+  Wreck is half again as big and three miles inland among the reeds.
+* **Hidden valleys** (5) — a screen with something behind it. Foxglove Dell is a turf hut with
+  a smoking chimney inside a hedge, with two hundred and sixty foxgloves; the Hidden Tarn is
+  black water with no fringe of anything, because nothing lives in it, behind a bank of scree;
+  Wisp Hollow is a channel with a drowned house's chimney above the water, five cold green
+  lights over it and the strongbox in the chimney; Fern Gully is two walls of cliff slab with
+  mist that does not lift and three silk bridges across it; the Hushline Stair is forty Oroth
+  steps down into mist between two piers, with Wren Tallow's Hearthstone at the top step.
+* **Standing stones** (3) — `worldgen/stones.py` sets stones across the country from places and
+  roads, so the three POIs that *are* a setting were not among them. Bell Meadow leans three
+  bronze-streaked stones round pieces of the Toll's crown; the Seven Stones are seven for
+  seven clans, each lichened a different colour with the seventh bare, because that clan is
+  dead; the Tideflat Stones stand in a line along a strand that is not the shore any more.
+  Every stone gets its own packing stones, which is how a stone is actually set.
+* **Strange** (2) — built from their own sentence: twelve bell buoys on the water, each a
+  barrel float, a post, a cage and a bell a little smaller than the last, with the boat you row
+  out in; and the One Poppy, with the ring of stones somebody set round it and the cup of
+  water somebody brings it.
+
+### The Hearthstones, which is a gameplay hole closed
+
+No Hearthstone stood anywhere in the overworld: they existed only in caves, and in the
+journey's own scratch scene. So outside the deep places the player had no rest, no respawn
+point and no way to light a stone — and the main quest's second stage says *rest at Pilgrim's
+Ash*, which had nothing to rest at, as did the Isseva and Fallen Hand stages. There are
+sixteen now: six at the shrine POIs, three more at POIs whose data asks for one (the Three
+Sisters, the Hushline Stair, the Drowned Bell), and seven at the places tagged `shrine`
+(Merrowby, Tollmere, Isseva, Grandfather Hollow, Kharrow Hold, the Fallen Hand, Pilgrim's
+Ash). Each carries the id of the place or POI it stands at, which is exactly what a quest's
+`rest_at` objective names, and `test_pois.gd` walks every `rest_at` target in the pack and
+fails if no stone stands there.
+
+### What the captures changed
+
+Every image in `tools/capture/plans/pois.json` was looked at, and four things were only
+visible by looking:
+
+* **A wall was a heap of bricks.** `drum` and `wall` laid every stone as its own box, so a
+  tower was six hundred boxes with the painted surface's stone-block pattern drawn over them —
+  coursing twice, at two sizes, which reads as neither, and the Tumbled Watch photographed as
+  a stack of pillows. Both build a shell now, one ring of quads inside and out stepped in at
+  each course, and the stones are the shader's, the way `Settlement` does a house.
+* **A cliff was a wall.** The waterfall face was slabs at even spacing all turned one way on a
+  straight line: brickwork in a field. It is an arc now whose ends come forward, every slab
+  turned to the tangent and then well off it, scaled 0.78–1.22 and staggered in depth, with a
+  bank of ground behind it.
+* **Old snow was a marshmallow.** `mound` drew perfect domes. It swells and dips in broad
+  lobes now, jitters its rim, and the drifts lie long and low against the walls.
+* **Dusk at 19:00 is night.** The first camp and shrine shots were black ground under a violet
+  sky. The plan's dusk hour is 18:00, and it scores every camera bearing by how flat its
+  ground is rather than taking the approach side blind — a camera forty metres up a slope
+  photographs a map, which is what the first Chain Bridge shot was.
+
+### What is still wanting
+
+* **The pads are flat and the dressing does not know it.** The world builder flattens a pad
+  for every POI, so a waterfall's cliff, a gorge's bridge and a sinkhole's rim are all built on
+  level ground and have to raise or sink their own landform. The Hidden Tarn and the sinkhole
+  would read far better as ground the builder had actually cut. That is the world builder's
+  side of the line, not this node's.
+* **Two bridges do not cross water.** Larkbourne Ford is 335 m from the Larkbourne and the
+  Glass Bridge 2 km from any river, so they are crossings over a dry bed with the brief's own
+  thing under the arch. Honest, but a bridge wants a river; the positions belong to the
+  sightlines stream.
+* **The encounters each POI's data describes are not spawned here.** Every POI carries an
+  `encounter` sentence ("two bandits shake down late travellers after dark") and the dressing
+  reads it only for what it implies about the props. `worldgen/encounters.py` places the
+  country's spawns by density and does not know POIs exist.
+* **Nothing in a dressing is interactable except the Hearthstones.** The chests, the job-less
+  camps, the Sayers' books and the strongbox in Wisp Hollow's chimney are scenery; they are
+  forge props, not `WorldContainer`s or `WorldItem`s.
+* **No NPC stands at any of them.** The lamplighter of the Lantern Causeway, the toll-keeper of
+  the Chain Bridge, the knight in the Headless Watch's eye and the hermit of Willow Isle are
+  all named in the data and all absent; their props are set out as though they had just
+  stepped away. That is the content stream's.
+* **The far ring builds silhouettes but they are not impostors.** A far-ring dressing draws its
+  LOD1 meshes out to 950 m, which is cheap enough at 55 POIs but is not what a proper
+  impostor would cost.

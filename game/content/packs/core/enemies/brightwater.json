@@ -38,7 +38,7 @@
         "name": "purse_cut",
         "clip": "Attack_Dagger_1",
         "weapon_class": "dagger",
-        "damage": 7.0,
+        "damage": 9.0,
         "poise_damage": 5.0,
         "range": 1.9,
         "telegraph": 0.34,
@@ -60,7 +60,7 @@
         "name": "gutting_turn",
         "clip": "Attack_Dagger_2",
         "weapon_class": "dagger",
-        "damage": 13.0,
+        "damage": 15.0,
         "poise_damage": 11.0,
         "range": 2.1,
         "telegraph": 0.62,
@@ -152,7 +152,14 @@
         "cooldown": 1.2,
         "gcd": 0.3,
         "weight": 4.0,
-        "lunge": 2.6
+        "lunge": 2.6,
+        "statuses": [
+          {
+            "id": "poisoned",
+            "duration": 8.0,
+            "magnitude": 1.0
+          }
+        ]
       },
       {
         "name": "scrabble",
@@ -230,7 +237,7 @@
         "name": "measured_thrust",
         "clip": "Attack_1H_Light_1",
         "weapon_class": "rapier",
-        "damage": 15.0,
+        "damage": 18.0,
         "poise_damage": 9.0,
         "range": 2.3,
         "telegraph": 0.4,
@@ -332,7 +339,7 @@
         "name": "staff_rap",
         "clip": "Attack_2H_Light_1",
         "weapon_class": "staff",
-        "damage": 13.0,
+        "damage": 17.0,
         "poise_damage": 14.0,
         "range": 2.5,
         "telegraph": 0.5,

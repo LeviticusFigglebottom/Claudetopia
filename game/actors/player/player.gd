@@ -52,6 +52,8 @@ var quick_slot_handler: Callable = Callable()
 ## Inventory-stream hook: Callable(ammo_tag: String) -> bool, consumes one arrow when true.
 var ammo_provider: Callable = Callable()
 var equipped_spell: String = ""
+## What this character looks like, as the Naming wrote it (see `_take_the_naming`).
+var appearance: CharacterAppearance = CharacterAppearance.new()
 ## A carried light is off until the player strikes it, and it is the one thing they can do
 ## about the dark that also makes them easier to see (Stealth reads it as any other lamp).
 var lantern_lit: bool = false
@@ -138,6 +140,7 @@ func _ready() -> void:
 	if weapon == null:
 		equip_weapon("")
 	_refresh_lantern()          # equipment restored before the body entered the tree
+	_take_the_naming()
 	add_to_group("player")
 	SaveSystem.register(SAVE_SECTION, self)
 	_register_character_sections()
@@ -151,6 +154,59 @@ func _ready() -> void:
 
 func _announce() -> void:
 	EventBus.player_spawned.emit(self)
+
+
+# --- the Naming ----------------------------------------------------------------------------------
+
+## What the Naming wrote down, made flesh. Nothing read those flags before: the body that stood in
+## the world was the bare rig with the default head whatever had been chosen, the Calling's skills
+## never landed and its signature item never reached the bag. The flags travel in the save, so a
+## new game and a loaded one get the same body from them. The Calling is applied once, while the
+## game is new, because from then on its skills and its bag are state of their own.
+func _take_the_naming() -> void:
+	var name := str(GameState.get_flag("player_name", ""))
+	if not name.is_empty():
+		display_name = name
+	apply_appearance(_look_from_the_naming())
+	if not GameState.has_flag("new_game"):
+		return
+	var calling := str(GameState.get_flag("player_calling", ""))
+	var prog := get_node_or_null("Progression")
+	if calling.is_empty() or prog == null or not prog.has_method("apply_calling"):
+		return
+	if str(prog.get("calling_id")) == calling:
+		return
+	prog.call("apply_calling", calling, get_node_or_null("Inventory") as Inventory)
+
+
+## The record the Naming wrote, or, when nothing wrote one (a `--new-game` run, an old save), a
+## Foundling dressed by the Calling's people rather than the naked rig.
+func _look_from_the_naming() -> CharacterAppearance:
+	var raw: Variant = GameState.get_flag("player_appearance", null)
+	var written: Dictionary = raw if raw is Dictionary else {}
+	var look := CharacterAppearance.new(written)
+	if not written.has("parts"):
+		look.set_part("head", "default")
+		look.set_part("hair", "short")
+		var calling := str(GameState.get_flag("player_calling", ""))
+		look.dress_for_culture(CharacterAppearance.culture_of_calling(calling), abs(display_name.hash()))
+	return look
+
+
+## Puts a look on the body. The model is the forge's humanoid under the Model pivot, driven by
+## the animation driver; a placeholder capsule has nothing to apply it to and is left alone.
+func apply_appearance(look: Variant) -> void:
+	appearance = look if look is CharacterAppearance else CharacterAppearance.new(look as Dictionary)
+	var body := body_model()
+	if body != null:
+		body.call("apply_appearance", appearance)
+
+
+## The humanoid model standing in for this character, or null while it is a placeholder.
+func body_model() -> Node:
+	if anim != null and anim.model != null and anim.model.has_method("apply_appearance"):
+		return anim.model
+	return null
 
 
 func _exit_tree() -> void:
@@ -1251,6 +1307,14 @@ func from_save(d: Dictionary) -> void:
 	is_sneaking = bool(d.get("sneaking", false))
 	if not dead:
 		_set_state(State.FREE)
+	# The look lives in GameState's flags, which come back in the same pass as this section
+	# but not necessarily before it, so the body is dressed once the whole save is in.
+	call_deferred("_dress_from_the_save")
+
+
+func _dress_from_the_save() -> void:
+	if is_inside_tree():
+		apply_appearance(_look_from_the_naming())
 
 
 func save_summary() -> Dictionary:
