@@ -172,9 +172,22 @@ STAIR_RISER = 0.28
 TOR_M = 8.0
 
 
+## A `terrace` step on ground of slope s has a riser of slope s / riser-fraction, as wide as
+## riser-fraction * step / s. Past a slope of about a half the riser is a cliff a few metres wide,
+## narrower than the heightmap can hold: measured on the first build with the scars in, the
+## risers on Kharrow Hold's steep flanks came out as twenty-metre slots aliased into a stair of
+## texels, and every road off the hold had to dive into one. So both stepped landforms fade out
+## where the ground is already that steep, which is where it needs no help to look like rock.
+STEP_FADE = (0.38, 0.55)
+
+
+def _steepness(ctx, h: np.ndarray) -> np.ndarray:
+    return np.hypot(*np.gradient(h, ctx.grid.spacing))
+
+
 def briarwold(ctx, h: np.ndarray, r) -> np.ndarray:
     stepped = terrace(h, STAIR_STEP_M, STAIR_RISER)
-    stair = stepped - h
+    stair = (stepped - h) * (1.0 - smoothstep(STEP_FADE[0], STEP_FADE[1], _steepness(ctx, h)))
     # the lip of each bench is the top of the riser below it: where h is a whole number of steps
     q = h / STAIR_STEP_M
     frac = q - np.floor(q)
@@ -187,18 +200,20 @@ def briarwold(ctx, h: np.ndarray, r) -> np.ndarray:
 
 # --- Skerrow -----------------------------------------------------------------------------------
 
-SCAR_STEP_M = 24.0
+SCAR_STEP_M = 20.0
+SCAR_RISER = 0.25
 SHAKEHOLES = 900
 
 
 def skerrow(ctx, h: np.ndarray, r) -> np.ndarray:
     # limestone scars: the middle heights stepped in horizontal cliff bands
+    slope = _steepness(ctx, h)
     band = smoothstep(200.0, 260.0, h) * (1.0 - smoothstep(470.0, 540.0, h))
     where = smoothstep(-0.3, 0.5, ctx.f(154, 2.0, None, 700))
-    scars = (terrace(h, SCAR_STEP_M, 0.16) - h) * band * where * 0.85
+    fade = 1.0 - smoothstep(STEP_FADE[0], STEP_FADE[1], slope)
+    scars = (terrace(h, SCAR_STEP_M, SCAR_RISER) - h) * band * where * fade * 0.85
     out = scars.astype(np.float32)
     # shakeholes: sinks on the moor, in fields, where the water went down
-    slope = np.hypot(*np.gradient(h, ctx.grid.spacing))
     moor = smoothstep(215.0, 245.0, h) * (1.0 - smoothstep(330.0, 380.0, h)) \
         * (1.0 - smoothstep(0.18, 0.30, slope))
     fields = smoothstep(0.0, 0.6, ctx.f(159, 2.0, 250, 900))
@@ -266,7 +281,7 @@ def cinderlea(ctx, h: np.ndarray, r) -> np.ndarray:
 
 # --- Hearthvale --------------------------------------------------------------------------------
 
-BARROW_GROUPS = 16
+BARROW_GROUPS = 26
 LYNCHET_STEP_M = 3.0
 
 
@@ -313,8 +328,8 @@ def hearthvale(ctx, h: np.ndarray, r) -> np.ndarray:
             t = (m - 0.5 * (count - 1)) * gap
             bx = x + ux * t + rng.normal(0.0, 6.0)
             bz = z + uz * t + rng.normal(0.0, 6.0)
-            radius = rng.uniform(12.0, 20.0)
-            height = rng.uniform(2.2, 4.2)
+            radius = rng.uniform(14.0, 24.0)
+            height = rng.uniform(3.0, 5.5)
 
             def mound(d, dx, dz, radius=radius, height=height):
                 body = height * np.clip(1.0 - (d / radius) ** 2, 0.0, 1.0) ** 1.5

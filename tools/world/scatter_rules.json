@@ -792,13 +792,13 @@
     "forest_rise": [
       {
         "asset": "rocks/mossy_boulder",
-        "density": 7.5,
+        "density": 16.0,
         "scale": [
           0.8,
           2.0
         ],
         "moisture": [
-          0.25,
+          0.0,
           1.0
         ],
         "slope_min": 0.16,

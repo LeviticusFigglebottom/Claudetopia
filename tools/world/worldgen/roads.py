@@ -479,6 +479,13 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
     # runs along a knife-edge with nowhere else to go (`CREST_COST`, at a sixteen-metre cell)
     crest_c = np.abs(hc - ndimage.gaussian_filter(hc.astype(np.float64), sigma=1.5, mode="nearest"))
     area = area + 0.5 * CREST_COST * np.clip(crest_c - 2.0 * CREST_FREE_M, 0.0, None)
+    # and the cliffs inside a cell, which its mean height hides: the steepest texel in it
+    f = grid.n // n_c
+    if f > 1 and grid.n % n_c == 0:
+        steep = np.hypot(*np.gradient(H.astype(np.float32), grid.spacing))
+        steep = steep.reshape(n_c, f, n_c, f).max(axis=(1, 3))
+        area = area + 0.3 * CLIFF_COST * np.clip(steep - 0.9, 0.0, 3.0)
+        del steep
     towns = [p for p in places if p.get("kind") in ROAD_KINDS]
     if len(towns) < 2:
         return []
@@ -514,6 +521,7 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
     seen = set()
     laid_pts: list = []        # the centre lines of the roads already planned, every 2 m
     laid_elev: list = []       # and their levels there
+    laid_ground: list = []     # and the land they were graded against
     laid_width: list = []      # and their widths
     # A profile every 4 m: at 12 m, a cleft twelve metres across was one sample on one road and
     # none on the next, and two roads sharing a trunk were graded 13 m apart at the same place.
@@ -556,29 +564,46 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
             pts = paths.smooth_polyline(pts, passes=4)
         pts = paths.resample_polyline(pts, step_m)
         w = max(ROAD_WIDTH.get(towns[a]["kind"], 4.0), ROAD_WIDTH.get(towns[b]["kind"], 4.0))
-        ground = _ground_along(grid, H, pts, w, floor)
         last = pts.shape[0] - 1
+        # Where this road's carriageway overlaps one already laid, it IS that road: its points
+        # are moved onto the other's centre line and take its level and the land it recorded.
+        # Laid a few metres beside it instead, the two were graded against different ground --
+        # on either side of a scar's riser, ten metres apart in height across four -- and their
+        # carves cut steps into each other.
+        snapped: dict = {}
+        tree = None
+        if laid_pts:
+            laid_all = np.concatenate(laid_pts)
+            tree = cKDTree(laid_all)
+            elev_all = np.concatenate(laid_elev)
+            ground_all = np.concatenate(laid_ground)
+            width_all = np.concatenate(laid_width)
+            dist, near = tree.query(pts, distance_upper_bound=0.5 * (w + max(ROAD_WIDTH.values())) + 1.5)
+            for kk in np.flatnonzero(np.isfinite(dist)):
+                if not 0 < kk < last:
+                    continue
+                if float(dist[kk]) <= 0.5 * (w + float(width_all[near[kk]])) + 1.5:
+                    pts[kk] = laid_all[near[kk]]
+                    snapped[int(kk)] = int(near[kk])
+        ground = _ground_along(grid, H, pts, w, floor)
+        for kk, idx in snapped.items():
+            ground[kk] = float(ground_all[idx])
         pins = {0: levels.get(towns[a]["id"], float(ground[0])),
                 last: levels.get(towns[b]["id"], float(ground[-1]))}
-        # Where this road runs along one already laid, it takes that road's level; and where it
-        # passes near one, it may differ from it by no more than a one-in-two batter between the
-        # two carriageways allows, so the two carves meet on a bank and not in a step.
+        for kk, idx in snapped.items():
+            pins[kk] = float(elev_all[idx])
+        # and where it passes near one, it may differ from it by no more than a one-in-two
+        # batter between the two carriageways allows, so the two carves meet on a bank
         near_lo = near_hi = None
-        if laid_pts:
-            tree = cKDTree(np.concatenate(laid_pts))
-            elev_all = np.concatenate(laid_elev)
-            width_all = np.concatenate(laid_width)
+        if tree is not None:
             reach = w * 0.5 + shoulder_m(max(ROAD_WIDTH.values())) + 0.5 * max(ROAD_WIDTH.values())
             dist, near = tree.query(pts, distance_upper_bound=reach)
             near_lo = np.full(pts.shape[0], -np.inf)
             near_hi = np.full(pts.shape[0], np.inf)
             for kk in np.flatnonzero(np.isfinite(dist)):
-                if not 0 < kk < last:
+                if not 0 < kk < last or int(kk) in snapped:
                     continue
                 e_other = float(elev_all[near[kk]])
-                if dist[kk] <= w * 0.5 + 2.5:
-                    pins[int(kk)] = e_other
-                    continue
                 gap = float(dist[kk]) - 0.5 * w - 0.5 * float(width_all[near[kk]])
                 if gap < shoulder_m(w) + shoulder_m(float(width_all[near[kk]])):
                     room = BATTER * max(gap, 0.0)
@@ -602,6 +627,7 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
         sd = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(dense, axis=0), axis=1))])
         laid_pts.append(dense)
         laid_elev.append(np.interp(sd, s, elev.astype(np.float64)))
+        laid_ground.append(np.interp(sd, s, ground.astype(np.float64)))
         laid_width.append(np.full(dense.shape[0], w))
     return roads
 
