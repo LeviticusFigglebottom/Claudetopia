@@ -2599,6 +2599,121 @@ def copper(pal, rng, params, variant):
 
 
 # =========================================================================================
+# the Name-table
+# =========================================================================================
+
+def name_table(pal, rng, params, variant):
+    """A Name-table: the bench a Toll-Knight writes a note into iron at (DESIGN §5.8).
+
+    Named in the design, in the enchanting skill's own definition and in two item
+    descriptions, and until now there was no mesh for one: the only Name-table in the
+    country -- the Bell Chapter-House at Pilgrim's Ash, in Cadwen's recipe -- stood in as a
+    trestle table and was written down as owed.
+
+    The Tolling Order is grim, kind and doomed (WORLD_BIBLE §4), and it keeps a vigil in a
+    fallen bell on an ash heath. So there is nothing on this that the forge cannot justify:
+    a single heavy baulk of dark timber, iron-strapped legs, one plate of bell bronze let
+    into the top with the Order's note cut into it, and a small bowl for the Ember Motes
+    that pay for the writing. No carving, no inlay, no gilding. The mark is *cut* rather
+    than painted for the reason the millstone's furrows and the loaf's scores are cut: what
+    a player sees of a 0.34 m plate across a cell is the light caught in the groove, and a
+    line in the albedo catches nothing.
+    """
+    l = jit(rng, params.get("length", 1.40), 0.02)
+    w_ = jit(rng, params.get("width", 0.78), 0.02)
+    top_z = float(params.get("top_height", 0.745))
+    slab_t = 0.105
+    # One baulk, not a plank run: the plank size is set well past the slab so no joint
+    # crosses it, which is the same reason a spoon is one billet. The grain is down to two
+    # or three lengths of tone rather than the default's banding.
+    # Dark, and the tint kept right down. `wood_planks` mixes its tint from the palette's
+    # `earth` role, and Cinderlea's earth is the faded gold of old gilding -- the one warm
+    # light colour in a region of ash grey, char black and bone. At a fifth it lifted a
+    # near-black baulk to the pale olive of the Hearthvale trestle standing beside it in
+    # the review render, which is the one thing this bench must not look like.
+    timber = tool_wood(pal, rng, scale=0.46, wear=0.10, age=0.55, base_hex="#221a12",
+                       tint=0.06, relief=0.55, grain=0.30, plank_len=3.4, plank_w=1.3,
+                       along="X", name="name_slab")
+    strap = iron(pal, rng, age=0.72, wear=0.45, scale=0.18)
+    bronze = M.bell_bronze_patina(pal, age=0.80, wear=0.55, scale=0.22, name="note_bronze")
+    parts = []
+    slab = B.board("slab", l, w_, slab_t, mat=timber, location=(0, 0, top_z - slab_t * 0.5),
+                   chamfer=0.009, sag=0.003, rng=rng)
+    parts.append(slab)
+    # Two end frames. The posts stand square and the feet are one baulk laid flat, because
+    # a bench that is written at rather than eaten off does not get moved and does not need
+    # to fold: the Order's furniture is the Order's -- heavy, plain, and older than whoever
+    # is using it.
+    post = 0.085
+    leg_h = top_z - slab_t
+    for sx in (-1, 1):
+        x = sx * (l * 0.5 - 0.17)
+        for sy in (-1, 1):
+            p = S.cube("post_%d_%d" % (sx, sy), (post, post, leg_h),
+                       (x, sy * (w_ * 0.5 - 0.15), 0.0), mat=timber)
+            S.bevel(p, width=0.006, segments=2)
+            parts.append(p)
+        foot = S.cube("foot_%d" % sx, (post * 1.5, w_ * 0.80, 0.075), (x, 0, 0.0), mat=timber)
+        S.bevel(foot, width=0.008, segments=2)
+        parts.append(foot)
+        head = S.cube("head_%d" % sx, (post * 1.35, w_ * 0.74, 0.070), (x, 0, leg_h - 0.070),
+                      mat=timber)
+        S.bevel(head, width=0.008, segments=2)
+        parts.append(head)
+        # The straps: over the head where the leg takes the slab, and round the foot.
+        for z, ln in ((leg_h - 0.035, w_ * 0.80), (0.038, w_ * 0.86)):
+            parts.append(B.iron_strap("strap_%d_%.0f" % (sx, z * 100), ln, 0.050, 0.008,
+                                      mat=strap, location=(x, 0, z), rotation=(0, 0, 90)))
+    # One stretcher low down, strapped at both ends: what stops the frame racking.
+    parts.append(S.cube("stretcher", (l * 0.62, 0.075, 0.085), (0, 0, leg_h * 0.30), mat=timber))
+    S.bevel(parts[-1], width=0.007, segments=2)
+    for sx in (-1, 1):
+        parts.append(B.iron_strap("tie_%d" % sx, 0.135, 0.044, 0.007, mat=strap,
+                                  location=(sx * l * 0.30, 0, leg_h * 0.30 + 0.043),
+                                  rotation=(0, 0, 0)))
+    # The plate, let into the slab so it stands a couple of millimetres proud, with the
+    # Order's note cut into it. Two subtractions: the bell's mouth as a ring, and the stem
+    # standing off its shoulder.
+    pl, pw, pt = 0.34, 0.26, 0.016
+    plate_z = top_z - 0.004
+    plate = S.box_centered("plate", (pl, pw, pt), (0, 0, plate_z + pt * 0.5 - 0.004),
+                           mat=bronze)
+    S.bevel(plate, width=0.0035, segments=2, angle_deg=45)
+    # Cut deep. The first pass sank the cutters so only their shoulders broke the surface
+    # and the mark was four millimetres of groove on a 0.34 m plate -- there in the mesh and
+    # gone in the render, which is the millstone's furrow all over again. A third of the
+    # plate's thickness is a groove the light sits in.
+    ring_c = (-0.022, -0.030)
+    ring = S.torus("mark_ring", major=0.058, minor=0.010, seg_major=28, seg_minor=8,
+                   location=(ring_c[0], ring_c[1], plate_z + pt * 0.5 + 0.0015))
+    S.boolean(plate, ring, "DIFFERENCE")
+    stem = S.box_centered("mark_stem", (0.016, 0.140, 0.020),
+                          (ring_c[0] + 0.058, ring_c[1] + 0.062,
+                           plate_z + pt * 0.5 + 0.0035))
+    S.boolean(plate, stem, "DIFFERENCE")
+    S.shade_smooth(plate, 30.0)
+    parts.append(plate)
+    # The mote bowl: bell bronze, shallow, standing on the slab where a right hand falls.
+    # Ember Motes "hover a finger's breadth above the palm" (core:item/ember_mote), so it
+    # is open -- a cup with a lid would be a reliquary, and this is a working bench.
+    br = 0.058
+    bowl_z = top_z - 0.002
+    cup = S.lathe("mote_bowl", [(0.0, bowl_z + 0.004), (br * 0.52, bowl_z), (br * 0.80, bowl_z + 0.002),
+                                (br * 0.96, bowl_z + 0.030), (br, bowl_z + 0.052),
+                                (br * 0.94, bowl_z + 0.052), (br * 0.86, bowl_z + 0.030),
+                                (br * 0.44, bowl_z + 0.012), (0.0, bowl_z + 0.010)],
+                  segments=22, mat=bronze, close=False)
+    cup.location = Vector((l * 0.30, -w_ * 0.16, 0.0))
+    S.apply_transforms(cup)
+    S.shade_smooth(cup, 40.0)
+    parts.append(cup)
+    for p in parts:
+        S.jitter_verts(p, amount=0.0016, scale=0.6, seed=rng.randrange(999))
+    return finish(parts, rng, "convex", ["wood_planks", "iron", "bell_bronze_patina"],
+                  extra={"station": "name_table", "work_height": round(top_z, 3)})
+
+
+# =========================================================================================
 # books and paper
 # =========================================================================================
 
@@ -3217,6 +3332,8 @@ KINDS = {
     "bowl": bowl, "plate_stack": plate_stack, "paper_stack": paper_stack, "phial": phial,
     "jar": jar, "mortar": mortar, "candle_stub": candle_stub, "boots": boots,
     "lantern_hand": lantern_hand, "copper": copper,
+    # the Tolling Order's bench
+    "name_table": name_table,
     # books and paper
     "book": book, "book_stack": book_stack, "scroll": scroll,
     # structures and outdoor

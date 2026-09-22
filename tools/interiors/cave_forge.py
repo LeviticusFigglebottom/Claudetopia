@@ -500,7 +500,24 @@ def build(recipe: dict, out_root: str, voxel_override: float | None = None, quie
     scene = trimesh.Scene()
     for chamber_id, part in chunks.items():
         scene.add_geometry(part, node_name=f"shell_{chamber_id}", geom_name=f"shell_{chamber_id}")
-    scene.export(os.path.join(folder, f"{name}.glb"))
+    # With normals, and this is the dune ripple.
+    #
+    # trimesh only writes a NORMAL attribute if the mesh already has vertex normals cached,
+    # and nothing here ever asked for them, so every cave shell the forge has ever produced
+    # went out without a single normal in it. glTF is explicit about what a reader must then
+    # do -- calculate flat ones -- so Godot was shading these caves *per face*: a marching
+    # cubes shell, smoothed with Taubin and then decimated to a third of its faces, drawn as
+    # a few hundred thousand separate facets. On a wall it passes for broken rock. On a
+    # flattened floor, where the geometry is a plane and the decimator has left long thin
+    # triangles lying across it in every direction, each one takes its own shade and the
+    # floor reads as drifted sand.
+    #
+    # It was written down as "the shell noise is applied before the floor is flattened".
+    # That diagnosis does not survive a measurement: the floors are flat to a millimetre
+    # over five hundred square metres, before and after any change to the noise, and
+    # masking the noise around them changes nothing you can see. The floors were never the
+    # problem. The lighting of them was.
+    scene.export(os.path.join(folder, f"{name}.glb"), include_normals=True)
 
     col_target = max(int(len(mesh.faces) * 0.22), 3000)
     collision = decimate_keeping_colour(mesh, col_target) if len(mesh.faces) > col_target * 1.2 else mesh

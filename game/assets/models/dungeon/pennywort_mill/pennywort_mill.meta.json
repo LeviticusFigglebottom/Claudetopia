@@ -22,16 +22,16 @@
       68.65
     ]
   ],
-  "tris": 350000,
-  "collision_tris": 77000,
+  "tris": 280000,
+  "collision_tris": 61599,
   "chunks": {
-    "cellar": 108096,
-    "gear_pit": 63653,
-    "cut": 44760,
-    "drain": 25467,
+    "cellar": 81260,
+    "gear_pit": 38969,
+    "cut": 29641,
+    "drain": 22746,
     "sluice": 31827,
     "wheelhouse": 33943,
-    "crawl": 42254
+    "crawl": 41614
   },
   "entrance": [
     0.0,

@@ -2164,6 +2164,13 @@
    "palette": "core:region/hearthvale",
    "variant": "a",
    "seed": 8793
+  },
+  {
+   "generator": "gen_props",
+   "kind": "name_table",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 8846
   }
  ]
 }

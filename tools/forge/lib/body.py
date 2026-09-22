@@ -709,6 +709,16 @@ def to_object(name: str, verts: np.ndarray, faces, smooth: bool = True, uvs: Opt
     me = bpy.data.meshes.new(name)
     me.from_pydata([tuple(map(float, v)) for v in verts], [], [list(map(int, f)) for f in faces])
     me.update()
+    # Validate, the way `lib/scene.py` does for every mesh the prop forge builds from
+    # arrays. `from_pydata` will accept topology Blender considers invalid -- the marching
+    # cubes surface these come off produces faces that repeat a vertex where two corners
+    # meet at a point -- and it does not complain. The glTF exporter does: it says
+    # "Mesh Body is not valid, and may be exported wrongly" and then writes no mesh at all.
+    # That is why `bodies/child`, `heavy` and `slight` each shipped as a 31-bone skeleton
+    # with nothing on it, while the meta beside them recorded 7 798 triangles -- the
+    # triangles were counted off a live object *after* the export that had silently
+    # dropped them.
+    me.validate(verbose=False)
     if smooth:
         for p in me.polygons:
             p.use_smooth = True
@@ -759,13 +769,29 @@ def decimate(ob, target_tris: int, symmetry: bool = True) -> None:
 
 
 def shade_smooth_with_autosmooth(ob, angle_deg: float = 60.0) -> None:
+    """Smooth shading with a crease angle, under either Blender.
+
+    Blender 4.1 deleted `use_auto_smooth` and `auto_smooth_angle`; the same thing is said
+    now by marking the edges over the angle sharp, which is what `shade_smooth_by_angle`
+    does and what the glTF exporter reads. `lib/scene.py` carries the same guard for the
+    prop forge.
+
+    It used to swallow the `AttributeError` and carry on, which is worse than a crash: on
+    4.2 the angle would quietly mean nothing and every mesh would come out fully smoothed
+    with no threshold, and the only way to find out would be to notice it in a render. As
+    it happens nothing in the character forge calls this -- the bodies and garments are
+    smoothed by `to_object`, which sets every polygon smooth and asks for no angle -- so
+    the swallowed error was never reached. That is luck, not design, and the next caller
+    should get the behaviour the name promises."""
+    bpy = _bpy()
     for p in ob.data.polygons:
         p.use_smooth = True
-    try:
+    if hasattr(bpy.types.Mesh, "use_auto_smooth"):        # Blender 4.0
         ob.data.use_auto_smooth = True
         ob.data.auto_smooth_angle = math.radians(angle_deg)
-    except AttributeError:      # Blender >= 4.1
-        pass
+        return
+    select_only(ob)                                       # Blender 4.1+
+    bpy.ops.object.shade_smooth_by_angle(angle=math.radians(angle_deg), keep_sharp_edges=True)
 
 
 def smart_uv(ob, angle_deg: float = 66.0, margin: float = 0.02) -> None:
