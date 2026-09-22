@@ -2,6 +2,11 @@ extends Area3D
 ## The Echo: a faint standing figure where you last were known, holding your marks.
 
 var marks := 0
+## An Echo is something you come back to. It appears at the spot you fell, which for the three
+## seconds of the death delay is the spot your own body is lying on -- so it used to notice its
+## own player and hand everything back before they had stood up, and death cost nothing. Hearth
+## arms it when the player has come back (or at once, for one restored from a save).
+var armed := false
 var _figure: MeshInstance3D
 var _light: OmniLight3D
 var _t := 0.0
@@ -49,5 +54,5 @@ func _process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if body.is_in_group("player"):
+	if armed and body.is_in_group("player"):
 		Hearth.recover_echo()
