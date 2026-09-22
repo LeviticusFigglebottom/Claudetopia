@@ -9,6 +9,10 @@ extends Node
 ##   test that caused each one instead of leaving a number at the bottom. A test that provokes
 ##   one on purpose -- driving a refusal path, where the error *is* the evidence it refused --
 ##   says so in ERRORS_ALLOWED below, and anything not named there fails the run.
+## A test that leaves the world paused is reported the same way and unpaused before the next one
+## runs: an Area3D flushes its overlaps on the physics step, so one leftover pause makes every
+## physics-dependent test after it pass without asking anything.
+##
 ## * The engine's own SCRIPT ERRORs cannot be counted from inside GDScript: there is no API for
 ##   it, and the honest count is the one on stderr, so `run.sh test` greps for them and fails
 ##   the run. That is not bookkeeping. An invalid call abandons the rest of the function it is
@@ -44,6 +48,7 @@ func _ready() -> void:
 	var failures: Array[String] = []
 	var logged_total := 0
 	var noisy: Array[String] = []
+	var paused_by: Array[String] = []
 	var t0 := Time.get_ticks_msec()
 	for path in files:
 		var script: GDScript = load(path)
@@ -84,7 +89,7 @@ func _ready() -> void:
 			# step pass without asking anything, which is the quietest way a suite can lie.
 			if get_tree().paused:
 				get_tree().paused = false
-				noisy.append("%s left the tree paused, so every physics step after it was frozen" % inst._current)
+				paused_by.append(inst._current)
 			var logged := Log.error_count - errors_before
 			logged_total += logged
 			var allowed := int(ERRORS_ALLOWED.get(inst._current, 0))
@@ -104,8 +109,14 @@ func _ready() -> void:
 		print("FAILURE: %s" % f)
 	for n in noisy:
 		print("ERRORS: %s" % n)
-	print("%d tests, %d failed, %d content problems, %d logged errors, %d ms" % [
-		total, failed, ContentDB.problems.size(), logged_total, ms])
+	# Reported rather than fatal: unpausing between tests already stops one test's leftover pause
+	# from freezing the ones after it, so the suite is not lying any more and there is nothing to
+	# fail it for. Each of these opens a full-screen screen through the real event and never shuts
+	# it, and the fix is the one `test_crafting_station` uses: close it in `after_each`.
+	for n in paused_by:
+		print("PAUSED: %s left the tree paused; whatever it opened, it should shut" % n)
+	print("%d tests, %d failed, %d content problems, %d logged errors, %d left the world paused, %d ms" % [
+		total, failed, ContentDB.problems.size(), logged_total, paused_by.size(), ms])
 	for p in ContentDB.problems:
 		print("CONTENT: %s" % p)
 	# Audio autoloads hold open stream decoders while they play. Releasing them here keeps a
