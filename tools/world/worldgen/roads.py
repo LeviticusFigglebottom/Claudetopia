@@ -123,7 +123,8 @@ def cut_fill_m(width: float) -> float:
 
 def grade_profile(ground: np.ndarray, step_m: float, tol: float, max_grade: float = MAX_GRADE,
                   pins: dict | None = None, smooth_m: float = 60.0, sweeps: int = 60,
-                  bias: np.ndarray | None = None, no_fill: np.ndarray | None = None) -> np.ndarray:
+                  bias: np.ndarray | None = None, no_fill: np.ndarray | None = None,
+                  near_lo: np.ndarray | None = None, near_hi: np.ndarray | None = None) -> np.ndarray:
     """A road's elevation along its length, sampled every `step_m` metres.
 
     As smooth as the ground allows, never more than `tol` above or below the ground under it,
@@ -132,7 +133,9 @@ def grade_profile(ground: np.ndarray, step_m: float, tol: float, max_grade: floa
     runs along); a pin outside the band is pulled into it. `bias` (metres, per sample) is where
     the road would rather lie relative to the ground -- a holloway wants to be below it -- and
     is still held inside the band. Where `no_fill` is set the band's top is the ground itself:
-    the road may cut there but not stand proud.
+    the road may cut there but not stand proud. `near_lo` / `near_hi` narrow the band where
+    another road passes close by; where that window and the ground's band do not overlap, the
+    ground's band wins, because a road is never lifted off its land to meet another.
 
     Where the ground itself is steeper than the grade plus the room either side, the band wins:
     the road climbs with the ground for that pitch. That is the honest failure -- a steep
@@ -146,6 +149,12 @@ def grade_profile(ground: np.ndarray, step_m: float, tol: float, max_grade: floa
     hi = g + tol
     if no_fill is not None:
         hi = np.where(np.asarray(no_fill, dtype=bool), g, hi)
+    if near_lo is not None and near_hi is not None:
+        lo2 = np.maximum(lo, np.asarray(near_lo, dtype=np.float64))
+        hi2 = np.minimum(hi, np.asarray(near_hi, dtype=np.float64))
+        agree = lo2 <= hi2
+        lo = np.where(agree, lo2, lo)
+        hi = np.where(agree, hi2, hi)
     for k, v in (pins or {}).items():
         k = int(k)
         if 0 <= k < n:
@@ -325,16 +334,33 @@ def _water_cells(water_mask: np.ndarray, n: int) -> np.ndarray:
     return water_mask.reshape(n, f, n, f).min(axis=(1, 3)).astype(np.float32)
 
 
+## A road that follows the crest of a knife-edge spur, or the floor of a V-shaped gully, stands
+## above (or below) the ground either side of it by the ground's own relief, and from beside it
+## that reads exactly as the arete did. Measured on the first build with the new profile, the
+## road down the spur from Kharrow Hold stood 12.5 m above both sides on natural ground. So the
+## fine router prices how far a cell stands above or below its own twenty metres (`CREST_COST`
+## per metre past `CREST_FREE_M`), and a road crosses a spur or a gully rather than riding it.
+CREST_FREE_M = 1.5
+CREST_COST = 1.4
+CLIFF_COST = 30.0
+## A road already laid is cheaper to follow than new ground is to cross: two roads out of one
+## town share their trunk and fork, rather than running side by side a few metres apart at two
+## different levels, which is where their carves cut steps into each other.
+TRUNK_DISCOUNT = 0.55
+
+
 def _refine(grid: Grid, H: np.ndarray, water_mask: np.ndarray, coarse_pts: np.ndarray,
-            spacing: float = 4.0, corridor_m: float = 64.0) -> np.ndarray | None:
+            spacing: float = 4.0, corridor_m: float = 64.0,
+            laid: list | None = None) -> np.ndarray | None:
     """Route again on a fine lattice, inside a corridor around the coarse route.
 
     The coarse lattice is sixteen metres a cell, which is fine for choosing which side of a hill
     to go but too coarse to lay a road on: smoothing its staircase into a curve cuts the corners
     of every switchback and steepens it. Re-routed at four metres within sixty of the coarse
     line, the road finds the gentle line across each slope at the scale it is actually built,
-    and the curve it smooths into is already most of the way to smooth. Returns world points,
-    or None when the grid is too coarse for a second pass to add anything.
+    and the curve it smooths into is already most of the way to smooth. `laid` is the centre
+    lines of the roads already planned (world points), which this one would rather share.
+    Returns world points, or None when the grid is too coarse for a second pass to add anything.
     """
     spacing = max(spacing, grid.spacing)
     n_f = int(round(grid.size_m / spacing))
@@ -362,8 +388,11 @@ def _refine(grid: Grid, H: np.ndarray, water_mask: np.ndarray, coarse_pts: np.nd
     # hide is a cleft: a ravine twelve metres across and eighteen deep smooths into a dimple,
     # and a road that crosses it has to go down into it. So the raw ground's steepest pitch
     # nearby is priced separately, whichever way the road crosses it.
-    raw_slope = ndimage.maximum_filter(np.hypot(*np.gradient(sub_h.astype(np.float64), spacing)), size=3)
-    sub_h = ndimage.gaussian_filter(sub_h.astype(np.float64), sigma=6.0 / spacing, mode="nearest")
+    raw = sub_h.astype(np.float64)
+    raw_slope = ndimage.maximum_filter(np.hypot(*np.gradient(raw, spacing)), size=3)
+    # how far each cell stands proud of (or sunk into) the ground within about twenty metres
+    crest = np.abs(raw - ndimage.gaussian_filter(raw, sigma=10.0 / spacing, mode="nearest"))
+    sub_h = ndimage.gaussian_filter(raw, sigma=6.0 / spacing, mode="nearest")
     # the corridor: within `corridor_m` of the coarse line
     line = np.zeros((m, k), dtype=bool)
     dense = paths.resample_polyline(coarse_pts, spacing * 0.5)
@@ -371,7 +400,21 @@ def _refine(grid: Grid, H: np.ndarray, water_mask: np.ndarray, coarse_pts: np.nd
     li = np.clip(np.rint((dense[:, 1] - gf.z0) / spacing).astype(np.int64) - i0, 0, m - 1)
     line[li, lj] = True
     allowed = ndimage.distance_transform_edt(~line) * spacing <= corridor_m
-    area = 1.0 + WATER_COST * sub_w + 6.0 * np.clip(raw_slope - 0.45, 0.0, None)
+    # A cliff is priced hard enough that a road will go three hundred metres round a gorge
+    # rather than down one wall and up the other: a profile that follows the ground has no
+    # other way to cross a slot twelve metres wide than to go into it.
+    area = 1.0 + WATER_COST * sub_w + 6.0 * np.clip(raw_slope - 0.45, 0.0, None) \
+        + CLIFF_COST * np.clip(raw_slope - 0.9, 0.0, None) \
+        + CREST_COST * np.clip(crest - CREST_FREE_M, 0.0, None)
+    if laid:
+        on = np.zeros((m, k), dtype=bool)
+        for pts in laid:
+            q = paths.resample_polyline(np.asarray(pts, dtype=np.float64), spacing * 0.5)
+            qj = np.rint((q[:, 0] - gf.x0) / spacing).astype(np.int64) - j0
+            qi = np.rint((q[:, 1] - gf.z0) / spacing).astype(np.int64) - i0
+            ok = (qi >= 0) & (qi < m) & (qj >= 0) & (qj < k)
+            on[qi[ok], qj[ok]] = True
+        area = np.where(on, area * TRUNK_DISCOUNT, area)
     start = (int(li[0]), int(lj[0]))
     goal = (int(li[-1]), int(lj[-1]))
     route = _route(sub_h, area, spacing, start, goal, margin=max(m, k), allowed=allowed,
@@ -432,6 +475,10 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
     # ground. The grade a road takes is priced per edge in `_route`; this is only the ground
     # nobody would bench a road into whichever way it crossed it.
     area = (1.0 + WATER_COST * wc + 3.0 * np.clip(slope - 0.55, 0.0, None))
+    # and the spurs and gullies at this scale, so the fine pass is not handed a corridor that
+    # runs along a knife-edge with nowhere else to go (`CREST_COST`, at a sixteen-metre cell)
+    crest_c = np.abs(hc - ndimage.gaussian_filter(hc.astype(np.float64), sigma=1.5, mode="nearest"))
+    area = area + 0.5 * CREST_COST * np.clip(crest_c - 2.0 * CREST_FREE_M, 0.0, None)
     towns = [p for p in places if p.get("kind") in ROAD_KINDS]
     if len(towns) < 2:
         return []
@@ -467,7 +514,10 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
     seen = set()
     laid_pts: list = []        # the centre lines of the roads already planned, every 2 m
     laid_elev: list = []       # and their levels there
-    step_m = 12.0
+    laid_width: list = []      # and their widths
+    # A profile every 4 m: at 12 m, a cleft twelve metres across was one sample on one road and
+    # none on the next, and two roads sharing a trunk were graded 13 m apart at the same place.
+    step_m = 4.0
     for a, b in edges:
         key = tuple(sorted((a, b)))
         if key in seen:
@@ -475,13 +525,21 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
         seen.add(key)
         sa, sb = ij(towns[a]), ij(towns[b])
         span = int(max(abs(sa[0] - sb[0]), abs(sa[1] - sb[1])))
-        route = _route(hc, area, gc.spacing, sa, sb, margin=max(30, int(0.45 * span)))
+        # the roads already laid are cheaper to follow than new ground (TRUNK_DISCOUNT)
+        area_now = area
+        if laid_pts:
+            on = np.zeros((n_c, n_c), dtype=bool)
+            q = np.concatenate(laid_pts)
+            qj, qi = gc.clamp_index(*gc.to_tex(q[:, 0], q[:, 1]))
+            on[qi, qj] = True
+            area_now = np.where(on, area * TRUNK_DISCOUNT, area)
+        route = _route(hc, area_now, gc.spacing, sa, sb, margin=max(30, int(0.45 * span)))
         # A box round the two ends is room to go round a hill, not round a lake: Tollmere's only
         # dry way in is the Long Stride, whose landing lies outside any box drawn round
         # Gullhithe and the island, and the road swam. A route that crosses open water gets the
         # whole lattice to find a dry one; if there is none, the water is the answer after all.
         if not route or sum(1 for i, j in route if wc[i, j] > 0.99) > 2:
-            wide = _route(hc, area, gc.spacing, sa, sb, margin=n_c)
+            wide = _route(hc, area_now, gc.spacing, sa, sb, margin=n_c)
             if wide:
                 route = wide
         if len(route) < 3:
@@ -489,7 +547,7 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
         pts = np.array([[gc.x0 + j * gc.spacing, gc.z0 + i * gc.spacing] for i, j in route], dtype=np.float64)
         pts[0] = pos[a]
         pts[-1] = pos[b]
-        fine = _refine(grid, H, water_mask, pts)
+        fine = _refine(grid, H, water_mask, pts, laid=laid_pts)
         if fine is not None:
             fine[0] = pos[a]
             fine[-1] = pos[b]
@@ -502,14 +560,30 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
         last = pts.shape[0] - 1
         pins = {0: levels.get(towns[a]["id"], float(ground[0])),
                 last: levels.get(towns[b]["id"], float(ground[-1]))}
-        # where this road runs along one already laid, it takes that road's level
+        # Where this road runs along one already laid, it takes that road's level; and where it
+        # passes near one, it may differ from it by no more than a one-in-two batter between the
+        # two carriageways allows, so the two carves meet on a bank and not in a step.
+        near_lo = near_hi = None
         if laid_pts:
             tree = cKDTree(np.concatenate(laid_pts))
             elev_all = np.concatenate(laid_elev)
-            dist, near = tree.query(pts, distance_upper_bound=w * 0.5 + 2.5)
+            width_all = np.concatenate(laid_width)
+            reach = w * 0.5 + shoulder_m(max(ROAD_WIDTH.values())) + 0.5 * max(ROAD_WIDTH.values())
+            dist, near = tree.query(pts, distance_upper_bound=reach)
+            near_lo = np.full(pts.shape[0], -np.inf)
+            near_hi = np.full(pts.shape[0], np.inf)
             for kk in np.flatnonzero(np.isfinite(dist)):
-                if 0 < kk < last:
-                    pins[int(kk)] = float(elev_all[near[kk]])
+                if not 0 < kk < last:
+                    continue
+                e_other = float(elev_all[near[kk]])
+                if dist[kk] <= w * 0.5 + 2.5:
+                    pins[int(kk)] = e_other
+                    continue
+                gap = float(dist[kk]) - 0.5 * w - 0.5 * float(width_all[near[kk]])
+                if gap < shoulder_m(w) + shoulder_m(float(width_all[near[kk]])):
+                    room = BATTER * max(gap, 0.0)
+                    near_lo[kk] = e_other - room
+                    near_hi[kk] = e_other + room
         bias = None
         if sink is not None:
             from .grid import sample_bilinear
@@ -518,7 +592,8 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
         if no_fill is not None:
             from .grid import sample_nearest
             cap = sample_nearest(no_fill.astype(np.uint8), grid, pts[:, 0], pts[:, 1]) > 0
-        elev = grade_profile(ground, step_m, cut_fill_m(w), pins=pins, bias=bias, no_fill=cap)
+        elev = grade_profile(ground, step_m, cut_fill_m(w), pins=pins, bias=bias, no_fill=cap,
+                             near_lo=near_lo, near_hi=near_hi)
         roads.append(Road(id="core:road/%s_%s" % (towns[a]["id"].split("/")[-1], towns[b]["id"].split("/")[-1]),
                           points=pts, width=w, elevation=elev, ground=ground.astype(np.float32)))
         dense = paths.resample_polyline(pts, 2.0)
@@ -527,6 +602,7 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
         sd = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(dense, axis=0), axis=1))])
         laid_pts.append(dense)
         laid_elev.append(np.interp(sd, s, elev.astype(np.float64)))
+        laid_width.append(np.full(dense.shape[0], w))
     return roads
 
 
@@ -552,9 +628,11 @@ def add_streets(roads: list, places: list, levels: dict) -> list:
                     continue
                 cx, cz = float(pl["position"][0]), float(pl["position"][1])
                 if abs(p[0] - cx) < 1.0 and abs(p[1] - cz) < 1.0:
-                    # the bearing the road arrives on, taken far enough back to ignore the
-                    # last smoothing wiggle
-                    step = min(6, len(r.points) - 1)
+                    # the bearing the road arrives on, taken far enough back (about 72 m, which
+                    # was six points when roads were sampled every 12 m) to ignore the last
+                    # smoothing wiggle
+                    seg = float(np.mean(np.linalg.norm(np.diff(r.points, axis=0), axis=1)))
+                    step = min(max(1, int(round(72.0 / max(seg, 1e-3)))), len(r.points) - 1)
                     away = r.points[end - step] if end == -1 else r.points[step]
                     v = np.array([away[0] - cx, away[1] - cz], dtype=np.float64)
                     nrm = float(np.hypot(v[0], v[1]))
@@ -593,8 +671,13 @@ def add_streets(roads: list, places: list, levels: dict) -> list:
     return roads + out
 
 
-def carve_roads(grid: Grid, H: np.ndarray, roads: list) -> tuple:
-    """Cut the graded corridors in. Returns (heights, distance to road centre line, width map)."""
+def carve_roads(grid: Grid, H: np.ndarray, roads: list, no_fill: np.ndarray | None = None) -> tuple:
+    """Cut the graded corridors in. Returns (heights, distance to road centre line, width map).
+
+    Where `no_fill` is set (an authored sightline's corridor) the carve only ever lowers the
+    land: a road benched across a slope there is cut in on its uphill side and left on the
+    ground on its downhill side, rather than built up into the line.
+    """
     n = grid.n
     mask = np.zeros((n, n), dtype=bool)
     elev = np.zeros((n, n), dtype=np.float32)
@@ -615,4 +698,6 @@ def carve_roads(grid: Grid, H: np.ndarray, roads: list) -> tuple:
     crown = near_e + 0.12 * (1.0 - np.clip(d / np.maximum(half, 0.5), 0.0, 1.0) ** 2)
     w = 1.0 - smoothstep(half, half + shoulder, d)
     Hn = lerp(H, crown, w)
+    if no_fill is not None:
+        Hn = np.where(no_fill, np.minimum(H, Hn), Hn)
     return Hn.astype(np.float32), d, near_w

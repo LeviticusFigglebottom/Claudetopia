@@ -13,16 +13,18 @@ say (`heights.compose_heights`):
 
 * Brightwater -- the Mere has fallen since the Toll came down, and a lake that falls leaves its
   old shorelines behind it: raised beaches, level benches a few metres apart stepping up from
-  the water, and on the open south and east shores a strandplain of low ridges parallel to it.
-* Sedgemire -- the delta's channels are banked with silt, a metre or two above the marsh, the
-  only dry lines in the country; and the loops the channels have abandoned lie about as
+  the water, and on the open south and east shores a strandplain of wind-built dune ridges
+  parallel to it, each with a steep face to the water and a long back.
+* Sedgemire -- the delta's channels are banked with silt, a couple of metres above the marsh,
+  the only dry lines in the country; and the loops the channels have abandoned lie about as
   crescent pools with their own low rims.
 * The Briarwold -- old granite does not ramp, it goes up in benches: the rise is stepped, and
   the tors stand on the lips of the steps rather than anywhere.
 * Skerrow -- the karst's middle heights break into horizontal limestone scars, and the moor
   above them is pocked with shakeholes, the sinks the water went down.
 * Cinderlea -- the ash lies over the Builders' city, and the city shows through it: straight
-  sunken streets on one grid, running to the horizon, which no natural ground does.
+  sunken streets on one grid, running to the horizon, and between them the blocks mounded with
+  what the houses fell into -- flat tops and straight sides, which no natural ground has.
 * Hearthvale -- the escarpment is already its landform. What it adds at a walking scale is
   the face stepped with strip lynchets where it was ploughed along the contour, and on the
   crest the barrows, round mounds in lines behind the skyline, which is where the
@@ -80,11 +82,12 @@ def _stamp(out: np.ndarray, ctx, cx: float, cz: float, radius: float, fn) -> Non
 # --- Brightwater -------------------------------------------------------------------------------
 
 ## The raised beaches: a bench every 3.2 m of height, its bank a tenth of the step, from 110 m
-## back from the water out to about a kilometre. The strandplain: ridges 52 m apart and up to
-## three metres high, parallel to the shore, on the open stretches of it.
+## back from the water out to about a kilometre. The strandplain: ridges 78 m apart and up to
+## five and a half metres high, parallel to the shore, on the open stretches of it -- each one
+## a gentle back slope and a steeper face to the water, which is what the wind builds.
 BEACH_STEP_M = 3.2
-RIDGE_SPACING_M = 52.0
-RIDGE_HEIGHT_M = 3.0
+RIDGE_SPACING_M = 78.0
+RIDGE_HEIGHT_M = 5.5
 
 
 def brightwater(ctx, h: np.ndarray, r) -> np.ndarray:
@@ -98,9 +101,13 @@ def brightwater(ctx, h: np.ndarray, r) -> np.ndarray:
     # the strandplain, on the shores that are neither the northern cliffs nor the reed shelf
     open_shore = (1.0 - lk.northness) * (1.0 - lk.westness)
     s = sd + 18.0 * ctx.f(213, 2.0, 150, 600)
-    ridge = (0.5 + 0.5 * np.cos(2.0 * math.pi * s / RIDGE_SPACING_M)) ** 3
+    # a sawtooth rounded at the crest: the face to the water is a third of the period, the back
+    # slope the rest, so each ridge has a lee and the row reads as built by the wind
+    ph = (s / RIDGE_SPACING_M) % 1.0
+    tooth = np.where(ph < 0.33, ph / 0.33, (1.0 - ph) / 0.67)
+    ridge = smoothstep(0.0, 1.0, tooth) ** 1.6
     stretch = smoothstep(-0.2, 0.6, ctx.f(214, 2.0, 300, 1200))
-    fade = smoothstep(35.0, 70.0, sd) * (1.0 - smoothstep(260.0, 420.0, sd))
+    fade = smoothstep(35.0, 70.0, sd) * (1.0 - smoothstep(420.0, 620.0, sd))
     dunes = RIDGE_HEIGHT_M * ridge * stretch * open_shore * fade
     # not on Tollmere's stone or the causeway's deck
     keep_off = smoothstep(40.0, 120.0, lk.island_sd) * (1.0 - np.clip(lk.causeway * 3.0, 0.0, 1.0))
@@ -109,7 +116,7 @@ def brightwater(ctx, h: np.ndarray, r) -> np.ndarray:
 
 # --- Sedgemire ---------------------------------------------------------------------------------
 
-LEVEE_M = 1.7
+LEVEE_M = 2.2
 OXBOWS = 34
 
 
@@ -225,11 +232,13 @@ def skerrow(ctx, h: np.ndarray, r) -> np.ndarray:
 # --- Cinderlea ---------------------------------------------------------------------------------
 
 ## The street grid: blocks 96 by 72 m on a bearing of 23 degrees, streets 12 m across sunk
-## 2.8 m, with five-metre banks.
+## 2.8 m, with five-metre banks; and each block between them a flat-topped mound of what the
+## houses fell into, up to 3.5 m -- six metres from a street's floor to the block beside it.
 GRID_BEARING = 23.0
 GRID_M = (96.0, 72.0)
 STREET_M = 12.0
 STREET_DEPTH_M = 2.8
+BLOCK_M = 3.5
 
 
 def cinderlea(ctx, h: np.ndarray, r) -> np.ndarray:
@@ -237,16 +246,22 @@ def cinderlea(ctx, h: np.ndarray, r) -> np.ndarray:
     u = ctx.X * math.cos(th) + ctx.Z * math.sin(th)
     v = -ctx.X * math.sin(th) + ctx.Z * math.cos(th)
     streets = np.zeros_like(h)
+    inside = np.ones_like(h)
     for coord, period, off in ((u, GRID_M[0], 31.0), (v, GRID_M[1], 17.0)):
         d = np.abs(((coord + off + 0.5 * period) % period) - 0.5 * period)
         streets = np.maximum(streets, 1.0 - smoothstep(0.5 * STREET_M, 0.5 * STREET_M + 5.0, d))
+        # how far into its block a point is, 0 at the street's bank and 1 a dozen metres in
+        inside = np.minimum(inside, smoothstep(0.5 * STREET_M + 5.0, 0.5 * STREET_M + 17.0, d))
+    # not every block has the same depth of rubble in it: some houses stood taller
+    rubble = 0.55 + 0.45 * np.tanh(ctx.f(169, 1.8, 70, 260))
     # the city did not cover all of the heath, and the Choir's own terraces are older still
     city = smoothstep(-0.25, 0.35, ctx.f(168, 2.0, 900, 2600))
     choir = ctx.place("sunken_choir")
     ccx, ccz = choir["position"] if choir else r.center
     dchoir = np.sqrt((ctx.X - ccx) ** 2 + (ctx.Z - ccz) ** 2)
     away = smoothstep(420.0, 700.0, dchoir)
-    return (-STREET_DEPTH_M * streets * city * away).astype(np.float32)
+    shape = BLOCK_M * rubble * inside - STREET_DEPTH_M * streets
+    return (shape * city * away).astype(np.float32)
 
 
 # --- Hearthvale --------------------------------------------------------------------------------

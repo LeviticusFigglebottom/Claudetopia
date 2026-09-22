@@ -261,6 +261,15 @@ class BuiltWorldTest(unittest.TestCase):
         return np.where(wet, np.maximum(h, level), h)
 
     def test_no_road_stands_above_or_below_the_ground_either_side_of_it(self):
+        """The arete, measured from outside: the land beside every road, past its carve.
+
+        A road may stand above the ground on both sides of it by as much as the ground under it
+        already did -- a road along a spur between two gorges is on the spur -- plus what its
+        carve may add, `cut_fill_m(width)`, plus `SIDE_SLACK_M` for the land's own curvature
+        across the shoulder. The same the other way for a road down a gully. The old profile
+        stood the road down the spur from Kharrow Hold 150 m above both sides of it on ground
+        that stood 5 m proud; this fails that by 142 m.
+        """
         worst = []
         for r in self.roads:
             q = _resample(r["points"], 4.0)
@@ -275,14 +284,30 @@ class BuiltWorldTest(unittest.TestCase):
             centre = self._surface(q[:, 0], q[:, 1])
             left = self._surface(q[:, 0] - nx * off, q[:, 1] - nz * off)
             right = self._surface(q[:, 0] + nx * off, q[:, 1] + nz * off)
+            # the land the road was laid on, where the builder recorded it
+            p = self.profiles.get(r["id"])
+            if p is not None and len(p["ground_m"]) == len(r["points"]):
+                pts = np.asarray(r["points"], dtype=np.float64)
+                seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+                s_pts = np.concatenate([[0.0], np.cumsum(seg)])
+                s_q = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(q, axis=0), axis=1))])
+                ground = np.interp(s_q, s_pts, np.asarray(p["ground_m"], dtype=np.float64))
+            else:
+                ground = centre
             above = centre - np.maximum(left, right)          # an embankment standing proud
             below = np.minimum(left, right) - centre          # a cutting sunk into the land
-            k = int(np.argmax(np.maximum(above, below)))
-            excess = float(max(above[k], below[k]))
+            spur = np.maximum(ground - np.maximum(left, right), 0.0)
+            gully = np.maximum(np.minimum(left, right) - ground, 0.0)
+            excess_up = above - spur
+            excess_down = below - gully
+            k = int(np.argmax(np.maximum(excess_up, excess_down)))
+            excess = float(max(excess_up[k], excess_down[k]))
             if excess > tol:
-                worst.append("%s: %.1f m %s the ground on both sides at (%.0f, %.0f), allowed %.1f m"
-                             % (r["id"], excess, "above" if above[k] >= below[k] else "below",
-                                q[k, 0], q[k, 1], tol))
+                up = excess_up[k] >= excess_down[k]
+                worst.append("%s: %.1f m %s the ground on both sides at (%.0f, %.0f), %.1f m more "
+                             "than the land under it, allowed %.1f m"
+                             % (r["id"], float(above[k] if up else below[k]), "above" if up else "below",
+                                q[k, 0], q[k, 1], excess, tol))
         self.assertEqual(worst, [], "\n".join(worst))
 
     def test_every_road_is_graded_within_its_carve_of_the_ground(self):

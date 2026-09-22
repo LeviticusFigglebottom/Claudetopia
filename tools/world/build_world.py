@@ -390,11 +390,12 @@ def build(args) -> dict:
         no_fill = LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M)
         roads_list = RD.plan_roads(grid, H, pad_targets, rough_water, pad_levels, floor=road_floor,
                                    sink=road_sink, no_fill=no_fill)
-        del road_floor, road_sink, no_fill
+        del road_floor, road_sink
         # and through each settlement, so a town is somewhere a road passes rather than three
         # spokes meeting at a point
         roads_list = RD.add_streets(roads_list, pad_targets, pad_levels)
-        H, road_d, road_w = RD.carve_roads(grid, H, roads_list)
+        H, road_d, road_w = RD.carve_roads(grid, H, roads_list, no_fill=no_fill)
+        del no_fill
         # pads again: roads must not tilt a settlement platform
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         # and the rivers win over both: a pad or a road laid across a channel is cut through
