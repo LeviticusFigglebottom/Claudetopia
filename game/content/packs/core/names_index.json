@@ -639,6 +639,38 @@
       "rule": "5.1 people: short Vale feminine; a place taken as a surname",
       "derivation": "Nan, a Vale pet-name; Greyfold, the dead village's name, taken because nobody else would carry it",
       "used_by": "core:npc/nan_greyfold"
+    },
+    {
+      "name": "Jory Wick",
+      "language": "valish",
+      "kind": "person",
+      "rule": "5.1 people: short Vale masculine; place-suffix surname (3.2 Lakefolk)",
+      "derivation": "namegen candidate Jory + Wick, Tamsin Wick's family; the J. Wick of the Lantern Row day-book",
+      "used_by": "core:npc/jory_wick"
+    },
+    {
+      "name": "Lettie Wick",
+      "language": "valish",
+      "kind": "person",
+      "rule": "5.1 people: feminine -ie; married into a lake surname",
+      "derivation": "namegen candidate Lettie; Merrowby-born, a midwife's daughter, Wick by marriage",
+      "used_by": "core:npc/lettie_wick"
+    },
+    {
+      "name": "Elsie Wick",
+      "language": "valish",
+      "kind": "person",
+      "rule": "5.1 people: child's feminine -ie, family surname",
+      "derivation": "namegen candidate Elsie + Wick, her father's",
+      "used_by": "core:npc/elsie_wick"
+    },
+    {
+      "name": "Hob Tamwick",
+      "language": "valish",
+      "kind": "person",
+      "rule": "5.1 people: short Vale masculine; the orchard's place-name as a surname",
+      "derivation": "namegen candidate Hob + Tamwick, as his sister Bessa's: tam 'oak' + -wick 'dwelling'",
+      "used_by": "core:npc/hob_tamwick"
     }
   ]
 }

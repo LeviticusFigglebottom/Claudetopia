@@ -1,0 +1,120 @@
+[
+{
+  "id": "core:dialogue/jory_wick",
+  "speaker_name": "Jory Wick",
+  "notes": "Eel-fisher of Gullhithe; the J. Wick of Quill's day-book (core:book/charter_ledger_page), forty marks for a barrow where a carter paid four. Lakefolk fairness by the book, seen from the side the book is a wall on.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [4, 6]}], "text": "Forty marks. — That is not for you. I say it when I push off. Wait on the shingle if you want me; the lake does not."},
+    {"conditions": [{"book_read": "core:book/charter_ledger_page"}], "text": "You have read the day-book. Then you have read my name against forty marks and a carter's against four, and the steward's own note that the wall is a wall. I did not need a Sayer to tell me. I needed forty marks."},
+    {"conditions": [{"member_of": "core:faction/tallymen"}], "text": "You are with the Guild. Then you can tell them Wick's barrow is still in their yard at the Row and it is still not paid for, and I am still fishing without it, and I still say the figure every morning."},
+    {"conditions": [{"morality_max": -30}], "text": "The watch at Tollmere is a service with a price list. If you are what you look like you have read it closer than I have. Stand off my nets."},
+    {"conditions": [{"renown_min": 150}], "text": "You are somebody, they say. Somebody could walk into the Row and ask why a fisher pays ten times a carter. Somebody has not. I am not asking. I am saying."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Jory Wick", "text": "Wick. Jory. Tamsin at the Lamp is my aunt; I fish the eels she sells and Lettie dries. And I am the J. Wick in the Lantern Row day-book, fined forty marks for a barrow, if you have read it, which people have, which is the point of it.", "next": "hub"},
+    "hub": {"speaker": "Jory Wick", "text": "Say it.", "choices": [
+      {"text": "What happened with the barrow?", "next": "the_barrow"},
+      {"text": "Why say the figure every morning?", "next": "forty_marks", "conditions": [{"flag": "gullhithe_told_barrow"}]},
+      {"text": "What is the lake like at dawn?", "next": "the_lake"},
+      {"text": "What is the Lamp to a fisher?", "next": "the_lamp"},
+      {"text": "What does the Dwindling look like from a boat?", "next": "dwindling"},
+      {"text": "Good fishing.", "next": "bye"}
+    ]},
+    "the_barrow": {"speaker": "Jory Wick", "text": "Two years ago, Tallowday. I took a barrow of eel to the Row to sell direct and left it standing while I found the buyer, and the watch fined me forty marks for obstruction. The day before, a Merrowby carter left his standing in the same street and paid four. — Same street, same offence, same week. The reasoning is that his trade is chartered and mine is not. The steward wrote that in his own book: the reasoning is real, and it is also a wall built where a wall was wanted. He posted it. That is the Charter's whole virtue, he says: they will rob you, but they will write it down. I have the notice nailed up in the boat-house. I could not pay it. The barrow is in the Guild's yard under distraint and I carry the eels down on my back.", "effects": [{"set_flag": "gullhithe_told_barrow"}, {"rumour": ["core:rumour/wick_barrow", 0.4]}], "next": "hub"},
+    "forty_marks": {"speaker": "Jory Wick", "text": "Because a thing said aloud every morning does not go quiet. That is the Vale's whole account and Lettie brought it with her, and I am a lake man and I do not believe it, and I say the figure every time I push off. — If I stop saying it, it becomes a thing that happened to a fisher once. While I say it, it is a thing that is still happening, to me, and one day somebody who is somebody will walk into the Row and ask Orrin Quill why, and he will show them the page, because he posts everything, and the wall will be a window for one morning. That is all I want. One morning. Forty marks.", "effects": [{"set_flag": "gullhithe_told_forty_marks"}, {"morality": 1}], "next": "hub"},
+    "the_lake": {"speaker": "Jory Wick", "text": "Flat as slate and the same colour, and the Lamp's light going round over it, and the buoys' bells, and the Spire black against a sky that is not yet any colour. You set the lines off the reed fringe to the west where the eels lie and you wait, and the light goes round, and somewhere out there is a barge that sank with its cargo and a thing that nests in it, and you do not go there. — Then the sun comes up hard, the way it does over the Mere, and the water glitters and you cannot see anything in it at all, and that is when you pull.", "effects": [{"discover": "core:place/sunken_barge"}], "next": "hub"},
+    "the_lamp": {"speaker": "Jory Wick", "text": "The only reason a boat comes home at night. An Oroth sul-stone at the top of a tower my aunt has kept for thirty years, and it goes round, and every fisher on the Mere knows the count of its turning the way you know your own breathing. — It brightened at dawn on Merrowday. When she covered it. It brightens for good evening; it has never once in thirty years brightened for good morning. Elsie saw it from the slipway and will not go up the stair now, and Tamsin has two logbooks to not write it in, and I fished that morning anyway, because what else. But I counted the turns on the way out, and I have never done that before.", "effects": [{"rumour": ["core:rumour/lamp_brightened_covering", 0.4]}, {"discover": "core:place/the_lamp"}], "next": "hub"},
+    "dwindling": {"speaker": "Jory Wick", "text": "The Row would tell you it is prices. Everything costs a little more and the ledger says so and the ledger is honest. The Vale would tell you it is talk. — I will tell you what a fisher sees. The eels lie deeper. Every year the lines go down another arm's length before they touch anything, and the water is the same water and the Mere is not deeper, so the eels are going down towards something, and I pull them up towards the Lamp, and I think that is the whole of it: everything on the Mere is being drawn down, and one light is going round over it saying not yet, not yet, and my aunt keeps it, and it brightened at the wrong greeting.", "next": "hub"},
+    "bye": {"speaker": "Jory Wick", "text": "If you are ever in the Row and the steward is at the board, ask him about the barrow. Not for me. So he has to say it aloud once.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/lettie_wick",
+  "speaker_name": "Lettie Wick",
+  "notes": "Keeps the racks; Merrowby-born, midwife's daughter, married to the lake. The eels turned to face the Lamp; the loaf on the post; the Candle carried to a shore that does not believe it.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [7, 12]}], "text": "Mind the racks; they swing. And mind the eels; they are all facing the Lamp and I will know if one has been turned."},
+    {"conditions": [{"discovered": "core:place/merrowby"}], "text": "You have come from the Vale. Is Maud still putting the loaf on the rim-stone? Tell me she is. I set one on the post here on Naming Day and Jory thinks I am a heathen."},
+    {"conditions": [{"morality_min": 40}], "text": "Tamsin says you carried something up the Lamp stair for her without being asked. That is a loaf, where I am from. Sit; there is eel pie and you will not pay for it."},
+    {"conditions": [{"morality_max": -30}], "text": "You can buy from the racks. You cannot sit on the bench. That is not the lake's rule; it is the Vale's, and I brought it with me, and Jory lets me keep it."},
+    {"conditions": [{"has_item": ["core:item/eel_pie", 1]}], "text": "That is Tamsin's pie you are carrying, and the eel in it is one I turned. Face it to the Lamp when you eat it. I am joking. Mostly."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Lettie Wick", "text": "Wick. Lettie. I keep the racks: every eel Jory lands is split and salted and hung by me and turned by me, and I can tell you the weather of the week it was caught from the colour. I was a Merrowby girl. I married the lake. It has not entirely taken.", "next": "hub"},
+    "hub": {"speaker": "Lettie Wick", "text": "Go on, I can turn and talk.", "choices": [
+      {"text": "Why do the eels face the Lamp?", "next": "facing_the_lamp"},
+      {"text": "How does a Vale girl end up at Gullhithe?", "next": "married_in"},
+      {"text": "What's the loaf on the post?", "next": "the_loaf"},
+      {"text": "What do you make of the Lamp brightening?", "next": "the_brightening"},
+      {"text": "What is the Dwindling to a Vale woman on a lake?", "next": "dwindling"},
+      {"text": "I'll let you turn.", "next": "bye"}
+    ]},
+    "facing_the_lamp": {"speaker": "Lettie Wick", "text": "Split side to the Lamp. Every one. — It is for the drying; the wind comes off the lake and the Lamp is on the point, so an eel facing the Lamp is facing the wind, and it dries even. That is true and it is the reason I give. The other reason is that my mother was a midwife and she turned every child she delivered to face the hearth before she handed it over, and I could not tell you why, and I turn the eels the same way, and Tamsin says superstition, and I have seen her turn her own rack the same way when she thought I was in the loft. Elsie saw too. Elsie sees everything.", "effects": [{"set_flag": "gullhithe_told_facing"}, {"rumour": ["core:rumour/racks_face_the_lamp", 0.4]}], "next": "hub"},
+    "married_in": {"speaker": "Lettie Wick", "text": "Jory came to Merrowby market with a barrow of eel and a face like the Tallymen had personally offended him, which they had, and I sold him a loaf, and he came back the next Tollday with the barrow empty and bought another, and the third Tollday he had forgotten to bring any eels at all. Three loaves. In the Vale that is a friendship, and my mother said a friendship with a lake man is a marriage with extra weather, and she was right. — Ten years. I have a Vale bell-token I have never taken off and a lake I have never learned to swim in, and a girl who can do both, and I would not trade the weather.", "next": "hub"},
+    "the_loaf": {"speaker": "Lettie Wick", "text": "On Naming Day I set a loaf on the slipway post for nobody, the way Maud Brambling sets one on the Toll's rim-stone every morning for whoever. Nobody here does it. Jory thinks I am a heathen. Tamsin thinks I am wasting bread. — The loaf is gone by noon every year and no gull takes a whole loaf, and I have never watched to see who does, because Maud does not watch, and I think not watching is the part that works. That is the Vale. You carry a thing to a place and you do not look to see who takes it. It is the one thing I brought that the lake has not worn off.", "effects": [{"morality": 1}], "next": "hub"},
+    "the_brightening": {"speaker": "Lettie Wick", "text": "Merrowday, at dawn. Tamsin said good morning to the stone and put the cloth over it and it flared under the cloth. Elsie was on the slipway with her jar and saw the tower light up at the wrong hour and she came up the shingle white and has not gone up the Lamp stair since, and she used to go every dusk she was let. — Tamsin has two logbooks. I have seen them; she does not know I have. Nine years the same hand in different writing. She has not written the brightening in either. I think that is the first thing in thirty years she has not been able to put in one book or the other, and I think that frightens her more than the stone does.", "effects": [{"set_flag": "gullhithe_told_brightening"}, {"rumour": ["core:rumour/lamp_brightened_covering", 0.4]}], "next": "hub"},
+    "dwindling": {"speaker": "Lettie Wick", "text": "In the Vale it is a candle and you tend it by talking. On the lake they do not talk; they charter. Everything is written and priced and posted and the ledger is honest and the honest ledger says Jory's barrow is worth forty marks and a carter's four. — I have watched both for ten years and I will tell you what I think, which nobody here has asked. The Vale's account is true and the lake's is true, and they are the same account. A thing that is spoken of stays; a thing that is written down stays. The Row writes it down. The Vale says it aloud. The Dwindling is whatever is not in either, and Gullhithe is on the shore between them, and I turn the eels to face the light because it is the only thing on this point that is doing both.", "next": "hub"},
+    "bye": {"speaker": "Lettie Wick", "text": "Take an eel pie for the road. Tamsin's crust, my eel. And if you are going up the Lamp, say good evening to the stone, not good morning. It knows the difference now, and we did not.", "effects": [{"give_item": ["core:item/eel_pie", 1]}], "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/elsie_wick",
+  "speaker_name": "Elsie Wick",
+  "notes": "Eight; the fisher's daughter; the jar of gull feathers that counts the boats home. Saw the Lamp brighten at the covering and will not go up the stair.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [19, 20]}], "text": "Shh, I'm counting. Six feathers, six boats. — Seven. Da's in. Now you can talk."},
+    {"conditions": [{"time_between": [4, 7]}], "text": "Da's gone out. That's one feather out. I have to take it out or the jar's wrong all day."},
+    {"conditions": [{"morality_max": -30}], "text": "Mam says I'm not to talk to anyone she hasn't given a loaf to. She hasn't given you one. I can tell. She'd have said."},
+    {"conditions": [{"renown_min": 100}], "text": "Are you the one? Da says you're somebody. He says somebody could ask about the barrow. Are you going to? He said not to ask you that."},
+    {"conditions": [{"flag": "gullhithe_elsie_told_lamp"}], "text": "I still haven't been up. Great-aunt Tamsin says the stone doesn't mind. It's not the stone I'm frightened of. It's that it was glad."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Elsie Wick", "text": "I'm Elsie. Wick. That's my jar. It's got a feather in it for every boat that's home and none for the ones that are out, so you can look at it and know. Nobody asked me to. Somebody had to.", "next": "hub"},
+    "hub": {"speaker": "Elsie Wick", "text": "What?", "choices": [
+      {"text": "Tell me about the jar.", "next": "the_jar"},
+      {"text": "Why don't you go up the Lamp any more?", "next": "the_lamp"},
+      {"text": "What's your great-aunt like?", "next": "tamsin"},
+      {"text": "Do you like the lake?", "next": "the_lake"},
+      {"text": "Bye, Elsie.", "next": "bye"}
+    ]},
+    "the_jar": {"speaker": "Elsie Wick", "text": "Gull feathers. One in for every boat that comes home to the slipway, one out for every boat that goes. There's nine boats in Gullhithe so nine feathers is everyone. When it's empty everyone's on the water and I don't like it empty. When it's full I can go to bed. — Da's boat is the grey feather, I picked it special. Mam says I'm doing the Vale thing, counting people so they stay. I don't know what that means. I just know when the jar's full nobody's lost, and that's true, it's always been true, I've checked.", "effects": [{"set_flag": "gullhithe_elsie_told_jar"}], "next": "hub"},
+    "the_lamp": {"speaker": "Elsie Wick", "text": "I used to go up with Great-aunt Tamsin every dusk she'd let me and hold the cloth while she said good evening to the stone and it got bright. It always got bright for good evening. It never got bright for good morning; that's the rule, she said, it's a polite stone and it only says hello. — Merrowday I was on the slipway with the jar at dawn and I looked up and the Lamp went bright under the cloth. At good morning. And I could see her face in the window and she looked — I don't know. Like the stone had said something back. I haven't been up since. It's not that I'm frightened of it. It's that it was glad, and I don't know what about.", "effects": [{"set_flag": "gullhithe_elsie_told_lamp"}, {"rumour": ["core:rumour/lamp_brightened_covering", 0.4]}], "next": "hub"},
+    "tamsin": {"speaker": "Elsie Wick", "text": "She hasn't slept a whole night in thirty years. She says so like it's nothing. She turns the light all night and turns the eels all noon and sleeps in between in bits, and she squints even indoors, and she's got two books she writes in and I'm not supposed to know. — She let me hold the cloth. Nobody else has ever held the cloth. I want to go back up. I'm going to. I'm just waiting till the jar's been full three nights running, because then it's safe, and it hasn't been, because Da goes out.", "next": "hub"},
+    "the_lake": {"speaker": "Elsie Wick", "text": "It's flat and it's grey and it's got a serpent in it, Da says, out by the barge that sank, and you can hear the bells on the buoys all night and the Lamp goes round and round over everything. — Mam says in the Vale there's a bell as big as a hill and it's humming. I'd rather have the Lamp. A bell just makes a noise. The Lamp looks for you. That's what it's doing when it goes round. It's looking for the boats, same as my jar. We're doing the same job, me and the Lamp. I just don't go up any more.", "next": "hub"},
+    "bye": {"speaker": "Elsie Wick", "text": "If you've got a boat, tell me when it goes out. I'll need a feather for it. I've got spares.", "next": "hub"}
+  }
+},
+{
+  "id": "core:dialogue/hob_tamwick",
+  "speaker_name": "Hob Tamwick",
+  "notes": "Bessa's elder brother; turns the only cider press in Wickmere; nineteen turns for nineteen hearths on Tamwick's line of the Roll. The brother who stayed, about the one who went south and the sister who grafts.",
+  "start": "greet",
+  "greetings": [
+    {"conditions": [{"time_between": [13, 18]}], "text": "Eleven. Twelve. — Give me to nineteen. I cannot stop in the middle; the hearths would not have it."},
+    {"conditions": [{"quest_done": "core:quest/cask_and_press"}], "text": "Whatever you settled between my sister and the brewer, the press is still turning, so it was settled right enough."},
+    {"conditions": [{"discovered": "core:place/pilgrims_ash"}], "text": "You have been south, to the ash. Did you see a knight with a clapper bound in a cloth that smells of apples? — Never mind. Never mind. Have some cider."},
+    {"conditions": [{"morality_max": -30}], "text": "You can have cider. Everybody can have cider; that is what a press is for. You cannot help turn it. I do not know why. Bessa would know."},
+    {"conditions": [{"has_item": ["core:item/apple", 1]}], "text": "That is one of ours in your pocket. There are no other apple trees in Wickmere; every apple in the world is ours. Eat it slowly; it took a year."}
+  ],
+  "nodes": {
+    "greet": {"speaker": "Hob Tamwick", "text": "Tamwick. Hob. Bessa's brother; the older one, the one who stayed. I turn the screw. Nineteen turns to a pressing and I have never wanted anything else, and there are worse things to say about a life, and my sister has said most of them.", "next": "hub"},
+    "hub": {"speaker": "Hob Tamwick", "text": "Well, what?", "choices": [
+      {"text": "Why nineteen turns?", "next": "nineteen"},
+      {"text": "What's it like being Bessa's brother?", "next": "bessa"},
+      {"text": "Is there another brother?", "next": "the_other_brother", "conditions": [{"flag": "tamwick_told_bessa"}]},
+      {"text": "What's the twelfth kind on the Grafted Tree?", "next": "twelfth_kind"},
+      {"text": "What is the Dwindling to a man at a press?", "next": "dwindling"},
+      {"text": "I'll let you press.", "next": "bye"}
+    ]},
+    "nineteen": {"speaker": "Hob Tamwick", "text": "The Roll at Wardens' Rest has Tamwick down as nineteen hearths. So: nineteen turns of the screw, one each, aloud. Orchard. Tamwick. Pennywort's cousin. The Millers at the ford. And so on round to nineteen, and the juice runs, and I stop. Not eighteen, not twenty, whatever the apples say. — If I lose my place I start again from one. Skerrday I lost it at eleven and started again and the pressing took till dark and Bessa stood in the door and did not say hurry, which for Bessa is a speech. The cider came out sharper. She will not say whether that is good. It is good. I would not say so to her either.", "effects": [{"set_flag": "tamwick_told_nineteen"}, {"rumour": ["core:rumour/press_lost_count", 0.4]}], "next": "hub"},
+    "bessa": {"speaker": "Hob Tamwick", "text": "She keeps the trees and I keep the press and she keeps the opinions and I keep quiet. It has worked forty years. — She grafts a twig from every tree that dies onto the one tree that lives, and she can name the dead by taste, and she goes to Merrowby every Tollday to argue with Corwen Mullard about whether cider is a drink, and comes home lit up like Candle Night. I do not argue with anyone. I turn the screw. Somebody has to be the thing the other one leans on, and I am built for it; look at me.", "effects": [{"set_flag": "tamwick_told_bessa"}], "next": "hub"},
+    "the_other_brother": {"speaker": "Hob Tamwick", "text": "Toren. The youngest. He could not stay in a valley where every window is lit on Candle Night and nobody says what the light is for; that is how he put it, at nineteen, at this press, and I did not understand him and I still do not. He walked south at twenty-five and put on grey. He is a knight of the Order now, at the ring, counting bells. Nineteen years. — Bessa sends him a bottle of cider vinegar every spring. No letter. She does not write; she grafts. He has never written back, and she has never once said his name at this press, and every spring I bottle the vinegar and put it in the cart without being asked, and that is the whole of our family, and it is enough.", "effects": [{"set_flag": "tamwick_told_toren"}, {"rumour": ["core:rumour/knight_vinegar", 0.4]}, {"morality": 1}], "next": "hub"},
+    "twelfth_kind": {"speaker": "Hob Tamwick", "text": "Eleven kinds on the Grafted Tree, one for each tree that died, and she grafted every one and can name it by taste. This year there is a twelfth branch, fruiting, and she did not graft it. Nobody did. — I picked one on Skerrday. Small, russet, heavy for its size. She took it out of my hand before it reached my mouth and walked to the end of the orchard with it and I did not follow. She has not tasted it. She tastes everything. I think she is frightened of what she would name it, and I think she is right to be, and I turn the screw and I do not pick from that branch, and neither does anyone.", "effects": [{"set_flag": "tamwick_told_twelfth"}, {"rumour": ["core:rumour/grafted_tree_twelfth", 0.5]}], "next": "hub"},
+    "dwindling": {"speaker": "Hob Tamwick", "text": "The Roll says nineteen hearths and I turn nineteen turns, and the year the Roll says eighteen I will turn eighteen, and that is how I will know. — That is the whole of it for me. Bessa has the trees and the twelfth kind and her fear. Toren has his ring and his bells. I have a number I say aloud nineteen times a pressing, and it has not changed, and the day it does I will be the first man in Tamwick to know, standing at a press with juice running and one turn short, and I have thought about that day more than a slow man should, and I will not stop at eighteen. I will turn the nineteenth for whoever it was. That is what the press is for.", "next": "hub"},
+    "bye": {"speaker": "Hob Tamwick", "text": "Have a cup on your way. Not the sharp one; the sharp one is Corwen's, whether or not he knows it yet.", "effects": [{"give_item": ["core:item/cider", 1]}], "next": "hub"}
+  }
+}
+]
