@@ -152,6 +152,143 @@ def _compact_buffer_views(gltf: dict, bin_chunk: bytes, drop: set[int], path) ->
     write_glb(path, gltf, bytes(out))
 
 
+def _append_view(gltf: dict, out: bytearray, data: bytes, target: int | None = None) -> int:
+    while len(out) % 4:
+        out.append(0)
+    view = {"buffer": 0, "byteOffset": len(out), "byteLength": len(data)}
+    if target is not None:
+        view["target"] = target
+    out.extend(data)
+    gltf.setdefault("bufferViews", []).append(view)
+    return len(gltf["bufferViews"]) - 1
+
+
+def _append_accessor(gltf: dict, out: bytearray, values: list, kind: str, component: int,
+                     target: int | None, with_bounds: bool = False) -> int:
+    fmt = {5126: "f", 5123: "H", 5125: "I"}[component]
+    width = {"SCALAR": 1, "VEC2": 2, "VEC3": 3}[kind]
+    flat = [v for row in values for v in (row if isinstance(row, (list, tuple)) else [row])]
+    view = _append_view(gltf, out, struct.pack("<%d%s" % (len(flat), fmt), *flat), target)
+    acc = {"bufferView": view, "componentType": component, "count": len(values), "type": kind}
+    if with_bounds:
+        acc["min"] = [min(r[i] for r in values) for i in range(width)]
+        acc["max"] = [max(r[i] for r in values) for i in range(width)]
+    gltf.setdefault("accessors", []).append(acc)
+    return len(gltf["accessors"]) - 1
+
+
+def replace_mesh_geometry(gltf: dict, bin_chunk: bytes, mesh_name: str, positions: list,
+                          normals: list, uvs: list, indices: list, material: int) -> bytes:
+    """Give the mesh called `mesh_name` one new primitive, drawn with material `material`.
+
+    The old primitive's data is left in the buffer; `prune` takes it out. Returns the new BIN
+    chunk (the glTF dict is edited in place)."""
+    mesh = next((m for m in gltf.get("meshes", []) if m.get("name") == mesh_name), None)
+    if mesh is None:
+        raise KeyError("no mesh %r in the GLB" % mesh_name)
+    out = bytearray(bin_chunk)
+    pos = _append_accessor(gltf, out, positions, "VEC3", 5126, 34962, with_bounds=True)
+    nrm = _append_accessor(gltf, out, normals, "VEC3", 5126, 34962)
+    uv = _append_accessor(gltf, out, uvs, "VEC2", 5126, 34962)
+    idx = _append_accessor(gltf, out, indices, "SCALAR", 5123, 34963)
+    mesh["primitives"] = [{"attributes": {"POSITION": pos, "NORMAL": nrm, "TEXCOORD_0": uv},
+                           "indices": idx, "material": material, "mode": 4}]
+    if gltf.get("buffers"):
+        gltf["buffers"][0]["byteLength"] = len(out)
+    return bytes(out)
+
+
+def prune(gltf: dict, bin_chunk: bytes) -> bytes:
+    """Drop every accessor, buffer view, material, texture and image nothing refers to any more,
+    and compact the buffer. Static meshes only: a file with skins or animations is refused
+    rather than half-understood. Returns the new BIN chunk."""
+    if gltf.get("skins") or gltf.get("animations"):
+        raise ValueError("prune: skins and animations are not handled")
+    meshes = gltf.get("meshes", [])
+    used_acc, used_mat = set(), set()
+    for m in meshes:
+        for p in m.get("primitives", []):
+            used_acc.update(p.get("attributes", {}).values())
+            if "indices" in p:
+                used_acc.add(p["indices"])
+            for t in p.get("targets", []):
+                used_acc.update(t.values())
+            if "material" in p:
+                used_mat.add(p["material"])
+    mats = gltf.get("materials", [])
+
+    def tex_refs(mat: dict) -> list:
+        pbr = mat.get("pbrMetallicRoughness", {})
+        return [r for r in (pbr.get("baseColorTexture"), pbr.get("metallicRoughnessTexture"),
+                            mat.get("normalTexture"), mat.get("occlusionTexture"),
+                            mat.get("emissiveTexture")) if r is not None]
+
+    used_tex = {r["index"] for i in used_mat for r in tex_refs(mats[i])}
+    textures = gltf.get("textures", [])
+    used_img = {textures[t]["source"] for t in used_tex if "source" in textures[t]}
+    images = gltf.get("images", [])
+    accessors = gltf.get("accessors", [])
+    used_view = {accessors[a]["bufferView"] for a in used_acc if "bufferView" in accessors[a]}
+    used_view |= {images[i]["bufferView"] for i in used_img if "bufferView" in images[i]}
+
+    def remap(items: list, used: set) -> tuple[list, dict]:
+        kept, table = [], {}
+        for i, item in enumerate(items):
+            if i in used:
+                table[i] = len(kept)
+                kept.append(item)
+        return kept, table
+
+    new_views, vmap = [], {}
+    out = bytearray()
+    for i, v in enumerate(gltf.get("bufferViews", [])):
+        if i not in used_view:
+            continue
+        start = v.get("byteOffset", 0)
+        while len(out) % 4:
+            out.append(0)
+        nv = dict(v)
+        nv["byteOffset"] = len(out)
+        out.extend(bin_chunk[start:start + v["byteLength"]])
+        vmap[i] = len(new_views)
+        new_views.append(nv)
+    gltf["bufferViews"] = new_views
+    accessors, amap = remap(accessors, used_acc)
+    for a in accessors:
+        if "bufferView" in a:
+            a["bufferView"] = vmap[a["bufferView"]]
+    gltf["accessors"] = accessors
+    images, imap = remap(images, used_img)
+    for img in images:
+        if "bufferView" in img:
+            img["bufferView"] = vmap[img["bufferView"]]
+    textures, tmap = remap(textures, used_tex)
+    for t in textures:
+        if "source" in t:
+            t["source"] = imap[t["source"]]
+    mats, mmap = remap(mats, used_mat)
+    for mat in mats:
+        for r in tex_refs(mat):
+            r["index"] = tmap[r["index"]]
+    for m in meshes:
+        for p in m.get("primitives", []):
+            p["attributes"] = {k: amap[v] for k, v in p.get("attributes", {}).items()}
+            if "indices" in p:
+                p["indices"] = amap[p["indices"]]
+            if "targets" in p:
+                p["targets"] = [{k: amap[v] for k, v in t.items()} for t in p["targets"]]
+            if "material" in p:
+                p["material"] = mmap[p["material"]]
+    for key, items in (("images", images), ("textures", textures), ("materials", mats)):
+        if items:
+            gltf[key] = items
+        else:
+            gltf.pop(key, None)
+    if gltf.get("buffers"):
+        gltf["buffers"][0]["byteLength"] = len(out)
+    return bytes(out)
+
+
 def summary(path: str | Path) -> dict:
     """Quick facts for tests and meta: mesh names, triangle counts, image uris, materials."""
     gltf, _ = read_glb(path)

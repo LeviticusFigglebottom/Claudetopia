@@ -42,8 +42,23 @@ const VIEW_RANGE_FAR := {"tree": 920.0, "bush": 430.0, "rock": 480.0, "prop": 40
 ## the world -- the forge's are seven to fifteen thousand triangles each.
 const FAR_KEEP := {"tree": 0.35, "bush": 0.3, "rock": 0.4, "prop": 0.4, "herb": 0.0}
 
+## Trees (and heavy opaque scatter with a forge LOD ladder) are drawn per instance at the level
+## of detail their own distance deserves: see world/scatter_lod.gd. This much time a frame goes on
+## re-sorting them as the eye moves; the nearest groups are done first.
+const LOD_BUDGET_USEC := 4000
+
 var target: Node3D = null
 var provider: TerrainProvider = null
+
+## What the graphics settings ask of the scatter (Settings `graphics`): how far each kind is drawn
+## (`view_range`, a multiplier on VIEW_RANGE and VIEW_RANGE_FAR), how much ground cover stands in
+## the near ring (`scatter_density`, grass, flowers and bushes only -- never trees), and how far
+## away things keep their shape (`lod_bias`).
+var view_range := 1.0
+var scatter_density := 1.0
+var lod_bias := 1.0
+var _lod_groups: Array = []
+var _rebuild_queued := false
 
 var _cells_wide: int = 32
 var _origin := Vector2(-4096.0, -4096.0)
@@ -64,6 +79,47 @@ func _ready() -> void:
 	if provider:
 		_cells_wide = int(provider.manifest.get("cells", [32, 32])[0])
 		_origin = provider.origin
+	_read_graphics()
+	Settings.changed.connect(_on_setting_changed)
+
+
+func _read_graphics() -> void:
+	view_range = clampf(float(Settings.get_value("graphics", "view_range", 1.0)), 0.25, 3.0)
+	scatter_density = clampf(float(Settings.get_value("graphics", "scatter_density", 1.0)), 0.05, 1.0)
+	lod_bias = clampf(float(Settings.get_value("graphics", "lod_bias", 1.0)), 0.1, 4.0)
+
+
+func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
+	if section != "graphics":
+		return
+	match key:
+		"view_range":
+			_read_graphics()
+			apply_view_range()
+		"lod_bias":
+			_read_graphics()
+			apply_lod_bias()
+		"scatter_density":
+			_read_graphics()
+			# which plants stand is decided when a cell is built, so the cells are built again;
+			# queued, because a preset changes this and a dozen other keys in one go
+			_rebuild_queued = true
+
+
+## Every scatter MultiMesh's reach, from the range it was built with and the setting.
+func apply_view_range() -> void:
+	for cell in _loaded.values():
+		for child in (cell as Node).get_children():
+			if child is GeometryInstance3D and child.has_meta("range_base"):
+				var base := float(child.get_meta("range_base"))
+				(child as GeometryInstance3D).visibility_range_end = base * view_range
+				(child as GeometryInstance3D).visibility_range_end_margin = base * view_range * 0.15
+
+
+func apply_lod_bias() -> void:
+	ScatterLod.set_bias_all(lod_bias)
+	for g in _lod_groups:
+		(g as ScatterLod.Group).last_eye = Vector3(INF, INF, INF)
 
 
 func setup(p: TerrainProvider, t: Node3D) -> void:
@@ -89,12 +145,59 @@ func cell_centre(cell: Vector2i) -> Vector2:
 func _physics_process(_delta: float) -> void:
 	if not enabled or target == null or provider == null:
 		return
+	if _rebuild_queued:
+		_rebuild_queued = false
+		for c in _loaded.keys():
+			var ring := int(_loaded[c].get_meta("ring", 0))
+			_unload(c)
+			_request(c, ring)
 	var cell := cell_of(target.global_position)
 	if cell != _current_cell:
 		_current_cell = cell
 		refresh()
 		_check_region()
 	_drain_parsed()
+
+
+func _process(_delta: float) -> void:
+	update_lods(LOD_BUDGET_USEC)
+
+
+## Re-sorts the trees whose level may have changed since the eye last moved, nearest cells first,
+## for at most `budget_usec` (0: all of them).
+func update_lods(budget_usec: int = 0) -> void:
+	if _lod_groups.is_empty():
+		return
+	var eye := lod_eye()
+	var t0 := Time.get_ticks_usec()
+	var due: Array = []
+	for g in _lod_groups:
+		if (g as ScatterLod.Group).wants_update(eye):
+			due.append(g)
+	due.sort_custom(func(a: ScatterLod.Group, b: ScatterLod.Group) -> bool:
+			return a._box_distance(eye) < b._box_distance(eye))
+	for g in due:
+		(g as ScatterLod.Group).update(eye)
+		if budget_usec > 0 and Time.get_ticks_usec() - t0 > budget_usec:
+			break
+
+
+## True when every tree is drawn at the level the eye's distance asks for.
+func lods_settled() -> bool:
+	var eye := lod_eye()
+	for g in _lod_groups:
+		if (g as ScatterLod.Group).wants_update(eye):
+			return false
+	return true
+
+
+## Where the level of detail is measured from: the camera the world is being drawn through, or,
+## with none (a headless test), whatever the streamer follows.
+func lod_eye() -> Vector3:
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if cam != null:
+		return cam.global_position
+	return target.global_position if target != null else Vector3.ZERO
 
 
 ## True when every cell of the full-detail ring around the target is loaded.
@@ -110,7 +213,7 @@ func is_ring_loaded(ring: int = -1) -> bool:
 				continue
 			if not _loaded.has(c):
 				return false
-	return _pending.is_empty() and _parsed.is_empty()
+	return _pending.is_empty() and _parsed.is_empty() and lods_settled()
 
 
 func loaded_count() -> int:
@@ -123,13 +226,17 @@ func is_loaded(cell: Vector2i) -> bool:
 	return _loaded.has(cell)
 
 
+## Scatter instances standing in the loaded cells, each counted once: a tree in the middle of a
+## level-of-detail dissolve is in two MultiMeshes and is still one tree.
 func instance_count() -> int:
 	var total := 0
 	for cell in _loaded:
 		var node: Node3D = _loaded[cell]
 		for child in node.get_children():
-			if child is MultiMeshInstance3D and child.multimesh:
+			if child is MultiMeshInstance3D and child.multimesh and not child.has_meta("lod_group"):
 				total += child.multimesh.instance_count
+	for g in _lod_groups:
+		total += (g as ScatterLod.Group).count()
 	return total
 
 
@@ -297,10 +404,19 @@ func _build_spawns(parent: Node3D, spawns: Array) -> void:
 
 
 func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Array, ring: int) -> void:
+	var kind := asset_kind(asset_path)
+	var lad := _ladder_for(asset_path)
+	# A tree with an impostor is two triangles past a few hundred metres, so the far ring keeps
+	# every one of them instead of the third it could afford before; without one, it is drawn
+	# as it always was out there.
+	if lad != null and (ring <= full_ring or lad.has_impostor()):
+		_build_lod_group(parent, asset_path, lad, rows, ring, kind)
+		return
 	var keep := rows.size()
 	if ring > full_ring:
-		var kind := asset_kind(asset_path)
 		keep = int(ceil(float(rows.size()) * float(FAR_KEEP.get(kind, far_density))))
+	elif kind in ["herb", "bush"]:
+		keep = int(ceil(float(rows.size()) * scatter_density))
 	if keep <= 0:
 		return
 	var mm := MultiMesh.new()
@@ -314,24 +430,55 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 		var row: Array = rows[int(floor(float(i) * step))]
 		mm.set_instance_transform(i, instance_transform(row, origin3))
 		mm.set_instance_color(i, instance_tint(row))
-	var kind := asset_kind(asset_path)
-	var range_end: float = float(VIEW_RANGE.get(kind, 220.0)) if ring <= full_ring \
-		else float(VIEW_RANGE_FAR.get(kind, 160.0))
+	var range_end := _range_for(kind, ring)
 	if range_end <= 0.0:
 		return                                   # not worth drawing this far out at all
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = asset_path.get_file().get_basename()
 	mmi.set_meta("asset_path", asset_path)
+	mmi.set_meta("range_base", range_end)
 	mmi.multimesh = mm
 	# only trees and rocks in the near ring cast shadows; grass shadows cost more than they show
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
 		if (ring <= full_ring and kind in ["tree", "rock", "prop"]) \
 		else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.visibility_range_end = range_end
-	mmi.visibility_range_end_margin = range_end * 0.15
+	mmi.visibility_range_end = range_end * view_range
+	mmi.visibility_range_end_margin = range_end * view_range * 0.15
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-	mmi.lod_bias = 1.0 if ring <= full_ring else lod_bias_far
+	mmi.lod_bias = (1.0 if ring <= full_ring else lod_bias_far) * lod_bias
 	parent.add_child(mmi)
+
+
+## How far a kind is drawn in a ring, before the view-range setting multiplies it.
+func _range_for(kind: String, ring: int) -> float:
+	return float(VIEW_RANGE.get(kind, 220.0)) if ring <= full_ring \
+		else float(VIEW_RANGE_FAR.get(kind, 160.0))
+
+
+## The ladder a scatter asset is drawn down by distance, or null (world/scatter_lod.gd).
+func _ladder_for(asset_path: String) -> ScatterLod.Ladder:
+	var kind := asset_kind(asset_path)
+	if kind not in ["tree", "rock", "prop"]:
+		return null
+	var packed := _scene_for(asset_path)
+	return ScatterLod.ladder_for(asset_path, packed, lod_bias) if packed != null else null
+
+
+func _build_lod_group(parent: Node3D, asset_path: String, lad: ScatterLod.Ladder, rows: Array,
+		ring: int, kind: String) -> void:
+	var range_end := _range_for(kind, ring)
+	if range_end <= 0.0:
+		return
+	var far := ring > full_ring
+	var group := ScatterLod.make_group(lad, parent, rows, far, not far, range_end, asset_path)
+	for mmi in group.mmis.values():
+		(mmi as GeometryInstance3D).visibility_range_end = range_end * view_range
+		(mmi as GeometryInstance3D).visibility_range_end_margin = range_end * view_range * 0.15
+	if far:
+		group.fill_far()
+	else:
+		group.update(lod_eye())
+	_lod_groups.append(group)
 
 
 ## A scatter row is [x, y, z, yaw_deg, scale, tint_hex] in world metres (CONTRACTS §6);
@@ -440,6 +587,11 @@ static func asset_kind(asset_path: String) -> String:
 func _unload(cell: Vector2i) -> void:
 	var node: Node3D = _loaded.get(cell, null)
 	if node:
+		var kept: Array = []
+		for g in _lod_groups:
+			if (g as ScatterLod.Group).cell != node:
+				kept.append(g)
+		_lod_groups = kept
 		node.queue_free()
 	_loaded.erase(cell)
 	EventBus.cell_unloaded.emit(cell)

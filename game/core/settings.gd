@@ -1,27 +1,46 @@
 extends Node
 ## Settings: persisted user settings (user://settings.cfg) and the input map, including rebinding.
 ## Default bindings come from res://core/default_bindings.json so the rebinding UI is data-driven.
+##
+## The `graphics` section is every knob of the picture's fidelity: `Graphics` (core/graphics.gd)
+## says what each one means and puts it into the engine, and the presets live there too. A value
+## set here is applied at once and written to settings.cfg at the end of the frame -- except while
+## `persist` is off, which the unit tests and the measuring tools turn off so that neither ever
+## writes the player's file.
 
 signal changed(section: String, key: String, value: Variant)
 signal bindings_changed
 
 const PATH := "user://settings.cfg"
 const DEFAULTS := {
-	"video": {"fullscreen": false, "vsync": true, "fov": 75.0, "render_scale": 1.0, "shadows": 2, "msaa": 1, "ssao": true, "glow": true, "brightness": 1.0},
+	"video": {"fullscreen": false, "fov": 75.0, "brightness": 1.0},
+	"graphics": Graphics.DEFAULTS,
 	"audio": {"master": 0.9, "music": 0.7, "sfx": 0.9, "ambience": 0.8, "ui": 0.8, "voice": 1.0},
 	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false},
 	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true},
 	"accessibility": {"colourblind": 0, "ui_scale": 1.0, "reduce_flashing": false},
 }
 
+## The `video` keys that became `graphics` keys when the graphics settings arrived. A file written
+## before then still carries them, and what the player chose there is carried over once.
+const MOVED_TO_GRAPHICS := ["vsync", "render_scale", "msaa", "ssao", "glow", "shadows"]
+
 var data: Dictionary = {}
 var binding_defs: Array = []
 var bindings: Dictionary = {}   # action -> Array[String] of event strings
+## Off while the unit tests run and while a tool measures a preset: they change settings in memory
+## and must never write them into the player's settings.cfg.
+var persist := true
+var _save_queued := false
 
 
 func _ready() -> void:
 	load_settings()
 	apply_all()
+	# Lights and environments are adopted as they enter the tree, wherever they come from -- the
+	# world's atmosphere, an interior, a review stage -- so a setting reaches them without any of
+	# them having to know about it.
+	get_tree().node_added.connect(_on_node_added)
 
 
 func load_settings() -> void:
@@ -38,9 +57,33 @@ func load_settings() -> void:
 				data[section] = {}
 			for key in cf.get_section_keys(section):
 				data[section][key] = cf.get_value(section, key)
+		_migrate_video_keys(cf)
+
+
+## A file from before the graphics section: what was chosen under `video` moves across, unless the
+## file already has its own graphics value for it. `shadows` was a four-step quality that nothing
+## ever read; all that survives of it is whether it was off.
+func _migrate_video_keys(cf: ConfigFile) -> void:
+	var moved := false
+	for key: String in MOVED_TO_GRAPHICS:
+		if not cf.has_section_key("video", key):
+			continue
+		(data["video"] as Dictionary).erase(key)
+		if cf.has_section_key("graphics", key):
+			continue
+		var v: Variant = cf.get_value("video", key)
+		if key == "shadows":
+			data["graphics"]["shadows"] = int(v) > 0
+		else:
+			data["graphics"][key] = v
+		moved = true
+	if moved and not cf.has_section_key("graphics", "preset"):
+		data["graphics"]["preset"] = Graphics.matching_preset(data["graphics"])
 
 
 func save_settings() -> void:
+	if not persist:
+		return
 	var cf := ConfigFile.new()
 	for section in data:
 		for key in data[section]:
@@ -59,8 +102,44 @@ func set_value(section: String, key: String, value: Variant, apply := true) -> v
 		data[section] = {}
 	data[section][key] = value
 	changed.emit(section, key, value)
+	if section == "graphics" and key != "preset":
+		# a knob moved on its own: the section is a preset only if it still matches one exactly
+		_set_preset_name(Graphics.matching_preset(data["graphics"]))
 	if apply:
 		_apply_section(section)
+	_queue_save()
+
+
+## Every fidelity knob to a preset's values at once, applied once and saved once.
+func apply_graphics_preset(preset: String) -> void:
+	if not Graphics.PRESETS.has(preset):
+		return
+	var values := Graphics.preset_values(preset)
+	for key: String in values:
+		data["graphics"][key] = values[key]
+		changed.emit("graphics", key, values[key])
+	_set_preset_name(preset)
+	_apply_section("graphics")
+	_queue_save()
+
+
+func _set_preset_name(preset: String) -> void:
+	if str(data["graphics"].get("preset", "")) == preset:
+		return
+	data["graphics"]["preset"] = preset
+	changed.emit("graphics", "preset", preset)
+
+
+func _queue_save() -> void:
+	if not persist or _save_queued:
+		return
+	_save_queued = true
+	_save_now.call_deferred()
+
+
+func _save_now() -> void:
+	_save_queued = false
+	save_settings()
 
 
 func apply_all() -> void:
@@ -69,16 +148,26 @@ func apply_all() -> void:
 	apply_bindings()
 
 
+func _on_node_added(node: Node) -> void:
+	if node is DirectionalLight3D or node is WorldEnvironment:
+		# deferred, so whatever built the node has finished configuring it before its author's
+		# settings are remembered
+		_adopt.call_deferred(node)
+
+
+func _adopt(node) -> void:
+	if is_instance_valid(node):
+		Graphics.adopt(node, data.get("graphics", {}))
+
+
 func _apply_section(section: String) -> void:
 	match section:
 		"video":
 			var fs: bool = data.video.fullscreen
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fs else DisplayServer.WINDOW_MODE_WINDOWED)
-			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if data.video.vsync else DisplayServer.VSYNC_DISABLED)
-			var vp := get_viewport()
-			if vp:
-				vp.scaling_3d_scale = clampf(float(data.video.render_scale), 0.5, 1.0)
-				vp.msaa_3d = clampi(int(data.video.msaa), 0, 3) as Viewport.MSAA
+		"graphics":
+			if is_inside_tree():
+				Graphics.apply(data["graphics"], get_tree())
 		"audio":
 			for bus_name: String in ["Master", "Music", "SFX", "Ambience", "UI", "Voice"]:
 				var idx := AudioServer.get_bus_index(bus_name)

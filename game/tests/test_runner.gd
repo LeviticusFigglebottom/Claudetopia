@@ -33,6 +33,10 @@ const ERRORS_ALLOWED := {
 }
 
 func _ready() -> void:
+	# Tests change settings in memory -- a render scale, a rebound key -- and the player's
+	# settings.cfg is the same file the game and the capture tools read. Nothing a test sets may
+	# reach it.
+	Settings.persist = false
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
 	# Leave the scene-setup frame so tests may add nodes to the root freely.
