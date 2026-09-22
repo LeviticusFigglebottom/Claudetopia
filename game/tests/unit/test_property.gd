@@ -246,6 +246,7 @@ func test_property_sign_offers_and_sells() -> void:
 	steward_sign.interact(buyer)
 	assert_eq(talks, ["core:npc/example_reeve"], "a steward is spoken to, not haggled with at a board")
 	EventBus.dialogue_started.disconnect(cb)
+	close_screen("deed", "the board's quote is drawn on the deed screen")
 
 
 # --- save --------------------------------------------------------------------------------------------
@@ -298,6 +299,7 @@ func test_your_own_board_opens_the_landlords_side() -> void:
 	assert_eq(offered, [COTTAGE] as Array[String],
 		"standing at your own board told the UI nothing, so nothing was drawn")
 	assert_true(UI.MENUS.has("deed"), "no screen is registered to answer it")
+	close_screen("deed", "your own board opens the landlord's side")
 
 
 func test_your_own_board_says_what_is_waiting_before_you_walk_up_to_it() -> void:

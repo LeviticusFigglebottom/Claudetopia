@@ -174,3 +174,4 @@ func test_walking_up_to_it_opens_the_screen() -> void:
 	assert_eq(opened, [board] as Array[Node],
 		"reading the board told the UI nothing, so nothing was drawn")
 	assert_true(UI.MENUS.has("job_board"), "the UI has no screen registered for a board")
+	close_screen("job_board", "walking up to the board draws its notices")
