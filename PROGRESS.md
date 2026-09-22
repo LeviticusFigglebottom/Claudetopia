@@ -868,6 +868,16 @@ visible by looking:
   the Chain Bridge, the knight in the Headless Watch's eye and the hermit of Willow Isle are
   all named in the data and all absent; their props are set out as though they had just
   stepped away. That is the content stream's.
+* **The One Poppy does not read from thirty metres.** The dressing is honest to the fiction —
+  one red poppy in a square kilometre of grey grass, with a ring of stones somebody set round
+  it and a cup of water beside it — and photographed from the plan's distance the poppy is a
+  speck and the ring is pebbles. It wants a mark a person would see: the ring at three times
+  the size, or a low cairn. That was not changed blind, because the last unverified
+  improvement in this work (the bank behind the waterfall) was worse than the fault.
+* **The Thirteenth reads as fallen masonry, not as a body.** The torso, arms and legs are
+  boxes at a colossus's scale and from most angles they merge into one long mass. The
+  excavation, the spoil and the Sayer camp at its head carry the scene; the figure does not.
+  It wants separated limbs and a shoulder taper.
 * **The far ring builds silhouettes but they are not impostors.** A far-ring dressing draws its
   LOD1 meshes out to 950 m, which is cheap enough at 55 POIs but is not what a proper
   impostor would cost.
