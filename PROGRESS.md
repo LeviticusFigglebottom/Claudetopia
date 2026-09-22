@@ -1044,7 +1044,7 @@ The full 42-shot sheet, seven images a region, so **the landform axis binds** (D
 | landform | 0.21 | **0.12** | 0.55 |
 | together | 0.55 | **0.71** | 0.80 |
 
-Colour and the two together moved a long way and the test still fails, on both bars. The
+Colour and the two together moved a long way and the test still fails, on both bars. (Measured before the last change of the pass: Cinderlea's sun was raised from 3.2 degrees to 9.2 at its own hour afterwards, because at 3.2 the energy curve had already halved it and the region's ground shots came back nearly black. That is a change to one region's light which these numbers do not include.) The
 landform figure went *down*, and below the 0.17 chance line, which is the honest cost of this
 pass and worth stating plainly: the landform signature reads the skyline, the ruggedness and
 where the detail sits down the frame, and giving all six regions a dense near field of

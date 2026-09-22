@@ -460,7 +460,7 @@
       ],
       "light": {
         "sun_color": "#e8d9c0",
-        "sun_elevation_bias": -14,
+        "sun_elevation_bias": -8,
         "fog_color": "#8d8781",
         "fog_density": 0.0008,
         "ambient_tint": "#c6c0b6",
