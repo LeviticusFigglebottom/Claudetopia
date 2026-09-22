@@ -109,7 +109,15 @@ func bind(provider_name: String, obj: Object) -> void:
 	var node := obj as Node
 	if node != null and _watched.get(provider_name) != node:
 		_watched[provider_name] = node
-		node.tree_exiting.connect(_forget_provider.bind(provider_name, node), CONNECT_ONE_SHOT)
+		# A one-shot connection is not dropped until its callback returns, and `_forget_provider`
+		# erases the watch on the way out — so anything that re-binds the same body under the
+		# same name *during* its own `tree_exiting` passed the check above and connected an
+		# identical callable to a signal that still held one. The engine refused it and said so,
+		# twenty-seven times in a suite run, which is twenty-seven errors nobody reads standing
+		# in front of the next real one.
+		var forget := _forget_provider.bind(provider_name, node)
+		if not node.tree_exiting.is_connected(forget):
+			node.tree_exiting.connect(forget, CONNECT_ONE_SHOT)
 
 
 ## A bound provider is on its way out of the tree. Drop it, unless something has since bound

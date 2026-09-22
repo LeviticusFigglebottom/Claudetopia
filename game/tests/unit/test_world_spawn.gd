@@ -141,12 +141,23 @@ func test_the_country_has_things_in_it_that_will_fight_you() -> void:
 	# Cells parse on worker threads and build a bounded number per frame, and a full run has
 	# other suites' work in the queue; wait for the cell itself rather than a frame count.
 	var wanted := w.streamer.cell_of(where)
-	for i in 600:
+	var loaded := false
+	for i in 900:
 		await _tree().process_frame
 		if w.streamer.is_loaded(wanted):
+			loaded = true
 			break
-	var enemies := _tree().get_nodes_in_group("enemy")
-	assert_gt(enemies.size(), 0, "somebody is out on the downs")
+	assert_true(loaded, "cell %s never finished streaming, so this test proved nothing" % wanted)
+	# The cell being loaded is not the same as the bodies in it standing up: the spawner builds
+	# them over the frames after the parse, so breaking on `is_loaded` and counting immediately
+	# is a race that a loaded machine loses. Wait for the thing being asserted on.
+	var enemies: Array = []
+	for i in 300:
+		enemies = _tree().get_nodes_in_group("enemy")
+		if not enemies.is_empty():
+			break
+		await _tree().process_frame
+	assert_gt(enemies.size(), 0, "somebody is out on the downs (cell %s loaded: %s)" % [wanted, loaded])
 	for e in enemies:
 		var body := e as Node3D
 		var ground := World.terrain().get_height(body.global_position.x, body.global_position.z)

@@ -78,7 +78,10 @@ func _ready() -> void:
 		add_child(shape)
 	register_store()
 	restore_state()
-	inventory.changed.connect(_persist)
+	# Guarded the way the line below it is: a store is shared by id, so a chest rebuilt into a
+	# room that already had one is handed the same `Inventory` and connected to it twice.
+	if not inventory.changed.is_connected(_persist):
+		inventory.changed.connect(_persist)
 	if not EventBus.game_loaded.is_connected(_on_game_loaded):
 		EventBus.game_loaded.connect(_on_game_loaded)
 

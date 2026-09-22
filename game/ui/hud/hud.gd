@@ -481,7 +481,7 @@ func _update_compass() -> void:
 	if cam:
 		heading = Compass.heading_from_basis(cam.global_transform.basis)
 		origin = Vector2(cam.global_position.x, cam.global_position.z)
-	if _player and is_instance_valid(_player) and _player is Node3D:
+	if _player and is_instance_valid(_player) and _player is Node3D and (_player as Node3D).is_inside_tree():
 		var p := _player as Node3D
 		origin = Vector2(p.global_position.x, p.global_position.z)
 		if cam == null:
