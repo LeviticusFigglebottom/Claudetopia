@@ -22,18 +22,18 @@
       180.93
     ]
   ],
-  "tris": 450000,
-  "collision_tris": 98999,
+  "tris": 359999,
+  "collision_tris": 79198,
   "chunks": {
-    "threshold": 102733,
-    "first_length": 18599,
-    "antechoir": 24577,
-    "stop_hall": 21582,
-    "second_length": 37815,
-    "gallery": 33778,
-    "seat": 41609,
-    "vestry": 85967,
-    "return_length": 83340
+    "threshold": 86597,
+    "first_length": 17257,
+    "antechoir": 20700,
+    "stop_hall": 20789,
+    "second_length": 29465,
+    "gallery": 22454,
+    "seat": 25134,
+    "vestry": 66791,
+    "return_length": 70812
   },
   "entrance": [
     0.0,

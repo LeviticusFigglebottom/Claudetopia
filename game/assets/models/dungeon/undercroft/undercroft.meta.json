@@ -22,18 +22,18 @@
       138.6
     ]
   ],
-  "tris": 449999,
-  "collision_tris": 98999,
+  "tris": 359999,
+  "collision_tris": 79198,
   "chunks": {
-    "grate": 52156,
-    "sewer_run": 37039,
-    "cistern": 43211,
-    "ledger_fall": 59472,
-    "bell_hall": 31928,
-    "long_stair": 24945,
-    "door_hall": 82947,
-    "drake_warren": 47945,
-    "back_grate": 70356
+    "grate": 37676,
+    "sewer_run": 36904,
+    "cistern": 37696,
+    "ledger_fall": 46928,
+    "bell_hall": 25333,
+    "long_stair": 22299,
+    "door_hall": 68386,
+    "drake_warren": 30840,
+    "back_grate": 53937
   },
   "entrance": [
     0.0,
