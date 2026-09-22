@@ -504,8 +504,49 @@ stream two rebuild cycles on the anvil's stump before they rendered a trestle ta
 and found that Hearthvale's pale honey timber is the house style and not a bug. Render a known
 reference beside anything you are judging in that scene.
 
+## The way in had never been pressed
+
+The main menu, the Naming and the world were three screens nobody had walked between. The
+journey drives systems directly and the UI review renders screens with believable data; no
+test and no tool had ever started at `boot.tscn` and clicked New Game. Four things were wrong
+at once, and a player met all four in the first minute:
+
+* **The Naming spoke a vocabulary the body does not read.** It kept swatch indices, a
+  `height_m` and a face named after a culture, and handed that to
+  `HumanoidModel.apply_appearance`, which reads `CharacterAppearance`: `skin` arrived as the
+  string "1", `height` was never set, and with no `parts` there was no hair and no clothes. The
+  preview was the naked rig whatever you chose. `CharacterAppearance` is the one vocabulary now
+  — it carries the forge's colour tables, the head presets and the culture palettes, and dresses
+  a character for its people — and the Naming edits that record in place.
+* **Nothing read the Naming's flags.** `player_name`, `player_calling` and `player_appearance`
+  were written by the screen and read by no one, so the body at the Hushline Stair was the bare
+  rig with the default head, with no name, none of the Calling's three skill bonuses and none of
+  its items. `Player._take_the_naming` reads them when the body stands.
+* **Continue, Load and `--load=<slot>` did not load.** All three wrote
+  `_pending_load_slot` and nothing ever read it: every one of them stood a new Foundling up
+  with the save untouched on disk. `PlayerSpawn.load_pending_slot` reads it before the body.
+* **The screen was a dead black rectangle** from "Be named" until the world stood — ten to
+  fifty seconds of it, with no frame drawn at all while the terrain comes up. The fade layer
+  carries a loading caption now: a sheet of paper, a line in the world's voice, the bell mark
+  swaying, and what the world has raised so far.
+
+`./run.sh flow` is the test that presses it: three runs from `boot.tscn` (New Game through the
+Naming, then `--load`, then Continue), clicking by the words on the buttons, typing a name,
+working a chooser with the arrow keys, dragging both sliders, walking Tab round the form, and
+then asking the *body* in the world whether it is the character that was made. Every step is a
+PNG in `captures/flow/`. It found two of its own: the Naming gave nothing keyboard focus, and
+the Calling cards' wrapping focus chain trapped Tab for ever.
+
 ## Known issues
 
+* **A record from before that vocabulary existed** — `{"skin": 3, "hair": 2}`, which is what
+  the Naming used to write and what the journey still writes — is converted at the edge now
+  (an index means the tone it indexed). Any save still carrying the older shape makes a proper
+  body, but the journey's own shorthand should be brought up to the record's spelling.
+* **`./run.sh flow`'s Continue run depends on what else has saved.** Continue promises the
+  newest slot, so a journey run or another session writing into the same `user://saves` takes
+  that place; the probe reports which slot it got and falls back to checking that slot's own
+  summary. Tools that write saves should clear them (the UI review does now).
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.
   It rests at a Hearthstone, dies, respawns and recovers the echo, and one run in five one of
   those five conditions came back false. The step now names which one when it fails instead of
@@ -582,12 +623,18 @@ draw cost. Villagers' eyes no longer cast shadows (they fall inside the head's).
 
 | shot | draw calls | primitives | what is left (after) |
 |---|---|---|---|
-| hearthvale_street (Merrowby) | **2438 → 1328** | 1.15 M → 1.18 M | villagers 590, scatter 332, terrain 160, buildings 120, fabric 110 |
+| hearthvale_street (Merrowby) | **2438 → 1328 → 1240** | 1.15 M → 1.18 M | villagers 590, scatter 332, terrain 160, buildings 120, fabric 110 |
 | brightwater_street (Tollmere) | 479 → 283 | 0.34 M → 0.34 M | terrain 105, scatter 68, fabric 61, villager 26, buildings 16 |
 | sedgemire_street | 660 → 498 | 0.73 M → 0.73 M | terrain 184, scatter 182, fabric 60, villagers 53, buildings 12 |
 | briarwold_street | 764 → 547 | 0.80 M → 0.79 M | scatter 316, terrain 154, fabric 54, buildings 16 |
 | skerrow_street | 609 → 433 | 0.37 M → 0.45 M | scatter 136, terrain 126, villagers 95, fabric 59, buildings 18 |
 | cinderlea_street | 515 → 405 | 0.63 M → 0.62 M | terrain 170, scatter 123, villagers 56, buildings 11, fabric 10 |
+
+Merrowby's three numbers are the original, the figure after the fabric was merged, and the
+figure after villagers' eyes stopped casting a shadow into the head they sit in. The first
+measurement of the same shot on the integrated branch, with nine other streams' work in it,
+read 1330: the gap is their scatter, their points of interest and their light, not the
+fabric, whose own contribution `--attribute` will name at any time.
 
 Every shot is inside the 2000 budget with margin and the worst is under 1500. Buildings went
 from 1093 to 120 draws on the worst frame and the fabric from 244 to 110 (the 110 is

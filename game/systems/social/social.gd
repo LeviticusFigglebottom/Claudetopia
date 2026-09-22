@@ -33,6 +33,8 @@ var gossip: Node
 var quests: Node
 var dialogue: Node
 var radiant: RadiantGenerator
+## Bound provider nodes whose leaving this is watching: name -> node.
+var _watched: Dictionary = {}
 
 
 func _ready() -> void:
@@ -102,6 +104,23 @@ func bind(provider_name: String, obj: Object) -> void:
 	ctx.set_provider(provider_name, obj)
 	if provider_name == "player":
 		quests.position_provider = obj if SocialContext.can_locate(obj) else null
+	# Nothing ever told this system that a bound body had gone. A provider that leaves the tree
+	# takes its binding with it, so the quest log is never left polling a freed player.
+	var node := obj as Node
+	if node != null and _watched.get(provider_name) != node:
+		_watched[provider_name] = node
+		node.tree_exiting.connect(_forget_provider.bind(provider_name, node), CONNECT_ONE_SHOT)
+
+
+## A bound provider is on its way out of the tree. Drop it, unless something has since bound
+## something else under the same name.
+func _forget_provider(provider_name: String, node: Node) -> void:
+	if _watched.get(provider_name) == node:
+		_watched.erase(provider_name)
+	if ctx.provider(provider_name) == node:
+		ctx.set_provider(provider_name, null)
+	if provider_name == "player" and quests != null and quests.position_provider == node:
+		quests.position_provider = null
 
 
 ## Looks for the systems other streams own and binds the first node in each group.
