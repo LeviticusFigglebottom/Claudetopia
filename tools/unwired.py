@@ -22,6 +22,13 @@ Usage:
 
 `--verbs` narrows to names that sound like actions, which is where the real findings are: a
 query nobody calls is dead weight, but a *verb* nobody calls is a feature that does not happen.
+
+It also lists **hooks nothing assigns**: a member declared `var x: Callable` that no game code
+outside the tests ever sets. A hook is a question one system asks another, and an unassigned one
+is asked of nobody, so the caller quietly takes its fallback every time. Four of these shipped
+together -- the loot context, the quick-slot handler, the ammo provider, and a refusal reason the
+Name-table never asked for -- and the function scan could not see three of them, because a hook
+is not a function anybody calls; it is a variable nobody sets.
 """
 from __future__ import annotations
 
@@ -71,6 +78,34 @@ def gather(root: str) -> tuple[dict, collections.Counter, collections.Counter]:
     return defined, from_game, from_tests
 
 
+def hooks(root: str) -> list:
+    """Callable members declared in game code (not the tests, not vendored addons) that nothing
+    outside the tests ever assigns: `name = ...`, `.name = ...` or `set("name", ...)`."""
+    declared: dict[str, tuple] = {}
+    texts: list[str] = []
+    for base, _dirs, files in os.walk(root):
+        parts = set(base.split(os.sep))
+        if parts & TEST_DIRS or "addons" in parts:
+            continue
+        for f in files:
+            if not f.endswith(".gd"):
+                continue
+            path = os.path.join(base, f)
+            with open(path, encoding="utf-8") as fh:
+                text = fh.read()
+            texts.append(text)
+            for i, line in enumerate(text.splitlines(), 1):
+                m = re.match(r"^var ([a-z_][a-z0-9_]*)\s*:\s*Callable\b", line)
+                if m:
+                    declared[m.group(1)] = (path, i)
+    unassigned = []
+    for name, site in sorted(declared.items()):
+        pattern = r"(?<![\w.])%s\s*=(?!=)|\.%s\s*=(?!=)|set\(\s*\"%s\"" % (name, name, name)
+        if not any(re.search(pattern, t) for t in texts):
+            unassigned.append((name, site))
+    return unassigned
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default="game")
@@ -90,6 +125,10 @@ def main() -> int:
     for name, sites, n in rows:
         where = ", ".join("%s:%d" % s for s in sites[:2])
         print("  %-32s %-56s tests:%d" % (name, where, n))
+    loose = hooks(a.dir)
+    print("\n%d Callable hooks in %s that nothing outside the tests assigns\n" % (len(loose), a.dir))
+    for name, site in loose:
+        print("  %-32s %s:%d" % (name, site[0], site[1]))
     return 0
 
 

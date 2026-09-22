@@ -128,9 +128,37 @@ func clip_for(attack_kind: String, index: int = 0) -> String:
 				_: return "Attack_Unarmed_%d" % i
 
 
-## Placeholder timing derived from the weapon's speed (used until the real clips supply events).
-## Returns {"length": s, "events": [{"t": s, "name": "hit_start"|"hit_end"|"cancel_ok"}]}.
+## When a swing's blow lands and when it is spent: `{"length": s, "events": [{"t": s, "name":
+## "hit_start"|"hit_end"|"cancel_ok"...}]}`. It is the swing's own clip, off the rig's sidecar,
+## played at this weapon's `speed` -- a rapier's thrust is the sword's thrust, sooner, and a bell
+## on a haft is the same two-handed swing, later. The AnimationDriver keeps time by this, so the
+## hit window the game scores is the one the body is seen to swing.
+##
+## Before, the window was a placeholder built from `speed` alone, and the body swung its clip at
+## the clip's own pace and fired the clip's events: the two agreed to within a frame or two for a
+## sword, and `speed` did nothing at all once the forged rig arrived.
 func timing_for(attack_kind: String, index: int = 0) -> Dictionary:
+	var clip := clip_for(attack_kind, index)
+	var rig := HumanoidModel.sidecar_timing(clip)
+	if _has_window(rig):
+		var scale := 1.0 / speed if attack_kind == "light" or attack_kind == "heavy" else 1.0
+		var events: Array = []
+		for e in rig["events"]:
+			events.append({"t": float(e["t"]) * scale, "name": str(e["name"])})
+		return {"length": float(rig["length"]) * scale, "events": events}
+	return _proportional_timing(attack_kind, index)
+
+
+static func _has_window(t: Dictionary) -> bool:
+	var names := {}
+	for e in t.get("events", []):
+		names[str(e.get("name", ""))] = true
+	return float(t.get("length", 0.0)) > 0.0 and names.has("hit_start") and names.has("hit_end")
+
+
+## The proportions a swing had before there was a rig to measure: kept for a clip the sidecar does
+## not have, so a weapon never swings with no window at all.
+func _proportional_timing(attack_kind: String, index: int = 0) -> Dictionary:
 	var length: float
 	var hs: float
 	var he: float

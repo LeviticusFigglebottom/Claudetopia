@@ -283,6 +283,14 @@ func state_name() -> String:
 	return brain.state
 
 
+## Has not noticed anybody: not fighting, and its eyes have not filled the meter. A blow from
+## somebody it has not noticed is a sneak attack (DESIGN §5.3).
+func is_unaware() -> bool:
+	if dead or brain == null:
+		return false
+	return brain.state != Brain.COMBAT and (perception == null or perception.detection < 1.0)
+
+
 func is_busy() -> bool:
 	return _attacking
 
