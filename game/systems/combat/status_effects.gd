@@ -81,6 +81,10 @@ func advance(delta: float) -> void:
 		if _immune[id] <= 0.0:
 			_immune.erase(id)
 	for id in active.keys():
+		# A tick or an expiry earlier in this loop can end another effect (a burn that kills, a
+		# handler that clears stagger); the keys were copied before the loop, the entries were not.
+		if not active.has(id):
+			continue
 		var e: Dictionary = active[id]
 		var r := rule(id)
 		var tick := float(r.get("tick", 0.0))
