@@ -10,7 +10,7 @@ extends RefCounted
 
 ## The kinds a builder exists for. `PoiDressing.KINDS` is the whole list the design names;
 ## `test_pois.gd` reports the difference as still to be dressed.
-const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge"]
+const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall"]
 
 
 static func build(d: PoiDressing) -> void:
@@ -25,6 +25,8 @@ static func build(d: PoiDressing) -> void:
 			tower(d)
 		"bridge":
 			bridge(d)
+		"waterfall":
+			waterfall(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
 
@@ -1079,10 +1081,16 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 	var down := k.downhill()
 	var dir := down if down != Vector2.ZERO else axis
 	var a := dir * 4.0
-	var b := dir * 30.0
 	var yaw := PoiKit.yaw_of(dir)
 	var perp := Vector2(-dir.y, dir.x)
 	var deck_y := k.on_ground(a.x, a.y).y + 0.6
+	# the far end is where the ground comes back up to the deck, if it does within reach
+	var reach := 30.0
+	for t in range(14, 44, 2):
+		if k.on_ground(dir.x * float(t), dir.y * float(t)).y >= deck_y - 0.5:
+			reach = float(t)
+			break
+	var b := dir * reach
 	var planks := m.begin()
 	m.arch_bridge(planks, a, b, 2.4, -0.7, deck_y, false, false)
 	m.commit(planks, k.surface("planks", 0.8), "Deck", true)
@@ -1094,14 +1102,15 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 		for s in [-1.0, 1.0]:
 			var p := e + perp * float(s) * 1.9
 			var g := k.on_ground(p.x, p.y)
-			var h := deck_y - g.y + 4.6
+			# the far wall of a gorge can stand above the near lip; a pylon is still a pylon
+			var h := maxf(deck_y - g.y + 4.6, 2.0)
 			m.drum(stone, Transform3D(Basis.IDENTITY, g), 1.05, h, 0.0, NAN, true, 0.36)
 			tops.append(Vector3(p.x, g.y + h, p.y))
 	m.commit(stone, k.surface("stone", 0.6), "Pylons", true)
 	# the four chains: links along a catenary from pylon top to pylon top, touching the deck
 	var link := TorusMesh.new()
-	link.inner_radius = 0.07
-	link.outer_radius = 0.19
+	link.inner_radius = 0.1
+	link.outer_radius = 0.26
 	link.rings = 8
 	link.ring_segments = 6
 	var chains := m.begin()
@@ -1129,3 +1138,214 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 	k.place(k.prop("chest"), k.on_ground(keeper.x - dir.x * 1.4, keeper.y - dir.y * 1.4), yaw)
 	k.place(k.prop("drystone_wall"), k.on_ground(keeper.x + perp.x * 2.6, keeper.y + perp.y * 2.6), yaw)
 	k.place(k.prop("signpost"), k.on_ground(a.x - dir.x * 4.0 - perp.x * 2.6, a.y - dir.y * 4.0 - perp.y * 2.6), yaw)
+
+
+# --- waterfalls -------------------------------------------------------------------------------------
+
+## Water coming down: a face of the region's cliff slabs with a sheet falling off its lip into
+## a pool, spray at the foot, and what the brief adds — foxfire in the ravine walls, three
+## terraces with a Hearthstone behind the middle one, or no water at all and a face of black
+## glass with ledges to climb.
+static func waterfall(d: PoiDressing) -> void:
+	var k := d.kit
+	var b := d.brief
+	var grain := k.grain()
+	if PoiKit.brief_says(b, ["three", "terrace"]):
+		_falls_terraced(d, grain)
+	elif PoiKit.brief_says(b, ["glass"]):
+		_falls_glass(d, grain)
+	else:
+		_falls_single(d, grain, PoiKit.brief_says(b, ["foxfire", "glow"]))
+
+
+## A face of slabs across `width`, `height` tall, centred at `centre` (local xz) with its
+## front toward `facing`; two rows, the back row standing on the front. Returns the lip: the
+## point at the top front edge, in local space.
+static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float, height: float) -> Vector3:
+	var slab := k.rock("cliff_slab")
+	var slab_h := PoiKit.height_of(slab)
+	var perp := Vector2(-facing.y, facing.x)
+	var yaw := PoiKit.yaw_of(facing)
+	var rows := maxi(int(ceil(height / (slab_h * 1.25))), 1)
+	var scale := height / (float(rows) * slab_h * 0.92)
+	var slabs: Array = []
+	var top_y := 0.0
+	for row in rows:
+		var n := maxi(int(width / (3.2 * scale)) + 1, 2)
+		for i in n:
+			var t := (float(i) + 0.5) / float(n) - 0.5
+			var p := centre + perp * (t * width) - facing * (float(row) * 1.6 * scale + k.rng.randf_range(0.0, 0.5))
+			var y := k.on_ground(p.x, p.y).y + float(row) * slab_h * scale * 0.86 - 0.4
+			top_y = maxf(top_y, y + slab_h * scale)
+			slabs.append(PoiKit.transform_at(Vector3(p.x, y, p.y), yaw + k.rng.randf_range(-0.12, 0.12),
+					scale * k.rng.randf_range(0.94, 1.06), Vector3(k.rng.randf_range(-0.06, 0.02), 0.0, k.rng.randf_range(-0.05, 0.05))))
+	k.scatter(slab, slabs, true, true)
+	# boulders tumbled at the foot either side
+	var feet: Array = []
+	for i in 10:
+		var p := centre + perp * k.rng.randf_range(-width * 0.6, width * 0.6) + facing * k.rng.randf_range(1.0, 4.0)
+		feet.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.3), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.1)))
+	k.scatter(k.rock("boulder"), feet, true, true)
+	return Vector3(centre.x, top_y - 0.3, centre.y) + Vector3(facing.x, 0.0, facing.y) * 0.8
+
+
+static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var facing := grain
+	var face_at := -facing * 6.0
+	var lip := _rock_face(k, face_at, facing, 16.0, 11.0)
+	var yaw := PoiKit.yaw_of(facing)
+	var sheet_w := 5.5
+	var g := k.on_ground(0.0, 0.0)
+	var drop := lip.y - g.y
+	m.sheet(lip, yaw, sheet_w, drop + 0.4, PoiKit.falling_water(false, 2.4), "Fall", 0.9, true)
+	var pool_at := face_at + facing * 5.0
+	m.pool(pool_at, 6.5, g.y + 0.12, k.still_water(g.y - 2.0, Color.WHITE, 0.62))
+	k.puffs(Vector3(pool_at.x, g.y + 0.3, pool_at.y) - Vector3(facing.x, 0.0, facing.y) * 3.0, Vector3(sheet_w * 0.6, 0.3, 1.2),
+			0.8, 22, Color(0.95, 0.97, 1.0, 0.32), 2.6, 3.2)
+	# the stream on toward wherever it goes: wet stones and reeds along the way out
+	var out: Array = []
+	for i in 16:
+		var t := k.rng.randf_range(6.0, 20.0)
+		var p := pool_at + facing * t + Vector2(-facing.y, facing.x) * k.rng.randf_range(-3.5, 3.5)
+		out.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.35, 0.8)))
+	k.scatter(k.rock("boulder", 1), out, true)
+	var green := k.flora("fern") if foxfire else k.flora("reeds")
+	var fringe: Array = []
+	for i in 36:
+		var a := k.rng.randf_range(0.0, TAU)
+		var r := k.rng.randf_range(5.5, 9.5)
+		var p := pool_at + Vector2(sin(a), cos(a)) * r
+		fringe.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
+	k.scatter(green, fringe, false, false, false)
+	if foxfire:
+		# the ravine's walls glow: bracket fungus on the rock, and its light
+		var fungus := k.flora("bracket_fungus")
+		var glows: Array = []
+		for i in 14:
+			var side := 1.0 if i % 2 == 0 else -1.0
+			var p := face_at + Vector2(-facing.y, facing.x) * side * k.rng.randf_range(3.0, 7.5) + facing * k.rng.randf_range(0.8, 1.6)
+			var y := g.y + k.rng.randf_range(1.0, 7.0)
+			glows.append(PoiKit.transform_at(Vector3(p.x, y, p.y), yaw + PI * 0.5 * side, k.rng.randf_range(1.2, 2.0)))
+			if i % 4 == 0:
+				k.light(Vector3(p.x, y + 0.2, p.y) + Vector3(facing.x, 0.0, facing.y) * 0.8, Color(0.45, 0.95, 0.6), 1.2, 7.0)
+		k.scatter(fungus, glows, false, false, false)
+		var moss: Array = []
+		for i in 26:
+			var p := k.jitter(10.0)
+			moss.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.02), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.4)))
+		k.scatter(k.flora("moss_patch"), moss, false, false, false)
+	else:
+		# the down-wolves' way in: a dark mouth in the rock behind the water is theirs, and a
+		# cart track ends where somebody comes to look at the fall
+		var look := pool_at + facing * 9.0
+		k.place(k.prop("bench"), k.on_ground(look.x, look.y), yaw + PI)
+
+
+## Three falls one above the other up the slope, each with its pool, a stair up the side of
+## each, and the Hearthstone the sisters carried up on the middle ledge behind the water.
+static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var up := -k.downhill()
+	var facing := -up if up != Vector2.ZERO else grain
+	var perp := Vector2(-facing.y, facing.x)
+	var yaw := PoiKit.yaw_of(facing)
+	var tier_h := 4.6
+	var tier_d := 6.0
+	var ledge_w := 9.0
+	var base := k.on_ground(0.0, 0.0).y
+	var ledges := m.begin()
+	var pool_y := base
+	for tier in 3:
+		var face_at := -facing * (2.0 + float(tier) * tier_d)
+		var ledge_y := maxf(k.on_ground(face_at.x - facing.x * 2.0, face_at.y - facing.y * 2.0).y, pool_y) + tier_h
+		# the face: slabs across, and a flat ledge of stone on top you can stand on
+		var slab := k.rock("cliff_slab")
+		var slabs: Array = []
+		var n := 4
+		for i in n:
+			var t := (float(i) + 0.5) / float(n) - 0.5
+			var p := face_at + perp * (t * ledge_w * 1.15)
+			var s := (tier_h + 0.6) / PoiKit.height_of(slab)
+			slabs.append(PoiKit.transform_at(Vector3(p.x, ledge_y - tier_h - 0.5, p.y), yaw + k.rng.randf_range(-0.1, 0.1),
+					s, Vector3(k.rng.randf_range(-0.05, 0.02), 0.0, 0.0)))
+		k.scatter(slab, slabs, true, true)
+		var ledge_c := face_at - facing * (tier_d * 0.5)
+		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(ledge_c.x, ledge_y - 0.3, ledge_c.y))
+		m.block(ledges, xf, Vector3(ledge_w, 0.6, tier_d + 1.0))
+		k.collider(Vector3(ledge_w, 0.6, tier_d + 1.0), xf)
+		# the water off the lip into the pool below
+		var lip := Vector3(face_at.x, ledge_y - 0.05, face_at.y) + Vector3(facing.x, 0.0, facing.y) * 0.3
+		m.sheet(lip, yaw, 3.8, tier_h + 0.4, PoiKit.falling_water(false, 2.2), "Fall%d" % tier, 0.7, true)
+		var pool_at := face_at + facing * 2.6
+		m.pool(pool_at, 3.6, pool_y + 0.12, k.still_water(pool_y - 1.5, Color.WHITE, 0.62), "Pool%d" % tier)
+		k.puffs(Vector3(pool_at.x, pool_y + 0.3, pool_at.y), Vector3(2.0, 0.2, 0.8), 0.7, 12, Color(0.95, 0.97, 1.0, 0.3), 2.0, 3.0)
+		# the stair up the side of this tier
+		var stair_from := face_at + facing * 1.5 + perp * (ledge_w * 0.5 + 1.2)
+		var stair := m.begin()
+		var steps := int(ceil(tier_h / 0.36))
+		m.steps(stair, stair_from, -facing, pool_y, steps, tier_h / float(steps), 0.42, 1.4)
+		m.commit(stair, k.surface("stone", 0.7), "Stair%d" % tier, true)
+		if tier == 1:
+			var stone_at := face_at - facing * 2.4
+			k.hearthstone(Vector3(stone_at.x, ledge_y, stone_at.y), yaw, d.poi_id, d.display_name)
+			var candles: Array = []
+			for i in 9:
+				var a := k.rng.randf_range(0.0, TAU)
+				var c := stone_at + Vector2(sin(a), cos(a)) * k.rng.randf_range(0.7, 1.5)
+				candles.append(PoiKit.transform_at(Vector3(c.x, ledge_y, c.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
+			k.scatter(k.prop("candle"), candles, false, false, false)
+			k.light(Vector3(stone_at.x, ledge_y + 0.6, stone_at.y), Color(1.0, 0.76, 0.5), 1.2, 6.0)
+		pool_y = ledge_y
+	m.commit(ledges, k.surface("stone", 0.6), "Ledges", true)
+	var heather: Array = []
+	for i in 30:
+		var p := k.jitter(14.0)
+		heather.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
+	k.scatter(k.flora("heather"), heather, false, false, false)
+
+
+## A dry fall of black glass, still and polished, with ledges up its face for the climb the
+## Order forbids and uses.
+static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var facing := grain
+	var face_at := -facing * 7.0
+	var lip := _rock_face(k, face_at, facing, 18.0, 13.0)
+	var yaw := PoiKit.yaw_of(facing)
+	var g := k.on_ground(0.0, 0.0)
+	m.sheet(lip, yaw, 7.0, lip.y - g.y + 0.6, PoiKit.falling_water(true), "Glass", 0.8, true)
+	# the basin it fell into, glass too
+	var basin := m.begin()
+	var pool_at := face_at + facing * 5.0
+	for i in 5:
+		var p := pool_at + k.jitter(2.6)
+		m.block(basin, Transform3D(Basis(Vector3.UP, k.rng.randf_range(0.0, TAU)), k.on_ground(p.x, p.y, 0.04)), Vector3(4.5, 0.12, 3.6))
+	m.commit(basin, PoiKit.plain(PoiKit.GLASS, 0.08), "Basin", true)
+	# ledges up the face: slabs set into the glass, climbable
+	var ledges := m.begin()
+	var perp := Vector2(-facing.y, facing.x)
+	var count := int((lip.y - g.y) / 1.1)
+	for i in count:
+		var t := float(i) / float(count)
+		var side := (1.0 if i % 2 == 0 else -1.0) * 2.4
+		var p := face_at + facing * (1.4 - t * 0.6) + perp * side
+		var y := g.y + 1.0 + float(i) * 1.1
+		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(p.x, y, p.y))
+		m.block(ledges, xf, Vector3(2.2, 0.4, 1.3))
+		k.collider(Vector3(2.2, 0.4, 1.3), xf)
+	m.commit(ledges, k.surface("oroth", 0.5), "Ledges", true)
+	var shards: Array = []
+	for i in 20:
+		var p := pool_at + k.jitter(9.0)
+		shards.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.7)))
+	k.scatter(k.rock("scree"), shards)
+	var grass: Array = []
+	for i in 30:
+		var p := k.jitter(14.0)
+		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
+	k.scatter(k.flora("grey_grass"), grass, false, false, false)
+	k.place(k.tree("dead_ash_tree"), k.on_ground(face_at.x + perp.x * 11.0, face_at.y + perp.y * 11.0), k.rng.randf_range(0.0, TAU), 1.0, true, Vector3.ZERO, true)

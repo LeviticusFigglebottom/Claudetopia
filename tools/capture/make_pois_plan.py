@@ -99,12 +99,22 @@ def shot_for(entry: dict, poi: dict, kind: str, roads, ground: Ground) -> dict:
     pos = entry["pos"]
     dist = DISTANCE.get(kind, 34.0)
     bearing = approach_bearing(pos, roads, ground)
-    # a camera in the water or below the pad is no good: walk the bearing round until dry
-    for turn in range(0, 360, 30):
+    # The approach side, unless the ground there is water or a hillside: a camera forty metres
+    # up a slope photographs a map. Every bearing is scored by how far its ground is from the
+    # POI's own height, with a small preference for the approach, and the flattest wins.
+    best = None
+    for turn in range(0, 360, 20):
         b = bearing + math.radians(turn)
         cx, cz = pos[0] + math.sin(b) * dist, pos[2] + math.cos(b) * dist
-        if not ground.is_water(cx, cz):
-            break
+        if ground.is_water(cx, cz):
+            continue
+        score = abs(ground.height(cx, cz) - pos[1]) + min(turn, 360 - turn) * 0.02
+        if best is None or score < best[0]:
+            best = (score, cx, cz)
+    if best is None:
+        cx, cz = pos[0] + math.sin(bearing) * dist, pos[2] + math.cos(bearing) * dist
+    else:
+        _, cx, cz = best
     cy = max(ground.height(cx, cz), pos[1] - 2.0) + EYE
     # looking down at a thing 40 m below reads as a map; look from at least a little above
     cy = max(cy, pos[1] + 1.0)

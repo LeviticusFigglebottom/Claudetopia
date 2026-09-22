@@ -545,7 +545,9 @@ func collider(size: Vector3, xform: Transform3D) -> void:
 		_bodies += 1
 	var cs := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = size
+	# a block whose height came out negative (a pier whose foot is above its deck) is still
+	# a thing you bump into, not an error
+	box.size = size.abs().max(Vector3.ONE * 0.05)
 	cs.shape = box
 	cs.transform = xform
 	_masonry.add_child(cs)
