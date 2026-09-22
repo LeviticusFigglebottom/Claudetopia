@@ -115,5 +115,21 @@
       "no_sale"
     ],
     "description": "One glove, left-handed, grey kid leather worn through at the finger-ends on purpose so that the fingers can feel a ward through it. The Hands give one glove and keep the other, and nobody in the Undercroft will tell you where the other one is."
+  },
+  {
+    "id": "core:item/the_chapter_roll",
+    "name": "The Chapter Roll",
+    "category": "book",
+    "weight": 1.8,
+    "value": 0,
+    "tags": [
+      "quest",
+      "tolling_order",
+      "cinderlea",
+      "roll",
+      "no_sale"
+    ],
+    "reads": "core:book/chapter_roll",
+    "description": "Black boards and a brass clasp, the twin of the Vigil Book and never shown to pilgrims: the Order's own list of who is standing the watch, with eleven names on the standing side that have been on it for longer than anyone standing. Grey thumb-marks down the edge where it is read every night."
   }
 ]

@@ -1,0 +1,315 @@
+[
+  {
+    "id": "core:quest/forty_one_places",
+    "name": "Forty-One Places",
+    "layer": "faction",
+    "faction": "core:faction/tolling_order",
+    "giver": "core:npc/cadwen_ash",
+    "region": "core:region/cinderlea",
+    "summary": "The Order carries ash-cakes to Greyfold every ninth day for the one living woman there, who lays forty-one places at tables nobody will sit at. Carry them, count the tables, put down what comes to them, and settle what the forty-second place is for.",
+    "notes": "Tolling Order's line, second of four. Gated on Vigil and on rank Vigil. Nan Greyfold is the settlements stream's NPC; the delivery is closed by her own dialogue, which is the documented way a deliver objective closes.",
+    "requires": [
+      {"quest_done": "core:quest/vigil"},
+      {"rep_min": ["core:faction/tolling_order", 20]}
+    ],
+    "stages": [
+      {
+        "id": "the_ninth_day",
+        "journal": "Every ninth day somebody from the chapter-house walks a basket of ash-cakes out to Greyfold, where a village of a hundred and seventy years ago has its tables laid for a meal nobody finished. There is one living person in it. She came as a pilgrim thirty-one years ago, found the tables, and has laid them fresh every day since, and the Order feeds her and does not argue with her, which Cadwen says is the whole of the rule applied to one woman.",
+        "objectives": [{"type": "talk", "target": "core:npc/cadwen_ash", "text": "Take the ninth-day basket off Cadwen"}],
+        "on_enter": [{"give_item": ["core:item/ash_cake", 6]}],
+        "marker": {"place_id": "core:place/pilgrims_ash", "radius": 140}
+      },
+      {
+        "id": "the_lane",
+        "journal": "Greyfold is a lane, a green, thirty-odd houses with the doors on, and tables laid for six in every one of them. Nan Greyfold will be at the third house, or the ninth, and she will hear you coming and put the kettle on a fire she keeps lit because a laid table with no fire is a joke. Give her the basket. She will count the cakes and say the number out loud, which is not rudeness; it is the same instinct the Order counts bells with.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/greyfold", "radius": 140, "text": "Walk the lane at Greyfold"},
+          {"type": "deliver", "target": "core:npc/nan_greyfold", "item": "core:item/ash_cake", "count": 1, "text": "Give Nan the ninth-day basket"}
+        ],
+        "on_complete": [{"set_flag": "carried_the_ninth_day_basket"}, {"morality": 5}]
+      },
+      {
+        "id": "the_tables",
+        "journal": "Forty-one places, and she can tell you whose each one is, in order, without stopping, which takes four minutes. Ask her why she stays and she will tell you it is not grief; she never knew any of them. Then a bell goes somewhere out on the heath, the way one does every few minutes, and Greyfold's own come up the lane to the tables, because a bell is what they are still waiting for, and they still wave.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/nan_greyfold", "text": "Hear Nan out on the forty-one"},
+          {"type": "kill", "target": "core:enemy/ash_wight", "count": 8, "text": "Put down what comes up the lane between bells"}
+        ],
+        "on_complete": [{"set_flag": "laid_greyfolds_tables"}, {"renown": 15}]
+      },
+      {
+        "id": "the_forty_second",
+        "journal": "There are forty-two places laid on Hushday. She has never said whose the forty-second is and the Order has never asked, in thirty-one years, on the grounds that asking a person why they are kind is a way of getting them to stop. She is asking you, because you carried the basket and put down eleven of her neighbours in an afternoon and did not make a face about it afterwards.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_forty_second_place",
+            "text": "Say what the forty-second place is for",
+            "options": [
+              {
+                "id": "for_aud",
+                "text": "For Aud Fennick, who walked past this lane in grey and did not stop.",
+                "conditions": [{"flag": "aud_walked_south"}],
+                "effects": [
+                  {"set_flag": "forty_second_for_aud"},
+                  {"rep": ["core:faction/tolling_order", 15]},
+                  {"morality": 8},
+                  {"renown": 10}
+                ]
+              },
+              {
+                "id": "for_the_cantor",
+                "text": "For the Cantor. He is the only one who has not been let stop.",
+                "effects": [
+                  {"set_flag": "forty_second_for_the_cantor"},
+                  {"rep": ["core:faction/tolling_order", 20]},
+                  {"morality": 5}
+                ]
+              },
+              {
+                "id": "for_you",
+                "text": "For whoever comes up the lane alive. It has been yours all along.",
+                "effects": [
+                  {"set_flag": "forty_second_for_the_living"},
+                  {"rep": ["core:faction/tolling_order", 10]},
+                  {"renown": 20},
+                  {"morality": 10}
+                ]
+              },
+              {
+                "id": "none",
+                "text": "Forty-one is right. Take the forty-second down and sleep.",
+                "effects": [
+                  {"set_flag": "forty_second_taken_down"},
+                  {"rep": ["core:faction/tolling_order", 5]},
+                  {"morality": -5}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/greyfold", "radius": 140}
+      },
+      {
+        "id": "the_walk_back",
+        "auto": true,
+        "journal": "Cadwen takes the report standing up, the way she takes everything, and then says the part that is not a report: thirty-one years of ninth days, and the chapter-house has never once sent the same knight twice in a season, because the ones who go twice start asking for the round, and the ones who ask for the round are the ones the Order loses to the grey.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "forty_one_places_done"}, {"unlock_topic": "greyfold"}]
+      }
+    ],
+    "rewards": {
+      "marks": 90,
+      "renown": 15,
+      "rep": [["core:faction/tolling_order", 15]],
+      "items": [["core:item/greyfold_spoon", 1]],
+      "deed": "quest_complete_faction"
+    }
+  },
+
+  {
+    "id": "core:quest/the_names_in_the_chapter_book",
+    "name": "The Names in the Chapter Book",
+    "layer": "faction",
+    "faction": "core:faction/tolling_order",
+    "giver": "core:npc/toren_ash",
+    "region": "core:region/cinderlea",
+    "summary": "Eleven knights are read out every night as standing the watch, and they are standing it, in grey plate, on their own walks, because a name comes off the standing side only when the Order knows. Go out to the watch and find out, and then say what the book does about it.",
+    "notes": "Tolling Order's line, third of four, and the Order's answer to the Wardens' Roll: the same question about a name, asked by people who have to walk past the answer every night. Toren Ash is the settlements stream's day-watch knight; the fallen knights are Cinderlea's own ecology, so they stand on the walks in the built world.",
+    "requires": [
+      {"quest_done": "core:quest/forty_one_places"},
+      {"rep_min": ["core:faction/tolling_order", 45]}
+    ],
+    "stages": [
+      {
+        "id": "the_standing_side",
+        "journal": "The Vigil Book is for pilgrims. The Chapter Roll is the Order's own, black boards and a brass clasp, and it is read aloud at the turn of every watch, both sides. The standing side has nine knights on it who are standing, and eleven who went out to a walk and did not come back to the chapter-house: 1019, 1024, 1031, and eight more. Toren Ash reads them out every dawn and has done for four years, and has worked out, recently, that he is the only one who has counted how long.",
+        "objectives": [{"type": "talk", "target": "core:npc/toren_ash", "text": "Hear Toren out on the standing side"}],
+        "on_enter": [{"give_item": ["core:item/the_chapter_roll", 1]}],
+        "marker": {"place_id": "core:place/pilgrims_ash", "radius": 140}
+      },
+      {
+        "id": "read_it",
+        "journal": "Read the book before you go out on the walks, because it is the reason you are going. A name comes off the standing side when the Order knows the knight has ended — not when they have not come back, not after a year, not after nine. When the Order knows. The Order has never known, because knowing would mean going out to look, and looking would mean writing a name on the other side of a book that has four names on it in ninety years.",
+        "objectives": [{"type": "read_book", "target": "core:book/chapter_roll", "text": "Read the Chapter Roll"}],
+        "on_complete": [{"set_flag": "read_the_chapter_roll"}]
+      },
+      {
+        "id": "the_walks",
+        "journal": "The north walk goes out to a colossus's fallen head, hollowed into a watchtower with its eye for a window, which is where Sister Auvrey Tull went on a still night in 1024. They are on their own walks. Grey plate, a bell-mace with the clapper still bound in cloth, and the bound clapper is the part that is difficult: somebody tied it, every morning, for however long it was, and then one morning kept walking. They fight like knights, because they were, and they parry.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/headless_watch", "radius": 140, "text": "Walk out to the Headless Watch"},
+          {"type": "kill", "target": "core:enemy/tolling_knight", "count": 3, "text": "Meet what is standing the watch"}
+        ],
+        "on_complete": [{"set_flag": "found_the_standing_knights"}, {"renown": 25}]
+      },
+      {
+        "id": "what_the_book_says",
+        "journal": "Ossel, smith's daughter out of Gullhithe, whose quench the Order still uses, and who is the reason nine knights are alive to be solemn at each other. Auvrey Tull, whose hand is on the field copy of the Order's Mending. Halloran Ash. The Order knows now, which is the word the rule turns on, and Toren has the book open on the trestle in the bell yard and has not picked up a pen.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_standing_side",
+            "text": "Say what the Chapter Roll does with eleven names",
+            "options": [
+              {
+                "id": "struck",
+                "text": "Write them on the other side. They have ended and the Order knows it.",
+                "effects": [
+                  {"set_flag": "chapter_roll_struck"},
+                  {"rep": ["core:faction/tolling_order", 20]},
+                  {"renown": 15},
+                  {"morality": 5}
+                ]
+              },
+              {
+                "id": "kept",
+                "text": "Leave them standing. They are still on their walks and the Order still counts them.",
+                "effects": [
+                  {"set_flag": "chapter_roll_kept"},
+                  {"rep": ["core:faction/tolling_order", 15]},
+                  {"morality": -3}
+                ]
+              },
+              {
+                "id": "told",
+                "text": "Send the eleven north to the Wardens' Roll. Let somebody outside the grey say them too.",
+                "effects": [
+                  {"set_flag": "chapter_roll_sent_north"},
+                  {"rep": ["core:faction/tolling_order", 10]},
+                  {"rep": ["core:faction/wardens", 15]},
+                  {"renown": 20},
+                  {"morality": 8},
+                  {"deed": ["name_restored", 2]}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/pilgrims_ash", "radius": 140}
+      },
+      {
+        "id": "bell_sworn",
+        "auto": true,
+        "journal": "Whatever the book says now, it says it in a hand that is four years old and steady, and Toren read the turn of the watch that evening in a yard with nine people in it and got to the end without stopping. Cadwen was at the back and did not come in, which Toren says she has done every night for nineteen years and which nobody has ever asked her about.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "chapter_book_done"}, {"unlock_topic": "the_standing_side"}]
+      }
+    ],
+    "rewards": {
+      "marks": 140,
+      "renown": 20,
+      "rep": [["core:faction/tolling_order", 20]],
+      "items": [["core:item/ring_ash_knights_signet", 1]],
+      "deed": "quest_complete_faction"
+    }
+  },
+
+  {
+    "id": "core:quest/at_the_gate",
+    "name": "At the Gate",
+    "layer": "faction",
+    "faction": "core:faction/tolling_order",
+    "giver": "core:npc/cadwen_ash",
+    "region": "core:region/cinderlea",
+    "summary": "The Order has kept vigil for a hundred and seventy-seven years waiting for somebody the Seat would open for. Stand the last watch, walk with Cadwen to the gate, hear her say the names at a door that does not open, and decide what you swear there.",
+    "notes": "Tolling Order's line, last of four, and it ends at the gate, which is where WORLD_BIBLE 4.1 ends it. It does not open the Seat: that is the main thread's seventh quest, and this quest sets its own flags and leaves seat_opened alone. Swearing the grey costs renown, because being unsaid is what it costs.",
+    "requires": [
+      {"quest_done": "core:quest/the_names_in_the_chapter_book"},
+      {"rep_min": ["core:faction/tolling_order", 70]}
+    ],
+    "stages": [
+      {
+        "id": "the_last_watch",
+        "journal": "Cadwen has asked for a night at the ring and then a walk, and has been unusually exact about the order of those two things. She says the walk is not a vigil and not a pilgrimage and that the Order has no word for it, which is why she is nineteen years into doing it and has never taken anybody with her.",
+        "objectives": [{"type": "talk", "target": "core:npc/cadwen_ash", "text": "Take the last watch off Cadwen"}],
+        "marker": {"place_id": "core:place/pilgrims_ash", "radius": 140}
+      },
+      {
+        "id": "the_ring",
+        "journal": "Twelve headless colossi, a bell every few minutes from somewhere nobody has found, and the note underneath everything that you stop hearing after an hour and hear again at about four, which is the hour that takes people. The choristers come to the ring on a full night. They sing, and the singing is the damage, and silence stops it; Cadwen counts out loud through the whole of it so that there is a voice in the ring saying something ordinary.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/sunken_choir", "radius": 140, "text": "Stand the night at the Choir"},
+          {"type": "kill", "target": "core:enemy/chorister", "count": 2, "text": "Stop the singing between bells"}
+        ],
+        "on_complete": [{"set_flag": "stood_the_last_watch"}, {"renown": 20}, {"rep": ["core:faction/tolling_order", 10]}]
+      },
+      {
+        "id": "the_walk_to_the_gate",
+        "journal": "South from the ring, down the plateau, to a door of fused black stone with no hinges, in a wall that goes up further than the ash lets you see. Cadwen says the names at it. Her own, and the Order's, and the eleven off the standing side of the Chapter Roll, in the order they went. It takes a while. The door does not open, which she says is the correct outcome and which she has been getting for nineteen years.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/cantors_seat", "radius": 140, "text": "Walk to the gate of the Cantor's Seat"},
+          {"type": "talk", "target": "core:npc/cadwen_ash", "text": "Hear Cadwen say the names at the door"}
+        ],
+        "on_complete": [{"set_flag": "stood_at_the_seats_gate"}, {"renown": 20}]
+      },
+      {
+        "id": "the_oath",
+        "journal": "A hundred and seventy-seven years of standing outside a door that opens for the known, kept by people whose whole practice is to give up their names and be grey and not make a fuss. Cadwen has worked that out. She worked it out at about year six and has stood the watch every night since, and she is asking you to swear in front of it, and she has told you what each answer costs, in her flat counting voice, without leaning on any of them.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_oath_at_the_gate",
+            "text": "Say what you swear at the gate",
+            "options": [
+              {
+                "id": "swear",
+                "text": "Swear the grey. Your name goes in the chapter book and is not said aloud again.",
+                "effects": [
+                  {"set_flag": "order_sworn_grey"},
+                  {"rep": ["core:faction/tolling_order", 30]},
+                  {"renown": -25},
+                  {"morality": 10}
+                ]
+              },
+              {
+                "id": "keep_your_name",
+                "text": "Keep your name. The door opens for the known, and somebody has to be known.",
+                "effects": [
+                  {"set_flag": "order_kept_name"},
+                  {"rep": ["core:faction/tolling_order", 20]},
+                  {"renown": 25}
+                ]
+              },
+              {
+                "id": "relieve_him",
+                "text": "Swear to come back and relieve him, and mean it out loud where she can hear.",
+                "effects": [
+                  {"set_flag": "order_promised_relief"},
+                  {"rep": ["core:faction/tolling_order", 25]},
+                  {"renown": 15},
+                  {"morality": 10}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/cantors_seat", "radius": 140}
+      },
+      {
+        "id": "last_warden_of_the_seat",
+        "auto": true,
+        "journal": "Last Warden of the Seat, which is the Order's top rank and a title nine people have held and none of them have ever had to explain, because it means the one who will be standing here when it opens. Cadwen walks back up to the ring afterwards to take the rest of her watch. She is four hundred and six bells into the day and counting, and the hum counts as a half, and she has argued that with three chapter-masters and won twice.",
+        "objectives": [],
+        "on_enter": [
+          {"set_flag": "at_the_gate_done"},
+          {"set_flag": "tolling_order_line_done"},
+          {"set_flag": "ranked_in_a_faction"},
+          {"unlock_topic": "the_gate"}
+        ]
+      }
+    ],
+    "rewards": {
+      "marks": 180,
+      "renown": 25,
+      "rep": [["core:faction/tolling_order", 25]],
+      "items": [["core:item/vigil_cloak", 1]],
+      "deed": "quest_complete_faction",
+      "effects": [
+        {"teach_spell": "core:spell/kind_word"},
+        {"notify": "Cadwen teaches the Order's other Mending on the walk back: the one said over somebody else, which is harder, because you have to mean it."}
+      ]
+    }
+  }
+]

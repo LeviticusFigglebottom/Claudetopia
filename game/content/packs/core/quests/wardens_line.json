@@ -235,15 +235,15 @@
       },
       {
         "id": "the_privilege",
-        "journal": "Hesk explains the privilege on the walk back in, in the tone of a man reading out a clause. A Roll-Warden may set a name on a Hearthstone: put your hand flat on the stone, say the name aloud, and the stone has it, the way it has yours. There are three Roll-Wardens. It has been done nine times in four hundred years and twice it was done wrong, and he will not be drawn on how. The stone he means is the one in the Bell Cist, under the hung bell, in the ground with the hundred and forty in it.",
+        "journal": "Hesk explains the privilege on the walk back in, in the tone of a man reading out a clause. A Roll-Warden may set a name on a Hearthstone: put your hand flat on the stone, say the name aloud, and the stone has it, the way it has yours. There are three Roll-Wardens. It has been done nine times in four hundred years and twice it was done wrong, and he will not be drawn on how. The stone he means is Ansel's, out on the down: a hawthorn grown up through a stone chair with a Hearthstone in its lap, on the stretch between Merrowby and Tamwick, which is the only thing on that ground anybody still walks to.",
         "objectives": [
-          {"type": "reach", "target": "core:place/hollin_barrow", "radius": 140, "text": "Go back down to the Bell Cist"},
-          {"type": "rest_at", "target": "hearth_hollin_barrow", "text": "Put your hand on the stone in the Bell Cist"}
+          {"type": "reach", "target": "core:poi/hedge_shrine_of_ansel", "radius": 140, "text": "Go out to Ansel's Hedge Shrine"},
+          {"type": "rest_at", "target": "core:poi/hedge_shrine_of_ansel", "text": "Put your hand on the stone in the hawthorn's lap"}
         ]
       },
       {
         "id": "the_name_on_the_stone",
-        "journal": "The stone is warm and the bell over it is not moving. Whatever name is said here is kept by something that does not forget, does not read aloud, and does not need a yard with eleven people in it. Hesk says that is exactly what is wrong with it, and that he has come down here anyway, and that he will wait outside.",
+        "journal": "The stone is warm through the thorn and the down is quiet in both directions. Whatever name is said here is kept by something that does not forget, does not read aloud, and does not need a yard with eleven people in it. Hesk says that is exactly what is wrong with it, and that he has walked out here anyway, and that he will stand at the field gate.",
         "objectives": [
           {
             "type": "choice",

@@ -27,6 +27,11 @@ const REPORTED := "core:quest/a_thing_nobody_reported"
 const BELL_WALL := "core:quest/against_the_bell"
 const EVERY_PRICE := "core:quest/every_price"
 
+const VIGIL := "core:quest/vigil"
+const GREYFOLD := "core:quest/forty_one_places"
+const CHAPTER_BOOK := "core:quest/the_names_in_the_chapter_book"
+const AT_THE_GATE := "core:quest/at_the_gate"
+
 var log_node: Node
 var ctx: SocialContext
 var inventory: SocialFakes.FakeInventory
@@ -277,9 +282,9 @@ func test_the_reading_makes_a_roll_warden_and_names_a_stone() -> void:
 	assert_eq(stage(READING), "the_privilege")
 	assert_true(ctx.has_flag("read_the_roll_aloud"))
 
-	arrived("core:place/hollin_barrow")
+	arrived("core:poi/hedge_shrine_of_ansel")
 	assert_eq(stage(READING), "the_privilege", "the stone itself has to be rested at")
-	EventBus.hearthstone_rested.emit("hearth_hollin_barrow")
+	EventBus.hearthstone_rested.emit("core:poi/hedge_shrine_of_ansel")
 	assert_eq(stage(READING), "the_name_on_the_stone")
 
 	# Ryn's name is only offerable if Ryn was put back on the Roll, which this run did.
@@ -399,10 +404,10 @@ func test_the_long_measurement_is_taken_in_two_rooms() -> void:
 	assert_eq(stage(MEASUREMENT), "the_quiet_place")
 	assert_true(ctx.has_flag("measured_in_the_warm"))
 
-	arrived("core:place/undercroft")
-	killed("core:enemy/gutter_drake", 3)
-	assert_eq(stage(MEASUREMENT), "the_quiet_place", "the figure is taken at the stone, not on the stair")
-	EventBus.hearthstone_rested.emit("hearth_undercroft")
+	arrived("core:poi/shingle_shrine")
+	killed("core:enemy/cutpurse", 3)
+	assert_eq(stage(MEASUREMENT), "the_quiet_place", "the figure is taken at the stone, not on the road")
+	EventBus.hearthstone_rested.emit("core:poi/shingle_shrine")
 	assert_eq(stage(MEASUREMENT), "the_figures")
 	assert_true(ctx.has_flag("measured_in_the_deep"))
 	assert_eq(inventory.count("core:item/ondraels_figures"), 1)
@@ -708,6 +713,186 @@ func test_selling_the_ledger_back_is_paid_for_and_costs_the_hall() -> void:
 	assert_true(Social.standing.morality() < 0)
 
 
+# --- the Tolling Order -----------------------------------------------------------------------------
+
+## Vigil, driven through its own people: Cadwen's offer, Aud's walk to the line (which is the
+## only thing in the game that closes an escort objective), and the bell at the chapter-house.
+func finish_vigil(bell: String = "Hang it silent.") -> void:
+	var cadwen := talk_to("core:npc/cadwen_ash")
+	press(cadwen, "I'd stand a night's vigil.")
+	if cadwen.is_running():
+		cadwen.stop()
+	assert_true(log_node.is_active(VIGIL), "the Order takes anyone who will stand a night and count")
+	log_node.set_stage(VIGIL, "the_pilgrim")
+	ctx.set_flag("cadwen_asked_escort")
+
+	var aud := talk_to("core:npc/aud_fennick")
+	press(aud, "Will you let me walk you to the line?")
+	press(aud, "This is the line. I'll stop here.")
+	aud.stop()
+	assert_true(ctx.has_flag("aud_left_her_bell"), "she leaves the bell at the line")
+	assert_eq(stage(VIGIL), "what_she_left", "and walking her down closed the escort")
+
+	EventBus.dialogue_ended.emit("core:npc/cadwen_ash")
+	log_node.complete_objective(VIGIL, "deliver:core:npc/cadwen_ash")
+	assert_eq(stage(VIGIL), "what_the_cantor_is")
+
+	var chapter := talk_to("core:npc/cadwen_ash")
+	press(chapter, "Aud left her bell.")
+	press(chapter, bell)
+	if chapter.is_running():
+		chapter.stop()
+	assert_true(log_node.is_completed(VIGIL), "the bell's ending finishes Vigil")
+
+
+func test_vigil_can_finally_be_walked_and_decided() -> void:
+	finish_vigil()
+	assert_true(ctx.has_flag("aud_walked_south"), "the flag the rest of the line reads")
+	assert_true(ctx.has_flag("aud_bell_hung"))
+	assert_true(Social.factions.is_member(ORDER), "standing the watch is joining")
+	assert_eq(inventory.count("core:item/vigil_cloak"), 1, "handed over once, not once a stage and once a reward")
+	assert_true(sayings.knows_spell("core:spell/mend"), "the Order gives its Mending away")
+
+
+func test_ringing_auds_bell_out_of_custom_costs_the_chapter_house() -> void:
+	finish_vigil("Ring it tonight.")
+	assert_true(ctx.has_flag("aud_bell_rung"))
+	assert_gt(Social.standing.morality(), 0, "saying her name tonight is the kind thing")
+
+
+func test_forty_one_places_carries_the_ninth_day_basket() -> void:
+	finish_vigil()
+	rep(ORDER, 30)
+
+	walk_in("core:npc/cadwen_ash", ["Who carries the ninth-day basket to Greyfold?", "I'll take the basket."])
+	assert_true(log_node.is_active(GREYFOLD))
+	assert_eq(inventory.count("core:item/ash_cake"), 6, "six cakes, and she will count them")
+	assert_eq(stage(GREYFOLD), "the_lane")
+
+	arrived("core:place/greyfold")
+	var nan := talk_to("core:npc/nan_greyfold")
+	press(nan, "The Order's ninth-day basket.")
+	nan.stop()
+	assert_true(ctx.has_flag("nan_took_the_basket"))
+	assert_eq(stage(GREYFOLD), "the_tables", "the delivery was made in the conversation")
+
+	var tables := talk_to("core:npc/nan_greyfold")
+	press(tables, "Say the forty-one for me.")
+	tables.stop()
+	assert_true(ctx.has_flag("nan_said_the_forty_one"))
+	assert_eq(stage(GREYFOLD), "the_tables", "the tables are one half; what comes to them is the other")
+	killed("core:enemy/ash_wight", 8)
+	assert_eq(stage(GREYFOLD), "the_forty_second")
+
+	var second := talk_to("core:npc/nan_greyfold")
+	press(second, "Whose is the forty-second place?")
+	press(second, "Aud Fennick's.")
+	if second.is_running():
+		second.stop()
+	assert_true(log_node.is_completed(GREYFOLD))
+	assert_true(ctx.has_flag("forty_second_for_aud"))
+	assert_true(ctx.has_flag("forty_one_places_done"))
+	assert_gt(Social.standing.morality(), 0)
+
+
+func test_the_forty_second_place_is_only_auds_if_aud_walked() -> void:
+	# Vigil is finished here without ever walking her south, which the log allows and the
+	# choice does not: the option's condition reads the flag that walk sets.
+	already_finished(VIGIL)
+	rep(ORDER, 30)
+	walk_in("core:npc/cadwen_ash", ["Who carries the ninth-day basket to Greyfold?", "I'll take the basket. Why never twice in a season?"])
+	log_node.set_stage(GREYFOLD, "the_forty_second")
+	var ids: Array[String] = []
+	for o in log_node.open_options(GREYFOLD):
+		ids.append(str(o["id"]))
+	assert_false(ids.has("for_aud"), "a pilgrim you never walked is not yours to lay a place for")
+	assert_true(ids.has("for_the_cantor"))
+
+
+func test_the_names_in_the_chapter_book_goes_out_and_looks() -> void:
+	finish_vigil()
+	rep(ORDER, 50)
+	already_finished(GREYFOLD)
+	rep(ORDER, 50)
+
+	walk_in("core:npc/toren_ash", ["Eleven names on the standing side.", "Has nobody ever gone?", "Then I'll go."])
+	assert_true(log_node.is_active(CHAPTER_BOOK))
+	assert_eq(inventory.count("core:item/the_chapter_roll"), 1)
+	assert_eq(stage(CHAPTER_BOOK), "read_it")
+
+	read("core:book/chapter_roll")
+	assert_eq(stage(CHAPTER_BOOK), "the_walks")
+	arrived("core:poi/headless_watch")
+	killed("core:enemy/tolling_knight", 3)
+	assert_eq(stage(CHAPTER_BOOK), "what_the_book_says")
+
+	var toren := talk_to("core:npc/toren_ash")
+	press(toren, "I have been out to the walks.")
+	press(toren, "Send the eleven north to the Wardens' Roll.")
+	if toren.is_running():
+		toren.stop()
+	assert_true(log_node.is_completed(CHAPTER_BOOK))
+	assert_true(ctx.has_flag("chapter_roll_sent_north"))
+	assert_gt(Social.factions.reputation(WARDENS), 0, "the Wardens keep names for a living")
+	assert_true(ctx.has_flag("chapter_book_done"))
+	assert_eq(inventory.count("core:item/ring_ash_knights_signet"), 1)
+
+
+func test_at_the_gate_ends_the_line_without_opening_the_seat() -> void:
+	finish_vigil()
+	rep(ORDER, 75)
+	already_finished(GREYFOLD)
+	already_finished(CHAPTER_BOOK)
+	rep(ORDER, 75)
+
+	walk_in("core:npc/cadwen_ash", ["You have never taken anybody on the walk.", "Why go, if it never opens?", "Then I'll come."])
+	assert_eq(stage(AT_THE_GATE), "the_ring")
+
+	arrived("core:place/sunken_choir")
+	killed("core:enemy/chorister", 2)
+	assert_eq(stage(AT_THE_GATE), "the_walk_to_the_gate")
+	assert_true(ctx.has_flag("stood_the_last_watch"))
+
+	arrived("core:place/cantors_seat")
+	EventBus.dialogue_ended.emit("core:npc/cadwen_ash")
+	assert_eq(stage(AT_THE_GATE), "the_oath")
+	assert_true(ctx.has_flag("stood_at_the_seats_gate"))
+	assert_false(ctx.has_flag("seat_opened"), "the line ends at the gate; the door is the main thread's")
+
+	var renown_before: int = Social.standing.renown()
+	var cadwen := talk_to("core:npc/cadwen_ash")
+	press(cadwen, "The door did not open.")
+	press(cadwen, "I'll take the grey.")
+	if cadwen.is_running():
+		cadwen.stop()
+	assert_true(log_node.is_completed(AT_THE_GATE))
+	assert_true(ctx.has_flag("order_sworn_grey"))
+	assert_true(ctx.has_flag("tolling_order_line_done"))
+	assert_true(ctx.has_flag("ranked_in_a_faction"))
+	assert_true(Social.standing.renown() < renown_before + 25,
+		"going quiet costs what being known is worth, which is the whole of the Order's bargain")
+	assert_eq(Social.factions.rank_name(ORDER), "Last Warden of the Seat", "the line ends at the top of the ladder")
+	assert_true(sayings.knows_spell("core:spell/kind_word"))
+
+
+func test_keeping_your_name_at_the_gate_is_the_other_answer() -> void:
+	finish_vigil()
+	rep(ORDER, 75)
+	already_finished(GREYFOLD)
+	already_finished(CHAPTER_BOOK)
+	rep(ORDER, 75)
+	walk_in("core:npc/cadwen_ash", ["You have never taken anybody on the walk.", "Then I'll stand the night and walk with you."])
+	log_node.set_stage(AT_THE_GATE, "the_oath")
+	var renown_before: int = Social.standing.renown()
+	var cadwen := talk_to("core:npc/cadwen_ash")
+	press(cadwen, "The door did not open.")
+	press(cadwen, "I keep my name.")
+	if cadwen.is_running():
+		cadwen.stop()
+	assert_eq(log_node.outcome_of(AT_THE_GATE), "keep_your_name")
+	assert_gt(Social.standing.renown(), renown_before, "somebody standing at that door has to be known")
+
+
 # --- what every faction line owes a player ---------------------------------------------------------
 
 ## Quest ids that some dialogue offers through a `start_quest` effect, with the dialogue that
@@ -808,15 +993,38 @@ func test_a_faction_line_climbs_its_own_ladder() -> void:
 		for def in authored_quests("faction"):
 			if str(def.get("faction", "")) != faction:
 				continue
-			for entry in (def.get("rewards", {}) as Dictionary).get("rep", []):
-				if typeof(entry) == TYPE_ARRAY and str(entry[0]) == faction:
-					paid += int(entry[1])
+			paid += reputation_paid(def, faction)
 			for cond in def.get("requires", []):
 				if typeof(cond) == TYPE_DICTIONARY and (cond as Dictionary).has("rep_min"):
 					var pair: Array = (cond as Dictionary)["rep_min"]
 					if str(pair[0]) == faction:
 						asked = maxi(asked, int(pair[1]))
 		assert_gt(paid, asked, "%s asks for %d reputation and its own line pays %d" % [faction, asked, paid])
+
+
+## Every mark of standing with a faction that a quest can pay: its rewards, its stages, and the
+## options a player may take. A line pays for its own ladder mostly in the middle.
+func reputation_paid(value: Variant, faction: String) -> int:
+	var total := 0
+	match typeof(value):
+		TYPE_DICTIONARY:
+			for key in (value as Dictionary):
+				var child: Variant = (value as Dictionary)[key]
+				if str(key) == "rep" and typeof(child) == TYPE_ARRAY and (child as Array).size() >= 2:
+					if str(child[0]) == faction and int(child[1]) > 0:
+						total += int(child[1])
+				elif str(key) == "rep" and typeof(child) == TYPE_ARRAY:
+					for entry in child:
+						if typeof(entry) == TYPE_ARRAY and (entry as Array).size() >= 2 and str(entry[0]) == faction:
+							total += maxi(0, int(entry[1]))
+				else:
+					total += reputation_paid(child, faction)
+		TYPE_ARRAY:
+			for v in value:
+				total += reputation_paid(v, faction)
+		_:
+			pass
+	return total
 
 
 func test_no_quest_in_a_faction_line_prints_an_unfilled_token() -> void:
