@@ -15,7 +15,7 @@
     2350.0
    ],
    "fov": 55.0,
-   "time": 19.2,
+   "time": 17.55,
    "weather": "core:weather/clear",
    "fog_scale": 1.0
   },
@@ -71,7 +71,13 @@
    "fov": 58.0,
    "time": 9.0,
    "weather": "core:weather/clear",
-   "fog_scale": 1.0
+   "fog_scale": 1.0,
+   "frame": {
+    "node": "Poi_whitecut_falls",
+    "child_prefix": "Fall",
+    "distance": 20.0,
+    "height": 2.0
+   }
   },
   {
    "label": "brightwater_landmark_dusk",
@@ -87,7 +93,7 @@
     -230.0
    ],
    "fov": 58.0,
-   "time": 19.4,
+   "time": 18.25,
    "weather": "core:weather/clear",
    "fog_scale": 1.0
   },
@@ -215,7 +221,13 @@
    "fov": 58.0,
    "time": 11.0,
    "weather": "core:weather/still",
-   "fog_scale": 1.0
+   "fog_scale": 1.0,
+   "frame": {
+    "node": "Poi_foxfire_falls",
+    "child_prefix": "Fall",
+    "distance": 20.0,
+    "height": 2.0
+   }
   },
   {
    "label": "skerrow_vista_dawn",
@@ -251,7 +263,37 @@
    "fov": 58.0,
    "time": 14.0,
    "weather": "core:weather/clear_cold",
-   "fog_scale": 1.0
+   "fog_scale": 1.0,
+   "frame": {
+    "node": "Poi_three_sisters_falls",
+    "child_prefix": "Fall",
+    "distance": 26.0,
+    "height": 3.0
+   }
+  },
+  {
+   "label": "cinderlea_glass_falls",
+   "region": "core:region/cinderlea",
+   "pos": [
+    -1902.0,
+    91.3,
+    3030.0
+   ],
+   "look_at": [
+    -1860.0,
+    91.2,
+    3030.0
+   ],
+   "fov": 58.0,
+   "time": 16.5,
+   "weather": "core:weather/dry_wind",
+   "fog_scale": 1.0,
+   "frame": {
+    "node": "Poi_glass_falls",
+    "child_prefix": "Glass",
+    "distance": 20.0,
+    "height": 2.0
+   }
   },
   {
    "label": "cinderlea_landmark_dusk",
@@ -267,7 +309,7 @@
     3300.0
    ],
    "fov": 58.0,
-   "time": 18.4,
+   "time": 17.1,
    "weather": "core:weather/thin_sun",
    "fog_scale": 1.0
   },

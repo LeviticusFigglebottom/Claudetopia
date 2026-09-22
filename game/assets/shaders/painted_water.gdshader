@@ -145,8 +145,8 @@ void fragment() {
 	vec3 R = reflect(-V, n_world);
 	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
 	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
-	fresnel = min(fresnel, 0.82) * reflect_strength;
-	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, pow(clamp(R.y, 0.0, 1.0), 0.55));
+	fresnel = min(fresnel, 0.65) * reflect_strength;
+	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, pow(clamp(R.y, 0.0, 1.0), 0.35));
 	// a path of glints under the sun, broken into points by a fine sparkle
 	float sparkle = step(0.55, hash12(floor(v_world.xz * 2.5 + vec2(TIME * 1.3, TIME * 0.9))));
 	float sun_g = pow(max(dot(R, normalize(wm_sun_dir)), 0.0), glint_sharpness);

@@ -14,7 +14,7 @@ const GENERATED := "res://world/generated"
 ## sky the surface mirrors, and how hard the sun glitters on it. The Mere's is the glittering
 ## water WORLD_BIBLE 6.2 asks for; the marsh's is still and brown and gives back little.
 const REGION_WATER := {
-	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0, "reflect": 0.95, "glint": 4.0},
+	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0, "reflect": 0.8, "glint": 4.0},
 	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0, "reflect": 0.6, "glint": 1.2},
 	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6, "reflect": 0.85, "glint": 3.0},
 	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6, "reflect": 0.7, "glint": 2.0},

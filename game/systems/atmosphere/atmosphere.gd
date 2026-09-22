@@ -90,7 +90,7 @@ const DEFAULT_LOOK := {
 	"ambient_tint": Color(1, 1, 1), "ambient_energy": 1.0, "sky_contribution": 0.8,
 	# the far fog, which is aerial perspective
 	"fog_color": Color(0.8, 0.8, 0.78), "fog_density": 0.0012, "aerial_perspective": 0.35,
-	"fog_sun_scatter": 0.15, "fog_sky_affect": 0.45,
+	"fog_sun_scatter": 0.15, "fog_sky_affect": 0.15,
 	# the low haze, which lies in whatever is below you
 	"haze_density": 0.0, "haze_ceiling": 60.0, "haze_below_eye": 20.0, "haze_morning": 0.0,
 	# the grade

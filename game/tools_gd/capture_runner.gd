@@ -150,15 +150,27 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		cam.set_yaw_pitch(float(shot.get("yaw", 0.0)), float(shot.get("pitch", -8.0)))
 	_world.move_target(pos)
 	var waited := await _wait_for_streaming()
+	if shot.has("frame"):
+		# Re-aim at something the world raised at runtime, now that it is standing: a waterfall's
+		# sheet is built from the terrain's own grain, so no plan written beforehand knows which
+		# way it faces.
+		if _frame_node(cam, shot["frame"]):
+			waited += await _wait_for_streaming()
+		else:
+			_failures.append("%s: nothing to frame for %s" % [label, str(shot["frame"])])
 	# A region's look blends over six seconds when the camera crosses into it, which is right
 	# for walking and wrong for a photograph: without this a shot taken a few frames after a
 	# teleport was of half one region's light and half the last's. The lamps are handed out for
 	# where the camera now is, rather than wherever it stood at their last tick.
+	# Both are asked for by name, so this runner can still photograph a build from before either
+	# existed: a before-and-after is only a comparison if the camera is the same on both sides.
 	var atmos := _world.atmosphere
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
-	if _world.night_lights:
-		_world.night_lights.assign(Atmosphere.night_factor)
+	var lights: Variant = _world.get("night_lights")
+	if lights != null and (lights as Object).has_method("assign"):
+		var st: Variant = atmos.get("state") if atmos else null
+		(lights as Object).call("assign", float((st as Dictionary).get("night", 0.0)) if st is Dictionary else 0.0)
 	await get_tree().process_frame
 	# The atmosphere rewrites the environment every frame, so the fog override only holds if
 	# its per-frame update is paused for the exposure.
@@ -183,6 +195,62 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		% [label, path.get_file(), int(_perf[-1]["draw_calls"]), float(_perf[-1]["primitives"]) / 1e6, waited])
 	if attribute:
 		await _attribute_shot(label, cam)
+
+
+## Puts the camera in front of a mesh raised under a named node -- `{"node": "Poi_whitecut_falls",
+## "child_prefix": "Fall", "distance": 22, "height": 2}` -- facing it. The facing is read off the
+## mesh: its area-weighted normal, turned toward the side its lower edge bulges to, which for a
+## sheet of falling water is the side the water falls away from the rock on.
+func _frame_node(cam: FlyCamera, spec: Dictionary) -> bool:
+	var host := _world.find_child(str(spec.get("node", "")), true, false)
+	if host == null:
+		return false
+	var prefix := str(spec.get("child_prefix", ""))
+	var target: MeshInstance3D = null
+	for n in host.find_children("*", "MeshInstance3D", true, false):
+		if prefix == "" or str(n.name).begins_with(prefix):
+			target = n as MeshInstance3D
+			break
+	if target == null or target.mesh == null:
+		return false
+	var faces := target.mesh.get_faces()
+	var normal := Vector3.ZERO
+	var i := 0
+	while i + 2 < faces.size():
+		normal += (faces[i + 1] - faces[i]).cross(faces[i + 2] - faces[i])
+		i += 3
+	var box: AABB = target.global_transform * target.get_aabb()
+	var centre := box.get_center()
+	normal = (target.global_transform.basis * normal)
+	normal.y = 0.0
+	if normal.length() < 0.001:
+		return false
+	normal = normal.normalized()
+	# a sheet bulges out at its foot: the camera belongs on that side
+	var low := Vector3.ZERO
+	var high := Vector3.ZERO
+	var nl := 0
+	var nh := 0
+	for p in faces:
+		var g: Vector3 = target.global_transform * p
+		if g.y < centre.y:
+			low += g
+			nl += 1
+		else:
+			high += g
+			nh += 1
+	if nl > 0 and nh > 0:
+		var out := low / float(nl) - high / float(nh)
+		out.y = 0.0
+		if out.dot(normal) < 0.0:
+			normal = -normal
+	var at := centre + normal * float(spec.get("distance", 22.0))
+	var ground := _world.provider.get_height(at.x, at.z)
+	at.y = maxf(at.y, ground + float(spec.get("height", 2.0)))
+	cam.move_to(at, centre)
+	_world.move_target(at)
+	Log.info("Capture", "framed %s/%s from %s" % [host.name, target.name, str(at.snapped(Vector3(0.1, 0.1, 0.1)))])
+	return true
 
 
 ## Who the draw calls belong to, for one shot: the census first (cheap, colour pass only),
