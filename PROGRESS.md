@@ -874,6 +874,10 @@ visible by looking:
   speck and the ring is pebbles. It wants a mark a person would see: the ring at three times
   the size, or a low cairn. That was not changed blind, because the last unverified
   improvement in this work (the bank behind the waterfall) was worse than the fault.
+* **The Headless Watch reads as a head now, and a little like a helmet.** The brow band that
+  fixed the egg is a continuous ridge, which from the approach reads as a visor, and the
+  carved stone at a 3.4 m unit is very smooth beside the region's other Oroth work. Breaking
+  the band over the sockets and coarsening the surface would finish it.
 * **The Thirteenth reads as fallen masonry, not as a body.** The torso, arms and legs are
   boxes at a colossus's scale and from most angles they merge into one long mass. The
   excavation, the spoil and the Sayer camp at its head carry the scene; the figure does not.
