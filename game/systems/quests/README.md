@@ -8,6 +8,7 @@
 | `quest_routes.gd` | `QuestRoutes`: which deliveries and decisions the pack's dialogue closes by hand, and who hosts the ones nobody wrote a line for. |
 | `item_sources.gd` | `ItemSources`: where a player can get an item — the story hands it over, a shopkeeper sells it, a loot table may roll it, a house keeps the book on a shelf. |
 | `choice_point.gd` | `ChoicePoint`: a decision with nobody left to put it to you (the note at the Cantor's Seat); a cold light that puts the open options when walked up to. |
+| `quest_walk.gd` | `QuestWalk`: every objective of every quest, and what in the built game closes it — the person and where they live, the enemy and where it stands, the item and how it is got — or why nothing can; the same for what starts each quest and for every target a job board could name. |
 
 ## Data
 
@@ -144,3 +145,7 @@ quest end to end (both endings), radiant determinism, every template generating 
 and item pools are stood in, rewards by danger, and both save paths.
 `tests/unit/test_quest_items.gd`: the things the quests send you to pick up lie where their quests
 say, the same place every time, stay taken across streaming and saves, and the note is decided at the Seat.
+`tests/unit/test_quest_walk.gd`: every objective of every authored quest can be closed by something
+in the built game, every quest has something that starts it, and every target a job board could
+name can be done; a new objective that cannot fails it unless it is listed with its reason.
+Its `test_print_report` prints the whole walk, objective by objective, with how each one closes.

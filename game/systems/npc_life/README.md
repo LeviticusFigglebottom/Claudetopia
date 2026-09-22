@@ -61,7 +61,7 @@ reg.npcs_at(place_id) / spawn(npc_id) / despawn(npc_id) / actor(npc_id)
 reg.jail(npc_id, days) / simulate_all(weather)
 reg.begin_escort(npc_id, quest_id, at) / end_escort(npc_id, stay_at := "") / is_escorted / escorted_ids
 reg.escort_position(npc_id) / set_escort_position / escort_left / set_escort_left / waiting_at
-reg.spot_marker(npc_id) -> Node3D   # a dressing's marker named for their spot (group npc_spot)
+reg.spot_marker(npc_id) -> Node3D   # a dressing's marker named for their spot (group npc_spot), in the place they are at
 
 Escorts.ensure() -> Escorts ; esc.tick() ; Escorts.due_escorts(quest_log) -> {npc_id: {quest_id, index, objective}}
 Npc.follow(leader) / stop_following() / is_following() / update_follow()

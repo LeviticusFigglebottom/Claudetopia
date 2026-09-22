@@ -55,8 +55,9 @@ static func objectives() -> Array[Dictionary]:
 	return out
 
 
-## How each authored quest begins: [{quest_id, ok, how}]. The opening, a `start_quest` effect in
-## a line or a stage, or its giver offering it at their hub.
+## How each authored quest begins: [{quest_id, ok, how}]. The opening, or a `start_quest` effect
+## in a line of dialogue, a stage or a reward. A `giver` alone starts nothing: nothing reads it to
+## offer the quest (`QuestConditions.offers_of` has only ever been called by its tests).
 static func beginnings() -> Array[Dictionary]:
 	_build()
 	var out: Array[Dictionary] = []
@@ -65,16 +66,10 @@ static func beginnings() -> Array[Dictionary]:
 		var ways: Array[String] = []
 		for how in _started_by.get(id, []):
 			ways.append(str(how))
-		var giver := str(def.get("giver", ""))
-		if giver != "":
-			var v := _person(giver)
-			if bool(v["ok"]):
-				ways.append("offered by %s" % v["how"])
-			elif ways.is_empty():
-				out.append({"quest_id": id, "ok": false, "how": "its giver cannot be found: %s" % v["how"]})
-				continue
 		if ways.is_empty():
-			out.append({"quest_id": id, "ok": false, "how": "nothing starts it and nobody gives it"})
+			var giver := str(def.get("giver", ""))
+			out.append({"quest_id": id, "ok": false, "how": "nothing starts it%s" % (
+					"" if giver == "" else ": %s has no line that does" % _name(giver))})
 		else:
 			out.append({"quest_id": id, "ok": true, "how": "; ".join(ways)})
 	return out
@@ -145,9 +140,8 @@ static func radiant(generator: Object) -> Array[Dictionary]:
 							pool.append(board)
 						else:
 							pool = generator.pool_for(targets.get(token, ""), region, board)
-						if pool.is_empty():
-							out.append({"template": str(t["id"]), "region": region, "token": token, "type": type,
-									"target": "", "ok": false, "how": "nothing in the region fills it"})
+						# an empty pool is a notice the generator never writes (it skips the
+						# template there), not one that cannot be done
 						for id in pool:
 							var v := _radiant_one(type, field, id, region)
 							out.append({"template": str(t["id"]), "region": region, "token": token, "type": type,
@@ -162,7 +156,7 @@ static func _radiant_one(type: String, field: String, id: String, region: String
 		"kill":
 			return _foe(id, region)
 		"collect":
-			return _item(id)
+			return _item(id, true)
 		"talk", "escort":
 			return _person(id)
 	return _no("no tracker listens for a '%s'" % type)
@@ -177,8 +171,9 @@ static func report(everything: bool = false) -> String:
 		if not bool(r["ok"]):
 			cannot += 1
 		if everything or not bool(r["ok"]):
+			var target := str(r["target"])
 			lines.append("%s %s / %s [%s %s]: %s" % ["ok " if bool(r["ok"]) else "NO ", Ids.name_of(str(r["quest_id"])),
-					r["stage_id"], r["type"], Ids.name_of(str(r["target"])), r["how"]])
+					r["stage_id"], r["type"], Ids.name_of(target) if target.contains(":") else target, r["how"]])
 	for b in beginnings():
 		if not bool(b["ok"]):
 			lines.append("NO  %s does not begin: %s" % [Ids.name_of(str(b["quest_id"])), b["how"]])
@@ -188,19 +183,22 @@ static func report(everything: bool = false) -> String:
 
 # --- one kind at a time ------------------------------------------------------------------------------
 
-## Somebody to talk to: they exist, they have something to say, and they live somewhere.
-static func _person(npc_id: String) -> Dictionary:
+## Somebody to talk to: they exist and they live somewhere. A conversation with somebody who has
+## no lines of their own is a bare greeting, and it ends like any other, which is all a `talk` or
+## a hand-over waits for; a decision put at a hub (`needs_lines`) needs a hub to put it at.
+static func _person(npc_id: String, needs_lines := false) -> Dictionary:
 	if npc_id == "" or npc_id == "any" or npc_id.begins_with("tag:"):
 		return _yes("anybody")
 	var def := ContentDB.get_or_empty(npc_id)
 	if def.is_empty() or Ids.type_of(npc_id) != "npc":
 		return _no("%s is nobody in the pack" % npc_id)
-	if str(def.get("dialogue", "")) == "":
-		return _no("%s has nothing to say" % _name(npc_id))
+	var lines := str(def.get("dialogue", "")) != "" and ContentDB.has(str(def["dialogue"]))
+	if needs_lines and not lines:
+		return _no("%s has no lines of their own to put it in" % _name(npc_id))
 	var home := str(def.get("home_place", ""))
 	if not _stands(home):
 		return _no("%s lives at %s, which is nowhere a body can be stood up" % [_name(npc_id), home])
-	return _yes("%s at %s" % [_name(npc_id), _name(home)])
+	return _yes("%s at %s%s" % [_name(npc_id), _name(home), "" if lines else " (a bare greeting)"])
 
 
 ## Somewhere to arrive: a place or point of interest with a position.
@@ -249,8 +247,9 @@ static func _foe(target: String, region: String = "") -> Dictionary:
 
 
 ## How a player comes by an item, surest first: lying where a quest says, handed over by the
-## story, sold, lying in a house or a deep place. A loot table alone is a chance, not a way.
-static func _item(item: String) -> Dictionary:
+## story, sold, lying in a house or a deep place. A loot table alone is a chance, not a way, for
+## the one thing a story turns on; for a job board's "five of these", `chance_ok` counts it.
+static func _item(item: String, chance_ok := false) -> Dictionary:
 	if item == "" or not ContentDB.has(item) or Ids.type_of(item) != "item":
 		return _no("%s is no item in the pack" % item)
 	var ways: Array[String] = []
@@ -267,6 +266,8 @@ static func _item(item: String) -> Dictionary:
 	if not ways.is_empty():
 		return _yes("; ".join(ways))
 	if ItemSources.rolled(item):
+		if chance_ok:
+			return _yes("a chance on a loot table")
 		return _no("%s is only a chance on a loot table" % _name(item))
 	return _no("nothing gives, sells or puts down %s" % _name(item))
 
@@ -353,7 +354,7 @@ static func _choice(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dict
 		return _no("nobody to decide it with")
 	if Ids.type_of(host) != "npc":
 		return _no("its host %s is a place and nothing stands there to decide it at" % host)
-	var person := _person(host)
+	var person := _person(host, true)
 	if not bool(person["ok"]):
 		return person
 	return _yes("offered at the hub of %s" % person["how"])

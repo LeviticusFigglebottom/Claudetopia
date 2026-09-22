@@ -79,18 +79,29 @@ static func camp(d: PoiDressing) -> void:
 		ash.set_shader_parameter("base_color", Color(0.22, 0.21, 0.2))
 		ash.set_shader_parameter("accent_color", Color(0.3, 0.29, 0.28))
 		m.pool(fire, 1.6, k.on_ground(fire.x, fire.y).y + 0.03, ash, "Ash", 16)
+		var passed := false
 		for p in k.ring(6, 2.4, fire, 0.15):
 			var pp: Vector2 = p
 			k.place(k.prop("stool"), k.on_ground(pp.x, pp.y), PoiKit.yaw_of(fire - pp), 1.0)
 			var cup := pp + (fire - pp).normalized() * 0.6
 			k.place(k.prop("mug"), k.on_ground(cup.x, cup.y), k.rng.randf_range(0.0, TAU))
+			if not passed:
+				# the one being passed: whoever takes it up is in the circle, and the circle rises
+				passed = true
+				k.touchable("the_cup", k.on_ground(cup.x, cup.y), "Take up the cup")
 	else:
 		k.light(k.on_ground(fire.x, fire.y, 0.9), Color(1.0, 0.68, 0.35), 2.8, 13.0)
 		k.puffs(k.on_ground(fire.x, fire.y, 0.7), Vector3(0.15, 0.1, 0.15), 0.6, 8,
 				Color(0.55, 0.55, 0.55, 0.28), 1.1, 5.0)
+		var sat := false
 		for p in k.ring(3 + k.rng.randi_range(0, 2), 2.1, fire, 0.2):
 			var pp: Vector2 = p
 			k.place(k.prop("stool"), k.on_ground(pp.x, pp.y), PoiKit.yaw_of(fire - pp) + k.rng.randf_range(-0.3, 0.3))
+			if not sat:
+				# whoever keeps this fire at night keeps it from here, a pace behind the stool
+				sat = true
+				var behind := pp + (pp - fire).normalized() * 0.8
+				k.marker("by_the_fire", k.on_ground(behind.x, behind.y), true)
 
 	# tents on a ring, each turned to the fire, with a bedroll in its mouth
 	var tents := 3 + (1 if k.rng.randf() > 0.55 else 0)
@@ -600,6 +611,10 @@ static func _tower_tumbled(d: PoiDressing, grain: Vector2) -> void:
 	# somebody lives in the corridor now
 	var inside := start + down * (length * 0.5)
 	k.place(k.prop("bedroll"), k.on_ground(inside.x, inside.y), yaw)
+	# the bandits' hall is the lying stair, and the one who says the Hush keeps the stump's top
+	var hall := start + down * (length * 0.3)
+	k.marker("stair_hall", k.on_ground(hall.x, hall.y))
+	k.marker("the_parapet", base + Vector3(0.0, 3.25, 0.0), false, true, r)
 	# the fallen stair, where the Wardens' hand-bell is being used as a cup
 	k.marker("fallen_stair", k.on_ground(inside.x + down.x * 0.9, inside.y + down.y * 0.9, 0.05))
 	k.place(k.prop("crate"), k.on_ground(inside.x + down.x * 2.0, inside.y + down.y * 2.0), yaw)
@@ -708,6 +723,9 @@ static func _tower_hide(d: PoiDressing, grain: Vector2) -> void:
 	m.commit(rope, PoiKit.plain(Color(0.5, 0.42, 0.3), 0.9), "Rope")
 	# what the poachers keep up there, and what they left below
 	k.place(k.prop("crate"), Vector3(-edge.x, deck_y, -edge.z), yaw, 1.0, false)
+	# where they stand to shoot: the deck, between the trunk and the parapet
+	var deck_at := -edge * 0.8
+	k.marker("the_platform", Vector3(deck_at.x, deck_y + 0.05, deck_at.z), false, true, outer)
 	k.place(k.prop("spear"), Vector3(-edge.z * 0.9, deck_y, edge.x * 0.9), yaw, 1.0, false, Vector3(0.0, 0.0, 0.3))
 	var below := -grain * 5.5
 	k.place(k.prop("campfire"), k.on_ground(below.x, below.y), 0.0)
@@ -1187,10 +1205,14 @@ static func _bridge_natural_arch(d: PoiDressing, axis: Vector2) -> void:
 	if tree == "":
 		tree = k.tree("black_ash")
 	# the wardens stand well off the ends, or they stand in front of the arch and hide it
-	for end in [a, b]:
-		var e: Vector2 = end
+	var ends := ["the_warden_west", "the_warden_east"]
+	for i in 2:
+		var e: Vector2 = [a, b][i]
 		var t := e + e.normalized() * 6.5 + axis * 5.5
 		k.place(tree, k.on_ground(t.x, t.y), k.rng.randf_range(0.0, TAU), 0.72, true, Vector3.ZERO, true)
+		# and the Warden that keeps each end stands at the foot of its tree, on the path side
+		var keep := t - axis * 3.2
+		k.marker(ends[i], k.on_ground(keep.x, keep.y))
 	var ferns: Array = []
 	for i in 30:
 		var p := k.jitter(13.0)
@@ -2085,6 +2107,8 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 	k.place(k.prop("stool"), Vector3(camp.x, camp_y, camp.y), yaw)
 	k.place(k.prop("crate"), Vector3(camp.x + 1.2, camp_y, camp.y + 0.4), yaw + 0.6)
 	k.place(k.prop("book"), Vector3(camp.x + 1.2, camp_y + 0.66, camp.y + 0.4), yaw + 0.2, 1.0, false)
+	# the book is his, and it is a thing a place's `lies` can name (the island's is read where it is)
+	k.marker("the_hermits_book", Vector3(camp.x + 1.2, camp_y + 0.66, camp.y + 0.4))
 	k.place(k.prop("lantern_standing"), Vector3(camp.x - 1.4, camp_y, camp.y - 0.6), 0.0)
 	k.light(Vector3(camp.x - 1.4, camp_y + 1.9, camp.y - 0.6), Color(1.0, 0.82, 0.55), 1.7, 10.0)
 	k.place(k.prop("campfire"), Vector3(camp.x - 0.2, camp_y, camp.y - 2.2), 0.0)
@@ -2203,6 +2227,7 @@ static func wreck(d: PoiDressing) -> void:
 		var crate_at := bow + perp * 2.4
 		k.place(k.prop("crate"), k.on_ground(crate_at.x, crate_at.y), yaw)
 		k.place(k.prop("scroll"), k.on_ground(crate_at.x, crate_at.y, 0.66), yaw + 0.3, 1.0, false)
+		k.marker("the_chart", k.on_ground(crate_at.x - perp.x * 0.3, crate_at.y - perp.y * 0.3, 0.66))
 
 
 # --- hidden valleys ------------------------------------------------------------------------------------------
@@ -2580,6 +2605,8 @@ static func standing_stones(d: PoiDressing) -> void:
 		# to fight in, and stones enough to break a charge on
 		count = 9
 		radius = 12.5
+		# its keeper stands in the middle, where the question is asked
+		k.marker("the_circle", k.on_ground(0.0, 0.0))
 	elif PoiKit.brief_says(b, ["three"]):
 		count = 3
 	var shoreline := PoiKit.brief_says(b, ["shoreline", "sea's edge", "tide"])

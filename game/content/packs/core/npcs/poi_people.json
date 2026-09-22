@@ -1,0 +1,94 @@
+[
+  {
+    "id": "core:npc/lissane_sa", "name": "Lissane Sa", "home_place": "core:poi/lantern_causeway",
+    "dialogue": "core:dialogue/lissane_sa",
+    "bio": "Lamplighter of the Lantern Causeway for forty years: she walks the boardwalk from the Isseva end at dusk with a pole and a jar of fish-oil, and sings a verse to each lantern as she lights it, because the verse is how long a wick takes to catch. When she is late the boardwalk is not safe, and she is late on purpose when she wants Isseva to notice her.",
+    "unique_habit": "Counts the lanterns by the verses rather than by number, and if you ask how many there are she will sing you the whole round to find out, and lose count, and start again.",
+    "personality": {"traits": ["proud", "gossip", "brave", "kind"]},
+    "appearance": {"seed": 8201, "build": "small_wiry", "age": 64.0, "feminine": 1.0, "hair": "white_in_a_reed_band", "notes": "an oil jar on a cord across the body, a lighting pole with a brass hook worn bright, reed-dyed skirts kilted to the knee for the boardwalk"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/lantern_causeway", "activity": "sleep", "spot": "home"},
+      {"days": "workdays", "hour": 15, "place": "core:poi/lantern_causeway", "activity": "work", "spot": "the_lamp_round", "notes": "trimming wicks and filling the jars before the light goes"},
+      {"days": "restday", "hour": 20, "place": "core:poi/lantern_causeway", "activity": "work", "spot": "the_lamp_round", "notes": "late, on purpose: Isseva is meant to notice"},
+      {"days": "all", "hour": 23, "place": "core:poi/lantern_causeway", "activity": "sleep", "spot": "home"}
+    ]
+  },
+  {
+    "id": "core:npc/khath_ko_rudd", "name": "Khath ko-Rudd", "home_place": "core:poi/chain_bridge", "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/khath_ko_rudd",
+    "bio": "Toll-keeper at the near end of the Chain Bridge, a Rudd, because no clan keeps its own gate and the Kharrow end is a Skarl's. Takes two marks a crossing and a name, writes the name on a slate and wipes it when the crosser comes back, and has never once wiped a name that did not come back.",
+    "unique_habit": "Puts a hand flat on each of the four chains in turn every time somebody pays, the treaty order, and will not take the coin until the fourth.",
+    "personality": {"traits": ["quiet", "greedy", "brave", "humble"]},
+    "appearance": {"seed": 6120, "build": "short_thick", "age": 52.0, "feminine": 0.0, "hair": "grey_braided_with_a_rudd_bone_token", "notes": "a slate on a cord and a stub of chalk behind the ear, a brazier-burn up one forearm, a Rudd token worn outside the collar where a crosser can read it"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/chain_bridge", "activity": "sleep", "spot": "home"},
+      {"days": "all", "hour": 6, "place": "core:poi/chain_bridge", "activity": "work", "spot": "the_toll_post", "notes": "the slate, the brazier, the four chains"},
+      {"days": "all", "hour": 21, "place": "core:poi/chain_bridge", "activity": "sleep", "spot": "home", "notes": "the wolves have the far approach after dark, and the bridge is shut to anyone with sense"}
+    ]
+  },
+  {
+    "id": "core:npc/calen_ash", "name": "Calen Ash", "home_place": "core:poi/headless_watch", "faction": "core:faction/tolling_order",
+    "dialogue": "core:dialogue/calen_ash",
+    "bio": "Knight of the Tolling Order, born Calen Cresswell in Tollmere and sworn under the name every knight takes. The Order keeps one knight in the eye of the fallen head at all times; he has been the one for eleven years, because nobody has come to relieve him and he has stopped writing to ask.",
+    "unique_habit": "Asks every traveller what bread costs in Tollmere this month, writes it on the inside of the eye with a burnt stick, and has eleven years of Tollmere prices on the stone round the window.",
+    "personality": {"traits": ["pious", "kind", "gossip", "humble"]},
+    "appearance": {"seed": 7140, "build": "tall_spare", "age": 41.0, "feminine": 0.0, "hair": "fair_going_grey_cropped_for_the_helm", "notes": "grey plate over grey wool like every knight of the Order, soot on the right hand from writing prices on the stone, a Tollmere lantern-maker's mark on the lamp at his belt"},
+    "schedule": [
+      {"days": "all", "hour": 2, "place": "core:poi/headless_watch", "activity": "sleep", "spot": "in:the_eye"},
+      {"days": "all", "hour": 5, "place": "core:poi/headless_watch", "activity": "work", "spot": "the_vigil", "notes": "the vigil at the foot of the stair, facing the way the eye does"},
+      {"days": "all", "hour": 19, "place": "core:poi/headless_watch", "activity": "pray", "spot": "the_vigil", "notes": "the evening count of the Choir's bells, out loud, to nobody"},
+      {"days": "all", "hour": 20, "place": "core:poi/headless_watch", "activity": "work", "spot": "the_vigil"}
+    ]
+  },
+  {
+    "id": "core:npc/ivo_goslin", "name": "Ivo Goslin", "home_place": "core:poi/willow_isle", "no_radiant": true,
+    "dialogue": "core:dialogue/ivo_goslin",
+    "bio": "The hermit of Willow Isle: a Tallymen clerk who copied the Ledger of Prices for twenty years and stopped in the middle of a column. Lives in the roots of the pollard willow with a boat, a stool and a book, and will tell you the price of anything, correctly, and refuse to sell it.",
+    "unique_habit": "Answers every question with a price first and the answer second, and the price is always right, which is the part people find hard to forgive.",
+    "personality": {"traits": ["cynical", "quiet", "humble", "kind"]},
+    "appearance": {"seed": 2177, "build": "stooped_thin", "age": 67.0, "feminine": 0.0, "hair": "white_long_tied_with_a_ledger_ribbon", "notes": "a clerk's coat gone green at the seams, ink worn into the first two fingers of the right hand that twenty years on an islet have not got out, bare feet"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/willow_isle", "activity": "sleep", "spot": "home"},
+      {"days": "all", "hour": 6, "place": "core:poi/willow_isle", "activity": "work", "spot": "the_hermits_stool", "notes": "sitting; he calls it work, and nobody on the Mere has the standing to argue"},
+      {"days": "all", "hour": 21, "place": "core:poi/willow_isle", "activity": "sleep", "spot": "home"}
+    ]
+  },
+  {
+    "id": "core:npc/marigold_orchard", "name": "Marigold Orchard", "home_place": "core:poi/hedge_shrine_of_ansel",
+    "dialogue": "core:dialogue/marigold_orchard",
+    "bio": "A pilgrim on the road south from the Vale to Pilgrim's Ash, three years into walking it, because she stops at every shrine on the way for as long as it takes to tell the stone a story about a neighbour, which is what Ansel did, and there are a great many neighbours.",
+    "unique_habit": "Leaves half of whatever she is eating in the stone chair's lap, and apologises to the hawthorn when she sits down.",
+    "personality": {"traits": ["pious", "kind", "gossip", "humble"]},
+    "appearance": {"seed": 1188, "build": "round_short", "age": 58.0, "feminine": 1.0, "hair": "brown_grey_under_a_straw_hat", "notes": "pilgrim grey over a Vale orchard smock she will not take off, a staff cut from a Tamwick apple bough, a satchel of stories written on the backs of cider labels"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/hedge_shrine_of_ansel", "activity": "idle", "spot": "in:the_pilgrim_road", "notes": "on the road between here and the Ash; not at the shrine"},
+      {"days": ["kindleday", "thornday", "hushday"], "hour": 8, "place": "core:poi/hedge_shrine_of_ansel", "activity": "pray", "spot": "the_pilgrims_rest", "notes": "resting at Ansel's chair, telling it about somebody"},
+      {"days": ["kindleday", "thornday", "hushday"], "hour": 18, "place": "core:poi/hedge_shrine_of_ansel", "activity": "idle", "spot": "in:the_pilgrim_road"}
+    ]
+  },
+  {
+    "id": "core:npc/sorrel_rooke", "name": "Sorrel Rooke", "home_place": "core:poi/charcoal_camp",
+    "dialogue": "core:dialogue/sorrel_rooke",
+    "bio": "Charcoal-burner at the camp on the Briarwold edge, the day half of a pair: she and her brother Barnaby have not slept at the same time in twenty-two years, because a clamp left alone for an hour either goes out or goes up. Buys anything that burns and sells what the clamps make, and a great deal of gossip that does not.",
+    "unique_habit": "Tells the time by the colour of the smoke and is right to the quarter-hour, and will tell you the weather for tomorrow off the same smoke and be wrong about half the time.",
+    "personality": {"traits": ["greedy", "gossip", "brave", "cynical"]},
+    "appearance": {"seed": 5230, "build": "broad_strong", "age": 45.0, "feminine": 1.0, "hair": "black_cropped_against_sparks", "notes": "soot to the elbow and a clean line where the gloves stop, a turf-cutter's spade she uses as a walking stick, a leather apron scorched in a pattern she can read"},
+    "merchant": {"stock": "core:table/stock_charcoal_burner", "marks": 180, "buys": ["material", "misc", "book"]},
+    "schedule": [
+      {"days": "all", "hour": 3, "place": "core:poi/charcoal_camp", "activity": "sleep", "spot": "home", "notes": "Barnaby has the clamps"},
+      {"days": "all", "hour": 11, "place": "core:poi/charcoal_camp", "activity": "shop", "spot": "the_clamps", "notes": "tending, and selling from beside the first clamp"}
+    ]
+  },
+  {
+    "id": "core:npc/barnaby_rooke", "name": "Barnaby Rooke", "home_place": "core:poi/charcoal_camp",
+    "dialogue": "core:dialogue/barnaby_rooke",
+    "bio": "Charcoal-burner, the night half of the Rookes: tends the clamps while his sister sleeps and sleeps while she tends them, and hears everything anyone says round a fire after dark, which is where the camp's gossip comes from.",
+    "unique_habit": "Sleeps sitting up with his boots on and one hand on the turf-spade, and has been known to answer a question in his sleep, correctly.",
+    "personality": {"traits": ["gossip", "kind", "humble", "generous"]},
+    "appearance": {"seed": 5231, "build": "long_and_bent", "age": 48.0, "feminine": 0.0, "hair": "black_going_grey_singed_at_the_fringe", "notes": "his sister's apron's twin, scorched in a different pattern, which he says is the night's pattern; a clay pipe he never lights, because everything round him already is"},
+    "schedule": [
+      {"days": "all", "hour": 15, "place": "core:poi/charcoal_camp", "activity": "sleep", "spot": "home", "notes": "Sorrel has the clamps"},
+      {"days": "all", "hour": 23, "place": "core:poi/charcoal_camp", "activity": "work", "spot": "by_the_fire", "notes": "the night burn, and whoever comes to sit by it"}
+    ]
+  }
+]

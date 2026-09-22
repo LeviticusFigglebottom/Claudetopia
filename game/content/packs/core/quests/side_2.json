@@ -466,5 +466,34 @@
       "renown": 15,
       "items": [["core:item/wisp_glim", 1]]
     }
+  },
+  {
+    "id": "core:quest/the_last_column",
+    "name": "The Last Column",
+    "layer": "side",
+    "giver": "core:npc/ivo_goslin",
+    "region": "core:region/brightwater",
+    "summary": "The hermit of Willow Isle stopped copying the Ledger of Prices in the middle of a column twenty-two years ago. He has finished it, from memory, on an island, and it adds up, and he wants it put where he left it.",
+    "notes": "Willow Isle's side quest (the POI sentence: 'a book and a side quest'). Ivo Goslin is npcs/poi_people.json; Orrin Quill is Lantern Row's steward. The sheet changes hands at the end of any conversation with Quill while it is carried (QuestRoutes / QuestLog._hand_over).",
+    "stages": [
+      {
+        "id": "the_column",
+        "journal": "Ivo Goslin copied the Tallymen's Ledger of Prices for twenty years and stopped in the middle of a column: the line where the Row prices a village the Wardens have struck from the Roll, what its name is worth once nobody says it. He finished the column last winter, out on Willow Isle, from memory, and it adds up, which frightens him more than anything he has seen on the Mere. He wants it put in the hand of the steward of Lantern Row, who posts the prices, and he wants to know what the steward's face does.",
+        "objectives": [
+          {"type": "deliver", "target": "core:npc/orrin_quill", "item": "core:item/ivos_last_column", "count": 1, "text": "Put the column in Orrin Quill's hand on Lantern Row"}
+        ],
+        "on_enter": [{"give_item": ["core:item/ivos_last_column", 1]}],
+        "marker": {"place_id": "core:place/tollmere", "radius": 160}
+      },
+      {
+        "id": "what_his_face_did",
+        "journal": "Quill read the column twice, standing, and then sat down at the charter-board, which a steward of the Row does not do. He said the figure out loud, and then said that it was correct, and then that it had never been posted and never would be, and asked who had written it, and did not wait for the answer. Ivo will want to hear all of that, in that order.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/ivo_goslin", "text": "Tell Ivo Goslin what the steward's face did"}
+        ],
+        "marker": {"place_id": "core:poi/willow_isle", "radius": 140}
+      }
+    ],
+    "rewards": {"marks": 10, "renown": 10, "morality": 3}
   }
 ]

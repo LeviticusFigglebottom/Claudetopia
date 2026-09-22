@@ -779,6 +779,19 @@ func marker(marker_name: String, at: Vector3, worked := false, raised := false, 
 	return m
 
 
+## Something that can be touched, and a `PoiEncounters` group waiting on it (`rises_when`): the
+## cup going round the Cold Fire Camp. Nothing in the far ring.
+func touchable(touch_name: String, at: Vector3, prompt_line: String) -> PoiTouch:
+	if far:
+		return null
+	var t := PoiTouch.new()
+	t.name = touch_name
+	t.prompt = prompt_line
+	t.position = at
+	root.add_child(t)
+	return t
+
+
 ## A notice post the radiant generator fills, for a place whose sentence says there is work to be
 ## had there (the charcoal camp's "merchant and jobs"): the same `JobBoard` a village green has,
 ## with the place's own id, so its notices are for the country round it. Nothing in the far ring.

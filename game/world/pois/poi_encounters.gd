@@ -13,14 +13,17 @@ extends EnemySpawner
 ## `{id, place, spawns}`) says the same thing in terms the game can stand up, one entry per group:
 ##
 ##   {"enemy": id, "count": 1, "when": "always|day|night|dawn|dusk|midnight", "at": marker,
-##    "spread": 2.5}
+##    "spread": 2.5, "unless": [conditions], "unless_present": npc id, "rises_when": touch}
 ##
 ## `at` names a marker the dressing put down (the Tumbled Watch's `stair_hall`); without one the
 ## group stands on the pad's rim, the same place every time and out of the water. `when` is read
 ## off the clock as the cell is raised and again every hour it stands: the ford's bandits step out
-## after dark and are gone by morning, unless they are busy with you. A boss once put down
-## (`boss_deed/<id>`, which `Social` sets) stays down; its fight is bounded the way any boss's
-## outside a deep place is, by the arena it improvises when it wakes.
+## after dark and are gone by morning, unless they are busy with you. `unless` is the condition
+## vocabulary (CONTRACTS §7) and `unless_present` a person whose being here keeps the group away;
+## `rises_when` names a `PoiTouch` in the dressing, and until it is touched the group sits and
+## does not see you. A boss once put down (`boss_deed/<id>`, which `Social` sets) stays down; its
+## fight is bounded the way any boss's outside a deep place is, by the arena it improvises when
+## it wakes.
 ##
 ## One of these is a child of the dressing, so it streams and unloads with the cell. The index of
 ## defs is static, for `QuestWalk`, which asks where a foe stands.
@@ -107,13 +110,13 @@ static func _night(hour: float) -> bool:
 ## Stands up whatever this dressing's place is said to have, as a child of the dressing. Null
 ## when the sentence says nobody is there. Called by `WorldPois` for a near cell only.
 static func stand_up(d: PoiDressing) -> PoiEncounters:
-	var wanted := of(d.poi_id)
-	if wanted.is_empty() or d.far:
+	var wanted_here := of(d.poi_id)
+	if wanted_here.is_empty() or d.far:
 		return null
 	var node := PoiEncounters.new()
 	node.name = "Encounters"
 	node.poi_id = d.poi_id
-	node.entries = wanted
+	node.entries = wanted_here
 	node.pad_radius = d.pad_radius
 	node.terrain = d._provider
 	d.add_child(node)
@@ -131,27 +134,59 @@ func _init() -> void:
 func _ready() -> void:
 	super._ready()
 	add_to_group(GROUP)
+	# Deferred: the registry moves people on the same hour, and who is here decides who comes.
+	# Method references, not closures: the bus outlives this node.
 	EventBus.hour_changed.connect(_on_hour_changed)
+	EventBus.quest_stage_changed.connect(_on_quest_stage_changed)
 	call_deferred("refresh")
 
 
 func _on_hour_changed(_hour: int) -> void:
-	refresh()
+	call_deferred("refresh")
 
 
-## Brings each group in or out to match the clock and what has been put down. A group that
-## was raised and killed is not raised again on the hour: it stays dead until a Hearthstone
-## rest brings it back, the rule the rest of the country keeps.
+func _on_quest_stage_changed(_quest: String, _stage: int) -> void:
+	call_deferred("refresh")
+
+
+## Brings each group in or out to match the clock, the story and who is here. A group that was
+## raised and killed is not raised again on the hour: it stays dead until a Hearthstone rest
+## brings it back, the rule the rest of the country keeps.
 func refresh() -> void:
 	if not is_inside_tree():
 		return
 	for i in entries.size():
 		var e: Dictionary = entries[i]
-		var open := is_open(str(e.get("when", "always")), WorldClock.time_hours) and not _put_down(e)
+		var open := wanted(e)
 		if open and not _groups.has(i):
 			_raise(i, e)
 		elif not open and _groups.has(i):
 			_stand_down(i)
+
+
+## Whether a group should be standing now: its hour, a boss not yet put down, nothing in its
+## `unless` true (the Larkbourne Boys stand aside while Ryn is waiting to be heard), and nobody
+## named in `unless_present` here (the drowned climb the causeway's poles only when the
+## lamplighter is not on it).
+func wanted(e: Dictionary) -> bool:
+	if not is_open(str(e.get("when", "always")), WorldClock.time_hours) or _put_down(e):
+		return false
+	var unless: Variant = e.get("unless", [])
+	if typeof(unless) == TYPE_ARRAY and not (unless as Array).is_empty() and Social.ctx != null \
+			and Conditions.all_of(unless, Social.ctx):
+		return false
+	var keeper := str(e.get("unless_present", ""))
+	if keeper != "" and is_present(keeper, poi_id):
+		return false
+	return true
+
+
+## Is this person here and about: alive, at this place by the registry, and not under a roof.
+static func is_present(npc_id: String, place_id: String) -> bool:
+	var registry := NpcRegistry.instance
+	if registry == null or not is_instance_valid(registry):
+		return false
+	return registry.is_alive(npc_id) and registry.place_of(npc_id) == place_id and not registry.is_indoors(npc_id)
 
 
 ## The living members of one group.
@@ -160,6 +195,14 @@ func standing(index: int) -> Array[Enemy]:
 	for e in _groups.get(index, []):
 		if is_instance_valid(e) and not (e as Enemy).dead and not (e as Enemy).is_queued_for_deletion():
 			out.append(e)
+	return out
+
+
+## Every living enemy this place has standing, across its groups.
+func everyone() -> Array[Enemy]:
+	var out: Array[Enemy] = []
+	for i in _groups:
+		out.append_array(standing(int(i)))
 	return out
 
 
@@ -172,18 +215,28 @@ func _raise(index: int, e: Dictionary) -> void:
 	var count := maxi(1, int(e.get("count", 1)))
 	var spread := float(e.get("spread", 2.5))
 	var anchor := _anchor(index, e)
-	var facing := atan2(global_position.x - anchor.x, global_position.z - anchor.z)
+	var at_anchor: Vector3 = anchor["pos"]
+	var raised := bool(anchor["raised"])
+	var facing := atan2(global_position.x - at_anchor.x, global_position.z - at_anchor.z)
+	var asleep := str(e.get("rises_when", "")) != ""
 	var group: Array[Enemy] = []
 	for k in count:
-		var at := anchor
+		var at := at_anchor
 		if count > 1:
 			var a := TAU * float(k) / float(count) + float(index)
 			at += Vector3(cos(a), 0.0, sin(a)) * spread
-		at.y = _ground(at)
+		# on a deck or a stump the marker's own height is the floor; on the ground, the ground is
+		if not raised:
+			at.y = _ground(at)
 		var enemy := spawn_one(str(e["enemy"]), at, facing, {"group": "%s#%d" % [poi_id, index]})
-		if enemy != null:
-			group.append(enemy)
+		if enemy == null:
+			continue
+		if asleep:
+			_sleep(enemy)
+		group.append(enemy)
 	_groups[index] = group
+	if asleep:
+		_wait_for_touch(index, str(e["rises_when"]))
 
 
 ## Gone with the hour, the fallen with them, except whoever is fighting you: they finish what
@@ -204,13 +257,49 @@ func _stand_down(index: int) -> void:
 		_groups[index] = kept
 
 
-## Where a group stands: its marker, or a point on the pad's rim that is not in the water.
-func _anchor(index: int, e: Dictionary) -> Vector3:
+# --- sitting still until something is touched ----------------------------------------------------------
+
+## Seated, and deaf to everything but a blow: Greyfold's people wave at you, and go on waiting.
+func _sleep(enemy: Enemy) -> void:
+	if enemy.perception != null:
+		enemy.perception.enabled = false
+	enemy.inactive = true
+
+
+## The thing that wakes a sleeping group is a `PoiTouch` the dressing put down under that name.
+func _wait_for_touch(index: int, touch_name: String) -> void:
+	var holder := get_parent()
+	var touch := holder.find_child(touch_name, true, false) if holder != null else null
+	if touch is PoiTouch and not (touch as PoiTouch).touched.is_connected(_on_touched):
+		(touch as PoiTouch).touched.connect(_on_touched.bind(index))
+
+
+func _on_touched(actor: Node, index: int) -> void:
+	wake(index, actor)
+
+
+## Rises: hearing and seeing again, and turned on whoever did it.
+func wake(index: int, actor: Node = null) -> void:
+	for enemy in standing(index):
+		if enemy.perception != null:
+			enemy.perception.enabled = true
+			if actor is Node3D:
+				enemy.perception.alert_to((actor as Node3D).global_position, actor as Node3D)
+		enemy.inactive = false
+		if enemy.brain != null and actor is Node3D:
+			enemy.brain.force(Brain.COMBAT)
+
+
+# --- where ------------------------------------------------------------------------------------------------
+
+## Where a group stands, {pos, raised}: its marker (on a deck or a stump when the marker says
+## the floor there is raised), or a point on the pad's rim that is not in the water.
+func _anchor(index: int, e: Dictionary) -> Dictionary:
 	var marker := str(e.get("at", ""))
 	if marker != "":
 		var m := get_parent().find_child(marker, true, false) if get_parent() != null else null
 		if m is Node3D:
-			return (m as Node3D).global_position
+			return {"pos": (m as Node3D).global_position, "raised": bool(m.get_meta("raised", false))}
 	var rng := RandomNumberGenerator.new()
 	rng.seed = abs(("%s#%d" % [poi_id, index]).hash())
 	var start := rng.randf() * TAU
@@ -219,8 +308,8 @@ func _anchor(index: int, e: Dictionary) -> Vector3:
 		var a := start + TAU * float(step) / 12.0
 		var p := centre + Vector3(cos(a), 0.0, sin(a)) * pad_radius * RIM
 		if terrain == null or not terrain.is_water(p.x, p.z):
-			return p
-	return centre
+			return {"pos": p, "raised": false}
+	return {"pos": centre, "raised": false}
 
 
 func _ground(at: Vector3) -> float:

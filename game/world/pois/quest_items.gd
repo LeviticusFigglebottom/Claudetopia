@@ -131,6 +131,29 @@ static func _build() -> void:
 							"item": str(row.get("item", "")), "why": "the quest does not say where it lies"})
 					continue
 				_placements.append(row)
+	# What a place's own sentence says lies there, from its encounter def's `lies`: the chart of
+	# the Salt Isles in the Reed Wreck, which you can take, and the hermit's exercise book on
+	# Willow Isle, which is read where it lies.
+	var encounters := ContentDB.all("encounter")
+	encounters.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["id"]) < str(b["id"]))
+	for def in encounters:
+		var place := str(def.get("place", ""))
+		for l in def.get("lies", []):
+			if typeof(l) != TYPE_DICTIONARY or place == "":
+				continue
+			var lying: Dictionary = l
+			var item := str(lying.get("item", ""))
+			var book := str(lying.get("book", ""))
+			var what := item if item != "" else book
+			if what == "" or not ContentDB.has(what):
+				continue
+			var key := "lies:%s|%s" % [place, what]
+			if seen.has(key):
+				continue
+			seen[key] = true
+			_placements.append({"key": key, "kind": "item" if item != "" else "book", "item": item, "book": book,
+					"count": maxi(1, int(lying.get("count", 1))), "where": place, "spot": str(lying.get("at", "")),
+					"owner": str(lying.get("owner", "")), "quest_id": "", "stage_id": "", "index": -1, "text": ""})
 
 
 static func _placement_for(def: Dictionary, stage: Dictionary, o: Dictionary, index: int) -> Dictionary:
@@ -397,6 +420,13 @@ func _make(row: Dictionary) -> Node:
 		point.speaker = str(ContentDB.get_or_empty(str(row["where"])).get("name", ""))
 		point.name = "Choice_" + Ids.name_of(str(row["quest_id"]))
 		return point
+	if str(row["kind"]) == "book":
+		# read where it lies: never taken, so never in the save
+		var readable := Readable.new()
+		readable.book_id = str(row["book"])
+		readable.fixed = true
+		readable.name = "Book_" + Ids.name_of(str(row["book"]))
+		return readable
 	var item := WorldItem.new()
 	item.setup(str(row["item"]), int(row.get("count", 1)))
 	item.owner_npc = str(row.get("owner", ""))

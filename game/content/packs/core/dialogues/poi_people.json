@@ -1,0 +1,188 @@
+[
+  {
+    "id": "core:dialogue/lissane_sa",
+    "speaker_name": "Lissane Sa",
+    "notes": "The lamplighter of the Lantern Causeway (POI registry: 'lit each dusk by a lamplighter who sings as she goes'). The drowned climb the poles when she is not on the boardwalk (encounters/pois.json, unless_present).",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"is_night": true}], "text": "You came along the boards in the dark. Then you came along them after me, and the light was mine, and you're welcome to it."},
+      {"conditions": [{"flag": "lissane_heard_round"}], "text": "The singer of the round's back. Stand clear of the pole, I swing it wide."},
+      {"conditions": [{"renown_min": 200}], "text": "I know the face. Isseva says it on the boardwalk now, which is how I know a face these days: the boards talk before the people do."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Lissane Sa", "text": "Mind the third plank from the Isseva end. It's been mind-the-third-plank for eleven years and the Council has a note about it somewhere. — You'll be wanting the light. Everybody wants the light, and nobody wants the oil, and nobody wants to be the one carrying the pole at dusk with the drowned watching from under the boards.", "next": "hub"},
+      "hub": {"speaker": "Lissane Sa", "text": "Well? The wicks won't trim themselves while I talk, but they'll wait.", "choices": [
+        {"text": "Why do you sing to them?", "next": "the_verses"},
+        {"text": "What happens when you're late?", "next": "late"},
+        {"text": "They say you're late on purpose.", "next": "on_purpose", "conditions": [{"flag": "lissane_told_late"}]},
+        {"text": "Anything on the water lately?", "next": "the_water"},
+        {"text": "Let me carry the jar to the next pole.", "next": "carry", "once": true},
+        {"text": "Mind the plank.", "next": "bye"}
+      ]},
+      "the_verses": {"speaker": "Lissane Sa", "text": "A verse is how long a wick takes to catch. Light one without and it catches crooked, and a crooked flame smokes the glass, and a smoked glass is a dark pole by midnight. — Forty years. I don't know how many lanterns there are; I know how many verses. If you asked me for a number I'd have to sing you the whole round to find out, and I'd lose count in the middle, and start again, and it would be dawn.", "effects": [{"set_flag": "lissane_heard_round"}], "next": "hub"},
+      "late": {"speaker": "Lissane Sa", "text": "The drowned come up the poles. — The Reedfolk send their dead out with a lantern so the going-out has something to steer by, and sometimes the lantern goes out first, and what comes back up wants a light and a hand, in that order. They climb for the lanterns. You are only in the way. When every pole is lit they stay under the boards and hum. — After I've gone home the lanterns burn down one by one, and by midnight the poles are theirs. Cross early, or cross with a torch and a quick step.", "effects": [{"set_flag": "lissane_told_late"}], "next": "hub"},
+      "on_purpose": {"speaker": "Lissane Sa", "text": "Of course I am. — Isseva has a council, and the council has a memory like a reed basket, and a boardwalk that isn't safe for one hour of a restday keeps my name in their mouths and my oil on their account. Forty years, and they've tried to give the round to a boy twice. Twice the boy was late without meaning it, and that's worse, because I always come.", "next": "hub"},
+      "the_water": {"speaker": "Lissane Sa", "text": "A lantern went out from the burial jetty on Tollday and it was still burning at dawn. They all go out by dawn; that's what they're for. The whole of Isseva's gone quiet about it, which is the loudest the Reedfolk get. — Don't take my word. Take the boardwalk to the jetty and look at the water.", "effects": [{"rumour": ["core:rumour/lantern_still_lit", 0.6]}], "next": "hub"},
+      "carry": {"speaker": "Lissane Sa", "text": "Two hands on it, it's heavier than it looks, and don't swing it, fish-oil takes a week to leave a coat. — There. That's one verse I didn't have to walk for. The boardwalk will remember you did that, if nobody else does.", "effects": [{"morality": 1}, {"disposition": 5}], "next": "hub"},
+      "bye": {"speaker": "Lissane Sa", "text": "Third plank.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/khath_ko_rudd",
+    "speaker_name": "Khath ko-Rudd",
+    "notes": "The toll-keeper at the near end of the Chain Bridge (POI registry: 'a toll-keeper NPC'). A Rudd, because no clan keeps its own gate; Skardd ko-Skarl keeps the Kharrow end and counts the links.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"flag": "paid_the_chain_bridge"}], "text": "Your name's on the slate. You went over and you came back. I'll wipe it."},
+      {"conditions": [{"is_night": true}], "text": "Bridge is shut. Not locked; shut. Wolves have the far side after dark, and I go to bed so that I am not the one who let you over."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Khath ko-Rudd", "text": "Two marks and a name. The marks for the bridge. The name for the slate, and I wipe it when you come back over, and I have never wiped a name that did not.", "next": "hub"},
+      "hub": {"speaker": "Khath ko-Rudd", "text": "Crossing?", "choices": [
+        {"text": "Two marks. Here.", "next": "paid", "conditions": [{"marks_min": 2}, {"flag_not": "paid_the_chain_bridge"}]},
+        {"text": "Why four chains?", "next": "the_chains"},
+        {"text": "Who counts the links?", "next": "the_count"},
+        {"text": "What's on the far approach?", "next": "wolves"},
+        {"text": "Not today.", "next": "bye"}
+      ]},
+      "paid": {"speaker": "Khath ko-Rudd", "text": "*(A hand flat on each of the four chains, in turn, the treaty order: Kharrow, Dreugh, Brindle, Ghast. Then the coin.)* — Good. That is the fourth and the coin comes after the fourth. Your name.", "effects": [{"marks": -2}, {"set_flag": "paid_the_chain_bridge"}], "next": "hub"},
+      "the_chains": {"speaker": "Khath ko-Rudd", "text": "Each chain is a treaty. Four clans hung this bridge, one chain each, forged by their own hands so the hands can be read off the iron afterwards. When a clan is shamed at the Moot its chain is loosened one link, and the bridge leans. — Look at it. It leans to the Ghast side. Everyone who crosses knows why, and nobody who crosses says, and I take their two marks either way.", "next": "hub"},
+      "the_count": {"speaker": "Khath ko-Rudd", "text": "Skardd ko-Skarl, at the Hold end, on his knees on Kindleday with a hand on each link. Four hundred and twelve. — He has been out on the deck at night with a lamp this month, and a man does not count four hundred and twelve links by lamplight because he is sure of the number. Ask him. He will not tell you, and then he will.", "effects": [{"rumour": ["core:rumour/chain_count_wrong", 0.6]}], "next": "hub"},
+      "wolves": {"speaker": "Khath ko-Rudd", "text": "Crag-wolves. White, the year round, which on the far pavement is not a disguise, it is arithmetic: you count three and there are five. They come up the approach after dark and sit at the Hold end and wait for the bridge to bring them something. — By day the far side is yours. By night I would not cross for my own clan's chain.", "next": "hub"},
+      "bye": {"speaker": "Khath ko-Rudd", "text": "The slate will be here.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/calen_ash",
+    "speaker_name": "Calen Ash",
+    "notes": "The knight in the eye of the Headless Watch (POI registry: 'The Order keeps one knight in the eye at all times. The current one has been there eleven years and asks for news of Tollmere prices.').",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"discovered": "core:place/tollmere"}], "text": "You've been to Tollmere. I can see it on you; nobody else walks that fast on ash. What is bread on the Row this month?"},
+      {"conditions": [{"member_of": "core:faction/tolling_order"}], "text": "A sister of the vigil. Or a brother; the grey hides it and the Order is glad it does. Are you my relief? No. Nobody is my relief."},
+      {"conditions": [{"is_night": true}], "text": "Quietly. The Choir rings the hours whether I count them or not, and I would rather count them."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Calen Ash", "text": "Stop there, and be welcome. The Order keeps a knight in the eye and the eye keeps a knight, and I am he, eleven years this spring. — What is bread in Tollmere?", "next": "hub"},
+      "hub": {"speaker": "Calen Ash", "text": "Ask, and I will answer, and then you will answer me.", "choices": [
+        {"text": "Bread's a mark and a half on the Row.", "next": "prices", "conditions": [{"discovered": "core:place/tollmere"}]},
+        {"text": "I haven't been to Tollmere.", "next": "not_been", "conditions": [{"not": {"discovered": "core:place/tollmere"}}]},
+        {"text": "Why keep a watch in a stone head?", "next": "the_eye"},
+        {"text": "Has nobody come to relieve you?", "next": "relief"},
+        {"text": "There's another colossus on the heath.", "next": "the_thirteenth"},
+        {"text": "Keep the vigil.", "next": "bye"}
+      ]},
+      "prices": {"speaker": "Calen Ash", "text": "A mark and a half. *(He writes it on the inside of the eye with a burnt stick, under eleven years of other figures in the same hand.)* — Up a quarter since the autumn. That is the Tallymen and the barley both, and I would put money on which, if the Order let me keep any. — My mother kept a stall on Lantern Row. I know what bread is. I only want to know what it is now.", "effects": [{"set_flag": "calen_heard_prices"}, {"disposition": 5}, {"morality": 1}], "next": "hub"},
+      "not_been": {"speaker": "Calen Ash", "text": "Then you are no use to me and very welcome. Go to Tollmere; it is north, past the Mere, and it is loud. Buy a loaf. Come back and tell me what you paid.", "next": "hub"},
+      "the_eye": {"speaker": "Calen Ash", "text": "This is one of the Choir's heads. The night the note went wrong they came off, all twelve, and this one rolled further than the others, and somebody four hundred years ago cut a stair up its cheek and called it a watch. — From the eye you see the ring and the Seat and the whole heath to the Hushline, and a knight in the eye sees anything that walks toward the Seat. That is the vigil. It is not complicated. It is only long.", "next": "hub"},
+      "relief": {"speaker": "Calen Ash", "text": "I wrote every month for four years. Then every season. Then I stopped, because a letter that is not answered is a thing you have to carry up the stair and a knight is carrying enough. — The Ash counts twelve bells between noon and dusk. Some days I count eleven. I have written that down too, on the stone, where nobody will read it.", "effects": [{"rumour": ["core:rumour/eleven_bells", 0.5]}], "next": "hub"},
+      "the_thirteenth": {"speaker": "Calen Ash", "text": "Face down, a mile off the ring, as if it walked. — It has a head. I have sat in one of the twelve for eleven years and I know the inside of a Choir head the way you know your own mouth, and that one is not a Choir head; the brow is wrong and the Sayers who dig at it know it and argue about what that means instead of saying so. Keep clear of the diggings after dusk. The choristers go and stand round it and hold the note at it, and they do not like company.", "effects": [{"rumour": ["core:rumour/thirteenth_colossus", 0.5]}], "next": "hub"},
+      "bye": {"speaker": "Calen Ash", "text": "And you. Come back with a price.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/ivo_goslin",
+    "speaker_name": "Ivo Goslin",
+    "notes": "The hermit of Willow Isle (POI registry: 'a Tallymen clerk who stopped counting. He will tell you the price of anything, correctly, and refuse to sell it.'). Gives The Last Column (quests/side_2.json). His exercise book lies on his crate (encounters/pois.json, lies).",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"quest_at": ["core:quest/the_last_column", "what_his_face_did"]}], "text": "You've been to the Row. It's on your boots: Lantern Row mud is a mark a pound dearer than any other and it sticks like it knows."},
+      {"conditions": [{"marks_min": 1000}], "text": "Eleven hundred and some marks, on your belt, on an island. Don't sit near the edge."},
+      {"conditions": [{"quest_done": "core:quest/the_last_column"}], "text": "Sit. The column's posted, in the only place it will ever be posted, which is a man's face. That was the price. It's paid."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Ivo Goslin", "text": "Four marks and a half, that coat, if you sold it on the Row today, and you would be cheated; five and three-quarters is its price. — Sit if you like. The stool is worth nothing, which is why I've kept it.", "next": "hub"},
+      "hub": {"speaker": "Ivo Goslin", "text": "Ask me the price of something. It's the one thing I'm still good for.", "choices": [
+        {"text": "What's this island worth?", "next": "the_isle"},
+        {"text": "Why did you stop counting?", "next": "stopped"},
+        {"text": "Is there anything you want done?", "next": "the_column_offer", "conditions": [{"flag": "ivo_said_why"}, {"quest_not_done": "core:quest/the_last_column"}, {"not": {"quest_active": "core:quest/the_last_column"}}]},
+        {"text": "Quill read it. Twice, standing.", "next": "the_face", "conditions": [{"quest_at": ["core:quest/the_last_column", "what_his_face_did"]}]},
+        {"text": "What's the dearest thing in Tollmere?", "next": "dearest"},
+        {"text": "The book on your crate?", "next": "the_book"},
+        {"text": "Good day, Ivo.", "next": "bye"}
+      ]},
+      "the_isle": {"speaker": "Ivo Goslin", "text": "The willow, nothing: nobody can move it and nobody can sell what can't be moved, which is the one law the Tallymen never wrote down because they never needed to. The boat, eleven marks. The fish under it, more than the boat, fewer than the fisher thinks. Me, the Row wrote off at forty the year I stopped, which I thought generous, and said so, and they took two off for the saying.", "next": "hub"},
+      "stopped": {"speaker": "Ivo Goslin", "text": "Twenty years copying the Ledger of Prices. Every line: what a purse is worth to the man who takes it, what a lie costs at the charter-board, what a name is worth to the Row when the Wardens strike it off their roll and nobody says it any more. — That one. I was halfway down the column for Mullbourne when I understood what the column was, and I put the pen down, and I walked out of the counting-house and kept walking until the water stopped me. — I finished it last winter. Out here. From memory. It adds up.", "effects": [{"set_flag": "ivo_said_why"}], "next": "hub"},
+      "the_column_offer": {"speaker": "Ivo Goslin", "text": "Take it where I left it. — *(A single sheet from inside the book, folded in four, the ink twenty-two years apart down the middle of the page.)* — Orrin Quill is steward of the Row now. He posts the prices on the charter-board and believes it's the most honest thing in the city because it doesn't pretend to be free. Put that in his hand. And then come back and tell me what his face did, because that's the price I'm asking, and it's the only one I've ever set that I don't already know.", "choices": [
+        {"text": "I'll take it to Quill.", "effects": [{"start_quest": "core:quest/the_last_column"}], "next": "hub"},
+        {"text": "Not yet.", "next": "hub"}
+      ]},
+      "the_face": {"speaker": "Ivo Goslin", "text": "Twice. Standing. — And then he sat, at the board, where a steward doesn't sit. *(He is quiet for the length of a column.)* That's more than I paid for it. — Here: nine marks and a half is what your trouble was worth, and you'll take ten, because I've never once in my life rounded down, and I'm too old to start on an island.", "next": "hub"},
+      "dearest": {"speaker": "Ivo Goslin", "text": "Standing. — A barrow left standing in Lantern Row: forty marks, distraint, and the Tallymen will take the barrow as well if you're slow. Jory Wick's is still under it, I hear, from the boats that go by. Forty marks for leaving a thing where it was. I copied that line three hundred times and it was the one I laughed at, which tells you what sort of clerk I was.", "effects": [{"rumour": ["core:rumour/wick_barrow", 0.5]}], "next": "hub"},
+      "the_book": {"speaker": "Ivo Goslin", "text": "My exercise book, from the Row. I boxed my name out of the flyleaf the day I left; the rest I kept, because it's the only thing I ever wrote that wasn't a price. Read it if you like. It's about where you end and the world starts, which a clerk needs to know more than most. — It's not for sale. Nothing here is. Everything here has a price.", "next": "hub"},
+      "bye": {"speaker": "Ivo Goslin", "text": "Mind the boat. Eleven marks.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/marigold_orchard",
+    "speaker_name": "Marigold Orchard",
+    "notes": "A pilgrim who rests at Ansel's Hedge Shrine on some days (POI registry: 'a pilgrim NPC sometimes rests here').",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"flag": "told_ansel_a_story"}], "text": "You told her one. I heard it. She liked it; the hawthorn stopped scratching."},
+      {"conditions": [{"morality_max": -30}], "text": "Sit if you're sitting. Ansel told stories about neighbours, not only the good ones. There's room in the chair for yours."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Marigold Orchard", "text": "Oh — sit, sit, there's room. The chair's Ansel's, but she never minded, and she hasn't said so. I was just telling her about my neighbour Bessa's grafting. You can listen, or tell her one of your own.", "next": "hub"},
+      "hub": {"speaker": "Marigold Orchard", "text": "The pie's for her, mind. The crust's for anybody.", "choices": [
+        {"text": "Who was Ansel?", "next": "ansel"},
+        {"text": "Where are you walking?", "next": "the_road"},
+        {"text": "Tell Ansel about a neighbour.", "next": "tell", "once": true},
+        {"text": "Heard anything on the road?", "next": "the_news"},
+        {"text": "Rest well.", "next": "bye"}
+      ]},
+      "ansel": {"speaker": "Marigold Orchard", "text": "Hearth-Mother Ansel. She sat in this chair and told the first story about a neighbour, and the Vale says that's where neighbours come from: before her there were only people who lived near each other. The hawthorn took the chair over after she'd gone, the way hawthorn does, and nobody cut it back, which in the Vale is as good as a law. We bring a pie on Naming Day. I bring one every time. She's owed.", "next": "hub"},
+      "the_road": {"speaker": "Marigold Orchard", "text": "The Ash. Pilgrim's Ash, to put on grey. Three years I've been walking it, and it's four days' walk, and that's because I stop at every shrine on the way for as long as it takes to tell the stone about somebody, and there are a great many somebodies. — The Ash isn't going anywhere. That's rather its trouble.", "next": "hub"},
+      "tell": {"speaker": "Marigold Orchard", "text": "*(She listens to the whole of it with her eyes shut, nodding at the places where a Vale person would nod.)* — There. She has it now. It's hers as much as yours, which is what a story told at a shrine is for: now it can't go quiet, because somebody who can't forget it has heard it.", "effects": [{"set_flag": "told_ansel_a_story"}, {"morality": 2}], "next": "hub"},
+      "the_news": {"speaker": "Marigold Orchard", "text": "A pilgrim coming back the other way said somebody found the red poppy out west of the Choir, and ate it. Petals and all, standing in the grey. Nobody knows whether that was the Hearth in her or the Hollow. — I said the Hearth. She said I would say that, about anybody.", "effects": [{"rumour": ["core:rumour/poppy_eaten", 0.5]}], "next": "hub"},
+      "bye": {"speaker": "Marigold Orchard", "text": "Say hello to her on the way past. She hears.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/sorrel_rooke",
+    "speaker_name": "Sorrel Rooke",
+    "notes": "The day half of the Charcoal Camp's burners, and its merchant (POI registry: 'The burners buy anything that burns and sell gossip that does not. A safe camp with a job board.'). The camp's notice post is dressed by the builders when the encounter sentence mentions jobs.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"is_night": true}], "text": "You're up late, or I am. Barnaby's got the clamps. I'm only awake because the second one's fretful."},
+      {"conditions": [{"marks_min": 400}], "text": "Buying, then. Nobody walks out to a burners' camp with that on their belt to sell me a twig."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Sorrel Rooke", "text": "Buying or burning? I buy anything that burns and sell what the clamps make. Mind your sleeve; the second clamp's fretful, and fretful turf takes a sleeve before it takes a hand.", "next": "hub"},
+      "hub": {"speaker": "Sorrel Rooke", "text": "Smoke says three hours to noon. Smoke's never wrong about the time.", "choices": [
+        {"text": "Why do you and your brother never sleep at the same time?", "next": "the_clamps"},
+        {"text": "Is there work to be had?", "next": "the_board"},
+        {"text": "What will you buy?", "next": "buying"},
+        {"text": "What about the weather?", "next": "weather"},
+        {"text": "Goodbye.", "next": "bye"}
+      ]},
+      "the_clamps": {"speaker": "Sorrel Rooke", "text": "Because a clamp left alone for an hour either goes out or goes up. Twenty-two years, Barnaby and me: I wake at eleven and he says 'wind's from the east' and I say 'is it', and he sleeps, and at three in the morning I say 'wind's from the east' and he says 'is it', and I sleep. It's the longest conversation either of us has ever had.", "next": "hub"},
+      "the_board": {"speaker": "Sorrel Rooke", "text": "Post's by the fire. Charcoal buyers, hauliers wanting a hand, the odd body wanting a wolf thinned before they'll bring a cart up the track. They pin it there and I read it out to them when they can't. Take what you like off it; I get a mark off anyone who pays through the camp, which is my fee for the reading.", "next": "hub"},
+      "buying": {"speaker": "Sorrel Rooke", "text": "Wood, obviously. Cloth. Rope that's past trusting. Paper. Books — don't look like that; I've burned better books than you've read, and the better the book the steadier the burn, which is the one thing the Sayers and I agree on without either of us knowing why.", "next": "hub"},
+      "weather": {"speaker": "Sorrel Rooke", "text": "Rain by tomorrow noon. *(She looks at the smoke for a long moment.)* Or not. The smoke's right about the time and wrong about the weather half the days, and it's never told me which half.", "next": "hub"},
+      "bye": {"speaker": "Sorrel Rooke", "text": "Mind the sleeve.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/barnaby_rooke",
+    "speaker_name": "Barnaby Rooke",
+    "notes": "The night half of the Charcoal Camp's burners, and where its gossip comes from.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"is_night": false}], "text": "Mm? — No. Not asleep. Answering. Ask again, I'll be right either way."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Barnaby Rooke", "text": "Shh — no, go on, talk, talk. Sorrel's asleep in the lean-to and she sleeps like a clamp: quiet until she isn't. Sit by the fire. Everybody who comes past at night sits by the fire, and everybody who sits by the fire says something, and I hear all of it.", "next": "hub"},
+      "hub": {"speaker": "Barnaby Rooke", "text": "What'll it be — the talk, or the burning?", "choices": [
+        {"text": "What do people say round your fire?", "next": "the_talk"},
+        {"text": "Anything about the Standing Moot?", "next": "the_moot"},
+        {"text": "Do you ever see your sister awake?", "next": "sister"},
+        {"text": "Good night.", "next": "bye"}
+      ]},
+      "the_talk": {"speaker": "Barnaby Rooke", "text": "Fenwick Collier's clamp burned blue for an hour on Hushday night with the wood dry and the turf sound. Blue is copper in the ground or something older, and there's no copper under the Wold. He's banked it and he's not saying which. — That's the talk. The burning's all the same: slow, then all at once.", "effects": [{"rumour": ["core:rumour/collier_blue_smoke", 0.6]}], "next": "hub"},
+      "the_moot": {"speaker": "Barnaby Rooke", "text": "A hunter out of Fernhold sat where you're sitting a week back and said he'd seen the Hart standing in the middle of the Moot at dusk. Just standing, antlers up, the stones humming round it. He said it looked like it was waiting to be asked something. Then he said he'd not be the one to ask, and went to bed early, which is all you need to know about how it looked.", "effects": [{"rumour": ["core:rumour/hart_at_the_moot", 0.6]}], "next": "hub"},
+      "sister": {"speaker": "Barnaby Rooke", "text": "At three and at eleven, for as long as it takes to say 'wind's from the east' and 'is it'. Twenty-two years. — I know her better than anyone living. I couldn't tell you the colour of her eyes; they're always shut or they're watching smoke.", "next": "hub"},
+      "bye": {"speaker": "Barnaby Rooke", "text": "Quietly, going. She's fretful when she's woken, and so's the clamp.", "next": "end"}
+    }
+  }
+]

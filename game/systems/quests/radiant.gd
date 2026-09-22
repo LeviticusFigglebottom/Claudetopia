@@ -61,6 +61,14 @@ func _known(id: String) -> bool:
 	return bool(db().has(id))
 
 
+## Does the world supply this item at all? Read off the pack (`ItemSources`); a stand-in content
+## registry is its own world, and supplies what it lists.
+func _supplied(item_id: String) -> bool:
+	if db() != ContentDB:
+		return true
+	return ItemSources.sold(item_id) or ItemSources.rolled(item_id) or ItemSources.story_gives(item_id)
+
+
 # --- templates -----------------------------------------------------------------------------
 
 ## Every radiant template in content, sorted by id so generation order is stable.
@@ -442,10 +450,16 @@ func _pois_for(region_id: String, spec: Dictionary) -> Array[String]:
 	return out
 
 
+## People a notice can name. Not a placeholder the writers left standing (`example`), and not a
+## watch post (`guard`): the escort walk found boards able to post "Walk Gosling to Tollmere",
+## Gosling being one of the placeholder roster's dogs, and "see the Paid Watchman safe".
 func _npcs_for(region_id: String, spec: Dictionary) -> Array[String]:
 	var out: Array[String] = []
 	for def in _all("npc"):
-		if bool(def.get("no_radiant", false)):
+		if bool(def.get("no_radiant", false)) or bool(def.get("example", false)):
+			continue
+		var tags: Variant = def.get("tags", [])
+		if typeof(tags) == TYPE_ARRAY and (tags as Array).has("guard"):
 			continue
 		var home := str(def.get("home_place", ""))
 		if bool(spec.get("same_region", true)):
@@ -455,6 +469,9 @@ func _npcs_for(region_id: String, spec: Dictionary) -> Array[String]:
 	return out
 
 
+## Goods a notice can ask for: only what the world supplies somehow — a shop, a loot table, the
+## story — because a fetch for something nothing gives, sells or drops can be taken and never
+## finished (the walk found boards able to ask for cottongrass, which nothing in the game has).
 func _items_for(spec: Dictionary) -> Array[String]:
 	var tags: Array = spec.get("tags", [])
 	var cats: Array = spec.get("fallback_categories", [])
@@ -462,6 +479,8 @@ func _items_for(spec: Dictionary) -> Array[String]:
 	var by_cat: Array[String] = []
 	for def in _all("item"):
 		if bool(def.get("no_radiant", false)) or bool(def.get("quest_item", false)):
+			continue
+		if not _supplied(str(def.get("id", ""))):
 			continue
 		var item_tags: Array = def.get("tags", [])
 		var hit := false

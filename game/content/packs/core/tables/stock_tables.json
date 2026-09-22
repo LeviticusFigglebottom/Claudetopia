@@ -198,5 +198,18 @@
         "restock_hours": 24
       }
     ]
+  },
+  {
+    "id": "core:table/stock_charcoal_burner",
+    "role": "merchant_stock",
+    "description": "The Charcoal Camp's clamps and whatever the Rookes have taken in trade: what burns, what lights it, and what keeps it lit.",
+    "rows": [
+      {"item": "core:item/torch", "count": [6, 14], "restock_hours": 24},
+      {"item": "core:item/flint", "count": [4, 10], "restock_hours": 48},
+      {"item": "core:item/ash_wood", "count": [4, 12], "restock_hours": 48},
+      {"item": "core:item/candle", "count": [4, 10], "restock_hours": 48},
+      {"item": "core:item/rope", "count": [1, 3], "restock_hours": 72},
+      {"item": "core:item/ember_mote", "count": [0, 2], "restock_hours": 120, "chance": 0.35}
+    ]
   }
 ]

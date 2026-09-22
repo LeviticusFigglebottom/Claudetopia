@@ -204,8 +204,31 @@ func test_every_spot_a_quest_names_in_the_open_is_put_down_by_its_dressing() -> 
 			continue
 		var parent := _raise_cell_of(str(row["where"]))
 		assert_true(parent.find_child(spot, true, false) != null, "%s's dressing puts down no '%s'" % [row["where"], spot])
-		var placed := _found(parent, "QuestItem_" + Ids.name_of(str(row["item"])))
-		assert_eq(placed.size(), 1, "%s lies at %s" % [row["item"], row["where"]])
+		var named := ("Book_" + Ids.name_of(str(row["book"]))) if str(row["kind"]) == "book" \
+				else ("QuestItem_" + Ids.name_of(str(row["item"])))
+		var placed := _found(parent, named)
+		assert_eq(placed.size(), 1, "%s lies at %s" % [named, row["where"]])
+
+
+## A place's own sentence can say something lies there too: the chart in the Reed Wreck to take,
+## the hermit's exercise book on Willow Isle to read where it is.
+func test_what_a_places_sentence_says_lies_there_lies_there() -> void:
+	var chart := _row("lies:core:poi/reed_wreck|core:item/salt_isles_guide")
+	assert_false(chart.is_empty(), "the Salt Isles chart lies in the Reed Wreck")
+	assert_eq(str(chart.get("kind", "")), "item")
+	var book := _row("lies:core:poi/willow_isle|core:book/saying_ward")
+	assert_false(book.is_empty(), "the hermit's book lies on Willow Isle")
+	assert_eq(str(book.get("kind", "")), "book")
+	if provider == null:
+		return
+	var isle := _raise_cell_of("core:poi/willow_isle")
+	var readables := _found(isle, "Book_saying_ward")
+	assert_eq(readables.size(), 1, "on his crate")
+	if not readables.is_empty():
+		var r := readables[0] as Readable
+		assert_true(r.fixed, "read where it lies, not carried off")
+		assert_eq(r.collision_layer, Readable.INTERACT_LAYER, "and something the interaction ray can find")
+		assert_eq(r.book_id, "core:book/saying_ward", "and what it opens is his book")
 
 
 # --- inside -------------------------------------------------------------------------------------------
