@@ -113,7 +113,17 @@ rolls) lives in `static func`s or `RefCounted` classes so tests need no scene.
 | Death & shrines | `systems/hearth` | `Hearth` autoload, `Hearthstone`, `Echo` | `hearth` |
 | Interiors | `systems/interiors` | `Interiors` autoload, `Door` (+ `DoorLock` child from crime) | `interiors` |
 | Atmosphere | `systems/atmosphere` | `Atmosphere` node: sky shader, sun/moon, region look, weather | `world` |
+| Exploration | `systems/exploration` | `PlaceDiscovery` (arriving, surveying, line of sight over the built terrain) | none (`GameState`) |
 | Streaming | `world/streaming` | `WorldStreamer`, `Cell`, `TerrainProvider`, `Interiors` | `world_cells` |
+
+Most of these are nodes rather than autoloads, each with a `static ensure()` that
+finds or creates its own singleton. Nothing calls those by itself, which is how a
+player ends up in a world with no law and no market, so
+`world/bootstrap/game_services.gd` is the one place that does: its `ORDER` list
+installs ownership, bounty, crime reports, stealth, the NPC registry, reactions,
+the NPC streamer, the economy service, the property registry and place discovery,
+in dependency order. Any host scene — the world, the arena, the smoke run, the
+scripted journey — adds a single `GameServices`.
 
 ## 6. World data pipeline
 
