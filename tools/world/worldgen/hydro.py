@@ -142,6 +142,39 @@ def carve_rivers(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank):
     return Hn.astype(np.float32), d, near_surf, near_w
 
 
+## How far under the water a road's ford lies. Shallow enough to wade, deep enough to read as
+## water across the road and not as a wet stripe on it.
+FORD_DEPTH_M = 0.45
+
+
+def keep_channels(grid: Grid, H: np.ndarray, carved: np.ndarray, river_d: np.ndarray,
+                  river_w: np.ndarray, river_surf: np.ndarray, road_d: np.ndarray | None = None,
+                  road_w: np.ndarray | None = None) -> np.ndarray:
+    """Cut every river back through whatever was laid over it after it was carved.
+
+    Pads and roads are laid after the rivers, and both flatten or grade whatever lies under
+    them, a river bed included. Measured on the build before this existed: the Larkbourne Ford,
+    moved onto the river it is named for, filled 54 m of the Larkbourne with its own pad; the
+    Three Sisters' pad left the Skerrow Water dry for 46 m at the foot of the falls; and every
+    road crossing dammed its river for 8 to 30 m with a crown of road. A bridge dressed over a
+    dry bed has nothing to span.
+
+    `carved` is the land as the river carve left it. Inside the channel and along its banks,
+    nothing laid later may stand higher than that; where a road crosses, the bed is held up to
+    a wading depth (`FORD_DEPTH_M`) so the road runs through the water rather than under it.
+    """
+    half = river_w * 0.5
+    band = np.maximum(river_w * 1.6, 12.0)
+    zone = river_d <= half + band
+    if not zone.any():
+        return H
+    ceiling = carved.astype(np.float32, copy=True)
+    if road_d is not None and road_w is not None:
+        ford = zone & (river_d <= half) & (road_d <= road_w * 0.5 + 2.0)
+        ceiling = np.where(ford, np.maximum(ceiling, river_surf - FORD_DEPTH_M), ceiling)
+    return np.where(zone, np.minimum(H, ceiling), H).astype(np.float32)
+
+
 def water_maps(grid: Grid, H: np.ndarray, lake, rivers: list, river_d: np.ndarray, river_surf: np.ndarray,
                river_w: np.ndarray, owner: np.ndarray, regions: list, bank: NoiseBank) -> WaterResult:
     n = grid.n

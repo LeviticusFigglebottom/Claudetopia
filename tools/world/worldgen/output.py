@@ -105,6 +105,16 @@ def write_splines(out_dir: str, rivers: list, roads: list) -> None:
         json.dump(riv, f, indent=1)
     with open(os.path.join(out_dir, "roads.json"), "w", encoding="utf-8") as f:
         json.dump(rds, f, indent=1)
+    # Not part of the contract and read by nothing in the game: the level each road was graded
+    # to at each of its points, and the land under it that the grading was held to. It is what
+    # tools/world/tests/test_roads.py checks a road against, because the land a road was laid on
+    # is gone from heights.r32 once the road is carved into it.
+    prof = [{"id": r.id, "width_m": round(float(r.width), 2),
+             "elevation_m": [round(float(v), 2) for v in r.elevation],
+             "ground_m": [round(float(v), 2) for v in (r.ground if r.ground is not None else r.elevation)]}
+            for r in roads]
+    with open(os.path.join(out_dir, "road_profiles.json"), "w", encoding="utf-8") as f:
+        json.dump(prof, f, separators=(",", ":"))
 
 
 def write_pois(out_dir: str, pois: list) -> None:

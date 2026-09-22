@@ -1,5 +1,5 @@
 {
-  "_doc": "How the world is planted. A rule is a species: how thick it grows, where it will stand, and what it grows along. `density` is instances per hectare before the region multiplier; `region_density` overrides that multiplier for one landform, because a wood is not a downland copse at a slightly higher density. `cluster` gates the species through a low-frequency field so it comes in copses and belts with open ground between, rather than an even sprinkle. `near_water`, `near_hedge` and `near_lane` are attraction bands [from_m, to_m, strength]: willows follow the watercourses, thorn follows the field boundaries, limes follow the lanes. Exclusion alone can only ever produce confetti. `tint_index` picks which of the region's six palette colours a species is painted from (-1 keeps the asset's own colour), and `tint_strength` how far from white that multiplier travels -- the forge already builds each asset in its region's palette, so a full-strength multiply paints the colour on twice, so a region's grass, its flowers and its heather are not all one wash. `pad_keep` is the fraction of a species that survives on the outer part of a settlement's pad, beyond `pad_from` (default 0.72) of its radius: the verge at the foot of the walls gets its rough grass back while the green and the streets stay clear.",
+  "_doc": "How the world is planted. A rule is a species: how thick it grows, where it will stand, and what it grows along. `density` is instances per hectare before the region multiplier; `region_density` overrides that multiplier for one landform, because a wood is not a downland copse at a slightly higher density. `cluster` gates the species through a low-frequency field so it comes in copses and belts with open ground between, rather than an even sprinkle. `near_water`, `near_hedge` and `near_lane` are attraction bands [from_m, to_m, strength]: willows follow the watercourses, thorn follows the field boundaries, limes follow the lanes. Exclusion alone can only ever produce confetti. `tint_index` picks which of the region's six palette colours a species is painted from (-1 keeps the asset's own colour), and `tint_strength` how far from white that multiplier travels -- the forge already builds each asset in its region's palette, so a full-strength multiply paints the colour on twice, so a region's grass, its flowers and its heather are not all one wash. `pad_keep` is the fraction of a species that survives on the outer part of a settlement's pad, beyond `pad_from` (default 0.72) of its radius: the verge at the foot of the walls gets its rough grass back while the green and the streets stay clear. `tpi` [from_m, to_m, strength] is a band of height above the ground's own local mean (positive on a crest or a lip, negative in a hollow or a sunken street): marram on the crests of the strandplain, ash in the Builders' streets.",
   "defaults": {
     "scale": [
       0.85,
@@ -254,7 +254,7 @@
     },
     "reed": {
       "asset": "flora/reed",
-      "density": 520.0,
+      "density": 600.0,
       "scale": [
         0.8,
         1.6
@@ -267,17 +267,17 @@
       "kind": "herb",
       "near_water": [
         0.0,
-        34.0,
-        0.6
+        14.0,
+        0.95
       ],
       "tint_index": 1,
-      "cluster": 0.22,
+      "cluster": 0.12,
       "tint_jitter": 0.12,
       "tint_strength": 0.36
     },
     "willow": {
       "asset": "trees/willow",
-      "density": 34.0,
+      "density": 14.0,
       "scale": [
         0.9,
         1.3
@@ -297,7 +297,7 @@
     },
     "alder": {
       "asset": "trees/alder",
-      "density": 38.0,
+      "density": 22.0,
       "scale": [
         0.85,
         1.25
@@ -376,8 +376,8 @@
       "kind": "herb",
       "near_water": [
         0.0,
-        12.0,
-        0.8
+        9.0,
+        0.95
       ],
       "tint_index": 1,
       "tint_jitter": 0.11,
@@ -692,6 +692,34 @@
         "ash_plateau": 1.0
       },
       "tint_strength": 0.25
+    },
+    "marram": {
+      "asset": "flora/grass_clump",
+      "density": 1100.0,
+      "scale": [
+        0.9,
+        1.6
+      ],
+      "slope_max": 0.55,
+      "moisture": [
+        0.0,
+        0.9
+      ],
+      "kind": "herb",
+      "near_water": [
+        12.0,
+        440.0,
+        0.95
+      ],
+      "tpi": [
+        0.35,
+        8.0,
+        0.95
+      ],
+      "tint_index": 3,
+      "cluster": 0.12,
+      "tint_jitter": 0.1,
+      "tint_strength": 0.34
     }
   },
   "rocks": {
@@ -772,7 +800,11 @@
         "moisture": [
           0.25,
           1.0
-        ]
+        ],
+        "slope_min": 0.16,
+        "cluster": 0.85,
+        "cluster_threshold": 0.52,
+        "cluster_boost": 3.2
       },
       {
         "asset": "rocks/granite_slab",
@@ -824,7 +856,7 @@
     "ash_plateau": [
       {
         "asset": "rocks/fused_block",
-        "density": 1.8,
+        "density": 0.9,
         "scale": [
           0.45,
           0.85
@@ -838,7 +870,12 @@
           0.7,
           1.4
         ],
-        "slope_max": 0.3
+        "slope_max": 0.3,
+        "tpi": [
+          -12.0,
+          -0.7,
+          0.9
+        ]
       }
     ]
   },

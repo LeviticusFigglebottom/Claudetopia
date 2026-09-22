@@ -34,6 +34,7 @@ from worldgen import fields as FL
 from worldgen import heights as HM
 from worldgen import hedges as HG
 from worldgen import hydro as HY
+from worldgen import landforms as LF
 from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
@@ -83,6 +84,59 @@ def load_poi_registry(pack_dir: str) -> list:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data if isinstance(data, list) else [data]
+
+
+def pad_targets_for(places: list, pois: list) -> list:
+    """Every named place, plus every POI in the registry: everything that gets a pad."""
+    out = [dict(p) for p in places]
+    known = {tuple(p["position"]) for p in places}
+    for p in pois:
+        if tuple(p.get("position", [])) in known:
+            continue
+        out.append({"id": p["id"], "kind": p.get("kind", "poi"), "position": p["position"],
+                    "region": p.get("region", "")})
+    return out
+
+
+def sightline_segments(pois: list, pad_targets: list) -> list:
+    """[(x0, z0, x1, z1)] for every authored `visible_from` line whose two ends both have pads."""
+    where = {str(p["id"]): (float(p["position"][0]), float(p["position"][1])) for p in pad_targets}
+    out = []
+    for p in pois:
+        target = where.get(str(p.get("id", "")))
+        for vantage in p.get("visible_from", []):
+            v = where.get(str(vantage))
+            if target is not None and v is not None:
+                out.append((v[0], v[1], target[0], target[1]))
+    return out
+
+
+def pad_fingerprint(pad_targets: list) -> str:
+    """A checksum of where every pad is, how big, and what for."""
+    rows = sorted((str(p["id"]), str(p.get("kind", "")), round(float(p["position"][0]), 2),
+                   round(float(p["position"][1]), 2), round(RD.pad_radius(p), 2)) for p in pad_targets)
+    return "%08x" % zlib.crc32(json.dumps(rows).encode("utf-8"))
+
+
+def refuse_stale_pads(out_dir: str, fingerprint: str) -> None:
+    """A staged build may only reuse heights.r32 if the pads in it are the pads it would lay.
+
+    `--only textures` and `--only cells` reuse the heightmap and never write it back, so when a
+    place or a POI has moved since the heights were built, the terrain on disk keeps a pad at
+    the old position and has none at the new one, while the scatter, the POI heights and the
+    texture rules are computed against a pad re-flattened in memory where the thing now stands.
+    That is a pad under a POI's original position, with the POI standing on unflattened ground
+    and a clearing in the scatter where there is no platform. The answer is a heights build.
+    """
+    path = os.path.join(out_dir, "world_manifest.json")
+    had = ""
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            had = str(json.load(f).get("pad_fingerprint", ""))
+    if had != fingerprint:
+        raise SystemExit("[world] heights.r32 was flattened for other pads (%s, now %s): a place "
+                         "or POI has moved since. Rebuild the heights (build_world.py, or "
+                         "--only heights) before a staged build." % (had or "unrecorded", fingerprint))
 
 
 def scene_for(name: str, repo: str) -> str:
@@ -247,14 +301,8 @@ def build(args) -> dict:
     rf = compute_regions(regions, grid_c, bank, lake_c.sd, places)
     t.mark("regions")
 
-    # pad targets: every named place, plus every POI in the registry
-    pad_targets = [dict(p) for p in places]
-    known = {tuple(p["position"]) for p in places}
-    for p in pois:
-        if tuple(p.get("position", [])) in known:
-            continue
-        pad_targets.append({"id": p["id"], "kind": p.get("kind", "poi"), "position": p["position"],
-                            "region": p.get("region", "")})
+    pad_targets = pad_targets_for(places, pois)
+    pads_crc = pad_fingerprint(pad_targets)
 
     # Minimum pad levels: settlements sit above standing water. The marsh's table and the
     # sea's edge are the two that bite (Isseva is a stilt-town, not an underwater one).
@@ -274,6 +322,7 @@ def build(args) -> dict:
     heights_path = os.path.join(out_dir, "heights.r32")
     reuse = args.only in ("textures", "cells") and os.path.exists(heights_path)
     if reuse:
+        refuse_stale_pads(out_dir, pads_crc)
         H = np.fromfile(heights_path, dtype="<f4").reshape(n, n).copy()
         print("[world] reusing %s" % heights_path, flush=True)
         rivers = []
@@ -308,23 +357,49 @@ def build(args) -> dict:
             _, road_d, road_w = RD.carve_roads(grid, H.copy(), roads_list)
         t.mark("reload")
     else:
-        H = HM.compose_heights(grid, grid_c, bank, regions, rf, lake_c, lake, places)
+        H = HM.compose_heights(grid, grid_c, bank, regions, rf, lake_c, lake, places,
+                               keep_discs=[(float(p["position"][0]), float(p["position"][1]),
+                                            RD.pad_radius(p)) for p in pad_targets],
+                               keep_lines=sightline_segments(pois, pad_targets))
         t.mark("heights")
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         t.mark("pads")
         rivers = HY.trace_rivers(grid, H, bank, lake, places)
         H, river_d, river_surf, river_w = HY.carve_rivers(grid, H, rivers, bank)
+        # the land as the rivers left it, which nothing laid afterwards may dam
+        H_river = H.copy()
         t.mark("rivers")
         # a first water mask so roads know what to avoid, then the roads themselves
         rough_water = ((H < HM.SEA_LEVEL) | ((lake.sd < 0) & (H < HM.LAKE_LEVEL))
                        | (river_d <= river_w * 0.5 + 1.0)).astype(np.uint8)
-        roads_list = RD.plan_roads(grid, H, pad_targets, rough_water, pad_levels)
+        # A road's profile is laid over water's surface, not along its bed: where it crosses a
+        # river it is graded across the top, and `keep_channels` then cuts the ford.
+        # (the Mere's bed is below sea level in the middle, so the lake is tested last)
+        road_floor = np.where(river_d <= river_w * 0.5 + 2.0, river_surf + 0.6, -1.0e4)
+        road_floor = np.where(H < HM.SEA_LEVEL, HM.SEA_LEVEL + 0.6, road_floor)
+        road_floor = np.where((lake.sd < 0) & (H < HM.LAKE_LEVEL), HM.LAKE_LEVEL + 0.6,
+                              road_floor).astype(np.float32)
+        # and how far below the land a road would rather run, where that is the country's way
+        road_sink = None
+        for r in regions:
+            depth = float(RD.ROAD_SINK_M.get(r.shape, 0.0))
+            if depth > 0.0:
+                w = depth * rf.weight_at(r.index, n)
+                road_sink = w if road_sink is None else road_sink + w
+        # and where it may cut but not build up: nothing rises into an authored sightline
+        no_fill = LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M)
+        roads_list = RD.plan_roads(grid, H, pad_targets, rough_water, pad_levels, floor=road_floor,
+                                   sink=road_sink, no_fill=no_fill)
+        del road_floor, road_sink, no_fill
         # and through each settlement, so a town is somewhere a road passes rather than three
         # spokes meeting at a point
         roads_list = RD.add_streets(roads_list, pad_targets, pad_levels)
         H, road_d, road_w = RD.carve_roads(grid, H, roads_list)
         # pads again: roads must not tilt a settlement platform
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
+        # and the rivers win over both: a pad or a road laid across a channel is cut through
+        H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
+        del H_river
         t.mark("roads")
 
     owner = dithered_owner(rf, n, bank)
@@ -388,9 +463,12 @@ def build(args) -> dict:
     buckets: dict = {}
     if args.only in (None, "all", "cells"):
         rules = CELLS.load_rules(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scatter_rules.json"))
+        # where each point stands in the shape of the land, for the rules that grow on crests
+        # or lie in hollows
+        tpi = CELLS.topographic_position(H, grid.spacing)
         sw = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask,
                                 ctx.slope, bank, regions, water_d=water_d, field_d=field_d,
-                                pad_t=pad_t)
+                                pad_t=pad_t, tpi=tpi)
         buckets = CELLS.scatter(sw, rules, regions, seed, repo_root=REPO)
         # Standing stones are set, not scattered: a ring at the Moot, pairs flanking a road
         # where it crosses the high ground, and a few alone on skylines. They go into the same
@@ -421,6 +499,17 @@ def build(args) -> dict:
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
                 orchard_trees += len(rows)
+        # the lines that are the water's and the Builders', not a farmer's: willows along the
+        # marsh channels, and the stubs of walls along the lips of Cinderlea's buried streets
+        lined = 0
+        for placed_lines in (HG.waterside(grid, H, owner, ctx.slope, water.mask, water_d, pad_mask,
+                                          road_d, road_w, regions, index, bank, seed),
+                             HG.ruin_lines(grid, H, owner, ctx.slope, water.mask, pad_mask, road_d,
+                                           road_w, regions, index, bank, seed)):
+            for key, by_asset in placed_lines.items():
+                for asset, rows in by_asset.items():
+                    buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+                    lined += len(rows)
         # and what stands beside the roads: milestones, a signpost where roads meet, and
         # post-and-rail where the carriageway runs past somebody's field
         beside = RS.place(grid, H, owner, ctx.slope, water.mask, pad_mask, field_d, regions,
@@ -430,8 +519,8 @@ def build(args) -> dict:
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
                 roadside_rows += len(rows)
-        print("[world] %d hedge pieces, %d orchard trees, %d roadside"
-              % (rows_of_hedge, orchard_trees, roadside_rows), flush=True)
+        print("[world] %d hedge pieces, %d orchard trees, %d waterside and ruin, %d roadside"
+              % (rows_of_hedge, orchard_trees, lined, roadside_rows), flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
@@ -490,6 +579,8 @@ def build(args) -> dict:
         "encounters": int(sum(len(v) for v in spawns_by_cell.values())),
         "texture_slots": SF.SLOT_NAMES,
         "only": args.only or "all",
+        # what the pads in heights.r32 were flattened under; a staged build checks it
+        "pad_fingerprint": pads_crc,
     }
     OUT.write_manifest(out_dir, grid, seed, regions, runtime, stats)
     t.mark("write")

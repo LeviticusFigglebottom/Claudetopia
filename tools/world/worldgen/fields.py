@@ -30,18 +30,50 @@ from .noise import upsample
 
 ## Skerrow is enclosed too, and in stone rather than thorn: the moor above a clan hold is cut
 ## into intakes by drystone walls, which is the second thing WORLD_BIBLE 6.5 lists under its
-## architecture. Its parcels are larger than the Vale's because a moor intake is larger than
-## a field, and `hedges.py` lines them with wall instead of hedge.
+## architecture. `hedges.py` lines them with wall instead of hedge.
+##
+## They are not the Vale's fields in another material, and until now they were exactly that:
+## one pattern of 150 m parcels with wandering edges laid over all three regions. A field in
+## the Vale is small and its hedge follows whoever walked it; an intake on the moor is large,
+## and its walls were set out with a line and run dead straight up and over the fell. So each
+## enclosed landform has its own parcel size and its own wander.
+PATTERNS = {
+    # shape: (parcel spacing m, how far the boundaries wander m, salt)
+    "downs": (150.0, 26.0, 820),
+    "lake_basin": (150.0, 26.0, 820),
+    "mountains": (300.0, 4.0, 840),
+}
+
+
 def field_map(grid: Grid, bank, owner: np.ndarray, regions: list,
-              shapes=("downs", "lake_basin", "mountains"),
-              spacing_m: float = 150.0, warp_m: float = 26.0, salt: int = 820,
-              work_n: int = 2048) -> tuple:
+              shapes=("downs", "lake_basin", "mountains"), work_n: int = 2048) -> tuple:
     """Returns (labels int32, edge_d float32) at the full grid resolution.
 
     Computed on a coarser lattice and upsampled: a parcel is 165 m across and its boundary is
     a hedge two metres wide, so the extra resolution would cost two more distance transforms
-    and move the line by less than a texel.
+    and move the line by less than a texel. Each pattern in `PATTERNS` is laid over the regions
+    of its shapes; their labels never collide, so a parcel is one field on either side of a
+    region border.
     """
+    labels = np.full((grid.n, grid.n), -1, dtype=np.int32)
+    edge_d = np.full((grid.n, grid.n), 1e6, dtype=np.float32)
+    by_pattern: dict = {}
+    for s in shapes:
+        if s in PATTERNS:
+            by_pattern.setdefault(PATTERNS[s], []).append(s)
+    for k, (params, group) in enumerate(sorted(by_pattern.items())):
+        spacing_m, warp_m, salt = params
+        lab, ed = _parcels(grid, bank, owner, regions, tuple(group), spacing_m, warp_m, salt, work_n)
+        mine = lab >= 0
+        # keep the labels of each pattern apart: a vale field and a moor intake are never one parcel
+        labels = np.where(mine, lab + np.int32(k) * np.int32(1 << 27), labels)
+        edge_d = np.where(mine, ed, edge_d)
+    return labels, edge_d
+
+
+def _parcels(grid: Grid, bank, owner: np.ndarray, regions: list, shapes: tuple, spacing_m: float,
+             warp_m: float, salt: int, work_n: int) -> tuple:
+    """One enclosure pattern over the regions of `shapes`: (labels, edge_d), -1 / 1e6 outside."""
     n = min(grid.n, work_n)
     step = grid.size_m / n
 

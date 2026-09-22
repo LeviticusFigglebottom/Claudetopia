@@ -38,6 +38,8 @@ class Road:
     points: np.ndarray
     width: float
     elevation: np.ndarray
+    ## the land the profile was graded against, under each point (see `grade_profile`)
+    ground: np.ndarray | None = None
 
 
 def pad_radius(place: dict) -> float:
@@ -89,34 +91,347 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
     return H, pad_mask, levels
 
 
-def _grade(profile: np.ndarray, step_m: float, max_grade: float = 0.11, passes: int = 60) -> np.ndarray:
-    """Smooth then slope-limit a road's elevation profile."""
-    p = profile.astype(np.float64).copy()
-    k = max(3, int(90.0 / step_m) | 1)
-    kern = np.ones(k) / k
-    p = np.convolve(np.pad(p, (k, k), mode="edge"), kern, mode="same")[k:-k]
-    limit = max_grade * step_m
-    for _ in range(passes):
-        d = np.diff(p)
-        over = np.abs(d) > limit
-        if not over.any():
+## The design grade. A laden cart takes one in nine, and the router is what keeps a road under
+## it -- by going round a slope, or up it in zigzags -- not the profile: the profile follows the
+## ground, and it is never lifted off it or sunk into it to make a grade the route did not have.
+MAX_GRADE = 0.11
+## The steepest side slope the carve may leave between a road and the ground either side of
+## it: one in two. `carve_roads` blends a road into the land across its shoulder with a
+## smoothstep, whose steepest point is one and a half times its mean, so a road may stand
+## `BATTER * shoulder / 1.5` metres off its own ground -- 2.4 m for a four-metre track, 3.6 m
+## for a six-metre town road. That is a cutting or an embankment. It is never an arete: the
+## old profile limited the grade by lifting the road, and on the spur out of Kharrow Hold it
+## stood 150 m above the ground on both sides.
+BATTER = 0.5
+## How far below the land a road would rather run, by landform (`plan_roads`' `sink`). The
+## Briarwold's lanes are holloways: a track in old ground on soft rock wears down between its
+## own banks until the wood closes over it, and from inside one you see bank, roots and a strip
+## of sky -- which is a different frame from a road across open downland. It is held inside the
+## same band as any other road, so a holloway is a cutting and never a trench.
+ROAD_SINK_M = {"forest_rise": 1.9}
+
+
+def shoulder_m(width: float) -> float:
+    """How far either side of the carriageway the carve blends back into the land."""
+    return max(float(width) * 1.8, 7.0)
+
+
+def cut_fill_m(width: float) -> float:
+    """The most a road of this width may stand above, or lie below, the ground under it."""
+    return BATTER * shoulder_m(width) / 1.5
+
+
+def grade_profile(ground: np.ndarray, step_m: float, tol: float, max_grade: float = MAX_GRADE,
+                  pins: dict | None = None, smooth_m: float = 60.0, sweeps: int = 60,
+                  bias: np.ndarray | None = None, no_fill: np.ndarray | None = None) -> np.ndarray:
+    """A road's elevation along its length, sampled every `step_m` metres.
+
+    As smooth as the ground allows, never more than `tol` above or below the ground under it,
+    and no steeper than `max_grade` wherever the band leaves room for that. `pins` maps a sample
+    index to a level it must take (a settlement's pad at each end, the grade of a road this one
+    runs along); a pin outside the band is pulled into it. `bias` (metres, per sample) is where
+    the road would rather lie relative to the ground -- a holloway wants to be below it -- and
+    is still held inside the band. Where `no_fill` is set the band's top is the ground itself:
+    the road may cut there but not stand proud.
+
+    Where the ground itself is steeper than the grade plus the room either side, the band wins:
+    the road climbs with the ground for that pitch. That is the honest failure -- a steep
+    stretch of road -- and the router is what keeps it rare.
+    """
+    g = np.asarray(ground, dtype=np.float64)
+    n = g.size
+    if n == 0:
+        return g.astype(np.float32)
+    lo = g - tol
+    hi = g + tol
+    if no_fill is not None:
+        hi = np.where(np.asarray(no_fill, dtype=bool), g, hi)
+    for k, v in (pins or {}).items():
+        k = int(k)
+        if 0 <= k < n:
+            v = float(min(max(v, lo[k]), hi[k]))
+            lo[k] = hi[k] = v
+    if n < 3:
+        return np.clip(g, lo, hi).astype(np.float32)
+    k = max(3, int(round(smooth_m / step_m)) | 1)
+    e = np.convolve(np.pad(g, (k, k), mode="edge"), np.ones(k) / k, mode="same")[k:-k]
+    if bias is not None:
+        e = e + np.asarray(bias, dtype=np.float64)
+    e = np.clip(e, lo, hi)
+    step = max_grade * step_m
+    for _ in range(sweeps):
+        before = e.copy()
+        for i in range(1, n):                      # forward: no steeper than the grade...
+            e[i] = min(max(e[i], e[i - 1] - step), e[i - 1] + step)
+            e[i] = min(max(e[i], lo[i]), hi[i])    # ...and never out of the band
+        for i in range(n - 2, -1, -1):             # and back again
+            e[i] = min(max(e[i], e[i + 1] - step), e[i + 1] + step)
+            e[i] = min(max(e[i], lo[i]), hi[i])
+        if float(np.abs(e - before).max()) < 1e-3:
             break
-        adj = np.sign(d) * np.minimum(np.abs(d), limit)
-        p[1:] = p[:-1] + adj
-        p = np.convolve(np.pad(p, (2, 2), mode="edge"), np.ones(5) / 5, mode="same")[2:-2]
-    return p.astype(np.float32)
+    # take the corners off the kinks the sweeps leave, and keep it in the band doing so
+    for _ in range(2):
+        e[1:-1] = 0.25 * e[:-2] + 0.5 * e[1:-1] + 0.25 * e[2:]
+        e = np.clip(e, lo, hi)
+    return e.astype(np.float32)
+
+
+## Routing. A road is a least-cost path on a coarse lattice whose cost knows three things the
+## old one did not. Grade costs the same both ways: a road is driven in both directions, and
+## the old graph charged for climbing and nothing for descending, so a route planned from
+## Kharrow Hold down to the Mere went straight over the edge of the mountain. Grade past the
+## design grade costs quadratically, so a steep slope is worth going round or zigzagging up
+## rather than climbing straight. And a change of heading costs something, because a lattice
+## path that alternates two diagonals has a gentle grade on every edge and smooths out into a
+## road straight up the fall line; with turns priced, a switchback's legs have to be long.
+##
+## Eight headings are enough to choose which side of a hill to go. They are not enough to climb
+## one: on a uniform slope every edge that climbs at all climbs at 71% of the slope or more, so
+## above 16% no lattice path has a gentle edge in it and the router cannot see what a
+## switchback buys. The fine pass (`_refine`) adds the knight's moves, whose 27-degree heading
+## across the fall line climbs at 45% of the slope, and that is what lets it zigzag.
+_HEADINGS8 = ((0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1))
+_HEADINGS16 = ((0, 1), (1, 2), (1, 1), (2, 1), (1, 0), (2, -1), (1, -1), (1, -2),
+               (0, -1), (-1, -2), (-1, -1), (-2, -1), (-1, 0), (-2, 1), (-1, 1), (-1, 2))
+_HEADINGS = _HEADINGS8
+## metres of road that a change of heading is worth, by how far it turns: up to 30, 50, 95 and
+## 140 degrees, and anything sharper (a hairpin)
+_TURN_BY_ANGLE = ((1.0, 0.0), (30.0, 3.0), (50.0, 8.0), (95.0, 55.0), (140.0, 130.0), (181.0, 190.0))
+_GRADE_LINEAR = 12.0
+_GRADE_OVER = (0.10, 400.0)          # past this grade, cost grows with the square of the excess
+_GRADE_STEEP = (0.22, 1500.0)        # and past this, much faster still
+
+
+def _turn_table(headings: tuple) -> np.ndarray:
+    """[from, to] cost of turning between two headings, by the angle between them."""
+    ang = [math.atan2(di, dj) for di, dj in headings]
+    nh = len(headings)
+    out = np.zeros((nh, nh), dtype=np.float64)
+    for a in range(nh):
+        for b in range(nh):
+            turn = abs(math.degrees(ang[b] - ang[a])) % 360.0
+            turn = min(turn, 360.0 - turn)
+            out[a, b] = next(c for limit, c in _TURN_BY_ANGLE if turn <= limit)
+    return out
+
+
+def _edge_costs(h: np.ndarray, area: np.ndarray, spacing: float, headings: tuple = _HEADINGS8) -> list:
+    """Per heading, the cost of leaving each cell that way (inf where it would leave the box)."""
+    m, k = h.shape
+    out = []
+    for di, dj in headings:
+        length = spacing * math.hypot(di, dj)
+        src_i = slice(max(0, -di), m - max(0, di))
+        src_j = slice(max(0, -dj), k - max(0, dj))
+        dst_i = slice(max(0, di), m - max(0, -di))
+        dst_j = slice(max(0, dj), k - max(0, -dj))
+        grade = np.abs(h[dst_i, dst_j] - h[src_i, src_j]) / length
+        over = np.maximum(grade - _GRADE_OVER[0], 0.0)
+        steep = np.maximum(grade - _GRADE_STEEP[0], 0.0)
+        c = length * (0.5 * (area[src_i, src_j] + area[dst_i, dst_j]) + _GRADE_LINEAR * grade
+                      + _GRADE_OVER[1] * over * over + _GRADE_STEEP[1] * steep * steep)
+        full = np.full((m, k), np.inf, dtype=np.float64)
+        full[src_i, src_j] = c
+        out.append(full)
+    return out
+
+
+def _route(h: np.ndarray, area: np.ndarray, spacing: float, start: tuple, goal: tuple,
+           margin: int, allowed: np.ndarray | None = None, headings: tuple = _HEADINGS8) -> list:
+    """Least-cost lattice route with priced turns. Returns [(i, j), ...], or [] if there is none.
+
+    The search is over (cell, heading) states inside a box around the two ends, `margin` cells
+    wider than they are on every side: room to go round a hill, and a graph of a few hundred
+    thousand states rather than two million. `allowed`, the lattice's shape, narrows the search
+    further to a corridor; only its cells get states at all.
+    """
+    from scipy.sparse import coo_matrix, csgraph
+
+    n0, n1 = h.shape
+    i0 = max(0, min(start[0], goal[0]) - margin)
+    i1 = min(n0, max(start[0], goal[0]) + margin + 1)
+    j0 = max(0, min(start[1], goal[1]) - margin)
+    j1 = min(n1, max(start[1], goal[1]) + margin + 1)
+    hs = h[i0:i1, j0:j1].astype(np.float64)
+    ar = area[i0:i1, j0:j1].astype(np.float64)
+    m, k = hs.shape
+    ok_cell = np.ones((m, k), dtype=bool) if allowed is None else allowed[i0:i1, j0:j1].copy()
+    ok_cell[start[0] - i0, start[1] - j0] = True
+    ok_cell[goal[0] - i0, goal[1] - j0] = True
+    cells = int(ok_cell.sum())
+    compact = np.full((m, k), -1, dtype=np.int64)
+    compact[ok_cell] = np.arange(cells, dtype=np.int64)
+    nh = len(headings)
+    costs = _edge_costs(hs, ar, spacing, headings)
+    turns = _turn_table(headings)
+    rows, cols, data = [], [], []
+    for d_out, (di, dj) in enumerate(headings):
+        c = costs[d_out]
+        si, sj = np.nonzero(np.isfinite(c) & ok_cell)
+        ti, tj = si + di, sj + dj
+        keep = compact[ti, tj] >= 0
+        src = compact[si[keep], sj[keep]]
+        dst = compact[ti[keep], tj[keep]]
+        base = c[si[keep], sj[keep]]
+        for d_in in range(nh):
+            rows.append(src * nh + d_in)
+            cols.append(dst * nh + d_out)
+            data.append(base + turns[d_in, d_out])
+    graph = coo_matrix((np.concatenate(data), (np.concatenate(rows), np.concatenate(cols))),
+                       shape=(cells * nh, cells * nh)).tocsr()
+    s_cell = int(compact[start[0] - i0, start[1] - j0])
+    g_cell = int(compact[goal[0] - i0, goal[1] - j0])
+    sources = {s_cell * nh + d for d in range(nh)}
+    dist, pred, _ = csgraph.dijkstra(graph, directed=True, indices=sorted(sources), min_only=True,
+                                     return_predecessors=True)
+    goals = np.array([g_cell * nh + d for d in range(nh)])
+    best = int(goals[int(np.argmin(dist[goals]))])
+    if not np.isfinite(dist[best]):
+        return []
+    where = np.argwhere(ok_cell)                      # compact id -> (i, j) in the box
+    path = []
+    cur = best
+    guard = 0
+    while cur >= 0 and guard < cells * nh:
+        ci, cj = where[cur // nh]
+        cell = (int(ci) + i0, int(cj) + j0)
+        if not path or path[-1] != cell:
+            path.append(cell)
+        if cur in sources:
+            break
+        cur = int(pred[cur])
+        guard += 1
+    path.reverse()
+    return path
+
+
+## What a metre of road across open water costs, in metres of road on dry ground.
+WATER_COST = 30.0
+
+
+def _water_cells(water_mask: np.ndarray, n: int) -> np.ndarray:
+    """How much of each coarse cell is water that a road cannot stand on, 0..1.
+
+    A cell counts as water only where all of it is: the Long Stride is twelve metres wide, and
+    a sixteen-metre cell with the causeway down its middle is half water by area -- which
+    priced the causeway nearly as high as the open Mere, and the road to Tollmere swam.
+    """
+    m = water_mask.shape[0]
+    if m == n:
+        return water_mask.astype(np.float32)
+    if n > m or m % n:
+        return downsample(water_mask.astype(np.float32), n)
+    f = m // n
+    return water_mask.reshape(n, f, n, f).min(axis=(1, 3)).astype(np.float32)
+
+
+def _refine(grid: Grid, H: np.ndarray, water_mask: np.ndarray, coarse_pts: np.ndarray,
+            spacing: float = 4.0, corridor_m: float = 64.0) -> np.ndarray | None:
+    """Route again on a fine lattice, inside a corridor around the coarse route.
+
+    The coarse lattice is sixteen metres a cell, which is fine for choosing which side of a hill
+    to go but too coarse to lay a road on: smoothing its staircase into a curve cuts the corners
+    of every switchback and steepens it. Re-routed at four metres within sixty of the coarse
+    line, the road finds the gentle line across each slope at the scale it is actually built,
+    and the curve it smooths into is already most of the way to smooth. Returns world points,
+    or None when the grid is too coarse for a second pass to add anything.
+    """
+    spacing = max(spacing, grid.spacing)
+    n_f = int(round(grid.size_m / spacing))
+    if spacing >= 12.0 or grid.n % n_f != 0:
+        return None
+    gf = grid.with_n(n_f)
+    # a box around the coarse line, so the fine arrays are only as large as the road needs
+    pad = corridor_m + 8.0 * spacing
+    x0, x1 = float(coarse_pts[:, 0].min() - pad), float(coarse_pts[:, 0].max() + pad)
+    z0, z1 = float(coarse_pts[:, 1].min() - pad), float(coarse_pts[:, 1].max() + pad)
+    j0, i0 = gf.to_tex(x0, z0)
+    j1, i1 = gf.to_tex(x1, z1)
+    i0, j0 = max(0, int(i0)), max(0, int(j0))
+    i1, j1 = min(n_f, int(i1) + 2), min(n_f, int(j1) + 2)
+    f = grid.n // n_f
+    sub_h = H[i0 * f:i1 * f, j0 * f:j1 * f]
+    sub_w = water_mask[i0 * f:i1 * f, j0 * f:j1 * f].astype(np.float32)
+    m, k = i1 - i0, j1 - j0
+    if f > 1:
+        sub_h = sub_h[:m * f, :k * f].reshape(m, f, k, f).mean(axis=(1, 3))
+        sub_w = sub_w[:m * f, :k * f].reshape(m, f, k, f).min(axis=(1, 3))
+    # The route should see the lie of the land, not every tussock: routed over the raw detail
+    # band, the road wove round bumps a metre high and drew a drunkard's line across the moor.
+    # Bumps that small are what the profile's own tolerance absorbs. What smoothing must not
+    # hide is a cleft: a ravine twelve metres across and eighteen deep smooths into a dimple,
+    # and a road that crosses it has to go down into it. So the raw ground's steepest pitch
+    # nearby is priced separately, whichever way the road crosses it.
+    raw_slope = ndimage.maximum_filter(np.hypot(*np.gradient(sub_h.astype(np.float64), spacing)), size=3)
+    sub_h = ndimage.gaussian_filter(sub_h.astype(np.float64), sigma=6.0 / spacing, mode="nearest")
+    # the corridor: within `corridor_m` of the coarse line
+    line = np.zeros((m, k), dtype=bool)
+    dense = paths.resample_polyline(coarse_pts, spacing * 0.5)
+    lj = np.clip(np.rint((dense[:, 0] - gf.x0) / spacing).astype(np.int64) - j0, 0, k - 1)
+    li = np.clip(np.rint((dense[:, 1] - gf.z0) / spacing).astype(np.int64) - i0, 0, m - 1)
+    line[li, lj] = True
+    allowed = ndimage.distance_transform_edt(~line) * spacing <= corridor_m
+    area = 1.0 + WATER_COST * sub_w + 6.0 * np.clip(raw_slope - 0.45, 0.0, None)
+    start = (int(li[0]), int(lj[0]))
+    goal = (int(li[-1]), int(lj[-1]))
+    route = _route(sub_h, area, spacing, start, goal, margin=max(m, k), allowed=allowed,
+                   headings=_HEADINGS16)
+    if len(route) < 3:
+        return None
+    return np.array([[gf.x0 + (j + j0) * spacing, gf.z0 + (i + i0) * spacing] for i, j in route],
+                    dtype=np.float64)
+
+
+def _ground_along(grid: Grid, H: np.ndarray, pts: np.ndarray, width: float,
+                  floor: np.ndarray | None = None) -> np.ndarray:
+    """The land under a road: the mean across its carriageway, at each point.
+
+    `floor` lifts it where the road crosses water, so a profile laid across a river is laid
+    across its surface and not along its bed.
+    """
+    from .grid import sample_bilinear
+
+    d = np.gradient(pts, axis=0)
+    nrm = np.maximum(np.hypot(d[:, 0], d[:, 1]), 1e-9)
+    nx, nz = -d[:, 1] / nrm, d[:, 0] / nrm
+    acc = np.zeros(pts.shape[0], dtype=np.float64)
+    for off in (-0.5 * width, 0.0, 0.5 * width):
+        x = pts[:, 0] + nx * off
+        z = pts[:, 1] + nz * off
+        h = sample_bilinear(H, grid, x, z).astype(np.float64)
+        if floor is not None:
+            h = np.maximum(h, sample_bilinear(floor, grid, x, z).astype(np.float64))
+        acc += h
+    return acc / 3.0
 
 
 def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, levels: dict,
-               n_c: int = 512) -> list:
-    """Minimum spanning tree over settlements plus a couple of convenience links."""
+               n_c: int = 512, floor: np.ndarray | None = None, sink: np.ndarray | None = None,
+               no_fill: np.ndarray | None = None) -> list:
+    """Minimum spanning tree over settlements plus a couple of convenience links.
+
+    Each link is routed with priced grades and turns (`_route`), smoothed, and given a profile
+    that follows the ground within the carve's own tolerance (`grade_profile`). Where a road
+    runs along one planned before it, it takes that road's levels, so two roads sharing the way
+    out of a town are carved as one road and not as two at different heights. `floor` is the
+    water surface a road may not be graded under (see `_ground_along`). `sink` is how far below
+    the land a road would rather run, in metres, where that is a landform's character: the
+    Briarwold's lanes are holloways, worn down between their banks by centuries of feet.
+    `no_fill` marks ground a road may cut into but not build up: the corridors of the authored
+    sightlines, where an embankment legal anywhere else rose into the line from Greyfold to the
+    Cold Fire.
+    """
+    from scipy.spatial import cKDTree
+
     n_c = min(n_c, grid.n)
     gc = grid.with_n(n_c)
     hc = downsample(H, n_c)
-    wc = downsample(water_mask.astype(np.float32), n_c)
+    wc = _water_cells(water_mask, n_c)
     slope = np.hypot(*np.gradient(hc, gc.spacing)).astype(np.float32)
-    area = (1.0 + 7.0 * wc + 2.5 * np.clip(slope - 0.18, 0.0, None))
-    graph = paths.build_graph(hc, gc.spacing, climb_penalty=26.0, descent_bonus=0.0, area_cost=area)
+    # Open water is all but impassable; a river is crossed at a ford, and the causeway is dry
+    # ground. The grade a road takes is priced per edge in `_route`; this is only the ground
+    # nobody would bench a road into whichever way it crossed it.
+    area = (1.0 + WATER_COST * wc + 3.0 * np.clip(slope - 0.55, 0.0, None))
     towns = [p for p in places if p.get("kind") in ROAD_KINDS]
     if len(towns) < 2:
         return []
@@ -150,30 +465,68 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
             edges.append((by_short[a], by_short[b]))
     roads: list[Road] = []
     seen = set()
+    laid_pts: list = []        # the centre lines of the roads already planned, every 2 m
+    laid_elev: list = []       # and their levels there
+    step_m = 12.0
     for a, b in edges:
         key = tuple(sorted((a, b)))
         if key in seen:
             continue
         seen.add(key)
-        route = paths.path_between(graph, n_c, ij(towns[a]), ij(towns[b]))
+        sa, sb = ij(towns[a]), ij(towns[b])
+        span = int(max(abs(sa[0] - sb[0]), abs(sa[1] - sb[1])))
+        route = _route(hc, area, gc.spacing, sa, sb, margin=max(30, int(0.45 * span)))
+        # A box round the two ends is room to go round a hill, not round a lake: Tollmere's only
+        # dry way in is the Long Stride, whose landing lies outside any box drawn round
+        # Gullhithe and the island, and the road swam. A route that crosses open water gets the
+        # whole lattice to find a dry one; if there is none, the water is the answer after all.
+        if not route or sum(1 for i, j in route if wc[i, j] > 0.99) > 2:
+            wide = _route(hc, area, gc.spacing, sa, sb, margin=n_c)
+            if wide:
+                route = wide
         if len(route) < 3:
             continue
         pts = np.array([[gc.x0 + j * gc.spacing, gc.z0 + i * gc.spacing] for i, j in route], dtype=np.float64)
         pts[0] = pos[a]
         pts[-1] = pos[b]
-        pts = paths.smooth_polyline(pts, passes=6)
-        pts = paths.resample_polyline(pts, 12.0)
-        jj, ii = grid.to_tex(pts[:, 0], pts[:, 1])
-        jj, ii = grid.clamp_index(jj, ii)
-        prof = H[ii, jj].astype(np.float64)
-        prof[0] = levels.get(towns[a]["id"], prof[0])
-        prof[-1] = levels.get(towns[b]["id"], prof[-1])
-        elev = _grade(prof, 12.0)
-        elev[0] = prof[0]
-        elev[-1] = prof[-1]
+        fine = _refine(grid, H, water_mask, pts)
+        if fine is not None:
+            fine[0] = pos[a]
+            fine[-1] = pos[b]
+            pts = paths.smooth_polyline(fine, passes=6)
+        else:
+            pts = paths.smooth_polyline(pts, passes=4)
+        pts = paths.resample_polyline(pts, step_m)
         w = max(ROAD_WIDTH.get(towns[a]["kind"], 4.0), ROAD_WIDTH.get(towns[b]["kind"], 4.0))
+        ground = _ground_along(grid, H, pts, w, floor)
+        last = pts.shape[0] - 1
+        pins = {0: levels.get(towns[a]["id"], float(ground[0])),
+                last: levels.get(towns[b]["id"], float(ground[-1]))}
+        # where this road runs along one already laid, it takes that road's level
+        if laid_pts:
+            tree = cKDTree(np.concatenate(laid_pts))
+            elev_all = np.concatenate(laid_elev)
+            dist, near = tree.query(pts, distance_upper_bound=w * 0.5 + 2.5)
+            for kk in np.flatnonzero(np.isfinite(dist)):
+                if 0 < kk < last:
+                    pins[int(kk)] = float(elev_all[near[kk]])
+        bias = None
+        if sink is not None:
+            from .grid import sample_bilinear
+            bias = -sample_bilinear(sink, grid, pts[:, 0], pts[:, 1]).astype(np.float64)
+        cap = None
+        if no_fill is not None:
+            from .grid import sample_nearest
+            cap = sample_nearest(no_fill.astype(np.uint8), grid, pts[:, 0], pts[:, 1]) > 0
+        elev = grade_profile(ground, step_m, cut_fill_m(w), pins=pins, bias=bias, no_fill=cap)
         roads.append(Road(id="core:road/%s_%s" % (towns[a]["id"].split("/")[-1], towns[b]["id"].split("/")[-1]),
-                          points=pts, width=w, elevation=elev))
+                          points=pts, width=w, elevation=elev, ground=ground.astype(np.float32)))
+        dense = paths.resample_polyline(pts, 2.0)
+        seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+        s = np.concatenate([[0.0], np.cumsum(seg)])
+        sd = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(dense, axis=0), axis=1))])
+        laid_pts.append(dense)
+        laid_elev.append(np.interp(sd, s, elev.astype(np.float64)))
     return roads
 
 
@@ -236,7 +589,7 @@ def add_streets(roads: list, places: list, levels: dict) -> list:
             # a street is level: it is laid on the flattened ground of the place itself
             elev = np.full(pts.shape[0], level, dtype=np.float64)
             out.append(Road(id="core:road/%s_street%s" % (short, "" if n == 0 else "_cross"),
-                            points=pts, width=width, elevation=elev))
+                            points=pts, width=width, elevation=elev, ground=elev.copy()))
     return roads + out
 
 
