@@ -77,6 +77,11 @@ func _on_player_died(position: Vector3) -> void:
 
 
 func _respawn() -> void:
+	# One death, one coming back. The delay timer fires three seconds after the fall and nothing
+	# can cancel it, so anything that brought the player back sooner -- a load, a scripted
+	# respawn, the journey's -- was undone by it seconds into whatever they were doing next.
+	if not _respawning:
+		return
 	_respawning = false
 	var player := _player()
 	if player == null:
@@ -87,6 +92,10 @@ func _respawn() -> void:
 		player.respawn(respawn_position, respawn_yaw)
 	elif player is Node3D:
 		player.global_position = respawn_position
+	# The Echo is something you come back to, so it only answers once you have: until here the
+	# body was lying on the very spot it stands on.
+	if is_instance_valid(_echo_node):
+		_echo_node.set("armed", true)
 	EventBus.player_respawned.emit(last_hearthstone_id)
 	# Coming back is a rest: the world resets around you, but no autosave mid-recovery.
 	EventBus.hearthstone_rested.emit(last_hearthstone_id)
@@ -96,6 +105,10 @@ func _respawn() -> void:
 
 func recover_echo() -> void:
 	if not has_echo():
+		return
+	# Not before you have come back for it. While a death is unresolved the player is still on
+	# the ground where they fell, which is where the Echo is standing.
+	if _respawning:
 		return
 	var marks := int(echo.get("marks", 0))
 	var inv := _inventory()
@@ -118,6 +131,9 @@ func _spawn_echo_node() -> void:
 	parent.add_child(_echo_node)
 	_echo_node.global_position = echo["position"]
 	_echo_node.set("marks", int(echo["marks"]))
+	# An Echo raised by a death appears around the body that just fell and must not notice it;
+	# one raised by a load or a spawn is one the player left behind and is live at once.
+	_echo_node.set("armed", not _respawning)
 
 
 func _clear_echo_node() -> void:
