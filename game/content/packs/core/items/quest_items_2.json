@@ -70,5 +70,50 @@
       "no_sale"
     ],
     "description": "An Isseva burial lantern of indigo paper on an alder frame, relit every year for ninety-odd years by a family who could not have told you whose it was. A reed stands uncut in the oil-well, which in the marsh means a drowned person nobody could bury, and Tessane did not drown."
+  },
+  {
+    "id": "core:item/charter_strongroom_entry",
+    "name": "Charter Entry, the Row Strongroom",
+    "category": "book",
+    "weight": 0.6,
+    "value": 18,
+    "tags": [
+      "quest",
+      "tallymen",
+      "charter",
+      "tollmere"
+    ],
+    "reads": "core:book/charter_strongroom",
+    "description": "Four leaves in a paper wrapper, copied out by a binder who copies everything: the Guild's own charter entry for the building of the Lantern Row strongroom in Y.T. 998, with the mason's costs, the depth of the footings, and one sentence about the back wall that the Guild has never read carefully."
+  },
+  {
+    "id": "core:item/ledger_of_prices",
+    "name": "The Ledger of Prices",
+    "category": "book",
+    "weight": 6.5,
+    "value": 0,
+    "tags": [
+      "quest",
+      "tallymen",
+      "quiet_hands",
+      "ledger",
+      "no_sale"
+    ],
+    "reads": "core:book/ledger_of_prices",
+    "description": "Oak boards, brass corners, a strap and a lock that has been cut: ninety-one years of what the law of Tollmere has cost and who paid it, in eleven stewards' hands, each of them tidy. It is heavy in the way a thing is heavy when you are carrying it out of a room you should not be in."
+  },
+  {
+    "id": "core:item/unsaid_glove",
+    "name": "The Unsaid's Glove",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "quiet_hands",
+      "faction",
+      "token",
+      "no_sale"
+    ],
+    "description": "One glove, left-handed, grey kid leather worn through at the finger-ends on purpose so that the fingers can feel a ward through it. The Hands give one glove and keep the other, and nobody in the Undercroft will tell you where the other one is."
   }
 ]

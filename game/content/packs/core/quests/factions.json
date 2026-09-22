@@ -101,7 +101,7 @@
       {"id": "what_it_costs",
        "journal": "The day-book prices a fine at four marks for a Merrowby carter and forty for a Gullhithe fisher for the same barrow in the same street, with a note in Quill's hand about who each of them knows. Half-Ell is waiting in the Undercroft. So, in a way, is Quill.",
        "objectives": [{"type": "choice", "target": "the_daybook", "options": [
-         {"id": "to_hands", "text": "Give the day-book to Half-Ell. Let it be read.", "effects": [{"set_flag": "daybook_to_hands"}, {"set_flag": "ranked_in_a_faction"}, {"rep": ["core:faction/quiet_hands", 20]}, {"renown": 5}, {"give_item": ["core:item/half_ells_thimble", 1]}]},
+         {"id": "to_hands", "text": "Give the day-book to Half-Ell. Let it be read.", "effects": [{"join_faction": "core:faction/quiet_hands"}, {"set_flag": "daybook_to_hands"}, {"set_flag": "ranked_in_a_faction"}, {"rep": ["core:faction/quiet_hands", 20]}, {"renown": 5}, {"give_item": ["core:item/half_ells_thimble", 1]}]},
          {"id": "return_it", "text": "Put it back on Quill's desk. Tell Half-Ell you could not.", "effects": [{"set_flag": "daybook_returned"}, {"rep": ["core:faction/quiet_hands", -10]}, {"rep": ["core:faction/tallymen", 5]}, {"morality": 5}]},
          {"id": "to_quill", "text": "Hand it to Quill openly and tell him who wanted it.", "effects": [{"set_flag": "daybook_to_quill"}, {"rep": ["core:faction/tallymen", 15]}, {"rep": ["core:faction/quiet_hands", -30]}, {"marks": 50}]}
        ]}],

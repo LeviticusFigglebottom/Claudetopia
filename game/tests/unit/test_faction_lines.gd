@@ -22,6 +22,11 @@ const MEASUREMENT := "core:quest/the_long_measurement"
 const COUNCIL := "core:quest/in_council"
 const UNSAID := "core:quest/the_unsaid_woman"
 
+const LEDGER := "core:quest/the_unsaid_ledger"
+const REPORTED := "core:quest/a_thing_nobody_reported"
+const BELL_WALL := "core:quest/against_the_bell"
+const EVERY_PRICE := "core:quest/every_price"
+
 var log_node: Node
 var ctx: SocialContext
 var inventory: SocialFakes.FakeInventory
@@ -542,6 +547,165 @@ func test_the_circle_can_unsay_her_a_second_time() -> void:
 	assert_true(log_node.is_completed(UNSAID))
 	assert_true(ctx.has_flag("circle_unsaid_her_again"))
 	assert_true(Social.standing.morality() < 0, "doing it twice is worse than doing it once")
+
+
+# --- the Quiet Hands -------------------------------------------------------------------------------
+
+## The Unsaid Ledger, taken and decided through Half-Ell, whose hall is the only place its last
+## stage can be answered.
+func finish_the_unsaid_ledger(ending: String = "It goes to the Hands.") -> void:
+	var runner := talk_to("core:npc/half_ell")
+	press(runner, "Teach me Hush.")
+	if runner.is_running():
+		runner.stop()
+	assert_true(log_node.is_active(LEDGER), "learning the first Hush is taking the work")
+	log_node.set_stage(LEDGER, "what_it_costs")
+	var step := talk_to("core:npc/half_ell")
+	press(step, "I have the day-book.")
+	press(step, ending)
+	if step.is_running():
+		step.stop()
+	assert_true(log_node.is_completed(LEDGER), "the day-book's ending finishes the quest")
+
+
+func test_the_unsaid_ledger_can_finally_be_decided() -> void:
+	finish_the_unsaid_ledger()
+	assert_true(ctx.has_flag("daybook_to_hands"))
+	assert_true(Social.factions.is_member(HANDS), "carrying it down is what makes somebody a Hand")
+	assert_eq(inventory.count("core:item/half_ells_thimble"), 1)
+	assert_true(ctx.has_flag("ranked_in_a_faction"))
+
+
+func test_handing_the_day_book_to_quill_shuts_the_line() -> void:
+	finish_the_unsaid_ledger("I am taking it to Quill")
+	assert_true(ctx.has_flag("daybook_to_quill"))
+	assert_false(Social.factions.is_member(HANDS), "the Hands do not keep somebody who sold them")
+	assert_true(Social.factions.reputation(HANDS) < 20, "and the rest of the line is shut behind rank")
+	assert_false(log_node.start(REPORTED), "which is the consequence, not a missing quest")
+
+
+func test_a_thing_nobody_reported_goes_and_asks_the_man_on_the_page() -> void:
+	finish_the_unsaid_ledger()
+	rep(HANDS, 30)
+
+	walk_in("core:npc/half_ell", ["Four marks and forty.", "Why has nobody asked him?", "Then I'll go."])
+	assert_true(log_node.is_active(REPORTED))
+	assert_eq(stage(REPORTED), "the_fisher")
+
+	arrived("core:place/gullhithe")
+	var jory := talk_to("core:npc/jory_wick")
+	press(jory, "Forty marks was not for a barrow.")
+	press(jory, "Where did the cart come from?")
+	jory.stop()
+	assert_true(ctx.has_flag("jory_told_what_he_saw"))
+	assert_eq(stage(REPORTED), "the_wreck")
+
+	arrived("core:poi/gullhithe_wreck")
+	killed("core:enemy/smuggler_sayer", 2)
+	assert_eq(stage(REPORTED), "the_wreck", "the chit is the point, not the sayers")
+	inventory.add("core:item/forged_charter_chit", 1)
+	assert_eq(stage(REPORTED), "whose_hand")
+
+	var her := talk_to("core:npc/half_ell")
+	press(her, "The chit is in Quill's own hand.")
+	press(her, "Jory Wick can have it.")
+	if her.is_running():
+		her.stop()
+	assert_true(log_node.is_completed(REPORTED))
+	assert_eq(log_node.outcome_of(REPORTED), "to_the_fisher")
+	assert_true(ctx.has_flag("chit_to_jory"))
+	assert_true(ctx.has_flag("nobody_reported_done"))
+	assert_gt(Social.standing.morality(), 0, "giving a man back forty marks is a Hearth deed")
+
+	# And the fisher can be told, which is the only reason the chit was worth anything.
+	var again := talk_to("core:npc/jory_wick")
+	press(again, "The chit is yours.")
+	again.stop()
+	assert_true(ctx.has_flag("jory_has_the_chit"))
+
+
+func test_against_the_bell_finds_what_the_guild_built_against() -> void:
+	finish_the_unsaid_ledger()
+	rep(HANDS, 50)
+	already_finished(REPORTED)
+	rep(HANDS, 50)
+
+	walk_in("core:npc/half_ell", ["What is behind the back of the bell hall?", "I'll get the entry off the binder."])
+	assert_eq(stage(BELL_WALL), "the_charter_entry")
+
+	arrived("core:place/tollmere")
+	var cassa := talk_to("core:npc/cassa_binder")
+	press(cassa, "The Guild's entry for the Lantern Row strongroom.")
+	press(cassa, "Eleven times and nobody has asked you the question?")
+	cassa.stop()
+	assert_eq(inventory.count("core:item/charter_strongroom_entry"), 1)
+	assert_true(ctx.has_flag("cassa_said_it_is_a_bell"), "the binder says the thing at the foot of her own copy")
+	read("core:book/charter_strongroom")
+	assert_eq(stage(BELL_WALL), "behind_the_bell")
+
+	arrived("core:place/undercroft")
+	killed("core:enemy/gutter_drake", 4)
+	assert_eq(stage(BELL_WALL), "whose_name")
+
+	var her := talk_to("core:npc/half_ell")
+	press(her, "There is a second door in the bell's side.")
+	press(her, "I'll say mine.")
+	if her.is_running():
+		her.stop()
+	assert_true(log_node.is_completed(BELL_WALL))
+	assert_true(ctx.has_flag("door_heard_your_name"))
+	assert_true(ctx.has_flag("against_the_bell_done"))
+
+
+func test_every_price_ends_the_line_on_who_reads_the_ledger() -> void:
+	finish_the_unsaid_ledger()
+	rep(HANDS, 75)
+	already_finished(REPORTED)
+	already_finished(BELL_WALL)
+	rep(HANDS, 75)
+
+	walk_in("core:npc/half_ell", ["Then let us go and get the Ledger.", "Why me?", "Then I'll carry it."])
+	assert_eq(stage(EVERY_PRICE), "the_strongroom")
+
+	arrived("core:place/undercroft")
+	killed("core:enemy/bravo", 2)
+	inventory.add("core:item/ledger_of_prices", 1)
+	assert_eq(stage(EVERY_PRICE), "read_it")
+	read("core:book/ledger_of_prices")
+	assert_eq(stage(EVERY_PRICE), "who_reads_it")
+
+	var tally_before: int = Social.factions.reputation("core:faction/tallymen")
+	var her := talk_to("core:npc/half_ell")
+	press(her, "Thirty-one marks in the pound.")
+	press(her, "It goes on the charter-board.")
+	if her.is_running():
+		her.stop()
+	assert_true(log_node.is_completed(EVERY_PRICE))
+	assert_true(ctx.has_flag("ledger_published"))
+	assert_true(Social.factions.reputation("core:faction/tallymen") < tally_before, "the Guild reads it too")
+	assert_eq(inventory.count("core:item/unsaid_glove"), 1, "one glove, and they keep the other")
+	assert_true(ctx.has_flag("quiet_hands_line_done"))
+	assert_eq(Social.factions.rank_name(HANDS), "The Unsaid", "the line ends at the top of the ladder")
+	assert_gt(Social.standing.renown(), 40, "nailing that to a board is the loudest thing a thief can do")
+
+
+func test_selling_the_ledger_back_is_paid_for_and_costs_the_hall() -> void:
+	finish_the_unsaid_ledger()
+	rep(HANDS, 75)
+	already_finished(REPORTED)
+	already_finished(BELL_WALL)
+	rep(HANDS, 75)
+	walk_in("core:npc/half_ell", ["Then let us go and get the Ledger.", "In through the bell's side, then."])
+	log_node.set_stage(EVERY_PRICE, "who_reads_it")
+	var her := talk_to("core:npc/half_ell")
+	press(her, "Thirty-one marks in the pound.")
+	press(her, "The Guild buys it back.")
+	if her.is_running():
+		her.stop()
+	assert_eq(log_node.outcome_of(EVERY_PRICE), "sell_it_back")
+	assert_gt(inventory.marks(), 600, "six hundred marks and the quest's own purse")
+	assert_true(Social.factions.reputation(HANDS) < 75, "and the hall remembers it")
+	assert_true(Social.standing.morality() < 0)
 
 
 # --- what every faction line owes a player ---------------------------------------------------------
