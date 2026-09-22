@@ -154,14 +154,7 @@ func test_a_hearthstone_carries_the_id_of_the_place_it_stands_at() -> void:
 func test_the_main_quests_resting_places_have_hearthstones() -> void:
 	if _skip():
 		return
-	var stones: Dictionary = {}
-	for item_v in WorldPois.candidates(pois):
-		var item: Dictionary = item_v
-		var d := PoiDressing.raise(item["entry"], item["def"], false, provider, roads)
-		_host().add_child(d)
-		for stone_v in d.hearthstones():
-			stones[(stone_v as Hearthstone).hearthstone_id] = true
-		_drop(d)
+	var stones := _every_hearthstone_in_the_game()
 	var wanted := 0
 	for quest in ContentDB.all("quest"):
 		for stage in quest.get("stages", []):
@@ -173,8 +166,42 @@ func test_the_main_quests_resting_places_have_hearthstones() -> void:
 				if target == "" or target == "any" or target.begins_with("tag:"):
 					continue
 				wanted += 1
-				assert_true(stones.has(target), "%s rests at %s and no Hearthstone stands there" % [quest.get("id", "?"), target])
+				assert_true(stones.has(target),
+						"%s rests at %s and no Hearthstone of that id stands anywhere, in the open or in a deep place"
+						% [quest.get("id", "?"), target])
 	assert_gt(wanted, 0, "no quest rests anywhere; the objective type went unused")
+
+
+## Every Hearthstone the built game can stand up, by id, from both places they come from: the
+## ones this node raises in the open, and the ones the deep places declare as a `hearthstone`
+## feature in their own meta, which `cave_interior.gd` builds when you go inside.
+##
+## Counting only the overworld ones made this test wrong rather than strict: a quest that
+## rests at `hearth_undercroft` names a stone that genuinely exists, down in the Undercroft,
+## and the test called it missing.
+func _every_hearthstone_in_the_game() -> Dictionary:
+	var out: Dictionary = {}
+	for item_v in WorldPois.candidates(pois):
+		var item: Dictionary = item_v
+		var d := PoiDressing.raise(item["entry"], item["def"], false, provider, roads)
+		_host().add_child(d)
+		for stone_v in d.hearthstones():
+			out[(stone_v as Hearthstone).hearthstone_id] = true
+		_drop(d)
+	for def in ContentDB.all("interior"):
+		var meta_path := str(def.get("meta", ""))
+		if meta_path == "" or not FileAccess.file_exists(meta_path):
+			continue
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+		if typeof(parsed) != TYPE_DICTIONARY:
+			continue
+		for feature_v in (parsed as Dictionary).get("features", []):
+			if typeof(feature_v) != TYPE_DICTIONARY:
+				continue
+			var feature: Dictionary = feature_v
+			if str(feature.get("kind", "")) == "hearthstone":
+				out[str(feature.get("id", ""))] = true
+	return out
 
 
 # --- the same place every time ------------------------------------------------------------------------
