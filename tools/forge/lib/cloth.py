@@ -237,7 +237,29 @@ def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves:
 
     `collar` raises (+) or lowers (-) the neckline in metres from the base of the neck; the
     garment always covers the shoulders, so a negative collar opens the throat rather than
-    stripping the chest."""
+    stripping the chest.
+
+    The radius here only says *where the garment exists*; it cannot make a sleeve fat.
+    `offset_shell` puts the surface where the body's own field reads `gap + thickness`, and
+    outside the region it pushes the field solid so the garment ends. A larger radius
+    lengthens the sleeve's reach round the limb; it does not lift it off.
+
+    That is worth writing down, because ASSESSMENT lists "tunic sleeves are wider than the
+    forearm under them" as a known weakness and the measurement does not support it. Taking
+    every sleeve vertex's distance to the nearest point on the body and reading the median,
+    in millimetres:
+
+        tunic     shoulder 19   upper arm 14   forearm 13
+        shirt     shoulder 19   upper arm 14   forearm 13
+        coat      shoulder 26   upper arm 19   forearm 19
+        gambeson  shoulder 38   upper arm 32   forearm 31
+        robe      shoulder 27   upper arm 21   forearm 40
+
+    The tunic is the closest-fitting sleeved garment in the set and sits 2 mm over its own
+    design of 11 mm (3 gap + 8 thickness). What reads as a leg-of-mutton sleeve in a
+    character lineup is the *gambeson*, which is a padded jack standing 31-38 mm off the
+    arm because that is what padding is, and which half the presets in that render wear.
+    Before widening or narrowing anything here, render one figure in a tunic alone."""
     s = _s(skel)
     z0 = hem * skel.props.height
     z1 = top * skel.props.height
@@ -247,7 +269,6 @@ def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves:
         bones = ["Shoulder.L", "Shoulder.R", "UpperArm.L", "UpperArm.R"]
         if sleeves > 0.55:
             bones += ["LowerArm.L", "LowerArm.R"]
-        r = 0.10 * s + 0.02 * s
         arm_len = skel.bones["UpperArm.L"].length + skel.bones["LowerArm.L"].length
         reach = arm_len * sleeves
         sh = skel.J["UpperArm.L"]

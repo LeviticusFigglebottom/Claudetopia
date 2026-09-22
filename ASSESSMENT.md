@@ -191,6 +191,15 @@ under them, the shoulder cape reads as a lampshade, and the plate breastplate st
 collarbone with bare shoulders above it. The 70 animation clips were not re-tuned against the
 new proportions, so hand-to-prop contacts may have drifted.
 
+**Struck from that list since: the sleeves.** Measured as the distance from every sleeve
+vertex to the body surface under it, the tunic's median standoff is 19 mm at the shoulder,
+14 at the upper arm and 13 at the forearm, against its own design of 11 (3 gap, 8 cloth).
+It is the closest-fitting sleeved garment in the set. What reads as a leg-of-mutton sleeve
+in a character lineup is the **gambeson**, at 31-38 mm, which is a padded jack and is meant
+to be; half the presets in that render wear one. The numbers for all five sleeved garments
+are in `lib/cloth.torso_region`'s docstring, so the next person to look at a lineup and
+reach for the sleeve width finds the measurement first.
+
 **Balance is uncalibrated, and now at least it is measured.** There has still never been a
 playthrough, so there is no pacing data and no idea whether a fight is fun. But the numbers
 themselves are data and the formulas are three static functions, so `tools/balance.py` reads
