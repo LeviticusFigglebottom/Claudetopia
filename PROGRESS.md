@@ -506,12 +506,22 @@ reference beside anything you are judging in that scene.
 
 ## Known issues
 
-* **The journey's death step has failed once in five runs**, and I have not pinned down why.
-  It rests at a Hearthstone, dies, respawns and recovers the echo, and one run in five one of
-  those five conditions came back false. The step now names which one when it fails instead of
-  printing the success sentence, and each settling point waits two frames rather than one,
-  which has held for every run since — but "it stopped happening" is not a diagnosis and it is
-  recorded here as unexplained rather than fixed.
+* ~~**The journey's death step has failed once in five runs**~~ **Diagnosed and fixed: the Echo
+  noticed its own player.** It was never a frame-scheduling accident. The Echo is an `Area3D`
+  spawned at the spot the player fell, and for the three seconds of `RESPAWN_DELAY` the body is
+  still lying on that spot — so the area woke up around its own player, `body_entered` fired and
+  `recover_echo()` returned every mark before the player had stood up. Death has therefore never
+  cost anything in play: the Echo you are meant to walk back to went quiet within a frame of your
+  falling. The journey sees the same fault as `dropped=false`, as `marks_gone=false` or as a
+  clean pass depending only on whether a physics tick lands between two of the step's checks,
+  which is why more frames appeared to help and why five runs could not settle it. An Echo is
+  something you come back to, so `Hearth` now arms it on respawn (one restored from a save is
+  armed at once) and `recover_echo()` refuses outright while a death is unresolved. Two tests in
+  `test_hearth.gd` pin it, and they need a body the physics server can see, because an `Area3D`
+  never notices the bare `Node3D` the old fakes used. The same seam gave up a second fault:
+  `_respawn()` was not idempotent and the death delay's timer cannot be cancelled, so anything
+  that brought the player back sooner — a load, a scripted respawn, the journey's own — was
+  undone three seconds later when the timer yanked the body to the Hearthstone mid-stride.
 * **The exterior is over the primitive budget, badly.** DESIGN §11 sets 1.5 M primitives and
   2000 draw calls. Interiors are all comfortably inside it (the Cantor's Seat is the worst at
   1.17 M and 61 draws). The country is not: Merrowby from the air is **5.14 M primitives**
