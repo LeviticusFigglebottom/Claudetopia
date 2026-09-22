@@ -18,6 +18,7 @@
       "light": {
         "sun_color": "#ffe6b8",
         "sun_elevation_bias": -4,
+        "sun_elevation_scale": 0.53,
         "fog_color": "#e9dcbd",
         "fog_density": 0.00026,
         "ambient_tint": "#fff0d6",
@@ -103,6 +104,7 @@
       "light": {
         "sun_color": "#fff5e6",
         "sun_elevation_bias": 4,
+        "sun_elevation_scale": 0.53,
         "fog_color": "#c9d6e2",
         "fog_density": 0.0002,
         "ambient_tint": "#e8f0ff",
@@ -283,7 +285,7 @@
         "contrast": 1.12,
         "bloom": 0.45,
         "god_rays": true,
-        "sun_elevation_scale": 0.9,
+        "sun_elevation_scale": 0.54,
         "sky_tint": "#dcebd0"
       },
       "weather": {
@@ -367,6 +369,7 @@
       "light": {
         "sun_color": "#eef2ff",
         "sun_elevation_bias": 2,
+        "sun_elevation_scale": 0.38,
         "fog_color": "#b8c4d4",
         "fog_density": 0.00016,
         "ambient_tint": "#d8e2f2",
