@@ -19,7 +19,7 @@
   ],
   "culture": "pilgrims",
   "place": "core:place/pilgrims_ash",
-  "tris": 736,
+  "tris": 2188,
   "has_timber": true,
   "rooms": [
     {
@@ -224,9 +224,9 @@
       "fixture": "name_table",
       "room": "muster_room",
       "at": [
-        3.01,
+        2.79,
         0.0,
-        0.4
+        0.55
       ],
       "yaw": 0.0,
       "wear": 0.6

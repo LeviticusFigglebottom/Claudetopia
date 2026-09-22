@@ -219,6 +219,15 @@ PROPS_SIZED = [
     ("copper", "hearthvale", 1, None),
 ]
 
+# The Name-table (DESIGN §5.8). Enchanting is written at one, the skill's own definition
+# and two item descriptions name one, and there was no mesh: the only one in the country --
+# the Bell Chapter-House at Pilgrim's Ash -- stood in as a trestle table and was written
+# down as owed. Cinderlea, because the Tolling Order is Cinderlea's and keeps its vigil
+# there; one, because there is one.
+PROPS_ORDER = [
+    ("name_table", "cinderlea", 1, None),
+]
+
 LANDMARKS = [
     ("cracked_toll", "hearthvale", 1, None),
     ("fallen_hand", "skerrow", 1, None),
@@ -239,7 +248,7 @@ LANDMARKS = [
 TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
-          ("gen_props", PROPS_SIZED)]
+          ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER)]
 
 
 def build() -> list[dict]:

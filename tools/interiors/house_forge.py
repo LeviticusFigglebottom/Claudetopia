@@ -361,6 +361,11 @@ FIXTURE = {
     "chair": (0.5, 0.5, "beside_table", 0.0), "sideboard": (1.6, 0.6, "wall", 0.0),
     "net_rack": (2.0, 0.5, "wall", 0.0), "drying_line": (2.4, 0.1, "wall", 1.9),
     "oar_rack": (0.4, 0.4, "corner", 0.0), "tar_pot": (0.6, 0.6, "corner", 0.0),
+    # A Name-table (DESIGN §5.8): the bench a Toll-Knight writes a note into iron at. It
+    # had no entry at all and fell through to the 0.8 x 0.6 default, which reserved half
+    # the floor it needs -- the mesh is 1.4 x 0.78, and the room has to leave room to stand
+    # at it. Against a wall, because the Bell Chapter-House's muster room is a cell.
+    "name_table": (1.5, 0.9, "wall", 0.0),
     "weapon_rack": (1.8, 0.4, "wall", 0.0), "roll_desk": (1.4, 0.8, "wall", 0.0),
     "map_board": (1.4, 0.1, "wall", 1.3), "stool": (0.4, 0.4, "beside_table", 0.0),
     "cupboard": (1.2, 0.5, "wall", 0.0), "table": (1.6, 0.9, "centre", 0.0),
