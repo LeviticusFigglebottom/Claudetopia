@@ -118,11 +118,14 @@ func resolve(option_id: String, player: Node = null) -> Dictionary:
 		"pay":
 			var due := Crimes.fine(owed, float(l.get("fine_multiplier", 1.0)))
 			result["cost"] = due
-			if not Purse.pay(player, due):
+			# Through the ledger, not past it. This block used to take the marks, clear the
+			# bounty and count the fine itself -- a second implementation of `Bounty.pay_bounty`,
+			# which had four passing tests and was called by nothing at all. Two answers to
+			# "what does paying a fine do", and only one of them reachable.
+			var ledger := Bounty.ensure()
+			if ledger == null or not ledger.pay_bounty(law_faction, player):
 				EventBus.notify.emit("You have not the marks.", "info")
 				return result
-			_clear_bounty()
-			GameState.inc("fines_paid", due)
 			if style == "blood_price":
 				EventBus.notify.emit("The price is paid. The Moot will remember that you paid it.", "crime")
 			else:

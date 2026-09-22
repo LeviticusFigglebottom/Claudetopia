@@ -25,7 +25,13 @@ func _ready() -> void:
 		hearthstone_id = name
 	_build_visual()
 	_update_flame()
-	EventBus.hearthstone_rested.connect(func(_id: String) -> void: _update_flame())
+	# A method reference, not a closure: stones are streamed in and out with the world, and
+	# a closure on the bus outlives the stone that made it.
+	EventBus.hearthstone_rested.connect(_on_hearthstone_rested)
+
+
+func _on_hearthstone_rested(_id: String) -> void:
+	_update_flame()
 
 
 func prompt_text() -> String:

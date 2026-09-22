@@ -176,14 +176,21 @@ func _setup_components() -> void:
 	caster.setup(self, will)
 	caster.skill_lookup = func(def: Dictionary) -> float: return get_skill(SpellRuntime.skill_for(def))
 	anim.setup(model, body_kind, tint, body_scale, body_variant)
-	stamina_comp.changed.connect(func(_c: float, _m: float) -> void: stats_changed.emit())
-	poise_comp.changed.connect(func(_c: float, _m: float) -> void: stats_changed.emit())
-	caster.mana_changed.connect(func(_c: float, _m: float) -> void: stats_changed.emit())
+	# Method references, not closures, all the way down: a closure is not disconnected when
+	# the actor that made it is freed, and one on a component that outlived its owner is a
+	# call into nothing once per stat change for the rest of the process.
+	stamina_comp.changed.connect(_on_pool_changed)
+	poise_comp.changed.connect(_on_pool_changed)
+	caster.mana_changed.connect(_on_pool_changed)
 	poise_comp.broken.connect(_on_poise_broken)
 	status.damage_tick.connect(_on_status_damage)
 	status.expired.connect(_on_status_expired)
 	anim.clip_event.connect(_on_clip_event)
 	anim.clip_finished.connect(_on_clip_finished)
+
+
+func _on_pool_changed(_current: float, _maximum: float) -> void:
+	stats_changed.emit()
 
 
 # --- stat properties (coordinator contract: health/max_health/stamina/... as floats) ----------

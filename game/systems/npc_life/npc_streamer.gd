@@ -68,10 +68,21 @@ func _ready() -> void:
 	_registry = NpcRegistry.ensure()
 	# The hourly simulation moves people between places; the bodies have to follow it, and
 	# waiting up to INTERVAL for that is long enough to watch somebody teleport.
-	EventBus.hour_changed.connect(func(_h: int) -> void: refresh())
+	EventBus.hour_changed.connect(_on_hour_changed)
 	# A door is the sharpest change of who should be standing near you that the game has.
-	EventBus.interior_entered.connect(func(_id: String) -> void: refresh())
-	EventBus.interior_exited.connect(func(_id: String) -> void: refresh())
+	# All three are method references rather than closures: the bus is an autoload and a
+	# closure it holds survives the streamer, so a world that has been torn down goes on
+	# refreshing its people forever.
+	EventBus.interior_entered.connect(_on_interior_changed)
+	EventBus.interior_exited.connect(_on_interior_changed)
+
+
+func _on_hour_changed(_hour: int) -> void:
+	refresh()
+
+
+func _on_interior_changed(_id: String) -> void:
+	refresh()
 
 
 func _exit_tree() -> void:

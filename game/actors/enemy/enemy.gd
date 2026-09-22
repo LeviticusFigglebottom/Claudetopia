@@ -122,7 +122,7 @@ func _ready() -> void:
 	perception.setup(self, def)
 	perception.detected.connect(_on_detected)
 	perception.suspicion_raised.connect(_on_suspicion)
-	perception.noise.connect(func(pos: Vector3, _l: float) -> void: _remember(pos))
+	perception.noise.connect(_on_noise_heard)
 	brain.patrol_points = patrol_points
 	spawn_position = global_position
 	spawn_yaw = rotation.y
@@ -1148,6 +1148,10 @@ func _on_detected(_t: Node3D) -> void:
 	_call_pack(perception.last_known)
 	if is_boss and not boss_started:
 		start_boss()
+
+
+func _on_noise_heard(position: Vector3, _loudness: float) -> void:
+	_remember(position)
 
 
 func _on_suspicion(position: Vector3) -> void:

@@ -101,6 +101,12 @@ func _on_boss_defeated(id: String) -> void:
 	active = false
 	_set_gate(false)
 	arena_cleared.emit(boss_id)
+	# An arena that has held its one fight has nothing left to do, and a fog gate standing open
+	# in a room whose boss is dead is furniture. It goes with the fight it was for -- the same
+	# rule the improvised bound follows, and the one that stops a stale bound, and the lights
+	# it put out, surviving into the next fight in the same room.
+	if one_shot:
+		queue_free()
 
 
 ## A closed gate blocks the player's exit; an open one lets them pass.
