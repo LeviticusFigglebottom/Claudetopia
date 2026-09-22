@@ -970,6 +970,121 @@ behaviour was right all along). And `sells_deeds` on Ellard's def is still dead 
 honest use of it is a steward-mediated sale, which would undo the direct board route that was
 just built, so it is left for whoever authors that dialogue. `beds` on the deed items is
 likewise still unread.
+
+## The country, looked at
+
+A pass over the land, the cover on it, the roads and the light, judged by opening the
+pictures rather than by reading the numbers off a build. What follows is what moved, with
+what it cost, and what is still wanting.
+
+**There were no shadows anywhere, and the reason was the sun.** Three separate frames were
+reported as flat — a Merrowby street at nine in the morning, a four-pylon chain bridge in a
+steep Skerrow valley at two in the afternoon, the opening view of Cinderlea. In all three the
+shadows were being drawn and were the size of a doormat, because four of the six regions ran
+a sun between 60° and 94° above the horizon at their own review hour. `sun_elevation_scale`
+is the per-region knob for exactly this and only three regions set it, so the rest inherited
+a `-cos(hour)` curve that reaches vertical at noon. At each region's review hour:
+
+| | before | after | shadow as a fraction of height |
+|---|---|---|---|
+| Hearthvale 09:00 | 59.6° | 29.7° | 0.59 → 1.75 |
+| Brightwater 12:00 | 94.0° | 51.7° | past vertical → 0.79 |
+| Briarwold 10:30 | 74.8° | 44.9° | 0.27 → 1.00 |
+| Skerrow 14:00 | 79.9° | 31.6° | 0.18 → 1.62 |
+
+Sedgemire (21.3°) and Cinderlea (3.2°) were already low, which is why neither was among the
+frames that read as flat. A cottage now throws ten metres of shadow across the green instead
+of three. Two hours went into a wrong hypothesis first — that Terrain3D does not receive
+directional shadows on the Compatibility renderer — and `game/tools_gd/shadow_probe.tscn` is
+the instrument that disproved it; it is committed, because "this frame has no shadows" has
+three unrelated causes and a screenshot cannot tell them apart.
+
+**The ground had no cover.** Hearthvale carried 45 flora instances a hectare, one plant per
+26 m², and four regions named no ground carpet in their flora list at all. Measured over 140
+sampled cells, flora per hectare now: Hearthvale 761, Briarwold 565, Cinderlea 464,
+Sedgemire 461, Brightwater 406, Skerrow 295. Villages were the worst of it and for a separate
+reason: scatter was excluded from the whole of a settlement's pad, and the street camera
+stands 46 m inside Merrowby's 63.7 m pad, so that frame contained no growing thing by
+construction. `worldgen/pads.py` now gives a normalised radius rather than a flag, and low
+cover returns to the green inside 0.22 of it and the verge beyond 0.90 — either side of the
+20-to-50 m band the settlement builder rings its houses through.
+
+**The fields have hedges.** This was PROGRESS's "next" item for some time and is DESIGN §4.1's
+first line. `worldgen/hedges.py` lays 122 477 hedge pieces along the parcel boundaries
+`fields.py` has been drawing all along: a run of segments turned to lie *along* the boundary
+(from the tangent of the distance field — laid at random angles they read as loose bushes),
+hawthorn every 27 m, an oak standard every 70, gateways from a low-frequency field, and always
+a gap where a road crosses. Skerrow's boundaries take drystone wall instead, so the moor is
+enclosed too. 774 apple trees stand in rows in Tamwick's parcels. None of it was affordable
+with what existed — the nearest asset to a hedge was a 5 610-triangle hawthorn — so
+`tools/forge/gen_ground_kit.py` builds 2.2 m of hedge in 66 triangles, with a gate post and a
+milestone beside it. `worldgen/roadside.py` adds 6 024 milestones, junction signposts and
+post-and-rail frontages.
+
+**Every per-instance tint had been thrown away.** The builder has always written a distinct
+colour per plant — 88 different greens among 91 grass clumps in one Merrowby cell — and
+`foliage_wind.gdshader` never read `COLOR`. Turning it on immediately exposed two faults that
+had been latent in the data for as long: the jitter drew three independent per-channel
+normals, so it moved hue rather than lightness and the moor came back scattered with yellow,
+violet and blue clumps; and the palette was being applied twice, because the forge already
+builds each asset in its region's colours, which turned gold barley and red poppies into
+orange slabs. Both fixed; rules now carry a `tint_strength`.
+
+**Light.** Each region's recipe now comes from its own identity sheet rather than from a
+narrow band around the middle. Fog density spans 0.00014 (Skerrow, thin cold air) to 0.00125
+(Sedgemire, where the fog is the region) against a previous 0.00016–0.00085.
+
+### What the drop test says
+
+The full 42-shot sheet, seven images a region, so **the landform axis binds** (DESIGN §10.1):
+
+| | before (ASSESSMENT) | after | bar |
+|---|---|---|---|
+| colour | 0.64 | **0.74** | — |
+| landform | 0.21 | **0.12** | 0.55 |
+| together | 0.55 | **0.71** | 0.80 |
+
+Colour and the two together moved a long way and the test still fails, on both bars. (Measured before the last change of the pass: Cinderlea's sun was raised from 3.2 degrees to 9.2 at its own hour afterwards, because at 3.2 the energy curve had already halved it and the region's ground shots came back nearly black. That is a change to one region's light which these numbers do not include.)
+
+One further caveat, and it matters most to the landform figure: the sheet was shot before the fix for `poi_builders.gd` landed, and that script was failing to parse, so **none of the fifty-five dressed points of interest were standing in the world when these frames were taken**. The towers, bridges, shrines, stone settings and giant bones are exactly the distinctive geometry the landform axis reads, and every one of them was absent. The next sheet should be shot with them in. The
+landform figure went *down*, and below the 0.17 chance line, which is the honest cost of this
+pass and worth stating plainly: the landform signature reads the skyline, the ruggedness and
+where the detail sits down the frame, and giving all six regions a dense near field of
+similar tufts made the bottom of every frame equally busy. The cover was added uniformly
+because the ground was uniformly bare; what it needs next is cover that differs in *structure*
+between regions — a flat reed horizon against a crag line — and not simply in tint. The
+confusion pairs say the same thing: Briarwold reads as Sedgemire and Skerrow as Sedgemire.
+
+### What it costs
+
+Measured across the same 42 shots: **one frame** is over budget, the Merrowby street at 1511
+draws and 1.59 M primitives against 2000 and 1.5 M; nothing else exceeds either, the worst
+other frame is 1.23 M, and the median is 0.68 M. Before this pass that street was 1330 draws
+and 1.18 M. The new draw attribution is what found where it goes — 645 apple trees and 1234
+hawthorns in one frame at ~5 700 triangles each, against 4399 grass clumps in three draws —
+which is why the orchards went back to Tamwick alone and the hedge trees thinned from every
+13 m to every 27. The world build went from 217 s to 260 s and from 346 306 scatter instances
+to 3 473 920.
+
+### Still wanting
+
+* **The ground cover does not yet read as a carpet at eye height.** It reads as tufts on turf.
+  A true carpet needs an order of magnitude more instances than the primitive budget allows at
+  cell granularity, so the honest next lever is the terrain albedo itself, not more instances.
+* **Hedges read as dotted rather than solid at 400 m**, where the far ring keeps 40% of them.
+* **Skerrow's drystone walls are placed but have not been judged in a capture** at close range.
+* **The gate posts mark gaps but no gate hangs in them**, and the five signposts point nowhere
+  in particular: the asset has arms, but nothing writes the names of the places the road goes
+  to onto them, though every road is named for the two settlements it joins.
+* **Bridge abutments were not done.** The road crossings are left clear, as asked.
+* **A village street still has a bare green in front of it.** Cover returns to the green and
+  the verge but not to the 20-to-50 m band the houses ring through, because a grass tuft
+  standing inside somebody's cottage is a worse fault than a mown green. Putting cover there
+  needs the building footprints, which are raised at runtime and are not known to the builder.
+* **The Briarwold vista shot is inside a tree.** `make_default_plan.py` puts that camera 12 m
+  above the highest ground within 600 m, which in a forest of 30 m oaks is inside the canopy;
+  the vista shots skip the `clear_spot` check the ground shots use. One of the seven Briarwold
+  images in the sheet above is therefore a photograph of leaves, and the drop test scored it.
 ## Sightlines, answered
 
 DESIGN §4 ends "placed with sightlines: each POI names at least one other POI it should be

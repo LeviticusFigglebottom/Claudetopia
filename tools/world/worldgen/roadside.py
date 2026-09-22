@@ -91,11 +91,13 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         r = by_index.get(int(owner[int(i[0]), int(j[0])]))
         return r.short if r else ""
 
-    def clear_at(x: float, z: float) -> bool:
+    def clear_at(x: float, z: float, off_pad: bool = True) -> bool:
         j, i = grid.to_tex(np.array([x], dtype=np.float32), np.array([z], dtype=np.float32))
         j, i = grid.clamp_index(j, i)
         ii, jj = int(i[0]), int(j[0])
-        return bool(water[ii, jj] == 0 and pad_mask[ii, jj] == 0 and slope[ii, jj] < 0.42)
+        if off_pad and pad_mask[ii, jj] != 0:
+            return False
+        return bool(water[ii, jj] == 0 and slope[ii, jj] < 0.42)
 
     # --- milestones ---------------------------------------------------------------------
     for road in roads:
@@ -120,8 +122,12 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
 
     # --- signposts where roads meet -------------------------------------------------------
     # Every road ends at a settlement, so the ends cluster; a place with three or more roads
-    # arriving is a junction and gets a post. It stands off the carriageway, at the edge of
-    # the settlement's flattened ground rather than in the middle of the street.
+    # arriving is a junction and gets a post, standing back from the carriageway.
+    #
+    # It has to be allowed to stand *on* the settlement's platform. Every junction in the
+    # world is a town centre, and a town centre is pad by definition, so testing the pad the
+    # way the milestones and rails do rejected all eleven of them and the first build raised
+    # exactly zero signposts.
     ends: dict = {}
     for road in roads:
         pts = np.asarray(road.points)
@@ -141,7 +147,7 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
             a = float(rng.uniform(0.0, 2.0 * math.pi))
             r = float(rng.uniform(9.0, 15.0))
             x, z = x0 + math.cos(a) * r, z0 + math.sin(a) * r
-            if clear_at(x, z):
+            if clear_at(x, z, off_pad=False):
                 _put(out, grid, H, x, z, float(rng.uniform(0.0, 360.0)),
                      float(rng.uniform(0.95, 1.1)),
                      posts[int(rng.integers(0, len(posts)))])
