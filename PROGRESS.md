@@ -504,8 +504,49 @@ stream two rebuild cycles on the anvil's stump before they rendered a trestle ta
 and found that Hearthvale's pale honey timber is the house style and not a bug. Render a known
 reference beside anything you are judging in that scene.
 
+## The way in had never been pressed
+
+The main menu, the Naming and the world were three screens nobody had walked between. The
+journey drives systems directly and the UI review renders screens with believable data; no
+test and no tool had ever started at `boot.tscn` and clicked New Game. Four things were wrong
+at once, and a player met all four in the first minute:
+
+* **The Naming spoke a vocabulary the body does not read.** It kept swatch indices, a
+  `height_m` and a face named after a culture, and handed that to
+  `HumanoidModel.apply_appearance`, which reads `CharacterAppearance`: `skin` arrived as the
+  string "1", `height` was never set, and with no `parts` there was no hair and no clothes. The
+  preview was the naked rig whatever you chose. `CharacterAppearance` is the one vocabulary now
+  — it carries the forge's colour tables, the head presets and the culture palettes, and dresses
+  a character for its people — and the Naming edits that record in place.
+* **Nothing read the Naming's flags.** `player_name`, `player_calling` and `player_appearance`
+  were written by the screen and read by no one, so the body at the Hushline Stair was the bare
+  rig with the default head, with no name, none of the Calling's three skill bonuses and none of
+  its items. `Player._take_the_naming` reads them when the body stands.
+* **Continue, Load and `--load=<slot>` did not load.** All three wrote
+  `_pending_load_slot` and nothing ever read it: every one of them stood a new Foundling up
+  with the save untouched on disk. `PlayerSpawn.load_pending_slot` reads it before the body.
+* **The screen was a dead black rectangle** from "Be named" until the world stood — ten to
+  fifty seconds of it, with no frame drawn at all while the terrain comes up. The fade layer
+  carries a loading caption now: a sheet of paper, a line in the world's voice, the bell mark
+  swaying, and what the world has raised so far.
+
+`./run.sh flow` is the test that presses it: three runs from `boot.tscn` (New Game through the
+Naming, then `--load`, then Continue), clicking by the words on the buttons, typing a name,
+working a chooser with the arrow keys, dragging both sliders, walking Tab round the form, and
+then asking the *body* in the world whether it is the character that was made. Every step is a
+PNG in `captures/flow/`. It found two of its own: the Naming gave nothing keyboard focus, and
+the Calling cards' wrapping focus chain trapped Tab for ever.
+
 ## Known issues
 
+* **A record from before that vocabulary existed** — `{"skin": 3, "hair": 2}`, which is what
+  the Naming used to write and what the journey still writes — is converted at the edge now
+  (an index means the tone it indexed). Any save still carrying the older shape makes a proper
+  body, but the journey's own shorthand should be brought up to the record's spelling.
+* **`./run.sh flow`'s Continue run depends on what else has saved.** Continue promises the
+  newest slot, so a journey run or another session writing into the same `user://saves` takes
+  that place; the probe reports which slot it got and falls back to checking that slot's own
+  summary. Tools that write saves should clear them (the UI review does now).
 * **The journey's death step has failed once in five runs**, and I have not pinned down why.
   It rests at a Hearthstone, dies, respawns and recovers the echo, and one run in five one of
   those five conditions came back false. The step now names which one when it fails instead of
