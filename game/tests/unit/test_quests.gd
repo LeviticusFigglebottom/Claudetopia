@@ -536,3 +536,40 @@ func test_save_round_trip_through_the_save_system() -> void:
 	SaveSystem.deserialize(JSON.parse_string(text))
 	assert_true(log_node.is_active(WARDENS_Q1))
 	assert_eq(log_node.stage_id_of(WARDENS_Q1), "the_tumbled_watch")
+
+
+## A quest log that has outlived the body it was watching.
+##
+## `position_provider` is bound to the player, and nothing told the quest log when that player
+## was freed -- a body that died, a scene that changed, a test that finished. `check_reach` then
+## handed the dead reference to `SocialContext.can_locate`, and passing a freed instance to a
+## typed Object parameter is a script error in its own right: a hundred and nine of the one
+## hundred and thirteen a full test run logged came from this one line, reached from `_sync_stage`
+## every time a stage was entered. The log drops a provider that no longer exists.
+func test_a_freed_player_is_dropped_rather_than_called_through() -> void:
+	var gone: Node3D = preload("res://tests/fakes/fake_player.gd").new()
+	Engine.get_main_loop().root.add_child(gone)
+	Social.bind("player", gone)
+	assert_eq(log_node.position_provider, gone)
+	gone.get_parent().remove_child(gone)
+	gone.free()
+	assert_false(is_instance_valid(gone), "the body is gone")
+	log_node.check_reach()
+	# A freed reference compares equal to null, so `== null` cannot tell the two apart and a
+	# test written that way passes while the error is still being logged. The variant's type can:
+	# a dropped provider is nil, a dead one is still an Object.
+	assert_eq(typeof(log_node.position_provider), TYPE_NIL,
+		"the log is still holding a freed player, and calls can_locate through it")
+
+
+## The other end of the same seam: a bound provider that leaves the tree takes its binding with
+## it, so nothing has to notice afterwards that it is dead.
+func test_a_player_leaving_the_tree_unbinds_itself() -> void:
+	var leaving: Node3D = preload("res://tests/fakes/fake_player.gd").new()
+	Engine.get_main_loop().root.add_child(leaving)
+	Social.bind("player", leaving)
+	assert_eq(Social.ctx.provider("player"), leaving)
+	leaving.get_parent().remove_child(leaving)
+	assert_eq(Social.ctx.provider("player"), null, "the context still names a body that walked out")
+	assert_eq(log_node.position_provider, null, "and the log still polls it")
+	leaving.free()
