@@ -5,6 +5,9 @@ extends Node
 ##   --capture=<plan>   run a capture plan (screenshots / fly-through) and quit
 ##   --new-game         skip the main menu and start a new game with defaults
 ##   --load=<slot>      load a slot straight away
+##   --flow=<dir>       attach the flow probe (tools_gd/flow_probe.gd) and then boot exactly as
+##                      without it: the probe presses the buttons a player would and writes
+##                      what it saw to <dir>. `./run.sh flow` runs it.
 
 @onready var label: Label = $Label
 
@@ -16,6 +19,8 @@ func _ready() -> void:
 	await get_tree().process_frame
 	label.text = "Wickmere\n%d definitions in %d packs" % [ContentDB.all("region").size() + ContentDB.all("place").size(), ContentDB.packs.size()]
 	var args := _user_args()
+	if args.has("flow"):
+		_attach_flow_probe(str(args["flow"]))
 	if args.has("smoke"):
 		_run_smoke()
 		return
@@ -47,10 +52,38 @@ func _start_world(args: Dictionary) -> void:
 	if ResourceLoader.exists("res://world/world.tscn"):
 		if args.has("load"):
 			GameState.set_flag("_pending_load_slot", str(args["load"]))
+		elif args.has("new-game"):
+			# a new game with defaults is still a new game: a name, a Calling, and the flag
+			# GameServices starts the opening quest from
+			if not GameState.has_flag("player_name"):
+				GameState.set_flag("player_name", "Foundling")
+			if not GameState.has_flag("player_calling"):
+				var callings := ContentDB.all("calling")
+				if not callings.is_empty():
+					GameState.set_flag("player_calling", str(callings[0].get("id", "")))
+			GameState.set_flag("new_game", true)
+		# the same caption the menus put up: the world takes a while, and a dead screen while it
+		# does reads as a hang
+		UI.fade_to_black(0.0, "The Roll is read again, and your name is in it." if args.has("load")
+				else "The Warden walks you out of the Hush. Keep up; she does not look back.")
 		# deferred: _ready() is inside the tree's add/remove pass, where a scene swap is refused
 		get_tree().change_scene_to_file.call_deferred("res://world/world.tscn")
 	else:
 		label.text += "\n(no world scene yet)"
+
+
+## The probe lives at the root, outside every scene, so it survives the scene changes it is
+## there to watch. Boot then carries on down the same road it takes with no arguments.
+func _attach_flow_probe(out_dir: String) -> void:
+	var path := "res://tools_gd/flow_probe.gd"
+	if not ResourceLoader.exists(path):
+		Log.error("Boot", "flow probe missing: %s" % path)
+		get_tree().quit(2)
+		return
+	var probe: Node = (load(path) as GDScript).new()
+	probe.name = "FlowProbe"
+	probe.set("out_dir", out_dir)
+	get_tree().root.add_child.call_deferred(probe)
 
 
 func _run_smoke() -> void:

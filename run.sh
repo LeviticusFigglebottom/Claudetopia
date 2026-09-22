@@ -4,6 +4,8 @@
 #   ./run.sh test       import + unit tests
 #   ./run.sh smoke      load every region and interior headlessly, fail on errors
 #   ./run.sh journey    scripted playthrough of every promise in DESIGN's done list
+#   ./run.sh flow       boot -> title -> the Naming -> the world, pressing the buttons a player
+#                       would, with a screenshot at every step -> captures/flow/
 #   ./run.sh shots      headless capture plan -> captures/
 #   ./run.sh perf       measure draw calls and primitives against the budgets
 #   ./run.sh world      rebuild terrain/world data from recipes
@@ -48,6 +50,26 @@ case "$cmd" in
   journey)
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/journey/journey.tscn -- "$@" ;;
+  flow)
+    # Three starts, each from boot.tscn with the probe attached: the title menu's New Game
+    # through the Naming into the world (which also saves the slot the next two need), then
+    # --load=<slot> straight in, then the title menu's Continue. Any black world, missing HUD
+    # or unpressable button fails the run; the PNGs are there to be looked at either way.
+    import_project
+    out="${FLOW_OUT:-$ROOT/captures/flow}"
+    mkdir -p "$out"
+    flow_run() {
+      local log
+      log="$(xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy \
+        --resolution "${FLOW_RES:-1280x720}" -- "--flow=$out" "$@" 2>&1 | tee /dev/stderr)" || true
+      local script_errors
+      script_errors="$(echo "$log" | grep -c "SCRIPT ERROR" || true)"
+      [ "$script_errors" = "0" ] || echo "[flow] $script_errors script errors in the log (see above)"
+      if echo "$log" | grep -q "FLOW: FAIL"; then echo "[flow] FAIL ($*)"; return 1; fi
+      if ! echo "$log" | grep -q "FLOW: PASS"; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
+    }
+    flow_run "$@" && flow_run "--load=flow" && flow_run "--continue"
+    echo "[flow] PASS: $out" ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"

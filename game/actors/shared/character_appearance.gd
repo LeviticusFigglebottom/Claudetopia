@@ -27,6 +27,42 @@ const EYE_COLOURS: Array[String] = [
 ]
 const HAIR_STYLES: Array[String] = ["short", "cropped", "long", "braid", "bun", "hood_friendly", "tousled"]
 const BEARD_STYLES: Array[String] = ["stubble", "short_beard", "long_beard", "moustache"]
+## The head presets the forge has built (game/assets/models/characters/heads/). "default" is
+## the rig's own head; the rest replace it.
+const HEADS: Array[String] = ["default", "round", "soft", "angular", "narrow", "broad", "hawk", "heavy_brow"]
+
+## The colours behind the names, exactly as the forge paints them (tools/forge/lib/paint.py), so
+## a swatch on the Naming and a tint on the model are the same colour. Every rig and head is
+## baked at BAKED_SKIN with BAKED_EYE irises; an in-engine skin or eye is a tint relative to that.
+const SKIN_COLOURS := {
+	"porcelain": "f0d2bd", "fair": "e9c3a4", "wheat": "dcae87", "olive": "c69769",
+	"amber": "b07b4c", "umber": "8a5a36", "deep": "5f3b24", "ebony": "42281a",
+}
+const HAIR_COLOUR_VALUES := {
+	"black": "1d1917", "soot": "2a2521", "dark_brown": "3b2a1e", "brown": "5a3b25",
+	"chestnut": "6d3f22", "auburn": "8a3f22", "ginger": "a8501f", "sand": "a98a58",
+	"flax": "c7ab74", "ash_blond": "cdbf9a", "grey": "9a958e", "white": "d9d5cd",
+}
+const EYE_COLOUR_VALUES := {
+	"brown": "5a3a1e", "dark_brown": "3a2412", "hazel": "8a6a2a", "amber": "a5762a",
+	"green": "4a7a4a", "grey_green": "6e8472", "blue": "3f6d94", "pale_blue": "7fa3bd",
+	"grey": "78807f",
+}
+const BAKED_SKIN := "wheat"
+const BAKED_EYE := "brown"
+## Hair shells are baked at "brown", lightened by the forge's `hair_paint`; this is the mean of
+## that bake, so a hair colour is a ratio against it rather than a darkening of it.
+const BAKED_HAIR := "664730"
+
+## What each people wears, by cloth role (tools/forge/characters.json `culture_palettes`).
+const CULTURE_PALETTES := {
+	"vale": {"primary": "a8763f", "secondary": "7d8a4a", "leather": "6b4a2c", "metal": "8a8f94", "trim": "c9a24a", "accent": "b23a2e"},
+	"lakefolk": {"primary": "efe9dc", "secondary": "5d6470", "leather": "4a4239", "metal": "b08a3e", "trim": "3f7fb5", "accent": "b08a3e"},
+	"reedfolk": {"primary": "3b3a6e", "secondary": "2f7f78", "leather": "54452f", "metal": "7d7a70", "trim": "c9b26a", "accent": "e8a93f"},
+	"clans": {"primary": "c8bda6", "secondary": "6e5a44", "leather": "59432c", "metal": "6f7378", "trim": "e8e4d8", "accent": "8a4a2e"},
+	"woodfolk": {"primary": "4a4030", "secondary": "5c6b3c", "leather": "3f3325", "metal": "5f6259", "trim": "2b211c", "accent": "8ab34a"},
+	"ash_pilgrims": {"primary": "8b8a86", "secondary": "5a5652", "leather": "4a4744", "metal": "77736d", "trim": "a08a4a", "accent": "d8cfbf"},
+}
 
 var seed: int = 0
 var culture: String = "vale"
@@ -69,14 +105,18 @@ func _init(from: Dictionary = {}) -> void:
 
 func from_dict(d: Dictionary) -> void:
 	seed = int(d.get("seed", seed))
-	culture = str(d.get("culture", culture))
+	culture = culture_id(str(d.get("culture", culture)))
 	for key in ["height", "bulk", "shoulder_width", "hip_width", "limb_length", "neck_length",
 			"head_size", "build", "age", "feminine", "hearth", "hollow", "veins", "freckles", "stubble"]:
 		if d.has(key):
 			set(key, float(d[key]))
-	for key in ["skin", "hair_colour", "eye_colour"]:
-		if d.has(key):
-			set(key, str(d[key]))
+	# Colours are names, and a record may not know that: the Naming once wrote indices into its
+	# own swatch rows, and a save from then (or the journey's shorthand) carries `"skin": 3`,
+	# which taken as a string made the skin "3.0" — no tone, and a tint computed from nothing.
+	# An index means what it used to mean; anything else unrecognised leaves the default.
+	set("skin", _tone(d.get("skin", null), SKIN_TONES, skin))
+	set("hair_colour", _tone(d.get("hair_colour", d.get("hair", null)), HAIR_COLOURS, hair_colour))
+	set("eye_colour", _tone(d.get("eye_colour", d.get("eyes", null)), EYE_COLOURS, eye_colour))
 	if d.has("parts") and typeof(d["parts"]) == TYPE_DICTIONARY:
 		parts = (d["parts"] as Dictionary).duplicate(true)
 	if d.has("palette") and typeof(d["palette"]) == TYPE_DICTIONARY:
@@ -104,6 +144,18 @@ func duplicate_appearance() -> CharacterAppearance:
 	return CharacterAppearance.new(to_dict())
 
 
+## One colour name out of whatever a record carries: a name from `table`, an index into it, or
+## `fallback` when it is neither.
+static func _tone(v: Variant, table: Array[String], fallback: String) -> String:
+	match typeof(v):
+		TYPE_STRING, TYPE_STRING_NAME:
+			var name := str(v)
+			return name if name in table else fallback
+		TYPE_INT, TYPE_FLOAT:
+			return table[clampi(int(v), 0, table.size() - 1)]
+	return fallback
+
+
 static func _to_color(v: Variant) -> Color:
 	if typeof(v) == TYPE_COLOR:
 		return v
@@ -117,6 +169,95 @@ static func _to_color(v: Variant) -> Color:
 
 func part(slot: String) -> String:
 	return str(parts.get(slot, ""))
+
+
+# -- colours ---------------------------------------------------------------------------------
+
+static func skin_colour(name: String) -> Color:
+	return Color(str(SKIN_COLOURS.get(name, SKIN_COLOURS[BAKED_SKIN])))
+
+
+static func hair_colour_value(name: String) -> Color:
+	return Color(str(HAIR_COLOUR_VALUES.get(name, HAIR_COLOUR_VALUES["dark_brown"])))
+
+
+static func eye_colour_value(name: String) -> Color:
+	return Color(str(EYE_COLOUR_VALUES.get(name, EYE_COLOUR_VALUES[BAKED_EYE])))
+
+
+## What multiplies `baked` into `want`: the rig's textures carry one skin, so another is a
+## per-channel ratio against it. Lighter than the bake goes above 1, which the material allows.
+static func _relative_tint(want: Color, baked: Color) -> Color:
+	return Color(want.r / maxf(baked.r, 0.01), want.g / maxf(baked.g, 0.01), want.b / maxf(baked.b, 0.01), 1.0)
+
+
+## The tint that turns the baked skin into this one (`palette.skin_tint` overrides it).
+func skin_tint() -> Color:
+	if palette.has("skin_tint"):
+		return palette["skin_tint"]
+	return _relative_tint(skin_colour(skin), skin_colour(BAKED_SKIN))
+
+
+## The tint that turns the baked iris into this eye colour.
+func iris_tint() -> Color:
+	return _relative_tint(eye_colour_value(eye_colour), eye_colour_value(BAKED_EYE))
+
+
+## The tint that turns the baked hair into this colour (`palette.hair` overrides it).
+func hair_tint() -> Color:
+	if palette.has("hair"):
+		return palette["hair"]
+	return _relative_tint(hair_colour_value(hair_colour), Color(BAKED_HAIR))
+
+
+## Dresses this character the way its people dress (WORLD_BIBLE §3): culture, the outfit slots
+## and the cloth colours, deterministically from `rng_seed`. Head, hair and beard are left
+## alone: they are the person's own, not the people's. The Naming and the player both dress
+## through here, so the body in the world is the one the preview showed.
+func dress_for_culture(in_culture: String, rng_seed: int) -> void:
+	culture = culture_id(in_culture)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	var outfit := _culture_outfit(rng, culture, feminine > 0.5)
+	for slot in ["torso", "legs", "feet", "belt", "back", "hands"]:
+		set_part(slot, str(outfit.get(slot, "")))
+	palette = culture_palette(culture)
+
+
+## The people a Calling was raised among: its home region's culture, in the record's spelling.
+static func culture_of_calling(calling_id: String) -> String:
+	var def := ContentDB.get_or_empty(calling_id)
+	var region := ContentDB.get_or_empty(str(def.get("home_region", "")))
+	return culture_id(str(region.get("culture", "vale")))
+
+
+## The culture's cloth colours, for a character whose palette says nothing of its own.
+static func culture_palette(in_culture: String) -> Dictionary:
+	var raw: Dictionary = CULTURE_PALETTES.get(culture_id(in_culture), CULTURE_PALETTES["vale"])
+	var out := {}
+	for k in raw:
+		out[k] = Color(str(raw[k]))
+	return out
+
+
+## The world names its peoples one way (`WorldProbe.culture_key`: "pilgrims") and this record
+## another ("ash_pilgrims"); every Ash-Pilgrim rolled through the world's key fell through to
+## the Vale outfit. One place turns any spelling into the record's.
+static func culture_id(key: String) -> String:
+	var k := key.strip_edges().to_lower()
+	if k in CULTURES:
+		return k
+	if k.contains("pilgrim") or k.contains("ash"):
+		return "ash_pilgrims"
+	if k.contains("clan") or k.contains("skerrow"):
+		return "clans"
+	if k.contains("lake"):
+		return "lakefolk"
+	if k.contains("reed"):
+		return "reedfolk"
+	if k.contains("wood"):
+		return "woodfolk"
+	return "vale"
 
 
 func set_part(slot: String, name: String) -> void:
@@ -154,7 +295,7 @@ static func random(rng_seed: int, in_culture: String = "") -> CharacterAppearanc
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	a.seed = rng_seed
-	a.culture = in_culture if in_culture != "" else CULTURES[rng.randi() % CULTURES.size()]
+	a.culture = culture_id(in_culture) if in_culture != "" else CULTURES[rng.randi() % CULTURES.size()]
 	a.feminine = 1.0 if rng.randf() < 0.5 else 0.0
 	a.height = 1.62 + rng.randf() * 0.24 - a.feminine * 0.055
 	a.bulk = 0.90 + rng.randf() * 0.24
@@ -170,6 +311,8 @@ static func random(rng_seed: int, in_culture: String = "") -> CharacterAppearanc
 	a.hair_colour = _weighted_hair(rng, a.culture, a.age)
 	a.eye_colour = EYE_COLOURS[rng.randi() % EYE_COLOURS.size()]
 	a.parts = _culture_outfit(rng, a.culture, a.feminine > 0.5)
+	# the culture's cloth colours: without them every people's clothes were the bake's one hue
+	a.palette = culture_palette(a.culture)
 	if a.feminine < 0.5 and rng.randf() < 0.45:
 		a.parts["beard"] = BEARD_STYLES[rng.randi() % BEARD_STYLES.size()]
 	elif a.feminine < 0.5 and rng.randf() < 0.4:

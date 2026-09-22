@@ -27,6 +27,7 @@ meshes, not to play.
 |---|---|
 | `./run.sh test` | 1077 unit tests. Content validation runs here too, so a dangling id fails the build. |
 | `./run.sh journey` | One scripted run through every promise in the design's done list, in the built world: create a character, wake at the Hushline Stair and walk out of the region, find a village by walking into it and read the country off a vista, meet somebody who lives here, fight, level up, die and recover your marks, join a faction, commit a crime and pay for it, buy a house, clear a dungeon, fight a boss, learn a saying and cast it, save and load. |
+| `./run.sh flow` | The way in, pressed the way a player presses it: boots `boot.tscn` with no arguments, clicks New Game by the words on the button, types a name, changes a swatch, a chooser, a slider and a Calling, clicks Be named, and then watches the world for forty seconds — failing if the screen is still black, the fade is still down, the HUD is not up, or the body standing there is not the one that was made. Then the same for `--load=<slot>` and the title menu's Continue. Every step is a PNG in `captures/flow/`; look at them. Needs a display (Xvfb will do). |
 | `./run.sh smoke` | Builds all 24 shipping interiors for real and fails if one has no geometry, no collision, no light or no way out. |
 | `./run.sh perf` | Measures draw calls and primitives against the budgets in `DESIGN.md` §11. |
 | `./run.sh shots` | Headless capture plan into `captures/`. |
