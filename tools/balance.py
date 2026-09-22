@@ -11,8 +11,10 @@ This reads them and prints the curves: how many hits each region's enemies take 
 an hour of each region is worth in marks, and what the things you want cost in units of the
 thing you do. It does not know how long a fight *feels*, and it says so.
 
-The formulas are duplicated here from the GDScript on purpose — a second opinion is the point,
-and `test_balance.gd` asserts the two agree. Usage: tools/balance.py [--vigour 10] [--skill 20]
+The formulas are duplicated here from the GDScript on purpose — a second opinion is the point.
+`tools/tests/test_balance.py` runs this model and fails if the orderings a region's `danger`
+rating promises invert again; it named `test_balance.gd` here for a while, which has never
+existed. Usage: tools/balance.py [--vigour 10] [--skill 20]
 """
 from __future__ import annotations
 
@@ -42,7 +44,8 @@ LOADOUTS = [
 def load(folder: str) -> list:
     out = []
     for path in sorted(glob.glob(os.path.join(PACK, folder, "*.json"))):
-        data = json.load(open(path, encoding="utf-8"))
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
         out.extend(data if isinstance(data, list) else [data])
     return out
 
@@ -77,30 +80,100 @@ def level_threshold(level: int) -> int:
 
 # --- what a fight costs and pays ----------------------------------------------------------
 
-def loot_value(table_id: str, tables: dict, items: dict) -> float:
-    """Expected marks from one roll of a loot table, counting items at their own value."""
+def entry_value(e: dict, tables: dict, items: dict, depth: int) -> float:
+    """What one entry is worth if it is the one that comes up."""
+    if e.get("nothing", False):
+        return 0.0
+    if "table" in e:
+        # A nested table rolls in full (loot_table.gd `_apply_entry`), so it is worth
+        # whatever that whole table is worth, not one pick from it.
+        return loot_value(str(e["table"]), tables, items, depth + 1)
+    if "marks" in e:
+        lo, hi = e["marks"] if isinstance(e["marks"], list) else (e["marks"], e["marks"])
+        return (lo + hi) / 2.0
+    if "item" in e:
+        count = e.get("count", 1)
+        lo, hi = count if isinstance(count, list) else (count, count)
+        return float(items.get(e["item"], {}).get("value", 0)) * (lo + hi) / 2.0
+    return 0.0
+
+
+def loot_value(table_id: str, tables: dict, items: dict, depth: int = 0) -> float:
+    """Expected marks from one roll of a loot table, counting items at their own value.
+
+    Mirrors `LootTable.roll` (systems/inventory/loot_table.gd): the weighted `entries` are
+    picked once per roll, and every `guaranteed` entry drops on top of them, independently,
+    at its own `chance`. Guaranteed entries used to be skipped here, which read a sallowjaw
+    as worth three marks when the hide it always leaves is worth thirty-four — the whole
+    reason anybody hunts one. `conditions` are still ignored: the tool has no character to
+    check them against, so a level-gated drop is counted as if it were always available.
+    """
     t = tables.get(table_id)
-    if not t:
+    if not t or depth > 6:
         return 0.0
     entries = t.get("entries", [])
     total_weight = sum(float(e.get("weight", 1)) for e in entries) or 1.0
     per_roll = 0.0
     for e in entries:
         share = float(e.get("weight", 1)) / total_weight
-        if "marks" in e:
-            lo, hi = e["marks"] if isinstance(e["marks"], list) else (e["marks"], e["marks"])
-            per_roll += share * (lo + hi) / 2.0
-        elif "item" in e:
-            count = e.get("count", 1)
-            lo, hi = count if isinstance(count, list) else (count, count)
-            value = float(items.get(e["item"], {}).get("value", 0))
-            per_roll += share * value * (lo + hi) / 2.0
+        per_roll += share * entry_value(e, tables, items, depth)
     rolls = t.get("rolls", [1, 1])
     lo, hi = rolls if isinstance(rolls, list) else (rolls, rolls)
-    return per_roll * (lo + hi) / 2.0
+    total = per_roll * (lo + hi) / 2.0
+    for g in t.get("guaranteed", []):
+        total += float(g.get("chance", 1.0)) * entry_value(g, tables, items, depth)
+    return total
 
 
-def enemy_rows(enemies: list, tables: dict, items: dict, vigour: int) -> list:
+## What a status effect takes out of you over its life, for the ones that tick damage.
+## `status_effects.gd` ticks `magnitude` (falling back to the rule's own `dps`) once a second
+## for `duration` seconds, and that damage is raw: it does not go through armour. An attack
+## that opens a vein is not finished when the animation is.
+STATUS_DPS = {"burning": 3.0, "bleeding": 2.0, "poisoned": 1.5}
+
+
+def status_damage(attack: dict) -> float:
+    total = 0.0
+    for s in attack.get("statuses", []):
+        sid = str(s.get("id", ""))
+        if sid not in STATUS_DPS:
+            continue          # chilled, webbed, silenced, quieted cost you other things
+        dps = float(s.get("magnitude", 0.0)) or STATUS_DPS[sid]
+        total += dps * float(s.get("duration", 0.0))
+    return total
+
+
+def attack_damage(attack: dict, spells: dict) -> float:
+    """What one blow costs you in health, animation and aftermath together.
+
+    Three things the game does that reading `attack.damage` alone misses:
+
+    * A spell attack carries no `damage` of its own: `enemy.gd` sends it through the caster
+      and the spell's own damage effects are what hit you (CONTRACTS §7). Read flat, the
+      Smuggler Sayer and the Wisp did nothing three casts in five.
+    * A bleed, a burn or a poison goes on taking health after the blow, and takes it raw.
+      A Bravo's one real thrust is 25 in the moment and 12 more over the next six seconds.
+    * Chilled, webbed, silenced and quieted cost you the fight in other ways, and are not
+      counted here at all, because this column is health and they do not take health.
+    """
+    direct = float(attack.get("damage", 0.0))
+    if direct <= 0.0 and attack.get("spell"):
+        spell = spells.get(str(attack["spell"]), {})
+        direct = sum(float(x.get("amount", 0.0)) for x in spell.get("effects", [])
+                     if x.get("type") == "damage")
+    return direct + status_damage(attack)
+
+
+def attack_impact(attack: dict, spells: dict) -> float:
+    """Just the blow, with no aftermath: what the hardest single hit column means.
+
+    Whether a hit kills you outright is decided by the blow that lands, not by the bleed
+    that follows it, so the worst-hit share counts the impact and the average counts both.
+    """
+    return attack_damage(attack, spells) - status_damage(attack)
+
+
+def enemy_rows(enemies: list, tables: dict, items: dict, vigour: int, spells: dict) -> list:
     player_hp = hp_max(vigour)
     rows = []
     for e in enemies:
@@ -112,8 +185,9 @@ def enemy_rows(enemies: list, tables: dict, items: dict, vigour: int) -> list:
             continue
         # A weighted hit, the way the brain picks: each attack by its own weight.
         w = sum(float(a.get("weight", 1)) for a in attacks) or 1.0
-        avg_dmg = sum(float(a.get("damage", 0)) * float(a.get("weight", 1)) for a in attacks) / w
-        worst = max(float(a.get("damage", 0)) for a in attacks)
+        avg_dmg = sum(attack_damage(a, spells) * float(a.get("weight", 1))
+                      for a in attacks) / w
+        worst = max(attack_impact(a, spells) for a in attacks)
         blows = {name: hit(base, sk, armour) for name, base, sk in LOADOUTS}
         marks = e.get("marks", [0, 0])
         lo, hi = marks if isinstance(marks, list) else (marks, marks)
@@ -145,7 +219,8 @@ def main() -> int:
     regions = load("regions")
     enemies = load("enemies")
     bosses = load("bosses")
-    rows = enemy_rows(enemies, tables, items, a.vigour)
+    spells = by_id(load("spells"))
+    rows = enemy_rows(enemies, tables, items, a.vigour, spells)
     player_hp = hp_max(a.vigour)
 
     print("A player with Vigour %d (%.0f health), at three points in a career:" % (a.vigour, player_hp))
