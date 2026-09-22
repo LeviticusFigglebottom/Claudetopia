@@ -20,7 +20,7 @@
         "objectives": [
           {"type": "reach", "target": "core:poi/wisp_hollow", "radius": 140, "text": "Go up the north channel to Wisp Hollow"},
           {"type": "kill", "target": "core:enemy/wisp", "count": 3, "text": "Put out what is hanging over the drowned house"},
-          {"type": "collect", "target": "core:item/salissas_lantern", "count": 1, "text": "Take the lantern off the chimney"}
+          {"type": "collect", "target": "core:item/salissas_lantern", "count": 1, "text": "Take the lantern off the chimney", "spot": "the_chimney"}
         ],
         "on_complete": [{"set_flag": "found_the_lantern"}, {"renown": 5}]
       },
@@ -214,7 +214,7 @@
         "objectives": [
           {"type": "reach", "target": "core:poi/clanless_camp", "radius": 140, "text": "Find the camp under the overhang"},
           {"type": "kill", "target": "core:enemy/clanless_raider", "count": 2, "text": "Get to the chimes"},
-          {"type": "collect", "target": "core:item/clan_forged_link", "count": 1, "text": "Take the bridge's own link off the cord"}
+          {"type": "collect", "target": "core:item/clan_forged_link", "count": 1, "text": "Take the bridge's own link off the cord", "spot": "the_chimes"}
         ],
         "on_complete": [{"set_flag": "took_the_link_back"}, {"renown": 10}]
       },

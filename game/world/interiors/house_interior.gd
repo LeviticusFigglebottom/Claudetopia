@@ -95,6 +95,12 @@ func build(path: String) -> bool:
 	_build_props()
 	dress_furnishings()
 	_build_doors()
+	# what a quest says lies in here (the steward's brass key on his desk), put down by the
+	# quest-item placer, owned by whoever lives here
+	var items := get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
+	var interior_id := str(get_meta("interior_id", ""))
+	if items != null and interior_id != "":
+		items.call("raise_in_interior", self, interior_id, meta)
 	Log.info("HouseInterior", "%s: %d rooms, %d props" % [meta.get("name", slug), rooms.size(), meta.get("placements", []).size()])
 	return true
 

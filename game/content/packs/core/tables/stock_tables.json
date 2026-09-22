@@ -11,6 +11,7 @@
       {"item": "core:item/linen", "count": [2, 6], "restock_hours": 72},
       {"item": "core:item/wool", "count": [2, 6], "restock_hours": 72},
       {"item": "core:item/bread", "count": [3, 8], "restock_hours": 12},
+      {"item": "core:item/hearth_loaf", "count": [2, 6], "restock_hours": 12},
       {"item": "core:item/flint", "count": [4, 10], "restock_hours": 48},
       {"item": "core:item/lockpick", "count": [0, 2], "restock_hours": 120, "chance": 0.4}
     ]

@@ -757,6 +757,26 @@ func hearthstone(at: Vector3, yaw: float, id: String, display_name: String) -> H
 	return stone
 
 
+## A named point on the pad that something else looks for: a quest item's `spot` (the hand-bell
+## in the Tumbled Watch's fallen stair), or, with `worked`, where a resident's schedule has them
+## stand (group `npc_spot`, found by name). `raised` says the floor there is a deck or a mound
+## rather than the terrain, and holds for `radius` metres, so a person standing on it is not
+## snapped to the lake bed underneath. Nothing in the far ring.
+func marker(marker_name: String, at: Vector3, worked := false, raised := false, radius := 3.0) -> Marker3D:
+	if far:
+		return null
+	var m := Marker3D.new()
+	m.name = marker_name
+	m.position = at
+	if worked:
+		m.add_to_group(NpcRegistry.SPOT_GROUP)
+	if raised:
+		m.set_meta("raised", true)
+		m.set_meta("radius", radius)
+	root.add_child(m)
+	return m
+
+
 # --- small helpers ---------------------------------------------------------------------------
 
 func jitter(amount: float) -> Vector2:

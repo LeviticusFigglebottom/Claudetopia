@@ -113,6 +113,12 @@ func raise_in_cell(parent: Node3D, cell: Vector2i, far: bool) -> Array[PoiDressi
 		out.append(d)
 		raised.append(d)
 	_forget_the_freed()
+	if not far:
+		# what the quests say lies here (the tine at the Toll, the hand-bell in the fallen stair),
+		# after the dressing so a thing can lie on the marker its dressing put down
+		var items := get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
+		if items != null and items.has_method("raise_in_cell"):
+			items.call("raise_in_cell", parent, cell)
 	return out
 
 

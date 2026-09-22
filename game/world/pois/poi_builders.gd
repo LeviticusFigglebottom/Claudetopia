@@ -183,6 +183,9 @@ static func camp(d: PoiDressing) -> void:
 			bells.append(PoiKit.transform_at(ta.lerp(tb, t) - Vector3(0.0, 0.32 + k.rng.randf_range(0.0, 0.2), 0.0),
 					k.rng.randf_range(0.0, TAU), 1.0))
 		k.scatter(k.prop("bell_small"), bells)
+		# under the chimes, where the bridge's own link hangs among the clanless men's
+		var under := (a + b) * 0.5
+		k.marker("the_chimes", k.on_ground(under.x, under.y, 0.05))
 		# a drystone windbreak on the weather side
 		var wall := m.begin()
 		var w0 := fire - grain.rotated(0.6) * 6.5
@@ -578,6 +581,8 @@ static func _tower_tumbled(d: PoiDressing, grain: Vector2) -> void:
 	# somebody lives in the corridor now
 	var inside := start + down * (length * 0.5)
 	k.place(k.prop("bedroll"), k.on_ground(inside.x, inside.y), yaw)
+	# the fallen stair, where the Wardens' hand-bell is being used as a cup
+	k.marker("fallen_stair", k.on_ground(inside.x + down.x * 0.9, inside.y + down.y * 0.9, 0.05))
 	k.place(k.prop("crate"), k.on_ground(inside.x + down.x * 2.0, inside.y + down.y * 2.0), yaw)
 	var fire := start + down * (length + 1.0)
 	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0)
@@ -2153,6 +2158,8 @@ static func wreck(d: PoiDressing) -> void:
 	# her hold is somebody's now: a chest under the shelter of the standing side
 	var lee := perp * (beam * 0.3) * (-1.0 if heel > 0.0 else 1.0)
 	k.place(k.prop("chest"), k.on_ground(lee.x, lee.y), yaw + 0.4)
+	# the smugglers' cache, by the chest under her keel: a quest's `spot` lies here
+	k.marker("under_the_keel", k.on_ground(lee.x + lie.x * 1.1, lee.y + lie.y * 1.1, 0.05))
 	# where she lies: nets and gulls on the shingle, or reeds three miles inland
 	var fringe := k.flora("reeds") if big else k.flora("grass_clump")
 	var growth: Array = []
@@ -2351,6 +2358,8 @@ static func _valley_wisps(d: PoiDressing) -> void:
 	m.commit(wisps, PoiKit.plain(Color(0.7, 0.95, 0.85), 0.4, 0.0, Color(0.55, 0.95, 0.8), 3.5), "Wisps")
 	# the strongbox in the chimney, which is what is actually here
 	k.place(k.prop("chest"), Vector3(stack.x, level + 0.1, stack.y) + Vector3(grain.x, 0.0, grain.y) * 1.1, yaw)
+	# and a burial lantern against the chimney, upright, out, and dry
+	k.marker("the_chimney", Vector3(stack.x, level + 0.2, stack.y) - Vector3(grain.x, 0.0, grain.y) * 0.9)
 	# the family's lanterns, never lit for them, on the bank
 	for i in 3:
 		var p := grain * (11.0 + float(i) * 1.6) + perp * k.rng.randf_range(-3.0, 3.0)

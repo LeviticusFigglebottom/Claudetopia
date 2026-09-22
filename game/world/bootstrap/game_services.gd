@@ -29,6 +29,8 @@ const ORDER := [
 	["NpcStreamer", "res://systems/npc_life/npc_streamer.gd"],
 	# The quest log has waited for escort_arrived since it was written; this is what says it.
 	["Escorts", "res://systems/npc_life/escorts.gd"],
+	# Fourteen quests sent you for things nothing gave, sold or put anywhere.
+	["QuestItems", "res://world/pois/quest_items.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 	# The chart was filled by being told about places, never by going to one or looking out

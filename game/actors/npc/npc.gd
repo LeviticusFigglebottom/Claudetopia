@@ -263,7 +263,7 @@ func stop() -> void:
 	velocity.z = 0.0
 
 
-func move_speed() -> float:
+func current_speed() -> float:
 	if fleeing:
 		return FLEE_SPEED
 	if is_following():
@@ -374,8 +374,8 @@ func _step_towards(delta: float) -> void:
 		play_intent(Schedules.intent_for(activity, {}, def))
 		return
 	var dir := to.normalized()
-	velocity.x = dir.x * move_speed()
-	velocity.z = dir.z * move_speed()
+	velocity.x = dir.x * current_speed()
+	velocity.z = dir.z * current_speed()
 	if _model != null:
 		var yaw := atan2(dir.x, dir.z)
 		# The model faces +Z (CONTRACTS §1), so it is turned to face along -Z travel.

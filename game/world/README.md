@@ -70,6 +70,13 @@ pools, falling-water sheets) as one mesh per material. `tests/unit/test_pois.gd`
 every POI raises a mesh, a body and the Hearthstone its data promises, that it is the same
 twice, and that a quest's `rest_at` target always has a stone.
 
+`pois/quest_items.gd` (`QuestItems`, a world service installed by `GameServices`) puts down what
+the quests send you to pick up: in a near cell after its dressings, so a thing can lie on a
+marker the dressing put down (`PoiKit.marker`: the Tumbled Watch's `fallen_stair`, the Clanless
+Camp's `the_chimes`), and inside a house or a deep place as `HouseInterior`/`CaveInterior` build
+it. A deep place's `item` features are pickups through it too, except a boss's own drop. What has
+been taken is its save section, `quest_items`. See systems/quests/README.md.
+
 ## WaterSurface
 
 One subdivided sheet spans the world; its vertices take their height from the builder's water

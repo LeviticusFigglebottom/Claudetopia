@@ -6,6 +6,8 @@
 | `radiant.gd` | `RadiantGenerator`: turns the six radiant templates into real quests with region-appropriate targets and written text. |
 | `quest_conditions.gd` | `QuestConditions`: the glue between quest data and the dialogue condition vocabulary (`requires`, `hidden_until`, `fails_if`, `repeatable`). |
 | `quest_routes.gd` | `QuestRoutes`: which deliveries and decisions the pack's dialogue closes by hand, and who hosts the ones nobody wrote a line for. |
+| `item_sources.gd` | `ItemSources`: where a player can get an item — the story hands it over, a shopkeeper sells it, a loot table may roll it, a house keeps the book on a shelf. |
+| `choice_point.gd` | `ChoicePoint`: a decision with nobody left to put it to you (the note at the Cantor's Seat); a cold light that puts the open options when walked up to. |
 
 ## Data
 
@@ -16,7 +18,8 @@
  "repeatable?": false,
  "stages": [{"id", "journal", "auto?": false, "manual_advance?": false, "marker?": {"place_id", "radius"},
              "objectives": [{"type", "target", "count?", "text?", "optional?", "hidden?",
-                             "place?", "item?", "radius?", "options?", "effects_by_option?", "on_complete?"}],
+                             "place?", "item?", "radius?", "options?", "effects_by_option?", "on_complete?",
+                             "where?", "spot?", "owner?", "with?"}],
              "on_enter?": [effects], "on_complete?": [effects]}],
  "rewards": {"marks?", "renown?", "morality?", "items?": [[id, n]], "rep?": [[faction, n]], "deed?", "effects?"}}
 ```
@@ -35,6 +38,15 @@ Objective types and what closes them:
 | `use_item` | item id | `item_used`; a `tool` is used without being used up |
 | `rest_at` | hearthstone/place id | `hearthstone_rested` |
 | `read_book` | book id | `book_opened` |
+
+**Where the things lie.** A `collect` or `use_item` objective's item, or the item that reads a
+`read_book` objective's book, is put in the world by `QuestItems` (world/pois/quest_items.gd) unless
+the story already hands it over or a shopkeeper sells it: at the objective's `where` (a place, a
+point of interest or an interior), else the item's own `where`, else the place the same stage
+sends you to (`reach`). `spot` names a marker in the dressing, a chamber of a deep place, or a room
+of a house; `owner` makes taking it theft (in a house the resident owns it). A `choice` whose
+`with` names a place rather than a person gets a `ChoicePoint` there. What has been taken is the
+`quest_items` save section. `tests/unit/test_quest_items.gd` pins where each one lies.
 
 **Naming a stage.** Content names a stage by its id or by its *number*, and numbers count from
 one: `{"quest_at": ["core:quest/the_naming", 1]}` is the waking, the first stage.
@@ -130,3 +142,5 @@ QuestConditions.can_start(def, ctx, log) / is_offerable(...) / offers_of(npc_id,
 `tests/unit/test_quests.gd` (30): trackers per objective type, markers, the authored Wardens
 quest end to end (both endings), radiant determinism, every template generating once the enemy
 and item pools are stood in, rewards by danger, and both save paths.
+`tests/unit/test_quest_items.gd`: the things the quests send you to pick up lie where their quests
+say, the same place every time, stay taken across streaming and saves, and the note is decided at the Seat.
