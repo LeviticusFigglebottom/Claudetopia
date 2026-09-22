@@ -57,6 +57,16 @@ Rewards scale with the region's `danger`, the count, and the distance from the b
 Generation is deterministic for a seed; boards derive theirs from region, board and day, so the
 same board offers the same work all day (`DEFAULT_COOLDOWN_HOURS` 48).
 
+**How a board reaches this.** The economy stream's `JobBoard` asks `Jobs.board_offers()`, which
+asks `Social.board_jobs()` — the façade, because `QuestLog` has no `generate()`; it *holds* the
+generator. `JobBoard.take()` then accepts through `Social.take_quest()`. Both halves used to be
+unreachable: `board_offers` looked for a `generate()` method on the quest-log participant, found
+none, and fell through to the economy's own parcel deliveries every time, so no board in the
+game ever listed a bounty. A generated quest has no content-pack definition, so anything the
+generator hands out is registered with the log on the way — including notices handed back out of
+a board's cache and notices restored from a save, which were not, so every job still hanging on
+a board in a loaded game answered "cannot start unknown quest" when taken.
+
 ## Signals
 
 Emits `EventBus.quest_started(id)`, `quest_stage_changed(id, stage)`, `quest_completed(id, outcome)`.

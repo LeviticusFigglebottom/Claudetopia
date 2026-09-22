@@ -728,6 +728,10 @@ static func _blank_record(quest_id: String) -> Dictionary:
 
 func reset_for_new_game() -> void:
 	quests.clear()
+	# The generated quests live here; the boards that generated them live there. Clearing one
+	# and not the other left boards holding notices this log had never heard of.
+	if radiant != null and radiant.has_method("reset_for_new_game"):
+		radiant.reset_for_new_game()
 
 
 # --- save --------------------------------------------------------------------------------------
