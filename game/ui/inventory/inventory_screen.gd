@@ -398,18 +398,32 @@ func _belt(item_id: String, bound: String) -> void:
 	if item_id.is_empty() or _doll == null or not _doll.has_method("bind_quick"):
 		return
 	if bound != "":
-		_doll.call("clear_quick", bound)
+		_set_slot(int(bound.trim_prefix("quick_")) - 1, "")
 		_refresh()
 		return
-	var target := "quick_4"
+	var target := 3
 	for i in 4:
-		var slot := "quick_%d" % (i + 1)
-		if str(_doll.call("quick_item", slot)).is_empty():
-			target = slot
+		if str(_doll.call("quick_item", "quick_%d" % (i + 1))).is_empty():
+			target = i
 			break
-	if not bool(_doll.call("bind_quick", target, item_id)):
+	if not _set_slot(target, item_id):
 		EventBus.notify.emit("That does not go on a belt.", "info")
 	_refresh()
+
+
+## The belt is set on the player, not on the doll, because the player keeps its own copy for
+## the one thing that cannot go on a doll -- a saying -- and saves it. Binding the doll from
+## here left the two disagreeing, and the player's is the one that goes into the save. A doll
+## with no player over it (the UI review's fakes) is still bound directly.
+func _set_slot(index: int, item_id: String) -> bool:
+	var owner_node: Node = _doll.get_parent()
+	if owner_node != null and owner_node.has_method("set_quick_slot"):
+		return bool(owner_node.call("set_quick_slot", index, item_id))
+	var slot := "quick_%d" % (index + 1)
+	if item_id.is_empty():
+		_doll.call("clear_quick", slot)
+		return true
+	return bool(_doll.call("bind_quick", slot, item_id))
 
 
 func _read(uid: int) -> void:

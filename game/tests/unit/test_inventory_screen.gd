@@ -113,3 +113,35 @@ func test_the_belt_fills_the_first_free_slot() -> void:
 	await _tree().process_frame
 	assert_eq(doll.quick_item("quick_1"), POTION, "the first slot was overwritten")
 	assert_eq(doll.quick_item("quick_2"), STAMINA, "the second potion did not find the free slot")
+
+
+## The screen used to bind the doll itself, so the player node -- which keeps its own copy of
+## the belt and is the one that writes it into the save -- never heard about it. Two records
+## of one belt, and `to_save` wrote the empty one. Press the button with a real player under
+## the doll and ask the *player*.
+func test_the_belt_button_sets_the_belt_on_the_player() -> void:
+	var player := Player.new()
+	var pbag := Inventory.new()
+	pbag.name = "Inventory"
+	player.add_child(pbag)
+	var pdoll := Equipment.new()
+	pdoll.name = "Equipment"
+	player.add_child(pdoll)
+	_tree().root.add_child(player)
+	pdoll.set_inventory(pbag)
+	pbag.add(POTION, 2)
+
+	screen = SCREEN.instantiate()
+	screen.call("setup", {"bag": pbag, "doll": pdoll})
+	_tree().root.add_child(screen)
+	var b := _button("To the belt")
+	assert_true(b != null, "a potion in a real player's bag offered no way onto the belt")
+	b.pressed.emit()
+
+	assert_eq(str(player.quick_slots[0]), POTION,
+			"the screen bound the doll behind the player's back")
+	assert_eq(pdoll.quick_item("quick_1"), POTION, "and the doll the HUD reads did not get it")
+	var saved: Dictionary = player.to_save()
+	assert_eq(str((saved.get("quick_slots", []) as Array)[0]), POTION,
+			"the save wrote an empty belt beside an Equipment that had one")
+	player.queue_free()

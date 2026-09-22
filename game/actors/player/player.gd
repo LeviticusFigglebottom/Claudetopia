@@ -1149,18 +1149,28 @@ func _doll() -> Node:
 	return get_node_or_null(NodePath("Equipment"))
 
 
-func set_quick_slot(index: int, item_id: String) -> void:
+## True when the slot now holds what was asked for. The inventory screen goes through here
+## rather than reaching for the doll itself: writing the belt behind the player's back left
+## `to_save` recording an empty belt beside an `Equipment` that had one, which is two answers
+## to the same question and only one of them true.
+func set_quick_slot(index: int, item_id: String) -> bool:
 	if index < 0 or index >= quick_slots.size():
-		return
-	quick_slots[index] = item_id
+		return false
 	var eq := _doll()
-	if eq == null:
-		return
 	var slot := "quick_%d" % (index + 1)
 	if item_id.is_empty():
-		eq.call("clear_quick", slot)
-	elif Ids.type_of(item_id) != "spell":
-		eq.call("bind_quick", slot, item_id)
+		quick_slots[index] = ""
+		if eq != null:
+			eq.call("clear_quick", slot)
+		return true
+	# A saying is not an item and has no place on the doll, so it lives on this array alone.
+	if Ids.type_of(item_id) == "spell":
+		quick_slots[index] = item_id
+		return true
+	if eq != null and not bool(eq.call("bind_quick", slot, item_id)):
+		return false
+	quick_slots[index] = item_id
+	return true
 
 
 func use_quick_slot(index: int) -> void:
