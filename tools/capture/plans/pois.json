@@ -5,9 +5,9 @@
    "label": "bridge_chain_bridge",
    "region": "core:region/skerrow",
    "pos": [
-    325.6,
-    312.1,
-    -2631.7
+    323.0,
+    312.6,
+    -2617.2
    ],
    "look_at": [
     350.0,
@@ -23,9 +23,9 @@
    "label": "bridge_eelweir",
    "region": "core:region/brightwater",
    "pos": [
-    -1425.7,
-    14.1,
-    -130.6
+    -1410.9,
+    14.6,
+    -130.1
    ],
    "look_at": [
     -1400.0,
@@ -41,9 +41,9 @@
    "label": "bridge_glass_bridge",
    "region": "core:region/cinderlea",
    "pos": [
-    -1722.9,
-    107.1,
-    2482.8
+    -1718.4,
+    106.5,
+    2476.2
    ],
    "look_at": [
     -1700.0,
@@ -59,9 +59,9 @@
    "label": "bridge_lantern_causeway",
    "region": "core:region/sedgemire",
    "pos": [
-    -2523.6,
-    5.7,
-    -180.0
+    -2528.9,
+    6.3,
+    -174.0
    ],
    "look_at": [
     -2550.0,
@@ -69,7 +69,7 @@
     -150.0
    ],
    "fov": 58.0,
-   "time": 7.5,
+   "time": 17.2,
    "weather": "core:weather/overcast",
    "fog_scale": 0.6
   },
@@ -77,9 +77,9 @@
    "label": "bridge_larkbourne_ford",
    "region": "core:region/hearthvale",
    "pos": [
-    669.8,
-    34.5,
-    2623.8
+    668.0,
+    35.2,
+    2649.5
    ],
    "look_at": [
     700.0,
@@ -96,8 +96,8 @@
    "region": "core:region/brightwater",
    "pos": [
     0.0,
-    11.1,
-    560.0
+    10.8,
+    568.0
    ],
    "look_at": [
     0.0,
@@ -105,7 +105,7 @@
     600.0
    ],
    "fov": 58.0,
-   "time": 12.0,
+   "time": 17.2,
    "weather": "core:weather/clear",
    "fog_scale": 0.6
   },
@@ -113,9 +113,9 @@
    "label": "bridge_mossbridge",
    "region": "core:region/briarwold",
    "pos": [
-    2625.7,
+    2589.1,
     89.9,
-    569.4
+    569.9
    ],
    "look_at": [
     2600.0,
@@ -141,7 +141,7 @@
     -100.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/still",
    "fog_scale": 0.6
   },
@@ -159,7 +159,7 @@
     -3100.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear_cold",
    "fog_scale": 0.6
   },
@@ -177,7 +177,7 @@
     2700.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/dry_wind",
    "fog_scale": 0.6
   },
@@ -195,7 +195,7 @@
     3150.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear",
    "fog_scale": 0.6
   },
@@ -249,7 +249,7 @@
     -3300.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear_cold",
    "fog_scale": 0.6
   },
@@ -267,7 +267,7 @@
     250.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/still",
    "fog_scale": 0.6
   },
@@ -285,7 +285,7 @@
     -500.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/overcast",
    "fog_scale": 0.6
   },
@@ -303,7 +303,7 @@
     -2700.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear_cold",
    "fog_scale": 0.6
   },
@@ -321,7 +321,7 @@
     2350.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear",
    "fog_scale": 0.6
   },
@@ -339,7 +339,7 @@
     2200.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/dry_wind",
    "fog_scale": 0.6
   },
@@ -357,7 +357,7 @@
     -150.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear",
    "fog_scale": 0.6
   },
@@ -447,7 +447,7 @@
     -800.0
    ],
    "fov": 58.0,
-   "time": 7.5,
+   "time": 17.2,
    "weather": "core:weather/overcast",
    "fog_scale": 0.6
   },
@@ -537,7 +537,7 @@
     2500.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/dry_wind",
    "fog_scale": 0.6
   },
@@ -555,7 +555,7 @@
     -900.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/overcast",
    "fog_scale": 0.6
   },
@@ -573,7 +573,7 @@
     2600.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear",
    "fog_scale": 0.6
   },
@@ -591,7 +591,7 @@
     900.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/still",
    "fog_scale": 0.6
   },
@@ -609,7 +609,7 @@
     1100.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear",
    "fog_scale": 0.6
   },
@@ -627,7 +627,7 @@
     -3100.0
    ],
    "fov": 58.0,
-   "time": 18.0,
+   "time": 17.2,
    "weather": "core:weather/clear_cold",
    "fog_scale": 0.6
   },
@@ -843,7 +843,7 @@
     -1500.0
    ],
    "fov": 58.0,
-   "time": 12.0,
+   "time": 17.2,
    "weather": "core:weather/clear",
    "fog_scale": 0.6
   },
@@ -897,7 +897,7 @@
     -300.0
    ],
    "fov": 58.0,
-   "time": 10.5,
+   "time": 17.2,
    "weather": "core:weather/still",
    "fog_scale": 0.6
   },
@@ -969,7 +969,7 @@
     -700.0
    ],
    "fov": 58.0,
-   "time": 17.8,
+   "time": 17.0,
    "weather": "core:weather/clear",
    "fog_scale": 0.6
   },
@@ -987,7 +987,7 @@
     -500.0
    ],
    "fov": 58.0,
-   "time": 17.8,
+   "time": 17.0,
    "weather": "core:weather/overcast",
    "fog_scale": 0.6
   }
