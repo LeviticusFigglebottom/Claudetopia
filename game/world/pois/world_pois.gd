@@ -17,6 +17,9 @@ const GROUP := "world_pois"
 const ROADS_PATH := "res://world/generated/roads.json"
 
 @export var enabled: bool = true
+## Stand up what each place's `encounter` def says is there (`PoiEncounters`). Off for a tool that
+## wants the dressing without anybody in it.
+@export var encounters: bool = true
 
 var provider: TerrainProvider = null
 var roads: Array = []
@@ -114,6 +117,10 @@ func raise_in_cell(parent: Node3D, cell: Vector2i, far: bool) -> Array[PoiDressi
 		raised.append(d)
 	_forget_the_freed()
 	if not far:
+		# what each place's encounter sentence says stands there, on the dressing's own markers
+		if encounters:
+			for d in out:
+				PoiEncounters.stand_up(d)
 		# what the quests say lies here (the tine at the Toll, the hand-bell in the fallen stair),
 		# after the dressing so a thing can lie on the marker its dressing put down
 		var items := get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null

@@ -479,9 +479,15 @@ func spot_marker(npc_id: String) -> Node3D:
 	var spot := str(state(npc_id).get("spot", ""))
 	if spot == "" or not is_inside_tree():
 		return null
+	var place := place_of(npc_id)
 	for node in get_tree().get_nodes_in_group(SPOT_GROUP):
-		if node is Node3D and (node as Node3D).is_inside_tree() and str(node.name) == spot:
-			return node as Node3D
+		if not (node is Node3D) or not (node as Node3D).is_inside_tree() or str(node.name) != spot:
+			continue
+		# a marker says whose place it is in; two camps' fires are not the same fire
+		var owner_place := str(node.get_meta("place", ""))
+		if owner_place != "" and owner_place != place:
+			continue
+		return node as Node3D
 	return null
 
 

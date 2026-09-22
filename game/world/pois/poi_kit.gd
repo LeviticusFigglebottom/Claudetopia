@@ -758,16 +758,18 @@ func hearthstone(at: Vector3, yaw: float, id: String, display_name: String) -> H
 
 
 ## A named point on the pad that something else looks for: a quest item's `spot` (the hand-bell
-## in the Tumbled Watch's fallen stair), or, with `worked`, where a resident's schedule has them
-## stand (group `npc_spot`, found by name). `raised` says the floor there is a deck or a mound
-## rather than the terrain, and holds for `radius` metres, so a person standing on it is not
-## snapped to the lake bed underneath. Nothing in the far ring.
+## in the Tumbled Watch's fallen stair), an encounter's `at`, or, with `worked`, where a
+## resident's schedule has them stand (group `npc_spot`, found by name and by the place it
+## belongs to, so two dressings' `the_fire` are never mistaken for each other). `raised` says the
+## floor there is a deck or a mound rather than the terrain, and holds for `radius` metres, so a
+## person standing on it is not snapped to the lake bed underneath. Nothing in the far ring.
 func marker(marker_name: String, at: Vector3, worked := false, raised := false, radius := 3.0) -> Marker3D:
 	if far:
 		return null
 	var m := Marker3D.new()
 	m.name = marker_name
 	m.position = at
+	m.set_meta("place", str(root.get("poi_id")) if root.get("poi_id") != null else "")
 	if worked:
 		m.add_to_group(NpcRegistry.SPOT_GROUP)
 	if raised:
@@ -775,6 +777,24 @@ func marker(marker_name: String, at: Vector3, worked := false, raised := false, 
 		m.set_meta("radius", radius)
 	root.add_child(m)
 	return m
+
+
+## A notice post the radiant generator fills, for a place whose sentence says there is work to be
+## had there (the charcoal camp's "merchant and jobs"): the same `JobBoard` a village green has,
+## with the place's own id, so its notices are for the country round it. Nothing in the far ring.
+func job_board(at: Vector3, yaw: float) -> JobBoard:
+	if far:
+		return null
+	var board := JobBoard.new()
+	board.name = "JobBoard"
+	board.place_id = str(root.get("poi_id")) if root.get("poi_id") != null else ""
+	board.display_name = "the notice post"
+	board.position = at
+	board.rotation.y = yaw
+	root.add_child(board)
+	# what you see is a signpost; what the interaction ray finds is the board's own box
+	place(prop("signpost"), at, yaw, 1.0, false)
+	return board
 
 
 # --- small helpers ---------------------------------------------------------------------------

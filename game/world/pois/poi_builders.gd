@@ -65,6 +65,8 @@ static func camp(d: PoiDressing) -> void:
 
 	# the fire, its ring of stones, its light and its smoke
 	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), k.rng.randf_range(0.0, TAU), 1.15)
+	# where the people this camp belongs to stand round it (an encounter's `at`)
+	k.marker("the_fire", k.on_ground(fire.x, fire.y))
 	var stones: Array = []
 	for p in k.ring(9, 0.95, fire, 0.1):
 		var pp: Vector2 = p
@@ -157,15 +159,29 @@ static func camp(d: PoiDressing) -> void:
 		k.place(k.prop("millstone"), k.on_ground(at.x, at.y, h), k.rng.randf_range(0.0, TAU), 1.0, false)
 		k.place(k.prop("mug"), k.on_ground(at.x + 0.3, at.y + 0.2, h + 0.42), 0.0, 1.0, false)
 		k.place(k.prop("plate"), k.on_ground(at.x - 0.35, at.y - 0.1, h + 0.42), 0.0, 1.0, false)
+		# the stolen wheel is the band's table, and whoever leads them sits at its head
+		var head := at + (at - fire).normalized() * 1.3
+		k.marker("the_wheel_table", k.on_ground(head.x, head.y), true)
 	if PoiKit.brief_says(d.brief, ["kiln"]):
 		var earth := k.surface("earth", 0.7)
+		var first_kiln := Vector2.INF
 		for p in k.ring(3, 9.5, fire, 0.1, 0.4):
 			var pp: Vector2 = p
+			if first_kiln == Vector2.INF:
+				first_kiln = pp
 			var base := k.on_ground(pp.x, pp.y)
 			m.mound(base, 2.3, 1.9, earth, "Kiln", true, 1.1, 5, 14, true)
 			k.puffs(base + Vector3(0.0, 1.9, 0.0), Vector3(0.5, 0.1, 0.5), 0.9, 14, Color(0.7, 0.68, 0.64, 0.4), 1.8, 7.0)
 			var logs := pp + (pp - fire).normalized() * 3.2
 			k.place(k.prop("chopping_block"), k.on_ground(logs.x, logs.y), k.rng.randf_range(0.0, TAU))
+		# the burner tends the first clamp, and sells from beside it
+		var tend := first_kiln + (fire - first_kiln).normalized() * 3.4
+		k.marker("the_clamps", k.on_ground(tend.x, tend.y), true)
+	if PoiKit.brief_says(d.encounter, ["jobs"]):
+		# work posted for whoever passes: a notice post the job boards' generator fills, the
+		# same as a village green's
+		var post := fire + Vector2(-grain.y, grain.x) * 6.0 - grain * 2.0
+		k.job_board(k.on_ground(post.x, post.y), PoiKit.yaw_of(fire - post))
 	if PoiKit.brief_says(d.brief, ["chain", "wind chime"]):
 		# loosened links hung to ring in the wind: small bells on a line between two posts
 		var a := fire + grain.rotated(-1.2) * 5.5
@@ -229,6 +245,9 @@ static func shrine(d: PoiDressing) -> void:
 		var pie := stone_at + grain * 0.2 + Vector2(-grain.y, grain.x) * 0.45
 		k.place(k.prop("plate"), Vector3(pie.x, g.y + 0.56, pie.y), 0.0, 1.0, false)
 		k.place(k.prop("loaf"), Vector3(pie.x, g.y + 0.6, pie.y), 0.3, 1.0, false)
+		# a pilgrim resting here sits in the chair's shade, off the path to the stone
+		var rest := stone_at + grain * 3.2 + Vector2(-grain.y, grain.x) * 2.4
+		k.marker("the_pilgrims_rest", k.on_ground(rest.x, rest.y), true)
 	elif PoiKit.brief_says(brief, ["pebble", "shingle"]):
 		# a cairn of lake pebbles, each a name; the stone stands out of its top
 		var pebbles: Array = []
@@ -831,6 +850,9 @@ static func _tower_head(d: PoiDressing, grain: Vector2) -> void:
 		k.light(k.on_ground(at.x, at.y, 1.1), Color(1.0, 0.62, 0.3), 1.8, 9.0)
 	var bench := grain * 13.0
 	k.place(k.prop("bench"), k.on_ground(bench.x, bench.y), yaw)
+	# the knight keeping it stands between the braziers, facing out the way the eye does
+	var vigil := grain * 10.6
+	k.marker("the_vigil", k.on_ground(vigil.x, vigil.y), true)
 	var ash: Array = []
 	for i in 24:
 		var a := k.rng.randf_range(0.0, TAU)
@@ -1091,6 +1113,9 @@ static func _bridge_boardwalk(d: PoiDressing, axis: Vector2) -> void:
 	m.commit(planks, k.surface("planks", 0.7), "Boardwalk", true)
 	m.commit(posts, k.surface("timber", 0.6), "Poles", true)
 	k.scatter(k.prop("lantern_hanging"), lanterns)
+	# the lamplighter's round: on the deck, not on the marsh under it
+	var round_at := a.lerp(b, 0.35)
+	k.marker("the_lamp_round", Vector3(round_at.x, deck_y + 0.1, round_at.y), true, true, length * 0.5)
 	var reeds: Array = []
 	for i in 70:
 		var t := k.rng.randf_range(-0.1, 1.1)
@@ -1260,6 +1285,10 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 	k.place(k.prop("chest"), k.on_ground(keeper.x - dir.x * 1.4, keeper.y - dir.y * 1.4), yaw)
 	k.place(k.prop("drystone_wall"), k.on_ground(keeper.x + perp.x * 2.6, keeper.y + perp.y * 2.6), yaw)
 	k.place(k.prop("signpost"), k.on_ground(a.x - dir.x * 4.0 - perp.x * 2.6, a.y - dir.y * 4.0 - perp.y * 2.6), yaw)
+	var stool := keeper + perp * 1.6
+	k.marker("the_toll_post", k.on_ground(stool.x, stool.y), true)
+	var beyond := b + dir * 7.0
+	k.marker("the_far_approach", k.on_ground(beyond.x, beyond.y))
 
 
 # --- waterfalls -------------------------------------------------------------------------------------
@@ -2060,6 +2089,8 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 	k.light(Vector3(camp.x - 1.4, camp_y + 1.9, camp.y - 0.6), Color(1.0, 0.82, 0.55), 1.7, 10.0)
 	k.place(k.prop("campfire"), Vector3(camp.x - 0.2, camp_y, camp.y - 2.2), 0.0)
 	k.light(Vector3(camp.x - 0.2, camp_y + 0.8, camp.y - 2.2), Color(1.0, 0.68, 0.35), 2.0, 10.0)
+	# the hermit's own place, by his stool: raised, because under the isle is the lake bed
+	k.marker("the_hermits_stool", Vector3(camp.x + 0.8, camp_y, camp.y - 1.0), true, true, 3.0)
 	# lilies on the water round the isle, and reeds at its foot
 	var lilies: Array = []
 	for i in 22:
@@ -2544,6 +2575,11 @@ static func standing_stones(d: PoiDressing) -> void:
 	if PoiKit.brief_says(b, ["seven"]):
 		count = 7
 		radius = 7.4
+	elif PoiKit.brief_says(b, ["stone circle"]):
+		# a circle somebody stands in the middle of, and something charges across: wide enough
+		# to fight in, and stones enough to break a charge on
+		count = 9
+		radius = 12.5
 	elif PoiKit.brief_says(b, ["three"]):
 		count = 3
 	var shoreline := PoiKit.brief_says(b, ["shoreline", "sea's edge", "tide"])

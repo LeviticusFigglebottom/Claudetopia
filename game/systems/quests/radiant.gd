@@ -86,7 +86,7 @@ func template(template_id: String) -> Dictionary:
 ## board offers the same work all day.
 func generate(region_id: String, count: int = 3, board_place: String = "", seed_value: int = 0) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var board := board_place if board_place != "" else _default_board(region_id)
+	var board := board_place if board_place != "" else default_board(region_id)
 	if board == "":
 		Log.warn("Radiant", "no settled place in %s to hang a board on" % region_id)
 		return out
@@ -190,7 +190,7 @@ func _stored_def(quest_id: String) -> Dictionary:
 
 
 ## Where a board hangs when the caller does not say: the largest settled place in the region.
-func _default_board(region_id: String) -> String:
+func default_board(region_id: String) -> String:
 	const PREFERENCE := ["city", "town", "village", "fort", "camp", "lodge", "hamlet"]
 	var best := ""
 	var best_rank := PREFERENCE.size()
@@ -331,6 +331,19 @@ func _distance_m(a_id: String, b_id: String) -> float:
 func _pick(spec_value: Variant, region_id: String, board: String) -> String:
 	if typeof(spec_value) == TYPE_STRING:
 		return str(spec_value)
+	var candidates := pool_for(spec_value, region_id, board)
+	if candidates.is_empty():
+		Log.info("Radiant", "no %s in %s yet for a radiant target" % [str((spec_value as Dictionary).get("pool", "?")), region_id])
+		return ""
+	return candidates[_rng.randi() % candidates.size()]
+
+
+## Everything a target spec could be filled with here, its fallback pool included, sorted: what
+## `_pick` chooses from, and what the quest walk (`QuestWalk.radiant`) asks one by one whether it
+## can be done.
+func pool_for(spec_value: Variant, region_id: String, board: String) -> Array[String]:
+	if typeof(spec_value) == TYPE_STRING:
+		return [str(spec_value)]
 	var spec: Dictionary = spec_value
 	var candidates := _candidates(spec, region_id, board)
 	if candidates.is_empty() and spec.has("fallback_pool"):
@@ -340,11 +353,8 @@ func _pick(spec_value: Variant, region_id: String, board: String) -> String:
 		if spec.has("fallback_kinds"):
 			fallback["kinds"] = spec["fallback_kinds"]
 		candidates = _candidates(fallback, region_id, board)
-	if candidates.is_empty():
-		Log.info("Radiant", "no %s in %s yet for a radiant target" % [str(spec.get("pool", "?")), region_id])
-		return ""
 	candidates.sort()
-	return candidates[_rng.randi() % candidates.size()]
+	return candidates
 
 
 func _candidates(spec: Dictionary, region_id: String, board: String) -> Array[String]:
