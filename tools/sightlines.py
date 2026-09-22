@@ -2,7 +2,7 @@
 """Which authored sightlines the land actually honours.
 
 DESIGN §4 says each POI names at least one other place it should be visible from, and the 48
-POIs do: 96 lines of authored composition. `PlaceDiscovery` reads them, and surveying from a
+POIs do: 90 lines of authored composition. `PlaceDiscovery` reads them, and surveying from a
 vista reveals what is genuinely in view — so a claim the terrain contradicts silently reveals
 nothing and nobody hears about it.
 
@@ -10,7 +10,13 @@ This says it out loud. It marches the same ray `PlaceDiscovery.can_see()` marche
 same heightmap the runtime samples, and reports every claim the ground refuses. A blocked
 sightline is not automatically a bug: a shrine in a dry valley may be meant to be come upon
 rather than seen. It is a question for whoever placed it — move the POI, raise the vantage,
-or drop the line — and it should be answered rather than left to fail quietly.
+or replace the line — and it should be answered rather than left to fail quietly. Every one
+of them has been; `PROGRESS.md` under "Sightlines, answered" says what each answer was.
+
+The lines into the three hidden valleys are counted apart, because a hidden valley is called
+hidden: its sightline is the way in and not the place, and the land refusing it is the valley
+doing its job. `tools/world/tests/test_sightlines.py` fails the build if any other line goes
+dark or any POI outside those three loses its last vantage.
 
 Usage: tools/sightlines.py [--verbose]
 """
@@ -142,22 +148,32 @@ def main() -> int:
     a = ap.parse_args()
     k = constants()
     hs, pos, nm, kd = Heights(), positions(), names(), kinds()
-    clear, bad, missing = [], [], []
+    clear, bad, veiled, missing = [], [], [], []
     for vantage, target in claims():
         if vantage not in pos or target not in pos:
             missing.append((vantage, target))
             continue
         is_blocked, worst, dist = blocked_at(hs, pos[vantage], pos[target], k, kd.get(target, ""))
         row = (worst, dist, vantage, target)
-        (bad if is_blocked else clear).append(row)
+        if not is_blocked:
+            clear.append(row)
+        elif kd.get(target) == "hidden_valley":
+            # A line into a hidden valley is the way in, not the place. The land refusing it
+            # is the valley doing its job, so it is counted apart rather than as a fault.
+            veiled.append(row)
+        else:
+            bad.append(row)
 
-    total = len(clear) + len(bad) + len(missing)
-    print("%d authored sightlines: %d clear, %d blocked by the land, %d with no placed pad\n"
-          % (total, len(clear), len(bad), len(missing)))
+    total = len(clear) + len(bad) + len(veiled) + len(missing)
+    print("%d authored sightlines: %d the land honours, %d it refuses, %d into hidden valleys, "
+          "%d with no placed pad\n" % (total, len(clear), len(bad), len(veiled), len(missing)))
     for worst, dist, v, t in sorted(bad, reverse=True):
         reason = "out of sight range" if worst == float("inf") else "ground %.0f m over the line" % worst
         print("  %-30s -> %-30s %-16s %5.0f m   %s"
               % (nm.get(v, v), nm.get(t, t), kd.get(t, ""), dist, reason))
+    for worst, dist, v, t in sorted(veiled, reverse=True):
+        print("  %-30s -> %-30s %-16s %5.0f m   veiled: %.0f m over the line"
+              % (nm.get(v, v), nm.get(t, t), kd.get(t, ""), dist, worst))
     for v, t in missing:
         print("  %-34s -> %-34s  no pad in the built world" % (nm.get(v, v), nm.get(t, t)))
     if a.verbose:

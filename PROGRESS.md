@@ -906,3 +906,176 @@ behaviour was right all along). And `sells_deeds` on Ellard's def is still dead 
 honest use of it is a steward-mediated sale, which would undo the direct board route that was
 just built, so it is left for whoever authors that dialogue. `beds` on the deed items is
 likewise still unread.
+## Sightlines, answered
+
+DESIGN §4 ends "placed with sightlines: each POI names at least one other POI it should be
+visible from", and `tools/sightlines.py` had been saying for a while that the land did not
+agree: **90 authored sightlines, 54 clear, 36 the ground refused, and 10 POIs that no vantage
+could see at all.** Until they were answered, surveying from those vistas found nothing and
+the POIs behind them could only be found by walking into them, which is the right way for the
+feature to degrade and no way to leave it.
+
+They are answered. The tool now reads **90 authored sightlines: 87 the land honours, 0 it
+refuses, 3 into hidden valleys.** Every POI outside those three can be seen from somewhere.
+
+### First, the heights were guesses
+
+`LANDMARK_M` — how far a thing of each kind stands above its own ground — was written before a
+single POI had geometry. Now that all 55 are dressed, `poi_builders.gd` is the authority, and
+four of the twelve numbers were wrong by a factor. A watch drum is 7.6 m and carries its
+fire-bowl to about 10, not 18; the Tumbled Watch is 5, because it is lying down. A waterfall's
+face is 11 to 13 m, not 24. A standing gable is 4.6 m and the tallest Oroth column 7.2, not 8
+across the board. A bell buoy is a barrel with a post and a cage on it and the One Poppy is a
+poppy, so `strange` is 2.5 and not 6. Three went the other way: the Hart Bones' antlers reach
+15 m, a menhir set at 1.15–1.55 scale stands 5, and the Chain Bridge's pylons are 7.8 m over
+their deck.
+
+Correcting them made the reading **worse** before it made it better — 53 clear and 37 refused,
+with the Glass Falls joining the POIs nothing could see. That order is recorded because it is
+the evidence that these are measurements and not a fit, which is the same reason the per-kind
+heights' own arrival is recorded above.
+
+### Then, every line
+
+Nineteen POIs moved and seven vantages were replaced. No POI was deleted and no line dropped —
+the authored count is still 90 — and the terrain generator was not touched, because the land is
+built last and the places land on it (DECISIONS, 2026-09-20).
+
+| line | what was wrong | what was done |
+|---|---|---|
+| Three Sisters → Seven Stones | 178 m of mountain at 707 m; the stones lay in a bowl at 464 m that nothing in the world could see into | the stones moved 161 m onto the ridge at 577 m, where a setting of stones belongs; the line replaced by the Clanless Camp, who have no stone of their own and can see all seven |
+| Watch of the Gate → Seven Stones | 96 m over | the same move answers it |
+| Hidden Tarn → Watch of the Gate | 90 m of mountain | the Watch moved 70 m along the pass shoulder; its second vantage is the Seven Stones at 470 m, and the two see each other |
+| Chain Bridge → Three Sisters | 135 m of ridge | replaced by the Clanless Camp, 1044 m |
+| Kharrow Hold → Chain Bridge | 21 m — the hold's own level platform hides a bridge 112 m off and 47 m below it | the bridge moved 102 m onto the lower shelf, 192 m out, where the hold looks down on it |
+| Three Sisters → Chain Bridge | 141 m of ridge, and nothing in Skerrow can see into that hollow | the line went to the Breach, which carried only one vantage and can hold Weaverdeep's; the Chain Bridge keeps the one its own brief names |
+| Thornmarch → Breach | 30 m over | the Breach moved 172 m north along the Briar |
+| Foxfire Falls ↔ Charcoal Camp | 55 m and 49 m, both ways | Foxfire Falls moved 161 m up its ravine to 164 m; both ways clear, and Weaverdeep's line with them |
+| Weaverdeep → Foxfire Falls | 39 m over | the same move |
+| Thornmarch / Standing Moot / Hunters' Stand → Hart Bones | 42, 22 and 14 m over; the skull lay in a hollow only Brightwater, 3.4 km off, could see | the Hart Bones moved 228 m onto the rise at 196 m |
+| Hart Bones → Hunters' Stand | 13 m over | the same move |
+| Sunken Choir → Thirteenth | 23 m over | the Thirteenth moved 291 m onto the shelf at 116 m, still 420 m from the ring it walked away from |
+| Headless Watch → Thirteenth | 20 m over | the same move, and the Watch's own below |
+| Sunken Choir → Headless Watch | 12 m over | the Headless Watch moved 102 m |
+| Glass Bridge → Glass Falls, Sunken Choir → Glass Falls | 14 m and 7 m over | the Glass Falls moved 100 m along the scarp |
+| Greyfold → Cold Fire, One Poppy → Cold Fire | 14 m and 3 m over | the camp moved 72 m toward Greyfold, whose people sat down in it |
+| Cracked Toll → Bell Meadow Stones, Merrowby → Bell Meadow Stones | 9 m and 8 m of chalk; the stones lay in a hollow at 27 m | moved 89 m onto the rise at 34 m, nearer the crater whose crown they carry |
+| Fallen Hand → Rib Cathedral | 9 m over | the ribs moved 40 m |
+| Fernhold → Mossbridge, Oiled Stone → Mossbridge | 8 m and 3 m over | Mossbridge moved 120 m, still 101 m off the road it carries |
+| Pilgrim's Ash → Pilgrims' Bell | 7 m over | the bell moved 80 m along the pilgrim road |
+| Tollmere → Bell Buoys | 6 m of the city's own shore, and there is no water Tollmere can see to move them onto | replaced by the Sayers' Spire at 655 m: the Sayers tuned the buoys, so it is their spire that watches them |
+| Gullhithe → Bell Buoys | 5 m over | replaced by the Long Stride at 1342 m: you cross the causeway and the field of bells is off the rail |
+| Tollmere → North Cliff Beacon | 6 m over | the beacon moved 28 m along the cliff |
+| Merrowby → Larkbourne Ford | 3 m of chalk — and the ford stood 335 m from the Larkbourne | moved 337 m onto the river it is named for, which answers the dressing stream's complaint as well |
+| Wardens' Rest → Tumbled Watch | 3 m over at 1005 m | the tower moved 82 m further down its dry valley |
+| Tollmere → Willow Isle | 3 m over | the islet moved 20 m |
+| Singing Yew → Ansel's Hedge Shrine | 3 m over | the shrine moved 20 m |
+| Singing Yew → Foxglove Dell | 3 m over | left refused: it is a hidden valley |
+| Frostmother's Cradle → Hidden Tarn | 146 m over | left refused: it is a hidden valley |
+| Cantor's Seat → Hushline Stair | 42 m over | left refused: it is a hidden valley |
+
+Every POI stayed in its region and in character: the ford is on its river, the bridges on
+crossings, the stones on skylines, the camps in hollows.
+
+### Two things the first pass got wrong
+
+**A pad flattens the ground under the POI it moves to**, so the height a POI is aimed at is not
+the height it lands at. Mossbridge and the Watch of the Gate were placed on ground that read
+clear before the build and came up 2 m and 5 m short after it, because their new pads took 2
+and 5 metres off the knoll each was standing on. They were re-aimed at ground that clears
+whatever the pad does to it — every candidate re-tested at ±3 m of pad level — and the second
+build held. Anything else that picks positions off `heights.r32` should expect the same.
+
+**The released Chain Bridge line was first pointed at the bridge from Weaverdeep**, 3.7 km away
+through a mountain, which is the same mistake in miniature: a line is not answered by being
+given to somebody else's name, only by being given to ground that can hold it. It went to the
+Breach instead, which is 240 m from the Thornmarch and had only one vantage.
+
+### What the tool says now, and what keeps it saying it
+
+`tools/sightlines.py` counts the three hidden-valley lines apart rather than as faults. It
+already made that distinction for the POIs and not for the lines, which is why a valley doing
+its job read as a placement error.
+
+`tools/world/tests/test_sightlines.py` marches the same audit over the built world and fails if
+any line is refused, if any POI outside the hidden valleys loses its last vantage, if the
+authored count falls under 90, or if anything but a hidden valley claims that exemption. It
+reads the full 4096 build rather than building its own at 1024 the way `test_build.py` does,
+because a coarse build smooths exactly the hills that were in the way.
+
+**Some of it is thin.** Nine of the 87 clear lines clear the ground by less than half a metre
+— Pilgrim's Ash to the Pilgrims' Bell by 0.15 m, the Choir to the Thirteenth by 0.17. Widening
+them means moving POIs that are currently right, and moving a POI moves its pad, which is what
+went wrong the first time. They are left as they are and the test is what notices if they go.
+Two of them (the Thornmarch's lines to the Hart Bones and the Breach) fall the other way on the
+quarter-resolution `runtime/heights_1024.r32` that a headless run samples when Terrain3D is not
+loaded; both targets have another vantage, so nothing goes dark either way.
+
+### What moving a POI touches
+
+Nothing needed a code change: the dressing reads its position, pad radius and region out of
+`pois.json` at runtime, so a moved POI arrives dressed where it now stands.
+`tools/capture/plans/pois.json` bakes camera positions and was regenerated. Two quest
+objectives name POIs that moved — the Tumbled Watch (`reach`, radius 140) and the Breach — and
+both still sit where their own text says they are. One side effect is worth knowing: `camp` is
+in `ROAD_KINDS`, so moving the Cold Fire moved a road with it.
+
+### Two things found in passing
+
+**A graded road can become a levee.** `carve_roads` limits a road's elevation profile to 11%
+and writes it into the heightmap. Where the natural ground falls away faster than the road
+descends — the spur out of Kharrow Hold toward Gullhithe is the one that showed up — the road
+becomes an embankment standing as much as 100 m above the ground on both sides of it, which
+samples as a knife-edge arête that nothing in the region's shape function put there. It is
+invisible to a sightline audit, because the road holds the line of sight open, and would be
+very visible from the ground. That is the roads stream's.
+
+**`poi_builders.gd` did not parse.** A paving loop under the Toll's clapper declared `var a`
+for an angle in a function whose span end is already called `a`. `poi_dressing.gd` could not
+then resolve `PoiBuilders`, so `world_pois.gd`, `world_streamer.gd`, `world.gd` and the debug
+console failed to compile behind it and `test_pois.gd` would not load: the suite read 1143
+tests with 2 failures instead of 1152 with 1. Renamed and noted here because the file belongs
+to the dressing stream.
+
+### A landform apiece, proposed and not built
+
+The drop test's landform axis (DESIGN §10.1) reads 0.21 against a 0.55 bar. This is a proposal
+and nothing here is implemented. `tools/uniqueness_check.py` was not run for it — it wants six
+frames a region and the capture stream is using the display — so the regions named are the ones
+whose *shape functions* have the least silhouette to give, not measured confusion pairs. Each
+is a term the region's own shape could grow, in the manner of the Hearthvale escarpment
+(DECISIONS, 2026-09-20): one primary landform the region has and nobody else does, generated
+from the region's own geometry with no reference to where anything stands.
+
+* **Brightwater — the Mere's raised beaches.** `shape_lake_basin` is a 13 m plane with a tanh
+  wobble on it: in silhouette a straight line, which is why a lake cannot be told from a marsh
+  with the colour taken out. The Mere has fallen since the Toll came down, and a lake that
+  falls leaves strandlines. Terrace the basin against the lake's own signed distance field,
+  which the shape already holds: three or four level benches 2.5–4 m apart out to about 900 m
+  from the water, each cut through by the streams off the downs. The skyline becomes a flight
+  of steps down to the water and the causeway has something to climb.
+* **Sedgemire — levees.** `shape_delta` carves two braided channels; what a real delta has and
+  this one does not is the silt bank either side of each channel, a metre or two above the
+  marsh, which is the only dry line in the country and exactly what a boardwalk town gets built
+  along. A ring term on the same channel field — up where the channel distance is 0.20–0.30,
+  down inside it — gives a flat horizon *striped* by long low banks. Nothing else in Wickmere
+  makes that shape, and it explains Isseva.
+* **Briarwold — the granite stair.** `shape_forest_rise` climbs to the Briar on a clean ramp
+  (`0.05 * clip(X - 900)`) with tor blobs sprinkled over it. Old granite does not ramp; it goes
+  up in benches. Terrace the rise at about 18 m with a soft knee and put the existing tors on
+  the tread edges rather than at random, so the region reads as stacked flats with rock on
+  every lip — and the ravines the falls need already step where the benches do.
+* **Cinderlea — the street plan under the ash.** `shape_ash_plateau` terraces near the Choir
+  and pits elsewhere, which at a distance is noise. The region is ash lying over a Builders'
+  city: give the whole plateau a very low rectilinear ripple, ±1.2 m on one bearing at a 60–90 m
+  period, damped where the terraces already bite. At the metre scale the ground is
+  unnaturally straight and repeating, which no natural landform does and no other region here
+  would show.
+
+Skerrow and Hearthvale are left alone: the karst has ridges, terraces, gorges, sinkholes and a
+moor, and the downs have the escarpment. Two costs are real and should be counted before any
+of it is built: terracing Brightwater moves the shore that the Long Stride, the Shingle Shrine
+and Tollmere's own pad stand on, and levees in Sedgemire will push the marsh roads onto them,
+which is correct but is a change to where the roads go. If the axis is still under the bar with
+four new landforms in, the next thing to suspect is the sample — six frames a region, as §10.1
+says.

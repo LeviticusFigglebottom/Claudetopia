@@ -920,6 +920,7 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 		# apron twenty metres long, which is what a seven-block run of 3.3 × 4.6 came out as
 		var paving := m.begin()
 		for i in 22:
+			# not `a`: the span's near end is already called that in this function
 			var ang := k.rng.randf_range(0.0, TAU)
 			var r := 1.2 + 3.4 * sqrt(k.rng.randf())
 			var p := mid + Vector2(sin(ang), cos(ang)) * r
