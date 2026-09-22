@@ -138,9 +138,22 @@ func _new_game_flow() -> void:
 
 
 func _continue_flow() -> void:
-	var expected := _expected_from_the_first_run()
-	if expected.is_empty():
+	# Continue promises the newest slot, which is not necessarily the one the New Game run
+	# wrote: anything else that saves — a journey run, another session on the same user://
+	# directory, a quick save — takes that place. So the probe reads what Continue is about
+	# to pick and holds the body against *that* character, fully when it is the flow slot
+	# and by its saved summary otherwise.
+	var newest := _newest_slot()
+	if not _check(not newest.is_empty(), "there is a saved name for Continue to load"):
 		return
+	var expected := {}
+	if str(newest.get("slot", "")) == SLOT:
+		expected = _expected_from_the_first_run()
+		if expected.is_empty():
+			return
+	else:
+		_notes.append("Continue picked '%s' (saved %s), not this run's '%s': something else wrote a newer save, so the body is checked against that slot's own summary"
+				% [newest.get("slot", ""), newest.get("saved_at", ""), SLOT])
 	var menu := await _wait_for_scene("main_menu.gd", 90.0)
 	if not _check(menu != null, "the title menu comes up from boot"):
 		return
@@ -156,7 +169,10 @@ func _continue_flow() -> void:
 	await _watch_the_world_stand_up()
 	if _spawned == null:
 		return
-	_verify_body(expected)
+	if expected.is_empty():
+		_verify_body_against_slot(newest)
+	else:
+		_verify_body(expected)
 	await _portrait()
 
 
@@ -180,6 +196,30 @@ func _straight_in_flow() -> void:
 		var look: CharacterAppearance = _spawned.get("appearance")
 		_check(look != null and not look.part("torso").is_empty(), "and is dressed rather than the naked rig")
 	await _portrait()
+
+
+## The slot Continue will take: the newest, as the title menu sorts them.
+func _newest_slot() -> Dictionary:
+	var slots := SaveSystem.list_slots()
+	return slots[0] if slots.size() > 0 else {}
+
+
+## What can be asked of a character this run did not make: that the body standing there is the
+## one that slot's summary names, dressed by the forge rather than a placeholder.
+func _verify_body_against_slot(slot: Dictionary) -> void:
+	var summary: Dictionary = slot.get("summary", {})
+	var name := str(summary.get("name", ""))
+	_check(str(_spawned.get("display_name")) == name,
+			"the body is the one slot '%s' saved, %s (it answers to '%s')"
+			% [slot.get("slot", ""), name, _spawned.get("display_name")])
+	var model: Node = _spawned.call("body_model") if _spawned.has_method("body_model") else null
+	if not _check(model != null, "the loaded player has a forge body, not a placeholder"):
+		return
+	var look: CharacterAppearance = model.get("appearance")
+	_check(look != null and not look.part("torso").is_empty(),
+			"and is dressed rather than the naked rig (torso: %s)" % (look.part("torso") if look else "none"))
+	_check(look != null and look.skin in CharacterAppearance.SKIN_TONES,
+			"and its skin is a tone the body's own vocabulary knows (%s)" % (look.skin if look else "none"))
 
 
 func _expected_from_the_first_run() -> Dictionary:

@@ -110,9 +110,13 @@ func from_dict(d: Dictionary) -> void:
 			"head_size", "build", "age", "feminine", "hearth", "hollow", "veins", "freckles", "stubble"]:
 		if d.has(key):
 			set(key, float(d[key]))
-	for key in ["skin", "hair_colour", "eye_colour"]:
-		if d.has(key):
-			set(key, str(d[key]))
+	# Colours are names, and a record may not know that: the Naming once wrote indices into its
+	# own swatch rows, and a save from then (or the journey's shorthand) carries `"skin": 3`,
+	# which taken as a string made the skin "3.0" — no tone, and a tint computed from nothing.
+	# An index means what it used to mean; anything else unrecognised leaves the default.
+	set("skin", _tone(d.get("skin", null), SKIN_TONES, skin))
+	set("hair_colour", _tone(d.get("hair_colour", d.get("hair", null)), HAIR_COLOURS, hair_colour))
+	set("eye_colour", _tone(d.get("eye_colour", d.get("eyes", null)), EYE_COLOURS, eye_colour))
 	if d.has("parts") and typeof(d["parts"]) == TYPE_DICTIONARY:
 		parts = (d["parts"] as Dictionary).duplicate(true)
 	if d.has("palette") and typeof(d["palette"]) == TYPE_DICTIONARY:
@@ -138,6 +142,18 @@ func to_dict() -> Dictionary:
 
 func duplicate_appearance() -> CharacterAppearance:
 	return CharacterAppearance.new(to_dict())
+
+
+## One colour name out of whatever a record carries: a name from `table`, an index into it, or
+## `fallback` when it is neither.
+static func _tone(v: Variant, table: Array[String], fallback: String) -> String:
+	match typeof(v):
+		TYPE_STRING, TYPE_STRING_NAME:
+			var name := str(v)
+			return name if name in table else fallback
+		TYPE_INT, TYPE_FLOAT:
+			return table[clampi(int(v), 0, table.size() - 1)]
+	return fallback
 
 
 static func _to_color(v: Variant) -> Color:

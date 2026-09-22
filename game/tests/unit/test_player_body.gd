@@ -145,6 +145,31 @@ func test_a_loaded_game_reads_the_slot_it_was_asked_for() -> void:
 		assert_eq(_model().appearance.part("hair"), "braid")
 
 
+## A save written before the Naming spoke the record's vocabulary carries swatch indices
+## (`{"skin": 3, "hair": 2}`), and so does the journey's shorthand. Read as strings those made
+## the skin "3.0": no tone, and a tint computed from nothing. An index means what it meant.
+func test_an_old_record_of_swatch_indices_still_makes_a_body() -> void:
+	GameState.set_flag("player_name", "An Older Foundling")
+	GameState.set_flag("player_calling", REEDBORN)
+	GameState.set_flag("player_appearance", {"skin": 3, "hair": 2, "build": 0.5})
+	_stand_up()
+	var look := CharacterAppearance.new({"skin": 3, "hair": 2, "build": 0.5})
+	assert_eq(look.skin, CharacterAppearance.SKIN_TONES[3], "an index must name the tone it indexed")
+	assert_eq(look.hair_colour, CharacterAppearance.HAIR_COLOURS[2])
+	assert_true(look.skin in CharacterAppearance.SKIN_TONES)
+	if _model() != null and _model().skeleton != null:
+		assert_true(_model().appearance.skin in CharacterAppearance.SKIN_TONES,
+				"the body's skin must be a tone, not a number read as a word")
+		assert_true(not _model().appearance.part("torso").is_empty(), "and it must still be dressed")
+
+
+func test_a_record_naming_a_tone_that_does_not_exist_falls_back() -> void:
+	var look := CharacterAppearance.new({"skin": "puce", "hair_colour": "chartreuse", "eye_colour": "mauve"})
+	assert_eq(look.skin, "wheat", "an unknown tone must leave the default rather than be invented")
+	assert_eq(look.hair_colour, "dark_brown")
+	assert_eq(look.eye_colour, "brown")
+
+
 func test_a_missing_slot_is_reported_not_crashed() -> void:
 	GameState.set_flag("_pending_load_slot", "no_such_slot_ever")
 	var errors := Log.error_count
