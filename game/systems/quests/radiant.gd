@@ -115,10 +115,20 @@ func generate(region_id: String, count: int = 3, board_place: String = "", seed_
 		if dup:
 			continue
 		out.append(made)
-	for q in out:
-		if quest_log != null and quest_log.has_method("register_runtime"):
-			quest_log.register_runtime(q)
+	_publish(out)
 	return out
+
+
+## A generated quest has no content-pack definition, so the log can only start it once it has
+## been handed the runtime def. Anything this class gives out goes through here, because a
+## notice a player can read and cannot accept is worse than no notice: `start()` answers
+## "cannot start unknown quest" and the button does nothing.
+func _publish(defs: Array) -> void:
+	if quest_log == null or not quest_log.has_method("register_runtime"):
+		return
+	for q in defs:
+		if typeof(q) == TYPE_DICTIONARY and not (q as Dictionary).is_empty():
+			quest_log.register_runtime(q)
 
 
 ## Board-facing generation with a cooldown: within `cooldown_hours` the same notices come back.
@@ -133,6 +143,11 @@ func generate_for_board(board_id: String, region_id: String, count: int = 3, coo
 			if not def.is_empty():
 				kept.append(def)
 		if not kept.is_empty():
+			# The notices that were already on this board. They are handed straight back out
+			# of the board cache, and used not to be registered on the way — so a board read
+			# after a load, or after a new game wiped the log while this cache survived, was
+			# a list of work that refused to be taken.
+			_publish(kept)
 			return kept
 	var made := generate(region_id, count, board_id, 0)
 	var ids: Array[String] = []
@@ -551,3 +566,13 @@ func to_save() -> Dictionary:
 
 func from_save(d: Dictionary) -> void:
 	_boards = (d.get("boards", {}) as Dictionary).duplicate(true)
+	# The boards come back with their notices; the log has to be told what they are, or every
+	# job still hanging on a board in the loaded game cannot be taken.
+	for board_id in _boards:
+		_publish(_boards[board_id].get("defs", []))
+
+
+## A new game keeps no boards. Without this the generator's cache outlived the quest log it
+## had registered its work with, which is the same divergence a load used to cause.
+func reset_for_new_game() -> void:
+	_boards.clear()

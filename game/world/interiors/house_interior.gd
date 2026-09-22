@@ -93,6 +93,7 @@ func build(path: String) -> bool:
 	_build_windows()
 	_build_lights()
 	_build_props()
+	dress_furnishings()
 	_build_doors()
 	Log.info("HouseInterior", "%s: %d rooms, %d props" % [meta.get("name", slug), rooms.size(), meta.get("placements", []).size()])
 	return true
@@ -373,6 +374,163 @@ func _shelf_book() -> Dictionary:
 	return {"item": str(pick.get("id", "")), "book": str(pick.get("reads", ""))}
 
 
+# --- furnishings the player has bought (DESIGN §5.14) -------------------------------------------
+
+## What you have put in your own house. The forge dressed this building for whoever lives in
+## it; if that is you, your furnishings go in on top of the dressing, at a spot derived from
+## the room rather than authored, because a house you buy has no recipe line for a rug.
+##
+## `PropertyRegistry.add_furnishing()` and `furnishings()` were written, saved and tested, and
+## nothing in the game either sold a furnishing or drew one, so "Furnishings bought" was a
+## save field. This is the drawing half.
+##
+## Public because `build()` is not the only way in: a review render or a test can load a meta
+## and dress it without raising the shell.
+func dress_furnishings() -> void:
+	var reg := PropertyRegistry.instance
+	if reg == null or not is_instance_valid(reg):
+		return
+	var property_id := reg.property_for_interior(str(meta.get("id", "")))
+	if property_id.is_empty():
+		return
+	var bought: Array = reg.furnishings(property_id)
+	if bought.is_empty():
+		return
+	var holder := Node3D.new()
+	holder.name = "Furnishings"
+	add_child(holder)
+	var placed := 0
+	for entry in bought:
+		if _place_furnishing(holder, property_id, str(entry), placed):
+			placed += 1
+	Log.info("HouseInterior", "%s: %d of your own furnishings" % [property_id, placed])
+
+
+func _place_furnishing(holder: Node3D, property_id: String, item_id: String, index: int) -> bool:
+	var block: Dictionary = ContentDB.get_or_empty(item_id).get("furnishing", {})
+	if block.is_empty():
+		Log.warn("HouseInterior", "%s has no furnishing block" % item_id)
+		return false
+	var kind := str(block.get("prop", ""))
+	var room := _room_for(str(block.get("room", "")))
+	if room.is_empty() or kind.is_empty():
+		return false
+	var against_wall := str(block.get("spot", "floor")) == "wall"
+	var anchor := _free_spot(room, against_wall, index)
+	var node := _instance("", kind)
+	if node == null:
+		return false
+	node.name = Ids.name_of(item_id)
+	node.position = anchor["at"]
+	node.rotation.y = float(anchor["yaw"])
+	node.set_meta("furnishing", item_id)
+	node.set_meta("room", str(room["id"]))
+	holder.add_child(node)
+	if bool(block.get("storage", false)):
+		_make_player_storage(node, property_id, item_id, kind)
+	return true
+
+
+## The room a furnishing asks for, or the hearth room, which every house in Wickmere has.
+## A book press wants a study and most houses have none; it goes by the fire instead of
+## refusing to exist.
+func _room_for(wanted: String) -> Dictionary:
+	if wanted != "" and rooms.has(wanted):
+		return rooms[wanted]
+	for fallback in ["hearth_room", "hall"]:
+		if rooms.has(fallback):
+			return rooms[fallback]
+	for id in rooms:
+		return rooms[id]
+	return {}
+
+
+## Somewhere in this room that nothing already stands. The dressing pass put the resident's
+## things down first, so this scores a lattice of candidate spots by how far they are from the
+## nearest of them and takes the best — a derived anchor, deterministic for a given house and
+## room, so your rug is in the same place every time you come home. `index` shifts the lattice
+## so two furnishings in one room do not both win the same spot.
+func _free_spot(room: Dictionary, against_wall: bool, index: int) -> Dictionary:
+	const INSET := 0.55
+	const STEPS := 5
+	var x0 := float(room["x"]) + INSET
+	var z0 := float(room["z"]) + INSET
+	var w := maxf(float(room["w"]) - INSET * 2.0, 0.1)
+	var d := maxf(float(room["d"]) - INSET * 2.0, 0.1)
+	var y := float(room["floor_y"])
+	var taken := _props_in(str(room["id"]))
+	var best := Vector3(x0 + w * 0.5, y, z0 + d * 0.5)
+	var best_yaw := 0.0
+	var best_score := -1.0
+	for i in STEPS:
+		for j in STEPS:
+			var u := (float((i + index) % STEPS) + 0.5) / float(STEPS)
+			var v := (float(j) + 0.5) / float(STEPS)
+			var at := Vector3(x0 + w * u, y, z0 + d * v)
+			var yaw := 0.0
+			if against_wall:
+				# Nearest wall, and face into the room off it.
+				var to_left := at.x - x0
+				var to_right := x0 + w - at.x
+				var to_near := at.z - z0
+				var to_far := z0 + d - at.z
+				var least := minf(minf(to_left, to_right), minf(to_near, to_far))
+				if least > INSET * 1.2:
+					continue        # not against anything; a wall-hung thing wants a wall
+				if least == to_left:
+					yaw = 90.0
+				elif least == to_right:
+					yaw = 270.0
+				elif least == to_near:
+					yaw = 0.0
+				else:
+					yaw = 180.0
+			var score := 99.0
+			for other in taken:
+				score = minf(score, at.distance_to(other))
+			if score > best_score:
+				best_score = score
+				best = at
+				best_yaw = yaw
+	return {"at": best, "yaw": deg_to_rad(best_yaw), "clearance": best_score}
+
+
+## Where the resident's own things already stand in this room, furnishings included, so the
+## second thing you buy does not land on the first.
+func _props_in(room_id: String) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	for p in meta.get("placements", []):
+		if str((p as Dictionary).get("room", "")) == room_id:
+			out.append(_vec((p as Dictionary)["at"]))
+	var holder := get_node_or_null("Furnishings")
+	if holder != null:
+		for child in holder.get_children():
+			if child is Node3D and str(child.get_meta("room", "")) == room_id:
+				out.append((child as Node3D).position)
+	return out
+
+
+## A chest you bought is storage, and it is yours: no loot rolled into it, no resident on it,
+## and claimed in your name so taking your own things back out is not theft. Its id is built
+## from the property's storage id, so the same chest holds the same things across a save.
+func _make_player_storage(node: Node3D, property_id: String, item_id: String, kind: String) -> void:
+	var box := WorldContainer.new()
+	box.name = "Storage"
+	box.container_id = "%s#%s" % [PropertyRegistry.storage_id_of(property_id), Ids.name_of(item_id)]
+	box.display_name = str(ContentDB.get_or_empty(item_id).get("name", "chest"))
+	box.loot_table = ""
+	var shape := CollisionShape3D.new()
+	var form := BoxShape3D.new()
+	form.size = _placeholder_size(kind)
+	shape.shape = form
+	shape.position.y = form.size.y * 0.5
+	box.add_child(shape)
+	node.add_child(box)
+	var reg := Ownership.ensure()
+	if reg != null:
+		reg.claim_for_player(box.container_id)
+
+
 func _build_doors() -> void:
 	var holder := Node3D.new()
 	holder.name = "Doors"
@@ -407,8 +565,12 @@ func _scene_at(path: String) -> Node3D:
 
 ## Props the forge has not built yet get a labelled stand-in sized like the real thing,
 ## so the room still reads and the gap is obvious in a review render.
+##
+## An empty `path` means "no recipe named a file for this, ask the library for the kind" —
+## which is how a bought furnishing arrives, since a deed carries a prop kind and not an
+## asset path. A placement whose recipe named neither is the caller's mistake and is refused.
 func _instance(path: String, kind: String) -> Node3D:
-	if path.is_empty():
+	if path.is_empty() and kind.is_empty():
 		return null
 	var direct := _scene_at(path)
 	if direct != null:
