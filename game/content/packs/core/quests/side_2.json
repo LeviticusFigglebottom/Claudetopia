@@ -1,0 +1,470 @@
+[
+  {
+    "id": "core:quest/the_lantern_still_lit",
+    "name": "The Lantern That Would Not Go Out",
+    "layer": "side",
+    "giver": "core:npc/loa_oul",
+    "region": "core:region/sedgemire",
+    "summary": "A burial lantern is measured a spoonful of oil for every year the dead lived, and it goes out before dawn. One did not. Follow it up the channels, find out whose it was, and settle what the jetty does about a burial the water would not take.",
+    "notes": "Sedgemire's side quest. Loa Oul and Auti Sa are the settlements stream's people; the wisps and the drowned house at Wisp Hollow are the region's own ecology and POI.",
+    "stages": [
+      {
+        "id": "the_dawn_lantern",
+        "journal": "Loa Oul measures the oil herself: one spoon for every year they lived, and a spoonful poured back for the water. It goes out somewhere in the dark and the boat comes apart and that is the burial. Nine days ago she stood on the jetty at first light and there was still a light on the water, a long way up the north channel, and it was still going at noon, and she has not said this to her aunt.",
+        "objectives": [{"type": "talk", "target": "core:npc/loa_oul", "text": "Hear the jetty-keeper out"}],
+        "marker": {"place_id": "core:place/isseva", "radius": 140}
+      },
+      {
+        "id": "the_channel",
+        "journal": "North and west, up a dead-end channel where the wisps hang over a house that went under when the ground did, with its chimney still standing out of the water like a finger. The lantern is against the chimney, upright, out now, and dry. The wisps are the right height and the right amber and they sway, which is how a lantern behaves and is not how a lantern behaves.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/wisp_hollow", "radius": 140, "text": "Go up the north channel to Wisp Hollow"},
+          {"type": "kill", "target": "core:enemy/wisp", "count": 3, "text": "Put out what is hanging over the drowned house"},
+          {"type": "collect", "target": "core:item/salissas_lantern", "count": 1, "text": "Take the lantern off the chimney"}
+        ],
+        "on_complete": [{"set_flag": "found_the_lantern"}, {"renown": 5}]
+      },
+      {
+        "id": "whose_frame",
+        "journal": "Indigo paper on an alder frame, and the frame is pegged, not glued, which Isseva stopped doing three generations ago. Auti Sa keeps her mother's bench and her mother's mother's tools and will know the hand at a glance, and will be annoyed about knowing it, because a lantern-maker who recognises her own grandmother's pegging on a burial lantern that came back is a lantern-maker who has to say something.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/auti_sa", "text": "Show Auti Sa the frame"}
+        ],
+        "on_complete": [{"set_flag": "knew_the_frame"}]
+      },
+      {
+        "id": "what_the_water_would_not_take",
+        "journal": "Sa'lissa, who was nine, and who went under off the boards in a fog seventy years ago and was found and was buried properly with a lantern her grandmother made in a night. The lantern came back up the channel burning. Loa has poured oil for her every year without knowing, because the rail at the end of the jetty is for the ones the water would not take and nobody asks why a lantern is on it.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_lantern_that_would_not_go_out",
+            "text": "Settle what the jetty does about Sa'lissa",
+            "options": [
+              {
+                "id": "send_it_out",
+                "text": "Measure nine spoons and send her out again, properly, with her name said.",
+                "effects": [
+                  {"set_flag": "salissa_sent_out"},
+                  {"rep": ["core:faction/reed_council", 15]},
+                  {"morality": 10},
+                  {"renown": 10},
+                  {"deed": ["dead_buried", 2]}
+                ]
+              },
+              {
+                "id": "the_rail",
+                "text": "Put it on the rail with a reed standing. The water said no and the marsh has a word for that.",
+                "effects": [
+                  {"set_flag": "salissa_on_the_rail"},
+                  {"rep": ["core:faction/reed_council", 10]},
+                  {"morality": 5}
+                ]
+              },
+              {
+                "id": "keep_it",
+                "text": "Keep it. A lantern that burned a night and a day is worth carrying.",
+                "effects": [
+                  {"set_flag": "salissas_lantern_kept"},
+                  {"rep": ["core:faction/reed_council", -10]},
+                  {"morality": -5}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/isseva", "radius": 140}
+      },
+      {
+        "id": "the_jetty_at_dawn",
+        "auto": true,
+        "journal": "Loa Oul says she will tell her aunt now, which is the part she has been avoiding for nine days, and that she is going to say the name in the telling. Auti Sa has taken the frame apart to see the pegging properly and will not be sensible for a week.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "lantern_still_lit_done"}]
+      }
+    ],
+    "rewards": {
+      "marks": 40,
+      "renown": 10,
+      "rep": [["core:faction/reed_council", 5]],
+      "items": [["core:item/reed_lantern", 1]]
+    }
+  },
+
+  {
+    "id": "core:quest/the_fawning_months",
+    "name": "The Fawning Months",
+    "layer": "side",
+    "giver": "core:npc/tansy_thornby",
+    "region": "core:region/briarwold",
+    "summary": "Somebody is running a snare line under the Hunters' Stand in the months the Hollow takes nothing. The Woodfolk have no law, only custom, and custom is a thing that is done to a man slowly and without anybody having to say it to his face.",
+    "notes": "Briarwold's side quest, on the Woodfolk's virtue and their vice (WORLD_BIBLE 3.5): restraint, and the silence that lets wrongs stand. Hob Larkin is the hunter of no fixed lodge who wrote the unreliable bestiary; Fenwick Collier is the burner who took the pits after the last man was frozen out, which is what naming somebody here means.",
+    "stages": [
+      {
+        "id": "the_amount",
+        "journal": "One deer a week in winter, none in the fawning months, hare and fowl in between, and the number is arrived at by counting the Hollow first and the deer second and taking the smaller. Tansy Thornby has been finding snares on the ridge under the Hunters' Stand for three weeks, set at a hare's height, brass wire on a wooden toggle, and one of them has something in it that is not a hare.",
+        "objectives": [{"type": "talk", "target": "core:npc/tansy_thornby", "text": "Hear Thornby out on the snare line"}],
+        "marker": {"place_id": "core:place/grandfather_hollow", "radius": 160}
+      },
+      {
+        "id": "the_line",
+        "journal": "The Hunters' Stand is a hide built round a living trunk with a rope ladder the poachers pull up after them. The line runs west of it along the ridge: eleven snares, set well, by somebody who knows the ground better than the men in the hide do. The ninth has a thornhound in it, bark-skin up, three days in the wire, and it is past what a splint fixes. Tansy leaves a heart on the flat stone for these and they have never taken so much as a hen from the Hollow.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/hunters_stand", "radius": 140, "text": "Walk the ridge under the Hunters' Stand"},
+          {"type": "kill", "target": "core:enemy/thornhound", "count": 1, "text": "Do what the ninth snare needs doing"}
+        ],
+        "on_complete": [{"set_flag": "found_the_snare_line"}, {"morality": 3}]
+      },
+      {
+        "id": "whose_wire",
+        "journal": "Brass wire on a wooden toggle, and the toggles are all the same wood and the same hand. Fenwick Collier sleeps on the turf beside his clamps and is awake every two hours looking at the colour of his own smoke, which means he is the only person in the Wold who sees who walks the ridge road at night, and the only one who has never been asked.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/charcoal_camp", "radius": 140, "text": "Go down to the clamps below the south root"},
+          {"type": "talk", "target": "core:npc/fenwick_collier", "text": "Ask the burner who walks the ridge at night"}
+        ],
+        "on_complete": [{"set_flag": "knew_whose_wire"}]
+      },
+      {
+        "id": "what_custom_does",
+        "journal": "Hob Larkin, hunter, of no fixed lodge, who wrote a book about every beast in the basin with pictures he drew himself and most of it invented. He has been in the Wold since spring. Custom here is not law: nobody will arrest him, and nobody will say it to his face. What happens is that the Hollow stops selling him rope, and then turf, and then anything, and in a season he is somewhere else, and that is what happened to the man whose pits Fenwick Collier burns now.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_snare_line",
+            "text": "Decide what the Wold does about Hob Larkin",
+            "options": [
+              {
+                "id": "name_him",
+                "text": "Name him to the Hollow. Custom will do the rest, slowly, without anybody saying it.",
+                "effects": [
+                  {"set_flag": "larkin_named_to_the_hollow"},
+                  {"rep": ["core:faction/woodfolk", 15]},
+                  {"renown": 10}
+                ]
+              },
+              {
+                "id": "pull_it",
+                "text": "Pull the whole line and say nothing. The wrong stops and the man stays.",
+                "effects": [
+                  {"set_flag": "snare_line_pulled"},
+                  {"rep": ["core:faction/woodfolk", 5]},
+                  {"morality": 5}
+                ]
+              },
+              {
+                "id": "tell_him",
+                "text": "Walk up to the hide and say it to his face, which is the thing the Wold never does.",
+                "conditions": [{"skill_min": ["speech", 20]}],
+                "effects": [
+                  {"set_flag": "larkin_told_to_his_face"},
+                  {"rep": ["core:faction/woodfolk", 20]},
+                  {"morality": 10},
+                  {"renown": 20}
+                ]
+              },
+              {
+                "id": "take_it_over",
+                "text": "It is a good line and the fawning months end in three weeks. Keep it.",
+                "effects": [
+                  {"set_flag": "took_over_the_snare_line"},
+                  {"rep": ["core:faction/woodfolk", -20]},
+                  {"morality": -10},
+                  {"marks": 90}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/grandfather_hollow", "radius": 160}
+      },
+      {
+        "id": "the_flat_stone",
+        "auto": true,
+        "journal": "Tansy takes the wire and the toggles and burns them in Fenwick's clamp, which is a waste of good brass and is the point. Then she goes up to the flat stone by the root gate with a heart, and sits ten paces off, and waits, and nothing comes out of the bracken that evening, and she sits there until dark anyway.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "fawning_months_done"}]
+      }
+    ],
+    "rewards": {
+      "marks": 45,
+      "renown": 10,
+      "rep": [["core:faction/woodfolk", 5]],
+      "items": [["core:item/snare_wire", 4]]
+    }
+  },
+
+  {
+    "id": "core:quest/four_hundred_and_twelve",
+    "name": "Four Hundred and Twelve",
+    "layer": "side",
+    "giver": "core:npc/skardd_ko_skarl",
+    "region": "core:region/skerrow",
+    "summary": "The bridge-warden counted four hundred and eleven links on Kindleday and four hundred and twelve when he counted again. One of them was forged cold by nobody, and the one it replaced is hanging in a clanless camp as a wind chime.",
+    "notes": "Skerrow's side quest, on blood-price and on what a clan reads off a weld. Skardd and Oskarth are the settlements stream's people; the clanless camp already hangs loosened chain links as chimes, and clanless raiders are the region's own ecology.",
+    "stages": [
+      {
+        "id": "the_count",
+        "journal": "Every Kindleday, a side at a time, on his knees on the deck with a hand on each link: four hundred and twelve, and it has been four hundred and twelve since the hanging. On Kindleday last it was four hundred and eleven, and he counted again and it was four hundred and twelve, and he has been on the deck at night with a lamp ever since. He has now found the reason and it is worse than the arithmetic: one link is the right size, the wrong weight, closed cold, and filed smooth where a clan-mark should be.",
+        "objectives": [{"type": "talk", "target": "core:npc/skardd_ko_skarl", "text": "Hear the bridge-warden's count"}],
+        "marker": {"place_id": "core:place/kharrow_hold", "radius": 140}
+      },
+      {
+        "id": "the_chimes",
+        "journal": "The clanless hang their loosened links at the camp under the overhang, one for every man who was cut out of a clan, and they ring in the gorge wind all night, which is the joke and the point. One of the links hanging there is not a clanless man's. It is Kharrow bridge iron, hot-forged, folded, with a mark struck across the weld, and it has been up there long enough to have worn a groove in its cord.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/clanless_camp", "radius": 140, "text": "Find the camp under the overhang"},
+          {"type": "kill", "target": "core:enemy/clanless_raider", "count": 2, "text": "Get to the chimes"},
+          {"type": "collect", "target": "core:item/clan_forged_link", "count": 1, "text": "Take the bridge's own link off the cord"}
+        ],
+        "on_complete": [{"set_flag": "took_the_link_back"}, {"renown": 10}]
+      },
+      {
+        "id": "whose_mark",
+        "journal": "A clan-mark is struck across the weld so that a bridge can be read link by link afterwards and every hand on it named, which is the whole of why the clans forge that way and is not decoration. Oskarth ko-Brindle keeps the headframes and the winding chains and has been reading marks off iron for thirty years, and will tell you whose hand this is and when, and will not be pleased to.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/brindlecrag", "radius": 140, "text": "Take the link to Brindlecrag"},
+          {"type": "talk", "target": "core:npc/oskarth_ko_brindle", "text": "Have the mark read"}
+        ],
+        "on_complete": [{"set_flag": "read_the_clan_mark"}]
+      },
+      {
+        "id": "the_price",
+        "journal": "The mark is a Ghast hand from forty years ago, off a man who was cut out of his clan in the same decade and went to the overhang, and the cold link in the bridge is his work too: he took his own grandfather's link off Kharrow's gate and hung it with his own. Blood-price is for blood spilled by a hand. Nobody has bled. The bridge held. Four hundred and twelve people a year walk over a weld that was closed cold by a man with nothing to lose, and the bridge-warden greased past it every Kindleday for a year without knowing.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_cold_weld",
+            "text": "Say what the Hold is told about the link",
+            "options": [
+              {
+                "id": "name_them",
+                "text": "Take it to the Moot-Speaker. A bridge is the whole hold's business.",
+                "effects": [
+                  {"set_flag": "cold_link_taken_to_the_moot"},
+                  {"rep": ["core:faction/clan_moot", 15]},
+                  {"renown": 15}
+                ]
+              },
+              {
+                "id": "own_it",
+                "text": "Let Skardd report himself. He greased past a cold weld for a year.",
+                "effects": [
+                  {"set_flag": "skardd_reported_himself"},
+                  {"rep": ["core:faction/clan_moot", 10]},
+                  {"morality": 8},
+                  {"renown": 10}
+                ]
+              },
+              {
+                "id": "re_hang_it",
+                "text": "Hang the true link back, count four hundred and twelve, and tell nobody.",
+                "effects": [
+                  {"set_flag": "cold_link_quietly_replaced"},
+                  {"rep": ["core:faction/clan_moot", 5]},
+                  {"morality": -5}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/kharrow_hold", "radius": 140}
+      },
+      {
+        "id": "kindleday",
+        "auto": true,
+        "journal": "Skardd greases the first link on a Kindleday and says Brann ko-Kharrow's name at it, because he is a Skarl and has no verse for the man who hung the chain and refused the rope. He says he will keep doing that. He also says he will be counting twice from now on, once up and once back, which is eight hundred and twenty-four links on his knees, and that this is not penance, it is arithmetic.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "four_hundred_and_twelve_done"}]
+      }
+    ],
+    "rewards": {
+      "marks": 70,
+      "renown": 15,
+      "rep": [["core:faction/clan_moot", 10]],
+      "items": [["core:item/giant_bone_shard", 2]]
+    }
+  },
+
+  {
+    "id": "core:quest/the_cold_fire",
+    "name": "The Cold Fire",
+    "layer": "side",
+    "giver": "core:npc/wat_thatcher",
+    "region": "core:region/cinderlea",
+    "summary": "A sutler's tally is split so that neither half can be cut without the halves failing to meet. Six pilgrims took a season on tally and went out to the Cold Fire, and both halves of the stick are back in the sutler's hand, which cannot happen.",
+    "notes": "Cinderlea's side quest. Wat Thatcher and Deseith are the settlements stream's people at Pilgrim's Ash; the Cold Fire is the camp POI where the wights are still passing a cup.",
+    "stages": [
+      {
+        "id": "both_halves",
+        "journal": "A tally stick is split down the middle so the debtor keeps one half and the sutler the other and neither can cut a notch off without the halves failing to meet. That is the whole of Wat Thatcher's law and he has never needed another. Six pilgrims took a season's worth on tally in the spring and walked out to the Cold Fire, which pilgrims do because the wights there sit and do not get up. Both halves of the stick are in Wat's hand. He found the second one on the cart lid, on top of the bell-tally, in the morning.",
+        "objectives": [{"type": "talk", "target": "core:npc/wat_thatcher", "text": "Hear the sutler out about the tally"}],
+        "on_enter": [{"give_item": ["core:item/wats_tally_stick", 1]}],
+        "marker": {"place_id": "core:place/pilgrims_ash", "radius": 140}
+      },
+      {
+        "id": "the_camp",
+        "journal": "The Cold Fire is a ring of them round a fire that went out a hundred and seventy years ago, seated, passing a cup that has been going round since the Ash Winter. Pilgrims camp there. It is quiet, the wights do not get up, and the grey is thinner on that side of the heath. Six more are sitting in the ring now, in newer grey, with a season's worth of Wat Thatcher's supplies stacked behind them and not opened.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/cold_fire_camp", "radius": 140, "text": "Walk out to the Cold Fire"},
+          {"type": "kill", "target": "core:enemy/ash_wight", "count": 6, "text": "Settle with the six in the newer grey"}
+        ],
+        "on_complete": [{"set_flag": "found_wats_six"}, {"renown": 10}]
+      },
+      {
+        "id": "who_carried_it",
+        "journal": "Somebody carried half a tally stick two miles back across the heath and set it on a cart lid in the dark, on top of the bell-tally rather than the marks-tally, which is a choice. Deseith gave his own name away at the bell yard and answers to one he says he heard in the note under the Seat. He counts. He was a ledger-clerk in Tollmere before the floor started talking to him, and a man who was a clerk does not leave half a tally on the wrong pile by accident.",
+        "objectives": [{"type": "talk", "target": "core:npc/deseith", "text": "Ask Deseith who walked back with the stick"}],
+        "on_complete": [{"set_flag": "deseith_carried_the_tally"}]
+      },
+      {
+        "id": "the_debt",
+        "journal": "He walked back with it because a debt with both halves in one hand is a debt that has been settled, and he wanted it settled before he walks south himself, and he put it on the bell-tally because the bells are what Wat keeps for the ones who have gone and the marks are what he keeps for the ones who are coming back. Wat Thatcher has been a thatcher from Larkbourne Ford, a pilgrim, and a man with a purse under his grey, in that order, and he would like somebody else to say what the stick is now.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "wats_tally",
+            "text": "Say what Wat Thatcher's tally is now",
+            "options": [
+              {
+                "id": "strike_it",
+                "text": "The debt is struck. Burn the stick and put six notches on the bell-tally.",
+                "effects": [
+                  {"set_flag": "wats_debt_struck"},
+                  {"rep": ["core:faction/tolling_order", 10]},
+                  {"morality": 10},
+                  {"renown": 10}
+                ]
+              },
+              {
+                "id": "take_it_back",
+                "text": "Go and bring the supplies back off the camp. They are not using them.",
+                "effects": [
+                  {"set_flag": "wats_goods_recovered"},
+                  {"marks": 120},
+                  {"morality": -8}
+                ]
+              },
+              {
+                "id": "hang_it",
+                "text": "Hang the stick in the chapter-bell with the pilgrims' bells and let it ring in winter.",
+                "effects": [
+                  {"set_flag": "wats_tally_hung"},
+                  {"rep": ["core:faction/tolling_order", 15]},
+                  {"morality": 5},
+                  {"renown": 5}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/pilgrims_ash", "radius": 140}
+      },
+      {
+        "id": "two_tallies",
+        "auto": true,
+        "journal": "Wat keeps two tallies on the cart lid: bells inside, marks outside. He has never explained which one is the real ledger and he will not now, and he has moved six notches from one to the other in front of you without saying anything, which is as near as the man comes to a speech.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "cold_fire_done"}]
+      }
+    ],
+    "rewards": {
+      "marks": 50,
+      "renown": 10,
+      "items": [["core:item/ash_cake", 4]]
+    }
+  },
+
+  {
+    "id": "core:quest/the_lamp_is_dimmer",
+    "name": "The Lamp Is Dimmer",
+    "layer": "side",
+    "giver": "core:npc/tamsin_wick",
+    "region": "core:region/brightwater",
+    "summary": "Every fisher on the Mere knows the count of the Lamp's turning the way they know their own breathing, and it is dimmer, and the keeper has two logbooks she is not writing it in. It brightened once, at the wrong greeting, for a child.",
+    "notes": "Brightwater's side quest. Tamsin Wick is the Lamp keeper from the main pack; Jory, Lettie and Elsie Wick are the settlements stream's people at Gullhithe, and Elsie's morning is already in their dialogues.",
+    "stages": [
+      {
+        "id": "two_logbooks",
+        "journal": "An Oroth sul-stone at the top of a tower Tamsin Wick has kept for thirty years, and it goes round, and it is dimmer. She keeps two logbooks: the Guild's, which goes to Lantern Row every quarter, and her own, which does not. Neither of them says so. A keeper who reports a dimming lamp is a keeper replaced by a guild one on a guild wage, and the guild one will be on the stair four nights a week.",
+        "objectives": [{"type": "talk", "target": "core:npc/tamsin_wick", "text": "Get it out of the Lamp keeper"}],
+        "marker": {"place_id": "core:place/gullhithe", "radius": 140}
+      },
+      {
+        "id": "the_count_of_its_turning",
+        "journal": "Two people on the Mere have counted. Her nephew counted the turns on the way out on Merrowday for the first time in his life, because that was the morning it brightened when she covered it, and a sul-stone brightens for good evening and has never once in thirty years brightened for good morning. Her great-niece was on the slipway and saw it and will not go up the stair now.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/gullhithe", "radius": 140, "text": "Ask on the shore at Gullhithe"},
+          {"type": "talk", "target": "core:npc/jory_wick", "text": "Ask the fisher what he counted"},
+          {"type": "talk", "target": "core:npc/elsie_wick", "text": "Ask the child what she saw"}
+        ],
+        "on_complete": [{"set_flag": "counted_the_lamps_turning"}]
+      },
+      {
+        "id": "the_chipped_face",
+        "journal": "The stone is chipped. Low on the north face, out of the light's throw, where nobody standing on the stair would look and nobody on the water could see: four clean flakes off it, taken with a chisel by somebody who knew what they were worth and how not to be caught at it. Sul-stone is bright from the back as well as the front and cannot be carried in a pocket without the pocket showing, which is why it moves at night, off the north cliffs, through a beacon with an upturned bell for a fire-bowl.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/north_cliff_beacon", "radius": 140, "text": "Go up to the beacon on the north cliff"},
+          {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "text": "See who is moving it at night"},
+          {"type": "collect", "target": "core:item/sul_stone_sliver", "count": 1, "text": "Take back a sliver of the Lamp"}
+        ],
+        "on_complete": [{"set_flag": "found_the_sliver"}, {"renown": 10}]
+      },
+      {
+        "id": "what_the_keeper_does",
+        "journal": "So the Lamp is dimmer because four flakes of it are in Tollmere, and it is also dimmer than four flakes account for, and both of those are true and only one of them has a thief in it. Tamsin Wick is on the stair with the sliver in her hand and the Guild's logbook open on the sill and her own shut in her apron, and she has asked you, which after thirty years of asking nobody is not nothing.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_lamps_logbook",
+            "text": "Say what goes in the Lamp keeper's logbook",
+            "options": [
+              {
+                "id": "report_it",
+                "text": "Write it in the Guild's book. A lit lake is worth more than one keeper's post.",
+                "effects": [
+                  {"set_flag": "lamp_reported_to_the_guild"},
+                  {"rep": ["core:faction/tallymen", 15]},
+                  {"renown": 10},
+                  {"morality": 5},
+                  {"rumour": ["core:rumour/lamp_dimming", 0.8]}
+                ]
+              },
+              {
+                "id": "say_nothing",
+                "text": "Write nothing. Set the sliver back in the face and let her keep her stair.",
+                "effects": [
+                  {"set_flag": "lamp_kept_quiet"},
+                  {"morality": -3},
+                  {"rep": ["core:faction/tallymen", -5]}
+                ]
+              },
+              {
+                "id": "the_child_on_the_stair",
+                "text": "Let Elsie back up at dusk. It is the only thing that has ever made it brighter.",
+                "effects": [
+                  {"set_flag": "elsie_keeps_the_stair"},
+                  {"morality": 10},
+                  {"renown": 15},
+                  {"rumour": ["core:rumour/lamp_brightened_covering", 0.8]}
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:place/the_lamp", "radius": 140}
+      },
+      {
+        "id": "the_light_goes_round",
+        "auto": true,
+        "journal": "Whatever is written, the light goes round that night the way it has gone round for thirty years, and every boat on the Mere counts it without knowing they are counting, and one of them is a man who says a figure out loud every morning because a thing said aloud does not go quiet.",
+        "objectives": [],
+        "on_enter": [{"set_flag": "lamp_is_dimmer_done"}]
+      }
+    ],
+    "rewards": {
+      "marks": 60,
+      "renown": 15,
+      "items": [["core:item/wisp_glim", 1]]
+    }
+  }
+]

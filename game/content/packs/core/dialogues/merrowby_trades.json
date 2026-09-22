@@ -21,6 +21,7 @@
       {"text": "Where's the rest of your mill gear?", "next": "the_stolen_wheel"},
       {"text": "Your daughter counts the Toll's cracks.", "next": "winnow"},
       {"text": "About what's under the wheel.", "next": "after_grist", "conditions": [{"flag": "saw_old_pennywort"}]},
+      {"text": "I have been down in the wheel-pit.", "next": "the_wheel_pit", "conditions": [{"quest_at": ["core:quest/grist", "what_to_do"]}]},
       {"text": "Good day to you.", "next": "bye"}
     ]},
     "the_wheel": {"speaker": "Osric Pennywort", "text": "It does. Since the night the Toll started up. The Larkbourne moved out of the race the summer my father died, so I've ground by hand eleven year, and then one morning I come down and the wheel's going round like it's been paid. I ground a sack. It's good flour. It's very good flour, and it keeps a month, and bread off it tastes of nothing at all, and I've sold two hundredweight of it and I would like you to know that I did not know that at the time.", "choices": [
@@ -39,6 +40,13 @@
     ]},
     "after_grist_2": {"speaker": "Osric Pennywort", "text": "Old Osric. Buried in the yard under the apple with his tools, sixty year ago, because that was the custom and we thought it was a kindness. Treading the paddles. Sixty years of walking in a hole in the ground under his own floor because nobody said his name at the bell and nobody ground the flour he'd have wanted ground. — I'm going to sit down. Don't tell Winnow. I'll tell Winnow. In about a year.", "effects": [{"set_flag": "osric_knows"}, {"morality": 5}], "next": "hub"},
     "after_grist_3": {"speaker": "Osric Pennywort", "text": "Right. Right. I asked and you answered and I'll not go digging at it. Take a sack of the cold flour and don't bake it for anyone you like.", "effects": [{"give_item": ["core:item/cold_flour", 2]}], "next": "hub"},
+    "the_wheel_pit": {"speaker": "Osric Pennywort", "text": "You went down. — Don't tell me what he looks like. I know what he looks like; I've known since I was nine and I have not been down that trap since my father stopped taking me. — Right. There are three things and I have had sixty years to think about them and I have got nowhere, which is why I asked somebody who is not a Pennywort. You can put him down, the way you'd put down a hedge-wight, and the wheel stops and the mill stops and I am a man with a grindstone and no water. You can leave him, and the flour is flour. Or you can find the pin. My father threw the sluice pin in the head-pool under the Hound the day the stream moved, and if the work is what's holding him then giving him back the water might finish it.", "choices": [
+      {"text": "I'll put him to rest. He has done enough.", "effects": [{"quest_choice": ["core:quest/grist", "rest"]}], "next": "grist_settled"},
+      {"text": "I'll find the pin and give him back his water.", "effects": [{"quest_choice": ["core:quest/grist", "water"]}], "next": "grist_settled"},
+      {"text": "Leave him to it. Flour is flour.", "effects": [{"quest_choice": ["core:quest/grist", "leave"]}], "next": "grist_settled"},
+      {"text": "Let me think about it on the walk down.", "next": "hub"}
+    ]},
+    "grist_settled": {"speaker": "Osric Pennywort", "text": "Right. — Then that's what we're doing, and I shall be up at the house with the door shut and the shutters to, and I would be obliged if you did not come and tell me about it until it is done. — He was buried in the yard under the apple with his tools on him, which is the custom and which I have stopped being able to think of as a kindness.", "effects": [{"end": true}]},
     "bye": {"speaker": "Osric Pennywort", "text": "Mind the trap by the stones. And two taps before you touch anything, if you've any manners.", "next": "hub"}
   }
 },

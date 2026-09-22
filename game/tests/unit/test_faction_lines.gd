@@ -6,6 +6,9 @@ extends TestCase
 ##
 ## Nothing here calls `quests.start()` to begin a quest, because a quest with no button is a
 ## quest no player can take, and that is the failure this file exists to catch.
+##
+## The side quests are here too, for the same reason and against the same rules: the checks at
+## the foot of this file are about every authored quest a person hands over, of either layer.
 
 const WARDENS := "core:faction/wardens"
 const SAYERS := "core:faction/sayers"
@@ -31,6 +34,12 @@ const VIGIL := "core:quest/vigil"
 const GREYFOLD := "core:quest/forty_one_places"
 const CHAPTER_BOOK := "core:quest/the_names_in_the_chapter_book"
 const AT_THE_GATE := "core:quest/at_the_gate"
+
+const DAWN_LANTERN := "core:quest/the_lantern_still_lit"
+const FAWNING := "core:quest/the_fawning_months"
+const FOUR_TWELVE := "core:quest/four_hundred_and_twelve"
+const COLD_FIRE := "core:quest/the_cold_fire"
+const LAMP := "core:quest/the_lamp_is_dimmer"
 
 var log_node: Node
 var ctx: SocialContext
@@ -58,6 +67,9 @@ func before_each() -> void:
 func after_each() -> void:
 	if Social.dialogue.is_running():
 		Social.dialogue.stop()
+	# Opening a book opens the reader, and a full-screen menu pauses the tree, which would be
+	# waiting for the next test that needs a physics frame.
+	UI.close_all()
 	log_node.reset_for_new_game()
 	Social.standing.reset_for_new_game()
 	Social.factions.reset_for_new_game()
@@ -891,6 +903,173 @@ func test_keeping_your_name_at_the_gate_is_the_other_answer() -> void:
 		cadwen.stop()
 	assert_eq(log_node.outcome_of(AT_THE_GATE), "keep_your_name")
 	assert_gt(Social.standing.renown(), renown_before, "somebody standing at that door has to be known")
+
+
+# --- the side quests in the regions that had none ---------------------------------------------------
+
+func test_the_lantern_that_would_not_go_out() -> void:
+	ctx.set_flag("isseva_told_still_lit")          # she says it at her own jetty first
+	walk_in("core:npc/loa_oul", ["One lantern was still burning at noon", "Whose burial was it?", "Then I'll go and look at it."])
+	assert_true(log_node.is_active(DAWN_LANTERN))
+	assert_eq(stage(DAWN_LANTERN), "the_channel")
+
+	arrived("core:poi/wisp_hollow")
+	killed("core:enemy/wisp", 3)
+	inventory.add("core:item/salissas_lantern", 1)
+	assert_eq(stage(DAWN_LANTERN), "whose_frame")
+
+	var auti := talk_to("core:npc/auti_sa")
+	press(auti, "Read this frame for me.")
+	auti.stop()
+	assert_true(ctx.has_flag("knew_the_frame"), "her grandmother's pegging, left proud")
+	assert_eq(stage(DAWN_LANTERN), "what_the_water_would_not_take")
+
+	var loa := talk_to("core:npc/loa_oul")
+	press(loa, "It was Sa'lissa's. She was nine.")
+	press(loa, "Measure nine spoons.")
+	if loa.is_running():
+		loa.stop()
+	assert_true(log_node.is_completed(DAWN_LANTERN))
+	assert_true(ctx.has_flag("salissa_sent_out"))
+	assert_gt(Social.standing.morality(), 0, "burying the unburied is a Hearth deed")
+	assert_true(ctx.has_flag("lantern_still_lit_done"))
+
+
+func test_the_fawning_months_and_what_custom_does_to_a_man() -> void:
+	ctx.set_flag("hollow_told_the_heart")
+	walk_in("core:npc/tansy_thornby", ["Something is snaring in the fawning months.", "Why not pull them and be done?", "Then I'll go up to the ninth."])
+	assert_eq(stage(FAWNING), "the_line")
+
+	arrived("core:poi/hunters_stand")
+	killed("core:enemy/thornhound", 1)
+	assert_eq(stage(FAWNING), "whose_wire")
+
+	arrived("core:poi/charcoal_camp")
+	var fenwick := talk_to("core:npc/fenwick_collier")
+	press(fenwick, "Who walks the ridge road at night?")
+	fenwick.stop()
+	assert_true(ctx.has_flag("knew_whose_wire"), "the burner is awake at two and is never asked")
+	assert_eq(stage(FAWNING), "what_custom_does")
+
+	# Saying it to his face is a Speech door, and it is shut on a character who has not got it.
+	var ids: Array[String] = []
+	for o in log_node.open_options(FAWNING):
+		ids.append(str(o["id"]))
+	assert_false(ids.has("tell_him"), "walking up the ladder is a Speech check, not a free option")
+
+	var tansy := talk_to("core:npc/tansy_thornby")
+	press(tansy, "It is Hob Larkin's line.")
+	press(tansy, "Name him to the Hollow.")
+	if tansy.is_running():
+		tansy.stop()
+	assert_true(log_node.is_completed(FAWNING))
+	assert_true(ctx.has_flag("larkin_named_to_the_hollow"))
+	assert_gt(Social.factions.reputation("core:faction/woodfolk"), 0)
+
+
+func test_four_hundred_and_twelve_reads_a_mark_off_a_weld() -> void:
+	ctx.set_flag("hold_told_the_count")
+	walk_in("core:npc/skardd_ko_skarl", ["You found the link, didn't you.", "Where does a link go, if a man takes one?", "Then I'll go and take it off the cord."])
+	assert_eq(stage(FOUR_TWELVE), "the_chimes")
+	assert_eq(inventory.count("core:item/loosened_link"), 1, "he hands you the lie out of his own bridge")
+
+	arrived("core:poi/clanless_camp")
+	killed("core:enemy/clanless_raider", 2)
+	inventory.add("core:item/clan_forged_link", 1)
+	assert_eq(stage(FOUR_TWELVE), "whose_mark")
+
+	arrived("core:place/brindlecrag")
+	var oskarth := talk_to("core:npc/oskarth_ko_brindle")
+	press(oskarth, "Read this mark for me.")
+	oskarth.stop()
+	assert_true(ctx.has_flag("read_the_clan_mark"))
+	assert_eq(stage(FOUR_TWELVE), "the_price")
+
+	var skardd := talk_to("core:npc/skardd_ko_skarl")
+	press(skardd, "The mark is a Ghast hand")
+	press(skardd, "Report yourself.")
+	if skardd.is_running():
+		skardd.stop()
+	assert_true(log_node.is_completed(FOUR_TWELVE))
+	assert_true(ctx.has_flag("skardd_reported_himself"))
+	assert_gt(Social.standing.morality(), 0)
+
+
+func test_the_cold_fire_settles_a_split_tally() -> void:
+	ctx.set_flag("ash_told_tallies")
+	walk_in("core:npc/wat_thatcher", ["Both halves of a tally cannot be in one hand.", "What are the two piles?", "Then I'll go out to the Cold Fire."])
+	assert_eq(stage(COLD_FIRE), "the_camp")
+	assert_eq(inventory.count("core:item/wats_tally_stick"), 1)
+
+	arrived("core:poi/cold_fire_camp")
+	killed("core:enemy/ash_wight", 6)
+	assert_eq(stage(COLD_FIRE), "who_carried_it")
+
+	var deseith := talk_to("core:npc/deseith")
+	press(deseith, "You carried half a tally stick back in the dark.")
+	deseith.stop()
+	assert_true(ctx.has_flag("deseith_carried_the_tally"))
+	assert_eq(stage(COLD_FIRE), "the_debt")
+
+	var wat := talk_to("core:npc/wat_thatcher")
+	press(wat, "Deseith carried it back.")
+	press(wat, "Struck.")
+	if wat.is_running():
+		wat.stop()
+	assert_true(log_node.is_completed(COLD_FIRE))
+	assert_true(ctx.has_flag("wats_debt_struck"))
+	assert_eq(inventory.count("core:item/ash_cake"), 4)
+
+
+func test_the_lamp_is_dimmer_and_one_morning_it_was_not() -> void:
+	walk_in("core:npc/tamsin_wick", ["The Lamp is dimmer, and you know it.", "Why not write it in the Guild's book?", "Then let me find out what is wrong with it."])
+	assert_eq(stage(LAMP), "the_count_of_its_turning")
+
+	arrived("core:place/gullhithe")
+	EventBus.dialogue_ended.emit("core:npc/jory_wick")
+	EventBus.dialogue_ended.emit("core:npc/elsie_wick")
+	assert_eq(stage(LAMP), "the_chipped_face")
+
+	arrived("core:poi/north_cliff_beacon")
+	killed("core:enemy/smuggler_sayer", 2)
+	inventory.add("core:item/sul_stone_sliver", 1)
+	assert_eq(stage(LAMP), "what_the_keeper_does")
+
+	var tamsin := talk_to("core:npc/tamsin_wick")
+	press(tamsin, "Four flakes are gone off the north face.")
+	press(tamsin, "Let Elsie back up at dusk.")
+	if tamsin.is_running():
+		tamsin.stop()
+	assert_true(log_node.is_completed(LAMP))
+	assert_true(ctx.has_flag("elsie_keeps_the_stair"))
+	assert_gt(Social.standing.morality(), 0)
+	assert_true(ctx.has_flag("lamp_is_dimmer_done"))
+
+
+func test_the_six_side_quests_that_shipped_can_now_be_finished() -> void:
+	# Each of them stopped dead on its deciding stage, because a `choice` is closed by a
+	# dialogue effect and no dialogue had one. This presses each of those buttons.
+	var decisions := [
+		["core:quest/grist", "core:npc/osric_pennywort", "what_to_do", "I have been down in the wheel-pit.", "Leave him to it.", "leave"],
+		["core:quest/seventeen_bells", "core:npc/aud_fennick", "what_now", "Hesta wants to know what to do with your bell.", "It stays up.", "keep"],
+		["core:quest/bramble", "core:npc/robin_ashdown", "the_dog", "I have been up to the Hound. I found him.", "He's yours.", "home"],
+		["core:quest/cask_and_press", "core:npc/corwen_mullard", "the_long_table_question", "I have tasted both.", "Cider.", "cider"],
+		["core:quest/last_name", "core:npc/pellam_ashcombe", "what_to_do", "I have the third name.", "It is yours.", "tell"],
+		["core:quest/a_verse_about_you", "core:npc/merrick_gosling", "what_it_hangs_on", "What kind of verse, then?", "Kind.", "kind"],
+	]
+	for row_v in decisions:
+		var row: Array = row_v
+		before_each()
+		var quest := str(row[0])
+		assert_true(log_node.start(quest), "%s will not start" % quest)
+		log_node.set_stage(quest, str(row[2]))
+		var runner := talk_to(str(row[1]))
+		press(runner, str(row[3]))
+		press(runner, str(row[4]))
+		if runner.is_running():
+			runner.stop()
+		assert_eq(log_node.outcome_of(quest), str(row[5]), "%s: the decision was not taken" % quest)
+		assert_ne(stage(quest), str(row[2]), "%s is still standing on the stage it was asked to decide" % quest)
 
 
 # --- what every faction line owes a player ---------------------------------------------------------

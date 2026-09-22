@@ -131,5 +131,74 @@
     ],
     "reads": "core:book/chapter_roll",
     "description": "Black boards and a brass clasp, the twin of the Vigil Book and never shown to pilgrims: the Order's own list of who is standing the watch, with eleven names on the standing side that have been on it for longer than anyone standing. Grey thumb-marks down the edge where it is read every night."
+  },
+  {
+    "id": "core:item/salissas_lantern",
+    "name": "Sa'lissa's Lantern",
+    "category": "misc",
+    "weight": 1.5,
+    "value": 0,
+    "tags": [
+      "quest",
+      "sedgemire",
+      "lantern",
+      "no_sale"
+    ],
+    "description": "A burial lantern that was pushed off the Isseva jetty and came back up the channel still burning, which the reedfolk say is not possible for more than an hour and which this one did for a night and a day. The oil-well is dry now. The wick is not burnt."
+  },
+  {
+    "id": "core:item/clan_forged_link",
+    "name": "Clan-Forged Link",
+    "category": "material",
+    "weight": 4.0,
+    "value": 40,
+    "tags": [
+      "metal",
+      "clan",
+      "chain",
+      "smithing"
+    ],
+    "description": "A bridge link out of Brindlecrag: iron drawn, folded and closed hot, with the smith's clan-mark struck across the weld so that a bridge can be read link by link afterwards and every hand on it named."
+  },
+  {
+    "id": "core:item/loosened_link",
+    "name": "A Link Nobody Marked",
+    "category": "material",
+    "weight": 3.6,
+    "value": 4,
+    "tags": [
+      "metal",
+      "chain",
+      "quest"
+    ],
+    "description": "A bridge link of the right size and the wrong weight, closed cold and filed smooth where a clan-mark should be. Whoever made it knew exactly which of the four chains nobody walks on in winter."
+  },
+  {
+    "id": "core:item/wats_tally_stick",
+    "name": "Wat's Tally Stick",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 0,
+    "tags": [
+      "quest",
+      "cinderlea",
+      "tally",
+      "no_sale"
+    ],
+    "description": "A split hazel stick with six notches down the outside and six down the in, so that the debtor keeps one half and the sutler the other and neither can cut a notch off without the halves failing to meet. Both halves are in your hand, which is the whole of the trouble."
+  },
+  {
+    "id": "core:item/sul_stone_sliver",
+    "name": "Sliver of Sul-Stone",
+    "category": "material",
+    "weight": 0.1,
+    "value": 160,
+    "tags": [
+      "ember",
+      "oroth",
+      "rare",
+      "enchanting"
+    ],
+    "description": "A chip of Oroth sul-stone the size of a thumbnail, cold, and bright from the back as well as the front, so that it cannot be shaded and cannot be put in a pocket without the pocket showing. There is one lawful source of it on the Mere and it is a lighthouse."
   }
 ]
