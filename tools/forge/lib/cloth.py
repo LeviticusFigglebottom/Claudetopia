@@ -223,6 +223,9 @@ class Garment:
     # the skin at its edge does not spend half its triangles on a surface nobody can see.
     trim: Optional[object] = None
     trim_depth: float = 0.0012
+    # Other meshes exported with this one, each with its own material: the arming coat under
+    # a cuirass is cloth, the cuirass is iron. Named `<name>_<layer name>`.
+    layers: List["Garment"] = field(default_factory=list)
     # Per-vertex skin weights over rig.DEFORM_NAMES, for parts that are neither rigid to one
     # bone nor a copy of the body's weights (hair that hangs past the neck).
     weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
@@ -666,75 +669,249 @@ def gambeson(skel: Skeleton, body) -> Garment:
     return g
 
 
-def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
+# -- armour ------------------------------------------------------------------------------
+#
+# A cuirass on its own reads as a corset: bare shoulders over it, bare arms out of it, and a
+# hard edge at the waist with nothing below. Armour is a harness -- a padded coat under it
+# whose sleeves and skirt show, a gorget closing the neck, spaulders over the shoulder caps,
+# a fauld over the hips and tassets over the thighs -- and the harness is what reads.
+
+COAT_GAP, COAT_T = 0.003, 0.018       # the arming coat: 3 mm off the body, 18 mm of padding
+PLATE_T = 0.0055                      # 5.5 mm of steel, a shade thick for the eye
+
+
+def arming_coat(skel: Skeleton, body, name: str) -> Garment:
+    """The padded coat worn under plate or a brigandine: sleeves to the wrist, a skirt to
+    mid-thigh, quilted in vertical channels. It is what shows at the arms and below the fauld."""
     s = _s(skel)
-    sc = Scene()
+    g = tunic(skel, body, hem=0.40, sleeves=0.97, thickness=COAT_T, name=name)
     chest = float(skel.J["Chest"][2])
-    waist = float(skel.J["Spine"][2])
     hip = float(skel.J["UpperLeg.L"][2])
-    # The arm used to be excluded from the REGION, by an 85 mm capsule around the whole
-    # upper-arm bone.  That carved the shoulder and the outer chest off the breastplate --
-    # an armoured man bare from the collarbone out, which reads as unfinished rather than as
-    # a style -- and any region boundary on a limb ends in a flat flange anyway, because
-    # `offset_shell` cuts perpendicular to nothing.  The plate now covers the shoulder and a
-    # rounded armhole is CARVED out of it below, which is how a cuirass is actually shaped.
-    reg = band_z(hip + 0.02 * s, float(skel.J["Neck"][2]) - 0.01 * s, 0.018 * s)
-    sc.union(offset_shell(body, reg, 0.016 * s, gap=0.014 * s,
-                          bounds=zbox(skel, hip - 0.16 * s, float(skel.J["Neck"][2]) + 0.04 * s, xy=0.30)))
-    for side, sx in (("L", 1), ("R", -1)):
+    for i in range(12):
+        a = 2 * math.pi * (i + 0.5) / 12
+        d = np.array([math.cos(a), math.sin(a) * 0.80, 0.0])
+        g.scene.subtract(sdf.tube_path([d * 0.172 * s + np.array([0, 0, chest + 0.12 * s]),
+                                        d * 0.190 * s + np.array([0, 0, hip + 0.03 * s]),
+                                        d * 0.205 * s + np.array([0, 0, 0.42 * skel.props.height])],
+                                       0.006 * s), k=0.010 * s)
+    g.material = "cloth"
+    g.target_tris = 4600
+    return g
+
+
+def _arm_exclusion(skel: Skeleton, radius: float, start: float = 0.055) -> RegionFn:
+    """1 on the arms beyond the point of the shoulder: where a cuirass must not go."""
+    s = _s(skel)
+    segs = []
+    for side in ("L", "R"):
+        sh = skel.J["UpperArm.%s" % side]
+        hand = skel.J["HandTip.%s" % side]
+        d = sdf._unit(hand - sh)
+        segs.append((sh + d * start * s, hand))
+    return near_segments(segs, radius * s, 0.018 * s)
+
+
+def _neck_hole(skel: Skeleton, r: float, z_from: float) -> RegionFn:
+    """0 inside a vertical shaft round the neck above `z_from`, 1 elsewhere."""
+    s = _s(skel)
+
+    def fn(P):
+        near = 1.0 - sdf_smoothstep(r - 0.008 * s, r + 0.008 * s, np.hypot(P[:, 0], P[:, 1] - 0.010 * s))
+        above = sdf_smoothstep(z_from - 0.010 * s, z_from + 0.010 * s, P[:, 2])
+        return 1.0 - near * above
+    return fn
+
+
+def _lame_ring(z_top: float, z_bot: float, rx: float, ry: float, cy: float, flare: float,
+               thickness: float, sector=None) -> Prim:
+    """One lame of a fauld or a tasset: a band of steel `thickness` thick round an ellipse,
+    flaring `flare` outward towards its lower edge. `sector` (half-spaces) limits it to part of
+    the ring -- a tasset is a lame over one thigh."""
+    zm = 0.5 * (z_top + z_bot)
+    outer = sdf.loft([(np.array([0.0, cy, z_top]), rx, ry),
+                      (np.array([0.0, cy, zm]), rx + 0.5 * flare, ry + 0.5 * flare),
+                      (np.array([0.0, cy, z_bot]), rx + flare, ry + flare)], LEFT, axis=UP)
+    sub = Scene()
+    sub.union(outer)
+    sub.subtract(sdf.loft([(np.array([0.0, cy, z_top]), rx - thickness, ry - thickness),
+                           (np.array([0.0, cy, zm]), rx + 0.5 * flare - thickness, ry + 0.5 * flare - thickness),
+                           (np.array([0.0, cy, z_bot]), rx + flare - thickness, ry + flare - thickness)],
+                          LEFT, axis=UP))
+    sub.intersect(sdf.plane([0.0, 0.0, z_top], [0.0, 0.0, 1.0]))
+    sub.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]))
+    if sector is not None:
+        for pr in sector:
+            sub.intersect(pr)
+    lo = np.array([-(rx + flare) - 0.01, cy - (ry + flare) - 0.01, z_bot - 0.01])
+    hi = np.array([rx + flare + 0.01, cy + ry + flare + 0.01, z_top + 0.01])
+    return Prim(sub.eval, lo, hi, "union", 0.0)
+
+
+def fauld_and_tassets(skel: Skeleton, *, gap: float, thickness: float = PLATE_T, lames: int = 3,
+                      tassets: bool = True) -> List[Prim]:
+    """Hoops of steel over the hips below the cuirass, each overlapping the one below, and two
+    tassets hanging from the last over the front of the thighs."""
+    s = _s(skel)
+    waist = float(skel.J["Spine"][2])
+    # the pelvis at the hips measures +-0.18 m by -0.09..+0.12 m, before the coat
+    rx0, ry0, cy = (0.180 + gap) * s, (0.108 + gap) * s, 0.014 * s
+    top = waist - 0.010 * s
+    step = 0.040 * s
+    out: List[Prim] = []
+    for i in range(lames):
+        zt = top - i * step
+        zb = zt - step - 0.010 * s
+        out.append(_lame_ring(zt, zb, rx0 + 0.004 * i * s, ry0 + 0.004 * i * s, cy, 0.006 * s, thickness * s))
+    if tassets:
+        z0 = top - lames * step - 0.004 * s
+        for side in (1.0, -1.0):
+            for i in range(3):
+                zt = z0 - i * 0.046 * s
+                zb = zt - 0.056 * s
+                sector = [sdf.plane([side * 0.016 * s, 0.0, 0.0], [-side, 0.0, 0.0]),
+                          sdf.plane([0.0, cy + 0.030 * s, 0.0], [0.0, 1.0, 0.0]),
+                          sdf.plane([side * 0.205 * s, 0.0, 0.0], [side, 0.0, 0.0])]
+                out.append(_lame_ring(zt, zb, rx0 + (0.012 + 0.004 * i) * s, ry0 + (0.016 + 0.004 * i) * s,
+                                      cy, 0.006 * s, thickness * s, sector=sector))
+    return out
+
+
+def gorget(skel: Skeleton, body, *, gap: float, thickness: float = PLATE_T) -> Prim:
+    """A collar of steel from over the collarbones up the neck, lower in front than behind so
+    the chin clears it, in three lames that step in towards the throat."""
+    s = _s(skel)
+    neck = float(skel.J["Neck"][2])
+
+    def region(P):
+        a = _around(P)
+        top = neck + (0.030 + 0.060 * (1.0 - np.cos(a)) * 0.5) * s
+        r = np.hypot(P[:, 0], P[:, 1] - 0.010 * s)
+        w = (1.0 - sdf_smoothstep(top - 0.004 * s, top + 0.004 * s, P[:, 2])) * \
+            sdf_smoothstep(neck - 0.060 * s, neck - 0.050 * s, P[:, 2])
+        return w * (1.0 - sdf_smoothstep(0.125 * s, 0.140 * s, r))
+
+    def relief(P):
+        z = P[:, 2]
+        # three lames, each standing a little proud of the one above it
+        lame = np.floor(np.clip((neck + 0.070 * s - z) / (0.034 * s), 0.0, 2.99))
+        taper = np.clip((z - (neck - 0.050 * s)) / (0.12 * s), 0.0, 1.0)
+        return 0.004 * s * lame - 0.012 * s * taper
+    return offset_shell(body, region, thickness * s, gap=gap * s, relief=relief,
+                        bounds=zbox(skel, neck - 0.08 * s, neck + 0.12 * s, xy=0.20, ymin=-0.18, ymax=0.18))
+
+
+def spaulders(skel: Skeleton, body, *, gap: float, thickness: float = PLATE_T, lames: int = 3) -> List[Prim]:
+    """Steel over each shoulder cap: three lames stepping down the top of the arm, each
+    overlapping the next, following the body's own shoulder rather than a sphere near it."""
+    s = _s(skel)
+    out: List[Prim] = []
+    for side, sx in (("L", 1.0), ("R", -1.0)):
         sh = skel.J["UpperArm.%s" % side]
         el = skel.J["LowerArm.%s" % side]
-        d = (el - sh) / max(float(np.linalg.norm(el - sh)), 1e-6)
-        sc.subtract(sdf.capsule(sh + d * 0.052 * s + np.array([sx * 0.030 * s, 0.0, 0.0]),
-                                sh + d * 0.46 * float(np.linalg.norm(el - sh)) + np.array([sx * 0.070 * s, 0.0, 0.0]),
-                                0.082 * s), k=0.018 * s)
-    # a breastplate keel and a raised neck edge
-    sc.union(sdf.loft([
-        (np.array([0.0, -0.128 * s, chest + 0.085 * s]), 0.070 * s, 0.020 * s),
-        (np.array([0.0, -0.140 * s, chest - 0.01 * s]), 0.058 * s, 0.024 * s),
-        (np.array([0.0, -0.126 * s, waist + 0.02 * s]), 0.040 * s, 0.020 * s),
-    ], LEFT, axis=UP), k=0.026 * s)
+        d = sdf._unit(el - sh)
+        # "up" across the arm: perpendicular to it, in the plane of the arm and the vertical
+        up = sdf._unit(np.array([0.0, 0.0, 1.0]) - d * d[2])
+        for i in range(lames):
+            a0 = (-0.030 + 0.050 * i) * s
+            a1 = a0 + 0.062 * s
+
+            def region(P, sh=sh, d=d, up=up, a0=a0, a1=a1):
+                t = (P - sh) @ d
+                h = (P - sh) @ up
+                along = sdf_smoothstep(a0 - 0.004 * s, a0 + 0.004 * s, t) * \
+                    (1.0 - sdf_smoothstep(a1 - 0.004 * s, a1 + 0.004 * s, t))
+                over = sdf_smoothstep(-0.030 * s, -0.016 * s, h)
+                return along * over
+            out.append(offset_shell(body, region, thickness * s, gap=(gap + 0.005 * (lames - 1 - i)) * s,
+                                    bounds=(np.minimum(sh, el) - 0.13 * s, np.maximum(sh, el) + 0.13 * s)))
+    return out
+
+
+def _rivet_rows(body, skel: Skeleton, off: float, z0: float, z1: float, pitch: float,
+                skip: RegionFn) -> List[Prim]:
+    """Rivet heads in rows round the torso, on the surface `off` metres out from the body."""
+    s = _s(skel)
+    out: List[Prim] = []
+    z = z0
+    row = 0
+    while z <= z1:
+        n = 26
+        for k in range(n):
+            a = 2 * math.pi * (k + 0.5 * (row % 2)) / n
+            dirv = np.array([math.sin(a), -math.cos(a), 0.0])
+            P = np.array([[0.0, 0.010 * s, z]]) + dirv[None] * 0.30 * s
+            for _ in range(8):
+                dd = body.eval(P) - off
+                P = P - body.gradient(P) * dd[:, None]
+            if not np.all(np.isfinite(P)) or skip(P)[0] > 0.5 or abs(P[0, 2] - z) > 0.03 * s:
+                continue
+            out.append(sdf.sphere(P[0], 0.0042 * s, k=0.002 * s))
+        z += pitch
+        row += 1
+    return out
+
+
+def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
+    """A harness: an arming coat, a cuirass to the base of the neck, a gorget, spaulders, a
+    fauld and tassets -- or, for the brigandine, a riveted leather body over the same coat,
+    with a standing collar and leather lames."""
+    s = _s(skel)
+    name = "brigandine" if brigandine else "plate_torso"
+    neck = float(skel.J["Neck"][2])
+    waist = float(skel.J["Spine"][2])
+    coat = arming_coat(skel, body, name + "_coat")
+    cuirass_gap = COAT_GAP + COAT_T + 0.006
+    arms = _arm_exclusion(skel, 0.070)
+    region = region_and(band_z(waist - 0.030 * s, neck + 0.080 * s, 0.010 * s), region_not(arms),
+                        _neck_hole(skel, 0.078 * s, neck - 0.010 * s))
+    t_body = 0.008 if brigandine else PLATE_T
+    sc = Scene()
+    sc.union(offset_shell(body, region, t_body * s, gap=cuirass_gap * s,
+                          bounds=zbox(skel, waist - 0.06 * s, neck + 0.10 * s, xy=0.34)))
+    if not brigandine:
+        # the breastplate's keel, which is what makes steel read as shaped rather than poured
+        chest = float(skel.J["Chest"][2])
+        sc.union(sdf.loft([(np.array([0.0, -0.140 * s, chest + 0.090 * s]), 0.050 * s, 0.012 * s),
+                           (np.array([0.0, -0.152 * s, chest - 0.010 * s]), 0.046 * s, 0.016 * s),
+                           (np.array([0.0, -0.136 * s, waist + 0.020 * s]), 0.034 * s, 0.012 * s)],
+                          LEFT, axis=UP), k=0.030 * s)
+    # the lames below the waist overlap the cuirass's hem
+    for pr in fauld_and_tassets(skel, gap=cuirass_gap + 0.012, thickness=0.007 if brigandine else PLATE_T,
+                                tassets=not brigandine):
+        sc.union(pr)
+    main = Garment(name, sc, spacing=0.0034, smooth=3, target_tris=5200,
+                   material="leather" if brigandine else "iron")
+    steel = Scene()
     if brigandine:
-        rng = np.random.default_rng(7)
-        for i in range(34):
-            a = rng.uniform(0, 2 * math.pi)
-            z = rng.uniform(hip + 0.05 * s, chest + 0.14 * s)
-            d = np.array([math.cos(a), math.sin(a) * 0.78, 0.0])
-            sc.union(sdf.sphere(d * 0.175 * s + np.array([0, 0, z]), 0.0075 * s), k=0.004 * s)
+        # a standing collar of the same leather, and rivets in rows over the whole body
+        def collar_region(P):
+            return 1.0 - sdf_smoothstep(0.100 * s, 0.115 * s, np.hypot(P[:, 0], P[:, 1]))
+        main.scene.union(offset_shell(body, region_and(band_z(neck - 0.010 * s, neck + 0.070 * s, 0.006 * s),
+                                                       collar_region),
+                                      0.010 * s, gap=(cuirass_gap - 0.006) * s,
+                                      bounds=zbox(skel, neck - 0.04 * s, neck + 0.10 * s, xy=0.16,
+                                                  ymin=-0.14, ymax=0.14)), k=0.008 * s)
+        for pr in _rivet_rows(body, skel, (cuirass_gap + t_body) * s, waist + 0.010 * s, neck - 0.030 * s,
+                              0.034 * s, arms):
+            steel.union(pr)
     else:
-        z_top = waist - 0.005 * s
-        z_bot = z_top - 0.135 * s
-        sc.union(sdf.loft([
-            (np.array([0.0, 0.0, z_top]), 0.172 * s, 0.130 * s),
-            (np.array([0.0, 0.0, (z_top + z_bot) * 0.5]), 0.186 * s, 0.140 * s),
-            (np.array([0.0, 0.0, z_bot]), 0.196 * s, 0.148 * s),
-        ], LEFT, axis=UP), k=0.014 * s)
-        # two scored lines, which is all a lamellar fauld needs to read as layered
-        for i in range(2):
-            zr = z_top - (0.045 + 0.045 * i) * s
-            sc.subtract(sdf.tube_path(_ring((0.180 + 0.008 * i) * s, (0.136 + 0.006 * i) * s, zr),
-                                      0.0055 * s), k=0.006 * s)
-        sc.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]), k=0.004 * s)
-    return Garment("brigandine" if brigandine else "plate_torso", sc, spacing=0.0075,
-                   target_tris=4000, material="iron")
+        steel.union(gorget(skel, body, gap=cuirass_gap + PLATE_T + 0.002))
+        for pr in spaulders(skel, body, gap=cuirass_gap + PLATE_T + 0.004):
+            steel.union(pr)
+    layers = [coat]
+    if steel.prims:
+        layers.append(Garment(name + "_steel", steel, spacing=0.0030, smooth=3,
+                              target_tris=2600 if not brigandine else 3000, material="iron"))
+    main.layers = layers
+    return main
 
 
 def pauldrons(skel: Skeleton, body) -> Garment:
-    s = _s(skel)
+    """Spaulders on their own, for a brigandine or a coat: the shoulder caps in steel."""
     sc = Scene()
-    for side, sx in (("L", 1), ("R", -1)):
-        sh = skel.J[f"UpperArm.{side}"]
-        for i in range(3):
-            r = (0.095 + 0.012 * i) * s
-            c = sh + np.array([sx * (0.004 + 0.012 * i) * s, 0.0, (0.012 - 0.030 * i) * s])
-            lam = sdf.ellipsoid(c, [r, r * 1.02, r * 0.86])
-            inner = sdf.ellipsoid(c + np.array([-sx * 0.012 * s, 0, 0.004 * s]), [r * 0.88, r * 0.88, r * 0.78])
-            sub = Scene()
-            sub.union(lam)
-            sub.subtract(inner, k=0.004 * s)
-            sub.intersect(sdf.plane(c + np.array([0, 0, (-0.022 - 0.002 * i) * s]), [0, 0, -1.0]), k=0.004 * s)
-            sc.union(sdf.Prim(sub.eval, *sub.bounds(0.02), "union", 0.0), k=0.006 * s)
-    return Garment("pauldrons", sc, spacing=0.0045, target_tris=1600, material="iron")
+    for pr in spaulders(skel, body, gap=0.032):
+        sc.union(pr)
+    return Garment("pauldrons", sc, spacing=0.0032, smooth=3, target_tris=2200, material="iron")
 
 
 def greaves(skel: Skeleton, body) -> Garment:

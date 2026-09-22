@@ -370,7 +370,11 @@ func _add_part(slot: String, part_name: String) -> bool:
 		copy.skeleton = copy.get_path_to(skeleton)
 		copy.set_meta("slot", slot)
 		copy.set_meta("part", part_name)
-		copy.set_meta("material", str(_part_meta(slot, part_name).get("material", "")))
+		# a harness is several meshes of several materials (a coat under steel); the meta says
+		# which mesh is which, and a single-mesh part falls back to its one material
+		var meta := _part_meta(slot, part_name)
+		var per_mesh: Dictionary = meta.get("materials", {})
+		copy.set_meta("material", str(per_mesh.get(str(src.name), meta.get("material", ""))))
 		added.append(copy)
 	inst.queue_free()
 	if added.is_empty():
@@ -407,8 +411,16 @@ func _apply_colours() -> void:
 			var kind := str(mi.get_meta("material", ""))
 			if slot == "hair" or slot == "beard":
 				_dress(mi, appearance.hair_tint() if not pal.has("hair") else pal["hair"] as Color, "hair")
-			elif pal.has(key):
-				_dress(mi, pal[key] as Color, kind)
+				continue
+			# Steel is the people's metal and leather their leather, whichever slot it is worn
+			# in: a Vale cuirass was tinted the Vale's wool brown because it sat in `torso`.
+			var colour_key := key
+			if kind == "iron" and pal.has("metal"):
+				colour_key = "metal"
+			elif kind == "leather" and pal.has("leather"):
+				colour_key = "leather"
+			if pal.has(colour_key):
+				_dress(mi, pal[colour_key] as Color, kind)
 	for logical in ["body", "head"]:
 		if _default_meshes.has(logical):
 			_skin(_default_meshes[logical], skin)

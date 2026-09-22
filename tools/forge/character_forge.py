@@ -517,16 +517,44 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
     return albedo, orm
 
 
-def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str = "clothing",
-                       fits: Optional[Dict[str, Tuple[object, object]]] = None) -> str:
-    """Mesh, skin, fit, paint and export one part.
+def _metal_material(g, seed: int, scene=None):
+    """Steel: hammered, not woven. Broad soft dents in the value, bright wear where the edges
+    and the high points are rubbed, dark in the recesses where oil and dirt sit, and a
+    roughness that follows the same three things -- polished where it is worn, dull where it
+    is dirty. The colour is the game's (the palette's `metal`); this carries the value."""
+    n = paint.Noise(seed + 71, 48)
 
-    `fits` maps a morph-target name to (the field the part was built on, the field it should
-    also fit): the heavy and slight bodies for a garment, each face for a beard."""
+    def _occ(p, nrm):
+        if scene is None:
+            return np.ones(len(p))
+        return paint.sdf_occlusion(scene, p, nrm, radius=0.020, samples=5)
+
+    def albedo(p, nrm):
+        dents = n.fbm(p, freq=22.0, octaves=3)
+        streak = n.fbm(p * np.array([1.0, 1.0, 6.0]), freq=40.0, octaves=2)
+        occ = _occ(p, nrm)
+        v = 0.74 + 0.10 * (dents - 0.5) + 0.05 * (streak - 0.5)
+        v = v * (0.55 + 0.45 * occ)
+        proud = paint.exposure(occ, 3.0)
+        v = v + 0.18 * proud * (0.5 + 0.5 * n.fbm(p, freq=15.0, octaves=2))
+        return np.clip(np.stack([v, v, v], axis=1), 0.0, 1.0)
+
+    def orm(p, nrm):
+        occ = _occ(p, nrm)
+        dents = n.fbm(p, freq=22.0, octaves=3)
+        r = 0.34 + 0.10 * (dents - 0.5) - 0.12 * paint.exposure(occ, 3.0) + 0.30 * (1.0 - occ)
+        m = np.clip(0.55 + 0.45 * occ, 0.0, 1.0)
+        return np.stack([np.clip(occ, 0, 1), np.clip(r, 0.12, 0.9), m], axis=1)
+    return albedo, orm
+
+
+def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
+                 fits: Optional[Dict[str, Tuple[object, object]]] = None):
+    """Mesh, skin, fit and paint one garment (or one layer of one) into a Blender object."""
     verts, quads = g.mesh()
     if len(verts) == 0:
         log("part %s produced no geometry" % g.name)
-        return ""
+        return None, []
     ob = bodylib.to_object(mesh_object_name(g.name), verts, quads)
     bodylib.decimate(ob, g.target_tris)
     bodylib.smart_uv(ob, angle_deg=66.0, margin=0.02)
@@ -542,7 +570,6 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
         v, _, _ = bodylib.mesh_arrays(ob)
         fitted = bodylib.add_shape_keys(ob, {name: bodylib.fit_positions(v, a_, b_)
                                              for name, (a_, b_) in fits.items()})
-    out_dir = part_dir(kind, g.name)
     defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
     n_path = None
     if g.material == "hair":
@@ -554,30 +581,51 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
                                               scalp=g.trim, field=g.field(), s=clothlib._s(skel))
         alb = paint.paint(maps, a_fn, background=(0.35, 0.25, 0.18))
         orm3 = paint.paint(maps, o_fn, background=(0.9, 0.7, 0.0))
-        occ, rough = orm3[..., 0], orm3[..., 1]
+        occ, rough, met = orm3[..., 0], orm3[..., 1], orm3[..., 2]
         h = paint.paint(maps, lambda P, N: np.repeat(h_fn(P, N)[:, None], 3, axis=1),
                         background=(0.5, 0.5, 0.5))[..., 0]
-        nrm = normal_from_height(h, strength=0.035)
-        n_path = paint.save_png(nrm, os.path.join(out_dir, "%s_normal.png" % g.name))
+        n_path = paint.save_png(normal_from_height(h, strength=0.035),
+                                os.path.join(out_dir, "%s_normal.png" % g.name))
     else:
-        tex = 256 if g.material in ("horn", "glow") else 384
+        tex = 256 if g.material in ("horn", "glow") else 512 if g.material == "iron" else 384
         maps = paint.surface_maps(ob, size=tex, pad=3)
-        a_fn, o_fn = _garment_material(g, out_dir, g.name, seed, scene=g.scene)
+        if g.material == "iron":
+            a_fn, o_fn = _metal_material(g, seed, scene=g.field())
+        else:
+            a_fn, o_fn = _garment_material(g, out_dir, g.name, seed, scene=g.scene)
         alb = paint.paint(maps, a_fn, background=(0.8, 0.8, 0.8))
-        orm3 = paint.paint(maps, o_fn, background=(1.0, 0.8, 0.0))
-        rough = orm3[..., 1]
+        orm3 = paint.paint(maps, o_fn, background=(1.0, 0.8, float(defaults["metallic"])))
         # the occlusion channel used to be discarded here for a flat white, which threw away
         # every crease the material had just worked out
-        occ = orm3[..., 0]
-    met = np.full(rough.shape, float(defaults["metallic"]))
+        occ, rough, met = orm3[..., 0], orm3[..., 1], orm3[..., 2]
     a_path = paint.save_png(alb, os.path.join(out_dir, "%s_albedo.png" % g.name))
     o_path = paint.save_png(paint.orm_image(occ, rough, met), os.path.join(out_dir, "%s_orm.png" % g.name))
     mat = make_material("WM_%s" % g.name, a_path, o_path, n_path,
                         roughness=float(defaults["roughness"]), metallic=float(defaults["metallic"]))
     ob.data.materials.append(mat)
-    return export_part(g.name, kind, [ob], arm, {"material": g.material, "bone": g.bone},
-                       seed=seed, extra={"material": g.material, "slot_hint": _slot_hint(g.name),
-                                         "fits": fitted})
+    return ob, fitted
+
+
+def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str = "clothing",
+                       fits: Optional[Dict[str, Tuple[object, object]]] = None) -> str:
+    """Mesh, skin, fit, paint and export one part, with its layers as meshes of their own.
+
+    `fits` maps a morph-target name to (the field the part was built on, the field it should
+    also fit): the heavy and slight bodies for a garment, each face for a beard."""
+    out_dir = part_dir(kind, g.name)
+    objs, materials, fitted = [], {}, []
+    for i, piece in enumerate([g] + list(getattr(g, "layers", []))):
+        ob, f = _part_object(piece, skel, arm, bW, seed + 97 * i, out_dir, fits)
+        if ob is None:
+            continue
+        objs.append(ob)
+        materials[ob.name] = piece.material
+        fitted = sorted(set(fitted) | set(f))
+    if not objs:
+        return ""
+    return export_part(g.name, kind, objs, arm, {"material": g.material, "bone": g.bone},
+                       seed=seed, extra={"material": g.material, "materials": materials,
+                                         "slot_hint": _slot_hint(g.name), "fits": fitted})
 
 
 def _slot_hint(name: str) -> str:
