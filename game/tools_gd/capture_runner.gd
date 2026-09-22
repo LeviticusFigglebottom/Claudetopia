@@ -150,6 +150,16 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		cam.set_yaw_pitch(float(shot.get("yaw", 0.0)), float(shot.get("pitch", -8.0)))
 	_world.move_target(pos)
 	var waited := await _wait_for_streaming()
+	# A region's look blends over six seconds when the camera crosses into it, which is right
+	# for walking and wrong for a photograph: without this a shot taken a few frames after a
+	# teleport was of half one region's light and half the last's. The lamps are handed out for
+	# where the camera now is, rather than wherever it stood at their last tick.
+	var atmos := _world.atmosphere
+	if atmos and atmos.has_method("settle"):
+		atmos.call("settle")
+	if _world.night_lights:
+		_world.night_lights.assign(Atmosphere.night_factor)
+	await get_tree().process_frame
 	# The atmosphere rewrites the environment every frame, so the fog override only holds if
 	# its per-frame update is paused for the exposure.
 	_pause_atmosphere(true)

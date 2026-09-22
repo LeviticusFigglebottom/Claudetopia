@@ -86,14 +86,24 @@ func commit(parent: Node, key: String, material: Material, node_name: String) ->
 	return inst
 
 
-## The plain material for worked timber and shuttered openings: white, so the vertex colour
-## is the colour, which is what lets a dark door panel and a paler frame share one draw.
-static func joinery_material() -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color.WHITE
-	mat.vertex_color_use_as_albedo = true
-	mat.roughness = 0.86
+## The material for worked timber and shuttered openings: the vertex colour is the colour, which
+## is what lets a dark door panel and a paler frame share one draw, and a vertex alpha under one
+## marks a window pane and how brightly the room behind it is lit after dark (joinery.gdshader).
+static func joinery_material() -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = JOINERY_SHADER
 	return mat
+
+
+const JOINERY_SHADER := preload("res://assets/shaders/joinery.gdshader")
+## A pane's vertex alpha is its lit strength, and one means timber, so a lit pane tops out here.
+const PANE_LIT_MAX := 0.98
+
+
+## The vertex colour a window pane of `lit` strength is drawn in: the dark of the opening, with
+## how brightly it glows at night in its alpha (0 dark .. PANE_LIT_MAX).
+static func pane_colour(dark: Color, lit: float) -> Color:
+	return Color(dark.r, dark.g, dark.b, clampf(lit, 0.0, PANE_LIT_MAX))
 
 
 ## Shown near, dropped far, and for the small stuff no shadow: a shutter's shadow is a line

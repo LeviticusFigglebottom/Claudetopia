@@ -26,6 +26,7 @@ var streamer: WorldStreamer
 var water: WaterSurface
 var terrain_node: Node3D = null
 var atmosphere: Node = null
+var night_lights: NightLights = null
 var fly_camera: FlyCamera = null
 var target: Node3D = null
 
@@ -67,6 +68,7 @@ func _ready() -> void:
 	_setup_target()            # before the terrain: Terrain3D looks for a camera on its first frame
 	await _setup_terrain()
 	_setup_atmosphere()
+	_setup_night_lights()
 	_setup_water()
 	_setup_streamer()
 	EventBus.region_entered.connect(_on_region_entered)
@@ -167,6 +169,14 @@ func _setup_atmosphere() -> void:
 	atmosphere = packed.instantiate()
 	atmosphere.name = "Atmosphere"
 	add_child(atmosphere)
+
+
+## The lamps, lanterns, braziers, fires and lit windows after dark: one glow MultiMesh for the
+## whole country and a small pool of real lights near the eye (world/night_lights.gd).
+func _setup_night_lights() -> void:
+	night_lights = NightLights.new()
+	night_lights.name = "NightLights"
+	add_child(night_lights)
 
 
 func _setup_water() -> void:

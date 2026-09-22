@@ -207,8 +207,14 @@ func _add_door(fabric: FabricMesh) -> void:
 			timber_tints(culture), Color.WHITE)
 
 
+## Somebody lives in every house that has an inside, so most of its windows are lit after dark;
+## which ones follows from the interior's id, so the same house shows the same lit rooms every
+## night. The lit panes are glows for NightLights, and the front door carries a real lamp.
 func _add_windows(fabric: FabricMesh, front: Vector2) -> void:
 	var timber := timber_tints(culture)
+	var lights := RandomNumberGenerator.new()
+	lights.seed = abs(("lights:" + interior_id).hash())
+	var glows: Array = []
 	for entry in meta.get("windows", []):
 		var win: Dictionary = entry
 		var at: Array = win.get("at", [])
@@ -218,7 +224,15 @@ func _add_windows(fabric: FabricMesh, front: Vector2) -> void:
 		var n := Vector3(float(normal[0]), 0.0, float(normal[2])).normalized()
 		var base := Vector3(float(at[0]) - front.x, float(at[1]), float(at[2]) - front.y)
 		var face := Transform3D(Basis(Vector3.UP, atan2(n.x, n.z)), base + n * (WALL_THICK * 0.5))
-		window_at(fabric, face, timber, Color.WHITE, float(at[1]) < STOREY_M)
+		var ground_floor := float(at[1]) < STOREY_M
+		var lit := lights.randf_range(0.5, 0.95) if lights.randf() < (0.85 if ground_floor else 0.55) else 0.0
+		var pane := window_at(fabric, face, timber, Color.WHITE, ground_floor, lit)
+		if lit > 0.0:
+			glows.append(to_global(pane))
+	if is_inside_tree():
+		NightLights.add(self, glows, "window")
+		# the front door faces -z in this building's space; the lamp hangs over it
+		NightLights.add(self, [to_global(Vector3(0.0, 2.3, -WALL_THICK * 0.5 - 0.6))], "door")
 
 
 # --- the openings, shared with the fabric -----------------------------------------------------------
@@ -240,9 +254,13 @@ static func door_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, sto
 ## A shuttered opening: a dark pane set back behind a timber frame, on a stone sill, with a
 ## shutter leaf either side where asked. `at` has its origin at the centre of the opening on
 ## the wall's face and +z pointing out of the wall.
+## `lit` is how brightly the room behind glows after dark (0 is nobody home); it rides in the
+## pane's vertex alpha (FabricMesh.pane_colour). Returns the pane's centre, in the fabric's space,
+## for whoever wants to hang a glow on it.
 static func window_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, stone: Color,
-		shutters: bool) -> void:
-	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 0.0, 0.012)), Vector3(0.8, 0.84, 0.024), timber["pane"])
+		shutters: bool, lit := 0.0) -> Vector3:
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 0.0, 0.012)), Vector3(0.8, 0.84, 0.024),
+			FabricMesh.pane_colour(timber["pane"], lit))
 	for side_v in [-1.0, 1.0]:
 		var side := float(side_v)
 		fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.45, 0.0, 0.05)),
@@ -254,6 +272,7 @@ static func window_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, s
 			var side := float(side_v)
 			fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.74, 0.02, 0.04)),
 					Vector3(0.44, 0.92, 0.05), timber["shutter"])
+	return at * Vector3(0.0, 0.0, 0.25)
 
 
 ## Worked timber in the culture's own wood: the interior's beam colour, lighter for a frame,
