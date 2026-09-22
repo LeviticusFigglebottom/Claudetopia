@@ -61,7 +61,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if position_provider == null or not is_instance_valid(position_provider):
+	if _locator() == null:
 		return
 	_poll += delta
 	if _poll < REACH_POLL_S:
@@ -696,14 +696,26 @@ func _on_escort_arrived(npc_id: String, place_id: String) -> void:
 				_progress(quest_id, i, 1))
 
 
+## Where the player is, or nothing at all when what was bound has gone. A body that died and
+## was freed, or a scene that changed, leaves this holding a dead reference -- and handing one to
+## `can_locate` is a script error, once per stage synced, which is where a hundred and nine of a
+## test run's errors came from. A provider that no longer exists is dropped the moment it is
+## noticed, so nothing calls through it twice.
+func _locator() -> Object:
+	if position_provider != null and not is_instance_valid(position_provider):
+		position_provider = null
+	return position_provider
+
+
 ## Asks the position provider where the player is and completes `reach` objectives in range.
 ## Also callable directly with a position (tests, teleports).
 func check_reach(at: Variant = null) -> void:
 	var pos: Vector3
+	var provider := _locator()
 	if typeof(at) == TYPE_VECTOR3:
 		pos = at
-	elif SocialContext.can_locate(position_provider):
-		pos = SocialContext.position_of(position_provider)
+	elif provider != null and SocialContext.can_locate(provider):
+		pos = SocialContext.position_of(provider)
 	else:
 		return
 	_for_each_objective("reach", func(quest_id: String, i: int, o: Dictionary) -> void:
