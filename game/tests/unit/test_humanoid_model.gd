@@ -323,11 +323,14 @@ func test_a_heavy_record_wears_the_heavy_body() -> void:
 	assert_eq(a.body_variant(), "heavy")
 	m.apply_appearance(a.to_dict())
 	assert_eq(m.body_variant_worn, "heavy", "a build of 0.9 is still wearing the default body")
-	# With a real variant on, the rig is scaled by height alone: widening it as well would
-	# count the same build twice. The skeleton hangs under the rig root, so it carries
-	# whatever scale was applied there.
+	# With a real variant on, the rig only makes up the difference between the girth the build
+	# asks for and the heavy body's own, so the build is not counted twice: the total is the
+	# slider's girth, not the heavy body's girth widened again by it. The skeleton hangs under
+	# the rig root, so it carries whatever scale was applied there.
 	var s := m.skeleton.global_transform.basis.get_scale()
-	assert_near(s.x, s.y, 0.002, "a variant body was widened by the build slider as well")
+	var total := s.x / s.y * float(HumanoidModel.VARIANT_GIRTH["heavy"])
+	assert_near(total, HumanoidModel.girth_for(0.9), 0.002, "the heavy body's width was counted twice")
+	assert_true(absf(s.x / s.y - 1.0) < 0.05, "the heavy body was widened by more than the slider's own step")
 
 
 ## A part is only wearable on this rig if it was built around this rig's bones. `slight`

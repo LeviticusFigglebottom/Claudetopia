@@ -78,6 +78,8 @@ var _sneaking := false
 var _part_cache: Dictionary = {}
 ## Which hair part is actually on the head, which is not always the record's: see COVERS_HEAD.
 var hair_worn := ""
+var _worn_signature := ""
+var _colour_signature := ""
 static var _meta_cache: Dictionary = {}
 var _applying := false      ## guards the appearance_dict setter against re-entering
 
@@ -270,26 +272,53 @@ func apply_appearance(d: Variant) -> void:
 	_applying = true
 	appearance_dict = appearance.to_dict()
 	_applying = false
-	_clear_parts()
 	hair_worn = _hair_to_wear()
-	for slot in CharacterAppearance.SLOTS:
-		var part_name := hair_worn if slot == "hair" else appearance.part(slot)
-		if part_name.is_empty():
-			continue
-		if slot == "head" and part_name == "default":
-			continue
-		_add_part(slot, part_name)
-	_apply_morality_parts()
-	_apply_body_variant()
-	var own_head: bool = appearance.part("head").is_empty() or appearance.part("head") == "default"
-	_show_default(_default_meshes.get("head"), own_head)
-	# a head part brings its own eyes; the rig's pair stayed on underneath, two irises deep
-	for eye in _default_eyes:
-		_show_default(eye, own_head)
-	_apply_colours()
+	# Parts are only torn down and put back when the parts change. A slider dragged across the
+	# Naming used to rebuild every mesh on the body at every step of the drag.
+	var signature := _parts_signature()
+	if signature != _worn_signature:
+		_clear_parts()
+		for slot in CharacterAppearance.SLOTS:
+			var part_name := hair_worn if slot == "hair" else appearance.part(slot)
+			if slot == "head" and part_name.is_empty():
+				part_name = "default"
+			if part_name.is_empty():
+				continue
+			_add_part(slot, part_name)
+		_apply_morality_parts()
+		_apply_body_variant()
+		# The head is always a part now, "default" included, and the rig's own head and eyes
+		# stay hidden: the head parts carry the skull and the rig's copy is the old one. It
+		# comes back only if the head part cannot be loaded at all.
+		var own_head: bool = not _part_meshes.has("head")
+		_show_default(_default_meshes.get("head"), own_head)
+		for eye in _default_eyes:
+			_show_default(eye, own_head)
+		_worn_signature = signature
+		_colour_signature = ""
+	var colours := _colour_signature_now()
+	if colours != _colour_signature:
+		_apply_colours()
+		_colour_signature = colours
 	_apply_fits()
 	_apply_proportions()
 	appearance_changed.emit()
+
+
+## Everything that decides which meshes are on the body.
+func _parts_signature() -> String:
+	var bits: Array[String] = [hair_worn, appearance.body_variant(),
+		"hollow%d" % int(appearance.hollow >= 0.66) + str(int(appearance.hollow >= 0.33)),
+		"hearth%d" % int(appearance.hearth >= 0.66)]
+	for slot in CharacterAppearance.SLOTS:
+		bits.append("%s=%s" % [slot, appearance.part(slot)])
+	return "|".join(bits)
+
+
+## Everything that decides what colour those meshes are.
+func _colour_signature_now() -> String:
+	return "%s|%s|%s|%s" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
+		str(appearance.to_dict().get("palette", {}))]
 
 
 ## The hair the record chose, unless something is covering the crown.
@@ -303,7 +332,13 @@ func _hair_to_wear() -> String:
 	return chosen
 
 
+## Freed at the end of the frame. A part put back in the same frame takes the same node names,
+## and while the old meshes are still there the new ones are renamed `@MeshInstance3D@n` --
+## which is why an eye is known by the `eye` meta `_add_part` gives it and not by its name: a
+## head swapped for another used to lose the names its eyes were known by, and they were
+## dressed in skin.
 func _clear_parts() -> void:
+	_worn_signature = ""
 	for slot in _part_meshes:
 		for mi in _part_meshes[slot]:
 			if is_instance_valid(mi):
@@ -370,6 +405,7 @@ func _add_part(slot: String, part_name: String) -> bool:
 		copy.skeleton = copy.get_path_to(skeleton)
 		copy.set_meta("slot", slot)
 		copy.set_meta("part", part_name)
+		copy.set_meta("eye", str(src.name).to_lower().contains("eye"))
 		# a harness is several meshes of several materials (a coat under steel); the meta says
 		# which mesh is which, and a single-mesh part falls back to its one material
 		var meta := _part_meta(slot, part_name)
@@ -433,6 +469,10 @@ func _apply_colours() -> void:
 func _skin(mi: MeshInstance3D, tint: Color) -> void:
 	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
 	for i in count:
+		var worn := mi.get_surface_override_material(i) as ShaderMaterial
+		if worn != null and worn.shader == SKIN_SHADER:
+			worn.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
+			continue
 		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
 		var m := ShaderMaterial.new()
 		m.shader = SKIN_SHADER
@@ -463,13 +503,24 @@ static func skin_tint_of(mi: MeshInstance3D) -> Color:
 ## is. Wool and linen catch a soft light along their edges, which is what reads as cloth at a
 ## distance; leather takes a tighter sheen; hair a brighter edge where the light comes through
 ## it. Metal needs nothing but its own metallic map and something to reflect.
+##
+## A mesh keeps the one material it was dressed in and only its colour changes after that. A
+## look made in one frame (a preset, the lots, a probe) used to build a fresh material for every
+## mesh at every step and drop the last one, and the Compatibility renderer was left holding
+## materials that no longer existed: eyes stopped drawing, and the log filled with
+## `Parameter "material" is null`.
 func _dress(mi: MeshInstance3D, c: Color, kind: String) -> void:
 	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
 	for i in count:
+		var worn := mi.get_surface_override_material(i) as BaseMaterial3D
+		if worn != null and worn.has_meta("dressed"):
+			worn.albedo_color = c
+			continue
 		var base := mi.mesh.surface_get_material(i)
 		var m := (base.duplicate() if base != null else StandardMaterial3D.new()) as BaseMaterial3D
 		if m == null:
 			continue
+		m.set_meta("dressed", true)
 		m.albedo_color = c
 		match kind:
 			"cloth":
@@ -515,6 +566,8 @@ func _apply_fits() -> void:
 
 
 func _is_eye(mi: MeshInstance3D) -> bool:
+	if mi.has_meta("eye"):
+		return bool(mi.get_meta("eye"))
 	return mi.name.to_lower().contains("eye")
 
 
@@ -523,6 +576,10 @@ func _tint_iris(mi: MeshInstance3D) -> void:
 	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
 	var tint := appearance.iris_tint()
 	for i in count:
+		var worn := mi.get_surface_override_material(i) as ShaderMaterial
+		if worn != null and worn.shader == IRIS_SHADER:
+			worn.set_shader_parameter("iris_tint", Vector3(tint.r, tint.g, tint.b))
+			continue
 		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
 		var m := ShaderMaterial.new()
 		m.shader = IRIS_SHADER
@@ -583,11 +640,23 @@ func _apply_body_variant() -> void:
 ## in the mesh -- baked at the proportions the forge was given -- and scaling the rig as
 ## well would count the same build twice and hand a heavy villager a second helping of
 ## width.
+##
+## The build slider used to do nothing at all across its middle third: the body variant only
+## changes at 0.30 and 0.68, and with a variant on the rig was not widened. Now the girth the
+## slider asks for is one continuous line from slight to broad, and the rig makes up the
+## difference between it and the girth of whichever body is worn -- so each variant's own
+## shape (narrow shoulders, a heavy middle) comes in at its end without the width jumping,
+## and nothing is counted twice.
+const VARIANT_GIRTH := {"": 1.0, "slight": 0.90, "heavy": 1.12}
+
+
+static func girth_for(build: float) -> float:
+	return lerpf(0.88, 1.14, clampf(build, 0.0, 1.0))
+
+
 func _apply_proportions() -> void:
 	var s: float = appearance.height / 1.78
-	var wide := 1.0
-	if body_variant_worn.is_empty():
-		wide = lerpf(0.93, 1.09, clampf(appearance.build, 0.0, 1.0))
+	var wide: float = girth_for(appearance.build) / float(VARIANT_GIRTH.get(body_variant_worn, 1.0))
 	if _rig_root != null:
 		_rig_root.scale = Vector3(s * wide, s, s * wide)
 

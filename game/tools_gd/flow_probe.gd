@@ -56,12 +56,23 @@ const TOUR := [
 		"skin": "umber", "hair_colour": "grey", "eyes": "brown", "build": 0.95, "height": 1.62},
 	{"calling": "core:calling/reedborn", "head": "default", "hair": "braid", "beard": "",
 		"skin": "ebony", "hair_colour": "white", "eyes": "amber", "build": 0.1, "height": 1.92},
+	# the ends of both sliders, together: nothing a player can drag to may break the body
+	{"calling": "core:calling/wayfarer", "head": "narrow", "hair": "long", "beard": "",
+		"skin": "wheat", "hair_colour": "chestnut", "eyes": "hazel", "build": 0.0, "height": 1.55},
+	{"calling": "core:calling/cragborn", "head": "broad", "hair": "short", "beard": "long_beard",
+		"skin": "olive", "hair_colour": "dark_brown", "eyes": "brown", "build": 1.0, "height": 1.95},
+	{"calling": "core:calling/lantern_clerk", "head": "round", "hair": "tousled", "beard": "",
+		"skin": "fair", "hair_colour": "flax", "eyes": "blue", "build": 1.0, "height": 1.55},
+	{"calling": "core:calling/ashwalker", "head": "angular", "hair": "cropped", "beard": "short_beard",
+		"skin": "amber", "hair_colour": "black", "eyes": "green", "build": 0.0, "height": 1.95},
 ]
 const WORLD_TIMEOUT := 420.0
 
 var out_dir := "captures/flow"
 var mode := "new"            # new | load | continue | new-game
 var load_slot := ""
+## --naming-tour=quick makes two looks and skips the presets, for iterating on the screen.
+var tour_quick := false
 
 var _checks: Array[Dictionary] = []
 var _notes: Array[String] = []
@@ -86,8 +97,9 @@ func _ready() -> void:
 			mode = "continue"
 		elif a == "--new-game":
 			mode = "new-game"
-		elif a == "--naming-tour":
+		elif a.begins_with("--naming-tour"):
 			mode = "naming-tour"
+			tour_quick = a == "--naming-tour=quick"
 	out_dir = _absolute(out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_errors_at_start = Log.error_count
@@ -224,12 +236,51 @@ func _naming_tour() -> void:
 	await _settle(2.0)
 	await _capture("as_it_opens")
 	for i in TOUR.size():
+		if tour_quick and not (i in [0, 3]):
+			continue
 		var look: Dictionary = TOUR[i]
 		await _make_look(naming, look)
 		await _settle(1.2)
 		var label := "%s_%s_%s" % [Ids.name_of(str(look["calling"])), look["head"], look["hair"]]
 		await _capture(label)
 		_check_look(naming, look, label)
+		await _close_in(naming, label)
+	if tour_quick:
+		return
+	# every preset, through its own chooser, and three casts of the lots
+	var presets := _find_meta(naming, "presets", "true") as OptionButton
+	if _check(presets != null, "the Naming offers presets"):
+		for i in range(1, presets.item_count):
+			var name := presets.get_item_text(i)
+			presets.select(i)
+			presets.item_selected.emit(i)
+			await _settle(1.2)
+			await _capture("preset_%s" % name.to_lower().replace(" ", "_").replace("-", "_"))
+			_check(presets.selected == 0, "choosing the preset '%s' leaves the chooser ready for the next" % name)
+	var lots := _button(naming, "Cast lots")
+	if _check(lots != null, "the Naming can cast lots for a look"):
+		var seen := {}
+		for k in 3:
+			await _click(lots)
+			await _settle(1.2)
+			var look := _look(naming)
+			seen[JSON.stringify(look.to_dict())] = true
+			await _capture("lots_%d" % (k + 1))
+		_check(seen.size() == 3, "three casts of the lots gave three different looks")
+
+
+## Presses "Face", looks, and stands back again: the close framing has to hold for every look.
+func _close_in(naming: Node, label: String) -> void:
+	var face := _button(naming, "Face")
+	if not _check(face != null, "%s: the portrait has a Face framing" % label):
+		return
+	await _click(face)
+	await _settle(1.4)
+	await _capture(label + "_face")
+	var whole := _button(naming, "Whole figure")
+	if _check(whole != null, "%s: and a Whole figure framing" % label):
+		await _click(whole)
+		await _settle(0.6)
 
 
 ## Makes one look through the controls a player would use, in the order they sit on the page.
@@ -624,23 +675,32 @@ func _drag(s: Control, from_ratio: float, to_ratio: float) -> void:
 	await _frames(2)
 
 
+## Where a point of the UI is in window pixels. A control's rect is in canvas units -- the
+## 1280x720 the project is laid out in -- and a mouse event is in the window's own pixels, so at
+## 2560x1440 every click the probe made landed at half the distance from the corner and missed.
+func _to_window(p: Vector2) -> Vector2:
+	return get_tree().root.get_final_transform() * p
+
+
 func _mouse_move(p: Vector2) -> void:
+	var w := _to_window(p)
 	var ev := InputEventMouseMotion.new()
-	ev.position = p
-	ev.global_position = p
-	ev.relative = p - _mouse
+	ev.position = w
+	ev.global_position = w
+	ev.relative = w - _mouse
 	ev.button_mask = 0
-	_mouse = p
-	Input.warp_mouse(p)
+	_mouse = w
+	Input.warp_mouse(w)
 	Input.parse_input_event(ev)
 	Input.flush_buffered_events()
 	await get_tree().process_frame
 
 
 func _mouse_button(p: Vector2, pressed: bool) -> void:
+	var w := _to_window(p)
 	var ev := InputEventMouseButton.new()
-	ev.position = p
-	ev.global_position = p
+	ev.position = w
+	ev.global_position = w
 	ev.button_index = MOUSE_BUTTON_LEFT
 	ev.pressed = pressed
 	ev.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
