@@ -231,6 +231,10 @@ func _rebuild_list() -> void:
 		var b := UiKit.button(label, "FlatButton")
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
+		# clipped alone, a long rumour or book title stopped mid-word at the panel edge and
+		# read as a rendering fault; an ellipsis says "there is more of this" instead
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		b.tooltip_text = label
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var id := str(e.get("id", ""))
 		b.pressed.connect(func() -> void:
