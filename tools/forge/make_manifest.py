@@ -242,13 +242,26 @@ LANDMARKS = [
     ("eelfathom", "sedgemire", 1, None),
 ]
 
+# The kit the country is lined with (tools/forge/gen_ground_kit.py). A hedge segment is
+# 2.2 m of hedge in 66 triangles, which is what lets every field boundary in the Vale carry
+# one; the nearest existing asset was a 5 610-triangle hawthorn, and a hedge built out of
+# those would have cost more than the rest of the world together. Hearthvale and Brightwater
+# are the two shapes `worldgen/fields.py` encloses, so they are the two that need hedges.
+GROUND_KIT = [
+    ("hedge_segment", "hearthvale", 2, None),
+    ("hedge_segment", "brightwater", 2, None),
+    ("gate_post", "hearthvale", 1, None),
+    ("milestone", "hearthvale", 2, None),
+]
+
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
 # rebuilds, differently -- everything after it. New work goes on the end.
 TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
-          ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER)]
+          ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
+          ("gen_ground_kit", GROUND_KIT)]
 
 
 def build() -> list[dict]:

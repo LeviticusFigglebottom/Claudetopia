@@ -434,6 +434,22 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     hedge = np.exp(-(ctx.field_d / 5.0) ** 2) * (0.55 + 0.75 * ctx.patch(419, 12, 60))
     rgba[..., :3] *= (1.0 - 0.30 * np.clip(hedge, 0.0, 1.0))[..., None]
 
+    # Grazed turf is not one colour. The tint above is computed on a 1024 lattice -- eight
+    # metres to a texel -- and upsampled, so every variation in it is broader than a house,
+    # and from eye height the ground reads as a billiard table with plants standing on it.
+    # This is the missing octave: a few metres across, at full resolution, shifting value and
+    # a little hue, which is what makes the ground between the tufts look like ground. It
+    # costs nothing at runtime -- it is baked into the colour map the terrain already samples.
+    fine = ctx.patch(422, 3.5, 17.0)
+    coarse = ctx.patch(423, 14.0, 46.0)
+    grain = (0.93 + 0.14 * fine) * (0.95 + 0.10 * coarse)
+    rgba[..., :3] *= grain[..., None]
+    # the drier patches go a touch yellow and the damper ones a touch blue, which is the
+    # colour difference between grazed and rank grass
+    warm = (fine - 0.5) * 0.09
+    rgba[..., 0] *= (1.0 + warm)
+    rgba[..., 2] *= (1.0 - warm)
+
     road_t = ctx.road_t()
     out_town = 1.0 - ctx.town
     crown = (1.0 - smoothstep(0.15, 1.15, road_t)) * out_town

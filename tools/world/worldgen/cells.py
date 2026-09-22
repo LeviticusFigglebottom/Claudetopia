@@ -128,7 +128,8 @@ class ScatterWorld:
 
     def __init__(self, grid: Grid, H: np.ndarray, owner: np.ndarray, moisture: np.ndarray,
                  water: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
-                 slope: np.ndarray, bank, regions: list, water_d=None, field_d=None):
+                 slope: np.ndarray, bank, regions: list, water_d=None, field_d=None,
+                 pad_t=None):
         self.grid = grid
         self.H = H
         self.owner = owner
@@ -143,6 +144,11 @@ class ScatterWorld:
         # distance to any water at all (river, mere, sea) and to the nearest field boundary
         self.water_d = water_d if water_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
         self.field_d = field_d if field_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
+        # How far across a settlement's flattened platform a point lies: 0 at the place's
+        # centre, 1 at the edge of its pad, large out in the country. `pad_mask` alone can
+        # only say "a village stands here", and answering that with no scatter at all is what
+        # made every village a mown lawn sixty metres across.
+        self.pad_t = pad_t if pad_t is not None else np.full(H.shape, 9.0, dtype=np.float32)
 
     def sample(self, x, z) -> dict:
         g = self.grid
@@ -157,6 +163,7 @@ class ScatterWorld:
             "slope": sample_bilinear(self.slope, g, x, z),
             "water_d": sample_bilinear(self.water_d, g, x, z),
             "field_d": sample_bilinear(self.field_d, g, x, z),
+            "pad_t": sample_bilinear(self.pad_t, g, x, z),
         }
 
 
@@ -222,9 +229,30 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         hr = cfg.get("height", [-40, 900])
         acc *= smoothstep(hr[0] - 12.0, hr[0] + 6.0, s["h"])
         acc *= 1.0 - smoothstep(hr[1] - 6.0, hr[1] + 12.0, s["h"])
-        # keep off roads, pads and the immediate verge
+        # keep off the carriageway and its immediate verge
         acc *= s["road_d"] > (s["road_w"] * 0.5 + 2.5)
-        acc *= s["pad"] == 0
+        # A settlement's pad is flattened ground the size of the town, and excluding every
+        # plant from all of it made each village the middle of a mown lawn: the Merrowby
+        # street shot is taken 46 m from the centre of a 64 m pad, so nothing whatever grew
+        # in the frame. Houses and the green want clear ground, but the outer part of the pad
+        # is the verge -- rough grass at the foot of a wall, nettles along a fence -- and only
+        # low cover belongs there. `pad_keep` is the fraction that survives out there, and
+        # `pad_from` is how far across the pad the verge starts, as a fraction of its radius.
+        # The settlement builder rings its houses from `ring` metres out to `pad_radius - 8`
+        # (exteriors/settlement.gd), which for a town is 20 m to 56 m of a 64 m pad. So the
+        # two bands that are reliably free of buildings are the green in the middle and the
+        # verge outside the last house, and cover goes in both: a village green is grass, and
+        # the foot of the outermost wall is rough grass and nettles.
+        low = str(cfg.get("kind", "")) in ("herb", "bush")
+        if low and float(cfg.get("pad_keep", 0.0)) > 0.0:
+            green = float(cfg.get("pad_green", 0.22))
+            outer = float(cfg.get("pad_from", 0.90))
+            on_green = 1.0 - smoothstep(green - 0.07, green, s["pad_t"])
+            on_verge = smoothstep(outer, outer + 0.08, s["pad_t"])
+            acc *= np.where(s["pad"] > 0,
+                            np.maximum(on_green, on_verge) * float(cfg["pad_keep"]), 1.0)
+        else:
+            acc *= s["pad"] == 0
         # Attraction bands. A landscape's strongest line-work is what grows *along* things:
         # willows and alders following every watercourse, thorn along a field boundary, a row
         # of trees marking a lane. Exclusion alone can only ever produce an even sprinkle.
@@ -264,9 +292,33 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         scale = rng.uniform(scale_lo, scale_hi, x.shape).astype(np.float32)
         yaw = rng.uniform(0.0, 360.0, x.shape).astype(np.float32) if cfg.get("yaw_random", True) else np.zeros_like(x)
         pal = _palette_rgb(region)
-        base_col = pal[1] if pal.shape[0] > 1 else pal[0]
+        # Which of the region's six colours this species is painted from. Everything used to
+        # take entry 1, so a region's grass, its ferns and its heather were all the same
+        # colour and the ground read as one flat wash; a rule now names its own voice, and
+        # flowers take the accent that makes them worth seeing.
+        idx = int(cfg.get("tint_index", 1))
+        if idx < 0 or pal.shape[0] == 0:
+            # the one red poppy in Cinderlea is the colour the forge made it, and multiplying
+            # it by an ash-grey palette entry is how you lose the only red in a region
+            base_col = np.ones(3, dtype=np.float32)
+        else:
+            # A modulation, not a coat of paint. The forge already builds every asset from
+            # its region's palette, so multiplying that palette over it again doubles the
+            # colour: gold barley times gold, red poppies times red, and a downland vista
+            # came back littered with orange slabs. `tint_strength` is how far from white the
+            # multiplier is allowed to travel.
+            strength = float(cfg.get("tint_strength", 0.45))
+            base_col = (1.0 - strength) + strength * pal[idx % pal.shape[0]]
+        # Jitter one plant against the next. Almost all of it is *lightness*: a field of grass
+        # varies from tuft to tuft in how pale and how dry it is, not in hue. Drawing three
+        # independent normals, one per channel, moves the hue instead -- at a sigma of 0.12
+        # that is a third of a channel, and the moor came back scattered with yellow, orange,
+        # violet and blue clumps like confetti. It had always been written that way and never
+        # showed, because the foliage shader ignored the instance colour until today.
         jit = float(cfg.get("tint_jitter", 0.07))
-        tints = np.clip(base_col[None, :] * (1.0 + rng.normal(0.0, jit, (x.size, 3))), 0.25, 1.0)
+        light = rng.normal(0.0, jit, (x.size, 1))
+        hue = rng.normal(0.0, jit * 0.28, (x.size, 3))
+        tints = np.clip(base_col[None, :] * (1.0 + light + hue), 0.25, 1.0)
         # This region's own variants of the thing the rule names. Spreading the instances over
         # them is what stops a hillside being one tree printed four hundred times.
         variants = assets_for(index, str(cfg["asset"]), region.short)

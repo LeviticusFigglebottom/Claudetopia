@@ -16,16 +16,16 @@
         "#a5773a"
       ],
       "light": {
-        "sun_color": "#ffe6b8",
+        "sun_color": "#ffdfa4",
         "sun_elevation_bias": -4,
         "sun_elevation_scale": 0.53,
-        "fog_color": "#e9dcbd",
-        "fog_density": 0.00026,
-        "ambient_tint": "#fff0d6",
-        "saturation": 1.12,
-        "contrast": 1.0,
-        "bloom": 0.25,
-        "sky_tint": "#fff0d2"
+        "fog_color": "#efe0bb",
+        "fog_density": 0.0003,
+        "ambient_tint": "#ffeed2",
+        "saturation": 1.16,
+        "contrast": 1.02,
+        "bloom": 0.28,
+        "sky_tint": "#ffeecb"
       },
       "weather": {
         "clear": 45,
@@ -102,16 +102,16 @@
         "#274a6b"
       ],
       "light": {
-        "sun_color": "#fff5e6",
+        "sun_color": "#fffaf0",
         "sun_elevation_bias": 4,
         "sun_elevation_scale": 0.53,
-        "fog_color": "#c9d6e2",
-        "fog_density": 0.0002,
-        "ambient_tint": "#e8f0ff",
-        "saturation": 1.06,
-        "contrast": 1.08,
-        "bloom": 0.2,
-        "sky_tint": "#eaf4ff"
+        "fog_color": "#bcd0e4",
+        "fog_density": 0.00024,
+        "ambient_tint": "#dfeeff",
+        "saturation": 1.1,
+        "contrast": 1.12,
+        "bloom": 0.22,
+        "sky_tint": "#e4f1ff"
       },
       "weather": {
         "clear": 55,
@@ -124,7 +124,8 @@
         "lime",
         "waterlily",
         "market_herbs",
-        "reed_sparse"
+        "reed_sparse",
+        "clover"
       ],
       "architecture": "Lime-washed walls, slate roofs, brass lamps, canals with iron bridges, guild halls with charter-boards, the Oroth-built Sayers' Spire, the Lamp lighthouse.",
       "materials": [
@@ -188,16 +189,16 @@
         "#1b3a3a"
       ],
       "light": {
-        "sun_color": "#e9e2d0",
+        "sun_color": "#e6ddc6",
         "sun_elevation_bias": -8,
-        "fog_color": "#a9c1b8",
-        "fog_density": 0.00085,
-        "ambient_tint": "#cfe3dc",
-        "saturation": 0.95,
-        "contrast": 0.92,
-        "bloom": 0.35,
+        "fog_color": "#7fa39c",
+        "fog_density": 0.00125,
+        "ambient_tint": "#bcd8d2",
+        "saturation": 0.9,
+        "contrast": 0.9,
+        "bloom": 0.38,
         "sun_elevation_scale": 0.85,
-        "sky_tint": "#cfe2dc"
+        "sky_tint": "#c3dcd6"
       },
       "weather": {
         "fog": 40,
@@ -212,7 +213,8 @@
         "marsh_marigold",
         "bladderwort",
         "sundew",
-        "bulrush"
+        "bulrush",
+        "clover"
       ],
       "architecture": "Stilts, boardwalks, rope bridges, indigo-dyed cloth, lantern poles, upturned boats as roofs, water-burial jetties.",
       "materials": [
@@ -276,17 +278,17 @@
         "#6b3f8a"
       ],
       "light": {
-        "sun_color": "#ffd98a",
+        "sun_color": "#ffd478",
         "sun_elevation_bias": 0,
-        "fog_color": "#5f7a4a",
-        "fog_density": 0.00045,
-        "ambient_tint": "#3f5a3a",
-        "saturation": 1.08,
-        "contrast": 1.12,
-        "bloom": 0.45,
+        "fog_color": "#4e6b3c",
+        "fog_density": 0.00062,
+        "ambient_tint": "#36512f",
+        "saturation": 1.12,
+        "contrast": 1.16,
+        "bloom": 0.48,
         "god_rays": true,
         "sun_elevation_scale": 0.54,
-        "sky_tint": "#dcebd0"
+        "sky_tint": "#d2e6c4"
       },
       "weather": {
         "still": 40,
@@ -302,7 +304,8 @@
         "foxglove",
         "bracket_fungus",
         "hanging_moss",
-        "briar"
+        "briar",
+        "clover"
       ],
       "architecture": "Wood-carved lodges, rope walks inside the Grandfather, bark shingles, antler hooks, oiled stone circles.",
       "materials": [
@@ -367,16 +370,16 @@
         "#2c3440"
       ],
       "light": {
-        "sun_color": "#eef2ff",
+        "sun_color": "#eaf1ff",
         "sun_elevation_bias": 2,
         "sun_elevation_scale": 0.38,
-        "fog_color": "#b8c4d4",
-        "fog_density": 0.00016,
-        "ambient_tint": "#d8e2f2",
-        "saturation": 0.92,
-        "contrast": 1.15,
-        "bloom": 0.15,
-        "sky_tint": "#dfe7f6"
+        "fog_color": "#a9bacf",
+        "fog_density": 0.00014,
+        "ambient_tint": "#cfdcf2",
+        "saturation": 0.88,
+        "contrast": 1.2,
+        "bloom": 0.14,
+        "sky_tint": "#d4e0f4"
       },
       "weather": {
         "wind": 35,
@@ -390,7 +393,8 @@
         "juniper",
         "lichen",
         "cottongrass",
-        "rowan"
+        "rowan",
+        "clover"
       ],
       "architecture": "Cliff-carved holds, chain bridges, drystone, turf roofs, bone lintels, mine headframes.",
       "materials": [
@@ -455,17 +459,17 @@
         "#5a5652"
       ],
       "light": {
-        "sun_color": "#e2d8c8",
+        "sun_color": "#e8d9c0",
         "sun_elevation_bias": -14,
-        "fog_color": "#9a9793",
-        "fog_density": 0.00055,
-        "ambient_tint": "#b6b2ac",
+        "fog_color": "#8d8781",
+        "fog_density": 0.0008,
+        "ambient_tint": "#c6c0b6",
         "saturation": 0.55,
-        "contrast": 0.95,
-        "bloom": 0.3,
-        "grain": 0.06,
+        "contrast": 1.0,
+        "bloom": 0.26,
+        "grain": 0.07,
         "sun_elevation_scale": 0.5,
-        "sky_tint": "#cbc8c2"
+        "sky_tint": "#b9b3ab"
       },
       "weather": {
         "ashfall": 35,

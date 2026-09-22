@@ -1,0 +1,94 @@
+{
+ "bounds": {
+  "height": 1.841,
+  "max": [
+   1.391,
+   1.841,
+   0.466
+  ],
+  "min": [
+   -1.412,
+   0.0,
+   -0.502
+  ],
+  "radius": 1.745
+ },
+ "built_seconds": 19.06,
+ "category": "props",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_ground_kit",
+ "glb": "brightwater_hedge_segment_b.glb",
+ "hash": "b006267d11a97916",
+ "kind": "hedge_segment",
+ "materials": [
+  "brightwater_hedge_segment_b_mat",
+  "brightwater_hedge_segment_b_hedge_foliage"
+ ],
+ "materials_used": [
+  "oak_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "brightwater_hedge_segment_b",
+   "tris": 72
+  },
+  {
+   "name": "brightwater_hedge_segment_b_LOD1",
+   "tris": 48
+  },
+  {
+   "name": "brightwater_hedge_segment_b_LOD2",
+   "tris": 48
+  },
+  {
+   "name": "brightwater_hedge_segment_b_cards_LOD1",
+   "tris": 14
+  },
+  {
+   "name": "brightwater_hedge_segment_b_cards_LOD2",
+   "tris": 8
+  }
+ ],
+ "modular": true,
+ "module_length_m": 2.2,
+ "name": "brightwater_hedge_segment_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#3f7fb5",
+   "#f1ece0",
+   "#5d6470",
+   "#b08a3e",
+   "#c76a44",
+   "#274a6b"
+  ],
+  "id": "core:region/brightwater",
+  "roles": {
+   "accent": "#c76a44",
+   "cool": "#3f7fb5",
+   "dark": "#274a6b",
+   "earth": "#c76a44",
+   "green": "#f1ece0",
+   "light": "#f1ece0",
+   "mid": "#c76a44",
+   "warm": "#c76a44"
+  }
+ },
+ "seed": 8916,
+ "textures": [
+  "brightwater_hedge_segment_b_albedo.png",
+  "brightwater_hedge_segment_b_normal.png",
+  "brightwater_hedge_segment_b_orm.png",
+  "brightwater_hedge_segment_b_atlas_albedo.png",
+  "brightwater_hedge_segment_b_atlas_normal.png",
+  "brightwater_hedge_segment_b_atlas_orm.png"
+ ],
+ "tris": [
+  72,
+  62,
+  56
+ ],
+ "version": 3
+}

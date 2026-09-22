@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.552,
+  "max": [
+   0.139,
+   1.552,
+   0.194
+  ],
+  "min": [
+   -0.127,
+   0.0,
+   -0.126
+  ],
+  "radius": 0.803
+ },
+ "built_seconds": 17.01,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_ground_kit",
+ "glb": "hearthvale_gate_post_a.glb",
+ "hash": "b12d710fabf0ab96",
+ "kind": "gate_post",
+ "materials": [
+  "hearthvale_gate_post_a_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_gate_post_a",
+   "tris": 132
+  },
+  {
+   "name": "hearthvale_gate_post_a_LOD1",
+   "tris": 132
+  },
+  {
+   "name": "hearthvale_gate_post_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_gate_post_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 8952,
+ "textures": [
+  "hearthvale_gate_post_a_albedo.png",
+  "hearthvale_gate_post_a_normal.png",
+  "hearthvale_gate_post_a_orm.png"
+ ],
+ "tris": [
+  132,
+  132,
+  120
+ ],
+ "version": 3
+}

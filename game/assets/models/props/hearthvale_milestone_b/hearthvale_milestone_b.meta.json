@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.914,
+  "max": [
+   0.184,
+   0.914,
+   0.145
+  ],
+  "min": [
+   -0.182,
+   0.0,
+   -0.112
+  ],
+  "radius": 0.509
+ },
+ "built_seconds": 23.16,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_ground_kit",
+ "glb": "hearthvale_milestone_b.glb",
+ "hash": "b4c8342d405f8a1a",
+ "kind": "milestone",
+ "materials": [
+  "hearthvale_milestone_b_mat"
+ ],
+ "materials_used": [
+  "limestone"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_milestone_b",
+   "tris": 108
+  },
+  {
+   "name": "hearthvale_milestone_b_LOD1",
+   "tris": 108
+  },
+  {
+   "name": "hearthvale_milestone_b_LOD2",
+   "tris": 108
+  }
+ ],
+ "name": "hearthvale_milestone_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 9022,
+ "textures": [
+  "hearthvale_milestone_b_albedo.png",
+  "hearthvale_milestone_b_normal.png",
+  "hearthvale_milestone_b_orm.png"
+ ],
+ "tris": [
+  108,
+  108,
+  108
+ ],
+ "version": 3
+}

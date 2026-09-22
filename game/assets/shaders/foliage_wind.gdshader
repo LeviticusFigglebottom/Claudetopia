@@ -51,7 +51,14 @@ void vertex() {
 }
 
 void fragment() {
-	vec4 alb = texture(albedo_texture, UV) * tint;
+	// COLOR is the per-instance colour the MultiMesh carries. The world builder gives every
+	// scattered plant its own tint off the region's palette (worldgen/cells.py) and writes it
+	// into the cell data, the streamer loads it into the MultiMesh with `use_colors`, and
+	// until now this shader never read it -- so ninety grass clumps with eighty-eight
+	// different greens between them all drew in exactly one green. A field of one repeated
+	// colour is the thing that reads as wallpaper, and the variation was being computed and
+	// thrown away at the last step.
+	vec4 alb = texture(albedo_texture, UV) * tint * COLOR;
 	ALBEDO = alb.rgb;
 	float fade = clamp((length(VERTEX) - scissor_fade_start)
 			/ max(scissor_fade_end - scissor_fade_start, 0.01), 0.0, 1.0);

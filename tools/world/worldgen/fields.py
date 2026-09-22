@@ -28,7 +28,12 @@ from .grid import Grid
 from .noise import upsample
 
 
-def field_map(grid: Grid, bank, owner: np.ndarray, regions: list, shapes=("downs", "lake_basin"),
+## Skerrow is enclosed too, and in stone rather than thorn: the moor above a clan hold is cut
+## into intakes by drystone walls, which is the second thing WORLD_BIBLE 6.5 lists under its
+## architecture. Its parcels are larger than the Vale's because a moor intake is larger than
+## a field, and `hedges.py` lines them with wall instead of hedge.
+def field_map(grid: Grid, bank, owner: np.ndarray, regions: list,
+              shapes=("downs", "lake_basin", "mountains"),
               spacing_m: float = 150.0, warp_m: float = 26.0, salt: int = 820,
               work_n: int = 2048) -> tuple:
     """Returns (labels int32, edge_d float32) at the full grid resolution.

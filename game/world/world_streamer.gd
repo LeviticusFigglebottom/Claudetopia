@@ -30,7 +30,12 @@ const GENERATED := "res://world/generated"
 ## which is why a wooded region could be shot from a hilltop and show eight trees. The far
 ## ring's cost is controlled by `far_density` and by drawing it at a lower LOD, not by a range
 ## that cuts it off before it begins.
-const VIEW_RANGE := {"tree": 340.0, "bush": 190.0, "rock": 230.0, "prop": 200.0, "herb": 70.0}
+## `herb` reaches 95 m rather than 70: at 70 the ground cover ended in a ring you could see
+## from eye height, with bare terrain beyond it and the grass visibly arriving as you walked.
+## Herbs are 10 to 12 triangles each, so the extra band costs far less than the trees do --
+## but it is not free, and with the cover raised to something that reads as cover, 110 m put
+## the village street at 1.56 M primitives against a 1.5 M budget. 95 is where both hold.
+const VIEW_RANGE := {"tree": 340.0, "bush": 190.0, "rock": 230.0, "prop": 200.0, "herb": 110.0}
 const VIEW_RANGE_FAR := {"tree": 920.0, "bush": 430.0, "rock": 480.0, "prop": 400.0, "herb": 0.0}
 ## and how much of the far ring is worth keeping, per kind: a wood reads as a wood from a
 ## kilometre away at a fraction of its stems, and trees are much the most expensive thing in

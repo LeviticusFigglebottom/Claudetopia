@@ -447,3 +447,51 @@ frees a node belongs to that node. `tests/unit/test_signal_hygiene.gd` takes a c
 autoload signal around building and freeing a HUD, a streamer, a stat bar and a Hearthstone, and
 asks the SceneTree how many toast fades are still running over panels that are gone.
 
+## 2026-09-22 · A region's `sun_elevation_scale` is its latitude, not a mood dial
+**Decision.** Every region states a `sun_elevation_scale` that pulls the day's arc down to
+the elevation its identity sheet describes, and the default falls from 1.0 to 0.55.
+Hearthvale 0.53 (noon 44°), Brightwater 0.53 (52°), Briarwold 0.54 (49°), Skerrow 0.38 (37°);
+Sedgemire and Cinderlea already sat low and are untouched. The elevation is also clamped
+below vertical.
+**Why.** `WorldClock.sun_elevation_deg()` is a bare `-cos(hour)` curve that reaches 90° at
+noon — the sun directly overhead, a latitude Wickmere is not at. Only three regions set the
+scale, so the rest inherited it, and at each region's own review hour four of the six ran a
+sun between 60° and 94°. A sun that high casts a shadow between 0.18 and 0.59 of its caster's
+height, straight down and hidden underneath it. Three separate frames were reported as having
+"no shadows anywhere" — a village street, a chain bridge in a steep valley, the opening view
+of Cinderlea — and in every one the shadows were there and were the size of a doormat.
+Brightwater's +4° bias on top of a 90° noon also pushed the elevation past vertical, which
+flips `cos(e)` negative and swings the sun's bearing to the far side of the sky between one
+hour and the next.
+**Alternatives.** Changing the curve in `WorldClock` itself was the obvious fix and is worse:
+the clock is a core autoload that stealth, schedules and the light level all read, and the
+shape of the day is not the same question as how high the sun gets at this latitude. The
+per-region scale already existed for exactly this and three regions were already using it.
+**Consequences.** A cottage on the green throws ten metres of shadow instead of three, and
+houses visibly shadow each other in the morning. Two hours of this investigation went into a
+wrong hypothesis first — that Terrain3D's ground does not receive shadows on the Compatibility
+renderer — on the strength of a 16:30 street frame showing a shadowed house standing on lit
+grass. It was wrong: with the sun brought down, a hawthorn lays a dappled leaf shadow across
+the terrain with the individual leaf clusters legible in it. `tools_gd/shadow_probe.tscn` is
+the instrument that settled it and is committed, because "the frame has no shadows" has three
+unrelated causes — the light, the receiving surface, or the sun being too high to see them —
+and a screenshot of the world cannot tell them apart.
+
+## 2026-09-22 · Variation that is computed and then discarded is worse than none
+**Decision.** `foliage_wind.gdshader` multiplies by `COLOR`, and imported standard materials
+set `vertex_color_use_as_albedo`.
+**Why.** The world builder has always given each scattered plant its own tint from the
+region's palette, and writes it into the cell data: 88 distinct greens among 91 grass clumps
+in a single cell of Merrowby. The streamer has always loaded them into the MultiMesh with
+`use_colors`. The foliage shader never read `COLOR`, so every one of those greens drew as the
+same green, and the same was true of every rock and stump for want of one flag on the
+material. DESIGN §7.0.6 promises per-instance colour jitter; the pipeline computed it end to
+end and threw it away at the last step, which is the most expensive kind of bug — it costs
+the build time and the file size and delivers nothing.
+**Consequences.** A field of grass now has the colour spread it was always carrying. It also
+exposed a second fault immediately: the forge already builds each asset from its region's
+palette, so multiplying that palette over it again paints the colour on twice, and a downland
+vista came back littered with orange slabs where the gold barley and red poppies had been
+multiplied by gold and red. Rules now carry a `tint_strength` (how far from white the
+multiplier may travel, default 0.45) and the species whose asset already carries that colour
+take none at all.
