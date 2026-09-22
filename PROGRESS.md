@@ -1,26 +1,32 @@
 # PROGRESS.md — state of Wickmere
 
-_Updated 2026-09-19 (session 1)._
+_Updated 2026-09-22 (session 3)._
 
 ## State
 
-**1080 unit tests green, 0 content problems. The smoke run builds all 24 shipping interiors
-clean and sweeps all six regions and 34 places. The scripted journey passes all 15 of
-DESIGN's done-list promises, in the built world: it wakes at the Hushline Stair, walks 378 m
-of real ground out of the Cinderlea and into Sedgemire, and goes on from there. 764 content
-definitions. The world is 16 Terrain3D regions over 8 km square, built deterministically in
-about two and a half minutes, with 404,000 scatter instances of 79 forged assets, 596
-creatures in 247 groups, 24 interiors with doors in the ground, and the worst captured frame
-costing 95 draw calls and 0.2M primitives against budgets of 2000 and 1.5M.**
+**1204 unit tests green, 0 failed, 0 content problems and 0 script errors. The smoke run
+builds all 24 shipping interiors clean and sweeps all six regions and 34 places. The scripted
+journey passes all 16 of DESIGN's done-list promises in the built world — including the
+sixteenth, which had never once run, because it was called and never written and the file
+would not parse. 912 content definitions: 236 items, 89 rumours, 76 NPC defs (68 of them
+named people), 64 dialogues, 48 POIs, 40 quests, 40 books, 34 places, 26 enemies, 25
+interiors, 21 recipes, 15 sayings, 8 factions, 6 callings, 5 bosses. The world is 16
+Terrain3D regions over 8 km square, built deterministically in about three and a half
+minutes, with 1024 cells of scatter, 24 interiors with doors in the ground, all 55 points of
+interest dressed and standing, 16 Hearthstones in the open country, and the worst captured
+frame — a village street — costing 1240 draw calls and 1.18 M primitives against budgets of
+2000 and 1.5 M.**
 
-Verify the whole thing with four commands:
+Four commands verify it, and a fifth presses the way in:
 
 ```
-./run.sh test       # the unit suite; content validation fails the build
+./run.sh test       # the unit suite; content problems and logged errors both fail the run
 ./run.sh smoke      # build every interior for real; fail on any error
 ./run.sh journey    # one scripted run through every promise in the done list
+./run.sh flow       # boot, the Naming, and the world appearing, in captures
 ./run.sh perf       # draw calls and primitives against the budgets
 ```
+
 
 Merged and working on the main branch:
 
@@ -88,39 +94,33 @@ rather than the Vale's orchards and hedgerows). Everything else is merged.
 
 ## Next
 
-1. The surface and tree passes above, then re-shoot and judge the six regions again.
-2. Hedgerows and field boundaries in Hearthvale: the bible's defining feature, and the thing
-   that would most change how the downs read.
-3. **Nothing named is standing in the world.** `game/world/pois/` is empty, so `scene_for()`
-   in the world build never resolves a scene and all 34 places and 48 POIs are flattened pads
-   with nothing on them. The forge has built the six landmark meshes — the Cracked Toll, the
-   Lamp, the Sayer's Spire, both Choir Colossi, the Fallen Hand — and seven standing stones,
-   and no code places any of them. You can stand on the exact coordinates of a forty-metre
-   bronze bell that the main quest turns on and see a bald hillside. This is the largest
-   remaining hole in the world and the one the drop test most depends on. Assigned to the
-   world stream: resolve a landmark `.glb` as the place's scene, give it collision and a
-   deliberate yaw, and place standing stones as hand-authored sets rather than scatter.
-4. **The settlements are built but not planned.** Eleven places now carry a fabric of
-   generated houses around their hand-built interiors — 54 slate roofs in Tollmere, 34 thatched
-   ones in Merrowby, with the culture's walls, a plinth, a framed door and the carts, hay,
-   fences and market stalls the forge has made. What they do not have is a *street*: the roads
-   stop at the edge of the flattened pad instead of running through it, so the layout falls back
-   to a ring around a green every time. `Settlement._along_road` already fronts houses onto a
-   road correctly when one crosses the pad (there is a test for it) — the roads simply do not.
-   Second: the pads are far wider than the towns on them and are paved edge to edge, so every
-   village sits in the middle of a two-hundred-metre cobbled disc.
-5. NPC and encounter density tuning. There is now somebody to walk the country and feel it:
-   until this pass **nothing outside a test had ever called `NpcRegistry.spawn()`**, so the
-   schedules ran, dispositions changed and guards noticed crimes in villages that contained no
-   bodies at all. `NpcStreamer` follows whoever the world is streaming around and keeps people
-   standing in a 240 m ring (330 m before they are taken down again), capped at 48. What is
-   untuned is how many and how busy. Whoever the hour has indoors is not stood up in the
-   street — so a village genuinely empties at three in the morning, and rain sends the idlers
-   home — and going through a door stands the residents up in the room their hour calls for.
-   Nobody is placed inside an interior they do not live in, so an inn at midday has its
-   landlord and no drinkers.
-6. Hedgerows and field boundaries in Hearthvale (see 2) are the other half of the landform
-   score: the downs currently read as bare ground with trees on it.
+Items 3, 4 and 5 of the previous list are done and are written up in their own sections at
+the end of this file: every place and POI now has something standing on it, the settlement
+fabric is inside the draw-call budget with windows and chimneys on it, and the country has
+sixty-eight named people in it instead of forty-three. What is left, in the order it is
+worth doing:
+
+1. **Play it.** Still the first item, and still nobody has. The journey proves sixteen
+   promises hold; it cannot tell you whether swinging a sword feels like anything.
+2. **Hedgerows, ground cover and light.** The downs read as bare ground with trees on it and
+   the country casts no shadow at all, which is the single largest reason a frame reads flat.
+   In hand.
+3. **A graded road can stand a hundred metres above the ground.** `carve_roads` limits a
+   road's profile to 11% and writes it into the heightmap; where the ground falls faster than
+   the road descends — the spur out of Kharrow Hold toward Gullhithe — the road becomes an
+   arête that nothing in the region's shape function put there. Invisible to every audit we
+   have and obvious from the ground.
+4. **The quest plumbing three.** `quest_at` with an integer stage is off by one across the
+   pack (the context returns a 0-based index; the content is written 1-based), nothing in the
+   game emits `escort_arrived`, and the authored quest items that `collect` objectives name
+   are placed in the world by nothing.
+5. **Close the drop test.** Colour was 0.64 and landform 0.21 against bars of 0.80 and 0.55,
+   measured before any of this session's work; both want re-measuring once the ground cover
+   and light land, and the landform proposal in `## Sightlines, answered` is the honest next
+   step for the axis that is barely above chance.
+6. **Encounters and people at the points of interest.** Every POI's `encounter` sentence and
+   its named NPC — the lamplighter, the toll-keeper, the knight in the eye, the hermit — are
+   still absent, so the props are set out as if somebody had just stepped away.
 
 ## Deliberately not done (pass two)
 
