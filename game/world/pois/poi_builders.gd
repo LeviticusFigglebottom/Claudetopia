@@ -639,14 +639,20 @@ static func _tower_hide(d: PoiDressing, grain: Vector2) -> void:
 	for i in 4:
 		var side_basis := basis * Basis(Vector3.UP, PI * 0.5 * float(i))
 		var centre := side_basis * Vector3(0.0, 0.0, (inner + outer) * 0.5)
-		var xf := Transform3D(side_basis, Vector3(centre.x, deck_y - 0.05, centre.z))
-		m.block(planks, xf, Vector3(outer * 2.0, 0.1, outer - inner))
-		k.collider(Vector3(outer * 2.0, 0.2, outer - inner), xf)
-		var rail := side_basis * Vector3(0.0, 0.0, outer - 0.1)
-		m.block(posts, Transform3D(side_basis, Vector3(rail.x, deck_y + 0.95, rail.z)), Vector3(outer * 2.0, 0.08, 0.08))
+		var xf := Transform3D(side_basis, Vector3(centre.x, deck_y - 0.07, centre.z))
+		m.block(planks, xf, Vector3(outer * 2.0, 0.15, outer - inner))
+		k.collider(Vector3(outer * 2.0, 0.25, outer - inner), xf)
+		# A hide is a screen you stand behind: a plank parapet round the outer edge, chest
+		# high, with its cap rail on top. A bare rail photographed as scaffolding.
+		var rail := side_basis * Vector3(0.0, 0.0, outer - 0.12)
+		if i != 0:
+			m.block(planks, Transform3D(side_basis, Vector3(rail.x, deck_y + 0.55, rail.z)),
+					Vector3(outer * 2.0, 1.1, 0.12))
+			k.collider(Vector3(outer * 2.0, 1.1, 0.12), Transform3D(side_basis, Vector3(rail.x, deck_y + 0.55, rail.z)))
+		m.block(posts, Transform3D(side_basis, Vector3(rail.x, deck_y + 1.16, rail.z)), Vector3(outer * 2.0, 0.11, 0.2))
 		for s in [-1.0, 1.0]:
-			var p := side_basis * Vector3(float(s) * (outer - 0.1), 0.0, outer - 0.1)
-			m.block(posts, Transform3D(side_basis, Vector3(p.x, deck_y + 0.5, p.z)), Vector3(0.1, 1.0, 0.1))
+			var p := side_basis * Vector3(float(s) * (outer - 0.12), 0.0, outer - 0.12)
+			m.block(posts, Transform3D(side_basis, Vector3(p.x, deck_y + 0.6, p.z)), Vector3(0.14, 1.25, 0.14))
 		# a strut from the platform's edge back to the trunk
 		var strut_from := side_basis * Vector3(0.0, 0.0, outer - 0.3)
 		var strut_to := side_basis * Vector3(0.0, 0.0, inner * 0.5)
@@ -751,25 +757,49 @@ static func _tower_head(d: PoiDressing, grain: Vector2) -> void:
 	sphere.height = 2.0
 	sphere.radial_segments = 28
 	sphere.rings = 16
-	st.append_from(sphere, 0, Transform3D(basis, centre).scaled_local(Vector3(rx, ry, rz)))
-	# brow, nose and the stump of the neck
-	m.block(st, Transform3D(basis, centre + basis * Vector3(0.0, 1.6, rz * 0.82)), Vector3(rx * 1.5, 1.1, 1.6))
-	m.block(st, Transform3D(basis * Basis(Vector3.RIGHT, 0.35), centre + basis * Vector3(0.0, -0.6, rz * 0.98)), Vector3(1.6, 4.2, 1.5))
-	m.block(st, Transform3D(basis, centre + basis * Vector3(0.0, -ry * 0.75, -rz * 0.3)), Vector3(rx * 1.1, 3.0, rz * 0.9))
-	m.commit(st, k.surface("oroth", 0.7), "Head", true)
+	# the cranium, flattened at the back the way a skull is, not a hen's egg
+	st.append_from(sphere, 0, Transform3D(basis, centre + basis * Vector3(0.0, 0.0, 0.5))
+			.scaled_local(Vector3(rx, ry, rz * 0.94)))
+	# A head has to be a head from whichever side you come at it, because what the head faces
+	# is decided by the ground and where you walk up from is not. So: a brow band right round
+	# it, cheeks either side, a jaw and chin below, a nose, and a socket on *both* sides —
+	# built as an ovoid with one face on it, this photographed as an egg.
+	m.block(st, Transform3D(basis, centre + basis * Vector3(0.0, 1.9, 0.0)), Vector3(rx * 1.92, 1.3, rz * 1.86))
+	for s in [-1.0, 1.0]:
+		m.block(st, Transform3D(basis * Basis(Vector3.UP, float(s) * 0.5),
+				centre + basis * Vector3(float(s) * rx * 0.82, -0.9, rz * 0.34)), Vector3(2.0, 3.2, 2.6))
+	# the jaw: a mass under the cranium, and the chin standing out of it
+	m.block(st, Transform3D(basis * Basis(Vector3.RIGHT, -0.12), centre + basis * Vector3(0.0, -ry * 0.62, rz * 0.22)),
+			Vector3(rx * 1.5, 3.4, rz * 1.35))
+	m.block(st, Transform3D(basis * Basis(Vector3.RIGHT, 0.25), centre + basis * Vector3(0.0, -ry * 0.72, rz * 0.82)),
+			Vector3(rx * 0.9, 2.2, 1.9))
+	# the nose, and the stump of the neck it broke off at
+	m.block(st, Transform3D(basis * Basis(Vector3.RIGHT, 0.35), centre + basis * Vector3(0.0, -0.6, rz * 0.95)),
+			Vector3(1.7, 4.4, 1.8))
+	m.block(st, Transform3D(basis, centre + basis * Vector3(0.0, -ry * 0.78, -rz * 0.45)), Vector3(rx * 1.15, 3.2, rz * 0.9))
+	# Carved stone, not masonry: at the Oroth unit of 1.1 m the whole head came out bricked.
+	var carved := k.surface("oroth", 0.45)
+	carved.set_shader_parameter("unit_size", 3.4)
+	carved.set_shader_parameter("variation", 0.75)
+	m.commit(st, carved, "Head", true)
 	# a wall of the head's reach: a squashed sphere has no shape of its own
 	k.collider(Vector3(rx * 1.9, ry * 1.9, rz * 1.9), Transform3D(basis, centre))
-	# the eye: a dark socket with the vigil's light in it, facing the approach
-	var eye_at := centre + basis * Vector3(rx * 0.42, 1.3, rz * 0.93)
+	# the eyes: dark sockets, the one facing the approach with the vigil's light in it
 	var eye := m.begin()
 	var disc := CylinderMesh.new()
 	disc.top_radius = 1.0
 	disc.bottom_radius = 1.0
 	disc.height = 0.3
 	disc.radial_segments = 20
-	eye.append_from(disc, 0, Transform3D(basis * Basis(Vector3.RIGHT, PI * 0.5), eye_at).scaled_local(Vector3(1.25, 1.0, 0.9)))
-	m.commit(eye, PoiKit.plain(Color(0.03, 0.03, 0.035), 0.9, 0.0, Color(0.55, 0.75, 1.0), 0.6), "Eye", true)
-	k.light(eye_at + basis * Vector3(0.0, 0.0, 0.8), Color(0.6, 0.78, 1.0), 2.2, 12.0)
+	var lit_at := Vector3.ZERO
+	for s in [-1.0, 1.0]:
+		var at := centre + basis * Vector3(float(s) * rx * 0.44, 1.15, rz * 0.9)
+		eye.append_from(disc, 0, Transform3D(basis * Basis(Vector3.UP, float(s) * 0.34) * Basis(Vector3.RIGHT, PI * 0.5), at)
+				.scaled_local(Vector3(1.4, 1.0, 1.05)))
+		if s > 0.0:
+			lit_at = at
+	m.commit(eye, PoiKit.plain(Color(0.03, 0.03, 0.035), 0.9, 0.0, Color(0.55, 0.75, 1.0), 0.6), "Eyes", true)
+	k.light(lit_at + basis * Vector3(0.0, 0.0, 0.9), Color(0.6, 0.78, 1.0), 2.4, 14.0)
 	# a stair of slabs up the ash toward the eye's ledge
 	var stair_from := grain * 11.0 + Vector2(-grain.y, grain.x) * 3.5
 	var stair := m.begin()
@@ -845,22 +875,28 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 	m.arch_bridge(stone, a, b, 3.4, 1.5)
 	m.commit(stone, k.surface("oroth" if oroth else "stone", 0.55), "Bridge", true)
 	if PoiKit.brief_says(d.brief, ["glass"]):
-		# the riverbed the Ash Winter sang dry, sharp and black, running under the arch
+		# The riverbed the Ash Winter sang dry: a narrow band of broken black glass running
+		# under the arch, laid *into* the ground rather than on it. The first version was
+		# five-metre plates sitting proud at a roughness of 0.08, and they photographed as
+		# spilled oil — a mirror the size of a room is not a riverbed.
 		var bed := m.begin()
-		for i in 9:
-			var t := (float(i) - 4.0) * 5.0
-			var p := mid + perp * t
+		for i in 38:
+			var t := (float(i) - 18.5) * 2.2 + k.rng.randf_range(-0.5, 0.5)
+			var off := dir * k.rng.randf_range(-1.9, 1.9)
+			var p := mid + perp * t + off
 			var gg := k.on_ground(p.x, p.y)
-			m.block(bed, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(perp)), gg + Vector3(0.0, 0.05, 0.0)),
-					Vector3(5.5 + k.rng.randf_range(-0.8, 0.8), 0.14, 5.2))
-		m.commit(bed, PoiKit.plain(PoiKit.GLASS, 0.08), "GlassBed", true)
+			m.block(bed, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(perp) + k.rng.randf_range(-0.3, 0.3))
+					* Basis(Vector3.BACK, k.rng.randf_range(-0.09, 0.09)), gg - Vector3(0.0, 0.06, 0.0)),
+					Vector3(k.rng.randf_range(1.4, 2.8), 0.16, k.rng.randf_range(1.6, 3.4)))
+		m.commit(bed, PoiKit.plain(PoiKit.GLASS, 0.22), "GlassBed", true)
 		var shards: Array = []
 		for i in 26:
-			var p := mid + perp * k.rng.randf_range(-22.0, 22.0) + dir * k.rng.randf_range(-3.6, 3.6) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+			var p := mid + perp * k.rng.randf_range(-24.0, 24.0) + dir * k.rng.randf_range(2.2, 5.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
 			shards.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.7)))
 		k.scatter(k.rock("scree"), shards)
+		# the dead ash well off the crossing, down the bed, so nothing stands in the arch
 		for s in [-1.0, 1.0]:
-			var t := mid + perp * float(s) * 14.0 + dir * 4.0
+			var t := mid + perp * float(s) * 24.0 + dir * float(s) * 7.0
 			k.place(k.tree("dead_ash_tree"), k.on_ground(t.x, t.y), k.rng.randf_range(0.0, TAU), 1.0, true, Vector3.ZERO, true)
 	elif PoiKit.brief_says(d.brief, ["bell", "clapper"]):
 		# the Toll's clapper under the arch, too big to move, so they paved round it
@@ -975,10 +1011,11 @@ static func _bridge_weir(d: PoiDressing, dir: Vector2) -> void:
 		k.place(k.prop("dock_post"), k.on_ground(e.x, e.y), yaw, 1.15)
 		k.place(k.prop("rope_coil"), k.on_ground(e.x + perp.x * 1.2, e.y + perp.y * 1.2), k.rng.randf_range(0.0, TAU), 1.0, false)
 	k.place(k.prop("rowboat"), k.on_ground(a.x - perp.x * 4.0, a.y - perp.y * 4.0), yaw + 0.6)
+	# reeds either side of the weir, off the walkway rather than through it
 	var reeds: Array = []
-	for i in 50:
+	for i in 40:
 		var t := k.rng.randf_range(-0.1, 1.1)
-		var p := a.lerp(b, t) + perp * k.rng.randf_range(2.0, 8.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+		var p := a.lerp(b, t) + perp * k.rng.randf_range(3.2, 9.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
 		reeds.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
 	k.scatter(k.flora("reeds"), reeds, false, false, false)
 
@@ -995,8 +1032,10 @@ static func _bridge_boardwalk(d: PoiDressing, axis: Vector2) -> void:
 	var perp := Vector2(-axis.y, axis.x)
 	var planks := m.begin()
 	var posts := m.begin()
-	var deck_y := maxf(k.on_ground(a.x, a.y).y, maxf(k.on_ground(b.x, b.y).y, k.on_ground(0.0, 0.0).y)) + 0.9
-	m.plank_deck(planks, posts, a, b, 2.2, deck_y, 3.0, false)
+	# a marsh boardwalk stands well clear of the water: at 0.9 m the reeds grew over it and
+	# the whole causeway photographed as a reed bed with poles in it
+	var deck_y := maxf(k.on_ground(a.x, a.y).y, maxf(k.on_ground(b.x, b.y).y, k.on_ground(0.0, 0.0).y)) + 1.45
+	m.plank_deck(planks, posts, a, b, 2.4, deck_y, 3.0, false)
 	# the poles, alternating sides, with a lantern hung from each and a rope between
 	var n := int(length / 6.0)
 	var lanterns: Array = []
@@ -1025,7 +1064,7 @@ static func _bridge_boardwalk(d: PoiDressing, axis: Vector2) -> void:
 	var reeds: Array = []
 	for i in 70:
 		var t := k.rng.randf_range(-0.1, 1.1)
-		var p := a.lerp(b, t) + perp * k.rng.randf_range(1.8, 9.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+		var p := a.lerp(b, t) + perp * k.rng.randf_range(3.6, 12.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
 		reeds.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
 	k.scatter(k.flora("reeds"), reeds, false, false, false)
 	var lilies: Array = []
@@ -1048,18 +1087,30 @@ static func _bridge_natural_arch(d: PoiDressing, axis: Vector2) -> void:
 	var a := -perp * 10.0
 	var b := perp * 10.0
 	var stone := m.begin()
-	m.arch_bridge(stone, a, b, 3.6, 4.4, NAN, false, true, 1.0)
-	var granite := k.surface("stone", 0.8)
-	granite.set_shader_parameter("unit_size", 0.9)
+	m.arch_bridge(stone, a, b, 4.6, 4.4, NAN, false, true, 1.0)
+	# Natural granite, not masonry: the painted stone at a two-metre unit reads as rock mass
+	# rather than courses, and boulders sitting along the arch's own back finish the job. At
+	# a 0.9 m unit this photographed as a neatly built bridge, which is the one thing the
+	# brief says it is not.
+	var granite := k.surface("stone", 0.85)
+	granite.set_shader_parameter("unit_size", 2.1)
+	granite.set_shader_parameter("variation", 0.8)
 	m.commit(stone, granite, "Arch", true)
-	# boulders at the feet where the arch grows out of the ground, moss along its back
+	# boulders at the feet where the arch grows out of the ground, and along its back
 	var feet: Array = []
 	for end in [a, b]:
 		var e: Vector2 = end
-		for i in 6:
-			var p := e + k.jitter(2.6)
-			feet.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.3), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.6, 1.3)))
+		for i in 7:
+			var p := e + k.jitter(3.0)
+			feet.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.3), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.7, 1.5)))
 	k.scatter(k.rock("boulder"), feet, true, true)
+	var back: Array = []
+	for i in 9:
+		var t := k.rng.randf_range(0.12, 0.88)
+		var p := a.lerp(b, t) + axis * k.rng.randf_range(-2.1, 2.1)
+		var y := PoiMasonry._hump(t, k.on_ground(a.x, a.y).y, k.on_ground(b.x, b.y).y, 4.4)
+		back.append(PoiKit.transform_at(Vector3(p.x, y - 0.5, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.4, 0.8)))
+	k.scatter(k.rock("boulder", 1), back, false, true)
 	var moss: Array = []
 	for i in 40:
 		var t := k.rng.randf_range(0.05, 0.95)
@@ -1080,9 +1131,10 @@ static func _bridge_natural_arch(d: PoiDressing, axis: Vector2) -> void:
 	var tree := k.tree("giant_oak")
 	if tree == "":
 		tree = k.tree("black_ash")
+	# the wardens stand well off the ends, or they stand in front of the arch and hide it
 	for end in [a, b]:
 		var e: Vector2 = end
-		var t := e + e.normalized() * 4.5
+		var t := e + e.normalized() * 6.5 + axis * 5.5
 		k.place(tree, k.on_ground(t.x, t.y), k.rng.randf_range(0.0, TAU), 0.72, true, Vector3.ZERO, true)
 	var ferns: Array = []
 	for i in 30:
@@ -1102,9 +1154,10 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 	var yaw := PoiKit.yaw_of(dir)
 	var perp := Vector2(-dir.y, dir.x)
 	var deck_y := k.on_ground(a.x, a.y).y + 0.6
-	# the far end is where the ground comes back up to the deck, if it does within reach
+	# the far end is where the ground comes back up to the deck, if it does within reach, but
+	# never so near that four pylons crowd each other: a treaty bridge is a long span
 	var reach := 30.0
-	for t in range(14, 44, 2):
+	for t in range(20, 44, 2):
 		if k.on_ground(dir.x * float(t), dir.y * float(t)).y >= deck_y - 0.5:
 			reach = float(t)
 			break
@@ -1121,34 +1174,55 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 			var p := e + perp * float(s) * 1.9
 			var g := k.on_ground(p.x, p.y)
 			# the far wall of a gorge can stand above the near lip; a pylon is still a pylon
-			var h := maxf(deck_y - g.y + 4.6, 2.0)
+			var h := maxf(deck_y - g.y + 7.2, 3.0)
 			m.drum(stone, Transform3D(Basis.IDENTITY, g), 1.05, h, 0.0, NAN, true, 0.36)
 			tops.append(Vector3(p.x, g.y + h, p.y))
 	m.commit(stone, k.surface("stone", 0.6), "Pylons", true)
 	# the four chains: links along a catenary from pylon top to pylon top, touching the deck
+	# A link the size of a tyre reads as a tyre: these are forged links of about 30 cm, laid
+	# close enough to touch, alternating flat and on edge the way a chain lies.
 	var link := TorusMesh.new()
-	link.inner_radius = 0.1
-	link.outer_radius = 0.26
+	link.inner_radius = 0.055
+	link.outer_radius = 0.15
 	link.rings = 8
 	link.ring_segments = 6
 	var chains := m.begin()
-	var count := 0
+	var hangers := m.begin()
+	var sag := 4.4
 	for s_v in [-1.0, 1.0]:
 		var s := float(s_v)
-		for lane_v in [0.0, 0.55]:
+		for lane_v in [0.0, 0.42]:
 			var lane := float(lane_v)
 			var p0: Vector3 = tops[0 if s < 0.0 else 1] + Vector3(perp.x, 0.0, perp.y) * s * -lane
 			var p1: Vector3 = tops[2 if s < 0.0 else 3] + Vector3(perp.x, 0.0, perp.y) * s * -lane
-			var steps := 46
+			var span := p0.distance_to(p1)
+			var steps := maxi(int(span / 0.24), 12)
+			var along := (p1 - p0).normalized()
 			for i in steps:
 				var t := (float(i) + 0.5) / float(steps)
 				var p := p0.lerp(p1, t)
-				p.y -= (4.6 - 0.2) * (1.0 - pow(2.0 * t - 1.0, 2.0)) * (0.9 + lane * 0.3)
-				var along := (p1 - p0).normalized()
-				chains.append_from(link, 0, Transform3D(Basis.looking_at(along, Vector3.UP) * Basis(Vector3.BACK, PI * 0.5 * float(i % 2)), p))
-				count += 1
+				p.y -= sag * (1.0 - pow(2.0 * t - 1.0, 2.0)) * (0.95 + lane * 0.12)
+				chains.append_from(link, 0, Transform3D(Basis.looking_at(along, Vector3.UP)
+						* Basis(Vector3.BACK, PI * 0.5 * float(i % 2)), p))
+			# the hangers: a rod from the chain down to the deck every two metres, which is
+			# what makes the deck hang from the chains rather than the chains hang beside it
+			if lane > 0.0:
+				continue
+			var drops := maxi(int(span / 2.0), 3)
+			for i in range(1, drops):
+				var t := float(i) / float(drops)
+				var p := p0.lerp(p1, t)
+				p.y -= sag * (1.0 - pow(2.0 * t - 1.0, 2.0)) * 0.95
+				var deck := a.lerp(b, t)
+				var deck_top := PoiMasonry._hump(t, deck_y, deck_y, -0.7) + 0.2
+				var h := p.y - deck_top
+				if h <= 0.2:
+					continue
+				m.block(hangers, Transform3D(Basis(Vector3.UP, yaw), Vector3(deck.x + (p.x - deck.x) * 0.5,
+						deck_top + h * 0.5, deck.y + (p.z - deck.y) * 0.5)), Vector3(0.07, h, 0.07))
 	m.commit(chains, PoiKit.plain(Color(0.28, 0.26, 0.25), 0.55, 0.85), "Chains", true)
-	# handropes from the chains down to the deck at the middle, and a toll-keeper's post
+	m.commit(hangers, PoiKit.plain(Color(0.3, 0.28, 0.26), 0.6, 0.7), "Hangers", true)
+	# the toll-keeper's post at the near end
 	var keeper := a - dir * 3.0 + perp * 3.0
 	k.place(k.prop("brazier"), k.on_ground(keeper.x, keeper.y), 0.0)
 	k.light(k.on_ground(keeper.x, keeper.y, 1.1), Color(1.0, 0.62, 0.3), 2.0, 9.0)
@@ -1877,20 +1951,20 @@ static func _tree_sallow_king(d: PoiDressing) -> void:
 	# the king in the middle, and the ring its branches made when they came down and rooted
 	k.place(willow, k.on_ground(0.0, 0.0), k.rng.randf_range(0.0, TAU), 1.5, true, Vector3.ZERO, true)
 	var ring := k.ring(7, 11.0, Vector2.ZERO, 0.1)
+	# all seven rooted limbs in one mesh: a commit inside the loop is a draw call per branch
+	var timber := m.begin()
 	for p in ring:
 		var pp: Vector2 = p
-		var to_c := PoiKit.yaw_of(-pp)
 		k.place(willow, k.on_ground(pp.x, pp.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.62, 0.85),
-				true, Vector3(0.0, 0.0, 0.0), true)
+				true, Vector3.ZERO, true)
 		# the branch that came down and rooted: a limb of timber from the king out to it
-		var timber := m.begin()
 		var from := Vector3(0.0, k.on_ground(0.0, 0.0).y + 5.2, 0.0)
 		var to := Vector3(pp.x, k.on_ground(pp.x, pp.y).y + 3.4, pp.y)
 		var seg := to - from
 		var pitch := atan2(seg.y, Vector2(seg.x, seg.z).length())
 		m.rod(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(Vector2(seg.x, seg.z)))
 				* Basis(Vector3.RIGHT, PI * 0.5 - pitch), (from + to) * 0.5), 0.34, seg.length())
-		m.commit(timber, k.surface("timber", 0.7), "Limb", true)
+	m.commit(timber, k.surface("timber", 0.7), "Limbs", true)
 	# the water inside the ring, where the sallowjaws nest under the roots
 	var g := k.on_ground(0.0, 0.0)
 	m.pool(Vector2(4.0, 2.0), 4.6, g.y - 0.15, k.still_water(g.y - 2.2, Color(0.8, 0.95, 0.85), 0.55))
@@ -2225,21 +2299,22 @@ static func _valley_wisps(d: PoiDressing) -> void:
 	m.block(stone, xf2, Vector3(1.05, 5.0, 1.05))
 	k.collider(Vector3(1.05, 5.0, 1.05), xf2)
 	m.commit(stone, k.surface("stone", 0.85), "House", true)
-	# the wisps: small cold lights over the water, and the pale motes about them
+	# the wisps: small cold lights over the water, and the pale motes about them. All five
+	# bodies in one mesh; only the lights and the motes are per-wisp.
+	var wisps := m.begin()
+	var ball := SphereMesh.new()
+	ball.radius = 1.0
+	ball.height = 2.0
+	ball.radial_segments = 10
+	ball.rings = 6
 	for i in 5:
 		var a := TAU * float(i) / 5.0 + 0.7
 		var r := k.rng.randf_range(3.5, 9.0)
 		var at := Vector3(sin(a) * r, level + k.rng.randf_range(0.8, 2.2), cos(a) * r)
-		var wisp := m.begin()
-		var ball := SphereMesh.new()
-		ball.radius = 1.0
-		ball.height = 2.0
-		ball.radial_segments = 10
-		ball.rings = 6
-		wisp.append_from(ball, 0, Transform3D(Basis.IDENTITY, at).scaled_local(Vector3.ONE * 0.16))
-		m.commit(wisp, PoiKit.plain(Color(0.7, 0.95, 0.85), 0.4, 0.0, Color(0.55, 0.95, 0.8), 3.5), "Wisp%d" % i)
+		wisps.append_from(ball, 0, Transform3D(Basis.IDENTITY, at).scaled_local(Vector3.ONE * 0.16))
 		k.light(at, Color(0.5, 0.95, 0.75), 1.5, 7.0)
 		k.puffs(at, Vector3(0.6, 0.3, 0.6), 0.25, 8, Color(0.65, 0.95, 0.85, 0.22), 0.7, 4.0)
+	m.commit(wisps, PoiKit.plain(Color(0.7, 0.95, 0.85), 0.4, 0.0, Color(0.55, 0.95, 0.8), 3.5), "Wisps")
 	# the strongbox in the chimney, which is what is actually here
 	k.place(k.prop("chest"), Vector3(stack.x, level + 0.1, stack.y) + Vector3(grain.x, 0.0, grain.y) * 1.1, yaw)
 	# the family's lanterns, never lit for them, on the bank

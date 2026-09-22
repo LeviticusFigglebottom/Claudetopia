@@ -33,11 +33,17 @@ REGION_HOUR = {
     "core:region/skerrow": (14.0, "core:weather/clear_cold"),
     "core:region/cinderlea": (16.5, "core:weather/dry_wind"),
 }
-# kinds that carry a fire or a lantern are shot in the last of the light, when a lamp shows
-# and the ground still does (by 19:00 the country is black)
+# Kinds that carry a fire or a lantern are shot in the last of the light, when a lamp shows
+# and the ground still does (by 19:00 the country is black).
 DUSK_KINDS = {"camp": 18.0, "shrine": 18.0, "hearth": 18.0, "wreck": 17.8}
+DUSK_HOUR = 18.0
+# ...and so is any POI of any kind whose own feature text is about a light. The Lantern
+# Causeway is lit each dusk by a lamplighter who sings as she goes, and photographing it at
+# half past seven in the morning shows poles.
+LIT_WORDS = ("lantern", "lamp", "lit ", "light", "fire", "beacon", "foxfire", "wisp", "glow",
+             "candle", "note-light")
 # how far off the camera stands, by how big the thing is
-DISTANCE = {"giant_bones": 48.0, "tower": 44.0, "bridge": 40.0, "waterfall": 42.0, "strange_tree": 44.0,
+DISTANCE = {"giant_bones": 48.0, "tower": 44.0, "bridge": 32.0, "waterfall": 42.0, "strange_tree": 44.0,
             "hidden_valley": 38.0, "wreck": 36.0, "ruins": 38.0, "standing_stones": 34.0, "camp": 34.0,
             "shrine": 30.0, "strange": 30.0, "hearth": 26.0}
 EYE = 1.65
@@ -122,6 +128,8 @@ def shot_for(entry: dict, poi: dict, kind: str, roads, ground: Ground) -> dict:
     hour, weather = REGION_HOUR.get(region, (10.0, "core:weather/clear"))
     if kind in DUSK_KINDS:
         hour = DUSK_KINDS[kind]
+    elif any(w in poi.get("unique_feature", "").lower() for w in LIT_WORDS):
+        hour = DUSK_HOUR
     short = entry["place_id"].split("/")[-1]
     return {
         "label": "%s_%s" % (kind, short),
