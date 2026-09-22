@@ -5,9 +5,9 @@
    "label": "hearthvale_landmark",
    "region": "core:region/hearthvale",
    "pos": [
-    661.7,
-    84.9,
-    2026.9
+    705.1,
+    81.2,
+    1943.5
    ],
    "look_at": [
     1000.0,
@@ -167,9 +167,9 @@
    "label": "briarwold_landmark",
    "region": "core:region/briarwold",
    "pos": [
-    2876.9,
-    169.7,
-    -88.3
+    2673.7,
+    166.0,
+    97.9
    ],
    "look_at": [
     3000.0,

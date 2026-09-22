@@ -6,6 +6,8 @@ ground and looks at something: each region gets its landmark, a vista from the h
 within a few hundred metres of a viewpoint place, and the approach to its main settlement.
 
     tools/capture/make_default_plan.py [--out tools/capture/plans/default.json]
+    tools/capture/make_default_plan.py --horizon     # the three-shot horizon diagnostic
+    tools/capture/make_default_plan.py --look        # dusk, dawn, night, lamps, water, falls
 """
 from __future__ import annotations
 
@@ -147,12 +149,16 @@ class Heights:
         return best
 
 
-## How far outside the nearest crown's footprint a raised camera has to stand.
+## How far outside a crown's footprint a raised camera has to stand, and how far above its top.
 CROWN_MARGIN_M = 2.0
-## How far along its line of sight a camera may not have a crown crossing the centre. Seventy
-## metres: a tree in the middle ground is part of a wood's view, a tree in the foreground is
-## the whole frame.
+## How far along its line of sight a camera may not have a crown in the way. Seventy metres: a
+## tree in the middle ground is part of a wood's view, a tree in the foreground is the frame.
 LINE_TREE_REACH_M = 70.0
+## A landmark shot has to see the landmark, so its whole line is checked -- except the last
+## stretch, where the landmark's own wood stands round its feet and hides only its base.
+LANDMARK_TREE_SLACK_M = 60.0
+## The bearings a landmark shot will try, in order, when the one it was written for is blocked.
+LANDMARK_BEARING_STEPS = (0.0, 15.0, -15.0, 30.0, -30.0, 45.0, -45.0, 60.0, -60.0, 90.0, -90.0)
 
 
 class Scatter:
@@ -163,25 +169,27 @@ class Scatter:
     (the plan is generated once) and lets a shot step along its own bearing until it is in the
     open.
 
-    Trees are kept apart from the rest and carry their canopy: a raised camera -- a vista at
-    twelve metres, an approach at twenty-eight -- is clear of a trunk and still inside the
-    crown of the giant oak fourteen metres off, which is exactly where the Briarwold vista
-    stood. The canopy radius is read from the forge's own meta file (the horizontal half-extent
-    of the asset's bounds, times the instance scale), so a hawthorn and a giant oak are not
-    given the same reach.
+    Trees are kept apart from the rest and carry their crown as a cylinder: its reach (the
+    horizontal half-extent of the forge's bounds, times the instance scale) and its top (the
+    ground the instance stands on plus the asset's height, times the scale), both read from the
+    asset's own meta file, so a hawthorn and a giant oak are not given the same size. A raised
+    camera -- a vista at twelve metres, an approach at twenty-eight, a landmark at fifty-five --
+    is clear of every trunk and can still be inside the crown of the giant oak fourteen metres
+    off, which is exactly where the Briarwold vista stood; and the same camera fifty-five metres
+    up is above that oak altogether. Height is what tells the two apart.
     """
 
     def __init__(self, cell_m: float = 256.0, world_m: float = 8192.0):
         self.cell_m = cell_m
         self.half = world_m / 2.0
         self.cells: dict = {}
-        self._reach: dict = {}
+        self._crowns: dict = {}
 
-    def canopy_radius(self, asset: str) -> float:
-        """Horizontal half-extent of a tree asset at scale 1, from its meta file."""
-        if asset in self._reach:
-            return self._reach[asset]
-        r = 6.0
+    def crown_of(self, asset: str) -> tuple:
+        """(reach, height) of a tree asset at scale 1, from its meta file."""
+        if asset in self._crowns:
+            return self._crowns[asset]
+        reach, height = 6.0, 12.0
         meta = os.path.join(REPO, "game", asset.replace("res://", "", 1))
         meta = os.path.splitext(meta)[0] + ".meta.json"
         if os.path.exists(meta):
@@ -189,11 +197,12 @@ class Scatter:
                 with open(meta, "r", encoding="utf-8") as f:
                     b = json.load(f).get("bounds", {})
                 lo, hi = b.get("min", [0, 0, 0]), b.get("max", [0, 0, 0])
-                r = max(abs(float(lo[0])), abs(float(hi[0])), abs(float(lo[2])), abs(float(hi[2])), 1.0)
+                reach = max(abs(float(lo[0])), abs(float(hi[0])), abs(float(lo[2])), abs(float(hi[2])), 1.0)
+                height = max(float(hi[1]), 1.0)
             except (OSError, ValueError, KeyError, IndexError):
                 pass
-        self._reach[asset] = r
-        return r
+        self._crowns[asset] = (reach, height)
+        return self._crowns[asset]
 
     def _cell(self, cx: int, cz: int) -> tuple:
         key = (cx, cz)
@@ -210,12 +219,13 @@ class Scatter:
                 if "/flora/" in asset and "reed" not in asset:
                     continue
                 is_tree = "/trees/" in asset
-                reach = self.canopy_radius(asset) if is_tree else 0.0
+                reach, height = self.crown_of(asset) if is_tree else (0.0, 0.0)
                 for r in rows:
                     pts.append((float(r[0]), float(r[2])))
                     if is_tree:
                         scale = float(r[4]) if len(r) > 4 else 1.0
-                        trees.append((float(r[0]), float(r[2]), reach * scale))
+                        ground = float(r[1])
+                        trees.append((float(r[0]), float(r[2]), ground, reach * scale, ground + height * scale))
         self.cells[key] = (pts, trees)
         return self.cells[key]
 
@@ -236,56 +246,62 @@ class Scatter:
                     best = d
         return best
 
-    def canopy_clearance(self, x: float, z: float) -> float:
-        """Metres from the point to the edge of the nearest tree's crown; negative inside one."""
-        best = 1e9
+    def in_crown(self, x: float, y: float, z: float) -> bool:
+        """Whether a lens at (x, y, z) is inside, or under, any tree's crown."""
         for _pts, trees in self._around(x, z):
-            for px, pz, reach in trees:
-                d = math.hypot(px - x, pz - z) - reach
-                if d < best:
-                    best = d
-        return best
+            for px, pz, _ground, reach, top in trees:
+                if y < top + CROWN_MARGIN_M and math.hypot(px - x, pz - z) < reach + CROWN_MARGIN_M:
+                    return True
+        return False
 
-    def lens_clear(self, x: float, z: float, want: float, raised: bool) -> bool:
-        """Nothing within `want` metres of the lens; for a raised camera, no crown over it.
+    def lens_clear(self, x: float, z: float, want: float, cam_y=None) -> bool:
+        """Nothing standing within `want` metres; for a raised camera, no crown round the lens.
 
-        The crown margin is two metres, not `want`: a vantage in a wood is a spot between the
-        trees, and asking for nine clear metres past every crown's edge finds nothing in the
-        Briarwold at all. Standing two metres outside the widest crown's footprint, twelve
-        metres up, is beside the tree and not in it.
+        A vantage in a wood is a spot between the trees, or above them: asking for nine clear
+        metres past every crown finds nothing in the Briarwold at all, and the camera does not
+        need it -- two metres outside the widest crown's footprint, or two metres over its top,
+        is beside the tree or above it and not in it.
         """
         if self.nearest(x, z) < want:
             return False
-        return (not raised) or self.canopy_clearance(x, z) >= CROWN_MARGIN_M
+        return cam_y is None or not self.in_crown(x, cam_y, z)
 
     def clear_spot(self, x: float, z: float, bearing_deg: float, want: float = 5.0,
-                   step: float = 9.0, tries: int = 14, raised: bool = False):
-        """Step along the bearing until nothing is standing within `want` metres."""
+                   step: float = 9.0, tries: int = 14, eye=None):
+        """Step along the bearing until nothing is standing within `want` metres.
+
+        `eye(x, z)`, when given, is the lens height at a spot; the crowns are then checked
+        at that height as well, which is what a raised camera needs.
+        """
         a = math.radians(bearing_deg)
         for k in range(tries):
             px, pz = x + math.cos(a) * step * k, z + math.sin(a) * step * k
             if abs(px) > self.half - 40.0 or abs(pz) > self.half - 40.0:
                 break
-            if self.lens_clear(px, pz, want, raised):
+            if self.lens_clear(px, pz, want, eye(px, pz) if eye else None):
                 return px, pz
         return x, z
 
-    def trees_across(self, x0: float, z0: float, x1: float, z1: float, within_m: float) -> int:
-        """Trees whose crown crosses the first `within_m` metres of the line from (x0, z0)."""
+    def crowns_across(self, cam, target, from_m: float, to_m: float) -> int:
+        """Crowns the line of sight passes through between `from_m` and `to_m` along it.
+
+        A crown is a cylinder from a third of the tree's height to its top; the trunk under it
+        is a metre and a bit wide. A line that passes over a tree, or between two, is clear.
+        """
+        (x0, y0, z0), (x1, y1, z1) = cam, target
         dx, dz = x1 - x0, z1 - z0
         length = math.hypot(dx, dz)
         if length < 1.0:
             return 0
         ux, uz = dx / length, dz / length
-        reach = min(within_m, length)
+        to_m = min(to_m, length)
         hits = 0
-        # the cells the line passes through, sampled every cell length along it
         seen = set()
-        steps = int(reach // (self.cell_m * 0.5)) + 2
-        for i in range(steps + 1):
-            t = min(reach, i * self.cell_m * 0.5)
-            cx = int((x0 + ux * t + self.half) // self.cell_m)
-            cz = int((z0 + uz * t + self.half) // self.cell_m)
+        t = from_m
+        while t <= to_m + self.cell_m * 0.5:
+            tt = min(t, to_m)
+            cx = int((x0 + ux * tt + self.half) // self.cell_m)
+            cz = int((z0 + uz * tt + self.half) // self.cell_m)
             for ddx in (-1, 0, 1):
                 for ddz in (-1, 0, 1):
                     key = (cx + ddx, cz + ddz)
@@ -293,23 +309,29 @@ class Scatter:
                         continue
                     seen.add(key)
                     _pts, trees = self._cell(*key)
-                    for px, pz, r in trees:
+                    for px, pz, ground, reach, top in trees:
                         along = (px - x0) * ux + (pz - z0) * uz
-                        if along < 0.0 or along > reach:
+                        if along < from_m or along > to_m:
                             continue
                         side = abs((px - x0) * uz - (pz - z0) * ux)
-                        if side < r:
+                        line_y = y0 + (y1 - y0) * along / length
+                        if line_y >= top:
+                            continue
+                        crown_foot = ground + (top - ground) * 0.33
+                        if (side < reach * 0.85 and line_y > crown_foot) or side < 1.2:
                             hits += 1
+            t += self.cell_m * 0.5
         return hits
 
 
-def line_clear(hh: "Heights", scatter: Scatter, cam, target, tree_reach_m: float = LINE_TREE_REACH_M) -> bool:
-    """Whether the ground stays under the line of sight and no crown crosses its near end.
+def line_clear(hh: "Heights", scatter: Scatter, cam, target, tree_from_m: float = 0.0,
+               tree_to_m: float = LINE_TREE_REACH_M) -> bool:
+    """Whether the ground stays under the line of sight and no crown stands in it.
 
     Sampled every eight metres. The ground may not rise to within a metre of the line beyond
     the first fifteen metres (the near ground is under a raised camera by construction), and
-    no tree's crown may cross the line within `tree_reach_m`: a trunk in the middle of the
-    frame at fifty metres is a photograph of that tree, not of the country behind it.
+    no crown may cross the line between `tree_from_m` and `tree_to_m`: a trunk in the middle of
+    the frame at fifty metres is a photograph of that tree, not of the country behind it.
     """
     (cx, cy, cz), (tx, ty, tz) = cam, target
     dist = math.hypot(tx - cx, tz - cz)
@@ -319,7 +341,7 @@ def line_clear(hh: "Heights", scatter: Scatter, cam, target, tree_reach_m: float
         px, pz = cx + (tx - cx) * t, cz + (tz - cz) * t
         if t * dist >= 15.0 and hh.at(px, pz) > cy + (ty - cy) * t - 1.0:
             return False
-    return scatter.trees_across(cx, cz, tx, tz, tree_reach_m) == 0
+    return scatter.crowns_across(cam, target, tree_from_m, tree_to_m) == 0
 
 
 def load_places() -> dict:
@@ -346,6 +368,75 @@ def shot(label: str, pos, look, fov: float, hour: float, weather: str, fog_scale
     }
 
 
+def landmark_camera(hh: Heights, scatter: Scatter, lx: float, lz: float, bearing: float,
+                    label: str, dist: float = 360.0, rise: float = 55.0):
+    """A camera `dist` off the landmark and `rise` up, on the first bearing it can see from.
+
+    The written bearing is tried first; if the lens is in a crown or the line to the landmark
+    goes through the land or through a wood before the landmark's own, the bearing swings
+    fifteen degrees at a time either way. The Briarwold's landmark shot looked at the
+    Grandfather through the crowns on the rise in front of it, and the frame was leaves.
+    """
+    lh = hh.at(lx, lz)
+    target = (lx, lh + 8.0, lz)
+    first = None
+    for step in LANDMARK_BEARING_STEPS:
+        ang = math.radians(bearing + step)
+        cx, cz = lx + math.cos(ang) * dist, lz + math.sin(ang) * dist
+        cy = max(hh.at(cx, cz), lh) + rise
+        if first is None:
+            first = (cx, cy, cz)
+        if scatter.in_crown(cx, cy, cz):
+            continue
+        if not line_clear(hh, scatter, (cx, cy, cz), target, 0.0, dist - LANDMARK_TREE_SLACK_M):
+            continue
+        if step != 0.0:
+            print("[plan] %s: written bearing is blocked; turned %+.0f degrees" % (label, step))
+        return (cx, cy, cz), target
+    print("[plan] %s: no clear bearing; the written one is kept" % label)
+    return first, target
+
+
+def vista_camera(hh: Heights, scatter: Scatter, vx: float, vz: float, tx: float, tz: float,
+                 label: str, radius: float = 600.0, rise: float = 12.0):
+    """A vantage on the high ground near a viewpoint, with a clear lens and a clear line.
+
+    Returns (camera, look_at, found). The highest ground in a wood is under a tree as often as
+    not, and this camera used to stand on it regardless: twelve metres up in a forest of
+    thirty-metre oaks is inside the canopy, and one of the Briarwold's seven frames in the last
+    sheet was a photograph of leaves that the drop test then scored. So the vantage is the
+    highest of several candidates whose lens is clear -- no trunk or prop within nine metres
+    and no crown round the camera -- and whose line to the target the land and the trees allow.
+    If none passes, the highest is used with the camera raised out of the crowns, and the
+    generator says so.
+    """
+    def aim(px: float, pz: float):
+        # Look off the vantage at the lowest ground within a kilometre and a half, biased toward
+        # the settlement so the shot is still about somewhere. Standing on a crest and facing the
+        # back of your own hill is how six regions end up looking like one field.
+        lx, lz, _lh = hh.low_point(px, pz, 1500.0)
+        ax, az = lx * 0.4 + tx * 0.6, lz * 0.4 + tz * 0.6
+        return px + (ax - px) * 0.92, pz + (az - pz) * 0.92
+
+    for px, pz, py in hh.high_points(vx, vz, radius):
+        cy = py + rise
+        if not scatter.lens_clear(px, pz, 9.0, cy):
+            continue
+        mx, mz = aim(px, pz)
+        # Look out, not down. Aiming at ground four hundred metres away from twelve metres up
+        # puts the horizon in the top fifth of the frame and fills the other four fifths with
+        # the grass at your feet; aiming a little under your own eye height puts it at about two
+        # fifths, which is where a person standing on a hill actually sees it.
+        if not line_clear(hh, scatter, (px, cy, pz), (mx, cy - 9.0, mz)):
+            continue
+        return (px, cy, pz), (mx, cy - 9.0, mz), True
+    hx, hz, hy = hh.high_point(vx, vz, radius)
+    mx, mz = aim(hx, hz)
+    cy = hy + rise + 24.0
+    print("[plan] %s: no clear vantage within %.0f m; camera raised above the trees" % (label, radius))
+    return (hx, cy, hz), (mx, cy - 9.0, mz), False
+
+
 def build_plan() -> dict:
     hh = Heights()
     places = load_places()
@@ -355,13 +446,9 @@ def build_plan() -> dict:
         short = region_id.split("/")[-1]
         lm = places[landmark]
         lx, lz = float(lm["position"][0]), float(lm["position"][1])
-        lh = hh.at(lx, lz)
         # 1. the landmark from 360 m off and 55 m up: far enough that the land around it reads
-        ang = math.radians(bearing)
-        dist = 360.0
-        cx, cz = lx + math.cos(ang) * dist, lz + math.sin(ang) * dist
-        cam_h = max(hh.at(cx, cz), lh) + 55.0
-        shots.append(shot("%s_landmark" % short, (cx, cam_h, cz), (lx, lh + 8.0, lz), 58.0, hour, weather, 1.0, region_id))
+        cam, look = landmark_camera(hh, scatter, lx, lz, bearing, "%s_landmark" % short)
+        shots.append(shot("%s_landmark" % short, cam, look, 58.0, hour, weather, 1.0, region_id))
         # 2. a vista from the highest ground near the region's viewpoint, over the settlement.
         # Eye height on the hill, not forty-eight metres above it: from a drone every region
         # is a hazy panorama with the same composition, and the thing that tells a marsh from a
@@ -370,51 +457,15 @@ def build_plan() -> dict:
         vp = places[vista]
         vx, vz = float(vp["position"][0]), float(vp["position"][1])
         tx, tz = float(places[settlement]["position"][0]), float(places[settlement]["position"][1])
-        # The highest ground in a wood is under a tree as often as not, and this camera used
-        # to stand on it regardless: twelve metres up in a forest of thirty-metre oaks is
-        # inside the canopy, and one of the Briarwold's seven frames in the last sheet was a
-        # photograph of leaves that the drop test then scored. So the vantage is the highest
-        # of several candidates whose lens is clear -- no trunk or prop within nine metres and
-        # no crown over the camera -- and whose line to the target the land and the trees
-        # allow. If no spot within reach passes, the highest one is used and the camera is
-        # raised out of the crowns, and the generator says so.
-        hx, hz, hy = hh.high_point(vx, vz, 600.0)
-        cam_y = hy + 12.0
-        mx, mz = tx, tz
-        found = False
-        for px, pz, py in hh.high_points(vx, vz, 600.0):
-            cy = py + 12.0
-            if not scatter.lens_clear(px, pz, 9.0, True):
-                continue
-            # Look off the vantage at the lowest ground within a kilometre and a half, biased
-            # toward the settlement so the shot is still about somewhere. Standing on a crest
-            # and facing the back of your own hill is how six regions end up looking like one
-            # field.
-            lx, lz, lh = hh.low_point(px, pz, 1500.0)
-            ax, az = lx * 0.4 + tx * 0.6, lz * 0.4 + tz * 0.6
-            cmx, cmz = px + (ax - px) * 0.92, pz + (az - pz) * 0.92
-            # Look out, not down. Aiming at ground four hundred metres away from twelve metres
-            # up puts the horizon in the top fifth of the frame and fills the other four fifths
-            # with the grass at your feet; aiming a little under your own eye height puts it at
-            # about two fifths, which is where a person standing on a hill actually sees it.
-            if not line_clear(hh, scatter, (px, cy, pz), (cmx, cy - 9.0, cmz)):
-                continue
-            hx, hz, hy, cam_y, mx, mz, found = px, pz, py, cy, cmx, cmz, True
-            break
-        if not found:
-            lx, lz, lh = hh.low_point(hx, hz, 1500.0)
-            ax, az = lx * 0.4 + tx * 0.6, lz * 0.4 + tz * 0.6
-            mx, mz = hx + (ax - hx) * 0.92, hz + (az - hz) * 0.92
-            cam_y = hy + 12.0 + 24.0
-            print("[plan] %s_vista: no clear vantage within 600 m of %s; camera raised above the trees"
-                  % (short, vista))
-        shots.append(shot("%s_vista" % short, (hx, cam_y, hz), (mx, cam_y - 9.0, mz),
-                          62.0, hour, weather, 1.0, region_id))
+        cam, look, _found = vista_camera(hh, scatter, vx, vz, tx, tz, "%s_vista" % short)
+        shots.append(shot("%s_vista" % short, cam, look, 62.0, hour, weather, 1.0, region_id))
+        hx, hz = cam[0], cam[2]
         # 3. the approach to the settlement, 420 m out and 28 m up, looking down on it
         sx, sz = tx, tz
         a2 = math.atan2(hz - sz, hx - sx)
         ax, az = sx + math.cos(a2) * 420.0, sz + math.sin(a2) * 420.0
-        ax, az = scatter.clear_spot(ax, az, math.degrees(a2) + 180.0, want=9.0, raised=True)
+        ax, az = scatter.clear_spot(ax, az, math.degrees(a2) + 180.0, want=9.0,
+                                    eye=lambda x, z: hh.at(x, z) + 28.0)
         shots.append(shot("%s_approach" % short, (ax, hh.at(ax, az) + 28.0, az),
                           (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 1.0, region_id))
     # One shot standing in the middle of each region's settlement, which is the only frame in
@@ -462,16 +513,106 @@ def build_plan() -> dict:
     }
 
 
+## The horizon diagnostic: three regions' vistas turned to face the far distance, which is
+## where the world used to end in a straight line and where the fog and the sky meet.
+HORIZON_REGIONS = ("core:region/hearthvale", "core:region/briarwold", "core:region/skerrow")
+
+
+def build_horizon_plan() -> dict:
+    """Three vistas that look at the far horizon, from the same clear vantages as the sheet.
+
+    The hand-written plan this replaces had drifted off its own purpose as the world was
+    rebuilt under it: its Hearthvale camera stood in the grass looking at the slope in front
+    of it and its Briarwold camera was in the crowns. These stand where the default plan's
+    vistas stand and look two kilometres out along the same bearing, a little under eye level.
+    """
+    hh = Heights()
+    places = load_places()
+    scatter = Scatter()
+    shots = []
+    for region_id in HORIZON_REGIONS:
+        landmark, vista, settlement, hour, weather, _bearing = REGION_SHOTS[region_id]
+        short = region_id.split("/")[-1]
+        vp = places[vista]
+        vx, vz = float(vp["position"][0]), float(vp["position"][1])
+        tx, tz = float(places[settlement]["position"][0]), float(places[settlement]["position"][1])
+        cam, look, _found = vista_camera(hh, scatter, vx, vz, tx, tz, "%s_vista (horizon)" % short)
+        dx, dz = look[0] - cam[0], look[2] - cam[2]
+        d = max(math.hypot(dx, dz), 1.0)
+        far = (cam[0] + dx / d * 2000.0, cam[1] - 60.0, cam[2] + dz / d * 2000.0)
+        shots.append(shot("%s_vista" % short, cam, far, 68.0, hour, weather, 1.0, region_id))
+    return {
+        "_doc": "Generated by tools/capture/make_default_plan.py --horizon. Diagnostic: three vistas that "
+                "look at the far horizon, for checking that the world does not end in a straight line "
+                "and that the fog meets the sky. Runs in about three minutes.",
+        "shots": shots,
+    }
+
+
+## The look review: what the drop-test sheet never shows. The sheet is shot at one hour a region
+## by design, so dusk, dawn, night, the lamps, the water and the falls need their own frames.
+## Each row is (label, source plan, source shot, hour, weather); the camera is the source's.
+LOOK_SHOTS = (
+    ("hearthvale_approach_dusk", "default", "hearthvale_approach", 19.2, "core:weather/clear"),
+    ("hearthvale_street_night", "default", "hearthvale_street", 22.0, "core:weather/clear"),
+    ("hearthvale_vista_moon", "default", "hearthvale_vista", 23.5, "core:weather/clear"),
+    ("hearthvale_whitecut_falls", "pois", "waterfall_whitecut_falls", 9.0, "core:weather/clear"),
+    ("brightwater_landmark_dusk", "default", "brightwater_landmark", 19.4, "core:weather/clear"),
+    ("brightwater_mere_noon", "pois", "strange_tree_willow_isle", 12.0, "core:weather/clear"),
+    ("brightwater_long_stride_night", "pois", "bridge_long_stride", 21.8, "core:weather/clear"),
+    ("brightwater_street_night", "default", "brightwater_street", 21.5, "core:weather/clear"),
+    ("sedgemire_landmark_dawn", "default", "sedgemire_landmark", 6.3, "core:weather/fog"),
+    ("sedgemire_causeway_night", "pois", "bridge_lantern_causeway", 21.0, "core:weather/overcast"),
+    ("briarwold_vista_late", "default", "briarwold_vista", 17.6, "core:weather/still"),
+    ("briarwold_foxfire_falls", "pois", "waterfall_foxfire_falls", 11.0, "core:weather/still"),
+    ("skerrow_vista_dawn", "default", "skerrow_vista", 6.2, "core:weather/clear_cold"),
+    ("skerrow_three_sisters_falls", "pois", "waterfall_three_sisters_falls", 14.0, "core:weather/clear_cold"),
+    ("cinderlea_landmark_dusk", "default", "cinderlea_landmark", 18.4, "core:weather/thin_sun"),
+    ("cinderlea_street_night", "default", "cinderlea_street", 20.8, "core:weather/still_grey"),
+)
+
+
+def build_look_plan() -> dict:
+    """Dusk, dawn, night, lamps, water and falls, from cameras the other plans already trust."""
+    plans = {}
+    for name in ("default", "pois"):
+        with open(os.path.join(REPO, "tools", "capture", "plans", name + ".json"), "r", encoding="utf-8") as f:
+            plans[name] = {sh["label"]: sh for sh in json.load(f)["shots"]}
+    shots = []
+    for label, plan, source, hour, weather in LOOK_SHOTS:
+        src = plans[plan][source]
+        region = src.get("region") or "core:region/" + label.split("_")[0]
+        shots.append(shot(label, src["pos"], src["look_at"], float(src.get("fov", 60.0)), hour, weather,
+                          1.0, region))
+    return {
+        "_doc": "Generated by tools/capture/make_default_plan.py --look from default.json and pois.json. "
+                "The painted-look review: dusk, dawn, night, lamps, water and falls. Not a drop-test "
+                "sheet; its region copies are filed under regions/ like any other plan's.",
+        "shots": shots,
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default=os.path.join(REPO, "tools", "capture", "plans", "default.json"))
+    ap.add_argument("--out", default=None)
+    ap.add_argument("--horizon", action="store_true",
+                    help="write the three-shot horizon diagnostic instead of the default sheet")
+    ap.add_argument("--look", action="store_true",
+                    help="write the dusk/dawn/night/water review plan (reads default.json and pois.json)")
     args = ap.parse_args()
-    plan = build_plan()
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    with open(args.out, "w", encoding="utf-8") as f:
+    name = "horizon.json" if args.horizon else ("look.json" if args.look else "default.json")
+    out = args.out or os.path.join(REPO, "tools", "capture", "plans", name)
+    if args.horizon:
+        plan = build_horizon_plan()
+    elif args.look:
+        plan = build_look_plan()
+    else:
+        plan = build_plan()
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
         json.dump(plan, f, indent=1)
-    print("[plan] %d shots + %d flythrough frames -> %s"
-          % (len(plan["shots"]), plan["flythrough"]["frames"], args.out))
+    fly = plan.get("flythrough", {}).get("frames", 0)
+    print("[plan] %d shots + %d flythrough frames -> %s" % (len(plan["shots"]), fly, out))
     return 0
 
 
