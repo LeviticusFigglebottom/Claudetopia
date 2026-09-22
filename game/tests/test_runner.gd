@@ -9,9 +9,10 @@ extends Node
 ##   test that caused each one instead of leaving a number at the bottom. A test that provokes
 ##   one on purpose -- driving a refusal path, where the error *is* the evidence it refused --
 ##   says so in ERRORS_ALLOWED below, and anything not named there fails the run.
-## A test that leaves the world paused is reported the same way and unpaused before the next one
-## runs: an Area3D flushes its overlaps on the physics step, so one leftover pause makes every
-## physics-dependent test after it pass without asking anything.
+## A test that leaves a screen open is reported the same way, and the screen is closed and the
+## world unpaused before the next test runs: a full-screen screen pauses the world, an Area3D
+## flushes its overlaps on the physics step, and one leftover screen therefore freezes the physics
+## of everything after it -- which then passes or fails for reasons of its own that are not its own.
 ##
 ## * The engine's own SCRIPT ERRORs cannot be counted from inside GDScript: there is no API for
 ##   it, and the honest count is the one on stderr, so `run.sh test` greps for them and fails
@@ -27,6 +28,8 @@ const ERRORS_ALLOWED := {
 	# Walking into an interior that does not exist. This one asserts the error itself.
 	"test_interiors.test_unknown_interior_refused": 1,
 	"test_inventory_bag.test_add_rejects_unknown_items": 1,
+	# Loading a save slot that is not there. This one asserts the error is said exactly once.
+	"test_player_body.test_a_missing_slot_is_reported_not_crashed": 1,
 }
 
 func _ready() -> void:
@@ -85,11 +88,25 @@ func _ready() -> void:
 			if inst.has_method("after_each"):
 				inst.after_each()
 			await get_tree().process_frame
-			# A test that leaves the world paused makes every test after it that needs a physics
-			# step pass without asking anything, which is the quietest way a suite can lie.
+			# Eight tests walk up to a board, a shop, a chest or a book and the real event opens
+			# the real screen, which is exactly what they are for. A full-screen screen pauses the
+			# world, though, and an Area3D flushes its overlaps on the physics step -- so a screen
+			# left open freezes the physics of every test after it, and those tests then pass or
+			# fail for reasons that have nothing to do with them. Putting the UI back is the
+			# harness's job, not eight authors'; the one that left it open is named.
+			var left_open := 0
+			while UI.is_menu_open() and left_open < 16:
+				UI.close()
+				left_open += 1
 			if get_tree().paused:
 				get_tree().paused = false
-				paused_by.append(inst._current)
+				if left_open == 0:
+					left_open = -1        # paused with nothing open: rarer, and worth saying so
+			if left_open != 0:
+				paused_by.append("%s left %s" % [inst._current,
+					"the world paused with no screen open" if left_open < 0
+					else "%d screen%s open, and the world paused behind %s" % [
+						left_open, "" if left_open == 1 else "s", "it" if left_open == 1 else "them"]])
 			var logged := Log.error_count - errors_before
 			logged_total += logged
 			var allowed := int(ERRORS_ALLOWED.get(inst._current, 0))
@@ -109,12 +126,11 @@ func _ready() -> void:
 		print("FAILURE: %s" % f)
 	for n in noisy:
 		print("ERRORS: %s" % n)
-	# Reported rather than fatal: unpausing between tests already stops one test's leftover pause
-	# from freezing the ones after it, so the suite is not lying any more and there is nothing to
-	# fail it for. Each of these opens a full-screen screen through the real event and never shuts
-	# it, and the fix is the one `test_crafting_station` uses: close it in `after_each`.
+	# Reported rather than fatal: the screens are closed and the world unpaused between tests, so
+	# nothing after them is measuring a frozen physics step and there is nothing left to fail the
+	# run for. A test may still shut its own screens, as `test_crafting_station` does.
 	for n in paused_by:
-		print("PAUSED: %s left the tree paused; whatever it opened, it should shut" % n)
+		print("PAUSED: %s" % n)
 	print("%d tests, %d failed, %d content problems, %d logged errors, %d left the world paused, %d ms" % [
 		total, failed, ContentDB.problems.size(), logged_total, paused_by.size(), ms])
 	for p in ContentDB.problems:
