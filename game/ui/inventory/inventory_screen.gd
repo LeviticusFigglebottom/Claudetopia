@@ -54,7 +54,12 @@ func _ready() -> void:
 	if _bag and _bag.has_signal("changed"):
 		_bag.connect("changed", _refresh)
 	if _doll and _doll.has_signal("changed"):
-		_doll.connect("changed", func(_slot: String) -> void: _refresh())
+		# A method reference, not a closure: the paper doll outlives this screen.
+		_doll.connect("changed", _on_slot_changed)
+	_refresh()
+
+
+func _on_slot_changed(_slot: String) -> void:
 	_refresh()
 
 

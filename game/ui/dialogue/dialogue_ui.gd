@@ -37,9 +37,19 @@ func _ready() -> void:
 	_build()
 	_build_wheel()
 	visible = false
-	EventBus.dialogue_started.connect(func(_npc: String) -> void: _find_runner())
-	EventBus.dialogue_ended.connect(func(_npc: String) -> void: _on_ended())
+	# Method references, not closures: the bus outlives this screen, and a closure it holds
+	# is not disconnected when the screen is freed.
+	EventBus.dialogue_started.connect(_on_dialogue_started)
+	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 	_find_runner()
+
+
+func _on_dialogue_started(_npc: String) -> void:
+	_find_runner()
+
+
+func _on_dialogue_ended(_npc: String) -> void:
+	_on_ended()
 
 
 # --- construction ----------------------------------------------------------------------------

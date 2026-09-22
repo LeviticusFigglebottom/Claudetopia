@@ -56,21 +56,48 @@ func _ready() -> void:
 	_build()
 	_connect_world()
 	EventBus.region_entered.connect(_on_region_entered)
-	EventBus.place_discovered.connect(func(_id: String) -> void: _rebuild_markers())
+	# Every one of these is a method reference and not a closure, deliberately. A lambda
+	# connected to an autoload's signal is not disconnected when the node that made it is
+	# freed -- the bus holds the closure, not the node -- so a HUD from a finished world
+	# went on being called for the rest of the process, once per signal, forever.
+	EventBus.place_discovered.connect(_on_place_discovered)
 	EventBus.boss_started.connect(_on_boss_started)
 	EventBus.boss_defeated.connect(_on_boss_defeated)
 	EventBus.status_applied.connect(_on_status_applied)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
-	EventBus.player_spawned.connect(func(_p: Node) -> void: _connect_world())
-	EventBus.item_equipped.connect(func(_s: String, _i: String) -> void: _refresh_quick())
-	UI.input_device_changed.connect(func(_pad: bool) -> void: _refresh_prompt_glyph())
-	UI.variant_changed.connect(func(_v: String) -> void: _refresh_quick())
-	Settings.changed.connect(func(section: String, key: String, _v: Variant) -> void:
-			if section == "gameplay" and key in ["hud_opacity", "compass", "subtitles"]:
-				_apply_settings())
+	EventBus.player_spawned.connect(_on_player_spawned)
+	EventBus.item_equipped.connect(_on_item_equipped)
+	UI.input_device_changed.connect(_on_input_device_changed)
+	UI.variant_changed.connect(_on_variant_changed)
+	Settings.changed.connect(_on_setting_changed)
 	_apply_settings()
 	_rebuild_markers()
 	_refresh_quick()
+
+
+func _on_place_discovered(_id: String) -> void:
+	_rebuild_markers()
+
+
+func _on_player_spawned(_p: Node) -> void:
+	_connect_world()
+
+
+func _on_item_equipped(_slot: String, _item_id: String) -> void:
+	_refresh_quick()
+
+
+func _on_input_device_changed(_pad: bool) -> void:
+	_refresh_prompt_glyph()
+
+
+func _on_variant_changed(_variant: String) -> void:
+	_refresh_quick()
+
+
+func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
+	if section == "gameplay" and key in ["hud_opacity", "compass", "subtitles"]:
+		_apply_settings()
 
 
 # --- construction ---------------------------------------------------------------------------

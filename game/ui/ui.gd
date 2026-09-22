@@ -93,21 +93,46 @@ func _ready() -> void:
 	EventBus.property_offered.connect(_on_property_offered)
 	EventBus.crafting_station_used.connect(_on_crafting_station_used)
 	EventBus.trade_requested.connect(_on_trade_requested)
-	EventBus.region_entered.connect(func(id: String, _p: String) -> void: _refresh_variant())
-	EventBus.interior_entered.connect(func(_id: String) -> void: _refresh_variant())
-	EventBus.interior_exited.connect(func(_id: String) -> void: _refresh_variant())
-	EventBus.boss_started.connect(func(_id: String) -> void: set_variant("deep"))
-	EventBus.boss_defeated.connect(func(_id: String) -> void: _refresh_variant())
+	# Method references throughout, not closures. UI is an autoload and outlives everything,
+	# so nothing leaks here today -- but every screen and streamer in the project copied this
+	# block, and in a node that *is* freed a closure on the bus is never disconnected.
+	EventBus.region_entered.connect(_on_region_entered)
+	EventBus.interior_entered.connect(_on_interior_changed)
+	EventBus.interior_exited.connect(_on_interior_changed)
+	EventBus.boss_started.connect(_on_boss_started)
+	EventBus.boss_defeated.connect(_on_boss_defeated)
 	EventBus.player_spawned.connect(_on_player_spawned)
-	EventBus.echo_recovered.connect(func(marks: int) -> void:
-			EventBus.emit_notify("Your Echo goes quiet. %d marks recovered." % marks, "item"))
-	EventBus.player_died.connect(func(_pos: Vector3) -> void:
-			EventBus.emit_notify("You have gone quiet.", "warning"))
+	EventBus.echo_recovered.connect(_on_echo_recovered)
+	EventBus.player_died.connect(_on_player_died)
 	if Engine.has_singleton("Interiors") or get_node_or_null("/root/Interiors") != null:
 		var interiors: Node = get_node_or_null("/root/Interiors")
 		if interiors and interiors.has_signal("transition"):
 			interiors.transition.connect(_on_interior_transition)
 	Log.info("UI", "layers ready")
+
+
+func _on_region_entered(_id: String, _place: String) -> void:
+	_refresh_variant()
+
+
+func _on_interior_changed(_id: String) -> void:
+	_refresh_variant()
+
+
+func _on_boss_started(_id: String) -> void:
+	set_variant("deep")
+
+
+func _on_boss_defeated(_id: String) -> void:
+	_refresh_variant()
+
+
+func _on_echo_recovered(marks: int) -> void:
+	EventBus.emit_notify("Your Echo goes quiet. %d marks recovered." % marks, "item")
+
+
+func _on_player_died(_pos: Vector3) -> void:
+	EventBus.emit_notify("You have gone quiet.", "warning")
 
 
 func _build_layers() -> void:
@@ -536,16 +561,23 @@ func toast(text: String, kind := "info") -> void:
 		_toast_box.get_child(0).queue_free()
 		_toast_box.remove_child(_toast_box.get_child(0))
 
-	# fade in from ink: the panel arrives dark and settles into paper
+	# fade in from ink: the panel arrives dark and settles into paper.
+	#
+	# The tween belongs to the *panel*, not to UI. UI is an autoload and never goes, so a tween
+	# started on it outlives every toast it animates -- and a toast is thrown away early the
+	# moment a sixth one arrives, five and a half seconds before its own fade ends. The callback
+	# that freed it was a closure holding the panel, so it woke up with a freed capture and said
+	# so on stderr, once per toast, all run: "Lambda capture at index 0 was freed". Bound to the
+	# panel the tween dies with it, and `queue_free` as a method reference cannot outlive its
+	# object either. The guard that used to be inside the closure was never reached -- the
+	# capture is checked before the body runs.
 	panel.modulate = Color(0.25, 0.20, 0.16, 0.0)
-	var tw := create_tween()
+	var tw := panel.create_tween()
 	tw.set_parallel(true)
 	tw.tween_property(panel, "modulate", Color(1, 1, 1, 1), 0.45).set_trans(Tween.TRANS_CUBIC)
 	tw.chain().tween_interval(4.2)
 	tw.chain().tween_property(panel, "modulate:a", 0.0, 0.8)
-	tw.chain().tween_callback(func() -> void:
-			if is_instance_valid(panel):
-				panel.queue_free())
+	tw.chain().tween_callback(panel.queue_free)
 
 
 # --- screen fade --------------------------------------------------------------------------

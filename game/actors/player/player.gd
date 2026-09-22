@@ -903,13 +903,18 @@ func _fire_arrow(drawn: float) -> void:
 	hit.parryable = false
 	var speed := float(weapon.ranged.get("speed", 42.0)) * lerpf(0.6, 1.0, drawn)
 	arrow.launch(aim_origin(), aim_direction(), speed, hit, float(proj.get("gravity", gravity)))
-	arrow.struck.connect(func(_v: Node, h: HitData, outcome: String) -> void:
-		if outcome == "hit" or outcome == "blocked":
-			EventBus.skill_used.emit(h.skill_id, 3.0))
+	# A method reference, not a closure: an arrow outlives the bow that loosed it, and a
+	# closure on it is not disconnected when the archer is freed.
+	arrow.struck.connect(_on_arrow_struck)
 	var reload := float(weapon.ranged.get("reload_time", 0.0))
 	if reload > 0.0:
 		_reload_until = now() + reload
 	_emit_noise(0.3)
+
+
+func _on_arrow_struck(_victim: Node, hit: HitData, outcome: String) -> void:
+	if outcome == "hit" or outcome == "blocked":
+		EventBus.skill_used.emit(hit.skill_id, 3.0)
 
 
 # --- MANTLE -------------------------------------------------------------------------------------

@@ -66,7 +66,12 @@ func _ready() -> void:
 	if _prog and _prog.has_signal("sayings_changed"):
 		_prog.connect("sayings_changed", _refresh)
 	if _player and _player.has_signal("spell_readied"):
-		_player.connect("spell_readied", func(_id: String) -> void: _refresh())
+		# A method reference, not a closure: the player outlives this screen.
+		_player.connect("spell_readied", _on_spell_readied)
+	_refresh()
+
+
+func _on_spell_readied(_id: String) -> void:
 	_refresh()
 
 
