@@ -167,6 +167,27 @@ class ChannelTest(unittest.TestCase):
         self.assertTrue((out[river_d > 40.0] == laid[river_d > 40.0]).all(), "far from the river, untouched")
 
 
+class WrittenLineTest(unittest.TestCase):
+    """roads.json is the laid line thinned to the spacing the game reads, not a new line."""
+
+    def test_the_written_points_are_laid_points_with_both_ends(self):
+        from worldgen import output as OUT
+
+        # a line laid every 4 m along its length, bending the way a road does
+        turn = np.arange(100) * 4.0 / 60.0
+        steps = 4.0 * np.stack([np.cos(turn), np.sin(turn)], axis=1)
+        laid = np.vstack([[0.0, 0.0], np.cumsum(steps, axis=0)])
+        keep = OUT._road_keep(laid)
+        self.assertEqual(int(keep[0]), 0)
+        self.assertEqual(int(keep[-1]), len(laid) - 1)
+        self.assertTrue((np.diff(keep) > 0).all())
+        gaps = np.linalg.norm(np.diff(laid[keep], axis=0), axis=1)
+        self.assertLessEqual(float(gaps.max()), OUT.ROAD_OUT_STEP_M + 0.5)
+        # a short street is still a line of points (the game's own test wants more than four)
+        for n in (6, 9, 20):
+            self.assertGreaterEqual(len(OUT._road_keep(laid[:n])), OUT.ROAD_OUT_MIN_POINTS)
+
+
 class StalePadsTest(unittest.TestCase):
     """A staged build may not reuse a heightmap whose pads are somewhere else."""
 
@@ -266,9 +287,9 @@ class BuiltWorldTest(unittest.TestCase):
         A road may stand above the ground on both sides of it by as much as the ground under it
         already did -- a road along a spur between two gorges is on the spur -- plus what its
         carve may add, `cut_fill_m(width)`, plus `SIDE_SLACK_M` for the land's own curvature
-        across the shoulder. The same the other way for a road down a gully. The old profile
-        stood the road down the spur from Kharrow Hold 150 m above both sides of it on ground
-        that stood 5 m proud; this fails that by 142 m.
+        across the shoulder. The same the other way for a road down a gully. On the build this
+        pass started from (which wrote no record, so nothing is discounted) it reads the road
+        from Gullhithe to Kharrow Hold 150.1 m above both sides of it, against 6.6 m allowed.
         """
         worst = []
         for r in self.roads:
