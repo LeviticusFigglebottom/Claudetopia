@@ -396,8 +396,12 @@ Enchanting was worse off than unreachable. The Name-table is named in DESIGN §5
 enchanting skill's own definition and in two item descriptions, and **no interior in the
 world contained one**. The Tolling Order writes notes into iron, so the Bell Chapter-House at
 Pilgrim's Ash has one now — added to Cadwen's own recipe rather than to the warden trade,
-because Pellam keeps the Wardens' Roll and that is a different order entirely. There is no
-Name-table *mesh* yet; it stands in as a trestle and is written down as owed.
+because Pellam keeps the Wardens' Roll and that is a different order entirely. ~~There is no
+Name-table *mesh* yet; it stands in as a trestle and is written down as owed.~~ **Paid:**
+`gen_props.name_table` builds it in Cinderlea's palette — one heavy baulk of near-black
+timber on four iron-strapped posts, a plate of bell bronze let into the top with the
+Order's note cut into it, and a small bronze bowl for the Ember Motes that pay for the
+writing — and the chapter cell's muster room is regenerated around it.
 
 A note on the tests, because it is the same failure one level up: two of the tests I wrote for
 this passed while asserting nothing — one iterated an empty list of stations, one built the
@@ -594,9 +598,17 @@ the Calling cards' wrapping focus chain trapped Tab for ever.
   photographer's choice and not the place's.
 * Terrain3D + lavapipe (software Vulkan) crashes in JIT code; use OpenGL for
   headless captures (ARCHITECTURE.md §10).
-* Cave floors show a faint dune ripple where the shell noise is applied before the
-  floor is flattened. It reads as drifted sand rather than stone in the flattest
-  chambers; the fix is to flatten first and noise the walls only.
+* ~~Cave floors show a faint dune ripple where the shell noise is applied before the
+  floor is flattened.~~ **Fixed, and the diagnosis was wrong.** The floors were flat all
+  along -- measured off the shell, the lowest surface in every square metre of the
+  Undercroft's bell hall and Hollin Barrow's reeve hall is flat to one millimetre over
+  five hundred cells, and masking the noise around them changes nothing you can see. What
+  the shells did not have was **normals**: `trimesh` writes a NORMAL attribute only if the
+  mesh already has vertex normals cached, nothing ever asked for them, and glTF says a
+  reader must then compute flat ones -- so Godot was shading three hundred thousand
+  separate facets per cave. On a wall that passes for broken rock; on a flat floor it is
+  drifted sand. `include_normals=True` on the export, all nine rebuilt, structure
+  unchanged to the centimetre.
 * Compatibility renderer lacks SSAO/volumetric fog; the look must not depend on them.
 
 ## Exteriors: the fabric under budget
@@ -906,3 +918,74 @@ behaviour was right all along). And `sells_deeds` on Ellard's def is still dead 
 honest use of it is a steward-mediated sale, which would undo the direct board route that was
 just built, so it is left for whoever authors that dialogue. `beds` on the deed items is
 likewise still unread.
+
+## What the forge owed, and the four diagnoses that did not survive measurement
+
+Six things were owed by the forge, and four of the six turned out to be a different fault
+than the one written down. That is the pattern worth carrying forward more than any of the
+individual fixes: every one of these was recorded by somebody who had reasoned about it
+carefully, and the measurement disagreed each time.
+
+**The forge could not build anything at all on the machine it runs on.** Every generator died
+on its first object. The forge is written against Blender 4.0 and 4.2.3 is what is installed:
+`Mesh.use_auto_smooth` is gone (4.1 replaced it with the `shade_smooth_by_angle` operator),
+the glTF exporter renamed `export_colors`, and Blender's bundled Python has no Pillow, so
+every bake ended in `'NoneType' object has no attribute 'fromarray'` with no mention of what
+was missing. Three version guards in `lib/scene.py`, `lib/export.py` and `lib/__init__.py`,
+and `lib/bake.py` now names Pillow and the interpreter that needs it instead of dying on a
+None. Worth knowing before anyone rebuilds an old asset: a thing rebuilt under 4.2 is *not*
+byte-identical to its 4.0 twin — the mug came back 0.108 m instead of 0.110 and its LOD2
+differs by two triangles — so the rule that untouched assets stay byte-identical means
+untouched, not rebuilt-and-compared.
+
+**Eleven stand-ins lied about their size.** `test_prop_library` has been red on this for a
+while: `PropLibrary.STAND_IN` pointed a lantern at a `bucket`, a pair of boots at a `crate`,
+a brewing copper at a `barrel`, and the written size in `HouseInterior._placeholder_size` was
+out by more than a quarter in each case. The answer is not a better substitution table; the
+forge builds them. Ten new kinds in `gen_props.py` — `bowl`, `plate_stack`, `paper_stack`,
+`phial`, `jar`, `mortar`, `candle_stub`, `boots`, `lantern_hand`, `copper` — at the forge's
+own texture weights, grounded, and every one rendered in `asset_review.tscn` beside a known
+trestle. Five of them failed that review and were rebuilt: the boots read as bleached planks
+with soles, the mortar as a dark vase, the candle stub as a fresh candle, the paper stack as
+more planks, and the copper's setting had daylight showing between its blocks. `prop_heights.py`
+now reads *52 prop kinds have a written size; 0 meshes differ by 25% or more*.
+
+**Cave floors, the dune ripple.** Covered above under Known issues: the floors were flat all
+along and the shells had no normals. Two attempts at the recorded fix — masking the noise
+around the floor, then flattening the shader's `broad_fade` — changed nothing measurable and
+were reverted rather than kept as decoration.
+
+**The tunic's sleeves.** ASSESSMENT lists "tunic sleeves are wider than the forearm under
+them", and a finished character does show a leg-of-mutton shoulder. Distance from every sleeve
+vertex to the body surface beneath it, median: tunic 19/14/13 mm at shoulder, upper arm and
+forearm, against its own design of 11. The garment that stands off is the **gambeson** at
+31–38 mm, which is a padded jack and is meant to; half the presets in the lineup wear one. The
+robe's 40 mm forearm is its sleeve bells. Nothing was widened or narrowed — the numbers went
+into `lib/cloth.torso_region`'s docstring and ASSESSMENT's weak list is corrected, so the next
+screenshot does not re-open it. Two earlier measurements of mine were wrong before the third
+was right, which is in the commit message.
+
+**Three body variants shipped as a skeleton with nothing on it.**
+`game/assets/models/characters/bodies/{child,heavy,slight}` each held a rig and no geometry, so
+`CharacterAppearance.body_variant()` had nothing to select and the build slider was a uniform
+widening of one rig. `slight` and `heavy` are built and skinned to `WM_Humanoid_v1` and
+`HumanoidModel` wears them (worst joint displacement 3.3 mm and 1.9 mm — they ride the shared
+rig honestly). **`child` is left undone on purpose**: at child proportions the worst joint is
+476 mm out and the summed error over 29 bones is 9.2 m. A child is not a scaled adult, and
+doing it properly means its own skeleton and its own bake of the 70 clips, which is a piece of
+work and not a wiring change. A child NPC is still a small adult until that is done.
+
+**The Name-table** now exists as a mesh as well as a name — see above.
+
+### Left for others, found in passing
+
+* **`game/world/pois/poi_builders.gd:923` does not compile.** A variable named `a` is
+  re-declared inside a `for i in 22:` loop. `test_pois.gd` therefore fails to load, and
+  `./run.sh smoke` exits 1 because of it *while printing* `SMOKE: PASS` with zero logged
+  errors over all 24 interiors. Anyone reading that exit code is reading the parse error, not
+  the interiors.
+* **Character body GLBs embed their textures** (bufferView, no uri) instead of referencing the
+  external PNGs as CONTRACTS §4 requires, which leaves the loose PNGs beside them unreferenced
+  — including stale doubled ones such as `heavy_heavy_albedo.png`.
+* **Two dependencies were undeclared**: `scikit-image` and `fast_simplification` (trimesh 5
+  moved `simplify_quadric_decimation` out). Both are in `tools/requirements.txt` now.
