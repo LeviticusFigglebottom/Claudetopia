@@ -1034,15 +1034,35 @@ orange slabs. Both fixed; rules now carry a `tint_strength`.
 narrow band around the middle. Fog density spans 0.00014 (Skerrow, thin cold air) to 0.00125
 (Sedgemire, where the fog is the region) against a previous 0.00016–0.00085.
 
+### What the drop test says
+
+The full 42-shot sheet, seven images a region, so **the landform axis binds** (DESIGN §10.1):
+
+| | before (ASSESSMENT) | after | bar |
+|---|---|---|---|
+| colour | 0.64 | **0.74** | — |
+| landform | 0.21 | **0.12** | 0.55 |
+| together | 0.55 | **0.71** | 0.80 |
+
+Colour and the two together moved a long way and the test still fails, on both bars. The
+landform figure went *down*, and below the 0.17 chance line, which is the honest cost of this
+pass and worth stating plainly: the landform signature reads the skyline, the ruggedness and
+where the detail sits down the frame, and giving all six regions a dense near field of
+similar tufts made the bottom of every frame equally busy. The cover was added uniformly
+because the ground was uniformly bare; what it needs next is cover that differs in *structure*
+between regions — a flat reed horizon against a crag line — and not simply in tint. The
+confusion pairs say the same thing: Briarwold reads as Sedgemire and Skerrow as Sedgemire.
+
 ### What it costs
 
-The Merrowby street, which the new draw attribution confirms is the worst frame: **1330 draws
-and 1.18 M primitives before, 1441 and 1.53 M after**, against a budget of 2000 and 1.5 M. So
-draw calls are comfortable and primitives are 2% over, which is named here rather than hidden.
-The attribution is also what found where it goes — 645 apple trees and 1234 hawthorns in one
-frame at ~5 700 triangles each, against 4399 grass clumps in three draws — which is why the
-orchards went back to Tamwick alone and the hedge trees thinned from every 13 m to every 27.
-The world build went from 217 s to 260 s and from 346 306 scatter instances to 3 472 850.
+Measured across the same 42 shots: **one frame** is over budget, the Merrowby street at 1511
+draws and 1.59 M primitives against 2000 and 1.5 M; nothing else exceeds either, the worst
+other frame is 1.23 M, and the median is 0.68 M. Before this pass that street was 1330 draws
+and 1.18 M. The new draw attribution is what found where it goes — 645 apple trees and 1234
+hawthorns in one frame at ~5 700 triangles each, against 4399 grass clumps in three draws —
+which is why the orchards went back to Tamwick alone and the hedge trees thinned from every
+13 m to every 27. The world build went from 217 s to 260 s and from 346 306 scatter instances
+to 3 473 920.
 
 ### Still wanting
 
@@ -1051,10 +1071,18 @@ The world build went from 217 s to 260 s and from 346 306 scatter instances to 3
   cell granularity, so the honest next lever is the terrain albedo itself, not more instances.
 * **Hedges read as dotted rather than solid at 400 m**, where the far ring keeps 40% of them.
 * **Skerrow's drystone walls are placed but have not been judged in a capture** at close range.
-* **The gate posts mark gaps but no gate hangs in them**, and the signposts point nowhere in
-  particular: the asset has arms, but nothing writes the names of the places the road goes to
-  onto them, though the road data knows both ends.
+* **The gate posts mark gaps but no gate hangs in them**, and the five signposts point nowhere
+  in particular: the asset has arms, but nothing writes the names of the places the road goes
+  to onto them, though every road is named for the two settlements it joins.
 * **Bridge abutments were not done.** The road crossings are left clear, as asked.
+* **A village street still has a bare green in front of it.** Cover returns to the green and
+  the verge but not to the 20-to-50 m band the houses ring through, because a grass tuft
+  standing inside somebody's cottage is a worse fault than a mown green. Putting cover there
+  needs the building footprints, which are raised at runtime and are not known to the builder.
+* **The Briarwold vista shot is inside a tree.** `make_default_plan.py` puts that camera 12 m
+  above the highest ground within 600 m, which in a forest of 30 m oaks is inside the canopy;
+  the vista shots skip the `clear_spot` check the ground shots use. One of the seven Briarwold
+  images in the sheet above is therefore a photograph of leaves, and the drop test scored it.
 ## Sightlines, answered
 
 DESIGN §4 ends "placed with sightlines: each POI names at least one other POI it should be
