@@ -920,9 +920,9 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 		# apron twenty metres long, which is what a seven-block run of 3.3 × 4.6 came out as
 		var paving := m.begin()
 		for i in 22:
-			var a := k.rng.randf_range(0.0, TAU)
+			var ang := k.rng.randf_range(0.0, TAU)
 			var r := 1.2 + 3.4 * sqrt(k.rng.randf())
-			var p := mid + Vector2(sin(a), cos(a)) * r
+			var p := mid + Vector2(sin(ang), cos(ang)) * r
 			var gg := k.on_ground(p.x, p.y)
 			m.block(paving, Transform3D(Basis(Vector3.UP, k.rng.randf_range(0.0, TAU))
 					* Basis(Vector3.BACK, k.rng.randf_range(-0.05, 0.05)), gg - Vector3(0.0, 0.03, 0.0)),
