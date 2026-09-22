@@ -136,7 +136,10 @@ void sky() {
 	col += sun_disc_color.rgb * halo * 1.4 * sun_energy * sun_up;
 	col += sun_glow_color.rgb * glow * sun_glow * 0.55 * sun_energy * sun_up;
 	col += dusk_color.rgb * wash * sun_glow * 0.18 * sun_up;
-	col = mix(col, sun_disc_color.rgb * max(sun_energy, 0.25), disc);
+	// The disc adds to the sky; it does not replace it. Mixed over the sky, it came out darker
+	// than the halo, glow and dusk wash round its own edge, and a low sun over Cinderlea was a
+	// dark lozenge (tools_gd/sun_probe measured the centre at 0.58 against 0.83 five degrees off).
+	col += sun_disc_color.rgb * max(sun_energy, 0.25) * disc * 1.5;
 
 	// --- night: the milk, the stars and the moon -------------------------------------------
 	float md = dot(dir, normalize(moon_dir));
@@ -174,7 +177,10 @@ void sky() {
 	vec2 w = normalize(wind + vec2(1e-4, 0.0));
 	float cumulus = 0.0;
 	if (t > 0.0 && cloud_opacity > 0.001) {
-		float fade = smoothstep(0.0, 0.16, t);
+		// Cumulus fades out toward the horizon, where perspective squashes a lone cloud into a
+		// flat dark lozenge (it read as a flying saucer over Cinderlea); the stratus bank and the
+		// haze are what the horizon is made of.
+		float fade = smoothstep(0.03, 0.3, t);
 		if (!AT_CUBEMAP_PASS && cirrus > 0.001) {
 			vec2 pc = dir.xz / (dir.y + 0.35) * 0.9;
 			vec2 qc = vec2(dot(pc, w), dot(pc, vec2(-w.y, w.x)));

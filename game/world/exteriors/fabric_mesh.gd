@@ -50,6 +50,35 @@ func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> vo
 	_triangles[key] = int(_triangles.get(key, 0)) + faces.size() / 3
 
 
+## A window pane: a box like any other, except that its vertex colour is not a colour. Red and
+## green carry where each corner lies across the pane (0..1, left to right and bottom to top),
+## which the joinery shader interpolates into the pane's own coordinates and paints a mullion
+## and a hearth-lit gradient with; alpha is how brightly the room behind is lit, 0 (nobody home)
+## to PANE_LIT_MAX, because alpha 1 is what marks timber.
+## By day a pane is drawn in the shader's own shutter-dark, so the colour is free to carry this.
+func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
+	var st := _tool(key)
+	var faces := _faces()
+	var scaled := xf.scaled_local(size)
+	var alpha := clampf(lit, 0.0, PANE_LIT_MAX)
+	var i := 0
+	while i + 2 < faces.size():
+		var corners := [faces[i], faces[i + 1], faces[i + 2]]
+		var a: Vector3 = scaled * corners[0]
+		var b: Vector3 = scaled * corners[1]
+		var c: Vector3 = scaled * corners[2]
+		var n := (c - a).cross(b - a)
+		if n.length_squared() >= 1e-12:
+			n = n.normalized()
+			for k in 3:
+				var p: Vector3 = corners[k]
+				st.set_color(Color(p.x + 0.5, p.y + 0.5, 0.0, alpha))
+				st.set_normal(n)
+				st.add_vertex(scaled * p)
+		i += 3
+	_triangles[key] = int(_triangles.get(key, 0)) + faces.size() / 3
+
+
 ## One triangle, corners clockwise as seen from its front.
 func tri(key: String, a: Vector3, b: Vector3, c: Vector3, tint := Color.WHITE) -> void:
 	_emit(_tool(key), a, b, c, tint)
@@ -98,12 +127,6 @@ static func joinery_material() -> ShaderMaterial:
 const JOINERY_SHADER := preload("res://assets/shaders/joinery.gdshader")
 ## A pane's vertex alpha is its lit strength, and one means timber, so a lit pane tops out here.
 const PANE_LIT_MAX := 0.98
-
-
-## The vertex colour a window pane of `lit` strength is drawn in: the dark of the opening, with
-## how brightly it glows at night in its alpha (0 dark .. PANE_LIT_MAX).
-static func pane_colour(dark: Color, lit: float) -> Color:
-	return Color(dark.r, dark.g, dark.b, clampf(lit, 0.0, PANE_LIT_MAX))
 
 
 ## Shown near, dropped far, and for the small stuff no shadow: a shutter's shadow is a line

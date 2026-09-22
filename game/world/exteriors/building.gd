@@ -255,12 +255,11 @@ static func door_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, sto
 ## shutter leaf either side where asked. `at` has its origin at the centre of the opening on
 ## the wall's face and +z pointing out of the wall.
 ## `lit` is how brightly the room behind glows after dark (0 is nobody home); it rides in the
-## pane's vertex alpha (FabricMesh.pane_colour). Returns the pane's centre, in the fabric's space,
-## for whoever wants to hang a glow on it.
+## pane's vertex alpha (FabricMesh.pane). Returns the pane's centre, in the fabric's space, for
+## whoever wants to hang a glow on it.
 static func window_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, stone: Color,
 		shutters: bool, lit := 0.0) -> Vector3:
-	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 0.0, 0.012)), Vector3(0.8, 0.84, 0.024),
-			FabricMesh.pane_colour(timber["pane"], lit))
+	fabric.pane("joinery", at * Transform3D(Basis(), Vector3(0.0, 0.0, 0.012)), Vector3(0.8, 0.84, 0.024), lit)
 	for side_v in [-1.0, 1.0]:
 		var side := float(side_v)
 		fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.45, 0.0, 0.05)),
@@ -276,15 +275,15 @@ static func window_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, s
 
 
 ## Worked timber in the culture's own wood: the interior's beam colour, lighter for a frame,
-## darker for a lintel and darker still for a plank door; the pane is a shutter-dark opening
-## that the interior's own lamps warm at night, not glass.
+## darker for a lintel and darker still for a plank door. The pane between them is not a tint:
+## it is drawn in the joinery shader's own shutter-dark by day and lit from inside after dark.
 static func timber_tints(culture: String) -> Dictionary:
 	var by_culture: Dictionary = HouseInterior.CULTURE_SURFACES.get(culture, HouseInterior.CULTURE_SURFACES["vale"])
 	var beam: Dictionary = by_culture.get("beam", {})
 	var c := Color.html(str(beam.get("base", "#5e452c")))
 	return {
 		"frame": _scaled(c, 1.12), "lintel": _scaled(c, 0.82), "panel": _scaled(c, 0.6),
-		"shutter": _scaled(c, 0.9), "pane": Color(0.085, 0.08, 0.075),
+		"shutter": _scaled(c, 0.9),
 	}
 
 

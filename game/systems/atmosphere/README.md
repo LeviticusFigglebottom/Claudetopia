@@ -65,7 +65,8 @@ with a silver lining near the light and undersides lit by a low sun; cirrus stre
 the wind; a bank of stratus on the horizon where `cloud_band` asks for it; and at night stars in
 two sizes, a band of milk and a moon with seas on its face. The moon is its own
 DirectionalLight3D, left out of the sky shader, and takes the shadow cascades over once the sun
-has set, so only one of the two ever pays for them.
+has set, so only one of the two ever pays for them -- and the moon on two cascades over 160 m,
+not the sun's four over 260.
 
 **Forward+ extras.** SSAO (`video/ssao`, on), volumetric fog (`video/volumetric_fog`, off) and
 SDFGI (`video/sdfgi`, off) are enabled only when the renderer is Forward+ *and* the setting is on.
@@ -135,6 +136,8 @@ alpenglow at dawn (`sun_color_low` `#ffb8a8`), and snow under a bright blue moon
 **Cinderlea — Ember Ash.** A sun that never climbs (nine degrees at half past four) and burns
 faded gold through the ash haze, which glows round it (`fog_sun_scatter` 0.55, the highest). The
 ground is char and ash, so the fill is lifted and grey-violet (ambient 1.35) to keep the black
-soil reading as soil rather than as nothing. Desaturated (0.55), flat ash bands in the sky, the
-shadows lifted toward the single cold blue of the Seat's note-light, the highlights faded gold,
-film grain, and the heaviest vignette. The only region whose screenshot should look old.
+soil reading as soil rather than as nothing. Even so the char in shade came out black, so the
+grade lifts the blacks furthest of the six, grey-violet (`#474a62`), and eases the contrast
+under one: ash should read as ash. Desaturated (0.55), flat ash bands in the sky, the highlights
+faded gold, film grain, and the heaviest vignette. The only region whose screenshot should look
+old.

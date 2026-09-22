@@ -29,7 +29,7 @@
         "fog_density": 0.0003,
         "aerial_perspective": 0.3,
         "fog_sun_scatter": 0.25,
-        "haze_density": 0.03,
+        "haze_density": 0.018,
         "haze_ceiling": 45,
         "haze_below_eye": 18,
         "haze_morning": 1.5,
@@ -49,7 +49,7 @@
         "cirrus": 0.35,
         "cloud_scale": 1.0,
         "night_tint": "#8f9fd8",
-        "night_exposure": 1.7
+        "night_exposure": 1.3
       },
       "weather": {
         "clear": 45,
@@ -157,9 +157,9 @@
         "dusk_tint": "#ffb08a",
         "cloud_band": 0.1,
         "cirrus": 0.5,
-        "cloud_scale": 1.2,
+        "cloud_scale": 0.85,
         "night_tint": "#9fb8f0",
-        "night_exposure": 1.7
+        "night_exposure": 1.3
       },
       "weather": {
         "clear": 55,
@@ -251,8 +251,8 @@
         "aerial_perspective": 0.25,
         "fog_sun_scatter": 0.3,
         "fog_sky_affect": 0.5,
-        "haze_density": 0.05,
-        "haze_ceiling": 16,
+        "haze_density": 0.03,
+        "haze_ceiling": 12,
         "haze_below_eye": 2.5,
         "haze_morning": 0.8,
         "saturation": 0.9,
@@ -270,8 +270,9 @@
         "cloud_band": 0.75,
         "cirrus": 0.05,
         "cloud_scale": 0.8,
+        "painterly": 0.3,
         "night_tint": "#7fb0a8",
-        "night_exposure": 1.6
+        "night_exposure": 1.25
       },
       "weather": {
         "fog": 40,
@@ -385,7 +386,7 @@
         "cirrus": 0.2,
         "cloud_scale": 0.9,
         "night_tint": "#7896b8",
-        "night_exposure": 1.5
+        "night_exposure": 1.2
       },
       "weather": {
         "still": 40,
@@ -500,7 +501,7 @@
         "cirrus": 0.6,
         "cloud_scale": 1.3,
         "night_tint": "#a8c4ff",
-        "night_exposure": 1.8
+        "night_exposure": 1.35
       },
       "weather": {
         "wind": 35,
@@ -599,11 +600,11 @@
         "haze_below_eye": 20,
         "haze_morning": 0.0,
         "saturation": 0.55,
-        "contrast": 1.04,
+        "contrast": 0.96,
         "exposure": 1.12,
         "bloom": 0.3,
-        "grain": 0.07,
-        "shadow_lift": "#1e2a44",
+        "grain": 0.05,
+        "shadow_lift": "#474a62",
         "highlight_gain": "#fff0d8",
         "midtone_tint": "#f2ece2",
         "vignette": 0.35,
@@ -615,7 +616,7 @@
         "cirrus": 0.1,
         "cloud_scale": 0.9,
         "night_tint": "#9a9aac",
-        "night_exposure": 1.6
+        "night_exposure": 1.25
       },
       "weather": {
         "ashfall": 35,

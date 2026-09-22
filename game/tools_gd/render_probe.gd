@@ -52,6 +52,7 @@ func _run() -> void:
 		await _measure(fogged, feature)
 	env.fog_enabled = false
 	env.fog_light_color = Color(0.518, 0.553, 0.608)
+	await _normal_map_convention()
 	await _count_lights()
 	var f := FileAccess.open("%s/probe.txt" % out_dir, FileAccess.WRITE)
 	if f:
@@ -273,6 +274,55 @@ static func _mean_diff(a: Image, b: Image) -> float:
 			var cb := b.get_pixel(x, y)
 			total += (absf(ca.r - cb.r) + absf(ca.g - cb.g) + absf(ca.b - cb.b)) / 3.0
 	return total / float(W * H)
+
+
+## What the water shader's first normal did. It wrote a world-space normal, up in green, as
+## NORMAL_MAP = n * 0.5 + 0.5. A flat plane under a sun straight overhead is drawn three ways --
+## no normal map, that encoding of a flat "up", and the true flat tangent-space value (0.5, 0.5,
+## 1) -- and the mean brightness of each is printed. If the first two differ, the encoding tilted
+## every water surface in the game.
+func _normal_map_convention() -> void:
+	for n in stage.get_children():
+		if n is MeshInstance3D or n is Light3D:
+			(n as Node3D).visible = false
+	var over := DirectionalLight3D.new()
+	over.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	stage.add_child(over)
+	var plane := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(40.0, 40.0)
+	plane.mesh = pm
+	stage.add_child(plane)
+	var old_cam := cam.transform
+	cam.transform = Transform3D.IDENTITY
+	cam.position = Vector3(0.0, 6.0, 8.0)
+	cam.look_at(Vector3(0.0, 0.0, -2.0))
+	var results_line := "PROBE normal map, flat plane under an overhead sun, mean brightness:"
+	for case in ["none", "old_water_encoding", "true_flat"]:
+		var sh := Shader.new()
+		var body := "ALBEDO = vec3(0.6);"
+		if case == "old_water_encoding":
+			body += " NORMAL_MAP = vec3(0.0, 1.0, 0.0) * 0.5 + 0.5;"
+		elif case == "true_flat":
+			body += " NORMAL_MAP = vec3(0.5, 0.5, 1.0);"
+		sh.code = "shader_type spatial;\nvoid fragment() { %s }\n" % body
+		var mat := ShaderMaterial.new()
+		mat.shader = sh
+		plane.material_override = mat
+		var img := await _shot("normal_%s" % case)
+		var total := 0.0
+		for y in range(H / 2, H):
+			for x in W:
+				total += img.get_pixel(x, y).get_luminance()
+		results_line += " %s %.3f" % [case, total / float(W * (H - H / 2))]
+	print(results_line)
+	results.append(results_line)
+	plane.queue_free()
+	over.queue_free()
+	cam.transform = old_cam
+	for n in stage.get_children():
+		if n is MeshInstance3D or n is Light3D:
+			(n as Node3D).visible = true
 
 
 func _count_lights() -> void:

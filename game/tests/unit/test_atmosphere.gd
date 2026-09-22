@@ -199,7 +199,7 @@ func test_night_puts_the_moon_up_and_the_exposure_with_it() -> void:
 	assert_false(atmos.sun.visible, "no sun at one in the morning")
 	assert_gt(atmos.moon.light_energy, 0.15, "the moon lights the ground a little")
 	assert_true(atmos.moon.shadow_enabled, "and takes the shadows over from the sun")
-	assert_gt(atmos.env.tonemap_exposure, 1.3, "and the eye opens up")
+	assert_gt(atmos.env.tonemap_exposure, float(atmos.look()["exposure"]) + 0.1, "and the eye opens up")
 	WorldClock.set_time(10.0)
 	atmos.settle()
 	assert_near(Atmosphere.night_factor, 0.0, 0.01, "ten in the morning is day")

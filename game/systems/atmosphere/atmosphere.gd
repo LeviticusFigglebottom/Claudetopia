@@ -102,7 +102,7 @@ const DEFAULT_LOOK := {
 	"cloud_bias": 0.0, "cloud_scale": 1.0, "cloud_height": 0.15, "cloud_band": 0.25, "cirrus": 0.3,
 	"painterly": 0.6,
 	# the night
-	"night_tint": Color(0.62, 0.70, 0.95), "night_exposure": 1.6, "moon_energy": 1.0,
+	"night_tint": Color(0.62, 0.70, 0.95), "night_exposure": 1.3, "moon_energy": 1.0,
 	"god_rays": false,
 }
 const _COLOUR_KEYS := ["sun_color", "sun_color_low", "ambient_tint", "fog_color", "shadow_lift",
@@ -151,6 +151,10 @@ func _build_nodes() -> void:
 	moon.name = "Moon"
 	moon.shadow_enabled = false
 	_shadow_setup(moon)
+	# Moonlight is soft and nobody reads a shadow at forty metres by it: two cascades over
+	# 160 m cost half of what the sun's four do, which is what a night frame pays over a day's.
+	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	moon.directional_shadow_max_distance = 160.0
 	moon.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
 	moon.light_color = Color(0.62, 0.70, 0.95)
 	moon.light_energy = 0.0
@@ -489,7 +493,7 @@ func _apply(_delta: float) -> void:
 	moon.global_transform = Transform3D(Basis.looking_at(-moon_dir, Vector3.UP), Vector3.ZERO)
 	var night_tint: Color = lk["night_tint"]
 	moon.light_color = night_tint.lerp(Color(0.85, 0.9, 1.0), 0.35)
-	moon.light_energy = 0.34 * night * float(lk["moon_energy"]) * (0.35 + 0.65 * clampf(sun_mult, 0.0, 1.0))
+	moon.light_energy = 0.26 * night * float(lk["moon_energy"]) * (0.35 + 0.65 * clampf(sun_mult, 0.0, 1.0))
 	moon.visible = moon.light_energy > 0.005
 	# one set of cascades at a time: the moon casts only once the sun has gone
 	moon.shadow_enabled = moon.visible and not sun.visible and not interior
@@ -548,12 +552,14 @@ func _apply(_delta: float) -> void:
 	# --- the fill: coloured shadows ------------------------------------------------------
 	env.ambient_light_energy = ambient_energy * float(lk["ambient_energy"]) * float(w["ambient_mult"]) * (0.62 if interior else 1.0)
 	env.ambient_light_color = (lk["ambient_tint"] as Color).lerp(night_tint, night)
-	env.ambient_light_sky_contribution = lerpf(float(lk["sky_contribution"]), 0.25, night)
+	# At dusk the sky is orange at one side and the shadows would take it; painted dusk is warm
+	# light and cool shadow, so the region's own tint carries more of the fill as the sun goes.
+	env.ambient_light_sky_contribution = lerpf(float(lk["sky_contribution"]) * (1.0 - 0.5 * dusk), 0.25, night)
 
 	# --- fog: the far layer and the low haze ---------------------------------------------
 	# The far fog is aerial perspective: it takes the horizon's colour, most of all at dusk,
 	# when the whole distance goes the colour of the sky behind it.
-	var fog_col := fogc.lerp(hor_c, 0.3 + 0.35 * dusk).lerp(night_tint * 0.32, night * 0.85)
+	var fog_col := fogc.lerp(hor_c, 0.25 + 0.15 * dusk).lerp(night_tint * 0.32, night * 0.85)
 	env.fog_light_color = fog_col.lerp(top_c, 0.12 * (1.0 - cloudy))
 	env.fog_light_energy = lerpf(0.35, 1.0, ambient_energy)
 	env.fog_density = float(lk["fog_density"]) * float(w["fog_mult"]) * lerpf(1.0, 1.3, night) * (0.12 if interior else 1.0)

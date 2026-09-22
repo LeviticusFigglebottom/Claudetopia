@@ -25,12 +25,36 @@ func _drop(n: Node) -> void:
 
 # --- the panes -----------------------------------------------------------------------------------
 
-func test_a_pane_carries_how_brightly_it_is_lit_in_its_alpha() -> void:
-	var dark := Color(0.085, 0.08, 0.075)
-	assert_near(FabricMesh.pane_colour(dark, 0.7).a, 0.7, 0.001)
-	assert_near(FabricMesh.pane_colour(dark, 0.0).a, 0.0, 0.001, "a dark room is still glass")
-	assert_true(FabricMesh.pane_colour(dark, 3.0).a < 0.995,
-			"a pane lit as brightly as it goes must not read as timber (alpha 1)")
+func _pane_colours(lit: float) -> PackedColorArray:
+	var fabric := FabricMesh.new()
+	fabric.pane("joinery", Transform3D.IDENTITY, Vector3(0.8, 0.84, 0.024), lit)
+	var holder := Node3D.new()
+	var mi := fabric.commit(holder, "joinery", FabricMesh.joinery_material(), "Joinery")
+	var colours: PackedColorArray = mi.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+	holder.free()
+	return colours
+
+
+## The lit window is painted from the pane's own coordinates -- glazing bars, the hearth's glow
+## low in the glass -- and those ride in the vertex colour's red and green, with how brightly
+## the room is lit in its alpha. A pane written as one flat colour glowed as a white lightbox.
+func test_a_pane_carries_its_coordinates_and_its_light_in_its_colour() -> void:
+	var colours := _pane_colours(0.7)
+	var lo := Vector2(1.0, 1.0)
+	var hi := Vector2(0.0, 0.0)
+	# a vertex colour is stored at eight bits a channel: 0.7 comes back as 178/255
+	for c in colours:
+		assert_near(c.a, 0.7, 1.0 / 255.0, "every corner of a pane carries its room's light")
+		lo = Vector2(minf(lo.x, c.r), minf(lo.y, c.g))
+		hi = Vector2(maxf(hi.x, c.r), maxf(hi.y, c.g))
+	assert_near(lo.x, 0.0, 0.001, "the pane's left edge is u = 0")
+	assert_near(hi.x, 1.0, 0.001, "and its right edge u = 1")
+	assert_near(lo.y, 0.0, 0.001, "its foot is v = 0")
+	assert_near(hi.y, 1.0, 0.001, "and its head v = 1")
+	for c in _pane_colours(0.0):
+		assert_near(c.a, 0.0, 0.001, "a dark room is still glass")
+	for c in _pane_colours(3.0):
+		assert_true(c.a < 0.995, "a pane lit as brightly as it goes must not read as timber (alpha 1)")
 	assert_true(FabricMesh.joinery_material() is ShaderMaterial, "the joinery glows through its own shader")
 
 
