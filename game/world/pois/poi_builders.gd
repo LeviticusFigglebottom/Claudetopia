@@ -1461,18 +1461,20 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 		var p := pool_at + k.jitter(2.6)
 		m.block(basin, Transform3D(Basis(Vector3.UP, k.rng.randf_range(0.0, TAU)), k.on_ground(p.x, p.y, 0.04)), Vector3(4.5, 0.12, 3.6))
 	m.commit(basin, PoiKit.plain(PoiKit.GLASS, 0.08), "Basin", true)
-	# ledges up the face: slabs set into the glass, climbable
+	# Ledges up the face for the climb: narrow steps set *into* the glass, not shelves bolted
+	# onto the front of it — at 2.2 × 1.3 standing a metre and a half clear they photographed
+	# as brackets on a wall.
 	var ledges := m.begin()
 	var perp := Vector2(-facing.y, facing.x)
-	var count := int((lip.y - g.y) / 1.1)
+	var count := int((lip.y - g.y) / 1.15)
 	for i in count:
-		var t := float(i) / float(count)
-		var side := (1.0 if i % 2 == 0 else -1.0) * 2.4
-		var p := face_at + facing * (1.4 - t * 0.6) + perp * side
-		var y := g.y + 1.0 + float(i) * 1.1
-		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(p.x, y, p.y))
-		m.block(ledges, xf, Vector3(2.2, 0.4, 1.3))
-		k.collider(Vector3(2.2, 0.4, 1.3), xf)
+		var t := float(i) / float(maxi(count, 1))
+		var side := (1.0 if i % 2 == 0 else -1.0) * (1.6 + t * 1.2)
+		var p := face_at + facing * (0.35 - t * 0.5) + perp * side
+		var y := g.y + 1.1 + float(i) * 1.15
+		var xf := Transform3D(Basis(Vector3.UP, yaw + k.rng.randf_range(-0.2, 0.2)), Vector3(p.x, y, p.y))
+		m.block(ledges, xf, Vector3(1.3, 0.28, 0.7))
+		k.collider(Vector3(1.3, 0.28, 0.7), xf)
 	m.commit(ledges, k.surface("oroth", 0.5), "Ledges", true)
 	var shards: Array = []
 	for i in 20:
