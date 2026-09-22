@@ -4,7 +4,9 @@
 export/
 build/
 # Generated world data (rebuilt by `make world`)
+game/terrain_data
 game/terrain_data/**/*.res
+game/world/generated
 game/world/generated/
 game/world/terrain_assets.tres
 # Python
