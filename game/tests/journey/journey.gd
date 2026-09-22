@@ -262,7 +262,9 @@ func _step_find_the_country() -> void:
 		arrived = GameState.is_discovered(target)
 
 	# High ground, and what it shows you. The vista is whichever one the land actually agrees
-	# with, because 36 of the 90 authored sightlines are blocked by it (tools/sightlines.py).
+	# with: 36 of the 90 authored sightlines used to be blocked by it, and although they have
+	# been answered (PROGRESS.md, "Sightlines, answered") this still asks the ground rather
+	# than the data, which is what `tools/sightlines.py` exists to keep honest.
 	var vantage := ""
 	var revealed: Array[String] = []
 	for v in disco.vistas():
