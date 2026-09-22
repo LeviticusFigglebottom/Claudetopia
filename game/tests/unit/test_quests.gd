@@ -268,6 +268,75 @@ func test_choice_objectives_record_an_outcome() -> void:
 	assert_eq(log_node.outcome_of("core:quest/_test_choice"), "restore")
 
 
+## Options written as objects, which is how every quest in the pack but the Wardens' first one
+## writes them. `["a", "b"].has(option)` is false for a list of objects, so none of those
+## choices closed and none of their effects ran: the quests could not be finished at all.
+func test_options_written_as_objects_are_answerable() -> void:
+	var def := scripted_quest()
+	def["id"] = "core:quest/_test_option_objects"
+	def["stages"] = [
+		{"id": "decide", "journal": "Decide.", "objectives": [
+			{"type": "choice", "target": "the_stone", "options": [
+				{"id": "name_it", "text": "Name it.", "effects": [{"set_flag": "_test_named"}, {"renown": 7}]},
+				{"id": "leave_it", "text": "Leave it.", "effects": [{"set_flag": "_test_left"}]}
+			]}]},
+		{"id": "done", "auto": true, "journal": "Said.", "objectives": []}
+	]
+	log_node.register_runtime(def)
+	log_node.start("core:quest/_test_option_objects")
+	log_node.choose("core:quest/_test_option_objects", "name_it")
+	assert_true(ctx.has_flag("_test_named"), "the option's own effects ran")
+	assert_false(ctx.has_flag("_test_left"))
+	assert_gt(Social.standing.renown(), 0)
+	assert_true(log_node.is_completed("core:quest/_test_option_objects"), "and the objective closed")
+	assert_eq(log_node.outcome_of("core:quest/_test_option_objects"), "name_it")
+
+
+func test_an_option_whose_conditions_are_unmet_is_refused() -> void:
+	var def := scripted_quest()
+	def["id"] = "core:quest/_test_gated_option"
+	def["stages"] = [
+		{"id": "decide", "journal": "Decide.", "objectives": [
+			{"type": "choice", "target": "the_scraped_name", "options": [
+				{"id": "say_it", "text": "Say the name.", "conditions": [{"flag": "_test_found_it"}],
+				 "effects": [{"set_flag": "_test_said_it"}]},
+				{"id": "say_nothing", "text": "Say nothing.", "effects": [{"set_flag": "_test_said_nothing"}]}
+			]}]},
+		{"id": "done", "auto": true, "journal": "Said.", "objectives": []}
+	]
+	log_node.register_runtime(def)
+	log_node.start("core:quest/_test_gated_option")
+	assert_eq(log_node.open_options("core:quest/_test_gated_option").size(), 1, "only the open option is offered")
+	log_node.choose("core:quest/_test_gated_option", "say_it")
+	assert_false(ctx.has_flag("_test_said_it"), "a name you have not found cannot be said")
+	assert_true(log_node.is_active("core:quest/_test_gated_option"))
+	ctx.set_flag("_test_found_it")
+	assert_eq(log_node.open_options("core:quest/_test_gated_option").size(), 2)
+	log_node.choose("core:quest/_test_gated_option", "say_it")
+	assert_true(ctx.has_flag("_test_said_it"))
+	assert_true(log_node.is_completed("core:quest/_test_gated_option"))
+
+
+func test_a_branching_option_lands_on_the_stage_it_names() -> void:
+	var def := scripted_quest()
+	def["id"] = "core:quest/_test_branch"
+	def["stages"] = [
+		{"id": "decide", "journal": "Decide.", "objectives": [
+			{"type": "choice", "target": "which_way", "options": [
+				{"id": "left", "text": "Left.", "effects": [{"quest_stage": ["core:quest/_test_branch", "the_left_way"]}]},
+				{"id": "right", "text": "Right.", "effects": [{"quest_stage": ["core:quest/_test_branch", "the_right_way"]}]}
+			]}]},
+		{"id": "the_left_way", "journal": "Left.", "objectives": [{"type": "talk", "target": "core:npc/wardens_hesk"}]},
+		{"id": "the_right_way", "journal": "Right.", "objectives": [{"type": "talk", "target": "core:npc/wardens_dole"}]},
+		{"id": "done", "auto": true, "journal": "Arrived.", "objectives": []}
+	]
+	log_node.register_runtime(def)
+	log_node.start("core:quest/_test_branch")
+	log_node.choose("core:quest/_test_branch", "right")
+	assert_eq(log_node.stage_id_of("core:quest/_test_branch"), "the_right_way",
+		"the branch the option named, not the next stage in the list")
+
+
 func test_failing_a_quest_stops_it() -> void:
 	log_node.register_runtime(scripted_quest())
 	log_node.start("core:quest/_test_scripted")
