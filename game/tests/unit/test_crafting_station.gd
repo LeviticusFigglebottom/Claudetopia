@@ -15,6 +15,17 @@ func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
 
 
+## Working at a bench opens a full-screen screen, and a full-screen screen pauses the world. The
+## UI autoload is live in a test run and answers `crafting_station_used` like any other listener,
+## so this file was pausing the tree at its fourth test and nothing ever unpaused it: every test
+## after it in the run -- the whole alphabet from `test_hearth` on -- had a frozen physics step,
+## which is silent unless a test actually needs one. Whatever this file opens, it shuts.
+func after_each() -> void:
+	UI.close_all()
+	if _tree().paused:
+		_tree().paused = false
+
+
 ## Built the way the smoke run builds one: the builder node, handed the meta path.
 func _build(interior_id: String) -> Node3D:
 	var def := ContentDB.get_or_empty(interior_id)

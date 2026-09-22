@@ -44,7 +44,21 @@ case "$cmd" in
     exec "$GODOT" --path "$GAME" "$@" ;;
   test)
     import_project
-    "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/run_tests.tscn -- "$@" ;;
+    # The engine's SCRIPT ERRORs cannot be counted from inside GDScript, and they are not
+    # cosmetic: an invalid call abandons the rest of the function, so one inside a test means the
+    # assertions after it never ran. stderr is the honest count, so it is read here and it fails
+    # the run. The tests' own logged errors are counted and attributed by tests/test_runner.gd.
+    out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/run_tests.tscn -- "$@" 2>&1 | tee /dev/stderr)" || true
+    code=0
+    echo "$out" | grep -q "^RESULT: PASS" || code=1
+    n="$(echo "$out" | grep -c "^SCRIPT ERROR" || true)"
+    if [ "$n" -gt 0 ]; then
+      echo "[test] $n script error(s) logged by the engine, at:"
+      echo "$out" | grep -A1 "^SCRIPT ERROR" | grep "at:" | sed 's/^ *at: /  /' | sort | uniq -c
+      code=1
+    fi
+    echo "[test] script errors: $n"
+    exit $code ;;
   journey)
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/journey/journey.tscn -- "$@" ;;

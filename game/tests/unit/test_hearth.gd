@@ -109,6 +109,9 @@ func _standing_body() -> CharacterBody3D:
 ## physics tick happened to land in, which is what made it look like a flake in one run of five.
 func test_dying_on_the_spot_does_not_hand_the_marks_straight_back() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
+	# An Area3D flushes its overlaps on the physics step, so a paused tree makes every assertion
+	# below vacuously true. Say so here rather than report a pass nobody asked for.
+	assert_false(tree.paused, "the world is paused, so nothing in this test is being measured")
 	var body := _standing_body()
 	tree.root.add_child(body)
 	var fell := Vector3(120.0, 0.0, -40.0)
