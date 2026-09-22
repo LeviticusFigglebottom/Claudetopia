@@ -1,7 +1,7 @@
 extends Node
 ## Believable state for the UI review harness: the real Inventory, Equipment, Progression
-## and Crafting nodes loaded with real content, plus stand-ins for the streams that are
-## still being written (player, quest log, dialogue runner, merchant).
+## Crafting and QuestLog nodes loaded with real content, plus stand-ins for the streams that are
+## still being written (player, dialogue runner, merchant).
 
 const START_PLACES := [
 	"core:place/merrowby", "core:place/tamwick", "core:place/cracked_toll", "core:place/wardens_rest",
@@ -9,6 +9,15 @@ const START_PLACES := [
 	"core:place/the_lamp", "core:place/sayers_spire", "core:place/isseva", "core:place/pilgrims_ash",
 	"core:poi/larkbourne_ford", "core:poi/hedge_shrine_of_ansel", "core:poi/singing_yew",
 	"core:poi/tumbled_watchtower", "core:poi/whitecut_falls", "core:poi/bell_meadow_stones",
+]
+
+## A character mid-story: the opening quest finished, the main thread two stages in, a side
+## errand and a faction errand open. [quest id, stages to advance past the first].
+const REVIEW_QUESTS := [
+	["core:quest/the_naming", 4],
+	["core:quest/the_toll_hums", 2],
+	["core:quest/seventeen_bells", 1],
+	["core:quest/the_unsaid_ledger", 2],
 ]
 
 ## A working Sayer's repertoire: two schools well in hand, one saying from a third and
@@ -151,10 +160,24 @@ func _progression() -> void:
 		crafting.eat_ingredient(ing.id)
 
 
+## The real quest log, with real quests started in it. A stand-in was pointless here and worse
+## than pointless: `Social` owns a real QuestLog in the same "quest_log" group, and the journal
+## takes the *first* node in that group, so the review's three invented quests were never the
+## ones drawn — the Quests tab in every capture read "Nothing is asked of you yet." while the
+## fake sat beside it. Starting real quests renders the tab from the pack, which is the point
+## of the harness.
 func _quests() -> void:
-	quest_log = FakeQuestLog.new()
-	quest_log.name = "FakeQuestLog"
-	add_child(quest_log)
+	quest_log = get_tree().get_first_node_in_group("quest_log")
+	if quest_log == null:
+		quest_log = preload("res://systems/quests/quest_log.gd").new()
+		quest_log.name = "QuestLog"
+		add_child(quest_log)
+	for quest in REVIEW_QUESTS:
+		if not ContentDB.has(str(quest[0])):
+			continue
+		quest_log.call("start", str(quest[0]))
+		for i in int(quest[1]):
+			quest_log.call("advance", str(quest[0]))
 
 
 ## Two saved names so the title menu, Continue and the save/load screen have something real.
@@ -280,55 +303,6 @@ class FakePlayer:
 	class FakeInteractor:
 		extends Node
 		signal prompt_changed(text: String)
-
-
-class FakeQuestLog:
-	extends Node
-
-	func _init() -> void:
-		add_to_group("quest_log")
-
-	var _active: Array[Dictionary] = [
-		{"id": "core:quest/toll_hums", "name": "The Toll Hums", "layer": "main", "stage": 2,
-		 "journal": [
-			"Old Pennywort says the Cracked Toll has begun to hum at night, the way it did before the Quiet Villages. He would not say that in the tavern, which is how I know he means it.",
-			"Roll-Warden Cade let me read the page at the back of the Roll. Eight villages have gone quiet in living memory. Two of the names on the far page have started being answered.",
-			"Whatever is humming, it is answering something. I should stand in the Toll's crater at night and listen."],
-		 "objectives": [
-			{"text": "Speak to Pennywort at the mill", "done": true},
-			{"text": "Read the Roll at Wardens' Rest", "done": true},
-			{"text": "Stand in the Toll's crater after dark", "done": false},
-			{"text": "Find what answers it", "done": false}]},
-		{"id": "core:quest/wheel_that_turns", "name": "The Wheel That Turns", "layer": "side", "stage": 1,
-		 "journal": [
-			"The mill wheel turns with no water in the race. The miller has stopped charging for flour, which the village finds more frightening than the wheel."],
-		 "objectives": [
-			{"text": "Look under the mill", "done": false},
-			{"text": "Ask the Larkbourne Boys about the wheel they stole", "done": false}]},
-		{"id": "core:quest/lantern_clerks_errand", "name": "A Lantern-Clerk's Errand", "layer": "faction", "stage": 3,
-		 "journal": [
-			"The Sayers' Circle wants three accounts of the Dwindling written down from people who have never met a Sayer. They pay by the account and argue with each one."],
-		 "objectives": [
-			{"text": "Take down an account in Merrowby", "done": true},
-			{"text": "Take down an account in Gullhithe", "done": true},
-			{"text": "Take down an account in Isseva", "done": false}]},
-	]
-
-	func active_quests() -> Array[Dictionary]:
-		return _active
-
-	func completed_quests() -> Array[Dictionary]:
-		return [{"id": "core:quest/a_name_for_the_foundling", "name": "A Name for the Foundling",
-				"layer": "main", "outcome": "named",
-				"journal": ["I came up the Hushline Stair with no name and no memory. Wren Tallow gave me the first and said the second would keep."],
-				"objectives": [{"text": "Climb out of the Hush", "done": true}, {"text": "Be named at the Hearthstone", "done": true}]}]
-
-	func active_markers() -> Array[Dictionary]:
-		return [
-			{"place_id": "core:place/cracked_toll", "radius": 260.0},
-			{"place_id": "core:place/pennywort_mill", "radius": 180.0},
-			{"place_id": "core:place/gullhithe", "radius": 320.0},
-		]
 
 
 class FakeRunner:
