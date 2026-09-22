@@ -17,7 +17,23 @@ const LOD2_DISTANCE := 75.0
 const LOD_END := 260.0
 
 
+## Only the categories the world scatters from MultiMeshes may take their albedo from the
+## instance colour. The cave forge bakes its cavity shading into vertex colours
+## (tools/interiors/cave_forge.py), so switching this on for everything would multiply that
+## shading into the albedo of every interior in the game -- a change to somebody else's work,
+## made by accident, in the dark.
+const INSTANCE_TINTED := ["/models/props/", "/models/rocks/", "/models/trees/", "/models/flora/"]
+
+var _instance_tinted := false
+
+
 func _post_import(scene: Node) -> Object:
+	var source := get_source_file()
+	_instance_tinted = false
+	for prefix in INSTANCE_TINTED:
+		if source.contains(prefix):
+			_instance_tinted = true
+			break
 	var by_base: Dictionary = {}
 	for node in _all_mesh_instances(scene):
 		_convert_materials(node)
@@ -109,9 +125,10 @@ func _tune_standard(mat: Material) -> void:
 	sm.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
 	# Rocks, stumps and the rest of the scattered opaque assets are drawn from MultiMeshes
 	# that carry a per-instance tint (worldgen/cells.py), and a StandardMaterial3D ignores it
-	# unless it is told to use the vertex colour. No forge generator bakes a colour attribute
-	# into a mesh, so for anything not in a MultiMesh this reads as white and changes nothing.
-	sm.vertex_color_use_as_albedo = true
+	# unless it is told to use the vertex colour. No gen_* generator bakes a colour attribute
+	# into a mesh, so for anything of theirs not in a MultiMesh this reads as white and
+	# changes nothing -- but the cave forge does bake one, hence the category check.
+	sm.vertex_color_use_as_albedo = _instance_tinted
 
 
 func _make_foliage_material(src: Material) -> ShaderMaterial:

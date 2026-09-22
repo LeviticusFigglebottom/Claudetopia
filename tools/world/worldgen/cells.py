@@ -309,8 +309,16 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             # multiplier is allowed to travel.
             strength = float(cfg.get("tint_strength", 0.45))
             base_col = (1.0 - strength) + strength * pal[idx % pal.shape[0]]
+        # Jitter one plant against the next. Almost all of it is *lightness*: a field of grass
+        # varies from tuft to tuft in how pale and how dry it is, not in hue. Drawing three
+        # independent normals, one per channel, moves the hue instead -- at a sigma of 0.12
+        # that is a third of a channel, and the moor came back scattered with yellow, orange,
+        # violet and blue clumps like confetti. It had always been written that way and never
+        # showed, because the foliage shader ignored the instance colour until today.
         jit = float(cfg.get("tint_jitter", 0.07))
-        tints = np.clip(base_col[None, :] * (1.0 + rng.normal(0.0, jit, (x.size, 3))), 0.25, 1.0)
+        light = rng.normal(0.0, jit, (x.size, 1))
+        hue = rng.normal(0.0, jit * 0.28, (x.size, 3))
+        tints = np.clip(base_col[None, :] * (1.0 + light + hue), 0.25, 1.0)
         # This region's own variants of the thing the rule names. Spreading the instances over
         # them is what stops a hillside being one tree printed four hundred times.
         variants = assets_for(index, str(cfg["asset"]), region.short)
