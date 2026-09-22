@@ -32,6 +32,18 @@ Objective types and what closes them:
 | `escort` | npc id (+`place`) | `escort_arrived` |
 | `choice` | option id (+`options`, `effects_by_option`) | `choose()` |
 
+**Naming a stage.** Content names a stage by its id or by its *number*, and numbers count from
+one: `{"quest_at": ["core:quest/the_naming", 1]}` is the waking, the first stage.
+`QuestLog.stage_index()` is the one translation from what content wrote to an index; `stage_of()`
+answers that index (from nought) and is never what content writes. The code used to read the
+numbers as indices, so the pack's forty-eight numbered references all landed a stage late;
+`tests/unit/test_quest_stage_references.gd` pins every one of them to the stage id its writer
+meant, and fails on a new number until somebody says what it means.
+
+A stage's `on_complete` may send the quest to another stage (a branch rejoining the line), and
+when it does that is where the quest goes: `advance()` no longer walks on into the next stage
+in the list over the top of it.
+
 An option is written either as a plain id, with its consequences in the objective's
 `effects_by_option`, or as an object `{id, text, conditions?, effects?}` carrying its own. Both
 are answered by `choose()`, which refuses an option whose `conditions` are unmet; a branching
@@ -89,7 +101,8 @@ loaded game still knows what the board asked for. Board cooldowns ride in the sa
 
 ```gdscript
 Social.quests.start(quest_id) -> bool          # honours the def's `requires`
-Social.quests.set_stage(quest_id, stage)       # index or stage id
+Social.quests.set_stage(quest_id, stage)       # stage id, or its number counted from 1
+Social.quests.stage_index(quest_id, stage) -> int  # what content wrote, as an index (-1: no such stage)
 Social.quests.advance(quest_id)
 Social.quests.complete(quest_id, outcome := "") / fail(quest_id, reason) / abandon(quest_id)
 Social.quests.choose(quest_id, option) / complete_objective(quest_id, key) / deliver(quest_id, npc_id)

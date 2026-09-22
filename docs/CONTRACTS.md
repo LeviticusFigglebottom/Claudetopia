@@ -182,6 +182,10 @@ Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 `{"rep": [faction, delta]}`, `{"morality": delta}`, `{"renown": delta}`,
 `{"marks": delta}`, `{"start_quest": id}`, `{"teach_recipe": id}`,
 `{"teach_spell": "core:spell/x"}`.
+**A quest stage is named by its id or by its number counted from one** — in `quest_at`,
+`quest_min_stage` and `quest_stage` alike: `["core:quest/the_naming", 1]` is the Naming's first
+stage, `["core:quest/the_naming", "wake"]` the same stage by name. `QuestLog.stage_index()` is the
+only translation to an index (DECISIONS 2026-09-22, "A stage number counts from one").
 `teach_recipe` and `knows_recipe` go through the context's **`recipes`** provider, which
 `Social` binds to the first node in the `crafting` group, and whose methods are
 `learn_recipe` / `knows_recipe`. `teach_spell` and `knows_spell` go through the context's **`sayings`** provider, which `Social`

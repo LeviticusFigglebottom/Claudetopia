@@ -495,3 +495,21 @@ vista came back littered with orange slabs where the gold barley and red poppies
 multiplied by gold and red. Rules now carry a `tint_strength` (how far from white the
 multiplier may travel, default 0.45) and the species whose asset already carries that colour
 take none at all.
+
+## 2026-09-22 · A stage number counts from one
+**Decision.** Content names a quest stage by its id or by its number counted from one, in
+`quest_at`, `quest_min_stage` and `quest_stage` alike. The code translates in one place,
+`QuestLog.stage_index()`; `stage_of()` stays the index from nought and is never what content
+writes.
+**Why.** Every quest in the pack that writes stage numbers says in its own `notes` that they are
+1-based, and the forty-eight numbered references all read correctly that way and wrongly the
+other. The code compared them with the 0-based index, so each landed a stage late or on no stage
+at all — among them the main thread's first conversation and every branch of six side quests.
+**Alternatives.** Rewriting the forty-eight numbers as stage ids, which is what the later half of
+the pack already does and is the sturdier habit. It would have made the test that pins them
+tautological, and the numbers were written consistently; the fault was the reader, not the
+writing. New content should still prefer ids.
+**Consequences.** `test_quest_stage_references.gd` holds, for every number the pack uses, the
+stage id its prose describes, and fails on a number nobody has explained. The fake quest provider
+in `tests/fixtures/fakes.gd` counts the same way as the real log, so a test cannot pass against a
+convention the game does not use.

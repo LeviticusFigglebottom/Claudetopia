@@ -23,6 +23,13 @@ extends Node
 ##
 ## Markers are approximate areas, never pins: {place_id, radius, quest_id, text} (DESIGN §5.10).
 ##
+## **How content names a stage.** By its id, or by its *number*, counted from one: the first
+## stage is 1. Every quest in the pack that writes numbers says so in its own `notes` ("Stage
+## numbers in quest_at and quest_stage are 1-based"), and until this was written down in code
+## the code read them as indices from nought, so every numbered reference in the pack landed on
+## the stage after the one its writer meant, or on none. `stage_index()` is the one place that
+## turns what content wrote into an index; `stage_of()` is that index and content never writes it.
+##
 ## Emits: EventBus.quest_started(id), quest_stage_changed(id, stage), quest_completed(id, outcome).
 
 const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort", "choice", "use_item", "rest_at", "read_book"]
@@ -114,6 +121,30 @@ func stage_index_of_id(quest_id: String, stage_id: String) -> int:
 	return -1
 
 
+## The index of a stage as content names it: a stage id, or a stage number counted from one.
+## -1 when it names no stage of this quest.
+func stage_index(quest_id: String, stage: Variant) -> int:
+	return stage_index_in(stages_of(quest_id), stage)
+
+
+## `stage_index` over a stage list, for anything that holds a definition rather than a log: the
+## content tests, the tools. A string that is all digits is a number, because that is how one
+## arrives from the debug console.
+static func stage_index_in(stages: Array, stage: Variant) -> int:
+	match typeof(stage):
+		TYPE_INT, TYPE_FLOAT:
+			var n := int(stage)
+			return n - 1 if n >= 1 and n <= stages.size() else -1
+		TYPE_STRING, TYPE_STRING_NAME:
+			var s := str(stage)
+			for i in stages.size():
+				if typeof(stages[i]) == TYPE_DICTIONARY and str((stages[i] as Dictionary).get("id", "")) == s:
+					return i
+			if s.is_valid_int():
+				return stage_index_in(stages, int(s))
+	return -1
+
+
 # --- life cycle -------------------------------------------------------------------------------
 
 func start(quest_id: String) -> bool:
@@ -138,21 +169,15 @@ func start(quest_id: String) -> bool:
 	return true
 
 
-## Moves a quest to a stage, by index or by stage id. Running effects of the stage entered.
+## Moves a quest to a stage, named as content names it: a stage id, or a stage number counted
+## from one. Runs the effects of the stage entered.
 func set_stage(quest_id: String, stage: Variant) -> void:
 	if not quests.has(quest_id) or str(quests[quest_id].get("state", "")) != "active":
 		if not is_completed(quest_id) and not start(quest_id):
 			return
 		if str(quests[quest_id].get("state", "")) != "active":
 			return
-	var index := -1
-	match typeof(stage):
-		TYPE_INT, TYPE_FLOAT:
-			index = int(stage)
-		TYPE_STRING, TYPE_STRING_NAME:
-			index = stage_index_of_id(quest_id, str(stage))
-		_:
-			index = -1
+	var index := stage_index(quest_id, stage)
 	if index < 0:
 		Log.warn("Quests", "%s: unknown stage '%s' (content problem)" % [quest_id, str(stage)])
 		return
@@ -160,12 +185,21 @@ func set_stage(quest_id: String, stage: Variant) -> void:
 
 
 ## Advances to the next stage, completing the quest after the last one.
+##
+## A stage's `on_complete` may say where to go instead — a branch stage rejoins the main line
+## that way (`{"quest_stage": [quest, "tell_osric"]}`). This used to run those effects, land on
+## the stage they named, and then carry on as though they had said nothing, entering
+## `current + 1` over the top: every branch of the six branching side quests fell through into
+## the next branch in the list rather than rejoining. When the effects have moved the quest,
+## or finished it, that is the answer.
 func advance(quest_id: String) -> void:
 	if not is_active(quest_id):
 		return
 	var current := stage_of(quest_id)
 	var stage := stage_def(quest_id, current)
 	_run_effects(quest_id, stage.get("on_complete", []), "quest_complete_stage")
+	if not is_active(quest_id) or stage_of(quest_id) != current:
+		return
 	if current + 1 >= stages_of(quest_id).size():
 		complete(quest_id, str(stage.get("outcome", quests[quest_id].get("outcome", ""))))
 	else:
