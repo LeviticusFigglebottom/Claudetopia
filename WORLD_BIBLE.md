@@ -247,6 +247,10 @@ apostrophe appears only in names of the drowned. Places end in *-eva* (landing),
 
 Each sheet is also data in `content/packs/core/regions/<id>.json`. The
 **drop test**: with the HUD off, a player should know the region within seconds.
+Each region's "Palette & light" line below is carried out as a named light
+(Harvest Gold, Lake Glass, Drowned Lantern, Green Cathedral, Bone and Slate,
+Ember Ash), written up with what each is for in `game/systems/atmosphere/README.md`
+("Six lights"), and its values are the region's `identity.light`.
 
 ### 6.1 Hearthvale (`core:region/hearthvale`) — the start
 * **Geology & landforms**: chalk downland; long whale-backed hills, dry valleys,
