@@ -31,6 +31,10 @@ const BODY_MASK := LAYER_WORLD | LAYER_PLAYER | LAYER_ENEMY | LAYER_NPC | LAYER_
 const KNOCKDOWN_DURATION := 1.6
 const GET_UP_DURATION := 0.8
 const RIPOSTE_VICTIM_STUN := 1.2
+## A shove slows at this rate (m/s²); a knockback of d metres starts at sqrt(2·SHOVE_DECEL·d) m/s.
+const SHOVE_DECEL := 14.0
+## How far being knocked off your feet carries you, before any knockback the blow itself carries.
+const KNOCKDOWN_SHOVE := 1.2
 ## How far above the heightfield still counts as standing on it.
 const GROUND_SKIN := 0.12
 
@@ -79,6 +83,7 @@ var invulnerable_from: float = -100.0
 var invulnerable_until: float = -100.0
 var stunned_until: float = -100.0
 var last_attacker: Node = null
+## The shove still to be spent, as a speed (m/s) that SHOVE_DECEL runs down. See integrate_shove.
 var shove: Vector3 = Vector3.ZERO
 var gravity: float = 9.81
 
@@ -376,7 +381,7 @@ func take_hit(hit: HitData) -> String:
 	push_dir.y = 0.0
 	push_dir = push_dir.normalized() if push_dir.length_squared() > 0.0001 else -forward()
 	if hit.knockback > 0.0:
-		shove += push_dir * hit.knockback
+		_add_shove(push_dir, hit.knockback)
 	if hit.crit_kind == "riposte" or hit.crit_kind == "backstab":
 		riposte_open_until = -100.0
 		stunned_until = maxf(stunned_until, t + RIPOSTE_VICTIM_STUN)
@@ -485,7 +490,9 @@ func knock_down(direction: Vector3) -> void:
 		stagger(0.8)
 		return
 	stunned_until = maxf(stunned_until, now() + KNOCKDOWN_DURATION + GET_UP_DURATION)
-	shove += direction.normalized() * 4.0
+	# Off your feet carries you at least this far; a blow that already throws you further does not
+	# throw you further still for putting you down.
+	_add_shove(direction, maxf(KNOCKDOWN_SHOVE - shove_left(), 0.0))
 	on_action_interrupted()
 	anim.play_intent("Knockdown", {"length": KNOCKDOWN_DURATION})
 	knocked_down.emit()
@@ -654,14 +661,37 @@ func snap_to_terrain() -> bool:
 	return true
 
 
-## Adds the pending shove (knockback) to the horizontal velocity and decays it.
+## Pushes the body `metres` along `direction` (HitData.knockback is metres), over the next few
+## frames, whatever it is doing meanwhile.
+## Two shoves add as distances, not as speeds (speeds would add up to far more than the sum).
+func _add_shove(direction: Vector3, metres: float) -> void:
+	var flat := Vector3(direction.x, 0.0, direction.z)
+	if metres <= 0.0 or flat.length_squared() < 0.0001:
+		return
+	var carried := shove.normalized() * shove_left() if shove.length_squared() > 0.0001 else Vector3.ZERO
+	var total := carried + flat.normalized() * metres
+	shove = total.normalized() * sqrt(2.0 * SHOVE_DECEL * total.length()) if total.length_squared() > 0.0001 else Vector3.ZERO
+
+
+## How many metres the shove still has to carry the body, on open ground.
+func shove_left() -> float:
+	return shove.length_squared() / (2.0 * SHOVE_DECEL)
+
+
+## Moves the body by this frame's share of the shove and runs the shove down. The shove is its own
+## motion, never folded into `velocity`: it used to be added to the velocity every frame, so a body
+## whose state only damps its velocity (stunned, knocked down) summed sixty shoves a second, and a
+## bristleback's charge threw the player at 140 m/s off the edge of the world (`./run.sh fights`).
 func integrate_shove(delta: float) -> void:
 	if shove.length_squared() < 0.0001:
 		shove = Vector3.ZERO
 		return
-	velocity.x += shove.x
-	velocity.z += shove.z
-	shove = shove.move_toward(Vector3.ZERO, 14.0 * delta)
+	var hit := move_and_collide(Vector3(shove.x, 0.0, shove.z) * delta)
+	if hit != null:
+		# A wall takes the part of the shove that points into it; the rest slides along it.
+		shove = shove.slide(hit.get_normal())
+		shove.y = 0.0
+	shove = shove.move_toward(Vector3.ZERO, SHOVE_DECEL * delta)
 
 
 ## Turns the body toward a world point at turn_speed rad/s.

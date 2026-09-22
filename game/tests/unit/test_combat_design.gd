@@ -105,13 +105,15 @@ func _free_again() -> void:
 
 
 ## A foe that stands where it is put and does nothing on its own: its brain and its steering are
-## off, its hurtbox, poise, statuses and animation are the real ones.
+## off, its hurtbox, poise, statuses and animation are the real ones. It is placed before it enters
+## the tree: added at the origin and moved after, it is a floor under the player that jumps and
+## turns in one frame, and the player leaves it at the floor's speed.
 func _foe(id: String, at: Vector3, yaw := PI) -> Enemy:
 	var e := Enemy.new()
 	e.configure(id)
-	root.add_child(e)
-	e.global_position = at
+	e.position = at
 	e.rotation.y = yaw
+	root.add_child(e)
 	e.spawn_position = at
 	e.spawn_yaw = yaw
 	e.brain.post = at

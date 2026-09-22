@@ -8,8 +8,14 @@ extends Node3D
 ## The player is scripted, not good. It sees a telegraph a quarter second after it starts, and rolls
 ## so the blow lands a fifth of a second into the roll, inside the i-frames; it swings when nothing
 ## is about to land and it has a roll's stamina in hand, uses a heavy to finish a foe's poise, and
-## closes the distance otherwise. It never blocks: no starting kit carries a shield. So the numbers
-## are a floor for a patient player, not a measure of what anybody will feel.
+## closes the distance otherwise, running when it is more than a step out of reach. It never
+## blocks, because no starting kit carries a shield, and it never heals, because the flask DESIGN
+## §5.5 refills at a Hearthstone does not exist yet and a loaf mends 8. So the numbers are a floor
+## for a patient player at level 1, not a measure of what anybody will feel.
+##
+## Flags: "trivial" is under TRIVIAL_SECONDS without a blow taken; "not won in 120 s" is a fight
+## still going at the limit (the row says how much of the foes' health was left); "unwinnable for
+## this player" is a fight the player died in.
 ##
 ## Along the way it checks what DESIGN promises and a playthrough would notice first:
 ##   * every blow that reaches the player was telegraphed for at least as long as its attack says;
@@ -30,6 +36,9 @@ const START := Vector3(0.0, 0.05, 0.0)
 const FOE_DISTANCE := 9.0
 ## Trivial: over quickly and nothing landed. A finding, not a failure.
 const TRIVIAL_SECONDS := 8.0
+## The enemies roll dice (which attack, whether to swing this frame); the dice are seeded so that
+## a run can be repeated and a change measured against the run before it.
+const SEED := 5150
 const CALLINGS: Array[String] = ["core:calling/hearthkeeper", "core:calling/cragborn"]
 ## One foe per archetype, the first a traveller meets: the start region's where it has one, then
 ## the next region by danger.
@@ -88,6 +97,7 @@ func _run() -> void:
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
 	await get_tree().physics_frame
+	seed(SEED)
 	var only := ""
 	var archetypes: Array = []
 	for a in OS.get_cmdline_user_args():
@@ -98,7 +108,7 @@ func _run() -> void:
 		elif a.begins_with("--only="):
 			archetypes = Array(a.substr(7).split(","))
 			_partial = true
-	print("FIGHTS: calling | archetype | enemy | outcome | time s | blows taken | damage taken | player hits/swings | rolled | staggered")
+	print("FIGHTS: calling | archetype | enemy | outcome | time s | blows taken | damage taken | player hits/swings | dealt per hit | foe hp left | foes standing | rolled | staggered")
 	for calling in CALLINGS:
 		if only != "" and not calling.ends_with(only):
 			continue
@@ -107,9 +117,11 @@ func _run() -> void:
 				continue
 			var r: Dictionary = await _fight(calling, fight)
 			results.append(r)
-			print("FIGHT | %s | %s | %s | %s | %.1f | %d | %.0f | %d/%d | %d | %d%s" % [
+			print("FIGHT | %s | %s | %s | %s | %.1f | %d | %.0f | %d/%d | %.1f | %.0f%% | %d/%d | %d | %d%s" % [
 				Ids.name_of(calling), r["archetype"], Ids.name_of(str(r["enemy"])), r["outcome"], float(r["seconds"]),
-				int(r["blows"]), float(r["damage"]), int(r["landed"]), int(r["swings"]), int(r["rolled"]), int(r["staggered"]),
+				int(r["blows"]), float(r["damage"]), int(r["landed"]), int(r["swings"]),
+				float(r["dealt"]) / maxf(float(r["landed"]), 1.0), float(r["left"]) * 100.0, int(r["standing"]), int(r["foes"]),
+				int(r["rolled"]), int(r["staggered"]),
 				("  <- " + str(r["flag"])) if str(r["flag"]) != "" else ""])
 	_verdict()
 
@@ -170,12 +182,27 @@ func _fight(calling: String, fight: Dictionary) -> Dictionary:
 	_release_all()
 	if _player.hit_taken.is_connected(_on_player_hit):
 		_player.hit_taken.disconnect(_on_player_hit)
+	# What the player took off them, and what was left standing: a timeout reads very differently
+	# at 90% left than at 5%.
+	var dealt := 0.0
+	var pool := 0.0
+	var standing := 0
+	for e in _foes:
+		if is_instance_valid(e):
+			pool += e.max_health
+			dealt += e.max_health - maxf(e.health, 0.0) if not e.is_dead() else e.max_health
+			if not e.is_dead():
+				standing += 1
 	var r := {
 		"calling": calling, "archetype": fight["archetype"], "enemy": fight["enemy"], "outcome": outcome,
+		"dealt": dealt, "left": 1.0 - dealt / maxf(pool, 1.0), "standing": standing, "foes": _foes.size(),
 		"seconds": seconds, "blows": _stats["blows"], "damage": maxf(hp_start - _player.health, 0.0) if outcome != "lost" else hp_start,
 		"landed": _stats["landed"], "swings": _stats["swings"], "rolled": _stats["rolled"], "staggered": _stats["staggered"],
 	}
-	r["flag"] = "cannot be won by this player" if outcome != "won" else ("trivial" if seconds < TRIVIAL_SECONDS and int(r["blows"]) == 0 else "")
+	match outcome:
+		"lost": r["flag"] = "unwinnable for this player: it died"
+		"timeout": r["flag"] = "not won in %d s" % int(TIME_LIMIT)
+		_: r["flag"] = "trivial" if seconds < TRIVIAL_SECONDS and int(r["blows"]) == 0 else ""
 	var died := outcome == "lost"
 	stage.queue_free()
 	_player = null
@@ -393,7 +420,9 @@ func _decide() -> void:
 			_tap("attack_light", 2)
 	if dist > reach_now * 0.85:
 		_held["move_forward"] = true
-		if dist > 6.0 and p.stamina > p.max_stamina * 0.6:
+		# Out of reach by more than a step, and with two rolls and a swing to spare: run. A caster
+		# that keeps its distance backs off at about 3 m/s, which a walk (4.2 m/s) barely gains on.
+		if dist > reach_now * 1.6 and p.stamina > DamageModel.STAMINA_DODGE * 2.0 + light_cost:
 			_held["sprint"] = true
 
 

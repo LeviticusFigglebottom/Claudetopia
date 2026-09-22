@@ -11,6 +11,10 @@ signal hit_landed(victim: Node, hit: HitData, outcome: String)
 const CHAIN_LENGTH := {"1H": 3, "2H": 2, "dagger": 2, "unarmed": 2, "bow": 0, "staff": 0}
 const UNARMED_BLOCK := {"class": "unarmed", "damage": 6.0, "poise_damage": 8.0, "stamina_light": 12.0, "stamina_heavy": 20.0, "speed": 1.2, "reach": 1.0, "clips_set": "unarmed", "parry": false, "stability": 0.2, "kind": "blunt"}
 const HITBOX_RADIUS := 0.4
+## How far a swing reaches up and down from the attack origin (1.1 m on a person): from a hand's
+## breadth off the ground to a little over the head. See Hitbox.set_swing.
+const SWING_BELOW := 1.0
+const SWING_ABOVE := 0.8
 
 var item_id: String = ""
 var item_def: Dictionary = {}
@@ -73,12 +77,13 @@ func configure(def: Dictionary, id: String = "", instance_data: Dictionary = {})
 	enchant = data.get("enchant", {}) if typeof(data.get("enchant", {})) == TYPE_DICTIONARY else {}
 	name = "Weapon_" + (Ids.name_of(id) if not id.is_empty() else "unarmed")
 	if hitbox != null:
-		hitbox.set_capsule(HITBOX_RADIUS, minf(reach, 3.0))
+		hitbox.set_swing(HITBOX_RADIUS, minf(reach, 3.0), SWING_BELOW, SWING_ABOVE)
 
 
 func _ready() -> void:
 	if hitbox == null:
 		hitbox = Hitbox.create(owner_actor, HITBOX_RADIUS, minf(reach, 3.0))
+		hitbox.set_swing(HITBOX_RADIUS, minf(reach, 3.0), SWING_BELOW, SWING_ABOVE)
 		add_child(hitbox)
 		hitbox.hit_landed.connect(_on_hit_landed)
 
