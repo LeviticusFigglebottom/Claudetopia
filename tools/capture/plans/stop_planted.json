@@ -1,0 +1,13 @@
+{
+  "sequences": [
+    {"label": "jog_stop_before", "view": "feet", "plant_feet": false,
+     "keys": [[0.0, "W", true], [1.2, "W", false]],
+     "shots": {"from": 1.25, "every": 0.05, "count": 16}},
+    {"label": "jog_stop_after", "view": "feet",
+     "keys": [[0.0, "W", true], [1.2, "W", false]],
+     "shots": {"from": 1.25, "every": 0.05, "count": 16}},
+    {"label": "sprint_stop_after", "view": "feet",
+     "keys": [[0.0, "Shift", true], [0.0, "W", true], [2.0, "W", false], [2.0, "Shift", false]],
+     "shots": {"from": 2.05, "every": 0.05, "count": 22}}
+  ]
+}

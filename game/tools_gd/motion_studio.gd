@@ -12,13 +12,15 @@ extends Node3D
 ## Run it with --fixed-fps 60: every frame is then one physics tick, and a time in the plan is
 ## simulated time.
 ##
-## Plan: {"sequences": [{"label": "start_stop", "view": "side" | "player" | "front",
+## Plan: {"sequences": [{"label": "start_stop", "view": "side" | "feet" | "player" | "front",
 ##          "length": s, "keys": [[t, "W", true], [t, "W", false], ...],
-##          "look": [[t, dx], ...], "hud": false, "menu": "",
+##          "look": [[t, dx], ...], "hud": false, "menu": "", "plant_feet": true,
 ##          "shots": {"from": s, "every": s, "count": n}  or  [t, t, ...]}]}
 ## A key is a real key event through the input map, so through the bindings as the game sets them
 ## up. "look" turns the view as a mouse moving `dx` pixels would; "hud" puts the HUD up and "menu"
-## opens that screen (UI.open) before the first tick. Every sequence starts from a body
+## opens that screen (UI.open) before the first tick. "feet" is the side view brought down to the
+## feet, close; "plant_feet": false films the body as it stopped before its feet were held
+## (HumanoidModel.plant_feet), for a before and after in one run. Every sequence starts from a body
 ## standing still at the origin, facing north (-Z), with the view behind it. Each shot writes
 ## <out>/<label>_<nn>.png, and one line per shot goes to <out>/motion.txt: the time, the state,
 ## the speed, the clip and where the feet are.
@@ -26,6 +28,8 @@ extends Node3D
 const PLAYER_SCENE := "res://actors/player/player.tscn"
 const SIDE_DISTANCE := 5.0
 const SIDE_HEIGHT := 1.0
+const FEET_DISTANCE := 2.4
+const FEET_HEIGHT := 0.45
 
 var plan_path := ""
 var out_dir := "captures/motion"
@@ -131,6 +135,7 @@ func _run() -> void:
 func _sequence(seq: Dictionary) -> void:
 	var label := str(seq.get("label", "motion"))
 	UI.close_all()
+	HumanoidModel.plant_feet = bool(seq.get("plant_feet", true))
 	_fresh_player(bool(seq.get("hud", false)))
 	for i in 20:
 		await get_tree().physics_frame
@@ -163,6 +168,7 @@ func _sequence(seq: Dictionary) -> void:
 		await get_tree().physics_frame
 	for key in _held.keys():
 		_send_key(str(key), false)
+	HumanoidModel.plant_feet = true
 
 
 func _shot_times(spec: Variant) -> Array[float]:
@@ -219,6 +225,9 @@ func _place_camera(view: String) -> void:
 		"front":
 			_cam.make_current()
 			_cam.look_at_from_position(at + Vector3(0.0, SIDE_HEIGHT, -SIDE_DISTANCE), at + Vector3.UP * 0.95)
+		"feet":
+			_cam.make_current()
+			_cam.look_at_from_position(at + Vector3(FEET_DISTANCE, FEET_HEIGHT, 0.0), at + Vector3.UP * 0.35)
 		_:
 			_cam.make_current()
 			_cam.look_at_from_position(at + Vector3(SIDE_DISTANCE, SIDE_HEIGHT, 0.0), at + Vector3.UP * 0.95)

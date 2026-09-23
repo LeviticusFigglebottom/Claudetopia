@@ -133,6 +133,11 @@ var _applying := false      ## guards the appearance_dict setter against re-ente
 ## 0 holds the pose, which is what a heavy being charged is. Locomotion always plays at 1.
 var speed_scale: float = 1.0
 var _holding := ""          ## a finished HOLD_LAST_POSE clip the body is lying in
+## Holds the feet where they stand when the body stops and steps them into the stance, so a stop
+## does not slide them along the ground (FootPlanter). Off, a stop cross-fades the gait into the
+## idle as it did before (the review tool's before/after switch).
+static var plant_feet := true
+var _planter: FootPlanter = null
 
 static var _clip_cache: Dictionary = {}
 
@@ -194,6 +199,7 @@ func build() -> void:
 	_apply_loop_flags()
 	_build_sockets()
 	_build_animation_tree()
+	_planter = FootPlanter.make(skeleton)
 
 
 ## The rig GLB's meshes are named to avoid clashing with bone names (see the forge's
@@ -1145,7 +1151,18 @@ func _update_locomotion(delta: float) -> void:
 	_loco_now = _loco_now.lerp(_locomotion, 1.0 - exp(-delta / SPEED_SMOOTH_S))
 	_sneak_w = move_toward(_sneak_w, 1.0 if _sneaking else 0.0, delta / SNEAK_BLEND_S)
 	var p := locomotion_params(_loco_now, _sneak_w, _locomotion.length())
-	_move_w = move_toward(_move_w, smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length()), delta / MOVE_BLEND_S)
+	var moving := smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length())
+	if _plants_feet():
+		# The gait keeps its pose until the body stands and its feet are held; only then does the
+		# body settle into the idle over them while the feet step into it (_plant_feet). A
+		# one-shot the body stands through goes back to the idle, not to a frozen stride.
+		if _locomotion.length() >= FootPlanter.STANDS_BELOW:
+			moving = 1.0
+		elif _planter.is_planted() or not _one_shot.is_empty() or not _holding.is_empty():
+			moving = 0.0
+		else:
+			moving = _move_w
+	_move_w = move_toward(_move_w, moving, delta / MOVE_BLEND_S)
 	p["move/blend_amount"] = _move_w
 	if _has_stance_layer:
 		_stance_w = move_toward(_stance_w, 1.0 if _stance != "" else 0.0, delta / STANCE_BLEND_S)
@@ -1214,8 +1231,31 @@ func _process(delta: float) -> void:
 	var step := delta * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
 	if anim_tree != null:
 		anim_tree.advance(step)
-	if _one_shot.is_empty():
-		return
+	if not _one_shot.is_empty():
+		_advance_one_shot(step)
+	_plant_feet(delta)
+
+
+## The feet held where they stand when the body stops, and stepped into the stance, on the pose
+## the clips have just set (FootPlanter). Not on a child's rig: its legs are re-proportioned after
+## this, by ChildProportions, and a solve on the grown legs would miss its feet.
+func _plant_feet(delta: float) -> void:
+	if _plants_feet():
+		_planter.update(delta, _locomotion.length(), not _one_shot.is_empty() or not _holding.is_empty())
+	elif _planter != null and _planter.is_planted():
+		_planter.release()
+
+
+func _plants_feet() -> bool:
+	return plant_feet and _planter != null and _child_mod == null and anim_tree != null
+
+
+## The feet the planter holds, for tests and the motion studio (null on a rig without legs).
+func foot_planter() -> FootPlanter:
+	return _planter
+
+
+func _advance_one_shot(step: float) -> void:
 	var prev := _one_shot_time
 	_one_shot_time += step
 	_fire_events(prev, _one_shot_time)

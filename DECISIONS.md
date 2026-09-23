@@ -1010,3 +1010,35 @@ reads as a shuffle in play.
 **Consequences.** Enemies that raise a guard (`Enemy._guard`) get the same layer: they now walk
 under their guard instead of gliding. Any new stance meant to be held over the legs is added
 to `HumanoidModel.STANCE_CLIPS`.
+
+## 2026-09-23 · A stop plants the feet and steps them together; nothing slides into the idle
+**Decision.** When a body comes to a stand (ground speed under 0.05 m/s, no one-shot playing),
+`FootPlanter` holds each foot where the stride put it down, in the world, by a two-bone solve of
+each leg on the pose the clips have just set, and lowers the hips as far as the wider stance
+needs. The gait keeps its pose until the feet are held; then the body settles into the idle over
+them, and the foot furthest from its place in the idle lifts 6 cm and steps into it over 0.24 s,
+then the other if it is more than 3 cm off. A foot the stop caught in the air steps first. Once
+settled the feet stay held, and a foot steps again when the body has turned 20° or drifted 10 cm
+from it: a standing body turning to face someone shuffles round on its feet. The feet go back to
+the clips over 0.1 s when the body moves off, at once when it leaves the ground or is carried off
+(a teleport, a snap turn), and after a one-shot they are planted where it left them and stepped
+back into the stance.
+**Why.** The stop cross-faded a frozen stride into the idle under still feet. Measured on the
+heel and the ball of each foot, the points that bear on the ground (a foot rolling about its heel
+or its ball keeps that point still, so only a slide moves it): settling into the idle, the feet
+slid 114 cm between them after a stop from a walk, 110 cm from a jog and 43 cm from a sprint
+(58.6 cm from a jog on the ankles, the older measure). Planted, they slide 0.0 cm in all three,
+in two steps (one after the sprint), settled 0.25-0.49 s after the body stands, the hips at most
+5.5-6.6 cm lower while the stance is wide. Turning 90° on the spot over 1.5 s: five steps, no
+slide, a foot lagging the body 23° at most. After a light attack, standing: two steps back into
+the stance, 0.3 cm of slide.
+**Alternatives.** Stop clips, one on each foot, picked by where the stride is: the usual way, and
+better for a stop from a run, where a body leans back into it; but each needs the stride's phase
+matched and one per gait, and each still ends in a cross-fade into the idle. Engine IK
+(TwoBoneIK3D) does the solve, but not the steps, the hips or the letting go; the solve here is
+fifteen lines, run straight after the tree on the combat clock, where the tests read it back.
+**Consequences.** Every humanoid has it, the player, villagers and enemies, except a child's rig,
+whose legs are re-proportioned after the solve. `HumanoidModel.plant_feet` switches it off (the
+motion studio films a before and after with it). Still wrong: the slowing down before the stand.
+While the body decelerates, the gait's own feet slide on the ground: 15 cm over a stop from a
+walk, 1.8 cm from a jog, 66 cm from a sprint.
