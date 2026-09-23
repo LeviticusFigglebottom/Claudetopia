@@ -194,6 +194,27 @@ class ScatterWorld:
         }
 
 
+def lean_of(cfg: dict, shape: str, water_d: np.ndarray, rng: np.random.Generator) -> tuple:
+    """(lean_deg, toward_deg) per instance, or (None, None) for a rule that stands upright.
+
+    A rule's `lean` is {shape: [min_deg, max_deg]}: on that landform its trees are bent by the
+    prevailing wind, most where they stand exposed at the water (within 30 m, fading to nothing
+    by 450 m) and each a little differently. They lean the way the wind blows: `wind_toward`,
+    the ground direction [x, z] the atmosphere blows its wind (`wm_wind_dir` in
+    systems/atmosphere/atmosphere.gd; a test keeps the two the same), give or take ten degrees.
+    """
+    band = (cfg.get("lean") or {}).get(shape)
+    if not band:
+        return None, None
+    lo, hi = float(band[0]), float(band[1])
+    n = int(np.asarray(water_d).size)
+    exposed = 1.0 - smoothstep(30.0, 450.0, np.asarray(water_d, dtype=np.float32))
+    lean = (lo + (hi - lo) * exposed) * rng.uniform(0.7, 1.0, n)
+    wx, wz = (float(v) for v in cfg.get("wind_toward", (0.8, 0.6)))
+    toward = math.degrees(math.atan2(wz, wx)) + rng.normal(0.0, 10.0, n)
+    return lean.astype(np.float32), toward.astype(np.float32)
+
+
 def topographic_position(H: np.ndarray, spacing: float, radius_m: float = 30.0) -> np.ndarray:
     """Height above the ground's own local mean, in metres: positive on crests and lips,
     negative in hollows and trenches.
@@ -368,6 +389,10 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         light = rng.normal(0.0, jit, (x.size, 1))
         hue = rng.normal(0.0, jit * 0.28, (x.size, 3))
         tints = np.clip(base_col[None, :] * (1.0 + light + hue), 0.25, 1.0)
+        # A tree the wind has worked on for a hundred years leans away from it.
+        # (its own draws, so bending a species changes nothing else about where it stands)
+        lean, toward = lean_of(cfg, region.shape, s["water_d"][take],
+                               np.random.default_rng(np.random.SeedSequence([seed, 9900 + n])))
         # This region's own variants of the thing the rule names. Spreading the instances over
         # them is what stops a hillside being one tree printed four hundred times.
         variants = assets_for(index, str(cfg["asset"]), region.short)
@@ -391,8 +416,11 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             bucket = out.setdefault((ccx, ccz), {})
             for t in sel:
                 lst = bucket.setdefault(variants[int(pick[t])], [])
-                lst.append([round(float(x[t]), 2), round(float(y[t]), 2), round(float(z[t]), 2),
-                            round(float(yaw[t]), 1), round(float(scale[t]), 3), _hex(tints[t])])
+                row = [round(float(x[t]), 2), round(float(y[t]), 2), round(float(z[t]), 2),
+                       round(float(yaw[t]), 1), round(float(scale[t]), 3), _hex(tints[t])]
+                if lean is not None:
+                    row += [round(float(lean[t]), 1), round(float(toward[t]), 1)]
+                lst.append(row)
     if unmatched:
         print("[world] no asset for: %s" % ", ".join(sorted(unmatched)), flush=True)
     return out

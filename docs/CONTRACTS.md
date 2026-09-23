@@ -144,6 +144,12 @@ height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamles
 * `rivers.json`, `roads.json`: `[{"id", "points": [[x, z], ...], "width_m"}]`.
 * `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it..
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
+  An instance row may carry two more fields, `[.., lean_deg, lean_toward_deg]`: the instance is
+  tipped `lean_deg` from upright, its top carried toward the ground direction
+  `(cos, sin)(lean_toward_deg)` in x, z (the world builder writes them for trees the wind has
+  bent). A six-field row stands upright, and a reader that takes only the first six fields sees
+  the tree as it would have been, so old cells and old readers both still work.
+  `WorldStreamer.instance_transform` applies it.
 Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 
 ## 7. Content definitions that other streams depend on

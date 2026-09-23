@@ -11,6 +11,8 @@ and a recipe nobody builds rots, so each is built here once, small.
 from __future__ import annotations
 
 import json
+import math
+import re
 import os
 import subprocess
 import sys
@@ -57,6 +59,34 @@ class RulesTest(unittest.TestCase):
         self.assertIn("marram", cover["flora"])
 
 
+class LeanTest(unittest.TestCase):
+    """The wind-bent trees: CONTRACTS section 6's optional [lean_deg, lean_toward_deg]."""
+
+    def test_only_a_leaning_rule_on_its_own_landform_leans(self):
+        rng = np.random.default_rng(1)
+        water_d = np.array([5.0, 100.0, 800.0], dtype=np.float32)
+        self.assertEqual(CELLS.lean_of({}, "lake_basin", water_d, rng), (None, None))
+        cfg = {"lean": {"lake_basin": [6.0, 16.0]}, "wind_toward": [0.8, 0.6]}
+        self.assertEqual(CELLS.lean_of(cfg, "downs", water_d, rng), (None, None))
+        lean, toward = CELLS.lean_of(cfg, "lake_basin", water_d, rng)
+        self.assertEqual(lean.shape, (3,))
+        self.assertTrue((lean >= 0.7 * 6.0 - 1e-4).all() and (lean <= 16.0 + 1e-4).all())
+        self.assertGreater(float(lean[0]), float(lean[2]), "a tree at the water leans more than one inland")
+        self.assertTrue((np.abs(toward - 36.87) < 45.0).all())
+
+    def test_the_trees_lean_the_way_the_atmosphere_blows(self):
+        path = os.path.join(os.path.dirname(os.path.dirname(TOOLS_WORLD)), "game", "systems",
+                            "atmosphere", "atmosphere.gd")
+        text = open(path, encoding="utf-8").read()
+        m = re.search(r'"wm_wind_dir",\s*Vector3\(([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)\)', text)
+        self.assertIsNotNone(m, "atmosphere.gd no longer sets wm_wind_dir the way this reads it")
+        wx, wz = float(m.group(1)), float(m.group(3))
+        rules = CELLS.load_rules(RULES, ["cover"])
+        tx, tz = rules["defaults"]["wind_toward"]
+        self.assertAlmostEqual(math.atan2(tz, tx), math.atan2(wz, wx), places=3)
+        self.assertIn("lake_basin", rules["flora"]["willow_pollard"]["lean"])
+
+
 class BuildTest(unittest.TestCase):
     def test_an_unknown_recipe_is_refused(self):
         import build_world as BW
@@ -81,6 +111,15 @@ class BuildTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as plain, tempfile.TemporaryDirectory() as made:
             man0, h0 = build(plain, "--only", "heights")
             man1, h1 = build(made, "--recipe", "landforms", "--recipe", "cover")
+            lengths: dict = {}
+            cells = os.path.join(made, "cells")
+            for name in os.listdir(cells):
+                with open(os.path.join(cells, name), "r", encoding="utf-8") as f:
+                    for rows in json.load(f)["instances"].values():
+                        for row in rows:
+                            lengths[len(row)] = lengths.get(len(row), 0) + 1
+        self.assertEqual(set(lengths), {6, 8}, "a scatter row is six fields, or eight with a lean")
+        self.assertGreater(lengths[8], 0, "no tree in Brightwater leans")
         self.assertEqual(man0["recipes"], [])
         self.assertEqual(man1["recipes"], ["cover", "landforms"])
         self.assertGreater(float(np.abs(h1 - h0).max()), 1.0, "the landforms recipe changed nothing")

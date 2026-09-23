@@ -314,6 +314,14 @@ func test_streamer_builds_multimeshes_from_a_cell() -> void:
 	assert_near(rad_to_deg(xform.basis.get_euler().y), 90.0, 0.1)
 	assert_near(WorldStreamer.instance_tint(row).r, Color("#ff8844").r, 0.01)
 	assert_near(WorldStreamer.instance_tint([0, 0, 0, 0, 1]).g, 1.0, 0.01)
+	# a wind-bent tree: 12 degrees off upright, its top carried toward +x+z at 36.87 degrees
+	# (the wind the atmosphere blows, wm_wind_dir); a six-field row stands straight
+	assert_near(xform.basis.y.normalized().dot(Vector3.UP), 1.0, 0.0001, "an old row leans")
+	var bent: Array = [centre.x, 12.0, centre.y, 90.0, 1.0, "#ffffff", 12.0, 36.87]
+	var up := WorldStreamer.instance_transform(bent, Vector3(centre.x, 0.0, centre.y)).basis.y.normalized()
+	assert_near(rad_to_deg(acos(up.dot(Vector3.UP))), 12.0, 0.05, "leans by its lean")
+	var flat := Vector2(up.x, up.z).normalized()
+	assert_near(flat.dot(Vector2(0.8, 0.6)), 1.0, 0.001, "leans toward where the wind goes")
 	assert_eq(Log.warning_count, warnings_before + 1, "a missing asset should warn exactly once")
 	streamer._build_cell(Vector2i(17, 16), 0, data)
 	assert_eq(Log.warning_count, warnings_before + 1, "the same missing asset warned twice")

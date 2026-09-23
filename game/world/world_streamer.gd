@@ -334,13 +334,22 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	parent.add_child(mmi)
 
 
-## A scatter row is [x, y, z, yaw_deg, scale, tint_hex] in world metres (CONTRACTS §6);
+## A scatter row is [x, y, z, yaw_deg, scale, tint_hex] in world metres (CONTRACTS §6), and
+## optionally two more, [.., lean_deg, lean_toward_deg]: a tree the wind has bent, tipped
+## `lean_deg` from upright toward the ground direction (cos, sin) of `lean_toward_deg` in x, z.
+## A six-field row stands upright, so every cell written before the lean existed reads as it did.
 ## MultiMesh instances are stored relative to their cell node so the transforms stay small.
 static func instance_transform(row: Array, cell_origin: Vector3) -> Transform3D:
 	var pos := Vector3(float(row[0]), float(row[1]), float(row[2])) - cell_origin
 	var yaw := deg_to_rad(float(row[3])) if row.size() > 3 else 0.0
 	var scale := float(row[4]) if row.size() > 4 else 1.0
-	return Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(scale, scale, scale)), pos)
+	var b := Basis(Vector3.UP, yaw).scaled(Vector3(scale, scale, scale))
+	if row.size() > 7 and float(row[6]) != 0.0:
+		var toward := deg_to_rad(float(row[7]))
+		var dir := Vector3(cos(toward), 0.0, sin(toward))
+		# rotating about UP x dir carries the trunk's top toward dir
+		b = Basis(Vector3.UP.cross(dir).normalized(), deg_to_rad(float(row[6]))) * b
+	return Transform3D(b, pos)
 
 
 static func instance_tint(row: Array) -> Color:
