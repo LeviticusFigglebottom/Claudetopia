@@ -38,9 +38,11 @@ const SPRINT_FROM := 5.2
 const SPRINT_FULL := 7.6
 const SPRINT_IN_S := 0.45
 const SPRINT_OUT_S := 0.6
-## Follow rates, 1/s. Across the ground 14 trails a jog by ~0.36 m and a sprint by ~0.55 m;
-## up and down it is softer, which takes the edge off steps and the heightfield.
-const FOLLOW_XZ := 14.0
+## Follow rates, 1/s. Across the ground 20 trails a jog by ~0.25 m and a sprint by ~0.39 m,
+## and closes that up in about 0.15 s when the body stops; up and down it is softer, which takes
+## the edge off steps and the heightfield. At 14 the view drew 0.4 m away at every start and
+## came back at every stop, and read as a camera on a rubber band.
+const FOLLOW_XZ := 20.0
 const FOLLOW_Y := 9.0
 ## Collision: the camera is a ball this size, never nearer the pivot than ARM_MIN, and eases back
 ## out with this time constant once the way is clear.
@@ -91,6 +93,8 @@ var _base_fov: float = 75.0
 var _pivot := Vector3.ZERO
 var _placed := false
 var _last_target := Vector3.ZERO
+## The frame of the last snap (Engine.get_process_frames()); see _target_origin.
+var _snap_frame := -1
 var _ball := SphereShape3D.new()
 var _exclude: Array[RID] = []
 
@@ -210,13 +214,25 @@ func heading_degrees() -> float:
 ## the first frame.
 func snap_to_target() -> void:
 	_placed = false
+	_snap_frame = Engine.get_process_frames()
 	_follow(0.0)
+
+
+## Where the body is drawn. On the frame of a snap it is where the body was put: a teleport made
+## outside a physics tick (a timer, a load, the console) leaves the interpolated transform at the
+## old place until the next frame's interpolation update, and the rig read it, snapped to the old
+## place, and drew one frame 800 m from the body -- which is also the camera Terrain3D builds its
+## ground round.
+func _target_origin() -> Vector3:
+	if Engine.get_process_frames() == _snap_frame:
+		return target.global_position
+	return target.get_global_transform_interpolated().origin
 
 
 func _follow(delta: float) -> void:
 	if target == null or not is_instance_valid(target) or not target.is_inside_tree():
 		return
-	var at := target.get_global_transform_interpolated().origin
+	var at := _target_origin()
 	var want := Vector3(at.x, at.y + _height, at.z)
 	if not _placed or first_person or at.distance_to(_last_target) > SNAP_DISTANCE:
 		_pivot = want
@@ -230,10 +246,14 @@ func _follow(delta: float) -> void:
 	global_rotation = Vector3.ZERO
 
 
-## 0 at a jog or slower, 1 at a sprint, from how fast the body is really going.
+## 0 at a jog or slower, 1 at a sprint, from how fast the body is really going -- while it is
+## sprinting. A roll peaks at 11 m/s and a knockback can match it; neither is a sprint, and a view
+## that breathed out at every roll read as the camera lurching.
 func _sprint_amount() -> float:
 	var body := target as CharacterBody3D
 	if body == null or not is_instance_valid(body):
+		return 0.0
+	if "is_sprinting" in body and not bool(body.get("is_sprinting")):
 		return 0.0
 	var v := body.get_real_velocity()
 	return clampf((Vector2(v.x, v.z).length() - SPRINT_FROM) / (SPRINT_FULL - SPRINT_FROM), 0.0, 1.0)

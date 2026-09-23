@@ -80,6 +80,18 @@ func test_off_hand_clears_a_two_handed_main_weapon() -> void:
 	assert_eq(eq.item_id("main_hand"), "", "a bow cannot be held while a shield is strapped on")
 
 
+## The round shield is a shield worn as armour (its `armour` block names the off hand), and the
+## slot rules knew only shields carried as weapons: it was sold and could never be taken up.
+func test_a_shield_worn_as_armour_goes_on_the_off_hand() -> void:
+	inv.add(SWORD, 1)
+	inv.add("core:item/round_shield", 1)
+	assert_true(eq.equip(SWORD))
+	assert_true(eq.equip("core:item/round_shield"), "the round shield can be taken up")
+	assert_eq(eq.item_id("off_hand"), "core:item/round_shield")
+	assert_eq(eq.item_id("main_hand"), SWORD, "beside a one-handed blade")
+	assert_near(eq.armour_total(), 1.0, 0.001, "and counts its armour")
+
+
 func test_daggers_and_lanterns_may_take_the_off_hand() -> void:
 	inv.add(SWORD, 1)
 	inv.add(DAGGER, 1)

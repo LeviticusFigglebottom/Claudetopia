@@ -496,6 +496,35 @@ multiplied by gold and red. Rules now carry a `tint_strength` (how far from whit
 multiplier may travel, default 0.45) and the species whose asset already carries that colour
 take none at all.
 
+## 2026-09-22 · The opening is the Warden's voice over the real country, played in the world
+**Decision.** The opening (DESIGN §5.1a) is data — a `core:cinematic/opening` definition of
+shots whose cameras are placed relative to named places and to the ground beneath them, with
+durations, time of day, weather, subtitle lines and a music cue — played by a small player
+inside the streamed world after the Naming, on New Game only. The voice is Wren Tallow's,
+in subtitles, saying back the name the player has just chosen. It ends on the gameplay
+camera's own pose and hands over there, and the first quest starts at the hand-over.
+**Why.** The game's first minute was a fade from black into control, with nothing said about
+where you are, why, or what is wrong with the world. The Naming already *is* the Warden
+asking your name at the top of the Stair, so the natural next beat is her answering, and her
+lines already exist in her dialogue graph: the opening quotes the fiction rather than
+inventing a narrator. Playing it in the world rather than as a film keeps it true to the land
+as it is rebuilt — a stored height or a rendered video would be wrong the next time the world
+builder runs, and the land is being reshaped while this is written — and it costs no new
+tooling: the fly camera, the streamer, the atmosphere and the capture runner already exist.
+**Alternatives.** A pre-rendered video (nothing here can encode one, and it would freeze the
+country at whatever build it was shot from); painted still cards with text (cheap, but the
+brief is a painted *world*, and it is the one thing the game can show that a card cannot);
+a narrator outside the fiction (Wickmere's cosmology is told four contradictory ways on
+purpose, and an omniscient voice would have to pick one); no opening (what shipped).
+**Consequences.** The streamer must load the next shot while the current one plays, and must
+be able to follow a camera without telling the game the player entered those regions — a
+region change seeds rumours and moves music, and a camera is not a traveller. Every piece of
+state the opening borrows (streamer target, clock, weather, buses, HUD, input, the current
+camera) must be put back by the same code whether it is watched or skipped, and a test has to
+hold the two end states against each other. The hook into the new-game flow is one call in
+`GameServices.begin_new_game()`, the one place a new game already begins, and a setting stops
+it for later new games. Reversible.
+
 ## 2026-09-22 · A stage number counts from one
 **Decision.** Content names a quest stage by its id or by its number counted from one, in
 `quest_at`, `quest_min_stage` and `quest_stage` alike. The code translates in one place,
@@ -697,6 +726,36 @@ enemies and arrows would still step).
 that teleports an existing node must reset it. Terrain3D 1.0.2 still calls the deprecated
 `instance_reset_physics_interpolation`, which prints a warning at load and is harmless.
 
+## 2026-09-23 · A new game starts at the Stair Head, with the Warden at her fire and a way marked north
+**Decision.** A new game hands over at `core:poi/stair_head`, a Wardens' camp on the rim of the
+Cinderlea cliff above the Hushline Stair, not at the Stair. The Warden is kept there by a
+`holds` entry in her npc def (the dialogue's condition vocabulary, checked before her
+timetable) from the moment a new game is named until the Foundling reaches the Choir. She speaks
+first, in her own greeting for the moment, and the HUD writes each new objective under the
+compass as it changes. The Naming's first stage asks only to speak to her, with its marker at the
+camp. A new second stage, `the_choir`, sends the player 426 m north along waystones the camp's
+dressing lays from its `path` to the Sunken Choir.
+**Why.** The user's first minutes were a body alone on a grey pad in the Hush's water at the
+foot of an 80 m cliff (the pad the world builder flattened for the Stair). An objective ("Go to
+The Hushline Stair") was done the moment it appeared, the Warden it asked for was in Merrowby,
+and nothing in view said where to go. From the rim the country opens north: the Choir's colossi
+on the skyline, the heath, the Cantor's Seat. A camp there gives the first view something to
+look at and a person to speak to, and the second stage a destination a minute and a half away.
+**Alternatives.** Moving the Stair's own position to the rim (it is the land's to move, and the
+builder's stair dressing goes downhill from its pad, so it needs a rebuild and a look before
+anybody trusts it). Starting at Greyfold or Pilgrim's Ash (on the road, but a kilometre and
+more from where the story says you come up). An escort with the Warden walking beside you (the
+people stream is building escorts; this does not wait for them). Pinning the start in code
+(the POI is data, and a content pack can move it).
+**Consequences.** A POI written after the land was built is dressed where its def says, on the
+ground as it stands, until the next build flattens it a pad (`WorldPois.unbuilt_entries`), the
+same fallback `World.place_position` and `PlaceDiscovery` already made. A test holds the
+waystones' way against the built ground (walkable, dry, clear of the spawned enemies) and says
+which leg fails if the land moves under it. `quest_at` conditions on the Naming name its
+stages by id, so a stage can be added without renumbering the Warden's dialogue. The `new_game`
+flag now stays up through the opening, because it is what holds the Warden at the camp while the
+pictures play.
+
 ## 2026-09-23 · The legs are played at the ground's speed, on one stride timeline, and stand up
 **Decision.** `HumanoidModel.set_locomotion` takes the body's ground velocity in metres per second.
 Every moving clip carries the ground speed it was made at (`speed` in the sidecar, CONTRACTS §3)
@@ -721,11 +780,11 @@ slide in every blend as the phases drift apart.
 new gait clip must put its left foot down at phase 0 and its right at 0.5, which the forge's tests
 pin. Walk_Back and the strafes are still made by the first stride model. The strafes' side-steps
 are shortened (0.6 s, duty 0.5), so they no longer drop the hips 21 cm at every step. A diagonal
-strafe slides at about a third of the ground speed, because blending two strides in rotation space
-does not add up to the diagonal, so the locked-on speed is held at 2.6 m/s. The rig bake rebuilds
-the body as well as the clips, and under Blender 4.2 the body the committed rig was made with under
-4.0 comes back with the same vertices but a different UV layout and repainted textures. So the
-clips are baked into a scratch copy and moved onto the committed GLB by
+strafe slides, because blending two strides in rotation space does not add up to the diagonal: at a
+fifth to a quarter of the ground speed with these clips (see the entry on the locked-on pace). The
+rig bake rebuilds the body as well as the clips, and under Blender 4.2 the body the committed rig
+was made with under 4.0 comes back with the same vertices but a different UV layout and repainted
+textures. So the clips are baked into a scratch copy and moved onto the committed GLB by
 `tools/forge/transplant_clips.py`, which changes nothing but the animations and checks that it did
 not. When another branch changes the rig GLB, the merge takes that branch's GLB and transplants
 these clips onto it, provided the two share a skeleton (the tool refuses otherwise). If they do
@@ -754,3 +813,200 @@ where Ctrl's starts on it. A sprint starts 0.22 s after Shift goes down rather t
 takes 0.4 s to reach sprint speed from a jog in any case. Letting Shift go and pressing it again
 quickly in a sprint rolls. The hint strip and the controls page say "tap Shift" while the tap is
 on, and name the Dodge key when it is not.
+
+## 2026-09-23 · What the perks that named no system now mean
+**Decision.** Each of the 28 perk stats nothing read is read where the thing it names happens,
+and four of them needed a small system first. (1) **Fletcher's Thrift**: 40% of loosed arrows
+and bolts survive where they land (`DamageModel.ARROW_RECOVERY`); one that stands in the world
+is left there as a pickup, one that stays in a body comes out with the body's loot; the perk
+makes it 65%. (2) **Mote-Catcher**: a foe whose last blow was a Kindling saying gives its killer
+one Ember Mote (`Enchanting.MOTES_PER_WARMTH`), the perk two. (3) **Forager**: an ingredient
+taken from the ground where nobody owns it and nobody dropped it is "picked", and the perk gives
+one more. (4) **Second Skin**: worn armour counts at half its weight in the load the roll feels,
+and the noise medium and heavy armour add over cloth (×1.3, ×1.7) is halved. Fair Dealing's
+"buy for less" covers a house deed as well as a shop; Loud Name makes renown gained travel
+further and leaves renown lost as it was.
+**Why.** DESIGN §5.8 has motes "captured from slain foes with a Kindling spell", and nothing
+captured them; DESIGN names no arrow recovery, no gathering and no armour-weight rule, and the
+perk texts presuppose each. The figures are the smallest that make each sentence true: "a
+quarter more of your arrows" needs a share that can take a quarter more, and 40% leaves the perk
+a plain 65%; one mote a kill keeps motes an income for a Kindling-sayer rather than a flood (a
+mote sells for about 18 marks).
+**Alternatives.** Wild herbs to pick (the ground cover has a "herb" class) were not built: the
+world is another agent's this round, and a harvest node on every herb is its own work. Forager
+is therefore only as good as the ingredients lying in the world, which today are the ones
+creatures drop.
+**Consequences.** `tests/unit/test_perks_do_what_they_say.gd` takes all 34 perks on the player
+scene and measures the number each text names; its last test fails when any of the 36 perk
+stat keys has no reader anywhere in the game's scripts.
+
+## 2026-09-23 · The Hearth Flask
+**Decision.** Every character carries a Hearth Flask (`core:item/hearth_flask`): three swallows,
+each restoring 40% of the drinker's greatest health; a swallow is a committed, rooted drink of
+1.0 s with the warmth landing at 0.55 s, and a stagger before then spills it. Resting at a
+Hearthstone and coming back from death fill it. It rides in the bag (the charges in the stack's
+own data, so the save keeps them) and on the belt's first free slot, where the slot shows
+swallows left against a full flask. Merchants will not buy it (tag `keepsake`), and "use" in the
+bag does not drink it.
+**Why.** DESIGN §5.5: "Resting at a Hearthstone: full restore, respawn point set, refills flask
+charges." Nothing existed. DESIGN gives no numbers; these are the genre's: a filling that covers
+most of one bad exchange, a drink long enough to be a decision rather than a reflex.
+**Alternatives.** A dedicated key: every pad button is already bound, and the belt is how DESIGN
+§5.16 has items used in a fight. The flask as a number kept on the player: the bag already saves
+stack data, and an item has a name and a description to read.
+
+## 2026-09-23 · Load is measured against 20 + 1.5·Endurance
+**Decision.** The capacity that worn and wielded weight is measured against for the roll and for
+stamina regeneration is `20 + 1.5·Endurance` (35 at the start), not `40 + 3·Endurance` (70). The
+bands stay light below 30%, medium below 70%, heavy to 100%, overloaded past it.
+**Why.** DESIGN §5.3: "Heavy load lengthens [the roll] and cuts i-frames", §5.7: "Load affects
+dodge and stamina regen". Against 70 the heaviest kit in the pack reached 54%, so the heavy and
+overloaded rolls were only ever a bag's. Against 35: leathers and a sword 25% (light), a
+brigandine and a sword 51% (medium), clan plate and a greatsword 89% (heavy), clan plate and the
+Bearer's clapper 109% (overloaded); twenty points of Endurance later the plate and greatsword
+roll medium.
+**Alternatives.** Lower bands (light below 20%, medium below 40%): the same reach, but the bands
+are the ones every roll table in the genre uses and the capacity is the number nothing else
+leans on.
+**Consequences.** `test_every_load_band_can_be_reached_by_what_is_worn` equips the four kits at
+base Endurance and checks each band. Every Calling still starts light (0 to 14% of capacity; the
+Cragborn's axe and tunic are the heaviest).
+
+## 2026-09-23 · The eleven sounds nothing played: five wired, six dropped
+**Decision.** Wired: `bell_toll` to the Bell-bearer's toll and the Barrow Reeve's (and to the
+Reeve ringing his hammer on the floor as his second phase opens), `bell_hand` to the bell-headed
+weapons going live (the Tolling knight's mace, the Reeve's hammer, the Last Cantor's blade),
+`bell_tavern` to coming through an inn's door, `footstep_snow` and `footstep_sand` to the snow
+and the tide-flats the world builder paints. Footsteps on the terrain now read its paint: the
+builder's twenty-one textures fall into eight surfaces (the grasses, heather and moss as the
+Vale's grass; chalk, granite, limestone, fused stone and cobbles as stone; the dirt track and the
+forest floor as dirt; mud, peat and the lake bed as mud; scree and shingle as gravel; snow, sand
+and ash as themselves). Dropped: `bell_tower` (no bell in the world strikes the hours),
+`thunder_near`, `thunder_far` and `wind_gust` (the ambience's storm and wind layers are the
+thunder and the gusts, and nothing flashes or gusts as an event a one-shot could follow),
+`wood_creak` (the ambience's creak pools are the creaking) and `cart_wheels` (no cart moves
+anywhere in the game).
+**Why.** The brief: wire each to its real event, or remove it if no event exists for it.
+**Consequences.** `test_every_sound_the_game_asks_for_is_in_the_table_and_loads` now fails on
+any row nothing in the game can play, and the audio toolkit's tests fail when the sfx manifest
+or table holds an id the generator no longer makes.
+
+## 2026-09-23 · A blade for the two Callings that started without one
+**Decision.** The Wayfarer starts with a hunting knife beside the bow, and the Lantern-Clerk with
+an iron dagger.
+**Why.** With the scripted player blocking, rolling, drinking and saying what its Calling knows,
+`./run.sh fights` found two Callings that cannot beat the first region's foes at level 1, which
+DESIGN §5.1 and the Naming (WORLD_BIBLE §10: "Fight ash-wights") take for granted. Measured again
+on the game as it stands after the movement rework (one run per Calling): without its dagger the
+Lantern-Clerk, fists and a ward, died to the swarm with 85% of the drakes left and ran out of the
+120 s on the pack (95% of the wolves left, 528 damage taken and survived only by drinking), the
+hedge-wight (33% left) and the bravo (41%); without its knife the Wayfarer, a bow and thirty
+arrows, died to the swarm with 60% of the drakes left. With the blades both win every danger-one
+fight and the Naming (the Wayfarer in 3–58 s, the Lantern-Clerk in 13–32 s). The four other
+Callings win the same fights in 2–69 s and are unchanged.
+**Alternatives.** Wren handing every Foundling a blade in the Naming: it changes every Calling,
+including the four that need nothing. Softer danger-one foes: four Callings beat them already,
+which is the design working.
+**Consequences.** Nobody beats the Barrow Reeve at level 1: four Callings die and two run out of
+time with 47–73% of him left. He has 520 health and armour 6 against 3–11 a blow, and four to six
+of his (22–36 each, a knockdown among them) kill a 100-health character, flask and all. He is the
+third quest of the Wardens' line, behind 45 reputation and the quest before it, so this is not
+tuned.
+## 2026-09-23 · Software Vulkan gets the coarse ground, and the coarse ground says so out loud
+**Decision.** `WorldStatus` does not start Terrain3D when the renderer draws through a
+RenderingDevice (Forward+ or Mobile) and the adapter is Mesa's llvmpipe; the ground is the coarse
+one and the title says why. `-- --terrain=terrain3d` tries Terrain3D anyway, and so does asking
+for a number of clipmap rings (`-- --terrain-lods=N`, or `WICKMERE_TERRAIN_LODS`; nine when
+nobody asks). `-- --terrain=fallback` asks for the coarse ground anywhere. Unless it was asked for,
+the coarse ground is said across the title sheet, on a card when the player arrives and on a
+"Coarse ground" plate in the top left corner that stays while the HUD is up.
+**Why.** Measured. Terrain3D 1.0.2 alone in an empty project (a camera, a light, the node) crashes
+lavapipe: under gdb all four `llvmpipe` rasterizer threads stop at one address in the driver's
+compiled shader, on an indexed load out of range. When depends on the clipmap and the view, not on
+the ring count alone: alone at 2 m spacing, 7, 8 and 9 rings of 32 drew 60 frames and 9 of 48
+crashed, and at 1 m spacing 7 of 48 crashed on the first frame; in the game, 9 rings crash as the
+world is built, and 7 drew the real terrain for 40 seconds of the New Game flow and then crashed
+the same way. The line before each crash, "/root: The caller thread can't call the function
+`propagate_notification()`", is Godot's crash handler sending NOTIFICATION_CRASH from that driver
+thread; it is not there when gdb takes the fault first. None of the game's code touches the tree
+from a thread: its one worker task (the streamer's `_parse_cell`) reads a file and parses JSON,
+and nothing processes on a sub-thread group. And a player on Windows played for days on the
+coarse ground, which one toast and one small line had announced, taking its plain grey hills for
+the game's look.
+**Alternatives.** Leaving Forward+ on llvmpipe to crash (nothing could shoot the world there).
+Seven rings on llvmpipe by default (they crashed too, later). Upgrading Terrain3D: there is no
+newer release (1.0.2 is the newest tag, its branch has one docs commit since, and `main` is
+1.1.0-dev, without the deprecated call but without a release or binaries). Asking the driver to
+bound its loads (Vulkan's robustness features): not a setting the project has.
+**Consequences.** On software Vulkan the world is the coarse ground unless a tool asks, and then
+it should take short captures; the Compatibility renderer's llvmpipe still draws Terrain3D. The
+guard is a name match: when lavapipe or Terrain3D stops crashing, `--terrain=terrain3d` shows it
+and the guard goes. Screenshots with the HUD up on the coarse ground show the plate; captures
+have no HUD and do not.
+## 2026-09-23 · The controls are taught on screen for the first minutes, and remembered by the game
+**Decision.** A strip low in the HUD names move, sprint, roll, jump, use, strike and block with
+the keys bound at that moment, or the pad's buttons while a pad is in use. Each item goes once
+the thing has been done: moved for 1.2 s, sprinted 0.6 s, rolled, jumped, pressed use, swung,
+held a guard 0.25 s. The strip goes when nothing is left, or after fifteen minutes of play.
+What has been learned is a GameState flag, so it is saved with the game. The pause page reaches
+a page of every control, read-only, with a button to the rebinding tab.
+**Why.** The playtest asked "no roll?" of a roll that worked. Nothing on the screen named it,
+and a player reads the foot of the screen long before a menu. Items go as they are done, not on
+a timer, so the one control a player has not found keeps being shown. The first version kept
+the learned list in the settings file. The test suite's own HUDs then taught that file every
+control on this machine, and the next run's strip came up empty, which is exactly how a
+shared settings file behaves for a second player on the same machine.
+**Alternatives.** A tutorial sequence (the game has no place to put one before the Naming, and
+players skip them). A timed strip that fades after a minute whatever was done (it teaches the
+player who least needs it). Keeping the list in the settings (above).
+**Consequences.** A new game is taught again, which a player who knows the controls will see
+for the minute it takes to move, sprint, roll and jump. The Hints setting turns the strip off.
+
+## 2026-09-23 · Locked on, the pace goes by the way you go: a jog at the foe, a side-step across
+**Decision.** Locked on and not blocking, the body faces the foe and moves at 5.0 m/s straight
+at it (the jog), 3.0 m/s across it and 1.8 m/s backing away, and on the ellipse through the
+three in between (3.6 m/s on the forward diagonal). Blocking stays a guard walk at 1.56 m/s
+(2.6 × 0.6) whatever the lock. Sprint while locked on breaks the strafe and keeps the lock: the
+body turns to run where it is pushed at 7.8 m/s, the view stays on the foe, and letting go of
+Sprint turns the body back to face the foe.
+**Why.** The combat round's headless fights found that a locked-on player could not close on a
+caster backing away at about 3 m/s. Every locked-on direction was capped at 2.6 m/s, so the gap
+grew by 1.39 m over three seconds of pressing W. Locked on, W at a foe now closes the gap by
+5.26 m in the same three seconds, and the lock holds. The action RPGs this game is read against
+let a locked-on player advance at their run and keep strafes and backpedals slower. Advancing
+is how a fight is joined; circling and retreating are how it is survived. The locked-on
+sprint, lock kept, is the Souls convention: the lock is a choice about the view, and running
+is a choice about the legs.
+**Alternatives.** One locked-on speed for every direction at 3.2 m/s or more: it catches the
+caster, but the backpedal outruns the clip (Walk_Back at 1.15 m/s cannot play faster than
+1.84 without sliding) and a retreat becomes as good as an advance. Breaking the lock on sprint:
+it throws away the target at the moment the player is chasing it.
+**Consequences.** Each speed is within what its clip can play without sliding. Run is at 1.0x.
+The side-steps are at 1.58x (0% slide measured at 3.0 m/s). Walk_Back is at 1.57x (0% at
+1.8 m/s). The diagonals slide: at 3.64 m/s on the forward diagonal the planted foot moves at 28%
+of the ground speed, and at 2.18 m/s backing off diagonally at 23%. It was 19% at the old 2.6
+m/s. Diagonal clips or foot IK would take that out. `Player.locked_speed(way)` is the ellipse,
+and test_lock_on_movement pins all of it.
+
+## 2026-09-23 · A raised guard is a layer over the legs, and a turn on the spot steps
+**Decision.** Block_Idle is held over the upper body in the Locomotion graph: a Blend2 filtered
+to the bones above the hips (and the sockets hanging off them) mixes it over whatever the legs
+are doing, easing in and out over 0.12 s. `HumanoidModel.play_intent("Block_Idle")` raises it
+and keeps the body in Locomotion; `stop_intent()` or any other clip lowers it. The Block_Idle
+state stays in the machine for anything that still wants the whole-body pose. A body turning on
+the spot faster than 60°/s while standing is shown a side-step toward the turn at the pace its
+feet travel round its middle (0.18 m out), up to 1.4 m/s, eased in and out.
+**Why.** Filmed in the motion studio: played as a whole-body state, the guard froze the legs in
+its stance, and a player walking behind it at 1.56 m/s glided across the ground with still feet.
+Layered, the legs walk under it, with the planted foot at 2% of the ground speed, and the right
+hand stays at chest height (0.01 m below the chest bone, where the walk swings it 0.29 m
+below). A turn on the spot while guarding or locked on pivoted the whole body on planted feet at
+up to 720°/s. The side-step makes it a step round, the cheapest thing that reads as a person
+turning.
+**Alternatives.** A guard-walk clip set (walk, strafes and backpedal each with the guard up):
+that is four more clips to keep in step, and the layer gives the same picture from one pose.
+Turn-in-place clips (90° and 180° steps): better, and the next thing to make if the side-step
+reads as a shuffle in play.
+**Consequences.** Enemies that raise a guard (`Enemy._guard`) get the same layer: they now walk
+under their guard instead of gliding. Any new stance meant to be held over the legs is added
+to `HumanoidModel.STANCE_CLIPS`.

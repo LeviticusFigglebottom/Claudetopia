@@ -50,34 +50,35 @@ static func disposition_for(profile: Dictionary, faction_rank: int = 0, stored: 
 	return clampi(d, -100, 100)
 
 
-## The price of one unit. `base` is the item's `value`.
-static func price(base: int, region_mod_: float, supply_mod_: float, disposition_mod_: float, speech_skill: int) -> int:
-	var p := float(base) * region_mod_ * supply_mod_ * disposition_mod_ * speech_mod(speech_skill)
+## The price of one unit. `base` is the item's `value`. `trade_mult` is the buyer's own (Fair
+## Dealing: 0.9 buying), applied with everything else before the rounding.
+static func price(base: int, region_mod_: float, supply_mod_: float, disposition_mod_: float, speech_skill: int, trade_mult: float = 1.0) -> int:
+	var p := float(base) * region_mod_ * supply_mod_ * disposition_mod_ * speech_mod(speech_skill) * maxf(trade_mult, 0.0)
 	return maxi(MIN_PRICE, roundi(p))
 
 
 ## What the player pays the merchant for one unit.
-static func buy_price(base: int, region_id: String, stock_count: int, disposition: int, speech_skill: int, personality_bias: float = 0.0, hollow_penalty: float = 0.0) -> int:
-	return price(base, region_mod(region_id), supply_mod(stock_count), disposition_mod(disposition, personality_bias, hollow_penalty), speech_skill)
+static func buy_price(base: int, region_id: String, stock_count: int, disposition: int, speech_skill: int, personality_bias: float = 0.0, hollow_penalty: float = 0.0, trade_mult: float = 1.0) -> int:
+	return price(base, region_mod(region_id), supply_mod(stock_count), disposition_mod(disposition, personality_bias, hollow_penalty), speech_skill, trade_mult)
 
 
 ## What the merchant pays the player for one unit. The disposition and speech terms invert:
-## a merchant who likes you pays more, not less.
-static func sell_price(base: int, region_id: String, stock_count: int, disposition: int, speech_skill: int, personality_bias: float = 0.0, hollow_penalty: float = 0.0) -> int:
+## a merchant who likes you pays more, not less. `trade_mult` is the seller's own (Fair Dealing: 1.1).
+static func sell_price(base: int, region_id: String, stock_count: int, disposition: int, speech_skill: int, personality_bias: float = 0.0, hollow_penalty: float = 0.0, trade_mult: float = 1.0) -> int:
 	var disp := disposition_mod(disposition, personality_bias, hollow_penalty)
 	var speech := speech_mod(speech_skill)
-	var p := float(base) * SELL_FRACTION * region_mod(region_id) * supply_mod(stock_count) / maxf(0.25, disp * speech)
+	var p := float(base) * SELL_FRACTION * region_mod(region_id) * supply_mod(stock_count) / maxf(0.25, disp * speech) * maxf(trade_mult, 0.0)
 	return maxi(MIN_PRICE, roundi(p))
 
 
 ## Total for `count` units, priced one at a time so scarcity rises as a merchant sells out.
 ## `direction` is "buy" or "sell"; returns {total, unit_prices[]}.
-static func bulk(base: int, region_id: String, stock_count: int, count: int, disposition: int, speech_skill: int, direction: String = "buy", personality_bias: float = 0.0, hollow_penalty: float = 0.0) -> Dictionary:
+static func bulk(base: int, region_id: String, stock_count: int, count: int, disposition: int, speech_skill: int, direction: String = "buy", personality_bias: float = 0.0, hollow_penalty: float = 0.0, trade_mult: float = 1.0) -> Dictionary:
 	var total := 0
 	var units: Array[int] = []
 	for i in maxi(0, count):
 		var stock := stock_count - i if direction == "buy" else stock_count + i
-		var p := buy_price(base, region_id, stock, disposition, speech_skill, personality_bias, hollow_penalty) if direction == "buy" else sell_price(base, region_id, stock, disposition, speech_skill, personality_bias, hollow_penalty)
+		var p := buy_price(base, region_id, stock, disposition, speech_skill, personality_bias, hollow_penalty, trade_mult) if direction == "buy" else sell_price(base, region_id, stock, disposition, speech_skill, personality_bias, hollow_penalty, trade_mult)
 		units.append(p)
 		total += p
 	return {"total": total, "unit_prices": units}

@@ -16,11 +16,9 @@ const WREN := "core:npc/wren_tallow"
 ## The stage each number in the pack was written to mean, read off the journal, the option and
 ## the line it gates. A new number in the pack fails `test_every_stage_number_...` until it is
 ## added here, which is the point: say which stage you mean.
+## (The Naming's own references are ids now: its second stage, the walk to the Choir, was added
+## after these numbers were pinned, and Wren's dialogue names every stage of it by id.)
 const WRITER_MEANT := {
-	"core:quest/the_naming|1": "wake",
-	"core:quest/the_naming|2": "ash_wights",
-	"core:quest/the_naming|3": "hearthstone",
-	"core:quest/the_naming|4": "the_cart",
 	"core:quest/the_toll_hums|2": "ask_around",
 	"core:quest/the_toll_hums|3": "the_lip",
 	"core:quest/the_toll_hums|5": "a_fourth_line",
@@ -177,15 +175,15 @@ func test_a_stage_number_counts_from_one_in_the_live_log() -> void:
 	assert_true(Conditions.check({"quest_at": [NAMING, 1]}, Social.ctx), "the first stage is stage 1")
 	assert_false(Conditions.check({"quest_at": [NAMING, 2]}, Social.ctx))
 	assert_true(Conditions.check({"quest_at": [NAMING, "wake"]}, Social.ctx))
-	log_node.set_stage(NAMING, 2)
+	log_node.set_stage(NAMING, 3)
 	assert_eq(log_node.stage_id_of(NAMING), "ash_wights", "set_stage takes the same number content writes")
-	assert_true(Conditions.check({"quest_min_stage": [NAMING, 2]}, Social.ctx))
+	assert_true(Conditions.check({"quest_min_stage": [NAMING, 3]}, Social.ctx))
 	assert_true(Conditions.check({"quest_min_stage": [NAMING, "wake"]}, Social.ctx))
 	assert_false(Conditions.check({"quest_min_stage": [NAMING, "hearthstone"]}, Social.ctx))
-	assert_eq(log_node.stage_index(NAMING, 4), 3)
-	assert_eq(log_node.stage_index(NAMING, 5), -1, "the Naming has four stages")
+	assert_eq(log_node.stage_index(NAMING, 5), 4)
+	assert_eq(log_node.stage_index(NAMING, 6), -1, "the Naming has five stages")
 	assert_eq(log_node.stage_index(NAMING, 0), -1, "there is no stage nought")
-	assert_eq(log_node.stage_index(NAMING, "the_cart"), 3)
+	assert_eq(log_node.stage_index(NAMING, "the_cart"), 4)
 
 
 ## The line the off-by-one hid: Wren's greeting at the waking was keyed to the second stage.

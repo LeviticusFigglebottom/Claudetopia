@@ -32,7 +32,13 @@ var abstract_only := false
 static func ensure() -> NpcRegistry:
 	if instance != null and is_instance_valid(instance):
 		return instance
-	return Service.ensure(load("res://systems/npc_life/npc_registry.gd"), "NpcRegistry") as NpcRegistry
+	var found := Service.ensure(load("res://systems/npc_life/npc_registry.gd"), "NpcRegistry") as NpcRegistry
+	# A copy of this service inside a world set `instance` as it entered the tree and cleared it as it
+	# left; a copy under the root that entered earlier is then found here with `instance` still empty,
+	# and everything that reads `instance` directly finds nothing. Point it at what was found.
+	if found != null and (instance == null or not is_instance_valid(instance)):
+		instance = found
+	return found
 
 
 func _enter_tree() -> void:
@@ -58,6 +64,11 @@ func _ready() -> void:
 	EventBus.cell_loaded.connect(_on_cell_loaded)
 	EventBus.cell_unloaded.connect(_on_cell_unloaded)
 	EventBus.weather_changed.connect(_on_weather_changed)
+	# a def's `holds` follow the story (Schedules.held_entry), so the story moving on is a reason
+	# to look again, as the clock is
+	EventBus.quest_started.connect(_on_story_moved)
+	EventBus.quest_stage_changed.connect(_on_story_moved)
+	EventBus.quest_completed.connect(_on_story_moved)
 
 
 # --- state ---------------------------------------------------------------------------------
@@ -357,6 +368,10 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 
 
 func _on_hour_changed(_hour: int) -> void:
+	simulate_all()
+
+
+func _on_story_moved(_quest_id: String = "", _detail: Variant = null) -> void:
 	simulate_all()
 
 

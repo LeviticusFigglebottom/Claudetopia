@@ -14,6 +14,15 @@ var floor_body: StaticBody3D = null
 var wall: StaticBody3D = null
 
 
+## Stands in for Terrain3D: World.follow hands it a camera to build its ground and collision round.
+class FakeTerrain3D:
+	extends Node3D
+	var camera: Camera3D = null
+
+	func set_camera(c: Camera3D) -> void:
+		camera = c
+
+
 func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
 
@@ -160,6 +169,32 @@ func test_a_sprint_draws_the_view_back_and_widens_it() -> void:
 	assert_near(rig.camera.fov, base_fov, 0.3, "and after the stop the view settles back")
 
 
+## A roll is not a sprint. It peaks at 11 m/s, faster than any sprint, and a view that widened
+## with the ground speed breathed out at every roll: the camera lurched in the middle of a dodge.
+func test_a_roll_does_not_widen_the_view() -> void:
+	await _stand()
+	var rig := player.camera_rig
+	await _frames(4)
+	var base_fov := rig.camera.fov
+	Input.action_press("move_forward")
+	for i in 30:
+		await _tree().physics_frame
+	Input.action_press("dodge")
+	await _tree().physics_frame
+	Input.action_release("dodge")
+	var widest := base_fov
+	var rolled := false
+	for i in 50:
+		await _tree().physics_frame
+		await _frames(1)
+		rolled = rolled or player.state == Player.State.DODGE
+		widest = maxf(widest, rig.camera.fov)
+	Input.action_release("move_forward")
+	print("    a roll from a jog: the view went from %.1f to at most %.1f degrees" % [base_fov, widest])
+	assert_true(rolled, "the body did not roll")
+	assert_true(widest - base_fov < 0.3, "the roll widened the view by %.1f degrees" % (widest - base_fov))
+
+
 ## A wall behind the player pulls the camera in at once (it never looks through the wall) and,
 ## taken away, lets it back out over a third of a second rather than popping.
 func test_a_wall_pulls_the_camera_in_and_it_eases_back_out() -> void:
@@ -187,6 +222,31 @@ func test_a_wall_pulls_the_camera_in_and_it_eases_back_out() -> void:
 	assert_true(blocked < 1.6, "the camera must stay on this side of the wall (%.2f m out)" % blocked)
 	assert_true(one_frame < full - 0.5, "with the wall gone the camera must ease out, not pop (%.2f of %.2f m at once)" % [one_frame, full])
 	assert_near(later, full, 0.05, "and it gets all the way back")
+
+
+## The world follows the player's own view (World.follow): Terrain3D builds its ground and its
+## collision round the camera it is given, and it is given the rig's camera, which stays within a
+## few metres of the drawn body -- and arrives with it on a teleport, in the same frame, so the
+## ground under a body put somewhere new is built round that body and not where it was.
+func test_the_ground_follows_the_players_own_view() -> void:
+	await _stand()
+	var world := World.new()
+	var terrain := FakeTerrain3D.new()
+	world.terrain_node = terrain
+	world.follow(player)
+	assert_eq(terrain.camera, player.camera_rig.camera, "Terrain3D was given some other camera than the player's view")
+	await _frames(2)
+	var near := terrain.camera.global_position.distance_to(player.get_global_transform_interpolated().origin)
+	var far := Vector3(640.0, 0.02, -480.0)
+	floor_body.global_position = Vector3(far.x, -0.5, far.z)
+	player.teleport(far, 0.0)
+	await _tree().process_frame
+	var after := terrain.camera.global_position.distance_to(far)
+	print("    the terrain's camera is %.2f m from the drawn body, and %.2f m from it the frame after a 800 m teleport" % [near, after])
+	assert_true(near < 5.0, "the terrain's camera is %.2f m from the body" % near)
+	assert_true(after < 5.0, "a frame after a teleport the terrain's camera is %.2f m from the body" % after)
+	world.free()
+	terrain.free()
 
 
 ## The weapon and lantern sockets are moved by the animation every frame, so they are placed

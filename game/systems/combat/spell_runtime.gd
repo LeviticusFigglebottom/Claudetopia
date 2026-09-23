@@ -38,9 +38,11 @@ static func skill_for(def: Dictionary) -> String:
 	return str(def.get("skill", school_of(def)))
 
 
-static func cost_of(def: Dictionary, skill: float = 0.0) -> float:
+## Mana to say it: the saying's cost, less up to a quarter for skill, times the caster's own
+## `scale` for its school (Warm Word, Quieted: 0.85).
+static func cost_of(def: Dictionary, skill: float = 0.0, scale: float = 1.0) -> float:
 	var base := float(def.get("cost", 10.0))
-	return base * (1.0 - MAX_SKILL_DISCOUNT * clampf(skill, 0.0, 100.0) / 100.0)
+	return base * (1.0 - MAX_SKILL_DISCOUNT * clampf(skill, 0.0, 100.0) / 100.0) * maxf(scale, 0.0)
 
 
 static func cast_time_of(def: Dictionary, skill: float = 0.0) -> float:
@@ -86,7 +88,7 @@ static func color_for(def: Dictionary) -> Color:
 ## {"ok": bool, "reason": ""|"unknown"|"cast_type"|"not_known"|"busy"|"silenced"|"mana"}.
 ## `known` is whether this caster has been taught the saying: a saying nobody taught you is
 ## not castable however the id got into the slot (DESIGN §5.3 — a Saying is something learned).
-static func can_cast(def: Dictionary, mana: float, silenced: bool, skill: float = 0.0, busy: bool = false, known: bool = true) -> Dictionary:
+static func can_cast(def: Dictionary, mana: float, silenced: bool, skill: float = 0.0, busy: bool = false, known: bool = true, cost_scale: float = 1.0) -> Dictionary:
 	if def.is_empty():
 		return {"ok": false, "reason": "unknown"}
 	if not IMPLEMENTED_CAST_TYPES.has(str(def.get("cast_type", ""))):
@@ -97,7 +99,7 @@ static func can_cast(def: Dictionary, mana: float, silenced: bool, skill: float 
 		return {"ok": false, "reason": "busy"}
 	if silenced:
 		return {"ok": false, "reason": "silenced"}
-	if mana < cost_of(def, skill):
+	if mana < cost_of(def, skill, cost_scale):
 		return {"ok": false, "reason": "mana"}
 	return {"ok": true, "reason": ""}
 

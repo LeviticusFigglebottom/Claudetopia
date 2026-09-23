@@ -5,7 +5,7 @@ extends Actor
 ## core/default_bindings.json; edge detection is done here so scripted drivers that call
 ## Input.action_press() behave exactly like a keyboard.
 
-enum State { FREE, ATTACK, DODGE, STUNNED, CAST, MANTLE, BOW, RIPOSTE, DEAD }
+enum State { FREE, ATTACK, DODGE, STUNNED, CAST, MANTLE, BOW, RIPOSTE, DEAD, DRINK }
 
 signal state_changed(from: int, to: int)
 signal lock_on_changed(target: Node3D)
@@ -25,10 +25,19 @@ const WALK_SPEED := 1.8
 const JOG_SPEED := 5.0
 const SPRINT_SPEED := 7.8
 const SNEAK_SPEED := 1.5
-## Locked on or blocking the body faces the target or the view, not the way it moves, and the
-## legs have only walking strafes to show for it.
+## Blocking, the body walks behind its guard, facing the foe or the view: this, times
+## BLOCK_MOVE_MULT, whatever way it goes.
 const STRAFE_SPEED := 2.6
 const BLOCK_MOVE_MULT := 0.6
+## Locked on (and not blocking), the body faces the foe and goes at the pace each way allows: a
+## jog straight at it, so a foe backing away -- a caster kiting at about 3 m/s -- can be closed
+## on without letting go of the lock; a side-step across it; a backpedal away from it. Between
+## them the pace follows the ellipse through the three. At 2.6 m/s every way, a locked-on player
+## could not catch anything that walked backwards. Each is within what its clip can play without
+## sliding (Run at 1.0x, the side-steps at 1.58x, Walk_Back at 1.57x).
+const LOCKED_FORWARD := JOG_SPEED
+const LOCKED_SIDE := 3.0
+const LOCKED_BACK := 1.8
 ## Moving while a bow is drawn: what the first numbers gave it (half of 4.2), kept.
 const AIM_MOVE_SPEED := 2.1
 ## Stick deflection at which a walk becomes a jog, and where the jog is reached.
@@ -58,6 +67,16 @@ const ALIGN_NONE := deg_to_rad(150.0)
 const SPRINT_RESUME := 0.25
 ## A press of Sprint let go within this long is a tap, and a tap rolls (see _read_sprint_tap).
 const SPRINT_TAP_S := 0.22
+## Turning on the spot. A body standing (below TURN_STEP_BELOW m/s) that turns faster than
+## TURN_STEP_FROM steps round, instead of pivoting on planted feet: the model is told a side-step
+## at the pace the feet would travel round the body (TURN_STEP_RADIUS from its middle), no more
+## than TURN_STEP_MAX. TURN_STEP_EASE eases it in and out so a flick of the view is a step or
+## two, not a twitch.
+const TURN_STEP_FROM := deg_to_rad(60.0)
+const TURN_STEP_BELOW := 0.5
+const TURN_STEP_RADIUS := 0.18
+const TURN_STEP_MAX := 1.4
+const TURN_STEP_EASE := 12.0
 const JUMP_HEIGHT := 1.1
 ## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
@@ -69,10 +88,14 @@ const BOW_MIN_DRAW := 0.3
 const RIPOSTE_RANGE := 2.4
 ## How close you must be to a foe's back for the light to become a backstab.
 const BACKSTAB_RANGE := 1.8
-## Load is what is worn and wielded over 40 + 3·Endurance (the character's own Endurance). A bag
+## The body's own poise before any stance is learned (Hafted Poise adds to it).
+const BASE_POISE := 40.0
+## Load is what is worn and wielded over 20 + 1.5·Endurance (the character's own Endurance): at the
+## start of the game leathers and a sword roll light, a brigandine medium, plate and a greatsword
+## heavy, and plate with the heaviest hammer is more than the body can carry (DECISIONS). A bag
 ## carried past its capacity puts the roll in the overloaded band whatever is worn.
-const LOAD_CAPACITY_BASE := 40.0
-const LOAD_CAPACITY_PER_ENDURANCE := 3.0
+const LOAD_CAPACITY_BASE := 20.0
+const LOAD_CAPACITY_PER_ENDURANCE := 1.5
 const SAVE_SECTION := "player"
 const SKILL_IDS: Array[String] = ["one_handed", "two_handed", "archery", "block", "armour", "sneak", "speech", "alchemy", "smithing", "enchanting", "athletics", "kindling", "hush", "binding", "mending", "calling"]
 const ACTIONS: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact", "block", "sprint", "walk", "sneak", "lock_on", "cycle_target", "toggle_camera", "toggle_lantern", "quick_1", "quick_2", "quick_3", "quick_4"]
@@ -141,6 +164,8 @@ var _mantle_to: Vector3 = Vector3.ZERO
 var _mantle_t: float = 0.0
 var _bow_draw_start: float = -1.0
 var _riposte_target: Actor = null
+## The swallow in progress (drink_flask): elapsed, length, takes_at, restore, taken.
+var _drink: Dictionary = {}
 var _sprint_toggle: bool = false
 ## Run to empty: no sprint until SPRINT_RESUME of the stamina has come back.
 var _sprint_spent: bool = false
@@ -152,6 +177,9 @@ var _ground_speed: float = 0.0
 var _free_tick: int = -2
 ## The heightfield held the body up last tick (open country has no collider under it).
 var _terrain_held: bool = false
+## Turning on the spot (see TURN_STEP_*): the yaw a tick ago, and the side-step pace being shown.
+var _step_last_yaw := 0.0
+var _turn_step := 0.0
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
 
@@ -163,7 +191,7 @@ func _ready() -> void:
 	body_kind = "humanoid"
 	collision_layer = LAYER_PLAYER
 	max_health = DamageModel.hp_max(vigour)
-	poise_max = 40.0
+	poise_max = BASE_POISE
 	for s in SKILL_IDS:
 		if not skills.has(s):
 			skills[s] = 10
@@ -204,6 +232,10 @@ func _ready() -> void:
 	_follow_the_character()
 	if not EventBus.item_used.is_connected(_on_item_used):
 		EventBus.item_used.connect(_on_item_used)
+	if not EventBus.entity_killed.is_connected(_on_entity_killed):
+		EventBus.entity_killed.connect(_on_entity_killed)
+	if not EventBus.game_loaded.is_connected(_on_game_loaded):
+		EventBus.game_loaded.connect(_on_game_loaded)
 	if DisplayServer.get_name() != "headless" and input_enabled:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	call_deferred("_announce")
@@ -227,6 +259,8 @@ func _take_the_naming() -> void:
 	apply_appearance(_look_from_the_naming())
 	if not GameState.has_flag("new_game"):
 		return
+	# Every new character carries a Hearth Flask, on the belt from the first fight (DESIGN §5.5).
+	Flask.ensure(get_node_or_null("Inventory") as Inventory, get_node_or_null("Equipment") as Equipment)
 	var calling := str(GameState.get_flag("player_calling", ""))
 	var prog := get_node_or_null("Progression")
 	if calling.is_empty() or prog == null or not prog.has_method("apply_calling"):
@@ -246,7 +280,7 @@ func _look_from_the_naming() -> CharacterAppearance:
 		look.set_part("head", "default")
 		look.set_part("hair", "short")
 		var calling := str(GameState.get_flag("player_calling", ""))
-		look.dress_for_culture(CharacterAppearance.culture_of_calling(calling), abs(display_name.hash()))
+		look.dress_for_culture(CharacterAppearance.culture_of_calling(calling), abs(display_name.hash()), true)
 	return look
 
 
@@ -254,9 +288,39 @@ func _look_from_the_naming() -> CharacterAppearance:
 ## the animation driver; a placeholder capsule has nothing to apply it to and is left alone.
 func apply_appearance(look: Variant) -> void:
 	appearance = look if look is CharacterAppearance else CharacterAppearance.new(look as Dictionary)
+	_dress_the_body()
+
+
+## The equipment slots whose items are worn on the body, rather than held.
+const WORN_SLOTS := ["body", "hands", "feet", "head"]
+
+
+## What the body wears: the look the Naming made, with every piece of armour on the doll laid
+## over the part slots its `wear` block names. Equipping a brigandine used to change the armour
+## number and nothing a player could see: no armour item in the pack named a part at all.
+## `appearance` stays the Naming's look, which is what is saved and what a Warden would
+## describe; this is only what is on the body today.
+func worn_look() -> CharacterAppearance:
+	var worn := appearance.duplicate_appearance()
+	var eq := get_node_or_null(NodePath("Equipment"))
+	if eq == null or not eq.has_method("get_slot"):
+		return worn
+	for slot in WORN_SLOTS:
+		var stack: Variant = eq.call("get_slot", slot)
+		if stack == null:
+			continue
+		var wear: Variant = ContentDB.get_or_empty(str(stack.id)).get("wear", {})
+		if typeof(wear) != TYPE_DICTIONARY:
+			continue
+		for part_slot in wear:
+			worn.set_part(str(part_slot), str(wear[part_slot]))
+	return worn
+
+
+func _dress_the_body() -> void:
 	var body := body_model()
 	if body != null:
-		body.call("apply_appearance", appearance)
+		body.call("apply_appearance", worn_look())
 
 
 ## The humanoid model standing in for this character, or null while it is a placeholder.
@@ -269,6 +333,10 @@ func body_model() -> Node:
 func _exit_tree() -> void:
 	if EventBus.item_used.is_connected(_on_item_used):
 		EventBus.item_used.disconnect(_on_item_used)
+	if EventBus.entity_killed.is_connected(_on_entity_killed):
+		EventBus.entity_killed.disconnect(_on_entity_killed)
+	if EventBus.game_loaded.is_connected(_on_game_loaded):
+		EventBus.game_loaded.disconnect(_on_game_loaded)
 	if SaveSystem.participants.get(SAVE_SECTION) == self:
 		SaveSystem.unregister(SAVE_SECTION)
 	for pair in [["inventory", "Inventory"], ["equipment", "Equipment"],
@@ -359,6 +427,7 @@ func _physics_process(delta: float) -> void:
 		State.BOW: _tick_bow(delta)
 		State.RIPOSTE: _tick_riposte(delta)
 		State.DEAD: _damp_horizontal(delta, 10.0)
+		State.DRINK: _tick_drink(delta)
 	if state != State.MANTLE:
 		apply_gravity(delta)
 		integrate_shove(delta)
@@ -387,7 +456,7 @@ func state_name() -> String:
 
 
 func is_busy() -> bool:
-	return state in [State.ATTACK, State.DODGE, State.CAST, State.BOW, State.RIPOSTE, State.MANTLE]
+	return state in [State.ATTACK, State.DODGE, State.CAST, State.BOW, State.RIPOSTE, State.MANTLE, State.DRINK]
 
 
 # --- FREE ---------------------------------------------------------------------------------------
@@ -483,11 +552,14 @@ func can_parry_with_equipment() -> bool:
 	return weapon != null and weapon.can_parry
 
 
+## How much of a blow the raised guard stops (0..1): the shield's stability, else the weapon's,
+## raised by Braced Stance (+0.1).
 func block_stability_value() -> float:
 	var guard := _offhand_guard()
+	var base := weapon.stability if weapon != null else 0.0
 	if not guard.is_empty() and not weapon.is_two_handed():
-		return clampf(float(guard.get("stability", 0.0)), 0.0, 1.0)
-	return weapon.stability if weapon != null else 0.0
+		base = float(guard.get("stability", 0.0))
+	return clampf(base + stat_add("block_stability"), 0.0, 1.0)
 
 
 ## What the off hand guards with: a shield worn as armour says it in its `armour` block, and a
@@ -573,7 +645,7 @@ func _move(delta: float) -> void:
 	var wish := _wish_direction()
 	var moving := wish.length() > 0.1
 	_update_sprint(moving, delta)
-	var speed := _target_speed() if moving else 0.0
+	var speed := _target_speed(wish) if moving else 0.0
 	if not _on_ground():
 		_air_move(wish, speed, delta)
 	elif _strafe_mode():
@@ -599,19 +671,40 @@ static func gait_speed(stick: float, walk_held: bool) -> float:
 	return lerpf(WALK_SPEED, JOG_SPEED, clampf((m - WALK_STICK) / (JOG_STICK - WALK_STICK), 0.0, 1.0))
 
 
-func _target_speed() -> float:
+func _target_speed(wish := Vector3.ZERO) -> float:
 	var speed := SPRINT_SPEED if is_sprinting else gait_speed(_move_input.length(), bool(_held.get("walk", false)))
 	if is_sneaking:
 		speed = minf(speed, SNEAK_SPEED)
 	if _strafe_mode() and not camera_rig.first_person:
-		speed = minf(speed, STRAFE_SPEED)
+		if is_blocking or not lock.is_locked():
+			speed = minf(speed, STRAFE_SPEED)
+		else:
+			speed = minf(speed, locked_speed(_way_to_lock(wish)))
 	if is_blocking:
 		speed *= BLOCK_MOVE_MULT
 	return speed * speed_multiplier()
 
 
+## `wish` in the foe's frame: x across it (to the right), y toward it.
+func _way_to_lock(wish: Vector3) -> Vector2:
+	var local := Basis(Vector3.UP, yaw_to(lock.target_point())).inverse() * wish
+	return Vector2(local.x, -local.z)
+
+
+## The locked-on pace for a way to go in the foe's frame (x across, y toward): the ellipse
+## through LOCKED_FORWARD ahead, LOCKED_SIDE across and LOCKED_BACK behind.
+static func locked_speed(way: Vector2) -> float:
+	if way.length() < 0.001:
+		return LOCKED_SIDE
+	var d := way.normalized()
+	var along := LOCKED_FORWARD if d.y >= 0.0 else LOCKED_BACK
+	return 1.0 / sqrt(pow(d.x / LOCKED_SIDE, 2.0) + pow(d.y / along, 2.0))
+
+
 ## Locked on (and not sprinting), blocking, or looking out of the body's own eyes: the body faces
-## the target or the view and steps whichever way it is pushed. Sprinting breaks a lock's strafe.
+## the target or the view and steps whichever way it is pushed. Sprinting breaks a lock's strafe
+## and keeps the lock: the body runs where it is pushed at a sprint, the view stays on the foe,
+## and letting go of Sprint turns it back to face the foe.
 func _strafe_mode() -> bool:
 	return camera_rig.first_person or is_blocking or (lock.is_locked() and not is_sprinting)
 
@@ -723,18 +816,34 @@ func _damp_horizontal(delta: float, rate: float) -> void:
 	velocity.z = horizontal.z
 
 
-func _update_locomotion_anim(_delta: float) -> void:
+func _update_locomotion_anim(delta: float) -> void:
 	# the ground velocity the body really made, in its own frame, m/s: the model plays the gait
 	# at the rate that keeps its feet planted under exactly that
 	var v := get_real_velocity()
 	var local := global_transform.basis.inverse() * Vector3(v.x, 0.0, v.z)
-	anim.set_locomotion(Vector2(local.x, -local.z), is_sneaking)
+	var told := Vector2(local.x, -local.z)
+	told.x += turn_step_pace(told.length(), delta)
+	anim.set_locomotion(told, is_sneaking)
 	if state == State.FREE and not anim.is_busy() and not is_blocking:
 		if not is_on_floor() and velocity.y < -3.0 and not anim.is_playing("Fall_Loop"):
 			anim.play_intent("Fall_Loop")
 		elif is_on_floor() and anim.is_playing("Fall_Loop"):
 			anim.stop()
 	model.visible = not camera_rig.first_person
+
+
+## The side-step pace (m/s, + to the right) the legs are shown while the body turns on the spot;
+## 0 when it moves, stands still, or is busy. A turn to the left steps to the left.
+func turn_step_pace(ground_speed: float, delta: float) -> float:
+	var turn := wrapf(rotation.y - _step_last_yaw, -PI, PI) / maxf(delta, 0.0001)
+	_step_last_yaw = rotation.y
+	var want := 0.0
+	if state == State.FREE and ground_speed < TURN_STEP_BELOW and absf(turn) > TURN_STEP_FROM and _on_ground():
+		want = clampf(-turn * TURN_STEP_RADIUS, -TURN_STEP_MAX, TURN_STEP_MAX)
+	_turn_step = lerpf(_turn_step, want, 1.0 - exp(-TURN_STEP_EASE * delta))
+	if absf(_turn_step) < 0.02 and want == 0.0:
+		_turn_step = 0.0
+	return _turn_step
 
 
 # --- ATTACK -------------------------------------------------------------------------------------
@@ -826,7 +935,7 @@ func _on_clip_event(event_name: String) -> void:
 			if state == State.ATTACK or state == State.RIPOSTE:
 				_attack_phase = "active"
 				weapon.on_clip_event(event_name)
-				_emit_noise(0.5)
+				_emit_action_noise(0.5)
 		"hit_end":
 			if state == State.ATTACK or state == State.RIPOSTE:
 				_attack_phase = "recovery"
@@ -859,7 +968,7 @@ func _on_clip_finished(clip: String) -> void:
 func _on_weapon_hit(_victim: Node, hit: HitData, outcome: String) -> void:
 	if outcome == "hit" or outcome == "blocked":
 		EventBus.skill_used.emit(hit.skill_id, 4.0 if hit.heavy else 2.0)
-		_emit_noise(0.6)
+		_emit_action_noise(0.6)
 
 
 # --- RIPOSTE ------------------------------------------------------------------------------------
@@ -967,10 +1076,11 @@ func _tick_riposte(delta: float) -> void:
 func _start_dodge() -> bool:
 	if not can_act():
 		return false
-	if not stamina_comp.can_afford(DamageModel.STAMINA_DODGE):
+	var cost := dodge_cost()
+	if not stamina_comp.can_afford(cost):
 		return false
-	stamina_comp.spend(DamageModel.STAMINA_DODGE)
-	_dodge_params = DamageModel.dodge_params(load_ratio)
+	stamina_comp.spend(cost)
+	_dodge_params = roll_params()
 	_dodge_elapsed = 0.0
 	is_blocking = false
 	var wish := _wish_direction()
@@ -995,6 +1105,54 @@ func _start_dodge() -> bool:
 	_set_state(State.DODGE)
 	dodge_started.emit(_dodge_dir)
 	return true
+
+
+## A roll's stamina: DESIGN's 22, cheapened by Roll Away (15% less).
+func dodge_cost() -> float:
+	return DamageModel.STAMINA_DODGE * stat_mult("stamina_cost_dodge")
+
+
+## The roll this body would make now (DamageModel.dodge_params): from the load it carries, with
+## worn armour's share scaled by Second Skin, and its safe window held open longer by Roll Away
+## (+0.05 s), never past the roll's own end.
+func roll_params() -> Dictionary:
+	var p := DamageModel.dodge_params(dodge_load_ratio())
+	var extra := stat_add("dodge_iframes")
+	if not is_zero_approx(extra):
+		p["iframe_end"] = clampf(float(p["iframe_end"]) + extra, float(p["iframe_start"]), float(p["duration"]))
+	return p
+
+
+## The load the roll feels: `load_ratio`, except that Second Skin ("penalties from armour weight to
+## dodging are halved") counts the armour worn at half its weight. A bag carried past its capacity
+## still counts in full: that is not the armour.
+func dodge_load_ratio() -> float:
+	var scale := stat_mult("weight_class_penalty")
+	var capacity := LOAD_CAPACITY_BASE + LOAD_CAPACITY_PER_ENDURANCE * float(endurance)
+	if scale >= 1.0 or capacity <= 0.0:
+		return load_ratio
+	var ratio := maxf(_worn_weight() - _armour_weight() * (1.0 - scale), 0.0) / capacity
+	var bag := get_node_or_null(NodePath("Inventory"))
+	if bag != null and bag.has_method("is_overloaded") and bool(bag.call("is_overloaded")):
+		ratio = maxf(ratio, float(bag.call("load_fraction")))
+	return ratio
+
+
+## The weight of the armour worn on head, body, hands and feet.
+func _armour_weight() -> float:
+	var total := 0.0
+	var doll_body := ""
+	var doll := _doll()
+	if doll != null and doll.has_method("get_slot"):
+		for slot in Equipment.ARMOUR_SLOTS:
+			var s: Variant = doll.call("get_slot", slot)
+			if s != null:
+				total += float(s.unit_weight())
+		doll_body = str(doll.call("item_id", "body"))
+	var body := str(equipped.get("body", ""))
+	if not body.is_empty() and body != doll_body:
+		total += float(ContentDB.get_or_empty(body).get("weight", 0.0))
+	return total
 
 
 func _tick_dodge(delta: float) -> void:
@@ -1034,6 +1192,7 @@ func on_action_interrupted() -> void:
 	camera_rig.set_aiming(false)
 	clear_invulnerability()
 	_riposte_target = null
+	_drink.clear()   # a swallow interrupted is a swallow spilled
 	if state != State.DEAD:
 		_set_state(State.STUNNED)
 
@@ -1084,6 +1243,8 @@ func teleport(position: Vector3, yaw: float) -> void:
 	velocity = Vector3.ZERO
 	_ground_speed = 0.0
 	_free_tick = -2
+	_step_last_yaw = yaw          # a body put down facing a new way has not turned on the spot
+	_turn_step = 0.0
 	camera_rig.yaw = yaw
 	reset_physics_interpolation()
 	camera_rig.snap_to_target()
@@ -1145,6 +1306,60 @@ func aim_origin() -> Vector3:
 	return global_position + Vector3.UP * 1.45 + forward() * 0.35
 
 
+# --- DRINK --------------------------------------------------------------------------------------
+
+## A swallow from the Hearth Flask (DESIGN §5.5): committed and rooted like a saying, with the
+## warmth landing `takes_at` into the drink; a blow that staggers the drinker before then spills
+## it, and the swallow is spent either way. The belt key and a scripted hand both come here.
+## Returns whether a drink started.
+func drink_flask() -> bool:
+	if not can_act() or state != State.FREE:
+		return false
+	var bag := get_node_or_null(NodePath("Inventory")) as Inventory
+	var flask := Flask.find(bag)
+	if flask == null:
+		return false
+	if Flask.charges(flask) <= 0:
+		EventBus.notify.emit("The flask is dry. A Hearthstone will fill it.", "info")
+		return false
+	Flask.take_swallow(bag, flask)
+	var s := Flask.spec(flask.id)
+	_drink = {"elapsed": 0.0, "length": float(s["drink_time"]), "takes_at": float(s["takes_at"]),
+		"restore": float(s["restore"]), "taken": false}
+	is_blocking = false
+	anim.play_intent("Drink", {"length": float(s["drink_time"])})
+	_set_state(State.DRINK)
+	return true
+
+
+func _tick_drink(delta: float) -> void:
+	if is_stunned():
+		_drink.clear()
+		_enter_stunned()
+		return
+	_damp_horizontal(delta, 16.0)
+	_drink["elapsed"] = float(_drink.get("elapsed", 0.0)) + delta
+	if not bool(_drink.get("taken", true)) and float(_drink["elapsed"]) >= float(_drink["takes_at"]):
+		_drink["taken"] = true
+		heal(max_health * float(_drink["restore"]))
+		Foley.play("potion_drink", global_position + Vector3.UP * 1.4)
+	if float(_drink.get("elapsed", 0.0)) >= float(_drink.get("length", 0.0)):
+		_drink.clear()
+		_set_state(State.FREE)
+
+
+## A rest at a Hearthstone or a coming back from death: everything a body gets back, and the flask
+## filled again (DESIGN §5.5: "full restore ... refills flask charges").
+func full_restore() -> void:
+	super()
+	Flask.refill(get_node_or_null(NodePath("Inventory")) as Inventory)
+
+
+## A save from before the flask existed is given one on loading, like a new character.
+func _on_game_loaded(_slot: String) -> void:
+	Flask.ensure(get_node_or_null(NodePath("Inventory")) as Inventory, get_node_or_null(NodePath("Equipment")) as Equipment)
+
+
 # --- BOW ----------------------------------------------------------------------------------------
 
 func _start_bow() -> bool:
@@ -1157,7 +1372,7 @@ func _start_bow() -> bool:
 		EventBus.notify.emit("Still winding.", "warning")
 		return false
 	_bow_draw_start = now()
-	var draw_time := float(weapon.ranged.get("draw_time", 0.7))
+	var draw_time := weapon.draw_time()
 	anim.play_intent("Bow_Draw", {"length": draw_time})
 	Foley.play("bow_draw", attack_origin.global_position)
 	camera_rig.set_aiming(true)
@@ -1173,7 +1388,7 @@ func _tick_bow(delta: float) -> void:
 	var wish := _wish_direction() * AIM_MOVE_SPEED
 	velocity.x = wish.x
 	velocity.z = wish.z
-	var draw_time := maxf(float(weapon.ranged.get("draw_time", 0.7)), 0.1)
+	var draw_time := weapon.draw_time()
 	var drawn := clampf((now() - _bow_draw_start) / draw_time, 0.0, 1.0)
 	if drawn >= 1.0 and not anim.is_playing("Bow_Aim") and not anim.is_busy():
 		anim.play_intent("Bow_Aim")
@@ -1227,7 +1442,7 @@ func _fire_arrow(drawn: float) -> void:
 	# The shaft's own contribution: `damage` for a self-contained projectile, `damage_mult` for
 	# ammunition whose worth is in the head it carries. Both were in the pack; only one was read.
 	var base := (weapon.damage + float(proj.get("damage", 0.0))) * float(proj.get("damage_mult", 1.0))
-	hit.amount = DamageModel.raw_damage(base, get_skill(weapon.skill_id), lerpf(0.5, 1.0, drawn), 1.0)
+	hit.amount = DamageModel.raw_damage(base, get_skill(weapon.skill_id), lerpf(0.5, 1.0, drawn), 1.0) * weapon.skill_damage_mult()
 	hit.kind = str(proj.get("kind", "pierce"))
 	hit.poise_damage = weapon.poise_damage + float(proj.get("poise_damage", 0.0))
 	hit.attacker = self
@@ -1237,6 +1452,8 @@ func _fire_arrow(drawn: float) -> void:
 	var speed := float(weapon.ranged.get("speed", 42.0)) * lerpf(0.6, 1.0, drawn)
 	arrow.launch(aim_origin(), aim_direction(), speed, hit, float(proj.get("gravity", gravity)))
 	arrow.impact_sound = "arrow_hit"
+	arrow.recover_item = shot
+	arrow.recover_chance = arrow_recovery_chance()
 	Foley.play("bow_release", attack_origin.global_position)
 	Foley.play("arrow_whoosh", attack_origin.global_position)
 	# A method reference, not a closure: an arrow outlives the bow that loosed it, and a
@@ -1245,7 +1462,19 @@ func _fire_arrow(drawn: float) -> void:
 	var reload := float(weapon.ranged.get("reload_time", 0.0))
 	if reload > 0.0:
 		_reload_until = now() + reload
-	_emit_noise(0.3)
+	_emit_action_noise(0.3)
+
+
+## A foe this body killed with a Kindling word gives up its last warmth (Enchanting).
+func _on_entity_killed(victim: Node, killer: Node, _content_id: String) -> void:
+	if killer == self:
+		Enchanting.catch_last_warmth(victim, self)
+
+
+## The chance an arrow loosed now can be found and used again: DamageModel.ARROW_RECOVERY, and a
+## quarter more of them with Fletcher's Thrift.
+func arrow_recovery_chance() -> float:
+	return clampf(DamageModel.ARROW_RECOVERY + stat_add("arrow_recovery"), 0.0, 1.0)
 
 
 func _on_arrow_struck(_victim: Node, hit: HitData, outcome: String) -> void:
@@ -1474,7 +1703,7 @@ func equip_spell(spell_id: String) -> bool:
 
 
 ## Load, which lengthens the roll and slows regen (DESIGN §5.3, §5.7): everything worn and wielded
-## over 40 + 3·Endurance, and past 100% whenever the bag carries more than the character can. It
+## over 20 + 1.5·Endurance, and past 100% whenever the bag carries more than the character can. It
 ## used to count only the hands and the coat, so a helm, gauntlets and sabatons weighed nothing,
 ## and it never looked at the bag, whose `is_overloaded()` says in its own comment that it is "for
 ## the movement code to read" and was read by nothing.
@@ -1510,12 +1739,14 @@ func _refresh_armour() -> void:
 	var doll_body := ""
 	var doll := _doll()
 	if doll != null and doll.has_method("armour_total"):
-		total = float(doll.call("armour_total"))
+		# A tempered piece is worth what this smith's tiers are worth (Red Door: 15% a tier).
+		total = float(doll.call("armour_total", Smithing.bonus_per_tier(stat_mods())))
 		doll_body = str(doll.call("item_id", "body"))
 	var body := str(equipped.get("body", ""))
 	if not body.is_empty() and body != doll_body:
 		total += float(ContentDB.get_or_empty(body).get("armour", {}).get("armour", 0.0))
-	armour_flat = total
+	# Broken In: worn armour protects 10% better. A Fortify Armour draught or note adds on top.
+	armour_flat = total * stat_mult("armour") + stat_add("armour")
 	# Struck in heavy mail you ring; in cloth and leather you are hit (Foley.material_for).
 	var heavy := doll != null and doll.has_method("weight_class") and str(doll.call("weight_class")) == "heavy"
 	body_material = "metal" if heavy or armour_flat >= 11.0 else "flesh"
@@ -1565,6 +1796,9 @@ func use_quick_slot(index: int) -> void:
 	quick_slot_used.emit(index, id)
 	if id.is_empty():
 		return
+	if Flask.is_flask(id):
+		drink_flask()
+		return
 	if Ids.type_of(id) == "spell":
 		if equip_spell(id):
 			EventBus.notify.emit("Readied %s." % ContentDB.get_or_empty(id).get("name", id), "info")
@@ -1573,10 +1807,23 @@ func use_quick_slot(index: int) -> void:
 		EventBus.notify.emit("None left.", "info")
 
 
+## The noise of the body moving (a sprint's footfalls, a jump), which Quiet Step quiets by 30%.
 func _emit_noise(loudness: float) -> void:
+	_emit_action_noise(loudness * movement_noise_mult())
+
+
+## A noise the body makes by acting (a blade going live, a blow landing, a bowstring): nothing
+## about how softly it walks makes that any quieter.
+func _emit_action_noise(loudness: float) -> void:
 	for n in get_tree().get_nodes_in_group("perceivers"):
 		if n.has_method("noise_heard"):
 			n.noise_heard(global_position, loudness)
+
+
+## How loud this body's movement is against the plain figure (Quiet Step: 0.7). Stealth reads the
+## same number for the noise that goes into being seen.
+func movement_noise_mult() -> float:
+	return stat_mult("noise")
 
 
 func _on_lock_changed(target: Node3D) -> void:
@@ -1604,7 +1851,7 @@ func _follow_equipment() -> void:
 		eq.changed.connect(_on_equipment_changed)
 	if eq.has_method("use_quick_index"):
 		quick_slot_handler = Callable(eq, "use_quick_index")
-	for slot in ["main_hand", "off_hand", "body"]:
+	for slot in ["main_hand", "off_hand", "body", "hands", "feet", "head"]:
 		_on_equipment_changed(slot)
 
 
@@ -1620,6 +1867,11 @@ func _follow_the_character() -> void:
 			prog.modifiers_changed.connect(_on_modifiers_changed)
 		if prog.has_signal("level_changed") and not prog.level_changed.is_connected(_on_level_changed):
 			prog.level_changed.connect(_on_level_changed)
+		# Every source of the modifier table (a perk taken or granted, a draught, the gear worn)
+		# comes through this one signal; `points_changed` alone missed a perk given as a reward.
+		var table: Variant = prog.get("mods")
+		if table is Modifiers and not (table as Modifiers).changed.is_connected(_on_modifiers_changed):
+			(table as Modifiers).changed.connect(_on_modifiers_changed)
 	var bag := get_node_or_null(NodePath("Inventory"))
 	if bag != null and bag.has_signal("changed") and not bag.changed.is_connected(_recompute_load):
 		bag.changed.connect(_recompute_load)
@@ -1635,7 +1887,28 @@ func _on_points_changed(_attribute_points: int, _perk_points: int) -> void:
 
 
 func _on_modifiers_changed() -> void:
+	_refresh_armour()
 	_refresh_pools(false)
+
+
+## The modifier table this character's perks, draughts and worn enchantments feed.
+func stat_mods() -> Modifiers:
+	var p := progression()
+	if p == null:
+		return null
+	var table: Variant = p.get("mods")
+	return table as Modifiers if table is Modifiers else null
+
+
+## What the paper doll's enchantments say (a Fortify Armour note on a coat, Resist Fire on a helm)
+## goes into the modifier table as the "equipment" source. Equipment.modifiers() was worked out
+## and never handed to anything, so a written note on armour was a decoration.
+func _refresh_gear_modifiers() -> void:
+	var table := stat_mods()
+	var doll := _doll()
+	if table == null or doll == null or not doll.has_method("modifiers"):
+		return
+	table.set_source("equipment", doll.call("modifiers"))
 
 
 func _on_level_changed(_new_level: int) -> void:
@@ -1667,8 +1940,19 @@ func _refresh_pools(fill := false) -> void:
 	else:
 		health = minf(health, max_health)
 		caster.restore_mana(0.0)
+	_refresh_poise(fill)
 	_recompute_load()
 	stats_changed.emit()
+
+
+## Poise over the body's own 40, raised by Hafted Poise (+15). Raising the ceiling raises what is
+## in it by as much; a lowered one only trims it.
+func _refresh_poise(fill: bool) -> void:
+	var want := maxf((BASE_POISE + stat_add("poise_max")) * stat_mult("poise_max"), 1.0)
+	var gained := want - poise_comp.maximum
+	poise_max = want
+	poise_comp.maximum = want
+	poise_comp.current = want if fill else clampf(poise_comp.current + maxf(gained, 0.0), 0.0, want)
 
 
 ## Quieted drains renown (DESIGN §5.3). StatusEffects has always ticked it, and nothing listened,
@@ -1685,6 +1969,7 @@ func _on_equipment_changed(slot: String) -> void:
 	var eq := get_node_or_null(NodePath("Equipment"))
 	if eq == null or not eq.has_method("get_slot"):
 		return
+	_refresh_gear_modifiers()
 	var stack: Variant = eq.call("get_slot", slot)
 	var id := str(stack.id) if stack != null else ""
 	var stack_data: Dictionary = stack.data.duplicate(true) if stack != null else {}
@@ -1700,6 +1985,8 @@ func _on_equipment_changed(slot: String) -> void:
 			# A helm, gloves, boots, a ring: no hand to put them in, but armour and weight.
 			_refresh_armour()
 			_recompute_load()
+	if slot in WORN_SLOTS:
+		_dress_the_body()
 
 
 ## The blade running down: the WeaponInstance spent charge, so the stack it came from loses it

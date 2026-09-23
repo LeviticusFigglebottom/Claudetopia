@@ -55,6 +55,10 @@ var world_position := Vector3.ZERO
 var wants_hearthstone := false
 ## Ground some foes will not cross, from the def's `ward` ({radius_m, keeps_off}): Wards.
 var ward: Dictionary = {}
+## A way marked on the ground from here to somewhere else: `{to: place id, via: [[x, z], ...]}`
+## in world coordinates, the walk the POI's builder lays markers along (the Stair Head's cairns
+## to the Choir). Empty for nearly everything.
+var path: Dictionary = {}
 
 var kit: PoiKit = null
 var masonry: PoiMasonry = null
@@ -83,6 +87,8 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.far = silhouette
 	d.wants_hearthstone = bool(def.get("hearthstone", false)) or d.kind == "hearth"
 	d.ward = def.get("ward", {})
+	var way: Variant = def.get("path", {})
+	d.path = (way as Dictionary).duplicate(true) if typeof(way) == TYPE_DICTIONARY else {}
 	d.name = "Poi_" + Ids.name_of(d.poi_id)
 	d._provider = terrain
 	d._roads = roads

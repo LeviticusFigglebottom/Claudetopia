@@ -44,6 +44,13 @@ const FAR_KEEP := {"tree": 0.35, "bush": 0.3, "rock": 0.4, "prop": 0.4, "herb": 
 
 var target: Node3D = null
 var provider: TerrainProvider = null
+## Whether crossing into another region tells the game the player has arrived there. A camera
+## flying the opening over five regions is not a traveller: a region change seeds that region's
+## rumours, moves the music and titles the HUD, so a cinematic turns this off while it leads.
+var report_regions := true
+## Points besides the target whose full-detail ring is wanted too (a cinematic loads its next
+## shot while this one plays). Set it with `set_also_around`, which refreshes.
+var also_around: Array[Vector3] = []
 
 var _cells_wide: int = 32
 var _origin := Vector2(-4096.0, -4096.0)
@@ -129,6 +136,27 @@ func is_ring_loaded(ring: int = -1) -> bool:
 	return _pending.is_empty() and _parsed.is_empty()
 
 
+## True when the full-detail ring around any point is standing: what a cinematic asks before it
+## shows a shot, since its camera is somewhere the target has not been yet.
+func is_loaded_around(pos: Vector3, ring: int = -1) -> bool:
+	var r := full_ring if ring < 0 else ring
+	var cell := cell_of(pos)
+	for dz in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			var c := Vector2i(cell.x + dx, cell.y + dz)
+			if _in_world(c) and not _loaded.has(c):
+				return false
+	return true
+
+
+func set_also_around(points: Array) -> void:
+	also_around.clear()
+	for p in points:
+		if p is Vector3:
+			also_around.append(p)
+	refresh()
+
+
 func loaded_count() -> int:
 	return _loaded.size()
 
@@ -154,24 +182,24 @@ func refresh() -> void:
 		return
 	var cell := cell_of(target.global_position)
 	var wanted: Dictionary = {}
-	for dz in range(-far_ring, far_ring + 1):
-		for dx in range(-far_ring, far_ring + 1):
-			var c := Vector2i(cell.x + dx, cell.y + dz)
-			if not _in_world(c):
-				continue
-			var ring: int = maxi(absi(dx), absi(dz))
-			wanted[c] = ring
+	_want_around(wanted, cell, far_ring)
+	for p in also_around:
+		_want_around(wanted, cell_of(p), full_ring)
 	for c in wanted:
 		var ring: int = wanted[c]
 		if _loaded.has(c):
 			# A cell built for the far ring has no grass in it at all (and thinned instances
-			# elsewhere), so moving between rings means rebuilding it rather than patching
-			# what is there.
-			if int(_loaded[c].get_meta("ring", 0)) != ring:
+			# elsewhere), so moving between near and far detail means rebuilding it rather than
+			# patching what is there. Between the centre and the rest of the near ring nothing
+			# differs, so nothing is rebuilt.
+			if (int(_loaded[c].get_meta("ring", 0)) > full_ring) != (ring > full_ring):
 				_unload(c)
 				_request(c, ring)
 			continue
 		if _pending.has(c) or _parsed.has(c):
+			# built at whatever ring it is wanted at when its data arrives; a cell whose data had
+			# arrived after it stopped being wanted is wanted again, not dropped at the drain
+			_pending[c] = ring
 			continue
 		_request(c, ring)
 	for c in _loaded.keys():
@@ -180,6 +208,17 @@ func refresh() -> void:
 	for c in _pending.keys():
 		if not wanted.has(c):
 			_pending.erase(c)
+
+
+## Adds the rings around `centre` to `wanted`, each cell at the nearest ring anything wants it at.
+func _want_around(wanted: Dictionary, centre: Vector2i, rings: int) -> void:
+	for dz in range(-rings, rings + 1):
+		for dx in range(-rings, rings + 1):
+			var c := Vector2i(centre.x + dx, centre.y + dz)
+			if not _in_world(c):
+				continue
+			var ring: int = maxi(absi(dx), absi(dz))
+			wanted[c] = mini(ring, int(wanted.get(c, ring)))
 
 
 func _in_world(c: Vector2i) -> bool:
@@ -577,7 +616,7 @@ func _scene_for(path: String) -> PackedScene:
 
 
 func _check_region() -> void:
-	if provider == null or target == null:
+	if provider == null or target == null or not report_regions:
 		return
 	var pos := target.global_position
 	var jumped := _region_checked_at == Vector3.INF or pos.distance_to(_region_checked_at) > REGION_JUMP_M

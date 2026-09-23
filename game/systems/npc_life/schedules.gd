@@ -7,6 +7,8 @@ class_name Schedules
 ## activity: sleep | work | eat | idle | pray | socialise | patrol | shop (travel is derived).
 ## Rules: the current entry is the latest one at or before the hour (wrapping to earlier days);
 ## travel to the next entry begins TRAVEL_LEAD_HOURS before it; rain sends outdoor `idle` home.
+## A def may also carry `holds: [{when: [conditions], place, activity, spot}]`, which come before
+## the timetable whenever their conditions hold (see `held_entry`).
 
 const ACTIVITIES: Array[String] = ["sleep", "work", "eat", "idle", "pray", "socialise", "patrol", "shop"]
 const TRAVEL_LEAD_HOURS := 20.0 / 60.0
@@ -181,9 +183,55 @@ static func entry_at(schedule: Array, weekday: int, hour: float, weather: String
 	return out
 
 
-## Convenience: state for a whole npc def at the clock's current day/time.
-static func entry_for_def(def: Dictionary, day: int, hour: float, weather: String = "clear") -> Dictionary:
+## Convenience: state for a whole npc def at the clock's current day/time. A hold that applies
+## (`held_entry`) wins over the timetable; `ctx` defaults to the game's own context.
+static func entry_for_def(def: Dictionary, day: int, hour: float, weather: String = "clear",
+		ctx: SocialContext = null) -> Dictionary:
+	var held := held_entry(def, ctx if ctx != null else live_context())
+	if not held.is_empty():
+		return held
 	return entry_at(def.get("schedule", []), weekday_of(day), hour, weather, str(def.get("home_place", "")))
+
+
+## Where the story is keeping somebody, if it is. A def's `holds` are checked in order, and the
+## first whose `when` holds -- the dialogue's own condition vocabulary (`Conditions`), read through
+## the live SocialContext -- says where they are for as long as it holds, whatever the hour and
+## the weather. That is how the story keeps a person where it needs them without writing them a
+## second timetable: Wren Tallow stands at the Stair Head from a new game until the Foundling has
+## spoken to her and walked north (DESIGN §5.1a), and then goes back to her own days.
+static func held_entry(def: Dictionary, ctx: SocialContext) -> Dictionary:
+	var holds: Variant = def.get("holds", [])
+	if ctx == null or typeof(holds) != TYPE_ARRAY:
+		return {}
+	for h_v in holds:
+		if typeof(h_v) != TYPE_DICTIONARY:
+			continue
+		var h: Dictionary = h_v
+		var when: Variant = h.get("when", [])
+		# a hold that never says when would hold for ever: that is a content problem, not a rule
+		if typeof(when) != TYPE_ARRAY or (when as Array).is_empty():
+			continue
+		if not Conditions.all_of(when, ctx):
+			continue
+		var cur := resolve(h, "clear", str(def.get("home_place", "")))
+		var out := {"place": cur["place"], "activity": cur["activity"], "spot": cur["spot"], "hour": 0.0,
+				"travelling": false, "weather_override": false, "indoors": bool(cur.get("indoors", false)),
+				"next": {}, "after_travel": "", "held": true}
+		if cur.has("clip"):
+			out["clip"] = cur["clip"]
+		return out
+	return {}
+
+
+## The game's own SocialContext (the `Social` autoload's), or null where there is none.
+static func live_context() -> SocialContext:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		return null
+	var social := tree.root.get_node_or_null("Social")
+	if social == null:
+		return null
+	return social.get("ctx") as SocialContext
 
 
 ## Animation intent for an activity (CONTRACTS §3 life clips). `work_clip` comes from the
@@ -225,4 +273,29 @@ static func problems(schedule: Array, owner: String = "?") -> Array[String]:
 		var a := str(e.get("activity", ""))
 		if not a in ACTIVITIES:
 			out.append("%s: schedule[%d] unknown activity '%s'" % [owner, i, a])
+	return out
+
+
+## Validation for a def's `holds`: each needs a place, a known activity and a non-empty `when`.
+static func hold_problems(def: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	var owner := str(def.get("id", "?"))
+	var holds: Variant = def.get("holds", [])
+	if typeof(holds) != TYPE_ARRAY:
+		out.append("%s: holds is not a list" % owner)
+		return out
+	for i in (holds as Array).size():
+		var h_v: Variant = holds[i]
+		if typeof(h_v) != TYPE_DICTIONARY:
+			out.append("%s: holds[%d] is not an object" % [owner, i])
+			continue
+		var h: Dictionary = h_v
+		var when: Variant = h.get("when", [])
+		if typeof(when) != TYPE_ARRAY or (when as Array).is_empty():
+			out.append("%s: holds[%d] never says when, so it would hold for ever" % [owner, i])
+		if str(h.get("place", "")).is_empty():
+			out.append("%s: holds[%d] names no place" % [owner, i])
+		var a := str(h.get("activity", "idle"))
+		if not a in ACTIVITIES:
+			out.append("%s: holds[%d] unknown activity '%s'" % [owner, i, a])
 	return out

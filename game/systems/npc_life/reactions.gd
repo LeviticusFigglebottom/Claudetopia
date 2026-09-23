@@ -30,7 +30,13 @@ var _recent: Dictionary = {}   # npc_id -> true while the player is still near
 static func ensure() -> Reactions:
 	if instance != null and is_instance_valid(instance):
 		return instance
-	return Service.ensure(load("res://systems/npc_life/reactions.gd"), "Reactions") as Reactions
+	var found := Service.ensure(load("res://systems/npc_life/reactions.gd"), "Reactions") as Reactions
+	# A copy of this service inside a world set `instance` as it entered the tree and cleared it as it
+	# left; a copy under the root that entered earlier is then found here with `instance` still empty,
+	# and everything that reads `instance` directly finds nothing. Point it at what was found.
+	if found != null and (instance == null or not is_instance_valid(instance)):
+		instance = found
+	return found
 
 
 func _enter_tree() -> void:

@@ -44,11 +44,21 @@ Two rules beyond "latest entry wins":
 * **Weather** — rain, drizzle, storm or squall sends an *outdoor* `idle` entry
   home (`weather_override: true`). Work, sleep and indoor idling are unaffected.
 
+And one before it: a def's **`holds`** — `[{when: [conditions], place, activity,
+spot}]` — come first. The first whose `when` holds (the dialogue's condition
+vocabulary, read through the live `SocialContext`) says where they are, whatever
+the hour and the weather, for as long as it holds. It is how the story keeps somebody
+where it needs them: Wren Tallow is held at her fire at the Stair Head from a new
+game until the Naming's walk to the Choir is done (DESIGN §5.1a). The registry
+looks again whenever a quest starts, moves or ends, as it does on the hour.
+`Schedules.hold_problems(def)` validates them.
+
 ## Public API
 
 ```gdscript
 Schedules.entry_at(schedule, weekday, hour, weather, home_place) -> Dictionary
-Schedules.entry_for_def(npc_def, day, hour, weather) -> Dictionary
+Schedules.entry_for_def(npc_def, day, hour, weather, ctx = live) -> Dictionary   # holds first
+Schedules.held_entry(npc_def, ctx) -> Dictionary          # {} when no hold applies
 Schedules.intent_for(activity, entry, def) -> String      # animation clip name
 Schedules.problems(schedule, owner) -> Array[String]      # content validation
 

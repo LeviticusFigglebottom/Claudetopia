@@ -614,6 +614,90 @@ def iris_texture(size: int = 256, colour: str = "brown", seed: int = 0, glint: f
     return np.clip(out, 0, 1)
 
 
+def strand_directions(P: np.ndarray, nrm: np.ndarray, flow_fn=None, locks: Sequence[np.ndarray] = (),
+                      reach: float = 0.012) -> np.ndarray:
+    """The way the hair runs at each point: along the nearest combed lock where there is one
+    within `reach`, along the style's flow elsewhere, always lying in the surface."""
+    f = flow_fn(P) if flow_fn is not None else np.tile(np.array([0.0, 0.0, -1.0]), (len(P), 1))
+    if locks:
+        A = np.concatenate([l[:-1] for l in locks if len(l) > 1], axis=0)
+        B = np.concatenate([l[1:] for l in locks if len(l) > 1], axis=0)
+        D = B - A
+        L2 = np.maximum(np.sum(D * D, axis=1), 1e-12)
+        best = np.full(len(P), np.inf)
+        idx = np.zeros(len(P), dtype=np.int64)
+        chunk = max(1, 4_000_000 // max(len(A), 1))
+        for i in range(0, len(P), chunk):
+            Q = P[i:i + chunk]
+            t = np.clip(np.einsum("nij,ij->ni", Q[:, None, :] - A[None], D) / L2[None], 0.0, 1.0)
+            d2 = np.sum((Q[:, None, :] - (A[None] + t[..., None] * D[None])) ** 2, axis=2)
+            j = np.argmin(d2, axis=1)
+            best[i:i + chunk] = d2[np.arange(len(Q)), j]
+            idx[i:i + chunk] = j
+        near = best < reach * reach
+        f[near] = D[idx[near]] / np.sqrt(L2[idx[near]])[:, None]
+    f = f - nrm * np.sum(f * nrm, axis=1, keepdims=True)
+    return f / np.maximum(np.linalg.norm(f, axis=1, keepdims=True), 1e-9)
+
+
+def hair_strands(colour: str = "brown", seed: int = 0, *, flow_fn=None, locks: Sequence[np.ndarray] = (),
+                 scalp=None, field=None, s: float = 1.0):
+    """(albedo, orm, height) paint functions for combed hair.
+
+    The grain runs along the hair: noise is read in the plane across each strand's direction,
+    so it smears into stripes that follow the comb, in two sizes -- the clump and the strand.
+    Value does the rest, as it does in a painting: dark at the roots and down in the grooves
+    between locks (the part's own field gives the occlusion), light along the crests, and a
+    soft band of shine where the hair turns up to the sky. The colour stays the bake's one
+    brown; the game tints it by ratio (CharacterAppearance.hair_tint)."""
+    base = hex_rgb(HAIR_COLOURS.get(colour, HAIR_COLOURS["brown"]))
+    n = Noise(seed + 13, 64)
+    n2 = Noise(seed + 29, 64)
+
+    def _grain(P, nrm):
+        f = strand_directions(P, nrm, flow_fn, locks)
+        Q = P - f * np.sum(P * f, axis=1, keepdims=True)
+        clump = n.fbm(Q, freq=240.0 / s, octaves=2)
+        strand = n2.at(Q, 820.0 / s)
+        return clump, strand
+
+    def _root(P):
+        if scalp is None:
+            return np.ones(len(P))
+        return np.clip(scalp.eval(P) / (0.010 * s), 0.0, 1.0)
+
+    def _occ(P, nrm):
+        if field is None:
+            return np.ones(len(P))
+        return sdf_occlusion(field, P, nrm, radius=0.010 * s, samples=4, strength=1.0)
+
+    def albedo(P, nrm):
+        clump, strand = _grain(P, nrm)
+        root = _root(P)
+        occ = _occ(P, nrm)
+        v = 0.66 + 0.34 * clump + 0.10 * (strand - 0.5)
+        v = v * (0.66 + 0.34 * root) * (0.50 + 0.50 * occ)
+        crest = exposure(occ, 3.0)
+        v = v + 0.20 * crest * (0.5 + clump)
+        up = np.clip(nrm[:, 2], 0.0, 1.0)
+        shine = smoothstep(0.45, 0.80, up) * (1.0 - smoothstep(0.92, 1.0, up))
+        v = v + 0.16 * shine * (0.4 + 0.8 * clump)
+        c = np.clip(base * 1.25 + 0.02, 0, 1) * v[:, None]
+        return np.clip(c, 0.0, 1.0)
+
+    def orm(P, nrm):
+        clump, strand = _grain(P, nrm)
+        occ = _occ(P, nrm)
+        r = 0.58 + 0.16 * (1.0 - clump) + 0.10 * (1.0 - occ)
+        return np.stack([np.clip(0.55 + 0.45 * occ, 0, 1), np.clip(r, 0.3, 0.95), np.zeros(len(P))], axis=1)
+
+    def height(P, nrm):
+        clump, strand = _grain(P, nrm)
+        return 0.7 * clump + 0.3 * strand
+
+    return albedo, orm, height
+
+
 def hair_paint(colour: str = "brown", seed: int = 0, grey: float = 0.0) -> PaintFn:
     """Strand-flavoured colour for hair and beard shells."""
     base = hex_rgb(HAIR_COLOURS.get(colour, HAIR_COLOURS["brown"]))

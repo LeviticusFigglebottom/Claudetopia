@@ -2,22 +2,30 @@
  "bounds": [
   -0.8187,
   -0.1744,
-  0.1423,
+  0.1424,
   0.8367,
   0.1735,
-  1.5672
+  1.567
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "robe": "cloth"
+ },
  "params": {
   "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 5834,
+ "seed": 3731,
  "slot_hint": "torso",
+ "textures": [
+  "robe_albedo.png",
+  "robe_orm.png"
+ ],
  "tris": [
   4800,
   0,
