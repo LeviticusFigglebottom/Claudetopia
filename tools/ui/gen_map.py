@@ -319,10 +319,14 @@ def paint(world: dict, size: int, seed: int = 4242) -> tuple[Image.Image, dict]:
         region = by_id.get(region_id)
         if region is None:
             continue
-        u, v = _label_uv(region_small, index, region, origin, size_m)
+        name = str(region.get("name", "")).upper()
+        homes = [_to_uv(float(pl["position"][0]), float(pl["position"][1]), origin, size_m)
+                 for pl in load_places() if pl.get("region") == region_id and len(pl.get("position", [])) >= 2]
+        u, v = _label_uv(region_small, index, region, origin, size_m,
+                         half_width=len(name) * LABEL_SIZE * LABEL_ASPECT * 0.5, homes=homes)
         if not (0.02 < u < 0.98 and 0.02 < v < 0.98):
             continue
-        letters.text(str(region.get("name", "")).upper(), (u, v), 0.019, pal["ink"], FONT_DISPLAY, alpha=205)
+        letters.text(name, (u, v), LABEL_SIZE, pal["ink"], FONT_DISPLAY, alpha=205)
     chart = over(chart, letters.bake(grain=0.35, blur=0.5))
 
     # border and a compass rose in the corner
@@ -350,21 +354,41 @@ def _to_uv(x: float, z: float, origin, size_m: float) -> tuple[float, float]:
     return (x - float(origin[0])) / size_m, (z - float(origin[1])) / size_m
 
 
-def _label_uv(region_small: np.ndarray, index: int, region: dict, origin, size_m: float) -> tuple[float, float]:
-    """Where a region's name is lettered: the point of it farthest from its own edges in the
-    region mask, so the name goes where the region is however the map has been drawn. Only a
-    region the mask does not have is lettered at its map block's `center`, which is a point
-    written down once and left behind when the map is redrawn (docs/COORDINATES.md)."""
+LABEL_SIZE = 0.019          # a region name's letter height, as a fraction of the chart
+LABEL_ASPECT = 0.74         # Cinzel capitals: width per letter over height
+ROSE_BOX = (0.84, 0.83)     # the compass rose's corner: no name is lettered over it
+
+
+def _label_uv(region_small: np.ndarray, index: int, region: dict, origin, size_m: float,
+              half_width: float = 0.0, homes: list | None = None) -> tuple[float, float]:
+    """Where a region's name is lettered: well inside the region as the region mask has it, so
+    the name goes where the region is however the map has been drawn; of the ground deep inside
+    it, the part nearest the places people live in it (else its middle); and with the whole name
+    on the chart and off the compass rose. Only a region the mask does not have is lettered at
+    its map block's `center`, which is a point written down once and left behind when the map is
+    redrawn (docs/COORDINATES.md)."""
     mask = np.abs(region_small - index) < 0.5
     if mask.any():
         from scipy import ndimage
+        h, w = mask.shape
         inside = ndimage.distance_transform_edt(np.pad(mask, 1))[1:-1, 1:-1]
-        # of the points deepest inside it, the one nearest its middle: a long region is lettered
-        # half way along, not at whichever end the search reaches first
-        rows, cols = np.nonzero(inside >= 0.85 * inside.max())
-        ci, cj = np.nonzero(mask)
-        k = int(np.argmin((rows - ci.mean()) ** 2 + (cols - cj.mean()) ** 2))
-        return (cols[k] + 0.5) / mask.shape[1], (rows[k] + 0.5) / mask.shape[0]
+        us = (np.arange(w) + 0.5) / w
+        vs = (np.arange(h) + 0.5) / h
+        room = ((us[None, :] >= half_width + 0.03) & (us[None, :] <= 0.97 - half_width)
+                & (vs[:, None] >= 0.06) & (vs[:, None] <= 0.94)
+                & ~((us[None, :] + half_width >= ROSE_BOX[0]) & (vs[:, None] >= ROSE_BOX[1])))
+        deep = inside * room
+        if deep.max() <= 0.0:
+            deep = inside
+        rows, cols = np.nonzero(deep >= 0.5 * deep.max())
+        if homes:
+            tu = sum(hm[0] for hm in homes) / len(homes)
+            tv = sum(hm[1] for hm in homes) / len(homes)
+        else:
+            ci, cj = np.nonzero(mask)
+            tu, tv = (cj.mean() + 0.5) / w, (ci.mean() + 0.5) / h
+        k = int(np.argmin(((cols + 0.5) / w - tu) ** 2 + ((rows + 0.5) / h - tv) ** 2))
+        return (cols[k] + 0.5) / w, (rows[k] + 0.5) / h
     m = region.get("map", {})
     cx, cz = (list(m.get("center", [0, 0])) + [0, 0])[:2]
     return _to_uv(float(cx), float(cz), origin, size_m)
