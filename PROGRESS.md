@@ -3121,10 +3121,12 @@ trees' savings are measured.
 
 `core/graphics.gd` owns the `graphics` section: what every knob means, the four presets, the
 line that says why a control is greyed out, and `apply()`, the one place a setting reaches
-the engine. Twenty-four controls: render scale and upscaler, MSAA, FXAA, TAA, texture
+the engine. Twenty-nine controls: render scale and upscaler, MSAA, FXAA, TAA, texture
 filtering, vsync, a frame-rate cap, sun shadows with their map size, cascade count, reach and
 softness, ground-cover density, scatter view distance, the level-of-detail bias, distance
-haze, volumetric fog, SSAO and its quality, SSIL, SDFGI, glow and water quality. **High is the
+haze, volumetric fog, SSAO and its quality, SSIL, SDFGI, glow, water quality, the water's
+reflections and the lamps lit at night, and the look's own colour grade, vignette and film
+grain (these last three no preset touches, as it touches neither vsync nor the frame cap). **High is the
 game as it was tuned**, number for number: every value in it is what `project.godot`, the
 atmosphere or the streamer already used, so the default preset changes nothing about how the
 world looks except what the tree levels save. Painted is everything on that the renderer can
@@ -3303,22 +3305,25 @@ the presets move only its shadows there.
   been studied at a wall's switch distance for a pop; `lod_review` stands only trees.
 * **`check_scripts` still hangs on `tools_gd`** (every script loads on its own); not this pass's.
 
-### Merging this into main
+### Merged with main
 
-Main has moved on under this branch, and eight of its files have changed on both sides:
-`settings.gd`, `settings_menu.gd`, `atmosphere.gd`, `world_streamer.gd`, `water_surface.gd`,
-`painted_water.gdshader`, `capture_runner.gd` and `run.sh`; the trees, the forge and the
-manifest have not. The one real decision is who owns the picture's features. On main the
-atmosphere reads `video/ssao`, `video/volumetric_fog`, `video/sdfgi` and `video/glow`; here
-those live in `graphics` (an old file's `video` values are carried across once by
-`Settings._migrate_video_keys`) and `Graphics.apply_environment` sets them on the world's
-environment. Merged, the atmosphere's four reads become `graphics/*`, `volumetric_fog` and
-`sdfgi` join `MOVED_TO_GRAPHICS`, the Video tab loses its shadows, MSAA, SSAO, volumetric fog,
-SDFGI and glow rows to the Graphics tab, and main's `video/brightness` line (the look's own
-brightness times the setting) replaces the one-line change to `atmosphere.gd` here.
-`night_lights` and `water_reflections` are costs, and belong on the Graphics tab and in the
-presets beside `water_quality`; `color_grade`, `vignette` and `film_grain` are the look's and
-stay under Video.
+Main had moved 134 commits on under this branch, and eight files had changed on both sides. The
+painted look's settings were the one real decision: main's atmosphere, water and lamps read
+`video/*`, and they now read `graphics/*`. The lamps lit at night and the water's reflections
+are costs, so they are in the presets (Low: two lamps and no reflections, the frame copy saved;
+Medium: four; High and Painted: eight, with reflections); the colour grade, vignette and film
+grain are taste, and are Graphics-tab toggles no preset touches. A settings file from main has
+its `video` keys carried across once. Main's brightness line stands. The water keeps main's
+mirror and this branch's quality knob, which still reaches the finest ripple and the foam's
+wobble in main's rewritten shader. Two of main's new callers opened the settings screen by tab
+number, which the Graphics tab had moved; they ask by name now.
+
+The merge also exposed a fault of this branch's own: the GLB post-import read every sidecar's
+`bounds` as the forge's dictionary, and a character's `bounds` is a list, so when main's
+character models changed, every body in the game failed to import — 537 script errors and 14
+failed tests on the first run, none on the second. An import that fails in Godot 4.7 still
+records itself as done, so a stale scene survives it silently; the characters had to be
+reimported by hand once the script was fixed.
 
 ### Next, in order
 
@@ -3334,11 +3339,8 @@ stay under Video.
    rewrites every tree's `forward_plus` entry in `world/impostor_calibration.json` (about two
    minutes a tree here). Accept at luminance ink within 5% for every tree, with each
    `<tree>_calibrated.png` looked at.
-3. **Merge into main** as set out above, then `./run.sh test`, and the streets plan at every
-   preset again (`./run.sh shots tools/capture/plans/streets.json --preset=<p>` and once with
-   `--no-lod`), because main's lamps and light change what a frame costs: the painted-look
-   branch measured Merrowby at 1521 draws and 1.61 M before this pass. Accept when High is
-   under 2000 and 1.5 M on every street.
+3. **Measure Low and Medium on the merged tree** (`./run.sh shots tools/capture/plans/streets.json
+   --preset=low`, and `medium`): High and Painted were measured again after the merge, below.
 4. **Rebuild the poor LOD1s** (the third black ash, the tall Sedgemire willow, the yews) from
    fewer Sapling segments instead of collapsing LOD0 (`lib/export.make_lods` for trees), then
    `./run.sh assets --only briarwold_black_ash_c --only sedgemire_willow_a --only hearthvale_yew
