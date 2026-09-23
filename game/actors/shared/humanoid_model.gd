@@ -105,8 +105,10 @@ var _part_meshes: Dictionary = {}        ## slot -> Array[MeshInstance3D]
 ## Readable because the part node cannot answer it: every variant's mesh is called `Body`
 ## inside its own glTF, so they all arrive here named `body_Body`.
 var body_variant_worn := ""
-## Turns the arms out from a padded or heavy body (see ArmRoom), set with each appearance.
+## Turns the arms out from a padded or heavy body and holds them in under a long cloak (see
+## ArmRoom), set with each appearance.
 var arm_room: ArmRoom = null
+var _cloak_hold := 0.0                   ## ARM_HOLD for the cloak worn
 var _sockets: Dictionary = {}            ## socket bone name -> BoneAttachment3D
 var _one_shot := ""
 var _one_shot_time := 0.0
@@ -198,7 +200,26 @@ func build() -> void:
 	_build_animation_tree()
 	arm_room = ArmRoom.new()
 	arm_room.name = "ArmRoom"
+	arm_room.hang = _idle_hang()
 	skeleton.add_child(arm_room)
+
+
+## How the upper arms and forearms hang in the Idle's first frame, bone index -> local rotation:
+## what ArmRoom holds the arms in towards under a cloak.
+func _idle_hang() -> Dictionary:
+	var out := {}
+	var idle := _find_animation("Idle")
+	if idle == null:
+		return out
+	for i in idle.get_track_count():
+		if idle.track_get_type(i) != Animation.TYPE_ROTATION_3D:
+			continue
+		var bone_name := idle.track_get_path(i).get_concatenated_subnames()
+		if bone_name in ["UpperArm.L", "UpperArm.R", "LowerArm.L", "LowerArm.R"]:
+			var b := skeleton.find_bone(bone_name)
+			if b >= 0:
+				out[b] = idle.rotation_track_interpolate(i, 0.0)
+	return out
 
 
 ## The rig GLB's meshes are named to avoid clashing with bone names (see the forge's
@@ -406,6 +427,7 @@ func apply_appearance(d: Variant) -> void:
 	_apply_proportions()
 	if arm_room != null:
 		arm_room.degrees = arm_room_for(appearance.part("torso"), body_variant_worn)
+	_cloak_hold = arm_hold_for(appearance.part("back"))
 	appearance_changed.emit()
 
 
@@ -888,6 +910,42 @@ static func arm_room_for(torso: String, variant: String) -> float:
 	return float(ARM_ROOM.get(torso, 0.0)) + (ARM_ROOM_HEAVY if variant == "heavy" else 0.0)
 
 
+## How much of the arms' swing a cloak to the knee takes back while the body walks: the share
+## of the clip's arm pose ArmRoom returns to the Idle's hang. The cloth lying on an arm goes with
+## nearly all of its swing, and the whole Walk swing still brought the hand out through the front
+## of the cloak at every step. A shoulder cape or a plaid leaves the arms free below it.
+const ARM_HOLD := {"cloak": 0.7, "hooded_cloak": 0.7, "ragged_cloak": 0.7, "torn_cloak": 0.7}
+## Running, nearly all of it: the Run pumps the arms 38 degrees with the elbows bent 80, and at
+## the walk's hold the elbow behind still came out through the back of the cloak.
+const ARM_HOLD_RUNNING := 0.95
+## The hold comes and goes over this long, so a blow started mid-stride gets its whole arm at once.
+const ARM_HOLD_BLEND_S := 0.1
+
+
+static func arm_hold_for(back: String) -> float:
+	return float(ARM_HOLD.get(back, 0.0))
+
+
+## The hold for the cloak worn while `clip` plays on its own: the gaits', none for anything else
+## (the Idle is the hang itself). What character_review shows when it holds a clip.
+func arm_hold_in(clip: String) -> float:
+	if _cloak_hold <= 0.0 or clip not in MOVE_CLIPS or clip == "Sneak_Walk":
+		return 0.0
+	return maxf(_cloak_hold, ARM_HOLD_RUNNING) if clip in ["Run", "Sprint"] else _cloak_hold
+
+
+## While walking or running in a long cloak, and never through a one-shot, a held pose, a stance
+## or a sneak, whose arms are posed for what they do.
+func _arm_hold_now() -> float:
+	if _cloak_hold <= 0.0 or not _one_shot.is_empty() or not _holding.is_empty() or _stance != "":
+		return 0.0
+	# from the walk's hold at a brisk walk to the run's at the Run's own pace
+	var walk := float(_clip_speed.get("Walk", 1.8)) * BRISK_WALK
+	var run := maxf(float(_clip_speed.get("Run", 5.0)), walk + 0.1)
+	var running := smoothstep(walk, run, _loco_now.length())
+	return lerpf(_cloak_hold, maxf(_cloak_hold, ARM_HOLD_RUNNING), running) * _move_w * (1.0 - _sneak_w)
+
+
 func _apply_proportions() -> void:
 	var s: float = appearance.height / (_child_height if _child_mod != null else 1.78)
 	var wide: float = girth_for(appearance.build) / float(VARIANT_GIRTH.get(body_variant_worn, 1.0))
@@ -1236,6 +1294,8 @@ func current_stance() -> String:
 
 func _process(delta: float) -> void:
 	_update_locomotion(delta)
+	if arm_room != null:
+		arm_room.hold = move_toward(arm_room.hold, _arm_hold_now(), delta / ARM_HOLD_BLEND_S)
 	var step := delta * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
 	if anim_tree != null:
 		anim_tree.advance(step)

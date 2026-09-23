@@ -2,9 +2,11 @@
 they were modelled (the inverse of rebind_from_idle), weight them by the candidate rule, rebind, and pose
 them with the rig body.
 
-    python3 cloakreweight.py <out.png> <part> <rule> <clip@t>[,<clip@t>...] [--views=0,90,180]
+    python3 cloakreweight.py <out.png> <part> <rule> <clip@t>[,<clip@t>...] [--views=0,90,180] [--hold=0.5]
 
-rule: "built" (the glb's own weights) or a name in RULES below."""
+rule: "built" (the glb's own weights) or a name in RULES below or in cloakrules.py.
+--hold takes that share of the clip's arm pose back to the arms' hang in the Idle (the upper arms and
+forearms), as a modifier holding the arms in under a cloak would."""
 import sys
 from pathlib import Path
 HERE = Path(__file__).resolve().parent
@@ -52,6 +54,24 @@ def modelled(V, W):
     return np.linalg.solve(body, idle[:, :, None])[:, :3, 0]
 
 
+def held_pose_matrices(clip, t, hold):
+    """LP.pose_matrices with the arms taken `hold` of the way back to how they hang in the Idle."""
+    if hold <= 0.0:
+        return LP.pose_matrices(skel, clip, t)
+    from forge.lib import anim, anim_clips
+    clips = dict(anim_clips.locomotion_clips(skel))
+    local = clips[clip].local_pose(t)
+    cb = anim.ClipBuilder(skel, "hang", 1.0, loop=True, grounded=False)
+    cb.key(0.0, anim_clips.RELAXED)
+    hang = cb.local_pose(0.0)
+    for b in ("UpperArm.L", "UpperArm.R", "LowerArm.L", "LowerArm.R"):
+        R, tr = local[b]
+        q = rig.quat_slerp(rig.mat_to_quat(R), rig.mat_to_quat(hang[b][0]), hold)
+        local[b] = (rig.quat_to_mat(q), tr)
+    W = skel.fk(local)
+    return {b: W[b] @ np.linalg.inv(skel.bones[b].rest) for b in skel.bones if b in W}
+
+
 def to_sparse(W):
     W = bodylib.limit_influences(W)
     idx = np.argsort(-W, axis=1)[:, :4]
@@ -76,16 +96,19 @@ def current(skel, V, hooded):
 def main():
     out, part, rname, poses = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4].split(",")
     views = [0, 90, 180]
+    hold = 0.0
     for a in sys.argv[5:]:
         if a.startswith("--views="):
             views = [float(v) for v in a[8:].split(",")]
+        elif a.startswith("--hold="):
+            hold = float(a[7:])
     hooded = "hood" in part
     meshes_in = LP.load(M + "clothing/%s/%s.glb" % (part, part))
     body = LP.load(M + "humanoid_rig/humanoid_rig.glb", "Body")
     rows = []
     for pose in poses:
         clip, t = pose.split("@")
-        S = LP.pose_matrices(skel, clip, float(t))
+        S = held_pose_matrices(clip, float(t), hold)
         meshes = []
         for name, V, J, Wt, I, bones in body:
             meshes.append((LP.skin(V, J, Wt, bones, S), I, np.array([0.79, 0.64, 0.49])))

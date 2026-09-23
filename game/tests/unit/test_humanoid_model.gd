@@ -577,6 +577,61 @@ func test_padding_holds_the_arms_out() -> void:
 	assert_gt(0.09, padded - bare, "the arms were thrown out %.3f m" % (padded - bare))
 
 
+## A cloak to the knee holds the arms in while the body walks: the Walk swung the hand out
+## through the front of it at every step. Only while walking -- a blow gets its whole arm.
+func test_a_long_cloak_holds_the_arms_in_walking() -> void:
+	assert_gt(HumanoidModel.arm_hold_for("cloak"), 0.3, "a cloak to the knee leaves the arms their whole swing")
+	assert_eq(HumanoidModel.arm_hold_for("shoulder_cape"), 0.0, "a shoulder cape holds the arms in")
+	assert_eq(HumanoidModel.arm_hold_for(""), 0.0, "a bare back holds the arms in")
+	if not _rig_built():
+		return
+	var free := await _hand_swing("")
+	var held := await _hand_swing("cloak")
+	assert_gt(free, 0.08, "the walk never swung the hand ahead (%.3f m)" % free)
+	assert_gt(free * 0.75, held, "in a cloak the hand swings %.3f m ahead of the hips, bare %.3f m" % [held, free])
+	assert_gt(held, free * 0.2, "in a cloak the arms stopped swinging (%.3f m against %.3f m)" % [held, free])
+	var m := _make_model()
+	if m.has_clip("Attack_1H_Light_1"):
+		m.set_process(false)
+		assert_true(m.play_intent("Attack_1H_Light_1"))
+		for i in 12:
+			m._process(1.0 / 60.0)
+		assert_eq(m.arm_room.hold, 0.0, "a blow struck in a cloak is held in like a walk")
+		m.stop_intent()
+		m.set_process(true)
+
+
+## How far ahead of the hips the left hand comes, at most, over two seconds of walking at 1.4 m/s,
+## as the modifiers leave it. Stepped by hand, a frame at a time, so the skeleton's modifiers run
+## between steps.
+func _hand_swing(back: String) -> float:
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	if back != "":
+		a.set_part("back", back)
+	m.apply_appearance(a.to_dict())
+	m.set_process(false)
+	var sk := m.skeleton
+	var seen := {"ahead": -1.0}
+	var watch := func() -> void:
+		var hips := sk.get_bone_global_pose(sk.find_bone("Hips")).origin
+		var hand := sk.get_bone_global_pose(sk.find_bone("Hand.L")).origin
+		seen["ahead"] = maxf(float(seen["ahead"]), hand.z - hips.z)
+	m.set_locomotion(Vector2(0.0, 1.4))
+	for i in 30:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.connect(watch)
+	for i in 120:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.disconnect(watch)
+	m.set_locomotion(Vector2.ZERO)
+	m.set_process(true)
+	return float(seen["ahead"])
+
+
 ## How far out from the spine the left wrist hangs in the Idle, as the modifiers leave it.
 func _left_wrist_out(part: Array) -> float:
 	var m := _make_model()

@@ -24,7 +24,9 @@ def _near(V, sh, el, wr, s, ysq, reach, fade):
     return near, fore
 
 
-def make(ysq=0.5, reach=0.075, fade=0.05, share=0.85, below=0.0):
+def make(ysq=0.5, reach=0.075, fade=0.05, share=0.85, below=0.0, back=0.0, back_from=0.0, centre=0.08):
+    """`back`: the share of the thigh the back panels take below `back_from` m under the hips, blended
+    from one thigh to the other across `centre` m either side of the centre line."""
     def fn(skel, V, hooded):
         bones = list(rig.DEFORM_NAMES)
         B = {b: i for i, b in enumerate(bones)}
@@ -57,12 +59,16 @@ def make(ysq=0.5, reach=0.075, fade=0.05, share=0.85, below=0.0):
         w_hip = rest * _ss((spine_z - z) / (spine_z - hips_z))
         w_sp = rest - w_ch - w_hip
         w_leg = w_hip * 0.45 * _ss((hips_z - 0.10 * s - z) / (0.25 * s)) * np.clip(-y / (0.10 * s), 0.0, 1.0)
-        w_hip = w_hip - w_leg
+        w_back = w_hip * back * _ss((hips_z - back_from * s - z) / (0.25 * s)) * np.clip(y / (0.10 * s), 0.0, 1.0)
+        to_left = _ss((x / (centre * s) + 1.0) * 0.5)
+        w_hip = w_hip - w_leg - w_back
         for side, m in (("L", left), ("R", ~left)):
             W[m, B["Shoulder." + side]] = w_sh[m]
             W[m, B["UpperArm." + side]] = w_ua[m]
             W[m, B["LowerArm." + side]] = w_la[m]
             W[m, B["UpperLeg." + side]] = w_leg[m]
+        W[:, B["UpperLeg.L"]] += w_back * to_left
+        W[:, B["UpperLeg.R"]] += w_back * (1.0 - to_left)
         W[:, B["Head"]] = w_head
         W[:, B["Neck"]] = w_neck
         W[:, B["Chest"]] = w_ch
@@ -77,3 +83,5 @@ aniso = make(ysq=0.5)
 aniso2 = make(ysq=0.4, reach=0.09, fade=0.06)
 aniso3 = make(ysq=0.4, reach=0.09, fade=0.06, share=0.95)
 aniso4 = make(ysq=0.4, reach=0.09, fade=0.06, share=0.95, below=0.3)
+legs1 = make(ysq=0.4, reach=0.09, fade=0.06, share=0.95, back=0.35, back_from=0.0)
+legs2 = make(ysq=0.4, reach=0.09, fade=0.06, share=0.95, back=0.50, back_from=0.05)

@@ -186,6 +186,10 @@ func _hold_pose(m: HumanoidModel, clip: String, t: float) -> void:
 	m.anim_player.seek(t, true)
 	m.anim_player.advance(0.0)
 	m.anim_player.pause()
+	# with its process off the model does not set the hold a cloak puts on a walker's arms
+	# (ArmRoom.hold), so the lineup sets it: what a player sees walking, not the clip's bare swing
+	if m.arm_room != null:
+		m.arm_room.hold = m.arm_hold_in(clip)
 
 
 func _queue_lineup() -> void:
