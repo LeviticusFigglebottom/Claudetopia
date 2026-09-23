@@ -112,7 +112,7 @@ static func way_points(poi_id: String, def: Dictionary, follow_roads := true) ->
 		return out
 	var to := str((way as Dictionary).get("to", ""))
 	if follow_roads and to != "":
-		var road := WorldPois.road_between(poi_id, to)
+		var road := WorldPois.road_between(poi_id, to, str((way as Dictionary).get("built_road", "")))
 		if road.size() >= 2:
 			return road
 	var shape: Variant = (way as Dictionary).get("shape", null)

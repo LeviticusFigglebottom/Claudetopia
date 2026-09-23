@@ -15,12 +15,15 @@ const START := "core:poi/stair_head"
 const WREN := "core:npc/wren_tallow"
 const NAMING := "core:quest/the_naming"
 const CHOIR := "core:place/sunken_choir"
+const HUSHLINE := "core:poi/hushline_stair"
 ## What a person can walk up, measured over four metres of the built ground.
 const WALKABLE_DEG := 30.0
 ## How close the marked way comes to anything the world builder stood on the heath to fight you.
 const CLEAR_OF_ENEMIES_M := 50.0
 ## How near a `reach` objective's place counts as being there (QuestLog.REACH_RADIUS_M).
 const REACH_M := 45.0
+## Room for a body beside something solid the way goes round.
+const BODY_M := 1.0
 
 var provider: TerrainProvider = null
 var pois: Array = []
@@ -263,6 +266,162 @@ func test_the_marked_way_keeps_clear_of_what_lives_on_the_heath() -> void:
 					near.append("%s %.0f m from the way" % [str(spawn.get("def", "?")), closest.distance_to(at)])
 					break
 	assert_true(near.is_empty(), "the way walks past: %s" % ", ".join(near))
+
+
+## The way goes round what the build stood solid in it, not through it. The Choir's colossi are
+## twenty-seven metres across at the foot, and the way's last legs went through the robe of the
+## one nearest the Choir, with two of its stones inside the stone. Each solid scene within reach of
+## the way is held off every leg by its model's footprint (the widest its bounds reach from its
+## origin, as its collision does at the ground) and a body's width.
+func test_the_marked_way_goes_round_what_stands_solid_in_it() -> void:
+	if provider == null:
+		return
+	var via := _via()
+	var dir := DirAccess.open("%s/cells" % GENERATED)
+	if dir == null:
+		return
+	var reaches := {}
+	var through: Array[String] = []
+	for file in dir.get_files():
+		if not file.ends_with(".json"):
+			continue
+		var cell: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/cells/%s" % [GENERATED, file]))
+		if not (cell is Dictionary):
+			continue
+		for s in (cell as Dictionary).get("scenes", []):
+			var scene: Dictionary = s
+			if str(scene.get("collision", "")).is_empty():
+				continue
+			var pos: Array = scene.get("pos", [0, 0, 0])
+			var at := Vector2(float(pos[0]), float(pos[2]))
+			if at.distance_to(_xz(START)) > 800.0:
+				continue
+			var model := str(scene.get("scene", ""))
+			if not reaches.has(model):
+				reaches[model] = _footprint(model)
+			var reach: float = reaches[model]
+			if reach <= 0.0:
+				continue
+			for i in range(via.size() - 1):
+				var closest := Geometry2D.get_closest_point_to_segment(at, via[i], via[i + 1])
+				if closest.distance_to(at) < reach + BODY_M:
+					through.append("%s at (%.0f, %.0f), %.1f m from the leg (%.0f, %.0f) to (%.0f, %.0f), %.1f m from its centre to its edge"
+							% [model.get_file(), at.x, at.y, closest.distance_to(at), via[i].x, via[i].y, via[i + 1].x, via[i + 1].y, reach])
+					break
+	assert_true(through.is_empty(), "the way walks into: %s" % ", ".join(through))
+
+
+## How far a model reaches from its origin across the ground: the widest of its bounds in x and z,
+## from the meta the forge writes beside it. Nothing when it has none.
+func _footprint(model: String) -> float:
+	var meta := model.get_basename() + ".meta.json"
+	if not FileAccess.file_exists(meta):
+		return 0.0
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta))
+	if not (parsed is Dictionary):
+		return 0.0
+	var bounds: Dictionary = (parsed as Dictionary).get("bounds", {})
+	var lo: Array = bounds.get("min", [0, 0, 0])
+	var hi: Array = bounds.get("max", [0, 0, 0])
+	return maxf(maxf(absf(float(lo[0])), absf(float(hi[0]))), maxf(absf(float(lo[2])), absf(float(hi[2]))))
+
+
+## The Naming's first fight is among the Choir's feet, where the waystones end: every point
+## QuestFoes can stand its three ash-wights on (a ring of RING_MIN_M to RING_MAX_M round the Choir)
+## is dry ground at least a metre above any water, and from the way's last stone to each of them
+## is ground a person can walk. From the Stair Head to the fight is walkable end to end.
+func test_the_naming_s_first_fight_is_on_dry_ground_at_the_end_of_the_way() -> void:
+	if provider == null or _heights == null:
+		return
+	var stage := {}
+	for st in ContentDB.get_def(NAMING).get("stages", []):
+		if str((st as Dictionary).get("id", "")) == "ash_wights":
+			stage = st
+	var objectives: Array = stage.get("objectives", [])
+	assert_false(objectives.is_empty(), "the Naming asks for its ash-wights")
+	if objectives.is_empty():
+		return
+	assert_eq(str((objectives[0] as Dictionary).get("where", "")), CHOIR, "among the Choir's feet, where the way goes")
+	var via := _via()
+	if via.is_empty():
+		return
+	var from := via[via.size() - 1]
+	var centre := _xz(CHOIR)
+	var wet: Array[String] = []
+	var steep: Array[String] = []
+	for ring in [QuestFoes.RING_MIN_M, (QuestFoes.RING_MIN_M + QuestFoes.RING_MAX_M) * 0.5, QuestFoes.RING_MAX_M]:
+		for step in 24:
+			var a := TAU * float(step) / 24.0
+			var p: Vector2 = centre + Vector2(cos(a), sin(a)) * float(ring)
+			var above := provider.get_height(p.x, p.y) - provider.nearest_water_level(p.x, p.y)
+			if provider.is_water(p.x, p.y) or above < 1.0:
+				wet.append("(%.0f, %.0f) %.1f m above the water" % [p.x, p.y, above])
+			var n := maxi(1, int(ceil(from.distance_to(p) / 4.0)))
+			for s in n:
+				var u := from.lerp(p, float(s) / float(n))
+				var v := from.lerp(p, float(s + 1) / float(n))
+				var slope := rad_to_deg(atan2(absf(_ground(v.x, v.y) - _ground(u.x, u.y)), u.distance_to(v)))
+				if slope > WALKABLE_DEG:
+					steep.append("%.0f deg on the way to (%.0f, %.0f)" % [slope, p.x, p.y])
+					break
+	assert_true(wet.is_empty(), "the fight's ground is dry: %s" % ", ".join(wet))
+	assert_true(steep.is_empty(), "and it can be walked to from the last waystone: %s" % ", ".join(steep))
+
+
+## The Hushline Stair's own pad was flattened at 0.2 m with the Hush twenty metres deep round it:
+## a raft awash, its stair going down into clear sea, its ash-wights at the waterline. Its landing
+## stands on a shelf clear of the water now, its wights on the landing, and the mist lies on the
+## water where the stair goes under.
+func test_the_hushline_landing_stands_clear_of_the_water_with_its_wights_on_it() -> void:
+	if provider == null:
+		return
+	var d: PoiDressing = null
+	for e in pois:
+		if str((e as Dictionary).get("place_id", "")) == HUSHLINE:
+			d = PoiDressing.raise(e, ContentDB.get_or_empty(HUSHLINE), false, provider, WorldPois.roads_from_disk())
+			_scratch = Node3D.new()
+			_scratch.name = "HushlineScratch"
+			_tree().root.add_child(_scratch)
+			_scratch.add_child(d)
+	assert_true(d != null, "the Hushline Stair is in the built world")
+	if d == null:
+		return
+	var at := _xz(HUSHLINE)
+	var water := provider.nearest_water_level(at.x, at.y)
+	var landing := d.find_child("the_landing", true, false) as Node3D
+	assert_true(landing != null, "the landing is marked")
+	if landing == null:
+		return
+	var floor_y := landing.global_position.y
+	assert_true(floor_y >= water + 1.0, "the landing stands %.1f m above the water" % (floor_y - water))
+	assert_true(bool(landing.get_meta("raised", false)) or not provider.is_water(at.x, at.y),
+			"and it is the floor there, not the sea bed")
+	# the wights stand where PoiEncounters puts them, spread round the marker, each with the landing
+	# under its feet
+	for _i in 3:
+		await _tree().physics_frame
+	var space := d.get_world_3d().direct_space_state
+	var groups := PoiEncounters.of(HUSHLINE)
+	assert_false(groups.is_empty(), "the Stair keeps its ash-wights")
+	for index in groups.size():
+		var e: Dictionary = groups[index]
+		assert_eq(str(e.get("at", "")), "the_landing", "they wait on the landing")
+		var count := maxi(1, int(e.get("count", 1)))
+		for k in count:
+			var a := TAU * float(k) / float(count) + float(index)
+			var p := landing.global_position + Vector3(cos(a), 0.0, sin(a)) * float(e.get("spread", 2.5))
+			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(p + Vector3.UP * 3.0, p + Vector3.DOWN * 3.0))
+			assert_false(hit.is_empty(), "a wight at (%.1f, %.1f) has the landing under it" % [p.x, p.z])
+			if not hit.is_empty():
+				var under := (hit["position"] as Vector3).y
+				assert_true(absf(under - p.y) < 0.35 and under >= water + 1.0,
+						"standing %.2f m above the water, on the landing" % (under - water))
+	var mist := 0
+	for n in d.find_children("*", "GPUParticles3D", true, false):
+		var y := (n as Node3D).global_position.y
+		if y > water and y < water + 3.5:
+			mist += 1
+	assert_true(mist >= 4, "the mist lies on the water where the stair goes under (%d banks)" % mist)
 
 
 # --- the story's first two asks ------------------------------------------------------------------------

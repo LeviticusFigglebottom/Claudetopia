@@ -177,24 +177,27 @@ func _forget_the_freed() -> void:
 
 
 ## The built road between two places, as map points from `from_id` to `to_id`; empty when the
-## world has none. A road is named for its two ends (`core:road/<from>_<to>`, the atlas's own
-## default), either way round, and has to start and end within ROAD_END_M of them.
+## world has none. The road is the one the path names (`built_road`), else the one named for its two
+## ends (`core:road/<from>_<to>`, the atlas's own default), either way round; it has to start and
+## end within ROAD_END_M of them, so a road of another build is not taken for this one's.
 const ROAD_END_M := 60.0
 static var _road_cache: Array = []
 static var _road_cache_stamp := -1
 
 
-static func road_between(from_id: String, to_id: String) -> Array[Vector2]:
+static func road_between(from_id: String, to_id: String, named := "") -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	var a := PlaceRef.xz(from_id)
 	var b := PlaceRef.xz(to_id)
 	if a == Vector2.INF or b == Vector2.INF:
 		return out
-	var there := "core:road/%s_%s" % [Ids.name_of(from_id), Ids.name_of(to_id)]
-	var back := "core:road/%s_%s" % [Ids.name_of(to_id), Ids.name_of(from_id)]
+	var ids: Array[String] = ["core:road/%s_%s" % [Ids.name_of(from_id), Ids.name_of(to_id)],
+		"core:road/%s_%s" % [Ids.name_of(to_id), Ids.name_of(from_id)]]
+	if named != "":
+		ids = [named]
 	for r in _roads_with_ids():
 		var id := str((r as Dictionary).get("id", ""))
-		if id != there and id != back:
+		if not id in ids:
 			continue
 		for p in (r as Dictionary).get("points", []):
 			if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:

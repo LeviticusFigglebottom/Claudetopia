@@ -33,10 +33,10 @@
       {
         "id": "the_spire", "duration": 9.0, "time": 7.6, "weather": "core:weather/clear", "fov": 50,
         "keys": [
-          {"t": 0.0, "at": {"place": "core:place/sayers_spire", "bearing": 100, "distance": 330, "height": 30},
-           "look": {"place": "core:place/sayers_spire", "height": 26}},
-          {"t": 1.0, "at": {"place": "core:place/sayers_spire", "bearing": 92, "distance": 290, "height": 26},
-           "look": {"place": "core:place/sayers_spire", "height": 28}}
+          {"t": 0.0, "at": {"place": "core:place/sayers_spire", "bearing": 98, "distance": 370, "height": 11},
+           "look": {"place": "core:place/sayers_spire", "height": 30}},
+          {"t": 1.0, "at": {"place": "core:place/sayers_spire", "bearing": 91, "distance": 330, "height": 9},
+           "look": {"place": "core:place/sayers_spire", "height": 32}}
         ],
         "lines": [
           {"at": 0.4, "for": 4.0, "text": "The Sayers say it is a bell, struck once and still ringing."},

@@ -40,6 +40,13 @@ extends Node
 ## would, lets it settle, and takes `frames` shots `interval` seconds apart from its left side.
 ## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
 ## rasteriser managed: every frame is then one physics tick.
+##
+## A fight, as the player meets it: `"quests": {"<quest id>": "<stage id>"}` puts each quest at that
+## stage once the world stands, and a shot's `"body"` (a place spec or [x, _, z]) stands the player's body there,
+## facing what the shot looks at, before its exposure. The world then does what it does with a
+## player near, and a stage's foes are stood up round the place of its fight (QuestFoes), waited for
+## up to FOES_WAIT_SECONDS. Put the shot's camera behind the body at a player's height; with
+## `"face_foes": true` the body turns to the nearest of them and the camera follows it round.
 
 const WORLD_SCENE := "res://world/world.tscn"
 const PLAYER_SCENE := "res://actors/player/player.tscn"
@@ -47,6 +54,8 @@ const PLAYER_SCENE := "res://actors/player/player.tscn"
 const GAIT_ACTIONS: Array[String] = ["move_forward", "move_back", "move_left", "move_right", "sprint", "sneak", "walk"]
 const SETTLE_FRAMES := 10
 const MAX_WAIT_FRAMES := 240
+## Real seconds a shot with a body waits for the stage's foes to be stood up round it.
+const FOES_WAIT_SECONDS := 30.0
 
 var plan_path := ""
 var out_dir := "captures"
@@ -62,6 +71,10 @@ var people := true
 var attribute := false
 var _attribution: Array = []
 var _failures: Array[String] = []
+## The player's body a shot's `body` stands (one, moved from shot to shot).
+var _body: Node3D = null
+## Where the stage's foes stood round the body, when they were last waited for.
+var _foes_at: Array[Vector3] = []
 
 
 func _ready() -> void:
@@ -109,6 +122,7 @@ func run() -> int:
 			if registry and registry.has_method("despawn_all"):
 				registry.call("despawn_all")
 			Log.info("Capture", "shooting with the villagers left out")
+	_stage_quests(plan.get("quests", {}))
 	var shots: Array = plan.get("shots", [])
 	Log.info("Capture", "%d shots -> %s" % [shots.size(), out_dir])
 	var index := 0
@@ -200,8 +214,14 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	else:
 		cam.move_to(pos)
 		cam.set_yaw_pitch(float(shot.get("yaw", 0.0)), float(shot.get("pitch", -8.0)))
+	if shot.has("body"):
+		_stand_body(shot["body"], look)
 	_world.move_target(pos)
 	var waited := await _wait_for_streaming()
+	if shot.has("body"):
+		waited += await _wait_for_foes(label)
+		if bool(shot.get("face_foes", false)) and _face_the_foes(cam, pos, label):
+			waited += await _wait_for_streaming()
 	if shot.has("frame"):
 		# Re-aim at something the world raised at runtime, now that it is standing: a waterfall's
 		# sheet is built from the terrain's own grain, so no plan written beforehand knows which
@@ -420,6 +440,15 @@ func _look_of(shot: Dictionary) -> Vector3:
 	return Vector3.INF
 
 
+## A place spec or [x, y, z] as a point in this world; Vector3.INF for anything else.
+func _point_of(v: Variant) -> Vector3:
+	if PlaceRef.is_spec(v):
+		return _spec_point(v)
+	if typeof(v) == TYPE_ARRAY and (v as Array).size() >= 3:
+		return Vector3(float(v[0]), float(v[1]), float(v[2]))
+	return Vector3.INF
+
+
 ## A place spec in this world, as the opening's cinematic resolves one (the place's built
 ## position, the terrain under the point), so a plan and the cinematic agree about a bearing.
 func _spec_point(spec: Dictionary) -> Vector3:
@@ -435,6 +464,117 @@ func _place_at(id: String) -> Vector3:
 		return Vector3.INF
 	var at := _world.place_position(id)
 	return Vector3.INF if at == Vector3.ZERO else at
+
+
+## Puts each quest a plan names at the stage it names (see the header), starting it if need be.
+func _stage_quests(quests: Variant) -> void:
+	if not (quests is Dictionary) or (quests as Dictionary).is_empty():
+		return
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	if log_node == null or not log_node.has_method("set_stage"):
+		_failures.append("no quest log to put %s in" % str(quests))
+		return
+	for id: String in quests:
+		log_node.call("set_stage", id, quests[id])
+		Log.info("Capture", "%s is at stage %d" % [id, int(log_node.call("stage_of", id))])
+
+
+## Stands the player's body at `at` (its x and z, on the ground), facing `look` when there is one.
+## `at` is a place spec or [x, y, z], as a shot's camera is. The plan's camera stays the one
+## drawing: the body's own rig makes itself current when it comes in.
+func _stand_body(at_v: Variant, look: Vector3) -> void:
+	var at := _point_of(at_v)
+	if at == Vector3.INF:
+		_failures.append("a shot's body is a place spec or [x, y, z], not %s" % str(at_v))
+		return
+	if _body == null:
+		_body = (load(PLAYER_SCENE) as PackedScene).instantiate() as Node3D
+		_world.add_child(_body)
+		_world.fly_camera.make_current()
+	var p := Vector3(at.x, 0.0, at.z)
+	p.y = _world.provider.get_height(p.x, p.z) + 0.05
+	_body.set("velocity", Vector3.ZERO)
+	_body.global_position = p
+	if look != Vector3.INF:
+		var to := Vector3(look.x - p.x, 0.0, look.z - p.z)
+		if to.length() > 0.01:
+			_body.rotation.y = atan2(-to.x, -to.z)
+			var rig: Node = _body.get("camera_rig")
+			if rig != null:
+				rig.set("yaw", _body.rotation.y)
+	_body.reset_physics_interpolation()
+	Log.info("Capture", "the body stands at %s" % str(p.snapped(Vector3.ONE * 0.1)))
+
+
+## After a body is stood: waits until every fight a current stage wants within QuestFoes.STAND_M of
+## it has its group standing, or FOES_WAIT_SECONDS have gone on the wall clock, and says which not.
+func _wait_for_foes(label: String) -> int:
+	var foes := get_tree().get_first_node_in_group(QuestFoes.GROUP) as QuestFoes
+	if foes == null or _body == null:
+		return 0
+	var frames := 0
+	var until := Time.get_ticks_msec() + int(FOES_WAIT_SECONDS * 1000.0)
+	var missing: Array[String] = []
+	while true:
+		missing.clear()
+		var want := foes.wanted()
+		for key: String in want:
+			var at: Vector3 = (want[key] as Dictionary)["at"]
+			var d := Vector2(at.x - _body.global_position.x, at.z - _body.global_position.z).length()
+			if d <= QuestFoes.STAND_M and foes.group_for(key) == null:
+				missing.append(key)
+		if missing.is_empty() or Time.get_ticks_msec() >= until:
+			break
+		await get_tree().process_frame
+		frames += 1
+	if not missing.is_empty():
+		Log.warn("Capture", "%s: nothing stood for %s in %.0f s" % [label, ", ".join(missing), FOES_WAIT_SECONDS])
+	# the foes are drawn on the frames after they stand: a few more for their pose and shadows
+	for _i in SETTLE_FRAMES:
+		await get_tree().process_frame
+		frames += 1
+	_foes_at.clear()
+	var words: Array[String] = []
+	for key: String in foes.wanted():
+		var group := foes.group_for(key)
+		if group == null:
+			continue
+		for e: Enemy in group.alive():
+			_foes_at.append(e.global_position)
+			words.append(str(e.global_position.snapped(Vector3.ONE * 0.1)))
+	if not words.is_empty():
+		Log.info("Capture", "%s: the stage's foes stand at %s" % [label, ", ".join(words)])
+	return frames
+
+
+## A shot's `"face_foes": true` turns the body to the nearest of the foes stood round it, as a player
+## turns to the first of a fight, and puts the camera behind it again, as far back and as high as the
+## plan had it: a place's foes are stood on clear ground round it, and a plan written beforehand does
+## not know which side that is.
+func _face_the_foes(cam: FlyCamera, pos: Vector3, label: String) -> bool:
+	if _foes_at.is_empty() or _body == null:
+		return false
+	var body := _body.global_position
+	var nearest := _foes_at[0]
+	for p in _foes_at:
+		if Vector2(p.x - body.x, p.z - body.z).length() < Vector2(nearest.x - body.x, nearest.z - body.z).length():
+			nearest = p
+	var to := Vector3(nearest.x - body.x, 0.0, nearest.z - body.z)
+	if to.length() < 0.5:
+		return false
+	var ahead := to.normalized()
+	_body.rotation.y = atan2(-ahead.x, -ahead.z)
+	var rig: Node = _body.get("camera_rig")
+	if rig != null:
+		rig.set("yaw", _body.rotation.y)
+	var back := Vector2(pos.x - body.x, pos.z - body.z).length()
+	var lift := pos.y - _world.provider.get_height(pos.x, pos.z)
+	var at := body - ahead * back
+	at.y = _world.provider.get_height(at.x, at.z) + lift
+	cam.move_to(at, nearest + Vector3.UP * 1.2)
+	_world.move_target(at)
+	Log.info("Capture", "%s: turned to the nearest of the foes, %.0f m off" % [label, to.length()])
+	return true
 
 
 ## Waits until the streamer has the full-detail ring around the camera, then lets the frame
@@ -883,6 +1023,9 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 	if not ContentDB.has(id):
 		Log.error("Capture", "no cinematic %s" % id)
 		return 2
+	# A plan that stages a new game (`flags: {new_game: true}`) must not have the real opening start
+	# under the frames it poses: that one takes the screen, black, from its first shot. Not saved.
+	Settings.set_value("gameplay", "play_opening", false, false)
 	_world = await _load_world(true)
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")
