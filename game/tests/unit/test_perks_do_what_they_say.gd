@@ -412,8 +412,8 @@ func test_second_skin_halves_armour_weights_toll_on_rolling_and_noise() -> void:
 	assert_eq(Stealth.armour_weight_class(player), "heavy", "the plate is heard as heavy")
 	assert_near(noise_before, plain * 1.7, 0.0001, "plate walks 1.7 times as loud as cloth")
 	assert_near(noise_after, plain * 1.35, 0.0001, "and half that extra with the perk")
-	assert_eq(str(roll_before["tier"]), "medium", "a plated body with a greatsword rolls as a medium load")
-	assert_eq(str(roll_after["tier"]), "light", "with the plate counted at half its weight it rolls light")
+	assert_eq(str(roll_before["tier"]), "heavy", "a plated body with a greatsword rolls as a heavy load")
+	assert_eq(str(roll_after["tier"]), "medium", "with the plate counted at half its weight it rolls medium")
 	assert_gt(float(roll_after["iframe_end"]) - float(roll_after["iframe_start"]), float(roll_before["iframe_end"]) - float(roll_before["iframe_start"]), "and is safe for longer")
 
 

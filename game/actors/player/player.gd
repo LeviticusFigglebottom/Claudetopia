@@ -36,10 +36,12 @@ const RIPOSTE_RANGE := 2.4
 const BACKSTAB_RANGE := 1.8
 ## The body's own poise before any stance is learned (Hafted Poise adds to it).
 const BASE_POISE := 40.0
-## Load is what is worn and wielded over 40 + 3·Endurance (the character's own Endurance). A bag
+## Load is what is worn and wielded over 20 + 1.5·Endurance (the character's own Endurance): at the
+## start of the game leathers and a sword roll light, a brigandine medium, plate and a greatsword
+## heavy, and plate with the heaviest hammer is more than the body can carry (DECISIONS). A bag
 ## carried past its capacity puts the roll in the overloaded band whatever is worn.
-const LOAD_CAPACITY_BASE := 40.0
-const LOAD_CAPACITY_PER_ENDURANCE := 3.0
+const LOAD_CAPACITY_BASE := 20.0
+const LOAD_CAPACITY_PER_ENDURANCE := 1.5
 const SAVE_SECTION := "player"
 const SKILL_IDS: Array[String] = ["one_handed", "two_handed", "archery", "block", "armour", "sneak", "speech", "alchemy", "smithing", "enchanting", "athletics", "kindling", "hush", "binding", "mending", "calling"]
 const ACTIONS: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact", "block", "sprint", "sneak", "lock_on", "cycle_target", "toggle_camera", "toggle_lantern", "quick_1", "quick_2", "quick_3", "quick_4"]
@@ -1390,7 +1392,7 @@ func equip_spell(spell_id: String) -> bool:
 
 
 ## Load, which lengthens the roll and slows regen (DESIGN §5.3, §5.7): everything worn and wielded
-## over 40 + 3·Endurance, and past 100% whenever the bag carries more than the character can. It
+## over 20 + 1.5·Endurance, and past 100% whenever the bag carries more than the character can. It
 ## used to count only the hands and the coat, so a helm, gauntlets and sabatons weighed nothing,
 ## and it never looked at the bag, whose `is_overloaded()` says in its own comment that it is "for
 ## the movement code to read" and was read by nothing.
