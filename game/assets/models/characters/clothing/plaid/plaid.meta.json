@@ -8,16 +8,24 @@
   1.5774
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "plaid": "cloth"
+ },
  "params": {
   "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 9231,
+ "seed": 96348,
  "slot_hint": "back",
+ "textures": [
+  "plaid_albedo.png",
+  "plaid_orm.png"
+ ],
  "tris": [
   2600,
   0,

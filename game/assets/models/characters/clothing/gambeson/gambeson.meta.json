@@ -1,23 +1,31 @@
 {
  "bounds": [
-  -0.5798,
+  -0.5797,
   -0.1516,
   0.7476,
-  0.5798,
+  0.5797,
   0.1503,
-  1.5628
+  1.5642
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "gambeson": "cloth"
+ },
  "params": {
   "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 2629,
+ "seed": 52683,
  "slot_hint": "torso",
+ "textures": [
+  "gambeson_albedo.png",
+  "gambeson_orm.png"
+ ],
  "tris": [
   4400,
   0,

@@ -8,16 +8,24 @@
   1.5031
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "apron": "cloth"
+ },
  "params": {
   "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 4515,
+ "seed": 39504,
  "slot_hint": "torso",
+ "textures": [
+  "apron_albedo.png",
+  "apron_orm.png"
+ ],
  "tris": [
   1200,
   0,
