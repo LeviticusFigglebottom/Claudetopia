@@ -64,7 +64,8 @@ KITS = {
         "tree": None,
         "post": "props/drystone_wall_end",
         # the intakes stop at the fell wall: above it the moor is open, and a wall across the
-        # tops would be a wall nobody built
+        # tops would be a wall nobody built (honoured with `place(fell_wall=True)`, which is
+        # the world build's `cover` recipe)
         "max_height_m": 430.0,
     },
 }
@@ -92,8 +93,11 @@ def _hash01(a: np.ndarray, salt: int) -> np.ndarray:
 def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
           road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray, field_labels: np.ndarray,
           field_d: np.ndarray, regions: list, index: dict, bank, seed: int,
-          places: list | None = None) -> dict:
-    """Returns {(cx, cz): {asset_path: [[x, y, z, yaw, scale, tint], ...]}}."""
+          places: list | None = None, fell_wall: bool = False) -> dict:
+    """Returns {(cx, cz): {asset_path: [[x, y, z, yaw, scale, tint], ...]}}.
+
+    `fell_wall` stops a kit's boundaries at its `max_height_m`.
+    """
     out: dict = {}
     if field_labels is None:
         return out
@@ -127,7 +131,7 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         # road: the lane through a gap in the hedge is a gate, not a hedge.
         clear = (water == 0) & (pad_mask == 0) & (slope < 0.45) \
             & (road_d > road_w * 0.5 + 3.5)
-        if "max_height_m" in kit:
+        if fell_wall and "max_height_m" in kit:
             clear &= H < float(kit["max_height_m"])
         idx = np.argwhere(on_line & clear)
         if idx.size == 0:

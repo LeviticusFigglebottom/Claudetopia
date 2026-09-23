@@ -2,8 +2,9 @@
 
 The drop test (DESIGN 10.1) reads a region's landform with the colour taken out -- its
 skyline, how rugged it is, where the detail sits down the frame -- and on the 42-shot sheet it
-read 0.12, under the 0.17 chance line. The regions differed by the colour of the ground, not by
-its shape. Five of the six shape functions were broad rolling fields at different heights, and
+read 0.12 as recorded (shot with no points of interest standing) and 0.26 re-shot with them,
+against 0.17 for chance and a bar of 0.55. The regions differed by the colour of the ground,
+not by its shape. Five of the six shape functions were broad rolling fields at different heights, and
 at the scale a person walking sees (fifty to three hundred metres off, a few metres to a few
 tens of metres of relief) they all read as the same lumpy grass.
 

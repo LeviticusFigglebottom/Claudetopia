@@ -8,10 +8,11 @@ every file listed in docs/CONTRACTS.md section 6 into game/world/generated/.
     tools/world/build_world.py --size 1024     # fast test build
     tools/world/build_world.py --only heights  # heights/water/roads only
     tools/world/build_world.py --seed 99 --out /tmp/w
+    tools/world/build_world.py --recipe landforms --recipe cover   # see RECIPES
 
 Stages: region membership -> per-shape heights -> the Mere and the world edges -> place pads
 -> rivers -> roads -> water, moisture -> texture control maps and colour -> POIs -> cell
-scatter. Everything is deterministic from the seed in world.json (or --seed).
+scatter. Everything is deterministic from the seed in world.json (or --seed) and the recipes.
 """
 from __future__ import annotations
 
@@ -49,6 +50,21 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 PACK = os.path.join(REPO, "game", "content", "packs", "core")
 DEFAULT_OUT = os.path.join(REPO, "game", "world", "generated")
 OPEN_WATER = 255
+
+## Parts of the world that are built and measured but not yet looked at in the game, so no
+## default build makes them: each is turned on with `--recipe <name>` (`./run.sh world
+## --recipe landforms --recipe cover`) and recorded in the manifest. PROGRESS.md, "The shape
+## of the land", has what each measured and what is still to check before it becomes default.
+RECIPES = {
+    # each region's own landform at a walking scale: worldgen/landforms.py
+    "landforms": "raised beaches and dune ridges, levees and oxbows, the granite stair, limestone "
+                 "scars and shakeholes, the Builders' street grid, strip lynchets and barrows",
+    # cover that differs between regions in structure: scatter_rules.json's `cover` block,
+    # the per-landform field patterns, the fell wall, the waterside and ruin lines, roadside
+    # frontage by region, and the Briarwold's holloways (roads.ROAD_SINK_M)
+    "cover": "reeds at the water, willow lines, marram on the dune crests, boulder fields, ash "
+             "in the sunken streets and wall stubs on their lips, intakes and fell walls",
+}
 
 
 class Timer:
@@ -292,8 +308,14 @@ def build(args) -> dict:
     pois = load_poi_registry(PACK)
     out_dir = args.out or DEFAULT_OUT
     os.makedirs(out_dir, exist_ok=True)
-    print("[world] seed %d, %d m at %.2f m/texel (%d^2), %d regions, %d places, %d pois"
-          % (seed, size_m, grid.spacing, n, len(regions), len(places), len(pois)), flush=True)
+    recipes = sorted(set(getattr(args, "recipe", None) or []))
+    unknown = [r for r in recipes if r not in RECIPES]
+    if unknown:
+        raise SystemExit("[world] no such recipe: %s (there are: %s)" % (", ".join(unknown), ", ".join(sorted(RECIPES))))
+    cover = "cover" in recipes
+    print("[world] seed %d, %d m at %.2f m/texel (%d^2), %d regions, %d places, %d pois%s"
+          % (seed, size_m, grid.spacing, n, len(regions), len(places), len(pois),
+             ", recipes: " + ", ".join(recipes) if recipes else ""), flush=True)
 
     lake_def = next(r for r in regions if r.shape == "lake_basin")
     lake_c = HM.lake_geometry(grid_c, bank, lake_def.center, lake_def.lake_radius)
@@ -360,7 +382,8 @@ def build(args) -> dict:
         H = HM.compose_heights(grid, grid_c, bank, regions, rf, lake_c, lake, places,
                                keep_discs=[(float(p["position"][0]), float(p["position"][1]),
                                             RD.pad_radius(p)) for p in pad_targets],
-                               keep_lines=sightline_segments(pois, pad_targets))
+                               keep_lines=sightline_segments(pois, pad_targets),
+                               landforms="landforms" in recipes)
         t.mark("heights")
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         t.mark("pads")
@@ -380,8 +403,9 @@ def build(args) -> dict:
         road_floor = np.where((lake.sd < 0) & (H < HM.LAKE_LEVEL), HM.LAKE_LEVEL + 0.6,
                               road_floor).astype(np.float32)
         # and how far below the land a road would rather run, where that is the country's way
+        # (the Briarwold's holloways, which are part of its cover)
         road_sink = None
-        for r in regions:
+        for r in (regions if cover else []):
             depth = float(RD.ROAD_SINK_M.get(r.shape, 0.0))
             if depth > 0.0:
                 w = depth * rf.weight_at(r.index, n)
@@ -413,7 +437,8 @@ def build(args) -> dict:
     region_mask[open_water] = OPEN_WATER
 
     # the enclosed patchwork: one pattern read by the crops, the hedges and the colour map
-    field_labels, field_d = FL.field_map(grid, bank, owner, regions)
+    field_labels, field_d = FL.field_map(grid, bank, owner, regions,
+                                         patterns=FL.PATTERNS if cover else FL.ONE_PATTERN)
     # how far to any water at all -- river, mere or sea -- for the trees that follow it
     water_d = (ndimage.distance_transform_edt(water.mask == 0) * grid.spacing).astype(np.float32)
     # how far across a settlement's platform, so the verge can be planted and the green left
@@ -463,10 +488,11 @@ def build(args) -> dict:
     # --- cells ------------------------------------------------------------------------
     buckets: dict = {}
     if args.only in (None, "all", "cells"):
-        rules = CELLS.load_rules(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scatter_rules.json"))
+        rules = CELLS.load_rules(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scatter_rules.json"),
+                                 recipes)
         # where each point stands in the shape of the land, for the rules that grow on crests
-        # or lie in hollows
-        tpi = CELLS.topographic_position(H, grid.spacing)
+        # or lie in hollows (only the `cover` rules ask)
+        tpi = CELLS.topographic_position(H, grid.spacing) if cover else None
         sw = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask,
                                 ctx.slope, bank, regions, water_d=water_d, field_d=field_d,
                                 pad_t=pad_t, tpi=tpi)
@@ -487,7 +513,8 @@ def build(args) -> dict:
         # boundary, and no density per hectare produces a line.
         index = CELLS.asset_index(REPO)
         hedged = HG.place(grid, H, owner, ctx.slope, water.mask, road_d, road_w, pad_mask,
-                          field_labels, field_d, regions, index, bank, seed, places=places)
+                          field_labels, field_d, regions, index, bank, seed, places=places,
+                          fell_wall=cover)
         rows_of_hedge = 0
         for key, by_asset in hedged.items():
             for asset, rows in by_asset.items():
@@ -503,10 +530,13 @@ def build(args) -> dict:
         # the lines that are the water's and the Builders', not a farmer's: willows along the
         # marsh channels, and the stubs of walls along the lips of Cinderlea's buried streets
         lined = 0
-        for placed_lines in (HG.waterside(grid, H, owner, ctx.slope, water.mask, water_d, pad_mask,
-                                          road_d, road_w, regions, index, bank, seed),
-                             HG.ruin_lines(grid, H, owner, ctx.slope, water.mask, pad_mask, road_d,
-                                           road_w, regions, index, bank, seed)):
+        lines_of = []
+        if cover:
+            lines_of = [HG.waterside(grid, H, owner, ctx.slope, water.mask, water_d, pad_mask,
+                                     road_d, road_w, regions, index, bank, seed),
+                        HG.ruin_lines(grid, H, owner, ctx.slope, water.mask, pad_mask, road_d,
+                                      road_w, regions, index, bank, seed)]
+        for placed_lines in lines_of:
             for key, by_asset in placed_lines.items():
                 for asset, rows in by_asset.items():
                     buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
@@ -514,7 +544,7 @@ def build(args) -> dict:
         # and what stands beside the roads: milestones, a signpost where roads meet, and
         # post-and-rail where the carriageway runs past somebody's field
         beside = RS.place(grid, H, owner, ctx.slope, water.mask, pad_mask, field_d, regions,
-                          roads_list, places, index, seed)
+                          roads_list, places, index, seed, by_region=cover)
         roadside_rows = 0
         for key, by_asset in beside.items():
             for asset, rows in by_asset.items():
@@ -582,6 +612,8 @@ def build(args) -> dict:
         "only": args.only or "all",
         # what the pads in heights.r32 were flattened under; a staged build checks it
         "pad_fingerprint": pads_crc,
+        # which of the parts that are off by default this build made (RECIPES)
+        "recipes": recipes,
     }
     OUT.write_manifest(out_dir, grid, seed, regions, runtime, stats)
     t.mark("write")
@@ -597,6 +629,9 @@ def main(argv=None) -> int:
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--out", type=str, default=None)
     ap.add_argument("--only", type=str, choices=["heights", "textures", "cells"], default=None)
+    ap.add_argument("--recipe", action="append", choices=sorted(RECIPES), default=None,
+                    help="build a part of the world that is off by default (repeatable): "
+                         + "; ".join("%s -- %s" % kv for kv in sorted(RECIPES.items())))
     args = ap.parse_args(argv)
     build(args)
     return 0

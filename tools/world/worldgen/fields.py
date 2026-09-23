@@ -32,13 +32,18 @@ from .noise import upsample
 ## into intakes by drystone walls, which is the second thing WORLD_BIBLE 6.5 lists under its
 ## architecture. `hedges.py` lines them with wall instead of hedge.
 ##
-## They are not the Vale's fields in another material, and until now they were exactly that:
-## one pattern of 150 m parcels with wandering edges laid over all three regions. A field in
-## the Vale is small and its hedge follows whoever walked it; an intake on the moor is large,
-## and its walls were set out with a line and run dead straight up and over the fell. So each
-## enclosed landform has its own parcel size and its own wander.
-PATTERNS = {
+## By default that is one pattern of 150 m parcels with wandering edges laid over all three
+## regions (`ONE_PATTERN`), so the moor's intakes are the Vale's fields in another material.
+## The world build's `cover` recipe gives each enclosed landform its own (`PATTERNS`): a field
+## in the Vale is small and its hedge follows whoever walked it; an intake on the moor is
+## large, and its walls were set out with a line and run dead straight up and over the fell.
+ONE_PATTERN = {
     # shape: (parcel spacing m, how far the boundaries wander m, salt)
+    "downs": (150.0, 26.0, 820),
+    "lake_basin": (150.0, 26.0, 820),
+    "mountains": (150.0, 26.0, 820),
+}
+PATTERNS = {
     "downs": (150.0, 26.0, 820),
     "lake_basin": (150.0, 26.0, 820),
     "mountains": (300.0, 4.0, 840),
@@ -46,21 +51,23 @@ PATTERNS = {
 
 
 def field_map(grid: Grid, bank, owner: np.ndarray, regions: list,
-              shapes=("downs", "lake_basin", "mountains"), work_n: int = 2048) -> tuple:
+              shapes=("downs", "lake_basin", "mountains"), work_n: int = 2048,
+              patterns: dict | None = None) -> tuple:
     """Returns (labels int32, edge_d float32) at the full grid resolution.
 
     Computed on a coarser lattice and upsampled: a parcel is 165 m across and its boundary is
     a hedge two metres wide, so the extra resolution would cost two more distance transforms
-    and move the line by less than a texel. Each pattern in `PATTERNS` is laid over the regions
-    of its shapes; their labels never collide, so a parcel is one field on either side of a
-    region border.
+    and move the line by less than a texel. Each pattern in `patterns` (default `ONE_PATTERN`)
+    is laid over the regions of its shapes; their labels never collide, so a parcel is one
+    field on either side of a region border.
     """
+    patterns = ONE_PATTERN if patterns is None else patterns
     labels = np.full((grid.n, grid.n), -1, dtype=np.int32)
     edge_d = np.full((grid.n, grid.n), 1e6, dtype=np.float32)
     by_pattern: dict = {}
     for s in shapes:
-        if s in PATTERNS:
-            by_pattern.setdefault(PATTERNS[s], []).append(s)
+        if s in patterns:
+            by_pattern.setdefault(patterns[s], []).append(s)
     for k, (params, group) in enumerate(sorted(by_pattern.items())):
         spacing_m, warp_m, salt = params
         lab, ed = _parcels(grid, bank, owner, regions, tuple(group), spacing_m, warp_m, salt, work_n)

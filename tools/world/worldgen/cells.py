@@ -22,9 +22,32 @@ HECTARE = 10000.0
 MODELS_DIR = "game/assets/models"
 
 
-def load_rules(path: str) -> dict:
+def load_rules(path: str, recipes=()) -> dict:
+    """The scatter rules, with the patches of each named recipe applied.
+
+    A recipe is a block under "recipes" in the rules file, {"dotted.path": value}: the path
+    runs through keys and list indices ("rocks.forest_rise.0.density") and its last step may
+    name a key that is new. The block is dropped from what is returned, so nothing reads it
+    as a rule. The world build turns a recipe on with `--recipe <name>`.
+    """
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        rules = json.load(f)
+    blocks = rules.pop("recipes", {})
+    for name in recipes:
+        for dotted, value in blocks.get(name, {}).items():
+            _patch(rules, dotted, value)
+    return rules
+
+
+def _patch(rules: dict, dotted: str, value) -> None:
+    node = rules
+    steps = dotted.split(".")
+    for step in steps[:-1]:
+        node = node[int(step)] if isinstance(node, list) else node[step]
+    if isinstance(node, list):
+        node[int(steps[-1])] = value
+    else:
+        node[steps[-1]] = value
 
 
 def asset_index(repo_root: str) -> dict:
