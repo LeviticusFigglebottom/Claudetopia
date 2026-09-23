@@ -538,7 +538,8 @@ def build(args) -> dict:
         # smooths it back into the clean line it was drawn as; every pad is left whole.
         H = GEO.break_shelf_edges(grid, H, atlas, bank,
                                   keep_discs=[(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p))
-                                              for p in pad_targets])
+                                              for p in pad_targets],
+                                  keep=road_d <= road_w * 0.5 + GEO.SHELF_ROAD_CLEAR_M)
 
     owner = dithered_owner(rf, n, bank)
     # The sea is the ground under its level outside the coast, and within 150 m of the shore

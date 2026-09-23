@@ -583,16 +583,21 @@ SHELF_NOTCH_TOP_M = 2.0
 SHELF_NOTCH_FLOOR_M = -1.5
 ## how far outside a pad the breaking keeps off it (a pad's footprint is left whole)
 SHELF_PAD_CLEAR_M = 3.0
+## how far past a road's worn edge the breaking keeps off it (`keep` in break_shelf_edges)
+SHELF_ROAD_CLEAR_M = 4.0
 
 
-def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=()) -> np.ndarray:
+def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(),
+                      keep: np.ndarray | None = None) -> np.ndarray:
     """Every shelf's seaward edge broken the way the sea breaks rock: the drawn line wanders in and
     out (spurs of shelf-top rock, bites down to the foot of the face), blocks fallen from the face
     lie in the water under it, and each of the shelf's `notches` is a slot cut down into the sea.
 
     Run at full resolution after the pads, roads and landforms (so nothing laid afterwards smooths
-    it), and kept off every pad in `keep_discs` ([(x, z, radius)]) by SHELF_PAD_CLEAR_M. The land
-    behind a shelf is not touched: the breaking fades out where the edge runs into it."""
+    it), kept off every pad in `keep_discs` ([(x, z, radius)]) by SHELF_PAD_CLEAR_M and off every
+    texel of `keep` (bool, the full grid: the roads). Only the edge with the sea beyond it is
+    broken: the shelf's back edge, where the land comes down to it, and the land behind are not
+    touched, and the breaking fades out where the seaward edge runs into that land."""
     coast = atlas["coast"]
     shelves = coast.get("shelves", [])
     if not shelves:
@@ -623,6 +628,16 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
                                  ndimage.distance_transform_edt(~behind).astype(np.float32) * sp)
         else:
             seaward = np.ones_like(sub)
+        # And only near the sea. The land behind may come down to the shelf's back edge at the
+        # shelf's own height for tens of metres -- the Hushline's stair does, graded to the landing
+        # -- and measured from the ground over the top alone, that back edge was broken too: a bite
+        # cut 6.5 m of sea through the stair where it steps onto the shelf.
+        sea = (~sub_m) & (sub < SEA_LEVEL + 0.5)
+        if not sea.any():
+            continue
+        d_sea = ndimage.distance_transform_edt(~sea).astype(np.float32) * sp
+        seaward = seaward * (1.0 - smoothstep(SHELF_EDGE_M + 2.0 * sp, SHELF_EDGE_M + 6.0 * sp, d_sea))
+        del d_sea
         X = (g.x0 + np.arange(j0, j1, dtype=np.float32) * sp)[None, :]
         Z = (g.z0 + np.arange(i0, i1, dtype=np.float32) * sp)[:, None]
         whole = np.zeros(sub.shape, dtype=bool)      # every pad and SHELF_PAD_CLEAR_M round it
@@ -635,7 +650,8 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
             d2 = (X - px) ** 2 + (Z - pz) ** 2
             whole |= d2 <= rr * rr
             footprint |= d2 <= float(r) * float(r)
-        free = seaward * (~whole)
+        held = whole if keep is None else (whole | keep[i0:i1, j0:j1])
+        free = seaward * (~held)
         # 1. the edge wanders: in by a bite down to the foot of the face, out by a spur of shelf top
         salt = _salt("shelf edge", k)
         wander = SHELF_EDGE_M * _sc(bank.field_at(salt, g.n, 1.8, *SHELF_EDGE_WL)[i0:i1, j0:j1], 1.3) / 1.3
@@ -664,8 +680,8 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
                 crown = SEA_LEVEL + float(rng.uniform(*SHELF_BLOCK_TOP_M))
                 d2 = ((X - bx) ** 2 + (Z - bz) ** 2) / (r * r)
                 lump = np.clip(1.0 - d2, 0.0, 1.0) ** 0.7
-                keep = (whole == 0) & (d2 < 1.0)
-                sub = np.where(keep, np.maximum(sub, sub + (crown - sub) * lump), sub)
+                lay = (~held) & (d2 < 1.0)
+                sub = np.where(lay, np.maximum(sub, sub + (crown - sub) * lump), sub)
         # 3. the notches: a slot through the face and down into the sea
         for (nx, nz) in shelf.get("notches", []):
             fj, fi = (float(nx) - g.x0) / sp - j0, (float(nz) - g.z0) / sp - i0
@@ -681,6 +697,8 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
             floor = (top - SHELF_NOTCH_TOP_M) + (SEA_LEVEL + SHELF_NOTCH_FLOOR_M - (top - SHELF_NOTCH_TOP_M)) * t
             side = 1.0 - smoothstep(0.5 * SHELF_NOTCH_W_M - 1.0, 0.5 * SHELF_NOTCH_W_M + 1.5, across)
             inside = (along > -SHELF_NOTCH_IN_M) & (along < SHELF_NOTCH_OUT_M) & (side > 0.0) & ~footprint
+            if keep is not None:
+                inside &= ~keep[i0:i1, j0:j1]
             cut = np.where(inside, sub + (np.minimum(sub, floor) - sub) * side, sub)
             sub = cut.astype(np.float32)
         H[i0:i1, j0:j1] = sub.astype(np.float32)

@@ -105,6 +105,26 @@ class ShelfEdgeTest(unittest.TestCase):
         land = GEO.polygon_mask(self.grid, MAINLAND) & ~self.shelf
         self.assertTrue(np.array_equal(self.H[land], self.H0[land]))
 
+    def test_the_back_edge_and_a_road_across_the_shelf_are_left_alone(self):
+        # The Hushline's stair comes down the bank graded to the landing, so for tens of metres the
+        # land behind the shelf's back edge is at the shelf's own height. Measured only from the
+        # ground standing over the shelf, that back edge was broken too, and a bite cut 6.5 m of
+        # sea through the stair. Here the land behind comes down to 4.5 m for 30 m, and a road
+        # runs across the shelf from the land to the sea.
+        X = self.X
+        Z = self.Z
+        low_bank = (Z < -20.0) & (Z > -50.0) & (np.abs(X) < 60.0)
+        H0 = np.where(low_bank, TOP + 0.5, self.H0).astype(np.float32)
+        road = np.abs(X + 30.0) < 4.0
+        H = GEO.break_shelf_edges(self.grid, H0.copy(), self.atlas, NoiseBank(8471, self.grid),
+                                  keep_discs=[PAD], keep=road)
+        back = self.shelf & (Z < -10.0)
+        self.assertTrue(np.array_equal(H[back], H0[back]), "the shelf's back edge was broken")
+        self.assertTrue(np.array_equal(H[road], H0[road]), "the road across the shelf was cut")
+        # and the seaward edge is still broken either side of the road
+        edge = ~self.shelf & (Z > 0.0) & (np.abs(X) < 110.0)
+        self.assertFalse(np.array_equal(H[edge], H0[edge]))
+
     def test_a_coast_drawn_over_the_shelf_does_not_hold_its_edge(self):
         # The Hushline's coast polygon has a lobe over the whole shelf, with a low cliff along the
         # shelf's seaward edge. Measured from the coast, the edge had nowhere to wander and was

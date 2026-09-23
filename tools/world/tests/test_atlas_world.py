@@ -344,6 +344,15 @@ class TheLanding(unittest.TestCase):
                 if end in self.pads:
                     self.assertAlmostEqual(float(level), float(self.pads[end]["level_m"]), delta=0.3,
                                            msg="%s arrives at %s at %.2f m" % (rid, end, level))
+            # and the ground it was graded into is still under it: nothing laid after the roads
+            # (the shelf's broken edge once) cuts a hole in it. At 8 m a texel on a bank graded a
+            # half is up to 1.5 m off the road's own line; the hole was 6.5 m.
+            ii = np.clip(np.rint((pts[:, 1] - self.grid.z0) / self.grid.spacing).astype(int), 0, self.grid.n - 1)
+            jj = np.clip(np.rint((pts[:, 0] - self.grid.x0) / self.grid.spacing).astype(int), 0, self.grid.n - 1)
+            off = np.abs(self.H[ii, jj].astype(np.float64) - e)
+            k = int(np.argmax(off))
+            self.assertLess(float(off[k]), 2.5, "%s's ground at (%.0f, %.0f) is %.2f m off its step"
+                            % (rid, pts[k, 0], pts[k, 1], off[k]))
 
     def test_every_authored_pad_is_flat_and_dry_at_its_level(self):
         if not self.pads:
