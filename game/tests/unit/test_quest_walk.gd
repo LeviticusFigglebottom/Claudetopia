@@ -74,6 +74,24 @@ func test_no_board_names_a_placeholder_a_watch_post_or_goods_nobody_has() -> voi
 					"a board in %s could ask for %s, which nothing gives, sells or drops" % [region_id, id])
 
 
+## An escort that ends as it begins is not a job: nobody is posted to walk someone to where they live.
+func test_no_board_posts_an_escort_to_the_travellers_own_home() -> void:
+	var escorts := 0
+	for region in ["core:region/hearthvale", "core:region/brightwater", "core:region/sedgemire"]:
+		for seed_value in range(1, 120):
+			for job in Social.radiant.generate(region, 6, "", seed_value):
+				if str(job.get("kind", "")) != "escort":
+					continue
+				for stage in job["stages"]:
+					for o in (stage as Dictionary).get("objectives", []):
+						if str((o as Dictionary).get("type", "")) != "escort":
+							continue
+						escorts += 1
+						var home := str(ContentDB.get_or_empty(str(o["target"])).get("home_place", ""))
+						assert_ne(home, str(o["place"]), "%s walks %s home to %s" % [job["id"], o["target"], home])
+	assert_gt(escorts, 0, "the boards post escorts at all")
+
+
 func test_the_walk_says_how_as_well_as_whether() -> void:
 	# the Hart, the note, the escort and a thing lying in the fallen stair, one of each kind of fix
 	var want := {

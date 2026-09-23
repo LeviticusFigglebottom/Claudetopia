@@ -238,6 +238,12 @@ func _make_one(t: Dictionary, region_id: String, board: String) -> Dictionary:
 			return {}   # the world has no content for this template yet; try another
 		ids[token] = chosen
 		names[token] = _display(chosen)
+	# Nobody needs walking to where they live. With the placeholders out of the traveller pool the
+	# first escort a Merrowby board wrote was "see Bessa Tamwick safe to Tamwick", which ends the
+	# moment she agrees to it, standing in her own orchard.
+	if ids.has("traveller") and ids.has("destination") \
+			and str(_def(str(ids["traveller"])).get("home_place", "")) == str(ids["destination"]):
+		return {}
 
 	var range_spec: Array = spec.get("count", [1, 1])
 	var lo: int = int(range_spec[0]) if range_spec.size() > 0 else 1
