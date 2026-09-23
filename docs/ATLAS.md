@@ -78,7 +78,9 @@ Content is densest near the start: 15 locations within 1 km of the Stair Head, 2
 
 The Foundling comes up out of the Hush by the Hushline Stair. They reach **the Landing**, a
 rock shelf 4 m above the sea under the cliff. The stage-two ash-wights are fought there, and
-the Oroth stair goes down from its seaward edge into the water and the mist. From the Landing
+the Oroth stair goes down from its seaward edge into the water and the mist. The Hushline
+itself (`core:place/hushline`, the line a pilgrim is walked down to) is on the Landing at
+(10, 3870), by the notch where that stair leaves; the grey starts a few paces out. From the Landing
 **the Stair** climbs the bank in one long traverse to the rim. **The Stair Head**, the Wardens'
 camp, stands at (10, 3670) on the Stair Knoll, about 110 m up over the Hush, facing **333°**.
 
@@ -377,7 +379,8 @@ would still like the kit to build (with how they are faked today) are in §10.
   polygon carries a lobe over the bank, with a 4 m cliff along its seaward edge and the 78 m
   cliffs split around it. The road `core:road/stair_head_hushline_stair` is of kind "stair",
   and the opening's camp builder looks for that id. A pad pins core:poi/hushline_stair to the
-  shelf at 4 m (radius 26). The Stair is one traverse at about 77° to the fall line, turning
+  shelf at 4 m (radius 26), and another pins core:place/hushline beside it at 4 m (radius 20),
+  so the line an escort ends at is on the Landing and not on an islet in the Hush. The Stair is one traverse at about 77° to the fall line, turning
   only at the rim and at the bank's foot. On a 1024 heights build it is nowhere steeper than
   about 0.6. Three switchbacks were tried first; their corners sat mid-bank and ran 1.6 there.
   Drawn, the shelf's seaward edge is a smooth arc, and the builder breaks it up. Spurs and bites
@@ -428,7 +431,7 @@ would still like the kit to build (with how they are faked today) are in §10.
 | `core:place/greyfold` | -2300, 2900 | -1750, 2650 | The Ashgrid |
 | `core:place/sunken_choir` | -1900, 3300 | -210, 3240 | The Choir Plateau |
 | `core:place/cantors_seat` | -1900, 3500 | -130, 3470 | The Choir Plateau |
-| `core:place/hushline` | -1900, 4000 | 0, 3990 | The Ash Heath |
+| `core:place/hushline` | -1900, 4000 | 10, 3870 | The Ash Heath |
 | `core:poi/glass_bridge` | -1700, 2450 | 60, 2860 | The Ash Heath |
 | `core:poi/bell_of_the_pilgrims` | -1320, 2500 | 270, 2720 | The Ash Heath |
 | `core:poi/headless_watch` | -2120, 3200 | -750, 2990 | The Choir Plateau |

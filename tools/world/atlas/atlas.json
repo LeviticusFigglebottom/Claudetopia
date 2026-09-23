@@ -12131,6 +12131,11 @@
    "place": "core:poi/hushline_stair",
    "level_m": 4,
    "radius_m": 26
+  },
+  {
+   "place": "core:place/hushline",
+   "level_m": 4,
+   "radius_m": 20
   }
  ]
 }
