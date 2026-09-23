@@ -38,17 +38,28 @@ const FULL_HEIGHTS := "heights.r32"
 const FORCE_FALLBACK_ARG := "--terrain=fallback"
 ## Other spellings that ask for the same thing (`--fallback-terrain` was the first one).
 const FORCE_FALLBACK_ALIASES: Array[String] = ["--terrain=fallback", "--terrain=coarse", "--fallback-terrain"]
-## `-- --terrain=terrain3d` tries Terrain3D even on a driver known to fail inside it (below).
+## `-- --terrain=terrain3d` tries Terrain3D even on a driver known to fail inside it (below), and so
+## does asking for a number of clipmap rings (`--terrain-lods=N`): both are a tool taking the risk.
 const FORCE_TERRAIN3D_ARG := "--terrain=terrain3d"
-## Mesa's software Vulkan driver (lavapipe) names its device after llvmpipe. Terrain3D 1.0.2 crashes
-## it on the first frame it draws -- all four of the driver's rasterizer threads fault on the same
-## out-of-range load in its compiled shader, with Terrain3D alone in an empty project and no data
-## -- so on Forward+ or Mobile there the ground is the coarse one. The OpenGL llvmpipe of the
-## Compatibility renderer draws Terrain3D without trouble (every flow run here uses it). A
-## graphics card is not guarded against: none was here to try.
+## Mesa's software Vulkan driver (lavapipe) names its device after llvmpipe, and Terrain3D 1.0.2
+## crashes it: all four of the driver's rasterizer threads fault on the same out-of-range load in
+## its compiled shader. When is a matter of the clipmap and the view, not the ring count alone.
+## Alone in an empty project, at 2 m spacing, 7, 8 or 9 rings of 32 drew 60 frames and 9 of 48
+## crashed; at 1 m spacing 7 of 48 crashed on the first frame. In the game, 9 rings crash as the
+## world is built, and 7 drew the real terrain for 40 seconds of the New Game flow and then crashed
+## the same way. So on Forward+ or Mobile there the ground is the coarse one unless a tool asks.
+## The OpenGL llvmpipe of the Compatibility renderer draws Terrain3D without trouble (every flow run
+## here uses it), and the one graphics card reported (a Radeon RX 9070 XT) draws nine rings. A
+## graphics card is not guarded against.
 const UNSAFE_RD_ADAPTER := "llvmpipe"
 ## The oldest macOS the Terrain3D 1.0.2 frameworks were built for (their LC_BUILD_VERSION).
 const TERRAIN3D_MIN_MACOS := 15
+## Terrain3D's clipmap rings. Nine reach the edge of the world from anywhere in it (world.gd).
+const TERRAIN_LODS := 9
+## `-- --terrain-lods=N` or the WICKMERE_TERRAIN_LODS environment variable sets the rings, 1 to 10,
+## for tools; the argument wins. Seven reach about 6 km, and the land beyond stops in a line.
+const TERRAIN_LODS_ARG := "--terrain-lods="
+const TERRAIN_LODS_ENV := "WICKMERE_TERRAIN_LODS"
 
 ## Tests stand in for the disk with this; `facts()` returns a copy of it while it is set.
 static var override: Dictionary = {}
@@ -66,6 +77,7 @@ static func facts() -> Dictionary:
 		"terrain_class": ClassDB.class_exists("Terrain3D"), "terrain_regions": 0,
 		"forced_fallback": force_fallback or forced_by(OS.get_cmdline_user_args()) or forced_by(OS.get_cmdline_args()),
 		"forced_terrain3d": OS.get_cmdline_user_args().has(FORCE_TERRAIN3D_ARG) or OS.get_cmdline_args().has(FORCE_TERRAIN3D_ARG),
+		"lods_asked": terrain_lods_asked(),
 		"full_maps": FileAccess.file_exists("%s/%s" % [GENERATED, FULL_HEIGHTS]),
 		# Forward+ and Mobile draw through a RenderingDevice; Compatibility and headless do not
 		"rendering_device": RenderingServer.get_rendering_device() != null,
@@ -88,7 +100,8 @@ static func facts() -> Dictionary:
 static func evaluate(f: Dictionary) -> Dictionary:
 	var out := {"state": "ready", "playable": true, "terrain": "terrain3d", "reason": "",
 		"title": "", "detail": "", "notice": "", "badge": "", "announce": false,
-		"command": BUILD_COMMAND, "needs": BUILD_NEEDS}
+		"command": BUILD_COMMAND, "needs": BUILD_NEEDS,
+		"lods": int(f.get("lods_asked", 0)), "lods_why": "asked for"}
 	var lacking := ""
 	if not bool(f.get("manifest", false)):
 		lacking = "game/world/generated/world_manifest.json"
@@ -120,10 +133,11 @@ static func evaluate(f: Dictionary) -> Dictionary:
 	elif driver_fails_terrain3d(f):
 		why = "driver_unsafe"
 		out["title"] = "The full terrain cannot be drawn with this graphics driver."
-		out["detail"] = ("This is %s, Mesa's software Vulkan driver, and Terrain3D crashes it on the first frame it draws, "
+		out["detail"] = ("This is %s, Mesa's software Vulkan driver, and Terrain3D crashes it, "
 				+ "so the ground is drawn from the coarse 8 m height map instead: the country is all there, with softer hills and plainer ground. "
-				+ "The Compatibility renderer (--rendering-driver opengl3) draws the full terrain here, and a graphics card should; "
-				+ "to try Terrain3D anyway, start the game with %s.") % [str(f.get("adapter", "")), FORCE_TERRAIN3D_ARG]
+				+ "The Compatibility renderer (--rendering-driver opengl3) draws the full terrain here, and a graphics card should. "
+				+ "To try Terrain3D anyway, start the game with %s, or with fewer rings, %s7: it may still crash.") % [
+					str(f.get("adapter", "")), FORCE_TERRAIN3D_ARG, TERRAIN_LODS_ARG]
 		out["command"] = ""
 	elif int(f.get("terrain_regions", 0)) == 0:
 		why = "terrain_missing"
@@ -156,6 +170,33 @@ static func current() -> Dictionary:
 	return evaluate(facts())
 
 
+## The clipmap rings asked for by these arguments or this environment value (TERRAIN_LODS_ARG,
+## TERRAIN_LODS_ENV), clamped to Terrain3D's 1 to 10, or 0 when neither asks. Pure, for the tests.
+static func lods_from(args: PackedStringArray, env: String) -> int:
+	for a in args:
+		if a.begins_with(TERRAIN_LODS_ARG):
+			var n := a.trim_prefix(TERRAIN_LODS_ARG)
+			if n.is_valid_int():
+				return clampi(n.to_int(), 1, 10)
+	if env.strip_edges().is_valid_int():
+		return clampi(env.strip_edges().to_int(), 1, 10)
+	return 0
+
+
+## The rings this run was asked for, or 0: the user arguments, the engine's own, the environment.
+static func terrain_lods_asked() -> int:
+	var args := OS.get_cmdline_user_args()
+	args.append_array(OS.get_cmdline_args())
+	return lods_from(args, OS.get_environment(TERRAIN_LODS_ENV))
+
+
+## The clipmap rings Terrain3D draws with, for a verdict of `evaluate()`: what was asked for, else
+## TERRAIN_LODS.
+static func terrain_lods_for(s: Dictionary) -> int:
+	var asked := int(s.get("lods", 0))
+	return asked if asked > 0 else TERRAIN_LODS
+
+
 ## Whether these command-line arguments ask for the coarse ground (`--terrain=fallback`).
 static func forced_by(args: PackedStringArray) -> bool:
 	for a in args:
@@ -165,9 +206,11 @@ static func forced_by(args: PackedStringArray) -> bool:
 
 
 ## Whether Terrain3D would crash the graphics driver these facts describe (UNSAFE_RD_ADAPTER),
-## unless `--terrain=terrain3d` asked to try it anyway.
+## unless `--terrain=terrain3d` or a number of rings asked to try it anyway.
 static func driver_fails_terrain3d(f: Dictionary) -> bool:
-	if bool(f.get("forced_terrain3d", false)) or not bool(f.get("rendering_device", false)):
+	if bool(f.get("forced_terrain3d", false)) or int(f.get("lods_asked", 0)) > 0:
+		return false
+	if not bool(f.get("rendering_device", false)):
 		return false
 	return str(f.get("adapter", "")).to_lower().begins_with(UNSAFE_RD_ADAPTER)
 

@@ -58,7 +58,7 @@ title shuts New Game, Continue and Load, and says the same thing.
 The ground is drawn by Terrain3D 1.0.2, whose release carries binaries for Windows and Linux on
 x86_64 and for macOS 15 or later (`LICENSES.md` has their source and hashes). Anywhere else —
 Linux on arm64, Windows on arm64, a Mac on macOS 14 or older — on Mesa's software Vulkan driver
-(llvmpipe under Forward+ or Mobile, which Terrain3D crashes on its first frame), and in a copy
+(llvmpipe under Forward+ or Mobile, which Terrain3D crashes, sooner or later), and in a copy
 whose `game/terrain_data` is empty, the game draws the ground itself from the runtime height map at
 8 m: the same country, with softer hills and plainer ground. It says so where it cannot be missed:
 across the title screen with the reason and the way to the full terrain, on a card when you arrive,
@@ -75,6 +75,7 @@ Project Settings → Editor → Run → Main Run Args:
 |---|---|
 | `--terrain=fallback` | Draws the coarse ground even where Terrain3D can: to see, test or capture what a machine without it sees, or to get in on a graphics driver that fails inside Terrain3D. |
 | `--terrain=terrain3d` | Tries Terrain3D even on a driver it is known to crash. |
+| `--terrain-lods=N` | Terrain3D's clipmap rings, 1 to 10 (the `WICKMERE_TERRAIN_LODS` environment variable does the same; the argument wins). Nine, the default, reach the edge of the world from anywhere in it; seven reach about 6 km. Asking also tries Terrain3D on software Vulkan: at seven it drew the real terrain there for about forty seconds of play before the driver crashed, so take short captures. |
 
 ```
 godot --path game -- --terrain=fallback
@@ -86,7 +87,7 @@ godot --path game -- --terrain=fallback
 |---|---|
 | `./run.sh test` | 1204 unit tests. Content validation runs here too, so a dangling id fails the build, and the run fails if any test logs an error. |
 | `./run.sh journey` | One scripted run through every promise in the design's done list, in the built world: create a character in the Naming and wake at the Hushline Stair as the person you made and walk out of the region, find a village by walking into it and read the country off a vista, meet somebody who lives here, fight, level up, die and recover your marks, join a faction, commit a crime and pay for it, buy a house, clear a dungeon, fight a boss, learn a saying and cast it, save and load. |
-| `./run.sh flow` | The way in, pressed the way a player presses it: boots `boot.tscn` with no arguments, clicks New Game by the words on the button, types a name, changes a swatch, a chooser, a slider and a Calling, clicks Be named, and then watches the world for forty seconds — failing if the screen is still black, the fade is still down, the HUD is not up, nothing draws the ground, there is no ground under the body or nothing standing within 200 m of it, the fade lifted before the cells round the body were in, or the body standing there is not the one that was made. With no world on disk it fails at the title, with the title's words in its report. Then the same for `--load=<slot>` and the title menu's Continue. Every step is a PNG in `captures/flow/`; look at them. Needs a display (Xvfb will do). |
+| `./run.sh flow` | The way in, pressed the way a player presses it: boots `boot.tscn` with no arguments, clicks New Game by the words on the button, types a name, changes a swatch, a chooser, a slider and a Calling, clicks Be named, and then watches the world for forty seconds — failing if the screen is still black, the fade is still down, the HUD is not up, nothing draws the ground, there is no ground under the body or nothing standing within 200 m of it, Terrain3D is following some other camera than the body's, the coarse ground is drawn without its plate in the corner and its card, the fade lifted before the cells round the body were in, or the body standing there is not the one that was made. With no world on disk it fails at the title, with the title's words in its report. Then the same for `--load=<slot>` and the title menu's Continue. Every step is a PNG in `captures/flow/`; look at them. Needs a display (Xvfb will do). |
 | `./run.sh smoke` | Builds all 24 shipping interiors for real and fails if one has no geometry, no collision, no light or no way out. |
 | `./run.sh perf` | Measures draw calls and primitives against the budgets in `DESIGN.md` §11. |
 | `./run.sh shots` | Headless capture plan into `captures/`. |

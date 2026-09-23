@@ -204,8 +204,12 @@ func _setup_terrain3d() -> void:
 	# line with a visible corner -- a flat shelf across the distance with the land cut off
 	# behind it. Wickmere's diagonal is 11.6 km; 8 LODs reach 12.3 km, so the ground now runs
 	# to the edge of the world from anywhere in it. One more ring costs one more strip of the
-	# same vertex count at twice the spacing.
-	terrain_node.set("mesh_lods", 9)
+	# same vertex count at twice the spacing. Tools can ask for fewer (`--terrain-lods=N`).
+	var lods := WorldStatus.terrain_lods_for(status)
+	if lods != WorldStatus.TERRAIN_LODS:
+		Log.info("World", "Terrain3D draws %d clipmap rings (%s); %d reach the edge of the world"
+				% [lods, str(status.get("lods_why", "asked for")), WorldStatus.TERRAIN_LODS])
+	terrain_node.set("mesh_lods", lods)
 	terrain_node.set("mesh_size", 32)
 	var mat: Object = terrain_node.get("material")
 	if mat:

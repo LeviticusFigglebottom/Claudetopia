@@ -121,10 +121,28 @@ func test_software_vulkan_draws_the_coarse_ground_instead_of_crashing() -> void:
 	var forced := lavapipe.duplicate()
 	forced["forced_terrain3d"] = true
 	assert_eq(WorldStatus.evaluate(_facts(forced))["state"], "ready", "--terrain=terrain3d tries Terrain3D anyway")
+	var fewer := lavapipe.duplicate()
+	fewer["lods_asked"] = 7
+	var s7 := WorldStatus.evaluate(_facts(fewer))
+	assert_eq(s7["state"], "ready", "and so does asking for a number of rings: a tool taking the risk")
+	assert_eq(WorldStatus.terrain_lods_for(s7), 7, "with the rings it asked for")
 	assert_eq(WorldStatus.evaluate(_facts({"rendering_device": false, "adapter": "llvmpipe (LLVM 20.1.2, 256 bits)"}))["state"],
 			"ready", "the Compatibility renderer's llvmpipe draws Terrain3D")
 	assert_eq(WorldStatus.evaluate(_facts({"rendering_device": true, "adapter": "AMD Radeon RX 9070 XT"}))["state"],
 			"ready", "and a graphics card on Forward+ is not guarded against")
+
+
+func test_the_clipmap_rings_can_be_asked_for_by_argument_or_environment() -> void:
+	assert_eq(WorldStatus.lods_from(PackedStringArray(), ""), 0, "nobody asked")
+	assert_eq(WorldStatus.lods_from(PackedStringArray(["--flow=/x", "--terrain-lods=7"]), ""), 7, "the argument")
+	assert_eq(WorldStatus.lods_from(PackedStringArray(), "7"), 7, "the environment")
+	assert_eq(WorldStatus.lods_from(PackedStringArray(["--terrain-lods=8"]), "6"), 8, "the argument wins")
+	assert_eq(WorldStatus.lods_from(PackedStringArray(["--terrain-lods=40"]), ""), 10, "clamped to Terrain3D's ten")
+	assert_eq(WorldStatus.lods_from(PackedStringArray(["--terrain-lods=0"]), ""), 1, "and to one")
+	assert_eq(WorldStatus.lods_from(PackedStringArray(["--terrain-lods=many"]), " 7 "), 7, "a word is no number")
+	assert_eq(WorldStatus.TERRAIN_LODS, 9, "and nine when nobody asks, which reach the world's edge")
+	assert_eq(WorldStatus.terrain_lods_for(WorldStatus.evaluate(_facts())), 9, "a verdict nobody asked rings of draws nine")
+	assert_eq(WorldStatus.terrain_lods_for(WorldStatus.evaluate(_facts({"lods_asked": 6}))), 6, "and one that asked draws those")
 
 
 func test_the_terrain_argument_asks_for_the_coarse_ground() -> void:
@@ -297,6 +315,21 @@ func test_a_world_without_terrain3d_draws_the_coarse_ground_under_the_body() -> 
 	await _tree().process_frame
 
 
+func test_a_tool_that_asks_for_fewer_rings_gets_them() -> void:
+	if WorldStatus.current().get("state", "") != "ready":
+		return
+	WorldStatus.override = _facts({"lods_asked": 7})
+	var w := (load(WORLD_SCENE) as PackedScene).instantiate() as World
+	_tree().root.add_child(w)
+	await w.world_ready
+	assert_true(w.terrain_node != null, "Terrain3D draws the ground")
+	if w.terrain_node != null:
+		assert_eq(int(w.terrain_node.get("mesh_lods")), 7, "with the seven rings asked for")
+	_tree().root.remove_child(w)
+	w.queue_free()
+	await _tree().process_frame
+
+
 func test_a_built_world_draws_terrain3d_and_no_fallback() -> void:
 	if WorldStatus.current().get("state", "") != "ready":
 		return
@@ -306,6 +339,9 @@ func test_a_built_world_draws_terrain3d_and_no_fallback() -> void:
 	assert_eq(w.terrain_mode, "terrain3d")
 	assert_true(w.terrain_node != null and w.fallback == null, "Terrain3D, and nothing drawn beside it")
 	assert_eq(w.ground_notice, null, "and nothing says the ground is coarse")
+	if w.terrain_node != null:
+		assert_eq(int(w.terrain_node.get("mesh_lods")), WorldStatus.terrain_lods_for(w.status),
+				"with the clipmap rings this run asked for, or nine")
 	_tree().root.remove_child(w)
 	w.queue_free()
 	await _tree().process_frame

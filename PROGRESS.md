@@ -2513,14 +2513,23 @@ reported, announced by one small line on the title and one toast that they never
 software Vulkan driver installed, the flow got through the title and the Naming and died at
 `add_child(terrain_node)`: the deprecation warning, "/root: The caller thread can't call the
 function `propagate_notification()`", signal 11 in an unknown module. Terrain3D 1.0.2 alone in an
-empty project (a camera, a light, the node; with the regions and without any data) does the same
-on its first frame. Under gdb all four `llvmpipe` rasterizer threads stop at one address in the
-driver's compiled shader, on an indexed load (`vmovd 0x0(%r13,%rax,4)`) out of range. The thread
-error is Godot's crash handler sending NOTIFICATION_CRASH to the tree from that thread: under gdb,
-which takes the fault first, it never prints. The game's one worker-thread task (the streamer's
-`_parse_cell`) reads a file and parses JSON, touches no node, and is not running then. The
-deprecated `instance_reset_physics_interpolation` is compiled only into Terrain3D's 4.4-targeted
-builds and lands on Godot's compatibility binding: one warning, harmless, and not the crash.
+empty project (a camera, a light, the node) crashes it too. Under gdb all four `llvmpipe`
+rasterizer threads stop at one address in the driver's compiled shader, on an indexed load
+(`vmovd 0x0(%r13,%rax,4)`) out of range. The thread error is Godot's crash handler sending
+NOTIFICATION_CRASH to the tree from that thread: under gdb, which takes the fault first, it never
+prints. Nothing of ours touches the tree from a thread: the game's one worker-thread task (the
+streamer's `_parse_cell`) reads a file and parses JSON, no node processes on a sub-thread group,
+and nothing of ours listens to Terrain3D's signals. The deprecated
+`instance_reset_physics_interpolation` is compiled only into Terrain3D's 4.4-targeted builds and
+lands on Godot's compatibility binding: one warning, harmless, and not the crash.
+
+When it crashes is the clipmap and the view, not the ring count alone. Alone, at 2 m spacing with
+the regions, 60 frames each: Terrain3D's default 7 rings of 48, and 7, 8 and 9 rings of 32 (the
+game's), all drew; 9 of 48 crashed. At 1 m spacing, 7 of 48 crashed on the first frame, with the
+regions and without. In the game, 9 rings crash as the world is built; the painted-look stream
+found 7 ran, and here 7 drew the real terrain (Cinderlea, the Builders' towers) through forty
+seconds of the New Game flow and then crashed the same way. So fewer rings buy short captures,
+not safety.
 
 **No newer Terrain3D to move to.** `git ls-remote` of the upstream repository: the newest tag is
 `v1.0.2-stable`; its `1.0` branch has one commit since, to the installation docs; `main` is
@@ -2534,7 +2543,9 @@ release and no official binaries. Nothing to verify against, so nothing was chan
   Compatibility renderer's llvmpipe draws Terrain3D, as every flow here always has).
   `-- --terrain=terrain3d` tries Terrain3D anyway; `-- --terrain=fallback` asks for the coarse
   ground anywhere (`--fallback-terrain` still works), read from the user arguments and the
-  engine's own, so the editor's Main Run Args carry it too. On Forward+ over lavapipe the New Game
+  engine's own, so the editor's Main Run Args carry it too. `-- --terrain-lods=N` (or
+  `WICKMERE_TERRAIN_LODS=N`), 1 to 10, sets Terrain3D's clipmap rings for tools, nine when nobody
+  asks; asking also tries Terrain3D on llvmpipe, for short Forward+ captures of the real terrain. On Forward+ over lavapipe the New Game
   flow now passes (75 checks, none failed, no errors logged), and so does it with
   `--terrain=fallback` (74).
 * The coarse ground, unless asked for, is said where it cannot be missed (`GroundNotice`): across

@@ -29,7 +29,8 @@ world itself all ask it before going in:
   same notice and a way back to the title.
 * **fallback** — the country is there but Terrain3D cannot draw it: no library for this machine
   (see LICENSES.md), Mesa's software Vulkan driver under Forward+ or Mobile (Terrain3D 1.0.2
-  crashes it on its first frame, inside the driver's rasterizer threads), no regions in
+  crashes it inside the driver's rasterizer threads, at nine clipmap rings as the world is built
+  and at seven after a while), no regions in
   `game/terrain_data` (the command named is `./run.sh terrain` when the full-resolution maps are
   here, `./run.sh world` when they are not), regions that load as nothing, or
   `-- --terrain=fallback`. `FallbackTerrain` draws the ground. Unless the player asked for it, it
@@ -37,7 +38,8 @@ world itself all ask it before going in:
   full terrain, on a card across the top of the view once the region's name has gone, and on a
   "Coarse ground" plate in the top left corner for as long as the HUD is up. A toast used to say
   it once, and a player on Windows took the coarse ground for the game's look.
-  `-- --terrain=terrain3d` tries Terrain3D even on the driver it crashes.
+  `-- --terrain=terrain3d` tries Terrain3D even on the driver it crashes, and so does asking for a
+  number of clipmap rings: `-- --terrain-lods=N` (or `WICKMERE_TERRAIN_LODS=N`), 1 to 10, default 9.
 * **ready** — Terrain3D and its regions.
 
 `FallbackTerrain` is 256 chunks of 512 m sharing one flat 64 x 64 grid with a skirt, lifted in the
