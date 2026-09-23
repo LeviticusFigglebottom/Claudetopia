@@ -171,7 +171,9 @@ def on_land(atlas: dict, x: float, z: float) -> bool:
     coast = atlas.get("coast", {})
     if point_in_polygon(x, z, coast.get("polygon", [])):
         return True
-    return any(point_in_polygon(x, z, isl) for isl in coast.get("islands", []))
+    if any(point_in_polygon(x, z, isl) for isl in coast.get("islands", [])):
+        return True
+    return any(point_in_polygon(x, z, s["polygon"]) for s in coast.get("shelves", []))
 
 
 def lake_at(atlas: dict, x: float, z: float):
@@ -255,6 +257,11 @@ def check(atlas: dict, pack_dir: str, schema: dict | None = None) -> tuple:
     polygon_ok(coast["polygon"], "coast.polygon")
     for k, isl in enumerate(coast.get("islands", [])):
         polygon_ok(isl, "coast.islands[%d]" % k)
+    for k, shelf in enumerate(coast.get("shelves", [])):
+        polygon_ok(shelf["polygon"], "coast.shelves[%d]" % k)
+        if not any(point_in_polygon(x, z, coast["polygon"]) for x, z in shelf["polygon"]):
+            warnings.append("coast.shelves[%d]: no corner of it is on the mainland, so the sea runs "
+                            "between it and the land behind it: draw it back under the coast" % k)
 
     for k, r in enumerate(atlas.get("ranges", [])):
         where = "ranges[%d] (%s)" % (k, r["id"])
@@ -352,6 +359,23 @@ def check(atlas: dict, pack_dir: str, schema: dict | None = None) -> tuple:
     for p in places:
         if str(p.get("kind", "")) in SETTLEMENT_KINDS and p["id"] not in roaded:
             warnings.append("%s (%s) has no road" % (p["id"], p.get("kind")))
+
+    seen_pads: set = set()
+    for k, pad in enumerate(atlas.get("pads", [])):
+        where = "pads[%d] (%s)" % (k, pad["place"])
+        if pad["place"] not in things:
+            errors.append("%s: no place or POI %s in the content packs" % (where, pad["place"]))
+            continue
+        if pad["place"] in seen_pads:
+            errors.append("%s: the place's pad is given twice" % where)
+        seen_pads.add(pad["place"])
+        pos = things[pad["place"]].get("position") or [0, 0]
+        x, z = float(pos[0]), float(pos[1])
+        lake = lake_at(atlas, x, z)
+        water = float(lake["level_m"]) if lake is not None else 0.0
+        if pad["level_m"] < water + 1.0:
+            errors.append("%s: a pad at %.1f m is within a metre of the water there (%.1f m): "
+                          "whatever stands on it is awash" % (where, pad["level_m"], water))
 
     start = atlas.get("start")
     if start:

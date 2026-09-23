@@ -134,8 +134,8 @@ func test_water_levels() -> void:
 		return
 	assert_true(provider.is_water(0.0, -700.0), "the middle of the Mere should be water")
 	assert_near(provider.water_level_at(0.0, -700.0), 8.0, 0.6)
-	assert_false(provider.is_water(900.0, 2350.0), "Merrowby should be dry")
-	assert_eq(provider.water_level_at(900.0, 2350.0), TerrainProvider.NO_WATER)
+	assert_false(provider.is_water(250.0, 1330.0), "Merrowby should be dry")
+	assert_eq(provider.water_level_at(250.0, 1330.0), TerrainProvider.NO_WATER)
 	assert_gt(provider.water_depth_at(0.0, -700.0), 2.0)
 
 
@@ -325,8 +325,8 @@ func test_streamer_builds_multimeshes_from_a_cell() -> void:
 func test_provider_normals_and_slopes() -> void:
 	if _skip():
 		return
-	var flat := provider.get_normal(900.0, 2350.0)     # a settlement pad is flat by construction
+	var flat := provider.get_normal(250.0, 1330.0)     # a settlement pad is flat by construction
 	assert_gt(flat.y, 0.9, "a flattened pad should have an upward normal, got %s" % str(flat))
 	assert_near(flat.length(), 1.0, 0.01)
-	var slope := provider.get_slope(900.0, 2350.0)
+	var slope := provider.get_slope(250.0, 1330.0)
 	assert_true(slope < 0.4, "the pad slope is %.2f rad" % slope)

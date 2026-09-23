@@ -253,6 +253,7 @@ const WHAT_STANDS := {
 	"core:poi/chalk_pit": "nobody: chalk-diggers",
 	"core:poi/eel_stews": "nobody: none",
 	"core:poi/hanging_falls": "nobody: none",
+	"core:poi/ness_market": "nobody: fishers selling the catch",
 }
 
 var host: Node3D

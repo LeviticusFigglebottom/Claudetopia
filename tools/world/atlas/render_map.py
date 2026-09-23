@@ -19,6 +19,7 @@ import argparse
 import math
 import os
 import sys
+import zlib
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -52,8 +53,10 @@ FOREST = {
 }
 ROAD = {
     "highway": ((126, 58, 34), 4.2), "road": ((140, 84, 46), 3.0), "lane": ((150, 104, 64), 2.2),
-    "track": ((150, 116, 80), 1.6), "causeway": ((90, 84, 80), 5.0),
+    "track": ((150, 116, 80), 1.6), "causeway": ((90, 84, 80), 5.0), "stair": ((84, 70, 62), 2.0),
 }
+# drawn in this order, so the greater roads lie over the lesser where they meet
+ROAD_ORDER = ["track", "stair", "lane", "road", "highway", "causeway"]
 INK = (40, 32, 26)
 PAPER = (236, 226, 204)
 REGION_NAME = {
@@ -217,7 +220,7 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
     for k, p in enumerate(doc["provinces"]):
         col = np.array(BIOME[p["biome"]], np.float32)
         # a province is a little lighter or darker than its neighbours of the same biome
-        col = col * (0.94 + 0.12 * ((hash(p["id"]) % 7) / 6.0))
+        col = col * (0.94 + 0.12 * ((zlib.crc32(p["id"].encode()) % 7) / 6.0))
         base[idx == k] = col
     base = ndimage.gaussian_filter(base, sigma=(3, 3, 0))
     H = atlas.heights
@@ -244,10 +247,16 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
     lake = atlas.lake_id >= 0
     img[lake] = np.array(LAKE, np.float32)
     if built_water is not None:
-        # the built water where the build put it: open water below the sea, the rest lakes and rivers
-        img[built_water & (H < 0.0)] = np.array(SEA, np.float32)
-        img[built_water & (H >= 0.0)] = np.array(LAKE, np.float32)
-        img[~built_water & lake] = img[~built_water & lake] * 0.5 + np.array((200, 60, 60), np.float32) * 0.5
+        # the water where the build put it: the sea off the coast, lakes and rivers inland. A lake's
+        # bed may go below the sea's level, so which water is which comes from the atlas, not the depth.
+        dry_lake = ~built_water & lake
+        img[dry_lake] = base[dry_lake] * (0.55 + 0.75 * shade[dry_lake][:, None])
+        img[built_water & sea] = np.array(SEA, np.float32)
+        img[built_water & hush] = np.array(HUSH, np.float32)
+        img[built_water & ~sea] = np.array(LAKE, np.float32)
+        if coverage:
+            # where the atlas draws a lake and the build left the ground dry: its shore band
+            img[dry_lake] = img[dry_lake] * 0.5 + np.array((200, 60, 60), np.float32) * 0.5
     img = np.clip(img, 0, 255).astype(np.uint8)
     im = Image.fromarray(img, "RGB").resize((size, size), Image.BICUBIC)
 
@@ -268,7 +277,12 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
 
     # shores
     edge = ndimage.binary_dilation(atlas.land) & ~atlas.land
-    lake_edge = ndimage.binary_dilation(lake) & ~lake
+    if built_water is not None:
+        # a lake's shore where the build put its water, not quite where the atlas drew the line
+        body = built_water & lake
+        lake_edge = ndimage.binary_dilation(body) & ~built_water
+    else:
+        lake_edge = ndimage.binary_dilation(lake) & ~lake
     e = Image.fromarray(((edge | lake_edge) * 255).astype(np.uint8), "L").resize((size, size), Image.NEAREST)
     im.paste((52, 70, 84), mask=e.filter(ImageFilter.MaxFilter(3)))
     d = ImageDraw.Draw(im, "RGBA")
@@ -300,11 +314,24 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
             d.line([ch.px(p[0], p[1]) for p in v["path"]], fill=(30, 30, 34), width=4)
 
     # roads
-    for road, pts in sorted(atlas.road_paths(), key=lambda rp: ["track", "lane", "road", "highway", "causeway"].index(rp[0].get("kind", "road"))):
+    for road, pts in sorted(atlas.road_paths(), key=lambda rp: ROAD_ORDER.index(rp[0].get("kind", "road"))):
         col, w = ROAD[road.get("kind", "road")]
         xy = [ch.px(x, z) for x, z in pts]
         w = max(1, int(round(w * size / 2400)))
-        if road.get("kind") == "track":
+        if road.get("kind") == "stair":
+            # a line with its steps across it
+            d.line(xy, fill=col, width=w)
+            tick = 2.0 + 2.5 * size / 2400
+            for (x0, y0), (x1, y1) in zip(xy, xy[1:]):
+                L = math.hypot(x1 - x0, y1 - y0)
+                if L < 1e-6:
+                    continue
+                nx, ny = -(y1 - y0) / L * tick, (x1 - x0) / L * tick
+                for s in range(0, int(L / 5) + 1):
+                    a = s * 5 / L
+                    cx, cy = x0 + (x1 - x0) * a, y0 + (y1 - y0) * a
+                    d.line([cx - nx, cy - ny, cx + nx, cy + ny], fill=col, width=max(1, w // 2))
+        elif road.get("kind") == "track":
             for (x0, y0), (x1, y1) in zip(xy, xy[1:]):
                 L = math.hypot(x1 - x0, y1 - y0)
                 n = max(1, int(L / 7))
@@ -514,9 +541,12 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
     Y += int(size / 70)
     d.text((X, Y), "Roads", font=f_head, fill=INK)
     Y += int(size / 70)
-    for kind in ("highway", "road", "lane", "track", "causeway"):
+    for kind in ("highway", "road", "lane", "track", "causeway", "stair"):
         col, w = ROAD[kind]
         d.line([X, Y + 9, X + 28, Y + 9], fill=col, width=max(1, int(w)))
+        if kind == "stair":
+            for tx in range(X + 2, X + 28, 5):
+                d.line([tx, Y + 4, tx, Y + 14], fill=col, width=1)
         d.text((X + 36, Y), kind, font=f_text, fill=INK)
         Y += int(size / 95)
     Y += 10

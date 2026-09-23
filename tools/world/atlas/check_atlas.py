@@ -3,6 +3,7 @@
 
     python3 tools/world/atlas/check_atlas.py                 # tools/world/atlas/atlas.json
     python3 tools/world/atlas/check_atlas.py my_atlas.json   # any other
+    python3 tools/world/atlas/check_atlas.py my_atlas.json --pack other/game/content/packs/core
 
 Prints every error and warning and exits 1 when there is an error. An error is something the
 world builder cannot make a world from, or would make a world the game's own tests refuse; a
@@ -23,14 +24,19 @@ PACK = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "ga
 
 
 def main(argv=None) -> int:
-    argv = sys.argv[1:] if argv is None else argv
+    argv = list(sys.argv[1:] if argv is None else argv)
+    pack = PACK
+    if "--pack" in argv:
+        k = argv.index("--pack")
+        pack = argv[k + 1]
+        del argv[k:k + 2]
     path = argv[0] if argv else ATLAS.ATLAS_PATH
     try:
         doc = ATLAS.load(path)
     except (OSError, ValueError) as e:
         print("cannot read %s: %s" % (path, e))
         return 1
-    errors, warnings = ATLAS.check(doc, PACK)
+    errors, warnings = ATLAS.check(doc, pack)
     for w in warnings:
         print("warning: " + w)
     for e in errors:

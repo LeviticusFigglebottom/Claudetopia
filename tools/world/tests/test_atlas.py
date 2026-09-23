@@ -150,6 +150,25 @@ class AtlasCheck(unittest.TestCase):
         doc["lakes"][0]["islands"][0]["height_m"] = 6
         self.assertRefused(doc, "is under the lake's surface")
 
+    def test_an_authored_pad_stands_clear_of_the_water(self):
+        doc = _atlas()
+        doc["pads"] = [{"place": "core:poi/stones", "level_m": 0.6}]
+        self.assertRefused(doc, "within a metre of the water")
+        doc["pads"] = [{"place": "core:poi/stones", "level_m": 5.0, "radius_m": 30}]
+        self.assertEqual(self.errors_of(doc), [])
+        doc["pads"].append({"place": "core:poi/nowhere", "level_m": 5.0})
+        self.assertRefused(doc, "no place or POI core:poi/nowhere")
+
+    def test_a_shelf_off_the_coast_is_a_warning(self):
+        doc = _atlas()
+        doc["coast"]["shelves"] = [{"polygon": [[3200, 0], [3400, 0], [3400, 200], [3200, 200]], "height_m": 4}]
+        errors, warnings = ATLAS.check(doc, self.pack)
+        self.assertEqual(errors, [])
+        self.assertTrue(any("sea runs between it and the land" in w for w in warnings), warnings)
+        doc["coast"]["shelves"][0]["polygon"][0] = [2900, 0]
+        _errors, warnings = ATLAS.check(doc, self.pack)
+        self.assertFalse(any("sea runs between" in w for w in warnings), warnings)
+
     def test_a_settlement_without_a_road_is_a_warning(self):
         doc = _atlas()
         doc["roads"] = []

@@ -961,3 +961,28 @@ players skip them). A timed strip that fades after a minute whatever was done (i
 player who least needs it). Keeping the list in the settings (above).
 **Consequences.** A new game is taught again, which a player who knows the controls will see
 for the minute it takes to move, sprint, roll and jump. The Hints setting turns the strip off.
+
+## 2026-09-23 · Wickmere is drawn, not seeded
+**Decision.** The world's geography is authored in `tools/world/atlas/atlas.json` (docs/ATLAS.md
+says why each part is where it is). That covers the provinces and their ground, the ranges,
+peaks, valleys, rivers, lakes, woods, coast and roads, and the start. The builder makes the land
+from it, and noise decides only how a slope is broken. The places and points of interest were
+moved to where the map puts them, and the country between them was filled until no walkable
+ground is far from somewhere worth walking to. This supersedes "The land is built last, and the
+places land on it" (2026-09-20).
+**Why.** The playtest was dropped at the edge of a map of hilly nothingness with the odd tower
+standing in it. It said the seed took the mystique away, and it was right. A generator that
+does not know where anything stands cannot put a village where a valley opens, a road through a
+coombe, or a bell-tower where the first view needs one. It also cannot say where the country is
+empty. The earlier decision was sound for a generated world: a landscape negotiated with its
+villages feels arranged. A drawn map is arranged on purpose, the way the maps of the games this
+one stands beside are.
+**Alternatives.** Constraining the generator by hand-placed stamps (the seed still owns most of
+the ground, and the empty country with it). Shrinking the world until the old content filled it
+(the brief was a sprawling world; with 297 locations and a density rule, 8192 m is full).
+**Consequences.** Every place and POI has a position the atlas agrees with (check_atlas.py
+refuses a place outside its region's provinces). tools/world/tests/test_atlas_map.py holds the
+density: no walkable point more than about 400 m from a location, and no road more than about
+250 m. A new location is placed on the map and not left to the builder. Tests that read the
+tracked world (test_world_data, test_the_start, test_pois, the cinematic paths, the sightlines)
+disagree with the moved content until the world is rebuilt from the atlas.

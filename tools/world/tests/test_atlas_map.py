@@ -43,9 +43,9 @@ ROAD_SLACK_M = 50.0
 RIVER_RISE_M = 110.0
 
 ## Where a point of interest may stand off dry land: a bridge or a causeway over its water, a wreck
-## in the shallows, a thing in the Mere (the Bell-Buoys), and the one the Hush has: the Stair itself.
+## in the shallows, a thing in the Mere (the Bell-Buoys), a deep place under it (the Sunken Barge).
 WET_KINDS = ("bridge", "wreck", "strange", "deep_place")
-OFF_THE_COAST = ("core:poi/hushline_stair",)
+OFF_THE_COAST = ()
 SETTLEMENTS = ("city", "town", "village", "hamlet", "fort", "lodge")
 
 
@@ -179,6 +179,27 @@ class TheRoads(_Map):
             key = tuple(sorted((r["from"], r["to"])))
             self.assertNotIn(key, seen, "two roads between %s and %s" % key)
             seen.add(key)
+
+
+class TheLanding(_Map):
+    """The Hushline Stair stands on the rock shelf under the Stair Head, above the sea, with the
+    stair down the bank to it and its pad pinned to the shelf."""
+
+    def test_the_stair_stands_on_the_shelf(self):
+        shelves = self.atlas["coast"].get("shelves", [])
+        self.assertTrue(shelves, "the coast has no landing")
+        x, z = self.where["core:poi/hushline_stair"]["position"][:2]
+        self.assertTrue(any(ATLAS.point_in_polygon(x, z, s["polygon"]) for s in shelves), "the Stair is off the shelf")
+        pads = {p["place"]: p for p in self.atlas.get("pads", [])}
+        self.assertIn("core:poi/hushline_stair", pads)
+        self.assertGreaterEqual(pads["core:poi/hushline_stair"]["level_m"], 2.0)
+
+    def test_a_stair_goes_down_to_it(self):
+        ids = {r.get("id"): r for r in self.atlas.get("roads", [])}
+        stair = ids.get("core:road/stair_head_hushline_stair")
+        self.assertIsNotNone(stair, "the opening looks for this road by its id")
+        self.assertEqual(stair["kind"], "stair")
+        self.assertEqual({stair["from"], stair["to"]}, {"core:poi/stair_head", "core:poi/hushline_stair"})
 
 
 class TheStart(_Map):
