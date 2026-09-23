@@ -105,15 +105,25 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt) -> list:
 ## valley's width when the atlas does not give one, in river widths
 VALLEY_GRADE = 0.22
 VALLEY_WIDTHS = 12.0
+## Past half the valley's width, land still standing over the valley side is a gorge the river
+## has cut, and its wall climbs on at this grade (50 degrees) until it meets the land. Faded back
+## to the land over the valley's last fifth instead, a river held level through high ground ran
+## in a slot: the Brindle Beck through the Skerrow dales' southern ridge, 95 m wide, its walls
+## falling 55 m in one 9.4 m step.
+GORGE_GRADE = 1.2
+## how far past the valley a gorge wall is followed: 480 m of climb, more than any land in the
+## atlas stands over a river's valley side
+GORGE_REACH_M = 400.0
 
 
 def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list) -> np.ndarray:
     """Open a valley along every river so its channel is not a slot in the hills.
 
     From each bank the ground may stand no higher than the water plus a metre and a climb of
-    VALLEY_GRADE, out to half the valley's width, beyond which the land is left as it was: a
-    river through high ground runs in a valley it has cut, steep-sided where the valley is
-    narrower than the hill is high. `valley_m` 0 leaves the land to the channel's own banks.
+    VALLEY_GRADE, out to half the valley's width. Past that, land under the valley side is left
+    as it was, and land over it is a gorge the river has cut through high ground: the wall
+    climbs on from the valley's edge at GORGE_GRADE until it meets the land. `valley_m` 0 leaves
+    the land to the channel's own banks.
     """
     n = grid.n
     for r in rivers:
@@ -130,17 +140,22 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list) -> np.ndarray:
             continue
         # only a window round the river is worth the distance transform
         ii, jj = np.nonzero(mask)
-        pad = int(reach / grid.spacing) + 4
+        pad = int((reach + GORGE_REACH_M) / grid.spacing) + 4
         i0, i1 = max(int(ii.min()) - pad, 0), min(int(ii.max()) + pad + 1, n)
         j0, j1 = max(int(jj.min()) - pad, 0), min(int(jj.max()) + pad + 1, n)
         sub = mask[i0:i1, j0:j1]
         dist, (ni, nj) = ndimage.distance_transform_edt(~sub, return_indices=True)
         d = (dist * grid.spacing).astype(np.float32)
+        del dist
         s = surf[i0:i1, j0:j1][ni, nj]
-        side = s + 1.0 + VALLEY_GRADE * np.maximum(d - half_w, 0.0)
-        w = 1.0 - smoothstep(reach * 0.8, reach, d)
+        del ni, nj
+        rim = VALLEY_GRADE * max(reach - half_w, 0.0)
+        climb = np.where(d <= reach, VALLEY_GRADE * np.maximum(d - half_w, 0.0),
+                         rim + GORGE_GRADE * (d - reach))
+        side = s + 1.0 + climb
+        del climb, s
         Hs = H[i0:i1, j0:j1]
-        H[i0:i1, j0:j1] = lerp(Hs, np.minimum(Hs, side), w)
+        H[i0:i1, j0:j1] = np.where(d <= reach + GORGE_REACH_M, np.minimum(Hs, side), Hs)
     return H
 
 

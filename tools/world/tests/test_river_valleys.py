@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""A river held level through high ground runs in a gorge, not in a slot.
+
+    python3 -m pytest tools/world/tests/test_river_valleys.py
+
+`hydro.carve_river_valleys` holds the land beside a river under its valley side, out to half the
+valley's width. It used to fade back to the untouched land over the last fifth of that width, and
+where a river is held level through a ridge the fade was a wall. On the final build of the drawn
+atlas the Brindle Beck, the Rudd Beck and the Rib Beck ran through the Skerrow dales' southern
+ridge in slots 90 to 110 m wide, and the Brindle Beck's walls fell 55 m in one 9.4 m step. Past
+the valley, a gorge wall now climbs at GORGE_GRADE until it meets the land.
+"""
+from __future__ import annotations
+
+import os
+import sys
+import unittest
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))
+
+from worldgen import hydro as HY  # noqa: E402
+from worldgen import paths  # noqa: E402
+from worldgen.grid import Grid  # noqa: E402
+
+PLATEAU_M = 120.0
+WATER_M = 60.0
+WIDTH_M = 9.0
+## the river runs down a column of texel centres, so a texel's distance from it is exact
+RIVER_X = 1.0
+
+
+def _river(valley_m=None) -> HY.River:
+    """A straight river down the middle of the window, held at WATER_M through the plateau."""
+    pts = paths.resample_polyline(np.array([[RIVER_X, -900.0], [RIVER_X, 900.0]]), 20.0)
+    k = pts.shape[0]
+    return HY.River(id="test:river/held", points=pts, width=np.full(k, WIDTH_M, np.float32),
+                    surface=np.full(k, WATER_M, np.float32), valley_m=valley_m)
+
+
+class GorgeTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.grid = Grid(2048.0, 1024)                      # 2 m texels, as a full build
+        n = cls.grid.n
+        x = cls.grid.x0 + (np.arange(n) + 0.5) * cls.grid.spacing
+        cls.dist = np.abs(np.broadcast_to(x[None, :] - RIVER_X, (n, n)))   # metres from the river
+        land = np.full((n, n), PLATEAU_M, dtype=np.float32)
+        # a hollow east of the river that lies under the valley side: a gorge leaves it be
+        cls.hollow = (x[None, :] > 130.0) & (x[None, :] < 170.0) & np.ones((n, 1), bool)
+        land[cls.hollow] = 50.0
+        cls.land = land
+        cls.carved = HY.carve_river_valleys(cls.grid, land.copy(), [_river()])
+        cls.reach = HY.VALLEY_WIDTHS * WIDTH_M * 0.5
+        # the rows away from the river's ends, where the valley is a straight cut
+        cls.rows = slice(n // 2 - 300, n // 2 + 300)
+
+    def test_no_side_is_steeper_than_a_gorge_wall(self):
+        h = self.carved[self.rows].astype(np.float64)
+        gz, gx = np.gradient(h, self.grid.spacing)
+        steep = np.hypot(gx, gz)
+        near = self.dist[self.rows] < 120.0
+        self.assertLess(float(steep[near].max()), HY.GORGE_GRADE * 1.1,
+                        "the valley's side is a wall %.1f steep" % steep[near].max())
+
+    def test_the_valley_floor_climbs_from_the_banks(self):
+        row = self.carved[self.grid.n // 2]
+        d = self.dist[self.grid.n // 2]
+        for want_d in (10.0, 30.0, 50.0):
+            j = int(np.argmin(np.abs(d - want_d) + (np.arange(d.size) < self.grid.n // 2) * 1e9))
+            want = WATER_M + 1.0 + HY.VALLEY_GRADE * (d[j] - WIDTH_M * 0.5)
+            self.assertAlmostEqual(float(row[j]), want, delta=0.05)
+
+    def test_the_gorge_wall_meets_the_land_and_stops(self):
+        # 71.9 m at the valley's edge, then 1.2 a metre: the plateau at 120 m is met 40 m on
+        top = WATER_M + 1.0 + HY.VALLEY_GRADE * (self.reach - WIDTH_M * 0.5)
+        meets = self.reach + (PLATEAU_M - top) / HY.GORGE_GRADE
+        west = self.dist[self.rows] > meets + 3.0
+        west &= (np.arange(self.grid.n)[None, :] < self.grid.n // 2)
+        self.assertTrue(np.array_equal(self.carved[self.rows][west], self.land[self.rows][west]))
+        cut = (self.dist[self.rows] > self.reach + 5.0) & (self.dist[self.rows] < meets - 5.0)
+        self.assertTrue(bool((self.carved[self.rows][cut] < PLATEAU_M - 1.0).all()),
+                        "the land between the valley and the plateau was not cut back")
+
+    def test_land_under_the_valley_side_is_left_as_it_was(self):
+        hollow = self.hollow[self.rows]
+        self.assertTrue(np.array_equal(self.carved[self.rows][hollow], self.land[self.rows][hollow]))
+
+    def test_a_river_with_no_valley_leaves_the_land_to_its_banks(self):
+        out = HY.carve_river_valleys(self.grid, self.land.copy(), [_river(valley_m=0.0)])
+        self.assertTrue(np.array_equal(out, self.land))
+
+
+if __name__ == "__main__":
+    unittest.main()
