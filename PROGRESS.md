@@ -1329,3 +1329,187 @@ work and not a wiring change. A child NPC is still a small adult until that is d
   — including stale doubled ones such as `heavy_heavy_albedo.png`.
 * **Two dependencies were undeclared**: `scikit-image` and `fast_simplification` (trimesh 5
   moved `simplify_quadric_decimation` out). Both are in `tools/requirements.txt` now.
+
+## Cloned, pressed Play, and stood on nothing
+
+A player cloned the repository, played it on their own machine, and reported that "when
+progressing in the game the player is transported to a blank empty plane with nothing visible
+in every direction". Every check here passed, because this machine has the built world and
+nothing else ever looked at a machine that did not.
+
+**Reproduced first, both ways.** With `game/world/generated` empty, New Game went through the
+Naming into a world with no manifest: the body stood at (-1900, 1, 3900), at y = 0 on nothing,
+fog in every direction, HUD up — and `./run.sh flow` printed `FLOW: PASS (new: 67 checks, 0
+failed)`. With the data but no Terrain3D regions (the state of a Mac, where the plugin never
+loads), trees, props and the Hushline's bench hung in the same fog over no ground; `FLOW: PASS`
+again. Nothing in the flow asked whether there was ground, and nothing in the game did either:
+`world.gd` logged a warning and carried on.
+
+Three things were true at once, and a clone met all three:
+
+* **The world was not in the repository.** `game/world/generated` and `game/terrain_data` were
+  ignored whole. `./run.sh` built them when the manifest was missing — Python, 8 GB, minutes —
+  but the Godot editor's Play button does not run `run.sh`, and a failed build left nothing.
+* **Terrain3D had binaries for two desktops of the three it names.** The vendored addon carried
+  Linux and Windows on x86_64; `terrain.gdextension` points macOS at two frameworks that were
+  not there.
+* **Every way in let a player through.** The title menu, boot's `--new-game` and `--load`, the
+  Naming and the capture runner all went into `world.tscn` without asking.
+
+### What changed
+
+**The title asks first (`WorldStatus`).** One module reads what is on disk and what the engine
+loaded and says `missing`, `fallback` or `ready`. With no world data the title sheet says so
+plainly — what is missing, `./run.sh world`, and what it needs — and New Game, Continue and Load
+stay shut; asked again at the door, because the load screen calls `load_slot` itself. Boot,
+the Naming and the capture runner ask the same question, and a world entered anyway (the
+editor's Play Scene) stands down with the same notice and a way back to the title rather than
+emitting `world_ready`. `test_world_status.gd` holds each branch: data missing, plugin missing,
+regions missing, forced, both present — against the verdict, the title screen and the world.
+
+**Terrain3D for macOS.** The official 1.0.2 archive came through the proxy by its release URL
+(the GitHub API and release pages are refused; the Asset Library's entry 3892 names the file).
+All four vendored binaries, `terrain.gdextension` and `plugin.cfg` are byte-identical to it,
+which is how it is known to be the same release; its two macOS frameworks are added unmodified,
+with the URL and every hash in `LICENSES.md`. Two things the release does not do: it has **no
+Linux arm64 or riscv64 binaries** at all, though the `.gdextension` names them, and its macOS
+frameworks are built for **macOS 15.0 and later** (their `LC_BUILD_VERSION`), universal, with
+only the arm64 slice signed.
+
+**The coarse ground (`FallbackTerrain`).** When Terrain3D cannot draw — no library, no regions,
+regions that load as nothing, or `-- --fallback-terrain` — the ground is drawn from the builder's
+8 m runtime height map: 256 chunks of 512 m sharing one flat grid with a skirt, lifted in the
+vertex shader, with four index LODs that Godot's mesh LOD picks; the region's own terrain
+textures in two arrays, tinted by the palette the way the builder's colour map is (the shader's
+mean tint per region is within a few percent of `color.rgba8`'s), with slope, height bands,
+snow, the lake bed and roads stamped at 2 m; and a HeightMapShape3D per chunk on the world and
+terrain layers. The mesh, the collision and `TerrainProvider.get_height` split every quad the
+same way — `test_fallback_terrain.gd` checks Jolt's split with a twisted quad and the world's
+collision against the provider at forty points — and each cell's scatter, placed on the 2 m
+ground, is set down on the 8 m one as it streams in. It builds in 1.8 s here when the machine
+is quiet (1.6 s of it reading back and scaling the terrain textures) and 7.8 s at a load of 25.
+Looked at against Terrain3D from the same cameras: the Hearthvale downs, the Merrowby street and
+the Brightwater island read as the same country; the spawn's ash spit and the hill behind it
+match; what is lost is fine relief — Cinderlea's terraces are rounded off, cliffs are softer,
+and the field patchwork and hedge lines are not there.
+
+**The runtime heights were read 3 m out.** `runtime/heights_1024.r32` is a 4 x 4 block mean,
+so its texel sits at `origin + 8 i + 3 m`; `TerrainProvider` read it at `origin + 8 i`. Against
+the 2 m ground that was more than a metre out on 37% of the land and more than three on 11%;
+read where it is, 11% and 1.15%. The regions, water and levels are point samples and were read
+correctly. The offset is in CONTRACTS §6 now.
+
+**The flow fails on a void, and `run.sh` now says so.** After the body stands, the probe checks
+that the ground is drawn (by Terrain3D or the fallback), that a ray finds ground under the feet,
+and that at least ten drawn things stand within 200 m. With no world on disk it fails at the
+title instead, with the title's words in its report. And `./run.sh flow` itself had never
+failed: it ran `flow_run new && flow_run load && flow_run continue` and printed `[flow] PASS` on
+the next line, and an `&&` list that fails part-way does not trip `set -e`, so a failed probe
+exited 0 under a PASS, with only a `[flow] FAIL` line further up to say otherwise. The verdict is
+taken from the list now. Any earlier "flow passes" that was read from the last line or the exit
+code was not a reading of the probe.
+
+**The fade waits for the country.** It lifted on `player_spawned`, and in all three flow runs
+**none** of the full-detail cells round the body was standing at that moment (the Hushline Stair
+is on the world's south edge, so its ring is six cells, not nine): the first frame a player saw
+was bare ground with the trees and the steps arriving over it. The fade now holds until the ring
+is in, for up to 20 s, with "Laying the country around you: n of 6" in the caption and the body's
+hands held; the probe fails a run whose fade had to give up. It held 8.0 s (New Game), 4.4 s
+(`--load`) and 12.8 s (Continue) here, at a load average of 20; on a machine to itself it will be
+a fraction of that. The world's own synchronous load (no frame at all for 17 to 19 s after the
+press, the probe's note) is unchanged: that is the terrain and the doors, not the cells.
+
+**Shipping the world so a clone plays without Python.** Every read of `res://world/generated`
+and `res://terrain_data` in `game/` was traced. The game reads the manifest, `pois.json`,
+`roads.json`, `rivers.json`, the four `runtime/` maps, the 1024 cells and the sixteen Terrain3D
+regions, and nothing else:
+
+| Set | Files | Raw | zlib-6 (git's) |
+|---|---|---|---|
+| manifest, pois, roads, rivers | 4 | 0.1 MB | 0.03 MB |
+| `runtime/` | 4 | 10.0 MB | 3.8 MB |
+| `cells/` | 1024 | 153.5 MB | 58.1 MB |
+| `terrain_data/` | 16 | 145.1 MB | 144.7 MB |
+| **total** | 1048 | **308.7 MB** | **206.6 MB** |
+
+A repository holding exactly that set packs to **206.7 MiB**. The full-resolution maps only
+the terrain import reads — `heights.r32`, `color.rgba8`, `control.u32`, `flow.rg8`, the three
+`texture_*.u8`, `water_mask.u8`, `region_mask.u8` — are 304 MB and stay out. The Terrain3D regions
+are already compressed: every region file is `RSCC`, the format `ResourceSaver`'s
+`FLAG_COMPRESS` writes — zstd, but in 4 KB blocks — so a region's 13.3 MB comes to about
+9.1 MB where whole-file zlib would give 7.6 and xz 5.8. There is no flag in
+`import_terrain.gd` to change that: it hands the saving to Terrain3D's `save_directory`, which
+chooses the format itself. Terrain3D's 16-bit height option would save about 2 MB a region at a
+worst error of 0.125 m here (0.25 m above 512 m); not taken. Cells could be stored gzipped
+(58 MB instead of 154 checked out; git stores them compressed either way): reading one costs the
+worker thread 2.3 ms more for a median cell and 8.3 ms for the largest, against a JSON parse of
+10.5 and 21.5 ms, measured at a load average of 20, and `_parse_cell` runs on the worker pool,
+so none of it is frame time. Not done: it is the builder's file to write, and the builder is
+another stream's this round. `.gitignore` now names
+exactly the runtime set (checked against placeholders of every file the builder writes, and an
+unknown new one, which stays out); `run.sh` imports a never-imported project before running it,
+and `ensure_world` checks the manifest and the regions, imports the regions alone when the
+full-resolution maps are there, and otherwise builds; README's "Run it" is rewritten for a
+repository that carries its world. **The world data itself is not committed on this branch**:
+another stream is rebuilding it this round.
+
+**Proved on a clean clone.** A clone of this branch in a scratch directory, never opened and never
+imported. With no world on disk, `./run.sh flow` imported the project (5060 files, a 519 MB import
+cache) and failed at the title, whose sheet said what was missing, the command and what it needs,
+with New Game, Continue and Load shut — and the sheet, seen there for the first time, overflowed
+1280 x 720, so it was tightened. With only the runtime set copied in (`git status` in the clone
+then listed exactly those 1048 files, and nothing else the builder writes), the same command passed
+all three runs — 72, 28 and 31 checks, none failed, no errors logged — without building anything,
+the fade holding 8.2, 12.0 and 11.1 s for the near cells. Then, as near as this Linux machine
+can come to a Mac without the plugin, `terrain.gdextension` was taken out of the clone: the
+`Terrain3D` class did not exist, the title showed its one small line about the coarse ground, the
+world drew `FallbackTerrain` (built in 5.5 s at a load average of 32), and the flow passed all
+three runs again — the body standing on the heightfield chunk `Ground_4_15` at 0.00 m, thirty
+drawn things within 200 m, the notice on arrival.
+
+### Found and not fixed
+
+* **`tools_gd/check_scripts.gd` does not run on 4.7.2**: an internal VM error at its line 20,
+  after which it never quits (the `SceneTree` waits for ever). Use the test runner.
+* **The water sheet samples its maps 4 m out.** `painted_water.gdshader` maps a world point to
+  `(xz - origin) / size`, which puts runtime texel k at `origin + 8 k + 4`: the mask and levels
+  are point samples at `origin + 8 k`, the heights at `+ 3`. Four metres of shoreline.
+* **Whether the water sheet is drawn at the sea inlets.** Its discard test is
+  `texture(mask_tex, uv).r < 0.5` on a mask whose water texels are the byte 1, which normalises
+  to 1/255; yet the Mere's surface looks like water from its shore. I have not settled which it
+  is — Cinderlea's water is near-black and so is its ground — and the test that would is one
+  capture with `use_mask` off beside one with it on.
+* **`run.sh flow` keeps only its last run in a redirected log.** `flow_run` tees each probe's
+  output to `/dev/stderr`, and when stderr is a file, `tee` reopens it truncated, so
+  `./run.sh flow > log 2>&1` ends with only the Continue run in `log`. The per-run JSON reports
+  in the output directory are complete; read those.
+* **The headless teardown message came seventeen times, not sixteen** (`Parameter "material" is
+  null`, Known issues above), in the first full run with the two new test files, which stand up
+  three more worlds with people in them. Probably one more NPC body freed; not traced.
+* **After this merges, a worktree with the world symlinked in shows the two symlinks as
+  untracked** (`game/world/generated`, `game/terrain_data`), because `.gitignore` can no longer
+  ignore those paths whole and still track files inside them. Add files by name.
+
+### Next, in order
+
+1. **Commit the built world**, once the rebuilt one is merged into the main checkout. From the
+   top of that checkout, with the world built there (not symlinked):
+   `git add game/world/generated/world_manifest.json game/world/generated/pois.json
+   game/world/generated/roads.json game/world/generated/rivers.json game/world/generated/runtime
+   game/world/generated/cells game/terrain_data` (plus `game/world/terrain_assets.tres` if the
+   import rewrote it). `.gitignore` keeps everything else out; `git add --dry-run` of those paths
+   was checked against placeholders of every file the builder writes. Accept it when `git diff
+   --cached --stat` says 1048 files, about 309 MB, and a fresh clone of the result passes
+   `./run.sh flow` without Python (the test in this section).
+2. **Play it on a Mac.** Nothing here can run macOS. On macOS 15 or later the title must show no
+   "coarse" line and `./run.sh flow` must pass on Terrain3D; on macOS 14 or earlier, the title's
+   small line must name macOS 15 and the flow must pass on the coarse ground. If the frameworks are
+   refused (quarantine, signing), the Console log says so and the game still plays, coarse.
+3. **Linux on arm64** is the same test as an old Mac, and Terrain3D has no binary for it: the
+   fix there is upstream, or building Terrain3D 1.0.2 for arm64 ourselves.
+4. **Settle the water sheet** (see above): one capture of the Mere and one of the Hushline's
+   inlet with `use_mask` on and off. Then move its samples onto the texels they belong to.
+5. **The coarse ground's weak places**: Cinderlea's terraces, cliffs and the field patchwork do
+   not survive 8 m. A 2 m runtime copy of the heights would be 64 MB; a small runtime field map
+   from the builder would bring the hedges back. Both are the builder's files, not this stream's.
+6. **`check_scripts.gd`** wants mending for 4.7.2 or deleting.
