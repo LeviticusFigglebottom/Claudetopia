@@ -226,6 +226,50 @@ func test_nobody_is_stood_inside_anything() -> void:
 	assert_gt(looked, 10, "the people's places put their markers down")
 
 
+## Everyone stands on their own marker at every hour they work, not on the ring round the place's
+## middle that a person without one is given: a marker the dressing names and the registry cannot
+## find fails quietly, and on an island, a causeway or a dig that ring is water, lake bed or
+## colossus.
+func test_everyone_stands_on_their_marker_at_every_hour_they_work() -> void:
+	if provider == null:
+		return
+	var dressed: Dictionary = {}
+	var stood := 0
+	for id in POI_PEOPLE:
+		var place := str(POI_PEOPLE[id])
+		if not dressed.has(place):
+			dressed[place] = _dress(place)
+		var d: PoiDressing = dressed[place]
+		if d == null:
+			continue
+		for e in ContentDB.get_or_empty(str(id)).get("schedule", []):
+			var entry: Dictionary = e
+			if str(entry.get("place", "")) != place or Schedules.is_indoors(entry):
+				continue
+			var day := -1
+			for candidate in 7:
+				if day < 0 and Schedules.applies_on(entry.get("days", "all"), Schedules.weekday_of(candidate)):
+					day = candidate
+			assert_true(day >= 0, "%s works '%s' on no day at all" % [id, entry.get("spot", "")])
+			if day < 0:
+				continue
+			WorldClock.set_time(float(entry.get("hour", 0)) + 0.25, day)
+			registry.simulate_all("clear")
+			registry.despawn(str(id))
+			registry.loaded_cells[registry.cell_of(str(id))] = true
+			var body := registry.spawn(str(id)) as Node3D
+			var marker := d.find_child(str(entry.get("spot", "")), true, false) as Node3D
+			assert_true(body != null and marker != null, "%s is stood up at '%s'" % [id, entry.get("spot", "")])
+			if body == null or marker == null:
+				continue
+			var flat := Vector2(body.global_position.x - marker.global_position.x, body.global_position.z - marker.global_position.z)
+			assert_true(flat.length() < 0.5, "%s at %.2f stands %.1f m from '%s'" % [id, float(entry.get("hour", 0)) + 0.25,
+					flat.length(), entry.get("spot", "")])
+			stood += 1
+			registry.despawn(str(id))
+	assert_gt(stood, 12, "every working hour of every one of them was stood")
+
+
 func test_the_charcoal_camp_posts_its_work() -> void:
 	if provider == null:
 		return
