@@ -54,7 +54,7 @@ on this side of a closing range's crest.
 | | |
 |---|---|
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
-| open water on land | the Mere 5.0 km², six small waters 0.13 km², fourteen rivers |
+| open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
 | locations | **297**: 57 places and 240 points of interest (60 places counting the three edge places) |
 | density | **6.3 locations a walkable km²** |
@@ -341,9 +341,10 @@ plans moved with their places. The table is in §12.
 There are 26 new places: hamlets, lodges, a fort and a camp, each with the one person who lives
 there, written with a schedule, a dialogue and a habit of their own. There are 191 new points of
 interest: 53 ruins, 39 camps, 29 standing stones, 23 towers, 18 bridges, 13 shrines, 6
-waterfalls, 6 giant bones and 4 wrecks. With the older ones that makes 22 Hearthstones. Each has a name in its
-culture's language, a feature no other location shares, a story, and one line of the quest or
-story it could anchor, which is in the tables below. Hooks are hooks: no quest is written.
+waterfalls, 6 giant bones and 4 wrecks. With the older ones that makes 22 Hearthstones. Each
+has a name in its culture's language, a feature no other location shares, a story, and one line
+of the quest or story it could anchor, which is in the tables below. Hooks are hooks: no quest
+is written.
 
 Every kind is one the POI dressing kit already builds, and the unique features are worded so
 that its variants pick the right dressing: a "mill wheel" gets the mill, "stilts" the stilt
@@ -378,6 +379,10 @@ would still like the kit to build (with how they are faked today) are in §10.
   shelf at 4 m (radius 26). The Stair is one traverse at about 77° to the fall line, turning
   only at the rim and at the bank's foot. On a 1024 heights build it is nowhere steeper than
   about 0.6. Three switchbacks were tried first; their corners sat mid-bank and ran 1.6 there.
+  Drawn, the shelf's seaward edge is a smooth arc, and the builder breaks it up. Spurs and bites
+  take the edge up to 7 m in and out, and blocks fallen from the face lie in the water at its
+  foot. A notch is cut where the Oroth stair leaves the shelf (`coast.shelves[].notches`, one at
+  (44, 3902), on the line from the Stair Head through the Stair's pad).
 * **The Stair Knoll** (a 110 m dome under the camp) is what lets the first view see over the
   heath. The heath's own relief is kept low (18 m) for the same reason.
 * **A lake's water stands about 36 m inside its polygon** (24 to 56 m on a 1024 build), because
