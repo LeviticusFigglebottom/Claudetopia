@@ -344,6 +344,15 @@ class TheLanding(unittest.TestCase):
                 if end in self.pads:
                     self.assertAlmostEqual(float(level), float(self.pads[end]["level_m"]), delta=0.3,
                                            msg="%s arrives at %s at %.2f m" % (rid, end, level))
+            # and the ground it was graded into is still under it: nothing laid after the roads
+            # (the shelf's broken edge once) cuts a hole in it. At 8 m a texel on a bank graded a
+            # half is up to 1.5 m off the road's own line; the hole was 6.5 m.
+            ii = np.clip(np.rint((pts[:, 1] - self.grid.z0) / self.grid.spacing).astype(int), 0, self.grid.n - 1)
+            jj = np.clip(np.rint((pts[:, 0] - self.grid.x0) / self.grid.spacing).astype(int), 0, self.grid.n - 1)
+            off = np.abs(self.H[ii, jj].astype(np.float64) - e)
+            k = int(np.argmax(off))
+            self.assertLess(float(off[k]), 2.5, "%s's ground at (%.0f, %.0f) is %.2f m off its step"
+                            % (rid, pts[k, 0], pts[k, 1], off[k]))
 
     def test_every_authored_pad_is_flat_and_dry_at_its_level(self):
         if not self.pads:
@@ -380,38 +389,70 @@ class TheLanding(unittest.TestCase):
 
 
 class ForestsGrow(unittest.TestCase):
-    """A wood the atlas draws is planted, and the ground beside it is only the biome's own."""
+    """A small full build (256, cells and all) of the atlas with a test wood drawn on it: the wood is
+    planted and the ground beside it is only the biome's own; and nothing that fights stands by
+    the roads out of the start."""
+
+    # an oakwood in the open downs between Merrowby and Tamwick, and an equal square beside it
+    WOOD = [[1300.0, 2900.0], [1700.0, 2900.0], [1700.0, 3200.0], [1300.0, 3200.0]]
+    BESIDE = [[1800.0, 2900.0], [2200.0, 2900.0], [2200.0, 3200.0], [1800.0, 3200.0]]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.atlas = copy.deepcopy(ATLAS.load())
+        cls.atlas.setdefault("forests", []).append({"id": "test_wood", "polygon": cls.WOOD, "kind": "oakwood",
+                                                    "density": 1.0})
+        cls.tmp = tempfile.mkdtemp(prefix="wickmere_woods_")
+        path = os.path.join(cls.tmp, "atlas.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(cls.atlas, f)
+        cls.out = os.path.join(cls.tmp, "world")
+        proc = subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"), "--size", "256",
+                               "--atlas", path, "--out", cls.out], capture_output=True, text=True, timeout=1500)
+        if proc.returncode != 0:
+            raise AssertionError(proc.stdout[-2000:] + proc.stderr[-2000:])
+        cls.cells = []
+        for name in os.listdir(os.path.join(cls.out, "cells")):
+            with open(os.path.join(cls.out, "cells", name), "r", encoding="utf-8") as f:
+                cls.cells.append(json.load(f))
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def oaks_in(self, poly):
+        x0, x1 = min(p[0] for p in poly), max(p[0] for p in poly)
+        z0, z1 = min(p[1] for p in poly), max(p[1] for p in poly)
+        count = 0
+        for cell in self.cells:
+            for asset, rows in cell["instances"].items():
+                if "/trees/" not in asset or "oak" not in asset or "giant" in asset:
+                    continue
+                count += sum(1 for r in rows if x0 <= r[0] <= x1 and z0 <= r[2] <= z1)
+        return count / ((x1 - x0) * (z1 - z0) / 1e4)
 
     def test_a_drawn_wood_is_planted(self):
-        atlas = copy.deepcopy(ATLAS.load())
-        # an oakwood in the open downs between Merrowby and Tamwick, and an equal square beside it
-        wood = [[1300.0, 2900.0], [1700.0, 2900.0], [1700.0, 3200.0], [1300.0, 3200.0]]
-        beside = [[1800.0, 2900.0], [2200.0, 2900.0], [2200.0, 3200.0], [1800.0, 3200.0]]
-        atlas.setdefault("forests", []).append({"id": "test_wood", "polygon": wood, "kind": "oakwood", "density": 1.0})
-        with tempfile.TemporaryDirectory() as tmp:
-            path = os.path.join(tmp, "atlas.json")
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(atlas, f)
-            out = os.path.join(tmp, "world")
-            proc = subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"), "--size", "256",
-                                   "--atlas", path, "--out", out], capture_output=True, text=True, timeout=1500)
-            self.assertEqual(proc.returncode, 0, proc.stdout[-2000:] + proc.stderr[-2000:])
-
-            def oaks_in(poly):
-                x0, x1 = min(p[0] for p in poly), max(p[0] for p in poly)
-                z0, z1 = min(p[1] for p in poly), max(p[1] for p in poly)
-                count = 0
-                cells = os.path.join(out, "cells")
-                for name in os.listdir(cells):
-                    with open(os.path.join(cells, name), "r", encoding="utf-8") as f:
-                        for asset, rows in json.load(f)["instances"].items():
-                            if "/trees/" not in asset or "oak" not in asset or "giant" in asset:
-                                continue
-                            count += sum(1 for r in rows if x0 <= r[0] <= x1 and z0 <= r[2] <= z1)
-                return count / ((x1 - x0) * (z1 - z0) / 1e4)
-            inside, outside = oaks_in(wood), oaks_in(beside)
+        inside, outside = self.oaks_in(self.WOOD), self.oaks_in(self.BESIDE)
         self.assertGreater(inside, 15.0, "the wood has %.1f oaks a hectare" % inside)
         self.assertGreater(inside, 4.0 * max(outside, 0.5), "a wood of %.1f a hectare beside %.1f" % (inside, outside))
+
+    def test_nothing_that_fights_stands_by_the_roads_out_of_the_start(self):
+        from worldgen import encounters as ENC
+        start = (self.atlas.get("start") or {}).get("place")
+        if not start:
+            self.skipTest("the atlas has no start")
+        with open(os.path.join(self.out, "roads.json"), "r", encoding="utf-8") as f:
+            roads = {r["id"]: r for r in json.load(f)}
+        ids = {str(s.get("id") or "core:road/%s_%s" % (s["from"].split("/")[-1], s["to"].split("/")[-1]))
+               for s in self.atlas.get("roads", []) if start in (s.get("from"), s.get("to"))}
+        ways = [np.asarray(roads[i]["points"])[:, :2] for i in ids if i in roads]
+        self.assertTrue(ways, "no road out of the start was built")
+        at = np.array([[sp["pos"][0], sp["pos"][2]] for cell in self.cells for sp in cell.get("spawns", [])
+                       if sp.get("kind") == "enemy"], dtype=np.float64)
+        self.assertGreater(at.shape[0], 100, "the build placed almost nothing to fight")
+        d = ENC.distance_to_paths(at[:, 0], at[:, 1], ways)
+        self.assertGreaterEqual(float(d.min()), ENC.START_WAY_CLEAR_M,
+                                "something stands %.1f m from a road out of the start" % d.min())
 
 
 if __name__ == "__main__":

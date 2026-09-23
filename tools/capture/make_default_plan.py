@@ -263,6 +263,16 @@ class Scatter:
                     return True
         return False
 
+    def crown_top_over(self, x: float, z: float) -> float:
+        """The top of the tallest crown whose footprint, with the margin, covers (x, z); -inf where
+        none does. A camera `CROWN_MARGIN_M` over it is out of every crown there."""
+        best = -math.inf
+        for _pts, trees in self._around(x, z):
+            for px, pz, _ground, reach, top in trees:
+                if math.hypot(px - x, pz - z) < reach + CROWN_MARGIN_M:
+                    best = max(best, top)
+        return best
+
     def lens_clear(self, x: float, z: float, want: float, cam_y=None) -> bool:
         """Nothing standing within `want` metres; for a raised camera, no crown round the lens.
 
@@ -466,7 +476,9 @@ def vista_camera(hh: Heights, scatter: Scatter, vx: float, vz: float, tx: float,
         return (px, cy, pz), (mx, cy - 9.0, mz), True
     hx, hz, hy = hh.high_point(vx, vz, radius)
     mx, mz = aim(hx, hz)
-    cy = hy + rise + 24.0
+    # over the tallest crown round it, whatever that takes: 36 m up was still inside a giant oak's
+    # crown on the Standing Moot's rise in the drawn Briarwold
+    cy = max(hy + rise + 24.0, scatter.crown_top_over(hx, hz) + CROWN_MARGIN_M + 0.5)
     print("[plan] %s: no clear vantage within %.0f m; camera raised above the trees" % (label, radius))
     return (hx, cy, hz), (mx, cy - 9.0, mz), False
 

@@ -78,6 +78,30 @@ class CrownModel(unittest.TestCase):
         self.assertEqual(hits, 0, "the tree is fifty metres along; the first twenty are clear")
 
 
+class RaisedOverTheCrowns(unittest.TestCase):
+    """A vista with no clear vantage stands over the tallest crown round it, not just 36 m up."""
+
+    def test_the_fallback_vista_is_over_a_giant_oak(self):
+        class Flat:
+            def high_points(self, x, z, radius, count=12, samples=220, apart_m=30.0):
+                return [(x, z, 100.0)]
+
+            def high_point(self, x, z, radius, samples=96):
+                return (x, z, 100.0)
+
+            def low_point(self, x, z, radius, samples=140):
+                return (x + 400.0, z, 90.0)
+
+            def at(self, x, z):
+                return 100.0
+
+        # a giant oak on the vantage itself, its crown 41 m over the ground
+        sc = _scatter_with([(0.0, 0.0, 100.0, 14.0, 141.0)])
+        cam, _look, found = plan.vista_camera(Flat(), sc, 0.0, 0.0, 400.0, 0.0, "test_vista")
+        self.assertFalse(found)
+        self.assertFalse(sc.in_crown(*cam), "the raised vista at %.1f m is in the crown" % cam[1])
+
+
 class ViewClear(unittest.TestCase):
     """A camera at eye height does not stand with its nose against a trunk."""
 
