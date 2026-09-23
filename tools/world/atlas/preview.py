@@ -45,6 +45,9 @@ WALKABLE_SLOPE = 0.70
 ## not country. Above the snowline (the mountains biome's, SCHEMA.md) is snowfield and crag, not
 ## country either.
 CLOSURES = {"skerrow_wall": "north", "thornmarch": "east"}
+## A closing range's crest itself, and this much of the country's side of it, is the rampart, not
+## country: a col in the Wall is still the Wall.
+CREST_M = 120.0
 SNOWLINE_M = 520.0
 ## The kinds of place that are the world's edge rather than a place in it.
 EDGE_KINDS = ("edge",)
@@ -432,11 +435,11 @@ class Atlas:
                 # (past its ends, the end's z: a closing range closes to the map's edge)
                 order = np.argsort(crest[:, 0])
                 zc = np.interp(g.xs[0], crest[order, 0], crest[order, 1])
-                edge |= g.zs < zc[None, :]
+                edge |= g.zs < zc[None, :] + CREST_M
             else:
                 order = np.argsort(crest[:, 1])
                 xc = np.interp(g.zs[:, 0], crest[order, 1], crest[order, 0])
-                edge |= g.xs > xc[:, None]
+                edge |= g.xs > xc[:, None] - CREST_M
         return edge
 
     # -- sampling --

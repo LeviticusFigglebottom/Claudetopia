@@ -205,7 +205,8 @@ class Labels:
         return False
 
 
-def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, world: str = "") -> dict:
+def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, world: str = "",
+           colours: int = 0) -> dict:
     ch = Chart(atlas, size)
     doc = atlas.doc
     survey = atlas.survey()
@@ -263,7 +264,7 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
     x, y = ch.px(-1200, 3960)
     d.text((x, y), "t h e   H u s h", font=f_sea, fill=(230, 230, 232), anchor="mm")
     x, y = ch.px(-4000, 400)
-    d.text((x, y), "Grey Sea", font=f_sea, fill=(220, 230, 236), anchor="mm")
+    d.text((x, y), "Grey\nSea", font=f_sea, fill=(220, 230, 236), anchor="mm", align="center")
 
     # shores
     edge = ndimage.binary_dilation(atlas.land) & ~atlas.land
@@ -389,6 +390,9 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
         x, y = ch.px(float(atlas.grid.xs[0, j]), float(atlas.grid.zs[i, 0]))
         text = " ".join(label)
         w, h = d.textbbox((0, 0), text, font=f_region)[2:]
+        # kept whole on the sheet: a name near the edge is pulled in rather than cut off
+        x = min(max(x, w / 2 + size * 0.02), size - w / 2 - size * 0.02)
+        y = min(max(y, h / 2 + size * 0.02), size - h / 2 - size * 0.02)
         d.text((x - w / 2, y - h / 2), text, font=f_region, fill=(60, 44, 30, 150), stroke_width=3,
                stroke_fill=(250, 240, 220, 150))
     for p in doc["provinces"]:
@@ -428,7 +432,7 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
     for k in range(4):
         d.rectangle([x0 + k * km / 2, y0, x0 + (k + 1) * km / 2, y0 + 8], fill=INK if k % 2 == 0 else PAPER, outline=INK)
     d.text((x0, y0 - 22), "0        1 km        2 km", font=f_poi, fill=PAPER, stroke_width=2, stroke_fill=INK)
-    cx, cy = size * 0.955, size * 0.05
+    cx, cy = size * 0.955, size * 0.1
     d.polygon([(cx, cy - 30), (cx - 9, cy), (cx, cy - 6), (cx + 9, cy)], fill=INK)
     d.text((cx, cy - 44), "N", font=f_town, fill=INK, anchor="mm", stroke_width=2, stroke_fill=PAPER)
 
@@ -519,7 +523,7 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
     d.regular_polygon((X + 12, Y + 9, 9), 5, fill=(230, 30, 30), outline=(255, 255, 255))
     d.text((X + 36, Y), "the start, facing the Choir; the pale wedge is the first view", font=f_text, fill=INK)
     Y += int(size / 70)
-    if survey["gaps"]:
+    if coverage and survey["gaps"]:
         d.text((X, Y), "Walkable ground over %d m from anything" % PV.REACH_M, font=f_head, fill=(150, 30, 30))
         Y += int(size / 70)
         for g in survey["gaps"][:8]:
@@ -527,6 +531,9 @@ def render(atlas: PV.Atlas, out: str, size: int = 2400, coverage: bool = False, 
                    font=f_text, fill=(120, 30, 30))
             Y += int(size / 105)
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    if colours:
+        # a paper map for the repository: a palette keeps it a few megabytes smaller
+        sheet = sheet.quantize(colors=colours, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG)
     sheet.save(out, optimize=True)
     return survey
 
@@ -553,9 +560,10 @@ def main(argv=None) -> int:
     ap.add_argument("--size", type=int, default=2400)
     ap.add_argument("--coverage", action="store_true", help="shade walkable ground far from any location")
     ap.add_argument("--world", default="", help="a built world's directory: draw its heights and water under the atlas")
+    ap.add_argument("--colours", type=int, default=0, help="save with a palette of this many colours (smaller file)")
     args = ap.parse_args(argv)
     atlas = PV.Atlas.load(args.atlas)
-    s = render(atlas, args.out, args.size, args.coverage, args.world)
+    s = render(atlas, args.out, args.size, args.coverage, args.world, args.colours)
     print("%s: %d locations (%d places, %d POIs), %.1f km2 walkable, %.1f per km2, furthest %.0f m, "
           "%d gaps over %d m, %.1f km of road" % (
               os.path.relpath(args.out), s["locations"], s["places"], s["pois"], s["walkable_km2"],
