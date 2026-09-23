@@ -1,5 +1,5 @@
 {
-  "note": "The Stair Head as a new game has it (DESIGN 5.1a, the start): the flag holds the Warden at her fire. first_view is the gameplay camera's resting pose at the hand-over (CinematicPlayer.resting_camera behind the right shoulder, facing the Choir); the others walk round the camp and look up the waystones. Take it on the shipped renderer: --rendering-driver vulkan --rendering-method forward_plus.",
+  "note": "The Stair Head as a new game has it (DESIGN 5.1a, the start): the flag holds the Warden at her fire. first_view is the gameplay camera's resting pose at the hand-over (CinematicPlayer.resting_camera behind the right shoulder, facing the Choir); the others walk round the camp, look up the waystones and down the Stair, and look back at the cliff from over the Hush. Take it on the shipped renderer: --rendering-driver vulkan --rendering-method forward_plus.",
   "flags": {"new_game": true},
   "shots": [
     {"label": "first_view", "pos": [-1921.8, 0, 3711.6], "height_above_ground": 2.3, "look_at": [-1919.9, 72.3, 3668.7],
@@ -8,6 +8,10 @@
      "time": 7.2, "weather": "core:weather/thin_sun", "fov": 65},
     {"label": "the_way_north", "pos": [-1920.0, 0, 3688.0], "height_above_ground": 1.7, "look_at": [-1895.0, 80.0, 3500.0],
      "time": 7.2, "weather": "core:weather/thin_sun", "fov": 65},
+    {"label": "down_the_stair", "pos": [-1922.0, 0, 3712.0], "height_above_ground": 1.8, "look_at": [-1905.0, 2.0, 3850.0],
+     "time": 7.2, "weather": "core:weather/thin_sun", "fov": 65},
+    {"label": "the_cliff_from_the_hush", "pos": [-1905.0, 0, 3990.0], "height_above_ground": 22, "look_at": [-1920.0, 45.0, 3740.0],
+     "time": 7.2, "weather": "core:weather/thin_sun", "fov": 60},
     {"label": "the_camp_from_above", "pos": [-1899.5, 0, 3747.0], "height_above_ground": 50, "look_at": [-1921.6, 78.0, 3700.0],
      "time": 7.2, "weather": "core:weather/thin_sun", "fov": 60}
   ]

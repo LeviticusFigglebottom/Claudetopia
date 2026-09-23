@@ -315,7 +315,14 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		var p: Vector2 = at.call(-6.2, 3.4 * float(s))
 		m.drum(stone, Transform3D(Basis.IDENTITY, k.on_ground(p.x, p.y)), 0.85, 4.4, 0.25, NAN, true, 0.55)
 	var head: Vector2 = at.call(-6.8, 0.0)
-	m.steps(stone, head, -ahead, k.on_ground(head.x, head.y).y, 5, -0.34, 0.95, 5.6, 1.1)
+	# the stair goes down the face towards the Stair's own place in the Hush, or straight back
+	var pad := WorldProbe.xz_of(ContentDB.get_or_empty("core:poi/hushline_stair"))
+	var down := -ahead
+	if pad != Vector2.ZERO:
+		var to_pad := Vector2(pad.x - k.origin.x, pad.y - k.origin.z) - head
+		if to_pad.length() > 20.0 and to_pad.normalized().dot(-ahead) > 0.7:
+			down = to_pad.normalized()
+	_hush_stair(d, stone, head, down)
 	var hs: Vector2 = at.call(-3.4, -2.6)
 	k.hearthstone(k.on_ground(hs.x, hs.y), yaw, d.poi_id, d.display_name)
 
@@ -329,12 +336,77 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 			continue
 		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.25)))
 	k.scatter(k.flora("grey_grass"), grass, false, false, false)
-	var ash: Vector2 = at.call(4.0, 13.0)
+	var ash: Vector2 = at.call(12.0, 18.0)
 	k.place(k.tree("dead_ash_tree"), k.on_ground(ash.x, ash.y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
 
 	_waymarks(d, timber)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
+
+
+## The Hushline Stair itself: from its head at the camp, straight down the cliff to the Hush and a
+## few steps on into the water, where the mist takes it. Every step follows the ground (its top no
+## more than 0.62 m below the last, and never less than 0.15 m above the face), and is filled down
+## into the face, so the stair reads as built into the cliff and never stands off it. A parapet runs
+## either side, and one sloped collider per flight of ten lets it be walked. It is built for the far
+## ring too, because it is what the opening's last shot climbs to reach the camp.
+static func _hush_stair(d: PoiDressing, stone: SurfaceTool, head: Vector2, down: Vector2) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var tread := 0.46
+	var width := 5.2
+	var side := Vector2(-down.y, down.x)
+	var yaw := atan2(down.x, down.y)
+	var basis := Basis(Vector3.UP, yaw)
+	var top := k.on_ground(head.x, head.y).y
+	var flight_from := Vector3(head.x, top, head.y)
+	var in_flight := 0
+	var under := 0
+	var last := head
+	for i in 320:
+		var p := head + down * tread * (float(i) + 0.5)
+		last = p
+		var g := k.ground(k.origin.x + p.x, k.origin.z + p.y) - k.origin.y
+		var surface_y := k.water_y(p.x, p.y)
+		if not is_nan(surface_y) and g < surface_y - 0.5:
+			under += 1
+			# a few steps on into the water, then the mist has it
+			if under > 6:
+				break
+		var rise := clampf(top - (g + 0.15), 0.0, 0.62)
+		top -= rise
+		var bottom := minf(g, top) - 1.0
+		var h := top - bottom
+		m.block(stone, Transform3D(basis, Vector3(p.x, top - h * 0.5, p.y)), Vector3(width, h, tread * 1.04))
+		for s in [-1.0, 1.0]:
+			var w := p + side * float(s) * (width * 0.5 + 0.25)
+			var wall_h := top + 0.9 - bottom
+			m.block(stone, Transform3D(basis, Vector3(w.x, bottom + wall_h * 0.5, w.y)), Vector3(0.5, wall_h, tread * 1.04))
+		in_flight += 1
+		if in_flight >= 10:
+			_flight_collider(k, flight_from, Vector3(p.x + down.x * tread * 0.5, top, p.y + down.y * tread * 0.5), yaw, width)
+			flight_from = Vector3(p.x + down.x * tread * 0.5, top, p.y + down.y * tread * 0.5)
+			in_flight = 0
+	if in_flight > 0:
+		var end := last + down * tread * 0.5
+		_flight_collider(k, flight_from, Vector3(end.x, top, end.y), yaw, width)
+	# the mist the stair goes down into, at its foot
+	for i in 3:
+		var at := last + down * float(i - 1) * 9.0
+		k.puffs(k.on_ground(at.x, at.y, 1.5), Vector3(8.0, 1.5, 6.0), 0.1, 26, Color(0.86, 0.86, 0.88, 0.24), 10.0, 12.0)
+
+
+## One flight of a stair as a single sloped box from `a` to `b` (its top face on the steps' tops).
+static func _flight_collider(k: PoiKit, a: Vector3, b: Vector3, yaw: float, width: float) -> void:
+	var along := b - a
+	var length := along.length()
+	if length < 0.2:
+		return
+	var flat := Vector2(along.x, along.z).length()
+	var pitch := atan2(a.y - b.y, flat)
+	var basis := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, pitch)
+	var mid := (a + b) * 0.5 - basis * Vector3(0.0, 0.25, 0.0)
+	k.collider(Vector3(width, 0.5, length), Transform3D(basis, mid))
 
 
 ## A lantern hung from an arm on a post, lit.
@@ -381,7 +453,7 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 		while s <= length:
 			var p := a + dir * s + side * (1.7 if n % 2 == 0 else -1.7)
 			var g := k.on_ground(p.x, p.y, -0.15)
-			stones.append(PoiKit.transform_at(g, k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.36),
+			stones.append(PoiKit.transform_at(g, k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.48, 0.55),
 					Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))))
 			if n % 3 == 1:
 				_lamp_post(k, m, timber, a + dir * s - side * (1.7 if n % 2 == 0 else -1.7), PoiKit.yaw_of(dir))
