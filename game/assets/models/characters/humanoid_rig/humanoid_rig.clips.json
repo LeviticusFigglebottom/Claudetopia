@@ -682,14 +682,14 @@
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.0186
+    "t": 0.021
    },
    {
     "name": "footstep_r",
-    "t": 0.3286
+    "t": 0.371
    }
   ],
-  "length": 0.62,
+  "length": 0.7,
   "loop": true,
   "speed": 5.0
  },
@@ -722,16 +722,31 @@
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.0405
+    "t": 0.0345
    },
    {
     "name": "footstep_r",
-    "t": 0.7155
+    "t": 0.6095
    }
   ],
-  "length": 1.35,
+  "length": 1.15,
   "loop": true,
-  "speed": 0.95
+  "speed": 1.5
+ },
+ "Sprint": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.018
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.318
+   }
+  ],
+  "length": 0.6,
+  "loop": true,
+  "speed": 7.8
  },
  "Stagger": {
   "events": [
@@ -777,14 +792,14 @@
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.0285
+    "t": 0.018
    },
    {
     "name": "footstep_r",
-    "t": 0.5035
+    "t": 0.318
    }
   ],
-  "length": 0.95,
+  "length": 0.6,
   "loop": true,
   "speed": 1.9
  },
@@ -792,14 +807,14 @@
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.0285
+    "t": 0.018
    },
    {
     "name": "footstep_r",
-    "t": 0.5035
+    "t": 0.318
    }
   ],
-  "length": 0.95,
+  "length": 0.6,
   "loop": true,
   "speed": 1.9
  },
@@ -839,16 +854,16 @@
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.03
+    "t": 0.0288
    },
    {
     "name": "footstep_r",
-    "t": 0.53
+    "t": 0.5088
    }
   ],
-  "length": 1.0,
+  "length": 0.96,
   "loop": true,
-  "speed": 1.55
+  "speed": 1.8
  },
  "Walk_Back": {
   "events": [

@@ -131,6 +131,11 @@ func test_the_start_stands_on_the_rim_above_the_mist() -> void:
 			lowest = minf(lowest, g)
 			highest = maxf(highest, g)
 	assert_true(highest - lowest < 3.5, "the ground where the Foundling stands is near level (%.1f m over 6 m)" % (highest - lowest))
+	# the spawn's own test of a landing (PlayerSpawn.dry_ground_near), so the start is the landing
+	# and that search is only ever a safety net under it
+	assert_true(PlayerSpawn._dry_at(provider, at.x, at.y), "the spawn reads the start as dry, walkable ground")
+	var landed := PlayerSpawn.dry_ground_near(provider, Vector3(at.x, 0.0, at.y))
+	assert_true(Vector2(landed.x - at.x, landed.z - at.y).length() < 0.5, "and leaves the Foundling where the story put them")
 
 
 # --- what is there ------------------------------------------------------------------------------

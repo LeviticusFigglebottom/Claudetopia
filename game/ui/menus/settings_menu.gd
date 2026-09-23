@@ -235,6 +235,7 @@ func _build_controls() -> void:
 	_option("controls", "camera_side", "Camera side", ["Left", "Right"])
 	_check("controls", "vibration", "Vibration")
 	_check("controls", "toggle_sprint", "Sprint is a toggle")
+	_check("controls", "sprint_tap_rolls", "A tap of Sprint rolls")
 	_grid = null
 	_compact = false
 	_content.add_child(UiKit.divider())
