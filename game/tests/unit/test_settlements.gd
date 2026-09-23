@@ -23,12 +23,21 @@ func _drop(s: Node) -> void:
 	s.queue_free()
 
 
+## The houses' own bodies: a notice post or a stall in the square is not a house.
 func _houses(s: Settlement) -> Array:
 	var out: Array = []
 	for child in s.get_children():
-		if child is StaticBody3D:
+		if child is StaticBody3D and child.has_meta("house"):
 			out.append(child)
 	return out
+
+
+## A straight road due east through the middle of the pad.
+func _east_road() -> Array:
+	var line: Array = []
+	for i in range(-12, 13):
+		line.append([CENTRE.x + float(i) * 9.0, CENTRE.z])
+	return line
 
 
 # --- every kind of place gets the right amount of town -------------------------------------------
@@ -155,11 +164,7 @@ func test_a_settlement_uses_its_own_regions_roof() -> void:
 # --- roads are the grain of a street --------------------------------------------------------------
 
 func test_a_road_through_a_place_lines_the_houses_up_along_it() -> void:
-	# a straight road due east through the middle of the pad
-	var line: Array = []
-	for i in range(-8, 9):
-		line.append([CENTRE.x + float(i) * 9.0, CENTRE.z])
-	var s := _raise("village", "core:region/hearthvale", [line])
+	var s := _raise("village", "core:region/hearthvale", [_east_road()])
 	var bodies := _houses(s)
 	assert_true(bodies.size() > 0, "a village on a road raised nothing")
 	var fronting := 0
@@ -180,7 +185,16 @@ func test_a_road_through_a_place_lines_the_houses_up_along_it() -> void:
 ## frame its own MeshInstance3D drawn once for the eye and about twice more for the sun. The
 ## fabric is merged now, and this is the ratchet that keeps it merged: a village of Merrowby's
 ## kind, with its board, its stations and its for-sale signs, raises at most this many meshes.
-const MESH_RATCHET := 31
+##
+## It was 31 before the streets. It is 65 now, and the fabric is still its eight surfaces: the rest
+## is one MultiMesh for each kind of thing a street has lying about it (a kind's two variants are
+## two), the market's stalls and their wares, the beasts (six kinds), the gardens' apple trees
+## (three variants, each its trunk and its leaf cards), the chimney smoke, the shop signs' emblems,
+## and the stations' props, whose three nodes are the forge's LOD bands and are drawn one at a
+## time. The small things (the crockery on a stall, a bucket) throw no shadow and are gone past
+## seventy metres. Measured against DESIGN section 11 on the streets plan's Merrowby shot, which
+## is in PROGRESS.md.
+const MESH_RATCHET := 65
 const MERROWBY := "core:place/merrowby"
 
 
@@ -204,24 +218,32 @@ func _direct(s: Node, type: String) -> Array[Node]:
 func test_a_village_of_merrowbys_kind_stays_under_the_mesh_ratchet() -> void:
 	var s := _raise("village", "core:region/hearthvale", [], [], MERROWBY)
 	var meshes := _meshes(s)
+	var names: Array[String] = []
+	for m in meshes:
+		names.append(str(m.name))
+	names.sort()
 	assert_true(meshes.size() <= MESH_RATCHET,
-			"Merrowby's fabric is %d meshes; the ratchet is %d" % [meshes.size(), MESH_RATCHET])
+			"Merrowby's fabric is %d meshes; the ratchet is %d: %s" % [meshes.size(), MESH_RATCHET, ", ".join(names)])
 	assert_true(_houses(s).size() >= 10, "a village with %d houses is not Merrowby" % _houses(s).size())
 	_drop(s)
 
 
-func test_the_fabric_is_four_meshes_however_many_houses() -> void:
+## The surfaces a settlement's fabric is drawn in, however many houses it has: its walls in the
+## region's own surface and in its stone, the roofs, the stone, the joinery, and the made ground.
+const SURFACES := ["Drystone", "Earth", "Joinery", "Paving", "Roofs", "Stone", "Walls", "WallsAlt"]
+
+
+func test_the_fabric_is_one_mesh_a_surface_however_many_houses() -> void:
 	var city := _raise("city", "core:region/brightwater", [], [], "core:place/test_city")
 	var hamlet := _raise("hamlet", "core:region/hearthvale", [], [], "core:place/test_small")
 	for s in [city, hamlet]:
 		var own: Array[String] = []
 		for m in _direct(s, "MeshInstance3D"):
-			own.append(m.name)
-		own.sort()
-		assert_eq(own, ["Joinery", "Roofs", "Stone", "Walls"] as Array[String],
-				"%s raised %s rather than one mesh per surface" % [s.name, own])
+			own.append(str(m.name))
+			assert_true(SURFACES.has(str(m.name)), "%s raised %s beside its surfaces" % [s.name, m.name])
+		assert_true(own.has("Walls") and own.has("Roofs") and own.has("Joinery"), "%s raised %s" % [s.name, own])
 	assert_true(_houses(city).size() > _houses(hamlet).size() * 3,
-			"a city of %d houses and a hamlet of %d cost the same four draws" % [_houses(city).size(), _houses(hamlet).size()])
+			"a city of %d houses and a hamlet of %d cost the same draws" % [_houses(city).size(), _houses(hamlet).size()])
 	_drop(city)
 	_drop(hamlet)
 
@@ -267,7 +289,7 @@ func test_props_are_one_multimesh_per_asset() -> void:
 	assert_true(seen.size() >= 6, "a Vale village with only %d kinds of prop" % seen.size())
 	assert_true(instances > seen.size(), "%d props in %d MultiMeshes: nothing was batched" % [instances, seen.size()])
 	assert_empty(s.find_children("*", "MeshInstance3D", false, false).filter(
-			func(n: Node) -> bool: return not (n.name in ["Walls", "Roofs", "Stone", "Joinery"])),
+			func(n: Node) -> bool: return not SURFACES.has(str(n.name))),
 			"a prop is still its own MeshInstance3D beside the merged fabric")
 	_drop(s)
 
@@ -296,8 +318,9 @@ func test_a_building_is_four_meshes_and_a_body_a_room() -> void:
 	for m in _direct(b, "MeshInstance3D"):
 		own.append(m.name)
 	own.sort()
-	assert_eq(own, ["Joinery", "Roof", "Stone", "Walls"] as Array[String],
-			"the inn raised %s rather than one mesh per surface" % [own])
+	# the four surfaces, and the jug the innkeeper hangs out over the street
+	assert_eq(own, ["Emblem", "Joinery", "Roof", "Stone", "Walls"] as Array[String],
+			"the inn raised %s rather than one mesh per surface and its sign" % [own])
 	var rooms := 0
 	for r in b.meta.get("rooms", []):
 		if int((r as Dictionary).get("storey", 0)) == 0:
@@ -343,3 +366,226 @@ func test_the_fabric_boxes_face_outward() -> void:
 			"the tint did not reach the vertices: %s" % tint)
 	_tree().root.remove_child(host)
 	host.queue_free()
+
+
+# --- a street, not a ring round a green ------------------------------------------------------------
+
+## Every house the fabric raises turns its door to its street: the road here is the line
+## z = CENTRE.z, so a house north of it faces south and one south of it faces north.
+func test_every_house_faces_its_street() -> void:
+	var s := _raise("village", "core:region/hearthvale", [_east_road()])
+	var fronting := 0
+	for h in s.street.houses:
+		var door: Vector2 = h["door"]
+		var facing: Vector2 = h["facing"]
+		var off := door.y - CENTRE.z
+		assert_true(absf(off) > StreetPlan.ROAD_HALF_M, "a front door in the road at %s" % door)
+		if absf(off) < 25.0:
+			fronting += 1
+			assert_true(facing.y * off < 0.0, "a house on the street with its back to it at %s" % door)
+	assert_gt(fronting, 6, "only %d houses front the road through the village" % fronting)
+	_drop(s)
+
+
+## The ground in front of a town house is paved and a cottage has a path to its door, so a street
+## is never a lawn with houses on it. Made ground lies on the ground, a few centimetres up.
+func test_a_town_paves_its_street_fronts_and_a_village_walks_on_earth() -> void:
+	var town := _raise("town", "core:region/hearthvale", [_east_road()], [], "core:place/test_paved")
+	var paving := town.get_node_or_null("Paving") as MeshInstance3D
+	assert_true(paving != null, "a town with no setts in front of its houses")
+	for v in paving.mesh.get_faces():
+		assert_true(v.y > 0.0 and v.y < 0.2, "paving %.2f m off the ground" % v.y)
+	var village := _raise("village", "core:region/hearthvale", [_east_road()], [], "core:place/test_earth")
+	assert_true(village.get_node_or_null("Paving") == null, "a village street paved like a town's")
+	assert_true(village.get_node_or_null("Earth") != null, "no path to any cottage door")
+	_drop(town)
+	_drop(village)
+
+
+## A garden is fenced, and fenced the way its country fences: hurdles and hedges in the Vale,
+## drystone walls on the hills, rails in the wood.
+func test_gardens_are_fenced_the_way_their_region_fences() -> void:
+	var vale := _raise("village", "core:region/hearthvale", [_east_road()], [], "core:place/test_fenced_vale")
+	var hills := _raise("village", "core:region/skerrow", [_east_road()], [], "core:place/test_fenced_hills")
+	var wood := _raise("village", "core:region/briarwold", [_east_road()], [], "core:place/test_fenced_wood")
+	var vale_runs := 0
+	for k in vale.fences_laid:
+		assert_true(k in Settlement.FENCE_BY_CULTURE["vale"], "a Vale garden fenced with %s" % k)
+		vale_runs += int(vale.fences_laid[k])
+	assert_gt(vale_runs, 10, "a village of gardens with %d runs of fence" % vale_runs)
+	assert_eq(hills.fences_laid.keys(), ["drystone"], "the clans fence in %s" % [hills.fences_laid.keys()])
+	assert_eq(wood.fences_laid.keys(), ["rail"], "the Woodfolk fence in %s" % [wood.fences_laid.keys()])
+	_drop(vale)
+	_drop(hills)
+	_drop(wood)
+
+
+## Windows on every side of a house, because a house is lived in all the way round: the front's
+## bays, the back's, and the gables. The fabric used to glaze the street side and leave the rest.
+func test_a_house_has_windows_on_every_side() -> void:
+	var fabric := FabricMesh.new()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var lights := RandomNumberGenerator.new()
+	lights.seed = 8
+	var spec := {"w": 8.0, "d": 6.0, "storeys": 2, "culture": "vale", "style": HouseKit.STYLES["vale"][0],
+			"roof": Building.ROOF_BY_CULTURE["vale"]}
+	HouseKit.build(fabric, Transform3D.IDENTITY, spec, rng, lights)
+	var host := Node3D.new()
+	_tree().root.add_child(host)
+	var mi := fabric.commit(host, "joinery", FabricMesh.joinery_material(), "Joinery")
+	var arrays: Array = mi.mesh.surface_get_arrays(0)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var colours: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	var panes := {"front": 0, "back": 0, "gable": 0}
+	var i := 0
+	while i + 2 < verts.size():
+		if colours[i].a < 0.995:
+			var mid := (verts[i] + verts[i + 1] + verts[i + 2]) / 3.0
+			if absf(mid.x) > 3.8:
+				panes["gable"] += 1
+			elif mid.z < -2.8:
+				panes["front"] += 1
+			elif mid.z > 2.8:
+				panes["back"] += 1
+		i += 3
+	for side in panes:
+		assert_gt(panes[side], 0, "a house with no window in its %s" % side)
+	host.free()
+
+
+func test_a_timber_framed_house_shows_its_frame() -> void:
+	var framed := _frame_boxes({"frame": true})
+	var plain := _frame_boxes({"frame": false})
+	assert_gt(framed, plain + 20, "a timber-framed house with %d more members than a cob one" % (framed - plain))
+
+
+func _frame_boxes(style_patch: Dictionary) -> int:
+	var fabric := FabricMesh.new()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var lights := RandomNumberGenerator.new()
+	var style: Dictionary = (HouseKit.STYLES["vale"][0] as Dictionary).duplicate()
+	style.merge(style_patch, true)
+	HouseKit.build(fabric, Transform3D.IDENTITY, {"w": 8.0, "d": 6.0, "storeys": 2, "culture": "vale",
+			"style": style, "roof": Building.ROOF_BY_CULTURE["vale"]}, rng, lights)
+	return fabric.triangles("joinery") / 12
+
+
+## Each region builds in its own walls: plaster in the Vale, tarred boards in the fen, laid logs
+## in the wood, drystone on the hills.
+func test_each_region_builds_in_its_own_walls() -> void:
+	var cases := {"core:region/hearthvale": 0, "core:region/sedgemire": 1,
+			"core:region/briarwold": 1, "core:region/skerrow": 2}
+	var n := 0
+	for region in cases:
+		n += 1
+		var s := _raise("village", str(region), [_east_road()], [], "core:place/test_walls_%d" % n)
+		var walls := s.get_node("Walls") as MeshInstance3D
+		assert_eq(int((walls.material_override as ShaderMaterial).get_shader_parameter("pattern")), int(cases[region]),
+				"%s builds in the wrong wall" % region)
+		_drop(s)
+
+
+## A shop hangs the thing it sells out over the street; a house with an inside and a trade hangs
+## its own name as well, and a house with no trade hangs nothing.
+func test_a_shop_hangs_its_sign_over_the_street() -> void:
+	var s := _raise("town", "core:region/hearthvale", [_east_road()], [], "core:place/test_shops")
+	assert_false(s.find_children("Sign_*", "MultiMeshInstance3D", false, false).is_empty(), "a town with no shop signs")
+	_drop(s)
+	var inn := Building.raise_for("core:interior/tolls_lip", CENTRE, 0.0)
+	_tree().root.add_child(inn)
+	var name_board := inn.get_node_or_null("SignName") as Label3D
+	assert_true(name_board != null, "the inn has no name over its door")
+	assert_eq(name_board.text, "The Toll's Lip")
+	var cottage := Building.raise_for("core:interior/hesta_bell_house", CENTRE + Vector3(40.0, 0.0, 0.0), 0.0)
+	_tree().root.add_child(cottage)
+	assert_true(cottage.get_node_or_null("SignName") == null, "a house with no trade hung out a sign")
+	for b in [inn, cottage]:
+		_tree().root.remove_child(b)
+		b.queue_free()
+
+
+## A house with an inside is put on its street by the size of its own ground floor: the footprint
+## is in its door's frame, the door on its front, the house behind it.
+func test_a_real_house_knows_its_own_footprint() -> void:
+	var foot := Building.footprint_of("core:interior/tolls_lip")
+	assert_true(foot.size.x > 11.6 and foot.size.y > 12.0, "the inn is %s" % foot.size)
+	assert_true(foot.position.x < 0.0 and foot.end.x > 0.0, "the inn's door is not in its front wall")
+	assert_true(foot.position.y >= 0.0, "part of the inn stands in front of its own door")
+	assert_eq(Building.footprint_of("core:interior/undercroft"), Rect2(), "a deep place has no house to put on a street")
+
+
+func test_the_chimneys_smoke() -> void:
+	var s := _raise("village", "core:region/hearthvale", [_east_road()], [], "core:place/test_smoke")
+	var smoke := s.get_node_or_null("ChimneySmoke") as MultiMeshInstance3D
+	assert_true(smoke != null, "not one chimney in the village is drawing")
+	assert_gt(smoke.multimesh.instance_count, 0)
+	assert_eq(smoke.multimesh.instance_count % ChimneySmoke.PUFFS, 0, "a chimney with a puff missing")
+	assert_eq(smoke.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "smoke casting a shadow")
+	assert_true((smoke.material_override as ShaderMaterial).shader == ChimneySmoke.SHADER)
+	var ruin := _raise("ruin_village", "core:region/cinderlea", [_east_road()], [], "core:place/test_cold")
+	assert_true(ruin.get_node_or_null("ChimneySmoke") == null, "smoke over a ruin nobody lives in")
+	_drop(s)
+	_drop(ruin)
+
+
+## The people whose days send them to the market's stalls, the well and the green stand there:
+## each stallholder at a stall of their own, and the rest at the well and on the green.
+func test_people_stand_where_their_day_sends_them() -> void:
+	var s := _raise("town", "core:region/hearthvale", [_east_road()], [], MERROWBY)
+	var marks := {}
+	for m in s.get_children():
+		if m is Marker3D and m.is_in_group(NpcRegistry.SPOT_GROUP):
+			marks[str(m.name)] = m
+			assert_eq(str(m.get_meta("place", "")), MERROWBY, "%s does not say whose place it is in" % m.name)
+	for want in ["market_stall", "market_stall_flour", "market_stall_bread", "market_stall_ale", "well", "green"]:
+		assert_true(marks.has(want), "nowhere to stand for %s: %s" % [want, marks.keys()])
+	var at: Array = []
+	for stall in ["market_stall", "market_stall_flour", "market_stall_bread", "market_stall_ale"]:
+		if not marks.has(stall):
+			continue
+		for other in at:
+			assert_true((marks[stall] as Node3D).position.distance_to(other) > 2.0, "two stallholders at one stall")
+		at.append((marks[stall] as Node3D).position)
+	if marks.has("market_stall_flour") and marks.has("well"):
+		assert_false(bool(marks["market_stall_flour"].get_meta("gather", true)), "a stall is one person's")
+		assert_true(bool(marks["well"].get_meta("gather", false)), "the well is everybody's")
+	_drop(s)
+
+
+func test_people_sent_to_one_spot_stand_round_it_not_in_one_another() -> void:
+	var m := Marker3D.new()
+	m.set_meta("gather", true)
+	var a := NpcRegistry.gather_offset("core:npc/one", m)
+	var b := NpcRegistry.gather_offset("core:npc/two", m)
+	assert_true(a.distance_to(b) > 0.2, "two people in one place at the well")
+	assert_true(a.length() >= 0.9 and a.length() <= 2.6, "somebody %.1f m from the well" % a.length())
+	assert_eq(NpcRegistry.gather_offset("core:npc/one", m), a, "and the same place each time")
+	m.set_meta("gather", false)
+	assert_eq(NpcRegistry.gather_offset("core:npc/one", m), Vector3.ZERO, "a stool is sat on, not stood round")
+	m.free()
+
+
+## The Vale paints a door for the trade behind it ("blue miller, red smith, green grower, yellow
+## brewer", its identity says): Mullard's Yellow Door is yellow, and a house of no trade is not.
+func test_a_vale_door_is_painted_for_its_trade() -> void:
+	var yellow: Color = HouseKit.VALE_DOOR_PAINT["brewer"]
+	var brewhouse := Building.raise_for("core:interior/corwen_brewhouse", CENTRE, 0.0)
+	_tree().root.add_child(brewhouse)
+	assert_true(_has_colour(brewhouse, yellow), "Mullard's Yellow Door is not yellow")
+	var bell_house := Building.raise_for("core:interior/hesta_bell_house", CENTRE + Vector3(40.0, 0.0, 0.0), 0.0)
+	_tree().root.add_child(bell_house)
+	for paint in HouseKit.VALE_DOOR_PAINT.values():
+		assert_false(_has_colour(bell_house, paint), "the bell-keeper's door is painted for a trade she does not keep")
+	for b in [brewhouse, bell_house]:
+		_tree().root.remove_child(b)
+		b.queue_free()
+
+
+func _has_colour(b: Node, c: Color) -> bool:
+	var joinery := b.get_node("Joinery") as MeshInstance3D
+	for col in joinery.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]:
+		if absf(col.r - c.r) < 0.01 and absf(col.g - c.g) < 0.01 and absf(col.b - c.b) < 0.01:
+			return true
+	return false

@@ -10,6 +10,10 @@ terrain_provider.gd       TerrainProvider: heights, normals, regions, water (see
 fallback_terrain.gd       FallbackTerrain: the ground from the runtime map when Terrain3D cannot
 fallback_terrain.gdshader   draw it (see below)
 world_streamer.gd         WorldStreamer: cell rings, MultiMesh scatter, POI scenes
+wayside.gd                Wayside: signposts, gates and drystone runs built, not scattered (below)
+fingerpost.gd             Fingerpost: a signpost whose arms name the places down its roads
+road_network.gd           RoadNetwork: roads.json, and where each way along a road leads
+exteriors/                Settlement, StreetPlan, HouseKit, Building, Livestock: the towns (below)
 water_surface.gd          WaterSurface: the Mere, the Grey Sea, marsh pools, river ribbons
 fly_camera.gd             FlyCamera: stand-in for the player; the capture and smoke runners' eye
 pois/                     WorldPois: what stands at the points of interest (see below)
@@ -130,6 +134,46 @@ nothing solid is (clear of the props a builder set out along the world's axes, a
 snow and stone), and two people at one place at one hour work at two markers. A camp whose sentence promises jobs gets a `JobBoard` (`PoiKit.job_board`).
 `tests/unit/test_poi_encounters.gd` pins what stands at every one of the forty-eight;
 `tests/unit/test_poi_people.gd` the people, their markers, and their save.
+
+## Settlements
+
+`bootstrap/doors.gd` (`WorldDoors`) stands the interiors' doors in the world and raises the rest of
+each town around them. A town is its streets (`exteriors/street_plan.gd`, `StreetPlan`): the roads
+that cross the flattened pad, split at the middle and merged where two leave on one line, with
+the frontage beyond the outer of the two where they part. A place a road only reaches still has
+its street go on through it, and a town on one road gets a cross street. The houses with an inside
+go on first, each on the frontage nearest where its door plan's bearing and ring wanted it, door
+on the street (`Building.footprint_of` is its ground floor in its door's frame); then the fabric
+fills both sides of every street from the middle out -- shoulder to shoulder in a town, a garden
+apart in a hamlet -- each plot an oriented box clear of every road, the open middle and every
+other plot, with its garden behind it. `tests/unit/test_street_plan.gd` pins the geometry.
+
+`exteriors/settlement.gd` (`Settlement`) builds on the plan: the houses by region and trade
+(`HouseKit`: framed plaster, cob in coloured washes, flint, render over stone, tarred boards on
+stilts, laid logs, drystone; windows on every side, porches, chimneys, a shop's emblem hung over
+the street), the gardens fenced the region's way (hurdles and hedges in the Vale, drystone on the
+hills, rails in the wood) with beds, sheds, woodpiles and washing in them, the made ground (setts
+on a town's carriageway, footways and square, a beaten path to a cottage door), the middle (a
+market square with its stalls, well or cross and lamps, or a green with its well, tree and
+benches), the ground behind the gardens (paddocks with gates, orchards, allotments, woodyards),
+the beasts (`Livestock`: hens, geese, sheep, a pig, each wandering its own ground while somebody
+is near), the smoke (`ChimneySmoke`: every puff of every chimney one MultiMesh moved on the GPU),
+and a marker for every outdoor spot this place's people's days name, so the stallholders stand at
+their stalls and the gossips at the well (`gather` markers are shared round, `NpcRegistry.gather_offset`).
+However many houses, a settlement is a handful of draws: one mesh a surface, one MultiMesh an
+asset. `tests/unit/test_settlements.gd`, `test_livestock.gd` and `test_settlement_work.gd`.
+
+## The wayside
+
+`Wayside.prepare` runs over each cell's instances before the streamer draws them. A signpost the
+build stood where roads meet is a `Fingerpost`: an arm down each road that leaves, turned along it,
+with the name of the place at the other end on both faces, read at runtime from `roads.json` and
+the places (`RoadNetwork.destinations`). A gate post has a five-barred gate hung from it along its
+hedge's line into the gap, with a post to shut against; some stand open. And Skerrow's drystone
+walls are walls: the build's asset lookup matched the wall *end* by prefix, so a third of every
+run was a 0.9 m end in a 2.4 m slot, and each piece was scaled at random in all three axes; an end
+with wall on both sides is drawn as wall, and every piece is stretched along its line to meet the
+next at a steady height. `tests/unit/test_wayside.gd`.
 
 ## WaterSurface
 

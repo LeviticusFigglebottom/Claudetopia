@@ -91,6 +91,29 @@ func quad(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, tint := C
 	tri(key, a, c, d, tint)
 
 
+## A log, a pole, a round: a prism of `sides` faces lying along the local X axis of `xf`, `length`
+## long and `radius` across, its sides in `tint` and its two ends in `ends` (the pale of a sawn
+## face, where a box's end would read as a brick).
+func prism(key: String, xf: Transform3D, radius: float, length: float, tint: Color, ends: Color, sides := 6) -> void:
+	var h := length * 0.5
+	var rim: Array[Vector2] = []
+	for k in range(sides + 1):
+		var a := TAU * float(k) / float(sides)
+		rim.append(Vector2(cos(a), sin(a)) * radius)
+	var head := xf * Vector3(h, 0.0, 0.0)
+	var foot := xf * Vector3(-h, 0.0, 0.0)
+	for k in range(sides):
+		var p0 := rim[k]
+		var p1 := rim[k + 1]
+		var a := xf * Vector3(-h, p0.x, p0.y)
+		var b := xf * Vector3(h, p0.x, p0.y)
+		var c := xf * Vector3(h, p1.x, p1.y)
+		var d := xf * Vector3(-h, p1.x, p1.y)
+		quad(key, a, b, c, d, tint)
+		tri(key, head, c, b, ends)
+		tri(key, foot, a, d, ends)
+
+
 func has(key: String) -> bool:
 	return _tools.has(key) and int(_triangles.get(key, 0)) > 0
 
@@ -127,6 +150,13 @@ static func joinery_material() -> ShaderMaterial:
 const JOINERY_SHADER := preload("res://assets/shaders/joinery.gdshader")
 ## A pane's vertex alpha is its lit strength, and one means timber, so a lit pane tops out here.
 const PANE_LIT_MAX := 0.98
+
+
+## A timber's colour a shade lighter or darker. `Color * float` scales the alpha too, and in the
+## joinery an alpha under one is not timber but a window pane: a hurdle tinted that way came out
+## as a row of dark glass that lit up after dark.
+static func shade(c: Color, k: float) -> Color:
+	return Color(clampf(c.r * k, 0.0, 1.0), clampf(c.g * k, 0.0, 1.0), clampf(c.b * k, 0.0, 1.0), c.a)
 
 
 ## Shown near, dropped far, and for the small stuff no shadow: a shutter's shadow is a line

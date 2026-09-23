@@ -254,6 +254,16 @@ GROUND_KIT = [
     ("milestone", "hearthvale", 2, None),
 ]
 
+# A village's stock (world/exteriors/livestock.gd): hens in the yards, geese on the green,
+# sheep in the paddock and a pig in its sty. The Vale's, for every region: a village in any of
+# them keeps the same beasts, and the palette would only move the hides a shade.
+PROPS_LIVESTOCK = [
+    ("hen", "hearthvale", 2, None),
+    ("goose", "hearthvale", 1, None),
+    ("sheep", "hearthvale", 2, None),
+    ("pig", "hearthvale", 1, None),
+]
+
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
 # rebuilds, differently -- everything after it. New work goes on the end.
@@ -261,7 +271,7 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
-          ("gen_ground_kit", GROUND_KIT)]
+          ("gen_ground_kit", GROUND_KIT), ("gen_props", PROPS_LIVESTOCK)]
 
 
 def build() -> list[dict]:

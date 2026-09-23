@@ -92,16 +92,21 @@ static func census_table(rows: Dictionary) -> String:
 	return "\n".join(out)
 
 
-## Hides each owner in turn and reads the frame counter back. Returns
-## {"total": n, "shadow_passes": n, "by_owner": {name: draws}, "residue": n}, where the residue
-## is what nothing here can hide: the sky, the terrain if it ignores `visible`, the UI.
+## Hides each owner in turn and reads the frame counters back. Returns
+## {"total": n, "shadow_passes": n, "by_owner": {name: draws}, "residue": n, "primitives": n,
+## "shadow_primitives": n, "primitives_by_owner": {name: n}}, where the residue is what nothing
+## here can hide: the sky, the terrain if it ignores `visible`, the UI. The primitives are the
+## other half of DESIGN section 11's budget, measured the same way.
 static func measure(world: Node) -> Dictionary:
 	var tree := Engine.get_main_loop() as SceneTree
-	var result := {"total": 0, "shadow_passes": 0, "by_owner": {}, "owner_nodes": {}, "residue": 0}
+	var result := {"total": 0, "shadow_passes": 0, "by_owner": {}, "owner_nodes": {}, "residue": 0,
+			"primitives": 0, "shadow_primitives": 0, "primitives_by_owner": {}}
 	if tree == null or world == null:
 		return result
 	var total := await _settled_draws(tree)
+	var total_prims := _primitives()
 	result["total"] = total
+	result["primitives"] = total_prims
 	var owners := _owners(world)
 	var accounted := 0
 	for name in owners:
@@ -113,10 +118,12 @@ static func measure(world: Node) -> Dictionary:
 			was.append((n as Node3D).visible)
 			(n as Node3D).visible = false
 		var without := await _settled_draws(tree)
+		var prims_without := _primitives()
 		for i in nodes.size():
 			(nodes[i] as Node3D).visible = was[i]
 		var cost := total - without
 		result["by_owner"][name] = cost
+		result["primitives_by_owner"][name] = total_prims - prims_without
 		result["owner_nodes"][name] = nodes.size()
 		accounted += cost
 	# the sun's shadow passes, by turning them off
@@ -124,6 +131,7 @@ static func measure(world: Node) -> Dictionary:
 	if sun != null and sun.shadow_enabled:
 		sun.shadow_enabled = false
 		var lit := await _settled_draws(tree)
+		result["shadow_primitives"] = total_prims - _primitives()
 		sun.shadow_enabled = true
 		result["shadow_passes"] = total - lit
 	result["residue"] = total - accounted
@@ -134,14 +142,18 @@ static func measure(world: Node) -> Dictionary:
 static func measure_table(m: Dictionary) -> String:
 	var out: Array[String] = ["measured by hiding each owner (includes its shadow passes):"]
 	var by: Dictionary = m.get("by_owner", {})
+	var prims: Dictionary = m.get("primitives_by_owner", {})
 	var counts: Dictionary = m.get("owner_nodes", {})
 	var names: Array = by.keys()
 	names.sort_custom(func(a: String, b: String) -> bool: return int(by[a]) > int(by[b]))
 	for name in names:
-		out.append("  %-56s %6d   (%d nodes hidden)" % [name, int(by[name]), int(counts.get(name, 0))])
+		out.append("  %-56s %6d  %6.2f M   (%d nodes hidden)" % [name, int(by[name]),
+				float(prims.get(name, 0)) / 1.0e6, int(counts.get(name, 0))])
 	out.append("  %-56s %6d" % ["residue (sky, terrain, water, UI, anything not listed)", int(m.get("residue", 0))])
-	out.append("  %-56s %6d" % ["total draw calls", int(m.get("total", 0))])
-	out.append("  %-56s %6d" % ["of which shadow passes (sun shadows off)", int(m.get("shadow_passes", 0))])
+	out.append("  %-56s %6d  %6.2f M" % ["total draw calls, primitives", int(m.get("total", 0)),
+			float(m.get("primitives", 0)) / 1.0e6])
+	out.append("  %-56s %6d  %6.2f M" % ["of which shadow passes (sun shadows off)", int(m.get("shadow_passes", 0)),
+			float(m.get("shadow_primitives", 0)) / 1.0e6])
 	return "\n".join(out)
 
 
@@ -184,6 +196,11 @@ static func _sun(world: Node) -> DirectionalLight3D:
 		if sun is DirectionalLight3D:
 			return sun
 	return null
+
+
+## The primitives of the frame `_settled_draws` last waited for.
+static func _primitives() -> int:
+	return int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
 
 
 static func _settled_draws(tree: SceneTree) -> int:

@@ -245,7 +245,9 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	node.set_meta("region", str(data.get("region", "")))
 	add_child(node)
 	_loaded[cell] = node
-	var instances: Dictionary = data.get("instances", {})
+	# the furniture of the roads and the field walls: signposts, gates and drystone runs are
+	# built rather than scattered (world/wayside.gd)
+	var instances: Dictionary = Wayside.prepare(data.get("instances", {}), node, ring <= full_ring)
 	for asset_path in instances:
 		var rows: Array = instances[asset_path]
 		if rows.is_empty():
@@ -351,10 +353,15 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 
 
 ## A scatter row is [x, y, z, yaw_deg, scale, tint_hex] in world metres (CONTRACTS §6);
-## MultiMesh instances are stored relative to their cell node so the transforms stay small.
+## MultiMesh instances are stored relative to their cell node so the transforms stay small. A row
+## `Wayside` has fitted into a run carries a seventh entry, [sx, sy, sz], a scale in the asset's
+## own axes that replaces the uniform one.
 static func instance_transform(row: Array, cell_origin: Vector3) -> Transform3D:
 	var pos := Vector3(float(row[0]), float(row[1]), float(row[2])) - cell_origin
 	var yaw := deg_to_rad(float(row[3])) if row.size() > 3 else 0.0
+	if row.size() > 6 and typeof(row[6]) == TYPE_ARRAY and (row[6] as Array).size() == 3:
+		var s: Array = row[6]
+		return Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(float(s[0]), float(s[1]), float(s[2]))), pos)
 	var scale := float(row[4]) if row.size() > 4 else 1.0
 	return Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(scale, scale, scale)), pos)
 

@@ -221,6 +221,12 @@ func _go_to_spot() -> void:
 
 func _spot_position() -> Vector3:
 	if not spot.is_empty() and is_inside_tree():
+		# the registry's own marker first: it knows whose place a marker is in, and where in a
+		# shared one this person stands
+		if NpcRegistry.instance != null:
+			var own := NpcRegistry.instance.spot_marker(npc_id)
+			if own != null and str(own.name) == spot:
+				return own.global_position + NpcRegistry.gather_offset(npc_id, own)
 		var marker := _find_marker(spot)
 		if marker != null:
 			return marker.global_position

@@ -480,7 +480,7 @@ func spawn_position(npc_id: String) -> Vector3:
 		return on_road
 	var marked := spot_marker(npc_id)
 	if marked != null:
-		return marked.global_position
+		return marked.global_position + gather_offset(npc_id, marked)
 	var base := WorldProbe.place_position(place_of(npc_id))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(npc_id)
@@ -512,6 +512,20 @@ func spot_marker(npc_id: String) -> Node3D:
 			continue
 		return node as Node3D
 	return null
+
+
+## Where in a shared spot one person stands. A settlement's well, green and inn door are marked
+## `gather`, because half a village is sent to each of them at some hour: they stand round it,
+## each in a place of their own that is the same every time, rather than all in one point. A
+## spot a dressing made for one person (the toll-keeper's stool) holds them exactly on it.
+static func gather_offset(npc_id: String, marker: Node3D) -> Vector3:
+	if marker == null or not bool(marker.get_meta("gather", false)):
+		return Vector3.ZERO
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("gather:" + npc_id)
+	var a := rng.randf() * TAU
+	var r := rng.randf_range(0.9, 2.6)
+	return Vector3(cos(a) * r, 0.0, sin(a) * r)
 
 
 func despawn(npc_id: String) -> void:
