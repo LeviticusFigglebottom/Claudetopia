@@ -259,6 +259,7 @@ func _graphics_row(c: Dictionary) -> void:
 			s.max_value = float(c["max"])
 			s.step = float(c["step"])
 			s.value = float(value)
+			s.editable = reason == ""
 			s.custom_minimum_size = Vector2(260, 20)
 			s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			var shown := UiKit.label(_format(s.value, str(c.get("suffix", ""))), "Small")
@@ -285,6 +286,7 @@ func _graphics_row(c: Dictionary) -> void:
 						note = Graphics.unsupported_reason(key, v)
 			var index := _index_of(values, value) if not values.is_empty() else int(value)
 			o.selected = clampi(index, 0, choices.size() - 1)
+			o.disabled = reason != ""
 			o.item_selected.connect(func(i: int) -> void:
 					_set_graphics(key, values[i] if i < values.size() else i))
 			control = o

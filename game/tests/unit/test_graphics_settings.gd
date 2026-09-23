@@ -242,8 +242,17 @@ func test_compatibility_greys_out_what_it_cannot_do_and_says_why() -> void:
 	var r := Graphics.RENDERER_COMPATIBILITY
 	for key in ["fxaa", "taa", "volumetric_fog", "ssil", "sdfgi"]:
 		assert_true(Graphics.unsupported_reason(key, null, r).contains("Forward+"), key)
-	for key in ["msaa", "ssao", "glow", "fog", "render_scale", "shadows", "lod_bias"]:
+	for key in ["msaa", "glow", "fog", "render_scale", "shadows", "lod_bias"]:
 		assert_eq(Graphics.unsupported_reason(key, null, r), "", "%s works on Compatibility" % key)
+	# Compatibility has an SSAO, but the world is lit without it there (see COMPATIBILITY_UNUSED)
+	for key in ["ssao", "ao_quality"]:
+		assert_ne(Graphics.unsupported_reason(key, null, r), "", "%s is greyed on Compatibility" % key)
+		assert_eq(Graphics.unsupported_reason(key, null, Graphics.RENDERER_FORWARD_PLUS), "")
+	assert_false(bool(Graphics.preset_values("high", r)["ssao"]), "High there asks for none")
+	assert_eq(Graphics.preset_values("high", r)["ao_quality"], Graphics.PRESETS["high"]["ao_quality"],
+			"and leaves the quality it would have had alone")
+	assert_eq(Graphics.matching_preset(Graphics.DEFAULTS, r), "high",
+			"a file that says High on Forward+ is still High on Compatibility")
 	assert_eq(Graphics.unsupported_reason("upscaler", 0, r), "", "bilinear scaling works everywhere")
 	assert_ne(Graphics.unsupported_reason("upscaler", 1, r), "", "FSR 1.0 does not on Compatibility")
 	assert_ne(Graphics.unsupported_reason("upscaler", 2, r), "", "nor FSR 2.2")
@@ -264,6 +273,8 @@ func test_a_forward_plus_only_knob_does_nothing_on_compatibility() -> void:
 	assert_false(_tree().root.use_taa, "no TAA asked of a renderer without it")
 	assert_eq(_tree().root.screen_space_aa, Viewport.SCREEN_SPACE_AA_DISABLED)
 	assert_false(_world_env.sdfgi_enabled, "no SDFGI on Compatibility")
+	Settings.set_value("graphics", "ssao", true)
+	assert_false(_world_env.ssao_enabled, "the world keeps the look it was lit with on Compatibility")
 
 
 func _stage_ready() -> void:

@@ -54,6 +54,12 @@ const HYSTERESIS := 1.5
 ## Floats a MultiMesh instance takes with a 3D transform and a colour.
 const STRIDE := 16
 const IMPOSTOR_SHADER := "res://assets/shaders/tree_impostor.gdshader"
+## Per tree, the colour gain (`tint`, in the picture's own sRGB terms) and alpha cut that make
+## its picture match its LOD1 where the one becomes the other: measured, not chosen, by
+## `tools_gd/lod_review.tscn -- --calibrate` with each tree standing in its own region's light.
+## The mesh's leaves go paler and thinner with distance than any picture of them does, and by a
+## different amount for every tree, so a single setting in the shader cannot match them all.
+const CALIBRATION := "res://world/impostor_calibration.json"
 
 
 ## The meshes one asset is drawn with at each level.
@@ -214,6 +220,29 @@ class Group extends RefCounted:
 
 ## Every ladder the streamer has asked for, by asset path; null where an asset has none.
 static var _ladders: Dictionary = {}
+static var _calibration: Variant = null
+
+
+## The calibration file, read once: tree name -> {"gain": [r, g, b], "alpha_scissor": s, ...}.
+static func calibration() -> Dictionary:
+	if _calibration == null:
+		var parsed: Variant = null
+		if FileAccess.file_exists(CALIBRATION):
+			parsed = JSON.parse_string(FileAccess.get_file_as_string(CALIBRATION))
+		_calibration = parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+	return _calibration
+
+
+## A tree's picture set to its measured gain and cut, where it has been measured.
+static func calibrate_material(mat: ShaderMaterial, tree_name: String) -> void:
+	var cal: Dictionary = calibration().get(tree_name, {})
+	if cal.is_empty():
+		return
+	var gain: Array = cal.get("gain", [1.0, 1.0, 1.0])
+	if gain.size() == 3:
+		mat.set_shader_parameter("tint", Color(float(gain[0]), float(gain[1]), float(gain[2])))
+	if cal.has("alpha_scissor"):
+		mat.set_shader_parameter("alpha_scissor", float(cal["alpha_scissor"]))
 
 
 ## The ladder for a scatter asset, or null when it is drawn as it always was: no LOD1 in the
@@ -263,6 +292,7 @@ static func _build_ladder(asset_path: String, packed: PackedScene) -> Ladder:
 		var lod2: Mesh = meshes.get(base + "_LOD2", null)
 		if lod2 != null and _is_impostor(lod2):
 			var mat := (lod2.surface_get_material(0) as ShaderMaterial).duplicate() as ShaderMaterial
+			calibrate_material(mat, base)
 			lad.impostor = _with_material(lod2, mat)
 			lad.impostor_material = mat
 		for level in lad.levels:

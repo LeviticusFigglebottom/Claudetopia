@@ -134,9 +134,11 @@ func test_what_compatibility_cannot_do_is_greyed_out_with_the_reason() -> void:
 	Graphics.renderer_override = Graphics.RENDERER_COMPATIBILITY
 	var screen := await _open()
 	var controls := _controls(screen)
-	for key in ["fxaa", "taa", "volumetric_fog", "ssil", "sdfgi"]:
+	for key in ["fxaa", "taa", "volumetric_fog", "ssil", "sdfgi", "ssao"]:
 		var box: CheckBox = controls.get(key)
 		assert_true(box != null and box.disabled, "%s should be greyed out on Compatibility" % key)
+	var ao: OptionButton = controls.get("ao_quality")
+	assert_true(ao != null and ao.disabled, "and the corner shadow's quality with it")
 	var words := ""
 	for l in screen.find_children("*", "Label", true, false):
 		words += (l as Label).text + "\n"
@@ -145,7 +147,7 @@ func test_what_compatibility_cannot_do_is_greyed_out_with_the_reason() -> void:
 	assert_false(up.disabled, "bilinear scaling is still offered")
 	assert_false(up.is_item_disabled(0))
 	assert_true(up.is_item_disabled(1) and up.is_item_disabled(2), "FSR is not")
-	for key in ["msaa", "ssao", "glow", "shadows"]:
+	for key in ["msaa", "glow", "shadows"]:
 		var c: Control = controls[key]
 		assert_false((c as BaseButton).disabled if c is BaseButton else false, "%s works on Compatibility" % key)
 

@@ -56,12 +56,13 @@ func _ready() -> void:
 			preset = a.substr(9)
 		elif a == "--no-lod":
 			per_tree_lod = false
+	# a measuring tool never writes the player's settings.cfg, preset or no preset
+	Settings.persist = false
 	if preset != "":
 		if not Graphics.PRESETS.has(preset):
 			Log.error("Capture", "no graphics preset %s (low, medium, high, painted)" % preset)
 			get_tree().quit(2)
 			return
-		Settings.persist = false
 		Settings.apply_graphics_preset(preset)
 		Log.info("Capture", "graphics preset: %s" % preset)
 	var code: int = await run()

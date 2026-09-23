@@ -5,7 +5,7 @@ extends Node3D
 ##   xvfb-run -a -s "-screen 0 1600x900x24" godot --path game --rendering-driver opengl3 \
 ##     --audio-driver Dummy --resolution 1600x900 res://tools_gd/lod_review.tscn -- \
 ##     --out=<abs dir> --assets=hearthvale_oak_a,hearthvale_hawthorn_a [--distances=20,40,70,100] \
-##     [--region=core:region/hearthvale] [--time=10] [--sweep]
+##     [--region=core:region/hearthvale] [--time=10] [--sweep | --calibrate]
 ##
 ## For each asset and distance it writes <asset>_<d>m.png: three copies of the tree the same
 ## distance away, left to right the full mesh (level 0), the forge's LOD1 (level 1) and the
@@ -14,9 +14,17 @@ extends Node3D
 ## sorted by the real `ScatterLod.Group.update`, dissolves and all, which is how it looks in
 ## the world. The camera is at eye height with the street plan's 58 degree field of view, and
 ## each image is cropped to the trees and doubled so a pixel of difference is visible.
+##
+## `--calibrate` instead stands every tree (or the `--assets` named) at its own picture distance
+## in its own region's light, nudges the picture's colour gain and alpha cut until it matches
+## LOD1 beside it, writes ScatterLod.CALIBRATION, and leaves <asset>_calibrated.png to look at.
 
 const TREES := "res://assets/models/trees"
 const ATMOSPHERE := "res://systems/atmosphere/atmosphere.tscn"
+## The hour each region is reviewed at (the street plan's), so a tree is calibrated in the light it
+## is most often looked at in.
+const REGION_HOURS := {"hearthvale": 9.0, "brightwater": 12.0, "sedgemire": 7.5, "briarwold": 10.5,
+		"skerrow": 14.0, "cinderlea": 16.5}
 
 var out_dir := "user://lod_review"
 var assets: PackedStringArray = ["hearthvale_oak_a", "hearthvale_hawthorn_a"]
@@ -24,8 +32,12 @@ var distances: Array = [20.0, 35.0, 50.0, 70.0, 100.0, 150.0]
 var region := "core:region/hearthvale"
 var hour := 10.0
 var sweep := false
+## `--calibrate`: for every tree (or `--assets`), match its picture to its LOD1 at its own switch
+## distance, in its own region's light, and write the gains to ScatterLod.CALIBRATION.
+var calibrate := false
 var cam: Camera3D
 var _stage: Node3D = null
+var _atmos: Node = null
 
 
 func _ready() -> void:
@@ -44,23 +56,25 @@ func _ready() -> void:
 			hour = float(a.substr(7))
 		elif a == "--sweep":
 			sweep = true
+		elif a == "--calibrate":
+			calibrate = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
 	_ground()
-	var atmos: Node = (load(ATMOSPHERE) as PackedScene).instantiate()
-	add_child(atmos)
-	WorldClock.set_time(hour)
-	if atmos.has_method("set_region"):
-		atmos.call("set_region", region, true)
-	if atmos.has_method("force_weather"):
-		atmos.call("force_weather", "core:weather/clear", true)
+	_atmos = (load(ATMOSPHERE) as PackedScene).instantiate()
+	add_child(_atmos)
+	_light(region, hour)
 	cam = Camera3D.new()
 	cam.fov = 58.0
 	cam.near = 0.1
 	cam.far = 4000.0
 	add_child(cam)
 	cam.current = true
+	if calibrate:
+		await _calibrate_all()
+		get_tree().quit(0)
+		return
 	for asset in assets:
 		var path := "%s/%s/%s.glb" % [TREES, asset, asset]
 		if not ResourceLoader.exists(path):
@@ -71,6 +85,155 @@ func _ready() -> void:
 		if sweep:
 			await _sweep(path)
 	get_tree().quit(0)
+
+
+func _light(region_id: String, at_hour: float) -> void:
+	# the clock stands still: a sky that moves between a plate and its shot is counted as tree
+	WorldClock.running = false
+	WorldClock.set_time(at_hour)
+	if _atmos.has_method("set_region"):
+		_atmos.call("set_region", region_id, true)
+	if _atmos.has_method("force_weather"):
+		_atmos.call("force_weather", "core:weather/clear", true)
+
+
+## Every tree with a picture, or the ones named, calibrated in turn and written out together.
+func _calibrate_all() -> void:
+	var names: Array = []
+	if Array(OS.get_cmdline_user_args()).any(func(a: String) -> bool: return a.begins_with("--assets=")):
+		names = Array(assets)
+	else:
+		for d in DirAccess.get_directories_at(TREES):
+			names.append(d)
+	# region by region, so the light is changed six times and has settled before each tree
+	names.sort_custom(func(a: String, b: String) -> bool:
+			return [_region_of(a), a] < [_region_of(b), b])
+	var out: Dictionary = ScatterLod.calibration().duplicate(true)
+	var lit := ""
+	for n in names:
+		var path := "%s/%s/%s.glb" % [TREES, n, n]
+		if not ResourceLoader.exists(path):
+			continue
+		var region_short := _region_of(n)
+		if region_short != lit:
+			lit = region_short
+			_light("core:region/%s" % region_short, float(REGION_HOURS.get(region_short, 10.0)))
+			# the sky's light is gathered over many frames (Sky.PROCESS_MODE_INCREMENTAL)
+			for i in 150:
+				await get_tree().process_frame
+		var result: Dictionary = await _calibrate(path)
+		if not result.is_empty():
+			out[n] = result
+	var f := FileAccess.open(ProjectSettings.globalize_path(ScatterLod.CALIBRATION), FileAccess.WRITE)
+	if f == null:
+		push_error("lod_review: cannot write %s" % ScatterLod.CALIBRATION)
+		return
+	f.store_string(JSON.stringify(out, "  ", true) + "\n")
+	f.close()
+	print("CALIBRATION written: %d trees" % out.size())
+
+
+## One tree: three copies at LOD1 and three as the picture, in pairs turned to three sides, at the tree's
+## own switch distance. The picture's colour gain and alpha cut are nudged until its mean colour
+## and its pixel coverage match the mesh's, over five passes measured against an empty plate.
+func _calibrate(path: String) -> Dictionary:
+	var name := path.get_file().get_basename()
+	var meta := ScatterLod._meta(path)
+	var region_short := _region_of(name)
+	await _clear()
+	var lad := _ladder(path)
+	if lad == null or not lad.has_impostor():
+		return {}
+	for level in lad.leaf_materials:
+		for m in level:
+			(m as ShaderMaterial).set_shader_parameter("lod_fade_in", Vector2.ZERO)
+			(m as ShaderMaterial).set_shader_parameter("lod_fade_out", Vector2.ZERO)
+	lad.impostor_material.set_shader_parameter("lod_fade_in", Vector2.ZERO)
+	var d := lad.far
+	var b: Dictionary = meta.get("bounds", {})
+	var lo: Array = b.get("min", [-2, 0, -2])
+	var hi: Array = b.get("max", [2, 4, 2])
+	var width := maxf(float(hi[0]) - float(lo[0]), float(hi[2]) - float(lo[2]))
+	var height := float(b.get("height", 4.0))
+	var gap := width * 1.5
+	var rows: Array = []
+	for i in 6:
+		rows.append([(float(i) - 2.5) * gap, 0.0, -d, [0.0, 0.0, 120.0, 120.0, 240.0, 240.0][i], 1.0, "#ffffff"])
+	var g := ScatterLod.make_group(lad, _stage, rows, false, true, 100000.0, path)
+	cam.position = Vector3(0.0, 1.7, 0.0)
+	cam.look_at(Vector3(0.0, height * 0.5, -d))
+	_put(g, "solid1", [0, 2, 4])
+	_put(g, "leaves1", [0, 2, 4])
+	_put(g, "impostor", [1, 3, 5])
+	var prior: Dictionary = ScatterLod.calibration().get(name, {})
+	var gain_a: Array = prior.get("gain", [1.0, 1.0, 1.0])
+	var gain := Color(float(gain_a[0]), float(gain_a[1]), float(gain_a[2]))
+	var scissor := float(prior.get("alpha_scissor", 0.45))
+	# the best pass is kept, not the last: tonemapping can make a pass overshoot
+	var best := {}
+	var best_err := INF
+	var best_img: Image = null
+	for it in 5:
+		lad.impostor_material.set_shader_parameter("tint", gain)
+		lad.impostor_material.set_shader_parameter("alpha_scissor", scissor)
+		# a fresh empty plate every pass, the trees hidden, so only the trees differ from it
+		_stage.visible = false
+		var plate := await _shot()
+		_stage.visible = true
+		var img := await _shot()
+		var mesh_c := _mean_of(plate, img, [0, 2, 4], gap, width, height, d)
+		var pic_c := _mean_of(plate, img, [1, 3, 5], gap, width, height, d)
+		print("CALIB %s pass %d: mesh rgb(%.3f %.3f %.3f) px %d | picture rgb(%.3f %.3f %.3f) px %d | gain (%.2f %.2f %.2f) cut %.2f" % [
+				name, it, mesh_c.r, mesh_c.g, mesh_c.b, int(mesh_c.a), pic_c.r, pic_c.g, pic_c.b, int(pic_c.a),
+				gain.r, gain.g, gain.b, scissor])
+		if pic_c.a <= 0.0 or mesh_c.a <= 0.0:
+			break
+		var cov := mesh_c.a / pic_c.a
+		var err := absf(mesh_c.r - pic_c.r) + absf(mesh_c.g - pic_c.g) + absf(mesh_c.b - pic_c.b) \
+				+ absf(cov - 1.0) * 0.2
+		if err < best_err:
+			best_err = err
+			best_img = img
+			best = {"gain": [snappedf(gain.r, 0.001), snappedf(gain.g, 0.001), snappedf(gain.b, 0.001)],
+					"alpha_scissor": snappedf(scissor, 0.001), "distance_m": snappedf(d, 0.1),
+					"light": "%s %.1f h" % [region_short, float(REGION_HOURS.get(region_short, 10.0))],
+					"mesh_rgb": [snappedf(mesh_c.r, 0.001), snappedf(mesh_c.g, 0.001), snappedf(mesh_c.b, 0.001)],
+					"picture_rgb": [snappedf(pic_c.r, 0.001), snappedf(pic_c.g, 0.001), snappedf(pic_c.b, 0.001)],
+					"coverage": [int(mesh_c.a), int(pic_c.a)]}
+		# screen colour is tonemapped, so the ratio is only a direction: iterate towards it
+		gain.r = clampf(gain.r * clampf(mesh_c.r / maxf(pic_c.r, 0.01), 0.7, 1.4), 0.4, 2.0)
+		gain.g = clampf(gain.g * clampf(mesh_c.g / maxf(pic_c.g, 0.01), 0.7, 1.4), 0.4, 2.0)
+		gain.b = clampf(gain.b * clampf(mesh_c.b / maxf(pic_c.b, 0.01), 0.7, 1.4), 0.4, 2.0)
+		# coverage: a lower cut keeps more of the picture's softened edge
+		scissor = clampf(scissor - (cov - 1.0) * 0.35, 0.2, 0.7)
+	if best_img != null:
+		_save_crop(best_img, Vector3(-3.0 * gap, 0.0, -d), Vector3(3.0 * gap, height * 1.1, -d),
+				"%s_calibrated" % name)
+	return best
+
+
+## The region a tree grows in, by its forge name.
+func _region_of(tree_name: String) -> String:
+	var r := tree_name.get_slice("_", 0)
+	return r if REGION_HOURS.has(r) else "hearthvale"
+
+
+## The pixel-weighted mean colour of several trees in the calibration row; alpha is their pixels.
+func _mean_of(plate: Image, img: Image, which: Array, gap: float, width: float, height: float,
+		d: float) -> Color:
+	var sum := Vector3.ZERO
+	var n := 0.0
+	for i in which:
+		var x := (float(i) - 2.5) * gap
+		# from just above eye height: below it the ground shows behind the tree, and a neighbour's
+		# shadow on that ground is not the tree's colour
+		var m := _mean_change(plate, img, Vector3(x - width * 0.65, 1.8, -d), Vector3(x + width * 0.65, height * 1.08, -d))
+		sum += Vector3(m.r, m.g, m.b) * m.a
+		n += m.a
+	if n <= 0.0:
+		return Color(0, 0, 0, 0)
+	sum /= n
+	return Color(sum.x, sum.y, sum.z, n)
 
 
 func _ground() -> void:

@@ -78,14 +78,21 @@ const RENDERER_FORWARD_PLUS := "forward_plus"
 const RENDERER_COMPATIBILITY := "gl_compatibility"
 
 ## What the Compatibility renderer cannot do (Godot 4.7's own renderer table), keyed by setting.
-## `upscaler` is per choice: bilinear works everywhere, both FSRs are Forward+ only. Every other
-## knob works on both.
+## `upscaler` is per choice: bilinear works everywhere, both FSRs are Forward+ only.
 const FORWARD_PLUS_ONLY := {
 	"fxaa": "Forward+ only: the Compatibility renderer has no FXAA.",
 	"taa": "Forward+ only: the Compatibility renderer has no temporal anti-aliasing.",
 	"volumetric_fog": "Forward+ only: the Compatibility renderer has depth fog but no volumetric fog.",
 	"ssil": "Forward+ only: the Compatibility renderer has no screen-space indirect light.",
 	"sdfgi": "Forward+ only: the Compatibility renderer has no SDFGI.",
+}
+## What Compatibility has but the world does not use on it. Its SSAO is a pass over the finished
+## picture that darkens sunlit ground as much as shade (Forward+'s darkens only the sky's light),
+## and the atmosphere draws the world without it on that renderer (`ssao_enabled = _forward_plus`),
+## so the setting there would change the look rather than add to it. Every other knob works on both.
+const COMPATIBILITY_UNUSED := {
+	"ssao": "Off on Compatibility: its corner shadow darkens sunlit ground as well as shade.",
+	"ao_quality": "Corner shadow is off on Compatibility.",
 }
 const UPSCALER_CHOICES := ["Bilinear", "FSR 1.0", "FSR 2.2"]
 const UPSCALER_REASON := "FSR 1.0 and 2.2 are Forward+ only; Compatibility scales bilinearly."
@@ -160,16 +167,20 @@ static func preset_values(name: String, for_renderer := "") -> Dictionary:
 	var r := for_renderer if for_renderer != "" else renderer()
 	for key in out:
 		if unsupported_reason(key, out[key], r) != "":
-			out[key] = _fallback(key)
+			out[key] = _fallback(key, out[key])
 	return out
 
 
-## Which preset these values are, or "custom".
+## Which preset these values are, or "custom". A knob greyed out on this renderer does not
+## decide it: High chosen on Forward+ is still High when the same file is read on Compatibility.
 static func matching_preset(values: Dictionary, for_renderer := "") -> String:
+	var r := for_renderer if for_renderer != "" else renderer()
 	for name in PRESET_ORDER:
-		var p := preset_values(name, for_renderer)
+		var p := preset_values(name, r)
 		var same := true
 		for key in p:
+			if unsupported_reason(key, null, r) != "":
+				continue
 			if not _same(values.get(key), p[key]):
 				same = false
 				break
@@ -184,10 +195,14 @@ static func _same(a: Variant, b: Variant) -> bool:
 	return a == b
 
 
-static func _fallback(key: String) -> Variant:
+## What a preset asks for in place of something this renderer does not do: plain scaling for
+## FSR, off for a feature, and a quality level left as it is for a feature that is off anyway.
+static func _fallback(key: String, value: Variant) -> Variant:
 	match key:
 		"upscaler":
 			return 0
+		"ao_quality":
+			return value
 		_:
 			return false
 
@@ -200,7 +215,9 @@ static func unsupported_reason(key: String, value: Variant = null, for_renderer 
 		return ""
 	if key == "upscaler":
 		return UPSCALER_REASON if value != null and int(value) > 0 else ""
-	return str(FORWARD_PLUS_ONLY.get(key, ""))
+	if FORWARD_PLUS_ONLY.has(key):
+		return str(FORWARD_PLUS_ONLY[key])
+	return str(COMPATIBILITY_UNUSED.get(key, ""))
 
 
 static func is_supported(key: String, value: Variant = null, for_renderer := "") -> bool:

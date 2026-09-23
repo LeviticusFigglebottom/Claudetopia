@@ -30,9 +30,13 @@ uniform float alpha_scissor : hint_range(0.0, 1.0) = 0.45;
 // How much of the sun a crown's surface gets, on average, once its own leaves have shadowed
 // it: the mesh levels get this from the shadow map, a picture has to be told. Measured against
 // LOD1 by tools_gd/lod_review.tscn (LODSTATS), not chosen by eye.
-uniform float sun_share : hint_range(0.0, 1.0) = 0.55;
+uniform float sun_share : hint_range(0.0, 1.0) = 0.75;
 // light through the leaves from behind, as the foliage shader's BACKLIGHT gives the cards
 uniform float translucency : hint_range(0.0, 1.0) = 0.25;
+// How far the baked sky visibility also shades the sun: the middle of a crown, which sees
+// little sky, is the part the mesh's own leaves shadow. Without it a picture has none of the
+// dark gaps between leaf clusters that give the mesh its depth, and reads pale and flat.
+uniform float sun_occlusion : hint_range(0.0, 1.0) = 0.85;
 uniform float specular_value : hint_range(0.0, 1.0) = 0.3;
 uniform float roughness_value : hint_range(0.0, 1.0) = 0.72;
 uniform vec4 tint : source_color = vec4(1.0);
@@ -45,6 +49,7 @@ varying flat float v_view;
 varying flat vec3 v_bx;
 varying flat vec3 v_bz;
 varying float v_lod_dist;
+varying float v_sky;
 
 void vertex() {
 	vec3 origin = MODEL_MATRIX[3].xyz;
@@ -110,6 +115,7 @@ void fragment() {
 	// the baked sky visibility: the middle of a crown sees less of the sky than its rim
 	AO = n.a;
 	AO_LIGHT_AFFECT = 0.0;
+	v_sky = n.a;
 	ROUGHNESS = roughness_value;
 	SPECULAR = specular_value;
 	METALLIC = 0.0;
@@ -117,7 +123,8 @@ void fragment() {
 
 void light() {
 	float ndl = dot(NORMAL, LIGHT);
-	float diffuse = max(ndl, 0.0) * sun_share + max(-ndl, 0.0) * translucency;
+	float shade = mix(1.0, v_sky, sun_occlusion);
+	float diffuse = (max(ndl, 0.0) * sun_share + max(-ndl, 0.0) * translucency) * shade;
 	DIFFUSE_LIGHT += diffuse * ATTENUATION * LIGHT_COLOR / PI;
 	vec3 h = normalize(LIGHT + VIEW);
 	float spec = pow(max(dot(NORMAL, h), 0.0), mix(64.0, 4.0, roughness_value));

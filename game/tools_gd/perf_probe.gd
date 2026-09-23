@@ -36,12 +36,13 @@ func _ready() -> void:
 			out_dir = a.substr(6)
 		elif a.begins_with("--preset="):
 			preset = a.substr(9)
+	# a measuring tool never writes the player's settings.cfg, preset or no preset
+	Settings.persist = false
 	if preset != "":
 		if not Graphics.PRESETS.has(preset):
 			push_error("perf_probe: no graphics preset %s" % preset)
 			get_tree().quit(2)
 			return
-		Settings.persist = false
 		Settings.apply_graphics_preset(preset)
 		print("PERF: graphics preset %s" % preset)
 	DirAccess.make_dir_recursive_absolute(out_dir)
