@@ -495,3 +495,32 @@ vista came back littered with orange slabs where the gold barley and red poppies
 multiplied by gold and red. Rules now carry a `tint_strength` (how far from white the
 multiplier may travel, default 0.45) and the species whose asset already carries that colour
 take none at all.
+
+## 2026-09-22 · The opening is the Warden's voice over the real country, played in the world
+**Decision.** The opening (DESIGN §5.1a) is data — a `core:cinematic/opening` definition of
+shots whose cameras are placed relative to named places and to the ground beneath them, with
+durations, time of day, weather, subtitle lines and a music cue — played by a small player
+inside the streamed world after the Naming, on New Game only. The voice is Wren Tallow's,
+in subtitles, saying back the name the player has just chosen. It ends on the gameplay
+camera's own pose and hands over there, and the first quest starts at the hand-over.
+**Why.** The game's first minute was a fade from black into control, with nothing said about
+where you are, why, or what is wrong with the world. The Naming already *is* the Warden
+asking your name at the top of the Stair, so the natural next beat is her answering, and her
+lines already exist in her dialogue graph: the opening quotes the fiction rather than
+inventing a narrator. Playing it in the world rather than as a film keeps it true to the land
+as it is rebuilt — a stored height or a rendered video would be wrong the next time the world
+builder runs, and the land is being reshaped while this is written — and it costs no new
+tooling: the fly camera, the streamer, the atmosphere and the capture runner already exist.
+**Alternatives.** A pre-rendered video (nothing here can encode one, and it would freeze the
+country at whatever build it was shot from); painted still cards with text (cheap, but the
+brief is a painted *world*, and it is the one thing the game can show that a card cannot);
+a narrator outside the fiction (Wickmere's cosmology is told four contradictory ways on
+purpose, and an omniscient voice would have to pick one); no opening (what shipped).
+**Consequences.** The streamer must load the next shot while the current one plays, and must
+be able to follow a camera without telling the game the player entered those regions — a
+region change seeds rumours and moves music, and a camera is not a traveller. Every piece of
+state the opening borrows (streamer target, clock, weather, buses, HUD, input, the current
+camera) must be put back by the same code whether it is watched or skipped, and a test has to
+hold the two end states against each other. The hook into the new-game flow is one call in
+`GameServices.begin_new_game()`, the one place a new game already begins, and a setting stops
+it for later new games. Reversible.

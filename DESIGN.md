@@ -131,6 +131,63 @@ are normative for pass one and live in `game/systems/*`.
 * Appearance is a data record (`CharacterAppearance`) applied to a body built by
   the character forge on our own humanoid rig, so morality visuals can modify it later.
 
+### 5.1a The opening (designed; not built yet — see PROGRESS "The opening")
+
+What plays between "Be named" and the first step, on **New Game only**: never on Continue
+or Load. The model is the first minutes of Fable, Oblivion and Dark Souls 2 — a voice, the
+land, the stakes, then you — and it is about ninety seconds long.
+
+* **Who speaks.** The Warden who has just asked your name (`core:npc/wren_tallow`), in
+  subtitles, because pass one has no voice acting (§12). The label says *The Warden*: she
+  has not told you her name yet. The Naming was her asking at the top step ("Say it clearly.
+  I'll say it back and then it's done" — her `the_naming_q` line), so the opening is her
+  saying it back, and then telling you, as she walks, what you have come up into.
+* **Why you are where you wake.** WORLD_BIBLE §1.5: the Hushline is where the Dwindling has
+  finished, and the player came out of it, which should be impossible. You came up the
+  Hushline Stair (`core:poi/hushline_stair`, the place `core:opening/new_game` names), where
+  Wren has stood on and off for nineteen years watching grey people walk *down* (her
+  `the_hush` line). That is the whole of what she knows, and she says so.
+* **What you are shown**, each shot a slow eased move over a real place in the streamed
+  world, with the time and weather that place looks like itself in:
+  1. *Black.* One bell. "{name}." — "There. Said out loud, and heard. That is how it holds."
+  2. *The Mere at first light*, up the Long Stride to Tollmere. The title card —
+     **WICKMERE**, the bell mark, "Everything that is spoken of, stays." — inks in and out.
+     "Nobody in Wickmere agrees what the world is."
+  3. *Tollmere and the Sayers' Spire.* "The Sayers say it is a bell, struck once and still
+     ringing. They charge by the hour to explain it."
+  4. *The Drowned Nave in mist.* "The marsh says it is a tide going out."
+  5. *The Fallen Hand in cold light.* "The clans say something vast is breathing in."
+  6. *Merrowby under the Cracked Toll, gold morning.* "In the Vale we say it is a candle,
+     and a candle wants tending."
+  7. *The downs and Wardens' Rest.* "Everybody agrees what it is doing. A place nobody
+     speaks of goes quiet, and then it goes. We keep their names on the Roll."
+  8. *The Toll, close.* "This spring the Toll began to hum. The last time it hummed, Gosford
+     went quiet in eleven days." (WORLD_BIBLE §7.1; Harewell is left for *The Toll Hums*.)
+  9. *The Sunken Choir in ashfall.* "South of everything is Cinderlea, where it has gone
+     furthest. South of that is the Hush, where it has finished."
+  10. *The Stair*, from high over the Hush looking north at the cliff: "I have stood at the
+      top of that stair nineteen years and watched grey people walk down it. Nobody has
+      ever walked up it." The camera comes down and settles behind your shoulder, facing
+      north: "Then, this morning, you did." — "Keep up. I don't look back."
+* **The hand-over.** The last shot ends exactly on the gameplay camera's pose, the letterbox
+  draws back, the HUD inks in and control returns. *The Naming* (`core:quest/the_naming`)
+  starts at that moment, not under the pictures, so its first objective — stage `wake`,
+  speak to the Warden — is the first thing the journal and the HUD say.
+* **The rules it keeps.** Every camera is placed relative to a place and to the ground under
+  it, never at a stored height, and a test samples every path against the built terrain and
+  its scatter. No shot looks south from the Hushline: the world ends 200 m past the Stair.
+  The streamer follows the camera and loads the next shot while this one plays; if the
+  cells are not there in time the picture holds on black with the loading caption and the
+  music waits. Any key or button shows *hold to skip*; skipping arrives at exactly the state
+  playing to the end does — position, streaming, time, weather, buses, nothing paused. A
+  setting stops it playing on later new games, and the pause menu can replay it, after
+  which everything is put back as it was.
+* **What it cannot fix, and the design assumes.** Today the Stair's head is a mesa on the
+  Hush floor, 100 m out from the foot of the Cinderlea cliff rather than at its top, and
+  nothing stands Wren at the Stair — her schedule keeps her in Merrowby — so the first
+  objective cannot yet be met where the game starts. Both belong to the land and the
+  people, and the opening should not paper over either.
+
 ### 5.2 Movement & cameras
 * `CharacterBody3D`, 4.2 m/s walk, 6.5 m/s run (stamina drain), sprint dodge-roll.
 * First-person (arms visible) and third-person (orbit, shoulder offset, lock-on
