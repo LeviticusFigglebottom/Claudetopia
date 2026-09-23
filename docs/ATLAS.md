@@ -14,7 +14,9 @@ built, so change both.
 
 **The drawing:** `docs/atlas/wickmere_atlas.png`. `python3 tools/world/atlas/render_map.py`
 draws it from the atlas. With `--world DIR` it draws the heights and water of a world built
-from the atlas instead, and with `--coverage` it shades the ground that is far from anything.
+from the atlas instead, with each lake's shore where the build put its water. With `--coverage`
+it shades the ground that is far from anything, and over a built world it also tints the edge
+of each lake that the build left dry.
 
 ---
 
@@ -53,13 +55,13 @@ on this side of a closing range's crest.
 |---|---|
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 5.0 km², six small waters 0.13 km², fourteen rivers |
-| walkable country | **47.1 km²** |
-| locations | **296**: 57 places and 239 points of interest (60 places counting the three edge places) |
+| walkable country | **47.2 km²** |
+| locations | **297**: 57 places and 240 points of interest (60 places counting the three edge places) |
 | density | **6.3 locations a walkable km²** |
 | distance to the nearest location | mean **180 m**, 95% of the ground within **312 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
-| roads | 82, **79 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km) |
-| road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot, and the Long Stride's causeway) |
+| roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
+| road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
 
 The brief's rule was no walkable point more than about 400 m from somewhere notable, and nothing
 on a road more than about 250 m. The map keeps both within the "about". Where it overshoots, the
@@ -73,29 +75,33 @@ Content is densest near the start: 15 locations within 1 km of the Stair Head, 2
 
 ## 3. The start
 
-The Foundling comes up out of the Hush by the Hushline Stair and stands at **the Stair Head**
-(10, 3670), the Wardens' camp on the cliff rim, facing **333°**. In the first view (DESIGN 5.1a):
+The Foundling comes up out of the Hush by the Hushline Stair. They reach **the Landing**, a
+rock shelf 4 m above the sea under the cliff. The stage-two ash-wights are fought there, and
+the Oroth stair goes down from its seaward edge into the water and the mist. From the Landing
+**the Stair** climbs the bank in one long traverse to the rim. **The Stair Head**, the Wardens'
+camp, stands at (10, 3670) on the Stair Knoll, about 110 m up over the Hush, facing **333°**.
+
+In a heights build of this atlas, the first view (DESIGN 5.1a) has:
 
 * **a landmark silhouette**: the Sunken Choir's ring of headless colossi on the Choir's Crown,
-  483 m ahead and dead on the facing, with the Cantor's Seat's cold light below it (244 m).
-* **a road**: the waystones walking north across the heath to the Choir (the Stair Path). Past
+  483 m ahead and dead on the facing, and the Cantor's Seat's cold light below it (244 m).
+* **a road**: the waystones walking north across the heath to the Choir (the Stair Path). Beyond
   the Choir, the Pilgrim Road comes down off the plateau through the notch in its north lip.
-* **smoke, then roofs**: Pilgrim's Ash's fires at the Glass Bridge (790 m, 13°). Beyond them,
-  Ashwell's roofs at the head of the Vale (1.4 km).
-* **water**: the Glass Falls pouring off the plateau's lip (650 m, 352°), and the Lark Pool
-  where the green begins (1.2 km, 10°). Behind the player, the Hush.
-* **the rest within ten minutes' walk**: the Hush Bell on the cliff to the east (650 m), the Bell
+* **smoke and roofs**: Pilgrim's Ash's fires by the Glass Bridge (790 m, 13°), and past them
+  Ashwell's roofs, where the green of the Vale begins (1.4 km). Both show over the heath because
+  the camp stands on its knoll and the heath's own hills are low.
+* **water**: the Hush, behind the player and over the rim. Ahead, the Lark Pool, where the
+  Vale's green begins, sits 3 m under the line of sight from the camp and comes into view on the
+  way to Pilgrim's Ash. The Glass Falls pour off the far side of the plateau's lip, so the Stair
+  Path reaches them before the eye does.
+* **within ten minutes' walk**: the Hush Bell on the cliff to the east (650 m, in view), the Bell
   Garden and the Last Camp to the west, the Row of Mouths, the Tenth Waystone, the Thirteenth
-  Colossus, the Last Look, where the downs begin.
+  Colossus, and the Last Look, where the downs begin (in view).
 
 Walking north, the Pilgrim Road goes from the ash through the Vale (Ashwell, Wynstead, Merrowby)
-and down Stride Coombe past the Cracked Toll to the Stride's Foot and the Long Stride. The
-player reaches the city along the spine of the map, through three regions, in about three
-kilometres.
-
-**The landing** (agreed with the land builder, see §11): below the rim, a rock shelf a few
-metres above the sea, big enough for the stage-two ash-wight fight, with the Oroth stair going
-down from its seaward edge into the water and the mist.
+and down Stride Coombe past the Cracked Toll. It comes out at the Stride's Foot, where the Long
+Stride runs out along the Ness and over the last water to the city. The player reaches Tollmere
+along the spine of the map, through three regions, in about four kilometres.
 
 ## 4. The provinces
 
@@ -143,29 +149,33 @@ Fallen Hand. Tracks climb Ribdale, Skarldale and Ghast Dale.
 *High clear light, white lime walls, slate, brass lamps, gulls and buoy-bells.*
 
 * **The Mere and its Shores** (13 m, flat; raised beaches, dune ridges): **the Mere** stands at
-  8 m. Tollmere is on its island, with Willow Isle and Gull Holm besides. The shores have names:
-  * **the Narrows**, up to the Narrows Bridge;
-  * **the Rudd shore**, bitten into coves under the Rudd Cliffs, with the fans of Rudd Beck,
-    Rib Beck and the Skarl Water;
-  * **Smokehouse Bay** under Merrowhithe, and **Holm Point** reaching for Gull Holm;
-  * **the Rafts** at the Wold Water's mouth, and **Horn Point**, with the Listening Post behind it;
-  * **Lime Bay**, the drowned foot of Cress Coombe;
-  * **the Stride Ness**, reaching for the island, where the Long Stride leaves the shore;
-  * **the Larkmouth**;
-  * **Willow Bay**, closed by the Willow Ness;
-  * **the Reed Arm**, choked and shallow, running west to the Eelweir, where the Mere leaves as
-    the Outfall;
-  * **Gullhithe's shingle**, and the Lamp on its spit;
-  * **the Gull shore** under the Gull Cliffs.
+  8 m. It is drawn in features of three hundred metres and more, so that it reads on a map. The
+  shores have names:
+  * **the Narrows**, a funnel up to the Skerrow Water's mouth under the Narrows Bridge;
+  * **the Rudd shore** under the Rudd Cliffs;
+  * **Smokehouse Bay**, open-mouthed under Merrowhithe, where Rib Beck and the Skarl Water come in;
+  * **Holm Point**, a headland reaching for Gull Holm;
+  * **the Rafts** at the Wold Water's mouth;
+  * **Lime Bay**, as wide as it is deep, with the Cressbourne at its head under the Lime Bridge;
+  * **the Lime shore** under the kilns;
+  * **the Stride Ness**, half a kilometre of land reaching for the city, with the Ness Market on it
+    and the Long Stride along its spine and over the last water to the city's harbour;
+  * **Willow Bay**, closed by **Willow Point**, with Willow Isle off its tip;
+  * **the Reed Arm**, a funnel narrowing west through the reeds to the Eelweir, where the Mere
+    leaves as the Outfall;
+  * **Gullhithe's shingle**, and the Lamp on its promontory;
+  * **Gull Bay** under the Gull Cliffs.
 
-  The Mere has fallen ten metres since the Toll came down, and its old beaches step up the east
-  shore.
+  **Tollmere's island** has a harbour bight facing the Long Stride. The Spire Rock stands at its
+  north-east end, under the Sayers' Spire, and a low tail runs west where the Undercroft has its
+  water-gate. The Mere has fallen ten metres since the Toll came down, and its old beaches step
+  up the east shore.
 * **The North Shore** (26 m, hills): the lake-basin country between the cliffs and the fells.
   The cliff-top road runs behind the Gull Cliffs; the Pilgrim Stair goes down them into the
   water. Merrowhithe smokes its pike in the Standing Arches' last spans. Here too are the
   Counting Tower, the Charter Stone and Brindle Mill.
 
-**Roads.** The **Long Stride** (causeway) runs from the Stride's Foot to the city. The **Lake Road**
+**Roads.** The **Long Stride** (causeway) runs from the Stride's Foot along the Ness and over the water to the city. The **Lake Road**
 goes west by the Larkmouth Bridge, the Wash-Stones, the Tallyman's Folly and Sedgehithe to the
 Eelweir. The **west shore road** runs from the Eelweir by the Dry Jetty to Gullhithe. The
 **cliff road** goes behind the Gull Cliffs to the Narrows Bridge. The **Rudd road** runs behind
@@ -329,9 +339,9 @@ plans moved with their places. The table is in §12.
 ## 9. What is new
 
 There are 26 new places: hamlets, lodges, a fort and a camp, each with the one person who lives
-there, written with a schedule, a dialogue and a habit of their own. There are 190 new points of
-interest: 57 ruins, 43 camps, 32 standing stones, 29 towers, 25 bridges, 19 shrines (22
-Hearthstones in all), 10 waterfalls, 8 giant bones and 6 wrecks. Each has a name in its
+there, written with a schedule, a dialogue and a habit of their own. There are 191 new points of
+interest: 53 ruins, 39 camps, 29 standing stones, 23 towers, 18 bridges, 13 shrines, 6
+waterfalls, 6 giant bones and 4 wrecks. With the older ones that makes 22 Hearthstones. Each has a name in its
 culture's language, a feature no other location shares, a story, and one line of the quest or
 story it could anchor, which is in the tables below. Hooks are hooks: no quest is written.
 
@@ -360,12 +370,22 @@ would still like the kit to build (with how they are faked today) are in §10.
 
 ## 11. For the builder
 
-* **The landing under the Stair Head.** The rim stays where the coast polygon draws it (z ≈ 3742
-  at the Stair Head), with the camp and the start 70 m back from it. Seaward of the rim, a lobe of
-  land about 300 × 150 m has a steep bank in its back 90 m, a path zigzagging down it, and a flat
-  rock shelf in its front 60 m at 4 m. The Oroth stair goes down from the shelf's seaward edge
-  into the water, and core:poi/hushline_stair stands on the shelf. The fields are being agreed
-  with the land builder and are added to the atlas when its schema takes them.
+* **The landing under the Stair Head** is drawn with the fields agreed with the land builder.
+  `coast.shelves` holds the shelf at 4 m, with a 90 m bank down to it from the rim. The coast
+  polygon carries a lobe over the bank, with a 4 m cliff along its seaward edge and the 78 m
+  cliffs split around it. The road `core:road/stair_head_hushline_stair` is of kind "stair",
+  and the opening's camp builder looks for that id. A pad pins core:poi/hushline_stair to the
+  shelf at 4 m (radius 26). The Stair is one traverse at about 77° to the fall line, turning
+  only at the rim and at the bank's foot. On a 1024 heights build it is nowhere steeper than
+  about 0.6. Three switchbacks were tried first; their corners sat mid-bank and ran 1.6 there.
+* **The Stair Knoll** (a 110 m dome under the camp) is what lets the first view see over the
+  heath. The heath's own relief is kept low (18 m) for the same reason.
+* **A lake's water stands about 36 m inside its polygon** (24 to 56 m on a 1024 build), because
+  the builder raises the shore there. A cove drawn narrower than about a hundred metres closes up
+  and leaves a round bump in the built shore. The Mere was once drawn with many small coves,
+  and its built shore came out scalloped. So the lakes are drawn in features of three hundred
+  metres and more. The polygon's line is the landward edge of the shore, and the water begins
+  about 36 m inside it.
 * **Valleys are cut relative to the ground,** so a dale's valley stops where the dale does. The
   Oskeld Dale once ran out onto the fen and cut 70 m below the sea there.
 * **The High Moor is rolling, not a plateau.** A stepped plateau stood 250 m over the dale heads,
@@ -410,7 +430,7 @@ would still like the kit to build (with how they are faked today) are in §10.
 | `core:poi/thirteenth_colossus` | -1480, 3280 | 380, 3060 | The Ash Heath |
 | `core:poi/cold_fire_camp` | -2260, 2760 | -1600, 2830 | The Ashgrid |
 | `core:poi/glass_falls` | -1860, 3030 | -80, 3030 | The Ash Heath |
-| `core:poi/hushline_stair` | -1900, 3900 | 0, 3800 | The Ash Heath |
+| `core:poi/hushline_stair` | -1900, 3900 | 40, 3872 | The Ash Heath |
 | `core:poi/stair_head` | -1922, 3708 | 10, 3670 | The Ash Heath |
 | `core:place/tollmere` | 0, -150 | 40, -300 | The Mere and its Shores |
 | `core:place/gullhithe` | 1500, -900 | -1300, -960 | The Mere and its Shores |
@@ -418,7 +438,7 @@ would still like the kit to build (with how they are faked today) are in §10.
 | `core:place/sayers_spire` | 60, -230 | 120, -390 | The Mere and its Shores |
 | `core:place/undercroft` | -80, -100 | -40, -240 | The Mere and its Shores |
 | `core:place/sunken_barge` | -700, -700 | -700, -1320 | The North Shore |
-| `core:poi/long_stride` | 0, 600 | 70, 330 | The Mere and its Shores |
+| `core:poi/long_stride` | 0, 600 | 62, 60 | The Mere and its Shores |
 | `core:poi/shingle_shrine` | 300, 1100 | -215, -1865 | The North Shore |
 | `core:poi/north_cliff_beacon` | -580, -1520 | -560, -1470 | The North Shore |
 | `core:poi/gullhithe_wreck` | 1700, -700 | -1310, -880 | The Mere and its Shores |
@@ -559,7 +579,7 @@ The places (with their residents) are in bold. "Where" gives the province and th
 | The Bell Garden | ruins | The Choir Plateau (-650, 3480) | Struck in the right order the garden plays a line, and the Cantor's Seat's door answers it. |
 | The Row of Mouths | ruins | The Choir Plateau (-530, 3210) | At dusk one mouth is heard singing a single note, a different pillar every night, and the Order is counting which. |
 
-#### Brightwater (26 new)
+#### Brightwater (27 new)
 
 | Location | Kind | Where | The story it anchors |
 |---|---|---|---|
@@ -574,6 +594,7 @@ The places (with their residents) are in bold. "Where" gives the province and th
 | The Limekilns | camp | The Mere and its Shores (650, 840) | The lime from the third kiln has come out grey, and the Tallymen want to know whether they can still sell it. |
 | The Listening Post | tower | The Mere and its Shores (1430, 120) | The clerk says the hum changed pitch on the night the Foundling came up the Stair. |
 | The Log Boom | bridge | The Mere and its Shores (1760, -205) | A raft was let go with nobody on it, and it went up the Wold Water, not down. |
+| The Ness Market | camp | The Mere and its Shores (130, 430) | The Tallymen have put a clerk at the Ness's tip overnight, with a ledger and no warrant. |
 | The Rafters' Camp | camp | The Mere and its Shores (1560, -430) | A raft came down the Wold Water with a forester tied to it, alive, silent, and not saying who. |
 | The Sedge Hearth | shrine, Hearthstone | The Mere and its Shores (-1440, 0) | The plank to the island has been taken up, from the island side. |
 | The Strandline Stones | stones | The Mere and its Shores (1350, 520) | A Sayer's measuring-rod stands by the stones: the water fell a finger's width this spring, the first change in a century. |

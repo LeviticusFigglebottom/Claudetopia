@@ -24,7 +24,7 @@
    "unique_feature": "a dry valley entirely purple with foxgloves around a hedge-witch's turf hut", "visible_from": ["core:poi/singing_yew"],
    "story": "The hedge-witch Tansy Cresswell grows what Merrowby pretends not to buy. Something has been digging up her yew berries at night.", "encounter": "bristlebacks rooting in the dell at dawn; a charger fight in a narrow valley with soft banks"},
 
-  {"id": "core:poi/long_stride", "name": "The Long Stride", "region": "core:region/brightwater", "kind": "bridge", "position": [70, 330], "hearthstone": false,
+  {"id": "core:poi/long_stride", "name": "The Long Stride", "region": "core:region/brightwater", "kind": "bridge", "position": [62, 60], "hearthstone": false,
    "unique_feature": "an Oroth causeway whose hinge-less lamp posts light one after another at dusk", "visible_from": ["core:place/strides_foot", "core:place/tollmere", "core:poi/whitecut_falls"],
    "story": "The Builders laid it to reach their foundation stone; the guilds charge a toll on it and pretend they built it.", "encounter": "cutpurses work the toll queue; a bravo duels anyone who refuses to pay"},
   {"id": "core:poi/shingle_shrine", "name": "Shingle Shrine", "region": "core:region/brightwater", "kind": "shrine", "position": [-215, -1865], "hearthstone": true,
@@ -145,8 +145,8 @@
   {"id": "core:poi/glass_falls", "name": "The Glass Falls", "region": "core:region/cinderlea", "kind": "waterfall", "position": [-80, 3030], "hearthstone": false,
    "unique_feature": "a dry waterfall of black glass, climbable, the shortcut up to the Choir plateau", "visible_from": ["core:poi/glass_bridge", "core:place/sunken_choir"],
    "story": "Water still sounds here if you stand still. The Order forbids the climb and uses it themselves.", "encounter": "a bell-bearer at the top rings when it sees you; stun radius, break line of sight behind the glass ledges"},
-  {"id": "core:poi/hushline_stair", "name": "The Hushline Stair", "region": "core:region/cinderlea", "kind": "hidden_valley", "position": [0, 3800], "hearthstone": true,
-   "unique_feature": "Oroth stairs descending into the mist where colour drains from your own hands", "visible_from": ["core:place/cantors_seat"],
+  {"id": "core:poi/hushline_stair", "name": "The Hushline Stair", "region": "core:region/cinderlea", "kind": "hidden_valley", "position": [40, 3872], "hearthstone": true,
+   "unique_feature": "Oroth stairs descending into the mist where colour drains from your own hands", "visible_from": [],
    "story": "Where the Foundling walked out. Wren Tallow's Hearthstone at the top step is the first name you are given.", "encounter": "the tutorial: ash-wights on the stair; the mist turns you back below the fortieth step"},
   {"id": "core:poi/stair_head", "name": "The Stair Head", "region": "core:region/cinderlea", "kind": "camp", "position": [10, 3670], "hearthstone": true,
    "unique_feature": "the Wardens' camp at the head of the Hushline Stair: a fire kept on the rim, grey-green colours on two poles, a lamp at the way out, and waystones walking north across the heath to the Choir",
@@ -721,5 +721,8 @@
    "story": "Nauve's Landing sells its eels alive: a dead eel is a Tallyman's price and a live one is a reedfolk's.", "encounter": "none", "hook": "The high-walled pond has been found empty with its sluice shut, and its wall is wet on the outside."},
   {"id": "core:poi/hanging_falls", "name": "The Hanging Falls", "region": "core:region/skerrow", "kind": "waterfall", "position": [-1700, -3800], "hearthstone": false,
    "unique_feature": "a waterfall hanging frozen on the Wall's face at the head of Brakh Gill", "visible_from": [],
-   "story": "The clans say it thaws one day a year, the day the giants were breathed in, and runs for an hour.", "encounter": "none", "hook": "It thawed this spring on the wrong day, and has been running for a week."}
+   "story": "The clans say it thaws one day a year, the day the giants were breathed in, and runs for an hour.", "encounter": "none", "hook": "It thawed this spring on the wrong day, and has been running for a week."},
+  {"id": "core:poi/ness_market", "name": "The Ness Market", "region": "core:region/brightwater", "kind": "camp", "position": [130, 430], "hearthstone": false,
+   "unique_feature": "a fish market of trestles and awnings on the Stride Ness, the land side of the causeway, where the boats land their catch", "visible_from": [],
+   "story": "Lakefolk fishers sell here because a fish sold on the Ness pays no city toll. The Tallymen have been trying to move the toll-line out to the Ness's root for forty years.", "encounter": "none; fishers selling the catch", "hook": "The Tallymen have put a clerk at the Ness's tip overnight, with a ledger and no warrant."}
 ]
