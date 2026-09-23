@@ -57,7 +57,7 @@ signal played(id: String, position: Vector3)
 var enabled := true
 var rows: Dictionary = {}             ## id -> {files, volume_db, pitch_variance, bus}
 
-## Keeps the engine's audio mixing safe in a run whose frames are not paced (AudioGuard).
+## Keeps the engine's audio mixer from reading bus details it has freed (AudioGuard).
 var guard: AudioGuard = null
 var _pool3d: Array[AudioStreamPlayer3D] = []
 var _pool2d: Array[AudioStreamPlayer] = []

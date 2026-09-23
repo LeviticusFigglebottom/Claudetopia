@@ -3,7 +3,7 @@ extends SceneTree
 ##
 ##   godot --headless --path game --audio-driver Dummy --fixed-fps 60 \
 ##       --script res://tools_gd/audio_race.gd -- [--seconds=60] [--players=24] [--silent]
-##       [--realtime] [--churn] [--audio-guard]
+##       [--realtime] [--churn] [--no-audio-guard]
 ##
 ## Every AudioStreamPlayer3D that is playing hands the AudioServer new bus details every physics
 ## frame (_update_panning -> set_playback_bus_volumes_linear; it compares a mix count it never
@@ -17,10 +17,11 @@ extends SceneTree
 ## On its own this rarely crashes: the gap is a few instructions. With tools/debug/stall_mixer.py
 ## holding only the mixing thread at that instruction, it crashes at once: unpaced frames at the
 ## first 30 ms stall; frames paced at 60 a second (`--realtime`) at the first 20 ms stall, and
-## after 57 of 10 ms. `--audio-guard` turns on the guard (systems/audio/audio_guard.gd) that
-## closes the race for unpaced runs. `--churn` allocates and frees memory the size of a set of bus
-## details, filled with 0xFF, as a game does between mixes (freed memory nobody reuses reads back
-## intact); `--silent` plays nothing (the control).
+## after 57 of 10 ms (all with `--no-audio-guard`, which turns off the guard that closes the
+## race, systems/audio/audio_guard.gd; tools/debug/audio_race_check.sh runs both ways and fails
+## unless it crashes without the guard and runs with it). `--churn` allocates and frees memory the
+## size of a set of bus details, filled with 0xFF, as a game does between mixes (freed memory
+## nobody reuses reads back intact); `--silent` plays nothing (the control).
 
 var _players: Array[AudioStreamPlayer3D] = []
 var _streams: Array[AudioStream] = []
