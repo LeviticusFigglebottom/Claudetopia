@@ -77,6 +77,27 @@ static func progression() -> Object:
 	return participant("progression")
 
 
+## The character's modifier table (Progression.mods): perks, draughts, worn enchantments.
+static func stat_mods() -> Modifiers:
+	var p := progression()
+	if p == null:
+		return null
+	var table: Variant = p.get("mods")
+	return table as Modifiers if table is Modifiers else null
+
+
+## The character's multiplier on a stat (Fair Dealing's `prices_buy` 0.9); 1 with no character.
+static func stat_mult(stat: String) -> float:
+	var m := stat_mods()
+	return m.get_mult(stat) if m != null else 1.0
+
+
+## The character's addition to a stat; 0 with no character.
+static func stat_add(stat: String) -> float:
+	var m := stat_mods()
+	return m.get_add(stat) if m != null else 0.0
+
+
 ## {renown, renown_tier 0..4, morality, morality_tier -3..3 (negative = Hollow), title}.
 static func reaction_profile() -> Dictionary:
 	var s := standing()

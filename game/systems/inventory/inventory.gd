@@ -520,6 +520,7 @@ func drop(item: Variant, amount: int = 1) -> Node:
 	wi.set("item_id", item_id)
 	wi.set("count", amount)
 	wi.set("data", data)
+	wi.set("from_bag", true)
 	var origin := _carrier_3d()
 	var parent: Node = origin.get_parent() if origin != null else get_tree().current_scene
 	if parent == null:

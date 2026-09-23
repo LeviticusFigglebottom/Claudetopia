@@ -17,6 +17,7 @@ extends RefCounted
 const MOTE_ITEM := "core:item/ember_mote"
 const CHARGE_PER_MOTE := 25.0        # fallback when the mote item carries no `ember.charge`
 const BASE_MAGNITUDE_MOTES := 2      # motes for one step of magnitude when the effect omits mote_cost
+const MOTES_PER_WARMTH := 1          # caught from a foe a Kindling word killed (Mote Catcher: +1)
 const MAGNITUDE_STEPS_MAX := 5
 const SKILL_MAGNITUDE_PER_LEVEL := 0.01
 const DISENCHANT_XP := 25.0
@@ -64,6 +65,27 @@ static func slot_kind(stack: ItemStack) -> String:
 static func fits(effect_id: String, stack: ItemStack) -> bool:
 	var kind := slot_kind(stack)
 	return kind != "" and slots_for(effect_id).has(kind)
+
+
+## Ember Motes are "captured from slain foes with a Kindling spell" (DESIGN §5.8): a foe whose last
+## blow was a Kindling saying gives its killer one, and Mote Catcher one more. Nothing did the
+## catching, so the only motes in the world were the ones a loot table happened to roll. Returns
+## how many went into the killer's bag. A called thing that is dismissed never dies, so it is
+## never caught.
+static func catch_last_warmth(victim: Node, killer: Node) -> int:
+	if victim == null or killer == null or not is_instance_valid(victim) or not is_instance_valid(killer):
+		return 0
+	if str(victim.get("last_hit_skill")) != "kindling" or victim == killer:
+		return 0
+	var bag := Inventory.for_actor(killer)
+	if bag == null or not ContentDB.has(MOTE_ITEM):
+		return 0
+	var extra := (killer as Actor).stat_add("mote_yield") if killer is Actor else 0.0
+	var count := MOTES_PER_WARMTH + maxi(int(round(extra)), 0)
+	if bag.add(MOTE_ITEM, count) == null:
+		return 0
+	EventBus.notify.emit("Caught %s." % ("an Ember Mote" if count == 1 else "%d Ember Motes" % count), "item")
+	return count
 
 
 ## Charge one mote is worth.

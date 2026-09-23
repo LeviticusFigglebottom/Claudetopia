@@ -34,6 +34,8 @@ const BOW_MIN_DRAW := 0.3
 const RIPOSTE_RANGE := 2.4
 ## How close you must be to a foe's back for the light to become a backstab.
 const BACKSTAB_RANGE := 1.8
+## The body's own poise before any stance is learned (Hafted Poise adds to it).
+const BASE_POISE := 40.0
 ## Load is what is worn and wielded over 40 + 3·Endurance (the character's own Endurance). A bag
 ## carried past its capacity puts the roll in the overloaded band whatever is worn.
 const LOAD_CAPACITY_BASE := 40.0
@@ -118,7 +120,7 @@ func _ready() -> void:
 	body_kind = "humanoid"
 	collision_layer = LAYER_PLAYER
 	max_health = DamageModel.hp_max(vigour)
-	poise_max = 40.0
+	poise_max = BASE_POISE
 	for s in SKILL_IDS:
 		if not skills.has(s):
 			skills[s] = 10
@@ -159,6 +161,8 @@ func _ready() -> void:
 	_follow_the_character()
 	if not EventBus.item_used.is_connected(_on_item_used):
 		EventBus.item_used.connect(_on_item_used)
+	if not EventBus.entity_killed.is_connected(_on_entity_killed):
+		EventBus.entity_killed.connect(_on_entity_killed)
 	if DisplayServer.get_name() != "headless" and input_enabled:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	call_deferred("_announce")
@@ -224,6 +228,8 @@ func body_model() -> Node:
 func _exit_tree() -> void:
 	if EventBus.item_used.is_connected(_on_item_used):
 		EventBus.item_used.disconnect(_on_item_used)
+	if EventBus.entity_killed.is_connected(_on_entity_killed):
+		EventBus.entity_killed.disconnect(_on_entity_killed)
 	if SaveSystem.participants.get(SAVE_SECTION) == self:
 		SaveSystem.unregister(SAVE_SECTION)
 	for pair in [["inventory", "Inventory"], ["equipment", "Equipment"],
@@ -437,11 +443,14 @@ func can_parry_with_equipment() -> bool:
 	return weapon != null and weapon.can_parry
 
 
+## How much of a blow the raised guard stops (0..1): the shield's stability, else the weapon's,
+## raised by Braced Stance (+0.1).
 func block_stability_value() -> float:
 	var guard := _offhand_guard()
+	var base := weapon.stability if weapon != null else 0.0
 	if not guard.is_empty() and not weapon.is_two_handed():
-		return clampf(float(guard.get("stability", 0.0)), 0.0, 1.0)
-	return weapon.stability if weapon != null else 0.0
+		base = float(guard.get("stability", 0.0))
+	return clampf(base + stat_add("block_stability"), 0.0, 1.0)
 
 
 ## What the off hand guards with: a shield worn as armour says it in its `armour` block, and a
@@ -617,7 +626,7 @@ func _on_clip_event(event_name: String) -> void:
 			if state == State.ATTACK or state == State.RIPOSTE:
 				_attack_phase = "active"
 				weapon.on_clip_event(event_name)
-				_emit_noise(0.5)
+				_emit_action_noise(0.5)
 		"hit_end":
 			if state == State.ATTACK or state == State.RIPOSTE:
 				_attack_phase = "recovery"
@@ -650,7 +659,7 @@ func _on_clip_finished(clip: String) -> void:
 func _on_weapon_hit(_victim: Node, hit: HitData, outcome: String) -> void:
 	if outcome == "hit" or outcome == "blocked":
 		EventBus.skill_used.emit(hit.skill_id, 4.0 if hit.heavy else 2.0)
-		_emit_noise(0.6)
+		_emit_action_noise(0.6)
 
 
 # --- RIPOSTE ------------------------------------------------------------------------------------
@@ -758,10 +767,11 @@ func _tick_riposte(delta: float) -> void:
 func _start_dodge() -> bool:
 	if not can_act():
 		return false
-	if not stamina_comp.can_afford(DamageModel.STAMINA_DODGE):
+	var cost := dodge_cost()
+	if not stamina_comp.can_afford(cost):
 		return false
-	stamina_comp.spend(DamageModel.STAMINA_DODGE)
-	_dodge_params = DamageModel.dodge_params(load_ratio)
+	stamina_comp.spend(cost)
+	_dodge_params = roll_params()
 	_dodge_elapsed = 0.0
 	is_blocking = false
 	var wish := _wish_direction()
@@ -786,6 +796,54 @@ func _start_dodge() -> bool:
 	_set_state(State.DODGE)
 	dodge_started.emit(_dodge_dir)
 	return true
+
+
+## A roll's stamina: DESIGN's 22, cheapened by Roll Away (15% less).
+func dodge_cost() -> float:
+	return DamageModel.STAMINA_DODGE * stat_mult("stamina_cost_dodge")
+
+
+## The roll this body would make now (DamageModel.dodge_params): from the load it carries, with
+## worn armour's share scaled by Second Skin, and its safe window held open longer by Roll Away
+## (+0.05 s), never past the roll's own end.
+func roll_params() -> Dictionary:
+	var p := DamageModel.dodge_params(dodge_load_ratio())
+	var extra := stat_add("dodge_iframes")
+	if not is_zero_approx(extra):
+		p["iframe_end"] = clampf(float(p["iframe_end"]) + extra, float(p["iframe_start"]), float(p["duration"]))
+	return p
+
+
+## The load the roll feels: `load_ratio`, except that Second Skin ("penalties from armour weight to
+## dodging are halved") counts the armour worn at half its weight. A bag carried past its capacity
+## still counts in full: that is not the armour.
+func dodge_load_ratio() -> float:
+	var scale := stat_mult("weight_class_penalty")
+	var capacity := LOAD_CAPACITY_BASE + LOAD_CAPACITY_PER_ENDURANCE * float(endurance)
+	if scale >= 1.0 or capacity <= 0.0:
+		return load_ratio
+	var ratio := maxf(_worn_weight() - _armour_weight() * (1.0 - scale), 0.0) / capacity
+	var bag := get_node_or_null(NodePath("Inventory"))
+	if bag != null and bag.has_method("is_overloaded") and bool(bag.call("is_overloaded")):
+		ratio = maxf(ratio, float(bag.call("load_fraction")))
+	return ratio
+
+
+## The weight of the armour worn on head, body, hands and feet.
+func _armour_weight() -> float:
+	var total := 0.0
+	var doll_body := ""
+	var doll := _doll()
+	if doll != null and doll.has_method("get_slot"):
+		for slot in Equipment.ARMOUR_SLOTS:
+			var s: Variant = doll.call("get_slot", slot)
+			if s != null:
+				total += float(s.unit_weight())
+		doll_body = str(doll.call("item_id", "body"))
+	var body := str(equipped.get("body", ""))
+	if not body.is_empty() and body != doll_body:
+		total += float(ContentDB.get_or_empty(body).get("weight", 0.0))
+	return total
 
 
 func _tick_dodge(delta: float) -> void:
@@ -937,7 +995,7 @@ func _start_bow() -> bool:
 		EventBus.notify.emit("Still winding.", "warning")
 		return false
 	_bow_draw_start = now()
-	var draw_time := float(weapon.ranged.get("draw_time", 0.7))
+	var draw_time := weapon.draw_time()
 	anim.play_intent("Bow_Draw", {"length": draw_time})
 	Foley.play("bow_draw", attack_origin.global_position)
 	camera_rig.set_aiming(true)
@@ -953,7 +1011,7 @@ func _tick_bow(delta: float) -> void:
 	var wish := _wish_direction() * WALK_SPEED * 0.5
 	velocity.x = wish.x
 	velocity.z = wish.z
-	var draw_time := maxf(float(weapon.ranged.get("draw_time", 0.7)), 0.1)
+	var draw_time := weapon.draw_time()
 	var drawn := clampf((now() - _bow_draw_start) / draw_time, 0.0, 1.0)
 	if drawn >= 1.0 and not anim.is_playing("Bow_Aim") and not anim.is_busy():
 		anim.play_intent("Bow_Aim")
@@ -1007,7 +1065,7 @@ func _fire_arrow(drawn: float) -> void:
 	# The shaft's own contribution: `damage` for a self-contained projectile, `damage_mult` for
 	# ammunition whose worth is in the head it carries. Both were in the pack; only one was read.
 	var base := (weapon.damage + float(proj.get("damage", 0.0))) * float(proj.get("damage_mult", 1.0))
-	hit.amount = DamageModel.raw_damage(base, get_skill(weapon.skill_id), lerpf(0.5, 1.0, drawn), 1.0)
+	hit.amount = DamageModel.raw_damage(base, get_skill(weapon.skill_id), lerpf(0.5, 1.0, drawn), 1.0) * weapon.skill_damage_mult()
 	hit.kind = str(proj.get("kind", "pierce"))
 	hit.poise_damage = weapon.poise_damage + float(proj.get("poise_damage", 0.0))
 	hit.attacker = self
@@ -1017,6 +1075,8 @@ func _fire_arrow(drawn: float) -> void:
 	var speed := float(weapon.ranged.get("speed", 42.0)) * lerpf(0.6, 1.0, drawn)
 	arrow.launch(aim_origin(), aim_direction(), speed, hit, float(proj.get("gravity", gravity)))
 	arrow.impact_sound = "arrow_hit"
+	arrow.recover_item = shot
+	arrow.recover_chance = arrow_recovery_chance()
 	Foley.play("bow_release", attack_origin.global_position)
 	Foley.play("arrow_whoosh", attack_origin.global_position)
 	# A method reference, not a closure: an arrow outlives the bow that loosed it, and a
@@ -1025,7 +1085,19 @@ func _fire_arrow(drawn: float) -> void:
 	var reload := float(weapon.ranged.get("reload_time", 0.0))
 	if reload > 0.0:
 		_reload_until = now() + reload
-	_emit_noise(0.3)
+	_emit_action_noise(0.3)
+
+
+## A foe this body killed with a Kindling word gives up its last warmth (Enchanting).
+func _on_entity_killed(victim: Node, killer: Node, _content_id: String) -> void:
+	if killer == self:
+		Enchanting.catch_last_warmth(victim, self)
+
+
+## The chance an arrow loosed now can be found and used again: DamageModel.ARROW_RECOVERY, and a
+## quarter more of them with Fletcher's Thrift.
+func arrow_recovery_chance() -> float:
+	return clampf(DamageModel.ARROW_RECOVERY + stat_add("arrow_recovery"), 0.0, 1.0)
 
 
 func _on_arrow_struck(_victim: Node, hit: HitData, outcome: String) -> void:
@@ -1290,12 +1362,14 @@ func _refresh_armour() -> void:
 	var doll_body := ""
 	var doll := _doll()
 	if doll != null and doll.has_method("armour_total"):
-		total = float(doll.call("armour_total"))
+		# A tempered piece is worth what this smith's tiers are worth (Red Door: 15% a tier).
+		total = float(doll.call("armour_total", Smithing.bonus_per_tier(stat_mods())))
 		doll_body = str(doll.call("item_id", "body"))
 	var body := str(equipped.get("body", ""))
 	if not body.is_empty() and body != doll_body:
 		total += float(ContentDB.get_or_empty(body).get("armour", {}).get("armour", 0.0))
-	armour_flat = total
+	# Broken In: worn armour protects 10% better. A Fortify Armour draught or note adds on top.
+	armour_flat = total * stat_mult("armour") + stat_add("armour")
 	# Struck in heavy mail you ring; in cloth and leather you are hit (Foley.material_for).
 	var heavy := doll != null and doll.has_method("weight_class") and str(doll.call("weight_class")) == "heavy"
 	body_material = "metal" if heavy or armour_flat >= 11.0 else "flesh"
@@ -1353,10 +1427,23 @@ func use_quick_slot(index: int) -> void:
 		EventBus.notify.emit("None left.", "info")
 
 
+## The noise of the body moving (a sprint's footfalls, a jump), which Quiet Step quiets by 30%.
 func _emit_noise(loudness: float) -> void:
+	_emit_action_noise(loudness * movement_noise_mult())
+
+
+## A noise the body makes by acting (a blade going live, a blow landing, a bowstring): nothing
+## about how softly it walks makes that any quieter.
+func _emit_action_noise(loudness: float) -> void:
 	for n in get_tree().get_nodes_in_group("perceivers"):
 		if n.has_method("noise_heard"):
 			n.noise_heard(global_position, loudness)
+
+
+## How loud this body's movement is against the plain figure (Quiet Step: 0.7). Stealth reads the
+## same number for the noise that goes into being seen.
+func movement_noise_mult() -> float:
+	return stat_mult("noise")
 
 
 func _on_lock_changed(target: Node3D) -> void:
@@ -1400,6 +1487,11 @@ func _follow_the_character() -> void:
 			prog.modifiers_changed.connect(_on_modifiers_changed)
 		if prog.has_signal("level_changed") and not prog.level_changed.is_connected(_on_level_changed):
 			prog.level_changed.connect(_on_level_changed)
+		# Every source of the modifier table (a perk taken or granted, a draught, the gear worn)
+		# comes through this one signal; `points_changed` alone missed a perk given as a reward.
+		var table: Variant = prog.get("mods")
+		if table is Modifiers and not (table as Modifiers).changed.is_connected(_on_modifiers_changed):
+			(table as Modifiers).changed.connect(_on_modifiers_changed)
 	var bag := get_node_or_null(NodePath("Inventory"))
 	if bag != null and bag.has_signal("changed") and not bag.changed.is_connected(_recompute_load):
 		bag.changed.connect(_recompute_load)
@@ -1415,7 +1507,28 @@ func _on_points_changed(_attribute_points: int, _perk_points: int) -> void:
 
 
 func _on_modifiers_changed() -> void:
+	_refresh_armour()
 	_refresh_pools(false)
+
+
+## The modifier table this character's perks, draughts and worn enchantments feed.
+func stat_mods() -> Modifiers:
+	var p := progression()
+	if p == null:
+		return null
+	var table: Variant = p.get("mods")
+	return table as Modifiers if table is Modifiers else null
+
+
+## What the paper doll's enchantments say (a Fortify Armour note on a coat, Resist Fire on a helm)
+## goes into the modifier table as the "equipment" source. Equipment.modifiers() was worked out
+## and never handed to anything, so a written note on armour was a decoration.
+func _refresh_gear_modifiers() -> void:
+	var table := stat_mods()
+	var doll := _doll()
+	if table == null or doll == null or not doll.has_method("modifiers"):
+		return
+	table.set_source("equipment", doll.call("modifiers"))
 
 
 func _on_level_changed(_new_level: int) -> void:
@@ -1447,8 +1560,19 @@ func _refresh_pools(fill := false) -> void:
 	else:
 		health = minf(health, max_health)
 		caster.restore_mana(0.0)
+	_refresh_poise(fill)
 	_recompute_load()
 	stats_changed.emit()
+
+
+## Poise over the body's own 40, raised by Hafted Poise (+15). Raising the ceiling raises what is
+## in it by as much; a lowered one only trims it.
+func _refresh_poise(fill: bool) -> void:
+	var want := maxf((BASE_POISE + stat_add("poise_max")) * stat_mult("poise_max"), 1.0)
+	var gained := want - poise_comp.maximum
+	poise_max = want
+	poise_comp.maximum = want
+	poise_comp.current = want if fill else clampf(poise_comp.current + maxf(gained, 0.0), 0.0, want)
 
 
 ## Quieted drains renown (DESIGN §5.3). StatusEffects has always ticked it, and nothing listened,
@@ -1465,6 +1589,7 @@ func _on_equipment_changed(slot: String) -> void:
 	var eq := get_node_or_null(NodePath("Equipment"))
 	if eq == null or not eq.has_method("get_slot"):
 		return
+	_refresh_gear_modifiers()
 	var stack: Variant = eq.call("get_slot", slot)
 	var id := str(stack.id) if stack != null else ""
 	var stack_data: Dictionary = stack.data.duplicate(true) if stack != null else {}

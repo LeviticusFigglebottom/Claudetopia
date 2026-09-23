@@ -190,11 +190,11 @@ func hollow_penalty() -> float:
 
 
 func buy_price_of(item_id: String) -> int:
-	return Pricing.buy_price(ContentQuery.item_value(item_id), region_id(), count(item_id), effective_disposition(), Peers.skill_level("speech"), personality_bias(), hollow_penalty())
+	return Pricing.buy_price(ContentQuery.item_value(item_id), region_id(), count(item_id), effective_disposition(), Peers.skill_level("speech"), personality_bias(), hollow_penalty(), Peers.stat_mult("prices_buy"))
 
 
 func sell_price_of(item_id: String) -> int:
-	return Pricing.sell_price(ContentQuery.item_value(item_id), region_id(), count(item_id), effective_disposition(), Peers.skill_level("speech"), personality_bias(), hollow_penalty())
+	return Pricing.sell_price(ContentQuery.item_value(item_id), region_id(), count(item_id), effective_disposition(), Peers.skill_level("speech"), personality_bias(), hollow_penalty(), Peers.stat_mult("prices_sell"))
 
 
 func will_buy(item_id: String) -> bool:
@@ -214,7 +214,7 @@ func buy(player: Object, item_id: String, count_: int = 1) -> Dictionary:
 	if count(item_id) < count_:
 		refused.emit("out_of_stock")
 		return {"ok": false, "reason": "out_of_stock", "price": 0, "count": 0}
-	var quote := Pricing.bulk(ContentQuery.item_value(item_id), region_id(), count(item_id), count_, effective_disposition(), Peers.skill_level("speech"), "buy", personality_bias(), hollow_penalty())
+	var quote := Pricing.bulk(ContentQuery.item_value(item_id), region_id(), count(item_id), count_, effective_disposition(), Peers.skill_level("speech"), "buy", personality_bias(), hollow_penalty(), Peers.stat_mult("prices_buy"))
 	var total := int(quote["total"])
 	if not Purse.can_pay(player, total):
 		refused.emit("poor")
@@ -245,7 +245,7 @@ func sell(player: Object, item_id: String, count_: int = 1) -> Dictionary:
 		return {"ok": false, "reason": "not_bought", "price": 0, "count": 0}
 	if Peers.item_count(player, item_id) < count_:
 		return {"ok": false, "reason": "not_held", "price": 0, "count": 0}
-	var quote := Pricing.bulk(ContentQuery.item_value(item_id), region_id(), count(item_id), count_, effective_disposition(), Peers.skill_level("speech"), "sell", personality_bias(), hollow_penalty())
+	var quote := Pricing.bulk(ContentQuery.item_value(item_id), region_id(), count(item_id), count_, effective_disposition(), Peers.skill_level("speech"), "sell", personality_bias(), hollow_penalty(), Peers.stat_mult("prices_sell"))
 	var total := int(quote["total"])
 	var paid := total
 	var sold := count_

@@ -114,6 +114,11 @@ static func slots_for(stack: ItemStack) -> Array[String]:
 				out.append("amulet")
 			"head", "body", "hands", "feet":
 				out.append(slot)
+			"off_hand":
+				# A shield worn as armour (the round shield) says so in its `armour` block; the
+				# rule above only knew a shield carried as a weapon, so this one was sold in shops
+				# and could never be taken up.
+				out.append("off_hand")
 	elif stack.has_tag("offhand"):
 		out.append("off_hand")
 	if stack.is_consumable():

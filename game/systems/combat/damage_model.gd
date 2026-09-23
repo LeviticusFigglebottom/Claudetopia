@@ -45,6 +45,9 @@ const HEAVY_ATTACK_MULT := 1.6
 const LIGHT_CHAIN_MULTS: Array[float] = [1.0, 1.0, 1.2]
 const CRIT := {"riposte": 3.0, "backstab": 3.0, "sneak": 3.0, "sneak_dagger": 6.0}
 const MIN_DAMAGE := 1.0
+## The share of loosed arrows and bolts that survive where they land, to be picked out of the
+## ground or the body (DESIGN names no figure; Fletcher's Thrift adds a quarter: DECISIONS).
+const ARROW_RECOVERY := 0.4
 
 ## Hit kinds a hitbox can carry; resists are keyed by these.
 const KINDS: Array[String] = ["slash", "pierce", "blunt", "fire", "frost", "poison", "silence"]
