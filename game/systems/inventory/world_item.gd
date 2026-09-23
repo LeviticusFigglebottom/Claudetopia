@@ -18,6 +18,9 @@ const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
 ## bandit is nobody's, and taking the second is not a crime.
 @export var owner_npc: String = ""
 @export var owner_faction: String = ""
+## A forge prop to wear instead of the item's own model: a deep place's meta names the asset its
+## `item` feature was set down as (a book on a cist's ledge), and that is what should be picked up.
+@export var visual_path: String = ""
 var data: Dictionary = {}
 
 var _visual: Node3D = null
@@ -114,6 +117,8 @@ func rebuild() -> void:
 	add_child(_visual)
 	var d := def()
 	var model := str(d.get("model", ""))
+	if visual_path != "" and ResourceLoader.exists(visual_path):
+		model = visual_path
 	if model != "" and ResourceLoader.exists(model):
 		var res: Resource = load(model)
 		if res is PackedScene:

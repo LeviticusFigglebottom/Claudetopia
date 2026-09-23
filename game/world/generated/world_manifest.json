@@ -1,0 +1,70 @@
+{
+ "seed": 8471,
+ "size_m": 8192,
+ "spacing_m": 2.0,
+ "origin": [
+  -4096.0,
+  -4096.0
+ ],
+ "grid": 4096,
+ "sea_level": 0,
+ "lake_level": 8,
+ "regions": [
+  "core:region/hearthvale",
+  "core:region/brightwater",
+  "core:region/sedgemire",
+  "core:region/briarwold",
+  "core:region/skerrow",
+  "core:region/cinderlea"
+ ],
+ "cell_size_m": 256,
+ "cells": [
+  32,
+  32
+ ],
+ "runtime": {
+  "grid": 1024,
+  "heights": "runtime/heights_1024.r32",
+  "regions": "runtime/regions_1024.u8",
+  "water": "runtime/water_1024.u8",
+  "water_level": "runtime/water_level_1024.r32"
+ },
+ "built_at": "2026-09-23T03:11:42Z",
+ "build_seconds": 280.1,
+ "height_range": [
+  -27.83,
+  720.41
+ ],
+ "water_fraction": 0.1788,
+ "rivers": 4,
+ "roads": 38,
+ "pois": 82,
+ "scatter_instances": 3484974,
+ "encounters": 592,
+ "texture_slots": [
+  "vale_grass",
+  "chalk",
+  "dirt_path",
+  "mud",
+  "peat",
+  "forest_floor",
+  "moss",
+  "granite",
+  "limestone",
+  "scree",
+  "snow",
+  "heather",
+  "ash_soil",
+  "grey_grass",
+  "fused_stone",
+  "shingle",
+  "cobbles",
+  "barley",
+  "orchard_grass",
+  "lake_bed",
+  "sand_flats"
+ ],
+ "only": "all",
+ "pad_fingerprint": "9a89fe66",
+ "recipes": []
+}

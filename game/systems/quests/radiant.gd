@@ -61,6 +61,14 @@ func _known(id: String) -> bool:
 	return bool(db().has(id))
 
 
+## Does the world supply this item at all? Read off the pack (`ItemSources`); a stand-in content
+## registry is its own world, and supplies what it lists.
+func _supplied(item_id: String) -> bool:
+	if db() != ContentDB:
+		return true
+	return ItemSources.sold(item_id) or ItemSources.rolled(item_id) or ItemSources.story_gives(item_id)
+
+
 # --- templates -----------------------------------------------------------------------------
 
 ## Every radiant template in content, sorted by id so generation order is stable.
@@ -86,7 +94,7 @@ func template(template_id: String) -> Dictionary:
 ## board offers the same work all day.
 func generate(region_id: String, count: int = 3, board_place: String = "", seed_value: int = 0) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var board := board_place if board_place != "" else _default_board(region_id)
+	var board := board_place if board_place != "" else default_board(region_id)
 	if board == "":
 		Log.warn("Radiant", "no settled place in %s to hang a board on" % region_id)
 		return out
@@ -190,7 +198,7 @@ func _stored_def(quest_id: String) -> Dictionary:
 
 
 ## Where a board hangs when the caller does not say: the largest settled place in the region.
-func _default_board(region_id: String) -> String:
+func default_board(region_id: String) -> String:
 	const PREFERENCE := ["city", "town", "village", "fort", "camp", "lodge", "hamlet"]
 	var best := ""
 	var best_rank := PREFERENCE.size()
@@ -230,6 +238,12 @@ func _make_one(t: Dictionary, region_id: String, board: String) -> Dictionary:
 			return {}   # the world has no content for this template yet; try another
 		ids[token] = chosen
 		names[token] = _display(chosen)
+	# Nobody needs walking to where they live. With the placeholders out of the traveller pool the
+	# first escort a Merrowby board wrote was "see Bessa Tamwick safe to Tamwick", which ends the
+	# moment she agrees to it, standing in her own orchard.
+	if ids.has("traveller") and ids.has("destination") \
+			and str(_def(str(ids["traveller"])).get("home_place", "")) == str(ids["destination"]):
+		return {}
 
 	var range_spec: Array = spec.get("count", [1, 1])
 	var lo: int = int(range_spec[0]) if range_spec.size() > 0 else 1
@@ -331,6 +345,19 @@ func _distance_m(a_id: String, b_id: String) -> float:
 func _pick(spec_value: Variant, region_id: String, board: String) -> String:
 	if typeof(spec_value) == TYPE_STRING:
 		return str(spec_value)
+	var candidates := pool_for(spec_value, region_id, board)
+	if candidates.is_empty():
+		Log.info("Radiant", "no %s in %s yet for a radiant target" % [str((spec_value as Dictionary).get("pool", "?")), region_id])
+		return ""
+	return candidates[_rng.randi() % candidates.size()]
+
+
+## Everything a target spec could be filled with here, its fallback pool included, sorted: what
+## `_pick` chooses from, and what the quest walk (`QuestWalk.radiant`) asks one by one whether it
+## can be done.
+func pool_for(spec_value: Variant, region_id: String, board: String) -> Array[String]:
+	if typeof(spec_value) == TYPE_STRING:
+		return [str(spec_value)]
 	var spec: Dictionary = spec_value
 	var candidates := _candidates(spec, region_id, board)
 	if candidates.is_empty() and spec.has("fallback_pool"):
@@ -340,11 +367,8 @@ func _pick(spec_value: Variant, region_id: String, board: String) -> String:
 		if spec.has("fallback_kinds"):
 			fallback["kinds"] = spec["fallback_kinds"]
 		candidates = _candidates(fallback, region_id, board)
-	if candidates.is_empty():
-		Log.info("Radiant", "no %s in %s yet for a radiant target" % [str(spec.get("pool", "?")), region_id])
-		return ""
 	candidates.sort()
-	return candidates[_rng.randi() % candidates.size()]
+	return candidates
 
 
 func _candidates(spec: Dictionary, region_id: String, board: String) -> Array[String]:
@@ -432,10 +456,16 @@ func _pois_for(region_id: String, spec: Dictionary) -> Array[String]:
 	return out
 
 
+## People a notice can name. Not a placeholder the writers left standing (`example`), and not a
+## watch post (`guard`): the escort walk found boards able to post "Walk Gosling to Tollmere",
+## Gosling being one of the placeholder roster's dogs, and "see the Paid Watchman safe".
 func _npcs_for(region_id: String, spec: Dictionary) -> Array[String]:
 	var out: Array[String] = []
 	for def in _all("npc"):
-		if bool(def.get("no_radiant", false)):
+		if bool(def.get("no_radiant", false)) or bool(def.get("example", false)):
+			continue
+		var tags: Variant = def.get("tags", [])
+		if typeof(tags) == TYPE_ARRAY and (tags as Array).has("guard"):
 			continue
 		var home := str(def.get("home_place", ""))
 		if bool(spec.get("same_region", true)):
@@ -445,6 +475,9 @@ func _npcs_for(region_id: String, spec: Dictionary) -> Array[String]:
 	return out
 
 
+## Goods a notice can ask for: only what the world supplies somehow — a shop, a loot table, the
+## story — because a fetch for something nothing gives, sells or drops can be taken and never
+## finished (the walk found boards able to ask for cottongrass, which nothing in the game has).
 func _items_for(spec: Dictionary) -> Array[String]:
 	var tags: Array = spec.get("tags", [])
 	var cats: Array = spec.get("fallback_categories", [])
@@ -452,6 +485,8 @@ func _items_for(spec: Dictionary) -> Array[String]:
 	var by_cat: Array[String] = []
 	for def in _all("item"):
 		if bool(def.get("no_radiant", false)) or bool(def.get("quest_item", false)):
+			continue
+		if not _supplied(str(def.get("id", ""))):
 			continue
 		var item_tags: Array = def.get("tags", [])
 		var hit := false

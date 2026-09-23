@@ -282,3 +282,7 @@ No GPU. Forward+ runs on lavapipe (software Vulkan) and is the shipped default.
   body standing and has `CinematicPlayer.scrub()` pose each shot's key frames, so the PNGs are
   the player's own frames, letterbox and subtitles included, with `cinematic.json` beside them
   saying where each camera stood and how far above the ground.
+* A plan's `flags` are set before the world stands up, so it can photograph a moment of the
+  story: `tools/capture/plans/start.json` sets `new_game` and looks at the Stair Head as a new
+  game hands it over, the Warden held at her fire, from the gameplay camera's resting pose and
+  three other places.

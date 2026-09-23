@@ -184,9 +184,11 @@ land, the stakes, then you — and it is about ninety seconds long.
   side of the way out, a signpost, lamps. Behind you: the two Oroth piers at the head of the
   stair, its top steps going over the edge, and her Hearthstone. The first view is the camp,
   the heath beyond it, and the Choir's twelve headless colossi on the skyline. From the camp,
-  waystones (a lamp on every third) walk 412 m north to the Choir over ground a person can
-  walk, and keep more than fifty metres from the bell-bearer's hollow and the wights' rise:
-  about a minute and a half on foot, past the Cantor's Seat. The Naming runs: `wake` (speak to
+  waystones (a lamp on every third) walk 426 m north to the Choir over ground a person can
+  walk, and keep more than fifty metres from anything the built world stands on the heath:
+  about a minute and a half on foot, past the Cantor's Seat. The world builder places the
+  heath's enemies afresh on every build, so a test holds the waystones against the spawns of
+  the build on disk and names the leg to move. The Naming runs: `wake` (speak to
   the Warden, who gives you the road) → `the_choir` (walk the waystones to the Sunken Choir) →
   `ash_wights` → `hearthstone` (Pilgrim's Ash) → `the_cart`. Standing at the start completes
   nothing. The Warden is kept at her fire by her npc def's `holds`, from the moment a new game

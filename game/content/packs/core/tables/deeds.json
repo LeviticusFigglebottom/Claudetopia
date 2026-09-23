@@ -45,6 +45,8 @@
     {"id": "gesture_offence", "label": "was rude in front of people", "hearth": -1, "renown": 1, "witness_renown": 1, "witness_cap": 4, "rumour": "core:rumour/bad_manners", "heat": 0.4},
     {"id": "bounty_paid", "label": "settled with the law", "hearth": 1, "renown": 0, "witness_renown": 0, "witness_cap": 2, "rumour": "core:rumour/paid_up", "heat": 0.3},
     {"id": "jailed", "label": "sat in a cell", "hearth": 0, "renown": 1, "witness_renown": 0, "witness_cap": 2, "rumour": "core:rumour/was_jailed", "heat": 0.5},
+    {"id": "poppy_picked", "label": "picked the one red poppy", "hearth": -6, "renown": 6, "witness_renown": 1, "witness_cap": 3, "rumour": "core:rumour/poppy_picked", "heat": 0.9},
+    {"id": "poppy_watered", "label": "watered the one red poppy", "hearth": 3, "renown": 1, "witness_renown": 1, "witness_cap": 3, "rumour": "core:rumour/poppy_watered", "heat": 0.4},
     {"id": "died", "label": "was seen to fall", "hearth": 0, "renown": -3, "witness_renown": 0, "witness_cap": 0, "rumour": "core:rumour/seen_to_fall", "heat": 0.4}
   ]
 }

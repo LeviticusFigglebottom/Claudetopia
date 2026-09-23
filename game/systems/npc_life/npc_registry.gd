@@ -18,6 +18,8 @@ signal npc_despawned(npc_id: String)
 const SECTION := "npcs"
 const NPC_SCENE := "res://actors/npc/npc.tscn"
 const GUARD_SCRIPT := "res://actors/npc/guard.gd"
+## Markers a dressing puts where somebody works, named for the `spot` in their schedule.
+const SPOT_GROUP := "npc_spot"
 
 var states: Dictionary = {}       # npc_id -> Dictionary
 var spawned: Dictionary = {}      # npc_id -> Node
@@ -86,6 +88,12 @@ func _fresh_state(def: Dictionary) -> Dictionary:
 		"hostile": false,
 		"in_jail_until_day": 0,
 		"travelling": false,
+		# walking with the player (Escorts): the quest it is for, where they last stood, and
+		# whether they have been left behind; and, once there, the place they were brought to
+		"escort": "",
+		"escort_pos": [],
+		"escort_left": false,
+		"waiting_at": "",
 	}
 
 
@@ -120,8 +128,92 @@ func activity_of(npc_id: String) -> String:
 
 ## Is this person under a roof right now? Their schedule decides it (Schedules.is_indoors),
 ## and it is what keeps a sleeping villager out of the village square at three in the morning.
+## Somebody walking the road with you is not in bed, whatever their timetable last said.
 func is_indoors(npc_id: String) -> bool:
+	if is_escorted(npc_id):
+		return false
 	return bool(state(npc_id).get("indoors", false))
+
+
+# --- escorts ---------------------------------------------------------------------------------------
+
+## Somebody walking with the player keeps no timetable: `simulate` leaves them alone, they stand
+## up where they were last seen rather than at their home place, and they are counted as being in
+## whichever cell they are actually in. `Escorts` decides when all that starts and stops.
+func is_escorted(npc_id: String) -> bool:
+	return str(state(npc_id).get("escort", "")) != ""
+
+
+func escorted_ids() -> Array[String]:
+	var out: Array[String] = []
+	for id in states:
+		if str((states[id] as Dictionary).get("escort", "")) != "":
+			out.append(str(id))
+	out.sort()
+	return out
+
+
+func begin_escort(npc_id: String, quest_id: String, at: Vector3) -> void:
+	var s := state(npc_id)
+	if s.is_empty():
+		return
+	s["escort"] = quest_id
+	s["escort_left"] = false
+	s["waiting_at"] = ""
+	s["indoors"] = false
+	set_escort_position(npc_id, at)
+	state_changed.emit(npc_id)
+
+
+func set_escort_position(npc_id: String, at: Vector3) -> void:
+	var s := state(npc_id)
+	if not s.is_empty() and at != Vector3.INF:
+		s["escort_pos"] = [snappedf(at.x, 0.01), snappedf(at.y, 0.01), snappedf(at.z, 0.01)]
+
+
+## Where an escorted person last stood, or `Vector3.INF` for anybody who is not walking with you.
+func escort_position(npc_id: String) -> Vector3:
+	var p: Variant = state(npc_id).get("escort_pos", [])
+	if not is_escorted(npc_id) or typeof(p) != TYPE_ARRAY or (p as Array).size() < 3:
+		return Vector3.INF
+	return Vector3(float(p[0]), float(p[1]), float(p[2]))
+
+
+func escort_left(npc_id: String) -> bool:
+	return bool(state(npc_id).get("escort_left", false))
+
+
+func set_escort_left(npc_id: String, left: bool) -> void:
+	var s := state(npc_id)
+	if not s.is_empty():
+		s["escort_left"] = left
+		state_changed.emit(npc_id)
+
+
+## Stops an escort. With `stay_at` they have arrived: they stand at that place for as long as the
+## player is there to see it, and go back to their own life once the player has gone (see
+## `despawn`). Without it they simply go back to their timetable.
+func end_escort(npc_id: String, stay_at := "") -> void:
+	var s := state(npc_id)
+	if s.is_empty():
+		return
+	s["escort"] = ""
+	s["escort_pos"] = []
+	s["escort_left"] = false
+	if stay_at != "":
+		s["place"] = stay_at
+		s["waiting_at"] = stay_at
+		s["activity"] = "idle"
+		s["spot"] = ""
+		state_changed.emit(npc_id)
+	else:
+		s["waiting_at"] = ""
+		state_changed.emit(npc_id)
+		simulate(npc_id)
+
+
+func waiting_at(npc_id: String) -> String:
+	return str(state(npc_id).get("waiting_at", ""))
 
 
 func disposition_of(npc_id: String) -> int:
@@ -223,6 +315,9 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 		return s
 	if int(s.get("in_jail_until_day", 0)) > WorldClock.day:
 		return s
+	# on the road with the player, or standing where the player brought them: not on the clock
+	if str(s.get("escort", "")) != "" or str(s.get("waiting_at", "")) != "":
+		return s
 	if weather.is_empty():
 		weather = weather_now()
 	var def := ContentDB.get_or_empty(npc_id)
@@ -266,8 +361,13 @@ func _on_weather_changed(_region_id: String, weather_id: String) -> void:
 
 # --- spawning --------------------------------------------------------------------------------
 
-## The cell an NPC is currently in (from its place's position).
+## The cell an NPC is currently in: its place's, or for somebody on the road with the player,
+## the one they are actually standing in — otherwise their home cell unloading behind you would
+## take them away from your side.
 func cell_of(npc_id: String) -> Vector2i:
+	var on_road := escort_position(npc_id)
+	if on_road != Vector3.INF:
+		return WorldProbe.cell_of(on_road)
 	return WorldProbe.cell_of_place(place_of(npc_id))
 
 
@@ -277,7 +377,21 @@ func _on_cell_loaded(cell: Vector2i) -> void:
 		return
 	for id in states:
 		if is_alive(id) and cell_of(id) == cell:
-			spawn(id)
+			if is_spawned(id):
+				_settle_on_marker(id)
+			else:
+				spawn(id)
+
+
+## Somebody stood up before the place they work was built — a far cell coming into the near
+## ring raises the full dressing, markers and all — is moved onto their marker once it exists.
+func _settle_on_marker(npc_id: String) -> void:
+	if is_escorted(npc_id):
+		return
+	var marker := spot_marker(npc_id)
+	var body := actor(npc_id)
+	if marker != null and body is Node3D and (body as Node3D).global_position.distance_to(marker.global_position) > 2.0:
+		(body as Node3D).global_position = marker.global_position
 
 
 func _on_cell_unloaded(cell: Vector2i) -> void:
@@ -347,6 +461,12 @@ func _spawn_parent() -> Node:
 ## village does not stand in one spot. The spot marker (if the place scene has one) wins,
 ## and the actor resolves that itself once spawned.
 func spawn_position(npc_id: String) -> Vector3:
+	var on_road := escort_position(npc_id)
+	if on_road != Vector3.INF:
+		return on_road
+	var marked := spot_marker(npc_id)
+	if marked != null:
+		return marked.global_position
 	var base := WorldProbe.place_position(place_of(npc_id))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(npc_id)
@@ -360,11 +480,36 @@ func spawn_position(npc_id: String) -> Vector3:
 	return pos
 
 
+## A marker in the world named for where this person stands right now. A point of interest's
+## dressing puts one where its resident works — the toll-keeper's stool, the hermit's fire — so
+## they stand up there rather than on a ring round the place's middle, which on a causeway or an
+## island is the water.
+func spot_marker(npc_id: String) -> Node3D:
+	var spot := str(state(npc_id).get("spot", ""))
+	if spot == "" or not is_inside_tree():
+		return null
+	var place := place_of(npc_id)
+	for node in get_tree().get_nodes_in_group(SPOT_GROUP):
+		if not (node is Node3D) or not (node as Node3D).is_inside_tree() or str(node.name) != spot:
+			continue
+		# a marker says whose place it is in; two camps' fires are not the same fire
+		var owner_place := str(node.get_meta("place", ""))
+		if owner_place != "" and owner_place != place:
+			continue
+		return node as Node3D
+	return null
+
+
 func despawn(npc_id: String) -> void:
 	if not spawned.has(npc_id):
 		return
 	var node: Node = spawned[npc_id]
 	spawned.erase(npc_id)
+	# Somebody who was brought somewhere stays there only while there is somebody to see it.
+	# Once the player has gone they go back to their own life, off the page like everyone else.
+	var kept := state(npc_id)
+	if str(kept.get("waiting_at", "")) != "":
+		kept["waiting_at"] = ""
 	if is_instance_valid(node):
 		if node.has_method("collect_state"):
 			var s: Variant = node.call("collect_state")

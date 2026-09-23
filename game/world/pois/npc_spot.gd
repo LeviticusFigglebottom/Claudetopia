@@ -17,6 +17,9 @@ var place_id := ""
 
 func _ready() -> void:
 	add_to_group(GROUP)
+	# the registry's own reading of whose marker this is (NpcRegistry.spot_marker)
+	if not place_id.is_empty():
+		set_meta("place", place_id)
 	var reg := NpcRegistry.instance
 	if reg == null:
 		return

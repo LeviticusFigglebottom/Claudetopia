@@ -525,6 +525,24 @@ hold the two end states against each other. The hook into the new-game flow is o
 `GameServices.begin_new_game()`, the one place a new game already begins, and a setting stops
 it for later new games. Reversible.
 
+## 2026-09-22 · A stage number counts from one
+**Decision.** Content names a quest stage by its id or by its number counted from one, in
+`quest_at`, `quest_min_stage` and `quest_stage` alike. The code translates in one place,
+`QuestLog.stage_index()`; `stage_of()` stays the index from nought and is never what content
+writes.
+**Why.** Every quest in the pack that writes stage numbers says in its own `notes` that they are
+1-based, and the forty-eight numbered references all read correctly that way and wrongly the
+other. The code compared them with the 0-based index, so each landed a stage late or on no stage
+at all — among them the main thread's first conversation and every branch of six side quests.
+**Alternatives.** Rewriting the forty-eight numbers as stage ids, which is what the later half of
+the pack already does and is the sturdier habit. It would have made the test that pins them
+tautological, and the numbers were written consistently; the fault was the reader, not the
+writing. New content should still prefer ids.
+**Consequences.** `test_quest_stage_references.gd` holds, for every number the pack uses, the
+stage id its prose describes, and fails on a number nobody has explained. The fake quest provider
+in `tests/fixtures/fakes.gd` counts the same way as the real log, so a test cannot pass against a
+convention the game does not use.
+
 ## 2026-09-22 · The character's attributes start at 10, and the pools are the character's
 **Decision.** Vigour, Endurance and Will start at 10, not 5, and there is one set of pool
 formulas (`DamageModel`): stamina `100 + 8·Endurance`, mana `60 + 6·Will`, health from Vigour.
@@ -716,7 +734,7 @@ Cinderlea cliff above the Hushline Stair, not at the Stair. The Warden is kept t
 timetable) from the moment a new game is named until the Foundling reaches the Choir. She speaks
 first, in her own greeting for the moment, and the HUD writes each new objective under the
 compass as it changes. The Naming's first stage asks only to speak to her, with its marker at the
-camp. A new second stage, `the_choir`, sends the player 412 m north along waystones the camp's
+camp. A new second stage, `the_choir`, sends the player 426 m north along waystones the camp's
 dressing lays from its `path` to the Sunken Choir.
 **Why.** The user's first minutes were a body alone on a grey pad in the Hush's water at the
 foot of an 80 m cliff (the pad the world builder flattened for the Stair). An objective ("Go to

@@ -41,11 +41,13 @@ func _model() -> HumanoidModel:
 
 func _step(m: HumanoidModel, v: Vector2, sneaking: bool, travelled: Vector2) -> Vector2:
 	m.set_locomotion(v, sneaking)
+	# the model advances its own tree in _process (manual mode, on the combat clock), so the test
+	# must not advance it again: a second advance plays every gait at twice its rate, and the
+	# planted foot slides backwards at exactly the ground speed
 	m._process(DT)
 	var next := travelled + v * DT
 	# the model faces +Z, so its right is -X
 	_root.position = Vector3(-next.x, 0.0, next.y)
-	m.anim_tree.advance(DT)
 	return next
 
 
