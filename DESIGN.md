@@ -137,7 +137,10 @@ are normative for pass one and live in `game/systems/*`.
   stops and does not start again until a quarter of the pool is back). Sneak 1.5 m/s; locked on
   or blocking 2.6 m/s (×0.6 while blocking). Rest to a jog in 0.31 s (16 m/s², then 7 m/s² on to
   a sprint); a jog stops in 0.25 s over 0.6 m (20 m/s²), a sprint in 0.48 s over 2.1 m
-  (12 m/s² down to a jog). Sprint dodge-roll.
+  (12 m/s² down to a jog).
+* The roll (§5.3) is a tap of Sprint: Shift let go within 0.22 s rolls, held it sprints, and
+  the sprint waits out those 0.22 s so a tap is not a lurch and then a roll. Ctrl rolls too, and
+  B on a pad; Space jumps. The tap can be turned off, and is off while Sprint is a toggle.
 * The legs keep pace with the ground. Each gait has its own clip made at its speed (Walk,
   Run for the jog, Sprint, Sneak_Walk). All of them share one stride phase and are played at
   ground speed over stride (0.5–1.6 times as made), so a planted foot stays planted through
@@ -151,7 +154,7 @@ are normative for pass one and live in `game/systems/*`.
   never with the body; the compass reads the camera.
 * First-person (arms visible) and third-person (orbit, shoulder offset, lock-on
   framing). `V` / right-stick click toggles. Third person sits 3.6 m behind a pivot 1.55 m up
-  and 0.4 m over the shoulder, and follows with a gentle lag (about 0.36 m at a jog). A sprint
+  and 0.4 m over the shoulder, and follows with a gentle lag (about 0.25 m at a jog). A sprint
   draws it back 0.5 m and widens the view 7°, eased in and out. Collision pulls the camera in at
   once and lets it back out over about 0.35 s. Physics is interpolated, so bodies moved at 60 Hz
   are smooth at any refresh rate; the camera, the compass and anything moved per frame read the
@@ -314,6 +317,12 @@ are normative for pass one and live in `game/systems/*`.
   high places (surveying at vistas) and by buying charts.
 * HUD: health/stamina/mana bars, quick slots, lock-on reticle, subtle prompts.
   Hides when idle. Everything themed (see §7).
+* The first minutes teach the controls. A strip low in the middle of the HUD names what a new
+  player reaches for (move, sprint, roll, jump, use, strike, block) with the keys bound at that
+  moment, or the pad's buttons while a pad is in use. Each thing goes once it has been done, and
+  the strip goes when nothing is left or after fifteen minutes of play. What was learned is kept
+  with the game, so a new game is taught again; the Hints setting turns the strip off.
+  The pause page reaches "How to move and fight", every control on one page as bound now.
 * Menus: inventory (paper-doll), journal (quests, rumours, bestiary, books read),
   map, skills/perks, settings (video, audio, controls with rebinding, gameplay),
   save/load slots.

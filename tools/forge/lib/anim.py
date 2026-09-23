@@ -1004,11 +1004,31 @@ def swing_clip(skel: Skeleton, name: str, length: float, guard: Pose, beats: Seq
 # roll generator (dodges)
 # --------------------------------------------------------------------------------------
 
+## Roughly how far the body's surface stands off each joint (m, at the default height): enough to
+## say which part of a tumbling body is lowest, and by how much it is into the ground or clear of it.
+BODY_RADII: Dict[str, float] = {
+    "Head": 0.11, "Neck": 0.06, "Chest": 0.14, "Spine": 0.13, "Hips": 0.13,
+    "Shoulder.L": 0.06, "Shoulder.R": 0.06, "UpperArm.L": 0.05, "UpperArm.R": 0.05,
+    "LowerArm.L": 0.045, "LowerArm.R": 0.045, "Hand.L": 0.04, "Hand.R": 0.04,
+    "UpperLeg.L": 0.08, "UpperLeg.R": 0.08, "LowerLeg.L": 0.06, "LowerLeg.R": 0.06,
+    "Foot.L": 0.045, "Foot.R": 0.045, "Toe.L": 0.02, "Toe.R": 0.02,
+}
+LEGS_STRAIGHT: Pose = {"UpperLeg.L": (0, 0, 0), "UpperLeg.R": (0, 0, 0), "LowerLeg.L": (0, 0, 0),
+                       "LowerLeg.R": (0, 0, 0), "Foot.L": (0, 0, 0), "Foot.R": (0, 0, 0)}
+
+
+def lowest_surface(skel: Skeleton, W) -> float:
+    """Height of the lowest point of the body's surface in pose W (joint heights less BODY_RADII)."""
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    return min(skel.joint_world(W, b)[2] - r * s for b, r in BODY_RADII.items() if b in skel.J)
+
+
 def roll_clip(skel: Skeleton, name: str, direction: str, length: float = 0.75, guard: Optional[Pose] = None) -> ClipBuilder:
     """Tucked roll in place.  direction in F/B/L/R.  The whole body turns about a horizontal
-    axis while tucking; legs are FK (not grounded)."""
+    axis while tucking; legs are FK (not grounded), and every frame the whole body is raised or
+    lowered until its lowest point is on the ground."""
     cb = ClipBuilder(skel, name, length, loop=False, grounded=False)
-    guard = guard or GUARD_1H
+    guard = {**LEGS_STRAIGHT, **(guard or GUARD_1H)}
     s = skel.props.height / rig.DEFAULT_HEIGHT
     # rotation sign: forward roll = bend forward (Hips f +)
     tuck: Pose = {"Spine": (36, 0, 0), "Chest": (28, 0, 0), "Neck": (18, 0, 0), "Head": (10, 0, 0),
@@ -1052,6 +1072,20 @@ def roll_clip(skel: Skeleton, name: str, direction: str, length: float = 0.75, g
         k = ease("smooth", k)
         return spin(k)
     cb.layer(spin_layer)
+
+    # Keys alone put the toes 19 cm into the ground on the way down, the head 24 cm into it at the
+    # turn and the back 26 cm clear of it coming over; and the guard at the end, which says
+    # nothing about the legs, kept the crouch's bent knees at standing height, so the body stood
+    # up with its feet 30 cm in the air and dropped when the game took it back. A roll is felt
+    # through the floor: every frame, the whole body goes up or down until its lowest point
+    # touches it.
+    def ground(t: float, pose: Pose) -> Pose:
+        low = lowest_surface(skel, skel.fk(cb.local_pose(t, pose)))
+        hp = pose.get(HIPS_POS, (0.0, 0.0, 0.0))
+        out = dict(pose)
+        out[HIPS_POS] = (hp[0], hp[1], hp[2] - low)
+        return out
+    cb.post.append(ground)
     cb.event(0.25 * length, "roll_start")
     cb.event(0.85 * length, "cancel_ok")
     return cb

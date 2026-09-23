@@ -7,6 +7,7 @@ const ENTRIES := [
 	["The journal", "journal", "quest"],
 	["The chart", "map", "map"],
 	["What you have learned", "skills", "book"],
+	["How to move and fight", "controls", "book"],
 	["Settings", "settings", "settings"],
 	["Write it down", "save", "save"],
 	["Take it up again", "load", "load"],
