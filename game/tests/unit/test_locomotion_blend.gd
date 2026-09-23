@@ -49,7 +49,8 @@ func _step(m: HumanoidModel, v: Vector2, sneaking: bool, travelled: Vector2) -> 
 	return next
 
 
-## [median planted-foot ground speed m/s, mean hips below standing m] over four seconds at `v`.
+## [median planted-foot ground speed m/s, mean hips below standing m, hips peak to peak m] over
+## four seconds at `v`.
 func _walk(m: HumanoidModel, v: Vector2, sneaking: bool) -> Array:
 	var sk := m.skeleton
 	var hips_rest := sk.get_bone_global_rest(sk.find_bone("Hips")).origin.y
@@ -58,11 +59,16 @@ func _walk(m: HumanoidModel, v: Vector2, sneaking: bool) -> Array:
 		travelled = _step(m, v, sneaking, travelled)
 	var feet := {"L": [], "R": []}
 	var hips := 0.0
+	var hips_lo := 99.0
+	var hips_hi := -99.0
 	var n := 480
 	for i in n:
 		travelled = _step(m, v, sneaking, travelled)
 		var xf := _root.global_transform * sk.transform
-		hips += (xf * sk.get_bone_global_pose(sk.find_bone("Hips")).origin).y / n
+		var hy := (xf * sk.get_bone_global_pose(sk.find_bone("Hips")).origin).y
+		hips += hy / n
+		hips_lo = minf(hips_lo, hy)
+		hips_hi = maxf(hips_hi, hy)
 		for side in ["L", "R"]:
 			feet[side].append(xf * sk.get_bone_global_pose(sk.find_bone("Foot." + side)).origin)
 	var slides: Array[float] = []
@@ -78,7 +84,7 @@ func _walk(m: HumanoidModel, v: Vector2, sneaking: bool) -> Array:
 				slides.append(Vector2(b.x - a.x, b.z - a.z).length() / DT)
 	slides.sort()
 	var median := slides[slides.size() / 2] if not slides.is_empty() else 99.0
-	return [median, hips_rest - hips]
+	return [median, hips_rest - hips, hips_hi - hips_lo]
 
 
 ## The planted foot stands still under the gaits the game moves at, and under the blends between
@@ -151,6 +157,25 @@ func test_standing_is_idle_and_only_a_sneak_crouches() -> void:
 	assert_true(absf(float(stand[1])) < 0.01, "standing still, the hips are %.1f cm off standing" % (float(stand[1]) * 100.0))
 	assert_true(float(walk[1]) < 0.07, "walking upright, the hips are %.1f cm low: a crouch has leaked into the walk" % (float(walk[1]) * 100.0))
 	assert_true(float(sneak[1]) > 0.14, "sneaking, the hips are only %.1f cm low" % (float(sneak[1]) * 100.0))
+
+
+## The gaits stand up. Each is played at the speed it was made for, so what the eye meets is the
+## clip itself: the hips ride a few centimetres below standing and rise and fall a few more with
+## each step. The first Walk sank 13.5 cm at every contact and the first Run 25.2 cm, which is
+## what read as a crouch-walk.
+func test_the_gaits_stand_up() -> void:
+	if not _rig_built():
+		return
+	var report: Array[String] = []
+	for c in [["walk", Player.WALK_SPEED], ["jog", Player.JOG_SPEED], ["sprint", Player.SPRINT_SPEED]]:
+		var got: Array = _walk(_model(), Vector2(0.0, float(c[1])), false)
+		after_each()
+		var low := float(got[1]) * 100.0
+		var swing := float(got[2]) * 100.0
+		report.append("%s %.1f cm low, %.1f cm peak to peak" % [c[0], low, swing])
+		assert_true(low < 6.0, "at a %s the hips ride %.1f cm below standing: a crouch" % [c[0], low])
+		assert_true(swing < 8.0, "at a %s the hips rise and fall %.1f cm with each step" % [c[0], swing])
+	print("    hips: %s" % "; ".join(report))
 
 
 ## A villager on its way somewhere walks: its model is told how fast (it used to stay at 0, so the

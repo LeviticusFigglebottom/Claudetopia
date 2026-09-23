@@ -17,7 +17,7 @@ signal clip_finished(clip: String)
 const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
 ## Ground speed (m/s) at which a placeholder body swings its limbs fully.
 const PLACEHOLDER_FULL_SPEED := 5.0
-const LOOPING: Array[String] = ["Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Strafe_L", "Strafe_R", "Sneak_Idle", "Sneak_Walk", "Jump_Loop", "Fall_Loop", "Block_Idle", "Cast_Loop", "Bow_Aim", "Sit_Idle", "Sleep_Idle"]
+const LOOPING: Array[String] = ["Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Idle", "Sneak_Walk", "Jump_Loop", "Fall_Loop", "Block_Idle", "Cast_Loop", "Bow_Aim", "Sit_Idle", "Sleep_Idle"]
 ## Clips that keep their final pose after finishing (until another clip plays).
 const HELD_POSE: Array[String] = ["Death_A", "Death_B", "Death", "Knockdown", "Sleep_Idle", "Sit_Idle"]
 ## Placeholder timing for clips whose length does not come from weapon/attack data.

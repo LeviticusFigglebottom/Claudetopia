@@ -523,9 +523,8 @@ third of a second after every reversal); DESIGN's first numbers (4.2 and 6.5).
 default made 0.52), and its speeds are pinned to the player's by a test. On a pad, sprint moved
 from the right-stick click, which it shared with lock-on and the camera toggle, to the left-stick
 click, which the Sayings menu gave up (it is on B on the keyboard; the pad layout wants a pass of
-its own). The first-model clips are fed through an interim mapping until the model is told metres
-per second. Reversible: the numbers are constants at the top of `player.gd`, and DESIGN §5.2
-states them.
+its own). How the legs keep pace with these speeds is its own entry, below. Reversible: the
+numbers are constants at the top of `player.gd`, and DESIGN §5.2 states them.
 
 ## 2026-09-23 · Physics is interpolated; what moves per frame opts out, and what jumps resets
 **Decision.** `physics/common/physics_interpolation` is on and the jitter fix is off. Bodies move
@@ -549,3 +548,37 @@ enemies and arrows would still step).
 **Consequences.** Anything new that is moved per frame in `_process` must opt out, and anything
 that teleports an existing node must reset it. Terrain3D 1.0.2 still calls the deprecated
 `instance_reset_physics_interpolation`, which prints a warning at load and is harmless.
+
+## 2026-09-23 · The legs are played at the ground's speed, on one stride timeline, and stand up
+**Decision.** `HumanoidModel.set_locomotion` takes the body's ground velocity in metres per second.
+Every moving clip carries the ground speed it was made at (`speed` in the sidecar, CONTRACTS §3)
+and lies on one shared one-second timeline, one stride cycle stretched to fit it. Every blend
+keeps its silent inputs running, so all the gaits are always at the same phase. One time scale
+sets the strides per second: the ground speed over the blended stride, held to 0.5–1.6 times the
+clip's own rate. The forge re-authors the gaits at the game's speeds: Walk 1.8, Run (the jog)
+5.0, a new Sprint at 7.8 and Sneak_Walk 1.5. They stand upright, with the stance sweep, the reach
+and the hip bob timed as a person's are.
+**Why.** Measured. At the old default of 4.2 m/s, the single 2D blend space fed velocity/6.5
+posed the body three-quarters of the way into Sneak_Walk, with the hips 15.2 cm below standing.
+The planted foot moved at 79% of the ground speed. The sprint played Walk and slid at 76%. The
+forge's own Walk sank 11.4 cm peak to peak at every step, and its Run 23.9 cm. The legs folded
+under the body with every contact, which is what a crouch-walk is. Stride-matched and
+phase-locked, the planted foot moves at 0–2% of the ground at every gait and every blend.
+Re-authored, the hips ride about 4 cm below standing with 5–6 cm of bob.
+**Alternatives.** Root motion: the body would move at the clip's speed, and the design's speeds
+would be whatever the clips said. Foot IK in the engine: it costs work per actor per frame, and
+it hides a clip that is wrong. A playback speed per clip without a shared timeline: the feet
+slide in every blend as the phases drift apart.
+**Consequences.** A locomotion clip without a `speed` in its sidecar plays at rate 1 and slides. A
+new gait clip must put its left foot down at phase 0 and its right at 0.5, which the forge's tests
+pin. Walk_Back and the strafes are still made by the first stride model. The strafes' side-steps
+are shortened (0.6 s, duty 0.5), so they no longer drop the hips 21 cm at every step. A diagonal
+strafe slides at about a third of the ground speed, because blending two strides in rotation space
+does not add up to the diagonal, so the locked-on speed is held at 2.6 m/s. The rig bake rebuilds
+the body as well as the clips, and under Blender 4.2 the body the committed rig was made with under
+4.0 comes back with the same vertices but a different UV layout and repainted textures. So the
+clips are baked into a scratch copy and moved onto the committed GLB by
+`tools/forge/transplant_clips.py`, which changes nothing but the animations and checks that it did
+not. When another branch changes the rig GLB, the merge takes that branch's GLB and transplants
+these clips onto it, provided the two share a skeleton (the tool refuses otherwise). If they do
+not, the merge re-runs the rig bake on the merged tree.
