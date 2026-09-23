@@ -151,6 +151,10 @@ func _is_live_quarry(n: Variant, group: String) -> bool:
 	if not is_instance_valid(n) or not (n is Node3D) or n == owner_actor:
 		return false
 	var node := n as Node3D
+	# A body out of the tree (the player between the world and an interior) is nowhere to be seen:
+	# its transform is an engine error a frame, fourteen of them in one suite run.
+	if not node.is_inside_tree():
+		return false
 	if node.has_method("is_alive") and not node.is_alive():
 		return false
 	if group == "player" and not owner_actor.is_in_group(ALLY_GROUP):
