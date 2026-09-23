@@ -569,6 +569,10 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         bodylib.custom_weights(ob, g.weight_fn(v), arm)
     else:
         bodylib.transfer_weights(ob, bW[0], bW[1], arm)
+        if getattr(g, "weight_adjust", None) is not None:
+            v, _, _ = bodylib.mesh_arrays(ob)
+            W = bodylib.weight_matrix(ob, rig.DEFORM_NAMES)
+            bodylib.custom_weights(ob, g.weight_adjust(v, W), arm)
     fitted: List[str] = []
     if fits:
         v, _, _ = bodylib.mesh_arrays(ob)

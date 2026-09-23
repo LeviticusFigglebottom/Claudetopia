@@ -231,6 +231,10 @@ class Garment:
     # Per-vertex skin weights over rig.DEFORM_NAMES, for parts that are neither rigid to one
     # bone nor a copy of the body's weights (hair that hangs past the neck).
     weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    # Or the body's weights, reworked: (vertex positions, their transferred weights) -> weights.
+    # A skirt keeps the body's weights above the hips and gives most of the legs' share below
+    # them to the hips (see `_skirt_weights`).
+    weight_adjust: Optional[Callable[[np.ndarray, np.ndarray], np.ndarray]] = None
     # What the painter needs to lay strands along: a flow direction anywhere on the part and
     # the centrelines of the locks it was combed into.
     flow_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
@@ -444,6 +448,41 @@ def trousers(skel: Skeleton, body, *, thickness: float = 0.010, length: float = 
     return Garment("trousers", sc, spacing=0.0070, target_tris=3600, material="cloth")
 
 
+def _skirt_weights(skel: Skeleton) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+    """A skirt hangs from the hips and is pushed by the legs; it is not carried by them.
+
+    Weighted straight from the body, every vertex below the hips took the nearest leg's weights
+    whole, so a stride tore the cloth between the legs open and showed the thigh through the
+    gap -- the dress, the robe, the kilt and the wrap skirt all did it. Below the hip joint the
+    legs' share is handed to the hips, all of it on the centre line between the legs and less
+    of it towards the sides and the hem, where the thigh really does push the cloth; and what
+    the legs keep is the thigh's, because a skirt does not bend at the knee."""
+    bones = list(rig.DEFORM_NAMES)
+    B = {b: i for i, b in enumerate(bones)}
+    s = _s(skel)
+    hips_z = float(skel.J["UpperLeg.L"][2])
+    knee_z = float(skel.J["LowerLeg.L"][2])
+
+    def fn(V, W):
+        W = np.array(W, float, copy=True)
+        z, ax = V[:, 2], np.abs(V[:, 0])
+        below = _ss((hips_z - 0.02 * s - z) / (0.10 * s))
+        down = np.clip((hips_z - z) / max(hips_z - knee_z, 1e-3), 0.0, 1.0)
+        keep = (0.20 + 0.40 * down) * np.clip((ax - 0.02 * s) / (0.09 * s), 0.0, 1.0)
+        keep = 1.0 - below * (1.0 - keep)
+        for side in ("L", "R"):
+            thigh = B["UpperLeg." + side]
+            for b in ("LowerLeg.", "Foot.", "Toe."):
+                j = B[b + side]
+                W[:, thigh] += W[:, j] * below
+                W[:, j] *= (1.0 - below)
+            moved = W[:, thigh] * (1.0 - keep)
+            W[:, thigh] -= moved
+            W[:, B["Hips"]] += moved
+        return W
+    return fn
+
+
 def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: str = "skirt") -> Garment:
     s = _s(skel)
     hip = float(skel.J["UpperLeg.L"][2])
@@ -469,7 +508,9 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
     sc.union(sdf.tube_path(_ring((0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s,
                                  z_hem + 0.010 * s), 0.0060 * s), k=0.006 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    return Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
+    g = Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
+    g.weight_adjust = _skirt_weights(skel)
+    return g
 
 
 def dress(skel: Skeleton, body) -> Garment:
@@ -1954,7 +1995,9 @@ def kilt(skel: Skeleton, body) -> Garment:
                                    dvec * 0.186 * s + np.array([0, 0, z_hem])], depth), k=0.013 * s)
     sc.union(sdf.tube_path(_ring(0.185 * s, 0.142 * s, z_hem + 0.012 * s), 0.0062 * s), k=0.006 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    return Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
+    g = Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
+    g.weight_adjust = _skirt_weights(skel)
+    return g
 
 
 def plaid(skel: Skeleton, body) -> Garment:
