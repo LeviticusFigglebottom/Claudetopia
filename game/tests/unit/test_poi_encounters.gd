@@ -58,7 +58,7 @@ const WHAT_STANDS := {
 	"core:poi/bell_of_the_pilgrims": "nobody: none",
 	"core:poi/headless_watch": "person: core:npc/calen_ash (the fallen knight 'if the watch has turned' has nothing that turns it)",
 	"core:poi/the_one_poppy": "nobody: the poppy itself, to pick or water",
-	"core:poi/thirteenth_colossus": "choristers",
+	"core:poi/thirteenth_colossus": "choristers after dark (the Sayers dig by day)",
 	"core:poi/cold_fire_camp": "six ash-wights, seated until the cup is touched",
 	"core:poi/glass_falls": "a bell-bearer",
 	"core:poi/hushline_stair": "ash-wights",
@@ -310,6 +310,45 @@ func test_the_larkbourne_boys_keep_their_knives_away_while_ryn_is_waiting_to_be_
 	Social.quests.set_stage("core:quest/wardens_roll_of_names", "the_pen")
 	enc.refresh()
 	assert_eq(_living(enc, "core:enemy/roadside_bandit").size(), 4, "and they are back when that is done")
+
+
+## The One Poppy's sentence is a deed: a Hollow one if picked, a Hearth one if watered. Kneeling by
+## it puts the choice, and a poppy picked is not there when the heath is next built.
+func test_the_one_poppy_is_watered_or_picked_and_once_picked_is_gone() -> void:
+	if provider == null:
+		return
+	GameState.clear_flag("poppy_picked")
+	GameState.clear_flag("poppy_watered")
+	var d := _dress("core:poi/the_one_poppy")
+	var touch := d.find_child("the_poppy", true, false) as PoiTouch
+	assert_true(touch != null, "the poppy is something to kneel by")
+	if touch == null:
+		return
+	assert_eq(touch.dialogue_id, "core:dialogue/the_one_poppy")
+	assert_true(touch.find_child("Bloom", true, false) != null, "and it holds the flower")
+	var bag := SocialFakes.FakeInventory.new()
+	Social.bind("inventory", bag)
+	var morality_before := int(Social.reaction_profile().get("morality", 0))
+	touch.interact(null)
+	var runner: Node = Social.dialogue
+	assert_true(runner.is_running(), "kneeling puts the choice")
+	var texts: Array = []
+	for c in runner.current_choices:
+		texts.append(str((c as Dictionary).get("text", "")))
+	assert_eq(texts, ["Water it from the cup.", "Pick it.", "Leave it where it is."], "water, pick or leave: nobody here passes on the news")
+	runner.choose(1)
+	if runner.is_running():
+		runner.stop()
+	assert_true(GameState.has_flag("poppy_picked"), "picked")
+	assert_eq(bag.count("core:item/ash_poppy_petal"), 4, "four petals in your hand")
+	assert_true(int(Social.reaction_profile().get("morality", 0)) < morality_before, "and it was a Hollow deed")
+	assert_false(touch.visible, "and it is gone from the heath at once")
+	var again := _dress("core:poi/the_one_poppy")
+	assert_true(again.find_child("the_poppy", true, false) == null, "and when the heath is next built, a ring round nothing")
+	assert_true(again.find_child("Bloom", true, false) == null)
+	GameState.clear_flag("poppy_picked")
+	Social.bind("inventory", null)
+	Social.refresh_providers()
 
 
 func test_the_cold_fire_sits_until_somebody_takes_up_the_cup() -> void:

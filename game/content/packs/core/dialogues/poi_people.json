@@ -184,5 +184,20 @@
       "sister": {"speaker": "Barnaby Rooke", "text": "At three and at eleven, for as long as it takes to say 'wind's from the east' and 'is it'. Twenty-two years. — I know her better than anyone living. I couldn't tell you the colour of her eyes; they're always shut or they're watching smoke.", "next": "hub"},
       "bye": {"speaker": "Barnaby Rooke", "text": "Quietly, going. She's fretful when she's woken, and so's the clamp.", "next": "end"}
     }
+  },
+  {
+    "id": "core:dialogue/the_one_poppy",
+    "speaker_name": "The One Poppy",
+    "notes": "The One Poppy's sentence: 'a Hollow deed if picked, a Hearth deed if watered'. Put by the PoiTouch on the poppy (world/pois/poi_builders.gd, _strange_one_poppy); a conversation with nobody in it. A poppy picked sets poppy_picked, and the heath is built without it after that.",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The One Poppy", "no_talk": true, "text": "One red poppy in a square kilometre of grey. Somebody has set a ring of stones round it and left a cup of water in the grass, and the ground inside the ring is trodden black by the people who walk out to look at it. It is the only colour for as far as you can see.", "choices": [
+        {"text": "Water it from the cup.", "conditions": [{"flag_not": "poppy_watered"}], "effects": [{"deed": "poppy_watered"}, {"set_flag": "poppy_watered"}], "next": "watered"},
+        {"text": "Pick it.", "effects": [{"deed": "poppy_picked"}, {"set_flag": "poppy_picked"}, {"give_item": ["core:item/ash_poppy_petal", 4]}], "next": "picked"},
+        {"text": "Leave it where it is.", "next": "end"}
+      ]},
+      "watered": {"speaker": "The One Poppy", "text": "The grey ground takes the water the way a dry mouth does. The poppy does nothing at all, which is what a watered poppy does. Somebody will notice the cup has been used, and say so at the Ash, and the Ash will decide what kind of person does that.", "next": "end"},
+      "picked": {"speaker": "The One Poppy", "text": "It comes up easily. Four petals in your hand, and a square kilometre of grey with nothing in the middle of it but a ring of stones round a hole. The heath will know by morning.", "next": "end"}
+    }
   }
 ]

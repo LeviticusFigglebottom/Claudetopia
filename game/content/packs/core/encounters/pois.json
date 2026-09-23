@@ -119,8 +119,8 @@
    "spawns": [{"enemy": "core:enemy/ash_wight", "count": 4}]},
 
   {"id": "core:encounter/thirteenth_colossus", "place": "core:poi/thirteenth_colossus",
-   "notes": "choristers around the excavation",
-   "spawns": [{"enemy": "core:enemy/chorister", "count": 3, "spread": 6.0}]},
+   "notes": "choristers around the excavation. By day it is the Sayers' dig (the story: 'A Sayer camp digs here and argues'); after dark the choristers come and stand round it and hold the note at it, which is what the knight in the Headless Watch warns you of.",
+   "spawns": [{"enemy": "core:enemy/chorister", "count": 3, "spread": 6.0, "when": "night"}]},
 
   {"id": "core:encounter/cold_fire_camp", "place": "core:poi/cold_fire_camp",
    "notes": "swarm; they only rise if you touch the cup",

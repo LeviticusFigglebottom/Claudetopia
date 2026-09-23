@@ -100,5 +100,7 @@ func conversation() -> Dictionary:
 		choices.append({"text": str(option["text"]), "next": "end",
 				"effects": [{"quest_choice": [quest_id, str(option["id"])]}]})
 	choices.append({"text": "Not yet.", "next": "end"})
+	# nobody is here to pass on the news, so the runner's own "any news?" is not put either
 	return {"id": "", "speaker_name": speaker if speaker != "" else prompt_text(), "start": "put",
-			"nodes": {"put": {"speaker": "npc", "text": str(stage.get("journal", "")), "choices": choices}}}
+			"nodes": {"put": {"speaker": "npc", "text": str(stage.get("journal", "")), "choices": choices,
+					"no_talk": true}}}

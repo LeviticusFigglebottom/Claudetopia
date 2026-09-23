@@ -779,14 +779,19 @@ func marker(marker_name: String, at: Vector3, worked := false, raised := false, 
 	return m
 
 
-## Something that can be touched, and a `PoiEncounters` group waiting on it (`rises_when`): the
-## cup going round the Cold Fire Camp. Nothing in the far ring.
-func touchable(touch_name: String, at: Vector3, prompt_line: String) -> PoiTouch:
+## Something that can be touched: the cup going round the Cold Fire Camp, which a
+## `PoiEncounters` group waits on (`rises_when`), or the One Poppy, which puts a conversation
+## (`dialogue_id`) and is gone once `gone_flag` is set. Nothing in the far ring.
+func touchable(touch_name: String, at: Vector3, prompt_line: String, dialogue_id := "",
+		gone_flag := "", once := true) -> PoiTouch:
 	if far:
 		return null
 	var t := PoiTouch.new()
 	t.name = touch_name
 	t.prompt = prompt_line
+	t.dialogue_id = dialogue_id
+	t.gone_flag = gone_flag
+	t.once = once
 	t.position = at
 	root.add_child(t)
 	return t
