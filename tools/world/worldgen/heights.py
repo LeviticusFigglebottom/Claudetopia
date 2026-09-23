@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
+from scipy import ndimage
 
 from . import geography as GEO
 from .erosion import valley_carve
@@ -54,6 +55,23 @@ class HeightContext:
 
     def rng(self, salt):
         return np.random.default_rng(np.random.SeedSequence([self.bank.seed, salt]))
+
+
+def upsample_held(a: np.ndarray, n: int) -> np.ndarray:
+    """Cubic upsample, held inside the range of each coarse texel's neighbours.
+
+    A cubic spline rings at a step. The Skerrow Wall stands 470 m straight out of the sea in the
+    north-west, and upsampled from 2048 to 4096 the ground at its foot rang to 96 m under the
+    seabed, in 210 pits along the cliff. Held to the least and the most of the coarse texels
+    round it, a slope is still a smooth cubic and a cliff is a cliff, with nothing past either end.
+    """
+    up = upsample(a, n, order=3)
+    if n == a.shape[0]:
+        return up
+    lo = upsample(ndimage.minimum_filter(a, size=3, mode="nearest"), n, order=1)
+    hi = upsample(ndimage.maximum_filter(a, size=3, mode="nearest"), n, order=1)
+    np.clip(up, lo, hi, out=up)
+    return up
 
 
 def detail_amplitude(owner: np.ndarray, regions: list) -> np.ndarray:
@@ -139,7 +157,7 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, atlas: dict, prov
             h = h_with
         del h_with
     bank.forget()
-    H = upsample(h, grid.n, order=3)
+    H = upsample_held(h, grid.n)
     # full-resolution detail band, damped on water and steep-scaled in the mountains
     owner = rf.owner_at(grid.n)
     amp = detail_amplitude(owner, provinces)
