@@ -153,17 +153,25 @@ func _before(w: World, feet: Vector3) -> void:
 	w.atmosphere.call("force_weather", "core:weather/rain", true)
 
 
-## One run of the opening, skipped when `skip_when` says so (never, if it is empty).
-func _run(w: World, mode: CinematicPlayer.Mode, skip_when: Callable) -> Dictionary:
+## One run of the opening, skipped when `skip_when` says so (never, if it is empty); `configure`
+## is given the player before it begins.
+func _run(w: World, mode: CinematicPlayer.Mode, skip_when: Callable, configure := Callable()) -> Dictionary:
 	var cin := CinematicPlayer.new()
 	cin.time_scale = FAST
+	if configure.is_valid():
+		configure.call(cin)
 	var done := [false]
 	var shown: Array[String] = []
 	var early: Array[String] = []
 	var regions := [0]
 	var on_region := func(_id: String, _prev: String) -> void: regions[0] += 1
 	EventBus.region_entered.connect(on_region)
-	cin.finished.connect(func(_skipped: bool) -> void: done[0] = true)
+	# read as it finishes: it frees itself on the same frame
+	var capped := {"gave_up": false, "shown_early": []}
+	cin.finished.connect(func(_skipped: bool) -> void:
+		done[0] = true
+		capped["gave_up"] = cin.gave_up
+		capped["shown_early"] = cin.shown_early.duplicate())
 	w.add_child(cin)
 	cin.begin(w, _player(w), ContentDB.get_def(OPENING), mode)
 	var last_phase := ""
@@ -186,7 +194,8 @@ func _run(w: World, mode: CinematicPlayer.Mode, skip_when: Callable) -> Dictiona
 			skip_when = Callable()
 	EventBus.region_entered.disconnect(on_region)
 	var result := {"finished": bool(done[0]), "shown": shown, "early": early, "regions": regions[0],
-			"region_after": GameState.current_region_id, "region_before": start_region}
+			"region_after": GameState.current_region_id, "region_before": start_region,
+			"gave_up": capped["gave_up"], "shown_early": capped["shown_early"]}
 	await _settle()
 	result["state"] = _state(w)
 	return result
@@ -300,6 +309,161 @@ func test_skipping_anywhere_ends_exactly_where_watching_it_through_does() -> voi
 		var run := await _run(w, CinematicPlayer.Mode.OPENING, moments[what])
 		assert_true(bool(run["finished"]), "skipped %s, it still ends" % what)
 		_same(run["state"], end, "skipped %s" % what)
+	await _drop(w)
+
+
+## Nothing can keep a player inside the opening. The streamer is throttled to nothing -- every cell
+## the opening asks for is asked for for ever -- and each shot is still shown once its own wait
+## runs out; then, with the waits made endless, the overall cap hands over as a held key would.
+## Both end exactly where watching it through does.
+func test_a_country_that_never_comes_cannot_keep_anyone_in_the_opening() -> void:
+	if not _built():
+		return
+	Social.reset_for_new_game()
+	GameState.reset_for_new_game(16)
+	var w := _world()
+	await w.world_ready
+	await _settle()
+	w.streamer.cells_per_frame = 12
+	var player := _player(w)
+	var feet := player.global_position
+	feet.y = w.provider.get_height(feet.x, feet.z)
+	_before(w, feet)
+	var through := await _run(w, CinematicPlayer.Mode.OPENING, Callable())
+	assert_true(bool(through["finished"]) and not bool(through["gave_up"]), "watched through, it ends on its own")
+	assert_empty(through["shown_early"], "and waits for every shot's country when the country comes")
+	var end: Dictionary = through["state"]
+	var shots := CinematicDef.shots_of(ContentDB.get_def(OPENING)).size()
+
+	_before(w, feet)
+	w.streamer.cells_per_frame = 0
+	var starved := await _run(w, CinematicPlayer.Mode.OPENING, Callable(),
+			func(c: CinematicPlayer) -> void: c.hold_cap_seconds = 0.8)
+	w.streamer.cells_per_frame = 12
+	assert_true(bool(starved["finished"]), "with no country arriving at all, the opening still ends")
+	assert_false(bool(starved["gave_up"]), "each shot on its own wait, well inside the overall cap")
+	assert_eq((starved["shown"] as Array).size(), shots, "and every shot is shown: %s" % str(starved["shown"]))
+	assert_gt((starved["shown_early"] as Array).size(), 0,
+			"shown with what there was: %s" % str(starved["shown_early"]))
+	_same(starved["state"], end, "a starved opening")
+
+	_before(w, feet)
+	w.streamer.cells_per_frame = 0
+	var stuck := await _run(w, CinematicPlayer.Mode.OPENING, Callable(),
+			func(c: CinematicPlayer) -> void:
+				c.hold_cap_seconds = 100000.0
+				c.overall_cap_seconds = 2.0)
+	w.streamer.cells_per_frame = 12
+	assert_true(bool(stuck["finished"]), "a wait that would never end is ended")
+	assert_true(bool(stuck["gave_up"]), "by the overall cap")
+	assert_true((stuck["shown"] as Array).size() < shots, "before the pictures were all shown: %s" % str(stuck["shown"]))
+	_same(stuck["state"], end, "handed over by the overall cap")
+	await _drop(w)
+
+
+## The pictures keep the wall clock, not the engine's: on a machine that cannot keep up the engine
+## slows the whole game, and a shot timed on its delta ran for ten minutes (PROGRESS). Frames of a
+## third of a second each are made here by stalling the loop; nine seconds of the Spire must still
+## take about nine seconds.
+func test_the_pictures_keep_the_wall_clock_on_a_machine_that_cannot_keep_up() -> void:
+	if not _built():
+		return
+	Social.reset_for_new_game()
+	GameState.reset_for_new_game(19)
+	var w := _world()
+	await w.world_ready
+	await _settle()
+	w.streamer.cells_per_frame = 12
+	var cin := CinematicPlayer.new()
+	var done := [false]
+	cin.finished.connect(func(_s: bool) -> void: done[0] = true)
+	w.add_child(cin)
+	cin.begin(w, _player(w), ContentDB.get_def(OPENING), CinematicPlayer.Mode.OPENING)
+	var until := Time.get_ticks_msec() + 120000
+	while is_instance_valid(cin) and not (cin.current_shot() >= 1 and cin.phase_name() == "PLAY") \
+			and Time.get_ticks_msec() < until:
+		await _tree().process_frame
+	assert_true(is_instance_valid(cin) and cin.phase_name() == "PLAY", "the first picture is playing")
+	if not is_instance_valid(cin):
+		await _drop(w)
+		return
+	var shot := cin.current_shot()
+	var from_t := cin.shot_time()
+	var from_ms := Time.get_ticks_msec()
+	var frames := 0
+	while is_instance_valid(cin) and cin.current_shot() == shot and frames < 12:
+		OS.delay_msec(330)
+		await _tree().process_frame
+		frames += 1
+	var wall := (Time.get_ticks_msec() - from_ms) / 1000.0
+	# every frame took at least the 0.33 s it was held for; the engine's own clock counts each as
+	# at most eight physics steps, 0.13 s
+	if is_instance_valid(cin) and cin.current_shot() == shot:
+		var moved := cin.shot_time() - from_t
+		assert_true(moved > frames * 0.33 * 0.8, "%.1f s of the shot went by in %.1f s on the wall, over %d slow frames"
+				% [moved, wall, frames])
+	else:
+		assert_true(wall < 14.0, "the shot ended on time over slow frames (%.1f s)" % wall)
+	if is_instance_valid(cin):
+		cin.skip()
+		assert_true(await _until_finished(cin, done), "and it hands back")
+	await _drop(w)
+
+
+## A slot written during the opening kept the `new_game` flag up and the borrowed hour and sky,
+## and loading it played the opening again. No slot is written while it plays; and a slot that
+## still carries the flag (written before that rule) is loaded as the game it is, never as a new
+## one: the story, not the pictures.
+func test_no_slot_is_written_while_the_opening_plays_and_a_loaded_game_never_plays_it() -> void:
+	if not _built():
+		return
+	Social.reset_for_new_game()
+	GameState.reset_for_new_game(18)
+	GameState.set_flag("player_name", "Tam Cresswell")
+	GameState.set_flag("player_calling", "core:calling/cragborn")
+	GameState.set_flag("new_game", true)
+	var w := _world()
+	await w.world_ready
+	var cin := await _wait_for_cinematic(45.0)
+	assert_true(cin != null, "a new game plays the opening")
+	if cin == null:
+		await _drop(w)
+		return
+	assert_eq(SaveSystem.save_to_slot(_slot), ERR_BUSY, "no slot is written while it plays")
+	assert_false(SaveSystem.slot_exists(_slot), "and nothing reaches the disk")
+	var done := [false]
+	cin.finished.connect(func(_s: bool) -> void: done[0] = true)
+	cin.skip()
+	assert_true(await _until_finished(cin, done), "skipped, it hands back")
+	await _settle()
+	assert_false(GameState.has_flag("new_game"), "the new game's flag is down once control is back")
+	assert_eq(SaveSystem.save_to_slot(_slot), OK, "and slots are written again")
+	# the slot as one written mid-opening before the rule would read: the flag still up
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(SaveSystem.slot_path(_slot)))
+	assert_true(raw is Dictionary, "the slot reads back")
+	if raw is Dictionary:
+		var data: Dictionary = raw
+		var sections: Dictionary = data["sections"]
+		var state: Dictionary = sections["state"]
+		var flags: Dictionary = state["flags"]
+		flags["new_game"] = true
+		var f := FileAccess.open(SaveSystem.slot_path(_slot), FileAccess.WRITE)
+		f.store_string(JSON.stringify(data, "\t"))
+		f.close()
+	await _drop(w)
+	Social.reset_for_new_game()
+	GameState.reset_for_new_game(20)
+	GameState.set_flag("_pending_load_slot", _slot)
+	w = _world()
+	await w.world_ready
+	var again := await _wait_for_cinematic(6.0)
+	assert_true(again == null, "loading it does not play the opening again")
+	await _settle()
+	assert_false(GameState.has_flag("new_game"), "it is not a new game once loaded")
+	assert_true(_quest_active("core:quest/the_naming"), "and its story goes on")
+	assert_true(UI.hud_visible, "with the HUD up")
+	if again != null and is_instance_valid(again):
+		again.skip()
 	await _drop(w)
 
 

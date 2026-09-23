@@ -12,7 +12,10 @@ extends Node
 ## Each shot is resolved against the live ground when the cinematic starts (`CinematicPath`), the
 ## streamer follows the camera, and the next shot's places are loaded while this one plays. A shot
 ## whose cells have not arrived is not shown: the last frame holds, then the picture goes to black
-## with a caption and the music waits, and the shot plays when the country is there.
+## with a caption and the music waits, and the shot plays when the country is there -- or after
+## HOLD_CAP_SECONDS, with what has come. The pictures keep real time, as the music does, and
+## OVERALL_CAP_SECONDS after the first shot it hands over as a skip would: however slow the machine,
+## nobody is left inside it. While it holds the game, no slot is written (`SaveSystem.hold_saves`).
 ##
 ## Three ways to use it:
 ##   OPENING  after the Naming, from `GameServices.begin_new_game` via `play_opening`; control is
@@ -35,6 +38,21 @@ const PROMPT_LINGER_SECONDS := 2.5
 ## A wait for the country shorter than this shows nothing and stops nothing: the last frame
 ## simply holds a moment longer.
 const HOLD_GRACE_SECONDS := 0.5
+## However slowly the country comes, a shot is held no longer than this, in real seconds, and is
+## then shown with what has arrived: the terrain, the water and the sky are always there, and
+## whatever the missing cells carry comes in while it plays.
+const HOLD_CAP_SECONDS := 20.0
+## A hold that has lasted this long says in the log what it is waiting for, once.
+const HOLD_REPORT_SECONDS := 5.0
+## Real seconds from the first shot after which the opening hands over as though a key had been
+## held: about two and a half times its pictures. A loaded machine drew the Spire's shot at
+## several seconds a frame and the engine, which slows the whole game rather than step physics
+## more than eight times a frame, counted each as an eighth of a second; the shot ran for ten
+## minutes and never reached its cut.
+const OVERALL_CAP_SECONDS := 240.0
+## The pictures run on the wall clock, as the music does, but one long frame moves them on by no
+## more than this: a hitch does not throw a shot away.
+const MAX_STEP_SECONDS := 1.0
 const SETTLE_FRAMES := 4
 const FADE_IN_SECONDS := 1.6
 const SKIP_FADE_SECONDS := 0.45
@@ -59,6 +77,12 @@ var mode := Mode.OPENING
 ## Tests run the pictures faster; the waits for the country and a held key stay in real seconds.
 var time_scale := 1.0
 var skipped := false
+## The caps, as values a test can shorten.
+var hold_cap_seconds := HOLD_CAP_SECONDS
+var overall_cap_seconds := OVERALL_CAP_SECONDS
+## Whether the overall cap handed over, and the shots shown before their country had all come.
+var gave_up := false
+var shown_early: Array[String] = []
 
 var _world: World = null
 var _player: Node3D = null
@@ -92,6 +116,10 @@ var _handover_rig_yaw := 0.0
 var _handover_pitch := PLAYER_PITCH
 var _player_name := ""
 var _subtitles := true
+var _began_ms := 0
+var _hold_began_ms := 0
+var _hold_reported := false
+var _last_usec := 0
 
 
 # --- the ways in -----------------------------------------------------------------------------------
@@ -244,6 +272,7 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 		UI.fade_from_black(0.3)
 	if def.has("music"):
 		Music.play_cue(str(def["music"]))
+	_began_ms = Time.get_ticks_msec()
 	_enter_shot(0)
 
 
@@ -298,6 +327,7 @@ func _save_state() -> void:
 
 
 func _take_over() -> void:
+	SaveSystem.hold_saves(_save_reason())
 	UI.close_all()
 	if _player != null and _player.has_method("set_input_enabled"):
 		_player.call("set_input_enabled", false)
@@ -455,6 +485,8 @@ func _exit_tree() -> void:
 	if not _restored and not _saved.is_empty():
 		_restored = true
 		_restore_globals()
+	if not _saved.is_empty():
+		SaveSystem.release_saves(_save_reason())
 
 
 ## Gives back everything a scrub borrowed; the capture runner calls it when it is done.
@@ -542,9 +574,7 @@ func _enter_shot(index: int) -> void:
 		for p in path.looks:
 			_need.append(p)
 	_stream_ahead(picture)
-	_phase = Phase.HOLD
-	_waited = 0.0
-	_settle = SETTLE_FRAMES
+	_begin_hold()
 	shot_started.emit(index, str(shot.get("id", "")))
 
 
@@ -623,14 +653,19 @@ func _highest_ground(p: Vector3) -> float:
 
 # --- the frame loop ----------------------------------------------------------------------------------
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if _phase == Phase.DONE or _phase == Phase.STARTING or mode == Mode.SCRUB:
+		_last_usec = 0
 		return
-	var dt := delta * time_scale
-	_update_skip(delta)
+	var real := _real_delta()
+	var dt := real * time_scale
+	_update_skip(real)
+	if _phase in [Phase.HOLD, Phase.PLAY] and not gave_up and _began_ms > 0 \
+			and Time.get_ticks_msec() - _began_ms > int(overall_cap_seconds * 1000.0):
+		_give_up()
 	match _phase:
 		Phase.HOLD:
-			_tick_hold(delta)
+			_tick_hold(real)
 		Phase.PLAY:
 			_tick_play(dt)
 		Phase.SKIPPING:
@@ -662,11 +697,43 @@ func _fade_curtain(to: float, seconds: float) -> void:
 	_curtain_rate = 1.0 / maxf(seconds, 0.01)
 
 
+## Wall-clock seconds since the last frame, no more than MAX_STEP_SECONDS. The engine's own delta
+## is not that on a machine that cannot keep up: below 7.5 frames a second it slows the whole game
+## rather than step physics more than eight times a frame, so a five-second frame arrives as an
+## eighth of a second.
+func _real_delta() -> float:
+	var now := Time.get_ticks_usec()
+	var d := 0.0 if _last_usec == 0 else float(now - _last_usec) / 1000000.0
+	_last_usec = now
+	return minf(d, MAX_STEP_SECONDS)
+
+
+func _begin_hold() -> void:
+	_phase = Phase.HOLD
+	_waited = 0.0
+	_settle = SETTLE_FRAMES
+	_hold_began_ms = Time.get_ticks_msec()
+	_hold_reported = false
+
+
 func _tick_hold(delta: float) -> void:
 	_waited += delta
 	var shot: Dictionary = _shots[_index]
 	var black := bool(shot.get("black", false))
-	if black or _cells_ready():
+	var shown := black or _cells_ready()
+	if not shown:
+		var held_ms := Time.get_ticks_msec() - _hold_began_ms
+		if held_ms >= int(HOLD_REPORT_SECONDS * 1000.0) and not _hold_reported:
+			_hold_reported = true
+			Log.info("Cinematic", "shot '%s' is waiting for the country: %s" % [shot.get("id", ""), waiting_for()])
+		# after the overall cap nothing is waited for: the hand-over comes at once
+		if held_ms >= (0 if gave_up else int(hold_cap_seconds * 1000.0)):
+			Log.warn("Cinematic", "shot '%s' shown after %.1f s without all of its country: %s"
+					% [shot.get("id", ""), held_ms / 1000.0, waiting_for()])
+			shown_early.append(str(shot.get("id", "")))
+			shown = true
+			_settle = 0
+	if shown:
 		if _settle > 0:
 			_settle -= 1
 			return
@@ -827,9 +894,7 @@ func _arrive_at_the_end() -> void:
 		_pose(path, 1.0, true)
 		_need = [path.position_at(1.0)]
 	_stream_ahead(-1)
-	_phase = Phase.HOLD
-	_waited = 0.0
-	_settle = SETTLE_FRAMES
+	_begin_hold()
 
 
 # --- handing over --------------------------------------------------------------------------------------
@@ -854,7 +919,29 @@ func _finish() -> void:
 	set_process(false)
 	set_process_input(false)
 	finished.emit(skipped)
+	# only now: the new game's flag comes down and its story starts as `finished` is heard, and a
+	# slot written in between would have played the opening again when it was loaded
+	SaveSystem.release_saves(_save_reason())
 	queue_free()
+
+
+## The overall cap: hands over the way holding a key does, so the end is the same end.
+func _give_up() -> void:
+	gave_up = true
+	var shot: Dictionary = _shots[_index] if _index >= 0 and _index < _shots.size() else {}
+	Log.warn("Cinematic", "%s has run %.0f s, past its %.0f s cap, in shot '%s' (%s): handing over"
+			% [def.get("id", "the cinematic"), (Time.get_ticks_msec() - _began_ms) / 1000.0,
+				overall_cap_seconds, shot.get("id", ""), phase_name()])
+	skip()
+
+
+func _save_reason() -> String:
+	match mode:
+		Mode.REPLAY:
+			return "the opening is replayed"
+		Mode.SCRUB:
+			return "a cinematic is photographed"
+	return "the opening plays"
 
 
 # --- scrubbing, for the capture runner ------------------------------------------------------------------
@@ -888,6 +975,30 @@ func scrub(index: int, u: float) -> void:
 ## Whether everything the current moment looks at is standing (the capture runner waits on it).
 func ready_to_show() -> bool:
 	return _cells_ready()
+
+
+## What the current moment is waiting for, for the log: how many of the cells round its points are
+## standing, and where each missing one has got to in the streamer.
+func waiting_for() -> String:
+	var streamer := _world.streamer if _world != null else null
+	if streamer == null:
+		return "no streamer"
+	var cells := {}
+	var missing := {}
+	for p in _need:
+		for c in streamer.cells_around(p):
+			cells[c] = true
+		for c in streamer.missing_around(p):
+			missing[c] = true
+	var words: Array[String] = []
+	for c: Vector2i in missing:
+		words.append("%d_%d %s" % [c.x, c.y, streamer.cell_state(c)])
+	var queue := streamer.queue()
+	return "%d of %d cells in%s; the streamer follows %s, %d loaded, %d asked for, %d parsed" % [
+			cells.size() - missing.size(), cells.size(),
+			(" (missing: %s)" % ", ".join(words)) if not words.is_empty() else "",
+			streamer.target.name if streamer.target != null else "nothing",
+			int(queue["loaded"]), int(queue["pending"]), int(queue["parsed"])]
 
 
 func camera() -> Camera3D:

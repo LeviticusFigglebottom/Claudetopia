@@ -1010,3 +1010,29 @@ reads as a shuffle in play.
 **Consequences.** Enemies that raise a guard (`Enemy._guard`) get the same layer: they now walk
 under their guard instead of gliding. Any new stance meant to be held over the legs is added
 to `HumanoidModel.STANCE_CLIPS`.
+
+## 2026-09-23 · The opening keeps the wall clock, cannot keep anyone, and is never saved into
+**Decision.** The opening's pictures run on real seconds (`CinematicPlayer._real_delta`, one
+frame moving them on by a second at most), not on the engine's delta. A shot waits for its
+country twenty seconds at most and is then shown with what has come; four minutes after the
+first shot the whole opening hands over the way a held key does, and after that nothing is
+waited for. No slot is written while a cinematic holds the game (`SaveSystem.hold_saves`, held
+from the first thing borrowed until `finished` has been heard), and a world loaded from a slot
+never plays the opening, whatever its flags say: it gets the story, not the pictures.
+**Why.** Two flow runs on a tree carrying the opening sat in it for ten minutes, on its third
+shot, at a load average of 20 to 25. The last frame they drew was the Spire playing, its first
+line on the screen, not a hold. Godot slows the whole game rather than step physics more than
+eight times a frame, so on a machine drawing a frame every few seconds each frame's delta is
+an eighth of a second, and a nine-second shot timed on it lasts minutes of the wall clock, while
+the music, which plays in real seconds, has long finished. The probe gave up and saved its slot
+in the middle of the opening, with the `new_game` flag still up, and the `--load` run then
+played the opening again from that slot.
+**Alternatives.** Scaling the delta by the frame rate (the same thing, less plainly). Dropping
+shots whose frames are slow (a player on a slow machine would lose the Warden's lines with
+them). Saving the borrowed state's originals into the slot (every system that is borrowed
+would have to know it; refusing the save is one line in one place).
+**Consequences.** On a slow machine the pictures stay with the music and the words, and are
+drawn with fewer frames. A hold longer than five seconds says in the log which of its cells are
+missing and where each has got to in the streamer. The quicksave key says "Not saved while the
+opening plays." The flow probe reports when the overall cap handed over, and does not fail a
+machine too slow to show every shot in it.
