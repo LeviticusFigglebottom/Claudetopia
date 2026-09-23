@@ -412,7 +412,15 @@ would still like the kit to build (with how they are faked today) are in §10.
 * **Sightlines.** A new point of interest claims to be seen from somewhere only where it plainly
   is: the Hush Bell from the Stair Head. The moved points of interest keep claims that were
   checked against the preview's land. `tools/world/tests/test_sightlines.py` checks them all
-  against the built world once it is rebuilt.
+  against the built world once it is rebuilt. The first 4096 build of the atlas (w_final4)
+  refused 28 of 201 lines. Each was answered against that build's ground, measured the way the
+  game sees and the way the builder cuts. In 24 lines the vantage is now one that sees the place
+  clear without a cut. Kharrow Force sees the Chain Bridge, for one, and Harrow Tor sees the
+  Northgate Stone and the Skarl Bridge. Two places moved to where their lines hold: Ghorrow
+  85 m up the cliff to (2025, -3335), where the Fallen Hand sees it, and the Smeltings 67 m down
+  the slope to (-790, -2480), in Brindlecrag's view. Two lines had no vantage anywhere in sight
+  range and were dropped. Those places keep a line that holds: Dreughow for the Clanless Camp, the
+  Seven Stones for the Snow Shelter. That leaves 199 lines, none refused.
 
 ## 12. The tables
 
