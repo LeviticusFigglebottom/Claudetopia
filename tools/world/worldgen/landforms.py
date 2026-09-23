@@ -150,8 +150,15 @@ def sedgemire(ctx, h: np.ndarray, r) -> np.ndarray:
     # the same two channel fields shape_delta cuts (the bank caches them, so these are the ones)
     c1 = ctx.warped(133, 240, 700, 120.0, beta=1.7, aniso=(0.0, 1.6))
     c2 = ctx.warped(134, 400, 1100, 160.0, beta=1.7, aniso=(0.0, 1.2))
-    lev = np.maximum(np.exp(-((np.abs(c1) - 0.33) / LEVEE_WIDTH) ** 2),
-                     0.6 * np.exp(-((np.abs(c2) - 0.26) / (0.9 * LEVEE_WIDTH)) ** 2))
+    # A bank flanks a channel: the level set a third of the way up the channel field lies either
+    # side of every channel, but it also rings every hump of the field that never gets down to a
+    # channel at all, and banks there drew a maze over the whole marsh. So each bank is held to
+    # within about sixty metres of its own channel.
+    from scipy import ndimage
+    near1 = 1.0 - smoothstep(35.0, 65.0, ndimage.distance_transform_edt(np.abs(c1) > 0.15) * ctx.grid.spacing)
+    near2 = 1.0 - smoothstep(35.0, 65.0, ndimage.distance_transform_edt(np.abs(c2) > 0.11) * ctx.grid.spacing)
+    lev = np.maximum(np.exp(-((np.abs(c1) - 0.33) / LEVEE_WIDTH) ** 2) * near1,
+                     0.6 * np.exp(-((np.abs(c2) - 0.26) / (0.9 * LEVEE_WIDTH)) ** 2) * near2)
     # the banks are silt the channels dropped, so they die out on the tide-flats and the sea
     wet = 1.0 - smoothstep(-3050.0, -3450.0, ctx.X)
     levees = (LEVEE_M * lev * wet).astype(np.float32)
