@@ -12,6 +12,10 @@ extends Control
 
 const WORLD_SCENE := "res://world/world.tscn"
 const NAMING_SCENE := "res://ui/character/naming.tscn"
+## What this screen is called on EventBus.menu_opened. The music director brings the title's theme
+## up on it, but the title is a scene of its own, not one of UI's menus, and nothing ever said it
+## was up: the game's first minute was silent.
+const SCREEN_ID := "main_menu"
 
 const BACKDROP_INSET := Vector2(-150.0, -110.0)
 ## What the loading caption says while a saved name is read back in.
@@ -37,8 +41,13 @@ func _ready() -> void:
 	UI.close_all()
 	UI.hide_hud()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	EventBus.menu_opened.emit(SCREEN_ID)
 	_build()
 	UiKit.focus_first(self)
+
+
+func _exit_tree() -> void:
+	EventBus.menu_closed.emit(SCREEN_ID)
 
 
 func _build() -> void:

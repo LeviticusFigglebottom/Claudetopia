@@ -159,6 +159,8 @@ func _new_game_flow() -> void:
 	await _settle(2.2)      # the words ink in over about a second and a half
 	await _capture("title")
 	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "the mouse is free on the title menu")
+	_check(Music.overlay_playing() == "core:music/main_theme", "the title's theme is playing (%s)"
+			% (Music.overlay_playing() if not Music.overlay_playing().is_empty() else "nothing"))
 	var new_game := _button(menu, "New Game")
 	if not _check(new_game != null and not new_game.disabled, "New Game is on the title menu, by name, and enabled"):
 		return
@@ -169,6 +171,8 @@ func _new_game_flow() -> void:
 	await _settle(1.6)
 	await _capture("naming")
 	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "the mouse is free on the Naming")
+	_check(Music.overlay_playing() == "core:music/naming", "the Naming's music is playing (%s)"
+			% (Music.overlay_playing() if not Music.overlay_playing().is_empty() else "nothing"))
 	var focus := get_viewport().gui_get_focus_owner()
 	_check(focus is LineEdit, "the Naming opens with the keyboard in the name field, so a pad has somewhere to start (focus: %s)"
 			% (focus.get_class() if focus != null else "nothing"))
