@@ -2838,6 +2838,63 @@ release and no official binaries. Nothing to verify against, so nothing was chan
   no terrain collision: the same in every Terrain3D run here since the first, and consistent with
   what the user's second playtest found and main has since mended (Terrain3D's collision stayed
   round the fly camera, not the player).
+* **Main's `World.follow` and dry landing merged in, and nothing here leans on the fly camera.**
+  The coarse ground's collision is a heightfield per chunk over the whole world and its LOD is
+  Godot's mesh LOD on whatever camera draws; the fade's count asks the streamer, which `follow()`
+  points at the body before `player_spawned`. The flow now checks both things that let the old
+  bug through: that Terrain3D's camera is the body's own, and that the fade counted cells round
+  the body at all (a streamer following something else counts nothing, and nothing is all in at
+  once).
+* **The fade counts cells, not seconds** (the coordinator's finding on the main branch: the
+  `--load` start lifted with 8 of 9 near cells after 535 s of wall time, the machine running the
+  game at a few per cent of real speed). The 20 s cap described above is gone. `UI.wait_for_country`
+  holds while cells keep arriving and gives up only when none has come for 120 frames and 10
+  seconds together, or after 600 s; the caption goes on counting. `test_country_wait.gd` throttles
+  a fake streamer by hand rather than hoping for a slow machine: a cell every eight frames at two
+  seconds a frame is waited out to nine of nine (the old wait would have lifted on one), a streamer
+  that stops at five is given up on after both halves of the stall and no longer, a cell every 45
+  frames on a 1 ms clock is not given up on for its quiet frames alone, and the cap ends a wait
+  that is still moving.
+* **The wait went to main without the probe that reads it.** fc24424c took `UI.COUNTRY_WAIT_S`
+  away and `flow_probe.gd` still named it, so the probe does not compile on a main that has
+  fc24424c alone and `./run.sh flow` has no verdict there; 3e10d533 on this branch is its other
+  half.
+* **A player who built the world pulls the tracked one without trouble.** Modelled in a scratch
+  repository with both `.gitignore`s: the locally built manifest and runtime maps were ignored, so
+  `git pull` replaces them with the tracked ones silently (git's default for ignored files) and
+  leaves the full-resolution maps alone; `git status` is clean after. Those maps are then the old
+  build's: `./run.sh` leaves them be (the regions are there), but a `./run.sh terrain` would import
+  them over the tracked regions.
+* **`run.sh` stopped reaching for `xvfb-run` on Windows and a Mac**, which never have it and
+  always have a screen.
+
+**Found on merging main at f1cd8852, and not this stream's.** The merged suite: 1562 tests, 3
+failed, 3 script errors, where this branch alone had been 1421, none failed and none. (Main
+mended the three tests and the errors itself in d9c4b6ce and ef0b0ce2; merged again at 146494ec,
+the suite is 1570 tests, none failed, no content problems, no script errors, no dead captures.)
+`test_inventory_loot`'s two quest tests count the Naming's stages as wake, ash_wights, hearthstone,
+the_cart (quests round two, b1326eb6), and the opening (20ef631b) put `the_choir` second.
+`test_the_start.test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front` finds one light
+at the Stair Head where it wants more than two. `test_property` calls `Ownership.instance`, which
+it never makes and which no test before it now leaves standing. And the New Game flow sat in the
+opening for 601 s with 2 of its 10 shots shown, at a load average of 25: each shot holds until the
+cells round its points are in, and they came slowly. It did the same again on the final merge
+(602 s, the same two shots, `the_name` and `the_mere`, then a hold on the third), so it may not be
+load alone. It never handed over, so the HUD, the first
+frame of control, the Warden, the objective line and this stream's Terrain3D-camera check all
+failed after it: the camera was still `/root/World/Opening/CinematicCamera`. The hair chooser's
+list did not open within its 60 frames either. The slot that run saved kept the `new_game` flag up
+(it stays up until the opening hands back), so the `--load` start after it played the opening
+again. With `-- --no-opening` the same three starts read past it: every check of this stream
+passed in all three -- nine of nine near cells in before the fade lifted (13.7, 25.1 and 20.3 s,
+two frames each), Terrain3D following `/root/World/Player/CameraRig/Yaw/Pitch/Arm/Camera3D`, its
+ground 0.00 m under the feet, 158 things drawn within 200 m -- and `--load` passed whole (32
+checks). New Game failed only the two choosers and the opening it was told not to play; Continue
+only "the body's hair is short (it is long)": it takes the newest slot, and every worktree on this
+machine saves into the one `user://`. On Forward+ over lavapipe, `--load` with the opening off
+drew the coarse ground and passed every check of this stream -- the plate in the corner, the card
+41.9 s after the fade (game time runs slow there), the body on `Ground_4_15`, 160 things drawn
+within 200 m, the fade holding 87.2 s for nine of nine -- and failed only the same hair.
 
 ### Next, in order
 

@@ -614,24 +614,27 @@ func _watch_the_world_stand_up() -> void:
 	if not _check(_spawned != null, "a body stands in the world within %d s (took %.0f s)"
 			% [int(WORLD_TIMEOUT), (_spawned_at_ms - _t0) / 1000.0 if _spawned != null else _elapsed()]):
 		return
-	# the fade is held until the cells round the body are in (UI.COUNTRY_WAIT_S), so the lift is
-	# waited for a little longer than that
+	# The fade is held while the cells round the body keep arriving (UI.wait_for_country), up to
+	# UI.COUNTRY_CAP_S; the lift is waited for while it is held, and a little after.
 	var held_caption := ""
 	if UI.is_holding_for_country():
 		await _settle(0.3)
 		held_caption = UI.loading_text().replace("\n", " / ")
 		await _capture("holding_for_country")
-	var lifted := await _wait_until(func() -> bool: return not UI.is_faded_out(), UI.COUNTRY_WAIT_S + 10.0)
+	var lifted := await _wait_until(func() -> bool: return not UI.is_faded_out(), UI.COUNTRY_CAP_S + 30.0)
 	_check(lifted, "the fade lifts once the body stands and the country round it is in")
 	var wait: Dictionary = UI.last_country_wait
 	if not wait.is_empty():
 		var cells: Vector2i = wait.get("cells", Vector2i.ZERO)
 		var at_spawn: Vector2i = wait.get("at_spawn", Vector2i.ZERO)
-		_notes.append("when the body stood, %d of %d near cells were in, which is what the fade used to lift on; it waited %.1f s more, and %d of %d were in when it lifted%s%s"
-				% [at_spawn.x, at_spawn.y, float(wait.get("ms", 0)) / 1000.0, cells.x, cells.y,
-					" (timed out)" if bool(wait.get("timed_out", false)) else "",
+		_notes.append("when the body stood, %d of %d near cells were in, which is what the fade used to lift on; it waited %.1f s and %d frames more, and %d of %d were in when it lifted%s%s"
+				% [at_spawn.x, at_spawn.y, float(wait.get("ms", 0)) / 1000.0, int(wait.get("frames", 0)), cells.x, cells.y,
+					" (gave up: %s)" % str(wait.get("why", "")) if bool(wait.get("timed_out", false)) else "",
 					"; caption while held: %s" % held_caption if not held_caption.is_empty() else ""])
 		_check(not bool(wait.get("timed_out", false)), "the near cells were all in before the fade lifted (%d of %d)" % [cells.x, cells.y])
+		# A streamer that is not following the body counts nothing, and nothing is all in at once:
+		# the fade would lift at the first frame again, and the check above would not see it.
+		_check(cells.y > 0, "the fade counted the cells round the body, not round something else (%d)" % cells.y)
 	# a new game's opening begins once that hold has let the fade go (CinematicPlayer.begin waits
 	# for it), and hands over before the world is photographed standing
 	await _watch_the_opening()
@@ -810,6 +813,15 @@ func _check_the_ground() -> void:
 				await _capture("coarse_ground_card")
 	elif drawn_by == "terrain3d":
 		_check(said == null, "nothing says the ground is coarse, because it is not")
+		# Terrain3D builds its clipmap and its collision round the camera it was given last. It
+		# was left on the fly camera, which flew off on the player's keys, and a player walked under
+		# the ground (World.follow). Standing still, the flow could not see that; this can.
+		var tn: Object = world.get("terrain_node") as Object
+		if tn != null and tn.has_method("get_camera"):
+			var cam := tn.call("get_camera") as Node
+			_check(cam != null and (cam == body or body.is_ancestor_of(cam)),
+					"Terrain3D's ground and collision follow the body's own camera (%s)"
+					% (str(cam.get_path()) if cam != null else "no camera"))
 	var feet := body.global_position
 	var q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 2.0, feet + Vector3.DOWN * 40.0, (1 << 0) | (1 << 10))
 	var own: Array[RID] = []
