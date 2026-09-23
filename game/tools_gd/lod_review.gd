@@ -97,7 +97,7 @@ func _light(region_id: String, at_hour: float) -> void:
 		_atmos.call("force_weather", "core:weather/clear", true)
 
 
-## Every tree with a picture, or the ones named, calibrated in turn and written out together.
+## Every tree with a picture, or the ones named, calibrated in turn; the file is written after each.
 func _calibrate_all() -> void:
 	var names: Array = []
 	if Array(OS.get_cmdline_user_args()).any(func(a: String) -> bool: return a.begins_with("--assets=")):
@@ -123,19 +123,27 @@ func _calibrate_all() -> void:
 				await get_tree().process_frame
 		var result: Dictionary = await _calibrate(path)
 		if not result.is_empty():
-			out[n] = result
+			var entry: Dictionary = out.get(n, {})
+			entry[Graphics.renderer()] = result
+			out[n] = entry
+			# after every tree, so a run cut short keeps what it measured
+			_write_calibration(out)
+	_write_calibration(out)
+	print("CALIBRATION written: %d trees" % out.size())
+
+
+func _write_calibration(out: Dictionary) -> void:
 	var f := FileAccess.open(ProjectSettings.globalize_path(ScatterLod.CALIBRATION), FileAccess.WRITE)
 	if f == null:
 		push_error("lod_review: cannot write %s" % ScatterLod.CALIBRATION)
 		return
 	f.store_string(JSON.stringify(out, "  ", true) + "\n")
 	f.close()
-	print("CALIBRATION written: %d trees" % out.size())
 
 
 ## One tree: three copies at LOD1 and three as the picture, in pairs turned to three sides, at the tree's
-## own switch distance. The picture's colour gain and alpha cut are nudged until its mean colour
-## and its pixel coverage match the mesh's, over five passes measured against an empty plate.
+## own switch distance. The picture's colour gain and alpha cut are nudged until the ink it adds
+## to the view and its pixel coverage match the mesh's, over four passes against an empty plate.
 func _calibrate(path: String) -> Dictionary:
 	var name := path.get_file().get_basename()
 	var meta := ScatterLod._meta(path)
@@ -165,47 +173,62 @@ func _calibrate(path: String) -> Dictionary:
 	_put(g, "solid1", [0, 2, 4])
 	_put(g, "leaves1", [0, 2, 4])
 	_put(g, "impostor", [1, 3, 5])
-	var prior: Dictionary = ScatterLod.calibration().get(name, {})
+	var prior: Dictionary = ScatterLod.calibration_for(name)
 	var gain_a: Array = prior.get("gain", [1.0, 1.0, 1.0])
-	var gain := Color(float(gain_a[0]), float(gain_a[1]), float(gain_a[2]))
+	# One gain for all three channels: a brightness, never a hue. The mesh's far colour is partly
+	# the sky seen through twigs thinner than a pixel, and a picture given a hue to match that
+	# comes out wrong in itself: a blue gain turned a black ash's crown cream and a pollard's bark
+	# lilac. The picture keeps the colours Cycles gave it, and matches the mesh in how much it
+	# darkens the view.
+	var bright := clampf(float(gain_a[1]), 0.5, 2.0)
 	var scissor := float(prior.get("alpha_scissor", 0.45))
 	# the best pass is kept, not the last: tonemapping can make a pass overshoot
 	var best := {}
 	var best_err := INF
 	var best_img: Image = null
-	for it in 5:
+	for it in 4:
+		var gain := Color(bright, bright, bright)
 		lad.impostor_material.set_shader_parameter("tint", gain)
 		lad.impostor_material.set_shader_parameter("alpha_scissor", scissor)
 		# a fresh empty plate every pass, the trees hidden, so only the trees differ from it
 		_stage.visible = false
-		var plate := await _shot()
+		var plate := await _shot(6)
 		_stage.visible = true
-		var img := await _shot()
-		var mesh_c := _mean_of(plate, img, [0, 2, 4], gap, width, height, d)
-		var pic_c := _mean_of(plate, img, [1, 3, 5], gap, width, height, d)
-		print("CALIB %s pass %d: mesh rgb(%.3f %.3f %.3f) px %d | picture rgb(%.3f %.3f %.3f) px %d | gain (%.2f %.2f %.2f) cut %.2f" % [
-				name, it, mesh_c.r, mesh_c.g, mesh_c.b, int(mesh_c.a), pic_c.r, pic_c.g, pic_c.b, int(pic_c.a),
-				gain.r, gain.g, gain.b, scissor])
-		if pic_c.a <= 0.0 or mesh_c.a <= 0.0:
+		var img := await _shot(6)
+		var mesh_m := _mean_of(plate, img, [0, 2, 4], gap, width, height, d)
+		var pic_m := _mean_of(plate, img, [1, 3, 5], gap, width, height, d)
+		var mesh_c: Vector3 = mesh_m["colour"]
+		var pic_c: Vector3 = pic_m["colour"]
+		var mesh_ink: Vector3 = mesh_m["ink"]
+		var pic_ink: Vector3 = pic_m["ink"]
+		print("CALIB %s pass %d: mesh px %d ink (%.0f %.0f %.0f) | picture px %d ink (%.0f %.0f %.0f) | gain (%.2f %.2f %.2f) cut %.2f" % [
+				name, it, int(mesh_m["count"]), mesh_ink.x, mesh_ink.y, mesh_ink.z, int(pic_m["count"]),
+				pic_ink.x, pic_ink.y, pic_ink.z, gain.r, gain.g, gain.b, scissor])
+		if int(pic_m["count"]) == 0 or int(mesh_m["count"]) == 0:
 			break
-		var cov := mesh_c.a / pic_c.a
-		var err := absf(mesh_c.r - pic_c.r) + absf(mesh_c.g - pic_c.g) + absf(mesh_c.b - pic_c.b) \
-				+ absf(cov - 1.0) * 0.2
+		var cov := float(mesh_m["count"]) / float(pic_m["count"])
+		# the colour the picture's own pixels would need for its ink to be the mesh's
+		var want: Vector3 = (pic_m["behind"] as Vector3) + mesh_ink / float(pic_m["count"])
+		want = want.clamp(Vector3(0.005, 0.005, 0.005), Vector3.ONE)
+		var lum := Vector3(0.2126, 0.7152, 0.0722)
+		var ink_err := absf(mesh_ink.dot(lum) - pic_ink.dot(lum)) / maxf(absf(mesh_ink.dot(lum)), 1.0)
+		var err := ink_err + 0.2 * absf(cov - 1.0)
 		if err < best_err:
 			best_err = err
 			best_img = img
 			best = {"gain": [snappedf(gain.r, 0.001), snappedf(gain.g, 0.001), snappedf(gain.b, 0.001)],
 					"alpha_scissor": snappedf(scissor, 0.001), "distance_m": snappedf(d, 0.1),
 					"light": "%s %.1f h" % [region_short, float(REGION_HOURS.get(region_short, 10.0))],
-					"mesh_rgb": [snappedf(mesh_c.r, 0.001), snappedf(mesh_c.g, 0.001), snappedf(mesh_c.b, 0.001)],
-					"picture_rgb": [snappedf(pic_c.r, 0.001), snappedf(pic_c.g, 0.001), snappedf(pic_c.b, 0.001)],
-					"coverage": [int(mesh_c.a), int(pic_c.a)]}
-		# screen colour is tonemapped, so the ratio is only a direction: iterate towards it
-		gain.r = clampf(gain.r * clampf(mesh_c.r / maxf(pic_c.r, 0.01), 0.7, 1.4), 0.4, 2.0)
-		gain.g = clampf(gain.g * clampf(mesh_c.g / maxf(pic_c.g, 0.01), 0.7, 1.4), 0.4, 2.0)
-		gain.b = clampf(gain.b * clampf(mesh_c.b / maxf(pic_c.b, 0.01), 0.7, 1.4), 0.4, 2.0)
+					"mesh_rgb": [snappedf(mesh_c.x, 0.001), snappedf(mesh_c.y, 0.001), snappedf(mesh_c.z, 0.001)],
+					"picture_rgb": [snappedf(pic_c.x, 0.001), snappedf(pic_c.y, 0.001), snappedf(pic_c.z, 0.001)],
+					"coverage": [int(mesh_m["count"]), int(pic_m["count"])],
+					"ink_error": snappedf(ink_err, 0.001)}
+		# screen colour is tonemapped, so a ratio is only a direction: iterate towards it
+		var l_want := want.x * 0.2126 + want.y * 0.7152 + want.z * 0.0722
+		var l_pic := maxf(pic_c.x * 0.2126 + pic_c.y * 0.7152 + pic_c.z * 0.0722, 0.005)
+		bright = clampf(bright * clampf(l_want / l_pic, 0.75, 1.33), 0.5, 2.0)
 		# coverage: a lower cut keeps more of the picture's softened edge
-		scissor = clampf(scissor - (cov - 1.0) * 0.35, 0.2, 0.7)
+		scissor = clampf(scissor - (cov - 1.0) * 0.35, 0.3, 0.6)
 	if best_img != null:
 		_save_crop(best_img, Vector3(-3.0 * gap, 0.0, -d), Vector3(3.0 * gap, height * 1.1, -d),
 				"%s_calibrated" % name)
@@ -218,22 +241,44 @@ func _region_of(tree_name: String) -> String:
 	return r if REGION_HOURS.has(r) else "hearthvale"
 
 
-## The pixel-weighted mean colour of several trees in the calibration row; alpha is their pixels.
+## Several trees of the calibration row measured together, against the empty plate:
+##   "count"  pixels the trees changed at all (the silhouette),
+##   "ink"    the summed change, per channel (what the trees add to the view),
+##   "colour" their mean colour, and "behind" the plate's mean under them.
+## Ink is what a dissolve has to keep: while it runs, every pixel of the tree is one level or the
+## other, so the view stays the same only if both levels change it by the same total. A far
+## mesh is dark leaves and branches thinner than a pixel, blended with the sky between them; its
+## picture is fewer, solider pixels. Matching their mean colours makes the picture pale; matching
+## their ink makes the two look alike from where they are seen.
 func _mean_of(plate: Image, img: Image, which: Array, gap: float, width: float, height: float,
-		d: float) -> Color:
+		d: float) -> Dictionary:
+	var ink := Vector3.ZERO
 	var sum := Vector3.ZERO
-	var n := 0.0
+	var under := Vector3.ZERO
+	var count := 0
+	var k := Vector2(img.get_size()) / get_viewport().get_visible_rect().size
 	for i in which:
 		var x := (float(i) - 2.5) * gap
-		# from just above eye height: below it the ground shows behind the tree, and a neighbour's
-		# shadow on that ground is not the tree's colour
-		var m := _mean_change(plate, img, Vector3(x - width * 0.65, 1.8, -d), Vector3(x + width * 0.65, height * 1.08, -d))
-		sum += Vector3(m.r, m.g, m.b) * m.a
-		n += m.a
-	if n <= 0.0:
-		return Color(0, 0, 0, 0)
-	sum /= n
-	return Color(sum.x, sum.y, sum.z, n)
+		# from just above eye height (or the crown of a shrub shorter than that): below it the
+		# ground shows behind the tree, and a neighbour's shadow on that ground is not its colour
+		var a := cam.unproject_position(Vector3(x - width * 0.65, minf(1.8, height * 0.4), -d)) * k
+		var b := cam.unproject_position(Vector3(x + width * 0.65, height * 1.08, -d)) * k
+		var rect := Rect2i(Rect2(Vector2(minf(a.x, b.x), minf(a.y, b.y)), (a - b).abs()))
+		rect = rect.intersection(Rect2i(Vector2i.ZERO, img.get_size()))
+		for y in range(rect.position.y, rect.end.y):
+			for px in range(rect.position.x, rect.end.x):
+				var c := img.get_pixel(px, y)
+				var q := plate.get_pixel(px, y)
+				if absf(c.r - q.r) + absf(c.g - q.g) + absf(c.b - q.b) <= 0.06:
+					continue
+				var cv := Vector3(c.r, c.g, c.b)
+				var qv := Vector3(q.r, q.g, q.b)
+				ink += cv - qv
+				sum += cv
+				under += qv
+				count += 1
+	var n := float(maxi(count, 1))
+	return {"count": count, "ink": ink, "colour": sum / n, "behind": under / n}
 
 
 func _ground() -> void:
@@ -365,8 +410,8 @@ func _sweep(path: String) -> void:
 	img.save_png("%s/%s_sweep.png" % [out_dir, path.get_file().get_basename()])
 
 
-func _shot() -> Image:
-	for i in 12:
+func _shot(frames := 12) -> Image:
+	for i in frames:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	return get_viewport().get_texture().get_image()

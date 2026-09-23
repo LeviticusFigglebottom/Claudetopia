@@ -21,10 +21,10 @@ const LOD2_DISTANCE := 75.0
 const LOD_END := 260.0
 ## A tree's own bands when a scene of it is instanced whole (a point of interest's hawthorn or
 ## yew), sized by its height the way world/scatter_lod.gd sizes the scattered ones at a level of
-## detail bias of one: the mid level from four heights away or 30 m, the impostor from ten or
+## detail bias of one: the mid level from four heights away or 50 m, the impostor from ten or
 ## 70 m. Kept in step with ScatterLod.NEAR_MIN/NEAR_PER_METRE/FAR_MIN/FAR_PER_METRE by hand; an
 ## import script is no place to lean on runtime classes.
-const TREE_LOD1_MIN := 30.0
+const TREE_LOD1_MIN := 50.0
 const TREE_LOD1_PER_M := 4.0
 const TREE_LOD2_MIN := 70.0
 const TREE_LOD2_PER_M := 10.0

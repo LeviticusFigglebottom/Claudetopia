@@ -9,7 +9,7 @@ extends RefCounted
 ## were trees and their shadows. The fix is not fewer trees. It is to draw each tree at the level
 ## its own distance deserves:
 ##
-##   level 0  the full mesh                        up to  max(30 m, 4 x its height)
+##   level 0  the full mesh                        up to  max(50 m, 4 x its height)
 ##   level 1  the forge's LOD1: trunk and cards    up to  max(70 m, 10 x its height)
 ##   beyond   the forge's impostor: eight views of the tree on one quad that turns to face you
 ##            (tools/forge/gen_impostors.py, assets/shaders/tree_impostor.gdshader)
@@ -24,8 +24,12 @@ extends RefCounted
 ## An opaque asset with a LOD ladder and weight to lose (a drystone wall, a boulder) takes the
 ## same treatment without the dissolve, at distances set by its size.
 
-## Where a tree leaves its full mesh, and where it becomes a picture, at a bias of one.
-const NEAR_MIN := 30.0
+## Where a tree leaves its full mesh, and where it becomes a picture, at a bias of one. The
+## full mesh was first given up at 30 m (or four heights); the far-trees plan's eye-level shot
+## put a hedgerow oak at 45 m in its LOD1, and beside the same oak drawn whole it was a sparser
+## crown of bigger cards with a blade of bark sticking out of it. A tree a player walks towards
+## is whole to 50 m, and a tree taller than twelve and a half metres to four times its height.
+const NEAR_MIN := 50.0
 const NEAR_PER_METRE := 4.0
 const FAR_MIN := 70.0
 const FAR_PER_METRE := 10.0
@@ -54,11 +58,12 @@ const HYSTERESIS := 1.5
 ## Floats a MultiMesh instance takes with a 3D transform and a colour.
 const STRIDE := 16
 const IMPOSTOR_SHADER := "res://assets/shaders/tree_impostor.gdshader"
-## Per tree, the colour gain (`tint`, in the picture's own sRGB terms) and alpha cut that make
-## its picture match its LOD1 where the one becomes the other: measured, not chosen, by
-## `tools_gd/lod_review.tscn -- --calibrate` with each tree standing in its own region's light.
-## The mesh's leaves go paler and thinner with distance than any picture of them does, and by a
-## different amount for every tree, so a single setting in the shader cannot match them all.
+## Per tree, the brightness gain (`tint`, the same in all three channels) and alpha cut that
+## make its picture darken the view as much as its LOD1 does where the one becomes the other:
+## measured, not chosen, by `tools_gd/lod_review.tscn -- --calibrate` with each tree standing
+## at its own switch distance in its own region's light. A far mesh is leaves and twigs thinner
+## than a pixel blended with the sky between them, by a different amount for every tree and
+## every region's light, so no single setting in the shader matches them all.
 const CALIBRATION := "res://world/impostor_calibration.json"
 
 
@@ -223,7 +228,8 @@ static var _ladders: Dictionary = {}
 static var _calibration: Variant = null
 
 
-## The calibration file, read once: tree name -> {"gain": [r, g, b], "alpha_scissor": s, ...}.
+## The calibration file, read once: tree name -> renderer -> {"gain": [r, g, b],
+## "alpha_scissor": s, ...}, one measurement per renderer it was taken on.
 static func calibration() -> Dictionary:
 	if _calibration == null:
 		var parsed: Variant = null
@@ -233,9 +239,19 @@ static func calibration() -> Dictionary:
 	return _calibration
 
 
+## A tree's measurement for this renderer, or Compatibility's where this one has none yet (the
+## renderers light a far canopy differently, Forward+ with SSAO in it, so each is measured).
+static func calibration_for(tree_name: String, renderer := "") -> Dictionary:
+	var entry: Dictionary = calibration().get(tree_name, {})
+	var r := renderer if renderer != "" else Graphics.renderer()
+	if entry.has(r):
+		return entry[r]
+	return entry.get(Graphics.RENDERER_COMPATIBILITY, {})
+
+
 ## A tree's picture set to its measured gain and cut, where it has been measured.
 static func calibrate_material(mat: ShaderMaterial, tree_name: String) -> void:
-	var cal: Dictionary = calibration().get(tree_name, {})
+	var cal := calibration_for(tree_name)
 	if cal.is_empty():
 		return
 	var gain: Array = cal.get("gain", [1.0, 1.0, 1.0])

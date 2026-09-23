@@ -169,3 +169,36 @@ func test_the_streamer_draws_trees_down_the_ladder_and_counts_each_once() -> voi
 	assert_true(streamer.lods_settled(), "sorted for the eye as they were built")
 	streamer._unload(Vector2i(16, 16))
 	assert_eq(streamer._lod_groups.size(), 0, "unloading a cell lets its groups go")
+
+
+func test_a_trees_picture_takes_its_measured_gain_and_cut() -> void:
+	var oak := "res://assets/models/trees/hearthvale_oak_a/hearthvale_oak_a.glb"
+	var saved: Variant = ScatterLod._calibration
+	ScatterLod._calibration = {"hearthvale_hawthorn_a": {
+		Graphics.renderer(): {"gain": [1.2, 1.1, 1.3], "alpha_scissor": 0.4}}}
+	var lad := ScatterLod._build_ladder(TREE, load(TREE) as PackedScene)
+	var other := ScatterLod._build_ladder(oak, load(oak) as PackedScene)
+	ScatterLod._calibration = saved
+	var tint: Color = lad.impostor_material.get_shader_parameter("tint")
+	assert_near(tint.r, 1.2, 0.001, "the measured gain, red")
+	assert_near(tint.b, 1.3, 0.001, "and blue")
+	assert_near(float(lad.impostor_material.get_shader_parameter("alpha_scissor")), 0.4, 0.001)
+	var plain: Variant = other.impostor_material.get_shader_parameter("tint")
+	assert_true(plain == null or (plain as Color).is_equal_approx(Color.WHITE),
+			"a tree with no measurement keeps the shader's own")
+
+
+func test_the_calibration_file_names_only_trees_that_exist() -> void:
+	var cal := ScatterLod.calibration()
+	for tree_name: String in cal:
+		var path := "res://assets/models/trees/%s/%s.glb" % [tree_name, tree_name]
+		assert_true(ResourceLoader.exists(path), "%s in the calibration is a tree the forge ships" % tree_name)
+		for r: String in cal[tree_name]:
+			assert_true(r in [Graphics.RENDERER_COMPATIBILITY, Graphics.RENDERER_FORWARD_PLUS],
+					"%s measured on a renderer the game has (%s)" % [tree_name, r])
+			var gain: Array = (cal[tree_name][r] as Dictionary).get("gain", [])
+			assert_eq(gain.size(), 3, "%s on %s has a gain per channel" % [tree_name, r])
+	# a renderer with no measurement of its own takes Compatibility's
+	if cal.has("hearthvale_oak_a") and not (cal["hearthvale_oak_a"] as Dictionary).has(Graphics.RENDERER_FORWARD_PLUS):
+		assert_eq(ScatterLod.calibration_for("hearthvale_oak_a", Graphics.RENDERER_FORWARD_PLUS),
+				cal["hearthvale_oak_a"][Graphics.RENDERER_COMPATIBILITY])

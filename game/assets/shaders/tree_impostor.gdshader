@@ -27,6 +27,8 @@ uniform vec2 frame_axis = vec2(0.0);
 uniform int views = 8;
 uniform int grid = 3;
 uniform float alpha_scissor : hint_range(0.0, 1.0) = 0.45;
+// Below one, the atlas is read a little finer than the picture's size on screen asks for.
+uniform float mip_sharpen : hint_range(0.25, 1.0) = 0.75;
 // How much of the sun a crown's surface gets, on average, once its own leaves have shadowed
 // it: the mesh levels get this from the shadow map, a picture has to be told. Measured against
 // LOD1 by tools_gd/lod_review.tscn (LODSTATS), not chosen by eye.
@@ -37,7 +39,14 @@ uniform float translucency : hint_range(0.0, 1.0) = 0.25;
 // little sky, is the part the mesh's own leaves shadow. Without it a picture has none of the
 // dark gaps between leaf clusters that give the mesh its depth, and reads pale and flat.
 uniform float sun_occlusion : hint_range(0.0, 1.0) = 0.85;
-uniform float specular_value : hint_range(0.0, 1.0) = 0.3;
+// ...and how far it shades the sky's own light. Little: the mesh's leaves take the sky's light
+// on every card whatever faces them, with nothing to occlude it on Compatibility, and a picture
+// that let its baked visibility darken the sky's light came out warmer and darker than the
+// mesh beside it on every tree measured.
+uniform float sky_occlusion : hint_range(0.0, 1.0) = 0.3;
+// Low: a crown's highlights are broken up leaf by leaf, but the picture's normals are smoothed
+// into an envelope, so any more than this draws one broad cream sheen over the top of the crown.
+uniform float specular_value : hint_range(0.0, 1.0) = 0.1;
 uniform float roughness_value : hint_range(0.0, 1.0) = 0.72;
 uniform vec4 tint : source_color = vec4(1.0);
 // fading in across (start, end) metres from the main camera; (0, 0) is always whole
@@ -100,9 +109,11 @@ void fragment() {
 	float index = mix(i0, mod(i0 + 1.0, float(views)), pick);
 	vec2 uv = cell_uv(index, UV);
 	// gradients from the quad's own UV, so the mip level does not jump where the dissolve
-	// switches cells between neighbouring pixels
-	vec2 gx = dFdx(UV) / float(grid);
-	vec2 gy = dFdy(UV) / float(grid);
+	// switches cells between neighbouring pixels; shortened by `mip_sharpen`, a picture read at
+	// the mip its size asks for is a smudge beside the mesh, whose leaves are drawn at full
+	// resolution however small they are
+	vec2 gx = dFdx(UV) / float(grid) * mip_sharpen;
+	vec2 gy = dFdy(UV) / float(grid) * mip_sharpen;
 	vec4 c = textureGrad(albedo_atlas, uv, gx, gy);
 	vec4 n = textureGrad(normal_atlas, uv, gx, gy);
 	ALBEDO = c.rgb * tint.rgb * COLOR.rgb;
@@ -113,7 +124,7 @@ void fragment() {
 	vec3 n_world = normalize(v_bx * n_obj.x + by * n_obj.y + v_bz * n_obj.z);
 	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
 	// the baked sky visibility: the middle of a crown sees less of the sky than its rim
-	AO = n.a;
+	AO = mix(1.0, n.a, sky_occlusion);
 	AO_LIGHT_AFFECT = 0.0;
 	v_sky = n.a;
 	ROUGHNESS = roughness_value;
