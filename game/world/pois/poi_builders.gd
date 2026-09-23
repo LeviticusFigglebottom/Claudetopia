@@ -322,7 +322,10 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		var to_pad := Vector2(pad.x - k.origin.x, pad.y - k.origin.z) - head
 		if to_pad.length() > 20.0 and to_pad.normalized().dot(-ahead) > 0.7:
 			down = to_pad.normalized()
-	_hush_stair(d, stone, head, down)
+	# a world whose land draws the stair down the bank itself (a road with this id) has it; a second
+	# one straight down the face beside it would be a stair nobody built
+	if WorldProbe.road_points(HUSH_STAIR_ROAD).size() < 2:
+		_hush_stair(d, stone, head, down)
 	var hs: Vector2 = at.call(-3.4, -2.6)
 	k.hearthstone(k.on_ground(hs.x, hs.y), yaw, d.poi_id, d.display_name)
 
@@ -342,6 +345,10 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	_waymarks(d, timber)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
+
+
+## The built road that is the stair down the bank from the camp, in a world whose land draws one.
+const HUSH_STAIR_ROAD := "core:road/stair_head_hushline_stair"
 
 
 ## The Hushline Stair itself: from its head at the camp, straight down the cliff to the Hush and a
@@ -390,10 +397,14 @@ static func _hush_stair(d: PoiDressing, stone: SurfaceTool, head: Vector2, down:
 	if in_flight > 0:
 		var end := last + down * tread * 0.5
 		_flight_collider(k, flight_from, Vector3(end.x, top, end.y), yaw, width)
-	# the mist the stair goes down into, at its foot
+	# the mist the stair goes down into, at its foot: lying on the water, not on the bed under it
 	for i in 3:
 		var at := last + down * float(i - 1) * 9.0
-		k.puffs(k.on_ground(at.x, at.y, 1.5), Vector3(8.0, 1.5, 6.0), 0.1, 26, Color(0.86, 0.86, 0.88, 0.24), 10.0, 12.0)
+		var lie := k.on_ground(at.x, at.y).y
+		var wet := k.water_y(at.x, at.y)
+		if not is_nan(wet):
+			lie = maxf(lie, wet)
+		k.puffs(Vector3(at.x, lie + 0.9, at.y), Vector3(8.0, 1.2, 6.0), 0.08, 30, Color(0.58, 0.6, 0.64, 0.3), 10.0, 12.0)
 
 
 ## One flight of a stair as a single sloped box from `a` to `b` (its top face on the steps' tops).
@@ -429,13 +440,20 @@ static func _lamp_post(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, at: Vector
 static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 	var k := d.kit
 	var m := d.masonry
-	var via: Array = d.path.get("via", [])
+	var via: Array = way_of(d.path)
 	if via.size() < 2:
 		return
 	var pts: Array[Vector2] = []
 	for p in via:
 		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
 			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	# a way written for another build does not start here: no stones rather than stones across
+	# somebody else's country
+	if pts.is_empty() or pts[0].length() > 40.0:
+		if not k.far:
+			Log.warn("PoiBuilders", "%s: its way starts %.0f m off, not at it; no waystones" % [d.poi_id,
+					pts[0].length() if not pts.is_empty() else INF])
+		return
 	var stones: Array = []
 	var every := 22.0
 	var carried := every * 0.8
@@ -461,6 +479,15 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 			s += every
 		carried = length - (s - every)
 	k.scatter(k.rock("standing_stone"), stones, true, true)
+
+
+## The points a POI's `path` goes by: the built road it names (`built_road`) when the land drew
+## one, the `via` points it was written with otherwise.
+static func way_of(path: Dictionary) -> Array:
+	var built := WorldProbe.road_points(str(path.get("built_road", "")))
+	if built.size() >= 2:
+		return built
+	return path.get("via", [])
 
 
 # --- shrines ----------------------------------------------------------------------------------------
@@ -2944,64 +2971,146 @@ static func _valley_gully(d: PoiDressing) -> void:
 			Vector3(0.0, 0.0, 0.12), true)
 
 
+## How far above the water the Hushline Stair's landing stands where the land does not lift it clear.
+const HUSH_LANDING_ABOVE_M := 1.6
+
+
 ## The Hushline Stair: Oroth steps going down into the mist where the colour goes out of
 ## things, with Wren Tallow's Hearthstone at the top step — the first name you are given.
+##
+## The built world flattened its pad at 0.2 m, with the Hush twenty metres deep on every side and
+## the cliff a hundred metres off: the pad read as a raft awash, the stair went down into clear sea,
+## and the ash-wights stood at the waterline. Where the ground is that low the stair's head stands
+## on a shelf of its own, a rough stone mound out of the water with an Oroth landing laid on it
+## HUSH_LANDING_ABOVE_M clear of the surface: the Hearthstone, the brazier, the piers and the wights
+## (`the_landing`, a raised marker) are on it. The stair goes out from it away from the cliff, and
+## where it goes under, the mist lies on the water and takes it. A pad the land already lifts clear
+## of the water keeps its own ground. Built from the pad's def and the water, not the terrain, so a
+## new build's pad is seated the same way.
 static func _valley_hushline(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
-	var down := k.downhill()
-	var into := down if down != Vector2.ZERO else k.grain()
+	# away from the cliff: out from under the Stair Head's camp, over the Hush
+	var into := Vector2.ZERO
+	var head_def := ContentDB.get_or_empty("core:poi/stair_head")
+	if not head_def.is_empty():
+		var from := WorldProbe.xz_of(head_def)
+		var here := Vector2(k.origin.x, k.origin.z)
+		if here.distance_to(from) > 1.0:
+			into = (here - from).normalized()
+	if into == Vector2.ZERO:
+		var down := k.downhill()
+		into = down if down != Vector2.ZERO else k.grain()
 	var perp := Vector2(-into.y, into.x)
 	var yaw := PoiKit.yaw_of(into)
+	var basis := Basis(Vector3.UP, yaw)
 	var g := k.on_ground(0.0, 0.0)
+	# the water the pad stands in or beside: the pad itself reads dry, the sea round it does not
+	var water := NAN
+	if k.provider != null and k.water_direction(k.radius + 20.0) != Vector2.ZERO:
+		water = k.provider.nearest_water_level(k.origin.x, k.origin.z) - k.origin.y
+	var shelf := not is_nan(water) and g.y < water + HUSH_LANDING_ABOVE_M and g.y > water - 3.0
+	var floor_y := water + HUSH_LANDING_ABOVE_M if shelf else g.y
 	var stone := m.begin()
-	# the stair: forty steps going down, wide, with a wall along each side
+	# the stair: forty steps going down, wide, with a wall along each side. On a level pad that
+	# ends at a drop it starts at the drop, not buried in the pad.
 	var steps := 40
 	var rise := -0.34
 	var tread := 0.95
 	var top := -into * 3.0
-	m.steps(stone, top, into, g.y, steps, rise, tread, 7.0, 1.1)
+	if not shelf:
+		var edge := _edge_along(k, into, g.y, k.radius + 12.0)
+		if edge > 4.0:
+			top = into * (edge - 1.0)
+	var landing := top - into * 6.0
+	if shelf:
+		# the rock the landing is seated on, its rim under the water, and the landing on it: level
+		# Oroth paving from the stair's head back twelve metres, its sides down into the water
+		var rock := -into * 8.0
+		var base := water - 3.0
+		m.mound(Vector3(rock.x, base, rock.y), 16.0, floor_y - 0.3 - base, k.surface("stone", 0.8), "Shelf",
+				true, 4.0, 8, 24, true, 0.14)
+		var deep := floor_y - (water - 1.0)
+		var slab := Transform3D(basis, Vector3(landing.x, floor_y - deep * 0.5, landing.y))
+		m.block(stone, slab, Vector3(14.0, deep, 12.0))
+		k.collider(Vector3(14.0, deep, 12.0), slab, "stone")
+	m.steps(stone, top, into, floor_y, steps, rise, tread, 7.0, 1.1)
 	for s in [-1.0, 1.0]:
 		var a := top + perp * float(s) * 3.8
 		var b := top + into * (tread * float(steps)) + perp * float(s) * 3.8
 		var mid := (a + b) * 0.5
 		var seg := b - a
 		var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(seg) + PI * 0.5),
-				Vector3(mid.x, g.y + rise * float(steps) * 0.5 + 0.7, mid.y))
+				Vector3(mid.x, floor_y + rise * float(steps) * 0.5 + 0.7, mid.y))
 		m.block(stone, xf, Vector3(seg.length(), 1.4, 0.6))
 		k.collider(Vector3(seg.length(), 1.4, 0.6), xf, "stone")
 	# the head of the stair: two Oroth piers marking where it begins
 	for s in [-1.0, 1.0]:
 		var p := top - into * 1.6 + perp * float(s) * 4.2
-		var frame := Transform3D(Basis.IDENTITY, k.on_ground(p.x, p.y))
+		var frame := Transform3D(Basis.IDENTITY, _on_landing(k, p, shelf, floor_y))
 		m.drum(stone, frame, 0.85, 4.4, 0.25, NAN, true, 0.55)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
-	# the mist below, which is what turns you back
-	for i in 4:
-		var t := 14.0 + float(i) * 8.0
+	# where the tutorial's wights wait, on the landing and never in the water
+	k.marker("the_landing", _on_landing(k, landing, shelf, floor_y), false, shelf, 6.0)
+	# the mist, which is what turns you back: lying on the water from where the stair goes under
+	# to past its last step, so it goes down into grey and not into clear sea
+	var under_from := 0.0
+	if not is_nan(water):
+		under_from = clampf((floor_y - water) / -rise, 0.0, float(steps)) * tread
+	var t := under_from
+	var i := 0
+	while t <= tread * float(steps) + 8.0:
 		var at := top + into * t
-		k.puffs(k.on_ground(at.x, at.y, 1.0 + float(i) * 0.4), Vector3(9.0, 1.2, 5.0), 0.1, 30,
-				Color(0.86, 0.86, 0.88, 0.26), 9.0, 11.0)
+		var lie := floor_y + rise * clampf(t / tread, 0.0, float(steps))
+		if not is_nan(water):
+			lie = maxf(lie, water)
+		# grey, not white: unshaded, a pale colour lit by the low sun read as a glare on the sea
+		k.puffs(Vector3(at.x, lie + 0.6 + float(i % 3) * 0.3, at.y), Vector3(9.0, 0.8, 4.5), 0.06, 40,
+				Color(0.56, 0.58, 0.62, 0.34), 10.0, 12.0)
+		t += 6.0
+		i += 1
 	# Wren's Hearthstone at the top step, and the brazier she keeps
 	var stone_at := top - into * 3.4 + perp * 2.2
-	k.hearthstone(k.on_ground(stone_at.x, stone_at.y), yaw + PI, d.poi_id, d.display_name)
+	k.hearthstone(_on_landing(k, stone_at, shelf, floor_y), yaw + PI, d.poi_id, d.display_name)
 	var brazier := top - into * 3.0 - perp * 2.4
-	k.place(k.prop("brazier"), k.on_ground(brazier.x, brazier.y), 0.0)
-	k.light(k.on_ground(brazier.x, brazier.y, 1.1), Color(1.0, 0.62, 0.3), 2.2, 10.0)
+	k.place(k.prop("brazier"), _on_landing(k, brazier, shelf, floor_y), 0.0)
+	k.light(_on_landing(k, brazier, shelf, floor_y, 1.1), Color(1.0, 0.62, 0.3), 2.2, 10.0)
 	var bench := top - into * 5.4
-	k.place(k.prop("bench"), k.on_ground(bench.x, bench.y), yaw)
-	k.place(k.prop("crate"), k.on_ground(bench.x + perp.x * 2.0, bench.y + perp.y * 2.0), yaw + 0.4)
-	k.place(k.prop("signpost"), k.on_ground(bench.x - perp.x * 3.0, bench.y - perp.y * 3.0), yaw + PI)
-	# the grey grass gives out as the stair goes down: the last of it at the top
+	k.place(k.prop("bench"), _on_landing(k, bench, shelf, floor_y), yaw)
+	k.place(k.prop("crate"), _on_landing(k, bench + perp * 2.0, shelf, floor_y), yaw + 0.4)
+	k.place(k.prop("signpost"), _on_landing(k, bench - perp * 3.0, shelf, floor_y), yaw + PI)
+	# the grey grass gives out as the stair goes down: the last of it at the top, and on a landing
+	# only on the landing
 	var grass: Array = []
-	for i in 40:
-		var t := k.rng.randf_range(-12.0, 8.0)
-		var p := top + into * t + perp * k.rng.randf_range(-13.0, 13.0)
-		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.3)))
+	for n in 40:
+		var along := k.rng.randf_range(-12.0, 8.0)
+		var across := k.rng.randf_range(-13.0, 13.0)
+		var p := top + into * along + perp * across
+		if shelf and (absf(along + 6.0) > 5.6 or absf(across) > 6.6):
+			continue
+		grass.append(PoiKit.transform_at(_on_landing(k, p, shelf, floor_y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.3)))
 	k.scatter(k.flora("grey_grass"), grass, false, false, false)
-	for i in 2:
-		var p := top - into * 8.0 + perp * (6.0 * (1.0 if i == 0 else -1.0))
-		k.place(k.tree("dead_ash_tree"), k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
+	for n in 2:
+		var p := top - into * 8.0 + perp * (6.0 * (1.0 if n == 0 else -1.0))
+		k.place(k.tree("dead_ash_tree"), _on_landing(k, p, shelf, floor_y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
+
+
+## How far along `dir` from the pad's middle the ground first falls a metre below `level`, or the
+## water begins; 0 when neither happens within `reach`.
+static func _edge_along(k: PoiKit, dir: Vector2, level: float, reach: float) -> float:
+	var t := 1.0
+	while t <= reach:
+		var p := dir * t
+		if k.is_water(p.x, p.y) or k.on_ground(p.x, p.y).y < level - 1.0:
+			return t
+		t += 1.0
+	return 0.0
+
+
+## A point on the Hushline's landing: the landing's own floor where it stands on its shelf, the
+## ground where the land holds it.
+static func _on_landing(k: PoiKit, p: Vector2, shelf: bool, floor_y: float, lift := 0.0) -> Vector3:
+	return Vector3(p.x, floor_y + lift, p.y) if shelf else k.on_ground(p.x, p.y, lift)
 
 
 # --- standing stones -----------------------------------------------------------------------------------------

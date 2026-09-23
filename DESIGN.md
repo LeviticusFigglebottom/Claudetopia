@@ -203,7 +203,7 @@ land, the stakes, then you — and it is about ninety seconds long.
   The streamer follows the camera and loads the next shot while this one plays; if the
   cells are not there in time the picture holds on black with the loading caption and the
   music waits, for four seconds at most, and then the shot is shown with what has come.
-  The pictures keep the wall clock, as the music does, and five minutes after the first shot
+  The pictures keep the wall clock, as the music does, and six minutes after the first shot
   the opening hands over as a skip would, however slow the machine. Any key or button shows
   *hold to skip*; skipping arrives at exactly the state playing to the end does — position,
   streaming, time, weather, buses, nothing paused. No slot is written while it plays, and a
@@ -217,11 +217,15 @@ land, the stakes, then you — and it is about ninety seconds long.
   *Play the opening on a new game* (Settings, gameplay) turns it off, and the pause menu's
   *How it began* plays it again.
 * **What it cannot fix, and the design assumes.** The Hushline Stair's own POI still stands
-  where the built world put its pad: an 8 m mound in the Hush's water 100 m out from the foot
-  of the cliff, with its old dressing and four ash-wights on it that nobody can reach. The stair
-  that matters is the one built from the camp. The Stair Head has no pad of its own until the
-  next world build (its def is dressed on the ground as it stands until then). There are no
-  animals in the camp, because nothing in the asset library is one.
+  where the built world put its pad: 0.2 m above a sea twenty metres deep, 100 m out from the
+  foot of the cliff. Its builder seats a landing there on a stone shelf 1.6 m clear of the water,
+  with the Hearthstone, the piers and the POI's four ash-wights on it (the `the_landing` marker),
+  and its Oroth stair goes out from the landing into mist lying on the water. Nobody can walk
+  out to it until the land lifts a landing at the cliff's foot; where the ground already stands
+  clear of the water, the builder keeps it and starts the stair at the drop. The stair that
+  matters is the one built from the camp. The Stair Head has no pad of its own until the next
+  world build (its def is dressed on the ground as it stands until then). There are no animals
+  in the camp, because nothing in the asset library is one.
 
 ### 5.2 Movement & cameras
 * `CharacterBody3D` with three gaits: **walk 1.8 m/s** (walk key held, or a light stick),
