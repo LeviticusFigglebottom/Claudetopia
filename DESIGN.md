@@ -134,8 +134,12 @@ are normative for pass one and live in `game/systems/*`.
 ### 5.2 Movement & cameras
 * `CharacterBody3D` with three gaits: **walk 1.8 m/s** (walk key held, or a light stick),
   **jog 5.0 m/s** (the default), **sprint 7.8 m/s** (held; stamina 8/s, §5.3; run to empty it
-  stops and does not start again until a quarter of the pool is back). Sneak 1.5 m/s; locked on
-  or blocking 2.6 m/s (×0.6 while blocking). Rest to a jog in 0.31 s (16 m/s², then 7 m/s² on to
+  stops and does not start again until a quarter of the pool is back). Sneak 1.5 m/s. Locked on,
+  the body faces the foe and goes 5.0 m/s straight at it (a jog, so a foe backing away can be
+  caught), 3.0 across it and 1.8 backing off, with the ellipse through the three between them.
+  Sprint while locked on breaks the strafe and keeps the lock: the body runs where it is pushed
+  and turns back to the foe when Sprint is let go. Blocking walks behind the guard at 1.56 m/s
+  (2.6 × 0.6) whatever the lock. Rest to a jog in 0.31 s (16 m/s², then 7 m/s² on to
   a sprint); a jog stops in 0.25 s over 0.6 m (20 m/s²), a sprint in 0.48 s over 2.1 m
   (12 m/s² down to a jog).
 * The roll (§5.3) is a tap of Sprint: Shift let go within 0.22 s rolls, held it sprints, and

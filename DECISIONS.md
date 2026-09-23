@@ -721,11 +721,11 @@ slide in every blend as the phases drift apart.
 new gait clip must put its left foot down at phase 0 and its right at 0.5, which the forge's tests
 pin. Walk_Back and the strafes are still made by the first stride model. The strafes' side-steps
 are shortened (0.6 s, duty 0.5), so they no longer drop the hips 21 cm at every step. A diagonal
-strafe slides at about a third of the ground speed, because blending two strides in rotation space
-does not add up to the diagonal, so the locked-on speed is held at 2.6 m/s. The rig bake rebuilds
-the body as well as the clips, and under Blender 4.2 the body the committed rig was made with under
-4.0 comes back with the same vertices but a different UV layout and repainted textures. So the
-clips are baked into a scratch copy and moved onto the committed GLB by
+strafe slides, because blending two strides in rotation space does not add up to the diagonal: at a
+fifth to a quarter of the ground speed with these clips (see the entry on the locked-on pace). The
+rig bake rebuilds the body as well as the clips, and under Blender 4.2 the body the committed rig
+was made with under 4.0 comes back with the same vertices but a different UV layout and repainted
+textures. So the clips are baked into a scratch copy and moved onto the committed GLB by
 `tools/forge/transplant_clips.py`, which changes nothing but the animations and checks that it did
 not. When another branch changes the rig GLB, the merge takes that branch's GLB and transplants
 these clips onto it, provided the two share a skeleton (the tool refuses otherwise). If they do
@@ -773,3 +773,29 @@ players skip them). A timed strip that fades after a minute whatever was done (i
 player who least needs it). Keeping the list in the settings (above).
 **Consequences.** A new game is taught again, which a player who knows the controls will see
 for the minute it takes to move, sprint, roll and jump. The Hints setting turns the strip off.
+
+## 2026-09-23 · Locked on, the pace goes by the way you go: a jog at the foe, a side-step across
+**Decision.** Locked on and not blocking, the body faces the foe and moves at 5.0 m/s straight
+at it (the jog), 3.0 m/s across it and 1.8 m/s backing away, and on the ellipse through the
+three in between (3.6 m/s on the forward diagonal). Blocking stays a guard walk at 1.56 m/s
+(2.6 × 0.6) whatever the lock. Sprint while locked on breaks the strafe and keeps the lock: the
+body turns to run where it is pushed at 7.8 m/s, the view stays on the foe, and letting go of
+Sprint turns the body back to face the foe.
+**Why.** The combat round's headless fights found that a locked-on player could not close on a
+caster backing away at about 3 m/s. Every locked-on direction was capped at 2.6 m/s, so the gap
+grew by 1.39 m over three seconds of pressing W. Locked on, W at a foe now closes the gap by
+5.26 m in the same three seconds, and the lock holds. The action RPGs this game is read against
+let a locked-on player advance at their run and keep strafes and backpedals slower. Advancing
+is how a fight is joined; circling and retreating are how it is survived. The locked-on
+sprint, lock kept, is the Souls convention: the lock is a choice about the view, and running
+is a choice about the legs.
+**Alternatives.** One locked-on speed for every direction at 3.2 m/s or more: it catches the
+caster, but the backpedal outruns the clip (Walk_Back at 1.15 m/s cannot play faster than
+1.84 without sliding) and a retreat becomes as good as an advance. Breaking the lock on sprint:
+it throws away the target at the moment the player is chasing it.
+**Consequences.** Each speed is within what its clip can play without sliding. Run is at 1.0x.
+The side-steps are at 1.58x (0% slide measured at 3.0 m/s). Walk_Back is at 1.57x (0% at
+1.8 m/s). The diagonals slide: at 3.64 m/s on the forward diagonal the planted foot moves at 28%
+of the ground speed, and at 2.18 m/s backing off diagonally at 23%. It was 19% at the old 2.6
+m/s. Diagonal clips or foot IK would take that out. `Player.locked_speed(way)` is the ellipse,
+and test_lock_on_movement pins all of it.

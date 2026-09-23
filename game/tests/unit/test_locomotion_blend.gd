@@ -105,7 +105,8 @@ func test_the_planted_foot_stays_planted() -> void:
 		["sprint", Vector2(0.0, Player.SPRINT_SPEED), false, 0.05],
 		["sneak", Vector2(0.0, Player.SNEAK_SPEED), true, 0.05],
 		["villager", Vector2(0.0, 2.2), false, 0.08],
-		["strafe right", Vector2(Player.STRAFE_SPEED, 0.0), false, 0.08],
+		["strafe right", Vector2(Player.LOCKED_SIDE, 0.0), false, 0.08],
+		["backpedal, locked on", Vector2(0.0, -Player.LOCKED_BACK), false, 0.08],
 		["backpedal", Vector2(0.0, -1.5), false, 0.08],
 	]
 	var report: Array[String] = []

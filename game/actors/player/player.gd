@@ -25,10 +25,19 @@ const WALK_SPEED := 1.8
 const JOG_SPEED := 5.0
 const SPRINT_SPEED := 7.8
 const SNEAK_SPEED := 1.5
-## Locked on or blocking the body faces the target or the view, not the way it moves, and the
-## legs have only walking strafes to show for it.
+## Blocking, the body walks behind its guard, facing the foe or the view: this, times
+## BLOCK_MOVE_MULT, whatever way it goes.
 const STRAFE_SPEED := 2.6
 const BLOCK_MOVE_MULT := 0.6
+## Locked on (and not blocking), the body faces the foe and goes at the pace each way allows: a
+## jog straight at it, so a foe backing away -- a caster kiting at about 3 m/s -- can be closed
+## on without letting go of the lock; a side-step across it; a backpedal away from it. Between
+## them the pace follows the ellipse through the three. At 2.6 m/s every way, a locked-on player
+## could not catch anything that walked backwards. Each is within what its clip can play without
+## sliding (Run at 1.0x, the side-steps at 1.58x, Walk_Back at 1.57x).
+const LOCKED_FORWARD := JOG_SPEED
+const LOCKED_SIDE := 3.0
+const LOCKED_BACK := 1.8
 ## Moving while a bow is drawn: what the first numbers gave it (half of 4.2), kept.
 const AIM_MOVE_SPEED := 2.1
 ## Stick deflection at which a walk becomes a jog, and where the jog is reached.
@@ -573,7 +582,7 @@ func _move(delta: float) -> void:
 	var wish := _wish_direction()
 	var moving := wish.length() > 0.1
 	_update_sprint(moving, delta)
-	var speed := _target_speed() if moving else 0.0
+	var speed := _target_speed(wish) if moving else 0.0
 	if not _on_ground():
 		_air_move(wish, speed, delta)
 	elif _strafe_mode():
@@ -599,19 +608,40 @@ static func gait_speed(stick: float, walk_held: bool) -> float:
 	return lerpf(WALK_SPEED, JOG_SPEED, clampf((m - WALK_STICK) / (JOG_STICK - WALK_STICK), 0.0, 1.0))
 
 
-func _target_speed() -> float:
+func _target_speed(wish := Vector3.ZERO) -> float:
 	var speed := SPRINT_SPEED if is_sprinting else gait_speed(_move_input.length(), bool(_held.get("walk", false)))
 	if is_sneaking:
 		speed = minf(speed, SNEAK_SPEED)
 	if _strafe_mode() and not camera_rig.first_person:
-		speed = minf(speed, STRAFE_SPEED)
+		if is_blocking or not lock.is_locked():
+			speed = minf(speed, STRAFE_SPEED)
+		else:
+			speed = minf(speed, locked_speed(_way_to_lock(wish)))
 	if is_blocking:
 		speed *= BLOCK_MOVE_MULT
 	return speed * speed_multiplier()
 
 
+## `wish` in the foe's frame: x across it (to the right), y toward it.
+func _way_to_lock(wish: Vector3) -> Vector2:
+	var local := Basis(Vector3.UP, yaw_to(lock.target_point())).inverse() * wish
+	return Vector2(local.x, -local.z)
+
+
+## The locked-on pace for a way to go in the foe's frame (x across, y toward): the ellipse
+## through LOCKED_FORWARD ahead, LOCKED_SIDE across and LOCKED_BACK behind.
+static func locked_speed(way: Vector2) -> float:
+	if way.length() < 0.001:
+		return LOCKED_SIDE
+	var d := way.normalized()
+	var along := LOCKED_FORWARD if d.y >= 0.0 else LOCKED_BACK
+	return 1.0 / sqrt(pow(d.x / LOCKED_SIDE, 2.0) + pow(d.y / along, 2.0))
+
+
 ## Locked on (and not sprinting), blocking, or looking out of the body's own eyes: the body faces
-## the target or the view and steps whichever way it is pushed. Sprinting breaks a lock's strafe.
+## the target or the view and steps whichever way it is pushed. Sprinting breaks a lock's strafe
+## and keeps the lock: the body runs where it is pushed at a sprint, the view stays on the foe,
+## and letting go of Sprint turns it back to face the foe.
 func _strafe_mode() -> bool:
 	return camera_rig.first_person or is_blocking or (lock.is_locked() and not is_sprinting)
 
