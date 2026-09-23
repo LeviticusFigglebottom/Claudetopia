@@ -135,7 +135,7 @@ func test_station_cooldown_and_ownership() -> void:
 func test_delivery_offers_are_local_and_deterministic() -> void:
 	var a := Jobs.delivery_offers(MERROWBY, 3, 6)
 	var b := Jobs.delivery_offers(MERROWBY, 3, 6)
-	assert_eq(a.size(), 2, "Hearthvale has two other settlements to walk to")
+	assert_eq(a.size(), 3, "a board has three notices, and Hearthvale has more settlements than that to walk to")
 	assert_eq(str(a[0]["id"]), str(b[0]["id"]), "the board says the same thing all day")
 	var next_day := Jobs.delivery_offers(MERROWBY, 3, 7)
 	assert_ne(str(a[0]["id"]), str(next_day[0]["id"]), "and something else tomorrow")

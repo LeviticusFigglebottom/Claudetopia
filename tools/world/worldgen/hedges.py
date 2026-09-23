@@ -118,12 +118,12 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         kit = KITS.get(region.shape)
         if kit is None:
             continue
-        line_assets = _assets(index, kit["line"], region.short)
+        line_assets = _assets(index, kit["line"], region.art_short)
         if not line_assets:
             continue
-        shrub_assets = _assets(index, kit["shrub"][0], region.short) if kit.get("shrub") else []
-        tree_assets = _assets(index, kit["tree"][0], region.short) if kit.get("tree") else []
-        post_assets = _assets(index, kit["post"], region.short) if kit.get("post") else []
+        shrub_assets = _assets(index, kit["shrub"][0], region.art_short) if kit.get("shrub") else []
+        tree_assets = _assets(index, kit["tree"][0], region.art_short) if kit.get("tree") else []
+        post_assets = _assets(index, kit["post"], region.art_short) if kit.get("post") else []
 
         # A boundary texel: within half a texel of the line, on this region's enclosed ground.
         on_line = (field_d <= grid.spacing * 0.7) & (field_labels >= 0) & (owner == region.index)
@@ -243,8 +243,8 @@ def waterside(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, w
         kit = WATERSIDE.get(region.shape)
         if kit is None:
             continue
-        first = _assets(index, kit["trees"][0], region.short)
-        second = _assets(index, kit["trees"][1], region.short)
+        first = _assets(index, kit["trees"][0], region.art_short)
+        second = _assets(index, kit["trees"][1], region.art_short)
         if not first:
             continue
         lo, hi = kit["back_m"]
@@ -296,7 +296,7 @@ def ruin_lines(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, 
         kit = RUINS.get(region.shape)
         if kit is None:
             continue
-        assets = _assets(index, kit["asset"], region.short)
+        assets = _assets(index, kit["asset"], region.art_short)
         if not assets:
             continue
         mine = np.argwhere(owner == region.index)
@@ -369,7 +369,7 @@ def orchards(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, wa
     downs = next((r for r in regions if r.shape == "downs"), None)
     if downs is None:
         return out
-    apples = _assets(index, "trees/apple", downs.short)
+    apples = _assets(index, "trees/apple", downs.art_short)
     if not apples:
         return out
     n = grid.n

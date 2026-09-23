@@ -104,7 +104,8 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         j, i = grid.to_tex(np.array([x], dtype=np.float32), np.array([z], dtype=np.float32))
         j, i = grid.clamp_index(j, i)
         r = by_index.get(int(owner[int(i[0]), int(j[0])]))
-        return r.short if r else ""
+        # the province's biome's art: a lake shore in the Hearthvale takes Brightwater's rails
+        return r.art_short if r else ""
 
     def clear_at(x: float, z: float, off_pad: bool = True) -> bool:
         j, i = grid.to_tex(np.array([x], dtype=np.float32), np.array([z], dtype=np.float32))
@@ -171,7 +172,7 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
     # --- post and rail along a frontage ---------------------------------------------------
     # Where a road runs past enclosed ground, the field is fenced off from it. Runs rather
     # than a continuous fence: a frontage is one owner's boundary, not the whole road.
-    shape_of = {r.short: r.shape for r in regions}
+    shape_of = {r.art_short: r.shape for r in regions}
     for road in roads:
         pts, tans, dist = _resample(np.asarray(road.points), RAIL_EVERY_M)
         if pts.shape[0] == 0:

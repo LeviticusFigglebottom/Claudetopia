@@ -159,6 +159,15 @@ LINE_TREE_REACH_M = 70.0
 LANDMARK_TREE_SLACK_M = 60.0
 ## The bearings a landmark shot will try, in order, when the one it was written for is blocked.
 LANDMARK_BEARING_STEPS = (0.0, 15.0, -15.0, 30.0, -30.0, 45.0, -45.0, 60.0, -60.0, 90.0, -90.0)
+## A walking camera looks past a trunk, not at it: a tree in the forward view nearer than
+## VIEW_TRUNK_REACH times its crown's reach (and never nearer than VIEW_TRUNK_MIN_M) is a frame
+## of bark. The Briarwold's first ground shot stood twelve metres from a giant oak whose crown
+## reaches twenty-six, a quarter of a turn off its bearing, and a third of the picture was trunk.
+VIEW_TRUNK_REACH = 1.2
+VIEW_TRUNK_MIN_M = 6.0
+VIEW_HALF_FOV_DEG = 50.0
+## where a ground shot looks for its spot when the way back along its bearing has none
+VIEW_SEARCH_TURNS = (0.0, 90.0, -90.0, 45.0, -45.0, 135.0, -135.0)
 
 
 class Scatter:
@@ -266,21 +275,46 @@ class Scatter:
             return False
         return cam_y is None or not self.in_crown(x, cam_y, z)
 
+    def view_clear(self, x: float, z: float, look_deg: float,
+                   half_fov_deg: float = VIEW_HALF_FOV_DEG) -> bool:
+        """No tree stands so near in front of a lens at eye height that the frame is its trunk."""
+        look = math.radians(look_deg)
+        for _pts, trees in self._around(x, z):
+            for px, pz, _ground, reach, _top in trees:
+                d = math.hypot(px - x, pz - z)
+                if d >= max(VIEW_TRUNK_MIN_M, VIEW_TRUNK_REACH * reach):
+                    continue
+                off = abs((math.atan2(pz - z, px - x) - look + math.pi) % (2.0 * math.pi) - math.pi)
+                if math.degrees(off) < half_fov_deg:
+                    return False
+        return True
+
     def clear_spot(self, x: float, z: float, bearing_deg: float, want: float = 5.0,
-                   step: float = 9.0, tries: int = 14, eye=None):
+                   step: float = 9.0, tries: int = 14, eye=None, look_deg=None):
         """Step along the bearing until nothing is standing within `want` metres.
 
         `eye(x, z)`, when given, is the lens height at a spot; the crowns are then checked
-        at that height as well, which is what a raised camera needs.
+        at that height as well, which is what a raised camera needs. `look_deg`, when given, is
+        where a camera at eye height will look, and the spot must also leave that view clear of
+        trunks (`view_clear`); if the way back along the bearing has no such spot, the search
+        turns (VIEW_SEARCH_TURNS), and if nothing anywhere will do it takes the first spot the
+        bearing alone gave, which is what it always did.
         """
-        a = math.radians(bearing_deg)
-        for k in range(tries):
-            px, pz = x + math.cos(a) * step * k, z + math.sin(a) * step * k
-            if abs(px) > self.half - 40.0 or abs(pz) > self.half - 40.0:
-                break
-            if self.lens_clear(px, pz, want, eye(px, pz) if eye else None):
-                return px, pz
-        return x, z
+        first = None
+        turns = VIEW_SEARCH_TURNS if look_deg is not None else (0.0,)
+        for turn in turns:
+            a = math.radians(bearing_deg + turn)
+            for k in range(tries):
+                px, pz = x + math.cos(a) * step * k, z + math.sin(a) * step * k
+                if abs(px) > self.half - 40.0 or abs(pz) > self.half - 40.0:
+                    break
+                if not self.lens_clear(px, pz, want, eye(px, pz) if eye else None):
+                    continue
+                if first is None:
+                    first = (px, pz)
+                if look_deg is None or self.view_clear(px, pz, look_deg):
+                    return px, pz
+        return first if first is not None else (x, z)
 
     def crowns_across(self, cam, target, from_m: float, to_m: float) -> int:
         """Crowns the line of sight passes through between `from_m` and `to_m` along it.
@@ -492,7 +526,8 @@ def build_plan() -> dict:
         for n, (sx, sz) in enumerate(spots):
             # stand on the ground and look out along it, each one on its own bearing
             ang = math.radians(bearing + 90.0 + n * 117.0)
-            sx, sz = scatter.clear_spot(sx, sz, bearing + 90.0 + n * 117.0 + 180.0, want=5.5)
+            sx, sz = scatter.clear_spot(sx, sz, bearing + 90.0 + n * 117.0 + 180.0, want=5.5,
+                                        look_deg=bearing + 90.0 + n * 117.0)
             tx, tz = sx + math.cos(ang) * 520.0, sz + math.sin(ang) * 520.0
             eye = hh.at(sx, sz) + 2.2
             shots.append(shot("%s_ground%d" % (short, n + 1), (sx, eye, sz),

@@ -125,7 +125,11 @@ func test_gossip_targets_same_region_settlements() -> void:
 	assert_false("core:place/tollmere" in targets, "other region")
 	assert_false("core:place/hollin_barrow" in targets, "not a settlement")
 	assert_false(MERROWBY in targets)
-	var none := Crimes.gossip_targets(MERROWBY, ContentDB.all("place"), {"core:place/tamwick": true, "core:place/wardens_rest": true})
+	# once everything it reaches knows, there is nobody left in range to tell
+	var known := {}
+	for t in targets:
+		known[t] = true
+	var none := Crimes.gossip_targets(MERROWBY, ContentDB.all("place"), known)
 	assert_empty(none)
 
 
@@ -266,11 +270,18 @@ func test_lawless_regions_decay_and_gossip_spreads() -> void:
 	var cb := func(r: String, p: String) -> void: rumours.append([r, p])
 	EventBus.rumour_spread.connect(cb)
 	var learned := b.spread_gossip()
-	assert_eq(learned, 2, "Tamwick and Wardens' Rest hear of it")
+	var first := Crimes.gossip_targets(MERROWBY, ContentDB.all("place"), {MERROWBY: true})
+	assert_gt(first.size(), 2, "the Vale is full of settlements now")
+	assert_eq(learned, first.size(), "every settlement in range of Merrowby hears of it on the first day")
 	assert_true(b.is_known_at(WARDENS, "core:place/tamwick"))
 	assert_true(b.is_known_at(WARDENS, "core:place/wardens_rest"))
-	assert_eq(rumours.size(), 2)
+	assert_eq(rumours.size(), first.size())
 	assert_eq(rumours[0][0], "bounty:" + WARDENS)
+	# then a day at a time from those to theirs, until nobody in the region is left to tell
+	var days := 0
+	while b.spread_gossip() > 0 and days < 20:
+		days += 1
+	assert_true(days < 20, "the gossip runs out of settlements to reach")
 	assert_eq(b.spread_gossip(), 0, "nowhere left to spread within range")
 	EventBus.rumour_spread.disconnect(cb)
 

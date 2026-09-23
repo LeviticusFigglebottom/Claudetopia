@@ -17,6 +17,7 @@ the ground. Nothing measured it, so nothing stopped it coming back.
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import sys
@@ -165,6 +166,48 @@ class ChannelTest(unittest.TestCase):
         ford = (river_d <= 4.0) & (road_d <= 2.5)
         self.assertTrue(np.allclose(out[ford], 10.0 - HY.FORD_DEPTH_M))
         self.assertTrue((out[river_d > 40.0] == laid[river_d > 40.0]).all(), "far from the river, untouched")
+
+
+class CampPadTest(unittest.TestCase):
+    def test_a_camp_pad_holds_its_camp_and_no_more(self):
+        """poi_builders.camp reaches 12.7 m from its fire (a kiln's log pile); the pad's flat core
+        is 0.7 of its radius. The 30 m pad a camp had was the size of a hamlet's."""
+        r = RD.pad_radius({"id": "core:poi/clanless_camp", "kind": "camp"})
+        self.assertEqual(r, RD.CAMP_PAD_M)
+        self.assertGreaterEqual(0.7 * r, 12.7 + 1.0)
+        self.assertLess(r, RD.pad_radius({"id": "core:place/x", "kind": "hamlet"}))
+
+    def test_a_camp_that_is_a_place_keeps_its_ground(self):
+        """Pilgrim's Ash is a camp the settlement builder raises, with a chapter-house door 26 m
+        out (door_plan.json); it keeps the pad it had."""
+        self.assertEqual(RD.pad_radius({"id": "core:place/pilgrims_ash", "kind": "camp"}), 30.0)
+
+
+class StreetsTest(unittest.TestCase):
+    """`add_streets`: a through street along the most opposed approaches, a cross street where
+    a third road comes in across it."""
+
+    @staticmethod
+    def _town_with(bearings):
+        place = {"id": "core:place/testford", "kind": "village", "position": [0.0, 0.0]}
+        roads = []
+        for n, deg in enumerate(bearings):
+            a = math.radians(deg)
+            t = np.arange(0.0, 400.0 + 1e-9, 4.0)[::-1]
+            pts = np.stack([t * math.cos(a), t * math.sin(a)], axis=1)   # ends at the centre
+            roads.append(RD.Road(id="core:road/r%d" % n, points=pts, width=5.0,
+                                 elevation=np.zeros(len(pts), dtype=np.float32)))
+        out = RD.add_streets(roads, [place], {"core:place/testford": 10.0})
+        return {r.id.split("/")[-1] for r in out[len(roads):]}
+
+    def test_pilgrims_ash_keeps_its_crossing(self):
+        """The bearings Pilgrim's Ash's roads leave it on, measured on the default build: the
+        through street from -10 to 156 degrees, and the side road at -74 (64 and 130 degrees
+        off its legs). Under the old threshold of 0.55 it had no cross street."""
+        self.assertEqual(self._town_with([-10.0, 156.0, -74.0]), {"testford_street", "testford_street_cross"})
+
+    def test_a_road_along_the_street_is_not_a_crossing(self):
+        self.assertEqual(self._town_with([0.0, 180.0, 20.0]), {"testford_street"})
 
 
 class WrittenLineTest(unittest.TestCase):

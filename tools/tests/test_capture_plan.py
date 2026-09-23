@@ -7,7 +7,9 @@ One of the Briarwold's seven frames in the drop-test sheet was a photograph of l
 camera stood twelve metres up inside a giant oak's crown, and the landmark camera looked at the
 Grandfather through the crowns on the rise in front of it. The drop test scored both. The plan
 generator now knows where every crown is and how tall it stands (tools/capture/make_default_plan.py);
-this is what keeps it knowing.
+this is what keeps it knowing. A camera on the ground has the other fault: its first ground shot
+stood twelve metres from a giant oak a quarter of a turn off its look, and a third of the frame was
+bark. A ground shot now keeps the trunks out of the front of its view.
 
 The crown model is checked on synthetic trees, which needs nothing built. The committed plans are
 checked against the built world, and skip with a reason when there is none.
@@ -15,6 +17,7 @@ checked against the built world, and skip with a reason when there is none.
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 import unittest
@@ -75,10 +78,38 @@ class CrownModel(unittest.TestCase):
         self.assertEqual(hits, 0, "the tree is fifty metres along; the first twenty are clear")
 
 
+class ViewClear(unittest.TestCase):
+    """A camera at eye height does not stand with its nose against a trunk."""
+
+    def setUp(self):
+        # the Briarwold's giant oak: twelve metres out, twenty-five degrees off the look, 14 m of reach
+        a = math.radians(25.0)
+        self.oak = (12.0 * math.cos(a), 12.0 * math.sin(a), 100.0, 14.0, 141.0)
+
+    def test_a_giant_tree_just_off_the_look_fills_the_frame(self):
+        self.assertFalse(_scatter_with([self.oak]).view_clear(0.0, 0.0, 0.0))
+
+    def test_the_same_tree_behind_the_lens_does_not(self):
+        self.assertTrue(_scatter_with([self.oak]).view_clear(0.0, 0.0, 180.0))
+
+    def test_a_small_tree_eight_metres_out_is_part_of_the_view(self):
+        hawthorn = (8.0, 0.0, 100.0, 3.0, 109.0)
+        self.assertTrue(_scatter_with([hawthorn]).view_clear(0.0, 0.0, 0.0))
+
+    def test_a_ground_shot_backs_away_from_the_trunk(self):
+        sc = _scatter_with([self.oak])
+        x, z = sc.clear_spot(0.0, 0.0, 180.0, want=5.5, look_deg=0.0)
+        self.assertLess(x, 0.0, "it steps back along its bearing")
+        self.assertTrue(sc.view_clear(x, z, 0.0))
+
+    def test_without_a_look_the_search_is_what_it_was(self):
+        self.assertEqual(_scatter_with([self.oak]).clear_spot(0.0, 0.0, 180.0, want=5.5), (0.0, 0.0))
+
+
 @unittest.skipUnless(os.path.exists(os.path.join(GEN, "world_manifest.json")),
                      "the world has not been built (./run.sh world)")
 class CommittedPlans(unittest.TestCase):
-    """Every raised camera in default.json and horizon.json has a clear lens."""
+    """Every raised camera in default.json and horizon.json has a clear lens, every ground one a clear view."""
 
     @classmethod
     def setUpClass(cls):
@@ -103,6 +134,15 @@ class CommittedPlans(unittest.TestCase):
                 continue
             hits = self.scatter.crowns_across(tuple(s["pos"]), tuple(s["look_at"]), 0.0, plan.LINE_TREE_REACH_M)
             self.assertEqual(hits, 0, "%s looks into a crown within %.0f m" % (s["label"], plan.LINE_TREE_REACH_M))
+
+    def test_no_ground_shot_looks_at_a_trunk(self):
+        for s in self.plans["default"]:
+            if "_ground" not in s["label"]:
+                continue
+            x, _y, z = s["pos"]
+            tx, _ty, tz = s["look_at"]
+            look = math.degrees(math.atan2(tz - z, tx - x))
+            self.assertTrue(self.scatter.view_clear(x, z, look), "%s stands with a trunk in its view" % s["label"])
 
 
 if __name__ == "__main__":
