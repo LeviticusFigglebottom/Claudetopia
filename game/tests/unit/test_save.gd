@@ -15,6 +15,28 @@ func test_migrate_v1_fixture() -> void:
 	assert_has(m["sections"]["world"], "weather")
 
 
+## v3 -> v4: attributes start at 10 now rather than 5, so a saved character's move up by 5 --
+## the ones it was born with and the ones it spent a level on alike -- and keeps the same health,
+## stamina and mana it had when it was saved.
+func test_v3_attributes_move_up_to_the_new_start() -> void:
+	var data := {"schema_version": 3, "sections": {
+		"player": {"attributes": {"vigour": 10, "endurance": 10, "will": 10}},
+		"progression": {"known_spells": [], "leveling": {"level": 3, "attributes": {"vigour": 5, "endurance": 7, "will": 5}}},
+	}}
+	var m := Migrations.migrate(data)
+	assert_eq(int(m["schema_version"]), SaveSystem.SCHEMA_VERSION)
+	var attrs: Dictionary = m["sections"]["progression"]["leveling"]["attributes"]
+	assert_eq(int(attrs["vigour"]), 10)
+	assert_eq(int(attrs["endurance"]), 12, "two points spent on Endurance stay spent")
+	assert_eq(int(attrs["will"]), 10)
+	var l := Leveling.new()
+	l.from_save(m["sections"]["progression"]["leveling"])
+	assert_near(l.max_health(), 100.0, 0.001, "the health the body had at Vigour 10")
+	assert_near(l.max_stamina(), 196.0, 0.001, "100 + 8*12")
+	var bare := Migrations.migrate({"schema_version": 3, "sections": {"player": {"marks": 5}}})
+	assert_false(bare["sections"].has("progression"), "a save with no character sheet grows none")
+
+
 func test_current_version_is_noop() -> void:
 	var data := {"schema_version": SaveSystem.SCHEMA_VERSION, "sections": {"player": {"marks": 5}}}
 	var m := Migrations.migrate(data.duplicate(true))

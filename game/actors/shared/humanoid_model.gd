@@ -39,6 +39,10 @@ const DEFAULT_BLEND := 0.12
 const ONE_SHOT_BLEND_IN := 0.08
 const ONE_SHOT_BLEND_OUT := 0.14
 const LOCOMOTION_STATE := "Locomotion"
+## One-shots that end in a pose the body keeps -- a corpse, a man knocked flat, a sleeper -- until
+## something else is played. Everything else goes back to locomotion when it ends, and so, until
+## this list, did the dead: a fallen bandit stood up again 2.3 s after dying.
+const HOLD_LAST_POSE: Array[String] = ["Death_A", "Death_B", "Death", "Knockdown", "Sleep_Idle", "Sit_Idle"]
 
 @export var appearance_dict: Dictionary = {}:
 	set(value):
@@ -70,6 +74,11 @@ var _locomotion := Vector2.ZERO
 var _sneaking := false
 var _part_cache: Dictionary = {}
 var _applying := false      ## guards the appearance_dict setter against re-entering
+## How fast a one-shot plays. The AnimationDriver sets it so that the blow the body makes lands on
+## the frame the game opens the hit window, whatever length the caller's timing gave the attack;
+## 0 holds the pose, which is what a heavy being charged is. Locomotion always plays at 1.
+var speed_scale: float = 1.0
+var _holding := ""          ## a finished HOLD_LAST_POSE clip the body is lying in
 
 static var _clip_cache: Dictionary = {}
 
@@ -202,6 +211,27 @@ func clip_events(name: String) -> Array:
 	if typeof(d) != TYPE_DICTIONARY:
 		return []
 	return (d as Dictionary).get("events", [])
+
+
+## A clip's own timeline, `{length, events}`: what the AnimationDriver keeps time by when its
+## caller did not say. Empty when the rig has no such clip.
+func clip_timing(name: String) -> Dictionary:
+	if not has_clip(name):
+		return {}
+	var t := sidecar_timing(name)
+	if t.is_empty() or float(t.get("length", 0.0)) <= 0.0:
+		t = {"length": clip_length(name), "events": clip_events(name).duplicate(true)}
+	return t
+
+
+## The same, straight off the sidecar and without building a rig: a weapon measures its hit window
+## against the clip it swings. Empty when the sidecar has no such clip.
+static func sidecar_timing(name: String) -> Dictionary:
+	var d: Variant = _load_clip_data().get(name, {})
+	if typeof(d) != TYPE_DICTIONARY or (d as Dictionary).is_empty():
+		return {}
+	var data := d as Dictionary
+	return {"length": float(data.get("length", 0.0)), "events": (data.get("events", []) as Array).duplicate(true)}
 
 
 # ---------------------------------------------------------------------------------------
@@ -498,7 +528,9 @@ func _build_animation_tree() -> void:
 	var tree := AnimationTree.new()
 	tree.name = "AnimationTree"
 	tree.tree_root = sm
-	tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE
+	# Stepped by _process rather than by itself, so a one-shot can be played faster, slower or not
+	# at all (speed_scale) -- an AnimationTree has no speed of its own to set.
+	tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	# the node has to be in the tree before a NodePath to the player can resolve
 	add_child(tree)
 	tree.anim_player = tree.get_path_to(anim_player)
@@ -561,7 +593,7 @@ func set_locomotion(v: Vector2, sneaking: bool = false) -> void:
 		p.y = clampf(p.y, 0.0, 0.5)
 		p.x = maxf(p.x, 0.001)
 	anim_tree.set("parameters/%s/blend_position" % LOCOMOTION_STATE, p)
-	if _one_shot.is_empty() and _state_machine != null and _state_machine.get_current_node() != LOCOMOTION_STATE:
+	if _one_shot.is_empty() and _holding.is_empty() and _state_machine != null and _state_machine.get_current_node() != LOCOMOTION_STATE:
 		_state_machine.travel(LOCOMOTION_STATE)
 
 
@@ -572,6 +604,7 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 	if not has_clip(clip_name):
 		push_warning("HumanoidModel: no clip '%s'" % clip_name)
 		return false
+	_holding = ""
 	if _is_locomotion_clip(clip_name):
 		_one_shot = ""
 		_state_machine.travel(LOCOMOTION_STATE)
@@ -585,11 +618,13 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 	_one_shot = clip_name
 	_one_shot_time = 0.0
 	_one_shot_length = clip_length(clip_name)
+	speed_scale = 1.0
 	_fired.clear()
 	return true
 
 
 func stop_intent() -> void:
+	_holding = ""
 	if _one_shot.is_empty():
 		return
 	var finished := _one_shot
@@ -604,17 +639,27 @@ func current_intent() -> String:
 
 
 func _process(delta: float) -> void:
+	var step := delta * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
+	if anim_tree != null:
+		anim_tree.advance(step)
 	if _one_shot.is_empty():
 		return
 	var prev := _one_shot_time
-	_one_shot_time += delta
+	_one_shot_time += step
 	_fire_events(prev, _one_shot_time)
 	if _one_shot_time >= _one_shot_length:
 		var finished := _one_shot
 		_one_shot = ""
-		if _state_machine != null:
+		if HOLD_LAST_POSE.has(finished):
+			_holding = finished
+		elif _state_machine != null:
 			_state_machine.travel(LOCOMOTION_STATE)
 		clip_finished.emit(finished)
+
+
+## The pose a finished one-shot left the body lying in, or "" when it went back to its feet.
+func holding_pose() -> String:
+	return _holding
 
 
 ## Events come from the clips.json sidecar: everything in [prev, now) fires once.

@@ -13,6 +13,8 @@ var regen_delay: float = DamageModel.POISE_REGEN_DELAY
 ## > 0 while the owner is in hyper-armour frames: hits with less poise damage than this are ignored.
 var hyper_armour_threshold: float = 0.0
 var auto_advance: bool = true
+## What is left of a delay below this is float noise, not time.
+const DELAY_RESIDUE := 0.0001
 
 var _delay_left: float = 0.0
 
@@ -30,7 +32,11 @@ func _physics_process(delta: float) -> void:
 
 func advance(delta: float) -> void:
 	if _delay_left > 0.0:
-		_delay_left = maxf(_delay_left - delta, 0.0)
+		# A delay counted down in sixtieths leaves a residue of 1e-15 where it should be zero,
+		# and that residue cost a whole frame: 1.5 s of poise delay measured 1.517 s.
+		_delay_left -= delta
+		if _delay_left < DELAY_RESIDUE:
+			_delay_left = 0.0
 		return
 	if current < maximum:
 		current = minf(maximum, current + regen_per_s * delta)

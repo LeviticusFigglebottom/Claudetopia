@@ -233,6 +233,7 @@ func test_board_take_and_deliver() -> void:
 	assert_eq(completed.size(), 1)
 	assert_eq(GameState.count("jobs_done"), 1)
 	EventBus.job_completed.disconnect(cb)
+	close_screen("job_board", "reading the board opens its screen")
 
 
 func test_a_parcel_must_actually_be_carried_somewhere() -> void:
