@@ -11,7 +11,13 @@ extends Node
 ##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours},
 ##    "gait": {"pos": [x, _, z], "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
 ##             "camera": {"distance": m, "height": m, "fov": deg},
-##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]}}
+##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]},
+##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?}}
+##
+## A `cinematic` block loads the world with its body standing where the story opens and has
+## `CinematicPlayer` scrub to each shot's samples, so every frame on disk is the player's own
+## frame -- letterbox, subtitle and title card included -- and writes <out>/cinematic.json with
+## where each camera stood and how far above the ground.
 ##
 ## A gait run may also hold keys and tap one, as real key events through the input map rather
 ## than as actions: {"label": "roll", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}.
@@ -71,6 +77,15 @@ func run() -> int:
 	if plan.is_empty():
 		return 2
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	# game flags set before the world stands up, so a plan can photograph the world as a given
+	# moment of the story sees it: `{"new_game": true}` is the start as a new game has it, with
+	# the Warden held at her fire (tools/capture/plans/start.json)
+	var flags: Variant = plan.get("flags", {})
+	if flags is Dictionary:
+		for key: String in flags:
+			GameState.set_flag(key, flags[key])
+	if plan.has("cinematic"):
+		return await _shoot_cinematic(plan["cinematic"])
 	_world = await _load_world()
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")
@@ -134,7 +149,7 @@ func _read_plan() -> Dictionary:
 	return parsed
 
 
-func _load_world() -> World:
+func _load_world(with_body := false) -> World:
 	var world_status := WorldStatus.current()
 	if not bool(world_status.get("playable", false)):
 		# a photograph of a void is not a photograph of the country
@@ -146,9 +161,10 @@ func _load_world() -> World:
 	var w: Node = packed.instantiate()
 	# A capture is a photograph of the country, taken from a planned camera. A body standing in
 	# it would both block the shot and take the streaming off the plan, so the world is loaded
-	# without one and keeps its fly camera.
+	# without one and keeps its fly camera -- except for a cinematic, whose last shot is of the
+	# body, and which takes the camera and the streaming itself.
 	var spawn: Node = w.get_node_or_null("PlayerSpawn")
-	if spawn != null:
+	if spawn != null and not with_body:
 		spawn.set("enabled", false)
 		# ...but the world's services still go in, because they are what stands the villagers
 		# up, and a photograph of a village with nobody in it is a photograph of a model.
@@ -729,3 +745,94 @@ static func _mean_luminance(img: Image) -> float:
 			total += img.get_pixel(x, y).get_luminance()
 			n += 1
 	return total / float(maxi(n, 1))
+
+
+# --- cinematics --------------------------------------------------------------------------------------
+
+## Real seconds each cinematic frame is given after its country stands, so a subtitle or a title
+## card that has just begun to ink in is photographed arrived rather than halfway.
+const CINEMATIC_SETTLE_SECONDS := 2.0
+
+
+## Every sample of every shot of a cinematic, through `CinematicPlayer.scrub`.
+func _shoot_cinematic(spec: Dictionary) -> int:
+	var id := str(spec.get("id", ""))
+	if not ContentDB.has(id):
+		Log.error("Capture", "no cinematic %s" % id)
+		return 2
+	_world = await _load_world(true)
+	if _world == null:
+		Log.error("Capture", "world scene failed to load")
+		return 1
+	if not _world.is_world_ready:
+		await _world.world_ready
+	var spawn: Node = _world.get_node_or_null("PlayerSpawn")
+	var player: Node3D = null
+	for i in 600:
+		player = spawn.get("player") as Node3D if spawn != null else null
+		if player != null:
+			break
+		await get_tree().process_frame
+	if player == null:
+		Log.error("Capture", "no body stood up to hand the cinematic over to")
+		return 1
+	_world.streamer.cells_per_frame = 12
+	# the body drops the last half-metre onto the ground before the last shot is composed on it
+	for i in 40:
+		await get_tree().physics_frame
+	var cin := CinematicPlayer.new()
+	_world.add_child(cin)
+	await cin.begin(_world, player, ContentDB.get_def(id), CinematicPlayer.Mode.SCRUB)
+	var samples: Array = spec.get("samples", [0.0, 0.5, 1.0])
+	var only: Array = spec.get("shots", [])
+	var shots := CinematicDef.shots_of(cin.def)
+	var rows: Array = []
+	var index := 0
+	for i in shots.size():
+		var shot: Dictionary = shots[i]
+		var sid := str(shot.get("id", ""))
+		if not only.is_empty() and not only.has(sid):
+			continue
+		var black := bool(shot.get("black", false))
+		for u_v in ([0.5] if black else samples):
+			var u := float(u_v)
+			cin.scrub(i, u)
+			var waited := 0
+			while waited < MAX_WAIT_FRAMES and not cin.ready_to_show():
+				await get_tree().process_frame
+				waited += 1
+			var ready := cin.ready_to_show()
+			var until := Time.get_ticks_msec() + int(CINEMATIC_SETTLE_SECONDS * 1000.0)
+			var frames := 0
+			while frames < SETTLE_FRAMES or Time.get_ticks_msec() < until:
+				await get_tree().process_frame
+				frames += 1
+			await RenderingServer.frame_post_draw
+			var file := "%02d_%s_%03d.png" % [index, sid, int(round(u * 100.0))]
+			var img := get_viewport().get_texture().get_image()
+			if img == null or img.save_png("%s/%s" % [out_dir, file]) != OK:
+				_failures.append("cannot write %s" % file)
+			var cam := cin.camera().global_position
+			var ground := _world.provider.max_height_around(cam.x, cam.z, 3.0, 12)
+			rows.append({
+				"file": file, "shot": sid, "u": u, "camera": [snappedf(cam.x, 0.1), snappedf(cam.y, 0.1), snappedf(cam.z, 0.1)],
+				"above_ground": snappedf(cam.y - ground, 0.01), "fov": snappedf(cin.camera().fov, 0.1),
+				"hour": snappedf(WorldClock.time_hours, 0.01),
+				"weather": str(_world.atmosphere.call("current_weather_id")) if _world.atmosphere else "",
+				"words": cin.overlay().said(), "ready": ready, "frames_waited": waited,
+				"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+				"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
+			})
+			if not ready and not black:
+				_failures.append("%s: its cells were not standing after %d frames" % [file, waited])
+			Log.info("Capture", "%s  %.1f m above the ground, %s" % [file, cam.y - ground, "ready" if ready else "NOT READY"])
+			index += 1
+	cin.release()
+	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"cinematic": id, "frames": rows}, "  "))
+		f.close()
+	for failure in _failures:
+		Log.error("Capture", failure)
+	Log.info("Capture", "%d cinematic frames written to %s" % [index, out_dir])
+	return 1 if not _failures.is_empty() else 0

@@ -76,9 +76,11 @@ every one of them, because the game blends them on one normalised timeline. A ga
 breaks this blends out of step: halfway through the blend one clip's foot is planted while the
 other's is swinging, and the leg comes out as the average of the two, half lifted.
 
-A change to the clips alone is baked into a scratch copy of the rig and moved onto the committed
-`humanoid_rig.glb` with `tools/forge/transplant_clips.py`, because the rig bake rebuilds and
-repaints the body too. The tool changes nothing but the animations and checks that it did not.
+A change to the clips alone does not re-bake the rig, which rebuilds and repaints the body too
+and takes twenty minutes. `blender -b --python tools/forge/bake_clips.py -- --out <dir>` bakes
+every clip onto the bare armature in under a minute, with the same functions, and writes the
+sidecar. `tools/forge/transplant_clips.py` then moves the clips onto the committed
+`humanoid_rig.glb`, bone by bone by name, and checks that nothing but the animations changed.
 
 Creatures use their own rigs; their clips must include `Idle`, `Walk`, `Run`,
 `Attack_1`, `Attack_2`, `Hit`, `Death`, plus archetype extras listed in the
@@ -184,9 +186,10 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
   `teaches_spell` is a full `core:spell/*` id: the first opening of that book teaches the saying, wherever it is opened (out of the bag, off a shelf, by a quest). An item reaches a book through its own `reads: <book id>`, or by being a `book`-category item whose short name matches a book id.
 * `calling`: `{id, name, culture, home_region, skill_bonuses, signature_item, starting_items[], starting_reputation{}, starting_marks, starting_spells?[], description}`.
   `starting_spells` are `core:spell/*` ids the character comes up already knowing; only callings whose `skill_bonuses` include that saying's school should carry one.
-* `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}}`
+* `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}, gone_when?: [conditions]}`
 * `quest`: `{id, name, layer (main|faction|side|radiant), stages[{id, journal, objectives[{type, target, count}], on_enter[], on_complete[]}], rewards}`
   An objective that sends you to pick something up may say where it lies: `where` (a place, POI or interior id), `spot` (a dressing marker, a deep place's chamber, or a house's room), `owner` (an npc id: taking it is theft). A `choice` may name its host in `with`: an npc, or a place/interior where nobody is left to ask. The quest-item placer (`QuestItems`) reads all four; systems/quests/README.md has the rules.
+  A `kill` says where the fight is: `where` (an interior id, or a place/POI id with `radius`, 140 m unless given), or `region` for a hunt; only a kill there counts (`KillPlaces`). In the open the stage stands up the foes it asks for (`QuestFoes`): the shortfall, or with `stand: "own"` its own group; `when` is an hour window (`always`, `day`, `night`, `dawn`, `dusk`, `midnight`).
 * `encounter`: `{id, place, spawns[{enemy, count, when?, at?, spread?, unless?[conds], unless_present?, rises_when?}], lies?[{item | book, at?, count?, owner?}]}` — what a place's `encounter` sentence says stands or lies there, raised with its dressing (`PoiEncounters`, `QuestItems`). A `place` def may name a `dressing` kind (the Standing Moot: `standing_stones`) so the POI builders dress it.
 * `dialogue`: `{id, nodes{node_id: {speaker, text, conditions[], effects[], choices[{text, next, conditions[]}], next}}, start}`
 Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,

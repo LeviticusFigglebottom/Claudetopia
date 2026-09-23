@@ -49,6 +49,7 @@
     "attacks": [
       {
         "name": "bell_sweep",
+        "sound": "bell_hand",
         "clip": "Attack_2H_Light_1",
         "weapon_class": "hammer",
         "damage": 22.0,
@@ -120,9 +121,11 @@
         "speed": 2.35,
         "hyper_armour": 26.0,
         "say": "The Reeve rings the hammer on the floor. Under the chalk, the cists answer him.",
+        "sound": "bell_toll",
         "attacks": [
           {
             "name": "the_toll",
+            "sound": "bell_toll",
             "clip": "Attack_2H_Heavy",
             "weapon_class": "hammer",
             "kind_damage": "blunt",
@@ -155,6 +158,7 @@
           },
           {
             "name": "bell_sweep",
+            "sound": "bell_hand",
             "clip": "Attack_2H_Light_1",
             "weapon_class": "hammer",
             "damage": 24.0,
@@ -993,6 +997,7 @@
     "attacks": [
       {
         "name": "bell_blade",
+        "sound": "bell_hand",
         "clip": "Attack_1H_Light_1",
         "damage": 34.0,
         "poise_damage": 30.0,
@@ -1008,6 +1013,7 @@
       },
       {
         "name": "bell_blade_two",
+        "sound": "bell_hand",
         "clip": "Attack_1H_Light_2",
         "damage": 36.0,
         "poise_damage": 32.0,
@@ -1052,6 +1058,7 @@
         "attacks": [
           {
             "name": "bell_blade",
+            "sound": "bell_hand",
             "clip": "Attack_1H_Light_1",
             "damage": 34.0,
             "poise_damage": 30.0,
@@ -1133,6 +1140,7 @@
           },
           {
             "name": "bell_blade",
+            "sound": "bell_hand",
             "clip": "Attack_1H_Light_1",
             "damage": 36.0,
             "poise_damage": 32.0,

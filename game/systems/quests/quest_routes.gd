@@ -20,12 +20,14 @@ extends RefCounted
 
 static var _closes: Dictionary = {}     # "quest|key" -> true, from complete_objective effects
 static var _chosen: Dictionary = {}     # "quest|option" -> true, from quest_choice effects
+static var _started: Dictionary = {}    # quest id -> true, from start_quest effects anywhere and the opening
 static var _built := false
 
 
 static func reset() -> void:
 	_closes.clear()
 	_chosen.clear()
+	_started.clear()
 	_built = false
 
 
@@ -35,6 +37,13 @@ static func _build() -> void:
 	_built = true
 	for def in ContentDB.all("dialogue"):
 		_walk(def)
+	# what else starts a quest: a stage's or a reward's effects, and a new game
+	for def in ContentDB.all("quest"):
+		_walk_starts(def.get("stages", []))
+		_walk_starts(def.get("rewards", {}))
+	var opening := str(ContentDB.get_or_empty(GameServices.OPENING).get("quest", ""))
+	if opening != "":
+		_started[opening] = true
 
 
 static func _walk(v: Variant) -> void:
@@ -47,10 +56,32 @@ static func _walk(v: Variant) -> void:
 					_closes["%s|%s" % [str(value[0]), str(value[1])]] = true
 				elif str(key) == "quest_choice":
 					_chosen["%s|%s" % [str(value[0]), str(value[1])]] = true
+			if str(key) == "start_quest":
+				_started[str(value[0]) if typeof(value) == TYPE_ARRAY and not (value as Array).is_empty() else str(value)] = true
 			_walk(value)
 	elif typeof(v) == TYPE_ARRAY:
 		for x in v:
 			_walk(x)
+
+
+static func _walk_starts(v: Variant) -> void:
+	if typeof(v) == TYPE_DICTIONARY:
+		var d: Dictionary = v
+		for key in d:
+			if str(key) == "start_quest":
+				var value: Variant = d[key]
+				_started[str(value[0]) if typeof(value) == TYPE_ARRAY and not (value as Array).is_empty() else str(value)] = true
+			_walk_starts(d[key])
+	elif typeof(v) == TYPE_ARRAY:
+		for x in v:
+			_walk_starts(x)
+
+
+## Does anything in the pack start this quest: a line of dialogue, another quest's stage or reward,
+## or the opening of a new game? A quest nothing starts is its giver's to offer.
+static func started_elsewhere(quest_id: String) -> bool:
+	_build()
+	return _started.has(quest_id)
 
 
 ## Does some dialogue in the pack close this objective itself? Matches the way

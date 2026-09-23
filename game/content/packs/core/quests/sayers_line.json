@@ -34,7 +34,7 @@
         "journal": "And the coldest, quietest place she could name that a person can sit down in: the Shingle Shrine on the north shore, a Hearthstone built out of lake pebbles with a name scratched on every one by whoever put it there, twenty paces from water that does not stop moving, and nobody within a mile of it after dark. Ondrael says she chose it for the cold and the quiet. She is a bad enough liar that she then explained about the names on the pebbles without being asked.",
         "objectives": [
           {"type": "reach", "target": "core:poi/shingle_shrine", "radius": 140, "text": "Walk the shore road to the Shingle Shrine"},
-          {"type": "kill", "target": "core:enemy/cutpurse", "count": 3, "text": "See off what works the shore road after dark"},
+          {"type": "kill", "target": "core:enemy/cutpurse", "count": 3, "text": "See off what works the shore road after dark", "where": "core:poi/shingle_shrine", "when": "night"},
           {"type": "rest_at", "target": "core:poi/shingle_shrine", "text": "Take the second figure at the shrine of pebbles"}
         ],
         "on_complete": [{"set_flag": "measured_in_the_deep"}, {"renown": 10}]

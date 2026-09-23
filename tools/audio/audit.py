@@ -174,7 +174,7 @@ SFX_FAMILIES = [
     ("handling", ("door_", "chest_open", "coins_", "pick_up", "eat", "potion_drink", "lockpick_", "armour_")),
     ("interface", ("ui_",)),
     ("cues", ("hearthstone_rest", "echo_recovered", "player_death")),
-    ("the world", ("bell_", "thunder_", "wind_gust", "wood_creak", "cart_wheels", "water_splash")),
+    ("the world", ("bell_", "water_splash")),
 ]
 
 

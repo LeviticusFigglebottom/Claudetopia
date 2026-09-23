@@ -1731,32 +1731,32 @@
   "encounters": [
     {
       "chamber": "scour",
-      "enemy": "core:enemy/down_wolf",
+      "enemy": "core:enemy/leech_hound",
       "count": 3,
       "group": "scour",
       "note": "Leech-hounds in the silt, drawn by the warmth of the hold."
     },
     {
       "chamber": "hull_walk",
-      "enemy": "core:enemy/hedge_wight",
+      "enemy": "core:enemy/bog_drowned",
       "count": 2,
       "group": "hull",
       "note": "The crew, at their stations, on a floor that is a wall."
     },
     {
       "chamber": "hold",
-      "enemy": "core:enemy/hedge_wight",
+      "enemy": "core:enemy/bog_drowned",
       "count": 3,
       "group": "hold",
       "ambush": true
     },
     {
       "chamber": "nest",
-      "enemy": "core:boss/she_who_waits",
+      "enemy": "core:enemy/sallowjaw",
       "count": 1,
-      "role": "boss",
-      "group": "boss",
-      "note": "Placeholder for the lake serpent until its own definition exists."
+      "role": "elite",
+      "group": "nest",
+      "note": "What the serpent leaves behind it in the aft hold: a sallowjaw grown fat on the barley, and it goes out with the current."
     }
   ],
   "palette": [

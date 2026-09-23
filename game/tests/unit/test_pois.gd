@@ -128,6 +128,64 @@ func test_every_poi_in_the_world_raises_a_dressing() -> void:
 	assert_true(wrong_stone.is_empty(), "Hearthstones not as the data says: %s" % ", ".join(wrong_stone))
 
 
+## Every collider a POI's own builder puts up says what a foot lands on (stone, wood, dirt ...),
+## so a bridge deck, a wall top, a stair or a pier is heard as what it is and not as the ground
+## under it. The forged props' bodies take theirs from the asset's name, and a bush or a banner
+## leaves it to the ground; those are counted, not required.
+func test_every_poi_collider_says_what_it_is_underfoot() -> void:
+	if _skip():
+		return
+	var built := 0
+	var silent := {}
+	var by_surface := {}
+	var props_left_to_ground := 0
+	for item_v in WorldPois.candidates(pois):
+		var item: Dictionary = item_v
+		if not _built(item):
+			continue
+		var entry: Dictionary = item["entry"]
+		var id := str(entry["place_id"])
+		var d := PoiDressing.raise(entry, item["def"], false, provider, roads)
+		_host().add_child(d)
+		for body_v in d.find_children("*", "StaticBody3D", true, false):
+			var body := body_v as StaticBody3D
+			for cs_v in body.find_children("*", "CollisionShape3D", false, false):
+				var cs := cs_v as CollisionShape3D
+				var surface := str(cs.get_meta(PoiKit.SURFACE_META, body.get_meta(PoiKit.SURFACE_META, "")))
+				if body.name == "Masonry":
+					built += 1
+					if surface.is_empty():
+						silent[id] = int(silent.get(id, 0)) + 1
+				elif surface.is_empty():
+					props_left_to_ground += 1
+				if not surface.is_empty():
+					by_surface[surface] = int(by_surface.get(surface, 0)) + 1
+		_drop(d)
+	print("MEASURE | POI collision shapes by what they are underfoot | %s | built shapes %d | props left to the ground %d"
+			% [str(by_surface), built, props_left_to_ground])
+	assert_gt(built, 100, "the builders put up their own colliders")
+	assert_true(silent.is_empty(), "built colliders that name no surface, by POI: %s" % str(silent))
+
+
+## What a forged asset is made of underfoot, from its name.
+func test_a_forged_asset_says_what_it_is_made_of() -> void:
+	var cases := {
+		"res://assets/models/props/sedgemire/sedgemire_boardwalk_plank_a.glb": "wood",
+		"res://assets/models/props/sedgemire/sedgemire_dock_post_b.glb": "wood",
+		"res://assets/models/props/hearthvale/hearthvale_cart_a.glb": "wood",
+		"res://assets/models/props/briarwold/briarwold_stool_a.glb": "wood",
+		"res://assets/models/props/hearthvale/hearthvale_signpost_a.glb": "wood",
+		"res://assets/models/props/skerrow/skerrow_drystone_wall_a.glb": "stone",
+		"res://assets/models/props/hearthvale/hearthvale_cliff_slab_b.glb": "stone",
+		"res://assets/models/props/hearthvale/hearthvale_gravestone_a.glb": "stone",
+		"res://assets/models/props/cinderlea/cinderlea_bone_finger_a.glb": "stone",
+		"res://assets/models/props/skerrow/skerrow_scree_c.glb": "gravel",
+		"res://assets/models/props/brightwater/brightwater_banner_a.glb": "",
+		"res://assets/models/props/briarwold/briarwold_fern_b.glb": "",
+	}
+	for path in cases:
+		assert_eq(PoiKit.surface_of_asset(str(path)), str(cases[path]), str(path).get_file())
+
 func test_a_hearthstone_carries_the_id_of_the_place_it_stands_at() -> void:
 	if _skip():
 		return
@@ -261,7 +319,12 @@ func test_world_pois_indexes_every_dressable_entry_by_its_cell() -> void:
 	var wp := WorldPois.new()
 	_host().add_child(wp)
 	var n := wp.index(pois, provider, roads)
-	assert_eq(n, WorldPois.candidates(pois).size())
+	# every built entry, and every POI the content has that the land does not have a pad for yet
+	var unbuilt := WorldPois.unbuilt_entries(pois, provider)
+	assert_eq(n, WorldPois.candidates(pois + unbuilt).size())
+	for e in unbuilt:
+		var id := str((e as Dictionary)["place_id"])
+		assert_true(_entry(id).is_empty(), "%s is marked unbuilt but has a pad" % id)
 	assert_gt(n, 50, "only %d entries indexed" % n)
 	for item_v in wp.entries():
 		var pos: Array = (item_v["entry"] as Dictionary)["pos"]

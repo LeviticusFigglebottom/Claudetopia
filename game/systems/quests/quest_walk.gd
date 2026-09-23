@@ -20,6 +20,7 @@ const PADS_PATH := "res://world/generated/pois.json"
 
 static var _in_the_open: Dictionary = {}    # enemy id -> {region id: count}, off the built cells
 static var _below: Dictionary = {}          # enemy id -> [interior id], a deep place's encounters
+static var _below_count: Dictionary = {}    # "interior|enemy" -> how many its encounters stand
 static var _cave_hearths: Dictionary = {}   # hearthstone id -> interior id
 static var _lying_inside: Dictionary = {}   # item id -> [interior id], cave features and house placements
 static var _shelved_in: Dictionary = {}     # book id -> [interior id]
@@ -30,7 +31,7 @@ static var _built := false
 
 
 static func reset() -> void:
-	for d in [_in_the_open, _below, _cave_hearths, _lying_inside, _shelved_in, _started_by, _pads]:
+	for d in [_in_the_open, _below, _below_count, _cave_hearths, _lying_inside, _shelved_in, _started_by, _pads]:
 		(d as Dictionary).clear()
 	_cells_read = false
 	_built = false
@@ -56,8 +57,8 @@ static func objectives() -> Array[Dictionary]:
 
 
 ## How each authored quest begins: [{quest_id, ok, how}]. The opening, or a `start_quest` effect
-## in a line of dialogue, a stage or a reward. A `giver` alone starts nothing: nothing reads it to
-## offer the quest (`QuestConditions.offers_of` has only ever been called by its tests).
+## in a line of dialogue, a stage or a reward; and where none of those does, its `giver`, who offers
+## it at their hub (QuestLog.giver_offers) once its `requires` hold.
 static func beginnings() -> Array[Dictionary]:
 	_build()
 	var out: Array[Dictionary] = []
@@ -68,8 +69,12 @@ static func beginnings() -> Array[Dictionary]:
 			ways.append(str(how))
 		if ways.is_empty():
 			var giver := str(def.get("giver", ""))
-			out.append({"quest_id": id, "ok": false, "how": "nothing starts it%s" % (
-					"" if giver == "" else ": %s has no line that does" % _name(giver))})
+			var person := _person(giver) if giver != "" else _no("")
+			if giver != "" and bool(person["ok"]):
+				out.append({"quest_id": id, "ok": true, "how": "offered by its giver, %s" % person["how"]})
+			else:
+				out.append({"quest_id": id, "ok": false, "how": "nothing starts it%s" % (
+						"" if giver == "" else ": its giver %s" % str(person["how"]))})
 		else:
 			out.append({"quest_id": id, "ok": true, "how": "; ".join(ways)})
 	return out
@@ -89,7 +94,7 @@ static func verdict(quest: Dictionary, stage: Dictionary, index: int) -> Diction
 		"reach":
 			return _place(target)
 		"kill":
-			return _foe(target)
+			return _kill(o)
 		"collect":
 			return _item(target)
 		"use_item":
@@ -244,6 +249,45 @@ static func _foe(target: String, region: String = "") -> Dictionary:
 		return _no("%s stands nowhere%s: no cell, deep place or point of interest raises one"
 				% [_name(target), "" if region == "" else " in " + _name(region)])
 	return _yes(", ".join(where))
+
+
+## A kill where the story puts it (`where`, KillPlaces): in a deep place, as many as its encounters
+## stand; at a place in the open, what `QuestFoes` stands for the stage (and what already stands
+## there); a boss, where its place stands it. A kill objective with no `where` is asked the old
+## question, whether the foe stands anywhere at all.
+static func _kill(o: Dictionary) -> Dictionary:
+	var target := str(o.get("target", ""))
+	var where := str(o.get("where", ""))
+	if where == "" or where == KillPlaces.ANYWHERE:
+		return _foe(target)
+	if not ContentDB.has(target):
+		return _no("%s is no enemy in the pack" % target)
+	var count := maxi(1, int(o.get("count", 1)))
+	if Ids.type_of(where) == "interior":
+		var n := int(_below_count.get("%s|%s" % [where, target], 0))
+		if n < count:
+			return _no("%s holds %d %s, and the story asks for %d there" % [_name(where), n, _name(target), count])
+		return _yes("%d in %s" % [n, _name(where)])
+	if not _stands(where):
+		return _no("%s has no position for the fight" % where)
+	if Ids.type_of(target) == "boss":
+		for e in PoiEncounters.of(where):
+			if str((e as Dictionary).get("enemy", "")) == target:
+				return _yes("at %s" % _name(where))
+		return _no("%s stands nowhere at %s" % [_name(target), _name(where)])
+	var when := str(o.get("when", "always"))
+	var already := 0
+	for e in PoiEncounters.of(where):
+		if str((e as Dictionary).get("enemy", "")) == target:
+			already += maxi(1, int((e as Dictionary).get("count", 1)))
+	var who := "the stage stands them"
+	if str(o.get("stand", "")) == QuestFoes.OWN:
+		who = "the stage stands its own"
+	elif already >= count:
+		who = "%d of its own" % already
+	elif already > 0:
+		who = "%d of its own, and the stage stands the rest" % already
+	return _yes("at %s%s: %s" % [_name(where), "" if when == "always" else " by " + when, who])
 
 
 ## How a player comes by an item, surest first: lying where a quest says, handed over by the
@@ -404,7 +448,10 @@ static func _build() -> void:
 		var interior := str(def["id"])
 		var place := str(def.get("place", ""))
 		for e in meta.get("encounters", []):
-			_note(_below, str((e as Dictionary).get("enemy", "")), interior)
+			var enemy := str((e as Dictionary).get("enemy", ""))
+			_note(_below, enemy, interior)
+			var key := "%s|%s" % [interior, enemy]
+			_below_count[key] = int(_below_count.get(key, 0)) + maxi(1, int((e as Dictionary).get("count", 1)))
 		for f_v in meta.get("features", []):
 			var f: Dictionary = f_v
 			match str(f.get("kind", "")):

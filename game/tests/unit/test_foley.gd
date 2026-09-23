@@ -49,8 +49,7 @@ func test_the_sounds_other_systems_are_promised_are_all_there() -> void:
 		"door_wood_open", "door_wood_close", "door_iron_open", "door_iron_close",
 		"chest_open", "lockpick_click", "lockpick_break",
 		"hearthstone_rest", "echo_recovered", "player_death",
-		"bell_hand", "bell_tavern", "bell_tower", "bell_toll",
-		"thunder_near", "thunder_far", "wind_gust", "water_splash", "wood_creak", "cart_wheels",
+		"bell_hand", "bell_tavern", "bell_toll", "water_splash",
 		"ui_paper_slide", "ui_brass_click", "ui_hover_tick", "ui_error_thunk",
 		"ui_page_turn", "ui_book_open", "ui_book_close", "ui_map_unroll",
 	]

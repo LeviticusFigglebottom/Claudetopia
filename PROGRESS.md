@@ -2338,3 +2338,524 @@ this work added is read).
 name where it counts. (2) Make `wardens_roll_fragment` or take it out of the cist. (3) The
 unhonoured sentences above, the Moot's stones and the Hart's model. (4) Delete or rename the
 placeholder roster.
+
+## Every perk kept, a flask to drink, every load band reachable, and the ground heard
+
+Six parts, one branch, in the order they were asked for. The tables are the game's own output:
+`./run.sh test --filter=test_perks_do_what_they_say | grep PERK`, `./run.sh fights
+--calling=<calling>` once per Calling, and `./run.sh test --filter=test_footsteps_in_the_world |
+grep FOOTSTEPS`.
+
+### 1. The perks
+
+Twenty-eight perk stats had no reader: the 25 listed last time, and `armour`, `noise` and
+`stamina_cost_light`, whose names appeared in the code only as other things. Each is now read
+where the thing it names happens. `test_perks_do_what_they_say.gd` takes every perk the way a
+character takes one (the skill raised to where the perk opens, its prerequisites first, a perk
+point spent) on the player scene, measures what the text names, takes the perk, and measures
+again. Every row below matched the figure the text gives:
+
+| perk | measured | before | after |
+|---|---|---|---|
+| wardens grip | sword light hit | 15.4 | 16.94 |
+| quick steel | stamina for a sword light | 18 | 15.3 |
+| ringing blow | sword poise damage | 12 | 15 |
+| wide sweep | greatsword charged heavy | 68.64 | 75.504 |
+| hafted poise | poise | 40 | 55 |
+| bell swing | stamina for a greatsword heavy | 44 | 35.2 |
+| fernhold draw | seconds to full draw | 0.9 | 0.783 |
+| fletchers thrift | chance a loosed arrow survives | 0.4 | 0.65 |
+| steady breath | arrow damage at full draw | 36.75 | 42.262 |
+| braced stance | guard stability | 0.8 | 0.9 |
+| braced stance | damage through the guard from 100 | 19 | 9 |
+| ready answer | parry window s | 0.18 | 0.24 |
+| broken in | armour worn | 12 | 13.2 |
+| second skin | noise at a jog in plate | 0.872 | 0.693 |
+| second skin | roll load | 0.886 | 0.543 |
+| quiet step | noise at a jog | 0.513 | 0.359 |
+| quiet step | a jump heard | 0.4 | 0.28 |
+| light fingers | pickpocket chance | 0.508 | 0.658 |
+| unsaid | sneak attack multiplier (sword) | 3 | 4 |
+| fair dealing | buy price | 160 | 144 |
+| fair dealing | sell price | 46 | 51 |
+| loud name | renown from a deed worth 50 | 50 | 60 |
+| hedge wise | restore health brewed | 24 | 28.8 |
+| forager | lichen from one plant | 1 | 2 |
+| bitter tongue | damage health brewed | 7 | 9.1 |
+| red door | tier-2 sword hit | 17.22 | 18.655 |
+| red door | tier-2 jerkin armour | 7.2 | 7.8 |
+| thrifty forge | ingots for a greatsword | 4 | 3 |
+| ember keeper | charge from four motes | 100 | 125 |
+| deep writing | ember burst magnitude | 24 | 28.8 |
+| wind in the chest | stamina | 180 | 195 |
+| strong back | carry capacity | 100 | 120 |
+| roll away | roll stamina | 22 | 18.7 |
+| roll away | roll safe window s | 0.3 | 0.35 |
+| warm word | mana for a kindle bolt | 11.4 | 9.69 |
+| mote catcher | motes from a foe a Kindling word killed | 1 | 2 |
+| quieted | mana for a frost bolt | 13.3 | 11.305 |
+| held fast | ward seconds | 12 | 15.6 |
+| held fast | binding word hold seconds | 1 | 1.3 |
+| tender | health from Mend | 38.5 | 46.2 |
+| loud company | seconds the hound stays | 45 | 58.5 |
+
+Its last test reads every script in the game and fails when any of the 36 perk stat keys has no
+reader (0 today).
+
+Found on the way: nothing wrote the player's `stealth_visibility`, which every foe's eyes
+multiply by, so a crouched figure in the dark was seen as plainly as one sprinting at noon; the
+Stealth service now writes it every physics frame (0.62 in the open, 0.08 crouched in shadow).
+The round shield could not be taken up: the slot rules knew only shields carried as weapons.
+Red Door's wider temper step was shown at the forge and never swung or worn. A note written on
+armour and a Resist draught changed nothing: `Equipment.modifiers()` was worked out and handed
+to nobody, and nothing read `resist_<kind>`. `grant_perk` changed the modifier table without the
+body hearing of it. Four stats needed a system first (DECISIONS): arrows that survive (40%, a
+pickup where they strike, or loot in the body), Ember Motes caught from a Kindling kill (1),
+picking an ingredient off the ground, and armour weight in the roll's load and in the noise.
+
+### 2. Healing in a fight, and the fights again
+
+DESIGN §5.5 has a flask that a Hearthstone refills, and there was none. `core:item/hearth_flask`
+holds three swallows of 40% of greatest health. A swallow is a committed one-second drink (the
+warmth lands at 0.55 s, and a stagger before then spills it). The flask is filled by a rest and
+by coming back from death, kept by the save, and shown on the belt as swallows left against a
+full flask. Potions, food, Mending (the Ashwalker's saying) and a rest already healed; the flask
+is the one thing every Calling has from the first fight.
+
+The scripted player now blocks when it has not the stamina to roll. Below 45% of its health it
+backs off to drink, and when the flask is dry it says a mending saying below 55% if it knows
+one. It says what else its Calling knows: a ward before the fight and again when it breaks, and
+a bolt at a foe out of reach. An archer shoots, backs off inside 4 m and closes with its knife.
+The Naming's own fight (three ash-wights) joined the roster. After the merge of the movement
+rework the harness needed one more thing a player does. Locked on, the body now strafes at
+2.6 m/s, and the smuggler-sayer backs off at about 3. The Cragborn and the Wayfarer followed it
+3.0 m behind for two minutes and landed 0 of 52 and 0 of 48 swings. Out of reach, the scripted
+player now sprints, which breaks the strafe, until it is in reach.
+
+One run per Calling. Each cell is the time to win; "sw" counts swallows and "bl" blocks:
+
+| fight | Hearthkeeper | Wayfarer | Reedborn | Cragborn | Ashwalker | Lantern-Clerk |
+|---|---|---|---|---|---|---|
+| naming: ash wight | 15 s | 18 s | 10 s | 24 s (2 sw, 1 bl) | 8 s | 19 s |
+| skirmisher: roadside bandit | 23 s (1 sw) | 3 s | 5 s | 5 s | 2 s | 21 s |
+| pack: down wolf | 32 s | 30 s | 10 s | 35 s (2 sw) | 8 s | 32 s (1 bl) |
+| brute: hedge wight | 14 s | 14 s | 35 s | 20 s | 6 s | 15 s |
+| charger: bristleback | 11 s | 13 s | 20 s | 12 s | 7 s | 13 s |
+| ambusher: sallowjaw | 15 s | 15 s | 38 s | 22 s | 8 s | 16 s |
+| caster: smuggler sayer | 26 s | 58 s (1 sw) | 39 s | 55 s | 28 s | 31 s |
+| sentinel: warden | 42 s | 73 s | **120 s**, 47% left | 86 s | 42 s | 42 s |
+| swarm: gutter drake | 34 s (3 sw) | 7 s | 9 s | 5 s | 7 s | 22 s (1 sw, 2 bl) |
+| elite: bravo | 13 s | 41 s | 69 s | 64 s (3 sw) | 8 s | 14 s |
+| boss: barrow reeve | **died** at 90 s, 61% left (1 sw) | **died** at 76 s, 61% left | **120 s**, 47% left | **died** at 115 s, 69% left | **died** at 38 s, 73% left (1 bl) | **120 s**, 71% left (2 sw) |
+
+The danger-one foes, from Hearthvale and Brightwater, are the skirmisher, the pack, the brute, the
+charger, the caster, the swarm and the elite. The ambusher is Sedgemire's (danger two) and the
+sentinel Briarwold's (danger three). The ash-wights are the Naming's own fight.
+
+What a competent player loses at level 1, and why:
+
+* **The Barrow Reeve, for every Calling** (four die, two run out of the 120 s with 47–73% of him
+  left). He has 520 health and armour 6 against 3–11 a blow. Four to six of his blows (22–36
+  each, a knockdown among them) kill a 100-health character, flask and all. He is the third
+  quest of the Wardens' line, behind 45 reputation and the quest before it, so he is met well
+  past level 1 and was not tuned.
+* **The warden, for the Reedborn** (120 s, 47% left). The Reedborn starts with fists and
+  Hush-Frost (12 frost). The warden, a danger-three treant, has 265 health and armour 10, so
+  the Reedborn lands 1.4 a hit and runs out of mana. Every other Calling kills it in 42–86 s.
+* **Two Callings could not beat the danger-one foes** before they were given blades
+  (DECISIONS). Measured again on the reworked movement, without its dagger the Lantern-Clerk
+  died to the swarm with 85% of the drakes left. It ran out of time on the pack (95% left, 528
+  damage survived by drinking), the hedge-wight (33%) and the bravo (41%). Without its knife the
+  Wayfarer died to the swarm with 60% of the drakes left. With the blades both win every
+  danger-one fight: the Wayfarer in 3–58 s and the Lantern-Clerk in 13–32 s.
+
+The Ashwalker's sayings make six of its eleven fights trivial (2–8 s without a blow taken); the
+other five Callings win the danger-one fights in 3–69 s. Nothing was tuned for that, because
+DESIGN asks only that every Calling live through the first fights.
+
+### 3. The heavy load band
+
+Load is now measured against `20 + 1.5·Endurance` (35 at the start), no longer
+`40 + 3·Endurance` (DECISIONS). With nothing in the bag, at base Endurance:
+
+| worn and wielded | load | band |
+|---|---|---|
+| leathers and a sword | 25% | light |
+| a brigandine and a sword | 51% | medium |
+| clan plate and an iron greatsword | 89% | heavy |
+| clan plate and the Bearer's clapper | 109% | overloaded |
+
+Before, the heaviest of these reached 54%. Every Calling still starts light (0–14%). Second
+Skin moves plate and a greatsword from heavy to medium (0.89 to 0.54).
+`test_every_load_band_can_be_reached_by_what_is_worn` equips the four kits and checks each band.
+
+### 4. The eleven sounds nothing played
+
+Five were wired to their events:
+
+* `bell_toll` rings for the Bell-bearer's toll and bell swing, for the Barrow Reeve's toll, and
+  as the Reeve opens his second phase.
+* `bell_hand` rings as a bell-headed weapon goes live: the Tolling knight's mace and his tolling
+  blow, the Reeve's bell sweep, and the Last Cantor's blades.
+* `bell_tavern` rings when you come through an inn's door (Toll's Lip), and not a bakehouse's.
+* `footstep_snow` and `footstep_sand` play on the snow and the tide-flats the builder paints.
+
+An attack or a boss phase may now name a sound. Footsteps on the terrain now read the paint:
+`TerrainProvider.texture_at` names the painted id from the manifest's slot list, because the
+Terrain3D texture list is emptied once its arrays are built. The builder's 21 textures fall into
+8 surfaces.
+
+Six were dropped, with their files and generators: `bell_tower` (no bell strikes the hours),
+`thunder_near`, `thunder_far` and `wind_gust` (the ambience's storm and wind layers are those),
+`wood_creak` (the creak pools are) and `cart_wheels` (no cart moves). A generator run also stopped
+writing a dropped id back into `core:table/sfx` from the old manifest. The wiring test now fails
+on any row nothing can play (0 of 64). The audio toolkit's 124 tests pass, two of them new: the
+manifest and the table hold exactly what the catalogue makes.
+
+### 5. Footsteps where the feet are
+
+Every collider the POI kit builds now names what it is made of. A stone bridge's deck, parapets
+and abutments are stone. A timber span, and every plank deck, post and ladder, is wood. Walls,
+drums, doorways, steps, carved figures and cairns are stone, and a mound is dirt. A forged
+asset's collision takes its surface from its name: pier, boardwalk, cart, stool and signpost are
+wood; cliff, drystone, cairn and the giants' bones are stone; scree is gravel. One body can carry
+both, so Foley reads the shape a ray hit before the body.
+
+`test_footsteps_in_the_world.gd` loads the built world and finds each place from what was built:
+the terrain's own paint, a bridge POI raised as the streamer raises it, and a deep place walked
+into through Interiors. A body's footfalls walk it for three seconds at 4.2 m/s:
+
+| where | at | heard |
+|---|---|---|
+| a market street in Merrowby (cobbles) | (900, 2350) | 6 × stone |
+| the bog at Isseva (mud, peat) | (-2882, -500) | 6 × mud |
+| the Skerrow heights (snow) | (1242, -3617) | 6 × snow |
+| the western tide-flats (sand) | (-3485, -544) | 6 × sand |
+| the deck of Larkbourne Ford (a stone bridge) | (733, 2303) | 6 × stone |
+| the deck of Eelweir (timber) | (-1400, -100) | 6 × wood |
+| the floor of Weaverdeep | the pocket | 6 × stone |
+
+Its second test fails when a texture the builder paints has no footstep (0 of 21). In
+`test_pois.gd`, every point of interest in the world is raised, and all 966 collision shapes
+its builders put up name their surface. With the forged props there are 1269 stone, 241 wood,
+46 gravel and 14 dirt; 131 props (trees, hedges, tents, braziers) leave it to the ground.
+
+Found on the way and fixed:
+
+* **A house or deep place entered from the overworld built nothing.** Its wrapper looked for
+  the current interior, which is set only once the player is through the door. Interiors now
+  hands it the meta.
+* **What a quest left inside (the steward's key, the Ledger of Prices) was never raised when
+  walked into.** The builders asked themselves which interior they were, and only the wrapper
+  was told. The wrappers now hand the name down.
+* **Every deep place dropped the player 3.0–4.5 m onto its mouth.** There was no Entrance marker,
+  so the arrival fell back to a metre above the pocket. One now stands on the rock under the
+  forge's entrance, read from the collision mesh (the voxel rock lies 0.25–0.55 m below the
+  nominal floor). All nine arrive 0.05 m above rock.
+* **A foe raised a script error on every sweep once its last candidate had been freed.**
+  Perception now tests validity before `is`.
+
+### 6. The arena, seen again
+
+Run again after the audio commits and both merges, under xvfb with the OpenGL renderer
+(`godot --path game --rendering-driver opengl3 -- --arena --verify --out=<dir>`): 16 checks, 16
+passed, and 12 screenshots. They show the arena, the player, the HUD's bars, the compass and the
+readied saying. Attack, parry and riposte, the roll's i-frames (0.08–0.38 s of 0.60), block,
+stagger, a saying and silence, the bow, the mantle, the prompt, the wolves' flanking, the
+charger's knockdown, the boss's phases and the respawn all pass as before. The wolves and the
+bristleback are still placeholder boxes. The belt is empty, because the arena's Foundling never
+passes through the Naming, which is where a new character is given the flask.
+
+### Checks
+
+`./run.sh test`: 1463 tests, 0 failed, 0 content problems, 0 script errors (the 4 logged errors
+are the ones their tests provoke). `./run.sh journey`: 16 of 16 steps. The audio toolkit's
+tests: 124 passed. `./run.sh fights --calling=<calling>` for each of the six: every check
+passes. All were run after both merges; the POI tests were run again after the last change (19
+tests, 0 failed).
+
+### Found and not fixed
+
+* **Going into a house stands the player in the corner of its first room**, a metre up, not
+  inside the door. The house builder makes no Entrance marker and nothing reads the meta's
+  `entrance`. Queued as its own task.
+* **A whole `./run.sh fights` (six Callings in one process) crashes in the engine.** It crashed
+  in two of three attempts, at a different fight each time. The crash is in a worker thread; the
+  log shows `propagate_notification()` called on /root from a thread (the crash handler's own
+  notification) and then signal 11, sometimes after Jolt's "exceeded the maximum number of
+  jobs". Runs of one Calling (`--calling=`) completed 12 times in 12 across the two full sets,
+  and the knife-less Wayfarer comparison crashed in two of three. The machine's load average was
+  about 40 throughout.
+* **Locked on, a melee player cannot close on a caster without sprinting.** The strafe speed
+  (2.6 m/s) is below the smuggler-sayer's back-off (about 3). That speed is the movement work's
+  number, so it is left alone and reported here.
+* The Reedborn's first saying (12 frost) does next to nothing against armour 10.
+
+### Next, in order
+
+1. Stand the player inside a house's door (the queued task).
+2. The Barrow Reeve at the level a player reaches him: fight him at the level the Wardens' line
+   takes to get there, and tune him only if that loses.
+3. The engine crash in long fights runs: a symbol build's backtrace, or split `./run.sh fights`
+   into a process per Calling.
+## Cloned, pressed Play, and stood on nothing
+
+A player cloned the repository, played it on their own machine, and reported that "when
+progressing in the game the player is transported to a blank empty plane with nothing visible
+in every direction". Every check here passed, because this machine has the built world and
+nothing else ever looked at a machine that did not.
+
+**Reproduced first, both ways.** With `game/world/generated` empty, New Game went through the
+Naming into a world with no manifest: the body stood at (-1900, 1, 3900), at y = 0 on nothing,
+fog in every direction, HUD up — and `./run.sh flow` printed `FLOW: PASS (new: 67 checks, 0
+failed)`. With the data but no Terrain3D regions (the state of a Mac, where the plugin never
+loads), trees, props and the Hushline's bench hung in the same fog over no ground; `FLOW: PASS`
+again. Nothing in the flow asked whether there was ground, and nothing in the game did either:
+`world.gd` logged a warning and carried on.
+
+Three things were true at once, and a clone met all three:
+
+* **The world was not in the repository.** `game/world/generated` and `game/terrain_data` were
+  ignored whole. `./run.sh` built them when the manifest was missing — Python, 8 GB, minutes —
+  but the Godot editor's Play button does not run `run.sh`, and a failed build left nothing.
+* **Terrain3D had binaries for two desktops of the three it names.** The vendored addon carried
+  Linux and Windows on x86_64; `terrain.gdextension` points macOS at two frameworks that were
+  not there.
+* **Every way in let a player through.** The title menu, boot's `--new-game` and `--load`, the
+  Naming and the capture runner all went into `world.tscn` without asking.
+
+### What changed
+
+**The title asks first (`WorldStatus`).** One module reads what is on disk and what the engine
+loaded and says `missing`, `fallback` or `ready`. With no world data the title sheet says so
+plainly — what is missing, `./run.sh world`, and what it needs — and New Game, Continue and Load
+stay shut; asked again at the door, because the load screen calls `load_slot` itself. Boot,
+the Naming and the capture runner ask the same question, and a world entered anyway (the
+editor's Play Scene) stands down with the same notice and a way back to the title rather than
+emitting `world_ready`. `test_world_status.gd` holds each branch: data missing, plugin missing,
+regions missing, forced, both present — against the verdict, the title screen and the world.
+
+**Terrain3D for macOS.** The official 1.0.2 archive came through the proxy by its release URL
+(the GitHub API and release pages are refused; the Asset Library's entry 3892 names the file).
+All four vendored binaries, `terrain.gdextension` and `plugin.cfg` are byte-identical to it,
+which is how it is known to be the same release; its two macOS frameworks are added unmodified,
+with the URL and every hash in `LICENSES.md`. Two things the release does not do: it has **no
+Linux arm64 or riscv64 binaries** at all, though the `.gdextension` names them, and its macOS
+frameworks are built for **macOS 15.0 and later** (their `LC_BUILD_VERSION`), universal, with
+only the arm64 slice signed.
+
+**The coarse ground (`FallbackTerrain`).** When Terrain3D cannot draw — no library, no regions,
+regions that load as nothing, or `-- --fallback-terrain` — the ground is drawn from the builder's
+8 m runtime height map: 256 chunks of 512 m sharing one flat grid with a skirt, lifted in the
+vertex shader, with four index LODs that Godot's mesh LOD picks; the region's own terrain
+textures in two arrays, tinted by the palette the way the builder's colour map is (the shader's
+mean tint per region is within a few percent of `color.rgba8`'s), with slope, height bands,
+snow, the lake bed and roads stamped at 2 m; and a HeightMapShape3D per chunk on the world and
+terrain layers. The mesh, the collision and `TerrainProvider.get_height` split every quad the
+same way — `test_fallback_terrain.gd` checks Jolt's split with a twisted quad and the world's
+collision against the provider at forty points — and each cell's scatter, placed on the 2 m
+ground, is set down on the 8 m one as it streams in. It builds in 1.8 s here when the machine
+is quiet (1.6 s of it reading back and scaling the terrain textures) and 7.8 s at a load of 25.
+Looked at against Terrain3D from the same cameras: the Hearthvale downs, the Merrowby street and
+the Brightwater island read as the same country; the spawn's ash spit and the hill behind it
+match; what is lost is fine relief — Cinderlea's terraces are rounded off, cliffs are softer,
+and the field patchwork and hedge lines are not there.
+
+**The runtime heights were read 3 m out.** `runtime/heights_1024.r32` is a 4 x 4 block mean,
+so its texel sits at `origin + 8 i + 3 m`; `TerrainProvider` read it at `origin + 8 i`. Against
+the 2 m ground that was more than a metre out on 37% of the land and more than three on 11%;
+read where it is, 11% and 1.15%. The regions, water and levels are point samples and were read
+correctly. The offset is in CONTRACTS §6 now.
+
+**The flow fails on a void, and `run.sh` now says so.** After the body stands, the probe checks
+that the ground is drawn (by Terrain3D or the fallback), that a ray finds ground under the feet,
+and that at least ten drawn things stand within 200 m. With no world on disk it fails at the
+title instead, with the title's words in its report. And `./run.sh flow` itself had never
+failed: it ran `flow_run new && flow_run load && flow_run continue` and printed `[flow] PASS` on
+the next line, and an `&&` list that fails part-way does not trip `set -e`, so a failed probe
+exited 0 under a PASS, with only a `[flow] FAIL` line further up to say otherwise. The verdict is
+taken from the list now. Any earlier "flow passes" that was read from the last line or the exit
+code was not a reading of the probe. The other way round, this branch's final suite printed
+`RESULT: PASS` and exited 1: `echo "$out" | grep -q` under `pipefail` (44 failures in 200
+replays of that log); the parent branch's fix, a grep that reads to the end, is taken verbatim.
+
+**The fade waits for the country.** It lifted on `player_spawned`, and in all three flow runs
+**none** of the full-detail cells round the body was standing at that moment (the Hushline Stair
+is on the world's south edge, so its ring is six cells, not nine): the first frame a player saw
+was bare ground with the trees and the steps arriving over it. The fade now holds until the ring
+is in, for up to 20 s, with "Laying the country around you: n of 6" in the caption and the body's
+hands held; the probe fails a run whose fade had to give up. It held 8.0 s (New Game), 4.4 s
+(`--load`) and 12.8 s (Continue) here, at a load average of 20; on a machine to itself it will be
+a fraction of that. The world's own synchronous load (no frame at all for 17 to 19 s after the
+press, the probe's note) is unchanged: that is the terrain and the doors, not the cells.
+
+**Shipping the world so a clone plays without Python.** Every read of `res://world/generated`
+and `res://terrain_data` in `game/` was traced. The game reads the manifest, `pois.json`,
+`roads.json`, `rivers.json`, the four `runtime/` maps, the 1024 cells and the sixteen Terrain3D
+regions, and nothing else:
+
+| Set | Files | Raw | zlib-6 (git's) |
+|---|---|---|---|
+| manifest, pois, roads, rivers | 4 | 0.1 MB | 0.03 MB |
+| `runtime/` | 4 | 10.0 MB | 3.8 MB |
+| `cells/` | 1024 | 153.5 MB | 58.1 MB |
+| `terrain_data/` | 16 | 145.1 MB | 144.7 MB |
+| **total** | 1048 | **308.7 MB** | **206.6 MB** |
+
+A repository holding exactly that set packs to **206.7 MiB**. The full-resolution maps only
+the terrain import reads — `heights.r32`, `color.rgba8`, `control.u32`, `flow.rg8`, the three
+`texture_*.u8`, `water_mask.u8`, `region_mask.u8` — are 304 MB and stay out. The Terrain3D regions
+are already compressed: every region file is `RSCC`, the format `ResourceSaver`'s
+`FLAG_COMPRESS` writes — zstd, but in 4 KB blocks — so a region's 13.3 MB comes to about
+9.1 MB where whole-file zlib would give 7.6 and xz 5.8. There is no flag in
+`import_terrain.gd` to change that: it hands the saving to Terrain3D's `save_directory`, which
+chooses the format itself. Terrain3D's 16-bit height option would save about 2 MB a region at a
+worst error of 0.125 m here (0.25 m above 512 m); not taken. Cells could be stored gzipped
+(58 MB instead of 154 checked out; git stores them compressed either way): reading one costs the
+worker thread 2.3 ms more for a median cell and 8.3 ms for the largest, against a JSON parse of
+10.5 and 21.5 ms, measured at a load average of 20, and `_parse_cell` runs on the worker pool,
+so none of it is frame time. Not done: it is the builder's file to write, and the builder is
+another stream's this round. `.gitignore` now names
+exactly the runtime set (checked against placeholders of every file the builder writes, and an
+unknown new one, which stays out); `run.sh` imports a never-imported project before running it,
+and `ensure_world` checks the manifest and the regions, imports the regions alone when the
+full-resolution maps are there, and otherwise builds; README's "Run it" is rewritten for a
+repository that carries its world. **The world data itself is not committed on this branch**:
+another stream is rebuilding it this round.
+
+**Proved on a clean clone.** A clone of this branch in a scratch directory, never opened and never
+imported. With no world on disk, `./run.sh flow` imported the project (5060 files, a 519 MB import
+cache) and failed at the title, whose sheet said what was missing, the command and what it needs,
+with New Game, Continue and Load shut — and the sheet, seen there for the first time, overflowed
+1280 x 720, so it was tightened. With only the runtime set copied in (`git status` in the clone
+then listed exactly those 1048 files, and nothing else the builder writes), the same command passed
+all three runs — 72, 28 and 31 checks, none failed, no errors logged — without building anything,
+the fade holding 8.2, 12.0 and 11.1 s for the near cells. Then, as near as this Linux machine
+can come to a Mac without the plugin, `terrain.gdextension` was taken out of the clone: the
+`Terrain3D` class did not exist, the title showed its one small line about the coarse ground, the
+world drew `FallbackTerrain` (built in 5.5 s at a load average of 32), and the flow passed all
+three runs again — the body standing on the heightfield chunk `Ground_4_15` at 0.00 m, thirty
+drawn things within 200 m, the notice on arrival.
+
+### Found and not fixed
+
+* **`tools_gd/check_scripts.gd` does not run on 4.7.2**: an internal VM error at its line 20,
+  after which it never quits (the `SceneTree` waits for ever). Use the test runner.
+* **The water sheet samples its maps 4 m out.** `painted_water.gdshader` maps a world point to
+  `(xz - origin) / size`, which puts runtime texel k at `origin + 8 k + 4`: the mask and levels
+  are point samples at `origin + 8 k`, the heights at `+ 3`. Four metres of shoreline.
+* **Whether the water sheet is drawn at the sea inlets.** Its discard test is
+  `texture(mask_tex, uv).r < 0.5` on a mask whose water texels are the byte 1, which normalises
+  to 1/255; yet the Mere's surface looks like water from its shore. I have not settled which it
+  is — Cinderlea's water is near-black and so is its ground — and the test that would is one
+  capture with `use_mask` off beside one with it on.
+* **`run.sh flow` keeps only its last run in a redirected log.** `flow_run` tees each probe's
+  output to `/dev/stderr`, and when stderr is a file, `tee` reopens it truncated, so
+  `./run.sh flow > log 2>&1` ends with only the Continue run in `log`. The per-run JSON reports
+  in the output directory are complete; read those.
+* **The headless teardown message came seventeen times, not sixteen** (`Parameter "material" is
+  null`, Known issues above), in the first full run with the two new test files, which stand up
+  three more worlds with people in them. Probably one more NPC body freed; not traced.
+* **After this merges, a worktree with the world symlinked in shows the two symlinks as
+  untracked** (`game/world/generated`, `game/terrain_data`), because `.gitignore` can no longer
+  ignore those paths whole and still track files inside them. Add files by name.
+
+### Then: Forward+, a player on Windows, and the coarse ground said out loud
+
+The player's own logs (Windows, a Radeon RX 9070 XT, Forward+, Godot 4.7.1) said
+`[World] ready: terrain=fallback` on every run, with no errors. Their world build had written the
+maps and the Terrain3D import after it never ran: `run.sh` called `godot`, which is not on a
+Windows `PATH`. The coarse ground carried them — and was much of the grey, barren look they
+reported, announced by one small line on the title and one toast that they never saw.
+
+**Forward+ on this machine crashed as the world was built, and it is not ours.** With Mesa's
+software Vulkan driver installed, the flow got through the title and the Naming and died at
+`add_child(terrain_node)`: the deprecation warning, "/root: The caller thread can't call the
+function `propagate_notification()`", signal 11 in an unknown module. Terrain3D 1.0.2 alone in an
+empty project (a camera, a light, the node) crashes it too. Under gdb all four `llvmpipe`
+rasterizer threads stop at one address in the driver's compiled shader, on an indexed load
+(`vmovd 0x0(%r13,%rax,4)`) out of range. The thread error is Godot's crash handler sending
+NOTIFICATION_CRASH to the tree from that thread: under gdb, which takes the fault first, it never
+prints. Nothing of ours touches the tree from a thread: the game's one worker-thread task (the
+streamer's `_parse_cell`) reads a file and parses JSON, no node processes on a sub-thread group,
+and nothing of ours listens to Terrain3D's signals. The deprecated
+`instance_reset_physics_interpolation` is compiled only into Terrain3D's 4.4-targeted builds and
+lands on Godot's compatibility binding: one warning, harmless, and not the crash.
+
+When it crashes is the clipmap and the view, not the ring count alone. Alone, at 2 m spacing with
+the regions, 60 frames each: Terrain3D's default 7 rings of 48, and 7, 8 and 9 rings of 32 (the
+game's), all drew; 9 of 48 crashed. At 1 m spacing, 7 of 48 crashed on the first frame, with the
+regions and without. In the game, 9 rings crash as the world is built; the painted-look stream
+found 7 ran, and here 7 drew the real terrain (Cinderlea, the Builders' towers) through forty
+seconds of the New Game flow and then crashed the same way. So fewer rings buy short captures,
+not safety.
+
+**No newer Terrain3D to move to.** `git ls-remote` of the upstream repository: the newest tag is
+`v1.0.2-stable`; its `1.0` branch has one commit since, to the installation docs; `main` is
+`1.1.0-dev` (`compatibility_minimum = 4.5`) and no longer makes the deprecated call, but has no
+release and no official binaries. Nothing to verify against, so nothing was changed.
+
+**What changed.**
+
+* `WorldStatus` does not start Terrain3D on a RenderingDevice (Forward+, Mobile) whose adapter is
+  llvmpipe: the coarse ground, with the reason and the renderer that does draw it (the
+  Compatibility renderer's llvmpipe draws Terrain3D, as every flow here always has).
+  `-- --terrain=terrain3d` tries Terrain3D anyway; `-- --terrain=fallback` asks for the coarse
+  ground anywhere (`--fallback-terrain` still works), read from the user arguments and the
+  engine's own, so the editor's Main Run Args carry it too. `-- --terrain-lods=N` (or
+  `WICKMERE_TERRAIN_LODS=N`), 1 to 10, sets Terrain3D's clipmap rings for tools, nine when nobody
+  asks; asking also tries Terrain3D on llvmpipe, for short Forward+ captures of the real terrain. On Forward+ over lavapipe the New Game
+  flow now passes (75 checks, none failed, no errors logged), and so does it with
+  `--terrain=fallback` (74).
+* The coarse ground, unless asked for, is said where it cannot be missed (`GroundNotice`): across
+  the title sheet as plainly as a missing world, with the way to the full terrain and the way in
+  still open; on a card across the top of the view once the region's name has gone; and on a
+  "Coarse ground" plate in the top left corner, with the reason, for as long as the HUD is up.
+  Asked for, it is the plate alone and one small line on the title. When the maps were built here
+  and never imported, the way named is `./run.sh terrain`, not a rebuild. The flow checks the
+  plate and the card on the coarse ground, and that nothing says so on Terrain3D.
+* `run.sh` finds Godot: `GODOT` if set, then the usual names on the `PATH`, then the usual places
+  (Downloads, the Desktop, `C:/Godot`, Program Files, Steam and winget on Windows, the console
+  build first; `/Applications/Godot.app`; an unpacked Linux download), a 4.7 before any other,
+  with a warning when it is not a 4.7. `./run.sh godot` says which. A command that needs Godot and
+  has none stops before doing anything, with a banner naming `GODOT` and an example per system;
+  `./run.sh world` looks before it builds. A failed terrain import gets a banner too, and
+  `./run.sh terrain` runs the import alone. Python is found the same way (`PYTHON`, `python3`,
+  `python`). Checked on this machine against fake homes; not run on Windows.
+* This branch's final suite had printed `RESULT: PASS` and exited 1: `echo | grep -q` under
+  `pipefail`. The parent's fix is taken verbatim.
+* The arrival card waits 4.8 s of game time for the region's title card, and game time is slow
+  when frames are: the engine clamps a slow frame's delta to what its capped physics steps cover
+  (0.12 to 0.15 s for a 0.5 s frame, measured), so on Forward+ over lavapipe under load the probe's
+  twelve seconds ran out before the card came. It waits up to ninety.
+* **The pushed branch, cloned and played.** Once the world was committed (197a50c1, the 1048
+  files of the runtime set), `claude/blissful-volta-dg80e6` at 549dd05 was cloned fresh from
+  GitHub (`--depth 1`, 1.4 GB checked out), never opened, never imported, no Python run. In it
+  `./run.sh flow` imported the project and passed all three starts on Terrain3D: New Game 73
+  checks, `--load` 28, Continue 31, none failed, no errors logged; the ground drawn by Terrain3D,
+  46 drawn things within 200 m, the fade held 8.3, 6.1 and 3.5 s for the near cells. In all
+  three the ray down from the body met the Hushline Stair's masonry 1.36 m below the feet and
+  no terrain collision: the same in every Terrain3D run here since the first, and consistent with
+  what the user's second playtest found and main has since mended (Terrain3D's collision stayed
+  round the fly camera, not the player).
+
+### Next, in order
+
+1. ~~**Commit the built world.**~~ Done on the main branch (197a50c1), and a fresh clone of it
+   plays without Python (above).
+2. **Play it on a Mac.** Nothing here can run macOS. On macOS 15 or later the title must say
+   nothing about the ground and `./run.sh flow` must pass on Terrain3D; on macOS 14 or earlier the
+   title's notice must name macOS 15, the corner plate must say "Coarse ground", and the flow must
+   pass on the coarse ground. If the frameworks are refused (quarantine, signing), the Console log
+   says so and the game still plays, coarse, and says so.
+2a. **Run `./run.sh` on Windows from Git Bash**, with Godot unzipped into Downloads and not on the
+   `PATH`: `./run.sh godot` must name the console build, and with no Godot anywhere every command
+   must stop with the banner before building anything.
+3. **Linux on arm64** is the same test as an old Mac, and Terrain3D has no binary for it: the
+   fix there is upstream, or building Terrain3D 1.0.2 for arm64 ourselves.
+4. **Settle the water sheet** (see above): one capture of the Mere and one of the Hushline's
+   inlet with `use_mask` on and off. Then move its samples onto the texels they belong to.
+5. **The coarse ground's weak places**: Cinderlea's terraces, cliffs and the field patchwork do
+   not survive 8 m. A 2 m runtime copy of the heights would be 64 MB; a small runtime field map
+   from the builder would bring the hedges back. Both are the builder's files, not this stream's.
+6. **`check_scripts.gd`** wants mending for 4.7.2 or deleting.

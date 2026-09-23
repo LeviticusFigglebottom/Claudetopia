@@ -120,14 +120,14 @@
   "encounters": [
     {
       "chamber": "gallery",
-      "enemy": "core:enemy/down_wolf",
+      "enemy": "core:enemy/crag_wolf",
       "count": 3,
       "group": "gallery",
       "note": "Crag-wolves, white on white."
     },
     {
       "chamber": "cistern",
-      "enemy": "core:enemy/hedge_wight",
+      "enemy": "core:enemy/scree_hag",
       "count": 2,
       "group": "cistern",
       "ambush": true,
@@ -135,10 +135,11 @@
     },
     {
       "chamber": "cradle",
-      "enemy": "core:enemy/hedge_wight",
+      "enemy": "core:enemy/stone_thrall",
       "count": 3,
       "group": "cradle",
-      "role": "elite"
+      "role": "elite",
+      "note": "What the ice kept and let go of: bone and rock that walked in here and was held, and walks again."
     }
   ],
   "features": [

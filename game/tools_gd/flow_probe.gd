@@ -14,6 +14,11 @@ extends Node
 ## press. Every step is a PNG in --flow=<dir>, and the run ends with the body turned to face the
 ## camera so the PNG can be held against the Naming's.
 ##
+## A new game then plays the opening (DESIGN §5.1a). The probe photographs every shot of it as it
+## really plays, streaming and all, checks that each picture is a picture and each black is one
+## the opening means (its black shot, or a hold with its caption up), and holds a key through the
+## last shot to skip it, the way a player would. A Continue and a --load check that none plays.
+##
 ## It fails, printing FLOW: FAIL and exiting 1, when a button cannot be found or does nothing,
 ## the screen is black where a caption or the world should be (mean luminance under BLACK:
 ## the fade's own rectangle measures 0.042, so anything under 0.06 is the fade or nothing), the
@@ -596,8 +601,10 @@ func _watch_the_world_stand_up() -> void:
 		var actual := _elapsed()
 		if _spawned != null:
 			_notes.append("%.0f s sample (drawn at %.1f s): the body is up, luma %.3f" % [float(at), actual, luma])
-			# mid-lift the black is still going; a black frame with the fade gone is dead
-			_check(luma > BLACK or UI.is_faded_out(), "%.0f s in, the world is not a black screen (luma %.3f)" % [float(at), luma])
+			# mid-lift the black is still going; a black frame with the fade gone is dead -- unless
+			# the opening is playing and the black is one it means
+			_check(luma > BLACK or UI.is_faded_out() or _opening_means_the_black(),
+					"%.0f s in, the world is not a black screen (luma %.3f)" % [float(at), luma])
 			continue
 		_check(UI.is_loading_shown(), "%.0f s in (%.1f s), the loading caption is up: %s"
 				% [float(at), actual, UI.loading_text().replace("\n", " / ")])
@@ -625,19 +632,151 @@ func _watch_the_world_stand_up() -> void:
 					" (timed out)" if bool(wait.get("timed_out", false)) else "",
 					"; caption while held: %s" % held_caption if not held_caption.is_empty() else ""])
 		_check(not bool(wait.get("timed_out", false)), "the near cells were all in before the fade lifted (%d of %d)" % [cells.x, cells.y])
+	# a new game's opening begins once that hold has let the fade go (CinematicPlayer.begin waits
+	# for it), and hands over before the world is photographed standing
+	await _watch_the_opening()
 	await _settle(2.5)
 	var luma := await _capture("world_standing")
 	_check(luma > BLACK, "the world is on the screen with the fade up (luma %.3f)" % luma)
 	_check(UI.hud() != null and UI.hud().visible, "the HUD is up")
 	_check(not UI.is_loading_shown(), "the loading caption has gone")
 	_check(not UI.is_faded_out(), "the fade is not still down")
-	_check_the_ground()
+	await _check_the_ground()
 	_notes.append("body stood at %.1f s from the press; %d cells streamed"
 			% [(_spawned_at_ms - _t0) / 1000.0, _cells()])
 	if _gap_ms > 1500:
 		_notes.append("no frame was drawn between %.1f s and %.1f s after the press: the world stands up synchronously, and the caption drawn last is what the player looks at for all of it"
 				% [(_gap_from_ms - _t0) / 1000.0, (_gap_from_ms + _gap_ms - _t0) / 1000.0])
 
+
+## The opening on a new game; on a Continue or a load, that there is none. Every shot is
+## photographed at the middle of its playing time, every picture must be more than the black, and
+## the last shot is skipped by holding a key for longer than the prompt asks, through the same
+## input a player's hand would give it.
+func _watch_the_opening() -> void:
+	var cin := await _wait_for_opening(8.0)
+	var new_game := mode in ["new", "new-game"]
+	if not new_game:
+		_check(cin == null, "a %s does not play the opening" % mode)
+		return
+	if not _check(cin != null, "a new game plays the opening after the Naming"):
+		return
+	_check(not UI.hud_visible, "no HUD over the opening's pictures")
+	var shots := CinematicDef.shots_of(cin.def)
+	var last := shots.size() - 1
+	var seen := {}
+	var started := Time.get_ticks_msec()
+	var skipped := false
+	while is_instance_valid(cin) and cin.is_playing() and Time.get_ticks_msec() - started < 600000:
+		await get_tree().process_frame
+		if not is_instance_valid(cin) or not cin.is_playing():
+			break
+		var i := cin.current_shot()
+		var shot: Dictionary = shots[i]
+		var half := float(shot.get("duration", 1.0)) * 0.5
+		if not seen.has(i) and cin.phase_name() == "PLAY" and cin.shot_time() >= half:
+			seen[i] = true
+			var black := bool(shot.get("black", false))
+			var luma := await _capture("opening_%02d_%s" % [i, str(shot.get("id", ""))])
+			if not is_instance_valid(cin):
+				break
+			if black:
+				_check(cin.overlay().said() != "", "the black shot '%s' carries its words (%s)" % [shot.get("id"), cin.overlay().said()])
+			else:
+				_check(luma > BLACK, "shot '%s' is a picture, not the black (luma %.3f)" % [shot.get("id"), luma])
+			if i == last and not skipped:
+				skipped = true
+				await _hold_to_skip(cin)
+				break
+	_notes.append("the opening: %d of %d shots photographed as they played, %.0f s from the first to the skip"
+			% [seen.size(), shots.size(), (Time.get_ticks_msec() - started) / 1000.0])
+	_check(seen.size() == shots.size(), "every shot of the opening was shown (%d of %d)" % [seen.size(), shots.size()])
+	var gone := await _wait_until(func() -> bool: return get_tree().get_first_node_in_group(CinematicPlayer.GROUP) == null, 20.0)
+	_check(gone, "holding a key skips the opening and it lets go of the screen")
+	_check(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "the mouse is the player's again after the opening")
+	await _first_moment_of_control()
+
+
+## What the player is handed (DESIGN §5.1a): their own body on the screen, the person who speaks
+## first standing in view and near, the story's first objective written under the compass and its
+## smudge on the strip. Read on the first frame after the hand-over, and photographed a moment
+## later once the HUD has inked in.
+func _first_moment_of_control() -> void:
+	await get_tree().process_frame
+	var opening := ContentDB.get_or_empty(GameServices.OPENING)
+	var greeter := str(opening.get("greeter", ""))
+	var body := _spawned as Node3D
+	var cam := get_viewport().get_camera_3d()
+	_check(body != null and _on_screen(cam, body.global_position + Vector3(0.0, 1.0, 0.0)),
+			"the first frame of control shows the player's own body")
+	var person: Node3D = null
+	if NpcRegistry.instance != null and greeter != "":
+		person = NpcRegistry.instance.actor(greeter) as Node3D
+	var far_off := body.global_position.distance_to(person.global_position) if person != null and body != null else INF
+	_check(person != null and far_off < 14.0,
+			"%s stands at the start, %.1f m from the player" % [str(ContentDB.get_or_empty(greeter).get("name", greeter)), far_off])
+	_check(person != null and _on_screen(cam, person.global_position + Vector3(0.0, 1.2, 0.0)),
+			"and is in view on the first frame of control")
+	var hud := UI.hud()
+	var marked := hud != null and hud.has_method("quest_marker_on_strip") and bool(hud.call("quest_marker_on_strip"))
+	_check(marked, "the first objective's smudge is on the compass strip")
+	await _settle(1.2)
+	var line := str(hud.call("objective_shown")) if hud != null and hud.has_method("objective_shown") else ""
+	_check(not line.is_empty(), "the first objective is written under the compass: %s" % line)
+	await _capture("first_moment_of_control")
+	var services := get_tree().get_first_node_in_group("game_services")
+	var words := str(services.get("first_words")) if services != null else ""
+	_notes.append("handed over at %s; the first words were \"%s\"; the objective line read \"%s\""
+			% [str(body.global_position.round()) if body != null else "?", words, line])
+
+
+## Whether a point is in front of the camera and inside the picture.
+func _on_screen(cam: Camera3D, point: Vector3) -> bool:
+	if cam == null or cam.is_position_behind(point):
+		return false
+	var at := cam.unproject_position(point)
+	return get_viewport().get_visible_rect().has_point(at)
+
+
+## A key held the way a hand holds one: pressed, kept down past the prompt's fill, let go.
+func _hold_to_skip(cin: CinematicPlayer) -> void:
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_SPACE
+	ev.physical_keycode = KEY_SPACE
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
+	await _settle(0.3)
+	if is_instance_valid(cin) and cin.overlay() != null:
+		_check(cin.overlay().prompt_shown(), "pressing a key during the opening shows the skip prompt")
+	await _capture("opening_hold_to_skip")
+	await _settle(CinematicPlayer.SKIP_HOLD_SECONDS + 0.4)
+	var up := ev.duplicate() as InputEventKey
+	up.pressed = false
+	Input.parse_input_event(up)
+	Input.flush_buffered_events()
+
+
+## Looks once more when the time is up, since one long frame can outlast the whole wait.
+func _wait_for_opening(timeout: float) -> CinematicPlayer:
+	var deadline := Time.get_ticks_msec() + int(timeout * 1000.0)
+	while true:
+		var found := get_tree().get_first_node_in_group(CinematicPlayer.GROUP)
+		if found is CinematicPlayer:
+			return found as CinematicPlayer
+		if Time.get_ticks_msec() >= deadline:
+			return null
+		await get_tree().process_frame
+	return null
+
+
+## Whether a black frame now is one the opening means: its black shot, the curtain it fades in
+## from, or a hold for the country with its caption up.
+func _opening_means_the_black() -> bool:
+	var cin := get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer
+	if cin == null or not cin.is_playing() or cin.overlay() == null:
+		return false
+	return cin.overlay().curtain() > 0.4 or cin.overlay().caption_shown()
 
 ## Is there a world under and around the body? A copy of the game with no built world passed every
 ## check above: the screen was not black (fog is not black), the fade was up, the HUD was up, and
@@ -650,6 +789,27 @@ func _check_the_ground() -> void:
 	var world := _world()
 	var drawn_by := str(world.get("terrain_mode")) if world != null else ""
 	_check(drawn_by in ["terrain3d", "fallback"], "the ground is drawn (by %s)" % (drawn_by if not drawn_by.is_empty() else "nothing"))
+	# On the coarse ground the player is owed the account of it, and a plate that stays while they
+	# walk on it: a toast once said it, and a player took the coarse ground for the game's look.
+	var said: Node = world.get("ground_notice") as Node if world != null else null
+	if drawn_by == "fallback":
+		_check(said != null and bool(said.call("plate_showing")), "the corner says the ground is the coarse one (%s)"
+				% (str(said.call("text")) if said != null else "nothing says so"))
+		var st: Variant = world.get("status")
+		if st is Dictionary and bool((st as Dictionary).get("announce", false)) and said != null:
+			# The card lets the region's title card go first (GroundNotice.AFTER_ARRIVAL_S), in game
+			# time. When frames are slow the engine clamps each frame's delta to what its capped
+			# physics steps cover (measured: 0.12 to 0.15 s for a 0.5 s frame), so on software
+			# Vulkan under load the 4.8 s is half a minute of the clock or more.
+			var asked := Time.get_ticks_msec()
+			var up := await _wait_until(func() -> bool: return bool(said.get("card_shown")), 90.0)
+			_check(up, "and a card says why, once the region's name has been shown (%.1f s later)"
+					% ((Time.get_ticks_msec() - asked) / 1000.0))
+			if up:
+				await _settle(0.8)
+				await _capture("coarse_ground_card")
+	elif drawn_by == "terrain3d":
+		_check(said == null, "nothing says the ground is coarse, because it is not")
 	var feet := body.global_position
 	var q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 2.0, feet + Vector3.DOWN * 40.0, (1 << 0) | (1 << 10))
 	var own: Array[RID] = []

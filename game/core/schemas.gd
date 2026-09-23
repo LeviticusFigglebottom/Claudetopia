@@ -30,6 +30,7 @@ const REQUIRED := {
 	"effect": ["name"],
 	"table": ["rows"],
 	"opening": ["quest"],
+	"cinematic": ["name", "shots"],
 	"schedule": ["entries"],
 	"world": ["seed", "size_m"],
 	"poi": ["name", "kind", "region"],
@@ -53,6 +54,10 @@ static func validate_def(def: Dictionary, source: String) -> Array[String]:
 	for key in REQUIRED[type]:
 		if not def.has(key):
 			out.append("%s: %s is missing required field '%s'" % [source, id, key])
+	# A cinematic's shape is deep enough that "has a shots field" says nothing about whether it
+	# can be played, so it answers to its own validator, and a malformed one fails the suite.
+	if type == "cinematic" and out.is_empty():
+		out.append_array(CinematicDef.validate(def, source))
 	return out
 
 
