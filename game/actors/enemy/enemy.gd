@@ -66,6 +66,12 @@ var spawn_position: Vector3 = Vector3.ZERO
 var spawn_yaw: float = 0.0
 var target: Node3D = null
 var inactive: bool = false            # ambusher waiting
+## Sitting at its post and minding its own business (a POI group that `sits`: the Mossbridge
+## Wardens, the Long Stride's toll-keeper): it sees whoever comes and starts nothing. A blow, the
+## greed rule or its group's `wake` ends it; seeing somebody does not.
+var minding: bool = false
+## Goes back to minding its post when it is reset after a rest, however the last visit ended.
+var sits: bool = false
 var pack_group: String = ""
 var summons_alive: Array[Enemy] = []
 ## Seconds a called thing has left before it goes back where it came from; 0 means it stays.
@@ -1215,6 +1221,7 @@ func take_hit(hit: HitData) -> String:
 		_check_damage_limb()
 	if outcome != "dead" and hit.attacker is Node3D:
 		perception.alert_to((hit.attacker as Node3D).global_position, hit.attacker as Node3D)
+		minding = false
 		inactive = false
 		brain.force(Brain.COMBAT)
 		_call_pack((hit.attacker as Node3D).global_position)
@@ -1231,6 +1238,8 @@ func _call_pack(position: Vector3) -> void:
 
 
 func _on_detected(_t: Node3D) -> void:
+	if minding:
+		return
 	inactive = false
 	_call_pack(perception.last_known)
 	if is_boss and not boss_started:
@@ -1298,7 +1307,8 @@ func reset_to_spawn() -> void:
 	reset_physics_interpolation()     # put back, not walked back: no smear across the map
 	perception.reset()
 	brain.force(Brain.PATROL if patrol_points.size() > 1 else Brain.IDLE)
-	inactive = archetype == "ambusher"
+	inactive = archetype == "ambusher" or sits
+	minding = sits
 	_attacking = false
 	_charging = false
 	_flee_timer = 0.0
@@ -1403,6 +1413,7 @@ func _greed(at: Vector3, thief: Node) -> void:
 	if not _roused_by_greed:
 		_roused_by_greed = true
 		brain.params["aggression"] = EnemyAbilities.guard_aggression(float(brain.param("aggression", 0.8)), brain.params)
+	minding = false
 	inactive = false
 	perception.alert_to(at, thief as Node3D if thief is Node3D else null)
 	brain.force(Brain.COMBAT)

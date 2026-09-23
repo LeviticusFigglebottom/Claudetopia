@@ -504,6 +504,9 @@ func test_the_mossbridge_wardens_let_the_empty_handed_cross() -> void:
 	for w in wardens:
 		assert_true(w.inactive, "a Warden is a dead tree to whoever carries nothing")
 	var who := _walker(wardens[0].global_position + Vector3(3.0, 0.0, 0.0))
+	# it sees you cross, and seeing you is not a reason
+	wardens[0].call("_on_detected", who)
+	assert_true(wardens[0].inactive and wardens[0].minding, "a Warden that has seen you still lets you by")
 	enc.mind(who)
 	assert_true(wardens[0].inactive, "empty-handed, you cross")
 	(who.get_node("Bag") as Inventory).add("core:item/wolf_pelt")
@@ -511,8 +514,10 @@ func test_the_mossbridge_wardens_let_the_empty_handed_cross() -> void:
 	assert_true(wardens[0].inactive, "a pelt Fernhold pays for is not the forest's to miss")
 	(who.get_node("Bag") as Inventory).add("core:item/heartwood_knot")
 	enc.mind(who)
-	assert_false(wardens[0].inactive, "a knot out of a Warden's own trunk wakes it")
+	assert_false(wardens[0].inactive or wardens[0].minding, "a knot out of a Warden's own trunk wakes it")
 	assert_eq(wardens[0].brain.state, Brain.COMBAT, "and it comes for you")
+	wardens[0].reset_to_spawn()
+	assert_true(wardens[0].inactive and wardens[0].minding, "and after a rest it is minding its end of the arch again")
 
 
 func test_the_long_stride_bravo_keeps_the_toll_and_duels_who_walks_past_it() -> void:
@@ -531,19 +536,23 @@ func test_the_long_stride_bravo_keeps_the_toll_and_duels_who_walks_past_it() -> 
 	if bravos.is_empty() or line == null:
 		return
 	assert_true(bravos[0].inactive, "he keeps his table and asks, he does not start it")
-	var index := -1
-	for i in enc.entries.size():
-		if (enc.entries[i] as Dictionary).has("toll"):
-			index = i
+	bravos[0].call("_on_detected", null)
+	assert_true(bravos[0].inactive, "and seeing you come is not starting it")
 	GameState.clear_flag(enc.toll_flag())
 	var who := _walker(line.global_position + Vector3(0.0, 0.0, 30.0))
 	enc.mind(who)
 	assert_true(bravos[0].inactive, "waiting in the queue is not refusing")
+	# the toll is paid by touching the table, as a player does
+	await _tree().process_frame
+	var toll := d.find_child("the_toll", true, false) as PoiTouch
+	assert_true(toll.prompt.contains("5 marks"), "the table says what the toll is: %s" % toll.prompt)
 	Purse.give(who, 12)
 	var before := Purse.balance(who)
-	assert_true(enc.pay_toll(who, index), "five marks at the table")
-	assert_eq(Purse.balance(who), before - 5)
-	assert_false(enc.pay_toll(who, index), "and once a day")
+	toll.interact(who)
+	assert_eq(Purse.balance(who), before - 5, "five marks at the table")
+	assert_true(enc.toll_paid())
+	toll.interact(who)
+	assert_eq(Purse.balance(who), before - 5, "and once a day")
 	who.global_position = line.global_position
 	enc.mind(who)
 	assert_true(bravos[0].inactive, "paid, you walk on past him")

@@ -246,12 +246,12 @@ func _hang_toll(index: int) -> void:
 
 
 func _on_toll_touched(actor: Node, index: int) -> void:
-	pay_toll(actor, index)
+	_pay_toll(actor, index)
 
 
 ## Pays the toll for `actor`: the marks, and the day's flag. False when they cannot pay (and
 ## nothing is taken), or it is paid already.
-func pay_toll(actor: Node, index: int) -> bool:
+func _pay_toll(actor: Node, index: int) -> bool:
 	var toll: Dictionary = (entries[index] as Dictionary).get("toll", {})
 	if toll_paid():
 		EventBus.notify.emit("The toll is paid for today.", "info")
@@ -403,6 +403,8 @@ func _sleep(enemy: Enemy) -> void:
 ## Minding its own business: eyes open, and nothing it sees starts a fight. A blow does (the
 ## enemy's own `take_hit`), and so does the greed rule, and `wake`.
 func _sit(enemy: Enemy) -> void:
+	enemy.sits = true
+	enemy.minding = true
 	enemy.inactive = true
 
 
@@ -438,6 +440,7 @@ func wake(index: int, actor: Node = null) -> void:
 			enemy.perception.enabled = true
 			if actor is Node3D:
 				enemy.perception.alert_to((actor as Node3D).global_position, actor as Node3D)
+		enemy.minding = false
 		enemy.inactive = false
 		if enemy.brain != null and actor is Node3D:
 			enemy.brain.force(Brain.COMBAT)

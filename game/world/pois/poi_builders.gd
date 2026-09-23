@@ -1726,7 +1726,7 @@ static func _lip_shelf(d: PoiDressing, face_at: Vector2, facing: Vector2, lip: V
 	var shelf := m.begin()
 	m.block(shelf, xf, Vector3(4.6, 0.7, 3.4))
 	m.commit(shelf, k.surface("stone", 0.7), "Shelf", true)
-	k.collider(Vector3(4.6, 0.7, 3.4), xf)
+	k.collider(Vector3(4.6, 0.7, 3.4), xf, "stone")
 	k.marker(marker_name, Vector3(at.x, top + 0.02, at.y), false, true, 1.8)
 
 
