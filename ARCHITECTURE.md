@@ -114,6 +114,7 @@ rolls) lives in `static func`s or `RefCounted` classes so tests need no scene.
 | Interiors | `systems/interiors` | `Interiors` autoload, `Door` (+ `DoorLock` child from crime) | `interiors` |
 | Atmosphere | `systems/atmosphere` | `Atmosphere` node: sky shader, sun/moon, region look, weather | `world` |
 | Exploration | `systems/exploration` | `PlaceDiscovery` (arriving, surveying, line of sight over the built terrain) | none (`GameState`) |
+| Cinematics | `systems/cinematic` | `CinematicDef` (validator), `CinematicPath` (cameras resolved against the ground), `CinematicPlayer` (plays one in the world, borrows and returns camera, streamer, clock, sky, buses, HUD, input), `CinematicOverlay` | none |
 | Streaming | `world/streaming` | `WorldStreamer`, `Cell`, `TerrainProvider`, `Interiors` | `world_cells` |
 
 Most of these are nodes rather than autoloads, each with a `static ensure()` that
@@ -269,3 +270,7 @@ No GPU. Forward+ runs on lavapipe (software Vulkan) and is the shipped default.
   shot with `-- --attribute` and writes `<out>/attribution.json`; the console command is
   `draws [measure]`. `tools/capture/plans/streets.json` is the six street shots, the worst
   frames in the game, on their own.
+* A plan with a `cinematic` block (`tools/capture/plans/opening.json`) loads the world with its
+  body standing and has `CinematicPlayer.scrub()` pose each shot's key frames, so the PNGs are
+  the player's own frames, letterbox and subtitles included, with `cinematic.json` beside them
+  saying where each camera stood and how far above the ground.

@@ -124,7 +124,8 @@ func _build() -> void:
 	_title_line = UiKit.label("", "Journal", HORIZONTAL_ALIGNMENT_CENTER)
 	_title_line.add_theme_font_size_override("font_size", 21)
 	_title_line.add_theme_color_override("font_color", paper)
-	_shadow(_title_line, 2)
+	# a thin italic under a heavy shadow reads as dark ink on a light halo, the wrong way round
+	_shadow(_title_line, 1, 2, 0.55)
 	_title.add_child(_title_line)
 
 	# --- the letterbox -------------------------------------------------------------------------
@@ -221,11 +222,11 @@ func _tinted(col: Color) -> ShaderMaterial:
 	return m
 
 
-func _shadow(label: Label, offset: int) -> void:
-	label.add_theme_color_override("font_shadow_color", Color(0.04, 0.03, 0.02, 0.7))
+func _shadow(label: Label, offset: int, outline := -1, alpha := 0.7) -> void:
+	label.add_theme_color_override("font_shadow_color", Color(0.04, 0.03, 0.02, alpha))
 	label.add_theme_constant_override("shadow_offset_x", offset)
 	label.add_theme_constant_override("shadow_offset_y", offset)
-	label.add_theme_constant_override("shadow_outline_size", offset * 3)
+	label.add_theme_constant_override("shadow_outline_size", offset * 3 if outline < 0 else outline)
 
 
 func _centre_caption_pivot() -> void:

@@ -115,6 +115,8 @@ func _state(w: World) -> Dictionary:
 		"gameplay_camera": _tree().root.get_viewport().get_camera_3d() == cam,
 		"music_overlay": Music.overlay_kind(),
 		"input": bool(player.get("input_enabled")),
+		"body_moves": player.is_physics_processing(),
+		"terrain_follows": str(w.terrain_node.call("get_camera").name) if w.terrain_node != null and w.terrain_node.call("get_camera") != null else "",
 		"cinematics": _tree().get_nodes_in_group(CinematicPlayer.GROUP).size(),
 	}
 
@@ -258,6 +260,7 @@ func test_skipping_anywhere_ends_exactly_where_watching_it_through_does() -> voi
 	assert_true(bool(end["streams_around_the_player"]) and bool(end["gameplay_camera"]) and bool(end["input"]),
 			"control is back: %s" % str(end))
 	assert_eq(int(end["cinematics"]), 0, "nothing of it is left in the tree")
+	assert_true(bool(end["body_moves"]), "the body is let go")
 	assert_near(float(end["hour"]), 7.2, 0.02, "it hands over at the hour it says")
 	assert_eq(str(end["weather"]), "core:weather/thin_sun", "in the weather it says")
 

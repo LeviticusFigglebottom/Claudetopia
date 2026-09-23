@@ -233,6 +233,11 @@ func current_shot() -> int:
 	return _index
 
 
+## Seconds into the current shot.
+func shot_time() -> float:
+	return _t
+
+
 func phase_name() -> String:
 	return Phase.keys()[_phase]
 
@@ -265,6 +270,8 @@ func _save_state() -> void:
 		"yaw": float(rig.get("yaw")) if rig != null else 0.0,
 		"pitch": float(rig.get("pitch")) if rig != null else PLAYER_PITCH,
 		"ambience": str(Ambience.get("region_id")),
+		"terrain_camera": _world.terrain_node.call("get_camera") if _world != null and _world.terrain_node != null else null,
+		"body_physics": _player.is_physics_processing() if _player != null else true,
 	}
 
 
@@ -283,6 +290,14 @@ func _take_over() -> void:
 	if streamer != null:
 		streamer.report_regions = false
 		streamer.target = _camera
+	# Terrain3D centres its clipmap -- its detail, its distance blending and its collision -- on
+	# one camera it was given, and the world gave it the fly camera. A shot four kilometres away
+	# would be drawn from the coarse outer rings, so the terrain follows this camera while it plays;
+	# and the body, whose ground may go with it, is held still until it is handed back.
+	if _world.terrain_node != null:
+		_world.terrain_node.call("set_camera", _camera)
+	if _player != null:
+		_player.set_physics_process(false)
 	WorldClock.running = false
 
 
@@ -350,6 +365,9 @@ func _restore_world() -> void:
 		streamer.target = target if target is Node3D and is_instance_valid(target) else _player
 		streamer.report_regions = bool(_saved.get("report_regions", true))
 		streamer.set_also_around(_saved.get("also_around", []))
+	var terrain_camera: Variant = _saved.get("terrain_camera", null)
+	if _world.terrain_node != null and terrain_camera is Camera3D and is_instance_valid(terrain_camera):
+		_world.terrain_node.call("set_camera", terrain_camera)
 	var atm := _atmosphere()
 	if atm != null:
 		atm.call("from_save", _saved.get("sky", {}))
@@ -362,6 +380,7 @@ func _restore_world() -> void:
 			atm.call("force_weather", weather, true)
 	if _player != null and is_instance_valid(_player):
 		_put_player_at_handover()
+		_player.set_physics_process(bool(_saved.get("body_physics", true)))
 		if _player.has_method("set_input_enabled"):
 			_player.call("set_input_enabled", bool(_saved.get("input", true)))
 		var rig: Node = _player.get("camera_rig")
@@ -515,7 +534,8 @@ func _stream_ahead(picture: int) -> void:
 	var ahead := path_of(next)
 	if ahead != null:
 		points.append(ahead.position_at(0.0))
-		points.append(ahead.look_point_at(0.0))
+		for p in ahead.looks:
+			points.append(p)
 	streamer.set_also_around(points)
 
 
@@ -749,7 +769,7 @@ func _update_skip(delta: float) -> void:
 ## Goes to black, then to the last frame of the hand-over shot, and hands over from there: the
 ## same hand-over, and so the same end state, as watching it through.
 func skip() -> void:
-	if not (_phase in [Phase.HOLD, Phase.PLAY]) or mode == Mode.SCRUB:
+	if skipped or not (_phase in [Phase.HOLD, Phase.PLAY]) or mode == Mode.SCRUB:
 		return
 	skipped = true
 	_phase = Phase.SKIPPING
@@ -817,18 +837,23 @@ func scrub(index: int, u: float) -> void:
 	var shot: Dictionary = _shots[index]
 	var duration := float(shot.get("duration", 1.0))
 	_t = u * duration
-	var path := path_of(index)
+	# a black shot stands its camera where playback does: on the next picture's first frame
+	var black := path_of(index) == null
+	var shown := _picture_for(index) if black else index
+	var at := 0.0 if black else u
+	var path := path_of(shown)
 	_need.clear()
 	if path != null:
-		_set_conditions(index, 0.0)
-		_set_conditions(index, maxf(u, 0.0001))
-		_pose(path, u, index == _handover)
+		_set_conditions(shown, 0.0)
+		_set_conditions(shown, maxf(at, 0.0001))
+		_pose(path, at, shown == _handover)
 		_need.append(_camera.global_position)
 		for p in path.looks:
 			_need.append(p)
-	_stream_ahead(index)
-	_overlay.set_curtain(1.0 if path == null else 0.0)
-	_line_key = ""
+	_stream_ahead(shown)
+	_overlay.set_curtain(1.0 if black else 0.0)
+	# a scrub jumps; whatever was said at the last moment it showed is not said at this one
+	_line_key = "?"
 	_update_words(shot)
 
 

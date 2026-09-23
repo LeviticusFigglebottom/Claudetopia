@@ -172,3 +172,25 @@ func test_the_content_loader_refuses_a_broken_cinematic() -> void:
 	def = _minimal()
 	def["shots"][1]["keys"][0]["at"]["height"] = 0.1
 	assert_false(Schemas.validate_def(def, "test").is_empty(), "the deep validator runs through the schema")
+
+
+# --- its music --------------------------------------------------------------------------------------
+
+func test_the_opening_has_its_own_cue_and_the_director_plays_holds_and_lets_it_go() -> void:
+	var def := ContentDB.get_def(OPENING)
+	var music := str(def.get("music", ""))
+	assert_eq(music, "core:music/opening", "the opening names its cue")
+	var stems: Dictionary = ContentDB.get_or_empty(music).get("stems", {})
+	assert_true(ResourceLoader.exists(str(stems.get("main", ""))), "and the cue is on disk")
+	Music.stop_all()
+	Music.enabled = true
+	Music.play_region("core:region/cinderlea", true)
+	assert_true(Music.play_cue(music), "the director takes the cue")
+	assert_eq(Music.overlay_kind(), "cue")
+	Music.pause_cue(true)
+	assert_false(Music.cue_playing(), "a held cue waits with the pictures")
+	Music.pause_cue(false)
+	Music.end_cue()
+	assert_eq(Music.overlay_kind(), "", "and when control comes back the region's own music has the floor")
+	assert_false(Music.play_cue(""), "no cue, no takeover")
+	Music.stop_all()

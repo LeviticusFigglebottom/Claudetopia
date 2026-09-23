@@ -87,6 +87,24 @@
       "side_rms_db": -24.631376259119868,
       "title": "The Naming",
       "true_peak_db": -8.241062222003814
+    },
+    "opening": {
+      "bpm": 60.0,
+      "bytes": 1337527,
+      "channels": 2,
+      "correlation": 0.22701179380912082,
+      "crest_db": 19.552964075685868,
+      "dc_offset": -2.801020572593124e-09,
+      "lufs": -18.00018975528268,
+      "mid_rms_db": -22.886059933834588,
+      "mode": "phrygian",
+      "path": "res://assets/audio/music/theme/opening.ogg",
+      "peak_db": -3.3330958581487193,
+      "rms_db": -22.886059933834588,
+      "seconds": 108.0,
+      "side_rms_db": -24.842584176801402,
+      "title": "The Opening",
+      "true_peak_db": -3.3275684831176564
     }
   },
   "regions": {

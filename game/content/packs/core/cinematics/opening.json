@@ -3,6 +3,7 @@
     "id": "core:cinematic/opening",
     "name": "The Opening",
     "description": "What plays between the Naming and the first step, on a new game (DESIGN 5.1a). The Warden says the name back, then tells the Foundling what they have come up into, over the country itself; the last shot comes down on the Hushline Stair and settles behind their shoulder. Every camera stands relative to a place and to the ground under it.",
+    "music": "core:music/opening",
     "speaker": "The Warden",
     "letterbox": 2.35,
     "dissolve": 1.4,
@@ -18,7 +19,7 @@
         ]
       },
       {
-        "id": "the_mere", "duration": 12.0, "time": 6.6, "time_to": 6.8, "weather": "core:weather/clear", "fov": 52,
+        "id": "the_mere", "duration": 12.0, "time": 7.3, "time_to": 7.5, "weather": "core:weather/clear", "fov": 52,
         "keys": [
           {"t": 0.0, "at": {"place": "core:place/tollmere", "bearing": 172, "distance": 700, "height": 40},
            "look": {"place": "core:place/sayers_spire", "height": 26}},
@@ -57,10 +58,10 @@
       {
         "id": "the_hand", "duration": 7.0, "time": 10.0, "weather": "core:weather/clear_cold", "fov": 52,
         "keys": [
-          {"t": 0.0, "at": {"place": "core:place/fallen_hand", "bearing": 150, "distance": 150, "height": 24},
-           "look": {"place": "core:place/fallen_hand", "height": 10}},
-          {"t": 1.0, "at": {"place": "core:place/fallen_hand", "bearing": 140, "distance": 125, "height": 20},
-           "look": {"place": "core:place/fallen_hand", "height": 12}}
+          {"t": 0.0, "at": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 108, "height": 41},
+           "look": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 13, "height": 5}},
+          {"t": 1.0, "at": {"place": "core:place/fallen_hand", "bearing": 200, "distance": 100, "height": 39},
+           "look": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 13, "height": 4}}
         ],
         "lines": [
           {"at": 0.8, "for": 3.6, "text": "The clans say something vast is breathing in."}
