@@ -33,6 +33,7 @@ const DIALOGUE_SCENE := "res://ui/dialogue/dialogue_ui.tscn"
 const MENUS := {
 	"pause": {"scene": "res://ui/menus/pause_menu.tscn", "full": true},
 	"settings": {"scene": "res://ui/menus/settings_menu.tscn", "full": true},
+	"controls": {"scene": "res://ui/menus/controls_page.tscn", "full": true},
 	"save_load": {"scene": "res://ui/menus/save_load.tscn", "full": true},
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
 	"container": {"scene": "res://ui/inventory/container_screen.tscn", "full": true},

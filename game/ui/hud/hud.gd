@@ -294,6 +294,19 @@ func _build() -> void:
 	_subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_subtitle)
 
+	# the first minutes' controls, low in the middle: above the quick slots' tops and clear of
+	# the bars' right edge at 1280 wide, under where a subtitle sits
+	var hints := ControlHints.new()
+	hints.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	hints.anchor_left = 0.5
+	hints.anchor_right = 0.5
+	hints.offset_left = -330.0
+	hints.offset_right = 330.0
+	hints.offset_top = -148.0
+	hints.offset_bottom = -116.0
+	hints.grow_horizontal = Control.GROW_DIRECTION_BOTH      # wider than its rect, still centred
+	add_child(hints)
+
 
 func _make_quick_slot(number: int) -> Control:
 	var panel := UiKit.panel("ChromePanel")
