@@ -222,6 +222,33 @@ class Group extends RefCounted:
 			level_of[i] = ladder.levels.size()
 		ScatterLod._fill(mmis["impostor"] as MultiMeshInstance3D, rows, all)
 
+	## Stands every instance on `p`'s ground, and draws them there. The coarse ground
+	## (world/fallback_terrain.gd) is drawn from the 8 m map, and the trees were placed on the 2 m
+	## one. It sets a cell's other MultiMeshes down by reading their buffers back and writing them
+	## again as the cell arrives. A group's buffers are no use to it: they are refilled from `rows`
+	## whenever the eye moves, so a tree set down only there went back up at the next re-sort, and
+	## on Forward+ they read back as NaN positions, which the ground was asked for (hundreds of
+	## script errors a run) and which were written back as trees at nonsense heights across the
+	## view. So `rows` is what moves.
+	func set_down(p: TerrainProvider) -> void:
+		var origin := cell.position
+		var lo := Vector3(INF, INF, INF)
+		var hi := -lo
+		for i in positions.size():
+			var at := positions[i]
+			at.y = p.get_height(at.x, at.z)
+			positions[i] = at
+			rows[i * STRIDE + 7] = at.y - origin.y
+			lo = lo.min(at)
+			hi = hi.max(at)
+		if not positions.is_empty():
+			box = AABB(lo, hi - lo)
+		signatures.clear()
+		if far_ring:
+			fill_far()
+		elif last_eye.is_finite():
+			update(last_eye)
+
 
 ## Every ladder the streamer has asked for, by asset path; null where an asset has none.
 static var _ladders: Dictionary = {}

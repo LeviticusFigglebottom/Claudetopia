@@ -171,6 +171,51 @@ func test_the_streamer_draws_trees_down_the_ladder_and_counts_each_once() -> voi
 	assert_eq(streamer._lod_groups.size(), 0, "unloading a cell lets its groups go")
 
 
+## The coarse ground (FallbackTerrain) sets a cell's scatter down through its MultiMeshes as the
+## cell arrives, and a group's levels are refilled from its own rows whenever the eye moves: set
+## down only in the buffers, the trees went back up to the 2 m ground at the next re-sort.
+func test_trees_set_down_on_the_coarse_ground_stay_down_as_the_eye_moves() -> void:
+	var provider := TerrainProvider.new()
+	if not provider.load_data():
+		provider.free()
+		return
+	var ground := Node3D.new()
+	provider.bind_fallback(ground)
+	_holder = Node3D.new()
+	_tree().root.add_child(_holder)
+	var streamer := WorldStreamer.new()
+	_holder.add_child(streamer)
+	var eye := Node3D.new()
+	_holder.add_child(eye)
+	eye.position = Vector3(128.0, 0.0, 128.0)
+	streamer.target = eye
+	var lad := _ladder()
+	# placed a hundred metres up, as if on some other ground, and strung out through every level
+	var rows: Array = []
+	for d in [5.0, lad.near, lad.far, 200.0]:
+		rows.append([128.0 + d, 100.0, 128.0, 0.0, 1.0, "#ffffff"])
+	streamer._build_cell(Vector2i(16, 16), 0, {"instances": {TREE: rows}})
+	var cell: Node3D = streamer._loaded[Vector2i(16, 16)]
+	assert_eq(streamer.set_lod_groups_down(cell, provider), 4, "every tree of the cell's groups")
+	var g: ScatterLod.Group = streamer._lod_groups[0]
+	var lowest := INF
+	for i in g.count():
+		var want := provider.get_height(g.positions[i].x, g.positions[i].z)
+		assert_near(g.positions[i].y, want, 0.001, "tree %d stands on the coarse ground" % i)
+		lowest = minf(lowest, want)
+	assert_near(g.box.position.y, lowest, 0.001, "and the group's box came down with it")
+	# the eye walks out past the picture line and back: every re-sort refills the levels from the
+	# rows, and the rows are what was set down
+	for e in [Vector3(128.0 + lad.far, 0.0, 128.0), Vector3(128.0, 0.0, 128.0)]:
+		g.update(e)
+		for i in g.count():
+			assert_near(g.rows[i * ScatterLod.STRIDE + 7], g.positions[i].y - cell.position.y, 0.001,
+					"tree %d is still drawn on the coarse ground after a re-sort" % i)
+	streamer._unload(Vector2i(16, 16))
+	ground.free()
+	provider.free()
+
+
 func test_a_trees_picture_takes_its_measured_gain_and_cut() -> void:
 	var oak := "res://assets/models/trees/hearthvale_oak_a/hearthvale_oak_a.glb"
 	var saved: Variant = ScatterLod._calibration
