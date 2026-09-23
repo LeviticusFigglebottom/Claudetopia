@@ -104,6 +104,15 @@ func _player() -> Node3D:
 	return get_tree().get_first_node_in_group("player") as Node3D
 
 
+## A teleport through the body's own `teleport` (CONTRACTS §8), which also brings the camera and
+## drops the old position's interpolation, rather than a bare write of the position.
+func _put(p: Node3D, pos: Vector3) -> void:
+	if p.has_method("teleport"):
+		p.call("teleport", pos, p.rotation.y)
+	else:
+		p.global_position = pos
+
+
 func _register_builtins() -> void:
 	register("help", func(_a: Array) -> String:
 		var names := _commands.keys()
@@ -151,10 +160,10 @@ func _register_builtins() -> void:
 			var world := get_tree().get_first_node_in_group("world")
 			if world and world.has_method("get_height"):
 				y = float(world.get_height(float(pos[0]), float(pos[1]))) + 1.0
-			p.global_position = Vector3(float(pos[0]), y, float(pos[1]))
+			_put(p, Vector3(float(pos[0]), y, float(pos[1])))
 			return "teleported to %s" % id
 		if a.size() >= 3:
-			p.global_position = Vector3(float(a[0]), float(a[1]), float(a[2]))
+			_put(p, Vector3(float(a[0]), float(a[1]), float(a[2])))
 			return "teleported"
 		return str(p.global_position), "tp <place_id> | tp <x> <y> <z>")
 	register("pos", func(_a: Array) -> String:

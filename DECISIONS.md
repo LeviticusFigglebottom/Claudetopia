@@ -495,3 +495,34 @@ vista came back littered with orange slabs where the gold barley and red poppies
 multiplied by gold and red. Rules now carry a `tint_strength` (how far from white the
 multiplier may travel, default 0.45) and the species whose asset already carries that colour
 take none at all.
+
+## 2026-09-23 · The view belongs to the mouse, movement is relative to it, and there are three gaits
+**Decision.** The camera rig is `top_level`: it follows the body's position every frame and never
+its rotation, and `CameraRig.yaw` is a world yaw that only look input changes. W/A/S/D are
+relative to that yaw. The body turns toward where it is going at a rate that falls with speed
+(900°/s standing to 300°/s at a sprint) and moves the way it faces, giving up speed while a large
+turn is still to make. Gaits are walk 1.8 m/s (a modifier or a light stick), jog 5.0 (the
+default) and sprint 7.8 (held, stamina 8/s, locked out at empty until 25% is back), with 16 m/s²
+up to a jog, 7 above it, 20 m/s² down from a jog and 12 above it.
+**Why.** Measured, not argued. The rig was a plain child of the body, so the view looked along
+body yaw + rig yaw while movement, respawn and saves all read the rig's yaw as the whole of it:
+one second of D turned the body 90° and the view with it, with the mouse untouched, and swung the
+compass in steps of up to 21° a frame. The player's report was "the mouse/movement relationship
+seems off, hence the compass and orientation issues", which is that sentence exactly. The speeds
+were 4.2 and 6.5 with no walk; the player said the movement was very slow and asked for a brisk
+jog near 5 and a sprint of 7.5–8. Two things made 4.2 read slower than it was: the default gait
+was posed as a crouch (the blend space fed velocity/6.5 = 0.65 sat beside Sneak_Walk at 0.5) and
+the planted feet slid at 79% of ground speed, so the legs looked like a shuffle while the body
+glided. Moving along the facing rather than straight along the stick is what stops a reversal
+reading as a moonwalk; giving up speed for the turn is what stops it swinging a wide arc.
+**Alternatives.** Keeping the rig under the body and subtracting its yaw everywhere it is read
+(every reader has to remember, and the camera still moves at physics rate); velocity straight
+along the stick with the body catching up (exact directions, but the body runs backward for a
+third of a second after every reversal); DESIGN's first numbers (4.2 and 6.5).
+**Consequences.** `Stealth` normalises noise by the sprint (a jog makes 0.51, where the old
+default made 0.52), and its speeds are pinned to the player's by a test. On a pad, sprint moved
+from the right-stick click, which it shared with lock-on and the camera toggle, to the left-stick
+click, which the Sayings menu gave up (it is on B on the keyboard; the pad layout wants a pass of
+its own). The first-model clips are fed through an interim mapping until the model is told metres
+per second. Reversible: the numbers are constants at the top of `player.gd`, and DESIGN §5.2
+states them.

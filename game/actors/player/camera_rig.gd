@@ -3,6 +3,14 @@ extends Node3D
 ## First/third-person camera rig (DESIGN §5.2): orbit with shoulder offset, SpringArm3D
 ## collision, lock-on framing, sneak lowers the pivot, FOV / sensitivity / invert / camera side
 ## from Settings. Builds its own Yaw > Pitch > SpringArm3D > Camera3D chain when the scene lacks it.
+##
+## `yaw` is a WORLD yaw: where the player is looking, which the mouse turns and nothing else
+## does. The rig is `top_level` and follows its body's position every frame; it never takes the
+## body's rotation. It used to be a plain child of the body, so the view looked along
+## body yaw + `yaw` while movement, respawn and saves all read `yaw` as the whole of it: W went
+## one way and the camera looked another whenever the body was not facing north, every turn of
+## the body swung the view and the compass with it, and a 90-degree strafe turned the camera by
+## 90 degrees in 1 s with nobody touching the mouse (DECISIONS 2026-09-23).
 
 signal mode_changed(first_person: bool)
 
@@ -22,6 +30,9 @@ const MASK_CAMERA := (1 << 0) | (1 << 9) | (1 << 10)   # world | camera_blocker 
 const LOCK_FOLLOW_SPEED := 5.0
 const MOUSE_RAD_PER_PX := 0.008
 const RENDER_LAYER_FP_ARMS := 1 << 1
+## A body that moves further than this between two frames was put somewhere, not walked there:
+## the rig jumps with it instead of following.
+const SNAP_DISTANCE := 4.0
 
 var yaw: float = 0.0
 var pitch: float = -0.18
@@ -32,6 +43,8 @@ var stick: Vector2 = Vector2.ZERO         # gamepad look, set by the player each
 var lock_point: Vector3 = Vector3.ZERO
 var has_lock: bool = false
 var look_enabled: bool = true
+## The body the rig follows: its parent, unless something says otherwise.
+var target: Node3D = null
 
 var yaw_node: Node3D
 var pitch_node: Node3D
@@ -43,11 +56,20 @@ var _mouse_delta: Vector2 = Vector2.ZERO
 var _arm_length: float = TP_ARM_LENGTH
 var _shoulder: float = TP_SHOULDER
 var _height: float = TP_HEIGHT
+var _placed := false
+var _last_target := Vector3.ZERO
 
 
 func _ready() -> void:
 	_build()
 	var parent := get_parent()
+	if target == null:
+		target = parent as Node3D
+	# The view turns with the mouse and not with the body: see the class comment.
+	top_level = true
+	# Placed every frame from the body's interpolated transform, so it must not be interpolated
+	# a second time between physics ticks.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	if parent is CollisionObject3D:
 		spring.add_excluded_object((parent as CollisionObject3D).get_rid())
 	yaw = parent.rotation.y if parent is Node3D else 0.0
@@ -55,6 +77,7 @@ func _ready() -> void:
 	if Settings.has_signal("changed"):
 		Settings.changed.connect(_on_setting_changed)
 	camera.make_current()
+	snap_to_target()
 
 
 func _build() -> void:
@@ -130,10 +153,12 @@ func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and look_enabled:
-		_mouse_delta += (event as InputEventMouseMotion).relative
+		add_mouse_look((event as InputEventMouseMotion).relative)
 
 
-## Adds raw mouse motion (pixels); the player forwards it when it owns the input.
+## Adds raw mouse motion (pixels, as InputEventMouseMotion.relative reports it). Moving the hand
+## right turns the view right (yaw falls: a clockwise turn seen from above, so the compass heading
+## rises) and moving it toward you pitches the view down, unless Settings asks for inverted Y.
 func add_mouse_look(relative: Vector2) -> void:
 	_mouse_delta += relative
 
@@ -141,6 +166,30 @@ func add_mouse_look(relative: Vector2) -> void:
 func set_lock_point(point: Vector3, active: bool) -> void:
 	lock_point = point
 	has_lock = active
+
+
+## Compass heading of the view in degrees: 0 north (-Z), 90 east (+X). Where the player looks,
+## which is what the compass strip shows.
+func heading_degrees() -> float:
+	return fposmod(rad_to_deg(-yaw), 360.0)
+
+
+## Puts the rig on its body at once: after a teleport, a respawn, a load or the first frame.
+func snap_to_target() -> void:
+	_placed = false
+	_follow()
+
+
+func _follow() -> void:
+	if target == null or not is_instance_valid(target) or not target.is_inside_tree():
+		return
+	var at := target.get_global_transform_interpolated().origin
+	if _placed and at.distance_to(_last_target) > SNAP_DISTANCE:
+		_placed = false
+	_last_target = at
+	_placed = true
+	global_position = Vector3(at.x, at.y + _height, at.z)
+	global_rotation = Vector3.ZERO
 
 
 func _process(delta: float) -> void:
@@ -153,6 +202,15 @@ func _process(delta: float) -> void:
 		yaw -= stick.x * pad_sens * delta
 		pitch -= stick.y * pad_sens * delta * invert
 	_mouse_delta = Vector2.ZERO
+	var target_height := FP_HEIGHT if first_person else TP_HEIGHT
+	var target_arm := 0.0 if first_person else (AIM_ARM_LENGTH if aiming else TP_ARM_LENGTH)
+	var target_shoulder := 0.0 if first_person else (_shoulder * (AIM_SHOULDER / TP_SHOULDER) if aiming else _shoulder)
+	if sneak_low:
+		target_height = FP_HEIGHT_SNEAK if first_person else TP_HEIGHT_SNEAK
+	var k := clampf(10.0 * delta, 0.0, 1.0)
+	_height = lerpf(_height, target_height, k)
+	_arm_length = lerpf(_arm_length, target_arm, k)
+	_follow()
 	if has_lock and not first_person:
 		var origin := global_position
 		var to := lock_point - origin
@@ -164,17 +222,7 @@ func _process(delta: float) -> void:
 			pitch = lerpf(pitch, want_pitch, clampf(LOCK_FOLLOW_SPEED * 0.6 * delta, 0.0, 1.0))
 	yaw = wrapf(yaw, -PI, PI)
 	pitch = clampf(pitch, PITCH_MIN_FP if first_person else PITCH_MIN_TP, PITCH_MAX_FP if first_person else PITCH_MAX_TP)
-	var target_height := FP_HEIGHT if first_person else TP_HEIGHT
-	var target_arm := 0.0 if first_person else (AIM_ARM_LENGTH if aiming else TP_ARM_LENGTH)
-	var target_shoulder := 0.0 if first_person else (_shoulder * (AIM_SHOULDER / TP_SHOULDER) if aiming else _shoulder)
-	if sneak_low:
-		target_height = FP_HEIGHT_SNEAK if first_person else TP_HEIGHT_SNEAK
-	var k := clampf(10.0 * delta, 0.0, 1.0)
-	_height = lerpf(_height, target_height, k)
-	_arm_length = lerpf(_arm_length, target_arm, k)
-	_shoulder = _shoulder
 	var shoulder_now: float = lerpf(spring.position.x, target_shoulder, k)
-	position.y = _height
 	yaw_node.rotation.y = yaw
 	pitch_node.rotation.x = pitch
 	spring.spring_length = _arm_length

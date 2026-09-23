@@ -48,11 +48,16 @@ var _idle := 0.0
 var _statuses: Array[Dictionary] = []
 var _marker_cache: Array[Dictionary] = []
 var _prompt_action := "interact"
+## The heading the strip shows: the view's, eased (Compass.ease_heading). -1 until the first frame.
+var _shown_heading := -1.0
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Last in the frame, so the compass and the reticle read the view the camera rig set up this
+	# frame rather than the one it left behind last frame.
+	process_priority = 100
 	_build()
 	_connect_world()
 	EventBus.region_entered.connect(_on_region_entered)
@@ -465,28 +470,36 @@ func _quest_areas() -> Array[Dictionary]:
 
 func _process(delta: float) -> void:
 	_idle += delta
-	_update_compass()
+	_update_compass(delta)
 	_update_reticle()
 	_update_statuses(delta)
 	_update_boss()
 	_update_idle_fade(delta)
 
 
-func _update_compass() -> void:
+## The strip shows where the player LOOKS: the view's heading, not the body's. It always read the
+## camera, and the camera used to turn with the body, so a second of D swung the strip 90 degrees
+## in steps of up to 21 a frame with the mouse still. Bearings to places are taken from where the
+## body is drawn this frame (its interpolated position), so a marker does not step at 60 Hz.
+func _update_compass(delta: float) -> void:
 	if not _compass.visible:
 		return
 	var origin := Vector2.ZERO
-	var heading := 0.0
+	var heading := -1.0
 	var cam := get_viewport().get_camera_3d()
 	if cam:
 		heading = Compass.heading_from_basis(cam.global_transform.basis)
 		origin = Vector2(cam.global_position.x, cam.global_position.z)
 	if _player and is_instance_valid(_player) and _player is Node3D and (_player as Node3D).is_inside_tree():
 		var p := _player as Node3D
-		origin = Vector2(p.global_position.x, p.global_position.z)
+		var at := p.get_global_transform_interpolated().origin
+		origin = Vector2(at.x, at.z)
 		if cam == null:
 			heading = Compass.heading_from_basis(p.global_transform.basis)
-	_compass.heading_deg = heading
+	if heading >= 0.0:
+		_shown_heading = heading if _shown_heading < 0.0 else Compass.ease_heading(_shown_heading, heading, delta)
+	var shown := maxf(_shown_heading, 0.0)
+	_compass.heading_deg = shown
 	_compass.player_xz = origin
 	var markers: Array[Dictionary] = []
 	for m in _marker_cache:
@@ -514,11 +527,13 @@ func _update_reticle() -> void:
 		_reticle.visible = true
 		_reticle.position = size * Vector2(0.5, 0.46) - _reticle.size * 0.5
 		return
-	if cam.is_position_behind(_lock_target.global_position):
+	# where the target is drawn this frame, not where the last physics tick left it
+	var at := _lock_target.get_global_transform_interpolated().origin
+	if cam.is_position_behind(at):
 		_reticle.visible = false
 		return
 	_reticle.visible = true
-	_reticle.position = cam.unproject_position(_lock_target.global_position) - _reticle.size * 0.5
+	_reticle.position = cam.unproject_position(at) - _reticle.size * 0.5
 
 
 func _update_statuses(delta: float) -> void:
