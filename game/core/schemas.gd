@@ -37,8 +37,9 @@ const REQUIRED := {
 	"appearance": ["parts"],
 }
 
-## Keys whose string values are free text and must not be treated as ID references.
-const NON_REFERENCE_KEYS := ["description", "text", "body", "name", "title", "tagline", "story", "lore", "greeting", "line", "notes", "author", "unique_feature", "unique_object", "formed_by", "geology", "architecture", "soundscape", "culture"]
+## Keys whose string values are free text and must not be treated as ID references. `built_road` is
+## the id of a road in the built world's roads.json, which the land draws and content only names.
+const NON_REFERENCE_KEYS := ["description", "text", "body", "name", "title", "tagline", "story", "lore", "greeting", "line", "notes", "author", "unique_feature", "unique_object", "formed_by", "geology", "architecture", "soundscape", "culture", "built_road"]
 
 
 static func validate_def(def: Dictionary, source: String) -> Array[String]:
