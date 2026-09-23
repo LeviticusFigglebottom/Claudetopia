@@ -111,6 +111,11 @@ func _read_plan() -> Dictionary:
 
 
 func _load_world() -> World:
+	var world_status := WorldStatus.current()
+	if not bool(world_status.get("playable", false)):
+		# a photograph of a void is not a photograph of the country
+		Log.error("Capture", "%s %s" % [str(world_status.get("title", "")), str(world_status.get("detail", ""))])
+		return null
 	var packed: PackedScene = load(WORLD_SCENE)
 	if packed == null:
 		return null
