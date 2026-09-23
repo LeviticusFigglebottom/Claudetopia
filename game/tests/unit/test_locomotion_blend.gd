@@ -201,11 +201,15 @@ func test_turning_on_the_spot_plays_the_turn_at_its_rate() -> void:
 			var now := _soles(m)
 			slid += _slid(m, last, now)
 			last = now
-		report.append("%s over %.2f s: %s, the feet slid %.1f cm, %s after" % [c[0], c[2], seen, slid * 100.0,
-				"still turning" if m.current_turn() != "" else "standing"])
+		# the heels, once the body has stood a moment: a turn pivots on the balls, and a foot left
+		# on its ball stands on tiptoe
+		var heels := maxf((last["L_heel"] as Vector3).y, (last["R_heel"] as Vector3).y) - _root.global_position.y
+		report.append("%s over %.2f s: %s, the feet slid %.1f cm, %s after, heels %.1f cm up" % [c[0], c[2], seen, slid * 100.0,
+				"still turning" if m.current_turn() != "" else "standing", heels * 100.0])
 		assert_eq(seen, str(c[3]), "%s played %s" % [c[0], seen])
 		assert_eq(m.current_turn(), "", "%s: the turn went on after the body stopped turning" % c[0])
 		assert_true(slid < 0.06, "%s: the feet slid %.1f cm on the ground" % [c[0], slid * 100.0])
+		assert_true(heels < 0.01, "%s: after it the body stood with its heels %.1f cm off the ground" % [c[0], heels * 100.0])
 		after_each()
 	print("    turning on the spot: %s" % "; ".join(report))
 

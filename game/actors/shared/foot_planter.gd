@@ -29,7 +29,8 @@ const STEP_LIFT := 0.06
 ## The share of a step at each end spent lifting the foot off the ground and setting it down,
 ## straight up and down: it travels only in between, when it is clear of the ground.
 const STEP_LIFTING := 0.12
-## While the body settles, a foot this far (m) or this turned (rad) from its place steps into it...
+## While the body settles, a foot this far (m) or this turned (rad, its heading) from its place
+## steps into it...
 const STEP_FROM := 0.03
 const TURN_FROM := 0.15
 ## ...and once it has settled, only when the body has turned or drifted this far from the foot.
@@ -37,6 +38,13 @@ const REPLANT_FROM := 0.10
 const RETURN_FROM := 0.35
 ## seconds after planting before the looser thresholds take over
 const SETTLE_S := 0.9
+## A held foot on the ground that is in its place, while neither foot steps, settles to the tilt
+## the clips give it, turning about the lower of its heel and ball, which stays put, over this
+## long (s). A turn on the spot pivots on the balls with the heels 8° up, and the feet it left
+## stood on tiptoe, the heels 3 cm off the ground, until the body next moved: a tilt is not a
+## heading, and never made a step. A foot still to step is left as it is: the back foot of a
+## stop, flattened on its ball before it stepped, pulled the hips 20 cm down to reach it.
+const FLATTEN_S := 0.08
 ## A foot caught in the air (see DOWN_WITHIN) comes down first, and at once, whatever the other
 ## foot is doing.
 const AIRBORNE_NEED := 10.0
@@ -225,6 +233,8 @@ func update(delta: float, ground_speed: float, busy: bool, hold_still := false) 
 		_since += delta
 		if not hold_still or is_stepping():
 			_step(delta, anim)
+		if not hold_still:
+			_flatten(delta, anim)
 	_pose(xf, anim)
 
 
@@ -332,15 +342,54 @@ func _need(i: int, at: Transform3D) -> float:
 	var f := _feet[i]
 	var off := at.origin - f.pos
 	var flat := Vector2(off.x, off.z).length()
-	var turn := f.rot.angle_to(at.basis.get_rotation_quaternion())
 	var xf := _sk.global_transform
-	var height := _sole_height(f, xf.affine_inverse() * f.pos, xf.basis.get_rotation_quaternion().inverse() * f.rot)
+	var body := xf.basis.get_rotation_quaternion().inverse()
+	var turn := absf(angle_difference(_heading(f, body * at.basis.get_rotation_quaternion()), _heading(f, body * f.rot)))
+	var height := _sole_height(f, xf.affine_inverse() * f.pos, body * f.rot)
 	if height > DOWN_WITHIN and off.length() > 0.01:
 		return AIRBORNE_NEED + flat
 	var settling := _since < SETTLE_S
 	if flat > (STEP_FROM if settling else REPLANT_FROM) or turn > (TURN_FROM if settling else RETURN_FROM):
 		return flat + turn * 0.1
 	return 0.0
+
+
+## The way foot `f` points about the vertical (rad), turned `rot` (skeleton space): the line from
+## its ankle to its ball, seen from above.
+func _heading(f: Foot, rot: Quaternion) -> float:
+	var ahead := rot * (f.ball if f.toe >= 0 else Vector3.FORWARD)
+	return atan2(ahead.x, ahead.z)
+
+
+## Settles each held foot on the ground in its place to the tilt the clips give it (see
+## FLATTEN_S), keeping its own heading, turned about the lower of its heel and ball.
+func _flatten(delta: float, anim: Array[Transform3D]) -> void:
+	if is_stepping():
+		return
+	var xf := _sk.global_transform
+	var inv := xf.affine_inverse()
+	var body := xf.basis.get_rotation_quaternion()
+	var body_inv := body.inverse()
+	var w := 1.0 - exp(-delta / FLATTEN_S)
+	for i in _feet.size():
+		var f := _feet[i]
+		if f.toe < 0 or _need(i, anim[i]) > 0.0:
+			continue
+		var p := inv * f.pos
+		var r := body_inv * f.rot
+		if _sole_height(f, p, r) > DOWN_WITHIN:
+			continue
+		var want := body_inv * anim[i].basis.get_rotation_quaternion()
+		var level := (Quaternion(Vector3.UP, angle_difference(_heading(f, want), _heading(f, r))) * want).normalized()
+		if r.angle_to(level) < 0.002:
+			continue
+		var heel := p + r * f.heel
+		var ball := p + r * f.ball
+		var pivot := f.ball if ball.y - f.ball_height <= heel.y else f.heel
+		var at := p + r * pivot
+		var q := r.slerp(level, w).normalized()
+		f.pos = xf * (at - q * pivot)
+		f.rot = (body * q).normalized()
 
 
 ## Where foot `i` is held this frame, in the world: where it stands, or on its way through a step,

@@ -1233,3 +1233,20 @@ into the landing, and that frame slides the foot: 2.0 cm in a stop from a sprint
 1.3, the mean of eight. The feet end the braking further apart, and the hips come down as much as
 8.6 cm for them from a jog and 6.3 from a sprint (2.8 and 0.5 before) until the feet have stepped
 in. The trailing leg still hangs in the air behind while the body brakes.
+
+## 2026-09-23 · A foot a turn leaves on its ball puts its heel down
+**Decision.** A held foot on the ground that is in its place, while neither foot steps, settles to
+the tilt the clips give it over 0.08 s, turning about the lower of its heel and its ball (which
+stays put) and keeping its own heading. A held foot steps for its heading (0.15 rad from its place
+while the body settles, 0.35 after), no longer for its tilt.
+**Why.** The turns on the spot pivot on the balls with the heels 8° up, and the planter held the
+feet where the turn left them: after every turn the body stood on tiptoe, its heels 3.0 cm off
+the ground, until it next moved. The tilt counted toward the turn that makes a step, but 8° is
+under 0.15 rad, so it never made one. Now the heels are down (0.0 cm); a quarter turn slides
+1.1 cm in all and an about-face 3.9 (0.9 and 3.7 before).
+**Alternatives.** Turn clips that end flat: a turn ends wherever the body stops turning, not at the
+end of its cycle. Flattening every held foot: the back foot of a stop, flattened on its ball before
+it stepped, was pulled back and down, and the hips came 20 cm down to reach it.
+**Consequences.** A stop's feet are stepped into the stance as before, and land at the clips'
+tilt. With the step judged by heading alone, the hips come down 5.2 cm at the most in a stop from a
+walk (7.8 before); a jog's and a sprint's are unchanged at 8.6 and 6.3.
