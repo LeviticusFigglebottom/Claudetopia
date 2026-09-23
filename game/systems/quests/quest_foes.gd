@@ -34,6 +34,9 @@ const LEAVE_M := 520.0
 ## How far round the place a group stands, as a ring (metres), inside a kill objective's radius.
 const RING_MIN_M := 9.0
 const RING_MAX_M := 22.0
+## How far above a spot the look for anything standing over it starts: above the tallest thing the
+## world stands (the Choir's colossi are fifty metres).
+const OVERHEAD_M := 120.0
 const POLL_S := 1.0
 const OWN := "own"
 
@@ -200,7 +203,8 @@ func living_near(enemy_id: String, at: Vector3, radius: float) -> int:
 
 
 ## `count` points on the ground round `at`, each with room for a body: the same points every time
-## for the same objective, off walls, props and water where the world says so.
+## for the same objective, off walls, props and water where the world says so, and never under or
+## inside anything solid.
 func clear_ground(key: String, at: Vector3, count: int) -> Array[Vector3]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = abs(key.hash())
@@ -229,6 +233,17 @@ func _blocked(p: Vector3) -> bool:
 	var world := get_viewport().get_world_3d() if is_inside_tree() else null
 	if world == null:
 		return false
+	var space := world.direct_space_state
+	# A landmark's collision is its mesh's surface (WorldStreamer._add_collision), so a body standing
+	# inside the Choir's colossus touches nothing, and the query below called the spot clear. Two of
+	# the Naming's three ash-wights were stood inside its robe, where nobody could reach them and the
+	# Naming could not be finished. Anything solid straight overhead means under a roof or inside a
+	# hull, and no place for a foe. The look goes down to a hand above the ground, because a hull's
+	# flared foot is only a little higher than that just inside its edge, and a shape with most of
+	# itself behind a face does not touch it either.
+	var over := PhysicsRayQueryParameters3D.create(p + Vector3.UP * OVERHEAD_M, p + Vector3.UP * 0.3, 1 << 0)
+	if not space.intersect_ray(over).is_empty():
+		return true
 	var shape := CapsuleShape3D.new()
 	shape.radius = 0.45
 	shape.height = 1.7
@@ -236,7 +251,7 @@ func _blocked(p: Vector3) -> bool:
 	q.shape = shape
 	q.collision_mask = 1 << 0
 	q.transform = Transform3D(Basis.IDENTITY, p + Vector3(0.0, 1.05, 0.0))
-	return not world.direct_space_state.intersect_shape(q, 1).is_empty()
+	return not space.intersect_shape(q, 1).is_empty()
 
 
 func _all_fallen(spawner: EnemySpawner) -> bool:
