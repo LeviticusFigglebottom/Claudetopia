@@ -1042,3 +1042,88 @@ whose legs are re-proportioned after the solve. `HumanoidModel.plant_feet` switc
 motion studio films a before and after with it). Still wrong: the slowing down before the stand.
 While the body decelerates, the gait's own feet slide on the ground: 15 cm over a stop from a
 walk, 1.8 cm from a jog, 66 cm from a sprint.
+
+## 2026-09-23 · Every clip starts on its first frame once, and a foot leaves and meets the ground at its pace
+**Decision.** The forge puts a clip's keys on frames 0..n-1 (they went on 1..n); every loop is a
+whole number of frames at 30 fps, its last frame its first again (`check_contract` refuses one
+that is not; the walk is 29 frames where it was 28.8); a one-shot is sampled on to the frame at or
+past its end. In the stride model a swing foot leaves the ground and comes down on it at the
+ground's own pace, eased in and out in the world (`swing_settle`: 1 for the walks, the backpedal
+and the side-steps, 0.7 for Trot, 0.5 for Run and 0.15 for Sprint, where the full ease carries
+the foot too far out in front and pulls the hips down); `swing_lag` and `swing_reach`, which
+faked the heel recovery and the reach by hand, are gone. Walk_Back (1.8 m/s) and the side-steps
+(3.0 m/s, a shuffle with a little flight, the swing foot crossing in front) are made on the
+stride model at the locked-on paces, and a slow run, Trot (3.6 m/s), stands between the brisk
+walk and the jog.
+**Why.** Every clip began with its first frame twice: the glTF exporter wrote keys at frame / fps
+from 1/30 s, and Godot's importer sampled from 0 and held the first pose. A loop stood still for a
+frame once a cycle with its left foot just down, and the foot was carried along the ground at the
+body's speed. And an eased swing starts and stops still in the body's frame, which moves at the
+body's speed in the world, so every foot scuffed forward as it lifted and landed running. On the
+heel and ball of the feet (the points that bear on the ground; tests/unit/foot_contact.gd), in the
+forge's own sampling, a stride slid 5.3, 6.0 and 4.1 cm at a walk, a jog and a sprint; 0.4 now.
+In the game, played through the 30 fps keys: 3.2, 2.5 and 3.1 cm a stride, 3.0 sneaking, 1.8
+backpedalling, 4.5 side-stepping (the side-steps were 23 cm, made at 1.9 m/s and played at 1.58x).
+**Alternatives.** Baking at 60 frames a second halves what a frame carries a foot and doubles the
+clips; the ease in the world gets most of it at 30. IK on every footfall would hide all of it.
+**Consequences.** Every one-shot is a frame shorter and starts a frame sooner, in step with the
+events its sidecar always gave. The clips are baked with `bake_clips.py` and transplanted, the
+body untouched.
+
+## 2026-09-23 · Whichever way the body goes, the legs go the nearest of four ways and the hips turn the rest
+**Decision.** The legs play one of four clips, the one whose way is nearest the way the body
+goes: ahead (the gaits) and back (Walk_Back) each take the ways within 67.5° of them, the
+side-steps the rest; a way is left only 10° past its edge, and the legs hand over across 0.15 s.
+The hips are turned the rest of the way toward where the body goes, over 0.08 s, and the chest is
+turned back 80% of that to face ahead (`HumanoidModel._turn_the_hips`). The whole pace is played
+along the stride.
+**Why.** Blended by the share of the pace that went sideways, a side-step and a run put the
+planted foot on a line between their two footfalls: locked on, the planted foot moved at 28% of
+the ground's speed on the diagonal ahead (3.64 m/s) and 23% backing off diagonally (2.18). Now
+2% and 5%. On the heel and ball, 79 and 49 cm a stride before the clips were re-made, 3.7 and 7.7
+now; the Trot takes most of the diagonal ahead, which a walk and a jog blended half and half left
+at 11.
+**Alternatives.** Diagonal clips, eight ways: four more clips to keep in step, and a stick
+between two of them blends again. Turning the whole body to the way it goes: the locked-on body
+has to face its foe.
+**Consequences.** A body always faces where it is going when it is not locked on, blocking or in
+first person, so the hips turn only then, and only as far as 77.5°.
+
+## 2026-09-23 · A turn on the spot is a turn, played at the rate the body turns
+**Decision.** A body standing (under 0.3 m/s) that turns faster than 60°/s plays a turn on the
+spot, Turn_L90 or Turn_R90, two steps round a quarter turn; one begun faster than 200°/s plays
+the quick about-face, Turn_L180 or Turn_R180, a long pivot step and the other foot round after
+it. The clips are made in the turning body's frame and played at the rate it turns (a cycle for
+every `turn` degrees in the sidecar), the way the gaits are played at the ground's speed, so a
+foot on the ground stays where it went down; the feet pivot on their balls, the head leads and
+the shoulders follow. A turn picks up as far round as the body has already come, comes in over
+0.03 s with the planted feet held under it, and ends when the body has turned slower than 30°/s
+for 0.08 s; the feet are then planted and stepped into the stance, as after a stop. Slower than
+60°/s the planted feet step round by themselves. The player's side-step (`turn_step_pace`) is
+gone: the model reads the body's own turn, so a villager or a foe turning on the spot steps the
+same way.
+**Why.** The side-step told the legs to walk sideways at the pace the feet go round the middle:
+it read as a shuffle, and a step sideways is not a step round. Measured on the heel and ball: a
+quarter turn over 0.7 s slides 0.9 cm in all, an about-face over 0.35 s 3.7 cm.
+**Alternatives.** Turn clips that turn the body themselves (root motion): the body would turn only
+as fast as the clip, and a flick of the view would wait on it.
+**Consequences.** A turn faster than 2.5 times the clip's own pace (321°/s for the quarter turn,
+750°/s for the about-face) turns the feet with the body for the rest; the player's standing turn
+tops out at 900°/s, so the start of the fastest flick still pivots a little.
+
+## 2026-09-23 · Braking, the legs keep the gait they were in
+**Decision.** Slowing faster than 6 m/s², the legs hold the gait they were in and go on at the
+ground's pace, however slow, with no floor on the stride's rate, until the body stands and the
+feet are planted; the hold lets go when the body speeds up, settles to a steady pace or has
+settled into its stance, easing back to the gait its pace calls for.
+**Why.** Slowing, the gait blended down through the slower gaits, and a run's feet and a walk's
+are down for different shares of a stride: while the body slowed, the heel and ball slid 0.8 cm
+in a stop from a walk, 40 cm from a jog and 35 cm from a sprint (the mean of eight stops begun at
+eight points of the stride). Now 0.1, 0.5 and 1.3 cm; with the settle after the stand, 0.7 cm at
+the most.
+**Alternatives.** Stop clips, one for each foot, chosen by where the stride is and timed to the
+distance left: the usual way, and it still needs the stride's phase matched and one per gait.
+**Consequences.** The last stride of a stop keeps its length and slows its cadence with the
+body, where a braking runner would shorten the stride at the same cadence; a stop clip is the
+next thing if it reads as slow motion. A stop from a sprint ends in the sprint's pose for a
+frame before the feet are planted and step in.

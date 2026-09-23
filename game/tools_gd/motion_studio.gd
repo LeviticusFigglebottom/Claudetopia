@@ -14,10 +14,12 @@ extends Node3D
 ##
 ## Plan: {"sequences": [{"label": "start_stop", "view": "side" | "feet" | "player" | "front",
 ##          "length": s, "keys": [[t, "W", true], [t, "W", false], ...],
-##          "look": [[t, dx], ...], "hud": false, "menu": "", "plant_feet": true,
+##          "look": [[t, dx], [t, dx, seconds], ...], "target": [x, y, z],
+##          "hud": false, "menu": "", "plant_feet": true,
 ##          "shots": {"from": s, "every": s, "count": n}  or  [t, t, ...]}]}
 ## A key is a real key event through the input map, so through the bindings as the game sets them
-## up. "look" turns the view as a mouse moving `dx` pixels would; "hud" puts the HUD up and "menu"
+## up. "look" turns the view as a mouse moving `dx` pixels would, all at once or spread evenly over
+## `seconds`; "target" stands a post there that a lock can take; "hud" puts the HUD up and "menu"
 ## opens that screen (UI.open) before the first tick. "feet" is the side view brought down to the
 ## feet, close; "plant_feet": false films the body as it stopped before its feet were held
 ## (HumanoidModel.plant_feet), for a before and after in one run. Every sequence starts from a body
@@ -141,8 +143,12 @@ func _sequence(seq: Dictionary) -> void:
 		await get_tree().physics_frame
 	if str(seq.get("menu", "")) != "":
 		UI.open(str(seq["menu"]))
+	var target: Array = seq.get("target", [])
+	if target.size() == 3:
+		_stand_target(Vector3(float(target[0]), float(target[1]), float(target[2])))
 	var keys: Array = seq.get("keys", []).duplicate()
 	var looks: Array = seq.get("look", []).duplicate()
+	var turning: Array = []        # [until, dx a tick]
 	var shots := _shot_times(seq.get("shots", []))
 	var length := float(seq.get("length", (shots[shots.size() - 1] + 0.1) if not shots.is_empty() else 1.0))
 	var view := str(seq.get("view", "side"))
@@ -160,7 +166,15 @@ func _sequence(seq: Dictionary) -> void:
 			_send_key(str(k[1]), bool(k[2]))
 		while not looks.is_empty() and float(looks[0][0]) <= t + 0.0001:
 			var l: Array = looks.pop_front()
-			_player.camera_rig.add_mouse_look(Vector2(float(l[1]), 0.0))
+			if l.size() >= 3 and float(l[2]) > dt:
+				turning = [float(l[0]) + float(l[2]), float(l[1]) * dt / float(l[2])]
+			else:
+				_player.camera_rig.add_mouse_look(Vector2(float(l[1]), 0.0))
+		if not turning.is_empty():
+			if t < float(turning[0]) - 0.0001:
+				_player.camera_rig.add_mouse_look(Vector2(float(turning[1]), 0.0))
+			else:
+				turning = []
 		if shot < shots.size() and shots[shot] <= t + 0.0001:
 			await _shoot(label, shot, view)
 			shot += 1
@@ -169,6 +183,27 @@ func _sequence(seq: Dictionary) -> void:
 	for key in _held.keys():
 		_send_key(str(key), false)
 	HumanoidModel.plant_feet = true
+	for post in get_tree().get_nodes_in_group(LockOn.GROUP):
+		if post.get_parent() == self:
+			post.queue_free()
+
+
+## A post a lock can take (group LockOn.GROUP, alive), standing at `at`.
+func _stand_target(at: Vector3) -> void:
+	var script := GDScript.new()
+	script.source_code = "extends Node3D\nfunc is_alive() -> bool:\n\treturn true\nfunc lock_point() -> Vector3:\n\treturn global_position + Vector3.UP * 1.2\n"
+	script.reload()
+	var post := Node3D.new()
+	post.set_script(script)
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.3, 1.8, 0.3)
+	mesh.mesh = box
+	mesh.position = Vector3(0.0, 0.9, 0.0)
+	post.add_child(mesh)
+	add_child(post)
+	post.global_position = at
+	post.add_to_group(LockOn.GROUP)
 
 
 func _shot_times(spec: Variant) -> Array[float]:
@@ -253,13 +288,15 @@ func _describe(label: String, n: int) -> String:
 
 
 ## A key as a keyboard sends it, through the input map: a modifier key reports itself held.
-## "LMB" and "RMB" are the mouse's buttons.
+## "LMB", "RMB" and "MMB" are the mouse's buttons.
 func _send_key(name: String, pressed: bool) -> void:
-	if name in ["LMB", "RMB"]:
+	if name in ["LMB", "RMB", "MMB"]:
 		var mb := InputEventMouseButton.new()
-		mb.button_index = MOUSE_BUTTON_LEFT if name == "LMB" else MOUSE_BUTTON_RIGHT
+		var buttons := {"LMB": [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_MASK_LEFT], "RMB": [MOUSE_BUTTON_RIGHT, MOUSE_BUTTON_MASK_RIGHT],
+				"MMB": [MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_MASK_MIDDLE]}
+		mb.button_index = buttons[name][0]
 		mb.pressed = pressed
-		mb.button_mask = (MOUSE_BUTTON_MASK_LEFT if name == "LMB" else MOUSE_BUTTON_MASK_RIGHT) if pressed else 0
+		mb.button_mask = buttons[name][1] if pressed else 0
 		Input.parse_input_event(mb)
 		Input.flush_buffered_events()
 		if pressed:

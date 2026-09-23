@@ -229,6 +229,16 @@ def locomotion_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         hip_sway=0.02, hip_yaw=8.0, hip_roll=3.0, lean=4.0, arm_swing=24.0, arm_bend=18.0,
         arm_bend_swing=14.0))
 
+    # A slow run, between the brisk walk and the jog: the pace a locked-on body goes at on the
+    # diagonal ahead (3.64 m/s), where a walk and a jog blended half and half put their feet down
+    # for different shares of a stride and the feet slid 11 cm a stride.
+    out["Trot"] = gait_clip(skel, "Trot", GaitParams(
+        speed=3.6, period=22.0 / FPS, duty=0.36, contact_ahead=0.34, bob_mode="run", hip_drop=0.03,
+        hip_bob=0.02, soft_reach=0.05, heel_strike=8.0, land_pitch=8.0, heel_rise=65.0,
+        heel_rise_from=0.4, swing_from_pitch=-65.0, step_height=0.18, swing_peak=0.72,
+        knee_drive=0.06, swing_settle=0.7, hip_sway=0.013, hip_yaw=7.0, hip_roll=3.5, lean=7.0,
+        arm_swing=32.0, arm_bend=75.0, arm_bend_swing=14.0, hands_up=True, head_bob=0.65))
+
     # The default gait (the contract's name for it is Run): a jog.
     out["Run"] = gait_clip(skel, "Run", GaitParams(
         speed=5.0, period=0.70, duty=0.28, contact_ahead=0.33, bob_mode="run", hip_drop=0.035,
@@ -273,12 +283,15 @@ def locomotion_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     # rate it turns, a cycle for every `turn` degrees, the way a gait is played at the ground's
     # speed. A quarter turn is two steps round; the about-face is quicker and wider, the lead foot
     # opening a long pivot step and the other swinging round after it.
-    out["Turn_L90"] = anim.turn_clip(skel, "Turn_L90", 90.0, 21.0 / FPS, 0.06, 0.44, 0.50, 0.90)
-    out["Turn_R90"] = anim.turn_clip(skel, "Turn_R90", -90.0, 21.0 / FPS, 0.06, 0.44, 0.50, 0.90)
+    spread, toe_out = STANCES["idle"][0], STANCES["idle"][3]
+    out["Turn_L90"] = anim.turn_clip(skel, "Turn_L90", 90.0, 21.0 / FPS, 0.06, 0.44, 0.50, 0.90,
+                                     spread=spread, toe_out=toe_out)
+    out["Turn_R90"] = anim.turn_clip(skel, "Turn_R90", -90.0, 21.0 / FPS, 0.06, 0.44, 0.50, 0.90,
+                                     spread=spread, toe_out=toe_out)
     out["Turn_L180"] = anim.turn_clip(skel, "Turn_L180", 180.0, 18.0 / FPS, 0.04, 0.40, 0.46, 0.86,
-                                      pivot=0.6, step_height=0.08, look=18.0)
+                                      pivot=0.6, step_height=0.08, look=18.0, spread=spread, toe_out=toe_out)
     out["Turn_R180"] = anim.turn_clip(skel, "Turn_R180", -180.0, 18.0 / FPS, 0.04, 0.40, 0.46, 0.86,
-                                      pivot=0.6, step_height=0.08, look=18.0)
+                                      pivot=0.6, step_height=0.08, look=18.0, spread=spread, toe_out=toe_out)
 
     sneak = ClipBuilder(skel, "Sneak_Idle", 3.6, loop=True, grounded=True)
     set_stance(sneak, "crouch")
@@ -1410,7 +1423,7 @@ def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
 
 REQUIRED_CLIPS: List[str] = [
-    "Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Idle",
+    "Idle", "Idle_Combat", "Walk", "Walk_Back", "Trot", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Idle",
     "Sneak_Walk", "Turn_L90", "Turn_R90", "Turn_L180", "Turn_R180", "Jump_Start", "Jump_Loop", "Jump_Land", "Fall_Loop",
     "Dodge_F", "Dodge_B", "Dodge_L", "Dodge_R",
     "Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Light_3", "Attack_1H_Heavy",
@@ -1425,10 +1438,10 @@ REQUIRED_CLIPS: List[str] = [
     "Bow_Gesture", "Laugh", "Rude", "Dance", "Cheer", "Cower", "Point", "Drink", "Eat", "Read",
 ]
 ATTACK_CLIPS = [c for c in REQUIRED_CLIPS if c.startswith("Attack_")] + ["Riposte", "Backstab"]
-LOCOMOTION_CLIPS = ["Walk", "Walk_Back", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Walk"]
+LOCOMOTION_CLIPS = ["Walk", "Walk_Back", "Trot", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Walk"]
 ## The gaits the game blends in phase and plays stride-matched: each carries its ground speed in
 ## the sidecar (`speed`), and each puts its left foot down at phase 0 and its right at 0.5.
-GAIT_CLIPS = ["Walk", "Run", "Sprint", "Sneak_Walk", "Walk_Back", "Strafe_L", "Strafe_R"]
+GAIT_CLIPS = ["Walk", "Trot", "Run", "Sprint", "Sneak_Walk", "Walk_Back", "Strafe_L", "Strafe_R"]
 ## The turns on the spot, played at the rate the body turns: each carries the angle one cycle
 ## covers in the sidecar (`turn`, degrees, + to the left).
 TURN_CLIPS = ["Turn_L90", "Turn_R90", "Turn_L180", "Turn_R180"]

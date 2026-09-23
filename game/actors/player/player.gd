@@ -67,16 +67,6 @@ const ALIGN_NONE := deg_to_rad(150.0)
 const SPRINT_RESUME := 0.25
 ## A press of Sprint let go within this long is a tap, and a tap rolls (see _read_sprint_tap).
 const SPRINT_TAP_S := 0.22
-## Turning on the spot. A body standing (below TURN_STEP_BELOW m/s) that turns faster than
-## TURN_STEP_FROM steps round, instead of pivoting on planted feet: the model is told a side-step
-## at the pace the feet would travel round the body (TURN_STEP_RADIUS from its middle), no more
-## than TURN_STEP_MAX. TURN_STEP_EASE eases it in and out so a flick of the view is a step or
-## two, not a twitch.
-const TURN_STEP_FROM := deg_to_rad(60.0)
-const TURN_STEP_BELOW := 0.5
-const TURN_STEP_RADIUS := 0.18
-const TURN_STEP_MAX := 1.4
-const TURN_STEP_EASE := 12.0
 const JUMP_HEIGHT := 1.1
 ## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
@@ -177,9 +167,6 @@ var _ground_speed: float = 0.0
 var _free_tick: int = -2
 ## The heightfield held the body up last tick (open country has no collider under it).
 var _terrain_held: bool = false
-## Turning on the spot (see TURN_STEP_*): the yaw a tick ago, and the side-step pace being shown.
-var _step_last_yaw := 0.0
-var _turn_step := 0.0
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
 
@@ -816,13 +803,14 @@ func _damp_horizontal(delta: float, rate: float) -> void:
 	velocity.z = horizontal.z
 
 
-func _update_locomotion_anim(delta: float) -> void:
+func _update_locomotion_anim(_delta: float) -> void:
 	# the ground velocity the body really made, in its own frame, m/s: the model plays the gait
 	# at the rate that keeps its feet planted under exactly that
 	var v := get_real_velocity()
 	var local := global_transform.basis.inverse() * Vector3(v.x, 0.0, v.z)
 	var told := Vector2(local.x, -local.z)
-	told.x += turn_step_pace(told.length(), delta)
+	# turning on the spot is the model's to show: it reads the body's own turn and plays the turn
+	# clips at its rate (HumanoidModel._update_turn)
 	anim.set_locomotion(told, is_sneaking)
 	if state == State.FREE and not anim.is_busy() and not is_blocking:
 		if not is_on_floor() and velocity.y < -3.0 and not anim.is_playing("Fall_Loop"):
@@ -830,20 +818,6 @@ func _update_locomotion_anim(delta: float) -> void:
 		elif is_on_floor() and anim.is_playing("Fall_Loop"):
 			anim.stop()
 	model.visible = not camera_rig.first_person
-
-
-## The side-step pace (m/s, + to the right) the legs are shown while the body turns on the spot;
-## 0 when it moves, stands still, or is busy. A turn to the left steps to the left.
-func turn_step_pace(ground_speed: float, delta: float) -> float:
-	var turn := wrapf(rotation.y - _step_last_yaw, -PI, PI) / maxf(delta, 0.0001)
-	_step_last_yaw = rotation.y
-	var want := 0.0
-	if state == State.FREE and ground_speed < TURN_STEP_BELOW and absf(turn) > TURN_STEP_FROM and _on_ground():
-		want = clampf(-turn * TURN_STEP_RADIUS, -TURN_STEP_MAX, TURN_STEP_MAX)
-	_turn_step = lerpf(_turn_step, want, 1.0 - exp(-TURN_STEP_EASE * delta))
-	if absf(_turn_step) < 0.02 and want == 0.0:
-		_turn_step = 0.0
-	return _turn_step
 
 
 # --- ATTACK -------------------------------------------------------------------------------------
@@ -1243,8 +1217,9 @@ func teleport(position: Vector3, yaw: float) -> void:
 	velocity = Vector3.ZERO
 	_ground_speed = 0.0
 	_free_tick = -2
-	_step_last_yaw = yaw          # a body put down facing a new way has not turned on the spot
-	_turn_step = 0.0
+	var body := body_model()
+	if body != null and body.has_method("reset_heading"):
+		body.reset_heading()      # a body put down facing a new way has not turned on the spot
 	camera_rig.yaw = yaw
 	reset_physics_interpolation()
 	camera_rig.snap_to_target()

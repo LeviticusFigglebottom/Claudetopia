@@ -24,7 +24,7 @@ const SOCKET_BONES: Array[String] = [
 ]
 ## CONTRACTS.md §3 — required clip names.
 const REQUIRED_CLIPS: Array[String] = [
-	"Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Sprint", "Strafe_L", "Strafe_R",
+	"Idle", "Idle_Combat", "Walk", "Walk_Back", "Trot", "Run", "Sprint", "Strafe_L", "Strafe_R",
 	"Sneak_Idle", "Sneak_Walk", "Turn_L90", "Turn_R90", "Turn_L180", "Turn_R180", "Jump_Start", "Jump_Loop", "Jump_Land", "Fall_Loop",
 	"Dodge_F", "Dodge_B", "Dodge_L", "Dodge_R",
 	"Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Light_3", "Attack_1H_Heavy",

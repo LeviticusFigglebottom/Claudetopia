@@ -49,7 +49,7 @@ Exported as glTF animations on the model; loop flag and events in a sidecar
  "Attack_1H_Light_1": {"loop": false, "length": 0.8, "events": [{"t": 0.32, "name": "hit_start"}, {"t": 0.48, "name": "hit_end"}, {"t": 0.55, "name": "cancel_ok"}]}}
 ```
 Required clip names (v1):
-* Locomotion: `Idle`, `Idle_Combat`, `Walk`, `Walk_Back`, `Run`, `Sprint`, `Strafe_L`,
+* Locomotion: `Idle`, `Idle_Combat`, `Walk`, `Walk_Back`, `Trot`, `Run`, `Sprint`, `Strafe_L`,
   `Strafe_R`, `Sneak_Idle`, `Sneak_Walk`, `Turn_L90`, `Turn_R90`, `Turn_L180`, `Turn_R180`,
   `Jump_Start`, `Jump_Loop`, `Jump_Land`, `Fall_Loop`
 * Dodge: `Dodge_F`, `Dodge_B`, `Dodge_L`, `Dodge_R` (roll; i-frames from data)
@@ -70,7 +70,8 @@ has footstep events. Death clips end in a held pose.
 Every locomotion clip's sidecar carries `"speed"`: the ground speed in m/s at which its planted
 foot stands still. It is load-bearing. The game plays a gait at (ground speed / `speed`), so a
 clip authored at the wrong speed slides its feet by exactly the difference. `Walk`, `Run` and
-`Sprint` are the three gaits of DESIGN §5.2 (1.8, 5.0 and 7.8 m/s), `Sneak_Walk` is sneak
+`Sprint` are the three gaits of DESIGN §5.2 (1.8, 5.0 and 7.8 m/s), `Trot` a slow run between
+the walk and the jog (3.6), `Sneak_Walk` is sneak
 (1.5), and `Walk_Back` and `Strafe_L`/`_R` are the locked-on backpedal and side-steps (1.8 and
 3.0). The gaits also share a phase: the left foot goes down at phase 0 and the right at 0.5 in
 every one of them, because the game blends them on one normalised timeline. A gait that

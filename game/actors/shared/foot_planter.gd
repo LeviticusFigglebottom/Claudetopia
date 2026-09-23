@@ -139,8 +139,10 @@ func release() -> void:
 
 
 ## One frame, after the clips have posed the body. `ground_speed` is the body's speed over the
-## ground (m/s); `busy` says a one-shot (or anything else that moves the feet itself) has it.
-func update(delta: float, ground_speed: float, busy: bool) -> void:
+## ground (m/s); `busy` says a one-shot (or anything else that moves the feet itself) has it;
+## `hold_still` keeps the feet where they are without starting a step (a turn on the spot coming
+## in over them, which takes them from here where they stand).
+func update(delta: float, ground_speed: float, busy: bool, hold_still := false) -> void:
 	var xf := _sk.global_transform
 	var rise := 0.0
 	if not is_nan(_last_y) and delta > 0.0:
@@ -172,7 +174,8 @@ func update(delta: float, ground_speed: float, busy: bool) -> void:
 			_let_go()
 			_plant(anim)
 		_since += delta
-		_step(delta, anim)
+		if not hold_still or is_stepping():
+			_step(delta, anim)
 	_pose(xf, anim)
 
 

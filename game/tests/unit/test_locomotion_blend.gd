@@ -8,6 +8,7 @@ extends TestCase
 ## sprint played the Walk clip and slid at 76%; a villager walking at 2.2 m/s stood in its idle.
 
 const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
+const FootContact := preload("res://tests/unit/foot_contact.gd")
 const NPC_SCENE := "res://actors/npc/npc.tscn"
 const DT := 1.0 / 120.0
 
@@ -105,9 +106,12 @@ func test_the_planted_foot_stays_planted() -> void:
 		["sprint", Vector2(0.0, Player.SPRINT_SPEED), false, 0.05],
 		["sneak", Vector2(0.0, Player.SNEAK_SPEED), true, 0.05],
 		["villager", Vector2(0.0, 2.2), false, 0.08],
-		["strafe right", Vector2(Player.LOCKED_SIDE, 0.0), false, 0.08],
-		["backpedal, locked on", Vector2(0.0, -Player.LOCKED_BACK), false, 0.08],
+		["strafe right", Vector2(Player.LOCKED_SIDE, 0.0), false, 0.05],
+		["strafe left", Vector2(-Player.LOCKED_SIDE, 0.0), false, 0.05],
+		["backpedal, locked on", Vector2(0.0, -Player.LOCKED_BACK), false, 0.05],
 		["backpedal", Vector2(0.0, -1.5), false, 0.08],
+		["diagonal ahead, locked on", _locked(Vector2(1.0, 1.0)), false, 0.08],
+		["diagonal back, locked on", _locked(Vector2(-1.0, -1.0)), false, 0.08],
 	]
 	var report: Array[String] = []
 	for c in cases:
@@ -120,6 +124,90 @@ func test_the_planted_foot_stays_planted() -> void:
 			c[0], ground, float(got[0]), share * 100.0])
 		after_each()
 	print("    planted-foot speed as a share of ground speed: %s" % ", ".join(report))
+
+
+## The locked-on velocity for a push `way` (the body's frame, x to its right): the pace of
+## Player.locked_speed in that direction.
+func _locked(way: Vector2) -> Vector2:
+	return way.normalized() * Player.locked_speed(way)
+
+
+## The heel and ball of the feet, the points that bear on the ground, slide no more than a few
+## centimetres a stride at any pace the game moves a body at, the locked-on diagonals included.
+## Each clip lifts and lands its feet at the ground's pace, and a diagonal plays the nearest way's
+## clip with the hips turned the rest of the way; the one ahead is at a slow run's pace (Trot).
+## Before: a jog slid 16 cm a stride (a held frame at every loop, and every foot lifting and
+## landing still in the body's frame, so moving in the world), a 3 m/s side-step 23 cm, and the
+## diagonals, blended from two clips at right angles, 79 and 49 cm.
+func test_the_feet_do_not_slide_along_the_ground() -> void:
+	if not _rig_built():
+		return
+	var cases := [
+		["walk", Vector2(0.0, Player.WALK_SPEED), false, 0.05],
+		["jog", Vector2(0.0, Player.JOG_SPEED), false, 0.04],
+		["sprint", Vector2(0.0, Player.SPRINT_SPEED), false, 0.05],
+		["sneak", Vector2(0.0, Player.SNEAK_SPEED), true, 0.05],
+		["backpedal", Vector2(0.0, -Player.LOCKED_BACK), false, 0.04],
+		["strafe right", Vector2(Player.LOCKED_SIDE, 0.0), false, 0.06],
+		["strafe left", Vector2(-Player.LOCKED_SIDE, 0.0), false, 0.06],
+		["diagonal ahead", _locked(Vector2(1.0, 1.0)), false, 0.06],
+		["diagonal back", _locked(Vector2(-1.0, -1.0)), false, 0.10],
+	]
+	var report: Array[String] = []
+	for c in cases:
+		var m := _model()
+		var v: Vector2 = c[1]
+		var travelled := Vector2.ZERO
+		for i in 240:
+			travelled = _step(m, v, c[2], travelled)
+		var last := _soles(m)
+		var slid := 0.0
+		var strides := 0.0
+		for i in 480:
+			travelled = _step(m, v, c[2], travelled)
+			var now := _soles(m)
+			slid += _slid(m, last, now)
+			last = now
+			strides += float(m.anim_tree.get("parameters/%s/cycle/scale" % HumanoidModel.LOCOMOTION_STATE)) * DT
+		var per := slid / maxf(strides, 0.001)
+		report.append("%s %.1f" % [c[0], per * 100.0])
+		assert_true(per < float(c[3]), "%s at %.2f m/s: the heel and ball slid %.1f cm a stride" % [c[0], v.length(), per * 100.0])
+		after_each()
+	print("    heel and ball slid, cm a stride: %s" % ", ".join(report))
+
+
+## Turning on the spot plays the turn clips at the rate the body turns: a quarter turn at a
+## standing turn's pace steps round in the quarter-turn clip, an about-face at the player's pace in
+## the pivot, and the feet on the ground stay where they went down.
+func test_turning_on_the_spot_plays_the_turn_at_its_rate() -> void:
+	if not _rig_built():
+		return
+	var report: Array[String] = []
+	for c in [["a quarter turn left", 90.0, 0.7, "Turn_L90"], ["a quarter turn right", -90.0, 0.7, "Turn_R90"],
+			["an about-face left", 180.0, 0.35, "Turn_L180"], ["an about-face right", -180.0, 0.35, "Turn_R180"]]:
+		var m := _model()
+		for i in 60:
+			_step(m, Vector2.ZERO, false, Vector2.ZERO)
+		var ticks := int(float(c[2]) / DT)
+		var seen := ""
+		var last := _soles(m)
+		var slid := 0.0
+		for i in ticks + 90:
+			if i < ticks:
+				_root.rotate_y(deg_to_rad(float(c[1])) / ticks)
+			_step(m, Vector2.ZERO, false, Vector2.ZERO)
+			if seen.is_empty() and m.current_turn() != "":
+				seen = m.current_turn()
+			var now := _soles(m)
+			slid += _slid(m, last, now)
+			last = now
+		report.append("%s over %.2f s: %s, the feet slid %.1f cm, %s after" % [c[0], c[2], seen, slid * 100.0,
+				"still turning" if m.current_turn() != "" else "standing"])
+		assert_eq(seen, str(c[3]), "%s played %s" % [c[0], seen])
+		assert_eq(m.current_turn(), "", "%s: the turn went on after the body stopped turning" % c[0])
+		assert_true(slid < 0.06, "%s: the feet slid %.1f cm on the ground" % [c[0], slid * 100.0])
+		after_each()
+	print("    turning on the spot: %s" % "; ".join(report))
 
 
 ## The moving clips share one stride timeline and every blend keeps its silent inputs running,
@@ -184,75 +272,59 @@ func test_the_gaits_stand_up() -> void:
 
 
 ## A stop, from a walk, a jog and a sprint, at the player's own deceleration (a quarter of a
-## second from a jog). While the body is still moving, a foot on the ground keeps pace with the
-## ground, as it does at any speed; once it stands, the legs stop striding, the feet are held
-## where they stand and step into the idle one at a time, and no foot slides along the ground.
+## second from a jog), begun at eight points of the stride. While the body slows, the legs keep the
+## gait they were in at the ground's pace, so a foot on the ground stays put; once it stands, the
+## legs stop striding, the feet are held where they stand and step into the idle one at a time,
+## and no foot slides along the ground.
 ##
-## Before, the stride was timed off a speed smoothed over 0.08 s, which under that deceleration
-## ran up to 1.6 m/s ahead of the body, and it kept stepping at half pace after the body had
-## stopped. Then the gait was cross-faded into the idle under still feet: from a jog, both feet
-## slid 58.6 cm along the ground between them into the idle stance.
+## Before: the stride was timed off a speed smoothed over 0.08 s and kept stepping at half pace
+## after the body had stopped; then the gait was cross-faded into the idle under still feet (58.6
+## cm of slide between the feet from a jog); then, slowing, the gait blended down through the
+## walk, whose feet are down for a different share of the stride than a run's: 40 cm of slide on
+## the way down from a jog, the mean of eight stops, and 35 cm from a sprint.
 func test_a_stop_plants_the_feet_and_steps_them_together() -> void:
 	if not _rig_built():
 		return
 	var report: Array[String] = []
 	for from in [["walk", Player.WALK_SPEED], ["jog", Player.JOG_SPEED], ["sprint", Player.SPRINT_SPEED]]:
-		var got := _stop_from(float(from[1]))
-		report.append("%s: skated %.1f cm moving, stepped %.2f of a stride after standing, slid %.1f cm settling; %d steps, settled in %.2f s, hips down %.1f cm at most, feet left %.1f cm from the idle" % [
-				from[0], got["moving_skate"] * 100.0, got["strides_after"], got["settle_skate"] * 100.0,
-				got["steps"], got["settled_s"], got["drop"] * 100.0, got["left"] * 100.0])
-		if from[0] == "jog":
-			assert_true(got["moving_skate"] < 0.03, "stopping from a %s, a planted foot skated %.1f cm while the body was still moving" % [from[0], got["moving_skate"] * 100.0])
-		assert_true(got["strides_after"] < 0.05, "stopping from a %s, the legs went on striding %.2f of a stride after the body stood" % [from[0], got["strides_after"]])
-		assert_true(got["settle_skate"] < 0.01, "stopping from a %s, the feet slid %.1f cm along the ground settling into the idle" % [from[0], got["settle_skate"] * 100.0])
-		assert_true(got["steps"] <= 2, "stopping from a %s took %d steps to settle" % [from[0], got["steps"]])
-		assert_true(got["settled_s"] < 0.8, "stopping from a %s, the feet were still stepping %.2f s after the body stood" % [from[0], got["settled_s"]])
-		assert_true(got["left"] <= FootPlanter.STEP_FROM + 0.005, "stopping from a %s, a foot was left %.1f cm from its place in the idle" % [from[0], got["left"] * 100.0])
-		after_each()
+		var worst := {"moving_skate": 0.0, "settle_skate": 0.0, "strides_after": 0.0, "steps": 0, "settled_s": 0.0, "drop": 0.0, "left": 0.0}
+		var mean := 0.0
+		for k in 8:
+			var got := _stop_from(float(from[1]), k * 9)
+			mean += float(got["moving_skate"]) / 8.0
+			for key in worst:
+				worst[key] = maxf(float(worst[key]), float(got[key]))
+			after_each()
+		report.append("%s: skated %.1f cm moving (the mean of 8, %.1f at the most), stepped %.2f of a stride after standing, slid %.1f cm settling; %d steps, settled in %.2f s, hips down %.1f cm, feet left %.1f cm from the idle, at the most" % [
+				from[0], mean * 100.0, float(worst["moving_skate"]) * 100.0, worst["strides_after"], float(worst["settle_skate"]) * 100.0,
+				int(worst["steps"]), worst["settled_s"], float(worst["drop"]) * 100.0, float(worst["left"]) * 100.0])
+		assert_true(mean < 0.03, "stopping from a %s, a planted foot skated %.1f cm (the mean of eight stops) while the body was still moving" % [from[0], mean * 100.0])
+		assert_true(float(worst["strides_after"]) < 0.05, "stopping from a %s, the legs went on striding %.2f of a stride after the body stood" % [from[0], worst["strides_after"]])
+		assert_true(float(worst["settle_skate"]) < 0.01, "stopping from a %s, the feet slid %.1f cm along the ground settling into the idle" % [from[0], float(worst["settle_skate"]) * 100.0])
+		assert_true(int(worst["steps"]) <= 2, "stopping from a %s took %d steps to settle" % [from[0], int(worst["steps"])])
+		assert_true(float(worst["settled_s"]) < 0.8, "stopping from a %s, the feet were still stepping %.2f s after the body stood" % [from[0], worst["settled_s"]])
+		assert_true(float(worst["left"]) <= FootPlanter.STEP_FROM + 0.005, "stopping from a %s, a foot was left %.1f cm from its place in the idle" % [from[0], float(worst["left"]) * 100.0])
 	print("    a stop from a %s" % "\n    a stop from a ".join(report))
 
 
-## The two points of each foot that bear on the ground, in the world: the heel and the ball
-## (the Toe bone's head). Each is fixed to the foot, so a foot that rolls about its heel or its
-## ball keeps that point still, and only a foot that slides moves a point that is down.
+## The heel and ball of each foot, in the world (FootContact).
 func _soles(m: HumanoidModel) -> Dictionary:
-	var sk := m.skeleton
-	var xf := _root.global_transform * sk.transform
-	var out := {}
-	for side in ["L", "R"]:
-		var foot := sk.find_bone("Foot." + side)
-		var rest := sk.get_bone_global_rest(foot)
-		var ball := sk.get_bone_global_rest(sk.find_bone("Toe." + side)).origin
-		# the heel stands on the ground under and a little behind the ankle, as low as the ball
-		var heel := rest.affine_inverse() * Vector3(rest.origin.x, ball.y, rest.origin.z - 0.04)
-		var pose := sk.get_bone_global_pose(foot)
-		out[side + "_heel"] = xf * (pose * heel)
-		out[side + "_ball"] = xf * sk.get_bone_global_pose(sk.find_bone("Toe." + side)).origin
-	return out
+	return FootContact.soles(m.skeleton, _root.global_transform * m.skeleton.transform)
 
 
-## How far (m) the points of the feet that were down in both `a` and `b` (two _soles) slid
-## between them. A point is down within 1 cm of the height it stands at.
+## How far (m) the points of the feet that were down in both `a` and `b` (two _soles) slid.
 func _slid(m: HumanoidModel, a: Dictionary, b: Dictionary) -> float:
-	var sk := m.skeleton
-	var ground := sk.get_bone_global_rest(sk.find_bone("Toe.L")).origin.y + _root.global_position.y + 0.01
-	var d := 0.0
-	for key in a:
-		var p: Vector3 = a[key]
-		var q: Vector3 = b[key]
-		if p.y < ground and q.y < ground:
-			d += Vector2(q.x - p.x, q.z - p.z).length()
-	return d
+	return FootContact.slid(m.skeleton, _root.global_position.y, a, b)
 
 
-## The numbers of one stop from `speed` (m/s): how far the points of the feet on the ground slid
+## The numbers of one stop from `speed` (m/s), `later` ticks into the stride: how far the points of the feet on the ground slid
 ## while the body moved and while it settled (m, both feet), the strides the legs took after it
 ## stood, the steps the feet took, how long after standing the last foot came down (s), the most
 ## the hips came down (m), and how far from its place in the idle a foot was left (m).
-func _stop_from(speed: float) -> Dictionary:
+func _stop_from(speed: float, later := 0) -> Dictionary:
 	var m := _model()
 	var travelled := Vector2.ZERO
-	for i in 240:
+	for i in 240 + later:
 		travelled = _step(m, Vector2(0.0, speed), false, travelled)
 	var planter := m.foot_planter()
 	var got := {"moving_skate": 0.0, "settle_skate": 0.0, "strides_after": 0.0, "steps": 0,

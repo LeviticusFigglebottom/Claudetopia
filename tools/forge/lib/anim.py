@@ -1023,7 +1023,8 @@ def _stride_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: boo
 
 def turn_clip(skel: Skeleton, name: str, angle: float, period: float, lead_lift: float, lead_land: float,
               trail_lift: float, trail_land: float, pivot: float = 0.5, step_height: float = 0.06,
-              hip_drop: float = 0.02, look: float = 12.0) -> ClipBuilder:
+              hip_drop: float = 0.02, look: float = 12.0, spread: float = 0.0,
+              toe_out: float = 0.0) -> ClipBuilder:
     """A turn on the spot, one cycle of it: the body comes round `angle` degrees (+ to the left)
     at an even rate while the foot on the side it turns to opens a step round, and the other
     follows it. It starts and ends standing square, so it loops, a turn of any size being played
@@ -1038,7 +1039,9 @@ def turn_clip(skel: Skeleton, name: str, angle: float, period: float, lead_lift:
 
     The lead foot lifts at `lead_lift` and lands at `lead_land` (shares of the cycle), the other
     at `trail_lift` and `trail_land`; each lands where it has to be for the stance to come square
-    at the end of the cycle."""
+    at the end of the cycle. The stance is the idle's (`spread` m wider each side, the toes turned
+    out `toe_out` degrees), so a turn begins with the feet where a standing body has them: on the
+    rest pose's, both balls jumped 3 cm as it took the feet."""
     cb = ClipBuilder(skel, name, period, loop=True, grounded=True)
     cb.extra["speed"] = 0.0
     cb.extra["turn"] = round(float(angle), 3)
@@ -1046,8 +1049,12 @@ def turn_clip(skel: Skeleton, name: str, angle: float, period: float, lead_lift:
     turn = math.radians(angle)
     lead = "L" if angle > 0 else "R"
     trail = "R" if lead == "L" else "L"
-    ball0 = {side: skel.J[f"Toe.{side}"].copy() for side in ("L", "R")}
     ankle0 = {side: skel.J[f"Foot.{side}"].copy() for side in ("L", "R")}
+    ankle0["L"][0] += spread
+    ankle0["R"][0] -= spread
+    yaw0 = {"L": math.radians(toe_out), "R": -math.radians(toe_out)}
+    ball0 = {side: ankle0[side] + rig.rot_axis(UP, yaw0[side]) @ (skel.J[f"Toe.{side}"] - skel.J[f"Foot.{side}"])
+             for side in ("L", "R")}
     heel_up = math.radians(-8.0)          # up on the balls of the feet while turning, to pivot on them
     times = {lead: (lead_lift, lead_land), trail: (trail_lift, trail_land)}
 
@@ -1057,9 +1064,10 @@ def turn_clip(skel: Skeleton, name: str, angle: float, period: float, lead_lift:
     def foot_fn(side: str):
         lift, land = times[side]
         ball = ball0[side]
+        toe = yaw0[side]
         # ball -> ankle, flat and square. The plan gives a foot on its ball as the ankle of the
         # square foot whose ball that is (ClipBuilder.ankle_target turns it about the ball)
-        off = ankle0[side] - ball
+        off = skel.J[f"Foot.{side}"] - skel.J[f"Toe.{side}"]
 
         def planted(p: float, anchor: float, since: float, yaw_at: float):
             # the ball held at `anchor` (the body's turn when it went down), turned back in the
@@ -1074,21 +1082,24 @@ def turn_clip(skel: Skeleton, name: str, angle: float, period: float, lead_lift:
             if p < lift:
                 ang, yaw = planted(p, 0.0, 0.0, 0.0)
                 b = about_up(ball, ang)
-                return b + off, yaw, heel_up, True
+                return b + off, yaw + toe, heel_up, True
             if p >= land:
                 ang, yaw = planted(p, turn, land, land_yaw)
                 b = about_up(ball, ang)
-                return b + off, yaw, heel_up, True
+                return b + off, yaw + toe, heel_up, True
             v = (p - lift) / (land - lift)
             ve = v * v * (3 - 2 * v)
-            a0, y0 = planted(lift, 0.0, 0.0, 0.0)
-            a1 = turn - turn * land
-            ang = a0 + (a1 - a0) * ve
+            _a0, y0 = planted(lift, 0.0, 0.0, 0.0)
+            # round the body from where it went down (the body's heading then, 0) to where it
+            # comes down (its heading at the end of the cycle, `turn`), eased in and out in the
+            # world so it leaves the ground and meets it still, as the gaits' feet do; then back
+            # into the turning body's frame
+            ang = turn * (v * v * v * (v * (v * 6.0 - 15.0) + 10.0)) - turn * p
             yaw = y0 + (land_yaw - y0) * ve
             h = step_height * s * math.sin(math.pi * v) ** 0.9
             b = about_up(ball, ang) + UP * h
             pitch = heel_up + math.radians(-10.0) * math.sin(math.pi * v)
-            return b + off, yaw, pitch, False
+            return b + off, yaw + toe, pitch, False
         return fn
 
     cb.feet.pos_fn["L"] = foot_fn("L")

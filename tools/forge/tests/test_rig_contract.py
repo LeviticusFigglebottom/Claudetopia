@@ -242,7 +242,7 @@ class TestClipLibrary(unittest.TestCase):
         """A planted foot must travel backwards at exactly the clip's speed: the speed the sidecar
         carries, which is the speed the game plays it at (CONTRACTS §3)."""
         from forge.lib import anim_preview
-        cases = {"Walk": (0.0, 1.0), "Run": (0.0, 1.0), "Sprint": (0.0, 1.0),
+        cases = {"Walk": (0.0, 1.0), "Trot": (0.0, 1.0), "Run": (0.0, 1.0), "Sprint": (0.0, 1.0),
                  "Walk_Back": (0.0, -1.0), "Sneak_Walk": (0.0, 1.0),
                  "Strafe_L": (1.0, 0.0), "Strafe_R": (-1.0, 0.0)}
         for name, direction in cases.items():
@@ -255,7 +255,7 @@ class TestClipLibrary(unittest.TestCase):
     # The gaits at the speeds DESIGN §5.2 moves the body at (Player.WALK_SPEED, JOG_SPEED,
     # SPRINT_SPEED, SNEAK_SPEED, and locked on LOCKED_BACK and LOCKED_SIDE; test_humanoid_model
     # checks the game reads the same numbers).
-    GAIT_SPEEDS = {"Walk": 1.8, "Run": 5.0, "Sprint": 7.8, "Sneak_Walk": 1.5,
+    GAIT_SPEEDS = {"Walk": 1.8, "Trot": 3.6, "Run": 5.0, "Sprint": 7.8, "Sneak_Walk": 1.5,
                    "Walk_Back": 1.8, "Strafe_L": 3.0, "Strafe_R": 3.0}
 
     def test_gait_clips_carry_the_games_speeds(self) -> None:
@@ -270,7 +270,7 @@ class TestClipLibrary(unittest.TestCase):
         (24.0). A walk moves the pelvis 4-5 cm and a run 6-8; these bounds sit just outside that.
         The side-steps dipped 21.3 cm (19.8 peak to peak) at every step until they were shortened."""
         hips0 = self.skel.joint_world(self.skel.fk({}), "Hips")[2]
-        limits = {"Walk": (0.05, 0.07), "Run": (0.06, 0.09), "Sprint": (0.06, 0.09),
+        limits = {"Walk": (0.05, 0.07), "Trot": (0.06, 0.08), "Run": (0.06, 0.09), "Sprint": (0.06, 0.09),
                   "Walk_Back": (0.05, 0.08), "Strafe_L": (0.05, 0.08), "Strafe_R": (0.05, 0.08)}
         for name, (mean_max, p2p_max) in limits.items():
             c = self.clips[name]
@@ -319,8 +319,9 @@ class TestClipLibrary(unittest.TestCase):
         """A turn on the spot is played at the rate the body turns, so a foot on the ground must go
         round the other way in the body's frame at exactly that rate: turned into the world by the
         body's own turn so far, the ball of a planted foot stays where it went down. It pivots on
-        that ball, and no leg twists further than a leg turns (45 degrees). Each turn comes square
-        at the end of its cycle, so it loops."""
+        that ball, and no leg twists further than a leg turns (45 degrees past the idle's own
+        toe-out). Each turn comes square at the end of its cycle, so it loops."""
+        toe_out = math.radians(anim_clips.STANCES["idle"][3])
         for name in anim_clips.TURN_CLIPS:
             c = self.clips[name]
             self.assertIn("turn", c.extra, "%s carries no turn angle" % name)
@@ -332,8 +333,9 @@ class TestClipLibrary(unittest.TestCase):
                 R = rig.rot_axis(rig.UP, turn * i / 120.0)
                 for side in ("L", "R"):
                     fs = c.feet.state(side, t)
-                    self.assertLess(abs(math.degrees(fs.yaw)), 45.0, "%s twists the %s leg %.0f degrees"
-                                    % (name, side, math.degrees(fs.yaw)))
+                    twist = fs.yaw - (toe_out if side == "L" else -toe_out)
+                    self.assertLess(abs(math.degrees(twist)), 45.0, "%s twists the %s leg %.0f degrees"
+                                    % (name, side, math.degrees(twist)))
                     ball = R @ self.skel.joint_world(W, "Toe." + side)
                     if not fs.planted:
                         anchor[side] = None

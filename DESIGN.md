@@ -231,11 +231,17 @@ land, the stakes, then you — and it is about ninety seconds long.
   the sprint waits out those 0.22 s so a tap is not a lurch and then a roll. Ctrl rolls too, and
   B on a pad; Space jumps. The tap can be turned off, and is off while Sprint is a toggle.
 * The legs keep pace with the ground. Each gait has its own clip made at its speed (Walk,
-  Run for the jog, Sprint, Sneak_Walk). All of them share one stride phase and are played at
-  ground speed over stride (0.5–1.6 times as made), so a planted foot stays planted through
-  every blend between them. Upright gaits ride the hips a few centimetres below standing; only
-  the sneak crouches. A raised guard is held over the upper body while the legs go on walking
-  under it, and a body turning on the spot steps round instead of pivoting on planted feet.
+  Run for the jog, Sprint, Sneak_Walk; locked on, Walk_Back at 1.8 and the side-steps at 3.0).
+  All of them share one stride phase and are played at ground speed over stride (0.5–1.6 times
+  as made), and each lifts and sets down its feet at the ground's own pace. Whichever way the
+  body goes, the legs play the nearest of four ways (ahead, back, either side) and the hips are
+  turned the rest of the way toward it, the chest turned back to face ahead. Braking, the legs
+  keep the gait they were in; standing, the feet are held where they were put down and step into
+  the stance one at a time. A body turning on the spot plays a turn at the rate it turns: a
+  quarter turn in two steps, or a quick about-face on the balls of the feet; turning slowly, its
+  planted feet step round by themselves. Upright gaits ride the hips a few centimetres below
+  standing; only the sneak crouches. A raised guard is held over the upper body while the legs
+  go on walking under it.
 * Movement is relative to the view: W is where the camera looks, on the ground; S away, A and D
   to its sides. The body turns to where it is going at a limited rate (900°/s standing, 720 at a
   walk, 540 at a jog, 300 at a sprint, easing into the last few degrees) and gives up speed for a

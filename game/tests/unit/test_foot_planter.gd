@@ -4,6 +4,7 @@ extends TestCase
 ## body moves off, leaves the ground, plays a one-shot or is carried away.
 
 const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
+const FootContact := preload("res://tests/unit/foot_contact.gd")
 const DT := 1.0 / 120.0
 
 var _root: Node3D = null
@@ -38,32 +39,14 @@ func _tick(m: HumanoidModel, v: Vector2 = Vector2.ZERO) -> void:
 	m._process(DT)
 
 
-## The heel and the ball of each foot, in the world (as test_locomotion_blend measures them).
+## The heel and ball of each foot, in the world (FootContact).
 func _soles(m: HumanoidModel) -> Dictionary:
-	var sk := m.skeleton
-	var xf := sk.global_transform
-	var out := {}
-	for side in ["L", "R"]:
-		var foot := sk.find_bone("Foot." + side)
-		var rest := sk.get_bone_global_rest(foot)
-		var ball := sk.get_bone_global_rest(sk.find_bone("Toe." + side)).origin
-		var heel := rest.affine_inverse() * Vector3(rest.origin.x, ball.y, rest.origin.z - 0.04)
-		out[side + "_heel"] = xf * (sk.get_bone_global_pose(foot) * heel)
-		out[side + "_ball"] = xf * sk.get_bone_global_pose(sk.find_bone("Toe." + side)).origin
-	return out
+	return FootContact.soles(m.skeleton, m.skeleton.global_transform)
 
 
 ## How far the points of the feet that were on the ground in both `a` and `b` slid (m).
 func _slid(m: HumanoidModel, a: Dictionary, b: Dictionary) -> float:
-	var sk := m.skeleton
-	var ground := sk.get_bone_global_rest(sk.find_bone("Toe.L")).origin.y + _root.global_position.y + 0.01
-	var d := 0.0
-	for key in a:
-		var p: Vector3 = a[key]
-		var q: Vector3 = b[key]
-		if p.y < ground and q.y < ground:
-			d += Vector2(q.x - p.x, q.z - p.z).length()
-	return d
+	return FootContact.slid(m.skeleton, _root.global_position.y, a, b)
 
 
 ## The turn (rad) of each foot about the vertical, against the body's.
@@ -79,8 +62,9 @@ func _foot_turns(m: HumanoidModel) -> Array[float]:
 	return out
 
 
-## A body turning on the spot, as a villager turns to face someone, steps round on its feet: no
-## foot slides on the ground, and the feet never lag the body by more than the turn it steps at.
+## A body turning slowly on the spot, as a villager turns to face someone, steps round on its
+## feet: no foot slides on the ground, and the feet never lag the body by more than the turn it
+## steps at. (Faster than HumanoidModel.TURN_FROM, the turn clips have the feet.)
 func test_turning_on_the_spot_steps_round() -> void:
 	if not _rig_built():
 		return
@@ -93,10 +77,10 @@ func test_turning_on_the_spot_steps_round() -> void:
 	var slid := 0.0
 	var worst := 0.0
 	var last := _soles(m)
-	# 90 degrees over 1.5 s, then half a second to settle
-	for i in 240:
-		if i < 180:
-			_root.rotate_y(deg_to_rad(90.0) / 180.0)
+	# 90 degrees over 3 s (30 degrees a second), then half a second to settle
+	for i in 420:
+		if i < 360:
+			_root.rotate_y(deg_to_rad(90.0) / 360.0)
 		_tick(m)
 		var now := _soles(m)
 		slid += _slid(m, last, now)
@@ -104,7 +88,7 @@ func test_turning_on_the_spot_steps_round() -> void:
 		var turns := _foot_turns(m)
 		for s in 2:
 			worst = maxf(worst, absf(turns[s] - rest_turns[s]))
-	print("    turning 90 degrees on the spot over 1.5 s: %d steps, the feet slid %.1f cm, a foot lagged the body %.0f degrees at most" % [
+	print("    turning 90 degrees on the spot over 3 s: %d steps, the feet slid %.1f cm, a foot lagged the body %.0f degrees at most" % [
 			planter.steps, slid * 100.0, rad_to_deg(worst)])
 	assert_true(planter.steps >= 2, "turning 90 degrees the feet took %d steps" % planter.steps)
 	assert_true(slid < 0.01, "turning on the spot the feet slid %.1f cm on the ground" % (slid * 100.0))
