@@ -3,7 +3,10 @@ extends Control
 ## the game's name in Cinzel, and five words to choose from.
 ##
 ## New Game goes to the Naming (ui/character/naming.tscn). Continue picks the newest slot.
-## Nothing here needs the world to exist: if it does not, the screen says so plainly.
+## Nothing here needs the world to exist: if it does not (`WorldStatus`), the sheet says so plainly,
+## with the command that builds it, and New Game, Continue and Load stay shut, because the way in
+## used to open onto a grey void with the HUD up. If the world is there but Terrain3D cannot draw
+## it, one small line says the ground will be the coarse one.
 
 const WORLD_SCENE := "res://world/world.tscn"
 const NAMING_SCENE := "res://ui/character/naming.tscn"
@@ -15,6 +18,12 @@ const LOADING_LINE := "The Roll is read again, and your name is in it."
 var _backdrop: TextureRect
 var _buttons: Array[Control] = []
 var _drift := 0.0
+## `WorldStatus.current()` when the screen was built: whether there is a world to enter at all.
+var world_status: Dictionary = {}
+## The plain account of a world that is not built, when it is not (see WorldNotice).
+var notice: WorldNotice = null
+## The one small line under the buttons when the ground will be the coarse one.
+var ground_line: Label = null
 
 
 func _ready() -> void:
@@ -28,6 +37,8 @@ func _ready() -> void:
 
 
 func _build() -> void:
+	world_status = WorldStatus.current()
+	var playable := bool(world_status.get("playable", false))
 	# --- the chart behind everything ---------------------------------------------------
 	var back := ColorRect.new()
 	back.color = ThemeBuilder.colour("paper_lo", "warm").darkened(0.35)
@@ -59,10 +70,10 @@ func _build() -> void:
 	sheet.anchor_right = 0.5
 	sheet.anchor_top = 0.5
 	sheet.anchor_bottom = 0.5
-	sheet.offset_left = -368.0
-	sheet.offset_right = 368.0
-	sheet.offset_top = -340.0
-	sheet.offset_bottom = 330.0
+	sheet.offset_left = -368.0 if playable else -400.0
+	sheet.offset_right = 368.0 if playable else 400.0
+	sheet.offset_top = -340.0 if playable else -350.0
+	sheet.offset_bottom = 330.0 if playable else 350.0
 	sheet.modulate = Color(1.0, 0.99, 0.96, 0.86)
 	sheet.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(sheet)
@@ -83,14 +94,14 @@ func _build() -> void:
 
 	var mark := TextureRect.new()
 	mark.texture = ThemeBuilder.texture("mark_bell")
-	mark.custom_minimum_size = Vector2(0, 124)
+	mark.custom_minimum_size = Vector2(0, 124 if playable else 44)
 	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(mark)
 
 	var title := UiKit.label("WICKMERE", "DisplayTitle", HORIZONTAL_ALIGNMENT_CENTER)
-	title.add_theme_font_size_override("font_size", 68)
+	title.add_theme_font_size_override("font_size", 68 if playable else 52)
 	root.add_child(title)
 
 	var rule := UiKit.divider()
@@ -101,9 +112,20 @@ func _build() -> void:
 	rule_row.add_child(rule)
 	root.add_child(rule_row)
 
-	var tagline := UiKit.label("Everything that is spoken of, stays.", "Journal", HORIZONTAL_ALIGNMENT_CENTER)
-	root.add_child(tagline)
-	root.add_child(UiKit.spacer(34, true))
+	var tagline: Label = null
+	if playable:
+		tagline = UiKit.label("Everything that is spoken of, stays.", "Journal", HORIZONTAL_ALIGNMENT_CENTER)
+		root.add_child(tagline)
+		root.add_child(UiKit.spacer(34, true))
+	else:
+		# No world on disk: the first thing on the sheet is what is missing and how to build it,
+		# and nothing below it leads into the world.
+		root.add_child(UiKit.spacer(8, true))
+		var holder := CenterContainer.new()
+		notice = WorldNotice.panel(world_status, 680.0)
+		holder.add_child(notice)
+		root.add_child(holder)
+		root.add_child(UiKit.spacer(14, true))
 
 	UiKit.ink_in(mark, 0.10, 0.9)
 	UiKit.ink_in(title, 0.35, 1.0)
@@ -111,9 +133,9 @@ func _build() -> void:
 
 	var latest := _latest_slot()
 	var entries := [
-		["New Game", _on_new_game, true],
-		["Continue", _on_continue, not latest.is_empty()],
-		["Load", func() -> void: UI.open("save_load", {"mode": "load", "from_menu": true}), _has_any_slot()],
+		["New Game", _on_new_game, playable],
+		["Continue", _on_continue, playable and not latest.is_empty()],
+		["Load", func() -> void: UI.open("save_load", {"mode": "load", "from_menu": true}), playable and _has_any_slot()],
 		["Settings", func() -> void: UI.open("settings", {"from_menu": true}), true],
 		["Quit", _on_quit, true],
 	]
@@ -123,18 +145,29 @@ func _build() -> void:
 		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.disabled = not bool(e[2])
 		b.pressed.connect(e[1] as Callable)
-		b.custom_minimum_size = Vector2(0, 46)
+		b.custom_minimum_size = Vector2(0, 46 if playable else 38)
 		root.add_child(b)
 		_buttons.append(b)
 		UiKit.ink_in(b, 0.9 + i * 0.09, 0.55, 6.0)
 		i += 1
 	UiKit.focus_chain(_buttons)
 
-	root.add_child(UiKit.spacer(10, true))
-	var note := UiKit.label(_slot_line(latest) if not latest.is_empty() else "No saved names yet.",
-			"Small", HORIZONTAL_ALIGNMENT_CENTER)
-	root.add_child(note)
-	UiKit.ink_in(note, 1.5, 0.6)
+	if playable:
+		# with no world there is nothing to continue into, and the notice needs the room
+		root.add_child(UiKit.spacer(10, true))
+		var note := UiKit.label(_slot_line(latest) if not latest.is_empty() else "No saved names yet.",
+				"Small", HORIZONTAL_ALIGNMENT_CENTER)
+		root.add_child(note)
+		UiKit.ink_in(note, 1.5, 0.6)
+	if str(world_status.get("state", "")) == "fallback":
+		# the country is there, drawn coarse: one small line, not a warning sign
+		ground_line = UiKit.label(str(world_status.get("title", "")) + " The ground will be drawn from the coarse map.",
+				"Tiny", HORIZONTAL_ALIGNMENT_CENTER)
+		ground_line.name = "GroundLine"
+		ground_line.tooltip_text = str(world_status.get("detail", ""))
+		ground_line.mouse_filter = Control.MOUSE_FILTER_PASS
+		root.add_child(ground_line)
+		UiKit.ink_in(ground_line, 1.6, 0.6)
 
 	var version := UiKit.label("v%s" % ProjectSettings.get_setting("application/config/version", "0"), "Tiny")
 	version.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -157,10 +190,22 @@ func _process(delta: float) -> void:
 # --- actions ------------------------------------------------------------------------------
 
 func _on_new_game() -> void:
+	if not _world_is_there():
+		return
 	if not ResourceLoader.exists(NAMING_SCENE):
 		EventBus.emit_notify("The Naming is not built yet.", "warning")
 		return
 	get_tree().change_scene_to_file(NAMING_SCENE)
+
+
+## Asked again at the moment of going in, not only when the screen was drawn: the buttons are shut
+## when there is no world, but the load screen calls `load_slot` itself.
+func _world_is_there() -> bool:
+	world_status = WorldStatus.current()
+	if bool(world_status.get("playable", false)):
+		return true
+	EventBus.emit_notify("%s Run %s first." % [str(world_status.get("title", "")), WorldStatus.BUILD_COMMAND], "warning")
+	return false
 
 
 func _on_continue() -> void:
@@ -180,6 +225,8 @@ func load_slot(slot: String) -> void:
 
 
 func _enter_world(args: Dictionary) -> void:
+	if not _world_is_there():
+		return
 	if not ResourceLoader.exists(WORLD_SCENE):
 		EventBus.emit_notify("The world is not built yet — %s is missing." % WORLD_SCENE, "warning")
 		return

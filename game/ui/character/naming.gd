@@ -497,6 +497,12 @@ func _begin_game() -> void:
 		if not world_scene.is_empty():
 			EventBus.emit_notify("Named, but the world is not built yet.", "warning")
 		return
+	var world_status := WorldStatus.current()
+	if not bool(world_status.get("playable", false)):
+		# the title shuts New Game when there is no world, but the Naming can be opened on its own
+		EventBus.emit_notify("Named, but %s Run %s first." % [str(world_status.get("title", "")).to_lower(),
+				WorldStatus.BUILD_COMMAND], "warning")
+		return
 	_begin.disabled = true
 	UI.fade_to_black(0.5, LOADING_LINE)
 	await get_tree().create_timer(0.55).timeout
