@@ -125,6 +125,8 @@ func _build_collision(dir: String, slug: String) -> void:
 	var inst := (load(glb) as PackedScene).instantiate()
 	var body := StaticBody3D.new()
 	body.name = "Collision"
+	# Footsteps read this (Foley.surface_at): a deep place is rock underfoot.
+	body.set_meta("surface", "stone")
 	body.collision_layer = 1 | (1 << 9)   # world + camera blocker
 	body.collision_mask = 0
 	add_child(body)

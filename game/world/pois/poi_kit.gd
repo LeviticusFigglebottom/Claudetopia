@@ -656,6 +656,11 @@ static func falling_water(glass := false, speed := 2.6) -> ShaderMaterial:
 ## of the valley costs nothing, and it casts no shadow because the Compatibility renderer caps
 ## lights per object and a shadowing omni is the expensive kind.
 func light(at: Vector3, colour := Color(1.0, 0.72, 0.42), energy := 2.2, reach := 11.0) -> OmniLight3D:
+	# After dark the fire is also a glow for NightLights, which is what makes a camp on the far
+	# side of the valley a point of light; that is registered in the far ring as well, where no
+	# real light is built.
+	if root.is_inside_tree():
+		NightLights.add(root, [root.to_global(at)], "fire", Color(colour.r, colour.g, colour.b, 1.0))
 	if far:
 		return null
 	var l := OmniLight3D.new()

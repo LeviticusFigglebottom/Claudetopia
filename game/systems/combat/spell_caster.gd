@@ -139,6 +139,14 @@ func _release() -> void:
 			_cast_target(def)
 		"summon":
 			_cast_summon(def)
+	var school := SpellRuntime.school_of(def)
+	if actor is Node3D and (actor as Node3D).is_inside_tree():
+		var at := (actor as Node3D).global_position + Vector3.UP * 1.4
+		Foley.play("spell_cast_" + school, at)
+		# A saying that lands on its caster lands with its sound at once; one that flies carries
+		# its landing with it (Projectile.impact_sound); one aimed at somebody sounds on them.
+		if str(def.get("cast_type")) == "self":
+			Foley.play("spell_impact_" + school, at)
 	EventBus.skill_used.emit(SpellRuntime.skill_for(def), SpellRuntime.xp_for(def))
 	cast_released.emit(spell_id)
 
@@ -188,6 +196,7 @@ func _cast_projectile(def: Dictionary) -> void:
 	parent.add_child(p)
 	var hit := _hit_for(def, skill_for(def))
 	p.launch(origin + dir * 0.6, dir, SpellRuntime.speed_of(def), hit, float(def.get("gravity", 0.0)))
+	p.impact_sound = "spell_impact_" + SpellRuntime.school_of(def)
 
 
 func _cast_target(def: Dictionary) -> void:
@@ -199,6 +208,8 @@ func _cast_target(def: Dictionary) -> void:
 		return
 	var friendly: bool = actor != null and actor.has_method("is_hostile_to") and not actor.is_hostile_to(t)
 	_apply_effects(t, def, friendly)
+	if t is Node3D and (t as Node3D).is_inside_tree():
+		Foley.play("spell_impact_" + SpellRuntime.school_of(def), (t as Node3D).global_position + Vector3.UP)
 
 
 ## Calling: the spell names something and it stands up beside the caster for a while. The

@@ -10,14 +10,16 @@ extends Node3D
 const SHADER := preload("res://assets/shaders/painted_water.gdshader")
 const GENERATED := "res://world/generated"
 
-## Region look: deep colour, shallow colour, and how quickly depth reads as deep.
+## Region look: deep colour, shallow colour, how quickly depth reads as deep, how much of the
+## sky the surface mirrors, and how hard the sun glitters on it. The Mere's is the glittering
+## water WORLD_BIBLE 6.2 asks for; the marsh's is still and brown and gives back little.
 const REGION_WATER := {
-	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0},
-	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0},
-	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6},
-	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6},
-	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4},
-	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6},
+	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0, "reflect": 0.8, "glint": 4.0},
+	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0, "reflect": 0.6, "glint": 1.2},
+	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6, "reflect": 0.85, "glint": 3.0},
+	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6, "reflect": 0.7, "glint": 2.0},
+	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4, "reflect": 0.9, "glint": 3.5},
+	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6, "reflect": 0.6, "glint": 1.5},
 }
 
 @export var sheet_subdivisions: int = 96
@@ -256,6 +258,8 @@ func set_region_look(region_id: String) -> void:
 	for mat in _all_materials():
 		mat.set_shader_parameter("deep_colour", deep)
 		mat.set_shader_parameter("shallow_colour", shallow)
+		mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)))
+		mat.set_shader_parameter("glint_strength", float(look.get("glint", 3.0)))
 		if mat == _sheet_material or mat == _skirt_material:
 			mat.set_shader_parameter("depth_fade_m", fade)
 

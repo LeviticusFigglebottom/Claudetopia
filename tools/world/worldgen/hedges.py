@@ -63,6 +63,10 @@ KITS = {
         "shrub": ("flora/juniper", 34.0),
         "tree": None,
         "post": "props/drystone_wall_end",
+        # the intakes stop at the fell wall: above it the moor is open, and a wall across the
+        # tops would be a wall nobody built (honoured with `place(fell_wall=True)`, which is
+        # the world build's `cover` recipe)
+        "max_height_m": 430.0,
     },
 }
 
@@ -89,8 +93,11 @@ def _hash01(a: np.ndarray, salt: int) -> np.ndarray:
 def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
           road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray, field_labels: np.ndarray,
           field_d: np.ndarray, regions: list, index: dict, bank, seed: int,
-          places: list | None = None) -> dict:
-    """Returns {(cx, cz): {asset_path: [[x, y, z, yaw, scale, tint], ...]}}."""
+          places: list | None = None, fell_wall: bool = False) -> dict:
+    """Returns {(cx, cz): {asset_path: [[x, y, z, yaw, scale, tint], ...]}}.
+
+    `fell_wall` stops a kit's boundaries at its `max_height_m`.
+    """
     out: dict = {}
     if field_labels is None:
         return out
@@ -124,6 +131,8 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         # road: the lane through a gap in the hedge is a gate, not a hedge.
         clear = (water == 0) & (pad_mask == 0) & (slope < 0.45) \
             & (road_d > road_w * 0.5 + 3.5)
+        if fell_wall and "max_height_m" in kit:
+            clear &= H < float(kit["max_height_m"])
         idx = np.argwhere(on_line & clear)
         if idx.size == 0:
             continue
@@ -207,6 +216,130 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
                     _put(out, grid, float(gx_[k]), float(H[gi[k], gj[k]]), float(gz_[k]),
                          float(rng.uniform(0.0, 360.0)), float(rng.uniform(0.9, 1.1)),
                          post_assets[int(rng.integers(0, len(post_assets)))])
+    return out
+
+
+## Sedgemire's line-work is the water's, not a farmer's. Its willows were scattered at so many
+## a hectare with a pull toward the water, which gives a band of trees about every pool and a
+## tree or two out on the peat; what a marsh actually shows from a boardwalk is a line: a
+## willow every so often along the edge of every channel, a pace or two back from it, with
+## alder among them where the ground is carr, and gaps where the bank is too soft to hold one.
+WATERSIDE = {
+    "delta": {"trees": ("trees/willow", "trees/alder"), "alder_share": 0.3,
+              "every_m": 16.0, "back_m": (4.0, 6.5)},
+}
+
+
+def waterside(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
+              water_d: np.ndarray, pad_mask: np.ndarray, road_d: np.ndarray, road_w: np.ndarray,
+              regions: list, index: dict, bank, seed: int) -> dict:
+    """Lines of trees along the water's edge. Returns the scatter's bucket shape."""
+    out: dict = {}
+    n = grid.n
+    rng = np.random.default_rng(np.random.SeedSequence([seed, 5353]))
+    gap_field = bank.field_at(5354, min(n, 1024), beta=1.7, wl_min=80.0, wl_max=400.0)
+    gap_g = grid.with_n(gap_field.shape[0])
+    for region in regions:
+        kit = WATERSIDE.get(region.shape)
+        if kit is None:
+            continue
+        first = _assets(index, kit["trees"][0], region.short)
+        second = _assets(index, kit["trees"][1], region.short)
+        if not first:
+            continue
+        lo, hi = kit["back_m"]
+        hi = max(hi, lo + 1.5 * grid.spacing)          # a coarse test grid has no texel at 5 m
+        on_line = (water_d >= lo) & (water_d < hi) & (owner == region.index) & (water == 0) \
+            & (pad_mask == 0) & (slope < 0.35) & (road_d > road_w * 0.5 + 3.0)
+        idx = np.argwhere(on_line)
+        if idx.size == 0:
+            continue
+        ii, jj = idx[:, 0], idx[:, 1]
+        # a band (hi - lo) m wide holds (hi - lo) / spacing texels across per spacing of line
+        p = grid.spacing * grid.spacing / ((hi - lo) * float(kit["every_m"]))
+        keep = _hash01(ii.astype(np.int64) * 65599 + jj.astype(np.int64), 919) < p
+        x = (grid.x0 + jj * grid.spacing).astype(np.float32)
+        z = (grid.z0 + ii * grid.spacing).astype(np.float32)
+        gate = 0.5 + 0.5 * np.tanh(sample_bilinear(gap_field, gap_g, x, z))
+        keep &= gate < 0.82
+        for k in np.flatnonzero(keep):
+            use_second = bool(second) and rng.random() < float(kit["alder_share"])
+            pool = second if use_second else first
+            _put(out, grid, float(x[k] + rng.uniform(-0.6, 0.6)), float(H[ii[k], jj[k]]),
+                 float(z[k] + rng.uniform(-0.6, 0.6)), float(rng.uniform(0.0, 360.0)),
+                 float(rng.uniform(0.85, 1.15)), pool[int(rng.integers(0, len(pool)))])
+    return out
+
+
+## Cinderlea's walls: the Builders' city shows through the ash as its street grid
+## (`landforms.cinderlea`), and along the lip of the sunken streets what is left of the walls
+## stands out of the drift -- runs of fused blocks lined up with the street, which is the one
+## straight line in the country that nobody alive laid.
+RUINS = {"ash_plateau": {"asset": "rocks/fused_block", "every_m": 34.0, "back_m": 9.0,
+                         "min_depth_m": 1.2}}
+
+
+def ruin_lines(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
+               pad_mask: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, regions: list,
+               index: dict, bank, seed: int) -> dict:
+    """Wall stubs along the lips of the Builders' streets. Returns the scatter's bucket shape."""
+    from .landforms import GRID_BEARING, GRID_M, STREET_M
+
+    out: dict = {}
+    rng = np.random.default_rng(np.random.SeedSequence([seed, 5454]))
+    n = grid.n
+    th = math.radians(GRID_BEARING)
+    ct, st = math.cos(th), math.sin(th)
+    run_field = bank.field_at(5455, min(n, 1024), beta=1.7, wl_min=60.0, wl_max=300.0)
+    run_g = grid.with_n(run_field.shape[0])
+    for region in regions:
+        kit = RUINS.get(region.shape)
+        if kit is None:
+            continue
+        assets = _assets(index, kit["asset"], region.short)
+        if not assets:
+            continue
+        mine = np.argwhere(owner == region.index)
+        if mine.size == 0:
+            continue
+        i0, j0 = mine.min(axis=0)
+        i1, j1 = mine.max(axis=0) + 1
+        X = (grid.x0 + np.arange(j0, j1) * grid.spacing)[None, :]
+        Z = (grid.z0 + np.arange(i0, i1) * grid.spacing)[:, None]
+        u = X * ct + Z * st
+        v = -X * st + Z * ct
+        sub = (slice(i0, i1), slice(j0, j1))
+        base_ok = (owner[sub] == region.index) & (water[sub] == 0) & (pad_mask[sub] == 0) \
+            & (slope[sub] < 0.6) & (road_d[sub] > road_w[sub] * 0.5 + 4.0)
+        lip = 0.5 * STREET_M + float(kit["back_m"])
+        # streets of constant u run along v, and the other way about
+        for coord, period, off, along in ((u, GRID_M[0], 31.0, (-st, ct)), (v, GRID_M[1], 17.0, (ct, st))):
+            rel = ((coord + off + 0.5 * period) % period) - 0.5 * period      # signed, from the street
+            on_line = base_ok & (np.abs(np.abs(rel) - lip) < 0.8 * grid.spacing)
+            idx = np.argwhere(on_line)
+            if idx.size == 0:
+                continue
+            ii, jj = idx[:, 0] + i0, idx[:, 1] + j0
+            p = grid.spacing / float(kit["every_m"]) * 0.6
+            keep = _hash01(ii.astype(np.int64) * 131 + jj.astype(np.int64) * 7919, 1201) < p
+            x = (grid.x0 + jj * grid.spacing).astype(np.float64)
+            z = (grid.z0 + ii * grid.spacing).astype(np.float64)
+            run = 0.5 + 0.5 * np.tanh(sample_bilinear(run_field, run_g, x, z))
+            keep &= run > 0.45
+            # only where the street is actually sunk into the land here: the city is not
+            # everywhere, and the places stand on ground the grid was kept off
+            r_sel = rel[idx[:, 0], idx[:, 1]]
+            axis = (ct, st) if coord is u else (-st, ct)
+            cx = x - axis[0] * r_sel
+            cz = z - axis[1] * r_sel
+            cj = np.clip(np.rint((cx - grid.x0) / grid.spacing).astype(np.int64), 0, n - 1)
+            ci = np.clip(np.rint((cz - grid.z0) / grid.spacing).astype(np.int64), 0, n - 1)
+            keep &= (H[ii, jj] - H[ci, cj]) > float(kit["min_depth_m"])
+            yaw_along = math.degrees(math.atan2(-along[1], along[0]))
+            for k in np.flatnonzero(keep):
+                _put(out, grid, float(x[k]), float(H[ii[k], jj[k]]) - 0.3, float(z[k]),
+                     yaw_along + float(rng.normal(0.0, 6.0)), float(rng.uniform(0.34, 0.6)),
+                     assets[int(rng.integers(0, len(assets)))])
     return out
 
 

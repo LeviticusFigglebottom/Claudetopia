@@ -32,6 +32,10 @@ const MANTLE_MAX := 1.3
 const MANTLE_TIME := 0.5
 const BOW_MIN_DRAW := 0.3
 const RIPOSTE_RANGE := 2.4
+## How close you must be to a foe's back for the light to become a backstab.
+const BACKSTAB_RANGE := 1.8
+## Load is what is worn and wielded over 40 + 3·Endurance (the character's own Endurance). A bag
+## carried past its capacity puts the roll in the overloaded band whatever is worn.
 const LOAD_CAPACITY_BASE := 40.0
 const LOAD_CAPACITY_PER_ENDURANCE := 3.0
 const SAVE_SECTION := "player"
@@ -47,9 +51,14 @@ var equipped: Dictionary = {"main_hand": "", "off_hand": "", "body": ""}
 var weapon: WeaponInstance = null
 var offhand: Dictionary = {}
 var quick_slots: Array = ["", "", "", ""]
-## Inventory-stream hook: Callable(index: int, item_id: String) -> bool, called on quick slot use.
+## The belt's answer to a quick key: Callable(index: int, item_id: String) -> bool, true when the
+## item was used. The paper doll owns the belt and is bound here (`Equipment.use_quick_index`);
+## a saying on a quick key is readied by this node, because a saying is not an item.
 var quick_slot_handler: Callable = Callable()
-## Inventory-stream hook: Callable(ammo_tag: String) -> bool, consumes one arrow when true.
+## Where arrows come from: Callable(ammo_tag: String, preferred: String, take: bool) -> String,
+## the id of the arrow that would be (take false) or was (take true) drawn, or "" when there is
+## none. The bag is bound here (`Inventory.ammo_for`). A body with no bag -- a bench, the crossbow
+## test -- looses from the `arrows` counter instead.
 var ammo_provider: Callable = Callable()
 var equipped_spell: String = ""
 ## What this character looks like, as the Naming wrote it (see `_take_the_naming`).
@@ -81,6 +90,8 @@ var _lantern_light: OmniLight3D = null
 var _reload_until: float = -1.0
 var _attack_kind: String = "light"
 var _attack_index: int = 0
+## The crit this swing carries ("" or "sneak"), kept so a charged heavy is rebuilt with it.
+var _attack_crit: String = ""
 var _attack_phase: String = ""
 var _attack_clip: String = ""
 var _chain_open: bool = false
@@ -145,6 +156,7 @@ func _ready() -> void:
 	SaveSystem.register(SAVE_SECTION, self)
 	_register_character_sections()
 	_follow_equipment()
+	_follow_the_character()
 	if not EventBus.item_used.is_connected(_on_item_used):
 		EventBus.item_used.connect(_on_item_used)
 	if DisplayServer.get_name() != "headless" and input_enabled:
@@ -306,6 +318,12 @@ func _physics_process(delta: float) -> void:
 		integrate_shove(delta)
 		move_and_slide()
 		snap_to_terrain()
+		# Sneaking is felt through the boots as much as it is seen: a quieter step, and a
+		# sprint's a louder one.
+		step_sounds(delta, -8.0 if is_sneaking else (2.0 if is_sprinting else 0.0))
+	# A raised guard halves regen, and so does a load (DESIGN §5.7): read every frame, because
+	# a guard dropped by an attack or a roll must not leave regen halved behind it.
+	stamina_comp.regen_multiplier = (0.5 if is_blocking else 1.0) * DamageModel.load_regen_mult(load_ratio)
 	_update_locomotion_anim(delta)
 	_noise_timer -= delta
 
@@ -347,6 +365,10 @@ func _tick_free(delta: float) -> void:
 				var rt := _riposte_candidate()
 				if rt != null:
 					_start_riposte(rt)
+					return
+				var bs := _backstab_candidate()
+				if bs != null:
+					_start_riposte(bs, "backstab")
 					return
 				if _start_attack("light", 0, false):
 					return
@@ -403,7 +425,6 @@ func _update_block() -> void:
 	is_blocking = want
 	can_parry = parry_item
 	block_stability = block_stability_value()
-	stamina_comp.regen_multiplier = 0.5 if is_blocking else 1.0
 	if is_blocking and not anim.is_busy() and not anim.is_playing("Block_Idle") and not anim.is_playing("Parry"):
 		anim.play_intent("Block_Idle")
 	elif not is_blocking and anim.is_playing("Block_Idle"):
@@ -411,15 +432,32 @@ func _update_block() -> void:
 
 
 func can_parry_with_equipment() -> bool:
-	if not offhand.is_empty() and bool(offhand.get("armour", {}).get("parry", false)):
+	if bool(_offhand_guard().get("parry", false)):
 		return true
 	return weapon != null and weapon.can_parry
 
 
 func block_stability_value() -> float:
-	if not offhand.is_empty() and not weapon.is_two_handed():
-		return clampf(float(offhand.get("armour", {}).get("stability", 0.0)), 0.0, 1.0)
+	var guard := _offhand_guard()
+	if not guard.is_empty() and not weapon.is_two_handed():
+		return clampf(float(guard.get("stability", 0.0)), 0.0, 1.0)
 	return weapon.stability if weapon != null else 0.0
+
+
+## What the off hand guards with: a shield worn as armour says it in its `armour` block, and a
+## shield carried as a weapon (the clan shield, the oak round shield) in its `weapon` block. Only
+## the first was read, so a clan shield raised let every point of a blow through, cost the full
+## 0.6 of it in stamina, and could never parry.
+func _offhand_guard() -> Dictionary:
+	if offhand.is_empty():
+		return {}
+	var worn: Dictionary = offhand.get("armour", {})
+	if not worn.is_empty():
+		return worn
+	var carried: Dictionary = offhand.get("weapon", {})
+	if str(carried.get("class", "")) == "shield":
+		return carried
+	return {}
 
 
 func _wish_direction() -> Vector3:
@@ -507,8 +545,15 @@ func _start_attack(kind: String, index: int, charging: bool) -> bool:
 	_charging = charging
 	_charge_start = now()
 	_charge_ratio = 0.0
+	_attack_crit = _sneak_crit()
 	var timing := weapon.timing_for(kind, index)
-	weapon.begin_attack(weapon.build_hit(kind, index, 0.0, get_skill(weapon.skill_id)))
+	weapon.begin_attack(weapon.build_hit(kind, index, 0.0, get_skill(weapon.skill_id), _attack_crit))
+	# "Hyper-armour frames on heavies" (DESIGN §5.3): from the wind-up to the end of the swing, a
+	# small hit does not take the swinger's footing. Only the brute's heavies ever had it.
+	if kind == "heavy":
+		poise_comp.set_hyper_armour(DamageModel.HEAVY_HYPER_ARMOUR)
+	else:
+		poise_comp.clear_hyper_armour()
 	_face_attack_target()
 	_attack_clip = weapon.clip_for(kind, index)
 	anim.play_intent(_attack_clip, timing)
@@ -563,7 +608,7 @@ func _tick_attack(delta: float) -> void:
 func _release_charge() -> void:
 	_charging = false
 	anim.release_hold()
-	weapon.begin_attack(weapon.build_hit("heavy", 0, _charge_ratio, get_skill(weapon.skill_id)))
+	weapon.begin_attack(weapon.build_hit("heavy", 0, _charge_ratio, get_skill(weapon.skill_id), _attack_crit))
 
 
 func _on_clip_event(event_name: String) -> void:
@@ -577,6 +622,7 @@ func _on_clip_event(event_name: String) -> void:
 			if state == State.ATTACK or state == State.RIPOSTE:
 				_attack_phase = "recovery"
 				weapon.on_clip_event(event_name)
+				poise_comp.clear_hyper_armour()
 		"cancel_ok":
 			_chain_open = true
 
@@ -586,6 +632,7 @@ func _on_clip_finished(clip: String) -> void:
 		State.ATTACK:
 			if clip == _attack_clip:
 				weapon.end_attack()
+				poise_comp.clear_hyper_armour()
 				if _attack_kind == "light" and _attack_index + 1 < weapon.chain_length() and _peek_buffer(["attack_light"]) != "":
 					_consume_buffer(["attack_light"])
 					_start_attack("light", _attack_index + 1, false)
@@ -626,17 +673,69 @@ func _riposte_candidate() -> Actor:
 	return best
 
 
-func _start_riposte(target: Actor) -> void:
+## A foe with its back to you, within arm's reach and in front of you: the light becomes a
+## backstab. DESIGN §5.3 lists it beside the riposte as a crit, `DamageModel.is_behind` was written
+## for it, and nothing ever made one. A boss is too aware of its own back to be taken this way.
+func _backstab_candidate() -> Actor:
+	var pool: Array = [lock.target] if lock.is_locked() else get_tree().get_nodes_in_group("enemy")
+	var best: Actor = null
+	var best_d := BACKSTAB_RANGE
+	for n in pool:
+		if not (n is Enemy) or not is_hostile_to(n):
+			continue
+		var e := n as Enemy
+		if e.is_dead() or e.is_boss or e.is_stunned():
+			continue
+		var to := e.global_position - global_position
+		var d := Vector3(to.x, 0.0, to.z).length()
+		if d > best_d or not DamageModel.is_facing(forward(), to, 0.5):
+			continue
+		if not DamageModel.is_behind(e.forward(), -to):
+			continue
+		best = e
+		best_d = d
+	return best
+
+
+## A blow from somebody the victim never noticed is a sneak attack (DESIGN §5.3): the victim is
+## what the swing is about to meet -- the locked target, or the nearest foe in front within reach.
+func _sneak_crit() -> String:
+	if not is_sneaking:
+		return ""
+	var victim: Node = lock.target if lock.is_locked() else _foe_in_reach()
+	if victim is Enemy and (victim as Enemy).is_unaware():
+		return "sneak"
+	return ""
+
+
+func _foe_in_reach() -> Node:
+	var best: Node = null
+	var best_d := (weapon.reach if weapon != null else 1.0) + 0.6
+	for n in get_tree().get_nodes_in_group("enemy"):
+		if not (n is Actor) or (n as Actor).is_dead() or not is_hostile_to(n):
+			continue
+		var to := (n as Node3D).global_position - global_position
+		var d := Vector3(to.x, 0.0, to.z).length()
+		if d <= best_d and DamageModel.is_facing(forward(), to, 0.5):
+			best = n
+			best_d = d
+	return best
+
+
+## A riposte at a foe a parry opened, or (`kind` "backstab") a blow into one's back: both are the
+## same committed move, a crit that cannot be blocked, parried or rolled out of.
+func _start_riposte(target: Actor, kind := "riposte") -> void:
 	_riposte_target = target
 	snap_facing(target.global_position - global_position)
 	target.stunned_until = maxf(target.stunned_until, now() + 1.4)
-	_attack_kind = "riposte"
+	_attack_kind = kind
 	_attack_index = 0
 	_attack_phase = "windup"
-	weapon.begin_attack(weapon.build_hit("riposte", 0, 0.0, get_skill(weapon.skill_id), "riposte"))
-	anim.play_intent("Riposte", weapon.timing_for("riposte"))
+	_attack_crit = kind
+	weapon.begin_attack(weapon.build_hit(kind, 0, 0.0, get_skill(weapon.skill_id), kind))
+	anim.play_intent("Riposte" if kind == "riposte" else "Backstab", weapon.timing_for(kind))
 	_set_state(State.RIPOSTE)
-	attack_started.emit("riposte", 0)
+	attack_started.emit(kind, 0)
 
 
 func _tick_riposte(delta: float) -> void:
@@ -718,6 +817,7 @@ func is_in_iframes() -> bool:
 func on_action_interrupted() -> void:
 	if weapon != null:
 		weapon.end_attack()
+	poise_comp.clear_hyper_armour()
 	_charging = false
 	anim.release_hold()
 	caster.interrupt()
@@ -743,6 +843,7 @@ func die(killer: Node = null) -> void:
 	if dead:
 		return
 	super.die(killer)
+	Foley.play_ui("player_death")
 	_set_state(State.DEAD)
 	lock.clear()
 	EventBus.player_died.emit(global_position)
@@ -829,7 +930,7 @@ func aim_origin() -> Vector3:
 func _start_bow() -> bool:
 	if not can_act():
 		return false
-	if arrows <= 0 and not ammo_provider.is_valid():
+	if _draw_ammo(false).is_empty():
 		EventBus.notify.emit("No arrows.", "warning")
 		return false
 	if now() < _reload_until:
@@ -838,6 +939,7 @@ func _start_bow() -> bool:
 	_bow_draw_start = now()
 	var draw_time := float(weapon.ranged.get("draw_time", 0.7))
 	anim.play_intent("Bow_Draw", {"length": draw_time})
+	Foley.play("bow_draw", attack_origin.global_position)
 	camera_rig.set_aiming(true)
 	_set_state(State.BOW)
 	return true
@@ -870,17 +972,28 @@ func _tick_bow(delta: float) -> void:
 		_set_state(State.FREE)
 
 
-func _fire_arrow(drawn: float) -> void:
+## The arrow this bow would loose: the kind it names if the quiver has it, else any of its tag.
+## `take` spends it. Returns the item id, or "" for an empty quiver.
+func _draw_ammo(take: bool) -> String:
+	var tag := str(weapon.ranged.get("ammo_tag", "bolt" if weapon.weapon_class == "crossbow" else "arrow"))
+	var preferred := str(weapon.ranged.get("ammo_item", ""))
 	if ammo_provider.is_valid():
-		if not bool(ammo_provider.call(str(weapon.ranged.get("ammo_tag", "arrow")))):
-			EventBus.notify.emit("No arrows.", "warning")
-			return
-	elif arrows > 0:
+		return str(ammo_provider.call(tag, preferred, take))
+	if arrows <= 0:
+		return ""
+	if take:
 		arrows -= 1
-	else:
+	return preferred if not preferred.is_empty() else "core:item/arrow"
+
+
+func _fire_arrow(drawn: float) -> void:
+	var shot := _draw_ammo(true)
+	if shot.is_empty():
+		EventBus.notify.emit("No arrows.", "warning")
 		return
 	stamina_comp.spend(weapon.stamina_cost("light"))
-	var arrow_def := ContentDB.get_or_empty(str(weapon.ranged.get("ammo_item", "")))
+	# What flies is what came out of the quiver, so its head is the one that hits.
+	var arrow_def := ContentDB.get_or_empty(shot)
 	var proj: Dictionary = arrow_def.get("projectile", {})
 	var scene_path := str(proj.get("scene", ARROW_SCENE))
 	var packed := load(scene_path) as PackedScene
@@ -903,6 +1016,9 @@ func _fire_arrow(drawn: float) -> void:
 	hit.parryable = false
 	var speed := float(weapon.ranged.get("speed", 42.0)) * lerpf(0.6, 1.0, drawn)
 	arrow.launch(aim_origin(), aim_direction(), speed, hit, float(proj.get("gravity", gravity)))
+	arrow.impact_sound = "arrow_hit"
+	Foley.play("bow_release", attack_origin.global_position)
+	Foley.play("arrow_whoosh", attack_origin.global_position)
 	# A method reference, not a closure: an arrow outlives the bow that loosed it, and a
 	# closure on it is not disconnected when the archer is freed.
 	arrow.struck.connect(_on_arrow_struck)
@@ -964,7 +1080,15 @@ func _tick_mantle(delta: float) -> void:
 
 # --- equipment / skills / quick slots -----------------------------------------------------------
 
+## The character's skill, which is the one use raises and a Calling's bonus lands on: Progression's,
+## with its fortify effects. This used to read a `skills` table of its own on this node, all tens,
+## that nothing but a save ever wrote -- so a swing hit as hard on the first day as on the
+## hundredth, and a Hearthkeeper's One-Handed +10 never reached a blade. The table is kept for a
+## body with no Progression (a bench, an old save being read).
 func get_skill(skill_id: String) -> float:
+	var prog := get_node_or_null(NodePath("Progression"))
+	if prog != null and prog.has_method("effective_skill"):
+		return float(prog.call("effective_skill", skill_id))
 	return float(skills.get(skill_id, 10))
 
 
@@ -995,9 +1119,8 @@ func equip_offhand(item_id: String) -> void:
 
 
 func equip_armour(item_id: String) -> void:
-	var def := ContentDB.get_or_empty(item_id) if not item_id.is_empty() else {}
 	equipped["body"] = item_id
-	armour_flat = float(def.get("armour", {}).get("armour", 0.0))
+	_refresh_armour()
 	_recompute_load()
 	equipment_changed.emit("body", item_id)
 	EventBus.item_equipped.emit("body", item_id)
@@ -1130,14 +1253,52 @@ func equip_spell(spell_id: String) -> bool:
 	return true
 
 
-## Placeholder load until the inventory stream owns weights: equipped weight over capacity.
+## Load, which lengthens the roll and slows regen (DESIGN §5.3, §5.7): everything worn and wielded
+## over 40 + 3·Endurance, and past 100% whenever the bag carries more than the character can. It
+## used to count only the hands and the coat, so a helm, gauntlets and sabatons weighed nothing,
+## and it never looked at the bag, whose `is_overloaded()` says in its own comment that it is "for
+## the movement code to read" and was read by nothing.
 func _recompute_load() -> void:
-	var weight := 0.0
+	var capacity := LOAD_CAPACITY_BASE + LOAD_CAPACITY_PER_ENDURANCE * float(endurance)
+	load_ratio = _worn_weight() / capacity if capacity > 0.0 else 0.0
+	var bag := get_node_or_null(NodePath("Inventory"))
+	if bag != null and bag.has_method("is_overloaded") and bool(bag.call("is_overloaded")):
+		load_ratio = maxf(load_ratio, float(bag.call("load_fraction")))
+
+
+## Everything worn and wielded. The doll is the record when there is one; a hand or a coat put on
+## straight through equip_* (the arena, a bench) is counted once as well.
+func _worn_weight() -> float:
+	var total := 0.0
+	var doll := _doll()
+	var on_doll := {}
+	if doll != null and doll.has_method("equipped_weight"):
+		total = float(doll.call("equipped_weight"))
+		for slot in equipped:
+			on_doll[slot] = str(doll.call("item_id", slot))
 	for slot in equipped:
 		var id: String = equipped[slot]
-		if not id.is_empty():
-			weight += float(ContentDB.get_or_empty(id).get("weight", 0.0))
-	load_ratio = weight / (LOAD_CAPACITY_BASE + LOAD_CAPACITY_PER_ENDURANCE * float(endurance))
+		if not id.is_empty() and id != str(on_doll.get(slot, "")):
+			total += float(ContentDB.get_or_empty(id).get("weight", 0.0))
+	return total
+
+
+## Armour is everything worn (DESIGN §5.3's `armour_flat`), temper included. It used to be the coat
+## alone: a helm, gloves and boots were worn, drawn, saved and weighed, and stopped nothing.
+func _refresh_armour() -> void:
+	var total := 0.0
+	var doll_body := ""
+	var doll := _doll()
+	if doll != null and doll.has_method("armour_total"):
+		total = float(doll.call("armour_total"))
+		doll_body = str(doll.call("item_id", "body"))
+	var body := str(equipped.get("body", ""))
+	if not body.is_empty() and body != doll_body:
+		total += float(ContentDB.get_or_empty(body).get("armour", {}).get("armour", 0.0))
+	armour_flat = total
+	# Struck in heavy mail you ring; in cloth and leather you are hit (Foley.material_for).
+	var heavy := doll != null and doll.has_method("weight_class") and str(doll.call("weight_class")) == "heavy"
+	body_material = "metal" if heavy or armour_flat >= 11.0 else "flesh"
 
 
 ## The belt lives on the equipment doll: `Equipment` binds it, persists it, and the HUD draws
@@ -1182,16 +1343,13 @@ func use_quick_slot(index: int) -> void:
 	if id.is_empty():
 		id = quick_slots[index]
 	quick_slot_used.emit(index, id)
-	if quick_slot_handler.is_valid():
-		quick_slot_handler.call(index, id)
-		return
 	if id.is_empty():
 		return
 	if Ids.type_of(id) == "spell":
 		if equip_spell(id):
 			EventBus.notify.emit("Readied %s." % ContentDB.get_or_empty(id).get("name", id), "info")
 		return
-	if eq == null or not bool(eq.call("use_quick", slot)):
+	if not quick_slot_handler.is_valid() or not bool(quick_slot_handler.call(index, id)):
 		EventBus.notify.emit("None left.", "info")
 
 
@@ -1224,8 +1382,83 @@ func _follow_equipment() -> void:
 		return
 	if not eq.changed.is_connected(_on_equipment_changed):
 		eq.changed.connect(_on_equipment_changed)
+	if eq.has_method("use_quick_index"):
+		quick_slot_handler = Callable(eq, "use_quick_index")
 	for slot in ["main_hand", "off_hand", "body"]:
 		_on_equipment_changed(slot)
+
+
+## The body's pools and skills are the character's, and the character lives on Progression; its
+## load lives on the doll and in the bag. This listens to all three, and fills the pools once, as
+## a body that has just stood up.
+func _follow_the_character() -> void:
+	var prog := get_node_or_null(NodePath("Progression"))
+	if prog != null:
+		if prog.has_signal("points_changed") and not prog.points_changed.is_connected(_on_points_changed):
+			prog.points_changed.connect(_on_points_changed)
+		if prog.has_signal("modifiers_changed") and not prog.modifiers_changed.is_connected(_on_modifiers_changed):
+			prog.modifiers_changed.connect(_on_modifiers_changed)
+		if prog.has_signal("level_changed") and not prog.level_changed.is_connected(_on_level_changed):
+			prog.level_changed.connect(_on_level_changed)
+	var bag := get_node_or_null(NodePath("Inventory"))
+	if bag != null and bag.has_signal("changed") and not bag.changed.is_connected(_recompute_load):
+		bag.changed.connect(_recompute_load)
+	if bag != null and bag.has_method("ammo_for"):
+		ammo_provider = Callable(bag, "ammo_for")
+	if not status.renown_tick.is_connected(_on_renown_tick):
+		status.renown_tick.connect(_on_renown_tick)
+	_refresh_pools(true)
+
+
+func _on_points_changed(_attribute_points: int, _perk_points: int) -> void:
+	_refresh_pools(false)
+
+
+func _on_modifiers_changed() -> void:
+	_refresh_pools(false)
+
+
+func _on_level_changed(_new_level: int) -> void:
+	_refresh_pools(false)
+
+
+## Health, stamina and mana from the character's Vigour, Endurance and Will (DESIGN §5.3, §5.6),
+## through Progression so a fortify effect counts. This node used to keep its own three
+## attributes at 10 while Progression kept the character's, and a level's point spent on
+## Endurance raised a number the stamina bar never read. `fill` is for a body standing up; a
+## level-up grows the pool and leaves what is in it.
+func _refresh_pools(fill := false) -> void:
+	var prog := get_node_or_null(NodePath("Progression"))
+	if prog != null and prog.has_method("attribute_with_mods") and prog.has_method("max_stamina"):
+		vigour = int(prog.call("attribute_with_mods", "vigour"))
+		endurance = int(prog.call("attribute_with_mods", "endurance"))
+		will = int(prog.call("attribute_with_mods", "will"))
+		level = int(prog.get("level"))
+		max_health = float(prog.call("max_health"))
+		stamina_comp.setup(float(prog.call("max_stamina")), fill)
+		caster.mana_max = float(prog.call("max_mana"))
+	else:
+		max_health = DamageModel.hp_max(vigour)
+		stamina_comp.setup(DamageModel.stamina_max(endurance), fill)
+		caster.mana_max = DamageModel.mana_max(will)
+	if fill:
+		health = max_health
+		caster.refill()
+	else:
+		health = minf(health, max_health)
+		caster.restore_mana(0.0)
+	_recompute_load()
+	stats_changed.emit()
+
+
+## Quieted drains renown (DESIGN §5.3). StatusEffects has always ticked it, and nothing listened,
+## so a Cinderlea shade's quieting touch did nothing at all.
+func _on_renown_tick(amount: float) -> void:
+	if not is_inside_tree():
+		return
+	var standing := get_tree().get_first_node_in_group("standing")
+	if standing != null and standing.has_method("add_renown"):
+		standing.call("add_renown", -int(round(amount)), "quieted")
 
 
 func _on_equipment_changed(slot: String) -> void:
@@ -1243,6 +1476,10 @@ func _on_equipment_changed(slot: String) -> void:
 			equip_offhand(id)
 		"body":
 			equip_armour(id)
+		_:
+			# A helm, gloves, boots, a ring: no hand to put them in, but armour and weight.
+			_refresh_armour()
+			_recompute_load()
 
 
 ## The blade running down: the WeaponInstance spent charge, so the stack it came from loses it

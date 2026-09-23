@@ -105,11 +105,26 @@ bar_beats=4
 
 def write_ogg_import(ogg_path: str, res_path: str, loop: bool, bpm: float = 0.0, beat_count: int = 0) -> str:
     """Write the Godot .import sidecar so a fresh checkout imports with the right loop flag.
-    Godot fills in uid/path on its next import pass and keeps these [params]."""
+    Godot fills in uid/path on its next import pass and keeps these [params].
+
+    A file being re-rendered keeps the uid, path and dest_files Godot gave it: writing the
+    sidecar fresh threw them away, so every regeneration gave every file a new resource uid on
+    its next import (247 of them the last time the effects were rendered)."""
     p = ogg_path + ".import"
+    text = IMPORT_OGG_TEMPLATE.format(res=res_path, loop="true" if loop else "false",
+                                      bpm=("%.1f" % bpm) if bpm else "0.0", beats=int(beat_count))
+    if os.path.exists(p):
+        with open(p) as f:
+            old = f.read().splitlines()
+        keep_remap = [ln for ln in old if ln.startswith("uid=") or ln.startswith("path=")]
+        keep_deps = [ln for ln in old if ln.startswith("dest_files=")]
+        if keep_remap:
+            text = text.replace('type="AudioStreamOggVorbis"\n', 'type="AudioStreamOggVorbis"\n' + "\n".join(keep_remap) + "\n", 1)
+        if keep_deps:
+            text = text.replace('source_file="res://%s"\n' % res_path,
+                                'source_file="res://%s"\n' % res_path + "\n".join(keep_deps) + "\n", 1)
     with open(p, "w") as f:
-        f.write(IMPORT_OGG_TEMPLATE.format(res=res_path, loop="true" if loop else "false",
-                                           bpm=("%.1f" % bpm) if bpm else "0.0", beats=int(beat_count)))
+        f.write(text)
     return p
 
 
@@ -168,6 +183,22 @@ def loudness_lufs(x: np.ndarray) -> float:
     if not np.any(keep2):
         keep2 = keep
     return float(-0.691 + 10.0 * np.log10(np.mean(z[keep2]) + 1e-12))
+
+
+def momentary_max_lufs(x: np.ndarray, window_s: float = 0.4, hop_s: float = 0.1) -> float:
+    """The loudest 400 ms of a signal, in LUFS: what a one-shot's loudness means. Integrated
+    loudness is gated over 400 ms blocks and averaged, so for a 90 ms click it reads the
+    silence around the click as much as the click."""
+    y = np.asarray(x, dtype=np.float64)
+    n = len(y)
+    w = int(window_s * SR)
+    if n <= w:
+        pad = np.zeros((w - n,) + y.shape[1:]) if y.ndim > 1 else np.zeros(w - n)
+        return loudness_lufs(np.concatenate([y, pad]))
+    best = -120.0
+    for start in range(0, n - w + 1, max(1, int(hop_s * SR))):
+        best = max(best, loudness_lufs(y[start:start + w]))
+    return best
 
 
 def true_peak_db(x: np.ndarray) -> float:

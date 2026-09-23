@@ -311,6 +311,14 @@ func use_quick(slot: String) -> bool:
 	return inventory.use(s)
 
 
+## The belt's answer to a quick key, as `Player.quick_slot_handler` wants it: key `index` (0..3)
+## uses whatever is bound to quick_<index + 1>. The doll owns the belt, so the doll answers.
+func use_quick_index(index: int, _item_id: String = "") -> bool:
+	if index < 0 or index >= QUICK_SLOTS.size():
+		return false
+	return use_quick(QUICK_SLOTS[index])
+
+
 # --- aggregates --------------------------------------------------------------------------
 
 ## Sum of armour ratings (temper applied) over every gear slot.
