@@ -19,11 +19,11 @@ var registry: Dictionary = {}   # id -> {"faction": String, "npc": String}
 static func ensure() -> Ownership:
 	if instance != null and is_instance_valid(instance):
 		return instance
-	# A stand-in added and freed elsewhere (a test's own registry) clears `instance` as it leaves
-	# while the real one stays at the root; finding that one again makes it the instance again,
-	# or every caller of `instance` after it reads a null.
 	var found := Service.ensure(load("res://systems/crime/ownership.gd"), "Ownership") as Ownership
-	if found != null:
+	# A copy of this service inside a world set `instance` as it entered the tree and cleared it as it
+	# left; a copy under the root that entered earlier is then found here with `instance` still empty,
+	# and everything that reads `instance` directly finds nothing. Point it at what was found.
+	if found != null and (instance == null or not is_instance_valid(instance)):
 		instance = found
 	return found
 

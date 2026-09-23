@@ -447,6 +447,16 @@ class SampledField:
         self.shape = np.array(self.F.shape)
         self.far = float(np.max(self.F))
 
+    @classmethod
+    def from_grid(cls, F: np.ndarray, origin: np.ndarray, spacing: float) -> "SampledField":
+        """Wrap a grid that has already been sampled (by the mesher, say) instead of sampling
+        the scene a second time."""
+        f = cls.__new__(cls)
+        f.F, f.origin, f.spacing = F, np.asarray(origin, float), float(spacing)
+        f.shape = np.array(F.shape)
+        f.far = float(np.max(F))
+        return f
+
     def eval(self, P: np.ndarray) -> np.ndarray:
         q = (np.asarray(P, float) - self.origin) / self.spacing
         i0 = np.floor(q).astype(np.int64)
@@ -643,8 +653,12 @@ def project_to_field(verts: np.ndarray, scene: Scene, iters: int = 2, step: floa
 
 
 def mesh_from_scene(scene: Scene, spacing: float, smooth_iters: int = 6, project: int = 1,
-                    iso: float = 0.0) -> Tuple[np.ndarray, np.ndarray]:
+                    iso: float = 0.0, grid_out: Optional[list] = None) -> Tuple[np.ndarray, np.ndarray]:
+    """Surface-nets mesh of a scene. Pass a list as `grid_out` to be handed the sampled grid
+    (F, origin, spacing) as well, so a painter can read the same field without resampling it."""
     F, origin, sp = scene.grid(spacing)
+    if grid_out is not None:
+        grid_out[:] = [F, origin, sp]
     verts, quads = surface_nets(F, origin, sp, iso)
     if len(verts) == 0:
         return verts, quads

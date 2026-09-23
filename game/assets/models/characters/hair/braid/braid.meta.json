@@ -1,25 +1,34 @@
 {
  "bounds": [
-  -0.1083,
-  -0.0783,
-  1.3445,
-  0.1064,
-  0.1138,
-  1.8159
+  -0.0845,
+  -0.0822,
+  1.2874,
+  0.0852,
+  0.1288,
+  1.7893
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
+ "materials": {
+  "braid": "hair"
+ },
  "params": {
-  "bone": "Head",
+  "bone": null,
   "material": "hair"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 9597,
+ "seed": 8138,
  "slot_hint": "attachment",
+ "textures": [
+  "braid_normal.png",
+  "braid_albedo.png",
+  "braid_orm.png"
+ ],
  "tris": [
-  2200,
+  4200,
   0,
   0
  ],

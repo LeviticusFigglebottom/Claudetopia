@@ -81,9 +81,10 @@ func _look() -> CharacterAppearance:
 	return naming.get("appearance") as CharacterAppearance
 
 
+## The colour a part has been given: a cloth or hair part's albedo, or a skin's tint (skin wears
+## the skin shader, not a StandardMaterial3D).
 func _override_albedo(mi: MeshInstance3D) -> Color:
-	var m := mi.get_surface_override_material(0) as BaseMaterial3D
-	return m.albedo_color if m != null else Color(-1, -1, -1)
+	return HumanoidModel.skin_tint_of(mi)
 
 
 func _forge_built() -> bool:
@@ -170,23 +171,36 @@ func test_choosing_a_hair_style_changes_the_part_on_the_body() -> void:
 	assert_true(after != null and after != before, "the hair mesh on the skeleton did not change")
 
 
+## Every face is a head part now, the even one included: the rig's own head is an older skull
+## than the parts and stays hidden under whichever face is chosen. One head and one pair of eyes
+## show at a time, and choosing a face swaps them.
 func test_choosing_a_face_swaps_the_head_and_its_eyes() -> void:
 	var o := _chooser("head")
 	assert_true(o != null, "no face chooser")
 	if o == null or not _forge_built():
 		return
 	var rig_head: MeshInstance3D = _model()._default_meshes.get("head")
-	assert_true(rig_head != null and rig_head.visible, "the rig's own head should show before a face is chosen")
+	assert_true(_model()._part_meshes.has("head"), "the even face should be a head part too")
+	assert_true(rig_head == null or not rig_head.visible, "the rig's own head is showing under the head part")
+	var before: Mesh = (_model()._part_meshes["head"][0] as MeshInstance3D).mesh
 	o.select(1)
 	o.item_selected.emit(1)
 	assert_eq(_model().appearance.part("head"), CharacterAppearance.HEADS[1])
-	assert_true(_model()._part_meshes.has("head"), "no head part was attached")
-	assert_false(rig_head.visible, "the rig's own head is still showing under the chosen face")
+	var after: Mesh = (_model()._part_meshes["head"][0] as MeshInstance3D).mesh
+	assert_true(after != before, "choosing another face left the same head on")
 	for eye in _model()._default_eyes:
-		assert_false((eye as MeshInstance3D).visible, "the rig's own eyes are still showing under the chosen face")
+		assert_false((eye as MeshInstance3D).visible, "the rig's own eyes are showing under the chosen face")
+	var eyes := 0
+	for mi in _model()._part_meshes["head"]:
+		if _model()._is_eye(mi):
+			eyes += 1
+			assert_true((mi as MeshInstance3D).get_surface_override_material(0) is ShaderMaterial
+					and ((mi as MeshInstance3D).get_surface_override_material(0) as ShaderMaterial).shader
+					== HumanoidModel.IRIS_SHADER, "a swapped face's eye is not wearing the iris shader")
+	assert_eq(eyes, 2, "the chosen face brings exactly one pair of eyes")
 	o.select(0)
 	o.item_selected.emit(0)
-	assert_true(rig_head.visible, "choosing the even face should bring the rig's head back")
+	assert_true(rig_head == null or not rig_head.visible, "going back to the even face brought the old skull back")
 
 
 func test_every_part_a_chooser_offers_has_been_forged() -> void:
@@ -220,33 +234,59 @@ func test_the_height_slider_scales_the_rig() -> void:
 	assert_near(_model()._rig_root.scale.y, 1.60 / 1.78, 0.001, "the rig did not shrink with the slider")
 
 
-## The build slider has to change the body, and it does it two ways now. With the forge's
-## bodies present, a slight or a heavy record *wears a different mesh* -- which is the whole
-## point of baking the variants, and the rig deliberately stops widening then, or the same
-## build would be counted twice. Without them, widening the rig is the fallback.
-##
-## This asserted only the widening, so it pinned the fallback and went red on the day the
-## real bodies arrived. A test that only knows one of two right answers is a test that
-## punishes the fix.
+## The build slider has to change the body at every step of its travel. It used to do nothing
+## across its middle third: the body variant only changes at 0.30 and 0.68, and a variant body was
+## never widened. The girth it asks for is now one continuous line, and the rig makes up the
+## difference between that and the girth of whichever body is worn, so the width never jumps
+## where the variant changes and is never counted twice.
 func test_the_build_slider_changes_the_body() -> void:
 	var s := _slider("build")
 	assert_true(s != null, "no build slider")
 	if s == null or not _forge_built():
 		return
-	s.value = 0.0
-	var slight: Vector3 = _model()._rig_root.scale
-	var slight_body := _model().body_variant_worn
-	s.value = 1.0
-	var broad: Vector3 = _model()._rig_root.scale
-	var broad_body := _model().body_variant_worn
-	assert_near(broad.y, slight.y, 0.0001, "build must not change height")
-	if slight_body.is_empty() and broad_body.is_empty():
-		assert_true(slight.x < slight.y, "a slight build should be narrower than it is tall")
-		assert_true(broad.x > slight.x, "the build slider did not widen the rig")
+	var last := -1.0
+	var worn: Array[String] = []
+	var height := -1.0
+	for i in 21:
+		s.value = i * 0.05
+		var girth: float = _model()._rig_root.scale.x / _model()._rig_root.scale.y \
+				* float(HumanoidModel.VARIANT_GIRTH.get(_model().body_variant_worn, 1.0))
+		assert_near(girth, HumanoidModel.girth_for(i * 0.05), 0.001,
+				"at build %.2f the body is not the girth the slider asks for" % (i * 0.05))
+		assert_true(girth > last, "the build slider did not widen the body between %.2f and %.2f" % [(i - 1) * 0.05, i * 0.05])
+		if last > 0.0:
+			assert_true(girth - last < 0.03, "the width jumps at build %.2f" % (i * 0.05))
+		last = girth
+		if height < 0.0:
+			height = _model()._rig_root.scale.y
+		assert_near(_model()._rig_root.scale.y, height, 0.0001, "build must not change height")
+		if not worn.has(_model().body_variant_worn):
+			worn.append(_model().body_variant_worn)
+	# A variant body is only worn under clothes cut for it (HumanoidModel._garments_fit); where
+	# the clothes are not, the rig's girth does all of the widening and no skin shows through.
+	var fitted: bool = _model()._garments_fit("heavy") and _model()._garments_fit("slight")
+	if fitted:
+		assert_true(worn.size() >= 2, "the build slider never changed the body mesh: %s" % [worn])
+	else:
+		assert_eq(worn, [""] as Array[String], "a variant body was worn under clothes not cut for it")
+
+
+## Every beard the chooser offers draws something. Three of the four once shipped as a skeleton
+## with no mesh in it, and "Long" drew nothing at all.
+func test_every_beard_offered_has_a_mesh() -> void:
+	var o := _chooser("beard")
+	assert_true(o != null, "no beard chooser")
+	if o == null:
 		return
-	assert_ne(slight_body, broad_body,
-		"the build slider left the same body mesh on at both ends: %s" % slight_body)
-	assert_near(broad.x, broad.y, 0.002, "a variant body was widened by the slider as well")
+	var offered: Array = naming.call("offered_beards")
+	assert_eq(o.item_count, offered.size(), "the chooser and the list it was built from disagree")
+	assert_eq(str(offered[0]), "", "the first beard is no beard")
+	for style in offered.slice(1):
+		var packed := load("res://assets/models/characters/beards/%s/%s.glb" % [style, style]) as PackedScene
+		var inst := packed.instantiate()
+		assert_gt(inst.find_children("*", "MeshInstance3D", true, false).size(), 0,
+				"the Naming offers the beard '%s' and it has nothing to draw" % style)
+		inst.free()
 
 
 # --- the Calling ----------------------------------------------------------------------------------
@@ -344,3 +384,36 @@ func test_be_named_writes_the_record_the_world_reads() -> void:
 	assert_near(look.height, 1.66)
 	assert_true(look.skin in CharacterAppearance.SKIN_TONES, "the record must use the body's own vocabulary")
 	assert_eq(_tree().current_scene, scene_before, "the test seam must keep the scene where it is")
+
+
+## A player can change five things before the screen draws once (a preset does), and the
+## probe does. Every part must still be drawable afterwards, and a face must still have eyes
+## wearing the iris shader rather than skin.
+func test_a_whole_look_made_in_one_frame_leaves_every_part_drawable() -> void:
+	if not _forge_built():
+		return
+	for i in 3:
+		_swatch("Skin", CharacterAppearance.SKIN_TONES[i + 2]).pressed.emit()
+		_swatch("Hair", CharacterAppearance.HAIR_COLOURS[i + 1]).pressed.emit()
+		_swatch("Eyes", CharacterAppearance.EYE_COLOURS[i + 3]).pressed.emit()
+		for slot in ["head", "hair", "beard"]:
+			var o := _chooser(slot)
+			o.select((i + 2) % o.item_count)
+			o.item_selected.emit(o.selected)
+		_slider("build").value = [0.1, 0.5, 0.9][i]
+		await _tree().process_frame
+		await _tree().process_frame
+	var eyes := 0
+	for slot in _model()._part_meshes:
+		for mi in _model()._part_meshes[slot]:
+			var m := mi as MeshInstance3D
+			assert_true(is_instance_valid(m) and m.is_inside_tree(), "a %s mesh is not in the tree" % slot)
+			assert_true(m.mesh != null, "a %s mesh has nothing to draw" % slot)
+			if _model()._is_eye(m):
+				eyes += 1
+				var mat := m.get_surface_override_material(0) as ShaderMaterial
+				assert_true(mat != null and mat.shader == HumanoidModel.IRIS_SHADER, "an eye is not wearing the iris shader")
+				# with no texture the shader samples plain white, and an eye is a blank disc
+				assert_true(mat != null and mat.get_shader_parameter("albedo_tex") != null,
+						"an eye's iris material has no eye texture: it draws as a white disc")
+	assert_eq(eyes, 2, "the face has lost its eyes")

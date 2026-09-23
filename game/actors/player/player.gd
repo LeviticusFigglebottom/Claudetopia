@@ -258,7 +258,7 @@ func _look_from_the_naming() -> CharacterAppearance:
 		look.set_part("head", "default")
 		look.set_part("hair", "short")
 		var calling := str(GameState.get_flag("player_calling", ""))
-		look.dress_for_culture(CharacterAppearance.culture_of_calling(calling), abs(display_name.hash()))
+		look.dress_for_culture(CharacterAppearance.culture_of_calling(calling), abs(display_name.hash()), true)
 	return look
 
 
@@ -266,9 +266,39 @@ func _look_from_the_naming() -> CharacterAppearance:
 ## the animation driver; a placeholder capsule has nothing to apply it to and is left alone.
 func apply_appearance(look: Variant) -> void:
 	appearance = look if look is CharacterAppearance else CharacterAppearance.new(look as Dictionary)
+	_dress_the_body()
+
+
+## The equipment slots whose items are worn on the body, rather than held.
+const WORN_SLOTS := ["body", "hands", "feet", "head"]
+
+
+## What the body wears: the look the Naming made, with every piece of armour on the doll laid
+## over the part slots its `wear` block names. Equipping a brigandine used to change the armour
+## number and nothing a player could see: no armour item in the pack named a part at all.
+## `appearance` stays the Naming's look, which is what is saved and what a Warden would
+## describe; this is only what is on the body today.
+func worn_look() -> CharacterAppearance:
+	var worn := appearance.duplicate_appearance()
+	var eq := get_node_or_null(NodePath("Equipment"))
+	if eq == null or not eq.has_method("get_slot"):
+		return worn
+	for slot in WORN_SLOTS:
+		var stack: Variant = eq.call("get_slot", slot)
+		if stack == null:
+			continue
+		var wear: Variant = ContentDB.get_or_empty(str(stack.id)).get("wear", {})
+		if typeof(wear) != TYPE_DICTIONARY:
+			continue
+		for part_slot in wear:
+			worn.set_part(str(part_slot), str(wear[part_slot]))
+	return worn
+
+
+func _dress_the_body() -> void:
 	var body := body_model()
 	if body != null:
-		body.call("apply_appearance", appearance)
+		body.call("apply_appearance", worn_look())
 
 
 ## The humanoid model standing in for this character, or null while it is a placeholder.
@@ -1760,7 +1790,7 @@ func _follow_equipment() -> void:
 		eq.changed.connect(_on_equipment_changed)
 	if eq.has_method("use_quick_index"):
 		quick_slot_handler = Callable(eq, "use_quick_index")
-	for slot in ["main_hand", "off_hand", "body"]:
+	for slot in ["main_hand", "off_hand", "body", "hands", "feet", "head"]:
 		_on_equipment_changed(slot)
 
 
@@ -1894,6 +1924,8 @@ func _on_equipment_changed(slot: String) -> void:
 			# A helm, gloves, boots, a ring: no hand to put them in, but armour and weight.
 			_refresh_armour()
 			_recompute_load()
+	if slot in WORN_SLOTS:
+		_dress_the_body()
 
 
 ## The blade running down: the WeaponInstance spent charge, so the stack it came from loses it

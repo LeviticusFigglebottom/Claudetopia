@@ -8,16 +8,24 @@
   0.57
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "iron",
+ "materials": {
+  "greaves": "iron"
+ },
  "params": {
   "bone": null,
   "material": "iron"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 7103,
+ "seed": 62480,
  "slot_hint": "feet",
+ "textures": [
+  "greaves_albedo.png",
+  "greaves_orm.png"
+ ],
  "tris": [
   1298,
   0,
