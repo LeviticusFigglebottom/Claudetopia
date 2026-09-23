@@ -33,6 +33,9 @@ const BOOK_MENUS := ["journal", "book", "sayings", "skills"]
 const PAPER_MENUS := ["inventory", "container", "trade", "crafting", "deed", "job_board"]
 const BRASS_MENUS := ["pause", "settings", "save_load"]
 const REFUSAL_NOTES := ["warning", "warn", "refusal"]
+## A cue heard off EventBus plays at most once in this long (ms): taking everything from a chest,
+## or a Calling's starting kit arriving, is one pick-up, not a pile of them struck together.
+const CUE_GAP_MS := 150
 
 signal played(id: String, position: Vector3)
 
@@ -45,6 +48,7 @@ var _rng := RandomNumberGenerator.new()
 var _cache: Dictionary = {}           ## path -> AudioStream
 var _missing: Dictionary = {}         ## ids already complained about, so a loop logs once
 var _last_played: Dictionary = {}     ## id -> index, so the same variant is not picked twice running
+var _cue_at: Dictionary = {}          ## cue id -> Time.get_ticks_msec() it last played
 
 
 func _ready() -> void:
@@ -361,12 +365,22 @@ func _on_container_opened(container: Node, _actor: Node) -> void:
 	play("chest_open", (container as Node3D).global_position if container is Node3D else Vector3.INF)
 
 
+## Whether a cue may play now (and, if it may, that it has): see CUE_GAP_MS.
+func _cue_ready(id: String) -> bool:
+	var now := Time.get_ticks_msec()
+	if now - int(_cue_at.get(id, -100000)) < CUE_GAP_MS:
+		return false
+	_cue_at[id] = now
+	return true
+
+
 func _on_item_acquired(_item_id: String, _count: int) -> void:
-	play("pick_up", _player_position())
+	if _cue_ready("pick_up"):
+		play("pick_up", _player_position())
 
 
 func _on_marks_changed(_total: int, delta: int) -> void:
-	if delta != 0:
+	if delta != 0 and _cue_ready("coins"):
 		play("coins_many" if delta >= 50 else "coins_few")
 
 

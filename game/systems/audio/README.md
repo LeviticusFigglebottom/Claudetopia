@@ -149,6 +149,7 @@ python3 tools/audio/gen_music.py --force        # ~14 min: stems, theme, boss, s
 python3 tools/audio/gen_ambience.py --force     # beds and one-shot pools
 python3 tools/audio/gen_sfx.py --force          # 70 ids, 240 variants
 python3 tools/audio/report.py                   # spectrograms + loudness table -> captures/audio
+python3 tools/audio/audit.py --strict           # clipping, DC, edges, dead air, seams, loudness
 godot --headless --path game --audio-driver Dummy -s tools_gd/make_bus_layout.gd
 ```
 
