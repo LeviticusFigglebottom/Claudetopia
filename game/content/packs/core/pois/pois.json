@@ -70,7 +70,7 @@
   {"id": "core:poi/tideflat_stones", "name": "The Tideflat Stones", "region": "core:region/sedgemire", "kind": "standing_stones", "position": [-3790, 450], "hearthstone": false,
    "unique_feature": "three stones on the sea's edge marking a shoreline that no longer exists", "visible_from": ["core:poi/reed_wreck"],
    "story": "The soft western edge. Beyond them the flats go grey and the Salt Isles are a rumour. A survey point for the western chart.", "encounter": "none; crabs"},
-  {"id": "core:poi/heron_watch", "name": "Heron Watch", "region": "core:region/sedgemire", "kind": "tower", "position": [-2460, -640], "hearthstone": false,
+  {"id": "core:poi/heron_watch", "name": "Heron Watch", "region": "core:region/sedgemire", "kind": "tower", "position": [-2442, -660], "hearthstone": false,
    "unique_feature": "a reedfolk lookout on tall stilts with a bittern nesting in its bell", "visible_from": ["core:poi/lantern_causeway", "core:poi/eelweir"],
    "story": "The watch was raised to see the Lakefolk coming for the weir. Now it is where young reedfolk go to be alone together.", "encounter": "none; a vista over the delta"},
 

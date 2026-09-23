@@ -466,7 +466,7 @@ would still like the kit to build (with how they are faked today) are in §10.
 | `core:poi/stair_of_isse` | -3300, -1100 | -3120, -1180 | The North Fen |
 | `core:poi/wisp_hollow` | -2300, -800 | -2950, -780 | The Delta |
 | `core:poi/tideflat_stones` | -3900, -200 | -3790, 450 | The Tideflats |
-| `core:poi/heron_watch` | -2100, -400 | -2460, -640 | The Delta |
+| `core:poi/heron_watch` | -2100, -400 | -2442, -660 | The Delta |
 | `core:place/grandfather_hollow` | 3000, 250 | 2750, 450 | The Greatwood |
 | `core:place/grandfather` | 3000, 250 | 2750, 450 | The Greatwood |
 | `core:place/fernhold` | 2300, 1100 | 3350, 230 | The High Wold |
