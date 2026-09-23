@@ -307,6 +307,10 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     maps = paint.surface_maps(ob, size=size, pad=4)
     head = bool(appearance.get("face", True))
     occ_r = 0.022 if head else 0.052
+    # read near the surface only: the occlusion probe steps out at most occ_r, and the whole
+    # scene at every probe put each texel through all ten fingers (36 minutes for the rig)
+    if isinstance(scene, sdf.Scene):
+        scene = scene.near(0.08)
     fn = paint.skin_paint(
         L, tone=appearance.get("skin", "wheat"), seed=int(appearance.get("seed", 0)),
         face=appearance.get("face", True), brow_colour=appearance.get("hair_colour", "dark_brown"),

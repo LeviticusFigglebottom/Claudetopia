@@ -387,6 +387,10 @@ class Scene:
             hi = np.maximum(hi, p.hi + p.k)
         return lo - margin, hi + margin
 
+    def near(self, margin: float = 0.08) -> "_NearScene":
+        """This scene, read only near its surface (see `_NearScene`)."""
+        return _NearScene(self, margin)
+
     def eval(self, P: np.ndarray) -> np.ndarray:
         """Evaluate the field at arbitrary points (n,3)."""
         d = np.full(len(P), 1e6)
@@ -443,6 +447,36 @@ class Scene:
                 else:
                     F[sl] = smax(F[sl], dp, p.k)
         return F, origin, spacing
+
+
+class _NearScene:
+    """A scene's field where it matters to something probing near the surface: each union or
+    subtraction is evaluated only at the points within `margin` (and its blend) of its bounds.
+    Closer than `margin` to the surface the value is exact; further out it is at least `margin`,
+    which is all an occlusion probe of a smaller radius asks of it.
+
+    `Scene.eval` evaluates every primitive at every point. Painting the body, the occlusion
+    probe put five points above each of a million texels through the whole body, and every one
+    of them through each sphere of ten fingers: the rig's bake went from twenty minutes to
+    over an hour when the hands got fingers."""
+
+    def __init__(self, scene: "Scene", margin: float):
+        self.scene = scene
+        self.margin = margin
+
+    def eval(self, P: np.ndarray) -> np.ndarray:
+        d = np.full(len(P), 1e6)
+        for p in self.scene.prims:
+            if p.op in ("union", "subtract"):
+                pad = self.margin + p.k
+                idx = np.nonzero(np.all((P >= p.lo - pad) & (P <= p.hi + pad), axis=1))[0]
+                if len(idx) == 0:
+                    continue
+                dp = p.fn(P[idx])
+                d[idx] = smin(d[idx], dp, p.k) if p.op == "union" else smax(d[idx], -dp, p.k)
+            else:
+                d = smax(d, p.fn(P), p.k)
+        return d
 
 
 class SampledField:

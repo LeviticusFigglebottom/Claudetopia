@@ -11,7 +11,8 @@ extends Node3D
 ## children between two grown people, standing and mid-stride, from the front and the side;
 ## `--no-child-rig` shows them as they were before the child had a skeleton of its own.
 ## `--looks=<file.json>` stands the appearances listed in that file in a row and photographs
-## the row from the front, three-quarter, side and back (`--pose=Walk` for mid-stride).
+## the row from the front, three-quarter, side and back (`--pose=Walk` for mid-stride);
+## `--frame=head` closes in on the heads, `--frame=hands` on the hands (two looks to a row).
 
 const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
 const PRESETS_PATH := "res://../tools/forge/characters.json"
@@ -257,7 +258,8 @@ func _queue_looks() -> void:
 		return
 	var looks: Array = parsed
 	var heads := looks_frame == "head"
-	var spacing := 0.62 if heads else 1.05
+	var hands := looks_frame == "hands"
+	var spacing := 0.62 if heads else (0.55 if hands else 1.05)
 	var views := {"front": 0.0, "three_quarter": -40.0, "side": -90.0, "back": 180.0}
 	var r := 0
 	for view in views:
@@ -273,6 +275,11 @@ func _queue_looks() -> void:
 				# wide enough for the row at 16:9 and a 30 degree field of view
 				"cam": Vector3(x0, 1.62, -maxf(1.2, (width * 0.5 + 0.3) / 0.476)),
 				"look": Vector3(x0, 1.58, 0), "fov": 30.0, "hide_rows": -1})
+		elif hands:
+			# from the elbow to the knee: the hands hanging at the sides, and how they meet the arm
+			_jobs.append({"file": "lineup_looks_%s.png" % view,
+				"cam": Vector3(x0, 0.98, -maxf(0.9, (width * 0.5 + 0.1) / 0.476)),
+				"look": Vector3(x0, 0.92, 0), "fov": 30.0, "hide_rows": -1})
 		else:
 			_jobs.append({"file": "lineup_looks_%s.png" % view,
 				"cam": Vector3(x0, 1.0, -maxf(3.4, width * 0.9 + 1.0)),
