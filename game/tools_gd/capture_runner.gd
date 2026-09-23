@@ -169,6 +169,13 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	# Both are asked for by name, so this runner can still photograph a build from before either
 	# existed: a before-and-after is only a comparison if the camera is the same on both sides.
 	var atmos := _world.atmosphere
+	# The plan's weather again, now the camera is standing in the shot's region: entering a region
+	# starts that region's own weather, so a weather pinned before the move lasted only until the
+	# region changed under it, and every shot that crossed a border took whatever the region's dice
+	# gave (the Briarwold vista in rain, pinned "still"). Sheets were not repeatable across a
+	# change to any region's weather odds.
+	if shot.has("weather"):
+		_force_weather(str(shot["weather"]))
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
@@ -496,6 +503,8 @@ func _sequence(index: int, seq: Dictionary) -> int:
 	_world.move_target(pos)
 	await _wait_for_streaming()
 	var atmos := _world.atmosphere
+	if seq.has("weather"):
+		_force_weather(str(seq["weather"]))
 	var to := str(seq.get("region", _world.provider.nearest_region_id_at(pos.x, pos.z)))
 	if atmos and seq.has("from_region"):
 		atmos.call("set_region", str(seq["from_region"]), true)
