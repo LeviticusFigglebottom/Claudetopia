@@ -652,29 +652,19 @@ static func falling_water(glass := false, speed := 2.6) -> ShaderMaterial:
 
 # --- light, smoke and the stone that keeps a name -----------------------------------------
 
-## A fire's or a lantern's light. It fades out with distance so a camp seen from the far side
-## of the valley costs nothing, and it casts no shadow because the Compatibility renderer caps
-## lights per object and a shadowing omni is the expensive kind.
-func light(at: Vector3, colour := Color(1.0, 0.72, 0.42), energy := 2.2, reach := 11.0) -> OmniLight3D:
-	# After dark the fire is also a glow for NightLights, which is what makes a camp on the far
-	# side of the valley a point of light; that is registered in the far ring as well, where no
-	# real light is built.
+## A fire's or a lantern's light, as a source for NightLights rather than a light of its own.
+##
+## Every one of these used to be an always-on OmniLight3D -- 27 calls across the builders, six
+## along the Long Stride alone -- and nothing counted them against the pool of lamps NightLights
+## hands out, so beside a causeway the two together passed the twelve lights Compatibility draws
+## on one object and it dropped the rest without a word. Registered here, the fire is a glow that
+## reads from across the valley at night, and it takes one of the pool's real lights, at the
+## energy and reach given, whenever it is among the nearest to the camera -- by day as well,
+## because a camp's fire burns at noon. The far ring registers too; it is never near enough to
+## be given a light, and its glow is what a far camp is.
+func light(at: Vector3, colour := Color(1.0, 0.72, 0.42), energy := 2.2, reach := 11.0) -> void:
 	if root.is_inside_tree():
-		NightLights.add(root, [root.to_global(at)], "fire", Color(colour.r, colour.g, colour.b, 1.0))
-	if far:
-		return null
-	var l := OmniLight3D.new()
-	l.position = at
-	l.light_color = colour
-	l.light_energy = energy
-	l.omni_range = reach
-	l.omni_attenuation = 0.9
-	l.shadow_enabled = false
-	l.distance_fade_enabled = true
-	l.distance_fade_begin = 55.0
-	l.distance_fade_length = 40.0
-	root.add_child(l)
-	return l
+		NightLights.add(root, [root.to_global(at)], "poi", Color(colour.r, colour.g, colour.b, 1.0), energy, reach)
 
 
 ## Smoke, mist or spray: a soft billboard puff emitted in a column or a spread.

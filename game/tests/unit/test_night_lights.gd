@@ -160,12 +160,70 @@ func test_the_pool_lights_the_nearest_lamps_at_night_and_none_by_day() -> void:
 	_drop(st[0])
 
 
+## A point of interest's fire or lamp used to be an OmniLight3D of its own, always on, and nothing
+## counted those against the pool: six along the Long Stride and eight from the pool passed the
+## twelve lights Compatibility draws on one object. It is a source now, with its own energy and
+## reach, and no light node is left standing in the dressing.
+func test_a_poi_light_is_a_source_not_a_light_of_its_own() -> void:
+	var root := Node3D.new()
+	_tree().root.add_child(root)
+	var kit := PoiKit.new(root, Vector3.ZERO, 20.0, "core:region/brightwater", false, "core:poi/test_lamp")
+	kit.light(Vector3(1.0, 2.0, 3.0), Color(1.0, 0.6, 0.3), 2.8, 13.0)
+	assert_empty(root.find_children("*", "OmniLight3D", true, false), "a POI light stood its own OmniLight3D")
+	var mine := NightLights.sources_of(root)
+	assert_eq(mine.size(), 1, "the light was not registered")
+	if mine.size() == 1:
+		var s: Array = mine[0]
+		assert_eq(str(s[1]), "poi")
+		assert_near(float(s[3]), 2.8, 0.001, "the builder's energy is kept")
+		assert_near(float(s[4]), 13.0, 0.001, "and its reach")
+	_drop(root)
+	assert_empty(NightLights.sources_of(root), "a dressing that left kept its light")
+
+
+## By day the pool lights only what always burned -- a point of interest's fires and lamps --
+## and never more than it has, which is at most eight: the other four of Compatibility's twelve
+## are a Hearthstone's flame or two, the player's lantern and an Echo.
+func test_by_day_the_pool_lights_only_what_always_burned() -> void:
+	var st := _stage()
+	var lights: NightLights = st[2]
+	var owner: Node3D = st[3]
+	var eye := Vector3(5000.0, 10.0, 5000.0)
+	NightLights.add(owner, [eye + Vector3(2.0, 0.0, 0.0)], "lantern")
+	NightLights.add(owner, [eye + Vector3(4.0, 0.0, 0.0)], "poi", Color(1, 0.6, 0.3, 1), 2.0, 9.0)
+	lights.assign(0.0)
+	assert_eq(lights.lit.size(), 1, "by day only the point of interest's fire is lit")
+	if lights.lit.size() == 1:
+		assert_eq(str(lights.lit[0][1]), "poi")
+	var many: Array = []
+	for i in 30:
+		many.append(eye + Vector3(1.0 + float(i), 0.0, 1.0))
+	NightLights.add(owner, many, "poi")
+	lights.assign(1.0)
+	assert_true(lights.lit.size() <= NightLights.MAX_POOL, "the pool lit %d lights" % lights.lit.size())
+	lights._size_pool(99)
+	assert_eq(lights.pool_size, NightLights.MAX_POOL, "the setting cannot raise the pool past its cap")
+	_drop(st[0])
+
+
+func test_the_costs_are_counted() -> void:
+	var st := _stage()
+	var lights: NightLights = st[2]
+	NightLights.reset_stats()
+	lights.rebuild_glow()
+	lights.assign(1.0)
+	assert_eq(int(NightLights.stats["rebuilds"]), 1, "a rebuild went uncounted")
+	assert_eq(int(NightLights.stats["assigns"]), 1, "an assignment went uncounted")
+	assert_eq(int(NightLights.stats["rebuild_sources"]), NightLights.count(), "the rebuild drew a different registry")
+	_drop(st[0])
+
+
 func test_every_source_is_one_glow_in_one_draw() -> void:
 	var st := _stage()
 	var lights: NightLights = st[2]
 	var owner: Node3D = st[3]
 	NightLights.add(owner, [Vector3(1, 2, 3), Vector3(4, 5, 6)], "fire", Color(0.4, 0.9, 0.8))
-	lights._process(0.0)
+	lights.rebuild_glow()
 	var glow := lights.get_node("Glows") as MultiMeshInstance3D
 	assert_eq(glow.multimesh.instance_count, NightLights.count(), "one glow per source")
 	assert_eq(glow.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "a glow casts no shadow")
@@ -177,4 +235,37 @@ func test_every_source_is_one_glow_in_one_draw() -> void:
 		if str(s[1]) == "fire" and is_equal_approx(c.g, 0.9) and is_equal_approx(c.r, 0.4):
 			mine += 1
 	assert_eq(mine, 2, "a fire that knows its colour keeps it")
+	_drop(st[0])
+
+
+## The glow MultiMesh is filled from one buffer made of each owner's chunk, written once when the
+## owner registers. A chunk is sixteen floats a source in the MultiMesh's own layout: the scaled
+## basis in rows with the origin at the end of each, then the colour and the glow's strength.
+## When the owner leaves, its chunk goes with it.
+func test_a_glow_is_written_once_in_the_multimesh_layout() -> void:
+	var st := _stage()
+	var lights: NightLights = st[2]
+	var owner: Node3D = st[3]
+	NightLights.add(owner, [Vector3(1, 2, 3), Vector3(4, 5, 6)], "brazier", Color(0.4, 0.9, 0.8))
+	var chunk: PackedFloat32Array = NightLights._chunks[owner.get_instance_id()]
+	var n := (NightLights.sources_of(owner)).size()
+	assert_eq(chunk.size(), n * 16, "sixteen floats a source")
+	var size := float(NightLights.KINDS["brazier"]["size"])
+	var last := (n - 1) * 16
+	assert_near(chunk[last + 0], size, 0.0001, "the basis is the kind's size")
+	assert_near(chunk[last + 5], size, 0.0001)
+	assert_near(chunk[last + 10], size, 0.0001)
+	assert_near(chunk[last + 3], 4.0, 0.0001, "the origin closes each row: x")
+	assert_near(chunk[last + 7], 5.0, 0.0001, "y")
+	assert_near(chunk[last + 11], 6.0, 0.0001, "z")
+	assert_near(chunk[last + 13], 0.9, 0.0001, "then the colour")
+	assert_near(chunk[last + 15], float(NightLights.KINDS["brazier"]["glow"]), 0.0001, "and the strength")
+	lights.rebuild_glow()
+	var total := 0
+	for id in NightLights._chunks:
+		total += (NightLights._chunks[id] as PackedFloat32Array).size() / 16
+	assert_eq(total, NightLights.count(), "every source has its place in the buffer, and only once")
+	var id := owner.get_instance_id()
+	NightLights.remove(id)
+	assert_false(NightLights._chunks.has(id), "a departed owner takes its glows with it")
 	_drop(st[0])

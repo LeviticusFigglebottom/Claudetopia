@@ -180,7 +180,8 @@ func _build_video() -> void:
 	_check("video", "volumetric_fog", "Volumetric fog", "Forward+ only")
 	_check("video", "sdfgi", "Bounced light (SDFGI)", "Forward+ only")
 	_check("video", "color_grade", "Region colour grade")
-	_slider("video", "night_lights", "Lamps lit at night", 0.0, 10.0, 1.0, "lamps")
+	_check("video", "water_reflections", "Reflections in the water")
+	_slider("video", "night_lights", "Lamps lit at night", 0.0, 8.0, 1.0, "lamps")
 	_check("video", "glow", "Glow")
 	_slider("video", "brightness", "Brightness", 0.6, 1.6, 0.05)
 

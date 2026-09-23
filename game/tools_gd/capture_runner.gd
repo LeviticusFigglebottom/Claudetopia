@@ -168,6 +168,8 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
+	if lights != null and (lights as Object).has_method("rebuild_glow"):
+		(lights as Object).call("rebuild_glow")
 	if lights != null and (lights as Object).has_method("assign"):
 		var st: Variant = atmos.get("state") if atmos else null
 		(lights as Object).call("assign", float((st as Dictionary).get("night", 0.0)) if st is Dictionary else 0.0)
@@ -266,6 +268,17 @@ func _attribute_shot(label: String, cam: Camera3D) -> void:
 	if f:
 		f.store_string(JSON.stringify(_attribution, "  "))
 		f.close()
+
+
+## What the per-frame systems cost over the whole run: the night-light glow rebuilds and pool
+## assignments and the grade LUT rebuilds, each count, total and worst in microseconds. Asked for by
+## name, so a build from before either existed still runs.
+func _costs() -> Dictionary:
+	var out := {}
+	for node in [_world.get("night_lights") if _world else null, _world.atmosphere if _world else null]:
+		if node != null and (node as Object).has_method("costs"):
+			out.merge((node as Object).call("costs"))
+	return out
 
 
 ## Review shots look a long way, where the region fog densities turn the land into haze.
@@ -420,6 +433,7 @@ func _write_perf() -> void:
 		"budget": {"draw_calls": 2000, "primitives": 1500000},
 		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
 		"within_budget": worst_draw <= 2000 and worst_prims <= 1500000,
+		"costs": _costs(),
 		"shots": _perf,
 	}
 	var f := FileAccess.open("%s/perf.json" % out_dir, FileAccess.WRITE)
@@ -428,3 +442,4 @@ func _write_perf() -> void:
 		f.close()
 	Log.info("Capture", "worst frame: %d draw calls, %.2f M primitives (budget 2000 / 1.5 M)"
 		% [worst_draw, float(worst_prims) / 1e6])
+	Log.info("Capture", "costs: %s" % JSON.stringify(doc["costs"]))

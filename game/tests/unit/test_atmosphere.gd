@@ -137,6 +137,24 @@ func test_a_region_grade_is_a_full_lut() -> void:
 	assert_eq(lut.get_depth(), Atmosphere.GRADE_LUT_SIZE)
 
 
+## The table is written as bytes rather than a pixel at a time; every texel must still be the
+## grade `grade_colour` describes, to within the eight bits it is stored in.
+func test_the_lut_is_the_grade_texel_for_texel() -> void:
+	var look := Atmosphere._look_from_region(ContentDB.get_def("core:region/cinderlea"))
+	var slices := Atmosphere.grade_slices(look)
+	assert_eq(slices.size(), Atmosphere.GRADE_LUT_SIZE, "a slice for every step of blue")
+	var n := Atmosphere.GRADE_LUT_SIZE
+	var step := 1.0 / float(n - 1)
+	var lift := (look["shadow_lift"] as Color) * Atmosphere.GRADE_LIFT
+	var worst := 0.0
+	for idx in [[0, 0, 0], [16, 16, 16], [8, 3, 12], [16, 0, 5], [2, 14, 9], [11, 11, 0]]:
+		var want := Atmosphere.grade_colour(Color(float(idx[0]) * step, float(idx[1]) * step, float(idx[2]) * step),
+			lift, look["highlight_gain"], look["midtone_tint"])
+		var got := (slices[idx[2]] as Image).get_pixel(idx[0], idx[1])
+		worst = maxf(worst, maxf(absf(got.r - want.r), maxf(absf(got.g - want.g), absf(got.b - want.b))))
+	assert_true(worst <= 1.0 / 255.0 + 0.0001, "the table matches the grade (worst %.4f)" % worst)
+
+
 # --- a live atmosphere -------------------------------------------------------------------------
 
 func _live(cam_y: float) -> Array:
