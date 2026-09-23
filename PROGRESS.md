@@ -1329,3 +1329,339 @@ work and not a wiring change. A child NPC is still a small adult until that is d
   — including stale doubled ones such as `heavy_heavy_albedo.png`.
 * **Two dependencies were undeclared**: `scikit-image` and `fast_simplification` (trimesh 5
   moved `simplify_quadric_decimation` out). Both are in `tools/requirements.txt` now.
+
+## The shape of the land
+
+A pass over the ground itself: the road that stood on a knife-edge, a landform apiece for the
+six regions, and cover that differs between them in structure rather than tint. It was stopped
+part-way by a stopping-point order, so it ends in two halves. **The roads, the rivers under
+them and the staged-build check are finished, measured and on by default. The landforms and
+the regional cover are built and partly measured, and are switched off** (`--recipe landforms`,
+`--recipe cover`), because nobody has yet looked at them from the ground or put them through
+the drop test. The numbers below are from three full 4096 builds in this worktree: the world
+as this pass found it, the default build as it now stands, and a build with both recipes.
+
+### The arete was two faults, and the diagnosis had half of one
+
+PROGRESS recorded it as `carve_roads` writing an 11% profile into the heightmap "where the ground
+falls away faster than the road descends". That is the second fault. The first is the router:
+`build_graph` charged for climbing and gave nothing back for descending (`descent_bonus=0`),
+and the roads are routed in one direction, so a road planned from Kharrow Hold down to the Mere
+paid nothing to go straight over the edge of the mountain. `_grade` then limited the grade by
+lifting the profile (a forward clamp, sixty passes, no reference to the ground), and the road
+stood where the grade put it. The carve blended the land up to it across its shoulder.
+
+**What changed.** A road is now routed twice: on the 16 m lattice to choose which side of a hill
+to go, then again on a 4 m lattice inside 64 m of that line, with the knight's moves added so it
+can zigzag. Grade costs the same both ways, quadratically past 10% and hard past 22%; every change
+of heading costs something, so a switchback's legs are long; a cliff, and a cell standing proud
+of or sunk into its own twenty metres (a knife-edge spur, a V-gully), cost enough that the road
+crosses them rather than riding them; a road already laid is cheaper to follow than new ground,
+so roads out of one town share a trunk and fork, and where one runs on another it takes that
+road's level. The profile (`grade_profile`, every 4 m) is held within `cut_fill_m(width)` of the
+ground under it -- 2.4 m for a track, 3.6 m for a town road, which is what a one-in-two batter
+across the carve's shoulder allows -- and is never lifted to make a grade. Where the ground is
+steeper than 11% plus that room, the road is steep: that is the honest failure, and the router is
+what keeps it rare. No road builds up within 14 m of an authored sightline.
+
+Measured with the ground read 2 m past each road's carve on both sides (above the higher side is
+an embankment standing proud; below the lower, a cutting), raw, nothing discounted:
+
+| worst road | before | default build | with both recipes |
+|---|---|---|---|
+| above both sides | **150.1 m** (Gullhithe - Kharrow Hold) | 4.8 m (Gullhithe - Kharrow Hold) | 7.5 m (Kharrow Hold - Grandfather Hollow) |
+| below both sides | **67.0 m** (Gullhithe - Kharrow Hold) | 8.2 m (Kharrow Hold - Grandfather Hollow) | 14.4 m (Charcoal Camp - Gullhithe) |
+| steepest grade of the carved road, 99th percentile of any road | 7.29 (the arete's flanks) | 0.45 (Gullhithe - Kharrow Hold) | 0.50 (Brindlecrag - the Clanless Camp) |
+| steepest grade of the carved road, anywhere | 9.1 | 0.81 (Kharrow Hold - Grandfather Hollow) | 0.92 (Gullhithe - Kharrow Hold) |
+
+What is left in those raw figures is the land's own relief -- a road along a spur is on the spur
+-- and `tools/world/tests/test_roads.py` discounts it from the builder's own record of the land
+each road was laid on (`road_profiles.json`, new, read by nothing in the game). It holds every
+road of the built world three ways: graded within `cut_fill_m` of that land; the carved
+heightmap under the centre line equal to the grade (away from pads and fords); and, from
+outside, the land beside the road no lower (or higher) than the road by more than the land
+under it already was, plus the carve's tolerance and 3 m for the land's curvature. The default
+build and the recipe build both pass. The world this pass started from fails the last on twelve
+roads, worst the Gullhithe road at 150.1 m against 6.6 m allowed.
+
+**A test that passed the world it was written to fail.** As first committed, that last check
+took the carved road for its own land wherever a build had written no record, which excused
+every arete: run against the old world it passed. Found while writing this up, fixed (no record
+now means nothing is discounted), and checked against the old world again.
+
+### Rivers ran under the pads and roads laid on them
+
+Found in passing, measured on the old world: pads and roads are laid after the rivers are cut,
+and both flatten or grade whatever is under them. The Larkbourne Ford -- moved last session onto
+the river it is named for -- filled 54 m of the Larkbourne with its own pad; the Three Sisters'
+pad left 46 m of the Skerrow Water dry at the foot of the falls; each road crossing dammed its
+river for 8 to 30 m. Six dry runs longer than 6 m in all. `hydro.keep_channels` cuts every
+channel back through what was laid on it, holding a crossing to a ford 0.45 m under the
+surface: 0 dry runs on the default build, 0 with the recipes, and a test holds it.
+
+### Two recorded diagnoses that did not survive measurement
+
+**"The pads module flattens under the original positions of POIs that were later moved."** Not
+in a full build. Measured on the old world, the nineteen POIs moved last session have flat
+pads at their new positions (0.00 m of relief within 15 m) and nothing flat at their old ones
+(0.7 to 55 m of relief, the same as control points beside them); the scatter has 28 to 143
+instances within 18 m of each old position and 0 to 5 at each new one. The one path that does
+do it is the staged build: `--only textures` and `--only cells` reuse `heights.r32` from disk
+and re-flatten pads in memory where things now stand, so a moved POI keeps its old pad in the
+terrain and stands on unflattened ground, while the scatter clears a pad that is not there. The
+manifest now records a checksum of every pad (`pad_fingerprint`) and a staged build refuses a
+heightmap whose pads were laid for other positions. Tested.
+
+**"`camp` is missing from ROAD_KINDS."** It is not, and never was: `ROAD_KINDS` has included it
+since the first commit that defined it (6a5a84df), and last session's own note says so ("`camp`
+is in `ROAD_KINDS`, so moving the Cold Fire moved a road with it"). What was true is that nothing
+kept the world builder's kinds and the exterior's in step, so a test now reads
+`Settlement.FABRIC` out of `settlement.gd` and requires `ROAD_KINDS`, `FABRIC_COUNT` and
+`ROAD_WIDTH` to name exactly its kinds, with the same counts.
+
+### Sightlines, and two that had been answered by accident
+
+The old world read 90 authored lines, 87 clear, 0 refused, 3 into hidden valleys. The first
+scratch build with the roads held to their carve refused two and left a third clear by 0.03 m,
+and the reason is worth more than the fix: all three had been answered last session on a world
+where a road cut as deep as its grade wanted. Beside the Clanless Camp the old road from
+Brindlecrag had cut a trench that, worked back through the pad's blend, took the ground 30 m
+from the camp down to about 264 m, 88 m under the pad (the old world reads that road 65 m below
+the land on both sides 44 m from the camp), and the line from Brindlecrag looked through it.
+Between Greyfold and the Cold Fire the old road had taken 1.7 m off the hump the line crosses.
+The Long Stride's line to the Bell Buoys went the other way: the first router swam to Tollmere
+instead of taking the causeway, and its fill rose 3 m into the line.
+
+* **The Long Stride -> the Bell Buoys** -- answered by the road: a coarse cell counts as water
+  only when all of it is, so the causeway is dry ground, and a route that crosses open water is
+  re-planned over the whole lattice.
+* **Greyfold -> the Cold Fire** -- the Cold Fire moves another 20 m toward Greyfold, to
+  (-2260, 2760), where the line clears on the land itself and not on a road cutting.
+* **Brindlecrag -> the Clanless Camp** -- left in place. The positions that clear it by a metre
+  are 35 to 40 m down the cliff, where the pad would cut away the overhang the camp is named for
+  ("Find the camp under the overhang"), and a 21 m move buys half a metre.
+
+| | old world | default build | with both recipes |
+|---|---|---|---|
+| clear / refused / into hidden valleys | 87 / 0 / 3 | 87 / 0 / 3 | 87 / 0 / 3 |
+| Brindlecrag -> the Clanless Camp, clearance | clear, through the old road's trench | 0.03 m | 0.03 m |
+| Greyfold -> the Cold Fire, clearance | clear, over the old road's cutting | 1.07 m | 1.07 m |
+
+### Built, measured, and switched off: a landform apiece
+
+`worldgen/landforms.py`, the `landforms` recipe: applied to the composed land after the drainage
+and the Mere, so the rivers, pads and roads that follow are laid on it. Each term comes from the
+region's own geometry, with no reference to where anything stands (DECISIONS, 2026-09-20), and
+is weighted by the region's blend so borders mix:
+
+| region | the landform | relief | scale |
+|---|---|---|---|
+| Brightwater | raised beaches: the basin terraced every 3.2 m of height from 110 to 950 m back from the Mere; and on the open south and east shores a strandplain of dune ridges parallel to the water, each with a steep face to it and a long back | benches 3.2 m, ridges to 5.5 m | ridges 78 m apart, 35 to 600 m from the water |
+| Sedgemire | silt levees either side of both channel fields `shape_delta` cuts; 34 cut-off meanders, crescent pools cut below the marsh table with a low rim | levees 2.2 m, pools to 3 m | crescents 55 to 130 m across |
+| Briarwold | the granite stair: the rise terraced every 18 m with a soft riser, tors on the lips of the treads | 18 m steps, tors to about 8 m | treads 50 to 300 m deep |
+| Skerrow | limestone scars across the 200 to 540 m band; about 900 shakeholes on the moor | 20 m steps, holes 3 to 7 m | holes 9 to 22 m across |
+| Cinderlea | the Builders' street grid, 96 by 72 m blocks on a bearing of 23 degrees: streets 12 m wide sunk 2.8 m, blocks mounded up to 3.5 m | 6.3 m from street floor to block top | 72 to 96 m |
+| Hearthvale | strip lynchets stepping the scarp face in flights; 26 lines of barrows behind the crest | lynchets 3 m, barrows 3 to 5.5 m | barrows 28 to 48 m across, in lines of 3 to 6 |
+
+The ground under every place is left as it was out to 1.3 pad radii, nothing is raised within
+14 m of an authored sightline, and the stepped landforms fade out on ground steeper than about
+one in two: on Kharrow Hold's flanks the first scars came out as twenty-metre slots aliased
+into a stair of texels, and every road off the hold dived into one.
+
+**What it measured**, the recipe build against the default build (so the roads are the same
+kind on both). The land band-passed to the walking scale (a difference of
+Gaussians at 12 and 75 m, so roughly 50 to 300 m wavelengths), in metres, over each region's dry
+land away from the world's edges:
+
+| region | relief, median / 75th / 95th percentile, default | with the landforms | dry land moved over 1 m (over 3 m) |
+|---|---|---|---|
+| Hearthvale | 2.49 / 4.68 / 14.80 | 2.50 / 4.69 / 14.87 | 4.6% (0.8%) |
+| Brightwater | 0.95 / 2.86 / 15.67 | 1.17 / 2.95 / 15.82 | 40.0% (2.7%) |
+| Sedgemire | 0.59 / 2.16 / 25.94 | 0.57 / 1.90 / 24.95 | 12.5% (0.2%) |
+| Briarwold | 5.70 / 9.90 / 18.57 | 6.14 / 10.65 / 19.20 | 56.1% (41.1%) |
+| Skerrow | 9.23 / 18.29 / 37.90 | 9.24 / 18.35 / 38.10 | 8.4% (3.8%) |
+| Cinderlea | 4.23 / 7.34 / 13.17 | 4.27 / 7.40 / 13.25 | 26.4% (1.9%) |
+
+The finding I did not expect, and the reason this is off by default: **measured as relief at
+50 to 300 m, the landforms barely move any region.** They move a lot of ground -- more than a metre on 56% of the Briarwold's dry land and 40% of Brightwater's --
+but the land already had metres of relief at that scale, and a 3 m bench or a 2.8 m street adds
+to it in quadrature. Whether they read from a walking camera is a question for the camera, and
+the camera has not been asked.
+
+### Built, measured, and switched off: cover by structure
+
+The `cover` recipe. Until now what differed between regions was which species and what tint; the
+rules that place them -- a density, a clustering field, a pull toward water or a boundary -- were
+the same everywhere, and the field boundaries, walls and roadside rails were one pattern laid
+over three regions. With the recipe:
+
+* **Sedgemire** -- reed beds at the water's edge rather than a sprinkle across the peat; willows
+  and alders in *lines* along every channel and pool, a willow every 16 m a few paces back from
+  the water with gaps where the bank will not hold one (`hedges.waterside`), and the scattered
+  willow and alder thinned to make room.
+* **Brightwater** -- marram on the crests of the dune ridges and not in the slacks: a rule gated
+  by `tpi`, the height of a point above its own 30 m, new in the scatter.
+* **The Briarwold** -- boulder fields on the risers of the stair; its lanes sunk as holloways
+  (1.9 m under the land, inside the same band as any road).
+* **Skerrow** -- intakes, not fields: parcels 300 m across with walls that run dead straight, the
+  walls stopping at the fell wall at 430 m, and the roads walled in drystone in 70 m runs.
+* **Cinderlea** -- the ash in the Builders' sunken streets, and the stubs of their walls, fused
+  blocks, along the streets' lips (`hedges.ruin_lines`). No fence along any road.
+
+Measured on the recipe build against the old world:
+
+| | old world | with both recipes |
+|---|---|---|
+| Sedgemire reeds within 14 m of water | 28% of 102 071 | 73% of 35 929 |
+| Sedgemire willow and alder within 8 m of water | 23% of 8 730 | 56% of 6 317 |
+| Brightwater grass on a crest (tpi over 0.35 m) | 25% of 414 099 | 44% of 551 696 |
+| Briarwold boulders on slopes over 0.16 | 201 in the region | 4 111 (83% on the risers) |
+| Skerrow drystone wall pieces | 21 553 | 10 707 |
+| Cinderlea ash in hollows (tpi under -0.7 m) | 37% of 1 359 | 81% of 596 |
+| Cinderlea wall stubs | 35 | 2 703 |
+| scatter instances, whole world | 3 477 721 | 3 370 573 |
+
+By region the instance totals move from -17% (Sedgemire) to +26% (Brightwater, the marram); the
+Vale, where the worst captured frame is, moves by 0.3%. None of it has been rendered. The brief
+also asked for wind-bent trees in Brightwater, and the instance format (`[x, y, z, yaw, scale,
+tint]`) has no tilt, so that is not a scatter rule away; it is a format change.
+
+### What it costs
+
+| | before | default build | with both recipes |
+|---|---|---|---|
+| `build_world.py`, whole build (the machine shared with five other agents throughout) | 237.8 s | 544.3 s (the machine twice as loaded; see below) | 262.3 s |
+| of which the roads stage | 7.1 s | 75.4 s | 28.1 s |
+| scatter instances | 3 477 721 | 3 484 974 | 3 370 573 |
+| hedge pieces / roadside pieces | 122 398 / 6 261 | 122 359 / 8 871 | 106 471 / 6 371 |
+| total length of road | 35.6 km | 41.9 km | 44.7 km |
+| points in `roads.json` | 3 113 | 3 558 | 3 796 |
+| `./run.sh perf`, worst of the 24 interiors | 183 draws, 0.99 M | not re-run | not re-run |
+| worst captured frame, default plan | 1521 draws, 1.61 M (hearthvale_street) | not captured | not captured |
+| drop test colour / landform / together (42 shots) | 0.76 / 0.26 / 0.64 | not captured | not captured |
+
+Whole-build times on this machine are not comparable between runs: the default build ran while
+it was about twice as loaded, and the stages whose code did not change took about twice as long
+(469 s against the old build's 231 s; its textures stage alone 129 s against 49 s in the recipe
+build an hour earlier). The recipe build ran at about the old build's load -- everything but its
+roads took 234 s against 231 -- and the roads stage is the only one whose work grew: two
+routings and a profile every 4 m, 28 s against 7 s. The roads are 18% longer --
+they go round the Kharrow Hold spur instead of over it, and zigzag where they climb -- which is
+where the extra roadside pieces come from. `roads.json` is written at about 12 m (every third laid
+point, each on the carved centre line), because the POI dresser walks every segment of every road
+for each point of interest. `./run.sh perf` measures the interiors, which read nothing the
+world build writes, so it was not re-run. The captures and the drop test were not taken after:
+the pass was stopped before them, and they are the first thing the recipes need (below).
+
+### Still wanting
+
+* **Brindlecrag -> the Clanless Camp clears by 0.03 m.** It is the thinnest authored line in
+  the world. Nothing this pass lays can raise the ground under it, but anything that lowers the
+  camp's pad or raises the cliff edge will close it.
+* **Steep pitches.** Where the ground is steeper than the grade plus the band, the road goes with
+  the ground. Read along each road's centre line every 4 m on the default build, the steepest
+  grade anywhere is 0.81, on the Kharrow Hold - Grandfather Hollow road below the hold, near (1045, -2278),
+  and the worst 99th percentile of any road is 0.45 (Gullhithe - Kharrow Hold). The router keeps these
+  short; it does not remove them.
+* **`road_profiles.json` is not in CONTRACTS.** It is a build artifact for the tests, and says so
+  in `output.py`.
+* **Pilgrim's Ash has lost its cross street** on the default build (38 roads, was 39). The two
+  roads north out of it (to Isseva and Nauve's Landing, on one trunk as before) and the road to
+  the Cold Fire now leave it 130 degrees apart instead of 120, which is past `add_streets`'
+  threshold for a road "across the grain"; the recipe build keeps it. The town still has its
+  through street and all four roads.
+* **The Kharrow Hold - Grandfather Hollow road is 5.4 km, was 4.1.** It goes round the spur
+  the old one stood on. Nothing in the game prices a road's length yet, but anyone timing a
+  walk will notice.
+* **`tools/capture/plans/pois.json`** still has the Cold Fire at its old position
+  (`tools/capture/make_pois_plan.py` regenerates it).
+* **From above, the scars hardly show.** On a scratch build before the steep-ground fade, the
+  scars round Kharrow Hold came out as contour rings aliased into stairs of texels. With the
+  fade, a hillshade 2.8 km across Skerrow is hard to tell from the default build's: the thin
+  looping lines in both are the drainage carve's, already in the old world. What does show is
+  Brightwater's raised beaches, as close-set contours above the Mere's north shore -- a terrace
+  of a round hill is a contour, which is not what a limestone scar looks like either. If the
+  recipe goes on, the scars want to be long, level and few.
+* Found in passing and fixed: `tools/uniqueness_check.py --json` raised a NameError after
+  printing its scores (two names used three lines before they were assigned), so nobody had the
+  drop test's JSON. And **`./run.sh test` exited 1 on a passing suite**: under `pipefail` it read
+  the verdict with `echo "$out" | grep -q`, which stops reading at the match and can leave echo
+  a SIGPIPE, so the pipeline failed with "RESULT: PASS" in it (3 runs in 50, replayed on that
+  run's own output). The flow and smoke verdicts were read the same way, where the race could
+  also pass a failing run. All four read to the end now.
+
+### Rebuilding the world after the merge
+
+```
+./run.sh world
+```
+
+That is the default build: the roads, rivers and pads above, no landforms, no regional cover.
+To build the rest for evaluation, in a worktree:
+
+```
+./run.sh world --recipe landforms --recipe cover
+```
+
+### Next, in order:
+
+1. **Done and verified: what the default build now produces, against the world this pass
+   found** (full 4096 builds, both in this worktree). Roads laid on the land: the worst road
+   above both sides of it 150.1 m -> 4.8 m, below both sides 67.0 m -> 8.2 m, raw; every road
+   graded within 2.4 to 3.6 m of its land and carved to that grade; the steepest grade along
+   any road 9.1 -> 0.81. Rivers under every crossing as fords: dry runs over 6 m, 6 -> 0.
+   Sightlines 87 / 0 / 3 -> 87 / 0 / 3, Clanless 0.03 m, the Cold Fire 20 m nearer Greyfold at
+   (-2260, 2760). Staged builds refuse a heightmap whose pads have moved; `ROAD_KINDS` is held
+   to the exterior's `FABRIC`. Roads 35.6 km -> 41.9 km, 39 -> 38 (Pilgrim's Ash's cross
+   street); `roads.json` 3 113 -> 3 558 points, plus `road_profiles.json`; the manifest gains
+   `pad_fingerprint` and `recipes`. Scatter 3 477 721 -> 3 484 974 instances. The roads stage costs
+   about 21 s more at the old build's load. `game/world/terrain_assets.tres` unchanged. No
+   landforms and no regional cover: those are recipes (3). Verified by
+   `python3 -m pytest tools/world/tests tools/tests` (49 passed) and `./run.sh test`
+   (1226 tests, 0 failed, 0 content problems, 0 script errors).
+2. **After the merge, rebuild the main checkout's world**: `./run.sh world`. Until that runs,
+   `tools/world/tests/test_roads.py` fails there, by design -- it reads the old world's
+   Gullhithe road 150.1 m above both sides. Accept on: pytest green, `python3 tools/sightlines.py`
+   saying 87 clear / 0 refused / 3 veiled, `./run.sh test` green, `./run.sh journey` 16/16, and
+   `git status` showing no change to `game/world/terrain_assets.tres` (none here).
+3. **Half-done, off by default: the `landforms` and `cover` recipes.** They live in
+   `tools/world/build_world.py` (`RECIPES`, `--recipe`, recorded as the manifest's `recipes`);
+   `worldgen/landforms.py`, called from `heights.compose_heights(landforms=True)`; the `recipes`
+   / `cover` block of `tools/world/scatter_rules.json`, applied by `cells.load_rules`;
+   `fields.PATTERNS` (against the default `ONE_PATTERN`); `hedges.place(fell_wall=True)`,
+   `hedges.waterside`, `hedges.ruin_lines`; `roadside.place(by_region=True)`; and
+   `roads.ROAD_SINK_M` (the holloways, passed only with `cover`). `test_recipes.py` holds the
+   defaults off and builds both recipes small. Measured with both on: sightlines 87 / 0 / 3,
+   Clanless 0.03 m; the road and river tests pass; the relief and structure tables above. Not
+   measured: any frame, the drop test, frame cost.
+4. **Evaluate them** in a worktree, against the default build shot the same way, since the
+   cameras stand on the ground as built. For each of `./run.sh world` and
+   `./run.sh world --recipe landforms --recipe cover` (about 4.5 minutes each, peaking near
+   8 GB: `free -g` first): `python3 tools/sightlines.py` (accept at least 87 clear, 0 refused)
+   and pytest; `python3 tools/capture/make_default_plan.py --out <dir>` to place the cameras on
+   that ground; `./run.sh shots <dir>/default.json` and the horizon plan (about 80 s a shot);
+   `python3 tools/uniqueness_check.py <captures>/regions --json <captures>/drop_test.json`.
+   **Look at every frame**, the landforms first: the relief figures say they may barely show
+   from an approach camera. Accept the recipes if the landform axis rises and colour and
+   together do not fall (the old world read 0.76 / 0.26 / 0.64 on this pass's sheet), and the
+   worst frame stays within 2000 draws and no worse in primitives than the default build's
+   (the old world's worst was 1.61 M, already over the 1.5 M budget).
+5. **If they pass, make them the default**: drop the gating in `build_world.py` (or apply both
+   recipes when none is named), fold the `cover` block into the rules proper, change
+   `test_recipes.py`'s expectation that a default build has none, rebuild, and repeat 2.
+6. **If the landforms do not read from the ground**: they are 2 to 6 m against natural relief
+   whose 95th percentile at the same scale is already 13 to 38 m by region (median 0.6 to 9 m).
+   The larger terms are the place to push -- Cinderlea's streets and blocks, Brightwater's
+   ridges -- and Skerrow's scars want to be long level bands that show, rather than terraces
+   that follow the contours (see Still wanting); any raise stays out of the 14 m sightline
+   corridors, with the Clanless line re-measured.
+7. **Risks and regressions, with numbers**: Brindlecrag -> the Clanless Camp clears by
+   0.03 m (the thinnest line in the world; Foxfire Falls -> the Charcoal Camp is next at
+   0.08 m); the steepest grade along a road 0.81 and the worst 99th percentile 0.45 (Gullhithe - Kharrow Hold); the roads
+   stage costs about 21 s at the old build's load (68 s on the loaded run) more; the roads are 18% longer and Pilgrim's Ash has no cross street; no
+   frame of
+   the default build has been captured, so its frame cost is inferred (every region's scatter is
+   within 0.6% of before, most of the difference roadside rail) and not measured; `road_profiles.json` is not in CONTRACTS;
+   `tools/capture/plans/pois.json` has the Cold Fire's old position
+   (`python3 tools/capture/make_pois_plan.py`); Brightwater's wind-bent trees need a tilt in
+   the scatter's instance format, which is a CONTRACTS change.
