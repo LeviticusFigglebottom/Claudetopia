@@ -547,6 +547,13 @@ func _roll_suggestions() -> void:
 	for name in ValishNames.suggestions(3):
 		var b := UiKit.button(name, "FlatButton")
 		b.add_theme_font_size_override("font_size", ThemeBuilder.SIZES.small)
+		# The row shares the column's width instead of setting it: three long names ("Hesk of
+		# Fallowhithe") widened the middle column at 1280x720, and the right-hand column's
+		# heading broke over two lines and its callings' peoples were cut off.
+		b.clip_text = true
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.tooltip_text = name
 		b.pressed.connect(func() -> void:
 				player_name = name
 				_name_edit.text = name
