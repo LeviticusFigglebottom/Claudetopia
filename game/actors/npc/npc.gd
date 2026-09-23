@@ -263,6 +263,16 @@ func stop() -> void:
 	velocity.z = 0.0
 
 
+## Turns to look along `dir` at once (flat), the way walking would leave them facing: for a
+## person put somewhere rather than walked there (`NpcSpot`).
+func face_direction(dir: Vector3) -> void:
+	dir.y = 0.0
+	if dir.length_squared() < 0.0001 or _model == null:
+		return
+	dir = dir.normalized()
+	_model.rotation.y = atan2(dir.x, dir.z) + PI
+
+
 func current_speed() -> float:
 	if fleeing:
 		return FLEE_SPEED

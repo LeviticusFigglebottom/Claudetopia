@@ -47,7 +47,7 @@ uniform vec4 cloud_lit_color : source_color = vec4(1.0, 0.98, 0.94, 1.0);
 uniform vec4 cloud_shade_color : source_color = vec4(0.55, 0.58, 0.66, 1.0);
 uniform vec4 cloud_under_color : source_color = vec4(1.0, 0.55, 0.35, 1.0);
 uniform float cloud_opacity : hint_range(0.0, 1.0) = 0.9;
-uniform float painterly : hint_range(0.0, 1.0) = 0.6;
+uniform float painterly : hint_range(0.0, 1.0) = 0.45;
 
 uniform float stars : hint_range(0.0, 1.0) = 0.0;
 uniform vec3 moon_dir = vec3(0.0, -1.0, 0.0);
@@ -87,9 +87,11 @@ float fbm(vec2 p, int octaves) {
 }
 
 // The cloud field in the wind's own frame: x runs downwind, and a banded sky stretches along it.
+// The stretch is gentle: pulled harder, the masses became streaks that met at the horizon like
+// the lines of a zoom, which read as speed rather than as weather.
 vec2 cloud_space(vec2 p, vec2 w) {
 	vec2 q = vec2(dot(p, w), dot(p, vec2(-w.y, w.x)));
-	return vec2(q.x * (1.0 - 0.62 * cloud_band), q.y * (1.0 + 2.2 * cloud_band));
+	return vec2(q.x * (1.0 - 0.35 * cloud_band), q.y * (1.0 + 1.1 * cloud_band));
 }
 
 void sky() {
@@ -115,7 +117,9 @@ void sky() {
 	// blue (the earth's own shadow), which is the whole of what makes an evening worth stopping for.
 	vec2 hdir = normalize(dir.xz + vec2(1e-5, 0.0));
 	vec2 sdir = normalize(sun_dir.xz + vec2(1e-5, 0.0));
-	float toward = dot(hdir, sdir) * 0.5 + 0.5;
+	// Clamped: two unit vectors can dot to a hair over one, and pow() of the hair under zero that
+	// leaves is NaN, which drew a dotted black line up the sky at the sun's own bearing.
+	float toward = clamp(dot(hdir, sdir) * 0.5 + 0.5, 0.0, 1.0);
 	float low_band = exp(-up * 6.0) * step(-0.02, t);
 	col = mix(col, dusk_color.rgb, dusk * low_band * (0.25 + 0.75 * pow(toward, 1.8)));
 	float belt = smoothstep(0.015, 0.06, up) * (1.0 - smoothstep(0.09, 0.26, up));
@@ -146,7 +150,9 @@ void sky() {
 	float night_sky = stars * smoothstep(-0.02, 0.2, t);
 	if (!AT_CUBEMAP_PASS && night_sky > 0.001) {
 		// the milk: a faint band along one great circle, lumpy with dust
-		float band = exp(-pow(dot(dir, normalize(vec3(0.35, 0.28, 0.89))) * 3.2, 2.0));
+		// squared by hand: pow() of the negative half of the sky is undefined
+		float across = dot(dir, normalize(vec3(0.35, 0.28, 0.89))) * 3.2;
+		float band = exp(-across * across);
 		float milk = band * (0.35 + 0.65 * fbm(dir.xz / (dir.y + 1.0) * 9.0, 4));
 		col += vec3(0.62, 0.66, 0.82) * milk * 0.08 * night_sky;
 		// stars in two sizes, on a stereographic grid so they do not bunch at the zenith
@@ -177,10 +183,11 @@ void sky() {
 	vec2 w = normalize(wind + vec2(1e-4, 0.0));
 	float cumulus = 0.0;
 	if (t > 0.0 && cloud_opacity > 0.001) {
-		// Cumulus fades out toward the horizon, where perspective squashes a lone cloud into a
-		// flat dark lozenge (it read as a flying saucer over Cinderlea); the stratus bank and the
-		// haze are what the horizon is made of.
-		float fade = smoothstep(0.03, 0.3, t);
+		// Cumulus fades out in the last degree or so over the horizon, where perspective squashes a
+		// lone cloud into a flat lozenge (dark, it read as a flying saucer over Cinderlea; lit
+		// through, as it is now, it is a far cloud). Faded out over the lowest seventeen degrees, as
+		// it first was, a level camera saw no cloud at all: that band is most of the sky in a frame.
+		float fade = smoothstep(0.012, 0.14, t);
 		if (!AT_CUBEMAP_PASS && cirrus > 0.001) {
 			vec2 pc = dir.xz / (dir.y + 0.35) * 0.9;
 			vec2 qc = vec2(dot(pc, w), dot(pc, vec2(-w.y, w.x)));
@@ -191,19 +198,45 @@ void sky() {
 		}
 
 		// --- the cumulus, lit from the side the light is on --------------------------------
+			// Masses first: a low-frequency field, slowly warped so the masses are lumps and not a
+		// contour map of noise, with the fine octaves only on their edges. The first version took
+		// its shape and its light from one five-octave field and stepped the light hard into four,
+		// so every octave's wobble became a flat blotch with a dark eye in it: camouflage, not cloud.
+		// The masses are sized so a frame holds several: at a third of this frequency one mass
+		// filled a ninety-degree view, and a sky of one soft edge read as haze.
 		vec2 p = dir.xz / (dir.y + cloud_height) * cloud_scale;
 		vec2 q = cloud_space(p, w) * 0.8 + vec2(TIME * cloud_speed, 0.0);
-		float d = fbm(q, oct);
+		vec2 warp = vec2(fbm(q * 0.35 + vec2(7.1, 2.3), 3), fbm(q * 0.35 + vec2(3.7, 9.4), 3)) - 0.5;
+		vec2 qw = q + warp * 0.7;
+		float base = fbm(qw * 1.8, 3);
+		float detail = fbm(qw * 6.0 + vec2(11.0, 5.0), oct);
+		// Value-noise fbm keeps most of its values within 0.2 of the middle, so the masses are
+		// spread before they are cut: at their raw spread a half-covered sky fell entirely inside
+		// the soft edge and came out as one grey wash with no cloud in it.
+		float dens = 0.5 + (base - 0.5) * 1.9 + (detail - 0.5) * 0.35;
 		float thr = 1.0 - cloud_coverage;
-		float shape = smoothstep(thr - cloud_softness * 0.5, thr + cloud_softness * 0.5, d);
-		// How much thinner the cloud is a step toward the light: that side is the lit one.
+		float shape = smoothstep(thr - cloud_softness * 0.18, thr + cloud_softness * 0.18, dens);
+		// The light, measured on the smooth field alone, so it falls in broad strokes: the side of
+		// a mass that thins toward the light is its lit side. Deep inside an overcast the modelling
+		// eases off (a grey sky is not a field of dark eyes), and a thin cloud is lit through: a
+		// wisp at the edge of the threshold came out as a dark lozenge on a pale sky over Skerrow.
+		float thick = smoothstep(thr, thr + 0.3, dens);
+		float deep = smoothstep(thr + 0.2, thr + 0.6, dens);
+		// A low sun lights a mass from its side; a high one lights its top, which on the dome is the
+		// side toward the zenith, so the bases seen from below go grey. The two are mixed, not
+		// normalised: where they cancel (a cloud in the sun's own direction) the light is even.
 		vec2 toward_light = cloud_space(normalize(light_dir.xz + vec2(1e-4, 0.0)), w);
-		float d_light = fbm(q + toward_light * 0.16, oct);
-		float light = clamp(0.55 + (d - d_light) * 4.5 + light_dir.y * 0.15, 0.0, 1.0);
-		// thick middles are darker than thin edges
-		light *= mix(1.0, 0.7, smoothstep(0.5, 1.0, shape) * smoothstep(0.55, 0.85, d));
-		// painted: the light falls into four flat steps with soft joins
-		float stepped = floor(light * 4.0 + 0.5) / 4.0;
+		vec2 toward_top = -cloud_space(normalize(p + vec2(1e-4, 0.0)), w);
+		float high = clamp(light_dir.y, 0.0, 1.0);
+		toward_light = toward_light * (1.0 - high) + toward_top * high;
+		float base_l = fbm((qw + toward_light * 0.25) * 1.8, 3);
+		float light = clamp(0.6 + (base - base_l) * 3.2 * (1.0 - 0.6 * deep) + light_dir.y * 0.2, 0.0, 1.0);
+		light = mix(max(light, 0.78), light, thick);
+		// a mass is a little greyer at its heart than at its edge, and no more: not a doughnut
+		light *= mix(1.0, 0.86, thick);
+		// painted: three soft steps rather than four hard ones
+		float steps = light * 3.0;
+		float stepped = (floor(steps) + smoothstep(0.25, 0.75, fract(steps))) / 3.0;
 		light = mix(light, stepped, painterly);
 		vec3 cc = mix(cloud_shade_color.rgb, cloud_lit_color.rgb, light);
 		// a low sun lights the clouds from underneath, most on the side it is on
@@ -212,6 +245,8 @@ void sky() {
 		float edge = shape * (1.0 - shape) * 4.0;
 		float near_light = pow(max(dot(dir, normalize(light_dir)), 0.0), 10.0);
 		cc += cloud_lit_color.rgb * edge * near_light * 0.9;
+		// the far ones go the colour of the air they are seen through
+		cc = mix(cc, horizon_color.rgb, (1.0 - smoothstep(0.02, 0.4, t)) * 0.5);
 		cumulus = shape * cloud_opacity * fade;
 		col = mix(col, cc, cumulus);
 

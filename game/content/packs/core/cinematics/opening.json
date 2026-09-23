@@ -1,0 +1,141 @@
+[
+  {
+    "id": "core:cinematic/opening",
+    "name": "The Opening",
+    "description": "What plays between the Naming and the first step, on a new game (DESIGN 5.1a). The Warden says the name back, then tells the Foundling what they have come up into, over the country itself; the last shot comes down on the Hushline Stair and settles behind their shoulder. Every camera stands relative to a place and to the ground under it.",
+    "music": "core:music/opening",
+    "speaker": "The Warden",
+    "letterbox": 2.35,
+    "dissolve": 1.4,
+    "hold_line": "The Warden waits for you to catch her up.",
+    "title_card": {"shot": "the_mere", "at": 1.0, "for": 6.0, "title": "Wickmere", "line": "Everything that is spoken of, stays."},
+    "handover": {"time": 7.2, "weather": "core:weather/thin_sun", "facing": {"place": "core:place/sunken_choir"}},
+    "shots": [
+      {
+        "id": "the_name", "duration": 6.0, "black": true,
+        "lines": [
+          {"at": 0.6, "for": 1.6, "text": "{name}."},
+          {"at": 2.4, "for": 3.3, "text": "There. Said out loud, and heard. That is how it holds."}
+        ]
+      },
+      {
+        "id": "the_mere", "duration": 12.0, "time": 7.3, "time_to": 7.5, "weather": "core:weather/clear", "fov": 52,
+        "keys": [
+          {"t": 0.0, "at": {"place": "core:place/tollmere", "bearing": 172, "distance": 700, "height": 40},
+           "look": {"place": "core:place/sayers_spire", "height": 26}},
+          {"t": 1.0, "at": {"place": "core:place/tollmere", "bearing": 166, "distance": 520, "height": 32},
+           "look": {"place": "core:place/sayers_spire", "height": 24}}
+        ],
+        "lines": [
+          {"at": 7.6, "for": 3.8, "text": "Nobody in Wickmere agrees what the world is."}
+        ]
+      },
+      {
+        "id": "the_spire", "duration": 9.0, "time": 7.6, "weather": "core:weather/clear", "fov": 50,
+        "keys": [
+          {"t": 0.0, "at": {"place": "core:place/sayers_spire", "bearing": 100, "distance": 330, "height": 30},
+           "look": {"place": "core:place/sayers_spire", "height": 26}},
+          {"t": 1.0, "at": {"place": "core:place/sayers_spire", "bearing": 92, "distance": 290, "height": 26},
+           "look": {"place": "core:place/sayers_spire", "height": 28}}
+        ],
+        "lines": [
+          {"at": 0.4, "for": 4.0, "text": "The Sayers say it is a bell, struck once and still ringing."},
+          {"at": 4.6, "for": 3.4, "text": "They charge by the hour to explain it."}
+        ]
+      },
+      {
+        "id": "the_nave", "duration": 7.0, "time": 8.0, "weather": "core:weather/mist", "fov": 52,
+        "keys": [
+          {"t": 0.0, "at": {"place": "core:place/drowned_nave", "bearing": 113, "distance": 380, "height": 30},
+           "look": {"place": "core:place/drowned_nave", "height": 55}},
+          {"t": 1.0, "at": {"place": "core:place/drowned_nave", "bearing": 108, "distance": 330, "height": 24},
+           "look": {"place": "core:place/drowned_nave", "height": 58}}
+        ],
+        "lines": [
+          {"at": 0.8, "for": 3.4, "text": "The marsh says it is a tide going out."}
+        ]
+      },
+      {
+        "id": "the_hand", "duration": 7.0, "time": 10.0, "weather": "core:weather/clear_cold", "fov": 52,
+        "keys": [
+          {"t": 0.0, "at": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 108, "height": 41},
+           "look": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 13, "height": 5}},
+          {"t": 1.0, "at": {"place": "core:place/fallen_hand", "bearing": 200, "distance": 100, "height": 39},
+           "look": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 13, "height": 4}}
+        ],
+        "lines": [
+          {"at": 0.8, "for": 3.6, "text": "The clans say something vast is breathing in."}
+        ]
+      },
+      {
+        "id": "merrowby", "duration": 8.0, "time": 7.6, "weather": "core:weather/clear", "fov": 52,
+        "keys": [
+          {"t": 0.0, "at": {"place": "core:place/merrowby", "bearing": 190, "distance": 260, "height": 45},
+           "look": {"place": "core:place/cracked_toll", "height": 25}},
+          {"t": 1.0, "at": {"place": "core:place/merrowby", "bearing": 188, "distance": 200, "height": 38},
+           "look": {"place": "core:place/cracked_toll", "height": 24}}
+        ],
+        "lines": [
+          {"at": 0.8, "for": 4.6, "text": "In the Vale we say it is a candle, and a candle wants tending."}
+        ]
+      },
+      {
+        "id": "the_roll", "duration": 10.5, "time": 8.6, "weather": "core:weather/overcast", "fov": 52,
+        "keys": [
+          {"t": 0.0, "at": {"place": "core:place/wardens_rest", "bearing": 150, "distance": 220, "height": 30},
+           "look": {"place": "core:place/wardens_rest", "height": 8}},
+          {"t": 1.0, "at": {"place": "core:place/wardens_rest", "bearing": 128, "distance": 200, "height": 26},
+           "look": {"place": "core:place/wardens_rest", "height": 8}}
+        ],
+        "lines": [
+          {"at": 0.4, "for": 2.8, "text": "Everybody agrees what it is doing."},
+          {"at": 3.4, "for": 3.6, "text": "A place nobody speaks of goes quiet, and then it goes."},
+          {"at": 7.4, "for": 2.6, "text": "We keep their names on the Roll."}
+        ]
+      },
+      {
+        "id": "the_toll", "duration": 9.0, "time": 18.2, "weather": "core:weather/thin_sun", "fov": 55,
+        "keys": [
+          {"t": 0.0, "at": {"place": "core:place/cracked_toll", "bearing": 108, "distance": 110, "height": 12},
+           "look": {"place": "core:place/cracked_toll", "height": 22}},
+          {"t": 1.0, "at": {"place": "core:place/cracked_toll", "bearing": 86, "distance": 92, "height": 12},
+           "look": {"place": "core:place/cracked_toll", "height": 22}}
+        ],
+        "lines": [
+          {"at": 0.6, "for": 2.8, "text": "This spring the Toll began to hum."},
+          {"at": 3.8, "for": 4.3, "text": "The last time it hummed, Gosford went quiet in eleven days."}
+        ]
+      },
+      {
+        "id": "the_choir", "duration": 10.0, "time": 16.8, "weather": "core:weather/ashfall", "fov": 55,
+        "keys": [
+          {"t": 0.0, "at": {"place": "core:place/sunken_choir", "bearing": 180, "distance": 340, "height": 30},
+           "look": {"place": "core:place/sunken_choir", "height": 26}},
+          {"t": 1.0, "at": {"place": "core:place/sunken_choir", "bearing": 183, "distance": 300, "height": 25},
+           "look": {"place": "core:place/sunken_choir", "height": 28}}
+        ],
+        "lines": [
+          {"at": 0.6, "for": 4.3, "text": "South of everything is Cinderlea, where it has gone furthest."},
+          {"at": 5.2, "for": 3.7, "text": "South of that is the Hush, where it has finished."}
+        ]
+      },
+      {
+        "id": "the_stair", "duration": 16.0, "time": 7.2, "weather": "core:weather/thin_sun", "fov": 55,
+        "handover": true,
+        "keys": [
+          {"t": 0.0, "at": {"place": "player", "bearing": 174, "distance": 330, "height": 55},
+           "look": {"place": "player", "bearing": 180, "distance": 60, "height": 25}},
+          {"t": 0.6, "at": {"place": "player", "bearing": 176, "distance": 34, "height": 40},
+           "look": {"place": "player", "bearing": 5, "distance": 60, "height": 6}},
+          {"t": 1.0, "at": "player_camera"}
+        ],
+        "lines": [
+          {"at": 0.6, "for": 5.4, "text": "I have stood at the top of that stair nineteen years and watched grey people walk down it."},
+          {"at": 6.3, "for": 2.4, "text": "Nobody has ever walked up it."},
+          {"at": 9.2, "for": 2.6, "text": "Then, this morning, you did."},
+          {"at": 12.4, "for": 2.8, "text": "Keep up. I don't look back."}
+        ]
+      }
+    ]
+  }
+]

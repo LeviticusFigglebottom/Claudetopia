@@ -99,11 +99,43 @@ func test_region_flag_and_quest_conditions() -> void:
 	assert_true(LootTable.condition_passes({"flag": "quiet_hands_member"}, {"flags": {"quiet_hands_member": true}}))
 	assert_false(LootTable.condition_passes({"flag": "quiet_hands_member"}, {"flags": {}}))
 	assert_true(LootTable.condition_passes({"flag_not": "x"}, {"flags": {}}))
-	assert_true(LootTable.condition_passes({"quest_at": ["core:quest/x", 2]}, {"quests": {"core:quest/x": 2}}))
-	assert_false(LootTable.condition_passes({"quest_at": ["core:quest/x", 2]}, {"quests": {"core:quest/x": 1}}))
-	assert_true(LootTable.condition_passes({"quest_min": ["core:quest/x", 2]}, {"quests": {"core:quest/x": 4}}))
+	# a stage is named the pack's way, by id or by number from one; the context holds the index
+	var NAMING := "core:quest/the_naming"          # wake, ash_wights, hearthstone, the_cart
+	assert_true(LootTable.condition_passes({"quest_at": [NAMING, 2]}, {"quests": {NAMING: 1}}), "the second stage is index 1")
+	assert_false(LootTable.condition_passes({"quest_at": [NAMING, 2]}, {"quests": {NAMING: 2}}), "and not index 2")
+	assert_true(LootTable.condition_passes({"quest_at": [NAMING, "ash_wights"]}, {"quests": {NAMING: 1}}))
+	assert_false(LootTable.condition_passes({"quest_at": [NAMING, "ash_wights"]}, {"quests": {}}), "not started")
+	assert_true(LootTable.condition_passes({"quest_min": [NAMING, "hearthstone"]}, {"quests": {NAMING: 3}}))
+	assert_false(LootTable.condition_passes({"quest_min": [NAMING, "hearthstone"]}, {"quests": {NAMING: 1}}))
+	assert_true(LootTable.condition_passes({"quest_min": [NAMING, "hearthstone"]}, {"quests": {}, "quests_done": [NAMING]}),
+			"a finished quest is past every stage")
+	assert_false(LootTable.condition_passes({"quest_at": ["core:quest/no_such_quest", 1]}, {"quests": {"core:quest/no_such_quest": 0}}),
+			"a stage of a quest nobody wrote is no stage")
 	assert_true(LootTable.condition_passes({"luck_min": 2.0}, {"luck": 3.0}))
 	assert_false(LootTable.condition_passes({"luck_min": 2.0}, {"luck": 1.0}))
+
+
+## A chest and a kill are rolled in the same world. A chest rolled in the default context, a level-1
+## stranger with no quests, so nothing a story gates on could ever come out of one; and the quest
+## conditions were read against a context nobody filled.
+func test_a_roll_reads_the_quests_as_they_stand() -> void:
+	var quests: Node = Social.quests
+	quests.reset_for_new_game()
+	assert_true(quests.start("core:quest/the_naming"))
+	quests.set_stage("core:quest/the_naming", "ash_wights")
+	var ctx := LootTable.world_context()
+	assert_eq(int((ctx["quests"] as Dictionary).get("core:quest/the_naming", -1)), 1, "the Naming at its second stage")
+	var table := {"rolls": 1, "entries": [{"item": INGOT, "weight": 1,
+			"conditions": [{"quest_at": ["core:quest/the_naming", "ash_wights"]}]}, {"nothing": true, "weight": 0}]}
+	assert_eq(LootTable.roll(table, rng(3), ctx).size(), 1, "an entry gated on the stage the story is at drops")
+	quests.set_stage("core:quest/the_naming", "hearthstone")
+	assert_empty(LootTable.roll(table, rng(3), LootTable.world_context()), "and not a stage later")
+	var scene: PackedScene = load("res://systems/inventory/container.tscn")
+	var chest: WorldContainer = scene.instantiate()
+	var chest_quests: Dictionary = chest.loot_context().get("quests", {})
+	assert_eq(int(chest_quests.get("core:quest/the_naming", -1)), 2, "a chest reads the same quests")
+	chest.free()
+	quests.reset_for_new_game()
 
 
 func test_luck_raises_the_weight_of_lucky_entries() -> void:

@@ -182,6 +182,7 @@
   {
     "id": "core:npc/aud_fennick", "name": "Aud Fennick", "home_place": "core:place/pilgrims_ash",
     "dialogue": "core:dialogue/aud_fennick",
+    "gone_when": [{"flag": "aud_left_her_bell"}],
     "bio": "The last of Merrowby's Fennicks, who put on grey and walked to Cinderlea to do what Greyfold's people did, and is in no hurry about it.",
     "unique_habit": "Hums the Merrowby Long Table grace with all the words left out, and stops if anyone tries to supply them.",
     "personality": {"traits": ["brave", "generous", "pious", "quiet", "humble", "kind"]},

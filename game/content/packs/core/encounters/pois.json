@@ -4,8 +4,8 @@
    "spawns": [{"enemy": "core:enemy/roadside_bandit", "count": 2, "when": "night"}]},
 
   {"id": "core:encounter/tumbled_watchtower", "place": "core:poi/tumbled_watchtower",
-   "notes": "skirmisher bandits in the stair-hall, a caster on the fallen parapet. The caster is the one Hush-speaking hand the Hearthvale bandits have: a Spire dropout, the smuggler-Sayer, gone inland.",
-   "spawns": [{"enemy": "core:enemy/roadside_bandit", "count": 3, "at": "stair_hall", "spread": 2.0},
+   "notes": "skirmisher bandits in the stair-hall, a caster on the fallen parapet. The caster is the one Hush-speaking hand the Hearthvale bandits have: a Spire dropout, the smuggler-Sayer, gone inland. Five of them, as A Verse About You counts them: the Larkbourne Boys keep hall here.",
+   "spawns": [{"enemy": "core:enemy/roadside_bandit", "count": 5, "at": "stair_hall", "spread": 2.4},
               {"enemy": "core:enemy/smuggler_sayer", "count": 1, "at": "the_parapet"}]},
 
   {"id": "core:encounter/gosling_pit", "place": "core:poi/gosling_pit",

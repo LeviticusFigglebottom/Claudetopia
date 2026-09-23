@@ -158,7 +158,7 @@ func drum(st: SurfaceTool, frame: Transform3D, r: float, height: float, broken :
 			if not is_nan(door_yaw) and absf(angle_difference(a, door_yaw)) < TAU / float(segs):
 				continue
 			var local := Transform3D(Basis(Vector3.UP, a + PI * 0.5), Vector3(sin(a) * r, h * 0.5, cos(a) * r))
-			kit.collider(Vector3(TAU * r / float(segs) * 1.02, h, THICK), frame * local)
+			kit.collider(Vector3(TAU * r / float(segs) * 1.02, h, THICK), frame * local, "stone")
 
 
 ## One sector of a drum's wall: the outer face, the inner face, and the floor and cap where
@@ -227,7 +227,7 @@ func wall(st: SurfaceTool, a: Vector2, b: Vector2, height: float, broken := 0.0,
 		var mid := (a + b) * 0.5
 		var h := maxf(min_h, course_h)
 		kit.collider(Vector3(length, h, THICK),
-				Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), Vector3(mid.x, (ya + yb) * 0.5 + h * 0.5, mid.y)))
+				Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), Vector3(mid.x, (ya + yb) * 0.5 + h * 0.5, mid.y)), "stone")
 
 
 ## A doorway: two jambs and a lintel of stone, standing on the ground at `at`, facing `yaw`.
@@ -237,7 +237,7 @@ func doorway(st: SurfaceTool, at: Vector2, yaw: float, width := 1.4, height := 2
 	for side in [-1.0, 1.0]:
 		var p := Vector3(at.x, ground + height * 0.5, at.y) + basis * Vector3(float(side) * (width * 0.5 + 0.22), 0.0, 0.0)
 		block(st, Transform3D(basis, p), Vector3(0.44, height, THICK))
-		kit.collider(Vector3(0.44, height, THICK), Transform3D(basis, p))
+		kit.collider(Vector3(0.44, height, THICK), Transform3D(basis, p), "stone")
 	var lintel := Vector3(at.x, ground + height + 0.2, at.y)
 	block(st, Transform3D(basis, lintel), Vector3(width + 0.9, 0.4, THICK + 0.1))
 
@@ -247,9 +247,10 @@ func doorway(st: SurfaceTool, at: Vector2, yaw: float, width := 1.4, height := 2
 ## A humped stone bridge whose deck runs from `a` to `b` (local xz), `width` across, rising
 ## `rise` at the middle above the straight line between its ends (which stand on the ground,
 ## or on `deck_y` where given). Parapets either side, an arch ring beneath, abutments at the
-## ends. Collision follows the deck so it can be crossed.
+## ends. Collision follows the deck so it can be crossed, and says `surface` underfoot (stone, or
+## wood for a timber span built on the same bones).
 func arch_bridge(st: SurfaceTool, a: Vector2, b: Vector2, width: float, rise: float,
-		deck_y := NAN, parapet := true, arch := true, arch_sag := NAN) -> void:
+		deck_y := NAN, parapet := true, arch := true, arch_sag := NAN, surface := "stone") -> void:
 	var seg := b - a
 	var length := seg.length()
 	if length < 2.0:
@@ -272,12 +273,12 @@ func arch_bridge(st: SurfaceTool, a: Vector2, b: Vector2, width: float, rise: fl
 		var basis := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, -pitch)
 		var xf := Transform3D(basis, Vector3(p.x, (y0 + y1) * 0.5, p.y))
 		block(st, xf, Vector3(width, deck_t, seg_len * 1.02))
-		kit.collider(Vector3(width, deck_t, seg_len * 1.02), xf)
+		kit.collider(Vector3(width, deck_t, seg_len * 1.02), xf, surface)
 		if parapet:
 			for side in [-1.0, 1.0]:
 				var q := xf.origin + basis * Vector3(float(side) * (width * 0.5 - 0.17), deck_t * 0.5 + 0.42, 0.0)
 				block(st, Transform3D(basis, q), Vector3(0.34, 0.84, seg_len * 1.02))
-				kit.collider(Vector3(0.34, 0.84, seg_len * 1.02), Transform3D(basis, q))
+				kit.collider(Vector3(0.34, 0.84, seg_len * 1.02), Transform3D(basis, q), surface)
 	if arch:
 		# the ring under the deck: voussoirs on an arc from one abutment to the other
 		var span := length * 0.72
@@ -300,7 +301,7 @@ func arch_bridge(st: SurfaceTool, a: Vector2, b: Vector2, width: float, rise: fl
 		var basis := Basis(Vector3.UP, yaw)
 		var xf := Transform3D(basis, Vector3(p.x, y - depth * 0.5 + 0.1, p.y))
 		block(st, xf, Vector3(width + 0.5, depth, 2.2))
-		kit.collider(Vector3(width + 0.5, depth, 2.2), xf)
+		kit.collider(Vector3(width + 0.5, depth, 2.2), xf, surface)
 
 
 static func _hump(t: float, ya: float, yb: float, rise: float) -> float:
@@ -346,7 +347,7 @@ func plank_deck(planks: SurfaceTool, posts: SurfaceTool, a: Vector2, b: Vector2,
 			var mid := (a + b) * 0.5
 			var q := Vector3(mid.x, y + 0.9, mid.y) + basis * Vector3(float(side) * (width * 0.5 - 0.22), 0.0, 0.0)
 			block(posts, Transform3D(basis, q), Vector3(0.1, 0.1, length))
-	kit.collider(Vector3(width, 0.2, length), Transform3D(basis, Vector3((a.x + b.x) * 0.5, y - 0.1, (a.y + b.y) * 0.5)))
+	kit.collider(Vector3(width, 0.2, length), Transform3D(basis, Vector3((a.x + b.x) * 0.5, y - 0.1, (a.y + b.y) * 0.5)), "wood")
 
 
 ## A flight of `count` steps from `start` (local xz, at local height `y0`) along `dir`, each
@@ -360,7 +361,7 @@ func steps(st: SurfaceTool, start: Vector2, dir: Vector2, y0: float, count: int,
 		var top := y0 + rise * float(i + 1)
 		var xf := Transform3D(basis, Vector3(p.x, top - block_depth * 0.5, p.y))
 		block(st, xf, Vector3(width, block_depth, tread * 1.02))
-		kit.collider(Vector3(width, block_depth, tread * 1.02), xf)
+		kit.collider(Vector3(width, block_depth, tread * 1.02), xf, "stone")
 
 
 # --- earth, water and timber --------------------------------------------------------------------
@@ -418,7 +419,7 @@ func mound(centre: Vector3, r: float, height: float, mat: Material, node_name: S
 	if kit.far:
 		kit._far_range(inst)
 	elif collide:
-		kit.collider_shape(m.create_trimesh_shape(), Transform3D.IDENTITY)
+		kit.collider_shape(m.create_trimesh_shape(), Transform3D.IDENTITY, "dirt")
 	return inst
 
 
@@ -505,7 +506,7 @@ func post(st: SurfaceTool, at: Vector2, height: float, side := 0.18, lean := Vec
 	var basis := Basis.from_euler(lean)
 	var xf := Transform3D(basis, Vector3(at.x, g, at.y) + basis * Vector3(0.0, height * 0.5, 0.0))
 	block(st, xf, Vector3(side, height, side))
-	kit.collider(Vector3(side, height, side), xf)
+	kit.collider(Vector3(side, height, side), xf, "wood")
 	return Vector3(at.x, g, at.y) + basis * Vector3(0.0, height, 0.0)
 
 

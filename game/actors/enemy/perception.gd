@@ -146,7 +146,9 @@ func _find_target() -> Node3D:
 ## predates factions and stand-in player nodes in tests rely on it — but an ally the player
 ## called does not, and the ally/hostile groups are filtered by the faction rule.
 func _is_live_quarry(n: Variant, group: String) -> bool:
-	if not (n is Node3D) or not is_instance_valid(n) or n == owner_actor:
+	# Validity first: `is` on a freed body (the last candidate, gone since the last sweep) is a
+	# script error, not a false.
+	if not is_instance_valid(n) or not (n is Node3D) or n == owner_actor:
 		return false
 	var node := n as Node3D
 	if node.has_method("is_alive") and not node.is_alive():

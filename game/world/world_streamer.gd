@@ -44,6 +44,13 @@ const FAR_KEEP := {"tree": 0.35, "bush": 0.3, "rock": 0.4, "prop": 0.4, "herb": 
 
 var target: Node3D = null
 var provider: TerrainProvider = null
+## Whether crossing into another region tells the game the player has arrived there. A camera
+## flying the opening over five regions is not a traveller: a region change seeds that region's
+## rumours, moves the music and titles the HUD, so a cinematic turns this off while it leads.
+var report_regions := true
+## Points besides the target whose full-detail ring is wanted too (a cinematic loads its next
+## shot while this one plays). Set it with `set_also_around`, which refreshes.
+var also_around: Array[Vector3] = []
 
 var _cells_wide: int = 32
 var _origin := Vector2(-4096.0, -4096.0)
@@ -53,6 +60,18 @@ var _parsed: Dictionary = {}          # Vector2i -> Dictionary (data ready to bu
 var _tasks: Dictionary = {}           # Vector2i -> task id
 var _current_cell := Vector2i(-9999, -9999)
 var _current_region := ""
+## How often the region under the target is looked at, and how far inside a new region the target
+## has to be before it counts as there. The region used to be read only when the target crossed
+## into a new streaming cell, with no margin: a walk along a cell edge that lay on a border
+## flipped the region -- the light's six-second blend, the music, the name on the screen -- at
+## every step over the edge, and a region entered mid-cell was not noticed until the next cell.
+const REGION_CHECK_SECONDS := 0.5
+const REGION_MARGIN_M := 24.0
+## A target that moved further than this between two looks was put somewhere -- a load, fast
+## travel, a capture's camera -- rather than walked there, and takes the region it landed in.
+const REGION_JUMP_M := 60.0
+var _region_timer := 0.0
+var _region_checked_at := Vector3.INF
 var _missing_assets: Dictionary = {}  # asset path -> true (one warning each)
 var _mesh_cache: Dictionary = {}      # asset path -> Mesh or null
 var _scene_cache: Dictionary = {}
@@ -86,13 +105,17 @@ func cell_centre(cell: Vector2i) -> Vector2:
 	return Vector2(_origin.x + (float(cell.x) + 0.5) * cell_size, _origin.y + (float(cell.y) + 0.5) * cell_size)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not enabled or target == null or provider == null:
 		return
 	var cell := cell_of(target.global_position)
+	_region_timer -= delta
 	if cell != _current_cell:
 		_current_cell = cell
 		refresh()
+		_region_timer = 0.0
+	if _region_timer <= 0.0:
+		_region_timer = REGION_CHECK_SECONDS
 		_check_region()
 	_drain_parsed()
 
@@ -111,6 +134,27 @@ func is_ring_loaded(ring: int = -1) -> bool:
 			if not _loaded.has(c):
 				return false
 	return _pending.is_empty() and _parsed.is_empty()
+
+
+## True when the full-detail ring around any point is standing: what a cinematic asks before it
+## shows a shot, since its camera is somewhere the target has not been yet.
+func is_loaded_around(pos: Vector3, ring: int = -1) -> bool:
+	var r := full_ring if ring < 0 else ring
+	var cell := cell_of(pos)
+	for dz in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			var c := Vector2i(cell.x + dx, cell.y + dz)
+			if _in_world(c) and not _loaded.has(c):
+				return false
+	return true
+
+
+func set_also_around(points: Array) -> void:
+	also_around.clear()
+	for p in points:
+		if p is Vector3:
+			also_around.append(p)
+	refresh()
 
 
 func loaded_count() -> int:
@@ -138,24 +182,24 @@ func refresh() -> void:
 		return
 	var cell := cell_of(target.global_position)
 	var wanted: Dictionary = {}
-	for dz in range(-far_ring, far_ring + 1):
-		for dx in range(-far_ring, far_ring + 1):
-			var c := Vector2i(cell.x + dx, cell.y + dz)
-			if not _in_world(c):
-				continue
-			var ring: int = maxi(absi(dx), absi(dz))
-			wanted[c] = ring
+	_want_around(wanted, cell, far_ring)
+	for p in also_around:
+		_want_around(wanted, cell_of(p), full_ring)
 	for c in wanted:
 		var ring: int = wanted[c]
 		if _loaded.has(c):
 			# A cell built for the far ring has no grass in it at all (and thinned instances
-			# elsewhere), so moving between rings means rebuilding it rather than patching
-			# what is there.
-			if int(_loaded[c].get_meta("ring", 0)) != ring:
+			# elsewhere), so moving between near and far detail means rebuilding it rather than
+			# patching what is there. Between the centre and the rest of the near ring nothing
+			# differs, so nothing is rebuilt.
+			if (int(_loaded[c].get_meta("ring", 0)) > full_ring) != (ring > full_ring):
 				_unload(c)
 				_request(c, ring)
 			continue
 		if _pending.has(c) or _parsed.has(c):
+			# built at whatever ring it is wanted at when its data arrives; a cell whose data had
+			# arrived after it stopped being wanted is wanted again, not dropped at the drain
+			_pending[c] = ring
 			continue
 		_request(c, ring)
 	for c in _loaded.keys():
@@ -164,6 +208,17 @@ func refresh() -> void:
 	for c in _pending.keys():
 		if not wanted.has(c):
 			_pending.erase(c)
+
+
+## Adds the rings around `centre` to `wanted`, each cell at the nearest ring anything wants it at.
+func _want_around(wanted: Dictionary, centre: Vector2i, rings: int) -> void:
+	for dz in range(-rings, rings + 1):
+		for dx in range(-rings, rings + 1):
+			var c := Vector2i(centre.x + dx, centre.y + dz)
+			if not _in_world(c):
+				continue
+			var ring: int = maxi(absi(dx), absi(dz))
+			wanted[c] = mini(ring, int(wanted.get(c, ring)))
 
 
 func _in_world(c: Vector2i) -> bool:
@@ -554,14 +609,43 @@ func _scene_for(path: String) -> PackedScene:
 
 
 func _check_region() -> void:
-	if provider == null or target == null:
+	if provider == null or target == null or not report_regions:
 		return
 	var pos := target.global_position
-	var id := provider.nearest_region_id_at(pos.x, pos.z)
+	var jumped := _region_checked_at == Vector3.INF or pos.distance_to(_region_checked_at) > REGION_JUMP_M
+	_region_checked_at = pos
+	var id := provider.region_id_at(pos.x, pos.z)
+	if id.is_empty():
+		# Over open water a walk (or a swim) stays in the region it came from. The nearest shore
+		# is a search that can land either side of a strait: off the Hushline Stair, where a new
+		# game begins on a patch of Cinderlea in open water, it finds Sedgemire's and
+		# Brightwater's coasts from spots a hundred metres out. A target put down on the water
+		# takes the nearest shore's.
+		if not jumped and not _current_region.is_empty():
+			return
+		id = provider.nearest_region_id_at(pos.x, pos.z)
 	if id.is_empty() or id == _current_region:
+		return
+	if not jumped and not region_entered_at(pos, id):
 		return
 	_current_region = id
 	GameState.enter_region(id)
+
+
+## Whether a walk to `pos` has taken the target far enough inside region `id` to count as having
+## entered it: the first region of all is taken at once, and any other only once no land of
+## another region lies within REGION_MARGIN_M, so a border has a band either side of it where
+## nothing changes. (A target put down somewhere takes its region at once: REGION_JUMP_M.)
+func region_entered_at(pos: Vector3, id: String) -> bool:
+	if _current_region.is_empty():
+		return true
+	for k in 4:
+		var a := TAU * float(k) / 4.0
+		var there := provider.region_id_at(pos.x + cos(a) * REGION_MARGIN_M, pos.z + sin(a) * REGION_MARGIN_M)
+		# open water beside you is nobody's; land of another region is not yet behind you
+		if not there.is_empty() and there != id:
+			return false
+	return true
 
 
 func unload_all() -> void:

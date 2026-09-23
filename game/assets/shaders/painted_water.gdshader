@@ -8,12 +8,25 @@ render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specula
 //   mask_tex    R8    1 where there is water surface
 //   height_tex  R32F  terrain height, for depth colour and shore foam
 //
-// It draws no depth texture and no screen texture, so it behaves the same on the Compatibility
-// renderer as on Forward+ (ARCHITECTURE.md §10). What makes it read as water is done here rather
-// than left to the engine's reflection: the sky's own colours (the atmosphere publishes its
-// zenith and horizon every frame) mirrored by a Fresnel term, so the water is dark where you look
-// down into it and sky-coloured toward the far shore; a path of glints under the sun, and under
-// the moon at night; moving ripples; and foam that follows the waterline and breaks up.
+// What makes it read as water is done here rather than left to the engine's reflection, so it
+// works on the Compatibility renderer as it would on Forward+ (ARCHITECTURE.md §10): the world
+// mirrored by a Fresnel term, so the water is dark where you look down into it and gives back
+// the far shore, the hills and the sky toward the grazing angle; a path of glints under the sun,
+// and under the moon at night; moving ripples; and foam that follows the waterline and breaks up.
+// tools_gd/render_probe.gd measured the screen texture on Compatibility: read back and drawn
+// again it comes out within a tenth of the scene with the post-process path on (glow and the
+// grade, as the game has them), so it is the scene's own light and goes into EMISSION as it is;
+// and SCREEN_UV's y runs up the frame in this renderer, which the mirror's sign takes care of.
+//
+// The mirror is the frame's own pixels, looked up where the reflected ray points: the direction
+// is projected to infinity, which puts it above the horizon wherever the camera is above the
+// water, so the lookup can land on a hill, a far shore or the sky but never on the lake itself.
+// That is exact for anything far away and wrong in parallax for something near, which on a lake
+// is the right way round. Where the ray leaves the frame the sky's own zenith and horizon (the
+// atmosphere publishes them every frame) stand in. `mirror` = 0 fades the lookup out; the
+// setting that turns reflections off builds this shader with WATER_NO_MIRROR defined instead
+// (world/water_surface.gd), because a material that so much as names the screen texture makes
+// the renderer copy the frame for it, whatever the uniform says.
 //
 // The normal is written to NORMAL in view space. The first version wrote a world-space normal
 // with its up component in the normal map's green channel; Godot rebuilds a normal map's z from
@@ -49,6 +62,15 @@ uniform float flow_speed = 0.35;       // metres of wave travel per second, down
 uniform float reflect_strength : hint_range(0.0, 1.0) = 0.9;
 uniform float glint_strength = 3.0;
 uniform float glint_sharpness = 700.0;
+uniform float mirror : hint_range(0.0, 1.0) = 1.0;
+// how much of the waves bends what the mirror shows: all of it scrambles a hill into streaks of
+// sky and shore; a third leaves the hill, wavering
+uniform float mirror_ripple : hint_range(0.0, 1.0) = 0.3;
+// the most of the light the water gives back at the grazing angle, before `reflect_strength`
+uniform float fresnel_cap : hint_range(0.0, 1.0) = 0.65;
+#ifndef WATER_NO_MIRROR
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear, repeat_disable;
+#endif
 
 // published by systems/atmosphere every frame, all linear
 global uniform vec3 wm_sun_dir;
@@ -145,8 +167,28 @@ void fragment() {
 	vec3 R = reflect(-V, n_world);
 	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
 	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
-	fresnel = min(fresnel, 0.65) * reflect_strength;
-	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, pow(clamp(R.y, 0.0, 1.0), 0.35));
+	fresnel = min(fresnel, fresnel_cap) * reflect_strength;
+	// what the mirror shows is bent by a share of the waves only (`mirror_ripple`)
+	vec3 n_mirror = normalize(vec3(-slope.x * mirror_ripple, 1.0, -slope.y * mirror_ripple));
+	vec3 Rm = reflect(-V, n_mirror);
+	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, pow(clamp(Rm.y, 0.0, 1.0), 0.35));
+	// the mirror: where on screen the reflected direction is, as a vanishing point. The sign that
+	// relates clip space to SCREEN_UV is taken from the derivatives (outside any branch, where
+	// they are defined), so it holds whichever way up this renderer keeps its frame.
+	vec3 reflected = sky;
+#ifndef WATER_NO_MIRROR
+	vec4 cur = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
+	vec2 cur_ndc = cur.xy / cur.w;
+	float ys = sign(dFdy(SCREEN_UV.y)) * sign(dFdy(cur_ndc.y));
+	ys = ys == 0.0 ? 1.0 : ys;
+	vec4 ref = PROJECTION_MATRIX * (VIEW_MATRIX * vec4(Rm, 0.0));
+	if (mirror > 0.001 && ref.w > 0.0001) {
+		vec2 uv2 = SCREEN_UV + (ref.xy / ref.w - cur_ndc) * 0.5 * vec2(1.0, ys);
+		float margin = min(min(uv2.x, 1.0 - uv2.x), min(uv2.y, 1.0 - uv2.y));
+		float inside = smoothstep(0.0, 0.06, margin);
+		reflected = mix(sky, texture(screen_tex, uv2).rgb, inside * mirror);
+	}
+#endif
 	// a path of glints under the sun, broken into points by a fine sparkle
 	float sparkle = step(0.55, hash12(floor(v_world.xz * 2.5 + vec2(TIME * 1.3, TIME * 0.9))));
 	float sun_g = pow(max(dot(R, normalize(wm_sun_dir)), 0.0), glint_sharpness);
@@ -156,7 +198,7 @@ void fragment() {
 		+ wm_moon_color * moon_g * mix(0.3, 1.4, sparkle) * glint_strength * 0.6;
 
 	ALBEDO = mix(body * (1.0 - fresnel), foam_colour.rgb, foam);
-	EMISSION = (sky * fresnel + glints * (1.0 - far * 0.6)) * (1.0 - foam);
+	EMISSION = (reflected * fresnel + glints * (1.0 - far * 0.6)) * (1.0 - foam);
 	ROUGHNESS = clamp(roughness_water + 0.25 + foam * 0.4 + far * 0.1, 0.02, 1.0);
 	SPECULAR = 0.12 * (1.0 - foam);
 	METALLIC = 0.0;

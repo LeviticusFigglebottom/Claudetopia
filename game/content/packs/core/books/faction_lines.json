@@ -1,5 +1,13 @@
 [
   {
+    "id": "core:book/wardens_roll_fragment",
+    "title": "A Leaf of the Wardens' Roll",
+    "author": "four Wardens' hands, one after another, and at the foot the Reeve of Hollin's",
+    "category": "book",
+    "quest_hook": "core:quest/the_deep_lines",
+    "body": "# A Leaf of the Roll\n\n*Rag-paper, ruled in the Wardens' four columns: the name, the place, who spoke for them, the season it was read. The top edge is burnt away. It was folded twice and pushed up into the throat of the bell in the Bell Cist, where it was dry, which is the only reason it is anything.*\n\n---\n\n**Harl Mullen**, miller, of Mullbourne. *Spoken for by his wife. Read at the turn of the harvest.*\n\n**Tessa Mullen**, of Mullbourne. *Spoken for by her brother at the ford. Read at the turn of the harvest.*\n\n**The Mullen boy**, not yet named, of Mullbourne. *Spoken for by the whole of the mill-house. Read.*\n\n**Aldo Penfold**, carter, of Mullbourne and the ford road. *Spoken for by the miller, who owed him.*\n\n**The Widow Fenn**, of Mullbourne, whose name the Rest has lost and would like back. *Spoken for by nobody, and read anyway, because she was there.*\n\n*Eleven more, in two more hands, down to the fold.*\n\n---\n\n*Below the fold, in a fifth Warden's hand, one line across all four columns:* Mullbourne. The stream has moved and the mill with it. Nobody answers at the ford. Struck.\n\n---\n\n*And under that, in brown ink gone the colour of the chalk, in the hand that fills the Barrow Roll:*\n\nRead again at the turn of the season by the Reeve of Hollin, all sixteen, the widow too. Nobody asked me to. I do not see that as a reason to stop.\n\n*Read again.*\n\n*Read again.*\n\n*The line is repeated to the bottom of the leaf, and over the edge onto the next, which is not there.*"
+  },
+  {
     "id": "core:book/barrow_roll",
     "title": "The Barrow Roll of Hollin",
     "author": "begun by Orm Hollin, Barrow Reeve, and continued in his hand for rather longer than that",

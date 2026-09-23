@@ -33,7 +33,7 @@
         "journal": "Eleven households, a well with a hare cut on the lip, and a hawthorn shrine to Hearth-Mother Ansel that people still walk to because the Hearthstone in its lap is warm. The shrine is on the Roll. Harewell is not on anything. Whatever is working the hedges out there has tools and does not stop for a greeting, and two of them came up the lane at you, which is a lane, which is the thing Wren could not make anyone else see.",
         "objectives": [
           {"type": "reach", "target": "core:poi/hedge_shrine_of_ansel", "radius": 140, "text": "Walk the down at Ansel's Hedge Shrine"},
-          {"type": "kill", "target": "core:enemy/hedge_wight", "count": 2, "text": "Put down what is still working the Harewell hedges"}
+          {"type": "kill", "target": "core:enemy/hedge_wight", "count": 2, "text": "Put down what is still working the Harewell hedges", "where": "core:poi/hedge_shrine_of_ansel"}
         ],
         "on_complete": [{"set_flag": "walked_the_harewell_down"}, {"renown": 10}]
       },
@@ -128,7 +128,7 @@
         "journal": "Hollin Barrow is a collapsed crypt cut into chalk with a yew's roots through it, and a long way in there is a cist with a bell hung in it, and the bell is the only warm thing in the ground. The Reeve is in there with a hammer and a roll on a bronze ring, reading. He gets to the end of the forty-first name and starts again. He will not stop for you, because you are not on it.",
         "objectives": [
           {"type": "reach", "target": "core:place/hollin_barrow", "radius": 140, "text": "Go down into Hollin Barrow"},
-          {"type": "kill", "target": "core:boss/barrow_reeve", "count": 1, "text": "Settle with the Barrow Reeve"}
+          {"type": "kill", "target": "core:boss/barrow_reeve", "count": 1, "text": "Settle with the Barrow Reeve", "where": "core:interior/hollin_barrow"}
         ],
         "on_complete": [
           {"give_item": ["core:item/barrow_roll", 1]},

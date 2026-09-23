@@ -249,8 +249,10 @@ func ensure_loot() -> void:
 	_persist()
 
 
+## What a chest is rolled against: the same world a kill's drop is (level, luck, quests), not a
+## level-1 stranger's.
 func loot_context() -> Dictionary:
-	return LootTable.default_context()
+	return LootTable.world_context()
 
 
 static func now_hours() -> float:

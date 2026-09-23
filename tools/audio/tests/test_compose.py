@@ -321,3 +321,49 @@ def test_every_region_in_the_pack_has_a_theme():
     for r in regions:
         cfg = next(c for c in compose.REGIONS.values() if c["region_id"] == r["id"])
         assert cfg["music_mode"] == r["identity"]["music_mode"], r["id"]
+
+
+# --- the opening ---------------------------------------------------------------------------------
+
+def test_the_opening_is_cut_to_the_shots_of_its_cinematic():
+    """At 60 bpm a beat is a second, and each section begins where a shot does."""
+    s = scores()["opening"]
+    marks = compose.opening_marks()
+    starts = [round(start, 3) for start, _t, _m in s.meta["sections"]]
+    for shot in ("the_name", "the_mere", "the_spire", "the_nave", "the_hand", "merrowby",
+                 "the_roll", "the_toll", "the_choir", "the_stair"):
+        assert round(marks[shot], 3) in starts, "no section begins with %s at %.1f s" % (shot, marks[shot])
+    assert round(marks["turn"], 3) in starts, "the turn is not where the line says it is"
+    assert s.bpm == 60.0
+    assert s.seconds() >= marks["handover"], "the cue ends before control is handed back"
+    assert s.meta.get("loop") is False, "the opening is played once, not looped"
+
+
+def test_the_opening_turns_lydian_on_the_same_e_at_you_did():
+    s = scores()["opening"]
+    turn = compose.opening_marks()["turn"]
+    stair = compose.opening_marks()["the_stair"]
+    before = [n for n in s.all_notes() if stair <= n.beat < turn - 0.2 and not n.tension]
+    after = [n for n in s.all_notes() if n.beat >= turn + 0.2]
+    assert before and after
+    assert all(theory.in_mode(n.midi, 52, "phrygian") for n in before), "the Stair is not hollow before the turn"
+    assert any(not theory.in_mode(n.midi, 52, "phrygian") for n in after), "the cue never leaves the Hush"
+    assert all(theory.in_mode(n.midi, 52, "lydian") for n in after), "the turn is not E lydian"
+
+
+def test_the_opening_states_the_toll_warm_under_the_title_and_again_at_the_turn():
+    s = scores()["opening"]
+    marks = compose.opening_marks()
+    lead = sorted([n for n in s.notes("melody") if n.voice == "lead"], key=lambda n: n.beat)
+    title = [n.midi for n in lead if marks["title"] - 0.2 <= n.beat < marks["the_spire"]]
+    turn = [n.midi for n in lead if n.beat >= marks["turn"] - 0.2]
+    assert _contains_transformation(title, 62, "lydian"), "no Toll under the title"
+    assert _contains_transformation(turn, 64, "lydian"), "no Toll at the turn"
+
+
+def test_the_opening_hums_a_half_step_under_the_toll_on_purpose():
+    """The one deliberate semitone in the score: the tine humming under the bell."""
+    s = scores()["opening"]
+    start = compose.opening_marks()["the_toll"]
+    tense = [n for n in s.all_notes() if n.tension]
+    assert tense and all(start - 0.2 <= n.beat < compose.opening_marks()["the_choir"] for n in tense)

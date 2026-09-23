@@ -11,7 +11,13 @@ extends Node
 ##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours},
 ##    "gait": {"pos": [x, _, z], "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
 ##             "camera": {"distance": m, "height": m, "fov": deg},
-##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]}}
+##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]},
+##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?}}
+##
+## A `cinematic` block loads the world with its body standing where the story opens and has
+## `CinematicPlayer` scrub to each shot's samples, so every frame on disk is the player's own
+## frame -- letterbox, subtitle and title card included -- and writes <out>/cinematic.json with
+## where each camera stood and how far above the ground.
 ##
 ## A gait run may also hold keys and tap one, as real key events through the input map rather
 ## than as actions: {"label": "roll", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}.
@@ -71,6 +77,15 @@ func run() -> int:
 	if plan.is_empty():
 		return 2
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	# game flags set before the world stands up, so a plan can photograph the world as a given
+	# moment of the story sees it: `{"new_game": true}` is the start as a new game has it, with
+	# the Warden held at her fire (tools/capture/plans/start.json)
+	var flags: Variant = plan.get("flags", {})
+	if flags is Dictionary:
+		for key: String in flags:
+			GameState.set_flag(key, flags[key])
+	if plan.has("cinematic"):
+		return await _shoot_cinematic(plan["cinematic"])
 	_world = await _load_world()
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")
@@ -90,6 +105,10 @@ func run() -> int:
 	var shots: Array = plan.get("shots", [])
 	Log.info("Capture", "%d shots -> %s" % [shots.size(), out_dir])
 	var index := 0
+	# a `sequences` section (see _sequence at the end of this file) is shot first
+	for seq in plan.get("sequences", []):
+		if typeof(seq) == TYPE_DICTIONARY:
+			index = await _sequence(index, seq)
 	for shot in shots:
 		if typeof(shot) != TYPE_DICTIONARY:
 			continue
@@ -130,7 +149,7 @@ func _read_plan() -> Dictionary:
 	return parsed
 
 
-func _load_world() -> World:
+func _load_world(with_body := false) -> World:
 	var world_status := WorldStatus.current()
 	if not bool(world_status.get("playable", false)):
 		# a photograph of a void is not a photograph of the country
@@ -142,9 +161,10 @@ func _load_world() -> World:
 	var w: Node = packed.instantiate()
 	# A capture is a photograph of the country, taken from a planned camera. A body standing in
 	# it would both block the shot and take the streaming off the plan, so the world is loaded
-	# without one and keeps its fly camera.
+	# without one and keeps its fly camera -- except for a cinematic, whose last shot is of the
+	# body, and which takes the camera and the streaming itself.
 	var spawn: Node = w.get_node_or_null("PlayerSpawn")
-	if spawn != null:
+	if spawn != null and not with_body:
 		spawn.set("enabled", false)
 		# ...but the world's services still go in, because they are what stands the villagers
 		# up, and a photograph of a village with nobody in it is a photograph of a model.
@@ -193,6 +213,8 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
+	if lights != null and (lights as Object).has_method("rebuild_glow"):
+		(lights as Object).call("rebuild_glow")
 	if lights != null and (lights as Object).has_method("assign"):
 		var st: Variant = atmos.get("state") if atmos else null
 		(lights as Object).call("assign", float((st as Dictionary).get("night", 0.0)) if st is Dictionary else 0.0)
@@ -291,6 +313,17 @@ func _attribute_shot(label: String, cam: Camera3D) -> void:
 	if f:
 		f.store_string(JSON.stringify(_attribution, "  "))
 		f.close()
+
+
+## What the per-frame systems cost over the whole run: the night-light glow rebuilds and pool
+## assignments and the grade LUT rebuilds, each count, total and worst in microseconds. Asked for by
+## name, so a build from before either existed still runs.
+func _costs() -> Dictionary:
+	var out := {}
+	for node in [_world.get("night_lights") if _world else null, _world.atmosphere if _world else null]:
+		if node != null and (node as Object).has_method("costs"):
+			out.merge((node as Object).call("costs"))
+	return out
 
 
 ## Review shots look a long way, where the region fog densities turn the land into haze.
@@ -576,6 +609,7 @@ func _write_perf() -> void:
 		"budget": {"draw_calls": 2000, "primitives": 1500000},
 		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
 		"within_budget": worst_draw <= 2000 and worst_prims <= 1500000,
+		"costs": _costs(),
 		"shots": _perf,
 	}
 	var f := FileAccess.open("%s/perf.json" % out_dir, FileAccess.WRITE)
@@ -584,3 +618,221 @@ func _write_perf() -> void:
 		f.close()
 	Log.info("Capture", "worst frame: %d draw calls, %.2f M primitives (budget 2000 / 1.5 M)"
 		% [worst_draw, float(worst_prims) / 1e6])
+	Log.info("Capture", "costs: %s" % JSON.stringify(doc["costs"]))
+
+
+# --- sequences ------------------------------------------------------------------------------
+
+## `"sequences": [{"label", "pos", "look_at", "height_above_ground", "fov", "time", "weather",
+## "from_region", "region", "frames": n, "every": seconds}]` in a plan.
+##
+## A run of frames from one camera with the game left running between them, for what a single
+## exposure cannot show: a flash, a flicker, a blend. With `from_region` the look is settled
+## there first and then left to blend into `region`, as it does when you walk over the border.
+## Every frame drawn is measured -- its mean brightness, and whether the grade's table was
+## rebuilt for it -- not only the ones saved every `every` seconds, because a flash can be one
+## frame long; a frame brighter or darker than both its neighbours by more than FLASH_STEP is
+## saved as well and reported as a FLASH, and every frame under half the run's median brightness
+## is counted as DARK (a flash can also last half a second: the grade swap drew ten black frames
+## in a row on Forward+). Run it with --fixed-fps, so the game's time between two frames does not
+## depend on how slowly this machine draws them.
+const FLASH_STEP := 0.06
+
+
+func _sequence(index: int, seq: Dictionary) -> int:
+	var label := str(seq.get("label", "sequence"))
+	if seq.has("time"):
+		WorldClock.set_time(float(seq["time"]))
+	if seq.has("weather"):
+		_force_weather(str(seq["weather"]))
+	var pos := _shot_position(seq)
+	var cam := _world.fly_camera
+	if cam == null:
+		_failures.append("no fly camera for sequence %s" % label)
+		return index
+	cam.fov = float(seq.get("fov", 65.0))
+	if seq.has("look_at"):
+		var la: Array = seq["look_at"]
+		cam.move_to(pos, Vector3(float(la[0]), float(la[1]), float(la[2])))
+	else:
+		cam.move_to(pos)
+		cam.set_yaw_pitch(float(seq.get("yaw", 0.0)), float(seq.get("pitch", -8.0)))
+	_world.move_target(pos)
+	await _wait_for_streaming()
+	var atmos := _world.atmosphere
+	var to := str(seq.get("region", _world.provider.nearest_region_id_at(pos.x, pos.z)))
+	if atmos and seq.has("from_region"):
+		atmos.call("set_region", str(seq["from_region"]), true)
+		atmos.call("settle")
+		await get_tree().process_frame
+		atmos.call("set_region", to, false)
+	var want := int(seq.get("frames", 40))
+	var every := float(seq.get("every", 0.25))
+	var lums: Array[float] = []
+	var luts: Array[int] = []
+	var prev_img: Image = null
+	var clock := 0.0
+	var next_save := 0.0
+	var saved := 0
+	var flashes: Array[String] = []
+	var builds_at_start := _grade_builds()
+	var drawn := 0
+	while saved < want and drawn < want * 200:
+		await RenderingServer.frame_post_draw
+		drawn += 1
+		clock += get_process_delta_time()
+		var img := get_viewport().get_texture().get_image()
+		var lum := _mean_luminance(img)
+		var builds := _grade_builds() - builds_at_start
+		lums.append(lum)
+		luts.append(builds)
+		# the frame before this one is a flash if it stands out from both of its neighbours
+		var n := lums.size()
+		if n >= 3:
+			var a := lums[n - 3]
+			var b := lums[n - 2]
+			if (b - a) * (b - lum) > 0.0 and minf(absf(b - a), absf(b - lum)) > FLASH_STEP:
+				var fpath := "%s/%02d_%s_flash_%03d.png" % [out_dir, index, label, n - 2]
+				if prev_img:
+					prev_img.save_png(fpath)
+				flashes.append("frame %d at %.2f s: %.3f between %.3f and %.3f (grade tables built so far %d)"
+					% [n - 2, clock, b, a, lum, luts[n - 2]])
+		prev_img = img
+		if clock + 0.0001 >= next_save:
+			var path := "%s/%02d_%s_%03d.png" % [out_dir, index, label, saved]
+			img.save_png(path)
+			print("SEQ %s %03d t=%.2f s frame=%d mean=%.3f grade_tables=%d" % [label, saved, clock, drawn, lum, builds])
+			saved += 1
+			next_save += every
+	var lo := 1.0
+	var hi := 0.0
+	for l in lums:
+		lo = minf(lo, l)
+		hi = maxf(hi, l)
+	var sorted := lums.duplicate()
+	sorted.sort()
+	var median: float = sorted[sorted.size() / 2] if not sorted.is_empty() else 0.0
+	var dark := 0
+	for l in lums:
+		if l < median * 0.5:
+			dark += 1
+	Log.info("Capture", "sequence %s: %d frames drawn over %.1f s, %d saved, mean brightness %.3f..%.3f (median %.3f), grade tables built %d, %d flash(es), %d DARK frame(s)"
+		% [label, drawn, clock, saved, lo, hi, median, luts[-1] if not luts.is_empty() else 0, flashes.size(), dark])
+	if dark > 0 or not flashes.is_empty():
+		_failures.append("sequence %s: %d flash(es), %d frame(s) under half the median brightness" % [label, flashes.size(), dark])
+	for f in flashes:
+		Log.info("Capture", "FLASH %s %s" % [label, f])
+	return index + 1
+
+
+## How many times the grade's table has been built, asked for by name so a build from before the
+## count existed still runs a sequence (it reads 0 there).
+func _grade_builds() -> int:
+	var atmos := _world.atmosphere if _world else null
+	if atmos == null or not atmos.has_method("costs"):
+		return 0
+	var c: Dictionary = atmos.call("costs")
+	return int((c.get("grade_lut", {}) as Dictionary).get("builds", 0))
+
+
+static func _mean_luminance(img: Image) -> float:
+	var w := img.get_width()
+	var h := img.get_height()
+	var total := 0.0
+	var n := 0
+	for y in range(h / 36, h, h / 18):
+		for x in range(w / 64, w, w / 32):
+			total += img.get_pixel(x, y).get_luminance()
+			n += 1
+	return total / float(maxi(n, 1))
+
+
+# --- cinematics --------------------------------------------------------------------------------------
+
+## Real seconds each cinematic frame is given after its country stands, so a subtitle or a title
+## card that has just begun to ink in is photographed arrived rather than halfway.
+const CINEMATIC_SETTLE_SECONDS := 2.0
+
+
+## Every sample of every shot of a cinematic, through `CinematicPlayer.scrub`.
+func _shoot_cinematic(spec: Dictionary) -> int:
+	var id := str(spec.get("id", ""))
+	if not ContentDB.has(id):
+		Log.error("Capture", "no cinematic %s" % id)
+		return 2
+	_world = await _load_world(true)
+	if _world == null:
+		Log.error("Capture", "world scene failed to load")
+		return 1
+	if not _world.is_world_ready:
+		await _world.world_ready
+	var spawn: Node = _world.get_node_or_null("PlayerSpawn")
+	var player: Node3D = null
+	for i in 600:
+		player = spawn.get("player") as Node3D if spawn != null else null
+		if player != null:
+			break
+		await get_tree().process_frame
+	if player == null:
+		Log.error("Capture", "no body stood up to hand the cinematic over to")
+		return 1
+	_world.streamer.cells_per_frame = 12
+	# the body drops the last half-metre onto the ground before the last shot is composed on it
+	for i in 40:
+		await get_tree().physics_frame
+	var cin := CinematicPlayer.new()
+	_world.add_child(cin)
+	await cin.begin(_world, player, ContentDB.get_def(id), CinematicPlayer.Mode.SCRUB)
+	var samples: Array = spec.get("samples", [0.0, 0.5, 1.0])
+	var only: Array = spec.get("shots", [])
+	var shots := CinematicDef.shots_of(cin.def)
+	var rows: Array = []
+	var index := 0
+	for i in shots.size():
+		var shot: Dictionary = shots[i]
+		var sid := str(shot.get("id", ""))
+		if not only.is_empty() and not only.has(sid):
+			continue
+		var black := bool(shot.get("black", false))
+		for u_v in ([0.5] if black else samples):
+			var u := float(u_v)
+			cin.scrub(i, u)
+			var waited := 0
+			while waited < MAX_WAIT_FRAMES and not cin.ready_to_show():
+				await get_tree().process_frame
+				waited += 1
+			var ready := cin.ready_to_show()
+			var until := Time.get_ticks_msec() + int(CINEMATIC_SETTLE_SECONDS * 1000.0)
+			var frames := 0
+			while frames < SETTLE_FRAMES or Time.get_ticks_msec() < until:
+				await get_tree().process_frame
+				frames += 1
+			await RenderingServer.frame_post_draw
+			var file := "%02d_%s_%03d.png" % [index, sid, int(round(u * 100.0))]
+			var img := get_viewport().get_texture().get_image()
+			if img == null or img.save_png("%s/%s" % [out_dir, file]) != OK:
+				_failures.append("cannot write %s" % file)
+			var cam := cin.camera().global_position
+			var ground := _world.provider.max_height_around(cam.x, cam.z, 3.0, 12)
+			rows.append({
+				"file": file, "shot": sid, "u": u, "camera": [snappedf(cam.x, 0.1), snappedf(cam.y, 0.1), snappedf(cam.z, 0.1)],
+				"above_ground": snappedf(cam.y - ground, 0.01), "fov": snappedf(cin.camera().fov, 0.1),
+				"hour": snappedf(WorldClock.time_hours, 0.01),
+				"weather": str(_world.atmosphere.call("current_weather_id")) if _world.atmosphere else "",
+				"words": cin.overlay().said(), "ready": ready, "frames_waited": waited,
+				"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+				"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
+			})
+			if not ready and not black:
+				_failures.append("%s: its cells were not standing after %d frames" % [file, waited])
+			Log.info("Capture", "%s  %.1f m above the ground, %s" % [file, cam.y - ground, "ready" if ready else "NOT READY"])
+			index += 1
+	cin.release()
+	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"cinematic": id, "frames": rows}, "  "))
+		f.close()
+	for failure in _failures:
+		Log.error("Capture", failure)
+	Log.info("Capture", "%d cinematic frames written to %s" % [index, out_dir])
+	return 1 if not _failures.is_empty() else 0
