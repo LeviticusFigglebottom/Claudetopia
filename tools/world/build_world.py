@@ -384,11 +384,13 @@ def build(args) -> dict:
             _, road_d, road_w = RD.carve_roads(grid, H.copy(), roads_list)
         t.mark("reload")
     else:
-        H = HM.compose_heights(grid, grid_c, bank, regions, rf, lake_c, lake, places,
-                               keep_discs=[(float(p["position"][0]), float(p["position"][1]),
-                                            RD.pad_radius(p)) for p in pad_targets],
-                               keep_lines=sightline_segments(pois, pad_targets),
-                               landforms="landforms" in recipes)
+        # the landform, when there is one, comes back apart from the land: the rivers and the
+        # roads are traced and carved on the land without it, and it is laid on after them
+        H, lf_delta = HM.compose_heights(grid, grid_c, bank, regions, rf, lake_c, lake, places,
+                                         keep_discs=[(float(p["position"][0]), float(p["position"][1]),
+                                                      RD.pad_radius(p)) for p in pad_targets],
+                                         keep_lines=sightline_segments(pois, pad_targets),
+                                         landforms="landforms" in recipes, apart=True)
         t.mark("heights")
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         t.mark("pads")
@@ -429,8 +431,18 @@ def build(args) -> dict:
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         # and the rivers win over both: a pad or a road laid across a channel is cut through
         H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
-        del H_river
         t.mark("roads")
+        if lf_delta is not None:
+            # Each region's landform goes on last, and not across a road: a road is graded and
+            # carved against the land it was routed over, and the landform only comes back
+            # past its carve (landforms.road_clear), so a road climbs a scar through a break in
+            # it. Then the pads and the channels once more, as after the roads.
+            H = (H + lf_delta * LF.road_clear(road_d, road_w)).astype(np.float32)
+            del lf_delta
+            H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
+            H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
+            t.mark("landforms")
+        del H_river
 
     owner = dithered_owner(rf, n, bank)
     water = HY.water_maps(grid, H, lake, rivers, river_d, river_surf, river_w, owner, regions, bank)

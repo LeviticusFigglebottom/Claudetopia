@@ -40,6 +40,15 @@ and their sightlines answered one at a time, against the land as it is, and a pa
 the median of whatever is under it, so a terrace tread through a POI would move the height its
 sightlines are aimed from. And nothing may rise along an authored sightline: nine of the 87
 lines clear the ground by under half a metre. Lowering is free everywhere.
+
+The roads are the third thing kept. A world build lays the landforms on last, after the
+rivers and roads were traced and carved on the land without them (`build_world.py` asks
+`compose_heights` for the landform apart), and not across a road: `road_clear` holds the
+ground as it was out past each road's carve and brings the landform back over the next thirty
+metres. Laid first, as they were, the router took the road from Gullhithe up to Kharrow Hold
+straight over a scar -- eighteen metres of climb between two points seven metres apart -- and
+put the Grandfather Hollow road along the lip of a granite step, nine metres above the ground
+either side. A road through a scar goes through a break in it, which is how a road climbs one.
 """
 from __future__ import annotations
 
@@ -474,6 +483,30 @@ def line_mask(g, lines: list, width_m: float) -> np.ndarray:
         from scipy import ndimage
         out = ndimage.distance_transform_edt(~out) * g.spacing <= width_m
     return out
+
+
+## How far past its carve a road's ground is held as the road was laid on it, and over how
+## many metres more the landform comes back (`road_clear`).
+ROAD_CLEAR_M = 4.0
+ROAD_FADE_M = 30.0
+
+
+def road_clear(road_d: np.ndarray, road_w: np.ndarray) -> np.ndarray:
+    """float32 [n, n]: how much of the landform may stand here, 0 on a road and 1 clear of it.
+
+    `road_d` and `road_w` are `roads.carve_roads`' distance to the nearest road's centre line
+    and that road's width. The ground is held out to the road's half width, its shoulder
+    (`roads.shoulder_m`) and ROAD_CLEAR_M, so everything the road was graded and carved
+    against, and the land either side of it that the road tests read, is the land it was laid
+    on; the landform returns by ROAD_FADE_M further.
+    """
+    from .roads import shoulder_m
+
+    w = np.asarray(road_w, dtype=np.float32)
+    inner = np.empty_like(w)
+    for width in np.unique(w):              # a handful of road widths, and 0 where there is none
+        inner[w == width] = 0.5 * float(width) + shoulder_m(float(width)) + ROAD_CLEAR_M
+    return smoothstep(inner, inner + ROAD_FADE_M, np.asarray(road_d, dtype=np.float32)).astype(np.float32)
 
 
 def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = None) -> tuple:

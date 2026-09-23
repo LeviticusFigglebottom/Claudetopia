@@ -412,12 +412,16 @@ def apply_drainage(ctx: HeightContext, h: np.ndarray, work_n: int = 1024) -> tup
 
 def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, regions: list, rf: RegionField, lake_c: LakeGeometry,
                     lake_f: LakeGeometry, places: list, keep_discs: list | None = None,
-                    keep_lines: list | None = None, landforms: bool = False) -> np.ndarray:
+                    keep_lines: list | None = None, landforms: bool = False,
+                    apart: bool = False):
     """Full pipeline up to (not including) pads, rivers and roads. Returns heights at grid.n.
 
     `landforms` adds each region's own landform (worldgen/landforms.py, the world build's
     `landforms` recipe); `keep_discs` and `keep_lines` are the places and sightlines those are
-    held off.
+    held off. With `apart`, the landform is not added but returned beside the land, at grid.n
+    (None without `landforms`): (heights, landform). The world build lays it on after the
+    roads, and off them (`landforms.road_clear`). The upsample is linear, so the two added
+    together are the land `landforms` alone would have given.
     """
     from . import landforms as landforms_mod
 
@@ -428,9 +432,12 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, regions: list, rf
     h, _chan = apply_drainage(ctx, h)
     h = apply_lake(ctx, h)          # the Mere, its shores and the causeway win over the valleys
     # and each region's own shape at the scale a person walking sees it
+    delta = None
     if landforms:
-        h, _delta = landforms_mod.apply(ctx, h, keep_discs, keep_lines)
-        del _delta
+        h_with, delta = landforms_mod.apply(ctx, h, keep_discs, keep_lines)
+        if not apart:
+            h = h_with
+        del h_with
     bank.forget()
     H = upsample(h, grid.n, order=3)
     # full-resolution detail band, damped on water and steep-scaled in the mountains
@@ -439,4 +446,6 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, regions: list, rf
     d = bank.detail(190, grid.n, wl_min=max(3.0 * grid.spacing, 6.0), wl_max=64.0, beta=1.5)
     water = 1.0 - smoothstep(-6.0, 6.0, lake_f.sd)
     H += d * amp * (1.0 - 0.85 * water)
+    if apart:
+        return H.astype(np.float32), (upsample(delta, grid.n, order=3) if delta is not None else None)
     return H.astype(np.float32)

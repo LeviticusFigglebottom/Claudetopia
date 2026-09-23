@@ -87,6 +87,24 @@ class LeanTest(unittest.TestCase):
         self.assertIn("lake_basin", rules["flora"]["willow_pollard"]["lean"])
 
 
+class RoadClearTest(unittest.TestCase):
+    """The landform goes on after the roads and stays off them (landforms.road_clear)."""
+
+    def test_a_road_keeps_the_ground_it_was_laid_on(self):
+        from worldgen import landforms as LF
+        from worldgen import roads as RD
+
+        edge = 0.5 * 6.0 + RD.shoulder_m(6.0) + LF.ROAD_CLEAR_M       # 17.8 m for a town road
+        d = np.array([0.0, 3.0, 13.8, edge, edge + 15.0, edge + LF.ROAD_FADE_M, 1e6], dtype=np.float32)
+        w = np.full_like(d, 6.0)
+        w[-1] = 0.0                                                     # no road anywhere near
+        c = LF.road_clear(d, w)
+        self.assertTrue((c[:4] == 0.0).all(), "under the road, its shoulder, and past its carve")
+        self.assertAlmostEqual(float(c[4]), 0.5, places=5)
+        self.assertEqual(float(c[5]), 1.0, "all of it back thirty metres on")
+        self.assertEqual(float(c[6]), 1.0, "and everywhere there is no road")
+
+
 class BuildTest(unittest.TestCase):
     def test_an_unknown_recipe_is_refused(self):
         import build_world as BW
