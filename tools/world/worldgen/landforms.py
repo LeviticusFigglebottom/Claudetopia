@@ -15,10 +15,10 @@ measured (PROGRESS.md, "The shape of the land") but not yet looked at from the g
 measured as relief at that scale they barely move any region, so no default build makes them.
 
 * Brightwater -- the Mere has fallen since the Toll came down, and a lake that falls leaves its
-  old shorelines behind it: raised beaches, level benches a few metres apart stepping up from
-  the water, and on the open south and east shores a strandplain of wind-built dune ridges
-  parallel to it, each with a steep face to the water and a long back.
-* Sedgemire -- the delta's channels are banked with silt, a couple of metres above the marsh,
+  old shorelines behind it: raised beaches, level benches at the heights it stood at, each
+  backed by the cliff it cut, and on the open south and east shores a strandplain of
+  wind-built dune ridges parallel to it, each with a steep face to the water and a long back.
+* Sedgemire -- the delta's channels are banked with silt, three metres and more over the marsh,
   the only dry lines in the country; and the loops the channels have abandoned lie about as
   crescent pools with their own low rims.
 * The Briarwold -- old granite does not ramp, it goes up in benches: the rise is stepped, and
@@ -331,8 +331,9 @@ def skerrow(ctx, h: np.ndarray, r) -> np.ndarray:
 # --- Cinderlea ---------------------------------------------------------------------------------
 
 ## The street grid: blocks 96 by 72 m on a bearing of 23 degrees, streets 12 m across sunk
-## 2.8 m, with five-metre banks; and each block between them a flat-topped mound of what the
-## houses fell into, up to 3.5 m -- six metres from a street's floor to the block beside it.
+## 4 m, with four-metre banks; and each block between them a flat-topped mound of what the
+## houses fell into, up to 5.5 m -- nine and a half metres from a street's floor to the block
+## beside it, which from the floor of one is a skyline. (2.8 and 3.5 m in the first version.)
 GRID_BEARING = 23.0
 GRID_M = (96.0, 72.0)
 STREET_M = 12.0
@@ -382,7 +383,7 @@ def hearthvale(ctx, h: np.ndarray, r) -> np.ndarray:
     sd = across - wander
     # Strip lynchets: where the face was ploughed along the contour for long enough, the soil
     # crept down against each strip and the hillside became a flight of steps -- banks of a
-    # couple of metres, one above another up the scarp, which is the other thing a chalk
+    # few metres (LYNCHET_STEP_M), one above another up the scarp, which is the other thing a chalk
     # face shows from the vale besides its own white scar. In flights, not everywhere.
     slope = np.hypot(*np.gradient(h, ctx.grid.spacing))
     steep = smoothstep(0.10, 0.18, slope) * (1.0 - smoothstep(0.45, 0.60, slope))
