@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """Wickmere world builder.
 
-Reads the world, region, place and POI definitions from the core content pack and writes
-every file listed in docs/CONTRACTS.md section 6 into game/world/generated/.
+Reads the atlas (tools/world/atlas/atlas.json, the geography as somebody drew it: see
+tools/world/atlas/SCHEMA.md) and the world, region, place and POI definitions from the core
+content pack, and writes every file listed in docs/CONTRACTS.md section 6 into
+game/world/generated/.
 
     tools/world/build_world.py                 # full 4096 build
     tools/world/build_world.py --size 1024     # fast test build
     tools/world/build_world.py --only heights  # heights/water/roads only
     tools/world/build_world.py --seed 99 --out /tmp/w
-    tools/world/build_world.py --recipe landforms --recipe cover   # see RECIPES
+    tools/world/build_world.py --atlas other.json
+    tools/world/build_world.py --recipe cover  # see RECIPES
 
-Stages: region membership -> per-shape heights -> the Mere and the world edges -> place pads
--> rivers -> roads -> water, moisture -> texture control maps and colour -> POIs -> cell
-scatter. Everything is deterministic from the seed in world.json (or --seed) and the recipes.
+Stages: the atlas checked -> province membership -> the provinces' land, ranges, peaks,
+valleys, the coast and the lakes, drainage -> place pads -> the atlas's rivers -> its roads ->
+landforms -> water, moisture -> texture control maps and colour -> POIs -> cell scatter.
+Where things are is the atlas's; the seed in world.json (or --seed) only breaks up the detail.
 """
 from __future__ import annotations
 
@@ -29,9 +33,11 @@ from scipy import ndimage
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
 from worldgen import encounters as ENC
 from worldgen import fields as FL
+from worldgen import geography as GEO
 from worldgen import heights as HM
 from worldgen import hedges as HG
 from worldgen import hydro as HY
@@ -44,7 +50,7 @@ from worldgen import stones as ST
 from worldgen import surface as SF
 from worldgen.grid import Grid, sample_bilinear
 from worldgen.noise import NoiseBank
-from worldgen.regions import compute_regions, dithered_owner, load_places, load_regions
+from worldgen.regions import dithered_owner, load_places, load_regions
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PACK = os.path.join(REPO, "game", "content", "packs", "core")
@@ -53,12 +59,9 @@ OPEN_WATER = 255
 
 ## Parts of the world that are built and measured but not yet looked at in the game, so no
 ## default build makes them: each is turned on with `--recipe <name>` (`./run.sh world
-## --recipe landforms --recipe cover`) and recorded in the manifest. PROGRESS.md, "The shape
-## of the land", has what each measured and what is still to check before it becomes default.
+## --recipe cover`) and recorded in the manifest. PROGRESS.md, "The shape of the land", has what
+## each measured. (The landforms were one; they are the atlas's now, province by province.)
 RECIPES = {
-    # each region's own landform at a walking scale: worldgen/landforms.py
-    "landforms": "raised beaches and dune ridges, levees and oxbows, the granite stair, limestone "
-                 "scars and shakeholes, the Builders' street grid, strip lynchets and barrows",
     # cover that differs between regions in structure: scatter_rules.json's `cover` block,
     # the per-landform field patterns, the fell wall, the waterside and ruin lines, roadside
     # frontage by region, and the Briarwold's holloways (roads.ROAD_SINK_M)
@@ -306,9 +309,19 @@ def build(args) -> dict:
     nc = min(n, 2048)
     grid_c = grid.with_n(nc)
     bank = NoiseBank(seed, grid)
-    regions = load_regions(os.path.join(PACK, "regions", "regions.json"))
+    content_regions = load_regions(os.path.join(PACK, "regions", "regions.json"))
     places = load_places(os.path.join(PACK, "places", "places.json"))
     pois = load_poi_registry(PACK)
+    atlas_path = getattr(args, "atlas", None) or ATLAS.ATLAS_PATH
+    atlas = ATLAS.load(atlas_path)
+    errors, warnings = ATLAS.check(atlas, PACK)
+    for w in warnings:
+        print("[world] atlas: " + w, flush=True)
+    if errors:
+        raise SystemExit("[world] the atlas %s has errors (python3 tools/world/atlas/check_atlas.py):\n  %s"
+                         % (atlas_path, "\n  ".join(errors)))
+    # one RegionDef per province: `regions` from here on is the provinces
+    regions = GEO.provinces_from_atlas(atlas, content_regions)
     out_dir = args.out or DEFAULT_OUT
     os.makedirs(out_dir, exist_ok=True)
     asked = set(getattr(args, "recipe", None) or []) | set(getattr(args, "without", None) or [])
@@ -318,23 +331,27 @@ def build(args) -> dict:
     if unknown:
         raise SystemExit("[world] no such recipe: %s (there are: %s)" % (", ".join(unknown), ", ".join(sorted(RECIPES))))
     cover = "cover" in recipes
-    print("[world] seed %d, %d m at %.2f m/texel (%d^2), %d regions, %d places, %d pois%s"
-          % (seed, size_m, grid.spacing, n, len(regions), len(places), len(pois),
+    print("[world] seed %d, %d m at %.2f m/texel (%d^2), atlas %s: %d provinces in %d regions, "
+          "%d places, %d pois%s"
+          % (seed, size_m, grid.spacing, n, atlas.get("name", os.path.basename(atlas_path)), len(regions),
+             len({r.id for r in regions}), len(places), len(pois),
              ", recipes: " + ", ".join(recipes) if recipes else ""), flush=True)
 
-    lake_def = next(r for r in regions if r.shape == "lake_basin")
-    lake_c = HM.lake_geometry(grid_c, bank, lake_def.center, lake_def.lake_radius)
-    lake = lake_c if n == nc else HM.lake_geometry(grid, bank, lake_def.center, lake_def.lake_radius)
-    rf = compute_regions(regions, grid_c, bank, lake_c.sd, places)
+    # every place and POI by id: the ends of the roads and the causeways
+    things = {p["id"]: p for p in list(places) + list(pois)}
+    rf = GEO.province_field(grid_c, bank, atlas, regions)
+    waters_c = GEO.waters(grid_c, atlas, things)
+    waters = waters_c if n == nc else GEO.waters(grid, atlas, things)
     t.mark("regions")
 
     pad_targets = pad_targets_for(places, pois)
     pads_crc = pad_fingerprint(pad_targets)
 
-    # Minimum pad levels: settlements sit above standing water. The marsh's table and the
-    # sea's edge are the two that bite (Isseva is a stilt-town, not an underwater one).
-    marsh_idx = next((r.index for r in regions if r.shape == "delta"), -1)
-    marsh_tab = HY.marsh_table(grid, bank)
+    # Minimum pad levels: settlements sit above standing water. A delta's table and the sea's
+    # edge are the two that bite (Isseva is a stilt-town, not an underwater one).
+    marsh_ids = {r.index for r in regions if r.shape == "delta"}
+    marsh_tab = HY.marsh_table(grid, bank, regions, rf)
+    owner_full = rf.owner_at(n)
     min_levels: dict = {}
     dry_kinds = ("city", "town", "village", "hamlet", "fort", "camp", "lodge", "ruin_village")
     for p in pad_targets:
@@ -342,9 +359,10 @@ def build(args) -> dict:
         j, i = grid.to_tex(np.array([px]), np.array([pz]))
         j, i = grid.clamp_index(j, i)
         floor_m = 0.8 if p.get("kind") in dry_kinds else 0.2
-        if marsh_idx >= 0 and rf.owner_at(n)[int(i[0]), int(j[0])] == marsh_idx:
+        if int(owner_full[int(i[0]), int(j[0])]) in marsh_ids:
             floor_m = max(floor_m, float(marsh_tab[int(i[0]), int(j[0])]) + 0.75)
         min_levels[p["id"]] = floor_m
+    del owner_full
 
     heights_path = os.path.join(out_dir, "heights.r32")
     reuse = args.only in ("textures", "cells") and os.path.exists(heights_path)
@@ -382,33 +400,43 @@ def build(args) -> dict:
             _, river_d, river_surf, river_w = HY.carve_rivers(grid, H.copy(), rivers, bank)
         if roads_list:
             _, road_d, road_w = RD.carve_roads(grid, H.copy(), roads_list)
+        sea = ~GEO.land_mask(grid, atlas)
         t.mark("reload")
     else:
-        # the landform, when there is one, comes back apart from the land: the rivers and the
-        # roads are traced and carved on the land without it, and it is laid on after them
-        H, lf_delta = HM.compose_heights(grid, grid_c, bank, regions, rf, lake_c, lake, places,
-                                         keep_discs=[(float(p["position"][0]), float(p["position"][1]),
-                                                      RD.pad_radius(p)) for p in pad_targets],
-                                         keep_lines=sightline_segments(pois, pad_targets),
-                                         landforms="landforms" in recipes, apart=True)
+        # the landforms come back apart from the land: the rivers and the roads are laid and
+        # carved on the land without them, and they are laid on after
+        H, lf_delta, extras = HM.compose_heights(
+            grid, grid_c, bank, atlas, regions, rf, waters_c, waters, places, things,
+            keep_discs=[(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p)) for p in pad_targets],
+            keep_lines=sightline_segments(pois, pad_targets), apart=True)
+        sea = extras["sea"]
+        del extras
         t.mark("heights")
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         t.mark("pads")
-        rivers = HY.trace_rivers(grid, H, bank, lake, places)
+        # the atlas's rivers, in the valleys they have cut
+        rivers = HY.atlas_rivers(grid, H, atlas, waters)
+        still = sea | waters.in_lake(H)
+        H_still = H
+        H = HY.carve_river_valleys(grid, H.copy(), rivers)
         H, river_d, river_surf, river_w = HY.carve_rivers(grid, H, rivers, bank)
+        # a river's banks are raised to its water on land; where its mouth runs on into a lake or
+        # the sea they would stand up out of the water, so there the bed is only ever deepened
+        H = np.where(still, np.minimum(H, H_still), H).astype(np.float32)
+        del still, H_still
         # the land as the rivers left it, which nothing laid afterwards may dam
         H_river = H.copy()
         t.mark("rivers")
         # a first water mask so roads know what to avoid, then the roads themselves
-        rough_water = ((H < HM.SEA_LEVEL) | ((lake.sd < 0) & (H < HM.LAKE_LEVEL))
-                       | (river_d <= river_w * 0.5 + 1.0)).astype(np.uint8)
+        in_lake = waters.in_lake(H)
+        rough_water = (sea | in_lake | (river_d <= river_w * 0.5 + 1.0)).astype(np.uint8)
         # A road's profile is laid over water's surface, not along its bed: where it crosses a
-        # river it is graded across the top, and `keep_channels` then cuts the ford.
-        # (the Mere's bed is below sea level in the middle, so the lake is tested last)
+        # river it is graded across the top, and `keep_channels` then cuts the ford. (A lake's
+        # bed may be below the sea in the middle, so the lakes are tested last.)
         road_floor = np.where(river_d <= river_w * 0.5 + 2.0, river_surf + 0.6, -1.0e4)
-        road_floor = np.where(H < HM.SEA_LEVEL, HM.SEA_LEVEL + 0.6, road_floor)
-        road_floor = np.where((lake.sd < 0) & (H < HM.LAKE_LEVEL), HM.LAKE_LEVEL + 0.6,
-                              road_floor).astype(np.float32)
+        road_floor = np.where(sea, HM.SEA_LEVEL + 0.6, road_floor)
+        road_floor = np.where(in_lake, waters.level + 0.6, road_floor).astype(np.float32)
+        del in_lake
         # and how far below the land a road would rather run, where that is the country's way
         # (the Briarwold's holloways, which are part of its cover)
         road_sink = None
@@ -419,8 +447,8 @@ def build(args) -> dict:
                 road_sink = w if road_sink is None else road_sink + w
         # and where it may cut but not build up: nothing rises into an authored sightline
         no_fill = LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M)
-        roads_list = RD.plan_roads(grid, H, pad_targets, rough_water, pad_levels, floor=road_floor,
-                                   sink=road_sink, no_fill=no_fill)
+        roads_list = RD.plan_roads(grid, H, atlas.get("roads", []), things, rough_water, pad_levels,
+                                   floor=road_floor, sink=road_sink, no_fill=no_fill, lake=waters)
         del road_floor, road_sink
         # and through each settlement, so a town is somewhere a road passes rather than three
         # spokes meeting at a point
@@ -433,7 +461,7 @@ def build(args) -> dict:
         H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
         t.mark("roads")
         if lf_delta is not None:
-            # Each region's landform goes on last, and not across a road: a road is graded and
+            # Each province's landforms go on last, and not across a road: a road is graded and
             # carved against the land it was routed over, and the landform only comes back
             # past its carve (landforms.road_clear), so a road climbs a scar through a break in
             # it. Then the pads and the channels once more, as after the roads.
@@ -445,12 +473,22 @@ def build(args) -> dict:
         del H_river
 
     owner = dithered_owner(rf, n, bank)
-    water = HY.water_maps(grid, H, lake, rivers, river_d, river_surf, river_w, owner, regions, bank)
-    moist = HY.moisture(grid, H, water, lake, bank)
+    # The sea is the ground under its level outside the coast, and within 150 m of the shore
+    # inside it: a low texel on the strand is wet sand, not a dry pit beside the water. Further
+    # inland, ground under the sea's level is a dry hollow unless a lake says otherwise; and a
+    # pad a place has raised out of the sea (the Hushline's, 0.2 m) stands dry.
+    near_shore = GEO.signed_distance(grid, ~sea) > -150.0 if sea.any() else np.zeros_like(sea)
+    sea_water = (H < HM.SEA_LEVEL) & (sea | near_shore)
+    del near_shore
+    water = HY.water_maps(grid, H, waters, sea_water, rivers, river_d, river_surf, river_w, owner, regions,
+                          marsh_tab)
+    moist = HY.moisture(grid, H, water, waters, bank)
     t.mark("water")
 
-    region_mask = owner.copy()
-    open_water = (water.mask > 0) & ((lake.sd < 0) | (H < HM.SEA_LEVEL))
+    # what the game reads: the content region under each province, and open water
+    province_region = np.array([r.region_index for r in regions], dtype=np.uint8)
+    region_mask = province_region[owner]
+    open_water = (water.mask > 0) & ((waters.sd < 0) | sea_water)
     region_mask[open_water] = OPEN_WATER
 
     # the enclosed patchwork: one pattern read by the crops, the hedges and the colour map
@@ -463,8 +501,8 @@ def build(args) -> dict:
     t.mark("fields")
 
     ctx = SF.SurfaceContext(grid, bank, H, regions, owner, water.mask, water.level, moist,
-                            river_d, road_d, road_w, pad_mask, lake, places, rf=rf,
-                            field_labels=field_labels, field_d=field_d)
+                            river_d, road_d, road_w, pad_mask, waters, places, rf=rf,
+                            field_labels=field_labels, field_d=field_d, sea=sea_water)
     base = overlay = blend = None
     colour = None
     if args.only in (None, "all", "heights", "textures", "cells"):
@@ -512,7 +550,7 @@ def build(args) -> dict:
         tpi = CELLS.topographic_position(H, grid.spacing) if cover else None
         sw = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask,
                                 ctx.slope, bank, regions, water_d=water_d, field_d=field_d,
-                                pad_t=pad_t, tpi=tpi)
+                                pad_t=pad_t, tpi=tpi, forests=GEO.forests(grid, atlas))
         buckets = CELLS.scatter(sw, rules, regions, seed, repo_root=REPO)
         # Standing stones are set, not scattered: a ring at the Moot, pairs flanking a road
         # where it crosses the high ground, and a few alone on skylines. They go into the same
@@ -632,7 +670,24 @@ def build(args) -> dict:
         # which of the parts that are off by default this build made (RECIPES)
         "recipes": recipes,
     }
-    OUT.write_manifest(out_dir, grid, seed, regions, runtime, stats)
+    start = atlas.get("start")
+    if start:
+        sx, sz = float(start["at"][0]), float(start["at"][1])
+        sy = float(sample_bilinear(H, grid, np.array([sx]), np.array([sz]))[0])
+        stats["start"] = {"pos": [round(sx, 2), round(sy, 2), round(sz, 2)],
+                          "facing_deg": float(start["facing_deg"])}
+        if start.get("place"):
+            stats["start"]["place"] = start["place"]
+    # the manifest's one lake level is the biggest lake's (the game reads each texel's own level
+    # from the runtime water-level map; this is for anything that wants "the lake")
+    lakes = atlas.get("lakes", [])
+    if lakes:
+        biggest = max(lakes, key=lambda lk: ATLAS.polygon_area(lk["polygon"]))
+        stats["lake_level"] = biggest["level_m"]
+        stats["lakes"] = [{"id": lk["id"], "level_m": lk["level_m"]} for lk in lakes]
+    stats["atlas"] = {"name": atlas.get("name", ""), "provinces": [r.province for r in regions],
+                      "crc": "%08x" % zlib.crc32(json.dumps(atlas, sort_keys=True).encode("utf-8"))}
+    OUT.write_manifest(out_dir, grid, seed, content_regions, runtime, stats)
     t.mark("write")
     print("[world] %d cells, %d scatter instances, heights %.1f..%.1f m, water %.1f%%"
           % (n_cells, instances, H.min(), H.max(), 100.0 * water.mask.mean()), flush=True)
@@ -646,6 +701,8 @@ def main(argv=None) -> int:
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--out", type=str, default=None)
     ap.add_argument("--only", type=str, choices=["heights", "textures", "cells"], default=None)
+    ap.add_argument("--atlas", type=str, default=None,
+                    help="the atlas to build (default tools/world/atlas/atlas.json)")
     ap.add_argument("--recipe", action="append", choices=sorted(RECIPES), default=None,
                     help="build a part of the world that is off by default (repeatable): "
                          + "; ".join("%s -- %s" % kv for kv in sorted(RECIPES.items())))

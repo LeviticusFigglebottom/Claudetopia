@@ -3,10 +3,11 @@
 
     python3 -m pytest tools/world/tests/test_recipes.py
 
-`build_world.RECIPES` names them: `landforms` (worldgen/landforms.py) and `cover` (the scatter
-rules' `cover` block and the per-region line-work). A default build must be the world as it
-was without them, because the next `./run.sh world` in the main checkout is a default build;
-and a recipe nobody builds rots, so each is built here once, small.
+`build_world.RECIPES` names them: `cover` (the scatter rules' `cover` block and the per-region
+line-work). A default build must be the world without it, because the next `./run.sh world` in
+the main checkout is a default build; and a recipe nobody builds rots, so it is built here once,
+small. (The landforms were a recipe too; they are the atlas's now, province by province, and
+test_atlas_world.py holds them.)
 """
 from __future__ import annotations
 
@@ -114,7 +115,7 @@ class BuildTest(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 BW.build(args)
 
-    def test_both_recipes_build_and_are_recorded(self):
+    def test_the_cover_recipe_builds_and_is_recorded(self):
         def build(out, *extra):
             subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"), "--size", str(SIZE),
                             "--out", out, *extra], check=True, capture_output=True, timeout=900)
@@ -128,7 +129,7 @@ class BuildTest(unittest.TestCase):
         # so even this small a build plants the whole world: a couple of minutes)
         with tempfile.TemporaryDirectory() as plain, tempfile.TemporaryDirectory() as made:
             man0, h0 = build(plain, "--only", "heights")
-            man1, h1 = build(made, "--recipe", "landforms", "--recipe", "cover")
+            man1, h1 = build(made, "--recipe", "cover")
             lengths: dict = {}
             cells = os.path.join(made, "cells")
             for name in os.listdir(cells):
@@ -139,8 +140,7 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(set(lengths), {6, 8}, "a scatter row is six fields, or eight with a lean")
         self.assertGreater(lengths[8], 0, "no tree in Brightwater leans")
         self.assertEqual(man0["recipes"], [])
-        self.assertEqual(man1["recipes"], ["cover", "landforms"])
-        self.assertGreater(float(np.abs(h1 - h0).max()), 1.0, "the landforms recipe changed nothing")
+        self.assertEqual(man1["recipes"], ["cover"])
         self.assertGreater(man1["scatter_instances"], 0)
 
 

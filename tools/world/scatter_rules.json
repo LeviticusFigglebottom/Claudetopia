@@ -854,6 +854,16 @@
     "mountains": 0.5,
     "ash_plateau": 0.45
   },
+  "forests": {
+    "_doc": "What a wood of each kind is made of where the atlas draws one (tools/world/atlas/SCHEMA.md, forests): flora keys and their densities per hectare in a closed wood, which the atlas's density scales. A forest entry keeps its rule's asset, scale, slope limit and exclusions and drops its height, moisture and attraction bands: the atlas says there is a wood here.",
+    "oakwood": {"oak": 55, "hawthorn": 25, "yew": 4, "bracken": 120},
+    "ancient": {"giant_oak": 30, "black_ash": 30, "fern": 260, "bracken": 180},
+    "pine": {"hardy_pine": 80, "juniper": 40, "rowan": 8, "heather": 200},
+    "wetwood": {"willow": 50, "alder": 60, "reed_sparse": 150},
+    "limewood": {"lime": 50, "willow_pollard": 15},
+    "deadwood": {"dead_ash_tree": 45, "char_stump": 60, "grey_grass": 200},
+    "orchard": {"apple": 40}
+  },
   "recipes": {
     "cover": {
       "flora.reed.density": 600.0,

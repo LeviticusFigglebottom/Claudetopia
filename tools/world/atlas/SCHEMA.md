@@ -7,13 +7,16 @@ world builder makes the land from it. Noise is only the detail between the lines
 decides how a hillside is broken, never where the hills are.
 
 ```
-python3 tools/world/atlas/check_atlas.py            # check the committed atlas
-python3 tools/world/atlas/check_atlas.py other.json # or any other
+python3 tools/world/atlas/check_atlas.py                 # check the committed atlas
+python3 tools/world/atlas/check_atlas.py other.json      # or any other
+./run.sh world                                           # build the world from it
+python3 tools/world/build_world.py --atlas other.json --out /tmp/w --size 1024   # a quick look
+python3 tools/world/atlas/render_map.py --world /tmp/w --atlas other.json --out /tmp/map.png
 ```
 
-This document is the contract the builder is being written to. Until the builder reads the
-atlas, `./run.sh world` still makes the old procedural world, and this file says what the new
-one will do with each field; where it and the builder disagree, the builder is wrong.
+This document is the contract the builder is written to; where the two disagree, the builder is
+wrong. `render_map.py` draws a built world's heights, water, roads and rivers with the atlas over
+them, which is the quickest way to see whether the land is the map.
 
 The check reads `atlas.schema.json` (the shape of the document, which an editor can also use)
 and then what a shape cannot say: that every region named exists in the content packs, that no
@@ -69,19 +72,21 @@ there; the atlas only has to agree with it (the check says where it does not).
 ### How the land is made from it, in order
 
 1. **Provinces** give the ground its level and the grain of its hills: each province's
-   `base_height_m`, with `relief_m` of hills in its `character`, blended with its neighbours
-   across `blend_m` of border.
-2. **Ranges** and **peaks** rise out of that ground to their authored heights.
+   `base_height_m` is its low ground, and its hills rise `relief_m` over it in its `character`,
+   blended with its neighbours across `blend_m` of border.
+2. **Ranges** stand at their crest heights and **peaks** at theirs, blended into that ground.
 3. **Valleys** are cut into it.
-4. **Erosion**: a drainage network is cut into the land, so valleys branch the way water finds
-   them. It never reaches the authored features below.
-5. **The coast**: outside the coast polygon the land falls to the seabed; along a `cliffs` path
-   it stands to the water and drops sheer.
-6. **Lakes** are carved to their beds and their shores raised a little above the water.
+4. **The coast**: outside the coast polygon the land falls to the seabed; along a `cliffs` path
+   it stands to the water and drops sheer. **Lakes** are carved to their beds and their shores
+   raised a little above the water.
+5. **Erosion**: a drainage network is cut into the land by biome, so valleys branch the way
+   water finds them down to the sea and the lakes; then the coast and the lakes are laid again
+   over it, so the drawn water wins.
+6. **Causeways** are raised across the lakes they cross.
 7. **Pads**: every place and POI in the content packs gets a platform, flattened at the height
    of the ground under it (raised clear of standing water).
-8. **Rivers** are cut along their authored paths, the water falling from source to mouth all
-   the way, whatever the land does.
+8. **Rivers** are cut along their authored paths in valleys of their own, the water falling from
+   source to mouth all the way, whatever the land does.
 9. **Roads** are routed on the ground between their ends and through their `via` points,
    graded and cut in; a road that crosses a river crosses at a ford.
 10. Each province's **landforms** go on at a walking scale, off the roads and the pads.
@@ -120,8 +125,8 @@ at least one, or nothing of it can be entered.
 | `region` | the content region it belongs to (`core:region/...`). This is what the game calls the place you are standing in. |
 | `polygon` | its outline |
 | `biome` | its ground: textures, flora, trees, rocks, colour (below) |
-| `base_height_m` | the level of its ground before ranges, peaks and valleys: -5 to 800 |
-| `relief_m` | how high its own hills stand, trough to crest: 0 to 600 |
+| `base_height_m` | its low ground -- the floors of its valleys, the plain its hills stand on -- before ranges, peaks and valleys: -5 to 800 |
+| `relief_m` | how high its own hills rise over that, trough to crest: 0 to 600 (a `flat` province shows a tenth of it) |
 | `character` | the shape of those hills (below) |
 | `landform` | its walking-scale features, any number (below); none by default |
 | `grain_deg` | optional: the bearing its hills and valleys run along. Without it they run every way. |
@@ -137,7 +142,7 @@ There are six, one per region of the old world, and a new one is a change to the
 |---|---|
 | `downs` | chalk grassland: turf, chalk showing on the slopes, barley and orchard fields, hedgerows, oak copses and hawthorn (the Hearthvale) |
 | `lake_basin` | shingle and grass round open water: pollard willows at the water, limes along the lanes, reed fringes (Brightwater) |
-| `delta` | marsh: peat and mud, reeds, willow and alder carr, standing pools wherever the ground is within a hand of the water table (Sedgemire) |
+| `delta` | marsh: peat and mud, reeds, willow and alder carr, standing pools in its lowest hollows, where the ground is under its water table, three quarters of a metre over its low ground (Sedgemire) |
 | `forest_rise` | old forest on granite: forest floor and moss, giant oaks and black ash, fern and bracken, granite breaking through (the Briarwold) |
 | `mountains` | karst: limestone and scree, heather moor, hardy pine and juniper and rowan, snow above 520 m (Skerrow) |
 | `ash_plateau` | the ash: grey ash soil, fused stone, dead ash trees and stumps, grey grass and single poppies (Cinderlea) |
@@ -218,9 +223,11 @@ A range is a line of high ground: a crest you give the heights of, falling away 
 | `face` | for a `scarp`: which side is the steep one, `left` or `right` walking the ridge from its first point to its last (with north up, walking north, left is west) |
 | `rock` | what shows where it is steep: `granite`, `limestone`, `chalk`, `fused_stone` or `scree`; by default the biome's own |
 
-A range rises out of whatever the provinces put there and never lowers it. Its crest is broken
-by noise of a few metres to a few tens of metres, more on a `massif`, so a range drawn as a
-straight line still does not look ruled.
+At its crest a range is the height drawn for it, whatever the provinces put there, and it
+blends into their ground over its width: it rises out of low ground, and a pass drawn low in a
+range across high ground is low (draw a valley through it if a road is to reach it from lower
+country). Its crest is broken by noise of a few metres to a few tens of metres, more on a
+`massif`, so a range drawn as a straight line still does not look ruled.
 
 ## peaks
 

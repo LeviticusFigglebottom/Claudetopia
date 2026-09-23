@@ -134,6 +134,13 @@ height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamles
 ## 6. World builder outputs (`game/world/generated/`)
 
 * `world_manifest.json`: `{"seed", "size_m": 8192, "spacing_m": 2, "origin": [-4096, -4096], "grid": 4096, "sea_level": 0, "lake_level": 8, "regions": [ids in mask order], "cell_size_m": 256, "cells": [32, 32]}`
+  The world is built from the atlas (`tools/world/atlas/atlas.json`, `tools/world/atlas/SCHEMA.md`),
+  and the manifest also carries `"start": {"pos": [x, y, z], "facing_deg", "place"?}` (where the
+  atlas puts a new game: on the ground, `facing_deg` a compass bearing, 0 north = -z, 90 east),
+  `"lakes": [{"id", "level_m"}]` (every lake's own level; `lake_level` is the biggest's, and each
+  texel's water level is `runtime/water_level_*.r32`'s) and `"atlas": {"name", "provinces", "crc"}`.
+  A region of `regions` may be made of several of the atlas's provinces; `region_mask.u8` holds
+  the region's index either way.
 * `heights.r32` float32 little-endian, `grid × grid`, row-major, row = z.
 * `region_mask.u8` region index per texel (255 = open water).
 * `texture_base.u8`, `texture_overlay.u8`, `texture_blend.u8` (0–255) per texel.

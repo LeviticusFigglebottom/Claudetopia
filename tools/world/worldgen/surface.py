@@ -34,7 +34,7 @@ class SurfaceContext:
     def __init__(self, grid: Grid, bank: NoiseBank, H: np.ndarray, regions: list, owner: np.ndarray,
                  water_mask: np.ndarray, water_level: np.ndarray, moisture: np.ndarray,
                  river_d: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
-                 lake, places: list, rf=None, field_labels=None, field_d=None):
+                 lake, places: list, rf=None, field_labels=None, field_d=None, sea=None):
         self.rf = rf
         # the enclosed patchwork (worldgen/fields.py): which parcel, and how far to its edge
         self.field_labels = field_labels
@@ -57,7 +57,15 @@ class SurfaceContext:
         gy, gx = np.gradient(H, grid.spacing)
         self.slope = np.hypot(gx, gy).astype(np.float32)          # rise over run
         self.X, self.Z = grid.mesh()
-        self.idx = {r.shape: r.index for r in regions}
+        # every province of each biome: a biome's ground is the sum of its provinces'
+        self.idx: dict = {}
+        for r in regions:
+            self.idx.setdefault(r.shape, []).append(r.index)
+        # metres from the sea, for the strand and the tide-flats
+        if sea is not None and sea.any():
+            self.sea_d = (ndimage.distance_transform_edt(~sea) * grid.spacing).astype(np.float32)
+        else:
+            self.sea_d = np.full(H.shape, 1e6, dtype=np.float32)
         self.n = n
         self._patch_cache: dict = {}
         # roads: on the carriageway, and a slightly wider verge
@@ -83,8 +91,8 @@ class SurfaceContext:
                 self.market = np.maximum(self.market, 1.0 - smoothstep(r * 0.16, r * 0.30, d))
 
     def region(self, shape: str) -> np.ndarray:
-        i = self.idx.get(shape, -1)
-        return (self.owner == i) if i >= 0 else np.zeros((self.n, self.n), dtype=bool)
+        ids = self.idx.get(shape, [])
+        return np.isin(self.owner, ids) if ids else np.zeros((self.n, self.n), dtype=bool)
 
     def region_w(self, shape: str) -> np.ndarray:
         """Soft region membership, 0..1, with a noisy border so materials interlock.
@@ -95,11 +103,12 @@ class SurfaceContext:
         key = ("rw", shape)
         if key in self._patch_cache:
             return self._patch_cache[key]
-        i = self.idx.get(shape, -1)
-        if i < 0 or self.rf is None:
+        ids = self.idx.get(shape, [])
+        if not ids or self.rf is None:
             out = self.region(shape).astype(np.float32)
         else:
-            w = self.rf.weight_at(i, self.n)
+            w = sum(self.rf.weight_at(k, self.n) for k in ids)
+            i = ids[0]
             d = 0.5 * (self.patch(560 + i, 45, 260) - 0.5) + 0.22 * (self.patch(580 + i, 16, 70) - 0.5)
             out = np.clip(smoothstep(0.24, 0.62, w + d), 0.0, 1.0).astype(np.float32)
         self._patch_cache[key] = out
@@ -214,7 +223,7 @@ def _weights(ctx: SurfaceContext):
         + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band) \
         + basin * 0.8 * hedge_line
     yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
-        + basin * 1.3 * verysteep * smoothstep(-400.0, -1200.0, ctx.Z) \
+        + basin * 1.3 * verysteep * ctx.lake.cliffness \
         + downs * out_town * 2.2 * worn
     # Crops go in by the field. A parcel carries barley or it does not, all the way to its
     # hedge; a noise blob that runs across three fields and stops in the middle of a fourth is
@@ -244,18 +253,18 @@ def _weights(ctx: SurfaceContext):
                  + 1.5 * ctx.near_place({"sunken_choir", "cantors_seat"}, 190.0)
                  + 0.9 * ctx.near_place({"greyfold", "pilgrims_ash"}, 150.0))
     # Paving goes where feet and wheels go: the streets that cross the place, the market in the
-    # middle of a market town, and the Long Stride causeway. The rest of a settlement's ground
+    # middle of a market town, and the causeways over the lakes. The rest of a settlement's ground
     # is the region's own turf with trodden patches in it.
     yield SLOTS["cobbles"], 3.0 * ctx.town * carriage + 2.4 * ctx.market * (1.0 - steep) \
         + 0.8 * ctx.town * (1.0 - steep) * np.clip(ctx.patch(420, 12, 60) - 0.62, 0.0, 1.0) * 3.0 \
-        + 2.0 * (np.abs(ctx.X) < 12.0) * (ctx.lake.sd < 60.0) * (ctx.Z > -160.0) * (ctx.Z < 1400.0)
+        + 2.0 * (ctx.lake.causeway > 0.5)
 
     # --- Sedgemire: peat, mud, tide-flats ----------------------------------------------
-    yield SLOTS["peat"], delta * (1.1 + 0.8 * ctx.patch(404) * flat) * (1.0 - smoothstep(-3300.0, -3700.0, ctx.X))
+    yield SLOTS["peat"], delta * (1.1 + 0.8 * ctx.patch(404) * flat) * smoothstep(250.0, 600.0, ctx.sea_d)
     yield SLOTS["mud"], delta * (0.6 + 1.7 * m * (1.0 - flat * 0.3)) + 1.2 * river_band * (delta + basin * 0.6) \
         + 0.8 * m * downs * (1.0 - flat) * 0.3 + basin * 0.7 * m * ctx.patch(412, 40, 190) ** 2
-    yield SLOTS["sand_flats"], delta * 2.4 * smoothstep(-3150.0, -3600.0, ctx.X) \
-        + 1.6 * (H < 0.6) * (ctx.X < -3300.0)
+    yield SLOTS["sand_flats"], delta * 2.4 * (1.0 - smoothstep(300.0, 700.0, ctx.sea_d)) \
+        + 1.6 * (H < 0.6) * (ctx.sea_d < 500.0)
 
     # --- The Briarwold: forest floor, moss, granite ------------------------------------
     yield SLOTS["forest_floor"], forest * (1.15 + 0.5 * flat * dry)

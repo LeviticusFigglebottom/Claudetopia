@@ -78,7 +78,6 @@ def place(world, regions: list, places: list, packs_dir: str, seed: int) -> dict
     ecology = _ecology(regions)
     defs = _enemy_defs(packs_dir)
     danger = _danger(regions)
-    region_ids = [r.id for r in regions]
 
     hearths = np.array([[float(p["position"][0]), float(p["position"][1])] for p in places
                         if str(p.get("kind", "")) in
@@ -100,7 +99,8 @@ def place(world, regions: list, places: list, packs_dir: str, seed: int) -> dict
         x = (gx.ravel() + rng.uniform(0.0, step, gx.size)) - grid.size_m * 0.5
         z = (gz.ravel() + rng.uniform(0.0, step, gz.size)) - grid.size_m * 0.5
         s = world.sample(x.astype(np.float32), z.astype(np.float32))
-        keep = s["owner"] == region_ids.index(r.id)
+        # `regions` are the atlas's provinces, several of which may share a region's creatures
+        keep = s["owner"] == r.index
         keep &= s["water"] < 0.5
         keep &= s["pad"] == 0
         keep &= s["road_d"] > (s["road_w"] * 0.5 + ROAD_CLEAR_M)

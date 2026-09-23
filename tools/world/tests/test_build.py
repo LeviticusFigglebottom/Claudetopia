@@ -3,10 +3,11 @@
 
     python3 tools/world/tests/test_build.py          # or: python3 -m unittest discover tools/world/tests
 
-The build is run at --size 1024 (8 m per texel), which takes about 25 seconds and exercises
-every stage: regions, heights, drainage, the Mere, pads, rivers, roads, water, textures,
-colour, POIs and cells. The assertions are the parts of docs/CONTRACTS.md §6 that other
-streams rely on, plus the geography the world bible promises.
+The build is run at --size 1024 (8 m per texel) from the committed atlas and exercises every
+stage: provinces, heights, drainage, the coast and the lakes, pads, rivers, roads, water,
+textures, colour, POIs and cells. The assertions are the parts of docs/CONTRACTS.md §6 that other
+streams rely on, plus the geography the atlas draws: they read where things are from the atlas,
+so a new map is held to its own drawing and not to the old one's coordinates.
 """
 from __future__ import annotations
 
@@ -24,6 +25,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TOOLS_WORLD = os.path.dirname(HERE)
 REPO = os.path.dirname(os.path.dirname(TOOLS_WORLD))
 sys.path.insert(0, TOOLS_WORLD)
+
+from worldgen import atlas as ATLAS  # noqa: E402
+from worldgen import geography as GEO  # noqa: E402
+from worldgen.grid import Grid  # noqa: E402
 
 SIZE = 1024
 PACK = os.path.join(REPO, "game", "content", "packs", "core")
@@ -60,6 +65,8 @@ class WorldBuildTest(unittest.TestCase):
             cls.places = json.load(f)
         with open(os.path.join(PACK, "regions", "regions.json"), "r", encoding="utf-8") as f:
             cls.regions = json.load(f)
+        cls.atlas = ATLAS.load()
+        cls.grid = Grid(8192.0, n)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -81,6 +88,22 @@ class WorldBuildTest(unittest.TestCase):
         ids = self.manifest["regions"]
         return ids[idx] if idx < len(ids) else "open_water"
 
+    def deepest_inside(self, poly, not_in=(), on_land=False) -> tuple:
+        """(i, j) of the texel furthest inside `poly` (and outside every polygon in `not_in`, and
+        on the land when `on_land`)."""
+        m = GEO.polygon_mask(self.grid, poly)
+        if on_land:
+            m &= GEO.land_mask(self.grid, self.atlas)
+            # and in from the edge of the world, which the distance does not count as an edge
+            e = max(1, int(300.0 / self.spacing))
+            m[:e] = m[-e:] = False
+            m[:, :e] = m[:, -e:] = False
+        for other in not_in:
+            m &= ~GEO.polygon_mask(self.grid, other)
+        sd = GEO.signed_distance(self.grid, m)
+        k = int(np.argmin(sd))
+        return k // self.n, k % self.n
+
     # --- the contract ------------------------------------------------------------------------
     def test_manifest_fields(self):
         m = self.manifest
@@ -91,7 +114,10 @@ class WorldBuildTest(unittest.TestCase):
         self.assertEqual(m["cell_size_m"], 256)
         self.assertEqual(m["cells"], [32, 32])
         self.assertEqual(m["origin"], [-4096.0, -4096.0])
-        self.assertEqual(m["lake_level"], 8)
+        lakes = self.atlas.get("lakes", [])
+        if lakes:
+            biggest = max(lakes, key=lambda lk: ATLAS.polygon_area(lk["polygon"]))
+            self.assertEqual(m["lake_level"], biggest["level_m"])
         self.assertEqual(len(m["regions"]), len(self.regions))
         self.assertEqual(m["grid"] * m["spacing_m"], m["size_m"])
 
@@ -157,9 +183,13 @@ class WorldBuildTest(unittest.TestCase):
 
     # --- the geography -----------------------------------------------------------------------
     def test_height_extremes(self):
-        self.assertLess(self.H.min(), 0.0, "there is no sea")
-        self.assertGreater(self.H.max(), 550.0, "the northern peaks are too low")
-        self.assertLess(self.H.max(), 900.0, "something spikes above the mountains")
+        if not all(ATLAS.on_land(self.atlas, x, z) for x, z in ((-4000, -4000), (4000, -4000), (-4000, 4000), (4000, 4000))):
+            self.assertLess(self.H.min(), 0.0, "there is no sea")
+        tops = [p[2] for rg in self.atlas.get("ranges", []) for p in rg["ridge"]]
+        tops += [pk["height_m"] for pk in self.atlas.get("peaks", [])]
+        tops += [pv["base_height_m"] + pv["relief_m"] for pv in self.atlas["provinces"]]
+        self.assertGreater(self.H.max(), 0.8 * max(tops), "the highest ground is too low")
+        self.assertLess(self.H.max(), 1.25 * max(tops) + 40.0, "something spikes above the mountains")
         self.assertFalse(np.isnan(self.H).any())
 
     def test_regions_are_where_their_places_are(self):
@@ -180,14 +210,28 @@ class WorldBuildTest(unittest.TestCase):
             share = counts[i] / land
             self.assertGreater(share, 0.04, "%s covers only %.1f%% of the land" % (rid, 100 * share))
 
-    def test_the_mere_and_the_sea(self):
-        # the Mere: water at the lake level, deep in the middle, with the island dry
-        self.assertTrue(self.water[self.tex(0.0, -700.0)] != 0, "the middle of the Mere is dry")
-        self.assertLess(self.height_at(0.0, -700.0), 8.0)
-        self.assertGreater(self.height_at(0.0, -150.0), 8.0, "Tollmere's island is under water")
-        # the Grey Sea in the west, land in the east
-        self.assertLess(self.height_at(-4000.0, 0.0), 0.0)
-        self.assertGreater(self.height_at(3900.0, 0.0), 100.0, "the Thornmarch should rise")
+    def test_the_lakes_and_the_sea(self):
+        # every lake: water at its level in the middle, and its islands dry
+        for lake in self.atlas.get("lakes", []):
+            islands = [s["polygon"] for s in lake.get("islands", [])]
+            i, j = self.deepest_inside(lake["polygon"], islands)
+            self.assertTrue(self.water[i, j] != 0, "the middle of %s is dry" % lake["id"])
+            self.assertLess(float(self.H[i, j]), lake["level_m"])
+            for s in lake.get("islands", []):
+                i, j = self.deepest_inside(s["polygon"])
+                self.assertGreater(float(self.H[i, j]), lake["level_m"], "an island of %s is under water" % lake["id"])
+        # the sea, as far from the land as it gets
+        land = GEO.land_mask(self.grid, self.atlas)
+        if not land.all():
+            k = int(np.argmax(GEO.signed_distance(self.grid, land)))
+            self.assertLess(float(self.H.ravel()[k]), 0.0, "the open sea is not under the sea")
+        # every range's crest stands near the height drawn for it
+        for rg in self.atlas.get("ranges", []):
+            mid = rg["ridge"][len(rg["ridge"]) // 2]
+            i, j = self.tex(mid[0], mid[1])
+            k = max(1, int(60.0 / self.spacing))
+            top = float(self.H[max(i - k, 0):i + k + 1, max(j - k, 0):j + k + 1].max())
+            self.assertGreater(top, 0.75 * mid[2], "%s stands %.0f m at %s, drawn %.0f" % (rg["id"], top, mid[:2], mid[2]))
         water_fraction = float((self.water != 0).mean())
         self.assertTrue(0.05 < water_fraction < 0.35, "water covers %.1f%% of the map" % (100 * water_fraction))
 
@@ -206,31 +250,29 @@ class WorldBuildTest(unittest.TestCase):
     def test_rivers_run_downhill_into_the_water(self):
         with open(os.path.join(self.out_dir, "rivers.json"), "r", encoding="utf-8") as f:
             rivers = json.load(f)
-        self.assertGreaterEqual(len(rivers), 3)
-        ids = {r["id"] for r in rivers}
-        self.assertIn("core:river/mere_outflow", ids)
+        drawn = {rv["id"]: rv for rv in self.atlas.get("rivers", [])}
+        self.assertEqual({r["id"] for r in rivers}, set(drawn))
         for r in rivers:
             self.assertGreaterEqual(len(r["points"]), 8)
             self.assertLessEqual(r["surface_to_m"], r["surface_from_m"] + 0.01, "%s runs uphill" % r["id"])
-            self.assertTrue(4.0 <= r["width_m"] <= 14.0)
+            w0, w1 = drawn[r["id"]]["width_m"]
+            self.assertTrue(min(w0, w1) - 0.01 <= r["width_m"] <= max(w0, w1) + 0.01)
             # the mouth ends in standing water
             mx, mz = r["points"][-1]
             i, j = self.tex(mx, mz)
             near = self.water[max(i - 3, 0):i + 4, max(j - 3, 0):j + 4]
             self.assertTrue(near.any(), "%s does not reach any water" % r["id"])
 
-    def test_roads_connect_the_settlements(self):
+    def test_the_drawn_roads_are_built(self):
         with open(os.path.join(self.out_dir, "roads.json"), "r", encoding="utf-8") as f:
             roads = json.load(f)
-        self.assertGreaterEqual(len(roads), 8)
-        named = set()
-        for r in roads:
-            self.assertTrue(4.0 <= r["width_m"] <= 6.0)
+        built = {r["id"]: r for r in roads}
+        for spec in self.atlas.get("roads", []):
+            rid = spec.get("id") or "core:road/%s_%s" % (spec["from"].split("/")[-1], spec["to"].split("/")[-1])
+            self.assertIn(rid, built, "the road %s - %s was not built" % (spec["from"], spec["to"]))
+            r = built[rid]
+            self.assertTrue(3.5 <= r["width_m"] <= 6.0)
             self.assertGreaterEqual(len(r["points"]), 4)
-            for part in r["id"].split("/")[-1].split("_"):
-                named.add(part)
-        for town in ("merrowby", "tollmere", "isseva", "kharrow", "hollow"):
-            self.assertTrue(any(town in n for n in named), "no road reaches %s" % town)
 
     def test_texture_rules_put_the_right_ground_in_each_region(self):
         names = self.manifest["texture_slots"]
@@ -239,16 +281,26 @@ class WorldBuildTest(unittest.TestCase):
         def top_slot(x, z, radius=150.0):
             i, j = self.tex(x, z)
             k = max(1, int(radius / self.spacing))
-            patch = self.base[i - k:i + k, j - k:j + k]
+            # clamped: a window off the edge of the array is empty, and an empty count says
+            # the last three slots are the commonest
+            patch = self.base[max(i - k, 0):i + k, max(j - k, 0):j + k]
             counts = np.bincount(patch.ravel(), minlength=21)
             return [names[m] for m in np.argsort(counts)[::-1][:3]]
 
-        self.assertIn("vale_grass", top_slot(1400.0, 2600.0))           # the downs
-        self.assertTrue({"peat", "mud", "sand_flats"} & set(top_slot(-3000.0, -800.0)))   # the marsh
-        self.assertIn("forest_floor", top_slot(3000.0, 600.0))          # the wold
-        self.assertTrue({"limestone", "scree", "heather"} & set(top_slot(0.0, -3000.0)))  # the karst
-        self.assertTrue({"ash_soil", "grey_grass", "fused_stone"} & set(top_slot(-2000.0, 2600.0)))
-        self.assertIn("lake_bed", top_slot(0.0, -700.0))                # under the Mere
+        expect = {"downs": {"vale_grass"}, "delta": {"peat", "mud", "sand_flats"},
+                  "forest_rise": {"forest_floor"}, "mountains": {"limestone", "scree", "heather", "snow"},
+                  "ash_plateau": {"ash_soil", "grey_grass", "fused_stone"},
+                  "lake_basin": {"vale_grass", "shingle", "lake_bed", "mud"}}
+        lakes = [lk["polygon"] for lk in self.atlas.get("lakes", [])]
+        for prov in self.atlas["provinces"]:
+            i, j = self.deepest_inside(prov["polygon"], lakes, on_land=True)
+            x, z = -4096.0 + j * self.spacing, -4096.0 + i * self.spacing
+            got = set(top_slot(x, z))
+            self.assertTrue(expect[prov["biome"]] & got, "%s (%s) at (%.0f, %.0f) is %s"
+                            % (prov["id"], prov["biome"], x, z, sorted(got)))
+        for lake in self.atlas.get("lakes", []):
+            i, j = self.deepest_inside(lake["polygon"], [s["polygon"] for s in lake.get("islands", [])])
+            self.assertIn("lake_bed", top_slot(-4096.0 + j * self.spacing, -4096.0 + i * self.spacing))
         # snow only on the tops
         snow = self.base == names.index("snow")
         if snow.any():
