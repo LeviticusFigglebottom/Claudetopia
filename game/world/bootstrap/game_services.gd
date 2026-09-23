@@ -88,6 +88,11 @@ func _install_loot_drops() -> void:
 func begin_new_game() -> void:
 	GameState.set_flag("new_game", false)
 	var opening := ContentDB.get_or_empty(OPENING)
+	# The opening (DESIGN §5.1a) plays first, and the story starts when it hands control back, so
+	# the quest's first objective is the first thing the HUD says rather than a toast under the
+	# pictures. This is the cinematic's only way into the new-game flow; it returns at once when
+	# there is nothing to play or the player has turned it off.
+	await CinematicPlayer.play_opening(opening)
 	var quest := str(opening.get("quest", ""))
 	if quest.is_empty() or not ContentDB.has(quest):
 		Log.warn("GameServices", "no opening quest in %s" % OPENING)

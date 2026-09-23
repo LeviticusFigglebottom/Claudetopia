@@ -554,6 +554,13 @@ func _rest_alpha() -> float:
 	return clampf(float(Settings.get_value("gameplay", "hud_opacity", 1.0)), 0.1, 1.0)
 
 
+## The HUD arriving after something else has had the screen (the opening): from nothing, and
+## awake, so it inks up to its resting opacity instead of to its idle one.
+func come_up() -> void:
+	modulate.a = 0.0
+	_idle = 0.0
+
+
 func _input(_event: InputEvent) -> void:
 	_idle = 0.0
 
