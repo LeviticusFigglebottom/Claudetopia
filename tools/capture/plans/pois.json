@@ -5,9 +5,9 @@
    "label": "bridge_chain_bridge",
    "region": "core:region/skerrow",
    "pos": [
-    277.7,
-    315.2,
-    -2596.0
+    218.5,
+    314.8,
+    -2574.4
    ],
    "look_at": [
     250.0,
@@ -59,9 +59,9 @@
    "label": "bridge_lantern_causeway",
    "region": "core:region/sedgemire",
    "pos": [
-    -2528.9,
-    6.3,
-    -174.0
+    -2574.0,
+    5.9,
+    -128.8
    ],
    "look_at": [
     -2550.0,
@@ -77,9 +77,9 @@
    "label": "bridge_larkbourne_ford",
    "region": "core:region/hearthvale",
    "pos": [
-    749.5,
-    36.0,
-    2338.5
+    758.4,
+    35.9,
+    2326.6
    ],
    "look_at": [
     729.0,
@@ -95,13 +95,13 @@
    "label": "bridge_long_stride",
    "region": "core:region/brightwater",
    "pos": [
-    0.0,
-    10.8,
-    568.0
+    5.6,
+    10.5,
+    568.5
    ],
    "look_at": [
     0.0,
-    10.3,
+    9.9,
     600.0
    ],
    "fov": 58.0,
@@ -113,9 +113,9 @@
    "label": "bridge_mossbridge",
    "region": "core:region/briarwold",
    "pos": [
-    2603.2,
-    100.7,
-    511.8
+    2609.7,
+    101.9,
+    510.5
    ],
    "look_at": [
     2600.0,
@@ -149,9 +149,9 @@
    "label": "camp_clanless_camp",
    "region": "core:region/skerrow",
    "pos": [
-    -1272.1,
-    353.0,
-    -3080.5
+    -1319.5,
+    353.5,
+    -3072.1
    ],
    "look_at": [
     -1300.0,
@@ -167,14 +167,14 @@
    "label": "camp_cold_fire_camp",
    "region": "core:region/cinderlea",
    "pos": [
-    -2263.0,
-    87.8,
-    2706.1
+    -2287.9,
+    88.3,
+    2740.5
    ],
    "look_at": [
     -2260.0,
-    88.2,
-    2740.0
+    88.8,
+    2760.0
    ],
    "fov": 58.0,
    "time": 17.2,
@@ -185,9 +185,9 @@
    "label": "camp_gosling_pit",
    "region": "core:region/hearthvale",
    "pos": [
-    1570.6,
-    108.2,
-    3133.0
+    1578.1,
+    108.5,
+    3124.0
    ],
    "look_at": [
     1600.0,
@@ -330,8 +330,8 @@
    "region": "core:region/cinderlea",
    "pos": [
     -1474.9,
-    108.7,
-    2193.3
+    108.8,
+    2206.7
    ],
    "look_at": [
     -1500.0,
@@ -383,9 +383,9 @@
    "label": "hidden_valley_foxglove_dell",
    "region": "core:region/hearthvale",
    "pos": [
-    2187.0,
-    100.8,
-    2464.3
+    2166.6,
+    100.5,
+    2481.9
    ],
    "look_at": [
     2200.0,
@@ -473,9 +473,9 @@
    "label": "ruins_pilgrim_stair",
    "region": "core:region/brightwater",
    "pos": [
-    1334.7,
-    10.4,
-    -215.5
+    1335.3,
+    10.5,
+    -185.8
    ],
    "look_at": [
     1300.0,
@@ -527,9 +527,9 @@
    "label": "shrine_bell_of_the_pilgrims",
    "region": "core:region/cinderlea",
    "pos": [
-    -1290.6,
+    -1290.9,
     108.5,
-    2493.8
+    2492.9
    ],
    "look_at": [
     -1320.0,
@@ -563,9 +563,9 @@
    "label": "shrine_hedge_shrine_of_ansel",
    "region": "core:region/hearthvale",
    "pos": [
-    1284.0,
-    124.9,
-    2605.4
+    1321.0,
+    124.7,
+    2558.5
    ],
    "look_at": [
     1300.0,
@@ -635,9 +635,9 @@
    "label": "standing_stones_bell_meadow_stones",
    "region": "core:region/hearthvale",
    "pos": [
-    1092.0,
-    34.2,
-    2070.7
+    1088.0,
+    34.9,
+    2078.4
    ],
    "look_at": [
     1120.0,
@@ -665,6 +665,24 @@
    "fov": 58.0,
    "time": 14.0,
    "weather": "core:weather/clear_cold",
+   "fog_scale": 0.6
+  },
+  {
+   "label": "standing_stones_standing_moot",
+   "region": "core:region/briarwold",
+   "pos": [
+    3580.5,
+    223.5,
+    1427.9
+   ],
+   "look_at": [
+    3600.0,
+    223.7,
+    1400.0
+   ],
+   "fov": 58.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
    "fog_scale": 0.6
   },
   {
@@ -743,9 +761,9 @@
    "label": "strange_tree_singing_yew",
    "region": "core:region/hearthvale",
    "pos": [
-    1939.9,
-    113.1,
-    2318.5
+    1868.9,
+    113.7,
+    2268.9
    ],
    "look_at": [
     1900.0,
@@ -887,9 +905,9 @@
    "label": "waterfall_foxfire_falls",
    "region": "core:region/briarwold",
    "pos": [
-    2510.8,
-    166.0,
-    -189.8
+    2553.5,
+    168.2,
+    -180.2
    ],
    "look_at": [
     2540.0,
@@ -923,9 +941,9 @@
    "label": "waterfall_three_sisters_falls",
    "region": "core:region/skerrow",
    "pos": [
-    -292.7,
-    218.4,
-    -2758.6
+    -304.7,
+    220.3,
+    -2841.7
    ],
    "look_at": [
     -300.0,
