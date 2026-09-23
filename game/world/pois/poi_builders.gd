@@ -1758,12 +1758,43 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		m.limb(body, at.call(-4.5, -8.4 + across, 0.28), at.call(-6.0 + absf(across) * 0.5, -8.4 + across * 1.2, 0.22), 0.25)
 	# the neck going down into the diggings
 	m.limb(body, at.call(14.5, 0.0, 1.0), at.call(16.8, 0.0, 0.1), 2.3)
-	# Carved stone, not coursed: at the Oroth unit the whole body came out bricked, which is what
-	# made it a wall. The Headless Watch's head is cut at 3.4 m; a body wants a longer unit still.
-	var carved := k.surface("oroth", 0.45)
-	carved.set_shader_parameter("unit_size", 5.5)
-	carved.set_shader_parameter("variation", 0.8)
+	# The Choir are singers, robed: the robe's folds run down its back from the shoulders to the
+	# hips, cut as ridges that follow the back's own curve. A smooth back read as a thing inflated.
+	var back_h := func(s: float, l: float) -> float:
+		var e1 := 1.3 + 2.8 * sqrt(maxf(0.0, 1.0 - pow(l / 6.0, 2.0) - pow((s - 4.0) / 8.0, 2.0)))
+		var e2 := 1.2 + 2.9 * sqrt(maxf(0.0, 1.0 - pow(l / 7.6, 2.0) - pow((s - 10.5) / 4.4, 2.0)))
+		return maxf(e1, e2)
+	for fold in [-4.2, -2.1, 0.0, 2.1, 4.2]:
+		var along := [12.0, 8.5, 5.0, 1.5, -1.8]
+		var prev := Vector3.INF
+		for s_v in along:
+			var s := float(s_v)
+			var l := float(fold) * (1.0 - maxf(0.0, (5.0 - s)) * 0.03)
+			var p: Vector3 = at.call(s, l, back_h.call(s, l) - 0.18)
+			if prev != Vector3.INF:
+				m.limb(body, prev, p, 0.38)
+			prev = p
+	# Carved stone, not coursed. In the Oroth courses the first one came out a wall, and on round
+	# forms the courses' joints drew seams, which made a body of capsules look inflated: a carved
+	# thing has no joints. The Builders' dark stone with the hairline cracks of long weathering
+	# (the painted surface's plaster pattern) is what one piece of cut stone looks like.
+	var carved := PoiKit.painted(0, PoiKit.OROTH, 0.8, 0.9)
+	carved.set_shader_parameter("unit_size", 1.6)
 	m.commit(body, carved, "Colossus", true)
+	# what has come off it: the last joints of the flung hand's fingers, and shards of the same
+	# stone along its flanks, half in the ash (the region's boulders are fused glass, and read as
+	# something else lying beside it)
+	var shards := m.begin()
+	for i in 12:
+		var s := k.rng.randf_range(-12.0, 30.0)
+		var side := (1.0 if k.rng.randf() > 0.5 else -1.0) * k.rng.randf_range(8.5, 12.5)
+		var size := k.rng.randf_range(0.5, 1.1)
+		m.ellipsoid(shards, at.call(s, side, size * 0.25), Vector3(size, size * 0.6, size * 1.3),
+				Basis(Vector3.UP, k.rng.randf_range(0.0, TAU)) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.3, 0.3)))
+	for f in 3:
+		m.limb(shards, at.call(32.6 + float(f) * 1.0, 9.2 + float(f) * 0.9, 0.2),
+				at.call(33.3 + float(f) * 1.0, 9.6 + float(f) * 0.9, 0.15), 0.27)
+	m.commit(shards, carved, "Shards", true)
 	# collision: the back, and each limb as a box along it
 	k.collider(Vector3(13.0, 4.6, 20.0), Transform3D(basis, at.call(5.0, 0.0, 1.8)))
 	for pair in [[legs[0][0], legs[0][1], 2.1], [legs[0][1], legs[0][2], 1.6], [legs[1][0], legs[1][1], 2.1],
@@ -1774,24 +1805,28 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		var r: float = pair[2]
 		k.collider(Vector3(r * 1.8, r * 1.8, a.distance_to(b)),
 				Transform3D(Basis.looking_at((b - a).normalized(), Vector3.UP), (a + b) * 0.5))
-	# The head, hooded, and down in the ash to above the brow: the crown, the hood's rim round
-	# it and the seam that runs over it are what the trench has found. None of the Choir's heads
-	# is hooded; the Headless Watch is one of theirs and is bare.
+	# The head, hooded, and down in the ash to above the brow: the back of the hood and its peak,
+	# drawn back toward the neck, are what the trench has found. None of the Choir's heads is
+	# hooded; the Headless Watch is one of theirs and is bare.
 	var head_at: Vector3 = at.call(19.6, 0.0, -0.8)
 	var head := m.begin()
-	m.ellipsoid(head, head_at, Vector3(3.2, 3.5, 3.7), basis)
-	m.ellipsoid(head, head_at + basis * Vector3(0.0, 0.35, -0.3), Vector3(3.75, 3.6, 4.1), basis)
-	m.ellipsoid(head, head_at + basis * Vector3(0.0, 3.55, 0.2), Vector3(0.42, 0.34, 3.4), basis)
-	m.ellipsoid(head, head_at + basis * Vector3(0.0, 2.2, 3.4), Vector3(1.3, 1.0, 1.1), basis)
-	var hood := k.surface("oroth", 0.35)
-	hood.set_shader_parameter("unit_size", 4.2)
-	hood.set_shader_parameter("variation", 0.85)
+	m.ellipsoid(head, head_at, Vector3(3.0, 3.3, 3.9), basis)
+	# the cowl, standing off the skull all round and open toward the ground where the face is
+	m.ellipsoid(head, head_at + basis * Vector3(0.0, 0.5, -0.6), Vector3(3.7, 3.5, 4.0), basis)
+	# the hood's peak, laid back along the neck the way cloth falls when the head goes down
+	m.limb(head, head_at + basis * Vector3(0.0, 2.6, -2.2), head_at + basis * Vector3(0.0, 3.3, -5.0), 1.05)
+	m.limb(head, head_at + basis * Vector3(0.0, 3.3, -5.0), head_at + basis * Vector3(0.0, 2.8, -6.6), 0.6)
+	# the hood's rim where it meets the ash on either side
+	for side in [-1.0, 1.0]:
+		m.limb(head, head_at + basis * Vector3(3.2 * float(side), 0.2, 2.2), head_at + basis * Vector3(3.5 * float(side), 1.2, -1.4), 0.55)
+	var hood := PoiKit.painted(0, PoiKit.OROTH, 0.7, 0.9)
+	hood.set_shader_parameter("unit_size", 1.3)
 	m.commit(head, hood, "Head", true)
 	k.collider(Vector3(7.0, 3.6, 7.6), Transform3D(basis, head_at + Vector3(0.0, 1.4, 0.0)))
 	# the ash drifted against its flanks, which is how something this size is half sunk
 	var ash := k.surface("earth", 0.9)
-	ash.set_shader_parameter("base_color", Color(0.24, 0.23, 0.22))
-	ash.set_shader_parameter("accent_color", Color(0.32, 0.31, 0.3))
+	ash.set_shader_parameter("base_color", Color(0.14, 0.135, 0.13))
+	ash.set_shader_parameter("accent_color", Color(0.19, 0.18, 0.17))
 	for drift in [[6.0, 7.9, 3.6], [-1.0, -6.8, 3.0], [13.0, -8.4, 3.2], [-9.0, 6.2, 3.4]]:
 		var p: Vector3 = at.call(float(drift[0]), float(drift[1]), -0.2)
 		m.mound(p, float(drift[2]), 1.3, ash, "Drift", false, 1.8, 6, 16, true, 0.12)
@@ -2813,7 +2848,7 @@ static func _poppy_flower(d: PoiDressing, at: Vector3) -> MeshInstance3D:
 	var m := d.masonry
 	var k := d.kit
 	var st := m.begin()
-	var head := at + Vector3(0.0, 0.66, 0.0)
+	var head := at + Vector3(0.0, 0.86, 0.0)
 	var petal := SphereMesh.new()
 	petal.radius = 1.0
 	petal.height = 2.0
@@ -2824,13 +2859,13 @@ static func _poppy_flower(d: PoiDressing, at: Vector3) -> MeshInstance3D:
 		var a := turn + TAU * float(i) / 4.0
 		var out := Vector3(sin(a), 0.0, cos(a))
 		var basis := Basis(Vector3.UP, a) * Basis(Vector3.RIGHT, -0.45)
-		st.append_from(petal, 0, Transform3D(basis, head + out * 0.1 + Vector3(0.0, 0.05, 0.0))
-				.scaled_local(Vector3(0.12, 0.025, 0.14)))
-	var red := PoiKit.plain(Color(0.8, 0.07, 0.05), 0.55, 0.0, Color(0.6, 0.04, 0.03), 0.35)
+		st.append_from(petal, 0, Transform3D(basis, head + out * 0.15 + Vector3(0.0, 0.06, 0.0))
+				.scaled_local(Vector3(0.17, 0.03, 0.2)))
+	var red := PoiKit.plain(Color(0.85, 0.07, 0.05), 0.5, 0.0, Color(0.75, 0.05, 0.03), 0.9)
 	var bloom := m.commit(st, red, "Bloom", true)
 	var dark := m.begin()
-	dark.append_from(petal, 0, Transform3D(Basis.IDENTITY, head + Vector3(0.0, 0.07, 0.0)).scaled_local(Vector3.ONE * 0.045))
-	m.rod(dark, Transform3D(Basis.from_euler(Vector3(0.08, 0.0, 0.05)), at + Vector3(0.0, 0.33, 0.0)), 0.012, 0.66)
+	dark.append_from(petal, 0, Transform3D(Basis.IDENTITY, head + Vector3(0.0, 0.08, 0.0)).scaled_local(Vector3.ONE * 0.06))
+	m.rod(dark, Transform3D(Basis.from_euler(Vector3(0.08, 0.0, 0.05)), at + Vector3(0.0, 0.43, 0.0)), 0.014, 0.86)
 	var stem := m.commit(dark, PoiKit.plain(Color(0.12, 0.14, 0.1), 0.8), "Stem", true)
 	# one thing, so that picking it takes all of it
 	if bloom != null and stem != null:
@@ -2890,12 +2925,14 @@ static func _strange_bell_buoys(d: PoiDressing) -> void:
 ##
 ## Honest to the fiction, the first dressing photographed from thirty metres as a speck and some
 ## pebbles: nothing in it told the eye there was anything there to walk to. What does now is what
-## people who come out to it would leave. They have trodden the grey off the ground inside the
-## ring and down a path from the pilgrim road, so the one red thing stands on black, not grey;
-## the ring is stones you would carry, not pebbles; and every pilgrim who waters it leaves a
-## stone on a cairn by the path, with a peeled white stake in it that stands up out of a flat heath
-## the way nothing else on it does. The poppy is a flower, built big enough to see and no bigger:
-## a stem to the knee and a bloom a hand across, and the only colour here.
+## people who come out to it would leave. The grey grass is worn off inside the ring and down a
+## path from the way they come, so the grass stops round it; the ring is stones you would carry,
+## not pebbles; and every pilgrim who waters it leaves a stone on a cairn by the path, with a
+## peeled white stake in it that stands up out of a flat heath the way nothing else on it does. The
+## poppy is a flower, built big enough to see and no bigger than a big poppy: a stem above the knee
+## and a bloom two hands across, holding a little light of its own, and the only colour here.
+## (A trodden path laid as thin boards read from thirty metres as a white rail across the heath;
+## where the grass stops is the path.)
 ##
 ## It is also the sentence's deed: touching it puts the choice (water it, the Hearth; pick it, the
 ## Hollow), and a poppy picked is not there the next time the heath is built.
@@ -2904,19 +2941,6 @@ static func _strange_one_poppy(d: PoiDressing) -> void:
 	var m := d.masonry
 	var grain := k.grain()
 	var picked := GameState.has_flag("poppy_picked")
-	var g := k.on_ground(0.0, 0.0).y
-	# the trodden ground: a disc of black ash inside the ring, and the path in to it from the way
-	# people come, which is where the cup and the cairn are
-	var trodden := k.surface("earth", 0.95)
-	trodden.set_shader_parameter("base_color", Color(0.13, 0.12, 0.12))
-	trodden.set_shader_parameter("accent_color", Color(0.2, 0.19, 0.18))
-	m.pool(Vector2.ZERO, 2.7, g + 0.035, trodden, "Trodden", 22)
-	var path := m.begin()
-	for i in 9:
-		var at := grain * (3.6 + float(i) * 2.1) + Vector2(-grain.y, grain.x) * sin(float(i) * 0.9) * 0.5
-		m.block(path, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(grain) + sin(float(i)) * 0.15),
-				k.on_ground(at.x, at.y, 0.02)), Vector3(1.0 - float(i) * 0.05, 0.04, 2.4))
-	m.commit(path, trodden, "Path")
 	# the ring of stones somebody set round it: stones you would carry, set touching
 	var ring: Array = []
 	for p in k.ring(13, 2.9, Vector2.ZERO, 0.04):
