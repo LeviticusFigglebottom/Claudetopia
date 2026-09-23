@@ -50,6 +50,21 @@ func test_a_beast_keeps_to_its_own_ground_and_wanders_it() -> void:
 	stock.free()
 
 
+## The beasts are moved from _process; a MultiMesh the physics interpolation keeps is to be moved
+## from the physics ticks, and the engine said so in every capture once the interpolation was on.
+func test_the_beasts_are_drawn_where_they_are_put() -> void:
+	var stock := Livestock.new()
+	stock.seed_with(7)
+	stock.keep("sheep", Livestock.paths_of("sheep"), Vector3.ZERO, 3.0, 4)
+	_tree().root.add_child(stock)
+	var meshes := stock.find_children("*", "MultiMeshInstance3D", true, false)
+	assert_false(meshes.is_empty(), "the ewes are drawn")
+	for m in meshes:
+		assert_eq((m as Node).physics_interpolation_mode, Node.PHYSICS_INTERPOLATION_MODE_OFF,
+				"%s is kept by the physics interpolation, and moved outside the physics ticks" % m.name)
+	stock.free()
+
+
 func test_a_village_keeps_hens_geese_and_sheep_and_a_ruin_keeps_none() -> void:
 	var s := Settlement.raise_at("core:place/test_farmstead", "village", "core:region/hearthvale", CENTRE, 64.0,
 			[_east_road()], [])

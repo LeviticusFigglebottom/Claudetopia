@@ -77,6 +77,9 @@ func _ready() -> void:
 		inst.multimesh = mm
 		# a beast wanders a few metres from where its instance was first put
 		inst.extra_cull_margin = 8.0
+		# the beasts are moved from _process, a tenth of a second at a time, and a MultiMesh the
+		# physics interpolation keeps is to be moved from the physics ticks (the engine warns)
+		inst.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 		# a hen's shadow is a smudge under a hen, and a pass of the sun for each kind of bird; a
 		# ewe's is her lowest rung (Settlement.shadow_of), moved with her
 		var size := mesh.get_aabb().size
@@ -86,6 +89,7 @@ func _ready() -> void:
 		add_child(inst)
 		if casts and not low.is_empty():
 			var sh := Settlement.shadow_of(inst, low[0], RANGE_M)
+			sh.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 			_shadow_mm[path] = sh.multimesh
 			add_child(sh)
 		for b in list:
