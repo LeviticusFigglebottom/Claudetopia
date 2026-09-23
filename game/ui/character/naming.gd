@@ -809,11 +809,14 @@ func _frame(snap: bool) -> void:
 	var t := _zoom * _zoom * (3.0 - 2.0 * _zoom)
 	var fig_target := Vector3(0.0, h * 0.50, 0.0)
 	var fig_dist := (h * 0.60) / tan(half_fov)
-	var face_target := Vector3(0.0, h * 0.905, 0.0)
-	var face_dist := 0.23 / tan(half_fov)
+	# Head and shoulders, with the crown inside the frame: framed 0.23 m either side of the
+	# mouth, a broad head at 1.84 m lost the top of its hair to the frame, and looked at from
+	# below it was all chin.
+	var face_target := Vector3(0.0, h * 0.885, 0.0)
+	var face_dist := 0.28 / tan(half_fov)
 	var target := fig_target.lerp(face_target, t)
 	var dist := exp(lerpf(log(fig_dist), log(face_dist), t))
-	var pitch := deg_to_rad(lerpf(3.0, -3.0, t))
+	var pitch := deg_to_rad(lerpf(3.0, 1.0, t))
 	_camera.position = target + Vector3(0.0, sin(pitch) * dist, cos(pitch) * dist)
 	_camera.look_at(target, Vector3.UP)
 

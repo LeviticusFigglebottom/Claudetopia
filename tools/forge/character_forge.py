@@ -439,6 +439,10 @@ BODY_VARIANTS: Dict[str, dict] = {
 }
 
 
+# What a child is dressed in: the plain garments of each slot, cut again on the child.
+CHILD_GARMENTS = ["tunic", "shirt", "trousers", "dress", "shoes", "boots", "belt"]
+
+
 def part_dir(kind: str, name: str) -> str:
     return ensure_dir(os.path.join(OUT_ROOT, PART_DIRS[kind], name))
 
@@ -629,6 +633,8 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
 
 
 def _slot_hint(name: str) -> str:
+    if name.endswith("_child"):
+        name = name[:-len("_child")]
     if name in ("tunic", "shirt", "dress", "robe", "gambeson", "plate_torso", "brigandine", "apron",
                 "coat", "wrap_torso"):
         return "torso"
@@ -647,9 +653,21 @@ def _slot_hint(name: str) -> str:
     return "attachment"
 
 
+def _guarded(name: str, build, failed: List[str]) -> None:
+    """Build one garment, and if it throws, say so and go on to the next: one bad part used to
+    throw away every part after it in a run that takes the best part of an hour."""
+    try:
+        build()
+    except Exception:
+        import traceback
+        log("FAILED %s:\n%s" % (name, traceback.format_exc()))
+        failed.append(name)
+
+
 def cmd_parts(args) -> None:
     only = set(args.only) if getattr(args, "only", None) else None
     t0 = time.time()
+    failed: List[str] = []
 
     def want(n: str) -> bool:
         return only is None or n in only
@@ -726,10 +744,14 @@ def cmd_parts(args) -> None:
                 if hname != "default":
                     face_fits[hname] = (base_face, clothlib.head_field(skel, bodylib.HeadStyle.from_dict(params)))
         for name in garments:
-            g = clothlib.CLOTHING_BUILDERS[name](skel, field)
-            fits = body_fits if (g.bone is None and g.weight_fn is None) else None
-            build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="clothing",
-                               fits=fits)
+            def one(name=name):
+                g = clothlib.CLOTHING_BUILDERS[name](skel, field)
+                # A cape or a cloak has weights of its own but hangs off the same shoulders, so
+                # it is fitted like any other garment; only a part rigid to one bone is not.
+                fits = body_fits if g.bone is None else None
+                build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="clothing",
+                                   fits=fits)
+            _guarded(name, one, failed)
         for name in hairs:
             g = clothlib.build_hair(skel, name, body=field)
             build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="hair")
@@ -740,7 +762,31 @@ def cmd_parts(args) -> None:
         for name in attachments:
             g = clothlib.ATTACHMENT_BUILDERS[name](skel)
             build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="attachment")
+
+    # -- a child's clothes, cut on the child's own skeleton and body -------------------------
+    # The game re-proportions the rig for a child (ChildProportions) and a garment skinned to
+    # the grown skeleton would hang off it at a grown size, so each garment a child wears is
+    # built again here as `<name>_child`, bound to the child's bones.
+    child_cuts = [n for n in CHILD_GARMENTS if want(n + "_child") or want("child_clothing")]
+    if child_cuts:
+        props = rig.Proportions.from_dict(BODY_VARIANTS["child"])
+        skel, arm = _fresh_rig(props)
+        style = bodylib.BodyStyle()
+        body_ob = build_body(skel, style)
+        bodylib.skin_to_armature(body_ob, arm, skel)
+        bv, _bn, _bt = bodylib.mesh_arrays(body_ob)
+        bW = (bv, bodylib.weight_matrix(body_ob, rig.DEFORM_NAMES))
+        field = clothlib.body_field(skel, style)
+        bpy.data.objects.remove(body_ob, do_unlink=True)
+        for name in child_cuts:
+            def one_child(name=name):
+                g = clothlib.CLOTHING_BUILDERS[name](skel, field)
+                g.name = name + "_child"
+                build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="clothing")
+            _guarded(name + "_child", one_child, failed)
     log("parts done in %.1fs" % (time.time() - t0))
+    if failed:
+        raise SystemExit("parts that failed and were not written: %s" % ", ".join(failed))
 
 
 # ======================================================================================
