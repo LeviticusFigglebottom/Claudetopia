@@ -11,7 +11,7 @@ extends Node3D
 ## children between two grown people, standing and mid-stride, from the front and the side;
 ## `--no-child-rig` shows them as they were before the child had a skeleton of its own.
 ## `--looks=<file.json>` stands the appearances listed in that file in a row and photographs
-## the row from the front, three-quarter, side and back (`--pose=Walk` for mid-stride);
+## the row from the front, three-quarter, side and back (`--pose=Walk@0.5` holds a clip at a time);
 ## `--frame=head` closes in on the heads, `--frame=hands` on the hands (two looks to a row).
 
 const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
@@ -29,6 +29,7 @@ var clip_list: PackedStringArray = PackedStringArray([
 var preset_filter: PackedStringArray = PackedStringArray()
 var looks_path := ""
 var looks_pose := "Idle"
+var looks_time := -1.0          ## `--pose=Walk@0.5`: the time to hold the clip at
 var looks_frame := "figure"
 
 var _camera: Camera3D
@@ -73,6 +74,9 @@ func _parse_args() -> void:
 			mode = "looks"
 		elif a.begins_with("--pose="):
 			looks_pose = a.substr(7)
+			if looks_pose.contains("@"):
+				looks_time = float(looks_pose.get_slice("@", 1))
+				looks_pose = looks_pose.get_slice("@", 0)
 		elif a.begins_with("--frame="):
 			looks_frame = a.substr(8)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../%s" % out_dir) if not out_dir.begins_with("/") else out_dir)
@@ -268,7 +272,8 @@ func _queue_looks() -> void:
 			var x := x0 + (i - (looks.size() - 1) * 0.5) * spacing
 			var m := _spawn(looks[i], Vector3(x, 0, 0))
 			(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 180.0 + float(views[view]), 0)
-			_hold_pose(m, looks_pose, 0.8 if looks_pose == "Idle" else 0.3)
+			var t := looks_time if looks_time >= 0.0 else (0.8 if looks_pose == "Idle" else 0.3)
+			_hold_pose(m, looks_pose, t)
 		var width := looks.size() * spacing
 		if heads:
 			_jobs.append({"file": "lineup_looks_%s.png" % view,
