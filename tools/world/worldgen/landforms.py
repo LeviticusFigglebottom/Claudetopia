@@ -84,33 +84,51 @@ def _stamp(out: np.ndarray, ctx, cx: float, cz: float, radius: float, fn) -> Non
 
 # --- Brightwater -------------------------------------------------------------------------------
 
-## The raised beaches: a bench every 3.2 m of height, its bank a tenth of the step, from 110 m
-## back from the water out to about a kilometre. The strandplain: ridges 78 m apart and up to
-## five and a half metres high, parallel to the shore, on the open stretches of it -- each one
-## a gentle back slope and a steeper face to the water, which is what the wind builds.
-BEACH_STEP_M = 3.2
-RIDGE_SPACING_M = 78.0
-RIDGE_HEIGHT_M = 5.5
+## The raised beaches: five old shorelines, 3.5 to 30 m above the Mere, each a level bench
+## backed by the fossil cliff the water cut when it stood there -- the cliff a seventh of the
+## rise to the next shoreline, so on a one-in-ten shore a bench forty to seventy metres deep
+## ends in a bank of five to eight metres at about one in one. They only ever lower the land.
+## A bench every 3.2 m (the first version) put a step in every contour and none of them showed.
+## The basin's shoulder rises from about 9 m at the water to 20-35 m a kilometre back, so these
+## are the levels the land is actually at. The strandplain: ridges 105 m apart and up to nine
+## metres high, parallel to the shore on its open stretches, each a long back slope and a steep
+## face to the water, which is what the wind builds.
+SHORELINES_M = (3.5, 8.5, 14.5, 21.5, 30.0)
+SHORE_CLIFF = 0.14
+RIDGE_SPACING_M = 105.0
+RIDGE_HEIGHT_M = 9.0
+
+
+def _levels(h: np.ndarray, levels, riser: float) -> np.ndarray:
+    """Terraces at the given heights: between two levels the ground is a bench at the lower one
+    and a riser (`riser` of the interval) up to the next. Below the first and above the last,
+    unchanged."""
+    out = h.astype(np.float32, copy=True)
+    for lo, hi in zip(levels[:-1], levels[1:]):
+        inside = (h >= lo) & (h < hi)
+        t = (h - lo) / (hi - lo)
+        s = np.clip((t - (1.0 - riser)) / riser, 0.0, 1.0)
+        s = s * s * (3.0 - 2.0 * s)
+        out = np.where(inside, lo + (hi - lo) * s, out)
+    return out
 
 
 def brightwater(ctx, h: np.ndarray, r) -> np.ndarray:
     lk = ctx.lake
     sd = lk.sd
-    base = LAKE_LEVEL + 1.5
-    band = smoothstep(110.0, 240.0, sd) * (1.0 - smoothstep(950.0, 1350.0, sd))
-    above = np.maximum(h - base, 0.0)
-    benches = terrace(above, BEACH_STEP_M, 0.10) + base
-    beaches = np.where(h > base, benches - h, 0.0) * band
+    band = smoothstep(90.0, 200.0, sd) * (1.0 - smoothstep(1100.0, 1500.0, sd))
+    levels = [LAKE_LEVEL + v for v in SHORELINES_M]
+    beaches = (_levels(h, levels, SHORE_CLIFF) - h) * band
     # the strandplain, on the shores that are neither the northern cliffs nor the reed shelf
     open_shore = (1.0 - lk.northness) * (1.0 - lk.westness)
-    s = sd + 18.0 * ctx.f(213, 2.0, 150, 600)
+    s = sd + 22.0 * ctx.f(213, 2.0, 150, 600)
     # a sawtooth rounded at the crest: the face to the water is a third of the period, the back
     # slope the rest, so each ridge has a lee and the row reads as built by the wind
     ph = (s / RIDGE_SPACING_M) % 1.0
-    tooth = np.where(ph < 0.33, ph / 0.33, (1.0 - ph) / 0.67)
-    ridge = smoothstep(0.0, 1.0, tooth) ** 1.6
-    stretch = smoothstep(-0.2, 0.6, ctx.f(214, 2.0, 300, 1200))
-    fade = smoothstep(35.0, 70.0, sd) * (1.0 - smoothstep(420.0, 620.0, sd))
+    tooth = np.where(ph < 0.3, ph / 0.3, (1.0 - ph) / 0.7)
+    ridge = smoothstep(0.0, 1.0, tooth) ** 1.4
+    stretch = smoothstep(-0.55, 0.25, ctx.f(214, 2.0, 300, 1200))
+    fade = smoothstep(30.0, 70.0, sd) * (1.0 - smoothstep(620.0, 860.0, sd))
     dunes = RIDGE_HEIGHT_M * ridge * stretch * open_shore * fade
     # not on Tollmere's stone or the causeway's deck
     keep_off = smoothstep(40.0, 120.0, lk.island_sd) * (1.0 - np.clip(lk.causeway * 3.0, 0.0, 1.0))
@@ -119,16 +137,21 @@ def brightwater(ctx, h: np.ndarray, r) -> np.ndarray:
 
 # --- Sedgemire ---------------------------------------------------------------------------------
 
-LEVEE_M = 2.2
-OXBOWS = 34
+## Levees three and a half metres over the marsh -- twice the height of a man standing on the
+## peat, so from anywhere on it the skyline is a bank -- a little wider than the first version's
+## 2.2 m. And 48 cut-off meanders, loops 70 to 170 m across with a rim of a metre and a quarter.
+LEVEE_M = 3.5
+LEVEE_WIDTH = 0.10
+OXBOWS = 48
+OXBOW_RIM_M = 1.25
 
 
 def sedgemire(ctx, h: np.ndarray, r) -> np.ndarray:
     # the same two channel fields shape_delta cuts (the bank caches them, so these are the ones)
     c1 = ctx.warped(133, 240, 700, 120.0, beta=1.7, aniso=(0.0, 1.6))
     c2 = ctx.warped(134, 400, 1100, 160.0, beta=1.7, aniso=(0.0, 1.2))
-    lev = np.maximum(np.exp(-((np.abs(c1) - 0.33) / 0.08) ** 2),
-                     0.5 * np.exp(-((np.abs(c2) - 0.26) / 0.07) ** 2))
+    lev = np.maximum(np.exp(-((np.abs(c1) - 0.33) / LEVEE_WIDTH) ** 2),
+                     0.6 * np.exp(-((np.abs(c2) - 0.26) / (0.9 * LEVEE_WIDTH)) ** 2))
     # the banks are silt the channels dropped, so they die out on the tide-flats and the sea
     wet = 1.0 - smoothstep(-3050.0, -3450.0, ctx.X)
     levees = (LEVEE_M * lev * wet).astype(np.float32)
@@ -140,8 +163,8 @@ def sedgemire(ctx, h: np.ndarray, r) -> np.ndarray:
     for _ in range(OXBOWS):
         cx = cx0 + rng.uniform(-1500.0, 1300.0)
         cz = cz0 + rng.uniform(-1500.0, 1400.0)
-        radius = rng.uniform(55.0, 130.0)
-        width = rng.uniform(12.0, 20.0)
+        radius = rng.uniform(70.0, 170.0)
+        width = rng.uniform(14.0, 24.0)
         a0 = rng.uniform(0.0, 2.0 * math.pi)
         extent = rng.uniform(math.radians(200.0), math.radians(290.0))
 
@@ -156,7 +179,7 @@ def sedgemire(ctx, h: np.ndarray, r) -> np.ndarray:
 
         def bank(d, dx, dz, radius=radius, width=width):
             across = np.abs(d - radius)
-            return ends(dx, dz) * 0.7 * np.exp(-((across - 0.5 * width - 6.0) / 4.0) ** 2)
+            return ends(dx, dz) * OXBOW_RIM_M * np.exp(-((across - 0.5 * width - 6.0) / 4.5) ** 2)
 
         _stamp(bowl, ctx, cx, cz, radius + width + 16.0, water)
         _stamp(rim, ctx, cx, cz, radius + width + 16.0, bank)
@@ -170,9 +193,11 @@ def sedgemire(ctx, h: np.ndarray, r) -> np.ndarray:
 # --- The Briarwold -----------------------------------------------------------------------------
 
 STAIR_STEP_M = 18.0
-STAIR_RISER = 0.28
-## a tor is a pile of rock five to twelve metres high, not a hill
-TOR_M = 8.0
+STAIR_RISER = 0.22
+## A tor is a pile of rock, not a hill: up to fourteen metres, which is what it takes to stand
+## out of a wood whose canopy is fifteen. At eight (the first version) the trees hid them.
+TOR_M = 14.0
+TOR_FIELD = 0.75
 
 
 ## A `terrace` step on ground of slope s has a riser of slope s / riser-fraction, as wide as
@@ -189,32 +214,61 @@ def _steepness(ctx, h: np.ndarray) -> np.ndarray:
 
 
 def briarwold(ctx, h: np.ndarray, r) -> np.ndarray:
-    stepped = terrace(h, STAIR_STEP_M, STAIR_RISER)
+    # A terrace only ever lowers (each tread is the bottom of its step), and at 18 m a step that
+    # took the whole wold down by seven metres on average and left every place in it standing on
+    # a plinth. Raised by half a tread, the stair cuts and fills about equally.
+    off = STAIR_STEP_M * (1.0 - STAIR_RISER) * 0.5
+    stepped = terrace(h, STAIR_STEP_M, STAIR_RISER) + off
     stair = (stepped - h) * (1.0 - smoothstep(STEP_FADE[0], STEP_FADE[1], _steepness(ctx, h)))
     # the lip of each bench is the top of the riser below it: where h is a whole number of steps
     q = h / STAIR_STEP_M
     frac = q - np.floor(q)
     near_whole = np.minimum(frac, 1.0 - frac)
     lip = np.exp(-(near_whole / 0.07) ** 2)
-    knobs = np.clip(ctx.f(148, 1.8, 25, 120) - 0.9, 0.0, 1.3) ** 1.5
+    knobs = np.clip(ctx.f(148, 1.8, 25, 120) - TOR_FIELD, 0.0, 1.3) ** 1.4
     tors = TOR_M * knobs * lip
     return (stair + tors).astype(np.float32)
 
 
 # --- Skerrow -----------------------------------------------------------------------------------
 
-SCAR_STEP_M = 20.0
-SCAR_RISER = 0.25
+## Limestone scars are the edges of the beds, and the beds lie level: a scar runs along the
+## valley side at one height for kilometres, and the next one up runs at its own. So the scars
+## are six levels, 65 m apart from 235 m, each a cliff band of about seventeen metres -- a
+## pavement bench above it and a scree foot below -- running wherever the ground is sloping
+## and the band field says the bed is exposed, which it does in runs of kilometres. The first
+## version terraced the whole 200-540 m band every 20 m and faded it off every slope steeper than
+## one in two, which in a region whose median slope is 0.63 left scars on the gentle ground
+## only, where from above they drew contours and from the ground nothing at all.
+SCAR_LEVELS_M = (235.0, 300.0, 365.0, 430.0, 495.0, 560.0)
+SCAR_HALF_M = 12.0
+SCAR_FACE = (0.45, 0.75)
+SCAR_SLOPE = (0.10, 0.22, 1.25, 1.7)
 SHAKEHOLES = 900
 
 
+def _scar(h: np.ndarray, level: float, half: float, face: tuple) -> np.ndarray:
+    """One cliff band at `level`: the window [level - half, level + half] of the land's height
+    becomes a foot at its bottom, a face between `face` fractions of it, and a bench at its top."""
+    t = np.clip((h - (level - half)) / (2.0 * half), 0.0, 1.0)
+    s = np.clip((t - face[0]) / (face[1] - face[0]), 0.0, 1.0)
+    s = s * s * (3.0 - 2.0 * s)
+    inside = (h > level - half) & (h < level + half)
+    return np.where(inside, (level - half) + 2.0 * half * s - h, 0.0).astype(np.float32)
+
+
 def skerrow(ctx, h: np.ndarray, r) -> np.ndarray:
-    # limestone scars: the middle heights stepped in horizontal cliff bands
     slope = _steepness(ctx, h)
-    band = smoothstep(200.0, 260.0, h) * (1.0 - smoothstep(470.0, 540.0, h))
-    where = smoothstep(-0.3, 0.5, ctx.f(154, 2.0, None, 700))
-    fade = 1.0 - smoothstep(STEP_FADE[0], STEP_FADE[1], slope)
-    scars = (terrace(h, SCAR_STEP_M, SCAR_RISER) - h) * band * where * fade * 0.85
+    lo0, lo1, hi0, hi1 = SCAR_SLOPE
+    on_slope = smoothstep(lo0, lo1, slope) * (1.0 - smoothstep(hi0, hi1, slope))
+    # where the bed is exposed along its length: long runs, and gaps a road can take
+    exposed = smoothstep(-0.55, 0.05, ctx.f(154, 2.0, 1200, 4200))
+    scars = np.zeros_like(h, dtype=np.float32)
+    for k, level in enumerate(SCAR_LEVELS_M):
+        # each bed has its own runs
+        bed = smoothstep(-0.6, 0.0, ctx.f(740 + k, 2.0, 900, 3600))
+        scars += _scar(h, level, SCAR_HALF_M, SCAR_FACE) * bed
+    scars *= on_slope * exposed
     out = scars.astype(np.float32)
     # shakeholes: sinks on the moor, in fields, where the water went down
     moor = smoothstep(215.0, 245.0, h) * (1.0 - smoothstep(330.0, 380.0, h)) \
@@ -229,8 +283,8 @@ def skerrow(ctx, h: np.ndarray, r) -> np.ndarray:
             break
         cx = cx0 + rng.uniform(-2200.0, 2400.0)
         cz = cz0 + rng.uniform(-1300.0, 1400.0)
-        radius = rng.uniform(9.0, 22.0)
-        depth = rng.uniform(3.0, 7.0) * radius / 16.0
+        radius = rng.uniform(10.0, 26.0)
+        depth = rng.uniform(3.5, 8.0) * radius / 16.0
         keep = rng.random()
         j = int(round((cx - g.x0) / g.spacing))
         i = int(round((cz - g.z0) / g.spacing))
@@ -255,8 +309,8 @@ def skerrow(ctx, h: np.ndarray, r) -> np.ndarray:
 GRID_BEARING = 23.0
 GRID_M = (96.0, 72.0)
 STREET_M = 12.0
-STREET_DEPTH_M = 2.8
-BLOCK_M = 3.5
+STREET_DEPTH_M = 4.0
+BLOCK_M = 5.5
 
 
 def cinderlea(ctx, h: np.ndarray, r) -> np.ndarray:
@@ -267,13 +321,13 @@ def cinderlea(ctx, h: np.ndarray, r) -> np.ndarray:
     inside = np.ones_like(h)
     for coord, period, off in ((u, GRID_M[0], 31.0), (v, GRID_M[1], 17.0)):
         d = np.abs(((coord + off + 0.5 * period) % period) - 0.5 * period)
-        streets = np.maximum(streets, 1.0 - smoothstep(0.5 * STREET_M, 0.5 * STREET_M + 5.0, d))
-        # how far into its block a point is, 0 at the street's bank and 1 a dozen metres in
-        inside = np.minimum(inside, smoothstep(0.5 * STREET_M + 5.0, 0.5 * STREET_M + 17.0, d))
+        streets = np.maximum(streets, 1.0 - smoothstep(0.5 * STREET_M, 0.5 * STREET_M + 4.0, d))
+        # how far into its block a point is, 0 at the street's bank and 1 eight metres in
+        inside = np.minimum(inside, smoothstep(0.5 * STREET_M + 4.0, 0.5 * STREET_M + 12.0, d))
     # not every block has the same depth of rubble in it: some houses stood taller
     rubble = 0.55 + 0.45 * np.tanh(ctx.f(169, 1.8, 70, 260))
     # the city did not cover all of the heath, and the Choir's own terraces are older still
-    city = smoothstep(-0.25, 0.35, ctx.f(168, 2.0, 900, 2600))
+    city = smoothstep(-0.6, 0.1, ctx.f(168, 2.0, 900, 2600))
     choir = ctx.place("sunken_choir")
     ccx, ccz = choir["position"] if choir else r.center
     dchoir = np.sqrt((ctx.X - ccx) ** 2 + (ctx.Z - ccz) ** 2)
@@ -284,8 +338,9 @@ def cinderlea(ctx, h: np.ndarray, r) -> np.ndarray:
 
 # --- Hearthvale --------------------------------------------------------------------------------
 
-BARROW_GROUPS = 26
-LYNCHET_STEP_M = 3.0
+BARROW_GROUPS = 32
+LYNCHET_STEP_M = 4.5
+LYNCHET_RISER = 0.28
 
 
 def hearthvale(ctx, h: np.ndarray, r) -> np.ndarray:
@@ -306,7 +361,7 @@ def hearthvale(ctx, h: np.ndarray, r) -> np.ndarray:
     steep = smoothstep(0.10, 0.18, slope) * (1.0 - smoothstep(0.45, 0.60, slope))
     face = smoothstep(-320.0, -220.0, sd) * (1.0 - smoothstep(20.0, 70.0, sd))
     flights = smoothstep(0.1, 0.6, ctx.f(126, 2.0, 200, 900))
-    out = ((terrace(h, LYNCHET_STEP_M, 0.35) - h) * steep * face * flights).astype(np.float32)
+    out = ((terrace(h, LYNCHET_STEP_M, LYNCHET_RISER) - h) * steep * face * flights).astype(np.float32)
     # the barrows: just behind the crest, on this region's own ground
     crest = (sd > 25.0) & (sd < 160.0) & (ctx.rf.weights[r.index] > 0.85)
     idx = np.argwhere(crest)
@@ -331,8 +386,8 @@ def hearthvale(ctx, h: np.ndarray, r) -> np.ndarray:
             t = (m - 0.5 * (count - 1)) * gap
             bx = x + ux * t + rng.normal(0.0, 6.0)
             bz = z + uz * t + rng.normal(0.0, 6.0)
-            radius = rng.uniform(14.0, 24.0)
-            height = rng.uniform(3.0, 5.5)
+            radius = rng.uniform(18.0, 30.0)
+            height = rng.uniform(4.5, 8.0)
 
             def mound(d, dx, dz, radius=radius, height=height):
                 body = height * np.clip(1.0 - (d / radius) ** 2, 0.0, 1.0) ** 1.5
