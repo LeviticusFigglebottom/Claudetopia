@@ -14,6 +14,9 @@ extends CanvasLayer
 ## and the plate says it was asked for.
 
 const CARD_SECONDS := 16.0
+## The card waits for the region's own title card (hud.gd, REGION_CARD_SECONDS) to go first: the
+## two land in the same place on arrival, and one on top of the other is read as neither.
+const AFTER_ARRIVAL_S := 4.8
 const PLATE_WIDTH := 330.0
 const CARD_WIDTH := 640.0
 
@@ -25,6 +28,8 @@ var card: PanelContainer
 ## Whether the card has been up, for the flow probe and the tests: it is gone after CARD_SECONDS.
 var card_shown := false
 var _card_left := 0.0
+## Seconds (seen) until the card goes up, or below zero when it is not waiting.
+var _card_wait := -1.0
 var _root: Control
 
 
@@ -98,8 +103,9 @@ func _build_card() -> void:
 	var col := UiKit.column(8)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(col)
-	var title := UiKit.label(str(status.get("title", "")), "Heading", HORIZONTAL_ALIGNMENT_CENTER)
+	var title := UiKit.wrapped(str(status.get("title", "")), "Heading", CARD_WIDTH - 48.0)
 	title.name = "Title"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 	var detail := UiKit.wrapped(str(status.get("detail", "")), "Body", CARD_WIDTH - 48.0)
 	detail.name = "Detail"
@@ -116,10 +122,18 @@ func _build_card() -> void:
 	col.add_child(foot)
 
 
-## The card, once the player can see: called by the world when the fade has lifted.
-func announce() -> void:
-	if not bool(status.get("announce", false)) or card == null:
+## The card, once the player can see: called by the world when the fade has lifted. It goes up
+## `delay` seconds later, counted only while the HUD is up, and stays CARD_SECONDS, counted the same.
+func announce(delay := AFTER_ARRIVAL_S) -> void:
+	if not bool(status.get("announce", false)) or card == null or card_shown or _card_wait >= 0.0:
 		return
+	_card_wait = maxf(delay, 0.0)
+	if _card_wait == 0.0:
+		_show_card()
+
+
+func _show_card() -> void:
+	_card_wait = -1.0
 	card.visible = true
 	card_shown = true
 	_card_left = CARD_SECONDS
@@ -130,11 +144,17 @@ func _process(delta: float) -> void:
 	var hud := UI.hud() as CanvasItem
 	var seen := hud != null and is_instance_valid(hud) and hud.is_visible_in_tree() and not UI.is_faded_out()
 	visible = seen
-	if not seen or card == null or not card.visible:
+	if not seen or card == null:
 		return
-	_card_left -= delta
-	if _card_left <= 0.0:
-		card.visible = false
+	if _card_wait >= 0.0:
+		_card_wait -= delta
+		if _card_wait <= 0.0:
+			_show_card()
+		return
+	if card.visible:
+		_card_left -= delta
+		if _card_left <= 0.0:
+			card.visible = false
 
 
 ## Whether the plate is up where the player can see it now.

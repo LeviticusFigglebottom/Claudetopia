@@ -235,6 +235,18 @@ func test_the_title_says_the_asked_for_coarse_ground_in_small_print() -> void:
 	await _tree().process_frame
 
 
+func test_asked_for_the_coarse_ground_gets_the_plate_and_no_card() -> void:
+	var g := GroundNotice.make(WorldStatus.evaluate(_facts({"forced_fallback": true})))
+	_tree().root.add_child(g)
+	await _tree().process_frame
+	g.announce(0.0)
+	assert_false(g.card_shown, "no card for what the player asked for")
+	assert_true(g.text().contains("Coarse ground") and g.text().contains("asked for with --terrain=fallback"),
+			"the plate says it was asked for: %s" % g.text())
+	g.queue_free()
+	await _tree().process_frame
+
+
 func test_a_world_with_no_data_stands_down_instead_of_showing_a_void() -> void:
 	WorldStatus.override = _facts({"manifest": false})
 	var w := (load(WORLD_SCENE) as PackedScene).instantiate() as World
@@ -267,8 +279,8 @@ func test_a_world_without_terrain3d_draws_the_coarse_ground_under_the_body() -> 
 	if said != null:
 		assert_true(said.text().contains("Coarse ground") and said.text().contains("Terrain3D did not load"),
 				"the plate names the ground and why: %s" % said.text())
-		said.announce()
-		assert_true(said.card_shown and said.card.visible, "the card goes up when the fade lifts")
+		said.announce(0.0)
+		assert_true(said.card_shown and said.card.visible, "the card goes up when it is told to")
 		assert_true(said.text().contains("cannot be drawn on this machine"), "with the whole account")
 	var body: Node3D = w.get_node("PlayerSpawn").get("player")
 	assert_true(body != null, "somebody stands in it")

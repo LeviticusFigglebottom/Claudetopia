@@ -119,10 +119,10 @@ static func evaluate(f: Dictionary) -> Dictionary:
 	elif driver_fails_terrain3d(f):
 		why = "driver_unsafe"
 		out["title"] = "The full terrain cannot be drawn with this graphics driver."
-		out["detail"] = ("This is Mesa's software Vulkan driver (%s), and Terrain3D crashes it on the first frame it draws, "
+		out["detail"] = ("This is %s, Mesa's software Vulkan driver, and Terrain3D crashes it on the first frame it draws, "
 				+ "so the ground is drawn from the coarse 8 m height map instead: the country is all there, with softer hills and plainer ground. "
-				+ "The Compatibility renderer (--rendering-driver opengl3) draws the full terrain here, and so does a graphics card. "
-				+ "%s tries Terrain3D anyway.") % [str(f.get("adapter", "")), FORCE_TERRAIN3D_ARG]
+				+ "The Compatibility renderer (--rendering-driver opengl3) draws the full terrain here, and so does a graphics card; "
+				+ "to try Terrain3D anyway, start the game with %s.") % [str(f.get("adapter", "")), FORCE_TERRAIN3D_ARG]
 		out["command"] = ""
 	elif int(f.get("terrain_regions", 0)) == 0:
 		why = "terrain_missing"

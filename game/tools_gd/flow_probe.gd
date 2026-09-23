@@ -473,7 +473,7 @@ func _watch_the_world_stand_up() -> void:
 	_check(UI.hud() != null and UI.hud().visible, "the HUD is up")
 	_check(not UI.is_loading_shown(), "the loading caption has gone")
 	_check(not UI.is_faded_out(), "the fade is not still down")
-	_check_the_ground()
+	await _check_the_ground()
 	_notes.append("body stood at %.1f s from the press; %d cells streamed"
 			% [(_spawned_at_ms - _t0) / 1000.0, _cells()])
 	if _gap_ms > 1500:
@@ -499,8 +499,13 @@ func _check_the_ground() -> void:
 		_check(said != null and bool(said.call("plate_showing")), "the corner says the ground is the coarse one (%s)"
 				% (str(said.call("text")) if said != null else "nothing says so"))
 		var st: Variant = world.get("status")
-		if st is Dictionary and bool((st as Dictionary).get("announce", false)):
-			_check(said != null and bool(said.get("card_shown")), "and a card said why when the fade lifted")
+		if st is Dictionary and bool((st as Dictionary).get("announce", false)) and said != null:
+			# the card lets the region's title card go first (GroundNotice.AFTER_ARRIVAL_S)
+			var up := await _wait_until(func() -> bool: return bool(said.get("card_shown")), 12.0)
+			_check(up, "and a card says why, once the region's name has been shown")
+			if up:
+				await _settle(0.8)
+				await _capture("coarse_ground_card")
 	elif drawn_by == "terrain3d":
 		_check(said == null, "nothing says the ground is coarse, because it is not")
 	var feet := body.global_position

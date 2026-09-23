@@ -18,9 +18,21 @@ about 310 MB, listed below — so a fresh clone needs no Python to play: the fir
 project into Godot (a minute or two) and starts the game, and after that it starts at once.
 Opening `game/` in the Godot editor and pressing Play does the same.
 
-Requirements: **Godot 4.7.2** (on `PATH`, or set `GODOT`). **Python 3.11+** with
-`pip install -r tools/requirements.txt` only to rebuild the world, the interiors or the sound;
-**Blender 4.x** only to regenerate meshes.
+Requirements: **Godot 4.7.2**. **Python 3.11+** with `pip install -r tools/requirements.txt` only
+to rebuild the world, the interiors or the sound; **Blender 4.x** only to regenerate meshes.
+
+`run.sh` is a bash script: on Windows run it from Git Bash. It looks for Godot as `godot` on the
+`PATH`, then in the usual places — Downloads, the Desktop, `C:/Godot`, Program Files, Steam and
+winget on Windows, `/Applications/Godot.app` on a Mac, an unpacked download on Linux — and takes a
+4.7 before any other; `./run.sh godot` says which one it found. Anywhere else, name it with the
+`GODOT` variable, with forward slashes on Windows:
+
+```
+GODOT="/c/Godot/Godot_v4.7.2-stable_win64_console.exe" ./run.sh
+```
+
+A command that needs Godot and cannot find it stops before it does anything and says so. Python is
+found the same way (`PYTHON`, else `python3`, else `python`).
 
 ### What of the world is in the repository
 
@@ -45,10 +57,28 @@ title shuts New Game, Continue and Load, and says the same thing.
 
 The ground is drawn by Terrain3D 1.0.2, whose release carries binaries for Windows and Linux on
 x86_64 and for macOS 15 or later (`LICENSES.md` has their source and hashes). Anywhere else —
-Linux on arm64, Windows on arm64, a Mac on macOS 14 or older — and in a copy whose
-`game/terrain_data` is empty, the game draws the ground itself from the runtime height map at
-8 m: the same country, with softer hills and plainer ground. The title screen says so in one small
-line, and so does a notice when you arrive. `-- --fallback-terrain` asks for that ground anywhere.
+Linux on arm64, Windows on arm64, a Mac on macOS 14 or older — on Mesa's software Vulkan driver
+(llvmpipe under Forward+ or Mobile, which Terrain3D crashes on its first frame), and in a copy
+whose `game/terrain_data` is empty, the game draws the ground itself from the runtime height map at
+8 m: the same country, with softer hills and plainer ground. It says so where it cannot be missed:
+across the title screen with the reason and the way to the full terrain, on a card when you arrive,
+and on a plate in the top left corner, "Coarse ground", for as long as you walk on it.
+
+If the plate says **the full terrain is not built: ./run.sh terrain**, the world's maps were built
+on this machine and never imported into Terrain3D (on Windows this happened whenever `godot` was
+not on the `PATH`). Run `./run.sh terrain`, with `GODOT` set if need be; it takes a minute or two.
+
+Two launch arguments choose the ground, from the command line after `--`, or in the editor under
+Project Settings → Editor → Run → Main Run Args:
+
+| Argument | What it does |
+|---|---|
+| `--terrain=fallback` | Draws the coarse ground even where Terrain3D can: to see, test or capture what a machine without it sees, or to get in on a graphics driver that fails inside Terrain3D. |
+| `--terrain=terrain3d` | Tries Terrain3D even on a driver it is known to crash. |
+
+```
+godot --path game -- --terrain=fallback
+```
 
 ## Check it
 
@@ -65,7 +95,8 @@ line, and so does a notice when you arrive. `-- --fallback-terrain` asks for tha
 
 | Command | What it rebuilds |
 |---|---|
-| `./run.sh world` | Terrain, region masks, rivers, roads and cell placements from the region recipes. |
+| `./run.sh world` | Terrain, region masks, rivers, roads and cell placements from the region recipes, then the terrain import. It looks for Godot before it builds anything, because the import at the end needs it. |
+| `./run.sh terrain` | Terrain3D's regions alone, from the full-resolution maps a world build left on this machine. Says so in a banner if it fails. |
 | `./run.sh interiors` | Every cave and house from `tools/interiors/recipes/`. |
 | `./run.sh assets` | Generated meshes and textures (needs Blender). |
 | `./run.sh import` | Re-import the Godot project headlessly. |
