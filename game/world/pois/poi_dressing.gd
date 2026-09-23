@@ -53,6 +53,8 @@ var far := false
 ## Where in the world this stands; `position` is relative to whatever cell node holds it.
 var world_position := Vector3.ZERO
 var wants_hearthstone := false
+## Ground some foes will not cross, from the def's `ward` ({radius_m, keeps_off}): Wards.
+var ward: Dictionary = {}
 
 var kit: PoiKit = null
 var masonry: PoiMasonry = null
@@ -80,6 +82,7 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.position = d.world_position
 	d.far = silhouette
 	d.wants_hearthstone = bool(def.get("hearthstone", false)) or d.kind == "hearth"
+	d.ward = def.get("ward", {})
 	d.name = "Poi_" + Ids.name_of(d.poi_id)
 	d._provider = terrain
 	d._roads = roads
@@ -122,6 +125,8 @@ func build() -> void:
 		Log.error("PoiDressing", "%s: the builders did not load from %s" % [poi_id, BUILDERS_PATH])
 		return
 	builders.build(self)
+	if not far and not ward.is_empty():
+		Wards.add(self, world_position, float(ward.get("radius_m", 8.0)), ward.get("keeps_off", []))
 	if wants_hearthstone and not far and hearthstones().is_empty():
 		# a builder that did not find a better place for the stone gets the plain one: at the
 		# pad's centre, off the exact middle so nothing spawning there stands inside it

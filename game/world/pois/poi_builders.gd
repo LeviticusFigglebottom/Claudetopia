@@ -876,8 +876,12 @@ static func _tower_head(d: PoiDressing, grain: Vector2) -> void:
 	# a stair of slabs up the ash toward the eye's ledge
 	var stair_from := grain * 11.0 + Vector2(-grain.y, grain.x) * 3.5
 	var stair := m.begin()
-	m.steps(stair, stair_from, -grain, k.on_ground(stair_from.x, stair_from.y).y, 9, 0.34, 0.9, 1.6)
+	var stair_y := k.on_ground(stair_from.x, stair_from.y).y
+	m.steps(stair, stair_from, -grain, stair_y, 9, 0.34, 0.9, 1.6)
 	m.commit(stair, k.surface("oroth", 0.6), "Stair", true)
+	# the sixth step, where whatever is standing the watch when it has turned stands
+	var sixth := stair_from - grain * (0.9 * 5.5)
+	k.marker("the_stair", Vector3(sixth.x, stair_y + 0.34 * 6.0 + 0.02, sixth.y), false, true, 0.6)
 	# the Order's vigil: braziers at the foot and a bench for the relief who never comes
 	for s in [-1.0, 1.0]:
 		var at := grain * 9.5 + Vector2(-grain.y, grain.x) * float(s) * 4.5
@@ -1054,6 +1058,14 @@ static func _bridge_causeway(d: PoiDressing, axis: Vector2, water: Vector2) -> v
 	# the toll: a table at the landward end, and the queue's litter
 	var gate := start + dir * 3.0
 	k.place(k.prop("table_trestle"), Vector3(gate.x + perp.x * 0.9, deck_y + 0.21, gate.y + perp.y * 0.9), yaw + PI * 0.5)
+	# who keeps it stands beside it, the toll is paid at it, the line is the deck past it, and the
+	# queue waits on the approach
+	k.marker("the_toll_table", Vector3(gate.x - perp.x * 0.5, deck_y + 0.23, gate.y - perp.y * 0.5), false, true, 0.8)
+	k.touchable("the_toll", Vector3(gate.x + perp.x * 0.9, deck_y + 0.21 + 0.8, gate.y + perp.y * 0.9), "Pay the toll")
+	var line := gate + dir * 2.8
+	k.marker("the_toll_line", Vector3(line.x, deck_y + 0.23, line.y), false, true, 2.0)
+	var queue := start - dir * 3.5
+	k.marker("the_toll_queue", k.on_ground(queue.x, queue.y))
 	k.place(k.prop("chest"), Vector3(gate.x + perp.x * 0.9, deck_y + 0.21, gate.y + perp.y * 0.9) + Vector3(dir.x, 0.0, dir.y) * 1.2, yaw)
 	k.place(k.prop("banner"), Vector3(gate.x - perp.x * 1.6, deck_y + 0.21, gate.y - perp.y * 1.6), yaw, 1.0, false)
 	k.place(k.prop("crate"), k.on_ground(start.x - dir.x * 3.0 + perp.x * 3.0, start.y - dir.y * 3.0 + perp.y * 3.0), k.rng.randf_range(0.0, TAU))
@@ -1419,6 +1431,7 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 	m.pool(pool_at, 6.5, g.y + 0.12, k.still_water(g.y - 2.0, Color.WHITE, 0.62))
 	k.puffs(Vector3(pool_at.x, g.y + 0.3, pool_at.y) - Vector3(facing.x, 0.0, facing.y) * 3.0, Vector3(sheet_w * 0.6, 0.3, 1.2),
 			0.8, 22, Color(0.95, 0.97, 1.0, 0.32), 2.6, 3.2)
+	_lip_shelf(d, face_at, facing, lip, "above_the_falls")
 	# the stream on toward wherever it goes: wet stones and reeds along the way out
 	var out: Array = []
 	for i in 16:
@@ -1454,8 +1467,49 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 	else:
 		# the down-wolves' way in: a dark mouth in the rock behind the water is theirs, and a
 		# cart track ends where somebody comes to look at the fall
+		_cave_mouth(d, face_at, facing, "behind_the_falls")
 		var look := pool_at + facing * 9.0
 		k.place(k.prop("bench"), k.on_ground(look.x, look.y), yaw + PI)
+
+
+## A shelf of stone on the lip of a fall, beside the water, that something can stand on and look
+## down from, with a marker on it (`name`): the sentences put the weavers "above" and the
+## bell-bearer "at the top", and a group with no marker stood on the pad's rim at the foot.
+static func _lip_shelf(d: PoiDressing, face_at: Vector2, facing: Vector2, lip: Vector3, marker_name: String) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var perp := Vector2(-facing.y, facing.x)
+	var at := face_at + perp * 4.6 - facing * 0.9
+	var top := lip.y + 0.3
+	var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(facing) + k.rng.randf_range(-0.12, 0.12)), Vector3(at.x, top - 0.35, at.y))
+	var shelf := m.begin()
+	m.block(shelf, xf, Vector3(4.6, 0.7, 3.4))
+	m.commit(shelf, k.surface("stone", 0.7), "Shelf", true)
+	k.collider(Vector3(4.6, 0.7, 3.4), xf)
+	k.marker(marker_name, Vector3(at.x, top + 0.02, at.y), false, true, 1.8)
+
+
+## A dark mouth in the rock at the foot of a fall, behind the falling water: two jambs, a lintel
+## and the dark behind them, and a marker (`name`) in it, on the ground.
+static func _cave_mouth(d: PoiDressing, face_at: Vector2, facing: Vector2, marker_name: String) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var perp := Vector2(-facing.y, facing.x)
+	var yaw := PoiKit.yaw_of(facing)
+	var at := face_at + facing * 0.6
+	var g := k.on_ground(at.x, at.y)
+	var rock := m.begin()
+	for side in [-1.0, 1.0]:
+		var j := at + perp * float(side) * 2.1
+		m.block(rock, Transform3D(Basis(Vector3.UP, yaw + float(side) * 0.2), k.on_ground(j.x, j.y, 1.4)), Vector3(1.3, 3.2, 1.6))
+	m.block(rock, Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, 0.06), g + Vector3(0.0, 3.1, 0.0)), Vector3(5.6, 1.0, 1.8))
+	m.commit(rock, k.surface("stone", 0.75), "Mouth", true)
+	var dark := m.begin()
+	var back := at - facing * 0.7
+	m.block(dark, Transform3D(Basis(Vector3.UP, yaw), k.on_ground(back.x, back.y, 1.3)), Vector3(3.2, 2.6, 0.3))
+	m.commit(dark, PoiKit.plain(Color(0.02, 0.02, 0.025), 0.95, 0.0), "MouthDark", true)
+	var inside := at + facing * 0.5
+	k.marker(marker_name, k.on_ground(inside.x, inside.y))
 
 
 ## Three falls one above the other up the slope, each with its pool, a stair up the side of
@@ -1513,6 +1567,9 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 				candles.append(PoiKit.transform_at(Vector3(c.x, ledge_y, c.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
 			k.scatter(k.prop("candle"), candles, false, false, false)
 			k.light(Vector3(stone_at.x, ledge_y + 0.6, stone_at.y), Color(1.0, 0.76, 0.5), 1.2, 6.0)
+		if tier == 2:
+			# the top ledge, over all three falls: where the scree-hags shriek at whoever climbs
+			k.marker("the_cliffs", Vector3(ledge_c.x, ledge_y + 0.02, ledge_c.y), false, true, 3.0)
 		pool_y = ledge_y
 	m.commit(ledges, k.surface("stone", 0.6), "Ledges", true)
 	var heather: Array = []
@@ -1555,6 +1612,7 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 		m.block(ledges, xf, Vector3(1.3, 0.28, 0.7))
 		k.collider(Vector3(1.3, 0.28, 0.7), xf)
 	m.commit(ledges, k.surface("oroth", 0.5), "Ledges", true)
+	_lip_shelf(d, face_at, facing, lip, "the_top")
 	var shards: Array = []
 	for i in 20:
 		var p := pool_at + k.jitter(9.0)
@@ -2217,6 +2275,8 @@ static func _tree_sallow_king(d: PoiDressing) -> void:
 	# the water inside the ring, where the sallowjaws nest under the roots
 	var g := k.on_ground(0.0, 0.0)
 	m.pool(Vector2(4.0, 2.0), 4.6, g.y - 0.15, k.still_water(g.y - 2.2, Color(0.8, 0.95, 0.85), 0.55))
+	# where they lie, in the water under the roots, until somebody walks into the ring
+	k.marker("the_pool", k.on_ground(4.0, 2.0))
 	var reeds: Array = []
 	for i in 60:
 		var a := k.rng.randf_range(0.0, TAU)
@@ -2878,6 +2938,18 @@ static func standing_stones(d: PoiDressing) -> void:
 		k.scatter(k.flora("reeds"), reeds, false, false, false)
 		k.place(k.prop("rowboat"), k.on_ground(along.x * 9.0 + grain.x * 5.0, along.y * 9.0 + grain.y * 5.0),
 				PoiKit.yaw_of(along) + 0.4, 1.0, true, Vector3(0.0, 0.0, 0.25))
+		# "none; crabs": nothing to fight, and the crabs on the old strand, going about sideways
+		# among the shingle at the stones' feet
+		if not k.far:
+			var crabs := Livestock.paths_of("crab", "sedgemire")
+			if not crabs.is_empty():
+				var shore := Livestock.new()
+				shore.name = "Crabs"
+				shore.seed_with(absi(("crabs:" + d.poi_id).hash()))
+				for i in 3:
+					var at := along * (float(i) - 1.0) * 8.0 + grain * k.rng.randf_range(-1.0, 1.0)
+					shore.keep("crab", crabs, k.on_ground(at.x, at.y), 3.2, 3 + k.rng.randi_range(0, 2))
+				d.add_child(shore)
 
 
 # --- the strange -----------------------------------------------------------------------------------------------

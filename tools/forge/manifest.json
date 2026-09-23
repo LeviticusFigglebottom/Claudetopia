@@ -2262,6 +2262,20 @@
    "palette": "core:region/hearthvale",
    "variant": "a",
    "seed": 9270
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crab",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 9323
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crab",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 9340
   }
  ]
 }

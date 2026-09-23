@@ -1,7 +1,8 @@
 class_name Livestock
 extends Node3D
 ## A settlement's beasts, where its people keep them: hens in the yards, geese on the green,
-## sheep in the paddock behind the houses, a pig in its sty.
+## sheep in the paddock behind the houses, a pig in its sty. And the few wild things a place's
+## sentence names: the crabs on the Tideflat's old strand.
 ##
 ## A village with nobody's hens scratching in it is a model of a village. Each kind is one
 ## MultiMesh; each beast keeps to its own patch of ground and wanders it the way its kind does --
@@ -10,12 +11,13 @@ extends Node3D
 ## and the beasts stand where they were.
 
 ## How each kind goes about: how fast it walks (m/s), how far from home it wanders, and how long
-## it stands between one walk and the next.
+## it stands between one walk and the next. A crab goes `sideways`.
 const HABITS := {
 	"hen": {"speed": 0.7, "pause": [0.8, 3.5], "step": [0.4, 1.4]},
 	"goose": {"speed": 0.45, "pause": [2.0, 7.0], "step": [0.8, 2.5]},
 	"sheep": {"speed": 0.3, "pause": [4.0, 14.0], "step": [0.5, 2.0]},
 	"pig": {"speed": 0.25, "pause": [3.0, 12.0], "step": [0.3, 0.9]},
+	"crab": {"speed": 0.4, "pause": [0.4, 4.0], "step": [0.2, 1.0], "sideways": true},
 }
 const AWAKE_M := 110.0
 const TICK_S := 0.1
@@ -113,7 +115,7 @@ func step(dt: float) -> void:
 			beast["wait"] = _rng.randf_range(float(p[0]), float(p[1]))
 		else:
 			beast["at"] = at + way / left * stride
-			beast["yaw"] = atan2(-way.z, way.x)
+			beast["yaw"] = atan2(-way.z, way.x) + (PI * 0.5 if bool(habit.get("sideways", false)) else 0.0)
 		_place(beast)
 
 
@@ -140,6 +142,6 @@ func _place(beast: Dictionary) -> void:
 			Transform3D(Basis(Vector3.UP, float(beast["yaw"])), at + Vector3(0.0, lift, 0.0)))
 
 
-## The forge's variants of a beast, if it built them.
-static func paths_of(kind: String) -> Array[String]:
-	return Settlement._prop_paths("hearthvale", kind)
+## The forge's variants of a beast, if it built them: the Vale's, or `region`'s.
+static func paths_of(kind: String, region := "hearthvale") -> Array[String]:
+	return Settlement._prop_paths(region, kind)

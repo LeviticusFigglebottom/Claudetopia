@@ -121,7 +121,18 @@ def says is there, as a child of its dressing in a near cell: groups of enemies 
 dressing put down (`at`) or on the pad's rim, by the hour (`when`: day, night, dawn, dusk,
 midnight), kept away while a condition holds (`unless`) or while a named person is present
 (`unless_present`: the Lantern Causeway's drowned and its lamplighter), or seated deaf and blind
-until a `PoiTouch` is touched (`rises_when`: the Cold Fire's cup). A boss once put down
+until a `PoiTouch` is touched (`rises_when`: the Cold Fire's cup). A group may also stand only
+while a condition holds (`if`: the fallen knight on the Headless Watch's stair while the watch has
+turned), sit minding its own business until it is struck, robbed at its feet or woken by who
+passes (`sits`, `wakes_for`: the Mossbridge Wardens wake for whoever carries the forest's goods
+past them), keep a toll (`toll`: the Long Stride's bravo asks five marks at his table and duels
+whoever walks on past it unpaid), or cost the player standing when they kill one (`killing_costs`:
+the Sallow King's sallowjaws, which the reedfolk feed). The markers the sentences' high groups
+stand on are built with the falls: a shelf on the lip (`above_the_falls`, `the_top`), the top
+ledge of the Three Sisters (`the_cliffs`), and the dark mouth behind Whitecut's water
+(`behind_the_falls`). A POI def's `ward` is ground a kind of foe will not cross (`pois/wards.gd`,
+`Wards`): the dead turn away at the Singing Yew. The Tideflat's crabs are `Livestock`, not an
+encounter. A boss once put down
 (`boss_deed/<id>`) is not stood up again, and a group killed stays dead until a Hearthstone rest.
 The Hart of Thorns keeps the Standing Moot this way, which a place's `dressing` kind lets the
 builders dress. The people the sentences and stories name are ordinary npc defs whose schedules

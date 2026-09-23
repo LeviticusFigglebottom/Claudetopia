@@ -3417,6 +3417,29 @@ def pig(pal, rng, params, variant):
     return finish(parts, rng, "convex", ["leather"])
 
 
+def crab(pal, rng, params, variant):
+    """A shore crab off the Sedgemire flats, a hand across: a flat shell, two claws held up in
+    front and four legs a side splayed into the mud. The first variant is the green of the
+    channel bottom and the second the rust of the tideline."""
+    shell = _hide(pal, "#4d5a36" if variant == "a" else "#8a4a2c", "shell")
+    under = _hide(pal, "#b9a77a" if variant == "a" else "#c98a5a", "under")
+    body = _ellipsoid("carapace", (0.075, 0.1, 0.032), (0.0, 0.0, 0.055), shell, 12, 6)
+    S.jitter_verts(body, amount=0.004, scale=0.6, seed=rng.randrange(999))
+    parts = [body, _ellipsoid("belly", (0.06, 0.085, 0.018), (0.0, 0.0, 0.035), under, 10, 5)]
+    for sy in (-1, 1):
+        # the claw: an arm forward and out, and the pincer on it
+        parts.append(S.tube_along("arm", [(0.05, sy * 0.05, 0.05), (0.1, sy * 0.08, 0.07), (0.13, sy * 0.07, 0.075)],
+                                  radius=0.011, segments=6, mat=shell))
+        parts.append(_ellipsoid("pincer", (0.04, 0.022, 0.02), (0.155, sy * 0.065, 0.075), shell, 8, 5))
+        parts.append(_ellipsoid("eye", (0.008, 0.008, 0.012), (0.07, sy * 0.025, 0.09), under, 6, 4))
+        for i, x in enumerate((0.03, 0.0, -0.03, -0.055)):
+            reach = 0.17 - 0.012 * i
+            parts.append(S.tube_along("leg", [(x, sy * 0.08, 0.05), (x - 0.01, sy * (reach - 0.03), 0.075),
+                                              (x - 0.025, sy * reach, 0.0)],
+                                      radius=0.007, segments=5, mat=shell))
+    return finish(parts, rng, "convex", ["leather"])
+
+
 KINDS = {
     # containers and vessels
     "barrel": barrel, "crate": crate, "bucket": bucket, "sack": sack, "basket": basket,
@@ -3455,7 +3478,7 @@ KINDS = {
     "bell_small": bell_small, "bell_medium": bell_medium, "gravestone": gravestone,
     "coffin": coffin, "sarcophagus": sarcophagus,
     # livestock
-    "hen": hen, "goose": goose, "sheep": sheep, "pig": pig,
+    "hen": hen, "goose": goose, "sheep": sheep, "pig": pig, "crab": crab,
 }
 
 

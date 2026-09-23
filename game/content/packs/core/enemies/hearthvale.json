@@ -76,6 +76,88 @@
     ]
   },
   {
+    "id": "core:enemy/larkbourne_bruiser",
+    "name": "Larkbourne Bruiser",
+    "archetype": "brute",
+    "rig": "humanoid",
+    "faction": "bandits",
+    "tint": "#5e4f38",
+    "scale": 1.15,
+    "height": 2.0,
+    "lore": "Ryn does the band's talking and this one does its hitting, which is the only arrangement in the chalk pit that has never been argued about. A mill labourer before the Toll fell, with a mill labourer's shoulders and a maul he says he found.",
+    "region": "core:region/hearthvale",
+    "stats": {
+      "hp": 150,
+      "stamina": 110,
+      "poise": 70,
+      "armour": 6,
+      "speed": 2.8
+    },
+    "perception": {
+      "sight_range": 22.0,
+      "sight_fov": 110.0,
+      "hearing": 16.0,
+      "alertness": 0.9
+    },
+    "behaviour": {
+      "engage_range": 2.9,
+      "circle": 0.1,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 34.0,
+      "hyper_armour": 18.0,
+      "strafe_speed": 0.4,
+      "aggression": 0.9
+    },
+    "attacks": [
+      {
+        "name": "maul_swing",
+        "clip": "Attack_2H_Light_1",
+        "weapon_class": "hammer",
+        "damage": 22.0,
+        "poise_damage": 30.0,
+        "range": 2.9,
+        "telegraph": 0.9,
+        "hit_window": 0.2,
+        "recovery": 0.85,
+        "cooldown": 2.8,
+        "gcd": 0.8,
+        "weight": 3.0,
+        "lunge": 1.6
+      },
+      {
+        "name": "maul_drop",
+        "clip": "Attack_2H_Heavy",
+        "weapon_class": "hammer",
+        "damage": 34.0,
+        "poise_damage": 48.0,
+        "heavy": true,
+        "hyper_armour": true,
+        "range": 3.0,
+        "telegraph": 1.35,
+        "hit_window": 0.22,
+        "recovery": 1.15,
+        "cooldown": 6.0,
+        "gcd": 1.1,
+        "weight": 1.0,
+        "lunge": 2.0,
+        "knockdown": true,
+        "knockback": 2.6
+      }
+    ],
+    "loot": "core:loot/bandit_pockets",
+    "marks": [
+      20,
+      45
+    ],
+    "tags": [
+      "bandit",
+      "humanoid",
+      "person",
+      "brute"
+    ]
+  },
+  {
     "id": "core:enemy/down_wolf",
     "name": "Down Wolf",
     "archetype": "pack",

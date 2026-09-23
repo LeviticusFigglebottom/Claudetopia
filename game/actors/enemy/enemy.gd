@@ -93,6 +93,8 @@ var _limbs: Array = []
 var _limbs_broken: int = 0
 var _damage_since_limb: float = 0.0
 var _roused_by_greed: bool = false
+## This foe's tags, for the ground a ward keeps it off (Wards): the Singing Yew's, to a wight.
+var _ward_tags: Array = []
 var _watched_target: Node = null
 var _channel_left: float = 0.0
 var _channel_next_pulse: float = 0.0
@@ -111,6 +113,9 @@ func _ready() -> void:
 	if not enemy_id.is_empty():
 		_read_def(ContentDB.get_or_empty(enemy_id))
 	super()
+	# the rig on its own is the forge's mannequin: a foe wears what its def and its tags say
+	if body_kind == "humanoid" and anim != null and anim.model != null:
+		EnemyDress.dress(anim.model, def)
 	brain = get_node_or_null("Brain") as Brain
 	if brain == null:
 		brain = Brain.new()
@@ -181,6 +186,7 @@ func _read_def(d: Dictionary) -> void:
 	capsule_height = float(def.get("height", 1.8 if body_kind == "humanoid" else 1.0))
 	if def.has("faction"):
 		faction = str(def["faction"])
+	_ward_tags = def.get("tags", [])
 
 
 func content_id() -> String:
@@ -280,6 +286,7 @@ func _context() -> Dictionary:
 		"distance_to_post": global_position.distance_to(brain.post),
 		"distance_to_target": d_target,
 		"inactive": inactive,
+		"warded": target != null and not _ward_tags.is_empty() and not Wards.keeping(_ward_tags, target.global_position).is_empty(),
 		"time_unseen": perception.time_since_seen,
 	}
 
@@ -1168,6 +1175,9 @@ func _move_towards(point: Vector3, move_speed: float, delta: float) -> float:
 func _step(dir: Vector3, move_speed: float, delta: float) -> void:
 	var s := move_speed * speed_multiplier()
 	var target_v := dir * s
+	# ground a ward keeps this foe off it does not step onto, whatever it is doing
+	if not _ward_tags.is_empty() and Wards.bars(_ward_tags, global_position, global_position + dir * maxf(s * 0.3, 0.5)):
+		target_v = Vector3.ZERO
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z).move_toward(target_v, ACCEL * delta * maxf(s, 1.0))
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z

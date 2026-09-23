@@ -67,3 +67,20 @@ func test_a_village_keeps_hens_geese_and_sheep_and_a_ruin_keeps_none() -> void:
 	_tree().root.add_child(ruin)
 	assert_true(ruin.get_node_or_null("Livestock") == null, "beasts kept in a ruin nobody lives in")
 	ruin.queue_free()
+
+
+func test_a_crab_goes_about_sideways() -> void:
+	var crabs := Livestock.paths_of("crab", "sedgemire")
+	assert_eq(crabs.size(), 2, "the forge built the shore crab, green and rust")
+	var stock := Livestock.new()
+	stock.seed_with(11)
+	stock.keep("crab", crabs, Vector3.ZERO, 3.0, 1)
+	_tree().root.add_child(stock)
+	var crab: Dictionary = stock.beasts[0]
+	crab["wait"] = 0.0
+	crab["at"] = Vector3.ZERO
+	crab["target"] = Vector3(2.0, 0.0, 0.0)
+	stock.step(0.1)
+	# walking along +x, a beast that faced its way would be at yaw 0; a crab is turned a right angle
+	assert_true(absf(absf(wrapf(float(crab["yaw"]), -PI, PI)) - PI * 0.5) < 0.01, "a crab walks sideways (yaw %.2f)" % float(crab["yaw"]))
+	stock.free()

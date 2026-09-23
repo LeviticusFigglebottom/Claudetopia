@@ -262,6 +262,7 @@ PROPS_LIVESTOCK = [
     ("goose", "hearthvale", 1, None),
     ("sheep", "hearthvale", 2, None),
     ("pig", "hearthvale", 1, None),
+    ("crab", "sedgemire", 2, None),
 ]
 
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
