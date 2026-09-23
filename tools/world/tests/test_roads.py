@@ -305,7 +305,10 @@ class BuiltWorldTest(unittest.TestCase):
             centre = self._surface(q[:, 0], q[:, 1])
             left = self._surface(q[:, 0] - nx * off, q[:, 1] - nz * off)
             right = self._surface(q[:, 0] + nx * off, q[:, 1] + nz * off)
-            # the land the road was laid on, where the builder recorded it
+            above = centre - np.maximum(left, right)          # an embankment standing proud
+            below = np.minimum(left, right) - centre          # a cutting sunk into the land
+            # the land the road was laid on, where the builder recorded it: a spur or a gully
+            # the road runs along is the land's relief, not the road's
             p = self.profiles.get(r["id"])
             if p is not None and len(p["ground_m"]) == len(r["points"]):
                 pts = np.asarray(r["points"], dtype=np.float64)
@@ -313,12 +316,13 @@ class BuiltWorldTest(unittest.TestCase):
                 s_pts = np.concatenate([[0.0], np.cumsum(seg)])
                 s_q = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(q, axis=0), axis=1))])
                 ground = np.interp(s_q, s_pts, np.asarray(p["ground_m"], dtype=np.float64))
+                spur = np.maximum(ground - np.maximum(left, right), 0.0)
+                gully = np.maximum(np.minimum(left, right) - ground, 0.0)
             else:
-                ground = centre
-            above = centre - np.maximum(left, right)          # an embankment standing proud
-            below = np.minimum(left, right) - centre          # a cutting sunk into the land
-            spur = np.maximum(ground - np.maximum(left, right), 0.0)
-            gully = np.maximum(np.minimum(left, right) - ground, 0.0)
+                # No record (a world built before there was one). The carved road is not the
+                # land it was laid on -- taking it for that would excuse every arete -- so
+                # nothing is discounted.
+                spur = gully = np.zeros_like(centre)
             excess_up = above - spur
             excess_down = below - gully
             k = int(np.argmax(np.maximum(excess_up, excess_down)))
