@@ -228,7 +228,7 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
             # arm is cut off just before the wrist: the two meshes are one surface either side of
             # the cut. Ended short and thin instead, the forearm's end stood out over the palm like
             # a glove's cuff, and ended shorter still, the two surfaces crossed in a ragged line.
-            arm = _cut(arm, wr + d * HAND_CUT * s, d)
+            arm = _cut(arm, wr + d * HAND_CUT * s, d, k=0.002 * s)
         sc.union(arm, k=0.026 * s)
 
     # -- legs ---------------------------------------------------------------------------------
@@ -409,21 +409,22 @@ def body_mesh(skel: Skeleton, style: Optional[BodyStyle] = None, spacing: float 
 HAND_CUT = -0.008
 
 
-def _cut(prim: sdf.Prim, point: np.ndarray, normal: np.ndarray) -> sdf.Prim:
-    """`prim` on the side of the plane through `point` that `normal` points away from, cut hard."""
+def _cut(prim: sdf.Prim, point: np.ndarray, normal: np.ndarray, k: float = 0.0) -> sdf.Prim:
+    """`prim` on the side of the plane through `point` that `normal` points away from, the edge
+    rounded over `k`."""
     n = np.asarray(normal, float)
 
     def fn(P):
-        return np.maximum(prim.fn(P), (P - point) @ n)
+        return sdf.smax(prim.fn(P), (P - point) @ n, k)
     return sdf.Prim(fn, prim.lo, prim.hi, prim.op, prim.k)
 
 
 def hands_scene(skel: Skeleton, style: Optional[BodyStyle] = None) -> Scene:
     """Both hands on their own, for meshing finer than the body: at the body's 8 mm the gap between
     two fingers is not there to be found, and the fingers came out as one mass whatever the field
-    said. Each is the body's own arm from 3 cm above the cut (`HAND_CUT`) outwards, sunk 0.8 mm
-    under the body's surface until just before the cut and exactly on it after, so the body's
-    forearm covers it until the cut and the hand carries on from there as the same surface."""
+    said. Each is the body's own arm from 3 cm above the cut (`HAND_CUT`) outwards, sunk 4 mm
+    under the body's surface until 5 mm before the cut and exactly on it from there, so the body's
+    forearm covers it up the arm and it covers the body's end, which is rounded off inside it."""
     st = style or BodyStyle()
     s = skel.props.height / rig.DEFAULT_HEIGHT
     arms = body_scene(skel, st, ground_cut=False)
@@ -439,7 +440,11 @@ def hands_scene(skel: Skeleton, style: Optional[BodyStyle] = None) -> Scene:
 
         def fn(P, group=group, d=d, cut=cut, start=start):
             t = (P - cut) @ d
-            sunk = 0.0008 * s * np.clip(-t / (0.002 * s), 0.0, 1.0)
+            # Well under the body's surface (4 mm, more than decimation moves either mesh) up the
+            # forearm, and on it for the last 5 mm before the cut, where the body's end rounds off
+            # inside it: the hand covers the join. Sunk 0.8 mm to the cut, the two surfaces crossed
+            # in a ragged line; sunk 4 mm to the cut, the rounded end left a groove round the wrist.
+            sunk = 0.004 * s * np.clip((-t - 0.005 * s) / (0.003 * s), 0.0, 1.0)
             return np.maximum(group.fn(P) + sunk, -((P - start) @ d))
         lo = np.minimum(start, tip) - 0.09 * s
         hi = np.maximum(start, tip) + 0.09 * s
