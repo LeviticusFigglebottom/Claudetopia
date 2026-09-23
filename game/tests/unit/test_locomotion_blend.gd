@@ -39,13 +39,14 @@ func _model() -> HumanoidModel:
 	return m
 
 
+## One tick: the model is told the velocity and steps its own tree (`_process` advances it by
+## hand, on the combat clock), and the root is carried along the ground by the same amount.
 func _step(m: HumanoidModel, v: Vector2, sneaking: bool, travelled: Vector2) -> Vector2:
 	m.set_locomotion(v, sneaking)
 	m._process(DT)
 	var next := travelled + v * DT
 	# the model faces +Z, so its right is -X
 	_root.position = Vector3(-next.x, 0.0, next.y)
-	m.anim_tree.advance(DT)
 	return next
 
 
