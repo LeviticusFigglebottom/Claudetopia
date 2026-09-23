@@ -105,6 +105,8 @@ var _part_meshes: Dictionary = {}        ## slot -> Array[MeshInstance3D]
 ## Readable because the part node cannot answer it: every variant's mesh is called `Body`
 ## inside its own glTF, so they all arrive here named `body_Body`.
 var body_variant_worn := ""
+## Turns the arms out from a padded or heavy body (see ArmRoom), set with each appearance.
+var arm_room: ArmRoom = null
 var _sockets: Dictionary = {}            ## socket bone name -> BoneAttachment3D
 var _one_shot := ""
 var _one_shot_time := 0.0
@@ -194,6 +196,9 @@ func build() -> void:
 	_apply_loop_flags()
 	_build_sockets()
 	_build_animation_tree()
+	arm_room = ArmRoom.new()
+	arm_room.name = "ArmRoom"
+	skeleton.add_child(arm_room)
 
 
 ## The rig GLB's meshes are named to avoid clashing with bone names (see the forge's
@@ -399,6 +404,8 @@ func apply_appearance(d: Variant) -> void:
 		_colour_signature = colours
 	_apply_fits()
 	_apply_proportions()
+	if arm_room != null:
+		arm_room.degrees = arm_room_for(appearance.part("torso"), body_variant_worn)
 	appearance_changed.emit()
 
 
@@ -866,6 +873,19 @@ const VARIANT_GIRTH := {"": 1.0, "slight": 0.90, "heavy": 1.12}
 
 static func girth_for(build: float) -> float:
 	return lerpf(0.88, 1.14, clampf(build, 0.0, 1.0))
+
+
+## How far the arms are turned out from the clips' own pose, by what the body wears: the Idle
+## hangs the wrists 5 cm outside the default body's hip, which a tunic or a shirt leaves room
+## for and padding does not. Degrees at the shoulder, about half a metre above the hand, so each
+## degree is nearly a centimetre there: the gambeson's 3 cm on the body and 3 cm on the sleeve
+## want 7, the harness's coat, plate and tassets 8, and the heavy body's hips 3 more.
+const ARM_ROOM := {"gambeson": 7.0, "plate_torso": 8.0, "brigandine": 7.0, "coat": 3.0}
+const ARM_ROOM_HEAVY := 3.0
+
+
+static func arm_room_for(torso: String, variant: String) -> float:
+	return float(ARM_ROOM.get(torso, 0.0)) + (ARM_ROOM_HEAVY if variant == "heavy" else 0.0)
 
 
 func _apply_proportions() -> void:

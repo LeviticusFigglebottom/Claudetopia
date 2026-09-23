@@ -557,3 +557,38 @@ func test_a_woven_part_is_not_tinted() -> void:
 				shirt += 1
 	assert_gt(plaid, 0, "no plaid mesh on the body")
 	assert_gt(shirt, 0, "no shirt mesh on the body")
+
+
+## A gambeson puts 3 cm of padding on the body and 3 cm on the sleeve, and the Idle hangs the
+## wrists 5 cm outside the bare hip: the hands of everyone in one hung inside its skirt. ArmRoom
+## turns the arms out for what is worn, and only for that.
+func test_padding_holds_the_arms_out() -> void:
+	if not _rig_built():
+		return
+	assert_eq(HumanoidModel.arm_room_for("tunic", ""), 0.0, "a tunic leaves the arms where the clip has them")
+	assert_gt(HumanoidModel.arm_room_for("gambeson", ""), 5.0, "a gambeson does not make room for the arms")
+	assert_gt(HumanoidModel.arm_room_for("gambeson", "heavy"), HumanoidModel.arm_room_for("gambeson", ""),
+			"a heavy body in a gambeson has no more room than a slight one")
+	var bare := await _left_wrist_out(["torso", "shirt"])
+	var padded := await _left_wrist_out(["torso", "gambeson"])
+	assert_true(bare > 0.0 and padded > 0.0, "the arms were never posed (%.3f, %.3f)" % [bare, padded])
+	# the wrist moves out by about 8 mm a degree of the 7
+	assert_gt(padded - bare, 0.04, "in a gambeson the wrist hangs %.3f m out, bare %.3f m" % [padded, bare])
+	assert_gt(0.09, padded - bare, "the arms were thrown out %.3f m" % (padded - bare))
+
+
+## How far out from the spine the left wrist hangs in the Idle, as the modifiers leave it.
+func _left_wrist_out(part: Array) -> float:
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.set_part(str(part[0]), str(part[1]))
+	m.apply_appearance(a.to_dict())
+	var sk := m.skeleton
+	var seen := {}
+	m.arm_room.modification_processed.connect(func() -> void:
+		var hips := sk.get_bone_global_pose(sk.find_bone("Hips")).origin
+		seen["x"] = absf(sk.get_bone_global_pose(sk.find_bone("Hand.L")).origin.x - hips.x))
+	for i in 4:
+		await Engine.get_main_loop().process_frame
+	return float(seen.get("x", -1.0))
