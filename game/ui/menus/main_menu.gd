@@ -94,14 +94,14 @@ func _build() -> void:
 
 	var mark := TextureRect.new()
 	mark.texture = ThemeBuilder.texture("mark_bell")
-	mark.custom_minimum_size = Vector2(0, 124 if playable else 64)
+	mark.custom_minimum_size = Vector2(0, 124 if playable else 44)
 	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(mark)
 
 	var title := UiKit.label("WICKMERE", "DisplayTitle", HORIZONTAL_ALIGNMENT_CENTER)
-	title.add_theme_font_size_override("font_size", 68)
+	title.add_theme_font_size_override("font_size", 68 if playable else 52)
 	root.add_child(title)
 
 	var rule := UiKit.divider()
@@ -122,7 +122,7 @@ func _build() -> void:
 		# and nothing below it leads into the world.
 		root.add_child(UiKit.spacer(8, true))
 		var holder := CenterContainer.new()
-		notice = WorldNotice.panel(world_status)
+		notice = WorldNotice.panel(world_status, 680.0)
 		holder.add_child(notice)
 		root.add_child(holder)
 		root.add_child(UiKit.spacer(14, true))
@@ -145,18 +145,20 @@ func _build() -> void:
 		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.disabled = not bool(e[2])
 		b.pressed.connect(e[1] as Callable)
-		b.custom_minimum_size = Vector2(0, 46)
+		b.custom_minimum_size = Vector2(0, 46 if playable else 38)
 		root.add_child(b)
 		_buttons.append(b)
 		UiKit.ink_in(b, 0.9 + i * 0.09, 0.55, 6.0)
 		i += 1
 	UiKit.focus_chain(_buttons)
 
-	root.add_child(UiKit.spacer(10, true))
-	var note := UiKit.label(_slot_line(latest) if not latest.is_empty() else "No saved names yet.",
-			"Small", HORIZONTAL_ALIGNMENT_CENTER)
-	root.add_child(note)
-	UiKit.ink_in(note, 1.5, 0.6)
+	if playable:
+		# with no world there is nothing to continue into, and the notice needs the room
+		root.add_child(UiKit.spacer(10, true))
+		var note := UiKit.label(_slot_line(latest) if not latest.is_empty() else "No saved names yet.",
+				"Small", HORIZONTAL_ALIGNMENT_CENTER)
+		root.add_child(note)
+		UiKit.ink_in(note, 1.5, 0.6)
 	if str(world_status.get("state", "")) == "fallback":
 		# the country is there, drawn coarse: one small line, not a warning sign
 		ground_line = UiKit.label(str(world_status.get("title", "")) + " The ground will be drawn from the coarse map.",
