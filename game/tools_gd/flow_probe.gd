@@ -339,7 +339,7 @@ func _make_look(naming: Node, look: Dictionary) -> void:
 ## The preview body wears exactly what was chosen, and every part it was asked for is on it.
 func _check_look(naming: Node, look: Dictionary, label: String) -> void:
 	var model: Node = naming.get("_model")
-	if not _check(model != null, "%s: the Naming has a preview body" % label):
+	if not _check(_draws_a_body(model), "%s: the Naming has a preview body, and it draws (%s)" % [label, _body_state(model)]):
 		return
 	var worn: CharacterAppearance = model.get("appearance")
 	_check(worn.skin == str(look["skin"]) and worn.hair_colour == str(look["hair_colour"])
@@ -556,6 +556,40 @@ func _popup_opens(chooser: OptionButton, max_frames := 60) -> bool:
 
 func _look(naming: Node) -> CharacterAppearance:
 	return naming.get("appearance") as CharacterAppearance
+
+
+## The preview body is only there if its script loaded and it has something on screen. A node
+## was all this asked for, and with HumanoidModel's script failing to parse (a class it names not
+## yet registered) the Naming held a bare Node3D: the stage was empty in every frame of the tour,
+## and the tour said "the Naming has a preview body".
+##
+## Asked by method, not by class: naming the class here would tie this script to that one, and a
+## body script that fails to parse would take the probe down with it instead of failing a check.
+func _draws_a_body(model: Node) -> bool:
+	return _body_script_loaded(model) and model.get("appearance") != null and _drawn_meshes(model) > 0
+
+
+func _body_script_loaded(model: Node) -> bool:
+	return model != null and model.has_method("apply_appearance")
+
+
+func _drawn_meshes(model: Node) -> int:
+	var n := 0
+	if model == null:
+		return 0
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.is_visible_in_tree() and m.mesh != null and m.mesh.get_surface_count() > 0:
+			n += 1
+	return n
+
+
+func _body_state(model: Node) -> String:
+	if model == null:
+		return "no body"
+	if not _body_script_loaded(model):
+		return "its script did not load: a bare %s" % model.get_class()
+	return "%d meshes drawn" % _drawn_meshes(model)
 
 
 func _model_look(naming: Node) -> CharacterAppearance:
