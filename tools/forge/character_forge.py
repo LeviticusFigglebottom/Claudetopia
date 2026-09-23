@@ -580,7 +580,11 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         bodylib.rigid_weights(ob, g.bone, arm)
     elif g.weight_fn is not None:
         v, _, _ = bodylib.mesh_arrays(ob)
-        bodylib.custom_weights(ob, g.weight_fn(v), arm)
+        Wc = bodylib.limit_influences(np.asarray(g.weight_fn(v), float))
+        bodylib.custom_weights(ob, Wc, arm)
+        if getattr(g, "rebind", False):
+            # modelled round the Idle's hanging arms: put it where the Idle brings it back
+            bodylib.set_verts(ob, clothlib.rebind_from_idle(skel, v, Wc))
     else:
         bodylib.transfer_weights(ob, bW[0], bW[1], arm)
         if getattr(g, "weight_adjust", None) is not None:
