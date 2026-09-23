@@ -53,6 +53,18 @@ var _parsed: Dictionary = {}          # Vector2i -> Dictionary (data ready to bu
 var _tasks: Dictionary = {}           # Vector2i -> task id
 var _current_cell := Vector2i(-9999, -9999)
 var _current_region := ""
+## How often the region under the target is looked at, and how far inside a new region the target
+## has to be before it counts as there. The region used to be read only when the target crossed
+## into a new streaming cell, with no margin: a walk along a cell edge that lay on a border
+## flipped the region -- the light's six-second blend, the music, the name on the screen -- at
+## every step over the edge, and a region entered mid-cell was not noticed until the next cell.
+const REGION_CHECK_SECONDS := 0.5
+const REGION_MARGIN_M := 24.0
+## A target that moved further than this between two looks was put somewhere -- a load, fast
+## travel, a capture's camera -- rather than walked there, and takes the region it landed in.
+const REGION_JUMP_M := 60.0
+var _region_timer := 0.0
+var _region_checked_at := Vector3.INF
 var _missing_assets: Dictionary = {}  # asset path -> true (one warning each)
 var _mesh_cache: Dictionary = {}      # asset path -> Mesh or null
 var _scene_cache: Dictionary = {}
@@ -86,13 +98,17 @@ func cell_centre(cell: Vector2i) -> Vector2:
 	return Vector2(_origin.x + (float(cell.x) + 0.5) * cell_size, _origin.y + (float(cell.y) + 0.5) * cell_size)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not enabled or target == null or provider == null:
 		return
 	var cell := cell_of(target.global_position)
+	_region_timer -= delta
 	if cell != _current_cell:
 		_current_cell = cell
 		refresh()
+		_region_timer = 0.0
+	if _region_timer <= 0.0:
+		_region_timer = REGION_CHECK_SECONDS
 		_check_region()
 	_drain_parsed()
 
@@ -557,11 +573,40 @@ func _check_region() -> void:
 	if provider == null or target == null:
 		return
 	var pos := target.global_position
-	var id := provider.nearest_region_id_at(pos.x, pos.z)
+	var jumped := _region_checked_at == Vector3.INF or pos.distance_to(_region_checked_at) > REGION_JUMP_M
+	_region_checked_at = pos
+	var id := provider.region_id_at(pos.x, pos.z)
+	if id.is_empty():
+		# Over open water a walk (or a swim) stays in the region it came from. The nearest shore
+		# is a search that can land either side of a strait: off the Hushline Stair, where a new
+		# game begins on a patch of Cinderlea in open water, it finds Sedgemire's and
+		# Brightwater's coasts from spots a hundred metres out. A target put down on the water
+		# takes the nearest shore's.
+		if not jumped and not _current_region.is_empty():
+			return
+		id = provider.nearest_region_id_at(pos.x, pos.z)
 	if id.is_empty() or id == _current_region:
+		return
+	if not jumped and not region_entered_at(pos, id):
 		return
 	_current_region = id
 	GameState.enter_region(id)
+
+
+## Whether a walk to `pos` has taken the target far enough inside region `id` to count as having
+## entered it: the first region of all is taken at once, and any other only once no land of
+## another region lies within REGION_MARGIN_M, so a border has a band either side of it where
+## nothing changes. (A target put down somewhere takes its region at once: REGION_JUMP_M.)
+func region_entered_at(pos: Vector3, id: String) -> bool:
+	if _current_region.is_empty():
+		return true
+	for k in 4:
+		var a := TAU * float(k) / 4.0
+		var there := provider.region_id_at(pos.x + cos(a) * REGION_MARGIN_M, pos.z + sin(a) * REGION_MARGIN_M)
+		# open water beside you is nobody's; land of another region is not yet behind you
+		if not there.is_empty() and there != id:
+			return false
+	return true
 
 
 func unload_all() -> void:

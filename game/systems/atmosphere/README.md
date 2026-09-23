@@ -57,7 +57,12 @@ shadow's colour, not a brightness.
 (`Atmosphere.grade_lut`, rebuilt at most every 0.4 s while a look blends). ACES, with the
 region's `exposure` and `tonemap_white`; at night the exposure rises to `night_exposure`, the way
 the eye opens, so a moonlit country reads blue rather than black and the lamps bloom. Over the
-frame, under the HUD: a vignette in the region's own dark, and grain where `grain` asks for it.
+frame, under the HUD: a faint vignette in the region's own dark, and grain where `grain` asks
+for it and the player has turned it on. The blacks take a fifth of `shadow_lift` (`GRADE_LIFT`),
+not the 0.45 they first took, which greyed every shadow. The table is made once and rewritten in
+place as a blend moves; it is never replaced: the first cut handed the Environment a new texture
+for every refresh of a blend, fifteen in six seconds, swapping a resource the renderer was
+drawing with.
 
 **The sky** (`assets/shaders/painted_sky.gdshader`): a gradient that burns round a low sun and
 goes rose on the far side over the earth's blue shadow; a sun disc a degree and a half across
@@ -167,10 +172,22 @@ contrast, cool, desaturated, wind-streaked cirrus, alpenglow at dawn (`sun_color
 and snow under a bright blue moon.
 
 **Cinderlea — Ember Ash.** A sun that never climbs (nine degrees at half past four) and burns
-faded gold through the ash haze, which glows round it (`fog_sun_scatter` 0.55, the highest). The
-ground is char and ash, so the fill is lifted and grey-violet (ambient 1.35) to keep the black
-soil reading as soil rather than as nothing. Even so the char in shade came out black, so the
-grade lifts the blacks furthest of the six, grey-violet (`#474a62`), and eases the contrast
-under one: ash should read as ash. Desaturated (0.55), flat ash bands in the sky, the highlights
-faded gold, film grain, and the heaviest vignette. The only region whose screenshot should look
-old.
+gold through the ash, with a haze that glows round it (`fog_sun_scatter` 0.3). The ground is
+char and ash, the fill grey-violet, the shadows leaning violet, the highlights gold, the sky a
+clean pale ash-blue over a warm horizon, and the colour held back (0.82, the least of the six)
+rather than taken away. This is where a new game opens, at the Hushline Stair, and the first cut
+made it the greyest frame in the game: saturation 0.55, the blacks lifted to an eighth grey, the
+fill at 1.35 flattening every form, a far fog at 0.0008 that was a third of the way to beige at
+five hundred metres, film grain and the heaviest vignette -- the player's first sight of the
+country read as washed out and filtered, on Forward+ and on Compatibility alike. The distance
+still goes to ash (0.00035, aerial perspective 0.4); the foreground is clear. Its weather was
+grey seven times in ten -- ashfall and still grey, which took a further three tenths and a fifth
+of what colour was left and thickened the fog by 1.7 and 1.4 -- so the dry wind and the thin sun
+are the likelier now (35 and 30 in a hundred), and the two grey weathers, which no other region
+has, take less (0.85 and 0.9 of the colour, fog 1.4 and 1.25).
+
+**The frame overlays** are the player's: the vignette is faint (0.08 to 0.12) and
+`video/vignette` turns it off; film grain (`grain`, Cinderlea's only) is drawn only when
+`video/film_grain` is on, and it is off by default. Glow is for what is brighter than white: by
+day nothing else is fed into it (`glow_bloom` is 0 until night), where the whole frame used to
+be, which laid a soft light over everything on Forward+.

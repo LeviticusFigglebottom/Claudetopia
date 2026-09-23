@@ -13,8 +13,10 @@ const WEATHER_BLEND_GAME_MINUTES := 3.0
 const GRADE_LUT_SIZE := 17
 const GRADE_REFRESH_SECONDS := 0.4
 ## How much of a region's `shadow_lift` colour reaches the blacks. The colour is written as the
-## hue the shadows lean toward; at full strength a lift of #1a1430 would grey every shadow.
-const GRADE_LIFT := 0.45
+## hue the shadows lean toward; at full strength a lift of #1a1430 would grey every shadow. It was
+## 0.45, which raised Cinderlea's blacks to an eighth grey and every region's to a matte: with the
+## fog, the bloom and the vignette over it, the first frame of the game read as washed out.
+const GRADE_LIFT := 0.2
 ## The canvas layer the vignette and grain sit on: over the world, under the HUD (UI.LAYER_HUD).
 const OVERLAY_LAYER := 1
 
@@ -62,6 +64,15 @@ var _forward_plus := false
 var interior := false
 var _grade_age := 999.0
 var _grade_dirty := true
+## The grade's table: made once and rewritten in place, never replaced. The first cut handed the
+## Environment a new texture for every refresh of a blend -- fifteen in a six-second blend --
+## swapping a resource the renderer was drawing with.
+var _grade_tex: ImageTexture3D = null
+## What the precipitation was last set up as. Its mesh, material and particle count are resources
+## and a reallocation: set every frame, as they were, a weather blend rebuilt the quad and
+## restarted the particles sixty times a second.
+var _precip_kind := ""
+var _precip_amount := -1
 ## The last frame's state, for tests, the debug console and anything that wants to know how dark
 ## it is without asking the renderer: night (0 day .. 1 night), dusk, sun elevation in degrees.
 var state: Dictionary = {}
@@ -71,7 +82,9 @@ static var night_factor := 0.0
 ## What the grade LUT costs to rebuild: count, total and worst in microseconds. It is rebuilt on
 ## the main thread, at most every GRADE_REFRESH_SECONDS while one region's look blends into the
 ## next, so its worst case is a hitch at a region border. The capture runner writes it out.
-static var lut_stats := {"builds": 0, "us_total": 0, "us_max": 0}
+## `textures` is how many table textures were ever made and `assigned` how many times one was
+## handed to the Environment: one each, however many blends there are.
+static var lut_stats := {"builds": 0, "us_total": 0, "us_max": 0, "textures": 0, "assigned": 0}
 
 ## `sun_elevation_scale` flattens the day's arc, and it is the difference between a country
 ## with shadows in it and one without. `WorldClock.sun_elevation_deg()` is a bare
@@ -603,25 +616,41 @@ func _apply(_delta: float) -> void:
 	env.adjustment_contrast = float(lk["contrast"])
 	# the player's own brightness setting multiplies the region's; glow can be turned off
 	env.adjustment_brightness = float(lk["brightness"]) * float(Settings.get_value("video", "brightness", 1.0))
-	env.glow_enabled = bool(Settings.get_value("video", "glow", true))
-	env.glow_intensity = 0.35 + float(lk["bloom"])
-	env.glow_bloom = 0.02 + 0.08 * float(lk["bloom"])
+	var glow_on := bool(Settings.get_value("video", "glow", true))
+	if env.glow_enabled != glow_on:
+		env.glow_enabled = glow_on
+	# Glow is for what is brighter than white: the sun, a lamp at night. `glow_bloom` feeds the
+	# whole frame into it, which on Forward+ laid a soft light over everything by day.
+	env.glow_intensity = 0.3 + 0.4 * float(lk["bloom"])
+	env.glow_bloom = 0.03 * night
 	env.glow_hdr_threshold = lerpf(1.1, 0.8, night)
 	if _grade_dirty and (_look_t >= 1.0 or _grade_age >= GRADE_REFRESH_SECONDS):
 		_grade_dirty = false
 		_grade_age = 0.0
 		if bool(Settings.get_value("video", "color_grade", true)):
 			var t0 := Time.get_ticks_usec()
-			env.adjustment_color_correction = grade_lut(lk)
+			var slices := grade_slices(lk)
+			if _grade_tex == null:
+				_grade_tex = ImageTexture3D.new()
+				_grade_tex.create(Image.FORMAT_RGBA8, GRADE_LUT_SIZE, GRADE_LUT_SIZE, GRADE_LUT_SIZE, false, slices)
+				lut_stats["textures"] += 1
+			else:
+				_grade_tex.update(slices)
+			if env.adjustment_color_correction != _grade_tex:
+				env.adjustment_color_correction = _grade_tex
+				lut_stats["assigned"] += 1
 			var us := Time.get_ticks_usec() - t0
 			lut_stats["builds"] += 1
 			lut_stats["us_total"] += us
 			lut_stats["us_max"] = maxi(int(lut_stats["us_max"]), us)
-		else:
+		elif env.adjustment_color_correction != null:
 			env.adjustment_color_correction = null
-	_vignette_mat.set_shader_parameter("amount", float(lk["vignette"]))
+	# The frame overlays are the player's to have: a region's vignette is shown (and kept faint)
+	# unless `video/vignette` is off, and its film grain only if `video/film_grain` is on.
+	var vignette := float(lk["vignette"]) if bool(Settings.get_value("video", "vignette", true)) else 0.0
+	_vignette_mat.set_shader_parameter("amount", vignette)
 	_vignette_mat.set_shader_parameter("tint", lk["vignette_tint"])
-	var grain := float(lk["grain"])
+	var grain := float(lk["grain"]) if bool(Settings.get_value("video", "film_grain", false)) else 0.0
 	_grain_rect.visible = grain > 0.001
 	_grain_mat.set_shader_parameter("amount", grain)
 
@@ -646,7 +675,13 @@ func _apply(_delta: float) -> void:
 		var cam := get_viewport().get_camera_3d()
 		if cam:
 			precipitation.global_position = cam.global_position + Vector3(0, 10, 0) + (-cam.global_transform.basis.z) * 4.0
-		precipitation.amount = int(200 + 1400 * intensity)
+		# in steps of a hundred, so a blend in intensity does not restart the particles every frame
+		var amount := int(round((200.0 + 1400.0 * intensity) / 100.0)) * 100
+		if amount != _precip_amount:
+			_precip_amount = amount
+			precipitation.amount = amount
+	if precipitation.emitting and kind != _precip_kind:
+		_precip_kind = kind
 		var mat := precipitation.material_override as StandardMaterial3D
 		match kind:
 			"rain":
@@ -667,6 +702,7 @@ func _apply(_delta: float) -> void:
 				precipitation.lifetime = 9.0
 				(precipitation.mesh as QuadMesh).size = Vector2(0.07, 0.05)
 				mat.albedo_color = Color(0.55, 0.53, 0.5, 0.85)
+	if precipitation.emitting:
 		precipitation.direction = Vector3(float(w["wind"]) * 0.6, -1.0, 0.2 * float(w["wind"])).normalized()
 
 	# --- global shader parameters: foliage, water, windows and lamps read these -----------

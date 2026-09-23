@@ -23,7 +23,8 @@ func test_day_sample_shape() -> void:
 func test_look_from_region() -> void:
 	var def := ContentDB.get_def("core:region/cinderlea")
 	var look := Atmosphere._look_from_region(def)
-	assert_near(float(look["saturation"]), 0.55, 0.001)
+	# the recipe's own value, whatever it is tuned to
+	assert_near(float(look["saturation"]), float(def["identity"]["light"]["saturation"]), 0.001)
 	assert_near(float(look["sun_elevation_scale"]), 0.5, 0.001)
 	assert_true(look["fog_color"] is Color)
 	var hv := Atmosphere._look_from_region(ContentDB.get_def("core:region/hearthvale"))
@@ -202,7 +203,8 @@ func test_settle_finishes_a_blend_at_once() -> void:
 	atmos.set_region("core:region/hearthvale", true)
 	atmos.set_region("core:region/cinderlea", false)
 	atmos.settle()
-	assert_near(float(atmos.look()["saturation"]), 0.55, 0.001, "a settled look is the region's own, not half of the last")
+	var own := float(ContentDB.get_def("core:region/cinderlea")["identity"]["light"]["saturation"])
+	assert_near(float(atmos.look()["saturation"]), own, 0.001, "a settled look is the region's own, not half of the last")
 	_drop(live[0])
 
 
@@ -236,4 +238,77 @@ func test_the_forward_plus_extras_are_off_unless_asked_for() -> void:
 	assert_false(bool(extras["sdfgi"]), "SDFGI is off by default")
 	if RenderingServer.get_current_rendering_method() != "forward_plus":
 		assert_false(bool(extras["ssao"]), "SSAO is never on outside Forward+")
+	_drop(live[0])
+
+
+## The flashes a player saw on Forward+: every refresh of a region blend (fifteen in six seconds)
+## handed the Environment a new grade texture. The table is made once and rewritten in place, so
+## a blend from one region into another assigns nothing to the Environment at all.
+func test_the_grade_table_is_made_once_and_rewritten_in_place() -> void:
+	var live := _live(40.0)
+	var atmos: Atmosphere = live[2]
+	atmos.set_region("core:region/skerrow", true)
+	atmos.settle()
+	var tex: Variant = atmos.env.adjustment_color_correction
+	assert_true(tex is ImageTexture3D, "the grade is a 3D table")
+	var made := int(Atmosphere.lut_stats["textures"])
+	var assigned := int(Atmosphere.lut_stats["assigned"])
+	var builds := int(Atmosphere.lut_stats["builds"])
+	atmos.set_region("core:region/cinderlea", false)
+	for i in 30:
+		atmos._process(0.25)
+	assert_eq(int(Atmosphere.lut_stats["textures"]), made, "no new table texture during a blend")
+	assert_eq(int(Atmosphere.lut_stats["assigned"]), assigned, "nothing handed to the Environment during a blend")
+	assert_true(atmos.env.adjustment_color_correction == tex, "the Environment keeps the texture it had")
+	assert_gt(int(Atmosphere.lut_stats["builds"]), builds, "the table itself was rewritten as the look blended")
+	_drop(live[0])
+
+
+## The rain, the snow and the ash are set up once for what is falling: the quad they fall as, its
+## colour and the particle count were written every frame, so a weather blend rebuilt the mesh and
+## restarted the particles sixty times a second. The count moves in steps of a hundred now.
+func test_the_precipitation_is_set_up_once_per_kind() -> void:
+	var live := _live(40.0)
+	var atmos: Atmosphere = live[2]
+	atmos.set_region("core:region/sedgemire", true)
+	atmos.force_weather("core:weather/rain", false)
+	var amounts := {}
+	for i in 30:
+		atmos._process(0.25)
+		if atmos.precipitation.emitting:
+			amounts[atmos.precipitation.amount] = true
+	assert_true(atmos.precipitation.emitting, "rain falls")
+	assert_eq(atmos._precip_kind, "rain", "set up as rain")
+	for a in amounts:
+		assert_eq(int(a) % 100, 0, "the particle count moves in hundreds, not every frame (%d)" % int(a))
+	var rain_size: Vector2 = (atmos.precipitation.mesh as QuadMesh).size
+	atmos.force_weather("core:weather/snow", true)
+	atmos._process(0.25)
+	assert_eq(atmos._precip_kind, "snow", "set up again when snow follows rain")
+	assert_ne((atmos.precipitation.mesh as QuadMesh).size, rain_size, "and the flakes are not raindrops")
+	_drop(live[0])
+
+
+## "Too many filters on the screen": the vignette is faint in every region and can be turned off,
+## and film grain is drawn only for a player who asks for it, Cinderlea's included.
+func test_the_frame_overlays_are_faint_and_the_grain_is_asked_for() -> void:
+	for id in REGIONS:
+		var look := Atmosphere._look_from_region(ContentDB.get_def(id))
+		assert_true(float(look["vignette"]) <= 0.12, "%s's vignette is faint (%.2f)" % [id, float(look["vignette"])])
+	var had_grain: Variant = Settings.get_value("video", "film_grain", false)
+	var had_vignette: Variant = Settings.get_value("video", "vignette", true)
+	var live := _live(40.0)
+	var atmos: Atmosphere = live[2]
+	atmos.set_region("core:region/cinderlea", true)
+	Settings.set_value("video", "film_grain", false, false)
+	atmos.settle()
+	assert_false(atmos._grain_rect.visible, "no grain unless the player turns it on")
+	Settings.set_value("video", "film_grain", true, false)
+	atmos.settle()
+	assert_true(atmos._grain_rect.visible, "Cinderlea's grain when it is on")
+	Settings.set_value("video", "vignette", false, false)
+	atmos.settle()
+	assert_near(float(atmos._vignette_mat.get_shader_parameter("amount")), 0.0, 0.0001, "and no vignette when that is off")
+	Settings.set_value("video", "film_grain", had_grain, false)
+	Settings.set_value("video", "vignette", had_vignette, false)
 	_drop(live[0])

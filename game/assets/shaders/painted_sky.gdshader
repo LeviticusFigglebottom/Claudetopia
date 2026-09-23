@@ -183,10 +183,11 @@ void sky() {
 	vec2 w = normalize(wind + vec2(1e-4, 0.0));
 	float cumulus = 0.0;
 	if (t > 0.0 && cloud_opacity > 0.001) {
-		// Cumulus fades out toward the horizon, where perspective squashes a lone cloud into a
-		// flat dark lozenge (it read as a flying saucer over Cinderlea); the stratus bank and the
-		// haze are what the horizon is made of.
-		float fade = smoothstep(0.03, 0.3, t);
+		// Cumulus fades out in the last degree or so over the horizon, where perspective squashes a
+		// lone cloud into a flat lozenge (dark, it read as a flying saucer over Cinderlea; lit
+		// through, as it is now, it is a far cloud). Faded out over the lowest seventeen degrees, as
+		// it first was, a level camera saw no cloud at all: that band is most of the sky in a frame.
+		float fade = smoothstep(0.012, 0.14, t);
 		if (!AT_CUBEMAP_PASS && cirrus > 0.001) {
 			vec2 pc = dir.xz / (dir.y + 0.35) * 0.9;
 			vec2 qc = vec2(dot(pc, w), dot(pc, vec2(-w.y, w.x)));
@@ -197,16 +198,18 @@ void sky() {
 		}
 
 		// --- the cumulus, lit from the side the light is on --------------------------------
-		// Masses first: a low-frequency field, slowly warped so the masses are lumps and not a
+			// Masses first: a low-frequency field, slowly warped so the masses are lumps and not a
 		// contour map of noise, with the fine octaves only on their edges. The first version took
 		// its shape and its light from one five-octave field and stepped the light hard into four,
 		// so every octave's wobble became a flat blotch with a dark eye in it: camouflage, not cloud.
+		// The masses are sized so a frame holds several: at a third of this frequency one mass
+		// filled a ninety-degree view, and a sky of one soft edge read as haze.
 		vec2 p = dir.xz / (dir.y + cloud_height) * cloud_scale;
 		vec2 q = cloud_space(p, w) * 0.8 + vec2(TIME * cloud_speed, 0.0);
 		vec2 warp = vec2(fbm(q * 0.35 + vec2(7.1, 2.3), 3), fbm(q * 0.35 + vec2(3.7, 9.4), 3)) - 0.5;
-		vec2 qw = q + warp * 1.1;
-		float base = fbm(qw * 0.6, 3);
-		float detail = fbm(qw * 2.4 + vec2(11.0, 5.0), oct);
+		vec2 qw = q + warp * 0.7;
+		float base = fbm(qw * 1.8, 3);
+		float detail = fbm(qw * 6.0 + vec2(11.0, 5.0), oct);
 		// Value-noise fbm keeps most of its values within 0.2 of the middle, so the masses are
 		// spread before they are cut: at their raw spread a half-covered sky fell entirely inside
 		// the soft edge and came out as one grey wash with no cloud in it.
@@ -219,8 +222,14 @@ void sky() {
 		// wisp at the edge of the threshold came out as a dark lozenge on a pale sky over Skerrow.
 		float thick = smoothstep(thr, thr + 0.3, dens);
 		float deep = smoothstep(thr + 0.2, thr + 0.6, dens);
+		// A low sun lights a mass from its side; a high one lights its top, which on the dome is the
+		// side toward the zenith, so the bases seen from below go grey. The two are mixed, not
+		// normalised: where they cancel (a cloud in the sun's own direction) the light is even.
 		vec2 toward_light = cloud_space(normalize(light_dir.xz + vec2(1e-4, 0.0)), w);
-		float base_l = fbm((qw + toward_light * 0.45) * 0.6, 3);
+		vec2 toward_top = -cloud_space(normalize(p + vec2(1e-4, 0.0)), w);
+		float high = clamp(light_dir.y, 0.0, 1.0);
+		toward_light = toward_light * (1.0 - high) + toward_top * high;
+		float base_l = fbm((qw + toward_light * 0.25) * 1.8, 3);
 		float light = clamp(0.6 + (base - base_l) * 3.2 * (1.0 - 0.6 * deep) + light_dir.y * 0.2, 0.0, 1.0);
 		light = mix(max(light, 0.78), light, thick);
 		// a mass is a little greyer at its heart than at its edge, and no more: not a doughnut
