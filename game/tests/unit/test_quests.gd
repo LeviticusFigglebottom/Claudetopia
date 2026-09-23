@@ -178,7 +178,7 @@ func test_rest_book_use_and_escort_objectives() -> void:
 	EventBus.book_opened.emit("core:book/_test")
 	assert_eq(log_node.stage_id_of("core:quest/_test_events"), "use")
 	close_screen("book", "opening a book draws it")
-	EventBus.item_used.emit(BELL)
+	EventBus.item_used.emit(BELL, [])
 	assert_eq(log_node.stage_id_of("core:quest/_test_events"), "escort")
 	EventBus.escort_arrived.emit("core:npc/wardens_ryn", "core:place/tamwick")
 	assert_true(log_node.is_active("core:quest/_test_events"), "the wrong destination does not count")
