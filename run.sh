@@ -134,7 +134,24 @@ import_project() { need_godot; "$GODOT" --headless --path "$GAME" --import --aud
 ensure_imported() {
   if [ ! -d "$GAME/.godot/imported" ]; then
     echo "[run] first run: importing the project (a minute or two)..."; import_project
+  elif class_cache_stale; then
+    echo "[run] a script names a class this checkout has not registered yet; importing to register it..."
+    import_project
   fi
+}
+# A `class_name` is known to the game only once the import (or the editor) has written it into
+# .godot/global_script_class_cache.cfg. A pull that adds one leaves an old cache behind, and every
+# script that names the new class then fails to parse: after a pull added ArmRoom, HumanoidModel
+# did not load and the Naming's preview stood empty. True when a script declares a class the cache
+# does not list.
+class_cache_stale() {
+  local cache="$GAME/.godot/global_script_class_cache.cfg" name
+  [ -f "$cache" ] || return 0
+  for name in $(grep -rhoE '^class_name[[:space:]]+[A-Za-z_][A-Za-z0-9_]*' --include='*.gd' \
+      --exclude-dir=.godot "$GAME" 2>/dev/null | awk '{print $2}' | sort -u); do
+    grep -F "&\"$name\"" "$cache" >/dev/null || return 0
+  done
+  return 1
 }
 # The built world is tracked (README.md, "Run it"), so a clone has it and nothing is built. What
 # the game needs is the manifest with its runtime maps and cells, and Terrain3D's regions. If the
