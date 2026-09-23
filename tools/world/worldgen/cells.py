@@ -22,9 +22,32 @@ HECTARE = 10000.0
 MODELS_DIR = "game/assets/models"
 
 
-def load_rules(path: str) -> dict:
+def load_rules(path: str, recipes=()) -> dict:
+    """The scatter rules, with the patches of each named recipe applied.
+
+    A recipe is a block under "recipes" in the rules file, {"dotted.path": value}: the path
+    runs through keys and list indices ("rocks.forest_rise.0.density") and its last step may
+    name a key that is new. The block is dropped from what is returned, so nothing reads it
+    as a rule. The world build turns a recipe on with `--recipe <name>`.
+    """
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        rules = json.load(f)
+    blocks = rules.pop("recipes", {})
+    for name in recipes:
+        for dotted, value in blocks.get(name, {}).items():
+            _patch(rules, dotted, value)
+    return rules
+
+
+def _patch(rules: dict, dotted: str, value) -> None:
+    node = rules
+    steps = dotted.split(".")
+    for step in steps[:-1]:
+        node = node[int(step)] if isinstance(node, list) else node[step]
+    if isinstance(node, list):
+        node[int(steps[-1])] = value
+    else:
+        node[steps[-1]] = value
 
 
 def asset_index(repo_root: str) -> dict:
@@ -129,7 +152,7 @@ class ScatterWorld:
     def __init__(self, grid: Grid, H: np.ndarray, owner: np.ndarray, moisture: np.ndarray,
                  water: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
                  slope: np.ndarray, bank, regions: list, water_d=None, field_d=None,
-                 pad_t=None):
+                 pad_t=None, tpi=None):
         self.grid = grid
         self.H = H
         self.owner = owner
@@ -149,6 +172,9 @@ class ScatterWorld:
         # only say "a village stands here", and answering that with no scatter at all is what
         # made every village a mown lawn sixty metres across.
         self.pad_t = pad_t if pad_t is not None else np.full(H.shape, 9.0, dtype=np.float32)
+        # How far a point stands above (or below) the ground around it, in metres: the crest of
+        # a dune ridge, the floor of a sunken street, the lip of a bench. See `topographic_position`.
+        self.tpi = tpi if tpi is not None else np.zeros(H.shape, dtype=np.float32)
 
     def sample(self, x, z) -> dict:
         g = self.grid
@@ -164,7 +190,22 @@ class ScatterWorld:
             "water_d": sample_bilinear(self.water_d, g, x, z),
             "field_d": sample_bilinear(self.field_d, g, x, z),
             "pad_t": sample_bilinear(self.pad_t, g, x, z),
+            "tpi": sample_bilinear(self.tpi, g, x, z),
         }
+
+
+def topographic_position(H: np.ndarray, spacing: float, radius_m: float = 30.0) -> np.ndarray:
+    """Height above the ground's own local mean, in metres: positive on crests and lips,
+    negative in hollows and trenches.
+
+    Structure is where things grow relative to the shape of the land, not only to its slope:
+    marram on the crests of the dune ridges and not in the slacks between them, ash lying in
+    the sunken streets and not on the blocks. Density per hectare cannot say "on the crest".
+    """
+    from scipy import ndimage
+
+    smooth = ndimage.gaussian_filter(H.astype(np.float32), sigma=radius_m / spacing, mode="nearest")
+    return (H - smooth).astype(np.float32)
 
 
 def _candidates(rng: np.random.Generator, size_m: float, spacing: float) -> tuple:
@@ -267,6 +308,14 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             # 1 inside the band, falling away either side over a third of its width
             soft = max((hi - lo) * 0.35, 1.5)
             inside = smoothstep(lo - soft, lo + soft * 0.3, d) * (1.0 - smoothstep(hi - soft * 0.3, hi + soft, d))
+            acc *= (1.0 - strength) + strength * inside
+        # where it stands in the shape of the land: `tpi` [from_m, to_m, strength] of height
+        # above the local mean (a crest is positive, a hollow negative)
+        band = cfg.get("tpi")
+        if band:
+            lo, hi = float(band[0]), float(band[1])
+            strength = float(band[2]) if len(band) > 2 else 1.0
+            inside = smoothstep(lo - 0.3, lo + 0.1, s["tpi"]) * (1.0 - smoothstep(hi - 0.1, hi + 0.3, s["tpi"]))
             acc *= (1.0 - strength) + strength * inside
         # clustering: a low-frequency field decides where this species actually grows
         cl = float(cfg.get("cluster", 0.35))
