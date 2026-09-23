@@ -296,10 +296,13 @@ func apply_appearance(d: Variant) -> void:
 	var signature := _parts_signature()
 	if signature != _worn_signature:
 		_clear_parts()
+		var child := _child_body_ready()
 		for slot in CharacterAppearance.SLOTS:
 			var part_name := hair_worn if slot == "hair" else appearance.part(slot)
 			if slot == "head" and part_name.is_empty():
 				part_name = "default"
+			if child:
+				part_name = _child_cut(slot, part_name)
 			if part_name.is_empty():
 				continue
 			_add_part(slot, part_name)
@@ -631,12 +634,23 @@ func _colour_key_for(slot: String) -> String:
 ##
 ## `child` is a different skeleton: its hips sit at 0.646 m against 0.980, its upper arm is
 ## 192 mm against 292, and its worst joint is 476 mm from the adult's, 9.2 m summed over
-## 29 bones. Draping that mesh on adult bones would stretch a child back into an adult and
-## look worse than the honest scale it gets now. A real child needs its own rig *and* its
-## own bake of the clips (CONTRACTS §2 pins the clips to the default proportions), which is
-## a second rig, not a wiring change -- so `body_variant()` still names it, and the model
-## still falls back to scaling for it, deliberately and in one place.
+## 29 bones. Draping that mesh on adult bones would stretch a child back into an adult, so it
+## is not worn like these two: `_apply_child` re-proportions the rig itself (see
+## ChildProportions) and the child body goes on that.
 const WEARABLE_BODIES := ["slight", "heavy"]
+const CHILD_BODY := "child"
+## What a child wears in a slot whose garment has no child's cut: the plain garment of that
+## slot. A slot missing here (hands, back) is left bare rather than draped in a grown cut.
+const CHILD_STAND_INS := {"torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}
+## Slots whose parts are skinned to the body and so are cut per skeleton. Everything else
+## (head, hair, beard, headgear, attachments) is rigid to the head and fits any skeleton.
+const CUT_PER_SKELETON := ["torso", "legs", "feet", "hands", "belt", "back"]
+
+var _child_mod: ChildProportions = null
+var _child_height := 1.30
+## Off, a child is the grown rig scaled down to a child's height, as before it had a skeleton
+## of its own (the review tool's before/after switch).
+static var child_rig := true
 
 
 ## The body this record wears, when it is not the default one.
@@ -653,9 +667,68 @@ const WEARABLE_BODIES := ["slight", "heavy"]
 ## body does, the default body is worn and the rig's girth does the widening.
 func _apply_body_variant() -> void:
 	var variant := appearance.body_variant()
-	var wearable: bool = WEARABLE_BODIES.has(variant) and _garments_fit(variant)
-	body_variant_worn = variant if wearable and _add_part("body", variant) else ""
+	if variant == CHILD_BODY and _child_body_ready() and _add_part("body", CHILD_BODY):
+		body_variant_worn = CHILD_BODY
+		_apply_child(true)
+	else:
+		_apply_child(false)
+		var wearable: bool = WEARABLE_BODIES.has(variant) and _garments_fit(variant)
+		body_variant_worn = variant if wearable and _add_part("body", variant) else ""
 	_show_default(_default_meshes.get("body"), body_variant_worn.is_empty())
+
+
+## True when this record is a child's and the forge has built the child's body and the
+## clothes cut for it. Without the clothes the child body would stand in the street bare, and
+## the grown rig scaled down is the better of the two.
+func _child_body_ready() -> bool:
+	return child_rig and appearance.body_variant() == CHILD_BODY \
+			and ResourceLoader.exists(_part_path("body", CHILD_BODY)) \
+			and ResourceLoader.exists(_part_path("torso", "%s_child" % CHILD_STAND_INS["torso"]))
+
+
+## The part a child wears in `slot` for `part_name`: rigid parts as they are, a garment's
+## child cut when the forge made one, otherwise the plain garment of the slot, otherwise none.
+func _child_cut(slot: String, part_name: String) -> String:
+	if part_name.is_empty() or not CUT_PER_SKELETON.has(slot):
+		return part_name
+	for candidate in [part_name, str(CHILD_STAND_INS.get(slot, ""))]:
+		if candidate.is_empty():
+			continue
+		var cut := "%s_child" % candidate
+		if ResourceLoader.exists(_part_path(slot, cut)):
+			return cut
+	return ""
+
+
+## Puts the rig at the child's proportions (or back). The child's rest pose is read off the
+## forge's child body, and its head scale off the proportions that body was built at: the
+## heads are the grown ones and a child's is 0.86 of a grown head at 1.30 m.
+func _apply_child(on: bool) -> void:
+	if not on:
+		if _child_mod != null:
+			_child_mod.queue_free()
+			_child_mod = null
+		return
+	if _child_mod != null:
+		return
+	var packed: PackedScene = _part_cache.get(_part_path("body", CHILD_BODY), null)
+	if packed == null:
+		packed = load(_part_path("body", CHILD_BODY))
+	if packed == null:
+		return
+	var inst := packed.instantiate()
+	var child_skel := inst.find_child("Skeleton3D", true, false) as Skeleton3D
+	if child_skel == null:
+		inst.free()
+		return
+	var props: Dictionary = _part_meta("body", CHILD_BODY).get("params", {}).get("proportions", {})
+	_child_height = float(props.get("height", 1.30))
+	var head_scale := float(props.get("head_size", 1.0)) * _child_height / 1.78
+	_child_mod = ChildProportions.new()
+	_child_mod.name = "ChildProportions"
+	_child_mod.setup(skeleton, child_skel, head_scale)
+	inst.free()
+	skeleton.add_child(_child_mod)
 
 
 ## Slots whose garments take their weights from the body and so have to be cut for it.
@@ -663,6 +736,8 @@ const FITTED_SLOTS := ["torso", "legs", "feet", "hands", "belt", "back"]
 
 
 func _garments_fit(variant: String) -> bool:
+	if variant == CHILD_BODY:
+		return true
 	for slot in FITTED_SLOTS:
 		var part_name := appearance.part(slot)
 		if part_name.is_empty():
@@ -695,7 +770,7 @@ static func girth_for(build: float) -> float:
 
 
 func _apply_proportions() -> void:
-	var s: float = appearance.height / 1.78
+	var s: float = appearance.height / (_child_height if _child_mod != null else 1.78)
 	var wide: float = girth_for(appearance.build) / float(VARIANT_GIRTH.get(body_variant_worn, 1.0))
 	if _rig_root != null:
 		_rig_root.scale = Vector3(s * wide, s, s * wide)

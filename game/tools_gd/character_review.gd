@@ -7,7 +7,11 @@ extends Node3D
 ##
 ## `lineup` renders every preset in tools/forge/characters.json side by side; `strips`
 ## renders each named clip at eight times from three angles and stitches a contact sheet.
-## Both write PNGs plus `contact_sheet.png` into the output folder.
+## Both write PNGs plus `contact_sheet.png` into the output folder. `children` stands two
+## children between two grown people, standing and mid-stride, from the front and the side;
+## `--no-child-rig` shows them as they were before the child had a skeleton of its own.
+## `--looks=<file.json>` stands the appearances listed in that file in a row and photographs
+## the row from the front, three-quarter, side and back (`--pose=Walk` for mid-stride).
 
 const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
 const PRESETS_PATH := "res://../tools/forge/characters.json"
@@ -22,6 +26,8 @@ var clip_list: PackedStringArray = PackedStringArray([
 	"Dodge_F", "Block_Hit", "Parry", "Hit_Heavy", "Stagger", "Death_A", "Bow_Draw", "Work_Chop",
 ])
 var preset_filter: PackedStringArray = PackedStringArray()
+var looks_path := ""
+var looks_pose := "Idle"
 
 var _camera: Camera3D
 var _jobs: Array[Dictionary] = []
@@ -39,6 +45,10 @@ func _ready() -> void:
 		_queue_lineup()
 	if mode == "strips" or mode == "both":
 		_queue_strips()
+	if mode == "children":
+		_queue_children()
+	if mode == "looks":
+		_queue_looks()
 	if _jobs.is_empty():
 		print("REVIEW: nothing to do")
 		get_tree().quit(0)
@@ -54,6 +64,13 @@ func _parse_args() -> void:
 			clip_list = a.substr(8).split(",", false)
 		elif a.begins_with("--presets="):
 			preset_filter = a.substr(10).split(",", false)
+		elif a == "--no-child-rig":
+			HumanoidModel.child_rig = false
+		elif a.begins_with("--looks="):
+			looks_path = a.substr(8)
+			mode = "looks"
+		elif a.begins_with("--pose="):
+			looks_pose = a.substr(7)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../%s" % out_dir) if not out_dir.begins_with("/") else out_dir)
 
 
@@ -125,6 +142,15 @@ func _load_presets() -> Array:
 
 
 func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
+	# a look that names its people and not its colours is dressed in the people's colours, as
+	# every villager is; without it the cloth renders in the bake's own white
+	if appearance.has("culture") and not appearance.has("palette"):
+		appearance = appearance.duplicate(true)
+		var pal := {}
+		var cp := CharacterAppearance.culture_palette(str(appearance["culture"]))
+		for k in cp:
+			pal[k] = (cp[k] as Color).to_html(false)
+		appearance["palette"] = pal
 	var holder := Node3D.new()
 	holder.position = pos
 	# CONTRACTS §1: actor scenes rotate the model 180 degrees so gameplay forward is -Z
@@ -186,6 +212,62 @@ func _queue_lineup() -> void:
 		"hide_rows": -1,
 	})
 	_preset_ids = labels
+
+
+## A man, a boy of eight, a girl of ten and a woman, in the plain clothes of the Vale.
+const FAMILY := [
+	{"height": 1.78, "build": 0.5, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+		"parts": {"head": "default", "hair": "short", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}},
+	{"height": 1.27, "build": 0.4, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+		"parts": {"head": "round", "hair": "tousled", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}},
+	{"height": 1.38, "build": 0.4, "skin": "fair", "hair_colour": "chestnut", "feminine": 1.0, "culture": "vale",
+		"parts": {"head": "soft", "hair": "braid", "torso": "dress", "feet": "shoes"}},
+	{"height": 1.66, "build": 0.45, "skin": "fair", "hair_colour": "chestnut", "feminine": 1.0, "culture": "vale",
+		"parts": {"head": "soft", "hair": "bun", "torso": "dress", "feet": "shoes", "belt": "belt"}},
+]
+
+
+func _queue_children() -> void:
+	var spacing := 0.95
+	# four rows far enough apart that none is behind another: standing and mid-stride, each
+	# once facing the camera and once in profile
+	var rows := [["idle", "front"], ["idle", "side"], ["walk", "front"], ["walk", "side"]]
+	for r in rows.size():
+		var x0 := r * 40.0
+		for i in FAMILY.size():
+			var x := x0 + (i - (FAMILY.size() - 1) * 0.5) * spacing
+			var m := _spawn(FAMILY[i], Vector3(x, 0, 0))
+			if rows[r][1] == "side":
+				(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 90, 0)
+			if rows[r][0] == "idle":
+				_hold_pose(m, "Idle", 0.8)
+			else:
+				_hold_pose(m, "Walk", 0.25 + 0.1 * i)
+		_jobs.append({"file": "lineup_children_%s_%s.png" % rows[r], "cam": Vector3(x0, 1.0, -4.6),
+			"look": Vector3(x0, 0.85, 0), "fov": 36.0, "hide_rows": -1})
+
+
+func _queue_looks() -> void:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(looks_path))
+	if typeof(parsed) != TYPE_ARRAY:
+		push_error("character_review: %s is not a list of appearances" % looks_path)
+		return
+	var looks: Array = parsed
+	var spacing := 1.05
+	var views := {"front": 0.0, "three_quarter": -40.0, "side": -90.0, "back": 180.0}
+	var r := 0
+	for view in views:
+		var x0 := r * 40.0
+		for i in looks.size():
+			var x := x0 + (i - (looks.size() - 1) * 0.5) * spacing
+			var m := _spawn(looks[i], Vector3(x, 0, 0))
+			(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 180.0 + float(views[view]), 0)
+			_hold_pose(m, looks_pose, 0.8 if looks_pose == "Idle" else 0.3)
+		var width := looks.size() * spacing
+		_jobs.append({"file": "lineup_looks_%s.png" % view,
+			"cam": Vector3(x0, 1.0, -maxf(3.4, width * 0.9 + 1.0)),
+			"look": Vector3(x0, 0.9, 0), "fov": 36.0, "hide_rows": -1})
+		r += 1
 
 
 func _queue_strips() -> void:
