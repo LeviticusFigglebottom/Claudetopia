@@ -63,12 +63,16 @@ func _quest_active(id: String) -> bool:
 	return log_node != null and bool(log_node.call("is_active", id))
 
 
+## Looks once more after the time is up: the frame the world stands up in can itself outlast the
+## wait on a loaded machine, and the opening begins at the end of that frame.
 func _wait_for_cinematic(seconds: float) -> CinematicPlayer:
 	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
-	while Time.get_ticks_msec() < until:
+	while true:
 		var found := _tree().get_first_node_in_group(CinematicPlayer.GROUP)
 		if found is CinematicPlayer:
 			return found as CinematicPlayer
+		if Time.get_ticks_msec() >= until:
+			return null
 		await _tree().process_frame
 	return null
 
@@ -197,7 +201,7 @@ func test_a_new_game_plays_the_opening_and_a_continue_does_not() -> void:
 	GameState.set_flag("new_game", true)
 	var w := _world()
 	await w.world_ready
-	var cin := await _wait_for_cinematic(15.0)
+	var cin := await _wait_for_cinematic(45.0)
 	assert_true(cin != null, "a new game plays the opening")
 	if cin != null:
 		assert_false(_quest_active("core:quest/the_naming"), "the story waits for the hand-over")
@@ -275,6 +279,40 @@ func test_skipping_anywhere_ends_exactly_where_watching_it_through_does() -> voi
 		var run := await _run(w, CinematicPlayer.Mode.OPENING, moments[what])
 		assert_true(bool(run["finished"]), "skipped %s, it still ends" % what)
 		_same(run["state"], end, "skipped %s" % what)
+	await _drop(w)
+
+
+## The menus fade to black on the way into the world, and something else lifts it: the body
+## standing, or the streaming being done. The opening must not depend on which, or on when: a
+## fade still down when it begins would hide every picture behind the subtitles.
+func test_a_fade_left_down_does_not_hide_the_pictures() -> void:
+	if not _built():
+		return
+	Social.reset_for_new_game()
+	GameState.reset_for_new_game(15)
+	var w := _world()
+	await w.world_ready
+	await _settle()
+	UI.fade_to_black(0.0, "The Roll is read again.")
+	# the fade is a tween, which moves on the idle step, not the physics one
+	var down_by := Time.get_ticks_msec() + 2000
+	while not UI.is_faded_out() and Time.get_ticks_msec() < down_by:
+		await _tree().process_frame
+	assert_true(UI.is_faded_out(), "the fade is down, as a menu leaves it")
+	var cin := CinematicPlayer.new()
+	var done := [false]
+	cin.finished.connect(func(_s: bool) -> void: done[0] = true)
+	w.add_child(cin)
+	cin.begin(w, _player(w), ContentDB.get_def(OPENING), CinematicPlayer.Mode.OPENING)
+	var until := Time.get_ticks_msec() + 5000
+	while (UI.is_faded_out() or not cin.is_playing()) and Time.get_ticks_msec() < until:
+		await _tree().process_frame
+	assert_false(UI.is_faded_out(), "the opening lifts it, under its own black")
+	assert_true(is_instance_valid(cin) and cin.is_playing() and cin.current_shot() == 0,
+			"while the Warden is still saying the name")
+	assert_true(cin.overlay().curtain() > 0.99, "so nothing of the world shows before the first picture")
+	cin.skip()
+	assert_true(await _until_finished(cin, done), "and it still hands back")
 	await _drop(w)
 
 

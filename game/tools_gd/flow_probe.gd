@@ -507,12 +507,15 @@ func _hold_to_skip(cin: CinematicPlayer) -> void:
 	Input.flush_buffered_events()
 
 
+## Looks once more when the time is up, since one long frame can outlast the whole wait.
 func _wait_for_opening(timeout: float) -> CinematicPlayer:
 	var deadline := Time.get_ticks_msec() + int(timeout * 1000.0)
-	while Time.get_ticks_msec() < deadline:
+	while true:
 		var found := get_tree().get_first_node_in_group(CinematicPlayer.GROUP)
 		if found is CinematicPlayer:
 			return found as CinematicPlayer
+		if Time.get_ticks_msec() >= deadline:
+			return null
 		await get_tree().process_frame
 	return null
 

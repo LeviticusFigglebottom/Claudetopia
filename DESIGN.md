@@ -131,7 +131,7 @@ are normative for pass one and live in `game/systems/*`.
 * Appearance is a data record (`CharacterAppearance`) applied to a body built by
   the character forge on our own humanoid rig, so morality visuals can modify it later.
 
-### 5.1a The opening (designed; not built yet — see PROGRESS "The opening")
+### 5.1a The opening (built — see PROGRESS "The opening")
 
 What plays between "Be named" and the first step, on **New Game only**: never on Continue
 or Load. The model is the first minutes of Fable, Oblivion and Dark Souls 2 — a voice, the
@@ -182,6 +182,13 @@ land, the stakes, then you — and it is about ninety seconds long.
   playing to the end does — position, streaming, time, weather, buses, nothing paused. A
   setting stops it playing on later new games, and the pause menu can replay it, after
   which everything is put back as it was.
+* **Where it lives.** The shots are data, `core:cinematic/opening`
+  (`content/packs/core/cinematics/opening.json`), checked by `CinematicDef` like any other
+  content. `CinematicPlayer` (`systems/cinematic`) plays them in the running world, and one
+  call in `GameServices.begin_new_game()` starts it. The music is `core:music/opening`,
+  which `tools/audio/compose.py` composes from the same shot list so the cuts land on it.
+  *Play the opening on a new game* (Settings, gameplay) turns it off, and the pause menu's
+  *How it began* plays it again.
 * **What it cannot fix, and the design assumes.** Today the Stair's head is a mesa on the
   Hush floor, 100 m out from the foot of the Cinderlea cliff rather than at its top, and
   nothing stands Wren at the Stair — her schedule keeps her in Merrowby — so the first

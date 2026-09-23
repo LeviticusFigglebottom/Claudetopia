@@ -220,6 +220,12 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 	_overlay.set_curtain(1.0)
 	_curtain_target = 1.0
 	_bars_target = 1.0
+	# The menus' fade may still be down: it lifts when the body stands, or later if it waits for
+	# the streaming. It sits under this curtain, which is just as black, so it is lifted here
+	# unseen and the opening owns the screen until the hand-over, holding on its own black while
+	# the country loads. Left down, it would hide every picture behind the subtitles.
+	if UI.is_faded_out():
+		UI.fade_from_black(0.3)
 	if def.has("music"):
 		Music.play_cue(str(def["music"]))
 	_enter_shot(0)
