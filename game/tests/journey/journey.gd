@@ -122,8 +122,6 @@ func _step_character_creation() -> void:
 	GameState.set_flag("player_name", "Foundling")
 	GameState.set_flag("player_calling", calling["id"])
 	GameState.set_flag("player_appearance", {"skin": 3, "hair": 2, "build": 0.5})
-	# what the Naming screen writes last: the world's services begin the opening quest from it
-	GameState.set_flag("new_game", true)
 	var named: bool = str(GameState.get_flag("player_name", "")) == "Foundling"
 	var has_bonuses: bool = calling.has("skill_bonuses") and (calling["skill_bonuses"] as Dictionary).size() > 0
 	_record("create a character", named and has_bonuses,
@@ -387,10 +385,11 @@ func _drive_the_opening(social: Node, village: String) -> Dictionary:
 	const NEXT := "core:quest/the_toll_hums"
 	const WREN := "core:npc/wren_tallow"
 	var quests: Node = social.quests
-	var begun := "the opening began it"
+	# The journey stands its world up before it names its character, so no new game begins the
+	# Naming here the way the Naming screen's flag does in play (GameServices.begin_new_game,
+	# which tests/unit covers); it is started by hand.
 	if not quests.is_active(NAMING) and not quests.is_completed(NAMING):
 		quests.start(NAMING)
-		begun = "started by hand (nothing had begun a new game)"
 	if not quests.is_active(NAMING):
 		return {"ok": false, "how": "the Naming could not be started"}
 	quests.set_stage(NAMING, "the_cart")
@@ -404,8 +403,13 @@ func _drive_the_opening(social: Node, village: String) -> Dictionary:
 	await get_tree().process_frame
 	var closed: bool = quests.is_completed(NAMING)
 	var onward: bool = quests.is_active(NEXT)
+	# The Toll Hums opens a few streets from here, and a stage it closed on its own later in the
+	# run would pay out marks in the middle of another step's arithmetic (the death step counts
+	# them to the mark). Having seen it begin, the journey puts it down again.
+	if onward:
+		quests.abandon(NEXT)
 	return {"ok": closed and onward,
-			"how": "the Naming (%s) %s at Wren's word in Merrowby%s" % [begun,
+			"how": "the Naming %s at Wren's word in Merrowby%s" % [
 				"closed" if closed else "did not close", ", and the Toll Hums began" if onward else ", and nothing followed it"]}
 
 
