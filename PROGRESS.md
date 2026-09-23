@@ -3286,17 +3286,17 @@ trees' savings are measured.
 ### The Graphics tab
 
 `core/graphics.gd` owns the `graphics` section: what every knob means, the four presets, the
-line that says why a control is greyed out, and `apply()`, the one place a setting reaches
-the engine. Twenty-nine controls: render scale and upscaler, MSAA, FXAA, TAA, texture
-filtering, vsync, a frame-rate cap, sun shadows with their map size, cascade count, reach and
-softness, ground-cover density, scatter view distance, the level-of-detail bias, distance
-haze, volumetric fog, SSAO and its quality, SSIL, SDFGI, glow, water quality, the water's
-reflections and the lamps lit at night, and the look's own colour grade, vignette and film
-grain (these last three no preset touches, as it touches neither vsync nor the frame cap). **High is the
-game as it was tuned**, number for number: every value in it is what `project.godot`, the
-atmosphere or the streamer already used, so the default preset changes nothing about how the
-world looks except what the tree levels save. Painted is everything on that the renderer can
-do; Low is what a struggling machine should be offered first.
+line that says why a control is greyed out, and `apply()`, the one place a setting reaches the
+engine. Twenty-nine controls: render scale and upscaler, MSAA, FXAA, TAA, texture filtering,
+vsync, a frame-rate cap, sun shadows with their map size, cascade count, reach and softness,
+ground-cover density, scatter view distance, the level-of-detail bias, distance haze, volumetric
+fog, SSAO and its quality, SSIL, SDFGI, glow, water quality, the water's reflections and the
+lamps lit at night, and the look's own colour grade, vignette and film grain (these last three
+no preset touches, as it touches neither vsync nor the frame cap). **High is the game as it was
+tuned**, number for number: every value in it is what `project.godot`, the atmosphere or the
+streamer already used, so the default preset changes nothing about how the world looks except
+what the tree levels save. Painted is everything on that the renderer can do; Low is what a
+struggling machine should be offered first.
 
 Everything applies live. The viewport takes scale, upscaler, MSAA, screen-space AA, TAA,
 anisotropy and the mesh-LOD threshold; the rendering server the shadow atlas, soft-shadow
@@ -3331,22 +3331,22 @@ ring around the eye was drawn whole: on Merrowby's street 1,937 trees in the nea
 them within 80 m, and 650 thousand of the frame's 1.56 million primitives were trees and
 their shadows (the attribution now counts primitives per owner as well as draws).
 
-`world/scatter_lod.gd` draws each tree at the level its own distance asks for: the full mesh
-to max(50 m, 4 × its height), the forge's LOD1 to max(70 m, 10 × its height), and the forge's
+`world/scatter_lod.gd` draws each tree at the level its own distance asks for: the full mesh to
+max(50 m, 4 × its height), the forge's LOD1 to max(70 m, 10 × its height), and the forge's
 picture beyond, each line multiplied by the LOD bias (no picture ever nearer than 50 m and no
-full mesh given up nearer than 20 m, whatever the bias). The full mesh's line was 30 m until
-the far-trees plan's eye-level shot was set beside the same frame drawn without the ladder:
-the hedgerow oak at 45 m, in its LOD1, was a sparser crown of bigger cards with a blade of
-bark sticking out of it, where the whole oak was a tree. Shot again at 50 m, it is the whole
-oak, and the frame costs 645 draws and 0.83 M against 572 and 0.99 M without the ladder. Each cell's trees of one kind are
-one group, a MultiMesh per level, re-sorted when the eye has moved two metres, within a 4 ms
-budget a frame. The canopy and the picture dissolve into each other across a band a fifth of
-the distance wide (`lod_fade.gdshaderinc`, measured from the main camera so the shadow passes
-agree), so a tree changing level neither pops nor is drawn twice; the bark switches outright
-in the middle of the band, under the canopy, with a metre and a half of hysteresis. The far
-ring is all pictures and never re-sorted. Opaque scatter heavy enough to be worth it (a LOD0
-of 1,500 triangles or more: Skerrow's drystone walls, the boulders and the scree, 35 kinds)
-takes the same ladder by its bounding radius, without the dissolve.
+full mesh given up nearer than 20 m, whatever the bias). The full mesh's line was 30 m until the
+far-trees plan's eye-level shot was set beside the same frame drawn without the ladder: the
+hedgerow oak at 45 m, in its LOD1, was a sparser crown of bigger cards with a blade of bark
+sticking out of it, where the whole oak was a tree. Shot again at 50 m, it is the whole oak, and
+the frame costs 645 draws and 0.83 M against 572 and 0.99 M without the ladder. Each cell's
+trees of one kind are one group, a MultiMesh per level, re-sorted when the eye has moved two
+metres, within a 4 ms budget a frame. The canopy and the picture dissolve into each other across
+a band a fifth of the distance wide (`lod_fade.gdshaderinc`, measured from the main camera so
+the shadow passes agree), so a tree changing level neither pops nor is drawn twice; the bark
+switches outright in the middle of the band, under the canopy, with a metre and a half of
+hysteresis. The far ring is all pictures and never re-sorted. Opaque scatter heavy enough to be
+worth it (a LOD0 of 1,500 triangles or more: Skerrow's drystone walls, the boulders and the
+scree, 35 kinds) takes the same ladder by its bounding radius, without the dissolve.
 
 **The picture** is new forge work, one `<tree>_impostor` manifest entry per tree, built by
 `gen_impostors.py` after the trees: eight Cycles views into a 384 px palette atlas, and a 192 px
@@ -3443,12 +3443,13 @@ the presets move only its shadows there.
 
 ### Still wrong, and what was not verified
 
-* **Forward+ has not been looked at in the world.** The player's machine draws Forward+, and
-  Terrain3D crashes on the software Vulkan driver this container has, so every world frame here
-  is Compatibility's. SDFGI, SSIL, volumetric fog, TAA and both FSRs are set, read back from the
-  engine in the tests and greyed on Compatibility, but nobody has seen Painted on Forward+: the
-  SDFGI and volumetric-fog numbers in `Graphics.apply_environment` are conservative guesses
-  (density 0.004, 180 m; first cascade 0.4 m) until someone does.
+* **Forward+ has not been looked at on Terrain3D.** The player's machine draws Forward+, and
+  Terrain3D crashes on the software Vulkan driver this container has, so every Terrain3D frame
+  here is Compatibility's; Forward+ has been seen only at High on the coarse ground (below).
+  SDFGI, SSIL, volumetric fog, TAA and both FSRs are set, read back from the engine in the tests
+  and greyed on Compatibility, but nobody has seen Painted on Forward+: the SDFGI and
+  volumetric-fog numbers in `Graphics.apply_environment` are conservative guesses (density
+  0.004, 180 m; first cascade 0.4 m) until someone does.
 * **The Forward+ measurements are a software rasteriser's**, the same shaders on llvmpipe; a
   Radeon's shadow filtering and SSAO may read a far canopy differently. Re-measure on the
   player's hardware before tuning any tree by eye.
@@ -3473,7 +3474,9 @@ the presets move only its shadows there.
 
 ### Merged with main
 
-Main had moved 134 commits on under this branch, and eight files had changed on both sides. The
+Main had moved 134 commits on under this branch, and eight files had changed on both sides (and
+seven more later, the audio guard, the doors and the interiors, which met this branch only in
+this file). The
 painted look's settings were the one real decision: main's atmosphere, water and lamps read
 `video/*`, and they now read `graphics/*`. The lamps lit at night and the water's reflections
 are costs, so they are in the presets (Low: two lamps and no reflections, the frame copy saved;
@@ -3491,22 +3494,89 @@ failed tests on the first run, none on the second. An import that fails in Godot
 records itself as done, so a stale scene survives it silently; the characters had to be
 reimported by hand once the script was fixed.
 
+### Measured again after the merge
+
+Main now draws the lakes and the sea, lights a pool of lamps and grades the picture through a
+table, and its villagers are the characters pass's heavier bodies. The streets plan again on the
+merged tree, Compatibility as before, draw calls / primitives (the two right-hand columns are
+the table above, on the world as it was built then):
+
+| shot | **High** | Painted | High, no tree levels | High before the merge | Painted before |
+|---|---|---|---|---|---|
+| hearthvale_street (Merrowby) | **1526 / 1.05 M** | 1805 / 1.39 M | 1619 / 1.71 M | 1384 / 0.94 M | 1606 / 1.25 M |
+| brightwater_street | **468 / 0.48 M** | 501 / 0.54 M | 491 / 0.61 M | 449 / 0.46 M | 495 / 0.52 M |
+| sedgemire_street | **805 / 0.59 M** | 972 / 0.75 M | 791 / 0.89 M | 708 / 0.57 M | 826 / 0.72 M |
+| briarwold_street | **734 / 0.64 M** | 919 / 0.90 M | 640 / 0.85 M | 692 / 0.63 M | 854 / 0.89 M |
+| skerrow_street | **750 / 0.60 M** | 847 / 0.75 M | 799 / 0.85 M | 593 / 0.55 M | 704 / 0.68 M |
+| cinderlea_street | **557 / 0.49 M** | 630 / 0.62 M | 519 / 0.71 M | 517 / 0.41 M | 596 / 0.54 M |
+
+* **High is under both budgets on every street**: 1526 draws and 1.05 M at worst, against 1619
+  and 1.71 M with the trees drawn the old way on the same tree, which is over the primitive
+  budget. The High run twice (the merge, and the head after it) agreed within two draw calls.
+* **Painted is under both as well**, and the nearest to them: 1805 draws (10% under 2000) and
+  1.39 M (7% under 1.5 M) at Merrowby. Main's additions cost it 199 draws and 0.14 M there.
+* **Where Merrowby's High frame grew**, by the attribution (each owner hidden in turn):
+  the villagers, 566 to 656 draws and 215 K to 329 K primitives; the rest is spread thin, 10 to
+  34 draws each (the water, 27, now that it is drawn; Terrain3D, 27; the landmarks, 26; the
+  trees' near ring, 26 and 13 K). The shadow passes went from 914 to 1048 draws.
+
+`./run.sh test` on the head: 1616 tests, 0 failed, 0 content problems, 0 script errors, RESULT
+PASS. `./run.sh flow`: the New Game start fails, and only on the opening's stall, which the
+opening's branch fixes: 89 checks, 10 failed, no script errors, every failure downstream of the
+opening stopping at its third shot of ten (no HUD, no first objective, the camera still the
+opening's). That ends `run.sh flow`'s chain, so the load and Continue starts were run on their
+own (`-- --flow=<dir> --load=flow`, `-- --flow=<dir> --continue`, into the same folder):
+Continue passes, 27 of 27, on Terrain3D with the HUD up; the load fails 5 of 32, because the
+`flow` slot was saved while the stalled opening still held the `new_game` flag, and a load with
+that flag up plays the opening again (`GameServices`), which stalls the same way.
+
+### Forward+, seen on the coarse ground
+
+Main's guard for Terrain3D on Mesa's software Vulkan draws the coarse ground there instead of
+crashing, so the world can now be looked at on Forward+ in this container, on that ground:
+Merrowby's and Briarwold's street shots (`tools/capture/plans/streets_two.json`), through
+`godot --path game --rendering-driver vulkan --rendering-method forward_plus --
+--capture=tools/capture/plans/streets_two.json --out=<dir> --preset=<p>`.
+
+* **The first look found a fault of this branch's, now fixed.** The coarse ground sets each
+  arriving cell's scatter down by reading its MultiMeshes back; a tree group's are refilled from
+  its own rows as the eye moves, and on Forward+ they read back as NaN, which reached the height
+  map as an index (72 script errors at High, 454 at Painted) and was written back as trees at
+  nonsense heights across the view: a black wall over half of Merrowby's frame, a green one over
+  Briarwold's sky. The group's rows are set down instead (`ScatterLod.Group.set_down`), with a
+  test. This reached any player whose machine draws the coarse ground: a Mac before 15, arm64
+  Linux, `--terrain=fallback`.
+* **High after the fix**: no script errors, 1339 draws and 0.99 M at Merrowby, 579 and 0.59 M at
+  Briarwold, and both frames read as they do on Compatibility, the wood whole. Fourteen engine
+  errors, `Buffer argument is not a valid buffer` from the rendering device, come before the
+  first shot; whose they are is not known yet (the same shots with `--no-lod` will say whether
+  they are the tree groups'). A pale column stands in Merrowby's sky on Forward+ that is not in
+  the Compatibility frame; not traced.
+* **Painted after the fix has not been seen**: its run was killed for memory, with 7 GB free,
+  before the first shot, and the run before the fix finished but its frames are the broken ones.
+  So SDFGI, SSIL, volumetric fog and TAA are still unseen in a sane frame.
+* **Terrain3D asked for seven rings** (`--terrain-lods=7`) at Painted crashed the driver before
+  the first shot (exit 139), as main recorded for the New Game flow.
+
 ### Next, in order
 
-1. **Look at Painted and High on Forward+ in the world**, the renderer the game ships on, on a
-   machine whose Vulkan driver Terrain3D survives (it crashes on Mesa's software one here):
+1. **Look at Painted and High on Forward+ in the world on Terrain3D**, the renderer the game
+   ships on, on a machine whose Vulkan driver Terrain3D survives (only the coarse ground has been
+   seen here, above):
    `godot --path game --rendering-driver vulkan --rendering-method forward_plus --
    --capture=tools/capture/plans/streets.json --out=<dir> --preset=painted` (`./run.sh shots`
    forces opengl3). Accept when SDFGI, SSIL and volumetric fog read as light in the air and not
    as a grey wash or a flicker, and Painted stays under 2000 draws and 1.5 M; tune
-   `Graphics.apply_environment`'s numbers only, never the atmosphere's recipes.
+   `Graphics.apply_environment`'s numbers only, never the atmosphere's recipes. Without such a
+   machine, Painted can at least be seen on the coarse ground here, with `streets_two.json` in
+   place of `streets.json`; on the software driver it wants more than 7 GB free.
 2. **Measure the pictures on the player's GPU**: `godot --path game --rendering-driver vulkan
    --rendering-method forward_plus res://tools_gd/lod_review.tscn -- --out=<dir> --calibrate`
    rewrites every tree's `forward_plus` entry in `world/impostor_calibration.json` (about two
    minutes a tree here). Accept at luminance ink within 5% for every tree, with each
    `<tree>_calibrated.png` looked at.
 3. **Measure Low and Medium on the merged tree** (`./run.sh shots tools/capture/plans/streets.json
-   --preset=low`, and `medium`): High and Painted were measured again after the merge, below.
+   --preset=low`, and `medium`): High and Painted were measured again after the merge, above.
 4. **Rebuild the poor LOD1s** (the third black ash, the tall Sedgemire willow, the yews) from
    fewer Sapling segments instead of collapsing LOD0 (`lib/export.make_lods` for trees), then
    `./run.sh assets --only briarwold_black_ash_c --only sedgemire_willow_a --only hearthvale_yew
