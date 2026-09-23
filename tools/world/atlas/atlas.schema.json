@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wickmere.invalid/tools/world/atlas/atlas.schema.json",
+  "title": "Wickmere atlas",
+  "description": "The authored geography the world builder makes the land from. See SCHEMA.md beside this file for what every field means to the generator. Coordinates are metres, x east, z south, origin at the centre of the world.",
+  "type": "object",
+  "required": ["version", "world_size_m", "sea_level_m", "provinces", "coast"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"type": "string"},
+    "_doc": {"type": "string"},
+    "version": {"const": 1},
+    "name": {"type": "string"},
+    "world_size_m": {"const": 8192},
+    "sea_level_m": {"const": 0},
+    "provinces": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/province"}},
+    "coast": {"$ref": "#/$defs/coast"},
+    "ranges": {"type": "array", "items": {"$ref": "#/$defs/range"}},
+    "peaks": {"type": "array", "items": {"$ref": "#/$defs/peak"}},
+    "valleys": {"type": "array", "items": {"$ref": "#/$defs/valley"}},
+    "rivers": {"type": "array", "items": {"$ref": "#/$defs/river"}},
+    "lakes": {"type": "array", "items": {"$ref": "#/$defs/lake"}},
+    "forests": {"type": "array", "items": {"$ref": "#/$defs/forest"}},
+    "roads": {"type": "array", "items": {"$ref": "#/$defs/road"}},
+    "start": {"$ref": "#/$defs/start"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+    "xz": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {"type": "number", "minimum": -4096, "maximum": 4096}
+    },
+    "xzh": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {"type": "number", "minimum": -4096, "maximum": 4096}
+    },
+    "polygon": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/xz"}},
+    "path": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/xz"}},
+    "province": {
+      "type": "object",
+      "required": ["id", "region", "polygon", "biome", "base_height_m", "relief_m", "character"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "region": {"type": "string", "pattern": "^[a-z0-9_]+:region/[a-z0-9_]+$"},
+        "polygon": {"$ref": "#/$defs/polygon"},
+        "biome": {"enum": ["downs", "lake_basin", "delta", "forest_rise", "mountains", "ash_plateau"]},
+        "base_height_m": {"type": "number", "minimum": -5, "maximum": 800},
+        "relief_m": {"type": "number", "minimum": 0, "maximum": 600},
+        "character": {"enum": ["flat", "marsh", "rolling", "hills", "ridged", "plateau", "mountains"]},
+        "landform": {
+          "type": "array",
+          "items": {"enum": ["raised_beaches", "dune_ridges", "levees", "oxbows", "granite_stair", "tors",
+                             "limestone_scars", "shakeholes", "buried_streets", "lynchets", "barrows"]}
+        },
+        "grain_deg": {"type": "number", "minimum": 0, "maximum": 360},
+        "roughness": {"type": "number", "minimum": 0, "maximum": 1},
+        "blend_m": {"type": "number", "minimum": 50, "maximum": 1500}
+      }
+    },
+    "coast": {
+      "type": "object",
+      "required": ["polygon"],
+      "additionalProperties": false,
+      "properties": {
+        "polygon": {"$ref": "#/$defs/polygon"},
+        "islands": {"type": "array", "items": {"$ref": "#/$defs/polygon"}},
+        "seabed_m": {"type": "number", "minimum": -200, "maximum": -2},
+        "shelf_m": {"type": "number", "minimum": 20, "maximum": 3000},
+        "beach_m": {"type": "number", "minimum": 0, "maximum": 1000},
+        "cliffs": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["path", "height_m"], "additionalProperties": false,
+            "properties": {"path": {"$ref": "#/$defs/path"},
+                           "height_m": {"type": "number", "minimum": 3, "maximum": 300}}
+          }
+        }
+      }
+    },
+    "range": {
+      "type": "object",
+      "required": ["id", "ridge", "width_m"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "ridge": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/xzh"}},
+        "width_m": {"type": "number", "minimum": 60, "maximum": 6000},
+        "profile": {"enum": ["ridge", "rounded", "scarp", "massif"]},
+        "face": {"enum": ["left", "right"]},
+        "rock": {"enum": ["granite", "limestone", "chalk", "fused_stone", "scree"]}
+      }
+    },
+    "peak": {
+      "type": "object",
+      "required": ["at", "height_m", "radius_m"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "at": {"$ref": "#/$defs/xz"},
+        "height_m": {"type": "number", "minimum": 1, "maximum": 1000},
+        "radius_m": {"type": "number", "minimum": 20, "maximum": 3000},
+        "shape": {"enum": ["cone", "dome", "crag", "mesa"]}
+      }
+    },
+    "valley": {
+      "type": "object",
+      "required": ["path", "depth_m", "width_m"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "path": {"$ref": "#/$defs/path"},
+        "depth_m": {"type": "number", "minimum": 1, "maximum": 400},
+        "width_m": {"type": "number", "minimum": 10, "maximum": 3000},
+        "profile": {"enum": ["u", "v", "gorge"]}
+      }
+    },
+    "river": {
+      "type": "object",
+      "required": ["id", "path", "width_m"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9_]+:river/[a-z0-9_]+$"},
+        "name": {"type": "string"},
+        "path": {"$ref": "#/$defs/path"},
+        "width_m": {"type": "array", "minItems": 2, "maxItems": 2,
+                    "items": {"type": "number", "minimum": 1, "maximum": 60}},
+        "valley_m": {"type": "number", "minimum": 0, "maximum": 1500}
+      }
+    },
+    "lake": {
+      "type": "object",
+      "required": ["id", "polygon", "level_m"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "polygon": {"$ref": "#/$defs/polygon"},
+        "level_m": {"type": "number", "minimum": 0.5, "maximum": 700},
+        "depth_m": {"type": "number", "minimum": 0.5, "maximum": 200},
+        "islands": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["polygon", "height_m"], "additionalProperties": false,
+            "properties": {"name": {"type": "string"}, "polygon": {"$ref": "#/$defs/polygon"},
+                           "height_m": {"type": "number", "minimum": 0.5, "maximum": 300}}
+          }
+        },
+        "cliff_shore_deg": {"type": "number", "minimum": 0, "maximum": 360},
+        "reed_shore_deg": {"type": "number", "minimum": 0, "maximum": 360}
+      }
+    },
+    "forest": {
+      "type": "object",
+      "required": ["polygon", "kind", "density"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "polygon": {"$ref": "#/$defs/polygon"},
+        "kind": {"enum": ["oakwood", "ancient", "pine", "wetwood", "limewood", "deadwood", "orchard"]},
+        "density": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "road": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9_]+:road/[a-z0-9_]+$"},
+        "from": {"type": "string", "pattern": "^[a-z0-9_]+:(place|poi)/[a-z0-9_]+$"},
+        "to": {"type": "string", "pattern": "^[a-z0-9_]+:(place|poi)/[a-z0-9_]+$"},
+        "via": {"type": "array", "items": {"$ref": "#/$defs/xz"}},
+        "kind": {"enum": ["highway", "road", "lane", "track", "causeway"]}
+      }
+    },
+    "start": {
+      "type": "object",
+      "required": ["at", "facing_deg"],
+      "additionalProperties": false,
+      "properties": {
+        "at": {"$ref": "#/$defs/xz"},
+        "facing_deg": {"type": "number", "minimum": 0, "maximum": 360},
+        "place": {"type": "string", "pattern": "^[a-z0-9_]+:(place|poi)/[a-z0-9_]+$"}
+      }
+    }
+  }
+}
