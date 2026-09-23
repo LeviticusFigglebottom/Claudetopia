@@ -25,10 +25,19 @@ const WALK_SPEED := 1.8
 const JOG_SPEED := 5.0
 const SPRINT_SPEED := 7.8
 const SNEAK_SPEED := 1.5
-## Locked on or blocking the body faces the target or the view, not the way it moves, and the
-## legs have only walking strafes to show for it.
+## Blocking, the body walks behind its guard, facing the foe or the view: this, times
+## BLOCK_MOVE_MULT, whatever way it goes.
 const STRAFE_SPEED := 2.6
 const BLOCK_MOVE_MULT := 0.6
+## Locked on (and not blocking), the body faces the foe and goes at the pace each way allows: a
+## jog straight at it, so a foe backing away -- a caster kiting at about 3 m/s -- can be closed
+## on without letting go of the lock; a side-step across it; a backpedal away from it. Between
+## them the pace follows the ellipse through the three. At 2.6 m/s every way, a locked-on player
+## could not catch anything that walked backwards. Each is within what its clip can play without
+## sliding (Run at 1.0x, the side-steps at 1.58x, Walk_Back at 1.57x).
+const LOCKED_FORWARD := JOG_SPEED
+const LOCKED_SIDE := 3.0
+const LOCKED_BACK := 1.8
 ## Moving while a bow is drawn: what the first numbers gave it (half of 4.2), kept.
 const AIM_MOVE_SPEED := 2.1
 ## Stick deflection at which a walk becomes a jog, and where the jog is reached.
@@ -58,6 +67,16 @@ const ALIGN_NONE := deg_to_rad(150.0)
 const SPRINT_RESUME := 0.25
 ## A press of Sprint let go within this long is a tap, and a tap rolls (see _read_sprint_tap).
 const SPRINT_TAP_S := 0.22
+## Turning on the spot. A body standing (below TURN_STEP_BELOW m/s) that turns faster than
+## TURN_STEP_FROM steps round, instead of pivoting on planted feet: the model is told a side-step
+## at the pace the feet would travel round the body (TURN_STEP_RADIUS from its middle), no more
+## than TURN_STEP_MAX. TURN_STEP_EASE eases it in and out so a flick of the view is a step or
+## two, not a twitch.
+const TURN_STEP_FROM := deg_to_rad(60.0)
+const TURN_STEP_BELOW := 0.5
+const TURN_STEP_RADIUS := 0.18
+const TURN_STEP_MAX := 1.4
+const TURN_STEP_EASE := 12.0
 const JUMP_HEIGHT := 1.1
 ## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
@@ -158,6 +177,9 @@ var _ground_speed: float = 0.0
 var _free_tick: int = -2
 ## The heightfield held the body up last tick (open country has no collider under it).
 var _terrain_held: bool = false
+## Turning on the spot (see TURN_STEP_*): the yaw a tick ago, and the side-step pace being shown.
+var _step_last_yaw := 0.0
+var _turn_step := 0.0
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
 
@@ -623,7 +645,7 @@ func _move(delta: float) -> void:
 	var wish := _wish_direction()
 	var moving := wish.length() > 0.1
 	_update_sprint(moving, delta)
-	var speed := _target_speed() if moving else 0.0
+	var speed := _target_speed(wish) if moving else 0.0
 	if not _on_ground():
 		_air_move(wish, speed, delta)
 	elif _strafe_mode():
@@ -649,19 +671,40 @@ static func gait_speed(stick: float, walk_held: bool) -> float:
 	return lerpf(WALK_SPEED, JOG_SPEED, clampf((m - WALK_STICK) / (JOG_STICK - WALK_STICK), 0.0, 1.0))
 
 
-func _target_speed() -> float:
+func _target_speed(wish := Vector3.ZERO) -> float:
 	var speed := SPRINT_SPEED if is_sprinting else gait_speed(_move_input.length(), bool(_held.get("walk", false)))
 	if is_sneaking:
 		speed = minf(speed, SNEAK_SPEED)
 	if _strafe_mode() and not camera_rig.first_person:
-		speed = minf(speed, STRAFE_SPEED)
+		if is_blocking or not lock.is_locked():
+			speed = minf(speed, STRAFE_SPEED)
+		else:
+			speed = minf(speed, locked_speed(_way_to_lock(wish)))
 	if is_blocking:
 		speed *= BLOCK_MOVE_MULT
 	return speed * speed_multiplier()
 
 
+## `wish` in the foe's frame: x across it (to the right), y toward it.
+func _way_to_lock(wish: Vector3) -> Vector2:
+	var local := Basis(Vector3.UP, yaw_to(lock.target_point())).inverse() * wish
+	return Vector2(local.x, -local.z)
+
+
+## The locked-on pace for a way to go in the foe's frame (x across, y toward): the ellipse
+## through LOCKED_FORWARD ahead, LOCKED_SIDE across and LOCKED_BACK behind.
+static func locked_speed(way: Vector2) -> float:
+	if way.length() < 0.001:
+		return LOCKED_SIDE
+	var d := way.normalized()
+	var along := LOCKED_FORWARD if d.y >= 0.0 else LOCKED_BACK
+	return 1.0 / sqrt(pow(d.x / LOCKED_SIDE, 2.0) + pow(d.y / along, 2.0))
+
+
 ## Locked on (and not sprinting), blocking, or looking out of the body's own eyes: the body faces
-## the target or the view and steps whichever way it is pushed. Sprinting breaks a lock's strafe.
+## the target or the view and steps whichever way it is pushed. Sprinting breaks a lock's strafe
+## and keeps the lock: the body runs where it is pushed at a sprint, the view stays on the foe,
+## and letting go of Sprint turns it back to face the foe.
 func _strafe_mode() -> bool:
 	return camera_rig.first_person or is_blocking or (lock.is_locked() and not is_sprinting)
 
@@ -773,18 +816,34 @@ func _damp_horizontal(delta: float, rate: float) -> void:
 	velocity.z = horizontal.z
 
 
-func _update_locomotion_anim(_delta: float) -> void:
+func _update_locomotion_anim(delta: float) -> void:
 	# the ground velocity the body really made, in its own frame, m/s: the model plays the gait
 	# at the rate that keeps its feet planted under exactly that
 	var v := get_real_velocity()
 	var local := global_transform.basis.inverse() * Vector3(v.x, 0.0, v.z)
-	anim.set_locomotion(Vector2(local.x, -local.z), is_sneaking)
+	var told := Vector2(local.x, -local.z)
+	told.x += turn_step_pace(told.length(), delta)
+	anim.set_locomotion(told, is_sneaking)
 	if state == State.FREE and not anim.is_busy() and not is_blocking:
 		if not is_on_floor() and velocity.y < -3.0 and not anim.is_playing("Fall_Loop"):
 			anim.play_intent("Fall_Loop")
 		elif is_on_floor() and anim.is_playing("Fall_Loop"):
 			anim.stop()
 	model.visible = not camera_rig.first_person
+
+
+## The side-step pace (m/s, + to the right) the legs are shown while the body turns on the spot;
+## 0 when it moves, stands still, or is busy. A turn to the left steps to the left.
+func turn_step_pace(ground_speed: float, delta: float) -> float:
+	var turn := wrapf(rotation.y - _step_last_yaw, -PI, PI) / maxf(delta, 0.0001)
+	_step_last_yaw = rotation.y
+	var want := 0.0
+	if state == State.FREE and ground_speed < TURN_STEP_BELOW and absf(turn) > TURN_STEP_FROM and _on_ground():
+		want = clampf(-turn * TURN_STEP_RADIUS, -TURN_STEP_MAX, TURN_STEP_MAX)
+	_turn_step = lerpf(_turn_step, want, 1.0 - exp(-TURN_STEP_EASE * delta))
+	if absf(_turn_step) < 0.02 and want == 0.0:
+		_turn_step = 0.0
+	return _turn_step
 
 
 # --- ATTACK -------------------------------------------------------------------------------------
@@ -1184,6 +1243,8 @@ func teleport(position: Vector3, yaw: float) -> void:
 	velocity = Vector3.ZERO
 	_ground_speed = 0.0
 	_free_tick = -2
+	_step_last_yaw = yaw          # a body put down facing a new way has not turned on the spot
+	_turn_step = 0.0
 	camera_rig.yaw = yaw
 	reset_physics_interpolation()
 	camera_rig.snap_to_target()
