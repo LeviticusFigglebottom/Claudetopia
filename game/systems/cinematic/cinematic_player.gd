@@ -40,20 +40,24 @@ const PROMPT_LINGER_SECONDS := 2.5
 const HOLD_GRACE_SECONDS := 0.5
 ## However slowly the country comes, a shot is held no longer than this, in real seconds, and is
 ## then shown with what has arrived: the terrain, the water and the sky are always there, and
-## whatever the missing cells carry comes in while it plays.
-const HOLD_CAP_SECONDS := 20.0
+## whatever the missing cells carry comes in while it plays. A few seconds: on a machine that
+## keeps up, a shot's country is in within a fraction of one.
+const HOLD_CAP_SECONDS := 4.0
 ## A hold that has lasted this long says in the log what it is waiting for, once.
-const HOLD_REPORT_SECONDS := 5.0
+const HOLD_REPORT_SECONDS := 2.0
 ## Real seconds from the first shot after which the opening hands over as though a key had been
-## held: about two and a half times its pictures. A loaded machine drew the Spire's shot at
-## several seconds a frame and the engine, which slows the whole game rather than step physics
-## more than eight times a frame, counted each as an eighth of a second; the shot ran for ten
-## minutes and never reached its cut.
-const OVERALL_CAP_SECONDS := 240.0
-## The pictures run on the wall clock, as the music does, but one long frame moves them on by no
-## more than this: a hitch does not throw a shot away.
+## held: about three times its pictures. It is the net under everything else, not a pace: on a
+## machine drawing a frame every five or six seconds the whole opening, holds and all, takes about
+## three minutes.
+const OVERALL_CAP_SECONDS := 300.0
+## The pictures run on the wall clock, as the music does. One long frame among quick ones -- a
+## hitch -- moves them on by no more than this, so it does not throw a shot away; on a machine whose
+## every frame is long the pictures keep the wall clock regardless, or the opening would crawl.
 const MAX_STEP_SECONDS := 1.0
-const SETTLE_FRAMES := 4
+## Frames drawn at a new place before its shot is shown, so the country just built and Terrain3D's
+## clipmap, which re-centres on the camera over a frame, are what the shot opens on. Never for the
+## black, and never past the hold's cap.
+const SETTLE_FRAMES := 2
 const FADE_IN_SECONDS := 1.6
 const SKIP_FADE_SECONDS := 0.45
 const BARS_SECONDS := 1.4
@@ -107,6 +111,9 @@ var _line_key := ""
 var _title_up := false
 var _held: Dictionary = {}
 var _skip_held := 0.0
+## When the key being held went down, on the wall clock: the hold is timed from the press, not
+## summed from frames, or a single five-second frame would make any tap a skip.
+var _held_since_ms := 0
 var _prompt_idle := 0.0
 var _saved: Dictionary = {}
 var _restored := false
@@ -120,6 +127,16 @@ var _began_ms := 0
 var _hold_began_ms := 0
 var _hold_reported := false
 var _last_usec := 0
+var _last_raw_s := 0.0
+## Whether the curtain waits under the menus' fade and its loading caption until both have gone
+## (`begin`), so the caption fades out over black rather than being covered by it.
+var _under_the_fade := false
+## What each shot cost to show, for the log (`_log_shot`): frames drawn, the engine's own delta
+## summed beside the wall clock, and the slowest frame.
+var _shot_frames := 0
+var _shot_began_ms := 0
+var _shot_engine_s := 0.0
+var _shot_slowest_s := 0.0
 
 
 # --- the ways in -----------------------------------------------------------------------------------
@@ -231,13 +248,16 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 	# hold is over, or the two would pull the streaming two ways and the hold would time out.
 	# Meanwhile the curtain lies black just under the fade, with the loading caption above it, so
 	# the fade lifts onto the opening's black rather than onto the world.
-	if how != Mode.SCRUB and UI.is_holding_for_country():
+	# It stays there until the fade and the caption have gone: raised over them at once, it covered
+	# the caption the moment the hold ended, and on a machine drawing a frame every few seconds the
+	# player looked at a bare black screen until the Warden's first words.
+	if how != Mode.SCRUB and (UI.is_holding_for_country() or UI.is_loading_shown()):
 		_overlay.layer = UI.LAYER_FADE - 1
+		_under_the_fade = true
 		while UI.is_holding_for_country():
 			await get_tree().process_frame
 			if not is_inside_tree():
 				return
-		_overlay.layer = CinematicOverlay.LAYER
 	_save_state()
 	_camera = Camera3D.new()
 	_camera.name = "CinematicCamera"
@@ -426,6 +446,11 @@ func _restore_world() -> void:
 	var terrain_camera: Variant = _saved.get("terrain_camera", null)
 	if _world.terrain_node != null and terrain_camera is Camera3D and is_instance_valid(terrain_camera):
 		_world.terrain_node.call("set_camera", terrain_camera)
+	# The opening hands the world to the body it hands control to, the way the spawn does, whatever
+	# was following what when it began: the streaming, Terrain3D's clipmap and collision, and the
+	# fly camera let go (World.follow).
+	if mode == Mode.OPENING and _player != null and is_instance_valid(_player):
+		_world.follow(_player)
 	var atm := _atmosphere()
 	if atm != null:
 		atm.call("from_save", _saved.get("sky", {}))
@@ -654,11 +679,19 @@ func _highest_ground(p: Vector3) -> float:
 # --- the frame loop ----------------------------------------------------------------------------------
 
 func _process(_delta: float) -> void:
+	if _under_the_fade and not UI.is_loading_shown() and not UI.is_faded_out():
+		_under_the_fade = false
+		_overlay.layer = CinematicOverlay.LAYER
 	if _phase == Phase.DONE or _phase == Phase.STARTING or mode == Mode.SCRUB:
 		_last_usec = 0
+		_last_raw_s = 0.0
 		return
 	var real := _real_delta()
 	var dt := real * time_scale
+	if _phase == Phase.PLAY:
+		_shot_frames += 1
+		_shot_engine_s += _delta
+		_shot_slowest_s = maxf(_shot_slowest_s, real)
 	_update_skip(real)
 	if _phase in [Phase.HOLD, Phase.PLAY] and not gave_up and _began_ms > 0 \
 			and Time.get_ticks_msec() - _began_ms > int(overall_cap_seconds * 1000.0):
@@ -697,15 +730,18 @@ func _fade_curtain(to: float, seconds: float) -> void:
 	_curtain_rate = 1.0 / maxf(seconds, 0.01)
 
 
-## Wall-clock seconds since the last frame, no more than MAX_STEP_SECONDS. The engine's own delta
-## is not that on a machine that cannot keep up: below 7.5 frames a second it slows the whole game
-## rather than step physics more than eight times a frame, so a five-second frame arrives as an
-## eighth of a second.
+## Wall-clock seconds since the last frame. The engine's own delta is not that on a machine that
+## cannot keep up: below 7.5 frames a second it slows the whole game rather than step physics more
+## than eight times a frame, so a five-second frame arrives as an eighth of a second, and the
+## opening ran at a fortieth of its speed (PROGRESS). A long frame after a quick one is a hitch and
+## counts for MAX_STEP_SECONDS at most; a long frame after a long one is the machine, and counts.
 func _real_delta() -> float:
 	var now := Time.get_ticks_usec()
 	var d := 0.0 if _last_usec == 0 else float(now - _last_usec) / 1000000.0
 	_last_usec = now
-	return minf(d, MAX_STEP_SECONDS)
+	var limit := maxf(MAX_STEP_SECONDS, _last_raw_s * 2.0)
+	_last_raw_s = d
+	return minf(d, limit)
 
 
 func _begin_hold() -> void:
@@ -720,21 +756,21 @@ func _tick_hold(delta: float) -> void:
 	_waited += delta
 	var shot: Dictionary = _shots[_index]
 	var black := bool(shot.get("black", false))
+	var held_ms := Time.get_ticks_msec() - _hold_began_ms
+	# after the overall cap nothing is waited for: the hand-over comes at once
+	var cap_ms := 0 if gave_up else int(hold_cap_seconds * 1000.0)
 	var shown := black or _cells_ready()
 	if not shown:
-		var held_ms := Time.get_ticks_msec() - _hold_began_ms
 		if held_ms >= int(HOLD_REPORT_SECONDS * 1000.0) and not _hold_reported:
 			_hold_reported = true
 			Log.info("Cinematic", "shot '%s' is waiting for the country: %s" % [shot.get("id", ""), waiting_for()])
-		# after the overall cap nothing is waited for: the hand-over comes at once
-		if held_ms >= (0 if gave_up else int(hold_cap_seconds * 1000.0)):
+		if held_ms >= cap_ms:
 			Log.warn("Cinematic", "shot '%s' shown after %.1f s without all of its country: %s"
 					% [shot.get("id", ""), held_ms / 1000.0, waiting_for()])
 			shown_early.append(str(shot.get("id", "")))
 			shown = true
-			_settle = 0
 	if shown:
-		if _settle > 0:
+		if _settle > 0 and not black and held_ms < cap_ms:
 			_settle -= 1
 			return
 		_reveal(black)
@@ -761,13 +797,32 @@ func _reveal(black: bool) -> void:
 	else:
 		_overlay.clear_freeze()
 		_fade_curtain(0.0, FADE_IN_SECONDS)
+	var held := (Time.get_ticks_msec() - _hold_began_ms) / 1000.0
+	if held > 1.0:
+		Log.info("Cinematic", "shot '%s' held %.1f s for its country" % [_shots[_index].get("id", ""), held])
+	if _index == _handover:
+		_stand_people_up()
 	_phase = Phase.PLAY
+	_shot_frames = 0
+	_shot_began_ms = Time.get_ticks_msec()
+	_shot_engine_s = 0.0
+	_shot_slowest_s = 0.0
+
+
+## One line per shot shown: how long its pictures took on the wall and how many frames drew them.
+## A machine that cannot keep up shows here first, as few frames and a slow slowest one.
+func _log_shot() -> void:
+	var shot: Dictionary = _shots[_index]
+	Log.info("Cinematic", "shot '%s': %.1f s of pictures in %.1f s on the wall, %d frames (slowest %.2f s; the engine counted %.1f s)"
+			% [shot.get("id", ""), minf(_t, float(shot.get("duration", 1.0))),
+				(Time.get_ticks_msec() - _shot_began_ms) / 1000.0, _shot_frames, _shot_slowest_s, _shot_engine_s])
 
 
 func _tick_play(dt: float) -> void:
-	_t += dt
 	var shot: Dictionary = _shots[_index]
 	var duration := float(shot.get("duration", 1.0))
+	# however long the frames, every shot is drawn at least once past its middle
+	_t += minf(dt, duration * 0.5)
 	var u := clampf(_t / duration, 0.0, 1.0)
 	var path := path_of(_index)
 	if path != null:
@@ -779,6 +834,7 @@ func _tick_play(dt: float) -> void:
 
 
 func _end_shot() -> void:
+	_log_shot()
 	if _index == _handover:
 		_hand_over()
 		return
@@ -826,6 +882,8 @@ func _input(event: InputEvent) -> void:
 			if _phase in [Phase.HOLD, Phase.PLAY]:
 				_overlay.prompt(true)
 			if not wheel:
+				if _held.is_empty():
+					_held_since_ms = Time.get_ticks_msec()
 				_held[id] = true
 		elif not event.is_pressed():
 			_held.erase(id)
@@ -855,7 +913,7 @@ func _update_skip(delta: float) -> void:
 		if _prompt_idle > PROMPT_LINGER_SECONDS and _overlay.prompt_shown():
 			_overlay.prompt(false)
 	else:
-		_skip_held += delta
+		_skip_held = maxf(_skip_held, (Time.get_ticks_msec() - _held_since_ms) / 1000.0)
 	_overlay.prompt_fill(_skip_held / SKIP_HOLD_SECONDS)
 	if _skip_held >= SKIP_HOLD_SECONDS:
 		skip()
@@ -867,6 +925,9 @@ func skip() -> void:
 	if skipped or not (_phase in [Phase.HOLD, Phase.PLAY]) or mode == Mode.SCRUB:
 		return
 	skipped = true
+	Log.info("Cinematic", "skipped in shot '%s' (%s, %.1f s in)" % [
+			(_shots[_index] as Dictionary).get("id", "") if _index >= 0 and _index < _shots.size() else "",
+			phase_name(), _t])
 	_phase = Phase.SKIPPING
 	_held.clear()
 	_skip_held = 0.0
@@ -900,6 +961,7 @@ func _arrive_at_the_end() -> void:
 # --- handing over --------------------------------------------------------------------------------------
 
 func _hand_over() -> void:
+	_stand_people_up()
 	_phase = Phase.HANDOVER
 	_overlay.unsay()
 	_overlay.prompt(false)
@@ -923,6 +985,21 @@ func _finish() -> void:
 	# slot written in between would have played the opening again when it was loaded
 	SaveSystem.release_saves(_save_reason())
 	queue_free()
+
+
+## The people of the place control comes back at are stood up now, not at the NPC streamer's next
+## look round. A point of interest's people wait for its dressing (NpcStreamer._place_ready), and
+## the dressing goes with its cell when the camera flies off, so the Warden was never stood up
+## while the opening played; the streamer looks every three quarters of a second of game time,
+## which on a machine drawing a frame every few seconds is half a minute, and the first frame of
+## control had nobody at the fire. Called as the last shot is revealed, when the camp is loaded
+## around the camera, and again at the hand-over.
+func _stand_people_up() -> void:
+	if mode != Mode.OPENING:
+		return
+	var people := get_tree().get_first_node_in_group("npc_streamer")
+	if people != null and people.has_method("refresh"):
+		people.call("refresh")
 
 
 ## The overall cap: hands over the way holding a key does, so the end is the same end.

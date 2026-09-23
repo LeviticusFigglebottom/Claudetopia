@@ -202,8 +202,8 @@ land, the stakes, then you — and it is about ninety seconds long.
   its scatter. No shot looks south from the Hushline: the world ends 200 m past the Stair.
   The streamer follows the camera and loads the next shot while this one plays; if the
   cells are not there in time the picture holds on black with the loading caption and the
-  music waits, for twenty seconds at most, and then the shot is shown with what has come.
-  The pictures keep the wall clock, as the music does, and four minutes after the first shot
+  music waits, for four seconds at most, and then the shot is shown with what has come.
+  The pictures keep the wall clock, as the music does, and five minutes after the first shot
   the opening hands over as a skip would, however slow the machine. Any key or button shows
   *hold to skip*; skipping arrives at exactly the state playing to the end does — position,
   streaming, time, weather, buses, nothing paused. No slot is written while it plays, and a

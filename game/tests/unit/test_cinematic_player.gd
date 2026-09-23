@@ -467,6 +467,136 @@ func test_no_slot_is_written_while_the_opening_plays_and_a_loaded_game_never_pla
 	await _drop(w)
 
 
+## Skipped at any moment -- here while a shot waits for country that is not coming -- a new game
+## is handed over whole: the world follows the body (its streaming and Terrain3D's camera), the HUD
+## is up, the Warden stands in view at her fire, the first objective's smudge is on the strip and
+## its line is written, and the body stands on dry ground.
+func test_a_new_game_skipped_while_the_country_is_late_is_handed_over_whole() -> void:
+	if not _built():
+		return
+	Social.reset_for_new_game()
+	GameState.reset_for_new_game(21)
+	GameState.set_flag("player_name", "Tam Cresswell")
+	GameState.set_flag("player_calling", "core:calling/cragborn")
+	GameState.set_flag("new_game", true)
+	var w := _world()
+	await w.world_ready
+	var cin := await _wait_for_cinematic(45.0)
+	assert_true(cin != null, "a new game plays the opening")
+	if cin == null:
+		await _drop(w)
+		return
+	# nothing more of the country is built: the Mere waits for cells that do not come
+	w.streamer.cells_per_frame = 0
+	var until := Time.get_ticks_msec() + 60000
+	while is_instance_valid(cin) and not (cin.current_shot() == 1 and cin.phase_name() == "HOLD") \
+			and Time.get_ticks_msec() < until:
+		await _tree().process_frame
+	assert_true(is_instance_valid(cin) and cin.current_shot() == 1 and cin.phase_name() == "HOLD",
+			"the Mere is waiting for its country")
+	if not is_instance_valid(cin):
+		await _drop(w)
+		return
+	var done := [false]
+	cin.finished.connect(func(_s: bool) -> void: done[0] = true)
+	cin.skip()
+	w.streamer.cells_per_frame = 12
+	assert_true(await _until_finished(cin, done), "skipped in the hold, it hands back")
+	await _settle()
+	var body := _player(w)
+	var rig: Node = body.get("camera_rig")
+	var cam: Camera3D = rig.get("camera")
+	assert_eq(w.streamer.target, body, "the country streams around the body")
+	if w.terrain_node != null:
+		assert_eq(w.terrain_node.call("get_camera"), cam, "and Terrain3D draws and collides around the body's own camera")
+	assert_eq(_tree().root.get_viewport().get_camera_3d(), cam, "the gameplay camera is the one drawing")
+	assert_true(UI.hud_visible, "the HUD is up")
+	assert_true(_quest_active("core:quest/the_naming"), "the Naming has begun")
+	assert_true(PlayerSpawn._dry_at(w.provider, body.global_position.x, body.global_position.z),
+			"the body stands on dry ground at %s" % str(body.global_position.round()))
+	var wren: Node3D = null
+	var until_wren := Time.get_ticks_msec() + 30000
+	while wren == null and Time.get_ticks_msec() < until_wren:
+		await _tree().process_frame
+		if NpcRegistry.instance != null:
+			wren = NpcRegistry.instance.actor("core:npc/wren_tallow") as Node3D
+	assert_true(wren != null, "the Warden is stood up at the start")
+	# the objective line inks in, and the Warden is put at her fire as the camp's cell comes in
+	var hud := UI.hud()
+	var line := ""
+	var in_view := false
+	var near := false
+	var marked := false
+	var until_all := Time.get_ticks_msec() + 30000
+	while Time.get_ticks_msec() < until_all and not (line != "" and in_view and near and marked):
+		await _tree().process_frame
+		line = str(hud.call("objective_shown")) if hud != null else ""
+		marked = hud != null and bool(hud.call("quest_marker_on_strip"))
+		if wren != null and is_instance_valid(wren):
+			var head := wren.global_position + Vector3(0.0, 1.2, 0.0)
+			near = wren.global_position.distance_to(body.global_position) < 14.0
+			in_view = not cam.is_position_behind(head) \
+					and _tree().root.get_viewport().get_visible_rect().has_point(cam.unproject_position(head))
+	assert_true(marked, "the first objective's smudge is on the strip")
+	assert_true(line.begins_with("The Naming"), "and its line is written under the compass: '%s'" % line)
+	assert_true(near, "the Warden is at her fire, near")
+	assert_true(in_view, "and in view")
+	await _drop(w)
+
+
+## Any key shows the prompt; only a key held past its fill skips, and the hold is timed from the
+## press on the wall clock. On a machine drawing a frame every few seconds a tap inside one long
+## frame is not a hold, and a key held across one is.
+func test_a_tap_never_skips_and_a_held_key_does_even_across_long_frames() -> void:
+	if not _built():
+		return
+	Social.reset_for_new_game()
+	GameState.reset_for_new_game(22)
+	var w := _world()
+	await w.world_ready
+	await _settle()
+	var cin := CinematicPlayer.new()
+	var done := [false]
+	cin.finished.connect(func(_s: bool) -> void: done[0] = true)
+	w.add_child(cin)
+	cin.begin(w, _player(w), ContentDB.get_def(OPENING), CinematicPlayer.Mode.OPENING)
+	var until := Time.get_ticks_msec() + 30000
+	while is_instance_valid(cin) and not cin.is_playing() and Time.get_ticks_msec() < until:
+		await _tree().process_frame
+	assert_true(is_instance_valid(cin) and cin.is_playing(), "the opening is playing")
+	if not is_instance_valid(cin):
+		await _drop(w)
+		return
+	_key(true)
+	await _tree().process_frame
+	assert_true(cin.overlay().prompt_shown(), "a key shows the prompt at once")
+	# the key comes up again inside one long frame, before the opening looks at it
+	OS.delay_msec(1500)
+	_key(false)
+	await _tree().process_frame
+	await _tree().process_frame
+	assert_false(cin.skipped, "a tap is not a skip, however long the frame it fell in")
+	_key(true)
+	await _tree().process_frame
+	assert_false(cin.skipped, "a key held is not a skip on the frame it goes down")
+	OS.delay_msec(1500)
+	await _tree().process_frame
+	await _tree().process_frame
+	assert_true(cin.skipped, "held across a long frame, past the fill, it skips")
+	_key(false)
+	assert_true(await _until_finished(cin, done), "and hands back")
+	await _drop(w)
+
+
+## A key, straight to the viewport's `_input`: a headless run has no window to send it through.
+func _key(down: bool) -> void:
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_SPACE
+	ev.physical_keycode = KEY_SPACE
+	ev.pressed = down
+	_tree().root.push_input(ev)
+
+
 ## The menus fade to black on the way into the world, and something else lifts it: the body
 ## standing, or the streaming being done. The opening must not depend on which, or on when: a
 ## fade still down when it begins would hide every picture behind the subtitles.

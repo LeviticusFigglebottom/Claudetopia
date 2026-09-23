@@ -670,10 +670,18 @@ func _watch_the_opening() -> void:
 	var seen := {}
 	var started := Time.get_ticks_msec()
 	var skipped := false
+	var gave_up := false
+	var early: Array[String] = []
 	while is_instance_valid(cin) and cin.is_playing() and Time.get_ticks_msec() - started < 600000:
-		await get_tree().process_frame
+		# read after the opening has moved this frame and before it is drawn, so the picture taken
+		# is the moment read: at a few seconds a frame, the next frame can be half a shot later
+		await RenderingServer.frame_pre_draw
 		if not is_instance_valid(cin) or not cin.is_playing():
 			break
+		gave_up = cin.gave_up
+		early = cin.shown_early.duplicate()
+		if gave_up:
+			continue
 		var i := cin.current_shot()
 		var shot: Dictionary = shots[i]
 		var half := float(shot.get("duration", 1.0)) * 0.5
@@ -691,11 +699,19 @@ func _watch_the_opening() -> void:
 				skipped = true
 				await _hold_to_skip(cin)
 				break
-	_notes.append("the opening: %d of %d shots photographed as they played, %.0f s from the first to the skip"
-			% [seen.size(), shots.size(), (Time.get_ticks_msec() - started) / 1000.0])
-	_check(seen.size() == shots.size(), "every shot of the opening was shown (%d of %d)" % [seen.size(), shots.size()])
-	var gone := await _wait_until(func() -> bool: return get_tree().get_first_node_in_group(CinematicPlayer.GROUP) == null, 20.0)
-	_check(gone, "holding a key skips the opening and it lets go of the screen")
+	_notes.append("the opening: %d of %d shots photographed as they played, %.0f s from the first to the skip%s%s"
+			% [seen.size(), shots.size(), (Time.get_ticks_msec() - started) / 1000.0,
+				"; its overall cap handed over first" if gave_up else "",
+				"; shown before all of their country came: %s" % ", ".join(early) if not early.is_empty() else ""])
+	# a machine too slow to show it all in the cap is handed over rather than left inside it; that
+	# is the design, and the note says it happened
+	_check(seen.size() == shots.size() or gave_up, "every shot of the opening was shown (%d of %d)%s"
+			% [seen.size(), shots.size(), ", until the overall cap handed over" if gave_up else ""])
+	# a skip fades to black, arrives at the hand-over and lifts: a handful of frames, which on a
+	# machine drawing one every five seconds is most of a minute
+	var gone := await _wait_until(func() -> bool: return get_tree().get_first_node_in_group(CinematicPlayer.GROUP) == null, 90.0)
+	_check(gone, "the overall cap ended the opening and it let go of the screen" if gave_up
+			else "holding a key skips the opening and it lets go of the screen")
 	_check(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "the mouse is the player's again after the opening")
 	await _first_moment_of_control()
 
@@ -712,6 +728,13 @@ func _first_moment_of_control() -> void:
 	var cam := get_viewport().get_camera_3d()
 	_check(body != null and _on_screen(cam, body.global_position + Vector3(0.0, 1.0, 0.0)),
 			"the first frame of control shows the player's own body")
+	# the second playtest was stood on a pad in the sea: the spawn's own test of dry ground, here
+	var world := _world()
+	var provider: Object = world.get("provider") if world != null else null
+	if body != null and provider != null:
+		var feet := body.global_position
+		_check(PlayerSpawn._dry_at(provider, feet.x, feet.z),
+				"standing on dry ground, %.1f m above the nearest water" % (feet.y - float(provider.call("nearest_water_level", feet.x, feet.z))))
 	var person: Node3D = null
 	if NpcRegistry.instance != null and greeter != "":
 		person = NpcRegistry.instance.actor(greeter) as Node3D
@@ -741,7 +764,9 @@ func _on_screen(cam: Camera3D, point: Vector3) -> bool:
 	return get_viewport().get_visible_rect().has_point(at)
 
 
-## A key held the way a hand holds one: pressed, kept down past the prompt's fill, let go.
+## A key held the way a hand holds one: pressed, kept down past the prompt's fill, let go. The
+## prompt is looked for on the frame the key goes down, before the hold can have filled: on a
+## machine drawing a frame every few seconds the next frame is already past the second it asks for.
 func _hold_to_skip(cin: CinematicPlayer) -> void:
 	var ev := InputEventKey.new()
 	ev.keycode = KEY_SPACE
@@ -749,11 +774,13 @@ func _hold_to_skip(cin: CinematicPlayer) -> void:
 	ev.pressed = true
 	Input.parse_input_event(ev)
 	Input.flush_buffered_events()
-	await _settle(0.3)
+	await _capture("opening_hold_to_skip")
 	if is_instance_valid(cin) and cin.overlay() != null:
 		_check(cin.overlay().prompt_shown(), "pressing a key during the opening shows the skip prompt")
-	await _capture("opening_hold_to_skip")
-	await _settle(CinematicPlayer.SKIP_HOLD_SECONDS + 0.4)
+	# kept down, on the wall clock, until the opening has taken it as a skip
+	var taken := await _wait_until(func() -> bool: return not is_instance_valid(cin) or cin.skipped,
+			CinematicPlayer.SKIP_HOLD_SECONDS + 30.0)
+	_check(taken, "holding it down past the prompt's fill is taken as a skip")
 	var up := ev.duplicate() as InputEventKey
 	up.pressed = false
 	Input.parse_input_event(up)
