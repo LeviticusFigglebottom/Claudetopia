@@ -659,6 +659,11 @@ func _on_prompt_changed(text: String) -> void:
 	set_prompt(text)
 
 
+## The interaction prompt on the screen now ("[E] Talk to Wren Tallow"), or "" when none is up.
+func prompt_text() -> String:
+	return _prompt_label.text if _prompt != null and _prompt.visible else ""
+
+
 func set_prompt(text: String, action := "interact") -> void:
 	_prompt_action = action
 	_prompt_label.text = text
