@@ -3689,3 +3689,215 @@ In the run before the QuestFoes fix, two of them stood inside it.
   stands aside for it. The land agent will send the stair's steepest grade and end heights.
 * Photograph the start, the stair and the landing on the atlas terrain, and look at the
   cinematic's last shot, which flies up whichever stair is there.
+
+## Settlements along their streets, the keys nothing read, the sentences honoured, the Hart's body
+
+The brief: make the settlements read as places people live (a Hearthvale street capture was white
+boxes with thatch round an empty green), wire or remove the five content keys nothing read and
+land the audit that asks what nothing places, then honour the encounter sentences that were
+honoured loosely or not at all, and give the Hart of Thorns a body.
+
+**A settlement is laid out along its roads now.** `StreetPlan` (world/exteriors/street_plan.gd)
+takes the roads that cross a place's pad, splits them at the middle into arms and merges two that
+leave on one line (16 degrees), and puts the frontage beyond the outer of a merged pair where they
+part, so a fork is not a front room. A village that a road only reaches has its street carried on
+through, and a town on one road gets a cross street. The houses with an inside go on first: each on
+the frontage nearest where its door plan wanted it, door on the street, by its footprint read at
+runtime from its interior (`Building.footprint_of`). The rest of the fabric fills both sides from
+the middle out, each plot an oriented box clear of the roads, the middle and every other plot, its
+garden behind it, with a lane left every few plots in a town. Merrowby has four streets and 33
+houses along them (10 with an inside), Tollmere 49, Isseva 35, Kharrow Hold 19.
+
+**The houses are built by region and trade** (`HouseKit`): framed plaster, cob in ochre and pink,
+flint, render over stone with jettied upper floors, tarred boards on stilts, laid logs, drystone;
+porches and door hoods, chimneys, a door painted for its trade in the Vale, and a shop's emblem hung
+on an iron bracket over the street; the houses with an inside hang their own names. Windows on
+every side, and the houses with an inside had them too, drawn a hand's breadth inside the wall:
+the house forge writes a window's `normal` as the wall's axis and not its side, so every window in
+a front or left-hand wall was inside the masonry and those houses showed the street blank walls.
+The side is read from the window's room now; a window the forge cut across the front door is
+dropped, and every outside wall it gave none gets one with its shutters closed.
+
+**What a street has round it.** Gardens fenced the region's way (hurdles, rails, paling, drystone
+with a coping of stones on edge), with beds of cabbages, leeks, beans on cane wigwams and earthed-up
+potatoes, a shed, a woodpile of round logs with their sawn ends out, washing on a line, an apple
+tree; the first cut drew the crops as cubes, which read as a crate of limes, and the woodpile as a
+brick stair. A town paves its carriageway, footways and square in setts; a village beats a path to
+each door. The middle is a market (stalls facing the square with their goods, a well or a cross,
+lamps) or a green (its well, its tree, benches). The ground between the streets, which was a lawn
+a town's width across, fills from the edge of the place in with paddocks behind gates, orchards,
+allotments, rickyards, woodyards and peat folds. Hens, geese, sheep and pigs (four new forge props)
+keep to their own ground and wander it, and only while somebody is near. Two chimneys in three
+smoke (one MultiMesh of puffs a place, moved by the shader, leaning with the wind). The people
+whose days send them to a stall, the well, the green or the forge stand there, and a smith has an
+anvil to stand at.
+
+**On the roads.** A signpost is a fingerpost whose arms point down the roads that leave it, each
+with the name of the place it reaches (`RoadNetwork.destinations`, at runtime); the forge's signpost
+with arms at random angles and nothing on them is not drawn. A gate post has a five-barred gate,
+hung along the hedge's own line across the gap, most shut and some open into the field. Skerrow's
+drystone walls were judged and were not walls: the world build's asset lookup took
+`drystone_wall_end` for a variant of `drystone_wall`, so a third of every run was a 0.9 m end piece
+in a 2.4 m slot, each piece scaled at random in all three axes, and a boundary on the diagonal came
+out two texels thick with a wall along each. `cells.py` prefers a region's own exact variants now
+(checked to change nothing but Skerrow's walls), and `Wayside` closes the runs, holds a steady
+height and drops the doubled diagonal. Six props' atlases had unfilled texels that bled black at
+their seams (the well, the three wall pieces, the peat stacks); the forge fills them now
+(`atlas_fill.py`).
+
+**The budget.** DESIGN section 11 is 2000 draw calls and 1.5 M primitives, measured on the streets
+plan's Merrowby shot, and `DrawAttribution` counts primitives by owner now as well as draws
+(`--attribute`). On that shot the frame is 1713 draw calls and 1.82 M primitives, and the
+settlements are 216 of the draws and 0.27 M of the primitives. The draws are under the budget and
+the primitives are not, and the settlements are the smallest share of them: the scatter is 0.88 M,
+the villagers 0.32 M and Terrain3D 0.29 M, 1.49 M before a house is drawn. What the settlements
+cost was cut four ways:
+* The sun draws the cheapest rung of everything that casts, a MultiMesh of the forge's LOD2 that
+  casts and is never seen. Before, each kind was drawn again whole for every cascade.
+* The gardens are a mesh a quarter, drawn to 110 m. The small things (the crockery, a bucket, a
+  hen) are drawn to 70 m and throw no shadow.
+* The orchards of the next village are impostors past 130 m.
+* The drystone walls had no range, so every place's were drawn however far off it stood. That
+  was 0.32 M of the frame. Now the wall is drawn to a kilometre and its coping, a mesh of its own,
+  to 360 m.
+
+Over the round the settlements' share went 0.51 M (the first streets), 0.42 M (the sun's cheap
+rung), 0.58 M (the backlands filled and the coping packed tight), and 0.27 M.
+
+**The keys nothing read.** `opposite` (a trait's own opposite, read before the built-in table),
+`beds` (a deed on offer says "Four rooms, two beds." and its story), `sells_deeds` (a steward
+offers the deeds of their place at their hub, and choosing one opens the purchase) and
+`unique_features` (the card a region arrives on says what it is known for, the first time only)
+are read now; `unlocks` on the Merrowby house key is gone, since nothing gives the key and nothing
+it names reads it. `tools/unplaced.py` is the third audit beside `dead_data.py` and `unwired.py`:
+for every enemy, person, item, book, place, interior and dialogue, the ways the built game has of
+putting one in front of a player, and the definitions none reaches. **Enemies 0 of 34, people 0 of
+87, places, interiors and dialogues 0; items 40 of 239 and books 17 of 41 that nothing places:**
+seven pieces of armour (the brigandine's, the clan plate's and the padded set's gauntlets and
+greaves or boots, and the leather gloves), six weapons of the ash, ashen and bell-bronze lines, the
+Clan shield and the round shield, six potions, seven Sayings' tomes (and their seven books), ten
+accounts, pamphlets and letters (and their books), cottongrass and the Merrowby house key. It
+counts what an encounter says lies at a place (the chart in the Reed Wreck, the hermit's exercise
+book on Willow Isle). It fails on nothing; some of that is meant, and none of it was this brief to
+place.
+
+**The sentences, honoured.** Each is a test in `test_poi_encounters.gd` against the built world. The
+Clanless Camp is "a brute and two skirmishers": the Clanless Hewer, who goes in first in the
+heaviest plate, and two Outriders in plate cut down to run, who flank (two new foes). Gosling Pit's
+pack has its brute, the Larkbourne Bruiser, at the fire with the four and standing aside with them
+while the Roll sends you to hear Ryn out; Ryn stays the one you talk to. He came in hitting hard
+enough to break both of `test_balance.py`'s orderings (the downs more dangerous than Brightwater
+after them, and paying more than the marsh), so his maul is 16 and 26: five and a half hits to put a
+new player down, where the road's bandit takes eight and a hedge-wight three. The Headless Watch
+turns: a fallen Tolling knight stands on the sixth step of its stair while the Chapter Book's walk
+out to it is the errand (an encounter's new `if`, the other side of `unless`), and otherwise there
+is only the vigil. The Sallow King's sallowjaws lie in the pool under his roots and come up at
+whoever walks into the ring; each one the player kills there costs the Reed Council eight points of
+regard, with a line saying why (`killing_costs`), and walking back out of the ring costs nothing.
+The Mossbridge Wardens sit (`sits`: a foe minding its post sees you and starts nothing; a blow, the
+greed rule or its group's wake ends it) and let the empty-handed cross, and wake for whoever comes
+within nine metres carrying what was taken out of the Briarwold (`wakes_for`: a Warden's own
+heartwood, a Hart-Knight's antler, crown or spear, weaver silk, the old trees' moss and fungus). The
+Long Stride has its toll: the guilds' bravo keeps the table at the landward end by day, five marks
+paid there covers the day, and whoever walks on past the table unpaid has it out with him (`toll`);
+the cutpurses work the queue on the approach. The Tideflat has its crabs and nothing to fight: a
+shore crab in two colours (a new forge prop), going about sideways on the old strand as `Livestock`.
+The Singing Yew is ground the dead will not cross (`Wards`, from the POI def's `ward`): a foe tagged
+undead whose quarry stands under the yew turns for home, comes again when the quarry steps off, and
+does not step inside of its own accord. The barrow's nearest dead work the hedges 190 m off on a 26
+m leash, too far to lure, so two come up the hedge line past the gravestones after dark and stop
+there, for the sentence's show. And the groups said to be up high stand up high: the Foxfire weavers
+and the Glass Falls bell-bearer on a shelf of stone on the lip, the Three Sisters' scree-hags on the
+top ledge, and Whitecut's down-wolves in a dark mouth at the foot of the face, behind the water.
+What stays terrain and not people: Gosling Pit's rear path from the Hound's eye, Fern Gully's
+bridges to cut, Whitecut's wet stone.
+
+**The Hart of Thorns wears antlered plate, and no humanoid foe is the bare rig.** Every humanoid foe
+stood in the world as the forge's mannequin: no humanoid enemy was ever given an appearance, so the
+bandits at the ford, the raiders "in heavy plate" and the Hart of Thorns -- "antlered plate, a spear
+the length of a boat" -- were the same bare body in a tint. A foe is dressed from its def now
+(`EnemyDress`): an `appearance` like any person's, a `held` forge prop in the right hand along the
+socket's blade axis, and `antlers` grown from the head as their own mesh on the head's socket; a def
+that says nothing wears the outfit of its first tag that has one, from the garments the character
+forge already builds (a hood and a tunic on the road, brigandine on the outlaws, a gambeson and a
+hooded cloak on a poacher, plate on a knight and on the clanless, rags on the dead, a robe on a
+caster). The forge's cuirass has no sleeves, and the first capture of the Hart showed it over bare
+arms, a vest on a labourer; plate is worn over a padded gambeson now, and the test asks that nothing
+wears it over bare arms. The Hart wears the cuirass and pauldrons over his gambeson, gauntlets,
+boots and a helm, carries the forge's spear at two and a half times its length, and his antlers
+stand over the helm a metre across with four tines a side (`test_enemy_dress.gd` measures them on
+the rig at rest).
+
+**Two things found on the way.** A foe's eyes asked where the player stood in the frames between
+the world and an interior, when the body is out of the tree: an engine error a frame, fourteen in
+one run of the suite. Perception passes over a body out of the tree now. And since the physics
+interpolation was turned on, every capture logged the engine's warning that a MultiMesh it keeps
+was moved outside the physics ticks: the beasts, stepped from `_process`. Their MultiMeshes are out
+of the interpolation.
+
+**Checks**, on the merged head (main at 6985d356), one Godot at a time:
+
+* `./run.sh test`: 1,664 tests, 0 failed, 0 content problems, 0 script errors. The 4 logged errors
+  are the ones their tests provoke: an unknown item twice, an unknown interior, a missing save
+  slot.
+* `./run.sh journey`: 16 of 16 steps, 0 logged errors.
+* `./run.sh smoke`: PASS. 6 regions, 34 places, 24 interiors, 0 logged errors.
+* `./run.sh flow`: **fails 1 of 99 checks, in the opening**: "pressing a key during the opening
+  shows the skip prompt". While it ran, other agents' builds held the machine at a load of 11 to
+  15. The opening's shots were drawn at 2 to 4 frames each, over 15 to 32 s of wall clock. The
+  probe also logged "Lambda capture at index 0 was freed" from its own `_wait_until`. Nothing in
+  this branch touches the opening or the probe. The Naming, the handover, the first moment of
+  control, the HUD and the objective all pass. The run stopped at that check, so the `--load`
+  and `--continue` starts were not run.
+* `python3 -m unittest discover tools/tests`: 27 tests, with 3 failing. All three are on the
+  forge's empty pauldrons, as on main. `test_balance.py` passes again now that the Bruiser is
+  fixed.
+* The audits against main:
+  * `unwired.py`: 39 functions reached only by the tests, the same 39 names as main.
+  * `dead_data.py`: 0 of 620 keys (main: 5 of 599).
+  * `unplaced.py`: 0 of 34 enemies and 0 of 87 people; 40 of 239 items and 17 of 41 books;
+    places, interiors and dialogues 0.
+* The streets plan's Merrowby shot, on Compatibility with `--attribute`: 1713 draw calls and
+  1.82 M primitives, of which the settlements are 216 draws and 0.27 M.
+* Every frame was looked at:
+  * 19 look shots on Compatibility (the five regions' streets, Merrowby's street, market,
+    gardens and fingerpost, the aerial, the Vale gate, Skerrow's walls, and the encounter
+    places);
+  * 8 on Forward+;
+  * the streets plan's six and seven framed in the streets, on Forward+, on the final head.
+
+**Found and not fixed.**
+
+* **The streets plan's cameras stand where the ring's gardens were.** The six street shots were
+  set for the old layout, 45 m from each middle; with the towns laid along their streets, the
+  Merrowby shot looks across back gardens and the Gullhithe one across the grass between two
+  streets. They still measure the worst frame (the settlement all round the camera); they are not
+  the best picture of a street, and `tools/capture/plans/streets.json` is the shared plan, so it
+  is left alone.
+* **The primitive budget is over, and not because of the settlements.** On the Merrowby shot:
+  * the frame is 1.82 M against DESIGN section 11's 1.5 M;
+  * the scatter is 0.88 M, the villagers 0.32 M (0.21 M before the characters' second round) and
+    Terrain3D 0.29 M, which is 1.49 M before a house is drawn;
+  * the settlements are 0.27 M.
+* **A house with an inside has shut windows the inside does not.** The house forge cuts as many
+  windows as the household can pay for; the outside now has one on every wall, shuttered where
+  the interior has none, and walking in you find a plain wall behind the shutters.
+* **The cutpurses at the Long Stride still fight rather than pick pockets in the queue**: their
+  blow cuts a purse and they run, which is the bestiary's cutpurse; a queue that jostles is not
+  built.
+* **Gosling Pit's rear path from the Hound's eye, Fern Gully's bridges to cut and Whitecut's wet
+  stone are terrain, and are not built.**
+* **The sallowjaws are the quadruped rig in a green tint.** In the capture of the Sallow King's
+  ring they stand in the shallow pool as two box-bodied dogs. The bestiary's sallowjaw is a log
+  that lies in eight inches of water for a day and a half; that body is the characters' to make.
+* **The point-of-interest kinds the drawn map wants next** are not built: cave, farmstead, mill,
+  waystone, market field, quarry, shieling and vista (the cartographer's `docs/ATLAS.md`, section
+  10). They are next on this list after the settlements.
+* **The forge's pauldrons hold no mesh.** `clothing/pauldrons/pauldrons.glb` is a skinned node
+  with nothing to skin (`tools/tests/test_glb_textures.py` fails on it, on the parent branch as
+  well), so nobody's pauldrons are drawn: the Hart's and the knights' shoulders are their
+  gambesons'. They are left in the outfits for the day the forge builds them.
+* **The player's Clan Plate is worn over bare arms.** Its description is "iron plates faced with
+  giant-bone over a wool arming coat", and its `wear` puts the sleeveless cuirass in the torso slot
+  with no coat (`items/armour.json`), as the foes had it before this round. The player's wardrobe
+  was not this brief.
