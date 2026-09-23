@@ -2869,7 +2869,9 @@ release and no official binaries. Nothing to verify against, so nothing was chan
   always have a screen.
 
 **Found on merging main at f1cd8852, and not this stream's.** The merged suite: 1562 tests, 3
-failed, 3 script errors, where this branch alone had been 1421, none failed and none.
+failed, 3 script errors, where this branch alone had been 1421, none failed and none. (Main
+mended the three tests and the errors itself in d9c4b6ce and ef0b0ce2; merged again at 146494ec,
+the suite is 1570 tests, none failed, no content problems, no script errors, no dead captures.)
 `test_inventory_loot`'s two quest tests count the Naming's stages as wake, ash_wights, hearthstone,
 the_cart (quests round two, b1326eb6), and the opening (20ef631b) put `the_choir` second.
 `test_the_start.test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front` finds one light
