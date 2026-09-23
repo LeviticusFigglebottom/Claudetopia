@@ -52,7 +52,10 @@ case "$cmd" in
     # the run. The tests' own logged errors are counted and attributed by tests/test_runner.gd.
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/run_tests.tscn -- "$@" 2>&1 | tee /dev/stderr)" || true
     code=0
-    echo "$out" | grep -q "^RESULT: PASS" || code=1
+    # Never `echo "$out" | grep -q` under pipefail: grep -q stops reading at its match, echo can
+    # take a SIGPIPE writing the rest, and the pipeline fails with the verdict in it (3 runs in
+    # 50 on a passing suite's 215 KB). A grep that reads to the end cannot race.
+    echo "$out" | grep "^RESULT: PASS" >/dev/null || code=1
     n="$(echo "$out" | grep -c "^SCRIPT ERROR" || true)"
     if [ "$n" -gt 0 ]; then
       echo "[test] $n script error(s) logged by the engine, at:"
@@ -89,16 +92,16 @@ case "$cmd" in
       local script_errors
       script_errors="$(echo "$log" | grep -c "SCRIPT ERROR" || true)"
       [ "$script_errors" = "0" ] || echo "[flow] $script_errors script errors in the log (see above)"
-      if echo "$log" | grep -q "FLOW: FAIL"; then echo "[flow] FAIL ($*)"; return 1; fi
-      if ! echo "$log" | grep -q "FLOW: PASS"; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
+      if echo "$log" | grep "FLOW: FAIL" >/dev/null; then echo "[flow] FAIL ($*)"; return 1; fi
+      if ! echo "$log" | grep "FLOW: PASS" >/dev/null; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
     }
     flow_run "$@" && flow_run "--load=flow" && flow_run "--continue"
     echo "[flow] PASS: $out" ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"
-    if echo "$out" | grep -qE "SCRIPT ERROR|SMOKE: FAIL"; then echo "[smoke] FAIL"; exit 1; fi
-    if ! echo "$out" | grep -q "SMOKE: PASS"; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
+    if echo "$out" | grep -E "SCRIPT ERROR|SMOKE: FAIL" >/dev/null; then echo "[smoke] FAIL"; exit 1; fi
+    if ! echo "$out" | grep "SMOKE: PASS" >/dev/null; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
     echo "[smoke] PASS" ;;
   perf)
     import_project

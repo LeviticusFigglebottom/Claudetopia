@@ -4,13 +4,15 @@ The drop test (DESIGN 10.1) reads a region's landform with the colour taken out 
 skyline, how rugged it is, where the detail sits down the frame -- and on the 42-shot sheet it
 read 0.12 as recorded (shot with no points of interest standing) and 0.26 re-shot with them,
 against 0.17 for chance and a bar of 0.55. The regions differed by the colour of the ground,
-not by its shape. Five of the six shape functions were broad rolling fields at different heights, and
-at the scale a person walking sees (fifty to three hundred metres off, a few metres to a few
-tens of metres of relief) they all read as the same lumpy grass.
+not by its shape. Five of the six shape functions were broad rolling fields at different
+heights, and at the scale a person walking sees (fifty to three hundred metres off, a few metres
+to a few tens of metres of relief) they all read as the same lumpy grass.
 
 So each region gets one or two terms here that only it has, built from its own geometry at
 that scale, applied once to the composed land after the drainage and the Mere have had their
-say (`heights.compose_heights`):
+say (`heights.compose_heights`). Only with the world build's `landforms` recipe: they are
+measured (PROGRESS.md, "The shape of the land") but not yet looked at from the ground, and
+measured as relief at that scale they barely move any region, so no default build makes them.
 
 * Brightwater -- the Mere has fallen since the Toll came down, and a lake that falls leaves its
   old shorelines behind it: raised beaches, level benches a few metres apart stepping up from
