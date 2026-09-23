@@ -626,3 +626,56 @@ because nothing asked whether there was ground, and `./run.sh flow` passed the v
 Terrain3D's already-compressed regions), and a rebuild of the world is now a commit of that
 data, which will diff. The runtime height map's 3 m block-mean offset became part of the
 contract (CONTRACTS §6), because the fallback draws from it and it is visibly wrong without it.
+## 2026-09-23 · The view belongs to the mouse, movement is relative to it, and there are three gaits
+**Decision.** The camera rig is `top_level`: it follows the body's position every frame and never
+its rotation, and `CameraRig.yaw` is a world yaw that only look input changes. W/A/S/D are
+relative to that yaw. The body turns toward where it is going at a rate that falls with speed
+(900°/s standing to 300°/s at a sprint) and moves the way it faces, giving up speed while a large
+turn is still to make. Gaits are walk 1.8 m/s (a modifier or a light stick), jog 5.0 (the
+default) and sprint 7.8 (held, stamina 8/s, locked out at empty until 25% is back), with 16 m/s²
+up to a jog, 7 above it, 20 m/s² down from a jog and 12 above it.
+**Why.** Measured, not argued. The rig was a plain child of the body, so the view looked along
+body yaw + rig yaw while movement, respawn and saves all read the rig's yaw as the whole of it:
+one second of D turned the body 90° and the view with it, with the mouse untouched, and swung the
+compass in steps of up to 21° a frame. The player's report was "the mouse/movement relationship
+seems off, hence the compass and orientation issues", which is that sentence exactly. The speeds
+were 4.2 and 6.5 with no walk; the player said the movement was very slow and asked for a brisk
+jog near 5 and a sprint of 7.5–8. Two things made 4.2 read slower than it was: the default gait
+was posed as a crouch (the blend space fed velocity/6.5 = 0.65 sat beside Sneak_Walk at 0.5) and
+the planted feet slid at 79% of ground speed, so the legs looked like a shuffle while the body
+glided. Moving along the facing rather than straight along the stick is what stops a reversal
+reading as a moonwalk; giving up speed for the turn is what stops it swinging a wide arc.
+**Alternatives.** Keeping the rig under the body and subtracting its yaw everywhere it is read
+(every reader has to remember, and the camera still moves at physics rate); velocity straight
+along the stick with the body catching up (exact directions, but the body runs backward for a
+third of a second after every reversal); DESIGN's first numbers (4.2 and 6.5).
+**Consequences.** `Stealth` normalises noise by the sprint (a jog makes 0.51, where the old
+default made 0.52), and its speeds are pinned to the player's by a test. On a pad, sprint moved
+from the right-stick click, which it shared with lock-on and the camera toggle, to the left-stick
+click, which the Sayings menu gave up (it is on B on the keyboard; the pad layout wants a pass of
+its own). The first-model clips are fed through an interim mapping until the model is told metres
+per second. Reversible: the numbers are constants at the top of `player.gd`, and DESIGN §5.2
+states them.
+
+## 2026-09-23 · Physics is interpolated; what moves per frame opts out, and what jumps resets
+**Decision.** `physics/common/physics_interpolation` is on and the jitter fix is off. Bodies move
+in `_physics_process` as before and are drawn between ticks. A node moved every rendered frame
+opts out with `PHYSICS_INTERPOLATION_MODE_OFF`: the camera rig, the fly camera, bone-attached
+sockets, the atmosphere (sun, moon, the rain that follows the camera), a dropped item's bob, the
+Echo's hover, the Naming's turning mannequin, and the UI roots. A node already in the world that
+is put somewhere else calls `reset_physics_interpolation()`: the player's `teleport()` (which
+respawn, loads, doors, jail and the console all go through), an enemy sent home, a villager put
+indoors, a loaded actor.
+**Why.** Measured in the engine, not assumed. A child moved every frame under an interpolated
+parent is interpolated between ticks and trails: it read 3.61 where it had been put at 4, and
+5.71 where it had been put at 6. The same child opted out sits exactly where it was put on top of
+its parent's interpolated position, which is what a sword in a hand needs. A node moved on the
+frame it enters the tree does not smear (the engine resets it on its first tick), so spawners
+need nothing. An existing node moved without a reset does: moved from x = 4 to 500 it was drawn
+at 254 for a frame, and at 500 with the reset.
+**Alternatives.** Moving the camera in `_physics_process` (it would step at 60 Hz on a 144 Hz
+display, which is the judder being fixed); interpolating by hand in the camera only (the body,
+enemies and arrows would still step).
+**Consequences.** Anything new that is moved per frame in `_process` must opt out, and anything
+that teleports an existing node must reset it. Terrain3D 1.0.2 still calls the deprecated
+`instance_reset_physics_interpolation`, which prints a warning at load and is harmless.

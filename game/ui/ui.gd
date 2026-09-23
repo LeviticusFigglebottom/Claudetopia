@@ -93,6 +93,9 @@ var last_country_wait: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Screens are laid out every frame and never moved by physics: nothing under here is
+	# interpolated between physics ticks (project physics_interpolation is on for the world).
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_build_layers()
 	set_variant("warm", true)
 	EventBus.notify.connect(_on_notify)

@@ -1180,8 +1180,9 @@ func _damp(delta: float, rate: float) -> void:
 
 
 func _update_anim() -> void:
+	# ground velocity in the body's frame, m/s: the model picks the gait and the rate from it
 	var local := global_transform.basis.inverse() * Vector3(velocity.x, 0.0, velocity.z)
-	anim.set_locomotion(Vector2(local.x, -local.z) / maxf(speed, 0.1), false)
+	anim.set_locomotion(Vector2(local.x, -local.z), false)
 
 
 # --- reactions ----------------------------------------------------------------------------------
@@ -1279,6 +1280,7 @@ func reset_to_spawn() -> void:
 	global_position = spawn_position
 	rotation.y = spawn_yaw
 	velocity = Vector3.ZERO
+	reset_physics_interpolation()     # put back, not walked back: no smear across the map
 	perception.reset()
 	brain.force(Brain.PATROL if patrol_points.size() > 1 else Brain.IDLE)
 	inactive = archetype == "ambusher"

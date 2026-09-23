@@ -619,6 +619,7 @@ func get_socket(socket_name: String) -> Node3D:
 			var att := BoneAttachment3D.new()
 			att.name = node_name
 			att.bone_name = socket_name
+			att.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # follows the animation per frame
 			skeleton.add_child(att)
 			found = att
 	if found == null:
@@ -768,6 +769,8 @@ func from_save(d: Dictionary) -> void:
 		var p: Array = d["position"]
 		global_position = Vector3(float(p[0]), float(p[1]), float(p[2]))
 	rotation.y = float(d.get("yaw", rotation.y))
+	if is_inside_tree():
+		reset_physics_interpolation()     # a load puts a body somewhere; it does not walk it there
 	status.from_save(d.get("status", {}))
 	if bool(d.get("dead", false)):
 		die(null)
