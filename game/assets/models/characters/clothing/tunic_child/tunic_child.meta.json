@@ -1,0 +1,35 @@
+{
+ "bounds": [
+  -0.4219,
+  -0.0988,
+  0.572,
+  0.4274,
+  0.0983,
+  1.1055
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "tunic_child": "cloth"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 59840,
+ "slot_hint": "torso",
+ "textures": [
+  "tunic_child_albedo.png",
+  "tunic_child_orm.png"
+ ],
+ "tris": [
+  4200,
+  0,
+  0
+ ],
+ "version": 1
+}
