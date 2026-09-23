@@ -118,7 +118,20 @@ func is_alive(npc_id: String) -> bool:
 	return bool(state(npc_id).get("alive", false))
 
 
+## Somebody the story has taken out of the world: their def's `gone_when` conditions hold. Aud
+## Fennick walks into the grey at the end of the vigil, and the roster put her back in her tent at
+## Pilgrim's Ash the next hour, mending other people's grey. Nobody killed her and she is not dead;
+## she is not anywhere any more: stood up nowhere, off the clock, at no place.
+func is_gone(npc_id: String) -> bool:
+	var conds: Variant = ContentDB.get_or_empty(npc_id).get("gone_when", [])
+	if typeof(conds) != TYPE_ARRAY or (conds as Array).is_empty() or Social.ctx == null:
+		return false
+	return Conditions.all_of(conds, Social.ctx)
+
+
 func place_of(npc_id: String) -> String:
+	if is_gone(npc_id):
+		return ""
 	return str(state(npc_id).get("place", ""))
 
 
@@ -283,6 +296,8 @@ func npcs_at(place_id: String, include_dead := false) -> Array[String]:
 			continue
 		if not include_dead and not bool(s.get("alive", true)):
 			continue
+		if is_gone(str(id)):
+			continue
 		out.append(id)
 	out.sort()
 	return out
@@ -312,6 +327,14 @@ func simulate_all(weather := "") -> void:
 func simulate(npc_id: String, weather := "") -> Dictionary:
 	var s := state(npc_id)
 	if s.is_empty() or not bool(s.get("alive", true)):
+		return s
+	if is_gone(npc_id):
+		if str(s.get("place", "")) != "":
+			s["place"] = ""
+			s["spot"] = ""
+			state_changed.emit(npc_id)
+		if is_spawned(npc_id):
+			despawn(npc_id)
 		return s
 	if int(s.get("in_jail_until_day", 0)) > WorldClock.day:
 		return s
@@ -376,7 +399,7 @@ func _on_cell_loaded(cell: Vector2i) -> void:
 	if not spawning_enabled or abstract_only:
 		return
 	for id in states:
-		if is_alive(id) and cell_of(id) == cell:
+		if is_alive(id) and cell_of(id) == cell and not is_gone(id):
 			if is_spawned(id):
 				_settle_on_marker(id)
 			else:
@@ -421,7 +444,7 @@ func actor(npc_id: String) -> Node:
 
 
 func spawn(npc_id: String) -> Node:
-	if is_spawned(npc_id) or not is_alive(npc_id):
+	if is_spawned(npc_id) or not is_alive(npc_id) or is_gone(npc_id):
 		return null
 	if not ResourceLoader.exists(NPC_SCENE):
 		return null

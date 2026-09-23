@@ -21,7 +21,10 @@ The actors themselves are `actors/npc/npc.gd` (villager) and `actors/npc/guard.g
 
 * `npc` defs (CONTRACTS §7): `home_place`, `personality{traits[]}`,
   `schedule[{days, hour, place, activity, spot}]`, `merchant{...}`, `faction`,
-  `tags[]`, and the optional `work_clip` and `perception{}` this system adds.
+  `tags[]`, and the optional `work_clip` and `perception{}` this system adds; `gone_when`
+  (conditions) says when the story has taken somebody out of the world (Aud Fennick walks into
+  the grey): the registry stands them up nowhere and keeps them off the clock, and they are not
+  dead (`is_gone`, `tests/unit/test_aud_fennick.gd`).
 * `core:table/personality_traits` — trait behaviour rows (`role: personality_traits`).
   `Personality` falls back to built-in constants when no table is loaded.
 * `place` positions (for cell lookup) and `region` culture/law, through `WorldProbe`.

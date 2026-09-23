@@ -60,6 +60,11 @@
             "next": "the_barrow_names"
           },
           {
+            "text": "There was a leaf of the Roll up in the Reeve's bell. It says Mullbourne.",
+            "conditions": [{"has_item": ["core:item/wardens_roll_fragment", 1]}, {"flag_not": "gave_mullbourne_leaf"}],
+            "next": "the_mullbourne_leaf"
+          },
+          {
             "text": "Who reads at the turn of the season?",
             "conditions": [{"quest_done": "core:quest/the_deep_lines"}, {"rep_min": ["core:faction/wardens", 70]}, {"quest_not_done": "core:quest/the_reading"}, {"not": {"quest_active": "core:quest/the_reading"}}],
             "next": "the_reading_offer"
@@ -81,6 +86,13 @@
           },
           {"text": "Nothing. Keep warm, Roll-Keeper.", "effects": [{"end": true}]}
         ]
+      },
+
+      "the_mullbourne_leaf": {
+        "speaker": "core:npc/wardens_hesk",
+        "text": "*(She reads it standing, the whole leaf, the Reeve's lines as well, and then she reads the struck line again.)* — Mullbourne is the oldest struck entry on the Roll. The Rest has the page it was struck on and not the page it was written on, and I have spent eleven years telling apprentices the second page was lost in the split. It was not lost. It was sent to a barrow. — We struck them because nobody answered at the ford. He did not strike them. He read them, all sixteen, every season, because they were in front of him. I am going to put this leaf in the box with the lid that fits, and I am going to read it at the turn of the season myself, and I am not going to tell the Rest why until I have decided whether I am ashamed.",
+        "effects": [{"take_item": ["core:item/wardens_roll_fragment", 1]}, {"set_flag": "gave_mullbourne_leaf"}, {"rep": ["core:faction/wardens", 8]}, {"renown": 5}],
+        "next": "hub"
       },
 
       "the_doorstep": {

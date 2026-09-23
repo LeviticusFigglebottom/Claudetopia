@@ -15,6 +15,21 @@
     "description": "Sheets of limed calfskin sewn to a bronze ring, the ring green and the skin the colour of tea, taken out of the Bell Cist at Hollin Barrow. It is a roll of the dead the way the Wardens' is a roll of the living, and the last forty lines are in the same hand as the first, which is not possible and is nevertheless the case."
   },
   {
+    "id": "core:item/wardens_roll_fragment",
+    "name": "A Leaf of the Roll",
+    "category": "book",
+    "weight": 0.05,
+    "value": 0,
+    "tags": [
+      "quest",
+      "wardens",
+      "roll",
+      "no_sale"
+    ],
+    "reads": "core:book/wardens_roll_fragment",
+    "description": "One leaf of Wardens' rag-paper, older than anything in the Rest, folded twice and pushed up into the throat of the bell in the Bell Cist at Hollin Barrow. The top edge is burnt. The bottom is written over in the Reeve's hand, which has no business being on a Wardens' page at all."
+  },
+  {
     "id": "core:item/roll_wardens_seal",
     "name": "The Roll-Warden's Seal",
     "category": "misc",

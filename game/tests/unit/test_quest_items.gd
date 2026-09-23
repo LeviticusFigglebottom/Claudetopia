@@ -293,6 +293,23 @@ func test_what_the_forge_put_in_a_cave_can_be_picked_up_but_a_boss_keeps_his_own
 		assert_false(n is WorldItem and (n as WorldItem).item_id == "core:item/nave_bell", "She Who Waits drops her bell; it is not also on the floor")
 
 
+## The forge put a `core:item/wardens_roll_fragment` in Hollin Barrow's bell cist and no such item
+## existed, so the cist held nothing at all: the placer passes over an item it cannot make, and the
+## cave leaves it to the placer. It is a leaf of the Wardens' Roll now, readable, and Hesk takes it.
+func test_the_bell_cist_holds_a_leaf_of_the_roll() -> void:
+	var leaf := ContentDB.get_or_empty("core:item/wardens_roll_fragment")
+	assert_false(leaf.is_empty(), "the item the bell cist names exists")
+	assert_true(ContentDB.has(str(leaf.get("reads", ""))), "and it reads as a book")
+	var barrow := Node3D.new()
+	host.add_child(barrow)
+	var at_the_feature := func(_f: Dictionary) -> Vector3: return Vector3(4.0, 0.5, -2.0)
+	var got := items.raise_in_interior(barrow, "core:interior/hollin_barrow", _meta_of("core:interior/hollin_barrow"), at_the_feature)
+	var found := false
+	for n in got:
+		found = found or (n is WorldItem and (n as WorldItem).item_id == "core:item/wardens_roll_fragment")
+	assert_true(found, "the leaf lies in the bell cist to be taken up")
+
+
 # --- the note at the Seat -------------------------------------------------------------------------------
 
 func test_the_note_is_taken_up_at_the_seat_and_nowhere_else() -> void:

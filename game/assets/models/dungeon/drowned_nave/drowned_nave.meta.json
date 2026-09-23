@@ -2088,14 +2088,14 @@
   "encounters": [
     {
       "chamber": "nave_high",
-      "enemy": "core:enemy/hedge_wight",
+      "enemy": "core:enemy/bog_drowned",
       "count": 3,
       "group": "nave",
       "note": "The bog-drowned, standing in the pews as if the service had not ended."
     },
     {
       "chamber": "aisle",
-      "enemy": "core:enemy/hedge_wight",
+      "enemy": "core:enemy/bog_drowned",
       "count": 2,
       "group": "aisle",
       "ambush": true,
@@ -2103,7 +2103,7 @@
     },
     {
       "chamber": "crypt",
-      "enemy": "core:enemy/hedge_wight",
+      "enemy": "core:enemy/bog_drowned",
       "count": 3,
       "group": "crypt"
     },

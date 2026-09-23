@@ -31,6 +31,8 @@ const ORDER := [
 	["Escorts", "res://systems/npc_life/escorts.gd"],
 	# Fourteen quests sent you for things nothing gave, sold or put anywhere.
 	["QuestItems", "res://world/pois/quest_items.gd"],
+	# And sent you to fight where nothing stood: the stage stands up what it asks for.
+	["QuestFoes", "res://systems/quests/quest_foes.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 	# The chart was filled by being told about places, never by going to one or looking out
@@ -103,26 +105,9 @@ func _install_loot_drops() -> void:
 ## through `context_provider` and nothing ever assigned one, so every kill in the game rolled as a
 ## level-1 character with no luck and no quests: every loot entry gated on `min_level` --
 ## twenty-one of them, from level 2 to level 20 -- could never drop, and `weight_per_luck` weighed
-## nothing. Stages are QuestLog's own `stage_of`, the same index the dialogue context hands out.
+## nothing. The context is `LootTable.world_context()`, which a chest reads as well.
 func loot_context() -> Dictionary:
-	var ctx := LootTable.default_context()
-	if not is_inside_tree():
-		return ctx
-	var prog := get_tree().get_first_node_in_group("progression")
-	if prog != null:
-		ctx["level"] = int(prog.get("level"))
-		var mods: Variant = prog.get("mods")
-		if mods is Modifiers:
-			ctx["luck"] = (mods as Modifiers).apply("luck", 0.0)
-	var quest_log := get_tree().get_first_node_in_group("quest_log")
-	if quest_log != null and quest_log.has_method("stage_of"):
-		var quests := {}
-		var known: Variant = quest_log.get("quests")
-		if known is Dictionary:
-			for quest_id in known:
-				quests[str(quest_id)] = int(quest_log.call("stage_of", str(quest_id)))
-		ctx["quests"] = quests
-	return ctx
+	return LootTable.world_context()
 
 
 ## The Naming hands over a named character and a flag, and until now nothing picked it up, so
