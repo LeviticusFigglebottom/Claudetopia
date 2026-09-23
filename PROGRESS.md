@@ -2558,18 +2558,21 @@ release and no official binaries. Nothing to verify against, so nothing was chan
   when frames are: the engine clamps a slow frame's delta to what its capped physics steps cover
   (0.12 to 0.15 s for a 0.5 s frame, measured), so on Forward+ over lavapipe under load the probe's
   twelve seconds ran out before the card came. It waits up to ninety.
+* **The pushed branch, cloned and played.** Once the world was committed (197a50c1, the 1048
+  files of the runtime set), `claude/blissful-volta-dg80e6` at 549dd05 was cloned fresh from
+  GitHub (`--depth 1`, 1.4 GB checked out), never opened, never imported, no Python run. In it
+  `./run.sh flow` imported the project and passed all three starts on Terrain3D: New Game 73
+  checks, `--load` 28, Continue 31, none failed, no errors logged; the ground drawn by Terrain3D,
+  46 drawn things within 200 m, the fade held 8.3, 6.1 and 3.5 s for the near cells. In all
+  three the ray down from the body met the Hushline Stair's masonry 1.36 m below the feet and
+  no terrain collision: the same in every Terrain3D run here since the first, and consistent with
+  what the user's second playtest found and main has since mended (Terrain3D's collision stayed
+  round the fly camera, not the player).
 
 ### Next, in order
 
-1. **Commit the built world**, once the rebuilt one is merged into the main checkout. From the
-   top of that checkout, with the world built there (not symlinked):
-   `git add game/world/generated/world_manifest.json game/world/generated/pois.json
-   game/world/generated/roads.json game/world/generated/rivers.json game/world/generated/runtime
-   game/world/generated/cells game/terrain_data` (plus `game/world/terrain_assets.tres` if the
-   import rewrote it). `.gitignore` keeps everything else out; `git add --dry-run` of those paths
-   was checked against placeholders of every file the builder writes. Accept it when `git diff
-   --cached --stat` says 1048 files, about 309 MB, and a fresh clone of the result passes
-   `./run.sh flow` without Python (the test in this section).
+1. ~~**Commit the built world.**~~ Done on the main branch (197a50c1), and a fresh clone of it
+   plays without Python (above).
 2. **Play it on a Mac.** Nothing here can run macOS. On macOS 15 or later the title must say
    nothing about the ground and `./run.sh flow` must pass on Terrain3D; on macOS 14 or earlier the
    title's notice must name macOS 15, the corner plate must say "Coarse ground", and the flow must
