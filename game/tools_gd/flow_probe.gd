@@ -500,9 +500,14 @@ func _check_the_ground() -> void:
 				% (str(said.call("text")) if said != null else "nothing says so"))
 		var st: Variant = world.get("status")
 		if st is Dictionary and bool((st as Dictionary).get("announce", false)) and said != null:
-			# the card lets the region's title card go first (GroundNotice.AFTER_ARRIVAL_S)
-			var up := await _wait_until(func() -> bool: return bool(said.get("card_shown")), 12.0)
-			_check(up, "and a card says why, once the region's name has been shown")
+			# The card lets the region's title card go first (GroundNotice.AFTER_ARRIVAL_S), in game
+			# time. When frames are slow the engine clamps each frame's delta to what its capped
+			# physics steps cover (measured: 0.12 to 0.15 s for a 0.5 s frame), so on software
+			# Vulkan under load the 4.8 s is half a minute of the clock or more.
+			var asked := Time.get_ticks_msec()
+			var up := await _wait_until(func() -> bool: return bool(said.get("card_shown")), 90.0)
+			_check(up, "and a card says why, once the region's name has been shown (%.1f s later)"
+					% ((Time.get_ticks_msec() - asked) / 1000.0))
 			if up:
 				await _settle(0.8)
 				await _capture("coarse_ground_card")
