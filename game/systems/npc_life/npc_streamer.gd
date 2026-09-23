@@ -153,6 +153,7 @@ func _stand_up_indoors(interior_id: String) -> void:
 		# a headless test, a pocket that has not finished loading — they are still here.
 		if body is Node3D and root != null:
 			(body as Node3D).global_position = _spot_inside(root, npc_id, n)
+			(body as Node3D).reset_physics_interpolation()
 		n += 1
 
 

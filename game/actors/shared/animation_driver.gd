@@ -23,6 +23,8 @@ signal clip_event(event_name: String)
 signal clip_finished(clip: String)
 
 const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
+## Ground speed (m/s) at which a placeholder body swings its limbs fully.
+const PLACEHOLDER_FULL_SPEED := 5.0
 const LOOPING: Array[String] = ["Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Strafe_L", "Strafe_R", "Sneak_Idle", "Sneak_Walk", "Jump_Loop", "Fall_Loop", "Block_Idle", "Cast_Loop", "Bow_Aim", "Sit_Idle", "Sleep_Idle"]
 ## Clips that keep their final pose after finishing (until another clip plays).
 const HELD_POSE: Array[String] = ["Death_A", "Death_B", "Death", "Knockdown", "Sleep_Idle", "Sit_Idle"]
@@ -59,7 +61,7 @@ var elapsed: float = 0.0
 var looping: bool = false
 var busy: bool = false                 # a non-looping clip is in progress
 var hold_at: float = -1.0              # >= 0: freeze the timeline at this time (heavy charge)
-var locomotion: Vector2 = Vector2.ZERO # x = strafe, y = forward, in units of run speed
+var locomotion: Vector2 = Vector2.ZERO # ground velocity in the body's frame, m/s: x right, y ahead
 var sneaking: bool = false
 var held: bool = false                 # finished clip keeps its last pose
 var event_times: Dictionary = {}       # name -> t for the current clip's timeline
@@ -155,6 +157,8 @@ func play_intent(clip: String, timing: Dictionary = {}) -> void:
 	clip_started.emit(clip)
 
 
+## `v` is the body's ground velocity in its own frame, in m/s (x to its right, y ahead). The
+## forge's model turns that into a gait played at the rate that keeps its feet planted.
 func set_locomotion(v: Vector2, is_sneaking: bool) -> void:
 	locomotion = v
 	sneaking = is_sneaking
@@ -241,7 +245,8 @@ func _physics_process(delta: float) -> void:
 	if model != null:
 		_sync_model_speed()
 	elif placeholder != null:
-		placeholder.update(delta, current_clip, progress(), locomotion, sneaking)
+		# the capsule's swing is scaled 0..1, full at a jog
+		placeholder.update(delta, current_clip, progress(), locomotion / PLACEHOLDER_FULL_SPEED, sneaking)
 
 
 ## The timeline is done with a clip the rig may still be playing (a swing stretched past its

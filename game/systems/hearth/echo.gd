@@ -30,6 +30,8 @@ func _ready() -> void:
 	col.position.y = HEIGHT * 0.5
 	add_child(col)
 	_figure = MeshInstance3D.new()
+	# it hovers every frame in _process, so it is placed exactly, not interpolated
+	_figure.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	var cm := CapsuleMesh.new()
 	cm.radius = 0.28
 	cm.height = 1.7
