@@ -182,8 +182,11 @@ land, the stakes, then you — and it is about ninety seconds long.
   of it towards the Choir. The Warden stands 6 m in front at her fire, turned to you. Around
   her: two tents, a cart with its load, two grey-green Warden colours with a bell each either
   side of the way out, a signpost, lamps. Behind you: the two Oroth piers at the head of the
-  stair, its top steps going over the edge, and her Hearthstone. The first view is the camp,
-  the heath beyond it, and the Choir's twelve headless colossi on the skyline. From the camp,
+  stair and her Hearthstone. The stair goes from them straight down the 77 m cliff to the Hush
+  and on into the water, where the mist takes it. From over the Hush it is one line climbing
+  the cliff to the camp: what you came up, and what the opening's last shot flies. The first
+  view is the camp, the heath beyond it, and the Choir's twelve headless colossi on the
+  skyline. From the camp,
   waystones (a lamp on every third) walk 426 m north to the Choir over ground a person can
   walk, and keep more than fifty metres from anything the built world stands on the heath:
   about a minute and a half on foot, past the Cantor's Seat. The world builder places the
@@ -209,12 +212,12 @@ land, the stakes, then you — and it is about ninety seconds long.
   which `tools/audio/compose.py` composes from the same shot list so the cuts land on it.
   *Play the opening on a new game* (Settings, gameplay) turns it off, and the pause menu's
   *How it began* plays it again.
-* **What it cannot fix, and the design assumes.** The Stair itself stands where the built
-  world put its pad: a mesa in the Hush's water 100 m out from the foot of the cliff, not
-  climbing it. The start is on the rim above it, and the Stair is seen from there and from the
-  last shot. The Stair Head has no pad of its own until the next world build (its def is
-  dressed on the ground as it stands until then), and there are no animals in the camp,
-  because nothing in the asset library is one.
+* **What it cannot fix, and the design assumes.** The Hushline Stair's own POI still stands
+  where the built world put its pad: an 8 m mound in the Hush's water 100 m out from the foot
+  of the cliff, with its old dressing and four ash-wights on it that nobody can reach. The stair
+  that matters is the one built from the camp. The Stair Head has no pad of its own until the
+  next world build (its def is dressed on the ground as it stands until then). There are no
+  animals in the camp, because nothing in the asset library is one.
 
 ### 5.2 Movement & cameras
 * `CharacterBody3D` with three gaits: **walk 1.8 m/s** (walk key held, or a light stick),

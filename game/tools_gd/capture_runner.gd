@@ -615,6 +615,9 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 	if not ContentDB.has(id):
 		Log.error("Capture", "no cinematic %s" % id)
 		return 2
+	# A plan that stages a new game (`flags: {new_game: true}`) must not have the real opening start
+	# under the frames it poses: that one takes the screen, black, from its first shot. Not saved.
+	Settings.set_value("gameplay", "play_opening", false, false)
 	_world = await _load_world(true)
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")
