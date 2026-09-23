@@ -2251,6 +2251,64 @@ drawn things within 200 m, the notice on arrival.
   untracked** (`game/world/generated`, `game/terrain_data`), because `.gitignore` can no longer
   ignore those paths whole and still track files inside them. Add files by name.
 
+### Then: Forward+, a player on Windows, and the coarse ground said out loud
+
+The player's own logs (Windows, a Radeon RX 9070 XT, Forward+, Godot 4.7.1) said
+`[World] ready: terrain=fallback` on every run, with no errors. Their world build had written the
+maps and the Terrain3D import after it never ran: `run.sh` called `godot`, which is not on a
+Windows `PATH`. The coarse ground carried them — and was much of the grey, barren look they
+reported, announced by one small line on the title and one toast that they never saw.
+
+**Forward+ on this machine crashed as the world was built, and it is not ours.** With Mesa's
+software Vulkan driver installed, the flow got through the title and the Naming and died at
+`add_child(terrain_node)`: the deprecation warning, "/root: The caller thread can't call the
+function `propagate_notification()`", signal 11 in an unknown module. Terrain3D 1.0.2 alone in an
+empty project (a camera, a light, the node; with the regions and without any data) does the same
+on its first frame. Under gdb all four `llvmpipe` rasterizer threads stop at one address in the
+driver's compiled shader, on an indexed load (`vmovd 0x0(%r13,%rax,4)`) out of range. The thread
+error is Godot's crash handler sending NOTIFICATION_CRASH to the tree from that thread: under gdb,
+which takes the fault first, it never prints. The game's one worker-thread task (the streamer's
+`_parse_cell`) reads a file and parses JSON, touches no node, and is not running then. The
+deprecated `instance_reset_physics_interpolation` is compiled only into Terrain3D's 4.4-targeted
+builds and lands on Godot's compatibility binding: one warning, harmless, and not the crash.
+
+**No newer Terrain3D to move to.** `git ls-remote` of the upstream repository: the newest tag is
+`v1.0.2-stable`; its `1.0` branch has one commit since, to the installation docs; `main` is
+`1.1.0-dev` (`compatibility_minimum = 4.5`) and no longer makes the deprecated call, but has no
+release and no official binaries. Nothing to verify against, so nothing was changed.
+
+**What changed.**
+
+* `WorldStatus` does not start Terrain3D on a RenderingDevice (Forward+, Mobile) whose adapter is
+  llvmpipe: the coarse ground, with the reason and the renderer that does draw it (the
+  Compatibility renderer's llvmpipe draws Terrain3D, as every flow here always has).
+  `-- --terrain=terrain3d` tries Terrain3D anyway; `-- --terrain=fallback` asks for the coarse
+  ground anywhere (`--fallback-terrain` still works), read from the user arguments and the
+  engine's own, so the editor's Main Run Args carry it too. On Forward+ over lavapipe the New Game
+  flow now passes (75 checks, none failed, no errors logged), and so does it with
+  `--terrain=fallback` (74).
+* The coarse ground, unless asked for, is said where it cannot be missed (`GroundNotice`): across
+  the title sheet as plainly as a missing world, with the way to the full terrain and the way in
+  still open; on a card across the top of the view once the region's name has gone; and on a
+  "Coarse ground" plate in the top left corner, with the reason, for as long as the HUD is up.
+  Asked for, it is the plate alone and one small line on the title. When the maps were built here
+  and never imported, the way named is `./run.sh terrain`, not a rebuild. The flow checks the
+  plate and the card on the coarse ground, and that nothing says so on Terrain3D.
+* `run.sh` finds Godot: `GODOT` if set, then the usual names on the `PATH`, then the usual places
+  (Downloads, the Desktop, `C:/Godot`, Program Files, Steam and winget on Windows, the console
+  build first; `/Applications/Godot.app`; an unpacked Linux download), a 4.7 before any other,
+  with a warning when it is not a 4.7. `./run.sh godot` says which. A command that needs Godot and
+  has none stops before doing anything, with a banner naming `GODOT` and an example per system;
+  `./run.sh world` looks before it builds. A failed terrain import gets a banner too, and
+  `./run.sh terrain` runs the import alone. Python is found the same way (`PYTHON`, `python3`,
+  `python`). Checked on this machine against fake homes; not run on Windows.
+* This branch's final suite had printed `RESULT: PASS` and exited 1: `echo | grep -q` under
+  `pipefail`. The parent's fix is taken verbatim.
+* The arrival card waits 4.8 s of game time for the region's title card, and game time is slow
+  when frames are: the engine clamps a slow frame's delta to what its capped physics steps cover
+  (0.12 to 0.15 s for a 0.5 s frame, measured), so on Forward+ over lavapipe under load the probe's
+  twelve seconds ran out before the card came. It waits up to ninety.
+
 ### Next, in order
 
 1. **Commit the built world**, once the rebuilt one is merged into the main checkout. From the
@@ -2262,10 +2320,14 @@ drawn things within 200 m, the notice on arrival.
    was checked against placeholders of every file the builder writes. Accept it when `git diff
    --cached --stat` says 1048 files, about 309 MB, and a fresh clone of the result passes
    `./run.sh flow` without Python (the test in this section).
-2. **Play it on a Mac.** Nothing here can run macOS. On macOS 15 or later the title must show no
-   "coarse" line and `./run.sh flow` must pass on Terrain3D; on macOS 14 or earlier, the title's
-   small line must name macOS 15 and the flow must pass on the coarse ground. If the frameworks are
-   refused (quarantine, signing), the Console log says so and the game still plays, coarse.
+2. **Play it on a Mac.** Nothing here can run macOS. On macOS 15 or later the title must say
+   nothing about the ground and `./run.sh flow` must pass on Terrain3D; on macOS 14 or earlier the
+   title's notice must name macOS 15, the corner plate must say "Coarse ground", and the flow must
+   pass on the coarse ground. If the frameworks are refused (quarantine, signing), the Console log
+   says so and the game still plays, coarse, and says so.
+2a. **Run `./run.sh` on Windows from Git Bash**, with Godot unzipped into Downloads and not on the
+   `PATH`: `./run.sh godot` must name the console build, and with no Godot anywhere every command
+   must stop with the banner before building anything.
 3. **Linux on arm64** is the same test as an old Mac, and Terrain3D has no binary for it: the
    fix there is upstream, or building Terrain3D 1.0.2 for arm64 ourselves.
 4. **Settle the water sheet** (see above): one capture of the Mere and one of the Hushline's
