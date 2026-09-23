@@ -104,6 +104,37 @@ static func bed_id_of(property_id: String) -> String:
 	return str(block(property_id).get("bed", interior_of(property_id) + "#bed"))
 
 
+## What the deed says the house is: its rooms and its beds, and what is written of it. The deed
+## screen reads it out under the house's name. Every deed carried its rooms, its beds and a line
+## of its history, and the screen showed a name and a price.
+static func describe(property_id: String) -> String:
+	var b := block(property_id)
+	var parts: Array[String] = []
+	var rooms := int(b.get("rooms", 0))
+	var beds := int(b.get("beds", 0))
+	if rooms > 0:
+		parts.append(_count(rooms, "room"))
+	if beds > 0:
+		parts.append(_count(beds, "bed"))
+	var line := ""
+	if not parts.is_empty():
+		line = _sentence(", ".join(parts))
+	var story := str(b.get("story", "")).strip_edges()
+	if story != "":
+		line = story if line == "" else line + " " + story
+	return line
+
+
+static func _count(n: int, noun: String) -> String:
+	const WORDS := ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+	var number: String = WORDS[n] if n < WORDS.size() else str(n)
+	return "%s %s%s" % [number, noun, "" if n == 1 else "s"]
+
+
+static func _sentence(s: String) -> String:
+	return s.left(1).to_upper() + s.substr(1) + "."
+
+
 static func door_id_of(property_id: String) -> String:
 	return interior_of(property_id) + "#door"
 

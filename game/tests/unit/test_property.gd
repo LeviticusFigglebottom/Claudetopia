@@ -319,3 +319,16 @@ func test_a_board_for_a_house_you_do_not_own_still_sells_it() -> void:
 	_root().add_child(sign)
 	_nodes.append(sign)
 	assert_true(sign.prompt_text().begins_with("Buy "), "got '%s'" % sign.prompt_text())
+
+
+## A deed says what the house is -- its rooms, its beds, a line of its history -- and the deed
+## screen reads it out under the name. The deeds carried all three and the screen showed a name
+## and a price.
+func test_a_deed_describes_its_house() -> void:
+	var line := PropertyRegistry.describe("core:item/deed_merrowby_bellrow_house")
+	assert_true(line.begins_with("Four rooms, two beds."), line)
+	assert_true(line.contains("bronze"), "the deed's history was left off: %s" % line)
+	for d in PropertyRegistry.all_deeds():
+		var b: Dictionary = d["property"]
+		if b.has("beds"):
+			assert_true(PropertyRegistry.describe(str(d["id"])).contains(" bed"), "%s: its beds went unread" % d["id"])
