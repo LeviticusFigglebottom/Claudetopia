@@ -63,13 +63,21 @@ def flow_accumulation(h: np.ndarray, cell_m: float) -> np.ndarray:
     return acc.reshape(n, n)
 
 
-def channel_field(h: np.ndarray, cell_m: float, knee: float = 60.0, power: float = 0.42) -> np.ndarray:
+def channel_field(h: np.ndarray, cell_m: float, knee: float = 60.0, power: float = 0.42,
+                  jitter: np.ndarray | None = None) -> np.ndarray:
     """0..1 "how much of a valley is this": log-scaled, normalised flow accumulation.
 
     Unitless on purpose -- the caller multiplies it by a per-region depth in metres, so the
     result has to mean the same thing at 2 m and at 32 m per texel.
+
+    `jitter` (metres) is added to the land the water is routed over, not to the land that is
+    cut. On a long even slope -- a dale side drawn as one plane, a range's flank -- D8 routing
+    runs every cell straight down in parallel lines that merge on the grid's own diagonals, and
+    the carve combed the whole hillside with rills a few cells apart. A few metres of
+    low-frequency unevenness is what a real hillside has, and it gathers the water into gills.
     """
-    filled = fill_sinks(ndimage.gaussian_filter(h, 1.0))
+    route = h if jitter is None else h + jitter
+    filled = fill_sinks(ndimage.gaussian_filter(route, 1.0))
     acc = flow_accumulation(filled, cell_m)
     a = np.log1p(acc / knee)
     a = a / max(float(np.percentile(a, 99.9)), 1e-6)
@@ -78,9 +86,9 @@ def channel_field(h: np.ndarray, cell_m: float, knee: float = 60.0, power: float
 
 
 def valley_carve(h: np.ndarray, cell_m: float, depth_m: np.ndarray, strength: np.ndarray,
-                 knee: float = 60.0, power: float = 0.42) -> tuple:
+                 knee: float = 60.0, power: float = 0.42, jitter: np.ndarray | None = None) -> tuple:
     """Deepen the drainage network by up to depth_m metres. Returns (heights, channel field)."""
-    chan = channel_field(h, cell_m, knee, power)
+    chan = channel_field(h, cell_m, knee, power, jitter)
     carved = h - depth_m * chan * strength
     # a valley floor is smoother than the ridges it cuts through (metres either way: this is
     # a blend between two height fields, never scaled by the depth again)

@@ -62,6 +62,11 @@ def detail_amplitude(owner: np.ndarray, regions: list) -> np.ndarray:
     return table[owner]
 
 
+## how uneven, in metres, the land the drainage is routed over is made (erosion.channel_field),
+## and over what wavelengths: broad enough that the water gathers into gills a few hundred metres
+## apart, never so broad that it bends a valley the atlas drew
+ROUTE_JITTER_M = 5.0
+ROUTE_JITTER_WL = (120.0, 700.0)
 EROSION_STRENGTH = {"downs": 1.0, "lake_basin": 0.35, "delta": 0.25, "forest_rise": 1.05,
                     "mountains": 1.25, "ash_plateau": 0.45}
 EROSION_DEPTH = {"downs": 24.0, "lake_basin": 8.0, "delta": 4.0, "forest_rise": 32.0,
@@ -88,7 +93,9 @@ def apply_drainage(ctx: HeightContext, h: np.ndarray, sea: np.ndarray | None = N
     if sea is not None:
         dry = dry * (1.0 - downsample(sea.astype(np.float32), g.n))
     strength = strength * dry
-    carved, chan = valley_carve(hw, g.spacing, depth_by, strength)
+    # the water is routed over land a little less even than the land itself (erosion.channel_field)
+    jitter = downsample(ROUTE_JITTER_M * ctx.f(611, 2.0, *ROUTE_JITTER_WL), g.n)
+    carved, chan = valley_carve(hw, g.spacing, depth_by, strength, jitter=jitter)
     delta = carved - hw
     if g.n != n:
         delta = upsample(delta, n, order=3)
