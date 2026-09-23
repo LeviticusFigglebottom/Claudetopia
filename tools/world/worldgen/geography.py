@@ -119,39 +119,82 @@ class LineField:
     left: np.ndarray       # bool: on the left walking from the first point to the last
 
 
+## `line_field`'s distance where no segment of the line is within reach
+LINE_FAR_M = 1.0e6
+
+
 def line_field(grid: Grid, pts, reach_m: float) -> LineField:
-    """Distance from every texel within `reach_m` of the polyline `pts` ([[x, z], ...])."""
+    """Distance from every texel within `reach_m` of the polyline `pts` ([[x, z], ...]) to the
+    nearest point on it, the arc position of that point, the tangent there and the side.
+
+    Each texel is projected onto every segment of the line whose reach it is in. It used to be
+    measured to the nearest of the line's samples, found by a distance transform of them
+    rasterised; that sample is the nearest *texel* holding one, and a few hundred metres out it is
+    tens of samples off the foot of the perpendicular. The distance and the arc position (and so a
+    range's crest height, which varies along it) came in steps of a few centimetres, and every
+    range's flanks were combed with dashes, which the hill-shading of the Skerrow dales showed
+    from end to end. Texels out of reach of every segment get LINE_FAR_M.
+    """
     p = np.asarray(pts, dtype=np.float64)[:, :2]
-    dense = resample_path(p, grid.spacing * 0.5)
-    seg = np.linalg.norm(np.diff(dense, axis=0), axis=1)
-    s = np.concatenate([[0.0], np.cumsum(seg)])
-    t_all = s / max(s[-1], 1e-9)
-    tan = np.gradient(dense, axis=0)
-    tan /= np.maximum(np.linalg.norm(tan, axis=1, keepdims=True), 1e-9)
+    if p.shape[0] > 1:
+        keep = np.concatenate([[True], np.linalg.norm(np.diff(p, axis=0), axis=1) > 1e-6])
+        p = p[keep]
     n = grid.n
-    pad = reach_m + 2.0 * grid.spacing
-    j0 = max(int((dense[:, 0].min() - pad - grid.x0) / grid.spacing), 0)
-    j1 = min(int((dense[:, 0].max() + pad - grid.x0) / grid.spacing) + 2, n)
-    i0 = max(int((dense[:, 1].min() - pad - grid.z0) / grid.spacing), 0)
-    i1 = min(int((dense[:, 1].max() + pad - grid.z0) / grid.spacing) + 2, n)
+    sp = grid.spacing
+    pad = reach_m + 2.0 * sp
+    j0 = max(int((p[:, 0].min() - pad - grid.x0) / sp), 0)
+    j1 = min(int((p[:, 0].max() + pad - grid.x0) / sp) + 2, n)
+    i0 = max(int((p[:, 1].min() - pad - grid.z0) / sp), 0)
+    i1 = min(int((p[:, 1].max() + pad - grid.z0) / sp) + 2, n)
     m, k = i1 - i0, j1 - j0
-    jj = np.clip(np.rint((dense[:, 0] - grid.x0) / grid.spacing).astype(np.int64) - j0, 0, k - 1)
-    ii = np.clip(np.rint((dense[:, 1] - grid.z0) / grid.spacing).astype(np.int64) - i0, 0, m - 1)
-    owner = np.full((m, k), -1, dtype=np.int64)
-    owner[ii, jj] = np.arange(dense.shape[0])
-    mask = owner >= 0
-    _dist, (ni, nj) = ndimage.distance_transform_edt(~mask, return_indices=True)
-    idx = owner[ni, nj]
-    X = (grid.x0 + (np.arange(j0, j1) * grid.spacing))[None, :]
-    Z = (grid.z0 + (np.arange(i0, i1) * grid.spacing))[:, None]
-    qx, qz = dense[idx, 0], dense[idx, 1]
-    vx, vz = X - qx, Z - qz
-    d = np.sqrt(vx * vx + vz * vz).astype(np.float32)
-    tx, tz = tan[idx, 0], tan[idx, 1]
+    xs = grid.x0 + np.arange(j0, j1) * sp
+    zs = grid.z0 + np.arange(i0, i1) * sp
+    best_d2 = np.full((m, k), np.inf)
+    best_s = np.zeros((m, k))
+    best_seg = np.zeros((m, k), dtype=np.int32)
+    if p.shape[0] == 1:
+        d2 = (xs[None, :] - p[0, 0]) ** 2 + (zs[:, None] - p[0, 1]) ** 2
+        best_d2 = np.where(d2 <= pad * pad, d2, np.inf)
+        dirs = np.array([[0.0, -1.0]])
+        seg_s = np.zeros(1)
+        total = 1.0
+    else:
+        seg = np.diff(p, axis=0)
+        lens = np.linalg.norm(seg, axis=1)
+        dirs = seg / lens[:, None]
+        seg_s = np.concatenate([[0.0], np.cumsum(lens)])
+        total = float(seg_s[-1])
+        for q in range(seg.shape[0]):
+            (ax, az), (bx, bz) = p[q], p[q + 1]
+            sj0 = max(int((min(ax, bx) - pad - grid.x0) / sp) - j0, 0)
+            sj1 = min(int((max(ax, bx) + pad - grid.x0) / sp) + 2 - j0, k)
+            si0 = max(int((min(az, bz) - pad - grid.z0) / sp) - i0, 0)
+            si1 = min(int((max(az, bz) + pad - grid.z0) / sp) + 2 - i0, m)
+            if sj1 <= sj0 or si1 <= si0:
+                continue
+            X = xs[None, sj0:sj1]
+            Z = zs[si0:si1, None]
+            ex, ez = seg[q]
+            u = np.clip(((X - ax) * ex + (Z - az) * ez) / (lens[q] * lens[q]), 0.0, 1.0)
+            dx = X - (ax + u * ex)
+            dz = Z - (az + u * ez)
+            d2 = dx * dx + dz * dz
+            win = (slice(si0, si1), slice(sj0, sj1))
+            better = d2 < best_d2[win]
+            best_d2[win] = np.where(better, d2, best_d2[win])
+            best_s[win] = np.where(better, seg_s[q] + u * lens[q], best_s[win])
+            best_seg[win] = np.where(better, q, best_seg[win])
+    reached = np.isfinite(best_d2)
+    d = np.where(reached, np.sqrt(np.where(reached, best_d2, 0.0)), LINE_FAR_M).astype(np.float32)
+    tx, tz = dirs[best_seg, 0], dirs[best_seg, 1]
+    s_at = best_s - seg_s[best_seg] if p.shape[0] > 1 else np.zeros_like(best_s)
+    qx = p[np.minimum(best_seg, p.shape[0] - 1), 0] + s_at * tx
+    qz = p[np.minimum(best_seg, p.shape[0] - 1), 1] + s_at * tz
+    vx, vz = xs[None, :] - qx, zs[:, None] - qz
     # with north up (-z), walking along (tx, tz), the left hand points along (tz, -tx)
     left = (vx * tz - vz * tx) > 0.0
-    return LineField((i0, i1, j0, j1), d, t_all[idx].astype(np.float32), tx.astype(np.float32),
-                     tz.astype(np.float32), left)
+    return LineField((i0, i1, j0, j1), d, (best_s / max(total, 1e-9)).astype(np.float32),
+                     tx.astype(np.float32), tz.astype(np.float32), left)
 
 
 # --- provinces -------------------------------------------------------------------------------
@@ -358,7 +401,9 @@ def _peak_profile(shape: str, t: np.ndarray) -> np.ndarray:
     return (1.0 - t) ** 1.4 * (1.0 + 0.4 * t)
 
 
-def apply_peaks(ctx, h: np.ndarray, atlas: dict) -> np.ndarray:
+def apply_peaks(ctx, h: np.ndarray, atlas: dict, mask: np.ndarray | None = None) -> np.ndarray:
+    """Every peak at its height, blended into the land over its radius. `mask`, when given, gets
+    how much of each texel is a peak's own flank (0..1), for the lakes to leave standing."""
     g = ctx.grid
     for pk in atlas.get("peaks", []):
         x, z = float(pk["at"][0]), float(pk["at"][1])
@@ -383,6 +428,8 @@ def apply_peaks(ctx, h: np.ndarray, atlas: dict) -> np.ndarray:
         if shape == "crag":
             crown = top - 0.08 * (top - base) * (1.0 - ridged(ctx.f(salt + 1, 1.8, 30, 160)[i0:i1, j0:j1], 1.2))
         h[i0:i1, j0:j1] = base + np.maximum(crown - base, 0.0) * up
+        if mask is not None:
+            mask[i0:i1, j0:j1] = np.maximum(mask[i0:i1, j0:j1], smoothstep(0.15, 0.5, up))
     return h
 
 
@@ -421,7 +468,9 @@ def land(ctx, atlas: dict) -> tuple:
         h += rf.weights[r.index] * (r.base_height + r.relief * fields[key])
     del fields
     h, rock = apply_ranges(ctx, h, atlas)
-    h = apply_peaks(ctx, h, atlas)
+    peak = np.zeros_like(h, dtype=np.float32)
+    h = apply_peaks(ctx, h, atlas, peak)
+    ctx.peak = peak
     h = apply_valleys(ctx, h, atlas)
     return h, rock
 
@@ -550,13 +599,9 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
         return H
     g = grid
     sp = g.spacing
-    mainland = polygon_mask(g, coast["polygon"])
-    for isl in coast.get("islands", []):
-        mainland |= polygon_mask(g, isl)
-    masks = [polygon_mask(g, s["polygon"]) for s in shelves]
     reach = SHELF_EDGE_M + SHELF_NOTCH_OUT_M + SHELF_BLOCK_OUT_M[1] + SHELF_BLOCK_R_M[1] + 4.0 * sp
     for k, shelf in enumerate(shelves):
-        m = masks[k]
+        m = polygon_mask(g, shelf["polygon"])
         if not m.any():
             continue
         top = float(shelf["height_m"])
@@ -566,14 +611,18 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
         j0, j1 = max(int(jj.min()) - pad, 0), min(int(jj.max()) + pad + 1, g.n)
         sub = H[i0:i1, j0:j1].astype(np.float32)
         sub_m = m[i0:i1, j0:j1]
-        behind = mainland[i0:i1, j0:j1].copy()
-        for kk, mm in enumerate(masks):
-            if kk != k:
-                behind |= mm[i0:i1, j0:j1]
         sd = np.where(sub_m, -(ndimage.distance_transform_edt(sub_m) - 0.5),
                       ndimage.distance_transform_edt(~sub_m) - 0.5).astype(np.float32) * sp
-        seaward = smoothstep(SHELF_EDGE_TAPER_M[0], SHELF_EDGE_TAPER_M[1],
-                             ndimage.distance_transform_edt(~behind).astype(np.float32) * sp)
+        # The land the shelf lies under -- its bank, the cliff behind it -- is the ground standing
+        # over the shelf's top. The breaking fades out toward it, so the edge runs back into the
+        # land as drawn. (Not the coast polygon: the Hushline's lobe of it covers the whole shelf,
+        # and measured from that, the seaward edge had nowhere to wander.)
+        behind = sub > top + 2.0
+        if behind.any():
+            seaward = smoothstep(SHELF_EDGE_TAPER_M[0], SHELF_EDGE_TAPER_M[1],
+                                 ndimage.distance_transform_edt(~behind).astype(np.float32) * sp)
+        else:
+            seaward = np.ones_like(sub)
         X = (g.x0 + np.arange(j0, j1, dtype=np.float32) * sp)[None, :]
         Z = (g.z0 + np.arange(i0, i1, dtype=np.float32) * sp)[:, None]
         whole = np.zeros(sub.shape, dtype=bool)      # every pad and SHELF_PAD_CLEAR_M round it
@@ -777,6 +826,17 @@ def apply_lakes(ctx, h: np.ndarray, wt: Waters) -> np.ndarray:
     # shingle shore, and the water begins past it -- SCHEMA.md, lakes; the atlas is drawn to that)
     near = 1.0 - smoothstep(250.0, 700.0, sd)
     ground = lerp(ground, np.maximum(ground, level + 1.5), near)
+    # A range drawn to the water keeps its height to the shore, and drops into the lake over the
+    # last 25 m: the shingle and the gentle bank are for the shores the atlas drew no range on.
+    # Laid over every shore alike, they took the Gull Cliffs on the Mere's north shore, drawn at
+    # 40 m, down to 24.
+    rock = getattr(ctx, "rock", None)
+    peak = getattr(ctx, "peak", None)
+    drawn = None
+    if rock is not None or peak is not None:
+        drawn = np.maximum(smoothstep(0.15, 0.5, rock) if rock is not None else 0.0,
+                           peak if peak is not None else 0.0)
+        ground = lerp(ground, np.maximum(ground, h), drawn * smoothstep(0.0, 25.0, sd))
     # a cliff shore stands seven to ten metres at the water
     cliff = (7.0 + 3.0 * ctx.f(172, 1.9, None, 260)) * smoothstep(0.0, 10.0, sd)
     ground = ground + cliff * wt.cliffness * (1.0 - smoothstep(40.0, 260.0, sd))
@@ -799,6 +859,10 @@ def apply_lakes(ctx, h: np.ndarray, wt: Waters) -> np.ndarray:
             fracture = 1.2 * np.abs(ctx.f(175, 1.5, 9.0, 48.0))
             ih = ih + (ledges + fracture) * inner
             h2 = np.maximum(h2, lerp(h2, ih, on))
+    # and a peak drawn in the water stands out of it: the Spire Rock, 32 m at Tollmere's high end,
+    # came out of the lake shaping at the island's own 15
+    if peak is not None and peak.any():
+        h2 = np.maximum(h2, lerp(h2, h, peak))
     return h2.astype(np.float32)
 
 

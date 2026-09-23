@@ -105,6 +105,17 @@ class ShelfEdgeTest(unittest.TestCase):
         land = GEO.polygon_mask(self.grid, MAINLAND) & ~self.shelf
         self.assertTrue(np.array_equal(self.H[land], self.H0[land]))
 
+    def test_a_coast_drawn_over_the_shelf_does_not_hold_its_edge(self):
+        # The Hushline's coast polygon has a lobe over the whole shelf, with a low cliff along the
+        # shelf's seaward edge. Measured from the coast, the edge had nowhere to wander and was
+        # built as the clean arc it was drawn as.
+        lobe = [[-512.0, -512.0], [512.0, -512.0], [512.0, 0.0], [110.0, 0.0]] \
+            + [[110.0 * math.cos(a), 70.0 * math.sin(a)] for a in np.linspace(0.0, math.pi, 25)] \
+            + [[-110.0, 0.0], [-512.0, 0.0]]
+        atlas = {"coast": {"polygon": lobe, "shelves": self.atlas["coast"]["shelves"]}}
+        H = GEO.break_shelf_edges(self.grid, self.H0.copy(), atlas, NoiseBank(8471, self.grid), keep_discs=[PAD])
+        self.assertTrue(np.array_equal(H, self.H), "the coast polygon changed how the shelf was broken")
+
 
 class AuthoredPadSkirtTest(unittest.TestCase):
     def test_an_authored_pads_skirt_does_not_fill_the_sea_below_the_face(self):

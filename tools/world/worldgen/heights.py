@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
+from scipy import ndimage
 
 from . import geography as GEO
 from .erosion import valley_carve
@@ -32,6 +33,8 @@ class HeightContext:
     places: list
     rivers: list = field(default_factory=list)       # the atlas's rivers (dicts), for the levees
     land_soft: np.ndarray | None = None              # 1 on land, 0 at sea, soft over the shore
+    rock: np.ndarray | None = None                   # 0..1, a range's own flanks (geography.land)
+    peak: np.ndarray | None = None                   # 0..1, a peak's own flanks (geography.land)
     X: np.ndarray = field(init=False)
     Z: np.ndarray = field(init=False)
 
@@ -54,6 +57,23 @@ class HeightContext:
 
     def rng(self, salt):
         return np.random.default_rng(np.random.SeedSequence([self.bank.seed, salt]))
+
+
+def upsample_held(a: np.ndarray, n: int) -> np.ndarray:
+    """Cubic upsample, held inside the range of each coarse texel's neighbours.
+
+    A cubic spline rings at a step. The Skerrow Wall stands 470 m straight out of the sea in the
+    north-west, and upsampled from 2048 to 4096 the ground at its foot rang to 96 m under the
+    seabed, in 210 pits along the cliff. Held to the least and the most of the coarse texels
+    round it, a slope is still a smooth cubic and a cliff is a cliff, with nothing past either end.
+    """
+    up = upsample(a, n, order=3)
+    if n == a.shape[0]:
+        return up
+    lo = upsample(ndimage.minimum_filter(a, size=3, mode="nearest"), n, order=1)
+    hi = upsample(ndimage.maximum_filter(a, size=3, mode="nearest"), n, order=1)
+    np.clip(up, lo, hi, out=up)
+    return up
 
 
 def detail_amplitude(owner: np.ndarray, regions: list) -> np.ndarray:
@@ -121,6 +141,7 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, atlas: dict, prov
     ctx = HeightContext(grid=grid_c, bank=bank, regions=provinces, rf=rf, lake=waters_c, places=places,
                         rivers=list(atlas.get("rivers", [])))
     h, rock = GEO.land(ctx, atlas)
+    ctx.rock = rock
     # the coast and the lakes first, so the drainage runs to the water that is there ...
     h, sea = GEO.apply_coast(ctx, h, atlas)
     h = GEO.apply_lakes(ctx, h, waters_c)
@@ -139,7 +160,7 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, atlas: dict, prov
             h = h_with
         del h_with
     bank.forget()
-    H = upsample(h, grid.n, order=3)
+    H = upsample_held(h, grid.n)
     # full-resolution detail band, damped on water and steep-scaled in the mountains
     owner = rf.owner_at(grid.n)
     amp = detail_amplitude(owner, provinces)
