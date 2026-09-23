@@ -32,7 +32,13 @@ var abstract_only := false
 static func ensure() -> NpcRegistry:
 	if instance != null and is_instance_valid(instance):
 		return instance
-	return Service.ensure(load("res://systems/npc_life/npc_registry.gd"), "NpcRegistry") as NpcRegistry
+	var found := Service.ensure(load("res://systems/npc_life/npc_registry.gd"), "NpcRegistry") as NpcRegistry
+	# A copy of this service inside a world set `instance` as it entered the tree and cleared it as it
+	# left; a copy under the root that entered earlier is then found here with `instance` still empty,
+	# and everything that reads `instance` directly finds nothing. Point it at what was found.
+	if found != null and (instance == null or not is_instance_valid(instance)):
+		instance = found
+	return found
 
 
 func _enter_tree() -> void:
@@ -58,6 +64,11 @@ func _ready() -> void:
 	EventBus.cell_loaded.connect(_on_cell_loaded)
 	EventBus.cell_unloaded.connect(_on_cell_unloaded)
 	EventBus.weather_changed.connect(_on_weather_changed)
+	# a def's `holds` follow the story (Schedules.held_entry), so the story moving on is a reason
+	# to look again, as the clock is
+	EventBus.quest_started.connect(_on_story_moved)
+	EventBus.quest_stage_changed.connect(_on_story_moved)
+	EventBus.quest_completed.connect(_on_story_moved)
 
 
 # --- state ---------------------------------------------------------------------------------
@@ -113,7 +124,20 @@ func is_alive(npc_id: String) -> bool:
 	return bool(state(npc_id).get("alive", false))
 
 
+## Somebody the story has taken out of the world: their def's `gone_when` conditions hold. Aud
+## Fennick walks into the grey at the end of the vigil, and the roster put her back in her tent at
+## Pilgrim's Ash the next hour, mending other people's grey. Nobody killed her and she is not dead;
+## she is not anywhere any more: stood up nowhere, off the clock, at no place.
+func is_gone(npc_id: String) -> bool:
+	var conds: Variant = ContentDB.get_or_empty(npc_id).get("gone_when", [])
+	if typeof(conds) != TYPE_ARRAY or (conds as Array).is_empty() or Social.ctx == null:
+		return false
+	return Conditions.all_of(conds, Social.ctx)
+
+
 func place_of(npc_id: String) -> String:
+	if is_gone(npc_id):
+		return ""
 	return str(state(npc_id).get("place", ""))
 
 
@@ -278,6 +302,8 @@ func npcs_at(place_id: String, include_dead := false) -> Array[String]:
 			continue
 		if not include_dead and not bool(s.get("alive", true)):
 			continue
+		if is_gone(str(id)):
+			continue
 		out.append(id)
 	out.sort()
 	return out
@@ -308,6 +334,14 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 	var s := state(npc_id)
 	if s.is_empty() or not bool(s.get("alive", true)):
 		return s
+	if is_gone(npc_id):
+		if str(s.get("place", "")) != "":
+			s["place"] = ""
+			s["spot"] = ""
+			state_changed.emit(npc_id)
+		if is_spawned(npc_id):
+			despawn(npc_id)
+		return s
 	if int(s.get("in_jail_until_day", 0)) > WorldClock.day:
 		return s
 	# on the road with the player, or standing where the player brought them: not on the clock
@@ -334,6 +368,10 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 
 
 func _on_hour_changed(_hour: int) -> void:
+	simulate_all()
+
+
+func _on_story_moved(_quest_id: String = "", _detail: Variant = null) -> void:
 	simulate_all()
 
 
@@ -367,7 +405,7 @@ func _on_cell_loaded(cell: Vector2i) -> void:
 	if not spawning_enabled or abstract_only:
 		return
 	for id in states:
-		if is_alive(id) and cell_of(id) == cell:
+		if is_alive(id) and cell_of(id) == cell and not is_gone(id):
 			if is_spawned(id):
 				_settle_on_marker(id)
 			else:
@@ -412,7 +450,7 @@ func actor(npc_id: String) -> Node:
 
 
 func spawn(npc_id: String) -> Node:
-	if is_spawned(npc_id) or not is_alive(npc_id):
+	if is_spawned(npc_id) or not is_alive(npc_id) or is_gone(npc_id):
 		return null
 	if not ResourceLoader.exists(NPC_SCENE):
 		return null

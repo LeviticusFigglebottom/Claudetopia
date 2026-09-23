@@ -281,6 +281,25 @@ class TestClipLibrary(unittest.TestCase):
             self.assertLess(zs.max() - zs.min(), p2p_max, "%s bobs the hips %.1f cm"
                             % (name, (zs.max() - zs.min()) * 100))
 
+    def test_the_rolls_stay_on_the_ground(self) -> None:
+        """A roll is felt through the floor. Built from keys alone, Dodge_F put the toes 19 cm into
+        the ground on the way down, the head 24 cm into it at the turn and the back 26 cm clear of
+        it coming over, and it ended standing on bent legs with its feet 30 cm in the air."""
+        from forge.lib.anim import lowest_surface
+        hips0 = self.skel.joint_world(self.skel.fk({}), "Hips")[2]
+        for name in ("Dodge_F", "Dodge_B", "Dodge_L", "Dodge_R"):
+            c = self.clips[name]
+            worst = 0.0
+            for i in range(41):
+                W = self.skel.fk(c.local_pose(c.length * i / 40.0))
+                worst = max(worst, abs(lowest_surface(self.skel, W)))
+            self.assertLess(worst, 0.01, "%s: the body is %.2f m off the ground" % (name, worst))
+            W = self.skel.fk(c.local_pose(c.length))
+            feet = min(self.skel.joint_world(W, b)[2] for b in ("Foot.L", "Foot.R", "Toe.L", "Toe.R"))
+            self.assertLess(feet, 0.05, "%s ends with its feet %.2f m up" % (name, feet))
+            self.assertAlmostEqual(self.skel.joint_world(W, "Hips")[2], hips0, delta=0.04,
+                                   msg="%s does not end standing" % name)
+
     def test_gaits_share_a_phase(self) -> None:
         """The game blends gaits on a shared normalised timeline, which is only honest if every
         gait puts the same foot down at the same phase: left at 0, right at one half."""

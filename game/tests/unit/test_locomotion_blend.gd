@@ -105,7 +105,8 @@ func test_the_planted_foot_stays_planted() -> void:
 		["sprint", Vector2(0.0, Player.SPRINT_SPEED), false, 0.05],
 		["sneak", Vector2(0.0, Player.SNEAK_SPEED), true, 0.05],
 		["villager", Vector2(0.0, 2.2), false, 0.08],
-		["strafe right", Vector2(Player.STRAFE_SPEED, 0.0), false, 0.08],
+		["strafe right", Vector2(Player.LOCKED_SIDE, 0.0), false, 0.08],
+		["backpedal, locked on", Vector2(0.0, -Player.LOCKED_BACK), false, 0.08],
 		["backpedal", Vector2(0.0, -1.5), false, 0.08],
 	]
 	var report: Array[String] = []
@@ -180,6 +181,91 @@ func test_the_gaits_stand_up() -> void:
 		assert_true(low < 6.0, "at a %s the hips ride %.1f cm below standing: a crouch" % [c[0], low])
 		assert_true(swing < 8.0, "at a %s the hips rise and fall %.1f cm with each step" % [c[0], swing])
 	print("    hips: %s" % "; ".join(report))
+
+
+## A stop. The body comes down from a jog at the player's own deceleration (20 m/s², a quarter
+## of a second). While it is still moving, a foot on the ground keeps pace with the ground, as it
+## does at any speed; once it stands, the legs stop stepping and settle into the idle. Before,
+## the stride was timed off a speed smoothed over 0.08 s, which under that deceleration runs up
+## to 1.6 m/s ahead of the body, and it kept stepping at half pace after the body had stopped.
+func test_a_stop_stops_the_legs() -> void:
+	if not _rig_built():
+		return
+	var m := _model()
+	var sk := m.skeleton
+	var travelled := Vector2.ZERO
+	for i in 240:
+		travelled = _step(m, Vector2(0.0, Player.JOG_SPEED), false, travelled)
+	var speed := Player.JOG_SPEED
+	var moving_skate := 0.0
+	var settle_skate := 0.0
+	var steps_after := 0.0
+	var phase_path := "parameters/%s/gait/%s/current_position" % [HumanoidModel.LOCOMOTION_STATE, str(m._gait_points[0][2])]
+	var last_phase := float(m.anim_tree.get(phase_path))
+	var last := {}
+	var lowest := {"L": 99.0, "R": 99.0}
+	var samples: Array = []
+	for i in 96:
+		speed = maxf(speed - Player.DECEL * DT, 0.0)
+		travelled = _step(m, Vector2(0.0, speed), false, travelled)
+		var xf := _root.global_transform * sk.transform
+		var feet := {"moving": speed > 0.0}
+		for side in ["L", "R"]:
+			var p: Vector3 = xf * sk.get_bone_global_pose(sk.find_bone("Foot." + side)).origin
+			feet[side] = p
+			lowest[side] = minf(float(lowest[side]), p.y)
+		samples.append(feet)
+		var phase := float(m.anim_tree.get(phase_path))
+		if speed <= 0.0:
+			steps_after += fposmod(phase - last_phase, 1.0)
+		last_phase = phase
+	for i in range(1, samples.size()):
+		for side in ["L", "R"]:
+			var a: Vector3 = samples[i - 1][side]
+			var b: Vector3 = samples[i][side]
+			if a.y < float(lowest[side]) + 0.02 and b.y < float(lowest[side]) + 0.02:
+				var d := Vector2(b.x - a.x, b.z - a.z).length()
+				if bool(samples[i]["moving"]):
+					moving_skate += d
+				else:
+					settle_skate += d
+	print("    a stop from a jog: planted feet skated %.1f cm while the body moved, the legs stepped %.2f of a stride after it stood, and the feet settled %.1f cm into the idle" % [
+		moving_skate * 100.0, steps_after, settle_skate * 100.0])
+	assert_true(moving_skate < 0.03, "stopping, a planted foot skated %.1f cm while the body was still moving" % (moving_skate * 100.0))
+	assert_true(steps_after < 0.05, "the legs went on stepping %.2f of a stride after the body stood" % steps_after)
+
+
+## A raised guard walks on its legs. The guard is held over the upper body while the legs go on
+## walking under it; played as a whole-body state it froze the legs in its stance, and a player
+## walking behind a shield at 1.56 m/s glided with still feet.
+func test_a_raised_guard_walks_on_its_legs() -> void:
+	if not _rig_built():
+		return
+	var m := _model()
+	var pace := Player.STRAFE_SPEED * Player.BLOCK_MOVE_MULT
+	var sk := m.skeleton
+	var open: Array = _walk(m, Vector2(0.0, pace), false)
+	var hand_open := (sk.get_bone_global_pose(sk.find_bone("Hand.R")).origin - sk.get_bone_global_pose(sk.find_bone("Chest")).origin).y
+	after_each()
+	m = _model()
+	sk = m.skeleton
+	assert_true(m.play_intent("Block_Idle"), "the rig has no guard")
+	var guarded: Array = _walk(m, Vector2(0.0, pace), false)
+	var hand_guard := (sk.get_bone_global_pose(sk.find_bone("Hand.R")).origin - sk.get_bone_global_pose(sk.find_bone("Chest")).origin).y
+	var share := float(guarded[0]) / pace
+	print("    walking at %.2f m/s: planted foot %.0f%% of the ground with the guard up (%.0f%% without); the right hand %.2f m from the chest's height with it, %.2f without" % [
+		pace, share * 100.0, float(open[0]) / pace * 100.0, hand_guard, hand_open])
+	assert_eq(m.current_stance(), "Block_Idle", "the guard is not held")
+	assert_eq(m.anim_tree.get("parameters/playback").get_current_node(), HumanoidModel.LOCOMOTION_STATE,
+			"the guard took the whole body out of the walk")
+	assert_true(share < 0.08, "with the guard up the planted foot moves at %.0f%% of the ground: the legs are not walking" % (share * 100.0))
+	assert_true(hand_guard > hand_open + 0.2, "the hands are not up in the guard (%.2f against %.2f)" % [hand_guard, hand_open])
+	m.stop_intent()
+	for i in 30:
+		_step(m, Vector2(0.0, pace), false, Vector2.ZERO)
+	var hand_down := (sk.get_bone_global_pose(sk.find_bone("Hand.R")).origin - sk.get_bone_global_pose(sk.find_bone("Chest")).origin).y
+	assert_eq(m.current_stance(), "", "the guard stayed up")
+	assert_true(hand_down < hand_guard - 0.2, "lowered, the hands stayed up (%.2f)" % hand_down)
 
 
 ## A villager on its way somewhere walks: its model is told how fast (it used to stay at 0, so the

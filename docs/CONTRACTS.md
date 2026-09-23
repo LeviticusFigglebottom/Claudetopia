@@ -76,9 +76,11 @@ every one of them, because the game blends them on one normalised timeline. A ga
 breaks this blends out of step: halfway through the blend one clip's foot is planted while the
 other's is swinging, and the leg comes out as the average of the two, half lifted.
 
-A change to the clips alone is baked into a scratch copy of the rig and moved onto the committed
-`humanoid_rig.glb` with `tools/forge/transplant_clips.py`, because the rig bake rebuilds and
-repaints the body too. The tool changes nothing but the animations and checks that it did not.
+A change to the clips alone does not re-bake the rig, which rebuilds and repaints the body too
+and takes twenty minutes. `blender -b --python tools/forge/bake_clips.py -- --out <dir>` bakes
+every clip onto the bare armature in under a minute, with the same functions, and writes the
+sidecar. `tools/forge/transplant_clips.py` then moves the clips onto the committed
+`humanoid_rig.glb`, bone by bone by name, and checks that nothing but the animations changed.
 
 Creatures use their own rigs; their clips must include `Idle`, `Walk`, `Run`,
 `Attack_1`, `Attack_2`, `Hit`, `Death`, plus archetype extras listed in the
@@ -155,6 +157,7 @@ height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamles
 * `runtime/heights_1024.r32`, `runtime/regions_1024.u8`, `runtime/water_1024.u8`, `runtime/water_level_1024.r32`: quarter-resolution copies the runtime queries without Terrain3D (`TerrainProvider`), so height, region, water and water-level lookups work headlessly and in tests. `world_manifest.json` lists them under `"runtime"`.
   The regions, water and water level are point samples of every fourth full texel, so runtime texel `(i, j)` sits at `origin + 8 (i, j)`. The heights are a 4 x 4 block mean, so their texel `(i, j)` is centred at `origin + 8 (i, j) + 3 m`; consumers take the offset from the two grids, or from `runtime.height_offset_m` when the manifest carries it. They are also what `FallbackTerrain` draws the ground from when Terrain3D cannot, so the set the game reads at run time is: the manifest, `pois.json`, `roads.json`, `rivers.json`, `runtime/`, `cells/` and `game/terrain_data/`. That set is tracked; the rest of this directory is not.
 * `water_mask.u8` (1 = water surface at lake/sea/river level), `flow.rg8` (river direction).
+* The water masks, `water_mask.u8` and `runtime/water_1024.u8`, are one byte a texel: 0 is dry, and water is 1 (as the builder writes it) or 255, nothing else. A shader samples an 8-bit texture as byte/255, so a 1 reads as 0.004: `WaterSurface.mask_bytes` stretches a 0-and-1 mask to 0 and 255 as the game loads it, and the water shader discards under 0.5. Until it did, every lake and the sea were discarded and the lake bed showed through. `tests/unit/test_water_look.gd` loads the mask the manifest names the way the game does and fails if any texel the file marks wet would read as dry in the shader.
 * `rivers.json`, `roads.json`: `[{"id", "points": [[x, z], ...], "width_m"}]`.
 * `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it..
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
@@ -184,9 +187,10 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
   `teaches_spell` is a full `core:spell/*` id: the first opening of that book teaches the saying, wherever it is opened (out of the bag, off a shelf, by a quest). An item reaches a book through its own `reads: <book id>`, or by being a `book`-category item whose short name matches a book id.
 * `calling`: `{id, name, culture, home_region, skill_bonuses, signature_item, starting_items[], starting_reputation{}, starting_marks, starting_spells?[], description}`.
   `starting_spells` are `core:spell/*` ids the character comes up already knowing; only callings whose `skill_bonuses` include that saying's school should carry one.
-* `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}}`
+* `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}, gone_when?: [conditions]}`
 * `quest`: `{id, name, layer (main|faction|side|radiant), stages[{id, journal, objectives[{type, target, count}], on_enter[], on_complete[]}], rewards}`
   An objective that sends you to pick something up may say where it lies: `where` (a place, POI or interior id), `spot` (a dressing marker, a deep place's chamber, or a house's room), `owner` (an npc id: taking it is theft). A `choice` may name its host in `with`: an npc, or a place/interior where nobody is left to ask. The quest-item placer (`QuestItems`) reads all four; systems/quests/README.md has the rules.
+  A `kill` says where the fight is: `where` (an interior id, or a place/POI id with `radius`, 140 m unless given), or `region` for a hunt; only a kill there counts (`KillPlaces`). In the open the stage stands up the foes it asks for (`QuestFoes`): the shortfall, or with `stand: "own"` its own group; `when` is an hour window (`always`, `day`, `night`, `dawn`, `dusk`, `midnight`).
 * `encounter`: `{id, place, spawns[{enemy, count, when?, at?, spread?, unless?[conds], unless_present?, rises_when?}], lies?[{item | book, at?, count?, owner?}]}` — what a place's `encounter` sentence says stands or lies there, raised with its dressing (`PoiEncounters`, `QuestItems`). A `place` def may name a `dressing` kind (the Standing Moot: `standing_stones`) so the POI builders dress it.
 * `dialogue`: `{id, nodes{node_id: {speaker, text, conditions[], effects[], choices[{text, next, conditions[]}], next}}, start}`
 Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,

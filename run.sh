@@ -9,20 +9,126 @@
 #                       would, with a screenshot at every step -> captures/flow/
 #   ./run.sh shots      headless capture plan -> captures/
 #   ./run.sh perf       measure draw calls and primitives against the budgets
-#   ./run.sh world      rebuild terrain/world data from recipes
+#   ./run.sh world      rebuild terrain/world data from recipes, then import the terrain
+#   ./run.sh terrain    import Terrain3D's regions from the maps a world build left here
+#   ./run.sh godot      say which Godot this script found (GODOT names one anywhere)
 #   ./run.sh assets     rebuild generated assets (needs Blender)
 #   ./run.sh interiors  rebuild every cave and house from its recipe
 #   ./run.sh import     (re)import the Godot project headlessly
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GODOT="${GODOT:-godot}"
-PY="${PYTHON:-python3}"
 GAME="$ROOT/game"
 cmd="${1:-run}"; shift || true
 
-have_display() { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; }
+# What a player has to act on is said where it is seen: a banner on stderr, not one more line.
+loud() {
+  {
+    echo ""
+    echo "[run] ========================================================================"
+    local line
+    for line in "$@"; do echo "[run] $line"; done
+    echo "[run] ========================================================================"
+    echo ""
+  } >&2
+}
+
+# --- Godot and Python -------------------------------------------------------------------------
+# Godot is `godot` on the PATH on most Linux machines and almost nowhere else. On Windows (Git Bash
+# runs this script there) it is an .exe named for its version, wherever its zip was unpacked; on a
+# Mac it is inside Godot.app. A build on Windows once found no `godot`, wrote the world's maps and
+# never imported the terrain, and the game ran on the coarse ground for days without anyone
+# knowing why. So: GODOT if it is set, then the usual names on the PATH, then the usual places,
+# a 4.7 before any other; and a command that needs Godot and has none stops and says so first.
+GODOT_ASKED="${GODOT:-}"
+godot_candidates() {
+  local home="${HOME:-}" d f
+  local dirs=("$home/Downloads" "$home/Desktop" "$home/Documents" "$home/Godot" "$home/Documents/Godot"
+    "$home/bin" "$home/.local/bin" "$home/Applications" "/c/Godot" "/c/Tools" "/c/Program Files/Godot"
+    "/c/Program Files (x86)/Godot" "/c/Program Files (x86)/Steam/steamapps/common/Godot Engine"
+    "/c/Program Files/Steam/steamapps/common/Godot Engine" "/opt/godot")
+  if [ -n "${LOCALAPPDATA:-}" ] && command -v cygpath >/dev/null 2>&1; then
+    local lad
+    lad="$(cygpath -u "$LOCALAPPDATA")"
+    dirs+=("$lad/Programs/Godot" "$lad/Godot" "$lad/Microsoft/WinGet/Links")
+    for d in "$lad"/Microsoft/WinGet/Packages/GodotEngine.GodotEngine*; do dirs+=("$d"); done
+  fi
+  for d in "${dirs[@]}"; do
+    [ -d "$d" ] || continue
+    # the console build before the other, which prints nothing to this terminal
+    for f in "$d"/Godot_v4*_console.exe "$d"/*/Godot_v4*_console.exe "$d"/Godot_v4*.exe "$d"/*/Godot_v4*.exe \
+        "$d"/godot.windows.*.exe "$d"/Godot_v4*_linux.x86_64 "$d"/*/Godot_v4*_linux.x86_64 \
+        "$d"/Godot_v4*_linux.arm64 "$d"/*/Godot_v4*_linux.arm64; do
+      if [ -f "$f" ]; then echo "$f"; fi
+    done
+  done
+  for f in "/Applications/Godot.app/Contents/MacOS/Godot" "$home/Applications/Godot.app/Contents/MacOS/Godot"; do
+    if [ -x "$f" ]; then echo "$f"; fi
+  done
+  return 0
+}
+find_godot() {
+  if [ -n "$GODOT_ASKED" ]; then
+    command -v "$GODOT_ASKED" 2>/dev/null || return 1
+    return 0
+  fi
+  local name all best="" f
+  for name in godot godot4 godot-4 godot.exe godot4.exe; do
+    if command -v "$name" >/dev/null 2>&1; then command -v "$name"; return 0; fi
+  done
+  all="$(godot_candidates)"
+  [ -n "$all" ] || return 1
+  while IFS= read -r f; do
+    case "$(basename "$f")" in Godot_v4.7*) best="$f"; break ;; esac
+  done <<< "$all"
+  [ -n "$best" ] || best="$(printf '%s\n' "$all" | sed -n 1p)"
+  echo "$best"
+}
+GODOT="$(find_godot || true)"
+GODOT_WARNED=""
+need_godot() {
+  if [ -n "$GODOT" ]; then
+    # a download names its version; one that is not 4.7 may not open this project at all
+    case "$(basename "$GODOT")" in
+      Godot_v4.7*|godot|godot4|godot-4|godot.exe|godot4.exe|Godot) ;;
+      *) if [ -z "$GODOT_WARNED" ]; then
+           echo "[run] warning: $GODOT is not Godot 4.7, which this project is made in; set GODOT to a 4.7 if it will not open" >&2
+           GODOT_WARNED=1
+         fi ;;
+    esac
+    return 0
+  fi
+  local why="Godot 4.7 was not found: there is no godot on the PATH, and none in the usual places."
+  [ -z "$GODOT_ASKED" ] || why="GODOT is set to '$GODOT_ASKED', and that is not a program this shell can run."
+  loud "$why" \
+    "Tell run.sh where it is with the GODOT variable (forward slashes on Windows), for example:" \
+    "  Windows, Git Bash:  GODOT=\"/c/Godot/Godot_v4.7.2-stable_win64_console.exe\" ./run.sh $cmd" \
+    "  macOS:              GODOT=/Applications/Godot.app/Contents/MacOS/Godot ./run.sh $cmd" \
+    "  Linux:              GODOT=\$HOME/Downloads/Godot_v4.7.2-stable_linux.x86_64 ./run.sh $cmd" \
+    "Nothing has been built or changed."
+  exit 1
+}
+# Python 3.11+: PYTHON if it is set, else python3, else python. On Windows `python3` can be the
+# Microsoft Store's stand-in, which runs nothing, so each is asked to run before it is trusted.
+PY=""
+need_python() {
+  [ -n "$PY" ] && return 0
+  local p
+  for p in ${PYTHON:+"$PYTHON"} python3 python; do
+    if "$p" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then PY="$p"; return 0; fi
+  done
+  loud "Python 3.11 or newer was not found (tried ${PYTHON:+\$PYTHON, }python3 and python)." \
+    "Building needs it, with its packages: pip install -r tools/requirements.txt" \
+    "Set PYTHON to name it if it is installed under another name."
+  return 1
+}
+
+# Windows (Git Bash) and macOS always have a screen and never have xvfb-run; Linux says so.
+have_display() {
+  case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*|Darwin*) return 0 ;; esac
+  [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
+}
 xvfb() { if have_display; then "$@"; else xvfb-run -a -s "-screen 0 1600x900x24" "$@"; fi; }
-import_project() { "$GODOT" --headless --path "$GAME" --import --audio-driver Dummy >/dev/null 2>&1 || true; }
+import_project() { need_godot; "$GODOT" --headless --path "$GAME" --import --audio-driver Dummy >/dev/null 2>&1 || true; }
 # A fresh clone has never been imported, and `godot --path game` outside the editor cannot load a
 # texture, mesh or scene that has not been: the first run imports it (a minute or two).
 ensure_imported() {
@@ -35,33 +141,65 @@ ensure_imported() {
 # regions alone are missing and the full-resolution maps are here, importing them is enough;
 # otherwise the whole world is built, which needs Python 3.11+ (tools/requirements.txt), about
 # 8 GB of memory and a few minutes. The title screen says the same thing if this never ran.
+count_regions() {
+  local n
+  n="$(find "$GAME/terrain_data/" -maxdepth 1 -name 'terrain3d*.res' 2>/dev/null | wc -l || true)"
+  echo "${n//[[:space:]]/}"
+}
 ensure_world() {
   local manifest="$GAME/world/generated/world_manifest.json"
-  local regions
-  regions="$(find "$GAME/terrain_data/" -maxdepth 1 -name 'terrain3d*.res' 2>/dev/null | wc -l || true)"
-  if [ -f "$manifest" ] && [ "$regions" -gt 0 ]; then return 0; fi
+  if [ -f "$manifest" ] && [ "$(count_regions)" != "0" ]; then return 0; fi
   if [ ! -f "$ROOT/tools/world/build_world.py" ]; then return 0; fi
   if [ -f "$manifest" ] && [ -f "$GAME/world/generated/heights.r32" ]; then
-    echo "[run] terrain regions missing; importing them from the built maps..."; import_terrain
-  else
-    echo "[run] world data missing; building it (Python 3.11+, about 8 GB, a few minutes)..."
-    "$PY" "$ROOT/tools/world/build_world.py" && import_terrain
+    echo "[run] the terrain regions are missing; importing them from the built maps..."
+    import_terrain || true
+    return 0
   fi
+  echo "[run] world data missing; building it (Python 3.11+, about 8 GB, a few minutes)..."
+  need_python || return 0
+  if ! "$PY" "$ROOT/tools/world/build_world.py"; then
+    loud "THE WORLD WAS NOT BUILT: tools/world/build_world.py failed, and its messages are above." \
+      "It needs Python 3.11+ with pip install -r tools/requirements.txt, about 8 GB of free memory and a few minutes." \
+      "The game still starts, and its title screen says what is missing."
+    return 0
+  fi
+  import_terrain || true
 }
 ensure_interiors() {
   if [ ! -f "$GAME/assets/models/dungeon/hollin_barrow/hollin_barrow.meta.json" ]; then
     echo "[run] interiors missing; forging (this takes a while)..."
+    need_python || return 0
     "$PY" "$ROOT/tools/interiors/cave_forge.py" "$ROOT"/tools/interiors/recipes/*.json --out "$GAME/assets/models/dungeon"
     "$PY" "$ROOT/tools/interiors/house_forge.py" "$ROOT"/tools/interiors/recipes/houses/*.json --out "$GAME/assets/models/interior"
     import_project
   fi
 }
+# Terrain3D's regions from the full-resolution maps a world build leaves in game/world/generated.
+# Without them the game draws the coarse ground, so a failed import is said as loudly as a failed
+# build: once it was one line at the end of minutes of output, and nobody saw it.
 import_terrain() {
-  "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tools_gd/import_terrain.tscn
+  need_godot
+  ensure_imported
+  echo "[run] importing the terrain into Terrain3D with $GODOT (a minute or two)..."
+  local code=0 regions
+  "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tools_gd/import_terrain.tscn || code=$?
+  regions="$(count_regions)"
+  if [ "$code" != "0" ] || [ "$regions" = "0" ]; then
+    local left="game/terrain_data holds no regions"
+    [ "$regions" = "0" ] || left="the $regions region files in game/terrain_data may be old or cut short"
+    loud "THE FULL TERRAIN WAS NOT IMPORTED." \
+      "The import (tools_gd/import_terrain.gd, run by $GODOT) exited $code; its messages are above." \
+      "The world's maps are built, but $left." \
+      "With no regions the game still runs, on the coarse 8 m ground, and says so on the title screen and in the corner." \
+      "To try again:  ./run.sh terrain"
+    return 1
+  fi
+  echo "[run] terrain imported: $regions regions in game/terrain_data"
 }
 
 case "$cmd" in
   run)
+    need_godot
     ensure_imported
     ensure_interiors
     ensure_world
@@ -148,10 +286,28 @@ case "$cmd" in
     plan="${1:-tools/capture/plans/default.json}"
     xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- "--capture=$plan" "--out=$ROOT/captures" ;;
   world)
-    "$PY" "$ROOT/tools/world/build_world.py" "$@" && import_terrain ;;
+    # The import at the end needs Godot, so it is looked for before the build, not after it: a
+    # machine without it is told at once instead of being left with maps and no terrain.
+    need_godot
+    need_python || exit 1
+    "$PY" "$ROOT/tools/world/build_world.py" "$@"
+    import_terrain ;;
+  terrain)
+    if [ ! -f "$GAME/world/generated/heights.r32" ]; then
+      loud "game/world/generated/heights.r32 is not here: only a machine that built the world has the full-resolution maps." \
+        "Build them with ./run.sh world (Python 3.11+, about 8 GB, a few minutes), which imports the terrain at the end."
+      exit 1
+    fi
+    import_terrain ;;
+  godot)
+    need_godot
+    echo "$GODOT"
+    "$GODOT" --headless --version 2>/dev/null || true ;;
   assets)
+    need_python || exit 1
     "$PY" "$ROOT/tools/forge/build_assets.py" "$@" ;;
   interiors)
+    need_python || exit 1
     "$PY" "$ROOT/tools/interiors/cave_forge.py" "$ROOT"/tools/interiors/recipes/*.json --out "$GAME/assets/models/dungeon"
     "$PY" "$ROOT/tools/interiors/house_forge.py" "$ROOT"/tools/interiors/recipes/houses/*.json --out "$GAME/assets/models/interior"
     import_project ;;

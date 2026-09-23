@@ -53,6 +53,10 @@ var far := false
 ## Where in the world this stands; `position` is relative to whatever cell node holds it.
 var world_position := Vector3.ZERO
 var wants_hearthstone := false
+## A way marked on the ground from here to somewhere else: `{to: place id, via: [[x, z], ...]}`
+## in world coordinates, the walk the POI's builder lays markers along (the Stair Head's cairns
+## to the Choir). Empty for nearly everything.
+var path: Dictionary = {}
 
 var kit: PoiKit = null
 var masonry: PoiMasonry = null
@@ -80,6 +84,8 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.position = d.world_position
 	d.far = silhouette
 	d.wants_hearthstone = bool(def.get("hearthstone", false)) or d.kind == "hearth"
+	var way: Variant = def.get("path", {})
+	d.path = (way as Dictionary).duplicate(true) if typeof(way) == TYPE_DICTIONARY else {}
 	d.name = "Poi_" + Ids.name_of(d.poi_id)
 	d._provider = terrain
 	d._roads = roads

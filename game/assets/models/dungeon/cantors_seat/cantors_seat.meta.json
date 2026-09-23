@@ -2398,21 +2398,21 @@
   "encounters": [
     {
       "chamber": "antechoir",
-      "enemy": "core:enemy/ash_wight",
+      "enemy": "core:enemy/chorister",
       "count": 4,
       "group": "antechoir",
       "note": "Choristers in the stalls, facing the blank wall. They do not turn until the second one is struck."
     },
     {
       "chamber": "stop_hall",
-      "enemy": "core:enemy/ash_wight",
+      "enemy": "core:enemy/chorister",
       "count": 5,
       "group": "stops",
       "note": "They walk the stops, and every step they take plays a note that damages."
     },
     {
       "chamber": "gallery",
-      "enemy": "core:enemy/roadside_bandit",
+      "enemy": "core:enemy/tolling_knight",
       "count": 2,
       "group": "gallery",
       "role": "elite",

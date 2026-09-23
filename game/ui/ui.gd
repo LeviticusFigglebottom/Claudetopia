@@ -33,6 +33,7 @@ const DIALOGUE_SCENE := "res://ui/dialogue/dialogue_ui.tscn"
 const MENUS := {
 	"pause": {"scene": "res://ui/menus/pause_menu.tscn", "full": true},
 	"settings": {"scene": "res://ui/menus/settings_menu.tscn", "full": true},
+	"controls": {"scene": "res://ui/menus/controls_page.tscn", "full": true},
 	"save_load": {"scene": "res://ui/menus/save_load.tscn", "full": true},
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
 	"container": {"scene": "res://ui/inventory/container_screen.tscn", "full": true},
@@ -52,11 +53,17 @@ const MENU_ACTIONS := {"inventory": "inventory", "journal": "journal", "map": "m
 
 ## Where a screenshot taken with the bound key lands.
 const SHOT_DIR := "user://captures/shots"
-## How long the fade waits for the cells around a body that has just stood up before it lifts
-## anyway. On this project's software renderer the nine near cells take a few seconds; the cap is
-## for a machine or a save that never gets there, which should see an unfinished country rather
-## than a loading sheet for ever.
-const COUNTRY_WAIT_S := 20.0
+## How the fade waits for the cells around a body that has just stood up. It counts cells, not
+## seconds: it holds while they are still arriving, and lifts on a half-built country only when
+## none has come for COUNTRY_STALL_FRAMES frames and COUNTRY_STALL_S seconds together, or after
+## COUNTRY_CAP_S in all. It used to give up after 20 s of the clock, and a machine drawing a frame
+## every few seconds -- the streamer builds a fixed share of a cell each frame -- saw the fade lift
+## with 8 of 9 cells standing after 535 s. The stall wants both because a fast machine runs 120
+## frames in two seconds and a slow one takes minutes over them; the cap is for a streamer that
+## keeps changing its mind, which should end in an unfinished country, not a loading sheet for ever.
+const COUNTRY_STALL_FRAMES := 120
+const COUNTRY_STALL_S := 10.0
+const COUNTRY_CAP_S := 600.0
 
 var hud_layer: CanvasLayer
 var dialogue_layer: CanvasLayer
@@ -87,7 +94,7 @@ var _hud_visible := true
 var _mouse_was_captured := false
 ## True while the fade is held for the country around a body that has just stood up.
 var _holding_for_country := false
-## How the last hold ended, for a probe or a test: {"cells": Vector2i(loaded, wanted), "ms", "timed_out"}.
+## How the last hold ended, for a probe or a test: see wait_for_country.
 var last_country_wait: Dictionary = {}
 
 
@@ -321,32 +328,69 @@ func is_holding_for_country() -> bool:
 	return _holding_for_country
 
 
+func _near_ring_progress_of(body_id: int) -> Vector2i:
+	var body := instance_from_id(body_id) as Node3D if body_id != 0 else null
+	return near_ring_progress(body) if body != null else Vector2i.ZERO
+
+
 ## The fade used to lift the moment the body stood, while the cells around it were still being
 ## built: the first thing a player saw was bare ground with the trees, the hedges and the village
 ## arriving over it. It waits for the full-detail ring now (3 x 3 cells, 768 m on a side), with the
-## count in the caption, and for no longer than COUNTRY_WAIT_S. The body's hands are held for the
-## wait, so nobody walks off blind.
+## count in the caption, for as long as the cells keep coming (wait_for_country). The body's hands
+## are held for the wait, so nobody walks off blind.
 func _wait_for_the_country(player: Node) -> void:
 	var body := player as Node3D
-	var t0 := Time.get_ticks_msec()
-	var deadline := t0 + int(COUNTRY_WAIT_S * 1000.0)
 	var had_input := body != null and body.has_method("set_input_enabled") and bool(body.get("input_enabled"))
 	if had_input:
 		body.call("set_input_enabled", false)
 	_holding_for_country = true
-	var near := near_ring_progress(body)
-	var at_spawn := near
-	while near.y > 0 and near.x < near.y and Time.get_ticks_msec() < deadline:
-		await get_tree().process_frame
-		near = near_ring_progress(body)
+	# by id, so a body freed during the wait (a scene change) answers "nothing wanted" and ends it
+	last_country_wait = await wait_for_country(_near_ring_progress_of.bind(body.get_instance_id() if body != null else 0))
 	_holding_for_country = false
-	var timed_out := near.y > 0 and near.x < near.y
-	last_country_wait = {"cells": near, "at_spawn": at_spawn, "ms": Time.get_ticks_msec() - t0, "timed_out": timed_out}
-	if timed_out:
-		Log.warn("UI", "the fade waited %.0f s for the country and lifted with %d of %d near cells standing"
-				% [COUNTRY_WAIT_S, near.x, near.y])
+	if bool(last_country_wait["timed_out"]):
+		var near: Vector2i = last_country_wait["cells"]
+		Log.warn("UI", "the fade lifted with %d of %d near cells standing: %s after %.0f s and %d frames"
+				% [near.x, near.y, str(last_country_wait["why"]), float(last_country_wait["ms"]) / 1000.0,
+					int(last_country_wait["frames"])])
 	if had_input and is_instance_valid(body):
 		body.call("set_input_enabled", true)
+
+
+## Waits, a frame at a time, until `progress` (a Callable returning Vector2i(loaded, wanted)) says
+## every wanted cell is in, or gives up: "stalled" when none has come for `stall_frames` frames and
+## `stall_s` seconds together, "cap" after `cap_s` in all. `clock` returns milliseconds (the tests
+## give it a slow machine's); by default it is the real one. Nothing wanted is nothing to wait for.
+## Returns {"cells", "at_spawn", "ms", "frames", "timed_out", "why"}.
+func wait_for_country(progress: Callable, clock := Callable(), stall_frames := COUNTRY_STALL_FRAMES,
+		stall_s := COUNTRY_STALL_S, cap_s := COUNTRY_CAP_S) -> Dictionary:
+	var now := func() -> int: return int(clock.call()) if clock.is_valid() else Time.get_ticks_msec()
+	var t0: int = now.call()
+	var near: Vector2i = progress.call()
+	var at_spawn := near
+	var best := near.x
+	var gained_at: int = t0
+	var quiet := 0
+	var frames := 0
+	var why := ""
+	while near.y > 0 and near.x < near.y:
+		var t: int = now.call()
+		if t - t0 >= int(cap_s * 1000.0):
+			why = "cap"
+			break
+		if quiet >= stall_frames and t - gained_at >= int(stall_s * 1000.0):
+			why = "stalled"
+			break
+		await get_tree().process_frame
+		frames += 1
+		near = progress.call()
+		if near.x > best:
+			best = near.x
+			gained_at = now.call()
+			quiet = 0
+		else:
+			quiet += 1
+	return {"cells": near, "at_spawn": at_spawn, "ms": int(now.call()) - t0, "frames": frames,
+		"timed_out": near.y > 0 and near.x < near.y, "why": why}
 
 
 func _process(_delta: float) -> void:

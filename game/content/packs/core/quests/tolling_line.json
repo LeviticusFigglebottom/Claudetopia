@@ -34,7 +34,7 @@
         "journal": "Forty-one places, and she can tell you whose each one is, in order, without stopping, which takes four minutes. Ask her why she stays and she will tell you it is not grief; she never knew any of them. Then a bell goes somewhere out on the heath, the way one does every few minutes, and Greyfold's own come up the lane to the tables, because a bell is what they are still waiting for, and they still wave.",
         "objectives": [
           {"type": "talk", "target": "core:npc/nan_greyfold", "text": "Hear Nan out on the forty-one"},
-          {"type": "kill", "target": "core:enemy/ash_wight", "count": 8, "text": "Put down what comes up the lane between bells"}
+          {"type": "kill", "target": "core:enemy/ash_wight", "count": 8, "text": "Put down what comes up the lane between bells", "where": "core:place/greyfold"}
         ],
         "on_complete": [{"set_flag": "laid_greyfolds_tables"}, {"renown": 15}]
       },
@@ -140,7 +140,7 @@
         "journal": "The north walk goes out to a colossus's fallen head, hollowed into a watchtower with its eye for a window, which is where Sister Auvrey Tull went on a still night in 1024. They are on their own walks. Grey plate, a bell-mace with the clapper still bound in cloth, and the bound clapper is the part that is difficult: somebody tied it, every morning, for however long it was, and then one morning kept walking. They fight like knights, because they were, and they parry.",
         "objectives": [
           {"type": "reach", "target": "core:poi/headless_watch", "radius": 140, "text": "Walk out to the Headless Watch"},
-          {"type": "kill", "target": "core:enemy/tolling_knight", "count": 3, "text": "Meet what is standing the watch"}
+          {"type": "kill", "target": "core:enemy/tolling_knight", "count": 3, "text": "Meet what is standing the watch", "where": "core:poi/headless_watch"}
         ],
         "on_complete": [{"set_flag": "found_the_standing_knights"}, {"renown": 25}]
       },
@@ -231,7 +231,7 @@
         "journal": "Twelve headless colossi, a bell every few minutes from somewhere nobody has found, and the note underneath everything that you stop hearing after an hour and hear again at about four, which is the hour that takes people. The choristers come to the ring on a full night. They sing, and the singing is the damage, and silence stops it; Cadwen counts out loud through the whole of it so that there is a voice in the ring saying something ordinary.",
         "objectives": [
           {"type": "reach", "target": "core:place/sunken_choir", "radius": 140, "text": "Stand the night at the Choir"},
-          {"type": "kill", "target": "core:enemy/chorister", "count": 2, "text": "Stop the singing between bells"}
+          {"type": "kill", "target": "core:enemy/chorister", "count": 2, "text": "Stop the singing between bells", "where": "core:place/sunken_choir", "when": "night"}
         ],
         "on_complete": [{"set_flag": "stood_the_last_watch"}, {"renown": 20}, {"rep": ["core:faction/tolling_order", 10]}]
       },

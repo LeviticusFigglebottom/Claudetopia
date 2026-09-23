@@ -31,6 +31,8 @@ const ORDER := [
 	["Escorts", "res://systems/npc_life/escorts.gd"],
 	# Fourteen quests sent you for things nothing gave, sold or put anywhere.
 	["QuestItems", "res://world/pois/quest_items.gd"],
+	# And sent you to fight where nothing stood: the stage stands up what it asks for.
+	["QuestFoes", "res://systems/quests/quest_foes.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 	# The chart was filled by being told about places, never by going to one or looking out
@@ -45,6 +47,9 @@ const OPENING := "core:opening/new_game"
 var services: Dictionary = {}
 ## Off only for a bench that wants one service and not the whole country standing up around it.
 var installs_on_ready := true
+## What the opening's greeter said when control was handed over, for a test or the flow probe.
+var first_words := ""
+var _new_game_begun := false
 
 
 func _ready() -> void:
@@ -100,34 +105,27 @@ func _install_loot_drops() -> void:
 ## through `context_provider` and nothing ever assigned one, so every kill in the game rolled as a
 ## level-1 character with no luck and no quests: every loot entry gated on `min_level` --
 ## twenty-one of them, from level 2 to level 20 -- could never drop, and `weight_per_luck` weighed
-## nothing. Stages are QuestLog's own `stage_of`, the same index the dialogue context hands out.
+## nothing. The context is `LootTable.world_context()`, which a chest reads as well.
 func loot_context() -> Dictionary:
-	var ctx := LootTable.default_context()
-	if not is_inside_tree():
-		return ctx
-	var prog := get_tree().get_first_node_in_group("progression")
-	if prog != null:
-		ctx["level"] = int(prog.get("level"))
-		var mods: Variant = prog.get("mods")
-		if mods is Modifiers:
-			ctx["luck"] = (mods as Modifiers).apply("luck", 0.0)
-	var quest_log := get_tree().get_first_node_in_group("quest_log")
-	if quest_log != null and quest_log.has_method("stage_of"):
-		var quests := {}
-		var known: Variant = quest_log.get("quests")
-		if known is Dictionary:
-			for quest_id in known:
-				quests[str(quest_id)] = int(quest_log.call("stage_of", str(quest_id)))
-		ctx["quests"] = quests
-	return ctx
+	return LootTable.world_context()
 
 
 ## The Naming hands over a named character and a flag, and until now nothing picked it up, so
 ## the first quest of the game never started and the main thread could not be entered at all.
 ## Starting it is all this does: everything else about a new game is a system's own business.
 func begin_new_game() -> void:
-	GameState.set_flag("new_game", false)
+	if _new_game_begun:
+		return
+	_new_game_begun = true
 	var opening := ContentDB.get_or_empty(OPENING)
+	# The opening (DESIGN §5.1a) plays first, and the story starts when it hands control back, so
+	# the quest's first objective is the first thing the HUD says rather than a toast under the
+	# pictures. This is the cinematic's only way into the new-game flow; it returns at once when
+	# there is nothing to play or the player has turned it off. The `new_game` flag stays up until
+	# then: it is what holds the greeter at the start while the pictures play (her npc def's
+	# `holds`), and the quest's own stage holds her from the hand-over on.
+	await CinematicPlayer.play_opening(opening)
+	GameState.set_flag("new_game", false)
 	var quest := str(opening.get("quest", ""))
 	if quest.is_empty() or not ContentDB.has(quest):
 		Log.warn("GameServices", "no opening quest in %s" % OPENING)
@@ -141,6 +139,24 @@ func begin_new_game() -> void:
 	log_node.call("start", quest)
 	new_game_started.emit(quest)
 	Log.info("GameServices", "new game: started %s" % quest)
+	_first_words(str(opening.get("greeter", "")))
+
+
+## Somebody speaks first: the opening's greeter says the greeting their own dialogue has for this
+## moment (the Warden's for the Naming's first stage), as a line on the screen with their name on
+## it, the moment control is handed over. Nothing is said if the greeter has no line for now.
+func _first_words(greeter: String) -> void:
+	if greeter.is_empty() or not ContentDB.has(greeter):
+		return
+	var runner: Node = Social.dialogue if Social != null else null
+	if runner == null or not runner.has_method("greeting_for"):
+		return
+	var line := str(runner.call("greeting_for", greeter))
+	var hud := UI.hud()
+	if line.is_empty() or hud == null or not hud.has_method("show_subtitle"):
+		return
+	hud.call("show_subtitle", "%s: %s" % [str(ContentDB.get_or_empty(greeter).get("name", "")), line], 6.0)
+	first_words = line
 
 
 func service(display_name: String) -> Node:

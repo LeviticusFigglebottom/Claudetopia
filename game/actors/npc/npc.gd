@@ -123,29 +123,7 @@ func _build_placeholder() -> void:
 			if m.has_method("apply_appearance"):
 				m.call("apply_appearance", appearance_of())
 		return
-
-
-## What this person looks like. The rig on its own is a naked body: `apply_appearance` is what
-## puts clothes on it, and nothing outside the character-creation screen had ever called it —
-## so every villager in Wickmere stood in the street with nothing on.
-##
-## The roll comes first and the def's own numbers are laid over it. A def's `appearance` block
-## is written for a person reading it (`"build": "short_thick"`, `"hair": "red_grey_shaved
-## _sides"`, a `notes` line about bone dust in the creases of both hands), so only the keys
-## that are actually numbers are applied; the prose is for the writer, not for the mesh.
-func appearance_of() -> CharacterAppearance:
-	var raw: Variant = def.get("appearance", {})
-	var block: Dictionary = raw if typeof(raw) == TYPE_DICTIONARY else {}
-	var from_seed := int(block.get("seed", abs(npc_id.hash())))
-	var look := CharacterAppearance.random(from_seed, culture())
-	for key in ["age", "height", "bulk", "feminine", "shoulder_width", "hip_width",
-			"limb_length", "neck_length", "head_size", "hearth", "hollow"]:
-		if not block.has(key):
-			continue
-		var v: Variant = block[key]
-		if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
-			look.set(key, float(v))
-	return look
+	# no model scene at all: a capsule, so the person is at least somewhere
 	if _model.get_node_or_null("Placeholder") != null:
 		return
 	var mesh := MeshInstance3D.new()
@@ -173,6 +151,54 @@ func appearance_of() -> CharacterAppearance:
 		col.shape = shape
 		col.position.y = 0.89
 		add_child(col)
+
+
+## What this person looks like. The rig on its own is a naked body: `apply_appearance` is what
+## puts clothes on it, and nothing outside the character-creation screen had ever called it —
+## so every villager in Wickmere stood in the street with nothing on.
+##
+## The roll comes first and the def's own numbers are laid over it. A def's `appearance` block
+## is written for a person reading it (`"build": "short_thick"`, `"hair": "red_grey_shaved
+## _sides"`, a `notes` line about bone dust in the creases of both hands), so only the keys
+## that are actually numbers are applied; the prose is for the writer, not for the mesh.
+func appearance_of() -> CharacterAppearance:
+	var raw: Variant = def.get("appearance", {})
+	var block: Dictionary = raw if typeof(raw) == TYPE_DICTIONARY else {}
+	var from_seed := int(block.get("seed", abs(npc_id.hash())))
+	var look := CharacterAppearance.random(from_seed, culture())
+	for key in ["age", "height", "bulk", "feminine", "shoulder_width", "hip_width",
+			"limb_length", "neck_length", "head_size", "hearth", "hollow"]:
+		if not block.has(key):
+			continue
+		var v: Variant = block[key]
+		if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
+			look.set(key, float(v))
+	if is_child():
+		var years: Variant = block.get("age", null)
+		look.height = child_height(float(years) if typeof(years) in [TYPE_INT, TYPE_FLOAT] else 9.0)
+		look.build = minf(look.build, 0.45)
+	return look
+
+
+## A child is written three ways in the packs: tagged `child`, built `child_small`, or just given
+## an age under fourteen. Every one of them was rolled as a grown person of the culture, so the
+## miller's nine-year-old stood as tall as the miller.
+func is_child() -> bool:
+	if def.get("tags", []).has("child"):
+		return true
+	var raw: Variant = def.get("appearance", {})
+	if typeof(raw) != TYPE_DICTIONARY:
+		return false
+	if str((raw as Dictionary).get("build", "")) == "child_small":
+		return true
+	var years: Variant = (raw as Dictionary).get("age", null)
+	return typeof(years) in [TYPE_INT, TYPE_FLOAT] and float(years) > 0.0 and float(years) < 14.0
+
+
+## A child's height for their years: 1.22 m at seven, 1.44 m at eleven. The body is still the
+## adult one scaled down to it -- children have no skeleton of their own yet (PROGRESS.md).
+static func child_height(years: float) -> float:
+	return clampf(1.22 + (years - 7.0) * 0.055, 1.0, 1.50)
 
 
 # --- registry hand-off -------------------------------------------------------------------------
@@ -261,6 +287,16 @@ func stop() -> void:
 	has_target = false
 	velocity.x = 0.0
 	velocity.z = 0.0
+
+
+## Turns to look along `dir` at once (flat), the way walking would leave them facing: for a
+## person put somewhere rather than walked there (`NpcSpot`).
+func face_direction(dir: Vector3) -> void:
+	dir.y = 0.0
+	if dir.length_squared() < 0.0001 or _model == null:
+		return
+	dir = dir.normalized()
+	_model.rotation.y = atan2(dir.x, dir.z) + PI
 
 
 func current_speed() -> float:

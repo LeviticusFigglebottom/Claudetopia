@@ -33,7 +33,7 @@
         "journal": "What he saw was a cargo going into the tally-house yard at four in the morning with the seal already on it, which means it was weighed somewhere that is not the Row. He was fined forty marks that afternoon by a watchman who had never fined anybody before. The landing is the old smack broken on the shingle under the Lamp, where the nets are full of gulls and the men on it are Spire dropouts with charter-stamps.",
         "objectives": [
           {"type": "reach", "target": "core:poi/gullhithe_wreck", "radius": 140, "text": "Go out to the wreck on the shingle"},
-          {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "text": "Settle with the sayers on the wreck"},
+          {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "text": "Settle with the sayers on the wreck", "where": "core:poi/gullhithe_wreck"},
           {"type": "collect", "target": "core:item/forged_charter_chit", "count": 1, "text": "Take a chit off them", "spot": "under_the_keel"}
         ],
         "on_complete": [{"set_flag": "took_the_chit"}, {"renown": 10}]
@@ -135,7 +135,7 @@
         "journal": "Footings eleven feet deep, three walls of coursed limestone, and a fourth wall the Guild did not build: fused black stone, curved, of no known thickness, which the mason objected to and then was pleased about. There is one curved black Oroth thing eleven feet under that end of the city. The Guild built its strongroom against the outside of the bell the Hands live in, and both parties have known for ninety years, and neither has ever mentioned it. The crawl round the back of the hall is drake country.",
         "objectives": [
           {"type": "reach", "target": "core:place/undercroft", "radius": 140, "text": "Go down and round the back of the bell hall"},
-          {"type": "kill", "target": "core:enemy/gutter_drake", "count": 4, "text": "Clear the crawl behind the bell"}
+          {"type": "kill", "target": "core:enemy/gutter_drake", "count": 4, "text": "Clear the crawl behind the bell", "where": "core:interior/undercroft"}
         ],
         "on_complete": [{"set_flag": "found_the_strongroom_wall"}, {"renown": 10}]
       },
@@ -223,7 +223,7 @@
         "journal": "In through the bell's side, along the Guild's own footings, and up into a dry room with a lamp bracket and no lamp. Oak boards, brass corners, a strap, a lock of three wards. And two men the Guild pays to stand in a room nobody can get into, who have been playing at counters for nine years and are very fast, and who are within their charter: a duel is lawful if both parties consent and a Tallyman witnesses it, and there is a Tallyman on the wall in a frame.",
         "objectives": [
           {"type": "reach", "target": "core:place/undercroft", "radius": 140, "text": "Go in through the bell's side"},
-          {"type": "kill", "target": "core:enemy/bravo", "count": 2, "text": "Get past the Guild's two bravos"},
+          {"type": "kill", "target": "core:enemy/bravo", "count": 2, "text": "Get past the Guild's two bravos", "where": "core:interior/undercroft"},
           {"type": "collect", "target": "core:item/ledger_of_prices", "count": 1, "text": "Take the Ledger of Prices", "where": "core:interior/undercroft", "spot": "ledger_fall"}
         ],
         "on_complete": [{"set_flag": "took_the_ledger"}, {"renown": 30}]

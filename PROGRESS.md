@@ -2598,3 +2598,512 @@ tests, 0 failed).
    takes to get there, and tune him only if that loses.
 3. The engine crash in long fights runs: a symbol build's backtrace, or split `./run.sh fights`
    into a process per Calling.
+## Cloned, pressed Play, and stood on nothing
+
+A player cloned the repository, played it on their own machine, and reported that "when
+progressing in the game the player is transported to a blank empty plane with nothing visible
+in every direction". Every check here passed, because this machine has the built world and
+nothing else ever looked at a machine that did not.
+
+**Reproduced first, both ways.** With `game/world/generated` empty, New Game went through the
+Naming into a world with no manifest: the body stood at (-1900, 1, 3900), at y = 0 on nothing,
+fog in every direction, HUD up — and `./run.sh flow` printed `FLOW: PASS (new: 67 checks, 0
+failed)`. With the data but no Terrain3D regions (the state of a Mac, where the plugin never
+loads), trees, props and the Hushline's bench hung in the same fog over no ground; `FLOW: PASS`
+again. Nothing in the flow asked whether there was ground, and nothing in the game did either:
+`world.gd` logged a warning and carried on.
+
+Three things were true at once, and a clone met all three:
+
+* **The world was not in the repository.** `game/world/generated` and `game/terrain_data` were
+  ignored whole. `./run.sh` built them when the manifest was missing — Python, 8 GB, minutes —
+  but the Godot editor's Play button does not run `run.sh`, and a failed build left nothing.
+* **Terrain3D had binaries for two desktops of the three it names.** The vendored addon carried
+  Linux and Windows on x86_64; `terrain.gdextension` points macOS at two frameworks that were
+  not there.
+* **Every way in let a player through.** The title menu, boot's `--new-game` and `--load`, the
+  Naming and the capture runner all went into `world.tscn` without asking.
+
+### What changed
+
+**The title asks first (`WorldStatus`).** One module reads what is on disk and what the engine
+loaded and says `missing`, `fallback` or `ready`. With no world data the title sheet says so
+plainly — what is missing, `./run.sh world`, and what it needs — and New Game, Continue and Load
+stay shut; asked again at the door, because the load screen calls `load_slot` itself. Boot,
+the Naming and the capture runner ask the same question, and a world entered anyway (the
+editor's Play Scene) stands down with the same notice and a way back to the title rather than
+emitting `world_ready`. `test_world_status.gd` holds each branch: data missing, plugin missing,
+regions missing, forced, both present — against the verdict, the title screen and the world.
+
+**Terrain3D for macOS.** The official 1.0.2 archive came through the proxy by its release URL
+(the GitHub API and release pages are refused; the Asset Library's entry 3892 names the file).
+All four vendored binaries, `terrain.gdextension` and `plugin.cfg` are byte-identical to it,
+which is how it is known to be the same release; its two macOS frameworks are added unmodified,
+with the URL and every hash in `LICENSES.md`. Two things the release does not do: it has **no
+Linux arm64 or riscv64 binaries** at all, though the `.gdextension` names them, and its macOS
+frameworks are built for **macOS 15.0 and later** (their `LC_BUILD_VERSION`), universal, with
+only the arm64 slice signed.
+
+**The coarse ground (`FallbackTerrain`).** When Terrain3D cannot draw — no library, no regions,
+regions that load as nothing, or `-- --fallback-terrain` — the ground is drawn from the builder's
+8 m runtime height map: 256 chunks of 512 m sharing one flat grid with a skirt, lifted in the
+vertex shader, with four index LODs that Godot's mesh LOD picks; the region's own terrain
+textures in two arrays, tinted by the palette the way the builder's colour map is (the shader's
+mean tint per region is within a few percent of `color.rgba8`'s), with slope, height bands,
+snow, the lake bed and roads stamped at 2 m; and a HeightMapShape3D per chunk on the world and
+terrain layers. The mesh, the collision and `TerrainProvider.get_height` split every quad the
+same way — `test_fallback_terrain.gd` checks Jolt's split with a twisted quad and the world's
+collision against the provider at forty points — and each cell's scatter, placed on the 2 m
+ground, is set down on the 8 m one as it streams in. It builds in 1.8 s here when the machine
+is quiet (1.6 s of it reading back and scaling the terrain textures) and 7.8 s at a load of 25.
+Looked at against Terrain3D from the same cameras: the Hearthvale downs, the Merrowby street and
+the Brightwater island read as the same country; the spawn's ash spit and the hill behind it
+match; what is lost is fine relief — Cinderlea's terraces are rounded off, cliffs are softer,
+and the field patchwork and hedge lines are not there.
+
+**The runtime heights were read 3 m out.** `runtime/heights_1024.r32` is a 4 x 4 block mean,
+so its texel sits at `origin + 8 i + 3 m`; `TerrainProvider` read it at `origin + 8 i`. Against
+the 2 m ground that was more than a metre out on 37% of the land and more than three on 11%;
+read where it is, 11% and 1.15%. The regions, water and levels are point samples and were read
+correctly. The offset is in CONTRACTS §6 now.
+
+**The flow fails on a void, and `run.sh` now says so.** After the body stands, the probe checks
+that the ground is drawn (by Terrain3D or the fallback), that a ray finds ground under the feet,
+and that at least ten drawn things stand within 200 m. With no world on disk it fails at the
+title instead, with the title's words in its report. And `./run.sh flow` itself had never
+failed: it ran `flow_run new && flow_run load && flow_run continue` and printed `[flow] PASS` on
+the next line, and an `&&` list that fails part-way does not trip `set -e`, so a failed probe
+exited 0 under a PASS, with only a `[flow] FAIL` line further up to say otherwise. The verdict is
+taken from the list now. Any earlier "flow passes" that was read from the last line or the exit
+code was not a reading of the probe. The other way round, this branch's final suite printed
+`RESULT: PASS` and exited 1: `echo "$out" | grep -q` under `pipefail` (44 failures in 200
+replays of that log); the parent branch's fix, a grep that reads to the end, is taken verbatim.
+
+**The fade waits for the country.** It lifted on `player_spawned`, and in all three flow runs
+**none** of the full-detail cells round the body was standing at that moment (the Hushline Stair
+is on the world's south edge, so its ring is six cells, not nine): the first frame a player saw
+was bare ground with the trees and the steps arriving over it. The fade now holds until the ring
+is in, for up to 20 s, with "Laying the country around you: n of 6" in the caption and the body's
+hands held; the probe fails a run whose fade had to give up. It held 8.0 s (New Game), 4.4 s
+(`--load`) and 12.8 s (Continue) here, at a load average of 20; on a machine to itself it will be
+a fraction of that. The world's own synchronous load (no frame at all for 17 to 19 s after the
+press, the probe's note) is unchanged: that is the terrain and the doors, not the cells.
+
+**Shipping the world so a clone plays without Python.** Every read of `res://world/generated`
+and `res://terrain_data` in `game/` was traced. The game reads the manifest, `pois.json`,
+`roads.json`, `rivers.json`, the four `runtime/` maps, the 1024 cells and the sixteen Terrain3D
+regions, and nothing else:
+
+| Set | Files | Raw | zlib-6 (git's) |
+|---|---|---|---|
+| manifest, pois, roads, rivers | 4 | 0.1 MB | 0.03 MB |
+| `runtime/` | 4 | 10.0 MB | 3.8 MB |
+| `cells/` | 1024 | 153.5 MB | 58.1 MB |
+| `terrain_data/` | 16 | 145.1 MB | 144.7 MB |
+| **total** | 1048 | **308.7 MB** | **206.6 MB** |
+
+A repository holding exactly that set packs to **206.7 MiB**. The full-resolution maps only
+the terrain import reads — `heights.r32`, `color.rgba8`, `control.u32`, `flow.rg8`, the three
+`texture_*.u8`, `water_mask.u8`, `region_mask.u8` — are 304 MB and stay out. The Terrain3D regions
+are already compressed: every region file is `RSCC`, the format `ResourceSaver`'s
+`FLAG_COMPRESS` writes — zstd, but in 4 KB blocks — so a region's 13.3 MB comes to about
+9.1 MB where whole-file zlib would give 7.6 and xz 5.8. There is no flag in
+`import_terrain.gd` to change that: it hands the saving to Terrain3D's `save_directory`, which
+chooses the format itself. Terrain3D's 16-bit height option would save about 2 MB a region at a
+worst error of 0.125 m here (0.25 m above 512 m); not taken. Cells could be stored gzipped
+(58 MB instead of 154 checked out; git stores them compressed either way): reading one costs the
+worker thread 2.3 ms more for a median cell and 8.3 ms for the largest, against a JSON parse of
+10.5 and 21.5 ms, measured at a load average of 20, and `_parse_cell` runs on the worker pool,
+so none of it is frame time. Not done: it is the builder's file to write, and the builder is
+another stream's this round. `.gitignore` now names
+exactly the runtime set (checked against placeholders of every file the builder writes, and an
+unknown new one, which stays out); `run.sh` imports a never-imported project before running it,
+and `ensure_world` checks the manifest and the regions, imports the regions alone when the
+full-resolution maps are there, and otherwise builds; README's "Run it" is rewritten for a
+repository that carries its world. **The world data itself is not committed on this branch**:
+another stream is rebuilding it this round.
+
+**Proved on a clean clone.** A clone of this branch in a scratch directory, never opened and never
+imported. With no world on disk, `./run.sh flow` imported the project (5060 files, a 519 MB import
+cache) and failed at the title, whose sheet said what was missing, the command and what it needs,
+with New Game, Continue and Load shut — and the sheet, seen there for the first time, overflowed
+1280 x 720, so it was tightened. With only the runtime set copied in (`git status` in the clone
+then listed exactly those 1048 files, and nothing else the builder writes), the same command passed
+all three runs — 72, 28 and 31 checks, none failed, no errors logged — without building anything,
+the fade holding 8.2, 12.0 and 11.1 s for the near cells. Then, as near as this Linux machine
+can come to a Mac without the plugin, `terrain.gdextension` was taken out of the clone: the
+`Terrain3D` class did not exist, the title showed its one small line about the coarse ground, the
+world drew `FallbackTerrain` (built in 5.5 s at a load average of 32), and the flow passed all
+three runs again — the body standing on the heightfield chunk `Ground_4_15` at 0.00 m, thirty
+drawn things within 200 m, the notice on arrival.
+
+### Found and not fixed
+
+* **`tools_gd/check_scripts.gd` does not run on 4.7.2**: an internal VM error at its line 20,
+  after which it never quits (the `SceneTree` waits for ever). Use the test runner.
+* **The water sheet samples its maps 4 m out.** `painted_water.gdshader` maps a world point to
+  `(xz - origin) / size`, which puts runtime texel k at `origin + 8 k + 4`: the mask and levels
+  are point samples at `origin + 8 k`, the heights at `+ 3`. Four metres of shoreline.
+* **Whether the water sheet is drawn at the sea inlets.** Its discard test is
+  `texture(mask_tex, uv).r < 0.5` on a mask whose water texels are the byte 1, which normalises
+  to 1/255; yet the Mere's surface looks like water from its shore. I have not settled which it
+  is — Cinderlea's water is near-black and so is its ground — and the test that would is one
+  capture with `use_mask` off beside one with it on.
+* **`run.sh flow` keeps only its last run in a redirected log.** `flow_run` tees each probe's
+  output to `/dev/stderr`, and when stderr is a file, `tee` reopens it truncated, so
+  `./run.sh flow > log 2>&1` ends with only the Continue run in `log`. The per-run JSON reports
+  in the output directory are complete; read those.
+* **The headless teardown message came seventeen times, not sixteen** (`Parameter "material" is
+  null`, Known issues above), in the first full run with the two new test files, which stand up
+  three more worlds with people in them. Probably one more NPC body freed; not traced.
+* **After this merges, a worktree with the world symlinked in shows the two symlinks as
+  untracked** (`game/world/generated`, `game/terrain_data`), because `.gitignore` can no longer
+  ignore those paths whole and still track files inside them. Add files by name.
+
+### Then: Forward+, a player on Windows, and the coarse ground said out loud
+
+The player's own logs (Windows, a Radeon RX 9070 XT, Forward+, Godot 4.7.1) said
+`[World] ready: terrain=fallback` on every run, with no errors. Their world build had written the
+maps and the Terrain3D import after it never ran: `run.sh` called `godot`, which is not on a
+Windows `PATH`. The coarse ground carried them — and was much of the grey, barren look they
+reported, announced by one small line on the title and one toast that they never saw.
+
+**Forward+ on this machine crashed as the world was built, and it is not ours.** With Mesa's
+software Vulkan driver installed, the flow got through the title and the Naming and died at
+`add_child(terrain_node)`: the deprecation warning, "/root: The caller thread can't call the
+function `propagate_notification()`", signal 11 in an unknown module. Terrain3D 1.0.2 alone in an
+empty project (a camera, a light, the node) crashes it too. Under gdb all four `llvmpipe`
+rasterizer threads stop at one address in the driver's compiled shader, on an indexed load
+(`vmovd 0x0(%r13,%rax,4)`) out of range. The thread error is Godot's crash handler sending
+NOTIFICATION_CRASH to the tree from that thread: under gdb, which takes the fault first, it never
+prints. Nothing of ours touches the tree from a thread: the game's one worker-thread task (the
+streamer's `_parse_cell`) reads a file and parses JSON, no node processes on a sub-thread group,
+and nothing of ours listens to Terrain3D's signals. The deprecated
+`instance_reset_physics_interpolation` is compiled only into Terrain3D's 4.4-targeted builds and
+lands on Godot's compatibility binding: one warning, harmless, and not the crash.
+
+When it crashes is the clipmap and the view, not the ring count alone. Alone, at 2 m spacing with
+the regions, 60 frames each: Terrain3D's default 7 rings of 48, and 7, 8 and 9 rings of 32 (the
+game's), all drew; 9 of 48 crashed. At 1 m spacing, 7 of 48 crashed on the first frame, with the
+regions and without. In the game, 9 rings crash as the world is built; the painted-look stream
+found 7 ran, and here 7 drew the real terrain (Cinderlea, the Builders' towers) through forty
+seconds of the New Game flow and then crashed the same way. So fewer rings buy short captures,
+not safety.
+
+**No newer Terrain3D to move to.** `git ls-remote` of the upstream repository: the newest tag is
+`v1.0.2-stable`; its `1.0` branch has one commit since, to the installation docs; `main` is
+`1.1.0-dev` (`compatibility_minimum = 4.5`) and no longer makes the deprecated call, but has no
+release and no official binaries. Nothing to verify against, so nothing was changed.
+
+**What changed.**
+
+* `WorldStatus` does not start Terrain3D on a RenderingDevice (Forward+, Mobile) whose adapter is
+  llvmpipe: the coarse ground, with the reason and the renderer that does draw it (the
+  Compatibility renderer's llvmpipe draws Terrain3D, as every flow here always has).
+  `-- --terrain=terrain3d` tries Terrain3D anyway; `-- --terrain=fallback` asks for the coarse
+  ground anywhere (`--fallback-terrain` still works), read from the user arguments and the
+  engine's own, so the editor's Main Run Args carry it too. `-- --terrain-lods=N` (or
+  `WICKMERE_TERRAIN_LODS=N`), 1 to 10, sets Terrain3D's clipmap rings for tools, nine when nobody
+  asks; asking also tries Terrain3D on llvmpipe, for short Forward+ captures of the real terrain. On Forward+ over lavapipe the New Game
+  flow now passes (75 checks, none failed, no errors logged), and so does it with
+  `--terrain=fallback` (74).
+* The coarse ground, unless asked for, is said where it cannot be missed (`GroundNotice`): across
+  the title sheet as plainly as a missing world, with the way to the full terrain and the way in
+  still open; on a card across the top of the view once the region's name has gone; and on a
+  "Coarse ground" plate in the top left corner, with the reason, for as long as the HUD is up.
+  Asked for, it is the plate alone and one small line on the title. When the maps were built here
+  and never imported, the way named is `./run.sh terrain`, not a rebuild. The flow checks the
+  plate and the card on the coarse ground, and that nothing says so on Terrain3D.
+* `run.sh` finds Godot: `GODOT` if set, then the usual names on the `PATH`, then the usual places
+  (Downloads, the Desktop, `C:/Godot`, Program Files, Steam and winget on Windows, the console
+  build first; `/Applications/Godot.app`; an unpacked Linux download), a 4.7 before any other,
+  with a warning when it is not a 4.7. `./run.sh godot` says which. A command that needs Godot and
+  has none stops before doing anything, with a banner naming `GODOT` and an example per system;
+  `./run.sh world` looks before it builds. A failed terrain import gets a banner too, and
+  `./run.sh terrain` runs the import alone. Python is found the same way (`PYTHON`, `python3`,
+  `python`). Checked on this machine against fake homes; not run on Windows.
+* This branch's final suite had printed `RESULT: PASS` and exited 1: `echo | grep -q` under
+  `pipefail`. The parent's fix is taken verbatim.
+* The arrival card waits 4.8 s of game time for the region's title card, and game time is slow
+  when frames are: the engine clamps a slow frame's delta to what its capped physics steps cover
+  (0.12 to 0.15 s for a 0.5 s frame, measured), so on Forward+ over lavapipe under load the probe's
+  twelve seconds ran out before the card came. It waits up to ninety.
+* **The pushed branch, cloned and played.** Once the world was committed (197a50c1, the 1048
+  files of the runtime set), `claude/blissful-volta-dg80e6` at 549dd05 was cloned fresh from
+  GitHub (`--depth 1`, 1.4 GB checked out), never opened, never imported, no Python run. In it
+  `./run.sh flow` imported the project and passed all three starts on Terrain3D: New Game 73
+  checks, `--load` 28, Continue 31, none failed, no errors logged; the ground drawn by Terrain3D,
+  46 drawn things within 200 m, the fade held 8.3, 6.1 and 3.5 s for the near cells. In all
+  three the ray down from the body met the Hushline Stair's masonry 1.36 m below the feet and
+  no terrain collision: the same in every Terrain3D run here since the first, and consistent with
+  what the user's second playtest found and main has since mended (Terrain3D's collision stayed
+  round the fly camera, not the player).
+* **Main's `World.follow` and dry landing merged in, and nothing here leans on the fly camera.**
+  The coarse ground's collision is a heightfield per chunk over the whole world and its LOD is
+  Godot's mesh LOD on whatever camera draws; the fade's count asks the streamer, which `follow()`
+  points at the body before `player_spawned`. The flow now checks both things that let the old
+  bug through: that Terrain3D's camera is the body's own, and that the fade counted cells round
+  the body at all (a streamer following something else counts nothing, and nothing is all in at
+  once).
+* **The fade counts cells, not seconds** (the coordinator's finding on the main branch: the
+  `--load` start lifted with 8 of 9 near cells after 535 s of wall time, the machine running the
+  game at a few per cent of real speed). The 20 s cap described above is gone. `UI.wait_for_country`
+  holds while cells keep arriving and gives up only when none has come for 120 frames and 10
+  seconds together, or after 600 s; the caption goes on counting. `test_country_wait.gd` throttles
+  a fake streamer by hand rather than hoping for a slow machine: a cell every eight frames at two
+  seconds a frame is waited out to nine of nine (the old wait would have lifted on one), a streamer
+  that stops at five is given up on after both halves of the stall and no longer, a cell every 45
+  frames on a 1 ms clock is not given up on for its quiet frames alone, and the cap ends a wait
+  that is still moving.
+* **The wait went to main without the probe that reads it.** fc24424c took `UI.COUNTRY_WAIT_S`
+  away and `flow_probe.gd` still named it, so the probe does not compile on a main that has
+  fc24424c alone and `./run.sh flow` has no verdict there; 3e10d533 on this branch is its other
+  half.
+* **A player who built the world pulls the tracked one without trouble.** Modelled in a scratch
+  repository with both `.gitignore`s: the locally built manifest and runtime maps were ignored, so
+  `git pull` replaces them with the tracked ones silently (git's default for ignored files) and
+  leaves the full-resolution maps alone; `git status` is clean after. Those maps are then the old
+  build's: `./run.sh` leaves them be (the regions are there), but a `./run.sh terrain` would import
+  them over the tracked regions.
+* **`run.sh` stopped reaching for `xvfb-run` on Windows and a Mac**, which never have it and
+  always have a screen.
+
+**Found on merging main at f1cd8852, and not this stream's.** The merged suite: 1562 tests, 3
+failed, 3 script errors, where this branch alone had been 1421, none failed and none. (Main
+mended the three tests and the errors itself in d9c4b6ce and ef0b0ce2; merged again at 146494ec,
+the suite is 1570 tests, none failed, no content problems, no script errors, no dead captures.)
+`test_inventory_loot`'s two quest tests count the Naming's stages as wake, ash_wights, hearthstone,
+the_cart (quests round two, b1326eb6), and the opening (20ef631b) put `the_choir` second.
+`test_the_start.test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front` finds one light
+at the Stair Head where it wants more than two. `test_property` calls `Ownership.instance`, which
+it never makes and which no test before it now leaves standing. And the New Game flow sat in the
+opening for 601 s with 2 of its 10 shots shown, at a load average of 25: each shot holds until the
+cells round its points are in, and they came slowly. It did the same again on the final merge
+(602 s, the same two shots, `the_name` and `the_mere`, then a hold on the third), so it may not be
+load alone. It never handed over, so the HUD, the first
+frame of control, the Warden, the objective line and this stream's Terrain3D-camera check all
+failed after it: the camera was still `/root/World/Opening/CinematicCamera`. The hair chooser's
+list did not open within its 60 frames either. The slot that run saved kept the `new_game` flag up
+(it stays up until the opening hands back), so the `--load` start after it played the opening
+again. With `-- --no-opening` the same three starts read past it: every check of this stream
+passed in all three -- nine of nine near cells in before the fade lifted (13.7, 25.1 and 20.3 s,
+two frames each), Terrain3D following `/root/World/Player/CameraRig/Yaw/Pitch/Arm/Camera3D`, its
+ground 0.00 m under the feet, 158 things drawn within 200 m -- and `--load` passed whole (32
+checks). New Game failed only the two choosers and the opening it was told not to play; Continue
+only "the body's hair is short (it is long)": it takes the newest slot, and every worktree on this
+machine saves into the one `user://`. On Forward+ over lavapipe, `--load` with the opening off
+drew the coarse ground and passed every check of this stream -- the plate in the corner, the card
+41.9 s after the fade (game time runs slow there), the body on `Ground_4_15`, 160 things drawn
+within 200 m, the fade holding 87.2 s for nine of nine -- and failed only the same hair.
+
+### Next, in order
+
+1. ~~**Commit the built world.**~~ Done on the main branch (197a50c1), and a fresh clone of it
+   plays without Python (above).
+2. **Play it on a Mac.** Nothing here can run macOS. On macOS 15 or later the title must say
+   nothing about the ground and `./run.sh flow` must pass on Terrain3D; on macOS 14 or earlier the
+   title's notice must name macOS 15, the corner plate must say "Coarse ground", and the flow must
+   pass on the coarse ground. If the frameworks are refused (quarantine, signing), the Console log
+   says so and the game still plays, coarse, and says so.
+2a. **Run `./run.sh` on Windows from Git Bash**, with Godot unzipped into Downloads and not on the
+   `PATH`: `./run.sh godot` must name the console build, and with no Godot anywhere every command
+   must stop with the banner before building anything.
+3. **Linux on arm64** is the same test as an old Mac, and Terrain3D has no binary for it: the
+   fix there is upstream, or building Terrain3D 1.0.2 for arm64 ourselves.
+4. **Settle the water sheet** (see above): one capture of the Mere and one of the Hushline's
+   inlet with `use_mask` on and off. Then move its samples onto the texels they belong to.
+5. **The coarse ground's weak places**: Cinderlea's terraces, cliffs and the field patchwork do
+   not survive 8 m. A 2 m runtime copy of the heights would be 64 MB; a small runtime field map
+   from the builder would bring the hedges back. Both are the builder's files, not this stream's.
+6. **`check_scripts.gd`** wants mending for 4.7.2 or deleting.
+## Walking, the view, the roll and the compass: what the player felt, measured
+
+The first report was "the walk animation seems very slow and jagged, like a crouch walk (no
+sprint?)", and that the compass moved erratically as the player did. After playing the build:
+"the movement is indeed very slow, and the mouse/movement (WASD) relationship seems off, hence
+the compass and orientation issues". After the first round: "movements/animations still a
+little clunky (no roll?)". Every part of that was true, and each had a cause that could be
+measured. Most were not the cause first guessed.
+
+**The view turned with the body.** The camera rig was a plain child of the player's body, so
+the view looked along body yaw plus rig yaw, while movement, respawn, the save and every test
+read the rig's yaw as the whole of it. One second of D, mouse untouched, turned the body −90°
+and the view +89.9°. The compass swung 89.9° in steps of up to 21° a frame, and W then sent the
+body off at an angle to what the player could see. That one fault is the "mouse/movement
+relationship" and the "compass and orientation issues". The rig is `top_level` now. It follows
+the body's drawn position every frame, never its rotation, and its yaw is a world yaw that only
+look input changes. The mouse signs were already right; a test pins them now. W/A/S/D are
+relative to the view, and over twenty cases (camera yaw 0, 90, 180, 270 and odd angles, each
+key) the worst direction error is 0.00°. The body turns toward where it is going at a rate that
+falls with speed: 900°/s standing, 720 at a walk, 540 at a jog, 300 at a sprint. It gives up
+speed while a large turn is still to make, so a reversal from a jog plants and faces round in
+0.42 s instead of moonwalking. Locked on, blocking or in first person, it faces the target or
+the view and strafes.
+
+**"Very slow" was two things, and only one of them was the speed.** A brand-new character
+reached exactly 4.20 m/s, the design's number, in 0.067 s, and nothing but a status touches
+ground speed. The gaits are now walk 1.8 m/s (Alt, or a light stick), jog 5.0 (the default)
+and sprint 7.8 (Shift held). The sprint costs 8 stamina a second, and run to empty it stops
+until a quarter of the pool is back instead of stuttering on every regen tick. Measured on a
+new character: 1.80, 5.00 and 7.80. Rest to a jog takes 0.317 s; a jog stops in 0.25 s over
+0.58 m, a sprint in 0.48 s over 2.05 m. The other half of "slow" was a jog posed as a crouch.
+The blend space fed velocity/6.5 with Sneak_Walk half way up its forward axis, so at 4.2 m/s
+the body was three-quarters into the sneak: hips 15.2 cm below standing, knees at 58°, the
+planted foot sliding at 79% of the ground speed. The sprint played the Walk clip and slid at
+76%. Legs that shuffle under a gliding body read as slow at any speed.
+
+**The legs keep pace with the ground.** `HumanoidModel.set_locomotion` takes metres per second.
+Every moving clip lies on one shared stride timeline with its silent inputs kept running, and
+one time scale plays it at ground speed over stride. The planted foot as a share of ground
+speed is now: walk 2%, brisk walk 2%, walk to jog 6%, jog 3%, jog to sprint 3%, sprint 3%, sneak
+1%, a villager at 2.2 m/s 2%, a strafe 0%, a backpedal 0%. The thresholds are 5% at a gait and
+8% in a blend. Every gait reads the same phase to within 0.001 of a stride through a walk, a
+jog, a sprint, a strafe and a backpedal. Villagers were never told how fast they walked; the
+village glided about in its idle pose. They are told now.
+
+**The clips were crouched as well.** Walk, Run and Sneak_Walk are re-made in the forge at the
+game's speeds, and there is a new Sprint. Played in the engine at walk, jog and sprint speed,
+the hips rode 5.4 cm below standing with 11.4 cm of bob at a walk, and 8.7 cm with 23.9 cm at a
+jog. The sprint was the jog's clip sped up and did the same. Now they ride 4.2 cm with 5.0 cm,
+4.1 cm with 5.3 cm, and 4.4 cm with 6.2 cm. The first model's walk was lowest at mid-stance
+and its run highest there, which is backwards. The new stride model in
+`tools/forge/lib/anim.py` plants the foot ahead of the hip by a share of the sweep, plans the
+hips from where the ankle really is once the foot has rolled, meets the reach limit through a
+smooth minimum, and phases the bob the right way round. The side-steps dropped the hips 21.3 cm
+at every step, a bounce whenever the player was locked on, and are shortened to move them
+5.7 cm.
+
+**The roll existed; nothing said where it was.** Proved from real key events through the
+default bindings, Ctrl rolled a jogging body 3.31 m in the tick the key went down, untouchable
+for 0.30 s, playing Dodge_F. But Ctrl is a key the genre does not use for a roll. A tap of
+Sprint now rolls, as it does in the games most players will have come from, and a hold sprints.
+The sprint waits out the 0.22 s tap window, so a tap is not a lurch and then a roll. Ctrl and a
+pad's B still roll, and Space stays jump. The tap has a setting and is off while Sprint is a
+toggle. The roll itself was wrong too: its keys put the toes 19 cm into the ground on the way
+down, the head 24 cm into it at the turn and the back 26 cm clear of it coming over, and it
+stood up on bent legs with its feet 30 cm in the air. Every frame now lowers or raises the
+whole body until its lowest point touches the floor, within 1 cm, and it ends standing. It also
+widened the view: the sprint's widening read real speed, and a roll peaks at 11 m/s, so every
+roll breathed the view out from 75° to 77.8°. It stays at 75.0° now.
+
+**The first minutes teach the controls.** A strip low in the HUD reads "WASD move · Shift
+sprint · tap Shift roll · Space jump · E use · LMB strike · RMB block" from the live bindings,
+or the pad's buttons while a pad is in use. Each item fades once it has been done, and the
+strip goes when nothing is left or after fifteen minutes. What was learned rides in the game,
+so a new game is taught again. The pause page reaches "How to move and fight", every control as
+bound now, one button from rebinding.
+
+**Locked on, the pace goes by the way you go.** The combat round's headless fights found that
+a locked-on player could not close on a caster backing away at about 3 m/s: every locked-on
+direction was capped at 2.6 m/s, and the gap grew 1.39 m in three seconds of W. Locked on, the
+body now goes 5.0 m/s at the foe, 3.0 across and 1.8 backing off (the ellipse between), and the
+gap closes 5.26 m in the same three seconds with the lock held. In the arena, at the old pace
+the Cragborn's caster fight was not won in 120 s (0 of 53 swings landed); at the new one it is
+won in 35.1 s, and the Hearthkeeper's in 20.7 s rather than 59.0. Sprint while locked on runs
+and keeps the lock. A raised guard walks at 1.56 m/s. It used to glide there with frozen legs,
+because Block_Idle was played as a whole-body state. It is a layer over the upper body now, and
+the legs walk under it, 2% slide. A body turning on the spot, guarding or locked on, steps
+round rather than pivoting on planted feet.
+
+**Starts, stops and the camera's follow.** The stride's rate was read off a speed smoothed over
+0.08 s. Under a jog's stop that runs up to 1.6 m/s ahead of the body, so the legs went on
+stepping 0.12 of a stride after the body stood, then held a split for a tenth of a second and
+snapped together. The rate now follows the ground speed as it is, no step is taken after the
+body stands, and the idle eases in over 0.2 s from the moment the body's own speed says so. The
+camera trailed a jog by 0.34 m and drew 0.4 m away at every start and back at every stop. It
+trails by 0.23 m now and closes up in about 0.15 s.
+
+**Smooth at any refresh rate.** Physics interpolation was off, so a body moved at 60 Hz stepped
+on any faster display, and the camera and the compass stepped with it. It is on, with the
+jitter fix off. What that needs was measured in the engine first. A child moved every frame
+under an interpolated parent trails (drawn at 3.61 when put at 4), so the per-frame things opt
+out: the camera rig, the sockets on the hands, the atmosphere, a dropped item's bob, the Echo's
+hover, the Naming's mannequin, the UI. An existing node moved without a reset smears (moved
+from x = 4 to 500 it was drawn at 254 for a frame), so everything that jumps resets:
+`Player.teleport` (which respawn, loads, doors, jail, exile and the console go through), an
+enemy sent home, a villager put indoors, a loaded actor. A wall 1.6 m behind the camera pulls
+it in to 1.39 m at once, and it eases back to 3.59 m over a third of a second. A sprint draws
+it back 0.5 m and widens the view from 75° to 81.8°, eased both ways. Checked against
+`World.follow`, which gives Terrain3D the player's own camera: a teleport made outside a physics
+tick (a respawn timer, a load, the console) left the interpolated transform at the old place for
+a frame, so the rig snapped there and the frame was drawn, and the terrain built, from 800 m
+away. On the frame of a snap the rig now reads where the body was put: 4.23 m from it the next
+frame.
+
+**The compass reads the view**, eased over about 30 ms, processed after the camera, with
+bearings from where the body is drawn. On a path past Merrowby that turned the body 450° with
+the mouse still, the strip moved 0.00°. With the view turning, it stays within 1.33° of the view
+and never moves further in a frame than the view did plus the lag it carried.
+
+**Holes found on the way.** The Echo handed a death's marks back. An Area3D finds an overlap
+in one physics step and reports it at the start of the next, and the journey dies and comes
+back one frame apart. So the body's single tick on the Echo was reported after Hearth had
+armed it and moved the body 30 m to the stone. The Echo now checks the body is standing in it
+when the arrival is reported; a test reproduces the stale report. After the merge with the
+combat work, three tests measured the machine instead of the game, and they are fixed. The
+blend test played every tick twice once the model advanced its own tree. The compass test's
+bound grew with frame times. A footstep test walked "a second and a half" on a loaded wall
+clock that fitted a third of a second of play.
+
+**Tools left behind.** `game/tools_gd/motion_studio.tscn` films the real player on a plain
+floor from real key events, in Forward+ in a minute or two, where loading the country crashes
+Mesa's software Vulkan. `tools/capture/plans/motion.json`, `gaits_studio.json` and
+`controls.json` are its plans. The capture runner's gait runs can hold and tap real keys
+(`tools/capture/plans/roll.json`). `tools/forge/bake_clips.py` bakes every clip onto the bare
+armature in 26 s where the rig bake takes 24 minutes. `tools/forge/transplant_clips.py` moves
+clips onto the committed rig by bone name and proves nothing else changed. Under Blender 4.2
+the rig bake repaints the body the 4.0-built rig was made with, so the transplant is how
+clips change without the body.
+
+**Looked at.** Eight frames 0.1 s apart of each gait, from the side, in the world at the
+Cracked Toll, through the capture runner's `gait` section (`tools/capture/plans/gait.json`,
+`--fixed-fps 60`), before and after. Before: the jog was a hunched, bent-kneed shuffle with
+both feet near the ground in every frame; the "walk" was the same, since there was no walk key;
+the sprint was the Walk clip at 6.5 m/s, an upright stroll with the arms hanging. After: the
+walk is upright, with a heel strike and a straight leg under the body. The jog leans a little,
+drives a knee and leaves the ground between steps. The sprint leans hard, drives the knee to the
+hip and spends much of each stride in the air. In Forward+, in the motion studio: the roll goes
+over the shoulders and back and ends standing; the stop's stance closes steadily over 0.2 s,
+where it had frozen mid-stride and snapped; a guard held while walking now steps under the
+raised hands, where the legs had stood still; a turn on the spot steps round.
+
+**Checks at the end.** On the final head: `./run.sh test` 1436 tests, 0 failed, 0 content
+problems, 0 script errors, 0 dead lambda captures; `./run.sh journey` 16 of 16, 0 logged errors;
+`./run.sh flow` PASS on all three starts (new 73 checks, load 28, continue 31, 0 errors logged).
+The forge's own tests: 28, all passing. `./run.sh fights --only=caster`: both Callings win.
+
+### Found, and not fixed
+
+* **A stop still slides its feet together.** The split closes steadily over 0.2 s now rather
+  than freezing and snapping, but the feet travel 59 cm in all doing it. A stop clip (the back
+  foot stepping up) or foot locking would take it out.
+* **Turning on the spot is a side-step, not a turn clip.** It reads as stepping round in the
+  frames; 90° and 180° turn-in-place clips would be the proper thing if it reads as a shuffle
+  in play.
+* **The diagonals slide.** Locked on, the planted foot moves at 28% of the ground speed on the
+  forward diagonal (3.64 m/s) and 23% backing off diagonally; it was 19% at the old 2.6 m/s.
+  Blending a forward stride with a side-step in rotation space does not put the foot at the
+  average of the two footfalls. It needs diagonal clips or foot IK.
+* **Footsteps count ground, not footfalls.** The foley added in the combat round counts
+  ground covered and is right on average. The clips carry `footstep_l`/`footstep_r` at the
+  shared phase (left 0, right 0.5), which would put the sound exactly on the foot.
+* **The pad layout wants its own pass.** The right-stick click is both lock-on and camera
+  toggle, and D-pad up is both cast and quick slot 1. The Sayings menu has no pad button since
+  sprint took the left-stick click. Cycle target, lantern, skills and quick save/load have
+  none either.
+* **Walk_Back and the strafes are still made by the first stride model.** They measure
+  upright enough (Walk_Back 3.7 cm below standing, 6.8 cm of bob), so only the side-step
+  length changed.
+* **Villagers walk at 2.2 m/s**, the walk clip at 1.2 times its speed: purposeful, not wrong.
+* **Terrain3D 1.0.2 calls the deprecated `instance_reset_physics_interpolation`**, which prints
+  a warning at load and is harmless.
+
+### What a pair of hands should check
+
+The feel cannot be measured headless. Check the turn rates, the 0.3 s start, the stops, the
+0.22 s tap (too short for a deliberate tap? too long for a sprint start?), mouse sensitivity,
+whether 3.6 m behind the shoulder is the right distance, and whether the sprint's widening
+reads as speed. On a display faster than 60 Hz, the body and the camera should glide, not
+step; the software rasteriser here cannot show that. On Windows, check that Alt (walk) does not
+take the keyboard into the window's menu, and that Ctrl + W in the editor's embedded game
+window rolls rather than closing anything.

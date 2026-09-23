@@ -2,7 +2,8 @@ class_name WorldNotice
 extends PanelContainer
 ## What the title screen says when there is no world to enter, and what the world itself shows if
 ## anything gets into it anyway (the editor's Play Scene, `--new-game`, a tool): the headline, why,
-## the command that builds it and what it needs, and a button that copies the command.
+## the command that builds it and what it needs, and a button that copies the command. The title
+## says the same across its sheet when the ground will be the coarse one, with "foot" under it.
 ##
 ## `WorldStatus` decides what is true; this only says it.
 
@@ -47,7 +48,7 @@ static func screen(s: Dictionary) -> Control:
 	n._build(600.0, true)
 	centre.add_child(n)
 	n.back_pressed.connect(func() -> void: n.get_tree().change_scene_to_file("res://ui/menus/main_menu.tscn"))
-	n.copy_button.call_deferred("grab_focus")
+	(n.copy_button if n.copy_button != null else n.back_button).call_deferred("grab_focus")
 	return root
 
 
@@ -62,23 +63,32 @@ func _build(width: float, with_back: bool) -> void:
 	detail.name = "Detail"
 	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(detail)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 14)
-	col.add_child(row)
-	command_label = UiKit.label(str(status.get("command", WorldStatus.BUILD_COMMAND)), "Emphasis")
-	command_label.name = "Command"
-	row.add_child(command_label)
-	copy_button = UiKit.button(COPY_LABEL, "FlatButton")
-	copy_button.name = "Copy"
-	copy_button.pressed.connect(_copy)
-	row.add_child(copy_button)
+	# no command when nothing the player can run mends it (a machine Terrain3D has no library for)
+	var command := str(status.get("command", WorldStatus.BUILD_COMMAND))
+	if not command.is_empty():
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 14)
+		col.add_child(row)
+		command_label = UiKit.label(command, "Emphasis")
+		command_label.name = "Command"
+		row.add_child(command_label)
+		copy_button = UiKit.button(COPY_LABEL, "FlatButton")
+		copy_button.name = "Copy"
+		copy_button.pressed.connect(_copy)
+		row.add_child(copy_button)
+	var foot := str(status.get("foot", ""))
+	if not foot.is_empty():
+		var foot_label := UiKit.label(foot, "Small", HORIZONTAL_ALIGNMENT_CENTER)
+		foot_label.name = "Foot"
+		col.add_child(foot_label)
 	if with_back:
 		back_button = UiKit.button(BACK_LABEL, "FlatButton")
 		back_button.name = "Back"
 		back_button.pressed.connect(func() -> void: back_pressed.emit())
 		col.add_child(back_button)
-		UiKit.focus_chain([copy_button, back_button])
+		var chain: Array = [back_button] if copy_button == null else [copy_button, back_button]
+		UiKit.focus_chain(chain)
 
 
 func _copy() -> void:
@@ -88,4 +98,5 @@ func _copy() -> void:
 
 ## The words on it, for a test or a probe.
 func text() -> String:
-	return "%s\n%s\n%s" % [str(status.get("title", "")), str(status.get("detail", "")), command_label.text if command_label else ""]
+	return "%s\n%s\n%s\n%s" % [str(status.get("title", "")), str(status.get("detail", "")),
+			command_label.text if command_label else "", str(status.get("foot", ""))]
