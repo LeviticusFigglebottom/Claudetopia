@@ -71,9 +71,8 @@ Every locomotion clip's sidecar carries `"speed"`: the ground speed in m/s at wh
 foot stands still. It is load-bearing. The game plays a gait at (ground speed / `speed`), so a
 clip authored at the wrong speed slides its feet by exactly the difference. `Walk`, `Run` and
 `Sprint` are the three gaits of DESIGN §5.2 (1.8, 5.0 and 7.8 m/s), `Trot` a slow run between
-the walk and the jog (3.6), `Sneak_Walk` is sneak
-(1.5), and `Walk_Back` and `Strafe_L`/`_R` are the locked-on backpedal and side-steps (1.8 and
-3.0). The gaits also share a phase: the left foot goes down at phase 0 and the right at 0.5 in
+the walk and the jog (3.6), `Sneak_Walk` is sneak (1.5), and `Walk_Back` and `Strafe_L`/`_R`
+are the locked-on backpedal and side-steps (1.8 and 3.0). The gaits also share a phase: the left foot goes down at phase 0 and the right at 0.5 in
 every one of them, because the game blends them on one normalised timeline. A gait that
 breaks this blends out of step: halfway through the blend one clip's foot is planted while the
 other's is swinging, and the leg comes out as the average of the two, half lifted.
