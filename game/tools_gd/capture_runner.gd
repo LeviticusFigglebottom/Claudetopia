@@ -13,6 +13,11 @@ extends Node
 ##             "camera": {"distance": m, "height": m, "fov": deg},
 ##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]}}
 ##
+## A gait run may also hold keys and tap one, as real key events through the input map rather
+## than as actions: {"label": "roll", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}.
+## The tap comes after the settle and just before the first frame, so the frames film whatever
+## the key does. "frames", "interval" and "settle" may be set per run.
+##
 ## For each shot it sets the clock, moves the fly camera, waits until the streamer reports the
 ## full-detail ring loaded (plus ten frames so LODs and shadows settle), saves
 ## <index>_<label>.png and records Performance monitors into <out>/perf.json.
@@ -481,8 +486,16 @@ func _gait(index: int, gait: Dictionary) -> int:
 				Input.action_press(str(action))
 			else:
 				Log.warn("Capture", "gait run %s: no input action '%s'" % [label, str(action)])
-		await _physics_seconds(settle)
-		for f in frames:
+		for k in run.get("hold_keys", []):
+			_send_key(str(k), true)
+		await _physics_seconds(float(run.get("settle", settle)))
+		if run.has("tap_key"):
+			_send_key(str(run["tap_key"]), true)
+			await _physics_seconds(float(run.get("tap_hold", 0.1)))
+			_send_key(str(run["tap_key"]), false)
+		var run_frames := int(run.get("frames", frames))
+		var run_interval := float(run.get("interval", interval))
+		for f in run_frames:
 			var at := player.get_global_transform_interpolated().origin
 			cam.move_to(at + right * distance + Vector3.UP * cam_height, at + Vector3.UP * 0.95)
 			RenderingServer.render_loop_enabled = true
@@ -495,16 +508,42 @@ func _gait(index: int, gait: Dictionary) -> int:
 			if img.save_png(path) != OK:
 				_failures.append("cannot write %s" % path)
 			var v: Vector3 = player.get("velocity")
-			Log.info("Capture", "%s: speed %.2f m/s, stamina %.0f" % [shot_label,
-					Vector2(v.x, v.z).length(), float(player.get("stamina"))])
+			var state := str(player.call("state_name")) if player.has_method("state_name") else "?"
+			var untouchable := bool(player.call("is_in_iframes")) if player.has_method("is_in_iframes") else false
+			var anim: Node = player.get("anim")
+			var clip := str(anim.get("current_clip")) if anim != null else ""
+			Log.info("Capture", "%s: speed %.2f m/s, stamina %.0f, %s%s, clip %s, at %s" % [shot_label,
+					Vector2(v.x, v.z).length(), float(player.get("stamina")), state,
+					" (untouchable)" if untouchable else "", clip, str(player.global_position.snapped(Vector3.ONE * 0.01))])
 			index += 1
-			await _physics_seconds(interval)
+			await _physics_seconds(run_interval)
+		for k in run.get("hold_keys", []):
+			_send_key(str(k), false)
 		_release_gait_actions()
 	RenderingServer.render_loop_enabled = true
 	player.queue_free()
 	cam.set_process(true)
 	cam.make_current()
 	return index
+
+
+## A key as a keyboard sends it, through the input map (so through the bindings the game set up):
+## a modifier key reports itself held while it is down.
+func _send_key(name: String, pressed: bool) -> void:
+	var code := OS.find_keycode_from_string(name)
+	if code == KEY_NONE:
+		Log.warn("Capture", "no key called '%s'" % name)
+		return
+	var ev := InputEventKey.new()
+	ev.keycode = code
+	ev.physical_keycode = code
+	ev.key_label = code
+	ev.pressed = pressed
+	ev.ctrl_pressed = pressed and code == KEY_CTRL
+	ev.shift_pressed = pressed and code == KEY_SHIFT
+	ev.alt_pressed = pressed and code == KEY_ALT
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
 
 
 func _release_gait_actions() -> void:

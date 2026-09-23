@@ -712,3 +712,27 @@ clips are baked into a scratch copy and moved onto the committed GLB by
 not. When another branch changes the rig GLB, the merge takes that branch's GLB and transplants
 these clips onto it, provided the two share a skeleton (the tool refuses otherwise). If they do
 not, the merge re-runs the rig bake on the merged tree.
+
+## 2026-09-23 · A tap of Sprint rolls; Ctrl and B still do, and Space stays jump
+**Decision.** On the keyboard, a press of Sprint (Shift) let go within 0.22 s is a roll, and a
+hold sprints. The sprint waits out those 0.22 s, so a tap is not a lurch forward and then a roll.
+The Dodge action keeps Ctrl on the keyboard and B on a pad, and stays rebindable. The tap follows
+whatever key Sprint is bound to. A setting (Controls, "A tap of Sprint rolls", on by default)
+turns it off. It is off while Sprint is a toggle, because the tap is the toggle. It is off on a
+pad, where the stick click is a sprint and nothing else and B rolls. Space stays jump.
+**Why.** The playtest asked "no roll?". The roll did work. Measured from real key events through
+the default bindings, Ctrl rolls a jogging body 3.31 m in the tick the key goes down, keeps it
+untouchable for 0.30 s, and plays Dodge_F. But it was on Ctrl alone, a key the genre does not use
+for a roll and a player does not find without reading. The games most players will have come
+from put the roll on the run key (the Souls games: tap to roll, hold to run) or on Space. Space
+is the jump here and stays so. A tap of Sprint makes the run key and the roll key the same key,
+the one the hand is already on.
+**Alternatives.** Roll on Space and move the jump: every player of every other genre presses
+Space to jump, and a surprise roll off a ledge is worse than a surprise jump. Roll on Alt: that
+is the walk key. Roll on the press of Sprint rather than its release: a roll cannot be told from
+a sprint until the key is let go, which is why the Souls games roll on release too.
+**Consequences.** A roll by tap starts when the key is let go, so up to 0.22 s after the press
+where Ctrl's starts on it. A sprint starts 0.22 s after Shift goes down rather than at once; it
+takes 0.4 s to reach sprint speed from a jog in any case. Letting Shift go and pressing it again
+quickly in a sprint rolls. The hint strip and the controls page say "tap Shift" while the tap is
+on, and name the Dodge key when it is not.
