@@ -26,6 +26,17 @@ MILESTONE_OFFSET_M = 3.4
 RAIL_EVERY_M = 2.35
 FRONTAGE_RUN_M = 34.0
 FRONTAGE_CHANCE = 0.22
+## What a road is fenced from the land with. By default, post and rail in every region
+## (`RAIL_KIT`). With `place(by_region=True)`, which is the world build's `cover` recipe, by
+## landform: the Vale and the lake shoulder put post and rail along a frontage; the clans wall
+## theirs in drystone, in longer runs; nobody fences a road across a marsh, a wood or an ash
+## heath, where the rail is the Vale's own fence carried into every region.
+RAIL_KIT = {"asset": "props/fence_post_rail", "run_m": FRONTAGE_RUN_M, "chance": FRONTAGE_CHANCE}
+FRONTAGE = {
+    "downs": {"asset": "props/fence_post_rail", "run_m": FRONTAGE_RUN_M, "chance": FRONTAGE_CHANCE},
+    "lake_basin": {"asset": "props/fence_post_rail", "run_m": FRONTAGE_RUN_M, "chance": FRONTAGE_CHANCE},
+    "mountains": {"asset": "props/drystone_wall", "run_m": 70.0, "chance": 0.30},
+}
 
 
 def _resample(points: np.ndarray, step_m: float) -> tuple:
@@ -74,8 +85,12 @@ def _put(out: dict, grid: Grid, H: np.ndarray, x: float, z: float, yaw: float, s
 
 def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
           pad_mask: np.ndarray, field_d: np.ndarray, regions: list, roads: list, places: list,
-          index: dict, seed: int) -> dict:
-    """Returns {(cx, cz): {asset_path: [rows]}} for milestones, signposts and rails."""
+          index: dict, seed: int, by_region: bool = False) -> dict:
+    """Returns {(cx, cz): {asset_path: [rows]}} for milestones, signposts and rails.
+
+    `by_region` fences each road the way its landform does (`FRONTAGE`) instead of with post
+    and rail everywhere.
+    """
     from .cells import assets_for
 
     out: dict = {}
@@ -156,20 +171,25 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
     # --- post and rail along a frontage ---------------------------------------------------
     # Where a road runs past enclosed ground, the field is fenced off from it. Runs rather
     # than a continuous fence: a frontage is one owner's boundary, not the whole road.
+    shape_of = {r.short: r.shape for r in regions}
     for road in roads:
         pts, tans, dist = _resample(np.asarray(road.points), RAIL_EVERY_M)
         if pts.shape[0] == 0:
             continue
         run_left = 0
         side = 1.0
+        kit = None
         for k in range(pts.shape[0]):
+            px, pz = float(pts[k][0]), float(pts[k][1])
             if run_left <= 0:
-                if float(rng.random()) > FRONTAGE_CHANCE * (RAIL_EVERY_M / FRONTAGE_RUN_M) * 6.0:
+                kit = FRONTAGE.get(shape_of.get(region_short_at(px, pz), "")) if by_region else RAIL_KIT
+                if kit is None:
                     continue
-                run_left = int(FRONTAGE_RUN_M / RAIL_EVERY_M)
+                if float(rng.random()) > kit["chance"] * (RAIL_EVERY_M / kit["run_m"]) * 6.0:
+                    continue
+                run_left = int(kit["run_m"] / RAIL_EVERY_M)
                 side = 1.0 if rng.random() < 0.5 else -1.0
             run_left -= 1
-            px, pz = float(pts[k][0]), float(pts[k][1])
             tx, tz = float(tans[k][0]), float(tans[k][1])
             nx, nz = -tz * side, tx * side
             x = px + nx * float(rng.uniform(3.2, 4.0))
@@ -178,7 +198,7 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
                 run_left = 0
                 continue
             short = region_short_at(x, z)
-            rails = assets_for(index, "props/fence_post_rail", short)
+            rails = assets_for(index, kit["asset"], short)
             if not rails:
                 continue
             _put(out, grid, H, x, z, _yaw_along(tx, tz) + float(rng.normal(0.0, 2.5)),

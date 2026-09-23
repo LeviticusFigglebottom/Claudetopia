@@ -95,6 +95,7 @@ func test_asking_opens_the_shop_and_the_conversation_carries_on() -> void:
 	assert_eq(asked, [A_SHOPKEEPER] as Array[String], "nobody was asked for their stock")
 	assert_true(runner.is_running(), "the shop ended the conversation")
 	assert_false(str(shown[-1]["text"]).is_empty(), "the keeper said nothing while opening up")
+	close_screen("trade", "asking to see the stock opens the shop")
 
 
 func test_the_keeper_says_it_in_their_own_voice() -> void:
@@ -106,6 +107,7 @@ func test_the_keeper_says_it_in_their_own_voice() -> void:
 	_open(A_SHOPKEEPER)
 	runner.choose(_choice_texts().find(runner.TRADE_CHOICE))
 	assert_ne(sour, str(shown[-1]["text"]), "a sour keeper and a kind one open up the same way")
+	close_screen("trade", "both keepers open the shop")
 
 
 # --- the shop exists to be opened ---------------------------------------------------------------

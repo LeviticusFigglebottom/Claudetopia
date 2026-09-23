@@ -144,6 +144,35 @@ static func enchant_blocker(stack: ItemStack, effect_id: String, motes: int, inv
 	return ""
 
 
+## What `enchant_blocker` means, said the way the Name-table says it. "" when nothing is in the way.
+static func blocker_text(reason: String, stack: ItemStack, effect_id: String, motes: int, inventory: Inventory) -> String:
+	var note := str(def(effect_id).get("name", "that note"))
+	match reason:
+		"":
+			return ""
+		"no_item":
+			return "Choose something to write it on."
+		"not_an_enchantment":
+			return "That is not a note that can be written."
+		"not_known":
+			return "You have not learned %s." % note
+		"wrong_item":
+			var takes: Array = slots_for(effect_id)
+			var into := " or ".join(takes.map(func(k: Variant) -> String: return {"weapon": "a blade", "shield": "a shield", "armour": "armour", "jewellery": "a ring or an amulet"}.get(str(k), str(k))))
+			return "%s is written into %s, not into that." % [note, into if into != "" else "something else"]
+		"already_enchanted":
+			return "It already carries a note. Take that one out first."
+		"no_inventory":
+			return "There is nothing to write with."
+		"not_enough_motes":
+			var per_step := motes_for_magnitude(effect_id)
+			var carried := inventory.count(MOTE_ITEM) if inventory != null else 0
+			if motes < per_step:
+				return "%s takes at least %d Ember Motes to say." % [note, per_step]
+			return "That takes %d Ember Motes and you carry %d." % [motes, carried]
+	return "It will not take."
+
+
 ## Writes an enchantment into one unit of a stack, spending motes. A stacked item is split so
 ## only the enchanted unit changes. Returns {ok, reason, stack, enchant, xp}.
 static func enchant(stack: ItemStack, effect_id: String, motes: int, inventory: Inventory, known: Array, skill_level: int = 0, mods: Modifiers = null) -> Dictionary:

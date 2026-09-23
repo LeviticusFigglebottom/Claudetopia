@@ -327,6 +327,12 @@ func _attr_with_mods(name: String) -> int:
 	return int(round(mods.apply(name, float(leveling.attribute(name)))))
 
 
+## An attribute as the body feels it: the trained value with any fortify effect on it. The
+## player's pools and load are built from these.
+func attribute_with_mods(name: String) -> int:
+	return _attr_with_mods(name)
+
+
 ## Effective skill level for damage and cost formulas: the trained level plus fortify effects.
 func effective_skill(skill: String) -> float:
 	var id := Skills.normalise(skill)

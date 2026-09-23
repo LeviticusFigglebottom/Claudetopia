@@ -299,6 +299,8 @@ func _build_stage(vp: SubViewport) -> void:
 	world.add_child(_camera)
 
 	_mannequin = Node3D.new()
+	# turned every frame below, so it must not also be interpolated between physics ticks
+	_mannequin.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	world.add_child(_mannequin)
 	if ResourceLoader.exists(MODEL_SCENE):
 		_model = (load(MODEL_SCENE) as PackedScene).instantiate()
@@ -847,6 +849,12 @@ func _begin_game() -> void:
 	if world_scene.is_empty() or not ResourceLoader.exists(world_scene):
 		if not world_scene.is_empty():
 			EventBus.emit_notify("Named, but the world is not built yet.", "warning")
+		return
+	var world_status := WorldStatus.current()
+	if not bool(world_status.get("playable", false)):
+		# the title shuts New Game when there is no world, but the Naming can be opened on its own
+		EventBus.emit_notify("Named, but %s Run %s first." % [str(world_status.get("title", "")).to_lower(),
+				WorldStatus.BUILD_COMMAND], "warning")
 		return
 	_begin.disabled = true
 	UI.fade_to_black(0.5, LOADING_LINE)

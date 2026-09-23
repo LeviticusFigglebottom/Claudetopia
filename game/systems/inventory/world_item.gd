@@ -109,6 +109,8 @@ func rebuild() -> void:
 		_visual = null
 	_visual = Node3D.new()
 	_visual.name = "Visual"
+	# bobbed and turned every frame in _process: interpolating it between ticks would stutter it
+	_visual.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	add_child(_visual)
 	var d := def()
 	var model := str(d.get("model", ""))

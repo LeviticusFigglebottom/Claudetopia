@@ -7,21 +7,18 @@ extends RefCounted
 ## level(gains) returns the highest L whose threshold the gains have met, starting from 1).
 ## Each level grants one attribute point and one perk point.
 ##
-## Attributes: Vigour (max HP = 100 + 10*V), Endurance (stamina = 100 + 8*E, load = 60 + 4*E),
-## Will (mana = 60 + 6*W). All three start at 5.
+## Attributes: Vigour (health), Endurance (stamina = 100 + 8*E, carrying = 60 + 4*E), Will
+## (mana = 60 + 6*W). All three start at 10. Health, stamina and mana are DamageModel's formulas,
+## the ones combat has always used: this file kept a second set (health 100 + 10*V, attributes
+## starting at 5) that the body never read, so the character sheet and the health bar disagreed
+## from the first frame, and a level's point in Endurance changed only the sheet.
 ## Pure logic: no nodes, no signals.
 
 const ATTRIBUTES: Array[String] = ["vigour", "endurance", "will"]
 const ATTRIBUTE_NAMES := {"vigour": "Vigour", "endurance": "Endurance", "will": "Will"}
-const BASE_ATTRIBUTE := 5
+const BASE_ATTRIBUTE := 10
 const MAX_ATTRIBUTE := 100
 
-const HP_BASE := 100.0
-const HP_PER_VIGOUR := 10.0
-const STAMINA_BASE := 100.0
-const STAMINA_PER_ENDURANCE := 8.0
-const MANA_BASE := 60.0
-const MANA_PER_WILL := 6.0
 const LOAD_BASE := 60.0
 const LOAD_PER_ENDURANCE := 4.0
 
@@ -129,15 +126,15 @@ func refund_perk_point() -> void:
 # --- derived pools -----------------------------------------------------------------------
 
 static func max_health_for(vigour: int) -> float:
-	return HP_BASE + HP_PER_VIGOUR * vigour
+	return DamageModel.hp_max(vigour)
 
 
 static func max_stamina_for(endurance: int) -> float:
-	return STAMINA_BASE + STAMINA_PER_ENDURANCE * endurance
+	return DamageModel.stamina_max(endurance)
 
 
 static func max_mana_for(will: int) -> float:
-	return MANA_BASE + MANA_PER_WILL * will
+	return DamageModel.mana_max(will)
 
 
 static func load_capacity_for(endurance: int) -> float:

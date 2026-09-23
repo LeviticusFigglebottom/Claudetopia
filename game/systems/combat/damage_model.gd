@@ -11,10 +11,18 @@ const STAMINA_REGEN_PER_S := 30.0
 const STAMINA_REGEN_DELAY := 0.8
 const BLOCK_STAMINA_FACTOR := 0.6
 
+## "Load affects dodge and stamina regen" (DESIGN §5.7): how much of the regen a load band keeps.
+## The design gives no numbers; these are the pass-one proposal, one step per band of the roll.
+const LOAD_REGEN_MULT := {"light": 1.0, "medium": 0.9, "heavy": 0.75, "overloaded": 0.5}
+
 # --- poise ---------------------------------------------------------------------------------
 const POISE_REGEN_PER_S := 4.0
 const POISE_REGEN_DELAY := 1.5
 const HEAVY_POISE_MULT := 1.5
+## The poise damage a heavy's wind-up and swing shrug off (DESIGN §5.3's hyper-armour threshold).
+## The design gives no number; this is the brute's own default, so a player's heavy stands up to
+## exactly what a brute's does.
+const HEAVY_HYPER_ARMOUR := 12.0
 
 # --- timing --------------------------------------------------------------------------------
 const INPUT_BUFFER := 0.25
@@ -62,8 +70,8 @@ static func mana_max(will: int) -> float:
 	return 60.0 + 6.0 * float(will)
 
 
-## DESIGN.md gives Vigour -> HP without a number; 60 + 4·Vigour (100 at the default 10) is the
-## pass-one proposal and lives only here.
+## DESIGN.md gives Vigour -> HP without a number; 60 + 4·Vigour (100 at the starting 10) is the
+## pass-one proposal. It lives here, and Leveling asks for it rather than keeping its own.
 static func hp_max(vigour: int) -> float:
 	return 60.0 + 4.0 * float(vigour)
 
@@ -164,14 +172,31 @@ static func buffer_valid(pressed_at: float, now: float, window: float = INPUT_BU
 ## Dodge roll parameters by load ratio (0 = naked, 1 = at max load, >1 over-encumbered).
 ## Heavy load lengthens the roll and cuts the i-frames (DESIGN §5.3).
 static func dodge_params(load_ratio: float) -> Dictionary:
+	match load_tier(load_ratio):
+		"light":
+			return {"duration": DODGE_DURATION, "iframe_start": DODGE_IFRAME_START, "iframe_end": DODGE_IFRAME_END, "distance": DODGE_DISTANCE, "tier": "light"}
+		"medium":
+			return {"duration": 0.66, "iframe_start": 0.08, "iframe_end": 0.34, "distance": 3.0, "tier": "medium"}
+		"heavy":
+			return {"duration": 0.8, "iframe_start": 0.1, "iframe_end": 0.3, "distance": 2.4, "tier": "heavy"}
+	return {"duration": 1.0, "iframe_start": 0.12, "iframe_end": 0.26, "distance": 1.6, "tier": "overloaded"}
+
+
+## The band a load ratio falls in: light below 30%, medium below 70%, heavy up to 100%, and
+## overloaded past it.
+static func load_tier(load_ratio: float) -> String:
 	var l := maxf(load_ratio, 0.0)
 	if l < 0.3:
-		return {"duration": DODGE_DURATION, "iframe_start": DODGE_IFRAME_START, "iframe_end": DODGE_IFRAME_END, "distance": DODGE_DISTANCE, "tier": "light"}
+		return "light"
 	if l < 0.7:
-		return {"duration": 0.66, "iframe_start": 0.08, "iframe_end": 0.34, "distance": 3.0, "tier": "medium"}
+		return "medium"
 	if l <= 1.0:
-		return {"duration": 0.8, "iframe_start": 0.1, "iframe_end": 0.3, "distance": 2.4, "tier": "heavy"}
-	return {"duration": 1.0, "iframe_start": 0.12, "iframe_end": 0.26, "distance": 1.6, "tier": "overloaded"}
+		return "heavy"
+	return "overloaded"
+
+
+static func load_regen_mult(load_ratio: float) -> float:
+	return float(LOAD_REGEN_MULT.get(load_tier(load_ratio), 1.0))
 
 
 static func in_iframes(elapsed: float, params: Dictionary) -> bool:

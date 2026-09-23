@@ -67,15 +67,19 @@ func test_sun_direction() -> void:
 
 func test_noise_model() -> void:
 	assert_near(Stealth.noise_level(0.0), 0.0)
-	assert_near(Stealth.noise_level(Stealth.RUN_SPEED), 1.0)
-	var walk := Stealth.noise_level(Stealth.WALK_SPEED)
-	assert_near(walk, pow(4.2 / 6.5, 1.5), 0.001)
-	assert_gt(Stealth.noise_level(4.2, "heavy"), walk, "armour is loud")
-	assert_near(Stealth.noise_level(4.2, "heavy"), minf(1.0, walk * 1.7), 0.001)
-	assert_near(Stealth.noise_level(4.2, "light", true), walk * 0.5, 0.001, "crouching halves noise")
-	assert_near(Stealth.noise_level(4.2, "light", false, "wood"), walk * 1.2, 0.001)
-	assert_near(Stealth.noise_level(4.2, "light", false, "snow"), walk * 0.7, 0.001)
-	assert_near(Stealth.noise_level(4.2, "light", false, "", true), walk * 0.7, 0.001, "rain masks noise")
+	assert_near(Stealth.noise_level(Stealth.SPRINT_SPEED), 1.0)
+	# the noise model's speeds are the player's own gaits, not a copy left behind when they change
+	assert_near(Stealth.JOG_SPEED, Player.JOG_SPEED, 0.0001)
+	assert_near(Stealth.SPRINT_SPEED, Player.SPRINT_SPEED, 0.0001)
+	var jog := Stealth.JOG_SPEED
+	var walk := Stealth.noise_level(jog)
+	assert_near(walk, pow(5.0 / 7.8, 1.5), 0.001)
+	assert_gt(Stealth.noise_level(jog, "heavy"), walk, "armour is loud")
+	assert_near(Stealth.noise_level(jog, "heavy"), minf(1.0, walk * 1.7), 0.001)
+	assert_near(Stealth.noise_level(jog, "light", true), walk * 0.5, 0.001, "crouching halves noise")
+	assert_near(Stealth.noise_level(jog, "light", false, "wood"), walk * 1.2, 0.001)
+	assert_near(Stealth.noise_level(jog, "light", false, "snow"), walk * 0.7, 0.001)
+	assert_near(Stealth.noise_level(jog, "light", false, "", true), walk * 0.7, 0.001, "rain masks noise")
 	assert_near(Stealth.noise_radius_m(0.5), 15.0)
 	assert_near(Stealth.noise_radius_m(2.0), 30.0)
 
@@ -299,7 +303,7 @@ func test_service_samples_lights_weather_and_player() -> void:
 	player.global_position = here
 	Peers.overrides["player"] = player
 	assert_near(st.player_noise(), 0.0, 0.0001, "standing still")
-	player.velocity = Vector3(0, 0, Stealth.RUN_SPEED)
+	player.velocity = Vector3(0, 0, Stealth.SPRINT_SPEED)
 	assert_near(st.player_noise(), 1.0 * 1.7 * 1.2 * 0.5 if 1.0 * 1.7 * 1.2 * 0.5 < 1.0 else 1.0, 0.001)
 	player.velocity = Vector3.ZERO
 	var expected := Stealth.visibility(Stealth.sun_light(1.0, 0.5), 0.0, true, 0)

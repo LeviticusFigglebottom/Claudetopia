@@ -55,6 +55,7 @@ func test_a_carried_book_can_be_read_and_is_not_spent() -> void:
 	EventBus.book_opened.disconnect(handler)
 	assert_eq(opened, [STRUCK])
 	assert_eq(bag.count("core:item/the_struck_bell"), 1, "reading a book does not use it up")
+	close_screen("book", "reading a carried book opens the reader")
 	_tree().root.remove_child(bag)
 	bag.free()
 
@@ -72,6 +73,7 @@ func test_a_teaching_book_teaches_once() -> void:
 	EventBus.book_opened.emit(STRUCK)
 	await _tree().process_frame
 	assert_eq(prog.skill_level("binding"), after, "a second reading teaches nothing")
+	close_screen("book", "a book opened is a book drawn")
 	GameState.set_flag("read:" + STRUCK, false)
 	_tree().root.remove_child(prog)
 	prog.free()
@@ -92,5 +94,6 @@ func test_a_book_on_a_table_reads_where_it_lies_or_comes_with_you() -> void:
 	assert_true(bool(result["ok"]))
 	assert_eq(opened, [STRUCK])
 	assert_true(fixed.prompt_text().begins_with("Read"))
+	close_screen("book", "a book read where it lies opens the reader")
 	_tree().root.remove_child(fixed)
 	fixed.free()

@@ -10,8 +10,11 @@ static var instance: Stealth
 const MOONLIGHT := 0.06
 const SHADOW_FACTOR := 0.35
 const SUN_RAY_M := 200.0
-const WALK_SPEED := 4.2
-const RUN_SPEED := 6.5
+## The player's default gait and flat-out sprint (Player.JOG_SPEED and Player.SPRINT_SPEED; the
+## unit test pins them together). Noise is (speed / SPRINT_SPEED)^1.5, which puts a jog at 0.51
+## and a sprint at 1, where the first gaits (4.2 and 6.5) put the default at 0.52 and the sprint at 1.
+const JOG_SPEED := 5.0
+const SPRINT_SPEED := 7.8
 const MAX_NOISE_RADIUS_M := 30.0
 const WEATHER_LIGHT := {
 	"clear": 1.0, "clear_cold": 1.0, "thin_sun": 0.8, "still": 0.9, "wind": 0.95, "dry_wind": 0.9, "breezy": 0.9,
@@ -20,7 +23,7 @@ const WEATHER_LIGHT := {
 }
 const NOISE_WEIGHT := {"none": 0.9, "light": 1.0, "medium": 1.3, "heavy": 1.7}
 const NOISE_SURFACE := {
-	"grass": 0.8, "dirt": 0.9, "mud": 0.9, "peat": 0.8, "sand": 0.75, "snow": 0.7, "ash": 0.85,
+	"grass": 0.8, "vale_grass": 0.8, "dirt": 0.9, "mud": 0.9, "peat": 0.8, "sand": 0.75, "snow": 0.7, "ash": 0.85,
 	"stone": 1.0, "cobbles": 1.05, "wood": 1.2, "shingle": 1.3, "gravel": 1.3, "scree": 1.3, "water": 1.4,
 }
 const LOCK_LEVEL_NAMES: Array[String] = ["open", "simple", "sturdy", "clever", "guild", "oroth"]
@@ -149,7 +152,7 @@ func light_level(pos: Vector3) -> float:
 # --- noise and visibility ----------------------------------------------------------------
 
 static func noise_level(speed_mps: float, weight_class: String = "light", crouched: bool = false, surface: String = "", raining_: bool = false) -> float:
-	var base := pow(clampf(speed_mps / RUN_SPEED, 0.0, 1.0), 1.5)
+	var base := pow(clampf(speed_mps / SPRINT_SPEED, 0.0, 1.0), 1.5)
 	var n := base * float(NOISE_WEIGHT.get(weight_class, 1.0)) * float(NOISE_SURFACE.get(surface, 1.0))
 	if crouched:
 		n *= 0.5

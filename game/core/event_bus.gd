@@ -22,7 +22,11 @@ signal echo_recovered(marks: int)
 signal damage_dealt(attacker: Node, victim: Node, amount: float, kind: String)
 signal entity_killed(victim: Node, killer: Node, enemy_id: String)
 signal boss_started(boss_id: String)
+## A boss crossed one of its phase thresholds (`phase` counts from 0, the fight's opening).
+signal boss_phase_changed(boss_id: String, phase: int)
 signal boss_defeated(boss_id: String)
+## An enemy turned to fight (engaged) or stopped fighting (dead, lost, leashed). The score follows it.
+signal enemy_engaged(enemy: Node, engaged: bool)
 signal status_applied(target: Node, effect_id: String)
 ## A called thing's time ran out and it let go (Calling; no death, no marks).
 signal summon_dismissed(enemy_id: String, summon: Node)

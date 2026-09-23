@@ -98,6 +98,7 @@ func attempt(actor: Node, timing_accuracy: float) -> Dictionary:
 	var skill := Peers.skill_level("sneak")
 	var r := Stealth.lockpick_attempt(skill, lock_level, timing_accuracy)
 	attempts += 1
+	Foley.play("lockpick_break" if r["broke"] else "lockpick_click")
 	if r["broke"]:
 		var pick := lockpick_item_id()
 		if not pick.is_empty():

@@ -301,6 +301,18 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 	_apply_gravity_or_snap(delta)
 	move_and_slide()
+	_drive_gait()
+
+
+## Tells the model how fast the body is walking (m/s, straight ahead: the model is turned to face
+## the way it goes), so its legs keep pace with the ground. Nothing did: a walking villager's
+## blend stayed at (0, 0) and the whole village glided about in its idle pose.
+func _drive_gait() -> void:
+	if _model == null or _model.get_child_count() == 0:
+		return
+	var m: Node = _model.get_child(0)
+	if m.has_method("set_locomotion"):
+		m.call("set_locomotion", Vector2(0.0, Vector2(velocity.x, velocity.z).length()), false)
 
 
 func _step_towards(delta: float) -> void:

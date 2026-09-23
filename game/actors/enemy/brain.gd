@@ -14,6 +14,10 @@ const SEARCH := "search"
 const COMBAT := "combat"
 const RETURN := "return"
 const STATES: Array[String] = [IDLE, PATROL, SUSPICIOUS, SEARCH, COMBAT, RETURN]
+## A fighter whose leash broke keeps walking home until it is within this share of the leash.
+const RETURN_HOME := 0.5
+## ... and on the way turns only on somebody this close (metres), whatever its own engage range.
+const REENGAGE_REACH := 3.0
 
 ## Per-archetype defaults for the `behaviour` block. Any enemy def may override each key.
 const ARCHETYPES := {
@@ -78,7 +82,8 @@ func engage_range() -> float:
 ## Decides the next state. `ctx` keys:
 ##   detection (0..1), can_see (bool), alerted (bool: heard/hit/pack call),
 ##   distance_to_post, distance_to_target, target_alive (bool),
-##   time_in_state, patrol (bool: has a patrol route), inactive (ambusher waiting)
+##   time_in_state, patrol (bool: has a patrol route), inactive (ambusher waiting),
+##   time_unseen (seconds since the target was last seen; defaults to time_in_state)
 static func decide(current: String, p: Dictionary, ctx: Dictionary) -> String:
 	var detection := float(ctx.get("detection", 0.0))
 	var can_see := bool(ctx.get("can_see", false))
@@ -87,6 +92,7 @@ static func decide(current: String, p: Dictionary, ctx: Dictionary) -> String:
 	var d_post := float(ctx.get("distance_to_post", 0.0))
 	var d_target := float(ctx.get("distance_to_target", INF))
 	var t := float(ctx.get("time_in_state", 0.0))
+	var unseen := float(ctx.get("time_unseen", t))
 	var leash_m := float(p.get("leash", 30.0))
 	var patience_s := float(p.get("patience", 3.0))
 	var never_leaves := bool(p.get("never_leaves_post", false))
@@ -102,9 +108,20 @@ static func decide(current: String, p: Dictionary, ctx: Dictionary) -> String:
 			return RETURN
 		if d_post > leash_m or (never_leaves and d_target > leash_m):
 			return RETURN
-		if not can_see and t > patience_s:
+		# Patience runs from the last sight of the target, not from the start of the fight: past
+		# `patience` seconds into any fight, one frame without sight (a roll past its shoulder)
+		# used to send a fighter off to search, often in the middle of its own blow.
+		if not can_see and unseen > patience_s:
 			return SEARCH
 		return COMBAT
+	# A broken leash holds until the fighter is well back inside it. On the way home it turns only
+	# on somebody within arm's reach; seeing its quarry is not enough, or the leash lasts a frame and
+	# the chase goes on past the threshold DESIGN §5.4 says it stops at (a caster kiting a player
+	# walked 50 m from a 32 m leash in `./run.sh fights`).
+	if current == RETURN and target_alive and d_post > leash_m * RETURN_HOME:
+		if d_target <= REENGAGE_REACH and (detection >= 1.0 or can_see):
+			return COMBAT
+		return RETURN
 	# Anything that fully detects a live target fights it.
 	if target_alive and (detection >= 1.0 or (alerted and can_see)):
 		if never_leaves and d_target > leash_m:
