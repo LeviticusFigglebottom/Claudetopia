@@ -685,7 +685,9 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
     # came out 0.92 m across the hem, a bell rather than cloth falling from two shoulders.
     drape = drape_field(body, skel, flare=0.045, arm_far=1.0)
     if hooded:
-        cowl = cowl_field(skel, flare=0.16)
+        # a smaller peak and less flare: at a full peak and 0.16 the spare cloth fell straight
+        # from a corner behind the crown, and in profile the hood was a box on the head
+        cowl = cowl_field(skel, flare=0.11, peak=0.6)
         fld = FieldFn(lambda P: np.minimum(drape.eval(P), cowl.eval(P)))
     else:
         fld = drape
