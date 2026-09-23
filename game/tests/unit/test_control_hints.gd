@@ -125,7 +125,8 @@ func test_a_pad_shows_the_pads_buttons() -> void:
 	UI.using_gamepad = true
 	UI.input_device_changed.emit(true)
 	assert_eq(hints.keys_for("move"), ["LS"])
-	assert_eq(hints.keys_for("roll"), ["B"], "on a pad the roll is B, not a tap of anything")
+	assert_eq(hints.keys_for("sprint"), ["B"])
+	assert_eq(hints.keys_for("roll"), ["tap B"], "on a pad the roll is a tap of B, Sprint's button")
 	assert_eq(hints.keys_for("jump"), ["Y"])
 	assert_eq(hints.keys_for("use"), ["A"])
 	assert_eq(hints.keys_for("strike"), ["RB"])

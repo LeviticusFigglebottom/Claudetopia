@@ -67,6 +67,8 @@ const ALIGN_NONE := deg_to_rad(150.0)
 const SPRINT_RESUME := 0.25
 ## A press of Sprint let go within this long is a tap, and a tap rolls (see _read_sprint_tap).
 const SPRINT_TAP_S := 0.22
+## The pads whose Sprint button is read for a tap (a binding names a button on any pad).
+const PADS_READ: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7]
 const JUMP_HEIGHT := 1.1
 ## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
@@ -592,14 +594,14 @@ func _sprint_wanted() -> bool:
 ## A tap of Sprint rolls; a hold sprints. The genre's players reach for the run key to roll (the
 ## Souls games taught most of them), and it leaves Space to jump. The roll goes through the same
 ## buffer as the Dodge key, so it cancels an attack's recovery and waits out a busy moment the same
-## way. Keyboard only: on a pad, B rolls and the stick click is a sprint and nothing else. Off
-## with its setting, and while Sprint is a toggle, where a tap is the toggle.
+## way. On a pad Sprint is B, as the Souls games have it: tapped it rolls, held it runs. Off with
+## its setting, and while Sprint is a toggle, where a tap is the toggle.
 func _read_sprint_tap() -> void:
 	if not (input_enabled and sprint_taps_roll_setting()):
 		_sprint_down_at = -1.0
 		return
 	if _just["sprint"]:
-		_sprint_down_at = now() if _sprint_key_down() else -1.0
+		_sprint_down_at = now() if _sprint_pressed() else -1.0
 	elif not bool(_held["sprint"]) and _sprint_down_at >= 0.0:
 		if now() - _sprint_down_at < SPRINT_TAP_S:
 			_buffer_action = "dodge"
@@ -613,16 +615,21 @@ static func sprint_taps_roll_setting() -> bool:
 			and not bool(Settings.get_value("controls", "toggle_sprint", false))
 
 
-## Whether Sprint is held on the keyboard (rather than on a pad).
-func _sprint_key_down() -> bool:
+## Whether a key or a pad's button bound to Sprint is held down: a press a hand made, which may
+## yet be a tap. The action pressed by a script (Input.action_press) is not, and sprints at once.
+func _sprint_pressed() -> bool:
 	for ev in InputMap.action_get_events("sprint"):
 		var key := ev as InputEventKey
-		if key == null:
-			continue
-		if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
-			return true
-		if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
-			return true
+		if key != null:
+			if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
+				return true
+			if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
+				return true
+		var button := ev as InputEventJoypadButton
+		if button != null:
+			for pad in PADS_READ:
+				if Input.is_joy_button_pressed(pad, button.button_index):
+					return true
 	return false
 
 

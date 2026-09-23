@@ -1127,3 +1127,30 @@ distance left: the usual way, and it still needs the stride's phase matched and 
 body, where a braking runner would shorten the stride at the same cadence; a stop clip is the
 next thing if it reads as slow motion. A stop from a sprint ends in the sprint's pose for a
 frame before the feet are planted and step in.
+
+## 2026-09-23 · One pad button, one thing
+**Decision.** On a pad, B is Sprint: a tap rolls and a hold runs, the same rule as Shift. The
+left stick's click sneaks; LB casts; the right stick's click locks on and nothing else; the D-pad
+is the four quick slots; Back is the chart; Start is the pause page, which now also opens what you
+can say (the Sayings). A still uses and, in a menu, confirms: the only button with two actions,
+which are never listened for at once. The first-person view and the lantern have no pad button
+yet. A player whose saved bindings are still the old defaults is moved onto these; a binding they
+changed is theirs and stays (`Settings.RETIRED_DEFAULTS`).
+**Why.** The pad had three buttons doing two things at once: the right stick's click locked on
+and switched to first person together, D-pad up cast and used the first quick slot together, and
+the map sat on Guide, which Windows keeps for itself (it opens the Game Bar), so a pad on Windows
+had no map. The Souls games, which most of the people who will play this learned on, put sprint
+and roll on one button, a tap and a hold, and crouch on the left stick's click. Doing the same
+frees LB, the one shoulder button left, for casting, which a fight needs at hand. The last
+round's "B rolls, the stick click sprints" kept B's press as an instant roll; a tap is judged on
+release, 0.22 s at the most later, and that is the cost.
+**Alternatives.** Cast on Back and the chart in the pause page: a cast on a button the thumb has
+to leave both sticks for. Three quick slots and cast on D-pad up: a slot the keyboard has and
+the pad does not. A tap-or-hold on Back for the chart and the lantern: the next thing, if a pad
+player needs the lantern without a menu.
+**Consequences.** `Player._sprint_pressed` reads a pad's button as well as a key, so the tap is
+judged the same on either. The hint strip and the controls page name the roll "tap B" on a pad.
+With "A tap of Sprint rolls" off, a pad has no roll until Dodge is given a button in the
+controls settings. test_pad_layout pins it: no pad input bound to two actions but A's pair,
+everything done in play on the pad, nothing on Guide, the retired defaults moved and a changed
+binding kept.
