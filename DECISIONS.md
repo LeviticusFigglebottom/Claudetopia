@@ -1149,3 +1149,37 @@ its payoff. Nothing in the game reads the hook table. It is an index: `tools/poi
 rewrites it from the pack and names any point of interest that pays off in nothing, and
 test_map_quests fails on a stale row and on a decision nobody remembers. A remembered greeting is as specific as the person's other conditioned
 greetings, so it is one of the lines they may greet you with, not the only one.
+
+## 2026-09-23 · A talk waits for its line, a book is read where it lies, a decision can be a crime, and residents offer work
+**Decision.** The quest vocabulary gets the four things the map's quests needed. Each is opt-in, so
+the rest of the pack plays exactly as before.
+* A `talk` objective may name a `topic`, a node of the person's dialogue. It then closes only when
+  a conversation reaches that line (`EventBus.dialogue_node_entered`). A talk with no topic still
+  closes when any conversation with the person ends.
+* A `read_book` objective may say `in_place`. The book itself is laid at the objective's `where`,
+  fixed, and reading it there closes the objective. Otherwise the copy that reads it is put down,
+  as before.
+* The `bounty` effect makes a decision a crime. It goes through the crime service's own
+  `report_crime`, seen by the person spoken to or a named witness. So the severity, the region's
+  law, the report delay and the lawless regions' ill-feeling are the crime system's own. Nobody
+  seeing it means nobody reports it.
+* The `offer_work` effect has a resident read you their place's work. That is the notice post
+  where the place has one. A hamlet, lodge or camp has none, so its resident reads you a
+  carried board: one per place, with no body in the world (`JobBoard.for_place`).
+
+A quest's giver offering it at their hub now counts as a way to start it in `test_quest_reach`,
+as it always did in play.
+**Why.** Any conversation closed a talk, so a stage that sent you to tell somebody something
+closed on a greeting. Only a copy you carried off could be read, so a keeper-roll hung inside a
+tower door had to be picked up. No effect could put a price on your head. Jobs came only from
+posts and workbenches, and only towns, cities, villages and forts have a post, so thirty of the
+thirty-nine settlements offered no work but a shift at a workbench.
+**Alternatives.** Closing a talk on any authored `complete_objective` line, as deliveries do.
+That would change existing content, since one talk in the pack already has such a line. A
+`bounty` effect that adds to the ledger directly would skip the witness, the delay and the law.
+A hub choice the runner adds for residents, as it does for trade, would be another hunk in
+`_visible_choices`, where the settlements stream's deed offers are.
+**Consequences.** All 15 talks in the map's quests close on their own lines. Five of its books
+are read where they lie. All 26 residents the map added offer the work going where they live.
+The crime service now answers `bounty_for`, which it never did, so every `bounty_min` condition
+and greeting read nought until now.

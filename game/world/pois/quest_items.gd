@@ -172,6 +172,8 @@ static func _placement_for(def: Dictionary, stage: Dictionary, o: Dictionary, in
 		"collect", "use_item":
 			item = str(o.get("target", ""))
 		"read_book":
+			if bool(o.get("in_place", false)):
+				return _book_in_place(def, stage, o, index)
 			item = ItemSources.reader_of(str(o.get("target", "")))
 			if item == "" or ItemSources.on_a_shelf(str(o.get("target", ""))):
 				return {}
@@ -197,6 +199,23 @@ static func _placement_for(def: Dictionary, stage: Dictionary, o: Dictionary, in
 	var count := maxi(1, int(o.get("count", 1))) if type == "collect" else 1
 	return {"key": "item:%s" % item, "kind": "item", "item": item, "count": count, "where": where,
 			"spot": str(o.get("spot", "")), "owner": str(o.get("owner", "")), "quest_id": str(def["id"]),
+			"stage_id": str(stage.get("id", "")), "index": index, "text": ""}
+
+
+## A book an objective asks you to read where it lies (`in_place`): a board hung inside a tower
+## door, the names cut in a cairn, a ledger chained in the counting room. The book itself is laid
+## down, fixed, at the objective's `where` (and `spot`), else where the same stage sends you, and
+## reading it there is what closes the objective (`Readable` says `book_opened`). It is never
+## taken, so it is never in the save.
+static func _book_in_place(def: Dictionary, stage: Dictionary, o: Dictionary, index: int) -> Dictionary:
+	var book := str(o.get("target", ""))
+	if not ContentDB.has(book):
+		return {}
+	var where := str(o.get("where", ""))
+	if where == "":
+		where = _reach_of(stage)
+	return {"key": "book:%s|%s" % [book, where], "kind": "book", "item": "", "book": book, "count": 1,
+			"where": where, "spot": str(o.get("spot", "")), "owner": "", "quest_id": str(def["id"]),
 			"stage_id": str(stage.get("id", "")), "index": index, "text": ""}
 
 
@@ -480,6 +499,9 @@ func _make(row: Dictionary) -> Node:
 		readable.book_id = str(row["book"])
 		readable.fixed = true
 		readable.name = "Book_" + Ids.name_of(str(row["book"]))
+		# on a marker the dressing shows what lies there; in the open it would be a prompt in thin air
+		if str(row.get("spot", "")) == "":
+			readable.add_child(WorldItem.placeholder_mesh({"category": "book"}))
 		return readable
 	var item := WorldItem.new()
 	item.setup(str(row["item"]), int(row.get("count", 1)))

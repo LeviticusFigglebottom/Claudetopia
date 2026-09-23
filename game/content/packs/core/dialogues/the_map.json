@@ -96,6 +96,10 @@
       ]
      },
      {
+      "text": "Is there any work going?",
+      "next": "work_going"
+     },
+     {
       "text": "I'll be on my way.",
       "next": "bye"
      }
@@ -220,6 +224,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Ada Welling",
+    "text": "The spring keeps me. The Vale has other work that wants hands. This is this week's.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   }
  },
@@ -275,6 +289,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -401,6 +419,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Hal Wynstead",
+    "text": "Water does its own work. The rest of the Vale does not, and it pays for help. Here.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -487,6 +515,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -603,6 +635,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Lin Cresswell",
+    "text": "Not in my beds. What the Vale wants doing besides, I can tell you. It is not much, and it pays.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -701,6 +743,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -822,6 +868,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Gil Fallow",
+    "text": "Not with the flock; they know me. But there is this, if you want it.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -924,6 +980,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -1055,6 +1115,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Pell Brambling",
+    "text": "I keep the count, and the count says there is work. Here it is, counted.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -1174,6 +1244,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -1385,6 +1459,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Tor Rookwright",
+    "text": "A reeve knows what wants doing. This is the week's, and none of it is on the green.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -1508,6 +1592,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -1634,6 +1722,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Tam Withy",
+    "text": "I weave. Other people want things carried and killed, and they will pay you for it. This is what they want.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -1724,6 +1822,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -1850,6 +1952,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Cal Merriweather",
+    "text": "The drovers leave word at the bar of what wants doing on the downs. This is what they left.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -1936,6 +2048,22 @@
         ]
        }
       ]
+     },
+     {
+      "text": "I am ready to walk when you are.",
+      "next": "q_would_anybody_say_it_walk_her_home",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/would_anybody_say_it",
+         "walk_her_home"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -2052,6 +2180,21 @@
       "next": "hub"
      }
     ]
+   },
+   "q_would_anybody_say_it_walk_her_home": {
+    "speaker": "Nella Candlewright",
+    "text": "Then we go. — The last candle is out. I have left the tent standing for whoever sits down next; somebody always does. Walk on my left. I have not walked north in three years, and I keep wanting to turn round.",
+    "next": "hub"
+   },
+   "work_going": {
+    "speaker": "Nella Candlewright",
+    "text": "Nothing here wants doing but candles. The knights leave word of the rest when they come for them. Here it is.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -2143,6 +2286,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -2274,6 +2421,16 @@
     "speaker": "Merrit Ash",
     "text": "Ashcombe's doors, name by name. — I know them by the hand, not the reading; I was a lock-maker. Nineteen houses. Ashcombe-Mill, over the mill-race door with the iron studs. Hobb's Cross. The Two Wells. The Weaver's. Cold Harbour, which was a joke; it is the warmest door. And on round to the Widow's End, which has a lock on it I made the key for myself, eleven years ago, so that I would have something to open. — Tell him that. Tell him the doors were every one shut by somebody who meant to open them again.",
     "next": "hub"
+   },
+   "work_going": {
+    "speaker": "Merrit Ash",
+    "text": "The Walk posts its work at the gate. I will read it to you; my eyes are better than the board's paint.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -2360,6 +2517,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -2476,6 +2637,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Corin Stilyard",
+    "text": "I weigh what comes in along the Stride. This is what is wanted going out, and what it pays, weighed.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -2562,6 +2733,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -2678,6 +2853,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Maudie Punt",
+    "text": "The reed wants cutting, and I cut it. The rest of the Mere wants this.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -2764,6 +2949,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -2880,6 +3069,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Berrit Smoker",
+    "text": "Work pays in fish or in marks. This pays in marks.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -2966,6 +3165,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -3082,6 +3285,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Sauve Mor",
+    "text": "The water gives work to whoever asks it. I am asking it for you. Here.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -3168,6 +3381,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -3284,6 +3501,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Lisse Tal",
+    "text": "I weave without talking. The work other people want, I will tell you out loud.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -3370,6 +3597,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -3486,6 +3717,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Ossa Lissa",
+    "text": "There is always work. The Tide brings it in. This is what it brought this week.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -3572,6 +3813,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -3688,6 +3933,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Meo Sa",
+    "text": "Salt does not boil itself, and neither does anything else on this coast. This is what is wanted, and what it pays.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -3790,6 +4045,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -3921,6 +4180,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Wenna Holt",
+    "text": "The Wold asks, and you answer or you do not. This is what it is asking this week.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -4011,6 +4280,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -4137,6 +4410,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Edda Thornby",
+    "text": "The thorn keeps us busy. What it does not keep us busy with, you may have.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -4199,6 +4482,18 @@
       "next": "topic_2"
      },
      {
+      "text": "Tam Withy asks why the Wold has stopped selling him rods.",
+      "next": "q_pens_with_no_gate_the_rods",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/pens_with_no_gate",
+         "the_rods"
+        ]
+       }
+      ]
+     },
+     {
       "text": "The Fennick stool hasn't grown back.",
       "next": "q_the_fennick_stool_offer",
       "conditions": [
@@ -4223,6 +4518,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -4253,6 +4552,11 @@
    "bye": {
     "speaker": "Aggie Coppice",
     "text": "Mind the stools as you go. They look like stumps. They are not stumps. They are only resting.",
+    "next": "hub"
+   },
+   "q_pens_with_no_gate_the_rods": {
+    "speaker": "Aggie Coppice",
+    "text": "Because he asked for rods for pens. — The Wold does not sell hazel for a pen nothing can walk out of. A thing that has gone grey is let go, here, the way we let a named moss go when there is nobody left to say it. Tell Tam he can have all the rods he likes for a fold. For a pen with no gate he can cut his own, and his hands will know what they are doing even if he does not.",
     "next": "hub"
    },
    "q_the_fennick_stool_offer": {
@@ -4339,6 +4643,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Aggie Coppice",
+    "text": "Work. Here is what the Wold wants done this week, and none of it is hazel.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -4425,6 +4739,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -4541,6 +4859,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Nessa Ashby",
+    "text": "The lodge has work it cannot do itself. Here is the list, and here is what it pays, which is less than it should.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -4607,6 +4935,18 @@
       "next": "topic_3"
      },
      {
+      "text": "There is a Builders' channel behind the Rust Scar, and it is wet.",
+      "next": "q_the_third_arch_ruddows_water",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_third_arch",
+         "ruddows_water"
+        ]
+       }
+      ]
+     },
+     {
       "text": "Rudd are asking for the forty head at last.",
       "next": "q_forty_head_and_a_hearth_offer",
       "conditions": [
@@ -4631,6 +4971,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -4671,6 +5015,11 @@
    "bye": {
     "speaker": "Ushra ko-Rudd",
     "text": "Go with the rope, as we say. Mind which end you are holding.",
+    "next": "hub"
+   },
+   "q_the_third_arch_ruddows_water": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Wet. — One day this spring the Scar ran clear, and every Rudd child born that day has the Scar's name, and the next morning it ran red again, as it always has. We said the fell stopped bleeding for a day. I wrote it in the account as a day owed to nobody. — If the clear water went into the Builders' stone, it went somewhere. Follow it down, and tell whoever is drinking it that Rudd would like to know.",
     "next": "hub"
    },
    "q_forty_head_and_a_hearth_offer": {
@@ -4757,6 +5106,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Rudd keep an account of what is owed and of what wants doing. This is the second.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -4847,6 +5206,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -4973,6 +5336,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "Ghast always have work. You have to climb up to it. Here.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -5063,6 +5436,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -5189,6 +5566,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Dreugh want things done that are not painting. Here they are.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -5275,6 +5662,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -5391,6 +5782,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Varra ko-Skarl",
+    "text": "The herd wants what the herd wants. This is what the rest of us want.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
@@ -5477,6 +5878,10 @@
         ]
        }
       ]
+     },
+     {
+      "text": "Is there any work going?",
+      "next": "work_going"
      },
      {
       "text": "I'll be on my way.",
@@ -5593,6 +5998,16 @@
       "next": "hub"
      }
     ]
+   },
+   "work_going": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "A lead-captain keeps a list. Here it is, and I laughed at none of it, which is rare.",
+    "effects": [
+     {
+      "offer_work": true
+     }
+    ],
+    "next": "hub"
    }
   },
   "greetings": [
