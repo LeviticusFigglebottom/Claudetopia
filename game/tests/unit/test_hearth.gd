@@ -140,6 +140,53 @@ func test_dying_on_the_spot_does_not_hand_the_marks_straight_back() -> void:
 	body.free()
 
 
+## An Echo answers a body standing in it, not the word of one that was.
+##
+## The physics server does not say who came into an Area3D in the step that finds them: the word
+## goes out as a later physics iteration begins. So a coming back that lands between the step that
+## found the body lying in the quiet Echo and the iteration that says so is answered after
+## `_respawn` has armed it, with the player already at the stone: the marks came straight back.
+## The journey's death step brings the player back one frame after the fall, and now and then it
+## read `marks_gone=false recovered=true`, the count exactly what it was. This stages the coming
+## back one, two and three physics steps after the fall; one step is the one that did it.
+func test_an_echo_does_not_answer_a_body_that_has_gone_before_the_word_came() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	assert_false(tree.paused, "the world is paused, so nothing in this test is being measured")
+	var body := _standing_body()
+	tree.root.add_child(body)
+	var fell := Vector3(120.0, 0.0, -40.0)
+	var stone := Vector3(10.0, 2.0, 3.0)
+	for steps in [1, 2, 3]:
+		var staged := false
+		for attempt in 12:
+			Hearth._clear_echo_node()
+			Hearth.echo = {}
+			Hearth._respawning = false
+			Hearth.rest_at("stone_a", stone, 0.0, false)
+			inv.marks = 280
+			body.global_position = fell
+			await tree.process_frame
+			var start := Engine.get_physics_frames()
+			Hearth._on_player_died(fell)
+			while Engine.get_physics_frames() - start < steps:
+				await tree.process_frame
+			body.global_position = stone          # come back, the way `respawn` carries the body
+			Hearth._respawn()
+			if Engine.get_physics_frames() - start == steps:
+				staged = true
+				break
+			# one frame ran two steps and overshot: let this one settle and stage it again
+			for i in 4:
+				await tree.physics_frame
+		assert_true(staged, "could not stage a coming back %d physics steps after the fall" % steps)
+		for i in 4:
+			await tree.physics_frame
+		assert_eq(inv.marks, 0, "%d step(s) after the fall the Echo answered a body at the stone and gave the marks back" % steps)
+		assert_true(Hearth.has_echo(), "%d step(s) after the fall the Echo went quiet with nobody standing in it" % steps)
+	body.get_parent().remove_child(body)
+	body.free()
+
+
 ## One death, one coming back. The death delay's timer fires three seconds after the fall and
 ## nothing cancels it, so anything that brought the player back sooner -- a load, a scripted
 ## respawn, the journey's own -- was undone by it seconds into whatever they were doing next.

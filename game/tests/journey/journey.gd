@@ -403,9 +403,8 @@ func _drive_the_opening(social: Node, village: String) -> Dictionary:
 	await get_tree().process_frame
 	var closed: bool = quests.is_completed(NAMING)
 	var onward: bool = quests.is_active(NEXT)
-	# The Toll Hums opens a few streets from here, and a stage it closed on its own later in the
-	# run would pay out marks in the middle of another step's arithmetic (the death step counts
-	# them to the mark). Having seen it begin, the journey puts it down again.
+	# Having seen it begin, the journey puts it down again: the steps after this one were written
+	# with no quest of the main thread running, and they go on measuring only what they measured.
 	if onward:
 		quests.abandon(NEXT)
 	return {"ok": closed and onward,
@@ -473,9 +472,13 @@ func _step_die_and_recover() -> void:
 	# was "marginal" -- it was not: the Echo was an Area3D standing on the body that had just
 	# fallen, so it recovered itself on the first physics tick after the death and which of the
 	# five conditions came back false depended on where that tick landed. The cause is fixed in
-	# `Hearth` (an Echo answers nobody until the player has come back for it) and pinned in
-	# `test_hearth.gd`, so the extra frames are gone: a step that needs padding to pass is not
-	# measuring the hearth, it is measuring the frame scheduler.
+	# `Hearth` (an Echo answers nobody until the player has come back for it) and in the Echo
+	# (then only a body standing in it: the word of who came in arrives an iteration after the
+	# step that found them, so when one step fell between the fall and this step's coming back,
+	# the Echo heard of the body lying in it after it was armed, with the player at the stone,
+	# and read `marks_gone=false`). Both are pinned in `test_hearth.gd`, so the extra frames are
+	# gone: a step that needs padding to pass is not measuring the hearth, it is measuring the
+	# frame scheduler.
 	await get_tree().process_frame
 	stone.interact(player)
 	var rested: bool = Hearth.last_hearthstone_id == "journey_stone"

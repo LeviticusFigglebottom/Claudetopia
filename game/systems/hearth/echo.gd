@@ -7,6 +7,9 @@ var marks := 0
 ## own player and hand everything back before they had stood up, and death cost nothing. Hearth
 ## arms it when the player has come back (or at once, for one restored from a save).
 var armed := false
+## How far from the Echo's foot a body can be and still be standing in it: the capsule's radius and
+## height below, and the player's own, with room to spare.
+const REACH := 2.5
 var _figure: MeshInstance3D
 var _light: OmniLight3D
 var _t := 0.0
@@ -54,5 +57,12 @@ func _process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if armed and body.is_in_group("player"):
-		Hearth.recover_echo()
+	# The physics server says who came in as the iteration after the step that found them begins,
+	# so the word can arrive after the body has gone: one that lay here while the Echo was quiet and
+	# was carried to the stone within that step was answered from wherever the stone is. An Echo
+	# answers a body standing in it, not the word of one that was.
+	if not armed or not body.is_in_group("player") or not (body is Node3D):
+		return
+	if (body as Node3D).global_position.distance_to(global_position) > REACH:
+		return
+	Hearth.recover_echo()
