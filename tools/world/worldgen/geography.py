@@ -401,7 +401,9 @@ def _peak_profile(shape: str, t: np.ndarray) -> np.ndarray:
     return (1.0 - t) ** 1.4 * (1.0 + 0.4 * t)
 
 
-def apply_peaks(ctx, h: np.ndarray, atlas: dict) -> np.ndarray:
+def apply_peaks(ctx, h: np.ndarray, atlas: dict, mask: np.ndarray | None = None) -> np.ndarray:
+    """Every peak at its height, blended into the land over its radius. `mask`, when given, gets
+    how much of each texel is a peak's own flank (0..1), for the lakes to leave standing."""
     g = ctx.grid
     for pk in atlas.get("peaks", []):
         x, z = float(pk["at"][0]), float(pk["at"][1])
@@ -426,6 +428,8 @@ def apply_peaks(ctx, h: np.ndarray, atlas: dict) -> np.ndarray:
         if shape == "crag":
             crown = top - 0.08 * (top - base) * (1.0 - ridged(ctx.f(salt + 1, 1.8, 30, 160)[i0:i1, j0:j1], 1.2))
         h[i0:i1, j0:j1] = base + np.maximum(crown - base, 0.0) * up
+        if mask is not None:
+            mask[i0:i1, j0:j1] = np.maximum(mask[i0:i1, j0:j1], smoothstep(0.15, 0.5, up))
     return h
 
 
@@ -464,7 +468,9 @@ def land(ctx, atlas: dict) -> tuple:
         h += rf.weights[r.index] * (r.base_height + r.relief * fields[key])
     del fields
     h, rock = apply_ranges(ctx, h, atlas)
-    h = apply_peaks(ctx, h, atlas)
+    peak = np.zeros_like(h, dtype=np.float32)
+    h = apply_peaks(ctx, h, atlas, peak)
+    ctx.peak = peak
     h = apply_valleys(ctx, h, atlas)
     return h, rock
 
@@ -820,6 +826,17 @@ def apply_lakes(ctx, h: np.ndarray, wt: Waters) -> np.ndarray:
     # shingle shore, and the water begins past it -- SCHEMA.md, lakes; the atlas is drawn to that)
     near = 1.0 - smoothstep(250.0, 700.0, sd)
     ground = lerp(ground, np.maximum(ground, level + 1.5), near)
+    # A range drawn to the water keeps its height to the shore, and drops into the lake over the
+    # last 25 m: the shingle and the gentle bank are for the shores the atlas drew no range on.
+    # Laid over every shore alike, they took the Gull Cliffs on the Mere's north shore, drawn at
+    # 40 m, down to 24.
+    rock = getattr(ctx, "rock", None)
+    peak = getattr(ctx, "peak", None)
+    drawn = None
+    if rock is not None or peak is not None:
+        drawn = np.maximum(smoothstep(0.15, 0.5, rock) if rock is not None else 0.0,
+                           peak if peak is not None else 0.0)
+        ground = lerp(ground, np.maximum(ground, h), drawn * smoothstep(0.0, 25.0, sd))
     # a cliff shore stands seven to ten metres at the water
     cliff = (7.0 + 3.0 * ctx.f(172, 1.9, None, 260)) * smoothstep(0.0, 10.0, sd)
     ground = ground + cliff * wt.cliffness * (1.0 - smoothstep(40.0, 260.0, sd))
@@ -842,6 +859,10 @@ def apply_lakes(ctx, h: np.ndarray, wt: Waters) -> np.ndarray:
             fracture = 1.2 * np.abs(ctx.f(175, 1.5, 9.0, 48.0))
             ih = ih + (ledges + fracture) * inner
             h2 = np.maximum(h2, lerp(h2, ih, on))
+    # and a peak drawn in the water stands out of it: the Spire Rock, 32 m at Tollmere's high end,
+    # came out of the lake shaping at the island's own 15
+    if peak is not None and peak.any():
+        h2 = np.maximum(h2, lerp(h2, h, peak))
     return h2.astype(np.float32)
 
 

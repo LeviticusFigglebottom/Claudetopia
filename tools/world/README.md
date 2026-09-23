@@ -117,7 +117,10 @@ errors.
    through both (a road crossing is a ford). No road builds up inside 14 m of an authored
    sightline.
 8. **Landforms**, each province's own, laid on last and held off the roads, the pads and the
-   authored sightlines.
+   authored sightlines, and never dug below a lake's water beside it. Then each shelf's seaward
+   edge is broken (`geography.break_shelf_edges`): the drawn line wanders up to 7 m in and out,
+   blocks fallen from the face lie at its foot, and each of its `notches` is cut down into the
+   sea; no pad is touched.
 9. **Surface**: every terrain slot gets a weight from biome membership, slope, height,
    moisture, roads and noise; the two strongest become base and overlay with a blend value.
    The colour map is each region's palette as a chroma-only tint so the textures still set the

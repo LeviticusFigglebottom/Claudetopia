@@ -33,6 +33,8 @@ class HeightContext:
     places: list
     rivers: list = field(default_factory=list)       # the atlas's rivers (dicts), for the levees
     land_soft: np.ndarray | None = None              # 1 on land, 0 at sea, soft over the shore
+    rock: np.ndarray | None = None                   # 0..1, a range's own flanks (geography.land)
+    peak: np.ndarray | None = None                   # 0..1, a peak's own flanks (geography.land)
     X: np.ndarray = field(init=False)
     Z: np.ndarray = field(init=False)
 
@@ -139,6 +141,7 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, atlas: dict, prov
     ctx = HeightContext(grid=grid_c, bank=bank, regions=provinces, rf=rf, lake=waters_c, places=places,
                         rivers=list(atlas.get("rivers", [])))
     h, rock = GEO.land(ctx, atlas)
+    ctx.rock = rock
     # the coast and the lakes first, so the drainage runs to the water that is there ...
     h, sea = GEO.apply_coast(ctx, h, atlas)
     h = GEO.apply_lakes(ctx, h, waters_c)
