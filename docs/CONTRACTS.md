@@ -188,6 +188,8 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
   `starting_spells` are `core:spell/*` ids the character comes up already knowing; only callings whose `skill_bonuses` include that saying's school should carry one.
 * `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}}`
 * `quest`: `{id, name, layer (main|faction|side|radiant), stages[{id, journal, objectives[{type, target, count}], on_enter[], on_complete[]}], rewards}`
+  An objective that sends you to pick something up may say where it lies: `where` (a place, POI or interior id), `spot` (a dressing marker, a deep place's chamber, or a house's room), `owner` (an npc id: taking it is theft). A `choice` may name its host in `with`: an npc, or a place/interior where nobody is left to ask. The quest-item placer (`QuestItems`) reads all four; systems/quests/README.md has the rules.
+* `encounter`: `{id, place, spawns[{enemy, count, when?, at?, spread?, unless?[conds], unless_present?, rises_when?}], lies?[{item | book, at?, count?, owner?}]}` — what a place's `encounter` sentence says stands or lies there, raised with its dressing (`PoiEncounters`, `QuestItems`). A `place` def may name a `dressing` kind (the Standing Moot: `standing_stones`) so the POI builders dress it.
 * `dialogue`: `{id, nodes{node_id: {speaker, text, conditions[], effects[], choices[{text, next, conditions[]}], next}}, start}`
 Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 `{"quest_at": ["core:quest/toll_hums", 2]}`, `{"rep_min": ["core:faction/wardens", 20]}`,
@@ -198,6 +200,10 @@ Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 `{"rep": [faction, delta]}`, `{"morality": delta}`, `{"renown": delta}`,
 `{"marks": delta}`, `{"start_quest": id}`, `{"teach_recipe": id}`,
 `{"teach_spell": "core:spell/x"}`.
+**A quest stage is named by its id or by its number counted from one** — in `quest_at`,
+`quest_min_stage` and `quest_stage` alike: `["core:quest/the_naming", 1]` is the Naming's first
+stage, `["core:quest/the_naming", "wake"]` the same stage by name. `QuestLog.stage_index()` is the
+only translation to an index (DECISIONS 2026-09-22, "A stage number counts from one").
 `teach_recipe` and `knows_recipe` go through the context's **`recipes`** provider, which
 `Social` binds to the first node in the `crafting` group, and whose methods are
 `learn_recipe` / `knows_recipe`. `teach_spell` and `knows_spell` go through the context's **`sayings`** provider, which `Social`

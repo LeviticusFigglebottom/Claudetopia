@@ -105,6 +105,32 @@ pools, falling-water sheets) as one mesh per material. `tests/unit/test_pois.gd`
 every POI raises a mesh, a body and the Hearthstone its data promises, that it is the same
 twice, and that a quest's `rest_at` target always has a stone.
 
+`pois/quest_items.gd` (`QuestItems`, a world service installed by `GameServices`) puts down what
+the quests send you to pick up: in a near cell after its dressings, so a thing can lie on a
+marker the dressing put down (`PoiKit.marker`: the Tumbled Watch's `fallen_stair`, the Clanless
+Camp's `the_chimes`), and inside a house or a deep place as `HouseInterior`/`CaveInterior` build
+it. A deep place's `item` features are pickups through it too, except a boss's own drop. What has
+been taken is its save section, `quest_items`. See systems/quests/README.md.
+
+`pois/poi_encounters.gd` (`PoiEncounters`, an `EnemySpawner`) stands up what a place's `encounter`
+def says is there, as a child of its dressing in a near cell: groups of enemies at a marker the
+dressing put down (`at`) or on the pad's rim, by the hour (`when`: day, night, dawn, dusk,
+midnight), kept away while a condition holds (`unless`) or while a named person is present
+(`unless_present`: the Lantern Causeway's drowned and its lamplighter), or seated deaf and blind
+until a `PoiTouch` is touched (`rises_when`: the Cold Fire's cup). A boss once put down
+(`boss_deed/<id>`) is not stood up again, and a group killed stays dead until a Hearthstone rest.
+The Hart of Thorns keeps the Standing Moot this way, which a place's `dressing` kind lets the
+builders dress. The people the sentences and stories name are ordinary npc defs whose schedules
+put them at the POI, on `worked` markers the builders put down (`the_lamp_round`, `the_toll_post`,
+`the_vigil`, `the_hermits_stool`, `the_pilgrims_rest`, `the_clamps`, `by_the_fire`,
+`the_wheel_table`, `the_witchs_door`, `the_foxglove_beds`, `the_gate_post`, `the_finds_table`,
+`the_dig`, `in_the_trench`); a marker carries the place it belongs to, so two camps' fires are
+never taken for each other. A body stands exactly where its marker is, so a marker goes where
+nothing solid is (clear of the props a builder set out along the world's axes, and of colliding
+snow and stone), and two people at one place at one hour work at two markers. A camp whose sentence promises jobs gets a `JobBoard` (`PoiKit.job_board`).
+`tests/unit/test_poi_encounters.gd` pins what stands at every one of the forty-eight;
+`tests/unit/test_poi_people.gd` the people, their markers, and their save.
+
 ## WaterSurface
 
 One subdivided sheet spans the world; its vertices take their height from the builder's water

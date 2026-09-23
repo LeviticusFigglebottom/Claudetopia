@@ -351,6 +351,39 @@ func _spawn_position() -> Vector3:
 	return pos
 
 
+## Hands the world to a body: the streaming follows it, and so do Terrain3D's clipmap and its
+## dynamic collision, which are built around whatever camera Terrain3D was last given. The spawn
+## handed the streamer the player and never told Terrain3D, which went on following the fly
+## camera the world starts with -- and that camera kept flying on the player's own keys (W A S D,
+## Space, Q, E; Shift made it fast), so the ground's collision moved away from the body at every
+## step, and a player walked under the terrain among trees that seemed to float. The fly camera
+## now stops flying and stops being anyone's eye; the tools that shoot without a player keep it.
+func follow(body: Node3D) -> void:
+	target = body
+	if streamer != null:
+		streamer.target = body
+		streamer.refresh()
+	_point_terrain_at(body)
+	if fly_camera != null and body != fly_camera:
+		fly_camera.set_process(false)
+		fly_camera.set_process_unhandled_input(false)
+		fly_camera.current = false
+
+
+## Gives Terrain3D the body's own camera (the camera itself when the body is one). Set before the
+## fly camera is let go, so the plugin is never left holding a camera that is not there.
+func _point_terrain_at(body: Node3D) -> void:
+	if terrain_node == null or not terrain_node.has_method("set_camera"):
+		return
+	var cam := body as Camera3D
+	if cam == null:
+		for c in body.find_children("*", "Camera3D", true, false):
+			cam = c as Camera3D
+			break
+	if cam != null:
+		terrain_node.call("set_camera", cam)
+
+
 ## Moves whatever the streamer follows (the fly camera, or the player) to a world position.
 func move_target(pos: Vector3, look_at: Variant = null) -> void:
 	# Move whatever the streaming is actually following. Once a body has spawned, the fly

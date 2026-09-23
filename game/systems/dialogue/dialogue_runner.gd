@@ -380,6 +380,15 @@ func _visible_choices(node: Dictionary) -> Array[Dictionary]:
 		var trade := _trade_choice()
 		trade["source_index"] = -2
 		out.insert(maxi(out.size() - 1, 0), trade)
+	# A decision the journal is waiting on that no author wrote a button for is put to the person
+	# who hosts it, at their hub (QuestRoutes): the main thread's five decisions had none, so none
+	# of them could be made. After deciding, the conversation goes back to where it was.
+	if not out.is_empty() and npc_id != "":
+		for offer in ctx.quest_offers(npc_id):
+			var decide := {"text": ctx.substitute(str(offer.get("text", ""))), "next": current_node_id,
+					"effects": [{"quest_choice": [str(offer.get("quest_id", "")), str(offer.get("id", ""))]}],
+					"source_index": -3, "tag": "quest"}
+			out.insert(maxi(out.size() - 1, 0), decide)
 	return out
 
 

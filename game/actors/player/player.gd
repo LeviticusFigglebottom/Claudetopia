@@ -1417,7 +1417,7 @@ func casting_power(school: String = "") -> float:
 
 ## Eating or drinking something: the bag says what was used and the body does it. Nothing
 ## applied these before, so every potion in the game was coloured water.
-func _on_item_used(item_id: String, effects: Array) -> void:
+func _on_item_used(item_id: String, effects: Array = []) -> void:
 	if effects.is_empty():
 		return
 	take_effects(effects)
