@@ -1,6 +1,12 @@
 extends Area3D
 ## The Echo: a faint standing figure where you last were known, holding your marks.
 
+const RADIUS := 0.6
+const HEIGHT := 2.0
+## How far from the Echo's axis a body can stand and still be touching it: its own radius and a
+## humanoid's, with room to spare.
+const REACH := RADIUS + 0.6
+
 var marks := 0
 ## An Echo is something you come back to. It appears at the spot you fell, which for the three
 ## seconds of the death delay is the spot your own body is lying on -- so it used to notice its
@@ -18,10 +24,10 @@ func _ready() -> void:
 	monitoring = true
 	var col := CollisionShape3D.new()
 	var shape := CapsuleShape3D.new()
-	shape.radius = 0.6
-	shape.height = 2.0
+	shape.radius = RADIUS
+	shape.height = HEIGHT
 	col.shape = shape
-	col.position.y = 1.0
+	col.position.y = HEIGHT * 0.5
 	add_child(col)
 	_figure = MeshInstance3D.new()
 	var cm := CapsuleMesh.new()
@@ -54,5 +60,17 @@ func _process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if armed and body.is_in_group("player"):
+	if armed and body.is_in_group("player") and _is_here(body):
 		Hearth.recover_echo()
+
+
+## An Area3D finds an overlap during one physics step and reports it at the start of the next, so
+## a body that lay here for a single tick and was then taken away -- a death one frame long, then
+## the Hearthstone -- was announced as arriving after it had gone, and after the Echo had been
+## armed. Only a body standing here when the arrival is announced counts.
+func _is_here(body: Node) -> bool:
+	var b := body as Node3D
+	if b == null:
+		return false
+	var d := b.global_position - global_position
+	return Vector2(d.x, d.z).length() <= REACH and absf(d.y) <= HEIGHT
