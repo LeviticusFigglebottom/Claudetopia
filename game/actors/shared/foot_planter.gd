@@ -37,14 +37,29 @@ const REPLANT_FROM := 0.10
 const RETURN_FROM := 0.35
 ## seconds after planting before the looser thresholds take over
 const SETTLE_S := 0.9
-## m above its standing height at which a held foot was caught in the air (or up on its toes)
-const IN_THE_AIR := 0.025
+## A foot caught in the air (see DOWN_WITHIN) comes down first, and at once, whatever the other
+## foot is doing.
+const AIRBORNE_NEED := 10.0
 ## seconds to hand the feet back to the clips when the body moves off
 const RELEASE_S := 0.1
-## A held foot this far (m) from its place, or a body turned this far (rad) in one frame, was
-## carried off with the body: the feet go back to the clips at once and are planted there.
-const LOST_FROM := 0.7
+## A standing body moved this far (m) along the ground in one frame, or turned this far (rad), was
+## carried off (a teleport, a load) or put down facing a new way: the feet go back to the clips at
+## once and are planted there. So is a held foot this far (m) from its place, past reaching. That
+## was 0.7 m and the only test of a teleport, and a stop from a sprint leaves the back foot 0.9 m
+## from its place: it snapped there in a frame.
+const CARRIED_FROM := 0.25
 const SNAP_TURN := 0.8
+const LOST_FROM := 1.4
+## Where a foot bears on the ground, as the forge turns it (tests/unit/foot_contact.gd): the heel
+## on the ground this far (m) behind the ankle, and the ball at the toe joint. A foot with either
+## within DOWN_WITHIN (m) of the height it stands at is on the ground, and is set down on it when
+## it is planted; one with neither is in the air. (Measured at the ankle, a foot up on its ball
+## counted as in the air, and came down with the other: both feet off the ground at once.)
+const HEEL_BACK := 0.06
+const DOWN_WITHIN := 0.03
+## A body planted with both feet off the ground has the lower set down on it, when it is no higher
+## than this (m): the push-off foot of a stop that ended a centimetre into its flight.
+const SET_DOWN_FROM := 0.08
 ## The share of its length a leg may straighten to before the hips come down for it (or the
 ## clip's own share, when the clip has the leg straighter), and the most they come down.
 const STRAIGHT := 0.97
@@ -55,8 +70,14 @@ class Foot:
 	var upper := -1
 	var lower := -1
 	var bone := -1
+	var toe := -1
 	var thigh := 0.0
 	var shin := 0.0
+	## the heel and the ball in the foot bone's own space, and the ball's height at rest (skeleton
+	## space)
+	var heel := Vector3.ZERO
+	var ball := Vector3.ZERO
+	var ball_height := 0.0
 	## where it is held, in the world
 	var pos := Vector3.ZERO
 	var rot := Quaternion.IDENTITY
@@ -74,7 +95,6 @@ class Foot:
 
 var _sk: Skeleton3D
 var _hips := -1
-var _stand_height := 0.0      ## the ankle's height above the ground at rest, skeleton space
 var _feet: Array[Foot] = []
 var _active := false
 var _weight := 0.0            ## 1 when the feet are held, easing to 0 as they go back to the clips
@@ -82,6 +102,7 @@ var _since := 0.0             ## seconds since the feet were planted
 var _unsettled := true        ## moved, played a one-shot or left the ground since last planted
 var _last_y := NAN
 var _last_yaw := NAN
+var _last_at := Vector2(NAN, NAN)
 ## steps taken since the feet were last planted, and the drop (m) given the hips this frame
 var steps := 0
 var drop := 0.0
@@ -109,7 +130,12 @@ static func make(sk: Skeleton3D) -> FootPlanter:
 		var c := sk.get_bone_global_rest(f.bone).origin
 		f.thigh = a.distance_to(b)
 		f.shin = b.distance_to(c)
-		p._stand_height = c.y
+		f.toe = sk.find_bone("Toe." + side)
+		var rest := sk.get_bone_global_rest(f.bone)
+		f.heel = rest.affine_inverse() * Vector3(rest.origin.x, 0.0, rest.origin.z - HEEL_BACK)
+		if f.toe >= 0:
+			f.ball = rest.affine_inverse() * sk.get_bone_global_rest(f.toe).origin
+			f.ball_height = sk.get_bone_global_rest(f.toe).origin.y
 		p._feet.append(f)
 	return p
 
@@ -122,6 +148,26 @@ func is_planted() -> bool:
 ## How far (m, along the ground) each foot was shown last frame from where the clips put it.
 func offsets() -> Array[float]:
 	return _offsets.duplicate()
+
+
+## How many feet the pose now in the skeleton has on the ground: a heel or a ball down.
+func feet_down() -> int:
+	var n := 0
+	for f in _feet:
+		var pose := _sk.get_bone_global_pose(f.bone)
+		if _sole_height(f, pose.origin, pose.basis.get_rotation_quaternion()) < DOWN_WITHIN:
+			n += 1
+	return n
+
+
+## How high (m, skeleton space) the lower of the heel and the ball of `f` is, the foot put at `pos`
+## turned `rot` (skeleton space), over the height each stands at.
+func _sole_height(f: Foot, pos: Vector3, rot: Quaternion) -> float:
+	var b := Basis(rot)
+	var h := (pos + b * f.heel).y
+	if f.toe >= 0:
+		h = minf(h, (pos + b * f.ball).y - f.ball_height)
+	return h
 
 
 ## True while a foot is lifted in a step.
@@ -151,6 +197,9 @@ func update(delta: float, ground_speed: float, busy: bool, hold_still := false) 
 	var yaw := xf.basis.get_euler().y
 	var turned := 0.0 if is_nan(_last_yaw) else absf(wrapf(yaw - _last_yaw, -PI, PI))
 	_last_yaw = yaw
+	var at := Vector2(xf.origin.x, xf.origin.z)
+	var carried := not is_nan(_last_at.x) and at.distance_to(_last_at) > CARRIED_FROM
+	_last_at = at
 	drop = 0.0
 	if absf(rise) > AIRBORNE_FROM or turned > SNAP_TURN:
 		release()
@@ -170,7 +219,7 @@ func update(delta: float, ground_speed: float, busy: bool, hold_still := false) 
 			if not _active and not _unsettled:
 				return
 			_plant(anim)
-		elif _lost(anim):
+		elif carried or _lost(anim):
 			_let_go()
 			_plant(anim)
 		_since += delta
@@ -188,14 +237,28 @@ func _let_go() -> void:
 
 
 ## Holds each foot where it is shown now: where the clips put it, or where this last showed it
-## when the feet were still being handed back.
+## when the feet were still being handed back. A foot just off the ground is set down on it, and
+## so is the lower of two feet caught in the air when it is no higher than SET_DOWN_FROM.
 func _plant(anim: Array[Transform3D]) -> void:
+	var xf := _sk.global_transform
+	var inv := xf.affine_inverse()
+	var body := xf.basis.get_rotation_quaternion().inverse()
+	var heights: Array[float] = []
 	for i in _feet.size():
 		var f := _feet[i]
 		var at: Transform3D = f.shown if _active else anim[i]
 		f.pos = at.origin
 		f.rot = at.basis.get_rotation_quaternion()
+		heights.append(_sole_height(f, inv * f.pos, body * f.rot))
 		f.t = -1.0
+	var lowest := 0
+	for i in _feet.size():
+		if heights[i] < heights[lowest]:
+			lowest = i
+	for i in _feet.size():
+		var h := heights[i]
+		if h > 0.0 and (h < DOWN_WITHIN or (i == lowest and h < SET_DOWN_FROM)):
+			_feet[i].pos -= xf.basis.y * h
 	_active = true
 	_weight = 1.0
 	_since = 0.0
@@ -218,39 +281,49 @@ func _lost(anim: Array[Transform3D]) -> bool:
 	return false
 
 
-## Moves the step in progress on, and when none is, starts the one most needed.
+## Moves the steps in progress on and starts the ones most needed. A foot caught in the air comes
+## down at once, whatever the other is doing, since it bears no weight: held there while the other
+## stepped, a stop from a sprint that ended with both feet off the ground hung one of them in the
+## air for a quarter of a second. A foot on the ground waits until the other is down.
 func _step(delta: float, anim: Array[Transform3D]) -> void:
-	var stepping := -1
+	var stepping := false
 	for i in _feet.size():
-		if _feet[i].t >= 0.0:
-			stepping = i
-	if stepping >= 0:
-		var f := _feet[stepping]
+		var f := _feet[i]
+		if f.t < 0.0:
+			continue
 		f.t = minf(f.t + delta / STEP_S, 1.0)
 		if f.t >= 1.0 - STEP_LIFTING and not f.aimed:
-			f.to = anim[stepping]
+			f.to = anim[i]
 			f.aimed = true
 		if f.t >= 1.0:
 			f.pos = f.to.origin
 			f.rot = f.to.basis.get_rotation_quaternion()
 			f.t = -1.0
 			steps += 1
-			stepping = -1
-	if stepping >= 0:
-		return
+		else:
+			stepping = true
 	var best := -1
 	var most := 0.0
 	for i in _feet.size():
+		if _feet[i].t >= 0.0:
+			continue
 		var need := _need(i, anim[i])
-		if need > most:
+		if need >= AIRBORNE_NEED:
+			_start_step(i)
+			stepping = true
+		elif need > most:
 			best = i
 			most = need
-	if best >= 0:
-		var f := _feet[best]
-		f.from_pos = f.pos
-		f.from_rot = f.rot
-		f.t = 0.0
-		f.aimed = false
+	if best >= 0 and not stepping:
+		_start_step(best)
+
+
+func _start_step(i: int) -> void:
+	var f := _feet[i]
+	f.from_pos = f.pos
+	f.from_rot = f.rot
+	f.t = 0.0
+	f.aimed = false
 
 
 ## How much foot `i` needs a step to where the clips put it (`at`): 0 when it does not, more the
@@ -260,9 +333,10 @@ func _need(i: int, at: Transform3D) -> float:
 	var off := at.origin - f.pos
 	var flat := Vector2(off.x, off.z).length()
 	var turn := f.rot.angle_to(at.basis.get_rotation_quaternion())
-	var height := (_sk.global_transform.affine_inverse() * f.pos).y - _stand_height
-	if height > IN_THE_AIR and off.length() > 0.01:
-		return 10.0 + flat
+	var xf := _sk.global_transform
+	var height := _sole_height(f, xf.affine_inverse() * f.pos, xf.basis.get_rotation_quaternion().inverse() * f.rot)
+	if height > DOWN_WITHIN and off.length() > 0.01:
+		return AIRBORNE_NEED + flat
 	var settling := _since < SETTLE_S
 	if flat > (STEP_FROM if settling else REPLANT_FROM) or turn > (TURN_FROM if settling else RETURN_FROM):
 		return flat + turn * 0.1

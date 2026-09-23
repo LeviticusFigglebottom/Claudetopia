@@ -1206,3 +1206,30 @@ With "A tap of Sprint rolls" off, a pad has no roll until Dodge is given a butto
 controls settings. test_pad_layout pins it: no pad input bound to two actions but A's pair,
 everything done in play on the pad, nothing on Guide, the retired defaults moved and a changed
 binding kept.
+
+## 2026-09-23 · A stop caught in a run's flight lands before the feet are planted
+**Decision.** Braking with both feet off the ground (a run's flight), the stride plays at its own
+pace rather than the body's, so the body comes down on a foot and brakes on it; a body that stands
+in the air finishes the flight, for a quarter of a second at the most, before its feet are
+planted. A flight begun slower than 1.5 m/s (the last push-off of a stop) is not played on, and
+the planter sets the lower foot down instead. A foot is on the ground when its heel or its ball is
+within 3 cm of it, as the forge turns the foot, not when its ankle is: a foot up on its ball
+stands. A foot caught in the air steps down at once, whatever the other is doing. The planter
+takes a standing body as carried off (a teleport) when it moves 25 cm along the ground in a frame;
+a held foot has to be 1.4 m from its place before it is given back to the clips.
+**Why.** Filmed, a stop from a sprint slowed the stride with the body and froze it in the flight:
+the body stood 0.2 s in the air with both feet up, and then the back foot, held 0.9 m from its
+place in the stance, tripped the planter's "carried off" test (0.7 m from its place) and snapped
+there in a frame, 60 cm. The stop test measured feet sliding on the ground, and neither foot was
+on it. It now measures both: over eight stops from each gait, the body stood with both feet off
+the ground for 0.22 s from a jog and 0.36 s from a sprint, and a foot moved 57 and 75 cm in a
+tick. Now 0.00 s over the eight (0.06 s at the most over thirty stops from each gait, a flight
+landing), and no foot moves faster than a step (7.0 cm in a 120th of a second).
+**Alternatives.** Stop clips, one for each foot and gait, timed to the distance left: still the
+proper thing. Letting both feet step down from the air together: the body hangs for a step's
+length.
+**Consequences.** The flight's pace is read off the last frame's pose, so it can run a frame
+into the landing, and that frame slides the foot: 2.0 cm in a stop from a sprint where it was
+1.3, the mean of eight. The feet end the braking further apart, and the hips come down as much as
+8.6 cm for them from a jog and 6.3 from a sprint (2.8 and 0.5 before) until the feet have stepped
+in. The trailing leg still hangs in the air behind while the body brakes.

@@ -23,6 +23,26 @@ static func soles(sk: Skeleton3D, xf: Transform3D) -> Dictionary:
 	return out
 
 
+## How many feet of `s` (a soles()) have a point down on ground at height `ground_y`.
+static func feet_down(sk: Skeleton3D, ground_y: float, s: Dictionary) -> int:
+	var ball_height := sk.get_bone_global_rest(sk.find_bone("Toe.L")).origin.y
+	var n := 0
+	for side in ["L", "R"]:
+		var heel: Vector3 = s[side + "_heel"]
+		var ball: Vector3 = s[side + "_ball"]
+		if heel.y < ground_y + DOWN_WITHIN or ball.y < ground_y + ball_height + DOWN_WITHIN:
+			n += 1
+	return n
+
+
+## The most (m) any point of the feet moved between `a` and `b` (two soles()), down or not.
+static func most_moved(a: Dictionary, b: Dictionary) -> float:
+	var most := 0.0
+	for key in a:
+		most = maxf(most, (a[key] as Vector3).distance_to(b[key] as Vector3))
+	return most
+
+
 ## How far (m, along the ground) the points that were down in both `a` and `b` (two soles())
 ## slid between them, on ground at height `ground_y`.
 static func slid(sk: Skeleton3D, ground_y: float, a: Dictionary, b: Dictionary) -> float:

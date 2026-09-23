@@ -281,13 +281,17 @@ func test_the_gaits_stand_up() -> void:
 ## after the body had stopped; then the gait was cross-faded into the idle under still feet (58.6
 ## cm of slide between the feet from a jog); then, slowing, the gait blended down through the
 ## walk, whose feet are down for a different share of the stride than a run's: 40 cm of slide on
-## the way down from a jog, the mean of eight stops, and 35 cm from a sprint.
+## the way down from a jog, the mean of eight stops, and 35 cm from a sprint. Then, filmed, a stop
+## from a sprint that ended in the stride's flight stood in the air, both feet off the ground (0.36
+## s at the most, 0.22 from a jog), until the back foot snapped to its place in a tick (75 cm; 57
+## from a jog): no foot was down to slide, so nothing above measured it. Now a flight the body
+## stands in lands within a few hundredths of a second, and no foot moves faster than a step.
 func test_a_stop_plants_the_feet_and_steps_them_together() -> void:
 	if not _rig_built():
 		return
 	var report: Array[String] = []
 	for from in [["walk", Player.WALK_SPEED], ["jog", Player.JOG_SPEED], ["sprint", Player.SPRINT_SPEED]]:
-		var worst := {"moving_skate": 0.0, "settle_skate": 0.0, "strides_after": 0.0, "steps": 0, "settled_s": 0.0, "drop": 0.0, "left": 0.0}
+		var worst := {"moving_skate": 0.0, "settle_skate": 0.0, "strides_after": 0.0, "steps": 0, "settled_s": 0.0, "drop": 0.0, "left": 0.0, "hung_s": 0.0, "jump": 0.0}
 		var mean := 0.0
 		for k in 8:
 			var got := _stop_from(float(from[1]), k * 9)
@@ -295,15 +299,18 @@ func test_a_stop_plants_the_feet_and_steps_them_together() -> void:
 			for key in worst:
 				worst[key] = maxf(float(worst[key]), float(got[key]))
 			after_each()
-		report.append("%s: skated %.1f cm moving (the mean of 8, %.1f at the most), stepped %.2f of a stride after standing, slid %.1f cm settling; %d steps, settled in %.2f s, hips down %.1f cm, feet left %.1f cm from the idle, at the most" % [
+		report.append("%s: skated %.1f cm moving (the mean of 8, %.1f at the most), stepped %.2f of a stride on the ground after standing, slid %.1f cm settling; %d steps, settled in %.2f s, hips down %.1f cm, feet left %.1f cm from the idle, both feet off the ground %.2f s standing, a foot moved %.1f cm in a tick standing, at the most" % [
 				from[0], mean * 100.0, float(worst["moving_skate"]) * 100.0, worst["strides_after"], float(worst["settle_skate"]) * 100.0,
-				int(worst["steps"]), worst["settled_s"], float(worst["drop"]) * 100.0, float(worst["left"]) * 100.0])
+				int(worst["steps"]), worst["settled_s"], float(worst["drop"]) * 100.0, float(worst["left"]) * 100.0,
+				worst["hung_s"], float(worst["jump"]) * 100.0])
 		assert_true(mean < 0.03, "stopping from a %s, a planted foot skated %.1f cm (the mean of eight stops) while the body was still moving" % [from[0], mean * 100.0])
 		assert_true(float(worst["strides_after"]) < 0.05, "stopping from a %s, the legs went on striding %.2f of a stride after the body stood" % [from[0], worst["strides_after"]])
 		assert_true(float(worst["settle_skate"]) < 0.01, "stopping from a %s, the feet slid %.1f cm along the ground settling into the idle" % [from[0], float(worst["settle_skate"]) * 100.0])
 		assert_true(int(worst["steps"]) <= 2, "stopping from a %s took %d steps to settle" % [from[0], int(worst["steps"])])
 		assert_true(float(worst["settled_s"]) < 0.8, "stopping from a %s, the feet were still stepping %.2f s after the body stood" % [from[0], worst["settled_s"]])
 		assert_true(float(worst["left"]) <= FootPlanter.STEP_FROM + 0.005, "stopping from a %s, a foot was left %.1f cm from its place in the idle" % [from[0], float(worst["left"]) * 100.0])
+		assert_true(float(worst["hung_s"]) < 0.08, "stopping from a %s, the body stood %.2f s with both feet off the ground" % [from[0], worst["hung_s"]])
+		assert_true(float(worst["jump"]) < 0.1, "stopping from a %s, a foot jumped %.1f cm in a tick while the body stood" % [from[0], float(worst["jump"]) * 100.0])
 	print("    a stop from a %s" % "\n    a stop from a ".join(report))
 
 
@@ -328,7 +335,7 @@ func _stop_from(speed: float, later := 0) -> Dictionary:
 		travelled = _step(m, Vector2(0.0, speed), false, travelled)
 	var planter := m.foot_planter()
 	var got := {"moving_skate": 0.0, "settle_skate": 0.0, "strides_after": 0.0, "steps": 0,
-			"settled_s": 0.0, "drop": 0.0, "left": 0.0}
+			"settled_s": 0.0, "drop": 0.0, "left": 0.0, "hung_s": 0.0, "jump": 0.0}
 	var phase_path := "parameters/%s/gait/%s/current_position" % [HumanoidModel.LOCOMOTION_STATE, str(m._gait_points[0][2])]
 	var last_phase := float(m.anim_tree.get(phase_path))
 	var last := _soles(m)
@@ -344,9 +351,14 @@ func _stop_from(speed: float, later := 0) -> Dictionary:
 		if speed <= 0.0:
 			if stood_at < 0:
 				stood_at = i
-			got["strides_after"] += fposmod(phase - last_phase, 1.0)
+			# the stride finishing a flight the body stood in moves no foot on the ground
+			if FootContact.feet_down(m.skeleton, _root.global_position.y, now) > 0:
+				got["strides_after"] += fposmod(phase - last_phase, 1.0)
 			if planter != null:
 				got["drop"] = maxf(float(got["drop"]), planter.drop)
+			if FootContact.feet_down(m.skeleton, _root.global_position.y, now) == 0:
+				got["hung_s"] = float(got["hung_s"]) + DT
+			got["jump"] = maxf(float(got["jump"]), FootContact.most_moved(last, now))
 			for key in now:
 				var a: Vector3 = last[key]
 				var b: Vector3 = now[key]

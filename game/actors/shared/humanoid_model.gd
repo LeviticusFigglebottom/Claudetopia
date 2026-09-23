@@ -125,7 +125,16 @@ const SNAP_TURN := 0.8
 ## run's feet and a walk's, which are down for different shares of a stride, took turns sliding:
 ## 40 cm along the ground in a stop from a jog (the mean of eight stops at eight points of the
 ## stride), 35 cm from a sprint. The hold lets go once the body gathers speed again.
+## Braking with both feet off the ground (a run's flight), the stride goes on at its own pace,
+## since no foot is on the ground to slide: the body comes down on a foot and brakes on it, and a
+## body that stands in the air finishes the flight (for FLIGHT_MOST_S at the most) before its feet
+## are planted. Slowed with the body, a stop from a sprint stood still in the air with both feet
+## up for as long as 0.36 s. A flight begun slower than FLIGHT_FROM m/s (the last push-off of a
+## stop, a centimetre from standing) is not played on, or the legs would run a stride in place
+## after the body stood; the planter sets the lower foot down instead.
 const BRAKING_FROM := -6.0
+const FLIGHT_MOST_S := 0.25
+const FLIGHT_FROM := 1.5
 const ACCEL_SMOOTH_S := 0.05
 
 @export var appearance_dict: Dictionary = {}:
@@ -175,6 +184,9 @@ var _gathered := 0.0                     ## rad turned since the body last stood
 var _speed_last := 0.0                   ## the ground speed last frame, for braking
 var _accel := 0.0                        ## m/s², eased (ACCEL_SMOOTH_S)
 var _held_gait := -1.0                   ## the gait position held while braking, or -1
+var _in_flight := false                  ## braking with both feet off the ground (see BRAKING_FROM)
+var _flight_s := 0.0                     ## seconds the body has stood in the air
+var _flight_pace := -1.0                 ## m/s the body went at when the flight began, or -1
 var _gait_shown := -1.0                  ## the gait position the graph is set to
 var _has_turns := false
 var _gait_points: Array = []             ## [[clip, ground speed m/s, point name], ...] ascending
@@ -1244,7 +1256,8 @@ static func way_blends(way: int) -> Dictionary:
 ## Stride cycles a second that keep a planted foot planted at `pace` m/s, for the blends `w`
 ## (way_blends, or eased between two of them) at gait position `gait_value` and crouch `sneak_w`.
 ## The legs go whichever way the hips are turned to, so the whole pace is along the stride.
-func _stride_rate(w: Dictionary, gait_value: float, sneak_w: float, pace: float, braking := false) -> float:
+func _stride_rate(w: Dictionary, gait_value: float, sneak_w: float, pace: float, braking := false,
+		flying := false) -> float:
 	var gait := _gait_blend(gait_value)
 	var fwd_stride := lerpf(float(gait[0]), _stride("Sneak_Walk"), sneak_w)
 	var fwd_rate := lerpf(float(gait[1]), 1.0 / float(_clip_cycle.get("Sneak_Walk", 1.0)), sneak_w)
@@ -1259,6 +1272,8 @@ func _stride_rate(w: Dictionary, gait_value: float, sneak_w: float, pace: float,
 	var natural := lerpf(along_rate, strafe_rate, side)
 	var rate := pace / maxf(stride, 0.01)
 	var floor_rate := 0.0 if braking else natural * RATE_MIN * smoothstep(MOVING_FROM, MOVING_FULL, pace)
+	if braking and flying:
+		floor_rate = natural
 	return clampf(rate, floor_rate, natural * RATE_MAX)
 
 
@@ -1310,7 +1325,10 @@ func _update_locomotion(delta: float) -> void:
 	p["lr/blend_amount"] = _way_w["lr"]
 	p["dir/blend_amount"] = _way_w["dir"]
 	_update_braking(delta, p)
-	p["cycle/scale"] = _stride_rate(_way_w, float(p["gait/blend_position"]), _sneak_w, _locomotion.length(), _held_gait >= 0.0)
+	var braking := _held_gait >= 0.0
+	_in_flight = _flies(delta, braking)
+	p["cycle/scale"] = _stride_rate(_way_w, float(p["gait/blend_position"]), _sneak_w, _locomotion.length(),
+			braking, _in_flight)
 	var moving := smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length())
 	if _plants_feet():
 		# The gait keeps its pose until the body stands and its feet are held; only then does the
@@ -1331,6 +1349,24 @@ func _update_locomotion(delta: float) -> void:
 		_update_turn(delta, p)
 	for key in p:
 		anim_tree.set("parameters/%s/%s" % [LOCOMOTION_STATE, key], p[key])
+
+
+## Braking with both feet off the ground, as the last frame left them (see BRAKING_FROM): the
+## stride goes on at the flight's own pace, standing or not, until a foot is down, or the body has
+## stood in the air for FLIGHT_MOST_S.
+func _flies(delta: float, braking: bool) -> bool:
+	if not braking or not _plants_feet() or _planter.is_planted() or not _one_shot.is_empty() \
+			or not _holding.is_empty() or _planter.feet_down() > 0:
+		_flight_s = 0.0
+		_flight_pace = -1.0
+		return false
+	if _flight_pace < 0.0:
+		_flight_pace = _locomotion.length()
+	if _flight_pace < FLIGHT_FROM:
+		return false
+	if _locomotion.length() < FootPlanter.STANDS_BELOW:
+		_flight_s += delta
+	return _flight_s < FLIGHT_MOST_S
 
 
 ## Braking, the gait position the body was at when it began to brake is held (see BRAKING_FROM),
@@ -1555,7 +1591,8 @@ func _plant_feet(delta: float) -> void:
 			# at once: the turn's feet are where the planter holds them, and eased from one to the
 			# other a held ankle and a foot pivoting on its ball pull the ball two ways
 			_planter.release()
-		var busy := not _one_shot.is_empty() or not _holding.is_empty() or (turning and _turn_w >= 0.999)
+		var busy := not _one_shot.is_empty() or not _holding.is_empty() or (turning and _turn_w >= 0.999) \
+				or _in_flight
 		_planter.update(delta, _locomotion.length(), busy, turning)
 	elif _planter != null and _planter.is_planted():
 		_planter.release()
