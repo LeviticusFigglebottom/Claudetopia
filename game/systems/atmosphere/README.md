@@ -107,7 +107,8 @@ the waves (`mirror_ripple`), and each region sets how rough its open water is: t
 Glass, calm enough to hold its island and its far shore upside down, where the first cut ran
 every lake and sea at one wave height that scrambled any reflection into streaks of sky and
 shore. Each region's `reflect`,
-`cap`, `glint` and `waves` are in `world/water_surface.gd`. `video/water_reflections` off puts
+`cap`, `glint`, `waves` and `foam` are in `world/water_surface.gd`; the marsh raises almost no
+foam, being shallower than the foam band everywhere, and the sea the most. `video/water_reflections` off puts
 the water on the same shader built without the lookup (`WaterSurface.shader_for`): a material
 that so much as names the screen texture has the frame copied for it, whatever its uniforms say.
 The water asks the engine for no specular (`SPECULAR` 0): at 0.12 the renderer laid the sky's own

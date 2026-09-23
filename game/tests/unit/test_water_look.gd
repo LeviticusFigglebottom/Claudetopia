@@ -23,7 +23,7 @@ func test_every_region_has_its_water() -> void:
 	for id in REGIONS:
 		assert_true(WaterSurface.REGION_WATER.has(id), "%s has a water look" % id)
 		var look: Dictionary = WaterSurface.REGION_WATER[id]
-		for key in ["deep", "shallow", "fade", "reflect", "cap", "glint", "waves"]:
+		for key in ["deep", "shallow", "fade", "reflect", "cap", "glint", "waves", "foam"]:
 			assert_true(look.has(key), "%s names its %s" % [id, key])
 		assert_true(float(look["cap"]) > 0.0 and float(look["cap"]) <= 1.0, "%s: a Fresnel cap is a share" % id)
 
@@ -38,6 +38,10 @@ func test_the_mere_is_calm_and_the_sea_is_not() -> void:
 	for id in REGIONS:
 		assert_true(float(WaterSurface.REGION_WATER[id]["waves"]) <= float(sea["waves"]),
 			"%s is no rougher than the open sea" % id)
+		assert_true(float(WaterSurface.REGION_WATER[id]["foam"]) <= float(sea["foam"]),
+			"%s raises no more foam than the sea's surf" % id)
+	assert_true(float(WaterSurface.REGION_WATER["core:region/sedgemire"]["foam"]) <= 0.1,
+		"the marsh's still pools raise no surf")
 
 
 ## The region's waves go on the lake and the sea; a river keeps its own, running with the current.
