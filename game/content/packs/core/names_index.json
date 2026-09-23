@@ -105,6 +105,10 @@
     {"name": "Barnaby Rooke", "language": "valish", "kind": "person", "rule": "5.1 people: a name used for anyone, family surname", "derivation": "Barnaby from the §5.1 lists; Sorrel's brother, the night burner", "used_by": "core:npc/barnaby_rooke"},
     {"name": "Ruska ko-Dreugh", "language": "skerrish", "kind": "person", "rule": "5.3 people: sk cluster, vowels u and a, stress on the first; ko- and the clan", "derivation": "R + u + sk + a; clan Dreugh, who sit by the door at the Moot because they always leave first (skerrow.json), keeping the gate at Windgate", "used_by": "core:npc/ruska_ko_dreugh"},
     {"name": "Gisel Morneth", "language": "valish+oroth", "kind": "person", "rule": "3.2 Lakefolk: Valish first name, Oroth loanword surname", "derivation": "gis- + feminine -el; surname morn 'stone' + -eth, a Tollmere family's Oroth name, as Sulion and Ondrael are", "used_by": "core:npc/gisel_morneth"},
+    {"name": "Harl Mullen", "language": "valish", "kind": "person", "rule": "5.1 people: one-syllable Vale masculine; surname from the place", "derivation": "Harl; Mullen from mull 'soft soil', the miller of Mullbourne on the leaf of the Roll in Hollin's bell (core:book/wardens_roll_fragment)"},
+    {"name": "Tessa Mullen", "language": "valish", "kind": "person", "rule": "5.1 people: feminine -a", "derivation": "the miller's wife on the same leaf"},
+    {"name": "Aldo Penfold", "language": "valish", "kind": "person", "rule": "5.1 people: two syllables; place-compound surname", "derivation": "penny 'small' + -fold 'pen': the carter of the ford road on the same leaf"},
+    {"name": "Fenn", "language": "valish", "kind": "person", "rule": "5.1 roots: fenn", "derivation": "the widow on the same leaf, whose first name the Rest has lost"},
     {"name": "Wennick Anthar", "language": "valish+oroth", "kind": "person", "rule": "3.2 Lakefolk: Valish first name, Oroth loanword surname", "derivation": "wen- + masculine -ick; surname anthe 'choir' + -ar, taken off a lintel in the Undercroft by his great-grandmother (his own account)", "used_by": "core:npc/wennick_anthar"}
   ]
 }

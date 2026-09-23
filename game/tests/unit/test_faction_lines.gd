@@ -224,6 +224,17 @@ func test_the_other_two_endings_of_the_harewell_line() -> void:
 		assert_true(log_node.is_completed(LANE), "%s: and every ending finishes it" % outcome)
 
 
+## The leaf of the Roll out of the Reeve's bell goes back to the Rest, and the Rest is glad of it.
+func test_the_leaf_of_the_roll_goes_back_to_the_rest() -> void:
+	inventory.add("core:item/wardens_roll_fragment", 1)
+	var before: int = Social.factions.reputation(WARDENS)
+	var runner := talk_to("core:npc/wardens_hesk")
+	press(runner, "There was a leaf of the Roll")
+	assert_eq(inventory.count("core:item/wardens_roll_fragment"), 0, "Hesk keeps the leaf")
+	assert_true(GameState.has_flag("gave_mullbourne_leaf"))
+	assert_eq(Social.factions.reputation(WARDENS), before + 8, "the Wardens know who brought it")
+
+
 func test_the_deep_lines_ends_the_barrow_reeves_reading() -> void:
 	finish_the_roll_of_names()
 	rep(WARDENS, 50)
