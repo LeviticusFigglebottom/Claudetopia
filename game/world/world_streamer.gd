@@ -268,6 +268,49 @@ func is_loaded_around(pos: Vector3, ring: int = -1) -> bool:
 	return true
 
 
+## The cells of the full-detail ring around `pos` that are in the world.
+func cells_around(pos: Vector3, ring: int = -1) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	var r := full_ring if ring < 0 else ring
+	var cell := cell_of(pos)
+	for dz in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			var c := Vector2i(cell.x + dx, cell.y + dz)
+			if _in_world(c):
+				out.append(c)
+	return out
+
+
+## Those of them not standing yet: what `is_loaded_around` is waiting for.
+func missing_around(pos: Vector3, ring: int = -1) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for c in cells_around(pos, ring):
+		if not _loaded.has(c):
+			out.append(c)
+	return out
+
+
+## Where one cell has got to, in words, for a log that has to say why something is waiting.
+func cell_state(c: Vector2i) -> String:
+	if _loaded.has(c):
+		return "standing"
+	_mutex.lock()
+	var parsed := _parsed.has(c)
+	_mutex.unlock()
+	if parsed:
+		return "read, waiting to be built" if _pending.has(c) else "read, and no longer wanted"
+	if _pending.has(c):
+		return "being read"
+	return "not asked for"
+
+
+func queue() -> Dictionary:
+	_mutex.lock()
+	var parsed := _parsed.size()
+	_mutex.unlock()
+	return {"loaded": _loaded.size(), "pending": _pending.size(), "parsed": parsed}
+
+
 func set_also_around(points: Array) -> void:
 	also_around.clear()
 	for p in points:
