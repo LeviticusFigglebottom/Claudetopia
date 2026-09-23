@@ -93,6 +93,8 @@ var _base_fov: float = 75.0
 var _pivot := Vector3.ZERO
 var _placed := false
 var _last_target := Vector3.ZERO
+## The frame of the last snap (Engine.get_process_frames()); see _target_origin.
+var _snap_frame := -1
 var _ball := SphereShape3D.new()
 var _exclude: Array[RID] = []
 
@@ -212,13 +214,25 @@ func heading_degrees() -> float:
 ## the first frame.
 func snap_to_target() -> void:
 	_placed = false
+	_snap_frame = Engine.get_process_frames()
 	_follow(0.0)
+
+
+## Where the body is drawn. On the frame of a snap it is where the body was put: a teleport made
+## outside a physics tick (a timer, a load, the console) leaves the interpolated transform at the
+## old place until the next frame's interpolation update, and the rig read it, snapped to the old
+## place, and drew one frame 800 m from the body -- which is also the camera Terrain3D builds its
+## ground round.
+func _target_origin() -> Vector3:
+	if Engine.get_process_frames() == _snap_frame:
+		return target.global_position
+	return target.get_global_transform_interpolated().origin
 
 
 func _follow(delta: float) -> void:
 	if target == null or not is_instance_valid(target) or not target.is_inside_tree():
 		return
-	var at := target.get_global_transform_interpolated().origin
+	var at := _target_origin()
 	var want := Vector3(at.x, at.y + _height, at.z)
 	if not _placed or first_person or at.distance_to(_last_target) > SNAP_DISTANCE:
 		_pivot = want
