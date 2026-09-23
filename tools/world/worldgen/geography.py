@@ -593,13 +593,9 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
         return H
     g = grid
     sp = g.spacing
-    mainland = polygon_mask(g, coast["polygon"])
-    for isl in coast.get("islands", []):
-        mainland |= polygon_mask(g, isl)
-    masks = [polygon_mask(g, s["polygon"]) for s in shelves]
     reach = SHELF_EDGE_M + SHELF_NOTCH_OUT_M + SHELF_BLOCK_OUT_M[1] + SHELF_BLOCK_R_M[1] + 4.0 * sp
     for k, shelf in enumerate(shelves):
-        m = masks[k]
+        m = polygon_mask(g, shelf["polygon"])
         if not m.any():
             continue
         top = float(shelf["height_m"])
@@ -609,14 +605,18 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
         j0, j1 = max(int(jj.min()) - pad, 0), min(int(jj.max()) + pad + 1, g.n)
         sub = H[i0:i1, j0:j1].astype(np.float32)
         sub_m = m[i0:i1, j0:j1]
-        behind = mainland[i0:i1, j0:j1].copy()
-        for kk, mm in enumerate(masks):
-            if kk != k:
-                behind |= mm[i0:i1, j0:j1]
         sd = np.where(sub_m, -(ndimage.distance_transform_edt(sub_m) - 0.5),
                       ndimage.distance_transform_edt(~sub_m) - 0.5).astype(np.float32) * sp
-        seaward = smoothstep(SHELF_EDGE_TAPER_M[0], SHELF_EDGE_TAPER_M[1],
-                             ndimage.distance_transform_edt(~behind).astype(np.float32) * sp)
+        # The land the shelf lies under -- its bank, the cliff behind it -- is the ground standing
+        # over the shelf's top. The breaking fades out toward it, so the edge runs back into the
+        # land as drawn. (Not the coast polygon: the Hushline's lobe of it covers the whole shelf,
+        # and measured from that, the seaward edge had nowhere to wander.)
+        behind = sub > top + 2.0
+        if behind.any():
+            seaward = smoothstep(SHELF_EDGE_TAPER_M[0], SHELF_EDGE_TAPER_M[1],
+                                 ndimage.distance_transform_edt(~behind).astype(np.float32) * sp)
+        else:
+            seaward = np.ones_like(sub)
         X = (g.x0 + np.arange(j0, j1, dtype=np.float32) * sp)[None, :]
         Z = (g.z0 + np.arange(i0, i1, dtype=np.float32) * sp)[:, None]
         whole = np.zeros(sub.shape, dtype=bool)      # every pad and SHELF_PAD_CLEAR_M round it
