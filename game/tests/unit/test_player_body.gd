@@ -223,7 +223,8 @@ func test_every_worn_part_exists() -> void:
 ## hair chooser changed nothing that could be seen.
 func test_the_player_is_dressed_hood_down_in_the_whole_outfit() -> void:
 	var covers: Array = HumanoidModel.COVERS_HEAD.get("back", [])
-	var signature := {"clans": "plaid", "lakefolk": "shoulder_cape", "woodfolk": "torn_cloak"}
+	var torn := "torn_cloak" if ResourceLoader.exists("res://assets/models/characters/clothing/torn_cloak/torn_cloak.glb") else "cloak"
+	var signature := {"clans": "plaid", "lakefolk": "shoulder_cape", "woodfolk": torn}
 	for calling in ContentDB.all("calling"):
 		var culture := CharacterAppearance.culture_of_calling(str(calling["id"]))
 		for s in 6:

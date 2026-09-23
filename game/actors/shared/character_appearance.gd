@@ -229,7 +229,11 @@ func dress_for_culture(in_culture: String, rng_seed: int, for_player: bool = fal
 	rng.seed = rng_seed
 	var outfit := _culture_outfit(rng, culture, feminine > 0.5, for_player)
 	if for_player:
-		outfit["back"] = HOOD_DOWN.get(str(outfit.get("back", "")), outfit.get("back", ""))
+		var down: String = str(HOOD_DOWN.get(str(outfit.get("back", "")), outfit.get("back", "")))
+		# a part the forge has not built yet is worn as the plain cloak rather than as nothing
+		if not down.is_empty() and not ResourceLoader.exists("res://assets/models/characters/clothing/%s/%s.glb" % [down, down]):
+			down = "cloak"
+		outfit["back"] = down
 	for slot in ["torso", "legs", "feet", "belt", "back", "hands"]:
 		set_part(slot, str(outfit.get(slot, "")))
 	palette = culture_palette(culture)
