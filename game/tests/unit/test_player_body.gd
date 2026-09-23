@@ -176,3 +176,42 @@ func test_a_missing_slot_is_reported_not_crashed() -> void:
 	assert_eq(PlayerSpawn.load_pending_slot(), "")
 	assert_false(GameState.has_flag("_pending_load_slot"))
 	assert_eq(Log.error_count, errors + 1, "a slot that is not there is an error, said once")
+
+
+## Armour on the doll is armour on the body. Equipping a brigandine used to change the armour
+## number and nothing a player could see: no armour item in the pack named a part to wear.
+func test_armour_on_the_doll_is_worn_on_the_body() -> void:
+	_name_them()
+	_stand_up()
+	var model := _model()
+	if model == null or model.skeleton == null:
+		return
+	var bag: Inventory = player.get_node("Inventory")
+	var eq: Node = player.get_node("Equipment")
+	var before := model.appearance.part("torso")
+	bag.add("core:item/brigandine", 1)
+	bag.add("core:item/kettle_helm", 1)
+	assert_true(bool(eq.call("equip", "core:item/brigandine")), "the brigandine would not go on")
+	assert_true(bool(eq.call("equip", "core:item/kettle_helm")), "the kettle helm would not go on")
+	assert_eq(model.appearance.part("torso"), "brigandine", "the brigandine is on the doll and not on the body")
+	assert_eq(model.appearance.part("headgear"), "helm", "the helm is on the doll and not on the body")
+	assert_eq(model.hair_worn, HumanoidModel.UNDER_A_HOOD, "the braid is standing through the helm")
+	assert_true(model._part_meshes.has("torso") and model._part_meshes.has("headgear"))
+	assert_eq(player.appearance.part("torso"), before, "equipping armour must not rewrite the Naming's look")
+	eq.call("unequip", "body")
+	eq.call("unequip", "head")
+	assert_eq(model.appearance.part("torso"), before, "taking the brigandine off left it on the body")
+	assert_eq(model.appearance.part("headgear"), "", "taking the helm off left it on the head")
+	assert_eq(model.hair_worn, "braid", "the braid did not come back when the helm came off")
+
+
+## Every armour item that names a part names one the forge has built.
+func test_every_worn_part_exists() -> void:
+	for def in ContentDB.all("item"):
+		var wear: Variant = def.get("wear", {})
+		if typeof(wear) != TYPE_DICTIONARY:
+			continue
+		for slot in wear:
+			assert_true(slot in CharacterAppearance.SLOTS, "%s wears into '%s', which is not a part slot" % [def["id"], slot])
+			var path := "res://assets/models/characters/clothing/%s/%s.glb" % [wear[slot], wear[slot]]
+			assert_true(ResourceLoader.exists(path), "%s wears %s and the forge has not built it" % [def["id"], wear[slot]])
