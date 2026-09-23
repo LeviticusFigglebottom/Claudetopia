@@ -840,6 +840,11 @@ func _on_clip_event(event_name: String) -> void:
 		"hit_start":
 			if _attacking:
 				_attack_phase = "active"
+				# What the blow itself sounds like, over its whoosh: a bell struck or rung, when the
+				# attack says so (the Bell-bearer's "ringing stuns in a radius").
+				var own := str(_current_attack.get("sound", ""))
+				if not own.is_empty():
+					Foley.play(own, attack_origin.global_position)
 				if EnemyAbilities.is_burst(_current_attack):
 					_burst(_current_attack)
 				elif EnemyAbilities.is_projectile(_current_attack):
@@ -1477,6 +1482,9 @@ func _enter_phase(index: int) -> void:
 		EventBus.boss_phase_changed.emit(enemy_id, index)
 	if phase.has("say"):
 		EventBus.notify.emit(str(phase["say"]), "boss")
+	# A phase that begins with a sound (the Barrow Reeve ringing his hammer on the floor) makes it.
+	if phase.has("sound") and index > 0 and is_inside_tree():
+		Foley.play(str(phase["sound"]), global_position + Vector3.UP * 1.5)
 
 
 ## Turns this one into something the player called: it fights for them, hostiles hunt it, and

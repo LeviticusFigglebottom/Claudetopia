@@ -89,6 +89,29 @@ func get_height(x: float, z: float) -> float:
 	return sample_height(x, z)
 
 
+## The name of the texture painted most strongly at a world position (`snow`, `cobbles`,
+## `sand_flats` ...), or "" with no Terrain3D to ask or outside its regions. Terrain3D keeps a
+## base and an overlay texture per control texel with a blend between them; whichever of the two
+## the blend favours is what is underfoot. The id is named from the build's own slot list
+## (`texture_slots` in the manifest, the order the builder painted in): the Terrain3D texture
+## list is emptied once its arrays are on the card (World._build_texture_arrays), so it cannot be
+## asked by then.
+func texture_at(x: float, z: float) -> String:
+	if _data == null:
+		return ""
+	var info: Variant = _data.call("get_texture_id", Vector3(x, 0.0, z))
+	if not (info is Vector3):
+		return ""
+	var v := info as Vector3
+	if is_nan(v.x) or is_nan(v.y) or is_nan(v.z):
+		return ""
+	var id := int(v.y) if v.z >= 0.5 else int(v.x)
+	var slots: Array = manifest.get("texture_slots", [])
+	if id < 0 or id >= slots.size():
+		return ""
+	return str(slots[id])
+
+
 ## Bilinear height from the runtime copy (works without Terrain3D).
 func sample_height(x: float, z: float) -> float:
 	if _heights.is_empty():

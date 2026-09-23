@@ -476,6 +476,44 @@ func test_what_the_world_does_is_heard() -> void:
 	assert_eq(",".join(_heard), "armour_light,armour_heavy", "armour is heard going on, a sword is not")
 
 
+## The bells that were in the table with nothing to ring them: a tavern door's bell rings for
+## whoever comes in; the Bell-bearer's toll (WORLD_BIBLE: "ringing stuns in a radius") and the
+## Barrow Reeve's hammer on the floor at his second phase are the great bell; a bell-headed
+## weapon (the Tolling knight's mace, the Reeve's hammer, the Cantor's blade) rings as it goes live.
+func test_the_bells_ring_where_the_world_rings_them() -> void:
+	_heard.clear()
+	EventBus.interior_entered.emit("core:interior/tolls_lip")
+	assert_has(_heard, "bell_tavern", "the Toll's Lip is an inn, and its door has a bell")
+	_heard.clear()
+	EventBus.interior_entered.emit("core:interior/maud_bakehouse")
+	assert_false(_heard.has("bell_tavern"), "a bakehouse door does not: %s" % str(_heard))
+	var rung := {}
+	for pair in [["core:enemy/bell_bearer", "the_toll", "bell_toll"], ["core:enemy/tolling_knight", "bell_mace", "bell_hand"],
+			[BANDIT, "", ""]]:
+		var e := _enemy(str(pair[0]), Vector3(0.0, 0.0, -6.0), false)
+		var attack: Dictionary = e.attacks[0]
+		for a in e.attacks:
+			if str(a.get("name", "")) == str(pair[1]):
+				attack = a
+		_heard.clear()
+		e._current_attack = attack
+		e._attacking = true
+		e._on_clip_event("hit_start")
+		rung[pair[0]] = _heard.duplicate()
+		if str(pair[2]).is_empty():
+			assert_false(_heard.has("bell_toll") or _heard.has("bell_hand"), "a bandit's blade rings no bell: %s" % str(_heard))
+		else:
+			assert_has(_heard, str(pair[2]), "%s's %s rings" % [pair[0], pair[1]])
+		e._close_hitbox()
+		e.queue_free()
+	var reeve := _enemy(REEVE, Vector3(0.0, 0.0, -8.0), false)
+	_heard.clear()
+	reeve._enter_phase(1)
+	assert_has(_heard, "bell_toll", "the Reeve rings his hammer on the floor as the second phase opens")
+	reeve.queue_free()
+	print("MEASURE | the bells | %s" % str(rung))
+
+
 func test_a_pick_clicks_and_snaps() -> void:
 	var door := StaticBody3D.new()
 	var lock := DoorLock.new()
@@ -553,6 +591,16 @@ static func _ids_the_game_asks_for() -> Dictionary:
 		for def in ContentDB.all(type):
 			for a in def.get("attacks", []):
 				classes[str(a.get("weapon_class", "claw"))] = true
+			# A blow that sounds as well as whooshes (a bell struck), and a phase that begins with
+			# a sound (the Reeve's hammer on the floor): Enemy plays the id the data names.
+			var attacks: Array = (def.get("attacks", []) as Array).duplicate()
+			for phase in def.get("phases", []):
+				attacks.append_array(phase.get("attacks", []))
+				if (phase as Dictionary).has("sound"):
+					ids[str(phase["sound"])] = "phase:" + str(def["id"])
+			for a in attacks:
+				if (a as Dictionary).has("sound"):
+					ids[str(a["sound"])] = "attack:" + str(def["id"])
 	for c in classes:
 		for heavy in [false, true]:
 			var s := Foley.swing_for(str(c), heavy)
@@ -565,6 +613,9 @@ static func _ids_the_game_asks_for() -> Dictionary:
 		ids["footstep_" + str(def.get("identity", {}).get("ground", Foley.DEFAULT_SURFACE))] = "region ground"
 	for s in ["stone", "wood", "water", Foley.DEFAULT_SURFACE]:
 		ids["footstep_" + s] = "surface"
+	# The terrain's paint underfoot (snow above the snow line, sand on the tide-flats ...).
+	for texture in Foley.TEXTURE_SURFACE:
+		ids["footstep_" + str(Foley.TEXTURE_SURFACE[texture])] = "terrain paint " + str(texture)
 	return ids
 
 
@@ -580,9 +631,10 @@ func test_every_sound_the_game_asks_for_is_in_the_table_and_loads() -> void:
 	for id: String in Foley.ids():
 		if not ids.has(id):
 			unused.append(id)
-	# Rows nothing in the game plays are not an error -- they may be waiting on a system that does
-	# not exist yet -- but they are printed, so the list is seen.
+	# A row nothing in the game can play is a sound nobody will hear: it is either wired to the
+	# event it is for or it is dropped (the last eleven were: DECISIONS 2026-09-23).
 	print("MEASURE | sfx ids nothing in the game plays | %d | %s" % [unused.size(), ", ".join(unused)])
+	assert_empty(unused, "sfx rows nothing in the game plays")
 
 
 func test_every_music_file_the_content_names_loads() -> void:
