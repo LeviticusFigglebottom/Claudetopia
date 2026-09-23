@@ -50,6 +50,35 @@ func set_capsule(radius: float, length: float) -> void:
 	shape_node.position = Vector3(0.0, 0.0, -length * 0.5)
 
 
+## A swing's volume: a box `2 * half_width` wide lying along local −Z from 0 to −length, reaching
+## `below` metres under this node and `above` metres over it. A blade drawn at chest height sweeps
+## from the knee to the crown, and the capsule at the attack origin's height (1.1 m, radius 0.4)
+## missed anything whose back was lower than 0.7 m: no sword in the game could touch a gutter drake,
+## and a wolf only when it stood dead ahead (found by `./run.sh fights`).
+func set_swing(half_width: float, length: float, below: float, above: float) -> void:
+	if shape_node == null:
+		shape_node = CollisionShape3D.new()
+		shape_node.name = "Shape"
+		add_child(shape_node)
+	var box := BoxShape3D.new()
+	var tall := maxf(below + above, 0.1)
+	box.size = Vector3(maxf(half_width, 0.05) * 2.0, tall, maxf(length, 0.1))
+	shape_node.shape = box
+	shape_node.rotation = Vector3.ZERO
+	shape_node.position = Vector3(0.0, (above - below) * 0.5, -maxf(length, 0.1) * 0.5)
+
+
+## The lowest and highest point the volume reaches, relative to this node (tests read these).
+func vertical_span() -> Vector2:
+	if shape_node == null or shape_node.shape == null:
+		return Vector2.ZERO
+	if shape_node.shape is BoxShape3D:
+		var h := (shape_node.shape as BoxShape3D).size.y * 0.5
+		return Vector2(shape_node.position.y - h, shape_node.position.y + h)
+	var r := (shape_node.shape as CapsuleShape3D).radius if shape_node.shape is CapsuleShape3D else 0.0
+	return Vector2(shape_node.position.y - r, shape_node.position.y + r)
+
+
 func begin_swing(new_hit: HitData) -> void:
 	swing_id += 1
 	hit = new_hit

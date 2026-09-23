@@ -149,27 +149,32 @@ func test_each_level_grants_one_attribute_point_and_one_perk_point() -> void:
 	assert_eq(l.perk_points, 4)
 
 
-func test_attributes_start_at_five_and_spend_points() -> void:
+## Ten, where the body has always stood: a character is born with the 100 health, 180 stamina
+## and 120 mana the game has always given a new one.
+func test_attributes_start_at_ten_and_spend_points() -> void:
 	var l := Leveling.new()
+	assert_eq(Leveling.BASE_ATTRIBUTE, 10)
 	assert_eq(l.attribute("vigour"), Leveling.BASE_ATTRIBUTE)
 	assert_false(l.spend_attribute("vigour"), "no points yet")
 	l.update_from_gains(15)
 	assert_false(l.spend_attribute("luck"), "there is no such attribute")
 	assert_true(l.spend_attribute("vigour"))
-	assert_eq(l.attribute("vigour"), 6)
+	assert_eq(l.attribute("vigour"), Leveling.BASE_ATTRIBUTE + 1)
 	assert_eq(l.attribute_points, 0)
 
 
+## One set of formulas, DamageModel's, which is what the body has always been built from.
 func test_derived_pools_follow_the_design_formulas() -> void:
-	assert_near(Leveling.max_health_for(5), 150.0)
+	assert_near(Leveling.max_health_for(10), DamageModel.hp_max(10), 0.001, "one health formula, not two")
+	assert_near(Leveling.max_health_for(10), 100.0)
 	assert_near(Leveling.max_stamina_for(5), 140.0, 0.001, "100 + 8*Endurance")
 	assert_near(Leveling.max_mana_for(5), 90.0, 0.001, "60 + 6*Will")
 	assert_near(Leveling.load_capacity_for(5), 80.0, 0.001)
 	var l := Leveling.new()
 	l.update_from_gains(120)
 	l.spend_attribute("endurance")
-	assert_near(l.max_stamina(), 148.0, 0.001)
-	assert_near(l.load_capacity(), 84.0, 0.001)
+	assert_near(l.max_stamina(), 188.0, 0.001, "100 + 8*11")
+	assert_near(l.load_capacity(), 104.0, 0.001, "60 + 4*11")
 
 
 func test_skills_save_round_trip() -> void:
@@ -196,6 +201,6 @@ func test_leveling_save_round_trip() -> void:
 	var l2 := Leveling.new()
 	l2.from_save(JSON.parse_string(text))
 	assert_eq(l2.level, 5)
-	assert_eq(l2.attribute("will"), 6)
+	assert_eq(l2.attribute("will"), Leveling.BASE_ATTRIBUTE + 1)
 	assert_eq(l2.attribute_points, 3)
 	assert_eq(l2.perk_points, 3)

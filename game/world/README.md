@@ -5,14 +5,43 @@ keeps the water surfaces, and streams 256 m cells around whoever is moving.
 
 ```
 world.tscn / world.gd     World (Node3D, `World.instance`): builds and owns everything below
+world_status.gd           WorldStatus: is there a world on disk, and what can draw its ground
 terrain_provider.gd       TerrainProvider: heights, normals, regions, water (see below)
+fallback_terrain.gd       FallbackTerrain: the ground from the runtime map when Terrain3D cannot
+fallback_terrain.gdshader   draw it (see below)
 world_streamer.gd         WorldStreamer: cell rings, MultiMesh scatter, POI scenes
 water_surface.gd          WaterSurface: the Mere, the Grey Sea, marsh pools, river ribbons
 fly_camera.gd             FlyCamera: stand-in for the player; the capture and smoke runners' eye
 pois/                     WorldPois: what stands at the points of interest (see below)
-generated/                world builder output (gitignored; `./run.sh world` writes it)
+generated/                world builder output; the part the game reads is tracked (.gitignore)
 terrain_assets.tres       Terrain3DAssets: the 21 terrain slots of docs/CONTRACTS.md §5
 ```
+
+## When there is no world, or nothing to draw its ground
+
+`WorldStatus.current()` reads what is on disk and what the engine loaded and says one of three
+things, and the title screen, boot's `--new-game`/`--load`, the Naming, the capture runner and the
+world itself all ask it before going in:
+
+* **missing** — no manifest, no runtime maps or no cells. Nothing enters the world: the title
+  screen shuts New Game, Continue and Load and says what is missing, with `./run.sh world` and
+  what that needs; a world scene entered anyway (the editor's Play Scene) stands down with the
+  same notice and a way back to the title.
+* **fallback** — the country is there but Terrain3D cannot draw it: no library for this machine
+  (see LICENSES.md), no regions in `game/terrain_data`, regions that load as nothing, or
+  `-- --fallback-terrain`. `FallbackTerrain` draws the ground, the title says so in one line and a
+  notice says it again when the player can see.
+* **ready** — Terrain3D and its regions.
+
+`FallbackTerrain` is 256 chunks of 512 m sharing one flat 64 x 64 grid with a skirt, lifted in the
+vertex shader from the 8 m runtime height map, with four index LODs Godot's mesh LOD picks from.
+The surface is the region's own terrain textures (albedo and normal arrays at 512 px), tinted by
+its palette the way the builder's colour map is, with slope, height bands, water, snow and the
+roads (stamped at 2 m from `roads.json`). Collision is a HeightMapShape3D per chunk on the world
+and terrain layers. The mesh, the collision and `TerrainProvider.get_height` split every quad the
+same way, so a body stands on what is drawn; scatter placed on the 2 m ground is set down on the
+8 m one as each cell arrives. It is coarser than Terrain3D and honest about it: softer hills,
+terraces and cliffs rounded off, no field patchwork.
 
 ## Where the data comes from
 
@@ -23,7 +52,13 @@ terrain_assets.tres       Terrain3DAssets: the 21 terrain slots of docs/CONTRACT
    files under `game/terrain_data/` (16 regions of 1024 texels at 2 m = 2048 m each) and
    writes `terrain_assets.tres`.
 3. `world.tscn` loads both at runtime. `./run.sh world` does steps 1 and 2; `./run.sh`
-   does them for you when the manifest is missing.
+   does them for you when the manifest or the regions are missing. What the game reads of step 1
+   and all of step 2 are tracked, so a clone does not need to (README.md, "Run it").
+
+The runtime height map is a block mean of 4 x 4 full texels, so its texel (i, j) is centred at
+`origin + 8 (i, j) + 3 m`, not on the origin; the region, water and level maps are point samples
+and sit on it. `TerrainProvider` reads the offset from the manifest's two grids (or from
+`runtime.height_offset_m` if the builder ever writes it).
 
 ## TerrainProvider
 

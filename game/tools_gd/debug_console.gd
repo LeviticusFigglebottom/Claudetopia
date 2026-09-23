@@ -15,6 +15,7 @@ var _lines: Array[String] = []
 func _ready() -> void:
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # a screen, not a body
 	_build_ui()
 	_register_builtins()
 	for a in OS.get_cmdline_user_args():
@@ -104,6 +105,15 @@ func _player() -> Node3D:
 	return get_tree().get_first_node_in_group("player") as Node3D
 
 
+## A teleport through the body's own `teleport` (CONTRACTS §8), which also brings the camera and
+## drops the old position's interpolation, rather than a bare write of the position.
+func _put(p: Node3D, pos: Vector3) -> void:
+	if p.has_method("teleport"):
+		p.call("teleport", pos, p.rotation.y)
+	else:
+		p.global_position = pos
+
+
 func _register_builtins() -> void:
 	register("help", func(_a: Array) -> String:
 		var names := _commands.keys()
@@ -132,6 +142,16 @@ func _register_builtins() -> void:
 			var id: String = a[0] if a[0].contains(":") else "core:weather/%s" % a[0]
 			atm.force_weather(id, a.size() > 1 and a[1] == "instant")
 		return str(atm.current_weather_id()), "weather [id] [instant]")
+	register("look", func(_a: Array) -> String:
+		var atm := get_tree().get_first_node_in_group("atmosphere")
+		if atm == null or not ("state" in atm):
+			return "no atmosphere"
+		var st: Dictionary = atm.get("state")
+		var lk: Dictionary = atm.call("look")
+		var msg := "%s: sun %.1f deg, night %.2f, dusk %.2f, haze top %.0f m, weather %s" % [
+			str(lk.get("name", "?")), float(st.get("elevation", 0.0)), float(st.get("night", 0.0)),
+			float(st.get("dusk", 0.0)), float(st.get("haze_top", 0.0)), str(atm.call("current_weather_id"))]
+		return msg, "look (the region's light, the sun's height, night and dusk, the haze top)")
 	register("region", func(a: Array) -> String:
 		if a.size() > 0:
 			var id: String = a[0] if a[0].contains(":") else "core:region/%s" % a[0]
@@ -151,10 +171,10 @@ func _register_builtins() -> void:
 			var world := get_tree().get_first_node_in_group("world")
 			if world and world.has_method("get_height"):
 				y = float(world.get_height(float(pos[0]), float(pos[1]))) + 1.0
-			p.global_position = Vector3(float(pos[0]), y, float(pos[1]))
+			_put(p, Vector3(float(pos[0]), y, float(pos[1])))
 			return "teleported to %s" % id
 		if a.size() >= 3:
-			p.global_position = Vector3(float(a[0]), float(a[1]), float(a[2]))
+			_put(p, Vector3(float(a[0]), float(a[1]), float(a[2])))
 			return "teleported"
 		return str(p.global_position), "tp <place_id> | tp <x> <y> <z>")
 	register("pos", func(_a: Array) -> String:

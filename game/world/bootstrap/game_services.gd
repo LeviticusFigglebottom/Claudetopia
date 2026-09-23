@@ -39,10 +39,13 @@ const ORDER := [
 const OPENING := "core:opening/new_game"
 
 var services: Dictionary = {}
+## Off only for a bench that wants one service and not the whole country standing up around it.
+var installs_on_ready := true
 
 
 func _ready() -> void:
-	install()
+	if installs_on_ready:
+		install()
 
 
 func install() -> void:
@@ -70,7 +73,12 @@ func install() -> void:
 
 ## Loot is a listener rather than a queried service, so it has no ensure() of its own.
 func _install_loot_drops() -> void:
-	if get_tree().get_nodes_in_group("loot_drops").size() > 0:
+	var present := get_tree().get_nodes_in_group("loot_drops")
+	if present.size() > 0:
+		for drops in present:
+			var provider: Variant = drops.get("context_provider")
+			if provider is Callable and not (provider as Callable).is_valid():
+				drops.set("context_provider", loot_context)
 		return
 	var path := "res://systems/inventory/loot_drops.gd"
 	if not ResourceLoader.exists(path):
@@ -78,8 +86,36 @@ func _install_loot_drops() -> void:
 	var drops: Node = (load(path) as GDScript).new()
 	drops.name = "LootDrops"
 	drops.add_to_group("loot_drops")
+	drops.set("context_provider", loot_context)
 	add_child(drops)
 	services["LootDrops"] = drops
+
+
+## What a kill's loot is rolled against (LootTable's context): where it happened, the character's
+## level and luck, the flags, and how far each quest has come. LootDrops has always asked for this
+## through `context_provider` and nothing ever assigned one, so every kill in the game rolled as a
+## level-1 character with no luck and no quests: every loot entry gated on `min_level` --
+## twenty-one of them, from level 2 to level 20 -- could never drop, and `weight_per_luck` weighed
+## nothing. Stages are QuestLog's own `stage_of`, the same index the dialogue context hands out.
+func loot_context() -> Dictionary:
+	var ctx := LootTable.default_context()
+	if not is_inside_tree():
+		return ctx
+	var prog := get_tree().get_first_node_in_group("progression")
+	if prog != null:
+		ctx["level"] = int(prog.get("level"))
+		var mods: Variant = prog.get("mods")
+		if mods is Modifiers:
+			ctx["luck"] = (mods as Modifiers).apply("luck", 0.0)
+	var quest_log := get_tree().get_first_node_in_group("quest_log")
+	if quest_log != null and quest_log.has_method("stage_of"):
+		var quests := {}
+		var known: Variant = quest_log.get("quests")
+		if known is Dictionary:
+			for quest_id in known:
+				quests[str(quest_id)] = int(quest_log.call("stage_of", str(quest_id)))
+		ctx["quests"] = quests
+	return ctx
 
 
 ## The Naming hands over a named character and a flag, and until now nothing picked it up, so

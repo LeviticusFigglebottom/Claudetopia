@@ -27,6 +27,9 @@ func _init() -> void:
 	rev.predelay_feedback = 0.25
 	AudioServer.add_bus_effect(interior, rev, 0)
 	AudioServer.set_bus_volume_db(interior, -1.0)
+	# Interior carries world sounds, so it goes out through SFX: the Sounds slider then turns
+	# them down indoors as well as out (sent to Master, only the Everything slider reached them).
+	AudioServer.set_bus_send(interior, "SFX")
 	AudioServer.set_bus_bypass_effects(interior, false)
 	# Ambience carries a low-pass for interior muffling, bypassed until indoors.
 	var lp := AudioEffectLowPassFilter.new()

@@ -139,7 +139,7 @@
   {"id": "core:poi/thirteenth_colossus", "name": "The Thirteenth", "region": "core:region/cinderlea", "kind": "ruins", "position": [-1480, 3280], "hearthstone": false,
    "unique_feature": "a thirteenth colossus lying face down far from the Choir's ring, as if it walked away", "visible_from": ["core:place/sunken_choir", "core:poi/headless_watch"],
    "story": "The Choir has twelve. This one has a head, buried in ash, and it is not the head of the others. A Sayer camp digs here and argues.", "encounter": "choristers around the excavation; casters whose note damages until silenced"},
-  {"id": "core:poi/cold_fire_camp", "name": "The Cold Fire", "region": "core:region/cinderlea", "kind": "camp", "position": [-2260, 2740], "hearthstone": false,
+  {"id": "core:poi/cold_fire_camp", "name": "The Cold Fire", "region": "core:region/cinderlea", "kind": "camp", "position": [-2260, 2760], "hearthstone": false,
    "unique_feature": "ash-wights seated around a fire that went out a hundred and seventy years ago, still passing a cup", "visible_from": ["core:place/greyfold", "core:poi/the_one_poppy"],
    "story": "The people of Greyfold sat down to wait out the Ash Winter. They are still waiting, and they wave.", "encounter": "swarm; they only rise if you touch the cup"},
   {"id": "core:poi/glass_falls", "name": "The Glass Falls", "region": "core:region/cinderlea", "kind": "waterfall", "position": [-1860, 3030], "hearthstone": false,

@@ -179,6 +179,9 @@ static func resting_camera(feet: Vector3, yaw: float, pitch := PLAYER_PITCH) -> 
 
 func _init() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# the camera is moved once per drawn frame, so it is not smeared between physics ticks
+	# (DECISIONS 2026-09-23: what moves per frame opts out)
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 
 
 func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> void:
@@ -191,11 +194,23 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 	_handover = CinematicDef.handover_index(def)
 	_player_name = str(GameState.get_flag("player_name", ""))
 	_subtitles = bool(Settings.get_value("gameplay", "subtitles", true))
-	_save_state()
 	_overlay = CinematicOverlay.new()
 	_overlay.letterbox = float(def.get("letterbox", CinematicDef.DEFAULT_LETTERBOX))
 	_overlay.text_scale = clampf(float(Settings.get_value("accessibility", "ui_scale", 1.0)), 0.8, 1.4)
 	add_child(_overlay)
+	# The menus' fade is held until the country round the body is in (UI's wait for the country),
+	# with the streaming on the body and the body's hands held. Nothing is borrowed until that
+	# hold is over, or the two would pull the streaming two ways and the hold would time out.
+	# Meanwhile the curtain lies black just under the fade, with the loading caption above it, so
+	# the fade lifts onto the opening's black rather than onto the world.
+	if how != Mode.SCRUB and UI.is_holding_for_country():
+		_overlay.layer = UI.LAYER_FADE - 1
+		while UI.is_holding_for_country():
+			await get_tree().process_frame
+			if not is_inside_tree():
+				return
+		_overlay.layer = CinematicOverlay.LAYER
+	_save_state()
 	_camera = Camera3D.new()
 	_camera.name = "CinematicCamera"
 	_camera.near = 0.25
@@ -205,12 +220,13 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 	_take_over()
 	_decide_handover()
 	_put_player_at_handover()
-	# the rig's spring arm settles on the physics step: the hand-over shot's last key is the
-	# gameplay camera as it will actually stand, not as it would stand with nothing in the way
-	await get_tree().physics_frame
-	await get_tree().physics_frame
-	if not is_inside_tree():
-		return
+	# the rig follows and pulls its arm in out of the way once per drawn frame: the hand-over
+	# shot's last key is the gameplay camera as it will actually stand, not as it would stand with
+	# nothing in the way
+	for i in 3:
+		await get_tree().process_frame
+		if not is_inside_tree():
+			return
 	_resolve_all()
 	if mode == Mode.SCRUB:
 		_overlay.set_curtain(0.0)
@@ -343,14 +359,20 @@ func _decide_handover() -> void:
 func _put_player_at_handover() -> void:
 	if _player == null:
 		return
-	_player.global_position = _handover_at
-	if "velocity" in _player:
-		_player.set("velocity", Vector3.ZERO)
-	_player.rotation.y = _handover_yaw
 	var rig: Node = _player.get("camera_rig")
+	if _player.has_method("teleport"):
+		# CONTRACTS §8: position, facing, the view behind it, no speed and no interpolation smear
+		_player.call("teleport", _handover_at, _handover_yaw)
+	else:
+		_player.global_position = _handover_at
+		if "velocity" in _player:
+			_player.set("velocity", Vector3.ZERO)
+		_player.rotation.y = _handover_yaw
 	if rig != null:
 		rig.set("yaw", _handover_rig_yaw)
 		rig.set("pitch", _handover_pitch)
+		if rig.has_method("snap_to_target"):
+			rig.call("snap_to_target")
 
 
 func _restore() -> void:

@@ -35,6 +35,11 @@ const CALLING := "core:calling/cragborn"
 const SLOT := "flow"
 const SAMPLE_SECONDS := [2.0, 5.0, 10.0, 20.0, 40.0]
 const WORLD_TIMEOUT := 420.0
+## A world is not entered unless it has this many drawn things within NEAR_RADIUS of the body
+## (terrain, water, sky and the body itself not counted). A void has none; the Hushline Stair,
+## the emptiest place anybody starts, has hundreds.
+const NEAR_RADIUS := 200.0
+const MIN_NEAR := 10
 
 var out_dir := "captures/flow"
 var mode := "new"            # new | load | continue | new-game
@@ -74,6 +79,20 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("[flow] mode=%s -> %s" % [mode, out_dir])
+	# With no world on disk every way in stops at the title, which says why; the run fails there,
+	# with the title's words in the report, rather than waiting seven minutes for a body.
+	var world_status := WorldStatus.current()
+	if not _check(bool(world_status.get("playable", false)), "there is a world to go into (%s)"
+			% str(world_status.get("state", ""))):
+		var menu := await _wait_for_scene("main_menu.gd", 90.0)
+		await _settle(2.2)
+		await _capture("no_world")
+		var notice: Node = menu.get("notice") if menu != null else null
+		_check(notice != null, "and the title says so")
+		_notes.append("the title says: %s" % (str(notice.call("text")).replace("\n", " / ") if notice != null
+				else str(world_status.get("title", ""))))
+		_finish()
+		return
 	match mode:
 		"new":
 			await _new_game_flow()
@@ -425,15 +444,34 @@ func _watch_the_world_stand_up() -> void:
 	if not _check(_spawned != null, "a body stands in the world within %d s (took %.0f s)"
 			% [int(WORLD_TIMEOUT), (_spawned_at_ms - _t0) / 1000.0 if _spawned != null else _elapsed()]):
 		return
+	# the fade is held until the cells round the body are in (UI.COUNTRY_WAIT_S), so the lift is
+	# waited for a little longer than that
+	var held_caption := ""
+	if UI.is_holding_for_country():
+		await _settle(0.3)
+		held_caption = UI.loading_text().replace("\n", " / ")
+		await _capture("holding_for_country")
+	var lifted := await _wait_until(func() -> bool: return not UI.is_faded_out(), UI.COUNTRY_WAIT_S + 10.0)
+	_check(lifted, "the fade lifts once the body stands and the country round it is in")
+	var wait: Dictionary = UI.last_country_wait
+	if not wait.is_empty():
+		var cells: Vector2i = wait.get("cells", Vector2i.ZERO)
+		var at_spawn: Vector2i = wait.get("at_spawn", Vector2i.ZERO)
+		_notes.append("when the body stood, %d of %d near cells were in, which is what the fade used to lift on; it waited %.1f s more, and %d of %d were in when it lifted%s%s"
+				% [at_spawn.x, at_spawn.y, float(wait.get("ms", 0)) / 1000.0, cells.x, cells.y,
+					" (timed out)" if bool(wait.get("timed_out", false)) else "",
+					"; caption while held: %s" % held_caption if not held_caption.is_empty() else ""])
+		_check(not bool(wait.get("timed_out", false)), "the near cells were all in before the fade lifted (%d of %d)" % [cells.x, cells.y])
+	# a new game's opening begins once that hold has let the fade go (CinematicPlayer.begin waits
+	# for it), and hands over before the world is photographed standing
 	await _watch_the_opening()
-	var lifted := await _wait_until(func() -> bool: return not UI.is_faded_out(), 15.0)
-	_check(lifted, "the fade lifts once the body stands")
 	await _settle(2.5)
 	var luma := await _capture("world_standing")
 	_check(luma > BLACK, "the world is on the screen with the fade up (luma %.3f)" % luma)
 	_check(UI.hud() != null and UI.hud().visible, "the HUD is up")
 	_check(not UI.is_loading_shown(), "the loading caption has gone")
 	_check(not UI.is_faded_out(), "the fade is not still down")
+	_check_the_ground()
 	_notes.append("body stood at %.1f s from the press; %d cells streamed"
 			% [(_spawned_at_ms - _t0) / 1000.0, _cells()])
 	if _gap_ms > 1500:
@@ -527,6 +565,77 @@ func _opening_means_the_black() -> bool:
 	if cin == null or not cin.is_playing() or cin.overlay() == null:
 		return false
 	return cin.overlay().curtain() > 0.4 or cin.overlay().caption_shown()
+
+## Is there a world under and around the body? A copy of the game with no built world passed every
+## check above: the screen was not black (fog is not black), the fade was up, the HUD was up, and
+## the body stood at y = 0 on nothing. So: the ground is drawn, something solid is under the feet,
+## and the country has something in it within 200 m.
+func _check_the_ground() -> void:
+	var body := _spawned as Node3D
+	if body == null or not is_instance_valid(body):
+		return
+	var world := _world()
+	var drawn_by := str(world.get("terrain_mode")) if world != null else ""
+	_check(drawn_by in ["terrain3d", "fallback"], "the ground is drawn (by %s)" % (drawn_by if not drawn_by.is_empty() else "nothing"))
+	var feet := body.global_position
+	var q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 2.0, feet + Vector3.DOWN * 40.0, (1 << 0) | (1 << 10))
+	var own: Array[RID] = []
+	if body is CollisionObject3D:
+		own.append((body as CollisionObject3D).get_rid())
+	q.exclude = own
+	var hit := body.get_world_3d().direct_space_state.intersect_ray(q)
+	var what := "nothing within 40 m"
+	var solid := false
+	if not hit.is_empty():
+		var gap := feet.y - (hit["position"] as Vector3).y
+		what = "%s %.2f m below the feet" % [str((hit.get("collider") as Node).name) if hit.get("collider") is Node else "a collider", gap]
+		solid = absf(gap) < 1.5
+	elif drawn_by == "terrain3d":
+		# Terrain3D builds its collision around its camera; the drawn height is the ground too
+		var data: Object = (world.get("terrain_node") as Object).get("data") if world.get("terrain_node") != null else null
+		var h: float = float(data.call("get_height", feet)) if data != null else NAN
+		if not is_nan(h):
+			what = "no collider yet, and Terrain3D draws the ground %.2f m below the feet" % (feet.y - h)
+			solid = absf(feet.y - h) < 1.5
+	_check(solid, "there is ground under the body (%s)" % what)
+	var near := _things_within(body, NEAR_RADIUS)
+	_check(near >= MIN_NEAR, "the country has things in it within %.0f m of the body (%d drawn, want %d)" % [NEAR_RADIUS, near, MIN_NEAR])
+	_notes.append("objects drawn in the last frame: %d" % int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)))
+
+
+func _world() -> Node:
+	var world_script := load("res://world/world.gd") as GDScript
+	return world_script.get("instance") if world_script != null else null
+
+
+## Drawn things (meshes, scatter, buildings, props, people) whose bounds come within `radius` of the
+## body, not counting the body, the ground, the water or the sky.
+func _things_within(body: Node3D, radius: float) -> int:
+	var world := _world()
+	if world == null:
+		return 0
+	var skip: Array[Node] = [body]
+	for field in ["terrain_node", "fallback", "water", "atmosphere"]:
+		var part: Variant = world.get(field)
+		if part is Node:
+			skip.append(part as Node)
+	var count := 0
+	for n in world.find_children("*", "GeometryInstance3D", true, false):
+		var g := n as GeometryInstance3D
+		if not g.is_visible_in_tree():
+			continue
+		var skipped := false
+		for s in skip:
+			if s == g or s.is_ancestor_of(g):
+				skipped = true
+				break
+		if skipped:
+			continue
+		var box := g.global_transform * g.get_aabb()
+		var closest := body.global_position.clamp(box.position, box.end)
+		if closest.distance_to(body.global_position) <= radius:
+			count += 1
+	return count
 
 
 ## The longest stretch without a frame, so the report can say how long the screen stood still.

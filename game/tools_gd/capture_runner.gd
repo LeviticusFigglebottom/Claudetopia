@@ -9,6 +9,9 @@ extends Node
 ##   {"shots": [{"label", "pos": [x, y, z], "look_at": [x, y, z] | "yaw"/"pitch",
 ##               "fov", "time": hours, "place": "core:place/x", "height_above_ground": m}],
 ##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours},
+##    "gait": {"pos": [x, _, z], "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
+##             "camera": {"distance": m, "height": m, "fov": deg},
+##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]},
 ##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?}}
 ##
 ## A `cinematic` block loads the world with its body standing where the story opens and has
@@ -19,8 +22,17 @@ extends Node
 ## For each shot it sets the clock, moves the fly camera, waits until the streamer reports the
 ## full-detail ring loaded (plus ten frames so LODs and shadows settle), saves
 ## <index>_<label>.png and records Performance monitors into <out>/perf.json.
+##
+## A `gait` section films the player's own body in motion: it stands a player up on the ground
+## at `pos`, facing `heading` (a compass bearing), presses the run's actions exactly as a player
+## would, lets it settle, and takes `frames` shots `interval` seconds apart from its left side.
+## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
+## rasteriser managed: every frame is then one physics tick.
 
 const WORLD_SCENE := "res://world/world.tscn"
+const PLAYER_SCENE := "res://actors/player/player.tscn"
+## Everything a gait run may hold down, released between runs so one run cannot leak into the next.
+const GAIT_ACTIONS: Array[String] = ["move_forward", "move_back", "move_left", "move_right", "sprint", "sneak", "walk"]
 const SETTLE_FRAMES := 10
 const MAX_WAIT_FRAMES := 240
 
@@ -89,6 +101,9 @@ func run() -> int:
 	var fly: Dictionary = plan.get("flythrough", {})
 	if not fly.is_empty():
 		index = await _fly(index, fly)
+	var gait: Dictionary = plan.get("gait", {})
+	if not gait.is_empty():
+		index = await _gait(index, gait)
 	_write_perf()
 	if not _failures.is_empty():
 		for f in _failures:
@@ -119,6 +134,11 @@ func _read_plan() -> Dictionary:
 
 
 func _load_world(with_body := false) -> World:
+	var world_status := WorldStatus.current()
+	if not bool(world_status.get("playable", false)):
+		# a photograph of a void is not a photograph of the country
+		Log.error("Capture", "%s %s" % [str(world_status.get("title", "")), str(world_status.get("detail", ""))])
+		return null
 	var packed: PackedScene = load(WORLD_SCENE)
 	if packed == null:
 		return null
@@ -159,6 +179,28 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		cam.set_yaw_pitch(float(shot.get("yaw", 0.0)), float(shot.get("pitch", -8.0)))
 	_world.move_target(pos)
 	var waited := await _wait_for_streaming()
+	if shot.has("frame"):
+		# Re-aim at something the world raised at runtime, now that it is standing: a waterfall's
+		# sheet is built from the terrain's own grain, so no plan written beforehand knows which
+		# way it faces.
+		if _frame_node(cam, shot["frame"]):
+			waited += await _wait_for_streaming()
+		else:
+			_failures.append("%s: nothing to frame for %s" % [label, str(shot["frame"])])
+	# A region's look blends over six seconds when the camera crosses into it, which is right
+	# for walking and wrong for a photograph: without this a shot taken a few frames after a
+	# teleport was of half one region's light and half the last's. The lamps are handed out for
+	# where the camera now is, rather than wherever it stood at their last tick.
+	# Both are asked for by name, so this runner can still photograph a build from before either
+	# existed: a before-and-after is only a comparison if the camera is the same on both sides.
+	var atmos := _world.atmosphere
+	if atmos and atmos.has_method("settle"):
+		atmos.call("settle")
+	var lights: Variant = _world.get("night_lights")
+	if lights != null and (lights as Object).has_method("assign"):
+		var st: Variant = atmos.get("state") if atmos else null
+		(lights as Object).call("assign", float((st as Dictionary).get("night", 0.0)) if st is Dictionary else 0.0)
+	await get_tree().process_frame
 	# The atmosphere rewrites the environment every frame, so the fog override only holds if
 	# its per-frame update is paused for the exposure.
 	_pause_atmosphere(true)
@@ -182,6 +224,62 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		% [label, path.get_file(), int(_perf[-1]["draw_calls"]), float(_perf[-1]["primitives"]) / 1e6, waited])
 	if attribute:
 		await _attribute_shot(label, cam)
+
+
+## Puts the camera in front of a mesh raised under a named node -- `{"node": "Poi_whitecut_falls",
+## "child_prefix": "Fall", "distance": 22, "height": 2}` -- facing it. The facing is read off the
+## mesh: its area-weighted normal, turned toward the side its lower edge bulges to, which for a
+## sheet of falling water is the side the water falls away from the rock on.
+func _frame_node(cam: FlyCamera, spec: Dictionary) -> bool:
+	var host := _world.find_child(str(spec.get("node", "")), true, false)
+	if host == null:
+		return false
+	var prefix := str(spec.get("child_prefix", ""))
+	var target: MeshInstance3D = null
+	for n in host.find_children("*", "MeshInstance3D", true, false):
+		if prefix == "" or str(n.name).begins_with(prefix):
+			target = n as MeshInstance3D
+			break
+	if target == null or target.mesh == null:
+		return false
+	var faces := target.mesh.get_faces()
+	var normal := Vector3.ZERO
+	var i := 0
+	while i + 2 < faces.size():
+		normal += (faces[i + 1] - faces[i]).cross(faces[i + 2] - faces[i])
+		i += 3
+	var box: AABB = target.global_transform * target.get_aabb()
+	var centre := box.get_center()
+	normal = (target.global_transform.basis * normal)
+	normal.y = 0.0
+	if normal.length() < 0.001:
+		return false
+	normal = normal.normalized()
+	# a sheet bulges out at its foot: the camera belongs on that side
+	var low := Vector3.ZERO
+	var high := Vector3.ZERO
+	var nl := 0
+	var nh := 0
+	for p in faces:
+		var g: Vector3 = target.global_transform * p
+		if g.y < centre.y:
+			low += g
+			nl += 1
+		else:
+			high += g
+			nh += 1
+	if nl > 0 and nh > 0:
+		var out := low / float(nl) - high / float(nh)
+		out.y = 0.0
+		if out.dot(normal) < 0.0:
+			normal = -normal
+	var at := centre + normal * float(spec.get("distance", 22.0))
+	var ground := _world.provider.get_height(at.x, at.z)
+	at.y = maxf(at.y, ground + float(spec.get("height", 2.0)))
+	cam.move_to(at, centre)
+	_world.move_target(at)
+	Log.info("Capture", "framed %s/%s from %s" % [host.name, target.name, str(at.snapped(Vector3(0.1, 0.1, 0.1)))])
+	return true
 
 
 ## Who the draw calls belong to, for one shot: the census first (cheap, colour pass only),
@@ -332,6 +430,103 @@ func _fly(index: int, fly: Dictionary) -> int:
 		await _take_shot(index, shot)
 		index += 1
 	return index
+
+
+## Films the player's body walking, jogging and sprinting (see the `gait` plan section above).
+## The body is the real player scene driven through the real input actions, so what is in the
+## frames is what a player's key presses produce, not a clip played on a mannequin.
+func _gait(index: int, gait: Dictionary) -> int:
+	var cam := _world.fly_camera
+	if cam == null:
+		_failures.append("no fly camera for the gait sequence")
+		return index
+	if gait.has("time"):
+		WorldClock.set_time(float(gait["time"]))
+	if gait.has("weather"):
+		_force_weather(str(gait["weather"]))
+	var p: Array = gait.get("pos", [0.0, 0.0, 0.0])
+	var start := Vector3(float(p[0]), 0.0, float(p[2]))
+	start.y = _world.provider.get_height(start.x, start.z)
+	var bearing := deg_to_rad(float(gait.get("heading", 90.0)))
+	var travel := Vector3(sin(bearing), 0.0, -cos(bearing))        # north is -Z (CONTRACTS §1)
+	var yaw := atan2(-travel.x, -travel.z)
+	var right := Basis(Vector3.UP, -PI * 0.5) * travel             # film from the right: motion runs left to right
+	var cam_cfg: Dictionary = gait.get("camera", {})
+	var distance := float(cam_cfg.get("distance", 4.2))
+	var cam_height := float(cam_cfg.get("height", 1.0))
+	cam.fov = float(cam_cfg.get("fov", 50.0))
+	var frames := int(gait.get("frames", 8))
+	var interval := float(gait.get("interval", 0.1))
+	var settle := float(gait.get("settle", 1.6))
+	_world.move_target(start + right * distance + Vector3.UP * cam_height, start + Vector3.UP)
+	await _wait_for_streaming()
+	# Under the software rasteriser a frame of the country takes seconds, and a gait needs a
+	# hundred simulated ticks between shots. Only the frames that are saved are drawn.
+	RenderingServer.render_loop_enabled = false
+	var packed := load(PLAYER_SCENE) as PackedScene
+	var player := packed.instantiate() as Node3D
+	_world.add_child(player)
+	# The body's own camera rig makes itself current on _ready; this is a side view.
+	cam.set_process(false)          # it reads the same move actions the body is being given
+	cam.make_current()
+	for run in gait.get("runs", []):
+		if typeof(run) != TYPE_DICTIONARY:
+			continue
+		var label := str(run.get("label", "run"))
+		_release_gait_actions()
+		player.set("velocity", Vector3.ZERO)
+		player.global_position = start + Vector3.UP * 0.05
+		player.rotation.y = yaw
+		var rig: Node = player.get("camera_rig")
+		if rig != null:
+			rig.set("yaw", yaw)
+		if player.has_method("full_restore"):
+			player.call("full_restore")
+		player.set("is_sneaking", false)       # a toggle: one run's sneak must not leak into the next
+		player.reset_physics_interpolation()
+		await _physics_seconds(0.25)
+		for action in run.get("press", []):
+			if InputMap.has_action(str(action)):
+				Input.action_press(str(action))
+			else:
+				Log.warn("Capture", "gait run %s: no input action '%s'" % [label, str(action)])
+		await _physics_seconds(settle)
+		for f in frames:
+			var at := player.get_global_transform_interpolated().origin
+			cam.move_to(at + right * distance + Vector3.UP * cam_height, at + Vector3.UP * 0.95)
+			RenderingServer.render_loop_enabled = true
+			await get_tree().process_frame
+			await RenderingServer.frame_post_draw
+			RenderingServer.render_loop_enabled = false
+			var shot_label := "gait_%s_%02d" % [label, f]
+			var path := "%s/%02d_%s.png" % [out_dir, index, shot_label]
+			var img := get_viewport().get_texture().get_image()
+			if img.save_png(path) != OK:
+				_failures.append("cannot write %s" % path)
+			var v: Vector3 = player.get("velocity")
+			Log.info("Capture", "%s: speed %.2f m/s, stamina %.0f" % [shot_label,
+					Vector2(v.x, v.z).length(), float(player.get("stamina"))])
+			index += 1
+			await _physics_seconds(interval)
+		_release_gait_actions()
+	RenderingServer.render_loop_enabled = true
+	player.queue_free()
+	cam.set_process(true)
+	cam.make_current()
+	return index
+
+
+func _release_gait_actions() -> void:
+	for action in GAIT_ACTIONS:
+		if InputMap.has_action(action):
+			Input.action_release(action)
+
+
+## Waits for `seconds` of simulated time, counted in physics ticks rather than wall-clock.
+func _physics_seconds(seconds: float) -> void:
+	var until := Engine.get_physics_frames() + int(round(seconds * Engine.physics_ticks_per_second))
+	while Engine.get_physics_frames() < until:
+		await get_tree().physics_frame
 
 
 func _write_perf() -> void:
