@@ -3519,8 +3519,9 @@ These were handled with what exists:
 
 * `game/tests/unit/test_map_quest_ground.gd` has 3 tests, all passing. It raises what the world
   raises at each place the quests fight at or leave something at: a dressing, a landmark with its
-  collision, or a settlement's fabric, on flat ground. It holds every foe (27 fights) and every
-  find (98 at 98 places) to open ground.
+  collision, or a settlement's fabric, on flat ground. It holds to open ground every foe QuestFoes
+  stands for the 27 fights, the 45 of the places' own foes those fights count first, and the 98
+  finds.
 * `game/tests/unit/test_map_quests.gd` has 9 tests, all passing:
   * every settlement has a resident whose work can begin;
   * every place that is not a settlement is somewhere a quest sends you;

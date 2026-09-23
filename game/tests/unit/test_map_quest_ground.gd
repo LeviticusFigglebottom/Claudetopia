@@ -234,7 +234,9 @@ func _fights() -> Array[Dictionary]:
 	return out
 
 
-## Where `foes` stands each of the map's fights, as [{fight, spots: [Vector3], why: [String]}].
+## Where `foes` stands each of the map's fights, and where the place's own groups of that kind
+## stand, as [{fight, why: [String], own: [String], built}]: an entry of `why` or `own` is "" for a
+## body in the open.
 func _stand_fights(foes: QuestFoes) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for f in _fights():
@@ -247,8 +249,48 @@ func _stand_fights(foes: QuestFoes) -> Array[Dictionary]:
 		var why: Array[String] = []
 		for p in foes.clear_ground(str(f["key"]), raised["base"], maxi(1, int(o.get("count", 1)))):
 			why.append(_shut_in(p, BODY_R, BODY_H))
-		out.append({"fight": f, "why": why, "built": raised["built"]})
+		var own: Array[String] = []
+		for node in raised["nodes"]:
+			if node is PoiDressing:
+				for p in _own_group(node as PoiDressing, str(o.get("target", ""))):
+					own.append(_shut_in(p, BODY_R, BODY_H))
+		out.append({"fight": f, "why": why, "own": own, "built": raised["built"]})
 		_drop_all(raised["nodes"])
+	return out
+
+
+## Where a place's own groups of one kind stand, as PoiEncounters stands them: on the marker an
+## entry names, else on the pad's rim, and spread round that when there are several. QuestFoes
+## counts these first and stands only the shortfall, so one of them shut inside a shell would
+## hold a fight open as surely as a ring spot there would. Nobody is raised: the node asks where
+## and is gone before its first refresh.
+func _own_group(d: PoiDressing, enemy: String) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var entries := PoiEncounters.of(d.poi_id)
+	if entries.is_empty():
+		return out
+	var enc := PoiEncounters.new()
+	enc.poi_id = d.poi_id
+	enc.entries = entries
+	enc.pad_radius = d.pad_radius
+	enc.terrain = _flat
+	d.add_child(enc)
+	for i in entries.size():
+		var e: Dictionary = entries[i]
+		if str(e.get("enemy", "")) != enemy:
+			continue
+		var anchor: Dictionary = enc._anchor(i, e)
+		var count := maxi(1, int(e.get("count", 1)))
+		for k in count:
+			var at: Vector3 = anchor["pos"]
+			if count > 1:
+				var a := TAU * float(k) / float(count) + float(i)
+				at += Vector3(cos(a), 0.0, sin(a)) * float(e.get("spread", 2.5))
+			if not bool(anchor["raised"]):
+				at.y = d.world_position.y
+			out.append(at)
+	d.remove_child(enc)
+	enc.free()
 	return out
 
 
@@ -263,14 +305,21 @@ func test_the_maps_fights_stand_in_the_open() -> void:
 	_host.add_child(foes)
 	var stood := await _stand_fights(foes)
 	var built: Dictionary = {}
+	var own := 0
 	for s in stood:
 		var f: Dictionary = s["fight"]
+		var target := Ids.name_of(str((f["objective"] as Dictionary).get("target", "")))
 		for b in s["built"]:
 			built[b] = int(built.get(b, 0)) + 1
 		for why in s["why"]:
-			assert_true(why == "", "%s / %s: a %s stands %s at %s" % [f["quest"], f["stage"],
-					Ids.name_of(str((f["objective"] as Dictionary).get("target", ""))), why, Ids.name_of(str(f["where"]))])
-	print("MEASURE | the map's fights at a place something is built at | %d | %s" % [stood.size(), str(built)])
+			assert_true(why == "", "%s / %s: a %s stands %s at %s" % [f["quest"], f["stage"], target, why,
+					Ids.name_of(str(f["where"]))])
+		for why in s["own"]:
+			own += 1
+			assert_true(why == "", "%s / %s: the place's own %s, which the fight counts, stands %s at %s" % [
+					f["quest"], f["stage"], target, why, Ids.name_of(str(f["where"]))])
+	print("MEASURE | the map's fights at a place something is built at | %d | %s | the places' own foes they count: %d"
+			% [stood.size(), str(built), own])
 	assert_gt(stood.size(), 25, "the map's fights were asked")
 
 
