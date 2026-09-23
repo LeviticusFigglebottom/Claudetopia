@@ -1,11 +1,11 @@
 {
  "bounds": [
-  -0.0987,
-  -0.1117,
+  -0.0852,
+  -0.1114,
   1.403,
-  0.0987,
-  0.0945,
-  1.8032
+  0.0859,
+  0.1104,
+  1.7806
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -31,6 +31,12 @@
  "rig": "WM_Humanoid_v1",
  "seed": 1,
  "slot_hint": "head",
+ "textures": [
+  "angular_eye_albedo.png",
+  "angular_normal.png",
+  "angular_albedo.png",
+  "angular_orm.png"
+ ],
  "tris": [
   5608,
   0,
