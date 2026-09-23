@@ -1948,7 +1948,7 @@
    ],
    "biome": "forest_rise",
    "base_height_m": 40,
-   "relief_m": 150,
+   "relief_m": 110,
    "character": "hills"
   },
   {
@@ -2268,7 +2268,8 @@
    "biome": "mountains",
    "base_height_m": 40,
    "relief_m": 190,
-   "character": "hills"
+   "character": "hills",
+   "blend_m": 1000
   },
   {
    "id": "skerrow_heights",
@@ -2646,8 +2647,9 @@
    ],
    "biome": "mountains",
    "base_height_m": 150,
-   "relief_m": 480,
-   "character": "mountains"
+   "relief_m": 330,
+   "character": "mountains",
+   "blend_m": 1000
   },
   {
    "id": "cinderlea",

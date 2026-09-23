@@ -82,6 +82,20 @@ def signed_distance(grid: Grid, inside: np.ndarray) -> np.ndarray:
     return (np.where(inside, -(d_in - 0.5), d_out - 0.5) * grid.spacing).astype(np.float32)
 
 
+def coarse_distance(grid: Grid, mask: np.ndarray, work_n: int = 1024) -> np.ndarray:
+    """float32 [n, n]: metres from each texel to the nearest texel of `mask`, measured on a
+    `work_n` lattice and interpolated back. Good to a lattice step (8 m at 1024), and a fraction
+    of the memory of a full-resolution distance transform, for the rules that read hundreds of
+    metres (the strand, the tide-flats)."""
+    n = grid.n
+    if not mask.any():
+        return np.full((n, n), 1e6, dtype=np.float32)
+    f = max(n // work_n, 1)
+    small = mask[::f, ::f] if f > 1 else mask
+    d = (ndimage.distance_transform_edt(~small) * grid.spacing * f).astype(np.float32)
+    return upsample(d, n, order=1) if f > 1 else d
+
+
 def resample_path(pts, step: float) -> np.ndarray:
     p = np.asarray(pts, dtype=np.float64)[:, :2]
     seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
@@ -634,6 +648,77 @@ def apply_causeways(ctx, h: np.ndarray, wt: Waters, atlas: dict, things: dict) -
         sub = h[i0:i1, j0:j1]
         h[i0:i1, j0:j1] = np.where(on_span, np.maximum(sub, sides), sub)
     return h
+
+
+# --- sightlines ----------------------------------------------------------------------------------
+
+## How far the builder will cut the land to honour an authored sightline, at the deepest point of
+## the cut. A line with a shoulder of hill in the way is given a saddle; a line with a mountain
+## in the way is left refused, because a two-hundred-metre trench is not a view, and that line
+## is the atlas's or the content's to answer (move the place, draw a pass, or change the claim).
+NOTCH_MAX_M = 25.0
+## what the cut leaves under the line on top of the game's own clearance, for the carving,
+## pads and detail that come after it and for the runtime's coarser copy of the heights
+NOTCH_SPARE_M = 1.0
+## the floor of the cut either side of the line, and the grade its sides climb back to the land
+NOTCH_FLOOR_M = 6.0
+NOTCH_SIDE_GRADE = 0.6
+
+
+def honour_sightlines(grid: Grid, H: np.ndarray, lines: list, k: dict) -> list:
+    """Cut a saddle wherever the land stands into an authored sightline, up to NOTCH_MAX_M.
+
+    `lines` is [(vantage_xz, target_xz, target_kind, pad_radius_vantage, pad_radius_target)]
+    and `k` the game's own sight constants (tools/sightlines.py `constants`, read out of
+    place_discovery.gd). The ray is the one `PlaceDiscovery.can_see` marches: from an eye EYE_M
+    over the vantage to a point LANDMARK_M over the target, the first FOREGROUND_M ignored, and
+    the land must stay CLEARANCE_M under it. Lines into a hidden valley are the way in, not the
+    place, and are left alone. Returns [(vantage_xz, target_xz, worst_m, cut)] for every line
+    the land stood into: `cut` False where it stood in by more than NOTCH_MAX_M and was left.
+    """
+    from .grid import sample_bilinear
+
+    out = []
+    for a, b, kind, ra, rb in lines:
+        if kind == "hidden_valley":
+            continue
+        flat = math.hypot(b[0] - a[0], b[1] - a[1])
+        if flat <= 1.0 or flat > k["MAX_SIGHT_M"]:
+            continue
+        ya = float(sample_bilinear(H, grid, np.array([a[0]]), np.array([a[1]]))[0])
+        yb = float(sample_bilinear(H, grid, np.array([b[0]]), np.array([b[1]]))[0])
+        eye = ya + k["EYE_M"]
+        top = yb + k["LANDMARK_M"].get(kind, k["LANDMARK_DEFAULT_M"])
+        skip = min(k["FOREGROUND_M"] / flat, 0.4)
+        # what the land must stay under, along the line (the pads at either end are their own)
+        t0 = max(skip, (ra * 1.2) / flat)
+        t1 = 1.0 - (rb * 1.2) / flat
+        if t1 <= t0:
+            continue
+        ts = np.linspace(t0, t1, max(int((t1 - t0) * flat / grid.spacing), 2))
+        xs = a[0] + (b[0] - a[0]) * ts
+        zs = a[1] + (b[1] - a[1]) * ts
+        ground = sample_bilinear(H, grid, xs, zs)
+        ceiling = eye + (top - eye) * ts - k["CLEARANCE_M"] - NOTCH_SPARE_M
+        worst = float((ground - ceiling).max())
+        if worst <= 0.0:
+            continue
+        if worst > NOTCH_MAX_M:
+            out.append((a, b, worst, False))
+            continue
+        reach = NOTCH_FLOOR_M + worst / NOTCH_SIDE_GRADE + 4.0 * grid.spacing
+        lf = line_field(grid, [a, b], reach)
+        i0, i1, j0, j1 = lf.window
+        t = lf.t
+        under = eye + (top - eye) * t - k["CLEARANCE_M"] - NOTCH_SPARE_M
+        cut = under + NOTCH_SIDE_GRADE * np.maximum(lf.d - NOTCH_FLOOR_M, 0.0)
+        # only between the pads, fading in and out over a few texels
+        span = grid.spacing * 4.0 / flat
+        along = smoothstep(t0 - span, t0, t) * (1.0 - smoothstep(t1, t1 + span, t))
+        sub = H[i0:i1, j0:j1]
+        H[i0:i1, j0:j1] = np.where(along > 0.0, lerp(sub, np.minimum(sub, cut), along), sub)
+        out.append((a, b, worst, True))
+    return out
 
 
 # --- forests -----------------------------------------------------------------------------------

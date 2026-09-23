@@ -186,6 +186,59 @@ class AtlasToHeights(unittest.TestCase):
             self.assertEqual(ids[got], prov["region"], "the middle of %s reads as %s" % (prov["id"], ids[got]))
 
 
+class SightlineSaddles(unittest.TestCase):
+    """The land is cut under an authored sightline by a saddle's depth, and no more."""
+
+    K = {"EYE_M": 1.65, "LANDMARK_M": {}, "LANDMARK_DEFAULT_M": 6.0, "CLEARANCE_M": 2.0,
+         "FOREGROUND_M": 140.0, "MAX_SIGHT_M": 4200.0, "RAY_STEPS": 64}
+
+    def _ground(self, hump_m):
+        grid = Grid(8192.0, 1024)
+        X, Z = grid.mesh()
+        # flat at 20 m, with a ridge across the line at x = 0 standing `hump_m` over it
+        H = (20.0 + hump_m * np.exp(-(X / 60.0) ** 2) + 0.0 * Z).astype(np.float32)
+        return grid, H
+
+    def _clear(self, grid, H):
+        import sightlines as SL
+
+        class Hs:
+            def at(self, x, z):
+                from worldgen.grid import sample_bilinear
+                return float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0])
+        a = (-600.0, float(H[512, 437]), 0.0)
+        b = (600.0, float(H[512, 587]), 0.0)
+        blocked, worst, _ = SL.blocked_at(Hs(), a, b, self.K, "")
+        return blocked, worst
+
+    def test_a_shoulder_in_the_way_is_given_a_saddle(self):
+        sys.path.insert(0, os.path.dirname(TOOLS_WORLD))
+        grid, H = self._ground(12.0)
+        self.assertTrue(self._clear(grid, H)[0], "the ridge should block the line to begin with")
+        done = GEO.honour_sightlines(grid, H, [((-600.0, 0.0), (600.0, 0.0), "", 25.0, 25.0)], self.K)
+        self.assertEqual(len(done), 1)
+        self.assertTrue(done[0][3], "a twelve-metre shoulder is within a saddle's depth")
+        blocked, worst = self._clear(grid, H)
+        self.assertFalse(blocked, "the line is still refused, %.2f m over" % worst)
+        # the saddle is a notch, not a trench: a hundred metres off the line the ridge stands
+        self.assertGreater(float(H[512 + int(100 / 8), 512]), 31.0)
+
+    def test_a_mountain_in_the_way_is_left_and_said(self):
+        grid, H = self._ground(200.0)
+        before = H.copy()
+        done = GEO.honour_sightlines(grid, H, [((-600.0, 0.0), (600.0, 0.0), "", 25.0, 25.0)], self.K)
+        self.assertEqual(len(done), 1)
+        self.assertFalse(done[0][3])
+        self.assertTrue(np.array_equal(before, H), "a refused line must leave the land alone")
+
+    def test_a_hidden_valley_is_left_hidden(self):
+        grid, H = self._ground(12.0)
+        before = H.copy()
+        done = GEO.honour_sightlines(grid, H, [((-600.0, 0.0), (600.0, 0.0), "hidden_valley", 25.0, 25.0)], self.K)
+        self.assertEqual(done, [])
+        self.assertTrue(np.array_equal(before, H))
+
+
 class ForestsGrow(unittest.TestCase):
     """A wood the atlas draws is planted, and the ground beside it is only the biome's own."""
 

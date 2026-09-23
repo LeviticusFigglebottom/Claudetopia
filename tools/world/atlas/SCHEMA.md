@@ -221,7 +221,7 @@ A range is a line of high ground: a crest you give the heights of, falling away 
 | `width_m` | foot to foot, across the crest |
 | `profile` | `ridge` (a sharp crest, even sides; the default), `rounded` (a whaleback), `scarp` (one steep face, one long gentle back), `massif` (a broad high block with a broken top) |
 | `face` | for a `scarp`: which side is the steep one, `left` or `right` walking the ridge from its first point to its last (with north up, walking north, left is west) |
-| `rock` | what shows where it is steep: `granite`, `limestone`, `chalk`, `fused_stone` or `scree`; by default the biome's own |
+| `rock` | what shows where it is steep: `granite`, `limestone`, `chalk`, `fused_stone` or `scree`. Checked, and not yet read by the texture rules: a range's flanks take the rock of the biome under them until they are |
 
 At its crest a range is the height drawn for it, whatever the provinces put there, and it
 blends into their ground over its width: it rises out of low ground, and a pass drawn low in a

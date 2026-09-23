@@ -32,6 +32,7 @@ import numpy as np
 from scipy import ndimage
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
@@ -51,6 +52,8 @@ from worldgen import surface as SF
 from worldgen.grid import Grid, sample_bilinear
 from worldgen.noise import NoiseBank
 from worldgen.regions import dithered_owner, load_places, load_regions
+
+import sightlines as SIGHT  # noqa: E402  tools/sightlines.py: the game's own sight model
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PACK = os.path.join(REPO, "game", "content", "packs", "core")
@@ -130,6 +133,25 @@ def sightline_segments(pois: list, pad_targets: list) -> list:
             v = where.get(str(vantage))
             if target is not None and v is not None:
                 out.append((v[0], v[1], target[0], target[1]))
+    return out
+
+
+def sightline_claims(pois: list, pad_targets: list) -> list:
+    """[(vantage_xz, target_xz, target_kind, vantage_pad_m, target_pad_m)] for every authored
+    `visible_from` line whose two ends both have pads (geography.honour_sightlines)."""
+    by_id = {str(p["id"]): p for p in pad_targets}
+    out = []
+    for p in pois:
+        target = by_id.get(str(p.get("id", "")))
+        if target is None:
+            continue
+        for vantage in p.get("visible_from", []):
+            v = by_id.get(str(vantage))
+            if v is None:
+                continue
+            out.append(((float(v["position"][0]), float(v["position"][1])),
+                        (float(target["position"][0]), float(target["position"][1])),
+                        str(p.get("kind", "")), RD.pad_radius(v), RD.pad_radius(target)))
     return out
 
 
@@ -299,6 +321,9 @@ def landmark_yaw(place: dict, facing, H, water_d, grid, places_by_id: dict) -> f
 
 def build(args) -> dict:
     t = Timer()
+    # `--pack` builds against another copy of the core pack (a cartographer's places and POIs
+    # before they are merged); everything else about the build is the same
+    PACK = getattr(args, "pack", None) or globals()["PACK"]
     wdef = load_world_def(PACK)
     seed = int(args.seed if args.seed is not None else wdef.get("seed", 1))
     size_m = float(wdef.get("size_m", 8192))
@@ -414,6 +439,16 @@ def build(args) -> dict:
         t.mark("heights")
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
         t.mark("pads")
+        # The authored sightlines: where the land stands into one by no more than a saddle's
+        # depth, it is cut down under it, as a pad is flattened under a place. A line with a
+        # mountain in the way is left refused, and said so: it is the atlas's or the content's.
+        notched = GEO.honour_sightlines(grid, H, sightline_claims(pois, pad_targets), SIGHT.constants())
+        cut = [row for row in notched if row[3]]
+        left = [row for row in notched if not row[3]]
+        print("[world] sightlines: %d cut under their lines (deepest %.1f m), %d stood into by more than "
+              "%.0f m and left" % (len(cut), max([row[2] for row in cut], default=0.0), len(left),
+                                   GEO.NOTCH_MAX_M), flush=True)
+        t.mark("sightlines")
         # the atlas's rivers, in the valleys they have cut
         rivers = HY.atlas_rivers(grid, H, atlas, waters)
         still = sea | waters.in_lake(H)
@@ -477,7 +512,7 @@ def build(args) -> dict:
     # inside it: a low texel on the strand is wet sand, not a dry pit beside the water. Further
     # inland, ground under the sea's level is a dry hollow unless a lake says otherwise; and a
     # pad a place has raised out of the sea (the Hushline's, 0.2 m) stands dry.
-    near_shore = GEO.signed_distance(grid, ~sea) > -150.0 if sea.any() else np.zeros_like(sea)
+    near_shore = GEO.coarse_distance(grid, sea) < 150.0
     sea_water = (H < HM.SEA_LEVEL) & (sea | near_shore)
     del near_shore
     water = HY.water_maps(grid, H, waters, sea_water, rivers, river_d, river_surf, river_w, owner, regions,
@@ -703,6 +738,9 @@ def main(argv=None) -> int:
     ap.add_argument("--only", type=str, choices=["heights", "textures", "cells"], default=None)
     ap.add_argument("--atlas", type=str, default=None,
                     help="the atlas to build (default tools/world/atlas/atlas.json)")
+    ap.add_argument("--pack", type=str, default=None,
+                    help="the core content pack to read places, POIs and regions from "
+                         "(default game/content/packs/core)")
     ap.add_argument("--recipe", action="append", choices=sorted(RECIPES), default=None,
                     help="build a part of the world that is off by default (repeatable): "
                          + "; ".join("%s -- %s" % kv for kv in sorted(RECIPES.items())))

@@ -63,7 +63,8 @@ class SurfaceContext:
             self.idx.setdefault(r.shape, []).append(r.index)
         # metres from the sea, for the strand and the tide-flats
         if sea is not None and sea.any():
-            self.sea_d = (ndimage.distance_transform_edt(~sea) * grid.spacing).astype(np.float32)
+            from .geography import coarse_distance
+            self.sea_d = coarse_distance(grid, sea)
         else:
             self.sea_d = np.full(H.shape, 1e6, dtype=np.float32)
         self.n = n
