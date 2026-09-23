@@ -76,7 +76,9 @@ func _ready() -> void:
 		inst.multimesh = mm
 		# a beast wanders a few metres from where its instance was first put
 		inst.extra_cull_margin = 8.0
-		FabricMesh.near_only(inst, RANGE_M, true)
+		# a hen's shadow is a smudge under a hen, and a pass of the sun for each kind of bird
+		var size := mesh.get_aabb().size
+		FabricMesh.near_only(inst, RANGE_M, maxf(size.x, maxf(size.y, size.z)) >= Settlement.SMALL_PROP_M)
 		add_child(inst)
 		for b in list:
 			_place(b)

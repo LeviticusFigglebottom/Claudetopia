@@ -174,10 +174,14 @@ other plot, with its garden behind it. `tests/unit/test_street_plan.gd` pins the
 (`HouseKit`: framed plaster, cob in coloured washes, flint, render over stone, tarred boards on
 stilts, laid logs, drystone; windows on every side, porches, chimneys, a shop's emblem hung over
 the street), the gardens fenced the region's way (hurdles and hedges in the Vale, drystone on the
-hills, rails in the wood) with beds, sheds, woodpiles and washing in them, the made ground (setts
-on a town's carriageway, footways and square, a beaten path to a cottage door), the middle (a
-market square with its stalls, well or cross and lamps, or a green with its well, tree and
-benches), the ground behind the gardens (paddocks with gates, orchards, allotments, woodyards),
+hills, rails in the wood) with beds of cabbages, leeks, beans and potatoes, sheds, woodpiles and
+washing in them (one `Garden` mesh of cards, drawn near and with no shadow), the made ground
+(setts on a town's carriageway, footways and square, a beaten path to a cottage door), the middle
+(a market square with its stalls, well or cross and lamps, or a green with its well, tree and
+benches), the ground between the streets filled from the edge in (paddocks with gates, orchards,
+allotments, rickyards, woodyards, peat folds; the orchards' and gardens' apple trees drawn as the
+forge's lighter trunk and cards), the houses with an inside given windows on the outside of the
+wall and shut ones where the interior has none (`Building.outward`, `Building.shut_windows`),
 the beasts (`Livestock`: hens, geese, sheep, a pig, each wandering its own ground while somebody
 is near), the smoke (`ChimneySmoke`: every puff of every chimney one MultiMesh moved on the GPU),
 and a marker for every outdoor spot this place's people's days name, so the stallholders stand at

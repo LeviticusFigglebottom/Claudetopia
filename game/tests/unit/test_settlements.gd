@@ -186,7 +186,8 @@ func test_a_road_through_a_place_lines_the_houses_up_along_it() -> void:
 ## fabric is merged now, and this is the ratchet that keeps it merged: a village of Merrowby's
 ## kind, with its board, its stations and its for-sale signs, raises at most this many meshes.
 ##
-## It was 31 before the streets. It is 65 now, and the fabric is still its eight surfaces: the rest
+## It was 31 before the streets. It is 66 now, and the fabric is nine surfaces (the gardens' crops,
+## woodpiles and washing are a mesh of their own, drawn near and with no shadow): the rest
 ## is one MultiMesh for each kind of thing a street has lying about it (a kind's two variants are
 ## two), the market's stalls and their wares, the beasts (six kinds), the gardens' apple trees
 ## (three variants, each its trunk and its leaf cards), the chimney smoke, the shop signs' emblems,
@@ -194,7 +195,7 @@ func test_a_road_through_a_place_lines_the_houses_up_along_it() -> void:
 ## time. The small things (the crockery on a stall, a bucket) throw no shadow and are gone past
 ## seventy metres. Measured against DESIGN section 11 on the streets plan's Merrowby shot, which
 ## is in PROGRESS.md.
-const MESH_RATCHET := 65
+const MESH_RATCHET := 66
 const MERROWBY := "core:place/merrowby"
 
 
@@ -230,7 +231,7 @@ func test_a_village_of_merrowbys_kind_stays_under_the_mesh_ratchet() -> void:
 
 ## The surfaces a settlement's fabric is drawn in, however many houses it has: its walls in the
 ## region's own surface and in its stone, the roofs, the stone, the joinery, and the made ground.
-const SURFACES := ["Drystone", "Earth", "Joinery", "Paving", "Roofs", "Stone", "Walls", "WallsAlt"]
+const SURFACES := ["Drystone", "Earth", "Garden", "Joinery", "Paving", "Roofs", "Stone", "Walls", "WallsAlt"]
 
 
 func test_the_fabric_is_one_mesh_a_surface_however_many_houses() -> void:

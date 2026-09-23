@@ -91,6 +91,20 @@ func quad(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, tint := C
 	tri(key, a, c, d, tint)
 
 
+## A leaf, a blade, a card: a quad `size` wide (x) and tall (y) in the local XY plane of `xf`,
+## drawn from both sides. Four triangles, where a box of no thickness is twelve and two thirds of
+## them are its edges, which nobody sees.
+func card(key: String, xf: Transform3D, size: Vector2, tint := Color.WHITE) -> void:
+	var hx := size.x * 0.5
+	var hy := size.y * 0.5
+	var a := xf * Vector3(-hx, -hy, 0.0)
+	var b := xf * Vector3(-hx, hy, 0.0)
+	var c := xf * Vector3(hx, hy, 0.0)
+	var d := xf * Vector3(hx, -hy, 0.0)
+	quad(key, a, b, c, d, tint)
+	quad(key, d, c, b, a, tint)
+
+
 ## A log, a pole, a round: a prism of `sides` faces lying along the local X axis of `xf`, `length`
 ## long and `radius` across, its sides in `tint` and its two ends in `ends` (the pale of a sawn
 ## face, where a box's end would read as a brick).

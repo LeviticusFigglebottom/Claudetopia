@@ -210,6 +210,10 @@ const GROUND_RANGE_M := 240.0
 const SMALL_PROP_M := 0.7
 const SMALL_PROP_RANGE_M := 70.0
 const MIDDLING_PROP_M := 1.6
+## The fabric key the gardens' small things are gathered under, drawn in the joinery's material as
+## a mesh of their own, only this near (measured to the middle of the place) and with no shadow.
+const GARDEN := "garden"
+const GARDEN_RANGE_M := 160.0
 
 ## Where the people whose schedules name a spot at this place stand: the words in a spot's name
 ## that say what it is at. The first that matches wins.
@@ -390,6 +394,10 @@ func _commit(fabric: FabricMesh) -> void:
 	var joinery := fabric.commit(self, "joinery", FabricMesh.joinery_material(), "Joinery")
 	if joinery != null:
 		FabricMesh.near_only(joinery, FabricMesh.JOINERY_RANGE_M, false)
+	# the gardens' crops, woodpiles and washing: small, many, and nothing from the next field
+	var garden := fabric.commit(self, GARDEN, FabricMesh.joinery_material(), "Garden")
+	if garden != null:
+		FabricMesh.near_only(garden, GARDEN_RANGE_M, false)
 	for key in ["paving", "earth"]:
 		var spec: Dictionary = PAVING_BY_CULTURE.get(culture, PAVING_BY_CULTURE["vale"]) if key == "paving" else EARTH
 		var ground := fabric.commit(self, key, _surface(spec, 0.55), "Paving" if key == "paving" else "Earth")
@@ -622,29 +630,32 @@ func _garden(fabric: FabricMesh, h: Dictionary, g: Dictionary) -> void:
 const CROPS := ["cabbages", "leeks", "beans", "potatoes"]
 
 
-## One bed's crop, planted down its length (`v`, `bed_len` long, 0.9 m across) from `mid`.
+## One bed's crop, planted down its length (`v`, `bed_len` long, 0.9 m across) from `mid`. The
+## leaves and blades are cards, in the garden's own mesh (`GARDEN`): a Vale town's crops as boxes
+## were two hundred thousand triangles, most of the settlement's, drawn whole wherever you stood.
 func _crop(fabric: FabricMesh, crop: String, mid: Vector2, v: Vector2, bed_len: float) -> void:
 	var u := Vector2(v.y, -v.x)
 	var top := 0.12
 	match crop:
 		"cabbages":
-			var n := maxi(1, int(bed_len / 0.5))
+			var n := maxi(1, int(bed_len / 0.55))
 			for j in range(n):
 				for x in [-0.2, 0.2]:
 					var q := _on_ground(mid + v * (-bed_len * 0.5 + (float(j) + 0.5) * bed_len / float(n)) + u * float(x))
 					_cabbage(fabric, q + Vector3(0.0, top, 0.0), Color(0.4, 0.55, 0.42).lerp(Color(0.5, 0.6, 0.36), _rng.randf()))
 		"leeks":
-			var n := maxi(1, int(bed_len / 0.3))
-			var green := Color(0.42, 0.56, 0.34)
+			var n := maxi(1, int(bed_len / 0.36))
+			var green := Color(0.4, 0.54, 0.32)
 			for j in range(n):
-				for x in [-0.22, 0.0, 0.22]:
+				for x in [-0.18, 0.18]:
 					var q := _on_ground(mid + v * (-bed_len * 0.5 + (float(j) + 0.5) * bed_len / float(n)) + u * float(x))
 					var turn := _rng.randf() * TAU
 					for k in range(3):
 						var yaw := turn + TAU * float(k) / 3.0
-						var lean := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, 1.35)
-						fabric.box("joinery", Transform3D(lean, q + Vector3(0.0, top + 0.16, 0.0) + Basis(Vector3.UP, yaw) * Vector3(0.03, 0.0, 0.0)),
-								Vector3(0.34, 0.035, 0.014), FabricMesh.shade(green, _rng.randf_range(0.85, 1.12)))
+						# a blade stands up out of the soil and leans away from the others
+						var lean := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, -0.22)
+						fabric.card(GARDEN, Transform3D(lean, q + Vector3(0.0, top + 0.17, 0.0) + Basis(Vector3.UP, yaw) * Vector3(0.03, 0.0, 0.0)),
+								Vector2(0.045, 0.34), FabricMesh.shade(green, _rng.randf_range(0.85, 1.12)))
 		"beans":
 			# a row of cane wigwams down the bed, a ridge cane along the top, the vines up them
 			var n := maxi(2, int(bed_len / 0.6) + 1)
@@ -657,12 +668,12 @@ func _crop(fabric: FabricMesh, crop: String, mid: Vector2, v: Vector2, bed_len: 
 				ends.append(apex)
 				for side in [-1.0, 1.0]:
 					var foot := _on_ground(mid + v * s + u * (0.38 * float(side))) + Vector3(0.0, top, 0.0)
-					_pole(fabric, foot, apex, 0.018, cane)
+					_pole(fabric, foot, apex, 0.018, cane, GARDEN)
 					for k in range(5):
 						var t := 0.18 + 0.16 * float(k) + _rng.randf_range(-0.05, 0.05)
-						fabric.box("joinery", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.RIGHT, _rng.randf_range(-0.5, 0.5)),
-								foot.lerp(apex, t)), Vector3(0.2, 0.16, 0.035), FabricMesh.shade(leaf, _rng.randf_range(0.82, 1.15)))
-			_pole(fabric, ends[0], ends[-1], 0.016, cane)
+						fabric.card(GARDEN, Transform3D(Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.RIGHT, _rng.randf_range(-0.5, 0.5)),
+								foot.lerp(apex, t)), Vector2(0.2, 0.16), FabricMesh.shade(leaf, _rng.randf_range(0.82, 1.15)))
+			_pole(fabric, ends[0], ends[-1], 0.016, cane, GARDEN)
 		_:
 			# potatoes, earthed up: a low ridge down the bed with the haulms bushing out of it
 			var along := Basis(Vector3.UP, atan2(-v.y, v.x))
@@ -673,25 +684,26 @@ func _crop(fabric: FabricMesh, crop: String, mid: Vector2, v: Vector2, bed_len: 
 				var q := _on_ground(mid + v * (-bed_len * 0.5 + (float(j) + 0.5) * bed_len / float(n)))
 				var turn := _rng.randf() * TAU
 				for k in range(3):
-					fabric.box("joinery", Transform3D(Basis(Vector3.UP, turn + float(k) * 1.05) * Basis(Vector3.RIGHT, _rng.randf_range(-0.3, 0.3)),
-							q + Vector3(0.0, top + 0.22, 0.0)), Vector3(0.44, 0.1, 0.2),
+					fabric.card(GARDEN, Transform3D(Basis(Vector3.UP, turn + float(k) * 1.05) * Basis(Vector3.RIGHT, -PI * 0.5 + _rng.randf_range(-0.35, 0.35)),
+							q + Vector3(0.0, top + 0.24, 0.0)), Vector2(0.44, 0.22),
 							FabricMesh.shade(Color(0.3, 0.45, 0.22), _rng.randf_range(0.85, 1.12)))
 
 
 ## A cabbage: a pale heart in a ring of leaves turned up at the edge.
 func _cabbage(fabric: FabricMesh, at: Vector3, green: Color) -> void:
 	var turn := _rng.randf() * TAU
-	fabric.box("joinery", Transform3D(Basis(Vector3.UP, turn), at + Vector3(0.0, 0.1, 0.0)), Vector3(0.17, 0.15, 0.17),
+	fabric.box(GARDEN, Transform3D(Basis(Vector3.UP, turn), at + Vector3(0.0, 0.1, 0.0)), Vector3(0.17, 0.15, 0.17),
 			FabricMesh.shade(green, 1.18))
 	for k in range(5):
 		var yaw := turn + TAU * float(k) / 5.0 + _rng.randf_range(-0.2, 0.2)
-		var leaf := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, _rng.randf_range(0.35, 0.6))
-		fabric.box("joinery", Transform3D(leaf, at + Basis(Vector3.UP, yaw) * Vector3(0.13, 0.08, 0.0)), Vector3(0.24, 0.02, 0.2),
+		# a leaf lies out from the heart, its outer edge turned up: a card tipped back off the flat
+		var leaf := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, _rng.randf_range(0.35, 0.6)) * Basis(Vector3.RIGHT, -PI * 0.5)
+		fabric.card(GARDEN, Transform3D(leaf, at + Basis(Vector3.UP, yaw) * Vector3(0.13, 0.08, 0.0)), Vector2(0.24, 0.2),
 				FabricMesh.shade(green, _rng.randf_range(0.8, 1.0)))
 
 
-## A pole from `a` to `b`, `r` thick.
-func _pole(fabric: FabricMesh, a: Vector3, b: Vector3, r: float, tint: Color) -> void:
+## A pole from `a` to `b`, `r` thick, in `key`.
+func _pole(fabric: FabricMesh, a: Vector3, b: Vector3, r: float, tint: Color, key := "joinery") -> void:
 	var d := b - a
 	if d.length() < 0.01:
 		return
@@ -701,7 +713,7 @@ func _pole(fabric: FabricMesh, a: Vector3, b: Vector3, r: float, tint: Color) ->
 		side = x.cross(Vector3.RIGHT)
 	var z := side.normalized()
 	var y := z.cross(x)
-	fabric.box("joinery", Transform3D(Basis(x, y, z), (a + b) * 0.5), Vector3(d.length(), r * 2.0, r * 2.0), tint)
+	fabric.box(key, Transform3D(Basis(x, y, z), (a + b) * 0.5), Vector3(d.length(), r * 2.0, r * 2.0), tint)
 
 
 ## A lean-to shed of boards, its roof falling to the back.
@@ -744,8 +756,8 @@ func _woodpile(fabric: FabricMesh, at: Vector2, u: Vector2) -> void:
 			var y := r + float(row) * r * 1.74
 			var bark := FabricMesh.shade(Color(0.36, 0.28, 0.2), _rng.randf_range(0.85, 1.15))
 			var sawn := FabricMesh.shade(Color(0.8, 0.66, 0.46), _rng.randf_range(0.85, 1.08))
-			fabric.prism("joinery", Transform3D(log_turn, p + basis * Vector3(x, y, _rng.randf_range(-0.04, 0.04))),
-					r * _rng.randf_range(0.88, 1.0), 0.55, bark, sawn, 7)
+			fabric.prism(GARDEN, Transform3D(log_turn, p + basis * Vector3(x, y, _rng.randf_range(-0.04, 0.04))),
+					r * _rng.randf_range(0.88, 1.0), 0.55, bark, sawn, 6)
 
 
 ## Two props and a line, and what is pegged out on it.
@@ -763,7 +775,7 @@ func _washing(fabric: FabricMesh, at: Vector2, u: Vector2, hw: float) -> void:
 	for i in range(n):
 		var q := a.lerp(b, (float(i) + 0.5) / float(n))
 		var size := Vector3(_rng.randf_range(0.4, 0.7), _rng.randf_range(0.45, 0.8), 0.03)
-		fabric.box("joinery", Transform3D(basis, q + Vector3(0.0, 1.9 - size.y * 0.5, 0.0)), size,
+		fabric.card(GARDEN, Transform3D(basis, q + Vector3(0.0, 1.9 - size.y * 0.5, 0.0)), Vector2(size.x, size.y),
 				colours[_rng.randi_range(0, colours.size() - 1)])
 
 
@@ -1290,7 +1302,7 @@ func _strew_one_kind(path: String, transforms: Array) -> void:
 	var packed := load(path) as PackedScene
 	if packed == null:
 		return
-	if path.contains("/trees/") and transforms.size() > 1:
+	if path.contains(FRUIT_TREE):
 		var parts := _lod_parts(packed, 1)
 		if not parts.is_empty():
 			for i in parts.size():
