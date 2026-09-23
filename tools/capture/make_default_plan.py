@@ -512,7 +512,13 @@ def build_plan() -> dict:
         ax, az = sx + math.cos(a2) * 420.0, sz + math.sin(a2) * 420.0
         ax, az = scatter.clear_spot(ax, az, math.degrees(a2) + 180.0, want=9.0,
                                     eye=lambda x, z: hh.at(x, z) + 28.0)
-        shots.append(shot("%s_approach" % short, (ax, hh.at(ax, az) + 28.0, az),
+        ay = hh.at(ax, az) + 28.0
+        if scatter.in_crown(ax, ay, az):
+            # in the drawn Briarwold no spot along the bearing out of Fernhold is clear of the
+            # oaks' crowns at 28 m, so the lens goes over the tallest of them
+            ay = scatter.crown_top_over(ax, az) + CROWN_MARGIN_M + 0.5
+            print("[plan] %s_approach: no clear spot on the bearing; camera raised above the trees" % short)
+        shots.append(shot("%s_approach" % short, (ax, ay, az),
                           (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 1.0, region_id))
     # One shot standing in the middle of each region's settlement, which is the only frame in
     # the sheet close enough for the villagers to be in it (they are kept up within 240 m) and
