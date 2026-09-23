@@ -64,6 +64,16 @@ static func centre_weight(bearing: float, heading: float, span := SPAN_DEG) -> f
 	return clampf(1.0 - absf(wrap_delta(bearing - heading)) / (span * 0.5), 0.0, 1.0)
 
 
+## One frame of easing the shown heading toward the view's, the short way round, with a time
+## constant of `tau` seconds so a mouse's discrete steps do not shake the glyphs. A jump bigger
+## than `snap_deg` in one frame is a cut (a respawn, a door) and is taken at once.
+static func ease_heading(shown: float, target: float, delta: float, tau := 0.03, snap_deg := 75.0) -> float:
+	var d := wrap_delta(target - shown)
+	if absf(d) > snap_deg or tau <= 0.0:
+		return fposmod(target, 360.0)
+	return fposmod(shown + d * (1.0 - exp(-delta / tau)), 360.0)
+
+
 # --- the control ----------------------------------------------------------------------------
 
 func _ready() -> void:

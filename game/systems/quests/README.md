@@ -5,6 +5,10 @@
 | `quest_log.gd` | Every quest started: stage, objective progress, journal, markers, rewards. Group `quest_log`, save section `quests`. |
 | `radiant.gd` | `RadiantGenerator`: turns the six radiant templates into real quests with region-appropriate targets and written text. |
 | `quest_conditions.gd` | `QuestConditions`: the glue between quest data and the dialogue condition vocabulary (`requires`, `hidden_until`, `fails_if`, `repeatable`). |
+| `quest_routes.gd` | `QuestRoutes`: which deliveries and decisions the pack's dialogue closes by hand, and who hosts the ones nobody wrote a line for. |
+| `item_sources.gd` | `ItemSources`: where a player can get an item — the story hands it over, a shopkeeper sells it, a loot table may roll it, a house keeps the book on a shelf. |
+| `choice_point.gd` | `ChoicePoint`: a decision with nobody left to put it to you (the note at the Cantor's Seat); a cold light that puts the open options when walked up to. |
+| `quest_walk.gd` | `QuestWalk`: every objective of every quest, and what in the built game closes it — the person and where they live, the enemy and where it stands, the item and how it is got — or why nothing can; the same for what starts each quest and for every target a job board could name. |
 
 ## Data
 
@@ -15,7 +19,8 @@
  "repeatable?": false,
  "stages": [{"id", "journal", "auto?": false, "manual_advance?": false, "marker?": {"place_id", "radius"},
              "objectives": [{"type", "target", "count?", "text?", "optional?", "hidden?",
-                             "place?", "item?", "radius?", "options?", "effects_by_option?", "on_complete?"}],
+                             "place?", "item?", "radius?", "options?", "effects_by_option?", "on_complete?",
+                             "where?", "spot?", "owner?", "with?"}],
              "on_enter?": [effects], "on_complete?": [effects]}],
  "rewards": {"marks?", "renown?", "morality?", "items?": [[id, n]], "rep?": [[faction, n]], "deed?", "effects?"}}
 ```
@@ -28,18 +33,39 @@ Objective types and what closes them:
 | `reach` | place or poi id | the position provider (`radius`, default 45 m) or `place_discovered` |
 | `kill` | enemy id, `""`/`any`, or `tag:<tag>` | `entity_killed` |
 | `collect` | item id | `item_acquired`, and what is already in the pack when the stage opens |
-| `deliver` | npc id (+`item`) | a dialogue effect (`complete_objective`) or `deliver()` |
-| `escort` | npc id (+`place`) | `escort_arrived` |
-| `choice` | option id (+`options`, `effects_by_option`) | `choose()` |
+| `deliver` | npc id (+`item`) | a dialogue effect (`complete_objective`); where no author wrote one, finishing a conversation with the person while carrying the item hands it over (`QuestRoutes`) |
+| `escort` | npc id (+`place`, `radius?`, `requires?`) | `escort_arrived`, said by `Escorts` (systems/npc_life) when the person walking with you gets there |
+| `choice` | option id (+`options`, `effects_by_option`, `with?`) | `choose()`: an authored `quest_choice` button, or, where nobody wrote one, the open options offered at the host's hub |
+| `use_item` | item id | `item_used`; a `tool` is used without being used up |
+| `rest_at` | hearthstone/place id | `hearthstone_rested` |
+| `read_book` | book id | `book_opened` |
+
+**Where the things lie.** A `collect` or `use_item` objective's item, or the item that reads a
+`read_book` objective's book, is put in the world by `QuestItems` (world/pois/quest_items.gd) unless
+the story already hands it over or a shopkeeper sells it: at the objective's `where` (a place, a
+point of interest or an interior), else the item's own `where`, else the place the same stage
+sends you to (`reach`). `spot` names a marker in the dressing, a chamber of a deep place, or a room
+of a house; `owner` makes taking it theft (in a house the resident owns it). A `choice` whose
+`with` names a place rather than a person gets a `ChoicePoint` there. What has been taken is the
+`quest_items` save section. `tests/unit/test_quest_items.gd` pins where each one lies.
+
+**Naming a stage.** Content names a stage by its id or by its *number*, and numbers count from
+one: `{"quest_at": ["core:quest/the_naming", 1]}` is the waking, the first stage.
+`QuestLog.stage_index()` is the one translation from what content wrote to an index; `stage_of()`
+answers that index (from nought) and is never what content writes. The code used to read the
+numbers as indices, so the pack's forty-eight numbered references all landed a stage late;
+`tests/unit/test_quest_stage_references.gd` pins every one of them to the stage id its writer
+meant, and fails on a new number until somebody says what it means.
+
+A stage's `on_complete` may send the quest to another stage (a branch rejoining the line), and
+when it does that is where the quest goes: `advance()` no longer walks on into the next stage
+in the list over the top of it.
 
 An option is written either as a plain id, with its consequences in the objective's
 `effects_by_option`, or as an object `{id, text, conditions?, effects?}` carrying its own. Both
 are answered by `choose()`, which refuses an option whose `conditions` are unmet; a branching
 quest names the stage it jumps to in the option's own effects, by stage id.
 `open_options(quest_id)` lists the options a dialogue should actually offer.
-| `use_item` | item id | `item_used` |
-| `rest_at` | hearthstone/place id | `hearthstone_rested` |
-| `read_book` | book id | `book_opened` |
 
 A stage closes when every non-optional objective is done (unless `manual_advance`), runs its
 `on_complete`, and the next stage's `on_enter` fires. A stage with no objectives waits for a
@@ -89,7 +115,8 @@ loaded game still knows what the board asked for. Board cooldowns ride in the sa
 
 ```gdscript
 Social.quests.start(quest_id) -> bool          # honours the def's `requires`
-Social.quests.set_stage(quest_id, stage)       # index or stage id
+Social.quests.set_stage(quest_id, stage)       # stage id, or its number counted from 1
+Social.quests.stage_index(quest_id, stage) -> int  # what content wrote, as an index (-1: no such stage)
 Social.quests.advance(quest_id)
 Social.quests.complete(quest_id, outcome := "") / fail(quest_id, reason) / abandon(quest_id)
 Social.quests.choose(quest_id, option) / complete_objective(quest_id, key) / deliver(quest_id, npc_id)
@@ -116,3 +143,9 @@ QuestConditions.can_start(def, ctx, log) / is_offerable(...) / offers_of(npc_id,
 `tests/unit/test_quests.gd` (30): trackers per objective type, markers, the authored Wardens
 quest end to end (both endings), radiant determinism, every template generating once the enemy
 and item pools are stood in, rewards by danger, and both save paths.
+`tests/unit/test_quest_items.gd`: the things the quests send you to pick up lie where their quests
+say, the same place every time, stay taken across streaming and saves, and the note is decided at the Seat.
+`tests/unit/test_quest_walk.gd`: every objective of every authored quest can be closed by something
+in the built game, every quest has something that starts it, and every target a job board could
+name can be done; a new objective that cannot fails it unless it is listed with its reason.
+Its `test_print_report` prints the whole walk, objective by objective, with how each one closes.

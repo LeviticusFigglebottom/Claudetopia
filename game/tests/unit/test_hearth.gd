@@ -140,6 +140,78 @@ func test_dying_on_the_spot_does_not_hand_the_marks_straight_back() -> void:
 	body.free()
 
 
+## The Echo answers a body that is in it, not a report of one that was. An Area3D finds an
+## overlap during a physics step and says so at the start of the next one, so a body that lay on
+## the Echo for a single tick and was brought back to the stone before the next was announced as
+## arriving after the Echo had been armed -- at the stone, 130 m away -- and the marks came back.
+## The journey dies and comes back one frame apart, which is exactly that; whether it failed
+## depended on whether that frame held a physics tick.
+func test_an_arrival_reported_after_the_body_left_does_not_recover_the_echo() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	assert_false(tree.paused, "the world is paused, so nothing in this test is being measured")
+	var body := _standing_body()
+	tree.root.add_child(body)
+	var fell := Vector3(120.0, 0.0, -40.0)
+	body.global_position = fell
+	inv.marks = 240
+	Hearth.rest_at("stone_a", Vector3(10, 2, 3), 0.0, false)
+	Hearth._on_player_died(fell)
+	await tree.physics_frame        # the tick after the fall: its step finds the body in the Echo
+	await tree.process_frame        # the frame is drawn with that arrival still unannounced
+	Hearth._respawn()               # and the player is brought back before the next tick
+	body.global_position = Vector3(10, 2, 3)
+	for i in 3:
+		await tree.physics_frame
+	assert_true(Hearth.has_echo(), "an arrival reported after the body had gone recovered the Echo")
+	assert_eq(inv.marks, 0, "the marks came back to a player standing at the stone")
+	body.get_parent().remove_child(body)
+	body.free()
+
+
+## And the same at every count of steps, with the count measured. The test above stages the
+## journey's case, one frame between the fall and the coming back, and passes unmeasured if that
+## frame happens to hold two physics steps (the arrival is then announced while the Echo is still
+## quiet). This stages the coming back exactly one, two and three physics steps after the fall,
+## counting them with `Engine.get_physics_frames()` and staging again when a frame overshoots;
+## before the Echo checked who was standing in it, one step was the count that gave the marks back.
+func test_an_echo_does_not_answer_a_body_that_has_gone_before_the_word_came() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	assert_false(tree.paused, "the world is paused, so nothing in this test is being measured")
+	var body := _standing_body()
+	tree.root.add_child(body)
+	var fell := Vector3(120.0, 0.0, -40.0)
+	var stone := Vector3(10.0, 2.0, 3.0)
+	for steps in [1, 2, 3]:
+		var staged := false
+		for attempt in 12:
+			Hearth._clear_echo_node()
+			Hearth.echo = {}
+			Hearth._respawning = false
+			Hearth.rest_at("stone_a", stone, 0.0, false)
+			inv.marks = 280
+			body.global_position = fell
+			await tree.process_frame
+			var start := Engine.get_physics_frames()
+			Hearth._on_player_died(fell)
+			while Engine.get_physics_frames() - start < steps:
+				await tree.process_frame
+			body.global_position = stone          # come back, the way `respawn` carries the body
+			Hearth._respawn()
+			if Engine.get_physics_frames() - start == steps:
+				staged = true
+				break
+			# one frame ran two steps and overshot: let this one settle and stage it again
+			for i in 4:
+				await tree.physics_frame
+		assert_true(staged, "could not stage a coming back %d physics steps after the fall" % steps)
+		for i in 4:
+			await tree.physics_frame
+		assert_eq(inv.marks, 0, "%d step(s) after the fall the Echo answered a body at the stone and gave the marks back" % steps)
+		assert_true(Hearth.has_echo(), "%d step(s) after the fall the Echo went quiet with nobody standing in it" % steps)
+	body.get_parent().remove_child(body)
+	body.free()
+
+
 ## One death, one coming back. The death delay's timer fires three seconds after the fall and
 ## nothing cancels it, so anything that brought the player back sooner -- a load, a scripted
 ## respawn, the journey's own -- was undone by it seconds into whatever they were doing next.

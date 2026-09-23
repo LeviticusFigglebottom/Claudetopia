@@ -4,6 +4,7 @@
 #   ./run.sh test       import + unit tests
 #   ./run.sh smoke      load every region and interior headlessly, fail on errors
 #   ./run.sh journey    scripted playthrough of every promise in DESIGN's done list
+#   ./run.sh fights     a scripted player against one foe of every archetype, headless
 #   ./run.sh flow       boot -> title -> the Naming -> the world, pressing the buttons a player
 #                       would, with a screenshot at every step -> captures/flow/
 #   ./run.sh shots      headless capture plan -> captures/
@@ -22,9 +23,29 @@ cmd="${1:-run}"; shift || true
 have_display() { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; }
 xvfb() { if have_display; then "$@"; else xvfb-run -a -s "-screen 0 1600x900x24" "$@"; fi; }
 import_project() { "$GODOT" --headless --path "$GAME" --import --audio-driver Dummy >/dev/null 2>&1 || true; }
+# A fresh clone has never been imported, and `godot --path game` outside the editor cannot load a
+# texture, mesh or scene that has not been: the first run imports it (a minute or two).
+ensure_imported() {
+  if [ ! -d "$GAME/.godot/imported" ]; then
+    echo "[run] first run: importing the project (a minute or two)..."; import_project
+  fi
+}
+# The built world is tracked (README.md, "Run it"), so a clone has it and nothing is built. What
+# the game needs is the manifest with its runtime maps and cells, and Terrain3D's regions. If the
+# regions alone are missing and the full-resolution maps are here, importing them is enough;
+# otherwise the whole world is built, which needs Python 3.11+ (tools/requirements.txt), about
+# 8 GB of memory and a few minutes. The title screen says the same thing if this never ran.
 ensure_world() {
-  if [ ! -f "$GAME/world/generated/world_manifest.json" ] && [ -f "$ROOT/tools/world/build_world.py" ]; then
-    echo "[run] world data missing; building..."; "$PY" "$ROOT/tools/world/build_world.py" && import_terrain
+  local manifest="$GAME/world/generated/world_manifest.json"
+  local regions
+  regions="$(find "$GAME/terrain_data/" -maxdepth 1 -name 'terrain3d*.res' 2>/dev/null | wc -l || true)"
+  if [ -f "$manifest" ] && [ "$regions" -gt 0 ]; then return 0; fi
+  if [ ! -f "$ROOT/tools/world/build_world.py" ]; then return 0; fi
+  if [ -f "$manifest" ] && [ -f "$GAME/world/generated/heights.r32" ]; then
+    echo "[run] terrain regions missing; importing them from the built maps..."; import_terrain
+  else
+    echo "[run] world data missing; building it (Python 3.11+, about 8 GB, a few minutes)..."
+    "$PY" "$ROOT/tools/world/build_world.py" && import_terrain
   fi
 }
 ensure_interiors() {
@@ -41,6 +62,7 @@ import_terrain() {
 
 case "$cmd" in
   run)
+    ensure_imported
     ensure_interiors
     ensure_world
     exec "$GODOT" --path "$GAME" "$@" ;;
@@ -77,6 +99,13 @@ case "$cmd" in
   journey)
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/journey/journey.tscn -- "$@" ;;
+  fights)
+    # A scripted player of a starting Calling against one foe of every archetype, headless and at a
+    # fixed 60 fps (so it is the same run every time and costs what the machine needs, not real
+    # time). Prints a FIGHT row per fight and a CHECK row per promise; exits 1 on a failed check.
+    #   ./run.sh fights [--calling=hearthkeeper] [--only=pack,boss] [--trace=boss]
+    import_project
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 res://tests/arena/fights.tscn -- "$@" ;;
   flow)
     # Three starts, each from boot.tscn with the probe attached: the title menu's New Game
     # through the Naming into the world (which also saves the slot the next two need), then
@@ -95,8 +124,13 @@ case "$cmd" in
       if echo "$log" | grep "FLOW: FAIL" >/dev/null; then echo "[flow] FAIL ($*)"; return 1; fi
       if ! echo "$log" | grep "FLOW: PASS" >/dev/null; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
     }
-    flow_run "$@" && flow_run "--load=flow" && flow_run "--continue"
-    echo "[flow] PASS: $out" ;;
+    # An `&&` list that fails part-way does not trip `set -e`, so this said PASS and exited 0
+    # whatever the runs found; the verdict has to be taken from the list itself.
+    if flow_run "$@" && flow_run "--load=flow" && flow_run "--continue"; then
+      echo "[flow] PASS: $out"
+    else
+      echo "[flow] FAIL: $out"; exit 1
+    fi ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"

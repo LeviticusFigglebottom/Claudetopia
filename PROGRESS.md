@@ -1859,3 +1859,482 @@ To build the rest for evaluation, in a worktree:
    not measured; `road_profiles.json` is not in CONTRACTS; `tools/capture/plans/pois.json` has
    the Cold Fire's old position (`python3 tools/capture/make_pois_plan.py`); Brightwater's
    wind-bent trees need a tilt in the scatter's instance format, which is a CONTRACTS change.
+## Combat measured, fights fought headless, four hooks owned, and the game heard
+
+Five parts, one branch. Every number below was produced by the running game, not read off the
+data: `./run.sh test --filter=test_combat_design | grep MEASURE` rebuilds the combat table,
+`./run.sh fights` the fights table, and `python3 tools/audio/audit.py` the audio one.
+
+### A. Combat against DESIGN §5.3
+
+`tests/unit/test_combat_design.gd` (19 tests) drives the real Player through the real input
+actions on a real floor against a real Enemy and prints what the game did. Before is the tree
+this branch started from; after is this branch. Timings have one-frame resolution (16.7 ms).
+
+| what | design | measured before | measured after |
+|---|---|---|---|
+| stamina pool at the character's own Endurance | 100 + 8·E (140 at E 5; 180 at E 10) | 180, whatever E was | 180 at E 10 |
+| mana pool at the character's own Will | 60 + 6·W | 120, whatever W was | 120 at W 10 |
+| stamina / mana after a level's point | +8 / +6 | +0 / +0 | 188 / 126 |
+| light / heavy / dodge / sprint cost (iron sword) | 18 / 32 / 22 / 8 per s | 18 / 32 / 22 / 8 | 18 / 32 / 22 / 8 |
+| stamina regen delay, rate | 0.8 s, 30/s | 0.800 s, 30/s | 0.800 s, 30/s |
+| input buffer | 0.25 s | 0.250 s | 0.250 s |
+| one-handed light chain | 3 | 3 | 3 |
+| heavy held to full, charge factor | 1.5× | 1.000× | 1.500× |
+| cancel a light into a dodge | only after the active frames | at 0.483 s, inside the hit window (0.323–0.493 s) | at 0.483 s, after it (0.297–0.467 s) |
+| roll, light load: length, i-frames | 0.6 s, 0.08–0.38 s | 0.600 s, 0.083–0.383 s | 0.600 s, 0.083–0.383 s |
+| load of a plate kit and a sword | worn / (40 + 3·E): 49.1% at E 5, 38.6% at E 10 | 24.3% | 38.6% |
+| a bag past its capacity | overloaded roll | 24.3%, never overloaded | 129%, overloaded roll |
+| stamina regen at light / heavy / overloaded load | slower as load rises (§5.7) | 30 / 30 / 30 per s | 30 / 22.5 / 15 per s |
+| guard of a 20 hit, clan shield (stability 0.8) | 4 through, 2.4 stamina | 20 through, 12 stamina | 4, 2.4 |
+| parry window | 0.18 s | 0.167 s (10 frames) | 0.167 s (10 frames; 0.18 s is 10.8) |
+| riposte_open, riposte multiplier | 2 s, 3× | 2.000 s, 3.000× | 2.000 s, 3.000× |
+| poise regen delay, rate | 1.5 s, 4/s | 1.517 s, 4/s | 1.500 s, 4/s |
+| stagger at zero poise, poise reset | yes | yes | yes |
+| poise a player's heavy loses to an 8-poise hit in its wind-up | 0 (hyper-armour) | 8 | 0 |
+| first light, iron sword, on a bandit (armour 2) | the §5.3 formula: 12.35 | 12.70 (a one-handed skill the character did not have) | 12.35 |
+| armour_flat, helm + tunic + gloves + boots | 15 | 3 (the body piece only) | 15 |
+| a light from behind; a sneaking dagger on an unaware foe | ×3; ×6 | ×1; ×1 | ×3; ×6 |
+| lock-on cycling, foes ahead, ahead-left, behind, and at 34 m | inside the 30 m cone only | cycled to the one behind | ahead-left, ahead |
+| burning / chilled / webbed / bleeding / poisoned / silenced | 12 / 0.6× / 0.45× / 6 / 15 / refused | all as designed | all as designed |
+| renown lost to 10 s of quieted | 2 | 0 | 2 |
+
+What changed to get there is in DECISIONS (2026-09-22: attributes start at 10 and one set of
+pool formulas, schema 4; load and regen by load; hyper-armour 12 and hit windows from the clip;
+backstab and sneak rules; the swing band and knockback in metres). The humanoid wind-ups were
+the largest single fault: 65 of 69 humanoid attacks threw their blow off the authored time (56
+early, 6 late, 3 never live) because the rig played the clip on its own schedule; the
+AnimationDriver now keeps the time and stretches the rig to it, and the worst of 100 attacks is
+0.017 s off.
+
+### B. Hit windows, telegraphs, and a scripted player against every archetype
+
+`tests/unit/test_attack_windows.gd` walks the data (every weapon's swings have `hit_start` and
+`hit_end`; every enemy and boss attack, every phase, winds up for at least 0.3 s) and then
+stands every one of them up in its real body and measures telegraph to live hitbox.
+
+`./run.sh fights` (`tests/arena/fights.gd`) puts a scripted level-1 player of a starting Calling
+on a flat floor against one foe of every §5.4 archetype, headless, at a fixed 60 fps and a
+seeded RNG (two runs diff equal). It checks, over 20 fights: every blow that landed was
+telegraphed for its authored time (238 seen), lock-on takes and cycles inside the cone, a parry
+inside the window opens a riposte and one outside does not, a roll's i-frames take a blow clean
+(170), a foe at zero poise staggers (19), and every fight is heard (20). All pass.
+
+| calling | archetype | foe | outcome | seconds | blows taken | damage taken | hits/swings | foe hp left |
+|---|---|---|---|---|---|---|---|---|
+| hearthkeeper | skirmisher | roadside bandit | won | 20.9 | 4 | 58 | 4/5 | 0% |
+| hearthkeeper | pack | down wolf | won | 38.9 | 4 | 40 | 8/9 | 0% |
+| hearthkeeper | brute | hedge wight | won | 13.2 | 0 | 0 | 13/13 | 0% |
+| hearthkeeper | charger | bristleback | won | 10.2 | 1 | 22 | 9/9 | 0% |
+| hearthkeeper | ambusher | sallowjaw | won | 14.9 | 0 | 0 | 12/12 | 0% |
+| hearthkeeper | caster | smuggler sayer | won | 28.2 | 4 | 50 | 4/4 | 0% |
+| hearthkeeper | sentinel | warden | won | 41.3 | 0 | 0 | 28/29 | 0% |
+| hearthkeeper | swarm | gutter drake | lost (died) | 35.5 | 11 | 100 | 5/8 | 30% |
+| hearthkeeper | elite | bravo | won | 42.2 | 0 | 0 | 20/20 | 0% |
+| hearthkeeper | boss | barrow reeve | lost (died) | 66.9 | 4 | 100 | 38/36 | 61% |
+| cragborn | skirmisher | roadside bandit | won | 12.1 | 2 | 30 | 3/5 | 0% |
+| cragborn | pack | down wolf | won | 13.2 | 7 | 42 | 6/6 | 0% |
+| cragborn | brute | hedge wight | won | 18.1 | 0 | 0 | 11/11 | 0% |
+| cragborn | charger | bristleback | won | 11.5 | 1 | 19 | 7/7 | 0% |
+| cragborn | ambusher | sallowjaw | won | 22.6 | 1 | 32 | 11/12 | 0% |
+| cragborn | caster | smuggler sayer | lost (died) | 55.1 | 10 | 100 | 2/8 | 31% |
+| cragborn | sentinel | warden | won | 84.9 | 0 | 0 | 42/42 | 0% |
+| cragborn | swarm | gutter drake | won | 7.0 | 7 | 45 | 4/4 | 0% |
+| cragborn | elite | bravo | lost (died) | 40.0 | 6 | 100 | 10/17 | 42% |
+| cragborn | boss | barrow reeve | lost (died) | 104.3 | 5 | 100 | 44/43 | 68% |
+
+Before the seven fixes below, the Hearthkeeper's first run read: pack and charger not won in 120
+s (the wolves bit nobody; the player was thrown off the edge of the arena), swarm lost with none
+of its swings landing, boss not won. A later run had the caster not won by either Calling: it
+walked away past its leash. After, 15 of 20 are won; the five lost are the swarm and the boss
+for the Hearthkeeper's dagger, and the caster, the elite and the boss for the Cragborn's axe.
+
+"Lost" is this player's result, not a verdict on the fight: the script never blocks (no starting
+kit has a shield) and never heals, because the flask DESIGN §5.5 refills at a Hearthstone does
+not exist and a loaf mends 8. The Barrow Reeve (520 hp, slash resist 0.3, armour 6) takes 7–11
+per landed blow from a starting weapon; at the scripted player's pace that is a minute and a
+half to three minutes of fighting without taking five of his blows. No fight is trivial by the
+harness's measure (over in under 8 s with nothing taken).
+
+The first runs found seven faults in the game, all fixed and pinned in
+`tests/unit/test_fights_found.gd`: a swing volume at chest height that no sword could land on a
+gutter drake with (0 hits); knockback summed into the velocity every frame (the bristleback
+threw the player at 140 m/s off the arena); an enemy that left the fight mid-blow lunging for
+ever; patience counted from the start of a fight rather than the last sight; a pack waiting on a
+ring wider than its bite (no blow landed on the player in 120 s against three wolves); circling
+at a speed no one could aim at; and a leash that broke for one frame (a caster walked 50 m from
+a 32 m leash). The first run also found `StatusEffects.advance` reading an effect a tick earlier
+in the same loop had ended.
+
+### C. Four hooks, owned
+
+`LootDrops.context_provider` (GameServices.loot_context: level, luck, quest stages),
+`Player.quick_slot_handler` (Equipment.use_quick_index), `Player.ammo_provider`
+(Inventory.ammo_for) and the Name-table's refusal reason (Crafting.enchant_check, shown on the
+station screen) each have an owner and a running-game test (`test_hooks_wired.gd`).
+`tools/unwired.py` now also lists Callable hooks nothing assigns: 3 before, 0 after. The fourth
+was not a hook but a function only its test called (`Enchanting.enchant_blocker`); the
+Name-table's screen asks it now, through `Crafting.enchant_check`, and shows the reason.
+
+### D. The audio
+
+Before: nothing in the game called Foley -- no footstep, blow, door, chest, coin or button had
+ever been heard. The score's combat layer came in only after a hit and went back to exploring
+eight seconds later mid-fight; there was no night; the second boss track arrived through a quest
+stage, as a cut; the ambience read the weather once per announcement and missed the blend;
+indoors, world sounds went round the Sounds slider. After:
+
+* an enemy entering combat holds the combat layer at 0.6 or above until the last one dies or
+  gives up, then it decays to exploring in 4.8 s; a region crossfades over 4 s between two banks
+  of stems; 21:00-05:00 is a night mix (melody -11 dB, deep stem -14 dB); an interior brings the
+  deep mix, a room tone, a 900 Hz low-pass on the ambience and a door; a boss's second phase
+  crossfades to the second track on its own player;
+* the ambience re-reads the Atmosphere's weather every second, so rain comes and goes with the
+  blend, not only with the announcement;
+* footsteps fall a stride apart by distance covered (0.35·speed + 0.6 m, so the cadence follows
+  whatever speeds the gait has) on the collider's surface, else water, else the region's ground;
+  blows sound the struck body's material; whooshes go with the blade; bows, arrows, sayings,
+  locks, buttons, chests, coins, meals, armour, menus, refusals, the Hearthstone and the Echo
+  are heard;
+* the Interior bus goes out through SFX, so the Sounds slider reaches indoors.
+
+`tests/unit/test_audio_wired.gd` (17 tests) drives each from its real trigger and samples every
+music player's level every 1/60 s: no player moves more than 3 dB in a step, and outgoing and
+incoming tracks are both audible at once. It also checks that every sound the code can ask for
+is a row whose files load (11 rows have nothing that asks, listed below), that every one of the
+393 audio files is used, that every bus a sound is sent to exists, and that the six sliders on
+the Settings screen move their buses (0.25 on a slider puts its bus at -12.0 dB).
+
+**The files.** `tools/audio/audit.py` measures every one of the 393 audio files the game ships
+(peak, true peak, clipping, DC, loudness per file and per category, one-shot edges and lead-ins,
+dead air in beds, loop-seam clicks and breaks) and flags what fails a release. Measured before:
+nothing clipped (highest true peak -1.48 dBTP), no DC, no loop clicked at its wrap (worst 3.8 dB
+against a 6 dB bar) and no loop broke its level at the wrap past anything it does elsewhere;
+every music stem sits within 0.1 LU of its stem's target and every bed within 0.6 LU of -30.
+What did fail:
+
+| check | files flagged before | after |
+|---|---|---|
+| a one-shot that decodes starting mid-waveform (first sample above -40 dBFS) | 50 | 0 |
+| a one-shot that starts late (more than 25 ms before it is heard) | 9 | 0 |
+| a variant more than 4 LU from the other variants of its effect | 4 | 0 |
+| an effect more than 10 LU from its family, at its table level | 7 (2 effects) | 0 |
+| a bed that drops to digital silence for more than 0.25 s | 3 | 0 |
+| clipping, true peak above -1 dBTP, DC, a click or a level break at a loop's wrap | 0 | 0 |
+| any of these | 69 | 0 |
+
+Fixed in the generators, then regenerated -- all 70 effects (240 files, because the edge fix
+applies to every effect) and four ambience keys (frogs, rope_creak, chain_clink, thunder_far);
+nothing else was re-rendered. The numbers under the flags: the effects' first decoded sample
+went from a median of -51.6 dBFS (worst -25.5) to digital zero, because Vorbis rings ahead of a
+transient on sample 0 and every effect is now set in 4 ms of silence; the longest digital
+silence in the frogs, boardwalk-rope and chain-bridge beds went from 2.4, 9.1 and 8.6 s to none,
+with the beds still at -30 LUFS (-30.2, -29.5, -29.8) and the frogs' wrap still under the click
+bar (4.5 dB against 6); the far thunder's lead-in went from up to 1.43 s to under 25 ms and the
+coins' from 108 ms; the four wide effects went from 4.1-4.9 LU of variant spread to 2.9-3.4; the
+lockpick click's median went from -34.6 to -30.2 LUFS and the cart wheels' from -30.0 to -24.0
+at their table levels; the highest true peak anywhere went from -1.48 to -1.26 dBTP. A music
+stem is not held to never going silent -- a melody rests while the others play -- only a bed is.
+
+### E. Test hygiene
+
+Sixteen tests opened a screen through the real event and left it open for the runner to find
+paused. `TestCase.close_screen(menu_id)` closes what a test opened and fails the test if it was
+not open; the count of tests leaving the world paused is 0 (it was 16).
+
+### Also fixed in passing
+
+* `./run.sh test` could report a green run as failed: `echo "$out" | grep -q` under pipefail
+  lets grep's early exit kill the echo; four of five replays of a green log failed. The parent
+  branch found and fixed the same race while this work was going on; this branch carries the
+  parent's lines verbatim (so the two merge without a conflict) plus its `fights` command, and
+  the parent's check reads the final green log as a pass twenty times in twenty.
+
+### Found and not fixed
+
+* 25 perk stat keys are read by nothing (the combat perks do nothing): damage_one_handed,
+  damage_two_handed, damage_archery, poise_damage_one_handed, stamina_cost_heavy,
+  stamina_cost_dodge, poise_max, dodge_iframes, block_stability, parry_window,
+  pickpocket_chance, sneak_attack_mult, prices_buy, prices_sell, renown_gain, ingredient_yield,
+  bow_draw_speed, arrow_recovery, weight_class_penalty, mote_yield, spell_cost_kindling,
+  spell_cost_hush, spell_power_mending, spell_duration_binding, spell_duration_calling.
+* The heavy and overloaded equipment tiers cannot be reached by gear alone (the heaviest kit
+  in the pack is about 0.61 of capacity); only an overfull bag gets there.
+* Flask charges (DESIGN §5.5) do not exist anywhere in the code.
+* Eleven sfx rows have nothing that plays them: bell_hand, bell_tavern, bell_toll, bell_tower,
+  thunder_far, thunder_near (the ambience has its own thunder), wind_gust, wood_creak,
+  cart_wheels, footstep_sand, footstep_snow (no region's ground is sand or snow).
+* POI structures (piers, walls, bridges) declare no footstep surface, so they sound like their
+  region's ground.
+* `tools/unwired.py` lists `use_quick` and `set_boss_intensity` because their only callers are
+  in their own files.
+
+### Next, in order
+
+1. **The 25 inert perk keys.** Each names a number the combat, stealth or economy code already
+   computes; read the character's modifiers for that key at that point and add a test per key
+   that takes the perk and measures the number move. `test_combat_design.gd` has the harness
+   for the combat ones.
+2. **Flask charges** (DESIGN §5.5): a quick-slot consumable refilled at a Hearthstone. Then
+   `./run.sh fights --only=boss` and record whether a level-1 player of either Calling can win
+   the Barrow Reeve; if not, the boss's numbers are DESIGN's to change.
+3. **The heavy load tier** cannot be reached by gear; either heavier kit or lower tier bounds
+   (`DamageModel.load_tier`), with the MEASURE rows in `test_combat_design.gd` updated.
+4. **POI footstep surfaces**: `poi_kit.gd`'s colliders take `surface` meta from the material they
+   were built with (timber and planks wood, stone and oroth stone); `test_audio_wired.gd` has the
+   walking test to copy.
+5. **The eleven unplayed sfx rows**: wire them (tower and tavern bells to the hour in Tollmere,
+   thunder to the Atmosphere's strikes, cart wheels to road travellers, snow to Skerrow above the
+   snow line) or drop them from `gen_sfx.py`. The test prints the list on every run.
+6. **unwired.py** could count a same-file caller when that caller is itself reached from outside
+   (it lists `use_quick` and `set_boss_intensity`, both reached through their own file).
+
+## The quests, walked to the end of every objective; and who stands at the points of interest
+
+Next item 4 recorded three diagnoses of the quest plumbing and item 6 the absent people and
+encounters at the points of interest. All three diagnoses survived measurement; the first was
+larger than written, and the walk of every quest that followed found more of the same kind.
+
+**`quest_at` counted from one and was read from nought — forty-eight times.** Content numbers a
+stage from one (`["core:quest/the_naming", 1]` is the waking); `quest_at`, `quest_min_stage` and
+`quest_stage` read the number as an index, so every one of the pack's forty-eight numbered
+references, in nine quests, landed a stage late. `QuestLog.stage_index()` is now the one
+translation (a stage id, or its number from one) and `test_quest_stage_references.gd` pins each of
+the forty-eight to the stage id its writer meant, and fails on a new number until somebody says
+what it means. The same pass found `advance()` walking on into the next stage over the top of a
+branch that had just sent the quest somewhere else; it stops now.
+
+**Nothing said `escort_arrived`, and nothing closed five deliveries or five decisions.**
+`Escorts` (systems/npc_life) walks the person with you: they fall in when the stage is under way
+and they have been spoken to, follow at your elbow, stop and wait with a journal line when left
+more than forty metres behind and fall in again when you come back, fail the quest when they
+die, and close the objective when they reach the place; they are saved on the road. Aud Fennick's
+vigil and the job boards' escorts both walk (`test_escorts.gd`, seven cases with bodies moved
+by hand). Five deliveries had no line anywhere to hand the thing over on (the letter to the
+Circle, Aud's bell to Cadwen, the Fennick bell, the press screw, the three loaves): finishing a
+conversation with the person while carrying it hands it over now, except where an author wrote
+the scene. The main thread's five decisions had no button anywhere: the open options are put at
+the host's hub, and the last one, the note, which has nobody left in the room to ask, at a cold
+light in the Cantor's Seat (`ChoicePoint`). Tools could not be used, so the speaking stone and the
+sluice pin could never be; a tool is used now without being used up.
+
+**Eighteen objectives in fourteen quests asked for things nothing gave, sold or put anywhere.**
+`QuestItems` (world/pois/quest_items.gd) puts them down as the world streams in: at the
+objective's `where`, the item's own, or the place the same stage sends you to; on a marker the
+dressing puts down when the objective names a `spot` (the Tumbled Watch's fallen stair, the
+Clanless Camp's chimes, the Gullhithe keel, the Wisp Hollow chimney), in a deep place's chamber or
+a house's room when it is inside; `owner` makes taking it theft; what is taken is the
+`quest_items` save section. A deep place's `item` features were props with an item written on
+them; they are pickups, except a boss's own drop. Hesta gives the Fennick bell on her blue-cuff
+line and the general store stocks the hearth loaf, rather than either lying in the road.
+
+**Every objective, walked.** `QuestWalk` (systems/quests/quest_walk.gd) asks of every objective
+of every authored quest what in the built game sends the event it waits for — the person and
+where they live, the enemy and where it stands (the built cells, a deep place's encounters, a
+point of interest's), the item and how it is got, the decision and who puts it — and
+`test_quest_walk.gd` fails on a new one that cannot be closed. **255 objectives in 35 quests:
+none without a way now, and every quest has a line or an effect that starts it.** Its radiant half
+asks the same of every target a job board could name, region by region, and found three ways a
+board could post work that is not work: an escort of a placeholder from the writers' first roster
+(one of them a dog, `example_dog_gosling`) or of an anonymous watch post, a fetch for cottongrass,
+which nothing in the game has, and — once those were out — an escort of Bessa Tamwick to Tamwick,
+where she lives, which ended the moment she agreed to it. The generator leaves all three out.
+
+The walk says whether the thing an objective waits for exists and can happen. It does not say the
+stage before is reachable, that a `requires` chain can be met, how hard the fight is, or that a
+kill happens where the story puts it (see the Undercroft below). The last column names only what
+an objective could not be closed without: a source this work added that nothing older supplies —
+a kill with enemies in the open is not counted for also standing at a point of interest, nor an
+item that is also sold for also lying somewhere.
+
+| quest | objectives | closable | numbered stage references (each read a stage late) | could not be closed without |
+|---|---|---|---|---|
+| `a_hand_on_the_rope` | 10 | all | - | placed, decision at the hub |
+| `a_thing_nobody_reported` | 7 | all | - | placed |
+| `a_verse_about_you` | 8 | all | 6 | stocked, hand-over, placed |
+| `against_the_bell` | 7 | all | - | - |
+| `at_the_gate` | 6 | all | - | - |
+| `bramble` | 6 | all | 4 | - |
+| `cask_and_press` | 8 | all | 6 | placed, hand-over |
+| `every_price` | 6 | all | - | placed x2 |
+| `forty_one_places` | 6 | all | - | - |
+| `four_hundred_and_twelve` | 7 | all | - | placed |
+| `grist` | 8 | all | 5 | tool use |
+| `in_council` | 10 | all | - | - |
+| `last_name` | 9 | all | 6 | - |
+| `louder` | 8 | all | - | tool use, placed |
+| `louder_than_books` | 7 | all | 2 | hand-over, decision at the hub |
+| `seventeen_bells` | 7 | all | 4 | given (Hesta), hand-over |
+| `the_briars_purpose` | 10 | all | - | POI encounter only, decision at the hub |
+| `the_cold_fire` | 5 | all | - | - |
+| `the_deep_lines` | 6 | all | - | - |
+| `the_fawning_months` | 6 | all | - | - |
+| `the_held_note` | 7 | all | - | decision at the Seat |
+| `the_lamp_is_dimmer` | 8 | all | - | placed |
+| `the_lane_that_isnt` | 7 | all | - | - |
+| `the_lantern_still_lit` | 6 | all | - | placed |
+| `the_last_column` | 2 | all | - | hand-over |
+| `the_long_measurement` | 9 | all | - | - |
+| `the_names_in_the_chapter_book` | 5 | all | - | - |
+| `the_naming` | 7 | all | 7 | - |
+| `the_reading` | 6 | all | - | - |
+| `the_toll_hums` | 10 | all | 8 | placed x2 |
+| `the_unsaid_ledger` | 6 | all | - | placed x2 |
+| `the_unsaid_woman` | 9 | all | - | - |
+| `vigil` | 9 | all | - | escort, hand-over |
+| `wardens_roll_of_names` | 8 | all | - | placed |
+| `what_the_water_kept` | 9 | all | - | decision at the hub, placed |
+
+*placed*: lies where `QuestItems` or a deep place's feature (now a pickup) puts it, and nothing
+else gives it. *stocked*, *given (Hesta)*: a shop's stock or a line now supplies it. *hand-over*:
+finishing a conversation with the person while carrying it. *decision at the hub* / *at the Seat*:
+`ChoicePoint`. *tool use*: used without being used up. *escort*: `Escorts`. *POI encounter only*:
+the Hart of Thorns, which nothing but the Standing Moot's encounter stands up.
+
+**The points of interest stand up what their sentences say.** Every POI has carried an
+`encounter` sentence and nothing stood up what any of them described; the world builder keeps the
+country's encounters off every pad, so the places a player is drawn to were the one ground sure
+to be empty. Thirty-three `encounter` defs (content/packs/core/encounters/pois.json) say the
+sentences in terms `PoiEncounters` can raise with the dressing: groups at a marker the builders
+put down or on the pad's rim, by the hour (the ford's bandits after dark, the dell's bristlebacks
+at dawn, the shrine's wisps at midnight), kept away by a condition (the Larkbourne Boys while the
+Roll of Names sends you to hear Ryn out) or by a person being present (the Lantern Causeway's
+drowned climb the poles only when the lamplighter is not on them), or seated until something is
+touched (Greyfold's six at the Cold Fire rise when you take up the cup). A group killed stays dead
+until a Hearthstone rest; a boss put down stays down. **The Hart of Thorns was stood up nowhere**
+— its arena is the Standing Moot, a place rather than a deep place — **so the main thread's
+fourth account could not be finished**; the Moot is dressed as a stone circle now (a place's
+`dressing` kind) with the Hart in its middle. `test_poi_encounters.gd` pins what stands at every
+one of the forty-eight, people included, both ways round.
+
+The people the sentences and stories name are ordinary npc defs with dialogue, and so they are in
+the `npcs` save section like anybody (`test_poi_people.gd` saves every one of them, loads over a
+standing body and into an empty registry, and finds one Ivo each time and the killed lamplighter
+still dead): **Lissane Sa** the lamplighter, **Khath ko-Rudd** the toll-keeper, **Calen Ash** the
+knight in the Headless Watch's eye (who asks what bread costs in Tollmere and writes the answer
+inside the eye with a burnt stick), **Ivo Goslin** the hermit, with a side quest (*The Last
+Column*) and his exercise book to read on his crate, **Marigold Orchard** the pilgrim at Ansel's
+chair on three days in seven, and **Sorrel and Barnaby Rooke**, the burners who never sleep at the
+same time, with a stock table and the camp's job board. Three more that the places' stories name
+were still missing after this work's first pass, and one had been written down and never made: **Tansy
+Cresswell**, Foxglove Dell's hedge-witch, was a row in the names index ("made Nell Harebell's
+cousin by this stream") and Nell's line about her, and nobody at the dell. She sells yew berries
+to anybody who asks plainly, which Nell will not, is asleep in her hut while the boars root at
+dawn, and says what the story leaves open: whoever takes her yew keeps the seed and leaves the
+harmless flesh in heaps (Nell has a line back). **Ruska ko-Dreugh** takes three marks at Windgate
+for a pass the snow has shut for nine winters and writes you in the book as crossed. **Gisel
+Morneth and Wennick Anthar** are the Sayers' camp at the Thirteenth, arguing whether its head is
+the Cantor's likeness or a face somebody cut into it afterwards, which is what Calen says they do
+instead of saying so; neither is shown right, and both are in their tents with the flaps tied
+before the choristers come. Two rumours carry the new ones about (the heaps under the yew, and
+crossing Windgate, which a capture's log has being said at Kharrow Hold). Ryn Larkbourne's
+schedule named a spot `gosling_pit` in Merrowby that
+nothing there was called; he keeps the camp at the head of the stolen mill wheel now. Each works
+on a marker their place's dressing puts down, and a marker says whose place it is in, so two
+camps' fires are never taken for each other. The Reed Wreck's chart of the Salt Isles lies on its
+crate.
+
+A body stands exactly where its marker is, and that found a mistake of this work's own: the
+Sayers' camp at the Thirteenth had been measured from the head toward the hips, so its table, lamp
+and ladder stood inside the colossus's shoulders and a tent in its flung arm (the B2 capture shows
+the tent's canvas through the carving's flank and no table anywhere). The camp is on the head's
+right, the one quarter the figure leaves open, and `test_poi_people.gd` now puts a person-sized
+capsule on every working marker and fails if it touches anything solid (a capsule at the
+colossus's hips must, and does), fails if two people work one marker at one hour, which the
+second Sayer first did, and stands every one of the twelve up at every hour they work and fails
+if any is more than half a metre off their marker — a marker the registry cannot find puts a
+person on a ring round the place's middle without a word, and on an island that ring is water.
+
+**The One Poppy and the Thirteenth, looked at.** From the POI plan's thirty metres the poppy was
+grey grass and nothing. It has what people who come out to it would leave: the grass worn away
+inside a ring of carried stones and down a path, a cairn by the path with a peeled white stake
+standing out of the flat heath, and the flower built from shapes, a bloom two hands across that
+holds a little light, the one colour there. At thirty metres the ring, the stake and the red are
+all legible; the bloom itself is a handful of pixels, which is what a poppy at thirty metres is. A
+trodden path laid as thin boards photographed as a white rail across the heath and was taken
+out. Kneeling by it now puts its sentence's deed: water it (the Hearth) or pick it (the Hollow,
+four petals, and it is not rebuilt). The Thirteenth was boxes and a dome in the coursed Oroth
+surface — a wall and an igloo. It is carved: the back, the blades and the hips as rounded masses,
+long limbs, the soles turned up, one arm flung ahead with the fingers spread, the robe's folds
+down its back, the hooded head down in the Sayers' diggings under a hoist. On round forms the
+Oroth courses drew seams and the body looked inflated, so it is the Builders' dark stone with
+hairline weathering instead. From above or along its length it is a figure lying face down; from
+the ground by its head it is a mass of carved stone with the dig at its crown — better, and still
+simplified: the limbs are smooth round forms, not sculpture. Captured again on the merged result,
+under the painted sky and its palette: the poppy still reads from thirty metres (the ring, the
+stake, and a red mark a few pixels wide), the Thirteenth's camp stands on the head's right with
+both Sayers on their feet at the table and the trench, and the gate-warden stands on clear ground
+in front of the toll-house's drifts. Foxglove Dell's hedge hides the valley from the pois plan's
+own shot, which is what a hedge is for; from above it, Tansy is among the foxgloves in the
+morning and at her door in the firelight at dusk.
+
+**Found in passing, and fixed (twice, some of it).** The journey's death step read
+`marks_gone=false recovered=true` with the count exactly what it was, once in this work's runs
+and once in another branch's run the same night (240 marks, no Naming step in it), so it was
+never the Toll Hums, as this work first guessed. The physics server says who came into an Area3D
+as the iteration after the step that found them begins; when exactly one physics step fell
+between the journey's fall and its coming back, that step found the body lying in the still-quiet
+Echo, `_respawn` armed it, and the word arrived after, with the player already at the stone: the
+marks came straight back. The player-feel work found the same hole the same night and fixed it
+the same way; the merge keeps its Echo (`_is_here` measures a body against the Echo's own radius
+and height, where this work's measured a round 2.5 m) and both tests: its own stages the
+journey's single step, and this work's stages one, two and three steps with the count measured,
+restaging any frame that overshoots, and failed at one step before the fix. `Readable` never set
+its collision layer, so the interaction ray, which masks only the interactable layer, went through
+every shelf book in every house: the shelves were readable only by a test calling `interact()`.
+`run.sh` read the test and smoke verdicts with `echo "$out" | grep -q` under `pipefail`, which
+returns 141 when grep leaves at its match while echo is still writing: five reruns in forty over
+one passing log exited 1, and the smoke check could have passed a log that said SCRIPT ERROR. The
+parent branch fixed that the same night too, with a grep that reads to the end, and its version
+is the one merged.
+
+**Measured**, on this branch with the parent merged in twice (the painted look, the roads, combat
+and audio, then player feel and no void): the unit suite 1398 tests, 0 failed, 0 content
+problems, 0 script errors and 0 dead lambda captures (four logged errors, the same four tests of
+bad input as before this work). The journey 16 of 16 in each of three runs; its meet-somebody
+step now closes the Naming at Wren's word in Merrowby and checks the Toll Hums begins, which is
+the furthest a noon in Merrowby carries the thread (the Naming's earlier stages are a day's walk
+away, and the unit suite walks them). Smoke PASS over 6 regions, 34 places and 24 interiors, with
+nothing logged. Against the parent branch as it stands, `unwired.py --verbs` counts two fewer
+verbs reached only by tests (37 to its 39: `open_options` and `start_def` are reached now) and
+none new, and `dead_data.py` the same five unread keys (559 distinct keys to its 542; every one
+this work added is read).
+
+**Found and not fixed.**
+
+* **Kills count wherever they happen.** The Undercroft's strongroom stage asks for bravos and the
+  room behind the bell for gutter drakes; the Undercroft's own encounters are down-wolves and
+  bandits, so both close by killing bravos at the Long Stride and drakes at the Gullhithe Wreck.
+  The fix is the Undercroft's meta or a kill objective that names where.
+* **Hollin Barrow's bell cist names `core:item/wardens_roll_fragment` as a feature; no such item
+  exists**, so it stays a prop.
+* **Aud Fennick walks "into the grey"** at the end of the vigil and the registry puts her back on
+  her schedule at Pilgrim's Ash; Seventeen Bells needs her there, so the story and the roster
+  disagree rather than either being broken.
+* **The loot tables' `quest_at` / `quest_min` conditions read a `quests` context nobody fills**;
+  no loot def uses them yet, and whoever does will meet this and the stage-numbering rule at once.
+* **A quest's `giver` starts nothing** (`QuestConditions.offers_of` is called only by its tests).
+  Every authored quest has a line or an effect that starts it, so none is stuck; a new quest that
+  relies on its giver alone will be.
+* **Sentences not honoured, or honoured loosely:** the Singing Yew's wights turning away, the
+  Sallow King's moral choice, the Headless Watch's fallen knight "if the watch has turned" (nothing
+  turns it), the Mossbridge Wardens' "stolen forest goods" (their own greed rule stands in),
+  Tideflat's crabs (there is no crab), Gosling Pit's brute leader, who is Ryn, a person you parley
+  with, the Long Stride's bravo, who is hostile by day rather than waiting for somebody to refuse
+  the toll (there is no toll to refuse), and the Clanless Camp's "brute and two skirmishers", who
+  are three raiders. Groups said to be up high ("at the top", "on the cliffs above", "in the cave
+  behind the falls") stand on the pad's rim, and the sentences' ground — Gosling Pit's rear path
+  from the Hound's eye, Fern Gully's bridges to cut, Whitecut's wet stone — is terrain, not people.
+* **The Hart of Thorns stands in the Moot as a bare humanoid rig**, and the Moot's stones read
+  dark on dark under the Briarwold canopy; both are in the capture and neither is this work's art.
+* **The placeholder roster is still in the world**: `example_merrowby.json`'s eight, three of them
+  sharing a name with a real person (Wren Tallow, Maud Brambling, Osric Pennywort), which are three
+  of `namegen.py --check`'s four problems; the fourth is two items both called "Reed Lantern".
+* **The pois plan's own shot of the Watch of the Gate photographs a hillside**: 44 m back from the
+  toll-house on its approach is behind a shoulder of the pass. A shot at half the distance shows
+  the house and its warden; `make_pois_plan.py` does not look for a clear line.
+
+**Left for next, in order.** (1) Give the Undercroft its drakes and bravos, and let a kill objective
+name where it counts. (2) Make `wardens_roll_fragment` or take it out of the cist. (3) The
+unhonoured sentences above, the Moot's stones and the Hart's model. (4) Delete or rename the
+placeholder roster.

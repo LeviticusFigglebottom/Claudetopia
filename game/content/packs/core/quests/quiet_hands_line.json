@@ -34,7 +34,7 @@
         "objectives": [
           {"type": "reach", "target": "core:poi/gullhithe_wreck", "radius": 140, "text": "Go out to the wreck on the shingle"},
           {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "text": "Settle with the sayers on the wreck"},
-          {"type": "collect", "target": "core:item/forged_charter_chit", "count": 1, "text": "Take a chit off them"}
+          {"type": "collect", "target": "core:item/forged_charter_chit", "count": 1, "text": "Take a chit off them", "spot": "under_the_keel"}
         ],
         "on_complete": [{"set_flag": "took_the_chit"}, {"renown": 10}]
       },
@@ -224,7 +224,7 @@
         "objectives": [
           {"type": "reach", "target": "core:place/undercroft", "radius": 140, "text": "Go in through the bell's side"},
           {"type": "kill", "target": "core:enemy/bravo", "count": 2, "text": "Get past the Guild's two bravos"},
-          {"type": "collect", "target": "core:item/ledger_of_prices", "count": 1, "text": "Take the Ledger of Prices"}
+          {"type": "collect", "target": "core:item/ledger_of_prices", "count": 1, "text": "Take the Ledger of Prices", "where": "core:interior/undercroft", "spot": "ledger_fall"}
         ],
         "on_complete": [{"set_flag": "took_the_ledger"}, {"renown": 30}]
       },

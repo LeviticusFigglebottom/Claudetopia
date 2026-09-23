@@ -30,7 +30,7 @@ static func register_all(social: Node, console: Object) -> void:
 	console.register("rep", func(args: Array) -> String: return _rep(social, args), "rep <faction_id> [delta]")
 	console.register("join", func(args: Array) -> String: return _join(social, args), "join <faction_id>")
 	console.register("quests", func(_args: Array) -> String: return _quests(social), "quests: the active journal")
-	console.register("quest", func(args: Array) -> String: return _quest(social, args), "quest <quest_id> [stage]")
+	console.register("quest", func(args: Array) -> String: return _quest(social, args), "quest <quest_id> [stage id, or its number counted from 1]")
 	console.register("board", func(args: Array) -> String: return _board(social, args), "board <place_id> [count]")
 	console.register("rumours", func(args: Array) -> String: return _rumours(social, args), "rumours [place_id]")
 
@@ -145,7 +145,7 @@ static func _quests(social: Node) -> String:
 
 static func _quest(social: Node, args: Array) -> String:
 	if args.is_empty():
-		return "quest <quest_id> [stage]"
+		return "quest <quest_id> [stage id, or its number counted from 1]"
 	var quest_id := _id(str(args[0]), "quest")
 	if args.size() > 1:
 		var stage: Variant = int(args[1]) if str(args[1]).is_valid_int() else str(args[1])

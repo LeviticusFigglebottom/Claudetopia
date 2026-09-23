@@ -49,3 +49,18 @@ func assert_has(container: Variant, key: Variant, msg := "") -> void:
 func assert_empty(container: Variant, msg := "") -> void:
 	if container.size() != 0:
 		fail("expected empty, got %d items: %s. %s" % [container.size(), str(container).left(300), msg])
+
+
+## Shuts a screen the test opened through the real event, after checking that it did open. A
+## full-screen screen pauses the world, and one left open freezes the physics of whatever test
+## runs next; the runner tidies up after a test that forgets, but it names the test, because a
+## test is expected to put back what it took out.
+func close_screen(menu_id: String, msg := "") -> void:
+	var ui: Node = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("UI")
+	if ui == null:
+		fail("no UI to close the %s screen in. %s" % [menu_id, msg])
+		return
+	if not bool(ui.call("is_menu_open", menu_id)):
+		fail("expected the %s screen to be open. %s" % [menu_id, msg])
+		return
+	ui.call("close", menu_id)

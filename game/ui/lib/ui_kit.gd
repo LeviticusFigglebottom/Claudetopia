@@ -45,6 +45,10 @@ static func button(text: String, variation := "") -> Button:
 	if not variation.is_empty():
 		b.theme_type_variation = StringName(variation)
 	b.focus_mode = Control.FOCUS_ALL
+	# Brass under the finger, a tick under the pointer (core:table/sfx, the UI bus). The
+	# closures capture nothing, so they cannot outlive what they refer to.
+	b.pressed.connect(func() -> void: Foley.play_ui("ui_brass_click"))
+	b.mouse_entered.connect(func() -> void: Foley.play_ui("ui_hover_tick"))
 	return b
 
 

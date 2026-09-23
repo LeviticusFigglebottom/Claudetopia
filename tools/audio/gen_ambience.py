@@ -166,6 +166,18 @@ def insects(seconds: float, rng, kind: str = "crickets", density: float = 0.6) -
     return np.stack([left, right], axis=1)
 
 
+def quiet_floor(n: int, rng, lowpass_hz: float = 380.0, peak: float = 0.004) -> np.ndarray:
+    """What a place sounds like between its events: a whisper of air or water far under them.
+
+    A bed made only of events (frogs, creaking ropes, clinking chains) fell to digital silence
+    between them -- up to nine seconds of it (tools/audio/audit.py) -- and a bed at -inf is the
+    world switching off, which is exactly what silence_bed exists to avoid. Scaled to `peak`,
+    some thirty dB under the events; drawn after them, so the events are the ones they were.
+    """
+    y = filters.lowpass(osc.brown(n, rng), lowpass_hz, 0.7)
+    return y / (np.max(np.abs(y)) + 1e-12) * peak
+
+
 def frogs_bed(seconds: float, rng, density: float = 0.6) -> np.ndarray:
     """Marsh frogs: pulsed croaks with a formant body, answering each other across the water."""
     n = samples(seconds)
@@ -193,6 +205,10 @@ def frogs_bed(seconds: float, rng, density: float = 0.6) -> np.ndarray:
         amp = 0.5 / np.sqrt(voices)
         left += out * np.cos(a) * amp
         right += out * np.sin(a) * amp
+    # Between croaks a marsh is still a marsh: slow water under everything (quiet_floor).
+    floor = quiet_floor(n, rng, 380.0, 0.004)
+    left += floor
+    right += np.roll(floor, samples(0.021))
     return np.stack([left, right], axis=1)
 
 
@@ -299,6 +315,8 @@ def rope_creak_bed(seconds: float, rng) -> np.ndarray:
         shape = env.segments([(0, 0), (dur * 0.25, 1.0), (dur * 0.7, 0.6), (dur, 0)], k)
         out[samples(t):samples(t) + k] += body * shape * rng.uniform(0.25, 0.8)
         t += rng.uniform(2.0, 11.0)
+    # water moving under the boardwalk between the groans (quiet_floor)
+    out += quiet_floor(n, rng, 300.0, 0.006)
     return fx.decorrelate(filters.highpass(out, 60.0), seed=int(rng.integers(1 << 30)), ms=28.0)
 
 
@@ -323,6 +341,9 @@ def chain_bed(seconds: float, rng) -> np.ndarray:
             m = min(len(hit), n - s)
             out[s:s + m] += hit[:m]
         t += rng.uniform(1.8, 9.0)
+    # the wind the chains hang in, between the clinks (quiet_floor, kept bright: the
+    # bed is high-passed at 700 Hz, and a floor of rumble would be filtered out of existence)
+    out += quiet_floor(n, rng, 2400.0, 0.02)
     return fx.decorrelate(filters.highpass(out, 700.0), seed=int(rng.integers(1 << 30)), ms=20.0)
 
 
@@ -654,6 +675,15 @@ def render_bed(name: str, spec: dict, seconds: float = BED_SECONDS) -> np.ndarra
     return y
 
 
+def _trim_lead(y: np.ndarray, floor_db: float = -60.0, keep: float = 0.004) -> np.ndarray:
+    """Drop what comes before the sound starts (below `floor_db` of its peak), keeping `keep`."""
+    mag = np.abs(y)
+    idx = np.flatnonzero(mag > core.db_to_lin(floor_db) * (mag.max() + 1e-12))
+    if not len(idx):
+        return y
+    return y[max(0, int(idx[0]) - samples(keep)):]
+
+
 def render_pool(name: str, spec: dict) -> list:
     """A pool of one-shot variants, each ending in silence so it can be triggered any time."""
     out = []
@@ -663,6 +693,10 @@ def render_pool(name: str, spec: dict) -> list:
         y = core.to_mono(y)
         y = core.fade(y, 0.004, 0.06)
         y = render.mixdown(y, peak_db=-3.0, target_lufs=ONESHOT_LUFS, hp=30.0, limit=True)
+        # A far thunder swelled up out of up to a second of nothing below -60 dB of its peak:
+        # a second of latency on a sound that is already random, and a pool player held for it.
+        # Trimmed after the mix, whose limiter moves the peak the threshold is measured from.
+        y = core.fade(_trim_lead(y), 0.004, 0.0)
         out.append(y)
     return out
 

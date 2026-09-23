@@ -316,6 +316,25 @@ func by_category(category: String) -> Array[ItemStack]:
 	return query({"category": category})
 
 
+## The arrow a bow draws from this bag, for `Player.ammo_provider`: the kind the bow names
+## (`preferred`) when there is one, else any item tagged `tag` ("arrow", "bolt"). With `take` one
+## of it leaves the bag. Returns its id, or "" when the quiver is empty. Before this was assigned
+## the player loosed from a counter of twenty that no pickup ever refilled, and the thirty arrows
+## a Wayfarer starts with could not be shot.
+func ammo_for(tag: String, preferred: String = "", take: bool = false) -> String:
+	var id := ""
+	if not preferred.is_empty() and count(preferred) > 0:
+		id = preferred
+	else:
+		for s in by_tag(tag):
+			if s.count > 0:
+				id = s.id
+				break
+	if not id.is_empty() and take:
+		remove(id, 1)
+	return id
+
+
 func by_tag(tag: String) -> Array[ItemStack]:
 	return query({"tag": tag})
 
@@ -436,6 +455,13 @@ func use(item: Variant) -> bool:
 		return false
 	if s.is_readable():
 		return read(s)
+	if s.is_tool():
+		# used, not used up: the use is announced for whoever is waiting on it (a quest's
+		# `use_item`), and the tool goes back in the bag
+		item_used.emit(s.id, [])
+		if is_player:
+			EventBus.item_used.emit(s.id, [])
+		return true
 	if not s.is_consumable():
 		return false
 	if s.is_ingredient():

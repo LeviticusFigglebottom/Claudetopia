@@ -306,5 +306,18 @@
       "wardens"
     ],
     "description": "A chalk doorstep worn hollow by feet. It was the only thing left where Harewell had been, and now that it is in your pack the place it came from cannot be found at all."
+  },
+  {
+    "id": "core:item/ivos_last_column",
+    "name": "Ivo's Last Column",
+    "category": "misc",
+    "weight": 0.05,
+    "value": 1,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "letter"
+    ],
+    "description": "One sheet of Tallymen ledger paper folded in four: a column of the Ledger of Prices for a village the Roll no longer names, begun in a clerk's hand and finished twenty-two years later in the same hand gone shaky. The total at the foot is underlined twice, and it is correct."
   }
 ]

@@ -7,6 +7,7 @@ extends StaticBody3D
 ## Interiors dress themselves with book props; this is what makes one of them worth walking to.
 
 const TAKE_PROMPT := "Take"
+const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
 
 @export var book_id := ""
 @export var item_id := ""
@@ -18,6 +19,10 @@ const TAKE_PROMPT := "Take"
 func _ready() -> void:
 	add_to_group("interactable")
 	add_to_group("readable")
+	# The layer the player's interaction ray masks. A body made with `.new()` keeps Godot's
+	# default layer 1, which the ray does not see: every shelf book in every house was a prompt
+	# nobody could raise, readable only by a test calling `interact()` directly.
+	collision_layer = INTERACT_LAYER
 	if display_name == "a book" and not book_id.is_empty():
 		display_name = str(ContentDB.get_or_empty(book_id).get("title", display_name))
 	if get_node_or_null("CollisionShape3D") == null:

@@ -157,6 +157,13 @@ func is_consumable() -> bool:
 	return category() == "consumable" or category() == "ingredient"
 
 
+## A tool is used without being used up: the speaking stone Said into at the Chalk Hound, the
+## sluice pin set in the mill's gate. Nothing could use one — `use()` knew only what is eaten,
+## worn or read — so the two quest objectives that ask for it could never close.
+func is_tool() -> bool:
+	return category() == "tool" and not is_equippable() and not is_readable()
+
+
 ## The book this item opens ("" when it is not something to read). An item says so with
 ## `reads`; a `book`-category item whose short name matches a book id says so by its name.
 func reads_book() -> String:
@@ -264,5 +271,5 @@ func summary() -> Dictionary:
 		"weight": weight(), "unit_weight": unit_weight(), "value": value(), "unit_value": unit_value(),
 		"tags": tags().duplicate(), "description": description(), "data": data.duplicate(true),
 		"equippable": is_equippable(), "consumable": is_consumable(), "two_handed": is_two_handed(),
-		"readable": is_readable(), "reads": reads_book(),
+		"readable": is_readable(), "reads": reads_book(), "tool": is_tool(),
 	}
