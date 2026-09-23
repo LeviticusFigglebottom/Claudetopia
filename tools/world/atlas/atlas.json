@@ -4351,6 +4351,13 @@
    "kind": "highway"
   }
  ],
+ "pads": [
+  {
+   "place": "core:poi/hushline_stair",
+   "level_m": 5.0,
+   "radius_m": 30
+  }
+ ],
  "start": {
   "at": [
    -1900.0,

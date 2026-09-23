@@ -139,7 +139,10 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, atlas: dict, prov
     d = bank.detail(190, grid.n, wl_min=max(3.0 * grid.spacing, 6.0), wl_max=64.0, beta=1.5)
     sea_f = sea if grid.n == grid_c.n else (upsample(sea.astype(np.float32), grid.n, order=1) > 0.5)
     water = np.maximum(1.0 - smoothstep(-6.0, 6.0, waters_f.sd), sea_f.astype(np.float32))
-    H += d * amp * (1.0 - 0.85 * water)
+    # a shelf is flat rock (geography.apply_shelves), not ground for the detail band to roughen
+    for shelf in atlas["coast"].get("shelves", []):
+        water = np.maximum(water, GEO.polygon_mask(grid, shelf["polygon"]).astype(np.float32))
+    H += d * amp * (1.0 - 0.95 * water)
     extras = {"sea": sea_f, "rock": upsample(rock, grid.n, order=1) if grid.n != grid_c.n else rock}
     delta_f = None
     if apart and delta is not None and delta.any():

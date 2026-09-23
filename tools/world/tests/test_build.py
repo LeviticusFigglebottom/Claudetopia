@@ -271,7 +271,7 @@ class WorldBuildTest(unittest.TestCase):
             rid = spec.get("id") or "core:road/%s_%s" % (spec["from"].split("/")[-1], spec["to"].split("/")[-1])
             self.assertIn(rid, built, "the road %s - %s was not built" % (spec["from"], spec["to"]))
             r = built[rid]
-            self.assertTrue(3.5 <= r["width_m"] <= 6.0)
+            self.assertTrue(3.0 <= r["width_m"] <= 6.0)
             self.assertGreaterEqual(len(r["points"]), 4)
 
     def test_texture_rules_put_the_right_ground_in_each_region(self):

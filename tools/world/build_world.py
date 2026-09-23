@@ -155,10 +155,13 @@ def sightline_claims(pois: list, pad_targets: list) -> list:
     return out
 
 
-def pad_fingerprint(pad_targets: list) -> str:
-    """A checksum of where every pad is, how big, and what for."""
+def pad_fingerprint(pad_targets: list, fixed_levels: dict | None = None) -> str:
+    """A checksum of where every pad is, how big, at what level if the atlas says, and what for."""
+    fixed = fixed_levels or {}
     rows = sorted((str(p["id"]), str(p.get("kind", "")), round(float(p["position"][0]), 2),
-                   round(float(p["position"][1]), 2), round(RD.pad_radius(p), 2)) for p in pad_targets)
+                   round(float(p["position"][1]), 2), round(RD.pad_radius(p), 2))
+                  + ((round(float(fixed[p["id"]]), 2),) if p["id"] in fixed else ())
+                  for p in pad_targets)
     return "%08x" % zlib.crc32(json.dumps(rows).encode("utf-8"))
 
 
@@ -370,7 +373,13 @@ def build(args) -> dict:
     t.mark("regions")
 
     pad_targets = pad_targets_for(places, pois)
-    pads_crc = pad_fingerprint(pad_targets)
+    # the atlas's own pads: a level, and a size where it gives one
+    fixed_levels = {pad["place"]: float(pad["level_m"]) for pad in atlas.get("pads", [])}
+    for pad in atlas.get("pads", []):
+        for p in pad_targets:
+            if p["id"] == pad["place"] and pad.get("radius_m"):
+                p["pad_radius_m"] = float(pad["radius_m"])
+    pads_crc = pad_fingerprint(pad_targets, fixed_levels)
 
     # Minimum pad levels: settlements sit above standing water. A delta's table and the sea's
     # edge are the two that bite (Isseva is a stilt-town, not an underwater one).
@@ -397,7 +406,7 @@ def build(args) -> dict:
         print("[world] reusing %s" % heights_path, flush=True)
         rivers = []
         roads_list = []
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H.copy(), pad_targets, min_levels)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H.copy(), pad_targets, min_levels, fixed_levels)
         river_d = np.full((n, n), 1e6, dtype=np.float32)
         river_surf = np.zeros((n, n), dtype=np.float32)
         river_w = np.zeros((n, n), dtype=np.float32)
@@ -437,7 +446,7 @@ def build(args) -> dict:
         sea = extras["sea"]
         del extras
         t.mark("heights")
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
         t.mark("pads")
         # The authored sightlines: where the land stands into one by no more than a saddle's
         # depth, it is cut down under it, as a pad is flattened under a place. A line with a
@@ -491,7 +500,7 @@ def build(args) -> dict:
         H, road_d, road_w = RD.carve_roads(grid, H, roads_list, no_fill=no_fill)
         del no_fill
         # pads again: roads must not tilt a settlement platform
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
         # and the rivers win over both: a pad or a road laid across a channel is cut through
         H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
         t.mark("roads")
@@ -502,7 +511,7 @@ def build(args) -> dict:
             # it. Then the pads and the channels once more, as after the roads.
             H = (H + lf_delta * LF.road_clear(road_d, road_w)).astype(np.float32)
             del lf_delta
-            H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels)
+            H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
             H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
             t.mark("landforms")
         del H_river

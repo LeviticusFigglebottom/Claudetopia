@@ -37,7 +37,8 @@ RIVER_VALLEY_GRADE = 0.22
 RIVER_VALLEY_WIDTHS = 12.0
 ## how far either side of a cliffs path the coast stands as a cliff
 CLIFF_REACH_M = 60.0
-ROAD_WIDTH_BY_KIND = {"highway": 6.0, "road": 5.0, "lane": 4.0, "track": 3.5, "causeway": 6.0}
+ROAD_WIDTH_BY_KIND = {"highway": 6.0, "road": 5.0, "lane": 4.0, "track": 3.5, "causeway": 6.0,
+                      "stair": 3.0}
 CAUSEWAY_HALF_M = 6.0
 CAUSEWAY_DECK_M = 1.8
 
@@ -432,7 +433,39 @@ def land_mask(grid: Grid, atlas: dict) -> np.ndarray:
     m = polygon_mask(grid, coast["polygon"])
     for isl in coast.get("islands", []):
         m |= polygon_mask(grid, isl)
+    for shelf in coast.get("shelves", []):
+        m |= polygon_mask(grid, shelf["polygon"])
     return m
+
+
+def apply_shelves(ctx, h: np.ndarray, atlas: dict, on_land: np.ndarray) -> np.ndarray:
+    """Every shelf flat at its height, and the land behind it brought down to it over its bank.
+
+    A shelf is rock: inside its polygon the ground is `height_m` give or take a few centimetres.
+    Within `bank_m` of it the land comes down to it -- a steep bank, not a sheer face -- and only
+    the land: the sea past a shelf's seaward edge is the coast's (a `cliffs` entry along that
+    edge stands it up out of the water)."""
+    g = ctx.grid
+    for shelf in atlas["coast"].get("shelves", []):
+        m = polygon_mask(g, shelf["polygon"])
+        if not m.any():
+            continue
+        height = float(shelf["height_m"])
+        bank = float(shelf.get("bank_m", 60.0))
+        ii, jj = np.nonzero(m)
+        pad = int(bank / g.spacing) + 3
+        i0, i1 = max(int(ii.min()) - pad, 0), min(int(ii.max()) + pad + 1, g.n)
+        j0, j1 = max(int(jj.min()) - pad, 0), min(int(jj.max()) + pad + 1, g.n)
+        sub_m = m[i0:i1, j0:j1]
+        d = (ndimage.distance_transform_edt(~sub_m) * g.spacing).astype(np.float32)
+        rough = 0.12 * _sc(ctx.f(_salt("shelf"), 1.6, 6, 40)[i0:i1, j0:j1], 1.5)
+        sub = h[i0:i1, j0:j1]
+        land = on_land[i0:i1, j0:j1]
+        t = smoothstep(0.0, bank, d)
+        banked = lerp(np.float32(height), sub, t)
+        sub = np.where(sub_m, height + rough, np.where(land & (d < bank), banked, sub))
+        h[i0:i1, j0:j1] = sub.astype(np.float32)
+    return h
 
 
 def apply_coast(ctx, h: np.ndarray, atlas: dict) -> tuple:
@@ -469,6 +502,7 @@ def apply_coast(ctx, h: np.ndarray, atlas: dict) -> tuple:
         foot = np.maximum(SEA_LEVEL - 4.0 - 0.5 * np.minimum(out_d, 40.0), seabed)
         sea_h = lerp(sea_h, np.minimum(sea_h, foot), cliff_w)
     out = np.where(on_land, land_h, sea_h).astype(np.float32)
+    out = apply_shelves(ctx, out, atlas, on_land)
     return out, ~on_land
 
 

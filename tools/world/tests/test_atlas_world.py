@@ -171,6 +171,29 @@ class AtlasToHeights(unittest.TestCase):
         self.assertEqual(int(self.W[i, j]), 0, "the start is in the water")
         self.assertGreater(y, 0.5)
 
+    def test_an_authored_pad_stands_where_the_atlas_says(self):
+        pads = self.atlas.get("pads", [])
+        if not pads:
+            self.skipTest("the atlas authors no pad")
+        from worldgen import roads as RD
+
+        things = {p["id"]: p for p in ATLAS._content(PACK)[1] + ATLAS._content(PACK)[2]}
+        for pad in pads:
+            place = dict(things[pad["place"]])
+            if pad.get("radius_m"):
+                place["pad_radius_m"] = pad["radius_m"]
+            x, z = (float(v) for v in place["position"][:2])
+            i, j = self.tex(x, z)
+            y = float(self.H[i, j])
+            self.assertAlmostEqual(y, pad["level_m"], delta=0.3, msg="%s stands at %.2f m" % (pad["place"], y))
+            r = 0.6 * RD.pad_radius(place)
+            k = max(1, int(r / self.grid.spacing))
+            i, j = self.tex(x, z)
+            core = self.H[max(i - k, 0):i + k + 1, max(j - k, 0):j + k + 1]
+            wet = self.W[max(i - k, 0):i + k + 1, max(j - k, 0):j + k + 1]
+            self.assertLess(float(np.abs(core - pad["level_m"]).max()), 1.0, "%s's pad is not flat" % pad["place"])
+            self.assertEqual(int(wet.sum()), 0, "%s's pad is awash" % pad["place"])
+
     def test_the_game_reads_each_provinces_region(self):
         ids = self.man["regions"]
         lakes = [lk["polygon"] for lk in self.atlas.get("lakes", [])]
@@ -237,6 +260,75 @@ class SightlineSaddles(unittest.TestCase):
         done = GEO.honour_sightlines(grid, H, [((-600.0, 0.0), (600.0, 0.0), "hidden_valley", 25.0, 25.0)], self.K)
         self.assertEqual(done, [])
         self.assertTrue(np.array_equal(before, H))
+
+
+class ShelfAndStair(unittest.TestCase):
+    """A landing: a rock shelf at the foot of the cliff, a stair down to it, and a pad on it."""
+
+    # the shelf runs back under the cliff line (z 3760), so it joins the mainland; its bank is the
+    # ninety metres behind it, and the stair crosses that bank in four legs
+    SHELF = [[-2010.0, 3740.0], [-1790.0, 3740.0], [-1790.0, 3960.0], [-2010.0, 3960.0]]
+    VIA = [[-1840.0, 3610.0], [-1960.0, 3650.0], [-1840.0, 3690.0], [-1960.0, 3735.0]]
+
+    @classmethod
+    def setUpClass(cls):
+        atlas = copy.deepcopy(ATLAS.load())
+        atlas["coast"].setdefault("shelves", []).append({"polygon": cls.SHELF, "height_m": 4.0, "bank_m": 90.0})
+        atlas["pads"] = [{"place": "core:poi/hushline_stair", "level_m": 4.0, "radius_m": 26.0}]
+        atlas["roads"].append({"from": "core:place/cantors_seat", "to": "core:poi/hushline_stair",
+                               "via": cls.VIA, "kind": "stair"})
+        cls.tmp = tempfile.mkdtemp(prefix="wickmere_shelf_")
+        path = os.path.join(cls.tmp, "atlas.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(atlas, f)
+        out = os.path.join(cls.tmp, "world")
+        proc = subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"), "--size", "1024",
+                               "--only", "heights", "--atlas", path, "--out", out],
+                              capture_output=True, text=True, timeout=1500)
+        if proc.returncode != 0:
+            raise AssertionError(proc.stdout[-3000:] + proc.stderr[-3000:])
+        n = 1024
+        cls.grid = Grid(8192.0, n)
+        cls.H = np.fromfile(os.path.join(out, "heights.r32"), dtype="<f4").reshape(n, n)
+        cls.W = np.fromfile(os.path.join(out, "water_mask.u8"), dtype=np.uint8).reshape(n, n)
+        with open(os.path.join(out, "roads.json"), "r", encoding="utf-8") as f:
+            cls.roads = {r["id"]: r for r in json.load(f)}
+        with open(os.path.join(out, "road_profiles.json"), "r", encoding="utf-8") as f:
+            cls.profiles = {r["id"]: r for r in json.load(f)}
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_the_shelf_is_flat_dry_rock_at_its_height(self):
+        m = GEO.polygon_mask(self.grid, self.SHELF)
+        core = GEO.signed_distance(self.grid, m) < -24.0
+        self.assertGreater(int(core.sum()), 50)
+        h = self.H[core]
+        self.assertLess(float(np.abs(h - 4.0).max()), 1.2, "the shelf is %.1f..%.1f m" % (h.min(), h.max()))
+        self.assertEqual(int(self.W[core].sum()), 0, "the shelf is awash")
+
+    def test_the_land_behind_comes_down_to_it(self):
+        # a hundred and twenty metres behind the shelf the cliff top stands; at the shelf's back
+        # edge the land is down at the shelf
+        k = self.grid
+        back = self.H[int((3620 + 4096) / k.spacing), int((-1900 + 4096) / k.spacing)]
+        edge = self.H[int((3745 + 4096) / k.spacing), int((-1900 + 4096) / k.spacing)]
+        self.assertGreater(float(back), 30.0)
+        self.assertLess(float(edge), 12.0)
+
+    def test_the_stair_goes_down_to_the_landing_no_steeper_than_a_stair(self):
+        rid = "core:road/cantors_seat_hushline_stair"
+        self.assertIn(rid, self.roads)
+        self.assertEqual(self.roads[rid]["width_m"], 3.0)
+        prof = self.profiles[rid]
+        e = np.asarray(prof["elevation_m"], dtype=np.float64)
+        pts = np.asarray(self.roads[rid]["points"], dtype=np.float64)
+        seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+        grade = np.abs(np.diff(e)) / np.maximum(seg, 1e-6)
+        self.assertLessEqual(float(grade.max()), 0.72, "the stair is %.2f at its steepest" % grade.max())
+        self.assertAlmostEqual(float(e[-1]), 4.0, delta=0.3)
+        self.assertGreater(float(e[0]) - float(e[-1]), 30.0, "the stair does not go down the cliff")
 
 
 class ForestsGrow(unittest.TestCase):

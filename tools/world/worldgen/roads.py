@@ -59,6 +59,8 @@ def pad_radius(place: dict) -> float:
     frontage, along two sides of one or two streets, is a street length of roughly 2n metres,
     so the radius grows with the square root of the count and not with the count itself.
     """
+    if place.get("pad_radius_m"):
+        return float(place["pad_radius_m"])          # the atlas's own (`pads`)
     kind = str(place.get("kind", ""))
     count = FABRIC_COUNT.get(kind)
     if count is None:
@@ -68,7 +70,8 @@ def pad_radius(place: dict) -> float:
     return float(min(max(20.0 + 7.5 * math.sqrt(count), 26.0), 80.0))
 
 
-def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None = None) -> tuple:
+def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None = None,
+               fixed_levels: dict | None = None) -> tuple:
     """Flatten a platform at every place. Returns (heights, pad_mask, pad heights by place id).
 
     `min_levels` lifts a pad that would otherwise sit under standing water: a stilt-town in
@@ -94,6 +97,10 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
         level = float(np.median(sub[inner])) if inner.any() else float(H[int(i), int(j)])
         if min_levels is not None and p["id"] in min_levels:
             level = max(level, float(min_levels[p["id"]]))
+        if fixed_levels is not None and p["id"] in fixed_levels:
+            # the atlas says where this one stands (`pads`): a landing at the foot of a cliff,
+            # a shelf over the water, which the ground under it cannot say
+            level = float(fixed_levels[p["id"]])
         levels[p["id"]] = level
         w = 1.0 - smoothstep(r * 0.7, r * 1.6, d)
         H[i0:i1, j0:j1] = lerp(sub, level, w)
@@ -113,6 +120,9 @@ MAX_GRADE = 0.11
 ## old profile limited the grade by lifting the road, and on the spur out of Kharrow Hold it
 ## stood 150 m above the ground on both sides.
 BATTER = 0.5
+## A stair (the atlas's road kind "stair"): laid straight between its via points, as steep as
+## thirty-five degrees -- steps cut into a bank the way a cliff path is -- and three metres wide.
+STAIR_MAX_GRADE = 0.7
 ## How far below the land a road would rather run, by landform (`plan_roads`' `sink`). The
 ## Briarwold's lanes are holloways: a track in old ground on soft rock wears down between its
 ## own banks until the wood closes over it, and from inside one you see bank, roots and a strip
@@ -544,7 +554,7 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
             area_now = np.where(on, area * TRUNK_DISCOUNT, area)
         legs = []
         for p, q in zip(wps[:-1], wps[1:]):
-            if kind == "causeway" and over_lake(p, q):
+            if kind == "stair" or (kind == "causeway" and over_lake(p, q)):
                 legs.append(paths.resample_polyline(np.stack([p, q]), step_m))
                 continue
             sa, sb = ij(p[0], p[1]), ij(q[0], q[1])
@@ -572,7 +582,10 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
                 pts = paths.smooth_polyline(pts, passes=4)
             legs.append(pts)
         pts = np.concatenate([leg if k == 0 else leg[1:] for k, leg in enumerate(legs)])
-        pts = paths.resample_polyline(pts, step_m)
+        if kind != "stair":
+            pts = paths.resample_polyline(pts, step_m)
+        # (a stair keeps its corners: resampled across a switchback, a corner is cut short by a
+        # step that runs straight down the fall line, the one line a stair must not take)
         pts[0] = ends[0]
         pts[-1] = ends[1]
         last = pts.shape[0] - 1
@@ -628,8 +641,10 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
         if no_fill is not None:
             from .grid import sample_nearest
             cap = sample_nearest(no_fill.astype(np.uint8), grid, pts[:, 0], pts[:, 1]) > 0
-        elev = grade_profile(ground, step_m, cut_fill_m(w), pins=pins, bias=bias, no_fill=cap,
-                             near_lo=near_lo, near_hi=near_hi)
+        elev = grade_profile(ground, step_m, cut_fill_m(w),
+                             max_grade=STAIR_MAX_GRADE if kind == "stair" else MAX_GRADE,
+                             pins=pins, bias=bias, no_fill=cap, near_lo=near_lo, near_hi=near_hi,
+                             **({"smooth_m": 12.0} if kind == "stair" else {}))
         rid = str(spec.get("id") or "core:road/%s_%s" % (a["id"].split("/")[-1], b["id"].split("/")[-1]))
         base_id, k = rid, 2
         while rid in ids:

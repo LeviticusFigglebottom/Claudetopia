@@ -62,6 +62,7 @@ there; the atlas only has to agree with it (the check says where it does not).
   "lakes":     [ ... ],
   "forests":   [ ... ],
   "roads":     [ ... ],
+  "pads":      [ ... ],
   "start":     { ... }
 }
 ```
@@ -186,7 +187,8 @@ every authored sightline's line.
   "seabed_m": -26,
   "shelf_m": 350,
   "beach_m": 60,
-  "cliffs": [{"path": [[x, z], ...], "height_m": 30}]
+  "cliffs": [{"path": [[x, z], ...], "height_m": 30}],
+  "shelves": [{"polygon": [[x, z], ...], "height_m": 4, "bank_m": 90}]
 }
 ```
 
@@ -195,6 +197,13 @@ ground falls to `seabed_m` (-26 by default) over `shelf_m` (350 m); ashore it co
 the water's edge over `beach_m` (60 m), which is a beach, a strand or a tide-flat depending on
 the biome behind it. Along a `cliffs` path (within about 60 m of it) the land holds its height
 to the shore and drops `height_m` to the sea.
+
+A `shelves` entry is a flat rock shelf at `height_m` (1 to 200): a landing at the foot of a cliff,
+a ledge over the sea. Its polygon is land even where the coast polygon does not reach, the ground
+inside it is flat to a few centimetres, and within `bank_m` (60 m by default) the land behind it
+comes down to it as a steep bank -- steep enough to want a `stair`, not a sheer face. The sea past
+its seaward edge is the coast's: draw a low `cliffs` entry along that edge to stand it up out of
+the water. A place on a shelf gets a pad at the shelf's height; a `pads` entry makes sure of it.
 
 The world stops at its square edge. Close it: sea, or a range too steep to climb. A province
 that runs flat into the edge is a place a player walks off the map. If the coast polygon covers
@@ -313,13 +322,31 @@ A road from one place or POI to another (both must be in the content packs), thr
 point in order. Between those points the builder finds the way on the ground: round a hill
 rather than over it, up a slope in turns, across a river at its narrowest. `via` is how you say
 which side of the hill, which pass, which ford. `kind` sets its width: `highway` 6 m, `road`
-5 m (the default), `lane` 4 m, `track` 3.5 m, or `causeway`, 6 m raised on a bank across open
-water (the Long Stride), which is laid straight between its points. `id` is optional
+5 m (the default), `lane` 4 m, `track` 3.5 m; `causeway`, 6 m raised on a bank across open
+water (the Long Stride), laid straight between its points over the water; or `stair`, 3 m, laid
+straight from point to point with no routing and graded as steep as thirty-five degrees (0.7):
+steps cut into a bank, a cliff path. Give a stair its switchbacks as via points, each leg no
+steeper than that over the ground it crosses. `id` is optional
 (`core:road/<from>_<to>` by default).
 
 Only the roads listed are built, and a settlement with none is only reached across country (the
 check warns). Every town and village gets a street through it along its two most opposed roads,
 and a cross street where a third road comes in across them.
+
+## pads
+
+```json
+{"place": "core:poi/hushline_stair", "level_m": 5, "radius_m": 30}
+```
+
+Every place and POI gets a flattened pad where the content packs put it, at the median height of
+the ground under it and clear of standing water. A `pads` entry says instead where that one pad
+stands: at `level_m` exactly, and `radius_m` across (by default the size its kind gets). It is for
+the places whose ground cannot say it: a landing at the foot of a cliff, a shelf over the sea, a
+ledge. The pad is flat to 0.7 of its radius and blends into the land (or the sea) by 1.6, so a
+landing drawn at the water's edge stands as a shelf with the sea falling away past its rim. The
+check refuses a pad within a metre of the water it stands over: whatever stands or fights on it
+would be awash.
 
 ## start
 
