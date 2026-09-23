@@ -45,7 +45,7 @@ captures/                 screenshot output (gitignored)
    through the autoload singletons.
 5. **Everything saveable registers with `SaveSystem`** under a section name and
    implements `to_save()`/`from_save()` with plain Dictionaries (copies, not
-   references). Save files are JSON with `schema_version` (currently **3**);
+   references). Save files are JSON with `schema_version` (currently **4**);
    `Migrations` is a pure chain of `vN -> vN+1` functions with fixture tests.
 6. **Data drives visuals.** Region identity (palette, light, weather, flora,
    ambience) is data; generators and shaders consume it.
@@ -87,7 +87,10 @@ user args (after `--`):
 Tests: `run.sh test` runs `tests/run_tests.tscn`, which discovers
 `tests/unit/test_*.gd` (subclasses of `TestCase`) and exits non-zero on any
 failure or any `ContentDB.problems` entry. Content validation is therefore part
-of the test suite.
+of the test suite. A test that opens a screen closes it (`TestCase.close_screen`);
+the runner reports any test that leaves the world paused. `run.sh fights`
+(`tests/arena/fights.tscn`) is the headless combat harness: a scripted player of
+each starting Calling against one foe of every archetype, seeded and repeatable.
 
 ## 5. Systems (game/systems) — contracts
 

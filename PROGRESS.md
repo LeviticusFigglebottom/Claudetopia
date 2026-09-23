@@ -1329,3 +1329,231 @@ work and not a wiring change. A child NPC is still a small adult until that is d
   — including stale doubled ones such as `heavy_heavy_albedo.png`.
 * **Two dependencies were undeclared**: `scikit-image` and `fast_simplification` (trimesh 5
   moved `simplify_quadric_decimation` out). Both are in `tools/requirements.txt` now.
+
+## Combat measured, fights fought headless, four hooks owned, and the game heard
+
+Five parts, one branch. Every number below was produced by the running game, not read off the
+data: `./run.sh test --filter=test_combat_design | grep MEASURE` rebuilds the combat table,
+`./run.sh fights` the fights table, and `python3 tools/audio/audit.py` the audio one.
+
+### A. Combat against DESIGN §5.3
+
+`tests/unit/test_combat_design.gd` (19 tests) drives the real Player through the real input
+actions on a real floor against a real Enemy and prints what the game did. Before is the tree
+this branch started from; after is this branch. Timings have one-frame resolution (16.7 ms).
+
+| what | design | measured before | measured after |
+|---|---|---|---|
+| stamina pool at the character's own Endurance | 100 + 8·E (140 at E 5; 180 at E 10) | 180, whatever E was | 180 at E 10 |
+| mana pool at the character's own Will | 60 + 6·W | 120, whatever W was | 120 at W 10 |
+| stamina / mana after a level's point | +8 / +6 | +0 / +0 | 188 / 126 |
+| light / heavy / dodge / sprint cost (iron sword) | 18 / 32 / 22 / 8 per s | 18 / 32 / 22 / 8 | 18 / 32 / 22 / 8 |
+| stamina regen delay, rate | 0.8 s, 30/s | 0.800 s, 30/s | 0.800 s, 30/s |
+| input buffer | 0.25 s | 0.250 s | 0.250 s |
+| one-handed light chain | 3 | 3 | 3 |
+| heavy held to full, charge factor | 1.5× | 1.000× | 1.500× |
+| cancel a light into a dodge | only after the active frames | at 0.483 s, inside the hit window (0.323–0.493 s) | at 0.483 s, after it (0.297–0.467 s) |
+| roll, light load: length, i-frames | 0.6 s, 0.08–0.38 s | 0.600 s, 0.083–0.383 s | 0.600 s, 0.083–0.383 s |
+| load of a plate kit and a sword | worn / (40 + 3·E): 49.1% at E 5, 38.6% at E 10 | 24.3% | 38.6% |
+| a bag past its capacity | overloaded roll | 24.3%, never overloaded | 129%, overloaded roll |
+| stamina regen at light / heavy / overloaded load | slower as load rises (§5.7) | 30 / 30 / 30 per s | 30 / 22.5 / 15 per s |
+| guard of a 20 hit, clan shield (stability 0.8) | 4 through, 2.4 stamina | 20 through, 12 stamina | 4, 2.4 |
+| parry window | 0.18 s | 0.167 s (10 frames) | 0.167 s (10 frames; 0.18 s is 10.8) |
+| riposte_open, riposte multiplier | 2 s, 3× | 2.000 s, 3.000× | 2.000 s, 3.000× |
+| poise regen delay, rate | 1.5 s, 4/s | 1.517 s, 4/s | 1.500 s, 4/s |
+| stagger at zero poise, poise reset | yes | yes | yes |
+| poise a player's heavy loses to an 8-poise hit in its wind-up | 0 (hyper-armour) | 8 | 0 |
+| first light, iron sword, on a bandit (armour 2) | the §5.3 formula: 12.35 | 12.70 (a one-handed skill the character did not have) | 12.35 |
+| armour_flat, helm + tunic + gloves + boots | 15 | 3 (the body piece only) | 15 |
+| a light from behind; a sneaking dagger on an unaware foe | ×3; ×6 | ×1; ×1 | ×3; ×6 |
+| lock-on cycling, foes ahead, ahead-left, behind, and at 34 m | inside the 30 m cone only | cycled to the one behind | ahead-left, ahead |
+| burning / chilled / webbed / bleeding / poisoned / silenced | 12 / 0.6× / 0.45× / 6 / 15 / refused | all as designed | all as designed |
+| renown lost to 10 s of quieted | 2 | 0 | 2 |
+
+What changed to get there is in DECISIONS (2026-09-22: attributes start at 10 and one set of
+pool formulas, schema 4; load and regen by load; hyper-armour 12 and hit windows from the clip;
+backstab and sneak rules; the swing band and knockback in metres). The humanoid wind-ups were
+the largest single fault: 65 of 69 humanoid attacks threw their blow off the authored time (56
+early, 6 late, 3 never live) because the rig played the clip on its own schedule; the
+AnimationDriver now keeps the time and stretches the rig to it, and the worst of 100 attacks is
+0.017 s off.
+
+### B. Hit windows, telegraphs, and a scripted player against every archetype
+
+`tests/unit/test_attack_windows.gd` walks the data (every weapon's swings have `hit_start` and
+`hit_end`; every enemy and boss attack, every phase, winds up for at least 0.3 s) and then
+stands every one of them up in its real body and measures telegraph to live hitbox.
+
+`./run.sh fights` (`tests/arena/fights.gd`) puts a scripted level-1 player of a starting Calling
+on a flat floor against one foe of every §5.4 archetype, headless, at a fixed 60 fps and a
+seeded RNG (two runs diff equal). It checks, over 20 fights: every blow that landed was
+telegraphed for its authored time (238 seen), lock-on takes and cycles inside the cone, a parry
+inside the window opens a riposte and one outside does not, a roll's i-frames take a blow clean
+(170), a foe at zero poise staggers (19), and every fight is heard (20). All pass.
+
+| calling | archetype | foe | outcome | seconds | blows taken | damage taken | hits/swings | foe hp left |
+|---|---|---|---|---|---|---|---|---|
+| hearthkeeper | skirmisher | roadside bandit | won | 20.9 | 4 | 58 | 4/5 | 0% |
+| hearthkeeper | pack | down wolf | won | 38.9 | 4 | 40 | 8/9 | 0% |
+| hearthkeeper | brute | hedge wight | won | 13.2 | 0 | 0 | 13/13 | 0% |
+| hearthkeeper | charger | bristleback | won | 10.2 | 1 | 22 | 9/9 | 0% |
+| hearthkeeper | ambusher | sallowjaw | won | 14.9 | 0 | 0 | 12/12 | 0% |
+| hearthkeeper | caster | smuggler sayer | won | 28.2 | 4 | 50 | 4/4 | 0% |
+| hearthkeeper | sentinel | warden | won | 41.3 | 0 | 0 | 28/29 | 0% |
+| hearthkeeper | swarm | gutter drake | lost (died) | 35.5 | 11 | 100 | 5/8 | 30% |
+| hearthkeeper | elite | bravo | won | 42.2 | 0 | 0 | 20/20 | 0% |
+| hearthkeeper | boss | barrow reeve | lost (died) | 66.9 | 4 | 100 | 38/36 | 61% |
+| cragborn | skirmisher | roadside bandit | won | 12.1 | 2 | 30 | 3/5 | 0% |
+| cragborn | pack | down wolf | won | 13.2 | 7 | 42 | 6/6 | 0% |
+| cragborn | brute | hedge wight | won | 18.1 | 0 | 0 | 11/11 | 0% |
+| cragborn | charger | bristleback | won | 11.5 | 1 | 19 | 7/7 | 0% |
+| cragborn | ambusher | sallowjaw | won | 22.6 | 1 | 32 | 11/12 | 0% |
+| cragborn | caster | smuggler sayer | lost (died) | 55.1 | 10 | 100 | 2/8 | 31% |
+| cragborn | sentinel | warden | won | 84.9 | 0 | 0 | 42/42 | 0% |
+| cragborn | swarm | gutter drake | won | 7.0 | 7 | 45 | 4/4 | 0% |
+| cragborn | elite | bravo | lost (died) | 40.0 | 6 | 100 | 10/17 | 42% |
+| cragborn | boss | barrow reeve | lost (died) | 104.3 | 5 | 100 | 44/43 | 68% |
+
+Before the seven fixes below, the Hearthkeeper's first run read: pack and charger not won in 120
+s (the wolves bit nobody; the player was thrown off the edge of the arena), swarm lost with none
+of its swings landing, boss not won. A later run had the caster not won by either Calling: it
+walked away past its leash. After, 15 of 20 are won; the five lost are the swarm and the boss
+for the Hearthkeeper's dagger, and the caster, the elite and the boss for the Cragborn's axe.
+
+"Lost" is this player's result, not a verdict on the fight: the script never blocks (no starting
+kit has a shield) and never heals, because the flask DESIGN §5.5 refills at a Hearthstone does
+not exist and a loaf mends 8. The Barrow Reeve (520 hp, slash resist 0.3, armour 6) takes 7–11
+per landed blow from a starting weapon; at the scripted player's pace that is a minute and a
+half to three minutes of fighting without taking five of his blows. No fight is trivial by the
+harness's measure (over in under 8 s with nothing taken).
+
+The first runs found seven faults in the game, all fixed and pinned in
+`tests/unit/test_fights_found.gd`: a swing volume at chest height that no sword could land on a
+gutter drake with (0 hits); knockback summed into the velocity every frame (the bristleback
+threw the player at 140 m/s off the arena); an enemy that left the fight mid-blow lunging for
+ever; patience counted from the start of a fight rather than the last sight; a pack waiting on a
+ring wider than its bite (no blow landed on the player in 120 s against three wolves); circling
+at a speed no one could aim at; and a leash that broke for one frame (a caster walked 50 m from
+a 32 m leash). The first run also found `StatusEffects.advance` reading an effect a tick earlier
+in the same loop had ended.
+
+### C. Four hooks, owned
+
+`LootDrops.context_provider` (GameServices.loot_context: level, luck, quest stages),
+`Player.quick_slot_handler` (Equipment.use_quick_index), `Player.ammo_provider`
+(Inventory.ammo_for) and the Name-table's refusal reason (Crafting.enchant_check, shown on the
+station screen) each have an owner and a running-game test (`test_hooks_wired.gd`).
+`tools/unwired.py` now also lists Callable hooks nothing assigns: 3 before, 0 after. The fourth
+was not a hook but a function only its test called (`Enchanting.enchant_blocker`); the
+Name-table's screen asks it now, through `Crafting.enchant_check`, and shows the reason.
+
+### D. The audio
+
+Before: nothing in the game called Foley -- no footstep, blow, door, chest, coin or button had
+ever been heard. The score's combat layer came in only after a hit and went back to exploring
+eight seconds later mid-fight; there was no night; the second boss track arrived through a quest
+stage, as a cut; the ambience read the weather once per announcement and missed the blend;
+indoors, world sounds went round the Sounds slider. After:
+
+* an enemy entering combat holds the combat layer at 0.6 or above until the last one dies or
+  gives up, then it decays to exploring in 4.8 s; a region crossfades over 4 s between two banks
+  of stems; 21:00-05:00 is a night mix (melody -11 dB, deep stem -14 dB); an interior brings the
+  deep mix, a room tone, a 900 Hz low-pass on the ambience and a door; a boss's second phase
+  crossfades to the second track on its own player;
+* the ambience re-reads the Atmosphere's weather every second, so rain comes and goes with the
+  blend, not only with the announcement;
+* footsteps fall a stride apart by distance covered (0.35·speed + 0.6 m, so the cadence follows
+  whatever speeds the gait has) on the collider's surface, else water, else the region's ground;
+  blows sound the struck body's material; whooshes go with the blade; bows, arrows, sayings,
+  locks, buttons, chests, coins, meals, armour, menus, refusals, the Hearthstone and the Echo
+  are heard;
+* the Interior bus goes out through SFX, so the Sounds slider reaches indoors.
+
+`tests/unit/test_audio_wired.gd` (17 tests) drives each from its real trigger and samples every
+music player's level every 1/60 s: no player moves more than 3 dB in a step, and outgoing and
+incoming tracks are both audible at once. It also checks that every sound the code can ask for
+is a row whose files load (11 rows have nothing that asks, listed below), that every one of the
+393 audio files is used, that every bus a sound is sent to exists, and that the six sliders on
+the Settings screen move their buses (0.25 on a slider puts its bus at -12.0 dB).
+
+**The files.** `tools/audio/audit.py` measures every one of the 393 audio files the game ships
+(peak, true peak, clipping, DC, loudness per file and per category, one-shot edges and lead-ins,
+dead air in beds, loop-seam clicks and breaks) and flags what fails a release. Measured before:
+nothing clipped (highest true peak -1.48 dBTP), no DC, no loop clicked at its wrap (worst 3.8 dB
+against a 6 dB bar) and no loop broke its level at the wrap past anything it does elsewhere;
+every music stem sits within 0.1 LU of its stem's target and every bed within 0.6 LU of -30.
+What did fail:
+
+| check | files flagged before | after |
+|---|---|---|
+| a one-shot that decodes starting mid-waveform (first sample above -40 dBFS) | 50 | 0 |
+| a one-shot that starts late (more than 25 ms before it is heard) | 9 | 0 |
+| a variant more than 4 LU from the other variants of its effect | 4 | 0 |
+| an effect more than 10 LU from its family, at its table level | 7 (2 effects) | 0 |
+| a bed that drops to digital silence for more than 0.25 s | 3 | 0 |
+| clipping, true peak above -1 dBTP, DC, a click or a level break at a loop's wrap | 0 | 0 |
+| any of these | 69 | 0 |
+
+Fixed in the generators, then regenerated -- all 70 effects (240 files, because the edge fix
+applies to every effect) and four ambience keys (frogs, rope_creak, chain_clink, thunder_far);
+nothing else was re-rendered. The numbers under the flags: the effects' first decoded sample
+went from a median of -51.6 dBFS (worst -25.5) to digital zero, because Vorbis rings ahead of a
+transient on sample 0 and every effect is now set in 4 ms of silence; the longest digital
+silence in the frogs, boardwalk-rope and chain-bridge beds went from 2.4, 9.1 and 8.6 s to none,
+with the beds still at -30 LUFS (-30.2, -29.5, -29.8) and the frogs' wrap still under the click
+bar (4.5 dB against 6); the far thunder's lead-in went from up to 1.43 s to under 25 ms and the
+coins' from 108 ms; the four wide effects went from 4.1-4.9 LU of variant spread to 2.9-3.4; the
+lockpick click's median went from -34.6 to -30.2 LUFS and the cart wheels' from -30.0 to -24.0
+at their table levels; the highest true peak anywhere went from -1.48 to -1.26 dBTP. A music
+stem is not held to never going silent -- a melody rests while the others play -- only a bed is.
+
+### E. Test hygiene
+
+Sixteen tests opened a screen through the real event and left it open for the runner to find
+paused. `TestCase.close_screen(menu_id)` closes what a test opened and fails the test if it was
+not open; the count of tests leaving the world paused is 0 (it was 16).
+
+### Also fixed in passing
+
+* `./run.sh test` could report a green run as failed: `echo "$out" | grep -q` under pipefail
+  lets grep's early exit kill the echo; four of five replays of a green log failed. The smoke
+  and flow checks had the same shape.
+
+### Found and not fixed
+
+* 25 perk stat keys are read by nothing (the combat perks do nothing): damage_one_handed,
+  damage_two_handed, damage_archery, poise_damage_one_handed, stamina_cost_heavy,
+  stamina_cost_dodge, poise_max, dodge_iframes, block_stability, parry_window,
+  pickpocket_chance, sneak_attack_mult, prices_buy, prices_sell, renown_gain, ingredient_yield,
+  bow_draw_speed, arrow_recovery, weight_class_penalty, mote_yield, spell_cost_kindling,
+  spell_cost_hush, spell_power_mending, spell_duration_binding, spell_duration_calling.
+* The heavy and overloaded equipment tiers cannot be reached by gear alone (the heaviest kit
+  in the pack is about 0.61 of capacity); only an overfull bag gets there.
+* Flask charges (DESIGN §5.5) do not exist anywhere in the code.
+* Eleven sfx rows have nothing that plays them: bell_hand, bell_tavern, bell_toll, bell_tower,
+  thunder_far, thunder_near (the ambience has its own thunder), wind_gust, wood_creak,
+  cart_wheels, footstep_sand, footstep_snow (no region's ground is sand or snow).
+* POI structures (piers, walls, bridges) declare no footstep surface, so they sound like their
+  region's ground.
+* `tools/unwired.py` lists `use_quick` and `set_boss_intensity` because their only callers are
+  in their own files.
+
+### Next, in order
+
+1. **The 25 inert perk keys.** Each names a number the combat, stealth or economy code already
+   computes; read the character's modifiers for that key at that point and add a test per key
+   that takes the perk and measures the number move. `test_combat_design.gd` has the harness
+   for the combat ones.
+2. **Flask charges** (DESIGN §5.5): a quick-slot consumable refilled at a Hearthstone. Then
+   `./run.sh fights --only=boss` and record whether a level-1 player of either Calling can win
+   the Barrow Reeve; if not, the boss's numbers are DESIGN's to change.
+3. **The heavy load tier** cannot be reached by gear; either heavier kit or lower tier bounds
+   (`DamageModel.load_tier`), with the MEASURE rows in `test_combat_design.gd` updated.
+4. **POI footstep surfaces**: `poi_kit.gd`'s colliders take `surface` meta from the material they
+   were built with (timber and planks wood, stone and oroth stone); `test_audio_wired.gd` has the
+   walking test to copy.
+5. **The eleven unplayed sfx rows**: wire them (tower and tavern bells to the hour in Tollmere,
+   thunder to the Atmosphere's strikes, cart wheels to road travellers, snow to Skerrow above the
+   snow line) or drop them from `gen_sfx.py`. The test prints the list on every run.
+6. **unwired.py** could count a same-file caller when that caller is itself reached from outside
+   (it lists `use_quick` and `set_boss_intensity`, both reached through their own file).
