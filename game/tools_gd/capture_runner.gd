@@ -452,7 +452,9 @@ func _write_perf() -> void:
 # --- sequences ------------------------------------------------------------------------------
 
 ## `"sequences": [{"label", "pos", "look_at", "height_above_ground", "fov", "time", "weather",
-## "from_region", "region", "frames": n, "every": seconds}]` in a plan.
+## "from_region", "region", "frames": n, "every": seconds, "to": [x, y, z]}]` in a plan. With
+## `to` the camera travels there over the run, looking the same way, so what flashes as the
+## camera moves shows too.
 ##
 ## A run of frames from one camera with the game left running between them, for what a single
 ## exposure cannot show: a flash, a flicker, a blend. With `from_region` the look is settled
@@ -462,9 +464,15 @@ func _write_perf() -> void:
 ## frame long; a frame brighter or darker than both its neighbours by more than FLASH_STEP is
 ## saved as well and reported as a FLASH, and every frame under half the run's median brightness
 ## is counted as DARK (a flash can also last half a second: the grade swap drew ten black frames
-## in a row on Forward+). Run it with --fixed-fps, so the game's time between two frames does not
+## in a row on Forward+). A thing that flashes on its own -- a roof going black for a frame, a
+## wall fighting the ground -- hardly moves a frame's mean, so each frame is also sampled on a
+## grid and the samples that jump by more than FLICKER_STEP and come straight back are counted:
+## the frames with most of them are saved as `_flicker_` for looking at. Run it with --fixed-fps, so the game's time between two frames does not
 ## depend on how slowly this machine draws them.
 const FLASH_STEP := 0.06
+const FLICKER_STEP := 0.25
+const FLICKER_GRID := Vector2i(160, 90)
+const FLICKER_SAVES := 6
 
 
 func _sequence(index: int, seq: Dictionary) -> int:
@@ -496,6 +504,21 @@ func _sequence(index: int, seq: Dictionary) -> int:
 		atmos.call("set_region", to, false)
 	var want := int(seq.get("frames", 40))
 	var every := float(seq.get("every", 0.25))
+	var start_pos := pos
+	var end_pos := pos
+	if seq.get("to", null) is Array:
+		var t: Array = seq["to"]
+		end_pos = Vector3(float(t[0]), float(t[1]), float(t[2]))
+	var look_off := Vector3.ZERO
+	if seq.has("look_at"):
+		var la2: Array = seq["look_at"]
+		look_off = Vector3(float(la2[0]), float(la2[1]), float(la2[2])) - start_pos
+	var travel := float(want) * every
+	var grid_a := PackedFloat32Array()
+	var grid_b := PackedFloat32Array()
+	var flicker_worst := 0
+	var flicker_frames := 0
+	var flicker_saved := 0
 	var lums: Array[float] = []
 	var luts: Array[int] = []
 	var prev_img: Image = null
@@ -511,6 +534,30 @@ func _sequence(index: int, seq: Dictionary) -> int:
 		clock += get_process_delta_time()
 		var img := get_viewport().get_texture().get_image()
 		var lum := _mean_luminance(img)
+		# samples that jumped in the frame before this one and came straight back
+		var grid := _luma_grid(img)
+		if grid_a.size() == grid.size() and grid_b.size() == grid.size():
+			var spikes := 0
+			for i in grid.size():
+				var da := grid_b[i] - grid_a[i]
+				var dc := grid_b[i] - grid[i]
+				if da * dc > 0.0 and minf(absf(da), absf(dc)) > FLICKER_STEP:
+					spikes += 1
+			flicker_worst = maxi(flicker_worst, spikes)
+			if spikes * 500 > grid.size():
+				flicker_frames += 1
+				if prev_img and flicker_saved < FLICKER_SAVES:
+					flicker_saved += 1
+					prev_img.save_png("%s/%02d_%s_flicker_%03d.png" % [out_dir, index, label, lums.size() - 1])
+					Log.info("Capture", "FLICKER %s frame %d at %.2f s: %d of %d samples jumped and came back"
+						% [label, lums.size() - 1, clock, spikes, grid.size()])
+		grid_a = grid_b
+		grid_b = grid
+		if end_pos != start_pos:
+			var p := start_pos.lerp(end_pos, clampf(clock / maxf(travel, 0.001), 0.0, 1.0))
+			if seq.has("height_above_ground"):
+				p.y = _world.provider.get_height(p.x, p.z) + float(seq["height_above_ground"])
+			cam.move_to(p, p + look_off if seq.has("look_at") else null)
 		var builds := _grade_builds() - builds_at_start
 		lums.append(lum)
 		luts.append(builds)
@@ -544,8 +591,9 @@ func _sequence(index: int, seq: Dictionary) -> int:
 	for l in lums:
 		if l < median * 0.5:
 			dark += 1
-	Log.info("Capture", "sequence %s: %d frames drawn over %.1f s, %d saved, mean brightness %.3f..%.3f (median %.3f), grade tables built %d, %d flash(es), %d DARK frame(s)"
-		% [label, drawn, clock, saved, lo, hi, median, luts[-1] if not luts.is_empty() else 0, flashes.size(), dark])
+	Log.info("Capture", "sequence %s: %d frames drawn over %.1f s, %d saved, mean brightness %.3f..%.3f (median %.3f), grade tables built %d, %d flash(es), %d DARK frame(s), %d frame(s) with things flickering (worst %d of %d samples)"
+		% [label, drawn, clock, saved, lo, hi, median, luts[-1] if not luts.is_empty() else 0, flashes.size(), dark,
+			flicker_frames, flicker_worst, FLICKER_GRID.x * FLICKER_GRID.y])
 	if dark > 0 or not flashes.is_empty():
 		_failures.append("sequence %s: %d flash(es), %d frame(s) under half the median brightness" % [label, flashes.size(), dark])
 	for f in flashes:
@@ -561,6 +609,21 @@ func _grade_builds() -> int:
 		return 0
 	var c: Dictionary = atmos.call("costs")
 	return int((c.get("grade_lut", {}) as Dictionary).get("builds", 0))
+
+
+## The frame's luminance on a FLICKER_GRID of samples.
+static func _luma_grid(img: Image) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(FLICKER_GRID.x * FLICKER_GRID.y)
+	var w := img.get_width()
+	var h := img.get_height()
+	var i := 0
+	for gy in FLICKER_GRID.y:
+		var y := int((float(gy) + 0.5) * float(h) / float(FLICKER_GRID.y))
+		for gx in FLICKER_GRID.x:
+			out[i] = img.get_pixel(int((float(gx) + 0.5) * float(w) / float(FLICKER_GRID.x)), y).get_luminance()
+			i += 1
+	return out
 
 
 static func _mean_luminance(img: Image) -> float:
