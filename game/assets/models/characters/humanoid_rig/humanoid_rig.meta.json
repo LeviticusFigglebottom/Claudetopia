@@ -65,6 +65,7 @@
   "Sleep_Idle",
   "Sneak_Idle",
   "Sneak_Walk",
+  "Sprint",
   "Stagger",
   "Stand_Up",
   "Strafe_L",

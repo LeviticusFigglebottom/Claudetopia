@@ -82,6 +82,7 @@ func build(path: String) -> bool:
 	if spawn_encounters:
 		_build_encounters()
 	_build_boss_arenas()
+	_raise_quest_things()
 	Log.info("CaveInterior", "%s built: %d chambers, %d tris" % [meta.get("name", slug), chambers.size(), int(meta.get("tris", 0))])
 	return true
 
@@ -456,6 +457,16 @@ func _build_features() -> void:
 				m.name = str(f.get("name", "Marker"))
 				m.position = at
 				holder.add_child(m)
+			"item":
+				# Something to pick up. The quest-item placer makes it a pickup, wearing this very
+				# prop, and remembers when it has been taken; a boss's own drop stays a prop in its
+				# lap. With no placer at all (the review scenes) it is the prop it always was.
+				if _quest_items() != null and not ItemSources.boss_drops_at(str(f.get("item", "")), _place_id()):
+					continue
+				var prop := _instance_asset(str(f.get("asset", "")), at, float(f.get("yaw", 0.0)), float(f.get("scale", 1.0)))
+				if prop:
+					prop.set_meta("item", f.get("item", ""))
+					holder.add_child(prop)
 			_:
 				var node := _instance_asset(str(f.get("asset", "")), at, float(f.get("yaw", 0.0)), float(f.get("scale", 1.0)))
 				if node:
@@ -626,6 +637,24 @@ func _feature_position(f: Dictionary) -> Vector3:
 				return _vec(pts[int(f["anchor"]) % pts.size()])
 		return _vec(ch["centre"])
 	return Vector3.ZERO
+
+
+## What a quest says lies in here — the Ledger of Prices in the room behind the bell, the
+## decision at the Seat — and the pickups this meta names, put down by the quest-item placer.
+func _raise_quest_things() -> void:
+	var items := _quest_items()
+	var interior_id := str(get_meta("interior_id", ""))
+	if items == null or interior_id == "":
+		return
+	items.call("raise_in_interior", self, interior_id, meta, Callable(self, "_feature_position"))
+
+
+func _quest_items() -> Node:
+	return get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
+
+
+func _place_id() -> String:
+	return str(ContentDB.get_or_empty(str(get_meta("interior_id", ""))).get("place", ""))
 
 
 func _random_floor(ch: Dictionary) -> Vector3:

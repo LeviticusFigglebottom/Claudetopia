@@ -2088,3 +2088,253 @@ not open; the count of tests leaving the world paused is 0 (it was 16).
    snow line) or drop them from `gen_sfx.py`. The test prints the list on every run.
 6. **unwired.py** could count a same-file caller when that caller is itself reached from outside
    (it lists `use_quick` and `set_boss_intensity`, both reached through their own file).
+
+## The quests, walked to the end of every objective; and who stands at the points of interest
+
+Next item 4 recorded three diagnoses of the quest plumbing and item 6 the absent people and
+encounters at the points of interest. All three diagnoses survived measurement; the first was
+larger than written, and the walk of every quest that followed found more of the same kind.
+
+**`quest_at` counted from one and was read from nought — forty-eight times.** Content numbers a
+stage from one (`["core:quest/the_naming", 1]` is the waking); `quest_at`, `quest_min_stage` and
+`quest_stage` read the number as an index, so every one of the pack's forty-eight numbered
+references, in nine quests, landed a stage late. `QuestLog.stage_index()` is now the one
+translation (a stage id, or its number from one) and `test_quest_stage_references.gd` pins each of
+the forty-eight to the stage id its writer meant, and fails on a new number until somebody says
+what it means. The same pass found `advance()` walking on into the next stage over the top of a
+branch that had just sent the quest somewhere else; it stops now.
+
+**Nothing said `escort_arrived`, and nothing closed five deliveries or five decisions.**
+`Escorts` (systems/npc_life) walks the person with you: they fall in when the stage is under way
+and they have been spoken to, follow at your elbow, stop and wait with a journal line when left
+more than forty metres behind and fall in again when you come back, fail the quest when they
+die, and close the objective when they reach the place; they are saved on the road. Aud Fennick's
+vigil and the job boards' escorts both walk (`test_escorts.gd`, seven cases with bodies moved
+by hand). Five deliveries had no line anywhere to hand the thing over on (the letter to the
+Circle, Aud's bell to Cadwen, the Fennick bell, the press screw, the three loaves): finishing a
+conversation with the person while carrying it hands it over now, except where an author wrote
+the scene. The main thread's five decisions had no button anywhere: the open options are put at
+the host's hub, and the last one, the note, which has nobody left in the room to ask, at a cold
+light in the Cantor's Seat (`ChoicePoint`). Tools could not be used, so the speaking stone and the
+sluice pin could never be; a tool is used now without being used up.
+
+**Eighteen objectives in fourteen quests asked for things nothing gave, sold or put anywhere.**
+`QuestItems` (world/pois/quest_items.gd) puts them down as the world streams in: at the
+objective's `where`, the item's own, or the place the same stage sends you to; on a marker the
+dressing puts down when the objective names a `spot` (the Tumbled Watch's fallen stair, the
+Clanless Camp's chimes, the Gullhithe keel, the Wisp Hollow chimney), in a deep place's chamber or
+a house's room when it is inside; `owner` makes taking it theft; what is taken is the
+`quest_items` save section. A deep place's `item` features were props with an item written on
+them; they are pickups, except a boss's own drop. Hesta gives the Fennick bell on her blue-cuff
+line and the general store stocks the hearth loaf, rather than either lying in the road.
+
+**Every objective, walked.** `QuestWalk` (systems/quests/quest_walk.gd) asks of every objective
+of every authored quest what in the built game sends the event it waits for — the person and
+where they live, the enemy and where it stands (the built cells, a deep place's encounters, a
+point of interest's), the item and how it is got, the decision and who puts it — and
+`test_quest_walk.gd` fails on a new one that cannot be closed. **255 objectives in 35 quests:
+none without a way now, and every quest has a line or an effect that starts it.** Its radiant half
+asks the same of every target a job board could name, region by region, and found three ways a
+board could post work that is not work: an escort of a placeholder from the writers' first roster
+(one of them a dog, `example_dog_gosling`) or of an anonymous watch post, a fetch for cottongrass,
+which nothing in the game has, and — once those were out — an escort of Bessa Tamwick to Tamwick,
+where she lives, which ended the moment she agreed to it. The generator leaves all three out.
+
+The walk says whether the thing an objective waits for exists and can happen. It does not say the
+stage before is reachable, that a `requires` chain can be met, how hard the fight is, or that a
+kill happens where the story puts it (see the Undercroft below). The last column names only what
+an objective could not be closed without: a source this work added that nothing older supplies —
+a kill with enemies in the open is not counted for also standing at a point of interest, nor an
+item that is also sold for also lying somewhere.
+
+| quest | objectives | closable | numbered stage references (each read a stage late) | could not be closed without |
+|---|---|---|---|---|
+| `a_hand_on_the_rope` | 10 | all | - | placed, decision at the hub |
+| `a_thing_nobody_reported` | 7 | all | - | placed |
+| `a_verse_about_you` | 8 | all | 6 | stocked, hand-over, placed |
+| `against_the_bell` | 7 | all | - | - |
+| `at_the_gate` | 6 | all | - | - |
+| `bramble` | 6 | all | 4 | - |
+| `cask_and_press` | 8 | all | 6 | placed, hand-over |
+| `every_price` | 6 | all | - | placed x2 |
+| `forty_one_places` | 6 | all | - | - |
+| `four_hundred_and_twelve` | 7 | all | - | placed |
+| `grist` | 8 | all | 5 | tool use |
+| `in_council` | 10 | all | - | - |
+| `last_name` | 9 | all | 6 | - |
+| `louder` | 8 | all | - | tool use, placed |
+| `louder_than_books` | 7 | all | 2 | hand-over, decision at the hub |
+| `seventeen_bells` | 7 | all | 4 | given (Hesta), hand-over |
+| `the_briars_purpose` | 10 | all | - | POI encounter only, decision at the hub |
+| `the_cold_fire` | 5 | all | - | - |
+| `the_deep_lines` | 6 | all | - | - |
+| `the_fawning_months` | 6 | all | - | - |
+| `the_held_note` | 7 | all | - | decision at the Seat |
+| `the_lamp_is_dimmer` | 8 | all | - | placed |
+| `the_lane_that_isnt` | 7 | all | - | - |
+| `the_lantern_still_lit` | 6 | all | - | placed |
+| `the_last_column` | 2 | all | - | hand-over |
+| `the_long_measurement` | 9 | all | - | - |
+| `the_names_in_the_chapter_book` | 5 | all | - | - |
+| `the_naming` | 7 | all | 7 | - |
+| `the_reading` | 6 | all | - | - |
+| `the_toll_hums` | 10 | all | 8 | placed x2 |
+| `the_unsaid_ledger` | 6 | all | - | placed x2 |
+| `the_unsaid_woman` | 9 | all | - | - |
+| `vigil` | 9 | all | - | escort, hand-over |
+| `wardens_roll_of_names` | 8 | all | - | placed |
+| `what_the_water_kept` | 9 | all | - | decision at the hub, placed |
+
+*placed*: lies where `QuestItems` or a deep place's feature (now a pickup) puts it, and nothing
+else gives it. *stocked*, *given (Hesta)*: a shop's stock or a line now supplies it. *hand-over*:
+finishing a conversation with the person while carrying it. *decision at the hub* / *at the Seat*:
+`ChoicePoint`. *tool use*: used without being used up. *escort*: `Escorts`. *POI encounter only*:
+the Hart of Thorns, which nothing but the Standing Moot's encounter stands up.
+
+**The points of interest stand up what their sentences say.** Every POI has carried an
+`encounter` sentence and nothing stood up what any of them described; the world builder keeps the
+country's encounters off every pad, so the places a player is drawn to were the one ground sure
+to be empty. Thirty-three `encounter` defs (content/packs/core/encounters/pois.json) say the
+sentences in terms `PoiEncounters` can raise with the dressing: groups at a marker the builders
+put down or on the pad's rim, by the hour (the ford's bandits after dark, the dell's bristlebacks
+at dawn, the shrine's wisps at midnight), kept away by a condition (the Larkbourne Boys while the
+Roll of Names sends you to hear Ryn out) or by a person being present (the Lantern Causeway's
+drowned climb the poles only when the lamplighter is not on them), or seated until something is
+touched (Greyfold's six at the Cold Fire rise when you take up the cup). A group killed stays dead
+until a Hearthstone rest; a boss put down stays down. **The Hart of Thorns was stood up nowhere**
+— its arena is the Standing Moot, a place rather than a deep place — **so the main thread's
+fourth account could not be finished**; the Moot is dressed as a stone circle now (a place's
+`dressing` kind) with the Hart in its middle. `test_poi_encounters.gd` pins what stands at every
+one of the forty-eight, people included, both ways round.
+
+The people the sentences and stories name are ordinary npc defs with dialogue, and so they are in
+the `npcs` save section like anybody (`test_poi_people.gd` saves every one of them, loads over a
+standing body and into an empty registry, and finds one Ivo each time and the killed lamplighter
+still dead): **Lissane Sa** the lamplighter, **Khath ko-Rudd** the toll-keeper, **Calen Ash** the
+knight in the Headless Watch's eye (who asks what bread costs in Tollmere and writes the answer
+inside the eye with a burnt stick), **Ivo Goslin** the hermit, with a side quest (*The Last
+Column*) and his exercise book to read on his crate, **Marigold Orchard** the pilgrim at Ansel's
+chair on three days in seven, and **Sorrel and Barnaby Rooke**, the burners who never sleep at the
+same time, with a stock table and the camp's job board. Three more that the places' stories name
+were still missing after this work's first pass, and one had been written down and never made: **Tansy
+Cresswell**, Foxglove Dell's hedge-witch, was a row in the names index ("made Nell Harebell's
+cousin by this stream") and Nell's line about her, and nobody at the dell. She sells yew berries
+to anybody who asks plainly, which Nell will not, is asleep in her hut while the boars root at
+dawn, and says what the story leaves open: whoever takes her yew keeps the seed and leaves the
+harmless flesh in heaps (Nell has a line back). **Ruska ko-Dreugh** takes three marks at Windgate
+for a pass the snow has shut for nine winters and writes you in the book as crossed. **Gisel
+Morneth and Wennick Anthar** are the Sayers' camp at the Thirteenth, arguing whether its head is
+the Cantor's likeness or a face somebody cut into it afterwards, which is what Calen says they do
+instead of saying so; neither is shown right, and both are in their tents with the flaps tied
+before the choristers come. Two rumours carry the new ones about (the heaps under the yew, and
+crossing Windgate, which a capture's log has being said at Kharrow Hold). Ryn Larkbourne's
+schedule named a spot `gosling_pit` in Merrowby that
+nothing there was called; he keeps the camp at the head of the stolen mill wheel now. Each works
+on a marker their place's dressing puts down, and a marker says whose place it is in, so two
+camps' fires are never taken for each other. The Reed Wreck's chart of the Salt Isles lies on its
+crate.
+
+A body stands exactly where its marker is, and that found a mistake of this work's own: the
+Sayers' camp at the Thirteenth had been measured from the head toward the hips, so its table, lamp
+and ladder stood inside the colossus's shoulders and a tent in its flung arm (the B2 capture shows
+the tent's canvas through the carving's flank and no table anywhere). The camp is on the head's
+right, the one quarter the figure leaves open, and `test_poi_people.gd` now puts a person-sized
+capsule on every working marker and fails if it touches anything solid (a capsule at the
+colossus's hips must, and does), fails if two people work one marker at one hour, which the
+second Sayer first did, and stands every one of the twelve up at every hour they work and fails
+if any is more than half a metre off their marker — a marker the registry cannot find puts a
+person on a ring round the place's middle without a word, and on an island that ring is water.
+
+**The One Poppy and the Thirteenth, looked at.** From the POI plan's thirty metres the poppy was
+grey grass and nothing. It has what people who come out to it would leave: the grass worn away
+inside a ring of carried stones and down a path, a cairn by the path with a peeled white stake
+standing out of the flat heath, and the flower built from shapes, a bloom two hands across that
+holds a little light, the one colour there. At thirty metres the ring, the stake and the red are
+all legible; the bloom itself is a handful of pixels, which is what a poppy at thirty metres is. A
+trodden path laid as thin boards photographed as a white rail across the heath and was taken
+out. Kneeling by it now puts its sentence's deed: water it (the Hearth) or pick it (the Hollow,
+four petals, and it is not rebuilt). The Thirteenth was boxes and a dome in the coursed Oroth
+surface — a wall and an igloo. It is carved: the back, the blades and the hips as rounded masses,
+long limbs, the soles turned up, one arm flung ahead with the fingers spread, the robe's folds
+down its back, the hooded head down in the Sayers' diggings under a hoist. On round forms the
+Oroth courses drew seams and the body looked inflated, so it is the Builders' dark stone with
+hairline weathering instead. From above or along its length it is a figure lying face down; from
+the ground by its head it is a mass of carved stone with the dig at its crown — better, and still
+simplified: the limbs are smooth round forms, not sculpture. Captured again on the merged result,
+under the painted sky and its palette: the poppy still reads from thirty metres (the ring, the
+stake, and a red mark a few pixels wide), the Thirteenth's camp stands on the head's right with
+both Sayers on their feet at the table and the trench, and the gate-warden stands on clear ground
+in front of the toll-house's drifts. Foxglove Dell's hedge hides the valley from the pois plan's
+own shot, which is what a hedge is for; from above it, Tansy is among the foxgloves in the
+morning and at her door in the firelight at dusk.
+
+**Found in passing, and fixed (twice, some of it).** The journey's death step read
+`marks_gone=false recovered=true` with the count exactly what it was, once in this work's runs
+and once in another branch's run the same night (240 marks, no Naming step in it), so it was
+never the Toll Hums, as this work first guessed. The physics server says who came into an Area3D
+as the iteration after the step that found them begins; when exactly one physics step fell
+between the journey's fall and its coming back, that step found the body lying in the still-quiet
+Echo, `_respawn` armed it, and the word arrived after, with the player already at the stone: the
+marks came straight back. The player-feel work found the same hole the same night and fixed it
+the same way; the merge keeps its Echo (`_is_here` measures a body against the Echo's own radius
+and height, where this work's measured a round 2.5 m) and both tests: its own stages the
+journey's single step, and this work's stages one, two and three steps with the count measured,
+restaging any frame that overshoots, and failed at one step before the fix. `Readable` never set
+its collision layer, so the interaction ray, which masks only the interactable layer, went through
+every shelf book in every house: the shelves were readable only by a test calling `interact()`.
+`run.sh` read the test and smoke verdicts with `echo "$out" | grep -q` under `pipefail`, which
+returns 141 when grep leaves at its match while echo is still writing: five reruns in forty over
+one passing log exited 1, and the smoke check could have passed a log that said SCRIPT ERROR. The
+parent branch fixed that the same night too, with a grep that reads to the end, and its version
+is the one merged.
+
+**Measured**, on this branch with the parent merged in twice (the painted look, the roads, combat
+and audio, then player feel and no void): the unit suite 1398 tests, 0 failed, 0 content
+problems, 0 script errors and 0 dead lambda captures (four logged errors, the same four tests of
+bad input as before this work). The journey 16 of 16 in each of three runs; its meet-somebody
+step now closes the Naming at Wren's word in Merrowby and checks the Toll Hums begins, which is
+the furthest a noon in Merrowby carries the thread (the Naming's earlier stages are a day's walk
+away, and the unit suite walks them). Smoke PASS over 6 regions, 34 places and 24 interiors, with
+nothing logged. Against the parent branch as it stands, `unwired.py --verbs` counts two fewer
+verbs reached only by tests (37 to its 39: `open_options` and `start_def` are reached now) and
+none new, and `dead_data.py` the same five unread keys (559 distinct keys to its 542; every one
+this work added is read).
+
+**Found and not fixed.**
+
+* **Kills count wherever they happen.** The Undercroft's strongroom stage asks for bravos and the
+  room behind the bell for gutter drakes; the Undercroft's own encounters are down-wolves and
+  bandits, so both close by killing bravos at the Long Stride and drakes at the Gullhithe Wreck.
+  The fix is the Undercroft's meta or a kill objective that names where.
+* **Hollin Barrow's bell cist names `core:item/wardens_roll_fragment` as a feature; no such item
+  exists**, so it stays a prop.
+* **Aud Fennick walks "into the grey"** at the end of the vigil and the registry puts her back on
+  her schedule at Pilgrim's Ash; Seventeen Bells needs her there, so the story and the roster
+  disagree rather than either being broken.
+* **The loot tables' `quest_at` / `quest_min` conditions read a `quests` context nobody fills**;
+  no loot def uses them yet, and whoever does will meet this and the stage-numbering rule at once.
+* **A quest's `giver` starts nothing** (`QuestConditions.offers_of` is called only by its tests).
+  Every authored quest has a line or an effect that starts it, so none is stuck; a new quest that
+  relies on its giver alone will be.
+* **Sentences not honoured, or honoured loosely:** the Singing Yew's wights turning away, the
+  Sallow King's moral choice, the Headless Watch's fallen knight "if the watch has turned" (nothing
+  turns it), the Mossbridge Wardens' "stolen forest goods" (their own greed rule stands in),
+  Tideflat's crabs (there is no crab), Gosling Pit's brute leader, who is Ryn, a person you parley
+  with, the Long Stride's bravo, who is hostile by day rather than waiting for somebody to refuse
+  the toll (there is no toll to refuse), and the Clanless Camp's "brute and two skirmishers", who
+  are three raiders. Groups said to be up high ("at the top", "on the cliffs above", "in the cave
+  behind the falls") stand on the pad's rim, and the sentences' ground — Gosling Pit's rear path
+  from the Hound's eye, Fern Gully's bridges to cut, Whitecut's wet stone — is terrain, not people.
+* **The Hart of Thorns stands in the Moot as a bare humanoid rig**, and the Moot's stones read
+  dark on dark under the Briarwold canopy; both are in the capture and neither is this work's art.
+* **The placeholder roster is still in the world**: `example_merrowby.json`'s eight, three of them
+  sharing a name with a real person (Wren Tallow, Maud Brambling, Osric Pennywort), which are three
+  of `namegen.py --check`'s four problems; the fourth is two items both called "Reed Lantern".
+* **The pois plan's own shot of the Watch of the Gate photographs a hillside**: 44 m back from the
+  toll-house on its approach is behind a shoulder of the pass. A shot at half the distance shows
+  the house and its warden; `make_pois_plan.py` does not look for a clear line.
+
+**Left for next, in order.** (1) Give the Undercroft its drakes and bravos, and let a kill objective
+name where it counts. (2) Make `wardens_roll_fragment` or take it out of the cist. (3) The
+unhonoured sentences above, the Moot's stones and the Hart's model. (4) Delete or rename the
+placeholder roster.

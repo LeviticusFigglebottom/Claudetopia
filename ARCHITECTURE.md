@@ -136,14 +136,19 @@ scripted journey — adds a single `GameServices`.
    rivers/roads splines, cell placement JSON (`cells/<x>_<z>.json`) and
    `world_manifest.json`.
 2. `game/tools_gd/import_terrain.tscn` (headless) imports those maps into
-   Terrain3D region files under `game/terrain_data/` (gitignored).
+   Terrain3D region files under `game/terrain_data/`.
 3. At runtime `TerrainProvider` wraps the `Terrain3D` node (height queries,
    region streaming). `WorldStreamer` loads cell placements in rings around the
    player: authored POI scenes, scatter MultiMeshes, NPC spawns, interior doors.
 4. Interiors are separate scenes listed in `interior` content defs; doors carry
    `interior_id` and a spawn marker name.
 
-Generated data is a build artifact; `run.sh` builds it if missing.
+Generated data is a build artifact, but the part of it the game reads (the manifest, the
+places and splines, `runtime/`, `cells/` and `game/terrain_data/`, about 310 MB) is tracked so
+a clone plays without Python; `.gitignore` names exactly that set, and `run.sh` builds the
+world only when it is missing. `WorldStatus` (`game/world/world_status.gd`) decides at every
+way in whether there is a world at all, and when Terrain3D cannot draw it `FallbackTerrain`
+draws the ground from the runtime height map (game/world/README.md).
 
 ## 6a. Interiors pipeline (tools/interiors)
 

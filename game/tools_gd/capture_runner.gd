@@ -8,13 +8,30 @@ extends Node
 ## Plan format:
 ##   {"shots": [{"label", "pos": [x, y, z], "look_at": [x, y, z] | "yaw"/"pitch",
 ##               "fov", "time": hours, "place": "core:place/x", "height_above_ground": m}],
-##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours}}
+##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours},
+##    "gait": {"pos": [x, _, z], "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
+##             "camera": {"distance": m, "height": m, "fov": deg},
+##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]}}
+##
+## A gait run may also hold keys and tap one, as real key events through the input map rather
+## than as actions: {"label": "roll", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}.
+## The tap comes after the settle and just before the first frame, so the frames film whatever
+## the key does. "frames", "interval" and "settle" may be set per run.
 ##
 ## For each shot it sets the clock, moves the fly camera, waits until the streamer reports the
 ## full-detail ring loaded (plus ten frames so LODs and shadows settle), saves
 ## <index>_<label>.png and records Performance monitors into <out>/perf.json.
+##
+## A `gait` section films the player's own body in motion: it stands a player up on the ground
+## at `pos`, facing `heading` (a compass bearing), presses the run's actions exactly as a player
+## would, lets it settle, and takes `frames` shots `interval` seconds apart from its left side.
+## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
+## rasteriser managed: every frame is then one physics tick.
 
 const WORLD_SCENE := "res://world/world.tscn"
+const PLAYER_SCENE := "res://actors/player/player.tscn"
+## Everything a gait run may hold down, released between runs so one run cannot leak into the next.
+const GAIT_ACTIONS: Array[String] = ["move_forward", "move_back", "move_left", "move_right", "sprint", "sneak", "walk"]
 const SETTLE_FRAMES := 10
 const MAX_WAIT_FRAMES := 240
 
@@ -81,6 +98,9 @@ func run() -> int:
 	var fly: Dictionary = plan.get("flythrough", {})
 	if not fly.is_empty():
 		index = await _fly(index, fly)
+	var gait: Dictionary = plan.get("gait", {})
+	if not gait.is_empty():
+		index = await _gait(index, gait)
 	_write_perf()
 	if not _failures.is_empty():
 		for f in _failures:
@@ -111,6 +131,11 @@ func _read_plan() -> Dictionary:
 
 
 func _load_world() -> World:
+	var world_status := WorldStatus.current()
+	if not bool(world_status.get("playable", false)):
+		# a photograph of a void is not a photograph of the country
+		Log.error("Capture", "%s %s" % [str(world_status.get("title", "")), str(world_status.get("detail", ""))])
+		return null
 	var packed: PackedScene = load(WORLD_SCENE)
 	if packed == null:
 		return null
@@ -401,6 +426,137 @@ func _fly(index: int, fly: Dictionary) -> int:
 		await _take_shot(index, shot)
 		index += 1
 	return index
+
+
+## Films the player's body walking, jogging and sprinting (see the `gait` plan section above).
+## The body is the real player scene driven through the real input actions, so what is in the
+## frames is what a player's key presses produce, not a clip played on a mannequin.
+func _gait(index: int, gait: Dictionary) -> int:
+	var cam := _world.fly_camera
+	if cam == null:
+		_failures.append("no fly camera for the gait sequence")
+		return index
+	if gait.has("time"):
+		WorldClock.set_time(float(gait["time"]))
+	if gait.has("weather"):
+		_force_weather(str(gait["weather"]))
+	var p: Array = gait.get("pos", [0.0, 0.0, 0.0])
+	var start := Vector3(float(p[0]), 0.0, float(p[2]))
+	start.y = _world.provider.get_height(start.x, start.z)
+	var bearing := deg_to_rad(float(gait.get("heading", 90.0)))
+	var travel := Vector3(sin(bearing), 0.0, -cos(bearing))        # north is -Z (CONTRACTS §1)
+	var yaw := atan2(-travel.x, -travel.z)
+	var right := Basis(Vector3.UP, -PI * 0.5) * travel             # film from the right: motion runs left to right
+	var cam_cfg: Dictionary = gait.get("camera", {})
+	var distance := float(cam_cfg.get("distance", 4.2))
+	var cam_height := float(cam_cfg.get("height", 1.0))
+	cam.fov = float(cam_cfg.get("fov", 50.0))
+	var frames := int(gait.get("frames", 8))
+	var interval := float(gait.get("interval", 0.1))
+	var settle := float(gait.get("settle", 1.6))
+	_world.move_target(start + right * distance + Vector3.UP * cam_height, start + Vector3.UP)
+	await _wait_for_streaming()
+	# Under the software rasteriser a frame of the country takes seconds, and a gait needs a
+	# hundred simulated ticks between shots. Only the frames that are saved are drawn.
+	RenderingServer.render_loop_enabled = false
+	var packed := load(PLAYER_SCENE) as PackedScene
+	var player := packed.instantiate() as Node3D
+	_world.add_child(player)
+	# The body's own camera rig makes itself current on _ready; this is a side view.
+	cam.set_process(false)          # it reads the same move actions the body is being given
+	cam.make_current()
+	for run in gait.get("runs", []):
+		if typeof(run) != TYPE_DICTIONARY:
+			continue
+		var label := str(run.get("label", "run"))
+		_release_gait_actions()
+		player.set("velocity", Vector3.ZERO)
+		player.global_position = start + Vector3.UP * 0.05
+		player.rotation.y = yaw
+		var rig: Node = player.get("camera_rig")
+		if rig != null:
+			rig.set("yaw", yaw)
+		if player.has_method("full_restore"):
+			player.call("full_restore")
+		player.set("is_sneaking", false)       # a toggle: one run's sneak must not leak into the next
+		player.reset_physics_interpolation()
+		await _physics_seconds(0.25)
+		for action in run.get("press", []):
+			if InputMap.has_action(str(action)):
+				Input.action_press(str(action))
+			else:
+				Log.warn("Capture", "gait run %s: no input action '%s'" % [label, str(action)])
+		for k in run.get("hold_keys", []):
+			_send_key(str(k), true)
+		await _physics_seconds(float(run.get("settle", settle)))
+		if run.has("tap_key"):
+			_send_key(str(run["tap_key"]), true)
+			await _physics_seconds(float(run.get("tap_hold", 0.1)))
+			_send_key(str(run["tap_key"]), false)
+		var run_frames := int(run.get("frames", frames))
+		var run_interval := float(run.get("interval", interval))
+		for f in run_frames:
+			var at := player.get_global_transform_interpolated().origin
+			cam.move_to(at + right * distance + Vector3.UP * cam_height, at + Vector3.UP * 0.95)
+			RenderingServer.render_loop_enabled = true
+			await get_tree().process_frame
+			await RenderingServer.frame_post_draw
+			RenderingServer.render_loop_enabled = false
+			var shot_label := "gait_%s_%02d" % [label, f]
+			var path := "%s/%02d_%s.png" % [out_dir, index, shot_label]
+			var img := get_viewport().get_texture().get_image()
+			if img.save_png(path) != OK:
+				_failures.append("cannot write %s" % path)
+			var v: Vector3 = player.get("velocity")
+			var state := str(player.call("state_name")) if player.has_method("state_name") else "?"
+			var untouchable := bool(player.call("is_in_iframes")) if player.has_method("is_in_iframes") else false
+			var anim: Node = player.get("anim")
+			var clip := str(anim.get("current_clip")) if anim != null else ""
+			Log.info("Capture", "%s: speed %.2f m/s, stamina %.0f, %s%s, clip %s, at %s" % [shot_label,
+					Vector2(v.x, v.z).length(), float(player.get("stamina")), state,
+					" (untouchable)" if untouchable else "", clip, str(player.global_position.snapped(Vector3.ONE * 0.01))])
+			index += 1
+			await _physics_seconds(run_interval)
+		for k in run.get("hold_keys", []):
+			_send_key(str(k), false)
+		_release_gait_actions()
+	RenderingServer.render_loop_enabled = true
+	player.queue_free()
+	cam.set_process(true)
+	cam.make_current()
+	return index
+
+
+## A key as a keyboard sends it, through the input map (so through the bindings the game set up):
+## a modifier key reports itself held while it is down.
+func _send_key(name: String, pressed: bool) -> void:
+	var code := OS.find_keycode_from_string(name)
+	if code == KEY_NONE:
+		Log.warn("Capture", "no key called '%s'" % name)
+		return
+	var ev := InputEventKey.new()
+	ev.keycode = code
+	ev.physical_keycode = code
+	ev.key_label = code
+	ev.pressed = pressed
+	ev.ctrl_pressed = pressed and code == KEY_CTRL
+	ev.shift_pressed = pressed and code == KEY_SHIFT
+	ev.alt_pressed = pressed and code == KEY_ALT
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
+
+
+func _release_gait_actions() -> void:
+	for action in GAIT_ACTIONS:
+		if InputMap.has_action(action):
+			Input.action_release(action)
+
+
+## Waits for `seconds` of simulated time, counted in physics ticks rather than wall-clock.
+func _physics_seconds(seconds: float) -> void:
+	var until := Engine.get_physics_frames() + int(round(seconds * Engine.physics_ticks_per_second))
+	while Engine.get_physics_frames() < until:
+		await get_tree().physics_frame
 
 
 func _write_perf() -> void:

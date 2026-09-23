@@ -18,13 +18,48 @@ signal spell_readied(spell_id: String)
 signal quick_slot_used(index: int, item_id: String)
 signal camera_mode_changed(first_person: bool)
 
-const WALK_SPEED := 4.2
-const RUN_SPEED := 6.5
-const SNEAK_MULT := 0.5
+## Gaits (DESIGN §5.2), ground speeds in m/s. A full stick or a key jogs; the walk key held, or a
+## light stick, walks; sprint held runs flat out on stamina (DESIGN §5.3, 8/s). The first
+## numbers were 4.2 and 6.5 with no walk at all, and the default was posed as a crouch.
+const WALK_SPEED := 1.8
+const JOG_SPEED := 5.0
+const SPRINT_SPEED := 7.8
+const SNEAK_SPEED := 1.5
+## Locked on or blocking the body faces the target or the view, not the way it moves, and the
+## legs have only walking strafes to show for it.
+const STRAFE_SPEED := 2.6
 const BLOCK_MOVE_MULT := 0.6
+## Moving while a bow is drawn: what the first numbers gave it (half of 4.2), kept.
+const AIM_MOVE_SPEED := 2.1
+## Stick deflection at which a walk becomes a jog, and where the jog is reached.
+const WALK_STICK := 0.55
+const JOG_STICK := 0.9
+## Speed changes, m/s². From rest to a jog in 0.31 s; a jog stops in 0.25 s over 0.63 m. Above a
+## jog both are gentler: a sprint builds over 0.4 s more and takes 0.48 s and 2.1 m to stop.
+const ACCEL := 16.0
+const DECEL := 20.0
+const SPRINT_ACCEL := 7.0
+const SPRINT_DECEL := 12.0
+const AIR_ACCEL := 8.0
+## How fast the body turns toward where it is going (rad/s), by how fast it is going, and the
+## rate at which the last few degrees ease in. A body turns on the spot faster than it can
+## change course at a sprint.
+const TURN_RATE_STILL := deg_to_rad(900.0)
+const TURN_RATE_WALK := deg_to_rad(720.0)
+const TURN_RATE_JOG := deg_to_rad(540.0)
+const TURN_RATE_SPRINT := deg_to_rad(300.0)
+const TURN_RATE_STRAFE := deg_to_rad(720.0)
+const TURN_EASE := 16.0
+## Full speed while the way you are going is within ALIGN_FULL of the way you face, none past
+## ALIGN_NONE: a reversal plants and turns rather than moonwalking or swinging a wide arc.
+const ALIGN_FULL := deg_to_rad(50.0)
+const ALIGN_NONE := deg_to_rad(150.0)
+## A sprint run to empty stops, and does not start again until this share of stamina is back.
+const SPRINT_RESUME := 0.25
+## A press of Sprint let go within this long is a tap, and a tap rolls (see _read_sprint_tap).
+const SPRINT_TAP_S := 0.22
 const JUMP_HEIGHT := 1.1
-const GROUND_ACCEL := 18.0
-const AIR_ACCEL := 5.0
+## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
 const ATTACK_STEP_SPEED := 1.6
 const MANTLE_MIN := 0.4
@@ -44,7 +79,7 @@ const LOAD_CAPACITY_BASE := 20.0
 const LOAD_CAPACITY_PER_ENDURANCE := 1.5
 const SAVE_SECTION := "player"
 const SKILL_IDS: Array[String] = ["one_handed", "two_handed", "archery", "block", "armour", "sneak", "speech", "alchemy", "smithing", "enchanting", "athletics", "kindling", "hush", "binding", "mending", "calling"]
-const ACTIONS: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact", "block", "sprint", "sneak", "lock_on", "cycle_target", "toggle_camera", "toggle_lantern", "quick_1", "quick_2", "quick_3", "quick_4"]
+const ACTIONS: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact", "block", "sprint", "walk", "sneak", "lock_on", "cycle_target", "toggle_camera", "toggle_lantern", "quick_1", "quick_2", "quick_3", "quick_4"]
 const BUFFERABLE: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact"]
 const ARROW_SCENE := "res://systems/combat/arrow.tscn"
 
@@ -113,6 +148,16 @@ var _riposte_target: Actor = null
 ## The swallow in progress (drink_flask): elapsed, length, takes_at, restore, taken.
 var _drink: Dictionary = {}
 var _sprint_toggle: bool = false
+## Run to empty: no sprint until SPRINT_RESUME of the stamina has come back.
+var _sprint_spent: bool = false
+## When the Sprint key went down (the combat clock), or -1 while it is up.
+var _sprint_down_at: float = -1.0
+## Speed along the way the body faces while moving freely (locomotion's own state, so a shove or
+## a dodge's velocity is never taken for running speed).
+var _ground_speed: float = 0.0
+var _free_tick: int = -2
+## The heightfield held the body up last tick (open country has no collider under it).
+var _terrain_held: bool = false
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
 
@@ -268,7 +313,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _read_input() -> void:
 	for a in ACTIONS:
-		var pressed := input_enabled and Input.is_action_pressed(a)
+		var pressed := input_enabled and InputMap.has_action(a) and Input.is_action_pressed(a)
 		_just[a] = pressed and not bool(_prev.get(a, false))
 		_prev[a] = pressed
 		_held[a] = pressed
@@ -278,6 +323,7 @@ func _read_input() -> void:
 		if _just[a]:
 			_buffer_action = a
 			_buffer_at = now()
+	_read_sprint_tap()
 
 
 func _peek_buffer(actions: Array) -> String:
@@ -334,7 +380,7 @@ func _physics_process(delta: float) -> void:
 		apply_gravity(delta)
 		integrate_shove(delta)
 		move_and_slide()
-		snap_to_terrain()
+		_terrain_held = snap_to_terrain()
 		# Sneaking is felt through the boots as much as it is seen: a quieter step, and a
 		# sprint's a louder one.
 		step_sounds(delta, -8.0 if is_sneaking else (2.0 if is_sprinting else 0.0))
@@ -480,6 +526,8 @@ func _offhand_guard() -> Dictionary:
 	return {}
 
 
+## Where the stick or the keys point, on the ground, in the world. `camera_rig.yaw` is the view's
+## world yaw (CameraRig), so W is the view's forward, S away from it, A and D its left and right.
 func _wish_direction() -> Vector3:
 	var basis := Basis(Vector3.UP, camera_rig.yaw)
 	var wish := basis * Vector3(_move_input.x, 0.0, _move_input.y)
@@ -496,39 +544,197 @@ func _sprint_wanted() -> bool:
 		if _move_input.length() < 0.1:
 			_sprint_toggle = false
 		return _sprint_toggle
-	return bool(_held["sprint"])
+	if not bool(_held["sprint"]):
+		return false
+	# a press that may yet be a tap is not a sprint: a roll must not start with a lurch forward
+	return _sprint_down_at < 0.0 or now() - _sprint_down_at >= SPRINT_TAP_S
 
+
+## A tap of Sprint rolls; a hold sprints. The genre's players reach for the run key to roll (the
+## Souls games taught most of them), and it leaves Space to jump. The roll goes through the same
+## buffer as the Dodge key, so it cancels an attack's recovery and waits out a busy moment the same
+## way. Keyboard only: on a pad, B rolls and the stick click is a sprint and nothing else. Off
+## with its setting, and while Sprint is a toggle, where a tap is the toggle.
+func _read_sprint_tap() -> void:
+	if not (input_enabled and sprint_taps_roll_setting()):
+		_sprint_down_at = -1.0
+		return
+	if _just["sprint"]:
+		_sprint_down_at = now() if _sprint_key_down() else -1.0
+	elif not bool(_held["sprint"]) and _sprint_down_at >= 0.0:
+		if now() - _sprint_down_at < SPRINT_TAP_S:
+			_buffer_action = "dodge"
+			_buffer_at = now()
+		_sprint_down_at = -1.0
+
+
+## Whether a tap of Sprint rolls, as the settings stand.
+static func sprint_taps_roll_setting() -> bool:
+	return bool(Settings.get_value("controls", "sprint_tap_rolls", true)) \
+			and not bool(Settings.get_value("controls", "toggle_sprint", false))
+
+
+## Whether Sprint is held on the keyboard (rather than on a pad).
+func _sprint_key_down() -> bool:
+	for ev in InputMap.action_get_events("sprint"):
+		var key := ev as InputEventKey
+		if key == null:
+			continue
+		if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
+			return true
+		if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
+			return true
+	return false
+
+
+# --- locomotion (DESIGN §5.2) -------------------------------------------------------------------
 
 func _move(delta: float) -> void:
 	var wish := _wish_direction()
-	var speed := WALK_SPEED
-	is_sprinting = _sprint_wanted() and wish.length() > 0.1 and not is_blocking and stamina_comp.current > 0.0 and is_on_floor()
-	if is_sprinting:
-		is_sneaking = false
-		speed = RUN_SPEED
-		stamina_comp.drain(DamageModel.STAMINA_SPRINT_PER_S, delta)
-		if _noise_timer <= 0.0:
-			_emit_noise(0.6)
-			_noise_timer = 0.4
+	var moving := wish.length() > 0.1
+	_update_sprint(moving, delta)
+	var speed := _target_speed() if moving else 0.0
+	if not _on_ground():
+		_air_move(wish, speed, delta)
+	elif _strafe_mode():
+		_strafe_move(wish, speed, delta)
+	else:
+		_free_move(wish, speed, delta)
+
+
+## Standing on something: a collider, or the heightfield that `snap_to_terrain` held us to.
+func _on_ground() -> bool:
+	return is_on_floor() or _terrain_held
+
+
+## The ground speed a stick deflection (0..1) asks for, before sprint, sneak, stance and status:
+## a light stick walks, a full one jogs, the walk key caps it at a walk.
+static func gait_speed(stick: float, walk_held: bool) -> float:
+	var m := clampf(stick, 0.0, 1.0)
+	if m < 0.1:
+		return 0.0
+	var walk := WALK_SPEED * minf(m / WALK_STICK, 1.0)
+	if walk_held or m <= WALK_STICK:
+		return walk
+	return lerpf(WALK_SPEED, JOG_SPEED, clampf((m - WALK_STICK) / (JOG_STICK - WALK_STICK), 0.0, 1.0))
+
+
+func _target_speed() -> float:
+	var speed := SPRINT_SPEED if is_sprinting else gait_speed(_move_input.length(), bool(_held.get("walk", false)))
 	if is_sneaking:
-		speed *= SNEAK_MULT
+		speed = minf(speed, SNEAK_SPEED)
+	if _strafe_mode() and not camera_rig.first_person:
+		speed = minf(speed, STRAFE_SPEED)
 	if is_blocking:
 		speed *= BLOCK_MOVE_MULT
-	speed *= speed_multiplier()
-	var target_v := wish * speed
-	var accel := GROUND_ACCEL if is_on_floor() else AIR_ACCEL
-	var horizontal := Vector3(velocity.x, 0.0, velocity.z).move_toward(target_v, accel * delta * maxf(speed, 1.0))
+	return speed * speed_multiplier()
+
+
+## Locked on (and not sprinting), blocking, or looking out of the body's own eyes: the body faces
+## the target or the view and steps whichever way it is pushed. Sprinting breaks a lock's strafe.
+func _strafe_mode() -> bool:
+	return camera_rig.first_person or is_blocking or (lock.is_locked() and not is_sprinting)
+
+
+## Sprint runs on stamina (DESIGN §5.3). Run to empty, it stops, and it does not start again
+## until SPRINT_RESUME of the pool is back: otherwise it stutters on and off with every regen tick.
+func _update_sprint(moving: bool, delta: float) -> void:
+	var wanted := _sprint_wanted()
+	if _sprint_spent and stamina_comp.current >= stamina_comp.maximum * SPRINT_RESUME:
+		_sprint_spent = false
+	is_sprinting = wanted and moving and not is_blocking and _on_ground() and not _sprint_spent \
+			and stamina_comp.current > 0.0
+	if not is_sprinting:
+		return
+	is_sneaking = false
+	if not stamina_comp.drain(DamageModel.STAMINA_SPRINT_PER_S, delta):
+		_sprint_spent = true
+		is_sprinting = false
+		return
+	if _noise_timer <= 0.0:
+		_emit_noise(0.6)
+		_noise_timer = 0.4
+
+
+## Moving freely: the body turns toward where the stick points, at a rate that falls as it goes
+## faster, and it goes the way it faces. With much of a turn still to make it gives up speed to
+## make it, so a reversal is a plant and a turn rather than a moonwalk or a wide arc.
+func _free_move(wish: Vector3, target_speed: float, delta: float) -> void:
+	var tick := Engine.get_physics_frames()
+	if _free_tick != tick - 1:
+		# back from a roll, a swing, the air or a strafe: carry the speed actually being made
+		_ground_speed = maxf(Vector3(velocity.x, 0.0, velocity.z).dot(forward()), 0.0)
+	else:
+		# into a wall you stop running, rather than keep the speed you were asking for
+		var real := get_real_velocity()
+		var made := Vector2(real.x, real.z).length()
+		if _ground_speed > made + 0.75:
+			_ground_speed = made
+	_free_tick = tick
+	var want := 0.0
+	if wish.length() > 0.1:
+		var want_yaw := atan2(-wish.x, -wish.z)
+		rotation.y = turn_toward(rotation.y, want_yaw, turn_rate_for(_ground_speed), delta)
+		want = target_speed * alignment(absf(wrapf(want_yaw - rotation.y, -PI, PI)))
+	_ground_speed = approach_speed(_ground_speed, want, delta)
+	velocity.x = -sin(rotation.y) * _ground_speed
+	velocity.z = -cos(rotation.y) * _ground_speed
+
+
+## Facing the target or the view, stepping any way: the velocity itself eases toward the push.
+func _strafe_move(wish: Vector3, target_speed: float, delta: float) -> void:
+	var face := yaw_to(lock.target_point()) if lock.is_locked() and not camera_rig.first_person else camera_rig.yaw
+	rotation.y = turn_toward(rotation.y, face, TURN_RATE_STRAFE, delta)
+	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
+	var goal := wish * target_speed
+	horizontal = horizontal.move_toward(goal, (ACCEL if goal.length() > horizontal.length() else DECEL) * delta)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
-	_face_for_movement(wish, delta)
+	_free_tick = -2
 
 
-func _face_for_movement(wish: Vector3, delta: float) -> void:
-	if camera_rig.first_person or lock.is_locked() or is_blocking:
-		var target_yaw := camera_rig.yaw if not lock.is_locked() else yaw_to(lock.target_point())
-		rotation.y = lerp_angle(rotation.y, target_yaw, clampf(TURN_SPEED * delta, 0.0, 1.0))
-	elif wish.length() > 0.1:
-		rotation.y = lerp_angle(rotation.y, atan2(-wish.x, -wish.z), clampf(TURN_SPEED * delta, 0.0, 1.0))
+func _air_move(wish: Vector3, target_speed: float, delta: float) -> void:
+	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
+	if wish.length() > 0.1:
+		horizontal = horizontal.move_toward(wish * maxf(target_speed, horizontal.length()), AIR_ACCEL * delta)
+	velocity.x = horizontal.x
+	velocity.z = horizontal.z
+	if _strafe_mode():
+		var face := yaw_to(lock.target_point()) if lock.is_locked() and not camera_rig.first_person else camera_rig.yaw
+		rotation.y = turn_toward(rotation.y, face, TURN_RATE_STRAFE, delta)
+	elif horizontal.length() > 0.5:
+		rotation.y = turn_toward(rotation.y, atan2(-horizontal.x, -horizontal.z), TURN_RATE_SPRINT, delta)
+	_free_tick = -2
+
+
+## One tick of turning `yaw` toward `want`: at most `rate` rad/s, and easing into the last few
+## degrees instead of stopping dead on them.
+static func turn_toward(yaw: float, want: float, rate: float, delta: float) -> float:
+	var diff := wrapf(want - yaw, -PI, PI)
+	var step := diff * (1.0 - exp(-TURN_EASE * delta))
+	var cap := rate * delta
+	return wrapf(yaw + clampf(step, -cap, cap), -PI, PI)
+
+
+## How fast the body can turn at a ground speed: quickest standing, slowest at a sprint.
+static func turn_rate_for(speed: float) -> float:
+	if speed <= WALK_SPEED:
+		return lerpf(TURN_RATE_STILL, TURN_RATE_WALK, speed / WALK_SPEED)
+	if speed <= JOG_SPEED:
+		return lerpf(TURN_RATE_WALK, TURN_RATE_JOG, (speed - WALK_SPEED) / (JOG_SPEED - WALK_SPEED))
+	return lerpf(TURN_RATE_JOG, TURN_RATE_SPRINT, clampf((speed - JOG_SPEED) / (SPRINT_SPEED - JOG_SPEED), 0.0, 1.0))
+
+
+## The share of the asked-for speed allowed with `off` radians of turn still to make.
+static func alignment(off: float) -> float:
+	return 1.0 - smoothstep(ALIGN_FULL, ALIGN_NONE, off)
+
+
+## One tick of speed change: brisk up to a jog, gentler above it, both ways.
+static func approach_speed(speed: float, want: float, delta: float) -> float:
+	if want > speed:
+		return minf(speed + (ACCEL if speed < JOG_SPEED else SPRINT_ACCEL) * delta, want)
+	return maxf(speed - (DECEL if speed <= JOG_SPEED else SPRINT_DECEL) * delta, want)
 
 
 func _damp_horizontal(delta: float, rate: float) -> void:
@@ -538,8 +744,11 @@ func _damp_horizontal(delta: float, rate: float) -> void:
 
 
 func _update_locomotion_anim(_delta: float) -> void:
-	var local := global_transform.basis.inverse() * Vector3(velocity.x, 0.0, velocity.z)
-	anim.set_locomotion(Vector2(local.x, -local.z) / RUN_SPEED, is_sneaking)
+	# the ground velocity the body really made, in its own frame, m/s: the model plays the gait
+	# at the rate that keeps its feet planted under exactly that
+	var v := get_real_velocity()
+	var local := global_transform.basis.inverse() * Vector3(v.x, 0.0, v.z)
+	anim.set_locomotion(Vector2(local.x, -local.z), is_sneaking)
 	if state == State.FREE and not anim.is_busy() and not is_blocking:
 		if not is_on_floor() and velocity.y < -3.0 and not anim.is_playing("Fall_Loop"):
 			anim.play_intent("Fall_Loop")
@@ -928,15 +1137,26 @@ func kill() -> void:
 
 ## Called by the Hearth autoload after the death delay; Hearth owns the respawn point and Echo.
 func respawn(position: Vector3, yaw: float) -> void:
-	global_position = position
-	rotation.y = yaw
-	velocity = Vector3.ZERO
 	revive()
 	collision_layer = LAYER_PLAYER
 	_buffer_action = ""
 	_set_state(State.FREE)
-	camera_rig.yaw = yaw
 	set_input_enabled(true)
+	teleport(position, yaw)
+
+
+## CONTRACTS §8: puts the body somewhere at once (a door, a Hearthstone, a load, the console),
+## facing `yaw`, with the view behind it looking the same way. Nothing is carried across the
+## jump: not the speed, not the camera's follow, not an interpolation smear from where it was.
+func teleport(position: Vector3, yaw: float) -> void:
+	global_position = position
+	rotation.y = yaw
+	velocity = Vector3.ZERO
+	_ground_speed = 0.0
+	_free_tick = -2
+	camera_rig.yaw = yaw
+	reset_physics_interpolation()
+	camera_rig.snap_to_target()
 
 
 # --- CAST ---------------------------------------------------------------------------------------
@@ -1074,7 +1294,7 @@ func _tick_bow(delta: float) -> void:
 		_enter_stunned()
 		return
 	rotation.y = lerp_angle(rotation.y, camera_rig.yaw, clampf(TURN_SPEED * delta, 0.0, 1.0))
-	var wish := _wish_direction() * WALK_SPEED * 0.5
+	var wish := _wish_direction() * AIM_MOVE_SPEED
 	velocity.x = wish.x
 	velocity.z = wish.z
 	var draw_time := weapon.draw_time()
@@ -1749,7 +1969,8 @@ func from_save(d: Dictionary) -> void:
 	stamina_comp.from_save(d.get("stamina", {}))
 	caster.from_save(d.get("mana", {}))
 	camera_rig.set_first_person(bool(d.get("first_person", false)))
-	camera_rig.yaw = rotation.y
+	# a load is a teleport: the body is somewhere else now, facing its saved way
+	teleport(global_position, rotation.y)
 	is_sneaking = bool(d.get("sneaking", false))
 	if not dead:
 		_set_state(State.FREE)

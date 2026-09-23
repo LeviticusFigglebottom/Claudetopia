@@ -496,6 +496,24 @@ multiplied by gold and red. Rules now carry a `tint_strength` (how far from whit
 multiplier may travel, default 0.45) and the species whose asset already carries that colour
 take none at all.
 
+## 2026-09-22 · A stage number counts from one
+**Decision.** Content names a quest stage by its id or by its number counted from one, in
+`quest_at`, `quest_min_stage` and `quest_stage` alike. The code translates in one place,
+`QuestLog.stage_index()`; `stage_of()` stays the index from nought and is never what content
+writes.
+**Why.** Every quest in the pack that writes stage numbers says in its own `notes` that they are
+1-based, and the forty-eight numbered references all read correctly that way and wrongly the
+other. The code compared them with the 0-based index, so each landed a stage late or on no stage
+at all — among them the main thread's first conversation and every branch of six side quests.
+**Alternatives.** Rewriting the forty-eight numbers as stage ids, which is what the later half of
+the pack already does and is the sturdier habit. It would have made the test that pins them
+tautological, and the numbers were written consistently; the fault was the reader, not the
+writing. New content should still prefer ids.
+**Consequences.** `test_quest_stage_references.gd` holds, for every number the pack uses, the
+stage id its prose describes, and fails on a number nobody has explained. The fake quest provider
+in `tests/fixtures/fakes.gd` counts the same way as the real log, so a test cannot pass against a
+convention the game does not use.
+
 ## 2026-09-22 · The character's attributes start at 10, and the pools are the character's
 **Decision.** Vigour, Endurance and Will start at 10, not 5, and there is one set of pool
 formulas (`DamageModel`): stamina `100 + 8·Endurance`, mana `60 + 6·Will`, health from Vigour.
@@ -611,3 +629,128 @@ trigger and measures levels a sixtieth of a second at a time (no player may move
 3 dB in a step; outgoing and incoming tracks overlap). The headless fights check that every
 fight is heard. Eleven sfx rows have nothing in the game that plays them (bells, thunder, wind
 gust, wood creak, cart wheels, sand and snow footsteps); they are listed by the test on every run.
+## 2026-09-23 · The built world is tracked, and the ground never depends on one plugin
+**Decision.** The part of `game/world/generated/` the game reads at run time (the manifest,
+`pois.json`, `roads.json`, `rivers.json`, `runtime/`, `cells/`) and `game/terrain_data/` are
+tracked in git, named exactly by `.gitignore`; the full-resolution maps that only the terrain
+import reads stay out. When Terrain3D cannot draw the ground — no library for the machine, no
+regions on disk, regions that load as nothing — `FallbackTerrain` draws it from the 8 m runtime
+height map, and `WorldStatus` refuses the world outright only when there is no world data at all.
+**Why.** A player cloned the repository, pressed Play and stood on a grey void. The world was
+never in the repository; building it needs Python, 8 GB and minutes, which the editor's Play
+button does not do; and on a Mac the plugin had no binary at all. Every way in let them through,
+because nothing asked whether there was ground, and `./run.sh flow` passed the void.
+**Consequences.** About 310 MB of built data in the repository (a 207 MiB pack, most of it
+Terrain3D's already-compressed regions), and a rebuild of the world is now a commit of that
+data, which will diff. The runtime height map's 3 m block-mean offset became part of the
+contract (CONTRACTS §6), because the fallback draws from it and it is visibly wrong without it.
+## 2026-09-23 · The view belongs to the mouse, movement is relative to it, and there are three gaits
+**Decision.** The camera rig is `top_level`: it follows the body's position every frame and never
+its rotation, and `CameraRig.yaw` is a world yaw that only look input changes. W/A/S/D are
+relative to that yaw. The body turns toward where it is going at a rate that falls with speed
+(900°/s standing to 300°/s at a sprint) and moves the way it faces, giving up speed while a large
+turn is still to make. Gaits are walk 1.8 m/s (a modifier or a light stick), jog 5.0 (the
+default) and sprint 7.8 (held, stamina 8/s, locked out at empty until 25% is back), with 16 m/s²
+up to a jog, 7 above it, 20 m/s² down from a jog and 12 above it.
+**Why.** Measured, not argued. The rig was a plain child of the body, so the view looked along
+body yaw + rig yaw while movement, respawn and saves all read the rig's yaw as the whole of it:
+one second of D turned the body 90° and the view with it, with the mouse untouched, and swung the
+compass in steps of up to 21° a frame. The player's report was "the mouse/movement relationship
+seems off, hence the compass and orientation issues", which is that sentence exactly. The speeds
+were 4.2 and 6.5 with no walk; the player said the movement was very slow and asked for a brisk
+jog near 5 and a sprint of 7.5–8. Two things made 4.2 read slower than it was: the default gait
+was posed as a crouch (the blend space fed velocity/6.5 = 0.65 sat beside Sneak_Walk at 0.5) and
+the planted feet slid at 79% of ground speed, so the legs looked like a shuffle while the body
+glided. Moving along the facing rather than straight along the stick is what stops a reversal
+reading as a moonwalk; giving up speed for the turn is what stops it swinging a wide arc.
+**Alternatives.** Keeping the rig under the body and subtracting its yaw everywhere it is read
+(every reader has to remember, and the camera still moves at physics rate); velocity straight
+along the stick with the body catching up (exact directions, but the body runs backward for a
+third of a second after every reversal); DESIGN's first numbers (4.2 and 6.5).
+**Consequences.** `Stealth` normalises noise by the sprint (a jog makes 0.51, where the old
+default made 0.52), and its speeds are pinned to the player's by a test. On a pad, sprint moved
+from the right-stick click, which it shared with lock-on and the camera toggle, to the left-stick
+click, which the Sayings menu gave up (it is on B on the keyboard; the pad layout wants a pass of
+its own). How the legs keep pace with these speeds is its own entry, below. Reversible: the
+numbers are constants at the top of `player.gd`, and DESIGN §5.2 states them.
+
+## 2026-09-23 · Physics is interpolated; what moves per frame opts out, and what jumps resets
+**Decision.** `physics/common/physics_interpolation` is on and the jitter fix is off. Bodies move
+in `_physics_process` as before and are drawn between ticks. A node moved every rendered frame
+opts out with `PHYSICS_INTERPOLATION_MODE_OFF`: the camera rig, the fly camera, bone-attached
+sockets, the atmosphere (sun, moon, the rain that follows the camera), a dropped item's bob, the
+Echo's hover, the Naming's turning mannequin, and the UI roots. A node already in the world that
+is put somewhere else calls `reset_physics_interpolation()`: the player's `teleport()` (which
+respawn, loads, doors, jail and the console all go through), an enemy sent home, a villager put
+indoors, a loaded actor.
+**Why.** Measured in the engine, not assumed. A child moved every frame under an interpolated
+parent is interpolated between ticks and trails: it read 3.61 where it had been put at 4, and
+5.71 where it had been put at 6. The same child opted out sits exactly where it was put on top of
+its parent's interpolated position, which is what a sword in a hand needs. A node moved on the
+frame it enters the tree does not smear (the engine resets it on its first tick), so spawners
+need nothing. An existing node moved without a reset does: moved from x = 4 to 500 it was drawn
+at 254 for a frame, and at 500 with the reset.
+**Alternatives.** Moving the camera in `_physics_process` (it would step at 60 Hz on a 144 Hz
+display, which is the judder being fixed); interpolating by hand in the camera only (the body,
+enemies and arrows would still step).
+**Consequences.** Anything new that is moved per frame in `_process` must opt out, and anything
+that teleports an existing node must reset it. Terrain3D 1.0.2 still calls the deprecated
+`instance_reset_physics_interpolation`, which prints a warning at load and is harmless.
+
+## 2026-09-23 · The legs are played at the ground's speed, on one stride timeline, and stand up
+**Decision.** `HumanoidModel.set_locomotion` takes the body's ground velocity in metres per second.
+Every moving clip carries the ground speed it was made at (`speed` in the sidecar, CONTRACTS §3)
+and lies on one shared one-second timeline, one stride cycle stretched to fit it. Every blend
+keeps its silent inputs running, so all the gaits are always at the same phase. One time scale
+sets the strides per second: the ground speed over the blended stride, held to 0.5–1.6 times the
+clip's own rate. The forge re-authors the gaits at the game's speeds: Walk 1.8, Run (the jog)
+5.0, a new Sprint at 7.8 and Sneak_Walk 1.5. They stand upright, with the stance sweep, the reach
+and the hip bob timed as a person's are.
+**Why.** Measured. At the old default of 4.2 m/s, the single 2D blend space fed velocity/6.5
+posed the body three-quarters of the way into Sneak_Walk, with the hips 15.2 cm below standing.
+The planted foot moved at 79% of the ground speed. The sprint played Walk and slid at 76%. The
+forge's own Walk sank 11.4 cm peak to peak at every step, and its Run 23.9 cm. The legs folded
+under the body with every contact, which is what a crouch-walk is. Stride-matched and
+phase-locked, the planted foot moves at 0–2% of the ground at every gait and every blend.
+Re-authored, the hips ride about 4 cm below standing with 5–6 cm of bob.
+**Alternatives.** Root motion: the body would move at the clip's speed, and the design's speeds
+would be whatever the clips said. Foot IK in the engine: it costs work per actor per frame, and
+it hides a clip that is wrong. A playback speed per clip without a shared timeline: the feet
+slide in every blend as the phases drift apart.
+**Consequences.** A locomotion clip without a `speed` in its sidecar plays at rate 1 and slides. A
+new gait clip must put its left foot down at phase 0 and its right at 0.5, which the forge's tests
+pin. Walk_Back and the strafes are still made by the first stride model. The strafes' side-steps
+are shortened (0.6 s, duty 0.5), so they no longer drop the hips 21 cm at every step. A diagonal
+strafe slides at about a third of the ground speed, because blending two strides in rotation space
+does not add up to the diagonal, so the locked-on speed is held at 2.6 m/s. The rig bake rebuilds
+the body as well as the clips, and under Blender 4.2 the body the committed rig was made with under
+4.0 comes back with the same vertices but a different UV layout and repainted textures. So the
+clips are baked into a scratch copy and moved onto the committed GLB by
+`tools/forge/transplant_clips.py`, which changes nothing but the animations and checks that it did
+not. When another branch changes the rig GLB, the merge takes that branch's GLB and transplants
+these clips onto it, provided the two share a skeleton (the tool refuses otherwise). If they do
+not, the merge re-runs the rig bake on the merged tree.
+
+## 2026-09-23 · A tap of Sprint rolls; Ctrl and B still do, and Space stays jump
+**Decision.** On the keyboard, a press of Sprint (Shift) let go within 0.22 s is a roll, and a
+hold sprints. The sprint waits out those 0.22 s, so a tap is not a lurch forward and then a roll.
+The Dodge action keeps Ctrl on the keyboard and B on a pad, and stays rebindable. The tap follows
+whatever key Sprint is bound to. A setting (Controls, "A tap of Sprint rolls", on by default)
+turns it off. It is off while Sprint is a toggle, because the tap is the toggle. It is off on a
+pad, where the stick click is a sprint and nothing else and B rolls. Space stays jump.
+**Why.** The playtest asked "no roll?". The roll did work. Measured from real key events through
+the default bindings, Ctrl rolls a jogging body 3.31 m in the tick the key goes down, keeps it
+untouchable for 0.30 s, and plays Dodge_F. But it was on Ctrl alone, a key the genre does not use
+for a roll and a player does not find without reading. The games most players will have come
+from put the roll on the run key (the Souls games: tap to roll, hold to run) or on Space. Space
+is the jump here and stays so. A tap of Sprint makes the run key and the roll key the same key,
+the one the hand is already on.
+**Alternatives.** Roll on Space and move the jump: every player of every other genre presses
+Space to jump, and a surprise roll off a ledge is worse than a surprise jump. Roll on Alt: that
+is the walk key. Roll on the press of Sprint rather than its release: a roll cannot be told from
+a sprint until the key is let go, which is why the Souls games roll on release too.
+**Consequences.** A roll by tap starts when the key is let go, so up to 0.22 s after the press
+where Ctrl's starts on it. A sprint starts 0.22 s after Shift goes down rather than at once; it
+takes 0.4 s to reach sprint speed from a jog in any case. Letting Shift go and pressing it again
+quickly in a sprint rolls. The hint strip and the controls page say "tap Shift" while the tap is
+on, and name the Dodge key when it is not.

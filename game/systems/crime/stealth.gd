@@ -10,8 +10,11 @@ static var instance: Stealth
 const MOONLIGHT := 0.06
 const SHADOW_FACTOR := 0.35
 const SUN_RAY_M := 200.0
-const WALK_SPEED := 4.2
-const RUN_SPEED := 6.5
+## The player's default gait and flat-out sprint (Player.JOG_SPEED and Player.SPRINT_SPEED; the
+## unit test pins them together). Noise is (speed / SPRINT_SPEED)^1.5, which puts a jog at 0.51
+## and a sprint at 1, where the first gaits (4.2 and 6.5) put the default at 0.52 and the sprint at 1.
+const JOG_SPEED := 5.0
+const SPRINT_SPEED := 7.8
 const MAX_NOISE_RADIUS_M := 30.0
 const WEATHER_LIGHT := {
 	"clear": 1.0, "clear_cold": 1.0, "thin_sun": 0.8, "still": 0.9, "wind": 0.95, "dry_wind": 0.9, "breezy": 0.9,
@@ -161,7 +164,7 @@ func light_level(pos: Vector3) -> float:
 ## Movement noise 0..1. `noise_mult` is the mover's own (Quiet Step: 0.7); `weight_penalty_scale`
 ## scales what armour weight adds over plain clothes (Second Skin: 0.5, so heavy's ×1.7 is ×1.35).
 static func noise_level(speed_mps: float, weight_class: String = "light", crouched: bool = false, surface: String = "", raining_: bool = false, noise_mult: float = 1.0, weight_penalty_scale: float = 1.0) -> float:
-	var base := pow(clampf(speed_mps / RUN_SPEED, 0.0, 1.0), 1.5)
+	var base := pow(clampf(speed_mps / SPRINT_SPEED, 0.0, 1.0), 1.5)
 	var weight := float(NOISE_WEIGHT.get(weight_class, 1.0))
 	if weight > 1.0:
 		weight = 1.0 + (weight - 1.0) * maxf(weight_penalty_scale, 0.0)

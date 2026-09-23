@@ -100,9 +100,12 @@ func _frames(n: int) -> void:
 		await _tree().physics_frame
 
 
+## `s` seconds of the game's own time, counted in physics ticks. Counted on the wall clock, a
+## loaded machine (one frame in half a second, eight ticks at most a frame) fitted a third of a
+## second of play into "a second and a half", and the walk under it came to one step.
 func _seconds(s: float) -> void:
-	var until := Time.get_ticks_msec() + int(s * 1000.0)
-	while Time.get_ticks_msec() < until:
+	var until := Engine.get_physics_frames() + int(round(s * Engine.physics_ticks_per_second))
+	while Engine.get_physics_frames() < until:
 		await _tree().physics_frame
 
 

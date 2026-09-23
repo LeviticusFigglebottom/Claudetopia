@@ -22,8 +22,20 @@ var region_ids: Array[String] = []
 
 var _terrain: Node3D = null
 var _data: Object = null
+var _fallback: Node3D = null
 var _grid: int = 0
 var _spacing: float = 8.0
+## Where the height map's texel (0, 0) stands. The region, water and level maps are point samples
+## of the full grid and sit on the origin; the height map is a block mean of `factor x factor`
+## full texels (tools/world/worldgen/noise.downsample), so each of its texels is centred half a
+## block further on: 3 m east and 3 m south at a 4096 grid and a 1024 runtime copy. Reading it
+## as though it stood on the origin put every runtime height 3 m out in both directions, which is
+## more than a metre of error on 37% of the land and more than three metres on 11% of it.
+var _height_origin := Vector2(-4096.0, -4096.0)
+## Heights answered on the same two triangles per 8 m quad as the fallback ground's mesh and its
+## HeightMapShape3D (diagonal from (x+1, z) to (x, z+1)), instead of bilinearly, so that where a
+## body stands, what it collides with and what is drawn under it are one surface.
+var _triangles := false
 var _heights := PackedFloat32Array()
 var _regions := PackedByteArray()
 var _water := PackedByteArray()
@@ -57,6 +69,7 @@ func load_data() -> bool:
 	var rt: Dictionary = manifest.get("runtime", {})
 	_grid = int(rt.get("grid", 1024))
 	_spacing = size_m / float(maxi(_grid, 1))
+	_height_origin = origin + Vector2.ONE * runtime_height_offset(manifest)
 	_heights = _read_floats("%s/%s" % [GENERATED, rt.get("heights", "")], _grid * _grid)
 	_levels = _read_floats("%s/%s" % [GENERATED, rt.get("water_level", "")], _grid * _grid)
 	_regions = _read_bytes("%s/%s" % [GENERATED, rt.get("regions", "")], _grid * _grid)
@@ -69,13 +82,73 @@ func load_data() -> bool:
 	return true
 
 
+## How far east and south of the origin the height map's first texel is centred. A manifest may
+## say so itself (`runtime.height_offset_m`); otherwise it follows from the block mean the builder
+## takes: half of one block less half a full texel.
+static func runtime_height_offset(m: Dictionary) -> float:
+	var rt: Dictionary = m.get("runtime", {})
+	if rt.has("height_offset_m"):
+		return float(rt["height_offset_m"])
+	var full := int(m.get("grid", 0))
+	var low := int(rt.get("grid", 0))
+	if full <= low or low <= 0 or full % low != 0:
+		return 0.0
+	var full_spacing := float(m.get("size_m", 8192)) / float(full)
+	return float(full / low - 1) * full_spacing * 0.5
+
+
 func bind_terrain(terrain: Node3D) -> void:
 	_terrain = terrain
 	_data = terrain.get("data") if terrain else null
 
 
+## The ground drawn from the runtime map (`FallbackTerrain`) when Terrain3D cannot draw one.
+## Heights are then answered on its triangles, so they agree with its mesh and its collision.
+func bind_fallback(ground: Node3D) -> void:
+	_fallback = ground
+	_triangles = ground != null
+
+
 func has_terrain() -> bool:
 	return _data != null
+
+
+## "terrain3d", "fallback", or "" when nothing draws the ground.
+func terrain_kind() -> String:
+	if _data != null:
+		return "terrain3d"
+	return "fallback" if _fallback != null else ""
+
+
+# --- the runtime maps, for the fallback ground -------------------------------------------------
+
+func has_runtime_maps() -> bool:
+	return not _heights.is_empty() and _grid > 1
+
+
+func runtime_grid() -> int:
+	return _grid
+
+
+func runtime_spacing() -> float:
+	return _spacing
+
+
+## World x and z of the height map's texel (0, 0) (see `_height_origin`).
+func height_origin() -> Vector2:
+	return _height_origin
+
+
+func runtime_heights() -> PackedFloat32Array:
+	return _heights
+
+
+func runtime_regions() -> PackedByteArray:
+	return _regions
+
+
+func runtime_water() -> PackedByteArray:
+	return _water
 
 
 # --- queries ---------------------------------------------------------------------------------
@@ -112,12 +185,13 @@ func texture_at(x: float, z: float) -> String:
 	return str(slots[id])
 
 
-## Bilinear height from the runtime copy (works without Terrain3D).
+## Height from the runtime copy (works without Terrain3D): bilinear, or on the fallback ground's
+## own triangles while it is the ground being drawn.
 func sample_height(x: float, z: float) -> float:
 	if _heights.is_empty():
 		return 0.0
-	var fx := clampf((x - origin.x) / _spacing, 0.0, float(_grid) - 1.001)
-	var fz := clampf((z - origin.y) / _spacing, 0.0, float(_grid) - 1.001)
+	var fx := clampf((x - _height_origin.x) / _spacing, 0.0, float(_grid) - 1.001)
+	var fz := clampf((z - _height_origin.y) / _spacing, 0.0, float(_grid) - 1.001)
 	var x0 := int(fx)
 	var z0 := int(fz)
 	var tx := fx - float(x0)
@@ -128,7 +202,17 @@ func sample_height(x: float, z: float) -> float:
 	var h10 := _heights[z0 * _grid + x1]
 	var h01 := _heights[z1 * _grid + x0]
 	var h11 := _heights[z1 * _grid + x1]
+	if _triangles:
+		return triangle_height(h00, h10, h01, h11, tx, tz)
 	return lerpf(lerpf(h00, h10, tx), lerpf(h01, h11, tx), tz)
+
+
+## A point on a quad split along the diagonal from (1, 0) to (0, 1): the split Godot's
+## HeightMapShape3D makes (Jolt's is mirrored to match it) and the one FallbackTerrain meshes.
+static func triangle_height(h00: float, h10: float, h01: float, h11: float, tx: float, tz: float) -> float:
+	if tx + tz <= 1.0:
+		return h00 + (h10 - h00) * tx + (h01 - h00) * tz
+	return h11 + (h01 - h11) * (1.0 - tx) + (h10 - h11) * (1.0 - tz)
 
 
 ## Unit surface normal at a world position.

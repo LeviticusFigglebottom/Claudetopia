@@ -22,6 +22,8 @@ var _looking := false
 
 func _ready() -> void:
 	add_to_group("fly_camera")
+	# flown every frame in _process, and placed outright by the capture and smoke runners
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_yaw = rotation.y
 	_pitch = rotation.x
 	current = true

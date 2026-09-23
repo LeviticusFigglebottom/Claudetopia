@@ -49,7 +49,7 @@ Exported as glTF animations on the model; loop flag and events in a sidecar
  "Attack_1H_Light_1": {"loop": false, "length": 0.8, "events": [{"t": 0.32, "name": "hit_start"}, {"t": 0.48, "name": "hit_end"}, {"t": 0.55, "name": "cancel_ok"}]}}
 ```
 Required clip names (v1):
-* Locomotion: `Idle`, `Idle_Combat`, `Walk`, `Walk_Back`, `Run`, `Strafe_L`,
+* Locomotion: `Idle`, `Idle_Combat`, `Walk`, `Walk_Back`, `Run`, `Sprint`, `Strafe_L`,
   `Strafe_R`, `Sneak_Idle`, `Sneak_Walk`, `Jump_Start`, `Jump_Loop`, `Jump_Land`,
   `Fall_Loop`
 * Dodge: `Dodge_F`, `Dodge_B`, `Dodge_L`, `Dodge_R` (roll; i-frames from data)
@@ -66,6 +66,19 @@ Required clip names (v1):
   `Drink`, `Eat`, `Read`
 Every attack clip has `hit_start`, `hit_end`, `cancel_ok` events. Locomotion
 has footstep events. Death clips end in a held pose.
+
+Every locomotion clip's sidecar carries `"speed"`: the ground speed in m/s at which its planted
+foot stands still. It is load-bearing. The game plays a gait at (ground speed / `speed`), so a
+clip authored at the wrong speed slides its feet by exactly the difference. `Walk`, `Run` and
+`Sprint` are the three gaits of DESIGN §5.2 (1.8, 5.0 and 7.8 m/s), and `Sneak_Walk` is sneak
+(1.5). The gaits also share a phase: the left foot goes down at phase 0 and the right at 0.5 in
+every one of them, because the game blends them on one normalised timeline. A gait that
+breaks this blends out of step: halfway through the blend one clip's foot is planted while the
+other's is swinging, and the leg comes out as the average of the two, half lifted.
+
+A change to the clips alone is baked into a scratch copy of the rig and moved onto the committed
+`humanoid_rig.glb` with `tools/forge/transplant_clips.py`, because the rig bake rebuilds and
+repaints the body too. The tool changes nothing but the animations and checks that it did not.
 
 Creatures use their own rigs; their clips must include `Idle`, `Walk`, `Run`,
 `Attack_1`, `Attack_2`, `Hit`, `Death`, plus archetype extras listed in the
@@ -140,6 +153,7 @@ height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamles
 * `color.rgba8` colour-map tint per texel.
 * `control.u32` the same three texture maps pre-packed into Terrain3D's uint32 control format (`base << 27 | overlay << 22 | blend << 14 | hole << 2 | nav << 1 | auto`), so the import tool hands the image straight to `Terrain3DData.import_images`.
 * `runtime/heights_1024.r32`, `runtime/regions_1024.u8`, `runtime/water_1024.u8`, `runtime/water_level_1024.r32`: quarter-resolution copies the runtime queries without Terrain3D (`TerrainProvider`), so height, region, water and water-level lookups work headlessly and in tests. `world_manifest.json` lists them under `"runtime"`.
+  The regions, water and water level are point samples of every fourth full texel, so runtime texel `(i, j)` sits at `origin + 8 (i, j)`. The heights are a 4 x 4 block mean, so their texel `(i, j)` is centred at `origin + 8 (i, j) + 3 m`; consumers take the offset from the two grids, or from `runtime.height_offset_m` when the manifest carries it. They are also what `FallbackTerrain` draws the ground from when Terrain3D cannot, so the set the game reads at run time is: the manifest, `pois.json`, `roads.json`, `rivers.json`, `runtime/`, `cells/` and `game/terrain_data/`. That set is tracked; the rest of this directory is not.
 * `water_mask.u8` (1 = water surface at lake/sea/river level), `flow.rg8` (river direction).
 * `rivers.json`, `roads.json`: `[{"id", "points": [[x, z], ...], "width_m"}]`.
 * `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it..
@@ -172,6 +186,8 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
   `starting_spells` are `core:spell/*` ids the character comes up already knowing; only callings whose `skill_bonuses` include that saying's school should carry one.
 * `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}}`
 * `quest`: `{id, name, layer (main|faction|side|radiant), stages[{id, journal, objectives[{type, target, count}], on_enter[], on_complete[]}], rewards}`
+  An objective that sends you to pick something up may say where it lies: `where` (a place, POI or interior id), `spot` (a dressing marker, a deep place's chamber, or a house's room), `owner` (an npc id: taking it is theft). A `choice` may name its host in `with`: an npc, or a place/interior where nobody is left to ask. The quest-item placer (`QuestItems`) reads all four; systems/quests/README.md has the rules.
+* `encounter`: `{id, place, spawns[{enemy, count, when?, at?, spread?, unless?[conds], unless_present?, rises_when?}], lies?[{item | book, at?, count?, owner?}]}` — what a place's `encounter` sentence says stands or lies there, raised with its dressing (`PoiEncounters`, `QuestItems`). A `place` def may name a `dressing` kind (the Standing Moot: `standing_stones`) so the POI builders dress it.
 * `dialogue`: `{id, nodes{node_id: {speaker, text, conditions[], effects[], choices[{text, next, conditions[]}], next}}, start}`
 Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 `{"quest_at": ["core:quest/toll_hums", 2]}`, `{"rep_min": ["core:faction/wardens", 20]}`,
@@ -182,6 +198,10 @@ Conditions and effects are arrays of small objects: `{"flag": "met_wren"}`,
 `{"rep": [faction, delta]}`, `{"morality": delta}`, `{"renown": delta}`,
 `{"marks": delta}`, `{"start_quest": id}`, `{"teach_recipe": id}`,
 `{"teach_spell": "core:spell/x"}`.
+**A quest stage is named by its id or by its number counted from one** — in `quest_at`,
+`quest_min_stage` and `quest_stage` alike: `["core:quest/the_naming", 1]` is the Naming's first
+stage, `["core:quest/the_naming", "wake"]` the same stage by name. `QuestLog.stage_index()` is the
+only translation to an index (DECISIONS 2026-09-22, "A stage number counts from one").
 `teach_recipe` and `knows_recipe` go through the context's **`recipes`** provider, which
 `Social` binds to the first node in the `crafting` group, and whose methods are
 `learn_recipe` / `knows_recipe`. `teach_spell` and `knows_spell` go through the context's **`sayings`** provider, which `Social`

@@ -239,15 +239,59 @@ class TestClipLibrary(unittest.TestCase):
             self.assertFalse(self.clips[n].loop, "%s must not loop" % n)
 
     def test_locomotion_feet_do_not_slide(self) -> None:
-        """A planted foot must travel backwards at exactly the clip's speed."""
+        """A planted foot must travel backwards at exactly the clip's speed: the speed the sidecar
+        carries, which is the speed the game plays it at (CONTRACTS §3)."""
         from forge.lib import anim_preview
-        cases = {"Walk": (1.55, (0.0, 1.0)), "Run": (5.0, (0.0, 1.0)),
-                 "Walk_Back": (1.15, (0.0, -1.0)), "Sneak_Walk": (0.95, (0.0, 1.0))}
-        for name, (speed, direction) in cases.items():
+        cases = {"Walk": (0.0, 1.0), "Run": (0.0, 1.0), "Sprint": (0.0, 1.0),
+                 "Walk_Back": (0.0, -1.0), "Sneak_Walk": (0.0, 1.0)}
+        for name, direction in cases.items():
+            speed = float(self.clips[name].extra["speed"])
             report = anim_preview.foot_slide_report(self.skel, self.clips[name], speed, direction, samples=30)
             for side, worst in report.items():
                 self.assertLess(worst, 0.05,
                                 "%s foot %s slides %.3f m" % (name, side, worst))
+
+    # The gaits at the speeds DESIGN §5.2 moves the body at (Player.WALK_SPEED, JOG_SPEED,
+    # SPRINT_SPEED, SNEAK_SPEED; test_humanoid_model checks the game reads the same numbers).
+    GAIT_SPEEDS = {"Walk": 1.8, "Run": 5.0, "Sprint": 7.8, "Sneak_Walk": 1.5}
+
+    def test_gait_clips_carry_the_games_speeds(self) -> None:
+        for name, speed in self.GAIT_SPEEDS.items():
+            self.assertAlmostEqual(float(self.clips[name].extra["speed"]), speed, places=3,
+                                   msg="%s is authored at %s m/s, the game moves at %s"
+                                       % (name, self.clips[name].extra["speed"], speed))
+
+    def test_the_gaits_stand_up(self) -> None:
+        """The report was a walk that read as a crouch. Measured on the first clips: Walk dipped
+        the hips 13.5 cm below standing at each contact (11.4 cm peak to peak) and Run 25.2 cm
+        (24.0). A walk moves the pelvis 4-5 cm and a run 6-8; these bounds sit just outside that.
+        The side-steps dipped 21.3 cm (19.8 peak to peak) at every step until they were shortened."""
+        hips0 = self.skel.joint_world(self.skel.fk({}), "Hips")[2]
+        limits = {"Walk": (0.05, 0.07), "Run": (0.06, 0.09), "Sprint": (0.06, 0.09),
+                  "Walk_Back": (0.05, 0.08), "Strafe_L": (0.05, 0.08), "Strafe_R": (0.05, 0.08)}
+        for name, (mean_max, p2p_max) in limits.items():
+            c = self.clips[name]
+            zs = []
+            for i in range(60):
+                W = self.skel.fk(c.local_pose(c.length * i / 60.0))
+                zs.append(self.skel.joint_world(W, "Hips")[2])
+            zs = np.array(zs)
+            self.assertLess(hips0 - zs.mean(), mean_max, "%s holds the hips %.1f cm below standing"
+                            % (name, (hips0 - zs.mean()) * 100))
+            self.assertLess(zs.max() - zs.min(), p2p_max, "%s bobs the hips %.1f cm"
+                            % (name, (zs.max() - zs.min()) * 100))
+
+    def test_gaits_share_a_phase(self) -> None:
+        """The game blends gaits on a shared normalised timeline, which is only honest if every
+        gait puts the same foot down at the same phase: left at 0, right at one half."""
+        for name in anim_clips.GAIT_CLIPS:
+            c = self.clips[name]
+            left = c.feet.state("L", 0.001)
+            right = c.feet.state("R", c.length * 0.501)
+            self.assertTrue(left.planted, "%s: the left foot is not down at phase 0" % name)
+            self.assertTrue(right.planted, "%s: the right foot is not down at phase 0.5" % name)
+            self.assertFalse(c.feet.state("R", 0.001).planted and name != "Walk" and name != "Sneak_Walk",
+                             "%s: a run has one foot down at a contact" % name)
 
     def test_death_clips_end_held(self) -> None:
         for name in ("Death_A", "Death_B"):

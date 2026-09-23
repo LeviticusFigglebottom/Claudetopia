@@ -3,12 +3,24 @@
 *.import.tmp
 export/
 build/
-# Generated world data (rebuilt by `make world`)
-game/terrain_data
-game/terrain_data/**/*.res
-game/world/generated
-game/world/generated/
-game/world/terrain_assets.tres
+# The built world. What the game reads at run time is tracked, so a clone plays without Python:
+#   game/world/generated/{world_manifest.json, pois.json, roads.json, rivers.json}
+#   game/world/generated/runtime/   the 1024 copies of heights, regions, water and water level
+#   game/world/generated/cells/     one JSON per 256 m cell: scatter, landmarks, encounters
+#   game/terrain_data/terrain3d*.res   Terrain3D's sixteen regions
+# (game/world/terrain_assets.tres is tracked too.) Everything else the builder writes -- the
+# full-resolution heights, colour, control, flow, texture, water and region maps, 300 MB that only
+# the terrain import reads -- stays out, and so does anything new it starts writing until a rule
+# here says otherwise. `./run.sh world` writes them all again. See README.md, "Run it".
+game/world/generated/*
+!game/world/generated/world_manifest.json
+!game/world/generated/pois.json
+!game/world/generated/roads.json
+!game/world/generated/rivers.json
+!game/world/generated/runtime/
+!game/world/generated/cells/
+game/terrain_data/*
+!game/terrain_data/terrain3d*.res
 # Python
 __pycache__/
 *.pyc
