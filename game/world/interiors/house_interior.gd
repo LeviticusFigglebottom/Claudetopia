@@ -67,6 +67,15 @@ const OPENABLE := {
 const TIER_LOOT := {"common": "core:loot/common_chest", "rich": "core:loot/rich_chest"}
 ## The ones a resident would actually lock.
 const LOCKED := ["strongbox", "coffer", "deed_chest"]
+## A body coming in through the front door is stood at least this far inside the wall, over the
+## floor by ENTRANCE_LIFT, and this far from anything standing on the floor and from the walls:
+## the player's capsule (0.35) and a hand's breadth.
+const ENTRANCE_IN := 0.75
+const ENTRANCE_LIFT := 0.05
+const BODY_CLEARANCE := 0.45
+const BODY_RADIUS := 0.35
+## Things this low (a rug, a coin) are stood on, not walked round.
+const UNDERFOOT := 0.15
 var _shelf_index := 0
 var _variant := 0
 
@@ -93,6 +102,7 @@ func build(path: String) -> bool:
 	_build_windows()
 	_build_lights()
 	_build_props()
+	_mark_entrance()
 	dress_furnishings()
 	_build_doors()
 	# what a quest says lies in here (the steward's brass key on his desk), put down by the
@@ -453,6 +463,129 @@ func _room_for(wanted: String) -> Dictionary:
 	return {}
 
 
+## Where a body coming through the front door stands, as the "Entrance" marker Interiors.enter
+## looks for: a step inside the door, on the floor of the room it opens into, clear of whatever
+## the forge stood there (an oven, a stool, the bellows) and of the walls, facing into the room.
+## Without one every house stood the player in the corner of its first room, a metre up.
+func _mark_entrance() -> void:
+	var front := _front_door()
+	if front.is_empty():
+		return
+	var door_at := _vec(front["at"])
+	var room: Dictionary = rooms.get(_front_room_id(front), {})
+	if room.is_empty():
+		return
+	var x0 := float(room["x"])
+	var z0 := float(room["z"])
+	var w := float(room["w"])
+	var d := float(room["d"])
+	var floor_y := float(room.get("floor_y", 0.0))
+	# In through the wall the door is in: whichever of the room's four sides it stands nearest.
+	var sides := [
+		[absf(door_at.z - z0), Vector3.BACK, Vector3(door_at.x, floor_y, z0)],
+		[absf(door_at.z - (z0 + d)), Vector3.FORWARD, Vector3(door_at.x, floor_y, z0 + d)],
+		[absf(door_at.x - x0), Vector3.RIGHT, Vector3(x0, floor_y, door_at.z)],
+		[absf(door_at.x - (x0 + w)), Vector3.LEFT, Vector3(x0 + w, floor_y, door_at.z)],
+	]
+	sides.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	var inward: Vector3 = sides[0][1]
+	var sill: Vector3 = sides[0][2]
+	var across := Vector3(inward.z, 0.0, -inward.x)
+	var things := _things_on_floor(floor_y)
+	# Spots on a 0.1 m lattice inside the door, the nearest to a step straight in first; a hand's
+	# breadth from everything if there is such a spot, else a capsule's width (a small room with a
+	# hearth and a settle either side of the door, like Merrick's, has no more).
+	var wanted := sill + inward * ENTRANCE_IN
+	var lattice: Array[Vector3] = []
+	for i in 21:
+		for j in 33:
+			lattice.append(sill + inward * (ENTRANCE_IN + 0.1 * float(i)) + across * (0.1 * float(j - 16)))
+	lattice.sort_custom(func(a: Vector3, b: Vector3) -> bool: return a.distance_squared_to(wanted) < b.distance_squared_to(wanted))
+	var spot := wanted
+	var found := false
+	for clearance in [BODY_CLEARANCE, BODY_RADIUS + 0.02]:
+		for p in lattice:
+			if _within_room(room, p, clearance) and _clear_of(things, p, clearance):
+				spot = p
+				found = true
+				break
+		if found:
+			break
+	if not found:
+		Log.warn("HouseInterior", "%s: nowhere clear inside the front door; the body stands in the way of something" % meta.get("name", "?"))
+	var marker := Marker3D.new()
+	marker.name = "Entrance"
+	marker.position = spot + Vector3.UP * ENTRANCE_LIFT
+	marker.rotation.y = atan2(-inward.x, -inward.z)
+	marker.set_meta("room", str(room["id"]))
+	add_child(marker)
+
+
+## The meta's front door, or {} for a house with none.
+func _front_door() -> Dictionary:
+	for d in meta.get("doors", []):
+		if str((d as Dictionary).get("kind", "")) == "front":
+			return d
+	return {}
+
+
+## The room a front door opens into: the one it stands between with the outside, else the ground
+## floor's first.
+func _front_room_id(front: Dictionary) -> String:
+	for id in front.get("between", []):
+		if str(id) != "outside" and rooms.has(str(id)):
+			return str(id)
+	for r in meta.get("rooms", []):
+		if absf(float((r as Dictionary).get("floor_y", 0.0))) < 0.01:
+			return str(r["id"])
+	return ""
+
+
+static func _within_room(room: Dictionary, p: Vector3, margin: float) -> bool:
+	return p.x >= float(room["x"]) + margin and p.x <= float(room["x"]) + float(room["w"]) - margin \
+			and p.z >= float(room["z"]) + margin and p.z <= float(room["z"]) + float(room["d"]) - margin
+
+
+## What stands on the floor at `floor_y` that a body cannot stand in, as boxes in this house's
+## space: every mesh the props put up (the real meshes, which are not the sizes their kinds'
+## stand-ins are drawn at: Merrick's forge hearth and crate are larger), from a rug's height to a
+## head's. Before the house is in a tree, the stand-in sizes from the meta.
+func _things_on_floor(floor_y: float) -> Array[AABB]:
+	var out: Array[AABB] = []
+	var holder := get_node_or_null("Props")
+	if holder != null and is_inside_tree():
+		var into_house := global_transform.affine_inverse()
+		for mi_v in holder.find_children("*", "MeshInstance3D", true, false):
+			var mi := mi_v as MeshInstance3D
+			if mi.mesh == null:
+				continue
+			var box: AABB = (into_house * mi.global_transform) * mi.get_aabb()
+			if box.end.y < floor_y + UNDERFOOT or box.position.y > floor_y + 1.8:
+				continue
+			out.append(box)
+		return out
+	for pl in meta.get("placements", []):
+		var at := _vec((pl as Dictionary)["at"])
+		if absf(at.y - floor_y) > 0.3:
+			continue
+		var size := _placeholder_size(str(pl.get("fixture", pl.get("prop", ""))))
+		if size.y < UNDERFOOT:
+			continue
+		var turned := Basis(Vector3.UP, deg_to_rad(float(pl.get("yaw", 0.0))))
+		out.append(Transform3D(turned, at) * AABB(Vector3(-size.x * 0.5, 0.0, -size.z * 0.5), size))
+	return out
+
+
+## Whether a body standing at `p` keeps `clearance` from every one of `things`, across the floor.
+static func _clear_of(things: Array[AABB], p: Vector3, clearance: float) -> bool:
+	for box in things:
+		var dx := maxf(maxf(box.position.x - p.x, p.x - box.end.x), 0.0)
+		var dz := maxf(maxf(box.position.z - p.z, p.z - box.end.z), 0.0)
+		if Vector2(dx, dz).length() < clearance:
+			return false
+	return true
+
+
 ## Somewhere in this room that nothing already stands. The dressing pass put the resident's
 ## things down first, so this scores a lattice of candidate spots by how far they are from the
 ## nearest of them and takes the best — a derived anchor, deterministic for a given house and
@@ -504,9 +637,13 @@ func _free_spot(room: Dictionary, against_wall: bool, index: int) -> Dictionary:
 
 
 ## Where the resident's own things already stand in this room, furnishings included, so the
-## second thing you buy does not land on the first.
+## second thing you buy does not land on the first; and where a body coming in through the front
+## door stands, so a bought bed is not put in the doorway.
 func _props_in(room_id: String) -> Array[Vector3]:
 	var out: Array[Vector3] = []
+	var entrance := get_node_or_null("Entrance") as Node3D
+	if entrance != null and str(entrance.get_meta("room", "")) == room_id:
+		out.append(entrance.position)
 	for p in meta.get("placements", []):
 		if str((p as Dictionary).get("room", "")) == room_id:
 			out.append(_vec((p as Dictionary)["at"]))
