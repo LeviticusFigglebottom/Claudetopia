@@ -727,8 +727,9 @@ func test_selling_the_ledger_back_is_paid_for_and_costs_the_hall() -> void:
 
 # --- the Tolling Order -----------------------------------------------------------------------------
 
-## Vigil, driven through its own people: Cadwen's offer, Aud's walk to the line (which is the
-## only thing in the game that closes an escort objective), and the bell at the chapter-house.
+## Vigil, driven through its own people: Cadwen's offer, Aud's walk to the line, and the bell at
+## the chapter-house. The walk itself is `Escorts`' (test_escorts.gd walks her down with bodies);
+## here it arrives the way Escorts says so, and the line she speaks there is spoken there.
 func finish_vigil(bell: String = "Hang it silent.") -> void:
 	var cadwen := talk_to("core:npc/cadwen_ash")
 	press(cadwen, "I'd stand a night's vigil.")
@@ -740,14 +741,21 @@ func finish_vigil(bell: String = "Hang it silent.") -> void:
 
 	var aud := talk_to("core:npc/aud_fennick")
 	press(aud, "Will you let me walk you to the line?")
-	press(aud, "This is the line. I'll stop here.")
 	aud.stop()
-	assert_true(ctx.has_flag("aud_left_her_bell"), "she leaves the bell at the line")
-	assert_eq(stage(VIGIL), "what_she_left", "and walking her down closed the escort")
+	assert_true(ctx.has_flag("aud_agreed_to_walk"), "she says she will walk")
+	assert_eq(stage(VIGIL), "the_pilgrim", "and has not walked yet")
+	EventBus.escort_arrived.emit("core:npc/aud_fennick", "core:place/hushline")
+	assert_eq(stage(VIGIL), "what_she_left", "arriving at the line closed the escort")
 
+	var at_the_line := talk_to("core:npc/aud_fennick")
+	press(at_the_line, "This is the line. I'll stop here.")
+	at_the_line.stop()
+	assert_true(ctx.has_flag("aud_left_her_bell"), "she leaves the bell at the line")
+
+	# carrying her bell to Cadwen and speaking to her hands it over
 	EventBus.dialogue_ended.emit("core:npc/cadwen_ash")
-	log_node.complete_objective(VIGIL, "deliver:core:npc/cadwen_ash")
-	assert_eq(stage(VIGIL), "what_the_cantor_is")
+	assert_eq(stage(VIGIL), "what_the_cantor_is", "the bell changed hands when Cadwen was spoken to")
+	assert_eq(inventory.count("core:item/pilgrims_bell_aud"), 0, "and it is hers now")
 
 	var chapter := talk_to("core:npc/cadwen_ash")
 	press(chapter, "Aud left her bell.")

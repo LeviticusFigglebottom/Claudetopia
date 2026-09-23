@@ -13,8 +13,10 @@ const WEATHER_BLEND_GAME_MINUTES := 3.0
 const GRADE_LUT_SIZE := 17
 const GRADE_REFRESH_SECONDS := 0.4
 ## How much of a region's `shadow_lift` colour reaches the blacks. The colour is written as the
-## hue the shadows lean toward; at full strength a lift of #1a1430 would grey every shadow.
-const GRADE_LIFT := 0.45
+## hue the shadows lean toward; at full strength a lift of #1a1430 would grey every shadow. It was
+## 0.45, which raised Cinderlea's blacks to an eighth grey and every region's to a matte: with the
+## fog, the bloom and the vignette over it, the first frame of the game read as washed out.
+const GRADE_LIFT := 0.2
 ## The canvas layer the vignette and grain sit on: over the world, under the HUD (UI.LAYER_HUD).
 const OVERLAY_LAYER := 1
 
@@ -62,12 +64,27 @@ var _forward_plus := false
 var interior := false
 var _grade_age := 999.0
 var _grade_dirty := true
+## The grade's table: made once and rewritten in place, never replaced. The first cut handed the
+## Environment a new texture for every refresh of a blend -- fifteen in a six-second blend --
+## swapping a resource the renderer was drawing with.
+var _grade_tex: ImageTexture3D = null
+## What the precipitation was last set up as. Its mesh, material and particle count are resources
+## and a reallocation: set every frame, as they were, a weather blend rebuilt the quad and
+## restarted the particles sixty times a second.
+var _precip_kind := ""
+var _precip_amount := -1
 ## The last frame's state, for tests, the debug console and anything that wants to know how dark
 ## it is without asking the renderer: night (0 day .. 1 night), dusk, sun elevation in degrees.
 var state: Dictionary = {}
 
 ## 0 by day, 1 at night, in between at dusk. Lamps, windows and the night-light pool read it.
 static var night_factor := 0.0
+## What the grade LUT costs to rebuild: count, total and worst in microseconds. It is rebuilt on
+## the main thread, at most every GRADE_REFRESH_SECONDS while one region's look blends into the
+## next, so its worst case is a hitch at a region border. The capture runner writes it out.
+## `textures` is how many table textures were ever made and `assigned` how many times one was
+## handed to the Environment: one each, however many blends there are.
+static var lut_stats := {"builds": 0, "us_total": 0, "us_max": 0, "textures": 0, "assigned": 0}
 
 ## `sun_elevation_scale` flattens the day's arc, and it is the difference between a country
 ## with shadows in it and one without. `WorldClock.sun_elevation_deg()` is a bare
@@ -99,19 +116,24 @@ const DEFAULT_LOOK := {
 	"bloom": 0.25, "grain": 0.0, "vignette": 0.2, "vignette_tint": Color(0.08, 0.06, 0.05),
 	# the sky
 	"tint": Color(1, 1, 1), "horizon_tint": Color(1, 1, 1), "dusk_tint": Color(1.0, 0.55, 0.30),
+	# the colour the far fog goes at dusk (unset, alpha 0: the burning horizon's own), and how
+	# much more of the sky the distance takes then
+	"dusk_fog_color": Color(0, 0, 0, 0), "dusk_aerial": 0.0,
 	"cloud_bias": 0.0, "cloud_scale": 1.0, "cloud_height": 0.15, "cloud_band": 0.25, "cirrus": 0.3,
-	"painterly": 0.6,
+	"painterly": 0.45,
 	# the night
 	"night_tint": Color(0.62, 0.70, 0.95), "night_exposure": 1.3, "moon_energy": 1.0,
 	"god_rays": false,
 }
 const _COLOUR_KEYS := ["sun_color", "sun_color_low", "ambient_tint", "fog_color", "shadow_lift",
-	"highlight_gain", "midtone_tint", "vignette_tint", "horizon_tint", "dusk_tint", "night_tint"]
+	"highlight_gain", "midtone_tint", "vignette_tint", "horizon_tint", "dusk_tint", "night_tint",
+	"dusk_fog_color"]
 const _FLOAT_KEYS := ["sun_elevation_bias", "sun_elevation_scale", "sun_energy", "ambient_energy",
 	"sky_contribution", "fog_density", "aerial_perspective", "fog_sun_scatter", "fog_sky_affect",
 	"haze_density", "haze_ceiling", "haze_below_eye", "haze_morning", "saturation", "contrast",
 	"brightness", "exposure", "tonemap_white", "bloom", "grain", "vignette", "cloud_bias",
-	"cloud_scale", "cloud_height", "cloud_band", "cirrus", "painterly", "night_exposure", "moon_energy"]
+	"cloud_scale", "cloud_height", "cloud_band", "cirrus", "painterly", "night_exposure", "moon_energy",
+	"dusk_aerial"]
 
 
 func _ready() -> void:
@@ -562,11 +584,17 @@ func _apply(_delta: float) -> void:
 	# --- fog: the far layer and the low haze ---------------------------------------------
 	# The far fog is aerial perspective: it takes the horizon's colour, most of all at dusk,
 	# when the whole distance goes the colour of the sky behind it.
-	var fog_col := fogc.lerp(hor_c, 0.25 + 0.15 * dusk).lerp(night_tint * 0.32, night * 0.85)
+	# A region can name the colour its distance goes at dusk: Hearthvale's goes lavender-rose
+	# over the gold, where otherwise every dusk in the country was the same orange haze.
+	var dfog: Color = lk["dusk_fog_color"]
+	var fog_col := fogc.lerp(hor_c, 0.25 + 0.15 * dusk * (1.0 - dfog.a))
+	fog_col = fog_col.lerp(Color(dfog.r, dfog.g, dfog.b), 0.6 * dusk * dfog.a)
+	fog_col = fog_col.lerp(night_tint * 0.32, night * 0.85)
 	env.fog_light_color = fog_col.lerp(top_c, 0.12 * (1.0 - cloudy))
 	env.fog_light_energy = lerpf(0.35, 1.0, ambient_energy)
 	env.fog_density = float(lk["fog_density"]) * float(w["fog_mult"]) * lerpf(1.0, 1.3, night) * (0.12 if interior else 1.0)
-	env.fog_aerial_perspective = float(lk["aerial_perspective"]) * (1.0 - 0.7 * night)
+	env.fog_aerial_perspective = clampf(float(lk["aerial_perspective"]) * (1.0 - 0.7 * night)
+			+ float(lk["dusk_aerial"]) * dusk, 0.0, 1.0)
 	env.fog_sun_scatter = float(lk["fog_sun_scatter"]) * (0.35 + 0.65 * dusk) * (1.0 if sun.visible else 0.0)
 	env.fog_sky_affect = float(lk["fog_sky_affect"])
 	# The haze lies in whatever is below you. Godot's height fog is a function of a fragment's
@@ -591,17 +619,41 @@ func _apply(_delta: float) -> void:
 	env.adjustment_contrast = float(lk["contrast"])
 	# the player's own brightness setting multiplies the region's; glow can be turned off
 	env.adjustment_brightness = float(lk["brightness"]) * float(Settings.get_value("video", "brightness", 1.0))
-	env.glow_enabled = bool(Settings.get_value("video", "glow", true))
-	env.glow_intensity = 0.35 + float(lk["bloom"])
-	env.glow_bloom = 0.02 + 0.08 * float(lk["bloom"])
+	var glow_on := bool(Settings.get_value("video", "glow", true))
+	if env.glow_enabled != glow_on:
+		env.glow_enabled = glow_on
+	# Glow is for what is brighter than white: the sun, a lamp at night. `glow_bloom` feeds the
+	# whole frame into it, which on Forward+ laid a soft light over everything by day.
+	env.glow_intensity = 0.3 + 0.4 * float(lk["bloom"])
+	env.glow_bloom = 0.03 * night
 	env.glow_hdr_threshold = lerpf(1.1, 0.8, night)
 	if _grade_dirty and (_look_t >= 1.0 or _grade_age >= GRADE_REFRESH_SECONDS):
 		_grade_dirty = false
 		_grade_age = 0.0
-		env.adjustment_color_correction = grade_lut(lk) if bool(Settings.get_value("video", "color_grade", true)) else null
-	_vignette_mat.set_shader_parameter("amount", float(lk["vignette"]))
+		if bool(Settings.get_value("video", "color_grade", true)):
+			var t0 := Time.get_ticks_usec()
+			var slices := grade_slices(lk)
+			if _grade_tex == null:
+				_grade_tex = ImageTexture3D.new()
+				_grade_tex.create(Image.FORMAT_RGBA8, GRADE_LUT_SIZE, GRADE_LUT_SIZE, GRADE_LUT_SIZE, false, slices)
+				lut_stats["textures"] += 1
+			else:
+				_grade_tex.update(slices)
+			if env.adjustment_color_correction != _grade_tex:
+				env.adjustment_color_correction = _grade_tex
+				lut_stats["assigned"] += 1
+			var us := Time.get_ticks_usec() - t0
+			lut_stats["builds"] += 1
+			lut_stats["us_total"] += us
+			lut_stats["us_max"] = maxi(int(lut_stats["us_max"]), us)
+		elif env.adjustment_color_correction != null:
+			env.adjustment_color_correction = null
+	# The frame overlays are the player's to have: a region's vignette is shown (and kept faint)
+	# unless `video/vignette` is off, and its film grain only if `video/film_grain` is on.
+	var vignette := float(lk["vignette"]) if bool(Settings.get_value("video", "vignette", true)) else 0.0
+	_vignette_mat.set_shader_parameter("amount", vignette)
 	_vignette_mat.set_shader_parameter("tint", lk["vignette_tint"])
-	var grain := float(lk["grain"])
+	var grain := float(lk["grain"]) if bool(Settings.get_value("video", "film_grain", false)) else 0.0
 	_grain_rect.visible = grain > 0.001
 	_grain_mat.set_shader_parameter("amount", grain)
 
@@ -626,7 +678,13 @@ func _apply(_delta: float) -> void:
 		var cam := get_viewport().get_camera_3d()
 		if cam:
 			precipitation.global_position = cam.global_position + Vector3(0, 10, 0) + (-cam.global_transform.basis.z) * 4.0
-		precipitation.amount = int(200 + 1400 * intensity)
+		# in steps of a hundred, so a blend in intensity does not restart the particles every frame
+		var amount := int(round((200.0 + 1400.0 * intensity) / 100.0)) * 100
+		if amount != _precip_amount:
+			_precip_amount = amount
+			precipitation.amount = amount
+	if precipitation.emitting and kind != _precip_kind:
+		_precip_kind = kind
 		var mat := precipitation.material_override as StandardMaterial3D
 		match kind:
 			"rain":
@@ -647,6 +705,7 @@ func _apply(_delta: float) -> void:
 				precipitation.lifetime = 9.0
 				(precipitation.mesh as QuadMesh).size = Vector2(0.07, 0.05)
 				mat.albedo_color = Color(0.55, 0.53, 0.5, 0.85)
+	if precipitation.emitting:
 		precipitation.direction = Vector3(float(w["wind"]) * 0.6, -1.0, 0.2 * float(w["wind"])).normalized()
 
 	# --- global shader parameters: foliage, water, windows and lamps read these -----------
@@ -683,22 +742,46 @@ func _eye_height() -> float:
 ## pulled toward `highlight_gain`, midtones tinted by `midtone_tint`. The table works on the
 ## tonemapped picture, so it is a painter's grade -- what the shadows lean toward and what the
 ## lights are warmed by -- and not a second exposure.
+##
+## It is `grade_colour` over every texel, written straight into the bytes of each slice: through
+## `Image.set_pixel` and a call per texel the 4913 of them took four milliseconds on average and
+## eighteen at worst, on the main thread, every refresh of a blend between two regions.
 static func grade_lut(lk: Dictionary) -> ImageTexture3D:
+	var n := GRADE_LUT_SIZE
+	var tex := ImageTexture3D.new()
+	tex.create(Image.FORMAT_RGBA8, n, n, n, false, grade_slices(lk))
+	return tex
+
+
+## The table's slices, blue by blue: what `grade_lut` uploads (and what a test can read, since a
+## headless renderer keeps no copy of a texture's data).
+static func grade_slices(lk: Dictionary) -> Array[Image]:
 	var n := GRADE_LUT_SIZE
 	var lift := (lk.get("shadow_lift", Color(0, 0, 0)) as Color) * GRADE_LIFT
 	var gain: Color = lk.get("highlight_gain", Color(1, 1, 1))
 	var mid: Color = lk.get("midtone_tint", Color(1, 1, 1))
+	var span := Vector3(gain.r - lift.r, gain.g - lift.g, gain.b - lift.b)
+	var tint := Vector3(mid.r - 1.0, mid.g - 1.0, mid.b - 1.0)
 	var images: Array[Image] = []
 	var step := 1.0 / float(n - 1)
+	var bytes := PackedByteArray()
+	bytes.resize(n * n * 4)
 	for bi in n:
-		var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+		var cb := float(bi) * step
+		var i := 0
 		for gi in n:
+			var cg := float(gi) * step
 			for ri in n:
-				img.set_pixel(ri, gi, grade_colour(Color(float(ri) * step, float(gi) * step, float(bi) * step), lift, gain, mid))
-		images.append(img)
-	var tex := ImageTexture3D.new()
-	tex.create(Image.FORMAT_RGBA8, n, n, n, false, images)
-	return tex
+				var cr := float(ri) * step
+				var l := cr * 0.2126 + cg * 0.7152 + cb * 0.0722
+				var m := 4.0 * l * (1.0 - l)
+				bytes[i] = int(clampf((lift.r + cr * span.x) * (1.0 + tint.x * m), 0.0, 1.0) * 255.0 + 0.5)
+				bytes[i + 1] = int(clampf((lift.g + cg * span.y) * (1.0 + tint.y * m), 0.0, 1.0) * 255.0 + 0.5)
+				bytes[i + 2] = int(clampf((lift.b + cb * span.z) * (1.0 + tint.z * m), 0.0, 1.0) * 255.0 + 0.5)
+				bytes[i + 3] = 255
+				i += 4
+		images.append(Image.create_from_data(n, n, false, Image.FORMAT_RGBA8, bytes))
+	return images
 
 
 ## One colour through the grade: lift and gain, then the midtone tint weighted to the middle.
@@ -739,6 +822,11 @@ func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
 		_apply_extras()
 	elif key == "color_grade":
 		_grade_dirty = true
+
+
+## What this node's per-frame work has cost so far (see `lut_stats`).
+func costs() -> Dictionary:
+	return {"grade_lut": lut_stats.duplicate()}
 
 
 ## Whether the Forward+ extras are drawn at all: false on the Compatibility renderer whatever the

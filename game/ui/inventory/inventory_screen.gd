@@ -333,6 +333,11 @@ func _refresh_detail() -> void:
 		var belt := UiKit.button("Off the belt" if bound != "" else "To the belt", "FlatButton")
 		belt.pressed.connect(func() -> void: _belt(str(it.get("item_id", "")), bound))
 		actions.add_child(belt)
+	if bool(it.get("tool", false)):
+		# a tool is used where it is wanted and kept: the speaking stone, the sluice pin
+		var use_tool := UiKit.button("Use")
+		use_tool.pressed.connect(func() -> void: _use(int(it["uid"])))
+		actions.add_child(use_tool)
 	if bool(it.get("readable", false)):
 		var read := UiKit.button("Read")
 		read.pressed.connect(func() -> void: _read(int(it["uid"])))

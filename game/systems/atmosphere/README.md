@@ -3,7 +3,9 @@
 Purpose: the look of the sky and the light. One `Atmosphere` node (scene `atmosphere.tscn`)
 owns the sun, the moon, the WorldEnvironment (painted sky shader, two layers of fog, tonemap,
 glow, the region colour grade), the vignette and grain overlay, region look recipes and weather.
-The lamps after dark belong to `world/night_lights.gd`, which reads `Atmosphere.night_factor`.
+The lamps after dark belong to `world/night_lights.gd`, which reads `Atmosphere.night_factor`
+and lights every fire and lamp in the open country, the points of interest's included, from
+one pool (at most eight, so Compatibility's twelve lights on one object are never passed).
 
 Reads: region defs (`identity.light`, every key below; `identity.weather` weights), weather defs
 (`core:weather/*`), WorldClock time, the current camera's height (for the haze), Settings `video`.
@@ -55,18 +57,44 @@ shadow's colour, not a brightness.
 (`Atmosphere.grade_lut`, rebuilt at most every 0.4 s while a look blends). ACES, with the
 region's `exposure` and `tonemap_white`; at night the exposure rises to `night_exposure`, the way
 the eye opens, so a moonlit country reads blue rather than black and the lamps bloom. Over the
-frame, under the HUD: a vignette in the region's own dark, and grain where `grain` asks for it.
+frame, under the HUD: a faint vignette in the region's own dark, and grain where `grain` asks
+for it and the player has turned it on. The blacks take a fifth of `shadow_lift` (`GRADE_LIFT`),
+not the 0.45 they first took, which greyed every shadow. The table is made once and rewritten in
+place as a blend moves; it is never replaced: the first cut handed the Environment a new texture
+for every refresh of a blend, fifteen in six seconds, swapping a resource the renderer was
+drawing with.
 
 **The sky** (`assets/shaders/painted_sky.gdshader`): a gradient that burns round a low sun and
 goes rose on the far side over the earth's blue shadow; a sun disc a degree and a half across
-with a tight halo, a glow and a wide dusk wash; cumulus lit from the side the light is on (the
-density a step toward the sun against the density here), falling into four flat painted steps
-with a silver lining near the light and undersides lit by a low sun; cirrus streaked out along
-the wind; a bank of stratus on the horizon where `cloud_band` asks for it; and at night stars in
-two sizes, a band of milk and a moon with seas on its face. The moon is its own
+with a tight halo, a glow and a wide dusk wash; cumulus as masses -- a slowly warped low-frequency
+field with the fine octaves only on its edges -- lit from the side the light is on, measured on
+the smooth field so the light falls in broad strokes, in three soft painted steps, a little
+greyer at the heart, with a silver lining near the light, undersides lit by a low sun, and the
+far ones going the colour of the air. A thin cloud is lit through, and deep inside an overcast
+the modelling eases off, so a grey sky is grey and not a field of dark eyes. Cirrus streaked out
+along the wind; a bank of stratus on the horizon where `cloud_band` asks for it; and at night
+stars in two sizes, a band of milk and a moon with seas on its face. The first version took its
+shape and its light from one five-octave field stepped hard into four, and over the Briarwold it
+drew camouflage: flat olive blotches with dark eyes; the second cut its masses from the raw
+field, whose values hardly leave the middle, so a half-covered sky fell inside the soft edge and
+came out as one grey wash (the field is now spread before it is cut; sampled off the shader's
+own noise, the clear sky's 0.25 covers about a fifth of the sky and overcast's 0.85 nine
+tenths). Two `pow()` calls of a possibly negative base drew a dotted black line up the sky at the
+sun's bearing (and would have speckled the milk); both are guarded. The moon is its own
 DirectionalLight3D, left out of the sky shader, and takes the shadow cascades over once the sun
 has set, so only one of the two ever pays for them -- and the moon on two cascades over 160 m,
 not the sun's four over 260.
+
+**The water** (`assets/shaders/painted_water.gdshader`): the frame's own pixels mirrored where the
+reflected ray points (projected to infinity, so always above the horizon and never onto the lake
+itself), the sky's own colours where the ray leaves the frame, a Fresnel term, glints under the
+sun and the moon. What the mirror shows is bent by a third of the waves (`mirror_ripple`), and
+each region sets how rough its open water is: the Mere is Lake Glass, calm enough to hold its
+island and its far shore upside down, where the first cut ran every lake and sea at one wave
+height that scrambled any reflection into streaks of sky and shore. Each region's `reflect`,
+`cap`, `glint` and `waves` are in `world/water_surface.gd`. `video/water_reflections` off puts
+the water on the same shader built without the lookup (`WaterSurface.shader_for`): a material
+that so much as names the screen texture has the frame copied for it, whatever its uniforms say.
 
 **Forward+ extras.** SSAO (`video/ssao`, on), volumetric fog (`video/volumetric_fog`, off) and
 SDFGI (`video/sdfgi`, off) are enabled only when the renderer is Forward+ *and* the setting is on.
@@ -89,6 +117,7 @@ Every key is optional; `Atmosphere.DEFAULT_LOOK` is what a silent region gets.
 | `shadow_lift`, `highlight_gain`, `midtone_tint` | the LUT: the hue the blacks lean toward, the lights' warmth, the middle's tint |
 | `bloom`, `grain`, `vignette`, `vignette_tint` | glow; film grain; the frame's edge |
 | `sky_tint`, `horizon_tint`, `dusk_tint` | the sky's colour, its horizon band, the burning horizon at dusk |
+| `dusk_fog_color`, `dusk_aerial` | the colour the distance goes at dusk (unset: the burning horizon's own), and how much more of the sky it takes |
 | `cloud_scale`, `cloud_height`, `cloud_band`, `cirrus`, `cloud_bias`, `painterly` | the region's clouds: size, flatness, stratus banding, high streaks, extra cover, how stepped the light on them is |
 | `night_tint`, `night_exposure`, `moon_energy` | moonlight and night fill; the eye's opening; the moon's strength |
 | `god_rays` | on Forward+ with volumetric fog on, denser forward-scattering volumetric fog: shafts. Nothing on Compatibility |
@@ -100,7 +129,9 @@ this region's and no other's. The values are in `content/packs/core/regions/regi
 
 **Hearthvale — Harvest Gold.** A warm gold sun, 30° at nine and 40-odd at noon, casting long
 soft shadows that lean lavender-blue (`#aab2d8`, half of it the sky's), so the gold has something
-to stand against. A pale gold haze lies in the vales and dry valleys under a ceiling of 45 m,
+to stand against. At dusk the distance goes lavender-rose (`dusk_fog_color` `#b8a4c4`) and takes
+more of the sky, over golden fields: every other dusk in the country is the burning horizon's own
+orange, and Cinderlea's is ash-red, so the two warmest regions do not end the day alike. A pale gold haze lies in the vales and dry valleys under a ceiling of 45 m,
 thickest in the first hours after sunrise (`haze_morning` 1.5: "fog pale gold in the mornings"),
 and never on the downs themselves. Saturated (1.16), with soft bloom. The shadows lift toward
 violet, the highlights warm; fair-weather cumulus. The storybook's opening page.
@@ -111,18 +142,22 @@ thin blue-grey haze lies on the water under 24 m. The brightest exposure of the 
 contrast, cool shadow lift, and high streaked cirrus. The water glitters: the sun path on the Mere
 is the one thing a screenshot of Brightwater should always have.
 
-**Sedgemire — Drowned Lantern.** A weak, pale sun (0.7) behind low flat stratus (`cloud_band`
-0.75) and diffuse teal light that comes from everywhere at once (ambient 1.2). The fog is the
-region: the densest far fog, and a haze two and a half metres under the eye that lies over every
-channel and pool, so the marsh breathes mist at your feet and the distance dissolves. Low contrast,
-desaturated, shadows lifted toward bruise-purple and indigo, a heavy vignette. At night, teal
+**Sedgemire — Drowned Lantern.** A weak, pale sun (0.7) behind low flat stratus and diffuse
+teal light that comes from everywhere at once (ambient 1.2). The fog is the region: the densest
+far fog, and a mist that lies over every channel and pool under eight metres, so the marsh
+breathes at your feet and the distance dissolves -- but not to white: at the first density the
+Drowned Nave stood in a whiteout from its own landmark camera, so the far fog is 0.0009 and the
+mist 0.022, the fog a darker teal, the contrast full and the bloom low. Desaturated, shadows
+lifted toward bruise-purple and indigo, a heavy vignette. At night, teal
 moonlight and the lanterns far off across the water.
 
 **Briarwold — Green Cathedral.** An amber sun (1.2) that makes the clearings blaze against deep
-green shade (`#3f5c3a`, barely any sky in it: under a canopy the sky is not what lights you). Green
-haze in the ravines and the lower wood, held thirty metres under you so the forest you look down
-on goes soft and gold-green toward the sun (`fog_sun_scatter` 0.35). High contrast, saturated,
-the strongest bloom, amber highlights over teal-green shadows, the darkest vignette. The shafts are
+green shade (`#4a6a48`, little sky in it: under a canopy the sky is not what lights you). The green
+is in the fill and the foliage and nowhere else: the grade's midtones are neutral, the sky is a
+clear warm blue, the far air a grey-teal that takes the sky's colour (`aerial_perspective` 0.35)
+and leaves the sky alone (`fog_sky_affect` 0). The first cut put green in the grade, the sky
+tint, the fog and the vignette at once, and the whole frame sat under a green-grey cast. High
+contrast, saturated, the strongest bloom, amber highlights, teal-green blacks. The shafts are
 the region's (`god_rays`): on Forward+ with volumetric fog turned on, its volumetric fog is denser
 and scatters toward the sun. On Compatibility there are none, and the region does not lean on them.
 
@@ -130,14 +165,29 @@ and scatters toward the sun. On Compatibility there are none, and the region doe
 sun (scale 0.38: 32° at two in the afternoon, so every crag throws a long shadow), shadows a deep
 cold blue straight from the sky (`sky_contribution` 0.8). The thinnest air of the six (fog
 0.00014) and a far horizon that goes to sky-blue rather than to grey; almost no haze, and only
-eighty metres below you in the gorges. High contrast, cool, desaturated, wind-streaked cirrus,
-alpenglow at dawn (`sun_color_low` `#ffb8a8`), and snow under a bright blue moon.
+eighty metres below you in the gorges. The haze is 0.0005: Godot's height fog is measured by how
+far a thing stands under the haze's top, not by how far it is from you, and at 0.0015 the whole
+island seen from a 700 m vista stood half-white under a top eighty metres below the eye. High
+contrast, cool, desaturated, wind-streaked cirrus, alpenglow at dawn (`sun_color_low` `#ffb8a8`),
+and snow under a bright blue moon.
 
 **Cinderlea — Ember Ash.** A sun that never climbs (nine degrees at half past four) and burns
-faded gold through the ash haze, which glows round it (`fog_sun_scatter` 0.55, the highest). The
-ground is char and ash, so the fill is lifted and grey-violet (ambient 1.35) to keep the black
-soil reading as soil rather than as nothing. Even so the char in shade came out black, so the
-grade lifts the blacks furthest of the six, grey-violet (`#474a62`), and eases the contrast
-under one: ash should read as ash. Desaturated (0.55), flat ash bands in the sky, the highlights
-faded gold, film grain, and the heaviest vignette. The only region whose screenshot should look
-old.
+gold through the ash, with a haze that glows round it (`fog_sun_scatter` 0.3). The ground is
+char and ash, the fill grey-violet, the shadows leaning violet, the highlights gold, the sky a
+clean pale ash-blue over a warm horizon, and the colour held back (0.82, the least of the six)
+rather than taken away. This is where a new game opens, at the Hushline Stair, and the first cut
+made it the greyest frame in the game: saturation 0.55, the blacks lifted to an eighth grey, the
+fill at 1.35 flattening every form, a far fog at 0.0008 that was a third of the way to beige at
+five hundred metres, film grain and the heaviest vignette -- the player's first sight of the
+country read as washed out and filtered, on Forward+ and on Compatibility alike. The distance
+still goes to ash (0.00035, aerial perspective 0.4); the foreground is clear. Its weather was
+grey seven times in ten -- ashfall and still grey, which took a further three tenths and a fifth
+of what colour was left and thickened the fog by 1.7 and 1.4 -- so the dry wind and the thin sun
+are the likelier now (35 and 30 in a hundred), and the two grey weathers, which no other region
+has, take less (0.85 and 0.9 of the colour, fog 1.4 and 1.25).
+
+**The frame overlays** are the player's: the vignette is faint (0.08 to 0.12) and
+`video/vignette` turns it off; film grain (`grain`, Cinderlea's only) is drawn only when
+`video/film_grain` is on, and it is off by default. Glow is for what is brighter than white: by
+day nothing else is fed into it (`glow_bloom` is 0 until night), where the whole frame used to
+be, which laid a soft light over everything on Forward+.

@@ -236,11 +236,24 @@ func _who_is_near(here: Vector2) -> Dictionary:
 		var d := Vector2(at.x - here.x, at.z - here.y).length()
 		if d > NEAR_M:
 			continue
+		# a point of interest's people stand where its dressing marks, so they wait for it
+		if not _place_ready(place_id):
+			continue
 		for npc_id in _registry.npcs_at(place_id):
 			# somebody asleep in their own bed does not also stand in the square
 			if _registry.is_indoors(npc_id):
 				continue
+			# somebody on the road with the player is wherever the road has got to
+			if _registry.is_escorted(npc_id):
+				continue
 			by_distance.append([d, npc_id])
+	for npc_id in _registry.escorted_ids():
+		if not _registry.is_alive(npc_id):
+			continue
+		var on_road := _registry.escort_position(npc_id)
+		var d2 := Vector2(on_road.x - here.x, on_road.z - here.y).length()
+		if d2 <= NEAR_M:
+			by_distance.append([d2, npc_id])
 	by_distance.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
 	var out: Dictionary = {}
 	for row in by_distance:
@@ -248,6 +261,21 @@ func _who_is_near(here: Vector2) -> Dictionary:
 			break
 		out[str((row as Array)[1])] = true
 	return out
+
+
+## Whether the people of a place can be stood up yet. A settlement always can. A point of
+## interest's resident stands at a marker its dressing puts down — the toll-keeper's stool, the
+## hermit's fire on an island — and before that dressing is raised the only place to put them is
+## a ring round the pad's middle, which at the Lantern Causeway is the lake. So they wait for it:
+## the dressing comes up with its cell, and the cell comes up well before anybody is near enough
+## to see who is standing there. With no world at all (a test, the flat journey) nothing waits.
+func _place_ready(place_id: String) -> bool:
+	if Ids.type_of(place_id) != "poi" or World.instance == null:
+		return true
+	for node in get_tree().get_nodes_in_group("poi_dressing"):
+		if str(node.get("poi_id")) == place_id and not bool(node.get("far")):
+			return true
+	return false
 
 
 ## Every place the roster currently has somebody in. Read off the registry rather than the

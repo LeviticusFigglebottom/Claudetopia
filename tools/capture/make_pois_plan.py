@@ -163,6 +163,9 @@ def main() -> int:
         pid = entry["place_id"]
         if pid in defs:
             poi, kind = defs[pid], defs[pid]["kind"]
+        elif pid in places and places[pid].get("dressing"):
+            # a place the POI builders dress as one of their kinds (the Standing Moot's circle)
+            poi, kind = places[pid], places[pid]["dressing"]
         elif pid in places and "shrine" in places[pid].get("tags", []):
             poi, kind = places[pid], "hearth"
         else:

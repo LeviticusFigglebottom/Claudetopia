@@ -43,6 +43,39 @@ func rod(st: SurfaceTool, xform: Transform3D, radius: float, length: float) -> v
 	st.append_from(_cyl, 0, xform.scaled_local(Vector3(radius * 2.0, length, radius * 2.0)))
 
 
+# --- carved figures ------------------------------------------------------------------------
+
+## A rounded limb, for something carved rather than laid: a capsule from `a` to `b` (local) of
+## radius `r`. Boxes and drums made the Thirteenth a wall; a body is round.
+func limb(st: SurfaceTool, a: Vector3, b: Vector3, r: float) -> void:
+	var dir := b - a
+	var length := dir.length()
+	if length < 0.01:
+		return
+	var y := dir / length
+	var x := y.cross(Vector3.UP)
+	if x.length() < 0.01:
+		x = Vector3.RIGHT
+	x = x.normalized()
+	var z := x.cross(y).normalized()
+	var capsule := CapsuleMesh.new()
+	capsule.radius = r
+	capsule.height = length + r * 2.0
+	capsule.radial_segments = 14
+	capsule.rings = 5
+	st.append_from(capsule, 0, Transform3D(Basis(x, y, z), (a + b) * 0.5))
+
+
+## A rounded mass: a sphere scaled to `radii` (x across, y up, z along `basis`) at `centre`.
+func ellipsoid(st: SurfaceTool, centre: Vector3, radii: Vector3, basis := Basis.IDENTITY) -> void:
+	var ball := SphereMesh.new()
+	ball.radius = 1.0
+	ball.height = 2.0
+	ball.radial_segments = 22
+	ball.rings = 11
+	st.append_from(ball, 0, Transform3D(basis, centre).scaled_local(radii))
+
+
 ## Finishes a batch into one MeshInstance3D under the dressing. A silhouette piece is built
 ## in the far ring as well and drawn out to the far range; anything else is near-ring only.
 func commit(st: SurfaceTool, mat: Material, node_name: String, silhouette := false) -> MeshInstance3D:

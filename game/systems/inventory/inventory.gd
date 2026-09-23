@@ -455,6 +455,13 @@ func use(item: Variant) -> bool:
 		return false
 	if s.is_readable():
 		return read(s)
+	if s.is_tool():
+		# used, not used up: the use is announced for whoever is waiting on it (a quest's
+		# `use_item`), and the tool goes back in the bag
+		item_used.emit(s.id, [])
+		if is_player:
+			EventBus.item_used.emit(s.id, [])
+		return true
 	if not s.is_consumable():
 		return false
 	if s.is_ingredient():

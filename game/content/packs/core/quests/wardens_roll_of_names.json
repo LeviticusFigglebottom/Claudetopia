@@ -21,7 +21,7 @@
       "journal": "A Warden tower fell on its side in the Quiet Villages years, and its garrison stopped being talked about. The hand-bell that called the roll there is still in it, and so are the Larkbourne Boys. Hesk wants the bell, and the page that was kept rolled inside it.",
       "objectives": [
         {"type": "reach", "target": "core:poi/tumbled_watchtower", "radius": 140, "text": "Find the Tumbled Watch, down the dry valley west of the Rest"},
-        {"type": "collect", "target": "core:item/wardens_hand_bell", "count": 1, "text": "Recover the Wardens' hand-bell"}
+        {"type": "collect", "target": "core:item/wardens_hand_bell", "count": 1, "text": "Recover the Wardens' hand-bell", "spot": "fallen_stair"}
       ]
     },
     {

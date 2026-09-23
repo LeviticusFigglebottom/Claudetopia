@@ -8,12 +8,15 @@ signal bindings_changed
 const PATH := "user://settings.cfg"
 const DEFAULTS := {
 	# volumetric_fog and sdfgi are Forward+ only and off unless asked for; color_grade is the
-	# region LUT; night_lights is how many real lamps the night-light pool may light at once
+	# region LUT; night_lights is how many real lamps the night-light pool may light at once;
+	# water_reflections is the lake giving back the far shore (the sky's colours stay either way);
+	# vignette and film_grain are the frame overlays, a faint vignette on and the grain off
 	"video": {"fullscreen": false, "vsync": true, "fov": 75.0, "render_scale": 1.0, "shadows": 2, "msaa": 1, "ssao": true, "glow": true, "brightness": 1.0,
-		"volumetric_fog": false, "sdfgi": false, "color_grade": true, "night_lights": 8},
+		"volumetric_fog": false, "sdfgi": false, "color_grade": true, "night_lights": 8, "water_reflections": true,
+		"vignette": true, "film_grain": false},
 	"audio": {"master": 0.9, "music": 0.7, "sfx": 0.9, "ambience": 0.8, "ui": 0.8, "voice": 1.0},
-	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false},
-	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true},
+	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false, "sprint_tap_rolls": true},
+	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true, "hints_learned": []},
 	"accessibility": {"colourblind": 0, "ui_scale": 1.0, "reduce_flashing": false},
 }
 
