@@ -52,11 +52,7 @@ case "$cmd" in
     # the run. The tests' own logged errors are counted and attributed by tests/test_runner.gd.
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/run_tests.tscn -- "$@" 2>&1 | tee /dev/stderr)" || true
     code=0
-    # Every "does the log say X" in this file reads a here-string, never `echo | grep -q`: under
-    # pipefail, grep -q exits at its first match, echo dies of SIGPIPE writing the rest, and the
-    # pipeline fails -- so a match early in a long log read as no match. That made this exit 1 on
-    # passing runs now and then, and let flow and smoke miss a failure line that came early.
-    grep -q "^RESULT: PASS" <<< "$out" || code=1
+    echo "$out" | grep -q "^RESULT: PASS" || code=1
     n="$(echo "$out" | grep -c "^SCRIPT ERROR" || true)"
     if [ "$n" -gt 0 ]; then
       echo "[test] $n script error(s) logged by the engine, at:"
@@ -93,16 +89,16 @@ case "$cmd" in
       local script_errors
       script_errors="$(echo "$log" | grep -c "SCRIPT ERROR" || true)"
       [ "$script_errors" = "0" ] || echo "[flow] $script_errors script errors in the log (see above)"
-      if grep -q "FLOW: FAIL" <<< "$log"; then echo "[flow] FAIL ($*)"; return 1; fi
-      if ! grep -q "FLOW: PASS" <<< "$log"; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
+      if echo "$log" | grep -q "FLOW: FAIL"; then echo "[flow] FAIL ($*)"; return 1; fi
+      if ! echo "$log" | grep -q "FLOW: PASS"; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
     }
     flow_run "$@" && flow_run "--load=flow" && flow_run "--continue"
     echo "[flow] PASS: $out" ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"
-    if grep -qE "SCRIPT ERROR|SMOKE: FAIL" <<< "$out"; then echo "[smoke] FAIL"; exit 1; fi
-    if ! grep -q "SMOKE: PASS" <<< "$out"; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
+    if echo "$out" | grep -qE "SCRIPT ERROR|SMOKE: FAIL"; then echo "[smoke] FAIL"; exit 1; fi
+    if ! echo "$out" | grep -q "SMOKE: PASS"; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
     echo "[smoke] PASS" ;;
   perf)
     import_project
