@@ -796,7 +796,11 @@ all), and each option moves something the game reads: standing, Hearth or Hollow
 deed, who lives where. The person who asked greets you afterwards with what came of it. Every
 where, marker and escort is a place id, never a coordinate. The quests and hooks leave 84 books
 lying about, each with an item copy to carry: 12 that the quests send you to find or read, and 72
-notes put down at points of interest by encounter defs that stand nobody up.
+notes put down at points of interest by encounter defs that stand nobody up. Five of the quests'
+books are read where they lie (`in_place`): a keeper-roll hung inside a tower door is not
+something you carry off. Every talk closes on its own line (`topic`), not on whatever you last
+said to the person, and every resident the map added can be asked what work is going where they
+live (`offer_work`).
 
 `game/tests/unit/test_map_quests.gd` holds all of it:
 

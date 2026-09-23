@@ -3973,3 +3973,73 @@ These were handled with what exists:
    own line, and a secret.
 3. **Walk three of the quests in the game:** Nella's walk home, the Notch on the Post's branch to
    Pilgrim's Ash, and Cut From Below's fight in the Sunken Barge.
+
+## The plumbing the map's quests were missing
+
+Writing the forty quests that follow the map turned up five gaps in the quest plumbing that bear
+on whether the quests play right. The settlements stream owns that plumbing, and it agreed to
+these changes and to where they sit (it is changing the dialogue runner's deed offers in the same
+file). Each change is opt-in, so the rest of the pack plays as it did. DECISIONS 2026-09-23 ("A
+talk waits for its line...") gives the reasons. `game/tests/unit/test_quest_plumbing.gd` holds
+all of it in 18 tests.
+
+### What changed
+
+1. **A talk waits for its own line.** A `talk` objective may name a `topic`, which is a node of the
+   person's dialogue. The runner says `EventBus.dialogue_node_entered` for every node it enters,
+   and QuestLog closes a talk with a topic only on that node. A talk with no topic still closes
+   when any conversation with the person ends. QuestWalk checks that the topic is a line the
+   person has.
+   * All 15 talks in the map's quests now close on their return lines. Three of those lines are
+     new: Ushra at Ruddow, Aggie at Hazelwick, and Nella at the Last Camp.
+   * Nella's escort now waits until you have said you are ready. Escorts wait for the stage's
+     talk with the traveller.
+2. **A book read where it lies.** A `read_book` objective may say `in_place`. QuestItems then lays
+   the book itself, fixed and with a book to see, at the objective's `where` instead of the copy
+   that reads it. Reading it there says `book_opened`, as a book read where it lies always did.
+   QuestWalk now counts any book QuestItems lays, which includes the settlements stream's `lies`
+   books, such as the one on Willow Isle.
+   * Five of the map's books are read where they lie: the Ash Watch night-log, the Pinfold's
+     pound-book, Hound Watch's keeper-roll, the Counting Tower's ledger and the slate of names at
+     Kharrow's cairns.
+3. **A decision can be a crime.** The `bounty` effect (`{"bounty": "theft"}` or `{crime, value, at,
+   seen_by, reaction}`) goes through the crime service's own `report_crime`. The person spoken to
+   sees it, or the witness the effect names. So the severity, the law of the place's region, the
+   report delay, and the lawless regions' ill-feeling that wears off are all the crime system's.
+   If nobody sees it, nobody reports it.
+   * The crime service now answers `bounty_for`. The dialogue context has always asked it by that
+     name and it never had the method. So every `bounty_min` condition and greeting read nought,
+     and the Tollmere smith who will not serve a wanted man served everybody.
+   * None of the map's 120 options is a crime. The first decision that is one can use the effect.
+4. **A giver's offer is a way in.** test_quest_reach now counts a quest that its giver offers at
+   their hub, as play always has.
+   * The offer nodes written for the map's quests stay. Each carries its giver's pitch, an accept
+     and a decline, and each keeps the generic "Is there something I could do?" off the hub. The
+     runner offers that line only for quests nothing else starts.
+5. **Work from somebody who lives there.** Jobs came only from notice posts and workbenches.
+   Settlement.FABRIC puts posts only in towns, cities, villages and forts, so thirty of the
+   thirty-nine settlements had no work but a shift at a workbench.
+   * The `offer_work` effect has a resident open their place's work, on the same screen a post
+     opens. `JobBoard.for_place` returns the post that stands in the place, or else the place's
+     carried board: one per place, with no body in the world and nothing to walk up to.
+   * All 26 residents the map added offer it: "Is there any work going?"
+
+### Tests
+
+* test_quest_plumbing: 18 tests pass.
+* These pass with 0 content problems and 0 failed tests:
+  * test_quest (100, with test_quest_reach, test_quest_walk and test_quest_items);
+  * test_dialogue (48), test_map (12), test_content (43), test_books (6), test_poi (38);
+  * test_jobs (12), test_crime (27), test_escorts (7), test_social (9);
+  * test_faction_lines (38), test_shopkeepers (7), test_economy (10).
+* test_economy logs one error: a test that adds an item that does not exist, on purpose.
+* The merge of main before this work brought the opening's overhead refusal into QuestFoes. So
+  test_map_quest_ground now asks QuestFoes itself.
+* The merge also moved the Naming's first fight to the Choir, so the hook table was rewritten:
+  108 points of interest are now sent to by a quest.
+
+### Next
+
+The quest walker: every one of the 75 authored quests, played end to end in the rebuilt world
+through the game's own services, with each decision taken in turn. It waits for the atlas world
+in main.
