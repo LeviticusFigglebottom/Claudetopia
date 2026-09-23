@@ -92,7 +92,7 @@
   {"id": "core:poi/briar_breach", "name": "The Breach", "region": "core:region/briarwold", "kind": "ruins", "position": [3990, -240], "hearthstone": false,
    "unique_feature": "a gap in the Briar where the thorns have withered around broken Oroth wardstones", "visible_from": ["core:place/thornmarch", "core:place/weaverdeep"],
    "story": "Something came through from the far side and the thorns died where it walked. Ash-wights, a long way from Cinderlea, wander near it. This is where the Briar's purpose becomes a question.", "encounter": "ash-wights (swarm) far from home; a main-quest clue"},
-  {"id": "core:poi/charcoal_camp", "name": "The Charcoal Camp", "region": "core:region/briarwold", "kind": "camp", "position": [2700, -100], "hearthstone": false,
+  {"id": "core:poi/charcoal_camp", "name": "The Charcoal Camp", "region": "core:region/briarwold", "kind": "camp", "position": [2694, -100], "hearthstone": false,
    "unique_feature": "smoking turf kilns tended by burners who never sleep at the same time", "visible_from": ["core:poi/foxfire_falls", "core:place/grandfather"],
    "story": "The burners buy anything that burns and sell gossip that does not. A safe camp with a job board.", "encounter": "none; merchant and jobs"},
   {"id": "core:poi/fern_gully", "name": "Fern Gully", "region": "core:region/briarwold", "kind": "hidden_valley", "position": [3500, -1000], "hearthstone": false,
