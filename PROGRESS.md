@@ -3526,7 +3526,8 @@ opening's branch fixes: 89 checks, 10 failed, no script errors, every failure do
 opening stopping at its third shot of ten (no HUD, no first objective, the camera still the
 opening's). That ends `run.sh flow`'s chain, so the load and Continue starts were run on their
 own (`-- --flow=<dir> --load=flow`, `-- --flow=<dir> --continue`, into the same folder):
-Continue passes, 27 of 27, on Terrain3D with the HUD up; the load fails 5 of 32, because the
+Continue passes (27 of 27, and 35 of 35 on the head: it loads whichever save is newest), on
+Terrain3D with the HUD up; the load fails 5 of 32, because the
 `flow` slot was saved while the stalled opening still held the `new_game` flag, and a load with
 that flag up plays the opening again (`GameServices`), which stalls the same way.
 
@@ -3549,9 +3550,11 @@ Merrowby's and Briarwold's street shots (`tools/capture/plans/streets_two.json`)
 * **High after the fix**: no script errors, 1339 draws and 0.99 M at Merrowby, 579 and 0.59 M at
   Briarwold, and both frames read as they do on Compatibility, the wood whole. Fourteen engine
   errors, `Buffer argument is not a valid buffer` from the rendering device, come before the
-  first shot; whose they are is not known yet (the same shots with `--no-lod` will say whether
-  they are the tree groups'). A pale column stands in Merrowby's sky on Forward+ that is not in
-  the Compatibility frame; not traced.
+  first shot, and they come with the tree groups: the same first shot drawn with `--no-lod` has
+  none (1432 draws and 1.65 M; that run was killed for memory before its second shot). Which of
+  the groups' MultiMesh calls the device refuses is not traced; the frames are not marked by it.
+  A pale column stands in Merrowby's sky on Forward+ that is not in the Compatibility frame;
+  not traced.
 * **Painted after the fix has not been seen**: its run was killed for memory, with 7 GB free,
   before the first shot, and the run before the fix finished but its frames are the broken ones.
   So SDFGI, SSIL, volumetric fog and TAA are still unseen in a sane frame.
