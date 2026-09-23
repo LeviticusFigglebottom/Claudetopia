@@ -1407,7 +1407,9 @@ failed: it ran `flow_run new && flow_run load && flow_run continue` and printed 
 the next line, and an `&&` list that fails part-way does not trip `set -e`, so a failed probe
 exited 0 under a PASS, with only a `[flow] FAIL` line further up to say otherwise. The verdict is
 taken from the list now. Any earlier "flow passes" that was read from the last line or the exit
-code was not a reading of the probe.
+code was not a reading of the probe. The other way round, this branch's final suite printed
+`RESULT: PASS` and exited 1: `echo "$out" | grep -q` under `pipefail` (44 failures in 200
+replays of that log); the parent branch's fix, a grep that reads to the end, is taken verbatim.
 
 **The fade waits for the country.** It lifted on `player_spawned`, and in all three flow runs
 **none** of the full-detail cells round the body was standing at that moment (the Hushline Stair
