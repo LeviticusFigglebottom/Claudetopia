@@ -323,30 +323,104 @@ func test_a_heavy_record_wears_the_heavy_body() -> void:
 	assert_eq(a.body_variant(), "heavy")
 	m.apply_appearance(a.to_dict())
 	assert_eq(m.body_variant_worn, "heavy", "a build of 0.9 is still wearing the default body")
-	# With a real variant on, the rig is scaled by height alone: widening it as well would
-	# count the same build twice. The skeleton hangs under the rig root, so it carries
-	# whatever scale was applied there.
+	# With a real variant on, the rig only makes up the difference between the girth the build
+	# asks for and the heavy body's own, so the build is not counted twice: the total is the
+	# slider's girth, not the heavy body's girth widened again by it. The skeleton hangs under
+	# the rig root, so it carries whatever scale was applied there.
 	var s := m.skeleton.global_transform.basis.get_scale()
-	assert_near(s.x, s.y, 0.002, "a variant body was widened by the build slider as well")
+	var total := s.x / s.y * float(HumanoidModel.VARIANT_GIRTH["heavy"])
+	assert_near(total, HumanoidModel.girth_for(0.9), 0.002, "the heavy body's width was counted twice")
+	assert_true(absf(s.x / s.y - 1.0) < 0.05, "the heavy body was widened by more than the slider's own step")
+
+
+## The heavy body is wider than every garment built on the default one, so under clothes that
+## carry no fit for it the model stays on the default body and widens the rig instead: at the
+## heavy end of the Naming's build slider the skin used to show through the gambeson.
+func test_a_heavy_body_is_only_worn_under_clothes_cut_for_it() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.build = 0.95
+	a.set_part("torso", "gambeson")
+	a.set_part("legs", "trousers")
+	m.apply_appearance(a.to_dict())
+	if m._garments_fit("heavy"):
+		assert_eq(m.body_variant_worn, "heavy", "the clothes are cut for the heavy body and it is not worn")
+	else:
+		assert_eq(m.body_variant_worn, "", "the heavy body was worn under clothes not cut for it")
+		var s := m.skeleton.global_transform.basis.get_scale()
+		assert_near(s.x / s.y, HumanoidModel.girth_for(0.95), 0.002, "and the rig did not do the widening")
 
 
 ## A part is only wearable on this rig if it was built around this rig's bones. `slight`
 ## and `heavy` are shape: their worst joint sits 3.3 mm and 1.9 mm from the default's.
 ## `child` is a different skeleton -- hips at 0.646 m against 0.980, worst joint 476 mm
-## out -- so re-skinning it onto adult bones would stretch a child back into an adult.
-## It needs its own rig and its own clips, and until it has them the model must not wear it.
-func test_a_child_is_not_draped_over_the_adult_skeleton() -> void:
+## out -- so re-skinning it onto adult bones would stretch a child back into an adult. It is
+## worn on the rig re-proportioned to the child's own skeleton instead (ChildProportions):
+## after the clips have posed it, the hips stand at a child's height, the arms are a child's
+## length and the head is scaled to the child's.
+func test_a_child_is_worn_on_a_child_skeleton() -> void:
 	assert_false(HumanoidModel.WEARABLE_BODIES.has("child"),
-		"the child body is built around its own skeleton and cannot ride this one")
-	if not _rig_built():
+		"the child body is built around its own skeleton and cannot ride the grown one as it is")
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/bodies/child/child.glb"):
+		return
+	# and a child is only put in its own body once there are clothes cut for it
+	if not ResourceLoader.exists("res://assets/models/characters/clothing/tunic_child/tunic_child.glb"):
 		return
 	var m := _make_model()
+	var grown_hips := m.skeleton.get_bone_global_rest(m.skeleton.find_bone("Hips")).origin.y
+	var grown_arm := _arm_length(m.skeleton, true)
 	var a := CharacterAppearance.new()
 	a.set_part("head", "default")
+	a.set_part("torso", "tunic")
 	a.height = 1.30
 	assert_eq(a.body_variant(), "child", "the record still knows what it is")
 	m.apply_appearance(a.to_dict())
-	assert_eq(m.body_variant_worn, "", "a child body was put on the adult rig after all")
+	assert_eq(m.body_variant_worn, "child", "a child's record is not wearing the child's body")
+	var mod := m.skeleton.get_node_or_null("ChildProportions") as ChildProportions
+	assert_true(mod != null, "the rig was not re-proportioned")
+	if mod == null:
+		return
+	# The pose is read as the modifier leaves it, which is what the skin is drawn with; the
+	# engine may hand scripts the clip's own pose again once the frame is drawn.
+	var sk := m.skeleton
+	var seen := {}
+	mod.modification_processed.connect(func() -> void:
+		seen["hips"] = sk.get_bone_global_pose(sk.find_bone("Hips")).origin.y
+		seen["arm"] = _arm_length(sk, false)
+		seen["head"] = sk.get_bone_global_pose(sk.find_bone("Head")).basis.get_scale().y)
+	for i in 4:
+		await Engine.get_main_loop().process_frame
+	assert_true(seen.has("hips"), "the child's proportions were never applied")
+	if not seen.has("hips"):
+		return
+	var hips: float = seen["hips"]
+	assert_gt(grown_hips * 0.75, hips, "the hips stand at %.3f m, a grown height" % hips)
+	assert_gt(hips, grown_hips * 0.5, "the hips sank to %.3f m" % hips)
+	var arm: float = seen["arm"]
+	assert_gt(grown_arm * 0.85, arm, "the arm is %.3f m against a grown %.3f" % [arm, grown_arm])
+	assert_near(float(seen["head"]), 1.18 * 1.30 / 1.78, 0.03, "the grown head was not scaled to the child's")
+	# a garment with no child's cut is not hung off the child in a grown size
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
+		var part := str(mi.get_meta("part", ""))
+		if str(mi.get_meta("slot", "")) == "torso":
+			assert_true(part.ends_with("_child"), "the child is wearing the grown %s" % part)
+	# and a grown record afterwards is grown again
+	a.height = 1.78
+	m.apply_appearance(a.to_dict())
+	assert_true(m.skeleton.get_node_or_null("ChildProportions") == null
+			or m.skeleton.get_node("ChildProportions").is_queued_for_deletion(),
+			"the child's proportions outlived the child")
+
+
+## Shoulder to wrist along the left arm, off the rest pose or the current one.
+func _arm_length(sk: Skeleton3D, rest: bool) -> float:
+	var sh := sk.find_bone("UpperArm.L")
+	var wr := sk.find_bone("Hand.L")
+	if rest:
+		return sk.get_bone_global_rest(sh).origin.distance_to(sk.get_bone_global_rest(wr).origin)
+	return sk.get_bone_global_pose(sh).origin.distance_to(sk.get_bone_global_pose(wr).origin)
 
 
 func test_appearance_composes() -> void:
@@ -425,3 +499,26 @@ func test_every_one_shot_has_a_transition_both_ways() -> void:
 		if not root.has_transition(name, HumanoidModel.LOCOMOTION_STATE):
 			missing.append(name + " ->")
 	assert_empty(missing, "clips with no transition to or from Locomotion: %s" % str(missing))
+
+
+
+## Stubble is a shell over the jaw in the hair colour; drawn opaque it was a full short beard.
+func test_stubble_is_seen_through() -> void:
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/beards/stubble/stubble.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.set_part("beard", "stubble")
+	m.apply_appearance(a.to_dict())
+	var seen := 0
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
+		if str(mi.get_meta("slot", "")) != "beard":
+			continue
+		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as BaseMaterial3D
+		assert_true(mat != null, "the stubble was not dressed")
+		if mat != null:
+			assert_eq(mat.transparency, BaseMaterial3D.TRANSPARENCY_ALPHA, "the stubble is opaque")
+			assert_gt(0.8, mat.albedo_color.a, "the stubble is drawn solid (alpha %.2f)" % mat.albedo_color.a)
+			seen += 1
+	assert_gt(seen, 0, "no stubble mesh on the body")

@@ -25,6 +25,14 @@ extends Node
 ## fade is still down once the body stands, the HUD is not up, or the body standing in the
 ## world is not the one the Naming made. With --load=<slot> or --continue it skips the Naming
 ## and holds the loaded character against what the New Game run wrote to flow_state.json.
+##
+## With --naming-tour it stops at the Naming instead: it makes a run of complete looks there --
+## each Calling with a face, a hair style, a beard, tones and a build -- through the screen's own
+## controls, checks the preview body took every choice, captures each look whole, and quits
+## without standing the world up. That is how the first screen a player sees gets looked at:
+##
+##   xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
+##       --audio-driver Dummy --resolution 1280x720 -- --flow=captures/naming --naming-tour
 
 const BLACK := 0.06
 const NAME := "Tam Cresswell"
@@ -34,6 +42,35 @@ const EYES := "green"
 const CALLING := "core:calling/cragborn"
 const SLOT := "flow"
 const SAMPLE_SECONDS := [2.0, 5.0, 10.0, 20.0, 40.0]
+## The looks --naming-tour makes, one per Calling and then a few that push the extremes: every
+## face, hair style and beard the choosers offer appears at least once across the run.
+const TOUR := [
+	{"calling": "core:calling/hearthkeeper", "head": "round", "hair": "short", "beard": "",
+		"skin": "fair", "hair_colour": "sand", "eyes": "blue", "build": 0.5, "height": 1.74},
+	{"calling": "core:calling/wayfarer", "head": "angular", "hair": "tousled", "beard": "stubble",
+		"skin": "wheat", "hair_colour": "brown", "eyes": "hazel", "build": 0.45, "height": 1.80},
+	{"calling": "core:calling/reedborn", "head": "narrow", "hair": "long", "beard": "",
+		"skin": "olive", "hair_colour": "black", "eyes": "dark_brown", "build": 0.35, "height": 1.70},
+	{"calling": "core:calling/cragborn", "head": "broad", "hair": "braid", "beard": "short_beard",
+		"skin": "fair", "hair_colour": "ginger", "eyes": "grey_green", "build": 0.8, "height": 1.84},
+	{"calling": "core:calling/ashwalker", "head": "hawk", "hair": "cropped", "beard": "long_beard",
+		"skin": "deep", "hair_colour": "soot", "eyes": "grey", "build": 0.4, "height": 1.78},
+	{"calling": "core:calling/lantern_clerk", "head": "soft", "hair": "bun", "beard": "",
+		"skin": "porcelain", "hair_colour": "ash_blond", "eyes": "pale_blue", "build": 0.2, "height": 1.66},
+	{"calling": "core:calling/hearthkeeper", "head": "heavy_brow", "hair": "hood_friendly", "beard": "moustache",
+		"skin": "umber", "hair_colour": "grey", "eyes": "brown", "build": 0.95, "height": 1.62},
+	{"calling": "core:calling/reedborn", "head": "default", "hair": "braid", "beard": "",
+		"skin": "ebony", "hair_colour": "white", "eyes": "amber", "build": 0.1, "height": 1.92},
+	# the ends of both sliders, together: nothing a player can drag to may break the body
+	{"calling": "core:calling/wayfarer", "head": "narrow", "hair": "long", "beard": "",
+		"skin": "wheat", "hair_colour": "chestnut", "eyes": "hazel", "build": 0.0, "height": 1.55},
+	{"calling": "core:calling/cragborn", "head": "broad", "hair": "short", "beard": "long_beard",
+		"skin": "olive", "hair_colour": "dark_brown", "eyes": "brown", "build": 1.0, "height": 1.95},
+	{"calling": "core:calling/lantern_clerk", "head": "round", "hair": "tousled", "beard": "",
+		"skin": "fair", "hair_colour": "flax", "eyes": "blue", "build": 1.0, "height": 1.55},
+	{"calling": "core:calling/ashwalker", "head": "angular", "hair": "cropped", "beard": "short_beard",
+		"skin": "amber", "hair_colour": "black", "eyes": "green", "build": 0.0, "height": 1.95},
+]
 const WORLD_TIMEOUT := 420.0
 ## A world is not entered unless it has this many drawn things within NEAR_RADIUS of the body
 ## (terrain, water, sky and the body itself not counted). A void has none; the Hushline Stair,
@@ -44,6 +81,8 @@ const MIN_NEAR := 10
 var out_dir := "captures/flow"
 var mode := "new"            # new | load | continue | new-game
 var load_slot := ""
+## --naming-tour=quick makes two looks and skips the presets, for iterating on the screen.
+var tour_quick := false
 
 var _checks: Array[Dictionary] = []
 var _notes: Array[String] = []
@@ -68,6 +107,9 @@ func _ready() -> void:
 			mode = "continue"
 		elif a == "--new-game":
 			mode = "new-game"
+		elif a.begins_with("--naming-tour"):
+			mode = "naming-tour"
+			tour_quick = a == "--naming-tour=quick"
 	out_dir = _absolute(out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_errors_at_start = Log.error_count
@@ -98,6 +140,8 @@ func _run() -> void:
 			await _new_game_flow()
 		"continue":
 			await _continue_flow()
+		"naming-tour":
+			await _naming_tour()
 		_:
 			await _straight_in_flow()
 	_finish()
@@ -198,6 +242,120 @@ func _continue_flow() -> void:
 	else:
 		_verify_body(expected)
 	await _portrait()
+
+
+## --naming-tour: title, New Game, and then the Naming through every look in TOUR.
+func _naming_tour() -> void:
+	var menu := await _wait_for_scene("main_menu.gd", 90.0)
+	if not _check(menu != null, "the title menu comes up from boot"):
+		return
+	await _settle(2.2)
+	var new_game := _button(menu, "New Game")
+	if not _check(new_game != null and not new_game.disabled, "New Game is on the title menu"):
+		return
+	await _click(new_game)
+	var naming := await _wait_for_scene("naming.gd", 30.0)
+	if not _check(naming != null, "clicking New Game opens the Naming"):
+		return
+	await _settle(2.0)
+	await _capture("as_it_opens")
+	for i in TOUR.size():
+		if tour_quick and not (i in [0, 3]):
+			continue
+		var look: Dictionary = TOUR[i]
+		await _make_look(naming, look)
+		await _settle(1.2)
+		var label := "%s_%s_%s" % [Ids.name_of(str(look["calling"])), look["head"], look["hair"]]
+		await _capture(label)
+		_check_look(naming, look, label)
+		await _close_in(naming, label)
+	if tour_quick:
+		return
+	# every preset, through its own chooser, and three casts of the lots
+	var presets := _find_meta(naming, "presets", "true") as OptionButton
+	if _check(presets != null, "the Naming offers presets"):
+		for i in range(1, presets.item_count):
+			var name := presets.get_item_text(i)
+			presets.select(i)
+			presets.item_selected.emit(i)
+			await _settle(1.2)
+			await _capture("preset_%s" % name.to_lower().replace(" ", "_").replace("-", "_"))
+			_check(presets.selected == 0, "choosing the preset '%s' leaves the chooser ready for the next" % name)
+	var lots := _button(naming, "Cast lots")
+	if _check(lots != null, "the Naming can cast lots for a look"):
+		var seen := {}
+		for k in 3:
+			await _click(lots)
+			await _settle(1.2)
+			var look := _look(naming)
+			seen[JSON.stringify(look.to_dict())] = true
+			await _capture("lots_%d" % (k + 1))
+		_check(seen.size() == 3, "three casts of the lots gave three different looks")
+
+
+## Presses "Face", looks, and stands back again: the close framing has to hold for every look.
+func _close_in(naming: Node, label: String) -> void:
+	var face := _button(naming, "Face")
+	if not _check(face != null, "%s: the portrait has a Face framing" % label):
+		return
+	await _click(face)
+	await _settle(1.4)
+	await _capture(label + "_face")
+	var whole := _button(naming, "Whole figure")
+	if _check(whole != null, "%s: and a Whole figure framing" % label):
+		await _click(whole)
+		await _settle(0.6)
+
+
+## Makes one look through the controls a player would use, in the order they sit on the page.
+func _make_look(naming: Node, look: Dictionary) -> void:
+	for pair in [["Skin", "skin"], ["Hair", "hair_colour"], ["Eyes", "eyes"]]:
+		var label := _label(naming, str(pair[0]))
+		var swatch := _find_meta(label.get_parent(), "tone", str(look[pair[1]])) if label != null else null
+		if _check(swatch != null, "the %s row has a %s swatch" % [pair[0], look[pair[1]]]):
+			(swatch as Button).pressed.emit()
+	# the beards are the ones the screen offers, which are only the ones that draw
+	var options := {"hair": CharacterAppearance.HAIR_STYLES, "head": CharacterAppearance.HEADS,
+		"beard": naming.call("offered_beards")}
+	for slot in options:
+		var o := _chooser(naming, slot)
+		var index: int = (options[slot] as Array).find(str(look[slot]))
+		if _check(o != null and index >= 0, "the %s chooser offers '%s'" % [slot, look[slot]]):
+			o.select(index)
+			o.item_selected.emit(index)
+	for key in ["build", "height"]:
+		var s := _slider(naming, key)
+		if _check(s != null, "the %s slider is there" % key):
+			s.value = float(look[key])
+	var card := _find_meta(naming, "calling", str(look["calling"]))
+	if _check(card != null, "there is a card for %s" % look["calling"]):
+		(card as Button).pressed.emit()
+	await _frames(3)
+
+
+## The preview body wears exactly what was chosen, and every part it was asked for is on it.
+func _check_look(naming: Node, look: Dictionary, label: String) -> void:
+	var model: Node = naming.get("_model")
+	if not _check(model != null, "%s: the Naming has a preview body" % label):
+		return
+	var worn: CharacterAppearance = model.get("appearance")
+	_check(worn.skin == str(look["skin"]) and worn.hair_colour == str(look["hair_colour"])
+			and worn.eye_colour == str(look["eyes"]),
+			"%s: the body's tones are the swatches pressed (%s, %s, %s)" % [label, worn.skin, worn.hair_colour, worn.eye_colour])
+	for slot in ["head", "hair", "beard"]:
+		_check(worn.part(slot) == str(look[slot]),
+				"%s: the body's %s is '%s' (it is '%s')" % [label, slot, look[slot], worn.part(slot)])
+	var parts: Dictionary = model.get("_part_meshes")
+	for slot in ["hair", "beard", "torso"]:
+		if worn.part(slot).is_empty():
+			continue
+		var meshes: Array = parts.get(slot, [])
+		var drawn := 0
+		for mi in meshes:
+			var m := mi as MeshInstance3D
+			if m != null and m.mesh != null and m.mesh.get_surface_count() > 0:
+				drawn += 1
+		_check(drawn > 0, "%s: the %s '%s' is on the body with a mesh to draw" % [label, slot, worn.part(slot)])
 
 
 ## --load=<slot> and --new-game: boot goes straight to the world, no menu in between.
@@ -456,24 +614,27 @@ func _watch_the_world_stand_up() -> void:
 	if not _check(_spawned != null, "a body stands in the world within %d s (took %.0f s)"
 			% [int(WORLD_TIMEOUT), (_spawned_at_ms - _t0) / 1000.0 if _spawned != null else _elapsed()]):
 		return
-	# the fade is held until the cells round the body are in (UI.COUNTRY_WAIT_S), so the lift is
-	# waited for a little longer than that
+	# The fade is held while the cells round the body keep arriving (UI.wait_for_country), up to
+	# UI.COUNTRY_CAP_S; the lift is waited for while it is held, and a little after.
 	var held_caption := ""
 	if UI.is_holding_for_country():
 		await _settle(0.3)
 		held_caption = UI.loading_text().replace("\n", " / ")
 		await _capture("holding_for_country")
-	var lifted := await _wait_until(func() -> bool: return not UI.is_faded_out(), UI.COUNTRY_WAIT_S + 10.0)
+	var lifted := await _wait_until(func() -> bool: return not UI.is_faded_out(), UI.COUNTRY_CAP_S + 30.0)
 	_check(lifted, "the fade lifts once the body stands and the country round it is in")
 	var wait: Dictionary = UI.last_country_wait
 	if not wait.is_empty():
 		var cells: Vector2i = wait.get("cells", Vector2i.ZERO)
 		var at_spawn: Vector2i = wait.get("at_spawn", Vector2i.ZERO)
-		_notes.append("when the body stood, %d of %d near cells were in, which is what the fade used to lift on; it waited %.1f s more, and %d of %d were in when it lifted%s%s"
-				% [at_spawn.x, at_spawn.y, float(wait.get("ms", 0)) / 1000.0, cells.x, cells.y,
-					" (timed out)" if bool(wait.get("timed_out", false)) else "",
+		_notes.append("when the body stood, %d of %d near cells were in, which is what the fade used to lift on; it waited %.1f s and %d frames more, and %d of %d were in when it lifted%s%s"
+				% [at_spawn.x, at_spawn.y, float(wait.get("ms", 0)) / 1000.0, int(wait.get("frames", 0)), cells.x, cells.y,
+					" (gave up: %s)" % str(wait.get("why", "")) if bool(wait.get("timed_out", false)) else "",
 					"; caption while held: %s" % held_caption if not held_caption.is_empty() else ""])
 		_check(not bool(wait.get("timed_out", false)), "the near cells were all in before the fade lifted (%d of %d)" % [cells.x, cells.y])
+		# A streamer that is not following the body counts nothing, and nothing is all in at once:
+		# the fade would lift at the first frame again, and the check above would not see it.
+		_check(cells.y > 0, "the fade counted the cells round the body, not round something else (%d)" % cells.y)
 	# a new game's opening begins once that hold has let the fade go (CinematicPlayer.begin waits
 	# for it), and hands over before the world is photographed standing
 	await _watch_the_opening()
@@ -652,6 +813,15 @@ func _check_the_ground() -> void:
 				await _capture("coarse_ground_card")
 	elif drawn_by == "terrain3d":
 		_check(said == null, "nothing says the ground is coarse, because it is not")
+		# Terrain3D builds its clipmap and its collision round the camera it was given last. It
+		# was left on the fly camera, which flew off on the player's keys, and a player walked under
+		# the ground (World.follow). Standing still, the flow could not see that; this can.
+		var tn: Object = world.get("terrain_node") as Object
+		if tn != null and tn.has_method("get_camera"):
+			var cam := tn.call("get_camera") as Node
+			_check(cam != null and (cam == body or body.is_ancestor_of(cam)),
+					"Terrain3D's ground and collision follow the body's own camera (%s)"
+					% (str(cam.get_path()) if cam != null else "no camera"))
 	var feet := body.global_position
 	var q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 2.0, feet + Vector3.DOWN * 40.0, (1 << 0) | (1 << 10))
 	var own: Array[RID] = []
@@ -798,23 +968,32 @@ func _drag(s: Control, from_ratio: float, to_ratio: float) -> void:
 	await _frames(2)
 
 
+## Where a point of the UI is in window pixels. A control's rect is in canvas units -- the
+## 1280x720 the project is laid out in -- and a mouse event is in the window's own pixels, so at
+## 2560x1440 every click the probe made landed at half the distance from the corner and missed.
+func _to_window(p: Vector2) -> Vector2:
+	return get_tree().root.get_final_transform() * p
+
+
 func _mouse_move(p: Vector2) -> void:
+	var w := _to_window(p)
 	var ev := InputEventMouseMotion.new()
-	ev.position = p
-	ev.global_position = p
-	ev.relative = p - _mouse
+	ev.position = w
+	ev.global_position = w
+	ev.relative = w - _mouse
 	ev.button_mask = 0
-	_mouse = p
-	Input.warp_mouse(p)
+	_mouse = w
+	Input.warp_mouse(w)
 	Input.parse_input_event(ev)
 	Input.flush_buffered_events()
 	await get_tree().process_frame
 
 
 func _mouse_button(p: Vector2, pressed: bool) -> void:
+	var w := _to_window(p)
 	var ev := InputEventMouseButton.new()
-	ev.position = p
-	ev.global_position = p
+	ev.position = w
+	ev.global_position = w
 	ev.button_index = MOUSE_BUTTON_LEFT
 	ev.pressed = pressed
 	ev.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0

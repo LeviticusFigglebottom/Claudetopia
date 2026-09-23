@@ -15,6 +15,7 @@ Regions are smooth 0..1 weights over 3D space (see `Region`), so garment edges c
 from __future__ import annotations
 
 import math
+import zlib
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
@@ -42,8 +43,10 @@ def band_z(z0: float, z1: float, soft: float = 0.02) -> RegionFn:
     return fn
 
 
-def sdf_smoothstep(e0: float, e1: float, x: np.ndarray) -> np.ndarray:
-    t = np.clip((x - e0) / max(e1 - e0, 1e-9), 0.0, 1.0)
+def sdf_smoothstep(e0, e1, x: np.ndarray) -> np.ndarray:
+    """Hermite step from e0 to e1; the edges may be per-point arrays (a hem that varies round
+    the body), which the built-in `max` in here used to refuse."""
+    t = np.clip((x - e0) / np.maximum(e1 - e0, 1e-9), 0.0, 1.0)
     return t * t * (3 - 2 * t)
 
 
@@ -217,9 +220,47 @@ class Garment:
     colour_key: str = "primary"
     bone: Optional[str] = None           # rigid parts (helms, horns) bind to one bone
     double_sided: bool = False
+    # A field whose inside is hidden anyway (the scalp under hair): faces whose centre lies
+    # more than `trim_depth` inside it are dropped after meshing, so a shell that dives under
+    # the skin at its edge does not spend half its triangles on a surface nobody can see.
+    trim: Optional[object] = None
+    trim_depth: float = 0.0012
+    # Other meshes exported with this one, each with its own material: the arming coat under
+    # a cuirass is cloth, the cuirass is iron. Named `<name>_<layer name>`.
+    layers: List["Garment"] = field(default_factory=list)
+    # Per-vertex skin weights over rig.DEFORM_NAMES, for parts that are neither rigid to one
+    # bone nor a copy of the body's weights (hair that hangs past the neck).
+    weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    # Or the body's weights, reworked: (vertex positions, their transferred weights) -> weights.
+    # A skirt keeps the body's weights above the hips and gives most of the legs' share below
+    # them to the hips (see `_skirt_weights`).
+    weight_adjust: Optional[Callable[[np.ndarray, np.ndarray], np.ndarray]] = None
+    # What the painter needs to lay strands along: a flow direction anywhere on the part and
+    # the centrelines of the locks it was combed into.
+    flow_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    locks: List[np.ndarray] = field(default_factory=list)
+    _grid: list = field(default_factory=list, repr=False)
+
+    def field(self) -> "sdf.SampledField":
+        """The part's own distance field, from the grid meshing sampled (or sampled now)."""
+        if self._grid:
+            return sdf.SampledField.from_grid(*self._grid)
+        return sdf.SampledField(self.scene, spacing=self.spacing, margin=0.02)
 
     def mesh(self) -> Tuple[np.ndarray, np.ndarray]:
-        return sdf.mesh_from_scene(self.scene, self.spacing, smooth_iters=self.smooth, project=1)
+        self._grid = []
+        verts, quads = sdf.mesh_from_scene(self.scene, self.spacing, smooth_iters=self.smooth, project=1,
+                                           grid_out=self._grid)
+        if self.trim is not None and len(quads):
+            q = np.asarray(quads)
+            centres = verts[q].mean(axis=1)
+            keep = self.trim.eval(centres) > -self.trim_depth
+            quads = q[keep]
+            used = np.unique(quads)
+            remap = -np.ones(len(verts), dtype=np.int64)
+            remap[used] = np.arange(len(used))
+            verts, quads = verts[used], remap[quads]
+        return verts, quads
 
 
 # --------------------------------------------------------------------------------------
@@ -283,9 +324,11 @@ def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves:
     neck_r = 0.085 * s
 
     def neckline(P):
-        # cut only a throat-sized hole, so shoulders and chest stay covered
-        near_axis = 1.0 - sdf_smoothstep(neck_r * 0.75, neck_r * 1.35, np.hypot(P[:, 0], P[:, 1] - 0.01 * s))
-        above = sdf_smoothstep(neck_cut - 0.025 * s, neck_cut + 0.015 * s, P[:, 2])
+        # Cut only a throat-sized hole, so shoulders and chest stay covered -- and cut it
+        # crisply. Faded over 5 cm, a padded jack's neckline thinned out over a hand's breadth
+        # and ended in a torn-paper edge, which is the first thing the Naming's face view saw.
+        near_axis = 1.0 - sdf_smoothstep(neck_r * 0.92, neck_r * 1.10, np.hypot(P[:, 0], P[:, 1] - 0.01 * s))
+        above = sdf_smoothstep(neck_cut - 0.010 * s, neck_cut + 0.008 * s, P[:, 2])
         return 1.0 - np.clip(near_axis * above + sdf_smoothstep(neck_cut + 0.06 * s, neck_cut + 0.10 * s, P[:, 2]), 0, 1)
     body_part = region_and(trunk, neckline)
     return region_or(body_part, *arms) if arms else body_part
@@ -394,13 +437,50 @@ def shirt(skel: Skeleton, body, *, thickness: float = 0.008) -> Garment:
     return Garment("shirt", sc, spacing=0.0070, target_tris=3600, material="cloth")
 
 
-def trousers(skel: Skeleton, body, *, thickness: float = 0.010, length: float = 0.92) -> Garment:
+def trousers(skel: Skeleton, body, *, thickness: float = 0.010, length: float = 0.975) -> Garment:
+    """Hip to ankle. They end inside the shoe: cut at 0.92 of the leg, the hem stood 3.5 cm
+    above the top of a shoe and every villager in shoes had bare ankles between the two."""
     sc = Scene()
     s = _s(skel)
     reg = legs_region(skel, top=0.575, length=length)
     sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
                           bounds=zbox(skel, 0.02, 0.60 * skel.props.height, xy=0.26)))
     return Garment("trousers", sc, spacing=0.0070, target_tris=3600, material="cloth")
+
+
+def _skirt_weights(skel: Skeleton) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+    """A skirt hangs from the hips and is pushed by the legs; it is not carried by them.
+
+    Weighted straight from the body, every vertex below the hips took the nearest leg's weights
+    whole, so a stride tore the cloth between the legs open and showed the thigh through the
+    gap -- the dress, the robe, the kilt and the wrap skirt all did it. Below the hip joint the
+    legs' share is handed to the hips, all of it on the centre line between the legs and less
+    of it towards the sides and the hem, where the thigh really does push the cloth; and what
+    the legs keep is the thigh's, because a skirt does not bend at the knee."""
+    bones = list(rig.DEFORM_NAMES)
+    B = {b: i for i, b in enumerate(bones)}
+    s = _s(skel)
+    hips_z = float(skel.J["UpperLeg.L"][2])
+    knee_z = float(skel.J["LowerLeg.L"][2])
+
+    def fn(V, W):
+        W = np.array(W, float, copy=True)
+        z, ax = V[:, 2], np.abs(V[:, 0])
+        below = _ss((hips_z - 0.02 * s - z) / (0.10 * s))
+        down = np.clip((hips_z - z) / max(hips_z - knee_z, 1e-3), 0.0, 1.0)
+        keep = (0.20 + 0.40 * down) * np.clip((ax - 0.02 * s) / (0.09 * s), 0.0, 1.0)
+        keep = 1.0 - below * (1.0 - keep)
+        for side in ("L", "R"):
+            thigh = B["UpperLeg." + side]
+            for b in ("LowerLeg.", "Foot.", "Toe."):
+                j = B[b + side]
+                W[:, thigh] += W[:, j] * below
+                W[:, j] *= (1.0 - below)
+            moved = W[:, thigh] * (1.0 - keep)
+            W[:, thigh] -= moved
+            W[:, B["Hips"]] += moved
+        return W
+    return fn
 
 
 def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: str = "skirt") -> Garment:
@@ -428,7 +508,9 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
     sc.union(sdf.tube_path(_ring((0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s,
                                  z_hem + 0.010 * s), 0.0060 * s), k=0.006 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    return Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
+    g = Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
+    g.weight_adjust = _skirt_weights(skel)
+    return g
 
 
 def dress(skel: Skeleton, body) -> Garment:
@@ -462,73 +544,238 @@ def robe(skel: Skeleton, body) -> Garment:
     return g
 
 
-def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30) -> Garment:
+def _ss(x: np.ndarray) -> np.ndarray:
+    x = np.clip(x, 0.0, 1.0)
+    return x * x * (3.0 - 2.0 * x)
+
+
+def _chunked(fn: Callable[[np.ndarray], np.ndarray], n: int = 400_000) -> Callable[[np.ndarray], np.ndarray]:
+    """`fn` over at most `n` points at a time. A sampled field reads eight gathered copies of
+    its input back, which over a cloak's whole box is gigabytes at once."""
+    def run(P):
+        if len(P) <= n:
+            return fn(P)
+        return np.concatenate([fn(P[i:i + n]) for i in range(0, len(P), n)])
+    return run
+
+
+def cowl_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None, flare: float = 0.16,
+               peak: float = 1.0, spacing: float = 0.005) -> sdf.SampledField:
+    """The head as a hood falls from it.
+
+    `drape_field` over the head: every section of the head, and of the spare cloth a hood is
+    cut with behind the crown, pushed out by `flare` for every metre of fall. A hood drawn up
+    rests on the crown and the back of the skull and falls from the widest part of the head
+    straight past the ears to the shoulders. It does not follow the jaw and the neck back in,
+    which is what the old hood -- a bigger head with a hole in it -- did."""
     s = _s(skel)
-    sc = Scene()
-    chest = float(skel.J["Chest"][2])
+    L = bodylib.head_landmarks(skel, hs)
+    head = _head_field(skel, hs)
+    lo = np.array([-0.27 * s, -0.25 * s, float(skel.J["Chest"][2])])
+    hi = np.array([0.27 * s, 0.32 * s, float(L["top"][2]) + 0.08 * s])
+    n = np.ceil((hi - lo) / spacing).astype(int) + 1
+    axes = [lo[i] + np.arange(n[i]) * spacing for i in range(3)]
+    gx, gy, gz = np.meshgrid(*axes, indexing="ij")
+    P = np.stack([gx.ravel(), gy.ravel(), gz.ravel()], axis=1)
+    F = _chunked(head.eval)(P)
+    if peak > 0:
+        pk = sdf.ellipsoid(L["skull_c"] + np.array([0.0, 0.070 * s, 0.050 * s]),
+                           np.array([0.030, 0.050, 0.040]) * s * peak)
+        F = np.minimum(F, _chunked(pk.fn)(P))
+    F = F.reshape(tuple(n))
+    out = np.empty_like(F)
+    run = np.full(F.shape[:2], 1e3)
+    for k in range(F.shape[2] - 1, -1, -1):
+        run = np.minimum(run - flare * spacing, F[:, :, k])
+        out[:, :, k] = run
+    return sdf.SampledField.from_grid(out, lo, spacing)
+
+
+def _surface_point(fld, off: float, a: np.ndarray, z: float, r_max: float = 0.5,
+                   centre=(0.0, 0.0)) -> np.ndarray:
+    """Where a horizontal ray at height `z`, `a` radians round from straight ahead, leaves the
+    level set `fld = off`: for laying a rim or a clasp on a surface made from a field."""
+    d = np.array([math.sin(a), -math.cos(a), 0.0])
+    o = np.array([centre[0], centre[1], z])
+    lo_r, hi_r = 0.0, r_max
+    for _ in range(40):
+        m = 0.5 * (lo_r + hi_r)
+        if float(fld.eval((o + d * m)[None])[0]) < off:
+            lo_r = m
+        else:
+            hi_r = m
+    return o + d * hi_r
+
+
+def _signed_around(P: np.ndarray) -> np.ndarray:
+    """Radians round the body from straight ahead, positive to the left: -pi..pi."""
+    return np.arctan2(P[:, 0], -P[:, 1])
+
+
+def _cloak_weights(skel: Skeleton, hooded: bool) -> Callable[[np.ndarray], np.ndarray]:
+    """What a cloak moves with. The hood with the head above the jaw, fading into the neck by
+    the shoulders; the shoulder girdle at the points of the shoulders, and some of each upper
+    arm where the cloth lies over it; then the chest, the spine and the hips down the back;
+    and near the hem the front panels take a share of the thigh on their side, so a stride
+    pushes the cloak open instead of through it. Weighted from the body instead, a cloak to
+    the knee is torn down the middle by every step."""
+    bones = list(rig.DEFORM_NAMES)
+    B = {b: i for i, b in enumerate(bones)}
+    s = _s(skel)
+    L = bodylib.head_landmarks(skel)
+    J = skel.J
+    neck_z, chest_z = float(J["Neck"][2]), float(J["Chest"][2])
+    spine_z, hips_z = float(J["Spine"][2]), float(J["Hips"][2])
+
+    def fn(V):
+        W = np.zeros((len(V), len(bones)))
+        x, y, z = V[:, 0], V[:, 1], V[:, 2]
+        ax = np.abs(x)
+        w_head = _ss((z - (L["chin_z"] - 0.010 * s)) / (0.050 * s)) if hooded else np.zeros(len(V))
+        w_neck = (_ss((z - (neck_z - 0.010 * s)) / (0.035 * s)) * (1.0 - w_head)
+                  * np.clip((0.13 * s - ax) / (0.05 * s), 0.0, 1.0))
+        rest = 1.0 - w_head - w_neck
+        w_sh = rest * 0.40 * np.clip((ax - 0.09 * s) / (0.12 * s), 0.0, 1.0) * _ss((z - (chest_z - 0.06 * s)) / (0.12 * s))
+        w_ua = (rest * 0.30 * np.clip((ax - 0.21 * s) / (0.06 * s), 0.0, 1.0)
+                * _ss((z - (chest_z - 0.24 * s)) / (0.14 * s)) * (1.0 - _ss((z - (neck_z - 0.03 * s)) / (0.05 * s))))
+        rest = rest - w_sh - w_ua
+        w_ch = rest * _ss((z - spine_z) / (chest_z - spine_z))
+        w_hip = rest * _ss((spine_z - z) / (spine_z - hips_z))
+        w_sp = rest - w_ch - w_hip
+        w_leg = w_hip * 0.45 * _ss((hips_z - 0.10 * s - z) / (0.25 * s)) * np.clip(-y / (0.10 * s), 0.0, 1.0)
+        w_hip = w_hip - w_leg
+        left = x >= 0
+        for side, m in (("L", left), ("R", ~left)):
+            W[m, B["Shoulder." + side]] = w_sh[m]
+            W[m, B["UpperArm." + side]] = w_ua[m]
+            W[m, B["UpperLeg." + side]] = w_leg[m]
+        W[:, B["Head"]] = w_head
+        W[:, B["Neck"]] = w_neck
+        W[:, B["Chest"]] = w_ch
+        W[:, B["Spine"]] = w_sp
+        W[:, B["Hips"]] = w_hip
+        return W
+    return fn
+
+
+def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragged: int = 0,
+          open_front: bool = True, hem_z: Optional[float] = None, name: Optional[str] = None) -> Garment:
+    """A cloak: cloth laid over the shoulders and let fall to the knee.
+
+    The old one was a rigid tube from the shoulders to the calves -- the lampshade the shoulder
+    cape was -- and the ragged one cut from it exported nothing at all. This is the cape's
+    construction carried down: one sheet over the drape of the body, resting on the points of
+    the shoulders and falling past the arms, folds that start below the shoulder blades and
+    deepen towards the hem, the hem a hand lower behind than in front, open down the front from
+    a clasp at the throat and opening wider as it falls.
+
+    Hooded, the same sheet is carried up over the head by `cowl_field`, with the face cut out
+    of it and a peak of spare cloth behind the crown, and it moves with the head above the jaw.
+    `ragged` tears the hem into that many leaf-shaped points (the Woodfolk's); `open_front`
+    False closes it all round (a hood's own short cape)."""
+    s = _s(skel)
+    L = bodylib.head_landmarks(skel)
     neck = float(skel.J["Neck"][2])
-    z_hem = hem * skel.props.height
-    shoulder_x = float(skel.J["UpperArm.L"][0])
-    # a cape hanging off the shoulders: wide at the back, open at the front
-    outer = sdf.loft([
-        (np.array([0.0, 0.016 * s, neck + 0.030 * s]), 0.118 * s, 0.104 * s),
-        (np.array([0.0, 0.018 * s, neck - 0.020 * s]), (shoulder_x + 0.016) * s, 0.122 * s),
-        (np.array([0.0, 0.020 * s, chest - 0.05 * s]), (shoulder_x + 0.040) * s, 0.132 * s),
-        (np.array([0.0, 0.024 * s, (chest + z_hem) * 0.5]), (shoulder_x + 0.032) * s, 0.134 * s),
-        (np.array([0.0, 0.028 * s, z_hem + 0.03 * s]), (shoulder_x + 0.044) * s, 0.142 * s),
-        (np.array([0.0, 0.028 * s, z_hem]), (shoulder_x + 0.045) * s, 0.143 * s),
-    ], LEFT, axis=UP)
-    sc.union(outer)
-    # Open down the front, and WIDE: the old opening was narrower than the body, so the cape
-    # closed over the chest and read as a barrel with a slot in it rather than as a cape.
-    sc.subtract(sdf.box([0.0, -0.32 * s, (neck + z_hem) * 0.5],
-                        [0.150 * s, 0.262 * s, (neck - z_hem) * 0.6],
-                        round_r=0.02 * s), k=0.02 * s)
-    for i in range(7):
-        a = math.pi * (0.25 + 0.5 * i / 6)
-        d = np.array([math.cos(a), math.sin(a), 0.0])
-        sc.subtract(sdf.tube_path([d * 0.16 * s + np.array([0, 0, chest]),
-                                   d * (shoulder_x + 0.072) * s + np.array([0, 0.02 * s, z_hem])],
-                                  0.014 * s), k=0.022 * s)
-    sc.union(sdf.tube_path(_ring((shoulder_x + 0.045) * s, 0.143 * s, z_hem + 0.010 * s),
-                           0.0060 * s), k=0.006 * s)
-    sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    g = Garment("hooded_cloak" if hooded else "cloak", sc, spacing=0.0080, target_tris=3600, material="cloth")
+    z_hem = hem_z if hem_z is not None else hem * skel.props.height
+    sh = shoulder_line(body, skel)
+    # the clasp closes the cloak at the base of the throat; hooded, below the face opening
+    clasp = sh - 0.015 * s if not hooded else min(sh - 0.015 * s, float(L["chin_z"]) - 0.036 * s)
+    # The flare is the cloak's own cut, not what hangs it off the body: the drape already takes
+    # in every section below the shoulders. At the cape's 0.10 per metre a cloak to the knee
+    # came out 0.92 m across the hem, a bell rather than cloth falling from two shoulders.
+    drape = drape_field(body, skel, flare=0.045, arm_far=1.0)
     if hooded:
-        g.scene.union(hood_prim(skel, body, up=True), k=0.02 * s)
-        g.target_tris = 3000
+        cowl = cowl_field(skel, flare=0.16)
+        fld = FieldFn(lambda P: np.minimum(drape.eval(P), cowl.eval(P)))
+    else:
+        fld = drape
+    top = sh + 0.045 * s
+    n_folds = 14
+    start = clasp - 0.050 * s                   # the folds start under the shoulder blades
+
+    amp_k = float(np.clip((start - z_hem) / (0.30 * s), 0.35, 1.0))
+
+    def fall(P):
+        return np.clip((start - P[:, 2]) / max(start - z_hem, 1e-3), 0.0, 1.0)
+
+    def hem_at(P):
+        a = _around(P)
+        sa = _signed_around(P)
+        z = z_hem - 0.075 * s * (1.0 - np.cos(a)) * 0.5 + 0.008 * s * np.sin(n_folds * sa + 0.4)
+        if ragged:
+            # leaf-shaped points: long tips, short rounded notches between them
+            t = np.abs(np.sin(0.5 * ragged * sa + 0.7))
+            z = z - 0.060 * s * (1.0 - t ** 0.55) + 0.012 * s
+        return z
+
+    if hooded:
+        f_top = L["brow_z"] + 0.030 * s
+        f_bot = L["chin_z"] - 0.022 * s
+        f_zc, f_az, f_ax = 0.5 * (f_top + f_bot), 0.5 * (f_top - f_bot), 0.074 * s
+        f_cut = float(L["skull_c"][1]) - 0.020 * s
+
+    def face_hole(P):
+        e = np.sqrt((P[:, 0] / f_ax) ** 2 + ((P[:, 2] - f_zc) / f_az) ** 2)
+        return (np.clip((1.0 - e) * f_az / (0.005 * s), 0.0, 1.0)
+                * np.clip((f_cut - P[:, 1]) / (0.006 * s), 0.0, 1.0))
+
+    def region(P):
+        z = P[:, 2]
+        w = np.clip((z - hem_at(P)) / (0.006 * s), 0.0, 1.0)
+        if open_front:
+            a_open = np.radians(7.0 + 29.0 * fall(P) ** 0.8)
+            r = np.hypot(P[:, 0], P[:, 1])
+            o = np.clip((_around(P) - a_open) * r / (0.006 * s), 0.0, 1.0)
+            w = w * np.where(z < clasp, o, 1.0)
+        if hooded:
+            w = w * (1.0 - face_hole(P))
+        else:
+            r = np.hypot(P[:, 0], P[:, 1] - 0.012 * s)
+            w = w * np.clip((top - z) / (0.006 * s), 0.0, 1.0) * np.clip((r - 0.080 * s) / (0.006 * s), 0.0, 1.0)
+        return w
+
+    def relief(P):
+        sa = _signed_around(P)
+        depth = fall(P) ** 0.7
+        folds = 0.75 * (0.5 + 0.5 * np.sin(n_folds * sa + 0.4)) + 0.25 * (0.5 + 0.5 * np.sin(31 * sa + 1.3))
+        # a short cape has room for shallow folds only
+        out = 0.024 * s * amp_k * depth * folds
+        if hooded:
+            # the edge of the face opening rolled back on itself, standing a little proud
+            e = np.sqrt((P[:, 0] / f_ax) ** 2 + ((P[:, 2] - f_zc) / f_az) ** 2)
+            near = np.clip(1.0 - np.abs(e - 1.0) * f_az / (0.016 * s), 0.0, 1.0)
+            out = out + 0.004 * s * near * (P[:, 1] < f_cut + 0.02 * s)
+        return out
+
+    z_top = float(L["top"][2]) + 0.10 * s if hooded else top + 0.03 * s
+    shell, trim = draped_shell(fld, region, 0.012 * s, 0.016 * s,
+                               zbox(skel, z_hem - 0.14 * s, z_top, xy=0.48, ymin=-0.36, ymax=0.44),
+                               relief=relief)
+    sc = Scene()
+    sc.union(shell)
+    off = 0.016 * s + 0.006 * s
+    if not hooded:
+        ring = np.array(_ring(0.086 * s, 0.082 * s, sh + 0.032 * s)) + np.array([0.0, 0.010 * s, 0.0])
+        sc.union(sdf.tube_path(ring, 0.012 * s, closed=False), k=0.008 * s)
+    # the clasp at the throat: a round brooch on the front of the cloth
+    front = _surface_point(fld, off, 0.0, clasp + 0.004 * s)
+    sc.union(sdf.ellipsoid(front + np.array([0.0, -0.004 * s, 0.0]), [0.014 * s, 0.006 * s, 0.014 * s]), k=0.003 * s)
+    nm = name or ("hooded_cloak" if hooded else "cloak")
+    g = Garment(nm, sc, spacing=0.0055 if not hooded else 0.0050, smooth=4, target_tris=5200 if hooded else 4400,
+                material="cloth", trim=trim, trim_depth=0.0)
+    g.weight_fn = _cloak_weights(skel, hooded)
+    g.double_sided = True
     return g
 
 
-def hood_prim(skel: Skeleton, body, up: bool = True) -> Prim:
-    """A hood standing off the skull (worn up), open at the face."""
-    s = _s(skel)
-    L = bodylib.head_landmarks(skel)
-    c = L["skull_c"]
-    r = L["skull_r"]
-    parts = []
-    outer = sdf.ellipsoid(c + np.array([0.0, 0.020 * s, 0.012 * s]),
-                          [r[0] * 1.24, r[1] * 1.26, r[2] * 1.22])
-    cone = sdf.loft([
-        (np.array([0.0, c[1] + 0.03 * s, c[2] - r[2] * 1.1]), r[0] * 1.30, r[1] * 1.34),
-        (np.array([0.0, c[1] + 0.05 * s, float(skel.J["Neck"][2]) - 0.02 * s]), r[0] * 1.55, r[1] * 1.50),
-    ], LEFT, axis=UP)
-    grp = sdf.group([outer, sdf.Prim(cone.fn, cone.lo, cone.hi, "union", 0.04 * s)], internal_k=0.03 * s)
-    sc = Scene()
-    sc.union(grp)
-    sc.subtract(sdf.ellipsoid(c + np.array([0.0, 0.016 * s, 0.006 * s]),
-                              [r[0] * 1.12, r[1] * 1.14, r[2] * 1.10]), k=0.006 * s)
-    # the face opening
-    sc.subtract(sdf.ellipsoid([0.0, L["face_y"] - 0.02 * s, L["eye_z"] - 0.012 * s],
-                              [r[0] * 0.92, 0.090 * s, r[2] * 0.85]), k=0.012 * s)
-    prim = sdf.Prim(sc.eval, *sc.bounds(0.02), "union", 0.0)
-    return prim
-
-
 def hood(skel: Skeleton, body) -> Garment:
-    sc = Scene()
-    sc.union(hood_prim(skel, body, up=True))
-    return Garment("hood", sc, spacing=0.0055, target_tris=1400, material="cloth", bone="Head")
+    """A hood on its own: the cloak's hood with a short cape of its own over the shoulders, closed
+    all round below the face, so the join at the neck is cloth and not the rim of a skull cap."""
+    s = _s(skel)
+    neck = float(skel.J["Neck"][2])
+    g = cloak(skel, body, hooded=True, open_front=False, hem_z=neck - 0.115 * s, name="hood")
+    g.target_tris = 2600
+    return g
 
 
 def boots(skel: Skeleton, body, *, high: float = 0.30) -> Garment:
@@ -617,7 +864,9 @@ def apron(skel: Skeleton, body) -> Garment:
 
 def gambeson(skel: Skeleton, body) -> Garment:
     s = _s(skel)
-    g = tunic(skel, body, hem=0.42, sleeves=0.75, thickness=0.026, name="gambeson")
+    # sleeves to the wrist, as the arming coat's: ending at three quarters of the arm they left
+    # a strip of bare forearm above every pair of padded gloves
+    g = tunic(skel, body, hem=0.42, sleeves=0.97, thickness=0.026, name="gambeson")
     # quilted channels
     hip = float(skel.J["UpperLeg.L"][2])
     chest = float(skel.J["Chest"][2])
@@ -634,75 +883,254 @@ def gambeson(skel: Skeleton, body) -> Garment:
     return g
 
 
-def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
+# -- armour ------------------------------------------------------------------------------
+#
+# A cuirass on its own reads as a corset: bare shoulders over it, bare arms out of it, and a
+# hard edge at the waist with nothing below. Armour is a harness -- a padded coat under it
+# whose sleeves and skirt show, a gorget closing the neck, spaulders over the shoulder caps,
+# a fauld over the hips and tassets over the thighs -- and the harness is what reads.
+
+COAT_GAP, COAT_T = 0.003, 0.018       # the arming coat: 3 mm off the body, 18 mm of padding
+PLATE_T = 0.0055                      # 5.5 mm of steel, a shade thick for the eye
+
+
+def arming_coat(skel: Skeleton, body, name: str) -> Garment:
+    """The padded coat worn under plate or a brigandine: sleeves to the wrist, a skirt to
+    mid-thigh, quilted in vertical channels. It is what shows at the arms and below the fauld."""
     s = _s(skel)
-    sc = Scene()
+    g = tunic(skel, body, hem=0.40, sleeves=0.97, thickness=COAT_T, name=name)
     chest = float(skel.J["Chest"][2])
-    waist = float(skel.J["Spine"][2])
     hip = float(skel.J["UpperLeg.L"][2])
-    # The arm used to be excluded from the REGION, by an 85 mm capsule around the whole
-    # upper-arm bone.  That carved the shoulder and the outer chest off the breastplate --
-    # an armoured man bare from the collarbone out, which reads as unfinished rather than as
-    # a style -- and any region boundary on a limb ends in a flat flange anyway, because
-    # `offset_shell` cuts perpendicular to nothing.  The plate now covers the shoulder and a
-    # rounded armhole is CARVED out of it below, which is how a cuirass is actually shaped.
-    reg = band_z(hip + 0.02 * s, float(skel.J["Neck"][2]) - 0.01 * s, 0.018 * s)
-    sc.union(offset_shell(body, reg, 0.016 * s, gap=0.014 * s,
-                          bounds=zbox(skel, hip - 0.16 * s, float(skel.J["Neck"][2]) + 0.04 * s, xy=0.30)))
-    for side, sx in (("L", 1), ("R", -1)):
+    for i in range(12):
+        a = 2 * math.pi * (i + 0.5) / 12
+        d = np.array([math.cos(a), math.sin(a) * 0.80, 0.0])
+        g.scene.subtract(sdf.tube_path([d * 0.172 * s + np.array([0, 0, chest + 0.12 * s]),
+                                        d * 0.190 * s + np.array([0, 0, hip + 0.03 * s]),
+                                        d * 0.205 * s + np.array([0, 0, 0.42 * skel.props.height])],
+                                       0.006 * s), k=0.010 * s)
+    g.material = "cloth"
+    g.target_tris = 4600
+    return g
+
+
+def _arm_exclusion(skel: Skeleton, radius: float, start: float = 0.055) -> RegionFn:
+    """1 on the arms beyond the point of the shoulder: where a cuirass must not go."""
+    s = _s(skel)
+    segs = []
+    for side in ("L", "R"):
+        sh = skel.J["UpperArm.%s" % side]
+        hand = skel.J["HandTip.%s" % side]
+        d = sdf._unit(hand - sh)
+        segs.append((sh + d * start * s, hand))
+    return near_segments(segs, radius * s, 0.018 * s)
+
+
+def _neck_hole(skel: Skeleton, r: float, z_from: float) -> RegionFn:
+    """0 inside a vertical shaft round the neck above `z_from`, 1 elsewhere."""
+    s = _s(skel)
+
+    def fn(P):
+        near = 1.0 - sdf_smoothstep(r - 0.008 * s, r + 0.008 * s, np.hypot(P[:, 0], P[:, 1] - 0.010 * s))
+        above = sdf_smoothstep(z_from - 0.010 * s, z_from + 0.010 * s, P[:, 2])
+        return 1.0 - near * above
+    return fn
+
+
+def _lame_ring(z_top: float, z_bot: float, rx: float, ry: float, cy: float, flare: float,
+               thickness: float, sector=None) -> Prim:
+    """One lame of a fauld or a tasset: a band of steel `thickness` thick round an ellipse,
+    flaring `flare` outward towards its lower edge. `sector` (half-spaces) limits it to part of
+    the ring -- a tasset is a lame over one thigh."""
+    zm = 0.5 * (z_top + z_bot)
+    outer = sdf.loft([(np.array([0.0, cy, z_top]), rx, ry),
+                      (np.array([0.0, cy, zm]), rx + 0.5 * flare, ry + 0.5 * flare),
+                      (np.array([0.0, cy, z_bot]), rx + flare, ry + flare)], LEFT, axis=UP)
+    sub = Scene()
+    sub.union(outer)
+    sub.subtract(sdf.loft([(np.array([0.0, cy, z_top]), rx - thickness, ry - thickness),
+                           (np.array([0.0, cy, zm]), rx + 0.5 * flare - thickness, ry + 0.5 * flare - thickness),
+                           (np.array([0.0, cy, z_bot]), rx + flare - thickness, ry + flare - thickness)],
+                          LEFT, axis=UP))
+    sub.intersect(sdf.plane([0.0, 0.0, z_top], [0.0, 0.0, 1.0]))
+    sub.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]))
+    if sector is not None:
+        for pr in sector:
+            sub.intersect(pr)
+    lo = np.array([-(rx + flare) - 0.01, cy - (ry + flare) - 0.01, z_bot - 0.01])
+    hi = np.array([rx + flare + 0.01, cy + ry + flare + 0.01, z_top + 0.01])
+    return Prim(sub.eval, lo, hi, "union", 0.0)
+
+
+def fauld_and_tassets(skel: Skeleton, *, gap: float, thickness: float = PLATE_T, lames: int = 3,
+                      tassets: bool = True) -> List[Prim]:
+    """Hoops of steel over the hips below the cuirass, each overlapping the one below, and two
+    tassets hanging from the last over the front of the thighs."""
+    s = _s(skel)
+    waist = float(skel.J["Spine"][2])
+    # the pelvis at the hips measures +-0.18 m by -0.09..+0.12 m, before the coat
+    rx0, ry0, cy = (0.180 + gap) * s, (0.108 + gap) * s, 0.014 * s
+    top = waist - 0.010 * s
+    step = 0.040 * s
+    out: List[Prim] = []
+    for i in range(lames):
+        zt = top - i * step
+        zb = zt - step - 0.010 * s
+        out.append(_lame_ring(zt, zb, rx0 + 0.004 * i * s, ry0 + 0.004 * i * s, cy, 0.006 * s, thickness * s))
+    if tassets:
+        z0 = top - lames * step - 0.004 * s
+        for side in (1.0, -1.0):
+            for i in range(3):
+                zt = z0 - i * 0.046 * s
+                zb = zt - 0.056 * s
+                sector = [sdf.plane([side * 0.016 * s, 0.0, 0.0], [-side, 0.0, 0.0]),
+                          sdf.plane([0.0, cy + 0.030 * s, 0.0], [0.0, 1.0, 0.0]),
+                          sdf.plane([side * 0.205 * s, 0.0, 0.0], [side, 0.0, 0.0])]
+                out.append(_lame_ring(zt, zb, rx0 + (0.012 + 0.004 * i) * s, ry0 + (0.016 + 0.004 * i) * s,
+                                      cy, 0.006 * s, thickness * s, sector=sector))
+    return out
+
+
+def gorget(skel: Skeleton, body, *, gap: float, thickness: float = PLATE_T) -> Prim:
+    """A collar of steel from over the collarbones up the neck, lower in front than behind so
+    the chin clears it, in three lames that step in towards the throat."""
+    s = _s(skel)
+    neck = float(skel.J["Neck"][2])
+
+    def region(P):
+        a = _around(P)
+        top = neck + (0.030 + 0.060 * (1.0 - np.cos(a)) * 0.5) * s
+        r = np.hypot(P[:, 0], P[:, 1] - 0.010 * s)
+        w = (1.0 - sdf_smoothstep(top - 0.004 * s, top + 0.004 * s, P[:, 2])) * \
+            sdf_smoothstep(neck - 0.060 * s, neck - 0.050 * s, P[:, 2])
+        # a ring round the neck: out to 0.14 m it was a plate across the shoulder blades
+        return w * (1.0 - sdf_smoothstep(0.100 * s, 0.112 * s, r))
+
+    def relief(P):
+        z = P[:, 2]
+        # three lames, each standing a little proud of the one above it
+        lame = np.floor(np.clip((neck + 0.070 * s - z) / (0.034 * s), 0.0, 2.99))
+        taper = np.clip((z - (neck - 0.050 * s)) / (0.12 * s), 0.0, 1.0)
+        return 0.004 * s * lame - 0.012 * s * taper
+    return offset_shell(body, region, thickness * s, gap=gap * s, relief=relief,
+                        bounds=zbox(skel, neck - 0.08 * s, neck + 0.12 * s, xy=0.20, ymin=-0.18, ymax=0.18))
+
+
+def spaulders(skel: Skeleton, body, *, gap: float, thickness: float = PLATE_T, lames: int = 3) -> List[Prim]:
+    """Steel over each shoulder cap: three lames stepping down the top of the arm, each
+    overlapping the next, following the body's own shoulder rather than a sphere near it."""
+    s = _s(skel)
+    out: List[Prim] = []
+    for side, sx in (("L", 1.0), ("R", -1.0)):
         sh = skel.J["UpperArm.%s" % side]
         el = skel.J["LowerArm.%s" % side]
-        d = (el - sh) / max(float(np.linalg.norm(el - sh)), 1e-6)
-        sc.subtract(sdf.capsule(sh + d * 0.052 * s + np.array([sx * 0.030 * s, 0.0, 0.0]),
-                                sh + d * 0.46 * float(np.linalg.norm(el - sh)) + np.array([sx * 0.070 * s, 0.0, 0.0]),
-                                0.082 * s), k=0.018 * s)
-    # a breastplate keel and a raised neck edge
-    sc.union(sdf.loft([
-        (np.array([0.0, -0.128 * s, chest + 0.085 * s]), 0.070 * s, 0.020 * s),
-        (np.array([0.0, -0.140 * s, chest - 0.01 * s]), 0.058 * s, 0.024 * s),
-        (np.array([0.0, -0.126 * s, waist + 0.02 * s]), 0.040 * s, 0.020 * s),
-    ], LEFT, axis=UP), k=0.026 * s)
+        d = sdf._unit(el - sh)
+        # "up" across the arm: perpendicular to it, in the plane of the arm and the vertical
+        up = sdf._unit(np.array([0.0, 0.0, 1.0]) - d * d[2])
+        for i in range(lames):
+            a0 = (-0.030 + 0.050 * i) * s
+            a1 = a0 + 0.062 * s
+
+            def region(P, sh=sh, d=d, up=up, a0=a0, a1=a1):
+                t = (P - sh) @ d
+                h = (P - sh) @ up
+                along = sdf_smoothstep(a0 - 0.004 * s, a0 + 0.004 * s, t) * \
+                    (1.0 - sdf_smoothstep(a1 - 0.004 * s, a1 + 0.004 * s, t))
+                over = sdf_smoothstep(-0.030 * s, -0.016 * s, h)
+                return along * over
+            out.append(offset_shell(body, region, thickness * s, gap=(gap + 0.005 * (lames - 1 - i)) * s,
+                                    bounds=(np.minimum(sh, el) - 0.13 * s, np.maximum(sh, el) + 0.13 * s)))
+    return out
+
+
+def _rivet_rows(body, skel: Skeleton, off: float, z0: float, z1: float, pitch: float,
+                skip: RegionFn) -> List[Prim]:
+    """Rivet heads in rows round the torso, on the surface `off` metres out from the body."""
+    s = _s(skel)
+    out: List[Prim] = []
+    z = z0
+    row = 0
+    while z <= z1:
+        n = 26
+        for k in range(n):
+            a = 2 * math.pi * (k + 0.5 * (row % 2)) / n
+            dirv = np.array([math.sin(a), -math.cos(a), 0.0])
+            P = np.array([[0.0, 0.010 * s, z]]) + dirv[None] * 0.30 * s
+            for _ in range(8):
+                dd = body.eval(P) - off
+                P = P - body.gradient(P) * dd[:, None]
+            if not np.all(np.isfinite(P)) or skip(P)[0] > 0.5 or abs(P[0, 2] - z) > 0.03 * s:
+                continue
+            out.append(sdf.sphere(P[0], 0.0042 * s, k=0.002 * s))
+        z += pitch
+        row += 1
+    return out
+
+
+def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
+    """A harness: an arming coat, a cuirass to the base of the neck, a gorget, spaulders, a
+    fauld and tassets -- or, for the brigandine, a riveted leather body over the same coat,
+    with a standing collar and leather lames."""
+    s = _s(skel)
+    name = "brigandine" if brigandine else "plate_torso"
+    neck = float(skel.J["Neck"][2])
+    waist = float(skel.J["Spine"][2])
+    coat = arming_coat(skel, body, name + "_coat")
+    cuirass_gap = COAT_GAP + COAT_T + 0.006
+    arms = _arm_exclusion(skel, 0.070)
+    # Over the tops of the shoulders and round the base of the neck. Cut off at a height just
+    # above the Neck joint, the plate ended in a flat shelf from shoulder to shoulder -- the
+    # body's shoulders stand higher than that joint -- and read as a box with a head in it.
+    sh = shoulder_line(body, skel)
+    region = region_and(band_z(waist - 0.030 * s, sh + 0.070 * s, 0.010 * s), region_not(arms),
+                        _neck_hole(skel, 0.098 * s, neck - 0.010 * s))
+    t_body = 0.008 if brigandine else PLATE_T
+    sc = Scene()
+    sc.union(offset_shell(body, region, t_body * s, gap=cuirass_gap * s,
+                          bounds=zbox(skel, waist - 0.06 * s, neck + 0.10 * s, xy=0.34)))
+    if not brigandine:
+        # the breastplate's keel, which is what makes steel read as shaped rather than poured
+        chest = float(skel.J["Chest"][2])
+        sc.union(sdf.loft([(np.array([0.0, -0.140 * s, chest + 0.090 * s]), 0.050 * s, 0.012 * s),
+                           (np.array([0.0, -0.152 * s, chest - 0.010 * s]), 0.046 * s, 0.016 * s),
+                           (np.array([0.0, -0.136 * s, waist + 0.020 * s]), 0.034 * s, 0.012 * s)],
+                          LEFT, axis=UP), k=0.030 * s)
+    # the lames below the waist overlap the cuirass's hem
+    for pr in fauld_and_tassets(skel, gap=cuirass_gap + 0.012, thickness=0.007 if brigandine else PLATE_T,
+                                tassets=not brigandine):
+        sc.union(pr)
+    main = Garment(name, sc, spacing=0.0034, smooth=3, target_tris=5200,
+                   material="leather" if brigandine else "iron")
+    steel = Scene()
     if brigandine:
-        rng = np.random.default_rng(7)
-        for i in range(34):
-            a = rng.uniform(0, 2 * math.pi)
-            z = rng.uniform(hip + 0.05 * s, chest + 0.14 * s)
-            d = np.array([math.cos(a), math.sin(a) * 0.78, 0.0])
-            sc.union(sdf.sphere(d * 0.175 * s + np.array([0, 0, z]), 0.0075 * s), k=0.004 * s)
+        # a standing collar of the same leather, and rivets in rows over the whole body
+        def collar_region(P):
+            return 1.0 - sdf_smoothstep(0.100 * s, 0.115 * s, np.hypot(P[:, 0], P[:, 1]))
+        main.scene.union(offset_shell(body, region_and(band_z(neck - 0.010 * s, neck + 0.070 * s, 0.006 * s),
+                                                       collar_region),
+                                      0.010 * s, gap=(cuirass_gap - 0.006) * s,
+                                      bounds=zbox(skel, neck - 0.04 * s, neck + 0.10 * s, xy=0.16,
+                                                  ymin=-0.14, ymax=0.14)), k=0.008 * s)
+        for pr in _rivet_rows(body, skel, (cuirass_gap + t_body) * s, waist + 0.010 * s, neck - 0.030 * s,
+                              0.034 * s, arms):
+            steel.union(pr)
     else:
-        z_top = waist - 0.005 * s
-        z_bot = z_top - 0.135 * s
-        sc.union(sdf.loft([
-            (np.array([0.0, 0.0, z_top]), 0.172 * s, 0.130 * s),
-            (np.array([0.0, 0.0, (z_top + z_bot) * 0.5]), 0.186 * s, 0.140 * s),
-            (np.array([0.0, 0.0, z_bot]), 0.196 * s, 0.148 * s),
-        ], LEFT, axis=UP), k=0.014 * s)
-        # two scored lines, which is all a lamellar fauld needs to read as layered
-        for i in range(2):
-            zr = z_top - (0.045 + 0.045 * i) * s
-            sc.subtract(sdf.tube_path(_ring((0.180 + 0.008 * i) * s, (0.136 + 0.006 * i) * s, zr),
-                                      0.0055 * s), k=0.006 * s)
-        sc.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]), k=0.004 * s)
-    return Garment("brigandine" if brigandine else "plate_torso", sc, spacing=0.0075,
-                   target_tris=4000, material="iron")
+        steel.union(gorget(skel, body, gap=cuirass_gap + PLATE_T + 0.002))
+        for pr in spaulders(skel, body, gap=cuirass_gap + PLATE_T + 0.004):
+            steel.union(pr)
+    layers = [coat]
+    if steel.prims:
+        layers.append(Garment(name + "_steel", steel, spacing=0.0030, smooth=3,
+                              target_tris=2600 if not brigandine else 3000, material="iron"))
+    main.layers = layers
+    return main
 
 
 def pauldrons(skel: Skeleton, body) -> Garment:
-    s = _s(skel)
+    """Spaulders on their own, for a brigandine or a coat: the shoulder caps in steel."""
     sc = Scene()
-    for side, sx in (("L", 1), ("R", -1)):
-        sh = skel.J[f"UpperArm.{side}"]
-        for i in range(3):
-            r = (0.095 + 0.012 * i) * s
-            c = sh + np.array([sx * (0.004 + 0.012 * i) * s, 0.0, (0.012 - 0.030 * i) * s])
-            lam = sdf.ellipsoid(c, [r, r * 1.02, r * 0.86])
-            inner = sdf.ellipsoid(c + np.array([-sx * 0.012 * s, 0, 0.004 * s]), [r * 0.88, r * 0.88, r * 0.78])
-            sub = Scene()
-            sub.union(lam)
-            sub.subtract(inner, k=0.004 * s)
-            sub.intersect(sdf.plane(c + np.array([0, 0, (-0.022 - 0.002 * i) * s]), [0, 0, -1.0]), k=0.004 * s)
-            sc.union(sdf.Prim(sub.eval, *sub.bounds(0.02), "union", 0.0), k=0.006 * s)
-    return Garment("pauldrons", sc, spacing=0.0045, target_tris=1600, material="iron")
+    for pr in spaulders(skel, body, gap=0.032):
+        sc.union(pr)
+    return Garment("pauldrons", sc, spacing=0.0032, smooth=3, target_tris=2200, material="iron")
 
 
 def greaves(skel: Skeleton, body) -> Garment:
@@ -724,25 +1152,75 @@ def greaves(skel: Skeleton, body) -> Garment:
 
 
 def helm(skel: Skeleton, body, *, open_face: bool = True) -> Garment:
+    """A nasal helm: a steel cap stood off the skull by the hair under it, down to the brow in
+    front, over the tops of the ears at the sides and lower behind; a rolled rim with rivets,
+    a comb ridge from brow to nape, and a nasal down the nose.
+
+    It is an offset of the head it sits on. The old one was an ellipsoid 3 % bigger than the
+    vault, which the new skull's brow, occiput and ears -- and any hair at all -- came through."""
     s = _s(skel)
     L = bodylib.head_landmarks(skel)
-    c, r = L["skull_c"], L["skull_r"]
+    head = _head_field(skel)
+    gap, t = 0.013 * s, 0.0045 * s
+    front_z = float(L["brow_z"]) + 0.012 * s
+    side_z = float(L["ear_c"][2] + L["ear_r"][2]) + 0.004 * s
+    back_z = float(L["nape_z"]) + 0.030 * s
+
+    def rim_z(a):
+        a = np.asarray(a, float)
+        u = _ss(a / (0.5 * math.pi))
+        v = _ss((a - 0.5 * math.pi) / (0.5 * math.pi))
+        return np.where(a < 0.5 * math.pi, front_z + (side_z - front_z) * u, side_z + (back_z - side_z) * v)
+
+    def cap(P):
+        d = head.eval(P)
+        shell = np.maximum(d - (gap + t), gap - d)
+        return np.maximum(shell, rim_z(_around(P)) - P[:, 2])
+    lo, hi = head.bounds(0.0)
     sc = Scene()
-    sc.union(sdf.ellipsoid(c + np.array([0.0, 0.004 * s, 0.004 * s]), [r[0] * 1.12, r[1] * 1.10, r[2] * 1.12]))
-    sc.subtract(sdf.ellipsoid(c + np.array([0.0, 0.004 * s, 0.002 * s]), [r[0] * 1.03, r[1] * 1.01, r[2] * 1.03]), k=0.003 * s)
-    # cut the whole lower half off, then a face opening
-    sc.intersect(sdf.plane([0.0, 0.0, L["eye_z"] - 0.012 * s], [0.0, 0.0, -1.0]), k=0.006 * s)
-    if open_face:
-        sc.subtract(sdf.box([0.0, L["face_y"] - 0.04 * s, L["eye_z"] + 0.030 * s],
-                            [r[0] * 0.62, 0.075 * s, 0.030 * s], round_r=0.012 * s), k=0.008 * s)
-    # nasal bar and a brow ridge
-    sc.union(sdf.tube_path([[0.0, L["face_y"] + 0.004 * s, L["brow_z"] + 0.016 * s],
-                            [0.0, L["face_y"] - 0.008 * s, L["eye_z"] - 0.006 * s],
-                            [0.0, L["face_y"] - 0.010 * s, L["nose_base_z"]]], 0.009 * s), k=0.006 * s)
-    sc.union(sdf.tube_path([[-r[0] * 1.02, c[1] + 0.03 * s, L["eye_z"] + 0.030 * s],
-                            [0.0, L["face_y"] + 0.004 * s, L["eye_z"] + 0.036 * s],
-                            [r[0] * 1.02, c[1] + 0.03 * s, L["eye_z"] + 0.030 * s]], 0.010 * s), k=0.008 * s)
-    return Garment("helm", sc, spacing=0.0042, target_tris=1500, material="iron", bone="Head")
+    sc.union(Prim(_chunked(cap), lo, hi, "union", 0.0))
+    mid = FieldFn(lambda P: head.eval(P))
+    cy = float(L["skull_c"][1])
+    # the rolled rim, laid on the outside of the cap just above its edge
+    rim = []
+    for i in range(49):
+        a = 2.0 * math.pi * i / 48.0
+        aa = abs(math.atan2(math.sin(a), math.cos(a)))
+        z = float(rim_z(aa)) + 0.006 * s
+        rim.append(_surface_point(mid, gap + t, a, z, r_max=0.2, centre=(0.0, cy)))
+    sc.union(sdf.tube_path(rim, 0.0042 * s, closed=False, density=3), k=0.002 * s)
+    for i in range(16):
+        a = 2.0 * math.pi * (i + 0.5) / 16.0
+        aa = abs(math.atan2(math.sin(a), math.cos(a)))
+        q = _surface_point(mid, gap + t + 0.003 * s, a, float(rim_z(aa)) + 0.014 * s, r_max=0.2, centre=(0.0, cy))
+        sc.union(sdf.sphere(q, 0.0028 * s), k=0.0012 * s)
+    # the comb: over the top of the cap from brow to nape
+    comb_pts = []
+    for i in range(25):
+        th = math.radians(-70.0 + 150.0 * i / 24.0)          # from the brow over to the nape
+        d = np.array([0.0, math.sin(th), math.cos(th)])
+        o = np.array([0.0, cy, float(L["skull_c"][2])])
+        lo_r, hi_r = 0.0, 0.25
+        for _ in range(40):
+            m = 0.5 * (lo_r + hi_r)
+            if float(head.eval((o + d * m)[None])[0]) < gap + t:
+                lo_r = m
+            else:
+                hi_r = m
+        q = o + d * hi_r
+        if q[2] > float(rim_z(abs(math.atan2(q[0], -q[1])))) + 0.012 * s:
+            comb_pts.append(q)
+    if len(comb_pts) > 2:
+        comb_pts = np.array(comb_pts)
+        u = np.linspace(0.0, 1.0, len(comb_pts))
+        sc.union(sdf.tube_path(comb_pts, 0.0032 * s + 0.0026 * s * np.sin(math.pi * u), density=3), k=0.004 * s)
+    # the nasal: from the rim down the bridge of the nose, a hand's breadth off it
+    nasal = []
+    for i in range(7):
+        z = front_z + 0.004 * s - (front_z - (float(L["nose_tip"][2]) + 0.014 * s)) * i / 6.0
+        nasal.append(_surface_point(mid, gap * 0.55 + t, 0.0, z, r_max=0.2, centre=(0.0, cy)))
+    sc.union(sdf.tube_path(nasal, [0.0068 * s] * 5 + [0.0074 * s, 0.0060 * s], density=3), k=0.004 * s)
+    return Garment("helm", sc, spacing=0.0022, smooth=3, target_tris=2200, material="iron", bone="Head")
 
 
 # --------------------------------------------------------------------------------------
@@ -753,47 +1231,418 @@ def _head_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None) -> sdf.S
     return head_field(skel, hs)
 
 
-def hair(skel: Skeleton, name: str, *, front: float = 1.0, sides: float = 1.0, back: float = 1.0,
-         thickness: float = 0.016, locks: Sequence[Sequence[Sequence[float]]] = (),
-         lock_radius: float = 0.018, hs: Optional[bodylib.HeadStyle] = None) -> Garment:
-    """A hair shell over the scalp, plus optional locks (a braid, a bun, a fringe)."""
+DOWN = np.array([0.0, 0.0, -1.0])
+
+
+def _unit_rows(v: np.ndarray) -> np.ndarray:
+    return v / np.maximum(np.linalg.norm(v, axis=-1, keepdims=True), 1e-12)
+
+
+def _onto(field, P: np.ndarray, off, iters: int = 3) -> np.ndarray:
+    """Move points onto the level set field == off (off a scalar or one per point)."""
+    P = np.array(P, float)
+    for _ in range(iters):
+        d = field.eval(P) - off
+        P = P - field.gradient(P) * d[:, None]
+    return P
+
+
+@dataclass
+class Groom:
+    """How a style lies on the head.
+
+    A style is a scalp shell -- `base` thick where the hair is full, thinning to a millimetre at
+    a hairline that follows the skull -- and `seeds` locks combed over it along `flow`, each
+    `length` long and `radius` thick at the root, standing `lift` off at the tip. Below
+    `release` (a fraction of the visible head) a lock stops following the skull and hangs,
+    pushed out of the shoulders and back by the body. `extra` adds a braid or a bun, which
+    the locks are combed towards."""
+    base: float
+    flow: str = "radial"
+    front: float = 1.0
+    sides: float = 1.0
+    back: float = 1.0
+    seeds: int = 0
+    length: Tuple[float, float] = (0.04, 0.06)
+    radius: float = 0.006
+    lift: float = 0.004
+    jitter: float = 0.0
+    part_x: float = 0.0
+    release: float = -1.0
+    spill: float = 0.0          # how far past the hairline a lock may fall (a fringe)
+    blend: float = 0.0045       # how far neighbouring locks melt into each other
+    extra: str = ""
+    target_tris: int = 3200
+
+
+def _crown(L: dict) -> np.ndarray:
+    s = L["s"]
+    return np.array([0.0, L["skull_c"][1] + 0.030 * s, L["chin_z"] + 0.965 * L["V"]])
+
+
+def _sink(g: Groom, L: dict) -> Optional[np.ndarray]:
+    s, V, z0, cy = L["s"], L["V"], L["chin_z"], L["skull_c"][1]
+    if g.extra == "bun":
+        return np.array([0.0, cy + 0.114 * s, z0 + 0.720 * V])
+    if g.extra == "braid":
+        return np.array([0.0, cy + 0.078 * s, z0 + 0.330 * V])
+    return None
+
+
+def flow_field(g: Groom, L: dict) -> Callable[[np.ndarray], np.ndarray]:
+    """The direction the hair is combed at any point (not yet projected onto the scalp)."""
+    s = L["s"]
+    crown = _crown(L)
+    sink = _sink(g, L)
+
+    def radial(P):
+        d = P - crown
+        d[:, 2] -= 0.015 * s
+        return _unit_rows(d)
+
+    if g.flow == "radial":
+        return radial
+    if g.flow in ("side_part", "centre_part"):
+        px = g.part_x * s
+        back = 0.35 if g.flow == "side_part" else 0.10
+
+        def parted(P):
+            side = np.where(P[:, 0] >= px, 1.0, -1.0)
+            v = _unit_rows(np.stack([side, np.full(len(P), back), np.full(len(P), -0.30)], axis=1))
+            # behind the crown the hair falls away from the whorl instead
+            wb = np.clip((P[:, 1] - crown[1] + 0.005 * s) / (0.045 * s), 0.0, 1.0)[:, None]
+            return _unit_rows(v * (1.0 - wb) + radial(P) * wb)
+        return parted
+    if g.flow == "back":
+        def combed_back(P):
+            v = np.tile(np.array([0.0, 1.0, -0.22]), (len(P), 1))
+            wb = np.clip((P[:, 1] - crown[1]) / (0.050 * s), 0.0, 1.0)[:, None]
+            return _unit_rows(v * (1.0 - wb) + np.array([0.0, 0.30, -1.0]) * wb)
+        return combed_back
+    if g.flow == "sink" and sink is not None:
+        def to_sink(P):
+            return _unit_rows(sink - P)
+        return to_sink
+    return radial
+
+
+def seed_scalp(head, L: dict, cov_fn, n: int, min_cov: float, rng) -> np.ndarray:
+    """About `n` points spread evenly over the scalp, at least `min_cov` inside the hairline."""
+    if n <= 0:
+        return np.zeros((0, 3))
+    m = n * 5
+    k = np.arange(m) + 0.5
+    phi = np.arccos(1.0 - 2.0 * k / m)
+    th = math.pi * (1.0 + 5 ** 0.5) * k
+    dirs = np.stack([np.cos(th) * np.sin(phi), np.sin(th) * np.sin(phi), np.cos(phi)], axis=1)
+    P = L["skull_c"] + dirs * (L["skull_r"] * 1.06)
+    P = _onto(head, P, 0.0, iters=8)
+    P = P[cov_fn(P) > min_cov]
+    if len(P) > n:
+        P = P[np.sort(rng.choice(len(P), n, replace=False))]
+    return P + rng.normal(0.0, 0.002 * L["s"], P.shape)
+
+
+def comb(head, start: np.ndarray, flow, length: float, off_fn, release_z: float, s: float,
+         body=None, twist: Optional[np.ndarray] = None, stop_fn=None, step: float = 0.004,
+         clear: Optional[float] = None) -> np.ndarray:
+    """One lock's centreline, walked from `start` along the flow.
+
+    Above `release_z` the lock hugs the skull at its own offset, so it lies on the head the way
+    combed hair does. Below it, it hangs: gravity with a little of the flow, and never inside
+    the head or the body -- long hair falls onto the shoulders rather than through them."""
+    n_steps = max(2, int(length / step))
+    p = np.array(start, float)
+    pts = [p.copy()]
+    hanging = p[2] < release_z
+    for i in range(n_steps):
+        u = (i + 1) / n_steps
+        f = flow(p[None])[0]
+        if twist is not None:
+            f = twist @ f
+        if not hanging:
+            nrm = head.gradient(p[None])[0]
+            t = f - nrm * float(np.dot(f, nrm))
+            if np.linalg.norm(t) < 1e-6:
+                t = DOWN - nrm * float(np.dot(DOWN, nrm))
+            q = p + sdf._unit(t) * step
+            q = _onto(head, q[None], off_fn(u), iters=2)[0]
+            if q[2] < release_z:
+                hanging = True
+        else:
+            q = p + sdf._unit(0.22 * f + DOWN) * step
+            o = off_fn(u)
+            dh = float(head.eval(q[None])[0])
+            if dh < o:
+                q = q + head.gradient(q[None])[0] * (o - dh)
+            if body is not None:
+                c = clear if clear is not None else 0.008 * s + 0.5 * o
+                db = float(body.eval(q[None])[0])
+                if db < c:
+                    q = q + body.gradient(q[None])[0] * (c - db)
+        # a projection off a degenerate gradient can throw a point anywhere, and one wild
+        # point is a scene bound the size of a house: a lock that jumps stops where it was
+        if not np.all(np.isfinite(q)) or np.linalg.norm(q - p) > 4.0 * step:
+            break
+        if stop_fn is not None and stop_fn(q, u):
+            break
+        pts.append(q)
+        p = q
+    return np.array(pts)
+
+
+def scalp_shell(head, cov_fn, base: float, s: float, t_min: float = 0.0012, depth: float = 0.004) -> Prim:
+    """The hair's first layer: `base` thick over the scalp, thinning to `t_min` at the hairline
+    over the last 14 mm, cut there, and diving under the skin below it -- so the hairline is a
+    line hair grows out of, not the rim of a cap. Everything under the skin is trimmed off
+    after meshing."""
+    feather = 0.014 * s
+
+    def fn(P):
+        d = head.eval(P)
+        c = cov_fn(P)
+        r = np.clip(c / feather, 0.0, 1.0)
+        t = t_min + (base - t_min) * (r * r * (3.0 - 2.0 * r))
+        shell = np.maximum(d - t, -(d + depth))
+        return np.maximum(shell, -c)
+    lo, hi = head.bounds(0.01)
+    return Prim(fn, lo, hi, "union", 0.0)
+
+
+# How far hanging hair and a long beard stay off the body: over the clothes, not the skin.
+# At 1 cm the long beard fell inside every shirt (1.1 cm off the body) and was seen only as a
+# tuft on the chest below the collar; 3 cm clears a padded jack.
+HANG_CLEAR = 0.030
+
+
+def _lock_prim(pts: np.ndarray, r0: float, s: float) -> Prim:
+    u = np.linspace(0.0, 1.0, len(pts))
+    radii = r0 * (1.0 - 0.62 * u ** 1.5) + 0.0010 * s
+    return sdf.tube_path(pts, radii, density=2, max_spheres=160)
+
+
+def _braid_prims(start: np.ndarray, body, head, L: dict, s: float, length: float = 0.27) -> Tuple[List[Prim], List[np.ndarray]]:
+    """A three-strand braid hanging from the nape down the back, and its tie and tuft."""
+    centre = comb(head, start, lambda P: np.tile(np.array([0.0, 0.25, -1.0]), (len(P), 1)),
+                  length * s, lambda u: 0.012 * s, release_z=1e9, s=s, body=body, step=0.005,
+                  clear=HANG_CLEAR * s)
+    if len(centre) < 4:
+        return [], []
+    seg = np.diff(centre, axis=0)
+    tang = _unit_rows(np.concatenate([seg, seg[-1:]], axis=0))
+    side = _unit_rows(np.cross(tang, np.array([0.0, -1.0, 0.0])))
+    back = _unit_rows(np.cross(side, tang))
+    arc = np.concatenate([[0.0], np.cumsum(np.linalg.norm(seg, axis=1))])
+    prims, lines = [], []
+    amp = 0.0110 * s
+    period = 0.056 * s
+    taper = 1.0 - 0.45 * (arc / max(arc[-1], 1e-6))
+    for k in range(3):
+        ph = 2.0 * math.pi * k / 3.0
+        w = 2.0 * math.pi * arc / period + ph
+        off = side * (amp * taper * np.sin(w))[:, None] + back * (0.45 * amp * taper * np.sin(2.0 * w))[:, None]
+        pts = centre + off
+        prims.append(sdf.tube_path(pts, 0.0086 * s * taper, density=2, max_spheres=200, k=0.002 * s))
+        lines.append(pts)
+    end = centre[-1]
+    prims.append(sdf.torus(end + tang[-1] * 0.002 * s, 0.0080 * s, 0.0034 * s, axis=tang[-1], k=0.002 * s))
+    tuft = [end, end + tang[-1] * 0.024 * s + back[-1] * 0.004 * s, end + tang[-1] * 0.046 * s]
+    prims.append(sdf.tube_path(tuft, [0.0075 * s, 0.0085 * s, 0.0024 * s], density=2, k=0.003 * s))
+    lines.append(np.array(tuft))
+    return prims, lines
+
+
+def _bun_prims(at: np.ndarray, s: float) -> Tuple[List[Prim], List[np.ndarray]]:
+    """A bun: a coil of hair wound round itself, with the turns showing.
+
+    The coil climbs the dome of the bun as it winds in. Wound the other way -- the outer turn
+    standing furthest from the head -- it was a dish, and from behind it read as a button."""
+    R = np.array([0.032, 0.027, 0.030]) * s
+    prims = [sdf.ellipsoid(at, R, k=0.006 * s)]
+    lines = []
+    turns = 2.4
+    pts = []
+    for i in range(60):
+        u = i / 59.0
+        a = 2.0 * math.pi * turns * u
+        r = (0.029 - 0.017 * u) * s
+        y = 0.80 * R[1] * math.sqrt(max(0.0, 1.0 - (r / R[0]) ** 2))
+        pts.append(at + np.array([r * math.cos(a), y, r * math.sin(a) * 0.95]))
+    pts = np.array(pts)
+    prims.append(sdf.tube_path(pts, 0.0090 * s, density=2, max_spheres=220, k=0.004 * s))
+    lines.append(pts)
+    return prims, lines
+
+
+def _hair_weights(L: dict, hang_below: float) -> Callable[[np.ndarray], np.ndarray]:
+    """Head above the nape; below it the hanging hair goes over to the neck and the chest, so a
+    braid or a length of loose hair lies on the back instead of swinging through it."""
+    bones = list(rig.DEFORM_NAMES)
+    hi = bones.index("Head")
+    ni = bones.index("Neck")
+    ci = bones.index("Chest")
+    s = L["s"]
+
+    def fn(V):
+        W = np.zeros((len(V), len(bones)))
+        z = V[:, 2]
+        wh = np.clip((z - (hang_below - 0.070 * s)) / (0.070 * s), 0.0, 1.0)
+        wh = wh * wh * (3.0 - 2.0 * wh)
+        W[:, hi] = wh
+        W[:, ni] = (1.0 - wh) * 0.30
+        W[:, ci] = (1.0 - wh) * 0.70
+        return W
+    return fn
+
+
+def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.HeadStyle] = None,
+         seed: int = 0) -> Garment:
+    """A hair style: the scalp shell with its hairline, and locks combed over it."""
     s = _s(skel)
     head = _head_field(skel, hs)
     L = bodylib.head_landmarks(skel, hs)
+    rng = np.random.default_rng(seed + 811)
 
-    def region(P):
-        return np.clip(bodylib.scalp_field(P, skel, hs or bodylib.HeadStyle(), front, sides, back) * 0.55 + 0.42, 0.0, 1.0)
+    def cov(P):
+        return bodylib.scalp_field(P, skel, hs, g.front, g.sides, g.back)
     sc = Scene()
-    lo, hi = head.bounds(0.02)
-    sc.union(offset_shell(head, region, thickness * s, gap=0.001 * s, bounds=(lo, hi)))
-    for pts in locks:
-        sc.union(sdf.tube_path([np.asarray(p, float) * s for p in pts], lock_radius * s), k=0.012 * s)
-    return Garment(name, sc, spacing=0.0034, target_tris=2200, material="hair", bone="Head")
+    sc.union(scalp_shell(head, cov, g.base * s, s))
+    flow = flow_field(g, L)
+    sink = _sink(g, L)
+    release_z = L["chin_z"] + L["V"] * g.release if g.release > 0 else -1e9
+    locks: List[np.ndarray] = []
+    starts = seed_scalp(head, L, cov, g.seeds, 0.006 * s, rng)
+    for p0 in starts:
+        length = rng.uniform(*g.length) * s
+        lift = g.lift * s * rng.uniform(0.6, 1.3)
+        r0 = g.radius * s * rng.uniform(0.85, 1.15)
+        off0 = g.base * s * 0.45
+
+        def off_fn(u, off0=off0, lift=lift):
+            return off0 + lift * u ** 1.6
+        twist = None
+        if g.jitter > 0:
+            nrm = head.gradient(p0[None])[0]
+            twist = rig.rot_axis(nrm, math.radians(rng.uniform(-g.jitter, g.jitter)))
+
+        def stop(q, u, sink=sink):
+            if sink is not None and np.linalg.norm(q - sink) < 0.018 * s:
+                return True
+            if q[2] < release_z:
+                return False
+            return float(cov(q[None])[0]) < -g.spill * s
+        pts = comb(head, _onto(head, p0[None], off0)[0], flow, length, off_fn, release_z, s,
+                   body=body, twist=twist, stop_fn=stop, clear=HANG_CLEAR * s)
+        if len(pts) < 3:
+            continue
+        locks.append(pts)
+        sc.union(_lock_prim(pts, r0, s), k=g.blend * s)
+    hang = L["nape_z"]
+    if g.extra == "braid" and sink is not None:
+        prims, lines = _braid_prims(sink, body, head, L, s)
+        for pr in prims:
+            sc.union(pr, k=0.004 * s)
+        locks += lines
+    if g.extra == "bun" and sink is not None:
+        prims, lines = _bun_prims(sink, s)
+        for pr in prims:
+            sc.union(pr, k=0.005 * s)
+        locks += lines
+    hangs = g.release > 0 or g.extra == "braid"
+    gm = Garment(name, sc, spacing=0.0032, smooth=4, target_tris=g.target_tris, material="hair",
+                 bone=None if hangs else "Head", trim=head)
+    if hangs:
+        gm.weight_fn = _hair_weights(L, hang)
+    gm.flow_fn = flow
+    gm.locks = locks
+    return gm
 
 
-def beard(skel: Skeleton, name: str, *, moustache: bool = True, cheeks: float = 1.0, length: float = 1.0,
-          thickness: float = 0.013, hs: Optional[bodylib.HeadStyle] = None) -> Garment:
+@dataclass
+class BeardStyle:
+    base: float
+    region: str = "full"        # full | moustache | chin
+    seeds: int = 0
+    length: Tuple[float, float] = (0.02, 0.03)
+    radius: float = 0.004
+    hang: float = 0.0           # how far below the chin the locks fall (metres at 1.78 m)
+    target_tris: int = 1400
+
+
+def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadStyle] = None,
+          seed: int = 0, body=None) -> Garment:
+    """A beard grown on the beard line: a shell over the jaw, cheeks and lip, and locks combed
+    down it -- off the chin and onto the chest when the style is long."""
     s = _s(skel)
     head = _head_field(skel, hs)
-    hsx = hs or bodylib.HeadStyle()
-    L = bodylib.head_landmarks(skel, hsx)
+    L = bodylib.head_landmarks(skel, hs)
+    rng = np.random.default_rng(seed + 907)
+    if st.region == "moustache":
+        def cov(P):
+            return bodylib.moustache_field(P, skel, hs)
+    else:
+        chin_only = st.region == "chin"
 
-    def region(P):
-        eps = 1e-3
-        d0 = head.eval(P)
-        g = np.stack([(head.eval(P + np.eye(3)[i] * eps) - d0) / eps for i in range(3)], axis=1)
-        g = g / np.maximum(np.linalg.norm(g, axis=1, keepdims=True), 1e-9)
-        f = bodylib.beard_field(P, g, skel, hsx, moustache, cheeks, length)
-        return np.clip(f * 0.8 + 0.4, 0.0, 1.0)
+        def cov(P):
+            return bodylib.beard_field(P, None, skel, hs, moustache=True, chin_only=chin_only)
     sc = Scene()
-    lo, hi = head.bounds(0.02)
-    sc.union(offset_shell(head, region, thickness * s, gap=0.001 * s, bounds=(lo, hi)))
-    if length > 1.2:
-        chin = np.array([0.0, L["face_y"] + 0.02 * s, L["chin_z"]])
-        sc.union(sdf.tube_path([chin, chin + np.array([0.0, 0.006 * s, -0.05 * s * length]),
-                                chin + np.array([0.0, 0.016 * s, -0.10 * s * length])],
-                               [0.028 * s, 0.024 * s, 0.014 * s]), k=0.015 * s)
-    return Garment(name, sc, spacing=0.0036, target_tris=900, material="hair", bone="Head")
+    sc.union(scalp_shell(head, cov, st.base * s, s, t_min=0.0008 * s, depth=0.003 * s))
+    chin = np.array([0.0, L["face_y"] + 0.010 * s, L["chin_z"] + 0.02 * s])
+
+    if st.region == "moustache":
+        mid = np.array([0.0, L["face_y"], L["mouth_z"] + 0.02 * s])
+
+        def flow(P):
+            v = P - mid
+            v[:, 2] = -0.9 * np.abs(v[:, 0]) / 0.03 - 0.4
+            return _unit_rows(v)
+    else:
+        def flow(P):
+            # down the jaw towards the chin, and straight down off it
+            v = np.stack([-0.35 * P[:, 0] / 0.05, np.full(len(P), -0.25), np.full(len(P), -1.0)], axis=1)
+            return _unit_rows(v)
+    locks: List[np.ndarray] = []
+    release_z = L["chin_z"] + 0.004 * s if st.hang > 0 else -1e9
+    starts = np.zeros((0, 3))
+    if st.seeds > 0:
+        # seeds over the beard itself, which the skull-sphere seeding does not reach well
+        cand = _face_points(head, L, rng, st.seeds * 12)
+        cand = cand[cov(cand) > 0.003 * s]
+        if len(cand) > st.seeds:
+            cand = cand[rng.choice(len(cand), st.seeds, replace=False)]
+        starts = cand
+    for p0 in starts:
+        length = rng.uniform(*st.length) * s + (st.hang * s if st.hang > 0 else 0.0)
+        r0 = st.radius * s * rng.uniform(0.8, 1.2)
+        off0 = st.base * s * 0.45
+
+        def off_fn(u, off0=off0):
+            return off0 + 0.002 * s * u
+
+        def stop(q, u):
+            if q[2] < release_z:
+                return False
+            return float(cov(q[None])[0]) < -0.004 * s
+        pts = comb(head, _onto(head, p0[None], off0)[0], flow, length, off_fn, release_z, s,
+                   body=body, stop_fn=stop, step=0.003, clear=HANG_CLEAR * s)
+        if len(pts) < 3:
+            continue
+        locks.append(pts)
+        sc.union(_lock_prim(pts, r0, s), k=0.0035 * s)
+    gm = Garment(name, sc, spacing=0.0028, smooth=4, target_tris=st.target_tris, material="hair",
+                 bone="Head", trim=head)
+    gm.flow_fn = flow
+    gm.locks = locks
+    return gm
+
+
+def _face_points(head, L: dict, rng, n: int) -> np.ndarray:
+    """Random points on the lower face and jaw, for seeding a beard."""
+    s = L["s"]
+    c = np.array([0.0, L["face_y"] + 0.045 * s, L["chin_z"] + 0.30 * L["V"]])
+    d = _unit_rows(rng.normal(0.0, 1.0, (n, 3)) * np.array([1.0, 0.6, 1.0]) + np.array([0.0, -0.55, -0.35]))
+    P = c + d * 0.08 * s
+    return _onto(head, P, 0.0, iters=8)
 
 
 # --------------------------------------------------------------------------------------
@@ -831,69 +1680,53 @@ def halo(skel: Skeleton) -> Garment:
 # the catalogue
 # --------------------------------------------------------------------------------------
 
-HAIR_STYLES: Dict[str, dict] = {
-    "short": dict(front=1.0, sides=1.0, back=1.0, thickness=0.010),
-    "cropped": dict(front=1.15, sides=1.35, back=1.25, thickness=0.005),
-    "long": dict(front=0.9, sides=0.55, back=0.2, thickness=0.015),
-    "braid": dict(front=0.95, sides=0.85, back=0.7, thickness=0.011),
-    "bun": dict(front=0.95, sides=0.95, back=0.9, thickness=0.010),
-    "hood_friendly": dict(front=1.05, sides=1.1, back=1.05, thickness=0.007),
-    "tousled": dict(front=0.85, sides=1.0, back=0.95, thickness=0.014),
+def stable_seed(name: str) -> int:
+    """A seed from a name that is the same in every process. `hash()` on a str is salted per
+    interpreter, so every part seeded with it painted a different texture on every build."""
+    return zlib.crc32(name.encode("utf-8")) % 99991
+
+
+# The styles the Naming offers, by the name it offers them under ("Short", "Cropped", "Loose",
+# "Braided", "Tied back", "Under a hood", "Wild"). Every one covers the scalp to the hairline;
+# they differ in how the hair is combed and how much of it there is.
+HAIR_STYLES: Dict[str, Groom] = {
+    # combed over from a side parting, short at the sides and back
+    "short": Groom(base=0.0068, flow="side_part", part_x=0.030, seeds=80, length=(0.035, 0.065),
+                   radius=0.0060, lift=0.0035, jitter=8.0, target_tris=3400),
+    # a close crop: the shell and the painted grain, with no lock standing proud of it
+    "cropped": Groom(base=0.0040, flow="radial", seeds=0, front=1.02, target_tris=2000),
+    # loose to the shoulders from a centre parting
+    "long": Groom(base=0.0066, flow="centre_part", seeds=74, length=(0.20, 0.34), radius=0.0092,
+                  lift=0.002, jitter=5.0, release=0.46, sides=1.05, blend=0.0080, target_tris=4600),
+    # combed back tight to the nape into one braid down the back
+    "braid": Groom(base=0.0058, flow="sink", seeds=70, length=(0.08, 0.18), radius=0.0050,
+                   lift=0.0, extra="braid", target_tris=4200),
+    # combed back and up into a coiled bun
+    "bun": Groom(base=0.0058, flow="sink", seeds=70, length=(0.08, 0.16), radius=0.0050,
+                 lift=0.0, extra="bun", target_tris=3800),
+    # short and flat, combed back, so a hood or a helm sits over it
+    "hood_friendly": Groom(base=0.0050, flow="back", seeds=55, length=(0.025, 0.045), radius=0.0040,
+                           lift=0.0, target_tris=2800),
+    # thick and every which way, a fringe falling over the brow
+    "tousled": Groom(base=0.0080, flow="radial", seeds=90, length=(0.040, 0.075), radius=0.0068,
+                     lift=0.010, jitter=30.0, spill=0.013, blend=0.0058, target_tris=4400),
 }
-BEARD_STYLES: Dict[str, dict] = {
-    "stubble": dict(moustache=True, cheeks=1.0, length=0.55, thickness=0.006),
-    "short_beard": dict(moustache=True, cheeks=1.0, length=1.0, thickness=0.013),
-    "long_beard": dict(moustache=True, cheeks=1.0, length=1.6, thickness=0.017),
-    "moustache": dict(moustache=True, cheeks=0.0, length=0.35, thickness=0.011),
+BEARD_STYLES: Dict[str, BeardStyle] = {
+    "stubble": BeardStyle(base=0.0016, target_tris=1000),
+    "short_beard": BeardStyle(base=0.0072, seeds=45, length=(0.018, 0.032), radius=0.0038, target_tris=1900),
+    "long_beard": BeardStyle(base=0.0085, seeds=42, length=(0.030, 0.050), radius=0.0055, hang=0.10,
+                             target_tris=2800),
+    "moustache": BeardStyle(base=0.0034, region="moustache", seeds=14, length=(0.022, 0.034),
+                            radius=0.0030, target_tris=900),
 }
 
 
-def hair_locks(skel: Skeleton, style: str) -> List[List[List[float]]]:
-    """Extra strands for the styles that need them, in units of the body scale."""
-    s = 1.0
-    L = bodylib.head_landmarks(skel)
-    c, r = L["skull_c"] / _s(skel), L["skull_r"] / _s(skel)
-    nape = [0.0, float(c[1]) + float(r[1]) * 0.72, float(c[2]) - float(r[2]) * 0.55]
-    if style == "long":
-        out = []
-        for sx in (1, -1, 0):
-            x = sx * 0.055
-            out.append([[x * 0.7, c[1] + r[1] * 0.55, c[2] + r[2] * 0.30],
-                        [x, c[1] + r[1] * 0.80, c[2] - r[2] * 0.30],
-                        [x, c[1] + r[1] * 0.86, c[2] - r[2] * 1.30],
-                        [x * 0.9, c[1] + r[1] * 0.80, c[2] - r[2] * 2.30]])
-        return out
-    if style == "braid":
-        return [[nape,
-                 [0.0, nape[1] + 0.012, nape[2] - 0.075],
-                 [0.012, nape[1] + 0.020, nape[2] - 0.150],
-                 [-0.010, nape[1] + 0.022, nape[2] - 0.225],
-                 [0.0, nape[1] + 0.020, nape[2] - 0.285]]]
-    if style == "bun":
-        b = [0.0, nape[1] + 0.030, float(c[2]) + float(r[2]) * 0.30]
-        return [[[b[0] - 0.045, b[1], b[2]], [b[0], b[1] + 0.022, b[2] + 0.020],
-                 [b[0] + 0.045, b[1], b[2]], [b[0], b[1] - 0.010, b[2] - 0.020],
-                 [b[0] - 0.045, b[1], b[2]]]]
-    if style == "tousled":
-        rng = np.random.default_rng(3)
-        out = []
-        for i in range(5):
-            a = rng.uniform(-1.0, 1.0)
-            out.append([[a * 0.05, c[1] - r[1] * 0.35, c[2] + r[2] * 0.70],
-                        [a * 0.055, c[1] - r[1] * 0.70, c[2] + r[2] * 0.62],
-                        [a * 0.06, c[1] - r[1] * 0.92, c[2] + r[2] * 0.50]])
-        return out
-    return []
+def build_hair(skel: Skeleton, style: str, body=None, hs: Optional[bodylib.HeadStyle] = None) -> Garment:
+    return hair(skel, style, HAIR_STYLES[style], body=body, hs=hs, seed=stable_seed(style))
 
 
-def build_hair(skel: Skeleton, style: str) -> Garment:
-    kw = dict(HAIR_STYLES[style])
-    locks = hair_locks(skel, style)
-    return hair(skel, style, locks=locks, lock_radius=0.021 if style != "braid" else 0.016, **kw)
-
-
-def build_beard(skel: Skeleton, style: str) -> Garment:
-    return beard(skel, style, **BEARD_STYLES[style])
+def build_beard(skel: Skeleton, style: str, hs: Optional[bodylib.HeadStyle] = None, body=None) -> Garment:
+    return beard(skel, style, BEARD_STYLES[style], hs=hs, seed=stable_seed(style), body=body)
 
 
 # --------------------------------------------------------------------------------------
@@ -938,31 +1771,157 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
     return Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth")
 
 
+class FieldFn:
+    """Anything with `eval(P)`, from a plain function: a trim field, an offset of a field."""
+
+    def __init__(self, fn: Callable[[np.ndarray], np.ndarray]):
+        self.fn = fn
+
+    def eval(self, P: np.ndarray) -> np.ndarray:
+        return self.fn(P)
+
+
+def drape_field(body, skel: Skeleton, flare: float = 0.10, arm_cut_x: float = 0.25,
+                arm_far: float = 0.05) -> sdf.SampledField:
+    """The body as cloth falls from it.
+
+    Every horizontal section of the result is the union of the body's sections above it,
+    pushed out by `flare` metres for every metre of fall -- which is the space a cloth takes
+    when it is laid over the shoulders and let go. The arms below the top of the deltoid are
+    left out, or the cloth would hang from an A-posed arm like a bat's wing: a cape rests on the
+    point of the shoulder and falls past the arm, not from it.
+
+    Left out means read as `arm_far` away. A short cape is let lie over the top of the arm at
+    5 cm; a cloak to the knee must not be, because the flare closes any fixed distance in the
+    end: at 5 cm the cloak's hem had spread out to the A-posed hands, half a metre each side."""
+    s = _s(skel)
+    F = np.array(body.F, copy=True)
+    o, sp = body.origin, body.spacing
+    xs = o[0] + np.arange(F.shape[0]) * sp
+    zs = o[2] + np.arange(F.shape[2]) * sp
+    zc = float(skel.J["UpperArm.L"][2]) + 0.030 * s
+    arm = (np.abs(xs)[:, None] > arm_cut_x * s) & (zs[None, :] < zc)
+    F = np.where(arm[:, None, :], np.maximum(F, arm_far), F)
+    out = np.empty_like(F)
+    run = np.full(F.shape[:2], 1e3)
+    for k in range(F.shape[2] - 1, -1, -1):
+        run = np.minimum(run - flare * sp, F[:, :, k])
+        out[:, :, k] = run
+    return sdf.SampledField.from_grid(out, o, sp)
+
+
+def shoulder_line(body, skel: Skeleton, x: float = 0.14) -> float:
+    """The height of the top of the shoulders `x` metres out from the spine, read off the body:
+    where a cape or a cloak rests. The body's trapezius stands 6 cm above the Neck joint, and
+    the cape cut off at the joint's height left the top of each shoulder bare above its edge."""
+    s = _s(skel)
+    zs = np.arange(float(skel.J["Chest"][2]), float(skel.J["Head"][2]) + 0.10 * s, 0.002)
+    P = np.stack([np.full_like(zs, x * s), np.full_like(zs, 0.02 * s), zs], axis=1)
+    inside = zs[body.eval(P) < 0.0]
+    return float(inside.max()) if len(inside) else float(skel.J["Neck"][2]) + 0.06 * s
+
+
+def _around(P: np.ndarray) -> np.ndarray:
+    """Radians round the body's vertical axis: 0 straight ahead, pi straight behind."""
+    return np.arctan2(np.abs(P[:, 0]), -P[:, 1])
+
+
+def draped_shell(drape, region: RegionFn, thickness: float, gap: float, bounds,
+                 relief: Optional[RegionFn] = None) -> Tuple[Prim, "FieldFn"]:
+    """A cloth sheet `thickness` thick lying `gap` off a drape field, restricted to `region`,
+    and the trim field that removes its inner face after meshing. The result is one sheet of
+    cloth, drawn from both sides, not a solid block with a floor under it -- which is what made
+    the old cape a lampshade."""
+    mid = gap + 0.5 * thickness
+    half = 0.5 * thickness
+
+    def off(P):
+        return mid if relief is None else mid + relief(P)
+
+    def fn(P):
+        d = drape.eval(P)
+        w = np.clip(region(P), 0.0, 1.0)
+        return np.abs(d - off(P)) - half + (1.0 - w) * 0.25
+    lo, hi = bounds
+    trim = FieldFn(lambda P: drape.eval(P) - off(P))
+    return Prim(_chunked(fn), np.asarray(lo, float), np.asarray(hi, float), "union", 0.0), trim
+
+
+def _cape_weights(skel: Skeleton) -> Callable[[np.ndarray], np.ndarray]:
+    """A cape moves with the chest and the shoulder girdle, and only a little with the top of
+    the arm under it: weighted from the body it would follow the arms and tear at the armpit."""
+    bones = list(rig.DEFORM_NAMES)
+    s = _s(skel)
+    ci, ni = bones.index("Chest"), bones.index("Neck")
+    neck_z = float(skel.J["Neck"][2])
+
+    def fn(V):
+        W = np.zeros((len(V), len(bones)))
+        ax = np.abs(V[:, 0])
+        w_sh = 0.45 * np.clip((ax - 0.09 * s) / (0.12 * s), 0.0, 1.0)
+        w_ua = 0.18 * np.clip((ax - 0.21 * s) / (0.06 * s), 0.0, 1.0) * np.clip((V[:, 2] - (neck_z - 0.09 * s)) / (0.08 * s), 0.0, 1.0)
+        w_nk = np.clip((V[:, 2] - (neck_z + 0.015 * s)) / (0.030 * s), 0.0, 1.0) * np.clip((0.11 * s - ax) / (0.04 * s), 0.0, 1.0)
+        left = V[:, 0] >= 0
+        for side, mask in (("L", left), ("R", ~left)):
+            W[mask, bones.index("Shoulder." + side)] = w_sh[mask]
+            W[mask, bones.index("UpperArm." + side)] = w_ua[mask]
+        W[:, ni] = w_nk
+        W[:, ci] = np.clip(1.0 - w_sh - w_ua - w_nk, 0.0, 1.0)
+        return W
+    return fn
+
+
 def shoulder_cape(skel: Skeleton, body) -> Garment:
-    """Lakefolk: a short cape ending above the elbow.  It squares the shoulders off, and a
-    square shoulder is the one cue that still reads at thirty pixels tall."""
+    """Lakefolk: a short cape that rests on the shoulders and falls to the top of the arm.
+
+    It lies over the drape of the shoulders, so it follows the slope from the neck and breaks
+    over the point of each shoulder before it falls; eleven folds deepen towards a hem that
+    runs lower behind and over the arms than in front; a standing collar closes at the throat
+    with a clasp, and the front is split below it. Squaring the shoulders is still its job,
+    which it does by resting on them rather than by standing off them."""
     s = _s(skel)
     sc = Scene()
     neck = float(skel.J["Neck"][2])
-    chest = float(skel.J["Chest"][2])
-    z_bot = chest - 0.10 * s
-    sx = float(skel.J["UpperArm.L"][0])
-    sc.union(sdf.loft([
-        (np.array([0.0, 0.010 * s, neck + 0.014 * s]), 0.086 * s, 0.076 * s),
-        (np.array([0.0, 0.008 * s, neck - 0.022 * s]), (sx + 0.055) * s, 0.128 * s),
-        (np.array([0.0, 0.004 * s, chest + 0.030 * s]), (sx + 0.086) * s, 0.146 * s),
-        (np.array([0.0, 0.0, z_bot + 0.020 * s]), (sx + 0.094) * s, 0.152 * s),
-        (np.array([0.0, 0.0, z_bot]), (sx + 0.090) * s, 0.149 * s),
-    ], LEFT, axis=UP))
-    sc.union(sdf.tube_path(_ring((sx + 0.094) * s, 0.152 * s, z_bot + 0.010 * s), 0.0060 * s), k=0.006 * s)
-    # The neck hole has to be a shaft, not a dimple -- and the sweep's top cap has to come
-    # off, because a hemisphere of its own radius rises past the chin and the cape ends up
-    # wearing the wearer's face.
-    sc.subtract(sdf.capsule([0.0, 0.012 * s, neck - 0.030 * s],
-                            [0.0, 0.012 * s, neck + 0.40 * s], 0.082 * s), k=0.010 * s)
-    sc.intersect(sdf.plane([0.0, 0.0, neck + 0.006 * s], [0.0, 0.0, 1.0]))
-    sc.intersect(sdf.plane([0.0, 0.0, z_bot], [0.0, 0.0, -1.0]))
-    return Garment("shoulder_cape", sc, spacing=0.0060, target_tris=2000, material="cloth")
+    drape = drape_field(body, skel, flare=0.10)
+    sh = shoulder_line(body, skel)
+    top = sh + 0.045 * s
+    clasp_z = sh - 0.012 * s
+    n_folds = 11
+
+    def hem(P):
+        a = _around(P)
+        z = neck - 0.130 * s - 0.070 * s * (1.0 - np.cos(a)) * 0.5 - 0.022 * s * np.sin(a) ** 2
+        return z + 0.006 * s * np.sin(n_folds * a + 0.6)
+
+    def region(P):
+        r = np.hypot(P[:, 0], P[:, 1] - 0.012 * s)
+        above = np.clip((P[:, 2] - hem(P)) / (0.006 * s), 0.0, 1.0)
+        below_top = np.clip((top - P[:, 2]) / (0.006 * s), 0.0, 1.0)
+        neck_hole = np.clip((r - 0.080 * s) / (0.006 * s), 0.0, 1.0)
+        # the front split, from the clasp down
+        split = np.clip((np.abs(P[:, 0]) - 0.010 * s) / (0.004 * s), 0.0, 1.0)
+        split = np.where((P[:, 1] < -0.04 * s) & (P[:, 2] < clasp_z - 0.020 * s), split, 1.0)
+        return above * below_top * neck_hole * split
+
+    def folds(P):
+        a = _around(P)
+        depth = np.clip((neck - 0.010 * s - P[:, 2]) / (0.13 * s), 0.0, 1.0)
+        return 0.013 * s * depth * (0.5 + 0.5 * np.sin(n_folds * a + 0.6))
+    shell, trim = draped_shell(drape, region, 0.010 * s, 0.006 * s,
+                               zbox(skel, neck - 0.26 * s, top + 0.02 * s, xy=0.42, ymin=-0.30, ymax=0.30),
+                               relief=folds)
+    sc.union(shell)
+    # the standing collar round the neck, over the cut edge of the cloth, and the clasp at the
+    # throat below it, laid on the front of the cloth
+    ring = np.array(_ring(0.084 * s, 0.080 * s, sh + 0.030 * s)) + np.array([0.0, 0.010 * s, 0.0])
+    sc.union(sdf.tube_path(ring, 0.011 * s, closed=False), k=0.008 * s)
+    front = _surface_point(drape, 0.011 * s, 0.0, clasp_z)
+    sc.union(sdf.ellipsoid(front + np.array([0.0, -0.004 * s, 0.0]), [0.012 * s, 0.006 * s, 0.012 * s]), k=0.003 * s)
+    g = Garment("shoulder_cape", sc, spacing=0.0045, smooth=4, target_tris=2600, material="cloth",
+                trim=trim, trim_depth=0.0)
+    g.weight_fn = _cape_weights(skel)
+    g.double_sided = True
+    return g
 
 
 def wrap_torso(skel: Skeleton, body) -> Garment:
@@ -1036,7 +1995,9 @@ def kilt(skel: Skeleton, body) -> Garment:
                                    dvec * 0.186 * s + np.array([0, 0, z_hem])], depth), k=0.013 * s)
     sc.union(sdf.tube_path(_ring(0.185 * s, 0.142 * s, z_hem + 0.012 * s), 0.0062 * s), k=0.006 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    return Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
+    g = Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
+    g.weight_adjust = _skirt_weights(skel)
+    return g
 
 
 def plaid(skel: Skeleton, body) -> Garment:
@@ -1138,8 +2099,9 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "kilt": kilt,
     "plaid": plaid,
     "leg_wraps": leg_wraps,
-    "ragged_cloak": lambda s, b: ragged_hem(s, cloak(s, b, hooded=True, hem=0.38),
-                                            0.38 * s.props.height, teeth=13, depth=0.055),
+    "ragged_cloak": lambda s, b: cloak(s, b, hooded=True, hem=0.38, ragged=13, name="ragged_cloak"),
+    # the same with the hood down, which is how the player wears it
+    "torn_cloak": lambda s, b: cloak(s, b, hooded=False, hem=0.38, ragged=13, name="torn_cloak"),
 }
 ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
     "horns_small": lambda s: horns(s, big=False),

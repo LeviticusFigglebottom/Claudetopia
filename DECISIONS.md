@@ -780,11 +780,11 @@ slide in every blend as the phases drift apart.
 new gait clip must put its left foot down at phase 0 and its right at 0.5, which the forge's tests
 pin. Walk_Back and the strafes are still made by the first stride model. The strafes' side-steps
 are shortened (0.6 s, duty 0.5), so they no longer drop the hips 21 cm at every step. A diagonal
-strafe slides at about a third of the ground speed, because blending two strides in rotation space
-does not add up to the diagonal, so the locked-on speed is held at 2.6 m/s. The rig bake rebuilds
-the body as well as the clips, and under Blender 4.2 the body the committed rig was made with under
-4.0 comes back with the same vertices but a different UV layout and repainted textures. So the
-clips are baked into a scratch copy and moved onto the committed GLB by
+strafe slides, because blending two strides in rotation space does not add up to the diagonal: at a
+fifth to a quarter of the ground speed with these clips (see the entry on the locked-on pace). The
+rig bake rebuilds the body as well as the clips, and under Blender 4.2 the body the committed rig
+was made with under 4.0 comes back with the same vertices but a different UV layout and repainted
+textures. So the clips are baked into a scratch copy and moved onto the committed GLB by
 `tools/forge/transplant_clips.py`, which changes nothing but the animations and checks that it did
 not. When another branch changes the rig GLB, the merge takes that branch's GLB and transplants
 these clips onto it, provided the two share a skeleton (the tool refuses otherwise). If they do
@@ -961,6 +961,107 @@ players skip them). A timed strip that fades after a minute whatever was done (i
 player who least needs it). Keeping the list in the settings (above).
 **Consequences.** A new game is taught again, which a player who knows the controls will see
 for the minute it takes to move, sprint, roll and jump. The Hints setting turns the strip off.
+
+## 2026-09-23 · Locked on, the pace goes by the way you go: a jog at the foe, a side-step across
+**Decision.** Locked on and not blocking, the body faces the foe and moves at 5.0 m/s straight
+at it (the jog), 3.0 m/s across it and 1.8 m/s backing away, and on the ellipse through the
+three in between (3.6 m/s on the forward diagonal). Blocking stays a guard walk at 1.56 m/s
+(2.6 × 0.6) whatever the lock. Sprint while locked on breaks the strafe and keeps the lock: the
+body turns to run where it is pushed at 7.8 m/s, the view stays on the foe, and letting go of
+Sprint turns the body back to face the foe.
+**Why.** The combat round's headless fights found that a locked-on player could not close on a
+caster backing away at about 3 m/s. Every locked-on direction was capped at 2.6 m/s, so the gap
+grew by 1.39 m over three seconds of pressing W. Locked on, W at a foe now closes the gap by
+5.26 m in the same three seconds, and the lock holds. The action RPGs this game is read against
+let a locked-on player advance at their run and keep strafes and backpedals slower. Advancing
+is how a fight is joined; circling and retreating are how it is survived. The locked-on
+sprint, lock kept, is the Souls convention: the lock is a choice about the view, and running
+is a choice about the legs.
+**Alternatives.** One locked-on speed for every direction at 3.2 m/s or more: it catches the
+caster, but the backpedal outruns the clip (Walk_Back at 1.15 m/s cannot play faster than
+1.84 without sliding) and a retreat becomes as good as an advance. Breaking the lock on sprint:
+it throws away the target at the moment the player is chasing it.
+**Consequences.** Each speed is within what its clip can play without sliding. Run is at 1.0x.
+The side-steps are at 1.58x (0% slide measured at 3.0 m/s). Walk_Back is at 1.57x (0% at
+1.8 m/s). The diagonals slide: at 3.64 m/s on the forward diagonal the planted foot moves at 28%
+of the ground speed, and at 2.18 m/s backing off diagonally at 23%. It was 19% at the old 2.6
+m/s. Diagonal clips or foot IK would take that out. `Player.locked_speed(way)` is the ellipse,
+and test_lock_on_movement pins all of it.
+
+## 2026-09-23 · A raised guard is a layer over the legs, and a turn on the spot steps
+**Decision.** Block_Idle is held over the upper body in the Locomotion graph: a Blend2 filtered
+to the bones above the hips (and the sockets hanging off them) mixes it over whatever the legs
+are doing, easing in and out over 0.12 s. `HumanoidModel.play_intent("Block_Idle")` raises it
+and keeps the body in Locomotion; `stop_intent()` or any other clip lowers it. The Block_Idle
+state stays in the machine for anything that still wants the whole-body pose. A body turning on
+the spot faster than 60°/s while standing is shown a side-step toward the turn at the pace its
+feet travel round its middle (0.18 m out), up to 1.4 m/s, eased in and out.
+**Why.** Filmed in the motion studio: played as a whole-body state, the guard froze the legs in
+its stance, and a player walking behind it at 1.56 m/s glided across the ground with still feet.
+Layered, the legs walk under it, with the planted foot at 2% of the ground speed, and the right
+hand stays at chest height (0.01 m below the chest bone, where the walk swings it 0.29 m
+below). A turn on the spot while guarding or locked on pivoted the whole body on planted feet at
+up to 720°/s. The side-step makes it a step round, the cheapest thing that reads as a person
+turning.
+**Alternatives.** A guard-walk clip set (walk, strafes and backpedal each with the guard up):
+that is four more clips to keep in step, and the layer gives the same picture from one pose.
+Turn-in-place clips (90° and 180° steps): better, and the next thing to make if the side-step
+reads as a shuffle in play.
+**Consequences.** Enemies that raise a guard (`Enemy._guard`) get the same layer: they now walk
+under their guard instead of gliding. Any new stance meant to be held over the legs is added
+to `HumanoidModel.STANCE_CLIPS`.
+
+## 2026-09-23 · A body comes in a step inside the door and goes out a pace and a half before it
+**Decision.** Going in through any door stands the body just inside the interior's own door
+(the one the way back is through), facing into the room. In a house that is at least 0.75 m in
+from the inside of the wall, on the floor of the room the front door opens into, on the nearest
+point of a 0.1 m lattice (2.0 m deep, 1.6 m either side) that keeps 0.45 m from every prop mesh on
+that floor and from the walls, or 0.37 m where a room has no more room than that. In a deep place
+it is 1.2 m in from its way out toward the middle of its chamber, on the rock. Going out stands
+the body 1.5 m in front of the door it came in by, on what is under that spot, facing away from
+the door. A game saved inside goes out by the door the save recorded.
+**Why.** The brief, and what was measured: every house put the player in the corner of its first
+room a metre up; every deep place put them in the middle of its mouth, 3-5 m from the way out;
+leaving faced the door just left; and a loaded game left into the pocket at 50 km. The props were
+measured, not taken from their kinds' stand-in sizes: Merrick's forge hearth and crate are larger
+than the boxes they would be drawn as.
+**Consequences.** `test_every_door_both_ways` walks all 24 doors both ways in the built world. A
+forged house whose doorway has no clear spot says so in a warning, and the test fails on it.
+
+## 2026-09-23 · The audio mixer is kept from memory the engine has freed
+**Decision.** `AudioGuard` (systems/audio, stood up by Foley) takes the audio driver's lock at the
+end of every frame's processing and lets it go at once, in every run: the game, the tests, the
+fights. `-- --no-audio-guard` turns it off, for the reproduction. Music stems and ambience beds
+write a volume only when it moves (`AudioGuard.ease_volume`).
+**Why.** The crash that killed the fights, a headless unit run and a Forward+ world load had one
+backtrace every time, in the audio mixing thread. StringName's copy constructor was called from
+AudioServer::_mix_step as it copied a sound's bus details, which was called from _driver_process.
+The stripped binary's frames were named by the strings each function refers to. Godot 4.7.2
+swaps in new bus details whenever a playing sound's volume or panning changes. For an
+AudioStreamPlayer3D that is every physics frame, because it compares a mix count it never
+records. The engine frees the old details two AudioServer.update()s later, whatever the mixer is
+doing, so a mixer descheduled between loading a sound's details and copying them reads freed
+memory. The mixer holds the driver's lock for a whole mix. The barrier therefore waits out a mix
+under way, and anything a later update() frees was swapped out before it. The measurements came
+from holding only the mixing thread at that instruction under gdb (tools/debug/stall_mixer.py),
+with frames paced at 60 a second:
+* Without the guard, the reproduction crashed at the first 20 ms stall.
+* Without the guard, it also crashed after 57 stalls of 10 ms.
+* With the guard, it ran its 40 s through 1,434 stalls.
+* The fights under 20 ms stalls crashed after 32 without the guard and survived 2,655 with it.
+**Alternatives.** Holding the lock from the end of one frame to the start of the next. The first
+version of the guard did that; it spans the frame's sleep in a paced game and starves the mixer.
+One process per Calling in the fights: a crash still loses a Calling, and the game is still
+exposed. Playing no audio in headless runs: the Foley, music and ambience tests test real
+playback.
+**Consequences.** When a mix is under way at the end of a frame, the frame waits for it: a
+millisecond or two, or as long as the mixer is descheduled, which is a hitch where the engine
+would have crashed. The fault is Godot's, and should be reported upstream with the reproduction:
+AudioServer's graveyard frees by frame count and not by the mixer's progress, and
+AudioStreamPlayer3D never records `last_mix_count`. `tools/debug/audio_race_check.sh` fails if the
+reproduction stops crashing without the guard or crashes with it. The Jolt warning ("exceeded the
+maximum number of jobs") that came before some crashes is starvation, not the cause: the
+crashing thread was the mixer every time, and no project setting sets that limit.
 
 ## 2026-09-23 · Wickmere is drawn, not seeded
 **Decision.** The world's geography is authored in `tools/world/atlas/atlas.json` (docs/ATLAS.md

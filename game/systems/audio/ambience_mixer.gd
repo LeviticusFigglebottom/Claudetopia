@@ -354,7 +354,8 @@ func _process(delta: float) -> void:
 		if not is_instance_valid(p):
 			continue
 		var target := float(_bed_targets.get(key, SILENCE_DB))
-		p.volume_db = move_toward(p.volume_db, target, step)
+		# written only when it moves (AudioGuard.ease_volume says why)
+		AudioGuard.ease_volume(p, target, step)
 		if p.volume_db <= SILENCE_DB and target <= SILENCE_DB and p.playing:
 			p.stop()
 		elif p.volume_db > SILENCE_DB and not p.playing:

@@ -8,16 +8,24 @@
   1.022
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "leg_wraps": "cloth"
+ },
  "params": {
   "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 5501,
+ "seed": 57888,
  "slot_hint": "legs",
+ "textures": [
+  "leg_wraps_albedo.png",
+  "leg_wraps_orm.png"
+ ],
  "tris": [
   3800,
   0,

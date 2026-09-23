@@ -2838,6 +2838,63 @@ release and no official binaries. Nothing to verify against, so nothing was chan
   no terrain collision: the same in every Terrain3D run here since the first, and consistent with
   what the user's second playtest found and main has since mended (Terrain3D's collision stayed
   round the fly camera, not the player).
+* **Main's `World.follow` and dry landing merged in, and nothing here leans on the fly camera.**
+  The coarse ground's collision is a heightfield per chunk over the whole world and its LOD is
+  Godot's mesh LOD on whatever camera draws; the fade's count asks the streamer, which `follow()`
+  points at the body before `player_spawned`. The flow now checks both things that let the old
+  bug through: that Terrain3D's camera is the body's own, and that the fade counted cells round
+  the body at all (a streamer following something else counts nothing, and nothing is all in at
+  once).
+* **The fade counts cells, not seconds** (the coordinator's finding on the main branch: the
+  `--load` start lifted with 8 of 9 near cells after 535 s of wall time, the machine running the
+  game at a few per cent of real speed). The 20 s cap described above is gone. `UI.wait_for_country`
+  holds while cells keep arriving and gives up only when none has come for 120 frames and 10
+  seconds together, or after 600 s; the caption goes on counting. `test_country_wait.gd` throttles
+  a fake streamer by hand rather than hoping for a slow machine: a cell every eight frames at two
+  seconds a frame is waited out to nine of nine (the old wait would have lifted on one), a streamer
+  that stops at five is given up on after both halves of the stall and no longer, a cell every 45
+  frames on a 1 ms clock is not given up on for its quiet frames alone, and the cap ends a wait
+  that is still moving.
+* **The wait went to main without the probe that reads it.** fc24424c took `UI.COUNTRY_WAIT_S`
+  away and `flow_probe.gd` still named it, so the probe does not compile on a main that has
+  fc24424c alone and `./run.sh flow` has no verdict there; 3e10d533 on this branch is its other
+  half.
+* **A player who built the world pulls the tracked one without trouble.** Modelled in a scratch
+  repository with both `.gitignore`s: the locally built manifest and runtime maps were ignored, so
+  `git pull` replaces them with the tracked ones silently (git's default for ignored files) and
+  leaves the full-resolution maps alone; `git status` is clean after. Those maps are then the old
+  build's: `./run.sh` leaves them be (the regions are there), but a `./run.sh terrain` would import
+  them over the tracked regions.
+* **`run.sh` stopped reaching for `xvfb-run` on Windows and a Mac**, which never have it and
+  always have a screen.
+
+**Found on merging main at f1cd8852, and not this stream's.** The merged suite: 1562 tests, 3
+failed, 3 script errors, where this branch alone had been 1421, none failed and none. (Main
+mended the three tests and the errors itself in d9c4b6ce and ef0b0ce2; merged again at 146494ec,
+the suite is 1570 tests, none failed, no content problems, no script errors, no dead captures.)
+`test_inventory_loot`'s two quest tests count the Naming's stages as wake, ash_wights, hearthstone,
+the_cart (quests round two, b1326eb6), and the opening (20ef631b) put `the_choir` second.
+`test_the_start.test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front` finds one light
+at the Stair Head where it wants more than two. `test_property` calls `Ownership.instance`, which
+it never makes and which no test before it now leaves standing. And the New Game flow sat in the
+opening for 601 s with 2 of its 10 shots shown, at a load average of 25: each shot holds until the
+cells round its points are in, and they came slowly. It did the same again on the final merge
+(602 s, the same two shots, `the_name` and `the_mere`, then a hold on the third), so it may not be
+load alone. It never handed over, so the HUD, the first
+frame of control, the Warden, the objective line and this stream's Terrain3D-camera check all
+failed after it: the camera was still `/root/World/Opening/CinematicCamera`. The hair chooser's
+list did not open within its 60 frames either. The slot that run saved kept the `new_game` flag up
+(it stays up until the opening hands back), so the `--load` start after it played the opening
+again. With `-- --no-opening` the same three starts read past it: every check of this stream
+passed in all three -- nine of nine near cells in before the fade lifted (13.7, 25.1 and 20.3 s,
+two frames each), Terrain3D following `/root/World/Player/CameraRig/Yaw/Pitch/Arm/Camera3D`, its
+ground 0.00 m under the feet, 158 things drawn within 200 m -- and `--load` passed whole (32
+checks). New Game failed only the two choosers and the opening it was told not to play; Continue
+only "the body's hair is short (it is long)": it takes the newest slot, and every worktree on this
+machine saves into the one `user://`. On Forward+ over lavapipe, `--load` with the opening off
+drew the coarse ground and passed every check of this stream -- the plate in the corner, the card
+41.9 s after the fade (game time runs slow there), the body on `Ground_4_15`, 160 things drawn
+within 200 m, the fade holding 87.2 s for nine of nine -- and failed only the same hair.
 
 ### Next, in order
 
@@ -2859,6 +2916,364 @@ release and no official binaries. Nothing to verify against, so nothing was chan
    not survive 8 m. A 2 m runtime copy of the heights would be 64 MB; a small runtime field map
    from the builder would bring the hedges back. Both are the builder's files, not this stream's.
 6. **`check_scripts.gd`** wants mending for 4.7.2 or deleting.
+
+## Walking, the view, the roll and the compass: what the player felt, measured
+
+The first report was "the walk animation seems very slow and jagged, like a crouch walk (no
+sprint?)", and that the compass moved erratically as the player did. After playing the build:
+"the movement is indeed very slow, and the mouse/movement (WASD) relationship seems off, hence
+the compass and orientation issues". After the first round: "movements/animations still a
+little clunky (no roll?)". Every part of that was true, and each had a cause that could be
+measured. Most were not the cause first guessed.
+
+**The view turned with the body.** The camera rig was a plain child of the player's body, so
+the view looked along body yaw plus rig yaw, while movement, respawn, the save and every test
+read the rig's yaw as the whole of it. One second of D, mouse untouched, turned the body −90°
+and the view +89.9°. The compass swung 89.9° in steps of up to 21° a frame, and W then sent the
+body off at an angle to what the player could see. That one fault is the "mouse/movement
+relationship" and the "compass and orientation issues". The rig is `top_level` now. It follows
+the body's drawn position every frame, never its rotation, and its yaw is a world yaw that only
+look input changes. The mouse signs were already right; a test pins them now. W/A/S/D are
+relative to the view, and over twenty cases (camera yaw 0, 90, 180, 270 and odd angles, each
+key) the worst direction error is 0.00°. The body turns toward where it is going at a rate that
+falls with speed: 900°/s standing, 720 at a walk, 540 at a jog, 300 at a sprint. It gives up
+speed while a large turn is still to make, so a reversal from a jog plants and faces round in
+0.42 s instead of moonwalking. Locked on, blocking or in first person, it faces the target or
+the view and strafes.
+
+**"Very slow" was two things, and only one of them was the speed.** A brand-new character
+reached exactly 4.20 m/s, the design's number, in 0.067 s, and nothing but a status touches
+ground speed. The gaits are now walk 1.8 m/s (Alt, or a light stick), jog 5.0 (the default)
+and sprint 7.8 (Shift held). The sprint costs 8 stamina a second, and run to empty it stops
+until a quarter of the pool is back instead of stuttering on every regen tick. Measured on a
+new character: 1.80, 5.00 and 7.80. Rest to a jog takes 0.317 s; a jog stops in 0.25 s over
+0.58 m, a sprint in 0.48 s over 2.05 m. The other half of "slow" was a jog posed as a crouch.
+The blend space fed velocity/6.5 with Sneak_Walk half way up its forward axis, so at 4.2 m/s
+the body was three-quarters into the sneak: hips 15.2 cm below standing, knees at 58°, the
+planted foot sliding at 79% of the ground speed. The sprint played the Walk clip and slid at
+76%. Legs that shuffle under a gliding body read as slow at any speed.
+
+**The legs keep pace with the ground.** `HumanoidModel.set_locomotion` takes metres per second.
+Every moving clip lies on one shared stride timeline with its silent inputs kept running, and
+one time scale plays it at ground speed over stride. The planted foot as a share of ground
+speed is now: walk 2%, brisk walk 2%, walk to jog 6%, jog 3%, jog to sprint 3%, sprint 3%, sneak
+1%, a villager at 2.2 m/s 2%, a strafe 0%, a backpedal 0%. The thresholds are 5% at a gait and
+8% in a blend. Every gait reads the same phase to within 0.001 of a stride through a walk, a
+jog, a sprint, a strafe and a backpedal. Villagers were never told how fast they walked; the
+village glided about in its idle pose. They are told now.
+
+**The clips were crouched as well.** Walk, Run and Sneak_Walk are re-made in the forge at the
+game's speeds, and there is a new Sprint. Played in the engine at walk, jog and sprint speed,
+the hips rode 5.4 cm below standing with 11.4 cm of bob at a walk, and 8.7 cm with 23.9 cm at a
+jog. The sprint was the jog's clip sped up and did the same. Now they ride 4.2 cm with 5.0 cm,
+4.1 cm with 5.3 cm, and 4.4 cm with 6.2 cm. The first model's walk was lowest at mid-stance
+and its run highest there, which is backwards. The new stride model in
+`tools/forge/lib/anim.py` plants the foot ahead of the hip by a share of the sweep, plans the
+hips from where the ankle really is once the foot has rolled, meets the reach limit through a
+smooth minimum, and phases the bob the right way round. The side-steps dropped the hips 21.3 cm
+at every step, a bounce whenever the player was locked on, and are shortened to move them
+5.7 cm.
+
+**The roll existed; nothing said where it was.** Proved from real key events through the
+default bindings, Ctrl rolled a jogging body 3.31 m in the tick the key went down, untouchable
+for 0.30 s, playing Dodge_F. But Ctrl is a key the genre does not use for a roll. A tap of
+Sprint now rolls, as it does in the games most players will have come from, and a hold sprints.
+The sprint waits out the 0.22 s tap window, so a tap is not a lurch and then a roll. Ctrl and a
+pad's B still roll, and Space stays jump. The tap has a setting and is off while Sprint is a
+toggle. The roll itself was wrong too: its keys put the toes 19 cm into the ground on the way
+down, the head 24 cm into it at the turn and the back 26 cm clear of it coming over, and it
+stood up on bent legs with its feet 30 cm in the air. Every frame now lowers or raises the
+whole body until its lowest point touches the floor, within 1 cm, and it ends standing. It also
+widened the view: the sprint's widening read real speed, and a roll peaks at 11 m/s, so every
+roll breathed the view out from 75° to 77.8°. It stays at 75.0° now.
+
+**The first minutes teach the controls.** A strip low in the HUD reads "WASD move · Shift
+sprint · tap Shift roll · Space jump · E use · LMB strike · RMB block" from the live bindings,
+or the pad's buttons while a pad is in use. Each item fades once it has been done, and the
+strip goes when nothing is left or after fifteen minutes. What was learned rides in the game,
+so a new game is taught again. The pause page reaches "How to move and fight", every control as
+bound now, one button from rebinding.
+
+**Locked on, the pace goes by the way you go.** The combat round's headless fights found that
+a locked-on player could not close on a caster backing away at about 3 m/s: every locked-on
+direction was capped at 2.6 m/s, and the gap grew 1.39 m in three seconds of W. Locked on, the
+body now goes 5.0 m/s at the foe, 3.0 across and 1.8 backing off (the ellipse between), and the
+gap closes 5.26 m in the same three seconds with the lock held. In the arena, at the old pace
+the Cragborn's caster fight was not won in 120 s (0 of 53 swings landed); at the new one it is
+won in 35.1 s, and the Hearthkeeper's in 20.7 s rather than 59.0. Sprint while locked on runs
+and keeps the lock. A raised guard walks at 1.56 m/s. It used to glide there with frozen legs,
+because Block_Idle was played as a whole-body state. It is a layer over the upper body now, and
+the legs walk under it, 2% slide. A body turning on the spot, guarding or locked on, steps
+round rather than pivoting on planted feet.
+
+**Starts, stops and the camera's follow.** The stride's rate was read off a speed smoothed over
+0.08 s. Under a jog's stop that runs up to 1.6 m/s ahead of the body, so the legs went on
+stepping 0.12 of a stride after the body stood, then held a split for a tenth of a second and
+snapped together. The rate now follows the ground speed as it is, no step is taken after the
+body stands, and the idle eases in over 0.2 s from the moment the body's own speed says so. The
+camera trailed a jog by 0.34 m and drew 0.4 m away at every start and back at every stop. It
+trails by 0.23 m now and closes up in about 0.15 s.
+
+**Smooth at any refresh rate.** Physics interpolation was off, so a body moved at 60 Hz stepped
+on any faster display, and the camera and the compass stepped with it. It is on, with the
+jitter fix off. What that needs was measured in the engine first. A child moved every frame
+under an interpolated parent trails (drawn at 3.61 when put at 4), so the per-frame things opt
+out: the camera rig, the sockets on the hands, the atmosphere, a dropped item's bob, the Echo's
+hover, the Naming's mannequin, the UI. An existing node moved without a reset smears (moved
+from x = 4 to 500 it was drawn at 254 for a frame), so everything that jumps resets:
+`Player.teleport` (which respawn, loads, doors, jail, exile and the console go through), an
+enemy sent home, a villager put indoors, a loaded actor. A wall 1.6 m behind the camera pulls
+it in to 1.39 m at once, and it eases back to 3.59 m over a third of a second. A sprint draws
+it back 0.5 m and widens the view from 75° to 81.8°, eased both ways. Checked against
+`World.follow`, which gives Terrain3D the player's own camera: a teleport made outside a physics
+tick (a respawn timer, a load, the console) left the interpolated transform at the old place for
+a frame, so the rig snapped there and the frame was drawn, and the terrain built, from 800 m
+away. On the frame of a snap the rig now reads where the body was put: 4.23 m from it the next
+frame.
+
+**The compass reads the view**, eased over about 30 ms, processed after the camera, with
+bearings from where the body is drawn. On a path past Merrowby that turned the body 450° with
+the mouse still, the strip moved 0.00°. With the view turning, it stays within 1.33° of the view
+and never moves further in a frame than the view did plus the lag it carried.
+
+**Holes found on the way.** The Echo handed a death's marks back. An Area3D finds an overlap
+in one physics step and reports it at the start of the next, and the journey dies and comes
+back one frame apart. So the body's single tick on the Echo was reported after Hearth had
+armed it and moved the body 30 m to the stone. The Echo now checks the body is standing in it
+when the arrival is reported; a test reproduces the stale report. After the merge with the
+combat work, three tests measured the machine instead of the game, and they are fixed. The
+blend test played every tick twice once the model advanced its own tree. The compass test's
+bound grew with frame times. A footstep test walked "a second and a half" on a loaded wall
+clock that fitted a third of a second of play.
+
+**Tools left behind.** `game/tools_gd/motion_studio.tscn` films the real player on a plain
+floor from real key events, in Forward+ in a minute or two, where loading the country crashes
+Mesa's software Vulkan. `tools/capture/plans/motion.json`, `gaits_studio.json` and
+`controls.json` are its plans. The capture runner's gait runs can hold and tap real keys
+(`tools/capture/plans/roll.json`). `tools/forge/bake_clips.py` bakes every clip onto the bare
+armature in 26 s where the rig bake takes 24 minutes. `tools/forge/transplant_clips.py` moves
+clips onto the committed rig by bone name and proves nothing else changed. Under Blender 4.2
+the rig bake repaints the body the 4.0-built rig was made with, so the transplant is how
+clips change without the body.
+
+**Looked at.** Eight frames 0.1 s apart of each gait, from the side, in the world at the
+Cracked Toll, through the capture runner's `gait` section (`tools/capture/plans/gait.json`,
+`--fixed-fps 60`), before and after. Before: the jog was a hunched, bent-kneed shuffle with
+both feet near the ground in every frame; the "walk" was the same, since there was no walk key;
+the sprint was the Walk clip at 6.5 m/s, an upright stroll with the arms hanging. After: the
+walk is upright, with a heel strike and a straight leg under the body. The jog leans a little,
+drives a knee and leaves the ground between steps. The sprint leans hard, drives the knee to the
+hip and spends much of each stride in the air. In Forward+, in the motion studio: the roll goes
+over the shoulders and back and ends standing; the stop's stance closes steadily over 0.2 s,
+where it had frozen mid-stride and snapped; a guard held while walking now steps under the
+raised hands, where the legs had stood still; a turn on the spot steps round.
+
+**Checks at the end.** On the final head: `./run.sh test` 1436 tests, 0 failed, 0 content
+problems, 0 script errors, 0 dead lambda captures; `./run.sh journey` 16 of 16, 0 logged errors;
+`./run.sh flow` PASS on all three starts (new 73 checks, load 28, continue 31, 0 errors logged).
+The forge's own tests: 28, all passing. `./run.sh fights --only=caster`: both Callings win.
+
+### Found, and not fixed
+
+* **A stop still slides its feet together.** The split closes steadily over 0.2 s now rather
+  than freezing and snapping, but the feet travel 59 cm in all doing it. A stop clip (the back
+  foot stepping up) or foot locking would take it out.
+* **Turning on the spot is a side-step, not a turn clip.** It reads as stepping round in the
+  frames; 90° and 180° turn-in-place clips would be the proper thing if it reads as a shuffle
+  in play.
+* **The diagonals slide.** Locked on, the planted foot moves at 28% of the ground speed on the
+  forward diagonal (3.64 m/s) and 23% backing off diagonally; it was 19% at the old 2.6 m/s.
+  Blending a forward stride with a side-step in rotation space does not put the foot at the
+  average of the two footfalls. It needs diagonal clips or foot IK.
+* **Footsteps count ground, not footfalls.** The foley added in the combat round counts
+  ground covered and is right on average. The clips carry `footstep_l`/`footstep_r` at the
+  shared phase (left 0, right 0.5), which would put the sound exactly on the foot.
+* **The pad layout wants its own pass.** The right-stick click is both lock-on and camera
+  toggle, and D-pad up is both cast and quick slot 1. The Sayings menu has no pad button since
+  sprint took the left-stick click. Cycle target, lantern, skills and quick save/load have
+  none either.
+* **Walk_Back and the strafes are still made by the first stride model.** They measure
+  upright enough (Walk_Back 3.7 cm below standing, 6.8 cm of bob), so only the side-step
+  length changed.
+* **Villagers walk at 2.2 m/s**, the walk clip at 1.2 times its speed: purposeful, not wrong.
+* **Terrain3D 1.0.2 calls the deprecated `instance_reset_physics_interpolation`**, which prints
+  a warning at load and is harmless.
+
+### What a pair of hands should check
+
+The feel cannot be measured headless. Check the turn rates, the 0.3 s start, the stops, the
+0.22 s tap (too short for a deliberate tap? too long for a sprint start?), mouse sensitivity,
+whether 3.6 m behind the shoulder is the right distance, and whether the sprint's widening
+reads as speed. On a display faster than 60 Hz, the body and the camera should glide, not
+step; the software rasteriser here cannot show that. On Windows, check that Alt (walk) does not
+take the keyboard into the window's menu, and that Ctrl + W in the editor's embedded game
+window rolls rather than closing anything.
+
+## Doors walked both ways, the crash found in the audio mixer, and every interior walked into
+
+Three parts, in the order they were asked for, the second made first when the same crash killed a
+unit run. Measured with `./run.sh test --filter=test_every_door_both_ways` (its DOOR and CONTENTS
+lines), `tools/debug/audio_race_check.sh`, and `./run.sh fights`.
+
+### 1. Every door lands the body just inside it, and just outside it on the way back
+
+All 24 doors the world puts up (15 houses, 9 deep places) are walked both ways by the world's own
+player, as a player would: stand two paces out, press the door, measure, press the way out,
+measure again.
+
+* **In.** A house now stands the body a step inside its front door. It is on the floor of the room
+  the door opens into, facing into the room, on the nearest spot that is clear of the real prop
+  meshes. The forge had stood Maud's bread oven, one of Hesta's stools and Osric's bellows right
+  inside their doors. A deep place stands the body 1.2 m inside its way out, on the rock. Measured
+  across the 24, the body lands 1.03-1.74 m from the interior's own door and 0.04-0.05 m over the
+  floor, standing in nothing, facing into the room: 1.00 where the door is straight ahead, and
+  0.59-0.98 where the nearest clear spot is to one side.
+* **Out.** The body lands 1.50 m in front of the door it came in by, on the ground (0.00 m), facing
+  away from the door (1.00).
+* **Before.** A house put the player in the corner of its first room, a metre up. A deep place put
+  them in the middle of its mouth chamber, 3-5 m from the way out. Leaving faced the player back at
+  the door they had just come out of.
+* **A game saved inside.** It now leaves by the door it came in by. The load had taken the body's
+  own position, in the pocket 50 km off, as the way out.
+
+### 2. The crash: the engine's audio mixer reading freed memory
+
+**Found.** All five crash logs have the same backtrace: four fights runs and the unit run on
+main. The stripped binary's frames were named by the strings each function refers to (Godot's
+error macros carry the file and function names):
+
+* StringName's copy constructor ("!configured", string_name.cpp);
+* AudioServer::_mix_step, at the copy of a playing sound's bus details;
+* AudioServer::_driver_process;
+* the audio driver's thread.
+
+The "/root: The caller thread can't call `propagate_notification()`" line is the crash handler
+itself, running on that thread.
+
+**Why it happens.** Godot 4.7.2 swaps in new bus details whenever a playing sound's volume or
+panning changes. For every AudioStreamPlayer3D that is playing, that is every physics frame: it
+compares a mix count it never records. AudioServer.update() frees the old details two updates
+later, whatever the mixing thread is doing. A mixer descheduled between loading a sound's details
+and copying them therefore copies freed memory.
+
+**Not the suspects.** Jolt, bodies freed in flight, navigation, interpolation and Terrain3D are
+not involved. The crashing thread was the mixer every time. The Jolt warning that came before some
+crashes is starvation, and no project setting sets that limit.
+
+**Reproduced deterministically.** `tools/debug/stall_mixer.py` holds only the mixing thread, under
+gdb, at the instruction between the load and the copy (0x3b19830 in the official build).
+`tools_gd/audio_race.gd` keeps sounds playing. Results:
+
+* frames unpaced (`--fixed-fps`): crashed at the first 30 ms stall;
+* frames paced at 60 a second: crashed at the first 20 ms stall, and after 57 stalls of 10 ms;
+* the real fights harness: crashed after 32 stalls of 20 ms.
+
+**Can the game hit it?** Yes. The unit suite and a Forward+ world load are paced runs, and they
+met it. It needs the mixer descheduled at one instruction for about a frame. That is rare on an
+idle machine and ordinary on a busy one. More sounds playing means more chances.
+
+**Fixed, or worked around where the fault is the engine's.** `AudioGuard` (systems/audio, stood up
+by Foley) stands between frames in every run. At the end of each frame's processing it takes the
+audio driver's lock and lets it go at once. The mixer holds that lock for a whole mix, so this
+waits out a mix under way and holds nothing. Anything a later update() frees was swapped out
+before the barrier. With the guard:
+
+* the stalled reproduction ran its 40 s through 1,434 stalls;
+* the fights under 20 ms stalls completed through 2,655 stalls;
+* two full six-Calling fights runs in one process passed (66 fights each, 0 checks failed), where
+  two of three had crashed before;
+* the unit suite ran 1,584 tests with 0 failed and no crash.
+
+Ours, also fixed: the music stems and ambience beds wrote their volume every frame. Every write
+swaps in new bus details, and they sit at their level most of the time; they now write only when
+the volume moves.
+
+**Regression.** `tools/debug/audio_race_check.sh` fails unless the stalled reproduction crashes
+without the guard and runs with it. It needs gdb and the official 4.7.2 build, and a crash cannot
+run inside the suite. `test_audio_guard.gd` checks four things:
+
+* a barrier every frame;
+* that the barrier waits for whoever holds the lock (257 ms behind a 250 ms hold);
+* that it holds nothing (the mixer goes on mixing);
+* that an unmoved volume is not written.
+
+The fault should go upstream with the reproduction. AudioServer's bus-details graveyard frees by
+frame count and not by the mixer's progress, and AudioStreamPlayer3D never records
+`last_mix_count`.
+
+### 3. Every interior walked into from the world
+
+The same walk now checks what each interior holds, against its meta and the quests.
+
+* **Holds what it should.** All 24 are built (44-169 meshes, a floor that says what it is, 3-44
+  lights). Every house prop the meta places stands (13-50 per house). Every foe a deep place's
+  markers ask for stands (8-14 per place). Every quest thing the placer puts inside is there: the
+  steward's key, the Ledger of Prices, the note at the Cantor's Seat, the cold flour, and the
+  things in Tallissa's and Dunna's houses. Built empty from the overworld and quest things not
+  placed were the faults fixed in the last round; they hold here.
+* **Stood over the rock.** A new case of the arrival drop's class. Every deep place stood its
+  Hearthstone, dressing, pickups and quest things at a chamber's nominal floor, 0.34-0.55 m over
+  the voxel rock. Sunken Barge stood its Hearthstone in the middle of the hold, over the pool,
+  with no rock within 6 m under it (the hold's and the nest's middles are both over nothing).
+  Features, spawn markers and the placer's things now go on the rock under them, or on the
+  nearest floor point that has rock under it. All nine deep places now measure 0.00 m.
+* **Other ways in.** A loaded game re-enters through the same builder as a door, and leaves by the
+  saved door (part 1). The console's `interior <id>` also uses the same builder. No deep place has
+  a door to a second interior.
+
+### 4. Combat timing against DESIGN §5.3
+
+Measured in the player scene on the merged head, after the movement rework, the tap-to-roll and
+physics interpolation, by `test_combat_design.gd` at 60 physics frames a second. Every timing
+lands within one frame (16.7 ms) of DESIGN:
+
+| what | DESIGN | measured |
+|---|---|---|
+| stamina regen | 30/s after 0.8 s | 30.00/s after 0.800 s |
+| sprint | 8/s | 8.00/s |
+| input buffer | 0.25 s | 0.250 s (a press 0.25 s early fired, one earlier did not) |
+| light chain | 3 | 3 (indices 0, 1, 2, then 0) |
+| heavy charge, tapped / held | 1.0× / 1.5× | 1.017× / 1.500× |
+| cancel into a dodge | after the active frames (hit_end 0.467 s) | 0.483 s, the next frame |
+| roll at a light load | 0.60 s, i-frames 0.08-0.38 s | 0.600 s, 0.083-0.383 s |
+| roll at a medium load | 0.66 s, 0.08-0.34 s | 0.667 s, 0.083-0.350 s |
+| roll at a heavy load | 0.80 s, 0.10-0.30 s | 0.800 s, 0.100-0.300 s |
+| roll overloaded | 1.00 s, 0.12-0.26 s | 1.000 s, 0.133-0.267 s |
+| parry window | 0.18 s | 0.167 s (10 frames; 11 frames early is too early) |
+| riposte open, and its damage | 2 s, 3× | 2.000 s, 3.000× |
+| poise regen | 4/s after 1.5 s | 4.00/s after 1.500 s |
+| enemy wind-ups | as authored | 0 frames apart over 100 attacks |
+
+The one gap is the tapped heavy. It is released after a frame of charge and lands at 1.017×.
+Nothing was changed for it. Main's roll by a tap of Shift starts on the release, up to 0.22 s
+after the press, as its own DECISIONS entry says; Ctrl and B start on the press.
+
+### Checks
+
+Run on the merged head (main at a3e9fe6b), one Godot at a time:
+
+* `./run.sh test`: 1,584 tests, 0 failed, 0 content problems, 0 script errors, and no crash. The
+  4 logged errors are the ones their tests provoke.
+* `./run.sh journey`: 16 of 16 steps.
+* `./run.sh fights`, all six Callings in one process: 66 fights, 0 checks failed, twice, with no
+  crash.
+* `tools/debug/audio_race_check.sh`: passes. Without the guard it crashes at the first stall;
+  with it, it runs 40 s through 1,650 stalls.
+* The audio toolkit's tests: 128 passed.
+* `./run.sh flow`: **fails, in the opening cinematic.** Two of its ten shots are shown, then it
+  holds on the third for 606 s, and a held key does not skip it. Ten of the 88 checks fail, all
+  downstream of that: no HUD, the cinematic camera still current, nothing drawn near the body.
+  It fails the same way with the audio guard off (`--no-audio-guard`, 606 s, the same ten), and
+  nothing in this branch touches the cinematic or the streaming.
+
+### Found and not fixed
+
+* **The opening cinematic hangs on its third shot** in `./run.sh flow` (above), and holding a key
+  does not skip it; it is the opening's own work and was left to it.
+* The engine faults above, to report upstream with the reproduction.
+* A house's front door always opens into its first ground-floor room from the north wall, and the
+  meta's `entrance` names an internal door; the landing reads the front door and ignores
+  `entrance`.
 
 ## Wickmere drawn by hand, and filled to walk
 

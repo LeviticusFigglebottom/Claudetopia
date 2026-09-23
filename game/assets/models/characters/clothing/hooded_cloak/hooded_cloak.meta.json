@@ -1,25 +1,33 @@
 {
  "bounds": [
-  -0.2551,
-  -0.1464,
-  0.5339,
-  0.2542,
-  0.2011,
-  1.8094
+  -0.4035,
+  -0.1814,
+  0.4549,
+  0.4002,
+  0.2459,
+  1.7945
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "hooded_cloak": "cloth"
+ },
  "params": {
   "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 4353,
+ "seed": 66791,
  "slot_hint": "back",
+ "textures": [
+  "hooded_cloak_albedo.png",
+  "hooded_cloak_orm.png"
+ ],
  "tris": [
-  2998,
+  5197,
   0,
   0
  ],

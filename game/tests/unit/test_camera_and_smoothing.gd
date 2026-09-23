@@ -14,6 +14,15 @@ var floor_body: StaticBody3D = null
 var wall: StaticBody3D = null
 
 
+## Stands in for Terrain3D: World.follow hands it a camera to build its ground and collision round.
+class FakeTerrain3D:
+	extends Node3D
+	var camera: Camera3D = null
+
+	func set_camera(c: Camera3D) -> void:
+		camera = c
+
+
 func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
 
@@ -213,6 +222,31 @@ func test_a_wall_pulls_the_camera_in_and_it_eases_back_out() -> void:
 	assert_true(blocked < 1.6, "the camera must stay on this side of the wall (%.2f m out)" % blocked)
 	assert_true(one_frame < full - 0.5, "with the wall gone the camera must ease out, not pop (%.2f of %.2f m at once)" % [one_frame, full])
 	assert_near(later, full, 0.05, "and it gets all the way back")
+
+
+## The world follows the player's own view (World.follow): Terrain3D builds its ground and its
+## collision round the camera it is given, and it is given the rig's camera, which stays within a
+## few metres of the drawn body -- and arrives with it on a teleport, in the same frame, so the
+## ground under a body put somewhere new is built round that body and not where it was.
+func test_the_ground_follows_the_players_own_view() -> void:
+	await _stand()
+	var world := World.new()
+	var terrain := FakeTerrain3D.new()
+	world.terrain_node = terrain
+	world.follow(player)
+	assert_eq(terrain.camera, player.camera_rig.camera, "Terrain3D was given some other camera than the player's view")
+	await _frames(2)
+	var near := terrain.camera.global_position.distance_to(player.get_global_transform_interpolated().origin)
+	var far := Vector3(640.0, 0.02, -480.0)
+	floor_body.global_position = Vector3(far.x, -0.5, far.z)
+	player.teleport(far, 0.0)
+	await _tree().process_frame
+	var after := terrain.camera.global_position.distance_to(far)
+	print("    the terrain's camera is %.2f m from the drawn body, and %.2f m from it the frame after a 800 m teleport" % [near, after])
+	assert_true(near < 5.0, "the terrain's camera is %.2f m from the body" % near)
+	assert_true(after < 5.0, "a frame after a teleport the terrain's camera is %.2f m from the body" % after)
+	world.free()
+	terrain.free()
 
 
 ## The weapon and lantern sockets are moved by the animation every frame, so they are placed

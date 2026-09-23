@@ -122,7 +122,11 @@ need_python() {
   return 1
 }
 
-have_display() { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; }
+# Windows (Git Bash) and macOS always have a screen and never have xvfb-run; Linux says so.
+have_display() {
+  case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*|Darwin*) return 0 ;; esac
+  [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
+}
 xvfb() { if have_display; then "$@"; else xvfb-run -a -s "-screen 0 1600x900x24" "$@"; fi; }
 import_project() { need_godot; "$GODOT" --headless --path "$GAME" --import --audio-driver Dummy >/dev/null 2>&1 || true; }
 # A fresh clone has never been imported, and `godot --path game` outside the editor cannot load a
