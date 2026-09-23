@@ -15,6 +15,10 @@
               {"enemy": "core:enemy/larkbourne_bruiser", "count": 1, "at": "the_fire",
                "unless": [{"quest_at": ["core:quest/wardens_roll_of_names", "find_the_name"]}]}]},
 
+  {"id": "core:encounter/singing_yew", "place": "core:poi/singing_yew",
+   "notes": "safe ground; a place to lure barrow-wights and watch them turn away. The barrow's nearest dead work the hedges two hundred metres off and are leashed to them, so two come up the hedge line past the gravestones after dark and stop there; the yew's ground (its POI def's ward) is ground the dead will not cross, and a wight whose quarry stands under it turns for home.",
+   "spawns": [{"enemy": "core:enemy/hedge_wight", "count": 2, "when": "night", "at": "the_gravestones", "spread": 2.0}]},
+
   {"id": "core:encounter/whitecut_falls", "place": "core:poi/whitecut_falls",
    "notes": "a down-wolf pack in the cave behind the falls: the dark mouth at the foot of the face, behind the water",
    "spawns": [{"enemy": "core:enemy/down_wolf", "count": 4, "at": "behind_the_falls", "spread": 1.5}]},

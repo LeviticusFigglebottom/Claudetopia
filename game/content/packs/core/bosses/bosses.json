@@ -493,18 +493,18 @@
       "skin": "umber",
       "build": 0.9,
       "parts": {
-        "torso": "plate_torso",
-        "back": "pauldrons",
+        "torso": "gambeson",
+        "back": "plate_torso",
+        "belt": "pauldrons",
         "legs": "trousers",
-        "feet": "greaves",
+        "feet": "boots",
         "hands": "gloves",
-        "headgear": "helm",
-        "belt": "belt"
+        "headgear": "helm"
       },
       "palette": {
         "primary": "4a5540",
         "secondary": "2e3324",
-        "leather": "3a2c1e",
+        "leather": "3b4034",
         "metal": "5d6457"
       }
     },

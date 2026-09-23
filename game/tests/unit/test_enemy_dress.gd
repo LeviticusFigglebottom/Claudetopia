@@ -39,6 +39,10 @@ func test_every_humanoid_foe_is_dressed() -> void:
 			var parts: Dictionary = look.get("parts", {})
 			if parts.get("torso", "") == "":
 				bare.append(str(def["id"]))
+			# a cuirass has no sleeves: plate is worn over something that has
+			if (parts.values() as Array).has("plate_torso"):
+				assert_true(str(parts.get("torso", "")) in ["gambeson", "shirt", "tunic", "brigandine", "coat"],
+						"%s wears plate over bare arms" % def["id"])
 	assert_empty(bare, "these humanoid foes would stand in the world as the bare rig")
 
 
@@ -48,14 +52,14 @@ func test_a_foes_own_appearance_is_worn_before_its_tags_outfit() -> void:
 	var tagged := {"id": "core:enemy/test", "tags": ["bandit", "humanoid"]}
 	assert_eq(EnemyDress.look_for(tagged)["parts"]["torso"], "tunic", "a bandit in the road's own jerkin")
 	var knight := {"id": "core:enemy/test", "tags": ["undead", "knight"]}
-	assert_eq(EnemyDress.look_for(knight)["parts"]["torso"], "plate_torso", "a knight is in plate before he is dead")
+	assert_true((EnemyDress.look_for(knight)["parts"] as Dictionary).values().has("plate_torso"), "a knight is in plate before he is dead")
 	assert_eq(EnemyDress.look_for({"id": "x", "tags": ["beast"]}), {}, "a beast is not dressed")
 
 
 func test_the_clanless_are_in_heavy_plate() -> void:
 	for id in ["core:enemy/clanless_raider", "core:enemy/clanless_hewer", "core:enemy/clanless_outrider"]:
 		var parts: Dictionary = EnemyDress.look_for(ContentDB.get_or_empty(id)).get("parts", {})
-		assert_eq(parts.get("torso", ""), "plate_torso", "%s is an elite raider in heavy plate" % id)
+		assert_true(parts.values().has("plate_torso"), "%s is an elite raider in heavy plate" % id)
 
 
 func test_the_hart_wears_antlered_plate_and_carries_his_spear() -> void:
@@ -68,7 +72,8 @@ func test_the_hart_wears_antlered_plate_and_carries_his_spear() -> void:
 	if model == null:
 		return
 	var look: CharacterAppearance = model.get("appearance")
-	assert_eq(look.part("torso"), "plate_torso", "plate")
+	assert_true(look.parts.values().has("plate_torso"), "plate")
+	assert_eq(look.part("torso"), "gambeson", "over a padded coat with sleeves, not bare arms")
 	assert_eq(look.part("headgear"), "helm", "a helm")
 	var hand: Node3D = model.call("socket", "WeaponR")
 	var spear := hand.get_node_or_null("Held") as Node3D

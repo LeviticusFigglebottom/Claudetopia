@@ -2482,6 +2482,9 @@ static func _tree_singing_yew(d: PoiDressing) -> void:
 		var p := -grain * (7.0 + float(i) * 3.2) + Vector2(-grain.y, grain.x) * k.rng.randf_range(-1.6, 1.6)
 		k.place(k.prop("gravestone"), k.on_ground(p.x, p.y), yaw + k.rng.randf_range(-0.4, 0.4), 1.0, true,
 				Vector3(k.rng.randf_range(-0.12, 0.12), 0.0, k.rng.randf_range(-0.14, 0.14)))
+	# and past the last stone, where the dead come up the hedge line after dark and stop
+	var beyond := -grain * 17.5
+	k.marker("the_gravestones", k.on_ground(beyond.x, beyond.y))
 	var grass: Array = []
 	for i in 34:
 		var p := k.jitter(12.0)

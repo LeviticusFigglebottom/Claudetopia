@@ -158,6 +158,12 @@ def item_sources(all_defs: dict) -> dict:
                 src[str(prop["key"])].append("deed " + iid)
         if isinstance(it.get("furnishing"), dict):
             src[iid].append("furnishing")
+    # what a place's own encounter def says lies there (QuestItems puts it down): the chart in
+    # the Reed Wreck, a note at a shrine
+    for eid, enc in of_type(all_defs, "encounter").items():
+        for lying in enc.get("lies", []) or []:
+            if isinstance(lying, dict) and lying.get("item"):
+                src[str(lying["item"])].append("lies at " + str(enc.get("place", eid)))
     # what the game itself hands over by name: the job board's parcel for delivery
     for token, where in _code_literals("core:item/"):
         src[token].append("code " + where)
@@ -187,6 +193,11 @@ def read_books(all_defs: dict, placed_items: set) -> dict:
         for p in meta.get("placements", []) or []:
             if isinstance(p, dict) and p.get("book"):
                 src[str(p["book"])].append("shelf " + iid)
+    # a book lying at a place is read where it lies (the hermit's exercise book on Willow Isle)
+    for eid, enc in of_type(all_defs, "encounter").items():
+        for lying in enc.get("lies", []) or []:
+            if isinstance(lying, dict) and lying.get("book"):
+                src[str(lying["book"])].append("lies at " + str(enc.get("place", eid)))
     return src
 
 

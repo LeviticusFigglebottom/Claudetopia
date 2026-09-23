@@ -15,13 +15,17 @@ extends RefCounted
 ##
 ## The outfits by tag (`OUTFITS`) are the garments the character forge already builds: a hood
 ## and a jerkin for the road's outlaws, plate for a knight, rags for the dead, a robe for a caster.
+## The forge's cuirass has no sleeves, and over bare arms it read as a vest on a labourer, so
+## plate is worn as it is worn: over a padded gambeson (the plate in the `back` slot, which lays it
+## over the torso's garment), with the pauldrons on the shoulders (the `belt` slot, tinted as
+## leather).
 
 ## The first tag of a foe's that has an outfit decides it, in this order.
 const OUTFITS := [
-	["knight", {"torso": "plate_torso", "legs": "trousers", "feet": "greaves", "hands": "gloves", "headgear": "helm",
-			"back": "pauldrons"}, {"primary": "6f7378", "secondary": "3c3a36", "leather": "3f3325", "metal": "8a8f94"}],
-	["raider", {"torso": "plate_torso", "legs": "kilt", "feet": "greaves", "hands": "gloves", "headgear": "helm",
-			"belt": "belt"}, {"primary": "5c5f63", "secondary": "5a4a3a", "leather": "3f3325", "metal": "6f7378"}],
+	["knight", {"torso": "gambeson", "back": "plate_torso", "belt": "pauldrons", "legs": "trousers", "feet": "boots",
+			"hands": "gloves", "headgear": "helm"}, {"primary": "6f7378", "secondary": "3c3a36", "leather": "4a4c50", "metal": "8a8f94"}],
+	["raider", {"torso": "gambeson", "back": "plate_torso", "belt": "belt", "legs": "kilt", "feet": "boots",
+			"hands": "gloves", "headgear": "helm"}, {"primary": "5c5f63", "secondary": "5a4a3a", "leather": "3f3325", "metal": "6f7378"}],
 	["caster", {"torso": "robe", "feet": "shoes", "back": "hooded_cloak", "belt": "belt"},
 			{"primary": "4e4a56", "secondary": "3a3740", "leather": "3f3325", "metal": "77736d"}],
 	["undead", {"torso": "shirt", "legs": "leg_wraps", "feet": "shoes", "back": "ragged_cloak", "hair": "long"},

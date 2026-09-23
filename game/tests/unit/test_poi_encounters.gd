@@ -18,7 +18,7 @@ const WHAT_STANDS := {
 	"core:poi/hedge_shrine_of_ansel": "person: core:npc/marigold_orchard",
 	"core:poi/tumbled_watchtower": "five bandits in the stair-hall, a smuggler-Sayer on the parapet",
 	"core:poi/gosling_pit": "four bandits and the Larkbourne Bruiser at the fire, and person: core:npc/wardens_ryn",
-	"core:poi/singing_yew": "nobody: safe ground, and the dead turn away at its ward (Wards)",
+	"core:poi/singing_yew": "two hedge-wights at the gravestones after dark, turned away at the yew's ward (Wards)",
 	"core:poi/whitecut_falls": "a down-wolf pack in the mouth behind the falls",
 	"core:poi/bell_meadow_stones": "nobody: none",
 	"core:poi/foxglove_dell": "two bristlebacks at dawn, and person: core:npc/tansy_cresswell",
@@ -619,6 +619,19 @@ func test_the_singing_yew_is_ground_the_dead_will_not_cross() -> void:
 	assert_eq(Wards.count(), 1, "the yew puts its ward down with it")
 	var yew := d.world_position
 	assert_false(Wards.keeping(["humanoid", "revenant", "undead"], yew + Vector3(3.0, 0.0, 0.0)).is_empty(), "a hedge-wight will not pass it")
+	# after dark two of the barrow's dead come up past the gravestones, and stop outside it
+	WorldClock.set_time(23.0, 2)
+	var enc := _encounters_of(d)
+	assert_true(enc != null, "the yew has its dead to turn away")
+	if enc != null:
+		enc.refresh()
+		var wights := _living(enc, "core:enemy/hedge_wight")
+		assert_eq(wights.size(), 2, "two hedge-wights at the gravestones after dark")
+		for w in wights:
+			assert_true(Wards.keeping(w.def.get("tags", []), w.global_position).is_empty(), "standing outside the yew's ground")
+			assert_true(Vector2(w.global_position.x - yew.x, w.global_position.z - yew.z).length() < 26.0,
+					"and near enough, on their leash, to come for somebody standing under it")
+	WorldClock.set_time(9.0, 2)
 	assert_true(Wards.keeping(["bandit", "humanoid", "person"], yew + Vector3(3.0, 0.0, 0.0)).is_empty(), "a bandit does not care")
 	assert_true(Wards.keeping(["undead"], yew + Vector3(20.0, 0.0, 0.0)).is_empty(), "and the ward ends where the yew's ground does")
 	d.get_parent().free()
