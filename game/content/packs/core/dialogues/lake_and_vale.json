@@ -5,6 +5,9 @@
   "notes": "Eel-fisher of Gullhithe; the J. Wick of Quill's day-book (core:book/charter_ledger_page), forty marks for a barrow where a carter paid four. Lakefolk fairness by the book, seen from the side the book is a wall on.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "ropes_the_serpent"}, {"quest_done": "core:quest/cut_from_below"}], "text": "It is fifty feet long now, the serpent, and Lettie killed it with an oar. The eggers go over again in spring. I have a knot in my belly about it that nobody else ties."},
+    {"conditions": [{"flag": "ropes_the_sayer"}, {"quest_done": "core:quest/cut_from_below"}], "text": "The knife hung on the slipway post for a week. One of the old eggers looked away on the second morning and has not come back to the racks. I have not asked him why. I watch the water where he rows."},
+    {"conditions": [{"flag": "ropes_said_nothing"}, {"quest_done": "core:quest/cut_from_below"}], "text": "The knife is in my chest under the good shirt. Tam keeps to the racks. The ropes held all spring. I do not know that it means anything, and I am not going to find out by asking."},
     {"conditions": [{"time_between": [4, 6]}], "text": "Forty marks. — That is not for you. I say it when I push off. Wait on the shingle if you want me; the lake does not."},
     {"conditions": [{"book_read": "core:book/charter_ledger_page"}], "text": "You have read the day-book. Then you have read my name against forty marks and a carter's against four, and the steward's own note that the wall is a wall. I did not need a Sayer to tell me. I needed forty marks."},
     {"conditions": [{"member_of": "core:faction/tallymen"}], "text": "You are with the Guild. Then you can tell them Wick's barrow is still in their yard at the Row and it is still not paid for, and I am still fishing without it, and I still say the figure every morning."},
@@ -110,7 +113,9 @@
   "notes": "Bessa's elder brother; turns the only cider press in Wickmere; nineteen turns for nineteen hearths on Tamwick's line of the Roll. The brother who stayed, about the one who went south and the sister who grafts.",
   "start": "greet",
   "greetings": [
-    {"conditions": [{"flag": "tamwick_twenty_turns"}], "text": "Twenty. I lost my place at twenty on Tallowday and started again from one and nobody minded. That has never happened."},
+    {"conditions": [{"flag": "tamwick_twenty_turns"}, {"quest_done": "core:quest/tamwick_twice"}], "text": "Twenty. I lost my place at twenty on Tallowday and started again from one and nobody minded. That has never happened."},
+    {"conditions": [{"flag": "tamwick_roll_to_rest"}, {"quest_done": "core:quest/tamwick_twice"}], "text": "The Rest has the roll, and Hesk has written me three letters about how to spell Tamwic. Not one of them says the yew. I turn nineteen and leave room for a twentieth, the way you leave a chair."},
+    {"conditions": [{"flag": "tamwick_roll_returned"}, {"quest_done": "core:quest/tamwick_twice"}], "text": "The roll is on the capstone where the barrow kept it. Nineteen turns. On Skerrday I lost my place at the twentieth, and I knew where, and I went on."},
     {"conditions": [{"time_between": [13, 18]}], "text": "Eleven. Twelve. — Give me to nineteen. I cannot stop in the middle; the hearths would not have it."},
     {"conditions": [{"quest_done": "core:quest/cask_and_press"}], "text": "Whatever you settled between my sister and the brewer, the press is still turning, so it was settled right enough."},
     {"conditions": [{"discovered": "core:place/pilgrims_ash"}], "text": "You have been south, to the ash. Did you see a knight with a clapper bound in a cloth that smells of apples? — Never mind. Never mind. Have some cider."},

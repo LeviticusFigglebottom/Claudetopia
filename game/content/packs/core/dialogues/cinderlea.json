@@ -54,6 +54,9 @@
   "notes": "Sutler to the pilgrims; a Larkbourne Ford thatcher in grey with a purse under it. Two tallies on the cart lid: bells inside, marks outside. Sells through the trade choice.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "kindly_load_to_the_order"}, {"quest_done": "core:quest/the_sealed_barge"}], "text": "The White Wood rang all winter with the Order's bells. Four sit on my shelf, wrapped. I have not decided who they are for. I think I am waiting for four lakefolk."},
+    {"conditions": [{"flag": "kindly_load_to_the_guild"}, {"quest_done": "core:quest/the_sealed_barge"}], "text": "The Guild sent a clerk, two watchmen and a bill, and I paid it and framed the receipt. Under it I have written the four lakefolks' names in full, so the manifest has somebody in it."},
+    {"conditions": [{"flag": "kindly_load_to_the_strand"}, {"quest_done": "core:quest/the_sealed_barge"}], "text": "The Ash Strand is the best-dressed shore in Cinderlea, all in the Order's grey. I carted the winter up from Merrowby twice and complained the whole way. I would do it again. Do not tell the knights."},
     {"conditions": [{"time_between": [7, 12]}], "text": "Cart's open. Grey cloth, ash-cake, candles. Everything a person needs to give up everything. Speak soft; they get upset if you haggle loud."},
     {"conditions": [{"marks_min": 500}], "text": "You have coin on you. I can hear it. Do not let it clink in the yard; Cadwen will look at you the way she looks at me, and I have had nine years of that look and I do not recommend it."},
     {"conditions": [{"morality_max": -30}], "text": "I sell to anybody. That is not virtue; a sutler with principles is a sutler with an empty cart. But I will count the bells while you are here, out loud, and you can decide what that is."},
@@ -143,6 +146,9 @@
   "notes": "The one who lays Greyfold's tables. Forty-one places, the forty-second on Hushday, the wights that wave, the letter under the plate at the third house (core:book/letter_from_greyfold). She will not leave, and it is not grief.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "greyfold_order_set"}, {"quest_done": "core:quest/the_late_delivery"}], "text": "The order is laid at the tables, the knife at the Fallows' boy's place. At dusk they came and stood, and the boy looked at the knife a long time. I waved. They were gone by the lamps. I have not moved the knife."},
+    {"conditions": [{"flag": "greyfold_order_left"}, {"quest_done": "core:quest/the_late_delivery"}], "text": "There is a place laid at the foot of the table for the carter, with a cup. One morning the cup had been moved. Not drunk from. Moved nearer."},
+    {"conditions": [{"flag": "greyfold_carter_to_rest"}, {"quest_done": "core:quest/the_late_delivery"}], "text": "The Rest and the Order have been arguing about Tam Oakes by letter, very politely, since midsummer. It is the first argument anybody has ever had about him. I think he would be pleased."},
     {"conditions": [{"time_between": [17, 20]}], "text": "They are coming to stand. Do not step between a place and the one it is laid for; they are polite, and you would not be."},
     {"conditions": [{"time_between": [5, 7]}], "text": "Wait until the places are laid. Forty-one. Forty-two. Then you may sit at the foot, where nobody is."},
     {"conditions": [{"book_read": "core:book/letter_from_greyfold"}], "text": "You have read the letter. Then you know it was for her sister at Gullhithe, by any hand going north. There was none. There is still none. I am not a hand going north; I am the hand that puts the plate back."},

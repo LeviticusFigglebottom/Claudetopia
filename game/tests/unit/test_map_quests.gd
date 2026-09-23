@@ -215,3 +215,50 @@ func test_the_maps_quests_link_places_and_ask_for_a_decision() -> void:
 						places[v] = true
 		assert_true(decides, "%s asks nobody to decide anything" % qid)
 		assert_true(places.size() >= 2, "%s links %d locations" % [qid, places.size()])
+
+
+## Every flag a condition anywhere under `v` reads.
+func _flags_read(v: Variant, out: Dictionary) -> void:
+	match typeof(v):
+		TYPE_DICTIONARY:
+			for k in (v as Dictionary):
+				var x: Variant = (v as Dictionary)[k]
+				if (str(k) == "flag" or str(k) == "flag_not") and typeof(x) == TYPE_STRING:
+					out[str(x)] = true
+				else:
+					_flags_read(x, out)
+		TYPE_ARRAY:
+			for x in v:
+				_flags_read(x, out)
+
+
+## Every decision in the map's quests leaves something the game reads: the person who asked
+## greets you with what came of it, or somebody moves or goes. A flag nothing reads is not a
+## consequence. A greeting that remembers a decision waits for the quest to be done, or it is
+## said on the way to the stage the decision sent you to, before any of it has happened.
+func test_every_decision_is_remembered_by_somebody() -> void:
+	var decided: Dictionary = {}
+	for def_v in _map_quests():
+		var def: Dictionary = def_v
+		for stage_v in def.get("stages", []):
+			for o_v in (stage_v as Dictionary).get("objectives", []):
+				for op_v in (o_v as Dictionary).get("options", []):
+					for e_v in (op_v as Dictionary).get("effects", []):
+						if typeof(e_v) == TYPE_DICTIONARY and (e_v as Dictionary).has("set_flag"):
+							decided[str((e_v as Dictionary)["set_flag"])] = str(def["id"])
+	assert_gt(decided.size(), 100, "the map's decisions were found")
+	var read: Dictionary = {}
+	for npc in ContentDB.all("npc"):
+		_flags_read(npc, read)
+	for dialogue in ContentDB.all("dialogue"):
+		_flags_read(dialogue, read)
+		for g_v in (dialogue as Dictionary).get("greetings", []):
+			var conds: Array = (g_v as Dictionary).get("conditions", [])
+			var flags: Dictionary = {}
+			_flags_read(conds, flags)
+			for f in flags:
+				if decided.has(f):
+					assert_true(conds.has({"quest_done": decided[f]}),
+							"%s greets you with %s before %s is done" % [dialogue["id"], f, decided[f]])
+	for f in decided:
+		assert_true(read.has(f), "%s: nobody remembers %s" % [decided[f], f])

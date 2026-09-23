@@ -9,6 +9,9 @@
     "conditions": [
      {
       "flag": "notch_walker_put_down"
+     },
+     {
+      "quest_done": "core:quest/the_notch_on_the_post"
      }
     ],
     "text": "The notch did not move this spring. I have not decided yet whether to thank you. Sit, drink; the water is clean, and I would like somebody to be glad of it."
@@ -17,6 +20,9 @@
     "conditions": [
      {
       "flag": "notch_walker_let_walk"
+     },
+     {
+      "quest_done": "core:quest/the_notch_on_the_post"
      }
     ],
     "text": "She came up again on Hushday. I filled the flask for her and put it on the lip and went inside. The notch is a finger higher. I cut it true."
@@ -25,6 +31,9 @@
     "conditions": [
      {
       "flag": "notch_walker_to_order"
+     },
+     {
+      "quest_done": "core:quest/the_notch_on_the_post"
      }
     ],
     "text": "Two knights came up the bed with a bell and walked her back down. They did not say where to. The Order does not say, and I have stopped asking, because they looked sorry, and a sorry knight is a rare thing."
@@ -399,6 +408,9 @@
     "conditions": [
      {
       "flag": "gosford_paddle_named"
+     },
+     {
+      "quest_done": "core:quest/the_twelfth_sluice"
      }
     ],
     "text": "Twelve names on twelve posts. The Toll hummed on Hushday and the paddle lifted itself and I sat and watched it, with a coat on, and it was a good night."
@@ -407,9 +419,23 @@
     "conditions": [
      {
       "flag": "gosford_paddle_nailed"
+     },
+     {
+      "quest_done": "core:quest/the_twelfth_sluice"
      }
     ],
     "text": "The hay is the best in six years. You would think that would be the end of it."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "gosford_paddle_wardens"
+     },
+     {
+      "quest_done": "core:quest/the_twelfth_sluice"
+     }
+    ],
+    "text": "The Rest sends a Warden down the lane on humming nights. She sits on the twelfth post with a book on her knee and writes down what she does not see. The paddle has not moved. I have stopped telling myself that is good news."
    }
   ]
  },
@@ -584,6 +610,9 @@
     "conditions": [
      {
       "flag": "cress_coins_returned"
+     },
+     {
+      "quest_done": "core:quest/the_top_bed"
      }
     ],
     "text": "The top bed is green at the edges. It tastes of chalk again, and a little of cold iron, and a little of somebody's pocket, which I am choosing not to think about."
@@ -592,9 +621,23 @@
     "conditions": [
      {
       "flag": "cress_coins_kept"
+     },
+     {
+      "quest_done": "core:quest/the_top_bed"
      }
     ],
     "text": "Still grey. I have put a coin in the bridge every morning. The water has not said anything. Water does not."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "cress_coins_to_guild"
+     },
+     {
+      "quest_done": "core:quest/the_top_bed"
+     }
+    ],
+    "text": "The Guild sent me a paper for thirty-one coins, received, with a seal. The water has never had a paper before. The top bed is still grey, but it is grey in writing now."
    }
   ]
  },
@@ -786,6 +829,9 @@
     "conditions": [
      {
       "flag": "thistle_kept"
+     },
+     {
+      "quest_done": "core:quest/thistle"
      }
     ],
     "text": "She went in on the fourth night. She is still grey. She is also still in the pond every morning, which is more than can be said for most of them."
@@ -794,9 +840,23 @@
     "conditions": [
      {
       "flag": "thistle_let_go"
+     },
+     {
+      "quest_done": "core:quest/thistle"
      }
     ],
     "text": "The counts on the waystone went up by one last week. I cut one on the gate. That is all there is to say."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "thistle_read_for"
+     },
+     {
+      "quest_done": "core:quest/thistle"
+     }
+    ],
+    "text": "They read Aldo slow at Greywatch, the whole name and the fold after it. The counts on the waystone stopped at four strokes and a bar. Thistle still lifts her head at dusk. Then she puts it down again."
    }
   ]
  },
@@ -1002,9 +1062,34 @@
     "conditions": [
      {
       "flag": "one_short_claimed"
+     },
+     {
+      "quest_done": "core:quest/one_short"
      }
     ],
     "text": "The sticks agree and they are right. The beam is still one short. I have decided that is the beam's affair."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "one_short_left"
+     },
+     {
+      "quest_done": "core:quest/one_short"
+     }
+    ],
+    "text": "The hayward's wether is still in the Pinfold, eating the parish's grass at the parish's cost. He looks up when the Bramcombe cart goes by. So do I."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "one_short_to_the_fold"
+     },
+     {
+      "quest_done": "core:quest/one_short"
+     }
+    ],
+    "text": "A carter saw two grey sheep on Bram Down at lambing, a ewe and a wether, grazing into the wind. The sticks come right now. I do not go up to count them."
    }
   ]
  },
@@ -1307,6 +1392,9 @@
     "conditions": [
      {
       "flag": "rookdown_stays"
+     },
+     {
+      "quest_done": "core:quest/the_grey_on_the_green"
      }
     ],
     "text": "Every name, every Tollday. The patch is the same size this week. It has never been the same size two weeks running. I have chalked that up too, with a line under it."
@@ -1315,9 +1403,56 @@
     "conditions": [
      {
       "flag": "rookdown_goes"
+     },
+     {
+      "quest_done": "core:quest/the_grey_on_the_green"
      }
     ],
     "text": "Long Table, the carts go. The rooks will stay. I have asked them. They did not answer, which is a rook's yes."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "rookdown_drowned_watch"
+     },
+     {
+      "quest_done": "core:quest/the_grey_on_the_green"
+     }
+    ],
+    "text": "My great-aunt faces the Hush again. The patch came to the foot of the cliff in the frost and stopped there, as if somebody had told it to. We have agreed not to say who."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "warren_walled"
+     },
+     {
+      "quest_done": "core:quest/the_warreners_burrow"
+     }
+    ],
+    "text": "The gap is walled, chalk and flint, with a Warden's mark on it. Nobody has knocked. The Warden who watches it says the wall is warm in the mornings. I have told her to stop touching it."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "warren_left_open"
+     },
+     {
+      "quest_done": "core:quest/the_warreners_burrow"
+     }
+    ],
+    "text": "The bread I leave at the gap on Tallowdays is gone by Hushday. Rabbits, I tell the green. The rabbits on the down have never been so fat, and not one of them will go near the barrow."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "warren_ferrets_to_tamwick"
+     },
+     {
+      "quest_done": "core:quest/the_warreners_burrow"
+     }
+    ],
+    "text": "The Tamwick boy whistles his ferrets on the down every morning and keeps well south of the barrow. I told him why. He has the sense to be frightened, which is more than his master had."
    }
   ]
  },
@@ -1506,9 +1641,34 @@
     "conditions": [
      {
       "flag": "pens_gated"
+     },
+     {
+      "quest_done": "core:quest/pens_with_no_gate"
      }
     ],
     "text": "Aggie sold me rods. At her price, not mine, and she came to see the gates herself. She said they would do. That is the most any Woodfolk has ever said about anything I made."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "pens_woven"
+     },
+     {
+      "quest_done": "core:quest/pens_with_no_gate"
+     }
+    ],
+    "text": "The pens are up, as ordered, of Vale rods at twice the price. The Wardens came and said they were good pens. They are not. I have stopped looking at them, which comes to the same thing."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "pens_refused"
+     },
+     {
+      "quest_done": "core:quest/pens_with_no_gate"
+     }
+    ],
+    "text": "The Rest found another weaver, a Tollmere man with a rule and no hands. His pens lean already. The first beast will walk straight through them, and I will be sorry, and I will not be wrong."
    }
   ]
  },
@@ -1697,6 +1857,9 @@
     "conditions": [
      {
       "flag": "dunn_paid"
+     },
+     {
+      "quest_done": "core:quest/one_to_dunn"
      }
     ],
     "text": "The board's clean. First time in twenty years. I keep looking at the top left corner like a tongue at a gap."
@@ -1705,9 +1868,23 @@
     "conditions": [
      {
       "flag": "dunn_named"
+     },
+     {
+      "quest_done": "core:quest/one_to_dunn"
      }
     ],
     "text": "Dunnet Hale. The drovers ask, and I tell them, and they drink to him. He is the best-drunk-to man on the downs."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "dunn_to_the_rest"
+     },
+     {
+      "quest_done": "core:quest/one_to_dunn"
+     }
+    ],
+    "text": "A Warden came in from the Rest with a coin for One to Dunn and would not drink it himself. It stands on the bar under the board, poured. Nobody touches it. It is the best-kept glass in the house."
    }
   ]
  },
@@ -1882,9 +2059,23 @@
     "conditions": [
      {
       "flag": "nella_stays_said"
+     },
+     {
+      "quest_done": "core:quest/would_anybody_say_it"
      }
     ],
     "text": "Sit, if you like. — You may say my name. I will allow it. Just the once."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "nella_goes_home"
+     },
+     {
+      "quest_done": "core:quest/would_anybody_say_it"
+     }
+    ],
+    "text": "The candle at the Cross burned down the night I came home. I have made a new one for the niche. Merrowby buys my candles again and complains about the price, which is how I know I am home."
    }
   ]
  },
@@ -2084,7 +2275,42 @@
     "text": "Ashcombe's doors, name by name. — I know them by the hand, not the reading; I was a lock-maker. Nineteen houses. Ashcombe-Mill, over the mill-race door with the iron studs. Hobb's Cross. The Two Wells. The Weaver's. Cold Harbour, which was a joke; it is the warmest door. And on round to the Widow's End, which has a lock on it I made the key for myself, eleven years ago, so that I would have something to open. — Tell him that. Tell him the doors were every one shut by somebody who meant to open them again.",
     "next": "hub"
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "ossel_clapper_quenched"
+     },
+     {
+      "quest_done": "core:quest/ossels_forge"
+     }
+    ],
+    "text": "The clapper hangs cold on the door-wall with the forty doors, unrung. Nothing has come through the North Gate since. The trough is dry. I miss the smell of it, which I will not say to the knights."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "ossel_clapper_left"
+     },
+     {
+      "quest_done": "core:quest/ossels_forge"
+     }
+    ],
+    "text": "The forge is laid and the trough fresh every evening. Three nights ago a bell rang once from the Bell Pit. I stood at the gate and counted it. One. The Order asks that it is counted."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "ossel_clapper_buried"
+     },
+     {
+      "quest_done": "core:quest/ossels_forge"
+     }
+    ],
+    "text": "It is buried with the broken bells and I am the only one who knows where. Something walked the North Gate twice more, heavier each time, and then stopped. I sleep behind forty doors and a secret. That is one too many."
+   }
+  ]
  },
  {
   "id": "core:dialogue/corin_stilyard",
@@ -2257,9 +2483,34 @@
     "conditions": [
      {
       "flag": "same_hand_word_sent"
+     },
+     {
+      "quest_done": "core:quest/the_same_hand"
      }
     ],
     "text": "Hew Coomb walked out along the Stride last Tollday, on foot, free. I weighed nothing. I entered him anyway. In my hand."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "same_hand_struck"
+     },
+     {
+      "quest_done": "core:quest/the_same_hand"
+     }
+    ],
+    "text": "Nine times now I have struck the same line with my initials. The hand is patient. So am I. The Guild does not know it is paying me to have an argument."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "same_hand_left_open"
+     },
+     {
+      "quest_done": "core:quest/the_same_hand"
+     }
+    ],
+    "text": "The book lay open on the desk all night with a lamp. In the morning there were two new names in the margin, in that hand, and one of them was a Wynstead name. I lit the lamp again. It is the correct book."
    }
   ]
  },
@@ -2428,7 +2679,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "ruled_line_to_reedfolk"
+     },
+     {
+      "quest_done": "core:quest/the_ruled_line"
+     }
+    ],
+    "text": "The reedfolk have a round about the kerb now. The children sing it cutting, and there is a line in it about a woman who pushed her punt along the Builders' ruler. That is me. It does not scan."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "ruled_line_to_circle"
+     },
+     {
+      "quest_done": "core:quest/the_ruled_line"
+     }
+    ],
+    "text": "A Circle Sayer came down with a pole and a boy and measured my reeds from the punt for a week. She left me a copy of the book with the line drawn in and my name spelt right. The water is still going down."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "ruled_line_cut"
+     },
+     {
+      "quest_done": "core:quest/the_ruled_line"
+     }
+    ],
+    "text": "The thatchers paid well. The last pole of green still stands at the line, on its own, like somebody waiting for a ferry. I cut round it every morning."
+   }
+  ]
  },
  {
   "id": "core:dialogue/berrit_smoker",
@@ -2601,9 +2887,34 @@
     "conditions": [
      {
       "flag": "arch_water_to_ruddow"
+     },
+     {
+      "quest_done": "core:quest/the_third_arch"
      }
     ],
     "text": "The Rudd sent a cask back down, full of honey-brew. The boy drank half of it on the road. I would have too."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "arch_left_dripping"
+     },
+     {
+      "quest_done": "core:quest/the_third_arch"
+     }
+    ],
+    "text": "The drip has made a pool under the third arch, and a heron stands in it in the mornings as if it pays rent. I moved the rack. The arch is louder than it was. I have got used to it, which I did not expect."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "arch_stopped"
+     },
+     {
+      "quest_done": "core:quest/the_third_arch"
+     }
+    ],
+    "text": "The third arch is dry and the pike hang straight under it. The clay went dark in a week and it stays dark. I do not stand under that one when I can help it."
    }
   ]
  },
@@ -2772,7 +3083,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "knots_bell_rung"
+     },
+     {
+      "quest_done": "core:quest/knots_round_nothing"
+     }
+    ],
+    "text": "Moreva rings the Fog Bell every quarter hour the fog is down, badly, turn about. On the ninth night somebody rang it back from under the water, once, in time. We have rung it better since."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "knots_to_saeva"
+     },
+     {
+      "quest_done": "core:quest/knots_round_nothing"
+     }
+    ],
+    "text": "Nine new lanterns went out on the south channel with the old knots, sung. The traps come up clean now. I miss the knots, which is a stupid thing to miss."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "knots_put_back"
+     },
+     {
+      "quest_done": "core:quest/knots_round_nothing"
+     }
+    ],
+    "text": "The knots came up again on Hushday, in the same traps, tied tighter. I put them back. The water can have the argument; I have the pole."
+   }
+  ]
  },
  {
   "id": "core:dialogue/lisse_tal",
@@ -2939,7 +3285,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "tal_lantern_sent_out"
+     },
+     {
+      "quest_done": "core:quest/against_the_current"
+     }
+    ],
+    "text": "Sung, all three voices, and it went out on the south channel and did not come back. My mother says that means it got where it was going. My mother says a great many things."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "tal_lantern_at_saoul"
+     },
+     {
+      "quest_done": "core:quest/against_the_current"
+     }
+    ],
+    "text": "Her lantern hangs on the last stilt at Saoul with the others, lit. I row out and trim them on Tolldays. There is one more every month. I do not know who is weaving them. I think I do."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "tal_lantern_to_order"
+     },
+     {
+      "quest_done": "core:quest/against_the_current"
+     }
+    ],
+    "text": "They hung it in the chapter-bell at Pilgrim's Ash and lit it on Candle Night. A knight wrote to say the bell rings a little softer with it in. That is a Tal lantern for you."
+   }
+  ]
  },
  {
   "id": "core:dialogue/ossa_lissa",
@@ -3106,7 +3487,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "nauvissa_waits"
+     },
+     {
+      "quest_done": "core:quest/which_account"
+     }
+    ],
+    "text": "We wait, and sing the round while we wait, all three voices. It came to the stilts at the new moon and went back before light. The round is getting better. So is it."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "nauvissa_goes_north"
+     },
+     {
+      "quest_done": "core:quest/which_account"
+     }
+    ],
+    "text": "Half the houses are on Ollo's boats and half are still arguing on the stilts. The grey reed went first, on the lead boat. It did not complain."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "nauvissa_keeps_watch"
+     },
+     {
+      "quest_done": "core:quest/which_account"
+     }
+    ],
+    "text": "The watchman is unbearable, as I said he would be. The knights buy our wicks and ask after him by name. The stilts are lit all night, and nothing has torn a net from inside since."
+   }
+  ]
  },
  {
   "id": "core:dialogue/meo_sa",
@@ -3273,7 +3689,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "oulea_tent_up"
+     },
+     {
+      "quest_done": "core:quest/what_the_tide_left"
+     }
+    ],
+    "text": "The traders' tent is up all year with our best salt in it. The gulls have had some. Nothing has come off the sea for it yet. It is due."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "oulea_tide_written"
+     },
+     {
+      "quest_done": "core:quest/what_the_tide_left"
+     }
+    ],
+    "text": "The post says this year as it came: the height, the prints, and due. Children walk over from the Salt Pans to read it. They read it to each other in whispers, which is the right way."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "oulea_chart_to_spire"
+     },
+     {
+      "quest_done": "core:quest/what_the_tide_left"
+     }
+    ],
+    "text": "The Circle has written twice to ask what the word means and whether I am sure it is a word. I have written back once: it is due. We are keeping each other busy."
+   }
+  ]
  },
  {
   "id": "core:dialogue/wenna_holt",
@@ -3477,9 +3928,34 @@
     "conditions": [
      {
       "flag": "elderhold_planted_forty"
+     },
+     {
+      "quest_done": "core:quest/flowered_in_the_frost"
      }
     ],
     "text": "Forty in the ground and forty notches off. You may go through the door, if you like. Mind the flowers. There are none. Mind them anyway."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "elderhold_custom_kept"
+     },
+     {
+      "quest_done": "core:quest/flowered_in_the_frost"
+     }
+    ],
+    "text": "The rafters could not buy rope in the Wold this autumn, or bark, or leave to cross. Nobody told them why. They go down to the Vale for rope now and pay twice for it. It is slow. It works."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "elderhold_paid"
+     },
+     {
+      "quest_done": "core:quest/flowered_in_the_frost"
+     }
+    ],
+    "text": "Forty Vale saplings in the ground, bought with Guild marks, and the Vale charged me for the carting. Three wrongs. The saplings do not know. One of them has already asked for more light."
    }
   ]
  },
@@ -3662,7 +4138,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "old_gate_edda_sleeps"
+     },
+     {
+      "quest_done": "core:quest/opened_from_the_far_side"
+     }
+    ],
+    "text": "The youngest sits up with me now, facing the Wold, and she swears it the right way round. Nothing has stood on the far side of the thorn since. I sleep better on the ground than I ever did in a bed."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "old_gate_bar_left"
+     },
+     {
+      "quest_done": "core:quest/opened_from_the_far_side"
+     }
+    ],
+    "text": "The bar has not moved. Some nights something on the far side of the thorn sleeps against it too. I can hear it breathe. We keep the promise together, it and I, and neither of us says so."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "old_gate_to_fernhold"
+     },
+     {
+      "quest_done": "core:quest/opened_from_the_far_side"
+     }
+    ],
+    "text": "Alder Wyke came up the thorn himself and counted the patch at my gate and wrote it in his book. The youngest carried the word, and she has not stopped talking since. I asked for that."
+   }
+  ]
  },
  {
   "id": "core:dialogue/aggie_coppice",
@@ -3829,7 +4340,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "fennick_stool_named"
+     },
+     {
+      "quest_done": "core:quest/the_fennick_stool"
+     }
+    ],
+    "text": "The book says the Fennick stool this year, cut or not. A Holt argued at the reading. I read it aloud to him twice. He has not argued since."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "fennick_rods_planted"
+     },
+     {
+      "quest_done": "core:quest/the_fennick_stool"
+     }
+    ],
+    "text": "The sets round the old stump have all leafed, thick as a thumb. In seven years it will be the Fennick stool. I will not explain."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "fennick_stool_let_go"
+     },
+     {
+      "quest_done": "core:quest/the_fennick_stool"
+     }
+    ],
+    "text": "The Holts cut their first rods off the old Fennick stool at the turn of the year. The book says Holt now. I read it out slowly the first time. The second time came easier."
+   }
+  ]
  },
  {
   "id": "core:dialogue/nessa_ashby",
@@ -3996,7 +4542,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "listeners_trunk_opened"
+     },
+     {
+      "quest_done": "core:quest/the_listeners_trunk"
+     }
+    ],
+    "text": "I put the sand on the fire. It smelled of a harbour I have never seen. I have not been able to get it out of the back room. I have stopped trying."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "listeners_trunk_to_circle"
+     },
+     {
+      "quest_done": "core:quest/the_listeners_trunk"
+     }
+    ],
+    "text": "The Spire paid the bill and did not read the note. Something came up the road to the gate in the night last week and stood at the step, and found nothing on it, and went back."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "listeners_trunk_at_the_gate"
+     },
+     {
+      "quest_done": "core:quest/the_listeners_trunk"
+     }
+    ],
+    "text": "The trunk was gone from the step in the morning, the road was swept clean to the Stone, and there was a handful of sea-sand where the trunk had stood. I have left the sand."
+   }
+  ]
  },
  {
   "id": "core:dialogue/ushra_ko_rudd",
@@ -4177,7 +4758,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "forty_head_coin_taken"
+     },
+     {
+      "quest_done": "core:quest/forty_head_and_a_hearth"
+     }
+    ],
+    "text": "Written paid. The rope is slack and nobody sings it, and I know. A memory-keeper sleeps on what she knows. I sleep well enough."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "forty_head_asked_in_hall"
+     },
+     {
+      "quest_done": "core:quest/forty_head_and_a_hearth"
+     }
+    ],
+    "text": "Torkh said the price aloud in the hall, with the bone passed hand to hand, and the song is a line longer. We quarrel over it at every Moot now. A quarrel is a rope too. It holds."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "forty_head_kun_home"
+     },
+     {
+      "quest_done": "core:quest/forty_head_and_a_hearth"
+     }
+    ],
+    "text": "Kharrow have agreed. Kun comes down the chain at the thaw, and he will be wearing a Kharrow cloak, and he will sing me their verse, and I will let him. A debt is paid. A boy is a boy."
+   }
+  ]
  },
  {
   "id": "core:dialogue/dagga_ko_ghast",
@@ -4358,7 +4974,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "ghast_bridge_mended"
+     },
+     {
+      "quest_done": "core:quest/a_debt_with_a_nicer_voice"
+     }
+    ],
+    "text": "The bridge is mended and I crossed it drunk, as I said I would. Kharrow still sing the forgiveness every morning. It holds without the ladders. I have nothing left to polish."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "ghast_keeps_climbing"
+     },
+     {
+      "quest_done": "core:quest/a_debt_with_a_nicer_voice"
+     }
+    ],
+    "text": "I oil the ladders every Skerrday and climb them every morning, and Kharrow sing us across. It is a long way to keep a grudge. My arms are the best in Ghast."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "ghast_forgiveness_sung_across"
+     },
+     {
+      "quest_done": "core:quest/a_debt_with_a_nicer_voice"
+     }
+    ],
+    "text": "Kharrow came to the lip of the gorge at dawn and sang it once, across, at our door. I did not know what to do with my face. I have been told it was smiling."
+   }
+  ]
  },
  {
   "id": "core:dialogue/brann_ko_dreugh",
@@ -4539,7 +5190,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "ninth_door_painted_over"
+     },
+     {
+      "quest_done": "core:quest/the_ninth_door"
+     }
+    ],
+    "text": "A word a day, and the first verse is new on the ninth door again, with the eighth under it the way the breath is under the song. Some mornings the blue has been touched before I come. I paint anyway."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "ninth_door_both_verses"
+     },
+     {
+      "quest_done": "core:quest/the_ninth_door"
+     }
+    ],
+    "text": "Both verses, one on the other. A trader knocked at the ninth door and asked where he was in the song. I said I did not know either. He stayed for supper."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "ninth_door_to_dunna"
+     },
+     {
+      "quest_done": "core:quest/the_ninth_door"
+     }
+    ],
+    "text": "Dunna sent the board back with one word painted under the last line, in Kharrow's red: listened. I have hung it inside the ninth door, facing in."
+   }
+  ]
  },
  {
   "id": "core:dialogue/varra_ko_skarl",
@@ -4706,7 +5392,42 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "skarl_wall_rebuilt"
+     },
+     {
+      "quest_done": "core:quest/nine_lights"
+     }
+    ],
+    "text": "The bone wall is up again, stronger, and the Woodfolk have been told it was pushed from our side. They thanked us for the honesty. The lights go past it at night, the other way."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "skarl_count_the_lights"
+     },
+     {
+      "quest_done": "core:quest/nine_lights"
+     }
+    ],
+    "text": "Nine, every night they come, chalked on the east post. Last Hushday it was nine and something that was not quite a tenth. I did not chalk it. I watched it."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "skarl_word_to_rookhold"
+     },
+     {
+      "quest_done": "core:quest/nine_lights"
+     }
+    ],
+    "text": "Edda Thornby sent my herder back with a strip of thorn bark, knotted twice. It means we keep the same promise from different doors. I have hung it on the Watcher."
+   }
+  ]
  },
  {
   "id": "core:dialogue/ebba_ko_oskel",
@@ -4873,6 +5594,41 @@
      }
     ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "aske_fire_kept"
+     },
+     {
+      "quest_done": "core:quest/askes_tune"
+     }
+    ],
+    "text": "The fire burns day and night with a herder beside it, and I knock twice on the marker going past. Aske hums less. When she does, the fire leans towards her."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "aske_taught_the_verse"
+     },
+     {
+      "quest_done": "core:quest/askes_tune"
+     }
+    ],
+    "text": "Aske has Oskel's verse by heart and hums it over the tune until the tune gives up. Dunna came down the pass to say eleven. She heard the child and went back up without saying it."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "aske_to_the_sayers"
+     },
+     {
+      "quest_done": "core:quest/askes_tune"
+     }
+    ],
+    "text": "I took her to the Spire myself. We were both frightened. Ismay Ondrael writes that Aske reads the tune off a slate faster than any Sayer. I do not know if that is good. She sounds happy."
+   }
+  ]
  }
 ]

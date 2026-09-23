@@ -192,6 +192,9 @@
   "notes": "Boatwright of Nauve's Landing; the upturned hull hall; the old plank in every hull; the bridge the Listener Said in 1011 (core:book/lecture_on_saying), told from the Landing's side. Sells through the trade choice.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "alle_hauled_back"}, {"quest_done": "core:quest/the_boat_that_moved"}], "text": "The Alle lies bow to the sea where I left her, with her plank in her. Some mornings there is weed on her mooring that did not grow there. I sing the answer and go to work."},
+    {"conditions": [{"flag": "alle_plank_new_boat"}, {"quest_done": "core:quest/the_boat_that_moved"}], "text": "The new boat is in the water with the Alle's plank low down in her. She steered herself round a shoal I did not know was there. I have stopped arguing with her."},
+    {"conditions": [{"flag": "alle_plank_to_the_stews"}, {"quest_done": "core:quest/the_boat_that_moved"}], "text": "The ribs in the high pond have a keel now. I went up to look and stood there with my hands in my pockets like a customer. I would not have put that plank there. It is right there."},
     {"conditions": [{"time_between": [6, 12]}], "text": "Sit on the stocks, not the keel. The keel is not yours yet and it knows."},
     {"conditions": [{"discovered": "core:place/drowned_nave"}], "text": "You have been out towards the Nave. Then you crossed the north channel, and you crossed it in one of mine, because there is no other kind. I hope you thanked it."},
     {"conditions": [{"morality_max": -30}], "text": "I will sell you rope and plank. I will not sell you a boat. A boat that has carried a person who takes goes wrong in the channels, and I would have to take it back and burn it, and I do not like burning boats."},

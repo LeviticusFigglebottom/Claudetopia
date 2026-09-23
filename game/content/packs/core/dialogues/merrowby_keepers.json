@@ -97,6 +97,9 @@
   "notes": "Old Roll-Keeper, 81. Main-quest stage-2 informant; gives The Last Name of Mullbourne. He is the one person in the valley who never exaggerates.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "ashcombe_on_the_roll"}, {"quest_done": "core:quest/ashcombe_on_the_roll"}], "text": "Ashcombe is on the Roll. I say it at the rim at dawn, the fifth name, and the bell throws it back. Wren spelt the mill wrong and I have let her. It is the only name on the Roll spelt the way it was said."},
+    {"conditions": [{"flag": "ashcombe_left_to_the_order"}, {"quest_done": "core:quest/ashcombe_on_the_roll"}], "text": "I said it once at the rim, for my grandmother's grandmother, and not again. Once a year a knight brings me a pressed flower from the far side of the Order's wall. I have not asked where they pick it."},
+    {"conditions": [{"flag": "ashcombe_door_home"}, {"quest_done": "core:quest/ashcombe_on_the_roll"}], "text": "The mill's door stands in the Roll room. Merrit chose it without being asked. The children knock on it on their way past, and I have not had the heart to stop them. It is a door. That is what doors are for."},
     {"conditions": [{"flag": "hamlet_name_restored"}], "text": "Three names this morning. Three. I said them slow, the way you say a thing you've got back."},
     {"conditions": [{"flag": "hamlet_name_struck"}], "text": "Two names this morning. Wren did it properly, with the door open and a witness, and I'll not say a word against her, and I've not spoken to her since Tollday."},
     {"conditions": [{"flag": "hamlet_name_let_go"}], "text": "Two names. I'll go up a while yet. Not for ever. A man knows when he's saying a thing to nobody."},

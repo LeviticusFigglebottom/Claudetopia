@@ -127,6 +127,9 @@
   "notes": "Sayer of the Breath (WORLD_BIBLE 1.3), Oskel-blooded. Quiet, tired, honest. She times her own held breath to see whether it is getting shorter.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "peat_warden_to_rest"}, {"quest_done": "core:quest/the_slow_reflection"}], "text": "The Rest have read his roll. They found their own names on it, as I expected, and have been very quiet. The waters came a hand closer this month. I measured it."},
+    {"conditions": [{"flag": "peat_warden_to_order"}, {"quest_done": "core:quest/the_slow_reflection"}], "text": "They walked him south with a bell and read him at Greywatch. The reflection in Eelfathom came back on time for three nights, then went slow again. That is a reading. I wrote it down."},
+    {"conditions": [{"flag": "peat_warden_left"}, {"quest_done": "core:quest/the_slow_reflection"}], "text": "He is still there between the waters, and I have been out with the glass eleven times. He has not moved. The waters have. I am ashamed of how happy that makes me."},
     {"conditions": [{"flag": "found_tessane"}], "text": "Shut the door. — Not like that. Quietly. Thank you."},
     {"conditions": [{"flag": "stone_thrall_king_fallen"}], "text": "You went into the singing shaft and came out. I have been reading about that shaft for twenty years from a chair."},
     {"conditions": [{"flag": "ghorr_remembered"}], "text": "The eighth verse. My mother's clan will have it by winter and my mother has been dead for nine years and I find I am not able to be scholarly about this yet."},

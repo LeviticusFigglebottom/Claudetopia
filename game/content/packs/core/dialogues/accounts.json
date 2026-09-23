@@ -42,6 +42,9 @@
   "notes": "Clan Kharrow's memory-keeper; main quest 5. Measures strangers by deeds she has heard of, so her hub gates hard on renown.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "harl_sung"}, {"quest_done": "core:quest/what_the_ice_keeps"}], "text": "Harl ko-Kharrow is in the verse, in the gap, and the hall has heard a name it never heard. Torkh held the bone so tight it left a mark. The mountain has him in words."},
+    {"conditions": [{"flag": "harl_token_to_rudd"}, {"quest_done": "core:quest/what_the_ice_keeps"}], "text": "Ushra ko-Rudd hung Harl's token on Rudd's rope, below the forty head. Kharrow owes it and cannot say it. Now it is said somewhere, in Rudd's hall, in Rudd's way."},
+    {"conditions": [{"flag": "harl_left_to_the_ice"}, {"quest_done": "core:quest/what_the_ice_keeps"}], "text": "I keep the slate and the token and the gap, and nobody asks. When I sing Kharrow's verse I leave a breath where his line was. Only I know it is a breath."},
     {"conditions": [{"flag": "ghorr_remembered"}], "text": "Ghorr. The children have the eighth verse by heart already and they sing it too fast. Come in, sit at the hearth, you are owed a hearth for the rest of your life."},
     {"conditions": [{"flag": "ghorr_unsaid"}], "text": "The shaft is quiet and the song still has its hole in it. You chose. I will not unpick a choice I asked you to make."},
     {"conditions": [{"flag": "held_by_the_hand"}], "text": "You have the Hand's mark on your back and the cold still in you. Now I will sing to you."},

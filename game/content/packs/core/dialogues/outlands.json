@@ -179,6 +179,9 @@
   "notes": "Tallymen steward of Lantern Row. The mark he is lifted from in The Unsaid Ledger; not a villain, and his defence of the charter-board is the faction's best argument.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "charter_repinned"}, {"quest_done": "core:quest/the_charter_pins"}], "text": "Four pins, a Guild mason and a clan elder, and they did not speak and did not need to. I posted the cost of the pins. It was the smallest figure on the board and the only one anybody read."},
+    {"conditions": [{"flag": "charter_broken"}, {"quest_done": "core:quest/the_charter_pins"}], "text": "CHARTER STONE, BROKEN. Road toll, clans: see below. It is the largest figure I have ever posted, and the widows' line is the longest on the board. Every figure on it is true. I did not say I liked it."},
+    {"conditions": [{"flag": "charter_two_pins"}, {"quest_done": "core:quest/the_charter_pins"}], "text": "Somebody from the Guild and somebody from Kharrow walk up to look at the Charter Stone every morning, from opposite ends of the road, at the same hour. I have posted the hour."},
     {"conditions": [{"flag": "daybook_to_quill"}], "text": "The man who handed it back with the name of who wanted it. The Guild has noted it. I have noted that the Guild noted it."},
     {"conditions": [{"flag": "lifted_daybook"}], "text": "Good day. — You will forgive me; I am counting something and I find I am counting it twice today."},
     {"conditions": [{"renown_min": 300}], "text": "A celebrated person. Celebrated persons pay the posted price, which is the entire point of posting it."},

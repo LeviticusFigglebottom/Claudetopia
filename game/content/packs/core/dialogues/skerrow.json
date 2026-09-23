@@ -185,6 +185,9 @@
   "notes": "Miner at the second headframe; hears the singing shaft through the rock and hums it back; the chalk lines going down the post. The Breath as a working man hears it.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "brodd_answered"}, {"quest_done": "core:quest/answer_it"}], "text": "We strike the bar before every shift. Yesterday it answered from the face, one note, low. The men went down anyway. So did I. I would rather hear it than wonder."},
+    {"conditions": [{"flag": "brodd_silver_buried"}, {"quest_done": "core:quest/answer_it"}], "text": "Ghalorn buried the bar under a bone lintel and asked the dead. The dead agreed, he says. The shaft has been quiet since. I miss the note a little, here, at my breastbone."},
+    {"conditions": [{"flag": "brodd_silver_sold"}, {"quest_done": "core:quest/answer_it"}], "text": "Word came up the pass that a Tollmere merchant's clerks cannot sleep. I have not written back. Silver is silver. It was also ours."},
     {"conditions": [{"time_between": [6, 7]}], "text": "Hold on. — There. That is the line for today. Lower again. Now I can talk."},
     {"conditions": [{"quest_done": "core:quest/a_hand_on_the_rope"}], "text": "The shaft stopped. Did you know that? The day the name came up it stopped singing, and I stood at the face and hummed the note and nothing hummed back, and I have never been so glad and so lonely in my life."},
     {"conditions": [{"morality_max": -30}], "text": "Oskarth says you are not going down. I say fine; there is nothing down there you can carry, and one thing that can carry you."},

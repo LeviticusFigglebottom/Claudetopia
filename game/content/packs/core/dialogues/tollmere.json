@@ -5,6 +5,9 @@
     "notes": "Tollmere's binder. Sells the four beginners' tomes and a shelf of Vale books; buys books. Her view of the Circle is the outsider's view of it, which is the only unflattering one in the pack.",
     "start": "greet",
     "greetings": [
+    {"conditions": [{"flag": "dedication_printed"}, {"quest_done": "core:quest/the_stride_dedication"}], "text": "Four hundred and forty copies, and the Row reads the stone aloud in the taverns, badly, with feeling. The Guild sent back its ribbon. I have framed the ribbon."},
+    {"conditions": [{"flag": "dedication_to_guild"}, {"quest_done": "core:quest/the_stride_dedication"}], "text": "The Guild paid on the nail and locked it in a drawer. My copy is on the back of an invoice, in a box under the press. One day somebody will want it. I will be here."},
+    {"conditions": [{"flag": "dedication_to_the_wold"}, {"quest_done": "core:quest/the_stride_dedication"}], "text": "The third line means what it says, the Woodfolk tell me. I have sold six copies of that sentence already. Nobody knows what it means. That is why they buy it."},
       {
         "conditions": [
           {

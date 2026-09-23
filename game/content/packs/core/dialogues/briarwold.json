@@ -35,6 +35,9 @@
   "notes": "Keeper of Knots: the two hundred and six lights, the rope walks, the drip. One fire carried since the town moved in. The night a light went out is the Hollow's own small piece of the Dwindling.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "seventh_light_burns"}, {"quest_done": "core:quest/the_two_hundred_and_seventh"}], "text": "Two hundred and seven. Pip counts it every night and nobody has asked yet what it is for. When they do, I have my answer ready."},
+    {"conditions": [{"flag": "seventh_light_out"}, {"quest_done": "core:quest/the_two_hundred_and_seventh"}], "text": "I put it out. It was lit again the next night, from the one beside it. The tree has answered. I will not put it out again."},
+    {"conditions": [{"flag": "seventh_light_housed"}, {"quest_done": "core:quest/the_two_hundred_and_seventh"}], "text": "He has the back room at the Knot-Hearth and oils the Stone of an evening with the rest of us. Gil says he pays in hares. Nobody asks where the hares are from."},
     {"conditions": [{"time_between": [18, 20]}], "text": "Evening round. Walk with me if you like, but do not talk to me while the taper is lit; I count while it burns."},
     {"conditions": [{"flag": "hollow_light_out_told"}], "text": "You know about the light. Then you know as much as I do, which is the number and the night and nothing else."},
     {"conditions": [{"morality_min": 40}], "text": "Gil says you carried water for him without being asked. In here that is a light lit. I have not got a knot for you yet. Do not make me need one."},
@@ -133,6 +136,9 @@
   "notes": "Bowyer to the Wold. Proud, sparing, right about yew. The root full of forty years of arrows he never fetched. Sells through the trade choice; the hub offers his opinion, which is the dearer thing.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "six_bows_hung"}, {"quest_done": "core:quest/the_restrung_bow"}], "text": "Six more on Hollin Tor, unstrung, with the thousand. The Wold's count is true now. I made a bow last week with no silk in the house, and it drew sweeter than any I have made."},
+    {"conditions": [{"flag": "six_bows_to_ormhold"}, {"quest_done": "core:quest/the_restrung_bow"}], "text": "Nessa Ashby hung Cobb's bow over her door at Ormhold and burned the rest. She sent me back the silk in a twist of paper, to show me she had cut it. I have not opened it."},
+    {"conditions": [{"flag": "six_bows_burned"}, {"quest_done": "core:quest/the_restrung_bow"}], "text": "I watched the grain go. Forty years of bows, and I watched six of mine burn with the silk crackling in them. I have not made one since. I will. Not yet."},
     {"conditions": [{"skill_min": ["core:skill/archery", 30]}], "text": "You draw with the back, not the arm. Somebody taught you or you hurt yourself learning. Either way you may stand at the bench."},
     {"conditions": [{"has_item": ["core:item/hunting_bow", 1]}], "text": "That bow was not made for your hand. I can see it from here. Whoever it was made for had shorter fingers and pulled to the chin. Do not tell me you bought it; I know you bought it."},
     {"conditions": [{"time_between": [6, 7]}], "text": "Wait. One arrow. Then you can talk."},
