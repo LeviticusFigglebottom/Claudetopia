@@ -651,3 +651,21 @@ func test_a_replay_puts_everything_back_as_it_was() -> void:
 	assert_true(bool(run["finished"]), "a replay skipped halfway ends")
 	_same(run["state"], before, "after a replay")
 	await _drop(w)
+
+
+## A prompt asked for and let go before its fade had begun -- a key down and a skip on the next
+## frame of a slow machine -- does not go on fading in over the skip's black.
+func test_a_prompt_let_go_before_its_fade_began_does_not_appear() -> void:
+	var overlay := CinematicOverlay.new()
+	_tree().root.add_child(overlay)
+	overlay.prompt(true)
+	overlay.prompt(false)
+	for _i in 30:
+		await _tree().process_frame
+	assert_false(overlay.prompt_shown(), "the prompt stays gone")
+	overlay.prompt(true)
+	for _i in 30:
+		await _tree().process_frame
+	assert_true(overlay.prompt_shown(), "and a key held shows it")
+	_tree().root.remove_child(overlay)
+	overlay.queue_free()

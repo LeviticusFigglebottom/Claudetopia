@@ -46,10 +46,10 @@ const HOLD_CAP_SECONDS := 4.0
 ## A hold that has lasted this long says in the log what it is waiting for, once.
 const HOLD_REPORT_SECONDS := 2.0
 ## Real seconds from the first shot after which the opening hands over as though a key had been
-## held: about three times its pictures. It is the net under everything else, not a pace: on a
-## machine drawing a frame every five or six seconds the whole opening, holds and all, takes about
-## three minutes.
-const OVERALL_CAP_SECONDS := 300.0
+## held: nearly four times its pictures. It is the net under everything else, not a pace: on a
+## machine drawing a frame every six seconds, and some frames in twenty, the whole opening, holds
+## and all, took a little over four minutes.
+const OVERALL_CAP_SECONDS := 360.0
 ## The pictures run on the wall clock, as the music does. One long frame among quick ones -- a
 ## hitch -- moves them on by no more than this, so it does not throw a shot away; on a machine whose
 ## every frame is long the pictures keep the wall clock regardless, or the opening would crawl.

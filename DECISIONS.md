@@ -1017,7 +1017,7 @@ the engine's delta: a long frame after quick ones is a hitch and moves them on b
 most, a long frame after long ones is the machine and counts in full, and no frame moves a shot
 past half its length, so every shot is drawn at least once past its middle. A shot waits for
 its country four seconds at most and is then shown with what has come; its two settling frames
-are skipped for the black and once that wait is spent. Five minutes after the first shot the
+are skipped for the black and once that wait is spent. Six minutes after the first shot the
 whole opening hands over the way a held key does, and after that nothing is waited for. A skip
 is timed from the key going down, on the wall clock. The hand-over hands the world to the body
 (`World.follow`) and stands the camp's people up at once. No slot is written while a cinematic
