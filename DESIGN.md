@@ -149,7 +149,8 @@ are normative for pass one and live in `game/systems/*`.
   Run for the jog, Sprint, Sneak_Walk). All of them share one stride phase and are played at
   ground speed over stride (0.5–1.6 times as made), so a planted foot stays planted through
   every blend between them. Upright gaits ride the hips a few centimetres below standing; only
-  the sneak crouches.
+  the sneak crouches. A raised guard is held over the upper body while the legs go on walking
+  under it, and a body turning on the spot steps round instead of pivoting on planted feet.
 * Movement is relative to the view: W is where the camera looks, on the ground; S away, A and D
   to its sides. The body turns to where it is going at a limited rate (900°/s standing, 720 at a
   walk, 540 at a jog, 300 at a sprint, easing into the last few degrees) and gives up speed for a

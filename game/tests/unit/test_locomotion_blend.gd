@@ -235,6 +235,39 @@ func test_a_stop_stops_the_legs() -> void:
 	assert_true(steps_after < 0.05, "the legs went on stepping %.2f of a stride after the body stood" % steps_after)
 
 
+## A raised guard walks on its legs. The guard is held over the upper body while the legs go on
+## walking under it; played as a whole-body state it froze the legs in its stance, and a player
+## walking behind a shield at 1.56 m/s glided with still feet.
+func test_a_raised_guard_walks_on_its_legs() -> void:
+	if not _rig_built():
+		return
+	var m := _model()
+	var pace := Player.STRAFE_SPEED * Player.BLOCK_MOVE_MULT
+	var sk := m.skeleton
+	var open: Array = _walk(m, Vector2(0.0, pace), false)
+	var hand_open := (sk.get_bone_global_pose(sk.find_bone("Hand.R")).origin - sk.get_bone_global_pose(sk.find_bone("Chest")).origin).y
+	after_each()
+	m = _model()
+	sk = m.skeleton
+	assert_true(m.play_intent("Block_Idle"), "the rig has no guard")
+	var guarded: Array = _walk(m, Vector2(0.0, pace), false)
+	var hand_guard := (sk.get_bone_global_pose(sk.find_bone("Hand.R")).origin - sk.get_bone_global_pose(sk.find_bone("Chest")).origin).y
+	var share := float(guarded[0]) / pace
+	print("    walking at %.2f m/s: planted foot %.0f%% of the ground with the guard up (%.0f%% without); the right hand %.2f m from the chest's height with it, %.2f without" % [
+		pace, share * 100.0, float(open[0]) / pace * 100.0, hand_guard, hand_open])
+	assert_eq(m.current_stance(), "Block_Idle", "the guard is not held")
+	assert_eq(m.anim_tree.get("parameters/playback").get_current_node(), HumanoidModel.LOCOMOTION_STATE,
+			"the guard took the whole body out of the walk")
+	assert_true(share < 0.08, "with the guard up the planted foot moves at %.0f%% of the ground: the legs are not walking" % (share * 100.0))
+	assert_true(hand_guard > hand_open + 0.2, "the hands are not up in the guard (%.2f against %.2f)" % [hand_guard, hand_open])
+	m.stop_intent()
+	for i in 30:
+		_step(m, Vector2(0.0, pace), false, Vector2.ZERO)
+	var hand_down := (sk.get_bone_global_pose(sk.find_bone("Hand.R")).origin - sk.get_bone_global_pose(sk.find_bone("Chest")).origin).y
+	assert_eq(m.current_stance(), "", "the guard stayed up")
+	assert_true(hand_down < hand_guard - 0.2, "lowered, the hands stayed up (%.2f)" % hand_down)
+
+
 ## A villager on its way somewhere walks: its model is told how fast (it used to stay at 0, so the
 ## whole village glided about in its idle pose).
 func test_a_walking_villager_is_given_its_gait() -> void:

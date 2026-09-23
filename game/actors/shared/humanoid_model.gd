@@ -61,6 +61,16 @@ const SPEED_SMOOTH_S := 0.08
 ## Below MOVING_FROM m/s the body is standing (the idle plays); above MOVING_FULL it is all gait.
 const MOVING_FROM := 0.08
 const MOVING_FULL := 0.7
+## Stances held over whatever the legs are doing: the upper body takes the clip, the hips and legs
+## keep walking. Played as a whole-body state, a raised guard froze the legs in its stance and the
+## body glided across the ground at 1.56 m/s with its feet still.
+const STANCE_CLIPS: Array[String] = ["Block_Idle"]
+## The bones a stance owns: everything above the hips, and what hangs off it.
+const UPPER_BODY: Array[String] = ["Spine", "Chest", "Neck", "Head",
+		"Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
+		"Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R",
+		"Socket.WeaponR", "Socket.WeaponL", "Socket.ShieldL", "Socket.Back", "Socket.Head", "Socket.Lantern"]
+const STANCE_BLEND_S := 0.12
 ## The gait and the idle hand over across this long, from the moment the body's own speed says
 ## so. Read off the smoothed speed, a stop from a jog held the legs split mid-stride for a tenth
 ## of a second after the body stood (the smoothing still thought it was moving) and then snapped
@@ -98,6 +108,9 @@ var _loco_now := Vector2.ZERO            ## ...eased (SPEED_SMOOTH_S)
 var _sneaking := false
 var _sneak_w := 0.0
 var _move_w := 0.0                       ## gait against idle, eased over MOVE_BLEND_S
+var _stance := ""                        ## a STANCE_CLIPS clip held over the legs, or ""
+var _stance_w := 0.0                     ## ...eased over STANCE_BLEND_S
+var _has_stance_layer := false
 var _gait_points: Array = []             ## [[clip, ground speed m/s, point name], ...] ascending
 var _clip_speed: Dictionary = {}         ## clip -> authored ground speed (sidecar `speed`)
 var _clip_cycle: Dictionary = {}         ## clip -> seconds per stride cycle
@@ -640,8 +653,31 @@ func _build_locomotion_tree() -> AnimationNodeBlendTree:
 	bt.add_node("move", AnimationNodeBlend2.new(), Vector2(800, 0))
 	bt.connect_node("move", 0, "idle")
 	bt.connect_node("move", 1, "cycle")
-	bt.connect_node("output", 0, "move")
+	bt.connect_node("output", 0, _add_stance_layer(bt, "move"))
 	return bt
+
+
+## The upper body of a held stance (a raised guard) over `below`, filtered to UPPER_BODY so the
+## hips and legs go on walking under it. Returns the node to take the output from.
+func _add_stance_layer(bt: AnimationNodeBlendTree, below: String) -> String:
+	_has_stance_layer = false
+	if anim_player == null or not anim_player.has_animation(STANCE_CLIPS[0]):
+		return below
+	var pose := AnimationNodeAnimation.new()
+	pose.animation = STANCE_CLIPS[0]
+	bt.add_node("stance_pose", pose, Vector2(800, 200))
+	var layer := AnimationNodeBlend2.new()
+	layer.filter_enabled = true
+	var clip := anim_player.get_animation(STANCE_CLIPS[0])
+	for i in clip.get_track_count():
+		var path := clip.track_get_path(i)
+		if UPPER_BODY.has(str(path.get_concatenated_subnames())):
+			layer.set_filter_path(path, true)
+	bt.add_node("stance", layer, Vector2(1000, 0))
+	bt.connect_node("stance", 0, below)
+	bt.connect_node("stance", 1, "stance_pose")
+	_has_stance_layer = true
+	return "stance"
 
 
 ## One stride cycle of a clip, stretched onto the shared one-second timeline.
@@ -781,6 +817,9 @@ func _update_locomotion(delta: float) -> void:
 	var p := locomotion_params(_loco_now, _sneak_w, _locomotion.length())
 	_move_w = move_toward(_move_w, smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length()), delta / MOVE_BLEND_S)
 	p["move/blend_amount"] = _move_w
+	if _has_stance_layer:
+		_stance_w = move_toward(_stance_w, 1.0 if _stance != "" else 0.0, delta / STANCE_BLEND_S)
+		p["stance/blend_amount"] = _stance_w
 	for key in p:
 		anim_tree.set("parameters/%s/%s" % [LOCOMOTION_STATE, key], p[key])
 
@@ -793,6 +832,14 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 		push_warning("HumanoidModel: no clip '%s'" % clip_name)
 		return false
 	_holding = ""
+	if _has_stance_layer and STANCE_CLIPS.has(clip_name):
+		# held over the legs in the Locomotion graph, not played as a state of its own
+		_stance = clip_name
+		_one_shot = ""
+		if _state_machine.get_current_node() != LOCOMOTION_STATE:
+			_state_machine.travel(LOCOMOTION_STATE)
+		return true
+	_stance = ""
 	if _is_locomotion_clip(clip_name):
 		_one_shot = ""
 		_state_machine.travel(LOCOMOTION_STATE)
@@ -813,6 +860,7 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 
 func stop_intent() -> void:
 	_holding = ""
+	_stance = ""
 	if _one_shot.is_empty():
 		return
 	var finished := _one_shot
@@ -824,6 +872,11 @@ func stop_intent() -> void:
 
 func current_intent() -> String:
 	return _one_shot
+
+
+## The stance held over the legs (a raised guard), or "".
+func current_stance() -> String:
+	return _stance
 
 
 func _process(delta: float) -> void:

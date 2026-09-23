@@ -799,3 +799,26 @@ The side-steps are at 1.58x (0% slide measured at 3.0 m/s). Walk_Back is at 1.57
 of the ground speed, and at 2.18 m/s backing off diagonally at 23%. It was 19% at the old 2.6
 m/s. Diagonal clips or foot IK would take that out. `Player.locked_speed(way)` is the ellipse,
 and test_lock_on_movement pins all of it.
+
+## 2026-09-23 · A raised guard is a layer over the legs, and a turn on the spot steps
+**Decision.** Block_Idle is held over the upper body in the Locomotion graph: a Blend2 filtered
+to the bones above the hips (and the sockets hanging off them) mixes it over whatever the legs
+are doing, easing in and out over 0.12 s. `HumanoidModel.play_intent("Block_Idle")` raises it
+and keeps the body in Locomotion; `stop_intent()` or any other clip lowers it. The Block_Idle
+state stays in the machine for anything that still wants the whole-body pose. A body turning on
+the spot faster than 60°/s while standing is shown a side-step toward the turn at the pace its
+feet travel round its middle (0.18 m out), up to 1.4 m/s, eased in and out.
+**Why.** Filmed in the motion studio: played as a whole-body state, the guard froze the legs in
+its stance, and a player walking behind it at 1.56 m/s glided across the ground with still feet.
+Layered, the legs walk under it, with the planted foot at 2% of the ground speed, and the right
+hand stays at chest height (0.01 m below the chest bone, where the walk swings it 0.29 m
+below). A turn on the spot while guarding or locked on pivoted the whole body on planted feet at
+up to 720°/s. The side-step makes it a step round, the cheapest thing that reads as a person
+turning.
+**Alternatives.** A guard-walk clip set (walk, strafes and backpedal each with the guard up):
+that is four more clips to keep in step, and the layer gives the same picture from one pose.
+Turn-in-place clips (90° and 180° steps): better, and the next thing to make if the side-step
+reads as a shuffle in play.
+**Consequences.** Enemies that raise a guard (`Enemy._guard`) get the same layer: they now walk
+under their guard instead of gliding. Any new stance meant to be held over the legs is added
+to `HumanoidModel.STANCE_CLIPS`.
