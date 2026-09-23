@@ -72,6 +72,29 @@ func test_every_deep_place_stands_a_body_on_the_floor_of_its_mouth() -> void:
 	assert_gt(caves, 5, "the deep places were all walked into")
 
 
+## What a quest says lies inside is there when the player walks in through the door, not only
+## when a test hands the builder its interior: the builders ask themselves which interior they
+## are, and Interiors names the wrapper above them.
+func test_what_a_quest_left_inside_is_there_when_walked_into() -> void:
+	var items := QuestItems.ensure()
+	items.clear()
+	for pair in [["core:interior/ellard_steward", "core:item/stewards_brass_key"],
+			["core:interior/undercroft", "core:item/ledger_of_prices"]]:
+		assert_true(Interiors.enter(str(pair[0])), "%s can be entered" % pair[0])
+		var root: Node = Interiors._loaded.get(str(pair[0]))
+		var found := false
+		if root != null:
+			for n in root.find_children("*", "", true, false):
+				if n is WorldItem and (n as WorldItem).item_id == str(pair[1]):
+					found = true
+		assert_true(found, "%s lies in %s when it is walked into" % [pair[1], pair[0]])
+		Interiors.exit()
+		GameState.current_interior_id = ""
+		Interiors.unload_all()
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	items.clear()
+
+
 func test_enter_and_exit() -> void:
 	var door := preload("res://systems/interiors/door.tscn").instantiate()
 	(Engine.get_main_loop() as SceneTree).root.add_child(door)
