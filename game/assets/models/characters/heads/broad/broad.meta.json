@@ -1,11 +1,11 @@
 {
  "bounds": [
-  -0.1066,
+  -0.0852,
   -0.1121,
-  1.4029,
-  0.1067,
-  0.094,
-  1.806
+  1.4032,
+  0.0859,
+  0.1103,
+  1.7806
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -31,6 +31,12 @@
  "rig": "WM_Humanoid_v1",
  "seed": 1,
  "slot_hint": "head",
+ "textures": [
+  "broad_eye_albedo.png",
+  "broad_normal.png",
+  "broad_albedo.png",
+  "broad_orm.png"
+ ],
  "tris": [
   5608,
   0,

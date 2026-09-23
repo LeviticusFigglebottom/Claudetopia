@@ -8,16 +8,24 @@
   1.2223
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "skirt": "cloth"
+ },
  "params": {
   "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 1452,
+ "seed": 11168,
  "slot_hint": "legs",
+ "textures": [
+  "skirt_albedo.png",
+  "skirt_orm.png"
+ ],
  "tris": [
   3400,
   0,

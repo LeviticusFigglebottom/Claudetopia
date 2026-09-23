@@ -8,16 +8,24 @@
   1.1156
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "leather",
+ "materials": {
+  "belt": "leather"
+ },
  "params": {
   "bone": null,
   "material": "leather"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 7606,
+ "seed": 90773,
  "slot_hint": "belt",
+ "textures": [
+  "belt_albedo.png",
+  "belt_orm.png"
+ ],
  "tris": [
   900,
   0,

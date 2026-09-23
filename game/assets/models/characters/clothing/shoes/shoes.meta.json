@@ -8,16 +8,24 @@
   0.1098
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "leather",
+ "materials": {
+  "shoes": "leather"
+ },
  "params": {
   "bone": null,
   "material": "leather"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 4990,
+ "seed": 74866,
  "slot_hint": "feet",
+ "textures": [
+  "shoes_albedo.png",
+  "shoes_orm.png"
+ ],
  "tris": [
   1100,
   0,
