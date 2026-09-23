@@ -211,28 +211,48 @@ TOR_FIELD = 0.75
 ## riser-fraction * step / s. Past a slope of about a half the riser is a cliff a few metres wide,
 ## narrower than the heightmap can hold: measured on the first build with the scars in, the
 ## risers on Kharrow Hold's steep flanks came out as twenty-metre slots aliased into a stair of
-## texels, and every road off the hold had to dive into one. So both stepped landforms fade out
-## where the ground is already that steep, which is where it needs no help to look like rock.
-STEP_FADE = (0.38, 0.55)
+## texels, and every road off the hold had to dive into one. The first answer faded the stair
+## out on any slope over 0.38 to 0.55 -- in a wold whose median slope is 0.35, most of it. Now
+## the riser widens instead, so it is never steeper than `RISER_SLOPE_MAX`: sharp treads on the
+## gentle ground, crags on the steep, and on ground steeper than the crags themselves no stair.
+RISER_SLOPE_MAX = 1.6
 
 
-def _steepness(ctx, h: np.ndarray) -> np.ndarray:
+def _steepness(ctx, h: np.ndarray, smooth_m: float = 0.0) -> np.ndarray:
+    """Slope magnitude; `smooth_m` averages the land first, so the answer is the hillside's and
+    not every hummock's (a factor that multiplies a landform must not be speckled)."""
+    if smooth_m > 0.0:
+        from scipy import ndimage
+        h = ndimage.gaussian_filter(h, smooth_m / ctx.grid.spacing, mode="nearest")
     return np.hypot(*np.gradient(h, ctx.grid.spacing))
+
+
+def _terrace_var(h: np.ndarray, step: float, riser: np.ndarray) -> np.ndarray:
+    """`noise.terrace` with a riser fraction per texel."""
+    q = h / step
+    base = np.floor(q)
+    frac = q - base
+    t = np.clip((frac - (1.0 - riser)) / riser, 0.0, 1.0)
+    t = t * t * (3.0 - 2.0 * t)
+    return ((base + t) * step).astype(np.float32)
 
 
 def briarwold(ctx, h: np.ndarray, r) -> np.ndarray:
     # A terrace only ever lowers (each tread is the bottom of its step), and at 18 m a step that
     # took the whole wold down by seven metres on average and left every place in it standing on
     # a plinth. Raised by half a tread, the stair cuts and fills about equally.
-    off = STAIR_STEP_M * (1.0 - STAIR_RISER) * 0.5
-    stepped = terrace(h, STAIR_STEP_M, STAIR_RISER) + off
-    stair = (stepped - h) * (1.0 - smoothstep(STEP_FADE[0], STEP_FADE[1], _steepness(ctx, h)))
+    slope = _steepness(ctx, h, smooth_m=16.0)
+    riser = np.clip(slope / RISER_SLOPE_MAX, STAIR_RISER, 1.0)
+    off = STAIR_STEP_M * (1.0 - riser) * 0.5
+    stair = _terrace_var(h, STAIR_STEP_M, riser) + off - h
     # the lip of each bench is the top of the riser below it: where h is a whole number of steps
     q = h / STAIR_STEP_M
     frac = q - np.floor(q)
     near_whole = np.minimum(frac, 1.0 - frac)
-    lip = np.exp(-(near_whole / 0.07) ** 2)
-    knobs = np.clip(ctx.f(148, 1.8, 25, 120) - TOR_FIELD, 0.0, 1.3) ** 1.4
+    # a tor is as deep as it is long, so the lip it stands on is taken wide, and the pile is
+    # capped at TOR_M: taken narrow and uncapped they came out as twenty-metre spikes
+    lip = np.exp(-(near_whole / 0.11) ** 2)
+    knobs = np.clip(ctx.f(148, 1.8, 25, 120) - TOR_FIELD, 0.0, 1.0) ** 1.2
     tors = TOR_M * knobs * lip
     return (stair + tors).astype(np.float32)
 
@@ -265,15 +285,15 @@ def _scar(h: np.ndarray, level: float, half: float, face: tuple) -> np.ndarray:
 
 
 def skerrow(ctx, h: np.ndarray, r) -> np.ndarray:
-    slope = _steepness(ctx, h)
+    slope = _steepness(ctx, h, smooth_m=16.0)
     lo0, lo1, hi0, hi1 = SCAR_SLOPE
     on_slope = smoothstep(lo0, lo1, slope) * (1.0 - smoothstep(hi0, hi1, slope))
     # where the bed is exposed along its length: long runs, and gaps a road can take
-    exposed = smoothstep(-0.55, 0.05, ctx.f(154, 2.0, 1200, 4200))
+    exposed = smoothstep(-0.9, -0.3, ctx.f(154, 2.0, 1200, 4200))
     scars = np.zeros_like(h, dtype=np.float32)
     for k, level in enumerate(SCAR_LEVELS_M):
         # each bed has its own runs
-        bed = smoothstep(-0.6, 0.0, ctx.f(740 + k, 2.0, 900, 3600))
+        bed = smoothstep(-0.9, -0.3, ctx.f(740 + k, 2.0, 900, 3600))
         scars += _scar(h, level, SCAR_HALF_M, SCAR_FACE) * bed
     scars *= on_slope * exposed
     out = scars.astype(np.float32)
