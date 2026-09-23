@@ -70,6 +70,8 @@ const SPRINT_TAP_S := 0.22
 ## The pads whose Sprint button is read for a tap (a binding names a button on any pad).
 const PADS_READ: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7]
 const JUMP_HEIGHT := 1.1
+## The steepest ground a body walks up (degrees): the physics' floor angle. Steeper is a wall.
+const WALKABLE_SLOPE_DEG := 45.0
 ## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
 const ATTACK_STEP_SPEED := 1.6
