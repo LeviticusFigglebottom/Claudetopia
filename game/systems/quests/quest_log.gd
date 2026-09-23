@@ -696,6 +696,29 @@ func current_objectives(type := "") -> Array[Dictionary]:
 	return out
 
 
+## What this NPC can offer to start, as [{quest_id, text}]: the quests whose `giver` they are, that
+## nothing else in the pack starts (QuestRoutes.started_elsewhere: no line, no stage, no reward, not
+## the opening), whose `requires` hold and that have not been taken (unless `repeatable`). A
+## `giver` used to start nothing at all: QuestConditions.offers_of was only ever called by its
+## tests, so a quest written with a giver and no line of its own could never begin. The dialogue
+## runner puts these at the giver's hub; `offer` on the quest is the line, else its name is.
+func giver_offers(npc_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if npc_id == "":
+		return out
+	for def in QuestConditions.offers_of(npc_id, ctx, self):
+		var quest_id := str(def["id"])
+		if QuestRoutes.started_elsewhere(quest_id):
+			continue
+		if is_known(quest_id) and not (is_completed(quest_id) and bool(def.get("repeatable", false))):
+			continue
+		var text := str(def.get("offer", ""))
+		if text == "":
+			text = "Is there something I could do? (%s)" % str(def.get("name", Ids.name_of(quest_id)))
+		out.append({"quest_id": quest_id, "text": text})
+	return out
+
+
 ## The open options of every choice this NPC hosts and nobody wrote a button for, as
 ## [{quest_id, id, text}] — what the dialogue runner offers at their hub (see QuestRoutes).
 func unwritten_choices_for(npc_id: String) -> Array[Dictionary]:

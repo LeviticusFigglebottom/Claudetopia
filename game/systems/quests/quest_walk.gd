@@ -57,8 +57,8 @@ static func objectives() -> Array[Dictionary]:
 
 
 ## How each authored quest begins: [{quest_id, ok, how}]. The opening, or a `start_quest` effect
-## in a line of dialogue, a stage or a reward. A `giver` alone starts nothing: nothing reads it to
-## offer the quest (`QuestConditions.offers_of` has only ever been called by its tests).
+## in a line of dialogue, a stage or a reward; and where none of those does, its `giver`, who offers
+## it at their hub (QuestLog.giver_offers) once its `requires` hold.
 static func beginnings() -> Array[Dictionary]:
 	_build()
 	var out: Array[Dictionary] = []
@@ -69,8 +69,12 @@ static func beginnings() -> Array[Dictionary]:
 			ways.append(str(how))
 		if ways.is_empty():
 			var giver := str(def.get("giver", ""))
-			out.append({"quest_id": id, "ok": false, "how": "nothing starts it%s" % (
-					"" if giver == "" else ": %s has no line that does" % _name(giver))})
+			var person := _person(giver) if giver != "" else _no("")
+			if giver != "" and bool(person["ok"]):
+				out.append({"quest_id": id, "ok": true, "how": "offered by its giver, %s" % person["how"]})
+			else:
+				out.append({"quest_id": id, "ok": false, "how": "nothing starts it%s" % (
+						"" if giver == "" else ": its giver %s" % str(person["how"]))})
 		else:
 			out.append({"quest_id": id, "ok": true, "how": "; ".join(ways)})
 	return out
