@@ -754,3 +754,102 @@ where Ctrl's starts on it. A sprint starts 0.22 s after Shift goes down rather t
 takes 0.4 s to reach sprint speed from a jog in any case. Letting Shift go and pressing it again
 quickly in a sprint rolls. The hint strip and the controls page say "tap Shift" while the tap is
 on, and name the Dodge key when it is not.
+
+## 2026-09-23 · What the perks that named no system now mean
+**Decision.** Each of the 28 perk stats nothing read is read where the thing it names happens,
+and four of them needed a small system first. (1) **Fletcher's Thrift**: 40% of loosed arrows
+and bolts survive where they land (`DamageModel.ARROW_RECOVERY`); one that stands in the world
+is left there as a pickup, one that stays in a body comes out with the body's loot; the perk
+makes it 65%. (2) **Mote-Catcher**: a foe whose last blow was a Kindling saying gives its killer
+one Ember Mote (`Enchanting.MOTES_PER_WARMTH`), the perk two. (3) **Forager**: an ingredient
+taken from the ground where nobody owns it and nobody dropped it is "picked", and the perk gives
+one more. (4) **Second Skin**: worn armour counts at half its weight in the load the roll feels,
+and the noise medium and heavy armour add over cloth (×1.3, ×1.7) is halved. Fair Dealing's
+"buy for less" covers a house deed as well as a shop; Loud Name makes renown gained travel
+further and leaves renown lost as it was.
+**Why.** DESIGN §5.8 has motes "captured from slain foes with a Kindling spell", and nothing
+captured them; DESIGN names no arrow recovery, no gathering and no armour-weight rule, and the
+perk texts presuppose each. The figures are the smallest that make each sentence true: "a
+quarter more of your arrows" needs a share that can take a quarter more, and 40% leaves the perk
+a plain 65%; one mote a kill keeps motes an income for a Kindling-sayer rather than a flood (a
+mote sells for about 18 marks).
+**Alternatives.** Wild herbs to pick (the ground cover has a "herb" class) were not built: the
+world is another agent's this round, and a harvest node on every herb is its own work. Forager
+is therefore only as good as the ingredients lying in the world, which today are the ones
+creatures drop.
+**Consequences.** `tests/unit/test_perks_do_what_they_say.gd` takes all 34 perks on the player
+scene and measures the number each text names; its last test fails when any of the 36 perk
+stat keys has no reader anywhere in the game's scripts.
+
+## 2026-09-23 · The Hearth Flask
+**Decision.** Every character carries a Hearth Flask (`core:item/hearth_flask`): three swallows,
+each restoring 40% of the drinker's greatest health; a swallow is a committed, rooted drink of
+1.0 s with the warmth landing at 0.55 s, and a stagger before then spills it. Resting at a
+Hearthstone and coming back from death fill it. It rides in the bag (the charges in the stack's
+own data, so the save keeps them) and on the belt's first free slot, where the slot shows
+swallows left against a full flask. Merchants will not buy it (tag `keepsake`), and "use" in the
+bag does not drink it.
+**Why.** DESIGN §5.5: "Resting at a Hearthstone: full restore, respawn point set, refills flask
+charges." Nothing existed. DESIGN gives no numbers; these are the genre's: a filling that covers
+most of one bad exchange, a drink long enough to be a decision rather than a reflex.
+**Alternatives.** A dedicated key: every pad button is already bound, and the belt is how DESIGN
+§5.16 has items used in a fight. The flask as a number kept on the player: the bag already saves
+stack data, and an item has a name and a description to read.
+
+## 2026-09-23 · Load is measured against 20 + 1.5·Endurance
+**Decision.** The capacity that worn and wielded weight is measured against for the roll and for
+stamina regeneration is `20 + 1.5·Endurance` (35 at the start), not `40 + 3·Endurance` (70). The
+bands stay light below 30%, medium below 70%, heavy to 100%, overloaded past it.
+**Why.** DESIGN §5.3: "Heavy load lengthens [the roll] and cuts i-frames", §5.7: "Load affects
+dodge and stamina regen". Against 70 the heaviest kit in the pack reached 54%, so the heavy and
+overloaded rolls were only ever a bag's. Against 35: leathers and a sword 25% (light), a
+brigandine and a sword 51% (medium), clan plate and a greatsword 89% (heavy), clan plate and the
+Bearer's clapper 109% (overloaded); twenty points of Endurance later the plate and greatsword
+roll medium.
+**Alternatives.** Lower bands (light below 20%, medium below 40%): the same reach, but the bands
+are the ones every roll table in the genre uses and the capacity is the number nothing else
+leans on.
+**Consequences.** `test_every_load_band_can_be_reached_by_what_is_worn` equips the four kits at
+base Endurance and checks each band. Every Calling still starts light (0 to 14% of capacity; the
+Cragborn's axe and tunic are the heaviest).
+
+## 2026-09-23 · The eleven sounds nothing played: five wired, six dropped
+**Decision.** Wired: `bell_toll` to the Bell-bearer's toll and the Barrow Reeve's (and to the
+Reeve ringing his hammer on the floor as his second phase opens), `bell_hand` to the bell-headed
+weapons going live (the Tolling knight's mace, the Reeve's hammer, the Last Cantor's blade),
+`bell_tavern` to coming through an inn's door, `footstep_snow` and `footstep_sand` to the snow
+and the tide-flats the world builder paints. Footsteps on the terrain now read its paint: the
+builder's twenty-one textures fall into eight surfaces (the grasses, heather and moss as the
+Vale's grass; chalk, granite, limestone, fused stone and cobbles as stone; the dirt track and the
+forest floor as dirt; mud, peat and the lake bed as mud; scree and shingle as gravel; snow, sand
+and ash as themselves). Dropped: `bell_tower` (no bell in the world strikes the hours),
+`thunder_near`, `thunder_far` and `wind_gust` (the ambience's storm and wind layers are the
+thunder and the gusts, and nothing flashes or gusts as an event a one-shot could follow),
+`wood_creak` (the ambience's creak pools are the creaking) and `cart_wheels` (no cart moves
+anywhere in the game).
+**Why.** The brief: wire each to its real event, or remove it if no event exists for it.
+**Consequences.** `test_every_sound_the_game_asks_for_is_in_the_table_and_loads` now fails on
+any row nothing in the game can play, and the audio toolkit's tests fail when the sfx manifest
+or table holds an id the generator no longer makes.
+
+## 2026-09-23 · A blade for the two Callings that started without one
+**Decision.** The Wayfarer starts with a hunting knife beside the bow, and the Lantern-Clerk with
+an iron dagger.
+**Why.** With the scripted player blocking, rolling, drinking and saying what its Calling knows,
+`./run.sh fights` found two Callings that cannot beat the first region's foes at level 1, which
+DESIGN §5.1 and the Naming (WORLD_BIBLE §10: "Fight ash-wights") take for granted. Measured again
+on the game as it stands after the movement rework (one run per Calling): without its dagger the
+Lantern-Clerk, fists and a ward, died to the swarm with 85% of the drakes left and ran out of the
+120 s on the pack (95% of the wolves left, 528 damage taken and survived only by drinking), the
+hedge-wight (33% left) and the bravo (41%); without its knife the Wayfarer, a bow and thirty
+arrows, died to the swarm with 60% of the drakes left. With the blades both win every danger-one
+fight and the Naming (the Wayfarer in 3–58 s, the Lantern-Clerk in 13–32 s). The four other
+Callings win the same fights in 2–69 s and are unchanged.
+**Alternatives.** Wren handing every Foundling a blade in the Naming: it changes every Calling,
+including the four that need nothing. Softer danger-one foes: four Callings beat them already,
+which is the design working.
+**Consequences.** Nobody beats the Barrow Reeve at level 1: four Callings die and two run out of
+time with 47–73% of him left. He has 520 health and armour 6 against 3–11 a blow, and four to six
+of his (22–36 each, a knockdown among them) kill a 100-health character, flask and all. He is the
+third quest of the Wardens' line, behind 45 reputation and the quest before it, so this is not
+tuned.

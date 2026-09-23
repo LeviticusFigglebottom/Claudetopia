@@ -176,7 +176,7 @@ static func brewed_magnitude(effect_id: String, skill_level: int, mods: Modifier
 	var skill_scale := 1.0 + float(skill_level) * SKILL_MAGNITUDE_PER_LEVEL
 	var potency := 1.0
 	if mods != null:
-		potency = mods.get_mult("poison_potency" if is_harmful(effect_id) else "potion_potency")
+		potency = mods.get_mult("poison_potency") if is_harmful(effect_id) else mods.get_mult("potion_potency")
 	var magnitude := float(d.get("magnitude_base", 0)) * skill_scale * potency
 	var duration := float(d.get("duration_base", 0)) * (1.0 + float(skill_level) * SKILL_DURATION_PER_LEVEL)
 	return {"effect": effect_id, "magnitude": snappedf(magnitude, 0.1), "duration": snappedf(duration, 0.1)}

@@ -478,6 +478,42 @@ func test_load_is_everything_worn_and_what_is_carried() -> void:
 	assert_gt(player.load_ratio, 1.0, "carrying past capacity puts the roll in the overloaded band")
 
 
+## Every band of the roll is somewhere a character can stand in the pack's own gear at the start of
+## the game (base Endurance, nothing in the bag): leathers and a sword roll light, a brigandine
+## and a sword medium, a plate harness and a greatsword heavy, and the plate with the Bearer's
+## clapper is more than the body can carry. The heaviest kit in the pack used to reach 0.54 of
+## capacity, so the heavy and overloaded rolls DESIGN §5.3 describes were only ever a bag's.
+func test_every_load_band_can_be_reached_by_what_is_worn() -> void:
+	await _frames(2)
+	var bag := player.get_node("Inventory") as Inventory
+	var doll := player.get_node("Equipment") as Equipment
+	var leather: Array[String] = ["core:item/leather_cap", "core:item/leather_jerkin", "core:item/leather_gloves", "core:item/leather_boots"]
+	var brigandine: Array[String] = ["core:item/kettle_helm", "core:item/brigandine", "core:item/brigandine_gauntlets", "core:item/brigandine_greaves"]
+	var plate: Array[String] = ["core:item/clan_bone_helm", "core:item/clan_plate", "core:item/clan_plate_gauntlets", "core:item/clan_plate_sabatons"]
+	var kits := [
+		["leathers and a sword", leather, SWORD, "light"],
+		["a brigandine and a sword", brigandine, SWORD, "medium"],
+		["plate and a greatsword", plate, "core:item/iron_greatsword", "heavy"],
+		["plate and the Bearer's clapper", plate, "core:item/bearers_clapper", "overloaded"],
+	]
+	var prog := player.progression() as Progression
+	assert_eq(prog.attribute("endurance"), Leveling.BASE_ATTRIBUTE, "a character at the start of the game")
+	for kit in kits:
+		doll.unequip_all()
+		for s in bag.stacks():
+			bag.remove_stack(s, s.count)
+		for id in kit[1]:
+			bag.add(id, 1)
+			assert_true(doll.equip(id), "equips %s" % id)
+		bag.add(str(kit[2]), 1)
+		assert_true(doll.equip(str(kit[2])), "takes up %s" % kit[2])
+		await _frames(1)
+		assert_false(bag.is_overloaded(), "the bag is not what makes it heavy")
+		var tier := DamageModel.load_tier(player.load_ratio)
+		_say("load band, %s" % kit[0], str(kit[3]), "%s (%.0f%%)" % [tier, player.load_ratio * 100.0])
+		assert_eq(tier, str(kit[3]), "%s roll %s" % [kit[0], kit[3]])
+
+
 ## DESIGN §5.7: "Load affects dodge and stamina regen".
 func test_load_slows_stamina_regen() -> void:
 	await _frames(2)

@@ -21,6 +21,9 @@ func _ready() -> void:
 	cave = CaveInterior.new()
 	cave.build_on_ready = false
 	cave.spawn_encounters = true
+	# The builder asks itself which interior it is (to raise what a quest left in here); Interiors
+	# names the wrapper, so the name is handed down.
+	cave.set_meta("interior_id", get_meta("interior_id", GameState.current_interior_id))
 	add_child(cave)
 	cave.build(meta_path)
 	_spawn_from_markers()

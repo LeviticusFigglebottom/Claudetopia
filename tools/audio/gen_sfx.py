@@ -699,31 +699,12 @@ def bell_sfx(rng, kind: str) -> np.ndarray:
     if kind == "tavern":
         y = inst.bell(69 + int(rng.integers(-1, 2)), 4.0, t60=3.4, amp=0.55, rng=rng, warmth=0.1)
         return _limit_tail(y, 0.15)
-    if kind == "tower":
-        y = inst.bell(50 + int(rng.integers(-1, 2)), 11.0, t60=10.0, amp=0.6, rng=rng, warmth=0.3)
-        y = core.to_mono(fx.reverb(y, "valley", mix=0.3, seed=int(rng.integers(1 << 30)), tail=True))
-        return _limit_tail(y, 0.4)
     if kind == "toll":
         # the Cracked Toll itself: forty metres of bronze, and the hum after
         y = inst.toll_bell(31, 22.0, amp=0.62, rng=rng)
         y = core.to_mono(fx.reverb(y, "cinder", mix=0.34, seed=int(rng.integers(1 << 30)), tail=True))
         return _limit_tail(y, 1.5)
     raise ValueError(kind)
-
-
-def thunder_sfx(rng, near: bool = True):
-    from gen_ambience import thunder as _thunder
-    y = _thunder(5.0 if near else 7.5, rng, distance=0.15 if near else 0.8)
-    return _limit_tail(core.to_mono(y), 0.3)
-
-
-def wind_gust_sfx(rng) -> np.ndarray:
-    from gen_ambience import wind as _wind
-    dur = 3.4
-    y = core.to_mono(_wind(dur, rng, strength=0.9, height=0.5, gustiness=1.0))
-    n = len(y)
-    y *= env.segments([(0, 0), (0.6, 1.0), (2.0, 0.7), (dur, 0.0)], n)
-    return _limit_tail(y, 0.3)
 
 
 def water_splash(rng) -> np.ndarray:
@@ -737,37 +718,6 @@ def water_splash(rng) -> np.ndarray:
         env.segments([(0, 0), (0.08, 1.0), (dur, 0.0)], n)
     out += drops * 0.4
     return _limit_tail(filters.highpass(out, 80.0), 0.08)
-
-
-def cart_wheels(rng) -> np.ndarray:
-    dur = 3.0
-    n = samples(dur)
-    # rumble of iron tyres on a track, plus the axle and the bed of the cart
-    rumble = filters.lowpass(osc.brown(n, rng), 220.0, 0.8) * 0.7
-    rumble *= np.clip(0.6 + 0.5 * env.wander(n, rng, 2.2, 1.0), 0.2, 1.4)
-    out = rumble
-    # each wheel revolution knocks
-    period = float(rng.uniform(0.42, 0.62))
-    t = 0.0
-    while t < dur:
-        s = samples(t)
-        k = samples(0.25)
-        if s + k >= n:
-            break
-        knock = struck(rng, [(float(rng.uniform(120, 260)), 0.09, 1.0),
-                             (float(rng.uniform(500, 900)), 0.05, 0.3)], 0.25, hardness=0.5)
-        out[s:s + k] += knock[:k] * float(rng.uniform(0.3, 0.8))
-        t += period * float(rng.uniform(0.92, 1.08))
-    axle = filters.bandpass(osc.saw(np.linspace(150, 190, n), n), 900.0, 1.6) * 0.1
-    axle *= np.clip(env.wander(n, rng, 1.5, 1.0) * 0.5 + 0.5, 0, 1)
-    out += axle
-    out *= env.segments([(0, 0), (0.25, 1.0), (dur - 0.4, 1.0), (dur, 0.0)], n)
-    return _limit_tail(filters.highpass(out, 45.0), 0.2)
-
-
-def wood_creak_sfx(rng) -> np.ndarray:
-    from gen_ambience import creak as _creak
-    return _limit_tail(_creak(rng, big=bool(rng.random() < 0.5)), 0.05)
 
 
 def hearth_chime(rng) -> np.ndarray:
@@ -854,15 +804,8 @@ def _catalogue() -> dict:
         "lockpick_click": _e(lambda rng: lockpick(rng, "click"), 5, -6.0, 0.10),
         "lockpick_break": _e(lambda rng: lockpick(rng, "break"), 3, -6.0, 0.06),
         "water_splash": _e(lambda rng: water_splash(rng), 4, -5.0, 0.08),
-        "wood_creak": _e(lambda rng: wood_creak_sfx(rng), 4, -10.0, 0.09),
-        # -9 put it 11 LU under the rest of the world's one-shots (tools/audio/audit.py)
-        "cart_wheels": _e(lambda rng: cart_wheels(rng), 2, -3.0, 0.04),
-        "wind_gust": _e(lambda rng: wind_gust_sfx(rng), 3, -10.0, 0.05),
-        "thunder_near": _e(lambda rng: thunder_sfx(rng, True), 3, -2.0, 0.05),
-        "thunder_far": _e(lambda rng: thunder_sfx(rng, False), 3, -6.0, 0.05),
         "bell_hand": _e(lambda rng: bell_sfx(rng, "hand"), 3, -6.0, 0.04),
         "bell_tavern": _e(lambda rng: bell_sfx(rng, "tavern"), 3, -5.0, 0.03),
-        "bell_tower": _e(lambda rng: bell_sfx(rng, "tower"), 2, -3.0, 0.02),
         "bell_toll": _e(lambda rng: bell_sfx(rng, "toll"), 2, -1.0, 0.01),
         "hearthstone_rest": _e(lambda rng: hearth_chime(rng), 2, -4.0, 0.02, bus="UI"),
         "echo_recovered": _e(lambda rng: echo_tone(rng), 2, -4.0, 0.02, bus="UI"),
@@ -903,8 +846,9 @@ def _load_manifest() -> dict:
 
 def build(only=None, force: bool = False) -> dict:
     # Start from what is already there, so rendering one id with --only does not drop the
-    # other 69 rows from core:table/sfx.
-    manifest = _load_manifest()
+    # other rows from core:table/sfx -- less any id the catalogue no longer makes, whose row
+    # would otherwise be written back into the table pointing at files that are gone.
+    manifest = {k: v for k, v in _load_manifest().items() if k in CATALOGUE}
     t_all = time.time()
     for name, spec in CATALOGUE.items():
         if only and name not in only:
