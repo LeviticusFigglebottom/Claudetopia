@@ -255,14 +255,14 @@ func _process(delta: float) -> void:
 		var p: AudioStreamPlayer = _players[stem]
 		if not is_instance_valid(p):
 			continue
-		p.volume_db = move_toward(p.volume_db, _target_db(stem), step)
+		AudioGuard.ease_volume(p, _target_db(stem), step)
 	# retire the previous region's stems
 	var still: Array[AudioStreamPlayer] = []
 	var out_step := delta / maxf(CROSSFADE_SECONDS, 0.01) * 60.0
 	for p in _outgoing:
 		if not is_instance_valid(p):
 			continue
-		p.volume_db = move_toward(p.volume_db, SILENCE_DB, out_step)
+		AudioGuard.ease_volume(p, SILENCE_DB, out_step)
 		if p.volume_db <= SILENCE_DB:
 			_discard(p)
 		else:
@@ -332,7 +332,7 @@ func _update_overlay(delta: float) -> void:
 		if not is_instance_valid(p):
 			continue
 		var want := _overlay_target_db() if i == _overlay_now else SILENCE_DB
-		p.volume_db = move_toward(p.volume_db, want, step)
+		AudioGuard.ease_volume(p, want, step)
 		if p.volume_db <= SILENCE_DB and p.playing and want <= SILENCE_DB:
 			_discard(p)
 

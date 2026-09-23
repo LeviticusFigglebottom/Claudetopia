@@ -92,6 +92,11 @@ var _chasing := false                 # sprinting to close on a foe out of reach
 
 
 func _ready() -> void:
+	# The fights run with --fixed-fps, whose frames are not paced: two of them pass while the audio
+	# mixer is descheduled, and the engine frees bus details the mixer still holds (AudioGuard).
+	# `--no-audio-guard` runs them without it, to show what it prevents.
+	if Foley.guard != null and not OS.get_cmdline_user_args().has("--no-audio-guard"):
+		Foley.guard.active = true
 	var floor_body := StaticBody3D.new()
 	floor_body.name = "Floor"
 	floor_body.collision_layer = 1
