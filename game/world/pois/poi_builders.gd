@@ -17,6 +17,11 @@ extends RefCounted
 ## file needs the name at all.
 
 
+## The kinds the drawn map asked for next, in a file of their own: caves, farmsteads, mills,
+## waystones, market fields, quarries, shielings and vistas.
+const LAND := preload("res://world/pois/poi_builders_land.gd")
+
+
 static func build(d: PoiDressing) -> void:
 	match d.kind:
 		"camp":
@@ -45,6 +50,22 @@ static func build(d: PoiDressing) -> void:
 			standing_stones(d)
 		"strange":
 			strange(d)
+		"cave":
+			LAND.cave(d)
+		"farmstead":
+			LAND.farmstead(d)
+		"mill":
+			LAND.mill(d)
+		"waystone":
+			LAND.waystone(d)
+		"market_field":
+			LAND.market_field(d)
+		"quarry":
+			LAND.quarry(d)
+		"shieling":
+			LAND.shieling(d)
+		"vista":
+			LAND.vista(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
 

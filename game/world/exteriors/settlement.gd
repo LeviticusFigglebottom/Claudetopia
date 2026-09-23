@@ -390,15 +390,11 @@ func _frame_of(b: Dictionary) -> Transform3D:
 
 
 func _commit(fabric: FabricMesh) -> void:
-	fabric.commit(self, "wall", _surface(_wall_spec(), 0.45), "Walls")
-	fabric.commit(self, "wall_alt", _surface(HouseKit.STONE_WALL.get(culture, HouseKit.STONE_WALL["vale"]), 0.5), "WallsAlt")
-	fabric.commit(self, "roof", _surface(_roof_spec(), 0.5), "Roofs")
-	fabric.commit(self, "stone", _surface(_stone_spec(), 0.6), "Stone")
-	# the walls laid dry: the plinths' stone broken small, with the dark of the gaps between
-	var rubble := _stone_spec().duplicate()
-	rubble["unit"] = 0.16
-	rubble["grout"] = "#2e2c28"
-	var laid := _surface(rubble, 0.7)
+	fabric.commit(self, "wall", fabric_material(culture, "wall"), "Walls")
+	fabric.commit(self, "wall_alt", fabric_material(culture, "wall_alt"), "WallsAlt")
+	fabric.commit(self, "roof", fabric_material(culture, "roof"), "Roofs")
+	fabric.commit(self, "stone", fabric_material(culture, "stone"), "Stone")
+	var laid := fabric_material(culture, "drystone")
 	var drystone := fabric.commit(self, "drystone", laid, "Drystone")
 	if drystone != null:
 		FabricMesh.near_only(drystone, DRYSTONE_RANGE_M, true)
@@ -413,8 +409,7 @@ func _commit(fabric: FabricMesh) -> void:
 	for garden in fabric.commit_all(self, GARDEN, FabricMesh.joinery_material(), "Garden"):
 		FabricMesh.near_only(garden, GARDEN_RANGE_M, false)
 	for key in ["paving", "earth"]:
-		var spec: Dictionary = PAVING_BY_CULTURE.get(culture, PAVING_BY_CULTURE["vale"]) if key == "paving" else EARTH
-		var ground := fabric.commit(self, key, _surface(spec, 0.55), "Paving" if key == "paving" else "Earth")
+		var ground := fabric.commit(self, key, fabric_material(culture, key), "Paving" if key == "paving" else "Earth")
 		if ground != null:
 			FabricMesh.near_only(ground, GROUND_RANGE_M, false)
 
@@ -1753,23 +1748,53 @@ func _inn_door() -> Vector3:
 
 # --- surfaces -------------------------------------------------------------------------------
 
-func _wall_spec() -> Dictionary:
-	if OUTSIDE_WALL.has(culture):
-		return OUTSIDE_WALL[culture]
+## The material a fabric key is drawn in for `for_culture`: what the settlements commit their
+## surfaces with, so a farmstead or a mill standing on its own is built of what its region's
+## villages are built of.
+static func fabric_material(for_culture: String, key: String) -> Material:
+	match key:
+		"wall":
+			return _surface(_wall_spec_of(for_culture), 0.45)
+		"wall_alt":
+			return _surface(HouseKit.STONE_WALL.get(for_culture, HouseKit.STONE_WALL["vale"]), 0.5)
+		"roof":
+			return _surface(_roof_spec_of(for_culture), 0.5)
+		"stone":
+			return _surface(_stone_spec_of(for_culture), 0.6)
+		"drystone", "coping":
+			# the walls laid dry: the plinths' stone broken small, with the dark of the gaps between
+			var rubble := _stone_spec_of(for_culture).duplicate()
+			rubble["unit"] = 0.16
+			rubble["grout"] = "#2e2c28"
+			return _surface(rubble, 0.7)
+		"paving":
+			return _surface(PAVING_BY_CULTURE.get(for_culture, PAVING_BY_CULTURE["vale"]), 0.55)
+		"earth":
+			return _surface(EARTH, 0.55)
+	return FabricMesh.joinery_material()
+
+
+static func _wall_spec_of(for_culture: String) -> Dictionary:
+	if OUTSIDE_WALL.has(for_culture):
+		return OUTSIDE_WALL[for_culture]
 	var by_culture: Dictionary = HouseInterior.CULTURE_SURFACES.get(
-			culture, HouseInterior.CULTURE_SURFACES["vale"])
+			for_culture, HouseInterior.CULTURE_SURFACES["vale"])
 	return by_culture.get("wall", {})
 
 
+static func _roof_spec_of(for_culture: String) -> Dictionary:
+	return Building.ROOF_BY_CULTURE.get(for_culture, Building.ROOF_BY_CULTURE["vale"])
+
+
+static func _stone_spec_of(for_culture: String) -> Dictionary:
+	return Building.PLINTH_BY_CULTURE.get(for_culture, Building.PLINTH_BY_CULTURE["vale"])
+
+
 func _roof_spec() -> Dictionary:
-	return Building.ROOF_BY_CULTURE.get(culture, Building.ROOF_BY_CULTURE["vale"])
+	return _roof_spec_of(culture)
 
 
-func _stone_spec() -> Dictionary:
-	return Building.PLINTH_BY_CULTURE.get(culture, Building.PLINTH_BY_CULTURE["vale"])
-
-
-func _surface(spec: Dictionary, wear: float) -> ShaderMaterial:
+static func _surface(spec: Dictionary, wear: float) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = load(Building.WALL_SHADER)
 	mat.set_shader_parameter("pattern", int(spec.get("pattern", 0)))

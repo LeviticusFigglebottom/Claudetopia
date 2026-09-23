@@ -56,6 +56,11 @@ const EYE_M := 1.65
 ##   wardstone 5.4, and the Thirteenth is face down.
 ## * `strange` — a bell buoy is a barrel, a post, a cage and a bell; the One Poppy is a poppy.
 ## * `standing_stones` — a menhir of 3.8 m set at 1.15 to 1.55.
+## * The kinds the drawn map asked for next (`poi_builders_land.gd`): a cave's shoulder of rock
+##   stands 6.6 to 10.6 m over the mouth's floor; a farmstead's house of one or two storeys and
+##   its roof about 7; a mill's two storeys and roof 9, a windmill's tower 9.5 under its cap; a
+##   waystone is a milestone at 1.55, 1.4 m; a market field's bell-post 3.4; a quarry's face three
+##   benches of 3.2; a shieling's walls 1.5 under a turf roof to 2.6; a vista's cairn 2.
 ## * `bridge` — an arch and its parapet is 4, Mossbridge's crown 5.4, the Chain Bridge's pylons
 ##   7.8 over their deck.
 ## * `shrine` — the Pilgrims' Bell lying on its side is 7, a hawthorn through a stone chair 5,
@@ -64,6 +69,8 @@ const LANDMARK_M := {
 	"tower": 10.0, "waterfall": 13.0, "strange_tree": 14.0, "giant_bones": 13.0,
 	"ruins": 6.0, "strange": 2.5, "wreck": 5.0, "standing_stones": 5.0,
 	"bridge": 4.5, "shrine": 4.0, "camp": 2.5, "hidden_valley": 1.0,
+	"cave": 6.0, "farmstead": 7.0, "mill": 9.0, "waystone": 1.4, "market_field": 3.4,
+	"quarry": 10.0, "shieling": 2.6, "vista": 2.0,
 }
 const LANDMARK_DEFAULT_M := 6.0
 ## Steps along the ray. 64 over eight kilometres is a sample every 125 m, which is coarse for a

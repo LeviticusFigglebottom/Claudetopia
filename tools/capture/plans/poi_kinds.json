@@ -1,0 +1,323 @@
+{
+ "shots": [
+  {
+   "label": "cave_skerrow",
+   "region": "core:region/skerrow",
+   "pos": [
+    3136.0,
+    273.8,
+    -3272.0
+   ],
+   "look_at": [
+    3112.0,
+    271.3,
+    -3272.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "cave",
+    "region": "core:region/skerrow",
+    "at": [
+     3112.0,
+     -3272.0
+    ],
+    "brief": "a limestone mouth in the scar above the dale",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "cave_briarwold",
+   "region": "core:region/briarwold",
+   "pos": [
+    3568.0,
+    192.1,
+    -2768.0
+   ],
+   "look_at": [
+    3568.0,
+    189.6,
+    -2744.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "cave",
+    "region": "core:region/briarwold",
+    "at": [
+     3568.0,
+     -2744.0
+    ],
+    "brief": "a root-cave under an old oak on the bank",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "cave_sea",
+   "region": "core:region/cinderlea",
+   "pos": [
+    -2203.0,
+    8.9,
+    3683.1
+   ],
+   "look_at": [
+    -2192.0,
+    7.4,
+    3664.0
+   ],
+   "fov": 60.0,
+   "time": 12.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "cave",
+    "region": "core:region/cinderlea",
+    "at": [
+     -2192.0,
+     3664.0
+    ],
+    "brief": "a sea-cave under the Hushline where the tide comes in",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "quarry",
+   "region": "core:region/hearthvale",
+   "pos": [
+    3271.2,
+    140.3,
+    2928.8
+   ],
+   "look_at": [
+    3280.0,
+    135.3,
+    2896.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "quarry",
+    "region": "core:region/hearthvale",
+    "at": [
+     3280.0,
+     2896.0
+    ],
+    "brief": "the chalk pit where the Vale's lime was cut",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "farmstead",
+   "region": "core:region/hearthvale",
+   "pos": [
+    1017.2,
+    44.3,
+    2408.4
+   ],
+   "look_at": [
+    1000.0,
+    37.3,
+    2440.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "farmstead",
+    "region": "core:region/hearthvale",
+    "at": [
+     1000.0,
+     2440.0
+    ],
+    "brief": "a cob farm with a dog that barks at nothing",
+    "encounter": "none; jobs",
+    "radius": 30
+   }
+  },
+  {
+   "label": "market_field",
+   "region": "core:region/skerrow",
+   "pos": [
+    1057.2,
+    138.0,
+    -2345.8
+   ],
+   "look_at": [
+    1096.0,
+    127.3,
+    -2336.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "market_field",
+    "region": "core:region/skerrow",
+    "at": [
+     1096.0,
+     -2336.0
+    ],
+    "brief": "Kharrow Foot, where the drovers meet",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "waystone",
+   "region": "core:region/cinderlea",
+   "pos": [
+    -698.5,
+    69.2,
+    2747.7
+   ],
+   "look_at": [
+    -704.0,
+    69.5,
+    2752.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "waystone",
+    "region": "core:region/cinderlea",
+    "at": [
+     -704.0,
+     2752.0
+    ],
+    "brief": "the ninth waystone the pilgrims count",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "mill",
+   "region": "core:region/hearthvale",
+   "pos": [
+    498.0,
+    36.5,
+    1663.0
+   ],
+   "look_at": [
+    472.0,
+    28.8,
+    1648.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "mill",
+    "region": "core:region/hearthvale",
+    "at": [
+     472.0,
+     1648.0
+    ],
+    "brief": "the mill on the Larkbourne",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "windmill",
+   "region": "core:region/brightwater",
+   "pos": [
+    -1760.2,
+    36.2,
+    -1664.2
+   ],
+   "look_at": [
+    -1784.0,
+    34.2,
+    -1688.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "mill",
+    "region": "core:region/brightwater",
+    "at": [
+     -1784.0,
+     -1688.0
+    ],
+    "brief": "a windmill with four sails on the ridge",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "shieling",
+   "region": "core:region/skerrow",
+   "pos": [
+    3088.4,
+    609.7,
+    -3755.2
+   ],
+   "look_at": [
+    3104.0,
+    602.6,
+    -3776.0
+   ],
+   "fov": 60.0,
+   "time": 16.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "shieling",
+    "region": "core:region/skerrow",
+    "at": [
+     3104.0,
+     -3776.0
+    ],
+    "brief": "a summer hut on the high fell",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "vista",
+   "region": "core:region/hearthvale",
+   "pos": [
+    304.0,
+    124.2,
+    3676.0
+   ],
+   "look_at": [
+    304.0,
+    117.7,
+    3728.0
+   ],
+   "fov": 60.0,
+   "time": 17.5,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "vista",
+    "region": "core:region/hearthvale",
+    "at": [
+     304.0,
+     3688.0
+    ],
+    "brief": "the bench at the Larkmouth where the Vale opens",
+    "encounter": "",
+    "radius": 30
+   }
+  }
+ ]
+}

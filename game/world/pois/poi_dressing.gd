@@ -33,6 +33,10 @@ const KINDS := {
 	"standing_stones": true, "hidden_valley": true,
 	## the Hearthstone a settlement or landmark keeps, for a place tagged `shrine`
 	"hearth": true,
+	## the kinds the drawn map asked for next (docs/ATLAS.md, section 10): a mouth in a slope, the
+	## worked land out between the villages, and the marks along a road
+	"cave": true, "farmstead": true, "mill": true, "waystone": true, "market_field": true,
+	"quarry": true, "shieling": true, "vista": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -40,7 +44,8 @@ const KINDS := {
 ## it. It lives here rather than on the builders because that script has no global name (see
 ## `poi_builders.gd`), and this is the type everything else already speaks to.
 const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
-		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange"]
+		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange",
+		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista"]
 
 var poi_id := ""
 var kind := ""
