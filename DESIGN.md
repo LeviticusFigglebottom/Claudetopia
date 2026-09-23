@@ -154,7 +154,7 @@ are normative for pass one and live in `game/systems/*`.
   never with the body; the compass reads the camera.
 * First-person (arms visible) and third-person (orbit, shoulder offset, lock-on
   framing). `V` / right-stick click toggles. Third person sits 3.6 m behind a pivot 1.55 m up
-  and 0.4 m over the shoulder, and follows with a gentle lag (about 0.36 m at a jog). A sprint
+  and 0.4 m over the shoulder, and follows with a gentle lag (about 0.25 m at a jog). A sprint
   draws it back 0.5 m and widens the view 7°, eased in and out. Collision pulls the camera in at
   once and lets it back out over about 0.35 s. Physics is interpolated, so bodies moved at 60 Hz
   are smooth at any refresh rate; the camera, the compass and anything moved per frame read the

@@ -76,9 +76,11 @@ every one of them, because the game blends them on one normalised timeline. A ga
 breaks this blends out of step: halfway through the blend one clip's foot is planted while the
 other's is swinging, and the leg comes out as the average of the two, half lifted.
 
-A change to the clips alone is baked into a scratch copy of the rig and moved onto the committed
-`humanoid_rig.glb` with `tools/forge/transplant_clips.py`, because the rig bake rebuilds and
-repaints the body too. The tool changes nothing but the animations and checks that it did not.
+A change to the clips alone does not re-bake the rig, which rebuilds and repaints the body too
+and takes twenty minutes. `blender -b --python tools/forge/bake_clips.py -- --out <dir>` bakes
+every clip onto the bare armature in under a minute, with the same functions, and writes the
+sidecar. `tools/forge/transplant_clips.py` then moves the clips onto the committed
+`humanoid_rig.glb`, bone by bone by name, and checks that nothing but the animations changed.
 
 Creatures use their own rigs; their clips must include `Idle`, `Walk`, `Run`,
 `Attack_1`, `Attack_2`, `Hit`, `Death`, plus archetype extras listed in the
