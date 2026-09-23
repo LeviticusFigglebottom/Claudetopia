@@ -87,10 +87,14 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 
 
 ## A POI's kind is its own; a place is dressed only for the Hearthstone its `shrine` tag
-## promises (the main quest rests at three of them and nothing stood at any).
+## promises (the main quest rests at three of them and nothing stood at any), or when its data
+## names a `dressing` kind: the Standing Moot is a place, not a registry POI, and the main quest
+## fights the Hart of Thorns among stones that nothing had stood there.
 static func kind_of(id: String, def: Dictionary) -> String:
 	if id.begins_with("core:poi/") or Ids.type_of(id) == "poi":
 		return str(def.get("kind", ""))
+	if str(def.get("dressing", "")) != "":
+		return str(def["dressing"])
 	var tags: Variant = def.get("tags", [])
 	if typeof(tags) == TYPE_ARRAY and (tags as Array).has("shrine"):
 		return "hearth"

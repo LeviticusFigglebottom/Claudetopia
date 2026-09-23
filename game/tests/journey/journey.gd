@@ -368,8 +368,48 @@ func _step_meet_somebody() -> void:
 	if in_the_world and body is Node3D:
 		var at2: Vector3 = (body as Node3D).global_position
 		on_the_ground = absf(at2.y - World.get_height(at2.x, at2.z)) < 2.5
-	_record(name, on_the_ground,
-		"%d in the street; %s said \"%s\"" % [standing.size(), who, spoken.substr(0, 52).strip_edges()])
+	var thread := await _drive_the_opening(social, village)
+	_record(name, on_the_ground and bool(thread["ok"]),
+		"%d in the street; %s said \"%s\"; %s" % [standing.size(), who, spoken.substr(0, 52).strip_edges(), thread["how"]])
+
+
+## The main thread, as far as a noon in Merrowby can carry it. The Naming is the opening quest and
+## its last stage is here: Wren Tallow's word and the town itself. Nothing in this run had ever
+## touched a quest, so a stage that could not close, a `start_quest` on completion that did not
+## fire, or a first stage numbered from nought would all have passed it. The Naming's earlier
+## stages (the stair, three wights, the Hearthstone at Pilgrim's Ash) are a day's walk from here
+## and the unit suite walks them; this closes the last one the way a player does, by speaking to
+## Wren and standing in Merrowby, and checks the thread goes on into the Toll Hums.
+func _drive_the_opening(social: Node, village: String) -> Dictionary:
+	const NAMING := "core:quest/the_naming"
+	const NEXT := "core:quest/the_toll_hums"
+	const WREN := "core:npc/wren_tallow"
+	var quests: Node = social.quests
+	# The journey stands its world up before it names its character, so no new game begins the
+	# Naming here the way the Naming screen's flag does in play (GameServices.begin_new_game,
+	# which tests/unit covers); it is started by hand.
+	if not quests.is_active(NAMING) and not quests.is_completed(NAMING):
+		quests.start(NAMING)
+	if not quests.is_active(NAMING):
+		return {"ok": false, "how": "the Naming could not be started"}
+	quests.set_stage(NAMING, "the_cart")
+	social.set_place(village)
+	social.talk(WREN)
+	await get_tree().process_frame
+	if social.dialogue.is_running():
+		social.dialogue.stop()
+	if player != null:
+		quests.check_reach(player.global_position)
+	await get_tree().process_frame
+	var closed: bool = quests.is_completed(NAMING)
+	var onward: bool = quests.is_active(NEXT)
+	# Having seen it begin, the journey puts it down again: the steps after this one were written
+	# with no quest of the main thread running, and they go on measuring only what they measured.
+	if onward:
+		quests.abandon(NEXT)
+	return {"ok": closed and onward,
+			"how": "the Naming %s at Wren's word in Merrowby%s" % [
+				"closed" if closed else "did not close", ", and the Toll Hums began" if onward else ", and nothing followed it"]}
 
 
 # 5 ------------------------------------------------------------------------------------
@@ -432,9 +472,13 @@ func _step_die_and_recover() -> void:
 	# was "marginal" -- it was not: the Echo was an Area3D standing on the body that had just
 	# fallen, so it recovered itself on the first physics tick after the death and which of the
 	# five conditions came back false depended on where that tick landed. The cause is fixed in
-	# `Hearth` (an Echo answers nobody until the player has come back for it) and pinned in
-	# `test_hearth.gd`, so the extra frames are gone: a step that needs padding to pass is not
-	# measuring the hearth, it is measuring the frame scheduler.
+	# `Hearth` (an Echo answers nobody until the player has come back for it) and in the Echo
+	# (then only a body standing in it: the word of who came in arrives an iteration after the
+	# step that found them, so when one step fell between the fall and this step's coming back,
+	# the Echo heard of the body lying in it after it was armed, with the player at the stone,
+	# and read `marks_gone=false`). Both are pinned in `test_hearth.gd`, so the extra frames are
+	# gone: a step that needs padding to pass is not measuring the hearth, it is measuring the
+	# frame scheduler.
 	await get_tree().process_frame
 	stone.interact(player)
 	var rested: bool = Hearth.last_hearthstone_id == "journey_stone"

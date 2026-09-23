@@ -8,7 +8,9 @@ extends RefCounted
 ##
 ## Vocabulary (CONTRACTS §7):
 ##   {"flag": "met_wren"}                     flag set (truthy)
-##   {"quest_at": [quest_id, stage]}          quest is active at exactly that stage (int index or stage id)
+##   {"quest_at": [quest_id, stage]}          quest is active at exactly that stage: its stage id, or its
+##                                            number counted from one (the first stage is 1), which is how
+##                                            every quest in the pack that writes numbers says it counts
 ##   {"rep_min": [faction_id, n]}             reputation >= n
 ##   {"renown_min": n}                        renown >= n
 ##   {"morality_min": n}                      Hearth/Hollow >= n (negative n tests the Hollow side)
@@ -120,12 +122,19 @@ static func _one(key: String, arg: Variant, ctx: SocialContext) -> bool:
 				return false
 			if typeof(p[1]) == TYPE_STRING:
 				return ctx.quest_stage_id(quest) == str(p[1])
-			return ctx.quest_stage(quest) == int(p[1])
+			# a number counts from one; the log's own stage is an index from nought
+			return ctx.quest_stage(quest) + 1 == int(p[1])
 		"quest_min_stage":
 			var p := _pair(arg, ctx, "quest_min_stage")
 			if p.is_empty():
 				return false
-			return ctx.quest_active(str(p[0])) and ctx.quest_stage(str(p[0])) >= int(p[1])
+			var quest := str(p[0])
+			if not ctx.quest_active(quest):
+				return false
+			if typeof(p[1]) == TYPE_STRING:
+				var at := ctx.quest_stage_index(quest, str(p[1]))
+				return at >= 0 and ctx.quest_stage(quest) >= at
+			return ctx.quest_stage(quest) + 1 >= int(p[1])
 		"quest_active":
 			return ctx.quest_active(str(arg))
 		"quest_done":

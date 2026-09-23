@@ -88,12 +88,17 @@ class Quests extends RefCounted:
 		stages[quest_id] = 0
 		return true
 
+	## The real log's convention: a stage id, or a stage number counted from one. `stages` holds
+	## what `stage_of` answers, which is the index from nought, exactly as `QuestLog` keeps it.
 	func set_stage(quest_id: String, stage: Variant) -> void:
 		active[quest_id] = true
 		if typeof(stage) == TYPE_STRING:
 			stage_ids[quest_id] = str(stage)
 		else:
-			stages[quest_id] = int(stage)
+			stages[quest_id] = int(stage) - 1
+
+	func stage_index(_quest_id: String, stage: Variant) -> int:
+		return int(stage) - 1 if typeof(stage) != TYPE_STRING else -1
 
 	func choose(quest_id: String, option: String) -> void:
 		choices[quest_id] = option
