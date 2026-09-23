@@ -1517,8 +1517,9 @@ not open; the count of tests leaving the world paused is 0 (it was 16).
 
 * `./run.sh test` could report a green run as failed: `echo "$out" | grep -q` under pipefail
   lets grep's early exit kill the echo; four of five replays of a green log failed. The parent
-  branch found and fixed the same race while this work was going on, so this branch keeps only
-  its `fights` command in run.sh and the parent's fix is the one that stands.
+  branch found and fixed the same race while this work was going on; this branch carries the
+  parent's lines verbatim (so the two merge without a conflict) plus its `fights` command, and
+  the parent's check reads the final green log as a pass twenty times in twenty.
 
 ### Found and not fixed
 
