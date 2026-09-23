@@ -43,9 +43,9 @@ func test_a_real_house_and_a_real_deep_place_are_built_when_walked_into() -> voi
 		GameState.current_interior_id = ""
 
 
-## Going into any deep place stands the body on the floor of its mouth (the forge's entrance
-## point), not a metre over the pocket's origin with a 3.0-4.5 m drop under it, and the floor it
-## stands on is rock underfoot.
+## Going into any deep place stands the body on the rock of its mouth chamber, a step inside the
+## way out, not a metre over the pocket's origin with a 3.0-4.5 m drop under it, and the floor it
+## stands on is rock underfoot. (test_every_door_both_ways walks the doors themselves.)
 func test_every_deep_place_stands_a_body_on_the_floor_of_its_mouth() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var caves := 0
@@ -109,6 +109,8 @@ func test_enter_and_exit() -> void:
 	assert_false(Interiors.in_interior())
 	assert_near(player.global_position.x, 110.0, 0.01, "returned beside the door")
 	assert_near(player.global_position.z, 100.0 + 1.5, 0.01, "one and a half metres in front of the door")
+	# The door faces +z; a body facing away from it looks along +z, which is a yaw of half a turn.
+	assert_near(absf(wrapf(player.global_rotation.y, -PI, PI)), PI, 0.01, "facing away from the door it came out of")
 	door.get_parent().remove_child(door)
 	door.free()
 
@@ -118,6 +120,31 @@ func test_pocket_slots_are_distinct() -> void:
 	var b := Interiors.pocket_for("core:interior/other")
 	assert_ne(a, b)
 	assert_eq(Interiors.pocket_for("core:interior/test_cell"), a)
+
+
+## A game saved inside and loaded again goes out by the door it came in by. The load stands the
+## body where it was saved (in the pocket, 50 km off), and the way back in took that as the way
+## out, so leaving a loaded interior put the player off the edge of the map.
+func test_a_loaded_game_leaves_by_the_door_it_came_in_by() -> void:
+	var door := preload("res://systems/interiors/door.tscn").instantiate()
+	(Engine.get_main_loop() as SceneTree).root.add_child(door)
+	door.global_position = Vector3(110, 5, 100)
+	door.interior_id = "core:interior/test_cell"
+	assert_true(Interiors.enter("core:interior/test_cell", door))
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(Interiors.to_save()))
+	var inside := player.global_position
+	Interiors.exit()
+	# The load: the body stands where the save had it, and the interior is entered again.
+	Interiors.unload_all()
+	player.global_position = inside
+	Interiors.from_save(saved)
+	assert_true(Interiors.in_interior(), "the loaded game is inside again")
+	assert_true(Interiors.exit(), "and can leave")
+	assert_near(player.global_position.x, 110.0, 0.01, "out by the door it came in by")
+	assert_near(player.global_position.z, 100.0 + Interiors.STEP_OUT, 0.01, "a pace and a half outside it")
+	assert_gt(40000.0, player.global_position.x, "not in the pocket it was saved in")
+	door.get_parent().remove_child(door)
+	door.free()
 
 
 func test_save_round_trip() -> void:
