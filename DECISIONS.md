@@ -1087,3 +1087,28 @@ density: no walkable point more than about 400 m from a location, and no road mo
 250 m. A new location is placed on the map and not left to the builder. Tests that read the
 tracked world (test_world_data, test_the_start, test_pois, the cinematic paths, the sightlines)
 disagree with the moved content until the world is rebuilt from the atlas.
+
+## 2026-09-23 · The map's hooks are kept with the systems the game already has
+**Decision.** Every settlement's work is a hand-written side quest given by somebody who lives
+there. The Jobs system is not used for it: jobs come from boards and stations, not from a
+resident with a day and lines of their own. Each point of interest's hook pays off in something
+an existing system puts there: a quest stage, an encounter, a Hearthstone, or a note or book
+lying there. A note is an encounter def with `lies` and no `spawns`: QuestItems puts it down
+and PoiEncounters stands nobody up. `core:table/poi_hooks` indexes every point of interest
+against the ids that pay it off, and test_map_quests holds each row true. Each decision a
+quest asks for sets a flag, and that flag is read by the person who asked: a greeting once the
+quest is done, or a hold or a going. Other writers' dialogue files take these lines by insertion
+only.
+**Why.** The brief was a world dense with work and reasons to walk, built from the systems
+already there. Quest plumbing belongs to the settlements stream, so new plumbing waits for it.
+Before this, 99 of the decisions' flags were read by nothing: consequences on paper only. A
+hook table that nothing checks goes stale the first time a quest is rewritten.
+**Alternatives.** A "secret" or "note" dressing of its own for points of interest: that is
+plumbing, and it is listed for the settlements stream instead. Jobs as the local work: they do
+not come from a resident. Rumours as the lasting consequence: they fade by design, and a
+decision should not.
+**Consequences.** Everything is named by id, so a point of interest that moves on the map keeps
+its payoff. The build of the quest pass refuses a point of interest that pays off in nothing, and
+a decision nobody remembers. Nothing in the game reads the hook table. It is an index, and the
+test keeps it honest. A remembered greeting is as specific as the person's other conditioned
+greetings, so it is one of the lines they may greet you with, not the only one.

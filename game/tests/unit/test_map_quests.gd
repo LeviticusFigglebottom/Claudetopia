@@ -1,12 +1,13 @@
 extends TestCase
-## The quests follow the map (docs/ATLAS.md §12). Every settlement offers local work, given by
+## The quests follow the map (docs/ATLAS.md §15, §16). Every settlement offers local work, given by
 ## somebody who lives there and has a day and lines of their own; every place that is not a
 ## settlement is somewhere a quest sends you; every point of interest pays off in something the
 ## game puts there; and every objective of every quest resolves to a place, a person, a spawn or
 ## an item the game places.
 ##
-## When the map was drawn, 41 quests reached 27 of its 60 places and 16 of its 240 points of
-## interest, and most of the country's hamlets had one resident with nothing to ask of anybody.
+## When the map was drawn, the pack's 35 authored quests reached 25 of its 57 places and 15 of its
+## 240 points of interest, and most of the country's hamlets had one resident with nothing to ask
+## of anybody.
 
 ## Where the quests that follow the map are written.
 const MAP_QUESTS := "res://content/packs/core/quests/the_map.json"
@@ -151,6 +152,28 @@ func test_every_hook_is_tied_to_the_ids_that_pay_it_off() -> void:
 		assert_gt(pays, 0, "%s: its hook pays off in nothing" % poi_id)
 	for poi in ContentDB.all("poi"):
 		assert_true(seen.has(str(poi["id"])), "the hook table has no row for %s" % poi["id"])
+
+
+## The one-line hook the map wrote for each new location (docs/ATLAS.md §12) is kept: a quest sends
+## you there, or something lies or stands there. A hook with nothing behind it is a promise the
+## game does not keep.
+func test_every_hook_the_map_wrote_is_kept() -> void:
+	var reached := _reached()
+	var paid: Dictionary = {}
+	for r_v in ContentDB.get_or_empty(MAP_HOOKS).get("rows", []):
+		var r: Dictionary = r_v
+		if not ((r.get("quests", []) as Array).is_empty() and (r.get("finds", []) as Array).is_empty()
+				and (r.get("encounters", []) as Array).is_empty() and not bool(r.get("hearthstone", false))):
+			paid[str(r.get("poi", ""))] = true
+	var hooks := 0
+	for kind in ["place", "poi"]:
+		for def in ContentDB.all(kind):
+			if str(def.get("hook", "")) == "":
+				continue
+			hooks += 1
+			var id := str(def["id"])
+			assert_true(reached.has(id) or paid.has(id), "%s: \"%s\" leads nowhere" % [id, def["hook"]])
+	assert_gt(hooks, 200, "the map's hooks were read")
 
 
 func test_every_note_at_a_point_of_interest_can_be_picked_up_and_read() -> void:

@@ -57,6 +57,7 @@ on this side of a closing range's crest.
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
 | locations | **297**: 57 places and 240 points of interest (60 places counting the three edge places) |
+| quests | **75** authored, 40 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 240 points of interest (§16) |
 | density | **6.3 locations a walkable km²** |
 | distance to the nearest location | mean **180 m**, 95% of the ground within **312 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
@@ -494,7 +495,8 @@ would still like the kit to build (with how they are faked today) are in §10.
 
 ### Every new location, and the story it could anchor
 
-The places (with their residents) are in bold. "Where" gives the province and the position.
+The places (with their residents) are in bold. "Where" gives the province and the position. §16
+ties each hook to the ids that pay it off in the game.
 
 #### Hearthvale (45 new)
 
@@ -773,3 +775,431 @@ python3 tools/world/atlas/render_map.py --world /tmp/w   # the land that makes
 Neighbouring provinces share their border vertex for vertex. Move a border in both, or the check
 finds the gap. The preview is coarse on purpose. It is right about what the atlas asks for and
 wrong about the detail, and the build is right about the ground.
+
+## 15. The quests that follow the map
+
+When the map was drawn, the pack's 35 authored quests reached 25 of its 57 places and 15 of its 240
+points of interest, and most of the country's hamlets had a resident with nothing to ask of
+anybody. Forty side quests are written with it (`game/content/packs/core/quests/the_map.json`),
+in the provinces' voices, so that:
+
+* every one of the 39 settlements has work, given by somebody who lives there, keeps a day and
+  has lines of their own (the table at the end of this section);
+* every one of the 18 places that is not a settlement is somewhere a quest sends you: eight deep
+  places from the Sunken Barge to Frostmother's Cradle, five landmarks including the Grandfather,
+  Pennywort's Mill, and four places the packs keep as points of interest;
+* every one of the 240 points of interest pays off in something the game puts there (§16).
+
+Each quest has 4 to 6 stages and sends you from its giver's settlement to 2 to 4 other locations.
+Twelve of them cross from one region into the next. Every one comes to a decision (120 options in
+all), and each option moves something the game reads: standing, Hearth or Hollow, renown, coin, a
+deed, who lives where. The person who asked greets you afterwards with what came of it. Every
+where, marker and escort is a place id, never a coordinate. The quests and hooks leave 84 books
+lying about, each with an item copy to carry: 12 that the quests send you to find or read, and 72
+notes put down at points of interest by encounter defs that stand nobody up.
+
+`game/tests/unit/test_map_quests.gd` holds all of it:
+
+* the work in every settlement can begin;
+* every objective resolves to a place, a person, a spawn or an item the game places;
+* every row of §16 is true, and every hook §12 wrote leads somewhere;
+* every decision is remembered by somebody, once the quest is done.
+
+The quest's id follows its name. "Where it sends you" leaves out the giver's own settlement.
+"The decision" names each option by its id.
+
+### Skerrow Heights (7)
+
+| Quest | Given by | Where it sends you | The decision | What rides on it |
+|---|---|---|---|---|
+| **The Ninth Door** `the_ninth_door` | Brann ko-Dreugh, Dreughow | The Skerr Stone, the Rope Cairn, Ghorrow | paint it over · leave both · to the memory keeper | standing with the Clan-Moot, renown |
+| **A Debt With a Nicer Voice** `a_debt_with_a_nicer_voice` | Dagga ko-Ghast, Ghastfell | The Dale Watch, Ghast's Broken Bridge, the Red Moor, Kharrow Hold | mend it · keep climbing · sing it at ghastfell | standing with the Clan-Moot, renown, Hearth or Hollow |
+| **Aske's Tune** `askes_tune` | Ebba ko-Oskel, Oskelcrag | Oskel Shieling, the Deadground, the Oskel Rake | keep the fire · teach her the verse · send her to the sayers | standing with the Clan-Moot and the Sayers' Circle, Hearth or Hollow, renown |
+| **Forty Head and a Hearth** `forty_head_and_a_hearth` | Ushra ko-Rudd, Ruddow | Kharrow Hold, Ruddale Bridge, the Blood-Price Stones | take the coin · ask in the hall · bring kun home | standing with the Clan-Moot, renown, Hearth or Hollow |
+| **Nine Lights** `nine_lights` | Varra ko-Skarl, Skarlow | Skarl Shieling, the Briar's End, the Watcher | rebuild the wall · face east · tell rookhold | standing with the Clan-Moot and the Woodfolk, renown |
+| **Answer It** `answer_it` | Brodd ko-Brindle, Brindlecrag | Brindle Swallow, Old Eld, the Smeltings | hang it · under a lintel · sell it down the pass | standing with the Clan-Moot, renown, coin, Hearth or Hollow |
+| **What the Ice Keeps** `what_the_ice_keeps` | Dunna ko-Kharrow, Kharrow Hold | Kharrow's Cairns, the Finger Shrine, Frostmother's Cradle | sing him · give the token to rudd · leave him to the ice | standing with the Clan-Moot, renown, Hearth or Hollow |
+
+### Brightwater and the Mere (6)
+
+| Quest | Given by | Where it sends you | The decision | What rides on it |
+|---|---|---|---|---|
+| **The Third Arch** `the_third_arch` | Berrit Smoker, Merrowhithe | The Standing Arches, the Stair Bridge, the Rust Scar, Ruddow | catch it · let it drip · stop it | standing with the Clan-Moot, Hearth or Hollow, renown, coin |
+| **The Ruled Line** `the_ruled_line` | Maudie Punt, Sedgehithe | The Heronry, the Eelweir, the Sedge Hearth | the tide · the circle · cut to the line | standing with the Reed Council and the Sayers' Circle, renown, coin |
+| **The Same Hand** `the_same_hand` | Corin Stilyard, Stride's Foot | The Larkmouth Bridge, Tollmere | strike them · send word · leave the book open | standing with the Tallymen, Hearth or Hollow, renown, a deed |
+| **The Stride's Dedication** `the_stride_dedication` | Cassa Binder, Tollmere | The Old Quarry, the Long Stride, Elderhold | print it · sell to the guild · to the wold | standing with the Sayers' Circle, the Tallymen and the Woodfolk, renown, coin |
+| **The Charter Pins** `the_charter_pins` | Orrin Quill, Tollmere | The Charter Stone, the Narrows Bridge, the Counting Tower | repin it · let it break · two pins | standing with the Clan-Moot and the Tallymen, Hearth or Hollow, coin, renown |
+| **Cut From Below** `cut_from_below` | Jory Wick, Gullhithe | The Eggers' Camp, the Pilgrim Stair, the Sunken Barge | the serpent · the sayer · say nothing | standing with the Sayers' Circle, renown, Hearth or Hollow, coin |
+
+### Sedgemire (6)
+
+| Quest | Given by | Where it sends you | The decision | What rides on it |
+|---|---|---|---|---|
+| **Knots Round Nothing** `knots_round_nothing` | Sauve Mor, Moreva | The Fog Bell, Mor'oul | ring the bell · send them out · put them back | standing with the Reed Council, Hearth or Hollow, renown |
+| **Which Account** `which_account` | Ossa Lissa, Nauvissa | The South Stilts, the Boardwalk Gate, the Greyreed Decoy | wait · go north · keep the watch | standing with the Reed Council and the Tolling Order, Hearth or Hollow, renown |
+| **What the Tide Left** `what_the_tide_left` | Meo Sa, Oulea | The Cockle Beds, the Salt Pans, the Traders' Post, the Builders' Harbour | put up the tent · write it true · to the spire | standing with the Reed Council and the Sayers' Circle, Hearth or Hollow, renown |
+| **Against the Current** `against_the_current` | Lisse Tal, Saeva | Saoul, the Tide Hearth | send it out · hang it at saoul · sell it to the order | standing with the Reed Council and the Tolling Order, Hearth or Hollow, coin |
+| **The Boat That Moved** `the_boat_that_moved` | Ollo Nauve, Nauve's Landing | The Eel-Boat Graveyard, the Eel Stews | haul it back · into a new boat · to the stews | standing with the Reed Council, Hearth or Hollow, renown |
+| **The Slow Reflection** `the_slow_reflection` | Ismay Ondrael, Tollmere | Eelfathom Pool, Hesk Pool, the Peat Hags | to the wardens · to the order · leave him | standing with Wardens of the Hearth, the Tolling Order and the Sayers' Circle, renown |
+
+### The Briarwold (6)
+
+| Quest | Given by | Where it sends you | The decision | What rides on it |
+|---|---|---|---|---|
+| **Flowered in the Frost** `flowered_in_the_frost` | Wenna Holt, Elderhold | The Grey Man, the Tally Hearth, the Log Boom, the Rafters' Camp | plant forty · slowly · make them pay | standing with the Woodfolk and the Tallymen, Hearth or Hollow, coin |
+| **The Fennick Stool** `the_fennick_stool` | Aggie Coppice, Hazelwick | The Rod Stacks, Mossgrave | keep the name · plant the rods · let it go | standing with the Woodfolk, Hearth or Hollow |
+| **The Listeners' Trunk** `the_listeners_trunk` | Nessa Ashby, Ormhold | Harrow Tor, the Northgate Stone | open it · send it to the circle · leave it at the gate | standing with the Sayers' Circle and the Woodfolk, renown, coin |
+| **Opened From the Far Side** `opened_from_the_far_side` | Edda Thornby, Rookhold | The Old Gate Stone, the Verderer's Tower, Countwatch | sleep against it · leave the bar · tell fernhold | standing with the Woodfolk, Hearth or Hollow, renown |
+| **The Restrung Bow** `the_restrung_bow` | Edric Fletcher, Grandfather Hollow | Hollin Tor, the Silked Camp, Weaverdeep, Ormhold | hang them · to ormhold · burn the silk | standing with the Woodfolk, Hearth or Hollow, renown |
+| **The Two Hundred and Seventh** `the_two_hundred_and_seventh` | Cille Tamwood, Grandfather Hollow | The Grandfather, Barkbridge, the Oiled Stone | let it burn · put it out · give him a bench | standing with the Woodfolk, Hearth or Hollow |
+
+### Hearthvale (11)
+
+| Quest | Given by | Where it sends you | The decision | What rides on it |
+|---|---|---|---|---|
+| **The Notch on the Post** `the_notch_on_the_post` | Ada Welling, Ashwell | The Wellspring, the Greyline Stones, Ash Watch, Pilgrim's Ash | put her down · let her walk · tell the order | standing with Wardens of the Hearth and the Tolling Order, Hearth or Hollow |
+| **The Twelfth Sluice** `the_twelfth_sluice` | Hal Wynstead, Wynstead | The Roll Stone, Merrowby | name it · nail it · tell the wardens | standing with Wardens of the Hearth, a deed, Hearth or Hollow, coin |
+| **Thistle** `thistle` | Gil Fallow, Fallowfold | The Old Sheepwash, the Ninth Waystone, Greywatch | keep her · let her go · read his name | standing with the Tolling Order, Hearth or Hollow |
+| **The Top Bed** `the_top_bed` | Lin Cresswell, Cressbourne | The Cress Bridge, the Lime Bridge, the Limekilns | put them back · to the toll house · keep them | standing with the Tallymen, Hearth or Hollow, coin |
+| **Pens With No Gate** `pens_with_no_gate` | Tam Withy, Hazelcombe | Wardens' Rest, the Rod Stacks, Hazelwick | as ordered · a gate south · refuse | standing with Wardens of the Hearth and the Woodfolk, coin, Hearth or Hollow |
+| **One Short** `one_short` | Pell Brambling, Bramcombe | The Pinfold, the Lambing Fold | claim it · leave it · to the lambing fold | Hearth or Hollow, coin |
+| **The Grey on the Green** `the_grey_on_the_green` | Tor Rookwright, Rookdown | The Last Field, Rook Mill, the Cliff Graves, the Brow Beacon | stay · go · turn the stone | standing with Wardens of the Hearth, a deed, Hearth or Hollow, renown |
+| **The Warrener's Burrow** `the_warreners_burrow` | Tor Rookwright, Rookdown | The Warrener's Camp, the Flint Pits, Tallow Barrow | wall it · leave it · ferrets to tamwick | standing with Wardens of the Hearth, renown, Hearth or Hollow, coin |
+| **One to Dunn** `one_to_dunn` | Cal Merriweather, the Hare and Hurdle | Hound Watch, the Last Look | pour it · write his name · tell the rest | standing with Wardens of the Hearth, Hearth or Hollow, renown |
+| **Tamwick Twice** `tamwick_twice` | Hob Tamwick, Tamwick | Orm's Long Barrow, the Singing Yew | twenty turns · to the rest · back in the cist | standing with Wardens of the Hearth, Hearth or Hollow |
+| **Ashcombe on the Roll** `ashcombe_on_the_roll` | Pellam Ashcombe, Merrowby | The West Walk, Ashcombe | onto the roll · leave the doors · bring a door home | standing with Wardens of the Hearth and the Tolling Order, a deed, Hearth or Hollow |
+
+### Cinderlea (4)
+
+| Quest | Given by | Where it sends you | The decision | What rides on it |
+|---|---|---|---|---|
+| **Would Anybody Say It** `would_anybody_say_it` | Nella Candlewright, the Last Camp | Merrowby, Candle Cross, Greywatch, the Wellspring | stay · go home · go on | standing with the Tolling Order, Hearth or Hollow, a deed, Nella moves to Merrowby or leaves |
+| **Ossel's Forge** `ossels_forge` | Merrit Ash, the West Walk | The Bell Pit, the North Gate | quench it · let her finish · bury it | standing with the Tolling Order, renown, Hearth or Hollow |
+| **The Late Delivery** `the_late_delivery` | Nan Greyfold, Greyfold | The Ash-Winter Carts, the Silent Market | set the tables · leave the stall · to the wardens | standing with Wardens of the Hearth, Hearth or Hollow, renown |
+| **The Sealed Barge** `the_sealed_barge` | Wat Thatcher, Pilgrim's Ash | The Driftwood Camp, the Strand Beacon | break the seal · send to the guild · give it to the strand | standing with the Tolling Order and the Tallymen, coin, Hearth or Hollow, renown |
+
+### Where the work is
+
+Every settlement, who in it gives work, and the work. Quests written with the map are in bold.
+
+| Settlement | Kind | Who gives work | The work |
+|---|---|---|---|
+| Brindlecrag | village | Brodd ko-Brindle | **Answer It** |
+| Dreughow | hamlet | Brann ko-Dreugh | **The Ninth Door** |
+| Ghastfell | hamlet | Dagga ko-Ghast | **A Debt With a Nicer Voice** |
+| Kharrow Hold | town | Dunna ko-Kharrow, Skardd ko-Skarl | A Hand on the Rope, **What the Ice Keeps**; Four Hundred and Twelve |
+| Oskelcrag | hamlet | Ebba ko-Oskel | **Aske's Tune** |
+| Ruddow | hamlet | Ushra ko-Rudd | **Forty Head and a Hearth** |
+| Skarlow | hamlet | Varra ko-Skarl | **Nine Lights** |
+| Gullhithe | village | Jory Wick, Tamsin Wick | **Cut From Below**; The Lamp Is Dimmer |
+| Merrowhithe | hamlet | Berrit Smoker | **The Third Arch** |
+| Sedgehithe | hamlet | Maudie Punt | **The Ruled Line** |
+| Stride's Foot | hamlet | Corin Stilyard | **The Same Hand** |
+| Tollmere | city | Aldith Sulion, Orrin Quill, Ismay Ondrael, Cassa Binder | In Council, Louder; **The Charter Pins**; The Long Measurement, **The Slow Reflection**, The Unsaid Woman; **The Stride's Dedication** |
+| Isseva | town | Loa Oul, Tallissa Oul | The Lantern That Would Not Go Out; What the Water Kept |
+| Moreva | hamlet | Sauve Mor | **Knots Round Nothing** |
+| Nauve's Landing | hamlet | Ollo Nauve | **The Boat That Moved** |
+| Nauvissa | hamlet | Ossa Lissa | **Which Account** |
+| Oulea | hamlet | Meo Sa | **What the Tide Left** |
+| Saeva | hamlet | Lisse Tal | **Against the Current** |
+| Elderhold | lodge | Wenna Holt | **Flowered in the Frost** |
+| Fernhold | lodge | Alder Wyke | The Briar's Purpose |
+| Grandfather Hollow | town | Tansy Thornby, Edric Fletcher, Cille Tamwood | The Fawning Months; **The Restrung Bow**; **The Two Hundred and Seventh** |
+| Hazelwick | hamlet | Aggie Coppice | **The Fennick Stool** |
+| Ormhold | lodge | Nessa Ashby | **The Listeners' Trunk** |
+| Rookhold | lodge | Edda Thornby | **Opened From the Far Side** |
+| Ashwell | hamlet | Ada Welling | **The Notch on the Post** |
+| Bramcombe | hamlet | Pell Brambling | **One Short** |
+| Cressbourne | hamlet | Lin Cresswell | **The Top Bed** |
+| Fallowfold | hamlet | Gil Fallow | **Thistle** |
+| Hazelcombe | hamlet | Tam Withy | **Pens With No Gate** |
+| Merrowby | town | Merrick Gosling, Pellam Ashcombe, Robin Ashdown, Corwen Mullard, Osric Pennywort, Wren Tallow, Hesta Hollins | A Verse About You; **Ashcombe on the Roll**, The Last Name of Mullbourne; Bramble; Cask and Press; Grist; Louder Than Books, The Lane That Isn't, The Naming, The Toll Hums; Seventeen Bells |
+| Rookdown | hamlet | Tor Rookwright | **The Grey on the Green**, **The Warrener's Burrow** |
+| Tamwick | hamlet | Hob Tamwick | **Tamwick Twice** |
+| The Hare and Hurdle | lodge | Cal Merriweather | **One to Dunn** |
+| Wardens' Rest | fort | Roll-Keeper Hesk | The Deep Lines, The Reading, The Roll of Names |
+| Wynstead | hamlet | Hal Wynstead | **The Twelfth Sluice** |
+| Greyfold | ruin village | Nan Greyfold | **The Late Delivery** |
+| Pilgrim's Ash | camp | Cadwen Ash, Wat Thatcher, Toren Ash | At the Gate, Forty-One Places, The Held Note, Vigil; The Cold Fire, **The Sealed Barge**; The Names in the Chapter Book |
+| The Last Camp | camp | Nella Candlewright | **Would Anybody Say It** |
+| The West Walk | fort | Merrit Ash | **Ossel's Forge** |
+
+## 16. What every point of interest pays off in
+
+Each point of interest's one-line hook (§12) is tied to the ids the game has for it in
+`core:table/poi_hooks` (`game/content/packs/core/tables/poi_hooks.json`). The build of the quest
+pass writes it from the pack. test_map_quests holds each row true: the quests it names send you
+there, the things lying there are put down there, the encounters stand somebody up there, and the
+Hearthstone is the place's own. 109 are sent to by a quest, 74 have something lying there to take or
+read, 83 stand an encounter up and 22 keep a Hearthstone. Nothing in the game reads the table
+itself. It is the index, and the test keeps it honest.
+
+### Skerrow Heights (52)
+
+| Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
+|---|---|---|---|---|
+| Brindle Swallow | `answer_it` |  |  |  |
+| Ghast's Broken Bridge | `a_debt_with_a_nicer_voice` |  | `ghasts_broken_bridge` |  |
+| Ghastfoot |  | `item/note_ghastfoot` |  |  |
+| Ghorrow | `the_ninth_door` |  | `ghorrow` |  |
+| Kharrow Foot |  | `item/note_kharrow_foot` |  |  |
+| Kharrow Force |  | `item/note_kharrow_force` |  |  |
+| Kharrow Gate |  | `item/note_kharrow_gate` |  |  |
+| Kharrow's Cairns | `what_the_ice_keeps` |  |  |  |
+| Old Eld | `answer_it` |  | `old_eld` |  |
+| Oskel Shieling | `askes_tune` |  |  |  |
+| Rudd Pike Beacon |  | `item/note_rudd_pike_beacon` |  |  |
+| Ruddale Bridge | `forty_head_and_a_hearth` |  |  |  |
+| Skarl Shieling | `nine_lights` |  |  |  |
+| Skarl Spout |  |  | `skarl_spout` |  |
+| The Black Keep |  | `item/note_black_keep` |  |  |
+| The Blood-Price Stones | `forty_head_and_a_hearth` |  |  |  |
+| The Bone Ford |  | `item/note_bone_ford` |  |  |
+| The Bonefield |  |  | `the_bonefield` |  |
+| The Breathing Stones |  | `item/note_breathing_stones` |  |  |
+| The Briar's End | `nine_lights` |  |  |  |
+| The Chain Bridge |  |  | `chain_bridge` |  |
+| The Clan Stones |  | `item/note_clan_stones` |  |  |
+| The Clanless Camp | `four_hundred_and_twelve` |  | `clanless_camp` |  |
+| The Dale Watch | `a_debt_with_a_nicer_voice` |  |  |  |
+| The Deadground | `askes_tune` |  |  |  |
+| The Drove Chain |  | `item/note_drove_chain` |  |  |
+| The Drovers' Bothy |  | `item/note_drovers_bothy` |  |  |
+| The Finger Shrine | `what_the_ice_keeps` |  |  | yes |
+| The Frost Moot |  | `item/note_frost_moot` |  |  |
+| The Giant's Spine |  |  | `giants_spine` |  |
+| The Giants' Stair |  |  | `giants_stair` |  |
+| The Hanging Falls |  | `item/note_hanging_falls` |  |  |
+| The Hidden Tarn |  |  | `hidden_tarn` |  |
+| The Jawbone |  |  | `the_jawbone` |  |
+| The Moot Beacon |  | `item/note_moot_beacon` |  |  |
+| The Oskel Rake | `askes_tune` |  | `oskel_rake` |  |
+| The Red Moor | `a_debt_with_a_nicer_voice` |  |  |  |
+| The Rib Cathedral |  |  | `rib_cathedral` |  |
+| The Rope Cairn | `the_ninth_door` |  |  |  |
+| The Rust Scar | `the_third_arch` |  |  |  |
+| The Seven Stones |  | `item/note_lichen_stones` |  |  |
+| The Skerr Stone | `the_ninth_door` |  |  |  |
+| The Skerry Watch |  | `item/note_skerry_watch` |  |  |
+| The Smeltings | `answer_it` |  |  |  |
+| The Snow Shelter |  | `item/note_snow_shelter` |  |  |
+| The Tappers' Camp |  | `item/note_tappers_camp` |  |  |
+| The Three Sisters |  |  | `three_sisters_falls` | yes |
+| The Tinkers' Camp |  | `item/note_tinkers_camp` |  |  |
+| The Wading Giant |  | `item/note_wading_giant` |  |  |
+| The Watch of the Gate |  | `item/note_watch_of_the_gate` |  |  |
+| The Watcher | `nine_lights` |  | `the_watcher` |  |
+| The Winter Cairns |  | `item/note_winter_cairns` |  |  |
+
+### Brightwater and the Mere (32)
+
+| Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
+|---|---|---|---|---|
+| Brindle Mill |  | `item/note_brindle_mill` |  |  |
+| Gull Holm |  |  | `gull_holm` |  |
+| North Cliff Beacon | `the_lamp_is_dimmer` |  | `north_cliff_beacon` |  |
+| Shingle Shrine | `the_long_measurement` |  |  | yes |
+| The Beached Barge |  | `item/note_beached_barge` |  |  |
+| The Bell Buoys |  | `item/note_bell_buoys` |  |  |
+| The Charter Stone | `the_charter_pins` |  |  |  |
+| The Counting Tower | `the_charter_pins` |  |  |  |
+| The Dry Jetty |  | `item/note_dry_jetty` |  |  |
+| The Eelweir | `the_ruled_line` |  | `eelweir` |  |
+| The Eggers' Camp | `cut_from_below` |  |  |  |
+| The Gullhithe Wreck | `a_thing_nobody_reported` |  | `gullhithe_wreck` |  |
+| The Heronry | `the_ruled_line` |  |  |  |
+| The Larkmouth Bridge | `the_same_hand` |  |  |  |
+| The Lime Bridge | `the_top_bed` |  |  |  |
+| The Limekilns | `the_top_bed` |  |  |  |
+| The Listening Post |  | `item/note_listening_post` |  |  |
+| The Log Boom | `flowered_in_the_frost` |  |  |  |
+| The Long Stride | `the_stride_dedication` |  | `long_stride` |  |
+| The Narrows Bridge | `the_charter_pins` |  |  |  |
+| The Ness Market |  | `item/note_ness_market` |  |  |
+| The Net Field |  | `item/note_net_field` |  |  |
+| The Pilgrim Stair | `cut_from_below` |  |  |  |
+| The Rafters' Camp | `flowered_in_the_frost` |  |  |  |
+| The Sedge Hearth | `the_ruled_line` |  |  | yes |
+| The Smoke Coppice |  | `item/note_smoke_coppice` |  |  |
+| The Stair Bridge | `the_third_arch` |  |  |  |
+| The Standing Arches | `the_third_arch` |  |  |  |
+| The Strandline Stones |  | `item/note_strandline_stones` |  |  |
+| The Tallyman's Folly |  |  | `tallymans_folly` |  |
+| The Wash-Stones |  | `item/note_wash_stones` |  |  |
+| Willow Isle | `the_last_column` | `book/saying_ward` |  |  |
+
+### Sedgemire (35)
+
+| Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
+|---|---|---|---|---|
+| Crookstilts |  |  | `crookstilts` |  |
+| Drowned Bell Shrine |  |  | `drowned_bell_shrine` | yes |
+| Heron Watch |  | `item/note_heron_watch` |  |  |
+| Mor'oul | `knots_round_nothing` |  | `mor_oul` |  |
+| Oskel Ford |  | `item/note_oskel_ford` |  |  |
+| Saoul | `against_the_current` |  | `saoul` |  |
+| The Boardwalk Gate | `which_account` |  |  |  |
+| The Cockle Beds | `what_the_tide_left` |  |  |  |
+| The Drowned Arch |  | `item/note_drowned_arch` |  |  |
+| The Drowned Road |  | `item/note_drowned_road` |  |  |
+| The Eel Hurdles |  | `item/note_eel_hurdles` |  |  |
+| The Eel Stews | `the_boat_that_moved` |  |  |  |
+| The Eel-Boat Graveyard | `the_boat_that_moved` |  | `eelboat_graveyard` |  |
+| The Fog Bell | `knots_round_nothing` |  |  |  |
+| The Grey Gull |  | `item/note_grey_gull` |  |  |
+| The Greyreed Decoy | `which_account` |  |  |  |
+| The Indigo Beds |  | `item/note_indigo_beds` |  |  |
+| The Knuckle Cairn |  | `item/note_knuckle_cairn` |  |  |
+| The Lantern Causeway |  |  | `lantern_causeway` |  |
+| The Long Jetty |  |  | `long_jetty` |  |
+| The Old Crannog |  |  | `old_crannog` |  |
+| The Peat Hags | `the_slow_reflection` |  | `peat_hags` |  |
+| The Reed Bridge |  | `item/note_reed_bridge` |  |  |
+| The Reed Wreck |  | `item/salt_isles_guide` | `reed_wreck` |  |
+| The Round Stones |  | `item/note_round_stones` |  |  |
+| The Sallow King |  |  | `sallow_king` |  |
+| The Salt Pans | `what_the_tide_left` |  |  |  |
+| The South Stilts | `which_account` |  |  |  |
+| The Stair of Isse |  |  | `stair_of_isse` |  |
+| The Sunken Tower |  |  | `sunken_tower` |  |
+| The Tide Hearth | `against_the_current` |  |  | yes |
+| The Tideflat Stones |  | `item/note_tideflat_stones` |  |  |
+| The Traders' Post | `what_the_tide_left` |  |  |  |
+| The Withy Beds |  | `item/note_withy_beds` |  |  |
+| Wisp Hollow | `the_lantern_still_lit` |  | `wisp_hollow` |  |
+
+### The Briarwold (36)
+
+| Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
+|---|---|---|---|---|
+| Barkbridge | `the_two_hundred_and_seventh` |  |  |  |
+| Blackgill Falls |  |  | `blackgill_falls` |  |
+| Countwatch | `opened_from_the_far_side` |  |  |  |
+| Fern Gully |  |  | `fern_gully` |  |
+| Foxfire Falls |  |  | `foxfire_falls` |  |
+| Harrow Tor | `the_listeners_trunk` |  |  |  |
+| Hollin Tor | `the_restrung_bow` |  |  |  |
+| Mossbridge |  |  | `mossbridge` |  |
+| Mossgrave | `the_fennick_stool` |  | `mossgrave` |  |
+| Pellow's Pale |  | `item/note_pellows_pale` |  |  |
+| The Antler Boilers |  |  | `antler_boilers` |  |
+| The Antler Chapel |  |  | `antler_chapel` |  |
+| The Bark Camp |  | `item/note_bark_camp` |  |  |
+| The Breach | `the_briars_purpose` |  | `briar_breach` |  |
+| The Briar Nursery |  | `item/note_briar_nursery` |  |  |
+| The Charcoal Camp | `the_fawning_months` |  |  |  |
+| The Fallen Firewatch |  | `item/note_fallen_firewatch` |  |  |
+| The Foxgill Arch |  | `item/note_foxgill_arch` |  |  |
+| The Grey Man | `flowered_in_the_frost` |  |  |  |
+| The Hart Bones |  |  | `hart_bones` |  |
+| The Hunters' Stand | `the_fawning_months` |  | `hunters_stand` |  |
+| The Knight's Mound |  |  | `knights_mound` |  |
+| The Moot Gate Stone |  |  |  | yes |
+| The Northgate Stone | `the_listeners_trunk` |  |  | yes |
+| The Oiled Stone | `the_two_hundred_and_seventh` |  |  | yes |
+| The Old Gate Stone | `opened_from_the_far_side` |  |  | yes |
+| The Old Quarry | `the_stride_dedication` |  | `old_quarry` |  |
+| The Poachers' Lee |  |  | `poachers_lee` |  |
+| The Sawpit |  | `item/note_the_sawpit` |  |  |
+| The Sentinels |  |  | `the_sentinels` |  |
+| The Silked Camp | `the_restrung_bow` |  | `silked_camp` |  |
+| The Skarl Bridge |  | `item/note_skarl_bridge` |  |  |
+| The Tally Hearth | `flowered_in_the_frost` |  |  | yes |
+| The Verderer's Tower | `opened_from_the_far_side` |  |  |  |
+| The Wardstone Line |  |  | `wardstone_line` |  |
+| Wold Force |  |  | `wold_force` |  |
+
+### Hearthvale (45)
+
+| Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
+|---|---|---|---|---|
+| Ansel's Hedge Shrine | `the_lane_that_isnt`, `the_reading` |  |  | yes |
+| Ash Watch | `the_notch_on_the_post` |  |  |  |
+| Bell Meadow Stones |  | `item/note_bell_meadow` |  |  |
+| Candle Cross | `would_anybody_say_it` |  |  | yes |
+| Foxglove Dell |  |  | `foxglove_dell` |  |
+| Gosling Pit | `wardens_roll_of_names` |  | `gosling_pit` |  |
+| Hanging Coombe |  |  | `hanging_coombe` |  |
+| Hound Watch | `one_to_dunn` |  |  |  |
+| Hurdle Fold |  |  | `hurdle_fold` |  |
+| Hushwatch |  | `item/note_hushwatch` |  |  |
+| Lamb's Bottom |  |  | `lambs_bottom` |  |
+| Larkbourne Ford |  |  | `larkbourne_ford` |  |
+| Orm's Long Barrow | `tamwick_twice` |  | `orms_long_barrow` |  |
+| Pennywort Bridge |  | `item/note_pennywort_bridge` |  |  |
+| Rook Mill | `the_grey_on_the_green` |  |  |  |
+| Tallow Barrow | `the_warreners_burrow` |  | `tallow_barrow` |  |
+| The Brow Beacon | `the_grey_on_the_green` |  |  |  |
+| The Chalk Cell |  | `item/note_chalk_cell` |  |  |
+| The Chalk Pit |  | `item/note_chalk_pit` |  |  |
+| The Cliff Graves | `the_grey_on_the_green` |  |  |  |
+| The Cliff Hearth |  |  |  | yes |
+| The Cress Bridge | `the_top_bed` |  |  |  |
+| The Dewpond Fold |  | `item/note_dewpond_fold` |  |  |
+| The Flint Pits | `the_warreners_burrow` |  |  |  |
+| The Grey End |  |  | `the_grey_end` |  |
+| The Hare Stone |  | `item/note_hare_stone` |  |  |
+| The Hush Steps |  | `item/note_hush_steps` |  |  |
+| The Lambing Fold | `one_short` |  |  |  |
+| The Last Field | `the_grey_on_the_green` |  | `the_last_field` |  |
+| The Last Look | `one_to_dunn` |  |  |  |
+| The Naming Stone |  |  |  | yes |
+| The Old Sheepwash | `thistle` |  |  |  |
+| The Pinfold | `one_short` |  |  |  |
+| The Rod Stacks | `pens_with_no_gate`, `the_fennick_stool` |  |  |  |
+| The Roll Stone | `the_twelfth_sluice` |  |  |  |
+| The Singing Yew | `tamwick_twice` |  |  |  |
+| The Southgate Stone |  |  |  | yes |
+| The Tumbled Watch | `a_verse_about_you`, `wardens_roll_of_names` |  | `tumbled_watchtower` |  |
+| The Turned Hut |  | `item/note_turned_hut` |  |  |
+| The Warden Barrow |  | `item/note_warden_barrow` |  |  |
+| The Warrener's Camp | `the_warreners_burrow` |  |  |  |
+| The Weighing Stone |  | `item/note_weighing_stone` |  |  |
+| The Wellspring | `the_notch_on_the_post`, `would_anybody_say_it` |  |  | yes |
+| Whitecut Falls |  |  | `whitecut_falls` |  |
+| Wolf Holt |  |  | `wolf_holt` |  |
+
+### Cinderlea (40)
+
+| Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
+|---|---|---|---|---|
+| Ashcombe | `ashcombe_on_the_roll` |  | `ashcombe` |  |
+| Bell Street |  |  | `bell_street` |  |
+| Greywatch | `thistle`, `would_anybody_say_it` |  |  |  |
+| Hesk Pool | `the_slow_reflection` |  |  |  |
+| Hesk-Morn |  | `item/note_hesk_morn` |  |  |
+| Sulion |  | `item/note_sulion` |  |  |
+| The Anthem Hall |  |  | `anthem_hall` |  |
+| The Ash-Winter Carts | `the_late_delivery` |  | `ashwinter_carts` |  |
+| The Bell Garden |  |  | `bell_garden` |  |
+| The Bell Pit | `ossels_forge` |  | `bell_pit` |  |
+| The Bell Wood Stone |  |  |  | yes |
+| The Builders' Harbour | `what_the_tide_left` |  |  |  |
+| The Cistern of Isse |  | `item/note_cistern_of_isse` |  |  |
+| The Cold Fire | `the_cold_fire` |  | `cold_fire_camp` |  |
+| The Driftwood Camp | `the_sealed_barge` |  |  |  |
+| The Glass Bridge |  |  | `glass_bridge` |  |
+| The Glass Falls |  |  | `glass_falls` |  |
+| The Grey Hedge |  | `item/note_grey_hedge` |  |  |
+| The Grey Wreck |  |  | `grey_wreck` |  |
+| The Greyline Stones | `the_notch_on_the_post` |  |  |  |
+| The Headless Watch | `the_names_in_the_chapter_book` |  |  |  |
+| The Hermit's Gate |  | `item/note_hermits_gate` |  |  |
+| The Hush Bell |  |  | `hush_bell` |  |
+| The Hushline Stair | `the_naming` |  | `hushline_stair` | yes |
+| The Kneeling Colossus |  | `item/note_kneeling_colossus` |  |  |
+| The Last Hearth |  |  |  | yes |
+| The Last Milestone |  | `item/note_last_milestone` |  |  |
+| The Ninth Waystone | `thistle` |  |  |  |
+| The North Gate | `ossels_forge` |  | `north_gate` |  |
+| The One Poppy |  | `item/note_the_one_poppy` |  |  |
+| The Pilgrims' Bell |  |  |  | yes |
+| The Row of Mouths |  |  | `row_of_mouths` |  |
+| The Silent Market | `the_late_delivery` |  | `silent_market` |  |
+| The Stair Head |  |  |  | yes |
+| The Strand Beacon | `the_sealed_barge` |  |  |  |
+| The Sunk Plaza |  |  | `sunk_plaza` |  |
+| The Tenth Waystone |  | `item/note_tenth_waystone` |  |  |
+| The Thirteenth |  |  | `thirteenth_colossus` |  |
+| The Tower of Vaelost |  |  | `tower_of_vaelost` |  |
+| The Weighhouse |  | `item/note_weighhouse` |  |  |
