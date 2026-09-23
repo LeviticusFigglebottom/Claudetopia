@@ -26,6 +26,10 @@ var _world_env: Environment
 var _stage_env: Environment
 var _streamer: WorldStreamer
 var _water: WaterSurface
+var _night: NightLights
+## The real atmosphere, made the first time a look knob is read: the colour grade, the vignette
+## and the film grain are its to draw, and a stand-in would only prove the stand-in.
+var _atmos: Atmosphere = null
 var _saved: Dictionary = {}
 
 
@@ -89,7 +93,11 @@ func _stage() -> void:
 	_water._sheet_material = ShaderMaterial.new()
 	_water.add_child(_water.sheet)
 	_holder.add_child(_water)
-	Settings.changed.connect(_water._on_setting_changed)
+	if not Settings.changed.is_connected(_water._on_setting_changed):
+		Settings.changed.connect(_water._on_setting_changed)
+	_night = NightLights.new()
+	_holder.add_child(_night)
+	_atmos = null
 	_build_cell()
 
 
@@ -115,6 +123,17 @@ func _grass() -> MultiMeshInstance3D:
 		if c is MultiMeshInstance3D and str(c.get_meta("asset_path", "")) == GRASS:
 			return c
 	return null
+
+
+## The real atmosphere in Cinderlea, whose look has both a vignette and a grain, settled so what
+## the settings say is drawn now rather than over the next blend.
+func _look_atmosphere() -> Atmosphere:
+	if _atmos == null or not is_instance_valid(_atmos):
+		_atmos = (load(ATMOSPHERE) as PackedScene).instantiate() as Atmosphere
+		_holder.add_child(_atmos)
+		_atmos.set_region("core:region/cinderlea", true)
+	_atmos.settle()
+	return _atmos
 
 
 ## What the engine says for one knob, after it has been set.
@@ -177,6 +196,18 @@ func _read(key: String) -> Variant:
 		"water_quality":
 			return [(_water.sheet.mesh as PlaneMesh).subdivide_width,
 					_water._sheet_material.get_shader_parameter("detail")]
+		"water_reflections":
+			# the mirrored shader names the screen texture; the other never does, so the frame
+			# copy is saved as well as the mirror
+			return _water._sheet_material.shader == WaterSurface.SHADER
+		"night_lights":
+			return _night.pool_size
+		"color_grade":
+			return _look_atmosphere().env.adjustment_color_correction != null
+		"vignette":
+			return float(_look_atmosphere()._vignette_mat.get_shader_parameter("amount"))
+		"film_grain":
+			return _look_atmosphere()._grain_rect.visible
 	return null
 
 
@@ -198,8 +229,11 @@ static func _other(key: String, current: Variant) -> Variant:
 func test_defaults_are_high_and_the_display_keys() -> void:
 	var expected: Dictionary = (Graphics.PRESETS["high"] as Dictionary).duplicate()
 	expected.merge(Graphics.DISPLAY_DEFAULTS)
+	expected.merge(Graphics.LOOK_DEFAULTS)
 	expected["preset"] = "high"
-	assert_eq(Graphics.DEFAULTS, expected, "Graphics.DEFAULTS is High plus the display keys")
+	assert_eq(Graphics.DEFAULTS, expected, "Graphics.DEFAULTS is High plus the display and look keys")
+	for key in Graphics.LOOK_DEFAULTS:
+		assert_false((Graphics.PRESETS["painted"] as Dictionary).has(key), "no preset touches %s" % key)
 	assert_eq(Settings.DEFAULTS["graphics"], Graphics.DEFAULTS, "and Settings.DEFAULTS names it")
 
 
@@ -221,7 +255,7 @@ func test_every_preset_sets_every_fidelity_knob_and_every_knob_has_a_control() -
 ## Low is cheaper than Medium, Medium than High, High than Painted, knob by knob.
 func test_presets_climb_in_cost() -> void:
 	for key in ["render_scale", "shadow_atlas", "shadow_distance", "scatter_density", "view_range",
-			"lod_bias", "water_quality", "anisotropic"]:
+			"lod_bias", "water_quality", "anisotropic", "night_lights", "water_reflections"]:
 		var prev := -INF
 		for p in Graphics.PRESET_ORDER:
 			var v := float(Graphics.PRESETS[p][key])
@@ -402,6 +436,10 @@ func test_settings_are_written_and_a_file_from_before_is_carried_across() -> voi
 	old.set_value("video", "msaa", 0)
 	old.set_value("video", "shadows", 0)
 	old.set_value("video", "fov", 90.0)
+	# and a file from the painted look, whose own keys were under video too
+	old.set_value("video", "night_lights", 3)
+	old.set_value("video", "water_reflections", false)
+	old.set_value("video", "film_grain", true)
 	old.save(test_path)
 	var was_persist := Settings.persist
 	var bindings := Settings.bindings.duplicate(true)
@@ -412,6 +450,11 @@ func test_settings_are_written_and_a_file_from_before_is_carried_across() -> voi
 	assert_false(bool(Settings.get_value("graphics", "shadows")), "shadows 0 meant off")
 	assert_false((Settings.data["video"] as Dictionary).has("render_scale"), "and left video")
 	assert_near(float(Settings.get_value("video", "fov")), 90.0, 0.001, "what stays in video stays")
+	assert_eq(int(Settings.get_value("graphics", "night_lights")), 3, "the lamps moved over")
+	assert_false(bool(Settings.get_value("graphics", "water_reflections")), "and the water's reflections")
+	assert_true(bool(Settings.get_value("graphics", "film_grain")), "and the grain")
+	for key in ["night_lights", "water_reflections", "film_grain"]:
+		assert_false((Settings.data["video"] as Dictionary).has(key), "%s left video" % key)
 	assert_eq(Settings.get_value("graphics", "preset"), "custom")
 	Settings.persist = true
 	Settings.set_value("graphics", "lod_bias", 1.75)

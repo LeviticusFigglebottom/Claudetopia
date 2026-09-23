@@ -11,7 +11,7 @@ extends RefCounted
 ##   flags      has_flag(key) get_flag(key, default) set_flag(key, value) clear_flag(key)
 ##              count(key) inc(key, by) is_discovered(place) discover(place) read_books (property)
 ##              mark_book_read(book) current_region_id (property) seed (property)
-##   quests     stage_of(quest) stage_id_of(quest) is_active(quest) is_completed(quest)
+##   quests     stage_of(quest) stage_id_of(quest) stage_index(quest, stage) is_active(quest) is_completed(quest)
 ##              outcome_of(quest) start(quest) set_stage(quest, stage) choose(quest, option)
 ##              fail(quest, reason) complete(quest, outcome) complete_objective(quest, key)
 ##   factions   reputation(id) rank(id) is_member(id) add_reputation(id, delta, reason) join(id) expel(id, reason)
@@ -153,6 +153,24 @@ func quest_stage(quest: String) -> int:
 
 func quest_stage_id(quest: String) -> String:
 	return str(_call("quests", "stage_id_of", [quest], ""))
+
+
+## The index of a stage named as content names it (an id, or a number counted from one), or -1.
+func quest_stage_index(quest: String, stage: Variant) -> int:
+	return int(_call("quests", "stage_index", [quest, stage], -1))
+
+
+## The open options of the decisions this NPC hosts that nobody wrote a button for:
+## [{quest_id, id, text}] (QuestLog.unwritten_choices_for).
+func quest_offers(npc: String) -> Array:
+	var r: Variant = _call("quests", "unwritten_choices_for", [npc], [])
+	return r if typeof(r) == TYPE_ARRAY else []
+
+
+## Quests this person can start, as their giver: [{quest_id, text}] (QuestLog.giver_offers).
+func quest_starts(npc: String) -> Array:
+	var r: Variant = _call("quests", "giver_offers", [npc], [])
+	return r if typeof(r) == TYPE_ARRAY else []
 
 
 func quest_active(quest: String) -> bool:

@@ -1,0 +1,140 @@
+[
+  {"id": "core:encounter/larkbourne_ford", "place": "core:poi/larkbourne_ford",
+   "notes": "none by day; two bandits shake down late travellers after dark",
+   "spawns": [{"enemy": "core:enemy/roadside_bandit", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/tumbled_watchtower", "place": "core:poi/tumbled_watchtower",
+   "notes": "skirmisher bandits in the stair-hall, a caster on the fallen parapet. The caster is the one Hush-speaking hand the Hearthvale bandits have: a Spire dropout, the smuggler-Sayer, gone inland. Five of them, as A Verse About You counts them: the Larkbourne Boys keep hall here.",
+   "spawns": [{"enemy": "core:enemy/roadside_bandit", "count": 5, "at": "stair_hall", "spread": 2.4},
+              {"enemy": "core:enemy/smuggler_sayer", "count": 1, "at": "the_parapet"}]},
+
+  {"id": "core:encounter/gosling_pit", "place": "core:poi/gosling_pit",
+   "notes": "a pack of bandits with a brute leader. The leader is Ryn Larkbourne, whom the Roll of Names sends you to hear out; while that is the errand, the band keeps its hands off its knives.",
+   "spawns": [{"enemy": "core:enemy/roadside_bandit", "count": 4, "at": "the_fire", "spread": 3.2,
+               "unless": [{"quest_at": ["core:quest/wardens_roll_of_names", "find_the_name"]}]}]},
+
+  {"id": "core:encounter/whitecut_falls", "place": "core:poi/whitecut_falls",
+   "notes": "a down-wolf pack in the cave behind the falls",
+   "spawns": [{"enemy": "core:enemy/down_wolf", "count": 4}]},
+
+  {"id": "core:encounter/foxglove_dell", "place": "core:poi/foxglove_dell",
+   "notes": "bristlebacks rooting in the dell at dawn",
+   "spawns": [{"enemy": "core:enemy/bristleback", "count": 2, "when": "dawn", "spread": 4.0}]},
+
+  {"id": "core:encounter/long_stride", "place": "core:poi/long_stride",
+   "notes": "cutpurses work the toll queue; a bravo duels anyone who refuses to pay",
+   "spawns": [{"enemy": "core:enemy/cutpurse", "count": 2, "when": "day"},
+              {"enemy": "core:enemy/bravo", "count": 1, "when": "day"}]},
+
+  {"id": "core:encounter/north_cliff_beacon", "place": "core:poi/north_cliff_beacon",
+   "notes": "smugglers with a dropout Sayer casting Hush",
+   "spawns": [{"enemy": "core:enemy/smuggler_sayer", "count": 1},
+              {"enemy": "core:enemy/cutpurse", "count": 2}]},
+
+  {"id": "core:encounter/gullhithe_wreck", "place": "core:poi/gullhithe_wreck",
+   "notes": "gutter drakes in the hull",
+   "spawns": [{"enemy": "core:enemy/gutter_drake", "count": 5, "spread": 2.0}]},
+
+  {"id": "core:encounter/eelweir", "place": "core:poi/eelweir",
+   "notes": "leech-hounds come up the channel at night",
+   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 3, "when": "night"}]},
+
+  {"id": "core:encounter/lantern_causeway", "place": "core:poi/lantern_causeway",
+   "notes": "bog-drowned climb the poles after dark if the lanterns are out: while Lissane is walking her round they are lit.",
+   "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 2, "when": "night", "unless_present": "core:npc/lissane_sa"}]},
+
+  {"id": "core:encounter/drowned_bell_shrine", "place": "core:poi/drowned_bell_shrine",
+   "notes": "wisps circle at midnight",
+   "spawns": [{"enemy": "core:enemy/wisp", "count": 2, "when": "midnight", "spread": 5.0}]},
+
+  {"id": "core:encounter/sallow_king", "place": "core:poi/sallow_king",
+   "notes": "sallowjaw ambush from the water inside the ring",
+   "spawns": [{"enemy": "core:enemy/sallowjaw", "count": 2}]},
+
+  {"id": "core:encounter/reed_wreck", "place": "core:poi/reed_wreck",
+   "notes": "leech-hounds in the hold; a chart of the Salt Isles, on the crate under her bow",
+   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 3}],
+   "lies": [{"item": "core:item/salt_isles_guide", "at": "the_chart"}]},
+
+  {"id": "core:encounter/willow_isle", "place": "core:poi/willow_isle",
+   "notes": "none; a book and a side quest. The book is the hermit's own exercise book from his clerking years, the name on its flyleaf boxed out, read on his crate where he leaves it; the side quest is his (npcs/poi_people.json, quests/side_2.json).",
+   "spawns": [],
+   "lies": [{"book": "core:book/saying_ward", "at": "the_hermits_book"}]},
+
+  {"id": "core:encounter/stair_of_isse", "place": "core:poi/stair_of_isse",
+   "notes": "bog-drowned rise from between the columns as you pass",
+   "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "spread": 4.0}]},
+
+  {"id": "core:encounter/wisp_hollow", "place": "core:poi/wisp_hollow",
+   "notes": "wisps lure toward deep water",
+   "spawns": [{"enemy": "core:enemy/wisp", "count": 3, "spread": 5.0}]},
+
+  {"id": "core:encounter/mossbridge", "place": "core:poi/mossbridge",
+   "notes": "sentinels: a Warden at each end of the arch, which lets anyone cross who carries nothing they did not need, and wakes for anyone who takes something within its reach",
+   "spawns": [{"enemy": "core:enemy/warden", "count": 1, "at": "the_warden_west"},
+              {"enemy": "core:enemy/warden", "count": 1, "at": "the_warden_east"}]},
+
+  {"id": "core:encounter/hunters_stand", "place": "core:poi/hunters_stand",
+   "notes": "skirmisher archers above",
+   "spawns": [{"enemy": "core:enemy/poacher", "count": 3, "at": "the_platform", "spread": 1.2}]},
+
+  {"id": "core:encounter/foxfire_falls", "place": "core:poi/foxfire_falls",
+   "notes": "weaver ambush from above at night; safe by day",
+   "spawns": [{"enemy": "core:enemy/weaver", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/hart_bones", "place": "core:poi/hart_bones",
+   "notes": "a Hart-Knight keeps vigil at the skull",
+   "spawns": [{"enemy": "core:enemy/hart_knight", "count": 1}]},
+
+  {"id": "core:encounter/briar_breach", "place": "core:poi/briar_breach",
+   "notes": "ash-wights (swarm) far from home: the four the Briar's Purpose sends you to put down are these",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 5, "spread": 3.0}]},
+
+  {"id": "core:encounter/fern_gully", "place": "core:poi/fern_gully",
+   "notes": "weavers on the bridges",
+   "spawns": [{"enemy": "core:enemy/weaver", "count": 3, "spread": 4.0}]},
+
+  {"id": "core:encounter/chain_bridge", "place": "core:poi/chain_bridge",
+   "notes": "crag-wolves on the far approach at night (the toll-keeper is a person: npcs/poi_people.json)",
+   "spawns": [{"enemy": "core:enemy/crag_wolf", "count": 3, "when": "night", "at": "the_far_approach"}]},
+
+  {"id": "core:encounter/rib_cathedral", "place": "core:poi/rib_cathedral",
+   "notes": "crag-wolf pack in the skull",
+   "spawns": [{"enemy": "core:enemy/crag_wolf", "count": 4}]},
+
+  {"id": "core:encounter/three_sisters_falls", "place": "core:poi/three_sisters_falls",
+   "notes": "scree-hags on the cliffs above shriek at climbers",
+   "spawns": [{"enemy": "core:enemy/scree_hag", "count": 2, "spread": 6.0}]},
+
+  {"id": "core:encounter/clanless_camp", "place": "core:poi/clanless_camp",
+   "notes": "elite raiders in heavy plate. The sentence's brute and two skirmishers are the same raiders fighting as a brute and two skirmishers do; Skerrow has no clanless brute of its own.",
+   "spawns": [{"enemy": "core:enemy/clanless_raider", "count": 3, "at": "the_fire", "spread": 3.0}]},
+
+  {"id": "core:encounter/hidden_tarn", "place": "core:poi/hidden_tarn",
+   "notes": "scree-hags on the scree",
+   "spawns": [{"enemy": "core:enemy/scree_hag", "count": 3, "spread": 5.0}]},
+
+  {"id": "core:encounter/glass_bridge", "place": "core:poi/glass_bridge",
+   "notes": "ash-wights under the arch",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 4}]},
+
+  {"id": "core:encounter/thirteenth_colossus", "place": "core:poi/thirteenth_colossus",
+   "notes": "choristers around the excavation. By day it is the Sayers' dig (the story: 'A Sayer camp digs here and argues'); after dark the choristers come and stand round it and hold the note at it, which is what the knight in the Headless Watch warns you of.",
+   "spawns": [{"enemy": "core:enemy/chorister", "count": 3, "spread": 6.0, "when": "night"}]},
+
+  {"id": "core:encounter/cold_fire_camp", "place": "core:poi/cold_fire_camp",
+   "notes": "swarm; they only rise if you touch the cup",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 6, "at": "the_fire", "spread": 2.4, "rises_when": "the_cup"}]},
+
+  {"id": "core:encounter/glass_falls", "place": "core:poi/glass_falls",
+   "notes": "a bell-bearer at the top rings when it sees you",
+   "spawns": [{"enemy": "core:enemy/bell_bearer", "count": 1}]},
+
+  {"id": "core:encounter/hushline_stair", "place": "core:poi/hushline_stair",
+   "notes": "the tutorial: ash-wights on the stair",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 4, "spread": 3.0}]},
+
+  {"id": "core:encounter/standing_moot", "place": "core:place/standing_moot",
+   "notes": "The Hart of Thorns keeps the circle. Its arena was always the Moot; nothing stood it up there, so the main thread's fourth account could not be finished.",
+   "spawns": [{"enemy": "core:boss/hart_of_thorns", "count": 1, "at": "the_circle"}]}
+]

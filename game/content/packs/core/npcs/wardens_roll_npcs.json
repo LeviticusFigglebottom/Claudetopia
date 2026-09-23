@@ -103,9 +103,10 @@
       {
         "days": "all",
         "hour": 6,
-        "place": "core:place/merrowby",
-        "activity": "idle",
-        "spot": "gosling_pit"
+        "place": "core:poi/gosling_pit",
+        "activity": "socialise",
+        "spot": "the_wheel_table",
+        "notes": "camped in the chalk pit under the Chalk Hound, at the head of the stolen wheel"
       }
     ]
   }

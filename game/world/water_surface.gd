@@ -10,14 +10,19 @@ extends Node3D
 const SHADER := preload("res://assets/shaders/painted_water.gdshader")
 const GENERATED := "res://world/generated"
 
-## Region look: deep colour, shallow colour, and how quickly depth reads as deep.
+## Region look: deep colour, shallow colour, how quickly depth reads as deep, how much of the
+## world the surface mirrors (`reflect`, and `cap`, the most it gives back at the grazing angle),
+## how hard the sun glitters on it, and how rough the open water is (`waves`, the lake and the
+## sea only; a river keeps its own). The Mere is Lake Glass: calm enough that the island and the
+## far shore stand in it upside down, with the glittering path WORLD_BIBLE 6.2 asks for; the
+## marsh's pools are still and brown and give back little; the Grey Sea stays rough.
 const REGION_WATER := {
-	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0},
-	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0},
-	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6},
-	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6},
-	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4},
-	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6},
+	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0, "reflect": 0.9, "cap": 0.85, "glint": 4.0, "waves": 0.14},
+	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0, "reflect": 0.5, "cap": 0.65, "glint": 1.2, "waves": 0.12},
+	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6, "reflect": 0.85, "cap": 0.7, "glint": 3.0, "waves": 0.3},
+	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6, "reflect": 0.7, "cap": 0.65, "glint": 2.0, "waves": 0.2},
+	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4, "reflect": 0.9, "cap": 0.65, "glint": 3.5, "waves": 0.42},
+	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6, "reflect": 0.6, "cap": 0.6, "glint": 1.5, "waves": 0.25},
 }
 
 @export var sheet_subdivisions: int = 96
@@ -39,6 +44,44 @@ var _river_materials: Array[ShaderMaterial] = []
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
 var _height_tex: ImageTexture
+
+static var _unmirrored: Shader = null
+
+
+## The water shader, with the mirror or without it. Without it is the same code built with
+## WATER_NO_MIRROR defined, so the screen texture is never named: a material that names it makes
+## the renderer copy the frame before the water is drawn, whatever its `mirror` uniform says, and
+## the setting that turns reflections off is there to save that copy.
+static func shader_for(mirrored: bool) -> Shader:
+	if mirrored:
+		return SHADER
+	if _unmirrored == null:
+		_unmirrored = Shader.new()
+		_unmirrored.code = SHADER.code.replace("shader_type spatial;", "shader_type spatial;\n#define WATER_NO_MIRROR")
+	return _unmirrored
+
+
+func _ready() -> void:
+	if not Settings.changed.is_connected(_on_setting_changed):
+		Settings.changed.connect(_on_setting_changed)
+
+
+## Puts every water material on the shader `graphics/water_reflections` asks for, keeping what
+## the region look and the builder set on it.
+func apply_reflections() -> void:
+	var mirrored := bool(Settings.get_value("graphics", "water_reflections", true))
+	var shader := shader_for(mirrored)
+	for mat in _all_materials():
+		if mat.shader != shader:
+			var keep := {}
+			if mat.shader != null:
+				for u in mat.shader.get_shader_uniform_list():
+					keep[str(u["name"])] = mat.get_shader_parameter(str(u["name"]))
+			mat.shader = shader
+			for k in keep:
+				if keep[k] != null:
+					mat.set_shader_parameter(k, keep[k])
+		mat.set_shader_parameter("mirror", 1.0 if mirrored else 0.0)
 
 
 func build(p: TerrainProvider) -> void:
@@ -65,7 +108,7 @@ func _build_textures() -> void:
 	var n := int(rt.get("grid", 1024))
 	_level_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("water_level", "")], n)
 	_height_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("heights", "")], n)
-	_mask_tex = _texture_r8("%s/%s" % [GENERATED, rt.get("water", "")], n)
+	_mask_tex = _mask_texture(mask_path(provider.manifest), n)
 
 
 func _texture_rf(path: String, n: int) -> ImageTexture:
@@ -77,18 +120,50 @@ func _texture_rf(path: String, n: int) -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 
-func _texture_r8(path: String, n: int) -> ImageTexture:
-	var bytes := FileAccess.get_file_as_bytes(path)
-	if bytes.size() < n * n:
+func _mask_texture(path: String, n: int) -> ImageTexture:
+	var img := mask_image(path, n)
+	if img == null:
 		Log.error("WaterSurface", "cannot read %s" % path)
 		return null
-	var img := Image.create_from_data(n, n, false, Image.FORMAT_R8, bytes)
 	return ImageTexture.create_from_image(img)
+
+
+## Where the water mask the game loads lives, from the world manifest.
+static func mask_path(manifest: Dictionary) -> String:
+	var rt: Dictionary = manifest.get("runtime", {})
+	return "%s/%s" % [GENERATED, rt.get("water", "")]
+
+
+## The water mask exactly as the shader will sample it (see `mask_bytes`), or null if it cannot
+## be read. The water shader discards wherever this is under 0.5.
+static func mask_image(path: String, n: int) -> Image:
+	var bytes := FileAccess.get_file_as_bytes(path)
+	if bytes.size() < n * n:
+		return null
+	return Image.create_from_data(n, n, false, Image.FORMAT_R8, mask_bytes(bytes))
+
+
+## The water mask as the shader reads it: 0 dry, 255 wet. The world builder writes it as 0 and 1,
+## and an R8 texture reads a byte as byte/255, so a wet texel was 0.004 to the shader -- under its
+## 0.5 test everywhere. Every lake and the sea were discarded, from the first runtime world on, and
+## what the camera saw on the Mere was the lake bed's own terrain texture under no water at all:
+## the water shader's reflections, glints and colours never reached a frame outside the rivers.
+## Stretched to 255, the mask's linear filter still puts the waterline midway between a wet texel
+## and a dry one. A mask already written as 0 and 255 is left as it is.
+static func mask_bytes(bytes: PackedByteArray) -> PackedByteArray:
+	if bytes.has(255) or not bytes.has(1):
+		return bytes
+	var out := bytes.duplicate()
+	for i in out.size():
+		if out[i] != 0:
+			out[i] = 255
+	return out
 
 
 func _make_material(follow_level: bool, use_mask: bool) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
-	mat.shader = SHADER
+	var mirrored := bool(Settings.get_value("graphics", "water_reflections", true))
+	mat.shader = shader_for(mirrored)
 	mat.set_shader_parameter("level_tex", _level_tex)
 	mat.set_shader_parameter("mask_tex", _mask_tex)
 	mat.set_shader_parameter("height_tex", _height_tex)
@@ -97,6 +172,9 @@ func _make_material(follow_level: bool, use_mask: bool) -> ShaderMaterial:
 	mat.set_shader_parameter("follow_level", follow_level)
 	mat.set_shader_parameter("use_mask", use_mask)
 	mat.set_shader_parameter("detail", QUALITY_DETAIL[quality])
+	# the lake gives back the far shore and the hills; a machine that cannot spare the frame copy
+	# the lookup needs can turn it off, and the water keeps the sky's own colours
+	mat.set_shader_parameter("mirror", 1.0 if mirrored else 0.0)
 	return mat
 
 
@@ -268,13 +346,21 @@ func set_region_look(region_id: String) -> void:
 	for mat in _all_materials():
 		mat.set_shader_parameter("deep_colour", deep)
 		mat.set_shader_parameter("shallow_colour", shallow)
+		mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)))
+		mat.set_shader_parameter("fresnel_cap", float(look.get("cap", 0.65)))
+		mat.set_shader_parameter("glint_strength", float(look.get("glint", 3.0)))
 		if mat == _sheet_material or mat == _skirt_material:
 			mat.set_shader_parameter("depth_fade_m", fade)
+			mat.set_shader_parameter("wave_strength", float(look.get("waves", 0.42)))
 
 
 func _on_setting_changed(section: String, key: String, value: Variant) -> void:
-	if section == "graphics" and key == "water_quality":
+	if section != "graphics":
+		return
+	if key == "water_quality":
 		apply_quality(int(value))
+	elif key == "water_reflections":
+		apply_reflections()
 
 
 ## Water quality, live: the sheet re-cut to its new subdivision and every surface's ripple

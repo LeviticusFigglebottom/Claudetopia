@@ -411,14 +411,26 @@ def apply_drainage(ctx: HeightContext, h: np.ndarray, work_n: int = 1024) -> tup
 
 
 def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, regions: list, rf: RegionField, lake_c: LakeGeometry,
-                    lake_f: LakeGeometry, places: list) -> np.ndarray:
-    """Full pipeline up to (not including) pads, rivers and roads. Returns heights at grid.n."""
+                    lake_f: LakeGeometry, places: list, keep_discs: list | None = None,
+                    keep_lines: list | None = None, landforms: bool = False) -> np.ndarray:
+    """Full pipeline up to (not including) pads, rivers and roads. Returns heights at grid.n.
+
+    `landforms` adds each region's own landform (worldgen/landforms.py, the world build's
+    `landforms` recipe); `keep_discs` and `keep_lines` are the places and sightlines those are
+    held off.
+    """
+    from . import landforms as landforms_mod
+
     ctx = HeightContext(grid=grid_c, bank=bank, regions=regions, rf=rf, lake=lake_c, places=places)
     h = blend_regions(ctx)
     h = apply_lake(ctx, h)
     h = apply_edges(ctx, h)
     h, _chan = apply_drainage(ctx, h)
     h = apply_lake(ctx, h)          # the Mere, its shores and the causeway win over the valleys
+    # and each region's own shape at the scale a person walking sees it
+    if landforms:
+        h, _delta = landforms_mod.apply(ctx, h, keep_discs, keep_lines)
+        del _delta
     bank.forget()
     H = upsample(h, grid.n, order=3)
     # full-resolution detail band, damped on water and steep-scaled in the mountains

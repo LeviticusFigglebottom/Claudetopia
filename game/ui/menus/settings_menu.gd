@@ -18,8 +18,9 @@ const GRAPHICS_GROUPS := [
 	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic"]],
 	["Pacing", ["vsync", "fps_cap"]],
 	["Shadows", ["shadows", "shadow_atlas", "shadow_cascades", "shadow_distance", "shadow_filter"]],
-	["The country", ["scatter_density", "view_range", "lod_bias", "water_quality"]],
-	["Light and air", ["fog", "volumetric_fog", "ssao", "ao_quality", "ssil", "sdfgi", "glow"]],
+	["The country", ["scatter_density", "view_range", "lod_bias", "water_quality", "water_reflections"]],
+	["Light and air", ["fog", "volumetric_fog", "ssao", "ao_quality", "ssil", "sdfgi", "glow", "night_lights"]],
+	["The look", ["color_grade", "vignette", "film_grain"]],
 ]
 
 var from_menu := false
@@ -90,6 +91,13 @@ func _build() -> void:
 	close.pressed.connect(func() -> void: UI.close("settings"))
 	foot.add_child(close)
 	UiKit.ink_in(frame, 0.0, 0.32)
+
+
+## Everything here is applied the moment it changes and written down when the screen closes.
+## Nothing wrote it down before, so every setting but the key bindings was forgotten when the game
+## was quit -- including the one that says not to play the opening again.
+func closing() -> void:
+	Settings.save_settings()
 
 
 func _show_tab(index: int) -> void:
@@ -193,8 +201,8 @@ func _build_video() -> void:
 	_slider("video", "brightness", "Brightness", 0.6, 1.6, 0.05)
 	_content.add_child(UiKit.divider())
 	_content.add_child(UiKit.wrapped(
-			"How much the picture holds -- shadows, distance, smoothing, the light in the air -- is " +
-			"under Graphics.", "Journal"))
+			"How much the picture holds -- shadows, distance, smoothing, the light in the air, the " +
+			"lamps at night, the water, the colour grade -- is under Graphics.", "Journal"))
 
 
 # --- graphics ------------------------------------------------------------------------------
@@ -326,6 +334,8 @@ func _build_gameplay() -> void:
 	_slider("gameplay", "day_length_minutes", "Length of a day", 12.0, 120.0, 1.0, "min")
 	_option("gameplay", "difficulty", "Difficulty", ["Kind", "Ordinary", "Hard", "Quiet"])
 	_check("gameplay", "subtitles", "Subtitles")
+	_check("gameplay", "play_opening", "Play the opening on a new game",
+			"the pause menu can still show it")
 	_check("gameplay", "show_hints", "Hints")
 	_check("gameplay", "compass", "Compass")
 	_slider("gameplay", "hud_opacity", "How loud the HUD is", 0.2, 1.0, 0.05, "%")
@@ -357,6 +367,7 @@ func _build_controls() -> void:
 	_option("controls", "camera_side", "Camera side", ["Left", "Right"])
 	_check("controls", "vibration", "Vibration")
 	_check("controls", "toggle_sprint", "Sprint is a toggle")
+	_check("controls", "sprint_tap_rolls", "A tap of Sprint rolls")
 	_grid = null
 	_compact = false
 	_content.add_child(UiKit.divider())

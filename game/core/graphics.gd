@@ -33,37 +33,42 @@ const PRESETS := {
 		"shadows": true, "shadow_atlas": 2048, "shadow_cascades": 2, "shadow_distance": 0.6,
 		"shadow_filter": 1, "scatter_density": 0.5, "view_range": 0.75, "lod_bias": 0.6,
 		"fog": true, "volumetric_fog": false, "ssao": false, "ao_quality": 0, "ssil": false,
-		"sdfgi": false, "glow": false, "water_quality": 0,
+		"sdfgi": false, "glow": false, "water_quality": 0, "water_reflections": false, "night_lights": 2,
 	},
 	"medium": {
 		"render_scale": 0.9, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 0.8,
 		"shadow_filter": 2, "scatter_density": 0.75, "view_range": 0.9, "lod_bias": 0.8,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 1, "ssil": false,
-		"sdfgi": false, "glow": true, "water_quality": 1,
+		"sdfgi": false, "glow": true, "water_quality": 1, "water_reflections": true, "night_lights": 4,
 	},
 	"high": {
 		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 		"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
-		"sdfgi": false, "glow": true, "water_quality": 2,
+		"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8,
 	},
 	"painted": {
 		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4,
 		"shadows": true, "shadow_atlas": 8192, "shadow_cascades": 4, "shadow_distance": 1.5,
 		"shadow_filter": 4, "scatter_density": 1.0, "view_range": 1.25, "lod_bias": 1.5,
 		"fog": true, "volumetric_fog": true, "ssao": true, "ao_quality": 3, "ssil": true,
-		"sdfgi": true, "glow": true, "water_quality": 3,
+		"sdfgi": true, "glow": true, "water_quality": 3, "water_reflections": true, "night_lights": 8,
 	},
 }
 
 ## About the display rather than the picture, so no preset touches them.
 const DISPLAY_DEFAULTS := {"vsync": true, "fps_cap": 0}
+## The look's own toggles: the region's colour grade and the frame's vignette and film grain.
+## They cost next to nothing and are a matter of taste, not of what a machine can afford, so no
+## preset touches them either: Painted does not switch the grain on, Low does not grade the
+## world out of its colours. The atmosphere reads them (systems/atmosphere/atmosphere.gd).
+const LOOK_DEFAULTS := {"color_grade": true, "vignette": true, "film_grain": false}
 
-## The graphics section as a new settings file has it: High, plus the display keys. Spelled out
-## rather than merged because `Settings.DEFAULTS` is a constant and names this one;
-## `test_graphics_settings` pins it to High and the display keys.
+## The graphics section as a new settings file has it: High, plus the display and look keys.
+## Spelled out rather than merged because `Settings.DEFAULTS` is a constant and names this one;
+## `test_graphics_settings` pins it to High, the display keys and the look keys.
 const DEFAULTS := {
 	"preset": "high",
 	"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3,
@@ -71,7 +76,8 @@ const DEFAULTS := {
 	"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 	"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 	"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
-	"sdfgi": false, "glow": true, "water_quality": 2,
+	"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8,
+	"color_grade": true, "vignette": true, "film_grain": false,
 }
 
 const RENDERER_FORWARD_PLUS := "forward_plus"
@@ -130,6 +136,13 @@ const CONTROLS := [
 	{"key": "sdfgi", "label": "Global light (SDFGI)", "kind": "check"},
 	{"key": "glow", "label": "Glow", "kind": "check"},
 	{"key": "water_quality", "label": "Water", "kind": "option", "choices": ["Low", "Medium", "High", "Painted"]},
+	{"key": "water_reflections", "label": "Reflections in the water", "kind": "check",
+		"note": "the lake giving back the far shore; the sky's colours stay either way"},
+	{"key": "night_lights", "label": "Lamps lit at night", "kind": "slider", "min": 0.0, "max": 8.0, "step": 1.0,
+		"suffix": "lamps", "note": "real lights on the ground near you; every lamp still glows"},
+	{"key": "color_grade", "label": "Region colour grade", "kind": "check"},
+	{"key": "vignette", "label": "Vignette", "kind": "check"},
+	{"key": "film_grain", "label": "Film grain", "kind": "check"},
 ]
 
 ## Anything a test or a tool has to be able to name, because the running renderer cannot be
@@ -384,7 +397,8 @@ static func apply_environment(env: Environment, g: Dictionary, world := false, r
 			"volumetric_fog":
 				if on and not bool(a[key]):
 					# Godot's default density is 0.05, which is a wall of fog at this scale. This is
-					# light in the air on top of the atmosphere's own depth fog, not more haze.
+					# light in the air on top of the atmosphere's own depth fog, not more haze; the
+					# world's own atmosphere then sets its region's density and god rays every frame.
 					env.volumetric_fog_density = 0.004
 					env.volumetric_fog_anisotropy = 0.5
 					env.volumetric_fog_length = 180.0

@@ -12,7 +12,8 @@ extends Node
 ## Objective types (CONTRACTS §7 plus this stream's list):
 ##   talk      target = npc id            EventBus.dialogue_ended
 ##   reach     target = place/poi id      position provider, or EventBus.place_discovered
-##   kill      target = enemy id (or "" for any, or a tag:) EventBus.entity_killed
+##   kill      target = enemy id (or "" for any, or a tag:) EventBus.entity_killed; `where` (an
+##             interior, place or POI) and `region` say where it must happen (KillPlaces)
 ##   collect   target = item id           EventBus.item_acquired (and the inventory's current count)
 ##   deliver   target = npc id, item = item id   completed by dialogue effects or deliver()
 ##   escort    target = npc id, place = place id EventBus.escort_arrived
@@ -22,6 +23,13 @@ extends Node
 ##   read_book target = book id           EventBus.book_opened
 ##
 ## Markers are approximate areas, never pins: {place_id, radius, quest_id, text} (DESIGN §5.10).
+##
+## **How content names a stage.** By its id, or by its *number*, counted from one: the first
+## stage is 1. Every quest in the pack that writes numbers says so in its own `notes` ("Stage
+## numbers in quest_at and quest_stage are 1-based"), and until this was written down in code
+## the code read them as indices from nought, so every numbered reference in the pack landed on
+## the stage after the one its writer meant, or on none. `stage_index()` is the one place that
+## turns what content wrote into an index; `stage_of()` is that index and content never writes it.
 ##
 ## Emits: EventBus.quest_started(id), quest_stage_changed(id, stage), quest_completed(id, outcome).
 
@@ -114,6 +122,30 @@ func stage_index_of_id(quest_id: String, stage_id: String) -> int:
 	return -1
 
 
+## The index of a stage as content names it: a stage id, or a stage number counted from one.
+## -1 when it names no stage of this quest.
+func stage_index(quest_id: String, stage: Variant) -> int:
+	return stage_index_in(stages_of(quest_id), stage)
+
+
+## `stage_index` over a stage list, for anything that holds a definition rather than a log: the
+## content tests, the tools. A string that is all digits is a number, because that is how one
+## arrives from the debug console.
+static func stage_index_in(stages: Array, stage: Variant) -> int:
+	match typeof(stage):
+		TYPE_INT, TYPE_FLOAT:
+			var n := int(stage)
+			return n - 1 if n >= 1 and n <= stages.size() else -1
+		TYPE_STRING, TYPE_STRING_NAME:
+			var s := str(stage)
+			for i in stages.size():
+				if typeof(stages[i]) == TYPE_DICTIONARY and str((stages[i] as Dictionary).get("id", "")) == s:
+					return i
+			if s.is_valid_int():
+				return stage_index_in(stages, int(s))
+	return -1
+
+
 # --- life cycle -------------------------------------------------------------------------------
 
 func start(quest_id: String) -> bool:
@@ -138,21 +170,15 @@ func start(quest_id: String) -> bool:
 	return true
 
 
-## Moves a quest to a stage, by index or by stage id. Running effects of the stage entered.
+## Moves a quest to a stage, named as content names it: a stage id, or a stage number counted
+## from one. Runs the effects of the stage entered.
 func set_stage(quest_id: String, stage: Variant) -> void:
 	if not quests.has(quest_id) or str(quests[quest_id].get("state", "")) != "active":
 		if not is_completed(quest_id) and not start(quest_id):
 			return
 		if str(quests[quest_id].get("state", "")) != "active":
 			return
-	var index := -1
-	match typeof(stage):
-		TYPE_INT, TYPE_FLOAT:
-			index = int(stage)
-		TYPE_STRING, TYPE_STRING_NAME:
-			index = stage_index_of_id(quest_id, str(stage))
-		_:
-			index = -1
+	var index := stage_index(quest_id, stage)
 	if index < 0:
 		Log.warn("Quests", "%s: unknown stage '%s' (content problem)" % [quest_id, str(stage)])
 		return
@@ -160,12 +186,21 @@ func set_stage(quest_id: String, stage: Variant) -> void:
 
 
 ## Advances to the next stage, completing the quest after the last one.
+##
+## A stage's `on_complete` may say where to go instead — a branch stage rejoins the main line
+## that way (`{"quest_stage": [quest, "tell_osric"]}`). This used to run those effects, land on
+## the stage they named, and then carry on as though they had said nothing, entering
+## `current + 1` over the top: every branch of the six branching side quests fell through into
+## the next branch in the list rather than rejoining. When the effects have moved the quest,
+## or finished it, that is the answer.
 func advance(quest_id: String) -> void:
 	if not is_active(quest_id):
 		return
 	var current := stage_of(quest_id)
 	var stage := stage_def(quest_id, current)
 	_run_effects(quest_id, stage.get("on_complete", []), "quest_complete_stage")
+	if not is_active(quest_id) or stage_of(quest_id) != current:
+		return
 	if current + 1 >= stages_of(quest_id).size():
 		complete(quest_id, str(stage.get("outcome", quests[quest_id].get("outcome", ""))))
 	else:
@@ -623,6 +658,88 @@ func deliver(quest_id: String, npc_id: String) -> void:
 	complete_objective(quest_id, "deliver:%s" % npc_id)
 
 
+## A line in a quest's journal that no stage wrote: something that happened on the way (Escorts
+## writes who was left behind where). The same line twice running is written once.
+func note(quest_id: String, line: String) -> void:
+	if not quests.has(quest_id) or line.strip_edges() == "":
+		return
+	var entries: Array = quests[quest_id]["journal"]
+	if entries.is_empty() or str(entries[entries.size() - 1]) != line:
+		entries.append(line)
+
+
+## Is objective `index` of this quest's current stage done?
+func objective_done(quest_id: String, index: int) -> bool:
+	if not is_active(quest_id):
+		return false
+	var at := stage_of(quest_id)
+	return _count_for(quest_id, at, index) >= maxi(1, int(_objective(quest_id, at, index).get("count", 1)))
+
+
+## The objectives of every active quest's current stage, of one type or of all:
+## [{quest_id, stage, index, objective, done}]. What another system reads to see what the
+## journal is waiting for, without reaching into the records.
+func current_objectives(type := "") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for quest_id in quests.keys():
+		if not is_active(quest_id):
+			continue
+		var at := stage_of(quest_id)
+		var objectives: Array = stage_def(quest_id, at).get("objectives", [])
+		for i in objectives.size():
+			var o: Dictionary = objectives[i]
+			if type != "" and str(o.get("type", "")) != type:
+				continue
+			var progress := _count_for(quest_id, at, i)
+			out.append({"quest_id": str(quest_id), "stage": at, "index": i, "objective": o,
+					"progress": progress, "done": progress >= maxi(1, int(o.get("count", 1)))})
+	return out
+
+
+## What this NPC can offer to start, as [{quest_id, text}]: the quests whose `giver` they are, that
+## nothing else in the pack starts (QuestRoutes.started_elsewhere: no line, no stage, no reward, not
+## the opening), whose `requires` hold and that have not been taken (unless `repeatable`). A
+## `giver` used to start nothing at all: QuestConditions.offers_of was only ever called by its
+## tests, so a quest written with a giver and no line of its own could never begin. The dialogue
+## runner puts these at the giver's hub; `offer` on the quest is the line, else its name is.
+func giver_offers(npc_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if npc_id == "":
+		return out
+	for def in QuestConditions.offers_of(npc_id, ctx, self):
+		var quest_id := str(def["id"])
+		if QuestRoutes.started_elsewhere(quest_id):
+			continue
+		if is_known(quest_id) and not (is_completed(quest_id) and bool(def.get("repeatable", false))):
+			continue
+		var text := str(def.get("offer", ""))
+		if text == "":
+			text = "Is there something I could do? (%s)" % str(def.get("name", Ids.name_of(quest_id)))
+		out.append({"quest_id": quest_id, "text": text})
+	return out
+
+
+## The open options of every choice this NPC hosts and nobody wrote a button for, as
+## [{quest_id, id, text}] — what the dialogue runner offers at their hub (see QuestRoutes).
+func unwritten_choices_for(npc_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if npc_id == "":
+		return out
+	for entry in current_objectives("choice"):
+		if bool(entry["done"]):
+			continue
+		var quest_id: String = entry["quest_id"]
+		var stage := stage_def(quest_id, int(entry["stage"]))
+		var objective: Dictionary = entry["objective"]
+		if QuestRoutes.dialogue_offers(quest_id, objective):
+			continue
+		if QuestRoutes.host_of(definition(quest_id), stage, objective) != npc_id:
+			continue
+		for option in open_options(quest_id):
+			out.append({"quest_id": quest_id, "id": str(option["id"]), "text": str(option["text"])})
+	return out
+
+
 func _check_stage_complete(quest_id: String) -> void:
 	if not is_active(quest_id):
 		return
@@ -647,7 +764,8 @@ func _check_stage_complete(quest_id: String) -> void:
 
 
 ## Re-reads objectives that can be satisfied by state rather than by an event (collect, reach,
-## read_book), so entering a stage with the goods already in your pack completes it.
+## read_book, a boss already put down), so entering a stage with the goods already in your pack
+## completes it.
 func _sync_stage(quest_id: String) -> void:
 	if not is_active(quest_id):
 		return
@@ -667,6 +785,14 @@ func _sync_stage(quest_id: String) -> void:
 			"reach":
 				if ctx != null and ctx.is_discovered(str(o.get("target", ""))):
 					_progress(quest_id, i, 1, true)
+			"kill":
+				# A thing with a name, put down before the stage that asks for it: the Hart stands in
+				# the Moot from the first day, and a player who met him early had killed the one foe
+				# the main thread's fourth stage could ever be closed on. A boss stays down, so the
+				# objective closes on entering the stage.
+				var target := str(o.get("target", ""))
+				if Ids.type_of(target) == "boss" and GameState.has_flag("boss_deed/" + target):
+					_progress(quest_id, i, maxi(1, int(o.get("count", 1))), true)
 			_:
 				pass
 	check_reach()
@@ -701,11 +827,28 @@ static func _matches(target: String, id: String, def: Dictionary = {}) -> bool:
 	return target == id
 
 
-func _on_entity_killed(_victim: Node, _killer: Node, enemy_id: String) -> void:
+## A kill counts where its objective says, when it says (`where`, `region`: KillPlaces): the
+## Guild's bravos in the strongroom are not the two who work the Long Stride's queue.
+func _on_entity_killed(victim: Node, killer: Node, enemy_id: String) -> void:
 	var def := ContentDB.get_or_empty(enemy_id)
+	var here := _player_position()
+	var inside := _player_interior()
 	_for_each_objective("kill", func(quest_id: String, i: int, o: Dictionary) -> void:
-		if _matches(str(o.get("target", "")), enemy_id, def):
+		if _matches(str(o.get("target", "")), enemy_id, def) and KillPlaces.counts(o, victim, killer, here, inside):
 			_progress(quest_id, i, 1))
+
+
+## Where the player is standing, or Vector3.INF when nothing can say.
+func _player_position() -> Vector3:
+	var provider := _locator()
+	if provider != null and SocialContext.can_locate(provider):
+		return SocialContext.position_of(provider)
+	return Vector3.INF
+
+
+## The interior the player is in, or "" in the open.
+func _player_interior() -> String:
+	return str(Interiors.current_id)
 
 
 func _on_item_acquired(item_id: String, count: int) -> void:
@@ -725,6 +868,34 @@ func _on_dialogue_ended(npc_id: String) -> void:
 	_for_each_objective("talk", func(quest_id: String, i: int, o: Dictionary) -> void:
 		if _matches(str(o.get("target", "")), npc_id):
 			_progress(quest_id, i, 1))
+	_hand_over(npc_id)
+
+
+## A delivery closes when you have spoken to the person it is for while carrying what they are
+## owed; the goods change hands then. Five of the pack's deliveries had no line anywhere to hand
+## the thing over on — the letter to the Circle, Aud's bell to Cadwen, the Fennick bell, the press
+## screw, the three loaves — so they could never close. Where an author did write the hand-over
+## (Nan Greyfold's basket, Tessane's lantern on the lectern) this stands aside for it.
+func _hand_over(npc_id: String) -> void:
+	if npc_id == "":
+		return
+	for entry in current_objectives("deliver"):
+		if bool(entry["done"]):
+			continue
+		var quest_id: String = entry["quest_id"]
+		var o: Dictionary = entry["objective"]
+		if str(o.get("target", "")) != npc_id or not is_active(quest_id) or stage_of(quest_id) != int(entry["stage"]):
+			continue
+		if QuestRoutes.dialogue_closes(quest_id, stage_def(quest_id, int(entry["stage"])), int(entry["index"])):
+			continue
+		var needed: int = maxi(1, int(o.get("count", 1)))
+		var item := str(o.get("item", ""))
+		if item != "":
+			if ctx == null or ctx.item_count(item) < needed:
+				continue
+			ctx.take_item(item, needed)
+		Log.info("Quests", "%s: handed over to %s" % [quest_id, npc_id])
+		_progress(quest_id, int(entry["index"]), needed, true)
 
 
 func _on_hearthstone_rested(hearthstone_id: String) -> void:

@@ -77,11 +77,49 @@ def test_sfx_catalogue_covers_the_brief():
         "lockpick_click", "lockpick_break", "ui_paper_slide", "ui_brass_click", "ui_hover_tick",
         "ui_error_thunk", "ui_page_turn", "ui_book_open", "ui_book_close", "ui_map_unroll",
         "hearthstone_rest", "echo_recovered", "player_death", "bell_hand", "bell_tavern",
-        "bell_tower", "bell_toll", "thunder_near", "thunder_far", "wind_gust", "water_splash",
-        "wood_creak", "cart_wheels",
+        "bell_toll", "water_splash",
     ]
     missing = [n for n in needed if n not in gen_sfx.CATALOGUE]
     assert not missing, missing
+    # Sounds nothing in the game could play were dropped rather than kept waiting (DECISIONS
+    # 2026-09-23): the ambience's own storm, wind and creak layers are those, and no bell strikes
+    # the hours and no cart moves.
+    dropped = ["bell_tower", "thunder_near", "thunder_far", "wind_gust", "wood_creak", "cart_wheels"]
+    assert not [n for n in dropped if n in gen_sfx.CATALOGUE]
+
+
+def test_the_sfx_manifest_and_table_hold_exactly_what_the_catalogue_makes():
+    with open(os.path.join(gen_sfx.OUT_ROOT, "manifest.json")) as f:
+        manifest = json.load(f)
+    with open(os.path.join(gen_sfx.PACK_DIR, "sfx.json")) as f:
+        rows = json.load(f)["rows"]
+    assert sorted(manifest) == sorted(gen_sfx.CATALOGUE), \
+        sorted(set(manifest) ^ set(gen_sfx.CATALOGUE))
+    assert sorted(rows) == sorted(gen_sfx.CATALOGUE), sorted(set(rows) ^ set(gen_sfx.CATALOGUE))
+
+
+def test_a_build_forgets_an_id_the_catalogue_no_longer_makes():
+    # A build starts from the manifest on disk so that `--only` keeps the other rows; a row whose
+    # id has left the catalogue used to be kept too, and written back into core:table/sfx
+    # pointing at files that had been deleted.
+    import tempfile
+
+    kept = sorted(gen_sfx.CATALOGUE)[0]
+    row = {"files": ["res://assets/audio/sfx/x/x_01.ogg"], "count": 1, "volume_db": 0.0,
+           "pitch_variance": 0.0, "bus": "SFX", "bytes": 1}
+    out_root, pack_dir = gen_sfx.OUT_ROOT, gen_sfx.PACK_DIR
+    with tempfile.TemporaryDirectory() as tmp:
+        with open(os.path.join(tmp, "manifest.json"), "w") as f:
+            json.dump({"cart_wheels": row, kept: row}, f)
+        gen_sfx.OUT_ROOT, gen_sfx.PACK_DIR = tmp, tmp
+        try:
+            manifest = gen_sfx.build(only={"an id that renders nothing"})
+            with open(os.path.join(tmp, "sfx.json")) as f:
+                rows = json.load(f)["rows"]
+        finally:
+            gen_sfx.OUT_ROOT, gen_sfx.PACK_DIR = out_root, pack_dir
+    assert "cart_wheels" not in manifest and "cart_wheels" not in rows
+    assert kept in manifest and kept in rows
 
 
 def test_every_surface_has_four_footstep_variants():
@@ -253,6 +291,84 @@ def test_sfx_are_mono_short_and_clean():
         assert 0.02 < len(y) / SR < 25.0, "%s is %.2f s" % (name, len(y) / SR)
         assert abs(y[0]) < 0.02 and abs(y[-1]) < 0.02, "%s clicks at an edge" % name
         assert -4.0 < core.lin_to_db(core.peak(y)) < -2.0, "%s is not peak-normalised" % name
+
+
+def test_every_sfx_starts_and_ends_at_zero():
+    """A one-shot that starts or stops mid-waveform clicks every time it is played. The audit's
+    bar (-40 dBFS) applied to every id in the catalogue, not a sample of five; the chest's latch,
+    struck on sample 0, started at -26 dBFS until finish_variant opened every sound from zero."""
+    bar = core.db_to_lin(-40.0)
+    for name, spec in gen_sfx.CATALOGUE.items():
+        rng = core.rng(core.sub_seed("sfx", name, 0))
+        y = gen_sfx.finish_variant(spec["fn"](rng, **spec.get("kw", {})))
+        assert abs(y[0]) < bar and abs(y[-1]) < bar, \
+            "%s starts at %.0f and ends at %.0f dBFS" % (name, core.lin_to_db(abs(y[0]) + 1e-12),
+                                                         core.lin_to_db(abs(y[-1]) + 1e-12))
+
+
+def test_an_encoded_sfx_still_starts_at_zero():
+    """The file is what the game plays, and the Vorbis round trip rings ahead of a transient:
+    rendered from zero, these decoded at -26 to -36 dBFS on their first sample until every
+    one-shot was set in 4 ms of silence."""
+    import tempfile
+    import report
+    bar = core.db_to_lin(-40.0)
+    with tempfile.TemporaryDirectory() as d:
+        for name in ("chest_open", "lockpick_click", "impact_metal", "footstep_stone", "ui_brass_click"):
+            spec = gen_sfx.CATALOGUE[name]
+            rng = core.rng(core.sub_seed("sfx", name, 0))
+            y = gen_sfx.finish_variant(spec["fn"](rng, **spec.get("kw", {})))
+            p = os.path.join(d, name + ".ogg")
+            render.write_ogg(p, y, quality=gen_sfx.OGG_QUALITY)
+            back, _ = report.load_audio(p)
+            back = core.to_mono(back)
+            assert abs(back[0]) < bar and abs(back[-1]) < bar, "%s decodes starting at %.0f dBFS" % (
+                name, core.lin_to_db(abs(back[0]) + 1e-12))
+
+
+def test_the_variants_of_an_effect_are_the_same_loudness():
+    """Four of the ids had a variant more than 4 LU from its siblings (a water step 4.2 LU over,
+    a spell cast 4.9 under); match_variants holds them to 3 LU where the peak allows."""
+    import audit
+    for name in ("footstep_water", "footstep_ash", "door_wood_open", "spell_cast_binding"):
+        spec = gen_sfx.CATALOGUE[name]
+        ys = [gen_sfx.finish_variant(spec["fn"](core.rng(core.sub_seed("sfx", name, i)), **spec.get("kw", {})))
+              for i in range(spec["count"])]
+        levels = [render.momentary_max_lufs(y) for y in gen_sfx.match_variants(ys)]
+        med = float(np.median(levels))
+        assert max(abs(v - med) for v in levels) <= audit.VARIANT_SPREAD_LU, "%s: %s" % (name, levels)
+        assert all(core.lin_to_db(core.peak(y)) < -1.0 for y in gen_sfx.match_variants(ys)), name
+
+
+def test_effects_and_pool_shots_start_when_they_are_played():
+    """Coins that land 100 ms after the purchase, a bell or a thunder that begins a second after
+    it was struck: the lead-in below -60 dB of the peak is trimmed off both kinds of one-shot."""
+    import audit
+    for name in ("coins_few", "bell_toll"):
+        spec = gen_sfx.CATALOGUE[name]
+        for i in range(spec["count"]):
+            y = gen_sfx.finish_variant(spec["fn"](core.rng(core.sub_seed("sfx", name, i)), **spec.get("kw", {})))
+            assert audit.leading_silence_s(y) <= audit.LATE_START_S, "%s %d starts %.0f ms in" % (
+                name, i, audit.leading_silence_s(y) * 1000.0)
+    for i, y in enumerate(gen_ambience.render_pool("thunder_far", gen_ambience.CATALOGUE["thunder_far"])):
+        assert audit.leading_silence_s(y) <= audit.LATE_START_S, "pool thunder %d starts %.0f ms in" % (
+            i, audit.leading_silence_s(y) * 1000.0)
+
+
+def test_the_sparse_beds_never_fall_to_digital_silence():
+    import audit
+    for name in ("rope_creak", "chain_clink"):
+        y = gen_ambience.render_bed(name, gen_ambience.CATALOGUE[name], seconds=16.0)
+        dead = [r for r in audit.dead_runs_s(y) if r[1] > audit.DEAD_BED_S]
+        assert not dead, "%s is silent for %s" % (name, dead)
+
+
+def test_the_frogs_never_fall_to_digital_silence():
+    """A bed is the world's floor; a bed at -inf between frogs is the world switching off."""
+    import audit
+    y = gen_ambience.render_bed("frogs", gen_ambience.CATALOGUE["frogs"], seconds=12.0)
+    dead = [r for r in audit.dead_runs_s(y) if r[1] > audit.DEAD_BED_S]
+    assert not dead, "silent for %s" % dead
 
 
 def test_footsteps_of_different_surfaces_sound_different():

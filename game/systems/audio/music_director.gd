@@ -4,7 +4,12 @@ extends Node
 ## A region's music is five stems started together and held in sync; what changes is how loud
 ## each one is. Exploration is pad + melody + texture. Fighting fades the combat stem in and
 ## the melody back. Deep places and interiors drop the melody for the deep stem, because that
-## is where the ringing failed (WORLD_BIBLE 1.1). Menus, bosses and stingers take over on top.
+## is where the ringing failed (WORLD_BIBLE 1.1). Night pulls the melody back and lets a little of
+## the deep stem in. Menus, bosses and stingers take over on top.
+##
+## Nothing is ever switched: every change of state is a change of level, run over
+## STEM_FADE_SECONDS, and a new track (a region, a boss, the menu theme) comes in on its own
+## player while the old one goes out on another.
 ##
 ## See README.md in this folder.
 
@@ -14,6 +19,11 @@ const CROSSFADE_SECONDS := 4.0
 const STEM_FADE_SECONDS := 1.6
 const COMBAT_DECAY_SECONDS := 8.0     ## combat_intensity falls from 1 to 0 over this long
 const COMBAT_HIT_GAIN := 0.5          ## how much one hit on the player raises the intensity
+## The combat layer's floor while any enemy is fighting: a fight is a fight before the first blow
+## lands and through every roll that keeps it from landing, not only in the seconds after a hit.
+const ENGAGED_LEVEL := 0.6
+## Hours [from, to) that count as night for the score, wrapping at midnight.
+const NIGHT_HOURS := Vector2(21.0, 5.0)
 const MENU_DUCK_DB := -10.0
 const SILENCE_DB := -60.0
 const DEEP_DANGER := 4                ## region danger at or above which the deep stem takes over
@@ -23,6 +33,7 @@ const MIX_EXPLORE := {"pad": 0.0, "melody": 0.0, "texture": -1.0, "combat": SILE
 const MIX_COMBAT := {"pad": -2.0, "melody": -9.0, "texture": -4.0, "combat": 0.0, "deep": SILENCE_DB}
 const MIX_DEEP := {"pad": -4.0, "melody": SILENCE_DB, "texture": -10.0, "combat": SILENCE_DB, "deep": 0.0}
 const MIX_DEEP_COMBAT := {"pad": -5.0, "melody": SILENCE_DB, "texture": -9.0, "combat": -2.0, "deep": -4.0}
+const MIX_NIGHT := {"pad": -3.0, "melody": -11.0, "texture": -5.0, "combat": SILENCE_DB, "deep": -14.0}
 
 signal region_music_changed(music_id: String)
 signal mode_changed(mode: String)
@@ -30,7 +41,7 @@ signal mode_changed(mode: String)
 var combat_intensity := 0.0
 var current_music_id := ""
 var current_region_id := ""
-var mode := "explore"                 ## explore | combat | deep | deep_combat
+var mode := "explore"                 ## explore | night | combat | deep | deep_combat
 var enabled := true
 
 ## Two fixed banks of stem players, created once. A region change hands the current bank to
@@ -42,8 +53,12 @@ var _bank := 0
 var _players: Dictionary = {}         ## stem -> AudioStreamPlayer (current region)
 var _outgoing: Array[AudioStreamPlayer] = []
 var _targets: Dictionary = {}         ## stem -> target dB
-var _overlay: AudioStreamPlayer       ## menu theme / boss track: replaces the region bed
+## Menu theme / boss track: replaces the region bed. Two players, so that one track can go out
+## while the next comes in (boss_1 to boss_2 used to stop one and start the other on one player).
+var _overlays: Array[AudioStreamPlayer] = []
+var _overlay_now := 0                 ## which of _overlays carries the current overlay
 var _overlay_kind := ""               ## "" | "menu" | "boss"
+var _engaged: Dictionary = {}         ## instance id -> WeakRef, every enemy fighting now
 var _stinger: AudioStreamPlayer
 var _boss_id := ""
 var _boss_intensity := 1
@@ -61,12 +76,15 @@ func _ready() -> void:
 	for b in 2:
 		for stem in STEMS:
 			_banks[b][stem] = _make_player("Bank%d_%s" % [b, stem])
-	_overlay = _make_player("Overlay")
+	_overlays = [_make_player("Overlay_A"), _make_player("Overlay_B")]
 	_stinger = _make_player("Stinger")
 	EventBus.region_entered.connect(_on_region_entered)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
 	EventBus.boss_started.connect(_on_boss_started)
+	EventBus.boss_phase_changed.connect(_on_boss_phase_changed)
 	EventBus.boss_defeated.connect(_on_boss_defeated)
+	EventBus.enemy_engaged.connect(_on_enemy_engaged)
+	EventBus.hour_changed.connect(_on_hour_changed)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.level_up.connect(_on_level_up)
 	EventBus.quest_stage_changed.connect(_on_quest_stage_changed)
@@ -162,6 +180,12 @@ func _discard(p: AudioStreamPlayer) -> void:
 
 # --- mode ------------------------------------------------------------------------------------
 
+## Whether it is night for the score (NIGHT_HOURS on the world clock).
+func is_night() -> bool:
+	var h := WorldClock.time_hours
+	return h >= NIGHT_HOURS.x or h < NIGHT_HOURS.y
+
+
 ## Whether the deep variant applies: inside any interior, or in a dangerous region.
 func is_deep() -> bool:
 	if not GameState.current_interior_id.is_empty():
@@ -180,6 +204,8 @@ func _refresh_mode(force := false) -> void:
 		new_mode = "deep"
 	elif fighting:
 		new_mode = "combat"
+	elif is_night():
+		new_mode = "night"
 	if new_mode != mode or force:
 		mode = new_mode
 		mode_changed.emit(mode)
@@ -193,6 +219,7 @@ func _mix_for_mode() -> Dictionary:
 		"combat": return MIX_COMBAT
 		"deep": return MIX_DEEP
 		"deep_combat": return MIX_DEEP_COMBAT
+		"night": return MIX_NIGHT
 		_: return MIX_EXPLORE
 
 
@@ -214,10 +241,14 @@ func _target_db(stem: String) -> float:
 
 
 func _process(delta: float) -> void:
-	if combat_intensity > 0.0:
-		combat_intensity = maxf(0.0, combat_intensity - delta / COMBAT_DECAY_SECONDS)
-		_refresh_mode()
-	elif not _targets.is_empty():
+	# The intensity decays towards the floor the fight sets, and the floor goes when the fight
+	# does: the last enemy to die or give up lets the score back down to exploring.
+	var floor_level := ENGAGED_LEVEL if engaged_count() > 0 else 0.0
+	if combat_intensity > floor_level:
+		combat_intensity = maxf(floor_level, combat_intensity - delta / COMBAT_DECAY_SECONDS)
+	elif combat_intensity < floor_level:
+		combat_intensity = floor_level
+	if combat_intensity > 0.0 or not _targets.is_empty():
 		_refresh_mode()
 	var step := delta / maxf(STEM_FADE_SECONDS, 0.01) * 60.0
 	for stem: String in _players:
@@ -250,7 +281,32 @@ func raise_combat(amount := COMBAT_HIT_GAIN) -> void:
 
 func clear_combat() -> void:
 	combat_intensity = 0.0
+	_engaged.clear()
 	_refresh_mode()
+
+
+func _on_enemy_engaged(enemy: Node, engaged: bool) -> void:
+	if enemy == null:
+		return
+	if engaged:
+		_engaged[enemy.get_instance_id()] = weakref(enemy)
+		combat_intensity = maxf(combat_intensity, ENGAGED_LEVEL)
+		_refresh_mode()
+	else:
+		_engaged.erase(enemy.get_instance_id())
+
+
+## How many enemies are fighting now. One that has died or been freed without saying so (a cell
+## unloading under it) stops counting here.
+func engaged_count() -> int:
+	var n := 0
+	for id: int in _engaged.keys():
+		var e: Object = (_engaged[id] as WeakRef).get_ref()
+		if e == null or not is_instance_valid(e) or (e.has_method("is_dead") and bool(e.call("is_dead"))):
+			_engaged.erase(id)
+			continue
+		n += 1
+	return n
 
 
 func _on_damage_dealt(attacker: Node, victim: Node, _amount: float, _kind: String) -> void:
@@ -270,17 +326,20 @@ func _overlay_target_db() -> float:
 
 
 func _update_overlay(delta: float) -> void:
-	if not is_instance_valid(_overlay):
-		return
 	var step := delta / maxf(STEM_FADE_SECONDS, 0.01) * 60.0
-	_overlay.volume_db = move_toward(_overlay.volume_db, _overlay_target_db(), step)
-	if _overlay.volume_db <= SILENCE_DB and _overlay.playing and _overlay_kind == "":
-		_overlay.stop()
+	for i in _overlays.size():
+		var p := _overlays[i]
+		if not is_instance_valid(p):
+			continue
+		var want := _overlay_target_db() if i == _overlay_now else SILENCE_DB
+		p.volume_db = move_toward(p.volume_db, want, step)
+		if p.volume_db <= SILENCE_DB and p.playing and want <= SILENCE_DB:
+			_discard(p)
 
 
 func _set_overlay(kind: String, music_id: String) -> void:
-	_overlay_kind = kind
 	if kind.is_empty():
+		_overlay_kind = ""
 		_duck_db = 0.0
 		return
 	var def := ContentDB.get_or_empty(music_id)
@@ -289,13 +348,22 @@ func _set_overlay(kind: String, music_id: String) -> void:
 	if stream == null:
 		_overlay_kind = ""
 		return
-	# Stop before restarting: assigning a new stream to a player that is still playing leaves
-	# the old stream playback alive with nothing to stop it, in the running game as much as at
-	# exit. Every play() in this file is preceded by a stop() for that reason.
-	_overlay.stop()
-	_overlay.stream = stream
-	_overlay.volume_db = SILENCE_DB
-	_overlay.play()
+	var current := _overlays[_overlay_now]
+	if current.playing and current.stream == stream:
+		_overlay_kind = kind
+		_duck_db = SILENCE_DB
+		return
+	# The new track comes in on the other player while this one goes out: a crossfade. Stop
+	# before restarting: assigning a new stream to a player that is still playing leaves the
+	# old stream playback alive with nothing to stop it. Every play() in this file is preceded
+	# by a stop() for that reason.
+	_overlay_now = 1 - _overlay_now
+	var p := _overlays[_overlay_now]
+	p.stop()
+	p.stream = stream
+	p.volume_db = SILENCE_DB
+	p.play()
+	_overlay_kind = kind
 	# the region bed goes away under an overlay rather than fighting it
 	_duck_db = SILENCE_DB
 
@@ -306,7 +374,11 @@ func _on_boss_started(boss_id: String) -> void:
 	_set_overlay("boss", "core:music/boss_1")
 
 
-## Phase changes switch the boss track to its second intensity.
+func _on_boss_phase_changed(_boss_id: String, phase: int) -> void:
+	set_boss_intensity(2 if phase >= 1 else 1)
+
+
+## Phase changes switch the boss track to its second intensity, crossfading.
 func set_boss_intensity(level: int) -> void:
 	level = clampi(level, 1, 2)
 	if _overlay_kind != "boss" or level == _boss_intensity:
@@ -321,13 +393,57 @@ func _on_boss_defeated(_boss_id: String) -> void:
 	play_stinger("victory")
 
 
-func _on_quest_stage_changed(quest_id: String, stage: int) -> void:
-	# a boss quest advancing a stage mid-fight is a phase change
-	if not _boss_id.is_empty() and stage >= 2:
-		set_boss_intensity(2)
+## A cutscene's music (`CinematicPlayer`): one through-composed piece in place of everything
+## else, with the region bed held silent under it until `end_cue` lets it back. Returns whether
+## the piece could be loaded; a cinematic plays on in silence rather than failing without one.
+func play_cue(music_id: String) -> bool:
+	if not enabled or music_id.is_empty():
+		return false
+	_set_overlay("cue", music_id)
+	var p := _cue_player()
+	if p == null:
+		return false
+	p.stream_paused = false
+	# a cue has a first note, and fading up into it would lose it
+	p.volume_db = 0.0
+	return true
+
+
+## Holds the cue where it is: the pictures have stopped to wait for the country to load, and the
+## music has to wait with them or the two come apart.
+func pause_cue(paused: bool) -> void:
+	var p := _cue_player()
+	if p != null:
+		p.stream_paused = paused
+
+
+## Lets the region bed back and fades the cue out under it.
+func end_cue() -> void:
+	if _overlay_kind != "cue":
+		return
+	var p := _cue_player()
+	if p != null:
+		p.stream_paused = false
+	_set_overlay("", "")
+
+
+func cue_playing() -> bool:
+	var p := _cue_player()
+	return p != null and p.playing and not p.stream_paused
+
+
+## The overlay player carrying the cue, or null when no cue is up.
+func _cue_player() -> AudioStreamPlayer:
+	if _overlay_kind != "cue" or _overlay_now >= _overlays.size():
+		return null
+	var p := _overlays[_overlay_now]
+	return p if is_instance_valid(p) else null
+
+
+func _on_quest_stage_changed(_quest_id: String, _stage: int) -> void:
+	# (A quest stage mid-boss used to stand in for a phase change; the boss says so itself now,
+	# through EventBus.boss_phase_changed.)
 	play_stinger("quest_update")
-	if quest_id.is_empty():
-		pass
 
 
 # --- menus -------------------------------------------------------------------------------------
@@ -404,6 +520,10 @@ func _on_interior_changed() -> void:
 	_refresh_mode()
 
 
+func _on_hour_changed(_hour: int) -> void:
+	_refresh_mode()
+
+
 # --- introspection (used by the tests and the debug console) ---------------------------------------
 
 func stem_volume_db(stem: String) -> float:
@@ -422,6 +542,15 @@ func playing_stems() -> Array[String]:
 
 func overlay_kind() -> String:
 	return _overlay_kind
+
+
+## Every music player's level now, for tests that watch a change happen: {name: dB}.
+func player_levels() -> Dictionary:
+	var out := {}
+	for child in get_children():
+		if child is AudioStreamPlayer and (child as AudioStreamPlayer).playing:
+			out[str(child.name)] = (child as AudioStreamPlayer).volume_db
+	return out
 
 
 ## A playing stream keeps its decoder alive, so everything is stopped and detached on the way
@@ -457,11 +586,12 @@ func stop_all() -> void:
 		_discard(p)
 	_outgoing.clear()
 	_set_overlay("", "")
-	if is_instance_valid(_overlay):
-		_overlay.stop()
+	for p in _overlays:
+		_discard(p)
 	if is_instance_valid(_stinger):
 		_stinger.stop()
 	current_region_id = ""
 	current_music_id = ""
 	combat_intensity = 0.0
+	_engaged.clear()
 	_targets.clear()

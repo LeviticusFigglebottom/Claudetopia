@@ -18,7 +18,12 @@ const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
 ## bandit is nobody's, and taking the second is not a crime.
 @export var owner_npc: String = ""
 @export var owner_faction: String = ""
+## A forge prop to wear instead of the item's own model: a deep place's meta names the asset its
+## `item` feature was set down as (a book on a cist's ledge), and that is what should be picked up.
+@export var visual_path: String = ""
 var data: Dictionary = {}
+## Let fall from somebody's bag (Inventory.drop) rather than found where it grew or fell.
+var from_bag: bool = false
 
 var _visual: Node3D = null
 var _phase := 0.0
@@ -83,7 +88,11 @@ func interact(actor: Node) -> bool:
 		Log.warn("WorldItem", "%s interacted with by an actor without an Inventory" % name)
 		return false
 	if item_id != "" and count > 0:
-		if inv.add(item_id, count, data) == null:
+		var amount := count
+		if is_gathering():
+			# Forager: one more of every ingredient picked.
+			amount += maxi(int(round((actor as Actor).stat_add("ingredient_yield"))), 0) if actor is Actor else 0
+		if inv.add(item_id, amount, data) == null:
 			return false
 	if marks > 0:
 		inv.add_marks(marks)
@@ -91,6 +100,12 @@ func interact(actor: Node) -> bool:
 	picked_up.emit(actor)
 	queue_free()
 	return true
+
+
+## Whether taking this is gathering it: an ingredient lying where it grew or fell, not one somebody
+## owns and not one the taker let fall from a bag.
+func is_gathering() -> bool:
+	return not from_bag and owner_npc.is_empty() and owner_faction.is_empty() and str(def().get("category", "")) == "ingredient"
 
 
 ## What taking this is worth to whoever owned it, in marks.
@@ -109,9 +124,13 @@ func rebuild() -> void:
 		_visual = null
 	_visual = Node3D.new()
 	_visual.name = "Visual"
+	# bobbed and turned every frame in _process: interpolating it between ticks would stutter it
+	_visual.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	add_child(_visual)
 	var d := def()
 	var model := str(d.get("model", ""))
+	if visual_path != "" and ResourceLoader.exists(visual_path):
+		model = visual_path
 	if model != "" and ResourceLoader.exists(model):
 		var res: Resource = load(model)
 		if res is PackedScene:

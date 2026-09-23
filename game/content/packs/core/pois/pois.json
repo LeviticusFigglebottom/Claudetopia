@@ -139,7 +139,7 @@
   {"id": "core:poi/thirteenth_colossus", "name": "The Thirteenth", "region": "core:region/cinderlea", "kind": "ruins", "position": [-1480, 3280], "hearthstone": false,
    "unique_feature": "a thirteenth colossus lying face down far from the Choir's ring, as if it walked away", "visible_from": ["core:place/sunken_choir", "core:poi/headless_watch"],
    "story": "The Choir has twelve. This one has a head, buried in ash, and it is not the head of the others. A Sayer camp digs here and argues.", "encounter": "choristers around the excavation; casters whose note damages until silenced"},
-  {"id": "core:poi/cold_fire_camp", "name": "The Cold Fire", "region": "core:region/cinderlea", "kind": "camp", "position": [-2260, 2740], "hearthstone": false,
+  {"id": "core:poi/cold_fire_camp", "name": "The Cold Fire", "region": "core:region/cinderlea", "kind": "camp", "position": [-2260, 2760], "hearthstone": false,
    "unique_feature": "ash-wights seated around a fire that went out a hundred and seventy years ago, still passing a cup", "visible_from": ["core:place/greyfold", "core:poi/the_one_poppy"],
    "story": "The people of Greyfold sat down to wait out the Ash Winter. They are still waiting, and they wave.", "encounter": "swarm; they only rise if you touch the cup"},
   {"id": "core:poi/glass_falls", "name": "The Glass Falls", "region": "core:region/cinderlea", "kind": "waterfall", "position": [-1860, 3030], "hearthstone": false,
@@ -147,5 +147,10 @@
    "story": "Water still sounds here if you stand still. The Order forbids the climb and uses it themselves.", "encounter": "a bell-bearer at the top rings when it sees you; stun radius, break line of sight behind the glass ledges"},
   {"id": "core:poi/hushline_stair", "name": "The Hushline Stair", "region": "core:region/cinderlea", "kind": "hidden_valley", "position": [-1900, 3900], "hearthstone": true,
    "unique_feature": "Oroth stairs descending into the mist where colour drains from your own hands", "visible_from": ["core:place/cantors_seat"],
-   "story": "Where the Foundling walked out. Wren Tallow's Hearthstone at the top step is the first name you are given.", "encounter": "the tutorial: ash-wights on the stair; the mist turns you back below the fortieth step"}
+   "story": "Where the Foundling walked out. Wren Tallow's Hearthstone at the top step is the first name you are given.", "encounter": "the tutorial: ash-wights on the stair; the mist turns you back below the fortieth step"},
+  {"id": "core:poi/stair_head", "name": "The Stair Head", "region": "core:region/cinderlea", "kind": "camp", "position": [-1922, 3708], "hearthstone": true,
+   "unique_feature": "the Wardens' camp at the head of the Hushline Stair: a fire kept on the rim, grey-green colours on two poles, a lamp at the way out, and waystones walking north across the heath to the Choir",
+   "story": "Where a new game hands over (DESIGN 5.1a). Wren Tallow keeps her fire here, above the Stair and out of the mist, and this is where she says the Foundling's name back. The position is the spot the Foundling stands on; the camp is laid out ahead of it, towards where its path leads.",
+   "path": {"to": "core:place/sunken_choir", "via": [[-1920, 3688], [-1944, 3672], [-1948, 3644], [-1948, 3616], [-1932, 3592], [-1916, 3572], [-1904, 3548], [-1900, 3520], [-1896, 3492], [-1884, 3476], [-1888, 3464], [-1872, 3440], [-1880, 3416], [-1876, 3388], [-1868, 3364], [-1864, 3356], [-1868, 3328], [-1884, 3308]]},
+   "encounter": "none at the camp; the waystones keep more than fifty metres from anything the built world stands on the heath, and a test says which leg to move when a rebuild stands something nearer"}
 ]

@@ -305,8 +305,8 @@ func test_despawned_merchant_keeps_its_stock() -> void:
 	m.marks = 321
 	var id := m.merchant_id()
 	_root().remove_child(m)
+	_nodes.erase(m)        # forget it before it is freed: erasing a freed object from a typed array is an engine error
 	m.free()
-	_nodes.erase(m)
 	assert_has(svc.saved_state, id)
 	var again := _merchant()
 	assert_eq(again.count(ROPE), 7, "the shop is as he left it")

@@ -72,11 +72,23 @@ func test_a_character_is_put_on_the_ground_at_the_opening() -> void:
 	var opening := str(ContentDB.get_or_empty(PlayerSpawn.OPENING).get("place", ""))
 	var want := w.place_position(opening)
 	if want != Vector3.ZERO:
+		# where the story opens, or the nearest dry, walkable ground to it: the Hushline Stair's own
+		# pad is one 8 m texel at sea level with the sea round it, and a body stood there is in the sea
+		var ashore := PlayerSpawn.dry_ground_near(World.terrain(), want)
+		assert_true(Vector2(body.global_position.x - ashore.x, body.global_position.z - ashore.z).length() < 5.0,
+				"they start where the story opens, on its nearest dry ground")
+		# ...and the story's own start is chosen on dry ground (the Stair Head, on the rim above the
+		# Stair, DESIGN §5.1a), so that net is never what puts them there: they stand where it says
+		assert_true(PlayerSpawn._dry_at(World.terrain(), want.x, want.z),
+				"the opening place %s is itself dry, walkable ground" % opening)
 		assert_true(Vector2(body.global_position.x - want.x, body.global_position.z - want.z).length() < 5.0,
-				"they start where the story opens")
+				"so they start exactly where the story opens")
 	var ground := World.terrain().get_height(body.global_position.x, body.global_position.z)
 	assert_true(absf(body.global_position.y - ground) < 2.0, "on the ground, not in it or above it")
 	assert_false(World.terrain().is_water(body.global_position.x, body.global_position.z), "and not in the water")
+	# a single dry texel in the sea passed the line above: the ground round the body must be dry too
+	assert_true(PlayerSpawn._dry_at(World.terrain(), body.global_position.x, body.global_position.z),
+			"and the ground round them is dry and walkable, not a pad in the sea")
 	await _drop(w)
 
 

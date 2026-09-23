@@ -53,9 +53,15 @@ static func signed_angle(origin: Vector3, forward: Vector3, pos: Vector3) -> flo
 	return rad_to_deg(atan2(f.cross(t).y, f.dot(t))) * -1.0
 
 
-## Next candidate to the right (direction > 0) or left (< 0) of the current one, within range.
-## Wraps around when nothing lies further in that direction. Returns -1 when no alternative exists.
-static func cycle_index(origin: Vector3, forward: Vector3, positions: PackedVector3Array, current: int, direction: int, range_m: float) -> int:
+## Next candidate to the right (direction > 0) or left (< 0) of the current one, within range and
+## inside the cone. Wraps around when nothing lies further in that direction. Returns -1 when no
+## alternative exists.
+##
+## The cone is the design's as much as the range is ("targets in a 30 m cone"): cycling used to
+## consider anything within 30 m in any direction, and because a wrap goes to the one furthest the
+## other way, flicking right from the foe in front of you turned the lock round onto whatever was
+## behind you.
+static func cycle_index(origin: Vector3, forward: Vector3, positions: PackedVector3Array, current: int, direction: int, range_m: float, cone_degrees: float = 180.0) -> int:
 	var cur_angle := signed_angle(origin, forward, positions[current]) if current >= 0 and current < positions.size() else 0.0
 	var best := -1
 	var best_delta := INF
@@ -63,6 +69,8 @@ static func cycle_index(origin: Vector3, forward: Vector3, positions: PackedVect
 	var wrap_delta := INF
 	for i in positions.size():
 		if i == current or origin.distance_to(positions[i]) > range_m:
+			continue
+		if absf(signed_angle(origin, forward, positions[i])) > cone_degrees:
 			continue
 		var a := signed_angle(origin, forward, positions[i])
 		var delta := (a - cur_angle) * float(sign(direction))
@@ -118,7 +126,7 @@ func cycle(origin: Vector3, forward: Vector3, direction: int) -> void:
 		positions.append(point_of(list[i]))
 		if list[i] == target:
 			current = i
-	var next := cycle_index(origin, forward, positions, current, direction, max_range)
+	var next := cycle_index(origin, forward, positions, current, direction, max_range, cone_deg)
 	if next >= 0:
 		set_target(list[next])
 

@@ -58,8 +58,12 @@ func _post_import(scene: Node) -> Object:
 	if FileAccess.file_exists(meta_path):
 		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
 		if typeof(parsed) == TYPE_DICTIONARY:
-			_impostor = (parsed as Dictionary).get("impostor", {})
-			_height = float((parsed as Dictionary).get("bounds", {}).get("height", 0.0))
+			# Not every sidecar is the forge's: a character's `bounds` is a list of six numbers, and
+			# reading it as the forge's dictionary failed the import of every body in the game.
+			var imp: Variant = (parsed as Dictionary).get("impostor", {})
+			_impostor = imp if imp is Dictionary else {}
+			var bounds: Variant = (parsed as Dictionary).get("bounds", {})
+			_height = float((bounds as Dictionary).get("height", 0.0)) if bounds is Dictionary else 0.0
 	var meshes := _all_mesh_instances(scene)
 	var names: Dictionary = {}
 	for node in meshes:

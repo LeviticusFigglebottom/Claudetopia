@@ -25,7 +25,16 @@ var provider: TerrainProvider
 var streamer: WorldStreamer
 var water: WaterSurface
 var terrain_node: Node3D = null
+## The ground drawn from the runtime height map when Terrain3D cannot draw it.
+var fallback: FallbackTerrain = null
+## What draws the ground: "terrain3d", "fallback", or "" when nothing does.
+var terrain_mode := ""
+## `WorldStatus.current()` as this world found it: whether there is a world, and what draws it.
+var status: Dictionary = {}
+## The corner plate and the arrival card that say the ground is the coarse one (fallback only).
+var ground_notice: GroundNotice = null
 var atmosphere: Node = null
+var night_lights: NightLights = null
 var fly_camera: FlyCamera = null
 var target: Node3D = null
 
@@ -60,13 +69,30 @@ static func is_water(x: float, z: float) -> bool:
 
 func _ready() -> void:
 	instance = self
+	status = WorldStatus.current()
+	if not bool(status.get("playable", false)):
+		# There is no country to stand in. Everything that waits for world_ready -- the body, the
+		# doors, the points of interest -- goes on waiting, and the screen says why instead of
+		# showing a grey void with the HUD up.
+		_stand_down()
+		return
 	provider = TerrainProvider.new()
 	provider.name = "TerrainProvider"
 	add_child(provider)        # TerrainProvider loads its maps in _ready
 	_load_pois()
 	_setup_target()            # before the terrain: Terrain3D looks for a camera on its first frame
 	await _setup_terrain()
+	if terrain_mode.is_empty():
+		# nothing could draw the ground: not even the runtime height map was readable
+		status = status.duplicate()
+		status["playable"] = false
+		status["title"] = "The ground could not be drawn."
+		status["detail"] = ("Neither Terrain3D nor the runtime height map in game/world/generated/runtime/ gave this world a ground. "
+				+ "Build the world again from the repository's top folder with the command below. It needs %s.") % WorldStatus.BUILD_NEEDS
+		_stand_down()
+		return
 	_setup_atmosphere()
+	_setup_night_lights()
 	_setup_water()
 	_setup_streamer()
 	EventBus.region_entered.connect(_on_region_entered)
@@ -74,7 +100,11 @@ func _ready() -> void:
 	GameState.enter_region(provider.nearest_region_id_at(start.x, start.z))
 	is_world_ready = true
 	Log.info("World", "ready: terrain=%s, %d pois, target=%s"
-		% [str(provider.has_terrain()), _pois.size(), target.name if target else "none"])
+		% [terrain_mode if not terrain_mode.is_empty() else "none", _pois.size(), target.name if target else "none"])
+	if terrain_mode == "fallback":
+		ground_notice = GroundNotice.make(status)
+		add_child(ground_notice)
+		EventBus.player_spawned.connect(_say_the_ground_is_coarse, CONNECT_ONE_SHOT)
 	world_ready.emit()
 
 
@@ -85,13 +115,77 @@ func _exit_tree() -> void:
 
 # --- construction -----------------------------------------------------------------------------
 
+## Terrain3D when it is here and has regions to draw; otherwise the coarse ground, the same country
+## from the 8 m runtime map (FallbackTerrain). Never nothing: a machine without the plugin, or a
+## copy without the regions, used to stand the player on a grey void.
 func _setup_terrain() -> void:
-	if not ClassDB.class_exists("Terrain3D"):
-		Log.warn("World", "Terrain3D extension unavailable; terrain queries fall back to the runtime map")
+	if str(status.get("terrain", "")) == "terrain3d":
+		await _setup_terrain3d()
+		if terrain_node != null:
+			terrain_mode = "terrain3d"
+			return
+		# regions that are on disk and load as nothing (another Terrain3D version, a truncated copy)
+		status = status.duplicate()
+		status["state"] = "fallback"
+		status["terrain"] = "fallback"
+		status["reason"] = "terrain_unreadable"
+		status["title"] = "The full terrain could not be read."
+		status["detail"] = ("Terrain3D read no regions from the files in game/terrain_data (another Terrain3D version, "
+				+ "or a copy cut short), so the ground is drawn from the coarse 8 m height map, which is why it looks plain and grey. "
+				+ "Build the terrain again with the command below. It needs %s.") % WorldStatus.BUILD_NEEDS
+		status["command"] = WorldStatus.BUILD_COMMAND
+		status["announce"] = true
+		status["badge"] = WorldStatus.badge_line("terrain_unreadable", WorldStatus.BUILD_COMMAND)
+		status["notice"] = ("The full terrain is not drawn here: you are walking on the coarse ground. "
+				+ "(Terrain3D read no regions from game/terrain_data: %s builds them again.)") % WorldStatus.BUILD_COMMAND
+	Log.warn("World", "%s Drawing the ground from the runtime height map." % str(status.get("title", "")))
+	_setup_fallback()
+	# Terrain3D's path waits a frame for its data object, so `world_ready` has always come after
+	# `add_child` returned, and every caller that adds a world and then awaits the signal depends
+	# on that. Without the wait the coarse ground made the world ready inside `add_child`, and a
+	# caller waiting afterwards waited for ever.
+	await get_tree().process_frame
+
+
+func _setup_fallback() -> void:
+	fallback = FallbackTerrain.new()
+	fallback.name = "FallbackTerrain"
+	add_child(fallback)
+	if fallback.build(provider):
+		terrain_mode = "fallback"
 		return
-	if not DirAccess.dir_exists_absolute(TERRAIN_DATA) or DirAccess.get_files_at(TERRAIN_DATA).is_empty():
-		Log.warn("World", "%s is empty; run ./run.sh world to build the terrain" % TERRAIN_DATA)
-		return
+	Log.error("World", "no runtime height map to draw the ground from; the world has no ground")
+	fallback.queue_free()
+	fallback = null
+
+
+## The coarse ground is the country, but not all of it, and the player is owed the account of why:
+## the card across the top once the fade is up (under the loading sheet nobody reads it), and the
+## plate in the corner for as long as they walk on it (GroundNotice). A toast used to say it, once,
+## and a player played for days on the coarse ground without seeing it.
+func _say_the_ground_is_coarse(_player: Node) -> void:
+	var deadline := Time.get_ticks_msec() + 60000
+	while is_inside_tree() and UI.is_faded_out() and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	if is_inside_tree() and ground_notice != null:
+		ground_notice.announce()
+
+
+## No world on disk: say so on the screen, plainly, with the way back to the title.
+func _stand_down() -> void:
+	Log.warn("World", "%s %s" % [str(status.get("title", "")), str(status.get("detail", ""))])
+	var layer := CanvasLayer.new()
+	layer.name = "Unbuilt"
+	layer.layer = UI.LAYER_FADE + 5
+	add_child(layer)
+	var screen := WorldNotice.screen(status)
+	layer.add_child(screen)
+	UI.hide_hud()
+	UI.fade_from_black(0.3)
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _setup_terrain3d() -> void:
 	terrain_node = ClassDB.instantiate("Terrain3D")
 	terrain_node.name = "Terrain3D"
 	# Terrain3D frees the source textures in NOTIFICATION_READY, which lands before its data
@@ -110,8 +204,12 @@ func _setup_terrain() -> void:
 	# line with a visible corner -- a flat shelf across the distance with the land cut off
 	# behind it. Wickmere's diagonal is 11.6 km; 8 LODs reach 12.3 km, so the ground now runs
 	# to the edge of the world from anywhere in it. One more ring costs one more strip of the
-	# same vertex count at twice the spacing.
-	terrain_node.set("mesh_lods", 9)
+	# same vertex count at twice the spacing. Tools can ask for fewer (`--terrain-lods=N`).
+	var lods := WorldStatus.terrain_lods_for(status)
+	if lods != WorldStatus.TERRAIN_LODS:
+		Log.info("World", "Terrain3D draws %d clipmap rings (%s); %d reach the edge of the world"
+				% [lods, str(status.get("lods_why", "asked for")), WorldStatus.TERRAIN_LODS])
+	terrain_node.set("mesh_lods", lods)
 	terrain_node.set("mesh_size", 32)
 	var mat: Object = terrain_node.get("material")
 	if mat:
@@ -135,6 +233,16 @@ func _setup_terrain() -> void:
 	elif target is Camera3D:
 		terrain_node.call("set_camera", target)
 	await get_tree().process_frame
+	# Region files that are there but cannot be read (a different Terrain3D version, a truncated
+	# copy) load as nothing, and nothing is a void: give the ground to the fallback instead.
+	var data: Object = terrain_node.get("data")
+	var regions := int(data.call("get_region_count")) if data != null else 0
+	if regions == 0:
+		Log.warn("World", "Terrain3D loaded no regions from %s" % TERRAIN_DATA)
+		provider.bind_terrain(null)
+		terrain_node.queue_free()
+		terrain_node = null
+		return
 	_build_texture_arrays(mat)
 
 
@@ -167,6 +275,14 @@ func _setup_atmosphere() -> void:
 	atmosphere = packed.instantiate()
 	atmosphere.name = "Atmosphere"
 	add_child(atmosphere)
+
+
+## The lamps, lanterns, braziers, fires and lit windows after dark: one glow MultiMesh for the
+## whole country and a small pool of real lights near the eye (world/night_lights.gd).
+func _setup_night_lights() -> void:
+	night_lights = NightLights.new()
+	night_lights.name = "NightLights"
+	add_child(night_lights)
 
 
 func _setup_water() -> void:
@@ -208,6 +324,8 @@ func _setup_streamer() -> void:
 	streamer.name = "WorldStreamer"
 	streamer.enabled = stream_enabled
 	add_child(streamer)
+	if fallback != null:
+		fallback.streamer = streamer      # its scatter is set down on the coarse ground as it arrives
 	streamer.setup(provider, target)
 
 
@@ -249,6 +367,39 @@ func _spawn_position() -> Vector3:
 	return pos
 
 
+## Hands the world to a body: the streaming follows it, and so do Terrain3D's clipmap and its
+## dynamic collision, which are built around whatever camera Terrain3D was last given. The spawn
+## handed the streamer the player and never told Terrain3D, which went on following the fly
+## camera the world starts with -- and that camera kept flying on the player's own keys (W A S D,
+## Space, Q, E; Shift made it fast), so the ground's collision moved away from the body at every
+## step, and a player walked under the terrain among trees that seemed to float. The fly camera
+## now stops flying and stops being anyone's eye; the tools that shoot without a player keep it.
+func follow(body: Node3D) -> void:
+	target = body
+	if streamer != null:
+		streamer.target = body
+		streamer.refresh()
+	_point_terrain_at(body)
+	if fly_camera != null and body != fly_camera:
+		fly_camera.set_process(false)
+		fly_camera.set_process_unhandled_input(false)
+		fly_camera.current = false
+
+
+## Gives Terrain3D the body's own camera (the camera itself when the body is one). Set before the
+## fly camera is let go, so the plugin is never left holding a camera that is not there.
+func _point_terrain_at(body: Node3D) -> void:
+	if terrain_node == null or not terrain_node.has_method("set_camera"):
+		return
+	var cam := body as Camera3D
+	if cam == null:
+		for c in body.find_children("*", "Camera3D", true, false):
+			cam = c as Camera3D
+			break
+	if cam != null:
+		terrain_node.call("set_camera", cam)
+
+
 ## Moves whatever the streamer follows (the fly camera, or the player) to a world position.
 func move_target(pos: Vector3, look_at: Variant = null) -> void:
 	# Move whatever the streaming is actually following. Once a body has spawned, the fly
@@ -256,8 +407,11 @@ func move_target(pos: Vector3, look_at: Variant = null) -> void:
 	# world went on streaming around the player standing where they were.
 	if target == fly_camera and fly_camera != null:
 		fly_camera.move_to(pos, look_at)
+	elif target != null and target.has_method("teleport"):
+		target.call("teleport", pos, target.rotation.y)
 	elif target != null:
 		target.global_position = pos
+		target.reset_physics_interpolation()
 	elif fly_camera != null:
 		fly_camera.move_to(pos, look_at)
 	if streamer:

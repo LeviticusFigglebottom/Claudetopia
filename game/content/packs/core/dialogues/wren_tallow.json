@@ -1,11 +1,12 @@
 {
   "id": "core:dialogue/wren_tallow",
   "speaker_name": "Wren Tallow",
-  "notes": "Main-quest guide across The Naming (1), The Toll Hums (2) and Louder Than Books (3). Stage indices are 1-based into each quest's stages array. The hub is 'hub'; topic nodes return to it; 'bye' ends.",
+  "notes": "Main-quest guide across The Naming (1), The Toll Hums (2) and Louder Than Books (3). The Naming's stages are named by id (quest_at accepts one), the others by 1-based index into each quest's stages array. The hub is 'hub'; topic nodes return to it; 'bye' ends. The 'wake' greeting is also what she says first when a new game hands over (core:opening/new_game's greeter).",
   "start": "greet",
   "greetings": [
-    {"conditions": [{"quest_at": ["core:quest/the_naming", 1]}], "text": "There you are. Eyes working? Good. Don't look behind you yet."},
-    {"conditions": [{"quest_at": ["core:quest/the_naming", 2]}], "text": "Sword up. Talk after."},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}], "text": "There you are. Eyes working? Good. Don't look behind you yet. Come to the fire."},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "the_choir"]}], "text": "North. Walk the stones to the Choir, and keep your hands off the colossi."},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "ash_wights"]}], "text": "Sword up. Talk after."},
     {"conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}], "text": "Merrowby's talking. That's Merrowby's whole trade, but it's talking louder than usual."},
     {"conditions": [{"flag": "seen_the_roll"}], "text": "Four lines on the Roll this year. I'd like it to stay four."},
     {"conditions": [{"renown_min": 300}], "text": "They're saying your name in Gullhithe now. Gullhithe. That's forty miles and a lake."},
@@ -25,11 +26,12 @@
       "text": "Well? Ask.",
       "choices": [
         {"text": "Who are you?", "next": "who_are_you"},
-        {"text": "What is this place? What's the mist?", "next": "the_hush", "conditions": [{"quest_at": ["core:quest/the_naming", 1]}]},
-        {"text": "What am I supposed to call myself?", "next": "the_naming_q", "conditions": [{"quest_at": ["core:quest/the_naming", 1]}]},
-        {"text": "Those things are waving at me.", "next": "the_wights", "conditions": [{"quest_at": ["core:quest/the_naming", 2]}]},
-        {"text": "The stone at the camp. What is it?", "next": "hearthstones", "conditions": [{"quest_at": ["core:quest/the_naming", 3]}]},
-        {"text": "I'm ready for the cart.", "next": "the_cart", "conditions": [{"quest_at": ["core:quest/the_naming", 4]}]},
+        {"text": "What is this place? What's the mist?", "next": "the_hush", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
+        {"text": "What am I supposed to call myself?", "next": "the_naming_q", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
+        {"text": "Where do we go from here?", "next": "the_road", "conditions": [{"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}]},
+        {"text": "Those things are waving at me.", "next": "the_wights", "conditions": [{"quest_at": ["core:quest/the_naming", "ash_wights"]}]},
+        {"text": "The stone at the camp. What is it?", "next": "hearthstones", "conditions": [{"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "hearthstone"]}]}]},
+        {"text": "I'm ready for the cart.", "next": "the_cart", "conditions": [{"quest_at": ["core:quest/the_naming", "the_cart"]}]},
         {"text": "The bell is humming. What does the village think?", "next": "the_hum", "conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}]},
         {"text": "I found a black stone tine in the Toll's crown.", "next": "the_tine", "conditions": [{"flag": "found_tuning_tine"}]},
         {"text": "Tell me about the Roll.", "next": "the_roll", "conditions": [{"flag": "seen_the_roll"}]},
@@ -77,6 +79,13 @@
       "speaker": "Wren Tallow",
       "text": "You pick. That's not me being soft; that's how it works here. A name is not a label, it's a rope. Things that are named and spoken of stay put. Things nobody says go quiet, and then go. You came out of the quiet with nothing on you, so we tie the rope now, and we tie it in front of a witness, and I'm the witness. Say it clearly. I'll say it back and then it's done.",
       "effects": [{"set_flag": "wren_explained_naming"}],
+      "next": "hub"
+    },
+
+    "the_road": {
+      "speaker": "Wren Tallow",
+      "text": "North. See the shoulders on the skyline, past the heath? That's the Sunken Choir: twelve of them, no heads, standing in a ring as if they were waiting to be let in. The road to Pilgrim's Ash starts past them. I've set stones along the way for the pilgrims, with a lamp on every third, so you can't miss it unless you mean to. Keep to them. Something with a bell on its back walks its round out on the heath, and it does not stop to ask names. Go on. I'll bring the cart round.",
+      "effects": [{"set_flag": "wren_gave_the_road"}],
       "next": "hub"
     },
 

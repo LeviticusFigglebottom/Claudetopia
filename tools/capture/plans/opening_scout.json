@@ -1,0 +1,14 @@
+{"note": "Scouting frames for the opening (DESIGN 5.1a). Not the cinematic itself: fixed cameras at the places its shots are meant to stand, so a composition can be judged before any path is written. ./run.sh shots tools/capture/plans/opening_scout.json",
+ "shots": [
+  {"label": "stair_from_south_high", "pos": [-1900, 0, 4010], "height_above_ground": 40, "look_at": [-1900, 50, 3720], "time": 7.0, "weather": "core:weather/clear", "fov": 60},
+  {"label": "stair_player_view", "pos": [-1899.5, 2.0, 3903.4], "look_at": [-1900, 8, 3780], "time": 7.0, "weather": "core:weather/clear", "fov": 75},
+  {"label": "stair_side_east", "pos": [-1780, 0, 3905], "height_above_ground": 25, "look_at": [-1900, 2, 3900], "time": 7.0, "weather": "core:weather/clear", "fov": 60},
+  {"label": "choir_from_south", "pos": [-1900, 0, 3640], "height_above_ground": 30, "look_at": [-1900, 80, 3300], "time": 7.0, "weather": "core:weather/clear", "fov": 60},
+  {"label": "tollmere_from_south", "pos": [80, 58, 800], "look_at": [20, 30, -180], "time": 6.7, "weather": "core:weather/clear", "fov": 55},
+  {"label": "nave_from_east", "pos": [-3150, 0, -1150], "height_above_ground": 30, "look_at": [-3500, 55, -1300], "time": 8.0, "weather": "core:weather/mist", "fov": 55},
+  {"label": "hand_from_south", "pos": [1250, 0, -2980], "height_above_ground": 45, "look_at": [1200, 250, -3300], "time": 10.0, "weather": "core:weather/clear_cold", "fov": 55},
+  {"label": "toll_over_merrowby", "pos": [880, 0, 2620], "height_above_ground": 38, "look_at": [1000, 32, 2150], "time": 7.6, "weather": "core:weather/clear", "fov": 55},
+  {"label": "toll_close_low", "pos": [1070, 0, 2240], "height_above_ground": 7, "look_at": [1000, 30, 2150], "time": 7.6, "weather": "core:weather/clear", "fov": 60},
+  {"label": "choir_ash_side", "pos": [-1770, 0, 3620], "height_above_ground": 22, "look_at": [-1900, 85, 3400], "time": 16.8, "weather": "core:weather/ashfall", "fov": 55},
+  {"label": "wardens_rest", "pos": [390, 0, 3260], "height_above_ground": 30, "look_at": [300, 25, 3100], "time": 8.5, "weather": "core:weather/clear", "fov": 55}
+ ]}

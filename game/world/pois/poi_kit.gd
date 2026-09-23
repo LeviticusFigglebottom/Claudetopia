@@ -21,6 +21,16 @@ const STILL_WATER_SHADER := "res://assets/shaders/still_water.gdshader"
 const FALLING_WATER_SHADER := "res://assets/shaders/falling_water.gdshader"
 const HEARTHSTONE_SCENE := "res://systems/hearth/hearthstone.tscn"
 const VARIANTS := ["a", "b", "c"]
+## The metadata a collider carries to name the surface a foot lands on (Foley.SURFACE_META).
+const SURFACE_META := "surface"
+## Words in a forged asset's name that say what it is made of underfoot (surface_of_asset).
+const WOOD_WORDS: Array[String] = ["boardwalk", "plank", "dock", "pier", "jetty", "rowboat", "cart", "crate",
+	"barrel", "table", "bench", "chest", "stall", "fence", "gate", "coffin", "timber", "log", "grandfather",
+	"stool", "chair", "signpost", "chopping_block", "stump", "wheelbarrow", "shelf", "cupboard"]
+## Bone is not stone, but it is the hard, dry thing a foot on a giant's finger hears.
+const STONE_WORDS: Array[String] = ["drystone", "wall", "stair", "step", "bridge", "masonry", "boulder",
+	"cliff", "slab", "stone", "cairn", "ruin", "sarcophagus", "well", "colossus", "spire", "nave", "toll",
+	"fallen_hand", "chalk_hound", "the_lamp", "bone_"]
 ## How far out a silhouette piece is still drawn: the far ring is 384-905 m away.
 const FAR_RANGE := 950.0
 
@@ -393,6 +403,9 @@ func scatter(path: String, transforms: Array, collide := false, silhouette := fa
 		var body := StaticBody3D.new()
 		body.name = mmi.name + "_body"
 		body.collision_layer = 1 << 0
+		var underfoot := surface_of_asset(path)
+		if not underfoot.is_empty():
+			body.set_meta(SURFACE_META, underfoot)
 		var added := 0
 		for xf in transforms:
 			var t: Transform3D = xf
@@ -453,6 +466,9 @@ func _collide(inst: Node3D, path: String, scale: float) -> void:
 	var body := StaticBody3D.new()
 	body.name = "Collision"
 	body.collision_layer = 1 << 0
+	var underfoot := surface_of_asset(path)
+	if not underfoot.is_empty():
+		body.set_meta(SURFACE_META, underfoot)
 	for part in parts:
 		var cs := CollisionShape3D.new()
 		cs.shape = part["shape"]
@@ -533,8 +549,9 @@ static func _scaled(shape: Shape3D, scale: float) -> Shape3D:
 
 
 ## A box you can bump into, for things built at runtime. All of a dressing's built collision
-## hangs off one body.
-func collider(size: Vector3, xform: Transform3D) -> void:
+## hangs off one body, so each shape names what it is made of (`surface`: stone, wood, dirt ...)
+## and a foot on a timber deck beside a stone parapet hears the timber (Foley.surface_at).
+func collider(size: Vector3, xform: Transform3D, surface := "") -> void:
 	if far:
 		return
 	if _masonry == null:
@@ -550,10 +567,12 @@ func collider(size: Vector3, xform: Transform3D) -> void:
 	box.size = size.abs().max(Vector3.ONE * 0.05)
 	cs.shape = box
 	cs.transform = xform
+	if not surface.is_empty():
+		cs.set_meta(SURFACE_META, surface)
 	_masonry.add_child(cs)
 
 
-func collider_shape(shape: Shape3D, xform: Transform3D) -> void:
+func collider_shape(shape: Shape3D, xform: Transform3D, surface := "") -> void:
 	if far or shape == null:
 		return
 	if _masonry == null:
@@ -565,11 +584,29 @@ func collider_shape(shape: Shape3D, xform: Transform3D) -> void:
 	var cs := CollisionShape3D.new()
 	cs.shape = shape
 	cs.transform = xform
+	if not surface.is_empty():
+		cs.set_meta(SURFACE_META, surface)
 	_masonry.add_child(cs)
 
 
 func bodies() -> int:
 	return _bodies
+
+
+## What a forged asset is made of underfoot, from its name: a pier, a jetty, a boardwalk, a cart or
+## anything of plank and log is wood; a wall, a stair, a bridge of stone, a cairn or a ruin is
+## stone. "" leaves it to the ground beneath (a bush, a banner).
+static func surface_of_asset(path: String) -> String:
+	var n := path.get_file().get_basename().to_lower()
+	if n.contains("scree"):
+		return "gravel"
+	for word in WOOD_WORDS:
+		if n.contains(word):
+			return "wood"
+	for word in STONE_WORDS:
+		if n.contains(word):
+			return "stone"
+	return ""
 
 
 # --- surfaces ------------------------------------------------------------------------------
@@ -652,24 +689,19 @@ static func falling_water(glass := false, speed := 2.6) -> ShaderMaterial:
 
 # --- light, smoke and the stone that keeps a name -----------------------------------------
 
-## A fire's or a lantern's light. It fades out with distance so a camp seen from the far side
-## of the valley costs nothing, and it casts no shadow because the Compatibility renderer caps
-## lights per object and a shadowing omni is the expensive kind.
-func light(at: Vector3, colour := Color(1.0, 0.72, 0.42), energy := 2.2, reach := 11.0) -> OmniLight3D:
-	if far:
-		return null
-	var l := OmniLight3D.new()
-	l.position = at
-	l.light_color = colour
-	l.light_energy = energy
-	l.omni_range = reach
-	l.omni_attenuation = 0.9
-	l.shadow_enabled = false
-	l.distance_fade_enabled = true
-	l.distance_fade_begin = 55.0
-	l.distance_fade_length = 40.0
-	root.add_child(l)
-	return l
+## A fire's or a lantern's light, as a source for NightLights rather than a light of its own.
+##
+## Every one of these used to be an always-on OmniLight3D -- 27 calls across the builders, six
+## along the Long Stride alone -- and nothing counted them against the pool of lamps NightLights
+## hands out, so beside a causeway the two together passed the twelve lights Compatibility draws
+## on one object and it dropped the rest without a word. Registered here, the fire is a glow that
+## reads from across the valley at night, and it takes one of the pool's real lights, at the
+## energy and reach given, whenever it is among the nearest to the camera -- by day as well,
+## because a camp's fire burns at noon. The far ring registers too; it is never near enough to
+## be given a light, and its glow is what a far camp is.
+func light(at: Vector3, colour := Color(1.0, 0.72, 0.42), energy := 2.2, reach := 11.0) -> void:
+	if root.is_inside_tree():
+		NightLights.add(root, [root.to_global(at)], "poi", Color(colour.r, colour.g, colour.b, 1.0), energy, reach)
 
 
 ## Smoke, mist or spray: a soft billboard puff emitted in a column or a spread.
@@ -755,6 +787,64 @@ func hearthstone(at: Vector3, yaw: float, id: String, display_name: String) -> H
 	stone.rotation.y = yaw
 	root.add_child(stone)
 	return stone
+
+
+## A named point on the pad that something else looks for: a quest item's `spot` (the hand-bell
+## in the Tumbled Watch's fallen stair), an encounter's `at`, or, with `worked`, where a
+## resident's schedule has them stand (group `npc_spot`, found by name and by the place it
+## belongs to, so two dressings' `the_fire` are never mistaken for each other). `raised` says the
+## floor there is a deck or a mound rather than the terrain, and holds for `radius` metres, so a
+## person standing on it is not snapped to the lake bed underneath. Nothing in the far ring.
+func marker(marker_name: String, at: Vector3, worked := false, raised := false, radius := 3.0) -> Marker3D:
+	if far:
+		return null
+	var m := Marker3D.new()
+	m.name = marker_name
+	m.position = at
+	m.set_meta("place", str(root.get("poi_id")) if root.get("poi_id") != null else "")
+	if worked:
+		m.add_to_group(NpcRegistry.SPOT_GROUP)
+	if raised:
+		m.set_meta("raised", true)
+		m.set_meta("radius", radius)
+	root.add_child(m)
+	return m
+
+
+## Something that can be touched: the cup going round the Cold Fire Camp, which a
+## `PoiEncounters` group waits on (`rises_when`), or the One Poppy, which puts a conversation
+## (`dialogue_id`) and is gone once `gone_flag` is set. Nothing in the far ring.
+func touchable(touch_name: String, at: Vector3, prompt_line: String, dialogue_id := "",
+		gone_flag := "", once := true) -> PoiTouch:
+	if far:
+		return null
+	var t := PoiTouch.new()
+	t.name = touch_name
+	t.prompt = prompt_line
+	t.dialogue_id = dialogue_id
+	t.gone_flag = gone_flag
+	t.once = once
+	t.position = at
+	root.add_child(t)
+	return t
+
+
+## A notice post the radiant generator fills, for a place whose sentence says there is work to be
+## had there (the charcoal camp's "merchant and jobs"): the same `JobBoard` a village green has,
+## with the place's own id, so its notices are for the country round it. Nothing in the far ring.
+func job_board(at: Vector3, yaw: float) -> JobBoard:
+	if far:
+		return null
+	var board := JobBoard.new()
+	board.name = "JobBoard"
+	board.place_id = str(root.get("poi_id")) if root.get("poi_id") != null else ""
+	board.display_name = "the notice post"
+	board.position = at
+	board.rotation.y = yaw
+	root.add_child(board)
+	# what you see is a signpost; what the interaction ray finds is the board's own box
+	place(prop("signpost"), at, yaw, 1.0, false)
+	return board
 
 
 # --- small helpers ---------------------------------------------------------------------------

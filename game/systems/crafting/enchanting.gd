@@ -17,6 +17,7 @@ extends RefCounted
 const MOTE_ITEM := "core:item/ember_mote"
 const CHARGE_PER_MOTE := 25.0        # fallback when the mote item carries no `ember.charge`
 const BASE_MAGNITUDE_MOTES := 2      # motes for one step of magnitude when the effect omits mote_cost
+const MOTES_PER_WARMTH := 1          # caught from a foe a Kindling word killed (Mote Catcher: +1)
 const MAGNITUDE_STEPS_MAX := 5
 const SKILL_MAGNITUDE_PER_LEVEL := 0.01
 const DISENCHANT_XP := 25.0
@@ -64,6 +65,27 @@ static func slot_kind(stack: ItemStack) -> String:
 static func fits(effect_id: String, stack: ItemStack) -> bool:
 	var kind := slot_kind(stack)
 	return kind != "" and slots_for(effect_id).has(kind)
+
+
+## Ember Motes are "captured from slain foes with a Kindling spell" (DESIGN §5.8): a foe whose last
+## blow was a Kindling saying gives its killer one, and Mote Catcher one more. Nothing did the
+## catching, so the only motes in the world were the ones a loot table happened to roll. Returns
+## how many went into the killer's bag. A called thing that is dismissed never dies, so it is
+## never caught.
+static func catch_last_warmth(victim: Node, killer: Node) -> int:
+	if victim == null or killer == null or not is_instance_valid(victim) or not is_instance_valid(killer):
+		return 0
+	if str(victim.get("last_hit_skill")) != "kindling" or victim == killer:
+		return 0
+	var bag := Inventory.for_actor(killer)
+	if bag == null or not ContentDB.has(MOTE_ITEM):
+		return 0
+	var extra := (killer as Actor).stat_add("mote_yield") if killer is Actor else 0.0
+	var count := MOTES_PER_WARMTH + maxi(int(round(extra)), 0)
+	if bag.add(MOTE_ITEM, count) == null:
+		return 0
+	EventBus.notify.emit("Caught %s." % ("an Ember Mote" if count == 1 else "%d Ember Motes" % count), "item")
+	return count
 
 
 ## Charge one mote is worth.
@@ -142,6 +164,35 @@ static func enchant_blocker(stack: ItemStack, effect_id: String, motes: int, inv
 	if motes < motes_for_magnitude(effect_id) or inventory.count(MOTE_ITEM) < motes:
 		return "not_enough_motes"
 	return ""
+
+
+## What `enchant_blocker` means, said the way the Name-table says it. "" when nothing is in the way.
+static func blocker_text(reason: String, stack: ItemStack, effect_id: String, motes: int, inventory: Inventory) -> String:
+	var note := str(def(effect_id).get("name", "that note"))
+	match reason:
+		"":
+			return ""
+		"no_item":
+			return "Choose something to write it on."
+		"not_an_enchantment":
+			return "That is not a note that can be written."
+		"not_known":
+			return "You have not learned %s." % note
+		"wrong_item":
+			var takes: Array = slots_for(effect_id)
+			var into := " or ".join(takes.map(func(k: Variant) -> String: return {"weapon": "a blade", "shield": "a shield", "armour": "armour", "jewellery": "a ring or an amulet"}.get(str(k), str(k))))
+			return "%s is written into %s, not into that." % [note, into if into != "" else "something else"]
+		"already_enchanted":
+			return "It already carries a note. Take that one out first."
+		"no_inventory":
+			return "There is nothing to write with."
+		"not_enough_motes":
+			var per_step := motes_for_magnitude(effect_id)
+			var carried := inventory.count(MOTE_ITEM) if inventory != null else 0
+			if motes < per_step:
+				return "%s takes at least %d Ember Motes to say." % [note, per_step]
+			return "That takes %d Ember Motes and you carry %d." % [motes, carried]
+	return "It will not take."
 
 
 ## Writes an enchantment into one unit of a stack, spending motes. A stacked item is split so

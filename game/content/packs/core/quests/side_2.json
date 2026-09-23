@@ -19,8 +19,8 @@
         "journal": "North and west, up a dead-end channel where the wisps hang over a house that went under when the ground did, with its chimney still standing out of the water like a finger. The lantern is against the chimney, upright, out now, and dry. The wisps are the right height and the right amber and they sway, which is how a lantern behaves and is not how a lantern behaves.",
         "objectives": [
           {"type": "reach", "target": "core:poi/wisp_hollow", "radius": 140, "text": "Go up the north channel to Wisp Hollow"},
-          {"type": "kill", "target": "core:enemy/wisp", "count": 3, "text": "Put out what is hanging over the drowned house"},
-          {"type": "collect", "target": "core:item/salissas_lantern", "count": 1, "text": "Take the lantern off the chimney"}
+          {"type": "kill", "target": "core:enemy/wisp", "count": 3, "text": "Put out what is hanging over the drowned house", "where": "core:poi/wisp_hollow"},
+          {"type": "collect", "target": "core:item/salissas_lantern", "count": 1, "text": "Take the lantern off the chimney", "spot": "the_chimney"}
         ],
         "on_complete": [{"set_flag": "found_the_lantern"}, {"renown": 5}]
       },
@@ -111,7 +111,7 @@
         "journal": "The Hunters' Stand is a hide built round a living trunk with a rope ladder the poachers pull up after them. The line runs west of it along the ridge: eleven snares, set well, by somebody who knows the ground better than the men in the hide do. The ninth has a thornhound in it, bark-skin up, three days in the wire, and it is past what a splint fixes. Tansy leaves a heart on the flat stone for these and they have never taken so much as a hen from the Hollow.",
         "objectives": [
           {"type": "reach", "target": "core:poi/hunters_stand", "radius": 140, "text": "Walk the ridge under the Hunters' Stand"},
-          {"type": "kill", "target": "core:enemy/thornhound", "count": 1, "text": "Do what the ninth snare needs doing"}
+          {"type": "kill", "target": "core:enemy/thornhound", "count": 1, "text": "Do what the ninth snare needs doing", "where": "core:poi/hunters_stand", "stand": "own"}
         ],
         "on_complete": [{"set_flag": "found_the_snare_line"}, {"morality": 3}]
       },
@@ -213,8 +213,8 @@
         "journal": "The clanless hang their loosened links at the camp under the overhang, one for every man who was cut out of a clan, and they ring in the gorge wind all night, which is the joke and the point. One of the links hanging there is not a clanless man's. It is Kharrow bridge iron, hot-forged, folded, with a mark struck across the weld, and it has been up there long enough to have worn a groove in its cord.",
         "objectives": [
           {"type": "reach", "target": "core:poi/clanless_camp", "radius": 140, "text": "Find the camp under the overhang"},
-          {"type": "kill", "target": "core:enemy/clanless_raider", "count": 2, "text": "Get to the chimes"},
-          {"type": "collect", "target": "core:item/clan_forged_link", "count": 1, "text": "Take the bridge's own link off the cord"}
+          {"type": "kill", "target": "core:enemy/clanless_raider", "count": 2, "text": "Get to the chimes", "where": "core:poi/clanless_camp"},
+          {"type": "collect", "target": "core:item/clan_forged_link", "count": 1, "text": "Take the bridge's own link off the cord", "spot": "the_chimes"}
         ],
         "on_complete": [{"set_flag": "took_the_link_back"}, {"renown": 10}]
       },
@@ -306,7 +306,7 @@
         "journal": "The Cold Fire is a ring of them round a fire that went out a hundred and seventy years ago, seated, passing a cup that has been going round since the Ash Winter. Pilgrims camp there. It is quiet, the wights do not get up, and the grey is thinner on that side of the heath. Six more are sitting in the ring now, in newer grey, with a season's worth of Wat Thatcher's supplies stacked behind them and not opened.",
         "objectives": [
           {"type": "reach", "target": "core:poi/cold_fire_camp", "radius": 140, "text": "Walk out to the Cold Fire"},
-          {"type": "kill", "target": "core:enemy/ash_wight", "count": 6, "text": "Settle with the six in the newer grey"}
+          {"type": "kill", "target": "core:enemy/ash_wight", "count": 6, "text": "Settle with the six in the newer grey", "where": "core:poi/cold_fire_camp", "stand": "own"}
         ],
         "on_complete": [{"set_flag": "found_wats_six"}, {"renown": 10}]
       },
@@ -404,7 +404,7 @@
         "journal": "The stone is chipped. Low on the north face, out of the light's throw, where nobody standing on the stair would look and nobody on the water could see: four clean flakes off it, taken with a chisel by somebody who knew what they were worth and how not to be caught at it. Sul-stone is bright from the back as well as the front and cannot be carried in a pocket without the pocket showing, which is why it moves at night, off the north cliffs, through a beacon with an upturned bell for a fire-bowl.",
         "objectives": [
           {"type": "reach", "target": "core:poi/north_cliff_beacon", "radius": 140, "text": "Go up to the beacon on the north cliff"},
-          {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "text": "See who is moving it at night"},
+          {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "text": "See who is moving it at night", "where": "core:poi/north_cliff_beacon", "when": "night"},
           {"type": "collect", "target": "core:item/sul_stone_sliver", "count": 1, "text": "Take back a sliver of the Lamp"}
         ],
         "on_complete": [{"set_flag": "found_the_sliver"}, {"renown": 10}]
@@ -466,5 +466,34 @@
       "renown": 15,
       "items": [["core:item/wisp_glim", 1]]
     }
+  },
+  {
+    "id": "core:quest/the_last_column",
+    "name": "The Last Column",
+    "layer": "side",
+    "giver": "core:npc/ivo_goslin",
+    "region": "core:region/brightwater",
+    "summary": "The hermit of Willow Isle stopped copying the Ledger of Prices in the middle of a column twenty-two years ago. He has finished it, from memory, on an island, and it adds up, and he wants it put where he left it.",
+    "notes": "Willow Isle's side quest (the POI sentence: 'a book and a side quest'). Ivo Goslin is npcs/poi_people.json; Orrin Quill is Lantern Row's steward. The sheet changes hands at the end of any conversation with Quill while it is carried (QuestRoutes / QuestLog._hand_over).",
+    "stages": [
+      {
+        "id": "the_column",
+        "journal": "Ivo Goslin copied the Tallymen's Ledger of Prices for twenty years and stopped in the middle of a column: the line where the Row prices a village the Wardens have struck from the Roll, what its name is worth once nobody says it. He finished the column last winter, out on Willow Isle, from memory, and it adds up, which frightens him more than anything he has seen on the Mere. He wants it put in the hand of the steward of Lantern Row, who posts the prices, and he wants to know what the steward's face does.",
+        "objectives": [
+          {"type": "deliver", "target": "core:npc/orrin_quill", "item": "core:item/ivos_last_column", "count": 1, "text": "Put the column in Orrin Quill's hand on Lantern Row"}
+        ],
+        "on_enter": [{"give_item": ["core:item/ivos_last_column", 1]}],
+        "marker": {"place_id": "core:place/tollmere", "radius": 160}
+      },
+      {
+        "id": "what_his_face_did",
+        "journal": "Quill read the column twice, standing, and then sat down at the charter-board, which a steward of the Row does not do. He said the figure out loud, and then said that it was correct, and then that it had never been posted and never would be, and asked who had written it, and did not wait for the answer. Ivo will want to hear all of that, in that order.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/ivo_goslin", "text": "Tell Ivo Goslin what the steward's face did"}
+        ],
+        "marker": {"place_id": "core:poi/willow_isle", "radius": 140}
+      }
+    ],
+    "rewards": {"marks": 10, "renown": 10, "morality": 3}
   }
 ]

@@ -16,14 +16,19 @@ const DEFAULTS := {
 	"video": {"fullscreen": false, "fov": 75.0, "brightness": 1.0},
 	"graphics": Graphics.DEFAULTS,
 	"audio": {"master": 0.9, "music": 0.7, "sfx": 0.9, "ambience": 0.8, "ui": 0.8, "voice": 1.0},
-	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false},
-	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true},
+	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false, "sprint_tap_rolls": true},
+	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true, "hints_learned": [], "play_opening": true},
 	"accessibility": {"colourblind": 0, "ui_scale": 1.0, "reduce_flashing": false},
 }
 
-## The `video` keys that became `graphics` keys when the graphics settings arrived. A file written
-## before then still carries them, and what the player chose there is carried over once.
-const MOVED_TO_GRAPHICS := ["vsync", "render_scale", "msaa", "ssao", "glow", "shadows"]
+## The `video` keys that became `graphics` keys when the graphics settings arrived: the six the
+## Video tab always had, and the painted look's own (volumetric fog, SDFGI, the colour grade, the
+## vignette and film grain, the lamps lit at night, the water's reflections). A file written
+## before then still carries them under `video`, and what the player chose there is carried
+## over once.
+const MOVED_TO_GRAPHICS := ["vsync", "render_scale", "msaa", "ssao", "glow", "shadows",
+		"volumetric_fog", "sdfgi", "color_grade", "vignette", "film_grain", "night_lights",
+		"water_reflections"]
 
 var data: Dictionary = {}
 var binding_defs: Array = []

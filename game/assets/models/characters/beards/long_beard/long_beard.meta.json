@@ -1,25 +1,42 @@
 {
  "bounds": [
-  -0.1073,
-  -0.1266,
-  1.3524,
-  0.1066,
-  0.0436,
-  1.6193
+  -0.0815,
+  -0.1171,
+  1.3986,
+  0.0805,
+  0.0009,
+  1.6445
  ],
  "collision": "none",
+ "fits": [
+  "angular",
+  "broad",
+  "hawk",
+  "heavy_brow",
+  "narrow",
+  "round",
+  "soft"
+ ],
  "generator": "character_forge",
  "kind": "beard",
  "material": "hair",
+ "materials": {
+  "long_beard": "hair"
+ },
  "params": {
   "bone": "Head",
   "material": "hair"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 2944,
+ "seed": 34547,
  "slot_hint": "attachment",
+ "textures": [
+  "long_beard_normal.png",
+  "long_beard_albedo.png",
+  "long_beard_orm.png"
+ ],
  "tris": [
-  896,
+  2799,
   0,
   0
  ],

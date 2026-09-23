@@ -163,8 +163,7 @@ func _go_to_jail(player: Node, days: int) -> void:
 	if jail_place.is_empty():
 		jail_place = str(def.get("home_place", place_id))
 	var pos := WorldProbe.place_position(jail_place)
-	if player is Node3D:
-		(player as Node3D).global_position = pos
+	_put_player(player, pos)
 	WorldClock.wait_until(7.0)
 	if days > 1:
 		WorldClock.advance_hours(24.0 * float(days - 1))
@@ -184,8 +183,16 @@ func _exile(player: Node) -> void:
 	EventBus.arrested.emit(law_faction)
 	EventBus.notify.emit("You are put off the boardwalks. Do not come back before the year turns.", "crime")
 	var edge := WorldProbe.place_position(str(def.get("home_place", place_id)))
-	if player is Node3D:
-		(player as Node3D).global_position = edge + Vector3(40.0, 0.0, 40.0)
+	_put_player(player, edge + Vector3(40.0, 0.0, 40.0))
+
+
+## A cell or an exile is a teleport: through the body's own `teleport` (CONTRACTS §8), which
+## brings the camera with it and drops the old position's interpolation.
+func _put_player(player: Node, pos: Vector3) -> void:
+	if player.has_method("teleport"):
+		player.call("teleport", pos, (player as Node3D).rotation.y)
+	elif player is Node3D:
+		(player as Node3D).global_position = pos
 
 
 static func is_exiled_from(region_id_: String) -> bool:

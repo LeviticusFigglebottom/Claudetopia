@@ -14,7 +14,7 @@ const START_PLACES := [
 ## A character mid-story: the opening quest finished, the main thread two stages in, a side
 ## errand and a faction errand open. [quest id, stages to advance past the first].
 const REVIEW_QUESTS := [
-	["core:quest/the_naming", 4],
+	["core:quest/the_naming", 5],
 	["core:quest/the_toll_hums", 2],
 	["core:quest/seventeen_bells", 1],
 	["core:quest/the_unsaid_ledger", 2],

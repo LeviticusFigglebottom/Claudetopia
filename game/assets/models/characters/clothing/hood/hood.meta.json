@@ -1,25 +1,33 @@
 {
  "bounds": [
-  -0.1368,
-  -0.0865,
-  1.3219,
-  0.1372,
-  0.2004,
-  1.8089
+  -0.3379,
+  -0.1475,
+  1.2868,
+  0.3359,
+  0.2383,
+  1.7954
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "hood": "cloth"
+ },
  "params": {
-  "bone": "Head",
+  "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 4096,
+ "seed": 58192,
  "slot_hint": "headgear",
+ "textures": [
+  "hood_albedo.png",
+  "hood_orm.png"
+ ],
  "tris": [
-  1400,
+  2599,
   0,
   0
  ],

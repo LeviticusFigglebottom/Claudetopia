@@ -53,6 +53,10 @@ var far := false
 ## Where in the world this stands; `position` is relative to whatever cell node holds it.
 var world_position := Vector3.ZERO
 var wants_hearthstone := false
+## A way marked on the ground from here to somewhere else: `{to: place id, via: [[x, z], ...]}`
+## in world coordinates, the walk the POI's builder lays markers along (the Stair Head's cairns
+## to the Choir). Empty for nearly everything.
+var path: Dictionary = {}
 
 var kit: PoiKit = null
 var masonry: PoiMasonry = null
@@ -80,6 +84,8 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.position = d.world_position
 	d.far = silhouette
 	d.wants_hearthstone = bool(def.get("hearthstone", false)) or d.kind == "hearth"
+	var way: Variant = def.get("path", {})
+	d.path = (way as Dictionary).duplicate(true) if typeof(way) == TYPE_DICTIONARY else {}
 	d.name = "Poi_" + Ids.name_of(d.poi_id)
 	d._provider = terrain
 	d._roads = roads
@@ -87,10 +93,14 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 
 
 ## A POI's kind is its own; a place is dressed only for the Hearthstone its `shrine` tag
-## promises (the main quest rests at three of them and nothing stood at any).
+## promises (the main quest rests at three of them and nothing stood at any), or when its data
+## names a `dressing` kind: the Standing Moot is a place, not a registry POI, and the main quest
+## fights the Hart of Thorns among stones that nothing had stood there.
 static func kind_of(id: String, def: Dictionary) -> String:
 	if id.begins_with("core:poi/") or Ids.type_of(id) == "poi":
 		return str(def.get("kind", ""))
+	if str(def.get("dressing", "")) != "":
+		return str(def["dressing"])
 	var tags: Variant = def.get("tags", [])
 	if typeof(tags) == TYPE_ARRAY and (tags as Array).has("shrine"):
 		return "hearth"
@@ -153,8 +163,16 @@ func hearthstones() -> Array:
 	return find_children("*", "Hearthstone", true, false)
 
 
+## Real lights standing in this dressing. None, now: its fires and lamps are sources for
+## NightLights, which lights the nearest of them from one pool (`light_sources()` lists them).
 func lights() -> Array:
 	return find_children("*", "OmniLight3D", true, false)
+
+
+## The fires and lamps this dressing registered with NightLights: [position, kind, colour,
+## energy, range] each.
+func light_sources() -> Array:
+	return NightLights.sources_of(self)
 
 
 ## A flat description of everything standing here, for comparing two raisings of one POI.
@@ -167,4 +185,8 @@ func signature() -> Array:
 			var n3 := node as Node3D
 			var label := n3.get_class() if n3.name.begins_with("@") else str(n3.name)
 			out.append("%s@%s" % [label, str(n3.position.snapped(Vector3.ONE * 0.001))])
+	# its fires and lamps stand here too, though they are sources for NightLights and no longer
+	# nodes of their own
+	for s in light_sources():
+		out.append("light@%s" % str(to_local(s[0]).snapped(Vector3.ONE * 0.001)))
 	return out

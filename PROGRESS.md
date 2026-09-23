@@ -1330,6 +1330,1784 @@ work and not a wiring change. A child NPC is still a small adult until that is d
 * **Two dependencies were undeclared**: `scikit-image` and `fast_simplification` (trimesh 5
   moved `simplify_quadric_decimation` out). Both are in `tools/requirements.txt` now.
 
+## The painted look: six lights, a sky, water that mirrors it, and the lamps after dark
+
+The frames were competent and flat: even light, one layer of fog, a gradient for a sky with
+grey blobs in it, water that was a grey plane, nights that were dark rather than lit, and six
+regions told apart by the colour of their ground more than by their light. This pass is the
+light. It stopped, on the user's order, before the after-sheet and the drop test were shot:
+what is measured and what is not is said plainly below, and the Next list at the end is the
+rest of the brief in order. Everything was measured on the world in the main checkout, built
+2026-09-22 12:56:09Z and still that build when this was written.
+
+### The cameras first, because a photograph of leaves is not a measurement
+
+The Briarwold vista stood twelve metres up inside a giant oak: `make_default_plan.py` put every
+vista above the highest ground near its viewpoint and never asked what was growing there. The
+plan's scatter index now carries every tree as a cylinder of crown, its reach and height read
+from the forge's own meta and scaled per instance, so a lens is in a crown only where it is
+inside one and a line of sight is blocked only where it passes through one. A vista takes the
+highest of a dozen candidate spots whose lens is clear and whose line to its target the land and
+the crowns allow; a landmark shot swings its bearing fifteen degrees at a time until it can see
+its landmark. **The recorded diagnosis was half of it**: the Briarwold's *landmark* camera was
+also looking at the Grandfather through the crowns on the rise in front of it (it turned 45°;
+Hearthvale's turned 15°). `horizon.json` is generated now (`--horizon`) from the same vantages --
+the hand-written one had its Hearthvale camera in the grass and its Briarwold camera in the
+crowns -- and `--look` writes seventeen frames the drop-test sheet never shows: dusk and dawn at
+each region's own sunset (the sky follows the sun's height, so "19:24" over the Mere is already
+night), night, the lamps, the Mere at eye level, and four waterfalls, re-aimed at runtime at
+each fall's own sheet (`frame` in the plan; the capture runner reads the sheet's facing off its
+mesh). `tools/tests/test_capture_plan.py` pins the crown model and the committed plans.
+
+Regenerating the plan also moved every ground shot, which is not this change: the committed plan
+had been drawn from an older build and the region mask under it had moved. The baseline was shot
+on the regenerated plan, from a snapshot of the untouched game (`git archive 7d1652e4 game`), so
+before and after are the same cameras.
+
+**The drop test's `--json` had never worked**: it read two variables before assigning them. On
+the regenerated plan, before any change to the light, 42 images, seven a region:
+
+| | colour | landform | together |
+|---|---|---|---|
+| recorded in "The country, looked at" (older plan, no POIs standing, a frame of leaves) | 0.74 | 0.12 | 0.71 |
+| baseline, regenerated plan, landmark cameras on their old bearings | 0.81 | 0.26 | 0.64 |
+| **baseline, regenerated plan, clear landmark cameras** | **0.81** | **0.31** | **0.64** |
+| after this pass | not shot | not shot | not shot |
+
+### What the renderer we can capture actually draws
+
+`game/tools_gd/render_probe.gd` turns each Environment feature on against a test stage and compares
+the frame. On Compatibility, every feature the look leans on is drawn: exponential, height and
+depth fog, aerial perspective, sky affect and sun scatter, glow, saturation, 1D and 3D colour
+correction, ACES, AgX and exposure, the ambient sky contribution, and both the screen and depth
+textures. Eight unshadowed omni lights cost no draw calls (30 → 30), one shadowed omni costs 4,
+and a second shadowed directional light costs 22. Nothing below needed a Forward+ feature;
+volumetric fog (which the Briarwold's `god_rays` drive), SDFGI and SSAO are behind the renderer
+check and their own settings, and the first two are off by default.
+
+### Six lights
+
+Each region's `identity.light` is now a named palette of some thirty optional keys, extended
+rather than rewritten: every old key survives. The table and the intent behind each light are in
+`game/systems/atmosphere/README.md`; WORLD_BIBLE §6 points there. Harvest Gold (Hearthvale), Lake
+Glass (Brightwater), Drowned Lantern (Sedgemire), Green Cathedral (Briarwold), Bone and Slate
+(Skerrow), Ember Ash (Cinderlea). What each carries: the sun's colour high and near the horizon,
+and its strength; shadows with a colour of their own (the fill's tint and how much sky is in it);
+two fogs, a far aerial-perspective layer and a low haze whose top is held under the eye (Godot's
+height fog ignores distance, so a haze top fixed in the world veiled the grass at your feet as
+thickly as the valley a kilometre off); a grade -- saturation, contrast, exposure, and a 3D LUT
+built from where the blacks lean, how warm the lights are and the midtone tint; vignette and
+grain; the region's clouds; and moonlight, with the exposure opening after dark.
+
+The day now follows the sun's height, not the clock (`SUN_KEYS`, keyed by elevation), so each
+region's sky and light agree wherever its latitude puts its sun: Cinderlea's nine-degree sun at
+half past four used to stand under a mid-afternoon sky.
+
+### The sky and the water, and two faults that had been there all along
+
+The sky shader is rewritten: a disc a degree and a half across with a halo, cumulus lit from the
+side the light is on (the density a step toward the sun against the density here) falling into
+painted steps with a silver lining, cirrus streaked along the wind, a stratus bank where a region
+asks for one, a horizon that burns under a low sun and goes rose over a blue band opposite it,
+and stars in two sizes, a band of milk and a moon at night. **The old sun disc was 11 to 14
+degrees in radius**: its size was a 1 − cos of 0.03 that nothing ever set. Its declared
+half-resolution pass was never read. The new disc was at first *mixed* over a sky that already
+carried its own halo, and came out darker than its surroundings -- a dark lozenge over Cinderlea.
+`game/tools_gd/sun_probe.tscn` measured the disc's centre at 0.58 against 0.83 five degrees above
+it, with the grade and the glow each on and off, which put the fault in the sky shader rather
+than the post; the disc adds now and reads 0.996.
+
+The water shader wrote a world-space normal, up in green, into `NORMAL_MAP`, which Godot reads
+as tangent space and rebuilds z from. **Every water surface in the game has been lit as if tilted
+steeply away from the sun**: `render_probe.gd` draws a flat plane under an overhead sun at 0.659
+mean brightness with no normal map, 0.662 with a true flat one, and 0.234 with the old encoding.
+It writes a view-space `NORMAL` now, mirrors the sky's own zenith and horizon (published by the
+atmosphere as linear globals) through a Fresnel term capped at 0.65, lays a path of glints under
+the sun and the moon, breaks its shore foam into patches, and thins to nothing at the waterline.
+The falls do use `falling_water.gdshader`: all four were framed from their own sheets and looked
+at in the baseline (the Glass Falls as black glass, as written); they have not been re-shot under
+the new light.
+
+### After dark
+
+POI dressing already hung real lights -- 27 `k.light` calls across its builders: camp fires,
+shrine lamps, the beacon, bridge and causeway lamps, the wisps and the foxfire -- always on, and
+faded out between 55 and 95 m. Settlements had none: the lakefolk's lanterns and the pilgrims'
+braziers were props with no light in them, and every window was a black box. Now a window pane is
+its own kind of box in the fabric whose vertex colour carries its coordinates across the glass
+and, in alpha, how brightly the room behind is lit; the joinery shader paints glazing bars and a
+hearth glow warmest low in the glass (a first cut at 3.2× the lamp colour came out as a white
+lightbox under ACES; it is 1.25 now). Seven houses in ten have somebody home, with a lamp over the
+door of each, and the dimmer rooms go out from about eleven until five.
+`game/world/night_lights.gd` keeps every lamp, lantern, brazier, fire and lit window as one glow
+MultiMesh for the whole country (one draw, at night only) and hands a pool of eight unshadowed
+OmniLights (`video/night_lights`, ten at most, because Compatibility draws twelve lights on an
+object) to the real-light sources nearest the camera. The moon takes the shadow cascades over when
+the sun has set, on two cascades over 160 m. The night street (Merrowby at 22:00) went from 367
+draws and 0.41 M primitives (the baseline night had no moon shadows and no lamps) to 889 and 1.13
+M with four cascades, and to 617 and 0.75 M with two -- well under the same street by day.
+
+### What it costs, measured
+
+The worst frame, the Merrowby street at 09:00: **1521 draws and 1.613 M primitives before, 1502
+and 1.592 M after** (`captures/tune_4/perf.json` against `captures/before/perf.json`). That is
+inside run-to-run noise: the seven other shots of the same round moved by −3 to +14 draws and
+−0.012 to +0.023 M against the same baseline, with nothing of this pass able to account for it,
+because by day this pass adds a vignette rect (and a grain rect in Cinderlea) and nothing else
+to draw -- the glows, the lamp pool and the moon's cascades are all off. I did not run one build
+twice to measure the noise directly; the spread is the evidence. The street was over the 1.5 M
+primitive budget before this pass and still is; that is the scatter and tree LOD work, not
+this. The unit suite is 1244 tests, 0 failed, 0 content problems, 0 script errors;
+`./run.sh flow` passes all three starts with 0 errors; the tools tests are 19, all passing.
+
+### Looked at, and what still reads badly
+
+Four tuning rounds, 34 frames across the six regions at day, dusk and night, each opened and
+looked at. What still reads badly: Sedgemire's landmark from 55 m is most of a whiteout (the far
+fog and the haze together); the Briarwold's olive cloud steps read murky rather than painted;
+the Mere from its landmark is still a pale sheet more than a mirror (the glint path shows only
+toward the sun); dusk everywhere is warm enough that Hearthvale's and Cinderlea's are closer to
+each other than they should be.
+
+### Next, in order:
+
+1. **Done and verified, in this worktree's `captures/`** (gitignored; the plans that make them are
+   committed): the baseline sheet `before/` (54 frames, drop test 0.81 / 0.31 / 0.64 in
+   `before/drop_test.json`), `before_horizon2/`, `before_look/` and `before_fix/` (the seven
+   look frames whose hours or framing changed); the four tuning rounds `tune_1/` to `tune_4/`,
+   of which `tune_4` is the current state; `render_probe/`, `sun_probe/`, `flow/`. Verified:
+   suite green, flow 3/3, worst day frame unchanged within noise (1502 / 1.592 M against
+   1521 / 1.613 M), night street 617 draws.
+2. **Nothing is half-done in code.** Everything is on by default and has been looked at in
+   captures except the Forward+ extras, which are off: `video/volumetric_fog` (which carries the
+   Briarwold's `god_rays`) and `video/sdfgi` default to false and never enable on Compatibility;
+   `video/ssao` keeps its old default and is Forward+ only. Switches for the rest:
+   `video/color_grade` (the LUT), `video/night_lights` (0 to 10 real lamps; glows still draw),
+   `video/glow`, and any key of a region's `identity.light` in
+   `game/content/packs/core/regions/regions.json` (the palettes are written by hand there).
+3. **Shoot the after-sheets and measure.** With `free -g` at 4 GB or more, one Godot at a time:
+   `xvfb-run -a -s "-screen 0 1600x900x24" godot --path game --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- --capture=tools/capture/plans/default.json --out=$PWD/captures/after`
+   (about an hour), then the same with `horizon.json` into `captures/after_horizon2` and
+   `look.json` into `captures/after_look`. Open every frame. Then
+   `python3 tools/uniqueness_check.py captures/after/regions --json captures/after/drop_test.json`
+   and report colour, landform and together against 0.81 / 0.31 / 0.64. Acceptance: all three
+   numbers reported, and if they do not move, say what the frames show and why; the landform
+   axis is the terrain's and light is not expected to carry it to 0.55. One caveat on the
+   comparison: the baseline's capture runner did not settle a region's six-second look blend
+   before an exposure, so a baseline shot taken just after crossing a region border (the six
+   street shots each do) may carry some of the previous region's light; the runner at this
+   head settles it.
+4. **`./run.sh perf`** (the interiors, which this pass does not touch indoors beyond the
+   atmosphere's existing interior mode) and the street from the after-sheet's `perf.json`.
+   Acceptance: every frame ≤ 2000 draws; the street's primitives no higher than 1.61 M.
+5. **Tune what reads badly**, then re-shoot the frame and look at it: Sedgemire's
+   `haze_density` (0.03) and `fog_sky_affect` (0.5) for `sedgemire_landmark`; the Briarwold's
+   `painterly` (0.6 default) and cloud colours for `briarwold_vista`; Brightwater's water
+   `reflect` (0.8, `game/world/water_surface.gd` REGION_WATER) for `brightwater_landmark`; a
+   cooler `dusk_tint` for Cinderlea against Hearthvale's. The Briarwold's light shafts exist only
+   on Forward+ (volumetric fog); a Compatibility version would be the cave forge's
+   `light_shaft.gdshader` cones stood in clearings, which nobody has built.
+6. **Re-shoot the falls under the new light** (`look.json`'s four `*_falls` frames) and look at
+   them; nothing in the falls was changed.
+7. **Measure the two costs nobody has timed**: the glow MultiMesh is rebuilt on the main thread
+   whenever a settlement, building or POI registers or leaves (about a thousand sources, on cell
+   loads), and the grade LUT (4913 texels of GDScript) is rebuilt at most every 0.4 s while a
+   region's look blends. Both are suspects for a hitch at a region border.
+
+Known risks: the POI dressing's own OmniLights are always on and do not count against the pool,
+so beside the Long Stride the pool and the POI lamps together can pass Compatibility's twelve
+lights on one object, and the extras are dropped without a word. The haze's top follows the
+camera, by design, so it moves as you climb. None of the Forward+ extras has been seen, because
+Forward+ does not run here. The before sheets live only in this worktree. They were shot from the
+untouched game: `before/` from the worktree before its first game change, the rest from a
+`git archive 7d1652e4 game` snapshot (`before_fix/` with this head's capture runner copied in, for
+its `frame` re-aiming, which the old atmosphere ignores). Re-shooting them that way reproduces them.
+## The shape of the land
+
+A pass over the ground itself: the road that stood on a knife-edge, a landform apiece for the
+six regions, and cover that differs between them in structure rather than tint. It was stopped
+part-way by a stopping-point order, so it ends in two halves. **The roads, the rivers under
+them and the staged-build check are finished, measured and on by default. The landforms and
+the regional cover are built and partly measured, and are switched off** (`--recipe landforms`,
+`--recipe cover`), because nobody has yet looked at them from the ground or put them through
+the drop test. The numbers below are from three full 4096 builds in this worktree: the world
+as this pass found it, the default build as it now stands, and a build with both recipes.
+
+### The arete was two faults, and the diagnosis had half of one
+
+PROGRESS recorded it as `carve_roads` writing an 11% profile into the heightmap "where the ground
+falls away faster than the road descends". That is the second fault. The first is the router:
+`build_graph` charged for climbing and gave nothing back for descending (`descent_bonus=0`),
+and the roads are routed in one direction, so a road planned from Kharrow Hold down to the Mere
+paid nothing to go straight over the edge of the mountain. `_grade` then limited the grade by
+lifting the profile (a forward clamp, sixty passes, no reference to the ground), and the road
+stood where the grade put it. The carve blended the land up to it across its shoulder.
+
+**What changed.** A road is now routed twice: on the 16 m lattice to choose which side of a hill
+to go, then again on a 4 m lattice inside 64 m of that line, with the knight's moves added so it
+can zigzag. Grade costs the same both ways, quadratically past 10% and hard past 22%; every change
+of heading costs something, so a switchback's legs are long; a cliff, and a cell standing proud
+of or sunk into its own twenty metres (a knife-edge spur, a V-gully), cost enough that the road
+crosses them rather than riding them; a road already laid is cheaper to follow than new ground,
+so roads out of one town share a trunk and fork, and where one runs on another it takes that
+road's level. The profile (`grade_profile`, every 4 m) is held within `cut_fill_m(width)` of the
+ground under it -- 2.4 m for a track, 3.6 m for a town road, which is what a one-in-two batter
+across the carve's shoulder allows -- and is never lifted to make a grade. Where the ground is
+steeper than 11% plus that room, the road is steep: that is the honest failure, and the router is
+what keeps it rare. No road builds up within 14 m of an authored sightline.
+
+Measured with the ground read 2 m past each road's carve on both sides (above the higher side is
+an embankment standing proud; below the lower, a cutting), raw, nothing discounted:
+
+| worst road | before | default build | with both recipes |
+|---|---|---|---|
+| above both sides | **150.1 m** (Gullhithe - Kharrow Hold) | 4.8 m (Gullhithe - Kharrow Hold) | 7.5 m (Kharrow Hold - Grandfather Hollow) |
+| below both sides | **67.0 m** (Gullhithe - Kharrow Hold) | 8.2 m (Kharrow Hold - Grandfather Hollow) | 14.4 m (Charcoal Camp - Gullhithe) |
+| steepest grade of the carved road, 99th percentile of any road | 7.29 (the arete's flanks) | 0.45 (Gullhithe - Kharrow Hold) | 0.50 (Brindlecrag - the Clanless Camp) |
+| steepest grade of the carved road, anywhere | 9.1 | 0.81 (Kharrow Hold - Grandfather Hollow) | 0.92 (Gullhithe - Kharrow Hold) |
+
+What is left in those raw figures is the land's own relief -- a road along a spur is on the spur
+-- and `tools/world/tests/test_roads.py` discounts it from the builder's own record of the land
+each road was laid on (`road_profiles.json`, new, read by nothing in the game). It holds every
+road of the built world three ways: graded within `cut_fill_m` of that land; the carved
+heightmap under the centre line equal to the grade (away from pads and fords); and, from
+outside, the land beside the road no lower (or higher) than the road by more than the land
+under it already was, plus the carve's tolerance and 3 m for the land's curvature. The default
+build and the recipe build both pass. The world this pass started from fails the last on twelve
+roads, worst the Gullhithe road at 150.1 m against 6.6 m allowed.
+
+**A test that passed the world it was written to fail.** As first committed, that last check
+took the carved road for its own land wherever a build had written no record, which excused
+every arete: run against the old world it passed. Found while writing this up, fixed (no record
+now means nothing is discounted), and checked against the old world again.
+
+### Rivers ran under the pads and roads laid on them
+
+Found in passing, measured on the old world: pads and roads are laid after the rivers are cut,
+and both flatten or grade whatever is under them. The Larkbourne Ford -- moved last session onto
+the river it is named for -- filled 54 m of the Larkbourne with its own pad; the Three Sisters'
+pad left 46 m of the Skerrow Water dry at the foot of the falls; each road crossing dammed its
+river for 8 to 30 m. Six dry runs longer than 6 m in all. `hydro.keep_channels` cuts every
+channel back through what was laid on it, holding a crossing to a ford 0.45 m under the
+surface: 0 dry runs on the default build, 0 with the recipes, and a test holds it.
+
+### Two recorded diagnoses that did not survive measurement
+
+**"The pads module flattens under the original positions of POIs that were later moved."** Not
+in a full build. Measured on the old world, the nineteen POIs moved last session have flat
+pads at their new positions (0.00 m of relief within 15 m) and nothing flat at their old ones
+(0.7 to 55 m of relief, the same as control points beside them); the scatter has 28 to 143
+instances within 18 m of each old position and 0 to 5 at each new one. The one path that does
+do it is the staged build: `--only textures` and `--only cells` reuse `heights.r32` from disk
+and re-flatten pads in memory where things now stand, so a moved POI keeps its old pad in the
+terrain and stands on unflattened ground, while the scatter clears a pad that is not there. The
+manifest now records a checksum of every pad (`pad_fingerprint`) and a staged build refuses a
+heightmap whose pads were laid for other positions. Tested.
+
+**"`camp` is missing from ROAD_KINDS."** It is not, and never was: `ROAD_KINDS` has included it
+since the first commit that defined it (6a5a84df), and last session's own note says so ("`camp`
+is in `ROAD_KINDS`, so moving the Cold Fire moved a road with it"). What was true is that nothing
+kept the world builder's kinds and the exterior's in step, so a test now reads
+`Settlement.FABRIC` out of `settlement.gd` and requires `ROAD_KINDS`, `FABRIC_COUNT` and
+`ROAD_WIDTH` to name exactly its kinds, with the same counts.
+
+### Sightlines, and two that had been answered by accident
+
+The old world read 90 authored lines, 87 clear, 0 refused, 3 into hidden valleys. The first
+scratch build with the roads held to their carve refused two and left a third clear by 0.03 m,
+and the reason is worth more than the fix: all three had been answered last session on a world
+where a road cut as deep as its grade wanted. Beside the Clanless Camp the old road from
+Brindlecrag had cut a trench that, worked back through the pad's blend, took the ground 30 m
+from the camp down to about 264 m, 88 m under the pad (the old world reads that road 65 m below
+the land on both sides 44 m from the camp), and the line from Brindlecrag looked through it.
+Between Greyfold and the Cold Fire the old road had taken 1.7 m off the hump the line crosses.
+The Long Stride's line to the Bell Buoys went the other way: the first router swam to Tollmere
+instead of taking the causeway, and its fill rose 3 m into the line.
+
+* **The Long Stride -> the Bell Buoys** -- answered by the road: a coarse cell counts as water
+  only when all of it is, so the causeway is dry ground, and a route that crosses open water is
+  re-planned over the whole lattice.
+* **Greyfold -> the Cold Fire** -- the Cold Fire moves another 20 m toward Greyfold, to
+  (-2260, 2760), where the line clears on the land itself and not on a road cutting.
+* **Brindlecrag -> the Clanless Camp** -- left in place. The positions that clear it by a metre
+  are 35 to 40 m down the cliff, where the pad would cut away the overhang the camp is named for
+  ("Find the camp under the overhang"), and a 21 m move buys half a metre.
+
+| | old world | default build | with both recipes |
+|---|---|---|---|
+| clear / refused / into hidden valleys | 87 / 0 / 3 | 87 / 0 / 3 | 87 / 0 / 3 |
+| Brindlecrag -> the Clanless Camp, clearance | clear, through the old road's trench | 0.03 m | 0.03 m |
+| Greyfold -> the Cold Fire, clearance | clear, over the old road's cutting | 1.07 m | 1.07 m |
+
+### Built, measured, and switched off: a landform apiece
+
+`worldgen/landforms.py`, the `landforms` recipe: applied to the composed land after the drainage
+and the Mere, so the rivers, pads and roads that follow are laid on it. Each term comes from the
+region's own geometry, with no reference to where anything stands (DECISIONS, 2026-09-20), and
+is weighted by the region's blend so borders mix:
+
+| region | the landform | relief | scale |
+|---|---|---|---|
+| Brightwater | raised beaches: the basin terraced every 3.2 m of height from 110 to 950 m back from the Mere; and on the open south and east shores a strandplain of dune ridges parallel to the water, each with a steep face to it and a long back | benches 3.2 m, ridges to 5.5 m | ridges 78 m apart, 35 to 600 m from the water |
+| Sedgemire | silt levees either side of both channel fields `shape_delta` cuts; 34 cut-off meanders, crescent pools cut below the marsh table with a low rim | levees 2.2 m, pools to 3 m | crescents 55 to 130 m across |
+| Briarwold | the granite stair: the rise terraced every 18 m with a soft riser, tors on the lips of the treads | 18 m steps, tors to about 8 m | treads 50 to 300 m deep |
+| Skerrow | limestone scars across the 200 to 540 m band; about 900 shakeholes on the moor | 20 m steps, holes 3 to 7 m | holes 9 to 22 m across |
+| Cinderlea | the Builders' street grid, 96 by 72 m blocks on a bearing of 23 degrees: streets 12 m wide sunk 2.8 m, blocks mounded up to 3.5 m | 6.3 m from street floor to block top | 72 to 96 m |
+| Hearthvale | strip lynchets stepping the scarp face in flights; 26 lines of barrows behind the crest | lynchets 3 m, barrows 3 to 5.5 m | barrows 28 to 48 m across, in lines of 3 to 6 |
+
+The ground under every place is left as it was out to 1.3 pad radii, nothing is raised within
+14 m of an authored sightline, and the stepped landforms fade out on ground steeper than about
+one in two: on Kharrow Hold's flanks the first scars came out as twenty-metre slots aliased
+into a stair of texels, and every road off the hold dived into one.
+
+**What it measured**, the recipe build against the default build (so the roads are the same
+kind on both). The land band-passed to the walking scale (a difference of
+Gaussians at 12 and 75 m, so roughly 50 to 300 m wavelengths), in metres, over each region's dry
+land away from the world's edges:
+
+| region | relief, median / 75th / 95th percentile, default | with the landforms | dry land moved over 1 m (over 3 m) |
+|---|---|---|---|
+| Hearthvale | 2.49 / 4.68 / 14.80 | 2.50 / 4.69 / 14.87 | 4.6% (0.8%) |
+| Brightwater | 0.95 / 2.86 / 15.67 | 1.17 / 2.95 / 15.82 | 40.0% (2.7%) |
+| Sedgemire | 0.59 / 2.16 / 25.94 | 0.57 / 1.90 / 24.95 | 12.5% (0.2%) |
+| Briarwold | 5.70 / 9.90 / 18.57 | 6.14 / 10.65 / 19.20 | 56.1% (41.1%) |
+| Skerrow | 9.23 / 18.29 / 37.90 | 9.24 / 18.35 / 38.10 | 8.4% (3.8%) |
+| Cinderlea | 4.23 / 7.34 / 13.17 | 4.27 / 7.40 / 13.25 | 26.4% (1.9%) |
+
+The finding I did not expect, and one reason this is off by default: **measured as relief at
+50 to 300 m, the landforms barely move any region.** They move a lot of ground -- more than a
+metre on 56% of the Briarwold's dry land and 40% of Brightwater's -- but the land already had
+metres of relief at that scale, and a 3 m bench or a 2.8 m street adds to it in quadrature.
+Whether they read from a walking camera is a question for the camera, and the camera has not
+been asked.
+
+### Built, measured, and switched off: cover by structure
+
+The `cover` recipe. Until now what differed between regions was which species and what tint; the
+rules that place them -- a density, a clustering field, a pull toward water or a boundary -- were
+the same everywhere, and the field boundaries, walls and roadside rails were one pattern laid
+over three regions. With the recipe:
+
+* **Sedgemire** -- reed beds at the water's edge rather than a sprinkle across the peat; willows
+  and alders in *lines* along every channel and pool, a willow every 16 m a few paces back from
+  the water with gaps where the bank will not hold one (`hedges.waterside`), and the scattered
+  willow and alder thinned to make room.
+* **Brightwater** -- marram on the crests of the dune ridges and not in the slacks: a rule gated
+  by `tpi`, the height of a point above its own 30 m, new in the scatter.
+* **The Briarwold** -- boulder fields on the risers of the stair; its lanes sunk as holloways
+  (1.9 m under the land, inside the same band as any road).
+* **Skerrow** -- intakes, not fields: parcels 300 m across with walls that run dead straight, the
+  walls stopping at the fell wall at 430 m, and the roads walled in drystone in 70 m runs.
+* **Cinderlea** -- the ash in the Builders' sunken streets, and the stubs of their walls, fused
+  blocks, along the streets' lips (`hedges.ruin_lines`). No fence along any road.
+
+Measured on the recipe build against the old world:
+
+| | old world | with both recipes |
+|---|---|---|
+| Sedgemire reeds within 14 m of water | 28% of 102 071 | 73% of 35 929 |
+| Sedgemire willow and alder within 8 m of water | 23% of 8 730 | 56% of 6 317 |
+| Brightwater grass on a crest (tpi over 0.35 m) | 25% of 414 099 | 44% of 551 696 |
+| Briarwold boulders on slopes over 0.16 | 201 in the region | 4 111 (83% on the risers) |
+| Skerrow drystone wall pieces | 21 553 | 10 707 |
+| Cinderlea ash in hollows (tpi under -0.7 m) | 37% of 1 359 | 81% of 596 |
+| Cinderlea wall stubs | 35 | 2 703 |
+| scatter instances, whole world | 3 477 721 | 3 370 573 |
+
+By region the instance totals move from -17% (Sedgemire) to +26% (Brightwater, the marram); the
+Vale, where the worst captured frame is, moves by 0.3%. None of it has been rendered. The brief
+also asked for wind-bent trees in Brightwater, and the instance format (`[x, y, z, yaw, scale,
+tint]`) has no tilt, so that is not a scatter rule away; it is a format change.
+
+### What it costs
+
+| | before | default build | with both recipes |
+|---|---|---|---|
+| `build_world.py`, whole build (the machine shared with five other agents throughout) | 237.8 s | 544.3 s (the machine twice as loaded; see below) | 262.3 s |
+| of which the roads stage | 7.1 s | 75.4 s | 28.1 s |
+| scatter instances | 3 477 721 | 3 484 974 | 3 370 573 |
+| hedge pieces / roadside pieces | 122 398 / 6 261 | 122 359 / 8 871 | 106 471 / 6 371 |
+| total length of road | 35.6 km | 41.9 km | 44.7 km |
+| points in `roads.json` | 3 113 | 3 558 | 3 796 |
+| `./run.sh perf`, worst of the 24 interiors | 183 draws, 0.99 M | not re-run | not re-run |
+| worst captured frame, default plan | 1521 draws, 1.61 M (hearthvale_street) | not captured | not captured |
+| drop test colour / landform / together (42 shots) | 0.76 / 0.26 / 0.64 | not captured | not captured |
+
+Whole-build times on this machine are not comparable between runs: the default build ran while
+it was about twice as loaded, and the stages whose code did not change took about twice as long
+(469 s against the old build's 231 s; its textures stage alone 129 s against 49 s in the recipe
+build an hour earlier). The recipe build ran at about the old build's load -- everything but its
+roads took 234 s against 231 -- and the roads stage is the only one whose work grew: two
+routings and a profile every 4 m, 28 s against 7 s. The roads are 18% longer --
+they go round the Kharrow Hold spur instead of over it, and zigzag where they climb -- which is
+where the extra roadside pieces come from. `roads.json` is written at about 12 m (every third laid
+point, each on the carved centre line), because the POI dresser walks every segment of every road
+for each point of interest. `./run.sh perf` measures the interiors, which read nothing the
+world build writes, so it was not re-run. The captures and the drop test were not taken after:
+the pass was stopped before them, and they are the first thing the recipes need (below).
+
+### Still wanting
+
+* **Brindlecrag -> the Clanless Camp clears by 0.03 m.** It is the thinnest authored line in
+  the world. Nothing this pass lays can raise the ground under it, but anything that lowers the
+  camp's pad or raises the cliff edge will close it.
+* **Steep pitches.** Where the ground is steeper than the grade plus the band, the road goes with
+  the ground. Read along each road's centre line every 4 m on the default build, the steepest
+  grade anywhere is 0.81, on the Kharrow Hold - Grandfather Hollow road below the hold near
+  (1045, -2278), and the worst 99th percentile of any road is 0.45 (Gullhithe - Kharrow Hold).
+  The router keeps these short; it does not remove them.
+* **`road_profiles.json` is not in CONTRACTS.** It is a build artifact for the tests, and says so
+  in `output.py`.
+* **Pilgrim's Ash has lost its cross street** on the default build (38 roads, was 39). The two
+  roads north out of it (to Isseva and Nauve's Landing, on one trunk as before) and the road to
+  the Cold Fire now leave it 130 degrees apart instead of 120, which is past `add_streets`'
+  threshold for a road "across the grain"; the recipe build keeps it. The town still has its
+  through street and all four roads.
+* **The Kharrow Hold - Grandfather Hollow road is 5.4 km, was 4.1.** It goes round the spur
+  the old one stood on. Nothing in the game prices a road's length yet, but anyone timing a
+  walk will notice.
+* **`tools/capture/plans/pois.json`** still has the Cold Fire at its old position
+  (`tools/capture/make_pois_plan.py` regenerates it).
+* **From above, the scars hardly show.** On a scratch build before the steep-ground fade, the
+  scars round Kharrow Hold came out as contour rings aliased into stairs of texels. With the
+  fade, a hillshade 2.8 km across Skerrow is hard to tell from the default build's: the thin
+  looping lines in both are the drainage carve's, already in the old world. What does show is
+  Brightwater's raised beaches, as close-set contours above the Mere's north shore -- a terrace
+  of a round hill is a contour, which is not what a limestone scar looks like either. If the
+  recipe goes on, the scars want to be long, level and few.
+* Found in passing and fixed: `tools/uniqueness_check.py --json` raised a NameError after
+  printing its scores (two names used three lines before they were assigned), so nobody had the
+  drop test's JSON. And **`./run.sh test` exited 1 on a passing suite**: under `pipefail` it read
+  the verdict with `echo "$out" | grep -q`, which stops reading at the match and can leave echo
+  a SIGPIPE, so the pipeline failed with "RESULT: PASS" in it (3 runs in 50, replayed on that
+  run's own output). The flow and smoke verdicts were read the same way, where the race could
+  also pass a failing run. All four read to the end now.
+
+### Rebuilding the world after the merge
+
+```
+./run.sh world
+```
+
+That is the default build: the roads, rivers and pads above, no landforms, no regional cover.
+To build the rest for evaluation, in a worktree:
+
+```
+./run.sh world --recipe landforms --recipe cover
+```
+
+### Next, in order:
+
+1. **Done and verified: what the default build now produces, against the world this pass
+   found** (full 4096 builds, both in this worktree). Roads laid on the land: the worst road
+   above both sides of it 150.1 m -> 4.8 m, below both sides 67.0 m -> 8.2 m, raw; every road
+   graded within 2.4 to 3.6 m of its land and carved to that grade; the steepest grade along
+   any road 9.1 -> 0.81. Rivers under every crossing as fords: dry runs over 6 m, 6 -> 0.
+   Sightlines 87 / 0 / 3, unchanged, with Clanless at 0.03 m and the Cold Fire 20 m nearer
+   Greyfold at (-2260, 2760). Staged builds refuse a heightmap whose pads have moved;
+   `ROAD_KINDS` is held to the exterior's `FABRIC`. Roads 35.6 km -> 41.9 km, 39 -> 38
+   (Pilgrim's Ash's cross street); `roads.json` 3 113 -> 3 558 points, plus
+   `road_profiles.json`; the manifest gains `pad_fingerprint` and `recipes`. Scatter
+   3 477 721 -> 3 484 974 instances. The roads stage costs about 21 s more at the old build's
+   load. `game/world/terrain_assets.tres` unchanged. No landforms and no regional cover: those
+   are recipes (3). Verified on that world by `python3 -m pytest tools/world/tests tools/tests`
+   (49 passed), `./run.sh test` (1226 tests, 0 failed, 0 content problems, 0 script errors)
+   and `./run.sh journey` (16 of 16 steps, 0 skipped, 0 logged errors).
+2. **After the merge, rebuild the main checkout's world**: `./run.sh world`. Until that runs,
+   `tools/world/tests/test_roads.py` fails there, by design -- it reads the old world's
+   Gullhithe road 150.1 m above both sides. Accept on: pytest green, `python3 tools/sightlines.py`
+   saying 87 clear / 0 refused / 3 veiled, `./run.sh test` green, `./run.sh journey` 16/16, and
+   `git status` showing no change to `game/world/terrain_assets.tres` (none here).
+3. **Half-done, off by default: the `landforms` and `cover` recipes.** They live in
+   `tools/world/build_world.py` (`RECIPES`, `--recipe`, recorded as the manifest's `recipes`);
+   `worldgen/landforms.py`, called from `heights.compose_heights(landforms=True)`; the `recipes`
+   / `cover` block of `tools/world/scatter_rules.json`, applied by `cells.load_rules`;
+   `fields.PATTERNS` (against the default `ONE_PATTERN`); `hedges.place(fell_wall=True)`,
+   `hedges.waterside`, `hedges.ruin_lines`; `roadside.place(by_region=True)`; and
+   `roads.ROAD_SINK_M` (the holloways, passed only with `cover`). `test_recipes.py` holds the
+   defaults off and builds both recipes small. Measured with both on: sightlines 87 / 0 / 3,
+   Clanless 0.03 m; the road and river tests pass; the relief and structure tables above. Not
+   measured: any frame, the drop test, frame cost.
+4. **Evaluate them** in a worktree, against the default build shot the same way, since the
+   cameras stand on the ground as built. For each of `./run.sh world` and
+   `./run.sh world --recipe landforms --recipe cover` (about 4.5 minutes each, peaking near
+   8 GB: `free -g` first): `python3 tools/sightlines.py` (accept at least 87 clear, 0 refused)
+   and pytest; `python3 tools/capture/make_default_plan.py --out <dir>` to place the cameras on
+   that ground; `./run.sh shots <dir>/default.json` and the horizon plan (about 80 s a shot);
+   `python3 tools/uniqueness_check.py <captures>/regions --json <captures>/drop_test.json`.
+   **Look at every frame**, the landforms first: the relief figures say they may barely show
+   from an approach camera. Accept the recipes if the landform axis rises and colour and
+   together do not fall (the old world read 0.76 / 0.26 / 0.64 on this pass's sheet), and the
+   worst frame stays within 2000 draws and no worse in primitives than the default build's
+   (the old world's worst was 1.61 M, already over the 1.5 M budget).
+5. **If they pass, make them the default**: drop the gating in `build_world.py` (or apply both
+   recipes when none is named), fold the `cover` block into the rules proper, change
+   `test_recipes.py`'s expectation that a default build has none, rebuild, and repeat 2.
+6. **If the landforms do not read from the ground**: they are 2 to 6 m against natural relief
+   whose 95th percentile at the same scale is already 13 to 38 m by region (median 0.6 to 9 m).
+   The larger terms are the place to push -- Cinderlea's streets and blocks, Brightwater's
+   ridges -- and Skerrow's scars want to be long level bands that show, rather than terraces
+   that follow the contours (see Still wanting); any raise stays out of the 14 m sightline
+   corridors, with the Clanless line re-measured.
+7. **Risks and regressions, with numbers**: Brindlecrag -> the Clanless Camp clears by
+   0.03 m (the thinnest line in the world; Foxfire Falls -> the Charcoal Camp is next at
+   0.08 m); the steepest grade along a road is 0.81 and the worst 99th percentile 0.45
+   (Gullhithe - Kharrow Hold); the roads stage costs about 21 s more at the old build's load
+   (68 s more on the loaded run); the roads are 18% longer and Pilgrim's Ash has no cross
+   street; no frame of the default build has been captured, so its frame cost is inferred
+   (every region's scatter is within 0.6% of before, most of the difference roadside rail) and
+   not measured; `road_profiles.json` is not in CONTRACTS; `tools/capture/plans/pois.json` has
+   the Cold Fire's old position (`python3 tools/capture/make_pois_plan.py`); Brightwater's
+   wind-bent trees need a tilt in the scatter's instance format, which is a CONTRACTS change.
+## Combat measured, fights fought headless, four hooks owned, and the game heard
+
+Five parts, one branch. Every number below was produced by the running game, not read off the
+data: `./run.sh test --filter=test_combat_design | grep MEASURE` rebuilds the combat table,
+`./run.sh fights` the fights table, and `python3 tools/audio/audit.py` the audio one.
+
+### A. Combat against DESIGN §5.3
+
+`tests/unit/test_combat_design.gd` (19 tests) drives the real Player through the real input
+actions on a real floor against a real Enemy and prints what the game did. Before is the tree
+this branch started from; after is this branch. Timings have one-frame resolution (16.7 ms).
+
+| what | design | measured before | measured after |
+|---|---|---|---|
+| stamina pool at the character's own Endurance | 100 + 8·E (140 at E 5; 180 at E 10) | 180, whatever E was | 180 at E 10 |
+| mana pool at the character's own Will | 60 + 6·W | 120, whatever W was | 120 at W 10 |
+| stamina / mana after a level's point | +8 / +6 | +0 / +0 | 188 / 126 |
+| light / heavy / dodge / sprint cost (iron sword) | 18 / 32 / 22 / 8 per s | 18 / 32 / 22 / 8 | 18 / 32 / 22 / 8 |
+| stamina regen delay, rate | 0.8 s, 30/s | 0.800 s, 30/s | 0.800 s, 30/s |
+| input buffer | 0.25 s | 0.250 s | 0.250 s |
+| one-handed light chain | 3 | 3 | 3 |
+| heavy held to full, charge factor | 1.5× | 1.000× | 1.500× |
+| cancel a light into a dodge | only after the active frames | at 0.483 s, inside the hit window (0.323–0.493 s) | at 0.483 s, after it (0.297–0.467 s) |
+| roll, light load: length, i-frames | 0.6 s, 0.08–0.38 s | 0.600 s, 0.083–0.383 s | 0.600 s, 0.083–0.383 s |
+| load of a plate kit and a sword | worn / (40 + 3·E): 49.1% at E 5, 38.6% at E 10 | 24.3% | 38.6% |
+| a bag past its capacity | overloaded roll | 24.3%, never overloaded | 129%, overloaded roll |
+| stamina regen at light / heavy / overloaded load | slower as load rises (§5.7) | 30 / 30 / 30 per s | 30 / 22.5 / 15 per s |
+| guard of a 20 hit, clan shield (stability 0.8) | 4 through, 2.4 stamina | 20 through, 12 stamina | 4, 2.4 |
+| parry window | 0.18 s | 0.167 s (10 frames) | 0.167 s (10 frames; 0.18 s is 10.8) |
+| riposte_open, riposte multiplier | 2 s, 3× | 2.000 s, 3.000× | 2.000 s, 3.000× |
+| poise regen delay, rate | 1.5 s, 4/s | 1.517 s, 4/s | 1.500 s, 4/s |
+| stagger at zero poise, poise reset | yes | yes | yes |
+| poise a player's heavy loses to an 8-poise hit in its wind-up | 0 (hyper-armour) | 8 | 0 |
+| first light, iron sword, on a bandit (armour 2) | the §5.3 formula: 12.35 | 12.70 (a one-handed skill the character did not have) | 12.35 |
+| armour_flat, helm + tunic + gloves + boots | 15 | 3 (the body piece only) | 15 |
+| a light from behind; a sneaking dagger on an unaware foe | ×3; ×6 | ×1; ×1 | ×3; ×6 |
+| lock-on cycling, foes ahead, ahead-left, behind, and at 34 m | inside the 30 m cone only | cycled to the one behind | ahead-left, ahead |
+| burning / chilled / webbed / bleeding / poisoned / silenced | 12 / 0.6× / 0.45× / 6 / 15 / refused | all as designed | all as designed |
+| renown lost to 10 s of quieted | 2 | 0 | 2 |
+
+What changed to get there is in DECISIONS (2026-09-22: attributes start at 10 and one set of
+pool formulas, schema 4; load and regen by load; hyper-armour 12 and hit windows from the clip;
+backstab and sneak rules; the swing band and knockback in metres). The humanoid wind-ups were
+the largest single fault: 65 of 69 humanoid attacks threw their blow off the authored time (56
+early, 6 late, 3 never live) because the rig played the clip on its own schedule; the
+AnimationDriver now keeps the time and stretches the rig to it, and the worst of 100 attacks is
+0.017 s off.
+
+### B. Hit windows, telegraphs, and a scripted player against every archetype
+
+`tests/unit/test_attack_windows.gd` walks the data (every weapon's swings have `hit_start` and
+`hit_end`; every enemy and boss attack, every phase, winds up for at least 0.3 s) and then
+stands every one of them up in its real body and measures telegraph to live hitbox.
+
+`./run.sh fights` (`tests/arena/fights.gd`) puts a scripted level-1 player of a starting Calling
+on a flat floor against one foe of every §5.4 archetype, headless, at a fixed 60 fps and a
+seeded RNG (two runs diff equal). It checks, over 20 fights: every blow that landed was
+telegraphed for its authored time (238 seen), lock-on takes and cycles inside the cone, a parry
+inside the window opens a riposte and one outside does not, a roll's i-frames take a blow clean
+(170), a foe at zero poise staggers (19), and every fight is heard (20). All pass.
+
+| calling | archetype | foe | outcome | seconds | blows taken | damage taken | hits/swings | foe hp left |
+|---|---|---|---|---|---|---|---|---|
+| hearthkeeper | skirmisher | roadside bandit | won | 20.9 | 4 | 58 | 4/5 | 0% |
+| hearthkeeper | pack | down wolf | won | 38.9 | 4 | 40 | 8/9 | 0% |
+| hearthkeeper | brute | hedge wight | won | 13.2 | 0 | 0 | 13/13 | 0% |
+| hearthkeeper | charger | bristleback | won | 10.2 | 1 | 22 | 9/9 | 0% |
+| hearthkeeper | ambusher | sallowjaw | won | 14.9 | 0 | 0 | 12/12 | 0% |
+| hearthkeeper | caster | smuggler sayer | won | 28.2 | 4 | 50 | 4/4 | 0% |
+| hearthkeeper | sentinel | warden | won | 41.3 | 0 | 0 | 28/29 | 0% |
+| hearthkeeper | swarm | gutter drake | lost (died) | 35.5 | 11 | 100 | 5/8 | 30% |
+| hearthkeeper | elite | bravo | won | 42.2 | 0 | 0 | 20/20 | 0% |
+| hearthkeeper | boss | barrow reeve | lost (died) | 66.9 | 4 | 100 | 38/36 | 61% |
+| cragborn | skirmisher | roadside bandit | won | 12.1 | 2 | 30 | 3/5 | 0% |
+| cragborn | pack | down wolf | won | 13.2 | 7 | 42 | 6/6 | 0% |
+| cragborn | brute | hedge wight | won | 18.1 | 0 | 0 | 11/11 | 0% |
+| cragborn | charger | bristleback | won | 11.5 | 1 | 19 | 7/7 | 0% |
+| cragborn | ambusher | sallowjaw | won | 22.6 | 1 | 32 | 11/12 | 0% |
+| cragborn | caster | smuggler sayer | lost (died) | 55.1 | 10 | 100 | 2/8 | 31% |
+| cragborn | sentinel | warden | won | 84.9 | 0 | 0 | 42/42 | 0% |
+| cragborn | swarm | gutter drake | won | 7.0 | 7 | 45 | 4/4 | 0% |
+| cragborn | elite | bravo | lost (died) | 40.0 | 6 | 100 | 10/17 | 42% |
+| cragborn | boss | barrow reeve | lost (died) | 104.3 | 5 | 100 | 44/43 | 68% |
+
+Before the seven fixes below, the Hearthkeeper's first run read: pack and charger not won in 120
+s (the wolves bit nobody; the player was thrown off the edge of the arena), swarm lost with none
+of its swings landing, boss not won. A later run had the caster not won by either Calling: it
+walked away past its leash. After, 15 of 20 are won; the five lost are the swarm and the boss
+for the Hearthkeeper's dagger, and the caster, the elite and the boss for the Cragborn's axe.
+
+"Lost" is this player's result, not a verdict on the fight: the script never blocks (no starting
+kit has a shield) and never heals, because the flask DESIGN §5.5 refills at a Hearthstone does
+not exist and a loaf mends 8. The Barrow Reeve (520 hp, slash resist 0.3, armour 6) takes 7–11
+per landed blow from a starting weapon; at the scripted player's pace that is a minute and a
+half to three minutes of fighting without taking five of his blows. No fight is trivial by the
+harness's measure (over in under 8 s with nothing taken).
+
+The first runs found seven faults in the game, all fixed and pinned in
+`tests/unit/test_fights_found.gd`: a swing volume at chest height that no sword could land on a
+gutter drake with (0 hits); knockback summed into the velocity every frame (the bristleback
+threw the player at 140 m/s off the arena); an enemy that left the fight mid-blow lunging for
+ever; patience counted from the start of a fight rather than the last sight; a pack waiting on a
+ring wider than its bite (no blow landed on the player in 120 s against three wolves); circling
+at a speed no one could aim at; and a leash that broke for one frame (a caster walked 50 m from
+a 32 m leash). The first run also found `StatusEffects.advance` reading an effect a tick earlier
+in the same loop had ended.
+
+### C. Four hooks, owned
+
+`LootDrops.context_provider` (GameServices.loot_context: level, luck, quest stages),
+`Player.quick_slot_handler` (Equipment.use_quick_index), `Player.ammo_provider`
+(Inventory.ammo_for) and the Name-table's refusal reason (Crafting.enchant_check, shown on the
+station screen) each have an owner and a running-game test (`test_hooks_wired.gd`).
+`tools/unwired.py` now also lists Callable hooks nothing assigns: 3 before, 0 after. The fourth
+was not a hook but a function only its test called (`Enchanting.enchant_blocker`); the
+Name-table's screen asks it now, through `Crafting.enchant_check`, and shows the reason.
+
+### D. The audio
+
+Before: nothing in the game called Foley -- no footstep, blow, door, chest, coin or button had
+ever been heard. The score's combat layer came in only after a hit and went back to exploring
+eight seconds later mid-fight; there was no night; the second boss track arrived through a quest
+stage, as a cut; the ambience read the weather once per announcement and missed the blend;
+indoors, world sounds went round the Sounds slider. After:
+
+* an enemy entering combat holds the combat layer at 0.6 or above until the last one dies or
+  gives up, then it decays to exploring in 4.8 s; a region crossfades over 4 s between two banks
+  of stems; 21:00-05:00 is a night mix (melody -11 dB, deep stem -14 dB); an interior brings the
+  deep mix, a room tone, a 900 Hz low-pass on the ambience and a door; a boss's second phase
+  crossfades to the second track on its own player;
+* the ambience re-reads the Atmosphere's weather every second, so rain comes and goes with the
+  blend, not only with the announcement;
+* footsteps fall a stride apart by distance covered (0.35·speed + 0.6 m, so the cadence follows
+  whatever speeds the gait has) on the collider's surface, else water, else the region's ground;
+  blows sound the struck body's material; whooshes go with the blade; bows, arrows, sayings,
+  locks, buttons, chests, coins, meals, armour, menus, refusals, the Hearthstone and the Echo
+  are heard;
+* the Interior bus goes out through SFX, so the Sounds slider reaches indoors.
+
+`tests/unit/test_audio_wired.gd` (17 tests) drives each from its real trigger and samples every
+music player's level every 1/60 s: no player moves more than 3 dB in a step, and outgoing and
+incoming tracks are both audible at once. It also checks that every sound the code can ask for
+is a row whose files load (11 rows have nothing that asks, listed below), that every one of the
+393 audio files is used, that every bus a sound is sent to exists, and that the six sliders on
+the Settings screen move their buses (0.25 on a slider puts its bus at -12.0 dB).
+
+**The files.** `tools/audio/audit.py` measures every one of the 393 audio files the game ships
+(peak, true peak, clipping, DC, loudness per file and per category, one-shot edges and lead-ins,
+dead air in beds, loop-seam clicks and breaks) and flags what fails a release. Measured before:
+nothing clipped (highest true peak -1.48 dBTP), no DC, no loop clicked at its wrap (worst 3.8 dB
+against a 6 dB bar) and no loop broke its level at the wrap past anything it does elsewhere;
+every music stem sits within 0.1 LU of its stem's target and every bed within 0.6 LU of -30.
+What did fail:
+
+| check | files flagged before | after |
+|---|---|---|
+| a one-shot that decodes starting mid-waveform (first sample above -40 dBFS) | 50 | 0 |
+| a one-shot that starts late (more than 25 ms before it is heard) | 9 | 0 |
+| a variant more than 4 LU from the other variants of its effect | 4 | 0 |
+| an effect more than 10 LU from its family, at its table level | 7 (2 effects) | 0 |
+| a bed that drops to digital silence for more than 0.25 s | 3 | 0 |
+| clipping, true peak above -1 dBTP, DC, a click or a level break at a loop's wrap | 0 | 0 |
+| any of these | 69 | 0 |
+
+Fixed in the generators, then regenerated -- all 70 effects (240 files, because the edge fix
+applies to every effect) and four ambience keys (frogs, rope_creak, chain_clink, thunder_far);
+nothing else was re-rendered. The numbers under the flags: the effects' first decoded sample
+went from a median of -51.6 dBFS (worst -25.5) to digital zero, because Vorbis rings ahead of a
+transient on sample 0 and every effect is now set in 4 ms of silence; the longest digital
+silence in the frogs, boardwalk-rope and chain-bridge beds went from 2.4, 9.1 and 8.6 s to none,
+with the beds still at -30 LUFS (-30.2, -29.5, -29.8) and the frogs' wrap still under the click
+bar (4.5 dB against 6); the far thunder's lead-in went from up to 1.43 s to under 25 ms and the
+coins' from 108 ms; the four wide effects went from 4.1-4.9 LU of variant spread to 2.9-3.4; the
+lockpick click's median went from -34.6 to -30.2 LUFS and the cart wheels' from -30.0 to -24.0
+at their table levels; the highest true peak anywhere went from -1.48 to -1.26 dBTP. A music
+stem is not held to never going silent -- a melody rests while the others play -- only a bed is.
+
+### E. Test hygiene
+
+Sixteen tests opened a screen through the real event and left it open for the runner to find
+paused. `TestCase.close_screen(menu_id)` closes what a test opened and fails the test if it was
+not open; the count of tests leaving the world paused is 0 (it was 16).
+
+### Also fixed in passing
+
+* `./run.sh test` could report a green run as failed: `echo "$out" | grep -q` under pipefail
+  lets grep's early exit kill the echo; four of five replays of a green log failed. The parent
+  branch found and fixed the same race while this work was going on; this branch carries the
+  parent's lines verbatim (so the two merge without a conflict) plus its `fights` command, and
+  the parent's check reads the final green log as a pass twenty times in twenty.
+
+### Found and not fixed
+
+* 25 perk stat keys are read by nothing (the combat perks do nothing): damage_one_handed,
+  damage_two_handed, damage_archery, poise_damage_one_handed, stamina_cost_heavy,
+  stamina_cost_dodge, poise_max, dodge_iframes, block_stability, parry_window,
+  pickpocket_chance, sneak_attack_mult, prices_buy, prices_sell, renown_gain, ingredient_yield,
+  bow_draw_speed, arrow_recovery, weight_class_penalty, mote_yield, spell_cost_kindling,
+  spell_cost_hush, spell_power_mending, spell_duration_binding, spell_duration_calling.
+* The heavy and overloaded equipment tiers cannot be reached by gear alone (the heaviest kit
+  in the pack is about 0.61 of capacity); only an overfull bag gets there.
+* Flask charges (DESIGN §5.5) do not exist anywhere in the code.
+* Eleven sfx rows have nothing that plays them: bell_hand, bell_tavern, bell_toll, bell_tower,
+  thunder_far, thunder_near (the ambience has its own thunder), wind_gust, wood_creak,
+  cart_wheels, footstep_sand, footstep_snow (no region's ground is sand or snow).
+* POI structures (piers, walls, bridges) declare no footstep surface, so they sound like their
+  region's ground.
+* `tools/unwired.py` lists `use_quick` and `set_boss_intensity` because their only callers are
+  in their own files.
+
+### Next, in order
+
+1. **The 25 inert perk keys.** Each names a number the combat, stealth or economy code already
+   computes; read the character's modifiers for that key at that point and add a test per key
+   that takes the perk and measures the number move. `test_combat_design.gd` has the harness
+   for the combat ones.
+2. **Flask charges** (DESIGN §5.5): a quick-slot consumable refilled at a Hearthstone. Then
+   `./run.sh fights --only=boss` and record whether a level-1 player of either Calling can win
+   the Barrow Reeve; if not, the boss's numbers are DESIGN's to change.
+3. **The heavy load tier** cannot be reached by gear; either heavier kit or lower tier bounds
+   (`DamageModel.load_tier`), with the MEASURE rows in `test_combat_design.gd` updated.
+4. **POI footstep surfaces**: `poi_kit.gd`'s colliders take `surface` meta from the material they
+   were built with (timber and planks wood, stone and oroth stone); `test_audio_wired.gd` has the
+   walking test to copy.
+5. **The eleven unplayed sfx rows**: wire them (tower and tavern bells to the hour in Tollmere,
+   thunder to the Atmosphere's strikes, cart wheels to road travellers, snow to Skerrow above the
+   snow line) or drop them from `gen_sfx.py`. The test prints the list on every run.
+6. **unwired.py** could count a same-file caller when that caller is itself reached from outside
+   (it lists `use_quick` and `set_boss_intensity`, both reached through their own file).
+
+## The quests, walked to the end of every objective; and who stands at the points of interest
+
+Next item 4 recorded three diagnoses of the quest plumbing and item 6 the absent people and
+encounters at the points of interest. All three diagnoses survived measurement; the first was
+larger than written, and the walk of every quest that followed found more of the same kind.
+
+**`quest_at` counted from one and was read from nought — forty-eight times.** Content numbers a
+stage from one (`["core:quest/the_naming", 1]` is the waking); `quest_at`, `quest_min_stage` and
+`quest_stage` read the number as an index, so every one of the pack's forty-eight numbered
+references, in nine quests, landed a stage late. `QuestLog.stage_index()` is now the one
+translation (a stage id, or its number from one) and `test_quest_stage_references.gd` pins each of
+the forty-eight to the stage id its writer meant, and fails on a new number until somebody says
+what it means. The same pass found `advance()` walking on into the next stage over the top of a
+branch that had just sent the quest somewhere else; it stops now.
+
+**Nothing said `escort_arrived`, and nothing closed five deliveries or five decisions.**
+`Escorts` (systems/npc_life) walks the person with you: they fall in when the stage is under way
+and they have been spoken to, follow at your elbow, stop and wait with a journal line when left
+more than forty metres behind and fall in again when you come back, fail the quest when they
+die, and close the objective when they reach the place; they are saved on the road. Aud Fennick's
+vigil and the job boards' escorts both walk (`test_escorts.gd`, seven cases with bodies moved
+by hand). Five deliveries had no line anywhere to hand the thing over on (the letter to the
+Circle, Aud's bell to Cadwen, the Fennick bell, the press screw, the three loaves): finishing a
+conversation with the person while carrying it hands it over now, except where an author wrote
+the scene. The main thread's five decisions had no button anywhere: the open options are put at
+the host's hub, and the last one, the note, which has nobody left in the room to ask, at a cold
+light in the Cantor's Seat (`ChoicePoint`). Tools could not be used, so the speaking stone and the
+sluice pin could never be; a tool is used now without being used up.
+
+**Eighteen objectives in fourteen quests asked for things nothing gave, sold or put anywhere.**
+`QuestItems` (world/pois/quest_items.gd) puts them down as the world streams in: at the
+objective's `where`, the item's own, or the place the same stage sends you to; on a marker the
+dressing puts down when the objective names a `spot` (the Tumbled Watch's fallen stair, the
+Clanless Camp's chimes, the Gullhithe keel, the Wisp Hollow chimney), in a deep place's chamber or
+a house's room when it is inside; `owner` makes taking it theft; what is taken is the
+`quest_items` save section. A deep place's `item` features were props with an item written on
+them; they are pickups, except a boss's own drop. Hesta gives the Fennick bell on her blue-cuff
+line and the general store stocks the hearth loaf, rather than either lying in the road.
+
+**Every objective, walked.** `QuestWalk` (systems/quests/quest_walk.gd) asks of every objective
+of every authored quest what in the built game sends the event it waits for — the person and
+where they live, the enemy and where it stands (the built cells, a deep place's encounters, a
+point of interest's), the item and how it is got, the decision and who puts it — and
+`test_quest_walk.gd` fails on a new one that cannot be closed. **255 objectives in 35 quests:
+none without a way now, and every quest has a line or an effect that starts it.** Its radiant half
+asks the same of every target a job board could name, region by region, and found three ways a
+board could post work that is not work: an escort of a placeholder from the writers' first roster
+(one of them a dog, `example_dog_gosling`) or of an anonymous watch post, a fetch for cottongrass,
+which nothing in the game has, and — once those were out — an escort of Bessa Tamwick to Tamwick,
+where she lives, which ended the moment she agreed to it. The generator leaves all three out.
+
+The walk says whether the thing an objective waits for exists and can happen. It does not say the
+stage before is reachable, that a `requires` chain can be met, how hard the fight is, or that a
+kill happens where the story puts it (see the Undercroft below). The last column names only what
+an objective could not be closed without: a source this work added that nothing older supplies —
+a kill with enemies in the open is not counted for also standing at a point of interest, nor an
+item that is also sold for also lying somewhere.
+
+| quest | objectives | closable | numbered stage references (each read a stage late) | could not be closed without |
+|---|---|---|---|---|
+| `a_hand_on_the_rope` | 10 | all | - | placed, decision at the hub |
+| `a_thing_nobody_reported` | 7 | all | - | placed |
+| `a_verse_about_you` | 8 | all | 6 | stocked, hand-over, placed |
+| `against_the_bell` | 7 | all | - | - |
+| `at_the_gate` | 6 | all | - | - |
+| `bramble` | 6 | all | 4 | - |
+| `cask_and_press` | 8 | all | 6 | placed, hand-over |
+| `every_price` | 6 | all | - | placed x2 |
+| `forty_one_places` | 6 | all | - | - |
+| `four_hundred_and_twelve` | 7 | all | - | placed |
+| `grist` | 8 | all | 5 | tool use |
+| `in_council` | 10 | all | - | - |
+| `last_name` | 9 | all | 6 | - |
+| `louder` | 8 | all | - | tool use, placed |
+| `louder_than_books` | 7 | all | 2 | hand-over, decision at the hub |
+| `seventeen_bells` | 7 | all | 4 | given (Hesta), hand-over |
+| `the_briars_purpose` | 10 | all | - | POI encounter only, decision at the hub |
+| `the_cold_fire` | 5 | all | - | - |
+| `the_deep_lines` | 6 | all | - | - |
+| `the_fawning_months` | 6 | all | - | - |
+| `the_held_note` | 7 | all | - | decision at the Seat |
+| `the_lamp_is_dimmer` | 8 | all | - | placed |
+| `the_lane_that_isnt` | 7 | all | - | - |
+| `the_lantern_still_lit` | 6 | all | - | placed |
+| `the_last_column` | 2 | all | - | hand-over |
+| `the_long_measurement` | 9 | all | - | - |
+| `the_names_in_the_chapter_book` | 5 | all | - | - |
+| `the_naming` | 7 | all | 7 | - |
+| `the_reading` | 6 | all | - | - |
+| `the_toll_hums` | 10 | all | 8 | placed x2 |
+| `the_unsaid_ledger` | 6 | all | - | placed x2 |
+| `the_unsaid_woman` | 9 | all | - | - |
+| `vigil` | 9 | all | - | escort, hand-over |
+| `wardens_roll_of_names` | 8 | all | - | placed |
+| `what_the_water_kept` | 9 | all | - | decision at the hub, placed |
+
+*placed*: lies where `QuestItems` or a deep place's feature (now a pickup) puts it, and nothing
+else gives it. *stocked*, *given (Hesta)*: a shop's stock or a line now supplies it. *hand-over*:
+finishing a conversation with the person while carrying it. *decision at the hub* / *at the Seat*:
+`ChoicePoint`. *tool use*: used without being used up. *escort*: `Escorts`. *POI encounter only*:
+the Hart of Thorns, which nothing but the Standing Moot's encounter stands up.
+
+**The points of interest stand up what their sentences say.** Every POI has carried an
+`encounter` sentence and nothing stood up what any of them described; the world builder keeps the
+country's encounters off every pad, so the places a player is drawn to were the one ground sure
+to be empty. Thirty-three `encounter` defs (content/packs/core/encounters/pois.json) say the
+sentences in terms `PoiEncounters` can raise with the dressing: groups at a marker the builders
+put down or on the pad's rim, by the hour (the ford's bandits after dark, the dell's bristlebacks
+at dawn, the shrine's wisps at midnight), kept away by a condition (the Larkbourne Boys while the
+Roll of Names sends you to hear Ryn out) or by a person being present (the Lantern Causeway's
+drowned climb the poles only when the lamplighter is not on them), or seated until something is
+touched (Greyfold's six at the Cold Fire rise when you take up the cup). A group killed stays dead
+until a Hearthstone rest; a boss put down stays down. **The Hart of Thorns was stood up nowhere**
+— its arena is the Standing Moot, a place rather than a deep place — **so the main thread's
+fourth account could not be finished**; the Moot is dressed as a stone circle now (a place's
+`dressing` kind) with the Hart in its middle. `test_poi_encounters.gd` pins what stands at every
+one of the forty-eight, people included, both ways round.
+
+The people the sentences and stories name are ordinary npc defs with dialogue, and so they are in
+the `npcs` save section like anybody (`test_poi_people.gd` saves every one of them, loads over a
+standing body and into an empty registry, and finds one Ivo each time and the killed lamplighter
+still dead): **Lissane Sa** the lamplighter, **Khath ko-Rudd** the toll-keeper, **Calen Ash** the
+knight in the Headless Watch's eye (who asks what bread costs in Tollmere and writes the answer
+inside the eye with a burnt stick), **Ivo Goslin** the hermit, with a side quest (*The Last
+Column*) and his exercise book to read on his crate, **Marigold Orchard** the pilgrim at Ansel's
+chair on three days in seven, and **Sorrel and Barnaby Rooke**, the burners who never sleep at the
+same time, with a stock table and the camp's job board. Three more that the places' stories name
+were still missing after this work's first pass, and one had been written down and never made: **Tansy
+Cresswell**, Foxglove Dell's hedge-witch, was a row in the names index ("made Nell Harebell's
+cousin by this stream") and Nell's line about her, and nobody at the dell. She sells yew berries
+to anybody who asks plainly, which Nell will not, is asleep in her hut while the boars root at
+dawn, and says what the story leaves open: whoever takes her yew keeps the seed and leaves the
+harmless flesh in heaps (Nell has a line back). **Ruska ko-Dreugh** takes three marks at Windgate
+for a pass the snow has shut for nine winters and writes you in the book as crossed. **Gisel
+Morneth and Wennick Anthar** are the Sayers' camp at the Thirteenth, arguing whether its head is
+the Cantor's likeness or a face somebody cut into it afterwards, which is what Calen says they do
+instead of saying so; neither is shown right, and both are in their tents with the flaps tied
+before the choristers come. Two rumours carry the new ones about (the heaps under the yew, and
+crossing Windgate, which a capture's log has being said at Kharrow Hold). Ryn Larkbourne's
+schedule named a spot `gosling_pit` in Merrowby that
+nothing there was called; he keeps the camp at the head of the stolen mill wheel now. Each works
+on a marker their place's dressing puts down, and a marker says whose place it is in, so two
+camps' fires are never taken for each other. The Reed Wreck's chart of the Salt Isles lies on its
+crate.
+
+A body stands exactly where its marker is, and that found a mistake of this work's own: the
+Sayers' camp at the Thirteenth had been measured from the head toward the hips, so its table, lamp
+and ladder stood inside the colossus's shoulders and a tent in its flung arm (the B2 capture shows
+the tent's canvas through the carving's flank and no table anywhere). The camp is on the head's
+right, the one quarter the figure leaves open, and `test_poi_people.gd` now puts a person-sized
+capsule on every working marker and fails if it touches anything solid (a capsule at the
+colossus's hips must, and does), fails if two people work one marker at one hour, which the
+second Sayer first did, and stands every one of the twelve up at every hour they work and fails
+if any is more than half a metre off their marker — a marker the registry cannot find puts a
+person on a ring round the place's middle without a word, and on an island that ring is water.
+
+**The One Poppy and the Thirteenth, looked at.** From the POI plan's thirty metres the poppy was
+grey grass and nothing. It has what people who come out to it would leave: the grass worn away
+inside a ring of carried stones and down a path, a cairn by the path with a peeled white stake
+standing out of the flat heath, and the flower built from shapes, a bloom two hands across that
+holds a little light, the one colour there. At thirty metres the ring, the stake and the red are
+all legible; the bloom itself is a handful of pixels, which is what a poppy at thirty metres is. A
+trodden path laid as thin boards photographed as a white rail across the heath and was taken
+out. Kneeling by it now puts its sentence's deed: water it (the Hearth) or pick it (the Hollow,
+four petals, and it is not rebuilt). The Thirteenth was boxes and a dome in the coursed Oroth
+surface — a wall and an igloo. It is carved: the back, the blades and the hips as rounded masses,
+long limbs, the soles turned up, one arm flung ahead with the fingers spread, the robe's folds
+down its back, the hooded head down in the Sayers' diggings under a hoist. On round forms the
+Oroth courses drew seams and the body looked inflated, so it is the Builders' dark stone with
+hairline weathering instead. From above or along its length it is a figure lying face down; from
+the ground by its head it is a mass of carved stone with the dig at its crown — better, and still
+simplified: the limbs are smooth round forms, not sculpture. Captured again on the merged result,
+under the painted sky and its palette: the poppy still reads from thirty metres (the ring, the
+stake, and a red mark a few pixels wide), the Thirteenth's camp stands on the head's right with
+both Sayers on their feet at the table and the trench, and the gate-warden stands on clear ground
+in front of the toll-house's drifts. Foxglove Dell's hedge hides the valley from the pois plan's
+own shot, which is what a hedge is for; from above it, Tansy is among the foxgloves in the
+morning and at her door in the firelight at dusk.
+
+**Found in passing, and fixed (twice, some of it).** The journey's death step read
+`marks_gone=false recovered=true` with the count exactly what it was, once in this work's runs
+and once in another branch's run the same night (240 marks, no Naming step in it), so it was
+never the Toll Hums, as this work first guessed. The physics server says who came into an Area3D
+as the iteration after the step that found them begins; when exactly one physics step fell
+between the journey's fall and its coming back, that step found the body lying in the still-quiet
+Echo, `_respawn` armed it, and the word arrived after, with the player already at the stone: the
+marks came straight back. The player-feel work found the same hole the same night and fixed it
+the same way; the merge keeps its Echo (`_is_here` measures a body against the Echo's own radius
+and height, where this work's measured a round 2.5 m) and both tests: its own stages the
+journey's single step, and this work's stages one, two and three steps with the count measured,
+restaging any frame that overshoots, and failed at one step before the fix. `Readable` never set
+its collision layer, so the interaction ray, which masks only the interactable layer, went through
+every shelf book in every house: the shelves were readable only by a test calling `interact()`.
+`run.sh` read the test and smoke verdicts with `echo "$out" | grep -q` under `pipefail`, which
+returns 141 when grep leaves at its match while echo is still writing: five reruns in forty over
+one passing log exited 1, and the smoke check could have passed a log that said SCRIPT ERROR. The
+parent branch fixed that the same night too, with a grep that reads to the end, and its version
+is the one merged.
+
+**Measured**, on this branch with the parent merged in twice (the painted look, the roads, combat
+and audio, then player feel and no void): the unit suite 1398 tests, 0 failed, 0 content
+problems, 0 script errors and 0 dead lambda captures (four logged errors, the same four tests of
+bad input as before this work). The journey 16 of 16 in each of three runs; its meet-somebody
+step now closes the Naming at Wren's word in Merrowby and checks the Toll Hums begins, which is
+the furthest a noon in Merrowby carries the thread (the Naming's earlier stages are a day's walk
+away, and the unit suite walks them). Smoke PASS over 6 regions, 34 places and 24 interiors, with
+nothing logged. Against the parent branch as it stands, `unwired.py --verbs` counts two fewer
+verbs reached only by tests (37 to its 39: `open_options` and `start_def` are reached now) and
+none new, and `dead_data.py` the same five unread keys (559 distinct keys to its 542; every one
+this work added is read).
+
+**Found and not fixed.**
+
+* **Kills count wherever they happen.** The Undercroft's strongroom stage asks for bravos and the
+  room behind the bell for gutter drakes; the Undercroft's own encounters are down-wolves and
+  bandits, so both close by killing bravos at the Long Stride and drakes at the Gullhithe Wreck.
+  The fix is the Undercroft's meta or a kill objective that names where.
+* **Hollin Barrow's bell cist names `core:item/wardens_roll_fragment` as a feature; no such item
+  exists**, so it stays a prop.
+* **Aud Fennick walks "into the grey"** at the end of the vigil and the registry puts her back on
+  her schedule at Pilgrim's Ash; Seventeen Bells needs her there, so the story and the roster
+  disagree rather than either being broken.
+* **The loot tables' `quest_at` / `quest_min` conditions read a `quests` context nobody fills**;
+  no loot def uses them yet, and whoever does will meet this and the stage-numbering rule at once.
+* **A quest's `giver` starts nothing** (`QuestConditions.offers_of` is called only by its tests).
+  Every authored quest has a line or an effect that starts it, so none is stuck; a new quest that
+  relies on its giver alone will be.
+* **Sentences not honoured, or honoured loosely:** the Singing Yew's wights turning away, the
+  Sallow King's moral choice, the Headless Watch's fallen knight "if the watch has turned" (nothing
+  turns it), the Mossbridge Wardens' "stolen forest goods" (their own greed rule stands in),
+  Tideflat's crabs (there is no crab), Gosling Pit's brute leader, who is Ryn, a person you parley
+  with, the Long Stride's bravo, who is hostile by day rather than waiting for somebody to refuse
+  the toll (there is no toll to refuse), and the Clanless Camp's "brute and two skirmishers", who
+  are three raiders. Groups said to be up high ("at the top", "on the cliffs above", "in the cave
+  behind the falls") stand on the pad's rim, and the sentences' ground — Gosling Pit's rear path
+  from the Hound's eye, Fern Gully's bridges to cut, Whitecut's wet stone — is terrain, not people.
+* **The Hart of Thorns stands in the Moot as a bare humanoid rig**, and the Moot's stones read
+  dark on dark under the Briarwold canopy; both are in the capture and neither is this work's art.
+* **The placeholder roster is still in the world**: `example_merrowby.json`'s eight, three of them
+  sharing a name with a real person (Wren Tallow, Maud Brambling, Osric Pennywort), which are three
+  of `namegen.py --check`'s four problems; the fourth is two items both called "Reed Lantern".
+* **The pois plan's own shot of the Watch of the Gate photographs a hillside**: 44 m back from the
+  toll-house on its approach is behind a shoulder of the pass. A shot at half the distance shows
+  the house and its warden; `make_pois_plan.py` does not look for a clear line.
+
+**Left for next, in order.** (1) Give the Undercroft its drakes and bravos, and let a kill objective
+name where it counts. (2) Make `wardens_roll_fragment` or take it out of the cist. (3) The
+unhonoured sentences above, the Moot's stones and the Hart's model. (4) Delete or rename the
+placeholder roster.
+
+## Every perk kept, a flask to drink, every load band reachable, and the ground heard
+
+Six parts, one branch, in the order they were asked for. The tables are the game's own output:
+`./run.sh test --filter=test_perks_do_what_they_say | grep PERK`, `./run.sh fights
+--calling=<calling>` once per Calling, and `./run.sh test --filter=test_footsteps_in_the_world |
+grep FOOTSTEPS`.
+
+### 1. The perks
+
+Twenty-eight perk stats had no reader: the 25 listed last time, and `armour`, `noise` and
+`stamina_cost_light`, whose names appeared in the code only as other things. Each is now read
+where the thing it names happens. `test_perks_do_what_they_say.gd` takes every perk the way a
+character takes one (the skill raised to where the perk opens, its prerequisites first, a perk
+point spent) on the player scene, measures what the text names, takes the perk, and measures
+again. Every row below matched the figure the text gives:
+
+| perk | measured | before | after |
+|---|---|---|---|
+| wardens grip | sword light hit | 15.4 | 16.94 |
+| quick steel | stamina for a sword light | 18 | 15.3 |
+| ringing blow | sword poise damage | 12 | 15 |
+| wide sweep | greatsword charged heavy | 68.64 | 75.504 |
+| hafted poise | poise | 40 | 55 |
+| bell swing | stamina for a greatsword heavy | 44 | 35.2 |
+| fernhold draw | seconds to full draw | 0.9 | 0.783 |
+| fletchers thrift | chance a loosed arrow survives | 0.4 | 0.65 |
+| steady breath | arrow damage at full draw | 36.75 | 42.262 |
+| braced stance | guard stability | 0.8 | 0.9 |
+| braced stance | damage through the guard from 100 | 19 | 9 |
+| ready answer | parry window s | 0.18 | 0.24 |
+| broken in | armour worn | 12 | 13.2 |
+| second skin | noise at a jog in plate | 0.872 | 0.693 |
+| second skin | roll load | 0.886 | 0.543 |
+| quiet step | noise at a jog | 0.513 | 0.359 |
+| quiet step | a jump heard | 0.4 | 0.28 |
+| light fingers | pickpocket chance | 0.508 | 0.658 |
+| unsaid | sneak attack multiplier (sword) | 3 | 4 |
+| fair dealing | buy price | 160 | 144 |
+| fair dealing | sell price | 46 | 51 |
+| loud name | renown from a deed worth 50 | 50 | 60 |
+| hedge wise | restore health brewed | 24 | 28.8 |
+| forager | lichen from one plant | 1 | 2 |
+| bitter tongue | damage health brewed | 7 | 9.1 |
+| red door | tier-2 sword hit | 17.22 | 18.655 |
+| red door | tier-2 jerkin armour | 7.2 | 7.8 |
+| thrifty forge | ingots for a greatsword | 4 | 3 |
+| ember keeper | charge from four motes | 100 | 125 |
+| deep writing | ember burst magnitude | 24 | 28.8 |
+| wind in the chest | stamina | 180 | 195 |
+| strong back | carry capacity | 100 | 120 |
+| roll away | roll stamina | 22 | 18.7 |
+| roll away | roll safe window s | 0.3 | 0.35 |
+| warm word | mana for a kindle bolt | 11.4 | 9.69 |
+| mote catcher | motes from a foe a Kindling word killed | 1 | 2 |
+| quieted | mana for a frost bolt | 13.3 | 11.305 |
+| held fast | ward seconds | 12 | 15.6 |
+| held fast | binding word hold seconds | 1 | 1.3 |
+| tender | health from Mend | 38.5 | 46.2 |
+| loud company | seconds the hound stays | 45 | 58.5 |
+
+Its last test reads every script in the game and fails when any of the 36 perk stat keys has no
+reader (0 today).
+
+Found on the way: nothing wrote the player's `stealth_visibility`, which every foe's eyes
+multiply by, so a crouched figure in the dark was seen as plainly as one sprinting at noon; the
+Stealth service now writes it every physics frame (0.62 in the open, 0.08 crouched in shadow).
+The round shield could not be taken up: the slot rules knew only shields carried as weapons.
+Red Door's wider temper step was shown at the forge and never swung or worn. A note written on
+armour and a Resist draught changed nothing: `Equipment.modifiers()` was worked out and handed
+to nobody, and nothing read `resist_<kind>`. `grant_perk` changed the modifier table without the
+body hearing of it. Four stats needed a system first (DECISIONS): arrows that survive (40%, a
+pickup where they strike, or loot in the body), Ember Motes caught from a Kindling kill (1),
+picking an ingredient off the ground, and armour weight in the roll's load and in the noise.
+
+### 2. Healing in a fight, and the fights again
+
+DESIGN §5.5 has a flask that a Hearthstone refills, and there was none. `core:item/hearth_flask`
+holds three swallows of 40% of greatest health. A swallow is a committed one-second drink (the
+warmth lands at 0.55 s, and a stagger before then spills it). The flask is filled by a rest and
+by coming back from death, kept by the save, and shown on the belt as swallows left against a
+full flask. Potions, food, Mending (the Ashwalker's saying) and a rest already healed; the flask
+is the one thing every Calling has from the first fight.
+
+The scripted player now blocks when it has not the stamina to roll. Below 45% of its health it
+backs off to drink, and when the flask is dry it says a mending saying below 55% if it knows
+one. It says what else its Calling knows: a ward before the fight and again when it breaks, and
+a bolt at a foe out of reach. An archer shoots, backs off inside 4 m and closes with its knife.
+The Naming's own fight (three ash-wights) joined the roster. After the merge of the movement
+rework the harness needed one more thing a player does. Locked on, the body now strafes at
+2.6 m/s, and the smuggler-sayer backs off at about 3. The Cragborn and the Wayfarer followed it
+3.0 m behind for two minutes and landed 0 of 52 and 0 of 48 swings. Out of reach, the scripted
+player now sprints, which breaks the strafe, until it is in reach.
+
+One run per Calling. Each cell is the time to win; "sw" counts swallows and "bl" blocks:
+
+| fight | Hearthkeeper | Wayfarer | Reedborn | Cragborn | Ashwalker | Lantern-Clerk |
+|---|---|---|---|---|---|---|
+| naming: ash wight | 15 s | 18 s | 10 s | 24 s (2 sw, 1 bl) | 8 s | 19 s |
+| skirmisher: roadside bandit | 23 s (1 sw) | 3 s | 5 s | 5 s | 2 s | 21 s |
+| pack: down wolf | 32 s | 30 s | 10 s | 35 s (2 sw) | 8 s | 32 s (1 bl) |
+| brute: hedge wight | 14 s | 14 s | 35 s | 20 s | 6 s | 15 s |
+| charger: bristleback | 11 s | 13 s | 20 s | 12 s | 7 s | 13 s |
+| ambusher: sallowjaw | 15 s | 15 s | 38 s | 22 s | 8 s | 16 s |
+| caster: smuggler sayer | 26 s | 58 s (1 sw) | 39 s | 55 s | 28 s | 31 s |
+| sentinel: warden | 42 s | 73 s | **120 s**, 47% left | 86 s | 42 s | 42 s |
+| swarm: gutter drake | 34 s (3 sw) | 7 s | 9 s | 5 s | 7 s | 22 s (1 sw, 2 bl) |
+| elite: bravo | 13 s | 41 s | 69 s | 64 s (3 sw) | 8 s | 14 s |
+| boss: barrow reeve | **died** at 90 s, 61% left (1 sw) | **died** at 76 s, 61% left | **120 s**, 47% left | **died** at 115 s, 69% left | **died** at 38 s, 73% left (1 bl) | **120 s**, 71% left (2 sw) |
+
+The danger-one foes, from Hearthvale and Brightwater, are the skirmisher, the pack, the brute, the
+charger, the caster, the swarm and the elite. The ambusher is Sedgemire's (danger two) and the
+sentinel Briarwold's (danger three). The ash-wights are the Naming's own fight.
+
+What a competent player loses at level 1, and why:
+
+* **The Barrow Reeve, for every Calling** (four die, two run out of the 120 s with 47–73% of him
+  left). He has 520 health and armour 6 against 3–11 a blow. Four to six of his blows (22–36
+  each, a knockdown among them) kill a 100-health character, flask and all. He is the third
+  quest of the Wardens' line, behind 45 reputation and the quest before it, so he is met well
+  past level 1 and was not tuned.
+* **The warden, for the Reedborn** (120 s, 47% left). The Reedborn starts with fists and
+  Hush-Frost (12 frost). The warden, a danger-three treant, has 265 health and armour 10, so
+  the Reedborn lands 1.4 a hit and runs out of mana. Every other Calling kills it in 42–86 s.
+* **Two Callings could not beat the danger-one foes** before they were given blades
+  (DECISIONS). Measured again on the reworked movement, without its dagger the Lantern-Clerk
+  died to the swarm with 85% of the drakes left. It ran out of time on the pack (95% left, 528
+  damage survived by drinking), the hedge-wight (33%) and the bravo (41%). Without its knife the
+  Wayfarer died to the swarm with 60% of the drakes left. With the blades both win every
+  danger-one fight: the Wayfarer in 3–58 s and the Lantern-Clerk in 13–32 s.
+
+The Ashwalker's sayings make six of its eleven fights trivial (2–8 s without a blow taken); the
+other five Callings win the danger-one fights in 3–69 s. Nothing was tuned for that, because
+DESIGN asks only that every Calling live through the first fights.
+
+### 3. The heavy load band
+
+Load is now measured against `20 + 1.5·Endurance` (35 at the start), no longer
+`40 + 3·Endurance` (DECISIONS). With nothing in the bag, at base Endurance:
+
+| worn and wielded | load | band |
+|---|---|---|
+| leathers and a sword | 25% | light |
+| a brigandine and a sword | 51% | medium |
+| clan plate and an iron greatsword | 89% | heavy |
+| clan plate and the Bearer's clapper | 109% | overloaded |
+
+Before, the heaviest of these reached 54%. Every Calling still starts light (0–14%). Second
+Skin moves plate and a greatsword from heavy to medium (0.89 to 0.54).
+`test_every_load_band_can_be_reached_by_what_is_worn` equips the four kits and checks each band.
+
+### 4. The eleven sounds nothing played
+
+Five were wired to their events:
+
+* `bell_toll` rings for the Bell-bearer's toll and bell swing, for the Barrow Reeve's toll, and
+  as the Reeve opens his second phase.
+* `bell_hand` rings as a bell-headed weapon goes live: the Tolling knight's mace and his tolling
+  blow, the Reeve's bell sweep, and the Last Cantor's blades.
+* `bell_tavern` rings when you come through an inn's door (Toll's Lip), and not a bakehouse's.
+* `footstep_snow` and `footstep_sand` play on the snow and the tide-flats the builder paints.
+
+An attack or a boss phase may now name a sound. Footsteps on the terrain now read the paint:
+`TerrainProvider.texture_at` names the painted id from the manifest's slot list, because the
+Terrain3D texture list is emptied once its arrays are built. The builder's 21 textures fall into
+8 surfaces.
+
+Six were dropped, with their files and generators: `bell_tower` (no bell strikes the hours),
+`thunder_near`, `thunder_far` and `wind_gust` (the ambience's storm and wind layers are those),
+`wood_creak` (the creak pools are) and `cart_wheels` (no cart moves). A generator run also stopped
+writing a dropped id back into `core:table/sfx` from the old manifest. The wiring test now fails
+on any row nothing can play (0 of 64). The audio toolkit's 124 tests pass, two of them new: the
+manifest and the table hold exactly what the catalogue makes.
+
+### 5. Footsteps where the feet are
+
+Every collider the POI kit builds now names what it is made of. A stone bridge's deck, parapets
+and abutments are stone. A timber span, and every plank deck, post and ladder, is wood. Walls,
+drums, doorways, steps, carved figures and cairns are stone, and a mound is dirt. A forged
+asset's collision takes its surface from its name: pier, boardwalk, cart, stool and signpost are
+wood; cliff, drystone, cairn and the giants' bones are stone; scree is gravel. One body can carry
+both, so Foley reads the shape a ray hit before the body.
+
+`test_footsteps_in_the_world.gd` loads the built world and finds each place from what was built:
+the terrain's own paint, a bridge POI raised as the streamer raises it, and a deep place walked
+into through Interiors. A body's footfalls walk it for three seconds at 4.2 m/s:
+
+| where | at | heard |
+|---|---|---|
+| a market street in Merrowby (cobbles) | (900, 2350) | 6 × stone |
+| the bog at Isseva (mud, peat) | (-2882, -500) | 6 × mud |
+| the Skerrow heights (snow) | (1242, -3617) | 6 × snow |
+| the western tide-flats (sand) | (-3485, -544) | 6 × sand |
+| the deck of Larkbourne Ford (a stone bridge) | (733, 2303) | 6 × stone |
+| the deck of Eelweir (timber) | (-1400, -100) | 6 × wood |
+| the floor of Weaverdeep | the pocket | 6 × stone |
+
+Its second test fails when a texture the builder paints has no footstep (0 of 21). In
+`test_pois.gd`, every point of interest in the world is raised, and all 966 collision shapes
+its builders put up name their surface. With the forged props there are 1269 stone, 241 wood,
+46 gravel and 14 dirt; 131 props (trees, hedges, tents, braziers) leave it to the ground.
+
+Found on the way and fixed:
+
+* **A house or deep place entered from the overworld built nothing.** Its wrapper looked for
+  the current interior, which is set only once the player is through the door. Interiors now
+  hands it the meta.
+* **What a quest left inside (the steward's key, the Ledger of Prices) was never raised when
+  walked into.** The builders asked themselves which interior they were, and only the wrapper
+  was told. The wrappers now hand the name down.
+* **Every deep place dropped the player 3.0–4.5 m onto its mouth.** There was no Entrance marker,
+  so the arrival fell back to a metre above the pocket. One now stands on the rock under the
+  forge's entrance, read from the collision mesh (the voxel rock lies 0.25–0.55 m below the
+  nominal floor). All nine arrive 0.05 m above rock.
+* **A foe raised a script error on every sweep once its last candidate had been freed.**
+  Perception now tests validity before `is`.
+
+### 6. The arena, seen again
+
+Run again after the audio commits and both merges, under xvfb with the OpenGL renderer
+(`godot --path game --rendering-driver opengl3 -- --arena --verify --out=<dir>`): 16 checks, 16
+passed, and 12 screenshots. They show the arena, the player, the HUD's bars, the compass and the
+readied saying. Attack, parry and riposte, the roll's i-frames (0.08–0.38 s of 0.60), block,
+stagger, a saying and silence, the bow, the mantle, the prompt, the wolves' flanking, the
+charger's knockdown, the boss's phases and the respawn all pass as before. The wolves and the
+bristleback are still placeholder boxes. The belt is empty, because the arena's Foundling never
+passes through the Naming, which is where a new character is given the flask.
+
+### Checks
+
+`./run.sh test`: 1463 tests, 0 failed, 0 content problems, 0 script errors (the 4 logged errors
+are the ones their tests provoke). `./run.sh journey`: 16 of 16 steps. The audio toolkit's
+tests: 124 passed. `./run.sh fights --calling=<calling>` for each of the six: every check
+passes. All were run after both merges; the POI tests were run again after the last change (19
+tests, 0 failed).
+
+### Found and not fixed
+
+* **Going into a house stands the player in the corner of its first room**, a metre up, not
+  inside the door. The house builder makes no Entrance marker and nothing reads the meta's
+  `entrance`. Queued as its own task.
+* **A whole `./run.sh fights` (six Callings in one process) crashes in the engine.** It crashed
+  in two of three attempts, at a different fight each time. The crash is in a worker thread; the
+  log shows `propagate_notification()` called on /root from a thread (the crash handler's own
+  notification) and then signal 11, sometimes after Jolt's "exceeded the maximum number of
+  jobs". Runs of one Calling (`--calling=`) completed 12 times in 12 across the two full sets,
+  and the knife-less Wayfarer comparison crashed in two of three. The machine's load average was
+  about 40 throughout.
+* **Locked on, a melee player cannot close on a caster without sprinting.** The strafe speed
+  (2.6 m/s) is below the smuggler-sayer's back-off (about 3). That speed is the movement work's
+  number, so it is left alone and reported here.
+* The Reedborn's first saying (12 frost) does next to nothing against armour 10.
+
+### Next, in order
+
+1. Stand the player inside a house's door (the queued task).
+2. The Barrow Reeve at the level a player reaches him: fight him at the level the Wardens' line
+   takes to get there, and tune him only if that loses.
+3. The engine crash in long fights runs: a symbol build's backtrace, or split `./run.sh fights`
+   into a process per Calling.
+## Cloned, pressed Play, and stood on nothing
+
+A player cloned the repository, played it on their own machine, and reported that "when
+progressing in the game the player is transported to a blank empty plane with nothing visible
+in every direction". Every check here passed, because this machine has the built world and
+nothing else ever looked at a machine that did not.
+
+**Reproduced first, both ways.** With `game/world/generated` empty, New Game went through the
+Naming into a world with no manifest: the body stood at (-1900, 1, 3900), at y = 0 on nothing,
+fog in every direction, HUD up — and `./run.sh flow` printed `FLOW: PASS (new: 67 checks, 0
+failed)`. With the data but no Terrain3D regions (the state of a Mac, where the plugin never
+loads), trees, props and the Hushline's bench hung in the same fog over no ground; `FLOW: PASS`
+again. Nothing in the flow asked whether there was ground, and nothing in the game did either:
+`world.gd` logged a warning and carried on.
+
+Three things were true at once, and a clone met all three:
+
+* **The world was not in the repository.** `game/world/generated` and `game/terrain_data` were
+  ignored whole. `./run.sh` built them when the manifest was missing — Python, 8 GB, minutes —
+  but the Godot editor's Play button does not run `run.sh`, and a failed build left nothing.
+* **Terrain3D had binaries for two desktops of the three it names.** The vendored addon carried
+  Linux and Windows on x86_64; `terrain.gdextension` points macOS at two frameworks that were
+  not there.
+* **Every way in let a player through.** The title menu, boot's `--new-game` and `--load`, the
+  Naming and the capture runner all went into `world.tscn` without asking.
+
+### What changed
+
+**The title asks first (`WorldStatus`).** One module reads what is on disk and what the engine
+loaded and says `missing`, `fallback` or `ready`. With no world data the title sheet says so
+plainly — what is missing, `./run.sh world`, and what it needs — and New Game, Continue and Load
+stay shut; asked again at the door, because the load screen calls `load_slot` itself. Boot,
+the Naming and the capture runner ask the same question, and a world entered anyway (the
+editor's Play Scene) stands down with the same notice and a way back to the title rather than
+emitting `world_ready`. `test_world_status.gd` holds each branch: data missing, plugin missing,
+regions missing, forced, both present — against the verdict, the title screen and the world.
+
+**Terrain3D for macOS.** The official 1.0.2 archive came through the proxy by its release URL
+(the GitHub API and release pages are refused; the Asset Library's entry 3892 names the file).
+All four vendored binaries, `terrain.gdextension` and `plugin.cfg` are byte-identical to it,
+which is how it is known to be the same release; its two macOS frameworks are added unmodified,
+with the URL and every hash in `LICENSES.md`. Two things the release does not do: it has **no
+Linux arm64 or riscv64 binaries** at all, though the `.gdextension` names them, and its macOS
+frameworks are built for **macOS 15.0 and later** (their `LC_BUILD_VERSION`), universal, with
+only the arm64 slice signed.
+
+**The coarse ground (`FallbackTerrain`).** When Terrain3D cannot draw — no library, no regions,
+regions that load as nothing, or `-- --fallback-terrain` — the ground is drawn from the builder's
+8 m runtime height map: 256 chunks of 512 m sharing one flat grid with a skirt, lifted in the
+vertex shader, with four index LODs that Godot's mesh LOD picks; the region's own terrain
+textures in two arrays, tinted by the palette the way the builder's colour map is (the shader's
+mean tint per region is within a few percent of `color.rgba8`'s), with slope, height bands,
+snow, the lake bed and roads stamped at 2 m; and a HeightMapShape3D per chunk on the world and
+terrain layers. The mesh, the collision and `TerrainProvider.get_height` split every quad the
+same way — `test_fallback_terrain.gd` checks Jolt's split with a twisted quad and the world's
+collision against the provider at forty points — and each cell's scatter, placed on the 2 m
+ground, is set down on the 8 m one as it streams in. It builds in 1.8 s here when the machine
+is quiet (1.6 s of it reading back and scaling the terrain textures) and 7.8 s at a load of 25.
+Looked at against Terrain3D from the same cameras: the Hearthvale downs, the Merrowby street and
+the Brightwater island read as the same country; the spawn's ash spit and the hill behind it
+match; what is lost is fine relief — Cinderlea's terraces are rounded off, cliffs are softer,
+and the field patchwork and hedge lines are not there.
+
+**The runtime heights were read 3 m out.** `runtime/heights_1024.r32` is a 4 x 4 block mean,
+so its texel sits at `origin + 8 i + 3 m`; `TerrainProvider` read it at `origin + 8 i`. Against
+the 2 m ground that was more than a metre out on 37% of the land and more than three on 11%;
+read where it is, 11% and 1.15%. The regions, water and levels are point samples and were read
+correctly. The offset is in CONTRACTS §6 now.
+
+**The flow fails on a void, and `run.sh` now says so.** After the body stands, the probe checks
+that the ground is drawn (by Terrain3D or the fallback), that a ray finds ground under the feet,
+and that at least ten drawn things stand within 200 m. With no world on disk it fails at the
+title instead, with the title's words in its report. And `./run.sh flow` itself had never
+failed: it ran `flow_run new && flow_run load && flow_run continue` and printed `[flow] PASS` on
+the next line, and an `&&` list that fails part-way does not trip `set -e`, so a failed probe
+exited 0 under a PASS, with only a `[flow] FAIL` line further up to say otherwise. The verdict is
+taken from the list now. Any earlier "flow passes" that was read from the last line or the exit
+code was not a reading of the probe. The other way round, this branch's final suite printed
+`RESULT: PASS` and exited 1: `echo "$out" | grep -q` under `pipefail` (44 failures in 200
+replays of that log); the parent branch's fix, a grep that reads to the end, is taken verbatim.
+
+**The fade waits for the country.** It lifted on `player_spawned`, and in all three flow runs
+**none** of the full-detail cells round the body was standing at that moment (the Hushline Stair
+is on the world's south edge, so its ring is six cells, not nine): the first frame a player saw
+was bare ground with the trees and the steps arriving over it. The fade now holds until the ring
+is in, for up to 20 s, with "Laying the country around you: n of 6" in the caption and the body's
+hands held; the probe fails a run whose fade had to give up. It held 8.0 s (New Game), 4.4 s
+(`--load`) and 12.8 s (Continue) here, at a load average of 20; on a machine to itself it will be
+a fraction of that. The world's own synchronous load (no frame at all for 17 to 19 s after the
+press, the probe's note) is unchanged: that is the terrain and the doors, not the cells.
+
+**Shipping the world so a clone plays without Python.** Every read of `res://world/generated`
+and `res://terrain_data` in `game/` was traced. The game reads the manifest, `pois.json`,
+`roads.json`, `rivers.json`, the four `runtime/` maps, the 1024 cells and the sixteen Terrain3D
+regions, and nothing else:
+
+| Set | Files | Raw | zlib-6 (git's) |
+|---|---|---|---|
+| manifest, pois, roads, rivers | 4 | 0.1 MB | 0.03 MB |
+| `runtime/` | 4 | 10.0 MB | 3.8 MB |
+| `cells/` | 1024 | 153.5 MB | 58.1 MB |
+| `terrain_data/` | 16 | 145.1 MB | 144.7 MB |
+| **total** | 1048 | **308.7 MB** | **206.6 MB** |
+
+A repository holding exactly that set packs to **206.7 MiB**. The full-resolution maps only
+the terrain import reads — `heights.r32`, `color.rgba8`, `control.u32`, `flow.rg8`, the three
+`texture_*.u8`, `water_mask.u8`, `region_mask.u8` — are 304 MB and stay out. The Terrain3D regions
+are already compressed: every region file is `RSCC`, the format `ResourceSaver`'s
+`FLAG_COMPRESS` writes — zstd, but in 4 KB blocks — so a region's 13.3 MB comes to about
+9.1 MB where whole-file zlib would give 7.6 and xz 5.8. There is no flag in
+`import_terrain.gd` to change that: it hands the saving to Terrain3D's `save_directory`, which
+chooses the format itself. Terrain3D's 16-bit height option would save about 2 MB a region at a
+worst error of 0.125 m here (0.25 m above 512 m); not taken. Cells could be stored gzipped
+(58 MB instead of 154 checked out; git stores them compressed either way): reading one costs the
+worker thread 2.3 ms more for a median cell and 8.3 ms for the largest, against a JSON parse of
+10.5 and 21.5 ms, measured at a load average of 20, and `_parse_cell` runs on the worker pool,
+so none of it is frame time. Not done: it is the builder's file to write, and the builder is
+another stream's this round. `.gitignore` now names
+exactly the runtime set (checked against placeholders of every file the builder writes, and an
+unknown new one, which stays out); `run.sh` imports a never-imported project before running it,
+and `ensure_world` checks the manifest and the regions, imports the regions alone when the
+full-resolution maps are there, and otherwise builds; README's "Run it" is rewritten for a
+repository that carries its world. **The world data itself is not committed on this branch**:
+another stream is rebuilding it this round.
+
+**Proved on a clean clone.** A clone of this branch in a scratch directory, never opened and never
+imported. With no world on disk, `./run.sh flow` imported the project (5060 files, a 519 MB import
+cache) and failed at the title, whose sheet said what was missing, the command and what it needs,
+with New Game, Continue and Load shut — and the sheet, seen there for the first time, overflowed
+1280 x 720, so it was tightened. With only the runtime set copied in (`git status` in the clone
+then listed exactly those 1048 files, and nothing else the builder writes), the same command passed
+all three runs — 72, 28 and 31 checks, none failed, no errors logged — without building anything,
+the fade holding 8.2, 12.0 and 11.1 s for the near cells. Then, as near as this Linux machine
+can come to a Mac without the plugin, `terrain.gdextension` was taken out of the clone: the
+`Terrain3D` class did not exist, the title showed its one small line about the coarse ground, the
+world drew `FallbackTerrain` (built in 5.5 s at a load average of 32), and the flow passed all
+three runs again — the body standing on the heightfield chunk `Ground_4_15` at 0.00 m, thirty
+drawn things within 200 m, the notice on arrival.
+
+### Found and not fixed
+
+* **`tools_gd/check_scripts.gd` does not run on 4.7.2**: an internal VM error at its line 20,
+  after which it never quits (the `SceneTree` waits for ever). Use the test runner.
+* **The water sheet samples its maps 4 m out.** `painted_water.gdshader` maps a world point to
+  `(xz - origin) / size`, which puts runtime texel k at `origin + 8 k + 4`: the mask and levels
+  are point samples at `origin + 8 k`, the heights at `+ 3`. Four metres of shoreline.
+* **Whether the water sheet is drawn at the sea inlets.** Its discard test is
+  `texture(mask_tex, uv).r < 0.5` on a mask whose water texels are the byte 1, which normalises
+  to 1/255; yet the Mere's surface looks like water from its shore. I have not settled which it
+  is — Cinderlea's water is near-black and so is its ground — and the test that would is one
+  capture with `use_mask` off beside one with it on.
+* **`run.sh flow` keeps only its last run in a redirected log.** `flow_run` tees each probe's
+  output to `/dev/stderr`, and when stderr is a file, `tee` reopens it truncated, so
+  `./run.sh flow > log 2>&1` ends with only the Continue run in `log`. The per-run JSON reports
+  in the output directory are complete; read those.
+* **The headless teardown message came seventeen times, not sixteen** (`Parameter "material" is
+  null`, Known issues above), in the first full run with the two new test files, which stand up
+  three more worlds with people in them. Probably one more NPC body freed; not traced.
+* **After this merges, a worktree with the world symlinked in shows the two symlinks as
+  untracked** (`game/world/generated`, `game/terrain_data`), because `.gitignore` can no longer
+  ignore those paths whole and still track files inside them. Add files by name.
+
+### Then: Forward+, a player on Windows, and the coarse ground said out loud
+
+The player's own logs (Windows, a Radeon RX 9070 XT, Forward+, Godot 4.7.1) said
+`[World] ready: terrain=fallback` on every run, with no errors. Their world build had written the
+maps and the Terrain3D import after it never ran: `run.sh` called `godot`, which is not on a
+Windows `PATH`. The coarse ground carried them — and was much of the grey, barren look they
+reported, announced by one small line on the title and one toast that they never saw.
+
+**Forward+ on this machine crashed as the world was built, and it is not ours.** With Mesa's
+software Vulkan driver installed, the flow got through the title and the Naming and died at
+`add_child(terrain_node)`: the deprecation warning, "/root: The caller thread can't call the
+function `propagate_notification()`", signal 11 in an unknown module. Terrain3D 1.0.2 alone in an
+empty project (a camera, a light, the node) crashes it too. Under gdb all four `llvmpipe`
+rasterizer threads stop at one address in the driver's compiled shader, on an indexed load
+(`vmovd 0x0(%r13,%rax,4)`) out of range. The thread error is Godot's crash handler sending
+NOTIFICATION_CRASH to the tree from that thread: under gdb, which takes the fault first, it never
+prints. Nothing of ours touches the tree from a thread: the game's one worker-thread task (the
+streamer's `_parse_cell`) reads a file and parses JSON, no node processes on a sub-thread group,
+and nothing of ours listens to Terrain3D's signals. The deprecated
+`instance_reset_physics_interpolation` is compiled only into Terrain3D's 4.4-targeted builds and
+lands on Godot's compatibility binding: one warning, harmless, and not the crash.
+
+When it crashes is the clipmap and the view, not the ring count alone. Alone, at 2 m spacing with
+the regions, 60 frames each: Terrain3D's default 7 rings of 48, and 7, 8 and 9 rings of 32 (the
+game's), all drew; 9 of 48 crashed. At 1 m spacing, 7 of 48 crashed on the first frame, with the
+regions and without. In the game, 9 rings crash as the world is built; the painted-look stream
+found 7 ran, and here 7 drew the real terrain (Cinderlea, the Builders' towers) through forty
+seconds of the New Game flow and then crashed the same way. So fewer rings buy short captures,
+not safety.
+
+**No newer Terrain3D to move to.** `git ls-remote` of the upstream repository: the newest tag is
+`v1.0.2-stable`; its `1.0` branch has one commit since, to the installation docs; `main` is
+`1.1.0-dev` (`compatibility_minimum = 4.5`) and no longer makes the deprecated call, but has no
+release and no official binaries. Nothing to verify against, so nothing was changed.
+
+**What changed.**
+
+* `WorldStatus` does not start Terrain3D on a RenderingDevice (Forward+, Mobile) whose adapter is
+  llvmpipe: the coarse ground, with the reason and the renderer that does draw it (the
+  Compatibility renderer's llvmpipe draws Terrain3D, as every flow here always has).
+  `-- --terrain=terrain3d` tries Terrain3D anyway; `-- --terrain=fallback` asks for the coarse
+  ground anywhere (`--fallback-terrain` still works), read from the user arguments and the
+  engine's own, so the editor's Main Run Args carry it too. `-- --terrain-lods=N` (or
+  `WICKMERE_TERRAIN_LODS=N`), 1 to 10, sets Terrain3D's clipmap rings for tools, nine when nobody
+  asks; asking also tries Terrain3D on llvmpipe, for short Forward+ captures of the real terrain. On Forward+ over lavapipe the New Game
+  flow now passes (75 checks, none failed, no errors logged), and so does it with
+  `--terrain=fallback` (74).
+* The coarse ground, unless asked for, is said where it cannot be missed (`GroundNotice`): across
+  the title sheet as plainly as a missing world, with the way to the full terrain and the way in
+  still open; on a card across the top of the view once the region's name has gone; and on a
+  "Coarse ground" plate in the top left corner, with the reason, for as long as the HUD is up.
+  Asked for, it is the plate alone and one small line on the title. When the maps were built here
+  and never imported, the way named is `./run.sh terrain`, not a rebuild. The flow checks the
+  plate and the card on the coarse ground, and that nothing says so on Terrain3D.
+* `run.sh` finds Godot: `GODOT` if set, then the usual names on the `PATH`, then the usual places
+  (Downloads, the Desktop, `C:/Godot`, Program Files, Steam and winget on Windows, the console
+  build first; `/Applications/Godot.app`; an unpacked Linux download), a 4.7 before any other,
+  with a warning when it is not a 4.7. `./run.sh godot` says which. A command that needs Godot and
+  has none stops before doing anything, with a banner naming `GODOT` and an example per system;
+  `./run.sh world` looks before it builds. A failed terrain import gets a banner too, and
+  `./run.sh terrain` runs the import alone. Python is found the same way (`PYTHON`, `python3`,
+  `python`). Checked on this machine against fake homes; not run on Windows.
+* This branch's final suite had printed `RESULT: PASS` and exited 1: `echo | grep -q` under
+  `pipefail`. The parent's fix is taken verbatim.
+* The arrival card waits 4.8 s of game time for the region's title card, and game time is slow
+  when frames are: the engine clamps a slow frame's delta to what its capped physics steps cover
+  (0.12 to 0.15 s for a 0.5 s frame, measured), so on Forward+ over lavapipe under load the probe's
+  twelve seconds ran out before the card came. It waits up to ninety.
+* **The pushed branch, cloned and played.** Once the world was committed (197a50c1, the 1048
+  files of the runtime set), `claude/blissful-volta-dg80e6` at 549dd05 was cloned fresh from
+  GitHub (`--depth 1`, 1.4 GB checked out), never opened, never imported, no Python run. In it
+  `./run.sh flow` imported the project and passed all three starts on Terrain3D: New Game 73
+  checks, `--load` 28, Continue 31, none failed, no errors logged; the ground drawn by Terrain3D,
+  46 drawn things within 200 m, the fade held 8.3, 6.1 and 3.5 s for the near cells. In all
+  three the ray down from the body met the Hushline Stair's masonry 1.36 m below the feet and
+  no terrain collision: the same in every Terrain3D run here since the first, and consistent with
+  what the user's second playtest found and main has since mended (Terrain3D's collision stayed
+  round the fly camera, not the player).
+* **Main's `World.follow` and dry landing merged in, and nothing here leans on the fly camera.**
+  The coarse ground's collision is a heightfield per chunk over the whole world and its LOD is
+  Godot's mesh LOD on whatever camera draws; the fade's count asks the streamer, which `follow()`
+  points at the body before `player_spawned`. The flow now checks both things that let the old
+  bug through: that Terrain3D's camera is the body's own, and that the fade counted cells round
+  the body at all (a streamer following something else counts nothing, and nothing is all in at
+  once).
+* **The fade counts cells, not seconds** (the coordinator's finding on the main branch: the
+  `--load` start lifted with 8 of 9 near cells after 535 s of wall time, the machine running the
+  game at a few per cent of real speed). The 20 s cap described above is gone. `UI.wait_for_country`
+  holds while cells keep arriving and gives up only when none has come for 120 frames and 10
+  seconds together, or after 600 s; the caption goes on counting. `test_country_wait.gd` throttles
+  a fake streamer by hand rather than hoping for a slow machine: a cell every eight frames at two
+  seconds a frame is waited out to nine of nine (the old wait would have lifted on one), a streamer
+  that stops at five is given up on after both halves of the stall and no longer, a cell every 45
+  frames on a 1 ms clock is not given up on for its quiet frames alone, and the cap ends a wait
+  that is still moving.
+* **The wait went to main without the probe that reads it.** fc24424c took `UI.COUNTRY_WAIT_S`
+  away and `flow_probe.gd` still named it, so the probe does not compile on a main that has
+  fc24424c alone and `./run.sh flow` has no verdict there; 3e10d533 on this branch is its other
+  half.
+* **A player who built the world pulls the tracked one without trouble.** Modelled in a scratch
+  repository with both `.gitignore`s: the locally built manifest and runtime maps were ignored, so
+  `git pull` replaces them with the tracked ones silently (git's default for ignored files) and
+  leaves the full-resolution maps alone; `git status` is clean after. Those maps are then the old
+  build's: `./run.sh` leaves them be (the regions are there), but a `./run.sh terrain` would import
+  them over the tracked regions.
+* **`run.sh` stopped reaching for `xvfb-run` on Windows and a Mac**, which never have it and
+  always have a screen.
+
+**Found on merging main at f1cd8852, and not this stream's.** The merged suite: 1562 tests, 3
+failed, 3 script errors, where this branch alone had been 1421, none failed and none. (Main
+mended the three tests and the errors itself in d9c4b6ce and ef0b0ce2; merged again at 146494ec,
+the suite is 1570 tests, none failed, no content problems, no script errors, no dead captures.)
+`test_inventory_loot`'s two quest tests count the Naming's stages as wake, ash_wights, hearthstone,
+the_cart (quests round two, b1326eb6), and the opening (20ef631b) put `the_choir` second.
+`test_the_start.test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front` finds one light
+at the Stair Head where it wants more than two. `test_property` calls `Ownership.instance`, which
+it never makes and which no test before it now leaves standing. And the New Game flow sat in the
+opening for 601 s with 2 of its 10 shots shown, at a load average of 25: each shot holds until the
+cells round its points are in, and they came slowly. It did the same again on the final merge
+(602 s, the same two shots, `the_name` and `the_mere`, then a hold on the third), so it may not be
+load alone. It never handed over, so the HUD, the first
+frame of control, the Warden, the objective line and this stream's Terrain3D-camera check all
+failed after it: the camera was still `/root/World/Opening/CinematicCamera`. The hair chooser's
+list did not open within its 60 frames either. The slot that run saved kept the `new_game` flag up
+(it stays up until the opening hands back), so the `--load` start after it played the opening
+again. With `-- --no-opening` the same three starts read past it: every check of this stream
+passed in all three -- nine of nine near cells in before the fade lifted (13.7, 25.1 and 20.3 s,
+two frames each), Terrain3D following `/root/World/Player/CameraRig/Yaw/Pitch/Arm/Camera3D`, its
+ground 0.00 m under the feet, 158 things drawn within 200 m -- and `--load` passed whole (32
+checks). New Game failed only the two choosers and the opening it was told not to play; Continue
+only "the body's hair is short (it is long)": it takes the newest slot, and every worktree on this
+machine saves into the one `user://`. On Forward+ over lavapipe, `--load` with the opening off
+drew the coarse ground and passed every check of this stream -- the plate in the corner, the card
+41.9 s after the fade (game time runs slow there), the body on `Ground_4_15`, 160 things drawn
+within 200 m, the fade holding 87.2 s for nine of nine -- and failed only the same hair.
+
+### Next, in order
+
+1. ~~**Commit the built world.**~~ Done on the main branch (197a50c1), and a fresh clone of it
+   plays without Python (above).
+2. **Play it on a Mac.** Nothing here can run macOS. On macOS 15 or later the title must say
+   nothing about the ground and `./run.sh flow` must pass on Terrain3D; on macOS 14 or earlier the
+   title's notice must name macOS 15, the corner plate must say "Coarse ground", and the flow must
+   pass on the coarse ground. If the frameworks are refused (quarantine, signing), the Console log
+   says so and the game still plays, coarse, and says so.
+2a. **Run `./run.sh` on Windows from Git Bash**, with Godot unzipped into Downloads and not on the
+   `PATH`: `./run.sh godot` must name the console build, and with no Godot anywhere every command
+   must stop with the banner before building anything.
+3. **Linux on arm64** is the same test as an old Mac, and Terrain3D has no binary for it: the
+   fix there is upstream, or building Terrain3D 1.0.2 for arm64 ourselves.
+4. **Settle the water sheet** (see above): one capture of the Mere and one of the Hushline's
+   inlet with `use_mask` on and off. Then move its samples onto the texels they belong to.
+5. **The coarse ground's weak places**: Cinderlea's terraces, cliffs and the field patchwork do
+   not survive 8 m. A 2 m runtime copy of the heights would be 64 MB; a small runtime field map
+   from the builder would bring the hedges back. Both are the builder's files, not this stream's.
+6. **`check_scripts.gd`** wants mending for 4.7.2 or deleting.
+## Walking, the view, the roll and the compass: what the player felt, measured
+
+The first report was "the walk animation seems very slow and jagged, like a crouch walk (no
+sprint?)", and that the compass moved erratically as the player did. After playing the build:
+"the movement is indeed very slow, and the mouse/movement (WASD) relationship seems off, hence
+the compass and orientation issues". After the first round: "movements/animations still a
+little clunky (no roll?)". Every part of that was true, and each had a cause that could be
+measured. Most were not the cause first guessed.
+
+**The view turned with the body.** The camera rig was a plain child of the player's body, so
+the view looked along body yaw plus rig yaw, while movement, respawn, the save and every test
+read the rig's yaw as the whole of it. One second of D, mouse untouched, turned the body −90°
+and the view +89.9°. The compass swung 89.9° in steps of up to 21° a frame, and W then sent the
+body off at an angle to what the player could see. That one fault is the "mouse/movement
+relationship" and the "compass and orientation issues". The rig is `top_level` now. It follows
+the body's drawn position every frame, never its rotation, and its yaw is a world yaw that only
+look input changes. The mouse signs were already right; a test pins them now. W/A/S/D are
+relative to the view, and over twenty cases (camera yaw 0, 90, 180, 270 and odd angles, each
+key) the worst direction error is 0.00°. The body turns toward where it is going at a rate that
+falls with speed: 900°/s standing, 720 at a walk, 540 at a jog, 300 at a sprint. It gives up
+speed while a large turn is still to make, so a reversal from a jog plants and faces round in
+0.42 s instead of moonwalking. Locked on, blocking or in first person, it faces the target or
+the view and strafes.
+
+**"Very slow" was two things, and only one of them was the speed.** A brand-new character
+reached exactly 4.20 m/s, the design's number, in 0.067 s, and nothing but a status touches
+ground speed. The gaits are now walk 1.8 m/s (Alt, or a light stick), jog 5.0 (the default)
+and sprint 7.8 (Shift held). The sprint costs 8 stamina a second, and run to empty it stops
+until a quarter of the pool is back instead of stuttering on every regen tick. Measured on a
+new character: 1.80, 5.00 and 7.80. Rest to a jog takes 0.317 s; a jog stops in 0.25 s over
+0.58 m, a sprint in 0.48 s over 2.05 m. The other half of "slow" was a jog posed as a crouch.
+The blend space fed velocity/6.5 with Sneak_Walk half way up its forward axis, so at 4.2 m/s
+the body was three-quarters into the sneak: hips 15.2 cm below standing, knees at 58°, the
+planted foot sliding at 79% of the ground speed. The sprint played the Walk clip and slid at
+76%. Legs that shuffle under a gliding body read as slow at any speed.
+
+**The legs keep pace with the ground.** `HumanoidModel.set_locomotion` takes metres per second.
+Every moving clip lies on one shared stride timeline with its silent inputs kept running, and
+one time scale plays it at ground speed over stride. The planted foot as a share of ground
+speed is now: walk 2%, brisk walk 2%, walk to jog 6%, jog 3%, jog to sprint 3%, sprint 3%, sneak
+1%, a villager at 2.2 m/s 2%, a strafe 0%, a backpedal 0%. The thresholds are 5% at a gait and
+8% in a blend. Every gait reads the same phase to within 0.001 of a stride through a walk, a
+jog, a sprint, a strafe and a backpedal. Villagers were never told how fast they walked; the
+village glided about in its idle pose. They are told now.
+
+**The clips were crouched as well.** Walk, Run and Sneak_Walk are re-made in the forge at the
+game's speeds, and there is a new Sprint. Played in the engine at walk, jog and sprint speed,
+the hips rode 5.4 cm below standing with 11.4 cm of bob at a walk, and 8.7 cm with 23.9 cm at a
+jog. The sprint was the jog's clip sped up and did the same. Now they ride 4.2 cm with 5.0 cm,
+4.1 cm with 5.3 cm, and 4.4 cm with 6.2 cm. The first model's walk was lowest at mid-stance
+and its run highest there, which is backwards. The new stride model in
+`tools/forge/lib/anim.py` plants the foot ahead of the hip by a share of the sweep, plans the
+hips from where the ankle really is once the foot has rolled, meets the reach limit through a
+smooth minimum, and phases the bob the right way round. The side-steps dropped the hips 21.3 cm
+at every step, a bounce whenever the player was locked on, and are shortened to move them
+5.7 cm.
+
+**The roll existed; nothing said where it was.** Proved from real key events through the
+default bindings, Ctrl rolled a jogging body 3.31 m in the tick the key went down, untouchable
+for 0.30 s, playing Dodge_F. But Ctrl is a key the genre does not use for a roll. A tap of
+Sprint now rolls, as it does in the games most players will have come from, and a hold sprints.
+The sprint waits out the 0.22 s tap window, so a tap is not a lurch and then a roll. Ctrl and a
+pad's B still roll, and Space stays jump. The tap has a setting and is off while Sprint is a
+toggle. The roll itself was wrong too: its keys put the toes 19 cm into the ground on the way
+down, the head 24 cm into it at the turn and the back 26 cm clear of it coming over, and it
+stood up on bent legs with its feet 30 cm in the air. Every frame now lowers or raises the
+whole body until its lowest point touches the floor, within 1 cm, and it ends standing. It also
+widened the view: the sprint's widening read real speed, and a roll peaks at 11 m/s, so every
+roll breathed the view out from 75° to 77.8°. It stays at 75.0° now.
+
+**The first minutes teach the controls.** A strip low in the HUD reads "WASD move · Shift
+sprint · tap Shift roll · Space jump · E use · LMB strike · RMB block" from the live bindings,
+or the pad's buttons while a pad is in use. Each item fades once it has been done, and the
+strip goes when nothing is left or after fifteen minutes. What was learned rides in the game,
+so a new game is taught again. The pause page reaches "How to move and fight", every control as
+bound now, one button from rebinding.
+
+**Locked on, the pace goes by the way you go.** The combat round's headless fights found that
+a locked-on player could not close on a caster backing away at about 3 m/s: every locked-on
+direction was capped at 2.6 m/s, and the gap grew 1.39 m in three seconds of W. Locked on, the
+body now goes 5.0 m/s at the foe, 3.0 across and 1.8 backing off (the ellipse between), and the
+gap closes 5.26 m in the same three seconds with the lock held. In the arena, at the old pace
+the Cragborn's caster fight was not won in 120 s (0 of 53 swings landed); at the new one it is
+won in 35.1 s, and the Hearthkeeper's in 20.7 s rather than 59.0. Sprint while locked on runs
+and keeps the lock. A raised guard walks at 1.56 m/s. It used to glide there with frozen legs,
+because Block_Idle was played as a whole-body state. It is a layer over the upper body now, and
+the legs walk under it, 2% slide. A body turning on the spot, guarding or locked on, steps
+round rather than pivoting on planted feet.
+
+**Starts, stops and the camera's follow.** The stride's rate was read off a speed smoothed over
+0.08 s. Under a jog's stop that runs up to 1.6 m/s ahead of the body, so the legs went on
+stepping 0.12 of a stride after the body stood, then held a split for a tenth of a second and
+snapped together. The rate now follows the ground speed as it is, no step is taken after the
+body stands, and the idle eases in over 0.2 s from the moment the body's own speed says so. The
+camera trailed a jog by 0.34 m and drew 0.4 m away at every start and back at every stop. It
+trails by 0.23 m now and closes up in about 0.15 s.
+
+**Smooth at any refresh rate.** Physics interpolation was off, so a body moved at 60 Hz stepped
+on any faster display, and the camera and the compass stepped with it. It is on, with the
+jitter fix off. What that needs was measured in the engine first. A child moved every frame
+under an interpolated parent trails (drawn at 3.61 when put at 4), so the per-frame things opt
+out: the camera rig, the sockets on the hands, the atmosphere, a dropped item's bob, the Echo's
+hover, the Naming's mannequin, the UI. An existing node moved without a reset smears (moved
+from x = 4 to 500 it was drawn at 254 for a frame), so everything that jumps resets:
+`Player.teleport` (which respawn, loads, doors, jail, exile and the console go through), an
+enemy sent home, a villager put indoors, a loaded actor. A wall 1.6 m behind the camera pulls
+it in to 1.39 m at once, and it eases back to 3.59 m over a third of a second. A sprint draws
+it back 0.5 m and widens the view from 75° to 81.8°, eased both ways. Checked against
+`World.follow`, which gives Terrain3D the player's own camera: a teleport made outside a physics
+tick (a respawn timer, a load, the console) left the interpolated transform at the old place for
+a frame, so the rig snapped there and the frame was drawn, and the terrain built, from 800 m
+away. On the frame of a snap the rig now reads where the body was put: 4.23 m from it the next
+frame.
+
+**The compass reads the view**, eased over about 30 ms, processed after the camera, with
+bearings from where the body is drawn. On a path past Merrowby that turned the body 450° with
+the mouse still, the strip moved 0.00°. With the view turning, it stays within 1.33° of the view
+and never moves further in a frame than the view did plus the lag it carried.
+
+**Holes found on the way.** The Echo handed a death's marks back. An Area3D finds an overlap
+in one physics step and reports it at the start of the next, and the journey dies and comes
+back one frame apart. So the body's single tick on the Echo was reported after Hearth had
+armed it and moved the body 30 m to the stone. The Echo now checks the body is standing in it
+when the arrival is reported; a test reproduces the stale report. After the merge with the
+combat work, three tests measured the machine instead of the game, and they are fixed. The
+blend test played every tick twice once the model advanced its own tree. The compass test's
+bound grew with frame times. A footstep test walked "a second and a half" on a loaded wall
+clock that fitted a third of a second of play.
+
+**Tools left behind.** `game/tools_gd/motion_studio.tscn` films the real player on a plain
+floor from real key events, in Forward+ in a minute or two, where loading the country crashes
+Mesa's software Vulkan. `tools/capture/plans/motion.json`, `gaits_studio.json` and
+`controls.json` are its plans. The capture runner's gait runs can hold and tap real keys
+(`tools/capture/plans/roll.json`). `tools/forge/bake_clips.py` bakes every clip onto the bare
+armature in 26 s where the rig bake takes 24 minutes. `tools/forge/transplant_clips.py` moves
+clips onto the committed rig by bone name and proves nothing else changed. Under Blender 4.2
+the rig bake repaints the body the 4.0-built rig was made with, so the transplant is how
+clips change without the body.
+
+**Looked at.** Eight frames 0.1 s apart of each gait, from the side, in the world at the
+Cracked Toll, through the capture runner's `gait` section (`tools/capture/plans/gait.json`,
+`--fixed-fps 60`), before and after. Before: the jog was a hunched, bent-kneed shuffle with
+both feet near the ground in every frame; the "walk" was the same, since there was no walk key;
+the sprint was the Walk clip at 6.5 m/s, an upright stroll with the arms hanging. After: the
+walk is upright, with a heel strike and a straight leg under the body. The jog leans a little,
+drives a knee and leaves the ground between steps. The sprint leans hard, drives the knee to the
+hip and spends much of each stride in the air. In Forward+, in the motion studio: the roll goes
+over the shoulders and back and ends standing; the stop's stance closes steadily over 0.2 s,
+where it had frozen mid-stride and snapped; a guard held while walking now steps under the
+raised hands, where the legs had stood still; a turn on the spot steps round.
+
+**Checks at the end.** On the final head: `./run.sh test` 1436 tests, 0 failed, 0 content
+problems, 0 script errors, 0 dead lambda captures; `./run.sh journey` 16 of 16, 0 logged errors;
+`./run.sh flow` PASS on all three starts (new 73 checks, load 28, continue 31, 0 errors logged).
+The forge's own tests: 28, all passing. `./run.sh fights --only=caster`: both Callings win.
+
+### Found, and not fixed
+
+* **A stop still slides its feet together.** The split closes steadily over 0.2 s now rather
+  than freezing and snapping, but the feet travel 59 cm in all doing it. A stop clip (the back
+  foot stepping up) or foot locking would take it out.
+* **Turning on the spot is a side-step, not a turn clip.** It reads as stepping round in the
+  frames; 90° and 180° turn-in-place clips would be the proper thing if it reads as a shuffle
+  in play.
+* **The diagonals slide.** Locked on, the planted foot moves at 28% of the ground speed on the
+  forward diagonal (3.64 m/s) and 23% backing off diagonally; it was 19% at the old 2.6 m/s.
+  Blending a forward stride with a side-step in rotation space does not put the foot at the
+  average of the two footfalls. It needs diagonal clips or foot IK.
+* **Footsteps count ground, not footfalls.** The foley added in the combat round counts
+  ground covered and is right on average. The clips carry `footstep_l`/`footstep_r` at the
+  shared phase (left 0, right 0.5), which would put the sound exactly on the foot.
+* **The pad layout wants its own pass.** The right-stick click is both lock-on and camera
+  toggle, and D-pad up is both cast and quick slot 1. The Sayings menu has no pad button since
+  sprint took the left-stick click. Cycle target, lantern, skills and quick save/load have
+  none either.
+* **Walk_Back and the strafes are still made by the first stride model.** They measure
+  upright enough (Walk_Back 3.7 cm below standing, 6.8 cm of bob), so only the side-step
+  length changed.
+* **Villagers walk at 2.2 m/s**, the walk clip at 1.2 times its speed: purposeful, not wrong.
+* **Terrain3D 1.0.2 calls the deprecated `instance_reset_physics_interpolation`**, which prints
+  a warning at load and is harmless.
+
+### What a pair of hands should check
+
+The feel cannot be measured headless. Check the turn rates, the 0.3 s start, the stops, the
+0.22 s tap (too short for a deliberate tap? too long for a sprint start?), mouse sensitivity,
+whether 3.6 m behind the shoulder is the right distance, and whether the sprint's widening
+reads as speed. On a display faster than 60 Hz, the body and the camera should glide, not
+step; the software rasteriser here cannot show that. On Windows, check that Alt (walk) does not
+take the keyboard into the window's menu, and that Ctrl + W in the editor's embedded game
+window rolls rather than closing anything.
+
 ## Graphics settings, and every tree drawn at the distance it stands
 
 Two things were asked together because each needs the other. A Graphics section: four

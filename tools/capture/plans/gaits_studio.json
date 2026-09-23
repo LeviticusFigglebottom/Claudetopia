@@ -1,0 +1,9 @@
+{
+  "_doc": "The three gaits and the sneak from the side in the motion studio, eight frames 0.1 s apart each once up to speed: walk (W with Alt), jog (W), sprint (W with Shift held), sneak (C then W). xvfb-run -a -s '-screen 0 1280x720x24' godot --path game --rendering-driver vulkan --rendering-method forward_plus --audio-driver Dummy --resolution 1280x720 --fixed-fps 60 res://tools_gd/motion_studio.tscn -- --plan=tools/capture/plans/gaits_studio.json --out=captures/gaits",
+  "sequences": [
+    {"label": "walk", "view": "side", "keys": [[0.0, "Alt", true], [0.05, "W", true]], "shots": {"from": 1.2, "every": 0.1, "count": 8}},
+    {"label": "jog", "view": "side", "keys": [[0.0, "W", true]], "shots": {"from": 1.2, "every": 0.1, "count": 8}},
+    {"label": "sprint", "view": "side", "keys": [[0.0, "W", true], [0.1, "Shift", true]], "shots": {"from": 1.6, "every": 0.1, "count": 8}},
+    {"label": "sneak", "view": "side", "keys": [[0.0, "C", true], [0.1, "C", false], [0.2, "W", true]], "shots": {"from": 1.4, "every": 0.1, "count": 8}}
+  ]
+}

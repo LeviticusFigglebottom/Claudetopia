@@ -11,7 +11,11 @@ gen_music.py      renders compose.py's scores to stems and pieces + core:music d
 gen_ambience.py   beds and one-shot pools for every ambience key, weather and time layer
 gen_sfx.py        70 effects in 240 variants + the core:table/sfx content table
 report.py         spectrograms and a loudness/balance table into captures/audio/
-tests/            104 tests; run with tests/run_tests.py (pytest is not installed here)
+audit.py          what fails a release: clipping, true peak, DC, late or hot one-shot edges,
+                  beds that drop to digital silence, loop-seam clicks and breaks, and files
+                  far from their category's loudness (one-shots by their loudest 400 ms at
+                  their table level); --strict exits 1 on any flag
+tests/            122 tests; run with tests/run_tests.py (pytest is not installed here)
 ```
 
 ## Regenerating
@@ -21,6 +25,7 @@ python3 tools/audio/gen_music.py --force        # ~13 min
 python3 tools/audio/gen_ambience.py --force     # ~4 min
 python3 tools/audio/gen_sfx.py --force          # ~1 min
 python3 tools/audio/report.py                   # spectrograms + captures/audio/loudness.md
+python3 tools/audio/audit.py --strict           # every file against the release checks
 python3 tools/audio/tests/run_tests.py          # the toolkit, the scores, the generators
 godot --headless --path game --audio-driver Dummy -s tools_gd/make_bus_layout.gd
 godot --headless --path game --import --audio-driver Dummy    # fills in the .import sidecars
@@ -102,3 +107,11 @@ Several defects were found this way and would have been hard to find otherwise: 
 began at full amplitude on a random phase and clicked on every strike, strings whose loop gain
 was applied per sample rather than per round trip so they died in milliseconds, a wind bed that
 breathed only 8 dB across 42 seconds, and mud that measured brighter than stone.
+
+`audit.py` found the next five, all fixed in the generators and pinned in the tests: one-shots
+that decoded starting at -26 to -36 dBFS (Vorbis rings ahead of a transient on sample 0, so each
+effect is now set in 4 ms of silence -- 50 files); beds of frogs, boardwalk ropes and chain
+bridges that fell to digital silence for up to nine seconds between events (they now have a
+floor); a far thunder that began up to 1.4 s after it was fired and coins that landed 100 ms
+after the purchase (lead-ins below -60 dB of the peak are trimmed); variants of one effect up
+to 4.9 LU apart (held to 3 LU now); and two rows the table played 10-11 LU under their family.

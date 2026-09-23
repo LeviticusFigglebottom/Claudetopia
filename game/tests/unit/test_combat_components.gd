@@ -155,6 +155,19 @@ func test_damage_ticks() -> void:
 	assert_eq(str(total["kind"]), "fire")
 
 
+## Found by the headless fights: a burn's tick ended a stagger that came later in the same pass,
+## and the pass then read the stagger it had already lost (a SCRIPT ERROR that abandoned the rest
+## of the frame's statuses). The effects after it must still run down.
+func test_an_effect_ended_mid_pass_does_not_stop_the_others() -> void:
+	status.damage_tick.connect(func(_id: String, _amount: float, _kind: String) -> void: status.clear("stagger"))
+	status.apply("burning")           # ticks at once when 0.5 s passes
+	status.apply("stagger", 5.0)
+	status.apply("chilled", 5.0)
+	status.advance(0.5)
+	assert_false(status.has("stagger"), "the tick's handler ended the stagger")
+	assert_near(status.remaining("chilled"), 4.5, 0.001, "the effect after it still ran down")
+	assert_near(status.remaining("burning"), 3.5, 0.001)
+
 func test_chilled_slows_movement() -> void:
 	assert_near(status.speed_multiplier(), 1.0)
 	status.apply("chilled")

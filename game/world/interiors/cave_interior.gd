@@ -13,6 +13,8 @@ const SHAFT_SHADER := preload("res://assets/shaders/light_shaft.gdshader")
 const HEARTHSTONE := preload("res://systems/hearth/hearthstone.tscn")
 const DOOR := preload("res://systems/interiors/door.tscn")
 const BOSS_ARENA := preload("res://actors/enemy/boss_arena.tscn")
+## How far over the rock a body coming in is stood: enough not to begin inside it.
+const ENTRANCE_LIFT := 0.05
 
 ## Surface parameters per formation: what cut the rock decides how the rock reads.
 const ROCK_BY_FORMATION := {
@@ -72,6 +74,7 @@ func build(path: String) -> bool:
 
 	_build_shell(dir, slug)
 	_build_collision(dir, slug)
+	_mark_entrance()
 	_build_water()
 	_build_light_shafts()
 	_build_chamber_lighting()
@@ -79,6 +82,7 @@ func build(path: String) -> bool:
 	if spawn_encounters:
 		_build_encounters()
 	_build_boss_arenas()
+	_raise_quest_things()
 	Log.info("CaveInterior", "%s built: %d chambers, %d tris" % [meta.get("name", slug), chambers.size(), int(meta.get("tris", 0))])
 	return true
 
@@ -124,6 +128,8 @@ func _build_collision(dir: String, slug: String) -> void:
 	var inst := (load(glb) as PackedScene).instantiate()
 	var body := StaticBody3D.new()
 	body.name = "Collision"
+	# Footsteps read this (Foley.surface_at): a deep place is rock underfoot.
+	body.set_meta("surface", "stone")
 	body.collision_layer = 1 | (1 << 9)   # world + camera blocker
 	body.collision_mask = 0
 	add_child(body)
@@ -136,6 +142,47 @@ func _build_collision(dir: String, slug: String) -> void:
 		shape.transform = (mi as MeshInstance3D).transform
 		body.add_child(shape)
 	inst.queue_free()
+
+
+## Where a body coming in stands: on the rock under the forge's `entrance` (the middle of the mouth
+## chamber), as the "Entrance" marker Interiors.enter looks for. Without one the arrival fell back
+## to a metre above the pocket's origin and the player dropped 3.0 to 4.5 m onto the mouth's
+## floor in every deep place. The entrance's height is the chamber's nominal floor; the voxel
+## rock under it lies 0.25 to 0.55 m lower (about a voxel), so the marker goes on the rock itself.
+func _mark_entrance() -> void:
+	if not meta.has("entrance"):
+		return
+	var marker := Marker3D.new()
+	marker.name = "Entrance"
+	marker.position = _rock_under(_vec(meta["entrance"])) + Vector3.UP * ENTRANCE_LIFT
+	add_child(marker)
+
+
+## The highest rock under `at` (from a metre above it to three below), in this cave's own space,
+## read from the collision shapes themselves: the physics server has not seen them yet when the
+## cave is being built. `at` itself when there is no rock there.
+func _rock_under(at: Vector3) -> Vector3:
+	var body := get_node_or_null("Collision") as StaticBody3D
+	if body == null:
+		return at
+	var top := at + Vector3.UP * 1.0
+	var bottom := at + Vector3.DOWN * 3.0
+	var best := Vector3(at.x, -INF, at.z)
+	for child in body.get_children():
+		var cs := child as CollisionShape3D
+		if cs == null or not (cs.shape is ConcavePolygonShape3D):
+			continue
+		var tm := TriangleMesh.new()
+		if not tm.create_from_faces((cs.shape as ConcavePolygonShape3D).get_faces()):
+			continue
+		var inv := cs.transform.affine_inverse()
+		var hit := tm.intersect_segment(inv * top, inv * bottom)
+		if hit.is_empty():
+			continue
+		var p: Vector3 = cs.transform * (hit["position"] as Vector3)
+		if p.y > best.y:
+			best = p
+	return at if is_inf(best.y) else best
 
 
 func _build_water() -> void:
@@ -410,6 +457,16 @@ func _build_features() -> void:
 				m.name = str(f.get("name", "Marker"))
 				m.position = at
 				holder.add_child(m)
+			"item":
+				# Something to pick up. The quest-item placer makes it a pickup, wearing this very
+				# prop, and remembers when it has been taken; a boss's own drop stays a prop in its
+				# lap. With no placer at all (the review scenes) it is the prop it always was.
+				if _quest_items() != null and not ItemSources.boss_drops_at(str(f.get("item", "")), _place_id()):
+					continue
+				var prop := _instance_asset(str(f.get("asset", "")), at, float(f.get("yaw", 0.0)), float(f.get("scale", 1.0)))
+				if prop:
+					prop.set_meta("item", f.get("item", ""))
+					holder.add_child(prop)
 			_:
 				var node := _instance_asset(str(f.get("asset", "")), at, float(f.get("yaw", 0.0)), float(f.get("scale", 1.0)))
 				if node:
@@ -580,6 +637,24 @@ func _feature_position(f: Dictionary) -> Vector3:
 				return _vec(pts[int(f["anchor"]) % pts.size()])
 		return _vec(ch["centre"])
 	return Vector3.ZERO
+
+
+## What a quest says lies in here — the Ledger of Prices in the room behind the bell, the
+## decision at the Seat — and the pickups this meta names, put down by the quest-item placer.
+func _raise_quest_things() -> void:
+	var items := _quest_items()
+	var interior_id := str(get_meta("interior_id", ""))
+	if items == null or interior_id == "":
+		return
+	items.call("raise_in_interior", self, interior_id, meta, Callable(self, "_feature_position"))
+
+
+func _quest_items() -> Node:
+	return get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
+
+
+func _place_id() -> String:
+	return str(ContentDB.get_or_empty(str(get_meta("interior_id", ""))).get("place", ""))
 
 
 func _random_floor(ch: Dictionary) -> Vector3:
