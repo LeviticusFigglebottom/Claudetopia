@@ -53,14 +53,11 @@ case "$cmd" in
     # the run. The tests' own logged errors are counted and attributed by tests/test_runner.gd.
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/run_tests.tscn -- "$@" 2>&1 | tee /dev/stderr)" || true
     code=0
-    # Every check on the output reads it from a here-string, never `echo | grep -q`: under
-    # pipefail, grep -q leaving at the first match can kill the echo still writing a 200 KB log,
-    # and the pipeline then fails -- this line reported four green runs in five as failures.
-    grep -q "^RESULT: PASS" <<<"$out" || code=1
-    n="$(grep -c "^SCRIPT ERROR" <<<"$out" || true)"
+    echo "$out" | grep -q "^RESULT: PASS" || code=1
+    n="$(echo "$out" | grep -c "^SCRIPT ERROR" || true)"
     if [ "$n" -gt 0 ]; then
       echo "[test] $n script error(s) logged by the engine, at:"
-      grep -A1 "^SCRIPT ERROR" <<<"$out" | grep "at:" | sed 's/^ *at: /  /' | sort | uniq -c
+      echo "$out" | grep -A1 "^SCRIPT ERROR" | grep "at:" | sed 's/^ *at: /  /' | sort | uniq -c
       code=1
     fi
     echo "[test] script errors: $n"
@@ -68,7 +65,7 @@ case "$cmd" in
     # and nowhere else: it is not a SCRIPT ERROR, GDScript cannot count it, and the run stayed
     # green through 139 of them. The listener is still connected, so whatever the closure was
     # for silently does not happen. Read it here, for the same reason as the line above.
-    l="$(grep -c "Lambda capture at index" <<<"$out" || true)"
+    l="$(echo "$out" | grep -c "Lambda capture at index" || true)"
     if [ "$l" -gt 0 ]; then
       echo "[test] $l lambda capture(s) fired after the object they captured was freed"
       code=1
@@ -82,7 +79,7 @@ case "$cmd" in
     # A scripted player of a starting Calling against one foe of every archetype, headless and at a
     # fixed 60 fps (so it is the same run every time and costs what the machine needs, not real
     # time). Prints a FIGHT row per fight and a CHECK row per promise; exits 1 on a failed check.
-    #   ./run.sh fights [--calling=hearthkeeper]
+    #   ./run.sh fights [--calling=hearthkeeper] [--only=pack,boss] [--trace=boss]
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 res://tests/arena/fights.tscn -- "$@" ;;
   flow)
@@ -98,18 +95,18 @@ case "$cmd" in
       log="$(xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy \
         --resolution "${FLOW_RES:-1280x720}" -- "--flow=$out" "$@" 2>&1 | tee /dev/stderr)" || true
       local script_errors
-      script_errors="$(grep -c "SCRIPT ERROR" <<<"$log" || true)"
+      script_errors="$(echo "$log" | grep -c "SCRIPT ERROR" || true)"
       [ "$script_errors" = "0" ] || echo "[flow] $script_errors script errors in the log (see above)"
-      if grep -q "FLOW: FAIL" <<<"$log"; then echo "[flow] FAIL ($*)"; return 1; fi
-      if ! grep -q "FLOW: PASS" <<<"$log"; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
+      if echo "$log" | grep -q "FLOW: FAIL"; then echo "[flow] FAIL ($*)"; return 1; fi
+      if ! echo "$log" | grep -q "FLOW: PASS"; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
     }
     flow_run "$@" && flow_run "--load=flow" && flow_run "--continue"
     echo "[flow] PASS: $out" ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"
-    if grep -qE "SCRIPT ERROR|SMOKE: FAIL" <<<"$out"; then echo "[smoke] FAIL"; exit 1; fi
-    if ! grep -q "SMOKE: PASS" <<<"$out"; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
+    if echo "$out" | grep -qE "SCRIPT ERROR|SMOKE: FAIL"; then echo "[smoke] FAIL"; exit 1; fi
+    if ! echo "$out" | grep -q "SMOKE: PASS"; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
     echo "[smoke] PASS" ;;
   perf)
     import_project

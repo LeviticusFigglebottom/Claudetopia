@@ -1516,8 +1516,9 @@ not open; the count of tests leaving the world paused is 0 (it was 16).
 ### Also fixed in passing
 
 * `./run.sh test` could report a green run as failed: `echo "$out" | grep -q` under pipefail
-  lets grep's early exit kill the echo; four of five replays of a green log failed. The smoke
-  and flow checks had the same shape.
+  lets grep's early exit kill the echo; four of five replays of a green log failed. The parent
+  branch found and fixed the same race while this work was going on, so this branch keeps only
+  its `fights` command in run.sh and the parent's fix is the one that stands.
 
 ### Found and not fixed
 
