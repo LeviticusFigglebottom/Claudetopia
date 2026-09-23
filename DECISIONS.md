@@ -754,3 +754,22 @@ where Ctrl's starts on it. A sprint starts 0.22 s after Shift goes down rather t
 takes 0.4 s to reach sprint speed from a jog in any case. Letting Shift go and pressing it again
 quickly in a sprint rolls. The hint strip and the controls page say "tap Shift" while the tap is
 on, and name the Dodge key when it is not.
+
+## 2026-09-23 · The controls are taught on screen for the first minutes, and remembered by the game
+**Decision.** A strip low in the HUD names move, sprint, roll, jump, use, strike and block with
+the keys bound at that moment, or the pad's buttons while a pad is in use. Each item goes once
+the thing has been done: moved for 1.2 s, sprinted 0.6 s, rolled, jumped, pressed use, swung,
+held a guard 0.25 s. The strip goes when nothing is left, or after fifteen minutes of play.
+What has been learned is a GameState flag, so it is saved with the game. The pause page reaches
+a page of every control, read-only, with a button to the rebinding tab.
+**Why.** The playtest asked "no roll?" of a roll that worked. Nothing on the screen named it,
+and a player reads the foot of the screen long before a menu. Items go as they are done, not on
+a timer, so the one control a player has not found keeps being shown. The first version kept
+the learned list in the settings file. The test suite's own HUDs then taught that file every
+control on this machine, and the next run's strip came up empty, which is exactly how a
+shared settings file behaves for a second player on the same machine.
+**Alternatives.** A tutorial sequence (the game has no place to put one before the Naming, and
+players skip them). A timed strip that fades after a minute whatever was done (it teaches the
+player who least needs it). Keeping the list in the settings (above).
+**Consequences.** A new game is taught again, which a player who knows the controls will see
+for the minute it takes to move, sprint, roll and jump. The Hints setting turns the strip off.
