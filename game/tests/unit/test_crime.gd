@@ -124,7 +124,11 @@ func test_gossip_targets_same_region_settlements() -> void:
 	assert_false("core:place/tollmere" in targets, "other region")
 	assert_false("core:place/hollin_barrow" in targets, "not a settlement")
 	assert_false(MERROWBY in targets)
-	var none := Crimes.gossip_targets(MERROWBY, ContentDB.all("place"), {"core:place/tamwick": true, "core:place/wardens_rest": true})
+	# once everything it reaches knows, there is nobody left in range to tell
+	var known := {}
+	for t in targets:
+		known[t] = true
+	var none := Crimes.gossip_targets(MERROWBY, ContentDB.all("place"), known)
 	assert_empty(none)
 
 
