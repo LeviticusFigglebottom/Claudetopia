@@ -44,7 +44,8 @@ const FORCE_TERRAIN3D_ARG := "--terrain=terrain3d"
 ## it on the first frame it draws -- all four of the driver's rasterizer threads fault on the same
 ## out-of-range load in its compiled shader, with Terrain3D alone in an empty project and no data
 ## -- so on Forward+ or Mobile there the ground is the coarse one. The OpenGL llvmpipe of the
-## Compatibility renderer draws Terrain3D without trouble, and so does every GPU tried.
+## Compatibility renderer draws Terrain3D without trouble (every flow run here uses it). A
+## graphics card is not guarded against: none was here to try.
 const UNSAFE_RD_ADAPTER := "llvmpipe"
 ## The oldest macOS the Terrain3D 1.0.2 frameworks were built for (their LC_BUILD_VERSION).
 const TERRAIN3D_MIN_MACOS := 15
@@ -121,7 +122,7 @@ static func evaluate(f: Dictionary) -> Dictionary:
 		out["title"] = "The full terrain cannot be drawn with this graphics driver."
 		out["detail"] = ("This is %s, Mesa's software Vulkan driver, and Terrain3D crashes it on the first frame it draws, "
 				+ "so the ground is drawn from the coarse 8 m height map instead: the country is all there, with softer hills and plainer ground. "
-				+ "The Compatibility renderer (--rendering-driver opengl3) draws the full terrain here, and so does a graphics card; "
+				+ "The Compatibility renderer (--rendering-driver opengl3) draws the full terrain here, and a graphics card should; "
 				+ "to try Terrain3D anyway, start the game with %s.") % [str(f.get("adapter", "")), FORCE_TERRAIN3D_ARG]
 		out["command"] = ""
 	elif int(f.get("terrain_regions", 0)) == 0:

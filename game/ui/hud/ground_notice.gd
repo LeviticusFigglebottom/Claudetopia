@@ -141,8 +141,9 @@ func _show_card() -> void:
 
 
 func _process(delta: float) -> void:
-	var hud := UI.hud() as CanvasItem
-	var seen := hud != null and is_instance_valid(hud) and hud.is_visible_in_tree() and not UI.is_faded_out()
+	var found: Variant = UI.hud()
+	var hud: CanvasItem = found as CanvasItem if is_instance_valid(found) else null
+	var seen := hud != null and hud.is_visible_in_tree() and not UI.is_faded_out()
 	visible = seen
 	if not seen or card == null:
 		return

@@ -124,7 +124,7 @@ func test_software_vulkan_draws_the_coarse_ground_instead_of_crashing() -> void:
 	assert_eq(WorldStatus.evaluate(_facts({"rendering_device": false, "adapter": "llvmpipe (LLVM 20.1.2, 256 bits)"}))["state"],
 			"ready", "the Compatibility renderer's llvmpipe draws Terrain3D")
 	assert_eq(WorldStatus.evaluate(_facts({"rendering_device": true, "adapter": "AMD Radeon RX 9070 XT"}))["state"],
-			"ready", "and so does a graphics card on Forward+")
+			"ready", "and a graphics card on Forward+ is not guarded against")
 
 
 func test_the_terrain_argument_asks_for_the_coarse_ground() -> void:
