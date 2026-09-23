@@ -283,10 +283,14 @@ leaves at the lake's level.
  "cliff_shore_deg": 0, "reed_shore_deg": 270}
 ```
 
-The water stands at `level_m` inside the polygon; the bed falls to `depth_m` below it toward
-the middle. The land round it is held a metre or two above the water for a few hundred metres,
-so there are no dry hollows under the lake's level beside it. `islands` stand in it to their
-`height_m`. `cliff_shore_deg`, when given, is the bearing from the lake's middle of a stretch of
+The polygon is the landward edge of the lake's shore. The water stands at `level_m` inside it,
+beginning some thirty metres in (24 to 56 m on a built lake): the first metres inside the line are
+a shingle shore held a metre and a half over the water, and a cove drawn narrower than about a
+hundred metres closes up into a bump in the built shore, so draw a lake in features of a few
+hundred metres (docs/ATLAS.md, section 11). The bed falls to `depth_m` below the level toward the
+middle. The land round it is held a metre or two above the water for a few hundred metres, so
+there are no dry hollows under the lake's level beside it, and no landform digs one there.
+`islands` stand in it to their `height_m`. `cliff_shore_deg`, when given, is the bearing from the lake's middle of a stretch of
 shore that stands in a low cliff at the water; `reed_shore_deg` the bearing of one that runs out
 in a shallow reed shelf. A lake must be on land. One with no river out of it is a still water,
 which is allowed.

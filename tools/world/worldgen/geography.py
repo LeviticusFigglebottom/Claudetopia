@@ -641,6 +641,8 @@ def apply_lakes(ctx, h: np.ndarray, wt: Waters) -> np.ndarray:
     # the water for a few hundred metres, so no dry hollow sits below the lake beside it
     shore = level + 4.0 * smoothstep(0.0, 60.0, sd)
     ground = lerp(shore, h, smoothstep(50.0, 320.0, sd))
+    # (and across the drawn line too: the first thirty metres or so inside the polygon are this
+    # shingle shore, and the water begins past it -- SCHEMA.md, lakes; the atlas is drawn to that)
     near = 1.0 - smoothstep(250.0, 700.0, sd)
     ground = lerp(ground, np.maximum(ground, level + 1.5), near)
     # a cliff shore stands seven to ten metres at the water

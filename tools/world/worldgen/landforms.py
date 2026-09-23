@@ -506,6 +506,12 @@ def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = No
     if land is not None:
         delta *= land
     delta *= smoothstep(-10.0, 30.0, ctx.lake.sd)
+    # and beside a lake, no pit deeper than its water: a shakehole or a sunken street dug under the
+    # level a few metres from the shore is a dry hole beside the water (7.7 m deep by the
+    # Blackwater Tarn), not a pool
+    lk = ctx.lake
+    beside = (lk.sd > 0.0) & (lk.sd < 300.0)
+    delta = np.where(beside, np.maximum(delta, np.minimum(h, lk.level + 0.5) - h), delta).astype(np.float32)
     keep, no_raise = protection(ctx, discs or [], lines or [])
     delta *= 1.0 - keep
     delta = np.where(no_raise, np.minimum(delta, 0.0), delta).astype(np.float32)
