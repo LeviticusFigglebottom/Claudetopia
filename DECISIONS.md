@@ -495,3 +495,19 @@ vista came back littered with orange slabs where the gold barley and red poppies
 multiplied by gold and red. Rules now carry a `tint_strength` (how far from white the
 multiplier may travel, default 0.45) and the species whose asset already carries that colour
 take none at all.
+
+## 2026-09-23 · The built world is tracked, and the ground never depends on one plugin
+**Decision.** The part of `game/world/generated/` the game reads at run time (the manifest,
+`pois.json`, `roads.json`, `rivers.json`, `runtime/`, `cells/`) and `game/terrain_data/` are
+tracked in git, named exactly by `.gitignore`; the full-resolution maps that only the terrain
+import reads stay out. When Terrain3D cannot draw the ground — no library for the machine, no
+regions on disk, regions that load as nothing — `FallbackTerrain` draws it from the 8 m runtime
+height map, and `WorldStatus` refuses the world outright only when there is no world data at all.
+**Why.** A player cloned the repository, pressed Play and stood on a grey void. The world was
+never in the repository; building it needs Python, 8 GB and minutes, which the editor's Play
+button does not do; and on a Mac the plugin had no binary at all. Every way in let them through,
+because nothing asked whether there was ground, and `./run.sh flow` passed the void.
+**Consequences.** About 310 MB of built data in the repository (a 207 MiB pack, most of it
+Terrain3D's already-compressed regions), and a rebuild of the world is now a commit of that
+data, which will diff. The runtime height map's 3 m block-mean offset became part of the
+contract (CONTRACTS §6), because the fallback draws from it and it is visibly wrong without it.
