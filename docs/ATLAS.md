@@ -226,7 +226,9 @@ Oulea, Saeva and the Traders' Post.
 * **The Northwold** (170 m, hills; tors): between the Wold and the fells. Ormhold, the Blackgill,
   Harrow Tor, the Wardstone Line and the Silked Camp are here.
 * **The Thornmarch**: a granite rampart the length of the east edge with the Briar grown on it,
-  sheer on the Wold's side. It closes the east. The Briar's End, where it gives out against the
+  sheer on the Wold's side. It closes the east. Its crest wanders between about x 3925 and 4030,
+  bellying out and drawing back every few hundred metres, so the face seen from the Wold is a
+  broken line and not a ruled one. It keeps 80 m or more clear of everything at its foot. The Briar's End, where it gives out against the
   fells, is walled with bones.
 
 **Roads.** The **Wold Road** runs from Tamwick by the Weighing Stone, the Rod Stacks, the Sawpit and
@@ -296,11 +298,12 @@ from the Choir to the Last Camp and Greywatch, and through the Sunk Plaza to the
   (`reed_shore_deg` 262) and the cliff shore the north (350).
 * **Fourteen rivers.** The Skerrow Water, Brindle Beck, Rudd Beck, Rib Beck, the Skarl Water, the
   Wold Water, the Larkbourne and the Cressbourne all run into the Mere. The Outfall runs from it
-  to the Grey Sea. The North Channel and the Greyreed are the delta's other channels. The Oskel,
-  Weaver's Gill and the Blackgill join other rivers. Every river falls from source to mouth and
-  ends in water (tested).
+  to the Grey Sea. The North Channel and the Greyreed are the delta's other channels. The Oskel
+  and Weaver's Gill join other rivers. The Blackgill ends at its falls, in the Blackgill Pot under
+  them, and goes on under the ground; the woodfolk say it comes up in the Mere. Every river falls
+  from source to mouth and ends in water (tested).
 * **The small waters**: the Lark Pool (46 m), the Hidden Tarn (520 m), Blackwater Tarn (415 m),
-  Hesk Pool (56 m), Mormere and Lissane Mere (a hand over the fen). Each is drawn to its setting:
+  Hesk Pool (56 m), the Blackgill Pot (189 m), Mormere and Lissane Mere (a hand over the fen). Each is drawn to its setting:
   a millpond held by its dam, a cirque tarn under its back wall, a peat pool eaten ragged by the
   hags, a Builders' basin square once with steps down one side, a black pool in the carr, a reed
   mere in lobes.
