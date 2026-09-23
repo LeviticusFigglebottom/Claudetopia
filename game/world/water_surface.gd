@@ -11,15 +11,18 @@ const SHADER := preload("res://assets/shaders/painted_water.gdshader")
 const GENERATED := "res://world/generated"
 
 ## Region look: deep colour, shallow colour, how quickly depth reads as deep, how much of the
-## sky the surface mirrors, and how hard the sun glitters on it. The Mere's is the glittering
-## water WORLD_BIBLE 6.2 asks for; the marsh's is still and brown and gives back little.
+## world the surface mirrors (`reflect`, and `cap`, the most it gives back at the grazing angle),
+## how hard the sun glitters on it, and how rough the open water is (`waves`, the lake and the
+## sea only; a river keeps its own). The Mere is Lake Glass: calm enough that the island and the
+## far shore stand in it upside down, with the glittering path WORLD_BIBLE 6.2 asks for; the
+## marsh's pools are still and brown and give back little; the Grey Sea stays rough.
 const REGION_WATER := {
-	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0, "reflect": 0.8, "glint": 4.0},
-	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0, "reflect": 0.6, "glint": 1.2},
-	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6, "reflect": 0.85, "glint": 3.0},
-	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6, "reflect": 0.7, "glint": 2.0},
-	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4, "reflect": 0.9, "glint": 3.5},
-	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6, "reflect": 0.6, "glint": 1.5},
+	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0, "reflect": 0.9, "cap": 0.85, "glint": 4.0, "waves": 0.14},
+	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0, "reflect": 0.5, "cap": 0.65, "glint": 1.2, "waves": 0.12},
+	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6, "reflect": 0.85, "cap": 0.7, "glint": 3.0, "waves": 0.3},
+	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6, "reflect": 0.7, "cap": 0.65, "glint": 2.0, "waves": 0.2},
+	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4, "reflect": 0.9, "cap": 0.65, "glint": 3.5, "waves": 0.42},
+	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6, "reflect": 0.6, "cap": 0.6, "glint": 1.5, "waves": 0.25},
 }
 
 @export var sheet_subdivisions: int = 96
@@ -34,6 +37,48 @@ var _river_materials: Array[ShaderMaterial] = []
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
 var _height_tex: ImageTexture
+
+static var _unmirrored: Shader = null
+
+
+## The water shader, with the mirror or without it. Without it is the same code built with
+## WATER_NO_MIRROR defined, so the screen texture is never named: a material that names it makes
+## the renderer copy the frame before the water is drawn, whatever its `mirror` uniform says, and
+## the setting that turns reflections off is there to save that copy.
+static func shader_for(mirrored: bool) -> Shader:
+	if mirrored:
+		return SHADER
+	if _unmirrored == null:
+		_unmirrored = Shader.new()
+		_unmirrored.code = SHADER.code.replace("shader_type spatial;", "shader_type spatial;\n#define WATER_NO_MIRROR")
+	return _unmirrored
+
+
+func _ready() -> void:
+	Settings.changed.connect(_on_setting_changed)
+
+
+func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
+	if section == "video" and key == "water_reflections":
+		apply_reflections()
+
+
+## Puts every water material on the shader `video/water_reflections` asks for, keeping what the
+## region look and the builder set on it.
+func apply_reflections() -> void:
+	var mirrored := bool(Settings.get_value("video", "water_reflections", true))
+	var shader := shader_for(mirrored)
+	for mat in _all_materials():
+		if mat.shader != shader:
+			var keep := {}
+			if mat.shader != null:
+				for u in mat.shader.get_shader_uniform_list():
+					keep[str(u["name"])] = mat.get_shader_parameter(str(u["name"]))
+			mat.shader = shader
+			for k in keep:
+				if keep[k] != null:
+					mat.set_shader_parameter(k, keep[k])
+		mat.set_shader_parameter("mirror", 1.0 if mirrored else 0.0)
 
 
 func build(p: TerrainProvider) -> void:
@@ -79,7 +124,8 @@ func _texture_r8(path: String, n: int) -> ImageTexture:
 
 func _make_material(follow_level: bool, use_mask: bool) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
-	mat.shader = SHADER
+	var mirrored := bool(Settings.get_value("video", "water_reflections", true))
+	mat.shader = shader_for(mirrored)
 	mat.set_shader_parameter("level_tex", _level_tex)
 	mat.set_shader_parameter("mask_tex", _mask_tex)
 	mat.set_shader_parameter("height_tex", _height_tex)
@@ -87,6 +133,9 @@ func _make_material(follow_level: bool, use_mask: bool) -> ShaderMaterial:
 	mat.set_shader_parameter("world_size", provider.size_m)
 	mat.set_shader_parameter("follow_level", follow_level)
 	mat.set_shader_parameter("use_mask", use_mask)
+	# the lake gives back the far shore and the hills; a machine that cannot spare the frame copy
+	# the lookup needs can turn it off, and the water keeps the sky's own colours
+	mat.set_shader_parameter("mirror", 1.0 if mirrored else 0.0)
 	return mat
 
 
@@ -259,9 +308,11 @@ func set_region_look(region_id: String) -> void:
 		mat.set_shader_parameter("deep_colour", deep)
 		mat.set_shader_parameter("shallow_colour", shallow)
 		mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)))
+		mat.set_shader_parameter("fresnel_cap", float(look.get("cap", 0.65)))
 		mat.set_shader_parameter("glint_strength", float(look.get("glint", 3.0)))
 		if mat == _sheet_material or mat == _skirt_material:
 			mat.set_shader_parameter("depth_fade_m", fade)
+			mat.set_shader_parameter("wave_strength", float(look.get("waves", 0.42)))
 
 
 func _all_materials() -> Array[ShaderMaterial]:
