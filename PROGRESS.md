@@ -2838,6 +2838,63 @@ release and no official binaries. Nothing to verify against, so nothing was chan
   no terrain collision: the same in every Terrain3D run here since the first, and consistent with
   what the user's second playtest found and main has since mended (Terrain3D's collision stayed
   round the fly camera, not the player).
+* **Main's `World.follow` and dry landing merged in, and nothing here leans on the fly camera.**
+  The coarse ground's collision is a heightfield per chunk over the whole world and its LOD is
+  Godot's mesh LOD on whatever camera draws; the fade's count asks the streamer, which `follow()`
+  points at the body before `player_spawned`. The flow now checks both things that let the old
+  bug through: that Terrain3D's camera is the body's own, and that the fade counted cells round
+  the body at all (a streamer following something else counts nothing, and nothing is all in at
+  once).
+* **The fade counts cells, not seconds** (the coordinator's finding on the main branch: the
+  `--load` start lifted with 8 of 9 near cells after 535 s of wall time, the machine running the
+  game at a few per cent of real speed). The 20 s cap described above is gone. `UI.wait_for_country`
+  holds while cells keep arriving and gives up only when none has come for 120 frames and 10
+  seconds together, or after 600 s; the caption goes on counting. `test_country_wait.gd` throttles
+  a fake streamer by hand rather than hoping for a slow machine: a cell every eight frames at two
+  seconds a frame is waited out to nine of nine (the old wait would have lifted on one), a streamer
+  that stops at five is given up on after both halves of the stall and no longer, a cell every 45
+  frames on a 1 ms clock is not given up on for its quiet frames alone, and the cap ends a wait
+  that is still moving.
+* **The wait went to main without the probe that reads it.** fc24424c took `UI.COUNTRY_WAIT_S`
+  away and `flow_probe.gd` still named it, so the probe does not compile on a main that has
+  fc24424c alone and `./run.sh flow` has no verdict there; 3e10d533 on this branch is its other
+  half.
+* **A player who built the world pulls the tracked one without trouble.** Modelled in a scratch
+  repository with both `.gitignore`s: the locally built manifest and runtime maps were ignored, so
+  `git pull` replaces them with the tracked ones silently (git's default for ignored files) and
+  leaves the full-resolution maps alone; `git status` is clean after. Those maps are then the old
+  build's: `./run.sh` leaves them be (the regions are there), but a `./run.sh terrain` would import
+  them over the tracked regions.
+* **`run.sh` stopped reaching for `xvfb-run` on Windows and a Mac**, which never have it and
+  always have a screen.
+
+**Found on merging main at f1cd8852, and not this stream's.** The merged suite: 1562 tests, 3
+failed, 3 script errors, where this branch alone had been 1421, none failed and none. (Main
+mended the three tests and the errors itself in d9c4b6ce and ef0b0ce2; merged again at 146494ec,
+the suite is 1570 tests, none failed, no content problems, no script errors, no dead captures.)
+`test_inventory_loot`'s two quest tests count the Naming's stages as wake, ash_wights, hearthstone,
+the_cart (quests round two, b1326eb6), and the opening (20ef631b) put `the_choir` second.
+`test_the_start.test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front` finds one light
+at the Stair Head where it wants more than two. `test_property` calls `Ownership.instance`, which
+it never makes and which no test before it now leaves standing. And the New Game flow sat in the
+opening for 601 s with 2 of its 10 shots shown, at a load average of 25: each shot holds until the
+cells round its points are in, and they came slowly. It did the same again on the final merge
+(602 s, the same two shots, `the_name` and `the_mere`, then a hold on the third), so it may not be
+load alone. It never handed over, so the HUD, the first
+frame of control, the Warden, the objective line and this stream's Terrain3D-camera check all
+failed after it: the camera was still `/root/World/Opening/CinematicCamera`. The hair chooser's
+list did not open within its 60 frames either. The slot that run saved kept the `new_game` flag up
+(it stays up until the opening hands back), so the `--load` start after it played the opening
+again. With `-- --no-opening` the same three starts read past it: every check of this stream
+passed in all three -- nine of nine near cells in before the fade lifted (13.7, 25.1 and 20.3 s,
+two frames each), Terrain3D following `/root/World/Player/CameraRig/Yaw/Pitch/Arm/Camera3D`, its
+ground 0.00 m under the feet, 158 things drawn within 200 m -- and `--load` passed whole (32
+checks). New Game failed only the two choosers and the opening it was told not to play; Continue
+only "the body's hair is short (it is long)": it takes the newest slot, and every worktree on this
+machine saves into the one `user://`. On Forward+ over lavapipe, `--load` with the opening off
+drew the coarse ground and passed every check of this stream -- the plate in the corner, the card
+41.9 s after the fade (game time runs slow there), the body on `Ground_4_15`, 160 things drawn
+within 200 m, the fade holding 87.2 s for nine of nine -- and failed only the same hair.
 
 ### Next, in order
 
@@ -3050,3 +3107,169 @@ reads as speed. On a display faster than 60 Hz, the body and the camera should g
 step; the software rasteriser here cannot show that. On Windows, check that Alt (walk) does not
 take the keyboard into the window's menu, and that Ctrl + W in the editor's embedded game
 window rolls rather than closing anything.
+
+## Doors walked both ways, the crash found in the audio mixer, and every interior walked into
+
+Three parts, in the order they were asked for, the second made first when the same crash killed a
+unit run. Measured with `./run.sh test --filter=test_every_door_both_ways` (its DOOR and CONTENTS
+lines), `tools/debug/audio_race_check.sh`, and `./run.sh fights`.
+
+### 1. Every door lands the body just inside it, and just outside it on the way back
+
+All 24 doors the world puts up (15 houses, 9 deep places) are walked both ways by the world's own
+player, as a player would: stand two paces out, press the door, measure, press the way out,
+measure again.
+
+* **In.** A house now stands the body a step inside its front door. It is on the floor of the room
+  the door opens into, facing into the room, on the nearest spot that is clear of the real prop
+  meshes. The forge had stood Maud's bread oven, one of Hesta's stools and Osric's bellows right
+  inside their doors. A deep place stands the body 1.2 m inside its way out, on the rock. Measured
+  across the 24, the body lands 1.03-1.74 m from the interior's own door and 0.04-0.05 m over the
+  floor, standing in nothing, facing into the room: 1.00 where the door is straight ahead, and
+  0.59-0.98 where the nearest clear spot is to one side.
+* **Out.** The body lands 1.50 m in front of the door it came in by, on the ground (0.00 m), facing
+  away from the door (1.00).
+* **Before.** A house put the player in the corner of its first room, a metre up. A deep place put
+  them in the middle of its mouth chamber, 3-5 m from the way out. Leaving faced the player back at
+  the door they had just come out of.
+* **A game saved inside.** It now leaves by the door it came in by. The load had taken the body's
+  own position, in the pocket 50 km off, as the way out.
+
+### 2. The crash: the engine's audio mixer reading freed memory
+
+**Found.** All five crash logs have the same backtrace: four fights runs and the unit run on
+main. The stripped binary's frames were named by the strings each function refers to (Godot's
+error macros carry the file and function names):
+
+* StringName's copy constructor ("!configured", string_name.cpp);
+* AudioServer::_mix_step, at the copy of a playing sound's bus details;
+* AudioServer::_driver_process;
+* the audio driver's thread.
+
+The "/root: The caller thread can't call `propagate_notification()`" line is the crash handler
+itself, running on that thread.
+
+**Why it happens.** Godot 4.7.2 swaps in new bus details whenever a playing sound's volume or
+panning changes. For every AudioStreamPlayer3D that is playing, that is every physics frame: it
+compares a mix count it never records. AudioServer.update() frees the old details two updates
+later, whatever the mixing thread is doing. A mixer descheduled between loading a sound's details
+and copying them therefore copies freed memory.
+
+**Not the suspects.** Jolt, bodies freed in flight, navigation, interpolation and Terrain3D are
+not involved. The crashing thread was the mixer every time. The Jolt warning that came before some
+crashes is starvation, and no project setting sets that limit.
+
+**Reproduced deterministically.** `tools/debug/stall_mixer.py` holds only the mixing thread, under
+gdb, at the instruction between the load and the copy (0x3b19830 in the official build).
+`tools_gd/audio_race.gd` keeps sounds playing. Results:
+
+* frames unpaced (`--fixed-fps`): crashed at the first 30 ms stall;
+* frames paced at 60 a second: crashed at the first 20 ms stall, and after 57 stalls of 10 ms;
+* the real fights harness: crashed after 32 stalls of 20 ms.
+
+**Can the game hit it?** Yes. The unit suite and a Forward+ world load are paced runs, and they
+met it. It needs the mixer descheduled at one instruction for about a frame. That is rare on an
+idle machine and ordinary on a busy one. More sounds playing means more chances.
+
+**Fixed, or worked around where the fault is the engine's.** `AudioGuard` (systems/audio, stood up
+by Foley) stands between frames in every run. At the end of each frame's processing it takes the
+audio driver's lock and lets it go at once. The mixer holds that lock for a whole mix, so this
+waits out a mix under way and holds nothing. Anything a later update() frees was swapped out
+before the barrier. With the guard:
+
+* the stalled reproduction ran its 40 s through 1,434 stalls;
+* the fights under 20 ms stalls completed through 2,655 stalls;
+* two full six-Calling fights runs in one process passed (66 fights each, 0 checks failed), where
+  two of three had crashed before;
+* the unit suite ran 1,584 tests with 0 failed and no crash.
+
+Ours, also fixed: the music stems and ambience beds wrote their volume every frame. Every write
+swaps in new bus details, and they sit at their level most of the time; they now write only when
+the volume moves.
+
+**Regression.** `tools/debug/audio_race_check.sh` fails unless the stalled reproduction crashes
+without the guard and runs with it. It needs gdb and the official 4.7.2 build, and a crash cannot
+run inside the suite. `test_audio_guard.gd` checks four things:
+
+* a barrier every frame;
+* that the barrier waits for whoever holds the lock (257 ms behind a 250 ms hold);
+* that it holds nothing (the mixer goes on mixing);
+* that an unmoved volume is not written.
+
+The fault should go upstream with the reproduction. AudioServer's bus-details graveyard frees by
+frame count and not by the mixer's progress, and AudioStreamPlayer3D never records
+`last_mix_count`.
+
+### 3. Every interior walked into from the world
+
+The same walk now checks what each interior holds, against its meta and the quests.
+
+* **Holds what it should.** All 24 are built (44-169 meshes, a floor that says what it is, 3-44
+  lights). Every house prop the meta places stands (13-50 per house). Every foe a deep place's
+  markers ask for stands (8-14 per place). Every quest thing the placer puts inside is there: the
+  steward's key, the Ledger of Prices, the note at the Cantor's Seat, the cold flour, and the
+  things in Tallissa's and Dunna's houses. Built empty from the overworld and quest things not
+  placed were the faults fixed in the last round; they hold here.
+* **Stood over the rock.** A new case of the arrival drop's class. Every deep place stood its
+  Hearthstone, dressing, pickups and quest things at a chamber's nominal floor, 0.34-0.55 m over
+  the voxel rock. Sunken Barge stood its Hearthstone in the middle of the hold, over the pool,
+  with no rock within 6 m under it (the hold's and the nest's middles are both over nothing).
+  Features, spawn markers and the placer's things now go on the rock under them, or on the
+  nearest floor point that has rock under it. All nine deep places now measure 0.00 m.
+* **Other ways in.** A loaded game re-enters through the same builder as a door, and leaves by the
+  saved door (part 1). The console's `interior <id>` also uses the same builder. No deep place has
+  a door to a second interior.
+
+### 4. Combat timing against DESIGN §5.3
+
+Measured in the player scene on the merged head, after the movement rework, the tap-to-roll and
+physics interpolation, by `test_combat_design.gd` at 60 physics frames a second. Every timing
+lands within one frame (16.7 ms) of DESIGN:
+
+| what | DESIGN | measured |
+|---|---|---|
+| stamina regen | 30/s after 0.8 s | 30.00/s after 0.800 s |
+| sprint | 8/s | 8.00/s |
+| input buffer | 0.25 s | 0.250 s (a press 0.25 s early fired, one earlier did not) |
+| light chain | 3 | 3 (indices 0, 1, 2, then 0) |
+| heavy charge, tapped / held | 1.0× / 1.5× | 1.017× / 1.500× |
+| cancel into a dodge | after the active frames (hit_end 0.467 s) | 0.483 s, the next frame |
+| roll at a light load | 0.60 s, i-frames 0.08-0.38 s | 0.600 s, 0.083-0.383 s |
+| roll at a medium load | 0.66 s, 0.08-0.34 s | 0.667 s, 0.083-0.350 s |
+| roll at a heavy load | 0.80 s, 0.10-0.30 s | 0.800 s, 0.100-0.300 s |
+| roll overloaded | 1.00 s, 0.12-0.26 s | 1.000 s, 0.133-0.267 s |
+| parry window | 0.18 s | 0.167 s (10 frames; 11 frames early is too early) |
+| riposte open, and its damage | 2 s, 3× | 2.000 s, 3.000× |
+| poise regen | 4/s after 1.5 s | 4.00/s after 1.500 s |
+| enemy wind-ups | as authored | 0 frames apart over 100 attacks |
+
+The one gap is the tapped heavy. It is released after a frame of charge and lands at 1.017×.
+Nothing was changed for it. Main's roll by a tap of Shift starts on the release, up to 0.22 s
+after the press, as its own DECISIONS entry says; Ctrl and B start on the press.
+
+### Checks
+
+Run on the merged head (main at a3e9fe6b), one Godot at a time:
+
+* `./run.sh test`: 1,584 tests, 0 failed, 0 content problems, 0 script errors, and no crash. The
+  4 logged errors are the ones their tests provoke.
+* `./run.sh journey`: 16 of 16 steps.
+* `./run.sh fights`, all six Callings in one process: 66 fights, 0 checks failed, twice, with no
+  crash.
+* `tools/debug/audio_race_check.sh`: passes. Without the guard it crashes at the first stall;
+  with it, it runs 40 s through 1,650 stalls.
+* The audio toolkit's tests: 128 passed.
+* `./run.sh flow`: **fails, in the opening cinematic.** Two of its ten shots are shown, then it
+  holds on the third for 606 s, and a held key does not skip it. Ten of the 88 checks fail, all
+  downstream of that: no HUD, the cinematic camera still current, nothing drawn near the body.
+  It fails the same way with the audio guard off (`--no-audio-guard`, 606 s, the same ten), and
+  nothing in this branch touches the cinematic or the streaming.
+
+### Found and not fixed
+
+* **The opening cinematic hangs on its third shot** in `./run.sh flow` (above), and holding a key
+  does not skip it; it is the opening's own work and was left to it.
+* The engine faults above, to report upstream with the reproduction.
+* A house's front door always opens into its first ground-floor room from the north wall, and the
+  meta's `entrance` names an internal door; the landing reads the front door and ignores
+  `entrance`.
