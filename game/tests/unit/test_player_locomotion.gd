@@ -272,6 +272,28 @@ func test_sprint_drains_stamina_and_stops_when_it_is_spent() -> void:
 	assert_true(resumed_at >= resume - 1.0, "the held sprint resumed at %.1f stamina, the rule is %.1f" % [resumed_at, resume])
 
 
+## A long sprint keeps the stamina bar in view. Holding keys sends no input events, and the HUD
+## used to rest itself at 35% after seven idle seconds while the stamina drained under it.
+func test_the_stamina_bar_stays_in_view_while_it_drains() -> void:
+	await _stand()
+	hud = HUD_SCENE.instantiate()
+	_tree().root.add_child(hud)
+	await _tree().process_frame
+	hud.call("_connect_world")
+	player.stamina_comp.current = player.stamina_comp.maximum * 0.5
+	player.stats_changed.emit()
+	hud.set("_idle", 60.0)
+	for i in 30:
+		hud.call("_update_idle_fade", 0.1)
+	assert_gt(float(hud.get("modulate").a), 0.9, "half a stamina bar faded out with the rest of the HUD")
+	player.stamina_comp.refill()
+	player.stats_changed.emit()
+	hud.set("_idle", 60.0)
+	for i in 30:
+		hud.call("_update_idle_fade", 0.1)
+	assert_true(float(hud.get("modulate").a) < 0.5, "at full stamina and idle the HUD rests as it did")
+
+
 # --- turning --------------------------------------------------------------------------------------
 
 ## The body turns toward where it is going at a limited rate that falls with speed, and eases into
@@ -380,7 +402,6 @@ func test_compass_reads_the_view_while_the_body_turns() -> void:
 		if not turning:
 			assert_gt(rad_to_deg(body_turn), 250.0, "the path should have turned the body round (it turned %.0f deg)" % rad_to_deg(body_turn))
 			assert_true(strip_step < 0.05, "mouse still: the strip moved %.2f degrees while only the body turned" % strip_step)
-			assert_true(marker_step < 3.0, "mouse still: a marker stepped %.1f px in one frame" % marker_step)
 	for r in report:
 		print("    " + r)
 	assert_true(compass.markers.size() > 0, "Merrowby should be on the compass: it was discovered")

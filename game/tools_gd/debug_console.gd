@@ -15,6 +15,7 @@ var _lines: Array[String] = []
 func _ready() -> void:
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # a screen, not a body
 	_build_ui()
 	_register_builtins()
 	for a in OS.get_cmdline_user_args():

@@ -526,3 +526,26 @@ click, which the Sayings menu gave up (it is on B on the keyboard; the pad layou
 its own). The first-model clips are fed through an interim mapping until the model is told metres
 per second. Reversible: the numbers are constants at the top of `player.gd`, and DESIGN §5.2
 states them.
+
+## 2026-09-23 · Physics is interpolated; what moves per frame opts out, and what jumps resets
+**Decision.** `physics/common/physics_interpolation` is on and the jitter fix is off. Bodies move
+in `_physics_process` as before and are drawn between ticks. A node moved every rendered frame
+opts out with `PHYSICS_INTERPOLATION_MODE_OFF`: the camera rig, the fly camera, bone-attached
+sockets, the atmosphere (sun, moon, the rain that follows the camera), a dropped item's bob, the
+Echo's hover, the Naming's turning mannequin, and the UI roots. A node already in the world that
+is put somewhere else calls `reset_physics_interpolation()`: the player's `teleport()` (which
+respawn, loads, doors, jail and the console all go through), an enemy sent home, a villager put
+indoors, a loaded actor.
+**Why.** Measured in the engine, not assumed. A child moved every frame under an interpolated
+parent is interpolated between ticks and trails: it read 3.61 where it had been put at 4, and
+5.71 where it had been put at 6. The same child opted out sits exactly where it was put on top of
+its parent's interpolated position, which is what a sword in a hand needs. A node moved on the
+frame it enters the tree does not smear (the engine resets it on its first tick), so spawners
+need nothing. An existing node moved without a reset does: moved from x = 4 to 500 it was drawn
+at 254 for a frame, and at 500 with the reset.
+**Alternatives.** Moving the camera in `_physics_process` (it would step at 60 Hz on a 144 Hz
+display, which is the judder being fixed); interpolating by hand in the camera only (the body,
+enemies and arrows would still step).
+**Consequences.** Anything new that is moved per frame in `_process` must opt out, and anything
+that teleports an existing node must reset it. Terrain3D 1.0.2 still calls the deprecated
+`instance_reset_physics_interpolation`, which prints a warning at load and is harmless.

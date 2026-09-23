@@ -170,6 +170,8 @@ func _build_preview() -> Control:
 	world.add_child(camera)
 
 	_mannequin = Node3D.new()
+	# turned every frame below, so it must not also be interpolated between physics ticks
+	_mannequin.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	world.add_child(_mannequin)
 	if ResourceLoader.exists(MODEL_SCENE):
 		_model = (load(MODEL_SCENE) as PackedScene).instantiate()

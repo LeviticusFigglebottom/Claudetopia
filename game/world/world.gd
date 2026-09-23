@@ -256,8 +256,11 @@ func move_target(pos: Vector3, look_at: Variant = null) -> void:
 	# world went on streaming around the player standing where they were.
 	if target == fly_camera and fly_camera != null:
 		fly_camera.move_to(pos, look_at)
+	elif target != null and target.has_method("teleport"):
+		target.call("teleport", pos, target.rotation.y)
 	elif target != null:
 		target.global_position = pos
+		target.reset_physics_interpolation()
 	elif fly_camera != null:
 		fly_camera.move_to(pos, look_at)
 	if streamer:

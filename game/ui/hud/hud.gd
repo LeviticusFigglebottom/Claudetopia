@@ -561,6 +561,10 @@ func _update_idle_fade(_delta: float) -> void:
 	var busy := _lock_target != null or _boss_box.visible or _prompt.visible
 	if not busy and _bars.has("health"):
 		busy = (_bars["health"] as StatBar).fraction() < 0.6
+	# Stamina being spent or coming back is worth seeing: holding sprint sends no input events, so
+	# a long run used to fade the bars out at seven seconds while the stamina drained.
+	if not busy and _bars.has("stamina"):
+		busy = (_bars["stamina"] as StatBar).fraction() < 0.995
 	var target := _rest_alpha() if (_idle < IDLE_SECONDS or busy) else _rest_alpha() * IDLE_ALPHA
 	modulate.a = move_toward(modulate.a, target, _delta * 1.6)
 

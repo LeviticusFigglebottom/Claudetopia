@@ -239,6 +239,10 @@ func _build_sockets() -> void:
 		att.name = "Socket%s" % SOCKETS[bone_name]
 		att.bone_name = bone_name
 		att.bone_idx = idx
+		# Moved by the animation every frame, not by physics: interpolated between ticks it would
+		# trail the hand (measured: a child moved per frame read 3.61 where it had been put at 4).
+		# Off, it sits exactly on the bone of a body that is itself interpolated.
+		att.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 		skeleton.add_child(att)
 		_sockets[bone_name] = att
 

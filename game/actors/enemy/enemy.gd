@@ -1200,6 +1200,7 @@ func reset_to_spawn() -> void:
 	global_position = spawn_position
 	rotation.y = spawn_yaw
 	velocity = Vector3.ZERO
+	reset_physics_interpolation()     # put back, not walked back: no smear across the map
 	perception.reset()
 	brain.force(Brain.PATROL if patrol_points.size() > 1 else Brain.IDLE)
 	inactive = archetype == "ambusher"
