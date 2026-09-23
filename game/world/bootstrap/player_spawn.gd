@@ -19,6 +19,11 @@ const PLAYER_SCENE := "res://actors/player/player.tscn"
 const OPENING := "core:opening/new_game"
 ## How far above the ground the body is placed, so the first frame settles down rather than up.
 const DROP_IN := 0.6
+## Where a new game may begin: see dry_ground_near.
+const DRY_PROBE := 8.0
+const DRY_MARGIN := 2.0
+const WALKABLE_RELIEF := 6.0
+const DRY_SEARCH_M := 800.0
 
 @export var spawn_place: String = ""
 @export var install_services: bool = true
@@ -29,6 +34,9 @@ const DROP_IN := 0.6
 @export var services_without_a_body: bool = false
 
 var player: Node3D = null
+## The slot this world was loaded from, or "" for a new game: a loaded game is never a new one,
+## whatever its flags say (GameServices.begin_new_game).
+var loaded_slot := ""
 
 
 func _ready() -> void:
@@ -62,7 +70,7 @@ func _world() -> World:
 ## Puts the body down and hands back whatever is now standing in the world (an existing player
 ## is left alone, so a scene that ships its own is not given a second one).
 func spawn() -> Node3D:
-	load_pending_slot()
+	loaded_slot = load_pending_slot()
 	var existing := get_tree().get_first_node_in_group("player")
 	if existing is Node3D:
 		player = existing
@@ -82,10 +90,8 @@ func spawn() -> Node3D:
 	if install_services:
 		_install_services()
 	var world := _world()
-	if world != null and world.streamer != null:
-		world.target = player
-		world.streamer.target = player
-		world.streamer.refresh()
+	if world != null:
+		world.follow(player)
 	Log.info("PlayerSpawn", "%s stands at %s" % [player.name, str(player.global_position.round())])
 	player_spawned.emit(player)
 	return player
@@ -112,8 +118,56 @@ static func load_pending_slot() -> String:
 ## Where the character starts, and on the ground.
 func _landing() -> Vector3:
 	var saved := _saved_position()
-	var point := saved if saved != Vector3.INF else _opening_position()
-	return _on_ground(point)
+	if saved != Vector3.INF:
+		return _on_ground(saved)
+	var start := _opening_position()
+	var provider := _terrain()
+	if provider != null:
+		var ashore := dry_ground_near(provider, start)
+		if Vector2(ashore.x - start.x, ashore.z - start.z).length() > 0.5:
+			Log.info("PlayerSpawn", "the opening place stands in the water at %s; the body comes ashore %d m away at %s"
+					% [str(start.round()), int(Vector2(ashore.x - start.x, ashore.z - start.z).length()), str(ashore.round())])
+		start = ashore
+	return _on_ground(start)
+
+
+## Dry, walkable ground at `point` or the nearest to it: the spot and eight around it DRY_PROBE
+## away all out of the water and at least DRY_MARGIN above the nearest water surface, with no
+## more than WALKABLE_RELIEF of rise across them. The opening place, the Hushline Stair, is one
+## 8 m pad at sea level with 20 m of sea round it on every side and the cliffs 130 m off; a new
+## game stood the body on the water there, below the land Terrain3D drew, among floating trees.
+## A saved position is never moved: only where a story opens is searched.
+static func dry_ground_near(provider: Object, point: Vector3, max_radius := DRY_SEARCH_M) -> Vector3:
+	if _dry_at(provider, point.x, point.z):
+		return Vector3(point.x, float(provider.call("get_height", point.x, point.z)), point.z)
+	var r := DRY_PROBE
+	while r <= max_radius:
+		var steps := maxi(12, int(TAU * r / DRY_PROBE))
+		for k in steps:
+			var a := TAU * float(k) / float(steps)
+			var x := point.x + cos(a) * r
+			var z := point.z + sin(a) * r
+			if _dry_at(provider, x, z):
+				return Vector3(x, float(provider.call("get_height", x, z)), z)
+		r += DRY_PROBE
+	return point
+
+
+static func _dry_at(provider: Object, x: float, z: float) -> bool:
+	var lo := INF
+	var hi := -INF
+	for dz in [-DRY_PROBE, 0.0, DRY_PROBE]:
+		for dx in [-DRY_PROBE, 0.0, DRY_PROBE]:
+			var px: float = x + dx
+			var pz: float = z + dz
+			if bool(provider.call("is_water", px, pz)):
+				return false
+			var ground := float(provider.call("get_height", px, pz))
+			if ground < float(provider.call("nearest_water_level", px, pz)) + DRY_MARGIN:
+				return false
+			lo = minf(lo, ground)
+			hi = maxf(hi, ground)
+	return hi - lo <= WALKABLE_RELIEF
 
 
 ## A save being loaded into this world already knows where the body was standing.

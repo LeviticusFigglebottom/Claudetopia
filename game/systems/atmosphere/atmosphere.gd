@@ -138,6 +138,9 @@ const _FLOAT_KEYS := ["sun_elevation_bias", "sun_elevation_scale", "sun_energy",
 
 func _ready() -> void:
 	add_to_group("atmosphere")
+	# The sun, the moon and the rain that follows the camera are placed every frame, not moved by
+	# physics: interpolating them between ticks would only make them lag and step.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_forward_plus = RenderingServer.get_current_rendering_method() == "forward_plus"
 	_rng.seed = 1043
 	_build_nodes()

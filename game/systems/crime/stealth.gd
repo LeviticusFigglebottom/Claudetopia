@@ -10,8 +10,11 @@ static var instance: Stealth
 const MOONLIGHT := 0.06
 const SHADOW_FACTOR := 0.35
 const SUN_RAY_M := 200.0
-const WALK_SPEED := 4.2
-const RUN_SPEED := 6.5
+## The player's default gait and flat-out sprint (Player.JOG_SPEED and Player.SPRINT_SPEED; the
+## unit test pins them together). Noise is (speed / SPRINT_SPEED)^1.5, which puts a jog at 0.51
+## and a sprint at 1, where the first gaits (4.2 and 6.5) put the default at 0.52 and the sprint at 1.
+const JOG_SPEED := 5.0
+const SPRINT_SPEED := 7.8
 const MAX_NOISE_RADIUS_M := 30.0
 const WEATHER_LIGHT := {
 	"clear": 1.0, "clear_cold": 1.0, "thin_sun": 0.8, "still": 0.9, "wind": 0.95, "dry_wind": 0.9, "breezy": 0.9,
@@ -20,7 +23,7 @@ const WEATHER_LIGHT := {
 }
 const NOISE_WEIGHT := {"none": 0.9, "light": 1.0, "medium": 1.3, "heavy": 1.7}
 const NOISE_SURFACE := {
-	"grass": 0.8, "dirt": 0.9, "mud": 0.9, "peat": 0.8, "sand": 0.75, "snow": 0.7, "ash": 0.85,
+	"grass": 0.8, "vale_grass": 0.8, "dirt": 0.9, "mud": 0.9, "peat": 0.8, "sand": 0.75, "snow": 0.7, "ash": 0.85,
 	"stone": 1.0, "cobbles": 1.05, "wood": 1.2, "shingle": 1.3, "gravel": 1.3, "scree": 1.3, "water": 1.4,
 }
 const LOCK_LEVEL_NAMES: Array[String] = ["open", "simple", "sturdy", "clever", "guild", "oroth"]
@@ -36,7 +39,13 @@ var _visibility_frame := -1
 static func ensure() -> Stealth:
 	if instance != null and is_instance_valid(instance):
 		return instance
-	return Service.ensure(load("res://systems/crime/stealth.gd"), "Stealth") as Stealth
+	var found := Service.ensure(load("res://systems/crime/stealth.gd"), "Stealth") as Stealth
+	# A copy of this service inside a world set `instance` as it entered the tree and cleared it as it
+	# left; a copy under the root that entered earlier is then found here with `instance` still empty,
+	# and everything that reads `instance` directly finds nothing. Point it at what was found.
+	if found != null and (instance == null or not is_instance_valid(instance)):
+		instance = found
+	return found
 
 
 func _enter_tree() -> void:
@@ -51,6 +60,16 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	EventBus.weather_changed.connect(_on_weather_changed)
+
+
+## Every foe's Perception multiplies what it sees of the player by `stealth_visibility` (gain_rate,
+## can_see), and nothing ever wrote it: a crouched figure in the dark was seen as plainly as one
+## sprinting at noon, and nothing the player did to be quiet or unseen reached a single foe. This
+## is the one place that knows light, noise, crouch and Sneak together, so it writes it.
+func _physics_process(_delta: float) -> void:
+	var p := Peers.player()
+	if p != null and is_instance_valid(p) and "stealth_visibility" in p:
+		p.set("stealth_visibility", player_visibility())
 
 
 func _on_weather_changed(region_id: String, weather_id: String) -> void:
@@ -148,9 +167,14 @@ func light_level(pos: Vector3) -> float:
 
 # --- noise and visibility ----------------------------------------------------------------
 
-static func noise_level(speed_mps: float, weight_class: String = "light", crouched: bool = false, surface: String = "", raining_: bool = false) -> float:
-	var base := pow(clampf(speed_mps / RUN_SPEED, 0.0, 1.0), 1.5)
-	var n := base * float(NOISE_WEIGHT.get(weight_class, 1.0)) * float(NOISE_SURFACE.get(surface, 1.0))
+## Movement noise 0..1. `noise_mult` is the mover's own (Quiet Step: 0.7); `weight_penalty_scale`
+## scales what armour weight adds over plain clothes (Second Skin: 0.5, so heavy's ×1.7 is ×1.35).
+static func noise_level(speed_mps: float, weight_class: String = "light", crouched: bool = false, surface: String = "", raining_: bool = false, noise_mult: float = 1.0, weight_penalty_scale: float = 1.0) -> float:
+	var base := pow(clampf(speed_mps / SPRINT_SPEED, 0.0, 1.0), 1.5)
+	var weight := float(NOISE_WEIGHT.get(weight_class, 1.0))
+	if weight > 1.0:
+		weight = 1.0 + (weight - 1.0) * maxf(weight_penalty_scale, 0.0)
+	var n := base * weight * float(NOISE_SURFACE.get(surface, 1.0)) * maxf(noise_mult, 0.0)
 	if crouched:
 		n *= 0.5
 	if raining_:
@@ -172,14 +196,15 @@ static func visibility(light: float, noise: float, crouched: bool, sneak_skill: 
 # --- sneak attacks ------------------------------------------------------------------------
 
 ## ×3 on an unaware target, ×6 with a dagger, ×1 once the target is alert (detection >= 0.6).
-static func sneak_multiplier_for(weapon_class: String, target_awareness: float) -> float:
+## `bonus` is the attacker's own (Unsaid: one more).
+static func sneak_multiplier_for(weapon_class: String, target_awareness: float, bonus: float = 0.0) -> float:
 	if target_awareness >= DetectionMeter.WITNESS:
 		return 1.0
-	return 6.0 if weapon_class == "dagger" else 3.0
+	return (6.0 if weapon_class == "dagger" else 3.0) + bonus
 
 
 func sneak_multiplier(attacker: Node, target: Node) -> float:
-	return sneak_multiplier_for(weapon_class_of(attacker), awareness_of(target))
+	return sneak_multiplier_for(weapon_class_of(attacker), awareness_of(target), stat_add_of(attacker, "sneak_attack_mult"))
 
 
 ## Target awareness: its `detection` property, its perception child's, or 1 (aware) if none.
@@ -224,8 +249,9 @@ static func weapon_class_of(attacker: Object) -> String:
 
 # --- pickpocket and locks ---------------------------------------------------------------
 
-static func pickpocket_chance(sneak_skill: int, target_awareness: float, item_value: int) -> float:
-	var c := 0.30 + 0.6 * clampf(float(sneak_skill), 0.0, 100.0) / 100.0 - 0.5 * clampf(target_awareness, 0.0, 1.0) - minf(0.4, float(item_value) / 500.0)
+## `bonus` is the thief's own (Light Fingers: +0.15), added before the clamp.
+static func pickpocket_chance(sneak_skill: int, target_awareness: float, item_value: int, bonus: float = 0.0) -> float:
+	var c := 0.30 + 0.6 * clampf(float(sneak_skill), 0.0, 100.0) / 100.0 - 0.5 * clampf(target_awareness, 0.0, 1.0) - minf(0.4, float(item_value) / 500.0) + bonus
 	return clampf(c, 0.02, 0.95)
 
 
@@ -241,7 +267,7 @@ func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGen
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	var value := ContentQuery.item_value(item_id)
-	var chance := pickpocket_chance(Peers.skill_level("sneak"), awareness_of(victim), value)
+	var chance := pickpocket_chance(Peers.skill_level("sneak"), awareness_of(victim), value, stat_add_of(thief, "pickpocket_chance"))
 	var ok := pickpocket_roll(chance, rng)
 	var victim_id := str(victim.get("npc_id")) if victim != null and "npc_id" in victim else ""
 	var pos := (victim as Node3D).global_position if victim is Node3D else Vector3.ZERO
@@ -323,12 +349,30 @@ static func armour_weight_class(actor: Object) -> String:
 	if "weight_class" in actor:
 		return str(actor.get("weight_class"))
 	var eq: Variant = actor.get("equipment")
+	if eq == null and actor is Node:
+		# The player carries its paper doll as a child, not a property: asked only the property,
+		# every suit of plate walked as quietly as cloth.
+		eq = (actor as Node).get_node_or_null(NodePath("Equipment"))
 	if eq is Object:
 		if eq.has_method("weight_class"):
 			return str(eq.call("weight_class"))
 		if "weight_class" in eq:
 			return str(eq.get("weight_class"))
 	return "light"
+
+
+## A body's modifier multiplier on `stat` (Actor.stat_mult; 1 for anything without a table).
+static func stat_mult_of(actor: Object, stat: String) -> float:
+	if actor != null and is_instance_valid(actor) and actor.has_method("stat_mult"):
+		return float(actor.call("stat_mult", stat))
+	return 1.0
+
+
+## A body's modifier addition to `stat` (Actor.stat_add; 0 for anything without a table).
+static func stat_add_of(actor: Object, stat: String) -> float:
+	if actor != null and is_instance_valid(actor) and actor.has_method("stat_add"):
+		return float(actor.call("stat_add", stat))
+	return 0.0
 
 
 static func surface_of(actor: Object) -> String:
@@ -341,7 +385,7 @@ func player_noise() -> float:
 	var p := Peers.player()
 	if p == null:
 		return 0.0
-	return noise_level(speed_of(p), armour_weight_class(p), is_crouched(p), surface_of(p), raining)
+	return noise_level(speed_of(p), armour_weight_class(p), is_crouched(p), surface_of(p), raining, stat_mult_of(p, "noise"), stat_mult_of(p, "weight_class_penalty"))
 
 
 func player_light() -> float:

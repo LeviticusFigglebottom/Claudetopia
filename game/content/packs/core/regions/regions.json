@@ -83,6 +83,7 @@
         "wind_soft",
         "leaves_broad"
       ],
+      "ground": "vale_grass",
       "music_mode": "lydian_warm",
       "landmark": "core:place/cracked_toll",
       "unique_features": [
@@ -175,7 +176,8 @@
         "waterlily",
         "market_herbs",
         "reed_sparse",
-        "clover"
+        "clover",
+        "marram"
       ],
       "architecture": "Lime-washed walls, slate roofs, brass lamps, canals with iron bridges, guild halls with charter-boards, the Oroth-built Sayers' Spire, the Lamp lighthouse.",
       "materials": [
@@ -192,6 +194,7 @@
         "market_murmur",
         "buoy_bell"
       ],
+      "ground": "gravel",
       "music_mode": "ionian_bright",
       "landmark": "core:place/sayers_spire",
       "unique_features": [
@@ -308,6 +311,7 @@
         "rope_creak",
         "water_still"
       ],
+      "ground": "mud",
       "music_mode": "dorian_misty",
       "landmark": "core:place/drowned_nave",
       "unique_features": [
@@ -424,6 +428,7 @@
         "creak",
         "owl"
       ],
+      "ground": "dirt",
       "music_mode": "aeolian_deep",
       "landmark": "core:place/grandfather",
       "unique_features": [
@@ -537,6 +542,7 @@
         "hammer_distant",
         "pipes_night"
       ],
+      "ground": "stone",
       "music_mode": "mixolydian_cold",
       "landmark": "core:place/fallen_hand",
       "unique_features": [
@@ -648,6 +654,7 @@
         "silence_bed",
         "sustained_note"
       ],
+      "ground": "ash",
       "music_mode": "phrygian_hollow",
       "landmark": "core:place/sunken_choir",
       "unique_features": [

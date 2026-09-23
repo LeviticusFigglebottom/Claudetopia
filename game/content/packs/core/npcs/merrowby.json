@@ -6,6 +6,11 @@
     "unique_habit": "Touches every small bell in Merrowby's trees at dusk and counts them under her breath, every day, whether or not the count has changed.",
     "personality": {"traits": ["brave", "generous", "cynical", "quiet", "humble", "kind"]},
     "appearance": {"seed": 1101, "build": "lean", "age": 44, "hair": "cropped_brown_greying", "notes": "grey-green Warden cloak, a wooden bell-token at the throat, boots that are always muddy"},
+    "holds": [
+      {"when": [{"any": [{"flag": "new_game"}, {"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}],
+       "place": "core:poi/stair_head", "activity": "idle", "spot": "wren_stair_head",
+       "notes": "At her fire at the Stair Head from the moment a new game is named until the Foundling has spoken to her and walked to the Choir (DESIGN 5.1a); then back to her own days."}
+    ],
     "schedule": [
       {"days": "weekdays", "hour": 5, "place": "core:place/merrowby", "activity": "eat", "spot": "warden_post"},
       {"days": "weekdays", "hour": 6, "place": "core:place/merrowby", "activity": "patrol", "spot": "crater_rim"},

@@ -14,9 +14,12 @@ extends RefCounted
 ## `chance` (0..1) and `conditions`.
 ## Conditions (all must pass): {region: id}, {min_level: n}, {max_level: n}, {luck_min: x},
 ##   {flag: name}, {flag_not: name}, {quest_at: [quest_id, stage]}, {quest_min: [quest_id, stage]}.
-## Context: {region: id, level: int, luck: float, flags: {name: value}, quests: {quest_id: stage}}.
+##   A stage is named the pack's way: its id, or its number counted from one.
+## Context: {region: id, level: int, luck: float, flags: {name: value}, quests: {quest_id: stage
+##   index from nought}, quests_done: [quest_id]}; `world_context()` reads it off the world.
 
 const MAX_DEPTH := 6
+const QUEST_LOG := preload("res://systems/quests/quest_log.gd")
 
 
 ## Rolls a table; results are not merged (call merge() for one entry per item).
@@ -173,14 +176,18 @@ static func condition_passes(cond: Dictionary, context: Dictionary) -> bool:
 				if typeof(v) != TYPE_ARRAY or v.size() < 2:
 					return false
 				var quests: Dictionary = context.get("quests", {})
-				if not quests.has(str(v[0])) or int(quests[str(v[0])]) != int(v[1]):
+				var at := _stage_named(str(v[0]), v[1])
+				if at < 0 or not quests.has(str(v[0])) or int(quests[str(v[0])]) != at:
 					return false
 			"quest_min":
 				if typeof(v) != TYPE_ARRAY or v.size() < 2:
 					return false
-				var quests2: Dictionary = context.get("quests", {})
-				if not quests2.has(str(v[0])) or int(quests2[str(v[0])]) < int(v[1]):
-					return false
+				# a finished quest is past every one of its stages
+				if not (context.get("quests_done", []) as Array).has(str(v[0])):
+					var quests2: Dictionary = context.get("quests", {})
+					var least := _stage_named(str(v[0]), v[1])
+					if least < 0 or not quests2.has(str(v[0])) or int(quests2[str(v[0])]) < least:
+						return false
 			_:
 				Log.warn("LootTable", "unknown loot condition '%s'" % key)
 				return false
@@ -228,4 +235,45 @@ static func merge(results: Array[Dictionary]) -> Array[Dictionary]:
 ## Context from the shared game state: current region, GameState flags, level 1, luck 0.
 ## Callers add "level", "luck" (from Modifiers) and "quests" from their own systems.
 static func default_context() -> Dictionary:
-	return {"region": GameState.current_region_id, "level": 1, "luck": 0.0, "flags": GameState.flags.duplicate(), "quests": {}}
+	return {"region": GameState.current_region_id, "level": 1, "luck": 0.0, "flags": GameState.flags.duplicate(),
+			"quests": {}, "quests_done": []}
+
+
+## The context a roll is made in, read off the world: where, the character's level and luck, the
+## flags, and how far each quest has come (`quests`: an active quest's stage, as an index from
+## nought; `quests_done`: the ones finished). A kill's drop (`GameServices.loot_context`, handed to
+## `LootDrops`) and a chest's contents (`Container`) are rolled in the same one. A chest rolled in
+## the default context was a level-1 character with no luck and no quests, whatever the player was.
+static func world_context() -> Dictionary:
+	var ctx := default_context()
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return ctx
+	var prog := tree.get_first_node_in_group("progression")
+	if prog != null:
+		ctx["level"] = int(prog.get("level"))
+		var mods: Variant = prog.get("mods")
+		if mods is Modifiers:
+			ctx["luck"] = (mods as Modifiers).apply("luck", 0.0)
+	var quest_log := tree.get_first_node_in_group("quest_log")
+	if quest_log != null and quest_log.has_method("stage_of"):
+		var quests := {}
+		var done: Array = []
+		var known: Variant = quest_log.get("quests")
+		if known is Dictionary:
+			for quest_id in known:
+				var id := str(quest_id)
+				if bool(quest_log.call("is_active", id)):
+					quests[id] = int(quest_log.call("stage_of", id))
+				elif bool(quest_log.call("is_completed", id)):
+					done.append(id)
+		ctx["quests"] = quests
+		ctx["quests_done"] = done
+	return ctx
+
+
+## The stage a condition names, as an index from nought: content writes a stage's id or its number
+## counted from one, the pack's rule everywhere else (QuestLog.stage_index). These conditions read
+## the number as an index, which would have put every numbered one a stage late.
+static func _stage_named(quest_id: String, stage: Variant) -> int:
+	return QUEST_LOG.stage_index_in(ContentDB.get_or_empty(quest_id).get("stages", []), stage)

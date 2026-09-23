@@ -25,7 +25,13 @@ var owned: Dictionary = {}     # property_id (deed item id) -> {bought_day, let,
 static func ensure() -> PropertyRegistry:
 	if instance != null and is_instance_valid(instance):
 		return instance
-	return Service.ensure(load("res://systems/economy/property.gd"), "PropertyRegistry") as PropertyRegistry
+	var found := Service.ensure(load("res://systems/economy/property.gd"), "PropertyRegistry") as PropertyRegistry
+	# A copy of this service inside a world set `instance` as it entered the tree and cleared it as it
+	# left; a copy under the root that entered earlier is then found here with `instance` still empty,
+	# and everything that reads `instance` directly finds nothing. Point it at what was found.
+	if found != null and (instance == null or not is_instance_valid(instance)):
+		instance = found
+	return found
 
 
 func _enter_tree() -> void:
@@ -154,7 +160,7 @@ func asking_price(property_id: String, seller_faction := "") -> int:
 	var base := price_of(property_id)
 	var region := WorldProbe.region_of_place(place_of(property_id))
 	var disposition := Pricing.disposition_for(Peers.reaction_profile(), Peers.faction_rank(seller_faction))
-	var p := Pricing.price(base, Pricing.region_mod(region), 1.0, Pricing.disposition_mod(disposition), Peers.skill_level("speech"))
+	var p := Pricing.price(base, Pricing.region_mod(region), 1.0, Pricing.disposition_mod(disposition), Peers.skill_level("speech"), Peers.stat_mult("prices_buy"))
 	return clampi(p, maxi(1, roundi(float(base) * PRICE_FLOOR)), base)
 
 

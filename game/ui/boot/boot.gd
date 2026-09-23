@@ -49,6 +49,16 @@ func _user_args() -> Dictionary:
 
 
 func _start_world(args: Dictionary) -> void:
+	var world_status := WorldStatus.current()
+	if not bool(world_status.get("playable", false)):
+		# `--new-game` and `--load` on a copy with no world: say why on stdout for whoever typed
+		# it, and go to the title, which says it on the screen with the command that builds it.
+		print("[boot] %s %s Build it with: %s" % [str(world_status.get("title", "")),
+				str(world_status.get("detail", "")), WorldStatus.BUILD_COMMAND])
+		label.text += "\n" + str(world_status.get("title", ""))
+		if ResourceLoader.exists("res://ui/menus/main_menu.tscn"):
+			get_tree().change_scene_to_file.call_deferred("res://ui/menus/main_menu.tscn")
+		return
 	if ResourceLoader.exists("res://world/world.tscn"):
 		if args.has("load"):
 			GameState.set_flag("_pending_load_slot", str(args["load"]))

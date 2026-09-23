@@ -1,5 +1,9 @@
 shader_type spatial;
-render_mode cull_back;
+// Both sides: the forge wound every eyeball inside out (its quads face inward), and with the
+// back faces culled the engine drew no eyeball at all -- the lids opened on the socket behind
+// them. Blender renders both sides, so the forge's own renders never showed it. Godot turns a
+// back face's normal round to the viewer, so an inside-out eye lights the right way too.
+render_mode cull_disabled;
 
 // The forge paints an eyeball as bands in v measured from the pupil (tools/forge/lib/paint.py
 // `iris_texture`): pupil to 0.072, iris to 0.205, limbal ring to 0.224, then sclera. glTF export

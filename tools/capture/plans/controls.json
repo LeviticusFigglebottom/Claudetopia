@@ -1,0 +1,9 @@
+{
+  "_doc": "The controls as a new player meets them, in the motion studio: the hint strip at the start, the strip after the player has moved and rolled, and the pause page's 'How to move and fight'. xvfb-run -a -s '-screen 0 1280x720x24' godot --path game --rendering-driver vulkan --rendering-method forward_plus --audio-driver Dummy --resolution 1280x720 --fixed-fps 60 res://tools_gd/motion_studio.tscn -- --plan=tools/capture/plans/controls.json --out=captures/controls",
+  "sequences": [
+    {"label": "hints", "view": "player", "hud": true,
+     "keys": [[0.5, "W", true], [2.2, "W", false], [2.6, "Shift", true], [2.7, "Shift", false]],
+     "shots": [0.4, 2.4, 3.6]},
+    {"label": "controls_page", "view": "player", "hud": true, "menu": "controls", "shots": [0.5]}
+  ]
+}

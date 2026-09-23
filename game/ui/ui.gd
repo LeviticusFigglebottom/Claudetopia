@@ -33,6 +33,7 @@ const DIALOGUE_SCENE := "res://ui/dialogue/dialogue_ui.tscn"
 const MENUS := {
 	"pause": {"scene": "res://ui/menus/pause_menu.tscn", "full": true},
 	"settings": {"scene": "res://ui/menus/settings_menu.tscn", "full": true},
+	"controls": {"scene": "res://ui/menus/controls_page.tscn", "full": true},
 	"save_load": {"scene": "res://ui/menus/save_load.tscn", "full": true},
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
 	"container": {"scene": "res://ui/inventory/container_screen.tscn", "full": true},
@@ -52,6 +53,17 @@ const MENU_ACTIONS := {"inventory": "inventory", "journal": "journal", "map": "m
 
 ## Where a screenshot taken with the bound key lands.
 const SHOT_DIR := "user://captures/shots"
+## How the fade waits for the cells around a body that has just stood up. It counts cells, not
+## seconds: it holds while they are still arriving, and lifts on a half-built country only when
+## none has come for COUNTRY_STALL_FRAMES frames and COUNTRY_STALL_S seconds together, or after
+## COUNTRY_CAP_S in all. It used to give up after 20 s of the clock, and a machine drawing a frame
+## every few seconds -- the streamer builds a fixed share of a cell each frame -- saw the fade lift
+## with 8 of 9 cells standing after 535 s. The stall wants both because a fast machine runs 120
+## frames in two seconds and a slow one takes minutes over them; the cap is for a streamer that
+## keeps changing its mind, which should end in an unfinished country, not a loading sheet for ever.
+const COUNTRY_STALL_FRAMES := 120
+const COUNTRY_STALL_S := 10.0
+const COUNTRY_CAP_S := 600.0
 
 var hud_layer: CanvasLayer
 var dialogue_layer: CanvasLayer
@@ -80,10 +92,17 @@ var _loading_mark: TextureRect
 var _loading_tween: Tween = null
 var _hud_visible := true
 var _mouse_was_captured := false
+## True while the fade is held for the country around a body that has just stood up.
+var _holding_for_country := false
+## How the last hold ended, for a probe or a test: see wait_for_country.
+var last_country_wait: Dictionary = {}
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Screens are laid out every frame and never moved by physics: nothing under here is
+	# interpolated between physics ticks (project physics_interpolation is on for the world).
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_build_layers()
 	set_variant("warm", true)
 	EventBus.notify.connect(_on_notify)
@@ -252,19 +271,126 @@ func _hide_loading(seconds := 0.0) -> void:
 
 ## What the world has stood up so far, in its own words.
 func _loading_progress_text() -> String:
-	var world: Node = null
-	var world_script := load("res://world/world.gd") as GDScript
-	if world_script != null:
-		world = world_script.get("instance")
+	var world := _world_node()
 	if world == null or not bool(world.get("is_world_ready")):
 		return "Raising the ground…"
-	var streamer: Node = world.get("streamer")
-	var cells: int = int(streamer.call("loaded_count")) if streamer != null and streamer.has_method("loaded_count") else 0
 	var people := get_tree().get_nodes_in_group("npc").size()
-	var text := "Laying the country: %d cells" % cells
+	var body := get_tree().get_first_node_in_group("player") as Node3D
+	var near := near_ring_progress(body)
+	var text := ""
+	if near.y > 0:
+		text = "Laying the country around you: %d of %d" % [near.x, near.y]
+	else:
+		var streamer: Node = world.get("streamer")
+		var cells: int = int(streamer.call("loaded_count")) if streamer != null and streamer.has_method("loaded_count") else 0
+		text = "Laying the country: %d cells" % cells
 	if people > 0:
 		text += ", %d people about" % people
 	return text + "…"
+
+
+func _world_node() -> Node:
+	var world_script := load("res://world/world.gd") as GDScript
+	return world_script.get("instance") if world_script != null else null
+
+
+## How many of the full-detail cells around `body` are standing, of how many there are in the
+## world (a body near the edge has fewer): Vector2i(loaded, wanted). (0, 0) when there is no world,
+## no streamer, or it is not streaming -- nothing to wait for.
+func near_ring_progress(body: Node3D) -> Vector2i:
+	var world := _world_node()
+	if world == null or body == null or not is_instance_valid(body) or not body.is_inside_tree():
+		return Vector2i.ZERO
+	var streamer: Node = world.get("streamer")
+	var provider: Node = world.get("provider")
+	if streamer == null or provider == null or not bool(streamer.get("enabled")) or streamer.get("target") != body:
+		return Vector2i.ZERO
+	var cells: Array = (provider.get("manifest") as Dictionary).get("cells", [32, 32])
+	var wide := int(cells[0])
+	var tall := int(cells[1]) if cells.size() > 1 else wide
+	var centre: Vector2i = streamer.call("cell_of", body.global_position)
+	var ring := int(streamer.get("full_ring"))
+	var loaded := 0
+	var wanted := 0
+	for dz in range(-ring, ring + 1):
+		for dx in range(-ring, ring + 1):
+			var c := Vector2i(centre.x + dx, centre.y + dz)
+			if c.x < 0 or c.y < 0 or c.x >= wide or c.y >= tall:
+				continue
+			wanted += 1
+			if bool(streamer.call("is_loaded", c)):
+				loaded += 1
+	return Vector2i(loaded, wanted)
+
+
+## Whether the fade is being held for the country to arrive around the body.
+func is_holding_for_country() -> bool:
+	return _holding_for_country
+
+
+func _near_ring_progress_of(body_id: int) -> Vector2i:
+	var body := instance_from_id(body_id) as Node3D if body_id != 0 else null
+	return near_ring_progress(body) if body != null else Vector2i.ZERO
+
+
+## The fade used to lift the moment the body stood, while the cells around it were still being
+## built: the first thing a player saw was bare ground with the trees, the hedges and the village
+## arriving over it. It waits for the full-detail ring now (3 x 3 cells, 768 m on a side), with the
+## count in the caption, for as long as the cells keep coming (wait_for_country). The body's hands
+## are held for the wait, so nobody walks off blind.
+func _wait_for_the_country(player: Node) -> void:
+	var body := player as Node3D
+	var had_input := body != null and body.has_method("set_input_enabled") and bool(body.get("input_enabled"))
+	if had_input:
+		body.call("set_input_enabled", false)
+	_holding_for_country = true
+	# by id, so a body freed during the wait (a scene change) answers "nothing wanted" and ends it
+	last_country_wait = await wait_for_country(_near_ring_progress_of.bind(body.get_instance_id() if body != null else 0))
+	_holding_for_country = false
+	if bool(last_country_wait["timed_out"]):
+		var near: Vector2i = last_country_wait["cells"]
+		Log.warn("UI", "the fade lifted with %d of %d near cells standing: %s after %.0f s and %d frames"
+				% [near.x, near.y, str(last_country_wait["why"]), float(last_country_wait["ms"]) / 1000.0,
+					int(last_country_wait["frames"])])
+	if had_input and is_instance_valid(body):
+		body.call("set_input_enabled", true)
+
+
+## Waits, a frame at a time, until `progress` (a Callable returning Vector2i(loaded, wanted)) says
+## every wanted cell is in, or gives up: "stalled" when none has come for `stall_frames` frames and
+## `stall_s` seconds together, "cap" after `cap_s` in all. `clock` returns milliseconds (the tests
+## give it a slow machine's); by default it is the real one. Nothing wanted is nothing to wait for.
+## Returns {"cells", "at_spawn", "ms", "frames", "timed_out", "why"}.
+func wait_for_country(progress: Callable, clock := Callable(), stall_frames := COUNTRY_STALL_FRAMES,
+		stall_s := COUNTRY_STALL_S, cap_s := COUNTRY_CAP_S) -> Dictionary:
+	var now := func() -> int: return int(clock.call()) if clock.is_valid() else Time.get_ticks_msec()
+	var t0: int = now.call()
+	var near: Vector2i = progress.call()
+	var at_spawn := near
+	var best := near.x
+	var gained_at: int = t0
+	var quiet := 0
+	var frames := 0
+	var why := ""
+	while near.y > 0 and near.x < near.y:
+		var t: int = now.call()
+		if t - t0 >= int(cap_s * 1000.0):
+			why = "cap"
+			break
+		if quiet >= stall_frames and t - gained_at >= int(stall_s * 1000.0):
+			why = "stalled"
+			break
+		await get_tree().process_frame
+		frames += 1
+		near = progress.call()
+		if near.x > best:
+			best = near.x
+			gained_at = now.call()
+			quiet = 0
+		else:
+			quiet += 1
+	return {"cells": near, "at_spawn": at_spawn, "ms": int(now.call()) - t0, "frames": frames,
+		"timed_out": near.y > 0 and near.x < near.y, "why": why}
 
 
 func _process(_delta: float) -> void:
@@ -507,7 +633,7 @@ func show_dialogue() -> Node:
 	return _dialogue
 
 
-func _on_player_spawned(_player: Node) -> void:
+func _on_player_spawned(player: Node) -> void:
 	show_hud()
 	show_dialogue()
 	# A load puts the region back without a region_entered, so a game saved in a dangerous
@@ -515,9 +641,10 @@ func _on_player_spawned(_player: Node) -> void:
 	_refresh_variant()
 	# The main menu and the Naming fade to black before they change scene, and this layer is
 	# an autoload, so the black outlives the scene change. Nothing lifted it: the world stood
-	# up and ran behind an opaque rectangle. A body standing in the world is the moment the
-	# player is owed the view.
+	# up and ran behind an opaque rectangle. The player is owed the view once the body stands
+	# and the country around it has arrived, and not before.
 	if _fade.visible:
+		await _wait_for_the_country(player)
 		fade_from_black(0.8)
 
 
@@ -716,6 +843,8 @@ func quick_save() -> void:
 	var err := SaveSystem.save_to_slot(SaveSystem.QUICK_SLOT)
 	if err == OK:
 		EventBus.notify.emit("Saved.", "save")
+	elif err == ERR_BUSY:
+		EventBus.notify.emit("Not saved while %s." % SaveSystem.saves_held_by(), "warning")
 	else:
 		EventBus.notify.emit("Could not save (%s)." % error_string(err), "warning")
 

@@ -448,6 +448,31 @@ class ClipBuilder:
             R = rig.rot_axis(a_local, math.radians(roll)) @ R
         local[hand] = (R, None)
 
+    def ankle_target(self, side: str, fs: FootState) -> Tuple[np.ndarray, np.ndarray]:
+        """Where the ankle has to be for this foot state, and the foot's world rotation.
+
+        The plan gives the ankle position for a *flat* foot; pitched toes-up the foot turns about
+        the heel, pitched toes-down about the ball, and the ankle moves with it.  The hips planner
+        in `gait_clip` asks this too, so the reach it plans for is the reach the solver needs."""
+        sk = self.skel
+        fb = sk.bones[f"Foot.{side}"]
+        yaw_R = rig.rot_axis(UP, fs.yaw)
+        rest_dir = fb.tail - fb.head
+        lateral = np.cross(UP, rest_dir)
+        lateral = lateral / np.linalg.norm(lateral)
+        pitch_R = rig.rot_axis(lateral, -fs.pitch)   # + pitch = toes up
+        Rw = yaw_R @ pitch_R
+        ankle = fs.pos.copy()
+        if fs.pitch > 1e-4:      # heel pivot
+            heel = fb.head + np.array([0.0, 0.06, -fb.head[2]]) * (sk.props.height / rig.DEFAULT_HEIGHT)
+            off = fb.head - heel
+            ankle = fs.pos + (Rw @ off - off)
+        elif fs.pitch < -1e-4:   # ball pivot
+            ball = sk.J[f"Toe.{side}"]
+            off = fb.head - ball
+            ankle = fs.pos + (Rw @ off - off)
+        return ankle, Rw
+
     def _solve_leg(self, W, local, side: str, fs: FootState) -> None:
         sk = self.skel
         up, lo, ft, toe = f"UpperLeg.{side}", f"LowerLeg.{side}", f"Foot.{side}", f"Toe.{side}"
@@ -455,24 +480,9 @@ class ClipBuilder:
         pole = yaw_R @ self.knee_pole
         # pole slightly outward so knees do not knock
         pole = pole + (LEFT if side == "L" else -LEFT) * 0.15
-        # foot bone target orientation: rest foot frame, pitched then yawed
         fb = sk.bones[ft]
         rest_dir = fb.tail - fb.head
-        lateral = np.cross(UP, rest_dir)
-        lateral = lateral / np.linalg.norm(lateral)
-        pitch_R = rig.rot_axis(lateral, -fs.pitch)   # + pitch = toes up
-        Rw = yaw_R @ pitch_R
-        # ankle target: the plan gives the ankle position for a flat foot; when pitched about
-        # the heel (toes up) or the ball (toes down) the ankle moves accordingly
-        ankle = fs.pos.copy()
-        if fs.pitch > 1e-4:      # heel pivot
-            heel = fb.head + np.array([0.0, 0.06, -fb.head[2]]) * (sk.props.height / rig.DEFAULT_HEIGHT)
-            off = fb.head - heel
-            ankle = fs.pos - off + Rw @ off if False else fs.pos + (Rw @ off - off)
-        elif fs.pitch < -1e-4:   # ball pivot
-            ball = sk.J[toe]
-            off = fb.head - ball
-            ankle = fs.pos + (Rw @ off - off)
+        ankle, Rw = self.ankle_target(side, fs)
         Ru, Rl = sk.ik_two_bone(W, up, lo, ankle, pole)
         local[up] = (Ru, None)
         local[lo] = (Rl, None)
@@ -636,12 +646,44 @@ class GaitParams:
     torso_forward: float = 0.0    # hips forward offset (m)
     extra_pose: Pose = field(default_factory=dict)
     knee_lift: float = 1.0
+    # --- the stride model -------------------------------------------------------------------
+    # The defaults reproduce the first model exactly (a stance sweep centred under the hip, a
+    # bob phased the wrong way round, a hard reach clamp); `bob_mode="walk"`/`"run"` opts into
+    # the one below.  Measured on the first model: its Walk dipped the hips 13.5 cm and its Run
+    # 25 cm at every contact, because a foot 0.48 / 0.62 m ahead of the hip is out of reach of a
+    # 0.87 m leg unless the body crouches to it.
+    contact_ahead: float = 0.5    # share of the planted-foot sweep that lies ahead of the hip at contact
+    heel_strike: float = 16.0     # toes-up degrees at contact (x heel_roll)
+    heel_rise: float = 38.0       # heel-off degrees at the end of stance (x heel_roll)
+    heel_rise_from: float = 0.72  # share of stance at which the heel starts to lift
+    swing_from_pitch: float = -30.0   # foot pitch as the swing starts (legacy value)
+    land_pitch: float = 18.0      # foot pitch as the swing lands (legacy value)
+    bob_mode: str = "legacy"      # "walk": hips highest over the planted foot; "run": lowest there
+    hip_drop: float = 0.0         # mean hips below standing, before the bob (m)
+    swing_lag: float = 1.0        # >1 holds the swing foot behind longer: heel recovery
+    swing_peak: float = 1.0       # <1 brings the swing foot's highest point earlier
+    swing_reach: float = 0.0      # extra forward reach (m) late in the swing, pawed back before landing
+    knee_drive: float = 0.0       # extra height (m) of the swing foot at that reach: the knee comes up
+    soft_reach: float = 0.0       # width (m) of the smooth minimum between the bob and the reach limit
+
+
+def _smooth_min(a: float, b: float, k: float) -> float:
+    """min(a, b) with the corner rounded over a width k; never above the true minimum."""
+    if k <= 0.0:
+        return min(a, b)
+    h = max(k - abs(a - b), 0.0) / k
+    return min(a, b) - h * h * k * 0.25
 
 
 def gait_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: bool = True) -> ClipBuilder:
     """Cyclic in-place locomotion with foot-lock.  Left foot contacts at phase 0, right at 0.5.
     The planted foot slides *backwards* along the travel direction at `speed` (the world moves,
-    the character stays), so there is no foot sliding when the game moves the actor at that speed."""
+    the character stays), so there is no foot sliding when the game moves the actor at that speed.
+
+    `speed` is written to the sidecar and is load-bearing: the game plays the clip at
+    (ground speed / speed) so the planted foot stays planted (CONTRACTS §3)."""
+    if gp.bob_mode != "legacy":
+        return _stride_clip(skel, name, gp, footstep_events)
     cb = ClipBuilder(skel, name, gp.period, loop=True, grounded=True)
     cb.extra["speed"] = round(gp.speed, 3)
     s = skel.props.height / rig.DEFAULT_HEIGHT
@@ -784,6 +826,145 @@ def gait_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: bool =
     return cb
 
 
+def _stride_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: bool = True) -> ClipBuilder:
+    """The stride model behind Walk, Run and Sprint.
+
+    What it changes against the first model, each from a measurement:
+
+    * the planted foot lands `contact_ahead` of its sweep in front of the hip and pushes off
+      behind it, the way a foot does, instead of a sweep centred under the hip that no leg of
+      this length can reach at either end without crouching;
+    * the reach the hips are allowed is worked out from where the ankle really is once the
+      foot has turned about its heel or its ball (`ClipBuilder.ankle_target`), not from the
+      flat-foot plan, and the limit is met through a smooth minimum rather than a hard clamp,
+      so the hips never crease;
+    * the bob is phased the right way round: a walk vaults over the planted leg and is highest
+      at mid-stance; a run lands into a bent knee and is lowest there;
+    * the swing foot can be held behind (`swing_lag`) and peak early (`swing_peak`), which is
+      heel recovery and knee drive, the difference between a sprint and a fast walk.
+
+    Left foot contacts at phase 0 and right at 0.5 in every clip made here, so clips of
+    different lengths can be blended in phase on a shared, normalised timeline."""
+    cb = ClipBuilder(skel, name, gp.period, loop=True, grounded=True)
+    cb.extra["speed"] = round(gp.speed, 3)
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    T = gp.period
+    d = np.array([gp.direction[0], gp.direction[1]], float)
+    d = d / max(np.linalg.norm(d), 1e-9)
+    travel_dir = LEFT * d[0] + FWD * d[1]
+    L = gp.speed * gp.duty * T                        # planted-foot travel per stance
+    a = gp.contact_ahead
+    ankle0 = {"L": skel.J["Foot.L"].copy(), "R": skel.J["Foot.R"].copy()}
+    hr = gp.heel_roll
+
+    def foot_fn(side: str):
+        base = ankle0[side].copy()
+        base[0] *= gp.stance_width
+        contact = 0.0 if side == "L" else 0.5
+
+        def fn(t: float):
+            ph = ((t / T) - contact) % 1.0           # 0 at contact
+            if ph < gp.duty:                         # stance
+                u = ph / gp.duty
+                pos = base + travel_dir * ((a - u) * L)
+                pitch = 0.0
+                if hr > 0:
+                    if u < 0.18:
+                        pitch = math.radians(gp.heel_strike) * (1 - u / 0.18) * hr
+                    elif u > gp.heel_rise_from:
+                        k = (u - gp.heel_rise_from) / (1.0 - gp.heel_rise_from)
+                        pitch = -math.radians(gp.heel_rise) * (k * k) * hr
+                return pos, 0.0, pitch, True
+            v = (ph - gp.duty) / (1 - gp.duty)       # swing, 0..1
+            start = base - travel_dir * ((1.0 - a) * L)
+            end = base + travel_dir * (a * L)
+            ve = (v * v * (3 - 2 * v)) ** gp.swing_lag
+            pos = start + (end - start) * ve
+            h = gp.step_height * s * gp.knee_lift * math.sin(math.pi * v ** gp.swing_peak) ** 0.9
+            # knee drive: late in the swing the foot goes out and up in front, then paws back
+            # to land under the hip (the drive peaks at ~78% of the swing and is gone at contact)
+            drive = math.sin(math.pi * v ** 2.8) ** 2
+            pos = pos + UP * (h + gp.knee_drive * s * drive) + travel_dir * (gp.swing_reach * s * drive)
+            pitch = 0.0
+            if hr > 0:
+                pitch = (math.radians(gp.swing_from_pitch) * (1 - v) ** 2
+                         + math.radians(gp.land_pitch) * v * v) * hr
+            return pos, 0.0, pitch, False
+        return fn
+
+    cb.feet.pos_fn["L"] = foot_fn("L")
+    cb.feet.pos_fn["R"] = foot_fn("R")
+
+    leg_len = skel.bones["UpperLeg.L"].length + skel.bones["LowerLeg.L"].length
+    reach = leg_len * 0.99
+    pelvis = skel.J["Hips"].copy()
+    hip_rel = {side: skel.J[f"UpperLeg.{side}"] - pelvis for side in ("L", "R")}
+
+    def hips_limit(t: float, offset: np.ndarray, R_pelvis: np.ndarray) -> float:
+        """The most the pelvis may rise (m, from standing) with both feet where the plan puts
+        them, the hip joints carried round by the pelvis's own turn and tilt.  A swing foot
+        counts too, eased out through mid-swing, so the limit neither appears nor vanishes at a
+        contact: that switch is what put a hitch in the first model's stride."""
+        dz_max = 1e9
+        for side in ("L", "R"):
+            fs = cb.feet.state(side, t)
+            ankle, _ = cb.ankle_target(side, fs)
+            hj = pelvis + offset + R_pelvis @ hip_rel[side]
+            horiz = math.hypot(ankle[0] - hj[0], ankle[1] - hj[1])
+            if horiz >= reach:
+                continue
+            dz = math.sqrt(reach * reach - horiz * horiz) + ankle[2] - hj[2]
+            if not fs.planted:
+                ph = ((t / T) - (0.0 if side == "L" else 0.5)) % 1.0
+                v = (ph - gp.duty) / (1 - gp.duty)
+                dz += 0.6 * math.sin(math.pi * clamp01(v)) ** 2
+            dz_max = min(dz_max, dz)
+        return dz_max
+
+    mid = gp.duty * 0.5
+
+    def body_pose(t: float) -> Pose:
+        ph = (t / T) % 1.0
+        w = 2 * math.pi * ph
+        wave = math.cos(2 * (w - 2 * math.pi * mid))   # +1 over each planted foot's mid-stance
+        bob = gp.hip_bob * s * (wave if gp.bob_mode == "walk" else -wave)
+        want = -(gp.hip_drop + gp.crouch) * s + bob
+        sway_x = gp.hip_sway * s * math.sin(w - 2 * math.pi * mid + math.pi / 2)
+        offset = FWD * gp.torso_forward * s + LEFT * sway_x
+        # The pelvis turns *with* the stride: at left contact the left hip is forward, which is
+        # a turn to the right.  The first model turned it the other way and lost ~1 cm of reach
+        # at each end of the stride to it.
+        yaw = -gp.hip_yaw * math.cos(w)
+        roll = gp.hip_roll * math.sin(w - 2 * math.pi * mid)
+        R_pelvis = (rig.rot_axis(LEFT, math.radians(gp.lean * 0.3)) @ rig.rot_axis(-FWD, math.radians(roll))
+                    @ rig.rot_axis(UP, math.radians(yaw)))
+        dz = _smooth_min(want, hips_limit(t, offset, R_pelvis), gp.soft_reach * s)
+        pose: Pose = {
+            HIPS_POS: (gp.torso_forward * s, sway_x, dz),
+            "Hips": (gp.lean * 0.3, roll, yaw),
+            "Spine": (gp.lean * 0.5 + 1.5, -roll * 0.5, -yaw * 0.5 * gp.chest_counter),
+            "Chest": (gp.lean * 0.3 + 0.5 * math.cos(2 * w), -roll * 0.4, -yaw * 0.6 * gp.chest_counter),
+            "Neck": (-gp.lean * 0.4 + 1.0 * gp.head_bob * math.cos(2 * w), 0, yaw * 0.1),
+            "Head": (-gp.lean * 0.4 - 1.0 * gp.head_bob * math.cos(2 * w + 0.6), 0, 0),
+        }
+        sw = gp.arm_swing
+        for side, sign in (("L", -1.0), ("R", 1.0)):
+            swing = sign * sw * math.cos(w)                     # + forward
+            fwd_amt = clamp01(swing / max(sw, 1e-6))
+            bend = gp.arm_bend + gp.arm_bend_swing * fwd_amt
+            pose[f"Shoulder.{side}"] = (swing * 0.12, 0.0, 0.0)
+            pose[f"UpperArm.{side}"] = (swing, gp.arm_adduct + 2.0 * fwd_amt, 8.0)
+            pose[f"LowerArm.{side}"] = (bend, 0.0, 0.0)
+            pose[f"Hand.{side}"] = (-6.0, 0.0, 0.0)
+        return pose_add(pose, gp.extra_pose)
+
+    cb.layers.append(body_pose)
+    if footstep_events:
+        cb.event(0.03 * T, "footstep_l")
+        cb.event(0.53 * T, "footstep_r")
+    return cb
+
+
 # --------------------------------------------------------------------------------------
 # swing generator (melee attacks)
 # --------------------------------------------------------------------------------------
@@ -823,11 +1004,31 @@ def swing_clip(skel: Skeleton, name: str, length: float, guard: Pose, beats: Seq
 # roll generator (dodges)
 # --------------------------------------------------------------------------------------
 
+## Roughly how far the body's surface stands off each joint (m, at the default height): enough to
+## say which part of a tumbling body is lowest, and by how much it is into the ground or clear of it.
+BODY_RADII: Dict[str, float] = {
+    "Head": 0.11, "Neck": 0.06, "Chest": 0.14, "Spine": 0.13, "Hips": 0.13,
+    "Shoulder.L": 0.06, "Shoulder.R": 0.06, "UpperArm.L": 0.05, "UpperArm.R": 0.05,
+    "LowerArm.L": 0.045, "LowerArm.R": 0.045, "Hand.L": 0.04, "Hand.R": 0.04,
+    "UpperLeg.L": 0.08, "UpperLeg.R": 0.08, "LowerLeg.L": 0.06, "LowerLeg.R": 0.06,
+    "Foot.L": 0.045, "Foot.R": 0.045, "Toe.L": 0.02, "Toe.R": 0.02,
+}
+LEGS_STRAIGHT: Pose = {"UpperLeg.L": (0, 0, 0), "UpperLeg.R": (0, 0, 0), "LowerLeg.L": (0, 0, 0),
+                       "LowerLeg.R": (0, 0, 0), "Foot.L": (0, 0, 0), "Foot.R": (0, 0, 0)}
+
+
+def lowest_surface(skel: Skeleton, W) -> float:
+    """Height of the lowest point of the body's surface in pose W (joint heights less BODY_RADII)."""
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    return min(skel.joint_world(W, b)[2] - r * s for b, r in BODY_RADII.items() if b in skel.J)
+
+
 def roll_clip(skel: Skeleton, name: str, direction: str, length: float = 0.75, guard: Optional[Pose] = None) -> ClipBuilder:
     """Tucked roll in place.  direction in F/B/L/R.  The whole body turns about a horizontal
-    axis while tucking; legs are FK (not grounded)."""
+    axis while tucking; legs are FK (not grounded), and every frame the whole body is raised or
+    lowered until its lowest point is on the ground."""
     cb = ClipBuilder(skel, name, length, loop=False, grounded=False)
-    guard = guard or GUARD_1H
+    guard = {**LEGS_STRAIGHT, **(guard or GUARD_1H)}
     s = skel.props.height / rig.DEFAULT_HEIGHT
     # rotation sign: forward roll = bend forward (Hips f +)
     tuck: Pose = {"Spine": (36, 0, 0), "Chest": (28, 0, 0), "Neck": (18, 0, 0), "Head": (10, 0, 0),
@@ -871,6 +1072,20 @@ def roll_clip(skel: Skeleton, name: str, direction: str, length: float = 0.75, g
         k = ease("smooth", k)
         return spin(k)
     cb.layer(spin_layer)
+
+    # Keys alone put the toes 19 cm into the ground on the way down, the head 24 cm into it at the
+    # turn and the back 26 cm clear of it coming over; and the guard at the end, which says
+    # nothing about the legs, kept the crouch's bent knees at standing height, so the body stood
+    # up with its feet 30 cm in the air and dropped when the game took it back. A roll is felt
+    # through the floor: every frame, the whole body goes up or down until its lowest point
+    # touches it.
+    def ground(t: float, pose: Pose) -> Pose:
+        low = lowest_surface(skel, skel.fk(cb.local_pose(t, pose)))
+        hp = pose.get(HIPS_POS, (0.0, 0.0, 0.0))
+        out = dict(pose)
+        out[HIPS_POS] = (hp[0], hp[1], hp[2] - low)
+        return out
+    cb.post.append(ground)
     cb.event(0.25 * length, "roll_start")
     cb.event(0.85 * length, "cancel_ok")
     return cb

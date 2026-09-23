@@ -214,26 +214,48 @@ def locomotion_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     gi.layer(head_look(period=3.2, yaw=4.0, pitch=1.5))
     out["Idle_Combat"] = gi
 
+    # The three gaits of DESIGN §5.2, each at the ground speed the game moves the body at, so the
+    # game plays it at rate 1 and nothing slides. Measured on the default rig (tools/forge/tests):
+    # hips 4.0 / 4.0 / 4.2 cm below standing on average and 5.1 / 5.3 / 6.3 cm peak to peak, where
+    # the first Walk and Run went 13.5 and 25.2 cm deep at every contact. Cadences 125, 171 and 200
+    # steps a minute; knees at mid-stance 23, 40 and 46 degrees; lean 4, 8 and 13 degrees.
     out["Walk"] = gait_clip(skel, "Walk", GaitParams(
-        speed=1.55, period=1.0, duty=0.62, step_height=0.055, hip_bob=0.026, hip_sway=0.022,
-        hip_yaw=6.5, hip_roll=3.0, lean=3.0, arm_swing=25.0, arm_bend=20.0, arm_bend_swing=16.0))
+        speed=1.8, period=0.96, duty=0.60, contact_ahead=0.38, bob_mode="walk", hip_drop=0.02,
+        hip_bob=0.012, soft_reach=0.05, heel_strike=18.0, land_pitch=18.0, heel_rise=60.0,
+        heel_rise_from=0.5, swing_from_pitch=-60.0, step_height=0.10, swing_peak=0.75, swing_lag=1.15,
+        hip_sway=0.02, hip_yaw=8.0, hip_roll=3.0, lean=4.0, arm_swing=24.0, arm_bend=18.0,
+        arm_bend_swing=14.0))
 
+    # The default gait (the contract's name for it is Run): a jog.
     out["Run"] = gait_clip(skel, "Run", GaitParams(
-        speed=5.0, period=0.62, duty=0.40, step_height=0.155, hip_bob=0.048, hip_sway=0.016,
-        hip_yaw=9.0, hip_roll=4.0, lean=13.0, arm_swing=42.0, arm_bend=78.0, arm_bend_swing=22.0,
-        hands_up=True, flight=True, knee_lift=1.25, head_bob=0.6))
+        speed=5.0, period=0.70, duty=0.28, contact_ahead=0.33, bob_mode="run", hip_drop=0.035,
+        hip_bob=0.025, soft_reach=0.05, heel_strike=6.0, land_pitch=6.0, heel_rise=72.0,
+        heel_rise_from=0.35, swing_from_pitch=-72.0, step_height=0.24, swing_peak=0.7, swing_lag=1.5,
+        swing_reach=0.12, knee_drive=0.10, hip_sway=0.012, hip_yaw=7.0, hip_roll=4.0, lean=9.0,
+        arm_swing=38.0, arm_bend=80.0, arm_bend_swing=16.0, hands_up=True, head_bob=0.6))
+
+    out["Sprint"] = gait_clip(skel, "Sprint", GaitParams(
+        speed=7.8, period=0.60, duty=0.21, contact_ahead=0.34, bob_mode="run", hip_drop=0.04,
+        hip_bob=0.03, soft_reach=0.06, heel_strike=4.0, land_pitch=4.0, heel_rise=75.0,
+        heel_rise_from=0.3, swing_from_pitch=-75.0, step_height=0.36, swing_peak=0.6, swing_lag=1.9,
+        swing_reach=0.30, knee_drive=0.26, hip_sway=0.012, hip_yaw=9.0, hip_roll=4.0, lean=15.0,
+        arm_swing=55.0, arm_bend=85.0, arm_bend_swing=10.0, hands_up=True, head_bob=0.6))
 
     out["Walk_Back"] = gait_clip(skel, "Walk_Back", GaitParams(
         speed=1.15, period=1.15, duty=0.60, direction=(0.0, -1.0), step_height=0.045,
         hip_bob=0.020, hip_sway=0.020, hip_yaw=3.0, hip_roll=2.5, lean=-3.0, arm_swing=16.0,
         arm_bend=24.0, arm_bend_swing=10.0))
 
+    # A side-step is short and quick: legs can spread sideways only so far before the hips have to
+    # drop to reach. At 0.95 s and duty 0.58 each foot swept 1.05 m sideways and the hips fell
+    # 21.3 cm at every step (19.8 cm peak to peak), a bounce that read as a crouch whenever the
+    # player was locked on. At 0.6 s and duty 0.5 the sweep is 0.57 m and the hips move 5.7 cm.
     out["Strafe_L"] = gait_clip(skel, "Strafe_L", GaitParams(
-        speed=1.9, period=0.95, duty=0.58, direction=(1.0, 0.0), step_height=0.055,
+        speed=1.9, period=0.6, duty=0.5, direction=(1.0, 0.0), step_height=0.055,
         hip_bob=0.018, hip_sway=0.010, hip_yaw=2.0, hip_roll=2.0, lean=2.0, arm_swing=8.0,
         arm_bend=30.0, arm_bend_swing=8.0, stance_width=1.2))
     out["Strafe_R"] = gait_clip(skel, "Strafe_R", GaitParams(
-        speed=1.9, period=0.95, duty=0.58, direction=(-1.0, 0.0), step_height=0.055,
+        speed=1.9, period=0.6, duty=0.5, direction=(-1.0, 0.0), step_height=0.055,
         hip_bob=0.018, hip_sway=0.010, hip_yaw=2.0, hip_roll=2.0, lean=2.0, arm_swing=8.0,
         arm_bend=30.0, arm_bend_swing=8.0, stance_width=1.2))
 
@@ -244,10 +266,13 @@ def locomotion_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     sneak.layer(head_look(period=4.2, yaw=12.0, pitch=4.0))
     out["Sneak_Idle"] = sneak
 
+    # A crouched prowl at the game's sneak speed (1.5 m/s; it was 0.95 against a game speed of 2.1).
     out["Sneak_Walk"] = gait_clip(skel, "Sneak_Walk", GaitParams(
-        speed=0.95, period=1.35, duty=0.66, step_height=0.045, hip_bob=0.014, hip_sway=0.024,
-        hip_yaw=4.0, hip_roll=2.0, lean=10.0, arm_swing=10.0, arm_bend=52.0, arm_bend_swing=8.0,
-        crouch=0.185, heel_roll=0.25, stance_width=1.25, head_bob=0.3,
+        speed=1.5, period=1.15, duty=0.62, contact_ahead=0.42, bob_mode="walk", hip_bob=0.008,
+        soft_reach=0.04, heel_strike=16.0, land_pitch=16.0, heel_rise=40.0, heel_rise_from=0.6,
+        swing_from_pitch=-40.0, step_height=0.07, swing_peak=0.85, swing_lag=1.1,
+        hip_sway=0.024, hip_yaw=4.0, hip_roll=2.0, lean=10.0, arm_swing=10.0, arm_bend=52.0,
+        arm_bend_swing=8.0, crouch=0.185, heel_roll=0.25, stance_width=1.25, head_bob=0.3,
         extra_pose={"Spine": (16, 0, 0), "Chest": (6, 0, 0), "Neck": (-14, 0, 0), "Head": (-8, 0, 0),
                     "UpperArm.L": (10, 4, 0), "UpperArm.R": (10, 4, 0)}))
 
@@ -1364,7 +1389,7 @@ def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
 
 REQUIRED_CLIPS: List[str] = [
-    "Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Strafe_L", "Strafe_R", "Sneak_Idle",
+    "Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Idle",
     "Sneak_Walk", "Jump_Start", "Jump_Loop", "Jump_Land", "Fall_Loop",
     "Dodge_F", "Dodge_B", "Dodge_L", "Dodge_R",
     "Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Light_3", "Attack_1H_Heavy",
@@ -1379,7 +1404,10 @@ REQUIRED_CLIPS: List[str] = [
     "Bow_Gesture", "Laugh", "Rude", "Dance", "Cheer", "Cower", "Point", "Drink", "Eat", "Read",
 ]
 ATTACK_CLIPS = [c for c in REQUIRED_CLIPS if c.startswith("Attack_")] + ["Riposte", "Backstab"]
-LOCOMOTION_CLIPS = ["Walk", "Walk_Back", "Run", "Strafe_L", "Strafe_R", "Sneak_Walk"]
+LOCOMOTION_CLIPS = ["Walk", "Walk_Back", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Walk"]
+## The gaits the game blends in phase and plays stride-matched: each carries its ground speed in
+## the sidecar (`speed`), and each puts its left foot down at phase 0 and its right at 0.5.
+GAIT_CLIPS = ["Walk", "Run", "Sprint", "Sneak_Walk"]
 
 
 def check_contract(clips: Dict[str, ClipBuilder]) -> List[str]:

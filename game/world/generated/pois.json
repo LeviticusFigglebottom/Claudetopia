@@ -1,0 +1,839 @@
+[
+ {
+  "place_id": "core:place/merrowby",
+  "pos": [
+   900.0,
+   29.88,
+   2350.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 63.73213921133976
+ },
+ {
+  "place_id": "core:place/tamwick",
+  "pos": [
+   1900.0,
+   116.65,
+   2900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 41.21320343559643
+ },
+ {
+  "place_id": "core:place/wardens_rest",
+  "pos": [
+   300.0,
+   19.6,
+   3100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 43.71708245126285
+ },
+ {
+  "place_id": "core:place/hollin_barrow",
+  "pos": [
+   1700.0,
+   120.82,
+   1900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/pennywort_mill",
+  "pos": [
+   600.0,
+   31.68,
+   1900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/chalk_hound",
+  "pos": [
+   1400.0,
+   100.58,
+   3300.0
+  ],
+  "yaw": 230.0,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/hearthvale_chalk_hound_a/hearthvale_chalk_hound_a.glb"
+ },
+ {
+  "place_id": "core:place/cracked_toll",
+  "pos": [
+   1000.0,
+   18.56,
+   2150.0
+  ],
+  "yaw": 96.0,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/hearthvale_cracked_toll_a/hearthvale_cracked_toll_a.glb",
+  "collision": "res://assets/models/landmarks/hearthvale_cracked_toll_a/hearthvale_cracked_toll_a_col.glb"
+ },
+ {
+  "place_id": "core:place/tollmere",
+  "pos": [
+   0.0,
+   18.09,
+   -150.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 75.11351921262151
+ },
+ {
+  "place_id": "core:place/gullhithe",
+  "pos": [
+   1500.0,
+   15.17,
+   -900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 50.0
+ },
+ {
+  "place_id": "core:place/the_lamp",
+  "pos": [
+   1750.0,
+   32.85,
+   -1250.0
+  ],
+  "yaw": -78.2,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/brightwater_the_lamp_a/brightwater_the_lamp_a.glb",
+  "collision": "res://assets/models/landmarks/brightwater_the_lamp_a/brightwater_the_lamp_a_col.glb"
+ },
+ {
+  "place_id": "core:place/sayers_spire",
+  "pos": [
+   60.0,
+   20.09,
+   -230.0
+  ],
+  "yaw": -36.9,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/brightwater_sayers_spire_a/brightwater_sayers_spire_a.glb",
+  "collision": "res://assets/models/landmarks/brightwater_sayers_spire_a/brightwater_sayers_spire_a_col.glb"
+ },
+ {
+  "place_id": "core:place/undercroft",
+  "pos": [
+   -80.0,
+   18.77,
+   -100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/sunken_barge",
+  "pos": [
+   -700.0,
+   1.27,
+   -700.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/isseva",
+  "pos": [
+   -2900.0,
+   1.88,
+   -500.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 63.73213921133976
+ },
+ {
+  "place_id": "core:place/nauves_landing",
+  "pos": [
+   -2200.0,
+   2.86,
+   200.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 41.21320343559643
+ },
+ {
+  "place_id": "core:place/drowned_nave",
+  "pos": [
+   -3500.0,
+   1.78,
+   -1300.0
+  ],
+  "yaw": 147.0,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/sedgemire_drowned_nave_a/sedgemire_drowned_nave_a.glb",
+  "collision": "res://assets/models/landmarks/sedgemire_drowned_nave_a/sedgemire_drowned_nave_a_col.glb"
+ },
+ {
+  "place_id": "core:place/eelfathom",
+  "pos": [
+   -2500.0,
+   3.17,
+   -1400.0
+  ],
+  "yaw": 275.0,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/sedgemire_eelfathom_a/sedgemire_eelfathom_a.glb",
+  "collision": "res://assets/models/landmarks/sedgemire_eelfathom_a/sedgemire_eelfathom_a_col.glb"
+ },
+ {
+  "place_id": "core:place/grandfather_hollow",
+  "pos": [
+   3000.0,
+   109.2,
+   250.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 63.73213921133976
+ },
+ {
+  "place_id": "core:place/grandfather",
+  "pos": [
+   3000.0,
+   109.2,
+   250.0
+  ],
+  "yaw": 2.0,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/briarwold_grandfather_a/briarwold_grandfather_a.glb",
+  "collision": "res://assets/models/landmarks/briarwold_grandfather_a/briarwold_grandfather_a_col.glb"
+ },
+ {
+  "place_id": "core:place/fernhold",
+  "pos": [
+   2300.0,
+   83.78,
+   1100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 36.770509831248425
+ },
+ {
+  "place_id": "core:place/standing_moot",
+  "pos": [
+   3600.0,
+   222.17,
+   1400.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/weaverdeep",
+  "pos": [
+   3400.0,
+   149.72,
+   -700.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/thornmarch",
+  "pos": [
+   4000.0,
+   345.24,
+   0.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/kharrow_hold",
+  "pos": [
+   400.0,
+   358.4,
+   -2700.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 63.73213921133976
+ },
+ {
+  "place_id": "core:place/brindlecrag",
+  "pos": [
+   -900.0,
+   209.65,
+   -2500.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 50.0
+ },
+ {
+  "place_id": "core:place/fallen_hand",
+  "pos": [
+   1200.0,
+   225.06,
+   -3300.0
+  ],
+  "yaw": 151.0,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/skerrow_fallen_hand_a/skerrow_fallen_hand_a.glb",
+  "collision": "res://assets/models/landmarks/skerrow_fallen_hand_a/skerrow_fallen_hand_a_col.glb"
+ },
+ {
+  "place_id": "core:place/oskeld_mine",
+  "pos": [
+   -600.0,
+   231.14,
+   -3200.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/frostmothers_cradle",
+  "pos": [
+   800.0,
+   572.45,
+   -3800.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/windgate",
+  "pos": [
+   200.0,
+   536.37,
+   -4000.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/pilgrims_ash",
+  "pos": [
+   -1500.0,
+   107.17,
+   2200.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0
+ },
+ {
+  "place_id": "core:place/greyfold",
+  "pos": [
+   -2300.0,
+   70.67,
+   2900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 42.5
+ },
+ {
+  "place_id": "core:place/sunken_choir",
+  "pos": [
+   -1900.0,
+   69.46,
+   3300.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0,
+  "scene": "res://assets/models/landmarks/cinderlea_choir_colossus_a/cinderlea_choir_colossus_a.glb",
+  "collision": "res://assets/models/landmarks/cinderlea_choir_colossus_a/cinderlea_choir_colossus_a_col.glb"
+ },
+ {
+  "place_id": "core:place/cantors_seat",
+  "pos": [
+   -1900.0,
+   63.79,
+   3500.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:place/hushline",
+  "pos": [
+   -1900.0,
+   0.2,
+   4000.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/larkbourne_ford",
+  "pos": [
+   729.0,
+   34.55,
+   2314.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/hedge_shrine_of_ansel",
+  "pos": [
+   1300.0,
+   123.21,
+   2580.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/tumbled_watchtower",
+  "pos": [
+   320.0,
+   30.71,
+   2120.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/gosling_pit",
+  "pos": [
+   1600.0,
+   106.6,
+   3150.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0
+ },
+ {
+  "place_id": "core:poi/singing_yew",
+  "pos": [
+   1900.0,
+   111.17,
+   2300.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/whitecut_falls",
+  "pos": [
+   700.0,
+   12.43,
+   1300.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/bell_meadow_stones",
+  "pos": [
+   1120.0,
+   33.24,
+   2090.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/foxglove_dell",
+  "pos": [
+   2200.0,
+   98.35,
+   2500.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/long_stride",
+  "pos": [
+   0.0,
+   8.41,
+   600.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/shingle_shrine",
+  "pos": [
+   300.0,
+   16.27,
+   1100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/north_cliff_beacon",
+  "pos": [
+   -580.0,
+   22.09,
+   -1520.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/gullhithe_wreck",
+  "pos": [
+   1700.0,
+   11.81,
+   -700.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/eelweir",
+  "pos": [
+   -1400.0,
+   12.36,
+   -100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/pilgrim_stair",
+  "pos": [
+   1300.0,
+   7.88,
+   -200.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/willow_isle",
+  "pos": [
+   -520.0,
+   0.2,
+   200.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/buoy_bell_field",
+  "pos": [
+   600.0,
+   2.13,
+   -600.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/lantern_causeway",
+  "pos": [
+   -2550.0,
+   4.71,
+   -150.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/drowned_bell_shrine",
+  "pos": [
+   -2800.0,
+   2.14,
+   -900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/sallow_king",
+  "pos": [
+   -3300.0,
+   1.92,
+   0.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/reed_wreck",
+  "pos": [
+   -3700.0,
+   2.0,
+   -500.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/stair_of_isse",
+  "pos": [
+   -3300.0,
+   2.01,
+   -1100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/wisp_hollow",
+  "pos": [
+   -2300.0,
+   2.72,
+   -800.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/tideflat_stones",
+  "pos": [
+   -3900.0,
+   1.78,
+   -200.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/heron_watch",
+  "pos": [
+   -2100.0,
+   2.17,
+   -400.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/mossbridge",
+  "pos": [
+   2600.0,
+   99.26,
+   480.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/oiled_stone_shrine",
+  "pos": [
+   2800.0,
+   122.24,
+   900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/hunters_stand",
+  "pos": [
+   3300.0,
+   184.5,
+   900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/foxfire_falls",
+  "pos": [
+   2540.0,
+   165.02,
+   -220.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/hart_bones",
+  "pos": [
+   3480.0,
+   193.67,
+   660.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/briar_breach",
+  "pos": [
+   3990.0,
+   339.16,
+   -240.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/charcoal_camp",
+  "pos": [
+   2700.0,
+   118.98,
+   -100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0
+ },
+ {
+  "place_id": "core:poi/fern_gully",
+  "pos": [
+   3500.0,
+   155.25,
+   -1000.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/chain_bridge",
+  "pos": [
+   250.0,
+   313.15,
+   -2580.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/rib_cathedral",
+  "pos": [
+   1000.0,
+   198.27,
+   -2940.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/three_sisters_falls",
+  "pos": [
+   -300.0,
+   217.4,
+   -2800.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/clanless_camp",
+  "pos": [
+   -1300.0,
+   351.91,
+   -3100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0
+ },
+ {
+  "place_id": "core:poi/sinkhole_shrine",
+  "pos": [
+   600.0,
+   266.49,
+   -3100.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/watch_of_the_gate",
+  "pos": [
+   370.0,
+   489.76,
+   -3850.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/lichen_stones",
+  "pos": [
+   -40.0,
+   572.01,
+   -3520.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/hidden_tarn",
+  "pos": [
+   700.0,
+   506.46,
+   -3600.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/glass_bridge",
+  "pos": [
+   -1700.0,
+   104.7,
+   2450.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/bell_of_the_pilgrims",
+  "pos": [
+   -1320.0,
+   107.38,
+   2500.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/headless_watch",
+  "pos": [
+   -2120.0,
+   81.19,
+   3200.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/the_one_poppy",
+  "pos": [
+   -2500.0,
+   59.2,
+   2500.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/thirteenth_colossus",
+  "pos": [
+   -1480.0,
+   115.61,
+   3280.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/cold_fire_camp",
+  "pos": [
+   -2260.0,
+   87.33,
+   2760.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0
+ },
+ {
+  "place_id": "core:poi/glass_falls",
+  "pos": [
+   -1860.0,
+   89.7,
+   3030.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ },
+ {
+  "place_id": "core:poi/hushline_stair",
+  "pos": [
+   -1900.0,
+   0.2,
+   3900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 25.0
+ }
+]

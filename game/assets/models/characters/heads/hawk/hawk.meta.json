@@ -1,11 +1,11 @@
 {
  "bounds": [
-  -0.097,
-  -0.1147,
+  -0.0851,
+  -0.1171,
   1.4031,
-  0.0971,
-  0.0964,
-  1.8032
+  0.0855,
+  0.1105,
+  1.7805
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -31,6 +31,12 @@
  "rig": "WM_Humanoid_v1",
  "seed": 1,
  "slot_hint": "head",
+ "textures": [
+  "hawk_eye_albedo.png",
+  "hawk_normal.png",
+  "hawk_albedo.png",
+  "hawk_orm.png"
+ ],
  "tris": [
   5608,
   0,

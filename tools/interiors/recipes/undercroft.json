@@ -142,24 +142,25 @@
   "encounters": [
     {
       "chamber": "cistern",
-      "enemy": "core:enemy/down_wolf",
+      "enemy": "core:enemy/gutter_drake",
       "count": 3,
       "group": "cistern",
       "note": "Gutter drakes, in the bestiary's terms a pack; they come along the walkway so only two can reach you."
     },
     {
       "chamber": "drake_warren",
-      "enemy": "core:enemy/down_wolf",
+      "enemy": "core:enemy/gutter_drake",
       "count": 4,
       "group": "warren",
       "ambush": true
     },
     {
       "chamber": "ledger_fall",
-      "enemy": "core:enemy/roadside_bandit",
+      "enemy": "core:enemy/bravo",
       "count": 2,
       "group": "paper",
-      "note": "Two Hands who did not get the message that you are expected."
+      "note": "The Guild's two bravos, paid to stand in a room nobody can get into; they have been playing at counters for nine years and are very fast.",
+      "role": "elite"
     }
   ],
   "features": [

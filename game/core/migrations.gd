@@ -6,6 +6,7 @@ class_name Migrations
 static var STEPS: Array[Callable] = [
 	_v1_to_v2,
 	_v2_to_v3,
+	_v3_to_v4,
 ]
 
 
@@ -53,5 +54,27 @@ static func _v2_to_v3(data: Dictionary) -> Dictionary:
 			carried.append(readied)
 		progression["known_spells"] = carried
 	sections["progression"] = progression
+	data["sections"] = sections
+	return data
+
+
+## v3 -> v4: attributes start at 10 instead of 5. The character's Vigour, Endurance and Will
+## always lived on Progression, starting at 5, while the body kept three of its own at 10 and
+## built its health, stamina and mana from those; the body now reads Progression's, so
+## Progression starts where the body always stood. A saved character keeps what it was: every
+## attribute it saved moves up by the same 5, points already spent included.
+const V4_ATTRIBUTE_SHIFT := 5
+
+static func _v3_to_v4(data: Dictionary) -> Dictionary:
+	var sections: Dictionary = data.get("sections", {})
+	var progression: Dictionary = sections.get("progression", {})
+	var leveling: Dictionary = progression.get("leveling", {})
+	var attributes: Dictionary = leveling.get("attributes", {})
+	for a in attributes.keys():
+		attributes[a] = int(attributes[a]) + V4_ATTRIBUTE_SHIFT
+	if not attributes.is_empty():
+		leveling["attributes"] = attributes
+		progression["leveling"] = leveling
+		sections["progression"] = progression
 	data["sections"] = sections
 	return data

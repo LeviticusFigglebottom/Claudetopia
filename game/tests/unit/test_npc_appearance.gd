@@ -77,6 +77,23 @@ func test_an_npc_takes_the_numbers_its_own_def_states() -> void:
 	npc.queue_free()
 
 
+func test_a_child_stands_a_child_height() -> void:
+	# Elsie is tagged a child, Winnow is only written as nine and `child_small`; both were rolled
+	# as grown women of their culture and stood as tall as their parents.
+	for id in ["core:npc/elsie_wick", "core:npc/winnow_pennywort"]:
+		if ContentDB.get_or_empty(id).is_empty():
+			continue
+		var npc := _stand_up(id)
+		var look: CharacterAppearance = _model_of(npc).get("appearance")
+		assert_gt(1.45, look.height, "%s is %.2f m tall" % [id, look.height])
+		assert_gt(look.height, 1.1, "%s is shrunk past any child" % id)
+		npc.queue_free()
+	var grown := _stand_up(A_VILLAGER)
+	assert_gt((_model_of(grown).get("appearance") as CharacterAppearance).height, 1.5,
+			"a grown villager was taken for a child")
+	grown.queue_free()
+
+
 func test_prose_in_a_def_is_not_mistaken_for_a_part_name() -> void:
 	# `"build": "short_thick"` and `"hair": "red_grey_shaved_sides"` are written for a person
 	# reading the pack, not for the mesh. Applying them as values would break the appearance.

@@ -8,7 +8,7 @@ extends RefCounted
 ## Vocabulary (CONTRACTS §7):
 ##   {"set_flag": "met_wren"} | {"set_flag": ["key", value]}
 ##   {"give_item": ["core:item/x", 2]} | {"give_item": "core:item/x"}
-##   {"quest_stage": [quest_id, stage]}      stage as int index or stage id string
+##   {"quest_stage": [quest_id, stage]}      a stage id, or a stage number counted from one (QuestLog.stage_index)
 ##   {"rep": [faction_id, delta]}
 ##   {"morality": delta}
 ##   {"renown": delta}

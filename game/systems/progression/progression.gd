@@ -288,11 +288,11 @@ func spells() -> Array[Dictionary]:
 			"id": id, "name": str(def.get("name", Ids.name_of(id))), "school": school,
 			"school_name": str(ContentDB.get_or_empty("core:skill/" + school).get("name", school.capitalize())),
 			"cast_type": str(def.get("cast_type", "")), "skill_level": skill_level(school),
-			"cost": SpellRuntime.cost_of(def, skill), "base_cost": float(def.get("cost", 0.0)),
+			"cost": SpellRuntime.cost_of(def, skill, mods.get_mult("spell_cost_" + school)), "base_cost": float(def.get("cost", 0.0)),
 			"cast_time": SpellRuntime.cast_time_of(def, skill),
 			"range": SpellRuntime.range_of(def) if def.has("range") else 0.0,
 			"radius": SpellRuntime.radius_of(def) if def.has("radius") else 0.0,
-			"duration": SpellRuntime.duration_of(def),
+			"duration": SpellRuntime.duration_of(def) * mods.get_mult("spell_duration_" + school),
 			"description": str(def.get("description", "")), "effects": SpellRuntime.effects_of(def),
 		})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -325,6 +325,12 @@ func load_capacity() -> float:
 
 func _attr_with_mods(name: String) -> int:
 	return int(round(mods.apply(name, float(leveling.attribute(name)))))
+
+
+## An attribute as the body feels it: the trained value with any fortify effect on it. The
+## player's pools and load are built from these.
+func attribute_with_mods(name: String) -> int:
+	return _attr_with_mods(name)
 
 
 ## Effective skill level for damage and cost formulas: the trained level plus fortify effects.

@@ -4,7 +4,7 @@ extends Node
 ## from_save(Dictionary). Late joiners (e.g. the player spawned after load) call
 ## take_pending(section) to pull their data.
 
-const SCHEMA_VERSION := 3
+const SCHEMA_VERSION := 4
 const SAVE_DIR := "user://saves"
 const QUICK_SLOT := "quick"
 const AUTO_SLOT := "auto"
@@ -12,6 +12,11 @@ const AUTO_SLOT := "auto"
 var participants: Dictionary = {}   # section -> Object
 var pending: Dictionary = {}        # sections loaded but not yet consumed
 var last_slot := ""
+## Whatever holds the game in a state that is not the player's says so here, and no slot is
+## written until it lets go (`hold_saves`). The opening flies its camera over the country with the
+## clock, the sky and the body borrowed: a slot written then kept the borrowed hour and weather,
+## and the `new_game` flag that plays the opening, so loading it played the opening again.
+var _holds: Dictionary = {}         # reason -> true
 
 
 func _ready() -> void:
@@ -76,7 +81,23 @@ func slot_path(slot: String) -> String:
 	return "%s/%s.json" % [SAVE_DIR, slot]
 
 
+func hold_saves(reason: String) -> void:
+	_holds[reason] = true
+
+
+func release_saves(reason: String) -> void:
+	_holds.erase(reason)
+
+
+## Why a save would be refused now, or "" when nothing holds it.
+func saves_held_by() -> String:
+	return ", ".join(PackedStringArray(_holds.keys()))
+
+
 func save_to_slot(slot: String) -> Error:
+	if not _holds.is_empty():
+		Log.warn("Save", "slot '%s' not written while %s" % [slot, saves_held_by()])
+		return ERR_BUSY
 	var data := serialize()
 	var f := FileAccess.open(slot_path(slot), FileAccess.WRITE)
 	if f == null:

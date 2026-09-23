@@ -122,6 +122,16 @@
     }
   },
   {
+    "bpm": 60.0,
+    "id": "core:music/opening",
+    "loop_seconds": 108.0,
+    "mode": "phrygian_hollow",
+    "name": "The Opening",
+    "stems": {
+      "main": "res://assets/audio/music/theme/opening.ogg"
+    }
+  },
+  {
     "bpm": 100.0,
     "id": "core:music/boss_1",
     "loop_seconds": 57.6,

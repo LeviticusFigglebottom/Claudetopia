@@ -93,18 +93,55 @@ def write_runtime(out_dir: str, grid: Grid, H: np.ndarray, region_mask: np.ndarr
             "water": "runtime/water_%d.u8" % n, "water_level": "runtime/water_level_%d.r32" % n}
 
 
+## Metres between the road points written out. A road is planned and carved every 4 m, but the
+## game walks every segment of every road for each point of interest it dresses (the bearing a
+## bridge lies on), so the written line keeps every third point -- each still exactly on the
+## carved centre line -- which is the spacing the game read before the profiles got finer.
+ROAD_OUT_STEP_M = 12.0
+## and never fewer than this many of a road's points, so a short street stays a line
+ROAD_OUT_MIN_POINTS = 6
+
+
+def _road_keep(points: np.ndarray) -> np.ndarray:
+    """Indices of a road's points to write: about every ROAD_OUT_STEP_M, both ends kept."""
+    n = int(points.shape[0])
+    if n < 3:
+        return np.arange(n)
+    seg = float(np.mean(np.linalg.norm(np.diff(points, axis=0), axis=1)))
+    stride = max(1, int(round(ROAD_OUT_STEP_M / max(seg, 1e-3))))
+    stride = max(1, min(stride, (n - 1) // (ROAD_OUT_MIN_POINTS - 1)))
+    keep = list(range(0, n, stride))
+    if keep[-1] != n - 1:
+        keep.append(n - 1)
+    return np.array(keep, dtype=np.int64)
+
+
 def write_splines(out_dir: str, rivers: list, roads: list) -> None:
     riv = [{"id": r.id, "points": [[round(float(x), 1), round(float(z), 1)] for x, z in r.points],
             "width_m": round(float(np.mean(r.width)), 2),
             "width_from_m": round(float(r.width[0]), 2), "width_to_m": round(float(r.width[-1]), 2),
             "surface_from_m": round(float(r.surface[0]), 2), "surface_to_m": round(float(r.surface[-1]), 2)}
            for r in rivers]
-    rds = [{"id": r.id, "points": [[round(float(x), 1), round(float(z), 1)] for x, z in r.points],
-            "width_m": round(float(r.width), 2)} for r in roads]
+    keeps = [_road_keep(np.asarray(r.points)) for r in roads]
+    rds = [{"id": r.id, "points": [[round(float(x), 1), round(float(z), 1)] for x, z in np.asarray(r.points)[k]],
+            "width_m": round(float(r.width), 2)} for r, k in zip(roads, keeps)]
     with open(os.path.join(out_dir, "rivers.json"), "w", encoding="utf-8") as f:
         json.dump(riv, f, indent=1)
     with open(os.path.join(out_dir, "roads.json"), "w", encoding="utf-8") as f:
         json.dump(rds, f, indent=1)
+    # Not part of the contract and read by nothing in the game: the level each road was graded
+    # to at each of its points, and the land under it that the grading was held to. It is what
+    # tools/world/tests/test_roads.py checks a road against, because the land a road was laid on
+    # is gone from heights.r32 once the road is carved into it.
+    # (at the same points roads.json has, so the two can be read side by side)
+    prof = []
+    for r, k in zip(roads, keeps):
+        ground = r.ground if r.ground is not None else r.elevation
+        prof.append({"id": r.id, "width_m": round(float(r.width), 2),
+                     "elevation_m": [round(float(v), 2) for v in np.asarray(r.elevation)[k]],
+                     "ground_m": [round(float(v), 2) for v in np.asarray(ground)[k]]})
+    with open(os.path.join(out_dir, "road_profiles.json"), "w", encoding="utf-8") as f:
+        json.dump(prof, f, separators=(",", ":"))
 
 
 def write_pois(out_dir: str, pois: list) -> None:

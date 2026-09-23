@@ -17,6 +17,9 @@ const GROUP := "world_pois"
 const ROADS_PATH := "res://world/generated/roads.json"
 
 @export var enabled: bool = true
+## Stand up what each place's `encounter` def says is there (`PoiEncounters`). Off for a tool that
+## wants the dressing without anybody in it.
+@export var encounters: bool = true
 
 var provider: TerrainProvider = null
 var roads: Array = []
@@ -58,7 +61,7 @@ func index(pois: Array, terrain: TerrainProvider, road_lines: Array) -> int:
 	if provider != null:
 		_origin = provider.origin
 		_cell_size = float(provider.manifest.get("cell_size_m", 256))
-	for c in candidates(pois):
+	for c in candidates(pois + unbuilt_entries(pois, provider)):
 		var item: Dictionary = c
 		var entry: Dictionary = item["entry"]
 		var pos: Array = entry.get("pos", [0, 0, 0])
@@ -84,6 +87,30 @@ static func candidates(pois: Array) -> Array:
 		var def := ContentDB.get_or_empty(id)
 		if PoiDressing.dressable(id, def):
 			out.append({"entry": entry, "def": def})
+	return out
+
+
+## Entries for the POIs the content has and the built world does not yet: one written after the
+## land was last built has no pad in `pois.json` until the next build flattens one. It is dressed
+## where its def says, on the ground as it stands, so a place added for the story (the Stair Head,
+## where a new game starts) is there the day it is written rather than the day the land is next
+## rebuilt. `World.place_position` and `PlaceDiscovery` already fall back to the def the same way.
+static func unbuilt_entries(pois: Array, terrain: TerrainProvider) -> Array:
+	var built := {}
+	for e in pois:
+		if typeof(e) == TYPE_DICTIONARY:
+			built[str((e as Dictionary).get("place_id", ""))] = true
+	var out: Array = []
+	for def in ContentDB.all("poi"):
+		var id := str(def.get("id", ""))
+		if id.is_empty() or built.has(id):
+			continue
+		var xz := WorldProbe.xz_of(def)
+		if xz == Vector2.ZERO:
+			continue
+		var y := terrain.get_height(xz.x, xz.y) if terrain != null else 0.0
+		out.append({"place_id": id, "pos": [xz.x, y, xz.y],
+				"radius_flat_m": float(def.get("radius_m", 18.0)), "unbuilt": true})
 	return out
 
 
@@ -113,6 +140,16 @@ func raise_in_cell(parent: Node3D, cell: Vector2i, far: bool) -> Array[PoiDressi
 		out.append(d)
 		raised.append(d)
 	_forget_the_freed()
+	if not far:
+		# what each place's encounter sentence says stands there, on the dressing's own markers
+		if encounters:
+			for d in out:
+				PoiEncounters.stand_up(d)
+		# what the quests say lies here (the tine at the Toll, the hand-bell in the fallen stair),
+		# after the dressing so a thing can lie on the marker its dressing put down
+		var items := get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
+		if items != null and items.has_method("raise_in_cell"):
+			items.call("raise_in_cell", parent, cell)
 	return out
 
 

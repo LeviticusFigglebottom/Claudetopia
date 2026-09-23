@@ -1,0 +1,2 @@
+{"note": "The opening's key frames, each through CinematicPlayer.scrub, so what is on disk is what a player sees at that moment: letterbox, subtitle and title card included. Look at every one. ./run.sh shots tools/capture/plans/opening.json",
+ "cinematic": {"id": "core:cinematic/opening", "samples": [0.0, 0.5, 1.0]}}

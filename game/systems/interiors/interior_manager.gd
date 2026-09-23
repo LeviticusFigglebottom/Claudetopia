@@ -6,6 +6,11 @@ signal transition(phase: String, interior_id: String)   # "fade_out", "fade_in"
 const POCKET_ORIGIN := Vector3(50000.0, 3000.0, 50000.0)
 const POCKET_STRIDE := 1000.0
 const MAX_CACHED := 2
+## How far in front of its door a body leaving an interior is stood, facing away from the door.
+const STEP_OUT := 1.5
+## How far above and below a door the ground in front of it is looked for.
+const GROUND_SEARCH_UP := 2.0
+const GROUND_SEARCH_DOWN := 4.0
 
 var current_id := ""
 var return_point := Vector3.ZERO
@@ -14,6 +19,9 @@ var _loaded: Dictionary = {}    # interior_id -> Node3D
 var _slots: Dictionary = {}     # interior_id -> int
 var _next_slot := 0
 var _busy := false
+## Set while a loaded game is put back inside: the return point came with the save, and the
+## body's own position (the pocket it was saved in) is no way out.
+var _restoring := false
 
 
 func _ready() -> void:
@@ -43,11 +51,13 @@ func enter(interior_id: String, door: Node3D = null, spawn_marker := "Entrance")
 		return false
 	_busy = true
 	if not in_interior():
-		return_point = player.global_position
-		return_yaw = player.global_rotation.y
 		if door:
-			return_point = door.global_position + door.global_transform.basis.z * 1.5
-			return_yaw = door.global_rotation.y
+			var out := outside_of(door)
+			return_point = out["at"]
+			return_yaw = float(out["yaw"])
+		elif not _restoring:
+			return_point = player.global_position
+			return_yaw = player.global_rotation.y
 	var root := _load(interior_id)
 	if root == null:
 		_busy = false
@@ -104,6 +114,12 @@ func _load(interior_id: String) -> Node3D:
 		return null
 	root.name = "Interior_%s" % Ids.name_of(interior_id)
 	root.set_meta("interior_id", interior_id)
+	# The house and deep-place wrappers build from the def's meta file the moment they enter the
+	# tree, and looked for it in the current interior id, which is only set once the player is
+	# through the door: every first way in from the overworld built nothing, and the player stood
+	# in an empty pocket at 50 km.
+	if def.has("meta"):
+		root.set_meta("meta_path", str(def["meta"]))
 	# The NPC streamer looks up loaded interiors by this group and falls back to matching the
 	# node's name. Nothing ever joined the group, so the name was load-bearing and a rename
 	# would have quietly emptied every house of the people who live in it.
@@ -113,6 +129,34 @@ func _load(interior_id: String) -> Node3D:
 	root.global_position = pocket_for(interior_id)
 	_loaded[interior_id] = root
 	return root
+
+
+## Where a body leaving through `door` stands: STEP_OUT in front of it (the side its face is on;
+## the building is behind it), on whatever is underfoot there, facing away from the door. It used
+## to stand at the door's own height, whatever the ground did in a metre and a half, facing the
+## door it had just come out of.
+static func outside_of(door: Node3D) -> Dictionary:
+	var face := door.global_transform.basis.z
+	face.y = 0.0
+	face = face.normalized() if face.length() > 0.001 else Vector3.BACK
+	var at := door.global_position + face * STEP_OUT
+	at.y = ground_under(door, at)
+	return {"at": at, "yaw": atan2(-face.x, -face.z)}
+
+
+## The height of what is underfoot at `at` near a door: the terrain, or a floor, step or paving
+## that stands above it within reach of the door's own height (never a roof over it).
+static func ground_under(near: Node3D, at: Vector3) -> float:
+	var best := -INF
+	var terrain: Variant = World.terrain()
+	if terrain != null and (terrain as Object).has_method("get_height"):
+		best = float((terrain as Object).call("get_height", at.x, at.z))
+	if near != null and near.is_inside_tree():
+		var q := PhysicsRayQueryParameters3D.create(at + Vector3.UP * GROUND_SEARCH_UP, at + Vector3.DOWN * GROUND_SEARCH_DOWN, 1)
+		var hit := near.get_world_3d().direct_space_state.intersect_ray(q)
+		if not hit.is_empty():
+			best = maxf(best, (hit["position"] as Vector3).y)
+	return at.y if is_inf(best) else best
 
 
 func _trim_cache(keep: String) -> void:
@@ -169,6 +213,15 @@ func from_save(d: Dictionary) -> void:
 	if not saved.is_empty():
 		# Re-enter once the player exists (the world scene spawns the player after load).
 		if _player():
-			enter(saved)
+			_enter_restored(saved)
 		else:
-			EventBus.player_spawned.connect(func(_p: Node) -> void: enter(saved), CONNECT_ONE_SHOT)
+			EventBus.player_spawned.connect(func(_p: Node) -> void: _enter_restored(saved), CONNECT_ONE_SHOT)
+
+
+## Back inside a loaded game's interior, keeping the way out the save kept. `enter` took the
+## body's own position as the way out, and a body saved inside stands in the pocket at 50 km,
+## so leaving put it off the edge of the map.
+func _enter_restored(interior_id: String) -> void:
+	_restoring = true
+	enter(interior_id)
+	_restoring = false

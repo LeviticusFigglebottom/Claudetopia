@@ -287,5 +287,7 @@ func test_the_project_has_the_buses_settings_expects() -> void:
 	var ambience := AudioServer.get_bus_index("Ambience")
 	assert_true(AudioServer.get_bus_effect(ambience, 0) is AudioEffectLowPassFilter,
 		"Ambience needs a low-pass for interior muffling")
-	for bus_name in ["Music", "SFX", "Ambience", "UI", "Voice", "Interior"]:
+	for bus_name in ["Music", "SFX", "Ambience", "UI", "Voice"]:
 		assert_eq(str(AudioServer.get_bus_send(AudioServer.get_bus_index(bus_name))), "Master")
+	assert_eq(str(AudioServer.get_bus_send(AudioServer.get_bus_index("Interior"))), "SFX",
+		"indoor world sounds go out through SFX, so the Sounds slider reaches them")

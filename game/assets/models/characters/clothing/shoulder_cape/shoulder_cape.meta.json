@@ -1,25 +1,33 @@
 {
  "bounds": [
-  -0.3043,
-  -0.1578,
-  1.1598,
-  0.3042,
-  0.1581,
-  1.4876
+  -0.3363,
+  -0.1421,
+  1.2786,
+  0.3365,
+  0.1385,
+  1.5848
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
+ "materials": {
+  "shoulder_cape": "cloth"
+ },
  "params": {
   "bone": null,
   "material": "cloth"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 9929,
+ "seed": 4940,
  "slot_hint": "back",
+ "textures": [
+  "shoulder_cape_albedo.png",
+  "shoulder_cape_orm.png"
+ ],
  "tris": [
-  2000,
+  2596,
   0,
   0
  ],

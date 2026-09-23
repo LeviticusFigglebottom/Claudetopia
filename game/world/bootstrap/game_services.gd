@@ -27,6 +27,12 @@ const ORDER := [
 	["Reactions", "res://systems/npc_life/reactions.gd"],
 	# The registry can stand people up and never did outside a test; this is what calls it.
 	["NpcStreamer", "res://systems/npc_life/npc_streamer.gd"],
+	# The quest log has waited for escort_arrived since it was written; this is what says it.
+	["Escorts", "res://systems/npc_life/escorts.gd"],
+	# Fourteen quests sent you for things nothing gave, sold or put anywhere.
+	["QuestItems", "res://world/pois/quest_items.gd"],
+	# And sent you to fight where nothing stood: the stage stands up what it asks for.
+	["QuestFoes", "res://systems/quests/quest_foes.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 	# The chart was filled by being told about places, never by going to one or looking out
@@ -39,10 +45,16 @@ const ORDER := [
 const OPENING := "core:opening/new_game"
 
 var services: Dictionary = {}
+## Off only for a bench that wants one service and not the whole country standing up around it.
+var installs_on_ready := true
+## What the opening's greeter said when control was handed over, for a test or the flow probe.
+var first_words := ""
+var _new_game_begun := false
 
 
 func _ready() -> void:
-	install()
+	if installs_on_ready:
+		install()
 
 
 func install() -> void:
@@ -70,7 +82,12 @@ func install() -> void:
 
 ## Loot is a listener rather than a queried service, so it has no ensure() of its own.
 func _install_loot_drops() -> void:
-	if get_tree().get_nodes_in_group("loot_drops").size() > 0:
+	var present := get_tree().get_nodes_in_group("loot_drops")
+	if present.size() > 0:
+		for drops in present:
+			var provider: Variant = drops.get("context_provider")
+			if provider is Callable and not (provider as Callable).is_valid():
+				drops.set("context_provider", loot_context)
 		return
 	var path := "res://systems/inventory/loot_drops.gd"
 	if not ResourceLoader.exists(path):
@@ -78,16 +95,42 @@ func _install_loot_drops() -> void:
 	var drops: Node = (load(path) as GDScript).new()
 	drops.name = "LootDrops"
 	drops.add_to_group("loot_drops")
+	drops.set("context_provider", loot_context)
 	add_child(drops)
 	services["LootDrops"] = drops
+
+
+## What a kill's loot is rolled against (LootTable's context): where it happened, the character's
+## level and luck, the flags, and how far each quest has come. LootDrops has always asked for this
+## through `context_provider` and nothing ever assigned one, so every kill in the game rolled as a
+## level-1 character with no luck and no quests: every loot entry gated on `min_level` --
+## twenty-one of them, from level 2 to level 20 -- could never drop, and `weight_per_luck` weighed
+## nothing. The context is `LootTable.world_context()`, which a chest reads as well.
+func loot_context() -> Dictionary:
+	return LootTable.world_context()
 
 
 ## The Naming hands over a named character and a flag, and until now nothing picked it up, so
 ## the first quest of the game never started and the main thread could not be entered at all.
 ## Starting it is all this does: everything else about a new game is a system's own business.
 func begin_new_game() -> void:
-	GameState.set_flag("new_game", false)
+	if _new_game_begun:
+		return
+	_new_game_begun = true
 	var opening := ContentDB.get_or_empty(OPENING)
+	# The opening (DESIGN §5.1a) plays first, and the story starts when it hands control back, so
+	# the quest's first objective is the first thing the HUD says rather than a toast under the
+	# pictures. This is the cinematic's only way into the new-game flow; it returns at once when
+	# there is nothing to play or the player has turned it off. The `new_game` flag stays up until
+	# then: it is what holds the greeter at the start while the pictures play (her npc def's
+	# `holds`), and the quest's own stage holds her from the hand-over on.
+	# A slot is never written while the opening plays (SaveSystem.hold_saves), but one written
+	# before that rule still carries the flag up: loaded, it gets the story and not the pictures.
+	if _loaded_slot().is_empty():
+		await CinematicPlayer.play_opening(opening)
+	else:
+		Log.info("GameServices", "'%s' was saved before the opening handed over: the story starts without it" % _loaded_slot())
+	GameState.set_flag("new_game", false)
 	var quest := str(opening.get("quest", ""))
 	if quest.is_empty() or not ContentDB.has(quest):
 		Log.warn("GameServices", "no opening quest in %s" % OPENING)
@@ -99,8 +142,38 @@ func begin_new_game() -> void:
 	if bool(log_node.call("is_active", quest)) or bool(log_node.call("is_completed", quest)):
 		return
 	log_node.call("start", quest)
+	# QuestLog.start announces a quest a moment before its first stage, and a hold on that stage
+	# lets go for that moment: the registry sent the greeter home and took her body away, and put her
+	# back at her fire without standing her up again. Whoever stands here now is stood up at once,
+	# not at the NPC streamer's next look round, so she is there on the first frame of control.
+	var people := get_tree().get_first_node_in_group("npc_streamer")
+	if people != null and people.has_method("refresh"):
+		people.call("refresh")
 	new_game_started.emit(quest)
 	Log.info("GameServices", "new game: started %s" % quest)
+	_first_words(str(opening.get("greeter", "")))
+
+
+func _loaded_slot() -> String:
+	var spawn := get_tree().get_first_node_in_group("player_spawn")
+	return str(spawn.get("loaded_slot")) if spawn != null and spawn.get("loaded_slot") != null else ""
+
+
+## Somebody speaks first: the opening's greeter says the greeting their own dialogue has for this
+## moment (the Warden's for the Naming's first stage), as a line on the screen with their name on
+## it, the moment control is handed over. Nothing is said if the greeter has no line for now.
+func _first_words(greeter: String) -> void:
+	if greeter.is_empty() or not ContentDB.has(greeter):
+		return
+	var runner: Node = Social.dialogue if Social != null else null
+	if runner == null or not runner.has_method("greeting_for"):
+		return
+	var line := str(runner.call("greeting_for", greeter))
+	var hud := UI.hud()
+	if line.is_empty() or hud == null or not hud.has_method("show_subtitle"):
+		return
+	hud.call("show_subtitle", "%s: %s" % [str(ContentDB.get_or_empty(greeter).get("name", "")), line], 6.0)
+	first_words = line
 
 
 func service(display_name: String) -> Node:

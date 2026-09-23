@@ -561,9 +561,16 @@ func _show_enchant() -> void:
 		for key in ["magnitude", "duration", "charge"]:
 			if preview.has(key):
 				_detail_box.add_child(UiKit.label("%s  %s" % [str(key).capitalize(), str(preview[key])], "Small"))
+	# The table says why it will not take a note before the button is pressed, as the forge does.
+	var check := {"ok": false}
+	if Ids.type_of(_selected) == "effect" and target_uid != 0 and _crafting and _crafting.has_method("enchant_check"):
+		check = _crafting.call("enchant_check", target_uid, _selected, _motes)
+		var why := str(check.get("why", ""))
+		if not why.is_empty():
+			_detail_box.add_child(UiKit.wrapped(why, "Small"))
 	var write := UiKit.button("Write it in")
 	write.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	write.disabled = Ids.type_of(_selected) != "effect" or target_uid == 0
+	write.disabled = Ids.type_of(_selected) != "effect" or target_uid == 0 or not bool(check.get("ok", false))
 	write.pressed.connect(func() -> void:
 			if _crafting and _crafting.has_method("enchant"):
 				_crafting.call("enchant", target_uid, _selected, _motes)

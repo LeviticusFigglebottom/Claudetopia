@@ -80,7 +80,7 @@ func is_silenced() -> bool:
 ## Starts a cast. Returns false (and emits cast_failed) when the rules refuse it.
 func cast(spell_id: String, target: Node = null) -> bool:
 	var def := ContentDB.get_or_empty(spell_id)
-	var check := SpellRuntime.can_cast(def, mana, is_silenced(), skill_for(def), casting, knows(spell_id))
+	var check := SpellRuntime.can_cast(def, mana, is_silenced(), skill_for(def), casting, knows(spell_id), school_mult("spell_cost_", def))
 	if not bool(check["ok"]):
 		cast_failed.emit(spell_id, str(check["reason"]))
 		return false
@@ -92,7 +92,7 @@ func cast(spell_id: String, target: Node = null) -> bool:
 		_explicit_target = t
 	else:
 		_explicit_target = target
-	mana -= SpellRuntime.cost_of(def, skill_for(def))
+	mana -= cost_for(def)
 	mana_changed.emit(mana, mana_max)
 	_def = def
 	current_spell_id = spell_id
@@ -139,14 +139,51 @@ func _release() -> void:
 			_cast_target(def)
 		"summon":
 			_cast_summon(def)
+	var school := SpellRuntime.school_of(def)
+	if actor is Node3D and (actor as Node3D).is_inside_tree():
+		var at := (actor as Node3D).global_position + Vector3.UP * 1.4
+		Foley.play("spell_cast_" + school, at)
+		# A saying that lands on its caster lands with its sound at once; one that flies carries
+		# its landing with it (Projectile.impact_sound); one aimed at somebody sounds on them.
+		if str(def.get("cast_type")) == "self":
+			Foley.play("spell_impact_" + school, at)
 	EventBus.skill_used.emit(SpellRuntime.skill_for(def), SpellRuntime.xp_for(def))
 	cast_released.emit(spell_id)
 
 
-## The hit a saying delivers, with whatever is in the caster's hand behind it.
+## The caster's own multiplier on a school's stat (`spell_cost_kindling`, `spell_power_mending`,
+## `spell_duration_binding`): what Warm Word, Tender or Held Fast promise, read as it is said.
+func school_mult(prefix: String, def: Dictionary) -> float:
+	if actor != null and is_instance_valid(actor) and actor.has_method("stat_mult"):
+		return float(actor.call("stat_mult", prefix + SpellRuntime.school_of(def)))
+	return 1.0
+
+
+## Mana this caster pays to say it: the saying's cost after skill, times its school's cost scale.
+func cost_for(def: Dictionary) -> float:
+	return SpellRuntime.cost_of(def, skill_for(def), school_mult("spell_cost_", def))
+
+
+## How long what this caster says lasts, against the saying's own figure: Held Fast's wards and
+## snares, Loud Company's called things.
+func duration_for(def: Dictionary, seconds: float) -> float:
+	return seconds * school_mult("spell_duration_", def)
+
+
+## The hit a saying delivers, with whatever is in the caster's hand behind it. What it leaves on
+## the target (a Binding word's stagger, a Kindling burn) lasts as long as the caster makes it.
 func _hit_for(def: Dictionary, skill: float) -> HitData:
 	var hit := SpellRuntime.build_hit(def, actor, skill)
 	hit.amount *= _instrument(def)
+	var lasting := school_mult("spell_duration_", def)
+	if not is_equal_approx(lasting, 1.0):
+		var statuses: Array = []
+		for st in hit.statuses:
+			var entry: Dictionary = (st as Dictionary).duplicate()
+			if float(entry.get("duration", 0.0)) > 0.0:
+				entry["duration"] = float(entry["duration"]) * lasting
+			statuses.append(entry)
+		hit.statuses = statuses
 	return hit
 
 
@@ -188,6 +225,7 @@ func _cast_projectile(def: Dictionary) -> void:
 	parent.add_child(p)
 	var hit := _hit_for(def, skill_for(def))
 	p.launch(origin + dir * 0.6, dir, SpellRuntime.speed_of(def), hit, float(def.get("gravity", 0.0)))
+	p.impact_sound = "spell_impact_" + SpellRuntime.school_of(def)
 
 
 func _cast_target(def: Dictionary) -> void:
@@ -199,6 +237,8 @@ func _cast_target(def: Dictionary) -> void:
 		return
 	var friendly: bool = actor != null and actor.has_method("is_hostile_to") and not actor.is_hostile_to(t)
 	_apply_effects(t, def, friendly)
+	if t is Node3D and (t as Node3D).is_inside_tree():
+		Foley.play("spell_impact_" + SpellRuntime.school_of(def), (t as Node3D).global_position + Vector3.UP)
 
 
 ## Calling: the spell names something and it stands up beside the caster for a while. The
@@ -221,7 +261,7 @@ func _cast_summon(def: Dictionary) -> void:
 			continue
 		var count := maxi(int(e.get("count", 1)), 1)
 		var radius := float(e.get("radius", 2.5))
-		var seconds := float(e.get("duration", def.get("duration", SpellRuntime.DEFAULT_SUMMON_SECONDS)))
+		var seconds := duration_for(def, float(e.get("duration", def.get("duration", SpellRuntime.DEFAULT_SUMMON_SECONDS))))
 		for i in count:
 			var spread := deg_to_rad(40.0) * (float(i) - float(count - 1) * 0.5)
 			var at := host.global_position + forward.rotated(Vector3.UP, spread) * radius
@@ -233,7 +273,7 @@ func _cast_summon(def: Dictionary) -> void:
 
 
 func _start_aura(def: Dictionary) -> void:
-	var duration := maxf(SpellRuntime.duration_of(def), 0.5)
+	var duration := maxf(duration_for(def, SpellRuntime.duration_of(def)), 0.5)
 	_auras.append({"def": def, "remaining": duration, "tick_left": 0.0, "interval": 0.5})
 
 
@@ -306,10 +346,10 @@ func _apply_effects(target: Node, def: Dictionary, friendly: bool, scale: float 
 		match str(e.get("type", "")):
 			"heal":
 				if friendly and target.has_method("heal"):
-					target.heal(SpellRuntime.heal_amount(e, skill) * scale * _instrument(def))
+					target.heal(SpellRuntime.heal_amount(e, skill) * scale * _instrument(def) * school_mult("spell_power_", def))
 			"shield":
 				if friendly and target.has_method("add_shield"):
-					target.add_shield(float(e.get("amount", 0.0)) * DamageModel.skill_mult(skill) * _instrument(def), float(e.get("duration", 10.0)))
+					target.add_shield(float(e.get("amount", 0.0)) * DamageModel.skill_mult(skill) * _instrument(def), duration_for(def, float(e.get("duration", 10.0))))
 			"cleanse":
 				var st: Node = target.get("status")
 				if friendly and st != null and st.has_method("clear_many"):

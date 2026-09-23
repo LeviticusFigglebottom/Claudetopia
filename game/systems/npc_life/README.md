@@ -12,6 +12,8 @@ personalities).
 | `personality.gd` | `RefCounted` | Six trait axes; gesture disposition, price bias, crime reaction |
 | `npc_registry.gd` | Node, group `npc_registry` | Abstract state for every NPC; spawns and despawns actors with cells |
 | `reactions.gd` | Node, group `reactions` | Chooses a behaviour from standing, personality, tags and bounty |
+| `npc_streamer.gd` | Node, group `npc_streamer` | Stands the nearby up and takes the distant down; a point of interest's people wait for its dressing |
+| `escorts.gd` | Node, group `escorts` | Walking somebody somewhere: starts an escort when it comes due, notices arriving, being left behind and dying, and says `escort_arrived` |
 
 The actors themselves are `actors/npc/npc.gd` (villager) and `actors/npc/guard.gd`.
 
@@ -19,7 +21,10 @@ The actors themselves are `actors/npc/npc.gd` (villager) and `actors/npc/guard.g
 
 * `npc` defs (CONTRACTS §7): `home_place`, `personality{traits[]}`,
   `schedule[{days, hour, place, activity, spot}]`, `merchant{...}`, `faction`,
-  `tags[]`, and the optional `work_clip` and `perception{}` this system adds.
+  `tags[]`, and the optional `work_clip` and `perception{}` this system adds; `gone_when`
+  (conditions) says when the story has taken somebody out of the world (Aud Fennick walks into
+  the grey): the registry stands them up nowhere and keeps them off the clock, and they are not
+  dead (`is_gone`, `tests/unit/test_aud_fennick.gd`).
 * `core:table/personality_traits` — trait behaviour rows (`role: personality_traits`).
   `Personality` falls back to built-in constants when no table is loaded.
 * `place` positions (for cell lookup) and `region` culture/law, through `WorldProbe`.
@@ -39,11 +44,21 @@ Two rules beyond "latest entry wins":
 * **Weather** — rain, drizzle, storm or squall sends an *outdoor* `idle` entry
   home (`weather_override: true`). Work, sleep and indoor idling are unaffected.
 
+And one before it: a def's **`holds`** — `[{when: [conditions], place, activity,
+spot}]` — come first. The first whose `when` holds (the dialogue's condition
+vocabulary, read through the live `SocialContext`) says where they are, whatever
+the hour and the weather, for as long as it holds. It is how the story keeps somebody
+where it needs them: Wren Tallow is held at her fire at the Stair Head from a new
+game until the Naming's walk to the Choir is done (DESIGN §5.1a). The registry
+looks again whenever a quest starts, moves or ends, as it does on the hour.
+`Schedules.hold_problems(def)` validates them.
+
 ## Public API
 
 ```gdscript
 Schedules.entry_at(schedule, weekday, hour, weather, home_place) -> Dictionary
-Schedules.entry_for_def(npc_def, day, hour, weather) -> Dictionary
+Schedules.entry_for_def(npc_def, day, hour, weather, ctx = live) -> Dictionary   # holds first
+Schedules.held_entry(npc_def, ctx) -> Dictionary          # {} when no hold applies
 Schedules.intent_for(activity, entry, def) -> String      # animation clip name
 Schedules.problems(schedule, owner) -> Array[String]      # content validation
 
@@ -57,6 +72,12 @@ reg.state(npc_id) / place_of / activity_of / disposition_of / is_alive / is_host
 reg.adjust_disposition(npc_id, delta) / note_player_deed(npc_id, deed) / kill(npc_id)
 reg.npcs_at(place_id) / spawn(npc_id) / despawn(npc_id) / actor(npc_id)
 reg.jail(npc_id, days) / simulate_all(weather)
+reg.begin_escort(npc_id, quest_id, at) / end_escort(npc_id, stay_at := "") / is_escorted / escorted_ids
+reg.escort_position(npc_id) / set_escort_position / escort_left / set_escort_left / waiting_at
+reg.spot_marker(npc_id) -> Node3D   # a dressing's marker named for their spot (group npc_spot), in the place they are at
+
+Escorts.ensure() -> Escorts ; esc.tick() ; Escorts.due_escorts(quest_log) -> {npc_id: {quest_id, index, objective}}
+Npc.follow(leader) / stop_following() / is_following() / update_follow()
 
 Reactions.ensure() -> Reactions
 Reactions.choose(profile, personality, tags, ctx) -> String   # pure
@@ -83,7 +104,10 @@ Consumed: `EventBus.hour_changed`, `new_day`, `weather_changed`,
 ## Save section
 
 `npcs` — `{states: {npc_id: {place, activity, spot, alive, disposition,
-last_seen_player_deed, hostile, in_jail_until_day}}}`. Loaded actors are asked
+last_seen_player_deed, hostile, in_jail_until_day, escort, escort_pos, escort_left, waiting_at}}}`.
+The last four are an escort's: the quest somebody is walking for, where they last stood, whether
+they have been left behind, and the place they were brought to (they stand there, off their
+timetable, until the player has gone). A save made on the road loads with them standing on it. Loaded actors are asked
 for their state first (`collect_state`), so a save is accurate mid-stride.
 
 ## Notes for other streams

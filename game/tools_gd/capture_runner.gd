@@ -8,15 +8,47 @@ extends Node
 ## Plan format:
 ##   {"shots": [{"label", "pos": [x, y, z], "look_at": [x, y, z] | "yaw"/"pitch",
 ##               "fov", "time": hours, "place": "core:place/x", "height_above_ground": m}],
-##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours}}
+##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours},
+##    "gait": {"pos": [x, _, z], "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
+##             "camera": {"distance": m, "height": m, "fov": deg},
+##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]},
+##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?}}
+##
+## A `cinematic` block loads the world with its body standing where the story opens and has
+## `CinematicPlayer` scrub to each shot's samples, so every frame on disk is the player's own
+## frame -- letterbox, subtitle and title card included -- and writes <out>/cinematic.json with
+## where each camera stood and how far above the ground.
+##
+## A gait run may also hold keys and tap one, as real key events through the input map rather
+## than as actions: {"label": "roll", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}.
+## The tap comes after the settle and just before the first frame, so the frames film whatever
+## the key does. "frames", "interval" and "settle" may be set per run.
 ##
 ## For each shot it sets the clock, moves the fly camera, waits until the streamer reports the
 ## full-detail ring loaded (plus ten frames so LODs and shadows settle), saves
 ## <index>_<label>.png and records Performance monitors into <out>/perf.json.
+##
+## A `gait` section films the player's own body in motion: it stands a player up on the ground
+## at `pos`, facing `heading` (a compass bearing), presses the run's actions exactly as a player
+## would, lets it settle, and takes `frames` shots `interval` seconds apart from its left side.
+## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
+## rasteriser managed: every frame is then one physics tick.
+##
+## A fight, as the player meets it: `"quests": {"<quest id>": "<stage id>"}` puts each quest at that
+## stage once the world stands, and a shot's `"body": [x, _, z]` stands the player's body there,
+## facing what the shot looks at, before its exposure. The world then does what it does with a
+## player near, and a stage's foes are stood up round the place of its fight (QuestFoes), waited for
+## up to FOES_WAIT_SECONDS. Put the shot's camera behind the body at a player's height; with
+## `"face_foes": true` the body turns to the nearest of them and the camera follows it round.
 
 const WORLD_SCENE := "res://world/world.tscn"
+const PLAYER_SCENE := "res://actors/player/player.tscn"
+## Everything a gait run may hold down, released between runs so one run cannot leak into the next.
+const GAIT_ACTIONS: Array[String] = ["move_forward", "move_back", "move_left", "move_right", "sprint", "sneak", "walk"]
 const SETTLE_FRAMES := 10
 const MAX_WAIT_FRAMES := 240
+## Real seconds a shot with a body waits for the stage's foes to be stood up round it.
+const FOES_WAIT_SECONDS := 30.0
 
 var plan_path := ""
 var out_dir := "captures"
@@ -32,6 +64,10 @@ var people := true
 var attribute := false
 var _attribution: Array = []
 var _failures: Array[String] = []
+## The player's body a shot's `body` stands (one, moved from shot to shot).
+var _body: Node3D = null
+## Where the stage's foes stood round the body, when they were last waited for.
+var _foes_at: Array[Vector3] = []
 
 
 func _ready() -> void:
@@ -54,6 +90,15 @@ func run() -> int:
 	if plan.is_empty():
 		return 2
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	# game flags set before the world stands up, so a plan can photograph the world as a given
+	# moment of the story sees it: `{"new_game": true}` is the start as a new game has it, with
+	# the Warden held at her fire (tools/capture/plans/start.json)
+	var flags: Variant = plan.get("flags", {})
+	if flags is Dictionary:
+		for key: String in flags:
+			GameState.set_flag(key, flags[key])
+	if plan.has("cinematic"):
+		return await _shoot_cinematic(plan["cinematic"])
 	_world = await _load_world()
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")
@@ -70,6 +115,7 @@ func run() -> int:
 			if registry and registry.has_method("despawn_all"):
 				registry.call("despawn_all")
 			Log.info("Capture", "shooting with the villagers left out")
+	_stage_quests(plan.get("quests", {}))
 	var shots: Array = plan.get("shots", [])
 	Log.info("Capture", "%d shots -> %s" % [shots.size(), out_dir])
 	var index := 0
@@ -85,6 +131,9 @@ func run() -> int:
 	var fly: Dictionary = plan.get("flythrough", {})
 	if not fly.is_empty():
 		index = await _fly(index, fly)
+	var gait: Dictionary = plan.get("gait", {})
+	if not gait.is_empty():
+		index = await _gait(index, gait)
 	_write_perf()
 	if not _failures.is_empty():
 		for f in _failures:
@@ -114,16 +163,22 @@ func _read_plan() -> Dictionary:
 	return parsed
 
 
-func _load_world() -> World:
+func _load_world(with_body := false) -> World:
+	var world_status := WorldStatus.current()
+	if not bool(world_status.get("playable", false)):
+		# a photograph of a void is not a photograph of the country
+		Log.error("Capture", "%s %s" % [str(world_status.get("title", "")), str(world_status.get("detail", ""))])
+		return null
 	var packed: PackedScene = load(WORLD_SCENE)
 	if packed == null:
 		return null
 	var w: Node = packed.instantiate()
 	# A capture is a photograph of the country, taken from a planned camera. A body standing in
 	# it would both block the shot and take the streaming off the plan, so the world is loaded
-	# without one and keeps its fly camera.
+	# without one and keeps its fly camera -- except for a cinematic, whose last shot is of the
+	# body, and which takes the camera and the streaming itself.
 	var spawn: Node = w.get_node_or_null("PlayerSpawn")
-	if spawn != null:
+	if spawn != null and not with_body:
 		spawn.set("enabled", false)
 		# ...but the world's services still go in, because they are what stands the villagers
 		# up, and a photograph of a village with nobody in it is a photograph of a model.
@@ -152,8 +207,14 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	else:
 		cam.move_to(pos)
 		cam.set_yaw_pitch(float(shot.get("yaw", 0.0)), float(shot.get("pitch", -8.0)))
+	if shot.has("body"):
+		_stand_body(shot["body"], shot.get("look_at", null))
 	_world.move_target(pos)
 	var waited := await _wait_for_streaming()
+	if shot.has("body"):
+		waited += await _wait_for_foes(label)
+		if bool(shot.get("face_foes", false)) and _face_the_foes(cam, pos, label):
+			waited += await _wait_for_streaming()
 	if shot.has("frame"):
 		# Re-aim at something the world raised at runtime, now that it is standing: a waterfall's
 		# sheet is built from the terrain's own grain, so no plan written beforehand knows which
@@ -355,6 +416,117 @@ func _shot_position(shot: Dictionary) -> Vector3:
 	return pos
 
 
+## Puts each quest a plan names at the stage it names (see the header), starting it if need be.
+func _stage_quests(quests: Variant) -> void:
+	if not (quests is Dictionary) or (quests as Dictionary).is_empty():
+		return
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	if log_node == null or not log_node.has_method("set_stage"):
+		_failures.append("no quest log to put %s in" % str(quests))
+		return
+	for id: String in quests:
+		log_node.call("set_stage", id, quests[id])
+		Log.info("Capture", "%s is at stage %d" % [id, int(log_node.call("stage_of", id))])
+
+
+## Stands the player's body at `at` (its x and z, on the ground), facing `look` when there is one.
+## The plan's camera stays the one drawing: the body's own rig makes itself current when it comes in.
+func _stand_body(at: Variant, look: Variant) -> void:
+	if not (at is Array and (at as Array).size() >= 3):
+		_failures.append("a shot's body is [x, y, z], not %s" % str(at))
+		return
+	if _body == null:
+		_body = (load(PLAYER_SCENE) as PackedScene).instantiate() as Node3D
+		_world.add_child(_body)
+		_world.fly_camera.make_current()
+	var a: Array = at
+	var p := Vector3(float(a[0]), 0.0, float(a[2]))
+	p.y = _world.provider.get_height(p.x, p.z) + 0.05
+	_body.set("velocity", Vector3.ZERO)
+	_body.global_position = p
+	if look is Array and (look as Array).size() >= 3:
+		var l: Array = look
+		var to := Vector3(float(l[0]) - p.x, 0.0, float(l[2]) - p.z)
+		if to.length() > 0.01:
+			_body.rotation.y = atan2(-to.x, -to.z)
+			var rig: Node = _body.get("camera_rig")
+			if rig != null:
+				rig.set("yaw", _body.rotation.y)
+	_body.reset_physics_interpolation()
+	Log.info("Capture", "the body stands at %s" % str(p.snapped(Vector3.ONE * 0.1)))
+
+
+## After a body is stood: waits until every fight a current stage wants within QuestFoes.STAND_M of
+## it has its group standing, or FOES_WAIT_SECONDS have gone on the wall clock, and says which not.
+func _wait_for_foes(label: String) -> int:
+	var foes := get_tree().get_first_node_in_group(QuestFoes.GROUP) as QuestFoes
+	if foes == null or _body == null:
+		return 0
+	var frames := 0
+	var until := Time.get_ticks_msec() + int(FOES_WAIT_SECONDS * 1000.0)
+	var missing: Array[String] = []
+	while true:
+		missing.clear()
+		var want := foes.wanted()
+		for key: String in want:
+			var at: Vector3 = (want[key] as Dictionary)["at"]
+			var d := Vector2(at.x - _body.global_position.x, at.z - _body.global_position.z).length()
+			if d <= QuestFoes.STAND_M and foes.group_for(key) == null:
+				missing.append(key)
+		if missing.is_empty() or Time.get_ticks_msec() >= until:
+			break
+		await get_tree().process_frame
+		frames += 1
+	if not missing.is_empty():
+		Log.warn("Capture", "%s: nothing stood for %s in %.0f s" % [label, ", ".join(missing), FOES_WAIT_SECONDS])
+	# the foes are drawn on the frames after they stand: a few more for their pose and shadows
+	for _i in SETTLE_FRAMES:
+		await get_tree().process_frame
+		frames += 1
+	_foes_at.clear()
+	var words: Array[String] = []
+	for key: String in foes.wanted():
+		var group := foes.group_for(key)
+		if group == null:
+			continue
+		for e: Enemy in group.alive():
+			_foes_at.append(e.global_position)
+			words.append(str(e.global_position.snapped(Vector3.ONE * 0.1)))
+	if not words.is_empty():
+		Log.info("Capture", "%s: the stage's foes stand at %s" % [label, ", ".join(words)])
+	return frames
+
+
+## A shot's `"face_foes": true` turns the body to the nearest of the foes stood round it, as a player
+## turns to the first of a fight, and puts the camera behind it again, as far back and as high as the
+## plan had it: a place's foes are stood on clear ground round it, and a plan written beforehand does
+## not know which side that is.
+func _face_the_foes(cam: FlyCamera, pos: Vector3, label: String) -> bool:
+	if _foes_at.is_empty() or _body == null:
+		return false
+	var body := _body.global_position
+	var nearest := _foes_at[0]
+	for p in _foes_at:
+		if Vector2(p.x - body.x, p.z - body.z).length() < Vector2(nearest.x - body.x, nearest.z - body.z).length():
+			nearest = p
+	var to := Vector3(nearest.x - body.x, 0.0, nearest.z - body.z)
+	if to.length() < 0.5:
+		return false
+	var ahead := to.normalized()
+	_body.rotation.y = atan2(-ahead.x, -ahead.z)
+	var rig: Node = _body.get("camera_rig")
+	if rig != null:
+		rig.set("yaw", _body.rotation.y)
+	var back := Vector2(pos.x - body.x, pos.z - body.z).length()
+	var lift := pos.y - _world.provider.get_height(pos.x, pos.z)
+	var at := body - ahead * back
+	at.y = _world.provider.get_height(at.x, at.z) + lift
+	cam.move_to(at, nearest + Vector3.UP * 1.2)
+	_world.move_target(at)
+	Log.info("Capture", "%s: turned to the nearest of the foes, %.0f m off" % [label, to.length()])
+	return true
+
+
 ## Waits until the streamer has the full-detail ring around the camera, then lets the frame
 ## settle (LOD selection, shadow splits and the water's first animation step).
 func _wait_for_streaming() -> int:
@@ -425,6 +597,137 @@ func _fly(index: int, fly: Dictionary) -> int:
 		await _take_shot(index, shot)
 		index += 1
 	return index
+
+
+## Films the player's body walking, jogging and sprinting (see the `gait` plan section above).
+## The body is the real player scene driven through the real input actions, so what is in the
+## frames is what a player's key presses produce, not a clip played on a mannequin.
+func _gait(index: int, gait: Dictionary) -> int:
+	var cam := _world.fly_camera
+	if cam == null:
+		_failures.append("no fly camera for the gait sequence")
+		return index
+	if gait.has("time"):
+		WorldClock.set_time(float(gait["time"]))
+	if gait.has("weather"):
+		_force_weather(str(gait["weather"]))
+	var p: Array = gait.get("pos", [0.0, 0.0, 0.0])
+	var start := Vector3(float(p[0]), 0.0, float(p[2]))
+	start.y = _world.provider.get_height(start.x, start.z)
+	var bearing := deg_to_rad(float(gait.get("heading", 90.0)))
+	var travel := Vector3(sin(bearing), 0.0, -cos(bearing))        # north is -Z (CONTRACTS §1)
+	var yaw := atan2(-travel.x, -travel.z)
+	var right := Basis(Vector3.UP, -PI * 0.5) * travel             # film from the right: motion runs left to right
+	var cam_cfg: Dictionary = gait.get("camera", {})
+	var distance := float(cam_cfg.get("distance", 4.2))
+	var cam_height := float(cam_cfg.get("height", 1.0))
+	cam.fov = float(cam_cfg.get("fov", 50.0))
+	var frames := int(gait.get("frames", 8))
+	var interval := float(gait.get("interval", 0.1))
+	var settle := float(gait.get("settle", 1.6))
+	_world.move_target(start + right * distance + Vector3.UP * cam_height, start + Vector3.UP)
+	await _wait_for_streaming()
+	# Under the software rasteriser a frame of the country takes seconds, and a gait needs a
+	# hundred simulated ticks between shots. Only the frames that are saved are drawn.
+	RenderingServer.render_loop_enabled = false
+	var packed := load(PLAYER_SCENE) as PackedScene
+	var player := packed.instantiate() as Node3D
+	_world.add_child(player)
+	# The body's own camera rig makes itself current on _ready; this is a side view.
+	cam.set_process(false)          # it reads the same move actions the body is being given
+	cam.make_current()
+	for run in gait.get("runs", []):
+		if typeof(run) != TYPE_DICTIONARY:
+			continue
+		var label := str(run.get("label", "run"))
+		_release_gait_actions()
+		player.set("velocity", Vector3.ZERO)
+		player.global_position = start + Vector3.UP * 0.05
+		player.rotation.y = yaw
+		var rig: Node = player.get("camera_rig")
+		if rig != null:
+			rig.set("yaw", yaw)
+		if player.has_method("full_restore"):
+			player.call("full_restore")
+		player.set("is_sneaking", false)       # a toggle: one run's sneak must not leak into the next
+		player.reset_physics_interpolation()
+		await _physics_seconds(0.25)
+		for action in run.get("press", []):
+			if InputMap.has_action(str(action)):
+				Input.action_press(str(action))
+			else:
+				Log.warn("Capture", "gait run %s: no input action '%s'" % [label, str(action)])
+		for k in run.get("hold_keys", []):
+			_send_key(str(k), true)
+		await _physics_seconds(float(run.get("settle", settle)))
+		if run.has("tap_key"):
+			_send_key(str(run["tap_key"]), true)
+			await _physics_seconds(float(run.get("tap_hold", 0.1)))
+			_send_key(str(run["tap_key"]), false)
+		var run_frames := int(run.get("frames", frames))
+		var run_interval := float(run.get("interval", interval))
+		for f in run_frames:
+			var at := player.get_global_transform_interpolated().origin
+			cam.move_to(at + right * distance + Vector3.UP * cam_height, at + Vector3.UP * 0.95)
+			RenderingServer.render_loop_enabled = true
+			await get_tree().process_frame
+			await RenderingServer.frame_post_draw
+			RenderingServer.render_loop_enabled = false
+			var shot_label := "gait_%s_%02d" % [label, f]
+			var path := "%s/%02d_%s.png" % [out_dir, index, shot_label]
+			var img := get_viewport().get_texture().get_image()
+			if img.save_png(path) != OK:
+				_failures.append("cannot write %s" % path)
+			var v: Vector3 = player.get("velocity")
+			var state := str(player.call("state_name")) if player.has_method("state_name") else "?"
+			var untouchable := bool(player.call("is_in_iframes")) if player.has_method("is_in_iframes") else false
+			var anim: Node = player.get("anim")
+			var clip := str(anim.get("current_clip")) if anim != null else ""
+			Log.info("Capture", "%s: speed %.2f m/s, stamina %.0f, %s%s, clip %s, at %s" % [shot_label,
+					Vector2(v.x, v.z).length(), float(player.get("stamina")), state,
+					" (untouchable)" if untouchable else "", clip, str(player.global_position.snapped(Vector3.ONE * 0.01))])
+			index += 1
+			await _physics_seconds(run_interval)
+		for k in run.get("hold_keys", []):
+			_send_key(str(k), false)
+		_release_gait_actions()
+	RenderingServer.render_loop_enabled = true
+	player.queue_free()
+	cam.set_process(true)
+	cam.make_current()
+	return index
+
+
+## A key as a keyboard sends it, through the input map (so through the bindings the game set up):
+## a modifier key reports itself held while it is down.
+func _send_key(name: String, pressed: bool) -> void:
+	var code := OS.find_keycode_from_string(name)
+	if code == KEY_NONE:
+		Log.warn("Capture", "no key called '%s'" % name)
+		return
+	var ev := InputEventKey.new()
+	ev.keycode = code
+	ev.physical_keycode = code
+	ev.key_label = code
+	ev.pressed = pressed
+	ev.ctrl_pressed = pressed and code == KEY_CTRL
+	ev.shift_pressed = pressed and code == KEY_SHIFT
+	ev.alt_pressed = pressed and code == KEY_ALT
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
+
+
+func _release_gait_actions() -> void:
+	for action in GAIT_ACTIONS:
+		if InputMap.has_action(action):
+			Input.action_release(action)
+
+
+## Waits for `seconds` of simulated time, counted in physics ticks rather than wall-clock.
+func _physics_seconds(seconds: float) -> void:
+	var until := Engine.get_physics_frames() + int(round(seconds * Engine.physics_ticks_per_second))
+	while Engine.get_physics_frames() < until:
+		await get_tree().physics_frame
 
 
 func _write_perf() -> void:
@@ -645,3 +948,97 @@ static func _mean_luminance(img: Image) -> float:
 			total += img.get_pixel(x, y).get_luminance()
 			n += 1
 	return total / float(maxi(n, 1))
+
+
+# --- cinematics --------------------------------------------------------------------------------------
+
+## Real seconds each cinematic frame is given after its country stands, so a subtitle or a title
+## card that has just begun to ink in is photographed arrived rather than halfway.
+const CINEMATIC_SETTLE_SECONDS := 2.0
+
+
+## Every sample of every shot of a cinematic, through `CinematicPlayer.scrub`.
+func _shoot_cinematic(spec: Dictionary) -> int:
+	var id := str(spec.get("id", ""))
+	if not ContentDB.has(id):
+		Log.error("Capture", "no cinematic %s" % id)
+		return 2
+	# A plan that stages a new game (`flags: {new_game: true}`) must not have the real opening start
+	# under the frames it poses: that one takes the screen, black, from its first shot. Not saved.
+	Settings.set_value("gameplay", "play_opening", false, false)
+	_world = await _load_world(true)
+	if _world == null:
+		Log.error("Capture", "world scene failed to load")
+		return 1
+	if not _world.is_world_ready:
+		await _world.world_ready
+	var spawn: Node = _world.get_node_or_null("PlayerSpawn")
+	var player: Node3D = null
+	for i in 600:
+		player = spawn.get("player") as Node3D if spawn != null else null
+		if player != null:
+			break
+		await get_tree().process_frame
+	if player == null:
+		Log.error("Capture", "no body stood up to hand the cinematic over to")
+		return 1
+	_world.streamer.cells_per_frame = 12
+	# the body drops the last half-metre onto the ground before the last shot is composed on it
+	for i in 40:
+		await get_tree().physics_frame
+	var cin := CinematicPlayer.new()
+	_world.add_child(cin)
+	await cin.begin(_world, player, ContentDB.get_def(id), CinematicPlayer.Mode.SCRUB)
+	var samples: Array = spec.get("samples", [0.0, 0.5, 1.0])
+	var only: Array = spec.get("shots", [])
+	var shots := CinematicDef.shots_of(cin.def)
+	var rows: Array = []
+	var index := 0
+	for i in shots.size():
+		var shot: Dictionary = shots[i]
+		var sid := str(shot.get("id", ""))
+		if not only.is_empty() and not only.has(sid):
+			continue
+		var black := bool(shot.get("black", false))
+		for u_v in ([0.5] if black else samples):
+			var u := float(u_v)
+			cin.scrub(i, u)
+			var waited := 0
+			while waited < MAX_WAIT_FRAMES and not cin.ready_to_show():
+				await get_tree().process_frame
+				waited += 1
+			var ready := cin.ready_to_show()
+			var until := Time.get_ticks_msec() + int(CINEMATIC_SETTLE_SECONDS * 1000.0)
+			var frames := 0
+			while frames < SETTLE_FRAMES or Time.get_ticks_msec() < until:
+				await get_tree().process_frame
+				frames += 1
+			await RenderingServer.frame_post_draw
+			var file := "%02d_%s_%03d.png" % [index, sid, int(round(u * 100.0))]
+			var img := get_viewport().get_texture().get_image()
+			if img == null or img.save_png("%s/%s" % [out_dir, file]) != OK:
+				_failures.append("cannot write %s" % file)
+			var cam := cin.camera().global_position
+			var ground := _world.provider.max_height_around(cam.x, cam.z, 3.0, 12)
+			rows.append({
+				"file": file, "shot": sid, "u": u, "camera": [snappedf(cam.x, 0.1), snappedf(cam.y, 0.1), snappedf(cam.z, 0.1)],
+				"above_ground": snappedf(cam.y - ground, 0.01), "fov": snappedf(cin.camera().fov, 0.1),
+				"hour": snappedf(WorldClock.time_hours, 0.01),
+				"weather": str(_world.atmosphere.call("current_weather_id")) if _world.atmosphere else "",
+				"words": cin.overlay().said(), "ready": ready, "frames_waited": waited,
+				"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+				"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
+			})
+			if not ready and not black:
+				_failures.append("%s: its cells were not standing after %d frames" % [file, waited])
+			Log.info("Capture", "%s  %.1f m above the ground, %s" % [file, cam.y - ground, "ready" if ready else "NOT READY"])
+			index += 1
+	cin.release()
+	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"cinematic": id, "frames": rows}, "  "))
+		f.close()
+	for failure in _failures:
+		Log.error("Capture", failure)
+	Log.info("Capture", "%d cinematic frames written to %s" % [index, out_dir])
+	return 1 if not _failures.is_empty() else 0
