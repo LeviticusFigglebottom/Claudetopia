@@ -64,6 +64,16 @@ func test_the_sky_follows_the_sun_height() -> void:
 		prev = float(row[0])
 
 
+## Stars come out as the sky darkens: none while the sun is less than six degrees down, most by
+## twelve, all by eighteen. At half strength six degrees down they hung in the opening's still-
+## light evening at the Toll.
+func test_the_stars_wait_for_the_dark() -> void:
+	assert_near(float(Atmosphere.sky_sample(-2.0)[5]), 0.0, 0.001, "no stars at sunset")
+	assert_true(float(Atmosphere.sky_sample(-6.5)[5]) < 0.2, "hardly any at the end of civil twilight (%.2f)" % float(Atmosphere.sky_sample(-6.5)[5]))
+	assert_gt(float(Atmosphere.sky_sample(-12.0)[5]), 0.5, "most of them by twelve degrees down")
+	assert_near(float(Atmosphere.sky_sample(-18.0)[5]), 1.0, 0.001, "all of them by eighteen")
+
+
 func test_night_is_zero_by_day_and_one_after_dark() -> void:
 	assert_near(Atmosphere.night_of(30.0), 0.0, 0.001, "day")
 	assert_near(Atmosphere.night_of(-20.0), 1.0, 0.001, "night")

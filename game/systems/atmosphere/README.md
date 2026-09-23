@@ -78,9 +78,14 @@ field with the fine octaves only on its edges -- lit from the side the light is 
 the smooth field so the light falls in broad strokes, in three soft painted steps, a little
 greyer at the heart, with a silver lining near the light, undersides lit by a low sun, and the
 far ones going the colour of the air. A thin cloud is lit through, and deep inside an overcast
-the modelling eases off, so a grey sky is grey and not a field of dark eyes. Cirrus streaked out
-along the wind; a bank of stratus on the horizon where `cloud_band` asks for it; and at night
-stars in two sizes, a band of milk and a moon with seas on its face. The first version took its
+the modelling eases off, so a grey sky is grey and not a field of dark eyes. Cirrus in wisps,
+streaked along the wind and bent across it like mares' tails, only where a patchier field lets
+them (streaked straight and everywhere, they ran from edge to edge of the frame and read as beams
+of light, or contrails); a bank of stratus on the horizon where `cloud_band` asks for it; and at
+night stars in two sizes, a band of milk and a moon with seas on its face. The stars wait for the
+dark: none until the sun is six degrees down, most by twelve, all by eighteen (`SUN_KEYS`), and
+each is faded by the brightness of the sky behind it, so the evening the night exposure lifts to
+rose holds none (the opening's dusk at the Toll had half-strength stars in a still-light sky). The first version took its
 shape and its light from one five-octave field stepped hard into four, and over the Briarwold it
 drew camouflage: flat olive blotches with dark eyes; the second cut its masses from the raw
 field, whose values hardly leave the middle, so a half-covered sky fell inside the soft edge and

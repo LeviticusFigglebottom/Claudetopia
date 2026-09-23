@@ -24,11 +24,16 @@ const OVERLAY_LAYER := 1
 ## is written low -- Cinderlea stands at nine degrees at half past four -- got a mid-afternoon sky
 ## over a sunset sun. Columns: elevation (degrees), zenith, horizon, sun colour, sun energy,
 ## ambient energy, stars, dusk (how hard the horizon under the sun burns).
+## The stars come out as the sky darkens, as they do: none until the sun is six degrees down (the
+## end of civil twilight), most of them by twelve and all of them by eighteen. They used to be at
+## half strength by six degrees down, over a dusk the night exposure had already brightened to
+## rose, and the opening's evening at the Toll had stars in a sky still full of light.
 const SUN_KEYS := [
 	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
-	[-12.0, Color("#0e1630"), Color("#262c48"), Color("#ff6a3a"), 0.0, 0.27, 0.95, 0.05],
-	[-6.0, Color("#1d2a52"), Color("#6b4a5e"), Color("#ff6a3a"), 0.0, 0.31, 0.5, 0.55],
-	[-2.0, Color("#2f4478"), Color("#c46a4e"), Color("#ff6a3a"), 0.08, 0.40, 0.1, 1.0],
+	[-18.0, Color("#0c1429"), Color("#1f2640"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
+	[-12.0, Color("#0e1630"), Color("#262c48"), Color("#ff6a3a"), 0.0, 0.27, 0.7, 0.05],
+	[-6.0, Color("#1d2a52"), Color("#6b4a5e"), Color("#ff6a3a"), 0.0, 0.31, 0.12, 0.55],
+	[-2.0, Color("#2f4478"), Color("#c46a4e"), Color("#ff6a3a"), 0.08, 0.40, 0.0, 1.0],
 	[2.0, Color("#4a64a0"), Color("#f0955a"), Color("#ff8c4a"), 0.55, 0.55, 0.0, 1.0],
 	[7.0, Color("#5a80c0"), Color("#f4c28c"), Color("#ffb070"), 0.95, 0.70, 0.0, 0.55],
 	[15.0, Color("#4a7cc8"), Color("#d8dcd4"), Color("#ffd8a8"), 1.15, 0.85, 0.0, 0.15],
