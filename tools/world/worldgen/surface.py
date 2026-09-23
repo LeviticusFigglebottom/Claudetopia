@@ -11,6 +11,8 @@ exist a screenshot says which region it is.
 """
 from __future__ import annotations
 
+from collections import OrderedDict
+
 import numpy as np
 
 from scipy import ndimage
@@ -26,6 +28,14 @@ SLOTS = {
 }
 SLOT_NAMES = [name for name, _ in sorted(SLOTS.items(), key=lambda kv: kv[1])]
 SNOW_LINE = 520.0
+
+
+## How many full-resolution patch fields a SurfaceContext keeps at once (each is 64 MB at 4096).
+## The texture rules ask for some forty; kept them all, they were two and a half gigabytes of a
+## build that has to fit beside everything else on the machine. The six that jitter every slot's
+## weight are asked for on every slot, so they stay; the rest are made again from the bank's
+## 1024 lattice when they come round a second time.
+PATCH_KEEP = 10
 
 
 class SurfaceContext:
@@ -69,6 +79,7 @@ class SurfaceContext:
             self.sea_d = np.full(H.shape, 1e6, dtype=np.float32)
         self.n = n
         self._patch_cache: dict = {}
+        self._patches: OrderedDict = OrderedDict()
         # roads: on the carriageway, and a slightly wider verge
         self.on_road = road_d <= road_w * 0.5 + 0.6
         self.near_road = road_d <= road_w * 0.5 + 3.5
@@ -122,12 +133,18 @@ class SurfaceContext:
         across, so the extra resolution would cost seconds and show nothing.
         """
         key = (salt, wl_min, wl_max)
-        if key not in self._patch_cache:
-            gen = min(self.n, 1024)
-            f = self.bank.field(salt, beta=1.6, wl_min=wl_min, wl_max=wl_max, n=gen)
-            v = (0.5 + 0.5 * np.tanh(f)).astype(np.float32)
-            self._patch_cache[key] = upsample(v, self.n, order=1)
-        return self._patch_cache[key]
+        out = self._patches.get(key)
+        if out is not None:
+            self._patches.move_to_end(key)
+            return out
+        gen = min(self.n, 1024)
+        f = self.bank.field(salt, beta=1.6, wl_min=wl_min, wl_max=wl_max, n=gen)
+        v = (0.5 + 0.5 * np.tanh(f)).astype(np.float32)
+        out = upsample(v, self.n, order=1)
+        self._patches[key] = out
+        while len(self._patches) > PATCH_KEEP:
+            self._patches.popitem(last=False)
+        return out
 
     def dither(self, salt: int) -> np.ndarray:
         """White noise at one value per texel, for breaking the control map's own grid.

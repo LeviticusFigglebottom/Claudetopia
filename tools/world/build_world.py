@@ -76,18 +76,36 @@ RECIPES = {
 DEFAULT_RECIPES: tuple = ()
 
 
+def peak_memory() -> str:
+    """The build's own peak resident memory so far, for the stage lines ("" where the platform
+    cannot say). A full build has to fit beside whatever else the machine is running, and the
+    stage it peaks in is the one to make leaner."""
+    try:
+        import resource
+        peak = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    except (ImportError, OSError, ValueError):
+        return ""
+    gb = peak / (1024.0 ** 3) if sys.platform == "darwin" else peak / (1024.0 ** 2)   # bytes / KiB
+    return "  peak %4.1f GB" % gb
+
+
 class Timer:
     def __init__(self, verbose=True):
         self.t0 = time.time()
         self.last = self.t0
         self.stages: list = []
         self.verbose = verbose
+        # called at the end of every stage: the build lets its noise go there (NoiseBank.forget),
+        # since a stage rarely asks for the last one's fields and making one again is cheap
+        self.on_mark = None
 
     def mark(self, label: str) -> None:
         now = time.time()
         self.stages.append((label, now - self.last))
         if self.verbose:
-            print("  %-22s %6.1fs" % (label, now - self.last), flush=True)
+            print("  %-22s %6.1fs%s" % (label, now - self.last, peak_memory()), flush=True)
+        if self.on_mark is not None:
+            self.on_mark()
         self.last = now
 
     def total(self) -> float:
@@ -337,6 +355,7 @@ def build(args) -> dict:
     nc = min(n, 2048)
     grid_c = grid.with_n(nc)
     bank = NoiseBank(seed, grid)
+    t.on_mark = bank.forget
     content_regions = load_regions(os.path.join(PACK, "regions", "regions.json"))
     places = load_places(os.path.join(PACK, "places", "places.json"))
     pois = load_poi_registry(PACK)
