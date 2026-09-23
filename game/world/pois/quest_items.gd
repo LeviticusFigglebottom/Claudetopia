@@ -41,6 +41,14 @@ const PADS_PATH := "res://world/generated/pois.json"
 ## How far off the middle of a place a thing without a spot lies.
 const RING_MIN_M := 3.0
 const RING_MAX_M := 9.0
+## How a thing without a spot finds open ground when the first spot is shut in (`_open`): this
+## many tries, a step further out every four, a crouching body's room, and how high the sky is
+## looked for.
+const OPEN_TRIES := 32
+const OPEN_STEP_M := 3.0
+const OPEN_R := 0.3
+const OPEN_H := 1.2
+const OPEN_SKY_M := 80.0
 
 static var _placements: Array[Dictionary] = []
 static var _unplaced: Array[Dictionary] = []
@@ -278,8 +286,17 @@ static func _pad_of(id: String) -> Vector3:
 	return _pads.get(id, Vector3.INF)
 
 
-## A marker the dressing put down under the spot's name, if the place is dressed and has one;
-## otherwise the same few paces off the middle every time.
+## A marker the dressing put down under the spot's name, if the place is dressed and has one: a
+## thing with a marker lies exactly on it. Otherwise the same few paces off the middle every time,
+## on open ground: the first spot tried is the one the key gives, and one that is shut in is passed
+## over for the next, round and outward (`_open`). A dressing's collision is a hollow shell, so
+## without the asking a note at Hound Watch lay inside a boulder and one at Hanging Falls under
+## thirteen metres of rock. The same thing lands in the same place every load: the tries follow
+## from the key and from what the dressing built, not from when it was asked.
+##
+## The asking is the physics space's, so it sees only colliders already standing: WorldPois puts
+## the dressing up before it asks for the cell's finds. A find raised with no dressing in the tree
+## takes the first spot, as everything did before.
 func _spot_in_the_open(parent: Node3D, row: Dictionary, base: Vector3) -> Vector3:
 	var spot := str(row.get("spot", ""))
 	if spot != "":
@@ -293,9 +310,46 @@ func _spot_in_the_open(parent: Node3D, row: Dictionary, base: Vector3) -> Vector
 	var angle := rng.randf() * TAU
 	var clear := _landmark_reach(parent, base)
 	var radius := clear + rng.randf_range(RING_MIN_M, RING_MAX_M) if clear > 0.0 else rng.randf_range(RING_MIN_M, RING_MAX_M)
+	var first := _ground_at(base, angle, radius)
+	var space := parent.get_world_3d().direct_space_state if parent.is_inside_tree() else null
+	if space == null:
+		return first
+	for k in OPEN_TRIES:
+		# the golden angle, so no two tries fall on one line, and a step outward every few
+		var at := first if k == 0 else _ground_at(base, angle + float(k) * 2.39996, radius + OPEN_STEP_M * floorf(float(k) / 4.0))
+		if _open(space, at):
+			return at
+	return first
+
+
+static func _ground_at(base: Vector3, angle: float, radius: float) -> Vector3:
 	var at := base + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 	at.y = WorldProbe.get_height(at.x, at.z, base.y) + 0.05
 	return at
+
+
+## Room to stoop for a thing, and sky over it: a capsule the size of a crouching body touches
+## nothing solid, and a ball as wide, let down from high over the spot, comes down to it. A hollow
+## shell passes the first and not the second.
+static func _open(space: PhysicsDirectSpaceState3D, at: Vector3) -> bool:
+	var body := CapsuleShape3D.new()
+	body.radius = OPEN_R
+	body.height = OPEN_H
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = body
+	q.collision_mask = 1 << 0
+	q.transform = Transform3D(Basis.IDENTITY, at + Vector3(0.0, 0.2 + OPEN_H * 0.5, 0.0))
+	if not space.intersect_shape(q, 1).is_empty():
+		return false
+	var ball := SphereShape3D.new()
+	ball.radius = OPEN_R
+	var fall := PhysicsShapeQueryParameters3D.new()
+	fall.shape = ball
+	fall.collision_mask = 1 << 0
+	fall.transform = Transform3D(Basis.IDENTITY, at + Vector3(0.0, OPEN_SKY_M, 0.0))
+	fall.motion = Vector3(0.0, 0.2 + OPEN_H + OPEN_R - OPEN_SKY_M, 0.0)
+	var way := space.cast_motion(fall)
+	return way.size() < 2 or way[0] >= 1.0
 
 
 ## How far a landmark standing on this spot reaches out from it: a thing that lies at the Cracked

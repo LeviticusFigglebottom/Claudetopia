@@ -805,6 +805,12 @@ notes put down at points of interest by encounter defs that stand nobody up.
 * every row of §16 is true, and every hook §12 wrote leads somewhere;
 * every decision is remembered by somebody, once the quest is done.
 
+`game/tests/unit/test_map_quest_ground.gd` raises what the world raises at each place the quests
+fight at or leave something at: a dressing, a landmark with its collision, a settlement's fabric.
+It holds every foe QuestFoes stands and every find QuestItems puts down there to open ground,
+with room for a body and sky over it. A landmark's collision is a hollow shell, and a spot inside
+one touches nothing.
+
 The quest's id follows its name. "Where it sends you" leaves out the giver's own settlement.
 "The decision" names each option by its id.
 
