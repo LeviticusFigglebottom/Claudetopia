@@ -291,29 +291,32 @@ func _fill_the_naming(naming: Node) -> void:
 	if _check(hair != null, "the hair chooser is there"):
 		var was := _look(naming).part("hair")
 		await _click(hair)
-		await _frames(3)
-		_check(hair.get_popup().visible, "clicking the hair chooser opens its list")
-		await _key(KEY_DOWN)
-		await _key(KEY_DOWN)
-		await _key(KEY_DOWN)
-		await _key(KEY_ENTER)
-		await _frames(2)
-		var now := _look(naming).part("hair")
-		_check(now != was and now == CharacterAppearance.HAIR_STYLES[2],
-				"three presses down and Enter pick the third hair style (%s -> %s)" % [was, now])
-		_check(_model_look(naming) != null and _model_look(naming).part("hair") == now, "and the preview body wears it")
+		# the list opens on a later idle frame, and on a loaded machine that is not always the
+		# third: wait for it (a second at most) rather than for a fixed count. If it never opens,
+		# pressing on would send Down and Enter to whatever holds the focus instead -- once, Be
+		# named -- and every check after this one would be reading a freed screen.
+		if _check(await _popup_opens(hair), "clicking the hair chooser opens its list"):
+			await _key(KEY_DOWN)
+			await _key(KEY_DOWN)
+			await _key(KEY_DOWN)
+			await _key(KEY_ENTER)
+			await _frames(2)
+			var now := _look(naming).part("hair")
+			_check(now != was and now == CharacterAppearance.HAIR_STYLES[2],
+					"three presses down and Enter pick the third hair style (%s -> %s)" % [was, now])
+			_check(_model_look(naming) != null and _model_look(naming).part("hair") == now, "and the preview body wears it")
 	var face := _chooser(naming, "head")
 	if _check(face != null, "the face chooser is there"):
 		await _click(face)
-		await _frames(3)
-		await _key(KEY_DOWN)
-		await _key(KEY_DOWN)
-		await _key(KEY_ENTER)
-		await _frames(2)
-		_check(_look(naming).part("head") == CharacterAppearance.HEADS[1],
-				"two presses down and Enter pick the second face (%s)" % _look(naming).part("head"))
-		_check(_model_look(naming) != null and _model_look(naming).part("head") == CharacterAppearance.HEADS[1],
-				"and the preview body wears that head")
+		if _check(await _popup_opens(face), "clicking the face chooser opens its list"):
+			await _key(KEY_DOWN)
+			await _key(KEY_DOWN)
+			await _key(KEY_ENTER)
+			await _frames(2)
+			_check(_look(naming).part("head") == CharacterAppearance.HEADS[1],
+					"two presses down and Enter pick the second face (%s)" % _look(naming).part("head"))
+			_check(_model_look(naming) != null and _model_look(naming).part("head") == CharacterAppearance.HEADS[1],
+					"and the preview body wears that head")
 
 	# a slider, dragged
 	var height := _slider(naming, "height")
@@ -374,6 +377,15 @@ func _kind_of(c: Control) -> String:
 	if c is LineEdit:
 		return "name"
 	return c.get_class()
+
+
+## Whether a chooser's list is showing within `max_frames` idle frames of being clicked.
+func _popup_opens(chooser: OptionButton, max_frames := 60) -> bool:
+	for i in max_frames:
+		if chooser.get_popup().visible:
+			return true
+		await _frames(1)
+	return chooser.get_popup().visible
 
 
 func _look(naming: Node) -> CharacterAppearance:
