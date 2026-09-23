@@ -132,9 +132,25 @@ are normative for pass one and live in `game/systems/*`.
   the character forge on our own humanoid rig, so morality visuals can modify it later.
 
 ### 5.2 Movement & cameras
-* `CharacterBody3D`, 4.2 m/s walk, 6.5 m/s run (stamina drain), sprint dodge-roll.
+* `CharacterBody3D` with three gaits: **walk 1.8 m/s** (walk key held, or a light stick),
+  **jog 5.0 m/s** (the default), **sprint 7.8 m/s** (held; stamina 8/s, §5.3; run to empty it
+  stops and does not start again until a quarter of the pool is back). Sneak 1.5 m/s; locked on
+  or blocking 2.6 m/s (×0.6 while blocking). Rest to a jog in 0.31 s (16 m/s², then 7 m/s² on to
+  a sprint); a jog stops in 0.25 s over 0.6 m (20 m/s²), a sprint in 0.48 s over 2.1 m
+  (12 m/s² down to a jog). Sprint dodge-roll.
+* Movement is relative to the view: W is where the camera looks, on the ground; S away, A and D
+  to its sides. The body turns to where it is going at a limited rate (900°/s standing, 720 at a
+  walk, 540 at a jog, 300 at a sprint, easing into the last few degrees) and gives up speed for a
+  large turn, so a reversal plants and turns instead of moonwalking. Locked on, blocking or in
+  first person it faces the target or the view and strafes. The camera turns with the mouse and
+  never with the body; the compass reads the camera.
 * First-person (arms visible) and third-person (orbit, shoulder offset, lock-on
-  framing). `V` / right-stick click toggles. Camera collision.
+  framing). `V` / right-stick click toggles. Third person sits 3.6 m behind a pivot 1.55 m up
+  and 0.4 m over the shoulder, and follows with a gentle lag (about 0.36 m at a jog). A sprint
+  draws it back 0.5 m and widens the view 7°, eased in and out. Collision pulls the camera in at
+  once and lets it back out over about 0.35 s. Physics is interpolated, so bodies moved at 60 Hz
+  are smooth at any refresh rate; the camera, the compass and anything moved per frame read the
+  interpolated body.
 * Jump is modest (1.1 m); climbing is via placed ladders and mantle on low ledges.
 
 ### 5.3 Combat
@@ -142,8 +158,9 @@ are normative for pass one and live in `game/systems/*`.
   dodge 22, block-hit = damage·0.6·(1−stability), sprint 8/s. Regen 30/s after 0.8 s.
 * **Attacks** are committed: input buffered 0.25 s, cancel only into dodge after the
   active frames. Chains of up to 3 lights; heavies charge.
-* **Hitboxes** are weapon-defined capsules active on animation frames (`hit_start`,
-  `hit_end` per attack in the weapon data).
+* **Hitboxes** are weapon-defined swing volumes (the weapon's reach long, shin to crown
+  high) active on animation frames (`hit_start`, `hit_end` per attack, from the attack's
+  clip scaled by the weapon's speed; see DECISIONS 2026-09-22).
 * **Lock-on**: targets in a 30 m cone, cycle with stick flick / mouse wheel;
   camera frames both; hard-lock movement strafes.
 * **Dodge**: 0.6 s roll, i-frames 0.08–0.38 s. Heavy load lengthens it and cuts

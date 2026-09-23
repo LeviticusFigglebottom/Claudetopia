@@ -59,12 +59,17 @@
     "loop": true
   },
   "chain_clink": {
-    "bytes": 42012,
+    "bytes": 523119,
     "files": [
       "res://assets/audio/ambience/chain_clink/chain_clink.ogg"
     ],
     "kind": "bed",
-    "loop": true
+    "loop": true,
+    "lufs": -29.69,
+    "peak_db": -11.15,
+    "seam_click_db": -18.59,
+    "seam_rms_db": 2.18,
+    "seconds": 42.0
   },
   "creak": {
     "bytes": 99524,
@@ -132,12 +137,17 @@
     "seconds": 2.2
   },
   "frogs": {
-    "bytes": 255198,
+    "bytes": 565639,
     "files": [
       "res://assets/audio/ambience/frogs/frogs.ogg"
     ],
     "kind": "bed",
-    "loop": true
+    "loop": true,
+    "lufs": -30.17,
+    "peak_db": -9.44,
+    "seam_click_db": 2.13,
+    "seam_rms_db": 4.346,
+    "seconds": 42.0
   },
   "gulls": {
     "bytes": 43400,
@@ -277,12 +287,17 @@
     "loop": true
   },
   "rope_creak": {
-    "bytes": 149403,
+    "bytes": 561549,
     "files": [
       "res://assets/audio/ambience/rope_creak/rope_creak.ogg"
     ],
     "kind": "bed",
-    "loop": true
+    "loop": true,
+    "lufs": -29.7,
+    "peak_db": -15.61,
+    "seam_click_db": -47.33,
+    "seam_rms_db": 1.136,
+    "seconds": 42.0
   },
   "silence_bed": {
     "bytes": 545038,
@@ -324,7 +339,7 @@
     "loop": true
   },
   "thunder_far": {
-    "bytes": 145666,
+    "bytes": 144578,
     "files": [
       "res://assets/audio/ambience/thunder_far/thunder_far_01.ogg",
       "res://assets/audio/ambience/thunder_far/thunder_far_02.ogg",
@@ -332,7 +347,9 @@
       "res://assets/audio/ambience/thunder_far/thunder_far_04.ogg"
     ],
     "kind": "pool",
-    "loop": false
+    "loop": false,
+    "lufs": -25.99,
+    "seconds": 7.389
   },
   "thunder_near": {
     "bytes": 151854,

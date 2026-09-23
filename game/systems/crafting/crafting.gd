@@ -261,6 +261,17 @@ func enchant_preview(effect_id: String, motes: int = 2) -> Dictionary:
 	return Enchanting.preview(effect_id, motes, skill_level("enchanting"), mods())
 
 
+## Whether a note can be written into an item with this many motes, and if not, why, in words:
+## {ok, reason, why}. The Name-table asks before the button is pressed, the way the forge asks
+## `temper_preview` -- `Enchanting.enchant_blocker` had seven passing tests and no caller, so a
+## refused writing was a button that did nothing.
+func enchant_check(item: Variant, effect_id: String, motes: int = 2) -> Dictionary:
+	var inv := bag()
+	var stack := inv.resolve(item) if inv != null and item != null else null
+	var reason := Enchanting.enchant_blocker(stack, effect_id, motes, inv, known_enchantments)
+	return {"ok": reason == "", "reason": reason, "why": Enchanting.blocker_text(reason, stack, effect_id, motes, inv)}
+
+
 ## Refills an item's enchantment charge from motes (-1 = as many as it takes).
 func recharge(item: Variant, motes: int = -1) -> bool:
 	var inv := bag()

@@ -4,6 +4,7 @@
 #   ./run.sh test       import + unit tests
 #   ./run.sh smoke      load every region and interior headlessly, fail on errors
 #   ./run.sh journey    scripted playthrough of every promise in DESIGN's done list
+#   ./run.sh fights     a scripted player against one foe of every archetype, headless
 #   ./run.sh flow       boot -> title -> the Naming -> the world, pressing the buttons a player
 #                       would, with a screenshot at every step -> captures/flow/
 #   ./run.sh shots      headless capture plan -> captures/
@@ -98,6 +99,13 @@ case "$cmd" in
   journey)
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/journey/journey.tscn -- "$@" ;;
+  fights)
+    # A scripted player of a starting Calling against one foe of every archetype, headless and at a
+    # fixed 60 fps (so it is the same run every time and costs what the machine needs, not real
+    # time). Prints a FIGHT row per fight and a CHECK row per promise; exits 1 on a failed check.
+    #   ./run.sh fights [--calling=hearthkeeper] [--only=pack,boss] [--trace=boss]
+    import_project
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 res://tests/arena/fights.tscn -- "$@" ;;
   flow)
     # Three starts, each from boot.tscn with the probe attached: the title menu's New Game
     # through the Naming into the world (which also saves the slot the next two need), then

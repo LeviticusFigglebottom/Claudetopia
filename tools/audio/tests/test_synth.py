@@ -572,3 +572,26 @@ def test_motif_library_is_all_motifs():
     for name, m in lib.items():
         assert len(m) >= 3, name
         assert m.duration() > 0, name
+
+
+def test_rewriting_an_import_sidecar_keeps_the_uid_godot_gave_the_file():
+    """Regenerating a file used to throw away the uid, path and dest_files Godot had written, so
+    every re-render gave every file a new resource uid on its next import."""
+    with tempfile.TemporaryDirectory() as d:
+        ogg = os.path.join(d, "x.ogg")
+        render.write_ogg_import(ogg, "assets/audio/x.ogg", loop=False)
+        with open(ogg + ".import") as f:
+            text = f.read()
+        text = text.replace('type="AudioStreamOggVorbis"\n', 'type="AudioStreamOggVorbis"\nuid="uid://abc123"\n'
+                            'path="res://.godot/imported/x.ogg-0f.oggvorbisstr"\n')
+        text = text.replace('source_file="res://assets/audio/x.ogg"\n', 'source_file="res://assets/audio/x.ogg"\n'
+                            'dest_files=["res://.godot/imported/x.ogg-0f.oggvorbisstr"]\n')
+        with open(ogg + ".import", "w") as f:
+            f.write(text)
+        render.write_ogg_import(ogg, "assets/audio/x.ogg", loop=True)
+        with open(ogg + ".import") as f:
+            again = f.read()
+        assert 'uid="uid://abc123"' in again
+        assert 'path="res://.godot/imported/x.ogg-0f.oggvorbisstr"' in again
+        assert 'dest_files=["res://.godot/imported/x.ogg-0f.oggvorbisstr"]' in again
+        assert "loop=true" in again, "the parameters are still the new ones"

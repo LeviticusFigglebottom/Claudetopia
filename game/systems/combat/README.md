@@ -97,10 +97,25 @@ emits `EventBus.player_died(position)` and implements `full_restore()` / `respaw
 
 ```
 ./run.sh test                                   # unit tests, content validation included
+./run.sh test --filter=test_combat_design       # DESIGN §5.3 measured: grep MEASURE for the table
+./run.sh fights [--calling=cragborn] [--only=pack,boss] [--trace=boss]
 godot --path game -- --arena                    # play the flat test arena
 xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
   --audio-driver Dummy -- --arena --verify --out=$PWD/captures/arena
 ```
+
+`./run.sh fights` (`tests/arena/fights.gd`) is a scripted level-1 player of each starting
+Calling against one foe of every archetype, headless, at a fixed 60 fps and a seeded RNG, so a
+run repeats exactly and a change can be measured against the run before it. It prints a row
+per fight (outcome, seconds, blows taken, damage taken, hits of swings, damage per hit, foe
+health left) and a CHECK per promise (telegraphs, lock-on, parry inside and outside the window,
+i-frames, stagger, the fight being heard); a failed check exits 1, a lost fight does not.
+`--trace=<archetype>` prints where everybody is twice a second.
+
+The driver keeps the time: every clip's gameplay events fire off `AnimationDriver`'s own
+timeline (the caller's timing, else the rig's sidecar), and the forged rig is stretched so its
+blow lands where the timeline says. A swing is live between `hit_start` and `hit_end` in a band
+from shin to crown (`Hitbox.set_swing`); knockback is metres (`Actor.SHOVE_DECEL`).
 
 The last line is the scripted verification (`tests/arena/arena_verify.gd`), 16 checks driven
 through real input actions: an attack damages a bandit; stamina drains 18 and regenerates; a

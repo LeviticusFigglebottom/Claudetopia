@@ -32,6 +32,7 @@ var terrain_mode := ""
 ## `WorldStatus.current()` as this world found it: whether there is a world, and what draws it.
 var status: Dictionary = {}
 var atmosphere: Node = null
+var night_lights: NightLights = null
 var fly_camera: FlyCamera = null
 var target: Node3D = null
 
@@ -89,6 +90,7 @@ func _ready() -> void:
 		_stand_down()
 		return
 	_setup_atmosphere()
+	_setup_night_lights()
 	_setup_water()
 	_setup_streamer()
 	EventBus.region_entered.connect(_on_region_entered)
@@ -259,6 +261,14 @@ func _setup_atmosphere() -> void:
 	add_child(atmosphere)
 
 
+## The lamps, lanterns, braziers, fires and lit windows after dark: one glow MultiMesh for the
+## whole country and a small pool of real lights near the eye (world/night_lights.gd).
+func _setup_night_lights() -> void:
+	night_lights = NightLights.new()
+	night_lights.name = "NightLights"
+	add_child(night_lights)
+
+
 func _setup_water() -> void:
 	water = WaterSurface.new()
 	water.name = "Water"
@@ -348,8 +358,11 @@ func move_target(pos: Vector3, look_at: Variant = null) -> void:
 	# world went on streaming around the player standing where they were.
 	if target == fly_camera and fly_camera != null:
 		fly_camera.move_to(pos, look_at)
+	elif target != null and target.has_method("teleport"):
+		target.call("teleport", pos, target.rotation.y)
 	elif target != null:
 		target.global_position = pos
+		target.reset_physics_interpolation()
 	elif fly_camera != null:
 		fly_camera.move_to(pos, look_at)
 	if streamer:

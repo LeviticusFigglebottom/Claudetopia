@@ -23,6 +23,10 @@ const CUTOFF_LERP := 4.0
 
 ## Thunder rolls are spaced this far apart, in seconds (the brief's 20-90 s).
 const THUNDER_GAP := Vector2(20.0, 90.0)
+## How often the weather is read again while nothing announces a change (seconds). The weather
+## blends in over game minutes after weather_changed has been said once, and rain that was read
+## only at the start of a blend stayed at the level the old weather had until the next hour.
+const WEATHER_POLL := 1.0
 
 ## Layers that only belong to part of the day. Hours are [from, to), wrapping at midnight.
 const TIME_LAYERS := {
@@ -75,6 +79,8 @@ var _cutoff := OPEN_CUTOFF_HZ
 var _lp_index := -1
 var _thunder_timer := 0.0
 var _weather_cache: Dictionary = {}
+var _weather_poll := WEATHER_POLL
+var _weather_heard := ""              ## the weather layers last asked for, as text
 
 ## Random gap between one-shots, per key, in seconds.
 const POOL_GAPS := {
@@ -265,6 +271,7 @@ func _has(key: String) -> bool:
 
 func _refresh() -> void:
 	var want := desired_layers()
+	_weather_heard = str(_weather_layers())
 	for key: String in want.keys():
 		if not _has(key):
 			continue
@@ -333,6 +340,14 @@ func _next_gap(key: String) -> float:
 # --- per frame -------------------------------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	_weather_poll -= delta
+	if _weather_poll <= 0.0:
+		_weather_poll = WEATHER_POLL
+		# Only the layers the weather asks for are compared, so a blend that moves nothing
+		# audible costs a dictionary and no refresh.
+		var heard := str(_weather_layers())
+		if heard != _weather_heard:
+			_refresh()
 	var step := delta / maxf(FADE_SECONDS, 0.01) * 60.0
 	for key: String in _beds.keys():
 		var p: AudioStreamPlayer = _beds[key]

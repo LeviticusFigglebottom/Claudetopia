@@ -255,6 +255,84 @@ def test_sfx_are_mono_short_and_clean():
         assert -4.0 < core.lin_to_db(core.peak(y)) < -2.0, "%s is not peak-normalised" % name
 
 
+def test_every_sfx_starts_and_ends_at_zero():
+    """A one-shot that starts or stops mid-waveform clicks every time it is played. The audit's
+    bar (-40 dBFS) applied to every id in the catalogue, not a sample of five; the chest's latch,
+    struck on sample 0, started at -26 dBFS until finish_variant opened every sound from zero."""
+    bar = core.db_to_lin(-40.0)
+    for name, spec in gen_sfx.CATALOGUE.items():
+        rng = core.rng(core.sub_seed("sfx", name, 0))
+        y = gen_sfx.finish_variant(spec["fn"](rng, **spec.get("kw", {})))
+        assert abs(y[0]) < bar and abs(y[-1]) < bar, \
+            "%s starts at %.0f and ends at %.0f dBFS" % (name, core.lin_to_db(abs(y[0]) + 1e-12),
+                                                         core.lin_to_db(abs(y[-1]) + 1e-12))
+
+
+def test_an_encoded_sfx_still_starts_at_zero():
+    """The file is what the game plays, and the Vorbis round trip rings ahead of a transient:
+    rendered from zero, these decoded at -26 to -36 dBFS on their first sample until every
+    one-shot was set in 4 ms of silence."""
+    import tempfile
+    import report
+    bar = core.db_to_lin(-40.0)
+    with tempfile.TemporaryDirectory() as d:
+        for name in ("chest_open", "lockpick_click", "impact_metal", "footstep_stone", "ui_brass_click"):
+            spec = gen_sfx.CATALOGUE[name]
+            rng = core.rng(core.sub_seed("sfx", name, 0))
+            y = gen_sfx.finish_variant(spec["fn"](rng, **spec.get("kw", {})))
+            p = os.path.join(d, name + ".ogg")
+            render.write_ogg(p, y, quality=gen_sfx.OGG_QUALITY)
+            back, _ = report.load_audio(p)
+            back = core.to_mono(back)
+            assert abs(back[0]) < bar and abs(back[-1]) < bar, "%s decodes starting at %.0f dBFS" % (
+                name, core.lin_to_db(abs(back[0]) + 1e-12))
+
+
+def test_the_variants_of_an_effect_are_the_same_loudness():
+    """Four of the ids had a variant more than 4 LU from its siblings (a water step 4.2 LU over,
+    a spell cast 4.9 under); match_variants holds them to 3 LU where the peak allows."""
+    import audit
+    for name in ("footstep_water", "footstep_ash", "door_wood_open", "spell_cast_binding"):
+        spec = gen_sfx.CATALOGUE[name]
+        ys = [gen_sfx.finish_variant(spec["fn"](core.rng(core.sub_seed("sfx", name, i)), **spec.get("kw", {})))
+              for i in range(spec["count"])]
+        levels = [render.momentary_max_lufs(y) for y in gen_sfx.match_variants(ys)]
+        med = float(np.median(levels))
+        assert max(abs(v - med) for v in levels) <= audit.VARIANT_SPREAD_LU, "%s: %s" % (name, levels)
+        assert all(core.lin_to_db(core.peak(y)) < -1.0 for y in gen_sfx.match_variants(ys)), name
+
+
+def test_effects_and_pool_shots_start_when_they_are_played():
+    """Coins that land 100 ms after the purchase, a thunder that begins a second after it was
+    fired: the lead-in below -60 dB of the peak is trimmed off both kinds of one-shot."""
+    import audit
+    for name in ("coins_few", "thunder_far"):
+        spec = gen_sfx.CATALOGUE[name]
+        for i in range(spec["count"]):
+            y = gen_sfx.finish_variant(spec["fn"](core.rng(core.sub_seed("sfx", name, i)), **spec.get("kw", {})))
+            assert audit.leading_silence_s(y) <= audit.LATE_START_S, "%s %d starts %.0f ms in" % (
+                name, i, audit.leading_silence_s(y) * 1000.0)
+    for i, y in enumerate(gen_ambience.render_pool("thunder_far", gen_ambience.CATALOGUE["thunder_far"])):
+        assert audit.leading_silence_s(y) <= audit.LATE_START_S, "pool thunder %d starts %.0f ms in" % (
+            i, audit.leading_silence_s(y) * 1000.0)
+
+
+def test_the_sparse_beds_never_fall_to_digital_silence():
+    import audit
+    for name in ("rope_creak", "chain_clink"):
+        y = gen_ambience.render_bed(name, gen_ambience.CATALOGUE[name], seconds=16.0)
+        dead = [r for r in audit.dead_runs_s(y) if r[1] > audit.DEAD_BED_S]
+        assert not dead, "%s is silent for %s" % (name, dead)
+
+
+def test_the_frogs_never_fall_to_digital_silence():
+    """A bed is the world's floor; a bed at -inf between frogs is the world switching off."""
+    import audit
+    y = gen_ambience.render_bed("frogs", gen_ambience.CATALOGUE["frogs"], seconds=12.0)
+    dead = [r for r in audit.dead_runs_s(y) if r[1] > audit.DEAD_BED_S]
+    assert not dead, "silent for %s" % dead
+
+
 def test_footsteps_of_different_surfaces_sound_different():
     """The whole point of ten surfaces is that a player can hear which one they are on."""
     from scipy import signal as sg

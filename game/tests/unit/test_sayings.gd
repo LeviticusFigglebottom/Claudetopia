@@ -143,6 +143,7 @@ func test_reading_a_tome_teaches_the_saying_in_it() -> void:
 	assert_true(bag.use(TOME_KINDLE), "the inventory screen's Read button")
 	assert_true(prog.knows_spell(KINDLE))
 	assert_eq(bag.count(TOME_KINDLE), 1, "a book is read, not eaten")
+	close_screen("book", "a tome read out of the bag is drawn in the reader")
 
 
 func test_a_tome_read_off_a_shelf_teaches_the_same_thing() -> void:
@@ -156,11 +157,13 @@ func test_a_tome_read_off_a_shelf_teaches_the_same_thing() -> void:
 	EventBus.notify.disconnect(cb)
 	assert_eq(said.size(), 1, "re-reading says something rather than nothing")
 	assert_true(said[0].contains("already"), "and says it is already known: '%s'" % said[0])
+	close_screen("book", "a tome opened off a shelf is drawn in the reader")
 
 
 func test_a_book_with_no_working_in_it_teaches_no_saying() -> void:
 	EventBus.book_opened.emit("core:book/naming_day_primer")
 	assert_empty(prog.known_spells)
+	close_screen("book", "an ordinary book is still read")
 
 
 func test_a_tome_says_what_it_opens_in_its_summary() -> void:

@@ -199,4 +199,5 @@ func test_reading_the_board_offers_the_deed() -> void:
 	EventBus.property_offered.disconnect(note)
 	assert_eq(offered, [DEED] as Array[String], "the board offered nothing to anybody")
 	assert_true(UI.MENUS.has("deed"), "no screen is registered to answer the offer")
+	close_screen("deed", "the offer is answered by the deed screen")
 	sign_node.queue_free()

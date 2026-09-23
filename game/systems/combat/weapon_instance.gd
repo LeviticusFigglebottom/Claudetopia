@@ -11,6 +11,10 @@ signal hit_landed(victim: Node, hit: HitData, outcome: String)
 const CHAIN_LENGTH := {"1H": 3, "2H": 2, "dagger": 2, "unarmed": 2, "bow": 0, "staff": 0}
 const UNARMED_BLOCK := {"class": "unarmed", "damage": 6.0, "poise_damage": 8.0, "stamina_light": 12.0, "stamina_heavy": 20.0, "speed": 1.2, "reach": 1.0, "clips_set": "unarmed", "parry": false, "stability": 0.2, "kind": "blunt"}
 const HITBOX_RADIUS := 0.4
+## How far a swing reaches up and down from the attack origin (1.1 m on a person): from a hand's
+## breadth off the ground to a little over the head. See Hitbox.set_swing.
+const SWING_BELOW := 1.0
+const SWING_ABOVE := 0.8
 
 var item_id: String = ""
 var item_def: Dictionary = {}
@@ -73,12 +77,13 @@ func configure(def: Dictionary, id: String = "", instance_data: Dictionary = {})
 	enchant = data.get("enchant", {}) if typeof(data.get("enchant", {})) == TYPE_DICTIONARY else {}
 	name = "Weapon_" + (Ids.name_of(id) if not id.is_empty() else "unarmed")
 	if hitbox != null:
-		hitbox.set_capsule(HITBOX_RADIUS, minf(reach, 3.0))
+		hitbox.set_swing(HITBOX_RADIUS, minf(reach, 3.0), SWING_BELOW, SWING_ABOVE)
 
 
 func _ready() -> void:
 	if hitbox == null:
 		hitbox = Hitbox.create(owner_actor, HITBOX_RADIUS, minf(reach, 3.0))
+		hitbox.set_swing(HITBOX_RADIUS, minf(reach, 3.0), SWING_BELOW, SWING_ABOVE)
 		add_child(hitbox)
 		hitbox.hit_landed.connect(_on_hit_landed)
 
@@ -128,9 +133,37 @@ func clip_for(attack_kind: String, index: int = 0) -> String:
 				_: return "Attack_Unarmed_%d" % i
 
 
-## Placeholder timing derived from the weapon's speed (used until the real clips supply events).
-## Returns {"length": s, "events": [{"t": s, "name": "hit_start"|"hit_end"|"cancel_ok"}]}.
+## When a swing's blow lands and when it is spent: `{"length": s, "events": [{"t": s, "name":
+## "hit_start"|"hit_end"|"cancel_ok"...}]}`. It is the swing's own clip, off the rig's sidecar,
+## played at this weapon's `speed` -- a rapier's thrust is the sword's thrust, sooner, and a bell
+## on a haft is the same two-handed swing, later. The AnimationDriver keeps time by this, so the
+## hit window the game scores is the one the body is seen to swing.
+##
+## Before, the window was a placeholder built from `speed` alone, and the body swung its clip at
+## the clip's own pace and fired the clip's events: the two agreed to within a frame or two for a
+## sword, and `speed` did nothing at all once the forged rig arrived.
 func timing_for(attack_kind: String, index: int = 0) -> Dictionary:
+	var clip := clip_for(attack_kind, index)
+	var rig := HumanoidModel.sidecar_timing(clip)
+	if _has_window(rig):
+		var scale := 1.0 / speed if attack_kind == "light" or attack_kind == "heavy" else 1.0
+		var events: Array = []
+		for e in rig["events"]:
+			events.append({"t": float(e["t"]) * scale, "name": str(e["name"])})
+		return {"length": float(rig["length"]) * scale, "events": events}
+	return _proportional_timing(attack_kind, index)
+
+
+static func _has_window(t: Dictionary) -> bool:
+	var names := {}
+	for e in t.get("events", []):
+		names[str(e.get("name", ""))] = true
+	return float(t.get("length", 0.0)) > 0.0 and names.has("hit_start") and names.has("hit_end")
+
+
+## The proportions a swing had before there was a rig to measure: kept for a clip the sidecar does
+## not have, so a weapon never swings with no window at all.
+func _proportional_timing(attack_kind: String, index: int = 0) -> Dictionary:
 	var length: float
 	var hs: float
 	var he: float
@@ -231,6 +264,11 @@ func on_clip_event(event_name: String) -> void:
 	match event_name:
 		"hit_start":
 			if current_hit != null and hitbox != null:
+				# The whoosh goes with the blade, not with the button: it is heard as the swing
+				# goes live, whatever the wind-up before it, and before anything it lands on.
+				var whoosh := Foley.swing_for(weapon_class, current_hit.heavy)
+				if not whoosh.is_empty() and is_inside_tree():
+					Foley.play(whoosh, global_position, -4.0 if clips_set == "unarmed" else 0.0)
 				hitbox.begin_swing(current_hit)
 		"hit_end":
 			if hitbox != null:
