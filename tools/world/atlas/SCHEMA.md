@@ -11,11 +11,11 @@ python3 tools/world/atlas/check_atlas.py                 # check the committed a
 python3 tools/world/atlas/check_atlas.py other.json      # or any other
 ./run.sh world                                           # build the world from it
 python3 tools/world/build_world.py --atlas other.json --out /tmp/w --size 1024   # a quick look
-python3 tools/world/atlas/render_map.py --world /tmp/w --atlas other.json --out /tmp/map.png
+python3 tools/world/atlas/render_build.py --world /tmp/w --atlas other.json --out /tmp/map.png
 ```
 
 This document is the contract the builder is written to; where the two disagree, the builder is
-wrong. `render_map.py` draws a built world's heights, water, roads and rivers with the atlas over
+wrong. `render_build.py` draws a built world's heights, water, roads and rivers with the atlas over
 them, which is the quickest way to see whether the land is the map.
 
 The check reads `atlas.schema.json` (the shape of the document, which an editor can also use)

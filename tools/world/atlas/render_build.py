@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Draw a built world's land with its atlas over it, to see whether the land is the map.
 
-    python3 tools/world/atlas/render_map.py                          # game/world/generated
-    python3 tools/world/atlas/render_map.py --world /tmp/w --out /tmp/map.png --size 2048
+    python3 tools/world/atlas/render_build.py                          # game/world/generated
+    python3 tools/world/atlas/render_build.py --world /tmp/w --out /tmp/map.png --size 2048
 
 The land is the built heights, hill-shaded from the north-west and tinted by height (sea and
 lake water from the built water mask, in blue); the built roads are drawn in dark red, the

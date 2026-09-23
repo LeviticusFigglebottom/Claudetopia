@@ -10,7 +10,7 @@ atlas/atlas.json          the geography as somebody drew it: provinces, coast, r
                           valleys, rivers, lakes, forests, roads and the start
 atlas/SCHEMA.md           what every field of the atlas means to the builder
 atlas/atlas.schema.json   the same as JSON Schema; atlas/check_atlas.py checks an atlas
-atlas/render_map.py       a built world's heights with its atlas drawn over them
+atlas/render_build.py     a built world's heights, roads and rivers with its atlas drawn over them
 gen_terrain_textures.py   the 21 terrain textures of docs/CONTRACTS.md §5
 scatter_rules.json        flora/rock keys -> asset names, densities and habitat rules, what each
                           kind of wood is made of, and the `cover` recipe's patch over them
@@ -60,7 +60,7 @@ tools/world/build_world.py --seed 99 --out /tmp/w
 tools/world/build_world.py --atlas other.json --out /tmp/w  # another atlas
 tools/world/build_world.py --recipe cover   # the part that is off by default
 python3 tools/world/atlas/check_atlas.py [atlas.json]
-python3 tools/world/atlas/render_map.py --world /tmp/w --out /tmp/map.png
+python3 tools/world/atlas/render_build.py --world /tmp/w --out /tmp/map.png
 tools/world/gen_terrain_textures.py [slots...] [--size 1024]
 python3 tools/world/tests/test_build.py
 ```
