@@ -25,10 +25,12 @@ const VARIANTS := ["a", "b", "c"]
 const SURFACE_META := "surface"
 ## Words in a forged asset's name that say what it is made of underfoot (surface_of_asset).
 const WOOD_WORDS: Array[String] = ["boardwalk", "plank", "dock", "pier", "jetty", "rowboat", "cart", "crate",
-	"barrel", "table", "bench", "chest", "stall", "fence", "gate", "coffin", "timber", "log", "grandfather"]
+	"barrel", "table", "bench", "chest", "stall", "fence", "gate", "coffin", "timber", "log", "grandfather",
+	"stool", "chair", "signpost", "chopping_block", "stump", "wheelbarrow", "shelf", "cupboard"]
+## Bone is not stone, but it is the hard, dry thing a foot on a giant's finger hears.
 const STONE_WORDS: Array[String] = ["drystone", "wall", "stair", "step", "bridge", "masonry", "boulder",
 	"cliff", "slab", "stone", "cairn", "ruin", "sarcophagus", "well", "colossus", "spire", "nave", "toll",
-	"fallen_hand", "chalk_hound", "the_lamp"]
+	"fallen_hand", "chalk_hound", "the_lamp", "bone_"]
 ## How far out a silhouette piece is still drawn: the far ring is 384-905 m away.
 const FAR_RANGE := 950.0
 
