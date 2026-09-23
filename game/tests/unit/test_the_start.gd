@@ -147,7 +147,9 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 	assert_true(d != null, "the Stair Head is dressed although the built world has no pad for it yet")
 	if d == null:
 		return
-	assert_gt(d.lights().size(), 2, "a fire and lamps: %d lights" % d.lights().size())
+	# the fire and the lamps are NightLights' to light (PoiKit.light registers them there)
+	var lit := d.light_sources().size()
+	assert_gt(lit, 2, "a fire and lamps: %d lights" % lit)
 	var stones := d.hearthstones()
 	assert_eq(stones.size(), 1, "one Hearthstone, the Warden's")
 	if not stones.is_empty():

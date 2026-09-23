@@ -148,8 +148,9 @@ Generated data is a build artifact, but the part of it the game reads (the manif
 places and splines, `runtime/`, `cells/` and `game/terrain_data/`, about 310 MB) is tracked so
 a clone plays without Python; `.gitignore` names exactly that set, and `run.sh` builds the
 world only when it is missing. `WorldStatus` (`game/world/world_status.gd`) decides at every
-way in whether there is a world at all, and when Terrain3D cannot draw it `FallbackTerrain`
-draws the ground from the runtime height map (game/world/README.md).
+way in whether there is a world at all, and when Terrain3D cannot draw it (no library, a driver
+it crashes, no regions, or `-- --terrain=fallback`) `FallbackTerrain` draws the ground from the
+runtime height map and `GroundNotice` says so where it cannot be missed (game/world/README.md).
 
 ## 6a. Interiors pipeline (tools/interiors)
 

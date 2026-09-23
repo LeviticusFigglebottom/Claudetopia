@@ -1,0 +1,12 @@
+{
+  "_doc": "Short sequences of the player's body for judging movement in the motion studio (game/tools_gd/motion_studio.gd): a start and a stop from a jog, a turn on the spot, the roll from a tap of Shift and from Ctrl, a light swing, and the camera's follow through the player's own view. Real key events through the input map. xvfb-run -a -s '-screen 0 1280x720x24' godot --path game --rendering-driver vulkan --rendering-method forward_plus --audio-driver Dummy --resolution 1280x720 --fixed-fps 60 res://tools_gd/motion_studio.tscn -- --plan=tools/capture/plans/motion.json --out=captures/motion",
+  "sequences": [
+    {"label": "start", "view": "side", "keys": [[0.3, "W", true]], "shots": {"from": 0.3, "every": 0.05, "count": 8}},
+    {"label": "stop", "view": "side", "keys": [[0.0, "W", true], [1.2, "W", false]], "shots": {"from": 1.15, "every": 0.05, "count": 10}},
+    {"label": "turn", "view": "side", "keys": [[0.3, "S", true], [0.75, "S", false]], "shots": {"from": 0.3, "every": 0.04, "count": 8}},
+    {"label": "roll_shift", "view": "side", "keys": [[0.0, "W", true], [1.0, "Shift", true], [1.1, "Shift", false], [2.0, "W", false]], "shots": {"from": 1.1, "every": 0.08, "count": 9}},
+    {"label": "roll_ctrl", "view": "side", "keys": [[0.0, "W", true], [1.0, "Ctrl", true], [1.1, "Ctrl", false], [2.0, "W", false]], "shots": {"from": 1.0, "every": 0.08, "count": 9}},
+    {"label": "swing", "view": "side", "keys": [[0.3, "LMB", true], [0.4, "LMB", false]], "shots": {"from": 0.3, "every": 0.1, "count": 9}},
+    {"label": "follow", "view": "player", "keys": [[0.0, "W", true], [1.2, "W", false]], "shots": [0.0, 0.3, 1.0, 1.2, 1.3, 1.45, 1.7]}
+  ]
+}

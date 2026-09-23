@@ -57,12 +57,13 @@ func _on_entity_killed(victim: Node, killer: Node, enemy_id: String) -> void:
 		if victim is Node3D and victim.is_inside_tree():
 			pos = (victim as Node3D).global_position
 			parent = victim.get_parent()
-	if def.is_empty():
-		return
-	var ctx := context()
-	if killer != null and is_instance_valid(killer) and killer.has_method("get_level"):
-		ctx["level"] = int(killer.call("get_level"))
-	var results := drops_for(def, ctx)
+	var results: Array[Dictionary] = []
+	if not def.is_empty():
+		var ctx := context()
+		if killer != null and is_instance_valid(killer) and killer.has_method("get_level"):
+			ctx["level"] = int(killer.call("get_level"))
+		results = drops_for(def, ctx)
+	results.append_array(lodged_in(victim))
 	if results.is_empty():
 		return
 	if drop_parent_path != NodePath(""):
@@ -73,6 +74,22 @@ func _on_entity_killed(victim: Node, killer: Node, enemy_id: String) -> void:
 	if parent == null or not is_instance_valid(parent) or not parent.is_inside_tree():
 		parent = get_tree().current_scene if get_tree().current_scene != null else get_tree().root
 	spawn_drops(results, pos, parent, enemy_id)
+
+
+## The arrows and bolts that struck the body and survived it (Actor.lodged), to be pulled out of it
+## with the rest of what it carried.
+static func lodged_in(victim: Node) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if victim == null or not is_instance_valid(victim):
+		return out
+	var lodged: Variant = victim.get("lodged")
+	if typeof(lodged) != TYPE_DICTIONARY:
+		return out
+	for id in lodged:
+		var n := int(lodged[id])
+		if n > 0 and ContentDB.has(str(id)):
+			out.append({"item": str(id), "count": n})
+	return out
 
 
 ## Rolls what an enemy def drops: its `drops` (unique and guaranteed), its loot table, and a

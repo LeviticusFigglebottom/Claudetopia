@@ -406,7 +406,7 @@ static func _flight_collider(k: PoiKit, a: Vector3, b: Vector3, yaw: float, widt
 	var pitch := atan2(a.y - b.y, flat)
 	var basis := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, pitch)
 	var mid := (a + b) * 0.5 - basis * Vector3(0.0, 0.25, 0.0)
-	k.collider(Vector3(width, 0.5, length), Transform3D(basis, mid))
+	k.collider(Vector3(width, 0.5, length), Transform3D(basis, mid), "stone")
 
 
 ## A lantern hung from an arm on a post, lit.
@@ -488,7 +488,7 @@ static func shrine(d: PoiDressing) -> void:
 		m.block(stonework, Transform3D(basis, g + basis * Vector3(0.0, 1.0, -0.55) + Vector3(0.0, 0.0, 0.0)), Vector3(1.5, 2.0, 0.42))
 		for s in [-1.0, 1.0]:
 			m.block(stonework, Transform3D(basis, g + basis * Vector3(float(s) * 0.66, 0.62, 0.0)), Vector3(0.22, 0.68, 1.1))
-		k.collider(Vector3(1.5, 2.0, 1.2), Transform3D(basis, g + Vector3(0.0, 1.0, 0.0) + basis * Vector3(0.0, 0.0, -0.2)))
+		k.collider(Vector3(1.5, 2.0, 1.2), Transform3D(basis, g + Vector3(0.0, 1.0, 0.0) + basis * Vector3(0.0, 0.0, -0.2)), "stone")
 		var behind := stone_at - grain * 0.9
 		k.place(k.tree("hawthorn"), k.on_ground(behind.x, behind.y), k.rng.randf_range(0.0, TAU), 1.9, true, Vector3.ZERO, true)
 		var lap := stone_at + grain * 0.95
@@ -516,7 +516,7 @@ static func shrine(d: PoiDressing) -> void:
 		var cyl := CylinderShape3D.new()
 		cyl.radius = cairn_r * 0.9
 		cyl.height = 1.2
-		k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(stone_at.x, stone_at.y, 0.6)))
+		k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(stone_at.x, stone_at.y, 0.6)), "stone")
 		k.hearthstone(k.on_ground(stone_at.x, stone_at.y, 0.95), approach, d.poi_id, d.display_name)
 		placed_hearth = true
 		# the newest pebbles, not yet on the heap
@@ -603,7 +603,7 @@ static func shrine(d: PoiDressing) -> void:
 		var cyl := CylinderShape3D.new()
 		cyl.radius = float(hi[1]) * fs * 0.42
 		cyl.height = length
-		k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(stone_at.x, stone_at.y, length * 0.5)))
+		k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(stone_at.x, stone_at.y, length * 0.5)), "stone")
 		var foot := stone_at + grain * (float(hi[1]) * fs * 0.5 + 1.6)
 		k.hearthstone(k.on_ground(foot.x, foot.y), approach, d.poi_id, d.display_name)
 		placed_hearth = true
@@ -639,7 +639,7 @@ static func shrine(d: PoiDressing) -> void:
 				continue
 			var around := axis * Basis(Vector3.BACK, a)
 			var at := middle + around * Vector3(0.0, br * 0.92, 0.0)
-			k.collider(Vector3(br * TAU / float(segs) * 1.05, 0.5, bh * 0.9), Transform3D(around, at))
+			k.collider(Vector3(br * TAU / float(segs) * 1.05, 0.5, bh * 0.9), Transform3D(around, at), "stone")
 		var inside := centre - grain * (bh * 0.1)
 		k.hearthstone(k.on_ground(inside.x, inside.y), approach, d.poi_id, d.display_name)
 		placed_hearth = true
@@ -897,7 +897,7 @@ static func _tower_stilts(d: PoiDressing, grain: Vector2) -> void:
 	for i in range(1, int(rail_len / 0.38)):
 		var t := float(i) * 0.38 / rail_len
 		m.block(posts, Transform3D(lean, g.lerp(top, t)), Vector3(0.6, 0.05, 0.05))
-	k.collider(Vector3(0.7, rail_len, 0.2), Transform3D(lean, (g + top) * 0.5))
+	k.collider(Vector3(0.7, rail_len, 0.2), Transform3D(lean, (g + top) * 0.5), "wood")
 	m.commit(planks, k.surface("planks", 0.7), "Planks", true)
 	m.commit(posts, k.surface("timber", 0.6), "Posts", true)
 	# the bell under the roof, and what a lookout keeps up there
@@ -935,14 +935,14 @@ static func _tower_hide(d: PoiDressing, grain: Vector2) -> void:
 		var centre := side_basis * Vector3(0.0, 0.0, (inner + outer) * 0.5)
 		var xf := Transform3D(side_basis, Vector3(centre.x, deck_y - 0.07, centre.z))
 		m.block(planks, xf, Vector3(outer * 2.0, 0.15, outer - inner))
-		k.collider(Vector3(outer * 2.0, 0.25, outer - inner), xf)
+		k.collider(Vector3(outer * 2.0, 0.25, outer - inner), xf, "wood")
 		# A hide is a screen you stand behind: a plank parapet round the outer edge, chest
 		# high, with its cap rail on top. A bare rail photographed as scaffolding.
 		var rail := side_basis * Vector3(0.0, 0.0, outer - 0.12)
 		if i != 0:
 			m.block(planks, Transform3D(side_basis, Vector3(rail.x, deck_y + 0.55, rail.z)),
 					Vector3(outer * 2.0, 1.1, 0.12))
-			k.collider(Vector3(outer * 2.0, 1.1, 0.12), Transform3D(side_basis, Vector3(rail.x, deck_y + 0.55, rail.z)))
+			k.collider(Vector3(outer * 2.0, 1.1, 0.12), Transform3D(side_basis, Vector3(rail.x, deck_y + 0.55, rail.z)), "wood")
 		m.block(posts, Transform3D(side_basis, Vector3(rail.x, deck_y + 1.16, rail.z)), Vector3(outer * 2.0, 0.11, 0.2))
 		for s in [-1.0, 1.0]:
 			var p := side_basis * Vector3(float(s) * (outer - 0.12), 0.0, outer - 0.12)
@@ -1097,7 +1097,7 @@ static func _tower_head(d: PoiDressing, grain: Vector2) -> void:
 	carved.set_shader_parameter("variation", 0.75)
 	m.commit(st, carved, "Head", true)
 	# a wall of the head's reach: a squashed sphere has no shape of its own
-	k.collider(Vector3(rx * 1.9, ry * 1.9, rz * 1.9), Transform3D(basis, centre))
+	k.collider(Vector3(rx * 1.9, ry * 1.9, rz * 1.9), Transform3D(basis, centre), "stone")
 	# the eyes: dark sockets, the one facing the approach with the vigil's light in it
 	var eye := m.begin()
 	var disc := CylinderMesh.new()
@@ -1498,7 +1498,7 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 			break
 	var b := dir * reach
 	var planks := m.begin()
-	m.arch_bridge(planks, a, b, 2.4, -0.7, deck_y, false, false)
+	m.arch_bridge(planks, a, b, 2.4, -0.7, deck_y, false, false, NAN, "wood")
 	m.commit(planks, k.surface("planks", 0.8), "Deck", true)
 	# pylons
 	var stone := m.begin()
@@ -1731,7 +1731,7 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 		var ledge_c := face_at - facing * (tier_d * 0.5)
 		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(ledge_c.x, ledge_y - 0.3, ledge_c.y))
 		m.block(ledges, xf, Vector3(ledge_w, 0.6, tier_d + 1.0))
-		k.collider(Vector3(ledge_w, 0.6, tier_d + 1.0), xf)
+		k.collider(Vector3(ledge_w, 0.6, tier_d + 1.0), xf, "stone")
 		# the water off the lip into the pool below
 		var lip := Vector3(face_at.x, ledge_y - 0.05, face_at.y) + Vector3(facing.x, 0.0, facing.y) * 0.3
 		m.sheet(lip, yaw, 3.8, tier_h + 0.4, PoiKit.falling_water(false, 2.2), "Fall%d" % tier, 0.7, true)
@@ -1794,7 +1794,7 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 		var y := g.y + 1.1 + float(i) * 1.15
 		var xf := Transform3D(Basis(Vector3.UP, yaw + k.rng.randf_range(-0.2, 0.2)), Vector3(p.x, y, p.y))
 		m.block(ledges, xf, Vector3(1.3, 0.28, 0.7))
-		k.collider(Vector3(1.3, 0.28, 0.7), xf)
+		k.collider(Vector3(1.3, 0.28, 0.7), xf, "stone")
 	m.commit(ledges, k.surface("oroth", 0.5), "Ledges", true)
 	var shards: Array = []
 	for i in 20:
@@ -2058,7 +2058,7 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 				at.call(33.3 + float(f) * 1.0, 9.6 + float(f) * 0.9, 0.15), 0.27)
 	m.commit(shards, carved, "Shards", true)
 	# collision: the back, and each limb as a box along it
-	k.collider(Vector3(13.0, 4.6, 20.0), Transform3D(basis, at.call(5.0, 0.0, 1.8)))
+	k.collider(Vector3(13.0, 4.6, 20.0), Transform3D(basis, at.call(5.0, 0.0, 1.8)), "stone")
 	for pair in [[legs[0][0], legs[0][1], 2.1], [legs[0][1], legs[0][2], 1.6], [legs[1][0], legs[1][1], 2.1],
 			[legs[1][1], legs[1][2], 1.6], [shoulder_l, elbow_l, 1.6], [elbow_l, wrist_l, 1.3],
 			[shoulder_r, elbow_r, 1.6], [elbow_r, wrist_r, 1.3]]:
@@ -2066,7 +2066,7 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		var b: Vector3 = pair[1]
 		var r: float = pair[2]
 		k.collider(Vector3(r * 1.8, r * 1.8, a.distance_to(b)),
-				Transform3D(Basis.looking_at((b - a).normalized(), Vector3.UP), (a + b) * 0.5))
+				Transform3D(Basis.looking_at((b - a).normalized(), Vector3.UP), (a + b) * 0.5), "stone")
 	# The head, hooded, and down in the ash to above the brow: the back of the hood and its peak,
 	# drawn back toward the neck, are what the trench has found. None of the Choir's heads is
 	# hooded; the Headless Watch is one of theirs and is bare.
@@ -2084,7 +2084,7 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 	var hood := PoiKit.painted(0, PoiKit.OROTH, 0.7, 0.9)
 	hood.set_shader_parameter("unit_size", 1.3)
 	m.commit(head, hood, "Head", true)
-	k.collider(Vector3(7.0, 3.6, 7.6), Transform3D(basis, head_at + Vector3(0.0, 1.4, 0.0)))
+	k.collider(Vector3(7.0, 3.6, 7.6), Transform3D(basis, head_at + Vector3(0.0, 1.4, 0.0)), "stone")
 	# the ash drifted against its flanks, which is how something this size is half sunk
 	var ash := k.surface("earth", 0.9)
 	ash.set_shader_parameter("base_color", Color(0.14, 0.135, 0.13))
@@ -2588,7 +2588,7 @@ static func wreck(d: PoiDressing) -> void:
 	m.block(timber, Transform3D(Basis.looking_at(mast_dir, Vector3.UP), mast_from + mast_dir * (length * 0.3)),
 			Vector3(0.44, 0.44, length * 0.62))
 	m.commit(timber, k.surface("planks", 0.9), "Hull", true)
-	k.collider(Vector3(beam, 2.4, length), Transform3D(Basis(Vector3.UP, yaw), Vector3(0.0, g.y + 1.0, 0.0)))
+	k.collider(Vector3(beam, 2.4, length), Transform3D(Basis(Vector3.UP, yaw), Vector3(0.0, g.y + 1.0, 0.0)), "wood")
 	# the deck boards that came off her, and the masonry she broke on
 	var boards: Array = []
 	for i in 14:
@@ -2810,12 +2810,12 @@ static func _valley_wisps(d: PoiDressing) -> void:
 		var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(seg) + PI * 0.5),
 				Vector3(mid.x, level + float(h) * 0.5 - 0.1, mid.y))
 		m.block(stone, xf, Vector3(seg.length(), float(h), 0.45))
-		k.collider(Vector3(seg.length(), float(h), 0.45), xf)
+		k.collider(Vector3(seg.length(), float(h), 0.45), xf, "stone")
 	# the chimney, which is the thing that still stands
 	var stack := -grain * (l * 0.5 - 0.5)
 	var xf2 := Transform3D(Basis(Vector3.UP, yaw), Vector3(stack.x, level + 2.3, stack.y))
 	m.block(stone, xf2, Vector3(1.05, 5.0, 1.05))
-	k.collider(Vector3(1.05, 5.0, 1.05), xf2)
+	k.collider(Vector3(1.05, 5.0, 1.05), xf2, "stone")
 	m.commit(stone, k.surface("stone", 0.85), "House", true)
 	# the wisps: small cold lights over the water, and the pale motes about them. All five
 	# bodies in one mesh; only the lights and the motes are per-wisp.
@@ -2969,7 +2969,7 @@ static func _valley_hushline(d: PoiDressing) -> void:
 		var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(seg) + PI * 0.5),
 				Vector3(mid.x, g.y + rise * float(steps) * 0.5 + 0.7, mid.y))
 		m.block(stone, xf, Vector3(seg.length(), 1.4, 0.6))
-		k.collider(Vector3(seg.length(), 1.4, 0.6), xf)
+		k.collider(Vector3(seg.length(), 1.4, 0.6), xf, "stone")
 	# the head of the stair: two Oroth piers marking where it begins
 	for s in [-1.0, 1.0]:
 		var p := top - into * 1.6 + perp * float(s) * 4.2
@@ -3256,7 +3256,7 @@ static func _strange_one_poppy(d: PoiDressing) -> void:
 	var cyl := CylinderShape3D.new()
 	cyl.radius = 0.85
 	cyl.height = 0.9
-	k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(cairn.x, cairn.y, 0.45)))
+	k.collider_shape(cyl, Transform3D(Basis.IDENTITY, k.on_ground(cairn.x, cairn.y, 0.45)), "stone")
 	var stake := m.begin()
 	m.rod(stake, Transform3D(Basis.from_euler(Vector3(0.06, 0.0, -0.04)), k.on_ground(cairn.x, cairn.y, 1.3)), 0.05, 2.6)
 	m.commit(stake, PoiKit.plain(Color(0.86, 0.83, 0.76), 0.9), "Stake", true)

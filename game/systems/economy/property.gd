@@ -154,7 +154,7 @@ func asking_price(property_id: String, seller_faction := "") -> int:
 	var base := price_of(property_id)
 	var region := WorldProbe.region_of_place(place_of(property_id))
 	var disposition := Pricing.disposition_for(Peers.reaction_profile(), Peers.faction_rank(seller_faction))
-	var p := Pricing.price(base, Pricing.region_mod(region), 1.0, Pricing.disposition_mod(disposition), Peers.skill_level("speech"))
+	var p := Pricing.price(base, Pricing.region_mod(region), 1.0, Pricing.disposition_mod(disposition), Peers.skill_level("speech"), Peers.stat_mult("prices_buy"))
 	return clampi(p, maxi(1, roundi(float(base) * PRICE_FLOOR)), base)
 
 

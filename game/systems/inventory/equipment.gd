@@ -114,6 +114,11 @@ static func slots_for(stack: ItemStack) -> Array[String]:
 				out.append("amulet")
 			"head", "body", "hands", "feet":
 				out.append(slot)
+			"off_hand":
+				# A shield worn as armour (the round shield) says so in its `armour` block; the
+				# rule above only knew a shield carried as a weapon, so this one was sold in shops
+				# and could never be taken up.
+				out.append("off_hand")
 	elif stack.has_tag("offhand"):
 		out.append("off_hand")
 	if stack.is_consumable():
@@ -299,9 +304,14 @@ func quick_stack(slot: String) -> ItemStack:
 	return inventory.find_first(id)
 
 
+## How many uses the belt slot has left: the stack's count, or for the flask its swallows.
 func quick_count(slot: String) -> int:
 	var id := quick_item(slot)
-	return inventory.count(id) if (id != "" and inventory != null) else 0
+	if id == "" or inventory == null:
+		return 0
+	if Flask.is_flask(id):
+		return Flask.charges(inventory.find_first(id))
+	return inventory.count(id)
 
 
 func use_quick(slot: String) -> bool:

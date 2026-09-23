@@ -49,7 +49,9 @@ const MOVE_CLIPS: Array[String] = ["Walk", "Run", "Sprint", "Walk_Back", "Strafe
 ## it starts turning into a run.
 const BRISK_WALK := 1.33
 ## However slowly or fast the body moves, a clip plays between these shares of its own cadence:
-## a crawl of a stride looks wrong sooner than a small slide does.
+## a crawl of a stride looks wrong sooner than a small slide does. The floor lets go as the body
+## comes to a stand (below MOVING_FULL), so a stop freezes the stride where it is and settles it
+## into the idle, rather than stepping on the spot at half pace while the feet skate.
 const RATE_MIN := 0.5
 const RATE_MAX := 1.6
 const SNEAK_BLEND_S := 0.25
@@ -59,6 +61,11 @@ const SPEED_SMOOTH_S := 0.08
 ## Below MOVING_FROM m/s the body is standing (the idle plays); above MOVING_FULL it is all gait.
 const MOVING_FROM := 0.08
 const MOVING_FULL := 0.7
+## The gait and the idle hand over across this long, from the moment the body's own speed says
+## so. Read off the smoothed speed, a stop from a jog held the legs split mid-stride for a tenth
+## of a second after the body stood (the smoothing still thought it was moving) and then snapped
+## them together in the next tenth.
+const MOVE_BLEND_S := 0.2
 
 @export var appearance_dict: Dictionary = {}:
 	set(value):
@@ -90,6 +97,7 @@ var _locomotion := Vector2.ZERO          ## ground velocity asked for, m/s, the 
 var _loco_now := Vector2.ZERO            ## ...eased (SPEED_SMOOTH_S)
 var _sneaking := false
 var _sneak_w := 0.0
+var _move_w := 0.0                       ## gait against idle, eased over MOVE_BLEND_S
 var _gait_points: Array = []             ## [[clip, ground speed m/s, point name], ...] ascending
 var _clip_speed: Dictionary = {}         ## clip -> authored ground speed (sidecar `speed`)
 var _clip_cycle: Dictionary = {}         ## clip -> seconds per stride cycle
@@ -699,7 +707,10 @@ func set_locomotion(v: Vector2, sneaking: bool = false) -> void:
 
 ## What the Locomotion graph is set to for a ground velocity `v` (m/s, the body's frame) and a
 ## crouch weight 0..1, keyed by parameter path under the state. Pure, so tests can read it.
-func locomotion_params(v: Vector2, sneak_w: float) -> Dictionary:
+## `ground_speed` is the speed the stride has to match, when it is not `v`'s: the blend is
+## driven by a smoothed velocity so that it does not shake, but a foot on the ground has to keep
+## pace with the ground as it is this tick, not as it was a smoothing constant ago.
+func locomotion_params(v: Vector2, sneak_w: float, ground_speed := -1.0) -> Dictionary:
 	var speed := v.length()
 	var sideways := absf(v.x)
 	var ahead := absf(v.y)
@@ -724,8 +735,9 @@ func locomotion_params(v: Vector2, sneak_w: float) -> Dictionary:
 		lateral = sideways * absf(along) / maxf(sideways * absf(along) + ahead * strafe, 0.0001)
 	var stride := Vector2(strafe * (1.0 if right > 0.5 else -1.0) * lateral, along * (1.0 - lateral))
 	var natural := lerpf(along_rate, strafe_rate, lateral)
-	var rate := speed / maxf(stride.length(), 0.01)
-	rate = clampf(rate, natural * RATE_MIN, natural * RATE_MAX)
+	var pace := speed if ground_speed < 0.0 else ground_speed
+	var rate := pace / maxf(stride.length(), 0.01)
+	rate = clampf(rate, natural * RATE_MIN * smoothstep(MOVING_FROM, MOVING_FULL, pace), natural * RATE_MAX)
 	return {
 		"gait/blend_position": gait_value,
 		"fwd/blend_amount": sneak_w,
@@ -766,7 +778,9 @@ func _update_locomotion(delta: float) -> void:
 		return
 	_loco_now = _loco_now.lerp(_locomotion, 1.0 - exp(-delta / SPEED_SMOOTH_S))
 	_sneak_w = move_toward(_sneak_w, 1.0 if _sneaking else 0.0, delta / SNEAK_BLEND_S)
-	var p := locomotion_params(_loco_now, _sneak_w)
+	var p := locomotion_params(_loco_now, _sneak_w, _locomotion.length())
+	_move_w = move_toward(_move_w, smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length()), delta / MOVE_BLEND_S)
+	p["move/blend_amount"] = _move_w
 	for key in p:
 		anim_tree.set("parameters/%s/%s" % [LOCOMOTION_STATE, key], p[key])
 

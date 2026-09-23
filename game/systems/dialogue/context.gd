@@ -167,6 +167,12 @@ func quest_offers(npc: String) -> Array:
 	return r if typeof(r) == TYPE_ARRAY else []
 
 
+## Quests this person can start, as their giver: [{quest_id, text}] (QuestLog.giver_offers).
+func quest_starts(npc: String) -> Array:
+	var r: Variant = _call("quests", "giver_offers", [npc], [])
+	return r if typeof(r) == TYPE_ARRAY else []
+
+
 func quest_active(quest: String) -> bool:
 	return bool(_call("quests", "is_active", [quest], false))
 

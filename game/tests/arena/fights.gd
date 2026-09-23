@@ -8,10 +8,12 @@ extends Node3D
 ## The player is scripted, not good. It sees a telegraph a quarter second after it starts, and rolls
 ## so the blow lands a fifth of a second into the roll, inside the i-frames; it swings when nothing
 ## is about to land and it has a roll's stamina in hand, uses a heavy to finish a foe's poise, and
-## closes the distance otherwise, running when it is more than a step out of reach. It never
-## blocks, because no starting kit carries a shield, and it never heals, because the flask DESIGN
-## §5.5 refills at a Hearthstone does not exist yet and a loaf mends 8. So the numbers are a floor
-## for a patient player at level 1, not a measure of what anybody will feel.
+## closes the distance otherwise, running when it is more than a step out of reach. When a blow is
+## coming and it has not the stamina to roll, it raises its guard instead. It drinks from the
+## Hearth Flask (DESIGN §5.5) below 45% of its health when nothing is about to land, and it says
+## what its Calling knows: a ward before the fight and again when it breaks, a mending saying when it
+## is below 55% and the flask is dry, and a bolt at a foe out of reach. So the numbers are those of a
+## patient player at level 1 who uses what the Calling gave them, not of anybody's best.
 ##
 ## Flags: "trivial" is under TRIVIAL_SECONDS without a blow taken; "not won in 120 s" is a fight
 ## still going at the limit (the row says how much of the foes' health was left); "unwinnable for
@@ -41,10 +43,20 @@ const TRIVIAL_SECONDS := 8.0
 ## The enemies roll dice (which attack, whether to swing this frame); the dice are seeded so that
 ## a run can be repeated and a change measured against the run before it.
 const SEED := 5150
-const CALLINGS: Array[String] = ["core:calling/hearthkeeper", "core:calling/cragborn"]
+## Every Calling the Naming offers (DESIGN §5.1): each has to be able to live through the first
+## fights with what it starts with.
+const CALLINGS: Array[String] = ["core:calling/hearthkeeper", "core:calling/wayfarer", "core:calling/reedborn",
+	"core:calling/cragborn", "core:calling/ashwalker", "core:calling/lantern_clerk"]
+## Below this share of health the scripted player drinks, when it can.
+const DRINK_BELOW := 0.45
+## Below this it says a mending saying, when the flask is dry.
+const MEND_BELOW := 0.55
 ## One foe per archetype, the first a traveller meets: the start region's where it has one, then
 ## the next region by danger.
 const ROSTER := [
+	# The Naming's own fight (WORLD_BIBLE §10: "Fight ash-wights"): three of them, at level 1, for
+	# every Calling, before anybody has bought anything.
+	{"archetype": "naming", "enemy": "core:enemy/ash_wight", "count": 3},
 	{"archetype": "skirmisher", "enemy": "core:enemy/roadside_bandit", "count": 1},
 	{"archetype": "pack", "enemy": "core:enemy/down_wolf", "count": 3},
 	{"archetype": "brute", "enemy": "core:enemy/hedge_wight", "count": 1},
@@ -71,7 +83,12 @@ var _stats: Dictionary = {}
 var _sounds: Dictionary = {}         # sfx id -> times played, this fight
 var _parry_plan: Array[String] = []  # "inside", "outside" still to try, this fight
 var _trace := ""                     # --trace=<archetype>: print the fight twice a second
-var _partial := false                # --only=<archetype,...>: a check that never came up is not a failure
+var _partial := false                # --only= or --calling=: a check that never came up is not a failure
+var _kit: Dictionary = {}            # what this fight's player can say and drink (see _plan_kit)
+var _guard_until := -1.0             # holding the guard up against a blow it cannot roll from
+var _retreat_until := -1.0           # backing off to drink, until nothing is about to land
+var _retreat_again_at := -1.0        # when a retreat that found no quiet may be tried again
+var _chasing := false                 # sprinting to close on a foe out of reach, until in reach
 
 
 func _ready() -> void:
@@ -106,12 +123,14 @@ func _run() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--calling="):
 			only = a.substr(10)
+			# One Calling may never meet a check's occasion (a parry needs a parrying blade).
+			_partial = true
 		elif a.begins_with("--trace="):
 			_trace = a.substr(8)
 		elif a.begins_with("--only="):
 			archetypes = Array(a.substr(7).split(","))
 			_partial = true
-	print("FIGHTS: calling | archetype | enemy | outcome | time s | blows taken | damage taken | player hits/swings | dealt per hit | foe hp left | foes standing | rolled | staggered")
+	print("FIGHTS: calling | archetype | enemy | outcome | time s | blows taken | damage taken | player hits/swings | dealt per hit | foe hp left | foes standing | rolled | staggered | blocked | swallows | sayings")
 	for calling in CALLINGS:
 		if only != "" and not calling.ends_with(only):
 			continue
@@ -120,11 +139,11 @@ func _run() -> void:
 				continue
 			var r: Dictionary = await _fight(calling, fight)
 			results.append(r)
-			print("FIGHT | %s | %s | %s | %s | %.1f | %d | %.0f | %d/%d | %.1f | %.0f%% | %d/%d | %d | %d%s" % [
+			print("FIGHT | %s | %s | %s | %s | %.1f | %d | %.0f | %d/%d | %.1f | %.0f%% | %d/%d | %d | %d | %d | %d | %d%s" % [
 				Ids.name_of(calling), r["archetype"], Ids.name_of(str(r["enemy"])), r["outcome"], float(r["seconds"]),
 				int(r["blows"]), float(r["damage"]), int(r["landed"]), int(r["swings"]),
 				float(r["dealt"]) / maxf(float(r["landed"]), 1.0), float(r["left"]) * 100.0, int(r["standing"]), int(r["foes"]),
-				int(r["rolled"]), int(r["staggered"]),
+				int(r["rolled"]), int(r["staggered"]), int(r["blocked"]), int(r["swallows"]), int(r["sayings"]),
 				("  <- " + str(r["flag"])) if str(r["flag"]) != "" else ""])
 	_verdict()
 
@@ -146,7 +165,17 @@ func _fight(calling: String, fight: Dictionary) -> Dictionary:
 	_threats.clear()
 	_telegraphs.clear()
 	_taps.clear()
-	_stats = {"blows": 0, "damage": 0.0, "landed": 0, "swings": 0, "rolled": 0, "staggered": 0, "riposted": 0}
+	_stats = {"blows": 0, "damage": 0.0, "landed": 0, "swings": 0, "rolled": 0, "staggered": 0, "riposted": 0,
+		"blocked": 0, "swallows": 0, "sayings": 0}
+	_guard_until = -1.0
+	_retreat_until = -1.0
+	_retreat_again_at = -1.0
+	_chasing = false
+	_kit = _plan_kit(_player)
+	_player.caster.cast_released.connect(func(_id: String) -> void: _stats["sayings"] = int(_stats["sayings"]) + 1)
+	_player.state_changed.connect(func(_from: int, to: int) -> void:
+		if to == Player.State.DRINK:
+			_stats["swallows"] = int(_stats["swallows"]) + 1)
 	_sounds.clear()
 	if not Foley.played.is_connected(_on_sound):
 		Foley.played.connect(_on_sound)
@@ -167,8 +196,9 @@ func _fight(calling: String, fight: Dictionary) -> Dictionary:
 	if str(fight["archetype"]) == "pack":
 		_check_lock_on()
 	_player.hit_taken.connect(_on_player_hit)
+	if not EventBus.damage_dealt.is_connected(_on_damage):
+		EventBus.damage_dealt.connect(_on_damage)
 	var start_frame := Engine.get_physics_frames()
-	var hp_start := _player.health
 	var outcome := "timeout"
 	while true:
 		await get_tree().physics_frame
@@ -188,6 +218,8 @@ func _fight(calling: String, fight: Dictionary) -> Dictionary:
 	_release_all()
 	if _player.hit_taken.is_connected(_on_player_hit):
 		_player.hit_taken.disconnect(_on_player_hit)
+	if EventBus.damage_dealt.is_connected(_on_damage):
+		EventBus.damage_dealt.disconnect(_on_damage)
 	# What the player took off them, and what was left standing: a timeout reads very differently
 	# at 90% left than at 5%.
 	var dealt := 0.0
@@ -202,8 +234,9 @@ func _fight(calling: String, fight: Dictionary) -> Dictionary:
 	var r := {
 		"calling": calling, "archetype": fight["archetype"], "enemy": fight["enemy"], "outcome": outcome,
 		"dealt": dealt, "left": 1.0 - dealt / maxf(pool, 1.0), "standing": standing, "foes": _foes.size(),
-		"seconds": seconds, "blows": _stats["blows"], "damage": maxf(hp_start - _player.health, 0.0) if outcome != "lost" else hp_start,
+		"seconds": seconds, "blows": _stats["blows"], "damage": float(_stats["damage"]),
 		"landed": _stats["landed"], "swings": _stats["swings"], "rolled": _stats["rolled"], "staggered": _stats["staggered"],
+		"blocked": _stats["blocked"], "swallows": _stats["swallows"], "sayings": _stats["sayings"],
 	}
 	match outcome:
 		"lost": r["flag"] = "unwinnable for this player: it died"
@@ -233,15 +266,57 @@ func _make_player(calling: String, parent: Node) -> Player:
 	var bag := p.get_node("Inventory") as Inventory
 	var doll := p.get_node("Equipment") as Equipment
 	prog.apply_calling(calling, bag)
+	# What the Calling put in its hands: a blade if it has one, else its bow (the Wayfarer's).
+	var melee: ItemStack = null
+	var ranged: ItemStack = null
 	for s in bag.stacks():
-		if s.is_weapon() and not s.is_ranged():
-			doll.equip(s)
-			break
+		if s.is_weapon() and not s.is_ranged() and melee == null:
+			melee = s
+		elif s.is_weapon() and s.is_ranged() and ranged == null:
+			ranged = s
+	if melee != null:
+		doll.equip(melee)
+	elif ranged != null:
+		doll.equip(ranged)
 	for s in bag.stacks():
 		if s.is_armour():
 			doll.equip(s)
+	# A new character's flask, on the belt as the Naming leaves it.
+	Flask.ensure(bag, doll)
 	p.full_restore()
 	return p
+
+
+## What this player can say and drink: the belt slot the flask is on, and the Calling's sayings by
+## what they are for. The first bolt it knows is readied, as the sayings screen would leave it.
+func _plan_kit(p: Player) -> Dictionary:
+	var kit := {"flask_slot": -1, "bolt": "", "mend": "", "ward": "", "blade": "", "bow": ""}
+	var doll := p.get_node("Equipment") as Equipment
+	for st in (p.get_node("Inventory") as Inventory).stacks():
+		if st.is_weapon() and not st.is_ranged() and str(kit["blade"]).is_empty():
+			kit["blade"] = st.id
+		elif st.is_weapon() and st.is_ranged() and str(kit["bow"]).is_empty():
+			kit["bow"] = st.id
+	for i in Equipment.QUICK_SLOTS.size():
+		if Flask.is_flask(doll.quick_item(Equipment.QUICK_SLOTS[i])):
+			kit["flask_slot"] = i
+	var prog := p.get_node("Progression") as Progression
+	for id in prog.known_spells:
+		var def := ContentDB.get_or_empty(id)
+		for e in SpellRuntime.effects_of(def):
+			match str(e.get("type", "")):
+				"damage":
+					if str(kit["bolt"]).is_empty() and str(def.get("cast_type", "")) in ["projectile", "target"]:
+						kit["bolt"] = id
+				"heal":
+					if str(kit["mend"]).is_empty() and str(def.get("cast_type", "")) == "self":
+						kit["mend"] = id
+				"shield":
+					if str(kit["ward"]).is_empty() and str(def.get("cast_type", "")) == "self":
+						kit["ward"] = id
+	if not str(kit["bolt"]).is_empty():
+		p.equip_spell(str(kit["bolt"]))
+	return kit
 
 
 func _watch_foe(e: Node3D) -> void:
@@ -311,12 +386,20 @@ func _check_heard(archetype: String, died: bool, blows_landed: int) -> void:
 	for id: String in _sounds:
 		if id.begins_with("footstep_"):
 			steps += int(_sounds[id])
-		elif id.ends_with("_swing") or id.begins_with("sword_swing") or id.begins_with("axe_swing") or id.begins_with("mace_swing"):
+		elif id.ends_with("_swing") or id.begins_with("sword_swing") or id.begins_with("axe_swing") or id.begins_with("mace_swing") \
+				or id == "bow_release" or id.begins_with("spell_cast_"):
 			whooshes += int(_sounds[id])
 		elif id.begins_with("impact_") or id == "block_clang" or id == "parry_clang":
 			impacts += int(_sounds[id])
 	var ok := steps > 0 and whooshes > 0 and (impacts > 0 or blows_landed == 0) and (not died or _sounds.has("player_death"))
 	_mark("heard", ok, "" if ok else "%s: %d steps, %d swings, %d blows heard, death %s" % [archetype, steps, whooshes, impacts, str(_sounds.has("player_death"))])
+
+
+## Everything that reached the player's health or ward, before a swallow or a saying put any back:
+## "damage taken" is what the fight cost, not what was left of it at the end.
+func _on_damage(_attacker: Node, victim: Node, amount: float, _kind: String) -> void:
+	if victim == _player and _player != null:
+		_stats["damage"] = float(_stats["damage"]) + amount
 
 
 func _on_player_hit(hit: HitData, outcome: String) -> void:
@@ -326,6 +409,8 @@ func _on_player_hit(hit: HitData, outcome: String) -> void:
 		_mark("dodge", true, "")
 	if outcome == "hit" or outcome == "blocked":
 		_stats["blows"] = int(_stats["blows"]) + 1
+	if outcome == "blocked":
+		_stats["blocked"] = int(_stats["blocked"]) + 1
 	# Every blow that reached the player was telegraphed for as long as its attack says.
 	if attacker == null or not is_instance_valid(attacker):
 		return
@@ -394,6 +479,10 @@ func _decide() -> void:
 	var dist := tto.length()
 	p.camera_rig.yaw = atan2(-tto.x, -tto.z)
 	var now := Actor.now()
+	# A guard raised against a blow it could not roll from stays up until the blow has passed.
+	if now < _guard_until and p.state == Player.State.FREE and p.stamina > 0.0:
+		_held["block"] = true
+		return
 	# What is about to land, that the player has seen and that can reach them.
 	var threat := {}
 	var kept: Array[Dictionary] = []
@@ -427,18 +516,48 @@ func _decide() -> void:
 				_tap("block", 2)
 				_check_parry_later(plan, target)
 				return
-		elif until <= ROLL_LEAD and p.stamina > 0.0 and p.state in [Player.State.FREE, Player.State.ATTACK]:
+		elif until <= ROLL_LEAD and p.stamina >= p.dodge_cost() and p.state in [Player.State.FREE, Player.State.ATTACK]:
 			threat["handled"] = true
 			_tap("dodge", 2)
+			return
+		elif until <= ROLL_LEAD and p.stamina > 0.0 and p.state == Player.State.FREE:
+			# Not the stamina for a roll: take it on the guard, which costs less than the blow.
+			threat["handled"] = true
+			_guard_until = float(threat["lands"]) + 0.15
+			_held["block"] = true
 			return
 	# A foe a parry opened is ripe for the riposte.
 	if target.is_riposte_open() and dist <= Player.RIPOSTE_RANGE and p.state == Player.State.FREE:
 		_tap("attack_light", 2)
 		return
 	var danger_soon := false
+	var calm := true
 	for t in _threats:
 		if float(t["lands"]) - now < 0.6 and not bool(t["handled"]):
 			danger_soon = true
+		if float(t["lands"]) - now < 1.3 and not bool(t["handled"]):
+			calm = false
+	if p.state == Player.State.FREE and calm and _mend_or_say(p, dist, reach_now):
+		return
+	# Hurt, with something to drink or say, and no quiet to do it in: back off for a moment and
+	# find some, as anybody would, rather than trade blows below half.
+	if not calm and p.state == Player.State.FREE and _wants_mending(p) and now >= _retreat_again_at:
+		if _retreat_until < 0.0:
+			_retreat_until = now + 2.5
+		if now < _retreat_until:
+			_held["move_back"] = true
+			if p.stamina > p.dodge_cost() * 2.0:
+				_held["sprint"] = true
+			return
+		_retreat_until = -1.0
+		_retreat_again_at = now + 4.0
+	if calm:
+		_retreat_until = -1.0
+	if _take_up_for(p, dist):
+		return
+	if weapon.is_ranged():
+		_shoot(p, dist, danger_soon)
+		return
 	var reserve := DamageModel.STAMINA_DODGE if not danger_soon else DamageModel.STAMINA_DODGE + light_cost
 	if dist <= reach_now and p.state == Player.State.FREE and not danger_soon:
 		var heavy_poise := weapon.poise_damage * DamageModel.HEAVY_POISE_MULT
@@ -448,10 +567,105 @@ func _decide() -> void:
 			_tap("attack_light", 2)
 	if dist > reach_now * 0.85:
 		_held["move_forward"] = true
-		# Out of reach by more than a step, and with two rolls and a swing to spare: run. A caster
-		# that keeps its distance backs off at about 3 m/s, which a walk (4.2 m/s) barely gains on.
-		if dist > reach_now * 1.6 and p.stamina > DamageModel.STAMINA_DODGE * 2.0 + light_cost:
+		# Out of reach, and with two rolls and a swing to spare: run, and keep running until in
+		# reach or down to a roll's stamina. Locked on, the body strafes at Player.STRAFE_SPEED
+		# (2.6 m/s), and a caster that keeps its distance backs off at about 3 m/s, so only a
+		# sprint (which breaks the strafe) closes on it; a sprint of a frame at a time, started and
+		# stopped at one stamina figure, never did.
+		var fresh := p.stamina > DamageModel.STAMINA_DODGE * 2.0 + light_cost
+		_chasing = dist > reach_now and (fresh or (_chasing and p.stamina > DamageModel.STAMINA_DODGE))
+		if _chasing:
 			_held["sprint"] = true
+	else:
+		_chasing = false
+
+
+## What the Calling gave it, used when nothing is about to land: the flask below half, a mending
+## saying when the flask is dry, a ward when none is up, a bolt at a foe out of reach. True when it
+## did one of them this frame.
+func _mend_or_say(p: Player, dist: float, reach_now: float) -> bool:
+	var hp := p.health / maxf(p.max_health, 1.0)
+	var slot := int(_kit.get("flask_slot", -1))
+	var swallows := Flask.charges(Flask.find(p.get_node("Inventory") as Inventory)) if slot >= 0 else 0
+	if hp < DRINK_BELOW and swallows > 0:
+		_tap("quick_%d" % (slot + 1), 2)
+		return true
+	var mend := str(_kit.get("mend", ""))
+	if hp < MEND_BELOW and swallows <= 0 and _can_say(p, mend):
+		p.equip_spell(mend)
+		_tap("cast", 2)
+		return true
+	var ward := str(_kit.get("ward", ""))
+	if p.shield_hp <= 0.0 and _can_say(p, ward):
+		p.equip_spell(ward)
+		_tap("cast", 2)
+		return true
+	var bolt := str(_kit.get("bolt", ""))
+	if dist > reach_now and _can_say(p, bolt) and dist < SpellRuntime.range_of(ContentDB.get_or_empty(bolt)) - 1.0:
+		p.equip_spell(bolt)
+		_tap("cast", 2)
+		return true
+	return false
+
+
+func _wants_mending(p: Player) -> bool:
+	var hp := p.health / maxf(p.max_health, 1.0)
+	var slot := int(_kit.get("flask_slot", -1))
+	var swallows := Flask.charges(Flask.find(p.get_node("Inventory") as Inventory)) if slot >= 0 else 0
+	if hp < DRINK_BELOW and swallows > 0:
+		return true
+	return hp < MEND_BELOW and swallows <= 0 and _can_say(p, str(_kit.get("mend", "")))
+
+
+## A Calling with a bow and a blade (the Wayfarer) uses the bow while the foe is well off and has
+## arrows to spare, and the blade when it has closed; swapping costs a frame, as the belt does.
+## True when it changed hands this frame.
+func _take_up_for(p: Player, dist: float) -> bool:
+	var bow := str(_kit.get("bow", ""))
+	var blade := str(_kit.get("blade", ""))
+	if bow.is_empty() or blade.is_empty() or p.state != Player.State.FREE:
+		return false
+	var want := bow if dist > 7.0 else blade
+	if p.weapon.is_ranged() and not p._draw_ammo(false).is_empty() and dist > 3.5:
+		want = bow
+	if want == bow and p._draw_ammo(false).is_empty() and p.weapon.item_id != bow:
+		want = blade
+	if p.weapon.item_id == want:
+		return false
+	var doll := p.get_node("Equipment") as Equipment
+	doll.equip((p.get_node("Inventory") as Inventory).find_first(want))
+	return true
+
+
+## A bow in the hands: keep a few metres off, draw to full and loose at the locked foe, and when
+## the quiver is empty put the bow away and use the fists.
+func _shoot(p: Player, dist: float, danger_soon: bool) -> void:
+	if p._draw_ammo(false).is_empty():
+		p.equip_weapon("")
+		return
+	if p.state == Player.State.BOW:
+		# Hold the string until the draw is full, then let go: the arrow flies on the release.
+		if Actor.now() - p._bow_draw_start < p.weapon.draw_time() and not danger_soon:
+			_held["attack_light"] = true
+		return
+	if p.state != Player.State.FREE:
+		return
+	if dist < 4.0:
+		_held["move_back"] = true
+		if p.stamina > p.dodge_cost() * 2.0:
+			_held["sprint"] = true
+		return
+	if dist > 28.0:
+		_held["move_forward"] = true
+		return
+	if not danger_soon:
+		_held["attack_light"] = true
+
+
+func _can_say(p: Player, spell_id: String) -> bool:
+	if spell_id.is_empty() or not p.knows_spell(spell_id):
+		return false
+	return p.caster.mana >= p.caster.cost_for(ContentDB.get_or_empty(spell_id))
 
 
 func _tap(action: String, frames: int) -> void:

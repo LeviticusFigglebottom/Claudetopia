@@ -187,6 +187,49 @@ func _proportional_timing(attack_kind: String, index: int = 0) -> Dictionary:
 	return {"length": length, "events": [{"t": length * hs, "name": "hit_start"}, {"t": length * he, "name": "hit_end"}, {"t": length * co, "name": "cancel_ok"}]}
 
 
+# --- what the wielder's perks change -------------------------------------------------------------
+
+## The wielder's modifier table (Actor.stat_mods), or null for a body with none.
+func _mods() -> Modifiers:
+	if owner_actor != null and is_instance_valid(owner_actor) and owner_actor.has_method("stat_mods"):
+		return owner_actor.call("stat_mods") as Modifiers
+	return null
+
+
+func _mult(stat: String) -> float:
+	var m := _mods()
+	return m.get_mult(stat) if m != null else 1.0
+
+
+func _add(stat: String) -> float:
+	var m := _mods()
+	return m.get_add(stat) if m != null else 0.0
+
+
+## The damage multiplier of the skill this weapon trains: Warden's Grip for a one-handed blade
+## (`damage_one_handed`), Wide Sweep for a two-handed one, Steady Breath for a bow or a crossbow
+## (`damage_archery`).
+func skill_damage_mult() -> float:
+	return _mult("damage_" + skill_id)
+
+
+## `damage` and `poise_damage` carry the stack's temper at the base 10% a tier (configure). Red Door
+## makes every tier worth 15%, so the swing scales by the difference, read when it is swung so a
+## perk taken with the blade in hand counts at once.
+func temper_perk_scale() -> float:
+	var tiers := float(int(data.get("temper", 0)))
+	var extra := _add("temper_bonus")
+	if tiers <= 0.0 or is_zero_approx(extra):
+		return 1.0
+	var base := 1.0 + ItemStack.TEMPER_BONUS_PER_TIER * tiers
+	return (base + extra * tiers) / base
+
+
+## Seconds to full draw: the bow's `draw_time`, shortened by Fernhold Draw (draws 15% faster).
+func draw_time() -> float:
+	return maxf(float(ranged.get("draw_time", 0.7)) / maxf(_mult("bow_draw_speed"), 0.01), 0.1)
+
+
 ## Attack multiplier before crits: chain position for lights, 1.6 · charge for heavies.
 func attack_mult(attack_kind: String, index: int = 0, charge_ratio: float = 0.0) -> float:
 	match attack_kind:
@@ -198,24 +241,35 @@ func attack_mult(attack_kind: String, index: int = 0, charge_ratio: float = 0.0)
 			return DamageModel.light_chain_mult(index)
 
 
+## What an attack takes out of the wielder. Bell Swing cheapens every heavy; Quick Steel cheapens
+## the lights of a one-handed weapon (a bow's loose is not a light attack, whatever it costs).
 func stamina_cost(attack_kind: String) -> float:
 	match attack_kind:
 		"riposte", "backstab":
 			return 0.0
+		"heavy":
+			return DamageModel.attack_stamina(attack_kind, block) * _mult("stamina_cost_heavy")
 		_:
-			return DamageModel.attack_stamina(attack_kind, block)
+			var cost := DamageModel.attack_stamina(attack_kind, block)
+			if skill_id == "one_handed" and ranged.is_empty():
+				cost *= _mult("stamina_cost_light")
+			return cost
 
 
 ## Builds the HitData for one swing. `skill` is the wielder's skill level for this weapon.
 func build_hit(attack_kind: String, index: int, charge_ratio: float, skill: float, crit_kind: String = "") -> HitData:
 	var h := HitData.new()
-	h.amount = DamageModel.raw_damage(damage, skill, attack_mult(attack_kind, index, charge_ratio), 1.0)
+	var tempered := temper_perk_scale()
+	h.amount = DamageModel.raw_damage(damage * tempered, skill, attack_mult(attack_kind, index, charge_ratio), 1.0) * skill_damage_mult()
 	h.kind = kind
 	h.heavy = attack_kind == "heavy"
-	h.poise_damage = poise_damage
+	h.poise_damage = poise_damage * tempered * _mult("poise_damage_" + skill_id)
 	h.attacker = owner_actor
 	h.crit_kind = crit_kind
 	h.crit_mult = DamageModel.crit_multiplier(crit_kind, weapon_class)
+	if crit_kind == "sneak":
+		# Unsaid: a sneak attack multiplies by one more (×3 → ×4, a dagger's ×6 → ×7).
+		h.crit_mult += _add("sneak_attack_mult")
 	if crit_kind == "riposte" or crit_kind == "backstab":
 		h.blockable = false
 		h.parryable = false

@@ -10,10 +10,12 @@ a different UV layout and repainted textures, though the vertex positions were i
 writes <out.glb> as <base.glb> in every respect except its animations, which are the donor's.
 Bake the clips into a scratch copy (the whole rig), then transplant them onto the committed GLB.
 
-Both files must have the same nodes in the same order with the same rest transforms, because a
-glTF animation channel addresses its bone by node index. The script refuses otherwise. It then
-reads the result back and checks that every mesh attribute, index list, skin and image is
-byte-for-byte the base's and every animation is the donor's.
+A glTF animation channel addresses its bone by node index, so each channel is moved onto the
+base's node of the same name, and every bone the donor animates must stand in the base at the
+same rest transform: the script refuses otherwise. The donor may be the whole rig or the bare
+armature that tools/forge/bake_clips.py exports in seconds. The script then reads the result back
+and checks that every mesh attribute, index list, skin and image is byte-for-byte the base's and
+every animation is the donor's.
 
 Pure Python (json, struct, numpy); no Blender.
 """
@@ -69,28 +71,41 @@ def _view_bytes(js: dict, binc: bytes, vi: int) -> bytes:
     return binc[v.get("byteOffset", 0): v.get("byteOffset", 0) + v["byteLength"]]
 
 
-def same_skeleton(jb: dict, jd: dict) -> str:
-    nb, nd = jb["nodes"], jd["nodes"]
-    if len(nb) != len(nd):
-        return "node counts differ: %d vs %d" % (len(nb), len(nd))
-    for a, b in zip(nb, nd):
-        if a.get("name") != b.get("name"):
-            return "node %s vs %s" % (a.get("name"), b.get("name"))
-        for k in ("translation", "rotation", "scale"):
-            va, vb = a.get(k), b.get(k)
-            if (va is None) != (vb is None):
-                return "node %s: %s is in one file only" % (a.get("name"), k)
-            if va is not None and max(abs(x - y) for x, y in zip(va, vb)) > 1e-6:
-                return "node %s: %s differs" % (a.get("name"), k)
-        if a.get("children") != b.get("children"):
-            return "node %s: children differ" % a.get("name")
-    if [s["joints"] for s in jb.get("skins", [])] != [s["joints"] for s in jd.get("skins", [])]:
-        return "skin joints differ"
-    return ""
+_REST = {"translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0]}
+
+
+def node_map(jb: dict, jd: dict) -> Tuple[Dict[int, int], str]:
+    """For every node the donor's animations address: the base's node of the same name. Returns
+    ({donor index: base index}, "") or ({}, why not), when a bone is missing from the base, is
+    named twice there, or stands at another rest transform."""
+    by_name: Dict[str, int] = {}
+    for i, n in enumerate(jb["nodes"]):
+        name = str(n.get("name", ""))
+        by_name[name] = -1 if name in by_name else i
+    out: Dict[int, int] = {}
+    for an in jd.get("animations", []):
+        for ch in an["channels"]:
+            di = ch["target"].get("node")
+            if di is None or di in out:
+                continue
+            dn = jd["nodes"][di]
+            name = str(dn.get("name", ""))
+            bi = by_name.get(name)
+            if bi is None:
+                return {}, "the base has no node %s" % name
+            if bi < 0:
+                return {}, "the base has two nodes called %s" % name
+            bn = jb["nodes"][bi]
+            for k, rest in _REST.items():
+                va, vb = bn.get(k, rest), dn.get(k, rest)
+                if max(abs(x - y) for x, y in zip(va, vb)) > 1e-5:
+                    return {}, "%s stands at another %s in the donor" % (name, k)
+            out[di] = bi
+    return out, ""
 
 
 def transplant(jb: dict, bb: bytes, jd: dict, bd: bytes) -> Tuple[dict, bytes]:
-    why = same_skeleton(jb, jd)
+    nodes, why = node_map(jb, jd)
     if why:
         raise SystemExit("not the same skeleton: " + why)
     out = copy.deepcopy(jb)
@@ -143,6 +158,9 @@ def transplant(jb: dict, bb: bytes, jd: dict, bd: bytes) -> Tuple[dict, bytes]:
         for s in an["samplers"]:
             s["input"] = add_acc(jd, bd, s["input"], ad, vd)
             s["output"] = add_acc(jd, bd, s["output"], ad, vd)
+        for ch in an["channels"]:
+            if ch["target"].get("node") is not None:
+                ch["target"]["node"] = nodes[ch["target"]["node"]]
     out["animations"] = anims
     out["accessors"] = accs
     out["bufferViews"] = views
@@ -184,6 +202,11 @@ def verify(jb: dict, bb: bytes, jd: dict, bd: bytes, jo: dict, bo: bytes) -> Lis
     for ad_, ao in zip(jd.get("animations", []), jo.get("animations", [])):
         if ad_.get("name") != ao.get("name") or len(ad_["samplers"]) != len(ao["samplers"]):
             bad.append("animation %s" % ad_.get("name"))
+            continue
+        targets_d = [(jd["nodes"][c["target"]["node"]].get("name"), c["target"]["path"]) for c in ad_["channels"]]
+        targets_o = [(jo["nodes"][c["target"]["node"]].get("name"), c["target"]["path"]) for c in ao["channels"]]
+        if targets_d != targets_o:
+            bad.append("animation %s targets" % ad_.get("name"))
             continue
         for sd, so in zip(ad_["samplers"], ao["samplers"]):
             if _accessor_bytes(jd, bd, sd["input"]) != _accessor_bytes(jo, bo, so["input"]) or \

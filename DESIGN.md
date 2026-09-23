@@ -193,9 +193,10 @@ land, the stakes, then you — and it is about ninety seconds long.
   heath's enemies afresh on every build, so a test holds the waystones against the spawns of
   the build on disk and names the leg to move. The Naming runs: `wake` (speak to
   the Warden, who gives you the road) → `the_choir` (walk the waystones to the Sunken Choir) →
-  `ash_wights` → `hearthstone` (Pilgrim's Ash) → `the_cart`. Standing at the start completes
-  nothing. The Warden is kept at her fire by her npc def's `holds`, from the moment a new game
-  is named until you reach the Choir, and then she goes back to her own days.
+  `ash_wights` (three, among the Choir's feet) → `hearthstone` (Pilgrim's Ash) → `the_cart`.
+  Standing at the start completes nothing. The Warden is kept at her fire by her npc def's
+  `holds`, from the moment a new game is named until you reach the Choir, and then she goes
+  back to her own days.
 * **The rules it keeps.** Every camera is placed relative to a place and to the ground under
   it, never at a stored height, and a test samples every path against the built terrain and
   its scatter. No shot looks south from the Hushline: the world ends 200 m past the Stair.
@@ -225,7 +226,10 @@ land, the stakes, then you — and it is about ninety seconds long.
   stops and does not start again until a quarter of the pool is back). Sneak 1.5 m/s; locked on
   or blocking 2.6 m/s (×0.6 while blocking). Rest to a jog in 0.31 s (16 m/s², then 7 m/s² on to
   a sprint); a jog stops in 0.25 s over 0.6 m (20 m/s²), a sprint in 0.48 s over 2.1 m
-  (12 m/s² down to a jog). Sprint dodge-roll.
+  (12 m/s² down to a jog).
+* The roll (§5.3) is a tap of Sprint: Shift let go within 0.22 s rolls, held it sprints, and
+  the sprint waits out those 0.22 s so a tap is not a lurch and then a roll. Ctrl rolls too, and
+  B on a pad; Space jumps. The tap can be turned off, and is off while Sprint is a toggle.
 * The legs keep pace with the ground. Each gait has its own clip made at its speed (Walk,
   Run for the jog, Sprint, Sneak_Walk). All of them share one stride phase and are played at
   ground speed over stride (0.5–1.6 times as made), so a planted foot stays planted through
@@ -239,7 +243,7 @@ land, the stakes, then you — and it is about ninety seconds long.
   never with the body; the compass reads the camera.
 * First-person (arms visible) and third-person (orbit, shoulder offset, lock-on
   framing). `V` / right-stick click toggles. Third person sits 3.6 m behind a pivot 1.55 m up
-  and 0.4 m over the shoulder, and follows with a gentle lag (about 0.36 m at a jog). A sprint
+  and 0.4 m over the shoulder, and follows with a gentle lag (about 0.25 m at a jog). A sprint
   draws it back 0.5 m and widens the view 7°, eased in and out. Collision pulls the camera in at
   once and lets it back out over about 0.35 s. Physics is interpolated, so bodies moved at 60 Hz
   are smooth at any refresh rate; the camera, the compass and anything moved per frame read the
@@ -402,6 +406,12 @@ land, the stakes, then you — and it is about ninety seconds long.
   high places (surveying at vistas) and by buying charts.
 * HUD: health/stamina/mana bars, quick slots, lock-on reticle, subtle prompts.
   Hides when idle. Everything themed (see §7).
+* The first minutes teach the controls. A strip low in the middle of the HUD names what a new
+  player reaches for (move, sprint, roll, jump, use, strike, block) with the keys bound at that
+  moment, or the pad's buttons while a pad is in use. Each thing goes once it has been done, and
+  the strip goes when nothing is left or after fifteen minutes of play. What was learned is kept
+  with the game, so a new game is taught again; the Hints setting turns the strip off.
+  The pause page reaches "How to move and fight", every control on one page as bound now.
 * Menus: inventory (paper-doll), journal (quests, rumours, bestiary, books read),
   map, skills/perks, settings (video, audio, controls with rebinding, gameplay),
   save/load slots.

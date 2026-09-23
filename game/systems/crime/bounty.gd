@@ -28,7 +28,13 @@ var history: Array[Dictionary] = []   # {kind, key, severity, day, hour, witness
 static func ensure() -> Bounty:
 	if instance != null and is_instance_valid(instance):
 		return instance
-	return Service.ensure(load("res://systems/crime/bounty.gd"), "Bounty") as Bounty
+	# A stand-in added and freed elsewhere (a test's own registry) clears `instance` as it leaves
+	# while the real one stays at the root; finding that one again makes it the instance again,
+	# or every caller of `instance` after it reads a null.
+	var found := Service.ensure(load("res://systems/crime/bounty.gd"), "Bounty") as Bounty
+	if found != null:
+		instance = found
+	return found
 
 
 func _enter_tree() -> void:

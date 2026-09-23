@@ -88,6 +88,12 @@ var invulnerable_from: float = -100.0
 var invulnerable_until: float = -100.0
 var stunned_until: float = -100.0
 var last_attacker: Node = null
+## The skill behind the last blow that reached this body ("kindling" for a Kindling saying): a foe
+## that dies of a Kindling word gives up its last warmth as an Ember Mote (DESIGN §5.8).
+var last_hit_skill: String = ""
+## Ammunition that struck this body and survived it, item id -> count: what can be pulled back
+## out of the body once it has fallen (LootDrops hands it over with the rest of the loot).
+var lodged: Dictionary = {}
 ## The shove still to be spent, as a speed (m/s) that SHOVE_DECEL runs down. See integrate_shove.
 var shove: Vector3 = Vector3.ZERO
 var gravity: float = 9.81
@@ -335,6 +341,46 @@ func speed_multiplier() -> float:
 	return status.speed_multiplier() if status else 1.0
 
 
+# --- what perks, potions and worn enchantments change ---------------------------------------------
+
+## The modifier table this body's perks, potions and worn enchantments feed (Progression.mods), or
+## null for a body that has none (an enemy, a test double). A perk's promise is kept by reading its
+## stat through here at the moment the thing it names happens.
+func stat_mods() -> Modifiers:
+	return null
+
+
+## Product of every multiplier on `stat` (1 for a body with no table).
+func stat_mult(stat: String) -> float:
+	var m := stat_mods()
+	return m.get_mult(stat) if m != null else 1.0
+
+
+## Sum of every addition to `stat` (0 for a body with no table).
+func stat_add(stat: String) -> float:
+	var m := stat_mods()
+	return m.get_add(stat) if m != null else 0.0
+
+
+## How long before a blow a raised guard still turns it into a parry: DESIGN §5.3's 0.18 s, widened
+## by whatever widens it (Ready Answer: +0.06 s).
+func parry_window() -> float:
+	return DamageModel.PARRY_WINDOW + stat_add("parry_window")
+
+
+## This body's resistance to a kind of harm: its own, plus what a potion or a worn enchantment adds
+## (`resist_fire` +0.25 from a Resist Fire draught).
+func resist_to(kind: String) -> float:
+	return DamageModel.resist_of(resists, kind) + stat_add("resist_" + kind)
+
+
+## An arrow or bolt that struck this body and can be recovered from it once it has fallen.
+func lodge(item_id: String, count: int = 1) -> void:
+	if item_id.is_empty() or count <= 0:
+		return
+	lodged[item_id] = int(lodged.get(item_id, 0)) + count
+
+
 # --- hit resolution -----------------------------------------------------------------------------
 
 ## Resolves one incoming hit. Returns "dead", "dodged", "parried", "blocked" or "hit".
@@ -349,7 +395,8 @@ func take_hit(hit: HitData) -> String:
 	var facing := DamageModel.is_facing(forward(), to_origin)
 	if hit.attacker != null and hit.attacker != self:
 		last_attacker = hit.attacker
-	if hit.parryable and can_parry and facing and DamageModel.parry_succeeds(parry_pressed_at, t):
+	last_hit_skill = hit.skill_id
+	if hit.parryable and can_parry and facing and DamageModel.parry_succeeds(parry_pressed_at, t, parry_window()):
 		parry_pressed_at = -100.0
 		if hit.attacker is Actor and is_instance_valid(hit.attacker):
 			(hit.attacker as Actor).open_riposte(DamageModel.RIPOSTE_OPEN_DURATION)
@@ -360,7 +407,7 @@ func take_hit(hit: HitData) -> String:
 	if hit.blockable and is_blocking and facing:
 		var raw := hit.amount * hit.crit_mult
 		var through := DamageModel.block_damage(raw, block_stability)
-		var final := DamageModel.apply_defence(through, armour_flat, DamageModel.resist_of(resists, hit.kind))
+		var final := DamageModel.apply_defence(through, armour_flat, resist_to(hit.kind))
 		stamina_comp.spend(DamageModel.block_stamina_cost(raw, block_stability))
 		_apply_damage(final, hit.kind, hit.attacker, hit.label)
 		if dead:
@@ -377,7 +424,7 @@ func take_hit(hit: HitData) -> String:
 		hit_taken.emit(hit, "blocked")
 		return "blocked"
 	var raw_full := hit.amount * hit.crit_mult
-	var dmg := DamageModel.apply_defence(raw_full, armour_flat, DamageModel.resist_of(resists, hit.kind))
+	var dmg := DamageModel.apply_defence(raw_full, armour_flat, resist_to(hit.kind))
 	# The blow lands on whatever the body is made of: flesh, mail, stone or wood.
 	Foley.play("impact_" + body_material, _struck_at())
 	_apply_damage(dmg, hit.kind, hit.attacker, hit.label)
@@ -552,6 +599,8 @@ func die(killer: Node = null) -> void:
 ## Brings a dead actor back at full strength (respawn / hearthstone reset).
 func revive() -> void:
 	dead = false
+	lodged.clear()
+	last_hit_skill = ""
 	hurtbox.set_enabled(true)
 	anim.stop()
 	full_restore()
@@ -580,7 +629,7 @@ func _on_poise_broken() -> void:
 func _on_status_damage(id: String, amount: float, kind: String) -> void:
 	if dead:
 		return
-	var dmg := maxf(amount * (1.0 - DamageModel.resist_of(resists, kind)), 0.0)
+	var dmg := maxf(amount * (1.0 - resist_to(kind)), 0.0)
 	if dmg > 0.0:
 		_apply_damage(dmg, kind, last_attacker if is_instance_valid(last_attacker) else null, "status:" + id)
 

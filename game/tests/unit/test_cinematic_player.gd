@@ -11,7 +11,10 @@ extends TestCase
 
 const WORLD_SCENE := "res://world/world.tscn"
 const OPENING := "core:cinematic/opening"
-const SLOT := "test_cinematic_opening"
+## Every checkout on a machine shares one `user://saves`, and two suites run at once each wrote,
+## read and deleted the same slot: one run's clean-up took the save out from under the other's
+## Continue. The process id keeps this run's slot its own.
+var _slot := "test_cinematic_opening_%d" % OS.get_process_id()
 const BUSES := ["Master", "Music", "SFX", "Ambience", "UI", "Voice"]
 const FAST := 60.0
 ## Real seconds any one run may take before the test gives up on it rather than hang the suite.
@@ -39,7 +42,7 @@ func before_each() -> void:
 func after_each() -> void:
 	CinematicPlayer.headless_allowed = false
 	Settings.set_value("gameplay", "play_opening", _setting_was, false)
-	SaveSystem.delete_slot(SLOT)
+	SaveSystem.delete_slot(_slot)
 
 
 func _world() -> World:
@@ -243,12 +246,12 @@ func test_a_new_game_plays_the_opening_and_a_continue_does_not() -> void:
 		Settings.set_value("gameplay", "play_opening", false, false)
 		assert_false(CinematicPlayer.should_play(OPENING), "unless the player has said never again")
 		Settings.set_value("gameplay", "play_opening", true, false)
-	assert_eq(SaveSystem.save_to_slot(SLOT), OK)
+	assert_eq(SaveSystem.save_to_slot(_slot), OK)
 	await _drop(w)
 	# Continue: the same character read back from the slot
 	Social.reset_for_new_game()
 	GameState.reset_for_new_game(12)
-	GameState.set_flag("_pending_load_slot", SLOT)
+	GameState.set_flag("_pending_load_slot", _slot)
 	w = _world()
 	await w.world_ready
 	var again := await _wait_for_cinematic(4.0)

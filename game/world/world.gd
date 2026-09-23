@@ -31,6 +31,8 @@ var fallback: FallbackTerrain = null
 var terrain_mode := ""
 ## `WorldStatus.current()` as this world found it: whether there is a world, and what draws it.
 var status: Dictionary = {}
+## The corner plate and the arrival card that say the ground is the coarse one (fallback only).
+var ground_notice: GroundNotice = null
 var atmosphere: Node = null
 var night_lights: NightLights = null
 var fly_camera: FlyCamera = null
@@ -99,7 +101,9 @@ func _ready() -> void:
 	is_world_ready = true
 	Log.info("World", "ready: terrain=%s, %d pois, target=%s"
 		% [terrain_mode if not terrain_mode.is_empty() else "none", _pois.size(), target.name if target else "none"])
-	if terrain_mode == "fallback" and not str(status.get("notice", "")).is_empty():
+	if terrain_mode == "fallback":
+		ground_notice = GroundNotice.make(status)
+		add_child(ground_notice)
 		EventBus.player_spawned.connect(_say_the_ground_is_coarse, CONNECT_ONE_SHOT)
 	world_ready.emit()
 
@@ -126,6 +130,12 @@ func _setup_terrain() -> void:
 		status["terrain"] = "fallback"
 		status["reason"] = "terrain_unreadable"
 		status["title"] = "The full terrain could not be read."
+		status["detail"] = ("Terrain3D read no regions from the files in game/terrain_data (another Terrain3D version, "
+				+ "or a copy cut short), so the ground is drawn from the coarse 8 m height map, which is why it looks plain and grey. "
+				+ "Build the terrain again with the command below. It needs %s.") % WorldStatus.BUILD_NEEDS
+		status["command"] = WorldStatus.BUILD_COMMAND
+		status["announce"] = true
+		status["badge"] = WorldStatus.badge_line("terrain_unreadable", WorldStatus.BUILD_COMMAND)
 		status["notice"] = ("The full terrain is not drawn here: you are walking on the coarse ground. "
 				+ "(Terrain3D read no regions from game/terrain_data: %s builds them again.)") % WorldStatus.BUILD_COMMAND
 	Log.warn("World", "%s Drawing the ground from the runtime height map." % str(status.get("title", "")))
@@ -149,14 +159,16 @@ func _setup_fallback() -> void:
 	fallback = null
 
 
-## The coarse ground is the country, but not all of it, and the player is owed a word about why.
-## Said once the fade is up, or it lands under the loading sheet where nobody reads it.
+## The coarse ground is the country, but not all of it, and the player is owed the account of why:
+## the card across the top once the fade is up (under the loading sheet nobody reads it), and the
+## plate in the corner for as long as they walk on it (GroundNotice). A toast used to say it, once,
+## and a player played for days on the coarse ground without seeing it.
 func _say_the_ground_is_coarse(_player: Node) -> void:
 	var deadline := Time.get_ticks_msec() + 60000
 	while is_inside_tree() and UI.is_faded_out() and Time.get_ticks_msec() < deadline:
 		await get_tree().process_frame
-	if is_inside_tree():
-		EventBus.emit_notify(str(status.get("notice", "")), "warning")
+	if is_inside_tree() and ground_notice != null:
+		ground_notice.announce()
 
 
 ## No world on disk: say so on the screen, plainly, with the way back to the title.
@@ -192,8 +204,12 @@ func _setup_terrain3d() -> void:
 	# line with a visible corner -- a flat shelf across the distance with the land cut off
 	# behind it. Wickmere's diagonal is 11.6 km; 8 LODs reach 12.3 km, so the ground now runs
 	# to the edge of the world from anywhere in it. One more ring costs one more strip of the
-	# same vertex count at twice the spacing.
-	terrain_node.set("mesh_lods", 9)
+	# same vertex count at twice the spacing. Tools can ask for fewer (`--terrain-lods=N`).
+	var lods := WorldStatus.terrain_lods_for(status)
+	if lods != WorldStatus.TERRAIN_LODS:
+		Log.info("World", "Terrain3D draws %d clipmap rings (%s); %d reach the edge of the world"
+				% [lods, str(status.get("lods_why", "asked for")), WorldStatus.TERRAIN_LODS])
+	terrain_node.set("mesh_lods", lods)
 	terrain_node.set("mesh_size", 32)
 	var mat: Object = terrain_node.get("material")
 	if mat:

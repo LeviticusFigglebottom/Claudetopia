@@ -160,6 +160,32 @@ func test_a_sprint_draws_the_view_back_and_widens_it() -> void:
 	assert_near(rig.camera.fov, base_fov, 0.3, "and after the stop the view settles back")
 
 
+## A roll is not a sprint. It peaks at 11 m/s, faster than any sprint, and a view that widened
+## with the ground speed breathed out at every roll: the camera lurched in the middle of a dodge.
+func test_a_roll_does_not_widen_the_view() -> void:
+	await _stand()
+	var rig := player.camera_rig
+	await _frames(4)
+	var base_fov := rig.camera.fov
+	Input.action_press("move_forward")
+	for i in 30:
+		await _tree().physics_frame
+	Input.action_press("dodge")
+	await _tree().physics_frame
+	Input.action_release("dodge")
+	var widest := base_fov
+	var rolled := false
+	for i in 50:
+		await _tree().physics_frame
+		await _frames(1)
+		rolled = rolled or player.state == Player.State.DODGE
+		widest = maxf(widest, rig.camera.fov)
+	Input.action_release("move_forward")
+	print("    a roll from a jog: the view went from %.1f to at most %.1f degrees" % [base_fov, widest])
+	assert_true(rolled, "the body did not roll")
+	assert_true(widest - base_fov < 0.3, "the roll widened the view by %.1f degrees" % (widest - base_fov))
+
+
 ## A wall behind the player pulls the camera in at once (it never looks through the wall) and,
 ## taken away, lets it back out over a third of a second rather than popping.
 func test_a_wall_pulls_the_camera_in_and_it_eases_back_out() -> void:
