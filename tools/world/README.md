@@ -94,10 +94,16 @@ errors.
    little over it and its islands stood up in it.
 4. **Drainage.** Sinks are filled, D8 flow accumulation computed, and the network cut into the
    land by biome, down to the sea and the lakes; then the coast and the lakes are laid again, so
-   the drawn water wins; then the causeways are raised across the lakes they cross.
+   the drawn water wins; then the causeways are raised across the lakes they cross. The water is
+   routed over the land plus five metres of broad unevenness (`heights.ROUTE_JITTER_M`), so a
+   slope drawn as one even plane gathers into gills a few hundred metres apart instead of being
+   combed with rills down the fall line (`tests/test_erosion.py`).
 5. **Pads** at every place and POI (radius by kind), raised above standing water so a
    stilt-town stands on peat rather than in a pool. A staged build (`--only textures|cells`)
-   refuses to reuse a heightmap whose pads were laid for places that have since moved.
+   refuses to reuse a heightmap whose pads were laid for places that have since moved. Then the
+   authored sightlines: where the land stands into one by no more than a saddle's depth
+   (`geography.NOTCH_MAX_M`, 25 m) it is cut down under the line; a line with more than that in
+   the way is left, and the build says how many (it is the atlas's or the content's to answer).
 6. **Rivers** along the atlas's paths, each in a valley it has cut, carved with a surface that
    falls from its source to the water it runs into (a tributary to its river's level at the
    confluence), banks and widths from the atlas.
