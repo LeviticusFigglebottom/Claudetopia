@@ -65,6 +65,9 @@ RECIPES = {
     "cover": "reeds at the water, willow lines, marram on the dune crests, boulder fields, ash "
              "in the sunken streets and wall stubs on their lips, intakes and fell walls",
 }
+## The recipes a build makes when it is not told otherwise; `--recipe` adds one, `--without`
+## takes one away.
+DEFAULT_RECIPES: tuple = ()
 
 
 class Timer:
@@ -308,8 +311,10 @@ def build(args) -> dict:
     pois = load_poi_registry(PACK)
     out_dir = args.out or DEFAULT_OUT
     os.makedirs(out_dir, exist_ok=True)
-    recipes = sorted(set(getattr(args, "recipe", None) or []))
-    unknown = [r for r in recipes if r not in RECIPES]
+    asked = set(getattr(args, "recipe", None) or []) | set(getattr(args, "without", None) or [])
+    recipes = sorted((set(DEFAULT_RECIPES) | set(getattr(args, "recipe", None) or []))
+                     - set(getattr(args, "without", None) or []))
+    unknown = [r for r in sorted(asked) if r not in RECIPES]
     if unknown:
         raise SystemExit("[world] no such recipe: %s (there are: %s)" % (", ".join(unknown), ", ".join(sorted(RECIPES))))
     cover = "cover" in recipes
@@ -632,6 +637,8 @@ def main(argv=None) -> int:
     ap.add_argument("--recipe", action="append", choices=sorted(RECIPES), default=None,
                     help="build a part of the world that is off by default (repeatable): "
                          + "; ".join("%s -- %s" % kv for kv in sorted(RECIPES.items())))
+    ap.add_argument("--without", action="append", choices=sorted(RECIPES), default=None,
+                    help="leave out a recipe the build would otherwise make (repeatable)")
     args = ap.parse_args(argv)
     build(args)
     return 0
