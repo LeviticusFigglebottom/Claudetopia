@@ -22,16 +22,23 @@ uniform bool use_normal = true;
 uniform vec3 tint : source_color = vec3(1.0);
 uniform vec3 scatter_colour : source_color = vec3(0.86, 0.30, 0.20);
 uniform float wrap : hint_range(0.0, 1.0) = 0.45;
-uniform float scatter : hint_range(0.0, 2.0) = 0.85;
+uniform float scatter : hint_range(0.0, 2.0) = 0.60;
 uniform float ao_strength : hint_range(0.0, 1.0) = 0.70;
-uniform float specular_amount : hint_range(0.0, 1.0) = 0.30;
+uniform float specular_amount : hint_range(0.0, 1.0) = 0.18;
+// The face bakes are painted with their lit planes already lifted (paint.skin_paint), so under
+// the engine's own light a fair face went to porcelain. This takes the paint back down to the
+// value skin is, rather than the value it is painted in a light.
+uniform float albedo_scale : hint_range(0.5, 1.2) = 0.84;
 // LIGHT_COLOR arrives scaled for the engine's own BRDF; this matches a lit StandardMaterial3D
 // of the same albedo at normal incidence (measured, see tools_gd/character_review.gd).
 uniform float diffuse_gain = 0.31831;
 
 void fragment() {
 	vec3 orm = use_orm ? texture(orm_tex, UV).rgb : vec3(1.0, 0.6, 0.0);
-	ALBEDO = texture(albedo_tex, UV).rgb * tint;
+	vec3 c = texture(albedo_tex, UV).rgb * tint * albedo_scale;
+	// a little more colour in the mid-tones, which the scale above takes out with the value
+	float l = dot(c, vec3(0.299, 0.587, 0.114));
+	ALBEDO = clamp(mix(vec3(l), c, 1.12), 0.0, 1.0);
 	ROUGHNESS = orm.g;
 	METALLIC = 0.0;
 	AO = mix(1.0, orm.r, ao_strength);

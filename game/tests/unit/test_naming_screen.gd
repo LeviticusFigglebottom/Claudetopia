@@ -413,4 +413,7 @@ func test_a_whole_look_made_in_one_frame_leaves_every_part_drawable() -> void:
 				eyes += 1
 				var mat := m.get_surface_override_material(0) as ShaderMaterial
 				assert_true(mat != null and mat.shader == HumanoidModel.IRIS_SHADER, "an eye is not wearing the iris shader")
+				# with no texture the shader samples plain white, and an eye is a blank disc
+				assert_true(mat != null and mat.get_shader_parameter("albedo_tex") != null,
+						"an eye's iris material has no eye texture: it draws as a white disc")
 	assert_eq(eyes, 2, "the face has lost its eyes")

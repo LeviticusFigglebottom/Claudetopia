@@ -473,6 +473,8 @@ func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> 
 	var current := options.find(appearance.part(slot))
 	o.selected = maxi(current, 0)
 	o.item_selected.connect(func(index: int) -> void:
+			if index < 0 or index >= options.size():
+				return
 			appearance.set_part(slot, str(options[index]))
 			_focus(FACE)
 			_apply_appearance())

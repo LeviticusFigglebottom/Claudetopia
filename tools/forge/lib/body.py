@@ -708,10 +708,12 @@ def eye_mesh(center: np.ndarray, r: float, nu: int = 22, nv: int = 16) -> Tuple[
             p = np.array([r * math.sin(th) * math.cos(ph), -r * math.cos(th), r * math.sin(th) * math.sin(ph)])
             verts.append(center + p)
             uvs.append((j / nu, th / math.pi))
+    # Wound so the faces look outward. They used to look inward: invisible to Blender's renders,
+    # which draw both sides, and culled away entirely by the engine's iris shader.
     for i in range(nv):
         for j in range(nu):
             a = i * (nu + 1) + j
-            faces.append([a, a + 1, a + nu + 2, a + nu + 1])
+            faces.append([a, a + nu + 1, a + nu + 2, a + 1])
     return np.asarray(verts), faces, np.asarray(uvs)
 
 

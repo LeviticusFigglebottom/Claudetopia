@@ -290,8 +290,9 @@ func _make_look(naming: Node, look: Dictionary) -> void:
 		var swatch := _find_meta(label.get_parent(), "tone", str(look[pair[1]])) if label != null else null
 		if _check(swatch != null, "the %s row has a %s swatch" % [pair[0], look[pair[1]]]):
 			(swatch as Button).pressed.emit()
+	# the beards are the ones the screen offers, which are only the ones that draw
 	var options := {"hair": CharacterAppearance.HAIR_STYLES, "head": CharacterAppearance.HEADS,
-		"beard": [""] + CharacterAppearance.BEARD_STYLES}
+		"beard": naming.call("offered_beards")}
 	for slot in options:
 		var o := _chooser(naming, slot)
 		var index: int = (options[slot] as Array).find(str(look[slot]))
