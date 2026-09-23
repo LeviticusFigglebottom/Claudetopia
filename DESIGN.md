@@ -187,9 +187,10 @@ land, the stakes, then you — and it is about ninety seconds long.
   the cliff to the camp: what you came up, and what the opening's last shot flies. The first
   view is the camp, the heath beyond it, and the Choir's twelve headless colossi on the
   skyline. From the camp,
-  waystones (a lamp on every third) walk 426 m north to the Choir over ground a person can
-  walk, and keep more than fifty metres from anything the built world stands on the heath:
-  about a minute and a half on foot, past the Cantor's Seat. The world builder places the
+  waystones (a lamp on every third) walk 413 m north to the Choir over ground a person can
+  walk, round the colossi rather than through them, and keep more than fifty metres from
+  anything the built world stands on the heath: about a minute and a half on foot, past the
+  Cantor's Seat. The world builder places the
   heath's enemies afresh on every build, so a test holds the waystones against the spawns of
   the build on disk and names the leg to move. The Naming runs: `wake` (speak to
   the Warden, who gives you the road) → `the_choir` (walk the waystones to the Sunken Choir) →

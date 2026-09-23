@@ -22,6 +22,8 @@ const WALKABLE_DEG := 30.0
 const CLEAR_OF_ENEMIES_M := 50.0
 ## How near a `reach` objective's place counts as being there (QuestLog.REACH_RADIUS_M).
 const REACH_M := 45.0
+## Room for a body beside something solid the way goes round.
+const BODY_M := 1.0
 
 var provider: TerrainProvider = null
 var pois: Array = []
@@ -266,6 +268,64 @@ func test_the_marked_way_keeps_clear_of_what_lives_on_the_heath() -> void:
 					near.append("%s %.0f m from the way" % [str(spawn.get("def", "?")), closest.distance_to(at)])
 					break
 	assert_true(near.is_empty(), "the way walks past: %s" % ", ".join(near))
+
+
+## The way goes round what the build stood solid in it, not through it. The Choir's colossi are
+## twenty-seven metres across at the foot, and the way's last legs went through the robe of the
+## one nearest the Choir, with two of its stones inside the stone. Each solid scene within reach of
+## the way is held off every leg by its model's footprint (the widest its bounds reach from its
+## origin, as its collision does at the ground) and a body's width.
+func test_the_marked_way_goes_round_what_stands_solid_in_it() -> void:
+	if provider == null:
+		return
+	var via := _via()
+	var dir := DirAccess.open("%s/cells" % GENERATED)
+	if dir == null:
+		return
+	var reaches := {}
+	var through: Array[String] = []
+	for file in dir.get_files():
+		if not file.ends_with(".json"):
+			continue
+		var cell: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/cells/%s" % [GENERATED, file]))
+		if not (cell is Dictionary):
+			continue
+		for s in (cell as Dictionary).get("scenes", []):
+			var scene: Dictionary = s
+			if str(scene.get("collision", "")).is_empty():
+				continue
+			var pos: Array = scene.get("pos", [0, 0, 0])
+			var at := Vector2(float(pos[0]), float(pos[2]))
+			if at.distance_to(_xz(START)) > 800.0:
+				continue
+			var model := str(scene.get("scene", ""))
+			if not reaches.has(model):
+				reaches[model] = _footprint(model)
+			var reach: float = reaches[model]
+			if reach <= 0.0:
+				continue
+			for i in range(via.size() - 1):
+				var closest := Geometry2D.get_closest_point_to_segment(at, via[i], via[i + 1])
+				if closest.distance_to(at) < reach + BODY_M:
+					through.append("%s at (%.0f, %.0f), %.1f m from the leg (%.0f, %.0f) to (%.0f, %.0f), %.1f m from its centre to its edge"
+							% [model.get_file(), at.x, at.y, closest.distance_to(at), via[i].x, via[i].y, via[i + 1].x, via[i + 1].y, reach])
+					break
+	assert_true(through.is_empty(), "the way walks into: %s" % ", ".join(through))
+
+
+## How far a model reaches from its origin across the ground: the widest of its bounds in x and z,
+## from the meta the forge writes beside it. Nothing when it has none.
+func _footprint(model: String) -> float:
+	var meta := model.get_basename() + ".meta.json"
+	if not FileAccess.file_exists(meta):
+		return 0.0
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta))
+	if not (parsed is Dictionary):
+		return 0.0
+	var bounds: Dictionary = (parsed as Dictionary).get("bounds", {})
+	var lo: Array = bounds.get("min", [0, 0, 0])
+	var hi: Array = bounds.get("max", [0, 0, 0])
+	return maxf(maxf(absf(float(lo[0])), absf(float(hi[0]))), maxf(absf(float(lo[2])), absf(float(hi[2]))))
 
 
 ## The Naming's first fight is among the Choir's feet, where the waystones end: every point
