@@ -28,6 +28,7 @@ var clip_list: PackedStringArray = PackedStringArray([
 var preset_filter: PackedStringArray = PackedStringArray()
 var looks_path := ""
 var looks_pose := "Idle"
+var looks_frame := "figure"
 
 var _camera: Camera3D
 var _jobs: Array[Dictionary] = []
@@ -71,6 +72,8 @@ func _parse_args() -> void:
 			mode = "looks"
 		elif a.begins_with("--pose="):
 			looks_pose = a.substr(7)
+		elif a.begins_with("--frame="):
+			looks_frame = a.substr(8)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../%s" % out_dir) if not out_dir.begins_with("/") else out_dir)
 
 
@@ -253,7 +256,8 @@ func _queue_looks() -> void:
 		push_error("character_review: %s is not a list of appearances" % looks_path)
 		return
 	var looks: Array = parsed
-	var spacing := 1.05
+	var heads := looks_frame == "head"
+	var spacing := 0.62 if heads else 1.05
 	var views := {"front": 0.0, "three_quarter": -40.0, "side": -90.0, "back": 180.0}
 	var r := 0
 	for view in views:
@@ -264,9 +268,15 @@ func _queue_looks() -> void:
 			(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 180.0 + float(views[view]), 0)
 			_hold_pose(m, looks_pose, 0.8 if looks_pose == "Idle" else 0.3)
 		var width := looks.size() * spacing
-		_jobs.append({"file": "lineup_looks_%s.png" % view,
-			"cam": Vector3(x0, 1.0, -maxf(3.4, width * 0.9 + 1.0)),
-			"look": Vector3(x0, 0.9, 0), "fov": 36.0, "hide_rows": -1})
+		if heads:
+			_jobs.append({"file": "lineup_looks_%s.png" % view,
+				# wide enough for the row at 16:9 and a 30 degree field of view
+				"cam": Vector3(x0, 1.62, -maxf(1.2, (width * 0.5 + 0.3) / 0.476)),
+				"look": Vector3(x0, 1.58, 0), "fov": 30.0, "hide_rows": -1})
+		else:
+			_jobs.append({"file": "lineup_looks_%s.png" % view,
+				"cam": Vector3(x0, 1.0, -maxf(3.4, width * 0.9 + 1.0)),
+				"look": Vector3(x0, 0.9, 0), "fov": 36.0, "hide_rows": -1})
 		r += 1
 
 
