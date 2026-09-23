@@ -1087,3 +1087,42 @@ density: no walkable point more than about 400 m from a location, and no road mo
 250 m. A new location is placed on the map and not left to the builder. Tests that read the
 tracked world (test_world_data, test_the_start, test_pois, the cinematic paths, the sightlines)
 disagree with the moved content until the world is rebuilt from the atlas.
+
+## 2026-09-23 — The map is written down once; everything else says what it is beside
+
+**Decision.** A place's and a POI's `position` is the only place the map is written in
+coordinates (the atlas writes it). Everything else that means "near that place" names the place
+and says where from it: a compass bearing and a distance, an offset, a way's shape between two
+places, or, for a position a save remembers, a pin (the nearest place, where it stood then, the
+height above the ground). `PlaceRef` reads all four. A door plan no longer copies its place's
+position, the Stair Head's way is a shape, the hand-written capture plans are place specs, and
+the saves pin the player, the Hearth's landing and Echo, an interior's way out and an escort on
+the road. `test_place_ref.gd` fails when a definition writes coordinates where a place belongs.
+**Why.** The atlas moved 83 places and added 216. Every copy of a coordinate had to be found and
+edited by hand to follow them. The land agent's branch did exactly that for the door plans, the
+Stair Head's way and three tests, and the next redraw would need it again. Said as places, they
+follow without anyone touching them, and on an unmoved map they resolve to the same points: a
+way to 2 mm, a plan's camera to 7 mm, a save exactly.
+**Alternatives.** A way drawn in coordinates with the two ends it was drawn against recorded
+beside it, and re-fitted on load. That is easier to draw, but a way redrawn for the new map and
+not re-recorded is moved twice. A table of where each place moved, applied to saves: it has to
+be written for every redraw, and a save cannot say which table it predates.
+**Consequences.** Anything new that stands near a place should say so as a spec;
+tools/place_paths.py and tools/capture/relative_plan.py turn coordinates into one. The generated
+capture plans (default, pois, look, horizon) are still coordinates: their generators read the
+built world, and are run again after a redraw. A region's `map.center` is still the no-world
+fallback for region lookups, and should be kept inside its region as the atlas draws it.
+
+## 2026-09-23 — The Stair Head's waystones walk the road the builder routed
+
+**Decision.** Where the built world has a road between a POI and the place its way leads to
+(`core:road/<from>_<to>`, either way round), the waystones stand along that road. The way's
+drawn shape is used only where there is no road.
+**Why.** On the atlas world the way drawn straight from the Stair Head to the Choir crossed
+ground of 37 to 61 degrees; the builder's road goes round the knoll. DESIGN 5.1a asks for a way
+marked on walkable ground.
+**Alternatives.** Keeping the drawn shape and asking the cartographer to redraw it round the
+knoll by hand: it would be walkable only on the build it was drawn against.
+**Consequences.** The walk is the road's length: 980 m on the atlas world, against the 300-650 m
+test_the_start holds it to. That is the atlas's distance, and it is left failing for the
+coordinator to decide. On main's world there is no such road and nothing changes.

@@ -17,7 +17,16 @@ atlas writes). Everything else names a place and says where from it:
 
 `test_place_ref.gd` fails if a definition holds coordinates where a place belongs. To turn
 coordinates into places: `tools/place_paths.py` (a POI's way) and
-`tools/capture/relative_plan.py` (a capture plan).
+`tools/capture/relative_plan.py` (a capture plan). `tools/coordinate_scan.py` lists what is
+still written as coordinates, in content, capture plans and scripts.
+
+**After the map is drawn again**: run the game on the new build without committing it
+(`tools/world/use_build.sh <build dir> [<terrain dir>]`, `--restore` after), run
+`tools/world/place_checks.py` for what the new ground does to the places (a place in water, a
+door on a cliff, a schedule across a lake, a quest place with no dry ground in reach, enemies
+beside the start's way), then `./run.sh test`, `journey` and `flow`. Regenerate the derived
+plans (`tools/capture/make_default_plan.py`, `--look`, `--horizon`, `make_pois_plan.py`) and the
+chart (`tools/ui/gen_map.py --world <full build dir>`: the tracked world has no full-size maps).
 
 ## Derived from a place (follows it already)
 
