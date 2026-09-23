@@ -93,6 +93,24 @@ func _ready() -> void:
 		apply_appearance(appearance_dict)
 
 
+## Takes the override materials off every mesh before the meshes go. Freed outright, a mesh's
+## materials died with it while its render instance still named them, and the renderer said
+## `Parameter "material" is null` once for every mesh on the body.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_PREDELETE:
+		return
+	var meshes: Array = _default_eyes.duplicate()
+	meshes.append_array(_default_meshes.values())
+	for slot in _part_meshes:
+		meshes.append_array(_part_meshes[slot])
+	for mi in meshes:
+		var m := mi as MeshInstance3D
+		if m == null or not is_instance_valid(m) or m.mesh == null:
+			continue
+		for i in m.mesh.get_surface_count():
+			m.set_surface_override_material(i, null)
+
+
 ## Loads the rig and its clips. Safe to call once; `_ready` does it automatically.
 func build() -> void:
 	if _rig_root != null:
