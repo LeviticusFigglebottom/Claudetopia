@@ -10,9 +10,9 @@ extends Node3D
 ## is about to land and it has a roll's stamina in hand, uses a heavy to finish a foe's poise, and
 ## closes the distance otherwise, running when it is more than a step out of reach. When a blow is
 ## coming and it has not the stamina to roll, it raises its guard instead. It drinks from the
-## Hearth Flask (DESIGN §5.5) when it is below half and nothing is about to land, and it says
-## what its Calling knows: a ward before the fight and again when it breaks, a mending saying when
-## it is hurt and the flask is dry, and a bolt at a foe out of reach. So the numbers are those of a
+## Hearth Flask (DESIGN §5.5) below 45% of its health when nothing is about to land, and it says
+## what its Calling knows: a ward before the fight and again when it breaks, a mending saying when it
+## is below 55% and the flask is dry, and a bolt at a foe out of reach. So the numbers are those of a
 ## patient player at level 1 who uses what the Calling gave them, not of anybody's best.
 ##
 ## Flags: "trivial" is under TRIVIAL_SECONDS without a blow taken; "not won in 120 s" is a fight
@@ -83,11 +83,12 @@ var _stats: Dictionary = {}
 var _sounds: Dictionary = {}         # sfx id -> times played, this fight
 var _parry_plan: Array[String] = []  # "inside", "outside" still to try, this fight
 var _trace := ""                     # --trace=<archetype>: print the fight twice a second
-var _partial := false                # --only=<archetype,...>: a check that never came up is not a failure
+var _partial := false                # --only= or --calling=: a check that never came up is not a failure
 var _kit: Dictionary = {}            # what this fight's player can say and drink (see _plan_kit)
 var _guard_until := -1.0             # holding the guard up against a blow it cannot roll from
 var _retreat_until := -1.0           # backing off to drink, until nothing is about to land
 var _retreat_again_at := -1.0        # when a retreat that found no quiet may be tried again
+var _chasing := false                 # sprinting to close on a foe out of reach, until in reach
 
 
 func _ready() -> void:
@@ -122,6 +123,8 @@ func _run() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--calling="):
 			only = a.substr(10)
+			# One Calling may never meet a check's occasion (a parry needs a parrying blade).
+			_partial = true
 		elif a.begins_with("--trace="):
 			_trace = a.substr(8)
 		elif a.begins_with("--only="):
@@ -167,6 +170,7 @@ func _fight(calling: String, fight: Dictionary) -> Dictionary:
 	_guard_until = -1.0
 	_retreat_until = -1.0
 	_retreat_again_at = -1.0
+	_chasing = false
 	_kit = _plan_kit(_player)
 	_player.caster.cast_released.connect(func(_id: String) -> void: _stats["sayings"] = int(_stats["sayings"]) + 1)
 	_player.state_changed.connect(func(_from: int, to: int) -> void:
@@ -563,10 +567,17 @@ func _decide() -> void:
 			_tap("attack_light", 2)
 	if dist > reach_now * 0.85:
 		_held["move_forward"] = true
-		# Out of reach by more than a step, and with two rolls and a swing to spare: run. A caster
-		# that keeps its distance backs off at about 3 m/s, which a walk (4.2 m/s) barely gains on.
-		if dist > reach_now * 1.6 and p.stamina > DamageModel.STAMINA_DODGE * 2.0 + light_cost:
+		# Out of reach, and with two rolls and a swing to spare: run, and keep running until in
+		# reach or down to a roll's stamina. Locked on, the body strafes at Player.STRAFE_SPEED
+		# (2.6 m/s), and a caster that keeps its distance backs off at about 3 m/s, so only a
+		# sprint (which breaks the strafe) closes on it; a sprint of a frame at a time, started and
+		# stopped at one stamina figure, never did.
+		var fresh := p.stamina > DamageModel.STAMINA_DODGE * 2.0 + light_cost
+		_chasing = dist > reach_now and (fresh or (_chasing and p.stamina > DamageModel.STAMINA_DODGE))
+		if _chasing:
 			_held["sprint"] = true
+	else:
+		_chasing = false
 
 
 ## What the Calling gave it, used when nothing is about to land: the flask below half, a mending
