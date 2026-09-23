@@ -26,6 +26,7 @@ const RANGE_M := 180.0
 ## {kind, path, home (Vector3, this node's space), radius, at, yaw, target, wait, instance}
 var beasts: Array = []
 var _mm: Dictionary = {}           # path -> MultiMesh
+var _shadow_mm: Dictionary = {}    # path -> MultiMesh of the forge's lowest rung, what the sun draws
 var _rng := RandomNumberGenerator.new()
 var _clock := 0.0
 
@@ -76,10 +77,17 @@ func _ready() -> void:
 		inst.multimesh = mm
 		# a beast wanders a few metres from where its instance was first put
 		inst.extra_cull_margin = 8.0
-		# a hen's shadow is a smudge under a hen, and a pass of the sun for each kind of bird
+		# a hen's shadow is a smudge under a hen, and a pass of the sun for each kind of bird; a
+		# ewe's is her lowest rung (Settlement.shadow_of), moved with her
 		var size := mesh.get_aabb().size
-		FabricMesh.near_only(inst, RANGE_M, maxf(size.x, maxf(size.y, size.z)) >= Settlement.SMALL_PROP_M)
+		var casts := maxf(size.x, maxf(size.y, size.z)) >= Settlement.SMALL_PROP_M
+		var low := Settlement._lod_parts(packed, 2)
+		FabricMesh.near_only(inst, RANGE_M, casts and low.is_empty())
 		add_child(inst)
+		if casts and not low.is_empty():
+			var sh := Settlement.shadow_of(inst, low[0], RANGE_M)
+			_shadow_mm[path] = sh.multimesh
+			add_child(sh)
 		for b in list:
 			_place(b)
 
@@ -140,8 +148,11 @@ func _place(beast: Dictionary) -> void:
 		return
 	var lift := maxf(0.0, -mm.mesh.get_aabb().position.y)
 	var at: Vector3 = beast["at"]
-	mm.set_instance_transform(int(beast["instance"]),
-			Transform3D(Basis(Vector3.UP, float(beast["yaw"])), at + Vector3(0.0, lift, 0.0)))
+	var xf := Transform3D(Basis(Vector3.UP, float(beast["yaw"])), at + Vector3(0.0, lift, 0.0))
+	mm.set_instance_transform(int(beast["instance"]), xf)
+	var shadow: MultiMesh = _shadow_mm.get(beast["path"], null)
+	if shadow != null:
+		shadow.set_instance_transform(int(beast["instance"]), xf)
 
 
 ## The forge's variants of a beast, if it built them: the Vale's, or `region`'s.

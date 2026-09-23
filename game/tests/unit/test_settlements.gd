@@ -186,16 +186,20 @@ func test_a_road_through_a_place_lines_the_houses_up_along_it() -> void:
 ## fabric is merged now, and this is the ratchet that keeps it merged: a village of Merrowby's
 ## kind, with its board, its stations and its for-sale signs, raises at most this many meshes.
 ##
-## It was 31 before the streets. It is 66 now, and the fabric is nine surfaces (the gardens' crops,
-## woodpiles and washing are a mesh of their own, drawn near and with no shadow): the rest
-## is one MultiMesh for each kind of thing a street has lying about it (a kind's two variants are
-## two), the market's stalls and their wares, the beasts (six kinds), the gardens' apple trees
-## (three variants, each its trunk and its leaf cards), the chimney smoke, the shop signs' emblems,
-## and the stations' props, whose three nodes are the forge's LOD bands and are drawn one at a
-## time. The small things (the crockery on a stall, a bucket) throw no shadow and are gone past
-## seventy metres. Measured against DESIGN section 11 on the streets plan's Merrowby shot, which
-## is in PROGRESS.md.
-const MESH_RATCHET := 66
+## It was 31 meshes before the streets, when a mesh was a draw for the eye and another for each
+## cascade of the sun. It is two ratchets now, because the two are no longer the same meshes: every
+## prop that throws a shadow throws it from its forge's lowest rung (a MultiMesh of the same
+## instances that casts and is never seen), and the one the eye sees casts none. So: this many
+## meshes drawn for the eye, and this many drawn for the sun. The eye's count is the fabric's nine
+## surfaces (the gardens' in four quarters, so a camera in a street draws the ones it faces), one
+## MultiMesh for each kind of thing lying about (a kind's two variants are two), the market's
+## stalls and wares, the beasts, the gardens' apple trees (three variants, each its trunk and its
+## leaf cards), the smoke, the shop signs' emblems, and the stations' props, whose three nodes are
+## the forge's LOD bands drawn one at a time. The small things (the crockery, a bucket, a hen) throw
+## no shadow and are gone past seventy metres. Measured against DESIGN section 11 on the streets
+## plan's Merrowby shot, which is in PROGRESS.md.
+const EYE_RATCHET := 69
+const SHADOW_RATCHET := 45
 const MERROWBY := "core:place/merrowby"
 
 
@@ -218,13 +222,20 @@ func _direct(s: Node, type: String) -> Array[Node]:
 
 func test_a_village_of_merrowbys_kind_stays_under_the_mesh_ratchet() -> void:
 	var s := _raise("village", "core:region/hearthvale", [], [], MERROWBY)
-	var meshes := _meshes(s)
-	var names: Array[String] = []
-	for m in meshes:
-		names.append(str(m.name))
-	names.sort()
-	assert_true(meshes.size() <= MESH_RATCHET,
-			"Merrowby's fabric is %d meshes; the ratchet is %d: %s" % [meshes.size(), MESH_RATCHET, ", ".join(names)])
+	var eye: Array[String] = []
+	var sun: Array[String] = []
+	for m in _meshes(s):
+		var gi := m as GeometryInstance3D
+		if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY:
+			eye.append(str(gi.name))
+		if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+			sun.append(str(gi.name))
+	eye.sort()
+	sun.sort()
+	assert_true(eye.size() <= EYE_RATCHET,
+			"Merrowby's fabric is %d meshes for the eye; the ratchet is %d: %s" % [eye.size(), EYE_RATCHET, ", ".join(eye)])
+	assert_true(sun.size() <= SHADOW_RATCHET,
+			"and %d for the sun; the ratchet is %d: %s" % [sun.size(), SHADOW_RATCHET, ", ".join(sun)])
 	assert_true(_houses(s).size() >= 10, "a village with %d houses is not Merrowby" % _houses(s).size())
 	_drop(s)
 
@@ -241,7 +252,11 @@ func test_the_fabric_is_one_mesh_a_surface_however_many_houses() -> void:
 		var own: Array[String] = []
 		for m in _direct(s, "MeshInstance3D"):
 			own.append(str(m.name))
-			assert_true(SURFACES.has(str(m.name)), "%s raised %s beside its surfaces" % [s.name, m.name])
+			# the gardens are the one surface drawn in quarters (Garden_ne ...)
+			var surface := str(m.name).get_slice("_", 0)
+			assert_true(SURFACES.has(surface), "%s raised %s beside its surfaces" % [s.name, m.name])
+			if surface == "Garden":
+				assert_true(FabricMesh.QUARTERS.has(str(m.name).get_slice("_", 1)), "%s is no quarter" % m.name)
 		assert_true(own.has("Walls") and own.has("Roofs") and own.has("Joinery"), "%s raised %s" % [s.name, own])
 	assert_true(_houses(city).size() > _houses(hamlet).size() * 3,
 			"a city of %d houses and a hamlet of %d cost the same draws" % [_houses(city).size(), _houses(hamlet).size()])
@@ -274,6 +289,40 @@ func test_the_joinery_is_near_only_and_casts_no_shadow() -> void:
 	_drop(s)
 
 
+## The sun is drawn the cheapest rung of a thing: every kind that throws a shadow throws its forge
+## LOD2's, a MultiMesh of the same instances that casts and is never seen, and the eye's copy casts
+## none. An apple tree's shadow was its 1 400 triangles again for every cascade; its impostor's
+## eight say the same on the ground.
+func test_the_sun_draws_the_cheap_rung_of_every_prop() -> void:
+	var s := _raise("village", "core:region/hearthvale", [], [], MERROWBY)
+	var proxies := 0
+	for node in s.find_children("*", "MultiMeshInstance3D", true, false):
+		var mmi := node as MultiMeshInstance3D
+		if mmi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY:
+			continue
+		proxies += 1
+		var eye := mmi.get_parent().get_node_or_null(NodePath(str(mmi.name).trim_suffix("_shadow"))) as MultiMeshInstance3D
+		assert_true(eye != null, "%s is the shadow of nothing" % mmi.name)
+		if eye == null:
+			continue
+		assert_eq(eye.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "%s throws its own shadow as well" % eye.name)
+		assert_eq(mmi.multimesh.instance_count, eye.multimesh.instance_count, "%s: a shadow for every one" % eye.name)
+		assert_true(_tris(mmi.multimesh.mesh) < _tris(eye.multimesh.mesh),
+				"%s's shadow is %d triangles against %d seen" % [eye.name, _tris(mmi.multimesh.mesh), _tris(eye.multimesh.mesh)])
+	assert_gt(proxies, 5, "the village's props throw their shadows from the cheap rung")
+	_drop(s)
+
+
+func _tris(mesh: Mesh) -> int:
+	var n := 0
+	for i in mesh.get_surface_count():
+		var arr: Array = mesh.surface_get_arrays(i)
+		var idx: Variant = arr[Mesh.ARRAY_INDEX]
+		n += ((idx as PackedInt32Array).size() if idx != null and (idx as PackedInt32Array).size() > 0
+				else (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
+	return n
+
+
 func test_props_are_one_multimesh_per_asset() -> void:
 	var s := _raise("village", "core:region/hearthvale", [], [], MERROWBY)
 	var seen: Dictionary = {}
@@ -290,7 +339,7 @@ func test_props_are_one_multimesh_per_asset() -> void:
 	assert_true(seen.size() >= 6, "a Vale village with only %d kinds of prop" % seen.size())
 	assert_true(instances > seen.size(), "%d props in %d MultiMeshes: nothing was batched" % [instances, seen.size()])
 	assert_empty(s.find_children("*", "MeshInstance3D", false, false).filter(
-			func(n: Node) -> bool: return not SURFACES.has(str(n.name))),
+			func(n: Node) -> bool: return not SURFACES.has(str(n.name).get_slice("_", 0))),
 			"a prop is still its own MeshInstance3D beside the merged fabric")
 	_drop(s)
 

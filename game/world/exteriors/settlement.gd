@@ -213,7 +213,7 @@ const MIDDLING_PROP_M := 1.6
 ## The fabric key the gardens' small things are gathered under, drawn in the joinery's material as
 ## a mesh of their own, only this near (measured to the middle of the place) and with no shadow.
 const GARDEN := "garden"
-const GARDEN_RANGE_M := 160.0
+const GARDEN_RANGE_M := 110.0
 
 ## Where the people whose schedules name a spot at this place stand: the words in a spot's name
 ## that say what it is at. The first that matches wins.
@@ -292,6 +292,7 @@ func _ready() -> void:
 	_yard_bodies.name = "Yards"
 	add_child(_yard_bodies)
 	var fabric := FabricMesh.new()
+	fabric.split(GARDEN, Vector3.ZERO)
 	_build(fabric, plan)
 	_yards(fabric)
 	_ground(fabric)
@@ -394,9 +395,9 @@ func _commit(fabric: FabricMesh) -> void:
 	var joinery := fabric.commit(self, "joinery", FabricMesh.joinery_material(), "Joinery")
 	if joinery != null:
 		FabricMesh.near_only(joinery, FabricMesh.JOINERY_RANGE_M, false)
-	# the gardens' crops, woodpiles and washing: small, many, and nothing from the next field
-	var garden := fabric.commit(self, GARDEN, FabricMesh.joinery_material(), "Garden")
-	if garden != null:
+	# the gardens' crops, woodpiles and washing: small, many, and nothing from the next field; in
+	# quarters, so a camera in the street draws the gardens it faces
+	for garden in fabric.commit_all(self, GARDEN, FabricMesh.joinery_material(), "Garden"):
 		FabricMesh.near_only(garden, GARDEN_RANGE_M, false)
 	for key in ["paving", "earth"]:
 		var spec: Dictionary = PAVING_BY_CULTURE.get(culture, PAVING_BY_CULTURE["vale"]) if key == "paving" else EARTH
@@ -1302,16 +1303,23 @@ func _strew_one_kind(path: String, transforms: Array) -> void:
 	var packed := load(path) as PackedScene
 	if packed == null:
 		return
+	# The sun is drawn the cheapest rung of a thing, not the one the eye sees: its shadow is a
+	# shape on the ground, and each kind was drawn again whole for every cascade of it -- an apple
+	# tree's 1 400 triangles four times over where its crossed-card impostor's eight say the same.
+	var low := _lod_parts(packed, 2)
+	var shadow: Mesh = low[0] if not low.is_empty() else null
 	if path.contains(FRUIT_TREE):
 		var parts := _lod_parts(packed, 1)
 		if not parts.is_empty():
 			for i in parts.size():
-				_strew_mesh(path, parts[i], transforms, "lod1_%d" % i)
+				_strew_mesh(path, parts[i], transforms, "lod1_%d" % i, shadow if i == 0 else null, i > 0 and shadow != null)
 			return
-	var mesh := WorldStreamer._mesh_of(packed, 0 if path.contains("/trees/") else 1)
+	var tree := path.contains("/trees/")
+	var mesh := WorldStreamer._mesh_of(packed, 0 if tree else 1)
 	if mesh == null:
 		return
-	_strew_mesh(path, mesh, transforms, "")
+	# the one tree on a green is the whole tree, and throws its own shadow
+	_strew_mesh(path, mesh, transforms, "", null if tree else shadow)
 
 
 ## Every mesh a forge scene keeps at LOD `level` (a tree's is its trunk and its cards, two meshes).
@@ -1340,7 +1348,8 @@ static func tree_paths(slug: String) -> Array[String]:
 	return out
 
 
-func _strew_mesh(path: String, mesh: Mesh, transforms: Array, part: String) -> void:
+func _strew_mesh(path: String, mesh: Mesh, transforms: Array, part: String, shadow: Mesh = null,
+		no_shadow := false) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = mesh
@@ -1375,8 +1384,31 @@ func _strew_mesh(path: String, mesh: Mesh, transforms: Array, part: String) -> v
 		reach = SMALL_PROP_RANGE_M + half
 	elif span < MIDDLING_PROP_M:
 		reach = minf(reach, FabricMesh.PROP_RANGE_M * 0.5 + half)
-	FabricMesh.near_only(inst, reach, span >= SMALL_PROP_M)
+	var casts := span >= SMALL_PROP_M and not no_shadow
+	FabricMesh.near_only(inst, reach, casts and shadow == null)
 	add_child(inst)
+	if casts and shadow != null:
+		add_child(shadow_of(inst, shadow, reach))
+	return inst
+
+
+## What the sun draws of `eye` (a MultiMesh of the forge's LOD1): the same instances in `shadow`,
+## the forge's lowest rung, casting and never seen.
+static func shadow_of(eye: MultiMeshInstance3D, shadow: Mesh, reach: float) -> MultiMeshInstance3D:
+	var src := eye.multimesh
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = shadow
+	mm.instance_count = src.instance_count
+	for i in src.instance_count:
+		mm.set_instance_transform(i, src.get_instance_transform(i))
+	var inst := MultiMeshInstance3D.new()
+	inst.name = str(eye.name) + "_shadow"
+	inst.multimesh = mm
+	inst.extra_cull_margin = eye.extra_cull_margin
+	FabricMesh.near_only(inst, reach, true)
+	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	return inst
 
 
 ## Both variants of a prop, if the forge built them. Naming is `<region>_<kind>_<a|b>` and a

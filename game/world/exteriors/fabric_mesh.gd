@@ -25,6 +25,9 @@ static var _unit_faces: PackedVector3Array = PackedVector3Array()
 
 var _tools: Dictionary = {}       # key -> SurfaceTool
 var _triangles: Dictionary = {}   # key -> int
+var _split: Dictionary = {}       # key -> Vector3: gathered in four quarters round that point
+## The quarters' names, by index: west or east of the centre, then north or south of it.
+const QUARTERS := ["sw", "se", "nw", "ne"]
 
 
 static func _faces() -> PackedVector3Array:
@@ -35,8 +38,23 @@ static func _faces() -> PackedVector3Array:
 	return _unit_faces
 
 
+## Gathers what is put under `key` from now on in four meshes, one for each quarter round `centre`
+## a piece stands in, so a camera in the middle of a town draws the quarters in front of it and not
+## the whole town. For the many small things that throw no shadow (a settlement's gardens).
+func split(key: String, centre: Vector3) -> void:
+	_split[key] = centre
+
+
+func _key_at(key: String, at: Vector3) -> String:
+	if not _split.has(key):
+		return key
+	var c: Vector3 = _split[key]
+	return "%s@%d" % [key, (1 if at.x >= c.x else 0) + (2 if at.z >= c.z else 0)]
+
+
 ## A box of `size`, placed by `xf` (its centre at the origin), in `tint`.
 func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> void:
+	key = _key_at(key, xf.origin)
 	var st := _tool(key)
 	var faces := _faces()
 	var scaled := xf.scaled_local(size)
@@ -57,6 +75,7 @@ func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> vo
 ## to PANE_LIT_MAX, because alpha 1 is what marks timber.
 ## By day a pane is drawn in the shader's own shutter-dark, so the colour is free to carry this.
 func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
+	key = _key_at(key, xf.origin)
 	var st := _tool(key)
 	var faces := _faces()
 	var scaled := xf.scaled_local(size)
@@ -81,6 +100,7 @@ func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
 
 ## One triangle, corners clockwise as seen from its front.
 func tri(key: String, a: Vector3, b: Vector3, c: Vector3, tint := Color.WHITE) -> void:
+	key = _key_at(key, a)
 	_emit(_tool(key), a, b, c, tint)
 	_triangles[key] = int(_triangles.get(key, 0)) + 1
 
@@ -129,16 +149,47 @@ func prism(key: String, xf: Transform3D, radius: float, length: float, tint: Col
 
 
 func has(key: String) -> bool:
+	if _split.has(key):
+		for q in 4:
+			if has("%s@%d" % [key, q]):
+				return true
+		return false
 	return _tools.has(key) and int(_triangles.get(key, 0)) > 0
 
 
 func triangles(key: String) -> int:
+	if _split.has(key):
+		var n := 0
+		for q in 4:
+			n += int(_triangles.get("%s@%d" % [key, q], 0))
+		return n
 	return int(_triangles.get(key, 0))
 
 
-## The finished mesh for one key as a child of `parent`, or null when nothing was drawn in it.
+## The finished mesh for one key as a child of `parent`, or null when nothing was drawn in it. A
+## split key is committed as its quarters (`node_name` with the quarter after it: Garden_ne), and
+## the first of them is returned; `commit_all` returns them all.
 func commit(parent: Node, key: String, material: Material, node_name: String) -> MeshInstance3D:
-	if not has(key):
+	var all := commit_all(parent, key, material, node_name)
+	return all[0] if not all.is_empty() else null
+
+
+func commit_all(parent: Node, key: String, material: Material, node_name: String) -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	if _split.has(key):
+		for q in 4:
+			var mi := _commit_one(parent, "%s@%d" % [key, q], material, "%s_%s" % [node_name, QUARTERS[q]])
+			if mi != null:
+				out.append(mi)
+		return out
+	var one := _commit_one(parent, key, material, node_name)
+	if one != null:
+		out.append(one)
+	return out
+
+
+func _commit_one(parent: Node, key: String, material: Material, node_name: String) -> MeshInstance3D:
+	if not _tools.has(key) or int(_triangles.get(key, 0)) <= 0:
 		return null
 	var st: SurfaceTool = _tools[key]
 	var mesh := st.commit()
