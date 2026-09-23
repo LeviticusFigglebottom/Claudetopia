@@ -49,7 +49,7 @@ Exported as glTF animations on the model; loop flag and events in a sidecar
  "Attack_1H_Light_1": {"loop": false, "length": 0.8, "events": [{"t": 0.32, "name": "hit_start"}, {"t": 0.48, "name": "hit_end"}, {"t": 0.55, "name": "cancel_ok"}]}}
 ```
 Required clip names (v1):
-* Locomotion: `Idle`, `Idle_Combat`, `Walk`, `Walk_Back`, `Run`, `Strafe_L`,
+* Locomotion: `Idle`, `Idle_Combat`, `Walk`, `Walk_Back`, `Run`, `Sprint`, `Strafe_L`,
   `Strafe_R`, `Sneak_Idle`, `Sneak_Walk`, `Jump_Start`, `Jump_Loop`, `Jump_Land`,
   `Fall_Loop`
 * Dodge: `Dodge_F`, `Dodge_B`, `Dodge_L`, `Dodge_R` (roll; i-frames from data)
@@ -66,6 +66,19 @@ Required clip names (v1):
   `Drink`, `Eat`, `Read`
 Every attack clip has `hit_start`, `hit_end`, `cancel_ok` events. Locomotion
 has footstep events. Death clips end in a held pose.
+
+Every locomotion clip's sidecar carries `"speed"`: the ground speed in m/s at which its planted
+foot stands still. It is load-bearing. The game plays a gait at (ground speed / `speed`), so a
+clip authored at the wrong speed slides its feet by exactly the difference. `Walk`, `Run` and
+`Sprint` are the three gaits of DESIGN §5.2 (1.8, 5.0 and 7.8 m/s), and `Sneak_Walk` is sneak
+(1.5). The gaits also share a phase: the left foot goes down at phase 0 and the right at 0.5 in
+every one of them, because the game blends them on one normalised timeline. A gait that
+breaks this blends out of step: halfway through the blend one clip's foot is planted while the
+other's is swinging, and the leg comes out as the average of the two, half lifted.
+
+A change to the clips alone is baked into a scratch copy of the rig and moved onto the committed
+`humanoid_rig.glb` with `tools/forge/transplant_clips.py`, because the rig bake rebuilds and
+repaints the body too. The tool changes nothing but the animations and checks that it did not.
 
 Creatures use their own rigs; their clips must include `Idle`, `Walk`, `Run`,
 `Attack_1`, `Attack_2`, `Hit`, `Death`, plus archetype extras listed in the

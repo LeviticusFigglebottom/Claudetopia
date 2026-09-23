@@ -56,6 +56,8 @@ const ALIGN_FULL := deg_to_rad(50.0)
 const ALIGN_NONE := deg_to_rad(150.0)
 ## A sprint run to empty stops, and does not start again until this share of stamina is back.
 const SPRINT_RESUME := 0.25
+## A press of Sprint let go within this long is a tap, and a tap rolls (see _read_sprint_tap).
+const SPRINT_TAP_S := 0.22
 const JUMP_HEIGHT := 1.1
 ## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
@@ -142,6 +144,8 @@ var _riposte_target: Actor = null
 var _sprint_toggle: bool = false
 ## Run to empty: no sprint until SPRINT_RESUME of the stamina has come back.
 var _sprint_spent: bool = false
+## When the Sprint key went down (the combat clock), or -1 while it is up.
+var _sprint_down_at: float = -1.0
 ## Speed along the way the body faces while moving freely (locomotion's own state, so a shove or
 ## a dodge's velocity is never taken for running speed).
 var _ground_speed: float = 0.0
@@ -303,6 +307,7 @@ func _read_input() -> void:
 		if _just[a]:
 			_buffer_action = a
 			_buffer_at = now()
+	_read_sprint_tap()
 
 
 func _peek_buffer(actions: Array) -> String:
@@ -519,7 +524,47 @@ func _sprint_wanted() -> bool:
 		if _move_input.length() < 0.1:
 			_sprint_toggle = false
 		return _sprint_toggle
-	return bool(_held["sprint"])
+	if not bool(_held["sprint"]):
+		return false
+	# a press that may yet be a tap is not a sprint: a roll must not start with a lurch forward
+	return _sprint_down_at < 0.0 or now() - _sprint_down_at >= SPRINT_TAP_S
+
+
+## A tap of Sprint rolls; a hold sprints. The genre's players reach for the run key to roll (the
+## Souls games taught most of them), and it leaves Space to jump. The roll goes through the same
+## buffer as the Dodge key, so it cancels an attack's recovery and waits out a busy moment the same
+## way. Keyboard only: on a pad, B rolls and the stick click is a sprint and nothing else. Off
+## with its setting, and while Sprint is a toggle, where a tap is the toggle.
+func _read_sprint_tap() -> void:
+	if not (input_enabled and sprint_taps_roll_setting()):
+		_sprint_down_at = -1.0
+		return
+	if _just["sprint"]:
+		_sprint_down_at = now() if _sprint_key_down() else -1.0
+	elif not bool(_held["sprint"]) and _sprint_down_at >= 0.0:
+		if now() - _sprint_down_at < SPRINT_TAP_S:
+			_buffer_action = "dodge"
+			_buffer_at = now()
+		_sprint_down_at = -1.0
+
+
+## Whether a tap of Sprint rolls, as the settings stand.
+static func sprint_taps_roll_setting() -> bool:
+	return bool(Settings.get_value("controls", "sprint_tap_rolls", true)) \
+			and not bool(Settings.get_value("controls", "toggle_sprint", false))
+
+
+## Whether Sprint is held on the keyboard (rather than on a pad).
+func _sprint_key_down() -> bool:
+	for ev in InputMap.action_get_events("sprint"):
+		var key := ev as InputEventKey
+		if key == null:
+			continue
+		if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
+			return true
+		if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
+			return true
+	return false
 
 
 # --- locomotion (DESIGN §5.2) -------------------------------------------------------------------
