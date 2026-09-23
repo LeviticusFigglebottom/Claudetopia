@@ -94,12 +94,10 @@ func _raise_start() -> PoiDressing:
 	return null
 
 
+## The way's points on today's map: the path is a shape between the Stair Head and the Choir,
+## so it goes where they go (PoiDressing.way_points, docs/COORDINATES.md).
 func _via() -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	var path: Dictionary = ContentDB.get_or_empty(START).get("path", {})
-	for p in path.get("via", []):
-		out.append(Vector2(float(p[0]), float(p[1])))
-	return out
+	return PoiDressing.way_points(START, ContentDB.get_or_empty(START))
 
 
 # --- where it is --------------------------------------------------------------------------------

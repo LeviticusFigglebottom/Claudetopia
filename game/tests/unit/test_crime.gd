@@ -4,8 +4,9 @@ const MERROWBY := "core:place/merrowby"
 const WARDENS := "core:faction/wardens"
 const HEARTHVALE := "core:region/hearthvale"
 const BRIARWOLD := "core:region/briarwold"
-const MERROWBY_POS := Vector3(900.0, 40.0, 2350.0)
-const HOLLOW_POS := Vector3(3000.0, 60.0, 250.0)
+## The two towns, wherever the map puts them (docs/COORDINATES.md).
+var MERROWBY_POS := at_place(MERROWBY, 40.0)
+var HOLLOW_POS := at_place("core:place/grandfather_hollow", 60.0)
 
 var _nodes: Array[Node] = []
 var _events: Array = []
@@ -295,7 +296,7 @@ func test_wanted_threshold_and_pay_bounty() -> void:
 
 func test_report_crime_contract_and_save_round_trip() -> void:
 	var b := _bounty()
-	var c := b.report_crime({"kind": "theft", "position": [900.0, 40.0, 2350.0], "value": 60, "witnesses": [_witness("core:npc/a", 0.9)]})
+	var c := b.report_crime({"kind": "theft", "position": [MERROWBY_POS.x, MERROWBY_POS.y, MERROWBY_POS.z], "value": 60, "witnesses": [_witness("core:npc/a", 0.9)]})
 	assert_eq(c["kind"], "theft")
 	assert_eq(int(c["severity"]), 30)
 	assert_eq(b.pending_count(), 1)

@@ -1,18 +1,5 @@
 {
   "_doc": "The roll from the keys a player presses, filmed from the right on the flat ground east of the Cracked Toll: a jog on W, then Ctrl (the Dodge key), then a tap of Shift (Sprint tapped rolls). Real key events through the input map, eight frames 0.08 s apart from the moment of the key. Forward+ as the player sees it: xvfb-run -a -s '-screen 0 1600x900x24' godot --path game --rendering-driver vulkan --rendering-method forward_plus --audio-driver Dummy --resolution 1600x900 --fixed-fps 60 -- --capture=tools/capture/plans/roll.json --out=captures/roll",
   "shots": [],
-  "gait": {
-    "pos": [1096.0, 0.0, 2086.0],
-    "heading": 90.0,
-    "time": 11.0,
-    "weather": "core:weather/clear",
-    "frames": 8,
-    "interval": 0.08,
-    "settle": 1.0,
-    "camera": {"distance": 5.2, "height": 1.0, "fov": 50.0},
-    "runs": [
-      {"label": "roll_ctrl", "hold_keys": ["W"], "tap_key": "Ctrl", "tap_hold": 0.1},
-      {"label": "roll_tap_shift", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}
-    ]
-  }
+  "gait": {"at": {"place": "core:poi/bell_meadow_stones", "bearing": 279.462, "distance": 24.33}, "heading": 90.0, "time": 11.0, "weather": "core:weather/clear", "frames": 8, "interval": 0.08, "settle": 1.0, "camera": {"distance": 5.2, "height": 1.0, "fov": 50.0}, "runs": [{"label": "roll_ctrl", "hold_keys": ["W"], "tap_key": "Ctrl", "tap_hold": 0.1}, {"label": "roll_tap_shift", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}]}
 }

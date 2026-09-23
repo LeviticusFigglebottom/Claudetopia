@@ -6,13 +6,20 @@ extends Node
 ##       -- --capture=tools/capture/plans/default.json --out=captures
 ##
 ## Plan format:
-##   {"shots": [{"label", "pos": [x, y, z], "look_at": [x, y, z] | "yaw"/"pitch",
-##               "fov", "time": hours, "place": "core:place/x", "height_above_ground": m}],
+##   {"shots": [{"label", "at": {place spec}, "look": {place spec} | "yaw"/"pitch",
+##               "fov", "time": hours}],
 ##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours},
-##    "gait": {"pos": [x, _, z], "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
+##    "gait": {"at": {place spec}, "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
 ##             "camera": {"distance": m, "height": m, "fov": deg},
 ##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]},
 ##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?}}
+##
+## A place spec is the opening cinematic's: `{"place": id, "bearing": deg, "distance": m,
+## "height": m}`, a compass bearing and a distance from the place and `height` metres above the
+## ground there (`PlaceRef`, `CinematicPath.point_of`), so a shot goes where its place goes when
+## the map is drawn again. `tools/capture/relative_plan.py` turns a plan written in coordinates
+## into one. Coordinates still work -- `"pos": [x, y, z]` with an optional `"height_above_ground"`,
+## `"place"` alone for the place itself, `"look_at": [x, y, z]` -- and stay where they are.
 ##
 ## A `cinematic` block loads the world with its body standing where the story opens and has
 ## `CinematicPlayer` scrub to each shot's samples, so every frame on disk is the player's own
@@ -29,7 +36,7 @@ extends Node
 ## <index>_<label>.png and records Performance monitors into <out>/perf.json.
 ##
 ## A `gait` section films the player's own body in motion: it stands a player up on the ground
-## at `pos`, facing `heading` (a compass bearing), presses the run's actions exactly as a player
+## at `at` (or `pos`), facing `heading` (a compass bearing), presses the run's actions exactly as a player
 ## would, lets it settle, and takes `frames` shots `interval` seconds apart from its left side.
 ## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
 ## rasteriser managed: every frame is then one physics tick.
@@ -187,9 +194,9 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		_failures.append("no fly camera for shot %s" % label)
 		return
 	cam.fov = float(shot.get("fov", 65.0))
-	if shot.has("look_at"):
-		var la: Array = shot["look_at"]
-		cam.move_to(pos, Vector3(float(la[0]), float(la[1]), float(la[2])))
+	var look := _look_of(shot)
+	if look != Vector3.INF:
+		cam.move_to(pos, look)
 	else:
 		cam.move_to(pos)
 		cam.set_yaw_pitch(float(shot.get("yaw", 0.0)), float(shot.get("pitch", -8.0)))
@@ -384,6 +391,12 @@ func _force_weather(weather_id: String) -> void:
 
 
 func _shot_position(shot: Dictionary) -> Vector3:
+	if PlaceRef.is_spec(shot.get("at", null)):
+		var at := _spec_point(shot["at"])
+		if at == Vector3.INF:
+			_failures.append("%s: no place %s" % [str(shot.get("label", "?")), str(shot["at"].get("place", ""))])
+			return Vector3.ZERO
+		return at
 	var pos := Vector3.ZERO
 	if shot.has("place"):
 		pos = _world.place_position(str(shot["place"]))
@@ -394,6 +407,34 @@ func _shot_position(shot: Dictionary) -> Vector3:
 		var ground := _world.provider.get_height(pos.x, pos.z)
 		pos.y = ground + float(shot["height_above_ground"])
 	return pos
+
+
+## Where a shot (or a sequence) looks: its `look` place spec, else its `look_at` coordinates;
+## Vector3.INF when it says neither and aims by yaw and pitch instead.
+func _look_of(shot: Dictionary) -> Vector3:
+	if PlaceRef.is_spec(shot.get("look", null)):
+		return _spec_point(shot["look"])
+	var la: Variant = shot.get("look_at", null)
+	if typeof(la) == TYPE_ARRAY and (la as Array).size() >= 3:
+		return Vector3(float(la[0]), float(la[1]), float(la[2]))
+	return Vector3.INF
+
+
+## A place spec in this world, as the opening's cinematic resolves one (the place's built
+## position, the terrain under the point), so a plan and the cinematic agree about a bearing.
+func _spec_point(spec: Dictionary) -> Vector3:
+	return CinematicPath.point_of(spec, Callable(self, "_ground_at"), Callable(self, "_place_at"))
+
+
+func _ground_at(x: float, z: float) -> float:
+	return _world.provider.get_height(x, z)
+
+
+func _place_at(id: String) -> Vector3:
+	if id.is_empty() or not ContentDB.has(id):
+		return Vector3.INF
+	var at := _world.place_position(id)
+	return Vector3.INF if at == Vector3.ZERO else at
 
 
 ## Waits until the streamer has the full-detail ring around the camera, then lets the frame
@@ -480,8 +521,15 @@ func _gait(index: int, gait: Dictionary) -> int:
 		WorldClock.set_time(float(gait["time"]))
 	if gait.has("weather"):
 		_force_weather(str(gait["weather"]))
-	var p: Array = gait.get("pos", [0.0, 0.0, 0.0])
-	var start := Vector3(float(p[0]), 0.0, float(p[2]))
+	var start := Vector3.ZERO
+	if PlaceRef.is_spec(gait.get("at", null)):
+		start = _spec_point(gait["at"])
+		if start == Vector3.INF:
+			_failures.append("gait: no place %s" % str(gait["at"].get("place", "")))
+			return index
+	else:
+		var p: Array = gait.get("pos", [0.0, 0.0, 0.0])
+		start = Vector3(float(p[0]), 0.0, float(p[2]))
 	start.y = _world.provider.get_height(start.x, start.z)
 	var bearing := deg_to_rad(float(gait.get("heading", 90.0)))
 	var travel := Vector3(sin(bearing), 0.0, -cos(bearing))        # north is -Z (CONTRACTS §1)
@@ -666,9 +714,9 @@ func _sequence(index: int, seq: Dictionary) -> int:
 		_failures.append("no fly camera for sequence %s" % label)
 		return index
 	cam.fov = float(seq.get("fov", 65.0))
-	if seq.has("look_at"):
-		var la: Array = seq["look_at"]
-		cam.move_to(pos, Vector3(float(la[0]), float(la[1]), float(la[2])))
+	var look := _look_of(seq)
+	if look != Vector3.INF:
+		cam.move_to(pos, look)
 	else:
 		cam.move_to(pos)
 		cam.set_yaw_pitch(float(seq.get("yaw", 0.0)), float(seq.get("pitch", -8.0)))
@@ -690,10 +738,13 @@ func _sequence(index: int, seq: Dictionary) -> int:
 	if seq.get("to", null) is Array:
 		var t: Array = seq["to"]
 		end_pos = Vector3(float(t[0]), float(t[1]), float(t[2]))
+	elif PlaceRef.is_spec(seq.get("to", null)):
+		end_pos = _spec_point(seq["to"])
+		if end_pos == Vector3.INF:
+			end_pos = pos
 	var look_off := Vector3.ZERO
-	if seq.has("look_at"):
-		var la2: Array = seq["look_at"]
-		look_off = Vector3(float(la2[0]), float(la2[1]), float(la2[2])) - start_pos
+	if look != Vector3.INF:
+		look_off = look - start_pos
 	var travel := float(want) * every
 	var grid_a := PackedFloat32Array()
 	var grid_b := PackedFloat32Array()
@@ -738,7 +789,7 @@ func _sequence(index: int, seq: Dictionary) -> int:
 			var p := start_pos.lerp(end_pos, clampf(clock / maxf(travel, 0.001), 0.0, 1.0))
 			if seq.has("height_above_ground"):
 				p.y = _world.provider.get_height(p.x, p.z) + float(seq["height_above_ground"])
-			cam.move_to(p, p + look_off if seq.has("look_at") else null)
+			cam.move_to(p, p + look_off if look != Vector3.INF else null)
 		var builds := _grade_builds() - builds_at_start
 		lums.append(lum)
 		luts.append(builds)

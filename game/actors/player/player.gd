@@ -2028,6 +2028,8 @@ func to_save() -> Dictionary:
 	d["arrows"] = arrows
 	d["first_person"] = camera_rig.first_person
 	d["sneaking"] = is_sneaking
+	# the place the body stood beside, so a load into a redrawn map finds it there (PlaceRef)
+	d["near"] = PlaceRef.pin(global_position)
 	return d
 
 
@@ -2059,6 +2061,7 @@ func from_save(d: Dictionary) -> void:
 		quick_slots[i] = str(qs[i])
 	arrows = int(d.get("arrows", arrows))
 	super.from_save(d)
+	global_position = PlaceRef.follow(global_position, d.get("near", null))
 	stamina_comp.from_save(d.get("stamina", {}))
 	caster.from_save(d.get("mana", {}))
 	camera_rig.set_first_person(bool(d.get("first_person", false)))

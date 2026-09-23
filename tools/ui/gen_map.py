@@ -319,9 +319,7 @@ def paint(world: dict, size: int, seed: int = 4242) -> tuple[Image.Image, dict]:
         region = by_id.get(region_id)
         if region is None:
             continue
-        m = region.get("map", {})
-        cx, cz = (m.get("center", [0, 0]) + [0, 0])[:2]
-        u, v = _to_uv(float(cx), float(cz), origin, size_m)
+        u, v = _label_uv(region_small, index, region, origin, size_m)
         if not (0.02 < u < 0.98 and 0.02 < v < 0.98):
             continue
         letters.text(str(region.get("name", "")).upper(), (u, v), 0.019, pal["ink"], FONT_DISPLAY, alpha=205)
@@ -350,6 +348,26 @@ def _hex(text: str) -> tuple[int, int, int]:
 
 def _to_uv(x: float, z: float, origin, size_m: float) -> tuple[float, float]:
     return (x - float(origin[0])) / size_m, (z - float(origin[1])) / size_m
+
+
+def _label_uv(region_small: np.ndarray, index: int, region: dict, origin, size_m: float) -> tuple[float, float]:
+    """Where a region's name is lettered: the point of it farthest from its own edges in the
+    region mask, so the name goes where the region is however the map has been drawn. Only a
+    region the mask does not have is lettered at its map block's `center`, which is a point
+    written down once and left behind when the map is redrawn (docs/COORDINATES.md)."""
+    mask = np.abs(region_small - index) < 0.5
+    if mask.any():
+        from scipy import ndimage
+        inside = ndimage.distance_transform_edt(np.pad(mask, 1))[1:-1, 1:-1]
+        # of the points deepest inside it, the one nearest its middle: a long region is lettered
+        # half way along, not at whichever end the search reaches first
+        rows, cols = np.nonzero(inside >= 0.85 * inside.max())
+        ci, cj = np.nonzero(mask)
+        k = int(np.argmin((rows - ci.mean()) ** 2 + (cols - cj.mean()) ** 2))
+        return (cols[k] + 0.5) / mask.shape[1], (rows[k] + 0.5) / mask.shape[0]
+    m = region.get("map", {})
+    cx, cz = (list(m.get("center", [0, 0])) + [0, 0])[:2]
+    return _to_uv(float(cx), float(cz), origin, size_m)
 
 
 def _draw_line(nib: Nib, points, origin, size_m: float, colour, width: float,

@@ -108,6 +108,16 @@ def main() -> int:
         check(synth_info["synthetic"], "a missing world falls back to the region definitions", failures)
         check((synth_out / "world_map.png").exists(), "the fallback chart is written too", failures)
         check(len(synth_info["regions"]) >= 5, "the fallback covers every region", failures)
+
+        # a region's name goes where the region mask has it, not where its map block's centre was
+        # written down: region 0 holds the west third, its stale centre is in the east
+        mask = np.full((90, 90), 1.0, np.float32)
+        mask[:, :30] = 0.0
+        stale = {"map": {"center": [3000.0, 0.0]}}
+        u, v = gen_map._label_uv(mask, 0, stale, [-SIZE_M / 2, -SIZE_M / 2], SIZE_M)
+        check(u < 1.0 / 3.0 and 0.2 < v < 0.8, "a name is lettered inside its region (%.2f, %.2f)" % (u, v), failures)
+        u2, _v2 = gen_map._label_uv(mask, 7, stale, [-SIZE_M / 2, -SIZE_M / 2], SIZE_M)
+        check(abs(u2 - (3000.0 + SIZE_M / 2) / SIZE_M) < 0.001, "a region the mask lacks falls back to its centre", failures)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

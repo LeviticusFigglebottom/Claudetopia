@@ -5,7 +5,8 @@ extends TestCase
 ## of interest hung up. These pin the three halves of the fix: the panes that glow, the sources
 ## every settlement registers, and the pool of real lights that follows the eye.
 
-const CENTRE := Vector3(900.0, 56.0, 2350.0)
+## Merrowby, wherever the map puts it (docs/COORDINATES.md).
+var CENTRE := at_place("core:place/merrowby", 56.0)
 
 
 func _tree() -> SceneTree:

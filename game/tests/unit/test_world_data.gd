@@ -6,6 +6,9 @@ extends TestCase
 ## the world first (run.sh does it automatically when the manifest is absent).
 
 const GENERATED := "res://world/generated"
+const MERROWBY := "core:place/merrowby"
+const HUSHLINE := "core:place/hushline"
+const WINDGATE := "core:place/windgate"
 
 var manifest: Dictionary = {}
 var provider: TerrainProvider = null
@@ -68,10 +71,13 @@ func test_region_list_matches_the_content_pack() -> void:
 		assert_true(ContentDB.has(id), "manifest names unknown region %s" % id)
 
 
-func test_heights_are_plausible_at_region_centres() -> void:
+## Each region is the kind of country its map block says: its ground, taken over every texel the
+## built region mask gives it, stands on average in its band. It used to be read at the region
+## def's `map.center`, a point that stays where it was written when the map is redrawn and the
+## region goes somewhere else (docs/COORDINATES.md).
+func test_each_region_stands_at_its_height() -> void:
 	if _skip():
 		return
-	# each region's own map block says what kind of country it is; the built heights have to agree
 	var expected := {
 		"core:region/hearthvale": [15.0, 140.0],
 		"core:region/brightwater": [-15.0, 90.0],
@@ -80,24 +86,67 @@ func test_heights_are_plausible_at_region_centres() -> void:
 		"core:region/skerrow": [120.0, 700.0],
 		"core:region/cinderlea": [30.0, 170.0],
 	}
-	for region in ContentDB.all("region"):
-		var map: Dictionary = region["map"]
-		var centre: Array = map["center"]
-		var h := provider.get_height(float(centre[0]), float(centre[1]))
-		var range_v: Array = expected.get(region["id"], [-50.0, 800.0])
-		assert_true(h >= float(range_v[0]) and h <= float(range_v[1]),
-			"%s centre is %.1f m, expected %s" % [region["id"], h, str(range_v)])
+	var ids: Array = manifest.get("regions", [])
+	var sums := PackedFloat64Array()
+	var counts := PackedInt64Array()
+	sums.resize(ids.size())
+	counts.resize(ids.size())
+	var heights := provider.runtime_heights()
+	var regions := provider.runtime_regions()
+	for i in mini(heights.size(), regions.size()):
+		var r := regions[i]
+		if r < ids.size():
+			sums[r] += heights[i]
+			counts[r] += 1
+	for r in ids.size():
+		var id := str(ids[r])
+		assert_gt(counts[r], 0, "%s has no ground in the region mask" % id)
+		if counts[r] == 0:
+			continue
+		var mean := sums[r] / float(counts[r])
+		var range_v: Array = expected.get(id, [-50.0, 800.0])
+		assert_true(mean >= float(range_v[0]) and mean <= float(range_v[1]),
+			"%s stands at %.1f m on average, expected %s" % [id, mean, str(range_v)])
+
+
+## The Mere, wherever the map puts it: the deepest water standing at the manifest's lake level
+## (the biggest lake's; DESIGN §4 has the Mere at 8 m), with how much of the map lies at that
+## level. {"at": Vector2, "depth": m, "km2": area}; depth 0 when there is no such water.
+func _the_mere() -> Dictionary:
+	var level := float(manifest.get("lake_level", 8.0))
+	var step := 32.0
+	var best := Vector2.ZERO
+	var deepest := 0.0
+	var texels := 0
+	var z := -4096.0 + step * 0.5
+	while z < 4096.0:
+		var x := -4096.0 + step * 0.5
+		while x < 4096.0:
+			if provider.is_water(x, z) and absf(provider.water_level_at(x, z) - level) < 0.6:
+				texels += 1
+				var d := provider.water_depth_at(x, z)
+				if d > deepest:
+					deepest = d
+					best = Vector2(x, z)
+			x += step
+		z += step
+	return {"at": best, "depth": deepest, "km2": float(texels) * step * step / 1e6}
 
 
 func test_world_height_extremes() -> void:
 	if _skip():
 		return
-	# the Mere sits at 8 m and the northern peaks reach 600-700 m (DESIGN.md §4)
-	var lake := provider.get_height(0.0, -200.0)
+	# the Mere sits at 8 m and the northern peaks reach 600-700 m (DESIGN.md §4); each is found
+	# by what it is -- the lake's water, the wall behind Windgate, the Hushline's own place --
+	# rather than at the coordinates it had before the map was redrawn
+	var mere: Vector2 = _the_mere()["at"]
+	var lake := provider.get_height(mere.x, mere.y)
 	assert_true(lake < 20.0, "the middle of the Mere is %.1f m" % lake)
-	var peak := provider.max_height_around(200.0, -3800.0, 600.0, 24)
+	var gate := PlaceRef.xz(WINDGATE)
+	var peak := provider.max_height_around(gate.x, gate.y, 600.0, 24)
 	assert_gt(peak, 450.0, "the northern wall only reaches %.1f m" % peak)
-	var hush := provider.get_height(-1900.0, 4000.0)
+	var hushline := PlaceRef.xz(HUSHLINE)
+	var hush := provider.get_height(hushline.x, hushline.y)
 	assert_true(hush < 10.0, "the Hushline should fall away, it is %.1f m" % hush)
 
 
@@ -132,11 +181,15 @@ func test_settlements_are_out_of_the_water() -> void:
 func test_water_levels() -> void:
 	if _skip():
 		return
-	assert_true(provider.is_water(0.0, -700.0), "the middle of the Mere should be water")
-	assert_near(provider.water_level_at(0.0, -700.0), 8.0, 0.6)
-	assert_false(provider.is_water(900.0, 2350.0), "Merrowby should be dry")
-	assert_eq(provider.water_level_at(900.0, 2350.0), TerrainProvider.NO_WATER)
-	assert_gt(provider.water_depth_at(0.0, -700.0), 2.0)
+	var mere := _the_mere()
+	var at: Vector2 = mere["at"]
+	assert_gt(float(mere["km2"]), 1.0, "the Mere is a lake, not a pond: %.2f km² at its level" % float(mere["km2"]))
+	assert_true(provider.is_water(at.x, at.y), "the middle of the Mere should be water")
+	assert_near(provider.water_level_at(at.x, at.y), 8.0, 0.6)
+	var town := PlaceRef.xz(MERROWBY)
+	assert_false(provider.is_water(town.x, town.y), "Merrowby should be dry")
+	assert_eq(provider.water_level_at(town.x, town.y), TerrainProvider.NO_WATER)
+	assert_gt(provider.water_depth_at(at.x, at.y), 2.0)
 
 
 func test_cell_index_maths() -> void:
@@ -325,8 +378,9 @@ func test_streamer_builds_multimeshes_from_a_cell() -> void:
 func test_provider_normals_and_slopes() -> void:
 	if _skip():
 		return
-	var flat := provider.get_normal(900.0, 2350.0)     # a settlement pad is flat by construction
+	var town := PlaceRef.xz(MERROWBY)
+	var flat := provider.get_normal(town.x, town.y)     # a settlement pad is flat by construction
 	assert_gt(flat.y, 0.9, "a flattened pad should have an upward normal, got %s" % str(flat))
 	assert_near(flat.length(), 1.0, 0.01)
-	var slope := provider.get_slope(900.0, 2350.0)
+	var slope := provider.get_slope(town.x, town.y)
 	assert_true(slope < 0.4, "the pad slope is %.2f rad" % slope)

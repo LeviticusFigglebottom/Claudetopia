@@ -5,11 +5,39 @@ extends TestCase
 ## are up, the distant are not, and walking away takes them down again.
 
 const MERROWBY := "core:place/merrowby"
-const FAR_AWAY := Vector3(-3600.0, 40.0, -3600.0)
+## The emptiest spot on the map, wherever the map has put its places (see _far_away).
+var FAR_AWAY := _far_away()
 
 
 func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
+
+
+## The point of a 256 m grid over the map that is farthest from every place and POI. It used to
+## be written down as a corner of the old map (-3600, -3600), which a redrawn map is free to put a
+## village in (docs/COORDINATES.md).
+static func _far_away() -> Vector3:
+	var anchors: Array[Vector2] = []
+	for type in PlaceRef.ANCHOR_TYPES:
+		for def in ContentDB.all(type):
+			var p := PlaceRef.xz(str(def.get("id", "")))
+			if p != Vector2.INF:
+				anchors.append(p)
+	var best := Vector3(-3600.0, 40.0, -3600.0)
+	var best_d := -1.0
+	var z := -3968.0
+	while z <= 3968.0:
+		var x := -3968.0
+		while x <= 3968.0:
+			var nearest := INF
+			for a in anchors:
+				nearest = minf(nearest, a.distance_squared_to(Vector2(x, z)))
+			if nearest > best_d:
+				best_d = nearest
+				best = Vector3(x, 40.0, z)
+			x += 256.0
+		z += 256.0
+	return best
 
 
 ## The world without its own body in it. `world.tscn` spawns a real Player at the opening
