@@ -3273,3 +3273,141 @@ Run on the merged head (main at a3e9fe6b), one Godot at a time:
 * A house's front door always opens into its first ground-floor room from the north wall, and the
   meta's `entrance` names an internal door; the landing reads the front door and ignores
   `entrance`.
+
+
+## Wickmere drawn by hand, and filled to walk
+
+The playtest put the Foundling at the edge of a map that was mostly empty hills, with a tower
+here and there, and said the seed had taken the mystique away. The world's geography is now drawn
+by hand in `tools/world/atlas/atlas.json`: twenty-two provinces in the six regions, with 21
+ranges, 24 peaks, 29 valleys, 14 rivers, 7 lakes, 21 woods, the coast and its cliffs, 83 roads
+and the start. The builder makes the land from it, and noise decides only how a slope is
+broken. `docs/ATLAS.md` gives the reasons for each part and every new location's story, and
+WORLD_BIBLE §6.7 points to it. The decision is recorded in DECISIONS (2026-09-23, superseding
+"The land is built last").
+
+### How full it is
+
+These figures are measured on the preview's 8 m cells (`tools/world/atlas/preview.py`). Walkable
+means dry land that is not too steep and not past the Skerrow Wall's or the Thornmarch's crest.
+
+| | |
+|---|---|
+| land | 61.4 km², of which 47.2 km² is walkable |
+| locations | 297: 57 places and 240 points of interest, 6.3 to a walkable km² |
+| nearest location | mean 180 m, 95% within 312 m, worst 501 m. 0.1% of walkable ground is over 400 m from one, in three pockets under 0.01 km² each |
+| roads | 83, 80 km: highway 3 km, road 25, lane 13, track 36, causeway 1.6, stair 0.6. No stretch is more than 289 m from a location |
+| near the start | 15 locations within 1 km of the camp, 29 within 1.5 km, 45 within 2 km |
+
+83 existing places and points of interest were moved to where the map puts them. None was
+deleted or renamed. There are 217 new locations:
+
+* 26 places. Each has one resident with a schedule, a dialogue and a habit of their own
+  (`game/content/packs/core/npcs/the_map.json`, `dialogues/the_map.json`).
+* 191 points of interest: 53 ruins, 39 camps, 29 standing stones, 23 towers, 18 bridges,
+  13 shrines, 6 waterfalls, 6 giant bones and 4 wrecks. Each has a one-line hook, and the world
+  has 22 Hearthstones in all.
+
+`tools/world/tests/test_atlas_map.py` holds these things:
+
+* every location stands in its own region's provinces, on land unless it is a bridge, wreck or
+  the like, and no two within 20 m;
+* every place or point of interest that anything in the pack names exists;
+* every river falls to its mouth;
+* the density: worst gap at most 550 m, at most 1% of the ground over 400 m, no road stretch
+  over 300 m from a location, at least 250 locations;
+* every settlement is on a road;
+* the landing;
+* the start faces the Choir.
+
+### The shapes, redrawn where they read as machine-made
+
+* Province borders, woods and the coast are broken every 140 to 210 m and pushed up to 45 to
+  70 m off the line. Neighbouring provinces share each border point for point.
+* The Wall's summits are drawn by the builder. The "fans" were the preview's shading of them.
+* The small waters are drawn to their settings, at 14 to 19 points each.
+* The Mere is drawn in features of three hundred metres and more:
+  * the Narrows' funnel;
+  * Smokehouse Bay, open-mouthed under Merrowhithe;
+  * Holm Point;
+  * Lime Bay, as wide as it is deep;
+  * the Stride Ness, about 470 m long, carrying the Long Stride and the new Ness Market;
+  * Willow Bay, closed by Willow Point;
+  * the Reed Arm narrowing to the Eelweir;
+  * the Lamp's promontory.
+* Tollmere's island has a harbour bight where the causeway lands, the Spire Rock (32 m) at its
+  high end and a low tail where the Undercroft has its water-gate.
+* The built shore had scallops, and the cause is the builder's shore band. On a build, a lake's
+  water stands about 36 m inside its polygon (24 to 56 m), so every cove under about a hundred
+  metres closed into a round bump. The drawing now has none that small (ATLAS §11).
+
+### The landing
+
+The Foundling comes up out of the Hush onto the Landing, a rock shelf 4 m above the sea under
+the cliff. The Oroth stair goes on down into the water from its seaward edge. The fields were
+agreed with the land builder:
+
+* a coast shelf at 4 m with a 90 m bank;
+* a lobe of the coast polygon with a 4 m cliff on its seaward edge;
+* a pad for the Hushline Stair;
+* the road `core:road/stair_head_hushline_stair` of kind "stair".
+
+The Stair is one traverse across the bank. Three switchbacks were tried first, and their corners
+sat mid-bank and ran 1.6. Drawn, the shelf's seaward edge is a smooth arc. The land builder breaks
+it with spurs, bites and fallen blocks, and cuts a notch where the Oroth stair leaves the shelf
+(`coast.shelves[].notches`, at (44, 3902)). The Wardens' camp stands on the Stair Knoll, a 110 m dome, so the first
+view carries over the heath to Pilgrim's Ash's smoke and Ashwell's roofs. The Ash Heath's relief
+is kept at 18 m for the same reason.
+
+These figures are from a 1024 heights build of 9277caaa with the builder at 74143ba9 (92 s, peak
+0.9 GB). The camp stands at 108.4 m and the Stair at 4.0 m. The Stair's road is 646 m long, and
+its steepest stretch is 0.57.
+
+### The map
+
+`tools/world/atlas/render_map.py` draws the paper map, `docs/atlas/wickmere_atlas.png`. It draws
+provinces by biome, woods, rivers, roads by kind (the stair with its steps), and every settlement
+and point of interest by kind. Hearthstones are ringed and the start is marked with its first
+view, and a panel gives the figures. The options are:
+
+* `--world DIR` draws a build's heights and water, with each lake's shore where the build put it;
+* `--coverage` shades what is far from anything, and over a build tints the dry band of each lake.
+
+### Tests
+
+* `check_atlas.py` finds 0 errors. The 20 warnings are places inside a border's blend, and the
+  Bell-Buoys in the Mere.
+* The Python atlas tests pass (31).
+* `./run.sh test` has 0 content problems. test_crime, test_jobs, test_world_data and
+  test_poi_encounters were brought to the moved content, and the property, crime, content and
+  point-of-interest filters pass.
+* Twelve tests read the tracked world, which still has the old positions. They fail until the
+  world is rebuilt from the atlas. Each was run alone against the content as committed:
+  * test_world_data: the region mask agrees with the place data; settlements are out of the water;
+  * test_world_spawn: a character is put on the ground at the opening;
+  * test_the_start: the Stair Head is a camp with the Warden's place in front;
+  * test_npc_streamer ×3;
+  * test_npcs_in_the_world;
+  * test_settlement_people ×2;
+  * test_cinematic_player ×2.
+
+  The rest of test_world_data passes over the old world, including the Mere's water and every
+  point of interest standing on the ground.
+* test_inventory_loot's two quest-stage tests fail on the branch this work started from, whether
+  run alone or in the full suite. The opening gave the Naming a stage called "the_choir"
+  (20ef631b), and the loot test (b1326eb6) still counts four stages. It has nothing to do with the
+  map.
+
+### Next, in order
+
+1. **Rebuild the tracked world from the merged atlas**: 9277caaa, with the land builder's notch
+   (that is the land builder's work). Then run the world-coupled tests above and test_sightlines
+   against it.
+2. **Walk the start at ground level**: the Landing, the Stair's traverse, and the first view from
+   the knoll. The Lark Pool sits 3 m under the line of sight from the camp and comes into view on
+   the way to Pilgrim's Ash. The Glass Falls are behind the plateau's lip.
+3. **The cost of the new places at bootstrap**: the 26 new places, mostly hamlets and lodges, all
+   bring their fabric and their people. Measure what the streamer carries around the Vale.
+4. **Mend test_inventory_loot** for the Naming's five stages.
+5. `namegen --check` reports four problems that were there before this pass (the Reed Lantern,
+   and duplicates among the example Merrowby people).
