@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-23 18:40 UTC. Main is `claude/blissful-volta-dg80e6`: `6985d356` plus this file.
+**Last refreshed:** 2026-09-23 18:55 UTC. Main is `claude/blissful-volta-dg80e6`: `6985d356` plus this file. Every area's hand-off note is in §6.
 
 ---
 
@@ -59,13 +59,13 @@ The user owns the project. Their direction, in their words where it matters:
 |---|---|---|---|
 | `claude/blissful-volta-dg80e6` | **main** | `6985d356` | Verified (§4) and pushed. |
 | `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `304d5df9` | Final 4096 build done. Build helpers are in the repo. Fixing river gorges cut as slots, then hands back. Carries the cartographer's atlas. |
-| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `c86e169d` | Atlas final. Quest plumbing Phase A done. Phase B, the **quest walker**, is in progress. Hushline escort fix pending. |
+| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `a90cfdde` | Atlas final. Quest plumbing Phase A done. The Hushline has moved onto the landing. Next: the atlas items that gate the merge, then the **quest walker** (`./run.sh quests`). |
 | `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `a0dd10dd` | PlaceRef and the coordinate inventory are done. The game runs on the atlas world (journey 16/16, fights 0 failed, 1 atlas-side test fail). Next: merge main, rerun, hand back. |
 | `wip/opening` | The intro cinematic, the start, and its loose ends | `cede10cd` | Phase A done (title/Naming music, QuestLog stage 0, QuestFoes fallback, wall-clock words). **URGENT: NPC talk fixed in WIP, being tested;** then the inverted tent and camp life. |
 | `wip/player-feel` | Movement, gaits, animation feel | `ca2d4920` | Follow-up round done. **URGENT: can't walk uphill; jump dead.** Diagnosed (§6.5). Then the attack-clip audit. |
 | `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `cbf7a236` | **URGENT: black ground, diagnosed** (the ash soil albedo, §4); fix next. |
 | `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `a5a930e9` | Suite passes (1616 tests, 0 failed). The flow failure was main's old opening stall. Next: merge main, then flow, then hand back. |
-| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `e7351633` | Most refinements done. The empty Naming preview is fixed (class cache). WIP: the wrist rebuild, cloaks mid-stride, the brigandine review (§6.8). |
+| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `36a900eb` | Most refinements done. The empty Naming preview is fixed (class cache). WIP: the wrist rebuild, cloaks mid-stride, the brigandine review (§6.8). |
 | `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `3352cb7c` | **Brief done and verified** (test 1664 passed, 0 failed; journey 16/16; smoke PASS; flow 98/99, the miss is the opening's). Queued for the next batch merge. Next: the atlas POI kinds. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
@@ -226,12 +226,55 @@ Each subsection is refreshed from its agent's hand-off note. Commands assume the
     - a `bounty` effect through the crime service (the missing `bounty_for` also fixed);
     - `test_quest_reach` reads `offer`;
     - residents `offer_work` through `JobBoard.for_place`.
-- **In progress:** the quest walker. It is a headless test that plays every quest and every
-  decision branch through the game's own services on the atlas world. It becomes the gate for
-  the atlas merge.
-- **Pending:** the Hushline place (0, 3990) stands in the sea, so "Walk Aud Fennick down to the
-  Hushline" can't finish on foot. Move the place onto the landing shelf, about (10, 3870), or end
-  the escort at the shelf's edge.
+- **Head:** `a90cfdde`, from its note.
+- **The Hushline** moved from (0, 3990) onto the landing at (10, 3870), with an atlas pad
+  (level 4, r 20). ATLAS §3, §11 and §12 are updated. The escort step floor went from 40 to 30.
+- **Results:**
+  - `check_atlas`: 0 errors;
+  - the atlas pytest: 31 passed;
+  - `poi_hooks --check`: 0 differ;
+  - `test_map` 13/0, `test_quest` 82/0, `test_poi` 38/0, `test_escorts` 7/0,
+    `test_faction_lines` 38/0;
+  - on w_final4: `test_settlement_people` 12/0 and `test_npc_streamer` 11/0.
+- **Still failing on w_final4:**
+  - world-side, sent to the builder: `test_world_data` river widths (the Weaver Gill 3.8 m, the
+    outfall 19.9 m, the North Channel 14.7 m);
+  - `test_the_start`: the 980 m walk, the Stair Head pad, the way round the solid, and the
+    landing's wights. Some of these pass on `wip/atlas-readiness`, whose place-relative
+    conversions this branch doesn't have.
+- **Next, in order:**
+  1. The atlas items that gate the merge:
+     - The Choir walk, 980 m against 300–650 m. The road drops 38 m off the knoll into the heath
+       dip at (−45, 3560), then zigzags up a 56 m scarp. A fix must cut that vertical: a saddle
+       from the Stair Knoll to the Choir's Crown, or the Choir and the plateau edge nearer.
+     - The Heron Watch 30 m off the North Channel.
+     - Wat Thatcher's and Jory Wick's schedules.
+     - The 28 sightlines.
+     - The Blackgill's end.
+     - The Thornmarch border.
+
+     Then tell the land agent to rebuild at 4096.
+  2. The quest walker, `game/tests/quests/quest_walker.tscn/.gd`, built like `tests/journey`,
+     and run by `./run.sh quests [--only=<quest id>]`.
+     - Per quest, it starts through the giver's offer, then drives each objective through the
+       services:
+       - teleport or walk to the `where`;
+       - `DialogueRunner` to the topic node;
+       - kills through `take_hit`;
+       - `WorldItem` pickups;
+       - books read.
+     - Before each choice it saves with `SaveSystem.serialize()`, then deserializes once per
+       option.
+     - It asserts the effects and the remembered greeting.
+- **Traps:**
+  - The quests, dialogues, places, POIs, encounters and books JSON is canonical; edit it directly.
+    The scratch DSL that first wrote it is gone. Don't recreate it.
+  - `atlas.json` is canonical and hand-edited. Move a pack position and its atlas feature
+    together, and update ATLAS §12.
+  - Escort arrival and quest reach use the content position. Map markers use the generated
+    `pois.json`, which is stale until the next build.
+  - Restore installed test worlds with
+    `git checkout -- game/world/generated game/terrain_data; git clean -fd game/world/generated`.
 - **Checks:**
   - `python3 tools/world/atlas/check_atlas.py` (0 errors);
   - `pytest tools/world/tests/test_atlas.py tools/world/tests/test_atlas_map.py`;
