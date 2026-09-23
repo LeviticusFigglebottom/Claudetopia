@@ -35,6 +35,18 @@ RIGHT = -LEFT
 # --------------------------------------------------------------------------------------
 
 STAND: Pose = anim.STAND
+# Standing at rest: the weight on the left leg, the pelvis over that foot and dropped on the free side,
+# the chest tipped back against it; the shoulders let down and the arms hanging at the sides, the
+# elbows soft and a touch behind, the hands beside the thighs with the fingers turned in towards them.
+# The wrists hang 23 cm out from the pelvis centre, 5 cm outside the default body's hip: close enough
+# to read as arms at rest, far enough for the hand to clear a skirt, a gambeson or a fauld.  STAND held
+# the arms some 10 degrees out with the wrists at 29 cm, which read as an A-pose.
+RELAXED: Pose = pose_add(STAND, {
+    "UpperArm.L": (-8, -3, -5), "UpperArm.R": (-8, -4, -12),
+    "Hand.L": (0, -5, 0), "Hand.R": (0, -3, 0),
+    "Hips": (0, -3, 3), "Spine": (0, 1.2, -1.5), "Chest": (0, 1.4, -1.5),
+    "Shoulder.L": (0, -2, 0), "Shoulder.R": (0, -2, 0),
+    HIPS_POS: (0.0, 0.018, -0.006)})
 GUARDS: Dict[str, Pose] = {
     "1h": anim.GUARD_1H,
     "2h": anim.GUARD_2H,
@@ -44,6 +56,8 @@ GUARDS: Dict[str, Pose] = {
 # (lateral spread, left foot forward, right foot forward, left yaw, right yaw)
 STANCES: Dict[str, Tuple[float, float, float, float, float]] = {
     "idle": (0.012, 0.0, 0.0, 7.0, -7.0),
+    # the free right foot eased forward and turned out
+    "rest": (0.010, 0.0, 0.035, 6.0, -13.0),
     "combat": (0.035, 0.150, -0.105, 12.0, -26.0),
     "wide": (0.055, 0.180, -0.150, 14.0, -30.0),
     "crouch": (0.045, 0.100, -0.080, 10.0, -22.0),
@@ -189,6 +203,16 @@ def _torso(f: float = 0.0, side: float = 0.0, turn: float = 0.0, hips_turn: floa
     return p
 
 
+def hanging_arms(period: float, amount: float = 1.0) -> Callable[[float], Pose]:
+    """The arms go on hanging while a breath lifts the shoulders: the breathing layer's shoulder
+    roll, taken back at the upper arm.  Without it every breath swung the hands of the relaxed
+    Idle 3 cm out from the thighs and back."""
+    def fn(t: float) -> Pose:
+        b = math.sin(2 * math.pi * t / period)
+        return {"UpperArm.L": (0, -1.5 * amount * b, 0), "UpperArm.R": (0, -1.5 * amount * b, 0)}
+    return fn
+
+
 # --------------------------------------------------------------------------------------
 # locomotion
 # --------------------------------------------------------------------------------------
@@ -197,9 +221,10 @@ def locomotion_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     out: Dict[str, ClipBuilder] = {}
 
     idle = ClipBuilder(skel, "Idle", 4.0, loop=True, grounded=True)
-    set_stance(idle, "idle")
-    idle.key(0.0, pose_add(STAND, {"Shoulder.L": (0, 1, 0), "Shoulder.R": (0, 1, 0)}))
+    set_stance(idle, "rest")
+    idle.key(0.0, RELAXED)
     idle.layer(breathing(period=4.0, amount=1.0))
+    idle.layer(hanging_arms(period=4.0, amount=1.0))
     idle.layer(head_look(period=6.5, yaw=9.0, pitch=3.0))
     idle.layer(sway(period=5.0, amount=1.0))
     out["Idle"] = idle
