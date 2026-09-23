@@ -85,6 +85,9 @@ var load_slot := ""
 var tour_quick := false
 
 var _checks: Array[Dictionary] = []
+## What _photograph_the_opening saw, for _watch_the_opening to report.
+var _opening := {"found": false, "done": false, "no_hud": false, "shots": 0, "seen": {}, "gave_up": false,
+		"early": [], "seconds": 0.0}
 var _notes: Array[String] = []
 var _shot := 0
 var _t0 := 0
@@ -594,6 +597,8 @@ func _slider(root: Node, key: String) -> HSlider:
 
 ## Samples the frame on the clock from the press, then waits for a body and a lifted fade.
 func _watch_the_world_stand_up() -> void:
+	if mode in ["new", "new-game"]:
+		_photograph_the_opening()
 	for at in SAMPLE_SECONDS:
 		while _elapsed() < float(at):
 			await get_tree().process_frame
@@ -657,30 +662,71 @@ func _watch_the_world_stand_up() -> void:
 ## the last shot is skipped by holding a key for longer than the prompt asks, through the same
 ## input a player's hand would give it.
 func _watch_the_opening() -> void:
-	var cin := await _wait_for_opening(8.0)
 	var new_game := mode in ["new", "new-game"]
 	if not new_game:
+		var cin := await _wait_for_opening(8.0)
 		_check(cin == null, "a %s does not play the opening" % mode)
 		return
-	if not _check(cin != null, "a new game plays the opening after the Naming"):
+	# the photographs were taken as it played (_photograph_the_opening, started at the press)
+	var finished := await _wait_until(func() -> bool: return bool(_opening["done"]), 900.0)
+	if not _check(bool(_opening["found"]), "a new game plays the opening after the Naming"):
 		return
-	_check(not UI.hud_visible, "no HUD over the opening's pictures")
+	_check(bool(_opening["no_hud"]), "no HUD over the opening's pictures")
+	var seen: Dictionary = _opening["seen"]
+	var count := int(_opening["shots"])
+	var gave_up := bool(_opening["gave_up"])
+	var early: Array = _opening["early"]
+	_notes.append("the opening: %d of %d shots photographed as they played, %.0f s from its first frame to the skip%s%s"
+			% [seen.size(), count, float(_opening["seconds"]),
+				"; its overall cap handed over first" if gave_up else "",
+				"; shown before all of their country came: %s" % ", ".join(early) if not early.is_empty() else ""])
+	# a machine too slow to show it all in the cap is handed over rather than left inside it; that
+	# is the design, and the note says it happened
+	_check(finished and (seen.size() == count or gave_up), "every shot of the opening was shown (%d of %d)%s"
+			% [seen.size(), count, ", until the overall cap handed over" if gave_up else ""])
+	# a skip fades to black, arrives at the hand-over and lifts: a handful of frames, which on a
+	# machine drawing one every five seconds is most of a minute
+	var gone := await _wait_until(func() -> bool: return get_tree().get_first_node_in_group(CinematicPlayer.GROUP) == null, 90.0)
+	_check(gone, "the overall cap ended the opening and it let go of the screen" if gave_up
+			else "holding a key skips the opening and it lets go of the screen")
+	_check(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "the mouse is the player's again after the opening")
+	await _first_moment_of_control()
+
+
+## Every shot of the opening, photographed at the middle of its playing time, every picture more
+## than the black, and the last shot skipped by holding a key for longer than the prompt asks,
+## through the same input a player's hand would give it. Started beside the probe's other waits
+## the moment "Be named" is pressed, not after them: on a machine drawing a frame every few seconds
+## the black shot is over before the fade's lift has been waited out.
+func _photograph_the_opening() -> void:
+	var cin: CinematicPlayer = null
+	var until := Time.get_ticks_msec() + int(WORLD_TIMEOUT * 1000.0)
+	while cin == null and Time.get_ticks_msec() < until:
+		await RenderingServer.frame_pre_draw
+		cin = get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer
+	if cin == null:
+		_opening["done"] = true
+		return
+	_opening["found"] = true
+	# its first pictures, not while it waits under the menus' fade for the country
+	while is_instance_valid(cin) and not cin.is_playing() and Time.get_ticks_msec() < until:
+		await RenderingServer.frame_pre_draw
+	_opening["no_hud"] = not UI.hud_visible
 	var shots := CinematicDef.shots_of(cin.def)
+	_opening["shots"] = shots.size()
 	var last := shots.size() - 1
-	var seen := {}
+	var seen: Dictionary = _opening["seen"]
 	var started := Time.get_ticks_msec()
 	var skipped := false
-	var gave_up := false
-	var early: Array[String] = []
 	while is_instance_valid(cin) and cin.is_playing() and Time.get_ticks_msec() - started < 600000:
 		# read after the opening has moved this frame and before it is drawn, so the picture taken
 		# is the moment read: at a few seconds a frame, the next frame can be half a shot later
 		await RenderingServer.frame_pre_draw
 		if not is_instance_valid(cin) or not cin.is_playing():
 			break
-		gave_up = cin.gave_up
-		early = cin.shown_early.duplicate()
-		if gave_up:
+		_opening["gave_up"] = cin.gave_up
+		_opening["early"] = cin.shown_early.duplicate()
+		if cin.gave_up:
 			continue
 		var i := cin.current_shot()
 		var shot: Dictionary = shots[i]
@@ -699,21 +745,8 @@ func _watch_the_opening() -> void:
 				skipped = true
 				await _hold_to_skip(cin)
 				break
-	_notes.append("the opening: %d of %d shots photographed as they played, %.0f s from the first to the skip%s%s"
-			% [seen.size(), shots.size(), (Time.get_ticks_msec() - started) / 1000.0,
-				"; its overall cap handed over first" if gave_up else "",
-				"; shown before all of their country came: %s" % ", ".join(early) if not early.is_empty() else ""])
-	# a machine too slow to show it all in the cap is handed over rather than left inside it; that
-	# is the design, and the note says it happened
-	_check(seen.size() == shots.size() or gave_up, "every shot of the opening was shown (%d of %d)%s"
-			% [seen.size(), shots.size(), ", until the overall cap handed over" if gave_up else ""])
-	# a skip fades to black, arrives at the hand-over and lifts: a handful of frames, which on a
-	# machine drawing one every five seconds is most of a minute
-	var gone := await _wait_until(func() -> bool: return get_tree().get_first_node_in_group(CinematicPlayer.GROUP) == null, 90.0)
-	_check(gone, "the overall cap ended the opening and it let go of the screen" if gave_up
-			else "holding a key skips the opening and it lets go of the screen")
-	_check(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "the mouse is the player's again after the opening")
-	await _first_moment_of_control()
+	_opening["seconds"] = (Time.get_ticks_msec() - started) / 1000.0
+	_opening["done"] = true
 
 
 ## What the player is handed (DESIGN §5.1a): their own body on the screen, the person who speaks
@@ -768,6 +801,8 @@ func _on_screen(cam: Camera3D, point: Vector3) -> bool:
 ## prompt is looked for on the frame the key goes down, before the hold can have filled: on a
 ## machine drawing a frame every few seconds the next frame is already past the second it asks for.
 func _hold_to_skip(cin: CinematicPlayer) -> void:
+	# at the start of a frame, as a hand's key arrives: the opening sees it before it moves on
+	await get_tree().process_frame
 	var ev := InputEventKey.new()
 	ev.keycode = KEY_SPACE
 	ev.physical_keycode = KEY_SPACE
