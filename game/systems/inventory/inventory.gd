@@ -457,6 +457,11 @@ func use(item: Variant) -> bool:
 		return read(s)
 	if not s.is_consumable():
 		return false
+	if Flask.is_flask(s.id):
+		# A flask is not used up: its swallows are, and a swallow is something the body does
+		# (Player.drink_flask, from the belt), not something a menu does to it.
+		EventBus.notify.emit("Drink from the flask on your belt.", "info")
+		return false
 	if s.is_ingredient():
 		# eating an ingredient can teach an effect, which is the crafting node's business
 		var crafting := _crafting_node()

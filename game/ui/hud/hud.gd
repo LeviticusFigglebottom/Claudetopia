@@ -338,9 +338,25 @@ func _connect_world() -> void:
 		var interactor := _find_interactor(_player)
 		if interactor and not interactor.is_connected("prompt_changed", _on_prompt_changed):
 			interactor.connect("prompt_changed", _on_prompt_changed)
+		# The belt's counts are the bag's: a draught drunk or a swallow taken changes what the slot
+		# says without anything being equipped, and the slot only ever listened for equipping.
+		var bag := _player.get_node_or_null(NodePath("Inventory"))
+		if bag != null and bag.has_signal("stack_changed"):
+			if not bag.is_connected("changed", _on_bag_changed):
+				bag.connect("changed", _on_bag_changed)
+			if not bag.is_connected("stack_changed", _on_bag_stack_changed):
+				bag.connect("stack_changed", _on_bag_stack_changed)
 	_refresh_stats()
 	_refresh_quick()
 	_refresh_saying()
+
+
+func _on_bag_changed() -> void:
+	_refresh_quick()
+
+
+func _on_bag_stack_changed(_stack: ItemStack) -> void:
+	_refresh_quick()
 
 
 func _find_interactor(root: Node) -> Node:
@@ -390,7 +406,14 @@ func _refresh_quick() -> void:
 		var def := ContentDB.get_or_empty(item_id)
 		if icon:
 			icon.texture = ThemeBuilder.icon(UiKit.item_icon_name(def))
-		if count:
+		if Flask.is_flask(item_id):
+			# The flask shows its swallows against a full filling, and goes dim when it is dry.
+			var flask := _equipment.call("quick_stack", "quick_%d" % (i + 1)) as ItemStack
+			if count:
+				count.text = "%d/%d" % [n, Flask.max_charges(flask)]
+			if n <= 0:
+				panel.modulate = Color(1, 1, 1, 0.45)
+		elif count:
 			count.text = str(n) if n > 1 else ""
 
 

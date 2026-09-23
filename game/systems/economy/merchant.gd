@@ -198,6 +198,10 @@ func sell_price_of(item_id: String) -> int:
 
 
 func will_buy(item_id: String) -> bool:
+	# A keepsake (the Hearth Flask) is not the kind of thing that is sold, whatever its category.
+	var tags: Variant = ContentDB.get_or_empty(item_id).get("tags", [])
+	if typeof(tags) == TYPE_ARRAY and (tags as Array).has("keepsake"):
+		return false
 	return ContentQuery.item_matches_categories(item_id, buys)
 
 

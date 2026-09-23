@@ -5,7 +5,7 @@ extends Actor
 ## core/default_bindings.json; edge detection is done here so scripted drivers that call
 ## Input.action_press() behave exactly like a keyboard.
 
-enum State { FREE, ATTACK, DODGE, STUNNED, CAST, MANTLE, BOW, RIPOSTE, DEAD }
+enum State { FREE, ATTACK, DODGE, STUNNED, CAST, MANTLE, BOW, RIPOSTE, DEAD, DRINK }
 
 signal state_changed(from: int, to: int)
 signal lock_on_changed(target: Node3D)
@@ -108,6 +108,8 @@ var _mantle_to: Vector3 = Vector3.ZERO
 var _mantle_t: float = 0.0
 var _bow_draw_start: float = -1.0
 var _riposte_target: Actor = null
+## The swallow in progress (drink_flask): elapsed, length, takes_at, restore, taken.
+var _drink: Dictionary = {}
 var _sprint_toggle: bool = false
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
@@ -163,6 +165,8 @@ func _ready() -> void:
 		EventBus.item_used.connect(_on_item_used)
 	if not EventBus.entity_killed.is_connected(_on_entity_killed):
 		EventBus.entity_killed.connect(_on_entity_killed)
+	if not EventBus.game_loaded.is_connected(_on_game_loaded):
+		EventBus.game_loaded.connect(_on_game_loaded)
 	if DisplayServer.get_name() != "headless" and input_enabled:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	call_deferred("_announce")
@@ -186,6 +190,8 @@ func _take_the_naming() -> void:
 	apply_appearance(_look_from_the_naming())
 	if not GameState.has_flag("new_game"):
 		return
+	# Every new character carries a Hearth Flask, on the belt from the first fight (DESIGN §5.5).
+	Flask.ensure(get_node_or_null("Inventory") as Inventory, get_node_or_null("Equipment") as Equipment)
 	var calling := str(GameState.get_flag("player_calling", ""))
 	var prog := get_node_or_null("Progression")
 	if calling.is_empty() or prog == null or not prog.has_method("apply_calling"):
@@ -230,6 +236,8 @@ func _exit_tree() -> void:
 		EventBus.item_used.disconnect(_on_item_used)
 	if EventBus.entity_killed.is_connected(_on_entity_killed):
 		EventBus.entity_killed.disconnect(_on_entity_killed)
+	if EventBus.game_loaded.is_connected(_on_game_loaded):
+		EventBus.game_loaded.disconnect(_on_game_loaded)
 	if SaveSystem.participants.get(SAVE_SECTION) == self:
 		SaveSystem.unregister(SAVE_SECTION)
 	for pair in [["inventory", "Inventory"], ["equipment", "Equipment"],
@@ -319,6 +327,7 @@ func _physics_process(delta: float) -> void:
 		State.BOW: _tick_bow(delta)
 		State.RIPOSTE: _tick_riposte(delta)
 		State.DEAD: _damp_horizontal(delta, 10.0)
+		State.DRINK: _tick_drink(delta)
 	if state != State.MANTLE:
 		apply_gravity(delta)
 		integrate_shove(delta)
@@ -347,7 +356,7 @@ func state_name() -> String:
 
 
 func is_busy() -> bool:
-	return state in [State.ATTACK, State.DODGE, State.CAST, State.BOW, State.RIPOSTE, State.MANTLE]
+	return state in [State.ATTACK, State.DODGE, State.CAST, State.BOW, State.RIPOSTE, State.MANTLE, State.DRINK]
 
 
 # --- FREE ---------------------------------------------------------------------------------------
@@ -883,6 +892,7 @@ func on_action_interrupted() -> void:
 	camera_rig.set_aiming(false)
 	clear_invulnerability()
 	_riposte_target = null
+	_drink.clear()   # a swallow interrupted is a swallow spilled
 	if state != State.DEAD:
 		_set_state(State.STUNNED)
 
@@ -981,6 +991,60 @@ func aim_direction() -> Vector3:
 
 func aim_origin() -> Vector3:
 	return global_position + Vector3.UP * 1.45 + forward() * 0.35
+
+
+# --- DRINK --------------------------------------------------------------------------------------
+
+## A swallow from the Hearth Flask (DESIGN §5.5): committed and rooted like a saying, with the
+## warmth landing `takes_at` into the drink; a blow that staggers the drinker before then spills
+## it, and the swallow is spent either way. The belt key and a scripted hand both come here.
+## Returns whether a drink started.
+func drink_flask() -> bool:
+	if not can_act() or state != State.FREE:
+		return false
+	var bag := get_node_or_null(NodePath("Inventory")) as Inventory
+	var flask := Flask.find(bag)
+	if flask == null:
+		return false
+	if Flask.charges(flask) <= 0:
+		EventBus.notify.emit("The flask is dry. A Hearthstone will fill it.", "info")
+		return false
+	Flask.take_swallow(bag, flask)
+	var s := Flask.spec(flask.id)
+	_drink = {"elapsed": 0.0, "length": float(s["drink_time"]), "takes_at": float(s["takes_at"]),
+		"restore": float(s["restore"]), "taken": false}
+	is_blocking = false
+	anim.play_intent("Drink", {"length": float(s["drink_time"])})
+	_set_state(State.DRINK)
+	return true
+
+
+func _tick_drink(delta: float) -> void:
+	if is_stunned():
+		_drink.clear()
+		_enter_stunned()
+		return
+	_damp_horizontal(delta, 16.0)
+	_drink["elapsed"] = float(_drink.get("elapsed", 0.0)) + delta
+	if not bool(_drink.get("taken", true)) and float(_drink["elapsed"]) >= float(_drink["takes_at"]):
+		_drink["taken"] = true
+		heal(max_health * float(_drink["restore"]))
+		Foley.play("potion_drink", global_position + Vector3.UP * 1.4)
+	if float(_drink.get("elapsed", 0.0)) >= float(_drink.get("length", 0.0)):
+		_drink.clear()
+		_set_state(State.FREE)
+
+
+## A rest at a Hearthstone or a coming back from death: everything a body gets back, and the flask
+## filled again (DESIGN §5.5: "full restore ... refills flask charges").
+func full_restore() -> void:
+	super()
+	Flask.refill(get_node_or_null(NodePath("Inventory")) as Inventory)
+
+
+## A save from before the flask existed is given one on loading, like a new character.
+func _on_game_loaded(_slot: String) -> void:
+	Flask.ensure(get_node_or_null(NodePath("Inventory")) as Inventory, get_node_or_null(NodePath("Equipment")) as Equipment)
 
 
 # --- BOW ----------------------------------------------------------------------------------------
@@ -1418,6 +1482,9 @@ func use_quick_slot(index: int) -> void:
 		id = quick_slots[index]
 	quick_slot_used.emit(index, id)
 	if id.is_empty():
+		return
+	if Flask.is_flask(id):
+		drink_flask()
 		return
 	if Ids.type_of(id) == "spell":
 		if equip_spell(id):

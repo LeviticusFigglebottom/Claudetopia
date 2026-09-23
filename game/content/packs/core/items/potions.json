@@ -58,5 +58,8 @@
    "description": "Ash-poppy and yew. A drop on the tongue and the Saying will not come; the Circle forbids it and keeps a cellar of it."},
   {"id": "core:item/potion_fortify_speed", "name": "Potion of Fortify Speed", "category": "consumable", "weight": 0.3, "value": 45, "stack": 10, "tags": ["potion"],
    "effects": [{"effect": "core:effect/fortify_speed", "magnitude": 10, "duration": 30}],
-   "description": "Cottongrass and grey-grass seed. The legs go light; the road goes short."}
+   "description": "Cottongrass and grey-grass seed. The legs go light; the road goes short."},
+  {"id": "core:item/hearth_flask", "name": "Hearth Flask", "category": "consumable", "weight": 0.5, "value": 0, "stack": 1, "tags": ["flask", "keepsake"],
+   "flask": {"charges": 3, "restore": 0.4, "drink_time": 1.0, "takes_at": 0.55},
+   "description": "A horn flask with a wax stopper and a Warden's knot. What is in it is not water: it is the warmth a Hearthstone keeps, and it tastes of whichever hearth you last put your hand to. Three swallows to a filling; the stone fills it again when you rest, and when you come back."}
 ]
