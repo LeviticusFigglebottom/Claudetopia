@@ -2338,3 +2338,263 @@ this work added is read).
 name where it counts. (2) Make `wardens_roll_fragment` or take it out of the cist. (3) The
 unhonoured sentences above, the Moot's stones and the Hart's model. (4) Delete or rename the
 placeholder roster.
+
+## Every perk kept, a flask to drink, every load band reachable, and the ground heard
+
+Six parts, one branch, in the order they were asked for. The tables are the game's own output:
+`./run.sh test --filter=test_perks_do_what_they_say | grep PERK`, `./run.sh fights
+--calling=<calling>` once per Calling, and `./run.sh test --filter=test_footsteps_in_the_world |
+grep FOOTSTEPS`.
+
+### 1. The perks
+
+Twenty-eight perk stats had no reader: the 25 listed last time, and `armour`, `noise` and
+`stamina_cost_light`, whose names appeared in the code only as other things. Each is now read
+where the thing it names happens. `test_perks_do_what_they_say.gd` takes every perk the way a
+character takes one (the skill raised to where the perk opens, its prerequisites first, a perk
+point spent) on the player scene, measures what the text names, takes the perk, and measures
+again. Every row below matched the figure the text gives:
+
+| perk | measured | before | after |
+|---|---|---|---|
+| wardens grip | sword light hit | 15.4 | 16.94 |
+| quick steel | stamina for a sword light | 18 | 15.3 |
+| ringing blow | sword poise damage | 12 | 15 |
+| wide sweep | greatsword charged heavy | 68.64 | 75.504 |
+| hafted poise | poise | 40 | 55 |
+| bell swing | stamina for a greatsword heavy | 44 | 35.2 |
+| fernhold draw | seconds to full draw | 0.9 | 0.783 |
+| fletchers thrift | chance a loosed arrow survives | 0.4 | 0.65 |
+| steady breath | arrow damage at full draw | 36.75 | 42.262 |
+| braced stance | guard stability | 0.8 | 0.9 |
+| braced stance | damage through the guard from 100 | 19 | 9 |
+| ready answer | parry window s | 0.18 | 0.24 |
+| broken in | armour worn | 12 | 13.2 |
+| second skin | noise at a jog in plate | 0.872 | 0.693 |
+| second skin | roll load | 0.886 | 0.543 |
+| quiet step | noise at a jog | 0.513 | 0.359 |
+| quiet step | a jump heard | 0.4 | 0.28 |
+| light fingers | pickpocket chance | 0.508 | 0.658 |
+| unsaid | sneak attack multiplier (sword) | 3 | 4 |
+| fair dealing | buy price | 160 | 144 |
+| fair dealing | sell price | 46 | 51 |
+| loud name | renown from a deed worth 50 | 50 | 60 |
+| hedge wise | restore health brewed | 24 | 28.8 |
+| forager | lichen from one plant | 1 | 2 |
+| bitter tongue | damage health brewed | 7 | 9.1 |
+| red door | tier-2 sword hit | 17.22 | 18.655 |
+| red door | tier-2 jerkin armour | 7.2 | 7.8 |
+| thrifty forge | ingots for a greatsword | 4 | 3 |
+| ember keeper | charge from four motes | 100 | 125 |
+| deep writing | ember burst magnitude | 24 | 28.8 |
+| wind in the chest | stamina | 180 | 195 |
+| strong back | carry capacity | 100 | 120 |
+| roll away | roll stamina | 22 | 18.7 |
+| roll away | roll safe window s | 0.3 | 0.35 |
+| warm word | mana for a kindle bolt | 11.4 | 9.69 |
+| mote catcher | motes from a foe a Kindling word killed | 1 | 2 |
+| quieted | mana for a frost bolt | 13.3 | 11.305 |
+| held fast | ward seconds | 12 | 15.6 |
+| held fast | binding word hold seconds | 1 | 1.3 |
+| tender | health from Mend | 38.5 | 46.2 |
+| loud company | seconds the hound stays | 45 | 58.5 |
+
+Its last test reads every script in the game and fails when any of the 36 perk stat keys has no
+reader (0 today).
+
+Found on the way: nothing wrote the player's `stealth_visibility`, which every foe's eyes
+multiply by, so a crouched figure in the dark was seen as plainly as one sprinting at noon; the
+Stealth service now writes it every physics frame (0.62 in the open, 0.08 crouched in shadow).
+The round shield could not be taken up: the slot rules knew only shields carried as weapons.
+Red Door's wider temper step was shown at the forge and never swung or worn. A note written on
+armour and a Resist draught changed nothing: `Equipment.modifiers()` was worked out and handed
+to nobody, and nothing read `resist_<kind>`. `grant_perk` changed the modifier table without the
+body hearing of it. Four stats needed a system first (DECISIONS): arrows that survive (40%, a
+pickup where they strike, or loot in the body), Ember Motes caught from a Kindling kill (1),
+picking an ingredient off the ground, and armour weight in the roll's load and in the noise.
+
+### 2. Healing in a fight, and the fights again
+
+DESIGN §5.5 has a flask that a Hearthstone refills, and there was none. `core:item/hearth_flask`
+holds three swallows of 40% of greatest health. A swallow is a committed one-second drink (the
+warmth lands at 0.55 s, and a stagger before then spills it). The flask is filled by a rest and
+by coming back from death, kept by the save, and shown on the belt as swallows left against a
+full flask. Potions, food, Mending (the Ashwalker's saying) and a rest already healed; the flask
+is the one thing every Calling has from the first fight.
+
+The scripted player now blocks when it has not the stamina to roll. Below 45% of its health it
+backs off to drink, and when the flask is dry it says a mending saying below 55% if it knows
+one. It says what else its Calling knows: a ward before the fight and again when it breaks, and
+a bolt at a foe out of reach. An archer shoots, backs off inside 4 m and closes with its knife.
+The Naming's own fight (three ash-wights) joined the roster. After the merge of the movement
+rework the harness needed one more thing a player does. Locked on, the body now strafes at
+2.6 m/s, and the smuggler-sayer backs off at about 3. The Cragborn and the Wayfarer followed it
+3.0 m behind for two minutes and landed 0 of 52 and 0 of 48 swings. Out of reach, the scripted
+player now sprints, which breaks the strafe, until it is in reach.
+
+One run per Calling. Each cell is the time to win; "sw" counts swallows and "bl" blocks:
+
+| fight | Hearthkeeper | Wayfarer | Reedborn | Cragborn | Ashwalker | Lantern-Clerk |
+|---|---|---|---|---|---|---|
+| naming: ash wight | 15 s | 18 s | 10 s | 24 s (2 sw, 1 bl) | 8 s | 19 s |
+| skirmisher: roadside bandit | 23 s (1 sw) | 3 s | 5 s | 5 s | 2 s | 21 s |
+| pack: down wolf | 32 s | 30 s | 10 s | 35 s (2 sw) | 8 s | 32 s (1 bl) |
+| brute: hedge wight | 14 s | 14 s | 35 s | 20 s | 6 s | 15 s |
+| charger: bristleback | 11 s | 13 s | 20 s | 12 s | 7 s | 13 s |
+| ambusher: sallowjaw | 15 s | 15 s | 38 s | 22 s | 8 s | 16 s |
+| caster: smuggler sayer | 26 s | 58 s (1 sw) | 39 s | 55 s | 28 s | 31 s |
+| sentinel: warden | 42 s | 73 s | **120 s**, 47% left | 86 s | 42 s | 42 s |
+| swarm: gutter drake | 34 s (3 sw) | 7 s | 9 s | 5 s | 7 s | 22 s (1 sw, 2 bl) |
+| elite: bravo | 13 s | 41 s | 69 s | 64 s (3 sw) | 8 s | 14 s |
+| boss: barrow reeve | **died** at 90 s, 61% left (1 sw) | **died** at 76 s, 61% left | **120 s**, 47% left | **died** at 115 s, 69% left | **died** at 38 s, 73% left (1 bl) | **120 s**, 71% left (2 sw) |
+
+The danger-one foes, from Hearthvale and Brightwater, are the skirmisher, the pack, the brute, the
+charger, the caster, the swarm and the elite. The ambusher is Sedgemire's (danger two) and the
+sentinel Briarwold's (danger three). The ash-wights are the Naming's own fight.
+
+What a competent player loses at level 1, and why:
+
+* **The Barrow Reeve, for every Calling** (four die, two run out of the 120 s with 47–73% of him
+  left). He has 520 health and armour 6 against 3–11 a blow. Four to six of his blows (22–36
+  each, a knockdown among them) kill a 100-health character, flask and all. He is the third
+  quest of the Wardens' line, behind 45 reputation and the quest before it, so he is met well
+  past level 1 and was not tuned.
+* **The warden, for the Reedborn** (120 s, 47% left). The Reedborn starts with fists and
+  Hush-Frost (12 frost). The warden, a danger-three treant, has 265 health and armour 10, so
+  the Reedborn lands 1.4 a hit and runs out of mana. Every other Calling kills it in 42–86 s.
+* **Two Callings could not beat the danger-one foes** before they were given blades
+  (DECISIONS). Measured again on the reworked movement, without its dagger the Lantern-Clerk
+  died to the swarm with 85% of the drakes left. It ran out of time on the pack (95% left, 528
+  damage survived by drinking), the hedge-wight (33%) and the bravo (41%). Without its knife the
+  Wayfarer died to the swarm with 60% of the drakes left. With the blades both win every
+  danger-one fight: the Wayfarer in 3–58 s and the Lantern-Clerk in 13–32 s.
+
+The Ashwalker's sayings make six of its eleven fights trivial (2–8 s without a blow taken); the
+other five Callings win the danger-one fights in 3–69 s. Nothing was tuned for that, because
+DESIGN asks only that every Calling live through the first fights.
+
+### 3. The heavy load band
+
+Load is now measured against `20 + 1.5·Endurance` (35 at the start), no longer
+`40 + 3·Endurance` (DECISIONS). With nothing in the bag, at base Endurance:
+
+| worn and wielded | load | band |
+|---|---|---|
+| leathers and a sword | 25% | light |
+| a brigandine and a sword | 51% | medium |
+| clan plate and an iron greatsword | 89% | heavy |
+| clan plate and the Bearer's clapper | 109% | overloaded |
+
+Before, the heaviest of these reached 54%. Every Calling still starts light (0–14%). Second
+Skin moves plate and a greatsword from heavy to medium (0.89 to 0.54).
+`test_every_load_band_can_be_reached_by_what_is_worn` equips the four kits and checks each band.
+
+### 4. The eleven sounds nothing played
+
+Five were wired to their events:
+
+* `bell_toll` rings for the Bell-bearer's toll and bell swing, for the Barrow Reeve's toll, and
+  as the Reeve opens his second phase.
+* `bell_hand` rings as a bell-headed weapon goes live: the Tolling knight's mace and his tolling
+  blow, the Reeve's bell sweep, and the Last Cantor's blades.
+* `bell_tavern` rings when you come through an inn's door (Toll's Lip), and not a bakehouse's.
+* `footstep_snow` and `footstep_sand` play on the snow and the tide-flats the builder paints.
+
+An attack or a boss phase may now name a sound. Footsteps on the terrain now read the paint:
+`TerrainProvider.texture_at` names the painted id from the manifest's slot list, because the
+Terrain3D texture list is emptied once its arrays are built. The builder's 21 textures fall into
+8 surfaces.
+
+Six were dropped, with their files and generators: `bell_tower` (no bell strikes the hours),
+`thunder_near`, `thunder_far` and `wind_gust` (the ambience's storm and wind layers are those),
+`wood_creak` (the creak pools are) and `cart_wheels` (no cart moves). A generator run also stopped
+writing a dropped id back into `core:table/sfx` from the old manifest. The wiring test now fails
+on any row nothing can play (0 of 64). The audio toolkit's 124 tests pass, two of them new: the
+manifest and the table hold exactly what the catalogue makes.
+
+### 5. Footsteps where the feet are
+
+Every collider the POI kit builds now names what it is made of. A stone bridge's deck, parapets
+and abutments are stone. A timber span, and every plank deck, post and ladder, is wood. Walls,
+drums, doorways, steps, carved figures and cairns are stone, and a mound is dirt. A forged
+asset's collision takes its surface from its name: pier, boardwalk, cart, stool and signpost are
+wood; cliff, drystone, cairn and the giants' bones are stone; scree is gravel. One body can carry
+both, so Foley reads the shape a ray hit before the body.
+
+`test_footsteps_in_the_world.gd` loads the built world and finds each place from what was built:
+the terrain's own paint, a bridge POI raised as the streamer raises it, and a deep place walked
+into through Interiors. A body's footfalls walk it for three seconds at 4.2 m/s:
+
+| where | at | heard |
+|---|---|---|
+| a market street in Merrowby (cobbles) | (900, 2350) | 6 × stone |
+| the bog at Isseva (mud, peat) | (-2882, -500) | 6 × mud |
+| the Skerrow heights (snow) | (1242, -3617) | 6 × snow |
+| the western tide-flats (sand) | (-3485, -544) | 6 × sand |
+| the deck of Larkbourne Ford (a stone bridge) | (733, 2303) | 6 × stone |
+| the deck of Eelweir (timber) | (-1400, -100) | 6 × wood |
+| the floor of Weaverdeep | the pocket | 6 × stone |
+
+Its second test fails when a texture the builder paints has no footstep (0 of 21). In
+`test_pois.gd`, every point of interest in the world is raised, and all 966 collision shapes
+its builders put up name their surface. With the forged props there are 1269 stone, 241 wood,
+46 gravel and 14 dirt; 131 props (trees, hedges, tents, braziers) leave it to the ground.
+
+Found on the way and fixed:
+
+* **A house or deep place entered from the overworld built nothing.** Its wrapper looked for
+  the current interior, which is set only once the player is through the door. Interiors now
+  hands it the meta.
+* **What a quest left inside (the steward's key, the Ledger of Prices) was never raised when
+  walked into.** The builders asked themselves which interior they were, and only the wrapper
+  was told. The wrappers now hand the name down.
+* **Every deep place dropped the player 3.0–4.5 m onto its mouth.** There was no Entrance marker,
+  so the arrival fell back to a metre above the pocket. One now stands on the rock under the
+  forge's entrance, read from the collision mesh (the voxel rock lies 0.25–0.55 m below the
+  nominal floor). All nine arrive 0.05 m above rock.
+* **A foe raised a script error on every sweep once its last candidate had been freed.**
+  Perception now tests validity before `is`.
+
+### 6. The arena, seen again
+
+Run again after the audio commits and both merges, under xvfb with the OpenGL renderer
+(`godot --path game --rendering-driver opengl3 -- --arena --verify --out=<dir>`): 16 checks, 16
+passed, and 12 screenshots. They show the arena, the player, the HUD's bars, the compass and the
+readied saying. Attack, parry and riposte, the roll's i-frames (0.08–0.38 s of 0.60), block,
+stagger, a saying and silence, the bow, the mantle, the prompt, the wolves' flanking, the
+charger's knockdown, the boss's phases and the respawn all pass as before. The wolves and the
+bristleback are still placeholder boxes. The belt is empty, because the arena's Foundling never
+passes through the Naming, which is where a new character is given the flask.
+
+### Checks
+
+`./run.sh test`: 1463 tests, 0 failed, 0 content problems, 0 script errors (the 4 logged errors
+are the ones their tests provoke). `./run.sh journey`: 16 of 16 steps. The audio toolkit's
+tests: 124 passed. `./run.sh fights --calling=<calling>` for each of the six: every check
+passes. All were run after both merges; the POI tests were run again after the last change (19
+tests, 0 failed).
+
+### Found and not fixed
+
+* **Going into a house stands the player in the corner of its first room**, a metre up, not
+  inside the door. The house builder makes no Entrance marker and nothing reads the meta's
+  `entrance`. Queued as its own task.
+* **A whole `./run.sh fights` (six Callings in one process) crashes in the engine.** It crashed
+  in two of three attempts, at a different fight each time. The crash is in a worker thread; the
+  log shows `propagate_notification()` called on /root from a thread (the crash handler's own
+  notification) and then signal 11, sometimes after Jolt's "exceeded the maximum number of
+  jobs". Runs of one Calling (`--calling=`) completed 12 times in 12 across the two full sets,
+  and the knife-less Wayfarer comparison crashed in two of three. The machine's load average was
+  about 40 throughout.
+* **Locked on, a melee player cannot close on a caster without sprinting.** The strafe speed
+  (2.6 m/s) is below the smuggler-sayer's back-off (about 3). That speed is the movement work's
+  number, so it is left alone and reported here.
+* The Reedborn's first saying (12 frost) does next to nothing against armour 10.
+
+### Next, in order
+
+1. Stand the player inside a house's door (the queued task).
+2. The Barrow Reeve at the level a player reaches him: fight him at the level the Wardens' line
+   takes to get there, and tune him only if that loses.
+3. The engine crash in long fights runs: a symbol build's backtrace, or split `./run.sh fights`
+   into a process per Calling.
