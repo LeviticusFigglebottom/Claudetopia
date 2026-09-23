@@ -40,7 +40,7 @@ coordinates into places: `tools/place_paths.py` (a POI's way) and
 | Was | Now |
 |---|---|
 | `door_plan.json` `position` ×15, a copy of each place's position | gone; `WorldDoors` falls back to the place's own position |
-| The Stair Head's `path.via`, 18 map points | `path.shape` between the Stair Head and the Sunken Choir; the same points to 2 mm on this map |
+| The Stair Head's `path.via`, 18 map points | `path.shape` between the Stair Head and the Sunken Choir; the same points to 2 mm on this map. Where the built world has a road between the two (the atlas's track), the waystones stand along the road instead |
 | Hand-written capture plans (`streets`, `start`, `opening_scout`, `gait`, `roll`): 48 points | place specs (`at`, `look`, gait `at`); within 7 mm of the old points against the runtime heights |
 | Saves: the player, the Hearth's landing and Echo, an interior's way out, an escort on the road | each saved with a `near` pin; a load beside a moved place moves with it, unmoved loads exactly as saved |
 | Map screen's default centre `(900, 2350)` | the place tagged `start_hub` |

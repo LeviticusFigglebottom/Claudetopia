@@ -7,6 +7,9 @@ extends TestCase
 
 const GENERATED := "res://world/generated"
 const MERROWBY := "core:place/merrowby"
+## How wide the built world's rivers and roads may be, as the atlas draws them.
+const RIVER_WIDTH_M := Vector2(2.0, 30.0)
+const ROAD_WIDTH_M := Vector2(3.0, 6.0)
 const HUSHLINE := "core:place/hushline"
 const WINDGATE := "core:place/windgate"
 
@@ -298,7 +301,9 @@ func test_rivers_and_roads_are_sane() -> void:
 	for river in rivers:
 		var r: Dictionary = river
 		assert_gt((r["points"] as Array).size(), 8)
-		assert_true(float(r["width_m"]) >= 4.0 and float(r["width_m"]) <= 14.0,
+		# the atlas draws each river's own width (tools/world/atlas/SCHEMA.md, `rivers`), from a gill
+		# a stride across to the Mere's outfall; the old seeded builder kept every one 4-14 m
+		assert_true(float(r["width_m"]) >= RIVER_WIDTH_M.x and float(r["width_m"]) <= RIVER_WIDTH_M.y,
 			"%s is %.1f m wide" % [r["id"], float(r["width_m"])])
 		# water runs downhill: the surface at the mouth is below the source
 		assert_true(float(r["surface_to_m"]) <= float(r["surface_from_m"]),
@@ -308,7 +313,10 @@ func test_rivers_and_roads_are_sane() -> void:
 	var linked := {}
 	for road in roads:
 		var r: Dictionary = road
-		assert_true(float(r["width_m"]) >= 4.0 and float(r["width_m"]) <= 6.0)
+		# a road's kind sets its width (SCHEMA.md, `roads`): a stair 3 m, a track 3.5, a lane 4, a
+		# road 5, a highway or a causeway 6
+		assert_true(float(r["width_m"]) >= ROAD_WIDTH_M.x and float(r["width_m"]) <= ROAD_WIDTH_M.y,
+			"%s is %.1f m wide" % [r["id"], float(r["width_m"])])
 		var points: Array = r["points"]
 		assert_gt(points.size(), 4)
 		for name in str(r["id"]).trim_prefix("core:road/").split("_", false):

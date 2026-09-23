@@ -25,13 +25,20 @@ func after_each() -> void:
 	SaveSystem.pending.erase("player")
 
 
-## Moves a place the way a redrawn map does, until the test ends.
+## Moves a place the way a redrawn map does, until the test ends. A place is moved once a test.
 func _move(id: String, by: Vector2) -> void:
 	var def := ContentDB.get_or_empty(id)
-	if not _moved.has(id):
-		_moved[id] = (def["position"] as Array).duplicate()
+	if _moved.has(id) or not def.has("position"):
+		return
+	_moved[id] = (def["position"] as Array).duplicate()
 	var p: Array = def["position"]
 	def["position"] = [float(p[0]) + by.x, float(p[1]) + by.y]
+
+
+## Moves whichever place a pin was kept beside: on a map as full as the atlas's that is not
+## always the town the test stood it in.
+func _move_pinned(pin: Dictionary) -> void:
+	_move(str(pin.get("place", "")), MOVE)
 
 
 func _xz(v: Vector3) -> Vector2:
@@ -93,14 +100,15 @@ func test_the_stair_head_way_goes_where_its_ends_go() -> void:
 	var way: Dictionary = def.get("path", {})
 	assert_true(way.has("shape"), "the Stair Head's way is a shape between its ends, not coordinates")
 	assert_false(way.has("via"), "and it no longer carries the coordinates as well")
-	var here := PoiDressing.way_points(STAIR_HEAD, def)
+	# the drawn way, not a road the world may have built along it (way_points prefers that)
+	var here := PoiDressing.way_points(STAIR_HEAD, def, false)
 	assert_gt(here.size(), 5)
 	var span := PlaceRef.xz(STAIR_HEAD).distance_to(PlaceRef.xz(CHOIR))
 	var end_here := here[here.size() - 1].distance_to(PlaceRef.xz(CHOIR)) / span
 	# the camp moves one way and the Choir another, as a redrawn map would have them
 	_move(STAIR_HEAD, MOVE)
 	_move(CHOIR, MOVE + Vector2(300.0, 150.0))
-	var there := PoiDressing.way_points(STAIR_HEAD, def)
+	var there := PoiDressing.way_points(STAIR_HEAD, def, false)
 	assert_eq(there.size(), here.size())
 	assert_true(there[0].distance_to(PlaceRef.xz(STAIR_HEAD)) < 30.0, "it still starts at the camp")
 	var end_there := there[there.size() - 1].distance_to(PlaceRef.xz(CHOIR)) / PlaceRef.xz(STAIR_HEAD).distance_to(PlaceRef.xz(CHOIR))
@@ -112,14 +120,14 @@ func test_the_stair_head_way_goes_where_its_ends_go() -> void:
 func test_a_pin_on_an_unmoved_map_gives_back_exactly_what_was_saved() -> void:
 	var at := at_place(MERROWBY, 31.25, Vector2(37.0, -12.5))
 	var pin := PlaceRef.pin(at)
-	assert_eq(str(pin.get("place", "")), MERROWBY, "pinned to the town it stood in")
+	assert_eq(str(pin.get("place", "")), PlaceRef.nearest(Vector2(at.x, at.z)), "pinned to the place nearest it")
 	assert_eq(PlaceRef.follow(at, pin), at, "nothing moved, so nothing moves")
 
 
 func test_a_pin_follows_its_place_and_keeps_its_height_above_the_ground() -> void:
 	var at := at_place(MERROWBY, 31.25, Vector2(37.0, -12.5))
 	var pin := PlaceRef.pin(at)
-	_move(MERROWBY, MOVE)
+	_move_pinned(pin)
 	var now := PlaceRef.follow(at, pin)
 	assert_true((_xz(now) - _xz(at)).is_equal_approx(MOVE), "beside the town where it is now: %s" % str(_xz(now) - _xz(at)))
 	var rise := at.y - WorldProbe.get_height(at.x, at.z, at.y)
@@ -139,7 +147,7 @@ func test_a_saved_body_loads_beside_its_place_on_a_redrawn_map() -> void:
 	SaveSystem.pending["player"] = {"position": [at.x, at.y, at.z], "near": PlaceRef.pin(at)}
 	var spawn := PlayerSpawn.new()
 	assert_eq(spawn._saved_position(), at, "unmoved, it loads where it was saved")
-	_move(MERROWBY, MOVE)
+	_move_pinned(SaveSystem.pending["player"]["near"])
 	var moved: Vector3 = spawn._saved_position()
 	assert_true((_xz(moved) - _xz(at)).is_equal_approx(MOVE), "moved, it loads beside the town: %s" % str(_xz(moved) - _xz(at)))
 	spawn.free()
@@ -153,7 +161,8 @@ func test_the_hearth_keeps_its_stone_and_its_echo_beside_their_places() -> void:
 	Hearth.respawn_position = stone
 	Hearth.echo = {"position": fell, "marks": 12, "region": "core:region/hearthvale"}
 	var d := Hearth.to_save()
-	_move(MERROWBY, MOVE)
+	_move_pinned(d["respawn_near"])
+	_move_pinned(d["echo"]["near"])
 	Hearth.from_save(d)
 	assert_true((_xz(Hearth.respawn_position) - _xz(stone)).is_equal_approx(MOVE), "the stone's landing moved with the town")
 	assert_true((_xz(Hearth.echo["position"]) - _xz(fell)).is_equal_approx(MOVE), "and so did the Echo")
@@ -169,7 +178,7 @@ func test_somebody_walking_with_you_is_saved_beside_a_place() -> void:
 	var on_road := at_place(MERROWBY, 1.0, Vector2(60.0, -40.0))
 	registry.begin_escort(who, "core:quest/test_escort", on_road)
 	var d: Variant = JSON.parse_string(JSON.stringify(registry.to_save()))
-	_move(MERROWBY, MOVE)
+	_move_pinned(d["states"][who]["escort_near"])
 	registry.from_save(d)
 	var now := registry.escort_position(who)
 	assert_true((_xz(now) - _xz(on_road)).is_equal_approx(MOVE), "on the road beside the town where it is now: %s" % str(_xz(now) - _xz(on_road)))
@@ -183,7 +192,7 @@ func test_the_way_out_of_an_interior_follows_its_place() -> void:
 	var out := at_place(MERROWBY, 0.5, Vector2(18.0, 0.0))
 	var d := {"current_id": "", "return_point": [out.x, out.y, out.z], "return_yaw": 0.0,
 		"return_near": PlaceRef.pin(out)}
-	_move(MERROWBY, MOVE)
+	_move_pinned(d["return_near"])
 	Interiors.from_save(d)
 	assert_true((_xz(Interiors.return_point) - _xz(out)).is_equal_approx(MOVE), "the door's step moved with the town")
 	Interiors.return_point = Vector3.ZERO

@@ -82,9 +82,13 @@ func _xz(id: String) -> Vector2:
 	return WorldProbe.xz_of(ContentDB.get_or_empty(id))
 
 
+## The Stair Head as the world dresses it: on the pad the built world gave it, or, in a world
+## built before it had one, on the ground where its data puts it.
 func _raise_start() -> PoiDressing:
-	for e in WorldPois.unbuilt_entries(pois, provider):
-		if str((e as Dictionary).get("place_id", "")) == START:
+	var entries: Array = pois.duplicate()
+	entries.append_array(WorldPois.unbuilt_entries(pois, provider))
+	for e in entries:
+		if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == START:
 			var d := PoiDressing.raise(e, ContentDB.get_or_empty(START), false, provider, WorldPois.roads_from_disk())
 			_scratch = Node3D.new()
 			_scratch.name = "StartScratch"
@@ -94,8 +98,9 @@ func _raise_start() -> PoiDressing:
 	return null
 
 
-## The way's points on today's map: the path is a shape between the Stair Head and the Choir,
-## so it goes where they go (PoiDressing.way_points, docs/COORDINATES.md).
+## The way's points on today's map, as the waystones stand them: the built road from the Stair
+## Head to the Choir where the world has one, else the path's shape between the two, so it goes
+## where they go (PoiDressing.way_points, docs/COORDINATES.md).
 func _via() -> Array[Vector2]:
 	return PoiDressing.way_points(START, ContentDB.get_or_empty(START))
 
@@ -142,7 +147,7 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 	if provider == null:
 		return
 	var d := _raise_start()
-	assert_true(d != null, "the Stair Head is dressed although the built world has no pad for it yet")
+	assert_true(d != null, "the Stair Head is dressed, on its pad or, before it had one, on the ground")
 	if d == null:
 		return
 	# fires and lamps at a point of interest are drawn from the NightLights pool now, not each an

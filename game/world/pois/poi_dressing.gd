@@ -86,28 +86,38 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.wants_hearthstone = bool(def.get("hearthstone", false)) or d.kind == "hearth"
 	var way: Variant = def.get("path", {})
 	d.path = (way as Dictionary).duplicate(true) if typeof(way) == TYPE_DICTIONARY else {}
-	if d.path.has("shape"):
+	if d.path.has("to"):
 		var via: Array = []
 		for p in way_points(d.poi_id, def):
 			via.append([p.x, p.y])
-		d.path["via"] = via
+		if not via.is_empty():
+			d.path["via"] = via
 	d.name = "Poi_" + Ids.name_of(d.poi_id)
 	d._provider = terrain
 	d._roads = roads
 	return d
 
 
-## The points a POI's `path` passes on today's map. A way is said as a `shape` between the POI
-## and the place it leads to, so it follows them when the map is redrawn (`PlaceRef.along`,
-## tools/place_paths.py); a `via` of bare coordinates is still read, and stays where it is.
-static func way_points(poi_id: String, def: Dictionary) -> Array[Vector2]:
+## The points a POI's `path` passes on today's map. Where the built world has a road between the
+## POI and the place its way leads to, the way is that road: the builder routes a road round a
+## hill rather than over it, and a way drawn straight between the same points on the atlas world
+## crossed ground of 37 to 61 degrees. Otherwise it is the way's `shape` between its two ends, so
+## it follows them when the map is redrawn (`PlaceRef.along`, tools/place_paths.py); a `via` of
+## bare coordinates is still read, and stays where it is. `follow_roads` false asks for the
+## drawn way whatever is built.
+static func way_points(poi_id: String, def: Dictionary, follow_roads := true) -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	var way: Variant = def.get("path", {})
 	if typeof(way) != TYPE_DICTIONARY:
 		return out
+	var to := str((way as Dictionary).get("to", ""))
+	if follow_roads and to != "":
+		var road := WorldPois.road_between(poi_id, to)
+		if road.size() >= 2:
+			return road
 	var shape: Variant = (way as Dictionary).get("shape", null)
 	if typeof(shape) == TYPE_ARRAY:
-		return PlaceRef.along(poi_id, str((way as Dictionary).get("to", "")), shape)
+		return PlaceRef.along(poi_id, to, shape)
 	for p in (way as Dictionary).get("via", []):
 		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
 			out.append(Vector2(float(p[0]), float(p[1])))
