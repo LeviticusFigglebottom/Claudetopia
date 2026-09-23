@@ -1378,10 +1378,13 @@ def comb(head, start: np.ndarray, flow, length: float, off_fn, release_z: float,
             if dh < o:
                 q = q + head.gradient(q[None])[0] * (o - dh)
             if body is not None:
+                # eased out to the clearance a little at a time: pushed out in one go, a beard
+                # leaving the chin jumped 3 cm, the runaway guard below took that for a wild
+                # projection, and every long beard stopped at the jaw
                 c = clear if clear is not None else 0.008 * s + 0.5 * o
                 db = float(body.eval(q[None])[0])
                 if db < c:
-                    q = q + body.gradient(q[None])[0] * (c - db)
+                    q = q + body.gradient(q[None])[0] * min(c - db, 2.0 * step)
         # a projection off a degenerate gradient can throw a point anywhere, and one wild
         # point is a scene bound the size of a house: a lock that jumps stops where it was
         if not np.all(np.isfinite(q)) or np.linalg.norm(q - p) > 4.0 * step:
