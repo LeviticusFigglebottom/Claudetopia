@@ -632,6 +632,15 @@ def plan_roads(grid: Grid, H: np.ndarray, places: list, water_mask: np.ndarray, 
     return roads
 
 
+## How far off both legs of the through street a third road has to arrive to earn a cross
+## street: more than about 49 degrees (|cos| under 0.66). It was 0.55, 57 degrees, and when the
+## roads were laid on the ground instead of over it Pilgrim's Ash's side road came in 64 degrees
+## off one leg and 50 off the other and the town lost its crossing. No other town changes: the
+## only others with three roads (Grandfather Hollow, Kharrow Hold) send two of them out on one
+## trunk, and Merrowby's and Gullhithe's side roads are 68 and 66 degrees off.
+CROSS_STREET_DOT = 0.66
+
+
 def add_streets(roads: list, places: list, levels: dict) -> list:
     """Carry every road through its settlement instead of stopping it at the middle.
 
@@ -681,7 +690,7 @@ def add_streets(roads: list, places: list, levels: dict) -> list:
         streets = [(best[1], best[2])]
         # a third road arriving across the grain earns a cross street
         for d in dirs:
-            if abs(float(np.dot(d, best[1]))) < 0.55 and abs(float(np.dot(d, best[2]))) < 0.55:
+            if abs(float(np.dot(d, best[1]))) < CROSS_STREET_DOT and abs(float(np.dot(d, best[2]))) < CROSS_STREET_DOT:
                 streets.append((d, -d))
                 break
         for n, (a, b) in enumerate(streets):
