@@ -9,6 +9,8 @@ extends TestCase
 
 const MENU := preload("res://ui/menus/main_menu.tscn")
 const WORLD_SCENE := "res://world/world.tscn"
+## Words of the title's line under the coarse-ground notice (main_menu.gd, COARSE_FOOT).
+const COARSE_FOOT_WORDS := "still go in"
 
 
 func _tree() -> SceneTree:
@@ -78,6 +80,21 @@ func test_no_terrain_regions_draws_the_coarse_ground_and_says_how_to_build_them(
 	assert_eq(s["reason"], "terrain_missing")
 	assert_eq(s["command"], WorldStatus.BUILD_COMMAND)
 	assert_true(str(s["notice"]).contains(WorldStatus.BUILD_COMMAND), "the notice names the command")
+	assert_true(bool(s["announce"]), "and it is said out loud: nobody asked for it")
+	assert_true(str(s["badge"]).contains(WorldStatus.BUILD_COMMAND), "the corner plate names it too: %s" % s["badge"])
+
+
+## The Windows case: the build wrote its maps, `godot` was not on the PATH, and the import that
+## turns the maps into Terrain3D regions never ran. The way to the full terrain is the import alone.
+func test_maps_built_and_never_imported_name_the_import_not_the_build() -> void:
+	var s := WorldStatus.evaluate(_facts({"terrain_regions": 0, "full_maps": true}))
+	assert_eq(s["reason"], "terrain_missing")
+	assert_eq(s["command"], WorldStatus.TERRAIN_COMMAND)
+	var detail := str(s["detail"])
+	assert_true(detail.contains("never imported") and detail.contains("GODOT"), "says what did not run, and how to name Godot: %s" % detail)
+	assert_true(detail.contains("plain and grey"), "and owns the look it leaves")
+	assert_true(str(s["badge"]).contains(WorldStatus.TERRAIN_COMMAND) and str(s["notice"]).contains(WorldStatus.TERRAIN_COMMAND),
+			"the plate and the notice name the import: %s / %s" % [s["badge"], s["notice"]])
 
 
 func test_the_coarse_ground_can_be_asked_for() -> void:
@@ -86,6 +103,38 @@ func test_the_coarse_ground_can_be_asked_for() -> void:
 	assert_true(bool(s["playable"]))
 	assert_eq(s["terrain"], "fallback")
 	assert_eq(s["reason"], "forced")
+	assert_false(bool(s["announce"]), "asked for, it is not announced")
+	assert_eq(s["command"], "", "and there is nothing to run")
+	assert_true(str(s["badge"]).contains(WorldStatus.FORCE_FALLBACK_ARG), "the plate says it was asked for: %s" % s["badge"])
+
+
+## Terrain3D 1.0.2 crashes Mesa's software Vulkan driver on its first frame (inside the driver's
+## rasterizer threads, with nothing of the game loaded), so Forward+ there draws the coarse ground.
+func test_software_vulkan_draws_the_coarse_ground_instead_of_crashing() -> void:
+	var lavapipe := {"rendering_device": true, "adapter": "llvmpipe (LLVM 20.1.2, 256 bits)"}
+	var s := WorldStatus.evaluate(_facts(lavapipe))
+	assert_eq(s["state"], "fallback", "Forward+ on llvmpipe does not start Terrain3D")
+	assert_eq(s["reason"], "driver_unsafe")
+	assert_true(bool(s["playable"]) and bool(s["announce"]), "and says so, and lets the player in")
+	assert_true(str(s["detail"]).contains("opengl3") and str(s["detail"]).contains(WorldStatus.FORCE_TERRAIN3D_ARG),
+			"naming the renderer that does draw it, and the way to try anyway: %s" % s["detail"])
+	var forced := lavapipe.duplicate()
+	forced["forced_terrain3d"] = true
+	assert_eq(WorldStatus.evaluate(_facts(forced))["state"], "ready", "--terrain=terrain3d tries Terrain3D anyway")
+	assert_eq(WorldStatus.evaluate(_facts({"rendering_device": false, "adapter": "llvmpipe (LLVM 20.1.2, 256 bits)"}))["state"],
+			"ready", "the Compatibility renderer's llvmpipe draws Terrain3D")
+	assert_eq(WorldStatus.evaluate(_facts({"rendering_device": true, "adapter": "AMD Radeon RX 9070 XT"}))["state"],
+			"ready", "and so does a graphics card on Forward+")
+
+
+func test_the_terrain_argument_asks_for_the_coarse_ground() -> void:
+	assert_true(WorldStatus.forced_by(PackedStringArray(["--flow=/tmp/x", "--terrain=fallback"])), "--terrain=fallback")
+	assert_true(WorldStatus.forced_by(PackedStringArray(["--terrain=coarse"])), "--terrain=coarse")
+	assert_true(WorldStatus.forced_by(PackedStringArray(["--fallback-terrain"])), "the first spelling still works")
+	assert_false(WorldStatus.forced_by(PackedStringArray(["--terrain=terrain3d"])), "--terrain=terrain3d does not")
+	assert_false(WorldStatus.forced_by(PackedStringArray(["--terrain=fallbacks", "--flow=fallback"])), "nor anything merely like it")
+	assert_false(WorldStatus.forced_by(PackedStringArray()), "nor nothing")
+	assert_eq(WorldStatus.FORCE_FALLBACK_ARG, "--terrain=fallback", "the spelling the README gives")
 
 
 func test_this_machine_is_ready_when_its_world_is_built() -> void:
@@ -139,14 +188,47 @@ func test_the_title_lets_a_built_world_in() -> void:
 	await _tree().process_frame
 
 
-func test_the_title_lets_a_world_without_terrain3d_in_and_says_so_in_small_print() -> void:
+## One small line said this once, and a player played on the coarse ground for days without
+## seeing it. So it is said across the sheet, as plainly as a missing world, and the way in stays open.
+func test_the_title_lets_a_world_without_terrain3d_in_and_says_so_across_the_sheet() -> void:
 	WorldStatus.override = _facts({"terrain_class": false})
 	var menu: Control = MENU.instantiate()
 	_tree().root.add_child(menu)
 	await _tree().process_frame
 	var new_game := _button(menu, "New Game")
 	assert_true(new_game != null and not new_game.disabled, "New Game is open: there is a country to walk")
-	assert_eq(menu.get("notice"), null, "no apology across the sheet")
+	var notice: WorldNotice = menu.get("notice")
+	assert_true(notice != null and notice.is_visible_in_tree(), "the sheet says the ground will be coarse")
+	if notice != null:
+		assert_true(notice.text().contains("Terrain3D") and notice.text().contains("coarse"), "and why: %s" % notice.text())
+		assert_true(notice.text().contains(COARSE_FOOT_WORDS), "and that the way in is still open")
+		assert_eq(notice.command_label, null, "with no command to run where nothing the player runs mends it")
+	assert_eq(menu.get("ground_line"), null, "not in small print")
+	assert_true(bool(menu.call("_world_is_there")))
+	menu.queue_free()
+	await _tree().process_frame
+
+
+func test_the_title_names_the_import_when_the_maps_are_built_and_the_regions_are_not() -> void:
+	WorldStatus.override = _facts({"terrain_regions": 0, "full_maps": true})
+	var menu: Control = MENU.instantiate()
+	_tree().root.add_child(menu)
+	await _tree().process_frame
+	var notice: WorldNotice = menu.get("notice")
+	assert_true(notice != null and notice.command_label != null and notice.command_label.text == WorldStatus.TERRAIN_COMMAND,
+			"the sheet gives the import's command: %s" % (notice.text() if notice != null else "no notice"))
+	assert_false(_button(menu, "Continue") == null, "and the menu is all there")
+	assert_false(_button(menu, "New Game").disabled, "with the way in open")
+	menu.queue_free()
+	await _tree().process_frame
+
+
+func test_the_title_says_the_asked_for_coarse_ground_in_small_print() -> void:
+	WorldStatus.override = _facts({"forced_fallback": true})
+	var menu: Control = MENU.instantiate()
+	_tree().root.add_child(menu)
+	await _tree().process_frame
+	assert_eq(menu.get("notice"), null, "no account across the sheet of what the player asked for")
 	var line: Label = menu.get("ground_line")
 	assert_true(line != null and line.text.contains("coarse"), "one small line says the ground will be coarse")
 	menu.queue_free()
@@ -180,6 +262,14 @@ func test_a_world_without_terrain3d_draws_the_coarse_ground_under_the_body() -> 
 	await w.world_ready
 	assert_eq(w.terrain_mode, "fallback", "the ground is drawn anyway")
 	assert_eq(w.terrain_node, null, "without touching Terrain3D")
+	var said := w.ground_notice
+	assert_true(said != null, "and the world has the plate and the card that say so")
+	if said != null:
+		assert_true(said.text().contains("Coarse ground") and said.text().contains("Terrain3D did not load"),
+				"the plate names the ground and why: %s" % said.text())
+		said.announce()
+		assert_true(said.card_shown and said.card.visible, "the card goes up when the fade lifts")
+		assert_true(said.text().contains("cannot be drawn on this machine"), "with the whole account")
 	var body: Node3D = w.get_node("PlayerSpawn").get("player")
 	assert_true(body != null, "somebody stands in it")
 	await _tree().physics_frame
@@ -203,6 +293,7 @@ func test_a_built_world_draws_terrain3d_and_no_fallback() -> void:
 	await w.world_ready
 	assert_eq(w.terrain_mode, "terrain3d")
 	assert_true(w.terrain_node != null and w.fallback == null, "Terrain3D, and nothing drawn beside it")
+	assert_eq(w.ground_notice, null, "and nothing says the ground is coarse")
 	_tree().root.remove_child(w)
 	w.queue_free()
 	await _tree().process_frame
