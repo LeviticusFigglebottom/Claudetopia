@@ -115,11 +115,20 @@ func _item(id: String, word: String, _actions: Array) -> Control:
 		var words := k.split(" ", false)
 		var key := words[words.size() - 1]
 		if words.size() > 1:
-			row.add_child(UiKit.label(" ".join(words.slice(0, words.size() - 1)), "Small"))
+			row.add_child(_word(" ".join(words.slice(0, words.size() - 1))))
 		row.add_child(_keycap(key))
-	var l := UiKit.label(word, "Small")
-	row.add_child(l)
+	row.add_child(_word(word))
 	return row
+
+
+## A word on the strip, light with a dark rim so it reads on pale floor and dark earth alike:
+## the theme's soft ink all but vanished against the world's dark ground.
+func _word(text: String) -> Label:
+	var l := UiKit.label(text, "Small")
+	l.add_theme_color_override("font_color", ThemeBuilder.colour("paper", "warm"))
+	l.add_theme_color_override("font_outline_color", Color(0.08, 0.06, 0.04, 0.85))
+	l.add_theme_constant_override("outline_size", 5)
+	return l
 
 
 ## A key as a small plate: ink on paper inside a metal rim, a few pixels wider than its name.
