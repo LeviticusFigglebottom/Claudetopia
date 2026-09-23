@@ -85,6 +85,106 @@ func _standing_in(root: Node, body: Node3D) -> Array[String]:
 	return out
 
 
+## What an interior walked into from the world holds, against what its meta and the quests say it
+## should, and whether each thing stands on something: {line, faults}. Built at all (meshes, a
+## floor that says what it is); every prop a house's meta places; a deep place's features and the
+## foes its markers ask for; every quest thing the placer puts here, and a deep place's pickups;
+## and in a deep place, each thing standing on the rock rather than over it.
+func _contents(root: Node, id: String) -> Dictionary:
+	var faults: Array[String] = []
+	var meta_path := str(ContentDB.get_or_empty(id).get("meta", ""))
+	var meta: Dictionary = {}
+	if meta_path != "":
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+		if parsed is Dictionary:
+			meta = parsed
+	var meshes := root.find_children("*", "MeshInstance3D", true, false).size()
+	var floors := 0
+	for body in root.find_children("*", "StaticBody3D", true, false):
+		if (body as Node).has_meta("surface"):
+			floors += 1
+	var lights := root.find_children("*", "Light3D", true, false).size()
+	if meshes == 0:
+		faults.append("built nothing to see")
+	if floors == 0:
+		faults.append("has no floor that says what it is")
+	var cave := meta.has("chambers")
+	var line := "CONTENTS | %s | %d meshes, %d floors, %d lights" % [id, meshes, floors, lights]
+	if not cave:
+		var props := root.find_child("Props", true, false)
+		var placed := props.get_child_count() if props != null else 0
+		var wanted := (meta.get("placements", []) as Array).size()
+		line += ", %d of %d props" % [placed, wanted]
+		if placed < wanted:
+			faults.append("%d of the meta's %d props stand" % [placed, wanted])
+	else:
+		var markers := 0
+		for m in _tree().get_nodes_in_group("enemy_spawn"):
+			if root.is_ancestor_of(m) and str((m as Node).get_meta("enemy", "")) != "" and ContentDB.has(str((m as Node).get_meta("enemy", ""))):
+				markers += 1
+		var spawned_node := root.find_child("Spawned", true, false)
+		var spawned := spawned_node.get_child_count() if spawned_node != null else 0
+		line += ", %d of %d foes" % [spawned, markers]
+		if spawned < markers:
+			faults.append("%d of %d foes its markers ask for stand" % [spawned, markers])
+	# every quest thing the placer puts here
+	var names: Array[String] = []
+	for row in QuestItems.placements():
+		if str(row["where"]) != id or QuestItems.ensure().is_taken(str(row["key"])):
+			continue
+		match str(row["kind"]):
+			"choice": names.append("Choice_" + Ids.name_of(str(row["quest_id"])))
+			"book": names.append("Book_" + Ids.name_of(str(row["book"])))
+			_: names.append("QuestItem_" + Ids.name_of(str(row["item"])))
+	var place := str(ContentDB.get_or_empty(id).get("place", ""))
+	for f in meta.get("features", []):
+		var item := str((f as Dictionary).get("item", ""))
+		if str(f.get("kind", "")) == "item" and item != "" and ContentDB.has(item) and not ItemSources.boss_drops_at(item, place):
+			names.append("Pickup_" + Ids.name_of(item))
+	var things: Array[Node3D] = []
+	for n in names:
+		var found := root.find_child(n, true, false) as Node3D
+		if found == null:
+			faults.append("%s is not there" % n)
+		else:
+			things.append(found)
+	line += ", %d of %d quest things" % [things.size(), names.size()]
+	# in a deep place, what stands in it stands on the rock
+	if cave:
+		var features := root.find_child("Features", true, false)
+		if features != null:
+			for child in features.get_children():
+				if child is Node3D and not (child is Door) and not (child is Marker3D) and not (child is Light3D):
+					things.append(child as Node3D)
+		var hovering: Array[String] = []
+		var worst := 0.0
+		for t in things:
+			var gap := _gap_under(t)
+			worst = maxf(worst, gap if not is_inf(gap) else 99.0)
+			if gap > 0.12:
+				hovering.append("%s %s" % [t.name, "over nothing" if is_inf(gap) else "%.2f m up" % gap])
+		line += ", highest over the rock %.2f m" % worst
+		if not hovering.is_empty():
+			faults.append("stands over the rock: %s" % ", ".join(hovering))
+	return {"line": line, "faults": faults}
+
+
+## How far a thing's origin stands over whatever is under it (INF over nothing within 3 m).
+func _gap_under(t: Node3D) -> float:
+	var space := t.get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(t.global_position + Vector3.UP * 0.3, t.global_position + Vector3.DOWN * 3.0, 1)
+	var own: Array[RID] = []
+	for body in t.find_children("*", "CollisionObject3D", true, false):
+		own.append((body as CollisionObject3D).get_rid())
+	if t is CollisionObject3D:
+		own.append((t as CollisionObject3D).get_rid())
+	q.exclude = own
+	var hit := space.intersect_ray(q)
+	if hit.is_empty():
+		return INF
+	return t.global_position.y - (hit["position"] as Vector3).y
+
+
 func test_every_door_is_walked_in_and_out_of_as_a_player_would() -> void:
 	var w := (load(WORLD_SCENE) as PackedScene).instantiate() as World
 	_tree().root.add_child(w)
@@ -141,6 +241,11 @@ func test_every_door_is_walked_in_and_out_of_as_a_player_would() -> void:
 		assert_true(in_above >= FLOOR_LOW and in_above <= FLOOR_HIGH, "%s: in, %.2f m above the floor" % [id, in_above])
 		assert_true(in_facing >= FACING_IN, "%s: in, facing into the room (%.2f)" % [id, in_facing])
 		assert_true(in_the_way.is_empty(), "%s: in, standing in %s" % [id, str(in_the_way)])
+		# What should be inside is inside, and stands on something.
+		var contents := _contents(root, id)
+		_lines.append(str(contents["line"]))
+		for fault in contents["faults"]:
+			assert_true(false, "%s: %s" % [id, fault])
 		# And out again, through the interior's own door.
 		inner.interact(player)
 		assert_eq(Interiors.current_id, "", "%s: its door leads out" % id)

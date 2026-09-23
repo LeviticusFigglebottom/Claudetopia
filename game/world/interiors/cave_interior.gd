@@ -17,6 +17,8 @@ const BOSS_ARENA := preload("res://actors/enemy/boss_arena.tscn")
 const ENTRANCE_LIFT := 0.05
 ## How far inside the way out a body coming in is stood, toward the middle of its chamber.
 const ENTRANCE_IN := 1.2
+## How far under a chamber's nominal floor the rock is looked for.
+const ROCK_SEARCH := 6.0
 
 ## Surface parameters per formation: what cut the rock decides how the rock reads.
 const ROCK_BY_FORMATION := {
@@ -51,6 +53,9 @@ var _missing_assets: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
 var _props := PropLibrary.new()
 var _variant := 0
+## The collision shapes as triangle meshes with where they sit, made once per build for finding the
+## rock under things (_rock_under) and let go when the build is done.
+var _rock_meshes: Array = []
 
 
 func _ready() -> void:
@@ -85,6 +90,7 @@ func build(path: String) -> bool:
 		_build_encounters()
 	_build_boss_arenas()
 	_raise_quest_things()
+	_rock_meshes.clear()
 	Log.info("CaveInterior", "%s built: %d chambers, %d tris" % [meta.get("name", slug), chambers.size(), int(meta.get("tris", 0))])
 	return true
 
@@ -160,7 +166,7 @@ func _mark_entrance() -> void:
 	if exit.is_empty():
 		if not meta.has("entrance"):
 			return
-		marker.position = _rock_under(_vec(meta["entrance"])) + Vector3.UP * ENTRANCE_LIFT
+		marker.position = _on_rock(_vec(meta["entrance"])) + Vector3.UP * ENTRANCE_LIFT
 		add_child(marker)
 		return
 	var door_at := _feature_position(exit)
@@ -170,7 +176,7 @@ func _mark_entrance() -> void:
 	toward.y = 0.0
 	var inward := toward.normalized() if toward.length() > 0.3 else Vector3.BACK
 	var at := door_at + inward * minf(ENTRANCE_IN, maxf(toward.length(), 0.3))
-	marker.position = _rock_under(at) + Vector3.UP * ENTRANCE_LIFT
+	marker.position = _on_rock(at) + Vector3.UP * ENTRANCE_LIFT
 	marker.rotation.y = atan2(-inward.x, -inward.z)
 	add_child(marker)
 
@@ -183,31 +189,62 @@ func _exit_feature() -> Dictionary:
 	return {}
 
 
-## The highest rock under `at` (from a metre above it to three below), in this cave's own space,
-## read from the collision shapes themselves: the physics server has not seen them yet when the
-## cave is being built. `at` itself when there is no rock there.
+## The rock under `at` (the first found going down from a metre above it to ROCK_SEARCH below), in
+## this cave's own space, read from the collision shapes themselves: the physics server has not
+## seen them yet when the cave is being built. `at` itself when there is no rock there.
 func _rock_under(at: Vector3) -> Vector3:
-	var body := get_node_or_null("Collision") as StaticBody3D
-	if body == null:
-		return at
+	var hit := _rock_hit(at)
+	return at if hit == Vector3.INF else hit
+
+
+## The rock under `at`, or Vector3.INF when there is none within reach.
+func _rock_hit(at: Vector3) -> Vector3:
+	if _rock_meshes.is_empty():
+		var body := get_node_or_null("Collision") as StaticBody3D
+		if body == null:
+			return Vector3.INF
+		for child in body.get_children():
+			var cs := child as CollisionShape3D
+			if cs == null or not (cs.shape is ConcavePolygonShape3D):
+				continue
+			var tm := TriangleMesh.new()
+			if tm.create_from_faces((cs.shape as ConcavePolygonShape3D).get_faces()):
+				_rock_meshes.append([tm, cs.transform])
 	var top := at + Vector3.UP * 1.0
-	var bottom := at + Vector3.DOWN * 3.0
+	var bottom := at + Vector3.DOWN * ROCK_SEARCH
 	var best := Vector3(at.x, -INF, at.z)
-	for child in body.get_children():
-		var cs := child as CollisionShape3D
-		if cs == null or not (cs.shape is ConcavePolygonShape3D):
-			continue
-		var tm := TriangleMesh.new()
-		if not tm.create_from_faces((cs.shape as ConcavePolygonShape3D).get_faces()):
-			continue
-		var inv := cs.transform.affine_inverse()
+	for entry in _rock_meshes:
+		var tm: TriangleMesh = entry[0]
+		var xf: Transform3D = entry[1]
+		var inv := xf.affine_inverse()
 		var hit := tm.intersect_segment(inv * top, inv * bottom)
 		if hit.is_empty():
 			continue
-		var p: Vector3 = cs.transform * (hit["position"] as Vector3)
+		var p: Vector3 = xf * (hit["position"] as Vector3)
 		if p.y > best.y:
 			best = p
-	return at if is_inf(best.y) else best
+	return Vector3.INF if is_inf(best.y) else best
+
+
+## A thing's place set down on the rock under it: the forge gives a chamber's nominal floor, and the
+## voxel rock lies 0.25 to 0.55 m under that, so the Hearthstones, the dressing, the pickups and a
+## quest's things all stood over the rock. Where there is no rock under the place at all (the
+## middle of Sunken Barge's hold and nest, over their pools), the nearest floor point that has rock
+## under it.
+func _on_rock(at: Vector3) -> Vector3:
+	var hit := _rock_hit(at)
+	if hit != Vector3.INF:
+		return hit
+	var points: Array[Vector3] = []
+	for id in chambers:
+		for p in (chambers[id] as Dictionary).get("floor_points", []):
+			points.append(_vec(p))
+	points.sort_custom(func(a: Vector3, b: Vector3) -> bool: return a.distance_squared_to(at) < b.distance_squared_to(at))
+	for v in points:
+		var under := _rock_hit(v)
+		if under != Vector3.INF:
+			return under
+	return at
 
 
 func _build_water() -> void:
@@ -453,7 +490,7 @@ func _build_features() -> void:
 	add_child(holder)
 	for f in meta.get("features", []):
 		var kind := str(f.get("kind", "prop"))
-		var at := _feature_position(f)
+		var at := _on_rock(_feature_position(f))
 		match kind:
 			"hearthstone":
 				var hs := HEARTHSTONE.instantiate()
@@ -521,7 +558,8 @@ func _build_encounters() -> void:
 				at = _random_floor(ch)
 			var marker := Marker3D.new()
 			marker.name = "Spawn_%s_%d" % [Ids.name_of(str(e.get("enemy", "core:enemy/unknown"))), i]
-			marker.position = at
+			# on the rock, so a foe stands up where it stands rather than dropping onto it
+			marker.position = _on_rock(at)
 			marker.rotation.y = deg_to_rad(float(e.get("yaw", 0.0)) if i == 0 else _rng.randf() * 360.0)
 			marker.set_meta("enemy", str(e.get("enemy", "")))
 			marker.set_meta("group", str(e.get("group", ch_id)))
@@ -671,7 +709,11 @@ func _raise_quest_things() -> void:
 	var interior_id := str(get_meta("interior_id", ""))
 	if items == null or interior_id == "":
 		return
-	items.call("raise_in_interior", self, interior_id, meta, Callable(self, "_feature_position"))
+	var placed: Array = items.call("raise_in_interior", self, interior_id, meta, Callable(self, "_feature_position"))
+	# the placer puts things at the meta's floor points; set them down on the rock under them
+	for node in placed:
+		if node is Node3D:
+			(node as Node3D).position = _on_rock((node as Node3D).position)
 
 
 func _quest_items() -> Node:
