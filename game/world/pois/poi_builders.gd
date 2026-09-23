@@ -793,6 +793,23 @@ static func _tower_toll_house(d: PoiDressing, grain: Vector2) -> void:
 	k.place(k.prop("signpost"), k.on_ground(door.x - 2.2, door.y + 1.0), yaw + PI)
 	k.place(k.prop("drystone_wall"), k.on_ground(door.x - 4.0, door.y - 1.0), yaw + PI * 0.5)
 	k.place(k.prop("drystone_wall"), k.on_ground(door.x + 4.4, door.y - 1.0), yaw + PI * 0.5)
+	# The gate-warden's post: out on the road past the drift the door's wall has piled (4.6 m
+	# round a point 5.4 m out, and it stands to the knee over the brazier), where the road comes
+	# up to the snow, on whichever side the walls and the post by the door leave clear.
+	var things := [[Vector2(door.x + 1.2, door.y), 1.4], [Vector2(door.x - 2.2, door.y + 1.0), 1.4],
+			[Vector2(door.x - 4.0, door.y - 1.0), 3.0], [Vector2(door.x + 4.4, door.y - 1.0), 3.0]]
+	var post := grain * 11.2
+	for a in [0.0, 0.25, -0.25, 0.5, -0.5]:
+		var c := grain.rotated(float(a)) * 11.2
+		var clear := true
+		for t in things:
+			var thing: Array = t
+			var where: Vector2 = thing[0]
+			clear = clear and c.distance_to(where) >= float(thing[1])
+		if clear:
+			post = c
+			break
+	k.marker("the_gate_post", k.on_ground(post.x, post.y), true)
 
 
 ## A colossus's fallen head, hollowed for a watch: a great stone head sunk to the jaw in ash,
@@ -1789,8 +1806,12 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		var s := k.rng.randf_range(-12.0, 30.0)
 		var side := (1.0 if k.rng.randf() > 0.5 else -1.0) * k.rng.randf_range(8.5, 12.5)
 		var size := k.rng.randf_range(0.5, 1.1)
-		m.ellipsoid(shards, at.call(s, side, size * 0.25), Vector3(size, size * 0.6, size * 1.3),
-				Basis(Vector3.UP, k.rng.randf_range(0.0, TAU)) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.3, 0.3)))
+		var turn := Basis(Vector3.UP, k.rng.randf_range(0.0, TAU)) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.3, 0.3))
+		# none where the Sayers have pitched their camp, on the head's right: they would have
+		# carted them off the dig (and a shard is solid, and a Sayer stands there)
+		if side < 0.0 and s > 14.0:
+			continue
+		m.ellipsoid(shards, at.call(s, side, size * 0.25), Vector3(size, size * 0.6, size * 1.3), turn)
 	for f in 3:
 		m.limb(shards, at.call(32.6 + float(f) * 1.0, 9.2 + float(f) * 0.9, 0.2),
 				at.call(33.3 + float(f) * 1.0, 9.6 + float(f) * 0.9, 0.15), 0.27)
@@ -1851,25 +1872,39 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		var foot3 := k.on_ground(foot2.x, foot2.y)
 		m.limb(timber, foot3, over, 0.12)
 	m.rod(timber, Transform3D(Basis.IDENTITY, over - Vector3(0.0, 2.2, 0.0)), 0.03, 4.4)
-	# a ladder down into the trench on the near side
-	var ladder := head2d - lie * 5.6
+	# The camp is on the head's right and ahead of it, the one quarter the figure leaves open:
+	# behind the head are its own neck and shoulders, and its left arm is flung out past the head
+	# on the other side. The first camp was measured from the head toward the hips and stood
+	# inside the carving (the table, the lamp and the ladder in its shoulders, a tent in its arm).
+	var right := -perp
+	var toward_head := Vector3(perp.x, 0.0, perp.y)
+	# a ladder down into the trench beside the head
+	var ladder := head2d + right * 5.6
 	var lg := k.on_ground(ladder.x, ladder.y)
 	for s in [-1.0, 1.0]:
-		m.limb(timber, lg + Vector3(perp.x, 0.0, perp.y) * 0.3 * float(s) - Vector3(0.0, 0.4, 0.0),
-				lg + Vector3(perp.x, 0.0, perp.y) * 0.3 * float(s) + Vector3(lie.x, 0.0, lie.y) * 1.2 + Vector3(0.0, 2.6, 0.0), 0.05)
+		m.limb(timber, lg + Vector3(lie.x, 0.0, lie.y) * 0.3 * float(s) - Vector3(0.0, 0.4, 0.0),
+				lg + Vector3(lie.x, 0.0, lie.y) * 0.3 * float(s) + toward_head * 1.2 + Vector3(0.0, 2.6, 0.0), 0.05)
 	m.commit(timber, k.surface("timber", 0.6), "Hoist", true)
-	for i in 2:
-		var t := head2d + perp * (8.6 * (1.0 if i == 0 else -1.0)) - lie * k.rng.randf_range(1.0, 4.0)
-		k.place(k.prop("tent"), k.on_ground(t.x, t.y), PoiKit.yaw_of(head2d - t), 1.0, true, Vector3.ZERO, true)
-		var crate := t + (head2d - t).normalized() * 2.8
+	for t in [head2d + right * 10.5 - lie * 1.0, head2d + right * 7.0 + lie * 8.5]:
+		var tp: Vector2 = t
+		k.place(k.prop("tent"), k.on_ground(tp.x, tp.y), PoiKit.yaw_of(head2d - tp), 1.0, true, Vector3.ZERO, true)
+		var crate := tp + (head2d - tp).normalized() * 2.8
 		k.place(k.prop("crate"), k.on_ground(crate.x, crate.y), k.rng.randf_range(0.0, TAU))
-	var table := head2d + perp * 5.2 - lie * 6.5
+	var table := head2d + right * 8.0 + lie * 4.0
 	k.place(k.prop("table_trestle"), k.on_ground(table.x, table.y), yaw)
 	k.place(k.prop("scroll"), k.on_ground(table.x, table.y, 0.75), yaw, 1.0, false)
 	k.place(k.prop("book"), k.on_ground(table.x + 0.4, table.y + 0.2, 0.75), yaw + 0.5, 1.0, false)
-	var lamp := head2d + perp * 3.4 - lie * 6.2
+	var lamp := head2d + right * 6.4 + lie * 2.0
 	k.place(k.prop("lantern_standing"), k.on_ground(lamp.x, lamp.y), 0.0)
 	k.light(k.on_ground(lamp.x, lamp.y, 1.9), Color(1.0, 0.82, 0.55), 1.8, 10.0)
+	# where the two Sayers work: at the findings, on the trench's lip by the ladder, and down in
+	# the trench by the hood (one marker each: a body stands exactly on its marker)
+	var finds := table + right * 1.4
+	k.marker("the_finds_table", k.on_ground(finds.x, finds.y), true)
+	var lip := head2d + right * 6.4 - lie * 1.2
+	k.marker("the_dig", k.on_ground(lip.x, lip.y), true)
+	var trench := head2d + right * 4.2 + lie * 2.8
+	k.marker("in_the_trench", k.on_ground(trench.x, trench.y), true)
 	var grass: Array = []
 	for i in 30:
 		var p := k.jitter(18.0)
@@ -2403,6 +2438,21 @@ static func _valley_dell(d: PoiDressing) -> void:
 	k.light(k.on_ground(door.x - 1.6, door.y + 0.4, 0.8), Color(1.0, 0.68, 0.35), 2.0, 10.0)
 	k.place(k.prop("stool"), k.on_ground(door.x + 0.3, door.y - 1.6), yaw)
 	k.place(k.prop("rope_coil"), k.on_ground(door.x + 2.6, door.y - 1.2), 0.0, 1.0, false)
+	# Where Tansy Cresswell stands to sell after dark: out in front of her door, on whichever side
+	# of it the table, the fire, the stool and the rope (set out along the world's axes, not the
+	# hut's) have left room for a person.
+	var things: Array[Vector2] = [Vector2(door.x + 1.8, door.y), Vector2(door.x - 1.6, door.y + 0.4),
+			Vector2(door.x + 0.3, door.y - 1.6), Vector2(door.x + 2.6, door.y - 1.2)]
+	var stand := door + grain * 3.0
+	for a in [0.0, 0.6, -0.6, 1.2, -1.2]:
+		var c := door + grain.rotated(float(a)) * 3.0
+		var clear := true
+		for t in things:
+			clear = clear and c.distance_to(t) >= 1.3
+		if clear:
+			stand = c
+			break
+	k.marker("the_witchs_door", k.on_ground(stand.x, stand.y), true)
 	# the yew somebody has been digging up at night, and the hole they left
 	var yew_at := grain * 7.0 + Vector2(-grain.y, grain.x) * 4.0
 	k.place(k.tree("yew"), k.on_ground(yew_at.x, yew_at.y), k.rng.randf_range(0.0, TAU), 1.3, true, Vector3.ZERO, true)
@@ -2433,6 +2483,9 @@ static func _valley_dell(d: PoiDressing) -> void:
 		var r := 13.0 * sqrt(k.rng.randf())
 		flowers.append(PoiKit.transform_at(k.on_ground(sin(a) * r, cos(a) * r), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.85, 1.35)))
 	k.scatter(foxglove, flowers, false, false, false)
+	# and where she works by day, among them, on the far side of the valley from the yew
+	var beds := grain * 3.0 - Vector2(-grain.y, grain.x) * 6.0
+	k.marker("the_foxglove_beds", k.on_ground(beds.x, beds.y), true)
 
 
 ## The Hidden Tarn: black water perfectly still behind a wall of scree, under the Cradle's mouth.

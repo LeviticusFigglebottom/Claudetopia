@@ -199,5 +199,102 @@
       "watered": {"speaker": "The One Poppy", "text": "The grey ground takes the water the way a dry mouth does. The poppy does nothing at all, which is what a watered poppy does. Somebody will notice the cup has been used, and say so at the Ash, and the Ash will decide what kind of person does that.", "next": "end"},
       "picked": {"speaker": "The One Poppy", "text": "It comes up easily. Four petals in your hand, and a square kilometre of grey with nothing in the middle of it but a ring of stones round a hole. The heath will know by morning.", "next": "end"}
     }
+  },
+  {
+    "id": "core:dialogue/tansy_cresswell",
+    "speaker_name": "Tansy Cresswell",
+    "notes": "The hedge-witch of Foxglove Dell (POI registry: 'The hedge-witch Tansy Cresswell grows what Merrowby pretends not to buy. Something has been digging up her yew berries at night.'). Nell Harebell's cousin, at a distance: Nell's 'tansy' line sets heard_about_tansy, and this one's 'the_berries' sets tansy_yew_heaps, which Nell answers. Who takes the seed is left open, as the registry leaves it; the bristlebacks at dawn get the blame.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"is_night": true}], "text": "Door, not window. The window is for people who want to be able to say they only came about the weather."},
+      {"conditions": [{"flag": "heard_about_tansy"}], "text": "Nell's told you about me and you came anyway. She'll have known you would; she tells people about me so that they will."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Tansy Cresswell", "text": "Mind the foxgloves. All of them: they're not for looking at, and neither am I. — You've come a long way off your road to stand in a ditch full of flowers. Buying, or lost?", "next": "hub"},
+      "hub": {"speaker": "Tansy Cresswell", "text": "Well?", "choices": [
+        {"text": "What do you grow out here?", "next": "the_dell"},
+        {"text": "Something's been digging up your yew.", "next": "the_berries"},
+        {"text": "Nell Harebell says you're her cousin.", "next": "nell", "conditions": [{"flag": "heard_about_tansy"}]},
+        {"text": "Who comes all this way to buy?", "next": "buyers"},
+        {"text": "I'll leave you to it.", "next": "bye"}
+      ]},
+      "the_dell": {"speaker": "Tansy Cresswell", "text": "Foxglove, which is a heart kept going in a thimble and stopped in a cup, and the whole of the difference is the thimble. Yew, for the same reason. And what the two of them make, in bottles, for the people who'll admit to buying. — The valley's dry, the hedge keeps the wind off and the sheep out, and nobody comes down here by accident. That's the other thing I grow.", "next": "hub"},
+      "the_berries": {"speaker": "Tansy Cresswell", "text": "Not digging. Picking. The boars come at dawn and turn the banks over and get the blame, because they're there to take it; but a boar would have the needles and the bark as well and die of it in the hedge, and nothing's died in my hedge. Somebody's been taking the berries, splitting them, keeping the seed and leaving the red flesh in neat little heaps under the tree. The flesh won't hurt you. The seed will. — Whoever it is knows which half is which, and wants the half that kills. I sat up four nights with a lamp. On the fifth I slept, and in the morning there were the heaps.", "effects": [{"set_flag": "tansy_yew_heaps"}, {"rumour": ["core:rumour/yew_seed_heaps", 0.5]}], "next": "hub"},
+      "nell": {"speaker": "Tansy Cresswell", "text": "Cousin. Her mother and mine were sisters and didn't speak for thirty years over a wound wash, and Nell and I have kept the family custom up with a good deal less effort than they put into it. — We're not at odds. We're at a distance. She keeps her yew in a locked press and sells it to nobody, and I sell mine to anybody who asks me plainly, and between the two of us the village is served and each of us gets to be the one who was right.", "next": "hub"},
+      "buyers": {"speaker": "Tansy Cresswell", "text": "Merrowby, after dark, with a scarf up, two hours each way to buy what Nell would sell them for a smile and a story about it in the Lip. Foxglove for an old man's heart. Something to make a long night shorter for somebody who isn't going to see the end of it. Something for a dog that has to be put down, for the man who can't. — I don't ask. I weigh it on my hand, and I tell them how much and how often and what it looks like when it's been too much, and they go home the long way.", "next": "hub"},
+      "bye": {"speaker": "Tansy Cresswell", "text": "Go out the way you came in. The hedge has opinions about the other ways.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/ruska_ko_dreugh",
+    "speaker_name": "Ruska ko-Dreugh",
+    "notes": "The gate-warden of Windgate at the Watch of the Gate (POI registry: 'The gate-warden takes a toll for a pass nobody can cross until spring, and spring has not come in years.'). A Dreugh: the clan that sits by the door at the Moot because it always leaves first (skerrow.json). What lies past the pass is hinted only, as WORLD_BIBLE §11 has it: the Ice Reach, a clan that went up and never came down, the giants' last road.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"flag": "paid_windgate"}], "text": "You're in the book. 'Crossed Windgate', it says, in my hand, and nobody in ten years has been able to say more than that."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Ruska ko-Dreugh", "text": "Three marks to cross Windgate. — You'll want to know the pass is shut. It is. It's been shut nine winters and this makes ten, and the toll is three marks, and for three marks I write you in the book as crossed and you may go up the road as far as the snow and look at it.", "next": "hub"},
+      "hub": {"speaker": "Ruska ko-Dreugh", "text": "Crossing?", "choices": [
+        {"text": "Three marks. Here.", "next": "paid", "conditions": [{"marks_min": 3}, {"flag_not": "paid_windgate"}]},
+        {"text": "Why take a toll for a pass nobody can cross?", "next": "the_toll"},
+        {"text": "What's on the other side?", "next": "beyond"},
+        {"text": "When does spring come up here?", "next": "spring"},
+        {"text": "Not today.", "next": "bye"}
+      ]},
+      "paid": {"speaker": "Ruska ko-Dreugh", "text": "*(She unwraps the book from its oilcloth, finds the page, and writes the day, your name and the word 'crossed' under nine winters of the same word in the same hand.)* — There. You've crossed Windgate. Very few people can say that these ten years, and every one of them paid me three marks to say it.", "effects": [{"marks": -3}, {"set_flag": "paid_windgate"}, {"rumour": ["core:rumour/windgate_toll", 0.5]}], "next": "hub"},
+      "the_toll": {"speaker": "Ruska ko-Dreugh", "text": "Because the toll isn't for the road. It's for the gate. A Dreugh has kept this house since before there were seven clans at the Moot, and the duty came down to me with the name, and a duty that comes with a name you don't put down because the road's shut; you'd be putting down the name. — If nobody takes the toll, the gate isn't kept, and a gate nobody keeps is a hole in a hill. I've spent nine winters keeping a hole in a hill from being only that. At the Moot they sit us by the door because the Dreugh always leave first. Somebody has to be by the door.", "next": "hub"},
+      "beyond": {"speaker": "Ruska ko-Dreugh", "text": "Snow, and under the snow the road, and the road goes up past the tops to the Ice Reach, where it runs wider and straighter than any clan ever built a road, and the old ones call it the giants' way and stop talking. — And a clan went up it once, one spring, all of them, and didn't come down. We don't say which. It isn't that we've forgotten. It's that we haven't.", "next": "hub"},
+      "spring": {"speaker": "Ruska ko-Dreugh", "text": "It came every year of my mother's life, and her mother's, and there's a line in the book for every thaw back to when the book was calfskin. Then it didn't. — The clans say the Breath is drawing in and the high places go first. The Sayers who came up to measure the snow said the note has slipped, and wrote it down, and went home before the weather did. I say it's been nine winters, and my brazier wants coal, and the book wants a line for today.", "next": "hub"},
+      "bye": {"speaker": "Ruska ko-Dreugh", "text": "Mind the road down. Nobody's fallen up this pass in ten years, and I'd like the book to go on saying so.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/gisel_morneth",
+    "speaker_name": "Gisel Morneth",
+    "notes": "First chair of the Sayers' dig at the Thirteenth (POI registry: 'The Choir has twelve. This one has a head, buried in ash, and it is not the head of the others. A Sayer camp digs here and argues.'). Holds that the head is the Cantor's likeness; Wennick Anthar holds that it was cut into the body afterwards; Calen Ash at the Headless Watch says the brow is wrong and the Sayers argue instead of saying so. Neither of them is shown right: the bible states no account outright.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"flag": "heard_wennick_anthar"}], "text": "You've been talking to Anthar. You have the look. He lies on the ash and says things at people, and they come away looking exactly like that."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Gisel Morneth", "text": "Mind the spoil. That heap is the last three days and I've been through it with my fingers twice. — You'll have come to look at the head. Everybody comes to look at the head. It is the Cantor's.", "next": "hub"},
+      "hub": {"speaker": "Gisel Morneth", "text": "Well? The light goes early on the ash.", "choices": [
+        {"text": "Why the Cantor's?", "next": "the_head"},
+        {"text": "Anthar says somebody cut the face into it afterwards.", "next": "the_quarrel", "conditions": [{"flag": "heard_wennick_anthar"}]},
+        {"text": "What have you found?", "next": "the_finds"},
+        {"text": "What happens here after dark?", "next": "the_night"},
+        {"text": "I'll let you dig.", "next": "bye"}
+      ]},
+      "the_head": {"speaker": "Gisel Morneth", "text": "The twelve are the Choir: twelve voices, cast to hold the note round the Seat, and when the note went wrong, the register says, their heads came off, which is why the Order has a knight living in one of them. This one lay down a mile from the ring with its head still on. — The Builders cast twelve for the ring and one for the Seat, and the one for the Seat was given a face, because the one who holds the note has to be someone you can look at. I won't say the name. It isn't said. But I have thirty years of rubbings from every Oroth lintel between here and the Mere, and I know that brow.", "effects": [{"set_flag": "heard_gisel_morneth"}, {"rumour": ["core:rumour/thirteenth_colossus", 0.4]}], "next": "hub"},
+      "the_quarrel": {"speaker": "Gisel Morneth", "text": "Anthar thinks it was recut. Anthar thinks everything was recut, because his grandmother was a mason and he has her eye for a claw chisel and none of her sense. — Recut by whom? With what? And carried a mile from the ring and laid on its face by whom, and written down nowhere by anybody? He has an eye and no answers. I have an answer, and I will put my name to it, which is more than the Circle will let him do.", "next": "hub"},
+      "the_finds": {"speaker": "Gisel Morneth", "text": "Ash, mostly. A pilgrim's hand-bell with the clapper tied, under the ash against the hood, which means somebody sat down by this head on their way into the grey and left it here. — And the seam. We're down to where the neck meets the shoulders and there's a seam right round it. I say it's where the head was cast on. Anthar says it's where it was set on. We've been saying it at each other for a month, and the seam hasn't said anything.", "next": "hub"},
+      "the_night": {"speaker": "Gisel Morneth", "text": "The choristers come after dark and stand round it and hold the note at it. We're in the tents by then with the flaps tied, which the Order would call cowardice and the Circle calls procedure; it's both. — They don't touch the dig. They sing at the head. I have lain in that tent and listened, and I'll tell you what I haven't told anybody at the Spire: I think they're trying to wake it, and I think they've been trying for a very long time. Be gone by dusk.", "next": "hub"},
+      "bye": {"speaker": "Gisel Morneth", "text": "Mind the spoil on your way. And if Anthar asks, I was civil.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/wennick_anthar",
+    "speaker_name": "Wennick Anthar",
+    "notes": "Second chair of the Sayers' dig at the Thirteenth. Holds that the face was cut into the head afterwards by somebody who wanted one particular face looked at, which is the design truth of WORLD_BIBLE §1.5 (being known holds) turned into a quarrel. Gisel Morneth holds that it is the Cantor's likeness. Neither of them is shown right.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"flag": "heard_gisel_morneth"}], "text": "She told you it's the Cantor's. Of course she did. She's been telling the head it's the Cantor's for a month, and it hasn't agreed with her either."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Wennick Anthar", "text": "Don't listen to her. — Sorry. You haven't said anything yet; it's a habit. Wennick Anthar, of the Circle: second chair on this dig, first on being right about it.", "next": "hub"},
+      "hub": {"speaker": "Wennick Anthar", "text": "Ask. Everybody asks, and then they lie down on the ash to look, and then they're on my side.", "choices": [
+        {"text": "Whose head is it, then?", "next": "the_head"},
+        {"text": "Morneth says it's the Cantor's.", "next": "the_quarrel", "conditions": [{"flag": "heard_gisel_morneth"}]},
+        {"text": "Anthar. That's an Oroth name.", "next": "the_name"},
+        {"text": "What happens here after dark?", "next": "the_night"},
+        {"text": "I'll leave you to it.", "next": "bye"}
+      ]},
+      "the_head": {"speaker": "Wennick Anthar", "text": "Lie down. No, properly; get your eye along the stone. — The twelve were cut in one campaign by one school, and you could lay a straightedge along any of their brows in the ring and it would sit true. This one bulges over the left eye. That isn't a style. That's a person. Somebody came after the Builders and cut a face into a head of the Builders' stone: one face, somebody's, somebody they wanted looked at. And then laid it down a mile from the ring, where people would come and look.", "effects": [{"set_flag": "heard_wennick_anthar"}, {"rumour": ["core:rumour/thirteenth_colossus", 0.4]}], "next": "hub"},
+      "the_quarrel": {"speaker": "Wennick Anthar", "text": "Of course she does. If it's the Cantor, it's the Builders', and the Circle can file it in the Oroth register next to everything else nobody reads. If it's a person, then somebody after the Builders put a face on fifty metres of their stone and walked it a mile from the ring, and the Circle has to say who, and how, and why nobody wrote it down. — She's right that I can't say. I'd rather be right and not able to say it than wrong and filed.", "next": "hub"},
+      "the_name": {"speaker": "Wennick Anthar", "text": "'Of the choir', in the liturgy. My great-grandmother took it off a lintel in the Undercroft because it sounded like money. It's the family joke that no Anthar has ever sung in tune. — So yes: I dig at the one colossus that isn't of the Choir, under a name that says I am. I've noticed. Morneth notices about twice a day.", "next": "hub"},
+      "the_night": {"speaker": "Wennick Anthar", "text": "They come at dusk. Three of them, sometimes four, hoods up, and they stand round the head and hold one note until the sky goes white. We lie in the tents and argue in whispers about what it means, which is the only time Morneth and I whisper. — Don't be here for it. They don't care about the dig. They'd care about you.", "next": "hub"},
+      "bye": {"speaker": "Wennick Anthar", "text": "If you pass Morneth, tell her there's a mortar line in the seam. She'll say she didn't hear you. She'll have heard you.", "next": "end"}
+    }
   }
 ]

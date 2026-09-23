@@ -43,7 +43,7 @@
     {"name": "Ellen", "language": "valish", "kind": "person", "rule": "5.1 people: -en", "derivation": "her sister at Gullhithe"},
     {"name": "Mother Oss", "language": "valish", "kind": "person", "rule": "5.1 people: short form with an honorific", "derivation": "Greyfold; whose idea the laid tables were"},
     {"name": "Hob Larkin", "language": "valish", "kind": "person", "rule": "5.1 people; trade/place surname", "derivation": "Hob (§5.1 first names); lark + -in. The unreliable hunter"},
-    {"name": "Tansy Cresswell", "language": "valish", "kind": "person", "rule": "5.1 people: feminine", "derivation": "from the POI registry (Foxglove Dell); made Nell Harebell's cousin by this stream"},
+    {"name": "Tansy Cresswell", "language": "valish", "kind": "person", "rule": "5.1 people: feminine", "derivation": "from the POI registry (Foxglove Dell); made Nell Harebell's cousin by this stream", "used_by": "core:npc/tansy_cresswell"},
     {"name": "Nauve Mor", "language": "sedgish", "kind": "person", "rule": "5.4: nauve 'channel', mor 'eel'", "derivation": "bible example; the salt-trader who wrote the Salt Isles guide"},
     {"name": "Brannock", "language": "valish", "kind": "person", "rule": "5.1 people", "derivation": "a dead pilgrim at Pilgrim's Ash, named once by Aud Fennick"},
     {"name": "M. Tarrow", "language": "valish", "kind": "person", "rule": "5.1 people: -ow", "derivation": "the Merrowby carter fined four marks in the Lantern Row day-book"},
@@ -102,6 +102,9 @@
     {"name": "Ivo Goslin", "language": "valish", "kind": "person", "rule": "5.1 people: two syllables, trade surname", "derivation": "named in the POI registry (Willow Isle's hermit); Ivo and Goslin from the §5.1 lists", "used_by": "core:npc/ivo_goslin"},
     {"name": "Marigold Orchard", "language": "valish", "kind": "person", "rule": "5.1 people: plant name, trade surname", "derivation": "Marigold and Orchard from the §5.1 lists; a Tamwick orchard woman on the pilgrim road", "used_by": "core:npc/marigold_orchard"},
     {"name": "Sorrel Rooke", "language": "valish", "kind": "person", "rule": "5.1 people: plant name, place/bird surname", "derivation": "Sorrel and Rooke from the §5.1 lists; the day burner at the Charcoal Camp", "used_by": "core:npc/sorrel_rooke"},
-    {"name": "Barnaby Rooke", "language": "valish", "kind": "person", "rule": "5.1 people: a name used for anyone, family surname", "derivation": "Barnaby from the §5.1 lists; Sorrel's brother, the night burner", "used_by": "core:npc/barnaby_rooke"}
+    {"name": "Barnaby Rooke", "language": "valish", "kind": "person", "rule": "5.1 people: a name used for anyone, family surname", "derivation": "Barnaby from the §5.1 lists; Sorrel's brother, the night burner", "used_by": "core:npc/barnaby_rooke"},
+    {"name": "Ruska ko-Dreugh", "language": "skerrish", "kind": "person", "rule": "5.3 people: sk cluster, vowels u and a, stress on the first; ko- and the clan", "derivation": "R + u + sk + a; clan Dreugh, who sit by the door at the Moot because they always leave first (skerrow.json), keeping the gate at Windgate", "used_by": "core:npc/ruska_ko_dreugh"},
+    {"name": "Gisel Morneth", "language": "valish+oroth", "kind": "person", "rule": "3.2 Lakefolk: Valish first name, Oroth loanword surname", "derivation": "gis- + feminine -el; surname morn 'stone' + -eth, a Tollmere family's Oroth name, as Sulion and Ondrael are", "used_by": "core:npc/gisel_morneth"},
+    {"name": "Wennick Anthar", "language": "valish+oroth", "kind": "person", "rule": "3.2 Lakefolk: Valish first name, Oroth loanword surname", "derivation": "wen- + masculine -ick; surname anthe 'choir' + -ar, taken off a lintel in the Undercroft by his great-grandmother (his own account)", "used_by": "core:npc/wennick_anthar"}
   ]
 }

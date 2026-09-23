@@ -211,5 +211,18 @@
       {"item": "core:item/rope", "count": [1, 3], "restock_hours": 72},
       {"item": "core:item/ember_mote", "count": [0, 2], "restock_hours": 120, "chance": 0.35}
     ]
+  },
+  {
+    "id": "core:table/stock_hedge_witch",
+    "role": "merchant_stock",
+    "description": "Foxglove Dell: what grows in the valley and what Merrowby walks out after dark not to be seen buying. The yew is sold to anybody who asks plainly, which is the difference between Tansy and her cousin.",
+    "rows": [
+      {"item": "core:item/foxglove", "count": [4, 10], "restock_hours": 48},
+      {"item": "core:item/yew_berry", "count": [3, 8], "restock_hours": 72},
+      {"item": "core:item/potion_cure_poison", "count": [1, 3], "restock_hours": 72},
+      {"item": "core:item/potion_night_eye", "count": [1, 2], "restock_hours": 72},
+      {"item": "core:item/potion_damage_health", "count": [0, 2], "restock_hours": 120, "chance": 0.5},
+      {"item": "core:item/potion_slow", "count": [0, 1], "restock_hours": 120, "chance": 0.4}
+    ]
   }
 ]

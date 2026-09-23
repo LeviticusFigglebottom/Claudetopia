@@ -90,5 +90,59 @@
       {"days": "all", "hour": 15, "place": "core:poi/charcoal_camp", "activity": "sleep", "spot": "home", "notes": "Sorrel has the clamps"},
       {"days": "all", "hour": 23, "place": "core:poi/charcoal_camp", "activity": "work", "spot": "by_the_fire", "notes": "the night burn, and whoever comes to sit by it"}
     ]
+  },
+  {
+    "id": "core:npc/tansy_cresswell", "name": "Tansy Cresswell", "home_place": "core:poi/foxglove_dell",
+    "dialogue": "core:dialogue/tansy_cresswell",
+    "bio": "Hedge-witch of Foxglove Dell and Nell Harebell's cousin, at a distance: took the turf hut in the dry valley for the foxgloves and the want of neighbours, and grows what Merrowby pretends not to buy and then buys, after dark, from a woman who lives usefully far away. Sells yew berries to anybody who asks plainly, which Nell will not, and remembers everybody who asks, which Nell also does.",
+    "unique_habit": "Weighs what she sells on the flat of her hand and has never been out by more than a berry; the scales Nell gave her hang on the hut door with a foxglove growing up through the pans.",
+    "personality": {"traits": ["proud", "cynical", "quiet", "brave"]},
+    "appearance": {"seed": 2231, "build": "small_wiry", "age": 58.0, "feminine": 1.0, "hair": "grey_plaited_round_the_head", "notes": "a sacking apron with deep pockets, purple pollen to the wrist, a bone-handled knife on a thong, and gloves she puts on for the foxgloves and never for the yew"},
+    "merchant": {"stock": "core:table/stock_hedge_witch", "marks": 140, "buys": ["ingredient"]},
+    "schedule": [
+      {"days": "all", "hour": 1, "place": "core:poi/foxglove_dell", "activity": "sleep", "spot": "home", "notes": "the yew berries go while she sleeps; she sat up four nights for it and saw nothing"},
+      {"days": "all", "hour": 9, "place": "core:poi/foxglove_dell", "activity": "work", "spot": "the_foxglove_beds", "notes": "after the boars have gone: putting back what they turned over at dawn"},
+      {"days": "all", "hour": 17, "place": "core:poi/foxglove_dell", "activity": "shop", "spot": "the_witchs_door", "notes": "at her door into the night, for the people who walk out from Merrowby not to be seen buying"}
+    ]
+  },
+  {
+    "id": "core:npc/ruska_ko_dreugh", "name": "Ruska ko-Dreugh", "home_place": "core:poi/watch_of_the_gate", "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/ruska_ko_dreugh",
+    "bio": "Gate-warden of Windgate: keeps the clan toll-house at a pass the snow has shut for nine winters. The duty came down to her with the name, the way duties do in Skerrow, and nobody has told her to put it down, so she takes the toll, writes the crossing in the book, and lets the crosser go as far as the snow to look at it.",
+    "unique_habit": "Rings the frozen bell every morning by striking it with the flat of her hand, which makes no sound at all, and writes 'rung' in the book.",
+    "personality": {"traits": ["proud", "pious", "quiet", "brave"]},
+    "appearance": {"seed": 6121, "build": "square_short", "age": 49.0, "feminine": 1.0, "hair": "black_braided_under_a_fleece_hood", "notes": "a sheepskin to the knee over a clan coat, a toll-book in oilcloth on a strap, frost-cracked knuckles, and the brazier's soot on one cheek where she leans in to read the book by it"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/watch_of_the_gate", "activity": "sleep", "spot": "home"},
+      {"days": "all", "hour": 6, "place": "core:poi/watch_of_the_gate", "activity": "work", "spot": "the_gate_post", "notes": "the book, the brazier and the road up to the snow"},
+      {"days": "all", "hour": 20, "place": "core:poi/watch_of_the_gate", "activity": "sleep", "spot": "home", "notes": "nobody has crossed after dark in ten years, and she writes that down too"}
+    ]
+  },
+  {
+    "id": "core:npc/gisel_morneth", "name": "Gisel Morneth", "home_place": "core:poi/thirteenth_colossus", "faction": "core:faction/sayers",
+    "dialogue": "core:dialogue/gisel_morneth",
+    "bio": "Sayer of the Circle and first chair of the dig at the Thirteenth, thirty years a reader of the Oroth register. Holds that the one colossus with its head still on is the likeness of the Cantor, cast for the Seat and not for the ring; will not say the name, and has written two hundred pages that go carefully round it.",
+    "unique_habit": "Goes through the spoil with her bare fingers, twice, because a sieve is for people who already know what they are looking for.",
+    "personality": {"traits": ["proud", "pious", "quiet", "brave"]},
+    "appearance": {"seed": 3013, "build": "tall_spare", "age": 61.0, "feminine": 1.0, "hair": "iron_grey_under_a_dig_scarf", "notes": "a Sayer's grey-blue coat with the hem taken up a hand for the trench, ash worked into every crease of the knuckles, a tube of rubbings on her back that she does not unroll in company"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/thirteenth_colossus", "activity": "sleep", "spot": "home", "notes": "in the tent with the flaps tied: after dark the choristers have the head"},
+      {"days": "all", "hour": 7, "place": "core:poi/thirteenth_colossus", "activity": "work", "spot": "the_dig", "notes": "at the trench, down to the seam where the neck meets the shoulders"},
+      {"days": "all", "hour": 19, "place": "core:poi/thirteenth_colossus", "activity": "sleep", "spot": "home"}
+    ]
+  },
+  {
+    "id": "core:npc/wennick_anthar", "name": "Wennick Anthar", "home_place": "core:poi/thirteenth_colossus", "faction": "core:faction/sayers",
+    "dialogue": "core:dialogue/wennick_anthar",
+    "bio": "Sayer of the Circle and second chair of the dig at the Thirteenth, a Tollmere mason's grandson with his grandmother's eye for a chisel mark. Holds that the head was not cast with the body but cut into it afterwards, by somebody who wanted one particular face looked at, which the Circle has no register to file under.",
+    "unique_habit": "Lies flat on the ash to sight along the brow and argues from there, so that Morneth has had most of a month of arguments with the soles of his boots.",
+    "personality": {"traits": ["proud", "cynical", "gossip", "brave"]},
+    "appearance": {"seed": 3031, "build": "rangy", "age": 34.0, "feminine": 0.0, "hair": "brown_cropped_full_of_ash", "notes": "the same grey-blue coat as Morneth's, filthier at the front from lying on the ash, a mason's claw chisel through a buttonhole that he says is for comparison, and a drawing-board under his arm with the brow on it in forty attempts"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/thirteenth_colossus", "activity": "sleep", "spot": "home"},
+      {"days": "all", "hour": 7, "place": "core:poi/thirteenth_colossus", "activity": "work", "spot": "the_finds_table", "notes": "drawing the brow again, and the finds, and the brow"},
+      {"days": "all", "hour": 13, "place": "core:poi/thirteenth_colossus", "activity": "work", "spot": "in_the_trench", "notes": "down in the trench below her, which is where the arguments are"},
+      {"days": "all", "hour": 19, "place": "core:poi/thirteenth_colossus", "activity": "sleep", "spot": "home", "notes": "flaps tied, whispering the rest of the argument across the gap between the tents"}
+    ]
   }
 ]

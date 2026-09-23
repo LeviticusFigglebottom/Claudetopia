@@ -5,9 +5,12 @@ extends TestCase
 ## Headless Watch's eye and the hermit of Willow Isle were named in the registry and absent, their
 ## props set out as if somebody had just stepped away; Ansel's shrine promised a pilgrim, the
 ## Charcoal Camp a merchant and a job board, and Ryn Larkbourne's schedule put him at a spot in
-## Merrowby called "gosling_pit" that nothing there was named. They are ordinary people of the
-## registry now, so they are in the `npcs` save section like anybody, and these check they are
-## stood up once, where they work, and not twice after a load.
+## Merrowby called "gosling_pit" that nothing there was named. The places' stories named more: the
+## hedge-witch Tansy Cresswell at Foxglove Dell (a name in the names index and nobody in the
+## world), the gate-warden who takes a toll at Windgate, and the Sayers' camp that digs at the
+## Thirteenth and argues. They are ordinary people of the registry now, so they are in the `npcs`
+## save section like anybody, and these check they are stood up once, where they work, and not
+## twice after a load.
 
 const GENERATED := "res://world/generated"
 const POI_PEOPLE := {
@@ -19,6 +22,10 @@ const POI_PEOPLE := {
 	"core:npc/sorrel_rooke": "core:poi/charcoal_camp",
 	"core:npc/barnaby_rooke": "core:poi/charcoal_camp",
 	"core:npc/wardens_ryn": "core:poi/gosling_pit",
+	"core:npc/tansy_cresswell": "core:poi/foxglove_dell",
+	"core:npc/ruska_ko_dreugh": "core:poi/watch_of_the_gate",
+	"core:npc/gisel_morneth": "core:poi/thirteenth_colossus",
+	"core:npc/wennick_anthar": "core:poi/thirteenth_colossus",
 }
 
 var host: Node3D
@@ -107,9 +114,52 @@ func test_every_person_a_sentence_names_lives_at_that_point_of_interest() -> voi
 		for e in def.get("schedule", []):
 			here = here or str((e as Dictionary).get("place", "")) == str(POI_PEOPLE[id])
 		assert_true(here, "%s is never at %s" % [id, POI_PEOPLE[id]])
-	var merchant: Variant = ContentDB.get_or_empty("core:npc/sorrel_rooke").get("merchant")
-	assert_true(typeof(merchant) == TYPE_DICTIONARY and ContentDB.has(str((merchant as Dictionary).get("stock", ""))),
-			"the burners sell what the clamps make")
+	for seller in ["core:npc/sorrel_rooke", "core:npc/tansy_cresswell"]:
+		var merchant: Variant = ContentDB.get_or_empty(seller).get("merchant")
+		assert_true(typeof(merchant) == TYPE_DICTIONARY and ContentDB.has(str((merchant as Dictionary).get("stock", ""))),
+				"%s sells what the place makes" % seller)
+
+
+## A body stands exactly on its marker, so two people working one marker at one hour stand inside
+## each other: the Sayers' second chair was first put on his colleague's spot at the dig.
+func test_no_two_people_work_one_marker_at_once() -> void:
+	for day in 7:
+		for half in 48:
+			var hour := float(half) * 0.5 + 0.25
+			var taken: Dictionary = {}
+			for id in POI_PEOPLE:
+				var entry := Schedules.entry_for_def(ContentDB.get_or_empty(str(id)), day, hour)
+				if bool(entry.get("indoors", false)) or str(entry.get("spot", "")) == "":
+					continue
+				var key := "%s|%s" % [entry.get("place", ""), entry.get("spot", "")]
+				assert_false(taken.has(key), "%s and %s both stand at '%s' at %.2f on day %d" % [taken.get(key, ""), id,
+						entry.get("spot", ""), hour, day])
+				taken[key] = id
+
+
+## The dig is the Sayers' by day and the choristers' after dark, and the dell's boars root at dawn
+## while the hedge-witch is asleep: the people these places' stories put there are under a roof in
+## every hour their place's sentence stands something hostile in the open.
+func test_nobody_is_out_while_their_place_stands_its_foes_up() -> void:
+	for id in ["core:npc/tansy_cresswell", "core:npc/gisel_morneth", "core:npc/wennick_anthar"]:
+		var def := ContentDB.get_or_empty(id)
+		var place := str(def.get("home_place", ""))
+		var groups := PoiEncounters.of(place)
+		assert_false(groups.is_empty(), "%s: %s stands nothing up to keep out of the way of" % [id, place])
+		var out_hours := 0
+		for day in 7:
+			for half in 48:
+				var hour := float(half) * 0.5 + 0.25
+				var entry := Schedules.entry_for_def(def, day, hour)
+				if bool(entry.get("indoors", false)) or str(entry.get("place", "")) != place:
+					continue
+				out_hours += 1
+				for g in groups:
+					var group: Dictionary = g
+					assert_false(PoiEncounters.is_open(str(group.get("when", "always")), hour),
+							"%s is out at '%s' at %.2f on day %d while %s stand at %s" % [id, entry.get("spot", ""), hour,
+							day, group.get("enemy", ""), place])
+		assert_gt(out_hours, 0, "%s is never out at %s at all" % [id, place])
 
 
 func test_every_spot_they_work_is_a_marker_their_place_puts_down() -> void:
@@ -131,6 +181,49 @@ func test_every_spot_they_work_is_a_marker_their_place_puts_down() -> void:
 			if marker != null:
 				assert_true(marker.is_in_group(NpcRegistry.SPOT_GROUP), "'%s' at %s is not somewhere a person stands" % [spot, place])
 				assert_eq(str(marker.get_meta("place", "")), place, "and it says whose place it is in")
+
+
+## A body stands exactly where its marker is, so nothing solid may be there. The Sayers' first camp
+## at the Thirteenth stood inside the carving (the finds table in the colossus's shoulders, a tent in
+## its arm), and a snow drift at Windgate runs over the brazier by the toll-house door.
+func test_nobody_is_stood_inside_anything() -> void:
+	if provider == null:
+		return
+	var person := CapsuleShape3D.new()
+	person.radius = 0.3
+	person.height = 1.6
+	var places: Dictionary = {}
+	for id in POI_PEOPLE:
+		places[str(POI_PEOPLE[id])] = true
+	var looked := 0
+	for place in places:
+		var d := _dress(str(place))
+		if d == null:
+			continue
+		for i in 2:
+			await _tree().physics_frame
+		var space := d.get_world_3d().direct_space_state
+		for n in d.find_children("*", "Marker3D", true, false):
+			if not n.is_in_group(NpcRegistry.SPOT_GROUP):
+				continue
+			looked += 1
+			var q := PhysicsShapeQueryParameters3D.new()
+			q.shape = person
+			q.collision_mask = 1 << 0
+			q.transform = Transform3D(Basis.IDENTITY, (n as Node3D).global_position + Vector3(0.0, 0.95, 0.0))
+			var what: Array[String] = []
+			for hit in space.intersect_shape(q, 4):
+				var thing: Variant = (hit as Dictionary).get("collider")
+				what.append(str((thing as Node).get_path()) if thing is Node else "something")
+			assert_true(what.is_empty(), "%s: whoever works at '%s' stands inside %s" % [place, n.name, ", ".join(what)])
+		if str(place) == "core:poi/thirteenth_colossus":
+			# and the check can see: a person stood at the colossus's hips is inside its back
+			var q := PhysicsShapeQueryParameters3D.new()
+			q.shape = person
+			q.collision_mask = 1 << 0
+			q.transform = Transform3D(Basis.IDENTITY, d.to_global(Vector3(0.0, 1.8, 0.0)))
+			assert_false(space.intersect_shape(q, 1).is_empty(), "a person inside the carving is seen to be inside something")
+	assert_gt(looked, 10, "the people's places put their markers down")
 
 
 func test_the_charcoal_camp_posts_its_work() -> void:

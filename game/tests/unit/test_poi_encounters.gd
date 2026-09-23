@@ -21,7 +21,7 @@ const WHAT_STANDS := {
 	"core:poi/singing_yew": "nobody: safe ground (the wights turning away at the yew is not a mechanic)",
 	"core:poi/whitecut_falls": "a down-wolf pack",
 	"core:poi/bell_meadow_stones": "nobody: none",
-	"core:poi/foxglove_dell": "two bristlebacks at dawn",
+	"core:poi/foxglove_dell": "two bristlebacks at dawn, and person: core:npc/tansy_cresswell",
 	"core:poi/long_stride": "two cutpurses and a bravo by day",
 	"core:poi/shingle_shrine": "nobody: none",
 	"core:poi/north_cliff_beacon": "a smuggler-Sayer and two cutpurses",
@@ -51,14 +51,14 @@ const WHAT_STANDS := {
 	"core:poi/three_sisters_falls": "scree-hags",
 	"core:poi/clanless_camp": "three clanless raiders",
 	"core:poi/sinkhole_shrine": "nobody: none",
-	"core:poi/watch_of_the_gate": "nobody: none",
+	"core:poi/watch_of_the_gate": "person: core:npc/ruska_ko_dreugh (the gate-warden of the story; the sentence says none)",
 	"core:poi/lichen_stones": "nobody: none",
 	"core:poi/hidden_tarn": "scree-hags",
 	"core:poi/glass_bridge": "ash-wights",
 	"core:poi/bell_of_the_pilgrims": "nobody: none",
 	"core:poi/headless_watch": "person: core:npc/calen_ash (the fallen knight 'if the watch has turned' has nothing that turns it)",
 	"core:poi/the_one_poppy": "nobody: the poppy itself, to pick or water",
-	"core:poi/thirteenth_colossus": "choristers after dark (the Sayers dig by day)",
+	"core:poi/thirteenth_colossus": "choristers after dark, and by day the Sayers' dig, person: core:npc/gisel_morneth, person: core:npc/wennick_anthar",
 	"core:poi/cold_fire_camp": "six ash-wights, seated until the cup is touched",
 	"core:poi/glass_falls": "a bell-bearer",
 	"core:poi/hushline_stair": "ash-wights",
@@ -151,6 +151,9 @@ func test_every_point_of_interest_is_accounted_for() -> void:
 			var place := str((e as Dictionary).get("place", ""))
 			if Ids.type_of(place) == "poi":
 				peopled[place] = true
+				# and the other way: whoever a schedule puts at a point of interest is in its row
+				assert_true(str(WHAT_STANDS.get(place, "")).contains("person: %s" % def["id"]),
+						"%s's schedule puts them at %s and its row does not name them" % [def["id"], place])
 	for poi_id in WHAT_STANDS:
 		var said := str(WHAT_STANDS[poi_id])
 		var has_def := not PoiEncounters.of(str(poi_id)).is_empty()
