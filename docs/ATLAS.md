@@ -88,7 +88,11 @@ In a heights build of this atlas, the first view (DESIGN 5.1a) has:
 
 * **a landmark silhouette**: the Sunken Choir's ring of headless colossi on the Choir's Crown,
   483 m ahead and dead on the facing, and the Cantor's Seat's cold light below it (244 m).
-* **a road**: the waystones walking north across the heath to the Choir (the Stair Path). Beyond
+* **a road**: the waystones (the Stair Path), which go west from the camp over the neck that
+  joins the knoll to the plateau, then up the avenue of colossi past the Cantor's Seat to the
+  Choir. It is 560 m, a couple of minutes' walk. It climbs 24 m and never goes down into the
+  heath's trough, which it used to cross. That way was 980 m of zigzags down the knoll and back
+  up the plateau's scarp. Beyond
   the Choir, the Pilgrim Road comes down off the plateau through the notch in its north lip.
 * **smoke and roofs**: Pilgrim's Ash's fires by the Glass Bridge (790 m, 13°), and past them
   Ashwell's roofs, where the green of the Vale begins (1.4 km). Both show over the heath because
@@ -285,7 +289,8 @@ Tamwick by Hollin Barrow to Hazelcombe.
 * **The Ash Strand** (14 m, flat): the grey beach on the Grey Sea, with the Grey Wreck, the Strand
   Beacon and the Driftwood Camp.
 
-**Roads.** The **Stair Path** (track) runs from the Stair Head to the Choir. The **Ash Road**, the
+**Roads.** The **Stair Path** (track) runs from the Stair Head over the neck onto the plateau,
+and up the avenue of colossi to the Choir. The **Ash Road**, the
 pilgrims' old road, goes from the Glass Bridge by the Tenth and Ninth Waystones, the Ash-Winter
 Carts and Hermit's Gate to Greyfold, then on through the dead city by Bell Street, the Weighhouse
 and the Cistern of Isse to the Builders' Harbour. The **Wardens' Walk** comes from Wardens' Rest
