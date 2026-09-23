@@ -114,7 +114,7 @@
         "name": "maul_swing",
         "clip": "Attack_2H_Light_1",
         "weapon_class": "hammer",
-        "damage": 22.0,
+        "damage": 16.0,
         "poise_damage": 30.0,
         "range": 2.9,
         "telegraph": 0.9,
@@ -129,7 +129,7 @@
         "name": "maul_drop",
         "clip": "Attack_2H_Heavy",
         "weapon_class": "hammer",
-        "damage": 34.0,
+        "damage": 26.0,
         "poise_damage": 48.0,
         "heavy": true,
         "hyper_armour": true,
@@ -147,8 +147,8 @@
     ],
     "loot": "core:loot/bandit_pockets",
     "marks": [
-      20,
-      45
+      16,
+      40
     ],
     "tags": [
       "bandit",
