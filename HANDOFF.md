@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-23 18:10 UTC. Main is `claude/blissful-volta-dg80e6` at `6985d356`.
+**Last refreshed:** 2026-09-23 18:25 UTC. Main is `claude/blissful-volta-dg80e6` at `c6e0fd89` (6985d356 plus this file).
 
 ---
 
@@ -66,7 +66,7 @@ The user owns the project. Their direction, in their words where it matters:
 | `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `cbf7a236` | **URGENT: black ground, diagnosed** (the ash soil albedo, §4); fix next. |
 | `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `6fe6cefa` | Suite passes (1616 tests, 0 failed). The flow failure was main's old opening stall. Next: merge main, then flow, then hand back. |
 | `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `2592df60` | Refinements in progress. Re-verifying the Naming preview (§6.8). |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `5155e455` | Streets done and written up. Next: loose ends, and new POI kinds for the atlas. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `3352cb7c` | **Brief done and verified** (test 1664 passed, 0 failed; journey 16/16; smoke PASS; flow 98/99, the miss is the opening's). Queued for the next batch merge. Next: the atlas POI kinds. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
 section says what it did.
@@ -420,20 +420,62 @@ Each subsection is refreshed from its agent's hand-off note. Commands assume the
   - re-verify the Naming from a clean class cache;
   - hand back with full-size renders.
 
-### 6.9 Settlements and POIs (`wip/settlements`)
-- **Done on branch:**
-  - settlements laid out as streets: houses front the roads, with gardens, yards, beasts and
-    smoke;
-  - encounter sentences honoured;
-  - content keys that nothing read now describe their data;
-  - the Larkbourne Bruiser;
-  - sentinels at their posts;
-  - the toll paid at the table.
+### 6.9 Settlements and POIs (`wip/settlements`), from its note
+- **Head:** `3352cb7c`, with main `6985d356` merged at `52040d16`. The tree is clean.
+- **Done:**
+  - settlements read as places: streets from the roads, plots, gardens, backlands, houses by
+    region and trade, beasts, smoke, fingerposts named at runtime, gates in gate posts, Skerrow's
+    walls;
+  - the five dead content keys;
+  - `tools/unplaced.py`;
+  - the POI encounter sentences;
+  - the Hart of Thorns' body.
+
+  Loose ends #18 are closed.
+- **Verified on `52040d16`:**
+  - test: 1664 tests, 0 failed, 0 script errors;
+  - journey: 16/16;
+  - smoke: PASS;
+  - flow: 98/99. The one fail, "a key during the opening shows the skip prompt", was at load
+    11–15 and is in the opening's code, not this branch.
+- **Audits against main:**
+  - `unwired.py`: 39 names, the same as main;
+  - `dead_data.py`: 0 (main has 5);
+  - `unplaced.py`: 40 of 239 items and 17 of 41 books.
+- **Budget:** Merrowby (`budget_merrowby.json --attribute`) is at 1713 draws and **1.82 M
+  primitives, over the 1.5 M budget.** Settlements are 216 draws and 0.27 M. The excess is scatter
+  (0.88 M), NPCs (0.32 M) and terrain (0.29 M), so graphics or scatter needs to cut it.
 - **Next:**
-  - loose ends (engine errors a run, dead keys, unassigned hooks);
-  - the POI kinds the atlas wants: cave, farmstead, mill, waystone, market field, quarry,
-    shieling, vista;
-  - silence the `event_bus.gd` unused-signal warnings.
+  1. Merge main, then run test, journey, smoke and flow.
+  2. Run `tools/capture/run_plan.sh tools/capture/plans/settlements.json captures/settlements forward`
+     and look at every frame. The Forward+ run was OOM-killed twice.
+  3. Build the POI kinds the atlas wants (ATLAS §10). Add each to `PoiDressing.KINDS_BUILT` and to
+     `poi_builders.build`, one test and one capture shot per kind. What to reuse:
+     - cave: `_cave_mouth`, from Whitecut;
+     - farmstead: `HouseKit` with `Settlement._wall`/`_fence`;
+     - mill: the camp's millstone;
+     - waystone: the standing stones;
+     - market field: the Settlement stalls;
+     - quarry: cliff slabs, scree and masonry, with a crane;
+     - shieling: `HouseKit` with a fold;
+     - vista: a bench or cairn facing downhill.
+  4. Silence the `event_bus.gd` unused-signal warnings.
+- **Found and not fixed:**
+  - the `streets.json` cameras look at back gardens;
+  - interiors have no shutters;
+  - cutpurses fight rather than pick pockets;
+  - terrain faults at Gosling's rear path, Fern Gully's bridges and Whitecut's wet stone;
+  - the sallowjaw body;
+  - an empty `pauldrons` glb (3 failing forge tests);
+  - Clan Plate shows over bare arms.
+- **Traps:**
+  - `test_settlements`' EYE_RATCHET 74 and SHADOW_RATCHET 50 count Merrowby's meshes, and a new
+    surface goes in SURFACES.
+  - A headless MultiMesh has no AABB.
+  - With physics interpolation on, a node moved from `_process` needs
+    `PHYSICS_INTERPOLATION_MODE_OFF`.
+  - `unwired.py` counts public functions that only tests call, so prefix helpers with `_`.
+  - A new foe shifts `tools/tests/test_balance.py`'s region means.
 
 ## 7. How to verify, and the house rules
 
