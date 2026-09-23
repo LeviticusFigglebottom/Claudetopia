@@ -473,7 +473,7 @@ func _watch_the_world_stand_up() -> void:
 	_check(UI.hud() != null and UI.hud().visible, "the HUD is up")
 	_check(not UI.is_loading_shown(), "the loading caption has gone")
 	_check(not UI.is_faded_out(), "the fade is not still down")
-	_check_the_ground()
+	await _check_the_ground()
 	_notes.append("body stood at %.1f s from the press; %d cells streamed"
 			% [(_spawned_at_ms - _t0) / 1000.0, _cells()])
 	if _gap_ms > 1500:
@@ -492,6 +492,27 @@ func _check_the_ground() -> void:
 	var world := _world()
 	var drawn_by := str(world.get("terrain_mode")) if world != null else ""
 	_check(drawn_by in ["terrain3d", "fallback"], "the ground is drawn (by %s)" % (drawn_by if not drawn_by.is_empty() else "nothing"))
+	# On the coarse ground the player is owed the account of it, and a plate that stays while they
+	# walk on it: a toast once said it, and a player took the coarse ground for the game's look.
+	var said: Node = world.get("ground_notice") as Node if world != null else null
+	if drawn_by == "fallback":
+		_check(said != null and bool(said.call("plate_showing")), "the corner says the ground is the coarse one (%s)"
+				% (str(said.call("text")) if said != null else "nothing says so"))
+		var st: Variant = world.get("status")
+		if st is Dictionary and bool((st as Dictionary).get("announce", false)) and said != null:
+			# The card lets the region's title card go first (GroundNotice.AFTER_ARRIVAL_S), in game
+			# time. When frames are slow the engine clamps each frame's delta to what its capped
+			# physics steps cover (measured: 0.12 to 0.15 s for a 0.5 s frame), so on software
+			# Vulkan under load the 4.8 s is half a minute of the clock or more.
+			var asked := Time.get_ticks_msec()
+			var up := await _wait_until(func() -> bool: return bool(said.get("card_shown")), 90.0)
+			_check(up, "and a card says why, once the region's name has been shown (%.1f s later)"
+					% ((Time.get_ticks_msec() - asked) / 1000.0))
+			if up:
+				await _settle(0.8)
+				await _capture("coarse_ground_card")
+	elif drawn_by == "terrain3d":
+		_check(said == null, "nothing says the ground is coarse, because it is not")
 	var feet := body.global_position
 	var q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 2.0, feet + Vector3.DOWN * 40.0, (1 << 0) | (1 << 10))
 	var own: Array[RID] = []

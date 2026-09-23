@@ -853,3 +853,34 @@ time with 47–73% of him left. He has 520 health and armour 6 against 3–11 a 
 of his (22–36 each, a knockdown among them) kill a 100-health character, flask and all. He is the
 third quest of the Wardens' line, behind 45 reputation and the quest before it, so this is not
 tuned.
+## 2026-09-23 · Software Vulkan gets the coarse ground, and the coarse ground says so out loud
+**Decision.** `WorldStatus` does not start Terrain3D when the renderer draws through a
+RenderingDevice (Forward+ or Mobile) and the adapter is Mesa's llvmpipe; the ground is the coarse
+one and the title says why. `-- --terrain=terrain3d` tries Terrain3D anyway, and so does asking
+for a number of clipmap rings (`-- --terrain-lods=N`, or `WICKMERE_TERRAIN_LODS`; nine when
+nobody asks). `-- --terrain=fallback` asks for the coarse ground anywhere. Unless it was asked for,
+the coarse ground is said across the title sheet, on a card when the player arrives and on a
+"Coarse ground" plate in the top left corner that stays while the HUD is up.
+**Why.** Measured. Terrain3D 1.0.2 alone in an empty project (a camera, a light, the node) crashes
+lavapipe: under gdb all four `llvmpipe` rasterizer threads stop at one address in the driver's
+compiled shader, on an indexed load out of range. When depends on the clipmap and the view, not on
+the ring count alone: alone at 2 m spacing, 7, 8 and 9 rings of 32 drew 60 frames and 9 of 48
+crashed, and at 1 m spacing 7 of 48 crashed on the first frame; in the game, 9 rings crash as the
+world is built, and 7 drew the real terrain for 40 seconds of the New Game flow and then crashed
+the same way. The line before each crash, "/root: The caller thread can't call the function
+`propagate_notification()`", is Godot's crash handler sending NOTIFICATION_CRASH from that driver
+thread; it is not there when gdb takes the fault first. None of the game's code touches the tree
+from a thread: its one worker task (the streamer's `_parse_cell`) reads a file and parses JSON,
+and nothing processes on a sub-thread group. And a player on Windows played for days on the
+coarse ground, which one toast and one small line had announced, taking its plain grey hills for
+the game's look.
+**Alternatives.** Leaving Forward+ on llvmpipe to crash (nothing could shoot the world there).
+Seven rings on llvmpipe by default (they crashed too, later). Upgrading Terrain3D: there is no
+newer release (1.0.2 is the newest tag, its branch has one docs commit since, and `main` is
+1.1.0-dev, without the deprecated call but without a release or binaries). Asking the driver to
+bound its loads (Vulkan's robustness features): not a setting the project has.
+**Consequences.** On software Vulkan the world is the coarse ground unless a tool asks, and then
+it should take short captures; the Compatibility renderer's llvmpipe still draws Terrain3D. The
+guard is a name match: when lavapipe or Terrain3D stops crashing, `--terrain=terrain3d` shows it
+and the guard goes. Screenshots with the HUD up on the coarse ground show the plate; captures
+have no HUD and do not.
