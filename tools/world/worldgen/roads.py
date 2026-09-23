@@ -27,6 +27,13 @@ FABRIC_COUNT = {
     "ruin_village": 9, "camp": 0,
 }
 PAD_DEFAULT = 25.0
+## A camp builds no houses: it is a fire, tents on a ring 7.6 m out and their stores, and at
+## the most a rail or a kiln 12 to 13 m from the fire (poi_builders.camp). Twenty-two metres keeps
+## all of that on the flat core (0.7 of the radius) with a couple of metres over. It was 30, the
+## size a hamlet gets without the houses, and on the knoll the Clanless Camp stands on that pad
+## threw a seventeen-metre embankment down the slope toward Brindlecrag -- whose rim was what the
+## line from Brindlecrag grazed, 1.97 m over it against the 2 m allowed.
+CAMP_PAD_M = 22.0
 ROAD_KINDS = ("city", "town", "village", "hamlet", "fort", "camp", "lodge", "ruin_village")
 ROAD_WIDTH = {"city": 6.0, "town": 6.0, "village": 5.0, "fort": 5.0, "hamlet": 4.5, "camp": 4.0,
               "lodge": 4.0, "ruin_village": 4.0}
@@ -54,7 +61,7 @@ def pad_radius(place: dict) -> float:
     if count is None:
         return PAD_DEFAULT
     if count <= 0:
-        return 30.0
+        return CAMP_PAD_M
     return float(min(max(20.0 + 7.5 * math.sqrt(count), 26.0), 80.0))
 
 
