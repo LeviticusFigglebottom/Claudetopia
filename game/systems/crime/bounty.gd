@@ -28,7 +28,13 @@ var history: Array[Dictionary] = []   # {kind, key, severity, day, hour, witness
 static func ensure() -> Bounty:
 	if instance != null and is_instance_valid(instance):
 		return instance
-	return Service.ensure(load("res://systems/crime/bounty.gd"), "Bounty") as Bounty
+	var found := Service.ensure(load("res://systems/crime/bounty.gd"), "Bounty") as Bounty
+	# A copy of this service inside a world set `instance` as it entered the tree and cleared it as it
+	# left; a copy under the root that entered earlier is then found here with `instance` still empty,
+	# and everything that reads `instance` directly finds nothing. Point it at what was found.
+	if found != null and (instance == null or not is_instance_valid(instance)):
+		instance = found
+	return found
 
 
 func _enter_tree() -> void:

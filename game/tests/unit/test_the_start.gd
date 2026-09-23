@@ -147,7 +147,10 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 	assert_true(d != null, "the Stair Head is dressed although the built world has no pad for it yet")
 	if d == null:
 		return
-	assert_gt(d.lights().size(), 2, "a fire and lamps: %d lights" % d.lights().size())
+	# fires and lamps at a point of interest are drawn from the NightLights pool now, not each an
+	# OmniLight3D of its own: count the ones it registered as well as any it still holds
+	var lit := d.lights().size() + d.light_sources().size()
+	assert_gt(lit, 2, "a fire and lamps: %d lights (%d held, %d pooled)" % [lit, d.lights().size(), d.light_sources().size()])
 	var stones := d.hearthstones()
 	assert_eq(stones.size(), 1, "one Hearthstone, the Warden's")
 	if not stones.is_empty():
