@@ -1482,11 +1482,12 @@ land away from the world's edges:
 | Skerrow | 9.23 / 18.29 / 37.90 | 9.24 / 18.35 / 38.10 | 8.4% (3.8%) |
 | Cinderlea | 4.23 / 7.34 / 13.17 | 4.27 / 7.40 / 13.25 | 26.4% (1.9%) |
 
-The finding I did not expect, and the reason this is off by default: **measured as relief at
-50 to 300 m, the landforms barely move any region.** They move a lot of ground -- more than a metre on 56% of the Briarwold's dry land and 40% of Brightwater's --
-but the land already had metres of relief at that scale, and a 3 m bench or a 2.8 m street adds
-to it in quadrature. Whether they read from a walking camera is a question for the camera, and
-the camera has not been asked.
+The finding I did not expect, and one reason this is off by default: **measured as relief at
+50 to 300 m, the landforms barely move any region.** They move a lot of ground -- more than a
+metre on 56% of the Briarwold's dry land and 40% of Brightwater's -- but the land already had
+metres of relief at that scale, and a 3 m bench or a 2.8 m street adds to it in quadrature.
+Whether they read from a walking camera is a question for the camera, and the camera has not
+been asked.
 
 ### Built, measured, and switched off: cover by structure
 
@@ -1560,9 +1561,9 @@ the pass was stopped before them, and they are the first thing the recipes need 
   camp's pad or raises the cliff edge will close it.
 * **Steep pitches.** Where the ground is steeper than the grade plus the band, the road goes with
   the ground. Read along each road's centre line every 4 m on the default build, the steepest
-  grade anywhere is 0.81, on the Kharrow Hold - Grandfather Hollow road below the hold, near (1045, -2278),
-  and the worst 99th percentile of any road is 0.45 (Gullhithe - Kharrow Hold). The router keeps these
-  short; it does not remove them.
+  grade anywhere is 0.81, on the Kharrow Hold - Grandfather Hollow road below the hold near
+  (1045, -2278), and the worst 99th percentile of any road is 0.45 (Gullhithe - Kharrow Hold).
+  The router keeps these short; it does not remove them.
 * **`road_profiles.json` is not in CONTRACTS.** It is a build artifact for the tests, and says so
   in `output.py`.
 * **Pilgrim's Ash has lost its cross street** on the default build (38 roads, was 39). The two
@@ -1610,15 +1611,16 @@ To build the rest for evaluation, in a worktree:
    above both sides of it 150.1 m -> 4.8 m, below both sides 67.0 m -> 8.2 m, raw; every road
    graded within 2.4 to 3.6 m of its land and carved to that grade; the steepest grade along
    any road 9.1 -> 0.81. Rivers under every crossing as fords: dry runs over 6 m, 6 -> 0.
-   Sightlines 87 / 0 / 3 -> 87 / 0 / 3, Clanless 0.03 m, the Cold Fire 20 m nearer Greyfold at
-   (-2260, 2760). Staged builds refuse a heightmap whose pads have moved; `ROAD_KINDS` is held
-   to the exterior's `FABRIC`. Roads 35.6 km -> 41.9 km, 39 -> 38 (Pilgrim's Ash's cross
-   street); `roads.json` 3 113 -> 3 558 points, plus `road_profiles.json`; the manifest gains
-   `pad_fingerprint` and `recipes`. Scatter 3 477 721 -> 3 484 974 instances. The roads stage costs
-   about 21 s more at the old build's load. `game/world/terrain_assets.tres` unchanged. No
-   landforms and no regional cover: those are recipes (3). Verified by
-   `python3 -m pytest tools/world/tests tools/tests` (49 passed) and `./run.sh test`
-   (1226 tests, 0 failed, 0 content problems, 0 script errors).
+   Sightlines 87 / 0 / 3, unchanged, with Clanless at 0.03 m and the Cold Fire 20 m nearer
+   Greyfold at (-2260, 2760). Staged builds refuse a heightmap whose pads have moved;
+   `ROAD_KINDS` is held to the exterior's `FABRIC`. Roads 35.6 km -> 41.9 km, 39 -> 38
+   (Pilgrim's Ash's cross street); `roads.json` 3 113 -> 3 558 points, plus
+   `road_profiles.json`; the manifest gains `pad_fingerprint` and `recipes`. Scatter
+   3 477 721 -> 3 484 974 instances. The roads stage costs about 21 s more at the old build's
+   load. `game/world/terrain_assets.tres` unchanged. No landforms and no regional cover: those
+   are recipes (3). Verified on that world by `python3 -m pytest tools/world/tests tools/tests`
+   (49 passed), `./run.sh test` (1226 tests, 0 failed, 0 content problems, 0 script errors)
+   and `./run.sh journey` (16 of 16 steps, 0 skipped, 0 logged errors).
 2. **After the merge, rebuild the main checkout's world**: `./run.sh world`. Until that runs,
    `tools/world/tests/test_roads.py` fails there, by design -- it reads the old world's
    Gullhithe road 150.1 m above both sides. Accept on: pytest green, `python3 tools/sightlines.py`
@@ -1657,11 +1659,11 @@ To build the rest for evaluation, in a worktree:
    corridors, with the Clanless line re-measured.
 7. **Risks and regressions, with numbers**: Brindlecrag -> the Clanless Camp clears by
    0.03 m (the thinnest line in the world; Foxfire Falls -> the Charcoal Camp is next at
-   0.08 m); the steepest grade along a road 0.81 and the worst 99th percentile 0.45 (Gullhithe - Kharrow Hold); the roads
-   stage costs about 21 s at the old build's load (68 s on the loaded run) more; the roads are 18% longer and Pilgrim's Ash has no cross street; no
-   frame of
-   the default build has been captured, so its frame cost is inferred (every region's scatter is
-   within 0.6% of before, most of the difference roadside rail) and not measured; `road_profiles.json` is not in CONTRACTS;
-   `tools/capture/plans/pois.json` has the Cold Fire's old position
-   (`python3 tools/capture/make_pois_plan.py`); Brightwater's wind-bent trees need a tilt in
-   the scatter's instance format, which is a CONTRACTS change.
+   0.08 m); the steepest grade along a road is 0.81 and the worst 99th percentile 0.45
+   (Gullhithe - Kharrow Hold); the roads stage costs about 21 s more at the old build's load
+   (68 s more on the loaded run); the roads are 18% longer and Pilgrim's Ash has no cross
+   street; no frame of the default build has been captured, so its frame cost is inferred
+   (every region's scatter is within 0.6% of before, most of the difference roadside rail) and
+   not measured; `road_profiles.json` is not in CONTRACTS; `tools/capture/plans/pois.json` has
+   the Cold Fire's old position (`python3 tools/capture/make_pois_plan.py`); Brightwater's
+   wind-bent trees need a tilt in the scatter's instance format, which is a CONTRACTS change.
