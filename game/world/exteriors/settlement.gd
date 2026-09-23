@@ -573,13 +573,17 @@ func _wall(fabric: FabricMesh, a: Vector2, b: Vector2, h: float) -> void:
 		var tint := _stone_tint().darkened(_rng.randf_range(0.0, 0.08))
 		fabric.box("drystone", Transform3D(basis, mid + Vector3(0.0, h * 0.3 - 0.1, 0.0)), Vector3(seg, h * 0.6 + 0.2, 0.62), tint)
 		fabric.box("drystone", Transform3D(basis, mid + Vector3(0.0, h * 0.74, 0.0)), Vector3(seg, h * 0.3, 0.48), tint)
-		# the coping: a stone on edge every hand's breadth, leaning a little this way and that
-		var stones := int(seg / 0.3)
+		# the coping: stones on edge packed tight along the top, each its own thickness, height and
+		# lean, so the crest is ragged. Spaced out at a hand's breadth with daylight between them
+		# they read from the fold as the battlements of a toy fort.
+		var stones := int(seg / 0.19)
 		for k in range(stones):
-			var q := p0.lerp(p1, (float(k) + 0.5) / float(stones))
-			var lean := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, _rng.randf_range(-0.22, 0.22))
-			fabric.box("drystone", Transform3D(lean, q + Vector3(0.0, h * 0.94, 0.0)),
-					Vector3(0.12, h * 0.2 + _rng.randf_range(0.0, 0.06), 0.4), tint.darkened(_rng.randf_range(0.04, 0.16)))
+			var q := p0.lerp(p1, (float(k) + 0.5) / float(stones)) \
+					+ Basis(Vector3.UP, yaw) * Vector3(0.0, 0.0, _rng.randf_range(-0.04, 0.04))
+			var lean := Basis(Vector3.UP, yaw + _rng.randf_range(-0.12, 0.12)) * Basis(Vector3.BACK, _rng.randf_range(-0.38, 0.38))
+			var tall := h * 0.15 + _rng.randf_range(0.0, 0.1)
+			fabric.box("drystone", Transform3D(lean, q + Vector3(0.0, h * 0.9 + tall * 0.3, 0.0)),
+					Vector3(_rng.randf_range(0.15, 0.22), tall, _rng.randf_range(0.34, 0.44)), tint.darkened(_rng.randf_range(0.04, 0.2)))
 
 
 ## What a garden holds: beds of greens, a shed at the far end, the woodpile, the washing out,
@@ -639,13 +643,13 @@ func _crop(fabric: FabricMesh, crop: String, mid: Vector2, v: Vector2, bed_len: 
 	var top := 0.12
 	match crop:
 		"cabbages":
-			var n := maxi(1, int(bed_len / 0.55))
+			var n := maxi(1, int(bed_len / 0.62))
 			for j in range(n):
 				for x in [-0.2, 0.2]:
 					var q := _on_ground(mid + v * (-bed_len * 0.5 + (float(j) + 0.5) * bed_len / float(n)) + u * float(x))
 					_cabbage(fabric, q + Vector3(0.0, top, 0.0), Color(0.4, 0.55, 0.42).lerp(Color(0.5, 0.6, 0.36), _rng.randf()))
 		"leeks":
-			var n := maxi(1, int(bed_len / 0.36))
+			var n := maxi(1, int(bed_len / 0.42))
 			var green := Color(0.4, 0.54, 0.32)
 			for j in range(n):
 				for x in [-0.18, 0.18]:
@@ -670,8 +674,8 @@ func _crop(fabric: FabricMesh, crop: String, mid: Vector2, v: Vector2, bed_len: 
 				for side in [-1.0, 1.0]:
 					var foot := _on_ground(mid + v * s + u * (0.38 * float(side))) + Vector3(0.0, top, 0.0)
 					_pole(fabric, foot, apex, 0.018, cane, GARDEN)
-					for k in range(5):
-						var t := 0.18 + 0.16 * float(k) + _rng.randf_range(-0.05, 0.05)
+					for k in range(4):
+						var t := 0.2 + 0.2 * float(k) + _rng.randf_range(-0.05, 0.05)
 						fabric.card(GARDEN, Transform3D(Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.RIGHT, _rng.randf_range(-0.5, 0.5)),
 								foot.lerp(apex, t)), Vector2(0.2, 0.16), FabricMesh.shade(leaf, _rng.randf_range(0.82, 1.15)))
 			_pole(fabric, ends[0], ends[-1], 0.016, cane, GARDEN)
@@ -684,8 +688,8 @@ func _crop(fabric: FabricMesh, crop: String, mid: Vector2, v: Vector2, bed_len: 
 			for j in range(n):
 				var q := _on_ground(mid + v * (-bed_len * 0.5 + (float(j) + 0.5) * bed_len / float(n)))
 				var turn := _rng.randf() * TAU
-				for k in range(3):
-					fabric.card(GARDEN, Transform3D(Basis(Vector3.UP, turn + float(k) * 1.05) * Basis(Vector3.RIGHT, -PI * 0.5 + _rng.randf_range(-0.35, 0.35)),
+				for k in range(2):
+					fabric.card(GARDEN, Transform3D(Basis(Vector3.UP, turn + float(k) * 1.57) * Basis(Vector3.RIGHT, -PI * 0.5 + _rng.randf_range(-0.35, 0.35)),
 							q + Vector3(0.0, top + 0.24, 0.0)), Vector2(0.44, 0.22),
 							FabricMesh.shade(Color(0.3, 0.45, 0.22), _rng.randf_range(0.85, 1.12)))
 
@@ -1102,9 +1106,10 @@ const BACKLANDS := {
 	"vale": ["paddock", "orchard", "allotment", "rickyard"], "woodfolk": ["paddock", "woodyard", "allotment"],
 	"clans": ["paddock", "peat"], "lakefolk": ["allotment", "paddock", "orchard"], "reedfolk": [], "pilgrims": [],
 }
-const BACKLAND_CAP := {"city": 6, "town": 5, "village": 3, "hamlet": 2}
-## The two sizes of a piece of it (half width, half depth): a field's corner, and a croft's.
-const BACKLAND_SIZES := [Vector2(8.0, 5.5), Vector2(5.5, 4.0)]
+const BACKLAND_CAP := {"city": 8, "town": 7, "village": 4, "hamlet": 2}
+## The sizes of a piece of it (half width, half depth): a field's corner, a croft's, and a plot
+## squeezed in where a croft will not go. The biggest first, so the small ones fill what is left.
+const BACKLAND_SIZES := [Vector2(8.0, 5.5), Vector2(5.5, 4.0), Vector2(4.0, 3.2)]
 
 
 func _backlands(fabric: FabricMesh, stock: Livestock, rng: RandomNumberGenerator) -> void:
@@ -1129,8 +1134,9 @@ func _backlands(fabric: FabricMesh, stock: Livestock, rng: RandomNumberGenerator
 ## laid. Its -v side faces the middle.
 func _backland_plot(w: Dictionary, rng: RandomNumberGenerator, size := Vector2(8.0, 5.5)) -> Dictionary:
 	var width := float(w["width"])
-	for t in range(8):
-		var bearing := float(w["bearing"]) + rng.randf_range(-0.3, 0.3) * minf(width, 120.0)
+	for t in range(12):
+		# across the gap, short of the streets at its sides (their houses and gardens refuse the rest)
+		var bearing := float(w["bearing"]) + rng.randf_range(-0.42, 0.42) * minf(width, 150.0)
 		var r := pad_radius + 2.0
 		while r > street.hub + 6.0 + size.y:
 			var c := street.hub_point(bearing, r)
@@ -1311,8 +1317,13 @@ func _strew_one_kind(path: String, transforms: Array) -> void:
 	if path.contains(FRUIT_TREE):
 		var parts := _lod_parts(packed, 1)
 		if not parts.is_empty():
+			var near: Array[MultiMeshInstance3D] = []
 			for i in parts.size():
-				_strew_mesh(path, parts[i], transforms, "lod1_%d" % i, shadow if i == 0 else null, i > 0 and shadow != null)
+				near.append(_strew_mesh(path, parts[i], transforms, "lod1_%d" % i, shadow if i == 0 else null, i > 0 and shadow != null))
+			# and from further off, the impostor alone: the orchards of the next village are two
+			# crossed cards a tree, not a trunk and forty leaf cards
+			if shadow != null and not near.is_empty():
+				_far_band(near, shadow, transforms)
 			return
 	var tree := path.contains("/trees/")
 	var mesh := WorldStreamer._mesh_of(packed, 0 if tree else 1)
@@ -1390,6 +1401,39 @@ func _strew_mesh(path: String, mesh: Mesh, transforms: Array, part: String, shad
 	if casts and shadow != null:
 		add_child(shadow_of(inst, shadow, reach))
 	return inst
+
+
+## Where a settlement's fruit trees give way to their impostors: this far from the middle of the
+## trees of a kind, past which the eye's LOD1 and the near shadow stop and the impostor is drawn.
+const TREE_NEAR_M := 130.0
+
+
+## `near` (the eye's LOD1 of a kind of tree, and the proxy that casts its shadow) drawn only to
+## TREE_NEAR_M past the trees' own spread, and the impostor `far` from there out.
+func _far_band(near: Array[MultiMeshInstance3D], far: Mesh, transforms: Array) -> void:
+	# the spread from where the trees were put: a MultiMesh's own box and its instances are the
+	# renderer's to keep, and the headless one keeps neither
+	var spread := Rect2()
+	for i in transforms.size():
+		var at: Vector3 = (transforms[i] as Transform3D).origin
+		spread = Rect2(at.x, at.z, 0.0, 0.0) if i == 0 else spread.expand(Vector2(at.x, at.z))
+	var edge := TREE_NEAR_M + spread.size.length() * 0.5
+	var nodes: Array[Node] = []
+	for n in near:
+		nodes.append(n)
+		var sh := get_node_or_null(NodePath(str(n.name) + "_shadow"))
+		if sh != null:
+			nodes.append(sh)
+	for n in nodes:
+		var gi := n as GeometryInstance3D
+		gi.visibility_range_end = edge
+		gi.visibility_range_end_margin = 12.0
+	var impostor := shadow_of(near[0], far, FabricMesh.PROP_RANGE_M * 2.0)
+	impostor.name = str(near[0].name).trim_suffix("_lod1_0") + "_far"
+	impostor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	impostor.visibility_range_begin = edge
+	impostor.visibility_range_begin_margin = 12.0
+	add_child(impostor)
 
 
 ## What the sun draws of `eye` (a MultiMesh of the forge's LOD1): the same instances in `shadow`,

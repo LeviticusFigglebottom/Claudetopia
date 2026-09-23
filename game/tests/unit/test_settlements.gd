@@ -194,12 +194,13 @@ func test_a_road_through_a_place_lines_the_houses_up_along_it() -> void:
 ## surfaces (the gardens' in four quarters, so a camera in a street draws the ones it faces), one
 ## MultiMesh for each kind of thing lying about (a kind's two variants are two), the market's
 ## stalls and wares, the beasts, the gardens' apple trees (three variants, each its trunk and its
-## leaf cards), the smoke, the shop signs' emblems, and the stations' props, whose three nodes are
-## the forge's LOD bands drawn one at a time. The small things (the crockery, a bucket, a hen) throw
-## no shadow and are gone past seventy metres. Measured against DESIGN section 11 on the streets
-## plan's Merrowby shot, which is in PROGRESS.md.
-const EYE_RATCHET := 69
-const SHADOW_RATCHET := 45
+## leaf cards near and its impostor far, one band drawn at a time), the smoke, the shop signs'
+## emblems, and the stations' props, whose three nodes are the forge's LOD bands drawn one at a
+## time. The small things (the crockery, a bucket, a hen) throw no shadow and are gone past seventy
+## metres. Measured against DESIGN section 11 on the streets plan's Merrowby shot, which is in
+## PROGRESS.md.
+const EYE_RATCHET := 73
+const SHADOW_RATCHET := 49
 const MERROWBY := "core:place/merrowby"
 
 
@@ -310,6 +311,38 @@ func test_the_sun_draws_the_cheap_rung_of_every_prop() -> void:
 		assert_true(_tris(mmi.multimesh.mesh) < _tris(eye.multimesh.mesh),
 				"%s's shadow is %d triangles against %d seen" % [eye.name, _tris(mmi.multimesh.mesh), _tris(eye.multimesh.mesh)])
 	assert_gt(proxies, 5, "the village's props throw their shadows from the cheap rung")
+	_drop(s)
+
+
+## A settlement's apple trees are the forge's LOD1 (a trunk and its leaf cards) near, and its
+## crossed-card impostor from TREE_NEAR_M past the middle of their spread out, casting its own
+## shadow: the orchards of the next village are eight triangles a tree, not fourteen hundred.
+func test_the_next_villages_orchards_are_impostors() -> void:
+	var s := _raise("village", "core:region/hearthvale", [], [], MERROWBY)
+	var fars := 0
+	for node in _direct(s, "MultiMeshInstance3D"):
+		var far := node as MultiMeshInstance3D
+		if not str(far.name).ends_with("_far"):
+			continue
+		fars += 1
+		var stem := str(far.name).trim_suffix("_far")
+		var near := s.get_node_or_null(NodePath(stem + "_lod1_0")) as MultiMeshInstance3D
+		assert_true(near != null, "%s is the far band of nothing" % far.name)
+		if near == null:
+			continue
+		assert_gt(near.visibility_range_end, Settlement.TREE_NEAR_M, "%s is drawn to %.0f m" % [near.name, near.visibility_range_end])
+		assert_near(far.visibility_range_begin, near.visibility_range_end, 0.01, "%s begins where the near trees end" % far.name)
+		assert_gt(far.visibility_range_end, far.visibility_range_begin, "%s is drawn from there out" % far.name)
+		assert_eq(far.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_ON, "%s throws its own shadow" % far.name)
+		assert_eq(far.multimesh.instance_count, near.multimesh.instance_count, "%s: an impostor for every tree" % far.name)
+		assert_true(_tris(far.multimesh.mesh) < _tris(near.multimesh.mesh),
+				"%s is %d triangles against the near trunk's %d" % [far.name, _tris(far.multimesh.mesh), _tris(near.multimesh.mesh)])
+		# the near band's leaf cards and the shadow it casts end there too
+		for other in [stem + "_lod1_1", stem + "_lod1_0_shadow"]:
+			var gi := s.get_node_or_null(NodePath(other)) as GeometryInstance3D
+			if gi != null:
+				assert_near(gi.visibility_range_end, near.visibility_range_end, 0.01, "%s ends with the near band" % other)
+	assert_gt(fars, 0, "a Vale village's apple trees have a far band")
 	_drop(s)
 
 
