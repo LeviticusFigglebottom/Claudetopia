@@ -845,6 +845,8 @@ func quick_save() -> void:
 	var err := SaveSystem.save_to_slot(SaveSystem.QUICK_SLOT)
 	if err == OK:
 		EventBus.notify.emit("Saved.", "save")
+	elif err == ERR_BUSY:
+		EventBus.notify.emit("Not saved while %s." % SaveSystem.saves_held_by(), "warning")
 	else:
 		EventBus.notify.emit("Could not save (%s)." % error_string(err), "warning")
 

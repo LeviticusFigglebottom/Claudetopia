@@ -124,7 +124,12 @@ func begin_new_game() -> void:
 	# there is nothing to play or the player has turned it off. The `new_game` flag stays up until
 	# then: it is what holds the greeter at the start while the pictures play (her npc def's
 	# `holds`), and the quest's own stage holds her from the hand-over on.
-	await CinematicPlayer.play_opening(opening)
+	# A slot is never written while the opening plays (SaveSystem.hold_saves), but one written
+	# before that rule still carries the flag up: loaded, it gets the story and not the pictures.
+	if _loaded_slot().is_empty():
+		await CinematicPlayer.play_opening(opening)
+	else:
+		Log.info("GameServices", "'%s' was saved before the opening handed over: the story starts without it" % _loaded_slot())
 	GameState.set_flag("new_game", false)
 	var quest := str(opening.get("quest", ""))
 	if quest.is_empty() or not ContentDB.has(quest):
@@ -137,9 +142,21 @@ func begin_new_game() -> void:
 	if bool(log_node.call("is_active", quest)) or bool(log_node.call("is_completed", quest)):
 		return
 	log_node.call("start", quest)
+	# QuestLog.start announces a quest a moment before its first stage, and a hold on that stage
+	# lets go for that moment: the registry sent the greeter home and took her body away, and put her
+	# back at her fire without standing her up again. Whoever stands here now is stood up at once,
+	# not at the NPC streamer's next look round, so she is there on the first frame of control.
+	var people := get_tree().get_first_node_in_group("npc_streamer")
+	if people != null and people.has_method("refresh"):
+		people.call("refresh")
 	new_game_started.emit(quest)
 	Log.info("GameServices", "new game: started %s" % quest)
 	_first_words(str(opening.get("greeter", "")))
+
+
+func _loaded_slot() -> String:
+	var spawn := get_tree().get_first_node_in_group("player_spawn")
+	return str(spawn.get("loaded_slot")) if spawn != null and spawn.get("loaded_slot") != null else ""
 
 
 ## Somebody speaks first: the opening's greeter says the greeting their own dialogue has for this

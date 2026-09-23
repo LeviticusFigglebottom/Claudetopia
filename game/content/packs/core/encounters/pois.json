@@ -150,8 +150,8 @@
    "spawns": [{"enemy": "core:enemy/bell_bearer", "count": 1, "at": "the_top"}]},
 
   {"id": "core:encounter/hushline_stair", "place": "core:poi/hushline_stair",
-   "notes": "the tutorial: ash-wights on the stair",
-   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 4, "spread": 3.0}]},
+   "notes": "the tutorial: ash-wights on the stair, on its landing and never in the water (the_landing, which the dressing raises clear of the Hush)",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 4, "at": "the_landing", "spread": 3.0}]},
 
   {"id": "core:encounter/standing_moot", "place": "core:place/standing_moot",
    "notes": "The Hart of Thorns keeps the circle. Its arena was always the Moot; nothing stood it up there, so the main thread's fourth account could not be finished.",

@@ -359,10 +359,12 @@ func title_shown() -> bool:
 
 func prompt(shown: bool) -> void:
 	var want := 1.0 if shown else 0.0
-	if is_equal_approx(_prompt.modulate.a, want):
-		return
+	# whatever is on its way goes first: a prompt asked for and let go before its fade had begun
+	# (a skip on the next frame of a slow machine) kept fading in over the skip's black
 	if _prompt_tween != null and _prompt_tween.is_valid():
 		_prompt_tween.kill()
+	if is_equal_approx(_prompt.modulate.a, want):
+		return
 	_prompt_tween = _prompt.create_tween()
 	_prompt_tween.tween_property(_prompt, "modulate:a", want, 0.3 if shown else 0.6)
 
