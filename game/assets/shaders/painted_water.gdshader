@@ -82,7 +82,6 @@ global uniform vec3 wm_sky_horizon;
 global uniform float wm_wind_strength;
 
 varying vec3 v_world;
-varying float v_depth;
 varying vec2 v_uv;
 
 vec2 world_uv(vec2 xz) {
@@ -126,8 +125,6 @@ void vertex() {
 		v_world.y = lvl;
 		VERTEX.y = lvl - NODE_POSITION_WORLD.y;
 	}
-	float ground = texture(height_tex, world_uv(v_world.xz)).r;
-	v_depth = max(v_world.y - ground, 0.0);
 	// a slow swell so the sheet is never perfectly flat
 	VERTEX.y += sin(v_world.x * 0.02 + TIME * 0.35) * 0.06 + cos(v_world.z * 0.017 - TIME * 0.28) * 0.06;
 }
@@ -150,14 +147,20 @@ void fragment() {
 	vec3 n_world = normalize(vec3(-slope.x, 1.0, -slope.y));
 	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
 
-	float depth_t = clamp(v_depth / depth_fade_m, 0.0, 1.0);
+	// How deep the water is here, per fragment. It was read at the vertices and interpolated, and
+	// the sheet's vertices are ninety metres apart: a quad with one corner on an island or a shore
+	// was "shallow" for most of its width, so open water ten metres deep was see-through near the
+	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
+	// like a lens effect from every low camera.
+	float depth = max(v_world.y - texture(height_tex, uv).r, 0.0);
+	float depth_t = clamp(depth / depth_fade_m, 0.0, 1.0);
 	vec3 body = mix(shallow_colour.rgb, deep_colour.rgb, depth_t) * region_tint.rgb;
 
 	// shore foam: a band that follows the waterline, wobbles with the waves and breaks into
 	// patches rather than lying along the shore like a painted line
 	float wobble = sin(v_world.x * 0.7 + t * 1.6) * 0.25 + cos(v_world.z * 0.63 - t * 1.3) * 0.25;
 	// (GLSL leaves smoothstep undefined with its edges reversed; Mesa forgives it, a GPU need not)
-	float foam = 1.0 - smoothstep(0.0, foam_width_m * (1.0 + wobble * 0.35), v_depth);
+	float foam = 1.0 - smoothstep(0.0, foam_width_m * (1.0 + wobble * 0.35), depth);
 	foam *= 0.35 + 0.65 * smoothstep(0.35, 0.7, vnoise(v_world.xz * 0.9 + vec2(t * 0.4, -t * 0.3)));
 	foam *= 0.7;
 
@@ -168,21 +171,65 @@ void fragment() {
 	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
 	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
 	fresnel = min(fresnel, fresnel_cap) * reflect_strength;
+	// Seen from under the surface the water is its own colour and gives back nothing: the mirror
+	// works out where a ray from above would land, and from below it smeared the lake bed across
+	// the ceiling (the Mere's look camera stood under its surface until the lakes were drawn).
+	bool from_below = !FRONT_FACING;
+	if (from_below) {
+		fresnel = 0.0;
+	}
 	// what the mirror shows is bent by a share of the waves only (`mirror_ripple`)
 	vec3 n_mirror = normalize(vec3(-slope.x * mirror_ripple, 1.0, -slope.y * mirror_ripple));
 	vec3 Rm = reflect(-V, n_mirror);
-	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, pow(clamp(Rm.y, 0.0, 1.0), 0.35));
-	// the mirror: where on screen the reflected direction is, as a vanishing point. The sign that
-	// relates clip space to SCREEN_UV is taken from the derivatives (outside any branch, where
-	// they are defined), so it holds whichever way up this renderer keeps its frame.
+	// where the reflected ray leaves the frame, the sky's own gradient stands in for it, with the
+	// painted sky's own curve (its horizon_sharpness): with a gentler one the stand-in was paler
+	// than the sky it met at the top of the frame, and a bright seam ran round every lake there
+	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, 1.0 - pow(1.0 - clamp(Rm.y, 0.0, 1.0), 4.5));
+	// the mirror: where on screen the reflected ray lands. The sign that relates clip space to
+	// SCREEN_UV is taken from the derivatives (outside any branch, where they are defined), so it
+	// holds whichever way up this renderer keeps its frame (on Compatibility its y runs up).
 	vec3 reflected = sky;
 #ifndef WATER_NO_MIRROR
 	vec4 cur = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
 	vec2 cur_ndc = cur.xy / cur.w;
 	float ys = sign(dFdy(SCREEN_UV.y)) * sign(dFdy(cur_ndc.y));
 	ys = ys == 0.0 ? 1.0 : ys;
-	vec4 ref = PROJECTION_MATRIX * (VIEW_MATRIX * vec4(Rm, 0.0));
-	if (mirror > 0.001 && ref.w > 0.0001) {
+	// What a lake mirrors stands on its far shore, so the reflected ray is followed over the water
+	// mask to where the water ends, and what the camera sees above that point is what the water
+	// shows. Projected to infinity instead, the far shore's reflection came out a camera-height's
+	// worth too high -- from a landmark sixty metres over the Mere, three degrees, which put it in
+	// the sky above the hills, and the lake gave back nothing but pale sky. Where no shore is met
+	// (the open sea, a river) the direction alone is used.
+	vec4 target = vec4(Rm, 0.0);
+	vec2 hdir = Rm.xz;
+	float hl = length(hdir);
+	if (use_mask && hl > 0.001) {
+		hdir /= hl;
+		float near_s = 0.0;
+		float far_s = 24.0;
+		bool found = false;
+		for (int k = 0; k < 16; k++) {
+			if (texture(mask_tex, world_uv(v_world.xz + hdir * far_s)).r < 0.5) {
+				found = true;
+				break;
+			}
+			near_s = far_s;
+			far_s *= 1.4;
+		}
+		if (found) {
+			for (int k = 0; k < 2; k++) {
+				float mid = 0.5 * (near_s + far_s);
+				if (texture(mask_tex, world_uv(v_world.xz + hdir * mid)).r < 0.5) {
+					far_s = mid;
+				} else {
+					near_s = mid;
+				}
+			}
+			target = vec4(v_world + Rm * (0.5 * (near_s + far_s) / hl), 1.0);
+		}
+	}
+	vec4 ref = PROJECTION_MATRIX * (VIEW_MATRIX * target);
+	if (!from_below && mirror > 0.001 && ref.w > 0.0001) {
 		vec2 uv2 = SCREEN_UV + (ref.xy / ref.w - cur_ndc) * 0.5 * vec2(1.0, ys);
 		float margin = min(min(uv2.x, 1.0 - uv2.x), min(uv2.y, 1.0 - uv2.y));
 		float inside = smoothstep(0.0, 0.06, margin);
@@ -200,9 +247,13 @@ void fragment() {
 	ALBEDO = mix(body * (1.0 - fresnel), foam_colour.rgb, foam);
 	EMISSION = (reflected * fresnel + glints * (1.0 - far * 0.6)) * (1.0 - foam);
 	ROUGHNESS = clamp(roughness_water + 0.25 + foam * 0.4 + far * 0.1, 0.02, 1.0);
-	SPECULAR = 0.12 * (1.0 - foam);
+	// No engine specular: the mirror and the glints above are the water's whole reflection. At 0.12
+	// the renderer laid the sky's own radiance over the mirror as well -- its Fresnel rises to
+	// nearly the same share at a grazing angle -- so every lake came out as bright as the sky above
+	// it, a pale sheet from any hill, on both renderers.
+	SPECULAR = 0.0;
 	METALLIC = 0.0;
 	// the water thins to nothing at the waterline, so the land does not end in a hard edge
-	float edge = smoothstep(0.0, 0.35, v_depth);
+	float edge = smoothstep(0.0, 0.35, depth);
 	ALPHA = clamp(mix(opacity_shallow, opacity_deep, depth_t) * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0);
 }

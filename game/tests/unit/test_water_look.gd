@@ -86,3 +86,44 @@ func test_turning_the_mirror_off_takes_the_frame_copy_away() -> void:
 	assert_eq(ws._sheet_material.get_shader_parameter("deep_colour"), deep, "with the colour still on it")
 	Settings.set_value("video", "water_reflections", had, false)
 	ws.free()
+
+
+## The builder writes the water mask as 0 and 1, and a texture reads a byte as byte/255: a wet
+## texel was 0.004 to the shader, under its 0.5 test everywhere, so every lake and the sea were
+## discarded and the Mere was its own lake bed. The mask is stretched to 255 as it is loaded.
+func test_the_water_mask_is_stretched_to_what_a_shader_reads() -> void:
+	var raw := PackedByteArray([0, 1, 1, 0, 1])
+	assert_eq(WaterSurface.mask_bytes(raw), PackedByteArray([0, 255, 255, 0, 255]), "a wet texel is 255")
+	var full := PackedByteArray([0, 255, 0])
+	assert_eq(WaterSurface.mask_bytes(full), full, "a mask already written as 0 and 255 is left alone")
+	assert_eq(raw, PackedByteArray([0, 1, 1, 0, 1]), "the bytes read from the file are not changed in place")
+
+
+## The water mask the game loads, loaded the way the game loads it, must read as water in the
+## shader wherever the file says water: a builder and a loader that disagree about the byte for
+## "wet" drew no lake or sea at all, and nothing said so. (docs/CONTRACTS.md 6 has the convention.)
+func test_the_water_mask_the_game_loads_reads_as_water_where_the_file_says_so() -> void:
+	var manifest_path := "%s/world_manifest.json" % WaterSurface.GENERATED
+	if not FileAccess.file_exists(manifest_path):
+		print("  (world data missing: water mask test skipped)")
+		return
+	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
+	assert_true(manifest is Dictionary, "the world manifest parses")
+	var n := int(((manifest as Dictionary).get("runtime", {}) as Dictionary).get("grid", 1024))
+	var path := WaterSurface.mask_path(manifest)
+	var raw := FileAccess.get_file_as_bytes(path)
+	assert_eq(raw.size(), n * n, "the mask is %d x %d bytes" % [n, n])
+	var img := WaterSurface.mask_image(path, n)
+	assert_true(img != null, "the mask loads")
+	if img == null:
+		return
+	var wet := 0
+	var dry_in_shader := 0
+	for i in range(0, raw.size(), 7):
+		if raw[i] == 0:
+			continue
+		wet += 1
+		if img.get_pixel(i % n, i / n).r < 0.5:
+			dry_in_shader += 1
+	assert_gt(wet, 0, "the world has water in it")
+	assert_eq(dry_in_shader, 0, "%d of %d wet texels would be discarded by the water shader" % [dry_in_shader, wet])

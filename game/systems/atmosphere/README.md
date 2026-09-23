@@ -59,12 +59,19 @@ region's `exposure` and `tonemap_white`; at night the exposure rises to `night_e
 the eye opens, so a moonlit country reads blue rather than black and the lamps bloom. Over the
 frame, under the HUD: a faint vignette in the region's own dark, and grain where `grain` asks
 for it and the player has turned it on. The blacks take a fifth of `shadow_lift` (`GRADE_LIFT`),
-not the 0.45 they first took, which greyed every shadow. The table is made once and rewritten in
+not the 0.45 they first took, which greyed every shadow. The table grades the sky as well as the
+land, so `highlight_gain` and `midtone_tint` stay within a few percent of white: Hearthvale's
+first warm midtone (`#fff2d6`) took a sixth of the blue out of a mid-blue sky and turned it
+olive-grey, which on Forward+ was the whole top half of every frame. Warmth is the sun's colour's
+job, and the fill's; the table leans, it does not tint. The table is made once and rewritten in
 place as a blend moves; it is never replaced: the first cut handed the Environment a new texture
 for every refresh of a blend, fifteen in six seconds, swapping a resource the renderer was
 drawing with.
 
-**The sky** (`assets/shaders/painted_sky.gdshader`): a gradient that burns round a low sun and
+**The sky** (`assets/shaders/painted_sky.gdshader`): a gradient whose blue comes down to within
+a few degrees of the horizon (`horizon_sharpness` 4.5) over a horizon that takes only a little of
+the fog's colour (0.15) -- a level view sees the sky only up to twenty degrees or so, and at 3.2
+and 0.3 all of that was a band of each region's fog-grey -- that burns round a low sun and
 goes rose on the far side over the earth's blue shadow; a sun disc a degree and a half across
 with a tight halo, a glow and a wide dusk wash; cumulus as masses -- a slowly warped low-frequency
 field with the fine octaves only on its edges -- lit from the side the light is on, measured on
@@ -85,20 +92,37 @@ DirectionalLight3D, left out of the sky shader, and takes the shadow cascades ov
 has set, so only one of the two ever pays for them -- and the moon on two cascades over 160 m,
 not the sun's four over 260.
 
-**The water** (`assets/shaders/painted_water.gdshader`): the frame's own pixels mirrored where the
-reflected ray points (projected to infinity, so always above the horizon and never onto the lake
-itself), the sky's own colours where the ray leaves the frame, a Fresnel term, glints under the
-sun and the moon. What the mirror shows is bent by a third of the waves (`mirror_ripple`), and
-each region sets how rough its open water is: the Mere is Lake Glass, calm enough to hold its
-island and its far shore upside down, where the first cut ran every lake and sea at one wave
-height that scrambled any reflection into streaks of sky and shore. Each region's `reflect`,
+**The water** (`assets/shaders/painted_water.gdshader`). None of it was drawn on a lake or the sea
+until the water mask was read right: the builder writes it as 0 and 1, a shader samples a byte as
+byte/255, and the shader's 0.5 test discarded every fragment of the sheet, so what showed on the
+Mere was the lake bed's terrain texture (`WaterSurface.mask_bytes`, docs/CONTRACTS.md 6). Now: the
+frame's own pixels mirrored where the
+reflected ray lands -- followed over the water mask to the shore it meets, since that is where
+what a lake mirrors stands, and projected to infinity where it meets none -- the sky's own
+colours where the ray leaves the frame, a Fresnel term, glints under the sun and the moon.
+Projected to infinity everywhere, as it first was, the far shore's reflection came out a
+camera-height too high: from sixty metres over the Mere, three degrees, in the sky above the
+hills, and the lake gave back nothing but pale sky. What the mirror shows is bent by a third of
+the waves (`mirror_ripple`), and each region sets how rough its open water is: the Mere is Lake
+Glass, calm enough to hold its island and its far shore upside down, where the first cut ran
+every lake and sea at one wave height that scrambled any reflection into streaks of sky and
+shore. Each region's `reflect`,
 `cap`, `glint` and `waves` are in `world/water_surface.gd`. `video/water_reflections` off puts
 the water on the same shader built without the lookup (`WaterSurface.shader_for`): a material
 that so much as names the screen texture has the frame copied for it, whatever its uniforms say.
+The water asks the engine for no specular (`SPECULAR` 0): at 0.12 the renderer laid the sky's own
+radiance over the mirror as well, its Fresnel rising to nearly the mirror's own share at a grazing
+angle, and every lake came out as bright as the sky above it. Its depth is read per fragment,
+not at the sheet's vertices ninety metres apart, and seen from under its surface it is its own
+colour and mirrors nothing.
 
 **Forward+ extras.** SSAO (`video/ssao`, on), volumetric fog (`video/volumetric_fog`, off) and
 SDFGI (`video/sdfgi`, off) are enabled only when the renderer is Forward+ *and* the setting is on.
-Nothing in the look depends on them: every image this project reviews is shot on Compatibility.
+Nothing in the look depends on them. Forward+ is the renderer players have, and it can be shot
+here on Mesa's software Vulkan (`--rendering-driver vulkan --rendering-method forward_plus`),
+slowly: about four seconds a frame, and Terrain3D's clipmap at the game's nine LODs crashes that
+driver on its first frame (seven draw, but a camera that moves can still bring it down), so a
+Forward+ review is a few still shots or a still camera's run of frames.
 
 ## The recipe (`identity.light`)
 
@@ -172,15 +196,17 @@ contrast, cool, desaturated, wind-streaked cirrus, alpenglow at dawn (`sun_color
 and snow under a bright blue moon.
 
 **Cinderlea — Ember Ash.** A sun that never climbs (nine degrees at half past four) and burns
-gold through the ash, with a haze that glows round it (`fog_sun_scatter` 0.3). The ground is
-char and ash, the fill grey-violet, the shadows leaning violet, the highlights gold, the sky a
-clean pale ash-blue over a warm horizon, and the colour held back (0.82, the least of the six)
-rather than taken away. This is where a new game opens, at the Hushline Stair, and the first cut
-made it the greyest frame in the game: saturation 0.55, the blacks lifted to an eighth grey, the
-fill at 1.35 flattening every form, a far fog at 0.0008 that was a third of the way to beige at
-five hundred metres, film grain and the heaviest vignette -- the player's first sight of the
-country read as washed out and filtered, on Forward+ and on Compatibility alike. The distance
-still goes to ash (0.00035, aerial perspective 0.4); the foreground is clear. Its weather was
+gold (`#ffd49a`, 1.25) through the ash, with a haze that glows round it (`fog_sun_scatter`
+0.35). The ground is char and ash, so the fill is violet (`#8c84b4` at 1.25) and holds the char in
+shade as violet-grey rather than black, the highlights gold, the sky a clear pale blue
+(`#9fb8dc`) over a warm horizon, few stratus bands (0.2), and the colour held back (0.92, the
+least of the six) rather than taken away. This is where a new game opens, at the Hushline Stair,
+and the first cut made it the greyest frame in the game: saturation 0.55, the blacks lifted to
+an eighth grey, a far fog at 0.0008 that was a third of the way to beige at five hundred metres,
+a cream-grey sky banded like a zoom, film grain and the heaviest vignette -- the player's first
+sight of the country read as washed out and filtered, on Forward+ and on Compatibility alike.
+The distance still goes to warm ash (fog `#b09a82`, 0.0003, aerial perspective 0.45); the
+foreground is clear. Its weather was
 grey seven times in ten -- ashfall and still grey, which took a further three tenths and a fifth
 of what colour was left and thickened the fog by 1.7 and 1.4 -- so the dry wind and the thin sun
 are the likelier now (35 and 30 in a hundred), and the two grey weathers, which no other region
