@@ -1329,3 +1329,196 @@ work and not a wiring change. A child NPC is still a small adult until that is d
   — including stale doubled ones such as `heavy_heavy_albedo.png`.
 * **Two dependencies were undeclared**: `scikit-image` and `fast_simplification` (trimesh 5
   moved `simplify_quadric_decimation` out). Both are in `tools/requirements.txt` now.
+
+## The painted look: six lights, a sky, water that mirrors it, and the lamps after dark
+
+The frames were competent and flat: even light, one layer of fog, a gradient for a sky with
+grey blobs in it, water that was a grey plane, nights that were dark rather than lit, and six
+regions told apart by the colour of their ground more than by their light. This pass is the
+light. It stopped, on the user's order, before the after-sheet and the drop test were shot:
+what is measured and what is not is said plainly below, and the Next list at the end is the
+rest of the brief in order. Everything was measured on the world in the main checkout, built
+2026-09-22 12:56:09Z and still that build when this was written.
+
+### The cameras first, because a photograph of leaves is not a measurement
+
+The Briarwold vista stood twelve metres up inside a giant oak: `make_default_plan.py` put every
+vista above the highest ground near its viewpoint and never asked what was growing there. The
+plan's scatter index now carries every tree as a cylinder of crown, its reach and height read
+from the forge's own meta and scaled per instance, so a lens is in a crown only where it is
+inside one and a line of sight is blocked only where it passes through one. A vista takes the
+highest of a dozen candidate spots whose lens is clear and whose line to its target the land and
+the crowns allow; a landmark shot swings its bearing fifteen degrees at a time until it can see
+its landmark. **The recorded diagnosis was half of it**: the Briarwold's *landmark* camera was
+also looking at the Grandfather through the crowns on the rise in front of it (it turned 45°;
+Hearthvale's turned 15°). `horizon.json` is generated now (`--horizon`) from the same vantages --
+the hand-written one had its Hearthvale camera in the grass and its Briarwold camera in the
+crowns -- and `--look` writes seventeen frames the drop-test sheet never shows: dusk and dawn at
+each region's own sunset (the sky follows the sun's height, so "19:24" over the Mere is already
+night), night, the lamps, the Mere at eye level, and four waterfalls, re-aimed at runtime at
+each fall's own sheet (`frame` in the plan; the capture runner reads the sheet's facing off its
+mesh). `tools/tests/test_capture_plan.py` pins the crown model and the committed plans.
+
+Regenerating the plan also moved every ground shot, which is not this change: the committed plan
+had been drawn from an older build and the region mask under it had moved. The baseline was shot
+on the regenerated plan, from a snapshot of the untouched game (`git archive 7d1652e4 game`), so
+before and after are the same cameras.
+
+**The drop test's `--json` had never worked**: it read two variables before assigning them. On
+the regenerated plan, before any change to the light, 42 images, seven a region:
+
+| | colour | landform | together |
+|---|---|---|---|
+| recorded in "The country, looked at" (older plan, no POIs standing, a frame of leaves) | 0.74 | 0.12 | 0.71 |
+| baseline, regenerated plan, landmark cameras on their old bearings | 0.81 | 0.26 | 0.64 |
+| **baseline, regenerated plan, clear landmark cameras** | **0.81** | **0.31** | **0.64** |
+| after this pass | not shot | not shot | not shot |
+
+### What the renderer we can capture actually draws
+
+`game/tools_gd/render_probe.gd` turns each Environment feature on against a test stage and compares
+the frame. On Compatibility, every feature the look leans on is drawn: exponential, height and
+depth fog, aerial perspective, sky affect and sun scatter, glow, saturation, 1D and 3D colour
+correction, ACES, AgX and exposure, the ambient sky contribution, and both the screen and depth
+textures. Eight unshadowed omni lights cost no draw calls (30 → 30), one shadowed omni costs 4,
+and a second shadowed directional light costs 22. Nothing below needed a Forward+ feature;
+volumetric fog (which the Briarwold's `god_rays` drive), SDFGI and SSAO are behind the renderer
+check and their own settings, and the first two are off by default.
+
+### Six lights
+
+Each region's `identity.light` is now a named palette of some thirty optional keys, extended
+rather than rewritten: every old key survives. The table and the intent behind each light are in
+`game/systems/atmosphere/README.md`; WORLD_BIBLE §6 points there. Harvest Gold (Hearthvale), Lake
+Glass (Brightwater), Drowned Lantern (Sedgemire), Green Cathedral (Briarwold), Bone and Slate
+(Skerrow), Ember Ash (Cinderlea). What each carries: the sun's colour high and near the horizon,
+and its strength; shadows with a colour of their own (the fill's tint and how much sky is in it);
+two fogs, a far aerial-perspective layer and a low haze whose top is held under the eye (Godot's
+height fog ignores distance, so a haze top fixed in the world veiled the grass at your feet as
+thickly as the valley a kilometre off); a grade -- saturation, contrast, exposure, and a 3D LUT
+built from where the blacks lean, how warm the lights are and the midtone tint; vignette and
+grain; the region's clouds; and moonlight, with the exposure opening after dark.
+
+The day now follows the sun's height, not the clock (`SUN_KEYS`, keyed by elevation), so each
+region's sky and light agree wherever its latitude puts its sun: Cinderlea's nine-degree sun at
+half past four used to stand under a mid-afternoon sky.
+
+### The sky and the water, and two faults that had been there all along
+
+The sky shader is rewritten: a disc a degree and a half across with a halo, cumulus lit from the
+side the light is on (the density a step toward the sun against the density here) falling into
+painted steps with a silver lining, cirrus streaked along the wind, a stratus bank where a region
+asks for one, a horizon that burns under a low sun and goes rose over a blue band opposite it,
+and stars in two sizes, a band of milk and a moon at night. **The old sun disc was 11 to 14
+degrees in radius**: its size was a 1 − cos of 0.03 that nothing ever set. Its declared
+half-resolution pass was never read. The new disc was at first *mixed* over a sky that already
+carried its own halo, and came out darker than its surroundings -- a dark lozenge over Cinderlea.
+`game/tools_gd/sun_probe.tscn` measured the disc's centre at 0.58 against 0.83 five degrees above
+it, with the grade and the glow each on and off, which put the fault in the sky shader rather
+than the post; the disc adds now and reads 0.996.
+
+The water shader wrote a world-space normal, up in green, into `NORMAL_MAP`, which Godot reads
+as tangent space and rebuilds z from. **Every water surface in the game has been lit as if tilted
+steeply away from the sun**: `render_probe.gd` draws a flat plane under an overhead sun at 0.659
+mean brightness with no normal map, 0.662 with a true flat one, and 0.234 with the old encoding.
+It writes a view-space `NORMAL` now, mirrors the sky's own zenith and horizon (published by the
+atmosphere as linear globals) through a Fresnel term capped at 0.65, lays a path of glints under
+the sun and the moon, breaks its shore foam into patches, and thins to nothing at the waterline.
+The falls do use `falling_water.gdshader`: all four were framed from their own sheets and looked
+at in the baseline (the Glass Falls as black glass, as written); they have not been re-shot under
+the new light.
+
+### After dark
+
+POI dressing already hung real lights -- 27 `k.light` calls across its builders: camp fires,
+shrine lamps, the beacon, bridge and causeway lamps, the wisps and the foxfire -- always on, and
+faded out between 55 and 95 m. Settlements had none: the lakefolk's lanterns and the pilgrims'
+braziers were props with no light in them, and every window was a black box. Now a window pane is
+its own kind of box in the fabric whose vertex colour carries its coordinates across the glass
+and, in alpha, how brightly the room behind is lit; the joinery shader paints glazing bars and a
+hearth glow warmest low in the glass (a first cut at 3.2× the lamp colour came out as a white
+lightbox under ACES; it is 1.25 now). Seven houses in ten have somebody home, with a lamp over the
+door of each, and the dimmer rooms go out from about eleven until five.
+`game/world/night_lights.gd` keeps every lamp, lantern, brazier, fire and lit window as one glow
+MultiMesh for the whole country (one draw, at night only) and hands a pool of eight unshadowed
+OmniLights (`video/night_lights`, ten at most, because Compatibility draws twelve lights on an
+object) to the real-light sources nearest the camera. The moon takes the shadow cascades over when
+the sun has set, on two cascades over 160 m. The night street (Merrowby at 22:00) went from 367
+draws and 0.41 M primitives (the baseline night had no moon shadows and no lamps) to 889 and 1.13
+M with four cascades, and to 617 and 0.75 M with two -- well under the same street by day.
+
+### What it costs, measured
+
+The worst frame, the Merrowby street at 09:00: **1521 draws and 1.613 M primitives before, 1502
+and 1.592 M after** (`captures/tune_4/perf.json` against `captures/before/perf.json`). That is
+inside run-to-run noise: the seven other shots of the same round moved by −3 to +14 draws and
+−0.012 to +0.023 M against the same baseline, with nothing of this pass able to account for it,
+because by day this pass adds a vignette rect (and a grain rect in Cinderlea) and nothing else
+to draw -- the glows, the lamp pool and the moon's cascades are all off. I did not run one build
+twice to measure the noise directly; the spread is the evidence. The street was over the 1.5 M
+primitive budget before this pass and still is; that is the scatter and tree LOD work, not
+this. The unit suite is 1244 tests, 0 failed, 0 content problems, 0 script errors;
+`./run.sh flow` passes all three starts with 0 errors; the tools tests are 19, all passing.
+
+### Looked at, and what still reads badly
+
+Four tuning rounds, 34 frames across the six regions at day, dusk and night, each opened and
+looked at. What still reads badly: Sedgemire's landmark from 55 m is most of a whiteout (the far
+fog and the haze together); the Briarwold's olive cloud steps read murky rather than painted;
+the Mere from its landmark is still a pale sheet more than a mirror (the glint path shows only
+toward the sun); dusk everywhere is warm enough that Hearthvale's and Cinderlea's are closer to
+each other than they should be.
+
+### Next, in order:
+
+1. **Done and verified, in this worktree's `captures/`** (gitignored; the plans that make them are
+   committed): the baseline sheet `before/` (54 frames, drop test 0.81 / 0.31 / 0.64 in
+   `before/drop_test.json`), `before_horizon2/`, `before_look/` and `before_fix/` (the seven
+   look frames whose hours or framing changed); the four tuning rounds `tune_1/` to `tune_4/`,
+   of which `tune_4` is the current state; `render_probe/`, `sun_probe/`, `flow/`. Verified:
+   suite green, flow 3/3, worst day frame unchanged within noise (1502 / 1.592 M against
+   1521 / 1.613 M), night street 617 draws.
+2. **Nothing is half-done in code.** Everything is on by default and has been looked at in
+   captures except the Forward+ extras, which are off: `video/volumetric_fog` (which carries the
+   Briarwold's `god_rays`) and `video/sdfgi` default to false and never enable on Compatibility;
+   `video/ssao` keeps its old default and is Forward+ only. Switches for the rest:
+   `video/color_grade` (the LUT), `video/night_lights` (0 to 10 real lamps; glows still draw),
+   `video/glow`, and any key of a region's `identity.light` in
+   `game/content/packs/core/regions/regions.json` (the palettes are written by hand there).
+3. **Shoot the after-sheets and measure.** With `free -g` at 4 GB or more, one Godot at a time:
+   `xvfb-run -a -s "-screen 0 1600x900x24" godot --path game --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- --capture=tools/capture/plans/default.json --out=$PWD/captures/after`
+   (about an hour), then the same with `horizon.json` into `captures/after_horizon2` and
+   `look.json` into `captures/after_look`. Open every frame. Then
+   `python3 tools/uniqueness_check.py captures/after/regions --json captures/after/drop_test.json`
+   and report colour, landform and together against 0.81 / 0.31 / 0.64. Acceptance: all three
+   numbers reported, and if they do not move, say what the frames show and why; the landform
+   axis is the terrain's and light is not expected to carry it to 0.55. One caveat on the
+   comparison: the baseline's capture runner did not settle a region's six-second look blend
+   before an exposure, so a baseline shot taken just after crossing a region border (the six
+   street shots each do) may carry some of the previous region's light; the runner at this
+   head settles it.
+4. **`./run.sh perf`** (the interiors, which this pass does not touch indoors beyond the
+   atmosphere's existing interior mode) and the street from the after-sheet's `perf.json`.
+   Acceptance: every frame ≤ 2000 draws; the street's primitives no higher than 1.61 M.
+5. **Tune what reads badly**, then re-shoot the frame and look at it: Sedgemire's
+   `haze_density` (0.03) and `fog_sky_affect` (0.5) for `sedgemire_landmark`; the Briarwold's
+   `painterly` (0.6 default) and cloud colours for `briarwold_vista`; Brightwater's water
+   `reflect` (0.8, `game/world/water_surface.gd` REGION_WATER) for `brightwater_landmark`; a
+   cooler `dusk_tint` for Cinderlea against Hearthvale's. The Briarwold's light shafts exist only
+   on Forward+ (volumetric fog); a Compatibility version would be the cave forge's
+   `light_shaft.gdshader` cones stood in clearings, which nobody has built.
+6. **Re-shoot the falls under the new light** (`look.json`'s four `*_falls` frames) and look at
+   them; nothing in the falls was changed.
+7. **Measure the two costs nobody has timed**: the glow MultiMesh is rebuilt on the main thread
+   whenever a settlement, building or POI registers or leaves (about a thousand sources, on cell
+   loads), and the grade LUT (4913 texels of GDScript) is rebuilt at most every 0.4 s while a
+   region's look blends. Both are suspects for a hitch at a region border.
+
+Known risks: the POI dressing's own OmniLights are always on and do not count against the pool,
+so beside the Long Stride the pool and the POI lamps together can pass Compatibility's twelve
+lights on one object, and the extras are dropped without a word. The haze's top follows the
+camera, by design, so it moves as you climb. None of the Forward+ extras has been seen, because
+Forward+ does not run here. The before sheets live only in this worktree. They were shot from the
+untouched game: `before/` from the worktree before its first game change, the rest from a
+`git archive 7d1652e4 game` snapshot (`before_fix/` with this head's capture runner copied in, for
+its `frame` re-aiming, which the old atmosphere ignores). Re-shooting them that way reproduces them.
