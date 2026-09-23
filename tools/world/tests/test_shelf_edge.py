@@ -21,6 +21,7 @@ import sys
 import unittest
 
 import numpy as np
+from scipy import ndimage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -124,6 +125,35 @@ class ShelfEdgeTest(unittest.TestCase):
         # and the seaward edge is still broken either side of the road
         edge = ~self.shelf & (Z > 0.0) & (np.abs(X) < 110.0)
         self.assertFalse(np.array_equal(H[edge], H0[edge]))
+
+    def test_a_bitten_edge_leaves_no_rib_of_the_drawn_arc(self):
+        # The coast drawn over the Hushline's shelf stands a band of land a few metres wide at the
+        # cliff's height just outside the shelf's seaward edge. Cut only inside the polygon, the
+        # drawn arc was left standing as a rib with the bites behind it as pools. Here that band is
+        # 3 m wide at the shelf's height, and the fallen blocks are left out.
+        grid, H0, shelf, atlas = world()
+        sd = GEO.signed_distance(grid, shelf)
+        H0 = np.where((sd > 0.0) & (sd <= 3.0) & (self.Z > 0.0), TOP, H0).astype(np.float32)
+        keep_blocks = GEO.SHELF_BLOCKS_PER_100M
+        GEO.SHELF_BLOCKS_PER_100M = 0.0
+        try:
+            H = GEO.break_shelf_edges(grid, H0.copy(), atlas, NoiseBank(8471, grid), keep_discs=[PAD])
+        finally:
+            GEO.SHELF_BLOCKS_PER_100M = keep_blocks
+        # A rib is the band still standing with water on both sides of it across the edge: 6 m in
+        # toward the shelf (a bite) and 6 m out (the sea). The notch, due south, has walls of its own.
+        gi, gj = np.gradient(ndimage.gaussian_filter(sd, 2.0))
+        norm = np.maximum(np.hypot(gi, gj), 1e-6)
+        ii, jj = np.nonzero((sd > 0.0) & (sd <= 3.0) & (self.Z > 0.0) & (H > 1.0) & (np.abs(self.X) > 12.0))
+        ribs = []
+        k = 3
+        for i, j in zip(ii, jj):
+            ui, uj = gi[i, j] / norm[i, j], gj[i, j] / norm[i, j]
+            a = (int(round(i - k * ui)), int(round(j - k * uj)))
+            b = (int(round(i + k * ui)), int(round(j + k * uj)))
+            if H[a] < 0.0 and H[b] < 0.0:
+                ribs.append("(%.0f, %.0f): %.1f m" % (float(self.X[i, j]), float(self.Z[i, j]), float(H[i, j])))
+        self.assertEqual(ribs, [], "the drawn arc stands as a rib beyond its bites")
 
     def test_a_coast_drawn_over_the_shelf_does_not_hold_its_edge(self):
         # The Hushline's coast polygon has a lobe over the whole shelf, with a low cliff along the

@@ -616,8 +616,19 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
         j0, j1 = max(int(jj.min()) - pad, 0), min(int(jj.max()) + pad + 1, g.n)
         sub = H[i0:i1, j0:j1].astype(np.float32)
         sub_m = m[i0:i1, j0:j1]
-        sd = np.where(sub_m, -(ndimage.distance_transform_edt(sub_m) - 0.5),
-                      ndimage.distance_transform_edt(~sub_m) - 0.5).astype(np.float32) * sp
+        # metres to the drawn line itself, not to the mask's edge in texel steps: the wandering
+        # edge is a level of this, and a level of a staircase has lone texels on either side of it
+        ring = np.asarray(list(shelf["polygon"]) + [shelf["polygon"][0]], dtype=np.float64)
+        xs = g.x0 + np.arange(j0, j1, dtype=np.float64) * sp
+        zs = g.z0 + np.arange(i0, i1, dtype=np.float64) * sp
+        d_line = np.full((i1 - i0, j1 - j0), np.inf)
+        for q in range(ring.shape[0] - 1):
+            (ax, az), (bx, bz) = ring[q], ring[q + 1]
+            ex, ez = bx - ax, bz - az
+            u = np.clip(((xs[None, :] - ax) * ex + (zs[:, None] - az) * ez) / max(ex * ex + ez * ez, 1e-12), 0.0, 1.0)
+            d_line = np.minimum(d_line, np.hypot(xs[None, :] - (ax + u * ex), zs[:, None] - (az + u * ez)))
+        sd = np.where(sub_m, -d_line, d_line).astype(np.float32)
+        del d_line
         # The land the shelf lies under -- its bank, the cliff behind it -- is the ground standing
         # over the shelf's top. The breaking fades out toward it, so the edge runs back into the
         # land as drawn. (Not the coast polygon: the Hushline's lobe of it covers the whole shelf,
@@ -656,10 +667,29 @@ def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=(
         salt = _salt("shelf edge", k)
         wander = SHELF_EDGE_M * _sc(bank.field_at(salt, g.n, 1.8, *SHELF_EDGE_WL)[i0:i1, j0:j1], 1.3) / 1.3
         edge = wander * free
-        bite = sub_m & (sd > edge) & (free > 0.05)
-        spur = (~sub_m) & (sd < edge) & (free > 0.05) & (sub < top)
+        # A bite takes everything seaward of the wandered edge down to the foot of the face, the
+        # ground just outside the drawn polygon included: the coast drawn over a shelf stands a
+        # band of land a few metres wide at the cliff's height along its seaward edge, and cut
+        # only inside the polygon, the drawn arc was left standing as a rib with pools behind it.
+        # (closed, so no lone texel of the old top stands in a bite, nor a lone hole in a spur:
+        # the distance to the drawn line comes in texel steps, and a pillar two metres across and
+        # six high is no more a rock than a rib is)
+        solid = np.ones((3, 3), dtype=bool)
+        bite = ndimage.binary_closing((sd > edge) & (free > 0.05), structure=solid)
+        bite &= (free > 0.05) & (sub > SEA_LEVEL + SHELF_FOOT_M)
+        spur = ndimage.binary_closing((~sub_m) & (sd < edge) & (free > 0.05), structure=solid)
+        spur &= (~sub_m) & (free > 0.05) & (sub < top) & ~bite
         sub = np.where(bite, np.minimum(sub, SEA_LEVEL + SHELF_FOOT_M), sub)
         sub = np.where(spur, top, sub)
+        # and the new outline cleaned of what a texel grid leaves at the tip of a spur or the mouth
+        # of a bite: nothing of the rock narrower than three texels stands alone in the water, and
+        # no hole that narrow is left in the rock
+        zone = free > 0.05
+        rock = sub > SEA_LEVEL + 0.5
+        cleaned = ndimage.binary_closing(ndimage.binary_opening(rock, structure=solid), structure=solid)
+        sub = np.where(zone & rock & ~cleaned, np.minimum(sub, SEA_LEVEL + SHELF_FOOT_M), sub)
+        sub = np.where(zone & ~rock & cleaned, np.float32(top), sub)
+        del rock, cleaned
         # 2. blocks fallen from the face, in the water at its foot
         broken = (sd < edge) & (free > 0.05)
         rim_i, rim_j = np.nonzero(~broken & ndimage.binary_dilation(broken) & (free > 0.5))
