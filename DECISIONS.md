@@ -495,3 +495,91 @@ vista came back littered with orange slabs where the gold barley and red poppies
 multiplied by gold and red. Rules now carry a `tint_strength` (how far from white the
 multiplier may travel, default 0.45) and the species whose asset already carries that colour
 take none at all.
+
+## 2026-09-22 · The character's attributes start at 10, and the pools are the character's
+**Decision.** Vigour, Endurance and Will start at 10, not 5, and there is one set of pool
+formulas (`DamageModel`): stamina `100 + 8·Endurance`, mana `60 + 6·Will`, health from Vigour.
+The Player reads the character's attributes (with modifiers) and refreshes its pools when a
+level, a point or a modifier changes. Saves move to schema 4: `Migrations._v3_to_v4` adds the
+5 to every saved attribute.
+**Why.** DESIGN §5.3 gives the formulas and §5.6 says a level's point in Endurance raises
+stamina. Measured before: the pools were a flat 180 / 120 / 100 whatever the attributes were,
+while the character sheet held 5s, so the design's own formula gave 140 / 90 / 80 and a level
+point changed nothing. Leveling kept a second copy of the formulas with different constants.
+Starting at 10 makes the formula give the numbers the game was already balanced around.
+**Alternatives.** Keeping 5 and changing the constants would have kept old saves untouched but
+made every derived number (load capacity, noise, requirements) disagree with the sheet.
+**Consequences.** Measured after: 180 / 120 / 100 at 10, 188 stamina and 126 mana after a
+point. A v3 save loads with its attributes 5 higher, which is what it would have had.
+
+## 2026-09-22 · Load is what is worn over what Endurance can carry, and the bag can overload it
+**Decision.** Load = worn weight / (40 + 3·Endurance). Tiers: light below 0.3, medium below
+0.7, heavy to 1.0, overloaded past it — and a bag carried past its capacity is overloaded
+whatever is worn. Stamina regen is multiplied by 1.0 / 0.9 / 0.75 / 0.5 across the tiers
+(`DamageModel.LOAD_REGEN_MULT`).
+**Why.** DESIGN §5.3 has heavy load lengthen the roll and §5.7 says "Load affects dodge and
+stamina regen", with no numbers. Measured before: a full plate kit and a sword read 24.3%
+load (half the design's own reading), nothing could reach overloaded, and regen was 30/s at
+every load. The capacity formula is new; the regen multipliers are chosen so a heavy kit costs
+a quarter of the regen and an overloaded one half, which is felt in a fight without deciding it.
+**Consequences.** A plate kit at Endurance 10 is 38.6% (medium); an overfull bag gives 129% and
+the overloaded roll. Found and not fixed: gear alone cannot reach the heavy tier (the heaviest
+kit in the pack is about 0.61 of capacity), so heavy and overloaded rolls are reachable only by
+carrying too much.
+
+## 2026-09-22 · A heavy's wind-up has hyper-armour 12; hit windows come from the clip
+**Decision.** The player's heavy attack carries hyper-armour 12 (`DamageModel.HEAVY_HYPER_ARMOUR`)
+from its start to its `hit_end`. A weapon's hit window is its clip's own `hit_start`/`hit_end`
+(the rig's `.clips.json` sidecar) divided by the weapon's `speed`; the placeholder proportions
+are the fallback. Light and heavy stamina costs are each weapon's own (18 / 32 are the iron
+sword's; a dagger's light is 12).
+**Why.** DESIGN §5.3: "hyper-armour frames on heavies ignore poise damage below a threshold",
+and hit windows "per attack in the weapon data". Measured before: a player's heavy lost 8
+poise to an 8-poise hit; 65 of 69 humanoid attacks threw their blow off the authored time
+(56 early, 6 late, 3 never live) because the rig played the clip on its own schedule. The
+AnimationDriver now keeps the time and the rig is stretched to it (worst of 100 attacks after:
+0.017 s). Putting the window in the weapon data would duplicate what the clip already says,
+and a clip that is re-forged would silently disagree with it.
+**Consequences.** A held heavy measures 1.5×, a player's heavy loses 0 poise in its wind-up.
+
+## 2026-09-22 · A backstab is from behind within 1.8 m; a sneak attack is on a foe that has not noticed
+**Decision.** A light attack on a foe whose back is to the player within 1.8 m is a backstab
+(×3, the Backstab clip); any blow on an enemy that is not in combat and whose detection is below
+1 is a sneak attack (×6 with a dagger, per `DamageModel.crit_multiplier`). Both multiply
+before armour, as §5.3 says crits do.
+**Why.** §5.3 names both crits; measured before, neither ever happened.
+
+## 2026-09-22 · A swing is a band from shin to crown, and knockback is metres
+**Decision.** A swing's volume is a box `2·radius` wide along the reach, from 0.1 m to 1.9 m
+above the ground for a person (`Hitbox.set_swing`, `WeaponInstance.SWING_BELOW/ABOVE` = 1.0 /
+0.8 about the 1.1 m attack origin; an enemy's reaches from the ground to a little over its own
+height). Knockback is a distance, as `HitData.knockback` always said: a shove starts at
+`sqrt(2·14·metres)` m/s and runs down at 14 m/s² (`Actor.SHOVE_DECEL`), it moves the body by
+`move_and_collide` and never enters `velocity`, two shoves add as distances, and a knockdown
+carries at least 1.2 m (`KNOCKDOWN_SHOVE`) without adding to a blow that already throws further.
+**Why.** DESIGN §5.3 says "capsules". The capsule sat at chest height (0.7–1.5 m) and missed
+everything shorter: `./run.sh fights` measured 0 hits on four gutter drakes, and the reach test
+fails on the old band. The shove was added to the velocity every frame; a body whose state only
+damps velocity (stunned, knocked down) summed sixty of them a second, and the bristleback's
+charge threw the player at 140 m/s off the edge of the arena.
+**Consequences.** A 3.4 m knockback measures 3.4 ± 0.35 m. DESIGN §5.3's hitbox line is
+amended to say band rather than capsule.
+
+## 2026-09-22 · What an enemy does with patience, a leash, a pack and a circle
+**Decision.** (1) Patience counts from the last sight of the target, not from the start of the
+fight. (2) A fighter that leaves the fight mid-blow has the blow called off. (3) A leash that
+breaks holds until the fighter is back within half its leash (`Brain.RETURN_HOME`), and on the
+way home it turns only on somebody within 3 m (`Brain.REENGAGE_REACH`). (4) A pack member waits
+on its ring and, with a blow ready, closes along its own bearing to its bite; slots are ordered
+by where each member stands, not by instance id. (5) Circling is held to 1.4 rad/s about the
+target (`Enemy.MAX_CIRCLE_RATE`).
+**Why.** All five were found by the headless fights, each as a fight that could not end: (1) a
+wolf past four seconds into any fight dropped to search the first frame a roll put the player
+behind it; (2) the idle clip that replaced its attack stranded it lunging for ever; (3) a
+kiting caster walked 50 m from a 32 m leash because seeing its quarry put it straight back in
+the fight; (4) the ring (3.2 m) was wider than the bite (1.9 m), so a pack that met a player who
+did not walk into it bit nobody in 120 s; (5) a wolf at 1.2 m went round the player once a
+second, faster than any swing could be aimed. DESIGN §5.4's "do not chase past their
+threshold" is (3).
+**Consequences.** The arena's flank check still passes (smallest gap between three wolves 44°).
+The fights are seeded and repeat exactly; the numbers after these changes are in PROGRESS.
