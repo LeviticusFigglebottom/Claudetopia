@@ -261,7 +261,12 @@ func test_world_pois_indexes_every_dressable_entry_by_its_cell() -> void:
 	var wp := WorldPois.new()
 	_host().add_child(wp)
 	var n := wp.index(pois, provider, roads)
-	assert_eq(n, WorldPois.candidates(pois).size())
+	# every built entry, and every POI the content has that the land does not have a pad for yet
+	var unbuilt := WorldPois.unbuilt_entries(pois, provider)
+	assert_eq(n, WorldPois.candidates(pois + unbuilt).size())
+	for e in unbuilt:
+		var id := str((e as Dictionary)["place_id"])
+		assert_true(_entry(id).is_empty(), "%s is marked unbuilt but has a pad" % id)
 	assert_gt(n, 50, "only %d entries indexed" % n)
 	for item_v in wp.entries():
 		var pos: Array = (item_v["entry"] as Dictionary)["pos"]

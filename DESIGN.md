@@ -144,9 +144,9 @@ land, the stakes, then you — and it is about ninety seconds long.
   saying it back, and then telling you, as she walks, what you have come up into.
 * **Why you are where you wake.** WORLD_BIBLE §1.5: the Hushline is where the Dwindling has
   finished, and the player came out of it, which should be impossible. You came up the
-  Hushline Stair (`core:poi/hushline_stair`, the place `core:opening/new_game` names), where
-  Wren has stood on and off for nineteen years watching grey people walk *down* (her
-  `the_hush` line). That is the whole of what she knows, and she says so.
+  Hushline Stair (`core:poi/hushline_stair`), where Wren has stood on and off for nineteen
+  years watching grey people walk *down* (her `the_hush` line). That is the whole of what she
+  knows, and she says so. You stand at its head, in her camp on the rim (**The start**, below).
 * **What you are shown**, each shot a slow eased move over a real place in the streamed
   world, with the time and weather that place looks like itself in:
   1. *Black.* One bell. "{name}." — "There. Said out loud, and heard. That is how it holds."
@@ -167,12 +167,30 @@ land, the stakes, then you — and it is about ninety seconds long.
      furthest. South of that is the Hush, where it has finished."
   10. *The Stair*, from high over the Hush looking north at the cliff: "I have stood at the
       top of that stair nineteen years and watched grey people walk down it. Nobody has
-      ever walked up it." The camera comes down and settles behind your shoulder, facing
-      north: "Then, this morning, you did." — "Keep up. I don't look back."
+      ever walked up it." The camera comes up over the rim into the Wardens' camp and settles
+      behind your shoulder, facing north: "Then, this morning, you did." — "Keep up. I don't
+      look back."
 * **The hand-over.** The last shot ends exactly on the gameplay camera's pose, the letterbox
   draws back, the HUD inks in and control returns. *The Naming* (`core:quest/the_naming`)
-  starts at that moment, not under the pictures, so its first objective — stage `wake`,
-  speak to the Warden — is the first thing the journal and the HUD say.
+  starts at that moment, not under the pictures, and the Warden speaks first, in her own
+  greeting for the moment ("There you are. Eyes working? Good. Don't look behind you yet. Come
+  to the fire."), as a line with her name on it. The first objective, *Speak to the Warden at
+  her fire*, is written under the compass, and its smudge sits on the strip.
+* **The start.** `core:poi/stair_head`, the Wardens' camp at the top of the Stair, on the rim
+  of the Cinderlea cliff 190 m north of the Stair itself, which is a pad in the Hush at the
+  cliff's foot. The POI's position is where the Foundling stands, and the camp is laid out ahead
+  of it towards the Choir. The Warden stands 6 m in front at her fire, turned to you. Around
+  her: two tents, a cart with its load, two grey-green Warden colours with a bell each either
+  side of the way out, a signpost, lamps. Behind you: the two Oroth piers at the head of the
+  stair, its top steps going over the edge, and her Hearthstone. The first view is the camp,
+  the heath beyond it, and the Choir's twelve headless colossi on the skyline. From the camp,
+  waystones (a lamp on every third) walk 412 m north to the Choir over ground a person can
+  walk, and keep more than fifty metres from the bell-bearer's hollow and the wights' rise:
+  about a minute and a half on foot, past the Cantor's Seat. The Naming runs: `wake` (speak to
+  the Warden, who gives you the road) → `the_choir` (walk the waystones to the Sunken Choir) →
+  `ash_wights` → `hearthstone` (Pilgrim's Ash) → `the_cart`. Standing at the start completes
+  nothing. The Warden is kept at her fire by her npc def's `holds`, from the moment a new game
+  is named until you reach the Choir, and then she goes back to her own days.
 * **The rules it keeps.** Every camera is placed relative to a place and to the ground under
   it, never at a stored height, and a test samples every path against the built terrain and
   its scatter. No shot looks south from the Hushline: the world ends 200 m past the Stair.
@@ -189,11 +207,12 @@ land, the stakes, then you — and it is about ninety seconds long.
   which `tools/audio/compose.py` composes from the same shot list so the cuts land on it.
   *Play the opening on a new game* (Settings, gameplay) turns it off, and the pause menu's
   *How it began* plays it again.
-* **What it cannot fix, and the design assumes.** Today the Stair's head is a mesa on the
-  Hush floor, 100 m out from the foot of the Cinderlea cliff rather than at its top, and
-  nothing stands Wren at the Stair — her schedule keeps her in Merrowby — so the first
-  objective cannot yet be met where the game starts. Both belong to the land and the
-  people, and the opening should not paper over either.
+* **What it cannot fix, and the design assumes.** The Stair itself stands where the built
+  world put its pad: a mesa in the Hush's water 100 m out from the foot of the cliff, not
+  climbing it. The start is on the rim above it, and the Stair is seen from there and from the
+  last shot. The Stair Head has no pad of its own until the next world build (its def is
+  dressed on the ground as it stands until then), and there are no animals in the camp,
+  because nothing in the asset library is one.
 
 ### 5.2 Movement & cameras
 * `CharacterBody3D` with three gaits: **walk 1.8 m/s** (walk key held, or a light stick),

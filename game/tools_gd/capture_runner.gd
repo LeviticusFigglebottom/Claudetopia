@@ -72,6 +72,13 @@ func run() -> int:
 	if plan.is_empty():
 		return 2
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	# game flags set before the world stands up, so a plan can photograph the world as a given
+	# moment of the story sees it: `{"new_game": true}` is the start as a new game has it, with
+	# the Warden held at her fire (tools/capture/plans/start.json)
+	var flags: Variant = plan.get("flags", {})
+	if flags is Dictionary:
+		for key: String in flags:
+			GameState.set_flag(key, flags[key])
 	if plan.has("cinematic"):
 		return await _shoot_cinematic(plan["cinematic"])
 	_world = await _load_world()

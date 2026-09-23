@@ -524,6 +524,48 @@ func _watch_the_opening() -> void:
 	var gone := await _wait_until(func() -> bool: return get_tree().get_first_node_in_group(CinematicPlayer.GROUP) == null, 20.0)
 	_check(gone, "holding a key skips the opening and it lets go of the screen")
 	_check(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "the mouse is the player's again after the opening")
+	await _first_moment_of_control()
+
+
+## What the player is handed (DESIGN §5.1a): their own body on the screen, the person who speaks
+## first standing in view and near, the story's first objective written under the compass and its
+## smudge on the strip. Read on the first frame after the hand-over, and photographed a moment
+## later once the HUD has inked in.
+func _first_moment_of_control() -> void:
+	await get_tree().process_frame
+	var opening := ContentDB.get_or_empty(GameServices.OPENING)
+	var greeter := str(opening.get("greeter", ""))
+	var body := _spawned as Node3D
+	var cam := get_viewport().get_camera_3d()
+	_check(body != null and _on_screen(cam, body.global_position + Vector3(0.0, 1.0, 0.0)),
+			"the first frame of control shows the player's own body")
+	var person: Node3D = null
+	if NpcRegistry.instance != null and greeter != "":
+		person = NpcRegistry.instance.actor(greeter) as Node3D
+	var far_off := body.global_position.distance_to(person.global_position) if person != null and body != null else INF
+	_check(person != null and far_off < 14.0,
+			"%s stands at the start, %.1f m from the player" % [str(ContentDB.get_or_empty(greeter).get("name", greeter)), far_off])
+	_check(person != null and _on_screen(cam, person.global_position + Vector3(0.0, 1.2, 0.0)),
+			"and is in view on the first frame of control")
+	var hud := UI.hud()
+	var marked := hud != null and hud.has_method("quest_marker_on_strip") and bool(hud.call("quest_marker_on_strip"))
+	_check(marked, "the first objective's smudge is on the compass strip")
+	await _settle(1.2)
+	var line := str(hud.call("objective_shown")) if hud != null and hud.has_method("objective_shown") else ""
+	_check(not line.is_empty(), "the first objective is written under the compass: %s" % line)
+	await _capture("first_moment_of_control")
+	var services := get_tree().get_first_node_in_group("game_services")
+	var words := str(services.get("first_words")) if services != null else ""
+	_notes.append("handed over at %s; the first words were \"%s\"; the objective line read \"%s\""
+			% [str(body.global_position.round()) if body != null else "?", words, line])
+
+
+## Whether a point is in front of the camera and inside the picture.
+func _on_screen(cam: Camera3D, point: Vector3) -> bool:
+	if cam == null or cam.is_position_behind(point):
+		return false
+	var at := cam.unproject_position(point)
+	return get_viewport().get_visible_rect().has_point(at)
 
 
 ## A key held the way a hand holds one: pressed, kept down past the prompt's fill, let go.

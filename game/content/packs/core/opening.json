@@ -2,10 +2,11 @@
   {
     "id": "core:opening/new_game",
     "role": "new_game",
-    "description": "What a new game begins with. The Naming hands over a named character; this says where the story opens, on what quest and after which cinematic, so a content pack can open somewhere else entirely without touching code. The Foundling wakes at the top of the Hushline Stair, in the ash, and is walked out of it. The cinematic plays first and the quest starts when control is handed back (DESIGN 5.1a).",
+    "description": "What a new game begins with. The Naming hands over a named character; this says where the story opens, on what quest, after which cinematic, and who speaks first, so a content pack can open somewhere else entirely without touching code. The Foundling stands at the Stair Head, the Wardens' camp at the top of the Hushline Stair, with the mist behind and the Warden at her fire in front; the cinematic plays first, the quest starts when control is handed back, and the first words are the greeter's own (DESIGN 5.1a).",
     "quest": "core:quest/the_naming",
-    "place": "core:poi/hushline_stair",
+    "place": "core:poi/stair_head",
     "region": "core:region/cinderlea",
-    "cinematic": "core:cinematic/opening"
+    "cinematic": "core:cinematic/opening",
+    "greeter": "core:npc/wren_tallow"
   }
 ]

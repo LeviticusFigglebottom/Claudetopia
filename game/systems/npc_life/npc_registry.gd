@@ -56,6 +56,11 @@ func _ready() -> void:
 	EventBus.cell_loaded.connect(_on_cell_loaded)
 	EventBus.cell_unloaded.connect(_on_cell_unloaded)
 	EventBus.weather_changed.connect(_on_weather_changed)
+	# a def's `holds` follow the story (Schedules.held_entry), so the story moving on is a reason
+	# to look again, as the clock is
+	EventBus.quest_started.connect(_on_story_moved)
+	EventBus.quest_stage_changed.connect(_on_story_moved)
+	EventBus.quest_completed.connect(_on_story_moved)
 
 
 # --- state ---------------------------------------------------------------------------------
@@ -239,6 +244,10 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 
 
 func _on_hour_changed(_hour: int) -> void:
+	simulate_all()
+
+
+func _on_story_moved(_quest_id: String = "", _detail: Variant = null) -> void:
 	simulate_all()
 
 

@@ -221,6 +221,24 @@ func test_a_new_game_plays_the_opening_and_a_continue_does_not() -> void:
 		await _settle()
 		assert_true(_quest_active("core:quest/the_naming"), "the Naming starts when control comes back")
 		assert_true(UI.hud_visible, "with the HUD")
+		# ...at the Stair Head, with the Warden there to speak first (DESIGN §5.1a, the start)
+		var body := _player(w)
+		assert_true(Vector2(body.global_position.x, body.global_position.z).distance_to(
+				WorldProbe.xz_of(ContentDB.get_or_empty("core:poi/stair_head"))) < 3.0, "control comes back at the Stair Head")
+		var services := _tree().get_first_node_in_group("game_services")
+		assert_true(services != null and str(services.get("first_words")).begins_with("There you are."),
+				"the Warden's own first words are said as control comes back")
+		var wren: Node3D = null
+		var until_wren := Time.get_ticks_msec() + 30000
+		while wren == null and Time.get_ticks_msec() < until_wren:
+			await _tree().process_frame
+			if NpcRegistry.instance != null:
+				wren = NpcRegistry.instance.actor("core:npc/wren_tallow") as Node3D
+		assert_true(wren != null, "the Warden is stood up at the start")
+		if wren != null:
+			await _settle(4)
+			var apart := wren.global_position.distance_to(body.global_position)
+			assert_true(apart > 3.0 and apart < 12.0, "at her fire, %.1f m in front of the player" % apart)
 		assert_true(CinematicPlayer.should_play(OPENING), "it could play again, now nothing else is")
 		Settings.set_value("gameplay", "play_opening", false, false)
 		assert_false(CinematicPlayer.should_play(OPENING), "unless the player has said never again")

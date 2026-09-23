@@ -41,6 +41,9 @@ const OPENING := "core:opening/new_game"
 var services: Dictionary = {}
 ## Off only for a bench that wants one service and not the whole country standing up around it.
 var installs_on_ready := true
+## What the opening's greeter said when control was handed over, for a test or the flow probe.
+var first_words := ""
+var _new_game_begun := false
 
 
 func _ready() -> void:
@@ -122,13 +125,18 @@ func loot_context() -> Dictionary:
 ## the first quest of the game never started and the main thread could not be entered at all.
 ## Starting it is all this does: everything else about a new game is a system's own business.
 func begin_new_game() -> void:
-	GameState.set_flag("new_game", false)
+	if _new_game_begun:
+		return
+	_new_game_begun = true
 	var opening := ContentDB.get_or_empty(OPENING)
 	# The opening (DESIGN §5.1a) plays first, and the story starts when it hands control back, so
 	# the quest's first objective is the first thing the HUD says rather than a toast under the
 	# pictures. This is the cinematic's only way into the new-game flow; it returns at once when
-	# there is nothing to play or the player has turned it off.
+	# there is nothing to play or the player has turned it off. The `new_game` flag stays up until
+	# then: it is what holds the greeter at the start while the pictures play (her npc def's
+	# `holds`), and the quest's own stage holds her from the hand-over on.
 	await CinematicPlayer.play_opening(opening)
+	GameState.set_flag("new_game", false)
 	var quest := str(opening.get("quest", ""))
 	if quest.is_empty() or not ContentDB.has(quest):
 		Log.warn("GameServices", "no opening quest in %s" % OPENING)
@@ -142,6 +150,24 @@ func begin_new_game() -> void:
 	log_node.call("start", quest)
 	new_game_started.emit(quest)
 	Log.info("GameServices", "new game: started %s" % quest)
+	_first_words(str(opening.get("greeter", "")))
+
+
+## Somebody speaks first: the opening's greeter says the greeting their own dialogue has for this
+## moment (the Warden's for the Naming's first stage), as a line on the screen with their name on
+## it, the moment control is handed over. Nothing is said if the greeter has no line for now.
+func _first_words(greeter: String) -> void:
+	if greeter.is_empty() or not ContentDB.has(greeter):
+		return
+	var runner: Node = Social.dialogue if Social != null else null
+	if runner == null or not runner.has_method("greeting_for"):
+		return
+	var line := str(runner.call("greeting_for", greeter))
+	var hud := UI.hud()
+	if line.is_empty() or hud == null or not hud.has_method("show_subtitle"):
+		return
+	hud.call("show_subtitle", "%s: %s" % [str(ContentDB.get_or_empty(greeter).get("name", "")), line], 6.0)
+	first_words = line
 
 
 func service(display_name: String) -> Node:

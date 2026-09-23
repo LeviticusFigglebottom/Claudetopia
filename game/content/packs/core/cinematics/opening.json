@@ -123,10 +123,10 @@
         "id": "the_stair", "duration": 16.0, "time": 7.2, "weather": "core:weather/thin_sun", "fov": 55,
         "handover": true,
         "keys": [
-          {"t": 0.0, "at": {"place": "player", "bearing": 165, "distance": 150, "height": 60},
-           "look": {"place": "player", "bearing": 0, "distance": 110, "height": 10}},
-          {"t": 0.6, "at": {"place": "player", "bearing": 174, "distance": 28, "height": 8},
-           "look": {"place": "player", "bearing": 0, "distance": 90, "height": 4}},
+          {"t": 0.0, "at": {"place": "player", "bearing": 174, "distance": 330, "height": 55},
+           "look": {"place": "player", "bearing": 180, "distance": 60, "height": 25}},
+          {"t": 0.6, "at": {"place": "player", "bearing": 176, "distance": 34, "height": 40},
+           "look": {"place": "player", "bearing": 5, "distance": 60, "height": 6}},
           {"t": 1.0, "at": "player_camera"}
         ],
         "lines": [

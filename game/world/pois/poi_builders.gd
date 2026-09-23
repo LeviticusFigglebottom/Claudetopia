@@ -55,6 +55,9 @@ static func build(d: PoiDressing) -> void:
 ## on a post; who camps here decides the rest. A fire that "went out" is cold: no light, ash,
 ## and the cups its sitters were passing set down around it.
 static func camp(d: PoiDressing) -> void:
+	if PoiKit.brief_says(d.brief, ["head of the hushline stair"]):
+		_camp_stair_head(d)
+		return
 	var k := d.kit
 	var m := d.masonry
 	var cold := PoiKit.brief_says(d.brief, ["went out", "cold"])
@@ -190,6 +193,169 @@ static func camp(d: PoiDressing) -> void:
 		m.wall(wall, w0, w1, 1.3, 0.35)
 		m.commit(wall, k.surface("stone"), "Windbreak", true)
 	m.commit(timber, k.surface("timber"), "Timber")
+
+
+## The Stair Head: the Wardens' camp at the top of the Hushline Stair, where a new game hands
+## over (DESIGN §5.1a). The POI's own position is where the Foundling stands, and everything is
+## laid out from there towards the place its `path` leads, so the first view of the game is the
+## camp in front, the Warden by its fire, the waystones going away down the heath and the Choir on
+## the skyline. Behind: the two Oroth piers at the head of the stair and Wren's Hearthstone.
+static func _camp_stair_head(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var timber := m.begin()
+	var stone := m.begin()
+	var to_id := str(d.path.get("to", ""))
+	var to_xz := WorldProbe.xz_of(ContentDB.get_or_empty(to_id)) if to_id != "" else Vector2.ZERO
+	var ahead := Vector2(to_xz.x - k.origin.x, to_xz.y - k.origin.z) if to_xz != Vector2.ZERO else Vector2(0.0, -1.0)
+	ahead = ahead.normalized() if ahead.length() > 0.5 else Vector2(0.0, -1.0)
+	var right := Vector2(-ahead.y, ahead.x)
+	var at := func(forward: float, side: float) -> Vector2:
+		return ahead * forward + right * side
+	var yaw := PoiKit.yaw_of(ahead)
+
+	# the fire the Warden keeps, a pace off the line of sight from where the Foundling stands
+	var fire: Vector2 = at.call(8.6, -1.8)
+	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), k.rng.randf_range(0.0, TAU), 1.15)
+	var ring: Array = []
+	for p in k.ring(9, 0.95, fire, 0.1):
+		var pp: Vector2 = p
+		ring.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y), k.rng.randf_range(0.0, TAU),
+				k.rng.randf_range(0.09, 0.14)))
+	k.scatter(k.rock("boulder"), ring)
+	k.light(k.on_ground(fire.x, fire.y, 0.9), Color(1.0, 0.68, 0.35), 3.0, 14.0)
+	k.puffs(k.on_ground(fire.x, fire.y, 0.7), Vector3(0.15, 0.1, 0.15), 0.7, 10,
+			Color(0.58, 0.58, 0.58, 0.3), 1.2, 6.0)
+	for p in k.ring(3, 2.2, fire, 0.15, 0.3):
+		var pp: Vector2 = p
+		k.place(k.prop("stool"), k.on_ground(pp.x, pp.y), PoiKit.yaw_of(fire - pp))
+
+	# where the Warden stands: by the fire, turned to the Foundling
+	var wren: Vector2 = at.call(6.4, 2.1)
+	var spot := NpcSpot.new()
+	spot.name = "wren_stair_head"
+	spot.place_id = d.poi_id
+	spot.position = k.on_ground(wren.x, wren.y)
+	spot.rotation.y = atan2(wren.x, wren.y)      # -Z (its forward) points back at the Foundling
+	k.root.add_child(spot)
+
+	# two tents turned to the fire, a bedroll in each mouth
+	for spec in [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]:
+		var t: Vector2 = at.call(float(spec[0]), float(spec[1]))
+		var tyaw := PoiKit.yaw_of(fire - t)
+		k.place(k.prop("tent"), k.on_ground(t.x, t.y), tyaw, float(spec[2]), true, Vector3.ZERO, true)
+		var mouth := t + (fire - t).normalized() * 2.5
+		k.place(k.prop("bedroll"), k.on_ground(mouth.x, mouth.y), tyaw + PI * 0.5)
+
+	# the cart they came up in, off to the side, with what it carried
+	var cart: Vector2 = at.call(2.5, -9.0)
+	var cyaw := yaw + 0.55
+	k.place(k.prop("cart"), k.on_ground(cart.x, cart.y), cyaw, 1.0, true, Vector3.ZERO, true)
+	var load_at: Vector2 = cart + right * 2.2
+	k.place(k.prop("crate"), k.on_ground(load_at.x, load_at.y), k.rng.randf_range(0.0, TAU))
+	k.place(k.prop("sack"), k.on_ground(load_at.x + 0.8, load_at.y + 0.5), k.rng.randf_range(0.0, TAU))
+	k.place(k.prop("barrel"), k.on_ground(load_at.x - 0.7, load_at.y + 0.9), 0.0)
+	var rail: Vector2 = cart - ahead * 4.0
+	k.place(k.prop("fence_post_rail"), k.on_ground(rail.x, rail.y), yaw + PI * 0.5)
+
+	# the Wardens' colours: two poles either side of the way out, grey-green cloth, a bell each
+	var cloth := PoiKit.plain(Color(0.33, 0.40, 0.33), 0.95)
+	cloth.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for s in [-1.0, 1.0]:
+		var pole: Vector2 = at.call(17.0, 3.4 * float(s) - 1.0)
+		var top := m.post(timber, pole, 4.4, 0.14)
+		var bar := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), top - Vector3(0.0, 0.25, 0.0))
+		m.block(timber, bar, Vector3(1.5, 0.08, 0.08))
+		m.sheet(top - Vector3(0.0, 0.3, 0.0), yaw, 1.2, 2.3, cloth, "Banner", 0.12, true)
+		k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(right.x, 0.0, right.y) * 0.72,
+				k.rng.randf_range(0.0, TAU), 1.0, false)
+
+	# a signpost at the way out, and a lamp on a post by the fire and another at the first stone
+	var sign_at: Vector2 = at.call(18.5, 1.6)
+	k.place(k.prop("signpost"), k.on_ground(sign_at.x, sign_at.y), yaw, 1.0, true, Vector3.ZERO, true)
+	for lamp in [at.call(10.0, -4.4), at.call(19.5, -3.0)]:
+		_lamp_post(k, m, timber, lamp as Vector2, yaw)
+
+	# behind: the head of the stair. Two Oroth piers, the top steps going over the edge, and the
+	# Hearthstone that heard the name first
+	for s in [-1.0, 1.0]:
+		var p: Vector2 = at.call(-6.2, 3.4 * float(s))
+		m.drum(stone, Transform3D(Basis.IDENTITY, k.on_ground(p.x, p.y)), 0.85, 4.4, 0.25, NAN, true, 0.55)
+	var head: Vector2 = at.call(-6.8, 0.0)
+	m.steps(stone, head, -ahead, k.on_ground(head.x, head.y).y, 5, -0.34, 0.95, 5.6, 1.1)
+	var hs: Vector2 = at.call(-3.4, -2.6)
+	k.hearthstone(k.on_ground(hs.x, hs.y), yaw, d.poi_id, d.display_name)
+
+	# the heath round it: grey grass, a dead ash for a silhouette against the sky
+	var grass: Array = []
+	for i in 46:
+		var a := k.rng.randf_range(0.0, TAU)
+		var r := k.rng.randf_range(5.0, 22.0)
+		var p := Vector2(cos(a), sin(a)) * r
+		if p.distance_to(fire) < 3.0 or p.distance_to(wren) < 1.5 or p.length() < 3.0:
+			continue
+		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.25)))
+	k.scatter(k.flora("grey_grass"), grass, false, false, false)
+	var ash: Vector2 = at.call(4.0, 13.0)
+	k.place(k.tree("dead_ash_tree"), k.on_ground(ash.x, ash.y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
+
+	_waymarks(d, timber)
+	m.commit(timber, k.surface("timber"), "Timber", true)
+	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
+
+
+## A lantern hung from an arm on a post, lit.
+static func _lamp_post(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, at: Vector2, yaw: float) -> void:
+	var top := m.post(timber, at, 2.7, 0.15)
+	var arm := Vector3(sin(yaw), 0.0, cos(yaw)) * 0.45
+	m.block(timber, Transform3D(Basis(Vector3.UP, yaw), top + arm * 0.5 - Vector3(0.0, 0.06, 0.0)),
+			Vector3(0.08, 0.08, 0.9))
+	var lantern := k.prop("lantern_hanging")
+	if lantern == "":
+		lantern = k.prop("lantern_standing")
+	k.place(lantern, top + arm - Vector3(0.0, 0.55, 0.0), yaw, 1.0, false, Vector3.ZERO, true)
+	k.light(top + arm - Vector3(0.0, 0.3, 0.0), Color(1.0, 0.8, 0.5), 1.6, 9.0)
+
+
+## The way a POI's `path` names, marked on the ground: a waystone every twenty-odd metres along
+## its points, alternating sides, and a lamp at every third. Built as silhouette pieces too, so
+## the stones are still there when the POI's own cell has dropped to the far ring behind a
+## player who has walked most of the way.
+static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var via: Array = d.path.get("via", [])
+	if via.size() < 2:
+		return
+	var pts: Array[Vector2] = []
+	for p in via:
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	var stones: Array = []
+	var every := 22.0
+	var carried := every * 0.8
+	var n := 0
+	for i in range(pts.size() - 1):
+		var a := pts[i]
+		var b := pts[i + 1]
+		var seg := b - a
+		var length := seg.length()
+		if length < 0.01:
+			continue
+		var dir := seg / length
+		var side := Vector2(-dir.y, dir.x)
+		var s := every - carried
+		while s <= length:
+			var p := a + dir * s + side * (1.7 if n % 2 == 0 else -1.7)
+			var g := k.on_ground(p.x, p.y, -0.15)
+			stones.append(PoiKit.transform_at(g, k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.36),
+					Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))))
+			if n % 3 == 1:
+				_lamp_post(k, m, timber, a + dir * s - side * (1.7 if n % 2 == 0 else -1.7), PoiKit.yaw_of(dir))
+			n += 1
+			s += every
+		carried = length - (s - every)
+	k.scatter(k.rock("standing_stone"), stones, true, true)
 
 
 # --- shrines ----------------------------------------------------------------------------------------
