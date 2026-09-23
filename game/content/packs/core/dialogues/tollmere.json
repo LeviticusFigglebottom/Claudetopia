@@ -39,6 +39,12 @@
       }
     ],
     "nodes": {
+    "q_the_stride_dedication_offer": {"speaker": "Cassa Binder", "text": "I want the words. A rubbing is how you get words off a stone without the stone. — A rafter told me, over a book he could not read and bought anyway, that the half-cut block in the Old Quarry in the Wold has Oroth on its hidden face: the Stride's own dedication, cut and never laid. The Guild will hear of it the same way I did, and the Guild has a use for good granite, which is doorsteps. — Take paper and charcoal. The weavers like the cut face. I am told they do not like charcoal, which is not the same thing as being frightened of it.", "choices": [{"text": "I'll bring you the rubbing.", "effects": [{"start_quest": "core:quest/the_stride_dedication"}], "next": "q_the_stride_dedication_accept"}, {"text": "Not now.", "next": "hub"}]},
+    "q_the_stride_dedication_accept": {"speaker": "Cassa Binder", "text": "Do not fold it. — I will know. A fold in a rubbing is a lie told in the grain, and I do not bind lies unless somebody pays me extra and signs for it.", "next": "hub"},
+    "q_the_stride_dedication_decide_print_it": {"speaker": "Cassa Binder", "text": "Forty to the Spire and four hundred to the Row, and one to the Guild, gratis, with a ribbon. — I will put your name in the front. No? Then I will put 'a walker', which is what the stone says, more or less.", "next": "hub"},
+    "q_the_stride_dedication_decide_sell_to_the_guild": {"speaker": "Cassa Binder", "text": "To the Guild. — I will do it, because I said I would do what you said, and I will copy it out first in my own hand on the back of an invoice, because I am a binder and not a saint.", "next": "hub"},
+    "q_the_stride_dedication_decide_to_the_wold": {"speaker": "Cassa Binder", "text": "The Woodfolk. — Nobody in this city has ever asked them anything. Go on, then. Take it to Elderhold. Tell them a bookbinder sends her compliments and would like to know what the third line means, if they do.", "next": "hub"},
+    "q_the_stride_dedication_decide": {"speaker": "Cassa Binder", "text": "Two hundred and six. The Guild has been counting wrong for four hundred years and charging by the count. — I could bind this in a week and sell forty copies to the Spire and four hundred to the Row, and the Guild would never forgive me, and I would sleep like a child. Or not. It is your rubbing. You walked into the Wold for it.", "choices": [{"text": "Bind it. Sell it. Let the city read it.", "effects": [{"quest_choice": ["core:quest/the_stride_dedication", "print_it"]}], "next": "q_the_stride_dedication_decide_print_it"}, {"text": "Sell it to the Guild.", "effects": [{"quest_choice": ["core:quest/the_stride_dedication", "sell_to_the_guild"]}], "next": "q_the_stride_dedication_decide_sell_to_the_guild"}, {"text": "Take it back to the Wold. It's their stone.", "effects": [{"quest_choice": ["core:quest/the_stride_dedication", "to_the_wold"]}], "next": "q_the_stride_dedication_decide_to_the_wold"}, {"text": "Let me think on it.", "next": "hub"}]},
       "greet": {
         "speaker": "Cassa Binder",
         "text": "Mind the boards, they're wet. Books on the shelf, tomes in the press, and anything on the bench is somebody else's and not for sale no matter what you offer.",
@@ -73,6 +79,8 @@
             "conditions": [{"quest_at": ["core:quest/against_the_bell", "the_charter_entry"]}],
             "next": "the_strongroom_entry"
           },
+          {"text": "The block in the Old Quarry. You want a rubbing.", "next": "q_the_stride_dedication_offer", "conditions": [{"quest_not_done": "core:quest/the_stride_dedication"}, {"not": {"quest_active": "core:quest/the_stride_dedication"}}]},
+          {"text": "Two hundred and six lamps. The last stone isn't laid.", "next": "q_the_stride_dedication_decide", "conditions": [{"quest_at": ["core:quest/the_stride_dedication", "whose_stone"]}]},
           {
             "text": "Nothing today.",
             "next": "bye"

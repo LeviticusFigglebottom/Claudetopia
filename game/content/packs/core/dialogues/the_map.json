@@ -8,6 +8,30 @@
    {
     "conditions": [
      {
+      "flag": "notch_walker_put_down"
+     }
+    ],
+    "text": "The notch did not move this spring. I have not decided yet whether to thank you. Sit, drink; the water is clean, and I would like somebody to be glad of it."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "notch_walker_let_walk"
+     }
+    ],
+    "text": "She came up again on Hushday. I filled the flask for her and put it on the lip and went inside. The notch is a finger higher. I cut it true."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "notch_walker_to_order"
+     }
+    ],
+    "text": "Two knights came up the bed with a bell and walked her back down. They did not say where to. The Order does not say, and I have stopped asking, because they looked sorry, and a sorry knight is a rare thing."
+   },
+   {
+    "conditions": [
+     {
       "renown_min": 150
      }
     ],
@@ -35,6 +59,32 @@
      {
       "text": "Is Ashwell on the Roll?",
       "next": "topic_3"
+     },
+     {
+      "text": "You wanted somebody to walk the bed to the Choir.",
+      "next": "q_the_notch_on_the_post_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_notch_on_the_post"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_notch_on_the_post"
+        }
+       }
+      ]
+     },
+     {
+      "text": "It is a pilgrim, Ada. Walking water back up the bed.",
+      "next": "q_the_notch_on_the_post_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_notch_on_the_post",
+         "whats_coming_up"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -76,6 +126,91 @@
     "speaker": "Ada Welling",
     "text": "Mind the bed on your way down, if it is down you are going. The glass cuts, and it cuts clean, and you do not feel it until you are home.",
     "next": "hub"
+   },
+   "q_the_notch_on_the_post_offer": {
+    "speaker": "Ada Welling",
+    "text": "I did, and I do. — The notch is above last year's. I measured three times. And this week a flask came back up: full, on the lip of the Wellspring, with my own tally cut in the neck. Nine hundred and twelve. I have filled nine hundred and forty and not one has come back up the road, and I would know. — Walk down the bed to the spring and bring it me, and then go on to the Greyline Stones and see where the grey begins. Ash Watch lit its beacon last night and nobody on its roll will own to it. Somebody is lying, or somebody is frightened, and in my experience it is the same somebody.",
+    "choices": [
+     {
+      "text": "I'll walk the bed.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_notch_on_the_post"
+       }
+      ],
+      "next": "q_the_notch_on_the_post_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_notch_on_the_post_accept": {
+    "speaker": "Ada Welling",
+    "text": "Mind the glass. It cuts clean, and you do not feel it until you are home. — And if the Watch gives you their log, read all of it. The Wardens write down everything and then do not read it, and I have always thought that was a waste of good ink.",
+    "next": "hub"
+   },
+   "q_the_notch_on_the_post_decide_put_her_down": {
+    "speaker": "Ada Welling",
+    "text": "Before dawn, then, at the lip. — Be quick with her. She was never quick with anything, and she would not want to be waited for.",
+    "next": "hub"
+   },
+   "q_the_notch_on_the_post_decide_let_her_walk": {
+    "speaker": "Ada Welling",
+    "text": "To somebody. — Yes. That is what a flask is for. I will cut the notch where the grey is and I will not pretend it is lower, and if it comes to the door I will fill her flask myself.",
+    "next": "hub"
+   },
+   "q_the_notch_on_the_post_decide_tell_the_order": {
+    "speaker": "Ada Welling",
+    "text": "Theirs. They read her name at Greywatch and she did not stay read. — Go to Pilgrim's Ash and tell the knight who keeps the night. They will want to know their Roll has a hole in it.",
+    "next": "hub"
+   },
+   "q_the_notch_on_the_post_decide": {
+    "speaker": "Ada Welling",
+    "text": "...Hild Marrow. Nine hundred and twelve. She had a laugh like a gate, and she bought bread off me for the road and gave half of it to the horses. — The grey comes up behind her. Every stride. — What would you have me do? You have seen it and I have only heard. I am asking you as the well-warden, and I will cut the notch at whatever you say.",
+    "choices": [
+     {
+      "text": "Put her down at the spring, before she fills another.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_notch_on_the_post",
+         "put_her_down"
+        ]
+       }
+      ],
+      "next": "q_the_notch_on_the_post_decide_put_her_down"
+     },
+     {
+      "text": "Let her walk. She is carrying water to somebody.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_notch_on_the_post",
+         "let_her_walk"
+        ]
+       }
+      ],
+      "next": "q_the_notch_on_the_post_decide_let_her_walk"
+     },
+     {
+      "text": "Tell the Order. She is theirs.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_notch_on_the_post",
+         "tell_the_order"
+        ]
+       }
+      ],
+      "next": "q_the_notch_on_the_post_decide_tell_the_order"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -105,6 +240,32 @@
      {
       "text": "What was Gosford like?",
       "next": "topic_3"
+     },
+     {
+      "text": "The twelfth sluice. I could sit the night with you.",
+      "next": "q_the_twelfth_sluice_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_twelfth_sluice"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_twelfth_sluice"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The twelfth paddle was Gosford's.",
+      "next": "q_the_twelfth_sluice_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_twelfth_sluice",
+         "what_wynstead_does"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -146,8 +307,111 @@
     "speaker": "Hal Wynstead",
     "text": "If you are going west, keep off the low meadow. It looks like grass. It is a hand of water with grass in it.",
     "next": "hub"
+   },
+   "q_the_twelfth_sluice_offer": {
+    "speaker": "Hal Wynstead",
+    "text": "Would you. — I have sat two, and my knees are forty years older than the meadows and they told me so. It is the twelfth paddle, the one with no name on its post; my grandfather could not tell me why it had none and his grandfather would not. The water goes down the Gosford lane. Somebody wants that lane under water, and I would like to know who before the hay does.",
+    "choices": [
+     {
+      "text": "I'll sit the third night.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_twelfth_sluice"
+       }
+      ],
+      "next": "q_the_twelfth_sluice_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_twelfth_sluice_accept": {
+    "speaker": "Hal Wynstead",
+    "text": "After dark, then, by the twelfth. Bring a coat; the water is warmer than the air, and it knows it. — If it is a Merrowby boy with a grudge, bring him to me. If it is not, do not bring it to me.",
+    "next": "hub"
+   },
+   "q_the_twelfth_sluice_decide_name_it": {
+    "speaker": "Hal Wynstead",
+    "text": "Then I will cut it, and I will cut it deep, and my cousin can write to me about the hay price. A meadow that is watered is a meadow that is kept.",
+    "next": "hub"
+   },
+   "q_the_twelfth_sluice_decide_nail_it": {
+    "speaker": "Hal Wynstead",
+    "text": "Nailed, then. — It is the sensible thing, and I have been sensible for forty years, and I will pay you for your night because it was a night. I will not sleep better. I did not expect to.",
+    "next": "hub"
+   },
+   "q_the_twelfth_sluice_decide_tell_the_wardens": {
+    "speaker": "Hal Wynstead",
+    "text": "The Rest, then. They cut the name on their stone; they can keep an eye on what it opens. I will send the boy up in the morning. I will not go myself. I have walked every yard of this Vale with water in my boots except that one.",
+    "next": "hub"
+   },
+   "q_the_twelfth_sluice_decide": {
+    "speaker": "Hal Wynstead",
+    "text": "Gosford's. — Well. Nine hearths, and they dug the twelfth cut with the rest of us, and we took their name off it the spring they went, as if a post could catch it. And now they come up the lane in the dark to water a meadow they cannot eat off. — I am a sluice-keeper. Tell me what the paddle is.",
+    "choices": [
+     {
+      "text": "Cut the name back. Let them water it on humming nights.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_twelfth_sluice",
+         "name_it"
+        ]
+       }
+      ],
+      "next": "q_the_twelfth_sluice_decide_name_it"
+     },
+     {
+      "text": "Nail it down. The hay is yours.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_twelfth_sluice",
+         "nail_it"
+        ]
+       }
+      ],
+      "next": "q_the_twelfth_sluice_decide_nail_it"
+     },
+     {
+      "text": "Give it to the Wardens. Let them watch the lane.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_twelfth_sluice",
+         "tell_the_wardens"
+        ]
+       }
+      ],
+      "next": "q_the_twelfth_sluice_decide_tell_the_wardens"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "gosford_paddle_named"
+     }
+    ],
+    "text": "Twelve names on twelve posts. The Toll hummed on Hushday and the paddle lifted itself and I sat and watched it, with a coat on, and it was a good night."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "gosford_paddle_nailed"
+     }
+    ],
+    "text": "The hay is the best in six years. You would think that would be the end of it."
+   }
+  ]
  },
  {
   "id": "core:dialogue/lin_cresswell",
@@ -171,6 +435,32 @@
      {
       "text": "Is it true Tollmere stole your sauce?",
       "next": "topic_2"
+     },
+     {
+      "text": "I'll find out what turned the top bed.",
+      "next": "q_the_top_bed_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_top_bed"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_top_bed"
+        }
+       }
+      ]
+     },
+     {
+      "text": "It is the water. Somebody was robbing the bridge.",
+      "next": "q_the_top_bed_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_top_bed",
+         "the_toll_to_the_water"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -202,8 +492,111 @@
     "speaker": "Lin Cresswell",
     "text": "Take a bunch. It is the second bed's, which is to say not quite right, and still better than anything the city will sell you.",
     "next": "hub"
+   },
+   "q_the_top_bed_offer": {
+    "speaker": "Lin Cresswell",
+    "text": "Will you. It is the water, the chalk or the Toll, and I can taste the first, and I can see the second, and the third I will leave to people who like being frightened. — The stream is low. It has never been low in spring. Walk up to the Cress Bridge and count the coins in the joints; there should be one in every joint, and there is always one in every joint, because nobody would dream of taking one.",
+    "choices": [
+     {
+      "text": "I'll walk up to the bridge.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_top_bed"
+       }
+      ],
+      "next": "q_the_top_bed_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_top_bed_accept": {
+    "speaker": "Lin Cresswell",
+    "text": "Count them. If a joint is empty, somebody dreamed. — And do not eat the cress on the way. Not the top bed. It will not hurt you. It will not do anything, which is worse.",
+    "next": "hub"
+   },
+   "q_the_top_bed_decide_put_them_back": {
+    "speaker": "Lin Cresswell",
+    "text": "Every coin, in its own joint, with a hammer and an apology. I will come with you and hold the lantern. — It is not superstition. It is manners.",
+    "next": "hub"
+   },
+   "q_the_top_bed_decide_to_the_toll_house": {
+    "speaker": "Lin Cresswell",
+    "text": "The Guild. — Well, it is lost coin, and they do have a box. The water will not see a mark of it and the Guild will write it down, which is the nearest thing Tollmere has to a prayer.",
+    "next": "hub"
+   },
+   "q_the_top_bed_decide_keep_them": {
+    "speaker": "Lin Cresswell",
+    "text": "It already has. — Keep them, then. You did the walking. I will wedge my own in, one a day, and we shall see whose coin the Cressbourne likes better.",
+    "next": "hub"
+   },
+   "q_the_top_bed_decide": {
+    "speaker": "Lin Cresswell",
+    "text": "Robbing the water. — A Tollmere cutpurse. Of course a Tollmere cutpurse. Thirty-one coins, and the Cressbourne sulks like a cousin. And the kilns' lime grey all the way down, so the city's white walls will come up grey next and they will blame the Vale. — It is your purse now. What is it for?",
+    "choices": [
+     {
+      "text": "Back into the bridge, every coin.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_top_bed",
+         "put_them_back"
+        ]
+       }
+      ],
+      "next": "q_the_top_bed_decide_put_them_back"
+     },
+     {
+      "text": "The Guild has a box for lost coin at the Stride's Foot.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_top_bed",
+         "to_the_toll_house"
+        ]
+       }
+      ],
+      "next": "q_the_top_bed_decide_to_the_toll_house"
+     },
+     {
+      "text": "I'll keep them. The water will not miss them.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_top_bed",
+         "keep_them"
+        ]
+       }
+      ],
+      "next": "q_the_top_bed_decide_keep_them"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "cress_coins_returned"
+     }
+    ],
+    "text": "The top bed is green at the edges. It tastes of chalk again, and a little of cold iron, and a little of somebody's pocket, which I am choosing not to think about."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "cress_coins_kept"
+     }
+    ],
+    "text": "Still grey. I have put a coin in the bridge every morning. The water has not said anything. Water does not."
+   }
+  ]
  },
  {
   "id": "core:dialogue/gil_fallow",
@@ -227,6 +620,44 @@
      {
       "text": "Tell me about the grey ewe.",
       "next": "topic_2"
+     },
+     {
+      "text": "I'll find out who else has to say Thistle's name.",
+      "next": "q_thistle_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/thistle"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/thistle"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The new counts on the waystone are a shepherd's. Four strokes and a bar.",
+      "next": "q_thistle_whose_hand",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/thistle",
+         "whose_hand"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Who says Thistle's name, then?",
+      "next": "q_thistle_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/thistle",
+         "who_says_it"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -258,8 +689,116 @@
     "speaker": "Gil Fallow",
     "text": "If you pass the Rest, tell them Fallowfold's in and counted. They like to hear it, and I like them to.",
     "next": "hub"
+   },
+   "q_thistle_offer": {
+    "speaker": "Gil Fallow",
+    "text": "She stands at the south wall all day. At dusk she puts her head up as if she is counting something, and then she lies down. — The pasture runs down to the Ninth Waystone. I have not gone past it since I was twelve. I do not intend to start now, and I would be glad if somebody else did.",
+    "choices": [
+     {
+      "text": "I'll walk the pasture to the waystone.",
+      "effects": [
+       {
+        "start_quest": "core:quest/thistle"
+       }
+      ],
+      "next": "q_thistle_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_thistle_accept": {
+    "speaker": "Gil Fallow",
+    "text": "Past the thistles and down. You will know the stone; the pilgrims have worn a seat in it. — Look at what is cut on it. The Order counts bells there. I would like to know what else is being counted.",
+    "next": "hub"
+   },
+   "q_thistle_whose_hand": {
+    "speaker": "Gil Fallow",
+    "text": "...Show me. — The bar slants. — My father cut them like that. He said a straight bar was for men who did not have to count in the rain. He walked south the spring I was twenty, to see how far the sweet grass went, and the Order wrote him down as gone on, and I have been a shepherd whose father is a line in a book ever since. — He is counting a flock down there. And she can hear him.",
+    "next": "hub"
+   },
+   "q_thistle_decide_keep_her": {
+    "speaker": "Gil Fallow",
+    "text": "All of us, then, and loud. If he can hear it down there, good. Let him know who has her.",
+    "next": "hub"
+   },
+   "q_thistle_decide_let_her_go": {
+    "speaker": "Gil Fallow",
+    "text": "...Four strokes and a bar. — I will open it at dusk, when she lifts her head. I will not watch her go. I will count the flock after, as I always do, and I will count one fewer, and it will be right.",
+    "next": "hub"
+   },
+   "q_thistle_decide_read_his_name": {
+    "speaker": "Gil Fallow",
+    "text": "Read again. — They read him once and he did not stop. Perhaps once is not enough for a Fallow; we were never quick. Go up to the rim, to Greywatch, and have them read it slow.",
+    "next": "hub"
+   },
+   "q_thistle_decide": {
+    "speaker": "Gil Fallow",
+    "text": "The Vale says a thing is kept by being named. She has a name, and I say it, and so does every child in the fold. And now somebody else is counting. — You have been down there. You say.",
+    "choices": [
+     {
+      "text": "We say it. All of us, at the pond, until she goes in.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/thistle",
+         "keep_her"
+        ]
+       }
+      ],
+      "next": "q_thistle_decide_keep_her"
+     },
+     {
+      "text": "Open the gate. She is going to him.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/thistle",
+         "let_her_go"
+        ]
+       }
+      ],
+      "next": "q_thistle_decide_let_her_go"
+     },
+     {
+      "text": "Have the Order read his name again, so he stops counting.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/thistle",
+         "read_his_name"
+        ]
+       }
+      ],
+      "next": "q_thistle_decide_read_his_name"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "thistle_kept"
+     }
+    ],
+    "text": "She went in on the fourth night. She is still grey. She is also still in the pond every morning, which is more than can be said for most of them."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "thistle_let_go"
+     }
+    ],
+    "text": "The counts on the waystone went up by one last week. I cut one on the gate. That is all there is to say."
+   }
+  ]
  },
  {
   "id": "core:dialogue/pell_brambling",
@@ -287,6 +826,44 @@
      {
       "text": "Is Bramcombe old?",
       "next": "topic_3"
+     },
+     {
+      "text": "The sticks are one short. I'll find the sheep.",
+      "next": "q_one_short_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/one_short"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/one_short"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The extra sheep in the Pinfold has the old Bramcombe mark.",
+      "next": "q_one_short_the_old_mark",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/one_short",
+         "the_old_mark"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "It is your flock's wether. What do we do?",
+      "next": "q_one_short_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/one_short",
+         "the_penny"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -328,8 +905,108 @@
     "speaker": "Pell Brambling",
     "text": "Go gently on the down. The sheep are counted, even if the sticks disagree.",
     "next": "hub"
+   },
+   "q_one_short_offer": {
+    "speaker": "Pell Brambling",
+    "text": "There is no sheep to find. That is the whole trouble. — Every stick, every morning, one short, and I count the fold with my mouth and it is right. Maud says come to Merrowby and eat properly. — The hayward in Merrowby pens the Vale's strays at the Pinfold on the Eastway. If a sheep of ours is anywhere it is there, and if it is not there it is nowhere, and I would like to know which.",
+    "choices": [
+     {
+      "text": "I'll look in the Pinfold.",
+      "effects": [
+       {
+        "start_quest": "core:quest/one_short"
+       }
+      ],
+      "next": "q_one_short_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_one_short_accept": {
+    "speaker": "Pell Brambling",
+    "text": "Read his book. He writes down everything, the hayward; it is the only thing he and the Wardens have in common. — Do not ring the bell. That is for the owner. It would be a lie, from you.",
+    "next": "hub"
+   },
+   "q_one_short_the_old_mark": {
+    "speaker": "Pell Brambling",
+    "text": "A notch under and a notch over. — That is the beam. That is the flock that was on the down before the bell came down, and every one of them two hundred years dead. — And one of them is standing in a pound in the Vale with nobody to pay his penny, and our sticks know. Of course they know. A tally is only a thing you say with a knife.",
+    "next": "hub"
+   },
+   "q_one_short_decide_claim_it": {
+    "speaker": "Pell Brambling",
+    "text": "My penny, then, and my bell, and I will walk him up the Eastway myself with the dog. The sticks will come right. I do not know what the beam will do. I am not sure I want to.",
+    "next": "hub"
+   },
+   "q_one_short_decide_leave_it": {
+    "speaker": "Pell Brambling",
+    "text": "The hayward's. — Yes. It is not ours to pay for a flock two hundred years under the chalk. I will stop counting the beam. I will not stop hearing it.",
+    "next": "hub"
+   },
+   "q_one_short_decide_to_the_lambing_fold": {
+    "speaker": "Pell Brambling",
+    "text": "To the ewe that belongs to nobody. — A nobody's ewe and a nobody's wether. That is a flock. Go on, then. I will not come. Somebody has to count this one.",
+    "next": "hub"
+   },
+   "q_one_short_decide": {
+    "speaker": "Pell Brambling",
+    "text": "Our flock's. The combe's oldest count, and one short. — A beast nobody names goes quiet, the Vale says, and that is for villages, but I have kept sheep forty years and I have never seen why it should not be for sheep too.",
+    "choices": [
+     {
+      "text": "Pay the penny. Ring the bell. Walk him home.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/one_short",
+         "claim_it"
+        ]
+       }
+      ],
+      "next": "q_one_short_decide_claim_it"
+     },
+     {
+      "text": "Leave him. He is the hayward's now.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/one_short",
+         "leave_it"
+        ]
+       }
+      ],
+      "next": "q_one_short_decide_leave_it"
+     },
+     {
+      "text": "Drive him up to the grey lamb's ewe on Bram Down.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/one_short",
+         "to_the_lambing_fold"
+        ]
+       }
+      ],
+      "next": "q_one_short_decide_to_the_lambing_fold"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "one_short_claimed"
+     }
+    ],
+    "text": "The sticks agree and they are right. The beam is still one short. I have decided that is the beam's affair."
+   }
+  ]
  },
  {
   "id": "core:dialogue/tor_rookwright",
@@ -357,6 +1034,61 @@
      {
       "text": "Is there anything past the Brow?",
       "next": "topic_3"
+     },
+     {
+      "text": "You wanted somebody from outside to say which half is right.",
+      "next": "q_the_grey_on_the_green_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_grey_on_the_green"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_grey_on_the_green"
+        }
+       }
+      ]
+     },
+     {
+      "text": "I've seen the field and the cliff.",
+      "next": "q_the_grey_on_the_green_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_grey_on_the_green",
+         "the_well"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Has anyone seen your warrener?",
+      "next": "q_the_warreners_burrow_offer",
+      "conditions": [
+       {
+        "quest_done": "core:quest/the_grey_on_the_green"
+       },
+       {
+        "quest_not_done": "core:quest/the_warreners_burrow"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_warreners_burrow"
+        }
+       }
+      ]
+     },
+     {
+      "text": "He went into Tallow Barrow, after the ringing.",
+      "next": "q_the_warreners_burrow_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_warreners_burrow",
+         "what_the_down_keeps"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -398,8 +1130,196 @@
     "speaker": "Tor Rookwright",
     "text": "If you are going east, keep north of the elms. The rooks will tell you where south is. Listen to them.",
     "next": "hub"
+   },
+   "q_the_grey_on_the_green_offer": {
+    "speaker": "Tor Rookwright",
+    "text": "I did, and I am ashamed of it, and I have not changed my mind. — Half of them say take the carts to Bramcombe before the well turns. Half say leaving is how a village goes quiet, and they are not wrong either; I have read the Roll. I am the reeve and I cannot say, because whichever half I say, the other half is my cousins. — Go and look at what leaving looks like. The Last Field, south on the Brow. Then look at what staying looks like, which is the cliff. Then come and stand at the post.",
+    "choices": [
+     {
+      "text": "I'll go and look.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_grey_on_the_green"
+       }
+      ],
+      "next": "q_the_grey_on_the_green_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_grey_on_the_green_accept": {
+    "speaker": "Tor Rookwright",
+    "text": "The Last Field first. The Southcotes left their plough in it. It is still there. Something is still using it.",
+    "next": "hub"
+   },
+   "q_the_grey_on_the_green_decide_stay": {
+    "speaker": "Tor Rookwright",
+    "text": "Every name, every Tollday, louder than the grey. — That is the Vale's answer and it is a good one, and it will cost us the well, or it will not. I will chalk it up.",
+    "next": "hub"
+   },
+   "q_the_grey_on_the_green_decide_go": {
+    "speaker": "Tor Rookwright",
+    "text": "Go. — A village is its people. I have said that to myself for a month and never once aloud. I will say it at the post, and my cousins will not speak to me for a year, and then they will, in Bramcombe.",
+    "next": "hub"
+   },
+   "q_the_grey_on_the_green_decide_turn_the_stone": {
+    "speaker": "Tor Rookwright",
+    "text": "Turn her back. — She drowned facing it; she can watch it. And if she turns round again, we will know something the beacon does not. That is a Rookdown answer. It is not an answer. We shall like it very much.",
+    "next": "hub"
+   },
+   "q_the_grey_on_the_green_decide": {
+    "speaker": "Tor Rookwright",
+    "text": "Then say it at the post, not to me. — No. Say it to me first, so I can hear how it sounds before they do. My great-aunt's stone has turned to face us. The beacon was lit twice. The well is sweet today. Say.",
+    "choices": [
+     {
+      "text": "Stay, and say every name at the post each Tollday.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_grey_on_the_green",
+         "stay"
+        ]
+       }
+      ],
+      "next": "q_the_grey_on_the_green_decide_stay"
+     },
+     {
+      "text": "Go to Bramcombe while the water is sweet.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_grey_on_the_green",
+         "go"
+        ]
+       }
+      ],
+      "next": "q_the_grey_on_the_green_decide_go"
+     },
+     {
+      "text": "Turn her stone back to the Hush. Let the drowned watch for you.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_grey_on_the_green",
+         "turn_the_stone"
+        ]
+       }
+      ],
+      "next": "q_the_grey_on_the_green_decide_turn_the_stone"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_warreners_burrow_offer": {
+    "speaker": "Tor Rookwright",
+    "text": "Not since the Long Table. — He was never much for company; a warrener is a man who has chosen rabbits. But he comes down for bread on Tallowdays, and he has not, and the boy I sent to feed his ferrets came back white and will not say why except that the rabbits are leaving. — His camp is up under the Thornmarch in the gorse. Go up.",
+    "choices": [
+     {
+      "text": "I'll go up to his camp.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_warreners_burrow"
+       }
+      ],
+      "next": "q_the_warreners_burrow_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_warreners_burrow_accept": {
+    "speaker": "Tor Rookwright",
+    "text": "Take bread. If he is there, he will want it, and if he is not, the ferrets will.",
+    "next": "hub"
+   },
+   "q_the_warreners_burrow_decide_wall_it": {
+    "speaker": "Tor Rookwright",
+    "text": "Wall it, with chalk and flint and a Warden watching. If he wants to come out, he can knock. They say the barrow listens.",
+    "next": "hub"
+   },
+   "q_the_warreners_burrow_decide_leave_it": {
+    "speaker": "Tor Rookwright",
+    "text": "His own feet. — Yes. I will leave bread on the stone at the gap on Tallowdays, and I will not say who it is for.",
+    "next": "hub"
+   },
+   "q_the_warreners_burrow_decide_ferrets_to_tamwick": {
+    "speaker": "Tor Rookwright",
+    "text": "Tamwick's tanners know a boy who can whistle a ferret. The down will have a warrener by harvest, and he will stay out of the barrow, because I will tell him about this one.",
+    "next": "hub"
+   },
+   "q_the_warreners_burrow_decide": {
+    "speaker": "Tor Rookwright",
+    "text": "Into the barrow. — The Tollmere diggers came out of it without their spades in 1012 and it walled itself up behind them. And now it has a door in it and a warrener through it. — What do I do with a door, then? I am a reeve. I keep the green, the well, the rookery and the peace. Nobody told me about the down.",
+    "choices": [
+     {
+      "text": "Wall it up again.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_warreners_burrow",
+         "wall_it"
+        ]
+       }
+      ],
+      "next": "q_the_warreners_burrow_decide_wall_it"
+     },
+     {
+      "text": "Leave it. He chose to go.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_warreners_burrow",
+         "leave_it"
+        ]
+       }
+      ],
+      "next": "q_the_warreners_burrow_decide_leave_it"
+     },
+     {
+      "text": "Give his ferrets to Tamwick. The down needs a warrener.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_warreners_burrow",
+         "ferrets_to_tamwick"
+        ]
+       }
+      ],
+      "next": "q_the_warreners_burrow_decide_ferrets_to_tamwick"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "rookdown_stays"
+     }
+    ],
+    "text": "Every name, every Tollday. The patch is the same size this week. It has never been the same size two weeks running. I have chalked that up too, with a line under it."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "rookdown_goes"
+     }
+    ],
+    "text": "Long Table, the carts go. The rooks will stay. I have asked them. They did not answer, which is a rook's yes."
+   }
+  ]
  },
  {
   "id": "core:dialogue/tam_withy",
@@ -427,6 +1347,32 @@
      {
       "text": "Why the odd rod in every hurdle?",
       "next": "topic_3"
+     },
+     {
+      "text": "I'll find out what the pens are for.",
+      "next": "q_pens_with_no_gate_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/pens_with_no_gate"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/pens_with_no_gate"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The pens are for the grey beasts. The Wold won't sell rods for them.",
+      "next": "q_pens_with_no_gate_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/pens_with_no_gate",
+         "the_weave"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -468,8 +1414,103 @@
     "speaker": "Tam Withy",
     "text": "Mind the rod stacks on your way out. They are taller than they are steady, like most of us.",
     "next": "hub"
+   },
+   "q_pens_with_no_gate_offer": {
+    "speaker": "Tam Withy",
+    "text": "Would you. — I have asked the Wardens and they said something that comes back grey, and a Warden who says something instead of a thing has not decided whether to lie. And the Woodfolk have stopped selling me rods, which they have not done since the year my father sold them a hurdle he had not made. — Ask at the Rest. Ask plainly. Sergeant Dole will answer a plain question, it is the only kind he can hear.",
+    "choices": [
+     {
+      "text": "I'll ask at the Rest.",
+      "effects": [
+       {
+        "start_quest": "core:quest/pens_with_no_gate"
+       }
+      ],
+      "next": "q_pens_with_no_gate_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_pens_with_no_gate_accept": {
+    "speaker": "Tam Withy",
+    "text": "And then ask the Wold. I cannot; they look at me like a man asking for more mother. They may look at you like somebody else's mother, which is better.",
+    "next": "hub"
+   },
+   "q_pens_with_no_gate_decide_as_ordered": {
+    "speaker": "Tam Withy",
+    "text": "As ordered. — I will buy the rods from the Vale's own copses at twice the price and weave a worse hurdle with them, and I will know it every time I look at the pens, and the Wardens will not.",
+    "next": "hub"
+   },
+   "q_pens_with_no_gate_decide_a_gate_south": {
+    "speaker": "Tam Withy",
+    "text": "A gate on the grey side, and the door on the Vale side barred. — That is a hurdle. That is a hurdle a Woodfolk could sell me a rod for, too. I will take it to Aggie myself, with a jug.",
+    "next": "hub"
+   },
+   "q_pens_with_no_gate_decide_refuse": {
+    "speaker": "Tam Withy",
+    "text": "Not my work. — I will write to the Rest and tell them so, and they will find another weaver, and he will be a worse one, and the pens will fall down the first winter. There is some comfort in that. Not much.",
+    "next": "hub"
+   },
+   "q_pens_with_no_gate_decide": {
+    "speaker": "Tam Withy",
+    "text": "Beasts. — And whatever else comes back. I heard the after-a-while in it too, you know; Dole cannot keep a pause out of his voice to save his life. — And Aggie says no, because it is custom, and it is always custom with Aggie when she means it, and when she does not it is the price. — I have to weave something. Tell me what.",
+    "choices": [
+     {
+      "text": "Weave them as ordered.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/pens_with_no_gate",
+         "as_ordered"
+        ]
+       }
+      ],
+      "next": "q_pens_with_no_gate_decide_as_ordered"
+     },
+     {
+      "text": "Put a gate in the south side. Let them walk back down.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/pens_with_no_gate",
+         "a_gate_south"
+        ]
+       }
+      ],
+      "next": "q_pens_with_no_gate_decide_a_gate_south"
+     },
+     {
+      "text": "Refuse. It is not your work.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/pens_with_no_gate",
+         "refuse"
+        ]
+       }
+      ],
+      "next": "q_pens_with_no_gate_decide_refuse"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "pens_gated"
+     }
+    ],
+    "text": "Aggie sold me rods. At her price, not mine, and she came to see the gates herself. She said they would do. That is the most any Woodfolk has ever said about anything I made."
+   }
+  ]
  },
  {
   "id": "core:dialogue/cal_merriweather",
@@ -497,6 +1538,32 @@
      {
       "text": "Who paints the sign?",
       "next": "topic_3"
+     },
+     {
+      "text": "I'll find your Dunn.",
+      "next": "q_one_to_dunn_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/one_to_dunn"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/one_to_dunn"
+        }
+       }
+      ]
+     },
+     {
+      "text": "Your Dunn was Dunnet Hale, a keeper of Hound Watch.",
+      "next": "q_one_to_dunn_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/one_to_dunn",
+         "the_debt"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -538,8 +1605,111 @@
     "speaker": "Cal Merriweather",
     "text": "Mind the step on the way out; it's where the hare lands.",
     "next": "hub"
+   },
+   "q_one_to_dunn_offer": {
+    "speaker": "Cal Merriweather",
+    "text": "Find him and I will pour him the best in the house and stand him a second for his trouble, and then I will wipe that board with a clear heart for the first time in twenty years. — My aunt kept the board honest and she wrote that line and she never told me who he was, and I have never known her to write a debt she did not mean. — The Wardens off the towers drink here. Start with Hound Watch, over the down. Its keepers have the look.",
+    "choices": [
+     {
+      "text": "I'll ask at Hound Watch.",
+      "effects": [
+       {
+        "start_quest": "core:quest/one_to_dunn"
+       }
+      ],
+      "next": "q_one_to_dunn_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_one_to_dunn_accept": {
+    "speaker": "Cal Merriweather",
+    "text": "Tell the keeper the Hare sent you. He will want to know if his slate is clean. It is not.",
+    "next": "hub"
+   },
+   "q_one_to_dunn_decide_pour_it": {
+    "speaker": "Cal Merriweather",
+    "text": "Facing the Choir, the best in the house, and then the cup comes home and goes on the shelf behind the bar, where it should have been. I will wipe the board myself.",
+    "next": "hub"
+   },
+   "q_one_to_dunn_decide_write_his_name": {
+    "speaker": "Cal Merriweather",
+    "text": "Dunnet Hale, under One to Dunn, in my chalk under hers. — Let the drovers ask. I will tell them. A man is owed a drink, and the Hare knows who.",
+    "next": "hub"
+   },
+   "q_one_to_dunn_decide_tell_the_rest": {
+    "speaker": "Cal Merriweather",
+    "text": "The Rest scraped him off a board so that nobody would follow him down. — I understand it. I will tell them anyway. A Warden who is owed a drink is still a Warden.",
+    "next": "hub"
+   },
+   "q_one_to_dunn_decide": {
+    "speaker": "Cal Merriweather",
+    "text": "Dunnet Hale. — My aunt knew him, then. She would have. She knew every Warden who ever came off a tower with that look. And he went down to the Choir, and she wrote him a drink, and she carried a cup to the Last Look and kept it filled, and she never said. — The house owes him. Tell me how the house pays.",
+    "choices": [
+     {
+      "text": "Pour it at the Last Look, facing the Choir, and bring the cup home.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/one_to_dunn",
+         "pour_it"
+        ]
+       }
+      ],
+      "next": "q_one_to_dunn_decide_pour_it"
+     },
+     {
+      "text": "Write his name under the debt.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/one_to_dunn",
+         "write_his_name"
+        ]
+       }
+      ],
+      "next": "q_one_to_dunn_decide_write_his_name"
+     },
+     {
+      "text": "Tell the Rest. They took his name off.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/one_to_dunn",
+         "tell_the_rest"
+        ]
+       }
+      ],
+      "next": "q_one_to_dunn_decide_tell_the_rest"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "dunn_paid"
+     }
+    ],
+    "text": "The board's clean. First time in twenty years. I keep looking at the top left corner like a tongue at a gap."
+   },
+   {
+    "conditions": [
+     {
+      "flag": "dunn_named"
+     }
+    ],
+    "text": "Dunnet Hale. The drovers ask, and I tell them, and they drink to him. He is the best-drunk-to man on the downs."
+   }
+  ]
  },
  {
   "id": "core:dialogue/nella_candlewright",
@@ -563,6 +1733,32 @@
      {
       "text": "Why only half a candle?",
       "next": "topic_2"
+     },
+     {
+      "text": "You want to know whether anybody would say your name.",
+      "next": "q_would_anybody_say_it_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/would_anybody_say_it"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/would_anybody_say_it"
+        }
+       }
+      ]
+     },
+     {
+      "text": "Merrowby says your name. So does the knight at Greywatch, every night.",
+      "next": "q_would_anybody_say_it_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/would_anybody_say_it",
+         "the_answer"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -594,8 +1790,103 @@
     "speaker": "Nella Candlewright",
     "text": "Go gently on the rim. The Hush does not pull. It simply waits, like me.",
     "next": "hub"
+   },
+   "q_would_anybody_say_it_offer": {
+    "speaker": "Nella Candlewright",
+    "text": "Nobody here says names; it is the rule, and I made it mine the day I sat down. — I walked down from Merrowby with my mind made up and reached this rim and rested, and made a candle in the morning, and have made one every evening since. The Order says the ones who wait are not stopped, only slow. I think I am waiting to find out whether anybody would say my name if I stayed. — I cannot ask. If I walk north to ask, I have answered. You could ask. Ask Maud Brambling. She knows everything and says half of it, and the half is always true.",
+    "choices": [
+     {
+      "text": "I'll ask in Merrowby.",
+      "effects": [
+       {
+        "start_quest": "core:quest/would_anybody_say_it"
+       }
+      ],
+      "next": "q_would_anybody_say_it_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_would_anybody_say_it_accept": {
+    "speaker": "Nella Candlewright",
+    "text": "Do not tell her I sent you. — Tell her anyway. She will know. She always knows who sent people.",
+    "next": "hub"
+   },
+   "q_would_anybody_say_it_decide_stay": {
+    "speaker": "Nella Candlewright",
+    "text": "Stay, and be said. — Then this is not waiting any more. It is living on a rim and making candles, which is a thing a person can do on purpose. I will do it on purpose.",
+    "next": "hub"
+   },
+   "q_would_anybody_say_it_decide_go_home": {
+    "speaker": "Nella Candlewright",
+    "text": "Home. — As far as the first clean water, and then I shall see whether my legs remember the rest. Give me the evening to put out the last candle. Then we will walk.",
+    "next": "hub"
+   },
+   "q_would_anybody_say_it_decide_go_on": {
+    "speaker": "Nella Candlewright",
+    "text": "Read at the stones, every night, by a knight who knows my candles. — Then I can go. I have been afraid of going unsaid, and I will not be. Thank you. I will leave the tent to whoever sits down next.",
+    "next": "hub"
+   },
+   "q_would_anybody_say_it_decide": {
+    "speaker": "Nella Candlewright",
+    "text": "Every night. — On no roll, because I am not gone, only slow. — And my half-candle at the Cross, burning since midsummer and not shorter. — I put that there on my way south. I had forgotten. I had not forgotten. — Three years. Tell me what to do with it, and I will do it, because I have not been able to decide anything since I sat down, and I am very tired of this rim.",
+    "choices": [
+     {
+      "text": "Stay. You're said.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/would_anybody_say_it",
+         "stay"
+        ]
+       }
+      ],
+      "next": "q_would_anybody_say_it_decide_stay"
+     },
+     {
+      "text": "Go home and finish the candle. I'll walk with you.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/would_anybody_say_it",
+         "go_home"
+        ]
+       }
+      ],
+      "next": "q_would_anybody_say_it_decide_go_home"
+     },
+     {
+      "text": "Go on south. You'll be read.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/would_anybody_say_it",
+         "go_on"
+        ]
+       }
+      ],
+      "next": "q_would_anybody_say_it_decide_go_on"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "nella_stays_said"
+     }
+    ],
+    "text": "Sit, if you like. — You may say my name. I will allow it. Just the once."
+   }
+  ]
  },
  {
   "id": "core:dialogue/merrit_ash",
@@ -623,6 +1914,44 @@
      {
       "text": "What is at the end of the west walk?",
       "next": "topic_3"
+     },
+     {
+      "text": "Somebody's working Ossel's forge at night.",
+      "next": "q_ossels_forge_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/ossels_forge"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/ossels_forge"
+        }
+       }
+      ]
+     },
+     {
+      "text": "It comes through the North Gate at night, smelling of your trough.",
+      "next": "q_ossels_forge_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/ossels_forge",
+         "the_clapper"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Pellam Ashcombe asks you to read him the doors.",
+      "next": "q_ashcombe_on_the_roll_the_doors",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/ashcombe_on_the_roll",
+         "the_doors"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -664,6 +1993,96 @@
     "speaker": "Merrit Ash",
     "text": "Walk with somebody, if you walk west. It is not dangerous. It is simply better with somebody.",
     "next": "hub"
+   },
+   "q_ossels_forge_offer": {
+    "speaker": "Merrit Ash",
+    "text": "Three nights, and a clapper on the anvil, warm, and nobody. — Ossel kept this forge and the walk both. Smith's daughter, of Gullhithe; she could shoe a horse and ring a bell and walk the round in one night and not once complain. In the autumn of nineteen she went out to bring in a bell-bearer's clapper and did not. We use her trough. We change the water every week. We have not lit the forge. — Look at what is on the anvil. I have not touched it. I was a lock-maker; I know better than to touch another hand's work while it is warm.",
+    "choices": [
+     {
+      "text": "I'll look at the anvil.",
+      "effects": [
+       {
+        "start_quest": "core:quest/ossels_forge"
+       }
+      ],
+      "next": "q_ossels_forge_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_ossels_forge_accept": {
+    "speaker": "Merrit Ash",
+    "text": "Then the pit. The bell-bearers dig at night. — And then the north gate. Something walks through it at the same hour every night, and I have been meaning to stand there and see for eleven years, and I have not, because I walk the round.",
+    "next": "hub"
+   },
+   "q_ossels_forge_decide_quench_it": {
+    "speaker": "Merrit Ash",
+    "text": "Cold, in her trough, and on the wall with the doors, unrung. A clapper that is never swung is a promise kept by not keeping it. I understand those. I sleep behind forty of them.",
+    "next": "hub"
+   },
+   "q_ossels_forge_decide_let_her_finish": {
+    "speaker": "Merrit Ash",
+    "text": "Back on the anvil, and the forge laid, and the trough fresh. — If a bell rings from the pit one night I will stand at the gate and count it. That is all the Order asks: that it is counted.",
+    "next": "hub"
+   },
+   "q_ossels_forge_decide_bury_it": {
+    "speaker": "Merrit Ash",
+    "text": "In the pit, deep, with the broken bells. — The Order buried them so nobody would ring a broken one. I will bury it myself, with the bound clapper, and not tell anyone where.",
+    "next": "hub"
+   },
+   "q_ossels_forge_decide": {
+    "speaker": "Merrit Ash",
+    "text": "Of the trough. — Of Ossel's trough. — Something that walks through the north gate carrying something heavy and smells of a quench nobody has used since nineteen, working a clapper for a dug-up bell. — I will not say her name. The Order says a name when it knows. Tell me what to do with the clapper.",
+    "choices": [
+     {
+      "text": "Quench it cold and hang it on the door-wall.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/ossels_forge",
+         "quench_it"
+        ]
+       }
+      ],
+      "next": "q_ossels_forge_decide_quench_it"
+     },
+     {
+      "text": "Put it back and let her finish it.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/ossels_forge",
+         "let_her_finish"
+        ]
+       }
+      ],
+      "next": "q_ossels_forge_decide_let_her_finish"
+     },
+     {
+      "text": "Bury it in the pit with the bells nobody should ring.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/ossels_forge",
+         "bury_it"
+        ]
+       }
+      ],
+      "next": "q_ossels_forge_decide_bury_it"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_ashcombe_on_the_roll_the_doors": {
+    "speaker": "Merrit Ash",
+    "text": "Ashcombe's doors, name by name. — I know them by the hand, not the reading; I was a lock-maker. Nineteen houses. Ashcombe-Mill, over the mill-race door with the iron studs. Hobb's Cross. The Two Wells. The Weaver's. Cold Harbour, which was a joke; it is the warmest door. And on round to the Widow's End, which has a lock on it I made the key for myself, eleven years ago, so that I would have something to open. — Tell him that. Tell him the doors were every one shut by somebody who meant to open them again.",
+    "next": "hub"
    }
   }
  },
@@ -689,6 +2108,32 @@
      {
       "text": "How much is the toll?",
       "next": "topic_2"
+     },
+     {
+      "text": "I'll find out whose hand is in your ledger.",
+      "next": "q_the_same_hand_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_same_hand"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_same_hand"
+        }
+       }
+      ]
+     },
+     {
+      "text": "They all went out to the city and were never said at home again.",
+      "next": "q_the_same_hand_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_same_hand",
+         "the_ledger"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -720,8 +2165,103 @@
     "speaker": "Corin Stilyard",
     "text": "Mind the lamps on the Stride at dusk. They light one after the other and it is a very beautiful thing and people walk into the water watching it.",
     "next": "hub"
+   },
+   "q_the_same_hand_offer": {
+    "speaker": "Corin Stilyard",
+    "text": "Please. — I have sat up with the book three nights running. I close it, blank; I blink; it is written. Nineteen names since winter, a traveller a week, on foot, going out. Nobody of those names comes back through the Foot, and the city clerks have none of them going in. — There is a man on the bench at the Larkmouth Bridge every night until dawn. I do not like to ask him things; he is Vale, and they have long silences. You may be better at it. Take the page. I have cut it out; the Guild will want to know why and I will tell them it was a correction.",
+    "choices": [
+     {
+      "text": "I'll sit with the man on the bench.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_same_hand"
+       }
+      ],
+      "next": "q_the_same_hand_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_same_hand_accept": {
+    "speaker": "Corin Stilyard",
+    "text": "Foot traffic is free, you know. It is the forty-second amendment. I voted against it. — I was wrong. I have never said that about an amendment before.",
+    "next": "hub"
+   },
+   "q_the_same_hand_decide_strike_them": {
+    "speaker": "Corin Stilyard",
+    "text": "Struck, with a ruled line and my initials, which is how a correction is made. — If they write themselves in again I shall strike them again. That is also how a correction is made.",
+    "next": "hub"
+   },
+   "q_the_same_hand_decide_send_word": {
+    "speaker": "Corin Stilyard",
+    "text": "Nineteen letters. The Guild will charge me postage and I will pay it and enter it under sundries. — Hew Coomb's daughter has a room on Canal End and three children. I will write that one myself.",
+    "next": "hub"
+   },
+   "q_the_same_hand_decide_leave_the_book_open": {
+    "speaker": "Corin Stilyard",
+    "text": "Open, on the desk, with a lamp. — If something wants to keep a count of who went out along the Stride and was never said again, it may keep it in my book. It is the correct book. It is the only one there is.",
+    "next": "hub"
+   },
+   "q_the_same_hand_decide": {
+    "speaker": "Corin Stilyard",
+    "text": "Eleven alive in the city and eight on the harbour roll, and every one of them written out of the book they came from, and into mine. — I am a Tallyman. A ledger is for what is owed. I do not know what this is owed. You tell me.",
+    "choices": [
+     {
+      "text": "Strike them. They're not tolls.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_same_hand",
+         "strike_them"
+        ]
+       }
+      ],
+      "next": "q_the_same_hand_decide_strike_them"
+     },
+     {
+      "text": "Send word home with their names.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_same_hand",
+         "send_word"
+        ]
+       }
+      ],
+      "next": "q_the_same_hand_decide_send_word"
+     },
+     {
+      "text": "Leave the book open and let it write.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_same_hand",
+         "leave_the_book_open"
+        ]
+       }
+      ],
+      "next": "q_the_same_hand_decide_leave_the_book_open"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "same_hand_word_sent"
+     }
+    ],
+    "text": "Hew Coomb walked out along the Stride last Tollday, on foot, free. I weighed nothing. I entered him anyway. In my hand."
+   }
+  ]
  },
  {
   "id": "core:dialogue/maudie_punt",
@@ -745,6 +2285,32 @@
      {
       "text": "Why are the bollards shaped like bells?",
       "next": "topic_2"
+     },
+     {
+      "text": "The line in the reeds. I'll find out what's drawing it.",
+      "next": "q_the_ruled_line_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_ruled_line"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_ruled_line"
+        }
+       }
+      ]
+     },
+     {
+      "text": "It's a Builders' kerb under the silt. The Mere is falling.",
+      "next": "q_the_ruled_line_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_ruled_line",
+         "what_the_line_is"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -776,6 +2342,91 @@
     "speaker": "Maudie Punt",
     "text": "Go round by the shore path. The reeds will cut you if you go through them, and they will be right to.",
     "next": "hub"
+   },
+   "q_the_ruled_line_offer": {
+    "speaker": "Maudie Punt",
+    "text": "Nobody is drawing it. That is what frightens the cutters; a line with nobody drawing it. — Go up the Heronry and look at it from above. The herons went west in the middle of the nesting, which herons do not do, and from the top you will see what they saw. Then go and look at the weir. Everything on this bay ends up at the weir sooner or later. Punts, eels, arguments.",
+    "choices": [
+     {
+      "text": "I'll climb the Heronry.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_ruled_line"
+       }
+      ],
+      "next": "q_the_ruled_line_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_ruled_line_accept": {
+    "speaker": "Maudie Punt",
+    "text": "Mind the nests; they are empty but they have opinions. — And if you meet a Sayer on the water, ask them what they are measuring. There has been one about. They do not wave.",
+    "next": "hub"
+   },
+   "q_the_ruled_line_decide_the_tide": {
+    "speaker": "Maudie Punt",
+    "text": "The weir, then. They will sing about it, which is how the reedfolk write things down, and it will be in a round by midsummer and nobody will be able to stop singing it.",
+    "next": "hub"
+   },
+   "q_the_ruled_line_decide_the_circle": {
+    "speaker": "Maudie Punt",
+    "text": "Twelve times. — Take the book up the hill and put it on a desk and make somebody read it out loud. Tell them a reed-cutter sent you. They will not know what that means. Tell them anyway.",
+    "next": "hub"
+   },
+   "q_the_ruled_line_decide_cut_to_the_line": {
+    "speaker": "Maudie Punt",
+    "text": "Cut and sell. — It is what a cutter does, and I am a cutter, and the thatchers will pay. I will leave the last pole of green at the line standing. I do not know why. I will.",
+    "next": "hub"
+   },
+   "q_the_ruled_line_decide": {
+    "speaker": "Maudie Punt",
+    "text": "Falling. — My father said the Mere was resting. My mother's people say it is going out, like the Tide, and will come back. And under my reeds there is a stone kerb the Builders laid straight as a rule, and the water is going down along it like a hand along a table. — Who hears this first? Say.",
+    "choices": [
+     {
+      "text": "The reedfolk. It is their account.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_ruled_line",
+         "the_tide"
+        ]
+       }
+      ],
+      "next": "q_the_ruled_line_decide_the_tide"
+     },
+     {
+      "text": "The Circle. Their Sayer measured it twelve times.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_ruled_line",
+         "the_circle"
+        ]
+       }
+      ],
+      "next": "q_the_ruled_line_decide_the_circle"
+     },
+     {
+      "text": "Cut to the line and sell what you can.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_ruled_line",
+         "cut_to_the_line"
+        ]
+       }
+      ],
+      "next": "q_the_ruled_line_decide_cut_to_the_line"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -801,6 +2452,32 @@
      {
       "text": "Do you have opinions about the city?",
       "next": "topic_2"
+     },
+     {
+      "text": "Your third arch drips. I'll find out from where.",
+      "next": "q_the_third_arch_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_third_arch"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_third_arch"
+        }
+       }
+      ]
+     },
+     {
+      "text": "It's the Rust Scar's water. The day it ran clear.",
+      "next": "q_the_third_arch_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_third_arch",
+         "the_drip"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -832,8 +2509,103 @@
     "speaker": "Berrit Smoker",
     "text": "Take a pike. Wrap it well. Oak smoke is honest; it will tell the whole shore where you have been.",
     "next": "hub"
+   },
+   "q_the_third_arch_offer": {
+    "speaker": "Berrit Smoker",
+    "text": "From the heights. There is nothing else up there. — It drips cold and it tastes of stone, and I do not care about the stone, I care that I have hung fish under a dry arch for thirty-two years and I do not know what I am hanging them under now. — Walk the line of it up onto the cliff-top. The Standing Arches go on from there to Rudd Beck. If it goes further than Rudd Beck, it goes into the clans' country, and you will want a warmer coat.",
+    "choices": [
+     {
+      "text": "I'll walk the line of it.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_third_arch"
+       }
+      ],
+      "next": "q_the_third_arch_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_third_arch_accept": {
+    "speaker": "Berrit Smoker",
+    "text": "Take a pike for the road. You will smell of oak for a day. Everybody does; it is not personal.",
+    "next": "hub"
+   },
+   "q_the_third_arch_decide_catch_it": {
+    "speaker": "Berrit Smoker",
+    "text": "A cask, then, a clean one, and the boy can carry it up on Tallowdays. The Rudd can name their children in it. I will send a pike with it. They will think it is a joke. It is not a joke. It is a trade.",
+    "next": "hub"
+   },
+   "q_the_third_arch_decide_let_it_drip": {
+    "speaker": "Berrit Smoker",
+    "text": "Eleven hundred years dry and it has found its water. — I will move the rack. The fish do not need to hang under it, and the arch does not need fish.",
+    "next": "hub"
+   },
+   "q_the_third_arch_decide_stop_it": {
+    "speaker": "Berrit Smoker",
+    "text": "Clay, then. I will do it myself, and I will not enjoy it, and the Rudd will never know, which is the worst of it. Here: the lads' wages for a week. You earned them walking.",
+    "next": "hub"
+   },
+   "q_the_third_arch_decide": {
+    "speaker": "Berrit Smoker",
+    "text": "The Rudd name their children for it. — And I have been smoking pike under it. — I do not have opinions about the city, and I did not think I had any about the clans either. I find I do. You tell me what is decent. You have been up there.",
+    "choices": [
+     {
+      "text": "Catch it in a cask and send it up to Ruddow.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_third_arch",
+         "catch_it"
+        ]
+       }
+      ],
+      "next": "q_the_third_arch_decide_catch_it"
+     },
+     {
+      "text": "Let it drip. It has water in it again.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_third_arch",
+         "let_it_drip"
+        ]
+       }
+      ],
+      "next": "q_the_third_arch_decide_let_it_drip"
+     },
+     {
+      "text": "Pack it with clay. You need the arches dry.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_third_arch",
+         "stop_it"
+        ]
+       }
+      ],
+      "next": "q_the_third_arch_decide_stop_it"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "arch_water_to_ruddow"
+     }
+    ],
+    "text": "The Rudd sent a cask back down, full of honey-brew. The boy drank half of it on the road. I would have too."
+   }
+  ]
  },
  {
   "id": "core:dialogue/sauve_mor",
@@ -857,6 +2629,32 @@
      {
       "text": "Why put the first eel back?",
       "next": "topic_2"
+     },
+     {
+      "text": "The knots in your traps. And the Fog Bell has stopped.",
+      "next": "q_knots_round_nothing_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/knots_round_nothing"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/knots_round_nothing"
+        }
+       }
+      ]
+     },
+     {
+      "text": "They're Mor'oul's knots. Nine lanterns under the water have none.",
+      "next": "q_knots_round_nothing_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/knots_round_nothing",
+         "the_knots"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -888,6 +2686,91 @@
     "speaker": "Sauve Mor",
     "text": "Go by the boards, not the reeds. The reeds are for eels, and they know it.",
     "next": "hub"
+   },
+   "q_knots_round_nothing_offer": {
+    "speaker": "Sauve Mor",
+    "text": "Stopped at the third quarter, when the fog was thickest, and every boat on the channel came in by feel and swearing. — The ringer is an old man and a good one and he does not stop. I think it is the knots. Nine, and every one tied the Saeva way round a lantern that is not there. — Go out to the bell. If he is up the ladder asleep, wake him. If he is not, look at his post. He scratches everything on the post.",
+    "choices": [
+     {
+      "text": "I'll go out to the Fog Bell.",
+      "effects": [
+       {
+        "start_quest": "core:quest/knots_round_nothing"
+       }
+      ],
+      "next": "q_knots_round_nothing_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_knots_round_nothing_accept": {
+    "speaker": "Sauve Mor",
+    "text": "Take the pole with the hook. The channel is shallow at the bend and there is always something in the shallows that would like to be pulled out.",
+    "next": "hub"
+   },
+   "q_knots_round_nothing_decide_ring_the_bell": {
+    "speaker": "Sauve Mor",
+    "text": "Moreva rings it, then, turn about, every quarter hour while the fog is down. I will take the first night. If he comes up, he will find his bell being rung badly, and he will be furious, and I will be glad.",
+    "next": "hub"
+   },
+   "q_knots_round_nothing_decide_send_them_out": {
+    "speaker": "Sauve Mor",
+    "text": "Nine new lanterns, tied with the old knots, sung out on the south channel the way it should have been done eighty years ago. Lisse Tal will know how. The Tals know how to do everything with rush and nothing with people.",
+    "next": "hub"
+   },
+   "q_knots_round_nothing_decide_put_them_back": {
+    "speaker": "Sauve Mor",
+    "text": "Back in the traps, then, and if they come up again I will put them back again. The water has a longer memory than Moreva. It can have the argument.",
+    "next": "hub"
+   },
+   "q_knots_round_nothing_decide": {
+    "speaker": "Sauve Mor",
+    "text": "Mor'oul. — My grandfather put the first eel back for them, he said, the ones under the water, so they would know. And they are sending the knots back. — What does that mean? You have been down there and I have only been over it a thousand times with a pole. Say what we do.",
+    "choices": [
+     {
+      "text": "Ring the Fog Bell for them until the ringer comes up.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/knots_round_nothing",
+         "ring_the_bell"
+        ]
+       }
+      ],
+      "next": "q_knots_round_nothing_decide_ring_the_bell"
+     },
+     {
+      "text": "Take the knots to Saeva. New lanterns, sent out properly.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/knots_round_nothing",
+         "send_them_out"
+        ]
+       }
+      ],
+      "next": "q_knots_round_nothing_decide_send_them_out"
+     },
+     {
+      "text": "Back in the traps. Let the water decide.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/knots_round_nothing",
+         "put_them_back"
+        ]
+       }
+      ],
+      "next": "q_knots_round_nothing_decide_put_them_back"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -913,6 +2796,32 @@
      {
       "text": "How do you know a lantern's maker?",
       "next": "topic_2"
+     },
+     {
+      "text": "The lantern that came back up the channel.",
+      "next": "q_against_the_current_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/against_the_current"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/against_the_current"
+        }
+       }
+      ]
+     },
+     {
+      "text": "It's your great-grandmother's weave, for a Gosford carter she named Ennet.",
+      "next": "q_against_the_current_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/against_the_current",
+         "the_weave"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -944,6 +2853,91 @@
     "speaker": "Lisse Tal",
     "text": "If you see a lantern on the water that is going the wrong way, do not follow it. Tell us.",
     "next": "hub"
+   },
+   "q_against_the_current_offer": {
+    "speaker": "Lisse Tal",
+    "text": "Against the current, lit, and my great-grandmother's twist, and her hair in it. — A lantern is a letter. Most people only read the light. I have read this one forty times and it says one thing: somebody is still weaving her way, eighty years after she put down the rush. — Saoul, down the south channel, where the old village left its lanterns for Sa'oul. Somebody relights them every night. Go and see whose hands.",
+    "choices": [
+     {
+      "text": "I'll go down to Saoul.",
+      "effects": [
+       {
+        "start_quest": "core:quest/against_the_current"
+       }
+      ],
+      "next": "q_against_the_current_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_against_the_current_accept": {
+    "speaker": "Lisse Tal",
+    "text": "After dark the wisps come over the pool. They are what a burial becomes when nobody sings. — Sing, if you can. If you cannot, be quick.",
+    "next": "hub"
+   },
+   "q_against_the_current_decide_send_it_out": {
+    "speaker": "Lisse Tal",
+    "text": "Sung, all three voices, from the landing, tonight. If it comes back again, I will know she wants it home.",
+    "next": "hub"
+   },
+   "q_against_the_current_decide_hang_it_at_saoul": {
+    "speaker": "Lisse Tal",
+    "text": "At the pool, then, on the last stilt, lit. — She is keeping them. I should help.",
+    "next": "hub"
+   },
+   "q_against_the_current_decide_sell_it_to_the_order": {
+    "speaker": "Lisse Tal",
+    "text": "The knights say a lantern and a bell are the same thing said twice. — Let it be said the second way, then, in the grey. They pay in marks and they burn the lights on Candle Night. She would have liked Candle Night.",
+    "next": "hub"
+   },
+   "q_against_the_current_decide": {
+    "speaker": "Lisse Tal",
+    "text": "Ennet. — She named a drowned Vale man so he would not go out unsung, and wove his light, and went on weaving it somewhere where the current runs the other way. — That is a Tal. That is exactly a Tal. — The lantern is on my bench. It is lit. Tell me what I do with it.",
+    "choices": [
+     {
+      "text": "Send it out again, down the south channel, and sing it.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/against_the_current",
+         "send_it_out"
+        ]
+       }
+      ],
+      "next": "q_against_the_current_decide_send_it_out"
+     },
+     {
+      "text": "Hang it at Saoul with hers.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/against_the_current",
+         "hang_it_at_saoul"
+        ]
+       }
+      ],
+      "next": "q_against_the_current_decide_hang_it_at_saoul"
+     },
+     {
+      "text": "The Order would hang it in the chapter-bell.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/against_the_current",
+         "sell_it_to_the_order"
+        ]
+       }
+      ],
+      "next": "q_against_the_current_decide_sell_it_to_the_order"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -969,6 +2963,32 @@
      {
       "text": "The grey is moving up the Greyreed?",
       "next": "topic_2"
+     },
+     {
+      "text": "You want to know which account is right.",
+      "next": "q_which_account_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/which_account"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/which_account"
+        }
+       }
+      ]
+     },
+     {
+      "text": "It comes in at night and goes back by day. The nets were torn from inside.",
+      "next": "q_which_account_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/which_account",
+         "the_account"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1000,6 +3020,91 @@
     "speaker": "Ossa Lissa",
     "text": "Walk north, when you go. Not because the grey is south. Because the eels are north, and somebody should eat tonight.",
     "next": "hub"
+   },
+   "q_which_account_offer": {
+    "speaker": "Ossa Lissa",
+    "text": "I want to know whether waiting is still the same thing it was. That is not the same question, and it is the only one that matters to a woman with a floor. — The watchman at the South Stilts says the grey comes in at night and goes back by day. Nobody believes him. I half believe him, which is the worst way to believe anything. Go and stand a night with him. If he is right, the Tide is right, and I can go on waiting with a clear mind.",
+    "choices": [
+     {
+      "text": "I'll stand a night at the stilts.",
+      "effects": [
+       {
+        "start_quest": "core:quest/which_account"
+       }
+      ],
+      "next": "q_which_account_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_which_account_accept": {
+    "speaker": "Ossa Lissa",
+    "text": "Take grey reed for your fire. It keeps a watcher company. The knights say so and they would know; they do nothing else.",
+    "next": "hub"
+   },
+   "q_which_account_decide_wait": {
+    "speaker": "Ossa Lissa",
+    "text": "Then we wait. And we sing the round while we wait, all three voices, so that if it listens the way the water listens it will hear who is here.",
+    "next": "hub"
+   },
+   "q_which_account_decide_go_north": {
+    "speaker": "Ossa Lissa",
+    "text": "North. — Ollo Nauve will build us a boat each and grumble about the price. We will take the grey reed with us. It is the only thing here that has never once complained.",
+    "next": "hub"
+   },
+   "q_which_account_decide_keep_the_watch": {
+    "speaker": "Ossa Lissa",
+    "text": "The Candle, then, from a reedfolk mouth. The knights will be astonished. — I will man the stilts myself the first night and tell the watchman he was right, and he will be unbearable.",
+    "next": "hub"
+   },
+   "q_which_account_decide": {
+    "speaker": "Ossa Lissa",
+    "text": "In and back. — Like water. — I was raised on the Tide. Everything goes out and comes back, the Tide says, the water and the dead and the names, and you wait, and waiting is a thing you do and not a thing you fail to do. — And now the grey does it too. So. Tell me. I will do what you say and blame you after, which is the reedfolk way.",
+    "choices": [
+     {
+      "text": "The Tide is right. Wait.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/which_account",
+         "wait"
+        ]
+       }
+      ],
+      "next": "q_which_account_decide_wait"
+     },
+     {
+      "text": "Go north to the Landing while it still goes back.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/which_account",
+         "go_north"
+        ]
+       }
+      ],
+      "next": "q_which_account_decide_go_north"
+     },
+     {
+      "text": "Stay, keep the stilts manned, and talk to the knights.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/which_account",
+         "keep_the_watch"
+        ]
+       }
+      ],
+      "next": "q_which_account_decide_keep_the_watch"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1025,6 +3130,32 @@
      {
       "text": "Why did the Salt Isles ships stop?",
       "next": "topic_2"
+     },
+     {
+      "text": "The footprints on your pans.",
+      "next": "q_what_the_tide_left_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/what_the_tide_left"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/what_the_tide_left"
+        }
+       }
+      ]
+     },
+     {
+      "text": "They went down the harbour steps into the sea. The chart says a ship is due.",
+      "next": "q_what_the_tide_left_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/what_the_tide_left",
+         "the_post"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1056,6 +3187,91 @@
     "speaker": "Meo Sa",
     "text": "Go inland before the evening tide. Not because it is dangerous. Because I would like to be the only one watching it.",
     "next": "hub"
+   },
+   "q_what_the_tide_left_offer": {
+    "speaker": "Meo Sa",
+    "text": "Small ones. Bare. Up out of the sea and across and back, on salt that was not there the day before. — I have written a tide on that post every day for forty years and my mother before me and her mother before her, and this spring the tide came over the bank, and I wrote it, and then I did not know what to write under it. — There are more prints up at the Salt Pans, the rakers say, going the other way. Go and see which way.",
+    "choices": [
+     {
+      "text": "I'll walk up to the Salt Pans.",
+      "effects": [
+       {
+        "start_quest": "core:quest/what_the_tide_left"
+       }
+      ],
+      "next": "q_what_the_tide_left_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_what_the_tide_left_accept": {
+    "speaker": "Meo Sa",
+    "text": "Walk on the crust, not the brine. And if you see a child on the flats, do not call out to it. — I do not know why I said that. Go on.",
+    "next": "hub"
+   },
+   "q_what_the_tide_left_decide_put_up_the_tent": {
+    "speaker": "Meo Sa",
+    "text": "All year. — My father said they found a better salt. My mother said they found out something about us. I will set out the best we boil, and we shall see which.",
+    "next": "hub"
+   },
+   "q_what_the_tide_left_decide_write_it_true": {
+    "speaker": "Meo Sa",
+    "text": "As it came: the height, and the prints, and the word due. The post will be the first thing on this coast that tells the truth about this year. It may be the last.",
+    "next": "hub"
+   },
+   "q_what_the_tide_left_decide_to_the_spire": {
+    "speaker": "Meo Sa",
+    "text": "The Spire, then. They will argue about the word for a year and publish nothing. That will give the ship time.",
+    "next": "hub"
+   },
+   "q_what_the_tide_left_decide": {
+    "speaker": "Meo Sa",
+    "text": "Due. — Forty years since a Salt Isles sail, and the Builders' bells ringing for one that has not set out, and children's feet on my salt going inland and coming back. — The Tide says what goes out comes back. It does not say what it will be. — What do I write? Say.",
+    "choices": [
+     {
+      "text": "Put up the tent all year. Set out salt.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/what_the_tide_left",
+         "put_up_the_tent"
+        ]
+       }
+      ],
+      "next": "q_what_the_tide_left_decide_put_up_the_tent"
+     },
+     {
+      "text": "Write it on the post as it came.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/what_the_tide_left",
+         "write_it_true"
+        ]
+       }
+      ],
+      "next": "q_what_the_tide_left_decide_write_it_true"
+     },
+     {
+      "text": "Send the chart to the Circle.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/what_the_tide_left",
+         "to_the_spire"
+        ]
+       }
+      ],
+      "next": "q_what_the_tide_left_decide_to_the_spire"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1085,6 +3301,44 @@
      {
       "text": "Is it true the Woodfolk have no law?",
       "next": "topic_3"
+     },
+     {
+      "text": "A Tollmere bookbinder sends the Builders' words from your quarry.",
+      "next": "q_the_stride_dedication_to_elderhold",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_stride_dedication",
+         "to_elderhold"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "The doorposts flowered in the frost.",
+      "next": "q_flowered_in_the_frost_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/flowered_in_the_frost"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/flowered_in_the_frost"
+        }
+       }
+      ]
+     },
+     {
+      "text": "Forty trees that hadn't asked. Poachers, a saw, and your mark.",
+      "next": "q_flowered_in_the_frost_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/flowered_in_the_frost",
+         "the_custom"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1126,8 +3380,108 @@
     "speaker": "Wenna Holt",
     "text": "Go gently in the Wold. Nothing will stop you. That is not the same as being welcome.",
     "next": "hub"
+   },
+   "q_the_stride_dedication_to_elderhold": {
+    "speaker": "Wenna Holt",
+    "text": "From the Old Quarry. — The block that would not come out. We left it hanging because it asked to be left, the way a tree asks. — Walk it anyway, it says. Yes. That is the Wold's custom too, and the Builders knew it, and Tollmere laid their road and forgot. — I will oil the block. Tell the binder the third line means what it says, and that she should stop putting question marks after it.",
+    "next": "hub"
+   },
+   "q_flowered_in_the_frost_offer": {
+    "speaker": "Wenna Holt",
+    "text": "They did. I oiled a stone and said so, aloud, which is how you tell the Moot a thing, and I am waiting. The Wold is slow to answer. It is not slow to notice. — You are not Woodfolk. You may go and listen where we would not. Climb the Grey Man. The hum comes across the Greatwood to the top of it, and the foresters say there is a word in it this spring, and they will not say what, because saying it would be asking.",
+    "choices": [
+     {
+      "text": "I'll climb the Grey Man.",
+      "effects": [
+       {
+        "start_quest": "core:quest/flowered_in_the_frost"
+       }
+      ],
+      "next": "q_flowered_in_the_frost_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_flowered_in_the_frost_accept": {
+    "speaker": "Wenna Holt",
+    "text": "Do not say the word back. Listen, and then come down, and then go where it sends you. It will send you somewhere. It always does.",
+    "next": "hub"
+   },
+   "q_flowered_in_the_frost_decide_plant_forty": {
+    "speaker": "Wenna Holt",
+    "text": "Forty, with the whole lodge, this autumn, and I will cut the notches off myself with the same knife. The ledger will be right. The trees will not be the same trees. Nothing ever is.",
+    "next": "hub"
+   },
+   "q_flowered_in_the_frost_decide_slowly": {
+    "speaker": "Wenna Holt",
+    "text": "No rope, no bark, no leave, and nobody will say why. It is slow. It is the slowest thing in the world. It works.",
+    "next": "hub"
+   },
+   "q_flowered_in_the_frost_decide_make_them_pay": {
+    "speaker": "Wenna Holt",
+    "text": "The Guild's price. — Tollmere pays for what it is told, by the girth. I will take their marks and buy forty saplings from the Vale, and the Vale will charge me, and that is three wrongs, and the trees will grow anyway.",
+    "next": "hub"
+   },
+   "q_flowered_in_the_frost_decide": {
+    "speaker": "Wenna Holt",
+    "text": "Forty that had not finished, with my mark cut on them by a saw. — The elder knew before I did. — Custom says you do not take more than you need, and the bows are for the ones who do not listen, and the bows have been used. Now the custom. You are standing at the Wold's door. Say what goes through it.",
+    "choices": [
+     {
+      "text": "Plant forty. Cut forty notches off.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/flowered_in_the_frost",
+         "plant_forty"
+        ]
+       }
+      ],
+      "next": "q_flowered_in_the_frost_decide_plant_forty"
+     },
+     {
+      "text": "The Wold's way. No rope, and nothing said.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/flowered_in_the_frost",
+         "slowly"
+        ]
+       }
+      ],
+      "next": "q_flowered_in_the_frost_decide_slowly"
+     },
+     {
+      "text": "Take the Guild's price and plant with it.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/flowered_in_the_frost",
+         "make_them_pay"
+        ]
+       }
+      ],
+      "next": "q_flowered_in_the_frost_decide_make_them_pay"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
-  }
+  },
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "elderhold_planted_forty"
+     }
+    ],
+    "text": "Forty in the ground and forty notches off. You may go through the door, if you like. Mind the flowers. There are none. Mind them anyway."
+   }
+  ]
  },
  {
   "id": "core:dialogue/edda_thornby",
@@ -1155,6 +3509,32 @@
      {
       "text": "Is the Briar keeping something out or in?",
       "next": "topic_3"
+     },
+     {
+      "text": "You want someone to look at the far side of the gate.",
+      "next": "q_opened_from_the_far_side_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/opened_from_the_far_side"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/opened_from_the_far_side"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The patch that moved is standing at your gate, on the far side.",
+      "next": "q_opened_from_the_far_side_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/opened_from_the_far_side",
+         "the_promise"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1196,6 +3576,91 @@
     "speaker": "Edda Thornby",
     "text": "When you go, go west. Not because east is closed. Because I asked.",
     "next": "hub"
+   },
+   "q_opened_from_the_far_side_offer": {
+    "speaker": "Edda Thornby",
+    "text": "Look. Not go through. — The doors were open at dawn, the bar lifted from the far side and laid on our side as neat as a folded shirt, and the youngest asleep on the other side of them, as she should have been, only on the wrong side. She came back and shut it and has not spoken since. — Go to the Gate Stone. Things come to it at night now. Then go somewhere high and look over.",
+    "choices": [
+     {
+      "text": "I'll look. Not through.",
+      "effects": [
+       {
+        "start_quest": "core:quest/opened_from_the_far_side"
+       }
+      ],
+      "next": "q_opened_from_the_far_side_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_opened_from_the_far_side_accept": {
+    "speaker": "Edda Thornby",
+    "text": "Good. — The verderer's tower is the only high place on the east. He will not come down. Go up to him.",
+    "next": "hub"
+   },
+   "q_opened_from_the_far_side_decide_sleep_against_it": {
+    "speaker": "Edda Thornby",
+    "text": "Facing the Wold, as it was kept. The youngest can sit up with me and learn it again. She swore the wrong way round. It is not her fault. Nobody told her which way the promise faces.",
+    "next": "hub"
+   },
+   "q_opened_from_the_far_side_decide_leave_the_bar": {
+    "speaker": "Edda Thornby",
+    "text": "From both sides. — That is not a Rookhold answer. I do not know what kind of answer it is. I will leave the bar where it was laid and sleep next to it, and we shall see who picks it up.",
+    "next": "hub"
+   },
+   "q_opened_from_the_far_side_decide_tell_fernhold": {
+    "speaker": "Edda Thornby",
+    "text": "Alder. — He counts the patches and walks the Briar every morning and his count is going up. He should know one of them is at my door. I will send the youngest; it will make her speak.",
+    "next": "hub"
+   },
+   "q_opened_from_the_far_side_decide": {
+    "speaker": "Edda Thornby",
+    "text": "The size of a door. — At my gate. — Something let itself in to look at us and was polite about it, and left the bar on our side so we would know, and now it is standing on the other side of the thorn where the patch used to be. — I have read both pamphlets and I still do not know what the Briar keeps. I know what I keep. Tell me how.",
+    "choices": [
+     {
+      "text": "Sleep against it yourself, facing the Wold.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/opened_from_the_far_side",
+         "sleep_against_it"
+        ]
+       }
+      ],
+      "next": "q_opened_from_the_far_side_decide_sleep_against_it"
+     },
+     {
+      "text": "Leave the bar lying. Keep the promise from both sides.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/opened_from_the_far_side",
+         "leave_the_bar"
+        ]
+       }
+      ],
+      "next": "q_opened_from_the_far_side_decide_leave_the_bar"
+     },
+     {
+      "text": "Send word to Alder Wyke.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/opened_from_the_far_side",
+         "tell_fernhold"
+        ]
+       }
+      ],
+      "next": "q_opened_from_the_far_side_decide_tell_fernhold"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1221,6 +3686,32 @@
      {
       "text": "Which stool has not grown back?",
       "next": "topic_2"
+     },
+     {
+      "text": "The Fennick stool hasn't grown back.",
+      "next": "q_the_fennick_stool_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_fennick_stool"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_fennick_stool"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The stool went into its rods. And a Fennick's moss was let go.",
+      "next": "q_the_fennick_stool_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_fennick_stool",
+         "the_stool"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1252,6 +3743,91 @@
     "speaker": "Aggie Coppice",
     "text": "Mind the stools as you go. They look like stumps. They are not stumps. They are only resting.",
     "next": "hub"
+   },
+   "q_the_fennick_stool_offer": {
+    "speaker": "Aggie Coppice",
+    "text": "Not a shoot. Seven hundred years it has come back and this year it is a stump. — The Fennicks are Vale folk and have cut that stool every seventh since before there was a Vale to be from, and the last of them has walked south, and I have not told the stool, because I am a sensible woman and it is a stump. — The last rods off it are drying at the Rod Stacks. If there is anything left of the Fennicks in this wood it is in those. Go and look at them. You will know them; I chalked the tie.",
+    "choices": [
+     {
+      "text": "I'll look at the rods.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_fennick_stool"
+       }
+      ],
+      "next": "q_the_fennick_stool_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_fennick_stool_accept": {
+    "speaker": "Aggie Coppice",
+    "text": "And if Tam Withy's cutters are at the Stacks, tell them the price is the price. They will not believe you either.",
+    "next": "hub"
+   },
+   "q_the_fennick_stool_decide_keep_the_name": {
+    "speaker": "Aggie Coppice",
+    "text": "The Fennick stool, in the book, every seventh year, cut or not, as long as I am reading it and after. Somebody will argue. I will read it aloud to them.",
+    "next": "hub"
+   },
+   "q_the_fennick_stool_decide_plant_the_rods": {
+    "speaker": "Aggie Coppice",
+    "text": "Sets round the stump, as thick as a thumb, with their roots out already. — In seven years there will be a stool, and it will be the Fennick stool, and it will not be, and the book will say Fennick and I will not explain.",
+    "next": "hub"
+   },
+   "q_the_fennick_stool_decide_let_it_go": {
+    "speaker": "Aggie Coppice",
+    "text": "Let go, then. The Holts will take it. Wil married one; that is near enough to a Fennick for a wood. — The book will say Holt. I will read it aloud slowly, the first time.",
+    "next": "hub"
+   },
+   "q_the_fennick_stool_decide": {
+    "speaker": "Aggie Coppice",
+    "text": "Wil Fennick. — I knew him. I was a girl. He married a Holt and sat on the bench outside Elderhold and told the whole Wold that hazel was only a tree with good manners. — They let his moss go the week she went. And the stool put its last seven years into the rods and lay down. — The book is mine. What does it say?",
+    "choices": [
+     {
+      "text": "The Fennick stool. As long as there is a book.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_fennick_stool",
+         "keep_the_name"
+        ]
+       }
+      ],
+      "next": "q_the_fennick_stool_decide_keep_the_name"
+     },
+     {
+      "text": "Plant the rooted rods round the stump.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_fennick_stool",
+         "plant_the_rods"
+        ]
+       }
+      ],
+      "next": "q_the_fennick_stool_decide_plant_the_rods"
+     },
+     {
+      "text": "Let it go, like a moss. Give it to a Wold family.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_fennick_stool",
+         "let_it_go"
+        ]
+       }
+      ],
+      "next": "q_the_fennick_stool_decide_let_it_go"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1277,6 +3853,32 @@
      {
       "text": "Why charge the Circle for the beds?",
       "next": "topic_2"
+     },
+     {
+      "text": "The Listeners' trunk smells of the sea.",
+      "next": "q_the_listeners_trunk_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_listeners_trunk"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_listeners_trunk"
+        }
+       }
+      ]
+     },
+     {
+      "text": "There's sea-sand on the gate step. Something's clearing the road for them.",
+      "next": "q_the_listeners_trunk_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_listeners_trunk",
+         "the_trunk"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1308,6 +3910,91 @@
     "speaker": "Nessa Ashby",
     "text": "The north path is clear to the tor. Past the tor, keep to the stones.",
     "next": "hub"
+   },
+   "q_the_listeners_trunk_offer": {
+    "speaker": "Nessa Ashby",
+    "text": "It does, and there is no sea north of here, and I have not opened it, because the Wold does not open what it is given to keep. — They came back from the far side on the fourth day with salt in their boots and wrote their report, which nobody reads. — The foresters say the road to the northern gate is clear every morning. The gate's keepers carried every stone they cleared up Harrow Tor, in the Chain Years, and did not come down. Go up the tor. Look at the road from the top, where they looked.",
+    "choices": [
+     {
+      "text": "I'll climb Harrow Tor.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_listeners_trunk"
+       }
+      ],
+      "next": "q_the_listeners_trunk_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_listeners_trunk_accept": {
+    "speaker": "Nessa Ashby",
+    "text": "Look. Do not go through. — That is not a warning. It is the custom. The warning is that the road is clear.",
+    "next": "hub"
+   },
+   "q_the_listeners_trunk_decide_open_it": {
+    "speaker": "Nessa Ashby",
+    "text": "...A notebook, in sealskin, and sand. Take the book; you opened it, it is yours to read. I will put the sand on the fire. I do not want to know what it smells like when it burns.",
+    "next": "hub"
+   },
+   "q_the_listeners_trunk_decide_send_it_to_the_circle": {
+    "speaker": "Nessa Ashby",
+    "text": "Unopened, with the bill, and a note to say it smells of the sea. They will not read the note. They will pay the bill. That is how it has always gone.",
+    "next": "hub"
+   },
+   "q_the_listeners_trunk_decide_leave_it_at_the_gate": {
+    "speaker": "Nessa Ashby",
+    "text": "On the step, for whoever clears the road. — Yes. The Wold does not go through. It can leave things at the door.",
+    "next": "hub"
+   },
+   "q_the_listeners_trunk_decide": {
+    "speaker": "Nessa Ashby",
+    "text": "For them. — Clearing the road back. After five years. — I have kept that trunk under a blanket in the back room for five years and dusted it on Kindledays and not once asked it anything. You have been to the stone. Say what I do with it.",
+    "choices": [
+     {
+      "text": "Open it.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_listeners_trunk",
+         "open_it"
+        ]
+       }
+      ],
+      "next": "q_the_listeners_trunk_decide_open_it"
+     },
+     {
+      "text": "Send it to the Spire, unopened, with the bill.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_listeners_trunk",
+         "send_it_to_the_circle"
+        ]
+       }
+      ],
+      "next": "q_the_listeners_trunk_decide_send_it_to_the_circle"
+     },
+     {
+      "text": "Leave it on the step at the gate.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_listeners_trunk",
+         "leave_it_at_the_gate"
+        ]
+       }
+      ],
+      "next": "q_the_listeners_trunk_decide_leave_it_at_the_gate"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1337,6 +4024,32 @@
      {
       "text": "What is the wall made of?",
       "next": "topic_3"
+     },
+     {
+      "text": "Rudd are asking for the forty head at last.",
+      "next": "q_forty_head_and_a_hearth_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/forty_head_and_a_hearth"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/forty_head_and_a_hearth"
+        }
+       }
+      ]
+     },
+     {
+      "text": "Torkh laid the coin himself, at night, to keep it out of the song.",
+      "next": "q_forty_head_and_a_hearth_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/forty_head_and_a_hearth",
+         "the_account"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1378,6 +4091,91 @@
     "speaker": "Ushra ko-Rudd",
     "text": "Go with the rope, as we say. Mind which end you are holding.",
     "next": "hub"
+   },
+   "q_forty_head_and_a_hearth_offer": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Through you, if you will carry it. Kharrow will not hear it from a Rudd; they will hear it from a go-between, because then it is a matter and not a quarrel. — The reason is on our roll of the dead. I will not tell you which line. Go up the chain and speak to our fosterling first. He is nine and wears a man's token and he knows more about it than Kharrow does, because nobody has told him not to.",
+    "choices": [
+     {
+      "text": "I'll carry it up the chain.",
+      "effects": [
+       {
+        "start_quest": "core:quest/forty_head_and_a_hearth"
+       }
+      ],
+      "next": "q_forty_head_and_a_hearth_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_forty_head_and_a_hearth_accept": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Wall on your right on the stair. Everyone who went over the edge went over on the left.",
+    "next": "hub"
+   },
+   "q_forty_head_and_a_hearth_decide_take_the_coin": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Paid. I will write it paid, and the rope goes slack, and nobody sings it, and I will know. That is what a memory-keeper is for: to know the things that are not sung.",
+    "next": "hub"
+   },
+   "q_forty_head_and_a_hearth_decide_ask_in_the_hall": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "In the hall, before the seven, with the bone passed hand to hand. Torkh will say the price aloud, because he must, and the song will be a line longer. It is a quarrel. A quarrel is a rope too.",
+    "next": "hub"
+   },
+   "q_forty_head_and_a_hearth_decide_bring_kun_home": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "The boy. — We sent him up to say forgiven with his feet. Kharrow kept him, because a debt is not forgiven until it is paid. — Then let this be the payment: he comes home. I will go up the chain for him myself.",
+    "next": "hub"
+   },
+   "q_forty_head_and_a_hearth_decide": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "In the dark. Twice. — So that Kharrow's verse would not have to say that Rudd died for Kharrow's herd. — A debt paid in the dark is a rope cut in the dark. — It is Rudd's account. I keep it. Tell me what goes in it.",
+    "choices": [
+     {
+      "text": "Take the coin. It is paid.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/forty_head_and_a_hearth",
+         "take_the_coin"
+        ]
+       }
+      ],
+      "next": "q_forty_head_and_a_hearth_decide_take_the_coin"
+     },
+     {
+      "text": "Ask for the forty head in the hall, and have it sung.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/forty_head_and_a_hearth",
+         "ask_in_the_hall"
+        ]
+       }
+      ],
+      "next": "q_forty_head_and_a_hearth_decide_ask_in_the_hall"
+     },
+     {
+      "text": "Ask for the boy.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/forty_head_and_a_hearth",
+         "bring_kun_home"
+        ]
+       }
+      ],
+      "next": "q_forty_head_and_a_hearth_decide_bring_kun_home"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1407,6 +4205,32 @@
      {
       "text": "What is at the bottom of the gorge?",
       "next": "topic_3"
+     },
+     {
+      "text": "Ghast want the bridge mended. I could carry that to Kharrow.",
+      "next": "q_a_debt_with_a_nicer_voice_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/a_debt_with_a_nicer_voice"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/a_debt_with_a_nicer_voice"
+        }
+       }
+      ]
+     },
+     {
+      "text": "Kharrow says the bridge is yours to mend.",
+      "next": "q_a_debt_with_a_nicer_voice_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/a_debt_with_a_nicer_voice",
+         "the_ladders"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1448,6 +4272,91 @@
     "speaker": "Dagga ko-Ghast",
     "text": "Down the ladders face in. Always face in. The mountain likes to be looked at.",
     "next": "hub"
+   },
+   "q_a_debt_with_a_nicer_voice_offer": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "You could. Everybody could. Nobody does. — A forgiveness sung every morning is a debt with a nicer voice. — Go down to the bridge first. The chain we cut is still hanging and the goats cross by it, and on the far anchor there is a mark that is no clan's, and I have looked at it through a glass every spring of my life and never been over to touch it. Wolves den under the stones. Take a spear. Take two.",
+    "choices": [
+     {
+      "text": "I'll go down to the bridge.",
+      "effects": [
+       {
+        "start_quest": "core:quest/a_debt_with_a_nicer_voice"
+       }
+      ],
+      "next": "q_a_debt_with_a_nicer_voice_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_a_debt_with_a_nicer_voice_accept": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "And if you cross by the chain, do not look down. The goats do not. That is the whole of their wisdom and it has kept them alive two hundred years.",
+    "next": "hub"
+   },
+   "q_a_debt_with_a_nicer_voice_decide_mend_it": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "Mend it. — I will cut the first new link myself, and Kharrow will hear the hammer from their hall, and the song will stop or it will not, and either way I will cross drunk.",
+    "next": "hub"
+   },
+   "q_a_debt_with_a_nicer_voice_decide_keep_climbing": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "In the song. — Yes. It is a very long way to keep a grudge polished, and it keeps Ghast in the Rope-Song, and I will keep the ladders oiled. Somebody has to be the one who climbs.",
+    "next": "hub"
+   },
+   "q_a_debt_with_a_nicer_voice_decide_sing_it_at_ghastfell": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "Across the gorge. — Kharrow singing forgiveness at Ghast's own door, where we can hear it. They will say no. Ask anyway. If they say yes, I will not know what to do with my face.",
+    "next": "hub"
+   },
+   "q_a_debt_with_a_nicer_voice_decide": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "Mine to mend and theirs to sing. — And somebody setting stones on the Red Moor for a bridge, with our mark and theirs and a ring with a gap. — I am tired of this grudge. I have polished it my whole life and I would like to put it down. The ladders are mine. Say what Ghast does.",
+    "choices": [
+     {
+      "text": "Mend it.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/a_debt_with_a_nicer_voice",
+         "mend_it"
+        ]
+       }
+      ],
+      "next": "q_a_debt_with_a_nicer_voice_decide_mend_it"
+     },
+     {
+      "text": "Keep climbing. You're in the song.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/a_debt_with_a_nicer_voice",
+         "keep_climbing"
+        ]
+       }
+      ],
+      "next": "q_a_debt_with_a_nicer_voice_decide_keep_climbing"
+     },
+     {
+      "text": "Ask Kharrow to sing it here, once, across the gorge.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/a_debt_with_a_nicer_voice",
+         "sing_it_at_ghastfell"
+        ]
+       }
+      ],
+      "next": "q_a_debt_with_a_nicer_voice_decide_sing_it_at_ghastfell"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1477,6 +4386,32 @@
      {
       "text": "Who was the first Brann?",
       "next": "topic_3"
+     },
+     {
+      "text": "The eighth verse on your ninth door.",
+      "next": "q_the_ninth_door_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_ninth_door"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_ninth_door"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The same verse is over Ghorrow's open door. In your blue.",
+      "next": "q_the_ninth_door_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_ninth_door",
+         "the_door"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1518,6 +4453,91 @@
     "speaker": "Brann ko-Dreugh",
     "text": "Knock on any door on your way. Read it first.",
     "next": "hub"
+   },
+   "q_the_ninth_door_offer": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Over our first, in a hand no clan uses, in my paint. — I have not painted over it. I cannot bring myself to. I have not read it aloud either. I stand in front of it every morning with the brush and then I go and paint the tenth door. — Somebody ground my blue and climbed my ladder and knew the metre. On Brindle Edge the children's ropes hang on the cairn; the Brindles say a rope has gone up this spring that no family owns. Go and look at the knots. Knots are a hand too.",
+    "choices": [
+     {
+      "text": "I'll look at the rope on the cairn.",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_ninth_door"
+       }
+      ],
+      "next": "q_the_ninth_door_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_the_ninth_door_accept": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Mind the third door, the paint is wet. It is always wet on one of them. That is the point.",
+    "next": "hub"
+   },
+   "q_the_ninth_door_decide_paint_it_over": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Over it, a word a day, the way I always do, and by midwinter the first verse will be new again and the eighth will be under it, the way the breath is under the song.",
+    "next": "hub"
+   },
+   "q_the_ninth_door_decide_leave_both": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Both, then, one on the other. — A stranger knocking at the ninth door will not know where he is in the song. Nor do I. We can be lost together.",
+    "next": "hub"
+   },
+   "q_the_ninth_door_decide_to_the_memory_keeper": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Dunna. — She keeps what Kharrow remembers, and the silence is after Kharrow's verse. I will copy it word by word on a board and send the board. I will not read it on the way.",
+    "next": "hub"
+   },
+   "q_the_ninth_door_decide": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Over Ghorrow's door, where no clan's mark is. — Painted by somebody who has watched a verse painted every day for a very long time and never been taught. — Four beats of silence every morning, and somebody has been listening to the silence. — The ninth door is mine to paint. Say what goes on it.",
+    "choices": [
+     {
+      "text": "Paint the first verse back over it.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_ninth_door",
+         "paint_it_over"
+        ]
+       }
+      ],
+      "next": "q_the_ninth_door_decide_paint_it_over"
+     },
+     {
+      "text": "Leave both.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_ninth_door",
+         "leave_both"
+        ]
+       }
+      ],
+      "next": "q_the_ninth_door_decide_leave_both"
+     },
+     {
+      "text": "Copy it for Dunna ko-Kharrow.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_ninth_door",
+         "to_the_memory_keeper"
+        ]
+       }
+      ],
+      "next": "q_the_ninth_door_decide_to_the_memory_keeper"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1543,6 +4563,32 @@
      {
       "text": "What are the lights?",
       "next": "topic_2"
+     },
+     {
+      "text": "The lights along the Briar.",
+      "next": "q_nine_lights_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/nine_lights"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/nine_lights"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The Watcher's turned to watch them go past. They're going out, not in.",
+      "next": "q_nine_lights_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/nine_lights",
+         "facing_east"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1574,6 +4620,91 @@
     "speaker": "Varra ko-Skarl",
     "text": "Go west when you go. You will anyway. Everybody does.",
     "next": "hub"
+   },
+   "q_nine_lights_offer": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Nine. Same spacing, same pace, north, on three nights. — There is no road on that side of the thorn that the Woodfolk know of, and the Woodfolk know every road there is and several there are not. — Skarl are not hopeful people. We are counting people. I have counted them and I would like somebody to go and look at what I counted. Go up to the shieling first. The herders will not come down to tell me things; I have to send outlanders up.",
+    "choices": [
+     {
+      "text": "I'll go up to the shieling.",
+      "effects": [
+       {
+        "start_quest": "core:quest/nine_lights"
+       }
+      ],
+      "next": "q_nine_lights_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_nine_lights_accept": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Sit on the east side of their fire. They keep the west side for the wind, as we do. They will think better of you.",
+    "next": "hub"
+   },
+   "q_nine_lights_decide_rebuild_the_wall": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Stronger, and from our side, and we tell the Woodfolk it was pushed from ours. Honesty with a wall is the only kind that holds.",
+    "next": "hub"
+   },
+   "q_nine_lights_decide_face_east": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Count them. — That is what we do. Every night they come I will sit on the east side of the fire and count, and chalk it, and if one night it is eight, I will know somebody has stopped.",
+    "next": "hub"
+   },
+   "q_nine_lights_decide_tell_rookhold": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Edda. The Old Gate. — Her doors opened from the far side and my wall was pushed from this one. The thorn is having a busy spring. I will send the fastest herder down the thorn, and tell her to go round the Briar's End and not through it.",
+    "next": "hub"
+   },
+   "q_nine_lights_decide": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Out. — A thousand years of Skarl doors facing east for something to come back, and it is going the other way. — The Watcher turned his head to see them off. — Well. I am the herd-mother. I keep the cattle and the watch. Tell me what the watch does now.",
+    "choices": [
+     {
+      "text": "Rebuild the wall.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/nine_lights",
+         "rebuild_the_wall"
+        ]
+       }
+      ],
+      "next": "q_nine_lights_decide_rebuild_the_wall"
+     },
+     {
+      "text": "Face east and count them.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/nine_lights",
+         "face_east"
+        ]
+       }
+      ],
+      "next": "q_nine_lights_decide_face_east"
+     },
+     {
+      "text": "Send word to Edda Thornby at Rookhold.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/nine_lights",
+         "tell_rookhold"
+        ]
+       }
+      ],
+      "next": "q_nine_lights_decide_tell_rookhold"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  },
@@ -1599,6 +4730,32 @@
      {
       "text": "What happened to the child?",
       "next": "topic_2"
+     },
+     {
+      "text": "Aske walked up the Oskeld road in her sleep.",
+      "next": "q_askes_tune_offer",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/askes_tune"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/askes_tune"
+        }
+       }
+      ]
+     },
+     {
+      "text": "The thralls in the rake hum it while they work. And the fire stops it.",
+      "next": "q_askes_tune_decide",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/askes_tune",
+         "whose_note"
+        ]
+       }
+      ]
      },
      {
       "text": "I'll be on my way.",
@@ -1630,6 +4787,91 @@
     "speaker": "Ebba ko-Oskel",
     "text": "If you go up the road, and you should not, knock on the stone first. Twice. So it knows it is you.",
     "next": "hub"
+   },
+   "q_askes_tune_offer": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "To the shaft, and sat down, and was found humming. She is well. She eats. She hums it when she is not thinking. — I would like to know whose tune it is, and I cannot go up the road; I am the one who keeps the rule that nobody goes. You are not Oskel. The rule is ours. — Start at the shieling. The herders keep a fire there for the mine, whatever they tell you, and it went out the night she walked.",
+    "choices": [
+     {
+      "text": "I'll go up to the shieling.",
+      "effects": [
+       {
+        "start_quest": "core:quest/askes_tune"
+       }
+      ],
+      "next": "q_askes_tune_accept"
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "q_askes_tune_accept": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "Knock on the marker stone on your way past. It likes to know who is coming. I have never known what it does when somebody does not.",
+    "next": "hub"
+   },
+   "q_askes_tune_decide_keep_the_fire": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "Always, with a herder beside it and a spare peat stack, and I will knock twice on the marker, so it knows we have understood. It is not an answer. It is a fire. Fires are what Oskel have.",
+    "next": "hub"
+   },
+   "q_askes_tune_decide_teach_her_the_verse": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "Our verse over their tune. — Dunna will say a child learns the Rope-Song at eleven. Dunna can come down the pass and say it to my face. Aske will have it by midwinter.",
+    "next": "hub"
+   },
+   "q_askes_tune_decide_send_her_to_the_sayers": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "To the Spire, to the Oskel woman who reads lips from the mine years. — She will be frightened of the city and it will be good for her. I will take her myself. I have never been. I will be frightened too.",
+    "next": "hub"
+   },
+   "q_askes_tune_decide": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "They hum it. — And my child hums it at her porridge. — The fire stops it for a night, and we have kept that fire for a hundred years and called it the herders' and never once said why. — I am the lead-captain. I am hard and fair and I laugh too much for an Oskel. Tell me what a lead-captain does with a tune.",
+    "choices": [
+     {
+      "text": "Keep the fire lit, always, and a herder by it.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/askes_tune",
+         "keep_the_fire"
+        ]
+       }
+      ],
+      "next": "q_askes_tune_decide_keep_the_fire"
+     },
+     {
+      "text": "Teach her Oskel's verse, to hum over it.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/askes_tune",
+         "teach_her_the_verse"
+        ]
+       }
+      ],
+      "next": "q_askes_tune_decide_teach_her_the_verse"
+     },
+     {
+      "text": "Send her to Ismay Ondrael.",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/askes_tune",
+         "send_her_to_the_sayers"
+        ]
+       }
+      ],
+      "next": "q_askes_tune_decide_send_her_to_the_sayers"
+     },
+     {
+      "text": "Let me think on it.",
+      "next": "hub"
+     }
+    ]
    }
   }
  }
