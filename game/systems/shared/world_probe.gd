@@ -84,6 +84,22 @@ static func cell_of(pos: Vector3) -> Vector2i:
 	return Vector2i(floori((pos.x + WORLD_HALF_M) / CELL_SIZE_M), floori((pos.z + WORLD_HALF_M) / CELL_SIZE_M))
 
 
+## The points of one road of the built world by its id ([[x, z], ...]), or [] when the build has
+## no such road. A POI whose `path` names a road the land drew follows the land's line rather than
+## points written for another build (the Stair Head's waystones).
+static func road_points(road_id: String) -> Array:
+	const BUILT_ROADS := "res://world/generated/roads.json"
+	if road_id.is_empty() or not FileAccess.file_exists(BUILT_ROADS):
+		return []
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(BUILT_ROADS))
+	if typeof(parsed) != TYPE_ARRAY:
+		return []
+	for entry in parsed:
+		if typeof(entry) == TYPE_DICTIONARY and str((entry as Dictionary).get("id", "")) == road_id:
+			return (entry as Dictionary).get("points", [])
+	return []
+
+
 static func place_position(place_id: String) -> Vector3:
 	var xz := xz_of(ContentDB.get_or_empty(place_id))
 	return Vector3(xz.x, get_height(xz.x, xz.y), xz.y)

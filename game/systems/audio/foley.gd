@@ -57,6 +57,8 @@ signal played(id: String, position: Vector3)
 var enabled := true
 var rows: Dictionary = {}             ## id -> {files, volume_db, pitch_variance, bus}
 
+## Keeps the engine's audio mixer from reading bus details it has freed (AudioGuard).
+var guard: AudioGuard = null
 var _pool3d: Array[AudioStreamPlayer3D] = []
 var _pool2d: Array[AudioStreamPlayer] = []
 var _rng := RandomNumberGenerator.new()
@@ -68,6 +70,9 @@ var _cue_at: Dictionary = {}          ## cue id -> Time.get_ticks_msec() it last
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	guard = AudioGuard.new()
+	guard.name = "AudioGuard"
+	add_child(guard)
 	_rng.seed = 5150
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded

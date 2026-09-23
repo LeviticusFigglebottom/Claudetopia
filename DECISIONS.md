@@ -1010,3 +1010,92 @@ reads as a shuffle in play.
 **Consequences.** Enemies that raise a guard (`Enemy._guard`) get the same layer: they now walk
 under their guard instead of gliding. Any new stance meant to be held over the legs is added
 to `HumanoidModel.STANCE_CLIPS`.
+
+## 2026-09-23 · A body comes in a step inside the door and goes out a pace and a half before it
+**Decision.** Going in through any door stands the body just inside the interior's own door
+(the one the way back is through), facing into the room. In a house that is at least 0.75 m in
+from the inside of the wall, on the floor of the room the front door opens into, on the nearest
+point of a 0.1 m lattice (2.0 m deep, 1.6 m either side) that keeps 0.45 m from every prop mesh on
+that floor and from the walls, or 0.37 m where a room has no more room than that. In a deep place
+it is 1.2 m in from its way out toward the middle of its chamber, on the rock. Going out stands
+the body 1.5 m in front of the door it came in by, on what is under that spot, facing away from
+the door. A game saved inside goes out by the door the save recorded.
+**Why.** The brief, and what was measured: every house put the player in the corner of its first
+room a metre up; every deep place put them in the middle of its mouth, 3-5 m from the way out;
+leaving faced the door just left; and a loaded game left into the pocket at 50 km. The props were
+measured, not taken from their kinds' stand-in sizes: Merrick's forge hearth and crate are larger
+than the boxes they would be drawn as.
+**Consequences.** `test_every_door_both_ways` walks all 24 doors both ways in the built world. A
+forged house whose doorway has no clear spot says so in a warning, and the test fails on it.
+
+## 2026-09-23 · The audio mixer is kept from memory the engine has freed
+**Decision.** `AudioGuard` (systems/audio, stood up by Foley) takes the audio driver's lock at the
+end of every frame's processing and lets it go at once, in every run: the game, the tests, the
+fights. `-- --no-audio-guard` turns it off, for the reproduction. Music stems and ambience beds
+write a volume only when it moves (`AudioGuard.ease_volume`).
+**Why.** The crash that killed the fights, a headless unit run and a Forward+ world load had one
+backtrace every time, in the audio mixing thread. StringName's copy constructor was called from
+AudioServer::_mix_step as it copied a sound's bus details, which was called from _driver_process.
+The stripped binary's frames were named by the strings each function refers to. Godot 4.7.2
+swaps in new bus details whenever a playing sound's volume or panning changes. For an
+AudioStreamPlayer3D that is every physics frame, because it compares a mix count it never
+records. The engine frees the old details two AudioServer.update()s later, whatever the mixer is
+doing, so a mixer descheduled between loading a sound's details and copying them reads freed
+memory. The mixer holds the driver's lock for a whole mix. The barrier therefore waits out a mix
+under way, and anything a later update() frees was swapped out before it. The measurements came
+from holding only the mixing thread at that instruction under gdb (tools/debug/stall_mixer.py),
+with frames paced at 60 a second:
+* Without the guard, the reproduction crashed at the first 20 ms stall.
+* Without the guard, it also crashed after 57 stalls of 10 ms.
+* With the guard, it ran its 40 s through 1,434 stalls.
+* The fights under 20 ms stalls crashed after 32 without the guard and survived 2,655 with it.
+**Alternatives.** Holding the lock from the end of one frame to the start of the next. The first
+version of the guard did that; it spans the frame's sleep in a paced game and starves the mixer.
+One process per Calling in the fights: a crash still loses a Calling, and the game is still
+exposed. Playing no audio in headless runs: the Foley, music and ambience tests test real
+playback.
+**Consequences.** When a mix is under way at the end of a frame, the frame waits for it: a
+millisecond or two, or as long as the mixer is descheduled, which is a hitch where the engine
+would have crashed. The fault is Godot's, and should be reported upstream with the reproduction:
+AudioServer's graveyard frees by frame count and not by the mixer's progress, and
+AudioStreamPlayer3D never records `last_mix_count`. `tools/debug/audio_race_check.sh` fails if the
+reproduction stops crashing without the guard or crashes with it. The Jolt warning ("exceeded the
+maximum number of jobs") that came before some crashes is starvation, not the cause: the
+crashing thread was the mixer every time, and no project setting sets that limit.
+
+## 2026-09-23 · The opening keeps the wall clock, cannot keep anyone, and is never saved into
+**Decision.** The opening's pictures run on real seconds (`CinematicPlayer._real_delta`), not on
+the engine's delta: a long frame after quick ones is a hitch and moves them on by a second at
+most, a long frame after long ones is the machine and counts in full, and no frame moves a shot
+past half its length, so every shot is drawn at least once past its middle. A shot waits for
+its country four seconds at most and is then shown with what has come; its two settling frames
+are skipped for the black and once that wait is spent. Six minutes after the first shot the
+whole opening hands over the way a held key does, and after that nothing is waited for. A skip
+is timed from the key going down, on the wall clock. The hand-over hands the world to the body
+(`World.follow`) and stands the camp's people up at once. No slot is written while a cinematic
+holds the game (`SaveSystem.hold_saves`, held from the first thing borrowed until `finished` has
+been heard), and a world loaded from a slot never plays the opening, whatever its flags say: it
+gets the story, not the pictures.
+**Why.** Two flow runs on a tree carrying the opening sat in it for ten minutes, on its third
+shot, at a load average of 20 to 25 on this machine's four cores. The last frame they drew was
+the Spire playing, its first line on the screen: not a hold, and nothing waited for. Godot
+slows the whole game rather than step physics more than eight times a frame, so a frame of five
+or six seconds counts as an eighth of one. Measured on the same load with a log line per shot:
+the name's six seconds took 37 s of the wall clock in six frames, and the engine counted 0.8 s
+of them; timed on the engine, the Mere's twelve seconds would have taken ninety frames. The two
+shots before the Spire used the probe's ten minutes up. Each hold also waited four frames to
+settle, 25 to 30 s each on that machine. The Warden was not at her fire when control came back:
+a point of interest's people wait for its dressing, which went with its cell when the camera
+flew off, and the NPC streamer looks round every three quarters of a second of game time. The
+probe then saved its slot in the middle of the opening, with the `new_game` flag still up, and
+the `--load` run played the opening again from that slot.
+**Alternatives.** Scaling the delta by the frame rate (the same thing, less plainly). Dropping
+shots whose frames are slow (a player on a slow machine would lose the Warden's lines with
+them). Saving the borrowed state's originals into the slot (every system that is borrowed
+would have to know it; refusing the save is one line in one place).
+**Consequences.** On a slow machine the pictures stay with the music and are drawn with fewer
+frames; a line can fall between two frames there. A hold of two seconds says in the log which
+of its cells are missing and where each has got to in the streamer, and every shot logs its
+frames and wall time. The quicksave key says "Not saved while the opening plays." The flow
+probe reads the opening just before each frame is drawn, so the picture it keeps is the moment
+it read, and reports when the overall cap handed over.

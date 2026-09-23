@@ -34,6 +34,9 @@ const DRY_SEARCH_M := 800.0
 @export var services_without_a_body: bool = false
 
 var player: Node3D = null
+## The slot this world was loaded from, or "" for a new game: a loaded game is never a new one,
+## whatever its flags say (GameServices.begin_new_game).
+var loaded_slot := ""
 
 
 func _ready() -> void:
@@ -67,7 +70,7 @@ func _world() -> World:
 ## Puts the body down and hands back whatever is now standing in the world (an existing player
 ## is left alone, so a scene that ships its own is not given a second one).
 func spawn() -> Node3D:
-	load_pending_slot()
+	loaded_slot = load_pending_slot()
 	var existing := get_tree().get_first_node_in_group("player")
 	if existing is Node3D:
 		player = existing

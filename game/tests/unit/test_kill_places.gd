@@ -16,6 +16,7 @@ const A_VERSE := "core:quest/a_verse_about_you"
 const COLD_FIRE := "core:quest/the_cold_fire"
 const AT_THE_GATE := "core:quest/at_the_gate"
 const BRIARS := "core:quest/the_briars_purpose"
+const NAMING := "core:quest/the_naming"
 const HART := "core:boss/hart_of_thorns"
 
 var log_node: Node
@@ -290,6 +291,39 @@ func test_the_newer_six_are_their_own() -> void:
 	foes.refresh()
 	var group := foes.group_for(_key(COLD_FIRE))
 	assert_true(group != null and group.all().size() == 6, "the newer six were not stood up beside the old ring")
+
+
+## A landmark's collision is its mesh's surface, so a spot inside the Choir's colossus touched
+## nothing and was called clear: two of the Naming's three ash-wights were stood inside its robe,
+## nine and eleven metres from its middle, where nobody could reach them and the Naming could not be
+## finished. The colossus here is built as the streamer builds it, a trimesh of a cone as wide at the
+## foot as the forge's; every wight must stand outside it.
+func test_nobody_is_stood_inside_the_choir_s_colossus() -> void:
+	_at(NAMING, "ash_wights")
+	_foes_at("core:place/sunken_choir")
+	var at := _place_xz("core:place/sunken_choir")
+	var ground := WorldProbe.get_height(at.x, at.z, at.y)
+	var robe := CylinderMesh.new()
+	robe.bottom_radius = 13.5
+	robe.top_radius = 7.0
+	robe.height = 50.0
+	var shape := CollisionShape3D.new()
+	shape.shape = robe.create_trimesh_shape()
+	var colossus := StaticBody3D.new()
+	colossus.add_child(shape)
+	_tree().root.add_child(colossus)
+	spawned.append(colossus)
+	colossus.global_position = Vector3(at.x, ground + robe.height * 0.5, at.z)
+	await _tree().physics_frame
+	await _tree().physics_frame
+	foes.refresh()
+	var group := foes.group_for(_key(NAMING))
+	assert_true(group != null and group.all().size() == 3, "the Naming's three ash-wights are stood at the Choir")
+	if group == null:
+		return
+	for wight in group.all():
+		var flat := Vector2(wight.global_position.x - at.x, wight.global_position.z - at.z).length()
+		assert_gt(flat, robe.bottom_radius, "an ash-wight stands %.1f m from the colossus's middle, inside its robe" % flat)
 
 
 ## "The choristers come to the ring on a full night": not at noon.
