@@ -177,6 +177,9 @@ func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
 func _hold_pose(m: HumanoidModel, clip: String, t: float) -> void:
 	if not m.has_clip(clip):
 		return
+	# The model steps its own tree every frame (HumanoidModel._process advances it by hand), and
+	# the tree's locomotion idle overwrote the held clip: every "mid-stride" lineup stood still.
+	m.set_process(false)
 	if m.anim_tree != null:
 		m.anim_tree.active = false
 	m.anim_player.play(clip)
