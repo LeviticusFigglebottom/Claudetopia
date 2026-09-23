@@ -1,0 +1,1636 @@
+[
+ {
+  "id": "core:dialogue/ada_welling",
+  "speaker_name": "Ada Welling",
+  "notes": "The one voice of Ashwell (hearthvale), written with the atlas: The notch on the well-house post is above last year's for the first time in a century, and the well-warden wants someone to walk the glass bed to the Choir and say why.",
+  "start": "greet",
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "renown_min": 150
+     }
+    ],
+    "text": "They said somebody came up the Stair. I did not believe it. I have been wrong about the grey this year, so I am trying to believe things."
+   }
+  ],
+  "nodes": {
+   "greet": {
+    "speaker": "Ada Welling",
+    "text": "Welling. Ada. You have come up out of the grey road, haven't you; it is on your boots. Sit, or drink, or both. The water is the first clean water north of the ash and it tastes of the chalk, and that is the point of it.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Ada Welling",
+    "text": "What is it you want to know? Everybody here wants to know something.",
+    "choices": [
+     {
+      "text": "What are the notches on the door-post?",
+      "next": "topic_1"
+     },
+     {
+      "text": "What is south of here, for someone like you?",
+      "next": "topic_2"
+     },
+     {
+      "text": "Is Ashwell on the Roll?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Ada Welling",
+    "text": "One a year, every Naming Day, since before my grandmother. I walk down the glass bed with the cord until the grass stops being green, and I cut the notch at that many knots. For a hundred years the notches went down the post, a little, and we said the Vale was winning. This year's is above last year's. I measured three times. — I have told the Wardens. They wrote it down. I would like somebody to walk the bed to the Choir and tell me what is coming up it.",
+    "effects": [
+     {
+      "set_flag": "ada_welling_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Ada Welling",
+    "text": "Down. We say down, in Ashwell, because the road goes down to the pool and the pool is where the water comes out of the glass. We do not say the other word. — The pilgrims say it. I fill their flasks at the Wellspring and they carry them down to pour out at the line, and I have filled nine hundred and forty flasks, and not one has come back up the road, and I would know.",
+    "effects": [
+     {
+      "set_flag": "ada_welling_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Ada Welling",
+    "text": "Eleven hearths, on the Wardens' Roll, read out every Tollday at the Rest. My brother is a Warden; he reads it some weeks, and he reads Ashwell a little louder than the rest, which I am told is not allowed and which I have told him I would notice if he stopped.",
+    "effects": [
+     {
+      "set_flag": "ada_welling_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Ada Welling",
+    "text": "Mind the bed on your way down, if it is down you are going. The glass cuts, and it cuts clean, and you do not feel it until you are home.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/hal_wynstead",
+  "speaker_name": "Hal Wynstead",
+  "notes": "The one voice of Wynstead (hearthvale), written with the atlas: Someone has been opening the sluices at night, and the flood is drowning the lane where Gosford's name used to be; the sluice-keeper thinks that is the point.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Hal Wynstead",
+    "text": "Wynstead. Hal. You are standing on the dry bit, which is the right bit to stand on in March. The meadows are under a hand of water and they will be under it till the grass is up, and the grass is why the Vale has hay.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Hal Wynstead",
+    "text": "Ask, then. I am between sluices.",
+    "choices": [
+     {
+      "text": "Why flood a meadow on purpose?",
+      "next": "topic_1"
+     },
+     {
+      "text": "You said someone opens the sluices at night.",
+      "next": "topic_2"
+     },
+     {
+      "text": "What was Gosford like?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Hal Wynstead",
+    "text": "The water is warmer than the air in March, so the grass under it wakes a month early; the Vale's hay comes off drowned ground and nobody in Merrowby who eats the mutton thinks about that once. My cousin Ellard used to. Then he learned to read ledgers and forgot how to read water, and now he sends me letters about the hay price.",
+    "effects": [
+     {
+      "set_flag": "hal_wynstead_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Hal Wynstead",
+    "text": "Three nights this month. Not the whole chain, just the twelfth, the one with no name, and the water runs west across the low meadow onto the old lane, the one that went to Gosford. — You have heard of Gosford. Nine hearths, gone in eleven days while the Toll hummed. The Toll is humming. Somebody is drowning the lane to it, and I have sat up two nights and seen nobody, and the paddle was open in the morning both times.",
+    "effects": [
+     {
+      "set_flag": "hal_wynstead_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Hal Wynstead",
+    "text": "I never saw it. Old Pellam did, at twenty-two, and found the doors on and the kettles on the hooks and nobody. The lane is still there, and it goes to a green, and the green goes to nothing, and I will not walk it, and I have walked every other yard of this Vale with water in my boots.",
+    "effects": [
+     {
+      "set_flag": "hal_wynstead_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Hal Wynstead",
+    "text": "If you are going west, keep off the low meadow. It looks like grass. It is a hand of water with grass in it.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/lin_cresswell",
+  "speaker_name": "Lin Cresswell",
+  "notes": "The one voice of Cressbourne (hearthvale), written with the atlas: The top bed came up grey overnight, and the Cresswells want to know whether it is the water, the chalk or the Toll before the city tastes it.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Lin Cresswell",
+    "text": "You are standing in my light. — Cresswell, Lin. The top bed is mine and the rest are my cousins' and every one of them is wrong about something.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Lin Cresswell",
+    "text": "Well?",
+    "choices": [
+     {
+      "text": "What happened to the top bed?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Is it true Tollmere stole your sauce?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Lin Cresswell",
+    "text": "It came up grey. Not dead: grey, as if somebody had drawn the green out of it with a thread. I tasted it. It tastes of nothing, which a cress should never do, it should taste of the chalk and the water and a little of cold iron. — The spring comes up under the top bed first. If it is the water, the other beds go next, one a week, down the coombe. If it is the chalk it will stop at the wall. If it is the Toll, I have no idea, and nor does anybody, and I would like somebody who does.",
+    "effects": [
+     {
+      "set_flag": "lin_cresswell_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Lin Cresswell",
+    "text": "Tollmere pays for it by the cartload and calls it Lantern Row green and charges four times. That is not stealing. That is Tollmere. — My grandmother's grandmother made it for a Sayer who was sick of fish, and the Sayer wrote it down, and now it is in a book in the Spire with somebody else's name on it. I do not mind. Cress does not care who is named for it. I care a little.",
+    "effects": [
+     {
+      "set_flag": "lin_cresswell_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Lin Cresswell",
+    "text": "Take a bunch. It is the second bed's, which is to say not quite right, and still better than anything the city will sell you.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/gil_fallow",
+  "speaker_name": "Gil Fallow",
+  "notes": "The one voice of Fallowfold (hearthvale), written with the atlas: A ewe came back from the south pasture grey to the skin and will not go into the pond; the shepherd wants her named, and does not know by whom.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Gil Fallow",
+    "text": "Hush a moment. — Clover, Bramble, Nutmeg, Wren. — There. Fallow. Gil. You can talk now; they are in.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Gil Fallow",
+    "text": "What do you need?",
+    "choices": [
+     {
+      "text": "Why graze so near the ash?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Tell me about the grey ewe.",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Gil Fallow",
+    "text": "The grass is sweeter where it is poorer, which nobody believes until they taste the mutton. And somebody has to; a down that is not grazed goes to scrub, and scrub goes to nobody's, and a place that is nobody's is halfway to quiet. — The grey comes over the down on a south wind like a fine flour. We wash it out of the fleeces in the pond. The pond has never been dry. I would like it understood that I count on that.",
+    "effects": [
+     {
+      "set_flag": "gil_fallow_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Gil Fallow",
+    "text": "Thistle. Four years old, twin lambs twice. She came in last week grey to the skin under the fleece, eyes and all, and she knows her name still, she comes to it, but she will not go into the pond, and she will not come past the fold gate, and she stands at the south wall looking down at the heath as if somebody had called her. — The Vale says a thing is kept by being named. She has a name. I would like to know who else has to say it.",
+    "effects": [
+     {
+      "set_flag": "gil_fallow_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Gil Fallow",
+    "text": "If you pass the Rest, tell them Fallowfold's in and counted. They like to hear it, and I like them to.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/pell_brambling",
+  "speaker_name": "Pell Brambling",
+  "notes": "The one voice of Bramcombe (hearthvale), written with the atlas: Every tally in the combe is one sheep short every morning, and no sheep is missing.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Pell Brambling",
+    "text": "Brambling. Pell. Maud's brother; yes, the one who stayed; no, I do not regret it; yes, she asks. Mind the wash, it is deeper than it looks and the oak pipe is a liar about how fast it fills.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Pell Brambling",
+    "text": "What is it? I have tallies to cut.",
+    "choices": [
+     {
+      "text": "What are the tally-sticks in every doorway?",
+      "next": "topic_1"
+     },
+     {
+      "text": "What does your sister say about it?",
+      "next": "topic_2"
+     },
+     {
+      "text": "Is Bramcombe old?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Pell Brambling",
+    "text": "Every house in the combe keeps its own count and I keep the combe's, and at shearing the sticks are laid side by side on the wash-house table, and they agree, and we drink. — Since spring they agree, and they are all one short. Every one. Every morning. I have counted the sheep in the fold with my own mouth and there are exactly as many as there should be. The sticks say one fewer. Nobody has cut a notch wrong; I checked every knife.",
+    "effects": [
+     {
+      "set_flag": "pell_brambling_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Pell Brambling",
+    "text": "Maud says it is the Toll humming and I should come to Merrowby for a week and eat properly. Maud says everything is the Toll humming and I should eat properly. — She may be right. She usually is, which is why I live up a combe.",
+    "effects": [
+     {
+      "set_flag": "pell_brambling_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Pell Brambling",
+    "text": "Older than Merrowby, by the sticks. There is a tally in the wash-house beam that nobody can read, cut before the Toll fell, and it is one short too.",
+    "effects": [
+     {
+      "set_flag": "pell_brambling_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Pell Brambling",
+    "text": "Go gently on the down. The sheep are counted, even if the sticks disagree.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/tor_rookwright",
+  "speaker_name": "Tor Rookwright",
+  "notes": "The one voice of Rookdown (hearthvale), written with the atlas: The grey patch on the green has reached the well: half the village wants to leave and half says leaving is how a village goes quiet, and they want somebody from outside to say which half is right.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Tor Rookwright",
+    "text": "Rookwright. Tor. Reeve, for my sins, which are not many, which is why they chose me. Mind the grey on the green; do not walk on it. It does not do anything. It is simply not a place you should put your feet.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Tor Rookwright",
+    "text": "Say it, then.",
+    "choices": [
+     {
+      "text": "Tell me about the grey on the green.",
+      "next": "topic_1"
+     },
+     {
+      "text": "Why won't the rooks fly south?",
+      "next": "topic_2"
+     },
+     {
+      "text": "Is there anything past the Brow?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Tor Rookwright",
+    "text": "It came up in the Quiet Villages years as a patch the size of a door. It is the size of a threshing floor now. I measure it every Tollday and chalk the figure on the bell-post, and the village stands round the post and argues, and the arguing is the most talking Rookdown does, and I have wondered whether that is not the point of the patch. — This week it touched the well. The water is still sweet. Half of them want to take the carts to Bramcombe before it is not. Half say that is exactly how a village goes quiet. I do not know which half is right and I am the reeve.",
+    "effects": [
+     {
+      "set_flag": "tor_rookwright_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Tor Rookwright",
+    "text": "They fly north, east and west all day, and at the south edge of the elms they turn back as if they had struck glass. They have done it since before my grandfather. I have watched them try. — I think they know something we would rather not, and I think it is kind of them not to go and look.",
+    "effects": [
+     {
+      "set_flag": "tor_rookwright_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Tor Rookwright",
+    "text": "The cliff, and then the Hush. You can see it from the Hushwatch stones on a clear evening, grey as a slate, and the Vale walks up to look at it and goes home grateful. We live next to it. We are not grateful. We are simply here.",
+    "effects": [
+     {
+      "set_flag": "tor_rookwright_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Tor Rookwright",
+    "text": "If you are going east, keep north of the elms. The rooks will tell you where south is. Listen to them.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/tam_withy",
+  "speaker_name": "Tam Withy",
+  "notes": "The one voice of Hazelcombe (hearthvale), written with the atlas: The Wardens have ordered a mile of hurdles for new pens on the grey border, and the weavers want to know what the pens are for before they weave them.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Tam Withy",
+    "text": "Withy. Tam. Hold that end — no, the other end. There. You have just helped make a hurdle and it will go to a fold on the downs and outlast us both.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Tam Withy",
+    "text": "Go on, then, while my hands are busy.",
+    "choices": [
+     {
+      "text": "What are the Wardens' new pens for?",
+      "next": "topic_1"
+     },
+     {
+      "text": "What is it like, trading with the Woodfolk?",
+      "next": "topic_2"
+     },
+     {
+      "text": "Why the odd rod in every hurdle?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Tam Withy",
+    "text": "A mile of hurdles, ordered from the Rest, to be carted to the border above the ash and set in pens. Not folds: pens, with no gate, the order says, just a door you can bar from the outside. — I have woven hurdles for folds and for pens and for a Long Table dance floor once, and I have never woven for a pen with no gate. I have asked the Wardens what goes in them and they have said something that comes back grey, and I have not woven a rod since.",
+    "effects": [
+     {
+      "set_flag": "tam_withy_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Tam Withy",
+    "text": "Like trading with a wall that has opinions. They cut the rods on a seven-year round and sell me exactly what the round gives and not a rod over, and when I asked once for more they looked at me the way you look at a man who has asked for more mother. — They are right, mostly. It is very tiresome.",
+    "effects": [
+     {
+      "set_flag": "tam_withy_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Tam Withy",
+    "text": "So I can find my work. A hurdle goes out of this yard and into a fold and the fold goes to a son and then to a stranger, and the hurdle is still standing, and somebody has to know who made it. I know. That is enough knowing for a hurdle.",
+    "effects": [
+     {
+      "set_flag": "tam_withy_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Tam Withy",
+    "text": "Mind the rod stacks on your way out. They are taller than they are steady, like most of us.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/cal_merriweather",
+  "speaker_name": "Cal Merriweather",
+  "notes": "The one voice of The Hare and Hurdle (hearthvale), written with the atlas: The innkeeper's board of who owes whom a drink has one debt on it, in chalk that will not rub off, owed to a man nobody can remember.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Cal Merriweather",
+    "text": "Welcome to the Hare. Merriweather, Cal, keeper. There is ale, there is cider from Tamwick if Bessa has been through, and there is a skittle alley, and if you lose at it you paint the sign.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Cal Merriweather",
+    "text": "What'll it be?",
+    "choices": [
+     {
+      "text": "What is the debt on the board that will not rub off?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Who comes through the Hare?",
+      "next": "topic_2"
+     },
+     {
+      "text": "Who paints the sign?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Cal Merriweather",
+    "text": "Top left. 'One to Dunn, from the Hare.' My aunt's hand, I think; the chalk is hers. It will not rub off. I have tried water, vinegar and a Sayer. — Nobody on the downs knows a Dunn. The Roll has no Dunn. Pellam in Merrowby does not know a Dunn, and Pellam knows everybody who ever owed anybody. The house owes a man a drink and the man is nowhere, and I would very much like to pay it.",
+    "effects": [
+     {
+      "set_flag": "cal_merriweather_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Cal Merriweather",
+    "text": "Drovers taking Bram Down's lambs to Merrowby market, carters with flint from the Pits, Wardens coming off the border tower shifts with the look of men who have been staring at grey for nine days. Rookdown folk, lately, with their carts loaded and their faces set, going north, and then coming back again two days later, not saying anything. — I pour for all of them. The Hare is a hurdle: it keeps the weather out, that is all.",
+    "effects": [
+     {
+      "set_flag": "cal_merriweather_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Cal Merriweather",
+    "text": "Whoever loses at skittles on Long Table night. The hare has been painted by a Warden, a Sayer, a knight of the Order and once by Bessa Tamwick, who lost on purpose because she said the last hare looked like it was apologising.",
+    "effects": [
+     {
+      "set_flag": "cal_merriweather_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Cal Merriweather",
+    "text": "Mind the step on the way out; it's where the hare lands.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/nella_candlewright",
+  "speaker_name": "Nella Candlewright",
+  "notes": "The one voice of The Last Camp (cinderlea), written with the atlas: A pilgrim who has waited three years asks for the one thing she has not been able to find out: whether anybody would say her name if she stayed.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Nella Candlewright",
+    "text": "Sit if you like. Nobody here will ask you anything. That is the whole of the camp: a rim, a fire, and nobody asking.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Nella Candlewright",
+    "text": "You may ask me, though. You look like you would.",
+    "choices": [
+     {
+      "text": "Why haven't you gone on?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Why only half a candle?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Nella Candlewright",
+    "text": "I do not know. That is the honest answer and I have had three years to find a better one. — I walked down from Merrowby with my mind made up and I reached this rim and sat down to rest, and the next morning I made a candle, and I have made one every evening since. The Order says the ones who wait are not stopped, only slow. I think I am waiting to find out whether anybody would say my name if I stayed. Nobody here says names. It is the rule.",
+    "effects": [
+     {
+      "set_flag": "nella_candlewright_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Nella Candlewright",
+    "text": "A whole one is a night. Half is a promise to come back and finish it. I have a tent full of half-candles. The knights take them to the chapter-house and burn the other halves on Candle Night, and the chapter-house is the brightest it has been in a hundred years, they tell me, and that is the only thing I know I have done since I sat down.",
+    "effects": [
+     {
+      "set_flag": "nella_candlewright_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Nella Candlewright",
+    "text": "Go gently on the rim. The Hush does not pull. It simply waits, like me.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/merrit_ash",
+  "speaker_name": "Merrit Ash",
+  "notes": "The one voice of The West Walk (cinderlea), written with the atlas: Someone has been working Ossel's forge at night, and what they are making is a bell-bearer's clapper.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Merrit Ash",
+    "text": "Merrit Ash, the west walk. You are on it. It goes from the White Wood to where the reeds go grey, and back, and I have walked it four thousand times, and it is exactly as long as it was the first night.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Merrit Ash",
+    "text": "Ask. I have the day to sleep and nobody to say anything to.",
+    "choices": [
+     {
+      "text": "Why is the wall made of doors?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Whose forge is it?",
+      "next": "topic_2"
+     },
+     {
+      "text": "What is at the end of the west walk?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Merrit Ash",
+    "text": "Ashcombe's. The hamlet went quiet in the Ash Winter, before Greyfold, and nobody remembers it at all, which is worse. The Order took the doors off their hinges so the houses would not be kept shut on nothing, and built the post out of them. — I was a lock-maker. They are good doors. Every one of them was shut by somebody who meant to open it again.",
+    "effects": [
+     {
+      "set_flag": "merrit_ash_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Merrit Ash",
+    "text": "Ossel's. Smith's daughter, of Gullhithe. She kept the forge and the west walk both, and in the autumn of 1019 she went out to bring in a bell-bearer's clapper and did not. We use her quench; the water in the trough has been changed every week since. The forge has not been lit. — It has been lit, lately. Three nights. Somebody is working a clapper on her anvil, and I have come back from the round each time to find it warm and nobody here.",
+    "effects": [
+     {
+      "set_flag": "merrit_ash_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Merrit Ash",
+    "text": "The reeds, going grey. The marsh folk cut them at Nauvissa and sell them to us for wicks. Past that, the ash runs into the water and you cannot tell which is which. I turn round there. The Vigil Book says to keep the ring, and the ring is wherever you turn round.",
+    "effects": [
+     {
+      "set_flag": "merrit_ash_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Merrit Ash",
+    "text": "Walk with somebody, if you walk west. It is not dangerous. It is simply better with somebody.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/corin_stilyard",
+  "speaker_name": "Corin Stilyard",
+  "notes": "The one voice of Stride's Foot (brightwater), written with the atlas: One traveller a week is entered in the toll-ledger going out to the city and never coming back, always in the same hand, and the hand is not a clerk's.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Corin Stilyard",
+    "text": "Stilyard, senior clerk, Stride's Foot. Everything that goes to the city on wheels is weighed here and priced, and you are not on wheels, so you are free, which is the only free thing between here and the Spire.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Corin Stilyard",
+    "text": "State your business. Briefly; there is a cart.",
+    "choices": [
+     {
+      "text": "What is odd about the ledger?",
+      "next": "topic_1"
+     },
+     {
+      "text": "How much is the toll?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Corin Stilyard",
+    "text": "Nothing is odd about my ledger. My ledger is correct. — One entry a week is not mine. A traveller, on foot, going out along the Stride toward the city, weight of pack given, name given, and the same hand every time, a hand like a child copying letters. And nobody of that name comes back through the Foot, ever, and nobody at the city end has them going in. Nineteen entries since winter. I have sat up with the book. The page is blank when I close it and written when I open it, and I would like it to stop, or to be paid for it.",
+    "effects": [
+     {
+      "set_flag": "corin_stilyard_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Corin Stilyard",
+    "text": "By weight and by kind, per the Charter of 712 as amended forty-one times, and I will not recite the amendments unless you have an afternoon and a grievance. Foot traffic is free. That is the forty-second amendment, and I voted against it, and I was right, and it is still free.",
+    "effects": [
+     {
+      "set_flag": "corin_stilyard_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Corin Stilyard",
+    "text": "Mind the lamps on the Stride at dusk. They light one after the other and it is a very beautiful thing and people walk into the water watching it.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/maudie_punt",
+  "speaker_name": "Maudie Punt",
+  "notes": "The one voice of Sedgehithe (brightwater), written with the atlas: The reed fringe is dying back from the shore in a straight line, as if something were drawing a rule across the water.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Maudie Punt",
+    "text": "Punt. Maudie. Yes, really; my father had a sense of humour and a boat. Mind the bollards, they ring if you knock them, and the reeds do not like it.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Maudie Punt",
+    "text": "Say what you came to say. The tide is not a thing on the Mere, but the light is.",
+    "choices": [
+     {
+      "text": "What is wrong with the reed fringe?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Why are the bollards shaped like bells?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Maudie Punt",
+    "text": "It is going back. Not dying from the edges like weed-rot: going back in a straight line, as if somebody had laid a rule across the bay and everything west of the rule has decided it is not reed any more. The line moves a pole's length a week, toward the Eelweir. — The reedfolk at the weir say it is the Tide account come true, the water going out. The Sayers say it is a measurement error. The reeds say nothing, which in my experience is when to listen.",
+    "effects": [
+     {
+      "set_flag": "maudie_punt_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Maudie Punt",
+    "text": "The Builders made them. Everything the Builders made is shaped like a bell if you look at it long enough, the Sayers say, which is either very deep or a sign that the Sayers need to look at something else. — You tie a punt to one and it hums while the punt rocks. My mother said it was the lake saying the boat's name. I have never had the heart to tell her it was the rope.",
+    "effects": [
+     {
+      "set_flag": "maudie_punt_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Maudie Punt",
+    "text": "Go round by the shore path. The reeds will cut you if you go through them, and they will be right to.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/berrit_smoker",
+  "speaker_name": "Berrit Smoker",
+  "notes": "The one voice of Merrowhithe (brightwater), written with the atlas: The dry aqueduct has started to drip, and there is nothing upstream of it but Skerrow.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Berrit Smoker",
+    "text": "Smoker. Berrit. It is not a joke, it is a trade. You will smell of oak for a day; everybody does.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Berrit Smoker",
+    "text": "Well?",
+    "choices": [
+     {
+      "text": "What is the aqueduct for?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Do you have opinions about the city?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Berrit Smoker",
+    "text": "Nothing, for eleven hundred years. The Builders ran it down off the heights to somewhere, and it broke, and it has been dry since before the Toll fell. We hang pike in the arches and smoke them, and the arches draw like a chimney, which is the only water-work it has ever done for us. — This spring it drips. From the third arch, onto the landing, day and night. The water is cold and tastes of stone and nothing else, and there is nothing up the line of it but the Rudd Cliffs and Skerrow and snow.",
+    "effects": [
+     {
+      "set_flag": "berrit_smoker_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Berrit Smoker",
+    "text": "No. — That is the whole of the answer. People are always disappointed. They come up the shore from Tollmere with an argument and find a man and a lot of fish, and go home thinking Merrowhithe is simple. We are not simple. We are finished thinking about it.",
+    "effects": [
+     {
+      "set_flag": "berrit_smoker_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Berrit Smoker",
+    "text": "Take a pike. Wrap it well. Oak smoke is honest; it will tell the whole shore where you have been.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/sauve_mor",
+  "speaker_name": "Sauve Mor",
+  "notes": "The one voice of Moreva (sedgemire), written with the atlas: The eel-traps have started coming up full of something that is not eels, with a lantern-maker's knot tied round it.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Sauve Mor",
+    "text": "Mor. Sauve. Issa at Isseva is my cousin and a liar about eels, which is the family trade as much as the trapping. Mind the traps on the boards; they are wet and they bite.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Sauve Mor",
+    "text": "Ask slowly. The eels are listening.",
+    "choices": [
+     {
+      "text": "What is coming up in the traps?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Why put the first eel back?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Sauve Mor",
+    "text": "Knots. Lantern-makers' knots, the kind they tie round a burial lantern so it floats true, and nothing inside them. A hank of indigo rush tied round nothing, in a trap that was empty of eels. Nine this month. — The lantern-makers at Saeva say every knot is somebody's. They say these were tied for lanterns that went out on the water eighty years ago, and should have come apart at sea.",
+    "effects": [
+     {
+      "set_flag": "sauve_mor_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Sauve Mor",
+    "text": "Go and tell them, we say. Tell who, the children ask, and we say the other eels, so they know what they are getting into. — My grandfather said it meant the ones under the water, the drowned, so they know we are still here and still fishing and have not forgotten them. I do not say which. I put the eel back. It swims off. Somebody down there knows we are here.",
+    "effects": [
+     {
+      "set_flag": "sauve_mor_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Sauve Mor",
+    "text": "Go by the boards, not the reeds. The reeds are for eels, and they know it.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/lisse_tal",
+  "speaker_name": "Lisse Tal",
+  "notes": "The one voice of Saeva (sedgemire), written with the atlas: A lantern came back up the channel against the current, in a weave the lantern-makers stopped using eighty years ago.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Lisse Tal",
+    "text": "Tal. Lisse. Sit on the boards, if you like; you are between the racks and the water, which is where everything here is.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Lisse Tal",
+    "text": "Ask what you like. My hands will not stop, but my ears do.",
+    "choices": [
+     {
+      "text": "What came back up the channel?",
+      "next": "topic_1"
+     },
+     {
+      "text": "How do you know a lantern's maker?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Lisse Tal",
+    "text": "A lantern. Out on the water they go down the south channel to the sea, and they come apart on the way, which is the burial; that is what a lantern is for. This one came back up, against the current, lit, and fetched up on our landing at dawn. — The weave is my great-grandmother's. We stopped weaving it eighty years ago. The strand of hair in it is grey. Somebody made a lantern in her way, with her hair, eighty years after she stopped, and sent it home.",
+    "effects": [
+     {
+      "set_flag": "lisse_tal_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Lisse Tal",
+    "text": "The twist. Every family twists the rush a different way and every weaver a little differently inside that. A lantern is a letter. Most people only read the light. — The Order at Pilgrim's Ash buys our old weaves to hang in the chapter-bell. The knights say the lanterns and the bells are the same thing said twice, and I think they are right, and I think they are very far from the water to be right about it.",
+    "effects": [
+     {
+      "set_flag": "lisse_tal_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Lisse Tal",
+    "text": "If you see a lantern on the water that is going the wrong way, do not follow it. Tell us.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/ossa_lissa",
+  "speaker_name": "Ossa Lissa",
+  "notes": "The one voice of Nauvissa (sedgemire), written with the atlas: The grey moves up the Greyreed a reed-bed a year; Nauvissa wants to know which of the four accounts is right before they decide whether to move.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Ossa Lissa",
+    "text": "Lissa. Ossa. You have come from the ash side; you smell of it. Sit by the fire. It is grey reed. Listen.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Ossa Lissa",
+    "text": "Ask.",
+    "choices": [
+     {
+      "text": "Why do the Order buy grey reeds?",
+      "next": "topic_1"
+     },
+     {
+      "text": "The grey is moving up the Greyreed?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Ossa Lissa",
+    "text": "Wicks. A grey reed burns slow and even and makes a sound as it goes, a small voice, like somebody saying a word in the next room. The knights say it keeps them awake on the night watch. I think it keeps them company. — They pay in bread and salt and news of the Choir, and the news is better than the bread.",
+    "effects": [
+     {
+      "set_flag": "ossa_lissa_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Ossa Lissa",
+    "text": "A bed a year. When I was a girl the grey reeds were at the ash's edge, a mile south. Now they are at our landing. Next year they are under my floor. — The four accounts each tell me something different to do. The Bell says it does not matter. The Candle says talk more and stay. The Breath says go north. The Tide says wait, it goes out and comes back. I am reedfolk. I was raised on the Tide. I am waiting. I would like somebody to tell me whether waiting is still the same thing it was.",
+    "effects": [
+     {
+      "set_flag": "ossa_lissa_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Ossa Lissa",
+    "text": "Walk north, when you go. Not because the grey is south. Because the eels are north, and somebody should eat tonight.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/meo_sa",
+  "speaker_name": "Meo Sa",
+  "notes": "The one voice of Oulea (sedgemire), written with the atlas: The tide came in over the shell bank for the first time in anyone's memory, and left something on the pans.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Meo Sa",
+    "text": "Sa. Meo. You are standing on salt; everything here is. It gets into the boots and then into the bread and then into you. Welcome to Oulea.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Meo Sa",
+    "text": "What is it?",
+    "choices": [
+     {
+      "text": "What did the tide leave on the pans?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Why did the Salt Isles ships stop?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Meo Sa",
+    "text": "Footprints. On the new salt, in the morning, after a tide that came higher than the shell bank, which it has not done in the three hundred years my family has written tides on that post. — Bare feet. Coming up out of the sea and across the pans and back again. Small ones. The Tide account says the drowned will walk when the flood comes back. I have boiled salt my whole life on the Tide account. I would rather it had waited until I was dead.",
+    "effects": [
+     {
+      "set_flag": "meo_sa_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Meo Sa",
+    "text": "Nobody knows. Forty years ago the last of them came in at midsummer and traded as always and sailed, and the next midsummer nobody came, and nobody since. We put up one tent for them at the Traders' Post every longest day anyway. — My father said they found a better salt. My mother said they found out something about us. I do not know which is worse.",
+    "effects": [
+     {
+      "set_flag": "meo_sa_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Meo Sa",
+    "text": "Go inland before the evening tide. Not because it is dangerous. Because I would like to be the only one watching it.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/wenna_holt",
+  "speaker_name": "Wenna Holt",
+  "notes": "The one voice of Elderhold (briarwold), written with the atlas: The elder doorposts have flowered out of season, and the lodge wants the Standing Moot's opinion without going to ask for it.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Wenna Holt",
+    "text": "Holt. Wenna. You are at the Wold's door; you may stand at it. Whether you go through it is another matter, and not mine alone.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Wenna Holt",
+    "text": "Ask, and I may answer.",
+    "choices": [
+     {
+      "text": "Why are the doorposts growing?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Which trees go down to the Mere?",
+      "next": "topic_2"
+     },
+     {
+      "text": "Is it true the Woodfolk have no law?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Wenna Holt",
+    "text": "They are elder. Elder does not know it has been made into a door; it simply goes on being elder, and we let it, and every year the lodge is a little taller at the door than at the back. — This spring they flowered in the frost. Elder does not flower in the frost. I have written to the Standing Moot's keepers, which is to say I have oiled a stone and said so aloud, and I am waiting. The Wold is slow to answer. It is not slow to notice.",
+    "effects": [
+     {
+      "set_flag": "wenna_holt_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Wenna Holt",
+    "text": "The ones that have finished. You can tell a tree that has finished; it stands differently. The Tallymen would like us to tell them by the girth, and pay by the girth, and we tell them by the standing, and they pay what they are told. — Every tree that goes down the Wold Water is one that asked. That is the whole of the custom, and the whole of the argument, and the Circle has written three pamphlets about it.",
+    "effects": [
+     {
+      "set_flag": "wenna_holt_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Wenna Holt",
+    "text": "We have custom and bows. Custom says you do not take more than you need. The bows are for the ones who do not listen to custom. Tollmere says that is not law. Tollmere has a building full of law and a room under it full of thieves, and we have neither, so.",
+    "effects": [
+     {
+      "set_flag": "wenna_holt_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Wenna Holt",
+    "text": "Go gently in the Wold. Nothing will stop you. That is not the same as being welcome.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/edda_thornby",
+  "speaker_name": "Edda Thornby",
+  "notes": "The one voice of Rookhold (briarwold), written with the atlas: The Old Gate's doors were found open at dawn, from the far side.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Edda Thornby",
+    "text": "Thornby. Edda. Keeper. The gate behind me is the Old Gate, and it is shut, and it is going to stay shut while I am standing here, which is a long time yet.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Edda Thornby",
+    "text": "Say what you need to say. Quietly. The thorn listens.",
+    "choices": [
+     {
+      "text": "Why does only the Old Gate still close?",
+      "next": "topic_1"
+     },
+     {
+      "text": "What happened at dawn?",
+      "next": "topic_2"
+     },
+     {
+      "text": "Is the Briar keeping something out or in?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Edda Thornby",
+    "text": "Because we keep it. There were four gates and four lodges, once. The northern gate's keepers went up to Harrow Tor to clear the road in the Chain Years and did not come down, and the Moot and south gates' keepers went to the Vale when the carts stopped. We stayed. — A gate is a promise that something will be let through and something will not. A promise nobody sleeps against is a hole.",
+    "effects": [
+     {
+      "set_flag": "edda_thornby_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Edda Thornby",
+    "text": "The doors were open. Not broken: open, and the bar lifted from the far side and laid on the ground on our side, neatly, as if somebody had been let in and was polite about it. The youngest was asleep against them, as she should have been, and she woke up on the other side of the gate. She came back through and closed it and has not spoken since. — I would like somebody to go and look at the far side. Not through. Look.",
+    "effects": [
+     {
+      "set_flag": "edda_thornby_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Edda Thornby",
+    "text": "I have read both pamphlets. Alder Wyke is a friend and the Circle is not, and I still do not know. I know this: the thorn is thickest on our side because we lay it. Whatever the Builders meant, it is our laying that stands now. What it keeps is whatever we are keeping.",
+    "effects": [
+     {
+      "set_flag": "edda_thornby_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Edda Thornby",
+    "text": "When you go, go west. Not because east is closed. Because I asked.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/aggie_coppice",
+  "speaker_name": "Aggie Coppice",
+  "notes": "The one voice of Hazelwick (briarwold), written with the atlas: One of the stools has not grown back after cutting, the first in seven hundred years, and the family it belongs to wants it named before the Roll takes theirs.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Aggie Coppice",
+    "text": "Coppice. Aggie. Reeve. If you are here to buy rods the price is the price and I will tell you what I think of it, and if you are here for anything else I will tell you what I think of that too.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Aggie Coppice",
+    "text": "Go on. The stools can wait; they are very old.",
+    "choices": [
+     {
+      "text": "What is the round?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Which stool has not grown back?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Aggie Coppice",
+    "text": "Seven years. Every stool in Hazelwick is cut to the ground once in seven, and grows back seven years of rods, straight as a Sayer's excuses. The book says which family cuts which stool which year. It has said it for seven hundred years and been argued with for all of them. — Tam Withy at Hazelcombe weaves the rods into hurdles and pays me what he pays. I tell him it is an insult. He agrees. We have been having that conversation for twenty years and it is the best part of both our summers.",
+    "effects": [
+     {
+      "set_flag": "aggie_coppice_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Aggie Coppice",
+    "text": "The Fennick stool. Cut last winter, as the book said, and it has put up nothing. Not a shoot. Seven hundred years it has come back, and the Fennicks cut it every seventh, and this year it is a stump and a stump only. — The Fennicks are a Vale family and have been in the book since before there was a Vale. Old Aud Fennick walked south this spring, I hear. I have not said so to the stool.",
+    "effects": [
+     {
+      "set_flag": "aggie_coppice_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Aggie Coppice",
+    "text": "Mind the stools as you go. They look like stumps. They are not stumps. They are only resting.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/nessa_ashby",
+  "speaker_name": "Nessa Ashby",
+  "notes": "The one voice of Ormhold (briarwold), written with the atlas: The Listeners left a trunk at Ormhold in 1038 and never came back for it; it has started to smell of the sea.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Nessa Ashby",
+    "text": "Ashby. Nessa. Ormhold. There are beds, if you are the Circle, at the Circle's rate; if you are not, there is floor, at mine.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Nessa Ashby",
+    "text": "What do you want in the Northwold?",
+    "choices": [
+     {
+      "text": "You guided the Listeners through the northern gate?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Why charge the Circle for the beds?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Nessa Ashby",
+    "text": "To it. Not through. The Wold does not go through; that is the custom. Two Listeners and a chart-maker, in 1038, with a great deal of paper. I waited three days at the gate stone. They came back on the fourth from the far side, with salt in their boots and the chart-maker not speaking, and slept here one more night, and went home, and wrote their report, which nobody reads. — They left a trunk. I have not opened it. This spring it smells of the sea, and there is no sea north of here.",
+    "effects": [
+     {
+      "set_flag": "nessa_ashby_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Nessa Ashby",
+    "text": "Because they used them. And because while they owe me they write to me, and while they write to me somebody in the Spire has to remember there is a gate in the north of the Wold that their people went through and came back from. — I have never opened a reply. I know what they say. Paying would end it.",
+    "effects": [
+     {
+      "set_flag": "nessa_ashby_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Nessa Ashby",
+    "text": "The north path is clear to the tor. Past the tor, keep to the stones.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/ushra_ko_rudd",
+  "speaker_name": "Ushra ko-Rudd",
+  "notes": "The one voice of Ruddow (skerrow), written with the atlas: Rudd have finally asked for the forty head, through the player as Kharrow's go-between, and the reason is on the roll of their dead.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Ushra ko-Rudd. I keep the memory of this clan, and the account, which is the same thing said with numbers. You are standing in Ruddow; the wall behind you was a giant's back.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Speak.",
+    "choices": [
+     {
+      "text": "What does Kharrow owe Rudd?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Why ask for it now?",
+      "next": "topic_2"
+     },
+     {
+      "text": "What is the wall made of?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Forty head and a hearth. The winter of the long snow, when the Windgate came down and Kharrow's herds were buried in the gorge, Rudd fed Kharrow from our own fold and gave a hearth to a family whose house was under the snow. Forty head. We have been asked three times to take payment and three times we have said it is forgiven. — It is not forgiven until it is paid. That is the whole of the Rope-Song in one line. A debt is a rope between two clans. Pay it and the rope goes slack.",
+    "effects": [
+     {
+      "set_flag": "ushra_ko_rudd_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Because the Toll hums and the clans are counting what holds them together, and Rudd has counted, and the rope to Kharrow is the one we would keep. — If Kharrow pays, it is only forty head. If Kharrow refuses, it is a quarrel, and a quarrel is a rope too. Either is better than a debt nobody has spoken of in a hundred years. I am the one who speaks of it. I would like it heard.",
+    "effects": [
+     {
+      "set_flag": "ushra_ko_rudd_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "A giant's back. Each vertebra a clan-cairn's worth of bone. Rudd found it in the scree above the dale when the Oskeld glacier went back, and carried it down one bone at a time, and it took nine winters. The Sayers say it is the same giant as the Rib Cathedral's. Rudd say it is ours.",
+    "effects": [
+     {
+      "set_flag": "ushra_ko_rudd_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Ushra ko-Rudd",
+    "text": "Go with the rope, as we say. Mind which end you are holding.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/dagga_ko_ghast",
+  "speaker_name": "Dagga ko-Ghast",
+  "notes": "The one voice of Ghastfell (skerrow), written with the atlas: Ghast want the bridge mended and the song of forgiveness stopped; Kharrow want neither.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "Ko-Ghast, Dagga. Ladder-warden. You came up the long ladders; well done. Most outlanders look down on the fourth.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "What do you want, outlander?",
+    "choices": [
+     {
+      "text": "Why has Ghast never mended the bridge?",
+      "next": "topic_1"
+     },
+     {
+      "text": "Would you mend it, if you could?",
+      "next": "topic_2"
+     },
+     {
+      "text": "What is at the bottom of the gorge?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "Because the Moot forgave us, and sings that it forgave us every morning, in Kharrow's hall, before food. A forgiveness sung every morning is a debt with a nicer voice. — We cut Kharrow's chain in the year of the broken bridge. There was blood. The Moot forgave. And if we mend the bridge the song stops, and if the song stops the forgiveness is forgotten, and a forgotten forgiveness goes back to being a debt. So we climb. It is a very long way to keep a grudge polished.",
+    "effects": [
+     {
+      "set_flag": "dagga_ko_ghast_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "Tomorrow. I would mend it tomorrow and cross it drunk. — But the elders say the song is what holds Ghast in the Rope-Song at all, the forgiveness verse, and a clan with no verse is a clan the Breath takes. Ghorr had no verse. You have heard of Ghorr. Nobody has.",
+    "effects": [
+     {
+      "set_flag": "dagga_ko_ghast_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "The chain we cut, still hanging, and the bridge's anchor on the far side with a mark on it that is no clan's. The goats cross by the chain. Goats do not know about the Moot.",
+    "effects": [
+     {
+      "set_flag": "dagga_ko_ghast_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Dagga ko-Ghast",
+    "text": "Down the ladders face in. Always face in. The mountain likes to be looked at.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/brann_ko_dreugh",
+  "speaker_name": "Brann ko-Dreugh",
+  "notes": "The one voice of Dreughow (skerrow), written with the atlas: Someone has painted an eighth verse on a Dreughow door overnight, in no clan's hand.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Ko-Dreugh, Brann. Mind the doors, the paint is wet on the third. It is always wet on one of them. That is the point.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Ask, and I will paint while you do.",
+    "choices": [
+     {
+      "text": "Why paint the verse on the doors?",
+      "next": "topic_1"
+     },
+     {
+      "text": "What was painted on the door overnight?",
+      "next": "topic_2"
+     },
+     {
+      "text": "Who was the first Brann?",
+      "next": "topic_3"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Dreugh sing first at the Moot. Seven clans, seven verses, and ours opens the rope. If a stranger knocks on a Dreugh door he should know where he is in the song before he is let in. — I paint a word a day. By midwinter the verse is new again. My grandfather said a verse painted once is a sign and a verse painted every day is a prayer, and I do not know whether he was pious or just liked painting.",
+    "effects": [
+     {
+      "set_flag": "brann_ko_dreugh_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "An eighth verse. On the ninth door, over our first, in a hand no clan uses. It is a verse's length and a verse's metre, and the words are Skerrish, and they do not mean anything, or they mean something nobody has said in a thousand years. — Four beats of silence every morning at Kharrow for the missing clan. Somebody has filled them in with paint. I have not painted over it. I cannot bring myself to. I have not read it aloud either.",
+    "effects": [
+     {
+      "set_flag": "brann_ko_dreugh_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_3": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "The clan-books say he hung the first chain at Windgate and would not be roped while he did it. Kharrow's books say that was their Brann. We do not discuss it at the Moot.",
+    "effects": [
+     {
+      "set_flag": "brann_ko_dreugh_told_3"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Brann ko-Dreugh",
+    "text": "Knock on any door on your way. Read it first.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/varra_ko_skarl",
+  "speaker_name": "Varra ko-Skarl",
+  "notes": "The one voice of Skarlow (skerrow), written with the atlas: Skarl's herders have seen a line of lights moving north along the Briar, beyond the wall, where there is no road.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Ko-Skarl. Varra. You came from the west; everybody does. Sit on the east side of the fire. We keep the west side for the wind.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Say it.",
+    "choices": [
+     {
+      "text": "Why do all the doors face east?",
+      "next": "topic_1"
+     },
+     {
+      "text": "What are the lights?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Varra ko-Skarl",
+    "text": "The Skarl verse says the giants went east when they were breathed in, along a road on the far side of the thorn, and that they will come back along it. We would like to see them coming. — It is not hope. Skarl are not hopeful people. It is manners. If somebody has been gone a thousand years you should at least be facing the door.",
+    "effects": [
+     {
+      "set_flag": "varra_ko_skarl_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Varra ko-Skarl",
+    "text": "A line of them. Moving north along the far side of the Briar, beyond the wall, slow, on three nights this spring. There is no road there that the Woodfolk know of, and the Woodfolk know every road there is and several there are not. — Nine lights. The same nine each time, the same spacing. I counted. Skarl count; it is the one thing we are known for, apart from the doors.",
+    "effects": [
+     {
+      "set_flag": "varra_ko_skarl_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Varra ko-Skarl",
+    "text": "Go west when you go. You will anyway. Everybody does.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/ebba_ko_oskel",
+  "speaker_name": "Ebba ko-Oskel",
+  "notes": "The one voice of Oskelcrag (skerrow), written with the atlas: An Oskel child walked up the mine road in her sleep and came back humming.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "Ko-Oskel. Ebba. Lead-captain. You are standing on spoil; the whole village is. Oskel built on what came out of the mountain. It seemed polite.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "Well, outlander?",
+    "choices": [
+     {
+      "text": "Why does nobody go up the Oskeld road?",
+      "next": "topic_1"
+     },
+     {
+      "text": "What happened to the child?",
+      "next": "topic_2"
+     },
+     {
+      "text": "I'll be on my way.",
+      "next": "bye"
+     }
+    ]
+   },
+   "topic_1": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "Because we sealed it. Oskel followed the silver into the mountain and the silver ran into bone, and the bone started to sing, and one day what was singing came up the shaft, and we sealed the shaft behind it and the road behind that. — Now we dig lead in the lower dale and we do not look up the road. I knock on the marker stone every morning so it knows we are still here and still not coming.",
+    "effects": [
+     {
+      "set_flag": "ebba_ko_oskel_told_1"
+     }
+    ],
+    "next": "hub"
+   },
+   "topic_2": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "Aske. Nine. Walked up the Oskeld road in her sleep in the small hours, past the marker, past the shieling, to the sealed shaft, and sat down there, and was found at dawn humming a tune nobody in Oskelcrag knows. She is well. She eats. She hums it when she is not thinking. — The clan-books say the thing in the shaft is holding a note. I would very much like to know whose, and I would very much like it not to be teaching it to children.",
+    "effects": [
+     {
+      "set_flag": "ebba_ko_oskel_told_2"
+     }
+    ],
+    "next": "hub"
+   },
+   "bye": {
+    "speaker": "Ebba ko-Oskel",
+    "text": "If you go up the road, and you should not, knock on the stone first. Twice. So it knows it is you.",
+    "next": "hub"
+   }
+  }
+ }
+]

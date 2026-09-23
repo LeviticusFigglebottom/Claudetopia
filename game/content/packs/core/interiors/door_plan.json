@@ -4,8 +4,8 @@
     "role": "door_plan",
     "place": "core:place/cantors_seat",
     "position": [
-      -1900,
-      3500
+      -130,
+      3470
     ],
     "region": "core:region/cinderlea",
     "rows": [
@@ -24,8 +24,8 @@
     "role": "door_plan",
     "place": "core:place/drowned_nave",
     "position": [
-      -3500,
-      -1300
+      -3300,
+      -1420
     ],
     "region": "core:region/sedgemire",
     "rows": [
@@ -44,8 +44,8 @@
     "role": "door_plan",
     "place": "core:place/fernhold",
     "position": [
-      2300,
-      1100
+      3350,
+      230
     ],
     "region": "core:region/briarwold",
     "rows": [
@@ -64,8 +64,8 @@
     "role": "door_plan",
     "place": "core:place/frostmothers_cradle",
     "position": [
-      800,
-      -3800
+      470,
+      -3790
     ],
     "region": "core:region/skerrow",
     "rows": [
@@ -84,8 +84,8 @@
     "role": "door_plan",
     "place": "core:place/gullhithe",
     "position": [
-      1500,
-      -900
+      -1300,
+      -960
     ],
     "region": "core:region/brightwater",
     "rows": [
@@ -104,8 +104,8 @@
     "role": "door_plan",
     "place": "core:place/hollin_barrow",
     "position": [
-      1700,
-      1900
+      1750,
+      1960
     ],
     "region": "core:region/hearthvale",
     "rows": [
@@ -124,8 +124,8 @@
     "role": "door_plan",
     "place": "core:place/isseva",
     "position": [
-      -2900,
-      -500
+      -2600,
+      50
     ],
     "region": "core:region/sedgemire",
     "rows": [
@@ -144,8 +144,8 @@
     "role": "door_plan",
     "place": "core:place/kharrow_hold",
     "position": [
-      400,
-      -2700
+      300,
+      -2740
     ],
     "region": "core:region/skerrow",
     "rows": [
@@ -164,8 +164,8 @@
     "role": "door_plan",
     "place": "core:place/merrowby",
     "position": [
-      900,
-      2350
+      250,
+      1330
     ],
     "region": "core:region/hearthvale",
     "rows": [
@@ -256,8 +256,8 @@
     "role": "door_plan",
     "place": "core:place/oskeld_mine",
     "position": [
-      -600,
-      -3200
+      -2680,
+      -3100
     ],
     "region": "core:region/skerrow",
     "rows": [
@@ -276,8 +276,8 @@
     "role": "door_plan",
     "place": "core:place/pennywort_mill",
     "position": [
-      600,
-      1900
+      -450,
+      1230
     ],
     "region": "core:region/hearthvale",
     "rows": [
@@ -296,8 +296,8 @@
     "role": "door_plan",
     "place": "core:place/pilgrims_ash",
     "position": [
-      -1500,
-      2200
+      190,
+      2900
     ],
     "region": "core:region/cinderlea",
     "rows": [
@@ -317,7 +317,7 @@
     "place": "core:place/sunken_barge",
     "position": [
       -700,
-      -700
+      -1320
     ],
     "region": "core:region/brightwater",
     "rows": [
@@ -336,8 +336,8 @@
     "role": "door_plan",
     "place": "core:place/undercroft",
     "position": [
-      -80,
-      -100
+      -40,
+      -240
     ],
     "region": "core:region/brightwater",
     "rows": [
@@ -356,8 +356,8 @@
     "role": "door_plan",
     "place": "core:place/weaverdeep",
     "position": [
-      3400,
-      -700
+      2990,
+      150
     ],
     "region": "core:region/briarwold",
     "rows": [
