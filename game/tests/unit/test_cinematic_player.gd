@@ -502,6 +502,15 @@ func test_a_new_game_skipped_while_the_country_is_late_is_handed_over_whole() ->
 	cin.skip()
 	w.streamer.cells_per_frame = 12
 	assert_true(await _until_finished(cin, done), "skipped in the hold, it hands back")
+	# the first frame of control, as the flow probe reads it: the Warden already standing
+	await _tree().process_frame
+	var reg := NpcRegistry.instance
+	var standing: Node = reg.actor("core:npc/wren_tallow") if reg != null else null
+	var said := "registry %s; her state %s; people in the tree: %s" % [
+			"missing" if reg == null else "with %d standing" % reg.spawned.size(),
+			str(reg.state("core:npc/wren_tallow")) if reg != null else "?",
+			", ".join(_tree().get_nodes_in_group("npc").map(func(n: Node) -> String: return str(n.get("npc_id"))))]
+	assert_true(standing != null, "the Warden stands at the start on the first frame of control (%s)" % said)
 	await _settle()
 	var body := _player(w)
 	var rig: Node = body.get("camera_rig")

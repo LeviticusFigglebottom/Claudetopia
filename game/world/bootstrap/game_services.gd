@@ -142,6 +142,13 @@ func begin_new_game() -> void:
 	if bool(log_node.call("is_active", quest)) or bool(log_node.call("is_completed", quest)):
 		return
 	log_node.call("start", quest)
+	# QuestLog.start announces a quest a moment before its first stage, and a hold on that stage
+	# lets go for that moment: the registry sent the greeter home and took her body away, and put her
+	# back at her fire without standing her up again. Whoever stands here now is stood up at once,
+	# not at the NPC streamer's next look round, so she is there on the first frame of control.
+	var people := get_tree().get_first_node_in_group("npc_streamer")
+	if people != null and people.has_method("refresh"):
+		people.call("refresh")
 	new_game_started.emit(quest)
 	Log.info("GameServices", "new game: started %s" % quest)
 	_first_words(str(opening.get("greeter", "")))
