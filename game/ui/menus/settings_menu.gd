@@ -177,6 +177,10 @@ func _build_video() -> void:
 	_option("video", "shadows", "Shadows", ["Off", "Low", "Medium", "High"])
 	_option("video", "msaa", "Edge smoothing", ["Off", "2×", "4×", "8×"])
 	_check("video", "ssao", "Corner shadow (SSAO)", "Forward+ only")
+	_check("video", "volumetric_fog", "Volumetric fog", "Forward+ only")
+	_check("video", "sdfgi", "Bounced light (SDFGI)", "Forward+ only")
+	_check("video", "color_grade", "Region colour grade")
+	_slider("video", "night_lights", "Lamps lit at night", 0.0, 10.0, 1.0, "lamps")
 	_check("video", "glow", "Glow")
 	_slider("video", "brightness", "Brightness", 0.6, 1.6, 0.05)
 

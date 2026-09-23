@@ -31,6 +31,10 @@ const BODY_MASK := LAYER_WORLD | LAYER_PLAYER | LAYER_ENEMY | LAYER_NPC | LAYER_
 const KNOCKDOWN_DURATION := 1.6
 const GET_UP_DURATION := 0.8
 const RIPOSTE_VICTIM_STUN := 1.2
+## A shove slows at this rate (m/s²); a knockback of d metres starts at sqrt(2·SHOVE_DECEL·d) m/s.
+const SHOVE_DECEL := 14.0
+## How far being knocked off your feet carries you, before any knockback the blow itself carries.
+const KNOCKDOWN_SHOVE := 1.2
 ## How far above the heightfield still counts as standing on it.
 const GROUND_SKIN := 0.12
 
@@ -70,6 +74,11 @@ var max_mana: float:
 var shield_hp: float = 0.0
 var shield_until: float = -1.0
 var dead: bool = false
+## What this body sounds like when it is struck (Foley.material_for): flesh, metal, stone, wood.
+var body_material: String = "flesh"
+## The surface its last footstep landed on, in Foley's names. Stealth reads it for noise.
+var surface: String = ""
+var _footfalls := Footfalls.new()
 var is_blocking: bool = false
 var block_stability: float = 0.0
 var can_parry: bool = false
@@ -79,6 +88,7 @@ var invulnerable_from: float = -100.0
 var invulnerable_until: float = -100.0
 var stunned_until: float = -100.0
 var last_attacker: Node = null
+## The shove still to be spent, as a speed (m/s) that SHOVE_DECEL runs down. See integrate_shove.
 var shove: Vector3 = Vector3.ZERO
 var gravity: float = 9.81
 
@@ -344,6 +354,7 @@ func take_hit(hit: HitData) -> String:
 		if hit.attacker is Actor and is_instance_valid(hit.attacker):
 			(hit.attacker as Actor).open_riposte(DamageModel.RIPOSTE_OPEN_DURATION)
 		anim.play_intent("Parry")
+		Foley.play("parry_clang", _struck_at())
 		hit_taken.emit(hit, "parried")
 		return "parried"
 	if hit.blockable and is_blocking and facing:
@@ -362,10 +373,13 @@ func take_hit(hit: HitData) -> String:
 			poise_comp.apply(hit.poise_damage * 0.5, hit.heavy)
 			if not is_stunned():
 				anim.play_intent("Block_Hit")
+		Foley.play("block_clang", _struck_at())
 		hit_taken.emit(hit, "blocked")
 		return "blocked"
 	var raw_full := hit.amount * hit.crit_mult
 	var dmg := DamageModel.apply_defence(raw_full, armour_flat, DamageModel.resist_of(resists, hit.kind))
+	# The blow lands on whatever the body is made of: flesh, mail, stone or wood.
+	Foley.play("impact_" + body_material, _struck_at())
 	_apply_damage(dmg, hit.kind, hit.attacker, hit.label)
 	if dead:
 		hit_taken.emit(hit, "hit")
@@ -376,7 +390,7 @@ func take_hit(hit: HitData) -> String:
 	push_dir.y = 0.0
 	push_dir = push_dir.normalized() if push_dir.length_squared() > 0.0001 else -forward()
 	if hit.knockback > 0.0:
-		shove += push_dir * hit.knockback
+		_add_shove(push_dir, hit.knockback)
 	if hit.crit_kind == "riposte" or hit.crit_kind == "backstab":
 		riposte_open_until = -100.0
 		stunned_until = maxf(stunned_until, t + RIPOSTE_VICTIM_STUN)
@@ -475,6 +489,7 @@ func stagger(duration: float = 0.8) -> void:
 	status.apply("stagger", duration)
 	on_action_interrupted()
 	anim.play_intent("Stagger", {"length": duration})
+	Foley.play("stagger_thud", _struck_at())
 	staggered.emit()
 
 
@@ -485,7 +500,9 @@ func knock_down(direction: Vector3) -> void:
 		stagger(0.8)
 		return
 	stunned_until = maxf(stunned_until, now() + KNOCKDOWN_DURATION + GET_UP_DURATION)
-	shove += direction.normalized() * 4.0
+	# Off your feet carries you at least this far; a blow that already throws you further does not
+	# throw you further still for putting you down.
+	_add_shove(direction, maxf(KNOCKDOWN_SHOVE - shove_left(), 0.0))
 	on_action_interrupted()
 	anim.play_intent("Knockdown", {"length": KNOCKDOWN_DURATION})
 	knocked_down.emit()
@@ -655,14 +672,63 @@ func snap_to_terrain() -> bool:
 	return true
 
 
-## Adds the pending shove (knockback) to the horizontal velocity and decays it.
+## Where on the body a blow is heard: chest height.
+func _struck_at() -> Vector3:
+	return global_position + Vector3.UP * capsule_height * 0.6 if is_inside_tree() else Vector3.INF
+
+
+## Standing on something: a floor collider, or the terrain heightfield bodies are snapped to.
+func on_ground() -> bool:
+	if is_on_floor():
+		return true
+	var provider: Object = World.terrain()
+	if provider == null or not provider.has_method("get_height") or not is_inside_tree():
+		return false
+	return global_position.y <= float(provider.call("get_height", global_position.x, global_position.z)) + GROUND_SKIN
+
+
+## The footsteps this body's movement makes this frame (Footfalls), and the surface they land on
+## for Stealth. Call once per physics frame after moving.
+func step_sounds(delta: float, volume_db: float = 0.0) -> void:
+	if dead:
+		return
+	var pace := Vector2(velocity.x, velocity.z).length()
+	var under := _footfalls.advance(self, delta, pace, on_ground(), body_scale, volume_db)
+	if not under.is_empty():
+		surface = under
+
+
+## Pushes the body `metres` along `direction` (HitData.knockback is metres), over the next few
+## frames, whatever it is doing meanwhile.
+## Two shoves add as distances, not as speeds (speeds would add up to far more than the sum).
+func _add_shove(direction: Vector3, metres: float) -> void:
+	var flat := Vector3(direction.x, 0.0, direction.z)
+	if metres <= 0.0 or flat.length_squared() < 0.0001:
+		return
+	var carried := shove.normalized() * shove_left() if shove.length_squared() > 0.0001 else Vector3.ZERO
+	var total := carried + flat.normalized() * metres
+	shove = total.normalized() * sqrt(2.0 * SHOVE_DECEL * total.length()) if total.length_squared() > 0.0001 else Vector3.ZERO
+
+
+## How many metres the shove still has to carry the body, on open ground.
+func shove_left() -> float:
+	return shove.length_squared() / (2.0 * SHOVE_DECEL)
+
+
+## Moves the body by this frame's share of the shove and runs the shove down. The shove is its own
+## motion, never folded into `velocity`: it used to be added to the velocity every frame, so a body
+## whose state only damps its velocity (stunned, knocked down) summed sixty shoves a second, and a
+## bristleback's charge threw the player at 140 m/s off the edge of the world (`./run.sh fights`).
 func integrate_shove(delta: float) -> void:
 	if shove.length_squared() < 0.0001:
 		shove = Vector3.ZERO
 		return
-	velocity.x += shove.x
-	velocity.z += shove.z
-	shove = shove.move_toward(Vector3.ZERO, 14.0 * delta)
+	var hit := move_and_collide(Vector3(shove.x, 0.0, shove.z) * delta)
+	if hit != null:
+		# A wall takes the part of the shove that points into it; the rest slides along it.
+		shove = shove.slide(hit.get_normal())
+		shove.y = 0.0
+	shove = shove.move_toward(Vector3.ZERO, SHOVE_DECEL * delta)
 
 
 ## Turns the body toward a world point at turn_speed rad/s.

@@ -23,7 +23,7 @@ const WEATHER_LIGHT := {
 }
 const NOISE_WEIGHT := {"none": 0.9, "light": 1.0, "medium": 1.3, "heavy": 1.7}
 const NOISE_SURFACE := {
-	"grass": 0.8, "dirt": 0.9, "mud": 0.9, "peat": 0.8, "sand": 0.75, "snow": 0.7, "ash": 0.85,
+	"grass": 0.8, "vale_grass": 0.8, "dirt": 0.9, "mud": 0.9, "peat": 0.8, "sand": 0.75, "snow": 0.7, "ash": 0.85,
 	"stone": 1.0, "cobbles": 1.05, "wood": 1.2, "shingle": 1.3, "gravel": 1.3, "scree": 1.3, "water": 1.4,
 }
 const LOCK_LEVEL_NAMES: Array[String] = ["open", "simple", "sturdy", "clever", "guild", "oroth"]

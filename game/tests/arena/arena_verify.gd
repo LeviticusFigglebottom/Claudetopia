@@ -256,10 +256,13 @@ func _check_bow_arrow() -> void:
 	_place_player_near(bandit, 5.0)
 	player.camera_rig.pitch = 0.0
 	player.equip_weapon("core:item/hunting_bow")
-	player.arrows = 5
+	# Arrows come out of the bag now, the way they do in the world.
+	var bag := player.get_node_or_null("Inventory") as Inventory
+	if bag != null and bag.count("core:item/iron_arrow") < 5:
+		bag.add("core:item/iron_arrow", 5 - bag.count("core:item/iron_arrow"))
 	await _settle(6)
 	var hp0 := bandit.health
-	var arrows0 := player.arrows
+	var arrows0 := bag.count("core:item/iron_arrow") if bag != null else player.arrows
 	# Hold to draw, then release to loose.
 	Input.action_press("attack_light")
 	await _wait_seconds(1.1)
@@ -267,8 +270,9 @@ func _check_bow_arrow() -> void:
 	Input.action_release("attack_light")
 	var landed := await _wait_until(func() -> bool: return bandit.health < hp0, 3.0)
 	await _shot("bow")
-	_record("the bow looses an arrow that damages its target", drawing and landed and player.arrows == arrows0 - 1,
-		"drawn %s, arrows %d -> %d, target hp %.1f -> %.1f" % [str(drawing), arrows0, player.arrows, hp0, bandit.health])
+	var arrows1 := bag.count("core:item/iron_arrow") if bag != null else player.arrows
+	_record("the bow looses an arrow that damages its target", drawing and landed and arrows1 == arrows0 - 1,
+		"drawn %s, arrows in the bag %d -> %d, target hp %.1f -> %.1f" % [str(drawing), arrows0, arrows1, hp0, bandit.health])
 	player.equip_weapon("core:item/iron_sword")
 
 

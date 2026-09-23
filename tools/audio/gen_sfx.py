@@ -40,6 +40,20 @@ OGG_QUALITY = 3.0          # mono, short, mostly noisy: q3 is transparent for th
 # transient at the same height; the per-entry volume_db in the table sets the balance between
 # them, which is where a mixer's judgement belongs.
 PEAK_DB = -3.0
+# Every one-shot opens from zero over its first millisecond and is set in 4 ms of silence each
+# side. A sound that starts at zero in the render still does not start at zero in the file: the
+# Vorbis round trip rings ahead of a transient on sample 0, and the decoded file began at -26 to
+# -36 dBFS (a lockpick at -26), which is a click on every play (tools/audio/audit.py, "starts
+# hot"). With 4 ms in hand the ringing lands in the silence and the file opens at -90 dBFS or
+# below; 4 ms is a quarter of a frame of latency.
+EDGE_FADE_S = 0.001
+EDGE_PAD_S = 0.004
+# The variants of one effect are its one sound said several ways, so they are held to within
+# this many LU of their median (loudest 400 ms): a water step 4.2 LU over its siblings is a
+# random loud footstep. Peak normalisation alone let a sustained variant carry more loudness
+# at the same peak. A quiet variant is raised only as far as its peak allows (VARIANT_BOOST_DB).
+VARIANT_MATCH_LU = 3.0
+VARIANT_BOOST_DB = 1.5
 
 
 # =================================================================================================
@@ -115,6 +129,34 @@ def _trim_silence(y: np.ndarray, floor_db: float = -70.0, keep: float = 0.03) ->
     return core.fade(y[:end], 0.0, min(keep, end / SR * 0.2))
 
 
+def _trim_lead(y: np.ndarray, floor_db: float = -60.0, keep: float = 0.002) -> np.ndarray:
+    """Drop what comes before the sound starts (below `floor_db` of its peak). A handful of coins
+    whose first coin lands 100 ms in is 100 ms of latency on every purchase; a far thunder's
+    first second and a half was nothing at all."""
+    mag = np.abs(y)
+    idx = np.flatnonzero(mag > core.db_to_lin(floor_db) * (mag.max() + 1e-12))
+    if not len(idx):
+        return y
+    return y[max(0, int(idx[0]) - samples(keep)):]
+
+
+def match_variants(ys: list) -> list:
+    """Brings an effect's variants to within VARIANT_MATCH_LU of their median loudness."""
+    if len(ys) < 2:
+        return ys
+    levels = [render.momentary_max_lufs(y) for y in ys]
+    median = float(np.median(levels))
+    out = []
+    for y, level in zip(ys, levels):
+        gain = 0.0
+        if level > median + VARIANT_MATCH_LU:
+            gain = median + VARIANT_MATCH_LU - level
+        elif level < median - VARIANT_MATCH_LU:
+            gain = min(median - VARIANT_MATCH_LU - level, VARIANT_BOOST_DB)
+        out.append(y * core.db_to_lin(gain))
+    return out
+
+
 def finish_variant(y: np.ndarray) -> np.ndarray:
     """Everything done to one rendered variant before it is written.
 
@@ -126,7 +168,10 @@ def finish_variant(y: np.ndarray) -> np.ndarray:
     y = core.to_mono(y)
     y = render.mixdown(y, peak_db=PEAK_DB, target_lufs=None, limit=False, hp=35.0)
     y = _trim_silence(y)
-    return fx.normalize_peak(y, PEAK_DB)
+    y = _trim_lead(y)
+    y = core.fade(y, EDGE_FADE_S, 0.0)
+    pad = np.zeros(samples(EDGE_PAD_S))
+    return fx.normalize_peak(np.concatenate([pad, y, pad]), PEAK_DB)
 
 
 
@@ -805,11 +850,13 @@ def _catalogue() -> dict:
         "door_iron_open": _e(lambda rng: door(rng, "iron", True), 3, -6.0, 0.04),
         "door_iron_close": _e(lambda rng: door(rng, "iron", False), 3, -5.0, 0.04),
         "chest_open": _e(lambda rng: chest_open(rng), 3, -6.0, 0.04),
-        "lockpick_click": _e(lambda rng: lockpick(rng, "click"), 5, -10.0, 0.10),
+        # -10 put it 10 LU under the other things a hand does (tools/audio/audit.py)
+        "lockpick_click": _e(lambda rng: lockpick(rng, "click"), 5, -6.0, 0.10),
         "lockpick_break": _e(lambda rng: lockpick(rng, "break"), 3, -6.0, 0.06),
         "water_splash": _e(lambda rng: water_splash(rng), 4, -5.0, 0.08),
         "wood_creak": _e(lambda rng: wood_creak_sfx(rng), 4, -10.0, 0.09),
-        "cart_wheels": _e(lambda rng: cart_wheels(rng), 2, -9.0, 0.04),
+        # -9 put it 11 LU under the rest of the world's one-shots (tools/audio/audit.py)
+        "cart_wheels": _e(lambda rng: cart_wheels(rng), 2, -3.0, 0.04),
         "wind_gust": _e(lambda rng: wind_gust_sfx(rng), 3, -10.0, 0.05),
         "thunder_near": _e(lambda rng: thunder_sfx(rng, True), 3, -2.0, 0.05),
         "thunder_far": _e(lambda rng: thunder_sfx(rng, False), 3, -6.0, 0.05),
@@ -870,9 +917,11 @@ def build(only=None, force: bool = False) -> dict:
             continue
         t0 = time.time()
         paths, lens, lufs = [], [], []
+        variants = []
         for i in range(spec["count"]):
             rng = core.rng(core.sub_seed("sfx", name, i))
-            y = finish_variant(spec["fn"](rng, **spec.get("kw", {})))
+            variants.append(finish_variant(spec["fn"](rng, **spec.get("kw", {}))))
+        for i, y in enumerate(match_variants(variants)):
             p = os.path.join(out_dir, "%s_%02d.ogg" % (name, i + 1))
             render.write_ogg(p, y, quality=OGG_QUALITY)
             render.write_ogg_import(p, res_path(p), loop=False)

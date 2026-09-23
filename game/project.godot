@@ -125,3 +125,31 @@ wm_region_tint={
 "type": "color",
 "value": Color(1, 1, 1, 1)
 }
+wm_night={
+"type": "float",
+"value": 0.0
+}
+wm_sun_dir={
+"type": "vec3",
+"value": Vector3(0.5, 0.6, 0.2)
+}
+wm_sun_color={
+"type": "vec3",
+"value": Vector3(1.2, 1.1, 0.95)
+}
+wm_moon_dir={
+"type": "vec3",
+"value": Vector3(-0.5, 0.6, -0.2)
+}
+wm_moon_color={
+"type": "vec3",
+"value": Vector3(0, 0, 0)
+}
+wm_sky_zenith={
+"type": "vec3",
+"value": Vector3(0.04, 0.16, 0.5)
+}
+wm_sky_horizon={
+"type": "vec3",
+"value": Vector3(0.5, 0.64, 0.78)
+}

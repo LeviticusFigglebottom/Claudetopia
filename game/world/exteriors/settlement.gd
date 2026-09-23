@@ -139,6 +139,11 @@ var ruined := false
 var _rng := RandomNumberGenerator.new()
 var _plots: Array[Rect2] = []
 var _yaws: Array[float] = []
+## Which houses are lit after dark, and which of their windows, has its own stream: drawing it
+## from `_rng` would move every prop and station laid out after the houses.
+var _lights := RandomNumberGenerator.new()
+var _window_glows: Array = []      # lit panes, this node's space
+var _door_lamps: Array = []        # a lamp over the door of every lit house, this node's space
 
 
 ## A settlement's fabric around `centre`. Nothing is built until it enters the tree.
@@ -163,11 +168,13 @@ func _ready() -> void:
 	if plan.is_empty() or int(plan.get("count", 0)) <= 0:
 		return
 	_rng.seed = abs(place_id.hash())
+	_lights.seed = abs(("lights:" + place_id).hash())
 	_lay_out(plan)
 	if _plots.is_empty():
 		return
 	_build(plan)
 	_strew(plan)
+	_light_up()
 	_put_to_work()
 	_offer_the_empty_houses()
 
@@ -347,21 +354,59 @@ func _one_house(fabric: FabricMesh, centre: Vector2, w: float, d: float, storeys
 	var door_slot := _rng.randi_range(0, slots.size() - 1)
 	var door_x := slots[door_slot]
 	Building.door_at(fabric, at * Transform3D(Basis(Vector3.UP, PI), Vector3(door_x, 0.0, -d * 0.5)), timber, stone)
+	# Seven houses in ten have somebody home after dark; in those, most of the ground floor is
+	# lit and about half of upstairs, and the door has a lamp over it. A ruin has nobody.
+	var home := not ruined and _lights.randf() < 0.72
+	if home:
+		_door_lamps.append(at * Vector3(door_x, 2.3, -d * 0.5 - 0.6))
 	# upstairs every bay has a window; at the back fewer; one in the gable away from the hearth
 	for s in range(storeys):
 		var cy := STOREY_M * float(s) + 1.45
 		for i in range(slots.size()):
 			if s == 0 and i == door_slot:
 				continue
-			Building.window_at(fabric, at * Transform3D(Basis(Vector3.UP, PI), Vector3(slots[i], cy, -d * 0.5)),
-					timber, stone, s == 0)
+			_glow_if_lit(Building.window_at(fabric, at * Transform3D(Basis(Vector3.UP, PI), Vector3(slots[i], cy, -d * 0.5)),
+					timber, stone, s == 0, _pane_lit(home, s == 0)))
 		for x_v in slots:
 			if _rng.randf() < 0.55:
-				Building.window_at(fabric, at * Transform3D(Basis(), Vector3(float(x_v), cy, d * 0.5)),
-						timber, stone, false)
+				_glow_if_lit(Building.window_at(fabric, at * Transform3D(Basis(), Vector3(float(x_v), cy, d * 0.5)),
+						timber, stone, false, _pane_lit(home, s == 0)))
 		if d > 4.5:
-			Building.window_at(fabric, at * Transform3D(Basis(Vector3.UP, -hearth * PI * 0.5),
-					Vector3(-hearth * w * 0.5, cy, 0.0)), timber, stone, false)
+			# the gable window is at the hearth's far end, and it is the one most often lit
+			_glow_if_lit(Building.window_at(fabric, at * Transform3D(Basis(Vector3.UP, -hearth * PI * 0.5),
+					Vector3(-hearth * w * 0.5, cy, 0.0)), timber, stone, false, _pane_lit(home, true)))
+
+
+## How brightly one pane of a house glows after dark. The value is also remembered by the next
+## `_glow_if_lit`, which is why the two are always called as a pair.
+var _last_lit := 0.0
+
+
+func _pane_lit(home: bool, ground_floor: bool) -> float:
+	_last_lit = 0.0
+	if home and _lights.randf() < (0.8 if ground_floor else 0.5):
+		_last_lit = _lights.randf_range(0.5, 0.95)
+	return _last_lit
+
+
+func _glow_if_lit(pane: Vector3) -> void:
+	if _last_lit > 0.0:
+		_window_glows.append(pane)
+
+
+## The settlement's lit windows and door lamps, and its lanterns and braziers, handed to
+## NightLights in world space (the props are registered as they are strewn).
+func _light_up() -> void:
+	if not is_inside_tree():
+		return
+	var glows: Array = []
+	for p in _window_glows:
+		glows.append(to_global(p))
+	NightLights.add(self, glows, "window")
+	var doors: Array = []
+	for p in _door_lamps:
+		doors.append(to_global(p))
+	NightLights.add(self, doors, "door")
 
 
 ## The bays along a frontage: evenly spaced, two metres or more apart, so a door with its
@@ -443,10 +488,18 @@ func _strew_one_kind(path: String, transforms: Array) -> void:
 	# The forge exports a standing prop with its feet at y = 0 (CONTRACTS §4). One that reaches
 	# below is lifted by its own box, so a cart centred on its axle still sits on the ground.
 	var lift := maxf(0.0, -mesh.get_aabb().position.y)
+	# a lantern or a brazier is a light after dark: its flame sits just under the top of its box
+	var lamp := "brazier" if path.contains("brazier") else ("lantern" if path.contains("lantern") else "")
+	var flame := mesh.get_aabb().end.y * (0.8 if lamp == "brazier" else 0.88)
+	var flames: Array = []
 	for i in transforms.size():
 		var xf: Transform3D = transforms[i]
 		xf.origin.y += lift
 		mm.set_instance_transform(i, xf)
+		if lamp != "" and is_inside_tree():
+			flames.append(to_global(xf.origin + Vector3(0.0, flame, 0.0)))
+	if not flames.is_empty():
+		NightLights.add(self, flames, lamp)
 	var inst := MultiMeshInstance3D.new()
 	inst.name = path.get_file().get_basename()
 	inst.multimesh = mm

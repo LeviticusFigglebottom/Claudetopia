@@ -52,6 +52,11 @@ const MENU_ACTIONS := {"inventory": "inventory", "journal": "journal", "map": "m
 
 ## Where a screenshot taken with the bound key lands.
 const SHOT_DIR := "user://captures/shots"
+## How long the fade waits for the cells around a body that has just stood up before it lifts
+## anyway. On this project's software renderer the nine near cells take a few seconds; the cap is
+## for a machine or a save that never gets there, which should see an unfinished country rather
+## than a loading sheet for ever.
+const COUNTRY_WAIT_S := 20.0
 
 var hud_layer: CanvasLayer
 var dialogue_layer: CanvasLayer
@@ -80,6 +85,10 @@ var _loading_mark: TextureRect
 var _loading_tween: Tween = null
 var _hud_visible := true
 var _mouse_was_captured := false
+## True while the fade is held for the country around a body that has just stood up.
+var _holding_for_country := false
+## How the last hold ended, for a probe or a test: {"cells": Vector2i(loaded, wanted), "ms", "timed_out"}.
+var last_country_wait: Dictionary = {}
 
 
 func _ready() -> void:
@@ -255,19 +264,89 @@ func _hide_loading(seconds := 0.0) -> void:
 
 ## What the world has stood up so far, in its own words.
 func _loading_progress_text() -> String:
-	var world: Node = null
-	var world_script := load("res://world/world.gd") as GDScript
-	if world_script != null:
-		world = world_script.get("instance")
+	var world := _world_node()
 	if world == null or not bool(world.get("is_world_ready")):
 		return "Raising the ground…"
-	var streamer: Node = world.get("streamer")
-	var cells: int = int(streamer.call("loaded_count")) if streamer != null and streamer.has_method("loaded_count") else 0
 	var people := get_tree().get_nodes_in_group("npc").size()
-	var text := "Laying the country: %d cells" % cells
+	var body := get_tree().get_first_node_in_group("player") as Node3D
+	var near := near_ring_progress(body)
+	var text := ""
+	if near.y > 0:
+		text = "Laying the country around you: %d of %d" % [near.x, near.y]
+	else:
+		var streamer: Node = world.get("streamer")
+		var cells: int = int(streamer.call("loaded_count")) if streamer != null and streamer.has_method("loaded_count") else 0
+		text = "Laying the country: %d cells" % cells
 	if people > 0:
 		text += ", %d people about" % people
 	return text + "…"
+
+
+func _world_node() -> Node:
+	var world_script := load("res://world/world.gd") as GDScript
+	return world_script.get("instance") if world_script != null else null
+
+
+## How many of the full-detail cells around `body` are standing, of how many there are in the
+## world (a body near the edge has fewer): Vector2i(loaded, wanted). (0, 0) when there is no world,
+## no streamer, or it is not streaming -- nothing to wait for.
+func near_ring_progress(body: Node3D) -> Vector2i:
+	var world := _world_node()
+	if world == null or body == null or not is_instance_valid(body) or not body.is_inside_tree():
+		return Vector2i.ZERO
+	var streamer: Node = world.get("streamer")
+	var provider: Node = world.get("provider")
+	if streamer == null or provider == null or not bool(streamer.get("enabled")) or streamer.get("target") != body:
+		return Vector2i.ZERO
+	var cells: Array = (provider.get("manifest") as Dictionary).get("cells", [32, 32])
+	var wide := int(cells[0])
+	var tall := int(cells[1]) if cells.size() > 1 else wide
+	var centre: Vector2i = streamer.call("cell_of", body.global_position)
+	var ring := int(streamer.get("full_ring"))
+	var loaded := 0
+	var wanted := 0
+	for dz in range(-ring, ring + 1):
+		for dx in range(-ring, ring + 1):
+			var c := Vector2i(centre.x + dx, centre.y + dz)
+			if c.x < 0 or c.y < 0 or c.x >= wide or c.y >= tall:
+				continue
+			wanted += 1
+			if bool(streamer.call("is_loaded", c)):
+				loaded += 1
+	return Vector2i(loaded, wanted)
+
+
+## Whether the fade is being held for the country to arrive around the body.
+func is_holding_for_country() -> bool:
+	return _holding_for_country
+
+
+## The fade used to lift the moment the body stood, while the cells around it were still being
+## built: the first thing a player saw was bare ground with the trees, the hedges and the village
+## arriving over it. It waits for the full-detail ring now (3 x 3 cells, 768 m on a side), with the
+## count in the caption, and for no longer than COUNTRY_WAIT_S. The body's hands are held for the
+## wait, so nobody walks off blind.
+func _wait_for_the_country(player: Node) -> void:
+	var body := player as Node3D
+	var t0 := Time.get_ticks_msec()
+	var deadline := t0 + int(COUNTRY_WAIT_S * 1000.0)
+	var had_input := body != null and body.has_method("set_input_enabled") and bool(body.get("input_enabled"))
+	if had_input:
+		body.call("set_input_enabled", false)
+	_holding_for_country = true
+	var near := near_ring_progress(body)
+	var at_spawn := near
+	while near.y > 0 and near.x < near.y and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+		near = near_ring_progress(body)
+	_holding_for_country = false
+	var timed_out := near.y > 0 and near.x < near.y
+	last_country_wait = {"cells": near, "at_spawn": at_spawn, "ms": Time.get_ticks_msec() - t0, "timed_out": timed_out}
+	if timed_out:
+		Log.warn("UI", "the fade waited %.0f s for the country and lifted with %d of %d near cells standing"
+				% [COUNTRY_WAIT_S, near.x, near.y])
+	if had_input and is_instance_valid(body):
+		body.call("set_input_enabled", true)
 
 
 func _process(_delta: float) -> void:
@@ -510,7 +589,7 @@ func show_dialogue() -> Node:
 	return _dialogue
 
 
-func _on_player_spawned(_player: Node) -> void:
+func _on_player_spawned(player: Node) -> void:
 	show_hud()
 	show_dialogue()
 	# A load puts the region back without a region_entered, so a game saved in a dangerous
@@ -518,9 +597,10 @@ func _on_player_spawned(_player: Node) -> void:
 	_refresh_variant()
 	# The main menu and the Naming fade to black before they change scene, and this layer is
 	# an autoload, so the black outlives the scene change. Nothing lifted it: the world stood
-	# up and ran behind an opaque rectangle. A body standing in the world is the moment the
-	# player is owed the view.
+	# up and ran behind an opaque rectangle. The player is owed the view once the body stands
+	# and the country around it has arrived, and not before.
 	if _fade.visible:
+		await _wait_for_the_country(player)
 		fade_from_black(0.8)
 
 

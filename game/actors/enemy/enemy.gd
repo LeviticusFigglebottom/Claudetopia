@@ -35,6 +35,8 @@ const CHARGE_MAX_TIME := 2.2
 const AMBUSH_ROUSE := 0.35
 const RETREAT_DISTANCE := 5.0
 const PACK_CALL_RADIUS := 18.0
+## The fastest a circling enemy sweeps round its target, radians per second (about 80 degrees).
+const MAX_CIRCLE_RATE := 1.4
 ## Where summoned help stands up, and how many of them a summoner may have out at once.
 const SUMMON_RADIUS := 4.5
 const SUMMON_DEFAULT_CAP := 6
@@ -174,6 +176,7 @@ func _read_def(d: Dictionary) -> void:
 	body_scale = float(def.get("scale", 1.0))
 	if def.has("tint"):
 		tint = Color(str(def["tint"]))
+	body_material = Foley.material_for(def, armour_flat)
 	capsule_radius = float(def.get("radius", 0.35 if body_kind == "humanoid" else 0.45))
 	capsule_height = float(def.get("height", 1.8 if body_kind == "humanoid" else 1.0))
 	if def.has("faction"):
@@ -241,6 +244,7 @@ func _physics_process(delta: float) -> void:
 	integrate_shove(delta)
 	move_and_slide()
 	snap_to_terrain()
+	step_sounds(delta, -3.0 if body_kind == "humanoid" else -5.0)
 	_update_anim()
 
 
@@ -276,11 +280,20 @@ func _context() -> Dictionary:
 		"distance_to_post": global_position.distance_to(brain.post),
 		"distance_to_target": d_target,
 		"inactive": inactive,
+		"time_unseen": perception.time_since_seen,
 	}
 
 
 func state_name() -> String:
 	return brain.state
+
+
+## Has not noticed anybody: not fighting, and its eyes have not filled the meter. A blow from
+## somebody it has not noticed is a sneak attack (DESIGN §5.3).
+func is_unaware() -> bool:
+	if dead or brain == null:
+		return false
+	return brain.state != Brain.COMBAT and (perception == null or perception.detection < 1.0)
 
 
 func is_busy() -> bool:
@@ -425,6 +438,17 @@ func _approach_or_hold(delta: float, dist: float) -> void:
 			return
 		_strafe_or_retreat(delta, dist, false)
 		return
+	if bool(brain.param("flank", false)) and not _pack_mates().is_empty():
+		# A pack member keeps to its own slot round the target (_approach_goal): it waits on the
+		# ring and comes in along its own bearing when it has a blow ready, so a pack bites from
+		# several sides by turns rather than circling in a knot at arm's length.
+		var slot := _approach_goal() - global_position
+		slot.y = 0.0
+		if slot.length() > ARRIVE:
+			_move_towards(global_position + slot, speed, delta)
+		else:
+			_damp(delta, 12.0)
+		return
 	var want := engage - 0.3
 	if dist > want:
 		var goal := _approach_goal()
@@ -456,11 +480,33 @@ func _approach_goal() -> Vector3:
 		reference = Vector3.FORWARD
 	reference = reference.normalized()
 	var arc := deg_to_rad(float(brain.param("flank_arc", 200.0)))
-	var slot := _pack_slot()
+	var slot := _pack_slot(reference, mates)
 	var offset := (float(slot) / float(count - 1) - 0.5) * arc
 	var bearing := reference.rotated(Vector3.UP, offset)
+	# The ring is where a pack member waits for its turn; with a blow ready it closes in along its
+	# own bearing, so it still comes from the flank. The ring alone is wider than a wolf's bite
+	# (3.2 m against 1.9), and a pack held on it never bit anybody who did not walk into it.
 	var ring := maxf(float(brain.param("spread", 2.6)), brain.engage_range())
+	if _attack_ready():
+		ring = maxf(brain.engage_range() - 0.3, 0.5)
 	return target.global_position + bearing * ring
+
+
+## Whether a blow could be thrown now, range aside: nothing cooling down that stops every attack.
+func _attack_ready() -> bool:
+	if _global_cooldown > 0.0 or not can_act():
+		return false
+	var silenced := status != null and status.has("silenced")
+	var since := now() - _last_attack_at
+	for a in current_attacks:
+		var attack: Dictionary = a
+		if not EnemyAbilities.is_usable(attack, silenced):
+			continue
+		if not EnemyAbilities.combo_ready(attack, _last_attack_name, since):
+			continue
+		if float(_attack_cooldowns.get(str(attack.get("name", "attack")), 0.0)) <= 0.0:
+			return true
+	return false
 
 
 func _pack_mates() -> Array[Node]:
@@ -480,13 +526,23 @@ func _pack_size() -> int:
 	return _pack_mates().size() + 1
 
 
-func _pack_slot() -> int:
-	var mates := _pack_mates()
-	var ids: Array[int] = [get_instance_id()]
+## This member's place in the fan: the pack in the order it stands round the target, so each keeps
+## the side it already holds and nobody crosses in front of the target to reach its slot. (Slots
+## used to go by instance id, which sent a wolf standing on the left to the far right.)
+func _pack_slot(reference: Vector3, mates: Array[Node]) -> int:
+	var mine := _bearing_round_target(reference, global_position)
+	var slot := 0
 	for m in mates:
-		ids.append(m.get_instance_id())
-	ids.sort()
-	return ids.find(get_instance_id())
+		var theirs := _bearing_round_target(reference, (m as Node3D).global_position)
+		if theirs < mine or (is_equal_approx(theirs, mine) and m.get_instance_id() < get_instance_id()):
+			slot += 1
+	return slot
+
+
+func _bearing_round_target(reference: Vector3, point: Vector3) -> float:
+	var to := point - target.global_position
+	to.y = 0.0
+	return reference.signed_angle_to(to, Vector3.UP) if to.length_squared() > 0.0001 else 0.0
 
 
 func _strafe_or_retreat(delta: float, dist: float, retreating: bool) -> void:
@@ -504,7 +560,11 @@ func _strafe_or_retreat(delta: float, dist: float, retreating: bool) -> void:
 		drift = _to_target_flat() * 0.5
 	elif dist < brain.engage_range() - 0.8:
 		drift = -_to_target_flat() * 0.5
-	_step((side * circle + drift).normalized(), speed * strafe_speed, delta)
+	# Circling is held to a sweep a person can follow, not only to what the legs can do: a wolf at
+	# arm's length going at its full strafe speed (5.5 m/s) went round the player about once a
+	# second, faster than a camera turns or a sword is aimed.
+	var circle_speed := minf(speed * strafe_speed, MAX_CIRCLE_RATE * maxf(dist, 1.0))
+	_step((side * circle + drift).normalized(), circle_speed, delta)
 
 
 func _to_target_flat() -> Vector3:
@@ -869,6 +929,9 @@ func build_hit(a: Dictionary) -> HitData:
 ## Enemies swing with a hitbox in front of them sized by the attack's range.
 func _open_hitbox() -> void:
 	var a := _current_attack
+	var whoosh := Foley.swing_for(str(a.get("weapon_class", "claw")), bool(a.get("heavy", false)))
+	if not whoosh.is_empty():
+		Foley.play(whoosh, attack_origin.global_position)
 	_weapon_hitbox().begin_swing(build_hit(a))
 	if a.has("summons"):
 		_summon(a["summons"])
@@ -959,6 +1022,10 @@ func _loose(a: Dictionary) -> void:
 		dir.y += 0.5 * gravity_ms * pow(dir.length() / maxf(speed_ms, 1.0), 2.0)
 	dir = dir.normalized()
 	p.launch(origin + dir * 0.6, dir, speed_ms, build_hit(a), gravity_ms)
+	if str(a.get("weapon_class", "")) == "bow" or p.sticks:
+		p.impact_sound = "arrow_hit"
+		Foley.play("bow_release", origin)
+		Foley.play("arrow_whoosh", origin)
 	p.struck.connect(_on_projectile_struck.bind(a))
 	attack_launched.emit(str(a.get("name", "attack")))
 	_make_noise(float(a.get("noise", 0.4)))
@@ -1064,7 +1131,11 @@ func _weapon_hitbox() -> Hitbox:
 		hb.hit_landed.connect(_on_swing_landed)
 	# `hit_range` lets an attack whose selection range is long (a charge) keep a short hitbox.
 	var reach := float(_current_attack.get("hit_range", _current_attack.get("range", brain.engage_range()))) + 0.4
-	hb.set_capsule(0.45 * body_scale, reach)
+	# From the ground to a little over its own top, whatever height the origin sits at: a drake's
+	# bite and a wight's overhead both reach whoever stands in front of them (Hitbox.set_swing).
+	var half := 0.45 * body_scale
+	var origin_y := attack_origin.position.y
+	hb.set_swing(half, reach, maxf(origin_y - 0.05, 0.1), maxf(capsule_height - origin_y, 0.0) + half)
 	return hb
 
 
@@ -1177,6 +1248,15 @@ func _make_noise(loudness: float) -> void:
 
 func _on_brain_state(from: String, to: String) -> void:
 	state_changed.emit(from, to)
+	# A blow in progress belongs to the fight, so leaving the fight calls it off. Replacing its clip
+	# with an idle loop used to strand it in its active phase for ever: a wolf that lost sight of
+	# you mid-lunge went on lunging, across the arena and out of it.
+	if from == Brain.COMBAT and (_attacking or _charging):
+		on_action_interrupted()
+	if to == Brain.COMBAT:
+		EventBus.enemy_engaged.emit(self, true)
+	elif from == Brain.COMBAT:
+		EventBus.enemy_engaged.emit(self, false)
 	match to:
 		Brain.SEARCH:
 			brain.has_search_point = false
@@ -1395,6 +1475,8 @@ func _enter_phase(index: int) -> void:
 		if bound != null:
 			bound.light_by_renown(true)
 	phase_changed.emit(index, phase)
+	if is_boss and index > 0:
+		EventBus.boss_phase_changed.emit(enemy_id, index)
 	if phase.has("say"):
 		EventBus.notify.emit(str(phase["say"]), "boss")
 
@@ -1419,10 +1501,13 @@ func dismiss() -> void:
 	if perception != null:
 		perception.enabled = false
 	EventBus.summon_dismissed.emit(enemy_id, self)
+	EventBus.enemy_engaged.emit(self, false)
 	queue_free()
 
 
 func _on_died(killer: Node) -> void:
+	if brain != null and brain.state == Brain.COMBAT:
+		EventBus.enemy_engaged.emit(self, false)
 	if is_boss and boss_started:
 		EventBus.boss_defeated.emit(enemy_id)
 	mark_dropped.emit(enemy_id, global_position)

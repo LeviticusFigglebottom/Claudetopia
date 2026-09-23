@@ -142,6 +142,16 @@ func _register_builtins() -> void:
 			var id: String = a[0] if a[0].contains(":") else "core:weather/%s" % a[0]
 			atm.force_weather(id, a.size() > 1 and a[1] == "instant")
 		return str(atm.current_weather_id()), "weather [id] [instant]")
+	register("look", func(_a: Array) -> String:
+		var atm := get_tree().get_first_node_in_group("atmosphere")
+		if atm == null or not ("state" in atm):
+			return "no atmosphere"
+		var st: Dictionary = atm.get("state")
+		var lk: Dictionary = atm.call("look")
+		var msg := "%s: sun %.1f deg, night %.2f, dusk %.2f, haze top %.0f m, weather %s" % [
+			str(lk.get("name", "?")), float(st.get("elevation", 0.0)), float(st.get("night", 0.0)),
+			float(st.get("dusk", 0.0)), float(st.get("haze_top", 0.0)), str(atm.call("current_weather_id"))]
+		return msg, "look (the region's light, the sun's height, night and dusk, the haze top)")
 	register("region", func(a: Array) -> String:
 		if a.size() > 0:
 			var id: String = a[0] if a[0].contains(":") else "core:region/%s" % a[0]

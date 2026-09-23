@@ -18,6 +18,9 @@ var sticks: bool = true
 var lifetime: float = 20.0
 var max_range: float = 90.0
 var trail_color: Color = Color.TRANSPARENT
+## The Foley id it makes where it lands, on a body or on the world ("" for none): arrow_hit for an
+## arrow, spell_impact_<school> for a saying's bolt.
+var impact_sound: String = ""
 
 var _stuck: bool = false
 var _travelled: float = 0.0
@@ -72,6 +75,7 @@ func _physics_process(delta: float) -> void:
 			h.origin = from
 			h.source = self
 			var outcome := hb.receive_hit(h)
+			_sound(point)
 			struck.emit(hb.actor, h, outcome)
 			landed.emit(point, false)
 			queue_free()
@@ -82,6 +86,7 @@ func _physics_process(delta: float) -> void:
 		return
 	# world geometry
 	global_position = point
+	_sound(point)
 	if sticks:
 		_stuck = true
 		global_position = point + velocity.normalized() * 0.12
@@ -90,6 +95,11 @@ func _physics_process(delta: float) -> void:
 	else:
 		landed.emit(point, false)
 		queue_free()
+
+
+func _sound(at: Vector3) -> void:
+	if not impact_sound.is_empty():
+		Foley.play(impact_sound, at)
 
 
 func _orient() -> void:

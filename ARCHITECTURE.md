@@ -45,7 +45,7 @@ captures/                 screenshot output (gitignored)
    through the autoload singletons.
 5. **Everything saveable registers with `SaveSystem`** under a section name and
    implements `to_save()`/`from_save()` with plain Dictionaries (copies, not
-   references). Save files are JSON with `schema_version` (currently **3**);
+   references). Save files are JSON with `schema_version` (currently **4**);
    `Migrations` is a pure chain of `vN -> vN+1` functions with fixture tests.
 6. **Data drives visuals.** Region identity (palette, light, weather, flora,
    ambience) is data; generators and shaders consume it.
@@ -87,7 +87,10 @@ user args (after `--`):
 Tests: `run.sh test` runs `tests/run_tests.tscn`, which discovers
 `tests/unit/test_*.gd` (subclasses of `TestCase`) and exits non-zero on any
 failure or any `ContentDB.problems` entry. Content validation is therefore part
-of the test suite.
+of the test suite. A test that opens a screen closes it (`TestCase.close_screen`);
+the runner reports any test that leaves the world paused. `run.sh fights`
+(`tests/arena/fights.tscn`) is the headless combat harness: a scripted player of
+each starting Calling against one foe of every archetype, seeded and repeatable.
 
 ## 5. Systems (game/systems) — contracts
 
@@ -133,14 +136,19 @@ scripted journey — adds a single `GameServices`.
    rivers/roads splines, cell placement JSON (`cells/<x>_<z>.json`) and
    `world_manifest.json`.
 2. `game/tools_gd/import_terrain.tscn` (headless) imports those maps into
-   Terrain3D region files under `game/terrain_data/` (gitignored).
+   Terrain3D region files under `game/terrain_data/`.
 3. At runtime `TerrainProvider` wraps the `Terrain3D` node (height queries,
    region streaming). `WorldStreamer` loads cell placements in rings around the
    player: authored POI scenes, scatter MultiMeshes, NPC spawns, interior doors.
 4. Interiors are separate scenes listed in `interior` content defs; doors carry
    `interior_id` and a spawn marker name.
 
-Generated data is a build artifact; `run.sh` builds it if missing.
+Generated data is a build artifact, but the part of it the game reads (the manifest, the
+places and splines, `runtime/`, `cells/` and `game/terrain_data/`, about 310 MB) is tracked so
+a clone plays without Python; `.gitignore` names exactly that set, and `run.sh` builds the
+world only when it is missing. `WorldStatus` (`game/world/world_status.gd`) decides at every
+way in whether there is a world at all, and when Terrain3D cannot draw it `FallbackTerrain`
+draws the ground from the runtime height map (game/world/README.md).
 
 ## 6a. Interiors pipeline (tools/interiors)
 

@@ -163,8 +163,9 @@ are normative for pass one and live in `game/systems/*`.
   dodge 22, block-hit = damage·0.6·(1−stability), sprint 8/s. Regen 30/s after 0.8 s.
 * **Attacks** are committed: input buffered 0.25 s, cancel only into dodge after the
   active frames. Chains of up to 3 lights; heavies charge.
-* **Hitboxes** are weapon-defined capsules active on animation frames (`hit_start`,
-  `hit_end` per attack in the weapon data).
+* **Hitboxes** are weapon-defined swing volumes (the weapon's reach long, shin to crown
+  high) active on animation frames (`hit_start`, `hit_end` per attack, from the attack's
+  clip scaled by the weapon's speed; see DECISIONS 2026-09-22).
 * **Lock-on**: targets in a 30 m cone, cycle with stick flick / mouse wheel;
   camera frames both; hard-lock movement strafes.
 * **Dodge**: 0.6 s roll, i-frames 0.08–0.38 s. Heavy load lengthens it and cuts

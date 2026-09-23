@@ -159,7 +159,7 @@ func test_progression_spends_points_on_attributes_and_perks() -> void:
 	assert_gt(prog.attribute_points, 0)
 	var before := prog.max_stamina()
 	assert_true(prog.spend_attribute("endurance"))
-	assert_near(prog.max_stamina(), before + Leveling.STAMINA_PER_ENDURANCE, 0.001)
+	assert_near(prog.max_stamina(), before + 8.0, 0.001, "100 + 8·Endurance")
 	assert_true(prog.skill_level("one_handed") >= 20)
 	var points := prog.perk_points
 	assert_true(prog.take_perk(GRIP))
