@@ -499,3 +499,26 @@ func test_every_one_shot_has_a_transition_both_ways() -> void:
 		if not root.has_transition(name, HumanoidModel.LOCOMOTION_STATE):
 			missing.append(name + " ->")
 	assert_empty(missing, "clips with no transition to or from Locomotion: %s" % str(missing))
+
+
+
+## Stubble is a shell over the jaw in the hair colour; drawn opaque it was a full short beard.
+func test_stubble_is_seen_through() -> void:
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/beards/stubble/stubble.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.set_part("beard", "stubble")
+	m.apply_appearance(a.to_dict())
+	var seen := 0
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
+		if str(mi.get_meta("slot", "")) != "beard":
+			continue
+		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as BaseMaterial3D
+		assert_true(mat != null, "the stubble was not dressed")
+		if mat != null:
+			assert_eq(mat.transparency, BaseMaterial3D.TRANSPARENCY_ALPHA, "the stubble is opaque")
+			assert_gt(0.8, mat.albedo_color.a, "the stubble is drawn solid (alpha %.2f)" % mat.albedo_color.a)
+			seen += 1
+	assert_gt(seen, 0, "no stubble mesh on the body")

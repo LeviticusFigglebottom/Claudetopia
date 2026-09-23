@@ -523,6 +523,8 @@ func _apply_colours() -> void:
 			var kind := str(mi.get_meta("material", ""))
 			if slot == "hair" or slot == "beard":
 				_dress(mi, appearance.hair_tint() if not pal.has("hair") else pal["hair"] as Color, "hair")
+				if slot == "beard" and str(mi.get_meta("part", "")) == STUBBLE:
+					_as_stubble(mi)
 				continue
 			# Steel is the people's metal and leather their leather, whichever slot it is worn
 			# in: a Vale cuirass was tinted the Vale's wool brown because it sat in `torso`.
@@ -585,6 +587,22 @@ static func skin_tint_of(mi: MeshInstance3D) -> Color:
 ## mesh at every step and drop the last one, and the Compatibility renderer was left holding
 ## materials that no longer existed: eyes stopped drawing, and the log filled with
 ## `Parameter "material" is null`.
+## Stubble is a shell a millimetre and a half over the jaw, drawn in the hair colour: opaque,
+## it was a full short beard. Seen through, it is a shadow on the skin, which is what stubble is.
+const STUBBLE := "stubble"
+const STUBBLE_ALPHA := 0.42
+
+
+func _as_stubble(mi: MeshInstance3D) -> void:
+	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
+		var m := mi.get_surface_override_material(i) as BaseMaterial3D
+		if m == null:
+			continue
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.albedo_color.a = STUBBLE_ALPHA
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
 func _dress(mi: MeshInstance3D, c: Color, kind: String) -> void:
 	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
 	for i in count:

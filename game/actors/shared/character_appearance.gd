@@ -34,9 +34,12 @@ const HEADS: Array[String] = ["default", "round", "soft", "angular", "narrow", "
 ## The colours behind the names, exactly as the forge paints them (tools/forge/lib/paint.py), so
 ## a swatch on the Naming and a tint on the model are the same colour. Every rig and head is
 ## baked at BAKED_SKIN with BAKED_EYE irises; an in-engine skin or eye is a tint relative to that.
+## Below wheat (the bake, whose value stays as baked) the tones used to swing towards orange --
+## amber was 57 % saturated at hue 28 -- and in the warm key light of the Naming a tanned hand
+## read as a carrot. Skin darkens through redder, less saturated browns (hue 18-24, 42-55 %).
 const SKIN_COLOURS := {
-	"porcelain": "f0d2bd", "fair": "e9c3a4", "wheat": "dcae87", "olive": "c69769",
-	"amber": "b07b4c", "umber": "8a5a36", "deep": "5f3b24", "ebony": "42281a",
+	"porcelain": "f0d2bd", "fair": "e9c3a4", "wheat": "dcae87", "olive": "c0936f",
+	"amber": "a97855", "umber": "875a40", "deep": "5e3c2b", "ebony": "43291e",
 }
 const HAIR_COLOUR_VALUES := {
 	"black": "1d1917", "soot": "2a2521", "dark_brown": "3b2a1e", "brown": "5a3b25",
@@ -214,14 +217,26 @@ func hair_tint() -> Color:
 ## and the cloth colours, deterministically from `rng_seed`. Head, hair and beard are left
 ## alone: they are the person's own, not the people's. The Naming and the player both dress
 ## through here, so the body in the world is the one the preview showed.
-func dress_for_culture(in_culture: String, rng_seed: int) -> void:
+##
+## The player is dressed in the people's whole outfit -- the piece that makes the silhouette
+## (the Clans' plaid, the Lakefolk's cape, the Woodfolk's torn cloak) always, where a villager
+## only sometimes has it -- and never with the hood up: a hood swaps the hair the Naming just
+## chose for the close style and covers it, so choosing Long for an Ashwalker changed nothing
+## anybody could see.
+func dress_for_culture(in_culture: String, rng_seed: int, for_player: bool = false) -> void:
 	culture = culture_id(in_culture)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
-	var outfit := _culture_outfit(rng, culture, feminine > 0.5)
+	var outfit := _culture_outfit(rng, culture, feminine > 0.5, for_player)
+	if for_player:
+		outfit["back"] = HOOD_DOWN.get(str(outfit.get("back", "")), outfit.get("back", ""))
 	for slot in ["torso", "legs", "feet", "belt", "back", "hands"]:
 		set_part(slot, str(outfit.get(slot, "")))
 	palette = culture_palette(culture)
+
+
+## A back piece with its hood up -> the same piece worn with it down.
+const HOOD_DOWN := {"hooded_cloak": "cloak", "ragged_cloak": "torn_cloak"}
 
 
 ## The people a Calling was raised among: its home region's culture, in the record's spelling.
@@ -351,7 +366,7 @@ static func _weighted_hair(rng: RandomNumberGenerator, culture: String, age_v: f
 ## Each culture dresses in ONE shape you could name from across a field, because that is
 ## the distance the player actually sees a crowd from and a colour carries no further than
 ## a few metres (WORLD_BIBLE.md §3, DESIGN.md §7).  Six recolours of a tunic is one people.
-static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bool) -> Dictionary:
+static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bool, full: bool = false) -> Dictionary:
 	var d := {"head": "default", "feet": "shoes" if rng.randf() < 0.5 else "boots"}
 	d["hair"] = HAIR_STYLES[rng.randi() % HAIR_STYLES.size()]
 	match culture:
@@ -360,7 +375,7 @@ static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bo
 			d["torso"] = "coat"
 			d["legs"] = "trousers"
 			d["feet"] = "shoes"
-			if rng.randf() < 0.7:
+			if rng.randf() < 0.7 or full:
 				d["back"] = "shoulder_cape"
 		"reedfolk":
 			# asymmetric, one bare shoulder, over a long wrap
@@ -374,7 +389,7 @@ static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bo
 			d["legs"] = "kilt"
 			d["feet"] = "boots"
 			d["belt"] = "belt"
-			if rng.randf() < 0.75:
+			if rng.randf() < 0.75 or full:
 				d["back"] = "plaid"
 		"woodfolk":
 			# hooded, banded legs, a torn hem
@@ -382,7 +397,7 @@ static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bo
 			d["legs"] = "leg_wraps"
 			d["feet"] = "boots"
 			d["belt"] = "belt"
-			d["back"] = "ragged_cloak" if rng.randf() < 0.7 else "hooded_cloak"
+			d["back"] = "ragged_cloak" if rng.randf() < 0.7 or full else "hooded_cloak"
 		"ash_pilgrims":
 			# enveloped and cowled, with no waist at all
 			d["torso"] = "robe"

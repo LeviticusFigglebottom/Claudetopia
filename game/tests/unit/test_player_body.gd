@@ -215,3 +215,27 @@ func test_every_worn_part_exists() -> void:
 			assert_true(slot in CharacterAppearance.SLOTS, "%s wears into '%s', which is not a part slot" % [def["id"], slot])
 			var path := "res://assets/models/characters/clothing/%s/%s.glb" % [wear[slot], wear[slot]]
 			assert_true(ResourceLoader.exists(path), "%s wears %s and the forge has not built it" % [def["id"], wear[slot]])
+
+
+
+## The player wears the people's whole outfit and never has the hood up: a hood swaps the hair
+## the Naming chose for the close style and covers it, so for an Ashwalker or a Wayfarer the
+## hair chooser changed nothing that could be seen.
+func test_the_player_is_dressed_hood_down_in_the_whole_outfit() -> void:
+	var covers: Array = HumanoidModel.COVERS_HEAD.get("back", [])
+	var signature := {"clans": "plaid", "lakefolk": "shoulder_cape", "woodfolk": "torn_cloak"}
+	for calling in ContentDB.all("calling"):
+		var culture := CharacterAppearance.culture_of_calling(str(calling["id"]))
+		for s in 6:
+			var a := CharacterAppearance.new()
+			a.dress_for_culture(culture, s * 7919, true)
+			assert_false(a.part("back") in covers, "%s is dressed with the hood up (%s)" % [calling["id"], a.part("back")])
+			if signature.has(culture):
+				assert_eq(a.part("back"), signature[culture], "%s is missing the piece its people are known by" % calling["id"])
+	# and a villager still may have it up
+	var hooded := false
+	for s in 40:
+		var v := CharacterAppearance.new()
+		v.dress_for_culture("woodfolk", s)
+		hooded = hooded or v.part("back") in covers
+	assert_true(hooded, "no Woodfolk villager wears a hood any more")

@@ -639,7 +639,10 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
     sh = shoulder_line(body, skel)
     # the clasp closes the cloak at the base of the throat; hooded, below the face opening
     clasp = sh - 0.015 * s if not hooded else min(sh - 0.015 * s, float(L["chin_z"]) - 0.036 * s)
-    drape = drape_field(body, skel, flare=0.11, arm_far=1.0)
+    # The flare is the cloak's own cut, not what hangs it off the body: the drape already takes
+    # in every section below the shoulders. At the cape's 0.10 per metre a cloak to the knee
+    # came out 0.92 m across the hem, a bell rather than cloth falling from two shoulders.
+    drape = drape_field(body, skel, flare=0.045, arm_far=1.0)
     if hooded:
         cowl = cowl_field(skel, flare=0.16)
         fld = FieldFn(lambda P: np.minimum(drape.eval(P), cowl.eval(P)))
@@ -1300,7 +1303,8 @@ def seed_scalp(head, L: dict, cov_fn, n: int, min_cov: float, rng) -> np.ndarray
 
 
 def comb(head, start: np.ndarray, flow, length: float, off_fn, release_z: float, s: float,
-         body=None, twist: Optional[np.ndarray] = None, stop_fn=None, step: float = 0.004) -> np.ndarray:
+         body=None, twist: Optional[np.ndarray] = None, stop_fn=None, step: float = 0.004,
+         clear: Optional[float] = None) -> np.ndarray:
     """One lock's centreline, walked from `start` along the flow.
 
     Above `release_z` the lock hugs the skull at its own offset, so it lies on the head the way
@@ -1331,10 +1335,10 @@ def comb(head, start: np.ndarray, flow, length: float, off_fn, release_z: float,
             if dh < o:
                 q = q + head.gradient(q[None])[0] * (o - dh)
             if body is not None:
-                clear = 0.008 * s + 0.5 * o
+                c = clear if clear is not None else 0.008 * s + 0.5 * o
                 db = float(body.eval(q[None])[0])
-                if db < clear:
-                    q = q + body.gradient(q[None])[0] * (clear - db)
+                if db < c:
+                    q = q + body.gradient(q[None])[0] * (c - db)
         # a projection off a degenerate gradient can throw a point anywhere, and one wild
         # point is a scene bound the size of a house: a lock that jumps stops where it was
         if not np.all(np.isfinite(q)) or np.linalg.norm(q - p) > 4.0 * step:
@@ -1364,6 +1368,12 @@ def scalp_shell(head, cov_fn, base: float, s: float, t_min: float = 0.0012, dept
     return Prim(fn, lo, hi, "union", 0.0)
 
 
+# How far hanging hair and a long beard stay off the body: over the clothes, not the skin.
+# At 1 cm the long beard fell inside every shirt (1.1 cm off the body) and was seen only as a
+# tuft on the chest below the collar; 3 cm clears a padded jack.
+HANG_CLEAR = 0.030
+
+
 def _lock_prim(pts: np.ndarray, r0: float, s: float) -> Prim:
     u = np.linspace(0.0, 1.0, len(pts))
     radii = r0 * (1.0 - 0.62 * u ** 1.5) + 0.0010 * s
@@ -1373,7 +1383,8 @@ def _lock_prim(pts: np.ndarray, r0: float, s: float) -> Prim:
 def _braid_prims(start: np.ndarray, body, head, L: dict, s: float, length: float = 0.27) -> Tuple[List[Prim], List[np.ndarray]]:
     """A three-strand braid hanging from the nape down the back, and its tie and tuft."""
     centre = comb(head, start, lambda P: np.tile(np.array([0.0, 0.25, -1.0]), (len(P), 1)),
-                  length * s, lambda u: 0.012 * s, release_z=1e9, s=s, body=body, step=0.005)
+                  length * s, lambda u: 0.012 * s, release_z=1e9, s=s, body=body, step=0.005,
+                  clear=HANG_CLEAR * s)
     if len(centre) < 4:
         return [], []
     seg = np.diff(centre, axis=0)
@@ -1480,7 +1491,7 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
                 return False
             return float(cov(q[None])[0]) < -g.spill * s
         pts = comb(head, _onto(head, p0[None], off0)[0], flow, length, off_fn, release_z, s,
-                   body=body, twist=twist, stop_fn=stop)
+                   body=body, twist=twist, stop_fn=stop, clear=HANG_CLEAR * s)
         if len(pts) < 3:
             continue
         locks.append(pts)
@@ -1572,7 +1583,7 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
                 return False
             return float(cov(q[None])[0]) < -0.004 * s
         pts = comb(head, _onto(head, p0[None], off0)[0], flow, length, off_fn, release_z, s,
-                   body=body, stop_fn=stop, step=0.003)
+                   body=body, stop_fn=stop, step=0.003, clear=HANG_CLEAR * s)
         if len(pts) < 3:
             continue
         locks.append(pts)
@@ -2046,6 +2057,8 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "plaid": plaid,
     "leg_wraps": leg_wraps,
     "ragged_cloak": lambda s, b: cloak(s, b, hooded=True, hem=0.38, ragged=13, name="ragged_cloak"),
+    # the same with the hood down, which is how the player wears it
+    "torn_cloak": lambda s, b: cloak(s, b, hooded=False, hem=0.38, ragged=13, name="torn_cloak"),
 }
 ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
     "horns_small": lambda s: horns(s, big=False),

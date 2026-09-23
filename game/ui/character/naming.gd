@@ -242,8 +242,13 @@ func _build_stage(vp: SubViewport) -> void:
 	sky.process_mode = Sky.PROCESS_MODE_QUALITY
 	environment.sky = sky
 	environment.background_mode = Environment.BG_SKY
+	# Mostly a neutral, slightly cool ambient with a little of the dusk in it. Lit from the dusk
+	# alone, the ambient was amber, and with a warm key on top a white gambeson came out cream
+	# (37 % saturated) and a mid-brown skin came out orange (68 %) against a 50 % swatch.
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_energy = 0.34
+	environment.ambient_light_sky_contribution = 0.35
+	environment.ambient_light_color = Color(0.66, 0.70, 0.78)
+	environment.ambient_light_energy = 0.42
 	environment.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	# without a raised white point the mid-greys clip on this renderer (ARCHITECTURE.md §10)
@@ -252,10 +257,10 @@ func _build_stage(vp: SubViewport) -> void:
 	env.environment = environment
 	world.add_child(env)
 
-	# the key: warm, high and to the camera's left, the only light that casts a shadow
+	# the key: a touch warm, high and to the camera's left, the only light that casts a shadow
 	var key := DirectionalLight3D.new()
 	key.name = "Key"
-	key.light_color = Color(1.0, 0.91, 0.80)
+	key.light_color = Color(1.0, 0.95, 0.89)
 	key.light_energy = 1.0
 	key.shadow_enabled = true
 	key.shadow_blur = 1.6
@@ -736,7 +741,7 @@ func _swatch_row(label_text: String) -> Node:
 ## The Calling says where you were raised, and that people dresses you: culture, clothes and
 ## cloth colours come from it, deterministically, so the same Calling shows the same coat.
 func _dress_for_calling() -> void:
-	appearance.dress_for_culture(CharacterAppearance.culture_of_calling(calling_id), abs(calling_id.hash()))
+	appearance.dress_for_culture(CharacterAppearance.culture_of_calling(calling_id), abs(calling_id.hash()), true)
 
 
 func _apply_appearance() -> void:

@@ -1117,7 +1117,7 @@ def custom_weights(ob, W: np.ndarray, arm, bones: Sequence[str] = rig.DEFORM_NAM
 
 
 def fit_positions(verts: np.ndarray, base_field, target_field, reach: float = 0.060,
-                  fade: float = 0.030, iters: int = 3) -> np.ndarray:
+                  fade: float = 0.030, iters: int = 3, max_step: float = 0.03) -> np.ndarray:
     """Where each vertex of a part built on one surface goes to sit on another.
 
     Each vertex keeps the distance it had from the surface it was built on, measured now from
@@ -1128,10 +1128,16 @@ def fit_positions(verts: np.ndarray, base_field, target_field, reach: float = 0.
     V = np.asarray(verts, float)
     d0 = base_field.eval(V)
     P = V.copy()
+    # A sampled field reads 1e6 in any cell no primitive's bounds reached, and a Newton step on
+    # that flung a dress's hem and a plaid's corner a thousand kilometres: never step on a
+    # reading that is not a distance, and never more than a few centimetres at once.
+    sane = np.abs(d0) < 0.5
     for _ in range(iters):
         d = target_field.eval(P)
-        P = P - target_field.gradient(P) * (d - d0)[:, None]
-    w = 1.0 - np.clip((d0 - reach) / max(fade, 1e-6), 0.0, 1.0)
+        ok = sane & (np.abs(d) < 0.5)
+        step = np.clip(d - d0, -max_step, max_step) * ok
+        P = P - target_field.gradient(P) * step[:, None]
+    w = (1.0 - np.clip((d0 - reach) / max(fade, 1e-6), 0.0, 1.0)) * sane
     return V + (P - V) * w[:, None]
 
 

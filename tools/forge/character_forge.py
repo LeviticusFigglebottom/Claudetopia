@@ -646,7 +646,7 @@ def _slot_hint(name: str) -> str:
         return "hands"
     if name in ("belt",):
         return "belt"
-    if name in ("cloak", "hooded_cloak", "ragged_cloak", "plaid", "shoulder_cape"):
+    if name in ("cloak", "hooded_cloak", "ragged_cloak", "torn_cloak", "plaid", "shoulder_cape"):
         return "back"
     if name in ("helm", "hood", "pauldrons"):
         return "headgear" if name in ("helm", "hood") else "torso"
@@ -729,9 +729,14 @@ def cmd_parts(args) -> None:
         field = clothlib.body_field(skel, style)
         log("body field cached %s" % (field.F.shape,))
         bpy.data.objects.remove(body_ob, do_unlink=True)
-        # every garment also fits the heavy and the slight body, as morph targets
+        # Every garment can also fit the heavy and the slight body, as morph targets -- but not
+        # by default. Measured against the variant bodies, a fitted tunic still left 7 % of its
+        # vertices inside the heavy body (59 % unfitted), a coat 17 %, and in the engine that
+        # is skin through the cloth at the heavy end of the build slider; unfitted, the game
+        # wears the default body under them and widens the rig, which shows no skin. `--fits`
+        # builds them for the next attempt.
         body_fits = {}
-        if garments:
+        if garments and getattr(args, "fits", False):
             for vname in ("heavy", "slight"):
                 vskel = Skeleton(rig.Proportions.from_dict(BODY_VARIANTS[vname]))
                 body_fits[vname] = (field, clothlib.body_field(vskel, style))
@@ -942,6 +947,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p.set_defaults(func=cmd_rig)
     p = sub.add_parser("parts", help="build the modular parts")
     p.add_argument("--only", nargs="*", default=None)
+    p.add_argument("--fits", action="store_true", help="fit garments to the heavy and slight bodies as morph targets")
     p.set_defaults(func=lambda a: cmd_parts(a))
     p = sub.add_parser("presets", help="write tools/forge/characters.json")
     p.set_defaults(func=lambda a: cmd_presets(a))

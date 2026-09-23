@@ -20,9 +20,11 @@ uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform bool use_orm = true;
 uniform bool use_normal = true;
 uniform vec3 tint : source_color = vec3(1.0);
-uniform vec3 scatter_colour : source_color = vec3(0.86, 0.30, 0.20);
+// Softer than it was (0.86/0.30/0.20 at 0.60): on a hand or a neck most of what is seen is the
+// band past the terminator, and there the old values pushed a mid-brown skin to 68 % saturated.
+uniform vec3 scatter_colour : source_color = vec3(0.80, 0.36, 0.26);
 uniform float wrap : hint_range(0.0, 1.0) = 0.45;
-uniform float scatter : hint_range(0.0, 2.0) = 0.60;
+uniform float scatter : hint_range(0.0, 2.0) = 0.42;
 uniform float ao_strength : hint_range(0.0, 1.0) = 0.70;
 uniform float specular_amount : hint_range(0.0, 1.0) = 0.18;
 // The face bakes are painted with their lit planes already lifted (paint.skin_paint), so under
@@ -36,9 +38,10 @@ uniform float diffuse_gain = 0.31831;
 void fragment() {
 	vec3 orm = use_orm ? texture(orm_tex, UV).rgb : vec3(1.0, 0.6, 0.0);
 	vec3 c = texture(albedo_tex, UV).rgb * tint * albedo_scale;
-	// a little more colour in the mid-tones, which the scale above takes out with the value
+	// a little more colour in the mid-tones, which the scale above takes out with the value;
+	// at 1.12 every tone darker than the bake went orange under the warm key
 	float l = dot(c, vec3(0.299, 0.587, 0.114));
-	ALBEDO = clamp(mix(vec3(l), c, 1.12), 0.0, 1.0);
+	ALBEDO = clamp(mix(vec3(l), c, 1.04), 0.0, 1.0);
 	ROUGHNESS = orm.g;
 	METALLIC = 0.0;
 	AO = mix(1.0, orm.r, ao_strength);

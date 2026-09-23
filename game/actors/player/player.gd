@@ -242,7 +242,7 @@ func _look_from_the_naming() -> CharacterAppearance:
 		look.set_part("head", "default")
 		look.set_part("hair", "short")
 		var calling := str(GameState.get_flag("player_calling", ""))
-		look.dress_for_culture(CharacterAppearance.culture_of_calling(calling), abs(display_name.hash()))
+		look.dress_for_culture(CharacterAppearance.culture_of_calling(calling), abs(display_name.hash()), true)
 	return look
 
 
