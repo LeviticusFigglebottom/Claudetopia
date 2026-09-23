@@ -425,7 +425,7 @@ func _on_echo_recovered(_marks: int) -> void:
 	play_ui("echo_recovered")
 
 
-func _on_item_used(item_id: String, _effects: Array) -> void:
+func _on_item_used(item_id: String, _effects: Array = []) -> void:
 	var def := ContentDB.get_or_empty(item_id)
 	var tags: Array = def.get("tags", [])
 	if str(def.get("category", "")) == "potion" or tags.has("potion"):
