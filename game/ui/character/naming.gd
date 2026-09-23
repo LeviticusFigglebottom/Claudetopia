@@ -243,7 +243,7 @@ func _build_stage(vp: SubViewport) -> void:
 	environment.sky = sky
 	environment.background_mode = Environment.BG_SKY
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_energy = 0.38
+	environment.ambient_light_energy = 0.34
 	environment.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	# without a raised white point the mid-greys clip on this renderer (ARCHITECTURE.md §10)
@@ -255,26 +255,26 @@ func _build_stage(vp: SubViewport) -> void:
 	# the key: warm, high and to the camera's left, the only light that casts a shadow
 	var key := DirectionalLight3D.new()
 	key.name = "Key"
-	key.light_color = Color(1.0, 0.86, 0.70)
-	key.light_energy = 1.15
+	key.light_color = Color(1.0, 0.91, 0.80)
+	key.light_energy = 1.0
 	key.shadow_enabled = true
 	key.shadow_blur = 1.6
 	key.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	key.directional_shadow_max_distance = 9.0
 	world.add_child(key)
-	key.look_at_from_position(Vector3(-2.4, 3.4, 3.1), Vector3(0.0, 0.9, 0.0), Vector3.UP)
+	key.look_at_from_position(Vector3(-3.0, 3.0, 2.0), Vector3(0.0, 0.9, 0.0), Vector3.UP)
 	# the rim: from behind and above, so the silhouette separates from the dusk behind it
 	var rim := DirectionalLight3D.new()
 	rim.name = "Rim"
-	rim.light_color = Color(1.0, 0.92, 0.80)
-	rim.light_energy = 0.95
+	rim.light_color = Color(0.86, 0.91, 1.0)
+	rim.light_energy = 1.25
 	world.add_child(rim)
-	rim.look_at_from_position(Vector3(1.9, 2.8, -3.0), Vector3(0.0, 1.1, 0.0), Vector3.UP)
+	rim.look_at_from_position(Vector3(2.4, 2.4, -2.6), Vector3(0.0, 1.1, 0.0), Vector3.UP)
 	# a cool fill low on the other side, so the shadow side is a colour and not a hole
 	var fill := DirectionalLight3D.new()
 	fill.name = "Fill"
-	fill.light_color = Color(0.70, 0.78, 0.92)
-	fill.light_energy = 0.28
+	fill.light_color = Color(0.70, 0.78, 0.94)
+	fill.light_energy = 0.22
 	world.add_child(fill)
 	fill.look_at_from_position(Vector3(2.8, 1.1, 2.2), Vector3(0.0, 1.0, 0.0), Vector3.UP)
 
@@ -330,9 +330,7 @@ func _build_middle() -> Control:
 	col.add_child(_swatches("Eyes", CharacterAppearance.EYE_COLOURS, "eye_colour"))
 	col.add_child(_chooser("Face", CharacterAppearance.HEADS, HEAD_NAMES, "head"))
 	col.add_child(_chooser("Style", CharacterAppearance.HAIR_STYLES, HAIR_STYLE_NAMES, "hair"))
-	var beards: Array = [""]
-	beards.append_array(CharacterAppearance.BEARD_STYLES)
-	col.add_child(_chooser("Beard", beards, BEARD_NAMES, "beard"))
+	col.add_child(_chooser("Beard", offered_beards(), BEARD_NAMES, "beard"))
 	col.add_child(_slider("Build", "build", 0.0, 1.0, 0.05))
 	col.add_child(_slider("Height", "height", HEIGHT_RANGE.x, HEIGHT_RANGE.y, 0.01))
 
@@ -438,6 +436,30 @@ func _tone_name(key: String, name: String) -> String:
 	if key == "skin":
 		return str(SKIN_NAMES.get(name, name))
 	return name.replace("_", " ").capitalize()
+
+
+## The beards worth offering: "none", and every style whose part holds a mesh. Three of the
+## four once shipped as a skeleton with nothing on it, and a chooser that offers "Long" and
+## draws nothing is a broken control. A style comes back by itself when the forge rebuilds it.
+static func offered_beards() -> Array:
+	var out: Array = [""]
+	for style in CharacterAppearance.BEARD_STYLES:
+		var path := "res://assets/models/characters/beards/%s/%s.glb" % [style, style]
+		if not ResourceLoader.exists(path):
+			continue
+		var packed := load(path) as PackedScene
+		if packed == null:
+			continue
+		var inst := packed.instantiate()
+		var drawn := false
+		for mi in inst.find_children("*", "MeshInstance3D", true, false):
+			if (mi as MeshInstance3D).mesh != null:
+				drawn = true
+				break
+		inst.free()
+		if drawn:
+			out.append(style)
+	return out
 
 
 ## A drop-down over one of the record's part lists; `slot` is the part slot it sets.
@@ -643,7 +665,7 @@ func apply_preset(p: Dictionary) -> void:
 	appearance.eye_colour = str(p["eye_colour"])
 	appearance.set_part("head", str(p["head"]))
 	appearance.set_part("hair", str(p["hair"]))
-	appearance.set_part("beard", str(p["beard"]))
+	appearance.set_part("beard", str(p["beard"]) if offered_beards().has(str(p["beard"])) else "")
 	appearance.build = float(p["build"])
 	appearance.height = float(p["height"])
 	_sync_controls()
@@ -667,8 +689,9 @@ func randomise(rng_seed: int = -1) -> void:
 	appearance.set_part("head", CharacterAppearance.HEADS[rng.randi() % CharacterAppearance.HEADS.size()])
 	appearance.set_part("hair", CharacterAppearance.HAIR_STYLES[rng.randi() % CharacterAppearance.HAIR_STYLES.size()])
 	var beard := ""
-	if rng.randf() < 0.4:
-		beard = CharacterAppearance.BEARD_STYLES[rng.randi() % CharacterAppearance.BEARD_STYLES.size()]
+	var beards := offered_beards()
+	if rng.randf() < 0.4 and beards.size() > 1:
+		beard = str(beards[1 + rng.randi() % (beards.size() - 1)])
 	appearance.set_part("beard", beard)
 	appearance.build = clampf(snappedf(rng.randfn(0.48, 0.20), 0.05), 0.0, 1.0)
 	appearance.height = clampf(snappedf(rng.randfn(1.76, 0.07), 0.01), HEIGHT_RANGE.x, HEIGHT_RANGE.y)
@@ -681,7 +704,7 @@ func randomise(rng_seed: int = -1) -> void:
 ## changed it (a preset, the lots, the review harness).
 func _sync_controls() -> void:
 	var lists := {"hair": CharacterAppearance.HAIR_STYLES, "head": CharacterAppearance.HEADS,
-		"beard": [""] + CharacterAppearance.BEARD_STYLES}
+		"beard": offered_beards()}
 	for slot in _choosers:
 		var index: int = (lists.get(slot, []) as Array).find(appearance.part(slot))
 		(_choosers[slot] as OptionButton).select(maxi(index, 0))

@@ -627,10 +627,32 @@ const WEARABLE_BODIES := ["slight", "heavy"]
 ## loaded it, because `bodies/child`, `heavy` and `slight` each held a 31-bone skeleton and
 ## no mesh at all: the forge built the geometry and the glTF exporter dropped it as invalid
 ## without failing the build.
+##
+## And only under clothes cut for it. The heavy body is wider than every garment built on the
+## default one, so wearing it under them showed skin through the gambeson, the coat and the
+## tunic at the heavy end of the Naming's build slider. A garment the forge has fitted carries
+## the variant as a morph target and says so in its meta (`fits`); until every garment on the
+## body does, the default body is worn and the rig's girth does the widening.
 func _apply_body_variant() -> void:
 	var variant := appearance.body_variant()
-	body_variant_worn = variant if WEARABLE_BODIES.has(variant) and _add_part("body", variant) else ""
+	var wearable: bool = WEARABLE_BODIES.has(variant) and _garments_fit(variant)
+	body_variant_worn = variant if wearable and _add_part("body", variant) else ""
 	_show_default(_default_meshes.get("body"), body_variant_worn.is_empty())
+
+
+## Slots whose garments take their weights from the body and so have to be cut for it.
+const FITTED_SLOTS := ["torso", "legs", "feet", "hands", "belt", "back"]
+
+
+func _garments_fit(variant: String) -> bool:
+	for slot in FITTED_SLOTS:
+		var part_name := appearance.part(slot)
+		if part_name.is_empty():
+			continue
+		var fits: Array = _part_meta(slot, part_name).get("fits", [])
+		if not fits.has(variant):
+			return false
+	return true
 
 
 ## Runtime bone scaling would break clips authored on the default proportions

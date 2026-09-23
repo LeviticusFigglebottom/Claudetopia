@@ -262,7 +262,31 @@ func test_the_build_slider_changes_the_body() -> void:
 		assert_near(_model()._rig_root.scale.y, height, 0.0001, "build must not change height")
 		if not worn.has(_model().body_variant_worn):
 			worn.append(_model().body_variant_worn)
-	assert_true(worn.size() >= 2, "the build slider never changed the body mesh: %s" % [worn])
+	# A variant body is only worn under clothes cut for it (HumanoidModel._garments_fit); where
+	# the clothes are not, the rig's girth does all of the widening and no skin shows through.
+	var fitted: bool = _model()._garments_fit("heavy") and _model()._garments_fit("slight")
+	if fitted:
+		assert_true(worn.size() >= 2, "the build slider never changed the body mesh: %s" % [worn])
+	else:
+		assert_eq(worn, [""] as Array[String], "a variant body was worn under clothes not cut for it")
+
+
+## Every beard the chooser offers draws something. Three of the four once shipped as a skeleton
+## with no mesh in it, and "Long" drew nothing at all.
+func test_every_beard_offered_has_a_mesh() -> void:
+	var o := _chooser("beard")
+	assert_true(o != null, "no beard chooser")
+	if o == null:
+		return
+	var offered: Array = naming.call("offered_beards")
+	assert_eq(o.item_count, offered.size(), "the chooser and the list it was built from disagree")
+	assert_eq(str(offered[0]), "", "the first beard is no beard")
+	for style in offered.slice(1):
+		var packed := load("res://assets/models/characters/beards/%s/%s.glb" % [style, style]) as PackedScene
+		var inst := packed.instantiate()
+		assert_gt(inst.find_children("*", "MeshInstance3D", true, false).size(), 0,
+				"the Naming offers the beard '%s' and it has nothing to draw" % style)
+		inst.free()
 
 
 # --- the Calling ----------------------------------------------------------------------------------

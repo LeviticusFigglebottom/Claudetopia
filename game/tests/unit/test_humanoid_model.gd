@@ -333,6 +333,26 @@ func test_a_heavy_record_wears_the_heavy_body() -> void:
 	assert_true(absf(s.x / s.y - 1.0) < 0.05, "the heavy body was widened by more than the slider's own step")
 
 
+## The heavy body is wider than every garment built on the default one, so under clothes that
+## carry no fit for it the model stays on the default body and widens the rig instead: at the
+## heavy end of the Naming's build slider the skin used to show through the gambeson.
+func test_a_heavy_body_is_only_worn_under_clothes_cut_for_it() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.build = 0.95
+	a.set_part("torso", "gambeson")
+	a.set_part("legs", "trousers")
+	m.apply_appearance(a.to_dict())
+	if m._garments_fit("heavy"):
+		assert_eq(m.body_variant_worn, "heavy", "the clothes are cut for the heavy body and it is not worn")
+	else:
+		assert_eq(m.body_variant_worn, "", "the heavy body was worn under clothes not cut for it")
+		var s := m.skeleton.global_transform.basis.get_scale()
+		assert_near(s.x / s.y, HumanoidModel.girth_for(0.95), 0.002, "and the rig did not do the widening")
+
+
 ## A part is only wearable on this rig if it was built around this rig's bones. `slight`
 ## and `heavy` are shape: their worst joint sits 3.3 mm and 1.9 mm from the default's.
 ## `child` is a different skeleton -- hips at 0.646 m against 0.980, worst joint 476 mm
