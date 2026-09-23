@@ -46,6 +46,12 @@
   "width": 31.7508
  },
  "kind": "giant_oak",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.662
+ },
  "materials": [
   "briarwold_giant_oak_a_mat",
   "briarwold_giant_oak_a_leaf_foliage",

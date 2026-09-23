@@ -46,6 +46,12 @@
   "width": 4.7714
  },
  "kind": "yew",
+ "lod1_repair": {
+  "area_m2": 10.56,
+  "dropped": 4,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "hearthvale_yew_b_mat",
   "hearthvale_yew_b_leaf_foliage",
@@ -66,7 +72,7 @@
   },
   {
    "name": "hearthvale_yew_b_LOD1",
-   "tris": 1161
+   "tris": 1157
   },
   {
    "name": "hearthvale_yew_b_cards_LOD1",
@@ -111,7 +117,7 @@
  ],
  "tris": [
   5719,
-  1581,
+  1577,
   2
  ],
  "version": 3

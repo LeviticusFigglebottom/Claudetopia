@@ -46,6 +46,12 @@
   "width": 13.3466
  },
  "kind": "black_ash",
+ "lod1_repair": {
+  "area_m2": 38.79,
+  "dropped": 4,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "briarwold_black_ash_b_mat",
   "briarwold_black_ash_b_leaf_foliage",
@@ -67,7 +73,7 @@
   },
   {
    "name": "briarwold_black_ash_b_LOD1",
-   "tris": 1074
+   "tris": 1070
   },
   {
    "name": "briarwold_black_ash_b_cards_LOD1",
@@ -115,7 +121,7 @@
  ],
  "tris": [
   6555,
-  1494,
+  1490,
   2
  ],
  "version": 3

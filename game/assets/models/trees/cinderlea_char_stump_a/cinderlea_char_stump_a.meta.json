@@ -46,6 +46,12 @@
   "width": 0.3455
  },
  "kind": "char_stump",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "cinderlea_char_stump_a_mat",
   "cinderlea_char_stump_a_impostor"

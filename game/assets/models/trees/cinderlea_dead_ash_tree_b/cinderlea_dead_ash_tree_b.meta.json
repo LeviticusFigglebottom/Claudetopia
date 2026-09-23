@@ -46,6 +46,12 @@
   "width": 12.4213
  },
  "kind": "dead_ash_tree",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "cinderlea_dead_ash_tree_b_mat",
   "cinderlea_dead_ash_tree_b_impostor"

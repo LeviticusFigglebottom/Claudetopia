@@ -330,6 +330,64 @@ class TestGlbWriter(unittest.TestCase):
             self.assertEqual(s["materials"], ["x_mat"])
 
 
+class TestLod1Repair(unittest.TestCase):
+    """lib/lod_repair.py: a LOD1 bark triangle bridging two branches of the full tree is taken
+    out, the ones lying on the bark stay, every vertex attribute survives, and a second pass
+    finds nothing."""
+
+    @staticmethod
+    def _tree() -> tuple[dict, bytes]:
+        gltf = {"asset": {"version": "2.0"}, "buffers": [{"byteLength": 0}], "bufferViews": [],
+                "accessors": [], "materials": [{"name": "t_mat"}, {"name": "t_leaf_foliage"}],
+                "meshes": [], "nodes": []}
+        out = bytearray()
+
+        def mesh(name: str, positions: list, indices: list, material: int) -> None:
+            pos = glb._append_accessor(gltf, out, positions, "VEC3", 5126, 34962, with_bounds=True)
+            nrm = glb._append_accessor(gltf, out, [[0.0, 0.0, 1.0]] * len(positions), "VEC3", 5126, 34962)
+            uv = glb._append_accessor(gltf, out, [[0.0, 0.0]] * len(positions), "VEC2", 5126, 34962)
+            idx = glb._append_accessor(gltf, out, indices, "SCALAR", 5123, 34963)
+            gltf["meshes"].append({"name": name, "primitives": [{
+                "attributes": {"POSITION": pos, "NORMAL": nrm, "TEXCOORD_0": uv},
+                "indices": idx, "material": material, "mode": 4}]})
+            gltf["nodes"].append({"name": name, "mesh": len(gltf["meshes"]) - 1})
+
+        # the full tree: two upright branches four metres tall, six metres apart
+        branches = [[-0.1, 0, 0], [0.1, 0, 0], [0.1, 4, 0], [-0.1, 4, 0],
+                    [5.9, 0, 0], [6.1, 0, 0], [6.1, 4, 0], [5.9, 4, 0]]
+        mesh("t", branches, [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7], 0)
+        # LOD1: one triangle on each branch, and a bridge across the gap between them
+        lod1 = [[-0.1, 0, 0], [0.1, 0, 0], [0.0, 4, 0], [5.9, 0, 0], [6.1, 0, 0], [6.0, 4, 0]]
+        mesh("t_LOD1", lod1, [0, 1, 2, 3, 4, 5, 2, 5, 1], 0)
+        # leaf cards far off the bark are cards, not bark, and are never touched
+        mesh("t_cards_LOD1", [[3, 8, 0], [4, 8, 0], [4, 9, 0]], [0, 1, 2], 1)
+        gltf["buffers"][0]["byteLength"] = len(out)
+        return gltf, bytes(out)
+
+    def test_the_bridge_goes_and_the_bark_stays(self):
+        from lib import lod_repair
+        gltf, bin_chunk = self._tree()
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "t.glb"
+            glb.write_glb(p, gltf, bin_chunk)
+            rep = lod_repair.repair_lod1(p, "t", 4.0)
+            self.assertEqual(rep["dropped"], 1, rep)
+            s = {m["name"]: m["tris"] for m in glb.summary(p)["meshes"]}
+            self.assertEqual(s, {"t": 4, "t_LOD1": 2, "t_cards_LOD1": 1})
+            after, after_bin = glb.read_glb(p)
+            prim = after["meshes"][1]["primitives"][0]
+            self.assertEqual(sorted(prim["attributes"]), ["NORMAL", "POSITION", "TEXCOORD_0"])
+            tris = lod_repair.accessor_array(after, after_bin, prim["indices"]).reshape(-1, 3).tolist()
+            self.assertEqual(tris, [[0, 1, 2], [3, 4, 5]], "the two triangles on the bark, in order")
+            again = lod_repair.repair_lod1(p, "t", 4.0)
+            self.assertEqual(again["dropped"], 0, "a second pass finds nothing to drop")
+
+    def test_the_tolerance_grows_with_the_tree(self):
+        from lib import lod_repair
+        self.assertEqual(lod_repair.tolerance(4.0), lod_repair.TOL_MIN)
+        self.assertGreater(lod_repair.tolerance(30.0), lod_repair.TOL_MIN)
+
+
 class TestGodotImportSidecars(unittest.TestCase):
     def test_uid_is_stable_and_well_formed(self):
         # Import lib.export lazily: it imports bpy, which only exists inside Blender.

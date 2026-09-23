@@ -45,6 +45,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib import cli  # noqa: E402
 from lib import export as E  # noqa: E402
 from lib import glb as G  # noqa: E402
+from lib import lod_repair as LR  # noqa: E402
 
 import bpy  # noqa: E402
 import numpy as np  # noqa: E402
@@ -402,6 +403,9 @@ def main() -> None:
     write_palette_png(atlas(cells_c, CELL, "albedo"), d / albedo_name)
     write_png(atlas(cells_n, NRM_CELL, "normal"), d / nrm_name)
     rewrite_lod2(glb_path, tree, frame, albedo_name)
+    # The picture is the far rung; the mid rung is repaired on the same pass, because it is
+    # the ladder's weakest step: see lib/lod_repair.py.
+    lod1_repair = LR.repair_lod1(glb_path, tree, float(meta.get("bounds", {}).get("height", frame["height"])))
     # The old impostor's normal and ORM maps are nobody's now.
     old = ["%s_impostor_normal.png" % tree, "%s_impostor_orm.png" % tree]
     for f in old:
@@ -421,7 +425,13 @@ def main() -> None:
     while len(tris) < 3:
         tris.append(tris[-1] if tris else 0)
     tris[2] = lod2_tris
+    by_name = {m["name"]: m["tris"] for m in summary["meshes"]}
+    tris[1] = by_name.get("%s_LOD1" % tree, 0) + by_name.get("%s_cards_LOD1" % tree, 0)
     meta["tris"] = tris
+    prior = meta.get("lod1_repair", {})
+    lod1_repair["dropped"] += int(prior.get("dropped", 0))
+    lod1_repair["area_m2"] = round(lod1_repair["area_m2"] + float(prior.get("area_m2", 0.0)), 2)
+    meta["lod1_repair"] = lod1_repair
     params = dict(args.params)
     meta["impostor"] = {
         "generator": "gen_impostors", "recipe": RECIPE,

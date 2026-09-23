@@ -46,6 +46,12 @@
   "width": 4.2081
  },
  "kind": "hawthorn",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "hearthvale_hawthorn_a_mat",
   "hearthvale_hawthorn_a_leaf_foliage",

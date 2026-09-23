@@ -46,6 +46,12 @@
   "width": 3.1636
  },
  "kind": "willow_pollard",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "brightwater_willow_pollard_b_mat",
   "brightwater_willow_pollard_b_leaf_foliage",

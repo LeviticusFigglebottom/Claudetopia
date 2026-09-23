@@ -46,6 +46,12 @@
   "width": 6.2491
  },
  "kind": "apple",
+ "lod1_repair": {
+  "area_m2": 12.53,
+  "dropped": 7,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "hearthvale_apple_c_mat",
   "hearthvale_apple_c_leaf_foliage",
@@ -66,7 +72,7 @@
   },
   {
    "name": "hearthvale_apple_c_LOD1",
-   "tris": 900
+   "tris": 893
   },
   {
    "name": "hearthvale_apple_c_cards_LOD1",
@@ -111,7 +117,7 @@
  ],
  "tris": [
   5719,
-  1320,
+  1313,
   2
  ],
  "version": 3

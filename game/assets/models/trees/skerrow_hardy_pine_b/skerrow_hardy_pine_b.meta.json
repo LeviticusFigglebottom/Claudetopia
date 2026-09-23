@@ -46,6 +46,12 @@
   "width": 5.5795
  },
  "kind": "hardy_pine",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "skerrow_hardy_pine_b_mat",
   "skerrow_hardy_pine_b_leaf_foliage",

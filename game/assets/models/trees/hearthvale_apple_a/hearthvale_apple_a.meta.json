@@ -46,6 +46,12 @@
   "width": 6.2492
  },
  "kind": "apple",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "hearthvale_apple_a_mat",
   "hearthvale_apple_a_leaf_foliage",
