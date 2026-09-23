@@ -534,6 +534,11 @@ def build(args) -> dict:
             H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
             t.mark("landforms")
         del H_river
+        # A shelf's seaward edge is broken last, at full resolution, so nothing laid after it
+        # smooths it back into the clean line it was drawn as; every pad is left whole.
+        H = GEO.break_shelf_edges(grid, H, atlas, bank,
+                                  keep_discs=[(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p))
+                                              for p in pad_targets])
 
     owner = dithered_owner(rf, n, bank)
     # The sea is the ground under its level outside the coast, and within 150 m of the shore

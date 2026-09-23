@@ -506,6 +506,138 @@ def apply_coast(ctx, h: np.ndarray, atlas: dict) -> tuple:
     return out, ~on_land
 
 
+# --- a shelf's seaward edge, as the sea has left it ------------------------------------------------
+
+## How far a shelf's seaward edge wanders in and out of the line it is drawn as (metres), and over
+## what wavelengths: spurs and bites some thirty to ninety metres apart. A 4 m shelf drawn as a
+## clean arc two hundred metres across read, from the ground, as something laid out with a compass.
+SHELF_EDGE_M = 7.0
+SHELF_EDGE_WL = (30.0, 90.0)
+## where the edge runs into the land behind it, the breaking tapers back to the drawn line
+SHELF_EDGE_TAPER_M = (6.0, 30.0)
+## the sea floor a bite is cut down to: the foot of the face
+SHELF_FOOT_M = -2.5
+## blocks fallen from the face: how many to a hundred metres of seaward edge, how far out from it,
+## how wide, and how far they stand out of the water
+SHELF_BLOCKS_PER_100M = 3.5
+SHELF_BLOCK_OUT_M = (2.0, 11.0)
+SHELF_BLOCK_R_M = (1.4, 3.2)
+SHELF_BLOCK_TOP_M = (0.3, 2.2)
+## a notch (coast.shelves[].notches): a slot SHELF_NOTCH_W_M wide through the face, running
+## SHELF_NOTCH_IN_M into the shelf, its floor falling from SHELF_NOTCH_TOP_M under the shelf's top
+## at the inner end to SHELF_NOTCH_FLOOR_M (under the water) at the drawn edge, and clear of spurs
+## and fallen blocks SHELF_NOTCH_OUT_M out past it. (The sightline saddles have NOTCH_* of their own.)
+SHELF_NOTCH_W_M = 8.0
+SHELF_NOTCH_IN_M = 4.0
+SHELF_NOTCH_OUT_M = 10.0
+SHELF_NOTCH_TOP_M = 2.0
+SHELF_NOTCH_FLOOR_M = -1.5
+## how far outside a pad the breaking keeps off it (a pad's footprint is left whole)
+SHELF_PAD_CLEAR_M = 3.0
+
+
+def break_shelf_edges(grid: Grid, H: np.ndarray, atlas: dict, bank, keep_discs=()) -> np.ndarray:
+    """Every shelf's seaward edge broken the way the sea breaks rock: the drawn line wanders in and
+    out (spurs of shelf-top rock, bites down to the foot of the face), blocks fallen from the face
+    lie in the water under it, and each of the shelf's `notches` is a slot cut down into the sea.
+
+    Run at full resolution after the pads, roads and landforms (so nothing laid afterwards smooths
+    it), and kept off every pad in `keep_discs` ([(x, z, radius)]) by SHELF_PAD_CLEAR_M. The land
+    behind a shelf is not touched: the breaking fades out where the edge runs into it."""
+    coast = atlas["coast"]
+    shelves = coast.get("shelves", [])
+    if not shelves:
+        return H
+    g = grid
+    sp = g.spacing
+    mainland = polygon_mask(g, coast["polygon"])
+    for isl in coast.get("islands", []):
+        mainland |= polygon_mask(g, isl)
+    masks = [polygon_mask(g, s["polygon"]) for s in shelves]
+    reach = SHELF_EDGE_M + SHELF_NOTCH_OUT_M + SHELF_BLOCK_OUT_M[1] + SHELF_BLOCK_R_M[1] + 4.0 * sp
+    for k, shelf in enumerate(shelves):
+        m = masks[k]
+        if not m.any():
+            continue
+        top = float(shelf["height_m"])
+        ii, jj = np.nonzero(m)
+        pad = int(reach / sp) + 4
+        i0, i1 = max(int(ii.min()) - pad, 0), min(int(ii.max()) + pad + 1, g.n)
+        j0, j1 = max(int(jj.min()) - pad, 0), min(int(jj.max()) + pad + 1, g.n)
+        sub = H[i0:i1, j0:j1].astype(np.float32)
+        sub_m = m[i0:i1, j0:j1]
+        behind = mainland[i0:i1, j0:j1].copy()
+        for kk, mm in enumerate(masks):
+            if kk != k:
+                behind |= mm[i0:i1, j0:j1]
+        sd = np.where(sub_m, -(ndimage.distance_transform_edt(sub_m) - 0.5),
+                      ndimage.distance_transform_edt(~sub_m) - 0.5).astype(np.float32) * sp
+        seaward = smoothstep(SHELF_EDGE_TAPER_M[0], SHELF_EDGE_TAPER_M[1],
+                             ndimage.distance_transform_edt(~behind).astype(np.float32) * sp)
+        X = (g.x0 + np.arange(j0, j1, dtype=np.float32) * sp)[None, :]
+        Z = (g.z0 + np.arange(i0, i1, dtype=np.float32) * sp)[:, None]
+        whole = np.zeros(sub.shape, dtype=bool)      # every pad and SHELF_PAD_CLEAR_M round it
+        footprint = np.zeros(sub.shape, dtype=bool)  # every pad itself
+        for (px, pz, r) in keep_discs:
+            rr = float(r) + SHELF_PAD_CLEAR_M
+            if (px + rr < float(X[0, 0]) or px - rr > float(X[0, -1])
+                    or pz + rr < float(Z[0, 0]) or pz - rr > float(Z[-1, 0])):
+                continue
+            d2 = (X - px) ** 2 + (Z - pz) ** 2
+            whole |= d2 <= rr * rr
+            footprint |= d2 <= float(r) * float(r)
+        free = seaward * (~whole)
+        # 1. the edge wanders: in by a bite down to the foot of the face, out by a spur of shelf top
+        salt = _salt("shelf edge", k)
+        wander = SHELF_EDGE_M * _sc(bank.field_at(salt, g.n, 1.8, *SHELF_EDGE_WL)[i0:i1, j0:j1], 1.3) / 1.3
+        edge = wander * free
+        bite = sub_m & (sd > edge) & (free > 0.05)
+        spur = (~sub_m) & (sd < edge) & (free > 0.05) & (sub < top)
+        sub = np.where(bite, np.minimum(sub, SEA_LEVEL + SHELF_FOOT_M), sub)
+        sub = np.where(spur, top, sub)
+        # 2. blocks fallen from the face, in the water at its foot
+        broken = (sd < edge) & (free > 0.05)
+        rim_i, rim_j = np.nonzero(~broken & ndimage.binary_dilation(broken) & (free > 0.5))
+        if rim_i.size and sp <= 4.0:
+            rng = np.random.default_rng([int(getattr(bank, "seed", 0)), salt])
+            length = rim_i.size * sp
+            count = int(round(length / 100.0 * SHELF_BLOCKS_PER_100M))
+            gi, gj = np.gradient(sd)
+            for _ in range(count):
+                q = int(rng.integers(rim_i.size))
+                ci, cj = rim_i[q], rim_j[q]
+                ni, nj = float(gi[ci, cj]), float(gj[ci, cj])
+                norm = max((ni * ni + nj * nj) ** 0.5, 1e-6)
+                out = float(rng.uniform(*SHELF_BLOCK_OUT_M))
+                bx = float(X[0, cj]) + nj / norm * out
+                bz = float(Z[ci, 0]) + ni / norm * out
+                r = float(rng.uniform(*SHELF_BLOCK_R_M))
+                crown = SEA_LEVEL + float(rng.uniform(*SHELF_BLOCK_TOP_M))
+                d2 = ((X - bx) ** 2 + (Z - bz) ** 2) / (r * r)
+                lump = np.clip(1.0 - d2, 0.0, 1.0) ** 0.7
+                keep = (whole == 0) & (d2 < 1.0)
+                sub = np.where(keep, np.maximum(sub, sub + (crown - sub) * lump), sub)
+        # 3. the notches: a slot through the face and down into the sea
+        for (nx, nz) in shelf.get("notches", []):
+            fj, fi = (float(nx) - g.x0) / sp - j0, (float(nz) - g.z0) / sp - i0
+            ci = int(np.clip(round(fi), 1, sub.shape[0] - 2))
+            cj = int(np.clip(round(fj), 1, sub.shape[1] - 2))
+            gi, gj = np.gradient(ndimage.gaussian_filter(sd, 2.0))
+            ui, uj = float(gi[ci, cj]), float(gj[ci, cj])
+            norm = max((ui * ui + uj * uj) ** 0.5, 1e-6)
+            ux, uz = uj / norm, ui / norm          # outward, into the sea
+            along = (X - nx) * ux + (Z - nz) * uz  # metres out past the drawn edge
+            across = np.abs(-(X - nx) * uz + (Z - nz) * ux)
+            t = np.clip((along + SHELF_NOTCH_IN_M) / SHELF_NOTCH_IN_M, 0.0, 1.0)
+            floor = (top - SHELF_NOTCH_TOP_M) + (SEA_LEVEL + SHELF_NOTCH_FLOOR_M - (top - SHELF_NOTCH_TOP_M)) * t
+            side = 1.0 - smoothstep(0.5 * SHELF_NOTCH_W_M - 1.0, 0.5 * SHELF_NOTCH_W_M + 1.5, across)
+            inside = (along > -SHELF_NOTCH_IN_M) & (along < SHELF_NOTCH_OUT_M) & (side > 0.0) & ~footprint
+            cut = np.where(inside, sub + (np.minimum(sub, floor) - sub) * side, sub)
+            sub = cut.astype(np.float32)
+        H[i0:i1, j0:j1] = sub.astype(np.float32)
+    return H
+
+
 # --- lakes ---------------------------------------------------------------------------------
 
 @dataclass

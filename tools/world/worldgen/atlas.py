@@ -31,6 +31,8 @@ SETTLEMENT_KINDS = ("city", "town", "village", "hamlet", "fort", "camp", "lodge"
 DRY_KINDS = ("city", "town", "village", "hamlet", "fort", "camp")
 ## How close a river's mouth has to come to another river to be its tributary.
 CONFLUENCE_M = 40.0
+## how far off its shelf's edge a notch may be drawn (coast.shelves[].notches)
+NOTCH_ON_EDGE_M = 20.0
 
 
 def load(path: str = ATLAS_PATH) -> dict:
@@ -262,6 +264,12 @@ def check(atlas: dict, pack_dir: str, schema: dict | None = None) -> tuple:
         if not any(point_in_polygon(x, z, coast["polygon"]) for x, z in shelf["polygon"]):
             warnings.append("coast.shelves[%d]: no corner of it is on the mainland, so the sea runs "
                             "between it and the land behind it: draw it back under the coast" % k)
+        ring = list(shelf["polygon"]) + [shelf["polygon"][0]]
+        for x, z in shelf.get("notches", []):
+            off = distance_to_path(x, z, ring)
+            if off > NOTCH_ON_EDGE_M:
+                errors.append("coast.shelves[%d]: the notch at (%.0f, %.0f) is %.0f m from the shelf's "
+                              "edge; a notch is a point on its seaward edge" % (k, x, z, off))
 
     for k, r in enumerate(atlas.get("ranges", [])):
         where = "ranges[%d] (%s)" % (k, r["id"])

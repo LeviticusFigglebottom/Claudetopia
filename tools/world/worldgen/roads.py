@@ -36,6 +36,9 @@ PAD_DEFAULT = 25.0
 ## 2 m allowed. A camp that is a *place* keeps its 30: Pilgrim's Ash is raised by the settlement
 ## builder, not the POI kit, and its chapter-house door stands 26 m from the middle.
 CAMP_PAD_M = 22.0
+## how far below an authored pad (the atlas's `pads`) the ground beyond its flat may lie before
+## its skirt leaves it alone: that is a drop, a shelf's face, and not ground to be filled
+PAD_DROP_M = 2.0
 CAMP_PLACE_PAD_M = 30.0
 ROAD_KINDS = ("city", "town", "village", "hamlet", "fort", "camp", "lodge", "ruin_village")
 ROAD_WIDTH = {"city": 6.0, "town": 6.0, "village": 5.0, "fort": 5.0, "hamlet": 4.5, "camp": 4.0,
@@ -103,6 +106,11 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
             level = float(fixed_levels[p["id"]])
         levels[p["id"]] = level
         w = 1.0 - smoothstep(r * 0.7, r * 1.6, d)
+        if fixed_levels is not None and p["id"] in fixed_levels:
+            # An authored pad is a landing on a shelf or at a cliff's foot. Its skirt takes the
+            # ground down to it, but builds nothing out over a drop: blended over the edge of the
+            # Hushline's shelf it filled the sea at the foot of the face up to a lip at sea level.
+            w = np.where((d > r * 0.7) & (sub < level - PAD_DROP_M), 0.0, w)
         H[i0:i1, j0:j1] = lerp(sub, level, w)
         pad_mask[i0:i1, j0:j1] |= d <= r
     return H, pad_mask, levels

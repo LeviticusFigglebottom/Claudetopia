@@ -298,6 +298,12 @@
                 "type": "number",
                 "minimum": 10,
                 "maximum": 500
+              },
+              "notches": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/xz"
+                }
               }
             }
           }

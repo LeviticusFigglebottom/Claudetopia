@@ -188,7 +188,7 @@ every authored sightline's line.
   "shelf_m": 350,
   "beach_m": 60,
   "cliffs": [{"path": [[x, z], ...], "height_m": 30}],
-  "shelves": [{"polygon": [[x, z], ...], "height_m": 4, "bank_m": 90}]
+  "shelves": [{"polygon": [[x, z], ...], "height_m": 4, "bank_m": 90, "notches": [[x, z]]}]
 }
 ```
 
@@ -204,6 +204,14 @@ inside it is flat to a few centimetres, and within `bank_m` (60 m by default) th
 comes down to it as a steep bank -- steep enough to want a `stair`, not a sheer face. The sea past
 its seaward edge is the coast's: draw a low `cliffs` entry along that edge to stand it up out of
 the water. A place on a shelf gets a pad at the shelf's height; a `pads` entry makes sure of it.
+
+The seaward edge is not built as the clean line it is drawn as. It wanders in and out by up to
+7 m (spurs and bites some thirty to ninety metres apart), and blocks fallen from it lie in the
+water at its foot. Near the land behind, where the edge runs into the coast, it tapers back to
+the drawn line. A pad's footprint is left whole. `notches` are points on the seaward edge where
+the shelf is cut down into the water: a slot 8 m wide through the face, 4 m into the shelf,
+with its floor falling from a couple of metres under the shelf into the sea, for a stair or a
+slipway to go down. A notch more than 20 m from the shelf's edge is an error.
 
 The world stops at its square edge. Close it: sea, or a range too steep to climb. A province
 that runs flat into the edge is a place a player walks off the map. If the coast polygon covers
