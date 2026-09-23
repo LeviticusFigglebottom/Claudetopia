@@ -682,7 +682,12 @@ def build(args) -> dict:
     cell_regions = CELLS.cell_region_ids(sw2, regions)
     # Who is standing out there: the region's own creatures, off the roads and away from the
     # hearths, in the groups their kind keeps.
-    spawns_by_cell = ENC.place(sw2, regions, places, PACK, seed)
+    # the roads out of the start, which a new game walks before it can fight
+    start_place = (atlas.get("start") or {}).get("place")
+    start_ids = {str(spec.get("id") or "core:road/%s_%s" % (spec["from"].split("/")[-1], spec["to"].split("/")[-1]))
+                 for spec in atlas.get("roads", []) if start_place in (spec.get("from"), spec.get("to"))}
+    start_ways = [np.asarray(r.points, dtype=np.float64)[:, :2] for r in roads_list if r.id in start_ids]
+    spawns_by_cell = ENC.place(sw2, regions, places, PACK, seed, start_ways=start_ways)
     t.mark("encounters")
     scenes_by_cell: dict = {}
     for entry in poi_out:
