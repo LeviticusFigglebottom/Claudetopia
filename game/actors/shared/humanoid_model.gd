@@ -495,6 +495,8 @@ func _add_part(slot: String, part_name: String) -> bool:
 		var meta := _part_meta(slot, part_name)
 		var per_mesh: Dictionary = meta.get("materials", {})
 		copy.set_meta("material", str(per_mesh.get(str(src.name), meta.get("material", ""))))
+		# a cloth woven in its own colours (the clans' tartan) is lit as cloth but not tinted
+		copy.set_meta("tint", str(meta.get("tint", "")))
 		added.append(copy)
 	inst.queue_free()
 	if added.is_empty():
@@ -533,6 +535,9 @@ func _apply_colours() -> void:
 				_dress(mi, appearance.hair_tint() if not pal.has("hair") else pal["hair"] as Color, "hair")
 				if slot == "beard" and str(mi.get_meta("part", "")) == STUBBLE:
 					_as_stubble(mi)
+				continue
+			if str(mi.get_meta("tint", "")) == "none":
+				_dress(mi, Color.WHITE, kind)
 				continue
 			# Steel is the people's metal and leather their leather, whichever slot it is worn
 			# in: a Vale cuirass was tinted the Vale's wool brown because it sat in `torso`.

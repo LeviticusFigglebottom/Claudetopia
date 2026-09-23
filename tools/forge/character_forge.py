@@ -253,16 +253,23 @@ def bake_all_clips(arm, skel: Skeleton, only: Optional[Sequence[str]] = None) ->
 # ======================================================================================
 
 BODY_TRIS = 7800
+HAND_TRIS = 1800             # both hands, on top of BODY_TRIS
 HEAD_TRIS = 4200
 BODY_TEX = 1024
 HEAD_TEX = 1024
 
 
 def build_body(skel: Skeleton, style: bodylib.BodyStyle, name: str = "Body",
-               spacing: float = 0.0080, target_tris: int = BODY_TRIS):
-    verts, quads = bodylib.body_mesh(skel, style, spacing=spacing)
+               spacing: float = 0.0080, target_tris: int = BODY_TRIS, hand_tris: int = HAND_TRIS):
+    """The body at `spacing`, its hands meshed apart at a third of it and joined on: two shells,
+    the hands' wrist stubs inside the forearms. At the body's spacing four fingers with a few
+    millimetres between them come out as one mass."""
+    (verts, quads), (hv, hq) = bodylib.body_mesh_parts(skel, style, spacing=spacing)
     ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
+    hands = bodylib.to_object(mesh_object_name(name + "_hands"), hv, hq)
+    bodylib.decimate(hands, hand_tris)
+    bodylib.join_into(ob, [hands])
     bodylib.smart_uv(ob, angle_deg=66.0, margin=0.015)
     return ob
 
@@ -498,6 +505,9 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
         bolt = n.fbm(p, freq=6.0, octaves=2)
         c = base * (0.88 + 0.16 * bolt)[:, None] * (0.93 + 0.12 * cloth)[:, None] \
             * (0.96 + 0.07 * thread)[:, None]
+        if getattr(g, "pattern", None) is not None:
+            # a woven pattern carries its own colours over the value (base 0.82 back to 1)
+            c = c * np.clip(g.pattern(p, nrm), 0, 1) / 0.82
         occ = _occ(p, nrm)
         # creases: value, not hue, so the game can tint the garment any colour it likes
         c = c * (0.62 + 0.38 * occ)[:, None]
@@ -631,9 +641,12 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
         fitted = sorted(set(fitted) | set(f))
     if not objs:
         return ""
+    extra = {"material": g.material, "materials": materials, "slot_hint": _slot_hint(g.name), "fits": fitted}
+    if getattr(g, "pattern", None) is not None:
+        # woven in its own colours: HumanoidModel leaves it untinted
+        extra["tint"] = "none"
     return export_part(g.name, kind, objs, arm, {"material": g.material, "bone": g.bone},
-                       seed=seed, extra={"material": g.material, "materials": materials,
-                                         "slot_hint": _slot_hint(g.name), "fits": fitted})
+                       seed=seed, extra=extra)
 
 
 def _slot_hint(name: str) -> str:
@@ -832,7 +845,9 @@ def cmd_presets(args) -> None:
          "feet": "shoes", "belt": "belt"},
         skin="olive", hair_colour="black", eye_colour="dark_brown", build=0.36, age=0.26)
     add("player_cragborn", "clans",
-        {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "gambeson", "legs": "kilt",
+        # the shirt the game's clans wear under the plaid (`_culture_outfit`); a padded jack under
+        # it was the padded costume
+        {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "shirt", "legs": "kilt",
          "feet": "boots", "belt": "belt", "back": "plaid"},
         skin="fair", hair_colour="ginger", eye_colour="grey_green", build=0.70, bulk=1.10,
         shoulder_width=1.12, age=0.34)

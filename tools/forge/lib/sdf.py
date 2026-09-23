@@ -338,6 +338,10 @@ def smax(d1: np.ndarray, d2: np.ndarray, k: float) -> np.ndarray:
     return d2 * (1 - h) + d1 * h + k * h * (1 - h)
 
 
+# Most grid points one primitive is evaluated at in one call (see Scene.grid).
+GRID_CHUNK = 600_000
+
+
 class Scene:
     """An ordered list of primitives combined with smooth min/max."""
 
@@ -420,16 +424,24 @@ class Scene:
             else:
                 i0 = np.zeros(3, int)
                 i1 = n
-            sl = tuple(slice(int(i0[a]), int(i1[a])) for a in range(3))
-            gx, gy, gz = np.meshgrid(axes[0][sl[0]], axes[1][sl[1]], axes[2][sl[2]], indexing="ij")
-            P = np.stack([gx.ravel(), gy.ravel(), gz.ravel()], axis=1)
-            dp = p.fn(P).reshape(gx.shape)
-            if p.op == "union":
-                F[sl] = smin(F[sl], dp, p.k)
-            elif p.op == "subtract":
-                F[sl] = smax(F[sl], -dp, p.k)
-            else:
-                F[sl] = smax(F[sl], dp, p.k)
+            # In slabs of at most GRID_CHUNK points: a torso-sized shell at 3 mm is 8 million
+            # points, and its region functions and a sampled field's eight gathered copies of
+            # them were gigabytes at once -- the brigandine was killed for memory mid-build.
+            # Every field here is pointwise, so the slabs give the same grid.
+            plane = max(int(i1[1] - i0[1]) * int(i1[2] - i0[2]), 1)
+            per = max(1, GRID_CHUNK // plane)
+            for xa in range(int(i0[0]), int(i1[0]), per):
+                xb = min(xa + per, int(i1[0]))
+                sl = (slice(xa, xb), slice(int(i0[1]), int(i1[1])), slice(int(i0[2]), int(i1[2])))
+                gx, gy, gz = np.meshgrid(axes[0][sl[0]], axes[1][sl[1]], axes[2][sl[2]], indexing="ij")
+                P = np.stack([gx.ravel(), gy.ravel(), gz.ravel()], axis=1)
+                dp = p.fn(P).reshape(gx.shape)
+                if p.op == "union":
+                    F[sl] = smin(F[sl], dp, p.k)
+                elif p.op == "subtract":
+                    F[sl] = smax(F[sl], -dp, p.k)
+                else:
+                    F[sl] = smax(F[sl], dp, p.k)
         return F, origin, spacing
 
 

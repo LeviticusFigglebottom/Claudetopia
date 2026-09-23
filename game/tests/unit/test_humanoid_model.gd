@@ -522,3 +522,38 @@ func test_stubble_is_seen_through() -> void:
 			assert_gt(0.8, mat.albedo_color.a, "the stubble is drawn solid (alpha %.2f)" % mat.albedo_color.a)
 			seen += 1
 	assert_gt(seen, 0, "no stubble mesh on the body")
+
+
+## The clans' plaid is a tartan baked in its own colours, and its meta says "tint": "none". Dressed
+## in the palette's primary like any cloth, the rust and the brown went to a muddy pale and the
+## check was lost: it must be lit as cloth and left its own colour.
+func test_a_woven_part_is_not_tinted() -> void:
+	var meta_path := "res://assets/models/characters/clothing/plaid/plaid.meta.json"
+	if not _rig_built() or not FileAccess.file_exists(meta_path):
+		return
+	var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+	if typeof(meta) != TYPE_DICTIONARY or str((meta as Dictionary).get("tint", "")) != "none":
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.culture = "clans"
+	a.palette = CharacterAppearance.culture_palette("clans")
+	a.set_part("head", "default")
+	a.set_part("back", "plaid")
+	a.set_part("torso", "shirt")
+	m.apply_appearance(a.to_dict())
+	var plaid := 0
+	var shirt := 0
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
+		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as BaseMaterial3D
+		if mat == null:
+			continue
+		match str(mi.get_meta("part", "")):
+			"plaid":
+				assert_eq(mat.albedo_color, Color.WHITE, "the tartan was tinted %s" % mat.albedo_color)
+				plaid += 1
+			"shirt":
+				assert_ne(mat.albedo_color, Color.WHITE, "the shirt under it was not dressed")
+				shirt += 1
+	assert_gt(plaid, 0, "no plaid mesh on the body")
+	assert_gt(shirt, 0, "no shirt mesh on the body")
