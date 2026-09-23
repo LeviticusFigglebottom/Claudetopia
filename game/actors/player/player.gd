@@ -24,10 +24,10 @@ signal camera_mode_changed(first_person: bool)
 const WALK_SPEED := 1.8
 const JOG_SPEED := 5.0
 const SPRINT_SPEED := 7.8
-const SNEAK_SPEED := 1.8
+const SNEAK_SPEED := 1.5
 ## Locked on or blocking the body faces the target or the view, not the way it moves, and the
 ## legs have only walking strafes to show for it.
-const STRAFE_SPEED := 3.2
+const STRAFE_SPEED := 2.6
 const BLOCK_MOVE_MULT := 0.6
 ## Moving while a bow is drawn: what the first numbers gave it (half of 4.2), kept.
 const AIM_MOVE_SPEED := 2.1
@@ -634,19 +634,6 @@ static func approach_speed(speed: float, want: float, delta: float) -> float:
 	return maxf(speed - (DECEL if speed <= JOG_SPEED else SPRINT_DECEL) * delta, want)
 
 
-## Interim, until the model is told metres per second: the forge's clips where the blend space
-## lays them out (Walk at y 1 was authored at 1.55 m/s, Run at y 2 at 5.0, Walk_Back at y -1 at
-## 1.15, the strafes at x ±1 at 1.9). Fed velocity / 6.5, the default gait sat at y 0.65, beside
-## Sneak_Walk at (0, 0.5), and was posed as a crouch; the sprint sat at y 1, the walk clip.
-static func legacy_blend(v: Vector2) -> Vector2:
-	var y := 0.0
-	if v.y >= 0.0:
-		y = v.y / 1.55 if v.y <= 1.55 else 1.0 + clampf((v.y - 1.55) / (5.0 - 1.55), 0.0, 1.0)
-	else:
-		y = maxf(v.y / 1.15, -1.0)
-	return Vector2(clampf(v.x / 1.9, -1.0, 1.0), y)
-
-
 func _damp_horizontal(delta: float, rate: float) -> void:
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z).move_toward(Vector3.ZERO, rate * delta)
 	velocity.x = horizontal.x
@@ -654,9 +641,11 @@ func _damp_horizontal(delta: float, rate: float) -> void:
 
 
 func _update_locomotion_anim(_delta: float) -> void:
+	# the ground velocity the body really made, in its own frame, m/s: the model plays the gait
+	# at the rate that keeps its feet planted under exactly that
 	var v := get_real_velocity()
 	var local := global_transform.basis.inverse() * Vector3(v.x, 0.0, v.z)
-	anim.set_locomotion(legacy_blend(Vector2(local.x, -local.z)), is_sneaking)
+	anim.set_locomotion(Vector2(local.x, -local.z), is_sneaking)
 	if state == State.FREE and not anim.is_busy() and not is_blocking:
 		if not is_on_floor() and velocity.y < -3.0 and not anim.is_playing("Fall_Loop"):
 			anim.play_intent("Fall_Loop")

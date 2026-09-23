@@ -134,8 +134,8 @@ are normative for pass one and live in `game/systems/*`.
 ### 5.2 Movement & cameras
 * `CharacterBody3D` with three gaits: **walk 1.8 m/s** (walk key held, or a light stick),
   **jog 5.0 m/s** (the default), **sprint 7.8 m/s** (held; stamina 8/s, §5.3; run to empty it
-  stops and does not start again until a quarter of the pool is back). Sneak 1.8 m/s; locked on
-  or blocking 3.2 m/s (×0.6 while blocking). Rest to a jog in 0.31 s (16 m/s², then 7 m/s² on to
+  stops and does not start again until a quarter of the pool is back). Sneak 1.5 m/s; locked on
+  or blocking 2.6 m/s (×0.6 while blocking). Rest to a jog in 0.31 s (16 m/s², then 7 m/s² on to
   a sprint); a jog stops in 0.25 s over 0.6 m (20 m/s²), a sprint in 0.48 s over 2.1 m
   (12 m/s² down to a jog). Sprint dodge-roll.
 * Movement is relative to the view: W is where the camera looks, on the ground; S away, A and D
