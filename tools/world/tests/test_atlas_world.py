@@ -165,6 +165,12 @@ class AtlasToHeights(unittest.TestCase):
         for rv in self.atlas.get("rivers", []):
             built = self.rivers[rv["id"]]
             self.assertLessEqual(built["surface_to_m"], built["surface_from_m"])
+            # the surface the game draws the water at is given at every point, and falls
+            surface = np.asarray(built["surface_m"], dtype=np.float64)
+            self.assertEqual(surface.shape[0], len(built["points"]))
+            self.assertLessEqual(float(np.diff(surface).max()), 0.01, "%s runs uphill" % rv["id"])
+            self.assertAlmostEqual(float(surface[0]), built["surface_from_m"], places=1)
+            self.assertAlmostEqual(float(surface[-1]), built["surface_to_m"], places=1)
             mx, mz = rv["path"][-1]
             lake = ATLAS.lake_at(self.atlas, mx, mz)
             if lake is not None:
