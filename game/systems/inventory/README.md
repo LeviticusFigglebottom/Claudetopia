@@ -79,7 +79,9 @@ bind_quick(slot, item_id) / use_quick(slot) -> bool     to_save() / from_save(d)
 # LootTable (static, pure)
 LootTable.roll(table, rng, context := {}) -> Array[Dictionary]      # [{item, count} | {marks}]
 LootTable.roll_merged(table, rng, context) -> Array[Dictionary]
-LootTable.default_context() -> {region, level, luck, flags, quests}
+LootTable.default_context() -> {region, level, luck, flags, quests, quests_done}
+LootTable.world_context() -> the same, read off the world: a kill's drop and a chest roll in it
+# quest_at / quest_min name a stage the pack's way (id, or number from one)
 
 # WorldItem / WorldContainer / LootDrops
 world_item.setup(item_id, count, data, marks)   interact(actor) -> bool   prompt_text() -> String
