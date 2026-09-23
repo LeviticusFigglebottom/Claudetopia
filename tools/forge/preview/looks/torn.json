@@ -1,0 +1,10 @@
+[
+  {"height": 1.76, "build": 0.5, "skin": "fair", "hair_colour": "dark_brown", "culture": "woodfolk",
+   "parts": {"head": "narrow", "hair": "short", "torso": "shirt", "legs": "leg_wraps", "feet": "boots", "belt": "belt", "back": "ragged_cloak"}},
+  {"height": 1.76, "build": 0.5, "skin": "fair", "hair_colour": "dark_brown", "culture": "woodfolk",
+   "parts": {"head": "narrow", "hair": "short", "torso": "shirt", "legs": "leg_wraps", "feet": "boots", "belt": "belt", "back": "torn_cloak"}},
+  {"height": 1.70, "build": 0.3, "skin": "olive", "hair_colour": "black", "culture": "woodfolk",
+   "parts": {"head": "round", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "boots", "belt": "belt", "back": "torn_cloak"}},
+  {"height": 1.82, "build": 0.8, "skin": "umber", "hair_colour": "soot", "culture": "woodfolk",
+   "parts": {"head": "broad", "hair": "cropped", "torso": "gambeson", "legs": "trousers", "feet": "boots", "belt": "belt", "back": "torn_cloak"}}
+]
