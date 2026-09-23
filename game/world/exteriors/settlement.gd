@@ -204,6 +204,13 @@ const STALL_COUNTER_M := 0.94
 const GROUND_LIFT_M := 0.05
 const CARRIAGEWAY_LIFT_M := 0.032
 const GROUND_RANGE_M := 240.0
+## A drystone wall is drawn this far from the middle of its place, and the coping of stones along
+## its top no further than a cart. The coping is most of a wall's triangles, and the walls had no
+## range: every place's were drawn however far off it stood, and on the streets plan's Merrowby
+## shot they were 0.32 M of the frame's 2.13 M triangles, where Merrowby's own (its sties) are
+## three thousand. A wall is less than a pixel from the next hill.
+const DRYSTONE_RANGE_M := 1000.0
+const COPING_RANGE_M := FabricMesh.PROP_RANGE_M
 ## A prop smaller than this across (the crockery on a stall, a bucket, a loaf) is drawn only this
 ## near and casts no shadow; one smaller than the middling size (a barrel, a bench) half as far as
 ## a cart.
@@ -391,7 +398,13 @@ func _commit(fabric: FabricMesh) -> void:
 	var rubble := _stone_spec().duplicate()
 	rubble["unit"] = 0.16
 	rubble["grout"] = "#2e2c28"
-	fabric.commit(self, "drystone", _surface(rubble, 0.7), "Drystone")
+	var laid := _surface(rubble, 0.7)
+	var drystone := fabric.commit(self, "drystone", laid, "Drystone")
+	if drystone != null:
+		FabricMesh.near_only(drystone, DRYSTONE_RANGE_M, true)
+	var coping := fabric.commit(self, "coping", laid, "Coping")
+	if coping != null:
+		FabricMesh.near_only(coping, COPING_RANGE_M, true)
 	var joinery := fabric.commit(self, "joinery", FabricMesh.joinery_material(), "Joinery")
 	if joinery != null:
 		FabricMesh.near_only(joinery, FabricMesh.JOINERY_RANGE_M, false)
@@ -582,7 +595,7 @@ func _wall(fabric: FabricMesh, a: Vector2, b: Vector2, h: float) -> void:
 					+ Basis(Vector3.UP, yaw) * Vector3(0.0, 0.0, _rng.randf_range(-0.04, 0.04))
 			var lean := Basis(Vector3.UP, yaw + _rng.randf_range(-0.12, 0.12)) * Basis(Vector3.BACK, _rng.randf_range(-0.38, 0.38))
 			var tall := h * 0.15 + _rng.randf_range(0.0, 0.1)
-			fabric.box("drystone", Transform3D(lean, q + Vector3(0.0, h * 0.9 + tall * 0.3, 0.0)),
+			fabric.box("coping", Transform3D(lean, q + Vector3(0.0, h * 0.9 + tall * 0.3, 0.0)),
 					Vector3(_rng.randf_range(0.15, 0.22), tall, _rng.randf_range(0.34, 0.44)), tint.darkened(_rng.randf_range(0.04, 0.2)))
 
 

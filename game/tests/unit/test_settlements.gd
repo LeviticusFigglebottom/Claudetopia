@@ -197,10 +197,10 @@ func test_a_road_through_a_place_lines_the_houses_up_along_it() -> void:
 ## leaf cards near and its impostor far, one band drawn at a time), the smoke, the shop signs'
 ## emblems, and the stations' props, whose three nodes are the forge's LOD bands drawn one at a
 ## time. The small things (the crockery, a bucket, a hen) throw no shadow and are gone past seventy
-## metres. Measured against DESIGN section 11 on the streets plan's Merrowby shot, which is in
-## PROGRESS.md.
-const EYE_RATCHET := 73
-const SHADOW_RATCHET := 49
+## metres. A drystone wall's coping is a mesh of its own, drawn nearer than the wall. Measured
+## against DESIGN section 11 on the streets plan's Merrowby shot, which is in PROGRESS.md.
+const EYE_RATCHET := 74
+const SHADOW_RATCHET := 50
 const MERROWBY := "core:place/merrowby"
 
 
@@ -243,7 +243,7 @@ func test_a_village_of_merrowbys_kind_stays_under_the_mesh_ratchet() -> void:
 
 ## The surfaces a settlement's fabric is drawn in, however many houses it has: its walls in the
 ## region's own surface and in its stone, the roofs, the stone, the joinery, and the made ground.
-const SURFACES := ["Drystone", "Earth", "Garden", "Joinery", "Paving", "Roofs", "Stone", "Walls", "WallsAlt"]
+const SURFACES := ["Coping", "Drystone", "Earth", "Garden", "Joinery", "Paving", "Roofs", "Stone", "Walls", "WallsAlt"]
 
 
 func test_the_fabric_is_one_mesh_a_surface_however_many_houses() -> void:
@@ -287,6 +287,24 @@ func test_the_joinery_is_near_only_and_casts_no_shadow() -> void:
 			"shutters cast a shadow: a whole extra pass for the sun and a line nobody sees")
 	var walls: MeshInstance3D = s.get_node("Walls")
 	assert_eq(walls.visibility_range_end, 0.0, "the roofs are how a village is read from the next hill")
+	_drop(s)
+
+
+## A drystone wall is not drawn from the next valley, and its coping (the stones on edge along its
+## top, most of the wall's triangles) not from the next field: the walls had no range, and every
+## place's were drawn however far off it stood.
+func test_a_drystone_wall_is_drawn_near_and_its_coping_nearer() -> void:
+	var s := _raise("village", "core:region/skerrow", [], [], "core:place/test_hills")
+	var wall := s.get_node_or_null("Drystone") as MeshInstance3D
+	var coping := s.get_node_or_null("Coping") as MeshInstance3D
+	assert_true(wall != null and coping != null, "a Skerrow village walls its gardens, and the walls have their coping")
+	if wall != null and coping != null:
+		assert_eq(wall.visibility_range_end, Settlement.DRYSTONE_RANGE_M, "the walls are drawn to a kilometre")
+		assert_eq(coping.visibility_range_end, Settlement.COPING_RANGE_M, "and their coping as far as a cart")
+		assert_gt(wall.visibility_range_end, coping.visibility_range_end, "the coping goes first")
+		for mi in [wall, coping]:
+			assert_ne((mi as MeshInstance3D).cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "%s throws its shadow" % mi.name)
+		assert_gt(_tris(coping.mesh), _tris(wall.mesh), "the coping is the most of a wall's triangles")
 	_drop(s)
 
 
