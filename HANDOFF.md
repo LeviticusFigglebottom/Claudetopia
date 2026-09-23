@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-23 18:25 UTC. Main is `claude/blissful-volta-dg80e6` at `c6e0fd89` (6985d356 plus this file).
+**Last refreshed:** 2026-09-23 18:40 UTC. Main is `claude/blissful-volta-dg80e6`: `6985d356` plus this file.
 
 ---
 
@@ -58,14 +58,14 @@ The user owns the project. Their direction, in their words where it matters:
 | Branch | Area | Head at last push | State |
 |---|---|---|---|
 | `claude/blissful-volta-dg80e6` | **main** | `6985d356` | Verified (§4) and pushed. |
-| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `05937961` | Final 4096 build done. Build helpers are in the repo. Fixing river gorges cut as slots, then hands back. Carries the cartographer's atlas. |
+| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `304d5df9` | Final 4096 build done. Build helpers are in the repo. Fixing river gorges cut as slots, then hands back. Carries the cartographer's atlas. |
 | `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `c86e169d` | Atlas final. Quest plumbing Phase A done. Phase B, the **quest walker**, is in progress. Hushline escort fix pending. |
-| `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `c9adeab9` | Converting literal coordinates. Running the game on the atlas build. Merges `wip/world-builder` into itself. |
+| `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `a0dd10dd` | PlaceRef and the coordinate inventory are done. The game runs on the atlas world (journey 16/16, fights 0 failed, 1 atlas-side test fail). Next: merge main, rerun, hand back. |
 | `wip/opening` | The intro cinematic, the start, and its loose ends | `cede10cd` | Phase A done (title/Naming music, QuestLog stage 0, QuestFoes fallback, wall-clock words). **URGENT: NPC talk fixed in WIP, being tested;** then the inverted tent and camp life. |
 | `wip/player-feel` | Movement, gaits, animation feel | `ca2d4920` | Follow-up round done. **URGENT: can't walk uphill; jump dead.** Diagnosed (§6.5). Then the attack-clip audit. |
 | `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `cbf7a236` | **URGENT: black ground, diagnosed** (the ash soil albedo, §4); fix next. |
-| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `6fe6cefa` | Suite passes (1616 tests, 0 failed). The flow failure was main's old opening stall. Next: merge main, then flow, then hand back. |
-| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `2592df60` | Refinements in progress. Re-verifying the Naming preview (§6.8). |
+| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `a5a930e9` | Suite passes (1616 tests, 0 failed). The flow failure was main's old opening stall. Next: merge main, then flow, then hand back. |
+| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `e7351633` | Most refinements done. The empty Naming preview is fixed (class cache). WIP: the wrist rebuild, cloaks mid-stride, the brigandine review (§6.8). |
 | `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `3352cb7c` | **Brief done and verified** (test 1664 passed, 0 failed; journey 16/16; smoke PASS; flow 98/99, the miss is the opening's). Queued for the next batch merge. Next: the atlas POI kinds. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
@@ -241,16 +241,51 @@ Each subsection is refreshed from its agent's hand-off note. Commands assume the
   Twelve world-coupled Godot tests fail until the tracked world is rebuilt from the atlas. That's
   expected; §5 says when.
 
-### 6.3 Atlas readiness (`wip/atlas-readiness`)
-- **Brief:**
-  1. Inventory every world coordinate in code, content, tools and tests.
-  2. Convert the ones that should follow a place into place-relative references resolved at
-     load.
-  3. Run test, journey, fights, the door sweep, the interior sweep and a new game on the atlas
-     build.
-  4. Fix the game-side breakages, and send the atlas-side ones to the builder or atlas owners.
-- **Known:** it merged `wip/world-builder`. It was rewriting the Willow Isle builder so a drawn
-  island isn't heaped over. Its hand-off note replaces this subsection.
+### 6.3 Atlas readiness (`wip/atlas-readiness`), from its note
+- **Head:** `a0dd10dd`, with the land branch merged at `3aced4f4`.
+- **Done:**
+  - The inventory is in `docs/COORDINATES.md`: each coordinate classed as derived, converted or
+    legitimately absolute, plus the procedure after a redraw.
+  - `PlaceRef` (`systems/shared/place_ref.gd`) resolves `{place, bearing, distance, height}`,
+    offsets and way shapes. Door plans name their place only. The Stair Head's way is a shape.
+    Hand capture plans are place specs. Saves pin the player, the Hearth, interiors and escorts.
+    Tests use `TestCase.at_place`.
+  - `test_place_ref.gd` (15 tests) moves places, and fails on coordinates in content.
+  - Game-side fixes the atlas found:
+    - stone stair colliders;
+    - the terraced falls' Hearthstone flag;
+    - Willow Isle on its own surface;
+    - the Hand shot raised 3 m;
+    - chart labels.
+- **Results:**
+  - On main's world: test 1599 (1 fail, fixed), journey 16/16, fights 66 with 0 failed checks.
+  - On the atlas world (w_final3/4): test 1599, with 1 fail that is atlas-side (the waystone walk
+    is 980 m against the 300–650 m the start test expects), journey 16/16, fights 66 with 0
+    failed checks, and all 24 doors land both ways. The body starts at (10, 108, 3670).
+  - Flow's 10 failures were the old opening stall, which is fixed in main.
+- **Next:**
+  1. Merge main.
+  2. `tools/world/use_build.sh --restore` puts the committed world back.
+  3. `./run.sh test && ./run.sh journey && ./run.sh flow`.
+  4. Hand back.
+- **To try a build:** `tools/world/use_build.sh <build dir> [<terrain dir>]`, then
+  `python3 tools/world/place_checks.py`, then `./run.sh test`.
+- **After main's world is rebuilt from the atlas:**
+  - `python3 tools/capture/make_default_plan.py` (and `--look`, `--horizon`);
+  - `python3 tools/capture/make_pois_plan.py`;
+  - `python3 tools/ui/gen_map.py --world <full build dir>`. The tracked world has no
+    `heights.r32`.
+- **Atlas-side, sent to the cartographer:**
+  - the Heron Watch stands in the North Channel;
+  - Wat Thatcher's schedule leg crosses the Lark Pool;
+  - Jory Wick commutes across the Mere;
+  - 28 of 201 sightlines are refused;
+  - the 980 m way.
+- **Traps:**
+  - Never stage `game/world/generated` or `game/terrain_data` after `use_build.sh`.
+  - A test file edited mid-suite fails once, so rerun it alone.
+  - The generated capture plans fail `tools/tests/test_capture_plan.py` until regenerated on
+    the final build.
 
 ### 6.4 The opening (`wip/opening`)
 - **In main:** the whole opening.
@@ -401,24 +436,65 @@ Each subsection is refreshed from its agent's hand-off note. Commands assume the
 - **Trap:** Godot 4.7 records a failed import as done. After fixing an import script, delete the
   matching `.godot/imported/*.md5`, touch the sources, then `./run.sh import`.
 
-### 6.8 Characters (`wip/characters`)
-- **Done on branch:**
-  - the heads repainted;
-  - hair, braids and beards rebuilt on lower shoulders;
-  - skirts, the coat, the gambeson, the harness and the helm on the new body, with `ArmRoom`
-    making room for the arms in padding;
-  - three-lame pauldrons;
-  - a tartan plaid;
-  - child clothing and the torn cloak.
-- **Watch:** a 15:27 Naming tour showed an **empty preview**. A new `class_name` (ArmRoom) wasn't
-  in Godot's global class cache yet, so `humanoid_model.gd` failed to parse.
-  - Any new `class_name` needs `godot --headless --path game --import` before a run.
-  - The flow probe's "has a preview body" check passed on an empty stage, so it is being made to
-    fail.
+### 6.8 Characters (`wip/characters`), from its note
+- **Head:** `e7351633`, with main merged at `6985d356`.
+- **Brief:** a second pass on the characters (skull, hair, cape, harness, external textures, a
+  child body, eyes and skin), the Naming screen first, then the four rough things (plaid, paddle
+  hands, the A-pose idle, the flat face).
+- **Done and verified in the engine:**
+  - a relaxed, weighted Idle;
+  - hands with fingers;
+  - face paint: brows, lashes, nose and lips;
+  - the tartan plaid;
+  - skirts, robe and kilt across both thighs;
+  - gloves;
+  - long hair, braid and beard;
+  - the harness and helm;
+  - pauldrons;
+  - child clothes;
+  - `ArmRoom`, which turns the arms out for padding.
+- **The empty Naming stage** was a stale `.godot` class cache.
+  - `run.sh` now imports whenever a `class_name` is missing from the cache (`184a7991`).
+  - The probe now fails unless the body script loads and draws a mesh (`663af1af`).
+  - A tour from a clean cache passed 235 checks, 0 failed, with a figure in all 34 frames.
+- **Suite:** 1596 tests, 0 failed, 0 script errors.
+- **WIP commits** (each body says what fails):
+  - `0bff37b6`: the Naming's suggestion buttons clip, and no tour has run since.
+  - `8e7b29af`: the wrist-join code is final, but the committed rig and bodies are one step
+    older and have a groove at each wrist. The rebuild is running.
+  - `2592df60`: cloaks draped over the Idle. The forward arm pokes through at Walk@0.51.
+  - `e7351633`: the brigandine, not yet seen in the engine.
 - **Next:**
-  - finish the refinements: plaid, hands, idle pose, face, cloaks mid-stride;
-  - re-verify the Naming from a clean class cache;
-  - hand back with full-size renders.
+  1. Rebuild the rig and bodies from the final wrist code:
+     - `tools/forge/rigbuild.sh` (about 30 min; expect "identical (<1e-5): 71");
+     - `blender -b --python tools/forge/character_forge.py -- parts --only bodies` (about 15 min);
+     - check with `tools/forge/preview/looks.sh <out> tools/forge/preview/looks/hands.json --frame=hands`.
+  2. Cloaks mid-stride.
+     - Try weight rules with `python3 tools/forge/preview/cloakreweight.py o.png cloak aniso2 Idle@0,Walk@0.25,Walk@0.51 --views=0,60,90,270`.
+     - Damp the arm swing under long cloaks during locomotion only.
+     - Port the result to `cloth._cloak_weights`, then build
+       `parts --only cloak hooded_cloak ragged_cloak torn_cloak hood shoulder_cape` (about
+       28 min).
+  3. Review the coat walking (`looks/outfits.json`) and the brigandine (`looks/armour.json`) in
+     the engine.
+  4. `./run.sh import`, then test, flow and journey, and
+     `python3 -m pytest tools/tests/test_glb_textures.py`.
+  5. The Naming tour at 1280, 1920 and 2560:
+     `xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 --audio-driver Dummy --resolution 1280x720 -- --flow=<out> --naming-tour`.
+     Look at every frame.
+  6. The PROGRESS section, at the end of the file only.
+- **Clips, only when one changes:**
+  - `blender -b --python tools/forge/bake_clips.py -- --out <dir>`;
+  - then `python3 tools/forge/transplant_clips.py <rig.glb> <dir>/humanoid_rig_clips.glb <rig.glb>`,
+    plus the sidecar.
+- **Traps:**
+  - A raw `godot` command doesn't refresh the class cache; use `./run.sh import`.
+  - `character_review` must hold clips with the model's `_process` off.
+  - Never run `character_forge rig` without `--clips Idle`; use `rigbuild.sh`.
+  - Parts with `rebind=True` are modelled in the Idle hang.
+  - One Blender at a time; a cloak build needs about 4 GB.
+- **Tools:** everything is in the repo under `tools/forge/preview/`: lbspreview, garmenttest,
+  cloakreweight, facepreview, clipdiff, `looks.sh` and `looks/*.json`.
 
 ### 6.9 Settlements and POIs (`wip/settlements`), from its note
 - **Head:** `3352cb7c`, with main `6985d356` merged at `52040d16`. The tree is clean.
