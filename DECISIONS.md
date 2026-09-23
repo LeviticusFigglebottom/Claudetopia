@@ -1287,3 +1287,35 @@ it stepped, was pulled back and down, and the hips came 20 cm down to reach it.
 **Consequences.** A stop's feet are stepped into the stance as before, and land at the clips'
 tilt. With the step judged by heading alone, the hips come down 5.2 cm at the most in a stop from a
 walk (7.8 before); a jog's and a sprint's are unchanged at 8.6 and 6.3.
+
+## 2026-09-23 · The heightfield holds a body only where no collider does, and a jump has a take-off
+**Decision.** `Actor.snap_to_terrain` stands down while a collider holds the body, and never pulls a
+rising body down; it still lifts a sunk body, and keeps one on the heightfield down a descent.
+Every actor's floor angle is 45° (`Actor.WALKABLE_SLOPE_DEG`), and its pace along the ground is the
+same up a slope as on the flat (`floor_constant_speed`). The player's "into a wall you stop
+running" reads the speed made along the ground, not across the map. Jumping, landing, mantling,
+blocking and the fall pose ask whether the body stands on a collider or on the heightfield
+(`Player._on_ground`), not on a collider alone. A jump plays Jump_Start's crouch and push in 0.1 s,
+and the feet leave the ground on the push (the clip's `jump_off`, now an anchor the rig is timed
+to); then Jump_Loop in the air and Jump_Land on the ground. Fall_Loop is for falling faster than
+6 m/s after a jump, or 3 m/s after none.
+**Why.** From a playtest on Terrain3D's collision: "walking upwards, at any incline, seems
+impossible", and "jump doesn't work". No test had walked a slope on a collider: their ground was
+a box or the heightfield alone. On Terrain3D's collision (tests/unit/test_walking_uphill.gd, planar
+ramps at the world's 2 m spacing), a walk could not get onto a 25° slope. A jog made 36% of its
+pace up 20° and nothing from 25°, a sprint 45% up 20°, and a jump rose 0.00 m on the collision and
+on the heightfield. The snap pulled the body down to the bilinear height whenever it was within
+12 cm above it. A capsule of radius r resting on a slope stands r(1/cos θ − 1) above the height
+under its middle, so the snap sank it into the slope and the collider pushed it back downhill
+every tick. A jump's first tick rises 7.7 cm, so it was pulled back down every tick. With the snap
+standing down, a jog and a sprint still stalled at 4.0 m/s up 35° and 3.1 up 40°: the wall check
+compared the pace asked for with the pace made across the map. Now every gait climbs every slope
+from 5° to 40° at 100% of its pace along the ground, and 50° is a wall. A jump leaves the ground
+0.12 s after the press, rises 1.14 m, and lands 1.05 s after the press.
+**Alternatives.** Making the snap agree with the collision's triangles: the capsule still stands
+off a slope by r(1/cos θ − 1), so the snap would need the capsule's shape. A jump off the press with
+Jump_Start played from its push: two frames of a clip made to show a crouch.
+**Consequences.** Where a collider holds the body, the collider is the ground, and the drawn
+heightfield may differ from it by a centimetre or two on curved ground. On the heightfield alone
+(no collider) a body climbs at its pace across the map, which is faster along the ground (131% at
+40°). A jump comes 0.1 s after the press.

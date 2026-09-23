@@ -269,7 +269,9 @@ land, the stakes, then you — and it is about ninety seconds long.
   once and lets it back out over about 0.35 s. Physics is interpolated, so bodies moved at 60 Hz
   are smooth at any refresh rate; the camera, the compass and anything moved per frame read the
   interpolated body.
-* Jump is modest (1.1 m); climbing is via placed ladders and mantle on low ledges.
+* Jump is modest (1.1 m), off a crouch and a push a tenth of a second long, with its own air and
+  landing. Ground up to 45° is walked at the gait's own pace along it, on Terrain3D's collision as
+  on the heightfield; steeper is a wall. Climbing is via placed ladders and mantle on low ledges.
 
 ### 5.3 Combat
 * **Stamina** (`100 + 8·Endurance`) drains per action: light attack 18, heavy 32,

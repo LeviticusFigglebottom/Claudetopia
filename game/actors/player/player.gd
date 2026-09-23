@@ -70,8 +70,14 @@ const SPRINT_TAP_S := 0.22
 ## The pads whose Sprint button is read for a tap (a binding names a button on any pad).
 const PADS_READ: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7]
 const JUMP_HEIGHT := 1.1
-## The steepest ground a body walks up (degrees): the physics' floor angle. Steeper is a wall.
-const WALKABLE_SLOPE_DEG := 45.0
+## A jump's take-off: from the press to the feet leaving the ground (s), in which the rig plays
+## Jump_Start's crouch and push to its `jump_off`, and how long the push goes on after it.
+const JUMP_WINDUP_S := 0.1
+const JUMP_PUSH_S := 0.12
+## In the air, falling faster than this (m/s) is a fall (Fall_Loop); slower, after a jump, it is
+## the jump's own air (Jump_Loop), and after no jump it is a step down, shown as nothing.
+const FALL_FROM := 3.0
+const JUMP_FALL_FROM := 6.0
 ## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
 const ATTACK_STEP_SPEED := 1.6
@@ -173,6 +179,10 @@ var _free_tick: int = -2
 var _terrain_held: bool = false
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
+## Seconds until a pressed jump's feet leave the ground, or -1; and whether the body is in a jump's
+## air (from the take-off to the landing).
+var _jump_in := -1.0
+var _jumping := false
 
 
 func _ready() -> void:
@@ -437,6 +447,8 @@ func _physics_process(delta: float) -> void:
 func _set_state(s: int) -> void:
 	if s == state:
 		return
+	if s != State.FREE:
+		_jump_in = -1.0          # a roll, a swing or a stagger in the take-off is not a jump
 	var prev := state
 	state = s
 	state_changed.emit(prev, s)
@@ -485,21 +497,38 @@ func _tick_free(delta: float) -> void:
 			if _start_cast():
 				return
 		"jump":
-			if is_on_floor() and not is_blocking:
+			# standing on a collider or held on the heightfield: gated on a collider alone, a
+			# body on the heightfield could never jump
+			if _on_ground() and not is_blocking and _jump_in < 0.0:
 				if not _try_mantle():
-					velocity.y = sqrt(2.0 * gravity * JUMP_HEIGHT)
-					anim.play_intent("Jump_Start")
-					_emit_noise(0.4)
+					_take_off()
 				return
 		"interact":
 			if interactor.try_interact(self):
 				anim.play_intent("Interact")
-	if not is_on_floor() and _move_input.y < -0.5 and velocity.y < 1.0 and _try_mantle():
+	if not _on_ground() and _move_input.y < -0.5 and velocity.y < 1.0 and _try_mantle():
 		return
+	if _jump_in >= 0.0:
+		_jump_in -= delta
+		if _jump_in < 0.0 and _on_ground():
+			velocity.y = sqrt(2.0 * gravity * JUMP_HEIGHT)
+			_jumping = true
+			_emit_noise(0.4)
 	_move(delta)
-	if is_on_floor() and not _was_on_floor and not anim.is_busy():
-		anim.play_intent("Jump_Land")
-	_was_on_floor = is_on_floor()
+	if _on_ground() and not _was_on_floor:
+		_jumping = false
+		if not anim.is_busy():
+			anim.play_intent("Jump_Land")
+	_was_on_floor = _on_ground()
+
+
+## A jump: the rig's crouch and push (Jump_Start, to its `jump_off`) played in JUMP_WINDUP_S, and
+## the body leaves the ground as the push does. It left on the press, and the clip showed the
+## crouch while the body was already rising.
+func _take_off() -> void:
+	_jump_in = JUMP_WINDUP_S
+	anim.play_intent("Jump_Start", {"length": JUMP_WINDUP_S + JUMP_PUSH_S,
+			"events": [{"t": JUMP_WINDUP_S, "name": "jump_off"}]})
 
 
 func _update_common_toggles() -> void:
@@ -527,7 +556,7 @@ func _update_block() -> void:
 		parry_pressed_at = now()
 		if not anim.is_busy():
 			anim.play_intent("Parry")
-	var want := bool(_held["block"]) and not weapon.is_ranged() and stamina_comp.current > 0.0 and is_on_floor()
+	var want := bool(_held["block"]) and not weapon.is_ranged() and stamina_comp.current > 0.0 and _on_ground()
 	is_blocking = want
 	can_parry = parry_item
 	block_stability = block_stability_value()
@@ -734,9 +763,12 @@ func _free_move(wish: Vector3, target_speed: float, delta: float) -> void:
 		# back from a roll, a swing, the air or a strafe: carry the speed actually being made
 		_ground_speed = maxf(Vector3(velocity.x, 0.0, velocity.z).dot(forward()), 0.0)
 	else:
-		# into a wall you stop running, rather than keep the speed you were asking for
+		# into a wall you stop running, rather than keep the speed you were asking for. The speed
+		# made is along the ground: up a slope the body makes its whole pace along it and only
+		# cos θ of it across the map, and read across the map a slope was a wall, which held a
+		# jog up 35° to 4.0 m/s and a sprint up 40° to 3.1
 		var real := get_real_velocity()
-		var made := Vector2(real.x, real.z).length()
+		var made := real.length() if is_on_floor() else Vector2(real.x, real.z).length()
 		if _ground_speed > made + 0.75:
 			_ground_speed = made
 	_free_tick = tick
@@ -822,9 +854,12 @@ func _update_locomotion_anim(_delta: float) -> void:
 	# clips at its rate (HumanoidModel._update_turn)
 	anim.set_locomotion(told, is_sneaking)
 	if state == State.FREE and not anim.is_busy() and not is_blocking:
-		if not is_on_floor() and velocity.y < -3.0 and not anim.is_playing("Fall_Loop"):
-			anim.play_intent("Fall_Loop")
-		elif is_on_floor() and anim.is_playing("Fall_Loop"):
+		if not _on_ground():
+			var falling := velocity.y < -(JUMP_FALL_FROM if _jumping else FALL_FROM)
+			var air := "Fall_Loop" if falling else ("Jump_Loop" if _jumping else "")
+			if air != "" and not anim.is_playing(air):
+				anim.play_intent(air)
+		elif anim.is_playing("Fall_Loop") or anim.is_playing("Jump_Loop"):
 			anim.stop()
 	model.visible = not camera_rig.first_person
 
@@ -1226,6 +1261,8 @@ func teleport(position: Vector3, yaw: float) -> void:
 	velocity = Vector3.ZERO
 	_ground_speed = 0.0
 	_free_tick = -2
+	_jump_in = -1.0
+	_jumping = false
 	var body := body_model()
 	if body != null and body.has_method("reset_heading"):
 		body.reset_heading()      # a body put down facing a new way has not turned on the spot

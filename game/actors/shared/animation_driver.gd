@@ -30,7 +30,7 @@ const LOOPING: Array[String] = ["Idle", "Idle_Combat", "Walk", "Walk_Back", "Tro
 const HELD_POSE: Array[String] = ["Death_A", "Death_B", "Death", "Knockdown", "Sleep_Idle", "Sit_Idle"]
 ## The moment a clip's body connects, looked for in this order on either timeline: the rig's clip
 ## is stretched so its anchor meets the gameplay timeline's.
-const ANCHORS: Array[String] = ["hit_start", "charge_go", "channel_start", "release", "cast_release"]
+const ANCHORS: Array[String] = ["hit_start", "charge_go", "channel_start", "release", "cast_release", "jump_off"]
 ## How far the rig may be sped up or slowed down to meet a timeline. Past these a stretched swing
 ## stops reading as the same swing; it simply lands late or early and says so by looking wrong.
 const MODEL_SPEED_MIN := 0.25

@@ -214,7 +214,7 @@ func test_every_gait_climbs_every_walkable_slope_on_terrain3d_collision() -> voi
 			var angle: float = ANGLES[lane]
 			var got := await _climb(lane, gait)
 			var share := float(got["along"]) / _gait_speed(gait)
-			if angle > Player.WALKABLE_SLOPE_DEG:
+			if angle > Actor.WALKABLE_SLOPE_DEG:
 				row.append("%.0f° wall (rose %.2f m)" % [angle, float(got["highest"])])
 				assert_true(float(got["highest"]) < 0.5, "%s into a %.0f° slope climbed %.2f m of it" % [gait, angle, float(got["highest"])])
 				continue
@@ -238,7 +238,7 @@ func test_a_jog_climbs_on_the_heightfield_alone() -> void:
 		var row: Array[String] = []
 		for lane in ANGLES.size():
 			var angle: float = ANGLES[lane]
-			if angle > Player.WALKABLE_SLOPE_DEG:
+			if angle > Actor.WALKABLE_SLOPE_DEG:
 				continue
 			var got := await _climb(lane, gait)
 			var share := float(got["along"]) / _gait_speed(gait)
@@ -264,21 +264,29 @@ func test_a_jump_leaves_the_ground_and_lands_on_either() -> void:
 		await _ticks(2)
 		_key(KEY_SPACE, false)
 		var peak := floor_y
-		var clips := {}
+		var clips: Array[String] = []
+		var left_at := -1
 		var landed_at := -1
 		for i in 120:
 			await _tree().physics_frame
+			var up := player.global_position.y - floor_y
 			peak = maxf(peak, player.global_position.y)
-			clips[str(player.anim.current_clip)] = true
-			if i > 10 and landed_at < 0 and player._on_ground() and player.global_position.y - floor_y < 0.05:
-				landed_at = i
+			var clip := str(player.anim.current_clip)
+			if clip != "" and (clips.is_empty() or clips[-1] != clip):
+				clips.append(clip)
+			if left_at < 0 and up > 0.02:
+				left_at = i + 2
+			if left_at > 0 and landed_at < 0 and i > left_at and player._on_ground() and up < 0.05:
+				landed_at = i + 2
 		var rose := peak - floor_y
-		report.append("%s rose %.2f m and landed after %.2f s (%s)" % [where, rose,
-				float(landed_at) / Engine.physics_ticks_per_second, ", ".join(clips.keys())])
+		var hz := float(Engine.physics_ticks_per_second)
+		report.append("%s left the ground %.2f s after the press, rose %.2f m and landed %.2f s after the press (%s)" % [
+				where, float(left_at) / hz, rose, float(landed_at) / hz, ", ".join(clips)])
 		assert_near(rose, Player.JUMP_HEIGHT, 0.15, "%s a jump rose %.2f m" % [where, rose])
+		assert_true(left_at > 0 and absf(float(left_at) / hz - Player.JUMP_WINDUP_S) < 0.05,
+				"%s the feet left the ground %.2f s after the press, not at the push (%.2f s)" % [where, float(left_at) / hz, Player.JUMP_WINDUP_S])
 		assert_true(landed_at > 0, "%s the body did not come down" % where)
-		assert_true(clips.has("Jump_Start"), "%s the jump played no take-off (%s)" % [where, ", ".join(clips.keys())])
-		assert_true(clips.has("Jump_Land"), "%s the jump played no landing (%s)" % [where, ", ".join(clips.keys())])
+		assert_eq(clips, ["Jump_Start", "Jump_Loop", "Jump_Land"], "%s the jump played %s" % [where, ", ".join(clips)])
 		_clear()
 		await _tree().process_frame
 	print("    a jump: %s" % "; ".join(report))
