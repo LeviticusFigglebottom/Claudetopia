@@ -2222,14 +2222,14 @@
   "encounters": [
     {
       "chamber": "first_hollow",
-      "enemy": "core:enemy/down_wolf",
+      "enemy": "core:enemy/weaver",
       "count": 2,
       "group": "hollow",
       "note": "Weavers; they drop, so the fight starts above you."
     },
     {
       "chamber": "span",
-      "enemy": "core:enemy/down_wolf",
+      "enemy": "core:enemy/weaver",
       "count": 2,
       "ambush": true,
       "group": "span",
@@ -2237,13 +2237,13 @@
     },
     {
       "chamber": "larder",
-      "enemy": "core:enemy/down_wolf",
+      "enemy": "core:enemy/weaver",
       "count": 4,
       "group": "larder"
     },
     {
       "chamber": "nursery",
-      "enemy": "core:enemy/down_wolf",
+      "enemy": "core:enemy/weaver",
       "count": 6,
       "group": "nursery",
       "role": "swarm"

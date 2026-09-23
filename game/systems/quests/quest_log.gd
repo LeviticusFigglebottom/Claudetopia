@@ -12,7 +12,8 @@ extends Node
 ## Objective types (CONTRACTS §7 plus this stream's list):
 ##   talk      target = npc id            EventBus.dialogue_ended
 ##   reach     target = place/poi id      position provider, or EventBus.place_discovered
-##   kill      target = enemy id (or "" for any, or a tag:) EventBus.entity_killed
+##   kill      target = enemy id (or "" for any, or a tag:) EventBus.entity_killed; `where` (an
+##             interior, place or POI) and `region` say where it must happen (KillPlaces)
 ##   collect   target = item id           EventBus.item_acquired (and the inventory's current count)
 ##   deliver   target = npc id, item = item id   completed by dialogue effects or deliver()
 ##   escort    target = npc id, place = place id EventBus.escort_arrived
@@ -689,8 +690,9 @@ func current_objectives(type := "") -> Array[Dictionary]:
 			var o: Dictionary = objectives[i]
 			if type != "" and str(o.get("type", "")) != type:
 				continue
+			var progress := _count_for(quest_id, at, i)
 			out.append({"quest_id": str(quest_id), "stage": at, "index": i, "objective": o,
-					"done": _count_for(quest_id, at, i) >= maxi(1, int(o.get("count", 1)))})
+					"progress": progress, "done": progress >= maxi(1, int(o.get("count", 1)))})
 	return out
 
 
@@ -739,7 +741,8 @@ func _check_stage_complete(quest_id: String) -> void:
 
 
 ## Re-reads objectives that can be satisfied by state rather than by an event (collect, reach,
-## read_book), so entering a stage with the goods already in your pack completes it.
+## read_book, a boss already put down), so entering a stage with the goods already in your pack
+## completes it.
 func _sync_stage(quest_id: String) -> void:
 	if not is_active(quest_id):
 		return
@@ -759,6 +762,14 @@ func _sync_stage(quest_id: String) -> void:
 			"reach":
 				if ctx != null and ctx.is_discovered(str(o.get("target", ""))):
 					_progress(quest_id, i, 1, true)
+			"kill":
+				# A thing with a name, put down before the stage that asks for it: the Hart stands in
+				# the Moot from the first day, and a player who met him early had killed the one foe
+				# the main thread's fourth stage could ever be closed on. A boss stays down, so the
+				# objective closes on entering the stage.
+				var target := str(o.get("target", ""))
+				if Ids.type_of(target) == "boss" and GameState.has_flag("boss_deed/" + target):
+					_progress(quest_id, i, maxi(1, int(o.get("count", 1))), true)
 			_:
 				pass
 	check_reach()
@@ -793,11 +804,28 @@ static func _matches(target: String, id: String, def: Dictionary = {}) -> bool:
 	return target == id
 
 
-func _on_entity_killed(_victim: Node, _killer: Node, enemy_id: String) -> void:
+## A kill counts where its objective says, when it says (`where`, `region`: KillPlaces): the
+## Guild's bravos in the strongroom are not the two who work the Long Stride's queue.
+func _on_entity_killed(victim: Node, killer: Node, enemy_id: String) -> void:
 	var def := ContentDB.get_or_empty(enemy_id)
+	var here := _player_position()
+	var inside := _player_interior()
 	_for_each_objective("kill", func(quest_id: String, i: int, o: Dictionary) -> void:
-		if _matches(str(o.get("target", "")), enemy_id, def):
+		if _matches(str(o.get("target", "")), enemy_id, def) and KillPlaces.counts(o, victim, killer, here, inside):
 			_progress(quest_id, i, 1))
+
+
+## Where the player is standing, or Vector3.INF when nothing can say.
+func _player_position() -> Vector3:
+	var provider := _locator()
+	if provider != null and SocialContext.can_locate(provider):
+		return SocialContext.position_of(provider)
+	return Vector3.INF
+
+
+## The interior the player is in, or "" in the open.
+func _player_interior() -> String:
+	return str(Interiors.current_id)
 
 
 func _on_item_acquired(item_id: String, count: int) -> void:

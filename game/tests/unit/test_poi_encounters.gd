@@ -16,7 +16,7 @@ const GENERATED := "res://world/generated"
 const WHAT_STANDS := {
 	"core:poi/larkbourne_ford": "two bandits after dark",
 	"core:poi/hedge_shrine_of_ansel": "person: core:npc/marigold_orchard",
-	"core:poi/tumbled_watchtower": "three bandits in the stair-hall, a smuggler-Sayer on the parapet",
+	"core:poi/tumbled_watchtower": "five bandits in the stair-hall, a smuggler-Sayer on the parapet",
 	"core:poi/gosling_pit": "four bandits at the fire, and person: core:npc/wardens_ryn",
 	"core:poi/singing_yew": "nobody: safe ground (the wights turning away at the yew is not a mechanic)",
 	"core:poi/whitecut_falls": "a down-wolf pack",

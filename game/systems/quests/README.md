@@ -31,7 +31,7 @@ Objective types and what closes them:
 |---|---|---|
 | `talk` | npc id | `EventBus.dialogue_ended` |
 | `reach` | place or poi id | the position provider (`radius`, default 45 m) or `place_discovered` |
-| `kill` | enemy id, `""`/`any`, or `tag:<tag>` | `entity_killed` |
+| `kill` | enemy id, `""`/`any`, or `tag:<tag>` (+`where`, `radius?`, `region?`, `when?`, `stand?`) | `entity_killed` where the objective says (`KillPlaces`) |
 | `collect` | item id | `item_acquired`, and what is already in the pack when the stage opens |
 | `deliver` | npc id (+`item`) | a dialogue effect (`complete_objective`); where no author wrote one, finishing a conversation with the person while carrying the item hands it over (`QuestRoutes`) |
 | `escort` | npc id (+`place`, `radius?`, `requires?`) | `escort_arrived`, said by `Escorts` (systems/npc_life) when the person walking with you gets there |
@@ -48,6 +48,18 @@ sends you to (`reach`). `spot` names a marker in the dressing, a chamber of a de
 of a house; `owner` makes taking it theft (in a house the resident owns it). A `choice` whose
 `with` names a place rather than a person gets a `ChoicePoint` there. What has been taken is the
 `quest_items` save section. `tests/unit/test_quest_items.gd` pins where each one lies.
+
+**Where a fight is.** A kill counts only where its objective says (`KillPlaces`): `where` is an
+interior (the body lay in its pocket) or a place or point of interest (in the open, within
+`radius`, 140 m unless it says); a job board's hunt says its `region`. The body that died is asked,
+then the killer, then the player. Every authored kill objective says where
+(`tests/unit/test_kill_places.gd`), because counting a kill anywhere let the Undercroft's
+strongroom close on the Long Stride's bravos. Where a stage sends you to fight in the open,
+`QuestFoes` stands up what it asks for once you are near: the shortfall after what already stands
+there, or with `stand: "own"` the objective's own group whatever else is there (the Cold Fire's
+newer six); `when` keeps them to an hour window (`night`, `dawn`, ... as `PoiEncounters`). A boss
+is never stood up; a boss already put down when its stage opens closes the objective at once. A
+deep place stands what its meta's encounters say, and the walk checks it holds enough.
 
 **Naming a stage.** Content names a stage by its id or by its *number*, and numbers count from
 one: `{"quest_at": ["core:quest/the_naming", 1]}` is the waking, the first stage.

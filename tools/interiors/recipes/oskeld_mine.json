@@ -140,21 +140,21 @@
   "encounters": [
     {
       "chamber": "stope",
-      "enemy": "core:enemy/roadside_bandit",
+      "enemy": "core:enemy/clanless_raider",
       "count": 3,
       "group": "stope",
       "note": "Clanless raiders working the props for iron."
     },
     {
       "chamber": "pump_house",
-      "enemy": "core:enemy/roadside_bandit",
+      "enemy": "core:enemy/clanless_raider",
       "count": 2,
       "group": "pump",
       "role": "elite"
     },
     {
       "chamber": "bone_level",
-      "enemy": "core:enemy/hedge_wight",
+      "enemy": "core:enemy/stone_thrall",
       "count": 4,
       "group": "bone",
       "note": "Stone-thralls, in the bestiary's terms brutes: bone and rock walking, and you can break the limbs off."
