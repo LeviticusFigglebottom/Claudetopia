@@ -28,9 +28,16 @@ world itself all ask it before going in:
   what that needs; a world scene entered anyway (the editor's Play Scene) stands down with the
   same notice and a way back to the title.
 * **fallback** — the country is there but Terrain3D cannot draw it: no library for this machine
-  (see LICENSES.md), no regions in `game/terrain_data`, regions that load as nothing, or
-  `-- --fallback-terrain`. `FallbackTerrain` draws the ground, the title says so in one line and a
-  notice says it again when the player can see.
+  (see LICENSES.md), Mesa's software Vulkan driver under Forward+ or Mobile (Terrain3D 1.0.2
+  crashes it on its first frame, inside the driver's rasterizer threads), no regions in
+  `game/terrain_data` (the command named is `./run.sh terrain` when the full-resolution maps are
+  here, `./run.sh world` when they are not), regions that load as nothing, or
+  `-- --terrain=fallback`. `FallbackTerrain` draws the ground. Unless the player asked for it, it
+  is said where it cannot be missed (`GroundNotice`): across the title sheet with the way to the
+  full terrain, on a card across the top of the view once the region's name has gone, and on a
+  "Coarse ground" plate in the top left corner for as long as the HUD is up. A toast used to say
+  it once, and a player on Windows took the coarse ground for the game's look.
+  `-- --terrain=terrain3d` tries Terrain3D even on the driver it crashes.
 * **ready** — Terrain3D and its regions.
 
 `FallbackTerrain` is 256 chunks of 512 m sharing one flat 64 x 64 grid with a skirt, lifted in the
@@ -51,9 +58,11 @@ terraces and cliffs rounded off, no field patchwork.
 2. `game/tools_gd/import_terrain.tscn` (headless) turns those maps into Terrain3D region
    files under `game/terrain_data/` (16 regions of 1024 texels at 2 m = 2048 m each) and
    writes `terrain_assets.tres`.
-3. `world.tscn` loads both at runtime. `./run.sh world` does steps 1 and 2; `./run.sh`
-   does them for you when the manifest or the regions are missing. What the game reads of step 1
-   and all of step 2 are tracked, so a clone does not need to (README.md, "Run it").
+3. `world.tscn` loads both at runtime. `./run.sh world` does steps 1 and 2 (it finds Godot
+   before it builds, since step 2 needs it), `./run.sh terrain` does step 2 alone, and `./run.sh`
+   does them for you when the manifest or the regions are missing, with a banner when step 2
+   cannot run. What the game reads of step 1 and all of step 2 are tracked, so a clone does not
+   need to (README.md, "Run it").
 
 The runtime height map is a block mean of 4 x 4 full texels, so its texel (i, j) is centred at
 `origin + 8 (i, j) + 3 m`, not on the origin; the region, water and level maps are point samples

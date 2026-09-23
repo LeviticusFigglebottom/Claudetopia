@@ -679,3 +679,28 @@ enemies and arrows would still step).
 **Consequences.** Anything new that is moved per frame in `_process` must opt out, and anything
 that teleports an existing node must reset it. Terrain3D 1.0.2 still calls the deprecated
 `instance_reset_physics_interpolation`, which prints a warning at load and is harmless.
+
+## 2026-09-23 · Software Vulkan gets the coarse ground, and the coarse ground says so out loud
+**Decision.** `WorldStatus` does not start Terrain3D when the renderer draws through a
+RenderingDevice (Forward+ or Mobile) and the adapter is Mesa's llvmpipe; the ground is the coarse
+one and the title says why. `-- --terrain=terrain3d` tries Terrain3D anyway, and
+`-- --terrain=fallback` asks for the coarse ground anywhere. Unless it was asked for, the coarse
+ground is said across the title sheet, on a card when the player arrives and on a "Coarse ground"
+plate in the top left corner that stays while the HUD is up.
+**Why.** Measured. Terrain3D 1.0.2 alone in an empty project (a camera, a light, the node, no
+data) crashes lavapipe on its first frame: under gdb all four `llvmpipe` rasterizer threads stop
+at one address in the driver's compiled shader, on an indexed load out of range. The line before
+the crash, "/root: The caller thread can't call the function `propagate_notification()`", is
+Godot's crash handler sending NOTIFICATION_CRASH from that thread; it is not there when gdb takes
+the fault first. None of the game's threads touches a node (the streamer's worker parses JSON) and
+none is running then. And a player on Windows played for days on the coarse ground, which one
+toast and one small line had announced, taking its plain grey hills for the game's look.
+**Alternatives.** Leaving Forward+ on llvmpipe to crash (nothing could shoot the world there).
+Upgrading Terrain3D: there is no newer release (1.0.2 is the newest tag, its branch has one docs
+commit since, and `main` is 1.1.0-dev, without the deprecated call but without a release or
+binaries). Asking the driver to bound its loads (Vulkan's robustness features): not a setting
+the project has.
+**Consequences.** On software Vulkan the world is the coarse ground; the Compatibility renderer's
+llvmpipe still draws Terrain3D. The guard is a name match: when lavapipe or Terrain3D stops
+crashing, `--terrain=terrain3d` shows it and the guard goes. Screenshots with the HUD up on the
+coarse ground show the plate; captures have no HUD and do not.
