@@ -62,6 +62,7 @@ const WHAT_STANDS := {
 	"core:poi/cold_fire_camp": "six ash-wights, seated until the cup is touched",
 	"core:poi/glass_falls": "a bell-bearer",
 	"core:poi/hushline_stair": "ash-wights",
+	"core:poi/stair_head": "nobody: the Wardens' camp where a new game starts; the Warden stands there by her npc def's holds, not by a schedule",
 }
 
 var host: Node3D

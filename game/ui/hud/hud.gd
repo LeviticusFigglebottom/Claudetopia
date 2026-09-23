@@ -16,6 +16,8 @@ const IDLE_ALPHA := 0.35
 const REGION_CARD_SECONDS := 4.2
 const SUBTITLE_SECONDS := 4.0
 const STATUS_DEFAULT_SECONDS := 12.0
+## How long a new objective's line stays under the compass before it goes back to the journal.
+const OBJECTIVE_SECONDS := 7.0
 
 var _player: Node = null
 var _equipment: Node = null
@@ -40,6 +42,9 @@ var _boss_name: Label
 var _boss_bar: TextureProgressBar
 var _status_row: HBoxContainer
 var _subtitle: Label
+## The line under the compass that says what to do next when it changes.
+var _objective: Label
+var _objective_tween: Tween
 
 var _lock_target: Node3D = null
 var _boss_id := ""
@@ -72,6 +77,8 @@ func _ready() -> void:
 	EventBus.damage_dealt.connect(_on_damage_dealt)
 	EventBus.player_spawned.connect(_on_player_spawned)
 	EventBus.item_equipped.connect(_on_item_equipped)
+	EventBus.quest_started.connect(_on_quest_moved)
+	EventBus.quest_stage_changed.connect(_on_quest_moved)
 	UI.input_device_changed.connect(_on_input_device_changed)
 	UI.variant_changed.connect(_on_variant_changed)
 	Settings.changed.connect(_on_setting_changed)
@@ -118,6 +125,22 @@ func _build() -> void:
 	_compass.offset_top = 14.0
 	_compass.offset_bottom = 70.0
 	add_child(_compass)
+
+	# what to do next, under the compass, for a few seconds whenever it changes
+	_objective = UiKit.label("", "Small", HORIZONTAL_ALIGNMENT_CENTER)
+	_objective.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_objective.anchor_left = 0.5
+	_objective.anchor_right = 0.5
+	_objective.offset_left = -300.0
+	_objective.offset_right = 300.0
+	_objective.offset_top = 74.0
+	_objective.offset_bottom = 100.0
+	_objective.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))
+	_objective.add_theme_constant_override("shadow_offset_x", 1)
+	_objective.add_theme_constant_override("shadow_offset_y", 1)
+	_objective.modulate.a = 0.0
+	_objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_objective)
 
 	# bars, bottom left
 	var bars := UiKit.column(5)
@@ -609,6 +632,13 @@ func _rest_alpha() -> float:
 	return clampf(float(Settings.get_value("gameplay", "hud_opacity", 1.0)), 0.1, 1.0)
 
 
+## The HUD arriving after something else has had the screen (the opening): from nothing, and
+## awake, so it inks up to its resting opacity instead of to its idle one.
+func come_up() -> void:
+	modulate.a = 0.0
+	_idle = 0.0
+
+
 func _input(_event: InputEvent) -> void:
 	_idle = 0.0
 
@@ -654,6 +684,61 @@ func show_region_card(title: String, tagline: String) -> void:
 	tw.tween_property(_region_card, "modulate", Color(1, 1, 1, 1), 1.1).set_trans(Tween.TRANS_CUBIC)
 	tw.tween_interval(REGION_CARD_SECONDS)
 	tw.tween_property(_region_card, "modulate:a", 0.0, 1.4)
+
+
+## A quest started or moved on: its next thing to do goes under the compass for a few seconds, so
+## the player learns it from the screen and not from the journal, and the smudge on the strip
+## above it says which way. Nothing is shown for a stage with nothing left to do.
+func _on_quest_moved(quest_id: String, _stage: Variant = null) -> void:
+	var line := objective_line(quest_id)
+	if not line.is_empty():
+		show_objective(line)
+
+
+## "The Naming: Speak to the Warden at her fire" -- the quest's name and its first objective not
+## yet done, or "" when there is none.
+func objective_line(quest_id: String) -> String:
+	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
+			else get_tree().get_first_node_in_group("quest_log")
+	if log_node == null or not log_node.has_method("objectives_of"):
+		return ""
+	for o in log_node.call("objectives_of", quest_id):
+		var obj: Dictionary = o
+		if bool(obj.get("done", false)) or bool(obj.get("optional", false)):
+			continue
+		var name_of := str(ContentDB.get_or_empty(quest_id).get("name", ""))
+		var text := str(obj.get("text", ""))
+		return text if name_of.is_empty() else "%s: %s" % [name_of, text]
+	return ""
+
+
+func show_objective(text: String, seconds := OBJECTIVE_SECONDS) -> void:
+	_objective.text = text
+	if _objective_tween != null and _objective_tween.is_valid():
+		_objective_tween.kill()
+	_objective.modulate = Color(1, 1, 1, 0.0)
+	_objective_tween = create_tween()
+	_objective_tween.tween_property(_objective, "modulate:a", 1.0, 0.5)
+	_objective_tween.tween_interval(seconds)
+	_objective_tween.tween_property(_objective, "modulate:a", 0.0, 1.2)
+	# the whole HUD is woken, so the line is not read through the idle fade
+	_idle = 0.0
+
+
+## The objective line as it stands, and whether it is on the screen: for the tests and the probe.
+func objective_shown() -> String:
+	return _objective.text if _objective != null and _objective.modulate.a > 0.05 else ""
+
+
+## Whether a quest's smudge is on the part of the strip the compass is showing now.
+func quest_marker_on_strip() -> bool:
+	if _compass == null or not _compass.visible:
+		return false
+	for a in _quest_areas():
+		var to: Vector2 = a["xz"]
+		if Compass.on_strip(Compass.bearing_deg(_compass.player_xz, to), _compass.heading_deg, Compass.SPAN_DEG, 24.0):
+			return true
+	return false
 
 
 func show_subtitle(text: String, seconds := SUBTITLE_SECONDS) -> void:

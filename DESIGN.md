@@ -131,6 +131,91 @@ are normative for pass one and live in `game/systems/*`.
 * Appearance is a data record (`CharacterAppearance`) applied to a body built by
   the character forge on our own humanoid rig, so morality visuals can modify it later.
 
+### 5.1a The opening (built — see PROGRESS "The opening")
+
+What plays between "Be named" and the first step, on **New Game only**: never on Continue
+or Load. The model is the first minutes of Fable, Oblivion and Dark Souls 2 — a voice, the
+land, the stakes, then you — and it is about ninety seconds long.
+
+* **Who speaks.** The Warden who has just asked your name (`core:npc/wren_tallow`), in
+  subtitles, because pass one has no voice acting (§12). The label says *The Warden*: she
+  has not told you her name yet. The Naming was her asking at the top step ("Say it clearly.
+  I'll say it back and then it's done" — her `the_naming_q` line), so the opening is her
+  saying it back, and then telling you, as she walks, what you have come up into.
+* **Why you are where you wake.** WORLD_BIBLE §1.5: the Hushline is where the Dwindling has
+  finished, and the player came out of it, which should be impossible. You came up the
+  Hushline Stair (`core:poi/hushline_stair`), where Wren has stood on and off for nineteen
+  years watching grey people walk *down* (her `the_hush` line). That is the whole of what she
+  knows, and she says so. You stand at its head, in her camp on the rim (**The start**, below).
+* **What you are shown**, each shot a slow eased move over a real place in the streamed
+  world, with the time and weather that place looks like itself in:
+  1. *Black.* One bell. "{name}." — "There. Said out loud, and heard. That is how it holds."
+  2. *The Mere at first light*, up the Long Stride to Tollmere. The title card —
+     **WICKMERE**, the bell mark, "Everything that is spoken of, stays." — inks in and out.
+     "Nobody in Wickmere agrees what the world is."
+  3. *Tollmere and the Sayers' Spire.* "The Sayers say it is a bell, struck once and still
+     ringing. They charge by the hour to explain it."
+  4. *The Drowned Nave in mist.* "The marsh says it is a tide going out."
+  5. *The Fallen Hand in cold light.* "The clans say something vast is breathing in."
+  6. *Merrowby under the Cracked Toll, gold morning.* "In the Vale we say it is a candle,
+     and a candle wants tending."
+  7. *The downs and Wardens' Rest.* "Everybody agrees what it is doing. A place nobody
+     speaks of goes quiet, and then it goes. We keep their names on the Roll."
+  8. *The Toll, close.* "This spring the Toll began to hum. The last time it hummed, Gosford
+     went quiet in eleven days." (WORLD_BIBLE §7.1; Harewell is left for *The Toll Hums*.)
+  9. *The Sunken Choir in ashfall.* "South of everything is Cinderlea, where it has gone
+     furthest. South of that is the Hush, where it has finished."
+  10. *The Stair*, from high over the Hush looking north at the cliff: "I have stood at the
+      top of that stair nineteen years and watched grey people walk down it. Nobody has
+      ever walked up it." The camera comes up over the rim into the Wardens' camp and settles
+      behind your shoulder, facing north: "Then, this morning, you did." — "Keep up. I don't
+      look back."
+* **The hand-over.** The last shot ends exactly on the gameplay camera's pose, the letterbox
+  draws back, the HUD inks in and control returns. *The Naming* (`core:quest/the_naming`)
+  starts at that moment, not under the pictures, and the Warden speaks first, in her own
+  greeting for the moment ("There you are. Eyes working? Good. Don't look behind you yet. Come
+  to the fire."), as a line with her name on it. The first objective, *Speak to the Warden at
+  her fire*, is written under the compass, and its smudge sits on the strip.
+* **The start.** `core:poi/stair_head`, the Wardens' camp at the top of the Stair, on the rim
+  of the Cinderlea cliff 190 m north of the Stair itself, which is a pad in the Hush at the
+  cliff's foot. The POI's position is where the Foundling stands, and the camp is laid out ahead
+  of it towards the Choir. The Warden stands 6 m in front at her fire, turned to you. Around
+  her: two tents, a cart with its load, two grey-green Warden colours with a bell each either
+  side of the way out, a signpost, lamps. Behind you: the two Oroth piers at the head of the
+  stair, its top steps going over the edge, and her Hearthstone. The first view is the camp,
+  the heath beyond it, and the Choir's twelve headless colossi on the skyline. From the camp,
+  waystones (a lamp on every third) walk 426 m north to the Choir over ground a person can
+  walk, and keep more than fifty metres from anything the built world stands on the heath:
+  about a minute and a half on foot, past the Cantor's Seat. The world builder places the
+  heath's enemies afresh on every build, so a test holds the waystones against the spawns of
+  the build on disk and names the leg to move. The Naming runs: `wake` (speak to
+  the Warden, who gives you the road) → `the_choir` (walk the waystones to the Sunken Choir) →
+  `ash_wights` → `hearthstone` (Pilgrim's Ash) → `the_cart`. Standing at the start completes
+  nothing. The Warden is kept at her fire by her npc def's `holds`, from the moment a new game
+  is named until you reach the Choir, and then she goes back to her own days.
+* **The rules it keeps.** Every camera is placed relative to a place and to the ground under
+  it, never at a stored height, and a test samples every path against the built terrain and
+  its scatter. No shot looks south from the Hushline: the world ends 200 m past the Stair.
+  The streamer follows the camera and loads the next shot while this one plays; if the
+  cells are not there in time the picture holds on black with the loading caption and the
+  music waits. Any key or button shows *hold to skip*; skipping arrives at exactly the state
+  playing to the end does — position, streaming, time, weather, buses, nothing paused. A
+  setting stops it playing on later new games, and the pause menu can replay it, after
+  which everything is put back as it was.
+* **Where it lives.** The shots are data, `core:cinematic/opening`
+  (`content/packs/core/cinematics/opening.json`), checked by `CinematicDef` like any other
+  content. `CinematicPlayer` (`systems/cinematic`) plays them in the running world, and one
+  call in `GameServices.begin_new_game()` starts it. The music is `core:music/opening`,
+  which `tools/audio/compose.py` composes from the same shot list so the cuts land on it.
+  *Play the opening on a new game* (Settings, gameplay) turns it off, and the pause menu's
+  *How it began* plays it again.
+* **What it cannot fix, and the design assumes.** The Stair itself stands where the built
+  world put its pad: a mesa in the Hush's water 100 m out from the foot of the cliff, not
+  climbing it. The start is on the rim above it, and the Stair is seen from there and from the
+  last shot. The Stair Head has no pad of its own until the next world build (its def is
+  dressed on the ground as it stands until then), and there are no animals in the camp,
+  because nothing in the asset library is one.
+
 ### 5.2 Movement & cameras
 * `CharacterBody3D` with three gaits: **walk 1.8 m/s** (walk key held, or a light stick),
   **jog 5.0 m/s** (the default), **sprint 7.8 m/s** (held; stamina 8/s, §5.3; run to empty it

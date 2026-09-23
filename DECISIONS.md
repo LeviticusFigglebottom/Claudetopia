@@ -496,6 +496,35 @@ multiplied by gold and red. Rules now carry a `tint_strength` (how far from whit
 multiplier may travel, default 0.45) and the species whose asset already carries that colour
 take none at all.
 
+## 2026-09-22 · The opening is the Warden's voice over the real country, played in the world
+**Decision.** The opening (DESIGN §5.1a) is data — a `core:cinematic/opening` definition of
+shots whose cameras are placed relative to named places and to the ground beneath them, with
+durations, time of day, weather, subtitle lines and a music cue — played by a small player
+inside the streamed world after the Naming, on New Game only. The voice is Wren Tallow's,
+in subtitles, saying back the name the player has just chosen. It ends on the gameplay
+camera's own pose and hands over there, and the first quest starts at the hand-over.
+**Why.** The game's first minute was a fade from black into control, with nothing said about
+where you are, why, or what is wrong with the world. The Naming already *is* the Warden
+asking your name at the top of the Stair, so the natural next beat is her answering, and her
+lines already exist in her dialogue graph: the opening quotes the fiction rather than
+inventing a narrator. Playing it in the world rather than as a film keeps it true to the land
+as it is rebuilt — a stored height or a rendered video would be wrong the next time the world
+builder runs, and the land is being reshaped while this is written — and it costs no new
+tooling: the fly camera, the streamer, the atmosphere and the capture runner already exist.
+**Alternatives.** A pre-rendered video (nothing here can encode one, and it would freeze the
+country at whatever build it was shot from); painted still cards with text (cheap, but the
+brief is a painted *world*, and it is the one thing the game can show that a card cannot);
+a narrator outside the fiction (Wickmere's cosmology is told four contradictory ways on
+purpose, and an omniscient voice would have to pick one); no opening (what shipped).
+**Consequences.** The streamer must load the next shot while the current one plays, and must
+be able to follow a camera without telling the game the player entered those regions — a
+region change seeds rumours and moves music, and a camera is not a traveller. Every piece of
+state the opening borrows (streamer target, clock, weather, buses, HUD, input, the current
+camera) must be put back by the same code whether it is watched or skipped, and a test has to
+hold the two end states against each other. The hook into the new-game flow is one call in
+`GameServices.begin_new_game()`, the one place a new game already begins, and a setting stops
+it for later new games. Reversible.
+
 ## 2026-09-22 · A stage number counts from one
 **Decision.** Content names a quest stage by its id or by its number counted from one, in
 `quest_at`, `quest_min_stage` and `quest_stage` alike. The code translates in one place,
@@ -696,6 +725,36 @@ enemies and arrows would still step).
 **Consequences.** Anything new that is moved per frame in `_process` must opt out, and anything
 that teleports an existing node must reset it. Terrain3D 1.0.2 still calls the deprecated
 `instance_reset_physics_interpolation`, which prints a warning at load and is harmless.
+
+## 2026-09-23 · A new game starts at the Stair Head, with the Warden at her fire and a way marked north
+**Decision.** A new game hands over at `core:poi/stair_head`, a Wardens' camp on the rim of the
+Cinderlea cliff above the Hushline Stair, not at the Stair. The Warden is kept there by a
+`holds` entry in her npc def (the dialogue's condition vocabulary, checked before her
+timetable) from the moment a new game is named until the Foundling reaches the Choir. She speaks
+first, in her own greeting for the moment, and the HUD writes each new objective under the
+compass as it changes. The Naming's first stage asks only to speak to her, with its marker at the
+camp. A new second stage, `the_choir`, sends the player 426 m north along waystones the camp's
+dressing lays from its `path` to the Sunken Choir.
+**Why.** The user's first minutes were a body alone on a grey pad in the Hush's water at the
+foot of an 80 m cliff (the pad the world builder flattened for the Stair). An objective ("Go to
+The Hushline Stair") was done the moment it appeared, the Warden it asked for was in Merrowby,
+and nothing in view said where to go. From the rim the country opens north: the Choir's colossi
+on the skyline, the heath, the Cantor's Seat. A camp there gives the first view something to
+look at and a person to speak to, and the second stage a destination a minute and a half away.
+**Alternatives.** Moving the Stair's own position to the rim (it is the land's to move, and the
+builder's stair dressing goes downhill from its pad, so it needs a rebuild and a look before
+anybody trusts it). Starting at Greyfold or Pilgrim's Ash (on the road, but a kilometre and
+more from where the story says you come up). An escort with the Warden walking beside you (the
+people stream is building escorts; this does not wait for them). Pinning the start in code
+(the POI is data, and a content pack can move it).
+**Consequences.** A POI written after the land was built is dressed where its def says, on the
+ground as it stands, until the next build flattens it a pad (`WorldPois.unbuilt_entries`), the
+same fallback `World.place_position` and `PlaceDiscovery` already made. A test holds the
+waystones' way against the built ground (walkable, dry, clear of the spawned enemies) and says
+which leg fails if the land moves under it. `quest_at` conditions on the Naming name its
+stages by id, so a stage can be added without renumbering the Warden's dialogue. The `new_game`
+flag now stays up through the opening, because it is what holds the Warden at the camp while the
+pictures play.
 
 ## 2026-09-23 · The legs are played at the ground's speed, on one stride timeline, and stand up
 **Decision.** `HumanoidModel.set_locomotion` takes the body's ground velocity in metres per second.
