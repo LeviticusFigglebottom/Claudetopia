@@ -955,9 +955,7 @@
       },
       {
         "poi": "core:poi/hushline_stair",
-        "quests": [
-          "core:quest/the_naming"
-        ],
+        "quests": [],
         "finds": [],
         "encounters": [
           "core:encounter/hushline_stair"

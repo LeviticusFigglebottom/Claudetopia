@@ -145,8 +145,11 @@ func _act(slot: String, used: bool) -> void:
 		if used and not await UI.confirm("Write over it?",
 				"%s already has a name written in it." % _slot_name(slot), "Write over it", "Leave it"):
 			return
-		SaveSystem.save_to_slot(slot)
-		EventBus.emit_notify("Written down: %s." % _slot_name(slot), "info")
+		var err := SaveSystem.save_to_slot(slot)
+		if err == OK:
+			EventBus.emit_notify("Written down: %s." % _slot_name(slot), "info")
+		else:
+			EventBus.emit_notify("Not written down (%s)." % (SaveSystem.saves_held_by() if err == ERR_BUSY else error_string(err)), "warning")
 		_rebuild()
 		return
 	if not used:

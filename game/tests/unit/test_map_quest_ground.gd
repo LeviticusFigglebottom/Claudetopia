@@ -77,18 +77,6 @@ class Ground:
 		return ""
 
 
-## QuestFoes refusing, besides a spot a body would touch something at, a spot with anything solid
-## over it: the opening's fix for the wights that stood inside the Choir's colossus, on its way to
-## the main branch. The fights here are asked of it, because a hollow landmark passes the check
-## QuestFoes has without it, and what this test answers for is whether each place leaves room
-## outside what is built at it. `test_the_ring_as_it_stands_today` says where the fix matters.
-class SkyFoes extends QuestFoes:
-	func _blocked(p: Vector3) -> bool:
-		if super._blocked(p):
-			return true
-		return Ground.overhead(get_viewport().get_world_3d().direct_space_state, p, BODY_R, BODY_H) != ""
-
-
 func before_each() -> void:
 	_flat = TerrainProvider.new()   # nothing loaded: flat at nought and dry everywhere
 	if _pads.is_empty() and FileAccess.file_exists(PADS):
@@ -296,11 +284,12 @@ func _own_group(d: PoiDressing, enemy: String) -> Array[Vector3]:
 
 ## Every fight the map's quests ask for at a place in the open: the spots QuestFoes stands the
 ## whole count on, which it does when nothing of the kind is there already (the place's own were
-## put down before the stage opened).
+## put down before the stage opened). QuestFoes refuses a spot with anything solid over it, since
+## the Naming's wights were found inside the Choir's colossus; this holds the map's places to it.
 func test_the_maps_fights_stand_in_the_open() -> void:
 	if not _no_world():
 		return
-	var foes := SkyFoes.new()
+	var foes := QuestFoes.new()
 	foes.enabled = false
 	_host.add_child(foes)
 	var stood := await _stand_fights(foes)
@@ -321,27 +310,6 @@ func test_the_maps_fights_stand_in_the_open() -> void:
 	print("MEASURE | the map's fights at a place something is built at | %d | %s | the places' own foes they count: %d"
 			% [stood.size(), str(built), own])
 	assert_gt(stood.size(), 25, "the map's fights were asked")
-
-
-## The same fights asked of QuestFoes as it is on this branch, which refuses only a spot a body
-## would touch something at. Not an assertion: it says which fights the overhead refusal matters
-## for, so that they can be looked at again the day it lands.
-func test_the_ring_as_it_stands_today() -> void:
-	if not _no_world():
-		return
-	var foes := QuestFoes.new()
-	foes.enabled = false
-	_host.add_child(foes)
-	var shut: Array[String] = []
-	var stood := await _stand_fights(foes)
-	for s in stood:
-		var f: Dictionary = s["fight"]
-		for why in s["why"]:
-			if why != "":
-				shut.append("%s at %s (%s)" % [Ids.name_of(str((f["objective"] as Dictionary).get("target", ""))),
-						Ids.name_of(str(f["where"])), why])
-	print("MEASURE | fights QuestFoes stands shut in without the overhead refusal | %d | %s" % [shut.size(), "; ".join(shut)])
-	assert_true(true)
 
 
 ## Every find the map's quests and notes leave at a place in the open: where QuestItems puts it

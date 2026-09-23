@@ -1063,6 +1063,43 @@ reproduction stops crashing without the guard or crashes with it. The Jolt warni
 maximum number of jobs") that came before some crashes is starvation, not the cause: the
 crashing thread was the mixer every time, and no project setting sets that limit.
 
+## 2026-09-23 · The opening keeps the wall clock, cannot keep anyone, and is never saved into
+**Decision.** The opening's pictures run on real seconds (`CinematicPlayer._real_delta`), not on
+the engine's delta: a long frame after quick ones is a hitch and moves them on by a second at
+most, a long frame after long ones is the machine and counts in full, and no frame moves a shot
+past half its length, so every shot is drawn at least once past its middle. A shot waits for
+its country four seconds at most and is then shown with what has come; its two settling frames
+are skipped for the black and once that wait is spent. Six minutes after the first shot the
+whole opening hands over the way a held key does, and after that nothing is waited for. A skip
+is timed from the key going down, on the wall clock. The hand-over hands the world to the body
+(`World.follow`) and stands the camp's people up at once. No slot is written while a cinematic
+holds the game (`SaveSystem.hold_saves`, held from the first thing borrowed until `finished` has
+been heard), and a world loaded from a slot never plays the opening, whatever its flags say: it
+gets the story, not the pictures.
+**Why.** Two flow runs on a tree carrying the opening sat in it for ten minutes, on its third
+shot, at a load average of 20 to 25 on this machine's four cores. The last frame they drew was
+the Spire playing, its first line on the screen: not a hold, and nothing waited for. Godot
+slows the whole game rather than step physics more than eight times a frame, so a frame of five
+or six seconds counts as an eighth of one. Measured on the same load with a log line per shot:
+the name's six seconds took 37 s of the wall clock in six frames, and the engine counted 0.8 s
+of them; timed on the engine, the Mere's twelve seconds would have taken ninety frames. The two
+shots before the Spire used the probe's ten minutes up. Each hold also waited four frames to
+settle, 25 to 30 s each on that machine. The Warden was not at her fire when control came back:
+a point of interest's people wait for its dressing, which went with its cell when the camera
+flew off, and the NPC streamer looks round every three quarters of a second of game time. The
+probe then saved its slot in the middle of the opening, with the `new_game` flag still up, and
+the `--load` run played the opening again from that slot.
+**Alternatives.** Scaling the delta by the frame rate (the same thing, less plainly). Dropping
+shots whose frames are slow (a player on a slow machine would lose the Warden's lines with
+them). Saving the borrowed state's originals into the slot (every system that is borrowed
+would have to know it; refusing the save is one line in one place).
+**Consequences.** On a slow machine the pictures stay with the music and are drawn with fewer
+frames; a line can fall between two frames there. A hold of two seconds says in the log which
+of its cells are missing and where each has got to in the streamer, and every shot logs its
+frames and wall time. The quicksave key says "Not saved while the opening plays." The flow
+probe reads the opening just before each frame is drawn, so the picture it keeps is the moment
+it read, and reports when the overall cap handed over.
+
 ## 2026-09-23 · Wickmere is drawn, not seeded
 **Decision.** The world's geography is authored in `tools/world/atlas/atlas.json` (docs/ATLAS.md
 says why each part is where it is). That covers the provinces and their ground, the ranges,

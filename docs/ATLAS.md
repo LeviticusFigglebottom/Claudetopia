@@ -936,7 +936,7 @@ Each point of interest's one-line hook (§12) is tied to the ids the game has fo
 `core:table/poi_hooks` (`game/content/packs/core/tables/poi_hooks.json`). `tools/poi_hooks.py`
 writes it from the pack, and `--check` says which rows have gone stale. test_map_quests holds each
 row true: the quests it names send you there, the things lying there are put down there, the
-encounters stand somebody up there, and the Hearthstone is the place's own. 109 are sent to by a
+encounters stand somebody up there, and the Hearthstone is the place's own. 108 are sent to by a
 quest, 74 have something lying there to take or read, 83 stand an encounter up and 22 keep a
 Hearthstone. Nothing in the game reads the table itself. It is the index, and the test keeps it
 honest.
@@ -1193,7 +1193,7 @@ honest.
 | The Headless Watch | `the_names_in_the_chapter_book` |  |  |  |
 | The Hermit's Gate |  | `item/note_hermits_gate` |  |  |
 | The Hush Bell |  |  | `hush_bell` |  |
-| The Hushline Stair | `the_naming` |  | `hushline_stair` | yes |
+| The Hushline Stair |  |  | `hushline_stair` | yes |
 | The Kneeling Colossus |  | `item/note_kneeling_colossus` |  |  |
 | The Last Hearth |  |  |  | yes |
 | The Last Milestone |  | `item/note_last_milestone` |  |  |
