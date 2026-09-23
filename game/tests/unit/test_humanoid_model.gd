@@ -24,8 +24,8 @@ const SOCKET_BONES: Array[String] = [
 ]
 ## CONTRACTS.md §3 — required clip names.
 const REQUIRED_CLIPS: Array[String] = [
-	"Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Strafe_L", "Strafe_R", "Sneak_Idle",
-	"Sneak_Walk", "Jump_Start", "Jump_Loop", "Jump_Land", "Fall_Loop",
+	"Idle", "Idle_Combat", "Walk", "Walk_Back", "Run", "Sprint", "Strafe_L", "Strafe_R",
+	"Sneak_Idle", "Sneak_Walk", "Jump_Start", "Jump_Loop", "Jump_Land", "Fall_Loop",
 	"Dodge_F", "Dodge_B", "Dodge_L", "Dodge_R",
 	"Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Light_3", "Attack_1H_Heavy",
 	"Attack_2H_Light_1", "Attack_2H_Light_2", "Attack_2H_Heavy",
@@ -215,7 +215,7 @@ func test_locomotion_clips_carry_footsteps() -> void:
 	if not _rig_built():
 		return
 	var m := _make_model()
-	for c in ["Walk", "Run", "Walk_Back", "Sneak_Walk"]:
+	for c in ["Walk", "Run", "Sprint", "Walk_Back", "Sneak_Walk"]:
 		if not m.has_clip(c):
 			continue
 		var names: Array[String] = []
