@@ -527,7 +527,10 @@ func _apply(_delta: float) -> void:
 	var tint: Color = lk["tint"]
 	var fogc: Color = lk["fog_color"]
 	var top_c := zenith * tint
-	var hor_c := horizon.lerp(fogc, 0.3) * (lk["horizon_tint"] as Color)
+	# The horizon takes a little of the fog's colour, so the land's far edge melts into it; at
+	# three tenths every region's horizon went the grey-brown of its fog, and a level view -- which
+	# sees the sky only up to twenty degrees -- saw nothing but that band.
+	var hor_c := horizon.lerp(fogc, 0.15) * (lk["horizon_tint"] as Color)
 	top_c = top_c.lerp(hor_c.lerp(Color(0.5, 0.52, 0.55), 0.3), clampf((cloudy - 0.3) / 0.7, 0.0, 1.0) * 0.6)
 	var dusk_col: Color = lk["dusk_tint"]
 	if rising:
@@ -535,7 +538,9 @@ func _apply(_delta: float) -> void:
 		dusk_col = dusk_col.lerp(Color(1.0, 0.62, 0.68), 0.35)
 	var sky_dusk := dusk * (1.0 - cloudy * 0.55)
 	var shown_sun := sun_energy * clampf(sun_mult * 1.2, 0.2, 1.0)
-	sky_mat.set_shader_parameter("horizon_sharpness", 3.2)
+	# the blue comes down to within a few degrees of the horizon: at 3.2 a level view's sky was
+	# more than half horizon colour up to the top of the frame
+	sky_mat.set_shader_parameter("horizon_sharpness", 4.5)
 	sky_mat.set_shader_parameter("top_color", top_c)
 	sky_mat.set_shader_parameter("horizon_color", hor_c)
 	sky_mat.set_shader_parameter("ground_horizon_color", hor_c.darkened(0.25))

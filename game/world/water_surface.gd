@@ -101,7 +101,7 @@ func _build_textures() -> void:
 	var n := int(rt.get("grid", 1024))
 	_level_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("water_level", "")], n)
 	_height_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("heights", "")], n)
-	_mask_tex = _texture_r8("%s/%s" % [GENERATED, rt.get("water", "")], n)
+	_mask_tex = _mask_texture(mask_path(provider.manifest), n)
 
 
 func _texture_rf(path: String, n: int) -> ImageTexture:
@@ -113,13 +113,44 @@ func _texture_rf(path: String, n: int) -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 
-func _texture_r8(path: String, n: int) -> ImageTexture:
-	var bytes := FileAccess.get_file_as_bytes(path)
-	if bytes.size() < n * n:
+func _mask_texture(path: String, n: int) -> ImageTexture:
+	var img := mask_image(path, n)
+	if img == null:
 		Log.error("WaterSurface", "cannot read %s" % path)
 		return null
-	var img := Image.create_from_data(n, n, false, Image.FORMAT_R8, bytes)
 	return ImageTexture.create_from_image(img)
+
+
+## Where the water mask the game loads lives, from the world manifest.
+static func mask_path(manifest: Dictionary) -> String:
+	var rt: Dictionary = manifest.get("runtime", {})
+	return "%s/%s" % [GENERATED, rt.get("water", "")]
+
+
+## The water mask exactly as the shader will sample it (see `mask_bytes`), or null if it cannot
+## be read. The water shader discards wherever this is under 0.5.
+static func mask_image(path: String, n: int) -> Image:
+	var bytes := FileAccess.get_file_as_bytes(path)
+	if bytes.size() < n * n:
+		return null
+	return Image.create_from_data(n, n, false, Image.FORMAT_R8, mask_bytes(bytes))
+
+
+## The water mask as the shader reads it: 0 dry, 255 wet. The world builder writes it as 0 and 1,
+## and an R8 texture reads a byte as byte/255, so a wet texel was 0.004 to the shader -- under its
+## 0.5 test everywhere. Every lake and the sea were discarded, from the first runtime world on, and
+## what the camera saw on the Mere was the lake bed's own terrain texture under no water at all:
+## the water shader's reflections, glints and colours never reached a frame outside the rivers.
+## Stretched to 255, the mask's linear filter still puts the waterline midway between a wet texel
+## and a dry one. A mask already written as 0 and 255 is left as it is.
+static func mask_bytes(bytes: PackedByteArray) -> PackedByteArray:
+	if bytes.has(255) or not bytes.has(1):
+		return bytes
+	var out := bytes.duplicate()
+	for i in out.size():
+		if out[i] != 0:
+			out[i] = 255
+	return out
 
 
 func _make_material(follow_level: bool, use_mask: bool) -> ShaderMaterial:
