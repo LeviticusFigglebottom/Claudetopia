@@ -204,33 +204,32 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         wrist = (0.026 + 0.004 * mus + 0.004 * heavy - 0.002 * fem) * lb * s
         ua_len = float(np.linalg.norm(el - sh))
         fa_len = float(np.linalg.norm(wr - el))
-        # Without its hands (they are meshed finer on their own, `hands_scene`) the forearm stops
-        # 3 cm short of the wrist and a little thinner, inside the hand's own wrist, which owns
-        # the join: ended at the wrist at full size, its round end stood out over the palm like
-        # the cuff of a glove.
-        wr_end = wr if hands else wr - d * 0.030 * s
-        wr_r = wrist if hands else wrist * 0.85
         parts = [
             sdf.chain([sh + d * 0.02 * s, sh + d * (0.40 * ua_len), el - d * 0.02 * s,
-                       el + d * (0.10 * fa_len), el + d * (0.32 * fa_len), wr_end],
-                      [ua * 1.02, ua * 0.92, el_r, fa, fa * 0.90, wr_r], k=0.0),
+                       el + d * (0.10 * fa_len), el + d * (0.32 * fa_len), wr],
+                      [ua * 1.02, ua * 0.92, el_r, fa, fa * 0.90, wrist], k=0.0),
             # elbow: a real mass, so the arm has a joint instead of a kink
             sdf.ellipsoid(el + up * 0.008 * s, [el_r * 1.30, el_r * 1.26, el_r * 1.30], k=0.026 * s),
             # forearm belly, thickest just below the elbow
             sdf.ellipsoid(el + d * (0.26 * fa_len) + fwd * 0.006 * s,
                           [fa * 1.10, fa * 1.08, fa * 1.14], k=0.034 * s),
-        ]
-        if hands:
             # wrist: narrow, which is what makes the hand read as a hand
-            parts.append(_wrist(wr, d, wrist, s))
+            _wrist(wr, d, wrist, s),
+        ]
         if mus > 0.2:
             parts.append(sdf.ellipsoid(sh + d * (0.38 * ua_len) + fwd * 0.014 * s,
                                        [0.036 * s, 0.034 * s, 0.034 * s], k=0.038 * s))
             parts.append(sdf.ellipsoid(sh + d * (0.42 * ua_len) - fwd * 0.014 * s,
                                        [0.032 * s, 0.030 * s, 0.038 * s], k=0.038 * s))
-        if hands:
-            parts.extend(_hand_parts(skel, st, wr, d, fwd, up, sx))
-        sc.union(sdf.group(parts, internal_k=0.016 * s), k=0.026 * s)
+        parts.extend(_hand_parts(skel, st, wr, d, fwd, up, sx))
+        arm = sdf.group(parts, internal_k=0.016 * s)
+        if not hands:
+            # The hands are meshed finer on their own (`hands_scene`) from this same arm, so the
+            # arm is cut off just before the wrist: the two meshes are one surface either side of
+            # the cut. Ended short and thin instead, the forearm's end stood out over the palm like
+            # a glove's cuff, and ended shorter still, the two surfaces crossed in a ragged line.
+            arm = _cut(arm, wr + d * HAND_CUT * s, d)
+        sc.union(arm, k=0.026 * s)
 
     # -- legs ---------------------------------------------------------------------------------
     for side, sx in (("L", 1), ("R", -1)):
@@ -405,33 +404,46 @@ def body_mesh(skel: Skeleton, style: Optional[BodyStyle] = None, spacing: float 
     return sdf.mesh_from_scene(sc, spacing * (skel.props.height / rig.DEFAULT_HEIGHT), smooth_iters=smooth, project=1)
 
 
+# Where the body stops and the separately meshed hand takes over, along the arm from the wrist
+# joint (m, at 1.78 m): just short of it, before the palm's blend begins.
+HAND_CUT = -0.008
+
+
+def _cut(prim: sdf.Prim, point: np.ndarray, normal: np.ndarray) -> sdf.Prim:
+    """`prim` on the side of the plane through `point` that `normal` points away from, cut hard."""
+    n = np.asarray(normal, float)
+
+    def fn(P):
+        return np.maximum(prim.fn(P), (P - point) @ n)
+    return sdf.Prim(fn, prim.lo, prim.hi, prim.op, prim.k)
+
+
 def hands_scene(skel: Skeleton, style: Optional[BodyStyle] = None) -> Scene:
-    """Both hands on their own, each with a stub of wrist that runs back inside the forearm, for
-    meshing finer than the body: at the body's 8 mm the gap between two fingers is not there to
-    be found, and the fingers came out as one mass whatever the field said."""
+    """Both hands on their own, for meshing finer than the body: at the body's 8 mm the gap between
+    two fingers is not there to be found, and the fingers came out as one mass whatever the field
+    said. Each is the body's own arm from 3 cm above the cut (`HAND_CUT`) outwards, sunk 0.8 mm
+    under the body's surface until just before the cut and exactly on it after, so the body's
+    forearm covers it until the cut and the hand carries on from there as the same surface."""
     st = style or BodyStyle()
-    J = skel.J
     s = skel.props.height / rig.DEFAULT_HEIGHT
-    mus, heavy, fem = st.muscle, skel.props.build, skel.props.feminine
-    lb = skel.props.bulk * (0.92 + 0.20 * heavy)
+    arms = body_scene(skel, st, ground_cut=False)
     sc = Scene()
-    for side, sx in (("L", 1), ("R", -1)):
-        el, wr = J[f"LowerArm.{side}"], J[f"Hand.{side}"]
-        d = sdf._unit(wr - el)
-        fwd, up = _arm_frame(d, sx)
-        wrist = (0.026 + 0.004 * mus + 0.004 * heavy - 0.002 * fem) * lb * s
-        fa = (0.039 + 0.009 * mus + 0.007 * heavy - 0.003 * fem) * lb * s
-        fa_len = float(np.linalg.norm(wr - el))
-        # the forearm from 7.5 cm above the wrist, starting a shade inside the body's own forearm
-        # (whose radius there is read off the same chain) and coming out of it as the body's
-        # forearm narrows into its hidden end
-        a0 = fa_len - 0.075 * s
-        t0 = (a0 - 0.32 * fa_len) / max(fa_len - 0.030 * s - 0.32 * fa_len, 1e-6)
-        r0 = (fa * 0.90 + (wrist * 0.85 - fa * 0.90) * float(np.clip(t0, 0.0, 1.0))) * 0.97
-        parts = [sdf.round_cone(wr - d * 0.075 * s, wr - d * 0.004 * s, r0, wrist * 0.94),
-                 _wrist(wr, d, wrist, s)]
-        parts.extend(_hand_parts(skel, st, wr, d, fwd, up, sx))
-        sc.union(sdf.group(parts, internal_k=0.010 * s))
+    J = skel.J
+    for side in ("L", "R"):
+        sh, el, wr, tip = J[f"UpperArm.{side}"], J[f"LowerArm.{side}"], J[f"Hand.{side}"], J[f"HandTip.{side}"]
+        d = sdf._unit(el - sh)
+        # the arm group of this side: the one whose bounds hold the wrist
+        group = next(p for p in arms.prims if p.op == "union" and np.all(p.lo <= wr) and np.all(p.hi >= wr))
+        cut = wr + d * HAND_CUT * s
+        start = cut - d * 0.030 * s
+
+        def fn(P, group=group, d=d, cut=cut, start=start):
+            t = (P - cut) @ d
+            sunk = 0.0008 * s * np.clip(-t / (0.002 * s), 0.0, 1.0)
+            return np.maximum(group.fn(P) + sunk, -((P - start) @ d))
+        lo = np.minimum(start, tip) - 0.09 * s
+        hi = np.maximum(start, tip) + 0.09 * s
+        sc.union(sdf.Prim(fn, lo, hi, "union", 0.0))
     return sc
 
 
