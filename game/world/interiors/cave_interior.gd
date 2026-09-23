@@ -15,6 +15,8 @@ const DOOR := preload("res://systems/interiors/door.tscn")
 const BOSS_ARENA := preload("res://actors/enemy/boss_arena.tscn")
 ## How far over the rock a body coming in is stood: enough not to begin inside it.
 const ENTRANCE_LIFT := 0.05
+## How far inside the way out a body coming in is stood, toward the middle of its chamber.
+const ENTRANCE_IN := 1.2
 
 ## Surface parameters per formation: what cut the rock decides how the rock reads.
 const ROCK_BY_FORMATION := {
@@ -144,18 +146,41 @@ func _build_collision(dir: String, slug: String) -> void:
 	inst.queue_free()
 
 
-## Where a body coming in stands: on the rock under the forge's `entrance` (the middle of the mouth
-## chamber), as the "Entrance" marker Interiors.enter looks for. Without one the arrival fell back
-## to a metre above the pocket's origin and the player dropped 3.0 to 4.5 m onto the mouth's
-## floor in every deep place. The entrance's height is the chamber's nominal floor; the voxel
-## rock under it lies 0.25 to 0.55 m lower (about a voxel), so the marker goes on the rock itself.
+## Where a body coming in stands, as the "Entrance" marker Interiors.enter looks for: a step inside
+## the way out (the meta's `exit` feature, the door the overworld's mouth leads to), toward the
+## middle of its chamber, on the rock, facing into the cave. Without a marker the arrival fell back
+## to a metre above the pocket's origin and the player dropped 3.0 to 4.5 m onto the mouth's floor;
+## and the middle of the mouth chamber, where it stood next, was 3 to 5 m from the way out. A
+## chamber's nominal floor is not the rock: the voxel rock lies 0.25 to 0.55 m below it (about a
+## voxel), so the marker goes on the rock itself. A meta with no exit uses its `entrance`.
 func _mark_entrance() -> void:
-	if not meta.has("entrance"):
-		return
 	var marker := Marker3D.new()
 	marker.name = "Entrance"
-	marker.position = _rock_under(_vec(meta["entrance"])) + Vector3.UP * ENTRANCE_LIFT
+	var exit := _exit_feature()
+	if exit.is_empty():
+		if not meta.has("entrance"):
+			return
+		marker.position = _rock_under(_vec(meta["entrance"])) + Vector3.UP * ENTRANCE_LIFT
+		add_child(marker)
+		return
+	var door_at := _feature_position(exit)
+	var ch: Dictionary = chambers.get(str(exit.get("chamber", "")), {})
+	var middle := _vec(ch.get("centre", meta.get("entrance", [0.0, 0.0, 0.0])))
+	var toward := middle - door_at
+	toward.y = 0.0
+	var inward := toward.normalized() if toward.length() > 0.3 else Vector3.BACK
+	var at := door_at + inward * minf(ENTRANCE_IN, maxf(toward.length(), 0.3))
+	marker.position = _rock_under(at) + Vector3.UP * ENTRANCE_LIFT
+	marker.rotation.y = atan2(-inward.x, -inward.z)
 	add_child(marker)
+
+
+## The meta's way out (the first `exit` feature), or {} for a deep place without one.
+func _exit_feature() -> Dictionary:
+	for f in meta.get("features", []):
+		if str((f as Dictionary).get("kind", "")) == "exit":
+			return f
+	return {}
 
 
 ## The highest rock under `at` (from a metre above it to three below), in this cave's own space,
