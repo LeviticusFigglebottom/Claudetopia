@@ -21,6 +21,14 @@ const STILL_WATER_SHADER := "res://assets/shaders/still_water.gdshader"
 const FALLING_WATER_SHADER := "res://assets/shaders/falling_water.gdshader"
 const HEARTHSTONE_SCENE := "res://systems/hearth/hearthstone.tscn"
 const VARIANTS := ["a", "b", "c"]
+## The metadata a collider carries to name the surface a foot lands on (Foley.SURFACE_META).
+const SURFACE_META := "surface"
+## Words in a forged asset's name that say what it is made of underfoot (surface_of_asset).
+const WOOD_WORDS: Array[String] = ["boardwalk", "plank", "dock", "pier", "jetty", "rowboat", "cart", "crate",
+	"barrel", "table", "bench", "chest", "stall", "fence", "gate", "coffin", "timber", "log", "grandfather"]
+const STONE_WORDS: Array[String] = ["drystone", "wall", "stair", "step", "bridge", "masonry", "boulder",
+	"cliff", "slab", "stone", "cairn", "ruin", "sarcophagus", "well", "colossus", "spire", "nave", "toll",
+	"fallen_hand", "chalk_hound", "the_lamp"]
 ## How far out a silhouette piece is still drawn: the far ring is 384-905 m away.
 const FAR_RANGE := 950.0
 
@@ -393,6 +401,9 @@ func scatter(path: String, transforms: Array, collide := false, silhouette := fa
 		var body := StaticBody3D.new()
 		body.name = mmi.name + "_body"
 		body.collision_layer = 1 << 0
+		var underfoot := surface_of_asset(path)
+		if not underfoot.is_empty():
+			body.set_meta(SURFACE_META, underfoot)
 		var added := 0
 		for xf in transforms:
 			var t: Transform3D = xf
@@ -453,6 +464,9 @@ func _collide(inst: Node3D, path: String, scale: float) -> void:
 	var body := StaticBody3D.new()
 	body.name = "Collision"
 	body.collision_layer = 1 << 0
+	var underfoot := surface_of_asset(path)
+	if not underfoot.is_empty():
+		body.set_meta(SURFACE_META, underfoot)
 	for part in parts:
 		var cs := CollisionShape3D.new()
 		cs.shape = part["shape"]
@@ -533,8 +547,9 @@ static func _scaled(shape: Shape3D, scale: float) -> Shape3D:
 
 
 ## A box you can bump into, for things built at runtime. All of a dressing's built collision
-## hangs off one body.
-func collider(size: Vector3, xform: Transform3D) -> void:
+## hangs off one body, so each shape names what it is made of (`surface`: stone, wood, dirt ...)
+## and a foot on a timber deck beside a stone parapet hears the timber (Foley.surface_at).
+func collider(size: Vector3, xform: Transform3D, surface := "") -> void:
 	if far:
 		return
 	if _masonry == null:
@@ -550,10 +565,12 @@ func collider(size: Vector3, xform: Transform3D) -> void:
 	box.size = size.abs().max(Vector3.ONE * 0.05)
 	cs.shape = box
 	cs.transform = xform
+	if not surface.is_empty():
+		cs.set_meta(SURFACE_META, surface)
 	_masonry.add_child(cs)
 
 
-func collider_shape(shape: Shape3D, xform: Transform3D) -> void:
+func collider_shape(shape: Shape3D, xform: Transform3D, surface := "") -> void:
 	if far or shape == null:
 		return
 	if _masonry == null:
@@ -565,11 +582,29 @@ func collider_shape(shape: Shape3D, xform: Transform3D) -> void:
 	var cs := CollisionShape3D.new()
 	cs.shape = shape
 	cs.transform = xform
+	if not surface.is_empty():
+		cs.set_meta(SURFACE_META, surface)
 	_masonry.add_child(cs)
 
 
 func bodies() -> int:
 	return _bodies
+
+
+## What a forged asset is made of underfoot, from its name: a pier, a jetty, a boardwalk, a cart or
+## anything of plank and log is wood; a wall, a stair, a bridge of stone, a cairn or a ruin is
+## stone. "" leaves it to the ground beneath (a bush, a banner).
+static func surface_of_asset(path: String) -> String:
+	var n := path.get_file().get_basename().to_lower()
+	if n.contains("scree"):
+		return "gravel"
+	for word in WOOD_WORDS:
+		if n.contains(word):
+			return "wood"
+	for word in STONE_WORDS:
+		if n.contains(word):
+			return "stone"
+	return ""
 
 
 # --- surfaces ------------------------------------------------------------------------------

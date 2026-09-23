@@ -13,6 +13,8 @@ const SHAFT_SHADER := preload("res://assets/shaders/light_shaft.gdshader")
 const HEARTHSTONE := preload("res://systems/hearth/hearthstone.tscn")
 const DOOR := preload("res://systems/interiors/door.tscn")
 const BOSS_ARENA := preload("res://actors/enemy/boss_arena.tscn")
+## How far over the rock a body coming in is stood: enough not to begin inside it.
+const ENTRANCE_LIFT := 0.05
 
 ## Surface parameters per formation: what cut the rock decides how the rock reads.
 const ROCK_BY_FORMATION := {
@@ -72,6 +74,7 @@ func build(path: String) -> bool:
 
 	_build_shell(dir, slug)
 	_build_collision(dir, slug)
+	_mark_entrance()
 	_build_water()
 	_build_light_shafts()
 	_build_chamber_lighting()
@@ -138,6 +141,47 @@ func _build_collision(dir: String, slug: String) -> void:
 		shape.transform = (mi as MeshInstance3D).transform
 		body.add_child(shape)
 	inst.queue_free()
+
+
+## Where a body coming in stands: on the rock under the forge's `entrance` (the middle of the mouth
+## chamber), as the "Entrance" marker Interiors.enter looks for. Without one the arrival fell back
+## to a metre above the pocket's origin and the player dropped 3.0 to 4.5 m onto the mouth's
+## floor in every deep place. The entrance's height is the chamber's nominal floor; the voxel
+## rock under it lies 0.25 to 0.55 m lower (about a voxel), so the marker goes on the rock itself.
+func _mark_entrance() -> void:
+	if not meta.has("entrance"):
+		return
+	var marker := Marker3D.new()
+	marker.name = "Entrance"
+	marker.position = _rock_under(_vec(meta["entrance"])) + Vector3.UP * ENTRANCE_LIFT
+	add_child(marker)
+
+
+## The highest rock under `at` (from a metre above it to three below), in this cave's own space,
+## read from the collision shapes themselves: the physics server has not seen them yet when the
+## cave is being built. `at` itself when there is no rock there.
+func _rock_under(at: Vector3) -> Vector3:
+	var body := get_node_or_null("Collision") as StaticBody3D
+	if body == null:
+		return at
+	var top := at + Vector3.UP * 1.0
+	var bottom := at + Vector3.DOWN * 3.0
+	var best := Vector3(at.x, -INF, at.z)
+	for child in body.get_children():
+		var cs := child as CollisionShape3D
+		if cs == null or not (cs.shape is ConcavePolygonShape3D):
+			continue
+		var tm := TriangleMesh.new()
+		if not tm.create_from_faces((cs.shape as ConcavePolygonShape3D).get_faces()):
+			continue
+		var inv := cs.transform.affine_inverse()
+		var hit := tm.intersect_segment(inv * top, inv * bottom)
+		if hit.is_empty():
+			continue
+		var p: Vector3 = cs.transform * (hit["position"] as Vector3)
+		if p.y > best.y:
+			best = p
+	return at if is_inf(best.y) else best
 
 
 func _build_water() -> void:
