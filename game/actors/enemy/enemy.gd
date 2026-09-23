@@ -176,6 +176,7 @@ func _read_def(d: Dictionary) -> void:
 	body_scale = float(def.get("scale", 1.0))
 	if def.has("tint"):
 		tint = Color(str(def["tint"]))
+	body_material = Foley.material_for(def, armour_flat)
 	capsule_radius = float(def.get("radius", 0.35 if body_kind == "humanoid" else 0.45))
 	capsule_height = float(def.get("height", 1.8 if body_kind == "humanoid" else 1.0))
 	if def.has("faction"):
@@ -243,6 +244,7 @@ func _physics_process(delta: float) -> void:
 	integrate_shove(delta)
 	move_and_slide()
 	snap_to_terrain()
+	step_sounds(delta, -3.0 if body_kind == "humanoid" else -5.0)
 	_update_anim()
 
 
@@ -927,6 +929,9 @@ func build_hit(a: Dictionary) -> HitData:
 ## Enemies swing with a hitbox in front of them sized by the attack's range.
 func _open_hitbox() -> void:
 	var a := _current_attack
+	var whoosh := Foley.swing_for(str(a.get("weapon_class", "claw")), bool(a.get("heavy", false)))
+	if not whoosh.is_empty():
+		Foley.play(whoosh, attack_origin.global_position)
 	_weapon_hitbox().begin_swing(build_hit(a))
 	if a.has("summons"):
 		_summon(a["summons"])
@@ -1017,6 +1022,10 @@ func _loose(a: Dictionary) -> void:
 		dir.y += 0.5 * gravity_ms * pow(dir.length() / maxf(speed_ms, 1.0), 2.0)
 	dir = dir.normalized()
 	p.launch(origin + dir * 0.6, dir, speed_ms, build_hit(a), gravity_ms)
+	if str(a.get("weapon_class", "")) == "bow" or p.sticks:
+		p.impact_sound = "arrow_hit"
+		Foley.play("bow_release", origin)
+		Foley.play("arrow_whoosh", origin)
 	p.struck.connect(_on_projectile_struck.bind(a))
 	attack_launched.emit(str(a.get("name", "attack")))
 	_make_noise(float(a.get("noise", 0.4)))
@@ -1243,6 +1252,10 @@ func _on_brain_state(from: String, to: String) -> void:
 	# you mid-lunge went on lunging, across the arena and out of it.
 	if from == Brain.COMBAT and (_attacking or _charging):
 		on_action_interrupted()
+	if to == Brain.COMBAT:
+		EventBus.enemy_engaged.emit(self, true)
+	elif from == Brain.COMBAT:
+		EventBus.enemy_engaged.emit(self, false)
 	match to:
 		Brain.SEARCH:
 			brain.has_search_point = false
@@ -1460,6 +1473,8 @@ func _enter_phase(index: int) -> void:
 		if bound != null:
 			bound.light_by_renown(true)
 	phase_changed.emit(index, phase)
+	if is_boss and index > 0:
+		EventBus.boss_phase_changed.emit(enemy_id, index)
 	if phase.has("say"):
 		EventBus.notify.emit(str(phase["say"]), "boss")
 
@@ -1484,10 +1499,13 @@ func dismiss() -> void:
 	if perception != null:
 		perception.enabled = false
 	EventBus.summon_dismissed.emit(enemy_id, self)
+	EventBus.enemy_engaged.emit(self, false)
 	queue_free()
 
 
 func _on_died(killer: Node) -> void:
+	if brain != null and brain.state == Brain.COMBAT:
+		EventBus.enemy_engaged.emit(self, false)
 	if is_boss and boss_started:
 		EventBus.boss_defeated.emit(enemy_id)
 	mark_dropped.emit(enemy_id, global_position)

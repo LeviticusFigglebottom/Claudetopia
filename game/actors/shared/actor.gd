@@ -74,6 +74,11 @@ var max_mana: float:
 var shield_hp: float = 0.0
 var shield_until: float = -1.0
 var dead: bool = false
+## What this body sounds like when it is struck (Foley.material_for): flesh, metal, stone, wood.
+var body_material: String = "flesh"
+## The surface its last footstep landed on, in Foley's names. Stealth reads it for noise.
+var surface: String = ""
+var _footfalls := Footfalls.new()
 var is_blocking: bool = false
 var block_stability: float = 0.0
 var can_parry: bool = false
@@ -349,6 +354,7 @@ func take_hit(hit: HitData) -> String:
 		if hit.attacker is Actor and is_instance_valid(hit.attacker):
 			(hit.attacker as Actor).open_riposte(DamageModel.RIPOSTE_OPEN_DURATION)
 		anim.play_intent("Parry")
+		Foley.play("parry_clang", _struck_at())
 		hit_taken.emit(hit, "parried")
 		return "parried"
 	if hit.blockable and is_blocking and facing:
@@ -367,10 +373,13 @@ func take_hit(hit: HitData) -> String:
 			poise_comp.apply(hit.poise_damage * 0.5, hit.heavy)
 			if not is_stunned():
 				anim.play_intent("Block_Hit")
+		Foley.play("block_clang", _struck_at())
 		hit_taken.emit(hit, "blocked")
 		return "blocked"
 	var raw_full := hit.amount * hit.crit_mult
 	var dmg := DamageModel.apply_defence(raw_full, armour_flat, DamageModel.resist_of(resists, hit.kind))
+	# The blow lands on whatever the body is made of: flesh, mail, stone or wood.
+	Foley.play("impact_" + body_material, _struck_at())
 	_apply_damage(dmg, hit.kind, hit.attacker, hit.label)
 	if dead:
 		hit_taken.emit(hit, "hit")
@@ -480,6 +489,7 @@ func stagger(duration: float = 0.8) -> void:
 	status.apply("stagger", duration)
 	on_action_interrupted()
 	anim.play_intent("Stagger", {"length": duration})
+	Foley.play("stagger_thud", _struck_at())
 	staggered.emit()
 
 
@@ -659,6 +669,32 @@ func snap_to_terrain() -> bool:
 	if velocity.y < 0.0:
 		velocity.y = 0.0
 	return true
+
+
+## Where on the body a blow is heard: chest height.
+func _struck_at() -> Vector3:
+	return global_position + Vector3.UP * capsule_height * 0.6 if is_inside_tree() else Vector3.INF
+
+
+## Standing on something: a floor collider, or the terrain heightfield bodies are snapped to.
+func on_ground() -> bool:
+	if is_on_floor():
+		return true
+	var provider: Object = World.terrain()
+	if provider == null or not provider.has_method("get_height") or not is_inside_tree():
+		return false
+	return global_position.y <= float(provider.call("get_height", global_position.x, global_position.z)) + GROUND_SKIN
+
+
+## The footsteps this body's movement makes this frame (Footfalls), and the surface they land on
+## for Stealth. Call once per physics frame after moving.
+func step_sounds(delta: float, volume_db: float = 0.0) -> void:
+	if dead:
+		return
+	var pace := Vector2(velocity.x, velocity.z).length()
+	var under := _footfalls.advance(self, delta, pace, on_ground(), body_scale, volume_db)
+	if not under.is_empty():
+		surface = under
 
 
 ## Pushes the body `metres` along `direction` (HitData.knockback is metres), over the next few

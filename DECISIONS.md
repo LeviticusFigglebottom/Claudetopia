@@ -583,3 +583,31 @@ second, faster than any swing could be aimed. DESIGN §5.4's "do not chase past 
 threshold" is (3).
 **Consequences.** The arena's flank check still passes (smallest gap between three wolves 44°).
 The fights are seeded and repeat exactly; the numbers after these changes are in PROGRESS.
+
+## 2026-09-23 · The score follows the fight, the clock and the boss; the foley follows the ground
+**Decision.** (1) An enemy entering or leaving combat says so (`EventBus.enemy_engaged`), and
+while any is fighting the combat layer cannot fall below 0.6 of full. (2) Night (21:00–05:00)
+is a music mode: melody −11 dB, a little of the deep stem (−14 dB). (3) A boss's phase change
+reaches the score from the boss (`EventBus.boss_phase_changed`); the quest-stage stand-in is gone.
+(4) Overlays (boss tracks, the menu theme) crossfade on two players. (5) Footsteps come from
+distance covered (`Footfalls`, a stride of `0.35·speed + 0.6` m), on the collider's declared
+surface, else water, else the region's new `identity.ground`. (6) A body sounds its def's
+material when struck (construct → stone, treant → wood, knight or armour ≥ 11 → metal, else
+flesh; a def's `material` overrides). (7) The Interior bus sends to SFX.
+**Why.** Measured before: the combat layer came in only after a hit and fell back to exploring
+eight seconds later in the middle of a fight nobody had landed a blow in; the score had no
+night; the second boss track was reached only through a quest stage and was a cut (stop one
+stream, start the next at −60 dB); nothing in the game called Foley at all -- no footstep,
+no blow, no door, no button was ever heard -- and indoors every world sound went round the
+Sounds slider, because the Interior bus sent straight to Master. DESIGN §8 asks for ambience per
+time and "foley for surfaces"; the night mix is the score's answer to the same clock.
+**Alternatives.** Footsteps off the forged rig's `footstep_l/r` clip events were rejected: the
+AnimationDriver keeps the gameplay timeline and the rig is only stretched to it, a placeholder
+body has no feet, and movement speeds are being changed by other work -- distance covered is the
+same measure for every body at every speed. Applying the SFX volume to the Interior bus from
+`Settings` was the other fix for the slider; routing is one line and cannot drift.
+**Consequences.** `tests/unit/test_audio_wired.gd` drives every one of these from its real
+trigger and measures levels a sixtieth of a second at a time (no player may move more than
+3 dB in a step; outgoing and incoming tracks overlap). The headless fights check that every
+fight is heard. Eleven sfx rows have nothing in the game that plays them (bells, thunder, wind
+gust, wood creak, cart wheels, sand and snow footsteps); they are listed by the test on every run.

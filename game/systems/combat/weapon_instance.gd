@@ -264,6 +264,11 @@ func on_clip_event(event_name: String) -> void:
 	match event_name:
 		"hit_start":
 			if current_hit != null and hitbox != null:
+				# The whoosh goes with the blade, not with the button: it is heard as the swing
+				# goes live, whatever the wind-up before it, and before anything it lands on.
+				var whoosh := Foley.swing_for(weapon_class, current_hit.heavy)
+				if not whoosh.is_empty() and is_inside_tree():
+					Foley.play(whoosh, global_position, -4.0 if clips_set == "unarmed" else 0.0)
 				hitbox.begin_swing(current_hit)
 		"hit_end":
 			if hitbox != null:

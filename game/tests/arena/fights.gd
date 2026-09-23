@@ -22,7 +22,9 @@ extends Node3D
 ##   * lock-on takes a target inside the 30 m cone and cycles only among targets inside it;
 ##   * a parry pressed inside the window opens a riposte, and one pressed outside it does not;
 ##   * a roll's i-frames take a blow without a scratch;
-##   * a foe whose poise reaches zero staggers.
+##   * a foe whose poise reaches zero staggers;
+##   * the fight is heard: steps, a whoosh for every swing that goes live, a blow landing on what
+##     it lands on, and the player's death when there is one.
 ## Any of those failing fails the run (exit 1). The table is printed either way; a fight lost or
 ## run out of time is reported as that, not as a failure, because it is a finding about the
 ## numbers, and the numbers are the design's to change.
@@ -66,6 +68,7 @@ var _telegraphs: Dictionary = {}     # attacker id -> {attack name -> frame}
 var _taps: Dictionary = {}           # action -> frames left to hold
 var _held: Dictionary = {}           # action -> true, this frame
 var _stats: Dictionary = {}
+var _sounds: Dictionary = {}         # sfx id -> times played, this fight
 var _parry_plan: Array[String] = []  # "inside", "outside" still to try, this fight
 var _trace := ""                     # --trace=<archetype>: print the fight twice a second
 var _partial := false                # --only=<archetype,...>: a check that never came up is not a failure
@@ -82,7 +85,7 @@ func _ready() -> void:
 	shape.position = Vector3(0.0, -0.5, 0.0)
 	floor_body.add_child(shape)
 	add_child(floor_body)
-	for c in ["telegraphed", "lock_on", "parry_inside", "parry_outside", "dodge", "stagger"]:
+	for c in ["telegraphed", "lock_on", "parry_inside", "parry_outside", "dodge", "stagger", "heard"]:
 		checks[c] = {"pass": true, "seen": 0, "detail": ""}
 	# A script error inside a fight abandons the coroutine and would leave the run idling for ever;
 	# this ends it instead, as a failure, well after the longest honest run could have finished.
@@ -144,6 +147,9 @@ func _fight(calling: String, fight: Dictionary) -> Dictionary:
 	_telegraphs.clear()
 	_taps.clear()
 	_stats = {"blows": 0, "damage": 0.0, "landed": 0, "swings": 0, "rolled": 0, "staggered": 0, "riposted": 0}
+	_sounds.clear()
+	if not Foley.played.is_connected(_on_sound):
+		Foley.played.connect(_on_sound)
 	_player.attack_started.connect(func(_k: String, _i: int) -> void: _stats["swings"] = int(_stats["swings"]) + 1)
 	_parry_plan.clear()
 	if str(fight["archetype"]) == "skirmisher":
@@ -204,6 +210,7 @@ func _fight(calling: String, fight: Dictionary) -> Dictionary:
 		"timeout": r["flag"] = "not won in %d s" % int(TIME_LIMIT)
 		_: r["flag"] = "trivial" if seconds < TRIVIAL_SECONDS and int(r["blows"]) == 0 else ""
 	var died := outcome == "lost"
+	_check_heard(str(fight["archetype"]), died, int(_stats["landed"]) + int(_stats["blows"]))
 	stage.queue_free()
 	_player = null
 	_foes.clear()
@@ -289,6 +296,27 @@ func _on_telegraph(attack_name: String, duration: float, foe: Enemy) -> void:
 			lands += dist / maxf(SpellRuntime.speed_of(spell), 0.1)
 	_threats.append({"foe": foe, "name": attack_name, "seen": Actor.now() + REACTION, "lands": lands,
 		"reach": float(a.get("range", 2.5)) + 1.0, "kind": str(a.get("kind", "")), "handled": false})
+
+
+func _on_sound(id: String, _position: Vector3) -> void:
+	_sounds[id] = int(_sounds.get(id, 0)) + 1
+
+
+## What a fight sounds like: somebody walked, somebody swung, a blow landed on something, and a
+## death was heard as one.
+func _check_heard(archetype: String, died: bool, blows_landed: int) -> void:
+	var steps := 0
+	var whooshes := 0
+	var impacts := 0
+	for id: String in _sounds:
+		if id.begins_with("footstep_"):
+			steps += int(_sounds[id])
+		elif id.ends_with("_swing") or id.begins_with("sword_swing") or id.begins_with("axe_swing") or id.begins_with("mace_swing"):
+			whooshes += int(_sounds[id])
+		elif id.begins_with("impact_") or id == "block_clang" or id == "parry_clang":
+			impacts += int(_sounds[id])
+	var ok := steps > 0 and whooshes > 0 and (impacts > 0 or blows_landed == 0) and (not died or _sounds.has("player_death"))
+	_mark("heard", ok, "" if ok else "%s: %d steps, %d swings, %d blows heard, death %s" % [archetype, steps, whooshes, impacts, str(_sounds.has("player_death"))])
 
 
 func _on_player_hit(hit: HitData, outcome: String) -> void:

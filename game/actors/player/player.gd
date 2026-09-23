@@ -318,6 +318,9 @@ func _physics_process(delta: float) -> void:
 		integrate_shove(delta)
 		move_and_slide()
 		snap_to_terrain()
+		# Sneaking is felt through the boots as much as it is seen: a quieter step, and a
+		# sprint's a louder one.
+		step_sounds(delta, -8.0 if is_sneaking else (2.0 if is_sprinting else 0.0))
 	# A raised guard halves regen, and so does a load (DESIGN §5.7): read every frame, because
 	# a guard dropped by an attack or a roll must not leave regen halved behind it.
 	stamina_comp.regen_multiplier = (0.5 if is_blocking else 1.0) * DamageModel.load_regen_mult(load_ratio)
@@ -840,6 +843,7 @@ func die(killer: Node = null) -> void:
 	if dead:
 		return
 	super.die(killer)
+	Foley.play_ui("player_death")
 	_set_state(State.DEAD)
 	lock.clear()
 	EventBus.player_died.emit(global_position)
@@ -935,6 +939,7 @@ func _start_bow() -> bool:
 	_bow_draw_start = now()
 	var draw_time := float(weapon.ranged.get("draw_time", 0.7))
 	anim.play_intent("Bow_Draw", {"length": draw_time})
+	Foley.play("bow_draw", attack_origin.global_position)
 	camera_rig.set_aiming(true)
 	_set_state(State.BOW)
 	return true
@@ -1011,6 +1016,9 @@ func _fire_arrow(drawn: float) -> void:
 	hit.parryable = false
 	var speed := float(weapon.ranged.get("speed", 42.0)) * lerpf(0.6, 1.0, drawn)
 	arrow.launch(aim_origin(), aim_direction(), speed, hit, float(proj.get("gravity", gravity)))
+	arrow.impact_sound = "arrow_hit"
+	Foley.play("bow_release", attack_origin.global_position)
+	Foley.play("arrow_whoosh", attack_origin.global_position)
 	# A method reference, not a closure: an arrow outlives the bow that loosed it, and a
 	# closure on it is not disconnected when the archer is freed.
 	arrow.struck.connect(_on_arrow_struck)
@@ -1288,6 +1296,9 @@ func _refresh_armour() -> void:
 	if not body.is_empty() and body != doll_body:
 		total += float(ContentDB.get_or_empty(body).get("armour", {}).get("armour", 0.0))
 	armour_flat = total
+	# Struck in heavy mail you ring; in cloth and leather you are hit (Foley.material_for).
+	var heavy := doll != null and doll.has_method("weight_class") and str(doll.call("weight_class")) == "heavy"
+	body_material = "metal" if heavy or armour_flat >= 11.0 else "flesh"
 
 
 ## The belt lives on the equipment doll: `Equipment` binds it, persists it, and the HUD draws
