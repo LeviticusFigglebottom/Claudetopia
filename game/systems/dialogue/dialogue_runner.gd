@@ -389,6 +389,21 @@ func _visible_choices(node: Dictionary) -> Array[Dictionary]:
 					"effects": [{"quest_choice": [str(offer.get("quest_id", "")), str(offer.get("id", ""))]}],
 					"source_index": -3, "tag": "quest"}
 			out.insert(maxi(out.size() - 1, 0), decide)
+		# and the work they are the giver of, where nothing else in the pack starts it
+		for offer in _starts():
+			out.insert(maxi(out.size() - 1, 0), offer)
+	return out
+
+
+## A giver's quests as choices that start them (QuestLog.giver_offers); the conversation carries on
+## from where it was asked.
+func _starts() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if npc_id == "":
+		return out
+	for offer in ctx.quest_starts(npc_id):
+		out.append({"text": ctx.substitute(str(offer.get("text", ""))), "next": current_node_id,
+				"effects": [{"start_quest": str(offer.get("quest_id", ""))}], "source_index": -4, "tag": "quest"})
 	return out
 
 
@@ -438,4 +453,14 @@ func _show_bare_greeting() -> void:
 	var line := greeting_for(npc_id)
 	if line == "":
 		line = "..."
+	# somebody with nothing to say may still have work to give, and taking it ends the exchange
+	var offers := _starts()
+	if not offers.is_empty():
+		for offer in offers:
+			offer["next"] = ""
+			current_choices.append(offer)
+		current_choices.append({"text": "Goodbye.", "next": "", "source_index": -5})
+		line_shown.emit(_npc_name(), line, _choice_payload())
+		choice_needed.emit(_choice_payload())
+		return
 	line_shown.emit(_npc_name(), line, [])

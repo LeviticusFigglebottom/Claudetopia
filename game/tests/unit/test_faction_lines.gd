@@ -10,6 +10,7 @@ extends TestCase
 ## The side quests are here too, for the same reason and against the same rules: the checks at
 ## the foot of this file are about every authored quest a person hands over, of either layer.
 
+const KILL_AT := preload("res://tests/fixtures/kill_at.gd")
 const WARDENS := "core:faction/wardens"
 const SAYERS := "core:faction/sayers"
 const HANDS := "core:faction/quiet_hands"
@@ -135,9 +136,10 @@ func already_finished(quest_id: String) -> void:
 	assert_true(log_node.is_completed(quest_id))
 
 
-func killed(enemy_id: String, times: int = 1) -> void:
-	for i in times:
-		EventBus.entity_killed.emit(null, null, enemy_id)
+## Kills, each a body lying where the stage puts the fight: a kill objective counts only there
+## (KillPlaces), so the line is walked the way a player has to walk it.
+func killed(enemy_id: String, times: int = 1, where: String = "") -> void:
+	KILL_AT.emit(enemy_id, where, times)
 
 
 func arrived(place_id: String) -> void:
@@ -184,7 +186,7 @@ func test_the_lane_that_isnt_from_wrens_own_mouth() -> void:
 
 	arrived("core:poi/hedge_shrine_of_ansel")
 	assert_eq(stage(LANE), "the_stretch", "the hedges are still being worked")
-	killed("core:enemy/hedge_wight", 2)
+	killed("core:enemy/hedge_wight", 2, "core:poi/hedge_shrine_of_ansel")
 	assert_eq(stage(LANE), "what_a_warden_writes")
 	assert_true(ctx.has_flag("walked_the_harewell_down"))
 
@@ -222,6 +224,17 @@ func test_the_other_two_endings_of_the_harewell_line() -> void:
 		assert_true(log_node.is_completed(LANE), "%s: and every ending finishes it" % outcome)
 
 
+## The leaf of the Roll out of the Reeve's bell goes back to the Rest, and the Rest is glad of it.
+func test_the_leaf_of_the_roll_goes_back_to_the_rest() -> void:
+	inventory.add("core:item/wardens_roll_fragment", 1)
+	var before: int = Social.factions.reputation(WARDENS)
+	var runner := talk_to("core:npc/wardens_hesk")
+	press(runner, "There was a leaf of the Roll")
+	assert_eq(inventory.count("core:item/wardens_roll_fragment"), 0, "Hesk keeps the leaf")
+	assert_true(GameState.has_flag("gave_mullbourne_leaf"))
+	assert_eq(Social.factions.reputation(WARDENS), before + 8, "the Wardens know who brought it")
+
+
 func test_the_deep_lines_ends_the_barrow_reeves_reading() -> void:
 	finish_the_roll_of_names()
 	rep(WARDENS, 50)
@@ -238,7 +251,7 @@ func test_the_deep_lines_ends_the_barrow_reeves_reading() -> void:
 	assert_true(ctx.has_flag("read_the_standing_orders"))
 
 	arrived("core:place/hollin_barrow")
-	killed("core:boss/barrow_reeve")
+	killed("core:boss/barrow_reeve", 1, "core:interior/hollin_barrow")
 	assert_eq(stage(DEEP_LINES), "the_roll_of_the_dead")
 	assert_eq(inventory.count("core:item/barrow_roll"), 1, "the roll comes up off the Reeve")
 
@@ -417,7 +430,7 @@ func test_the_long_measurement_is_taken_in_two_rooms() -> void:
 	assert_true(ctx.has_flag("measured_in_the_warm"))
 
 	arrived("core:poi/shingle_shrine")
-	killed("core:enemy/cutpurse", 3)
+	killed("core:enemy/cutpurse", 3, "core:poi/shingle_shrine")
 	assert_eq(stage(MEASUREMENT), "the_quiet_place", "the figure is taken at the stone, not on the road")
 	EventBus.hearthstone_rested.emit("core:poi/shingle_shrine")
 	assert_eq(stage(MEASUREMENT), "the_figures")
@@ -618,7 +631,7 @@ func test_a_thing_nobody_reported_goes_and_asks_the_man_on_the_page() -> void:
 	assert_eq(stage(REPORTED), "the_wreck")
 
 	arrived("core:poi/gullhithe_wreck")
-	killed("core:enemy/smuggler_sayer", 2)
+	killed("core:enemy/smuggler_sayer", 2, "core:poi/gullhithe_wreck")
 	assert_eq(stage(REPORTED), "the_wreck", "the chit is the point, not the sayers")
 	inventory.add("core:item/forged_charter_chit", 1)
 	assert_eq(stage(REPORTED), "whose_hand")
@@ -661,7 +674,7 @@ func test_against_the_bell_finds_what_the_guild_built_against() -> void:
 	assert_eq(stage(BELL_WALL), "behind_the_bell")
 
 	arrived("core:place/undercroft")
-	killed("core:enemy/gutter_drake", 4)
+	killed("core:enemy/gutter_drake", 4, "core:interior/undercroft")
 	assert_eq(stage(BELL_WALL), "whose_name")
 
 	var her := talk_to("core:npc/half_ell")
@@ -685,7 +698,7 @@ func test_every_price_ends_the_line_on_who_reads_the_ledger() -> void:
 	assert_eq(stage(EVERY_PRICE), "the_strongroom")
 
 	arrived("core:place/undercroft")
-	killed("core:enemy/bravo", 2)
+	killed("core:enemy/bravo", 2, "core:interior/undercroft")
 	inventory.add("core:item/ledger_of_prices", 1)
 	assert_eq(stage(EVERY_PRICE), "read_it")
 	read("core:book/ledger_of_prices")
@@ -801,7 +814,7 @@ func test_forty_one_places_carries_the_ninth_day_basket() -> void:
 	tables.stop()
 	assert_true(ctx.has_flag("nan_said_the_forty_one"))
 	assert_eq(stage(GREYFOLD), "the_tables", "the tables are one half; what comes to them is the other")
-	killed("core:enemy/ash_wight", 8)
+	killed("core:enemy/ash_wight", 8, "core:place/greyfold")
 	assert_eq(stage(GREYFOLD), "the_forty_second")
 
 	var second := talk_to("core:npc/nan_greyfold")
@@ -843,7 +856,7 @@ func test_the_names_in_the_chapter_book_goes_out_and_looks() -> void:
 	read("core:book/chapter_roll")
 	assert_eq(stage(CHAPTER_BOOK), "the_walks")
 	arrived("core:poi/headless_watch")
-	killed("core:enemy/tolling_knight", 3)
+	killed("core:enemy/tolling_knight", 3, "core:poi/headless_watch")
 	assert_eq(stage(CHAPTER_BOOK), "what_the_book_says")
 
 	var toren := talk_to("core:npc/toren_ash")
@@ -869,7 +882,7 @@ func test_at_the_gate_ends_the_line_without_opening_the_seat() -> void:
 	assert_eq(stage(AT_THE_GATE), "the_ring")
 
 	arrived("core:place/sunken_choir")
-	killed("core:enemy/chorister", 2)
+	killed("core:enemy/chorister", 2, "core:place/sunken_choir")
 	assert_eq(stage(AT_THE_GATE), "the_walk_to_the_gate")
 	assert_true(ctx.has_flag("stood_the_last_watch"))
 
@@ -922,7 +935,7 @@ func test_the_lantern_that_would_not_go_out() -> void:
 	assert_eq(stage(DAWN_LANTERN), "the_channel")
 
 	arrived("core:poi/wisp_hollow")
-	killed("core:enemy/wisp", 3)
+	killed("core:enemy/wisp", 3, "core:poi/wisp_hollow")
 	inventory.add("core:item/salissas_lantern", 1)
 	assert_eq(stage(DAWN_LANTERN), "whose_frame")
 
@@ -949,7 +962,7 @@ func test_the_fawning_months_and_what_custom_does_to_a_man() -> void:
 	assert_eq(stage(FAWNING), "the_line")
 
 	arrived("core:poi/hunters_stand")
-	killed("core:enemy/thornhound", 1)
+	killed("core:enemy/thornhound", 1, "core:poi/hunters_stand")
 	assert_eq(stage(FAWNING), "whose_wire")
 
 	arrived("core:poi/charcoal_camp")
@@ -982,7 +995,7 @@ func test_four_hundred_and_twelve_reads_a_mark_off_a_weld() -> void:
 	assert_eq(inventory.count("core:item/loosened_link"), 1, "he hands you the lie out of his own bridge")
 
 	arrived("core:poi/clanless_camp")
-	killed("core:enemy/clanless_raider", 2)
+	killed("core:enemy/clanless_raider", 2, "core:poi/clanless_camp")
 	inventory.add("core:item/clan_forged_link", 1)
 	assert_eq(stage(FOUR_TWELVE), "whose_mark")
 
@@ -1010,7 +1023,7 @@ func test_the_cold_fire_settles_a_split_tally() -> void:
 	assert_eq(inventory.count("core:item/wats_tally_stick"), 1)
 
 	arrived("core:poi/cold_fire_camp")
-	killed("core:enemy/ash_wight", 6)
+	killed("core:enemy/ash_wight", 6, "core:poi/cold_fire_camp")
 	assert_eq(stage(COLD_FIRE), "who_carried_it")
 
 	var deseith := talk_to("core:npc/deseith")
@@ -1039,7 +1052,7 @@ func test_the_lamp_is_dimmer_and_one_morning_it_was_not() -> void:
 	assert_eq(stage(LAMP), "the_chipped_face")
 
 	arrived("core:poi/north_cliff_beacon")
-	killed("core:enemy/smuggler_sayer", 2)
+	killed("core:enemy/smuggler_sayer", 2, "core:poi/north_cliff_beacon")
 	inventory.add("core:item/sul_stone_sliver", 1)
 	assert_eq(stage(LAMP), "what_the_keeper_does")
 

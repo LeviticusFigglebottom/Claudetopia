@@ -393,6 +393,53 @@ func _on_boss_defeated(_boss_id: String) -> void:
 	play_stinger("victory")
 
 
+## A cutscene's music (`CinematicPlayer`): one through-composed piece in place of everything
+## else, with the region bed held silent under it until `end_cue` lets it back. Returns whether
+## the piece could be loaded; a cinematic plays on in silence rather than failing without one.
+func play_cue(music_id: String) -> bool:
+	if not enabled or music_id.is_empty():
+		return false
+	_set_overlay("cue", music_id)
+	var p := _cue_player()
+	if p == null:
+		return false
+	p.stream_paused = false
+	# a cue has a first note, and fading up into it would lose it
+	p.volume_db = 0.0
+	return true
+
+
+## Holds the cue where it is: the pictures have stopped to wait for the country to load, and the
+## music has to wait with them or the two come apart.
+func pause_cue(paused: bool) -> void:
+	var p := _cue_player()
+	if p != null:
+		p.stream_paused = paused
+
+
+## Lets the region bed back and fades the cue out under it.
+func end_cue() -> void:
+	if _overlay_kind != "cue":
+		return
+	var p := _cue_player()
+	if p != null:
+		p.stream_paused = false
+	_set_overlay("", "")
+
+
+func cue_playing() -> bool:
+	var p := _cue_player()
+	return p != null and p.playing and not p.stream_paused
+
+
+## The overlay player carrying the cue, or null when no cue is up.
+func _cue_player() -> AudioStreamPlayer:
+	if _overlay_kind != "cue" or _overlay_now >= _overlays.size():
+		return null
+	var p := _overlays[_overlay_now]
+	return p if is_instance_valid(p) else null
+
+
 func _on_quest_stage_changed(_quest_id: String, _stage: int) -> void:
 	# (A quest stage mid-boss used to stand in for a phase change; the boss says so itself now,
 	# through EventBus.boss_phase_changed.)

@@ -36,6 +36,21 @@ const REFUSAL_NOTES := ["warning", "warn", "refusal"]
 ## A cue heard off EventBus plays at most once in this long (ms): taking everything from a chest,
 ## or a Calling's starting kit arriving, is one pick-up, not a pile of them struck together.
 const CUE_GAP_MS := 150
+## Interiors whose door has a bell over it: a tavern's, rung by whoever comes in.
+const TAVERN_TRADES := ["innkeeper", "tavern", "alewife"]
+## What the terrain's paint is underfoot, as a footstep surface: the world builder lays snow above
+## the snow line, sand on the western tide-flats, cobbles in a market street and a dirt track on
+## every road, and the feet should hear the paint they are standing on (tools/world/worldgen/
+## surface.py names the twenty-one textures).
+const TEXTURE_SURFACE := {
+	"vale_grass": "vale_grass", "orchard_grass": "vale_grass", "barley": "vale_grass",
+	"grey_grass": "vale_grass", "heather": "vale_grass", "moss": "vale_grass",
+	"chalk": "stone", "granite": "stone", "limestone": "stone", "fused_stone": "stone", "cobbles": "stone",
+	"dirt_path": "dirt", "forest_floor": "dirt",
+	"mud": "mud", "peat": "mud", "lake_bed": "mud",
+	"scree": "gravel", "shingle": "gravel",
+	"snow": "snow", "sand_flats": "sand", "ash_soil": "ash",
+}
 
 signal played(id: String, position: Vector3)
 
@@ -267,10 +282,25 @@ func surface_at(position: Vector3) -> String:
 		# The overworld's ground has no collider (the terrain is a heightfield bodies are snapped
 		# to), so nothing under the ray means the terrain, when there is one.
 		return ground_surface(position) if World.terrain() != null else DEFAULT_SURFACE
-	var declared := _declared_surface(hit.get("collider"))
+	var declared := _declared_surface(_shape_node(hit))
+	if declared.is_empty():
+		declared = _declared_surface(hit.get("collider"))
 	if declared.is_empty():
 		return ground_surface(position)
 	return _known_surface(declared)
+
+
+## The CollisionShape3D a ray hit, so one body can carry a timber deck and a stone parapet and say
+## which is which: a shape names its own surface before its body is asked.
+static func _shape_node(hit: Dictionary) -> Node:
+	var body := hit.get("collider") as CollisionObject3D
+	var index := int(hit.get("shape", -1))
+	if body == null or index < 0:
+		return null
+	var owner_id := body.shape_find_owner(index)
+	if owner_id < 0:
+		return null
+	return body.shape_owner_get_owner(owner_id) as Node
 
 
 ## The surface a node declares, walking up to its parents so a whole prop can carry one.
@@ -307,6 +337,9 @@ func ground_surface(position: Vector3) -> String:
 	if terrain != null:
 		if terrain.water_level_at(position.x, position.z) - position.y > WADE_DEPTH:
 			return "water"
+		var painted := str(TEXTURE_SURFACE.get(terrain.texture_at(position.x, position.z), ""))
+		if not painted.is_empty() and rows.has("footstep_%s" % painted):
+			return painted
 		var here := terrain.region_id_at(position.x, position.z)
 		if not here.is_empty():
 			region = here
@@ -392,7 +425,7 @@ func _on_echo_recovered(_marks: int) -> void:
 	play_ui("echo_recovered")
 
 
-func _on_item_used(item_id: String, _effects: Array) -> void:
+func _on_item_used(item_id: String, _effects: Array = []) -> void:
 	var def := ContentDB.get_or_empty(item_id)
 	var tags: Array = def.get("tags", [])
 	if str(def.get("category", "")) == "potion" or tags.has("potion"):
@@ -441,6 +474,9 @@ static func door_for(interior_id: String, opening: bool) -> String:
 
 func _on_interior_entered(interior_id: String) -> void:
 	play(door_for(interior_id, true))
+	# A tavern door has a bell over it, and it rings for whoever comes in.
+	if str(ContentDB.get_or_empty(interior_id).get("trade", "")) in TAVERN_TRADES:
+		play("bell_tavern")
 
 
 func _on_interior_exited(interior_id: String) -> void:

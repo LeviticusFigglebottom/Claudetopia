@@ -40,7 +40,10 @@ TAIL_SECONDS = 12.0        # rendered past the loop so reverb and bells can ring
 STEM_LUFS = {
     "pad": -21.0, "melody": -20.0, "texture": -23.0, "combat": -19.0, "deep": -24.0,
 }
-PIECE_LUFS = {"main_theme": -17.0, "naming": -19.0, "boss_1": -17.0, "boss_2": -16.0}
+PIECE_LUFS = {"main_theme": -17.0, "naming": -19.0, "boss_1": -17.0, "boss_2": -16.0, "opening": -18.0}
+# Played once and faded, not looped: the opening's cue runs under the pictures and stops.
+ONE_SHOT_PIECES = {"opening": 8.0}          # name -> seconds of tail rendered past the last bar
+PIECES = ("main_theme", "naming", "opening", "boss_1", "boss_2")
 STINGER_LUFS = -16.0
 
 
@@ -227,7 +230,7 @@ def region_stems(key: str, seed=None) -> dict:
 
 def piece(name: str):
     """Render a set piece (menu theme, Naming cue, boss music) as one mixed file."""
-    scores = {"main_theme": compose.main_theme, "naming": compose.naming_cue,
+    scores = {"main_theme": compose.main_theme, "naming": compose.naming_cue, "opening": compose.opening_cue,
               "boss_1": lambda: compose.boss_score(1), "boss_2": lambda: compose.boss_score(2)}
     score = scores[name]()
     cfg = {
@@ -237,6 +240,11 @@ def piece(name: str):
         "naming": dict(pad_voice="glass", lead="hum", texture="bell", bass="drone",
                        reverb="cinder", reverb_mix=0.40, brightness=0.3, vowel="oo",
                        ostinato="cello_short", deep_voice="hum", drum_hz=70.0),
+        # glass for the hollow, a choir for the warmth, a flute for the Toll, a harp for the Vale,
+        # the hum for the drones; one hall, a little wetter than the menu theme's
+        "opening": dict(pad_voice="glass", lead="flute", texture="harp", bass="cello",
+                        reverb="hall", reverb_mix=0.32, brightness=0.42, vowel="ah",
+                        ostinato="cello_short", deep_voice="hum", drum_hz=70.0),
         "boss_1": dict(pad_voice="choir", lead="cello", texture="pluck", bass="cello",
                        reverb="cathedral", reverb_mix=0.26, brightness=0.4, vowel="ah",
                        ostinato="cello_short", deep_voice="drone", drum_hz=58.0),
@@ -244,16 +252,20 @@ def piece(name: str):
                        reverb="cathedral", reverb_mix=0.24, brightness=0.5, vowel="ah",
                        ostinato="cello_short", deep_voice="drone", drum_hz=54.0),
     }[name]
-    loop = True
-    n = samples(score.seconds())
+    loop = name not in ONE_SHOT_PIECES
+    tail = ONE_SHOT_PIECES.get(name, TAIL_SECONDS)
+    n = samples(score.seconds() + (0.0 if loop else tail))
     mix = np.zeros((n, 2))
     for stem in score.stems:
-        y = render_stem(score, stem, cfg, core.sub_seed(name, stem), loop=loop)
-        mix[:len(y)] += y[:n]
+        y = render_stem(score, stem, cfg, core.sub_seed(name, stem), loop=loop, tail=tail)
+        mix[:min(len(y), n)] += y[:n]
     if name.startswith("boss"):
         # the drums of a boss track carry the pulse; glue them with a little compression
         mix = render.wrap_process(mix, lambda z: fx.compress(
             z, threshold_db=-20.0, ratio=2.5, attack_ms=12.0, release_ms=140.0))
+    if not loop:
+        # a piece played once starts on its first note and ends in silence, not cut off
+        mix = core.fade(mix, 0.005, min(3.0, tail * 0.5))
     mix = render.mixdown(mix, peak_db=-1.2, target_lufs=PIECE_LUFS[name], hp=28.0, loop=loop)
     return mix, score
 
@@ -301,12 +313,32 @@ def write_piece(audio: np.ndarray, abs_path: str, loop: bool, bpm: float = 0.0,
     return info
 
 
+def _previous_manifest() -> dict:
+    """What the last full build recorded. `--only` renders a few things and must not forget the
+    rest: music.json is written from the manifest, so anything missing from it here would drop
+    out of the game's music definitions -- every region theme, the last time only one piece
+    was asked for."""
+    try:
+        with open(os.path.join(AUDIO_DIR, "manifest.json")) as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
 def build(only=None, force: bool = False) -> dict:
     os.makedirs(AUDIO_DIR, exist_ok=True)
     manifest = {"regions": {}, "pieces": {}, "stingers": {}}
+    previous = _previous_manifest()
+
+    def keep(kind: str, name: str) -> None:
+        entry = previous.get(kind, {}).get(name)
+        if entry:
+            manifest[kind][name] = entry
 
     for key in compose.REGIONS:
         if only and key not in only:
+            keep("regions", key)
             continue
         print("[music] region %s" % key)
         out_dir = os.path.join(AUDIO_DIR, key)
@@ -325,26 +357,32 @@ def build(only=None, force: bool = False) -> dict:
                                                beats=int(score.total_beats()))
         manifest["regions"][key] = entry
 
-    for name in ("main_theme", "naming", "boss_1", "boss_2"):
+    for name in PIECES:
         if only and name not in only:
+            keep("pieces", name)
             continue
         print("[music] piece %s" % name)
         p = os.path.join(AUDIO_DIR, "theme", "%s.ogg" % name)
         if not force and os.path.exists(p):
             print("      up to date")
+            keep("pieces", name)
             continue
         audio, score = piece(name)
-        manifest["pieces"][name] = write_piece(audio, p, loop=True, bpm=score.bpm,
+        loop = name not in ONE_SHOT_PIECES
+        manifest["pieces"][name] = write_piece(audio, p, loop=loop, bpm=score.bpm,
                                                beats=int(score.total_beats()))
         manifest["pieces"][name].update({"bpm": score.bpm, "mode": score.mode,
-                                         "title": score.meta.get("title", name)})
+                                         "title": score.meta.get("title", name),
+                                         "seconds": score.seconds() if loop else len(audio) / SR})
         print("      %.1f s  %.1f LUFS" % (len(audio) / SR, render.loudness_lufs(audio)))
 
     for kind in compose.STINGERS:
         if only and kind not in only:
+            keep("stingers", kind)
             continue
         p = os.path.join(AUDIO_DIR, "stingers", "%s.ogg" % kind)
         if not force and os.path.exists(p):
+            keep("stingers", kind)
             continue
         print("[music] stinger %s" % kind)
         audio, score = stinger_audio(kind)
@@ -385,6 +423,7 @@ def _write_content(manifest: dict) -> None:
     pieces = manifest.get("pieces", {})
     for name, title, mode_key in (("main_theme", "Wickmere", "lydian_warm"),
                                   ("naming", "The Naming", "phrygian_hollow"),
+                                  ("opening", "The Opening", "phrygian_hollow"),
                                   ("boss_1", "The Holder of a Note", "phrygian_hollow"),
                                   ("boss_2", "The Note Itself", "phrygian_hollow")):
         info = pieces.get(name, {})
@@ -428,7 +467,7 @@ def main() -> int:
             s = compose.region_score(k)
             print("region  %-12s %6.1f s  %s %s  %.0f bpm" % (k, s.seconds(), s.mode,
                                                               "tonic=%d" % s.tonic, s.bpm))
-        for k in ("main_theme", "naming", "boss_1", "boss_2"):
+        for k in PIECES:
             print("piece   %s" % k)
         for k in compose.STINGERS:
             print("stinger %s" % k)

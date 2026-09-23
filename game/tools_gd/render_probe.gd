@@ -11,7 +11,8 @@ extends SceneTree
 ## difference of zero is a feature this renderer does not draw, whatever the inspector says.
 ##
 ## It also counts what lights cost: draw calls with no omni lights, with eight unshadowed ones,
-## and with one of them shadowed, which is the number the night-light pool is sized from.
+## and with one of them shadowed, which is the number the night-light pool is sized from; and it
+## reads the screen texture back in a spatial shader, which is what the water's mirror is made of.
 ## Writes <out>/probe_<feature>.png for looking at and prints one line per feature.
 
 const W := 320
@@ -53,6 +54,7 @@ func _run() -> void:
 	env.fog_enabled = false
 	env.fog_light_color = Color(0.518, 0.553, 0.608)
 	await _normal_map_convention()
+	await _screen_texture_spatial()
 	await _count_lights()
 	var f := FileAccess.open("%s/probe.txt" % out_dir, FileAccess.WRITE)
 	if f:
@@ -323,6 +325,80 @@ func _normal_map_convention() -> void:
 	for n in stage.get_children():
 		if n is MeshInstance3D or n is Light3D:
 			(n as Node3D).visible = true
+
+
+## What a spatial shader gets back from `hint_screen_texture`, which the water's mirror is made
+## of. A quad in front of the camera draws the screen texture back unchanged, unshaded; if what
+## it reads is the same light the scene was drawn with, the quad vanishes into the frame, and if
+## it reads the frame after the tonemapper (sRGB, clipped), it comes out brighter than what is
+## behind it. Measured with the post-process path on (glow and adjustments, as the game has them)
+## and off. A second quad reads a little below itself, to show which way SCREEN_UV runs.
+func _screen_texture_spatial() -> void:
+	var saved := [env.tonemap_mode, env.glow_enabled, env.adjustment_enabled]
+	var line := "PROBE screen texture read back in a spatial shader over the scene:"
+	for path in ["post_on", "post_off"]:
+		env.tonemap_mode = Environment.TONE_MAPPER_ACES
+		env.glow_enabled = path == "post_on"
+		env.glow_intensity = 0.3
+		env.glow_hdr_threshold = 4.0
+		env.adjustment_enabled = path == "post_on"
+		env.adjustment_saturation = 1.0
+		var ref := await _shot("screen_ref_%s" % path)
+		var quad := MeshInstance3D.new()
+		var qm := QuadMesh.new()
+		qm.size = Vector2(1.6, 0.9)
+		quad.mesh = qm
+		var sh := Shader.new()
+		sh.code = "shader_type spatial;\nrender_mode unshaded, blend_mix, depth_draw_never, cull_disabled;\n" \
+			+ "uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;\n" \
+			+ "void fragment() { ALBEDO = texture(screen_tex, SCREEN_UV).rgb; ALPHA = 0.999; }\n"
+		var mat := ShaderMaterial.new()
+		mat.shader = sh
+		quad.material_override = mat
+		cam.add_child(quad)
+		quad.position = Vector3(0.0, 0.0, -2.0)
+		var img := await _shot("screen_read_%s" % path)
+		quad.queue_free()
+		# the quad covers the middle of the frame; compare that part only
+		var diff := 0.0
+		var lum_ref := 0.0
+		var lum_img := 0.0
+		var n := 0
+		for y in range(H * 3 / 8, H * 5 / 8):
+			for x in range(W * 3 / 8, W * 5 / 8):
+				var cr := ref.get_pixel(x, y)
+				var ci := img.get_pixel(x, y)
+				diff += (absf(cr.r - ci.r) + absf(cr.g - ci.g) + absf(cr.b - ci.b)) / 3.0
+				lum_ref += cr.get_luminance()
+				lum_img += ci.get_luminance()
+				n += 1
+		line += " %s: mean difference %.4f, brightness read/scene %.3f;" % [path, diff / float(n), lum_img / maxf(lum_ref, 0.0001)]
+	# which way SCREEN_UV's y runs: read 0.25 of the frame "down" in UV; the ground is below the
+	# horizon here, so if +y is down the quad shows the darker ground where the scene has sky
+	var ref2 := await _shot("screen_ref_shift")
+	var probe := MeshInstance3D.new()
+	var pq := QuadMesh.new()
+	pq.size = Vector2(1.6, 0.9)
+	probe.mesh = pq
+	var sh2 := Shader.new()
+	sh2.code = "shader_type spatial;\nrender_mode unshaded, blend_mix, depth_draw_never, cull_disabled;\n" \
+		+ "uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;\n" \
+		+ "void fragment() { ALBEDO = texture(screen_tex, SCREEN_UV + vec2(0.0, 0.25)).rgb; ALPHA = 0.999; }\n"
+	var mat2 := ShaderMaterial.new()
+	mat2.shader = sh2
+	probe.material_override = mat2
+	cam.add_child(probe)
+	probe.position = Vector3(0.0, 0.0, -2.0)
+	var shifted := await _shot("screen_read_shift")
+	probe.queue_free()
+	var p_top := ref2.get_pixel(W / 2, H / 2 + H / 4).get_luminance()
+	line += " SCREEN_UV +0.25 in y reads %.3f at the centre, the scene a quarter frame lower is %.3f" \
+		% [shifted.get_pixel(W / 2, H / 2).get_luminance(), p_top]
+	env.tonemap_mode = saved[0]
+	env.glow_enabled = saved[1]
+	env.adjustment_enabled = saved[2]
+	print(line)
+	results.append(line)
 
 
 func _count_lights() -> void:

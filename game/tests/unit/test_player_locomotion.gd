@@ -353,6 +353,12 @@ func test_compass_reads_the_view_while_the_body_turns() -> void:
 		var gap := 0.0
 		var strip_step := 0.0
 		var excess := 0.0              # strip step beyond the view's own step
+		# ...and beyond the view's step plus the lag the strip was carrying into the frame. An eased
+		# strip catches up its lag faster in a long frame than a short one, so under a loaded
+		# machine the first number grows with the frame times; the second is the jump that would
+		# be a fault whatever the frame times were.
+		var jump := 0.0
+		var carried := 0.0
 		var marker_step := 0.0
 		var bearing_step := 0.0
 		var body_turn := 0.0
@@ -378,6 +384,8 @@ func test_compass_reads_the_view_while_the_body_turns() -> void:
 					var v_step := absf(Compass.wrap_delta(view - last_view))
 					strip_step = maxf(strip_step, s_step)
 					excess = maxf(excess, s_step - v_step)
+					jump = maxf(jump, s_step - v_step - carried)
+				carried = absf(Compass.wrap_delta(shown - view))
 				last_shown = shown
 				last_view = view
 				for m in compass.markers:
@@ -394,10 +402,10 @@ func test_compass_reads_the_view_while_the_body_turns() -> void:
 					last_bearing[label] = bearing
 			Input.action_release(str(leg[0]))
 		var name := "view turning" if turning else "mouse still"
-		report.append("%s: body turned %.0f deg in all, strip within %.2f deg of the view, largest strip step %.2f deg (%.2f beyond the view's own), largest marker step %.1f px" % [
-				name, rad_to_deg(body_turn), gap, strip_step, excess, marker_step])
+		report.append("%s: body turned %.0f deg in all, strip within %.2f deg of the view, largest strip step %.2f deg (%.2f beyond the view's own, %.2f beyond it and the lag carried), largest marker step %.1f px" % [
+				name, rad_to_deg(body_turn), gap, strip_step, excess, jump, marker_step])
 		assert_true(gap < 1.5, "%s: the strip lagged the view by %.2f degrees" % [name, gap])
-		assert_true(excess < 1.2, "%s: the strip stepped %.2f degrees further than the view in one frame" % [name, excess])
+		assert_true(jump < 0.05, "%s: the strip stepped %.2f degrees further than the view and its own lag in one frame" % [name, jump])
 		assert_true(marker_step < (strip_step + bearing_step + 0.2) * px_per_deg + 0.5, "%s: a marker jumped %.1f px" % [name, marker_step])
 		if not turning:
 			assert_gt(rad_to_deg(body_turn), 250.0, "the path should have turned the body round (it turned %.0f deg)" % rad_to_deg(body_turn))
@@ -405,3 +413,32 @@ func test_compass_reads_the_view_while_the_body_turns() -> void:
 	for r in report:
 		print("    " + r)
 	assert_true(compass.markers.size() > 0, "Merrowby should be on the compass: it was discovered")
+
+
+## Turning on the spot steps round. Blocking, the body faces the view; turned hard with the mouse
+## while standing, it used to pivot on planted feet at 720 degrees a second. Now the legs are told
+## a side-step toward the turn while it lasts, and nothing once it stops or once the body moves.
+func test_turning_on_the_spot_steps_round() -> void:
+	await _stand(Vector3.ZERO)
+	await _reset(Vector3.ZERO, 0.0, 0.0)
+	Input.action_press("block")
+	await _ticks(20)
+	var still := absf(player.anim.locomotion.x)
+	var widest := 0.0
+	var left_way := 0.0
+	var yaw0 := player.rotation.y
+	for i in 30:
+		player.camera_rig.add_mouse_look(Vector2(-50.0, 0.0))     # the hand to the left: turn left
+		await _tree().physics_frame
+		widest = maxf(widest, absf(player.anim.locomotion.x))
+		left_way = minf(left_way, player.anim.locomotion.x)
+	var turned := rad_to_deg(absf(player.rotation.y - yaw0))
+	await _ticks(40)
+	var after := absf(player.anim.locomotion.x)
+	Input.action_release("block")
+	print("    turning on the spot (%.0f deg in half a second): side-step %.2f m/s at the most (to the %s), %.2f standing before, %.2f after" % [
+		turned, widest, "left" if left_way < 0.0 else "right", still, after])
+	assert_true(still < 0.01, "standing still, the legs were told to step (%.2f)" % still)
+	assert_true(widest > 0.5, "turning on the spot, the legs were told only %.2f m/s of step" % widest)
+	assert_true(left_way < -0.5, "a turn to the left stepped to the right")
+	assert_true(after < 0.05, "the stepping went on after the turn (%.2f)" % after)

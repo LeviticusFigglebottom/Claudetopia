@@ -20,5 +20,8 @@ func _ready() -> void:
 		return
 	house = HouseInterior.new()
 	house.build_on_ready = false
+	# The builder asks itself which interior it is (to raise what a quest left in here); Interiors
+	# names the wrapper, so the name is handed down.
+	house.set_meta("interior_id", get_meta("interior_id", GameState.current_interior_id))
 	add_child(house)
 	house.build(meta_path)

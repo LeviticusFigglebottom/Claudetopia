@@ -75,6 +75,13 @@ func _build() -> void:
 	UiKit.ink_in(frame, 0.0, 0.32)
 
 
+## Everything here is applied the moment it changes and written down when the screen closes.
+## Nothing wrote it down before, so every setting but the key bindings was forgotten when the game
+## was quit -- including the one that says not to play the opening again.
+func closing() -> void:
+	Settings.save_settings()
+
+
 func _show_tab(index: int) -> void:
 	_tab = clampi(index, 0, TABS.size() - 1)
 	for i in _tab_buttons.size():
@@ -180,7 +187,10 @@ func _build_video() -> void:
 	_check("video", "volumetric_fog", "Volumetric fog", "Forward+ only")
 	_check("video", "sdfgi", "Bounced light (SDFGI)", "Forward+ only")
 	_check("video", "color_grade", "Region colour grade")
-	_slider("video", "night_lights", "Lamps lit at night", 0.0, 10.0, 1.0, "lamps")
+	_check("video", "vignette", "Vignette")
+	_check("video", "film_grain", "Film grain")
+	_check("video", "water_reflections", "Reflections in the water")
+	_slider("video", "night_lights", "Lamps lit at night", 0.0, 8.0, 1.0, "lamps")
 	_check("video", "glow", "Glow")
 	_slider("video", "brightness", "Brightness", 0.6, 1.6, 0.05)
 
@@ -195,6 +205,8 @@ func _build_gameplay() -> void:
 	_slider("gameplay", "day_length_minutes", "Length of a day", 12.0, 120.0, 1.0, "min")
 	_option("gameplay", "difficulty", "Difficulty", ["Kind", "Ordinary", "Hard", "Quiet"])
 	_check("gameplay", "subtitles", "Subtitles")
+	_check("gameplay", "play_opening", "Play the opening on a new game",
+			"the pause menu can still show it")
 	_check("gameplay", "show_hints", "Hints")
 	_check("gameplay", "compass", "Compass")
 	_slider("gameplay", "hud_opacity", "How loud the HUD is", 0.2, 1.0, 0.05, "%")
@@ -226,6 +238,7 @@ func _build_controls() -> void:
 	_option("controls", "camera_side", "Camera side", ["Left", "Right"])
 	_check("controls", "vibration", "Vibration")
 	_check("controls", "toggle_sprint", "Sprint is a toggle")
+	_check("controls", "sprint_tap_rolls", "A tap of Sprint rolls")
 	_grid = null
 	_compact = false
 	_content.add_child(UiKit.divider())

@@ -617,6 +617,31 @@ LOOK_SHOTS = (
 )
 
 
+EYE_OVER_WATER_M = 1.7
+
+
+def above_water(pos, look):
+    """A camera under a lake's surface, lifted to stand an eye's height over it (the look raised with
+    it). pois.json put the Willow Isle camera at 1.2 m in the Mere, whose surface is at 8: the look
+    frame of the lake was shot from under it, which went unnoticed while the lakes were not drawn."""
+    rt = os.path.join(GEN, "runtime")
+    with open(os.path.join(GEN, "world_manifest.json"), "r", encoding="utf-8") as f:
+        info = json.load(f).get("runtime", {})
+    n = int(info.get("grid", 1024))
+    size = 8192.0
+    level = np.fromfile(os.path.join(GEN, info.get("water_level", "runtime/water_level_1024.r32")),
+                        dtype="<f4").reshape(n, n)
+    wet = np.fromfile(os.path.join(GEN, info.get("water", "runtime/water_1024.u8")),
+                      dtype=np.uint8).reshape(n, n)
+    j = int(round((pos[0] + size / 2) / (size / n)))
+    i = int(round((pos[2] + size / 2) / (size / n)))
+    i, j = min(max(i, 0), n - 1), min(max(j, 0), n - 1)
+    if wet[i, j] == 0 or pos[1] >= float(level[i, j]) + 1.0:
+        return pos, look
+    lift = float(level[i, j]) + EYE_OVER_WATER_M - pos[1]
+    return [pos[0], pos[1] + lift, pos[2]], [look[0], look[1] + lift, look[2]]
+
+
 def build_look_plan() -> dict:
     """Dusk, dawn, night, lamps, water and falls, from cameras the other plans already trust."""
     plans = {}
@@ -628,8 +653,8 @@ def build_look_plan() -> dict:
         label, plan, source, hour, weather = row[:5]
         src = plans[plan][source]
         region = src.get("region") or "core:region/" + label.split("_")[0]
-        entry = shot(label, src["pos"], src["look_at"], float(src.get("fov", 60.0)), hour, weather,
-                     1.0, region)
+        pos, look = above_water(src["pos"], src["look_at"])
+        entry = shot(label, pos, look, float(src.get("fov", 60.0)), hour, weather, 1.0, region)
         if len(row) > 5:
             # re-aimed by the capture runner at what the world raised there: a waterfall's
             # sheet faces the terrain's own grain, which no plan written beforehand knows

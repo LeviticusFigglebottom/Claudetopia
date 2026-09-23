@@ -115,19 +115,6 @@
     "seconds": 22.04,
     "volume_db": -1.0
   },
-  "bell_tower": {
-    "bus": "SFX",
-    "bytes": 125645,
-    "count": 2,
-    "files": [
-      "res://assets/audio/sfx/bell_tower/bell_tower_01.ogg",
-      "res://assets/audio/sfx/bell_tower/bell_tower_02.ogg"
-    ],
-    "lufs": -17.67,
-    "pitch_variance": 0.02,
-    "seconds": 9.729,
-    "volume_db": -3.0
-  },
   "block_clang": {
     "bus": "SFX",
     "bytes": 23522,
@@ -171,19 +158,6 @@
     "pitch_variance": 0.06,
     "seconds": 0.508,
     "volume_db": -4.0
-  },
-  "cart_wheels": {
-    "bus": "SFX",
-    "bytes": 46283,
-    "count": 2,
-    "files": [
-      "res://assets/audio/sfx/cart_wheels/cart_wheels_01.ogg",
-      "res://assets/audio/sfx/cart_wheels/cart_wheels_02.ogg"
-    ],
-    "lufs": -23.76,
-    "pitch_variance": 0.04,
-    "seconds": 3.004,
-    "volume_db": -3.0
   },
   "chest_open": {
     "bus": "SFX",
@@ -821,34 +795,6 @@
     "seconds": 0.348,
     "volume_db": -4.0
   },
-  "thunder_far": {
-    "bus": "SFX",
-    "bytes": 74584,
-    "count": 3,
-    "files": [
-      "res://assets/audio/sfx/thunder_far/thunder_far_01.ogg",
-      "res://assets/audio/sfx/thunder_far/thunder_far_02.ogg",
-      "res://assets/audio/sfx/thunder_far/thunder_far_03.ogg"
-    ],
-    "lufs": -17.3,
-    "pitch_variance": 0.05,
-    "seconds": 3.953,
-    "volume_db": -6.0
-  },
-  "thunder_near": {
-    "bus": "SFX",
-    "bytes": 100957,
-    "count": 3,
-    "files": [
-      "res://assets/audio/sfx/thunder_near/thunder_near_01.ogg",
-      "res://assets/audio/sfx/thunder_near/thunder_near_02.ogg",
-      "res://assets/audio/sfx/thunder_near/thunder_near_03.ogg"
-    ],
-    "lufs": -17.83,
-    "pitch_variance": 0.05,
-    "seconds": 4.72,
-    "volume_db": -2.0
-  },
   "ui_book_close": {
     "bus": "UI",
     "bytes": 12974,
@@ -979,34 +925,5 @@
     "pitch_variance": 0.08,
     "seconds": 1.108,
     "volume_db": -5.0
-  },
-  "wind_gust": {
-    "bus": "SFX",
-    "bytes": 89982,
-    "count": 3,
-    "files": [
-      "res://assets/audio/sfx/wind_gust/wind_gust_01.ogg",
-      "res://assets/audio/sfx/wind_gust/wind_gust_02.ogg",
-      "res://assets/audio/sfx/wind_gust/wind_gust_03.ogg"
-    ],
-    "lufs": -15.58,
-    "pitch_variance": 0.05,
-    "seconds": 3.385,
-    "volume_db": -10.0
-  },
-  "wood_creak": {
-    "bus": "SFX",
-    "bytes": 100711,
-    "count": 4,
-    "files": [
-      "res://assets/audio/sfx/wood_creak/wood_creak_01.ogg",
-      "res://assets/audio/sfx/wood_creak/wood_creak_02.ogg",
-      "res://assets/audio/sfx/wood_creak/wood_creak_03.ogg",
-      "res://assets/audio/sfx/wood_creak/wood_creak_04.ogg"
-    ],
-    "lufs": -10.82,
-    "pitch_variance": 0.09,
-    "seconds": 1.812,
-    "volume_db": -10.0
   }
 }

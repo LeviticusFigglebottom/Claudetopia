@@ -77,11 +77,49 @@ def test_sfx_catalogue_covers_the_brief():
         "lockpick_click", "lockpick_break", "ui_paper_slide", "ui_brass_click", "ui_hover_tick",
         "ui_error_thunk", "ui_page_turn", "ui_book_open", "ui_book_close", "ui_map_unroll",
         "hearthstone_rest", "echo_recovered", "player_death", "bell_hand", "bell_tavern",
-        "bell_tower", "bell_toll", "thunder_near", "thunder_far", "wind_gust", "water_splash",
-        "wood_creak", "cart_wheels",
+        "bell_toll", "water_splash",
     ]
     missing = [n for n in needed if n not in gen_sfx.CATALOGUE]
     assert not missing, missing
+    # Sounds nothing in the game could play were dropped rather than kept waiting (DECISIONS
+    # 2026-09-23): the ambience's own storm, wind and creak layers are those, and no bell strikes
+    # the hours and no cart moves.
+    dropped = ["bell_tower", "thunder_near", "thunder_far", "wind_gust", "wood_creak", "cart_wheels"]
+    assert not [n for n in dropped if n in gen_sfx.CATALOGUE]
+
+
+def test_the_sfx_manifest_and_table_hold_exactly_what_the_catalogue_makes():
+    with open(os.path.join(gen_sfx.OUT_ROOT, "manifest.json")) as f:
+        manifest = json.load(f)
+    with open(os.path.join(gen_sfx.PACK_DIR, "sfx.json")) as f:
+        rows = json.load(f)["rows"]
+    assert sorted(manifest) == sorted(gen_sfx.CATALOGUE), \
+        sorted(set(manifest) ^ set(gen_sfx.CATALOGUE))
+    assert sorted(rows) == sorted(gen_sfx.CATALOGUE), sorted(set(rows) ^ set(gen_sfx.CATALOGUE))
+
+
+def test_a_build_forgets_an_id_the_catalogue_no_longer_makes():
+    # A build starts from the manifest on disk so that `--only` keeps the other rows; a row whose
+    # id has left the catalogue used to be kept too, and written back into core:table/sfx
+    # pointing at files that had been deleted.
+    import tempfile
+
+    kept = sorted(gen_sfx.CATALOGUE)[0]
+    row = {"files": ["res://assets/audio/sfx/x/x_01.ogg"], "count": 1, "volume_db": 0.0,
+           "pitch_variance": 0.0, "bus": "SFX", "bytes": 1}
+    out_root, pack_dir = gen_sfx.OUT_ROOT, gen_sfx.PACK_DIR
+    with tempfile.TemporaryDirectory() as tmp:
+        with open(os.path.join(tmp, "manifest.json"), "w") as f:
+            json.dump({"cart_wheels": row, kept: row}, f)
+        gen_sfx.OUT_ROOT, gen_sfx.PACK_DIR = tmp, tmp
+        try:
+            manifest = gen_sfx.build(only={"an id that renders nothing"})
+            with open(os.path.join(tmp, "sfx.json")) as f:
+                rows = json.load(f)["rows"]
+        finally:
+            gen_sfx.OUT_ROOT, gen_sfx.PACK_DIR = out_root, pack_dir
+    assert "cart_wheels" not in manifest and "cart_wheels" not in rows
+    assert kept in manifest and kept in rows
 
 
 def test_every_surface_has_four_footstep_variants():
@@ -303,10 +341,10 @@ def test_the_variants_of_an_effect_are_the_same_loudness():
 
 
 def test_effects_and_pool_shots_start_when_they_are_played():
-    """Coins that land 100 ms after the purchase, a thunder that begins a second after it was
-    fired: the lead-in below -60 dB of the peak is trimmed off both kinds of one-shot."""
+    """Coins that land 100 ms after the purchase, a bell or a thunder that begins a second after
+    it was struck: the lead-in below -60 dB of the peak is trimmed off both kinds of one-shot."""
     import audit
-    for name in ("coins_few", "thunder_far"):
+    for name in ("coins_few", "bell_toll"):
         spec = gen_sfx.CATALOGUE[name]
         for i in range(spec["count"]):
             y = gen_sfx.finish_variant(spec["fn"](core.rng(core.sub_seed("sfx", name, i)), **spec.get("kw", {})))

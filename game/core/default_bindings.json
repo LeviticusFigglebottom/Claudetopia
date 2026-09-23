@@ -10,7 +10,7 @@
     {"action": "look_left",     "label": "Look left",      "category": "Movement", "events": ["joy_axis:2:-1"]},
     {"action": "look_right",    "label": "Look right",     "category": "Movement", "events": ["joy_axis:2:1"]},
     {"action": "jump",          "label": "Jump",           "category": "Movement", "events": ["key:Space", "joy_button:3"]},
-    {"action": "sprint",        "label": "Sprint (hold)",  "category": "Movement", "events": ["key:Shift", "joy_button:7"]},
+    {"action": "sprint",        "label": "Sprint (hold), roll (tap)", "category": "Movement", "events": ["key:Shift", "joy_button:7"]},
     {"action": "walk",          "label": "Walk (hold)",    "category": "Movement", "events": ["key:Alt"]},
     {"action": "dodge",         "label": "Dodge / roll",   "category": "Movement", "events": ["key:Ctrl", "joy_button:1"]},
     {"action": "sneak",         "label": "Sneak (toggle)", "category": "Movement", "events": ["key:C", "joy_button:9"]},

@@ -13,6 +13,9 @@ stop.
 """
 from __future__ import annotations
 
+import json
+import math
+import os
 from dataclasses import dataclass, field
 
 from synth import theory
@@ -551,6 +554,211 @@ def naming_cue() -> Score:
     return s
 
 
+# Where the opening's shots begin, in seconds, and where its music turns. Read from the cinematic
+# definition itself so the cue stays cut to the pictures when a shot is lengthened; these are the
+# values it was written against, used when the definition cannot be read.
+OPENING_JSON = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                            "game", "content", "packs", "core", "cinematics", "opening.json")
+OPENING_MARKS = {"the_name": 0.0, "the_mere": 6.0, "the_spire": 18.0, "the_nave": 27.0, "the_hand": 34.0,
+                 "merrowby": 41.0, "the_roll": 49.0, "the_toll": 59.5, "the_choir": 68.5,
+                 "the_stair": 78.5, "title": 7.0, "turn": 87.7, "handover": 94.5}
+
+
+def opening_marks() -> dict:
+    """Shot starts, the title card and the turn ("Then, this morning, you did.") in seconds."""
+    try:
+        with open(OPENING_JSON) as f:
+            defs = json.load(f)
+    except (OSError, ValueError):
+        return dict(OPENING_MARKS)
+    d = defs[0] if isinstance(defs, list) else defs
+    marks, at = {}, 0.0
+    for shot in d.get("shots", []):
+        marks[shot["id"]] = at
+        at += float(shot.get("duration", 0.0))
+    marks["handover"] = at
+    card = d.get("title_card", {})
+    marks["title"] = marks.get(card.get("shot", ""), 0.0) + float(card.get("at", 0.0))
+    stair = d.get("shots", [])[-1] if d.get("shots") else {}
+    lines = stair.get("lines", [])
+    marks["turn"] = marks.get(stair.get("id", ""), 0.0) + (float(lines[2]["at"]) if len(lines) > 2 else 9.0)
+    for key, value in OPENING_MARKS.items():
+        marks.setdefault(key, value)
+    return marks
+
+
+def opening_cue() -> Score:
+    """The opening (DESIGN 5.1a): the music under the Warden's voice, cut to the shots.
+
+    One bell in the dark. The Toll stated warm over the Mere as the title comes up (D lydian, the
+    key the main theme opens in), and the Sayers' bells after it; the marsh in dorian and the
+    clans' moor in mixolydian, each heard in its own mode; the Vale at its warmest; then it thins
+    -- the quiet villages in B aeolian, the Toll's hum with a tine a half-step under it, Cinderlea's
+    hollow E phrygian -- until "Then, this morning, you did.", where the Hush's phrygian turns
+    lydian on the same E, as the Naming cue turns, and the Toll is stated once more and held as
+    control comes back.
+
+    At 60 bpm a beat is a second, so every section begins on a shot of core:cinematic/opening.
+    It does not loop: it is played once and faded as the region's own music comes back.
+    """
+    m = opening_marks()
+    bpm, bpb = 60.0, 4
+    end = float(int(m["handover"]) + 6)
+    bars = int(math.ceil(end / bpb))
+    s = Score("opening", 52, "phrygian", bpm, bars, bpb,
+              meta={"title": "The Opening", "loop": False,
+                    "colour": "one bell, the country in its own modes, the hollow, and the turn",
+                    "sections": []})
+    motifs = theory.motif_library()
+    pad, melody, texture = [], [], []
+
+    def section(start: float, tonic: int, mode: str) -> None:
+        s.meta["sections"].append((start, tonic, mode))
+
+    def hold(notes, at: float, until: float, vel: float, voice: str, dest=None) -> None:
+        for i, n in enumerate(notes):
+            (dest if dest is not None else pad).append(Note(at, until - at - 0.02, n, vel - 0.03 * i, voice))
+
+    def tune(motif, tonic: int, mode: str, at: float, until: float, octave: int, vel: float,
+             voice: str = "lead") -> None:
+        for (b, dur, midi, v) in motif.to_notes(tonic, mode, 0, at):
+            if b >= until - 0.05:
+                break
+            melody.append(Note(b, min(dur, until - b - 0.02), midi + octave, v * vel, voice))
+
+    def arpeggio(chord, at: float, until: float, per_beat: int, vel: float) -> None:
+        b, i = at, 0
+        step = 1.0 / per_beat
+        while b < until - 0.05:
+            n = chord[[0, 2, 1, 2][i % 4] % len(chord)] + (12 if i % 8 == 7 else 0)
+            texture.append(Note(b, min(step * 0.9, until - b - 0.02), n, vel - 0.02 * (i % 4), "arp"))
+            b += step
+            i += 1
+
+    # the name: one bell, and the Hush's hollow under it
+    t0, t1 = m["the_name"], m["the_mere"]
+    section(t0, 52, "phrygian")
+    texture.append(Note(t0, t1 - t0 - 0.02, 52, 0.9, "bell"))
+    pad.append(Note(t0 + 0.5, t1 - t0 - 0.52, 40, 0.45, "drone"))
+    hold([55, 59], t0 + 2.0, t1, 0.34, "pad")
+
+    # the Mere and the title: the Toll, warm, as the main theme states it
+    a, b = m["the_mere"], m["the_spire"]
+    section(a, 62, "lydian")
+    texture.append(Note(a, 4.0, 86, 0.35, "bell"))
+    mid = a + (b - a) / 3.0
+    chords = theory.progression([0, 1, 0], 62, "lydian", centre=57)
+    for (lo, hi), ch, bass in zip(((a, mid), (mid, mid + (b - a) / 3.0), (mid + (b - a) / 3.0, b)), chords, (38, 40, 38)):
+        hold(ch, lo, hi, 0.46, "pad")
+        hold(ch, lo, hi, 0.28, "choir")
+        pad.append(Note(lo, hi - lo - 0.02, bass, 0.5, "bass"))
+    tune(motifs["toll"], 62, "lydian", m["title"], b, 12, 0.95)
+    arpeggio(chords[1], mid, b, 2, 0.30)
+
+    # the Spire: the Sayers' bell, struck once and still ringing
+    a, b = m["the_spire"], m["the_nave"]
+    section(a, 62, "lydian")
+    half = a + (b - a) * 0.5
+    for (lo, hi), deg, bass in (((a, half), 5, 35), ((half, b), 4, 33)):
+        ch = theory.triad(deg, 62, "lydian")
+        hold(ch, lo, hi, 0.42, "pad")
+        pad.append(Note(lo, hi - lo - 0.02, bass, 0.46, "bass"))
+    for k, n in enumerate((81, 78, 74)):
+        texture.append(Note(a + 2.0 * k, 4.0, n, 0.42 - 0.06 * k, "bell"))
+    tune(motifs["answer"], 62, "lydian", a + 1.0, b, 12, 0.8)
+
+    # the Drowned Nave: the tide, heard in the marsh's own mode, the Toll turned over and low
+    a, b = m["the_nave"], m["the_hand"]
+    section(a, 62, "dorian")
+    half = a + (b - a) * 0.55
+    # i then the major IV, dorian's own colour and the chord the turned-over Toll passes through
+    for (lo, hi), deg, bass in (((a, half), 0, 38), ((half, b), 3, 43)):
+        ch = theory.triad(deg, 62, "dorian")
+        hold(ch, lo, hi, 0.36, "choir")
+        pad.append(Note(lo, hi - lo - 0.02, bass, 0.40, "bass"))
+    tune(motifs["toll_inv"], 62, "dorian", a + 1.0, b, 0, 0.55)
+
+    # the Fallen Hand: the clans' breath, open fifths on the moor
+    a, b = m["the_hand"], m["merrowby"]
+    section(a, 62, "mixolydian")
+    pad.append(Note(a, b - a - 0.02, 38, 0.45, "drone"))
+    pad.append(Note(a, b - a - 0.02, 45, 0.36, "drone"))
+    half = a + (b - a) * 0.5
+    for (lo, hi), deg in (((a, half), 0), ((half, b), 6)):
+        hold(theory.triad(deg, 62, "mixolydian"), lo, hi, 0.34, "pad")
+    tune(motifs["toll_short"], 62, "mixolydian", a + 0.5, b, 12, 0.7)
+
+    # Merrowby: the Vale at its warmest -- harp, choir, the answer the villages sing back
+    a, b = m["merrowby"], m["the_roll"]
+    section(a, 62, "lydian")
+    texture.append(Note(a, 3.0, 81, 0.4, "bell"))
+    half = a + (b - a) * 0.5
+    chords = theory.progression([0, 1], 62, "lydian", centre=57)
+    for (lo, hi), ch, bass in zip(((a, half), (half, b)), chords, (38, 40)):
+        hold(ch, lo, hi, 0.44, "pad")
+        hold(ch, lo, hi, 0.34, "choir")
+        pad.append(Note(lo, hi - lo - 0.02, bass, 0.55, "bass"))
+        arpeggio(ch, lo, hi, 2, 0.34)
+    tune(motifs["answer"], 62, "lydian", a + 1.0, b, 12, 0.9)
+
+    # the Roll: it thins; the names of the places that went quiet
+    a, b = m["the_roll"], m["the_toll"]
+    section(a, 59, "aeolian")
+    half = a + (b - a) * 0.48
+    for (lo, hi), deg, bass in (((a, half), 0, 35), ((half, b), 5, 31)):
+        hold(theory.triad(deg, 59, "aeolian"), lo, hi, 0.34, "pad")
+        pad.append(Note(lo, hi - lo - 0.02, bass, 0.38, "bass"))
+    texture.append(Note(half, 3.0, 71, 0.26, "bell"))
+    tune(motifs["hush"], 59, "aeolian", a + 0.5, b, 12, 0.7)
+
+    # the Toll: the hum, and the tine a half-step under it, beating
+    a, b = m["the_toll"], m["the_choir"]
+    section(a, 52, "phrygian")
+    pad.append(Note(a, b - a - 0.02, 40, 0.5, "drone"))
+    pad.append(Note(a + 1.5, b - a - 1.52, 39, 0.32, "drone", tension=True))
+    half = a + (b - a) * 0.5
+    for (lo, hi), deg in (((a, half), 0), ((half, b), 1)):
+        hold(theory.triad(deg, 52, "phrygian"), lo, hi, 0.30, "pad")
+    tune(motifs["toll_aug"], 52, "phrygian", a + 0.5, b, 0, 0.5, voice="drone")
+
+    # the Choir: Cinderlea's hollow, one bell
+    a, b = m["the_choir"], m["the_stair"]
+    section(a, 52, "phrygian")
+    texture.append(Note(a, 6.0, 64, 0.5, "bell"))
+    pad.append(Note(a, b - a - 0.02, 40, 0.44, "drone"))
+    half = a + (b - a) * 0.5
+    for (lo, hi), deg in (((a, half), 0), ((half, b), 6)):
+        hold(theory.triad(deg, 52, "phrygian"), lo, hi, 0.30, "pad")
+    tune(motifs["toll_short"], 52, "phrygian", a + 2.0, b, 12, 0.45)
+
+    # the Stair: hollow still, until you are the one who walked up it
+    a, turn = m["the_stair"], m["turn"]
+    section(a, 52, "phrygian")
+    texture.append(Note(a, 5.0, 52, 0.6, "bell"))
+    pad.append(Note(a, turn - a - 0.02, 40, 0.42, "drone"))
+    half = a + (turn - a) * 0.5
+    for (lo, hi), deg in (((a, half), 0), ((half, turn), 3)):
+        hold(theory.triad(deg, 52, "phrygian"), lo, hi, 0.30, "pad")
+    tune(motifs["hush"], 52, "phrygian", a + 1.0, turn, 12, 0.45)
+
+    # the turn: the same E, heard lydian -- the colour coming back into your hands
+    section(turn, 52, "lydian")
+    warm = theory.triad(0, 52, "lydian")
+    texture.append(Note(turn, 6.0, 88, 0.42, "bell"))
+    texture.append(Note(turn + 3.5, 5.0, 83, 0.34, "bell"))
+    hold(warm, turn, end, 0.46, "pad")
+    hold([n + 12 for n in warm], turn + 0.5, end, 0.32, "choir")
+    pad.append(Note(turn, end - turn - 0.02, 40, 0.55, "bass"))
+    arpeggio([n + 12 for n in warm], turn + 0.5, m["handover"] + 1.0, 2, 0.30)
+    tune(motifs["toll"], 64, "lydian", turn + 0.3, end, 12, 0.9)
+
+    s.add("pad", humanise(pad, sub_seed("opening", "pad"), 0.02, 0.06, beats_per_bar=bpb))
+    s.add("melody", humanise(melody, sub_seed("opening", "mel"), 0.02, 0.08, beats_per_bar=bpb))
+    s.add("texture", humanise(texture, sub_seed("opening", "tex"), 0.015, 0.1, beats_per_bar=bpb))
+    _finish(s)
+    return s
+
+
 def boss_score(intensity: int = 1) -> Score:
     """Boss music in two intensities. Intensity 1 is a circling threat; intensity 2 adds the
     choir, doubles the pulse and puts the Toll in the bass, for a phase change."""
@@ -667,6 +875,7 @@ def all_scores() -> dict:
         out["region:" + key] = region_score(key)
     out["main_theme"] = main_theme()
     out["naming"] = naming_cue()
+    out["opening"] = opening_cue()
     out["boss_1"] = boss_score(1)
     out["boss_2"] = boss_score(2)
     for k in STINGERS:
@@ -738,18 +947,33 @@ def clashes(score: Score, combination: str, min_beats: float = 0.0):
 def out_of_mode(score: Score) -> list:
     """Notes that are not in the score's mode.
 
-    Percussion is exempt (its MIDI number picks a drum). A score that changes mode part-way
-    declares the destination in meta["modulates_to"], and a note is accepted if it belongs to
-    either mode -- the Naming cue is the one piece that does this, and deliberately.
+    Percussion is exempt (its MIDI number picks a drum), and so is a note marked as deliberate
+    tension, which is chromatic on purpose. A score that changes mode part-way declares the
+    destination in meta["modulates_to"], and a note is accepted if it belongs to either mode --
+    the Naming cue does this. A through-composed piece declares meta["sections"], a list of
+    (start_beat, tonic, mode), and each note answers to the section it starts in, or to the next
+    one when humanising has nudged it a hair before the boundary it was written on.
     """
     bad = []
     accepted = [(score.tonic, score.mode)]
     if score.meta.get("modulates_to"):
         accepted.append((score.tonic + 2, score.meta["modulates_to"]))
+    sections = sorted(score.meta.get("sections") or [])
+
+    def section_at(beat: float):
+        found = None
+        for start, tonic, mode in sections:
+            if start <= beat + 1e-6:
+                found = (tonic, mode)
+        return found
+
     for stem, notes in score.stems.items():
         for n in notes:
-            if n.voice in UNPITCHED_VOICES:
+            if n.voice in UNPITCHED_VOICES or n.tension:
                 continue
-            if not any(theory.in_mode(n.midi, t, m) for t, m in accepted):
+            modes = accepted
+            if sections:
+                modes = [m for m in (section_at(n.beat), section_at(n.beat + 0.1)) if m is not None]
+            if not any(theory.in_mode(n.midi, t, m) for t, m in modes):
                 bad.append((stem, n.beat, n.midi))
     return bad

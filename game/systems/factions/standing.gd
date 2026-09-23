@@ -84,6 +84,9 @@ func add_morality(delta: int, reason: String = "") -> int:
 func add_renown(delta: int, reason: String = "") -> int:
 	if delta == 0:
 		return renown_value
+	if delta > 0 and reason != "set":
+		# Loud Name: deeds travel 20% further. What is earned grows; what is lost does not.
+		delta = int(round(float(delta) * Peers.stat_mult("renown_gain")))
 	var before := renown_value
 	renown_value = clampi(renown_value + delta, RENOWN_MIN, RENOWN_MAX)
 	if renown_value != before:

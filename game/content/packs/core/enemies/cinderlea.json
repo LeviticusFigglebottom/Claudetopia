@@ -233,6 +233,7 @@
     "attacks": [
       {
         "name": "bell_mace",
+        "sound": "bell_hand",
         "clip": "Attack_1H_Light_1",
         "weapon_class": "mace",
         "damage": 36.0,
@@ -263,6 +264,7 @@
       },
       {
         "name": "the_tolling_blow",
+        "sound": "bell_hand",
         "clip": "Attack_1H_Heavy",
         "weapon_class": "mace",
         "damage": 52.0,
@@ -330,6 +332,7 @@
     "attacks": [
       {
         "name": "the_toll",
+        "sound": "bell_toll",
         "kind": "burst",
         "clip": "Attack_2H_Heavy",
         "weapon_class": "hammer",
@@ -352,6 +355,7 @@
       },
       {
         "name": "bell_swing",
+        "sound": "bell_toll",
         "clip": "Attack_2H_Light_1",
         "weapon_class": "hammer",
         "damage": 44.0,
