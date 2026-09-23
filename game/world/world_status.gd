@@ -10,14 +10,13 @@ extends RefCounted
 ## Every one of those used to end the same way: the menu let you in, and you stood on nothing in
 ## a grey void with the HUD up. So every way into the world asks here first.
 ##
-##   missing     no manifest, no runtime maps or no cells: there is no country to stand in. The
-##               title screen says so, with the command that builds it, and nothing enters the world.
-##   no_terrain  the country is there but Terrain3D cannot draw its ground (no library for this
-##               machine, or no regions in game/terrain_data): refused the same way, with the reason.
-##   fallback    only when asked for with `-- --fallback-terrain`: `FallbackTerrain` draws the ground
-##               from the runtime height map. It is written and not yet verified in a render, so it
-##               never switches itself on.
-##   ready       everything is there.
+##   missing   no manifest, no runtime maps or no cells: there is no country to stand in. The title
+##             screen says so, with the command that builds it, and nothing enters the world.
+##   fallback  the country is there but Terrain3D cannot draw it (no library for this machine, or
+##             no regions in game/terrain_data), or `-- --fallback-terrain` asked for it:
+##             `FallbackTerrain` draws the ground from the runtime height map, the title says so in
+##             one small line, and a notice says it again once the player can see.
+##   ready     everything is there.
 
 const GENERATED := "res://world/generated"
 const TERRAIN_DATA := "res://terrain_data"
@@ -80,36 +79,25 @@ static func evaluate(f: Dictionary) -> Dictionary:
 				+ "New Game and Continue wait until it is done.") % [lacking, BUILD_NEEDS]
 		return out
 	var why := ""
-	if not bool(f.get("terrain_class", false)):
-		why = "plugin_missing"
-	elif int(f.get("terrain_regions", 0)) == 0:
-		why = "terrain_missing"
 	if bool(f.get("forced_fallback", false)):
-		# The coarse ground (FallbackTerrain) is drawn only when asked for. It is written and it
-		# has not yet been looked at in a render, so it does not switch itself on: see PROGRESS.md.
-		out["state"] = "fallback"
-		out["terrain"] = "fallback"
-		out["reason"] = why if not why.is_empty() else "forced"
+		why = "forced"
 		out["title"] = "The coarse ground, as asked for."
 		out["detail"] = "The game was started with %s, so the ground is drawn from the 8 m height map rather than by Terrain3D." % FORCE_FALLBACK_ARG
-		out["notice"] = "You are walking on the coarse ground (%s), not the full terrain." % FORCE_FALLBACK_ARG
-		return out
+	elif not bool(f.get("terrain_class", false)):
+		why = "plugin_missing"
+		out["title"] = "The full terrain cannot be drawn on this machine."
+		out["detail"] = _plugin_missing_detail(f)
+	elif int(f.get("terrain_regions", 0)) == 0:
+		why = "terrain_missing"
+		out["title"] = "The full terrain is not built."
+		out["detail"] = ("game/terrain_data holds no terrain regions, so the ground is drawn from the coarse 8 m height map: "
+				+ "the country is all there, with softer hills and plainer ground. Build the full terrain with the command below. It needs %s.") % BUILD_NEEDS
 	if why.is_empty():
 		return out
-	# Terrain3D cannot draw the ground here, and without a ground there is nothing to stand on:
-	# the world is refused with the reason rather than entered as a void.
-	out["state"] = "no_terrain"
-	out["playable"] = false
-	out["terrain"] = ""
+	out["state"] = "fallback"
+	out["terrain"] = "fallback"
 	out["reason"] = why
-	if why == "plugin_missing":
-		out["title"] = "The ground cannot be drawn on this machine."
-		out["detail"] = _plugin_missing_detail(f)
-		out["command"] = "godot --path game -- %s" % FORCE_FALLBACK_ARG
-	else:
-		out["title"] = "The terrain has not been built."
-		out["detail"] = ("The country's maps are here but game/terrain_data holds no terrain regions, so there is no ground to stand on. "
-				+ "Build it from the repository's top folder with the command below. It needs %s.") % BUILD_NEEDS
+	out["notice"] = "The full terrain is not drawn here: you are walking on the coarse ground. %s" % _notice_reason(why, f)
 	return out
 
 
@@ -159,4 +147,15 @@ static func _plugin_missing_detail(f: Dictionary) -> String:
 			because = "Terrain3D, the plugin that draws the ground, is built for macOS %d or later and this Mac runs macOS %s." % [TERRAIN3D_MIN_MACOS, str(f.get("os_version", ""))]
 		else:
 			because = "Terrain3D, the plugin that draws the ground, did not load on this Mac (%s). If macOS refused it, the Console log says so." % where
-	return because + " Without it there is no ground to stand on. An experimental coarse ground, drawn from the 8 m height map, can be tried with the command below."
+	return because + " The ground is drawn from the coarse 8 m height map instead: the country is all there, with softer hills and plainer ground."
+
+
+static func _notice_reason(why: String, f: Dictionary) -> String:
+	match why:
+		"forced":
+			return "(%s)" % FORCE_FALLBACK_ARG
+		"plugin_missing":
+			return "(Terrain3D did not load on %s %s.)" % [str(f.get("os", "?")), str(f.get("arch", "?"))]
+		"terrain_missing":
+			return "(game/terrain_data is empty: %s builds it.)" % BUILD_COMMAND
+	return ""

@@ -38,18 +38,21 @@ const LAYER_WORLD := 1 << 0
 const LAYER_TERRAIN := 1 << 10
 
 ## What each region's ground is made of here, by the shape its map block names: a flat material, a
-## steep one, a patch that comes through in noise within a height band [low, high, share], and what
-## lies at the water's edge. A simplification of tools/world/worldgen/surface.py.
+## steep one, a patch that comes through in noise within a height band [low, high, share, steep
+## bias], and what lies at the water's edge. A simplification of tools/world/worldgen/surface.py.
+## The steep bias lowers the slope at which the steep material takes over: Cinderlea's terraces
+## are steps two metres high, and an 8 m map rounds each riser off into a moderate slope that would
+## otherwise never read as the dark ash it is.
 const GROUND_BY_SHAPE := {
-	"downs": {"flat": "vale_grass", "steep": "chalk", "patch": "orchard_grass", "band": [0.0, 128.0, 0.35], "shore": "mud"},
-	"lake_basin": {"flat": "vale_grass", "steep": "chalk", "patch": "heather", "band": [16.0, 60.0, 0.30], "shore": "shingle"},
-	"delta": {"flat": "peat", "steep": "mud", "patch": "sand_flats", "band": [-20.0, 2.0, 0.55], "shore": "mud"},
-	"forest_rise": {"flat": "forest_floor", "steep": "granite", "patch": "moss", "band": [0.0, 420.0, 0.45], "shore": "moss"},
-	"mountains": {"flat": "limestone", "steep": "scree", "patch": "heather", "band": [110.0, 430.0, 0.55], "shore": "shingle"},
-	"ash_plateau": {"flat": "grey_grass", "steep": "ash_soil", "patch": "ash_soil", "band": [0.0, 900.0, 0.30], "shore": "ash_soil"},
+	"downs": {"flat": "vale_grass", "steep": "chalk", "patch": "orchard_grass", "band": [0.0, 128.0, 0.35, 0.0], "shore": "mud"},
+	"lake_basin": {"flat": "vale_grass", "steep": "chalk", "patch": "heather", "band": [16.0, 60.0, 0.30, 0.0], "shore": "shingle"},
+	"delta": {"flat": "peat", "steep": "mud", "patch": "sand_flats", "band": [-20.0, 2.0, 0.55, 0.0], "shore": "mud"},
+	"forest_rise": {"flat": "forest_floor", "steep": "granite", "patch": "moss", "band": [0.0, 420.0, 0.45, 0.0], "shore": "moss"},
+	"mountains": {"flat": "limestone", "steep": "scree", "patch": "heather", "band": [110.0, 430.0, 0.55, 0.0], "shore": "shingle"},
+	"ash_plateau": {"flat": "grey_grass", "steep": "ash_soil", "patch": "ash_soil", "band": [0.0, 900.0, 0.14, 0.14], "shore": "ash_soil"},
 }
-const WATER_GROUND := {"flat": "lake_bed", "steep": "lake_bed", "patch": "mud", "band": [-100.0, 100.0, 0.3], "shore": "shingle"}
-const DEFAULT_GROUND := {"flat": "vale_grass", "steep": "granite", "patch": "moss", "band": [0.0, 400.0, 0.3], "shore": "mud"}
+const WATER_GROUND := {"flat": "mud", "steep": "scree", "patch": "lake_bed", "band": [-4.0, 12.0, 0.6, 0.0], "shore": "shingle"}
+const DEFAULT_GROUND := {"flat": "vale_grass", "steep": "granite", "patch": "moss", "band": [0.0, 400.0, 0.3, 0.0], "shore": "mud"}
 ## Which palette entries carry each shape's ground colour, its second voice and its accent, and how
 ## strong the accent is: surface.COLOUR_VOICES.
 const COLOUR_VOICES := {
@@ -201,7 +204,7 @@ func _set_regions() -> void:
 		for key in ["flat", "steep", "patch", "shore"]:
 			layers.append(_layer_index(str(g[key])))
 		var band: Array = g["band"]
-		bands.append(Vector4(float(band[0]), float(band[1]), float(band[2]), 0.0))
+		bands.append(Vector4(float(band[0]), float(band[1]), float(band[2]), float(band[3]) if band.size() > 3 else 0.0))
 	material.set_shader_parameter("region_layers", layers)
 	material.set_shader_parameter("region_band", bands)
 	material.set_shader_parameter("region_c0", c0)
@@ -223,10 +226,10 @@ static func _palette_colour(palette: Array, index: int) -> Vector3:
 	return Vector3(c.r, c.g, c.b)
 
 
-func _layer_index(name: String) -> int:
-	var i := _layers.find(name)
+func _layer_index(layer_name: String) -> int:
+	var i := _layers.find(layer_name)
 	if i < 0:
-		_layers.append(name)
+		_layers.append(layer_name)
 		i = _layers.size() - 1
 	return i
 
@@ -238,19 +241,22 @@ func _set_layers() -> void:
 	var scale := PackedFloat32Array()
 	var value := PackedFloat32Array()
 	var rough := PackedFloat32Array()
-	var albedo: Array[Image] = []
-	var normal: Array[Image] = []
-	for name in _layers:
-		var slot: Dictionary = slots.get(name, {})
+	for layer_name in _layers:
+		var slot: Dictionary = slots.get(layer_name, {})
 		scale.append(1.0 / float(slot.get("tile_m", 2.6)))
 		value.append(float(slot.get("value", 0.5)))
 		rough.append(float(slot.get("roughness_mod", 0.0)))
-		albedo.append(_layer_image("%s/%s_albedo_height.png" % [TEXTURE_DIR, name], Color(0.45, 0.45, 0.4, 0.5)))
-		normal.append(_layer_image("%s/%s_normal_rough.png" % [TEXTURE_DIR, name], Color(0.5, 0.5, 1.0, 0.8)))
 	while scale.size() < 24:
 		scale.append(1.0)
 		value.append(0.5)
 		rough.append(0.0)
+	# Most of what building this costs (a second or two when the machine is quiet), all of it reading
+	# the terrain textures back and scaling them.
+	var albedo: Array[Image] = []
+	var normal: Array[Image] = []
+	for layer_name in _layers:
+		albedo.append(_layer_image("%s/%s_albedo_height.png" % [TEXTURE_DIR, layer_name], Color(0.45, 0.45, 0.4, 0.5)))
+		normal.append(_layer_image("%s/%s_normal_rough.png" % [TEXTURE_DIR, layer_name], Color(0.5, 0.5, 1.0, 0.8)))
 	var albedo_array := Texture2DArray.new()
 	albedo_array.create_from_images(albedo)
 	var normal_array := Texture2DArray.new()
@@ -274,8 +280,14 @@ func _slot_table() -> Dictionary:
 
 
 ## One terrain texture, at the fallback's size, uncompressed, with its own mipmaps. A texture that
-## is not there becomes a flat colour rather than a hole.
+## is not there becomes a flat colour rather than a hole. A headless run draws nothing and cannot
+## read a texture back from a renderer it does not have, so it gets the flat colour, small.
 func _layer_image(path: String, fill: Color) -> Image:
+	if DisplayServer.get_name() == "headless":
+		var flat := Image.create(4, 4, true, Image.FORMAT_RGBA8)
+		flat.fill(fill)
+		flat.generate_mipmaps()
+		return flat
 	var img: Image = null
 	if ResourceLoader.exists(path):
 		var tex := load(path) as Texture2D
@@ -424,22 +436,33 @@ func _on_cell_loaded(cell: Vector2i) -> void:
 
 
 ## Sets every MultiMesh instance under `cell` down on the provider's ground. Returns how many moved.
+## A renderer that keeps no instance data -- the headless one -- hands back an empty buffer, and
+## there is then nothing to move and nothing to write back.
 static func reground(cell: Node3D, p: TerrainProvider) -> int:
 	var moved := 0
-	var ox := cell.position.x
-	var oy := cell.position.y
-	var oz := cell.position.z
 	for child in cell.get_children():
 		var mmi := child as MultiMeshInstance3D
 		if mmi == null or mmi.multimesh == null or mmi.multimesh.transform_format != MultiMesh.TRANSFORM_3D:
 			continue
 		var mm := mmi.multimesh
-		var stride := 12 + (4 if mm.use_colors else 0) + (4 if mm.use_custom_data else 0)
+		var stride := buffer_stride(mm)
 		var buf := mm.buffer
-		var count := mini(mm.instance_count, buf.size() / stride)
-		for i in count:
-			var o := i * stride
-			buf[o + 7] = p.get_height(buf[o + 3] + ox, buf[o + 11] + oz) - oy
-		mm.buffer = buf
-		moved += count
+		if buf.is_empty() or buf.size() != mm.instance_count * stride:
+			continue
+		mm.buffer = set_down(buf, stride, cell.position, p)
+		moved += mm.instance_count
 	return moved
+
+
+## Floats per instance in a MultiMesh buffer: a 3 x 4 transform, then colour, then custom data.
+static func buffer_stride(mm: MultiMesh) -> int:
+	return 12 + (4 if mm.use_colors else 0) + (4 if mm.use_custom_data else 0)
+
+
+## The same buffer with every instance's height taken from the provider's ground; `origin` is
+## where the cell node stands, since instance positions are stored relative to it. The transform is
+## row-major, so the position's x, y and z are floats 3, 7 and 11 of each instance.
+static func set_down(buf: PackedFloat32Array, stride: int, origin: Vector3, p: TerrainProvider) -> PackedFloat32Array:
+	for o in range(0, buf.size() - stride + 1, stride):
+		buf[o + 7] = p.get_height(buf[o + 3] + origin.x, buf[o + 11] + origin.z) - origin.y
+	return buf

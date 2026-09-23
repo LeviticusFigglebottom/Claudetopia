@@ -112,8 +112,9 @@ func _build() -> void:
 	rule_row.add_child(rule)
 	root.add_child(rule_row)
 
-	var tagline := UiKit.label("Everything that is spoken of, stays.", "Journal", HORIZONTAL_ALIGNMENT_CENTER)
+	var tagline: Label = null
 	if playable:
+		tagline = UiKit.label("Everything that is spoken of, stays.", "Journal", HORIZONTAL_ALIGNMENT_CENTER)
 		root.add_child(tagline)
 		root.add_child(UiKit.spacer(34, true))
 	else:

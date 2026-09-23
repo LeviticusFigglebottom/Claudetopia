@@ -37,7 +37,8 @@ none) and are built for **macOS 15.0 or later**: an older macOS will not load th
 What the release does not ship, and so this repository does not have: **Linux arm64 and
 riscv64** (`terrain.gdextension` names both, but the archive holds no such files) and Windows
 on arm64. On those machines, and on a Mac older than macOS 15, the `Terrain3D` class does not
-exist at run time.
+exist at run time, and the game draws the ground itself from the runtime height map
+(`game/world/fallback_terrain.gd`), saying so on the title screen.
 
 ## Tools used to make our own assets (not redistributed)
 

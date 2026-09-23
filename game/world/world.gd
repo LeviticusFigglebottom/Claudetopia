@@ -80,11 +80,12 @@ func _ready() -> void:
 	_setup_target()            # before the terrain: Terrain3D looks for a camera on its first frame
 	await _setup_terrain()
 	if terrain_mode.is_empty():
+		# nothing could draw the ground: not even the runtime height map was readable
 		status = status.duplicate()
 		status["playable"] = false
-		status["title"] = "The terrain could not be read."
-		status["detail"] = ("There are terrain regions in game/terrain_data but Terrain3D loaded none of them, so there is "
-				+ "no ground to stand on. Rebuild them from the repository's top folder with the command below. It needs %s.") % WorldStatus.BUILD_NEEDS
+		status["title"] = "The ground could not be drawn."
+		status["detail"] = ("Neither Terrain3D nor the runtime height map in game/world/generated/runtime/ gave this world a ground. "
+				+ "Build the world again from the repository's top folder with the command below. It needs %s.") % WorldStatus.BUILD_NEEDS
 		_stand_down()
 		return
 	_setup_atmosphere()
@@ -108,19 +109,30 @@ func _exit_tree() -> void:
 
 # --- construction -----------------------------------------------------------------------------
 
-## Terrain3D when it is here and has regions to draw. The coarse ground from the 8 m runtime map
-## (FallbackTerrain) only when it was asked for (`WorldStatus.FORCE_FALLBACK_ARG`): it has not been
-## verified in a render yet, so it does not switch itself on. Regions that are on disk and load as
-## nothing leave no ground, and the world stands down with the reason rather than show a void.
+## Terrain3D when it is here and has regions to draw; otherwise the coarse ground, the same country
+## from the 8 m runtime map (FallbackTerrain). Never nothing: a machine without the plugin, or a
+## copy without the regions, used to stand the player on a grey void.
 func _setup_terrain() -> void:
 	if str(status.get("terrain", "")) == "terrain3d":
 		await _setup_terrain3d()
 		if terrain_node != null:
 			terrain_mode = "terrain3d"
-		return
-	if str(status.get("terrain", "")) == "fallback":
-		Log.warn("World", "%s Drawing the ground from the runtime height map." % str(status.get("title", "")))
-		_setup_fallback()
+			return
+		# regions that are on disk and load as nothing (another Terrain3D version, a truncated copy)
+		status = status.duplicate()
+		status["state"] = "fallback"
+		status["terrain"] = "fallback"
+		status["reason"] = "terrain_unreadable"
+		status["title"] = "The full terrain could not be read."
+		status["notice"] = ("The full terrain is not drawn here: you are walking on the coarse ground. "
+				+ "(Terrain3D read no regions from game/terrain_data: %s builds them again.)") % WorldStatus.BUILD_COMMAND
+	Log.warn("World", "%s Drawing the ground from the runtime height map." % str(status.get("title", "")))
+	_setup_fallback()
+	# Terrain3D's path waits a frame for its data object, so `world_ready` has always come after
+	# `add_child` returned, and every caller that adds a world and then awaits the signal depends
+	# on that. Without the wait the coarse ground made the world ready inside `add_child`, and a
+	# caller waiting afterwards waited for ever.
+	await get_tree().process_frame
 
 
 func _setup_fallback() -> void:

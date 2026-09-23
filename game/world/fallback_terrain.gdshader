@@ -41,7 +41,7 @@ uniform float layer_value[24];
 uniform float layer_rough[24];
 // per region, four layers: flat, steep, patch, shore
 uniform int region_layers[32];
-// per region: patch band low and high (m), patch share (0..1), unused
+// per region: patch band low and high (m), patch share (0..1), how much sooner slopes turn steep
 uniform vec4 region_band[8];
 uniform vec3 region_c0[8];
 uniform vec3 region_c1[8];
@@ -81,6 +81,20 @@ float vnoise(vec2 p) {
 float fbm(vec2 xz, float wl, float salt) {
 	vec2 p = xz / wl + vec2(salt * 17.13, salt * 5.71);
 	return vnoise(p) * 0.65 + vnoise(p * 2.03 + vec2(3.1, 9.7)) * 0.35;
+}
+
+// the map's own height at a point, bilinear from four texels. The fragment asks this rather than
+// taking the vertex's: at a far LOD the vertex height is a 64 m facet, and anything decided by
+// height -- a band of heather, the snow line -- would follow the facets in straight saw-teeth
+float map_height(vec2 xz) {
+	vec2 p = clamp((xz - height_origin) / spacing, vec2(0.0), vec2(float(grid) - 1.001));
+	ivec2 i = ivec2(floor(p));
+	vec2 f = p - vec2(i);
+	float h00 = texelFetch(heights, i, 0).r;
+	float h10 = texelFetch(heights, i + ivec2(1, 0), 0).r;
+	float h01 = texelFetch(heights, i + ivec2(0, 1), 0).r;
+	float h11 = texelFetch(heights, i + ivec2(1, 1), 0).r;
+	return mix(mix(h00, h10, f.x), mix(h01, h11, f.x), f.y);
 }
 
 vec3 map_normal(vec2 xz) {
@@ -155,9 +169,11 @@ void ground(int r, vec2 xz, float h, float slope, float shore, out vec4 alb, out
 	layer(region_layers[base], xz, alb, nrm);
 	vec4 band = region_band[r];
 	float pn = fbm(xz, 60.0, 407.0 + float(r));
-	float patch_t = smoothstep(1.0 - band.z, 1.0 - band.z + 0.14, pn)
-			* smoothstep(band.x - 12.0, band.x + 12.0, h) * (1.0 - smoothstep(band.y - 12.0, band.y + 12.0, h));
-	float steep_t = smoothstep(0.32, 0.78, slope + (fbm(xz, 24.0, 3.0) - 0.5) * 0.3);
+	// the band's edges wander by tens of metres, or they read as a contour line drawn on the hill
+	float hb = h + (fbm(xz, 90.0, 409.0 + float(r)) - 0.5) * 40.0;
+	float patch_t = smoothstep(1.0 - band.z, 1.0 - band.z + 0.22, pn)
+			* smoothstep(band.x - 18.0, band.x + 18.0, hb) * (1.0 - smoothstep(band.y - 18.0, band.y + 18.0, hb));
+	float steep_t = smoothstep(0.32 - band.w, 0.78 - band.w, slope + (fbm(xz, 24.0, 3.0) - 0.5) * 0.3);
 	blend_in(alb, nrm, region_layers[base + 2], patch_t * (1.0 - steep_t), xz, sharp);
 	blend_in(alb, nrm, region_layers[base + 3], shore * (1.0 - steep_t), xz, sharp);
 	blend_in(alb, nrm, region_layers[base + 1], steep_t, xz, sharp);
@@ -169,7 +185,7 @@ vec3 to_linear(vec3 c) {
 
 void fragment() {
 	vec2 xz = v_world.xz;
-	float h = v_world.y;
+	float h = map_height(xz);
 	vec3 n = map_normal(xz);
 	float slope = sqrt(max(1.0 - n.y * n.y, 0.0)) / max(n.y, 0.05);
 
@@ -183,14 +199,33 @@ void fragment() {
 	int r1 = region_at(p + vec2(1.1, 0.4));
 	int r2 = region_at(p + vec2(-0.5, 1.0));
 	int r3 = region_at(p + vec2(-0.6, -1.1));
-	int rs = r1 != r0 ? r1 : (r2 != r0 ? r2 : r3);
-	float ws = rs == r0 ? 0.0 : (float(r1 == rs) + float(r2 == rs) + float(r3 == rs)) * 0.25;
+	// open water owns no ground of its own: the builder's regions reach out under it, so the
+	// nearest land's materials run on under the water, looked for in widening rings
+	if (r0 == water_region) {
+		r0 = r1 != water_region ? r1 : (r2 != water_region ? r2 : r3);
+	}
+	for (int ring = 0; ring < 3 && r0 == water_region; ring++) {
+		float d = ring == 0 ? 3.0 : (ring == 1 ? 8.0 : 20.0);
+		for (int k = 0; k < 6 && r0 == water_region; k++) {
+			float a = float(k) * 1.0472 + float(ring) * 0.5;
+			r0 = region_at(p + vec2(cos(a), sin(a)) * d);
+		}
+	}
+	// a tap in open water counts for the land it belongs to
+	int t1 = r1 == water_region ? r0 : r1;
+	int t2 = r2 == water_region ? r0 : r2;
+	int t3 = r3 == water_region ? r0 : r3;
+	int rs = t1 != r0 ? t1 : (t2 != r0 ? t2 : t3);
+	float ws = rs == r0 ? 0.0 : (float(t1 == rs) + float(t2 == rs) + float(t3 == rs)) * 0.25;
 
-	// water: under it is the bed, near it is the region's shore
+	// water: under it is the bed, near it is the region's shore. The mask is ones and zeros 8 m
+	// apart, and filtered bilinearly its half-way line is a row of diamonds, so it is read a
+	// little blurred and the line is shaken by noise
 	vec2 muv = (xz - mask_origin) / spacing / float(grid) + vec2(0.5 / float(grid));
-	float under = smoothstep(0.35, 0.65, textureLod(water, muv, 0.0).r);
-	float near_water = textureLod(water, muv, 2.6).r;
-	float shore = smoothstep(0.02, 0.22, near_water) * (1.0 - under);
+	float shake = (fbm(xz, 11.0, 51.0) - 0.5) * 0.45 + (vnoise(xz / 3.1) - 0.5) * 0.15;
+	float under = smoothstep(0.35, 0.65, textureLod(water, muv, 0.9).r + shake);
+	float near_water = textureLod(water, muv, 1.6).r;
+	float shore = smoothstep(0.08, 0.34, near_water + shake * 0.5) * (1.0 - under);
 
 	vec4 alb;
 	vec4 nrm;
@@ -220,7 +255,9 @@ void fragment() {
 	float holds = 1.0 - smoothstep(0.55, 1.05, slope);
 	float snow_t = clamp(smoothstep(0.0, 130.0, h - line) * holds * 1.6, 0.0, 1.0);
 	blend_in(alb, nrm, snow_layer, snow_t, xz, sharp);
-	blend_in(alb, nrm, bed_layer, under, xz, sharp);
+	// the lake bed only where the water is shallow, as the builder paints it: a sea inlet
+	// twenty metres deep keeps the ground it was cut from
+	blend_in(alb, nrm, bed_layer, under * smoothstep(-3.0, -0.5, h), xz, sharp);
 
 	// the colour map: tint, shading by height and slope, the fine grain that stops turf reading
 	// as a billiard table, snow's cold, the crown of the road, clipped as an RGBA8 map is
@@ -236,14 +273,15 @@ void fragment() {
 	float crown = carriage * smoothstep(0.7, 1.0, cover);
 	cmap = mix(cmap, vec3(1.0), clamp(0.70 * crown + 0.30 * carriage + 0.2 * verge, 0.0, 0.8));
 	cmap *= 1.0 + 0.16 * crown + 0.06 * verge;
-	cmap = mix(cmap, vec3(1.0), under);
 
 	// Terrain3D's macro variation, on noise instead of its noise texture
 	vec3 macrov = mix(macro_variation1, vec3(1.0), fbm(xz, 500.0, 31.0));
 	macrov *= mix(macro_variation2, vec3(1.0), fbm(xz, 260.0, 32.0));
 	macrov = mix(vec3(1.0), macrov, clamp(n.y + 0.4, 0.0, 1.0));
 
-	float wet = clamp(0.9 * near_water + 0.6 * under, 0.0, 1.0);
+	// the builder darkens roughness with its moisture field, which the runtime maps do not carry;
+	// the water's edge stands in for it, gently, or every shore shines like a wet road
+	float wet = clamp(0.35 * under + 0.2 * shore, 0.0, 1.0);
 	float roughness = clamp(fma((0.5 - 0.38 * wet) - 0.5, 2.0, nrm.a), 0.0, 1.0);
 
 	ALBEDO = alb.rgb * to_linear(cmap) * macrov;

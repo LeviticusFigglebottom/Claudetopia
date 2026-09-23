@@ -58,33 +58,34 @@ func test_no_world_data_refuses_and_says_how_to_build_it() -> void:
 		assert_true(detail.contains("Python 3.11") and detail.contains("8 GB"), "and what it needs: %s" % detail)
 
 
-func test_no_terrain3d_library_refuses_and_says_why() -> void:
+func test_no_terrain3d_library_draws_the_coarse_ground_and_says_why() -> void:
 	var arm := WorldStatus.evaluate(_facts({"terrain_class": false, "arch": "arm64"}))
-	assert_eq(arm["state"], "no_terrain")
-	assert_false(bool(arm["playable"]), "no library, no ground, no world")
+	assert_eq(arm["state"], "fallback")
+	assert_true(bool(arm["playable"]), "the country is there; only its full terrain is not")
+	assert_eq(arm["terrain"], "fallback")
 	assert_eq(arm["reason"], "plugin_missing")
 	assert_true(str(arm["detail"]).contains("Linux on arm64"), "names the machine: %s" % arm["detail"])
+	assert_true(str(arm["notice"]).contains("coarse ground"), "and has a word for the player once they can see")
 	var old_mac := WorldStatus.evaluate(_facts({"terrain_class": false, "os": "macOS", "arch": "arm64", "os_version": "14.6.1"}))
 	assert_true(str(old_mac["detail"]).contains("macOS 15 or later") and str(old_mac["detail"]).contains("14.6.1"),
 			"a Mac too old for the frameworks is told so: %s" % old_mac["detail"])
 
 
-func test_no_terrain_regions_refuses_and_says_how_to_build_them() -> void:
+func test_no_terrain_regions_draws_the_coarse_ground_and_says_how_to_build_them() -> void:
 	var s := WorldStatus.evaluate(_facts({"terrain_regions": 0}))
-	assert_eq(s["state"], "no_terrain")
-	assert_false(bool(s["playable"]))
+	assert_eq(s["state"], "fallback")
+	assert_true(bool(s["playable"]))
 	assert_eq(s["reason"], "terrain_missing")
 	assert_eq(s["command"], WorldStatus.BUILD_COMMAND)
+	assert_true(str(s["notice"]).contains(WorldStatus.BUILD_COMMAND), "the notice names the command")
 
 
-func test_the_coarse_ground_is_drawn_only_when_asked_for() -> void:
-	assert_false(bool(WorldStatus.evaluate(_facts({"terrain_class": false}))["playable"]),
-			"it never switches itself on")
-	var s := WorldStatus.evaluate(_facts({"terrain_class": false, "forced_fallback": true}))
+func test_the_coarse_ground_can_be_asked_for() -> void:
+	var s := WorldStatus.evaluate(_facts({"forced_fallback": true}))
 	assert_eq(s["state"], "fallback")
 	assert_true(bool(s["playable"]))
 	assert_eq(s["terrain"], "fallback")
-	assert_eq(s["reason"], "plugin_missing", "and still knows why the full terrain is not drawn")
+	assert_eq(s["reason"], "forced")
 
 
 func test_this_machine_is_ready_when_its_world_is_built() -> void:
@@ -132,24 +133,76 @@ func test_the_title_lets_a_built_world_in() -> void:
 	var new_game := _button(menu, "New Game")
 	assert_true(new_game != null and not new_game.disabled, "New Game is open")
 	assert_eq(menu.get("notice"), null, "and there is nothing to apologise for")
+	assert_eq(menu.get("ground_line"), null, "not even in small print")
 	assert_true(bool(menu.call("_world_is_there")))
 	menu.queue_free()
 	await _tree().process_frame
 
 
-func test_a_world_with_no_ground_stands_down_instead_of_showing_a_void() -> void:
-	for missing in [{"manifest": false}, {"terrain_class": false}]:
-		WorldStatus.override = _facts(missing)
-		var w := (load(WORLD_SCENE) as PackedScene).instantiate() as World
-		_tree().root.add_child(w)
-		for i in 4:
-			await _tree().process_frame
-		assert_false(w.is_world_ready, "%s: the world never says it is ready" % str(missing))
-		var notice := w.find_child("WorldNotice", true, false) as WorldNotice
-		assert_true(notice != null, "%s: the screen says why" % str(missing))
-		assert_true(notice != null and notice.back_button != null, "and offers the way back to the title")
-		assert_eq(w.get_node("PlayerSpawn").get("player"), null, "%s: nobody is stood in it" % str(missing))
-		assert_eq(w.terrain_node, null, "and no terrain was loaded")
-		_tree().root.remove_child(w)
-		w.queue_free()
+func test_the_title_lets_a_world_without_terrain3d_in_and_says_so_in_small_print() -> void:
+	WorldStatus.override = _facts({"terrain_class": false})
+	var menu: Control = MENU.instantiate()
+	_tree().root.add_child(menu)
+	await _tree().process_frame
+	var new_game := _button(menu, "New Game")
+	assert_true(new_game != null and not new_game.disabled, "New Game is open: there is a country to walk")
+	assert_eq(menu.get("notice"), null, "no apology across the sheet")
+	var line: Label = menu.get("ground_line")
+	assert_true(line != null and line.text.contains("coarse"), "one small line says the ground will be coarse")
+	menu.queue_free()
+	await _tree().process_frame
+
+
+func test_a_world_with_no_data_stands_down_instead_of_showing_a_void() -> void:
+	WorldStatus.override = _facts({"manifest": false})
+	var w := (load(WORLD_SCENE) as PackedScene).instantiate() as World
+	_tree().root.add_child(w)
+	for i in 4:
 		await _tree().process_frame
+	assert_false(w.is_world_ready, "the world never says it is ready")
+	var notice := w.find_child("WorldNotice", true, false) as WorldNotice
+	assert_true(notice != null, "the screen says why")
+	assert_true(notice != null and notice.back_button != null, "and offers the way back to the title")
+	assert_eq(w.get_node("PlayerSpawn").get("player"), null, "nobody is stood in it")
+	assert_eq(w.terrain_node, null, "and no terrain was loaded")
+	_tree().root.remove_child(w)
+	w.queue_free()
+	await _tree().process_frame
+
+
+func test_a_world_without_terrain3d_draws_the_coarse_ground_under_the_body() -> void:
+	if not FileAccess.file_exists("res://world/generated/world_manifest.json"):
+		return
+	# what a Mac older than macOS 15, or Linux on arm64, finds: the class is not there
+	WorldStatus.override = _facts({"terrain_class": false})
+	var w := (load(WORLD_SCENE) as PackedScene).instantiate() as World
+	_tree().root.add_child(w)
+	await w.world_ready
+	assert_eq(w.terrain_mode, "fallback", "the ground is drawn anyway")
+	assert_eq(w.terrain_node, null, "without touching Terrain3D")
+	var body: Node3D = w.get_node("PlayerSpawn").get("player")
+	assert_true(body != null, "somebody stands in it")
+	await _tree().physics_frame
+	await _tree().physics_frame
+	if body != null:
+		var q := PhysicsRayQueryParameters3D.create(body.global_position + Vector3.UP * 2.0,
+				body.global_position + Vector3.DOWN * 40.0, 1 << 10)
+		var hit := w.get_world_3d().direct_space_state.intersect_ray(q)
+		assert_true(not hit.is_empty() and absf((hit["position"] as Vector3).y - body.global_position.y) < 1.0,
+				"on ground that is really there")
+	_tree().root.remove_child(w)
+	w.queue_free()
+	await _tree().process_frame
+
+
+func test_a_built_world_draws_terrain3d_and_no_fallback() -> void:
+	if WorldStatus.current().get("state", "") != "ready":
+		return
+	var w := (load(WORLD_SCENE) as PackedScene).instantiate() as World
+	_tree().root.add_child(w)
+	await w.world_ready
+	assert_eq(w.terrain_mode, "terrain3d")
+	assert_true(w.terrain_node != null and w.fallback == null, "Terrain3D, and nothing drawn beside it")
+	_tree().root.remove_child(w)
+	w.queue_free()
+	await _tree().process_frame
