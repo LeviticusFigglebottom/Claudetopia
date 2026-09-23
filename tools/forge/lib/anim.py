@@ -499,7 +499,13 @@ class ClipBuilder:
     # baking --------------------------------------------------------------------------
     def bake(self) -> BakedClip:
         sk = self.skel
-        n = int(round(self.length * self.fps))
+        # A loop is a whole number of frames (check_contract), its last frame the first again. A
+        # one-shot is sampled on to the frame at or past its end, so that nothing timed at its
+        # end falls off it: the game ends a one-shot when its baked length runs out.
+        if self.loop:
+            n = int(round(self.length * self.fps))
+        else:
+            n = int(math.ceil(self.length * self.fps - 1e-6))
         n = max(n, 1)
         times = [i / self.fps for i in range(n + 1)]
         bones = [b for b in sk.order if b != "Root" and not b.startswith("Socket")]
@@ -660,11 +666,18 @@ class GaitParams:
     land_pitch: float = 18.0      # foot pitch as the swing lands (legacy value)
     bob_mode: str = "legacy"      # "walk": hips highest over the planted foot; "run": lowest there
     hip_drop: float = 0.0         # mean hips below standing, before the bob (m)
-    swing_lag: float = 1.0        # >1 holds the swing foot behind longer: heel recovery
     swing_peak: float = 1.0       # <1 brings the swing foot's highest point earlier
-    swing_reach: float = 0.0      # extra forward reach (m) late in the swing, pawed back before landing
     knee_drive: float = 0.0       # extra height (m) of the swing foot at that reach: the knee comes up
     soft_reach: float = 0.0       # width (m) of the smooth minimum between the bob and the reach limit
+    # How far (m) a side-step's swing foot passes in front of the planted one on its way across,
+    # so the feet never meet; and how far (degrees) a side-step leans the spine into the way it goes.
+    swing_cross: float = 0.0
+    side_lean: float = 0.0
+    # How gently the swing foot leaves the ground and meets it again, seen from the world: 0 matches
+    # the ground's pace at both ends (a cubic in the body's frame), 1 matches its acceleration too
+    # (an ease in and out in the world), which carries the foot further back as it rises and
+    # further out before it lands, and moves it least across the frame it touches down in.
+    swing_settle: float = 1.0
 
 
 def _smooth_min(a: float, b: float, k: float) -> float:
@@ -840,8 +853,14 @@ def _stride_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: boo
       so the hips never crease;
     * the bob is phased the right way round: a walk vaults over the planted leg and is highest
       at mid-stance; a run lands into a bent knee and is lowest there;
-    * the swing foot can be held behind (`swing_lag`) and peak early (`swing_peak`), which is
-      heel recovery and knee drive, the difference between a sprint and a fast walk.
+    * the swing foot leaves and meets the ground at the ground's pace, which carries it on back
+      as it rises (heel recovery) and out past its landing before it comes down (retraction),
+      and it can peak early (`swing_peak`) and come up in front (`knee_drive`): the difference
+      between a sprint and a fast walk.
+
+    Backwards (`direction` (0, -1)) a foot goes down toes first and rolls back onto its heel
+    before it lifts, the other way round from walking ahead; sideways it stays flat, and the
+    swing foot passes `swing_cross` in front of the planted one on its way across.
 
     Left foot contacts at phase 0 and right at 0.5 in every clip made here, so clips of
     different lengths can be blended in phase on a shared, normalised timeline."""
@@ -856,6 +875,8 @@ def _stride_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: boo
     a = gp.contact_ahead
     ankle0 = {"L": skel.J["Foot.L"].copy(), "R": skel.J["Foot.R"].copy()}
     hr = gp.heel_roll
+    backward = d[1] < -0.5
+    sideways = abs(d[0]) > 0.5
 
     def foot_fn(side: str):
         base = ankle0[side].copy()
@@ -868,27 +889,53 @@ def _stride_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: boo
                 u = ph / gp.duty
                 pos = base + travel_dir * ((a - u) * L)
                 pitch = 0.0
-                if hr > 0:
+                if hr > 0 and not sideways:
+                    # ahead: down on the heel, off from the ball; backwards the other way about,
+                    # down on the ball and rolled back onto the heel before it lifts
+                    way = -1.0 if backward else 1.0
                     if u < 0.18:
-                        pitch = math.radians(gp.heel_strike) * (1 - u / 0.18) * hr
+                        pitch = way * math.radians(gp.heel_strike) * (1 - u / 0.18) * hr
                     elif u > gp.heel_rise_from:
                         k = (u - gp.heel_rise_from) / (1.0 - gp.heel_rise_from)
-                        pitch = -math.radians(gp.heel_rise) * (k * k) * hr
+                        pitch = -way * math.radians(gp.heel_rise) * (k * k) * hr
                 return pos, 0.0, pitch, True
             v = (ph - gp.duty) / (1 - gp.duty)       # swing, 0..1
             start = base - travel_dir * ((1.0 - a) * L)
             end = base + travel_dir * (a * L)
-            ve = (v * v * (3 - 2 * v)) ** gp.swing_lag
+            # Lifting and landing, the foot keeps pace with the ground: at both ends of the swing it
+            # moves at the stance's own velocity in the body's frame, so it is still in the world as
+            # it leaves the ground and as it comes down on it. An eased swing started and stopped
+            # still in the body's frame, which is moving at the body's speed in the world: every
+            # foot scuffed forward as it lifted and came down running, the heel and ball sliding
+            # 5.3, 6.0 and 4.1 cm a stride at a walk, a jog and a sprint (0.4 now). The cubic
+            # carries the foot on back as it rises (heel recovery) and out past its landing before
+            # it comes back to it (swing-leg retraction), which a lag and a reach were once added
+            # by hand to fake.
+            m = -(1.0 - gp.duty) / gp.duty
+            cubic = m * (v ** 3 - 2 * v * v + v) + (3 * v * v - 2 * v ** 3) + m * (v ** 3 - v * v)
+            # the same in the world: an ease in and out from the lift to the landing, less the
+            # body's own travel under it
+            world = (1.0 - m) * (v * v * v * (v * (v * 6.0 - 15.0) + 10.0)) + m * v
+            ve = cubic + (world - cubic) * gp.swing_settle
             pos = start + (end - start) * ve
             h = gp.step_height * s * gp.knee_lift * math.sin(math.pi * v ** gp.swing_peak) ** 0.9
-            # knee drive: late in the swing the foot goes out and up in front, then paws back
-            # to land under the hip (the drive peaks at ~78% of the swing and is gone at contact)
+            # knee drive: late in the swing the foot comes up in front (the drive peaks at ~78% of
+            # the swing and is gone at contact)
             drive = math.sin(math.pi * v ** 2.8) ** 2
-            pos = pos + UP * (h + gp.knee_drive * s * drive) + travel_dir * (gp.swing_reach * s * drive)
+            pos = pos + UP * (h + gp.knee_drive * s * drive)
+            if sideways:
+                # squared, so it too sets off and comes down still
+                pos = pos + FWD * (gp.swing_cross * s * math.sin(math.pi * v) ** 2)
             pitch = 0.0
             if hr > 0:
-                pitch = (math.radians(gp.swing_from_pitch) * (1 - v) ** 2
-                         + math.radians(gp.land_pitch) * v * v) * hr
+                if sideways:
+                    pitch = -math.radians(abs(gp.swing_from_pitch)) * math.sin(math.pi * v) * hr
+                elif backward:
+                    pitch = (math.radians(abs(gp.swing_from_pitch)) * (1 - v) ** 2
+                             - math.radians(abs(gp.land_pitch)) * v * v) * hr
+                else:
+                    pitch = (math.radians(gp.swing_from_pitch) * (1 - v) ** 2
+                             + math.radians(gp.land_pitch) * v * v) * hr
             return pos, 0.0, pitch, False
         return fn
 
@@ -956,12 +1003,143 @@ def _stride_clip(skel: Skeleton, name: str, gp: GaitParams, footstep_events: boo
             pose[f"UpperArm.{side}"] = (swing, gp.arm_adduct + 2.0 * fwd_amt, 8.0)
             pose[f"LowerArm.{side}"] = (bend, 0.0, 0.0)
             pose[f"Hand.{side}"] = (-6.0, 0.0, 0.0)
+        if sideways and gp.side_lean:
+            # into the way it goes: going left (+LEFT) the spine leans left
+            lean_left = gp.side_lean * (1.0 if d[0] > 0 else -1.0)
+            pose["Spine"] = (pose["Spine"][0], pose["Spine"][1] + lean_left, pose["Spine"][2])
+            pose["Chest"] = (pose["Chest"][0], pose["Chest"][1] + lean_left * 0.7, pose["Chest"][2])
         return pose_add(pose, gp.extra_pose)
 
     cb.layers.append(body_pose)
     if footstep_events:
         cb.event(0.03 * T, "footstep_l")
         cb.event(0.53 * T, "footstep_r")
+    return cb
+
+
+# --------------------------------------------------------------------------------------
+# turning on the spot
+# --------------------------------------------------------------------------------------
+
+def turn_clip(skel: Skeleton, name: str, angle: float, period: float, lead_lift: float, lead_land: float,
+              trail_lift: float, trail_land: float, pivot: float = 0.5, step_height: float = 0.06,
+              hip_drop: float = 0.02, look: float = 12.0) -> ClipBuilder:
+    """A turn on the spot, one cycle of it: the body comes round `angle` degrees (+ to the left)
+    at an even rate while the foot on the side it turns to opens a step round, and the other
+    follows it. It starts and ends standing square, so it loops, a turn of any size being played
+    as far round as the body goes.
+
+    The game turns the body in code and plays this at the rate the body turns (`turn` in the
+    sidecar is the angle one cycle covers), the way it plays a gait at the ground's speed: so each
+    clip is authored in the turning body's own frame, and a foot on the ground goes round the
+    other way at exactly the rate the body turns, which keeps it still in the world. While it is
+    down it pivots on its ball, turning `pivot` of the way the body does, so the leg twists no
+    further than a leg turns; the heel comes just off the ground to let it.
+
+    The lead foot lifts at `lead_lift` and lands at `lead_land` (shares of the cycle), the other
+    at `trail_lift` and `trail_land`; each lands where it has to be for the stance to come square
+    at the end of the cycle."""
+    cb = ClipBuilder(skel, name, period, loop=True, grounded=True)
+    cb.extra["speed"] = 0.0
+    cb.extra["turn"] = round(float(angle), 3)
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    turn = math.radians(angle)
+    lead = "L" if angle > 0 else "R"
+    trail = "R" if lead == "L" else "L"
+    ball0 = {side: skel.J[f"Toe.{side}"].copy() for side in ("L", "R")}
+    ankle0 = {side: skel.J[f"Foot.{side}"].copy() for side in ("L", "R")}
+    heel_up = math.radians(-8.0)          # up on the balls of the feet while turning, to pivot on them
+    times = {lead: (lead_lift, lead_land), trail: (trail_lift, trail_land)}
+
+    def about_up(v: np.ndarray, ang: float) -> np.ndarray:
+        return rig.rot_axis(UP, ang) @ v
+
+    def foot_fn(side: str):
+        lift, land = times[side]
+        ball = ball0[side]
+        # ball -> ankle, flat and square. The plan gives a foot on its ball as the ankle of the
+        # square foot whose ball that is (ClipBuilder.ankle_target turns it about the ball)
+        off = ankle0[side] - ball
+
+        def planted(p: float, anchor: float, since: float, yaw_at: float):
+            # the ball held at `anchor` (the body's turn when it went down), turned back in the
+            # body's frame as the body comes round; the foot turning `pivot` of the way with it
+            ang = anchor - turn * p
+            yaw = yaw_at - (1.0 - pivot) * turn * (p - since)
+            return ang, yaw
+
+        def fn(t: float):
+            p = (t / period) % 1.0
+            land_yaw = (1.0 - pivot) * turn * (1.0 - land)
+            if p < lift:
+                ang, yaw = planted(p, 0.0, 0.0, 0.0)
+                b = about_up(ball, ang)
+                return b + off, yaw, heel_up, True
+            if p >= land:
+                ang, yaw = planted(p, turn, land, land_yaw)
+                b = about_up(ball, ang)
+                return b + off, yaw, heel_up, True
+            v = (p - lift) / (land - lift)
+            ve = v * v * (3 - 2 * v)
+            a0, y0 = planted(lift, 0.0, 0.0, 0.0)
+            a1 = turn - turn * land
+            ang = a0 + (a1 - a0) * ve
+            yaw = y0 + (land_yaw - y0) * ve
+            h = step_height * s * math.sin(math.pi * v) ** 0.9
+            b = about_up(ball, ang) + UP * h
+            pitch = heel_up + math.radians(-10.0) * math.sin(math.pi * v)
+            return b + off, yaw, pitch, False
+        return fn
+
+    cb.feet.pos_fn["L"] = foot_fn("L")
+    cb.feet.pos_fn["R"] = foot_fn("R")
+
+    leg_len = skel.bones["UpperLeg.L"].length + skel.bones["LowerLeg.L"].length
+    reach = leg_len * 0.985
+    pelvis = skel.J["Hips"].copy()
+    hip_rel = {side: skel.J[f"UpperLeg.{side}"] - pelvis for side in ("L", "R")}
+    sign = 1.0 if angle > 0 else -1.0
+
+    def body_pose(t: float) -> Pose:
+        p = (t / period) % 1.0
+        # low while a foot is off the ground, high again as it lands
+        stepping = 0.0
+        for side in ("L", "R"):
+            lift, land = times[side]
+            if lift <= p < land:
+                stepping = max(stepping, math.sin(math.pi * (p - lift) / (land - lift)))
+        want = -(hip_drop + 0.012 * stepping) * s
+        # never so high that a foot out of reach pulls the leg straight
+        dz_max = 1e9
+        for side in ("L", "R"):
+            fs = cb.feet.state(side, t)
+            ankle, _ = cb.ankle_target(side, fs)
+            hj = pelvis + hip_rel[side]
+            horiz = math.hypot(ankle[0] - hj[0], ankle[1] - hj[1])
+            if horiz < reach:
+                dz_max = min(dz_max, math.sqrt(reach * reach - horiz * horiz) + ankle[2] - hj[2])
+        dz = _smooth_min(want, dz_max, 0.03 * s) if dz_max < 1e8 else want
+        # the head leads the turn, the shoulders follow it, the hips come last
+        lead_w = math.sin(math.pi * min(p / 0.5, 1.0) * 0.5) if p < 0.5 else 1.0
+        yaw_lead = sign * look
+        pose: Pose = {
+            HIPS_POS: (0.0, 0.0, dz),
+            "Hips": (1.0, 0.0, sign * 3.0 * math.sin(2 * math.pi * p)),
+            "Spine": (2.0, 0.0, yaw_lead * 0.2),
+            "Chest": (1.0, 0.0, yaw_lead * 0.3),
+            "Neck": (0.0, 0.0, yaw_lead * 0.3),
+            "Head": (-1.0, 0.0, yaw_lead * 0.5 * (0.6 + 0.4 * lead_w)),
+        }
+        for side, arm_sign in (("L", 1.0), ("R", -1.0)):
+            pose[f"Shoulder.{side}"] = (0.0, 0.0, 0.0)
+            pose[f"UpperArm.{side}"] = (4.0 * arm_sign * sign, -44.0, 8.0)
+            pose[f"LowerArm.{side}"] = (20.0, 0.0, 0.0)
+            pose[f"Hand.{side}"] = (-6.0, 0.0, 0.0)
+        return pose
+
+    cb.layers.append(body_pose)
+    cb.event(lead_land * period, "footstep_l" if lead == "L" else "footstep_r")
+    cb.event(trail_land * period, "footstep_r" if lead == "L" else "footstep_l")
     return cb
 
 

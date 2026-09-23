@@ -722,14 +722,14 @@
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.0345
+    "t": 0.035
    },
    {
     "name": "footstep_r",
-    "t": 0.6095
+    "t": 0.6183
    }
   ],
-  "length": 1.15,
+  "length": 1.1667,
   "loop": true,
   "speed": 1.5
  },
@@ -792,31 +792,31 @@
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.018
+    "t": 0.014
    },
    {
     "name": "footstep_r",
-    "t": 0.318
+    "t": 0.2473
    }
   ],
-  "length": 0.6,
+  "length": 0.4667,
   "loop": true,
-  "speed": 1.9
+  "speed": 3.0
  },
  "Strafe_R": {
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.018
+    "t": 0.014
    },
    {
     "name": "footstep_r",
-    "t": 0.318
+    "t": 0.2473
    }
   ],
-  "length": 0.6,
+  "length": 0.4667,
   "loop": true,
-  "speed": 1.9
+  "speed": 3.0
  },
  "Talk_1": {
   "events": [],
@@ -850,18 +850,82 @@
   "length": 0.76,
   "loop": false
  },
+ "Turn_L180": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.24
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.516
+   }
+  ],
+  "length": 0.6,
+  "loop": true,
+  "speed": 0.0,
+  "turn": 180.0
+ },
+ "Turn_L90": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.308
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.63
+   }
+  ],
+  "length": 0.7,
+  "loop": true,
+  "speed": 0.0,
+  "turn": 90.0
+ },
+ "Turn_R180": {
+  "events": [
+   {
+    "name": "footstep_r",
+    "t": 0.24
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.516
+   }
+  ],
+  "length": 0.6,
+  "loop": true,
+  "speed": 0.0,
+  "turn": -180.0
+ },
+ "Turn_R90": {
+  "events": [
+   {
+    "name": "footstep_r",
+    "t": 0.308
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.63
+   }
+  ],
+  "length": 0.7,
+  "loop": true,
+  "speed": 0.0,
+  "turn": -90.0
+ },
  "Walk": {
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.0288
+    "t": 0.029
    },
    {
     "name": "footstep_r",
-    "t": 0.5088
+    "t": 0.5123
    }
   ],
-  "length": 0.96,
+  "length": 0.9667,
   "loop": true,
   "speed": 1.8
  },
@@ -869,16 +933,16 @@
   "events": [
    {
     "name": "footstep_l",
-    "t": 0.0345
+    "t": 0.018
    },
    {
     "name": "footstep_r",
-    "t": 0.6095
+    "t": 0.318
    }
   ],
-  "length": 1.15,
+  "length": 0.6,
   "loop": true,
-  "speed": 1.15
+  "speed": 1.8
  },
  "Wave": {
   "events": [
@@ -894,54 +958,54 @@
   "events": [
    {
     "name": "hit_start",
-    "t": 0.891
+    "t": 0.902
    },
    {
     "name": "work_hit",
-    "t": 0.891
+    "t": 0.902
    },
    {
     "name": "hit_end",
-    "t": 0.972
+    "t": 0.984
    }
   ],
-  "length": 1.35,
+  "length": 1.3667,
   "loop": true
  },
  "Work_Dig": {
   "events": [
    {
     "name": "hit_start",
-    "t": 0.666
+    "t": 0.672
    },
    {
     "name": "work_dig",
-    "t": 0.666
+    "t": 0.672
    },
    {
     "name": "hit_end",
-    "t": 0.814
+    "t": 0.8213
    }
   ],
-  "length": 1.85,
+  "length": 1.8667,
   "loop": true
  },
  "Work_Hammer": {
   "events": [
    {
     "name": "hit_start",
-    "t": 0.63
+    "t": 0.64
    },
    {
     "name": "work_hit",
-    "t": 0.63
+    "t": 0.64
    },
    {
     "name": "hit_end",
-    "t": 0.693
+    "t": 0.704
    }
   ],
-  "length": 1.05,
+  "length": 1.0667,
   "loop": true
  },
  "Work_Stir": {
