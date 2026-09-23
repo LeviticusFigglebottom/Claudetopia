@@ -129,16 +129,18 @@ func _finds(player: Node3D, wren: Node3D) -> bool:
 
 
 ## Goes through the conversation as a player does: the interact key on a line, the last answer
-## offered when there are answers (the goodbye, the way these conversations are written). True when
-## it has ended and stays ended.
+## offered when there are answers (the goodbye, the way these conversations are written). A line
+## still typing out is finished by the interact key first, which does nothing else while answers
+## are up. True when it has ended and stays ended.
 func _talk_it_through(timeout: float) -> bool:
 	var until := Time.get_ticks_msec() + int(timeout * 1000.0)
 	var presses := 0
-	while bool(Social.dialogue.call("is_running")) and Time.get_ticks_msec() < until and presses < 40:
+	while bool(Social.dialogue.call("is_running")) and Time.get_ticks_msec() < until and presses < 60:
 		var choices: Array = Social.dialogue.get("current_choices")
 		if choices.is_empty():
 			await _press("interact")
 		elif choices.size() <= 9:
+			await _press("interact")
 			await _press_key(KEY_1 + choices.size() - 1)
 		else:
 			await _press_last_button()

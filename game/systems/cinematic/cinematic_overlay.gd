@@ -386,6 +386,11 @@ func prompt_shown() -> bool:
 	return _prompt.modulate.a > 0.01
 
 
+## How far in the skip prompt is, from 0 to 1.
+func prompt_alpha() -> float:
+	return _prompt.modulate.a
+
+
 func prompt_fill(fraction: float) -> void:
 	_prompt_fill.size = Vector2(_prompt_track.custom_minimum_size.x * clampf(fraction, 0.0, 1.0), 4.0)
 

@@ -33,6 +33,26 @@ func test_a_cinematic_line_is_fully_in_after_one_long_frame() -> void:
 	overlay.free()
 
 
+## The key that asks for the skip prompt goes down while a long frame is being drawn and is read at
+## the start of the next. On the engine's delta the prompt came in by an eighth of a second a frame
+## however long the frames were, and a hold of a second is a skip on the wall clock: on a loaded
+## machine the prompt could still be half in when the skip took it away again.
+func test_the_skip_prompt_is_in_on_the_frame_after_its_key() -> void:
+	var overlay := CinematicOverlay.new()
+	_tree().root.add_child(overlay)
+	overlay._process(COUNTED_S)
+	OS.delay_msec(LONG_FRAME_MS)
+	overlay.prompt(true)
+	overlay._process(COUNTED_S)
+	assert_gt(overlay.prompt_alpha(), 0.99, "the skip prompt is fully in on the frame after its key (%.2f)" % overlay.prompt_alpha())
+	overlay.prompt(false)
+	OS.delay_msec(LONG_FRAME_MS + 200)
+	overlay._process(COUNTED_S)
+	assert_false(overlay.prompt_shown(), "and gone on the frame after it is let go (%.2f)" % overlay.prompt_alpha())
+	_tree().root.remove_child(overlay)
+	overlay.free()
+
+
 func test_the_hud_subtitle_is_fully_in_after_one_long_frame() -> void:
 	var hud: Node = (load(HUD_SCENE) as PackedScene).instantiate()
 	_tree().root.add_child(hud)
