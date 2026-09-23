@@ -172,10 +172,15 @@ class CampPadTest(unittest.TestCase):
     def test_a_camp_pad_holds_its_camp_and_no_more(self):
         """poi_builders.camp reaches 12.7 m from its fire (a kiln's log pile); the pad's flat core
         is 0.7 of its radius. The 30 m pad a camp had was the size of a hamlet's."""
-        r = RD.pad_radius({"kind": "camp"})
+        r = RD.pad_radius({"id": "core:poi/clanless_camp", "kind": "camp"})
         self.assertEqual(r, RD.CAMP_PAD_M)
         self.assertGreaterEqual(0.7 * r, 12.7 + 1.0)
-        self.assertLess(r, RD.pad_radius({"kind": "hamlet"}))
+        self.assertLess(r, RD.pad_radius({"id": "core:place/x", "kind": "hamlet"}))
+
+    def test_a_camp_that_is_a_place_keeps_its_ground(self):
+        """Pilgrim's Ash is a camp the settlement builder raises, with a chapter-house door 26 m
+        out (door_plan.json); it keeps the pad it had."""
+        self.assertEqual(RD.pad_radius({"id": "core:place/pilgrims_ash", "kind": "camp"}), 30.0)
 
 
 class StreetsTest(unittest.TestCase):
