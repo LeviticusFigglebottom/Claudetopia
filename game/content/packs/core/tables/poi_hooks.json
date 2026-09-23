@@ -2,7 +2,7 @@
   {
     "id": "core:table/poi_hooks",
     "name": "What every point of interest's hook pays off in",
-    "description": "One row a point of interest: the quests whose stages send you there, the things lying there to take or read, the encounters that stand something up there, and whether it keeps a Hearthstone. Written from the pack by the quest pass that followed the map; tests/unit/test_map_quests.gd holds it true.",
+    "description": "One row a point of interest: the quests whose stages send you there, the things lying there to take or read, the encounters that stand something up there, and whether it keeps a Hearthstone. Written from the pack by tools/poi_hooks.py; tests/unit/test_map_quests.gd holds it true.",
     "rows": [
       {
         "poi": "core:poi/anthem_hall",

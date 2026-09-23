@@ -119,9 +119,11 @@ func test_every_point_of_interest_pays_off() -> void:
 ## Each point of interest's one-line hook, tied to the ids that pay it off (core:table/poi_hooks,
 ## docs/ATLAS.md §16). Every row is held to what the pack does: the quests it names send you there,
 ## the finds lie there, the encounters stand somebody up there, and the Hearthstone is the place's own.
+## When a quest or an encounter changes what it names, `tools/poi_hooks.py` rewrites the table.
 func test_every_hook_is_tied_to_the_ids_that_pay_it_off() -> void:
 	var rows: Array = ContentDB.get_or_empty(MAP_HOOKS).get("rows", [])
-	assert_eq(rows.size(), ContentDB.all("poi").size(), "the hook table has a row for every point of interest")
+	assert_eq(rows.size(), ContentDB.all("poi").size(),
+			"the hook table has a row for every point of interest (tools/poi_hooks.py)")
 	var lying: Dictionary = {}
 	for row in QuestItems.placements():
 		lying["%s|%s" % [row["where"], row.get("item", "")]] = true
@@ -136,7 +138,8 @@ func test_every_hook_is_tied_to_the_ids_that_pay_it_off() -> void:
 		var pays := 0
 		for qid in r.get("quests", []):
 			var def := ContentDB.get_or_empty(str(qid))
-			assert_true(_sends_you(def).has(poi_id), "%s: %s does not send you there" % [poi_id, qid])
+			assert_true(_sends_you(def).has(poi_id),
+					"%s: %s does not send you there (tools/poi_hooks.py)" % [poi_id, qid])
 			pays += 1
 		for what in r.get("finds", []):
 			assert_true(lying.has("%s|%s" % [poi_id, what]), "%s: nothing puts %s down there" % [poi_id, what])

@@ -1108,7 +1108,7 @@ plumbing, and it is listed for the settlements stream instead. Jobs as the local
 not come from a resident. Rumours as the lasting consequence: they fade by design, and a
 decision should not.
 **Consequences.** Everything is named by id, so a point of interest that moves on the map keeps
-its payoff. The build of the quest pass refuses a point of interest that pays off in nothing, and
-a decision nobody remembers. Nothing in the game reads the hook table. It is an index, and the
-test keeps it honest. A remembered greeting is as specific as the person's other conditioned
+its payoff. Nothing in the game reads the hook table. It is an index: `tools/poi_hooks.py`
+rewrites it from the pack and names any point of interest that pays off in nothing, and
+test_map_quests fails on a stale row and on a decision nobody remembers. A remembered greeting is as specific as the person's other conditioned
 greetings, so it is one of the lines they may greet you with, not the only one.
