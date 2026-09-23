@@ -2878,7 +2878,9 @@ the_cart (quests round two, b1326eb6), and the opening (20ef631b) put `the_choir
 at the Stair Head where it wants more than two. `test_property` calls `Ownership.instance`, which
 it never makes and which no test before it now leaves standing. And the New Game flow sat in the
 opening for 601 s with 2 of its 10 shots shown, at a load average of 25: each shot holds until the
-cells round its points are in, and they came slowly. It never handed over, so the HUD, the first
+cells round its points are in, and they came slowly. It did the same again on the final merge
+(602 s, the same two shots, `the_name` and `the_mere`, then a hold on the third), so it may not be
+load alone. It never handed over, so the HUD, the first
 frame of control, the Warden, the objective line and this stream's Terrain3D-camera check all
 failed after it: the camera was still `/root/World/Opening/CinematicCamera`. The hair chooser's
 list did not open within its 60 frames either. The slot that run saved kept the `new_game` flag up
