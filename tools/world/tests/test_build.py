@@ -172,6 +172,9 @@ class WorldBuildTest(unittest.TestCase):
                 continue
             x, y, z = pois[pid]["pos"]
             r = float(pois[pid]["radius_level_m"])
+            if pid not in RD.RING_TOWNS:
+                # level to its whole radius: the fabric's houses go out to radius - 8
+                self.assertAlmostEqual(r, float(pois[pid]["radius_flat_m"]), places=1, msg=pid)
             disc = ((X - x) ** 2 + (Z - z) ** 2 <= r * r) & (self.water == 0)
             level = float(np.median(self.H[disc]))
             share = float((np.abs(self.H[disc] - level) < 0.3).mean())
@@ -330,7 +333,7 @@ class WorldBuildTest(unittest.TestCase):
             return [names[m] for m in np.argsort(counts)[::-1][:3]]
 
         expect = {"downs": {"vale_grass"}, "delta": {"peat", "mud", "sand_flats"},
-                  "forest_rise": {"forest_floor"}, "mountains": {"limestone", "scree", "heather", "snow"},
+                  "forest_rise": {"forest_floor"}, "mountains": {"limestone", "scree", "heather", "snow", "vale_grass"},
                   "ash_plateau": {"ash_soil", "grey_grass", "fused_stone"},
                   "lake_basin": {"vale_grass", "shingle", "lake_bed", "mud"}}
         lakes = [lk["polygon"] for lk in self.atlas.get("lakes", [])]

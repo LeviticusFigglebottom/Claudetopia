@@ -1,0 +1,466 @@
+[
+  {
+    "id": "core:dialogue/hobb_pennick",
+    "speaker_name": "Hobb Pennick",
+    "notes": "A wayfarer (npcs/wayfarers.json): somebody met on the road, whose day walks it.",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Pedlar on the road! Candles, rope, apples."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Hobb Pennick",
+        "text": "Mind the pack, it swings. — Candles, rope, a clean shirt, apples if it's the season. I'm going the way you're going or the other way, and either way I'll sell you something on it.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hobb Pennick",
+        "text": "Ask, then. The road's long enough.",
+        "choices": [
+          {
+            "text": "What's the road like?",
+            "next": "the_road"
+          },
+          {
+            "text": "Why never further south than the Glass Bridge?",
+            "next": "the_other"
+          },
+          {
+            "text": "Good road to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_road": {
+        "speaker": "Hobb Pennick",
+        "text": "Long and the same, which is how I like a road. The waystones are the only company, and I knock on them, twice, so they know somebody's still walking it. — Three have lost their bowls this year. Not broken. Gone. I knock on those three times, to be safe.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/waystone_bowls",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Hobb Pennick",
+        "text": "Because past it you're selling to people who've stopped needing things. I'm a pedlar, not a priest. I sell them a candle at the Ash and let them go.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hobb Pennick",
+        "text": "The road's there when you want it. So am I, three days out of seven."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/garth_oakes",
+    "speaker_name": "Garth Oakes",
+    "notes": "A wayfarer (npcs/wayfarers.json): somebody met on the road, whose day walks it.",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Warden. Keep walking; I'm counting."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Garth Oakes",
+        "text": "Warden's road. Walk on the left of it, and if you see anything come up off the marsh, walk faster.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Garth Oakes",
+        "text": "Ask, then. The road's long enough.",
+        "choices": [
+          {
+            "text": "What do you watch for?",
+            "next": "the_road"
+          },
+          {
+            "text": "What were the three things?",
+            "next": "the_other"
+          },
+          {
+            "text": "Good road to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_road": {
+        "speaker": "Garth Oakes",
+        "text": "What comes up off the grey. Mostly nothing. Three times in twenty years, something. — I count my paces there and back. The road is eleven paces shorter than it was at midsummer, and it's shorter at the Walk's end.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/west_road_count",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Garth Oakes",
+        "text": "I don't describe them. That's not a rule. It's that when I try, the words come out the wrong size.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Garth Oakes",
+        "text": "Left side of the road. Faster if you see it."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ysolde_crane",
+    "speaker_name": "Ysolde Crane",
+    "notes": "A wayfarer (npcs/wayfarers.json): somebody met on the road, whose day walks it.",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Wet road today. Wet road every day."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ysolde Crane",
+        "text": "You've come the wet way, then, or you're going to. Boots off at the Gate, or the reedfolk will charge you a plank.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ysolde Crane",
+        "text": "Ask, then. The road's long enough.",
+        "choices": [
+          {
+            "text": "What's at Nauvissa?",
+            "next": "the_road"
+          },
+          {
+            "text": "Why you and not another Warden?",
+            "next": "the_other"
+          },
+          {
+            "text": "Good road to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_road": {
+        "speaker": "Ysolde Crane",
+        "text": "A gate made of boardwalk, a council that meets standing in the water, and eels. I walk down every day because they let me past without the fee. I've been learning their words. The sergeant hates it. — They put a new plank in the Gate every night and sink the old one off the jetty, weighted, always the same place. They won't say why.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/boardwalk_planks",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Ysolde Crane",
+        "text": "Because the first day I sounded every plank with my staff and told them which were rotten, and I was right, and the reedfolk forgive nearly anything in somebody who can hear wood.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ysolde Crane",
+        "text": "Mind your feet on the wet road. It moves."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/oswy_fenn",
+    "speaker_name": "Oswy Fenn",
+    "notes": "A wayfarer (npcs/wayfarers.json): somebody met on the road, whose day walks it.",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Blessings on the road, friend. Slowly now."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Oswy Fenn",
+        "text": "Walk with me if you like. I'm going to say the names. Slowly. They like it slowly.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Oswy Fenn",
+        "text": "Ask, then. The road's long enough.",
+        "choices": [
+          {
+            "text": "What names?",
+            "next": "the_road"
+          },
+          {
+            "text": "Have you never gone down the Stair?",
+            "next": "the_other"
+          },
+          {
+            "text": "Good road to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_road": {
+        "speaker": "Oswy Fenn",
+        "text": "The villages on the Wardens' Roll that went quiet. One to each of the colossi, morning and evening, so they are not left standing there with nobody to say them to. — There are thirteen this year. Twelve colossi. The thirteenth I say to the space where the thirteenth would stand.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/colossus_names",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Oswy Fenn",
+        "text": "Eleven years. Every morning I mean to. Every morning I get to the head of it and there's somebody who needs a name said first. — That's not an excuse. It's what's happened.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Oswy Fenn",
+        "text": "Say one of them for me, if you're passing the Choir. Any one. They don't mind which."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/bettony_sallow",
+    "speaker_name": "Bettony Sallow",
+    "notes": "A wayfarer (npcs/wayfarers.json): somebody met on the road, whose day walks it.",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Mind the baskets. They're spoken for."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Bettony Sallow",
+        "text": "It's bread, if you're looking. It's not for you. It's for Greyfold. — There's a heel in my apron if you're hungry. That one's for anybody.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Bettony Sallow",
+        "text": "Ask, then. The road's long enough.",
+        "choices": [
+          {
+            "text": "Who is the bread for?",
+            "next": "the_road"
+          },
+          {
+            "text": "Why do you do it?",
+            "next": "the_other"
+          },
+          {
+            "text": "Good road to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_road": {
+        "speaker": "Bettony Sallow",
+        "text": "The tables at Greyfold. They were laid for a meal and nobody finished it, and nobody's cleared them in a hundred and seventy years. I lay a loaf at each place, in the order they sat. — By morning it's gone. There's crumbs in a line going west. I've stopped asking.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/greyfold_loaves",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Bettony Sallow",
+        "text": "Somebody should finish a meal they were given. I can't make them eat it. I can put it there.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Bettony Sallow",
+        "text": "Keep the heel. Eat it walking; that's how Greyfold would."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/dunstan_carrow",
+    "speaker_name": "Dunstan Carrow",
+    "notes": "A wayfarer (npcs/wayfarers.json): somebody met on the road, whose day walks it.",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Carrow's cart! Buying or selling?"
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Dunstan Carrow",
+        "text": "Carrow's cart, Vale to city and back. If you're buying, I'm selling; if you're selling, I'm poor; if you're neither, walk with me and tell Tithe what things cost.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Dunstan Carrow",
+        "text": "Ask, then. The road's long enough.",
+        "choices": [
+          {
+            "text": "What's the price of salt?",
+            "next": "the_road"
+          },
+          {
+            "text": "Who is Tithe?",
+            "next": "the_other"
+          },
+          {
+            "text": "Good road to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_road": {
+        "speaker": "Dunstan Carrow",
+        "text": "Four pennies up since the Tallymen shut the north wharf. I knew it a day before the charter-board did, and bought a cartload on the landing, and I'll sell it to Merrowby at a price that'll make them weep and thank me.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/salt_price",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Dunstan Carrow",
+        "text": "The pony. Named for what the Tallymen take at Stride's Foot, which is all the profit and a bit of the pony. She listens. Nobody else in the Vale does.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Dunstan Carrow",
+        "text": "Tell them in Merrowby Carrow's coming. It puts the prices up nicely."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/wenna_hayle",
+    "speaker_name": "Wenna Hayle",
+    "notes": "A wayfarer (npcs/wayfarers.json): somebody met on the road, whose day walks it.",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Ridge road. Keep up or let me by."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Wenna Hayle",
+        "text": "Ridge road. It's long. I'm quicker alone, so if you're walking with me, walk.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Wenna Hayle",
+        "text": "Ask, then. The road's long enough.",
+        "choices": [
+          {
+            "text": "Is it safe, alone in the Wold?",
+            "next": "the_road"
+          },
+          {
+            "text": "Why weigh your cart at the Weighing Stone?",
+            "next": "the_other"
+          },
+          {
+            "text": "Good road to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_road": {
+        "speaker": "Wenna Hayle",
+        "text": "Safer than with company, who talk. The Wold doesn't mind a cart. — There are lights along it some nights, knot-lights, the Hollow kind, hung on nothing. I don't look at them. The Woodfolk say that's the right thing to do and I didn't need telling.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/ridge_road_lights",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Wenna Hayle",
+        "text": "Because it's there and it's honest. The beam doesn't care who's asking. That's rare enough I stop for it.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Wenna Hayle",
+        "text": "Hollow's up the road. Tell Cille the candles are coming."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/maddoc_dray",
+    "speaker_name": "Maddoc Dray",
+    "notes": "A wayfarer (npcs/wayfarers.json): somebody met on the road, whose day walks it.",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Stand still and let them by."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Maddoc Dray",
+        "text": "Stand still. They go round you if you stand still. They go through you if you don't.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Maddoc Dray",
+        "text": "Ask, then. The road's long enough.",
+        "choices": [
+          {
+            "text": "How many sheep?",
+            "next": "the_road"
+          },
+          {
+            "text": "What about the rooks?",
+            "next": "the_other"
+          },
+          {
+            "text": "Good road to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_road": {
+        "speaker": "Maddoc Dray",
+        "text": "Yan tan tethera — you'd not follow it. Rookdown's flock. Out through the Bramcombe gate in the morning, back through it at three. — Every day it comes home one more. Never a sheep I don't know. I've stopped telling Rookdown. They've enough with the rooks.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/one_more_sheep",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Maddoc Dray",
+        "text": "Won't fly south of the green. Not one. I noticed it forty years ago and I'm the only one who says it, and I only say it to the dogs, and now you.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Maddoc Dray",
+        "text": "Go round. Always go round."
+      }
+    }
+  }
+]

@@ -315,10 +315,6 @@
     "id": "core:table/door_plan_grandfather_hollow",
     "role": "door_plan",
     "place": "core:place/grandfather_hollow",
-    "position": [
-      2750,
-      450
-    ],
     "region": "core:region/briarwold",
     "rows": [
       {

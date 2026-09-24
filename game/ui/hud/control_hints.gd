@@ -175,7 +175,18 @@ func _process(delta: float) -> void:
 		learn("jump")
 	if player.state == Player.State.ATTACK:
 		learn("strike")
-	if player.input_enabled and InputMap.has_action("interact") and Input.is_action_just_pressed("interact"):
+
+
+## The interact key is read on the physics tick, where the body reads it. Read once a drawn frame,
+## a press and release that fell inside one frame on a loaded machine (several physics ticks to a
+## frame) was never seen as pressed, and the full suite's run of test_control_hints said "E did
+## not count as using" while it passed alone.
+func _physics_process(_delta: float) -> void:
+	if _gone or learned.has("use") or get_tree().paused:
+		return
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player != null and player.input_enabled and InputMap.has_action("interact") \
+			and Input.is_action_just_pressed("interact"):
 		learn("use")
 
 

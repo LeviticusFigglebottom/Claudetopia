@@ -44,8 +44,8 @@ CAMP_PLACE_PAD_M = 30.0
 ## into the land over PAD_SKIRT radii past that. The radius is what the game is told as
 ## `radius_flat_m`, and much of the game is tuned to it (a point of interest's dressing, a
 ## place's arrival ring), so it stays what it was; the ground that is truly level is told as
-## `radius_level_m`, which is where a settlement's houses may stand. A ring town's own `flat_m`
-## (RING_TOWNS) sets its level radius instead.
+## `radius_level_m`, which is where a settlement's houses may stand. A settlement is level to
+## its whole radius, and a ring town to its own `flat_m` (RING_TOWNS); see `pad_level_radius`.
 PAD_LEVEL = 0.7
 PAD_SKIRT = 0.9
 ROAD_KINDS = ("city", "town", "village", "hamlet", "fort", "camp", "lodge", "ruin_village")
@@ -94,10 +94,20 @@ def pad_radius(place: dict) -> float:
 
 
 def pad_level_radius(place: dict) -> float:
-    """How far out a place's pad is truly level: `radius_level_m` in pois.json."""
-    ring = RING_TOWNS.get(str(place.get("id", "")))
+    """How far out a place's pad is truly level: `radius_level_m` in pois.json.
+
+    A settlement (a place of a kind the fabric builds) is level to its whole radius: its houses
+    go out to `radius - 8`, and level only to 0.7 of it they stood on the skirt, a house band
+    level on 94% of it on average and 75% at Skarlow, Ghastfell and Fernhold. A point of
+    interest keeps its level core of 0.7: nothing but its kit stands on it, and a wider level
+    on a slope stood the Giants' Stair's terrace 2.4 m into the sightline up to it from Skarlow.
+    """
+    pid = str(place.get("id", ""))
+    ring = RING_TOWNS.get(pid)
     if ring is not None:
         return float(ring["flat_m"])
+    if ":place/" in pid and str(place.get("kind", "")) in FABRIC_COUNT:
+        return pad_radius(place)
     return PAD_LEVEL * pad_radius(place)
 
 
@@ -870,7 +880,9 @@ def ring_streets(place: dict, level: float) -> list:
     a[-1] = 0.0                                      # closed: the last point is the first
     ring = np.stack([cx + ring_m * np.sin(a), cz + ring_m * np.cos(a)], axis=1)
     b = math.radians(float(spec["spur_bearing_deg"]))
-    t = np.linspace(ring_m, float(spec["spur_to_m"]), 4)
+    # a point a metre, and at least as many as roads.json keeps of any road (the game reads a
+    # road of four points or fewer as a stub, test_world_data)
+    t = np.linspace(ring_m, float(spec["spur_to_m"]), max(int(math.ceil(ring_m - float(spec["spur_to_m"]))) + 1, 8))
     spur = np.stack([cx + t * math.sin(b), cz + t * math.cos(b)], axis=1)
     out = []
     for rid, pts, width in (("core:road/%s_street" % short, ring, float(spec["width_m"])),

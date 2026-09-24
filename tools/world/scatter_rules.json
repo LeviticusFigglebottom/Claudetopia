@@ -851,7 +851,7 @@
     "lake_basin": 0.8,
     "delta": 1.0,
     "forest_rise": 1.0,
-    "mountains": 0.5,
+    "mountains": 0.85,
     "ash_plateau": 0.45
   },
   "forests": {

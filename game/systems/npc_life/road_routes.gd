@@ -154,6 +154,19 @@ static func _link(a: int, b: int, length: float, pts: PackedVector2Array) -> voi
 	_edges[a] = list
 
 
+## The junctions within REACH_M of a point, or the nearest within ACROSS_M when none is.
+static func _nodes_near(p: Vector2) -> Array[int]:
+	var out: Array[int] = []
+	for i in _nodes.size():
+		if _nodes[i].distance_to(p) <= REACH_M:
+			out.append(i)
+	if out.is_empty():
+		var n := _nearest_node(p, ACROSS_M)
+		if n >= 0:
+			out.append(n)
+	return out
+
+
 ## The nearest junction to a point, within `limit`; -1 when there is none.
 static func _nearest_node(p: Vector2, limit: float) -> int:
 	var best := -1
@@ -169,18 +182,21 @@ static func _nearest_node(p: Vector2, limit: float) -> int:
 static func _walk(a: Vector2, b: Vector2) -> PackedVector2Array:
 	_build()
 	var straight := PackedVector2Array([a, b])
-	var na := _nearest_node(a, REACH_M)
-	if na < 0:
-		na = _nearest_node(a, ACROSS_M)
-	var nb := _nearest_node(b, REACH_M)
-	if nb < 0:
-		nb = _nearest_node(b, ACROSS_M)
-	if na < 0 or nb < 0 or na == nb:
+	# A place is reached by every road end on its pad: at the Choir three roads end round the
+	# ring, each a junction of its own, and a walk from the Last Camp's road to the Pilgrim Road
+	# goes across the pad between them. So the walk may start at any junction within reach of
+	# `a` and end at any within reach of `b`, the few metres to each counted.
+	var starts := _nodes_near(a)
+	var ends := _nodes_near(b)
+	if starts.is_empty() or ends.is_empty():
 		return straight
-	# Dijkstra over the junctions; the graph is a few hundred nodes, so a plain scan will do
-	var dist: Dictionary = {na: 0.0}
+	var dist: Dictionary = {}
 	var prev: Dictionary = {}
 	var done: Dictionary = {}
+	for n in starts:
+		dist[n] = _nodes[n].distance_to(a)
+	var best_end := -1
+	var best_total := INF
 	while true:
 		var cur := -1
 		var cur_d := INF
@@ -188,23 +204,30 @@ static func _walk(a: Vector2, b: Vector2) -> PackedVector2Array:
 			if not done.has(k) and float(dist[k]) < cur_d:
 				cur_d = float(dist[k])
 				cur = int(k)
-		if cur < 0 or cur == nb:
+		if cur < 0 or cur_d >= best_total:
 			break
 		done[cur] = true
+		if ends.has(cur):
+			var total := cur_d + _nodes[cur].distance_to(b)
+			if total < best_total:
+				best_total = total
+				best_end = cur
 		for e in _edges.get(cur, []):
 			var to := int(e[0])
 			var nd := cur_d + float(e[1])
 			if nd < float(dist.get(to, INF)):
 				dist[to] = nd
 				prev[to] = [cur, e[2]]
-	if not dist.has(nb):
+	if best_end < 0:
 		return straight
 	var legs: Array = []
-	var at := nb
-	while at != na:
+	var at := best_end
+	while prev.has(at):
 		var step: Array = prev[at]
 		legs.push_front(step[1])
 		at = int(step[0])
+	if legs.is_empty():
+		return straight
 	var out := PackedVector2Array([a])
 	for leg in legs:
 		for p in (leg as PackedVector2Array):

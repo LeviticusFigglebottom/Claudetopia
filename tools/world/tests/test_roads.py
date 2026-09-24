@@ -217,8 +217,13 @@ class PadLevelRadiusTest(unittest.TestCase):
         self.assertEqual(RD.pad_radius({"id": "core:poi/a_camp", "kind": "camp"}), 22.0)
         self.assertAlmostEqual(RD.pad_radius({"id": "core:place/grandfather_hollow", "kind": "town"}),
                                20.0 + 7.5 * math.sqrt(34), places=6)
-        self.assertAlmostEqual(RD.pad_level_radius({"id": "core:place/a_town", "kind": "town"}),
-                               0.7 * (20.0 + 7.5 * math.sqrt(34)), places=6)
+        # a settlement is level to its whole radius, where its houses go; a point of interest
+        # keeps its level core of 0.7
+        for place in ({"id": "core:place/a_town", "kind": "town"}, {"id": "core:place/a_hamlet", "kind": "hamlet"},
+                      {"id": "core:place/pilgrims_ash", "kind": "camp"}):
+            self.assertEqual(RD.pad_level_radius(place), RD.pad_radius(place), place["id"])
+        for place in ({"id": "core:poi/a_ruin", "kind": "ruins"}, {"id": "core:poi/a_camp", "kind": "camp"}):
+            self.assertAlmostEqual(RD.pad_level_radius(place), 0.7 * RD.pad_radius(place), places=6)
 
 
 class RingTownTest(unittest.TestCase):
@@ -258,6 +263,11 @@ class RingTownTest(unittest.TestCase):
         self.assertAlmostEqual(float(r_door[-1]), 41.0, places=6)
         bearing = math.degrees(math.atan2(door.points[-1, 0] - cx, door.points[-1, 1] - cz)) % 360.0
         self.assertAlmostEqual(bearing, 304.0, places=6)
+        # roads.json keeps more than four points of it: the game reads fewer as a stub
+        # (test_world_data.test_rivers_and_roads_are_sane); built with four, the batch2 world failed it
+        from worldgen import output as OUT
+        for r in (door, ring):
+            self.assertGreater(len(OUT._road_keep(np.asarray(r.points))), 4, r.id)
         for n in range(4):
             r = by_id["core:road/r%d" % n]
             end = r.points[-1] if n % 2 == 0 else r.points[0]

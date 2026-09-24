@@ -415,14 +415,20 @@ MATERIALS = {
     "moss": {"recipe": "grass", "tile_m": 1.8, "colors": ["#1f3a1c", "#2f5526", "#437032", "#5c8a3c"],
              "tip": "#7fa24a", "blades": 5200, "blade_len": 0.035, "blade_w": 0.006, "angle": 70.0,
              "normal_strength": 1.9},
-    "granite": {"recipe": "rock", "tile_m": 3.4, "colors": ["#4a4744", "#615d59", "#7b7671", "#96908a"],
-                "seam_colour": "#262422", "lichen": 0.4, "lichen_colour": "#7e8c5a", "cells": 5,
-                "jitter": 0.4, "seam": 0.028, "plate_warp": 0.1, "bedding": 0.05, "rough": 0.7, "normal_strength": 2.6},
-    "limestone": {"recipe": "rock", "tile_m": 3.6, "colors": ["#6c6f72", "#828687", "#9a9d9a", "#b4b5ad"],
-                  "seam_colour": "#3f444a", "aniso": (10.0, 2.2), "cells": 4, "jitter": 0.32,
-                  "seam": 0.03, "plate_warp": 0.08, "fine_seams": 0.4, "bedding": 0.14,
-                  "lichen": 0.3, "lichen_colour": "#8f9a70", "rough": 0.76, "normal_strength": 3.0},
-    "scree": {"recipe": "pebbles", "tile_m": 2.4, "colors": ["#4e5157", "#63666b", "#7b7d80"],
+    # The northern rock is weathered grey-brown with strata in it and lichen on it, not the blue
+    # slate it was painted as: under Skerrow's cold light the fells read as blue-grey plastic
+    # cracked into Voronoi cells. The seams are fewer, narrower and nearer the rock's own colour;
+    # the bedding is stronger and level, so a cliff (Terrain3D projects steep ground sideways)
+    # shows its strata.
+    "granite": {"recipe": "rock", "tile_m": 3.4, "colors": ["#4f4943", "#665e55", "#7f766b", "#988e81"],
+                "seam_colour": "#3a342e", "lichen": 0.3, "lichen_colour": "#8c8a6c", "cells": 4,
+                "jitter": 0.45, "seam": 0.018, "plate_warp": 0.14, "fine_seams": 0.35, "bedding": 0.16,
+                "bedding_angle": 4.0, "rough": 0.74, "normal_strength": 2.8},
+    "limestone": {"recipe": "rock", "tile_m": 3.6, "colors": ["#6f6961", "#857e73", "#9c9486", "#b3aa99"],
+                  "seam_colour": "#4d463d", "aniso": (10.0, 2.2), "cells": 3, "jitter": 0.4,
+                  "seam": 0.016, "plate_warp": 0.16, "fine_seams": 0.15, "bedding": 0.3, "bedding_angle": 2.0,
+                  "lichen": 0.3, "lichen_colour": "#9c9878", "rough": 0.8, "normal_strength": 3.0},
+    "scree": {"recipe": "pebbles", "tile_m": 2.4, "colors": ["#544e47", "#6a635a", "#827a6e"],
               "cells": 15, "radius": 0.55, "crease": 0.05, "small_mix": 0.5, "warp": 0.1, "rough": 0.82,
               "normal_strength": 3.0},
     "snow": {"recipe": "snow", "tile_m": 3.2, "colors": ["#b9c6da", "#d2dcea", "#e6ecf4", "#f6f8fb"]},
