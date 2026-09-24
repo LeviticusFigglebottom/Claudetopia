@@ -29,6 +29,8 @@ var provider: TerrainProvider = null
 var streamer: WorldStreamer = null
 ## cell -> the Thornmarch's MultiMeshInstance3D in it
 var wall: Dictionary = {}
+## Where the wall's trees stand (a headless renderer keeps no MultiMesh buffer to read back).
+var points := PackedVector3Array()
 var haze: MeshInstance3D = null
 
 
@@ -80,9 +82,10 @@ func _build_thornmarch() -> void:
 				continue
 			var at := Vector3(x, provider.get_height(x, zz), zz)
 			var cell := _cell_of(at)
-			var scale := rng.randf_range(1.3, 1.9)
-			var t := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * scale), at)
+			var size := rng.randf_range(1.3, 1.9)
+			var t := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * size), at)
 			(by_cell.get_or_add(cell, []) as Array).append(t)
+			points.append(at)
 		z += THORNMARCH_STEP
 	for cell in by_cell:
 		var ts: Array = by_cell[cell]

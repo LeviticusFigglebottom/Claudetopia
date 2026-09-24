@@ -243,13 +243,13 @@ func test_the_thornmarch_is_a_wood_on_the_east_ridge_and_the_hushline_a_mist() -
 	_holder.add_child(edges)
 	edges.build(provider, null)
 	assert_gt(edges.wall_trees(), 100, "the Briar wall is a wood, not a few trees (%d)" % edges.wall_trees())
-	for cell in edges.wall:
-		var mm := (edges.wall[cell] as MultiMeshInstance3D).multimesh
-		for i in mm.instance_count:
-			var at := mm.get_instance_transform(i).origin
-			assert_true(at.x >= HorizonBands.THORNMARCH_X.x and at.x <= HorizonBands.THORNMARCH_X.y,
-					"on the ridge line (x %.0f)" % at.x)
-		break
+	var off := 0
+	for at in edges.points:
+		if at.x < HorizonBands.THORNMARCH_X.x or at.x > HorizonBands.THORNMARCH_X.y \
+				or provider.nearest_region_id_at(at.x, at.z) != HorizonBands.THORNMARCH_REGION:
+			off += 1
+	assert_eq(off, 0, "every tree of it on the ridge line, in Briarwold")
+	assert_eq(edges.points.size(), edges.wall_trees(), "and each in a cell's MultiMesh")
 	var first: Vector2i = edges.wall.keys()[0]
 	edges.hand_over(first, true)
 	assert_false((edges.wall[first] as Node3D).visible, "a cell of the wall gives way to the cell's own trees")

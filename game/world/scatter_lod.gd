@@ -466,7 +466,7 @@ static func _tri_count(mesh: Mesh) -> int:
 		var n := am.surface_get_array_index_len(si)
 		if n == 0:
 			n = am.surface_get_array_len(si)
-		tris += n / 3
+		tris += floori(n / 3.0)
 	return tris
 
 
