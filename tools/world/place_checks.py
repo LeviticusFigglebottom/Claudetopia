@@ -121,7 +121,9 @@ class World:
 
 JOIN_M = 22.0      # road ends this close are one junction
 REACH_M = 140.0    # a place is reached by every road end this near its pad
-ACROSS_M = 900.0   # or by the nearest within this, walked to across country
+ACROSS_M = 900.0   # or by the nearest within this, and where the nearest road passes it
+OFF_ROAD_COST = 1.5  # a metre off the road counts for this many along one, choosing the walk
+DETOUR_MAX = 2.0     # a walk joined at a road's middle this many times the straight line is walked straight
 
 
 class Roads:
@@ -149,22 +151,70 @@ class Roads:
         self.nodes.append(p)
         return len(self.nodes) - 1
 
-    def _near(self, p) -> list:
-        out = [i for i, q in enumerate(self.nodes) if math.dist(p, q) <= REACH_M]
-        if not out and self.nodes:
+    def _nearest_on_road(self, p) -> dict:
+        """The nearest point to p of any road within ACROSS_M (RoadRoutes._nearest_on_road)."""
+        best, best_d = {}, ACROSS_M
+        for a, edges in self.edges.items():
+            for b, length, pts in edges:
+                if b < a:
+                    continue
+                run = 0.0
+                for k in range(len(pts) - 1):
+                    u, v = pts[k], pts[k + 1]
+                    seg = math.dist(u, v)
+                    t = 0.0 if seg == 0 else max(0.0, min(1.0, ((p[0] - u[0]) * (v[0] - u[0]) + (p[1] - u[1]) * (v[1] - u[1])) / (seg * seg)))
+                    at = (u[0] + (v[0] - u[0]) * t, u[1] + (v[1] - u[1]) * t)
+                    d = math.dist(at, p)
+                    if d < best_d:
+                        best_d = d
+                        best = {"from": a, "to": b, "pts": pts, "seg": k, "at": at, "s": run + t * seg, "length": length}
+                    run += seg
+        return best
+
+    def _joins(self, p) -> tuple:
+        """([(junction, cost, [(point, on_road)...] from p to it)], near): the road ends within
+        REACH_M, straight; with none, the nearest road end within ACROSS_M, straight, and where the
+        nearest road within ACROSS_M passes, along it both ways to its junctions. Metres off the
+        road cost OFF_ROAD_COST each (RoadRoutes._joins)."""
+        out = [(i, math.dist(p, q) * OFF_ROAD_COST, [(p, False), (q, False)], False) for i, q in enumerate(self.nodes)
+               if math.dist(p, q) <= REACH_M]
+        if out:
+            return out, {}
+        if self.nodes:
             i = min(range(len(self.nodes)), key=lambda k: math.dist(p, self.nodes[k]))
             if math.dist(p, self.nodes[i]) <= ACROSS_M:
-                out = [i]
-        return out
+                out.append((i, math.dist(p, self.nodes[i]) * OFF_ROAD_COST, [(p, False), (self.nodes[i], False)], False))
+        near = self._nearest_on_road(p)
+        if not near:
+            return out, near
+        pts, seg, q = near["pts"], near["seg"], near["at"]
+        off = math.dist(p, q) * OFF_ROAD_COST
+        back = [(p, False), (q, False)] + [(pts[k], True) for k in range(seg, -1, -1)]
+        on = [(p, False), (q, False)] + [(pts[k], True) for k in range(seg + 1, len(pts))]
+        out.append((near["from"], off + near["s"], back, True))
+        out.append((near["to"], off + near["length"] - near["s"], on, True))
+        return out, near
 
     def route(self, a, b) -> tuple:
         """(points, on_road) from a to b: the way along the roads, and for each stretch whether it
         is a road's own. The straight line, all off-road, when the roads do not join them."""
-        starts, ends = self._near(a), self._near(b)
+        (starts, na), (ends, nb) = self._joins(a), self._joins(b)
         if not starts or not ends:
             return [a, b], [False]
         import heapq
-        dist = {n: math.dist(self.nodes[n], a) for n in starts}
+        dist, lead_in = {}, {}
+        for n, m, pts, mid in starts:
+            if m < dist.get(n, math.inf):
+                dist[n], lead_in[n] = m, (pts, mid)
+        lead_out = {}
+        for n, m, pts, mid in ends:
+            if n not in lead_out or m < lead_out[n][0]:
+                # walked the other way: each point's flag says whether the stretch ending on it is a
+                # road's, and reversed, the stretch ending on a point is the one that ended on the
+                # point after it
+                k = len(pts) - 1
+                back = [(pts[k - j][0], pts[k - j + 1][1] if j >= 1 else False) for j in range(k + 1)]
+                lead_out[n] = (m, back, mid)
         prev: dict = {}
         heap = [(d, n) for n, d in dist.items()]
         heapq.heapify(heap)
@@ -174,13 +224,22 @@ class Roads:
             if n in done or d >= best:
                 continue
             done.add(n)
-            if n in ends and d + math.dist(self.nodes[n], b) < best:
-                best, best_end = d + math.dist(self.nodes[n], b), n
+            if n in lead_out and d + lead_out[n][0] < best:
+                best, best_end = d + lead_out[n][0], n
             for to, length, pts in self.edges.get(n, []):
                 if d + length < dist.get(to, math.inf):
                     dist[to] = d + length
                     prev[to] = (n, pts)
                     heapq.heappush(heap, (d + length, to))
+        # both joined to one road at its middle: along it between them, if that is shorter
+        if na and nb and na["from"] == nb["from"] and na["to"] == nb["to"] and na["pts"] is nb["pts"]:
+            pts = na["pts"]
+            ks = range(na["seg"] + 1, nb["seg"] + 1) if na["s"] <= nb["s"] else range(na["seg"], nb["seg"], -1)
+            walk = [(a, False), (na["at"], False)] + [(pts[k], True) for k in ks] + [(nb["at"], True), (b, False)]
+            off = math.dist(a, na["at"]) + math.dist(b, nb["at"])
+            if sum(math.dist(walk[i][0], walk[i + 1][0]) for i in range(len(walk) - 1)) + off * (OFF_ROAD_COST - 1.0) <= best:
+                points, on = self._flatten(walk)
+                return ([a, b], [False]) if self._round_about(points, a, b) else (points, on)
         if best_end < 0:
             return [a, b], [False]
         legs, at = [], best_end
@@ -188,16 +247,32 @@ class Roads:
             n, pts = prev[at]
             legs.insert(0, pts)
             at = n
-        if not legs:
+        first, first_mid = lead_in.get(at, ([(a, False), (self.nodes[at], False)], False))
+        last, last_mid = lead_out[best_end][1], lead_out[best_end][2]
+        if not legs and len(first) <= 2 and len(last) <= 2:
             return [a, b], [False]
-        points, on = [a], []
+        walk = list(first)
         for pts in legs:
-            for i, q in enumerate(pts):
-                if math.dist(points[-1], q) > 0.5:
-                    points.append(q)
-                    on.append(i > 0)
-        points.append(b)
-        on.append(False)
+            walk += [(q, i > 0) for i, q in enumerate(pts)]
+        walk += list(last) + [(b, False)]
+        points, on = self._flatten(walk)
+        if (first_mid or last_mid) and self._round_about(points, a, b):
+            return [a, b], [False]
+        return points, on
+
+    @staticmethod
+    def _round_about(points: list, a, b) -> bool:
+        """A walk joined to a road at its middle going the long way round (RoadRoutes._round_about)."""
+        return sum(math.dist(points[i], points[i + 1]) for i in range(len(points) - 1)) > DETOUR_MAX * math.dist(a, b)
+
+    @staticmethod
+    def _flatten(walk: list) -> tuple:
+        """points and on-road flags from [(point, whether the stretch that ends on it is a road's)]."""
+        points, on = [walk[0][0]], []
+        for q, road in walk[1:]:
+            if math.dist(points[-1], q) > 0.5:
+                points.append(q)
+                on.append(road)
         return points, on
 
 
