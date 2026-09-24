@@ -349,3 +349,28 @@ func test_lawless_regions_have_no_confrontation() -> void:
 	assert_empty(Crimes.confront_options("none", 500, {}))
 	b.add("core:region/briarwold", 500)
 	assert_false(b.is_wanted("core:region/briarwold"), "the Woodfolk have arrows, not warrants")
+
+
+## A person turned to face a way has their toes and face that way, by the rig's own bones, and
+## says so. The model's yaw was half a turn out and the facing was read back through the same half
+## turn: everybody agreed with everybody except the body, which walked backwards and turned its
+## back on whoever spoke to it.
+func test_a_person_turned_to_face_a_way_has_their_toes_that_way() -> void:
+	var npc := Npc.new()
+	npc.npc_id = BRAM
+	(Engine.get_main_loop() as SceneTree).root.add_child(npc)
+	_nodes.append(npc)
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	var model := npc.get("_model") as Node3D
+	var skeletons := model.find_children("*", "Skeleton3D", true, false) if model != null else []
+	if skeletons.is_empty():
+		return  # no forged body in this checkout
+	var k := skeletons[0] as Skeleton3D
+	for dir: Vector3 in [Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(-0.6, 0, -0.8)]:
+		npc.face_direction(dir)
+		await (Engine.get_main_loop() as SceneTree).process_frame
+		var foot := k.global_transform * k.get_bone_global_pose(k.find_bone("Foot.L")).origin
+		var toe := k.global_transform * k.get_bone_global_pose(k.find_bone("Toe.L")).origin
+		var toes := Vector3(toe.x - foot.x, 0.0, toe.z - foot.z).normalized()
+		assert_gt(toes.dot(dir.normalized()), 0.8, "turned to %s, the toes point that way (%s)" % [dir, toes])
+		assert_gt(npc.facing_flat().dot(dir.normalized()), 0.99, "and the person says they face it")
