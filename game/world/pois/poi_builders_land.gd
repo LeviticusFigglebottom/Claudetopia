@@ -337,9 +337,6 @@ static func cave(d: PoiDressing) -> void:
 	# floor on the ground there (so the hill never rises through it) and each darker than the last,
 	# black at ten metres. It is the dark of the cave; the rock round it is the forge's own.
 	var rings := 5
-	# the rock the passage is cut through, round the dark of its lining: from outside, where the
-	# hill does not bury it, it is the region's own stone and not a box of black
-	var shell := m.begin()
 	var floors: Array[float] = []
 	var hh_last := high
 	for i in rings:
@@ -366,11 +363,7 @@ static func cave(d: PoiDressing) -> void:
 			k.collider(Vector3(0.7, hh + 0.6, span), Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 0.35), hh * 0.5, mid)), "stone")
 		var dark := lerpf(0.26, 0.02, t1)
 		m.commit(lining, PoiKit.plain(Color(dark, dark * 0.97, dark * 0.92), 0.95), "Throat%d" % i)
-		for s in [-1.0, 1.0]:
-			m.block(shell, Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 1.3), hh * 0.5 + 0.1, mid)), Vector3(1.3, hh + 1.6, span))
-		m.block(shell, Transform3D(basis, base + basis * Vector3(0.0, hh + 1.15, mid)), Vector3(ww + 3.9, 0.9, span))
 		k.collider(Vector3(ww + 0.6, 0.4, span), Transform3D(basis, base + basis * Vector3(0.0, -0.2, mid)), "stone")
-	m.commit(shell, PoiKit.painted(0, k._spec("stone"), 0.85, 0.9), "ThroatRock", true)
 	var g_end: float = floors[-1]
 	var back := m.begin()
 	m.block(back, Transform3D(basis, Vector3(o.x, g_end, o.z) + basis * Vector3(0.0, hh_last * 0.5, deep + 0.75)), Vector3(wide + 1.2, hh_last + 0.8, 0.3))
