@@ -343,6 +343,7 @@ func _build_gameplay() -> void:
 			"the pause menu can still show it")
 	_check("gameplay", "show_hints", "Hints")
 	_check("gameplay", "compass", "Compass")
+	_check("gameplay", "blood", "Blood", "on a blow that lands on flesh")
 	_slider("gameplay", "hud_opacity", "How loud the HUD is", 0.2, 1.0, 0.05, "%")
 
 
@@ -352,6 +353,8 @@ func _build_accessibility() -> void:
 			"changes the bar colours only")
 	_slider("accessibility", "ui_scale", "Size of the UI", 0.8, 1.4, 0.05, "%")
 	_check("accessibility", "reduce_flashing", "Less flashing")
+	_slider("accessibility", "camera_shake", "Camera kick on a blow", 0.0, 1.0, 0.05, "%")
+	_check("accessibility", "hit_pause", "Pause on a landed blow", "a few frames; the fight's timing is the same")
 	_content.add_child(UiKit.divider())
 	_content.add_child(UiKit.wrapped(
 			"The UI scale applies the next time a screen is opened. Colour-blind palettes " +

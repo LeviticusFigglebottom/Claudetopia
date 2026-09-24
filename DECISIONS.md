@@ -1514,3 +1514,25 @@ walk per option instead of one per path.
 **Consequences.** The walker is slow, about a second per step plus streaming. `--only` and
 `--no-branches` narrow it. Its WORLD lines name what the land does to a place the content names,
 with coordinates, and they go to the land agent rather than into the content.
+
+## 2026-09-24 · A landed blow holds the picture, never the clock
+**Decision.** A landed blow holds both bodies' pictures still for a few frames (a hit-stop): from
+0.035 s for a dagger to 0.115 s for a heavy greatsword blow, 0.6 of that when blocked, 0.1 s on a
+parry. Then each picture plays at up to twice speed until it has caught up. The AnimationDriver's
+timeline keeps running through it, so the hit windows, the cancels, the buffer and every other
+§5.3 timing land on the same physics frame as they would without a hold. `test_impact` checks this
+frame by frame. The camera kicks, the struck material throws its bits, and a heavy drives the foe
+back by 0.16-0.85 m, depending on the weapon's weight.
+**Why.** The playtest asked for attacks that feel like hits, "in the Dark Souls 2 and Fable manner".
+A hit-stop is most of that feel, but a hit-stop that stops the game would lengthen every combo and
+recovery by its frames, and §5.3's timings are measured and fixed. The rig is already only a
+picture of the timeline (DECISIONS 2026-09-22), so holding the picture alone gets the feel for the
+cost of a few frames' lag in what is seen.
+**Alternatives.** Scaling Engine.time_scale for the hold, which is what most games do: it stretches
+every timer in the world, including the other bodies' fights and the §5.3 windows. Pausing both
+actors' logic: the same problem, only local.
+**Consequences.** For about a tenth of a second after a heavy blow, the picture runs up to 0.115 s
+behind the timeline. Hit_start of a chained blow can come while the picture is still catching up;
+at twice speed it has caught up within the next 0.115 s. The hold can be turned off
+(accessibility.hit_pause), the kick scaled to nothing (accessibility.camera_shake) and blood turned
+off (gameplay.blood).

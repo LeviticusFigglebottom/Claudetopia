@@ -98,6 +98,11 @@ var last_hit_skill: String = ""
 var lodged: Dictionary = {}
 ## The shove still to be spent, as a speed (m/s) that SHOVE_DECEL runs down. See integrate_shove.
 var shove: Vector3 = Vector3.ZERO
+## Where the last blow came from and when, for which way a stagger it causes throws the body.
+var _blow_from := Vector3.ZERO
+var _blow_at := -100.0
+## A stagger this soon after a blow is that blow's.
+const BLOW_REMEMBERED_S := 0.25
 var gravity: float = 9.81
 
 var model: Node3D = null
@@ -398,6 +403,8 @@ func take_hit(hit: HitData) -> String:
 		hit_taken.emit(hit, "dodged")
 		return "dodged"
 	var to_origin := hit.origin - global_position
+	_blow_from = hit.origin
+	_blow_at = t
 	var facing := DamageModel.is_facing(forward(), to_origin)
 	if hit.attacker != null and hit.attacker != self:
 		last_attacker = hit.attacker
@@ -408,6 +415,7 @@ func take_hit(hit: HitData) -> String:
 			(hit.attacker as Actor).open_riposte(DamageModel.RIPOSTE_OPEN_DURATION)
 		anim.play_intent("Parry")
 		Foley.play("parry_clang", _struck_at())
+		Impact.land(self, hit, "parried")
 		hit_taken.emit(hit, "parried")
 		return "parried"
 	if hit.blockable and is_blocking and facing:
@@ -427,12 +435,14 @@ func take_hit(hit: HitData) -> String:
 			if not is_stunned():
 				anim.play_intent("Block_Hit")
 		Foley.play("block_clang", _struck_at())
+		Impact.land(self, hit, "blocked")
 		hit_taken.emit(hit, "blocked")
 		return "blocked"
 	var raw_full := hit.amount * hit.crit_mult
 	var dmg := DamageModel.apply_defence(raw_full, armour_flat, resist_to(hit.kind))
 	# The blow lands on whatever the body is made of: flesh, mail, stone or wood.
 	Foley.play("impact_" + body_material, _struck_at())
+	Impact.land(self, hit, "hit")
 	_apply_damage(dmg, hit.kind, hit.attacker, hit.label)
 	if dead:
 		hit_taken.emit(hit, "hit")
@@ -453,7 +463,7 @@ func take_hit(hit: HitData) -> String:
 		knock_down(push_dir)
 	elif not poise_comp.apply(hit.poise_damage, hit.heavy):
 		if not is_busy() and not is_stunned():
-			anim.play_intent("Hit_Light")
+			anim.play_intent(reaction_clip("Hit_Light", hit.origin))
 	hit_taken.emit(hit, "hit")
 	return "hit"
 
@@ -535,13 +545,29 @@ func add_shield(amount: float, duration: float) -> void:
 	shield_changed.emit(shield_hp)
 
 
+## The reaction to a blow from `origin`: `base` ("Hit_Light", "Stagger") is the one to a blow from
+## in front; a blow from behind or from either side plays its _B, _L or _R when the body has it.
+func reaction_clip(base: String, origin: Vector3) -> String:
+	var way := Impact.way_of(forward(), origin - global_position)
+	if way.is_empty():
+		return base
+	var named := "%s_%s" % [base, way]
+	var body: Node = anim.model if anim != null else null
+	# a placeholder body plays the front's reaction whichever way it was struck
+	if body != null and body.has_method("has_clip") and bool(body.call("has_clip", named)):
+		return named
+	return base
+
+
 func stagger(duration: float = 0.8) -> void:
 	if dead:
 		return
 	stunned_until = maxf(stunned_until, now() + duration)
 	status.apply("stagger", duration)
 	on_action_interrupted()
-	anim.play_intent("Stagger", {"length": duration})
+	# thrown the way the blow that broke the guard or the poise threw it, when there was one
+	var clip := reaction_clip("Stagger", _blow_from) if now() - _blow_at <= BLOW_REMEMBERED_S else "Stagger"
+	anim.play_intent(clip, {"length": duration})
 	Foley.play("stagger_thud", _struck_at())
 	staggered.emit()
 

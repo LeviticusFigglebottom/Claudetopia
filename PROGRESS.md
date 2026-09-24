@@ -5655,18 +5655,15 @@ The first view with the camp's life in is described under 10.
 
 ## Characters, second pass: the Naming, a face and hands, a skull and hair, cloth that hangs, a harness, and a child
 
-*Written while the last of it was still being done: the cloaks mid-stride, the rig and bodies
-rebuilt with the last wrist join, and the final tours at 1920, 2560 and on Forward+. Where a
-thing is unfinished it says so.*
-
-The brief was seven things wrong with the people. Then the user played the Naming and called
-it rough, which put the character creator first, and after the first merge named four more
-things in it: the Cragborn's plaid, the hands, the idle, the face. Everything below was rendered
-and looked at -- Blender clay and numpy rasters for shape, the engine for what a player sees
-(`flow_probe.gd --naming-tour`, and `character_review.tscn`, which now takes `--looks=<file>` for
-a row of appearances from four sides, `--frame=head` and `--frame=hands` to close in,
-`--pose=Walk@0.51` to hold a clip at a time, and `--mode=children`) -- and the renders decided it.
-Several things I was sure of before the first render were wrong; they are listed at the end.
+The brief was seven things wrong with the people. Then the user played the Naming and called it
+rough, which put the character creator first, and after the first merge named four more things
+in it: the Cragborn's plaid, the hands, the idle, the face. Everything below was rendered and
+looked at -- Blender clay and numpy rasters for shape, the engine for what a player sees
+(`flow_probe.gd --naming-tour`, and `character_review.tscn`, which now takes `--looks=<file>`
+for a row of appearances from four sides, `--frame=head` and `--frame=hands` to close in,
+`--pose=Walk@0.51` to hold a clip at a time, `--grip=R,L` and `--haft` to close the hands round
+a stand-in haft, and `--mode=children`) -- and the renders decided it. Several things I was sure
+of before the first render were wrong; they are listed at the end.
 
 ### The Naming, rough edge by rough edge
 
@@ -5676,10 +5673,11 @@ then every preset and three casts of the lots), and on Forward+ as well as Compa
 user plays in the editor on Forward+, which none of the earlier captures used; Mesa's software
 Vulkan runs it here, slowly.
 
-The latest full tour ran at 1280x720 from a clean class cache, as a fresh clone runs it: 235
-checks, 0 failed, no script errors, and a figure in all 34 frames. The latest Forward+ tour (the
-quick one, 41 checks, 0 failed) was taken before the last round of parts, and the 1920 and 2560
-tours are to be taken again on the final parts.
+On the final parts, after the last merge: the full tour at 1280x720, 235 checks, 0 failed; the
+quick tour at 1920x1080, at 2560x1440 and on Forward+ at 1280x720, 41 checks each, 0 failed; no
+script errors, and a figure in every frame. Before that, the full tour ran from a clean class
+cache, as a fresh clone runs it: 235 checks, 0 failed, a figure in all 34 frames. Three long
+suggested names no longer widen the middle column: they share its width and end in an ellipsis.
 
 * **The preview was drawn in layout pixels.** A 232x380 box, so at 2560x1440 it was a quarter
   of the pixels stretched up, jagged, with a dark fringe from its transparent background and
@@ -5741,13 +5739,20 @@ plaid a thick white blanket, the hands paddles, the idle an A-pose, the face wit
 
 * **The idle.** It held the upper arms 10 degrees out with the wrists 29 cm from the centre
   line, 11 cm off the hips. The Idle is re-made -- only the Idle: the other 70 clips bake
-  identical to the committed ones, within 1e-5 on every channel, and the rig's meshes and
-  images stayed the committed ones byte for byte -- with the weight on the left leg, the pelvis
-  over that foot and dropped on the free side, the chest tipped back against it, the free foot
-  eased forward and turned out, the shoulders let down, the elbows soft, and the wrists 23 cm
-  out, 5 cm outside the hip: what a hand needs to clear a skirt, a gambeson or a fauld. The
-  first bake swung the hands 3 cm out and back with every breath, because the breathing layer
-  rolls the shoulders; a counter-roll at the upper arm keeps them hanging.
+  identical to the committed ones, within 1e-5 on every channel, and the rig's meshes and images
+  stayed the committed ones byte for byte -- with the weight on the left leg, the pelvis over
+  that foot and dropped on the free side, the chest tipped back against it, the free foot eased
+  forward and turned out, the shoulders let down, the elbows soft, and the wrists 23 cm out, 5
+  cm outside the hip: what a hand needs to clear a skirt, a gambeson or a fauld. The first bake
+  swung the hands 3 cm out and back with every breath, because the breathing layer rolls the
+  shoulders; a counter-roll at the upper arm keeps them hanging. Merged with the planted feet
+  (above), the Idle's free foot stood 3.5 cm forward and turned out, a stance of its own, and
+  every stop and turn settled into the planter's stance and was then pulled into the Idle's: it
+  stands in the planter's now. And its breath and sway moved the hips, which the relaxed pose's
+  bent legs followed at every joint; the engine thins those curves on import, and the feet the
+  bake holds still wandered 2 mm and were snapped back and forth by the planter for a second
+  after every stop. The breath and the sway move the chest, the spine and the head over legs
+  that stand still.
 * **The hands.** A hand was 1.12 of true size, 4.8 cm thick, and its four fingers one grooved
   mass: at the Naming's distance, a mitten. It is true size now, with a palm 3 cm thick, four
   three-jointed fingers that touch at the root and part towards the tips, curled as a hanging
@@ -5842,8 +5847,20 @@ every cloak's shoulder in a square corner, a coat hanger under the cloth; the ar
 the Idle then came out through the sides at every step. They are draped over the arms as the
 Idle hangs them now, put back into the rest pose by the inverse of the Idle's skinning so the
 Idle brings them to where they were made, and the cloth that lies on an arm takes most of its
-swing. The shoulders round over the arms and the sides go with them. These last were judged in
-numpy previews; they have not been seen in the engine yet (the end says what still fails).
+swing. The shoulders round over the arms and the sides go with them.
+
+Mid-stride, the arms still came out. The Walk swings a hand 30 cm ahead of the hip, and the
+cloth hanging in front of an arm and behind it was too far from the arm to take any of its
+swing: the forearm and the hand came out through the front. Distance ahead of and behind an arm
+now counts at 0.4 of itself, the cloth near an arm takes 0.95 of its swing, and the back takes
+half of the thigh behind it, handed from one thigh to the other across the middle of the back,
+so the leg behind no longer comes through at a run. And a long cloak holds a walker's arms in,
+as cloth lying on the arms does: `ArmRoom.hold` takes 0.7 of the clip's arm pose back to the
+Idle's hang walking and 0.95 running, and nothing in a blow, a guard, a sneak or a fall. Seen in
+the engine standing, at two frames of the Walk and two of the Run, from four sides: no arm comes
+out of a cloak's side, front or back, and no leg through its back; the hands show at the front
+opening, as an open cloak shows them. Standing, the shoulders round over the hanging arms, where
+the cloak had stood out from them like a coat hanger with the hands below its sides.
 
 ### The skirts
 
@@ -5858,8 +5875,11 @@ closer from the thigh up, under whatever is worn over them -- they showed throug
 the hips in green patches -- and below the hips a skirt's weights go to both thighs, blended
 across the centre line, with a little to the hips: the cloth over each thigh goes with it and
 the cloth between them stretches. Held at the Walk's contact pose from four sides, none of them
-opens at the thigh. The Lakefolk coat's skirt is weighted the same way now; it has not yet been
-seen walking in the engine.
+opens at the thigh. The Lakefolk coat's skirt is weighted the same way, with more of the thigh
+(0.85 of it at the hip, where the forward thigh came through at the contact), and it clears the
+body by 1.6 cm at four stations down the thigh: cleared by 1 cm at the hip and the hem only, it
+let the trousers through its sides in blue spots standing, and in a strip down the free leg in
+the Idle.
 
 Every "mid-stride" lineup rendered before that one had stood in the Idle: `character_review`
 held a clip on the AnimationPlayer with the tree switched off, and HumanoidModel steps its tree
@@ -5894,8 +5914,8 @@ brigandine's rivet rows had thrown one rivet a thousand kilometres out -- a step
 sampled field's 1e6 where no primitive reached, the fault the fits had -- and its grid could not
 be allocated, so it had not been built since the harness was made; built, its leather decimated
 from 325 000 triangles to 5 200 lay in chords that cut inside the coat, and the coat showed
-through it in patches. It has 9 000. The pauldrons, an empty file until now, are three lames over
-each shoulder.
+through it in patches. It has 9 000, and in the engine the leather is whole. The pauldrons, an
+empty file until now, are three lames over each shoulder.
 
 And the relaxed Idle's hands, 5 cm outside the bare hip, hung inside a gambeson's skirt and the
 harness's tassets. `ArmRoom`, a SkeletonModifier3D, turns the arms out at the shoulder after the
@@ -5907,6 +5927,24 @@ without it, and the probe's check that the Naming has a preview body asked only 
 `./run.sh run` imports now whenever a script declares a class the cache does not list (it
 imported only when a clone had never been imported), and the probe fails unless the body's
 script loaded and it draws.
+
+### A hand that closes
+
+No weapon was ever drawn in anyone's hand, and the hand had no finger bones: its palm stayed
+open and splayed round any hilt. Bones for the fingers would have changed the skeleton that
+every clip and every part is bound to, so the closed hand is a pair of morph targets, grip_L and
+grip_R, on the rig's body, the slight, heavy and child bodies and the gloves, whose two meshes
+each close with their own hand. `tools/forge/lib/grip.py` curls each finger and the thumb of the
+modelled hand as rigid pieces of a chain about its own knuckle hinge, by the angles a search
+finds to lay it round a 3.2 cm haft, blended across each joint; the palm stays.
+`HumanoidModel.set_grip(side, amount)` closes a hand over a tenth of a second, and a part put on
+a closed hand closes with it. The fist holds its haft 1.8 cm deeper in the palm than the weapon
+socket (`grip_offset`), and a held weapon is put there: moved into the fist, the sockets had
+every grip-led clip re-bake turned at the wrist by up to 175 degrees. Seen in the engine close
+up, bare and gloved, and in the one- and two-handed attacks at their windup, each fist closes
+round a haft, the fingers on its far side and the thumb across it. The player-feel work attaches
+its weapons with these calls. `transplant_clips` carries a morph target written sparse, which it
+had refused.
 
 ### Textures beside the GLBs
 
@@ -5994,18 +6032,12 @@ after the `return` of `appearance_of`, where nothing could reach it.
 
 ### Found and not fixed
 
-* **The wrist join.** The hands are a separate, finer mesh joined to the body's forearm, cut
-  from the same field. Sunk under the body right up to the cut, the hand left a groove round the
-  wrist where the body's end is rounded off, and the rig and bodies in the repo as this is
-  written have it; the hand now lies on the body for the last 5 mm and covers that end, and the
-  rig and bodies are being rebuilt from it (`tools/forge/rigbuild.sh`, then the bodies).
-* **At the Walk's full swing the forward arm comes out through the front of a cloak**, from the
-  elbow down: the cloth in front of an arm lies too far from it to take a share of its swing.
-  Reaching further ahead and behind for that share keeps the upper arm in (tried on the built
-  cloak with `tools/forge/preview/cloakreweight.py`), but the hand still shows at full swing;
-  holding the arms' swing in under a long cloak, in locomotion only, is the next thing to try.
-  None of the rebuilt cloaks has been seen in the engine yet.
-* **The hood's spare cloth still reads as a box behind the head in profile.**
+* **The wrist join is a fine line.** The hands are a separate, finer mesh joined to the body's
+  forearm, cut from the same field. The hand now covers the body's rounded end, and the groove
+  the first join left is gone; but two meshes of different resolution still meet there, in a
+  line a pixel or two wide at the Naming's whole figure.
+* **A cloak's shoulders are broad and flat on top, and in profile a hood's spare cloth hangs as
+  a flap behind the neck.**
 * **At the Walk's passing pose the swinging heel shows under the back of a robe to the ankle.**
   The robe's hem is a hand off the ground and the foot comes up behind it.
 * **Men in a shirt show the default body's chest through it**: the shirt follows the pectoral
@@ -6023,6 +6055,136 @@ after the `return` of `appearance_of`, where nothing could reach it.
   the Naming's distance; there are no modelled lids and no expressions.
 * **NPC defs give `age` in years**, and the record's `age` is 0 (young) to 1 (old). Nothing draws
   age yet and a test pins the raw value, so it is left.
+* **The engine thins the clips.** Godot's import keeps a fraction of each clip's keys (the
+  Idle's hips kept 10 of their 121), and a foot the bake holds still wanders a millimetre or two
+  in the engine. It is why the relaxed Idle's legs now stand still under its breath and sway.
+  Turning the import's animation optimizer off for the rig's clips did not keep the keys, and
+  wrote a 5 MB sidecar.
+* **The closed hand is one fist.** It closes round a single size of haft, 3.2 cm; a bow's grip,
+  a shield's handle and a dagger's hilt all get the same fist.
+
+## Characters, third pass: materials, faces that age, a period palette, and cloaks with the hood down
+
+The brief: cloth, leather, metal and skin that read as materials and not painted plastic;
+faces with lids, brows, colour and years (characterful storybook faces were the mark); feet at real
+size; bugs in the wrap and the cloak; a silhouette for each people. Then, after the first
+sheet: an earthy palette, warmer and older faces, beards with a body, a rounded cloak with a
+hood, wear at the elbows and knees, the kilt in tartan, and relaxed arms in the lineup.
+
+The same four people are rendered at 1920 through godot_slot.sh after each round, before
+against after, three-quarter and front (scratchpad `final_renders/lineup_before_after_1920.png`).
+
+### Materials (game/assets/shaders/garment.gdshader)
+
+- **Every garment wears one shader.** Four kinds: cloth, leather, metal, and woven (tartan,
+  left untinted).
+  - A detail normal tiles many times over each part's UVs: weave, leather grain, hammer dents.
+    The maps are made by tools/forge/gen_character_detail.py and live in
+    game/assets/textures/characters.
+  - A mottle map gives dye taken unevenly.
+  - Folds are darker than the bake's occlusion alone.
+  - Grime rises from the ground by model height: hems and boots are dirty, shoulders clean.
+- **Cloth, leather and metal:**
+  - Cloth is rough, at least 0.86, with a faint wool sheen at grazing angles.
+  - Leather scuffs paler.
+  - Iron is a dull grey: metallic 0.6–0.75, roughness about 0.62. At near-mirror settings it
+    had turned the sky into blue and black blotches.
+- **Both faces are drawn.** The glTF materials the shader replaced were double-sided; culled,
+  the plaid apron showed only its edge.
+- **Detail maps need mipmaps**, or the weave aliases into a chain-mail moiré at any distance.
+- **Elbows and knees** are rubbed pale and smoother in each garment's bake (behind the elbow,
+  in front of the knee). The old exposure term never found them inside a sleeve.
+
+### The palette
+
+Every people's cloth is dyed in period colours: madder, woad blue-grey, weld yellow, undyed
+wool, oak-gall browns and lichen greens. Saturation is low and values vary. The Reedfolk's royal
+blue and teal and the Vale's lime hose are gone. The table lives in three places, which agree:
+- tools/forge/lib/cloth.py `CULTURE_PALETTES`;
+- characters.json;
+- CharacterAppearance `CULTURE_PALETTES`.
+
+The kilt is woven all round in the clan's sett, the same one as the plaid.
+
+### Faces
+
+- **Painted (tools/forge/lib/paint.py):**
+  - The near-black lash line read as eyeliner. It is now a soft line in the skin's own shadow,
+    and a warm lid shadow runs up to the crease.
+  - Brows are heavier.
+  - Cheeks and nose carry more colour; there is a nasolabial fold and a shadow under the eyes.
+  - Each face is off true from its seed: one brow higher, one fold deeper, one cheek redder.
+- **Age is a runtime layer.** Every head is baked young and also bakes `<head>_age.png`
+  (`paint.age_lines`: forehead creases, the furrow between the brows, crow's feet, nose to
+  mouth, mouth to jaw, the fold under the eye). skin.gdshader multiplies it in by the record's
+  age: none at 0.30, all of it at 0.85 (`HumanoidModel.age_lines_amount`). The model's colour
+  signature includes it. Test: test_the_old_wear_their_years.
+- **Skin** keeps its full colour (the shader took 6 % out) and scatters a little warmer.
+- **Beards:**
+  - A full beard is a mass under the chin, two lobes tapering as they fall, with a few thick
+    clumps melted into it. Before, it was forty thin strands like icicles.
+  - Locks on the cheeks and the sides of the jaw lie close.
+- **Heads** are 6 % larger on adults (ArmRoom `head_scale`).
+- **Eyelids:** the lid lens is lower and narrower, so the upper lid covers the top of the iris.
+
+### Proportions, bugs, silhouette
+
+- **Feet** are 26.6 cm (they were 34), and the boots are built round them (test_foot_size.py).
+- **The relaxed Idle:**
+  - The elbows bend about 36° and the wrists fall with them, the forearms a little forward of
+    the thigh. At 28° the arms still read straight in a lineup.
+  - This clip is this branch's, re-baked and transplanted. Every other clip stays the weapons
+    branch's, byte for byte.
+- **The Reedfolk wrap** covers the chest. Its line starts under the left armpit, a hand below
+  the shoulder joint.
+- **Cloaks** (`cloak`, `torn_cloak`) are worn with the hood down:
+  - A roll of cloth lies round the back of the neck, and the hood lies down the back from it.
+  - The cloth is gathered 4 cm off the body behind the neck and over the shoulders, so the top
+    falls round from the neck to the point of the shoulder.
+  - Gathered in front as well, it stood up to the wearer's mouth.
+- **Culture belts:**
+  - Clans and Woodfolk: a belt with a sheathed knife.
+  - Reedfolk: a sash.
+  - Ash-Pilgrims: a cord of beads.
+  - Lakefolk clerks: a satchel.
+
+### The rig, shared with the weapons branch
+
+The weapons branch owns the clips; this branch owns the meshes, skins, morphs and the Idle.
+`transplant_clips.py --keep=<clips>` puts one branch's clips on the other's rig and keeps the
+named clips from the base. Its read-back proves both halves byte for byte, and the clip sidecar
+is always the weapons branch's.
+
+### Judged on the sheet, and what is still short
+
+The last round was rendered on 29b24fbf, the batch-3 merge with the weapons branch's Backstab.
+What reads now that did not before:
+- **Colour** is the biggest change. The people sit in the world instead of on top of it. The
+  Reedfolk wear woad over madder, the Vale lichen hose under undyed ochre, the Clans an undyed
+  shirt over a tartan kilt, and the Woodfolk bark and lichen. A light shirt, a mid skirt and a
+  dark cloak are three different values.
+- **The kilt** and the plaid are one sett. The Clans read at a glance.
+- **Cloth** is matte and woven, and the hems are dirty.
+- **The wrap** covers the chest.
+- **Feet** are the size of feet.
+- **The arms** hang with soft elbows beside the thighs, not in an A.
+- **The cloak's top** falls round from the neck to the shoulder, with no square corner, and
+  its collar sits below the chin.
+
+Still short of the mark:
+- **Iron** is grey now, not black, but still blotchy: the dents and the sky's reflection make
+  a noisy, dirty surface, not forged plate. It wants a calmer value with larger dents.
+- **The Woodfolk's bark brown** is so dark on a cloak that it reads black. The folds, the hood
+  lying down the back and its roll hardly read, even from behind. The torn front edge still
+  shows dark gaps by the right hand.
+- **Faces** are warm, lidded and coloured, and read as people at the lineup's distance. Close
+  to, they are still smooth and doll-like. The brows may now be too heavy.
+- **Age lines** show only on an older record. The lineup is at the default age of 0.3, so none
+  appear there.
+- **Beards** have a body at a distance. Close to, the clumps still hang as separate tails,
+  the ginger one most.
+- **Elbow and knee wear** is baked in but hardly shows at the lineup's distance: the knees of
+  the hose are a little paler, and the elbows of a light shirt show nothing.
 
 ## The quests, played on the atlas world
 

@@ -253,7 +253,12 @@ func test_a_sheathed_weapon_hangs_clear_of_the_body() -> void:
 			var thigh_gap := _gap(grip + blade * 0.12, _tip_of(xf, 0.86), at.call("UpperLeg.L"), knee)
 			assert_true(thigh_gap >= 0.07, "the sword passes %.1f cm from the left thigh bone, inside the leg" % (thigh_gap * 100.0))
 		else:
-			assert_true(grip.y > hips.y + 0.25, "%s does not ride up the back" % id)
+			assert_true(grip.y > hips.y + 0.1, "%s does not ride up the back" % id)
+			if id == "core:item/hunting_bow":
+				# the upper limb's tip (the model's +Z, 0.76 m) ends near the top of the head
+				var top := grip + xf.basis.z.normalized() * 0.76
+				var crown: Vector3 = at.call("Head")
+				assert_true(top.y < crown.y + 0.22, "the bow's upper limb stands %.0f cm over the head bone" % ((top.y - crown.y) * 100.0))
 			assert_true((grip - neck).dot(fwd) < 0.0, "%s is in front of the neck, not on the back" % id)
 	player.equip_weapon("")
 

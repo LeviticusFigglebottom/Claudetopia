@@ -2,11 +2,11 @@
  "bones": 29,
  "bounds": [
   -0.7721,
-  -0.241,
-  0.0001,
+  -0.1942,
+  0.0002,
   0.7721,
-  0.1211,
-  1.607
+  0.1209,
+  1.6062
  ],
  "clips": [
   "Attack_1H_Heavy",
@@ -45,6 +45,9 @@
   "Get_Up",
   "Hit_Heavy",
   "Hit_Light",
+  "Hit_Light_B",
+  "Hit_Light_L",
+  "Hit_Light_R",
   "Idle",
   "Idle_Combat",
   "Interact",
@@ -67,6 +70,9 @@
   "Sneak_Walk",
   "Sprint",
   "Stagger",
+  "Stagger_B",
+  "Stagger_L",
+  "Stagger_R",
   "Stand_Up",
   "Strafe_L",
   "Strafe_R",
@@ -130,7 +136,7 @@
   "style": {
    "belly": 0.09,
    "chest": 0.5,
-   "feet": 1.06,
+   "feet": 0.97,
    "hands": 1.0,
    "muscle": 0.35,
    "shoulders": 0.5
@@ -139,7 +145,7 @@
  "rig": "WM_Humanoid_v1",
  "seed": 1,
  "tris": [
-  15203,
+  15207,
   0,
   0
  ],
