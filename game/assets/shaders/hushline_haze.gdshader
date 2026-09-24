@@ -27,15 +27,17 @@ uniform float top = 260.0;
 uniform float from_x = -3600.0;
 uniform float to_x = 4080.0;
 uniform float end_fade_m = 500.0;
+// the distance over which the curtain thins away as the eye comes near. It is measured across the
+// ground, whatever the height, so a stretch of the curtain thins from its foot to its top at once.
+// Measured straight to each point, from the Landing, 130 m off, it was a veil at eye level under a
+// thick ceiling 250 m up.
 uniform float near_fade_from = 60.0;
 uniform float near_fade_to = 260.0;
 
-varying float v_dist;
 varying vec3 v_world;
 
 void vertex() {
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	v_dist = length((MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz);
 }
 
 float hash(vec2 p) {
@@ -60,7 +62,7 @@ void fragment() {
 	float swell = 0.82 + 0.18 * n;
 	float ends = smoothstep(from_x, from_x + end_fade_m, v_world.x)
 			* (1.0 - smoothstep(to_x - end_fade_m, to_x, v_world.x));
-	float near = smoothstep(near_fade_from, near_fade_to, v_dist);
+	float near = smoothstep(near_fade_from, near_fade_to, length(v_world.xz - CAMERA_POSITION_WORLD.xz));
 	vec3 to_lum = vec3(0.2126, 0.7152, 0.0722);
 	float level = max(dot(wm_sky_horizon, to_lum) * brightness, dot(wm_moon_color, to_lum) * moonlit);
 	ALBEDO = mist / max(dot(mist, to_lum), 0.001) * clamp(level, 0.0, 1.0);
