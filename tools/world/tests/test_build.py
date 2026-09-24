@@ -213,7 +213,8 @@ class WorldBuildTest(unittest.TestCase):
             for asset, rows in cell["instances"].items():
                 self.assertTrue(asset.startswith("res://assets/models/"))
                 for row in rows:
-                    self.assertEqual(len(row), 6)
+                    # six fields, and the lean pair after them for a bent tree or a seated rock
+                    self.assertIn(len(row), (6, 8, 9))
                     x, y, z = float(row[0]), float(row[1]), float(row[2])
                     self.assertEqual(int((x + 4096) // 256), cx)
                     self.assertEqual(int((z + 4096) // 256), cz)
