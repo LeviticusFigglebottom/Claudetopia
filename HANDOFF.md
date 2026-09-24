@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 08:25 UTC. Main is `claude/blissful-volta-dg80e6` at `154952a6` (the atlas merge). Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24 10:10 UTC. Main is `claude/blissful-volta-dg80e6` at `154952a6` (the atlas merge). Every area's hand-off note is in §6.
 
 ---
 
@@ -57,16 +57,16 @@ The user owns the project. Their direction, in their words where it matters:
 
 | Branch | Area | Head at last push | State |
 |---|---|---|---|
-| `claude/blissful-volta-dg80e6` | **main** | `154952a6` | **The drawn atlas is in main** (154952a6), and the seeded map is gone. Verified: test 1684/1685 (the cinematic test passes alone), journey 16/16, flow PASS on all three starts, quests 75/75 with 224/224 walks and 0 world notes, a clean checkout smokes. Next: a batch merge of opening, painted look, characters, weapons, graphics and settlements (one flow), then a second world rebuild (rivers, meander, the four new places, Grandfather Hollow). |
-| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `4bc399f6` | Merged in the atlas. Now: radius_level_m (a new field; radius_flat_m unchanged) and Grandfather Hollow's pad, ring and spur. Then the second rebuild. |
-| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `6e8665d2` | Merged in the atlas. Ready for the second rebuild: the Hollow with Cille Tamwood, four places plus Arn Sweeting, rivers redrawn, fabric reads radius_level_m. Standing brief: skyline and road density outward from the start. |
+| `claude/blissful-volta-dg80e6` | **main** | `154952a6` | The drawn atlas is in main. **Batch 2 is verifying (`wip/batch2` 581ccbfe):** the world rebuilt from atlas 3354e7a4, plus opening, painted look, graphics, weapons, world-builder and the cartographer's travellers and wayfarers. Journey 16/16 and flow PASS. The suite has 8 failures sent to their owners: Swept Road choices, the Hollow door plan, Arn's marker and the Turning Cairn hearthstone (cartographer); test_world_data rivers/roads (land); test_control_hints (opening). Quests running. Next batch: settlements, characters (rig via transplant_clips), weapons 6722b06d, meander rebuild 721c9e73, farmsteads, mills, caves. |
+| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `77469aab` | Meanders varied, with oxbows (721c9e73). Now: falls as data, build time, roads off grade. |
+| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `e01fe24f` | In batch2: road travellers (RoadRoutes; journeys at 3.4 m/s). Wayfarers written, being committed. Next: the 14 thin stretches. |
 | `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `2a3be507` | **Done and in main.** |
-| `wip/opening` | The intro cinematic, the start, and its loose ends | `81ac8544` | **NPC facing bug fixed: every NPC faced backwards** (yaw+PI against a +Z rig). Toasts dismissed in a talk. Two-shot from the side. Flow queued behind the pause; then Phase B on the atlas. |
-| `wip/player-feel` | Movement, gaits, animation feel | `036ce98d` | Wrist solve, dagger fix, draw and sheathe, NPC `carries`, crossbow (WIP), per-run test save folders. Merging the atlas main for the batch. |
-| `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `c2c01851` | Merging the atlas main; then the batch merge. Now: bare-twig dead trees, ground micro-detail, cloth banners, then the atlas re-shoot. |
-| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `5353e955` | Suite 1637/0. Re-verifying flow and journey with the probe fix. Next brief: **the horizon layer** (impostors out to 4.2 km per docs/HORIZON.md, with an Off/Near/Far setting). |
-| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `e8ac53eb` | Pass two done (3ad13a77). Now: materials, faces, proportions, the coverage bug, accessories. |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `3c36b6f3` | POI kinds round two: caves as clefts, sea cave, vista bench, spoil heap. Watch and beacon drums raised to 10–12 m for the horizon. |
+| `wip/opening` | The intro cinematic, the start, and its loose ends | `15b4486e` | In batch2. Cart off the way, with a clearance test. Now: Phase B. |
+| `wip/player-feel` | Movement, gaits, animation feel | `6722b06d` | Combat impact done: hit-stop, kick, effects, trails, knockback, directional reactions, enemy wind-up audit, scythe. Next batch. It owns the rig's clips; characters owns the meshes. |
+| `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `c3d7c104` | In batch2. **Priority now:** the upland and fell terrain reads as blue-grey cells (see the ground frames), plus the northern sky. Then re-render the dead-ash impostors. |
+| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `80365a89` | In batch2. Now: the horizon layer. |
+| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `f7e8286a` | Rig reconciled onto weapons' clips (6bd956f4). Now: an earthy palette, faces, cloak, wear. It rebuilds the rig onto weapons' latest clips before each batch. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `6d3e925e` | Moving Wayside scale to scatter field 8, then into the batch. POI kinds need atlas homes. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
 section says what it did.
