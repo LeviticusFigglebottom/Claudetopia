@@ -170,8 +170,16 @@ func _pad_radius(world: World, place_id: String) -> float:
 	for entry in world.pois():
 		var poi: Dictionary = entry
 		if str(poi.get("place_id", "")) == place_id:
-			return maxf(float(poi.get("radius_flat_m", 40.0)), 24.0)
+			return pad_radius_of(poi)
 	return 40.0
+
+
+## A built pad's room for houses. `radius_level_m` is how far the ground is truly level (the
+## builder writes it beside `radius_flat_m`, which the dressings, arrival and tests keep reading);
+## a house past it would stand on the pad's skirt. A build without it gives `radius_flat_m`.
+static func pad_radius_of(poi: Dictionary) -> float:
+	var r := float(poi.get("radius_level_m", poi.get("radius_flat_m", 40.0)))
+	return maxf(r, 24.0)
 
 
 ## Where the place stands in the world: the built POI data first, since that is the ground the

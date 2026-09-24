@@ -136,6 +136,23 @@ func test_a_town_round_a_landmark_leaves_its_footprint_clear() -> void:
 	_drop(s)
 
 
+func test_the_fabric_is_laid_to_the_level_ground_where_the_build_says_it() -> void:
+	# radius_flat_m stays what the dressings and arrival read; radius_level_m is how far the
+	# ground is truly level, and a house past it would stand on the pad's skirt
+	assert_eq(WorldDoors.pad_radius_of({"radius_flat_m": 63.7, "radius_level_m": 72.0}), 72.0, "the level radius when the build writes one")
+	assert_eq(WorldDoors.pad_radius_of({"radius_flat_m": 63.7}), 63.7, "the flat radius from an older build")
+	assert_eq(WorldDoors.pad_radius_of({"radius_flat_m": 25.0, "radius_level_m": 17.5}), 24.0, "never under the smallest town")
+	assert_eq(WorldDoors.pad_radius_of({}), 40.0, "a place with no pad entry gets the default")
+	# and the fabric keeps inside it: a town on a 72 m level pad lays nothing past it
+	var s := Settlement.raise_at("core:place/test", "town", "core:region/briarwold", CENTRE,
+			WorldDoors.pad_radius_of({"radius_flat_m": 103.0, "radius_level_m": 72.0}), [], [])
+	_tree().root.add_child(s)
+	for rect_v in (s.get("_plots") as Array):
+		var d := (rect_v as Rect2).get_center().distance_to(Vector2(CENTRE.x, CENTRE.z))
+		assert_true(d <= 72.0, "a house %.1f m out, past the level ground" % d)
+	_drop(s)
+
+
 func test_nothing_is_built_outside_the_flattened_ground() -> void:
 	var s := _raise("town")
 	for body in _houses(s):
