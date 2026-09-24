@@ -262,7 +262,7 @@ def bake_all_clips(arm, skel: Skeleton, only: Optional[Sequence[str]] = None) ->
 
 BODY_TRIS = 7800
 HAND_TRIS = 1800             # both hands, on top of BODY_TRIS
-HEAD_TRIS = 4200
+HEAD_TRIS = 6400   # a face is looked at from a hand away in the Naming; the lids and lips need it
 BODY_TEX = 1024
 HEAD_TEX = 1024
 
@@ -292,12 +292,15 @@ def add_grip_keys(ob, skel: Skeleton, hands: float = 1.0) -> List[str]:
 
 
 def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
-               spacing: float = 0.0032, target_tris: int = HEAD_TRIS):
+               spacing: float = 0.0026, target_tris: int = HEAD_TRIS):
     verts, quads = bodylib.head_mesh(skel, hs, spacing=spacing)
     ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
     L = bodylib.head_landmarks(skel, hs)
     bodylib.cylindrical_uv(ob, L["skull_c"], float(L["chin_z"] - 0.10 * L["s"]), float(L["top"][2]))
+    # a brow or a corner of the mouth a little higher, one side at a time, set per person
+    v, _, _ = bodylib.mesh_arrays(ob)
+    bodylib.add_shape_keys(ob, bodylib.face_asymmetry(skel, hs, v))
     return ob
 
 
@@ -321,8 +324,9 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     the crease under a lip all darken because the field says they are enclosed, and the
     parts that stick out -- knuckles, knees, the nose -- take the warmth and the wear."""
     L = bodylib.head_landmarks(skel, hs)
-    maps = paint.surface_maps(ob, size=size, pad=4)
     head = bool(appearance.get("face", True))
+    maps = paint.surface_maps(ob, size=size, pad=4, tangents=head and isinstance(scene, sdf.Scene))
+    detail_field = scene.near(0.02) if head and isinstance(scene, sdf.Scene) else None
     occ_r = 0.022 if head else 0.052
     # read near the surface only: the occlusion probe steps out at most occ_r, and the whole
     # scene at every probe put each texel through all ten fingers (36 minutes for the rig)
@@ -353,20 +357,26 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     if m.any():
         h[m] = n.fbm(maps["pos"][m], freq=14.0, octaves=2)
     nrm = normal_from_height(h, strength=0.010)
+    if detail_field is not None:
+        # the face's own detail, which the decimated mesh cannot hold: lids, nostrils, the line
+        # of the lips, the folds (paint.sdf_detail_normal), with the pores laid over it
+        nrm = paint.blend_normals(paint.sdf_detail_normal(detail_field, maps), nrm)
     a_path = paint.save_png(albedo, os.path.join(out_dir, "%s_albedo.png" % stem))
     o_path = paint.save_png(orm, os.path.join(out_dir, "%s_orm.png" % stem))
     n_path = paint.save_png(nrm, os.path.join(out_dir, "%s_normal.png" % stem))
     return a_path, o_path, n_path
 
 
-def paint_age(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 512) -> str:
-    """<stem>_age.png beside a head's albedo: the lines of age, which the engine lays over the
-    young bake by the record's age (paint.age_lines)."""
+def paint_marks(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 512) -> str:
+    """<stem>_marks.png beside a head's albedo: the lines of age, ruddiness, freckles and
+    weathering as four masks (paint.face_marks), which the engine lays over the young, even
+    bake by the person (HumanoidModel.face_marks_for)."""
     L = bodylib.head_landmarks(skel, hs)
     maps = paint.surface_maps(ob, size=size, pad=4)
-    img = paint.paint(maps, paint.age_lines(L, seed=zlib.crc32(stem.encode("utf-8")) % 99991),
-                      background=(1.0, 1.0, 1.0))
-    return paint.save_png(img, os.path.join(out_dir, "%s_age.png" % stem))
+    rgb_fn, a_fn = paint.face_marks(L, seed=zlib.crc32(stem.encode("utf-8")) % 99991)
+    rgb = paint.paint(maps, rgb_fn, background=(0.0, 0.0, 0.0))
+    a = paint.paint(maps, a_fn, background=(0.0, 0.0, 0.0))[..., :1]
+    return paint.save_png_rgba(np.concatenate([rgb, a], axis=-1), os.path.join(out_dir, "%s_marks.png" % stem))
 
 
 def paint_eyes(out_dir: str, stem: str, appearance: dict, size: int = 256) -> str:
@@ -427,7 +437,7 @@ def cmd_rig(args) -> None:
     ha, ho, hn = paint_body(head_ob, skel, hs, out_dir, "%s_head" % name, dict(app, face=True),
                             scene=bodylib.head_scene(skel, hs))
     ea = paint_eyes(out_dir, "%s_eye" % name, app)
-    paint_age(head_ob, skel, hs, out_dir, "%s_head" % name)
+    paint_marks(head_ob, skel, hs, out_dir, "%s_head" % name)
     body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
     head_ob.data.materials.append(make_material("WM_Skin_Head", ha, ho, hn, roughness=0.62))
     eye_mat = make_material("WM_Eye", ea, roughness=0.18)
@@ -764,10 +774,10 @@ def cmd_parts(args) -> None:
             bodylib.rigid_weights(e, "Head", arm)
         out_dir = part_dir("head", name)
         app = dict(DEFAULT_APPEARANCE)
-        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=768,
+        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True, freckles=0.0), size=768,
                                 scene=bodylib.head_scene(skel, hs))
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
-        paint_age(ob, skel, hs, out_dir, name)
+        paint_marks(ob, skel, hs, out_dir, name)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
         for e in eyes:

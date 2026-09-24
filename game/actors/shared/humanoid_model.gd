@@ -44,7 +44,7 @@ const DETAIL_DIR := "res://assets/textures/characters/"
 const GARMENT_KINDS := {
 	"cloth": [0, "weave_normal.png", 34.0, 0.45],
 	"leather": [1, "grain_normal.png", 16.0, 0.9],
-	"iron": [2, "hammer_normal.png", 5.0, 0.4],
+	"iron": [2, "hammer_normal.png", 9.0, 0.25],
 }
 static var _detail_cache: Dictionary = {}
 ## Headgear that covers the crown. Hair is combed for a bare head; under one of these the
@@ -550,9 +550,9 @@ func _parts_signature() -> String:
 
 ## Everything that decides what colour those meshes are.
 func _colour_signature_now() -> String:
-	# the lines of age are laid on with the skin, so a record that only grows older is recoloured
-	return "%s|%s|%s|%s|%.2f" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
-		str(appearance.to_dict().get("palette", {})), age_lines_amount(appearance.age)]
+	# a face's marks are laid on with the skin, so a record that only grows older is recoloured
+	return "%s|%s|%s|%s|%s" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
+		str(appearance.to_dict().get("palette", {})), str(face_marks_for(appearance))]
 
 
 ## The hair the record chose, unless something is covering the crown.
@@ -678,7 +678,7 @@ func _apply_colours() -> void:
 					_tint_iris(mi)
 				else:
 					_skin(mi, skin)
-					_age_face(mi, _part_path(slot, str(mi.get_meta("part", ""))).replace(".glb", "_age.png"))
+					_face_marks(mi, _part_path(slot, str(mi.get_meta("part", ""))).replace(".glb", "_marks.png"))
 				continue
 			var key := _colour_key_for(slot)
 			var kind := str(mi.get_meta("material", ""))
@@ -703,7 +703,7 @@ func _apply_colours() -> void:
 		if _default_meshes.has(logical):
 			_skin(_default_meshes[logical], skin)
 	if _default_meshes.has("head"):
-		_age_face(_default_meshes["head"], RIG_PATH.replace(".glb", "_head_age.png"))
+		_face_marks(_default_meshes["head"], RIG_PATH.replace(".glb", "_head_marks.png"))
 	for eye in _default_eyes:
 		_tint_iris(eye)
 
@@ -741,17 +741,50 @@ static func age_lines_amount(age: float) -> float:
 	return clampf((age - AGE_LINES_FROM) / (AGE_LINES_FULL - AGE_LINES_FROM), 0.0, 1.0)
 
 
-func _age_face(mi: MeshInstance3D, age_path: String) -> void:
-	var amount := age_lines_amount(appearance.age)
-	var tex: Texture2D = null
-	if amount > 0.0 and ResourceLoader.exists(age_path):
-		tex = load(age_path)
+## How much of each of a head's marks this person shows: the lines of age by their age, a
+## ruddiness and a weathering of their own (from their seed, their people and their years) and
+## their freckles. The values a face's marks_tex is read with (skin.gdshader).
+const RUDDY_BY_CULTURE := {"clans": 0.25, "woodfolk": 0.12, "vale": 0.10, "lakefolk": 0.0,
+	"reedfolk": -0.10, "ash_pilgrims": -0.15}
+
+
+static func face_marks_for(a: CharacterAppearance) -> Dictionary:
+	var h := absi(hash("%d|marks" % a.seed))
+	var r1 := float(h % 1000) / 999.0
+	var r2 := float((h / 1000) % 1000) / 999.0
+	return {
+		"age": age_lines_amount(a.age),
+		"ruddy": clampf(0.20 + 0.40 * r1 + float(RUDDY_BY_CULTURE.get(a.culture, 0.0)) + 0.20 * a.age, 0.0, 1.0),
+		"freckles": clampf(a.freckles * 2.0, 0.0, 1.0),
+		"weather": clampf(0.10 + 0.35 * r2 + 0.55 * a.age, 0.0, 1.0),
+	}
+
+
+## Which side of this person's face is a little higher, and by how much: a brow and a corner of
+## the mouth (the head's morph targets, the forge's body.face_asymmetry), from their seed.
+static func face_asymmetry_for(a: CharacterAppearance) -> Dictionary:
+	var h := absi(hash("%d|asym" % a.seed))
+	var brow := 0.30 + 0.70 * float((h / 2) % 100) / 99.0
+	var mouth := 0.20 + 0.60 * float((h / 400) % 100) / 99.0
+	var brow_left := h % 2 == 0
+	var mouth_left := (h / 200) % 2 == 0
+	return {
+		"brow_up_L": brow if brow_left else 0.0, "brow_up_R": 0.0 if brow_left else brow,
+		"mouth_up_L": mouth if mouth_left else 0.0, "mouth_up_R": 0.0 if mouth_left else mouth,
+	}
+
+
+func _face_marks(mi: MeshInstance3D, marks_path: String) -> void:
+	var tex: Texture2D = load(marks_path) if ResourceLoader.exists(marks_path) else null
+	var marks := face_marks_for(appearance)
 	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
 		var m := mi.get_surface_override_material(i) as ShaderMaterial
 		if m == null or m.shader != SKIN_SHADER:
 			continue
-		m.set_shader_parameter("age_tex", tex)
-		m.set_shader_parameter("age_amount", amount if tex != null else 0.0)
+		m.set_shader_parameter("marks_tex", tex)
+		for key in marks:
+			var param: String = "freckle_amount" if key == "freckles" else "%s_amount" % key
+			m.set_shader_parameter(param, float(marks[key]) if tex != null else 0.0)
 
 
 ## What a skin's tint is, from whichever material it is wearing (the tests and the probes ask).
@@ -866,6 +899,7 @@ static func dressed_colour_of(mi: MeshInstance3D) -> Color:
 ## jaw and the faces' jaws are not one jaw.
 func _apply_fits() -> void:
 	var head := appearance.part("head")
+	var asym := face_asymmetry_for(appearance)
 	for slot in _part_meshes:
 		for mi in _part_meshes[slot]:
 			var m := mi as MeshInstance3D
@@ -878,6 +912,10 @@ func _apply_fits() -> void:
 				if shape.begins_with("grip_"):
 					# the hands' own morphs, kept at what set_grip has them at
 					m.set_blend_shape_value(b, float(_grip.get(shape.substr(5), 0.0)))
+					continue
+				if slot == "head":
+					# a face's own asymmetry, by the person
+					m.set_blend_shape_value(b, float(asym.get(shape, 0.0)))
 					continue
 				if shape == "heavy" or shape == "slight":
 					on = shape == body_variant_worn

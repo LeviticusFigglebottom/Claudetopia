@@ -210,11 +210,14 @@ def exposure(occ: np.ndarray, power: float = 2.0) -> np.ndarray:
 # UV rasteriser
 # --------------------------------------------------------------------------------------
 
-def surface_maps(ob, size: int = 1024, pad: int = 4) -> Dict[str, np.ndarray]:
+def surface_maps(ob, size: int = 1024, pad: int = 4, tangents: bool = False) -> Dict[str, np.ndarray]:
     """For every texel of the UV layout, the 3D position and normal behind it.
 
     Returns {"pos": (size,size,3), "nrm": (size,size,3), "mask": (size,size) bool}.
-    `pad` dilates the covered area so bilinear filtering never samples empty texels."""
+    `pad` dilates the covered area so bilinear filtering never samples empty texels.
+    `tangents` adds "tan" and "bit": the directions in which u and v (Blender's, v up) grow,
+    for baking a tangent-space normal map. Each is averaged over the corners that share a
+    vertex and a UV (a UV seam splits them, as MikkTSpace does) and interpolated like the normal."""
     me = ob.data
     me.calc_loop_triangles()
     nv = len(me.vertices)
@@ -242,6 +245,31 @@ def surface_maps(ob, size: int = 1024, pad: int = 4) -> Dict[str, np.ndarray]:
     nrm_map = np.zeros((size, size, 3))
     mask = np.zeros((size, size), dtype=bool)
     uv_px = uvs * size - 0.5
+    corner_T = corner_B = None
+    tan_map = bit_map = None
+    if tangents:
+        P0, P1, P2 = co[tri_verts[:, 0]], co[tri_verts[:, 1]], co[tri_verts[:, 2]]
+        U0, U1, U2 = uvs[tri_loops[:, 0]], uvs[tri_loops[:, 1]], uvs[tri_loops[:, 2]]
+        e1, e2 = P1 - P0, P2 - P0
+        d1, d2 = U1 - U0, U2 - U0
+        det = d1[:, 0] * d2[:, 1] - d2[:, 0] * d1[:, 1]
+        r = np.where(np.abs(det) > 1e-14, 1.0 / np.where(np.abs(det) > 1e-14, det, 1.0), 0.0)
+        Tf = (e1 * d2[:, 1:2] - e2 * d1[:, 1:2]) * r[:, None]
+        Bf = (e2 * d1[:, 0:1] - e1 * d2[:, 0:1]) * r[:, None]
+        Tf /= np.maximum(np.linalg.norm(Tf, axis=1, keepdims=True), 1e-12)
+        Bf /= np.maximum(np.linalg.norm(Bf, axis=1, keepdims=True), 1e-12)
+        keys = np.stack([tri_verts.ravel(), np.round(uvs[tri_loops.ravel()] * 8192.0).astype(np.int64)[:, 0],
+                         np.round(uvs[tri_loops.ravel()] * 8192.0).astype(np.int64)[:, 1]], axis=1)
+        _, inv = np.unique(keys, axis=0, return_inverse=True)
+        inv = inv.ravel()
+        accT = np.zeros((int(inv.max()) + 1, 3))
+        accB = np.zeros_like(accT)
+        np.add.at(accT, inv, np.repeat(Tf, 3, axis=0))
+        np.add.at(accB, inv, np.repeat(Bf, 3, axis=0))
+        corner_T = accT[inv].reshape(-1, 3, 3)
+        corner_B = accB[inv].reshape(-1, 3, 3)
+        tan_map = np.zeros((size, size, 3))
+        bit_map = np.zeros((size, size, 3))
     for t in range(len(tri_verts)):
         a, b, c = uv_px[tri_loops[t]]
         x0 = max(int(math.floor(min(a[0], b[0], c[0]))), 0)
@@ -273,6 +301,10 @@ def surface_maps(ob, size: int = 1024, pad: int = 4) -> Dict[str, np.ndarray]:
         pos_map[yy, xx] = P
         nrm_map[yy, xx] = N
         mask[yy, xx] = True
+        if tangents:
+            cT, cB = corner_T[t], corner_B[t]
+            tan_map[yy, xx] = cT[0] * w0[inside, None] + cT[1] * w1[inside, None] + cT[2] * w2[inside, None]
+            bit_map[yy, xx] = cB[0] * w0[inside, None] + cB[1] * w1[inside, None] + cB[2] * w2[inside, None]
     # dilate into the gutter
     for _ in range(pad):
         holes = ~mask
@@ -283,11 +315,80 @@ def surface_maps(ob, size: int = 1024, pad: int = 4) -> Dict[str, np.ndarray]:
                 continue
             pos_map[take] = np.roll(np.roll(pos_map, dy, axis=0), dx, axis=1)[take]
             nrm_map[take] = np.roll(np.roll(nrm_map, dy, axis=0), dx, axis=1)[take]
+            if tangents:
+                tan_map[take] = np.roll(np.roll(tan_map, dy, axis=0), dx, axis=1)[take]
+                bit_map[take] = np.roll(np.roll(bit_map, dy, axis=0), dx, axis=1)[take]
             mask = mask | take
             holes = ~mask
     ln = np.linalg.norm(nrm_map, axis=2, keepdims=True)
     nrm_map = nrm_map / np.maximum(ln, 1e-9)
-    return {"pos": pos_map, "nrm": nrm_map, "mask": mask}
+    out = {"pos": pos_map, "nrm": nrm_map, "mask": mask}
+    if tangents:
+        out["tan"], out["bit"] = tan_map, bit_map
+    return out
+
+
+def sdf_detail_normal(field, maps: Dict[str, np.ndarray], eps: float = 0.0004, max_move: float = 0.004,
+                      iters: int = 3, chunk: int = 60000) -> np.ndarray:
+    """A tangent-space normal map (OpenGL, +Y up the UV's v) of the field's own surface, baked
+    onto the mesh that was meshed and decimated from it.
+
+    A head is meshed at a few millimetres and decimated to a few thousand triangles, and what a
+    face is read by close to -- the edge of a lid, the rim of a nostril, the line of the lips,
+    the fold under the eye -- is smaller than that and went with the triangles. Each texel's
+    point on the mesh is walked onto the field's zero set and the field's normal there is
+    written in the mesh's own tangent frame, so the lighting finds the detail the geometry
+    lost. Where the mesh is further than `max_move` from the field (or the walk fails) the mesh's
+    own normal is kept. `maps` must come from surface_maps(..., tangents=True)."""
+    size = maps["pos"].shape[0]
+    out = np.zeros((size, size, 3))
+    out[..., :] = (0.5, 0.5, 1.0)
+    m = maps["mask"]
+    idx = np.nonzero(m)
+    P_all, N_all = maps["pos"][m], maps["nrm"][m]
+    T_all, B_all = maps["tan"][m], maps["bit"][m]
+    res = np.zeros((len(P_all), 3))
+
+    def grad(Q):
+        g = np.empty_like(Q)
+        for a in range(3):
+            o = np.zeros(3)
+            o[a] = eps
+            g[:, a] = field.eval(Q + o) - field.eval(Q - o)
+        return g / np.maximum(np.linalg.norm(g, axis=1, keepdims=True), 1e-12)
+    for c0 in range(0, len(P_all), chunk):
+        P = P_all[c0:c0 + chunk]
+        N = N_all[c0:c0 + chunk]
+        T = T_all[c0:c0 + chunk]
+        B = B_all[c0:c0 + chunk]
+        Q = P.copy()
+        for _ in range(iters):
+            d = field.eval(Q)
+            Q = Q - grad(Q) * d[:, None]
+        G = grad(Q)
+        moved = np.linalg.norm(Q - P, axis=1)
+        bad = (moved > max_move) | ~np.all(np.isfinite(G), axis=1) | (np.sum(G * N, axis=1) < 0.25)
+        G[bad] = N[bad]
+        T = T - N * np.sum(T * N, axis=1, keepdims=True)
+        T /= np.maximum(np.linalg.norm(T, axis=1, keepdims=True), 1e-12)
+        NxT = np.cross(N, T)
+        sgn = np.sign(np.sum(NxT * B, axis=1))
+        sgn[sgn == 0] = 1.0
+        Bo = NxT * sgn[:, None]
+        n = np.stack([np.sum(G * T, axis=1), np.sum(G * Bo, axis=1), np.sum(G * N, axis=1)], axis=1)
+        n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
+        res[c0:c0 + chunk] = n
+    out[idx] = res * 0.5 + 0.5
+    return out
+
+
+def blend_normals(base: np.ndarray, detail: np.ndarray) -> np.ndarray:
+    """Two encoded tangent-space normal maps laid one over the other ("whiteout" blend)."""
+    a = base * 2.0 - 1.0
+    b = detail * 2.0 - 1.0
+    n = np.stack([a[..., 0] + b[..., 0], a[..., 1] + b[..., 1], a[..., 2] * b[..., 2]], axis=-1)
+    n /= np.maximum(np.linalg.norm(n, axis=-1, keepdims=True), 1e-9)
+    return n * 0.5 + 0.5
 
 
 def paint(maps: Dict[str, np.ndarray], fn: PaintFn, background: RGB = (0.5, 0.5, 0.5)) -> np.ndarray:
@@ -306,6 +407,14 @@ def save_png(img: np.ndarray, path: str) -> str:
     a = np.clip(np.asarray(img, float), 0.0, 1.0)
     # images are authored in sRGB space already; flip Y for glTF's UV origin
     Image.fromarray((a[::-1] * 255.0 + 0.5).astype(np.uint8)).save(path)
+    return path
+
+
+def save_png_rgba(img: np.ndarray, path: str) -> str:
+    """An (h, w, 4) image, flipped for glTF's UV origin like save_png."""
+    from PIL import Image
+    a = np.clip(np.asarray(img, float), 0.0, 1.0)
+    Image.fromarray((a[::-1] * 255.0 + 0.5).astype(np.uint8), mode="RGBA").save(path)
     return path
 
 
@@ -458,7 +567,8 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                      0.85 * gauss(p, [0.0, fy - 0.004 * s, L["nose_tip"][2]], [0.016 * s, 0.022 * s, 0.017 * s]) +
                      0.45 * gauss(p, [L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]) +
                      0.45 * gauss(p, [-L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]))
-            c = mix(c, t["blush"], np.clip(blush, 0, 1) * (0.40 + 0.08 * age))
+            # (the person's own ruddiness is laid over this at runtime: face_marks, channel G)
+            c = mix(c, t["blush"], np.clip(blush, 0, 1) * (0.30 + 0.06 * age))
             # -- eyes -------------------------------------------------------------------
             # The marks below were kept faint so that none of them "won at 30 pixels", and at
             # portrait distance the face then had nothing to read by: a brow, an eye, a nose and
@@ -514,13 +624,13 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                      (ex - sx * eye_r * 0.20, bz + 0.004 * s),
                                      (ex + sx * eye_r * 0.65, bz + 0.005 * s),
                                      (ex + sx * eye_r * 1.55, bz - 0.006 * s)],
-                                 width=0.0105 * s, soft=0.65, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
+                                 width=0.0095 * s, soft=0.70, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
                 head = stroke_xz(p, [(ex - sx * eye_r * 0.90, bz - 0.003 * s),
                                      (ex + sx * eye_r * 0.30, bz + 0.004 * s)],
                                  width=0.0088 * s, soft=0.75, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
                 brow_col = mix(np.clip(hair_rgb * 0.85, 0, 1), t["shadow"] * 0.55, 0.30)
                 # heavy brows: a face is read by them before anything else at a distance
-                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * (0.95 - 0.14 * float(age > 0.7)))
+                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * (0.82 - 0.12 * float(age > 0.7)))
             # -- mouth ------------------------------------------------------------------
             mw = mouth_w
             # The lips' depth is the face's own mouth station, 4 mm proud of it.  At the eye
@@ -641,6 +751,57 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
 
 
 AGE_INK = np.array([0.74, 0.62, 0.58])   # what a line does to the skin under it, as a multiplier
+
+
+def face_marks(landmarks: dict, seed: int = 0) -> Tuple[Callable, Callable]:
+    """What a life puts on a face, as four masks the engine lays over a young, even bake by the
+    person (skin.gdshader `marks_tex`, HumanoidModel.face_marks_for):
+
+      R  the lines of age (age_lines)
+      G  ruddiness: the cheeks, the nose, the ears and a little of the chin, mottled where the
+         small veins are
+      B  freckles: dots over the nose, the cheeks and the forehead, where the sun falls
+      A  weathering: the sun and the wind on the forehead, the nose, the cheekbones and the tops
+         of the ears
+
+    Returns (rgb, alpha) paint functions."""
+    L = landmarks
+    s = L["s"]
+    eye_x, eye_z = L["eye_x"], L["eye_z"]
+    fy, nt, chin_z, brow_z = L["face_y"], L["nose_tip"], L["chin_z"], L["brow_z"]
+    ec = L["ear_c"]
+    n = Noise(seed + 211, 48)
+    ink = age_lines(landmarks, seed)
+
+    def rgb(p: np.ndarray, nrm: np.ndarray) -> np.ndarray:
+        age = (1.0 - ink(p, nrm)[:, 0]) / (1.0 - AGE_INK[0])
+        cheeks = sum(gauss(p, [sx * eye_x * 1.45, fy + 0.020 * s, eye_z - 0.046 * s],
+                           [0.034 * s, 0.034 * s, 0.030 * s]) for sx in (1, -1))
+        nose = gauss(p, [0.0, fy - 0.004 * s, nt[2]], [0.018 * s, 0.024 * s, 0.020 * s])
+        ears = sum(gauss(p, [sx * ec[0], ec[1], ec[2]], [0.020 * s, 0.026 * s, 0.030 * s]) for sx in (1, -1))
+        chin = gauss(p, [0.0, fy + 0.004 * s, chin_z + 0.020 * s], [0.020 * s, 0.020 * s, 0.016 * s])
+        veins = 0.70 + 0.60 * n.fbm(p, freq=90.0, octaves=2)
+        ruddy = np.clip(np.maximum.reduce([cheeks, nose * 0.95, ears * 0.75, chin * 0.35]) * veins, 0, 1)
+        sun = np.clip(np.maximum.reduce([
+            sum(gauss(p, [sx * eye_x * 1.30, fy + 0.012 * s, eye_z - 0.030 * s],
+                      [0.030 * s, 0.030 * s, 0.026 * s]) for sx in (1, -1)),
+            gauss(p, [0.0, fy - 0.004 * s, 0.5 * (nt[2] + L["nose_root_z"])], [0.016 * s, 0.030 * s, 0.030 * s]),
+            gauss(p, [0.0, fy + 0.006 * s, brow_z + 0.020 * s], [0.040 * s, 0.040 * s, 0.020 * s]) * 0.7]), 0, 1)
+        dots = smoothstep(0.60, 0.70, n.at(p, 250.0))
+        freckles = np.clip(dots * sun * 1.3, 0, 1)
+        return np.stack([np.clip(age, 0, 1), ruddy, freckles], axis=1)
+
+    def alpha(p: np.ndarray, nrm: np.ndarray) -> np.ndarray:
+        sun = np.maximum.reduce([
+            gauss(p, [0.0, fy + 0.004 * s, brow_z + 0.030 * s], [0.060 * s, 0.050 * s, 0.035 * s]),
+            gauss(p, [0.0, fy - 0.004 * s, 0.5 * (nt[2] + L["nose_root_z"])], [0.016 * s, 0.030 * s, 0.034 * s]),
+            sum(gauss(p, [sx * eye_x * 1.50, fy + 0.012 * s, eye_z - 0.036 * s],
+                      [0.030 * s, 0.030 * s, 0.026 * s]) for sx in (1, -1)),
+            sum(gauss(p, [sx * ec[0], ec[1], ec[2] + 0.020 * s], [0.016 * s, 0.024 * s, 0.016 * s]) for sx in (1, -1)) * 0.8])
+        # the rest of a face weathers too, less, and unevenly
+        w = np.clip(0.30 + 0.70 * sun, 0, 1) * (0.70 + 0.60 * n.fbm(p, freq=20.0, octaves=2))
+        return np.repeat(np.clip(w, 0, 1)[:, None], 3, axis=1)
+    return rgb, alpha
 
 
 def age_lines(landmarks: dict, seed: int = 0) -> PaintFn:
