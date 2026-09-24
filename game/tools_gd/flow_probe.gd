@@ -98,6 +98,17 @@ var tour_quick := false
 ## the way a player does (run, sprint, turn, stop), so the session's errors are a session's and not
 ## only the start's (tools/debug/error_census.py reads the log).
 var wander_seconds := 0.0
+## --visit[=place,place,...]: then take the body to each place in turn (the console's `tp`), let the
+## country stream in around it and walk it about there for --visit-stay seconds, so a session sees
+## the towns, the water and the farms of every region and not only the Stair Head. With no list,
+## VISIT: a town, a city, the water, a marsh, the fells, the forest and the ash.
+var visit_places: Array[String] = []
+var visit_stay := 30.0
+const VISIT := ["merrowby", "tamwick", "tollmere", "gullhithe", "isseva", "kharrow_hold",
+	"grandfather_hollow", "pilgrims_ash"]
+## The longest a place is given, on the wall clock, for the 3 x 3 cells around the body to be
+## built after the jump; the walk starts as soon as they stand.
+const VISIT_SETTLE := 90.0
 
 var _checks: Array[Dictionary] = []
 ## What _photograph_the_opening saw, for _watch_the_opening to report.
@@ -130,6 +141,13 @@ func _ready() -> void:
 			tour_quick = a == "--naming-tour=quick"
 		elif a.begins_with("--wander="):
 			wander_seconds = float(a.substr(9))
+		elif a == "--visit":
+			visit_places.assign(VISIT)
+		elif a.begins_with("--visit="):
+			for p in a.substr(8).split(",", false):
+				visit_places.append(p.strip_edges())
+		elif a.begins_with("--visit-stay="):
+			visit_stay = maxf(float(a.substr(13)), 1.0)
 	out_dir = _absolute(out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_errors_at_start = Log.error_count
@@ -166,6 +184,8 @@ func _run() -> void:
 			await _straight_in_flow()
 	if wander_seconds > 0.0 and _spawned is Node3D:
 		await _wander(wander_seconds)
+	if not visit_places.is_empty() and _spawned is Node3D:
+		await _visit(visit_places, visit_stay)
 	_finish()
 
 
@@ -177,32 +197,108 @@ func _wall_seconds(seconds: float) -> void:
 		await get_tree().process_frame
 
 
-## Walks the body about for `seconds`: forward in legs of a few seconds, sprinting on every other
-## one, turning the view between legs, and stopping now and then, from wherever it was handed over.
+## Walks the body about for `seconds` from wherever it was handed over (--wander).
 func _wander(seconds: float) -> void:
+	var walk := await _walk_about(seconds)
+	_notes.append("wandered %d legs over %.0f s: %.0f m out at the farthest, %d cells of 256 m, stuck %d times"
+			% [walk["legs"], seconds, walk["farthest"], walk["cells"], walk["stuck"]])
+
+
+## Takes the body to each place in turn with the console's `tp`, lets the country stream in
+## around it, and walks it about there (--visit).
+func _visit(places: Array[String], stay: float) -> void:
+	var been := 0
+	for place in places:
+		if not is_instance_valid(_spawned):
+			break
+		var said := str(Debug.run("tp %s" % place))
+		if not said.begins_with("teleported"):
+			_notes.append("visit %s: %s" % [place, said])
+			continue
+		var streamed := await _wait_for_cells_around(VISIT_SETTLE)
+		var walk := await _walk_about(stay)
+		been += 1
+		_notes.append("visited %s: %s; %d legs, %.0f m out, %d cells, stuck %d times" % [place,
+				"its 3 x 3 cells stood in %.0f s" % streamed if streamed >= 0.0 else "its cells still coming in",
+				walk["legs"], walk["farthest"], walk["cells"], walk["stuck"]])
+	_check(been == places.size(), "every place on the visit was reached (%d of %d)" % [been, places.size()])
+
+
+## Waits, up to `limit` seconds of wall clock, for the cells around the body to be built: the
+## wall seconds it took, or -1 when they were still coming in.
+func _wait_for_cells_around(limit: float) -> float:
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < int(limit * 1000.0):
+		var world := World.instance
+		if world == null or world.streamer == null or not is_instance_valid(_spawned):
+			return -1.0
+		var centre := world.streamer.cell_of((_spawned as Node3D).global_position)
+		var all := true
+		for dx in [-1, 0, 1]:
+			for dz in [-1, 0, 1]:
+				if not world.streamer.is_loaded(centre + Vector2i(dx, dz)):
+					all = false
+		if all:
+			return (Time.get_ticks_msec() - t0) / 1000.0
+		await get_tree().process_frame
+	return -1.0
+
+
+## Walks the body about the way a player crosses country: legs of two and a half seconds of the
+## game's time forward, sprinting on three in four, bearing a little left or right each time so
+## the way curves, and a stop now and then. A leg that got nowhere (a wall, a fence, a bank too
+## steep) turns it most of the way round. Legs are counted in physics ticks, not on the wall: the
+## software renderers here draw a frame of the country in about five seconds, and the engine runs
+## at most eight ticks a frame, so a wall-clock leg was a step or two. `seconds` of wall clock
+## bound the whole, so on such a renderer a walk is short and the tour's jumps do the covering.
+## {legs, stuck, farthest, cells}
+func _walk_about(seconds: float) -> Dictionary:
 	var body := _spawned as Node3D
 	var from := body.global_position
+	var last := from
 	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
 	var leg := 0
+	var stuck := 0
+	var farthest := 0.0
+	var cells := {}
 	while Time.get_ticks_msec() < until and is_instance_valid(body):
+		var got_nowhere := leg > 0 and _flat(body.global_position - last) < 1.0
+		last = body.global_position
+		if got_nowhere:
+			stuck += 1
 		var turn := InputEventMouseMotion.new()
-		turn.relative = Vector2(180.0 if leg % 3 != 2 else -260.0, 0.0)
+		turn.relative = Vector2(320.0 if got_nowhere else (45.0 if leg % 2 == 0 else -35.0), 0.0)
 		turn.position = get_viewport().get_visible_rect().size * 0.5
 		Input.parse_input_event(turn)
 		Input.action_press("move_forward")
-		if leg % 2 == 1:
+		if leg % 4 != 3:
 			Input.action_press("sprint")
-		await _wall_seconds(4.0 if leg % 4 != 3 else 1.5)
+		await _game_seconds(2.5, until)
 		Input.action_release("sprint")
-		if leg % 4 == 3:
+		if leg % 6 == 5:
 			Input.action_release("move_forward")
-			await _wall_seconds(1.5)
+			await _game_seconds(0.5, until)
+		if is_instance_valid(body):
+			farthest = maxf(farthest, _flat(body.global_position - from))
+			cells[Vector2i(floori(body.global_position.x / 256.0), floori(body.global_position.z / 256.0))] = true
 		leg += 1
 	Input.action_release("move_forward")
 	Input.action_release("sprint")
-	if is_instance_valid(body):
-		_notes.append("wandered %d legs over %.0f s, %.0f m from where the body was handed over" % [
-				leg, seconds, Vector2(body.global_position.x - from.x, body.global_position.z - from.z).length()])
+	return {"legs": leg, "stuck": stuck, "farthest": farthest, "cells": cells.size()}
+
+
+## `seconds` of the game's own time, a physics tick at a time, or until the wall clock reaches
+## `until_ms`, whichever comes first.
+func _game_seconds(seconds: float, until_ms: int) -> void:
+	var ticks := int(seconds * Engine.physics_ticks_per_second)
+	for i in ticks:
+		if Time.get_ticks_msec() >= until_ms:
+			return
+		await get_tree().physics_frame
+
+
+static func _flat(v: Vector3) -> float:
+	return Vector2(v.x, v.z).length()
 
 
 # --- the three ways in ------------------------------------------------------------------------
