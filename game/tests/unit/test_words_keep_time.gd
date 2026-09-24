@@ -53,23 +53,6 @@ func test_the_skip_prompt_is_in_on_the_frame_after_its_key() -> void:
 	overlay.free()
 
 
-## The story's next thing to do, under the compass, and a place's name as the player comes to it.
-func test_the_objective_line_and_a_place_s_name_are_in_after_one_long_frame() -> void:
-	var hud: Node = (load(HUD_SCENE) as PackedScene).instantiate()
-	_tree().root.add_child(hud)
-	hud.call("_process", COUNTED_S)
-	hud.call("show_objective", "The Naming: Speak to the Warden at her fire")
-	hud.call("show_region_card", "Cinderlea", "The heath above the Hush")
-	OS.delay_msec(1200)
-	hud.call("_process", COUNTED_S)
-	var line := (hud.get("_objective") as Control).modulate.a
-	assert_gt(line, 0.99, "the objective line is fully in after one long frame (%.2f)" % line)
-	var card := (hud.get("_region_card") as Control).modulate.a
-	assert_gt(card, 0.99, "and so is the place's name (%.2f)" % card)
-	_tree().root.remove_child(hud)
-	hud.free()
-
-
 func test_the_hud_subtitle_is_fully_in_after_one_long_frame() -> void:
 	var hud: Node = (load(HUD_SCENE) as PackedScene).instantiate()
 	_tree().root.add_child(hud)

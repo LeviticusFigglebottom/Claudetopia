@@ -690,8 +690,7 @@ func show_region_card(title: String, tagline: String) -> void:
 	_region_name.text = title
 	_region_tagline.text = tagline
 	_region_card.modulate = Color(0.3, 0.24, 0.19, 0.0)
-	# read, so on the wall clock (WallTweens), as the subtitle and the objective line are
-	var tw := _wall.own(create_tween())
+	var tw := create_tween()
 	tw.tween_property(_region_card, "modulate", Color(1, 1, 1, 1), 1.1).set_trans(Tween.TRANS_CUBIC)
 	tw.tween_interval(REGION_CARD_SECONDS)
 	tw.tween_property(_region_card, "modulate:a", 0.0, 1.4)
@@ -728,9 +727,7 @@ func show_objective(text: String, seconds := OBJECTIVE_SECONDS) -> void:
 	if _objective_tween != null and _objective_tween.is_valid():
 		_objective_tween.kill()
 	_objective.modulate = Color(1, 1, 1, 0.0)
-	# on the wall clock (WallTweens): on a machine drawing a frame every few seconds the line inked
-	# in over several frames and was held for a fraction of the seconds it asks for
-	_objective_tween = _wall.own(create_tween())
+	_objective_tween = create_tween()
 	_objective_tween.tween_property(_objective, "modulate:a", 1.0, 0.5)
 	_objective_tween.tween_interval(seconds)
 	_objective_tween.tween_property(_objective, "modulate:a", 0.0, 1.2)
