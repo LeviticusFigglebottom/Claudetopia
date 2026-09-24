@@ -76,7 +76,7 @@ class RiverFall(unittest.TestCase):
         self.assertLessEqual(self.step.top, behind + 0.5)
 
     def test_the_river_falls_at_the_face(self):
-        rivers = HY.atlas_rivers(self.grid, self.H, self.atlas, None, avoid=[(0.0, 4.0)])
+        rivers = HY.atlas_rivers(self.grid, self.H, self.atlas, None, avoid=[(0.0, 4.0)], pins=self.step.pins())
         falls = rivers[0].falls
         at = [f for f in falls if abs(f["top"][0] + 7.0) < 8.0]
         self.assertEqual(len(at), 1, falls)
@@ -84,6 +84,30 @@ class RiverFall(unittest.TestCase):
         self.assertGreater(f["height_m"], 9.5)
         self.assertEqual(f["kind"], "fall")
         self.assertAlmostEqual(f["facing_deg"], 90.0, delta=15.0)
+
+
+class RiverThroughAHollow(unittest.TestCase):
+    def test_the_top_is_no_higher_than_the_lowest_land_the_river_crosses_above_it(self):
+        # the river crosses a hollow 300 m above the fall, 12 m under the land there: its surface
+        # is held at the hollow's level from there on, so a step with its top at the land's
+        # level stood the river under the lip, and the carve cut the step away
+        g = Grid(1024.0, 512)
+        X, Z = g.mesh(np.float64)
+        H0 = _land(g) - 18.0 * np.exp(-(((X + 300.0) / 40.0) ** 2)) * np.ones_like(Z)
+        H0 = H0.astype(np.float32)
+        atlas = {"coast": {"polygon": BIG},
+                 "rivers": [{"id": "test:river/beck", "path": [[-480.0, 0.0], [480.0, 0.0]], "width_m": [6, 8]}]}
+        poi = {"id": "core:poi/test_force", "kind": "waterfall", "position": [0.0, 4.0],
+               "unique_feature": "a single white sheet"}
+        step = FA.plan(g, H0, atlas, [poi])[poi["id"]]
+        hollow = float(np.min(sample_bilinear(H0, g, np.linspace(-360, -240, 61), np.zeros(61))))
+        self.assertLessEqual(step.top, hollow + 1e-3)
+        self.assertAlmostEqual(step.top - step.foot, 11.0, places=3)
+        H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps={poi["id"]: step})
+        rivers = HY.atlas_rivers(g, H, atlas, None, avoid=[(0.0, 4.0)], pins=step.pins())
+        at = [f for f in rivers[0].falls if abs(f["top"][0] + 7.0) < 8.0]
+        self.assertEqual(len(at), 1, rivers[0].falls)
+        self.assertGreater(at[0]["height_m"], 9.5)
 
 
 class OffTheRivers(unittest.TestCase):
