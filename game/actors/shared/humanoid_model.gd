@@ -44,7 +44,7 @@ const DETAIL_DIR := "res://assets/textures/characters/"
 const GARMENT_KINDS := {
 	"cloth": [0, "weave_normal.png", 34.0, 0.45],
 	"leather": [1, "grain_normal.png", 16.0, 0.9],
-	"iron": [2, "hammer_normal.png", 5.0, 0.7],
+	"iron": [2, "hammer_normal.png", 5.0, 0.4],
 }
 static var _detail_cache: Dictionary = {}
 ## Headgear that covers the crown. Hair is combed for a bare head; under one of these the
@@ -818,7 +818,8 @@ static func dressed_colour_of(mi: MeshInstance3D) -> Color:
 	var m := mi.get_surface_override_material(0)
 	if m is ShaderMaterial:
 		var v: Variant = (m as ShaderMaterial).get_shader_parameter("tint")
-		if int((m as ShaderMaterial).get_shader_parameter("kind")) == 3:
+		var k: Variant = (m as ShaderMaterial).get_shader_parameter("kind")   # null when left at 0
+		if k != null and int(k) == 3:
 			return Color.WHITE
 		if v is Vector3:
 			return Color(v.x, v.y, v.z)

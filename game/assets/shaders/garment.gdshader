@@ -1,5 +1,8 @@
 shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, cull_back;
+render_mode blend_mix, depth_draw_opaque, cull_disabled;
+// Both faces: a pleat, a cloak's hem and a kilt's plaid apron are single sheets, and the glTF's own
+// materials were double-sided. Culled, the Cragborn's plaid apron showed only its edge and the
+// cloak's inside went missing in holes.
 
 // What the people wear: cloth, leather and metal.
 //
@@ -67,9 +70,11 @@ void fragment() {
 		rough = clamp(mix(0.62, 0.9, scuff) + (m.g - 0.5) * 0.2, 0.5, 0.95);
 	} else if (kind == 2) {
 		// metal: dull, darkened, with scratches catching the light and dirt in the dents
-		metal = mix(0.75, 0.9, orm.b);
-		c = mix(c * vec3(0.62, 0.61, 0.60), c * 1.1, scuff);
-		rough = clamp(0.48 + (m.r - 0.5) * 0.35 - scuff * 0.2 + grime * 0.3, 0.25, 0.85);
+		// (Near-mirror iron, rougher only in patches, took the sky and the ground as black and blue
+		// blotches; forged iron is a grey that holds its own light, and its sheen is broad.)
+		metal = mix(0.6, 0.75, orm.b);
+		c = mix(c * vec3(0.84, 0.83, 0.82), c * 1.12, scuff);
+		rough = clamp(0.62 + (m.r - 0.5) * 0.16 - scuff * 0.14 + grime * 0.2, 0.45, 0.85);
 	} else {
 		// cloth: rough all over, rougher where it is dirty
 		rough = clamp(max(rough, 0.86) + grime * 0.1, 0.0, 1.0);
