@@ -247,14 +247,15 @@ func apply_setting() -> void:
 		var r := reach(p.tier)
 		for g in _geometry(p.node):
 			var band: Array = p.bands.get(g, [0.0, 0.0])
+			var last := float(band[1]) <= 0.0
 			g.visibility_range_begin = float(band[0])
-			g.visibility_range_begin_margin = float(band[0]) * LandmarkLod.HYSTERESIS_SHARE
-			g.visibility_range_end = minf(float(band[1]), r) if float(band[1]) > 0.0 else r
-			g.visibility_range_end_margin = g.visibility_range_end * 0.1
+			g.visibility_range_begin_margin = 0.0
+			g.visibility_range_end = r if last else minf(float(band[1]), r)
 			# a stand-in's last level fades out at the reach, into haze that has all but taken it;
-			# its levels change outright, as the cell's do
+			# its levels change outright and with no margin, as the cell's do (LandmarkLod)
+			g.visibility_range_end_margin = g.visibility_range_end * 0.1 if last else 0.0
 			g.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF \
-					if float(band[1]) <= 0.0 else GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+					if last else GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 		_show(p)
 	if edges != null:
 		edges.set_reach(reach("A"))

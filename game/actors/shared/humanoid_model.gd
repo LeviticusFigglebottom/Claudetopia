@@ -59,10 +59,14 @@ const ONE_SHOT_BLEND_OUT := 0.14
 ## long (s), along an edge of its own. With no edge between two one-shots the state machine
 ## restarted on the new clip's first frame: a 1H chain's hand-over moved a hand 46 cm in one
 ## frame (test_attack_motion), four times as far as the swing itself moves it in one.
+## The edge switches at once, and the model blends the two poses itself (_blend_handover).
 const ONE_SHOT_HANDOVER := 0.1
 ## The longest a landed blow holds the picture still (hit_stop), and how fast it catches up after.
 const HIT_STOP_MOST_S := 0.14
 const HIT_STOP_CATCH_UP := 2.0
+## The most the picture may owe the timeline: a blow's wait for the blade to reach the body
+## (Impact.MOST_WAIT_S) and its hold together, with room. Past it the picture would stay behind.
+const HIT_STOP_OWED_MOST := 0.5
 ## The clips a fight hands over from, and the ones it hands over to.
 const HANDS_OVER := ["Attack_", "Riposte", "Backstab"]
 const TAKES_OVER := ["Attack_", "Dodge_", "Hit_", "Stagger", "Knockdown", "Block_Hit", "Parry", "Death_"]
@@ -220,7 +224,9 @@ var _flight_s := 0.0                     ## seconds the body has stood in the ai
 var _flight_pace := -1.0                 ## m/s the body went at when the flight began, or -1
 var _gait_shown := -1.0                  ## the gait position the graph is set to
 var _has_turns := false
-var _handovers := {}                     ## "from>to" one-shot edges that cross-fade (_add_handovers)
+var _handovers := {}                     ## "from>to" one-shot edges that hand over (_add_handovers)
+var _handover_from: Array = []           ## each bone's [rotation, position] as the last clip left it
+var _handover_t := -1.0                  ## seconds into a hand-over's blend, or -1
 var _gait_points: Array = []             ## [[clip, ground speed m/s, point name], ...] ascending
 var _clip_speed: Dictionary = {}         ## clip -> authored ground speed (sidecar `speed`)
 var _clip_cycle: Dictionary = {}         ## clip -> seconds per stride cycle
@@ -1236,7 +1242,8 @@ func _build_animation_tree() -> void:
 	_update_locomotion(0.0)
 
 
-## The edges a fight hands over along (ONE_SHOT_HANDOVER), each played from the new clip's start.
+## The edges a fight hands over along, each played from the new clip's start. They switch at once:
+## the blend across ONE_SHOT_HANDOVER is the model's own (_blend_handover).
 func _add_handovers(sm: AnimationNodeStateMachine) -> void:
 	_handovers.clear()
 	var names := anim_player.get_animation_list()
@@ -1246,7 +1253,7 @@ func _add_handovers(sm: AnimationNodeStateMachine) -> void:
 		for to in names:
 			if to == from or _is_locomotion_clip(to) or not _starts_with_any(to, TAKES_OVER):
 				continue
-			var t := _transition(ONE_SHOT_HANDOVER, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
+			var t := _transition(0.0, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
 			t.reset = true
 			sm.add_transition(from, to, t)
 			_handovers["%s>%s" % [from, to]] = true
@@ -1779,6 +1786,8 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 	# edge, and routing through Locomotion would flash a walk, so that case restarts.
 	var current := str(_state_machine.get_current_node())
 	if current == LOCOMOTION_STATE or _handovers.has("%s>%s" % [current, clip_name]):
+		if current != LOCOMOTION_STATE:
+			_begin_handover()
 		_state_machine.travel(clip_name)
 	else:
 		_state_machine.start(clip_name, true)
@@ -1810,10 +1819,11 @@ func current_intent() -> String:
 ## HIT_STOP_CATCH_UP times as fast until it has caught the time up. The model is only a picture of
 ## the AnimationDriver's timeline (which keeps the hit windows, the cancels and every other §5.3
 ## timing on the physics clock), so a hit-stop delays nothing but the picture, by a few frames.
-func hit_stop(seconds: float) -> void:
-	if seconds <= 0.0:
+func hit_stop(seconds: float, replace := false) -> void:
+	if seconds <= 0.0 and not replace:
 		return
-	_stop_left = maxf(_stop_left, minf(seconds, HIT_STOP_MOST_S))
+	var s := clampf(seconds, 0.0, HIT_STOP_MOST_S)
+	_stop_left = s if replace else maxf(_stop_left, s)
 
 
 ## Seconds the picture is behind the timeline because of hit-stops, still to be caught up.
@@ -1826,7 +1836,7 @@ func _held_back(delta: float) -> float:
 	if _stop_left > 0.0:
 		var d := minf(_stop_left, delta)
 		_stop_left -= d
-		_stop_owed = minf(_stop_owed + d, HIT_STOP_MOST_S * 2.0)
+		_stop_owed = minf(_stop_owed + d, HIT_STOP_OWED_MOST)
 		return delta - d
 	if _stop_owed > 0.0:
 		var extra := minf(_stop_owed, delta * (HIT_STOP_CATCH_UP - 1.0))
@@ -1848,10 +1858,43 @@ func _process(delta: float) -> void:
 	var step := _held_back(delta) * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
 	if anim_tree != null:
 		anim_tree.advance(step)
+		if _handover_t >= 0.0:
+			_blend_handover(step)
 	if not _one_shot.is_empty():
 		_advance_one_shot(step)
 	_turn_the_hips()
 	_plant_feet(delta)
+
+
+## A fight's hand-over (a swing into the next, a roll, a flinch) is the pose the last clip left
+## blended into the new clip's, bone by bone, over ONE_SHOT_HANDOVER: each rotation slerped and each
+## position lerped, eased in and out so the hands neither start nor stop with a jolt. The mixer's own
+## cross-fade is not the pose in between. It takes each clip's turn
+## of a bone from the bone's rest, weighted, and composes one over the other, and between two poses
+## far apart that goes where neither does. From the two-handed chop's follow-through into the sweep
+## after it, it put a spear's butt 9 cm through the chest (test_attack_motion).
+func _begin_handover() -> void:
+	if skeleton == null:
+		return
+	var n := skeleton.get_bone_count()
+	_handover_from.resize(n)
+	for i in n:
+		_handover_from[i] = [skeleton.get_bone_pose_rotation(i), skeleton.get_bone_pose_position(i)]
+	_handover_t = 0.0
+
+
+## Called after the tree has set this frame's pose (see _begin_handover).
+func _blend_handover(step: float) -> void:
+	_handover_t += step
+	var w := _handover_t / ONE_SHOT_HANDOVER
+	if w >= 1.0 or skeleton == null:
+		_handover_t = -1.0
+		return
+	w = w * w * (3.0 - 2.0 * w)
+	for i in mini(_handover_from.size(), skeleton.get_bone_count()):
+		var was: Array = _handover_from[i]
+		skeleton.set_bone_pose_rotation(i, (was[0] as Quaternion).slerp(skeleton.get_bone_pose_rotation(i), w))
+		skeleton.set_bone_pose_position(i, (was[1] as Vector3).lerp(skeleton.get_bone_pose_position(i), w))
 
 
 ## Turns the hips (and the legs under them) toward the way the body goes, and the chest back most of

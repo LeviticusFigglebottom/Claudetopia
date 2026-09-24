@@ -11,6 +11,8 @@ signal hit_landed(victim: Node, hit: HitData, outcome: String)
 const CHAIN_LENGTH := {"1H": 3, "2H": 2, "dagger": 2, "unarmed": 2, "bow": 0, "staff": 0}
 const UNARMED_BLOCK := {"class": "unarmed", "damage": 6.0, "poise_damage": 8.0, "stamina_light": 12.0, "stamina_heavy": 20.0, "speed": 1.2, "reach": 1.0, "clips_set": "unarmed", "parry": false, "stability": 0.2, "kind": "blunt"}
 const HITBOX_RADIUS := 0.4
+## Rig events that belong to the picture, not the fight: left out of a swing's timeline.
+const PICTURE_EVENTS: Array[String] = ["cocked"]
 ## How far a swing reaches up and down from the attack origin (1.1 m on a person): from a hand's
 ## breadth off the ground to a little over the head. See Hitbox.set_swing.
 const SWING_BELOW := 1.0
@@ -149,6 +151,9 @@ func timing_for(attack_kind: String, index: int = 0) -> Dictionary:
 		var scale := 1.0 / speed if attack_kind == "light" or attack_kind == "heavy" else 1.0
 		var events: Array = []
 		for e in rig["events"]:
+			# `cocked` is the picture's (where a foe's held wind-up waits), not the fight's
+			if str(e["name"]) in PICTURE_EVENTS:
+				continue
 			events.append({"t": float(e["t"]) * scale, "name": str(e["name"])})
 		return {"length": float(rig["length"]) * scale, "events": events}
 	return _proportional_timing(attack_kind, index)
