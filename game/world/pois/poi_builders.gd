@@ -567,15 +567,17 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
 
 
-## The Wardens' Watch: a stone tower beside the camp's way where it tops the Choir's Crown, with
-## a stair up its side to a walled platform WATCH_TOP_M above the ground. From the Stair Head the
-## heath's own ridge hides the country; from here, ten metres up, the Grandfather, the Cracked
-## Toll, the Choir's ring and Merrowby's roofs are all on the skyline (the sightline model counts
-## 16 far things from the top, 9 from the way at its foot). It stands WATCH_ALONG_M along the
-## way, WATCH_OFF_M off it on the side the Grandfather is, and is built from the Stair Head so
-## that it is in the camp's near ring, and solid, while anybody stands on it.
-const WATCH_ALONG_M := 360.0
-const WATCH_OFF_M := 10.0
+## The Wardens' Watch: a stone tower off the camp's way where it tops the Choir's Crown, with a
+## stair straight up from the way's side to a walled platform WATCH_TOP_M above the ground. From
+## the Stair Head the heath's own ridge hides the country; from here, ten metres up, the
+## Grandfather, the Cracked Toll, the Choir's ring and Merrowby's roofs are all on the skyline (the
+## sightline model counts 16 far things from the top, 9 from the way). It stands WATCH_ALONG_M
+## along the way and WATCH_OFF_M off it on the side the Grandfather is: past the avenue's east
+## row of colossi, because from inside the avenue, ten metres off the way, the colossus fifty
+## metres north stood across Merrowby and the Toll. It is built from the Stair Head so that it is
+## in the camp's near ring, and solid, while anybody stands on it.
+const WATCH_ALONG_M := 380.0
+const WATCH_OFF_M := 44.0
 const WATCH_TOP_M := 10.0
 const WATCH_HALF_M := 2.4
 const WATCH_STAIR_W := 2.2
@@ -644,14 +646,15 @@ static func _wardens_watch(d: PoiDressing) -> void:
 	k.collider(body, body_xf, "stone")
 	# a string course under the platform's lip, so the tower has a top and is not a post
 	m.block(st, Transform3D(basis, Vector3(c.x, top - 0.15, c.y)), Vector3(WATCH_HALF_M * 2.0 + 0.3, 0.3, WATCH_HALF_M * 2.0 + 0.3))
-	# the wall round the platform: whole on three sides, and on the way's side only south of where
-	# the stair lands
-	var landing_u := WATCH_HALF_M - WATCH_STAIR_W
+	# the wall round the platform: whole on three sides, and on the way's side either side of the
+	# stair's head
+	var gap := WATCH_STAIR_W * 0.5
 	var walls := [
 		[0.0, WATCH_HALF_M, WATCH_HALF_M * 2.0, true],          # north (along +u)
 		[0.0, -WATCH_HALF_M, WATCH_HALF_M * 2.0, true],         # south
 		[WATCH_HALF_M, 0.0, WATCH_HALF_M * 2.0, false],         # the far side (+v)
-		[-WATCH_HALF_M, (landing_u - WATCH_HALF_M) * 0.5, landing_u + WATCH_HALF_M, false],  # the way's side
+		[-WATCH_HALF_M, (WATCH_HALF_M + gap) * 0.5, WATCH_HALF_M - gap, false],     # the way's side, north of the stair
+		[-WATCH_HALF_M, -(WATCH_HALF_M + gap) * 0.5, WATCH_HALF_M - gap, false],    # and south of it
 	]
 	for w in walls:
 		var across_u: bool = w[3]
@@ -660,62 +663,58 @@ static func _wardens_watch(d: PoiDressing) -> void:
 		var xf := Transform3D(basis, Vector3(at.x, top + WATCH_WALL_M * 0.5, at.y))
 		m.block(st, xf, size)
 		k.collider(size, xf, "stone")
-	# the stair: up the tower's side on the way's side, from the south, filled down to the ground,
-	# landing level with the platform where the wall stops
-	var stair_v := -WATCH_HALF_M - WATCH_STAIR_W * 0.5
-	var landing: Vector2 = local.call(landing_u + WATCH_STAIR_W * 0.5, stair_v)
-	var landing_xf := Transform3D(basis, Vector3(landing.x, (top + low - 0.5) * 0.5, landing.y))
-	var landing_size := Vector3(WATCH_STAIR_W, top - (low - 0.5), WATCH_STAIR_W)
-	m.block(st, landing_xf, landing_size)
-	k.collider(landing_size, landing_xf, "stone")
-	var run := 0.0
-	var foot_u := landing_u
-	var step_top := top
+	# the stair: straight out from the way's side of the tower toward the way, each step filled down
+	# to the ground, its head level with the platform where the wall parts
 	var tread := WATCH_RISER_M / WATCH_STAIR_SLOPE
-	while step_top > low and run < 40.0:
-		foot_u = landing_u - run - tread
-		var q: Vector2 = local.call(foot_u + tread * 0.5, stair_v)
+	var run := 0.0
+	var step_top := top
+	var basis_out := Basis(Vector3.UP, atan2(-side.x, -side.y))
+	while step_top > low - 1.0 and run < 40.0:
+		var q: Vector2 = local.call(0.0, -WATCH_HALF_M - run - tread * 0.5)
 		var ground := k.on_ground(q.x, q.y).y
 		step_top -= WATCH_RISER_M
 		if step_top <= ground:
 			break
-		m.block(st, Transform3D(basis, Vector3(q.x, (step_top + ground - 0.4) * 0.5, q.y)),
+		m.block(st, Transform3D(basis_out, Vector3(q.x, (step_top + ground - 0.4) * 0.5, q.y)),
 				Vector3(WATCH_STAIR_W, step_top - (ground - 0.4), tread))
 		run += tread
-	var bottom: Vector2 = local.call(landing_u - run, stair_v)
-	var bottom3 := Vector3(bottom.x, k.on_ground(bottom.x, bottom.y).y, bottom.y)
+	var head: Vector2 = local.call(0.0, -WATCH_HALF_M)
+	var foot: Vector2 = local.call(0.0, -WATCH_HALF_M - run)
+	var foot3 := Vector3(foot.x, k.on_ground(foot.x, foot.y).y, foot.y)
 	# walked as one slope, half a riser under the treads' fronts so a foot is never held off them
 	var sunk := WATCH_RISER_M * 0.5
-	_flight_collider(k, Vector3(landing.x - along.x * WATCH_STAIR_W * 0.5, top - sunk, landing.y - along.y * WATCH_STAIR_W * 0.5),
-			bottom3 - Vector3(0.0, sunk, 0.0), atan2(-along.x, -along.y), WATCH_STAIR_W)
-	# a wall on the stair's open side: level along the landing, then down the flight to where the
-	# stair is a metre off the ground
-	var open_v := stair_v - WATCH_STAIR_W * 0.5 - 0.18
-	var l_north: Vector2 = local.call(landing_u + WATCH_STAIR_W, open_v)
-	var l_south: Vector2 = local.call(landing_u, open_v)
-	_watch_rail(k, m, st, Vector3(l_north.x, top, l_north.y), Vector3(l_south.x, top, l_south.y))
-	var wall_to := landing_u - run * maxf(0.0, 1.0 - 1.0 / maxf(top - bottom3.y, 1.0))
-	var b2: Vector2 = local.call(wall_to, open_v)
-	var b_y := top - (landing_u - wall_to) * WATCH_STAIR_SLOPE
-	_watch_rail(k, m, st, Vector3(l_south.x, top, l_south.y), Vector3(b2.x, b_y, b2.y))
+	_flight_collider(k, Vector3(head.x, top - sunk, head.y), foot3 - Vector3(0.0, sunk, 0.0),
+			atan2(-side.x, -side.y), WATCH_STAIR_W)
+	# a wall down each side of the flight, to where the stair is a metre off the ground
+	var wall_to := run * maxf(0.0, 1.0 - 1.0 / maxf(top - foot3.y, 1.0))
+	for s_side in [-1.0, 1.0]:
+		var u := float(s_side) * (WATCH_STAIR_W * 0.5 + 0.18)
+		var a2: Vector2 = local.call(u, -WATCH_HALF_M)
+		var b2: Vector2 = local.call(u, -WATCH_HALF_M - wall_to)
+		_watch_rail(k, m, st, Vector3(a2.x, top, a2.y), Vector3(b2.x, top - wall_to * WATCH_STAIR_SLOPE, b2.y))
 	m.commit(st, k.surface("stone", 0.6), "Watch", true)
 	k.marker("the_view", Vector3(c.x, top, c.y), true, true, WATCH_HALF_M)
-	# the look-out: the whole far wall is something to lean on and look from, and says what is there
-	var lean: Vector2 = local.call(0.0, WATCH_HALF_M - 0.35)
-	var touch := k.touchable("look_out", Vector3(lean.x, top, lean.y), "Look out", WATCH_DIALOGUE, "", false)
+	# the look-out: the north wall and the far one, where the country is, are somewhere to lean on
+	# and look from, and say what is there
+	var touch := k.touchable("look_out", Vector3(c.x, top, c.y), "Look out", WATCH_DIALOGUE, "", false)
 	if touch != null:
 		touch.basis = basis
 		var old_shape := touch.get_node_or_null("Shape")
 		if old_shape != null:
 			touch.remove_child(old_shape)
 			old_shape.free()
-		var shape := CollisionShape3D.new()
-		shape.name = "Shape"
-		var box := BoxShape3D.new()
-		box.size = Vector3(0.7, 1.0, WATCH_HALF_M * 2.0 - 0.5)
-		shape.shape = box
-		shape.position.y = 1.0
-		touch.add_child(shape)
+		var lean := WATCH_HALF_M - 0.35
+		# (the basis turns local +z along the way and local -x to the far side)
+		var sides := [["Shape", Vector3(-lean, 1.0, 0.0), Vector3(0.7, 1.0, WATCH_HALF_M * 2.0 - 0.5)],
+				["ShapeNorth", Vector3(0.0, 1.0, lean), Vector3(WATCH_HALF_M * 2.0 - 0.5, 1.0, 0.7)]]
+		for spec in sides:
+			var shape := CollisionShape3D.new()
+			shape.name = str(spec[0])
+			var box := BoxShape3D.new()
+			box.size = spec[2]
+			shape.shape = box
+			shape.position = spec[1]
+			touch.add_child(shape)
 
 
 ## The stair's outer wall from `a` (its top) to `b`, sloped with it, WATCH_WALL_M above the treads.
