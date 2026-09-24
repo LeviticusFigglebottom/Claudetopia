@@ -44,6 +44,12 @@ static var all: Array = []
 ## The region's water colours, for the falls places raise after the region look was set.
 static var deep_colour := Color("#123239")
 static var shallow_colour := Color("#3f7a6a")
+## The falls places raised (dress_place), held weakly, so the region's colours and the quality
+## setting reach them too: [WeakRef to a sheet's or a pool's material], and [WeakRef to an
+## emitter, its amount at quality High].
+static var _place_sheets: Array = []
+static var _place_pools: Array = []
+static var _place_emitters: Array = []
 
 var quality := 2
 var _sheet_materials: Array[ShaderMaterial] = []
@@ -454,6 +460,24 @@ func set_colours(deep: Color, shallow: Color) -> void:
 		_colour_sheet(m)
 	for m in _pool_materials:
 		_colour_pool(m)
+	for m in _live(_place_sheets):
+		_colour_sheet(m as ShaderMaterial)
+	for m in _live(_place_pools):
+		_colour_pool(m as ShaderMaterial)
+
+
+## What of `refs` (WeakRefs, or [WeakRef, ...]) is still alive; the dead are dropped from it.
+static func _live(refs: Array) -> Array:
+	var out: Array = []
+	var keep: Array = []
+	for r in refs:
+		var ref: WeakRef = r[0] if r is Array else r
+		var obj: Variant = ref.get_ref()
+		if obj != null:
+			out.append(obj)
+			keep.append(r)
+	refs.assign(keep)
+	return out
 
 
 func _on_setting_changed(section: String, key: String, value: Variant) -> void:
@@ -473,6 +497,14 @@ func apply_quality(q: int) -> void:
 		m.set_shader_parameter("detail", QUALITY_DETAIL[quality])
 	for m in _pool_materials:
 		m.set_shader_parameter("detail", QUALITY_DETAIL[quality])
+	for m in _live(_place_sheets) + _live(_place_pools):
+		(m as ShaderMaterial).set_shader_parameter("detail", QUALITY_DETAIL[quality])
+	for e in _place_emitters.duplicate():
+		var p: GPUParticles3D = (e[0] as WeakRef).get_ref() as GPUParticles3D
+		if p == null:
+			_place_emitters.erase(e)
+		else:
+			p.amount = maxi(int(round(float(e[1]) * QUALITY_PARTICLES[quality])), 1)
 
 
 static func particle_scale() -> float:
@@ -574,6 +606,7 @@ static func dress_place(d: Node3D) -> int:
 		fall.mesh = sheet_mesh(lip, foot, width, out, false)
 		fall.material_override = sheet_material(height, width, false,
 				clampi(int(Settings.get_value("graphics", "water_quality", 2)), 0, 3))
+		_place_sheets.append(weakref(fall.material_override))
 		fall.visibility_range_end = SHEET_RANGE_M
 		if pool != null:
 			pool.visible = false
@@ -582,6 +615,7 @@ static func dress_place(d: Node3D) -> int:
 		var disc := pool_disc(Vector3(pool_c.x, foot_y + 0.04, pool_c.z), maxf(pool_r, width * 0.8), foot, width,
 				height, 1.6, false, clampi(int(Settings.get_value("graphics", "water_quality", 2)), 0, 3))
 		disc.name = "Pool" + tier
+		_place_pools.append(weakref(disc.material_override))
 		disc.visibility_range_end = POOL_RANGE_M
 		d.add_child(disc)
 		for p in puffs:
@@ -590,6 +624,7 @@ static func dress_place(d: Node3D) -> int:
 				p.queue_free()
 		var many := particle_scale()
 		for p in white_water(foot, out, width, height):
+			_place_emitters.append([weakref(p), p.amount])
 			p.amount = maxi(int(round(float(p.amount) * many)), 1)
 			p.name = str(p.name) + tier
 			d.add_child(p)

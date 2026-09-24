@@ -157,6 +157,31 @@ func test_a_place_of_its_own_draws_a_proper_fall() -> void:
 	assert_true(d.find_child("Mist", true, false) != null, "and mist over it")
 
 
+## A place's fall takes the region's water as the rivers' falls do, when the region changes after
+## it was raised, and the quality setting reaches its spray.
+func test_a_place_fall_follows_the_region_and_the_quality() -> void:
+	RiverFalls.all.clear()
+	var d := _dress_waterfall()
+	var fall := d.find_child("Fall", true, false) as MeshInstance3D
+	assert_true(fall != null, "the place's fall is drawn")
+	if fall == null:
+		return
+	var falls := RiverFalls.new()
+	falls.set_colours(Color(0.1, 0.0, 0.0), Color(0.0, 0.5, 0.0))
+	var mat := fall.material_override as ShaderMaterial
+	assert_eq(mat.get_shader_parameter("water_colour"), Color(0.0, 0.5, 0.0).lightened(0.15), "the region's water reaches it")
+	var spray := d.find_child("Spray", true, false) as GPUParticles3D
+	assert_true(spray != null, "it throws up white water")
+	if spray != null:
+		falls.apply_quality(0)
+		var low := spray.amount
+		falls.apply_quality(3)
+		assert_gt(spray.amount, low, "and more of it at Painted than at Low")
+		falls.apply_quality(int(Settings.get_value("graphics", "water_quality", 2)))
+	falls.set_colours(Color("#123239"), Color("#3f7a6a"))
+	falls.free()
+
+
 func _dress_waterfall() -> PoiDressing:
 	var id := "core:poi/test_waterfall"
 	var entry := {"place_id": id, "pos": [0.0, 50.0, 0.0], "radius_flat_m": 30.0}
