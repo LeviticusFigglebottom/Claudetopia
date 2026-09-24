@@ -4,12 +4,15 @@ extends Node
 ## boulders, stumps and logs, field walls, hedges and fences, gate posts, milestones and bales.
 ## Grass, flowers, bracken and bushes stay passable, and so does anything a foot steps over.
 ##
-## Each cell of the near ring (3x3 round the player, where the foes and the people are) stands one
-## static body on the physics server, with a simple shape for each solid thing in it. A trunk is a
-## cylinder of the forge's own trunk radius. A wall, a hedge or a fence module is the box of its
-## bounds. A rock is the convex hull of its mesh, and a cliff slab is the forge's collision mesh.
-## There are no nodes. A cell's shapes are server calls, spread over frames with the nearest cell
-## first, and the body goes with the cell. The far ring has none.
+## The near ring (3x3 cells of 256 m round the player, where the foes and the people are) is cut
+## into blocks of BLOCK_M, and each block with something solid in it stands one static body on the
+## physics server, with a simple shape for each solid thing. A trunk is a cylinder of the forge's
+## own trunk radius. A wall, a hedge or a fence module is the box of its bounds. A rock is the
+## convex hull of its mesh, and a cliff slab is the hull of the forge's collision mesh. There are no
+## nodes. The shapes are server calls, spread over ticks with the block nearest the player first,
+## and a block's body joins the physics space whole, once its last shape is in: the physics engine
+## re-files every shape of a body in space each time one is added, which made a 1000-shape cell
+## cost it a million moves. The bodies go with their cell. The far ring has none.
 ##
 ## The shapes are on a layer of their own (13, "scatter"). The player, the foes and the people walk
 ## into it (Actor.BODY_MASK and their scenes' masks). The camera's arm, sight, arrows, footsteps and
@@ -24,10 +27,13 @@ const MIN_HEIGHT_M := 0.45
 const TRUNK_TOP_M := 4.5
 ## How far under the ground a shape reaches, so a slope leaves no gap under it.
 const SINK_M := 0.4
-## How much of a physics tick the shapes may take (µs).
+## The side of a block (m): a cell of 256 m is sixteen, and the block the player stands in is solid
+## a few ticks after its cell arrives.
+const BLOCK_M := 64.0
+## How much of a physics tick the shapes may take (µs). An asset seen for the first time (its meta
+## read, a rock's hull made: 2 to 15 ms here) is made at the start of a tick of its own, so a tick
+## runs over by one asset at most, once a session.
 const BUDGET_USEC := 1500
-## How many shapes are stood between two looks at the clock.
-const CHUNK := 24
 ## The most points a rock's hull may have: the physics engine takes a hull of at most 256.
 const MAX_HULL_POINTS := 200
 ## Passable whatever the forge says: loose stones, driftwood, what lies flat or is walked on. A
@@ -48,84 +54,132 @@ static var _scaled: Dictionary = {}
 ## asset path -> the unscaled hull points or collision faces its scaled shapes are made from
 static var _hulls: Dictionary = {}
 static var _faces: Dictionary = {}
-## What standing the shapes has cost: cells and shapes stood, and microseconds in all and in the
-## worst tick. The capture runner and the solids probe report these.
-static var stats := {"cells": 0, "shapes": 0, "stood_us_total": 0, "stood_us_max": 0, "ticks": 0}
+## What standing the shapes has cost: cells, blocks and shapes stood, assets made ready, and
+## microseconds in all and in the worst tick. The capture runner and the solids probe report these.
+static var stats := {"cells": 0, "blocks": 0, "shapes": 0, "assets": 0, "stood_us_total": 0, "stood_us_max": 0, "ticks": 0}
 
 
-## One cell's body and what is still to stand in it.
+## One block of a cell: its body, and what is still to stand in it.
 class Job:
 	extends RefCounted
 	var node: Node3D
-	var holder: Node
+	## the block's middle, in the world, on the flat
+	var centre := Vector2.ZERO
 	var body := RID()
-	## [asset path, rows] of the cell's scatter, and [Shape3D, Transform3D] the wayside built
-	var groups: Array = []
+	var space := RID()
+	## asset path -> rows of the cell's scatter in this block, and [Shape3D, Transform3D] the
+	## wayside built there
+	var groups: Dictionary = {}
+	var paths: Array = []
 	var extra: Array = []
 	var gi := 0
 	var ri := 0
 	var ei := 0
 	var shapes := 0
+	var in_space := false
 	var gone := false
 
 	func finished() -> bool:
-		return gi >= groups.size() and ei >= extra.size()
+		return gi >= paths.size() and ei >= extra.size()
 
+
+## Off, a block's body is in the space from its first shape (as it was first built): the solids
+## probe's `--join-each`, to measure what joining whole saves.
+static var join_whole := true
 
 var _jobs: Array = []
 var _live: Array = []
+var _sorted_for := Vector2.INF
 
 
 ## Takes a near-ring cell's scatter (`instances`, what it draws: asset path -> rows) and what the
-## wayside built there (`extra`, [Shape3D, Transform3D] relative to the cell), and gives the cell a
-## body its shapes are stood in by `build`.
+## wayside built there (`extra`, [Shape3D, Transform3D] relative to the cell), and gives each of the
+## cell's blocks with something solid in it a body, whose shapes `build` stands.
 func add_cell(node: Node3D, instances: Dictionary, extra: Array = []) -> void:
 	if node == null or not node.is_inside_tree():
 		return
-	var job := Job.new()
-	job.node = node
+	var origin := node.global_position
+	var blocks: Dictionary = {}          # Vector2i -> Job
 	for path in instances:
-		if str(spec_for(str(path))["kind"]) != "none":
-			job.groups.append([str(path), instances[path]])
-	job.extra = extra
-	if job.groups.is_empty() and job.extra.is_empty():
+		var p := str(path)
+		if not maybe_solid(p):
+			continue
+		for row in instances[path]:
+			var key := Vector2i(floori((float(row[0]) - origin.x) / BLOCK_M), floori((float(row[2]) - origin.z) / BLOCK_M))
+			var job: Job = blocks.get(key)
+			if job == null:
+				job = Job.new()
+				blocks[key] = job
+			var rows: Array = job.groups.get_or_add(p, [])
+			rows.append(row)
+	for e in extra:
+		var at: Vector3 = (e[1] as Transform3D).origin
+		var key := Vector2i(floori(at.x / BLOCK_M), floori(at.z / BLOCK_M))
+		var job: Job = blocks.get(key)
+		if job == null:
+			job = Job.new()
+			blocks[key] = job
+		job.extra.append(e)
+	if blocks.is_empty():
 		return
-	job.holder = Node.new()
-	job.holder.name = "Solids"
-	node.add_child(job.holder)
-	job.holder.tree_exiting.connect(_drop.bind(job), CONNECT_ONE_SHOT)
-	job.body = PhysicsServer3D.body_create()
-	PhysicsServer3D.body_set_mode(job.body, PhysicsServer3D.BODY_MODE_STATIC)
-	PhysicsServer3D.body_set_collision_layer(job.body, LAYER)
-	PhysicsServer3D.body_set_collision_mask(job.body, 0)
-	PhysicsServer3D.body_attach_object_instance_id(job.body, job.holder.get_instance_id())
-	PhysicsServer3D.body_set_state(job.body, PhysicsServer3D.BODY_STATE_TRANSFORM,
-			Transform3D(Basis(), node.global_position))
-	PhysicsServer3D.body_set_space(job.body, node.get_world_3d().space)
-	_jobs.append(job)
-	_live.append(job)
+	var holder := Node.new()
+	holder.name = "Solids"
+	node.add_child(holder)
+	var cell_jobs: Array = []
+	var space := node.get_world_3d().space
+	for key: Vector2i in blocks:
+		var job: Job = blocks[key]
+		job.node = node
+		job.paths = job.groups.keys()
+		job.centre = Vector2(origin.x + (float(key.x) + 0.5) * BLOCK_M, origin.z + (float(key.y) + 0.5) * BLOCK_M)
+		job.space = space
+		job.body = PhysicsServer3D.body_create()
+		PhysicsServer3D.body_set_mode(job.body, PhysicsServer3D.BODY_MODE_STATIC)
+		PhysicsServer3D.body_set_collision_layer(job.body, LAYER)
+		PhysicsServer3D.body_set_collision_mask(job.body, 0)
+		PhysicsServer3D.body_attach_object_instance_id(job.body, holder.get_instance_id())
+		PhysicsServer3D.body_set_state(job.body, PhysicsServer3D.BODY_STATE_TRANSFORM,
+				Transform3D(Basis(), origin))
+		# not in the space until its last shape is in (see the top)
+		if not join_whole:
+			PhysicsServer3D.body_set_space(job.body, space)
+			job.in_space = true
+		_jobs.append(job)
+		_live.append(job)
+		cell_jobs.append(job)
+	holder.tree_exiting.connect(_drop_cell.bind(cell_jobs), CONNECT_ONE_SHOT)
+	_sorted_for = Vector2.INF
 	stats["cells"] += 1
+	stats["blocks"] += cell_jobs.size()
 
 
-## Stands the waiting cells' shapes, the cell nearest `eye` first, for at most `budget_usec` of
+## Stands the waiting blocks' shapes, the block nearest `eye` first, for at most `budget_usec` of
 ## this tick (0: all of them). Returns how many it stood.
 func build(eye: Vector3, budget_usec: int = BUDGET_USEC) -> int:
 	if _jobs.is_empty():
 		return 0
 	var t0 := Time.get_ticks_usec()
-	if _jobs.size() > 1:
+	var flat := Vector2(eye.x, eye.z)
+	# sorted again when a cell arrives or the eye has gone a block's width
+	if _jobs.size() > 1 and (_sorted_for == Vector2.INF or _sorted_for.distance_to(flat) > BLOCK_M * 0.5):
 		_jobs.sort_custom(func(a: Job, b: Job) -> bool:
-				return _flat_d2(a, eye) < _flat_d2(b, eye))
+				return a.centre.distance_squared_to(flat) < b.centre.distance_squared_to(flat))
+		_sorted_for = flat
+	var deadline := t0 + budget_usec if budget_usec > 0 else 0
 	var stood := 0
 	while not _jobs.is_empty():
 		var job: Job = _jobs[0]
 		if job.gone:
 			_jobs.pop_front()
 			continue
-		stood += _stand(job, CHUNK if budget_usec > 0 else 1 << 30)
+		var n := _stand(job, deadline, t0)
+		stood += maxi(n, 0)
 		if job.finished():
 			_jobs.pop_front()
-		if budget_usec > 0 and Time.get_ticks_usec() - t0 >= budget_usec:
+			if job.body.is_valid() and not job.in_space:
+				PhysicsServer3D.body_set_space(job.body, job.space)
+				job.in_space = true
+		elif n < 0 or (deadline > 0 and Time.get_ticks_usec() >= deadline):
 			break
 	var us := Time.get_ticks_usec() - t0
 	stats["stood_us_total"] += us
@@ -139,6 +193,7 @@ func flush() -> int:
 	return build(Vector3.ZERO, 0)
 
 
+## Blocks still to stand.
 func pending() -> int:
 	return _jobs.size()
 
@@ -151,6 +206,7 @@ func shape_count() -> int:
 	return n
 
 
+## Bodies standing, a block each.
 func body_count() -> int:
 	return _live.size()
 
@@ -163,54 +219,94 @@ func bodies() -> Array[RID]:
 	return out
 
 
-static func _flat_d2(job: Job, eye: Vector3) -> float:
-	if not is_instance_valid(job.node):
-		return INF
-	var p := job.node.global_position
-	return Vector2(p.x - eye.x, p.z - eye.z).length_squared()
+## Whether each body is in the physics space yet (it joins whole, when its last shape is in).
+func bodies_in_space() -> int:
+	var n := 0
+	for job in _live:
+		n += 1 if (job as Job).in_space else 0
+	return n
 
 
-func _stand(job: Job, count: int) -> int:
+## Stands `job`'s shapes until `deadline` (µs; 0, all of them). An asset not yet made ready is made
+## only at the start of a tick (`t0`): met later, it waits for the next, and -1 says so.
+func _stand(job: Job, deadline: int, t0: int) -> int:
 	var stood := 0
 	var origin := job.node.global_position
-	while stood < count and job.gi < job.groups.size():
-		var group: Array = job.groups[job.gi]
-		var rows: Array = group[1]
+	while job.gi < job.paths.size():
+		var path := str(job.paths[job.gi])
+		var rows: Array = job.groups[path]
 		if job.ri >= rows.size():
 			job.gi += 1
 			job.ri = 0
 			continue
-		var solid := solid_of(str(group[0]), rows[job.ri], origin)
+		if deadline > 0 and not _shape_ready(path):
+			if Time.get_ticks_usec() - t0 > 50:
+				stats["shapes"] += stood
+				return -1 if stood == 0 else stood
+			stats["assets"] += 1
+		var solid := solid_of(path, rows[job.ri], origin)
 		job.ri += 1
-		if solid.is_empty():
-			continue
-		PhysicsServer3D.body_add_shape(job.body, (solid[0] as Shape3D).get_rid(), solid[1])
-		job.shapes += 1
-		stood += 1
-	while stood < count and job.ei < job.extra.size():
+		if not solid.is_empty():
+			PhysicsServer3D.body_add_shape(job.body, (solid[0] as Shape3D).get_rid(), solid[1])
+			job.shapes += 1
+			stood += 1
+		if deadline > 0 and Time.get_ticks_usec() >= deadline:
+			stats["shapes"] += stood
+			return stood
+	while job.ei < job.extra.size():
 		var e: Array = job.extra[job.ei]
 		job.ei += 1
 		PhysicsServer3D.body_add_shape(job.body, (e[0] as Shape3D).get_rid(), e[1])
 		job.shapes += 1
 		stood += 1
+		if deadline > 0 and Time.get_ticks_usec() >= deadline:
+			break
 	stats["shapes"] += stood
 	return stood
 
 
-func _drop(job: Job) -> void:
-	job.gone = true
-	if job.body.is_valid():
-		PhysicsServer3D.free_rid(job.body)
-		job.body = RID()
-	_live.erase(job)
-	_jobs.erase(job)
-	# the wayside's shapes were this cell's alone; the scatter's are shared and stay cached
-	job.extra = []
+## Whether an asset's shape can be had without reading its meta or making its hull.
+static func _shape_ready(path: String) -> bool:
+	if not _specs.has(path):
+		return false
+	var kind := str(_specs[path]["kind"])
+	if kind == "hull":
+		return _hulls.has(path)
+	if kind == "mesh":
+		return _faces.has(path)
+	return true
+
+
+func _drop_cell(jobs: Array) -> void:
+	for job: Job in jobs:
+		job.gone = true
+		if job.body.is_valid():
+			PhysicsServer3D.free_rid(job.body)
+			job.body = RID()
+		_live.erase(job)
+		_jobs.erase(job)
+		# the wayside's shapes were this cell's alone; the scatter's are shared and stay cached
+		job.extra = []
+		job.groups = {}
 
 
 func _exit_tree() -> void:
-	for job in _live.duplicate():
-		_drop(job)
+	var jobs := _live.duplicate()
+	_drop_cell(jobs)
+
+
+## Whether an asset may stand as anything, from its path alone: grass, flowers, bracken and bushes
+## (the flora), and loose or flat things, never do, and are not looked at again.
+static func maybe_solid(path: String) -> bool:
+	if _specs.has(path):
+		return str(_specs[path]["kind"]) != "none"
+	if not path.contains("/trees/") and not path.contains("/rocks/") and not path.contains("/props/"):
+		return false
+	var file := path.get_file()
+	for word in PASSABLE:
+		if file.contains(word):
+			return false
+	return true
 
 
 # --- what stands as what ----------------------------------------------------------------------
