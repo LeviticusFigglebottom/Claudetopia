@@ -1878,10 +1878,10 @@ func _process(delta: float) -> void:
 ## A fight's hand-over (a swing into the next, a roll, a flinch) is the pose the last clip left
 ## blended into the new clip's, bone by bone, over ONE_SHOT_HANDOVER: each rotation slerped and each
 ## position lerped, eased in and out so the hands neither start nor stop with a jolt. The mixer's own
-## cross-fade is not the pose in between. It takes each clip's turn
-## of a bone from the bone's rest, weighted, and composes one over the other, and between two poses
-## far apart that goes where neither does. From the two-handed chop's follow-through into the sweep
-## after it, it put a spear's butt 9 cm through the chest (test_attack_motion).
+## cross-fade is not the pose in between: it takes each clip's turn of a bone from the bone's rest,
+## weighted, and composes one over the other, and between two poses far apart that goes where
+## neither does. From the two-handed chop's follow-through into the sweep after it, it put a
+## spear's butt 9 cm through the chest (test_attack_motion).
 func _begin_handover() -> void:
 	if skeleton == null:
 		return
