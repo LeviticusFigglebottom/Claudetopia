@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 09:10 UTC. Main is `claude/blissful-volta-dg80e6` at `154952a6` (the atlas merge). Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24 10:10 UTC. Main is `claude/blissful-volta-dg80e6` at `154952a6` (the atlas merge). Every area's hand-off note is in §6.
 
 ---
 
@@ -57,15 +57,15 @@ The user owns the project. Their direction, in their words where it matters:
 
 | Branch | Area | Head at last push | State |
 |---|---|---|---|
-| `claude/blissful-volta-dg80e6` | **main** | `154952a6` | The drawn atlas is in main and verified. **Batch in assembly on `batch2`, saved as `wip/batch2`:** opening 15b4486e, painted look c3d7c104 (dead-ash GLBs reconciled with graphics' via tools/forge/weather_dead_wood.py), graphics 80365a89, weapons 0dcd5cd6 (weapon seeds pinned, WEAPON_SEED in make_manifest.py), world-builder 767b9018, cartographer e01fe24f. Still to join: settlements, characters, wayfarers. The second 4096 rebuild is running. Then test, journey, flow and quests, then push. |
-| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `767b9018` | In batch2. Settlements are level to their full radius (radius_level_m = radius_flat_m); POIs are level to 0.7. Grandfather Hollow ring and spur, falls, meanders. |
+| `claude/blissful-volta-dg80e6` | **main** | `154952a6` | The drawn atlas is in main. **Batch 2 is verifying (`wip/batch2` 581ccbfe):** the world rebuilt from atlas 3354e7a4, plus opening, painted look, graphics, weapons, world-builder and the cartographer's travellers and wayfarers. Journey 16/16 and flow PASS. The suite has 8 failures sent to their owners: Swept Road choices, the Hollow door plan, Arn's marker and the Turning Cairn hearthstone (cartographer); test_world_data rivers/roads (land); test_control_hints (opening). Quests running. Next batch: settlements, characters (rig via transplant_clips), weapons 6722b06d, meander rebuild 721c9e73, farmsteads, mills, caves. |
+| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `77469aab` | Meanders varied, with oxbows (721c9e73). Now: falls as data, build time, roads off grade. |
 | `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `e01fe24f` | In batch2: road travellers (RoadRoutes; journeys at 3.4 m/s). Wayfarers written, being committed. Next: the 14 thin stretches. |
 | `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `2a3be507` | **Done and in main.** |
 | `wip/opening` | The intro cinematic, the start, and its loose ends | `15b4486e` | In batch2. Cart off the way, with a clearance test. Now: Phase B. |
-| `wip/player-feel` | Movement, gaits, animation feel | `fd6356cf` | Weapons in batch2 (0dcd5cd6). Now: combat impact (hit-stop, effects, reactions). |
+| `wip/player-feel` | Movement, gaits, animation feel | `6722b06d` | Combat impact done: hit-stop, kick, effects, trails, knockback, directional reactions, enemy wind-up audit, scythe. Next batch. It owns the rig's clips; characters owns the meshes. |
 | `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `c3d7c104` | In batch2. **Priority now:** the upland and fell terrain reads as blue-grey cells (see the ground frames), plus the northern sky. Then re-render the dead-ash impostors. |
 | `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `80365a89` | In batch2. Now: the horizon layer. |
-| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `5748d9e2` | Pass two (3ad13a77) waiting for its batch head. Materials and faces in progress. |
+| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `f7e8286a` | Rig reconciled onto weapons' clips (6bd956f4). Now: an earthy palette, faces, cloak, wear. It rebuilds the rig onto weapons' latest clips before each batch. |
 | `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `6d3e925e` | Moving Wayside scale to scatter field 8, then into the batch. POI kinds need atlas homes. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
