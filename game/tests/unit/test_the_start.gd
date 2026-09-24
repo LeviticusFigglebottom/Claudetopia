@@ -405,29 +405,24 @@ func test_the_wardens_watch_can_be_climbed_from_the_way() -> void:
 	assert_false(floor_hit.is_empty(), "the platform is solid")
 	if not floor_hit.is_empty():
 		assert_near(float((floor_hit["position"] as Vector3).y), top.y, 0.3, "and stood on at its top")
-	# the stair: walk from the way's side up its middle, and every step of it is a slope a body goes up
-	var consts := (load(PoiDressing.BUILDERS_PATH) as GDScript).get_script_constant_map()
+	# the stair: walk down its middle from the platform to the ground, toward the way it comes down
+	# to, and every step of it is a slope a body goes up
+	var builders := load(PoiDressing.BUILDERS_PATH) as GDScript
+	var consts := builders.get_script_constant_map()
 	var via := _via()
 	var at := Vector2(top.x, top.z)
-	var leg := 0
-	var best := INF
-	for i in range(via.size() - 1):
-		var off := Geometry2D.get_closest_point_to_segment(at, via[i], via[i + 1]).distance_to(at)
-		if off < best:
-			best = off
-			leg = i
-	var along := (via[leg + 1] - via[leg]).normalized()
-	var way_side := Vector2(-along.y, along.x)
-	if way_side.dot(Geometry2D.get_closest_point_to_segment(at, via[leg], via[leg + 1]) - at) < 0.0:
-		way_side = -way_side
+	var spot: Array = builders.call("_watch_spot", d)
+	assert_false(spot.is_empty(), "the Watch has its place on the way")
+	if spot.is_empty():
+		return
+	var on_way: Vector2 = Vector2(d.global_position.x, d.global_position.z) + (spot[0] as Vector2)
+	var way_side := (on_way - at).normalized()
 	var half: float = consts["WATCH_HALF_M"]
-	var w: float = consts["WATCH_STAIR_W"]
-	var stair_mid := at + way_side * (half + w * 0.5)
 	var last_y := INF
 	var climbed := 0.0
 	var steep: Array[String] = []
-	for j in 60:
-		var p := stair_mid + along * (half - w * 0.5 - float(j) * 0.5)
+	for j in 80:
+		var p := at + way_side * (half + 0.3 + float(j) * 0.5)
 		var hit: Dictionary = down.call(p.x, p.y, top.y + 3.0)
 		if hit.is_empty():
 			break
