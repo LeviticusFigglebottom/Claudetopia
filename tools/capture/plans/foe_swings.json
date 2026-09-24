@@ -1,0 +1,20 @@
+{
+  "sequences": [
+    {"label": "raider_step_through", "view": "foe_close_front",
+     "foe": ["core:enemy/clanless_raider", -3.0, 0.02, -3.0, 0.0],
+     "foe_attacks": [[0.2, "step_through"]],
+     "shots": {"from": 0.2, "every": 0.0667, "count": 22}},
+    {"label": "raider_great_cleave", "view": "foe_close_front",
+     "foe": ["core:enemy/clanless_raider", -3.0, 0.02, -3.0, 0.0],
+     "foe_attacks": [[0.2, "great_cleave"]],
+     "shots": {"from": 0.2, "every": 0.0667, "count": 26}},
+    {"label": "hart_antler_toss", "view": "foe_close_front",
+     "foe": ["core:enemy/hart_knight", -3.0, 0.02, -3.0, 0.0],
+     "foe_attacks": [[0.2, "antler_toss"]],
+     "shots": {"from": 0.2, "every": 0.0833, "count": 26}},
+    {"label": "bell_bearer_crushing_step", "view": "foe_close_front",
+     "foe": ["core:enemy/bell_bearer", -3.0, 0.02, -3.0, 0.0],
+     "foe_attacks": [[0.2, "crushing_step"]],
+     "shots": {"from": 0.2, "every": 0.1, "count": 30}}
+  ]
+}
