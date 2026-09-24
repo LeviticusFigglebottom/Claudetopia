@@ -57,8 +57,6 @@ GUARDS: Dict[str, Pose] = {
 # (lateral spread, left foot forward, right foot forward, left yaw, right yaw)
 STANCES: Dict[str, Tuple[float, float, float, float, float]] = {
     "idle": (0.012, 0.0, 0.0, 7.0, -7.0),
-    # the free right foot eased forward and turned out
-    "rest": (0.010, 0.0, 0.035, 6.0, -13.0),
     "combat": (0.035, 0.150, -0.105, 12.0, -26.0),
     "wide": (0.055, 0.180, -0.150, 14.0, -30.0),
     "crouch": (0.045, 0.100, -0.080, 10.0, -22.0),
@@ -204,6 +202,18 @@ def _torso(f: float = 0.0, side: float = 0.0, turn: float = 0.0, hips_turn: floa
     return p
 
 
+def hips_still(fn: Callable[[float], Pose]) -> Callable[[float], Pose]:
+    """A layer with its movement of the hips taken out: the upper body sways and breathes over legs
+    that stand still. The relaxed Idle's bent legs turned at every joint to keep the feet down while
+    the hips swayed, and the engine's import thins those curves: the feet the bake holds still
+    wandered 2 mm, and the foot planter snapped them back and forth for a second after every stop."""
+    def fn2(t: float) -> Pose:
+        p = dict(fn(t))
+        p.pop(HIPS_POS, None)
+        return p
+    return fn2
+
+
 def hanging_arms(period: float, amount: float = 1.0) -> Callable[[float], Pose]:
     """The arms go on hanging while a breath lifts the shoulders: the breathing layer's shoulder
     roll, taken back at the upper arm.  Without it every breath swung the hands of the relaxed
@@ -222,12 +232,16 @@ def locomotion_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     out: Dict[str, ClipBuilder] = {}
 
     idle = ClipBuilder(skel, "Idle", 4.0, loop=True, grounded=True)
-    set_stance(idle, "rest")
+    # The weight sits on the left leg (RELAXED's hips), and the feet stand where the foot planter
+    # and the turns on the spot put them: in the "rest" stance, the free right foot 3.5 cm forward
+    # and turned out 13 degrees, a stop from a walk went on stepping for 1.1 s and an about-face
+    # slid the feet 7.4 cm settling into it (test_locomotion_blend).
+    set_stance(idle, "idle")
     idle.key(0.0, RELAXED)
-    idle.layer(breathing(period=4.0, amount=1.0))
+    idle.layer(hips_still(breathing(period=4.0, amount=1.0)))
     idle.layer(hanging_arms(period=4.0, amount=1.0))
     idle.layer(head_look(period=6.5, yaw=9.0, pitch=3.0))
-    idle.layer(sway(period=5.0, amount=1.0))
+    idle.layer(hips_still(sway(period=5.0, amount=1.0)))
     out["Idle"] = idle
 
     gi = ClipBuilder(skel, "Idle_Combat", 2.4, loop=True, grounded=True)
