@@ -35,5 +35,5 @@ void fragment() {
 	vec3 col = mix(lip.rgb, core.rgb * glow * breathe, hot);
 	col = mix(core.rgb * 0.55 * breathe, col, max(hot, lips * 0.85));
 	ALBEDO = col;
-	ALPHA = clamp(max(max(hot, lips * 0.85), halo * 0.3), 0.0, 1.0);
+	ALPHA = clamp(max(max(hot, lips * 0.85), halo * 0.42), 0.0, 1.0);
 }
