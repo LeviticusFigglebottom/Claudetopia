@@ -7215,3 +7215,74 @@ Mill has moved (e21615a3).
   The old 28 are gone, including every one over 25 m. These four want the batch-4 4096 build's
   `test_sightlines` before anything is moved.
 
+
+### Waves 2 to 4: the Briarwold, Hearthvale, the Mere's shores, Sedgemire, and a light touch on Cinderlea
+
+- **Wave 2** (a35aaa77): 30 finds in the Briarwold, in the Woodfolk's voice (custom and not law,
+  leave never asked, moss graves, tally-sticks, oiled stones, the Hart-Knights' mourning). Two of
+  them stand on the Wold road's Vale edge. Two proposed sites were left out, each a second find
+  within 145 m on the Moot road by the Antler Chapel.
+- **Wave 3** (5a21f557): 29 finds.
+  - Hearthvale: the Wardens' Roll and the quiet villages, the Larkbourne Boys, the Chalk Hound.
+  - The Mere's shores: the weighbridge, the laundresses, the rafters, the fallen water.
+  - Sedgemire: lanterns for the drowned, the Tide account's turning.
+  - One site had its name clash with an existing location (the Roll Stone) and was renamed the
+    Quiet Mile.
+- **Wave 4** (99d892bd): 7 finds. Cinderlea gets finds only on roads empty for over about 470 m,
+  one to a road, and one more goes on the Dreughow road. Left out:
+  - a site 113 m from the One Poppy, which keeps its square kilometre;
+  - two more on the Ash Heath's West Walk road;
+  - one on the Grey Hedge's ground and one among the Glass Bridge's crowd;
+  - two within 125 m of wave-1 finds, and one on Rudd Beck's bank.
+
+**All four waves:** 120 finds.
+
+| Kind | Finds |
+|---|---|
+| camps | 28 |
+| waystones | 20 |
+| shrines | 20 |
+| vistas | 17 |
+| ruins | 13 |
+| standing stones | 10 |
+| caves | 5 |
+| shielings | 3 |
+| wrecks | 2 |
+| giant skulls | 2 |
+
+They leave 108 notes and 12 objects, and 16 of them stand foes up.
+
+| | thin road (of 120.5 km) | gaps over 300 m | longest | empty country |
+|---|---|---|---|---|
+| before | 65.4 km | 100 | 1680 m | 2.3 km² |
+| wave 1 | 46.3 km | 89 | 1360 m | 2.0 km² |
+| wave 2 | 32.9 km | 71 | 1248 m | 1.9 km² |
+| wave 3 | 20.5 km | 45 | 1248 m | 1.7 km² |
+| wave 4 | 18.0 km | 44 | 925 m | 1.7 km² |
+
+By region, thin road before and after:
+
+| Region | before | after |
+|---|---|---|
+| Skerrow | 19.6 km | 7.9 km |
+| the Briarwold | 15.3 km | 1.7 km |
+| Brightwater | 10.1 km | 0.3 km |
+| Cinderlea | 9.8 km | 7.4 km |
+| Hearthvale | 7.1 km | 0.3 km |
+| Sedgemire | 3.4 km | 0.3 km |
+
+**What is still thin** is mostly Skerrow's dale switchbacks, in runs of 300–500 m where no ground
+takes a pad, plus the Ash Heath and the Ashgrid, which are meant to be quiet. The empty country
+off the roads (1.7 km², in blobs of at most 0.09 km²) wants finds off the road. Those should be
+the fold, the cairn and the tally-post when settlements builds them.
+
+The atlas preview's density figures went from 320 locations before any find to 440, 6.8 to 9.3 a walkable km²,
+and a nearest-location mean of 180 to 159 m (ATLAS §2). docs/atlas/gap_map.png is the map after
+wave 4.
+
+**Checked on waves 1 to 4 together (99d892bd):**
+- The Godot filters, each 0 failed with 0 content problems: `test_poi` (64), `test_map_quest` (11),
+  `test_content` (43), `test_books` (6) and `test_quest_items` (13).
+- `check_atlas`: 0 errors.
+- `poi_hooks --check`: 383 rows, 0 differ, 0 bare.
+- The atlas tests and test_gap_map: 44 passed.
