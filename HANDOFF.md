@@ -53,6 +53,19 @@ file and GitHub alone, as §2 says a new session must.
   the sightlines, on the tracked 1024 runtime heights only 4 of 199 are refused, all marginal
   (3.9–5.7 m), and all 21 of the old refusals over 25 m are gone; the batch-4 4096 build's
   `test_sightlines` decides the four. §6.1–6.3 below are older than this.
+- **Landed in main (a998cd3e): 1024 previews draw the whole world in the engine.** Before it,
+  Terrain3D imported and drew every build at 2 m spacing and on a 1024-sample region grid from the
+  origin, so a 1024 build (8 m texels) went in as one region and the places stood over fog; every
+  in-engine judgement of a preview was on the wrong ground. The terrain import and the game now
+  take the manifest's `spacing_m`, and the import pads the maps onto Terrain3D's region grid and
+  fails if the centre reads NaN. A no-op for the 4096 world (the world and terrain test filters
+  pass, 85 and 16, 0 failed). An agent's worktree needs main merged before `use_build.sh` draws
+  a preview right.
+- **Commit identity (trap).** This container's git config carried the machine owner's identity,
+  and worktrees share it, so commits came out under that email and GitHub shows them as
+  unverified. The repo's config is now `Claude <noreply@anthropic.com>` for every worktree. About
+  thirty earlier agent commits on the `wip/*` branches still carry the old identity; they are
+  re-authored when their branch lands, never rewritten under a working agent.
 - **Also recovered.** `claude/admiring-faraday-74m7pe` holds one commit that never reached main:
   125a8c4c, "a capture that photographs an empty county now says so and fails". The capture runner
   on main still reports an unstreamed frame as healthy. The debug area is porting the guard onto
