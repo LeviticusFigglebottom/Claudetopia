@@ -354,6 +354,18 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
 # generator, so no asset shares a name or a hash with another.)
 LIVESTOCK_SEED = 9111
 
+# The ledges of bedded rock a fall, a crag or a sea cliff is laid from in rows (gen_rocks.py's
+# cliff_ledge): per region, in the region's stone, three heights that tile end to end. Pinned to a
+# seed of their own, after everything else, so nothing else is re-rolled by them.
+LEDGES = [
+    ("cliff_ledge", "hearthvale", 3, None),
+    ("cliff_ledge", "skerrow", 3, None),
+    ("cliff_ledge", "briarwold", 3, None),
+    ("cliff_ledge", "cinderlea", 2, None),
+    ("cliff_ledge", "brightwater", 2, None),
+]
+LEDGE_SEED = 9611
+
 
 def livestock_entries(seed: int) -> list[dict]:
     out = []
@@ -386,6 +398,15 @@ def build() -> list[dict]:
     # to where the running counter stood then; a table added above must not re-roll them.
     entries += weapon_entries(WEAPON_SEED)
     entries += livestock_entries(LIVESTOCK_SEED)
+    seed = LEDGE_SEED
+    for kind, reg, variants, params in LEDGES:
+        for i in range(variants):
+            e = {"generator": "gen_rocks", "kind": kind, "palette": region(reg), "variant": LETTERS[i],
+                 "seed": seed + i * 17}
+            if params:
+                e["params"] = params
+            entries.append(e)
+        seed += 53
     return entries
 
 

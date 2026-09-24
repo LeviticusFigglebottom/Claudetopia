@@ -40,20 +40,22 @@ func _ready() -> void:
 	material_override = m
 
 
-## How long the blade of a held weapon model is (m), from its grip along +Y: the far end of its
-## meshes' bounds. 0 when it has none.
+## How long the blade of a held weapon model is (m, in the world), from its grip along its +Y: the
+## far end of its meshes' bounds. A forge prop a foe holds is scaled (EnemyDress.hold), so this is
+## measured along the node's axis in the world, not in its own units. 0 when it has none.
 static func blade_length(node: Node3D) -> float:
 	if node.has_meta("blade_length"):
 		return float(node.get_meta("blade_length"))
 	var most := 0.0
+	var origin := node.global_position
+	var axis := node.global_transform.basis.y.normalized()
 	for m in node.find_children("*", "MeshInstance3D", true, false):
 		var mi := m as MeshInstance3D
 		if mi.mesh == null or mi is WeaponTrail or not mi.visible:
 			continue
 		var box := mi.get_aabb()
-		var to_node := node.global_transform.affine_inverse() * mi.global_transform
 		for i in 8:
-			most = maxf(most, (to_node * box.get_endpoint(i)).y)
+			most = maxf(most, (mi.global_transform * box.get_endpoint(i) - origin).dot(axis))
 	node.set_meta("blade_length", most)
 	return most
 
