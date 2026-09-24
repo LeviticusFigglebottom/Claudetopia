@@ -16,8 +16,9 @@ import numpy as np
 from .grid import Grid, sample_nearest
 from .rows import Rows
 
-## the categories of asset that never stand in water, and how far clear of a channel's edge
-DRY_CATEGORIES = ("/props/", "/trees/")
+## the categories of asset that never stand in water (and a standing stone, which somebody set up
+## on dry ground: one stood in a Skerrow beck), and how far clear of a channel's edge
+DRY_CATEGORIES = ("/props/", "/trees/", "_standing_stone_")
 CHANNEL_MARGIN_M = 0.8
 ## how finely a river's centreline is walked for the distance to it
 WALK_M = 1.0
