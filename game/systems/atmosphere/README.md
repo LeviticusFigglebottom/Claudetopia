@@ -208,8 +208,8 @@ and snow under a bright blue moon.
 **Cinderlea — Ember Ash.** A sun that never climbs (nine degrees at half past four) and burns
 gold (`#ffd49a`, 1.25) through the ash, with a haze that glows round it (`fog_sun_scatter`
 0.35). The ground is char and ash, so the fill is a violet-grey (`#a09ab2` at 1.25) that holds
-the char in shade as ash rather than black, two and a half times as strong while the sun
-is low (`low_sun_fill` 2.5: at 4 a light linen shirt went to the top of the curve and lost its folds), the highlights gold, the sky a clear pale blue (`#9fb8dc`) over a warm
+the char in shade as ash rather than black, three times as strong while the sun
+is low (`low_sun_fill` 3: at 4 a light linen shirt went to the top of the curve and lost its folds), the highlights gold, the sky a clear pale blue (`#9fb8dc`) over a warm
 horizon, few stratus bands (0.2), and the colour held back (0.92, the least of the six) rather
 than taken away. The contrast is 1.0: at 1.1 the grade takes everything under a twentieth of the
 display to black, which in a country of black soil is the ground. A new game hands over here at
