@@ -101,6 +101,23 @@ class Crags(unittest.TestCase):
         on = ((ax > 170.0) & (ax < 250.0)) | (np.abs(ax - 330.0) < 40.0)
         self.assertTrue(np.all(on), "an outcrop off the brows and the crest: %s" % ax[~on])
 
+    def test_an_outcrop_on_a_slope_leans_with_it_and_its_downhill_edge_is_in_the_ground(self):
+        # (playtest 5: "rocks jut from slopes"; the outcrops are seated as the scatter's rock is)
+        from worldgen import cells as CELLS
+
+        c = self.crests
+        g0 = self.ground(c[:, 0], c[:, 2])
+        d = 3.0
+        s = np.abs((self.ground(c[:, 0] + d, c[:, 2]) - self.ground(c[:, 0] - d, c[:, 2])) / (2 * d))
+        on_slope = s > 0.12
+        self.assertGreater(int(on_slope.sum()), 2)
+        self.assertTrue(np.all(c[on_slope, 6] > 0.0), "an outcrop upright on a slope")
+        half = CELLS.asset_bounds(BOULDER, REPO)[0] * c[:, 4]
+        # the foot's downhill edge: the pivot less the lean's share of the slope over the half-width
+        edge = c[:, 1] - half * np.tan(np.radians(c[:, 6]))
+        ground_edge = g0 - half * s
+        self.assertTrue(np.all(edge[on_slope] < ground_edge[on_slope] + 0.05), "an outcrop floating downhill")
+
     def test_none_on_the_road_or_in_the_sightline(self):
         on_road = (self.faces[:, 0] > 0) & (np.abs(self.faces[:, 2]) < 2.0 + CR.ROAD_CLEAR_M)
         self.assertFalse(on_road.any())
