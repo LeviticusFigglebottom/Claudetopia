@@ -1,0 +1,1969 @@
+[
+ {
+  "id": "core:npc/ada_welling",
+  "name": "Ada Welling",
+  "home_place": "core:place/ashwell",
+  "dialogue": "core:dialogue/ada_welling",
+  "bio": "Well-warden of Ashwell, as her mother was, which in Ashwell means she cuts the notch on the post every Naming Day and everybody else pretends not to look at it. Waters the carters' horses, sells them bread at a price nobody argues with, and knows every pilgrim who has gone south by their boots.",
+  "unique_habit": "Cuts one notch a year in the well-house door-post to mark how far the grey has come up the glass bed, measures it with a knotted cord she will not let anyone else hold, and afterwards washes the knife in the Lark Pool as if it had cut something alive.",
+  "personality": {
+   "traits": [
+    "kind",
+    "gossip",
+    "brave",
+    "pious",
+    "humble"
+   ]
+  },
+  "appearance": {
+   "seed": 9101,
+   "build": "sturdy_short",
+   "age": 52,
+   "hair": "grey_brown_in_a_kerchief",
+   "notes": "a knotted measuring-cord looped at her belt, chalk on her fingers, a grey-green Warden ribbon tied round her wrist for her brother"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/ashwell",
+    "activity": "eat",
+    "spot": "well_house_step"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/ashwell",
+    "activity": "work",
+    "spot": "the_well_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/ashwell",
+    "activity": "eat",
+    "spot": "the_green"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/ashwell",
+    "activity": "work",
+    "spot": "the_well_house"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/ashwell",
+    "activity": "socialise",
+    "spot": "the_green"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/ashwell",
+    "activity": "socialise",
+    "spot": "the_green"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/ashwell",
+    "activity": "sleep",
+    "spot": "bed_well_loft"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/hal_wynstead",
+  "name": "Hal Wynstead",
+  "home_place": "core:place/wynstead",
+  "dialogue": "core:dialogue/hal_wynstead",
+  "bio": "Sluice-keeper of Wynstead and cousin to Ellard the Steward, who went to Merrowby and a desk, and whom Hal has forgiven for it every spring for thirty years at some length. Floods the meadows in March and drains them in May and has opinions about water that he will share for the price of standing still.",
+  "unique_habit": "Walks the chain of sluices every dusk touching each oak paddle and naming it, Ansel, Tending, Long Table and so on down to the twelfth, which has no name because his grandfather could not agree with the Wardens about it.",
+  "personality": {
+   "traits": [
+    "proud",
+    "gossip",
+    "brave",
+    "generous",
+    "pious"
+   ]
+  },
+  "appearance": {
+   "seed": 9102,
+   "build": "long_lean",
+   "age": 58,
+   "hair": "white_cropped_with_a_wet_fringe",
+   "notes": "leather waders to the thigh, a sluice-key the length of his arm, a blue miller's-door ribbon on his hat though he is no miller"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/wynstead",
+    "activity": "eat",
+    "spot": "sluice_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/wynstead",
+    "activity": "work",
+    "spot": "the_sluices"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/wynstead",
+    "activity": "eat",
+    "spot": "the_meadow_bank"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/wynstead",
+    "activity": "work",
+    "spot": "the_sluices"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/wynstead",
+    "activity": "socialise",
+    "spot": "the_meadow_bank"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/wynstead",
+    "activity": "socialise",
+    "spot": "the_meadow_bank"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/wynstead",
+    "activity": "sleep",
+    "spot": "bed_sluice_house"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/lin_cresswell",
+  "name": "Lin Cresswell",
+  "home_place": "core:place/cressbourne",
+  "dialogue": "core:dialogue/lin_cresswell",
+  "bio": "Keeper of the top bed at Cressbourne and cousin to Tobin at the Toll's Lip, whom she considers a disgrace to the family for serving cress with fish. Sends two carts a week down the coombe to the Stride and has never once crossed it, because the city is loud and cress wilts in a loud place.",
+  "unique_habit": "Tastes one leaf from every bed every morning before she speaks to anybody and can tell from the taste which family has been lazy about the chalk; she will tell them, and they will thank her, because she has been right for forty years.",
+  "personality": {
+   "traits": [
+    "proud",
+    "quiet",
+    "kind",
+    "cynical",
+    "brave"
+   ]
+  },
+  "appearance": {
+   "seed": 9103,
+   "build": "slight_straight",
+   "age": 61,
+   "hair": "iron_grey_in_a_tight_knot",
+   "notes": "sleeves rolled past the elbow and wet to the shoulder, green under her nails, a cress knife on a thong"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/cressbourne",
+    "activity": "eat",
+    "spot": "top_bed_cottage"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/cressbourne",
+    "activity": "work",
+    "spot": "the_top_bed"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/cressbourne",
+    "activity": "eat",
+    "spot": "the_coombe_steps"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/cressbourne",
+    "activity": "work",
+    "spot": "the_top_bed"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/cressbourne",
+    "activity": "socialise",
+    "spot": "the_coombe_steps"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/cressbourne",
+    "activity": "socialise",
+    "spot": "the_coombe_steps"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/cressbourne",
+    "activity": "sleep",
+    "spot": "bed_top_bed_cottage"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/gil_fallow",
+  "name": "Gil Fallow",
+  "home_place": "core:place/fallowfold",
+  "dialogue": "core:dialogue/gil_fallow",
+  "bio": "Head shepherd of Fallowfold, who grazes the south pasture nearest the ash because the grass there is sweetest and nobody else will. Knows four hundred ewes by face and name and has the patience of a flint wall, which is to say none of the charm of one and all of the use.",
+  "unique_habit": "Counts the flock through the fold gate every evening by name rather than number, four hundred names in the same order, and starts again from the first if anybody speaks to him before he is through.",
+  "personality": {
+   "traits": [
+    "brave",
+    "quiet",
+    "kind",
+    "humble",
+    "pious"
+   ]
+  },
+  "appearance": {
+   "seed": 9104,
+   "build": "broad_weathered",
+   "age": 47,
+   "hair": "black_curls_gone_grey_at_the_ears",
+   "notes": "a crook with a Warden's bell on the neck, a sheepskin coat with the wool inward, ash in the creases of his boots"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/fallowfold",
+    "activity": "eat",
+    "spot": "fold_hut"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/fallowfold",
+    "activity": "work",
+    "spot": "the_south_pasture"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/fallowfold",
+    "activity": "eat",
+    "spot": "the_dew_pond"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/fallowfold",
+    "activity": "work",
+    "spot": "the_south_pasture"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/fallowfold",
+    "activity": "socialise",
+    "spot": "the_dew_pond"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/fallowfold",
+    "activity": "socialise",
+    "spot": "the_dew_pond"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/fallowfold",
+    "activity": "sleep",
+    "spot": "bed_fold_hut"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/pell_brambling",
+  "name": "Pell Brambling",
+  "home_place": "core:place/bramcombe",
+  "dialogue": "core:dialogue/pell_brambling",
+  "bio": "Keeper of the sheep-wash and the combe's tallies, Maud Brambling of Merrowby's younger brother, who stayed on the downs when she went to the bakery and has been asked every Long Table since whether he regrets it, and says no in a way that makes it a longer conversation.",
+  "unique_habit": "Carves every tally notch with the same small bone-handled knife and keeps the shavings in a jar on the wash-house sill, because a notch cut and forgotten is a sheep lost twice.",
+  "personality": {
+   "traits": [
+    "gossip",
+    "generous",
+    "timid",
+    "pious",
+    "humble"
+   ]
+  },
+  "appearance": {
+   "seed": 9105,
+   "build": "round_soft",
+   "age": 44,
+   "hair": "sandy_thinning_with_a_straw_hat",
+   "notes": "sleeves wet to the shoulder from the wash, a bundle of tally-sticks under one arm, flour on his cuff from his sister's last visit"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/bramcombe",
+    "activity": "eat",
+    "spot": "wash_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/bramcombe",
+    "activity": "work",
+    "spot": "the_sheep_wash"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/bramcombe",
+    "activity": "eat",
+    "spot": "the_combe_green"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/bramcombe",
+    "activity": "work",
+    "spot": "the_sheep_wash"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/bramcombe",
+    "activity": "socialise",
+    "spot": "the_combe_green"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/bramcombe",
+    "activity": "socialise",
+    "spot": "the_combe_green"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/bramcombe",
+    "activity": "sleep",
+    "spot": "bed_wash_house_loft"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/tor_rookwright",
+  "name": "Tor Rookwright",
+  "home_place": "core:place/rookdown",
+  "dialogue": "core:dialogue/tor_rookwright",
+  "bio": "Reeve of Rookdown, elected because nobody else would stand, which is how Rookdown elects everything. Keeps the green, the well, the rookery and the peace, in that order, and measures the grey patch every Tollday with a line and pegs and writes the figure on the church-less bell-post for the whole village to argue about.",
+  "unique_habit": "Feeds the rooks from his own table every morning before he eats, one crumb for each name on Rookdown's line of the Roll, and says the names aloud while he does it, which the rooks have learned to answer.",
+  "personality": {
+   "traits": [
+    "brave",
+    "proud",
+    "kind",
+    "cynical",
+    "quiet"
+   ]
+  },
+  "appearance": {
+   "seed": 9106,
+   "build": "tall_stooped",
+   "age": 66,
+   "hair": "white_and_wild_with_a_rook_feather",
+   "notes": "a surveyor's line and a bag of pegs, a black coat gone green at the seams, crumbs in both pockets"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/rookdown",
+    "activity": "eat",
+    "spot": "reeve_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/rookdown",
+    "activity": "work",
+    "spot": "the_grey_patch"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/rookdown",
+    "activity": "eat",
+    "spot": "the_green"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/rookdown",
+    "activity": "work",
+    "spot": "the_grey_patch"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/rookdown",
+    "activity": "socialise",
+    "spot": "the_green"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/rookdown",
+    "activity": "socialise",
+    "spot": "the_green"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/rookdown",
+    "activity": "sleep",
+    "spot": "bed_reeve_house"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/tam_withy",
+  "name": "Tam Withy",
+  "home_place": "core:place/hazelcombe",
+  "dialogue": "core:dialogue/tam_withy",
+  "bio": "Master weaver of Hazelcombe, who can make a hurdle in the time it takes to tell you how, and does both at once. Buys hazel rods from the Woodfolk, sells hurdles to every shepherd in the Vale, and is the only person in Hearthvale on speaking terms with both, which he says is a trade in itself.",
+  "unique_habit": "Weaves a single rod into every hurdle that is not hazel, a twist of willow or bramble or once a length of Toll bronze wire, so that he can find his own work anywhere in the Vale, and has found it as far as the Stride.",
+  "personality": {
+   "traits": [
+    "generous",
+    "gossip",
+    "brave",
+    "proud",
+    "cynical"
+   ]
+  },
+  "appearance": {
+   "seed": 9107,
+   "build": "compact_wiry",
+   "age": 39,
+   "hair": "brown_tied_back_with_bark",
+   "notes": "hands scarred crosswise from the rods, a hurdle-maker's bill-hook in his belt, a willow twist behind one ear"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/hazelcombe",
+    "activity": "eat",
+    "spot": "weavers_yard"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/hazelcombe",
+    "activity": "work",
+    "spot": "the_weaving_frames"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/hazelcombe",
+    "activity": "eat",
+    "spot": "the_rod_stacks"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/hazelcombe",
+    "activity": "work",
+    "spot": "the_weaving_frames"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/hazelcombe",
+    "activity": "socialise",
+    "spot": "the_rod_stacks"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/hazelcombe",
+    "activity": "socialise",
+    "spot": "the_rod_stacks"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/hazelcombe",
+    "activity": "sleep",
+    "spot": "bed_weavers_loft"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/cal_merriweather",
+  "name": "Cal Merriweather",
+  "home_place": "core:place/hare_and_hurdle",
+  "dialogue": "core:dialogue/cal_merriweather",
+  "bio": "Keeper of the Hare and Hurdle, who inherited it from an aunt with the understanding that the skittle alley would be kept level and the chalk board honest, and has kept both for twenty years. Knows every drover on the downs and what each of them will not drink.",
+  "unique_habit": "Chalks every debt of a drink on the board behind the bar and wipes it clean the moment it is paid, and has never once in twenty years wiped one that was not paid, except the one he cannot wipe.",
+  "personality": {
+   "traits": [
+    "generous",
+    "gossip",
+    "kind",
+    "brave",
+    "cynical"
+   ]
+  },
+  "appearance": {
+   "seed": 9108,
+   "build": "broad_cheerful",
+   "age": 45,
+   "hair": "red_going_sandy_with_a_short_beard",
+   "notes": "an apron chalked with sums, a skittle-ball in his hand more often than a cup, a hare badge pinned to his collar"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/hare_and_hurdle",
+    "activity": "eat",
+    "spot": "the_taproom"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/hare_and_hurdle",
+    "activity": "work",
+    "spot": "the_bar"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/hare_and_hurdle",
+    "activity": "eat",
+    "spot": "the_skittle_alley"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/hare_and_hurdle",
+    "activity": "work",
+    "spot": "the_bar"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/hare_and_hurdle",
+    "activity": "socialise",
+    "spot": "the_skittle_alley"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/hare_and_hurdle",
+    "activity": "socialise",
+    "spot": "the_skittle_alley"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/hare_and_hurdle",
+    "activity": "sleep",
+    "spot": "bed_innkeepers_room"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/nella_candlewright",
+  "name": "Nella Candlewright",
+  "home_place": "core:place/last_camp",
+  "dialogue": "core:dialogue/nella_candlewright",
+  "bio": "Candle-maker of Merrowby for thirty years, who put on grey three years ago, walked south, and got as far as the rim. Has waited at the Last Camp ever since, making candles for the Order out of tallow the knights bring her, and does not explain why she has not gone on, because nobody at the Last Camp is asked.",
+  "unique_habit": "Makes one candle every evening, lights it at dusk at the rim facing the Stair, and pinches it out at dawn unburned to the halfway mark, so that every candle she has made here is exactly half a candle.",
+  "personality": {
+   "traits": [
+    "quiet",
+    "kind",
+    "timid",
+    "pious",
+    "humble"
+   ]
+  },
+  "appearance": {
+   "seed": 9109,
+   "build": "slight_bent",
+   "age": 71,
+   "hair": "white_under_a_grey_hood",
+   "notes": "grey pilgrim's wool over a candle-maker's leather apron, tallow on her cuffs, a Merrowby family bell-token on a cord"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/last_camp",
+    "activity": "eat",
+    "spot": "her_tent"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/last_camp",
+    "activity": "work",
+    "spot": "the_rim"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/last_camp",
+    "activity": "eat",
+    "spot": "the_last_fire"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/last_camp",
+    "activity": "work",
+    "spot": "the_rim"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/last_camp",
+    "activity": "pray",
+    "spot": "the_last_fire"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/last_camp",
+    "activity": "socialise",
+    "spot": "the_last_fire"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/last_camp",
+    "activity": "sleep",
+    "spot": "bed_her_tent"
+   }
+  ],
+  "holds": [
+   {
+    "when": [
+     {
+      "flag": "nella_went_home"
+     }
+    ],
+    "place": "core:place/merrowby",
+    "activity": "work",
+    "spot": "candle_stall"
+   }
+  ],
+  "gone_when": [
+   {
+    "flag": "nella_goes_on"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/merrit_ash",
+  "name": "Merrit Ash",
+  "home_place": "core:place/west_walk",
+  "dialogue": "core:dialogue/merrit_ash",
+  "bio": "Toll-Knight of the west walk, eleven years at the post, who walks the round from the White Wood to the marsh edge every night and sleeps every day behind a wall of other people's front doors. Was a lock-maker in Tollmere; says the doors are the best-made thing he has ever slept behind.",
+  "unique_habit": "Knocks on every door in the post's wall on his way out at dusk, once each, and waits a breath at each before moving on, because they were somebody's front doors and it would be rude not to.",
+  "personality": {
+   "traits": [
+    "brave",
+    "quiet",
+    "kind",
+    "pious",
+    "humble"
+   ]
+  },
+  "appearance": {
+   "seed": 9110,
+   "build": "tall_spare",
+   "age": 49,
+   "hair": "grey_cropped_under_a_hood",
+   "notes": "grey plate over a lock-maker's leather, a bell-mace with the clapper bound in cloth, a ring of old keys at his belt that open nothing here"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/west_walk",
+    "activity": "eat",
+    "spot": "door_wall_cell"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/west_walk",
+    "activity": "patrol",
+    "spot": "the_west_round"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/west_walk",
+    "activity": "eat",
+    "spot": "the_quench_trough"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/west_walk",
+    "activity": "patrol",
+    "spot": "the_west_round"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/west_walk",
+    "activity": "pray",
+    "spot": "the_quench_trough"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/west_walk",
+    "activity": "socialise",
+    "spot": "the_quench_trough"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/west_walk",
+    "activity": "sleep",
+    "spot": "bed_door_wall_cell"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/corin_stilyard",
+  "name": "Corin Stilyard",
+  "home_place": "core:place/strides_foot",
+  "dialogue": "core:dialogue/corin_stilyard",
+  "bio": "Senior toll-clerk at the Stride's Foot, who has weighed every cart into Tollmere for nineteen years and can tell a cart's load from the sound of its wheels on the weighbridge planks. A Tallyman to the bone, fair by the book, and the book is very long.",
+  "unique_habit": "Rings the little brass bell on the weighbridge rail before every weighing, whether there is anybody to hear it or not, because the Charter says a weighing is announced and the Charter does not say to whom.",
+  "personality": {
+   "traits": [
+    "proud",
+    "gossip",
+    "greedy",
+    "cynical",
+    "brave"
+   ]
+  },
+  "appearance": {
+   "seed": 9111,
+   "build": "narrow_upright",
+   "age": 53,
+   "hair": "black_oiled_flat_with_a_clerks_cap",
+   "notes": "ink to the second knuckle, a brass steelyard hook on his belt, Tallymen's brass buttons polished to mirrors"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/strides_foot",
+    "activity": "eat",
+    "spot": "toll_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/strides_foot",
+    "activity": "work",
+    "spot": "the_weighbridge"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/strides_foot",
+    "activity": "eat",
+    "spot": "under_the_limes"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/strides_foot",
+    "activity": "work",
+    "spot": "the_weighbridge"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/strides_foot",
+    "activity": "socialise",
+    "spot": "under_the_limes"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/strides_foot",
+    "activity": "socialise",
+    "spot": "under_the_limes"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/strides_foot",
+    "activity": "sleep",
+    "spot": "bed_toll_house"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/maudie_punt",
+  "name": "Maudie Punt",
+  "home_place": "core:place/sedgehithe",
+  "dialogue": "core:dialogue/maudie_punt",
+  "bio": "Head reed-cutter at Sedgehithe, Lakefolk on her father's side and reedfolk on her mother's, who speaks Sedgish to the reeds and Valish to the Tallymen and says the reeds are better company. Cuts for the city's thatchers and the Spire's lamp-wick makers, and poles her own punt with a pole older than the Charter.",
+  "unique_habit": "Leaves one reed standing in every bed she cuts, for the water, and ties a thread of marsh indigo round it so her cutters will know it is not to be touched.",
+  "personality": {
+   "traits": [
+    "kind",
+    "gossip",
+    "brave",
+    "cynical",
+    "generous"
+   ]
+  },
+  "appearance": {
+   "seed": 9112,
+   "build": "strong_short",
+   "age": 42,
+   "hair": "black_braid_with_reed_seed_in_it",
+   "notes": "wet to the thigh in reed-cutter's leathers, a sickle with a Sedgish lantern-knot on the grip, indigo on her fingertips"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/sedgehithe",
+    "activity": "eat",
+    "spot": "punt_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/sedgehithe",
+    "activity": "work",
+    "spot": "the_reed_beds"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/sedgehithe",
+    "activity": "eat",
+    "spot": "the_bollards"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/sedgehithe",
+    "activity": "work",
+    "spot": "the_reed_beds"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/sedgehithe",
+    "activity": "socialise",
+    "spot": "the_bollards"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/sedgehithe",
+    "activity": "socialise",
+    "spot": "the_bollards"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/sedgehithe",
+    "activity": "sleep",
+    "spot": "bed_punt_house"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/berrit_smoker",
+  "name": "Berrit Smoker",
+  "home_place": "core:place/merrowhithe",
+  "dialogue": "core:dialogue/berrit_smoker",
+  "bio": "Master of the smokehouses at Merrowhithe, who hangs the Mere's pike in the arches of the Builders' aqueduct and has done for thirty-two years. Has never been to Tollmere, though he feeds half of it, because he does not see what the city has that a smokehouse does not.",
+  "unique_habit": "Tastes the smoke rather than the fish, standing in the arch with his eyes shut, and can tell you which wood, which wind and which day of the week it is from one breath.",
+  "personality": {
+   "traits": [
+    "quiet",
+    "humble",
+    "generous",
+    "cynical",
+    "brave"
+   ]
+  },
+  "appearance": {
+   "seed": 9113,
+   "build": "heavy_slow",
+   "age": 60,
+   "hair": "grey_beard_to_the_chest_smelling_of_oak",
+   "notes": "a smoker's leather cap blackened through, forearms like hams, a hook for hanging fish at his belt"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/merrowhithe",
+    "activity": "eat",
+    "spot": "smokehouse_door"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/merrowhithe",
+    "activity": "work",
+    "spot": "the_aqueduct_arches"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/merrowhithe",
+    "activity": "eat",
+    "spot": "the_landing"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/merrowhithe",
+    "activity": "work",
+    "spot": "the_aqueduct_arches"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/merrowhithe",
+    "activity": "socialise",
+    "spot": "the_landing"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/merrowhithe",
+    "activity": "socialise",
+    "spot": "the_landing"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/merrowhithe",
+    "activity": "sleep",
+    "spot": "bed_smokehouse_loft"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/sauve_mor",
+  "name": "Sauve Mor",
+  "home_place": "core:place/moreva",
+  "dialogue": "core:dialogue/sauve_mor",
+  "bio": "Eel-trapper of Moreva, the Mor family's eldest son, who sets a hundred and forty traps on the North Channel and lifts every one before dawn. Sells to Isseva's stalls through his cousin Issa and to Gullhithe through a man he has never met, and has an opinion about every trap-maker in the marsh.",
+  "unique_habit": "Speaks to each trap as he lifts it, the name of whoever made it, and puts back the first eel of every haul with the words go and tell them, as his whole family does and none of them will explain.",
+  "personality": {
+   "traits": [
+    "quiet",
+    "brave",
+    "humble",
+    "cynical",
+    "generous"
+   ]
+  },
+  "appearance": {
+   "seed": 9114,
+   "build": "lean_long_armed",
+   "age": 36,
+   "hair": "black_cropped_wet",
+   "notes": "indigo-dyed smock, wicker cuts on both forearms, a trapping hook worn through at the grip"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/moreva",
+    "activity": "eat",
+    "spot": "stilt_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/moreva",
+    "activity": "work",
+    "spot": "the_trap_line"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/moreva",
+    "activity": "eat",
+    "spot": "the_landing_boards"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/moreva",
+    "activity": "work",
+    "spot": "the_trap_line"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/moreva",
+    "activity": "socialise",
+    "spot": "the_landing_boards"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/moreva",
+    "activity": "socialise",
+    "spot": "the_landing_boards"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/moreva",
+    "activity": "sleep",
+    "spot": "bed_stilt_house"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/lisse_tal",
+  "name": "Lisse Tal",
+  "home_place": "core:place/saeva",
+  "dialogue": "core:dialogue/lisse_tal",
+  "bio": "Lantern-maker of Saeva, of the Tal family who have woven Isseva's burial lanterns for as long as there have been burials. Weaves in silence and sings in company, and can read a lantern's maker, year and dead from a single twist of its rush.",
+  "unique_habit": "Weaves a single strand of her own hair into every lantern she makes, so that when it goes out on the water a little of the maker goes with it, and she has been weaving grey into them for a year now.",
+  "personality": {
+   "traits": [
+    "quiet",
+    "kind",
+    "pious",
+    "humble",
+    "brave"
+   ]
+  },
+  "appearance": {
+   "seed": 9115,
+   "build": "small_neat",
+   "age": 58,
+   "hair": "long_grey_plaited_with_indigo_rush",
+   "notes": "indigo to the elbows, a rush-knife on a cord, a half-woven lantern always in her lap"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/saeva",
+    "activity": "eat",
+    "spot": "weaving_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/saeva",
+    "activity": "work",
+    "spot": "the_drying_racks"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/saeva",
+    "activity": "eat",
+    "spot": "the_saeva_landing"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/saeva",
+    "activity": "work",
+    "spot": "the_drying_racks"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/saeva",
+    "activity": "socialise",
+    "spot": "the_saeva_landing"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/saeva",
+    "activity": "socialise",
+    "spot": "the_saeva_landing"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/saeva",
+    "activity": "sleep",
+    "spot": "bed_weaving_house"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/ossa_lissa",
+  "name": "Ossa Lissa",
+  "home_place": "core:place/nauvissa",
+  "dialogue": "core:dialogue/ossa_lissa",
+  "bio": "Reed-cutter and head of Nauvissa, the Lissa family's widow, who cuts the grey reeds at the marsh's southern edge and trades them to the Tolling Order's knights for bread, salt and news. The only reedfolk most knights ever speak to, and the only person in Sedgemire who has walked to the Choir and back.",
+  "unique_habit": "Burns one grey reed every evening at the landing and listens to it; she says each one says a word as it goes, and keeps the words written on a slate that she has never shown anybody.",
+  "personality": {
+   "traits": [
+    "brave",
+    "quiet",
+    "cynical",
+    "kind",
+    "proud"
+   ]
+  },
+  "appearance": {
+   "seed": 9116,
+   "build": "thin_straight",
+   "age": 55,
+   "hair": "black_and_grey_cut_short_for_the_reeds",
+   "notes": "a grey-reed bundle on her back, sickle scars across both palms, a knight's grey ribbon tied to her punt-pole"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/nauvissa",
+    "activity": "eat",
+    "spot": "reed_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/nauvissa",
+    "activity": "work",
+    "spot": "the_grey_beds"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/nauvissa",
+    "activity": "eat",
+    "spot": "the_landing_fire"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/nauvissa",
+    "activity": "work",
+    "spot": "the_grey_beds"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/nauvissa",
+    "activity": "socialise",
+    "spot": "the_landing_fire"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/nauvissa",
+    "activity": "socialise",
+    "spot": "the_landing_fire"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/nauvissa",
+    "activity": "sleep",
+    "spot": "bed_reed_house"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/meo_sa",
+  "name": "Meo Sa",
+  "home_place": "core:place/oulea",
+  "dialogue": "core:dialogue/meo_sa",
+  "bio": "Salt-boiler of Oulea and keeper of the pans, of the Sa family who once traded with the Salt Isles ships and now boil their own salt because the ships stopped coming. Knows the tide tables for three hundred years by heart and has noticed they are wrong this year.",
+  "unique_habit": "Writes the height of every high tide on a driftwood post in the pans with a burnt stick, and has never rubbed out a mark in forty years, so that the post is black to the top.",
+  "personality": {
+   "traits": [
+    "proud",
+    "gossip",
+    "brave",
+    "greedy",
+    "pious"
+   ]
+  },
+  "appearance": {
+   "seed": 9117,
+   "build": "stocky_bowed",
+   "age": 64,
+   "hair": "white_stubble_under_a_salt_crusted_hat",
+   "notes": "salt-white hands and cracked knuckles, a long brine-rake, a Salt Isles copper ring worn through on one side"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/oulea",
+    "activity": "eat",
+    "spot": "salt_hut"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/oulea",
+    "activity": "work",
+    "spot": "the_salt_pans"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/oulea",
+    "activity": "eat",
+    "spot": "the_shell_bank"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/oulea",
+    "activity": "work",
+    "spot": "the_salt_pans"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/oulea",
+    "activity": "socialise",
+    "spot": "the_shell_bank"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/oulea",
+    "activity": "socialise",
+    "spot": "the_shell_bank"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/oulea",
+    "activity": "sleep",
+    "spot": "bed_salt_hut"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/wenna_holt",
+  "name": "Wenna Holt",
+  "home_place": "core:place/elderhold",
+  "dialogue": "core:dialogue/wenna_holt",
+  "bio": "Keeper of Elderhold and chooser of timber, who walks the Lower Wold marking which trees may go down the Wold Water to the rafters and which may not, and has never been argued with successfully. Speaks to strangers in a Valish so old the Vale folk think she is being rude.",
+  "unique_habit": "Presses her palm flat against a tree's bark for a count of nine before she marks it to be felled, and marks nothing on a day when she has not slept, because a tired hand says yes.",
+  "personality": {
+   "traits": [
+    "quiet",
+    "proud",
+    "kind",
+    "cynical",
+    "brave"
+   ]
+  },
+  "appearance": {
+   "seed": 9118,
+   "build": "tall_rangy",
+   "age": 57,
+   "hair": "grey_braided_with_elder_twigs",
+   "notes": "a woodsman's marking-axe with a notched haft, bark dust in the lines of her palms, a cloak dyed in elderberry"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/elderhold",
+    "activity": "eat",
+    "spot": "elder_ring"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/elderhold",
+    "activity": "work",
+    "spot": "the_marking_round"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/elderhold",
+    "activity": "eat",
+    "spot": "the_doorposts"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/elderhold",
+    "activity": "work",
+    "spot": "the_marking_round"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/elderhold",
+    "activity": "socialise",
+    "spot": "the_doorposts"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/elderhold",
+    "activity": "socialise",
+    "spot": "the_doorposts"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/elderhold",
+    "activity": "sleep",
+    "spot": "bed_elder_ring"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/edda_thornby",
+  "name": "Edda Thornby",
+  "home_place": "core:place/rookhold",
+  "dialogue": "core:dialogue/edda_thornby",
+  "bio": "Eldest keeper at Rookhold and Tansy Thornby's aunt, who has kept the Old Gate for forty-four years and slept against its doors for eleven of them. Can tell which way the thorn is leaning by the sound it makes in wind, and holds that the gate is not a door but a promise, and that promises are kept by sleeping against them.",
+  "unique_habit": "Oils the Old Gate's hinges every dusk whether they need it or not, and listens to them close after, because a gate that closes quietly is a gate somebody is keeping.",
+  "personality": {
+   "traits": [
+    "brave",
+    "proud",
+    "quiet",
+    "pious",
+    "kind"
+   ]
+  },
+  "appearance": {
+   "seed": 9119,
+   "build": "short_hard",
+   "age": 70,
+   "hair": "white_cropped_under_a_leather_cap",
+   "notes": "thorn-scarred forearms, gauntlets of hart hide, a key to the Old Gate on a thong that has worn a groove in her neck"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/rookhold",
+    "activity": "eat",
+    "spot": "keepers_lodge"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/rookhold",
+    "activity": "work",
+    "spot": "the_old_gate"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/rookhold",
+    "activity": "eat",
+    "spot": "the_gate_yard"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/rookhold",
+    "activity": "work",
+    "spot": "the_old_gate"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/rookhold",
+    "activity": "socialise",
+    "spot": "the_gate_yard"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/rookhold",
+    "activity": "socialise",
+    "spot": "the_gate_yard"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/rookhold",
+    "activity": "sleep",
+    "spot": "bed_keepers_lodge"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/aggie_coppice",
+  "name": "Aggie Coppice",
+  "home_place": "core:place/hazelwick",
+  "dialogue": "core:dialogue/aggie_coppice",
+  "bio": "Coppice-reeve of Hazelwick, who keeps the book of which family cuts which stool in which year, and has settled every quarrel over hazel in the Lower Wold for twenty-six years by reading the book aloud until everyone gives up. Sells rods to the Vale's hurdle-makers and despises the price, loudly, to their faces, and they love her for it.",
+  "unique_habit": "Reads the round-book aloud at the first cut of every year to the stools themselves, family by family, and waits after each name as though the stool might answer.",
+  "personality": {
+   "traits": [
+    "gossip",
+    "proud",
+    "generous",
+    "brave",
+    "pious"
+   ]
+  },
+  "appearance": {
+   "seed": 9120,
+   "build": "stout_quick",
+   "age": 63,
+   "hair": "brown_going_white_under_a_straw_hat",
+   "notes": "a round-book bound in bark under one arm, a bill-hook, hazel catkins pinned to her shawl"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/hazelwick",
+    "activity": "eat",
+    "spot": "reeves_cottage"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/hazelwick",
+    "activity": "work",
+    "spot": "the_stools"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/hazelwick",
+    "activity": "eat",
+    "spot": "the_cutting_green"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/hazelwick",
+    "activity": "work",
+    "spot": "the_stools"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/hazelwick",
+    "activity": "socialise",
+    "spot": "the_cutting_green"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/hazelwick",
+    "activity": "socialise",
+    "spot": "the_cutting_green"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/hazelwick",
+    "activity": "sleep",
+    "spot": "bed_reeves_cottage"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/nessa_ashby",
+  "name": "Nessa Ashby",
+  "home_place": "core:place/ormhold",
+  "dialogue": "core:dialogue/nessa_ashby",
+  "bio": "Keeper of Ormhold, who guided the Circle's Listeners and their chart-maker to the northern gate in 1038, waited three days, and saw them come back four days later from the far side with their boots full of salt. Has told the story to nobody since, and charges the Circle for the beds every year by letter.",
+  "unique_habit": "Sends the Circle a bill for three beds every spring, itemised to the night, and has kept every reply unopened in a box under the lodge's oak, because an unpaid bill is a reason for them to write.",
+  "personality": {
+   "traits": [
+    "quiet",
+    "greedy",
+    "brave",
+    "cynical",
+    "proud"
+   ]
+  },
+  "appearance": {
+   "seed": 9121,
+   "build": "lean_weathered",
+   "age": 51,
+   "hair": "black_cropped_with_a_white_streak",
+   "notes": "a black-ash bow unstrung across her back, a chart-maker's brass compass she was given and has never used, oak galls in her pockets"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/ormhold",
+    "activity": "eat",
+    "spot": "oak_lodge"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/ormhold",
+    "activity": "work",
+    "spot": "the_north_path"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/ormhold",
+    "activity": "eat",
+    "spot": "the_oak_roots"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/ormhold",
+    "activity": "work",
+    "spot": "the_north_path"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/ormhold",
+    "activity": "socialise",
+    "spot": "the_oak_roots"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/ormhold",
+    "activity": "socialise",
+    "spot": "the_oak_roots"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/ormhold",
+    "activity": "sleep",
+    "spot": "bed_oak_lodge"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/ushra_ko_rudd",
+  "name": "Ushra ko-Rudd",
+  "home_place": "core:place/ruddow",
+  "dialogue": "core:dialogue/ushra_ko_rudd",
+  "bio": "Memory-keeper of Clan Rudd, who sings Rudd's verse of the Rope-Song every morning before food and keeps the clan's account of what it is owed, which is longer than the verse. Remembers the winter of the long snow as if she had been there, which she was not, because remembering it is her office.",
+  "unique_habit": "Recites Kharrow's debt to Rudd aloud every morning after the verse, forty head and a hearth, and then says forgiven, and then says not forgiven until it is paid, and has done so for thirty years without once raising her voice.",
+  "personality": {
+   "traits": [
+    "proud",
+    "brave",
+    "quiet",
+    "pious",
+    "cruel"
+   ]
+  },
+  "appearance": {
+   "seed": 9122,
+   "build": "broad_square",
+   "age": 62,
+   "hair": "iron_grey_in_two_long_braids_with_bone_beads",
+   "notes": "a giant-bone token at her throat, a herder's crook carved with forty notches, sheepskin to the knee"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/ruddow",
+    "activity": "eat",
+    "spot": "longhouse"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/ruddow",
+    "activity": "work",
+    "spot": "the_vertebrae_wall"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/ruddow",
+    "activity": "eat",
+    "spot": "the_hold_yard"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/ruddow",
+    "activity": "work",
+    "spot": "the_vertebrae_wall"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/ruddow",
+    "activity": "socialise",
+    "spot": "the_hold_yard"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/ruddow",
+    "activity": "socialise",
+    "spot": "the_hold_yard"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/ruddow",
+    "activity": "sleep",
+    "spot": "bed_longhouse"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/dagga_ko_ghast",
+  "name": "Dagga ko-Ghast",
+  "home_place": "core:place/ghastfell",
+  "dialogue": "core:dialogue/dagga_ko_ghast",
+  "bio": "Ladder-warden of Ghastfell, who keeps the long ladders the clan climbs in and out of its hold by, and has kept them since the last warden fell off one. Sharp-tongued, fond of the clan's grudge, and privately tired of it.",
+  "unique_habit": "Counts the rungs of every ladder aloud each dusk and replaces any that creaks, and has replaced every rung in Ghastfell at least twice, so that none of the ladders is older than he is.",
+  "personality": {
+   "traits": [
+    "brave",
+    "cynical",
+    "proud",
+    "cruel",
+    "gossip"
+   ]
+  },
+  "appearance": {
+   "seed": 9123,
+   "build": "wiry_scarred",
+   "age": 44,
+   "hair": "black_with_a_shaved_stripe",
+   "notes": "rope-burn on both palms, a ladder-hook on a strap, the Ghast clan mark tattooed at his temple"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/ghastfell",
+    "activity": "eat",
+    "spot": "ladder_foot"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/ghastfell",
+    "activity": "work",
+    "spot": "the_ladders"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/ghastfell",
+    "activity": "eat",
+    "spot": "the_hold_ledge"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/ghastfell",
+    "activity": "work",
+    "spot": "the_ladders"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/ghastfell",
+    "activity": "socialise",
+    "spot": "the_hold_ledge"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/ghastfell",
+    "activity": "socialise",
+    "spot": "the_hold_ledge"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/ghastfell",
+    "activity": "sleep",
+    "spot": "bed_rock_cell"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/brann_ko_dreugh",
+  "name": "Brann ko-Dreugh",
+  "home_place": "core:place/dreughow",
+  "dialogue": "core:dialogue/brann_ko_dreugh",
+  "bio": "Door-painter of Dreughow, who keeps the Rope-Song's first verse bright on every door in the hold, repainting a word a day so that the whole verse is new once a year. Named for an ancestor the clan-books call the first Brann, and embarrassed by it.",
+  "unique_habit": "Repaints one word of the verse every morning on a different door, walking the scar from east to west, so that by midwinter the whole hold has been said once in fresh paint.",
+  "personality": {
+   "traits": [
+    "humble",
+    "kind",
+    "pious",
+    "brave",
+    "quiet"
+   ]
+  },
+  "appearance": {
+   "seed": 9124,
+   "build": "stocky_young",
+   "age": 29,
+   "hair": "red_brown_tied_back_with_paint_in_it",
+   "notes": "a pot of red ochre on a thong, brushes behind both ears, the Dreugh verse's first line tattooed along one forearm"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/dreughow",
+    "activity": "eat",
+    "spot": "scar_house"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/dreughow",
+    "activity": "work",
+    "spot": "the_painted_doors"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/dreughow",
+    "activity": "eat",
+    "spot": "the_scar_ledge"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/dreughow",
+    "activity": "work",
+    "spot": "the_painted_doors"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/dreughow",
+    "activity": "socialise",
+    "spot": "the_scar_ledge"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/dreughow",
+    "activity": "socialise",
+    "spot": "the_scar_ledge"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/dreughow",
+    "activity": "sleep",
+    "spot": "bed_scar_house"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/varra_ko_skarl",
+  "name": "Varra ko-Skarl",
+  "home_place": "core:place/skarlow",
+  "dialogue": "core:dialogue/varra_ko_skarl",
+  "bio": "Herd-mother of Skarlow, who keeps the clan's cattle and its eastward watch, and has sat outside her hut at dusk facing east every night of her life because that is what Skarl do. Blunt, dry, and the only person in Skerrow who admits to having seen the lights.",
+  "unique_habit": "Sits at her hut door every dusk facing east with a bowl of milk poured out for whatever comes back along the giants' road, and drinks it herself at dawn when nothing has, with the same expression every time.",
+  "personality": {
+   "traits": [
+    "brave",
+    "quiet",
+    "cynical",
+    "generous",
+    "humble"
+   ]
+  },
+  "appearance": {
+   "seed": 9125,
+   "build": "tall_raw_boned",
+   "age": 58,
+   "hair": "white_blonde_cropped_close",
+   "notes": "a cattle-horn cup on her belt, a Skarl bone token, knees of her breeches worn through from the pavement"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/skarlow",
+    "activity": "eat",
+    "spot": "beehive_hut"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/skarlow",
+    "activity": "work",
+    "spot": "the_herd_pavement"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/skarlow",
+    "activity": "eat",
+    "spot": "the_east_door"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/skarlow",
+    "activity": "work",
+    "spot": "the_herd_pavement"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/skarlow",
+    "activity": "socialise",
+    "spot": "the_east_door"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/skarlow",
+    "activity": "socialise",
+    "spot": "the_east_door"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/skarlow",
+    "activity": "sleep",
+    "spot": "bed_beehive_hut"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/ebba_ko_oskel",
+  "name": "Ebba ko-Oskel",
+  "home_place": "core:place/oskelcrag",
+  "dialogue": "core:dialogue/ebba_ko_oskel",
+  "bio": "Lead-captain of Oskelcrag, who runs the clan's lead workings in the lower dale and keeps the rule that nobody goes up the Oskeld road. Hard, fair and quick to laugh, which the other clans find unsettling in an Oskel.",
+  "unique_habit": "Knocks twice with the bone end of her pick on the Oskeld road's marker stone every morning on her way down to the lead, never looking up the road, and has done so since the day the mine was sealed.",
+  "personality": {
+   "traits": [
+    "brave",
+    "generous",
+    "cynical",
+    "proud",
+    "kind"
+   ]
+  },
+  "appearance": {
+   "seed": 9126,
+   "build": "short_powerful",
+   "age": 47,
+   "hair": "black_under_a_leather_mining_cap",
+   "notes": "lead-grey hands, a pick with a bone butt, a candle stub in the band of her cap"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:place/oskelcrag",
+    "activity": "eat",
+    "spot": "spoil_row"
+   },
+   {
+    "days": "workdays",
+    "hour": 7,
+    "place": "core:place/oskelcrag",
+    "activity": "work",
+    "spot": "the_lead_workings"
+   },
+   {
+    "days": "workdays",
+    "hour": 12,
+    "place": "core:place/oskelcrag",
+    "activity": "eat",
+    "spot": "the_road_stone"
+   },
+   {
+    "days": "workdays",
+    "hour": 13,
+    "place": "core:place/oskelcrag",
+    "activity": "work",
+    "spot": "the_lead_workings"
+   },
+   {
+    "days": "restday",
+    "hour": 8,
+    "place": "core:place/oskelcrag",
+    "activity": "socialise",
+    "spot": "the_road_stone"
+   },
+   {
+    "days": "all",
+    "hour": 18,
+    "place": "core:place/oskelcrag",
+    "activity": "socialise",
+    "spot": "the_road_stone"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:place/oskelcrag",
+    "activity": "sleep",
+    "spot": "bed_spoil_row"
+   }
+  ]
+ }
+]

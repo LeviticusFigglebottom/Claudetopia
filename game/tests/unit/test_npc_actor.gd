@@ -50,7 +50,7 @@ func _npc(id: String) -> Npc:
 	n.npc_id = id
 	_root().add_child(n)
 	_nodes.append(n)
-	n.global_position = Vector3(900, 40, 2350)
+	n.global_position = at_place("core:place/merrowby", 40.0)
 	return n
 
 
@@ -61,7 +61,7 @@ func _guard(id: String) -> Guard:
 	n.set("npc_id", id)
 	_root().add_child(n)
 	_nodes.append(n)
-	(n as Node3D).global_position = Vector3(900, 40, 2350)
+	(n as Node3D).global_position = at_place("core:place/merrowby", 40.0)
 	return n as Guard
 
 

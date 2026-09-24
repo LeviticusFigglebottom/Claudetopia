@@ -22,7 +22,7 @@ extends RefCounted
 ##   inventory  count(item) add(item, n) remove(item, n) -> int has_equipped_tag(tag)
 ##              marks() add_marks(n) remove_marks(n)
 ##   player     display_name() position() -> Vector3 skill_level(skill) -> int
-##   bounty     bounty_for(faction) -> int
+##   bounty     bounty_for(faction) -> int  report_crime(crime) -> Dictionary
 ##   recipes    learn_recipe(recipe) -> bool  knows_recipe(recipe) -> bool   (the crafting node)
 ##   sayings    learn_spell(spell) -> bool  knows_spell(spell) -> bool   (the progression node)
 ##   clock      hour() day (property or method)
@@ -40,6 +40,7 @@ var rng := RandomNumberGenerator.new()
 var end_requested := false
 var gesture_replies: Array[String] = []
 var notifications: Array[String] = []
+var work_offered: Array[String] = []    # places whose work the speaker has offered (offer_work)
 var problems: Array[String] = []        # content problems seen (also logged)
 
 const LOG_TAG := "Social"
@@ -68,6 +69,7 @@ func reset_conversation() -> void:
 	end_requested = false
 	gesture_replies.clear()
 	notifications.clear()
+	work_offered.clear()
 
 
 # --- generic dispatch ---------------------------------------------------------------------
@@ -249,6 +251,43 @@ func expel_faction(faction: String, reason: String = "") -> void:
 
 func bounty(faction: String) -> int:
 	return int(_call("bounty", "bounty_for", [faction], 0))
+
+
+## The work going in a place, offered by somebody who lives there (the `offer_work` effect): the
+## runner opens that place's board once the line is said. The speaker's own place when empty.
+func offer_work(place: String = "") -> void:
+	var where := place
+	if where == "":
+		where = str(npc.get("home_place", place_id))
+	if where == "":
+		problem("offer_work: nowhere to offer work for")
+		return
+	work_offered.append(where)
+
+
+## A crime a decision makes of the player (the `bounty` effect), committed through the crime
+## service's own rules: the severity its kind carries, the law of the place's region (and where
+## there is no law, ill-feeling that wears off), and a report that lands after the witness's
+## delay. It happens at `place`, the conversation's own when empty, and is seen by `witness`, the
+## person being spoken to when empty; nobody else saw it. {} when there is no crime service.
+func commit_crime(kind: String, place: String = "", witness: String = "", value: int = 0,
+		reaction: String = "report") -> Dictionary:
+	if not _has("bounty", "report_crime"):
+		problem("crime '%s' lost: no crime service" % kind)
+		return {}
+	var where := place if place != "" else place_id
+	var def := content_def(where)
+	var xz: Variant = def.get("position", [])
+	var at := Vector3.ZERO
+	if typeof(xz) == TYPE_ARRAY and (xz as Array).size() >= 2:
+		at = Vector3(float(xz[0]), 0.0, float(xz[1]))
+	var who := witness if witness != "" else npc_id
+	var seen: Array = []
+	if who != "":
+		seen.append({"npc_id": who, "detection": 1.0, "line_of_sight": true, "reaction": reaction, "place_id": where})
+	var r: Variant = _call("bounty", "report_crime", [{"kind": kind, "position": at, "value": value,
+			"region_id": str(def.get("region", "")), "place_id": where, "witnesses": seen}], {})
+	return r if typeof(r) == TYPE_DICTIONARY else {}
 
 
 # --- standing & gossip ---------------------------------------------------------------------

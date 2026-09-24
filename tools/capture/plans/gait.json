@@ -1,19 +1,5 @@
 {
   "_doc": "The player's body walking, jogging and sprinting, filmed from its right side on the flat ground east of the Cracked Toll. Eight frames 0.1 s apart per gait. Run with --fixed-fps 60 so the interval is simulation time: xvfb-run -a -s '-screen 0 1600x900x24' godot --path game --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 --fixed-fps 60 -- --capture=tools/capture/plans/gait.json --out=captures/gait",
   "shots": [],
-  "gait": {
-    "pos": [1096.0, 0.0, 2086.0],
-    "heading": 90.0,
-    "time": 11.0,
-    "weather": "core:weather/clear",
-    "frames": 8,
-    "interval": 0.1,
-    "settle": 1.6,
-    "camera": {"distance": 4.4, "height": 1.0, "fov": 50.0},
-    "runs": [
-      {"label": "walk", "press": ["move_forward", "walk"]},
-      {"label": "jog", "press": ["move_forward"]},
-      {"label": "sprint", "press": ["move_forward", "sprint"]}
-    ]
-  }
+  "gait": {"at": {"place": "core:poi/bell_meadow_stones", "bearing": 279.462, "distance": 24.33}, "heading": 90.0, "time": 11.0, "weather": "core:weather/clear", "frames": 8, "interval": 0.1, "settle": 1.6, "camera": {"distance": 4.4, "height": 1.0, "fov": 50.0}, "runs": [{"label": "walk", "press": ["move_forward", "walk"]}, {"label": "jog", "press": ["move_forward"]}, {"label": "sprint", "press": ["move_forward", "sprint"]}]}
 }

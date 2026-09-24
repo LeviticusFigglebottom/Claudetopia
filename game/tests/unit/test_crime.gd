@@ -4,8 +4,9 @@ const MERROWBY := "core:place/merrowby"
 const WARDENS := "core:faction/wardens"
 const HEARTHVALE := "core:region/hearthvale"
 const BRIARWOLD := "core:region/briarwold"
-const MERROWBY_POS := Vector3(900.0, 40.0, 2350.0)
-const HOLLOW_POS := Vector3(3000.0, 60.0, 250.0)
+## The two towns, wherever the map puts them (docs/COORDINATES.md).
+var MERROWBY_POS := at_place(MERROWBY, 40.0)
+var HOLLOW_POS := at_place("core:place/grandfather_hollow", 60.0)
 
 var _nodes: Array[Node] = []
 var _events: Array = []
@@ -124,7 +125,11 @@ func test_gossip_targets_same_region_settlements() -> void:
 	assert_false("core:place/tollmere" in targets, "other region")
 	assert_false("core:place/hollin_barrow" in targets, "not a settlement")
 	assert_false(MERROWBY in targets)
-	var none := Crimes.gossip_targets(MERROWBY, ContentDB.all("place"), {"core:place/tamwick": true, "core:place/wardens_rest": true})
+	# once everything it reaches knows, there is nobody left in range to tell
+	var known := {}
+	for t in targets:
+		known[t] = true
+	var none := Crimes.gossip_targets(MERROWBY, ContentDB.all("place"), known)
 	assert_empty(none)
 
 
@@ -265,11 +270,18 @@ func test_lawless_regions_decay_and_gossip_spreads() -> void:
 	var cb := func(r: String, p: String) -> void: rumours.append([r, p])
 	EventBus.rumour_spread.connect(cb)
 	var learned := b.spread_gossip()
-	assert_eq(learned, 2, "Tamwick and Wardens' Rest hear of it")
+	var first := Crimes.gossip_targets(MERROWBY, ContentDB.all("place"), {MERROWBY: true})
+	assert_gt(first.size(), 2, "the Vale is full of settlements now")
+	assert_eq(learned, first.size(), "every settlement in range of Merrowby hears of it on the first day")
 	assert_true(b.is_known_at(WARDENS, "core:place/tamwick"))
 	assert_true(b.is_known_at(WARDENS, "core:place/wardens_rest"))
-	assert_eq(rumours.size(), 2)
+	assert_eq(rumours.size(), first.size())
 	assert_eq(rumours[0][0], "bounty:" + WARDENS)
+	# then a day at a time from those to theirs, until nobody in the region is left to tell
+	var days := 0
+	while b.spread_gossip() > 0 and days < 20:
+		days += 1
+	assert_true(days < 20, "the gossip runs out of settlements to reach")
 	assert_eq(b.spread_gossip(), 0, "nowhere left to spread within range")
 	EventBus.rumour_spread.disconnect(cb)
 
@@ -295,7 +307,7 @@ func test_wanted_threshold_and_pay_bounty() -> void:
 
 func test_report_crime_contract_and_save_round_trip() -> void:
 	var b := _bounty()
-	var c := b.report_crime({"kind": "theft", "position": [900.0, 40.0, 2350.0], "value": 60, "witnesses": [_witness("core:npc/a", 0.9)]})
+	var c := b.report_crime({"kind": "theft", "position": [MERROWBY_POS.x, MERROWBY_POS.y, MERROWBY_POS.z], "value": 60, "witnesses": [_witness("core:npc/a", 0.9)]})
 	assert_eq(c["kind"], "theft")
 	assert_eq(int(c["severity"]), 30)
 	assert_eq(b.pending_count(), 1)
