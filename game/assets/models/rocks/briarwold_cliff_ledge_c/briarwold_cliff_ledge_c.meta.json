@@ -1,20 +1,20 @@
 {
  "beds": 2,
  "bounds": {
-  "height": 2.18,
+  "height": 2.162,
   "max": [
    2.5,
-   2.18,
-   2.489
+   2.162,
+   2.378
   ],
   "min": [
    -2.5,
    0.0,
    -1.7
   ],
-  "radius": 3.439
+  "radius": 3.402
  },
- "built_seconds": 55.75,
+ "built_seconds": 22.61,
  "category": "rocks",
  "collision": "briarwold_cliff_ledge_c_col.glb",
  "collision_params": {},
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "briarwold_cliff_ledge_c",
-   "tris": 2120
+   "tris": 1284
   },
   {
    "name": "briarwold_cliff_ledge_c_LOD1",
-   "tris": 848
+   "tris": 512
   },
   {
    "name": "briarwold_cliff_ledge_c_LOD2",
-   "tris": 318
+   "tris": 192
   }
  ],
  "modular": true,
@@ -76,9 +76,9 @@
   "briarwold_cliff_ledge_c_orm.png"
  ],
  "tris": [
-  2120,
-  848,
-  318
+  1284,
+  512,
+  192
  ],
  "version": 3
 }
