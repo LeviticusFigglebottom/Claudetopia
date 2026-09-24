@@ -39,6 +39,8 @@ uniform float streaks = 0.3;
 uniform float speckle = 0.2;
 uniform float sheen = 0.0;
 uniform float moss_mult = 1.0;
+// the stone's albedo lifted to its floor (RockPaint.value_lift): Cinderlea's near-black stone
+uniform float value_lift = 1.0;
 
 // the painted light: how dark the shadow plane is against the lit one, and how soft the step
 uniform float shadow_value = 0.16;
@@ -123,7 +125,7 @@ void vertex() {
 }
 
 void fragment() {
-	vec3 col = texture(albedo_texture, UV).rgb * albedo_tint.rgb * COLOR.rgb;
+	vec3 col = texture(albedo_texture, UV).rgb * albedo_tint.rgb * COLOR.rgb * value_lift;
 	vec3 orm = texture(orm_texture, UV).rgb;
 	vec3 wn = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
 
