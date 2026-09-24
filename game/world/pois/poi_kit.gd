@@ -346,6 +346,8 @@ static func scene(path: String) -> PackedScene:
 	var packed: PackedScene = null
 	if path != "" and ResourceLoader.exists(path):
 		packed = load(path) as PackedScene
+		# a rock's stone is painted (world/rock_paint.gd) the first time its scene is loaded
+		RockPaint.paint_scene(packed, path)
 	_scenes[path] = packed
 	return packed
 
