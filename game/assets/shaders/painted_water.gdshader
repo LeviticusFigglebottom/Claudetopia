@@ -181,6 +181,11 @@ void fragment() {
 	if (use_mask && texture(claim_tex, uv).r > 0.5) {
 		discard;
 	}
+	// and where the sheet would stand clear above its own water: where two waters at different
+	// levels meet within a cell, the cell between them is drawn at a level between the two
+	if (use_mask && v_world.y - texture(level_tex, uv).r > 0.6) {
+		discard;
+	}
 	float t = TIME * wave_speed * (0.7 + wm_wind_strength * 0.8);
 	float dist = length(CAMERA_POSITION_WORLD - v_world);
 	float far = clamp(dist / distance_calm_m, 0.0, 1.0);

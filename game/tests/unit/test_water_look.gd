@@ -152,3 +152,76 @@ func test_a_river_ribbon_stands_on_its_own_surface() -> void:
 	var rv: PackedVector3Array = ramp.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	assert_near(rv[2].y, 254.0, 0.01, "a file without surface_m keeps the ramp")
 	ws.free()
+
+
+## The shore classes are read by name (runtime.shore_classes, CONTRACTS 6), so a build that
+## writes them in another order still breaks surf on rock and lays none on mud.
+func test_the_shore_classes_are_read_by_name() -> void:
+	var raw := PackedByteArray([0, 1, 2, 3])
+	assert_eq(WaterSurface.shore_bytes(raw, []), raw, "no names: the contract's own order")
+	assert_eq(WaterSurface.shore_bytes(raw, WaterSurface.SHORE_CLASSES), raw, "the contract's order is kept")
+	var other := ["none", "mud", "rock", "glass"]
+	assert_eq(WaterSurface.shore_bytes(raw, other), PackedByteArray([0, 5, 3, 0]),
+		"mud and rock by name, a class the water does not know as none")
+
+
+## The lakes and the sea are laid as cells over the water, each corner at the level of the water
+## under it: every wet texel is covered, and no corner stands anywhere but at its water's level.
+## The plane before it took its level at vertices ninety metres apart, and Weaver's Linn stood
+## 13 m over itself under its fall.
+func test_the_sheet_lies_on_every_water_at_its_own_level() -> void:
+	var provider := TerrainProvider.new()
+	if not provider.load_data() or not provider.has_runtime_maps():
+		print("  (world data missing: sheet test skipped)")
+		provider.free()
+		return
+	var ws := WaterSurface.new()
+	ws.provider = provider
+	var cell: float = WaterSurface.QUALITY_CELL_M[2]
+	var mesh := ws.water_mesh(cell)
+	assert_true(mesh != null, "the sheet is laid")
+	if mesh == null:
+		ws.free()
+		provider.free()
+		return
+	var arr := mesh.surface_get_arrays(0)
+	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
+	var off := 0
+	for i in range(0, verts.size(), 7):
+		var v := verts[i]
+		if absf(v.y - provider.nearest_water_level(v.x, v.z)) > 0.001:
+			off += 1
+	assert_eq(off, 0, "every corner at its water's level")
+	# which cells the quads cover
+	var cn := int(ceil(provider.size_m / cell))
+	var covered := PackedByteArray()
+	covered.resize(cn * cn)
+	for t in range(0, idx.size(), 6):
+		var lo := Vector2(INF, INF)
+		var hi := Vector2(-INF, -INF)
+		for k in 6:
+			var p := verts[idx[t + k]]
+			lo = Vector2(minf(lo.x, p.x), minf(lo.y, p.z))
+			hi = Vector2(maxf(hi.x, p.x), maxf(hi.y, p.z))
+		for cz in range(int(round((lo.y - provider.origin.y) / cell)), int(round((hi.y - provider.origin.y) / cell))):
+			for cx in range(int(round((lo.x - provider.origin.x) / cell)), int(round((hi.x - provider.origin.x) / cell))):
+				covered[cz * cn + cx] = 1
+	var n := provider.runtime_grid()
+	var sp := provider.runtime_spacing()
+	var wet := provider.runtime_water()
+	var bare := 0
+	var count := 0
+	for j in range(0, n, 3):
+		for i in range(0, n, 3):
+			if wet[j * n + i] == 0:
+				continue
+			count += 1
+			var cx := int((float(i) + 0.5) * sp / cell)
+			var cz := int((float(j) + 0.5) * sp / cell)
+			if covered[cz * cn + cx] == 0:
+				bare += 1
+	assert_gt(count, 1000, "the world has water")
+	assert_eq(bare, 0, "%d of %d wet texels with no sheet over them" % [bare, count])
+	ws.free()
+	provider.free()

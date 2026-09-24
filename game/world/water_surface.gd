@@ -33,11 +33,22 @@ const REGION_WATER := {
 ## is what the swell and the depth colour have to interpolate over, and how much of the finest
 ## ripple layer the shader draws. High (2) is the water as it was built.
 const QUALITY_SUBDIVISIONS := [48, 64, 96, 160]
+## The sheet as it is built on a loaded world: cells of this many metres laid over the water
+## only, each corner at the water level under it (`water_mesh`). The subdivided plane took its
+## height from the level map at vertices ninety metres apart, and wherever two waters at
+## different levels were nearer than that -- a tarn under its fall, the Mere where a beck comes
+## down -- the water between was drawn at a level between the two: Weaver's Linn stood 13 m
+## over itself in a blue slab under its fall.
+const QUALITY_CELL_M := [32.0, 24.0, 16.0, 12.0]
+## Open water this many cells square, all at one level, is laid as one quad.
+const BLOCK_CELLS := 8
 const QUALITY_DETAIL := [0.0, 0.6, 1.0, 1.0]
 ## ... and how far over the water the mirror looks for the far shore (the shader's steps).
 const QUALITY_MIRROR_STEPS := [8, 11, 16, 18]
 ## How much of a river's ribbon runs past its waterline, under the bank, to thin away there.
 const RIBBON_OVERHANG_M := 0.35
+## The shore classes in the order the water shader numbers them (CONTRACTS 6, runtime.shore).
+const SHORE_CLASSES := ["none", "sand", "shingle", "rock", "cliff", "mud", "reeds"]
 ## The speeds (m/s) a river runs at: a lowland reach barely moves, a mountain beck runs.
 const RIVER_SPEED := Vector2(0.3, 3.5)
 var quality := 2
@@ -158,7 +169,23 @@ static func _shore_texture(manifest: Dictionary, n: int) -> ImageTexture:
 	var bytes := FileAccess.get_file_as_bytes("%s/%s" % [GENERATED, rt["shore"]])
 	if bytes.size() < n * n:
 		return null
-	return ImageTexture.create_from_image(Image.create_from_data(n, n, false, Image.FORMAT_R8, bytes.slice(0, n * n)))
+	bytes = shore_bytes(bytes.slice(0, n * n), rt.get("shore_classes", []))
+	return ImageTexture.create_from_image(Image.create_from_data(n, n, false, Image.FORMAT_R8, bytes))
+
+
+## The shore classes as the shader numbers them (SHORE_CLASSES), whatever order the build wrote
+## its names in (`runtime.shore_classes`); a class the shader does not know reads as none.
+static func shore_bytes(bytes: PackedByteArray, names: Array) -> PackedByteArray:
+	if names.is_empty() or names == SHORE_CLASSES:
+		return bytes
+	var table := PackedByteArray()
+	table.resize(256)
+	for i in names.size():
+		table[i] = maxi(SHORE_CLASSES.find(str(names[i])), 0)
+	var out := bytes.duplicate()
+	for i in out.size():
+		out[i] = table[out[i]]
+	return out
 
 
 ## Where the water mask the game loads lives, from the world manifest.
@@ -217,20 +244,132 @@ func _make_material(follow_level: bool, use_mask: bool, river := false) -> Shade
 
 
 func _build_sheet() -> void:
-	var mesh := PlaneMesh.new()
-	mesh.size = Vector2(provider.size_m + 512.0, provider.size_m + 512.0)
-	mesh.subdivide_width = sheet_subdivisions
-	mesh.subdivide_depth = sheet_subdivisions
 	sheet = MeshInstance3D.new()
 	sheet.name = "WaterSheet"
-	sheet.mesh = mesh
+	var cells := water_mesh(QUALITY_CELL_M[quality])
+	if cells != null:
+		sheet.mesh = cells
+		_sheet_material = _make_material(false, true)
+	else:
+		# no runtime maps to lay it over: the plane, lifted to the level map in the shader
+		var mesh := PlaneMesh.new()
+		mesh.size = Vector2(provider.size_m + 512.0, provider.size_m + 512.0)
+		mesh.subdivide_width = sheet_subdivisions
+		mesh.subdivide_depth = sheet_subdivisions
+		sheet.mesh = mesh
+		_sheet_material = _make_material(true, true)
 	sheet.position = Vector3.ZERO
 	sheet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# the sheet spans the world, so its own bounds must not cull it when the camera is inside
 	sheet.extra_cull_margin = provider.size_m
-	_sheet_material = _make_material(true, true)
 	sheet.material_override = _sheet_material
 	add_child(sheet)
+
+
+## The lakes, the sea and the marsh's pools as cells of `cell` metres laid over the water mask
+## (and one cell round it, which the mask's filter reaches into), every corner at the level of
+## the water under it, so each water stands at its own level to within a cell of where it meets
+## another. The shader discards what the mask calls dry, what a river's ribbon or a fall's pool
+## draws instead, and what a cell's corners would still lift above its water. Null with no
+## runtime maps.
+func water_mesh(cell: float) -> ArrayMesh:
+	if provider == null or not provider.has_runtime_maps():
+		return null
+	var n := provider.runtime_grid()
+	var sp := provider.runtime_spacing()
+	var org := provider.origin
+	var wet := provider.runtime_water()
+	if wet.size() != n * n:
+		return null
+	var cn := int(ceil(provider.size_m / cell))
+	var used := PackedByteArray()
+	used.resize(cn * cn)
+	for j in n:
+		var row := j * n
+		var cz := mini(int((float(j) + 0.5) * sp / cell), cn - 1)
+		for i in n:
+			if wet[row + i] != 0:
+				used[cz * cn + mini(int((float(i) + 0.5) * sp / cell), cn - 1)] = 1
+	# one cell round every wet one
+	var grown := used.duplicate()
+	for cz in cn:
+		for cx in cn:
+			if used[cz * cn + cx] == 0:
+				continue
+			for dz in range(maxi(cz - 1, 0), mini(cz + 2, cn)):
+				for dx in range(maxi(cx - 1, 0), mini(cx + 2, cn)):
+					grown[dz * cn + dx] = 1
+	var vid := PackedInt32Array()
+	vid.resize((cn + 1) * (cn + 1))
+	vid.fill(-1)
+	var level := PackedFloat32Array()
+	level.resize((cn + 1) * (cn + 1))
+	for gz in cn + 1:
+		for gx in cn + 1:
+			level[gz * (cn + 1) + gx] = provider.nearest_water_level(org.x + float(gx) * cell, org.y + float(gz) * cell)
+	var verts := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var normals := PackedVector3Array()
+	var indices := PackedInt32Array()
+	# Open water a block of cells wide, all of it at one level, is one quad: the sea and the Mere
+	# are most of the water, and at 16 m cells they were a hundred thousand triangles drawn in
+	# every frame. A block's edge meets its finer neighbours' corners on the same flat level.
+	var block := BLOCK_CELLS
+	var done := PackedByteArray()
+	done.resize(cn * cn)
+	for bz in range(0, cn - block + 1, block):
+		for bx in range(0, cn - block + 1, block):
+			var flat := true
+			var y0 := level[bz * (cn + 1) + bx]
+			for dz in block + 1:
+				for dx in block + 1:
+					if absf(level[(bz + dz) * (cn + 1) + bx + dx] - y0) > 0.01:
+						flat = false
+					if dz < block and dx < block and grown[(bz + dz) * cn + bx + dx] == 0:
+						flat = false
+			if not flat:
+				continue
+			for dz in block:
+				for dx in block:
+					done[(bz + dz) * cn + bx + dx] = 1
+			var q := PackedInt32Array()
+			for k in 4:
+				var gx := bx + (k & 1) * block
+				var gz := bz + (k >> 1) * block
+				q.append(_sheet_vertex(vid, level, gx, gz, cn, cell, verts, uvs, normals))
+			indices.append_array([q[0], q[1], q[3], q[0], q[3], q[2]])
+	for cz in cn:
+		for cx in cn:
+			if grown[cz * cn + cx] == 0 or done[cz * cn + cx] == 1:
+				continue
+			var corner := PackedInt32Array()
+			for k in 4:
+				corner.append(_sheet_vertex(vid, level, cx + (k & 1), cz + (k >> 1), cn, cell, verts, uvs, normals))
+			indices.append_array([corner[0], corner[1], corner[3], corner[0], corner[3], corner[2]])
+	if indices.is_empty():
+		return null
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+func _sheet_vertex(vid: PackedInt32Array, level: PackedFloat32Array, gx: int, gz: int, cn: int, cell: float,
+		verts: PackedVector3Array, uvs: PackedVector2Array, normals: PackedVector3Array) -> int:
+	var key := gz * (cn + 1) + gx
+	if vid[key] < 0:
+		var x := provider.origin.x + float(gx) * cell
+		var z := provider.origin.y + float(gz) * cell
+		vid[key] = verts.size()
+		verts.append(Vector3(x, level[key], z))
+		uvs.append(Vector2(x, z))
+		normals.append(Vector3.UP)
+	return vid[key]
 
 
 ## The Grey Sea runs to the horizon, not to the edge of the heightmap.
@@ -479,6 +618,30 @@ func _river_mesh(entry: Dictionary) -> ArrayMesh:
 			raw_bend[i] = clampf(d0.cross(d1) / maxf(run * 0.5, 1.0) * half * 8.0, -1.0, 1.0)
 	var speed := _smooth(raw_speed, 3)
 	var bend := _smooth(raw_bend, 2)
+	# Water stands no higher than the lower of its banks. Where something was laid over the river
+	# after it was carved -- a place's pad, a road's crown -- the ground beside the channel can
+	# be lower than the builder's surface, and the ribbon stood over it as a plank (the Three
+	# Sisters' pad lies 0.45 m under the Brindle Beck). It is lowered to the bank, never by more
+	# than most of the channel's depth, and smoothly along the river.
+	if provider != null and provider.has_runtime_maps():
+		var drops := PackedFloat32Array()
+		drops.resize(count)
+		for i in count:
+			var dir2 := (xz[mini(i + 1, count - 1)] - xz[maxi(i - 1, 0)])
+			if dir2.length_squared() < 0.0001:
+				continue
+			dir2 = dir2.normalized()
+			var side2 := Vector2(-dir2.y, dir2.x)
+			var water_half := lerpf(w_from, w_to, pow(float(i) / float(count - 1), 0.7)) * 0.5
+			var reach := water_half + 2.5
+			var a := xz[i] - side2 * reach
+			var b := xz[i] + side2 * reach
+			var bank := minf(provider.get_height(a.x, a.y), provider.get_height(b.x, b.y))
+			var depth := 1.1 + 0.2 * water_half
+			drops[i] = clampf(ys[i] - (bank - 0.05), 0.0, depth * 0.6)
+		drops = _smooth(drops, 2)
+		for i in count:
+			ys[i] -= drops[i]
 	var verts := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var uv2s := PackedVector2Array()
@@ -589,6 +752,10 @@ func apply_quality(q: int) -> void:
 	if sheet != null and sheet.mesh is PlaneMesh:
 		(sheet.mesh as PlaneMesh).subdivide_width = sheet_subdivisions
 		(sheet.mesh as PlaneMesh).subdivide_depth = sheet_subdivisions
+	elif sheet != null:
+		var cells := water_mesh(QUALITY_CELL_M[quality])
+		if cells != null:
+			sheet.mesh = cells
 	for mat in _all_materials():
 		mat.set_shader_parameter("detail", QUALITY_DETAIL[quality])
 		mat.set_shader_parameter("mirror_steps", QUALITY_MIRROR_STEPS[quality])
