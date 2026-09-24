@@ -206,7 +206,7 @@ static func _stain(victim: Node3D, at: Vector3, radius: float) -> void:
 	# A stain frees itself when it has faded, and goes with the scene it lies in, so the list forgets
 	# those before it counts. It used to keep them: past MOST_STAINS every bloody blow asked whether
 	# a freed stain was a Node, a SCRIPT ERROR each time.
-	_stains = _stains.filter(func(q: Variant) -> bool: return is_instance_valid(q))
+	_stains = _stains.filter(func(laid: Variant) -> bool: return is_instance_valid(laid))
 	_stains.append(quad)
 	while _stains.size() > MOST_STAINS:
 		var old: Variant = _stains.pop_front()
