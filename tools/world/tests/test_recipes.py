@@ -117,8 +117,9 @@ class BuildTest(unittest.TestCase):
 
     def test_the_cover_recipe_builds_and_is_recorded(self):
         def build(out, *extra):
+            # (a whole build's scatter costs as much at any size: see test_build.BUILD_TIMEOUT_S)
             subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"), "--size", str(SIZE),
-                            "--out", out, *extra], check=True, capture_output=True, timeout=900)
+                            "--out", out, *extra], check=True, capture_output=True, timeout=2400)
             with open(os.path.join(out, "world_manifest.json"), "r", encoding="utf-8") as f:
                 man = json.load(f)
             h = np.fromfile(os.path.join(out, "heights.r32"), dtype="<f4")

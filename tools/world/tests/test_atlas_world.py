@@ -421,8 +421,9 @@ class ForestsGrow(unittest.TestCase):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(cls.atlas, f)
         cls.out = os.path.join(cls.tmp, "world")
+        # (a whole build's scatter costs as much at any size: see test_build.BUILD_TIMEOUT_S)
         proc = subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"), "--size", "256",
-                               "--atlas", path, "--out", cls.out], capture_output=True, text=True, timeout=1500)
+                               "--atlas", path, "--out", cls.out], capture_output=True, text=True, timeout=2400)
         if proc.returncode != 0:
             raise AssertionError(proc.stdout[-2000:] + proc.stderr[-2000:])
         cls.cells = []

@@ -34,9 +34,15 @@ SIZE = 1024
 PACK = os.path.join(REPO, "game", "content", "packs", "core")
 
 
+## How long a whole build may take. The drawn atlas's scatter draws its candidates in metres, not
+## texels, so it costs about as much at 1024 as at 4096: 430 to 840 s of a 512 build, and a 1024
+## build ran past fifteen minutes on a busy machine.
+BUILD_TIMEOUT_S = 2400
+
+
 def build_once(out_dir: str) -> dict:
     cmd = [sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"), "--size", str(SIZE), "--out", out_dir]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=BUILD_TIMEOUT_S)
     if proc.returncode != 0:
         raise AssertionError("build failed:\n%s\n%s" % (proc.stdout[-4000:], proc.stderr[-4000:]))
     with open(os.path.join(out_dir, "world_manifest.json"), "r", encoding="utf-8") as f:
@@ -255,7 +261,13 @@ class WorldBuildTest(unittest.TestCase):
         drawn = {rv["id"]: rv for rv in self.atlas.get("rivers", [])}
         self.assertEqual({r["id"] for r in rivers}, set(drawn))
         for r in rivers:
-            self.assertGreaterEqual(len(r["points"]), 8)
+            # a river's line is written every 20 m: it has two points or more, and no gap longer
+            # than 30 m, which would be a chord across what it should have followed (the atlas
+            # draws Weaver's Gill into its linn in 93 m, six points)
+            pts = np.asarray([[p[0], p[-1]] for p in r["points"]], dtype=np.float64)
+            self.assertGreaterEqual(len(pts), 2, "%s has no line" % r["id"])
+            self.assertLessEqual(float(np.linalg.norm(np.diff(pts, axis=0), axis=1).max()), 30.0,
+                                 "%s's line has a gap" % r["id"])
             self.assertLessEqual(r["surface_to_m"], r["surface_from_m"] + 0.01, "%s runs uphill" % r["id"])
             w0, w1 = drawn[r["id"]]["width_m"]
             self.assertTrue(min(w0, w1) - 0.01 <= r["width_m"] <= max(w0, w1) + 0.01)
