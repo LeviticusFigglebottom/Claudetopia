@@ -39,6 +39,10 @@ CAMP_PAD_M = 22.0
 ## how far below an authored pad (the atlas's `pads`) the ground beyond its flat may lie before
 ## its skirt leaves it alone: that is a drop, a shelf's face, and not ground to be filled
 PAD_DROP_M = 2.0
+## A wayside find (a POI marked `"wayside": true`: a cairn, a shrine, a grave, a fold by the road)
+## is a small thing on the dale side, and a PAD_DEFAULT pad on 25 to 45 degree ground is a quarry
+## of cut and fill on the hillsides that are meant to read as wild. Its pad is this.
+WAYSIDE_PAD_M = 14.0
 CAMP_PLACE_PAD_M = 30.0
 ## A pad is level out to PAD_LEVEL of its radius (`pad_level_radius`), and its skirt blends it
 ## into the land over PAD_SKIRT radii past that. The radius is what the game is told as
@@ -84,6 +88,8 @@ def pad_radius(place: dict) -> float:
     """
     if place.get("pad_radius_m"):
         return float(place["pad_radius_m"])          # the atlas's own (`pads`)
+    if place.get("wayside"):
+        return WAYSIDE_PAD_M
     kind = str(place.get("kind", ""))
     count = FABRIC_COUNT.get(kind)
     if count is None:
