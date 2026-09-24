@@ -650,6 +650,8 @@ def build(args) -> dict:
         t.mark("textures")
         colour = SF.colour_map(ctx, rf)
         t.mark("colour")
+    # only the slope is read past here
+    ctx.release()
 
     # --- POIs -------------------------------------------------------------------------
     # A place with nothing standing on it is a flattened pad and a name. Where a hand-built
@@ -715,14 +717,33 @@ def build(args) -> dict:
                 stone_count += len(rows)
         # Crags: rock set into the steep faces and outcrops on the crests (worldgen.crags),
         # into the same buckets, so the streamer draws them in the same MultiMesh per asset
+        t_rock = time.time()
         crag_rows, crag_counts = CR.place(grid, H, owner, water.mask, water_d, road_d, road_w, pad_mask,
                                           regions, sightline_claims(pois, pad_targets), SIGHT.constants(),
                                           CELLS.asset_index(REPO), bank, seed, repo_root=REPO)
         for key, by_asset in crag_rows.items():
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
-        print("[world] crags: %d face pieces, %d outcrops" % (crag_counts["face"], crag_counts["crest"]),
-              flush=True)
+        del crag_rows
+        print("[world] crags: %d ledges, %d face pieces, %d outcrops (%d of them ledges), %.1f s" % (
+            crag_counts["ledge"], crag_counts["face"], crag_counts["crest"] + crag_counts["crest_ledge"],
+            crag_counts["crest_ledge"], time.time() - t_rock), flush=True)
+        t_rock = time.time()
+        # The sea cliffs, dressed from the water to their tops in the forge's ledges, their beds
+        # level along each cliff and round its stacks (worldgen.crags.coast_walls)
+        wall_rows, wall_counts = CR.coast_walls(
+            grid, H, atlas, owner, regions, road_d, road_w,
+            [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p), float(pad_levels.get(p["id"], 0.0)))
+             for p in pad_targets],
+            sightline_claims(pois, pad_targets), SIGHT.constants(), CELLS.asset_index(REPO), seed,
+            repo_root=REPO, stacks=shore_plan.stacks)
+        for key, by_asset in wall_rows.items():
+            for asset, rows in by_asset.items():
+                buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+        del wall_rows
+        print("[world] sea cliffs: %d dressed, %d columns, %d ledges, %d on the stacks, %.1f s" % (
+            wall_counts["walls"], wall_counts["columns"], wall_counts["wall_ledges"], wall_counts["stack_ledges"],
+            time.time() - t_rock), flush=True)
         t.mark("scatter")
         # The hedgerows, walls and orchard rows. Placed rather than scattered, for the same
         # reason the standing stones are: a hedge is a line somebody planted along a field

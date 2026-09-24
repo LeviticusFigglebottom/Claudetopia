@@ -107,6 +107,17 @@ class SurfaceContext:
             if kind in ("city", "town"):
                 self.market = np.maximum(self.market, 1.0 - smoothstep(r * 0.16, r * 0.30, d))
 
+    def release(self) -> None:
+        """Let go of everything the texture rules made but the slope, which the build reads to its
+        end. The patch fields, the regions' soft weights, the dither, the settlements' footprints,
+        the distance to the sea and the road's profile were held through the scatter, whose rows
+        are what a build's memory peaks on: at 2048 they were 0.67 GB of the 2.07 GB it held going
+        in, and at 4096 four times that."""
+        self._patches.clear()
+        self._patch_cache.clear()
+        for name in ("town", "market", "sea_d", "on_road", "near_road", "water", "shore", "_road_t"):
+            setattr(self, name, None)
+
     def region(self, shape: str) -> np.ndarray:
         ids = self.idx.get(shape, [])
         return np.isin(self.owner, ids) if ids else np.zeros((self.n, self.n), dtype=bool)
