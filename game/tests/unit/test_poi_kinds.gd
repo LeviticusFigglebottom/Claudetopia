@@ -366,3 +366,39 @@ func test_a_broken_waystone_has_its_top_at_its_foot() -> void:
 	if top != null:
 		assert_true(absf(top.basis.y.normalized().y) < 0.3, "on its back, not standing")
 	assert_true(_marker(d, "the_bowl") != null, "and the bowl is still there")
+
+
+## What the atlas's sentences name is there to see: Hatchmoor's dovecote, Pennywort's door-quern,
+## Southgate's trough, the Last Farm's lamp in the window, and Rudd Mill's turf roof.
+func test_a_farmstead_builds_what_its_sentence_names() -> void:
+	var plain := _dress("farmstead", "core:region/hearthvale", "a farm off the road")
+	for part in ["DovecoteHoles", "Quern", "Trough"]:
+		assert_true(plain.find_child(part, true, false) == null, "a plain farm has no %s" % part)
+	var lit := 0
+	for s in NightLights.sources_of(plain):
+		if str(s[1]) == "window":
+			lit += 1
+	assert_gt(lit, 0, "a lived-in farm's windows are lit after dark")
+	var cote := _dress("farmstead", "core:region/hearthvale", "a farm with a dovecote in its yard")
+	assert_true(cote.find_child("DovecoteHoles", true, false) != null and _marker(cote, "the_dovecote") != null, "Hatchmoor's dovecote")
+	var quern := _dress("farmstead", "core:region/hearthvale", "a farm with a door-quern by its door")
+	assert_true(quern.find_child("Quern", true, false) != null, "Pennywort's door-quern")
+	var trough := _dress("farmstead", "core:region/hearthvale", "a farm with a stone trough in the yard")
+	assert_true(trough.find_child("Trough", true, false) != null and trough.find_child("TroughWater", true, false) != null, "Southgate's trough, with water in it")
+	var lamp := _dress("farmstead", "core:region/hearthvale", "the last farm, with a lamp in the window facing the grey")
+	var lamps := 0
+	for s in NightLights.sources_of(lamp):
+		if str(s[1]) == "lantern":
+			lamps += 1
+	assert_eq(lamps, 1, "the Last Farm's lamp in the window")
+	assert_false(bool(NightLights.KINDS["lantern"]["day"]), "lit at dusk, not at noon")
+	var turf := _dress("mill", "core:region/skerrow", "a clan mill whose wheel is housed in a turf long-house")
+	var thatch := _dress("mill", "core:region/skerrow", "a clan mill on the beck")
+	var roof_of := func(d: Node) -> Color:
+		var r := d.find_child("FabricRoof", true, false) as MeshInstance3D
+		if r == null or not (r.material_override is ShaderMaterial):
+			return Color.BLACK
+		return (r.material_override as ShaderMaterial).get_shader_parameter("base_color")
+	var green: Color = roof_of.call(turf)
+	assert_true(green.g > green.r and green.g > green.b, "Rudd Mill's roof is turf (%s)" % green)
+	assert_ne(roof_of.call(thatch), green, "and another mill's is not")
