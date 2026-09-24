@@ -18,6 +18,7 @@
 #   ./run.sh assets     rebuild generated assets (needs Blender)
 #   ./run.sh interiors  rebuild every cave and house from its recipe
 #   ./run.sh import     (re)import the Godot project headlessly
+#   ./run.sh seed-import CHECKOUT   link CHECKOUT's imported files in, then import what differs
 #   ./run.sh warnings   count the GDScript warnings, and fail if the game's grew past the baseline
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,12 +27,15 @@ cmd="${1:-run}"; shift || true
 
 # A census of the GDScript warnings (tools/debug/warning_census.py) writes game/override.cfg for
 # one run of Godot and removes it after; one killed in the middle leaves it behind, and with it
-# every warning is an error and the game does not start. Its first line says whose it is.
+# every warning is an error and the game does not start. The headless import below writes one
+# too (import_project). Their first line says whose each is; anyone else's is left alone.
+IMPORT_OVERRIDE_MARK="; written by run.sh for one headless import; delete it if you find it"
 if [ -f "$GAME/override.cfg" ]; then
   first_line=""
   read -r first_line < "$GAME/override.cfg" || true
   case "$first_line" in
     *warning_census.py*) rm -f "$GAME/override.cfg"; echo "[run] removed a warning census's override.cfg left behind" >&2 ;;
+    "$IMPORT_OVERRIDE_MARK") rm -f "$GAME/override.cfg"; echo "[run] removed an import's override.cfg left behind" >&2 ;;
   esac
 fi
 
@@ -153,7 +157,32 @@ have_display() {
   [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
 }
 xvfb() { if have_display; then "$@"; else xvfb-run -a -s "-screen 0 1600x900x24" "$@"; fi; }
-import_project() { need_godot; "$GODOT" --headless --path "$GAME" --import --audio-driver Dummy >/dev/null 2>&1 || true; }
+# The headless import, one file at a time. Godot's threaded import deadlocks on this machine: the
+# main thread spins, the workers sit idle, and 0-byte .ctex-XXXXXX temp files are all it leaves
+# (twice on 2026-09-24), where one thread imports ten textures in 8 s. The switch is the project's
+# editor/import/use_multiple_threads, set in a game/override.cfg written for this import alone and
+# marked as run.sh's (IMPORT_OVERRIDE_MARK), so a killed import's leftover is removed by the next
+# run.sh or by the warning census; an override.cfg that is somebody's own is left alone, and the
+# import then runs as it is. IMPORT_LOG names a file for its output (install_world.sh keeps one).
+import_project() {
+  need_godot
+  # Godot redoes an import only when its source's modified time has changed, so an import cache
+  # linked from another checkout (seed-import) or a file whose time was kept stays stale: its
+  # sources are touched first (tools/debug/import_check.py compares each import's recorded md5).
+  if need_python >/dev/null 2>&1; then
+    "$PY" "$ROOT/tools/debug/import_check.py" --touch-stale >&2 || true
+  fi
+  local ours=0
+  if [ ! -e "$GAME/override.cfg" ]; then
+    printf '%s\n[editor]\n\nimport/use_multiple_threads=false\n' "$IMPORT_OVERRIDE_MARK" > "$GAME/override.cfg" && ours=1
+  fi
+  "$GODOT" --headless --path "$GAME" --import --audio-driver Dummy >"${IMPORT_LOG:-/dev/null}" 2>&1 || true
+  if [ "$ours" = "1" ] && [ -f "$GAME/override.cfg" ]; then
+    local first_line=""
+    read -r first_line < "$GAME/override.cfg" || true
+    [ "$first_line" != "$IMPORT_OVERRIDE_MARK" ] || rm -f "$GAME/override.cfg"
+  fi
+}
 # A fresh clone has never been imported, and `godot --path game` outside the editor cannot load a
 # texture, mesh or scene that has not been: the first run imports it (a minute or two).
 ensure_imported() {
@@ -281,7 +310,11 @@ case "$cmd" in
     if [ "${WARNINGS:-1}" != "0" ] && need_python; then
       census="$("$PY" "$ROOT/tools/debug/warning_census.py" --check 2>&1)" && wcode=0 || wcode=$?
       echo "$census" | sed -n '1p;/^PASS/,$p;/^FAIL/,$p'
-      if [ "$wcode" -ne 0 ]; then
+      if [ "$wcode" -eq 2 ]; then
+        # it could not be taken, which says nothing about the warnings: say why, not that they grew
+        echo "[test] the warning census could not run: $(echo "$census" | grep '^warning_census:' | tail -1)"
+        code=1
+      elif [ "$wcode" -ne 0 ]; then
         echo "[test] the GDScript warnings in the game's scripts grew (python3 tools/debug/warning_census.py --list)"
         code=1
       fi
@@ -383,6 +416,15 @@ case "$cmd" in
     "$PY" "$ROOT/tools/interiors/house_forge.py" "$ROOT"/tools/interiors/recipes/houses/*.json --out "$GAME/assets/models/interior"
     import_project ;;
   import)
+    import_project ;;
+  seed-import)
+    # Link another checkout's imported files into this one, so a checkout on a shared disk does not
+    # import every asset again, then import: whatever differs here is found stale and redone.
+    src="${1:-}"
+    [ -n "$src" ] && [ -d "$src/game/.godot/imported" ] \
+      || { echo "usage: ./run.sh seed-import <another checkout with game/.godot/imported>" >&2; exit 2; }
+    mkdir -p "$GAME/.godot/imported"
+    cp -al --remove-destination "$src/game/.godot/imported/." "$GAME/.godot/imported/"
     import_project ;;
   *)
     echo "unknown command: $cmd"; exit 2 ;;
