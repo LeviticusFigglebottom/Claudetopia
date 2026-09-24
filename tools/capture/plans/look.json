@@ -5,9 +5,9 @@
    "label": "hearthvale_approach_dusk",
    "region": "core:region/hearthvale",
    "pos": [
-    390.2,
-    96.2,
-    1725.9
+    388.0,
+    84.9,
+    1659.2
    ],
    "look_at": [
     250.0,
@@ -41,14 +41,14 @@
    "label": "hearthvale_vista_moon",
    "region": "core:region/hearthvale",
    "pos": [
-    658.5,
-    134.9,
-    2483.5
+    671.3,
+    134.8,
+    2334.9
    ],
    "look_at": [
-    405.0,
-    125.9,
-    2393.6
+    410.8,
+    125.8,
+    2327.0
    ],
    "fov": 62.0,
    "time": 23.5,
@@ -59,13 +59,13 @@
    "label": "hearthvale_whitecut_falls",
    "region": "core:region/hearthvale",
    "pos": [
-    -16.9,
-    33.1,
-    954.9
+    -57.8,
+    34.6,
+    952.0
    ],
    "look_at": [
     -40.0,
-    33.6,
+    33.1,
     990.0
    ],
    "fov": 58.0,
@@ -174,7 +174,7 @@
    "region": "core:region/sedgemire",
    "pos": [
     -2390.9,
-    4.4,
+    4.5,
     -70.1
    ],
    "look_at": [
@@ -192,12 +192,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3908.3,
-    372.1,
+    385.8,
     1051.8
    ],
    "look_at": [
     3190.1,
-    363.1,
+    376.8,
     874.9
    ],
    "fov": 62.0,
@@ -209,13 +209,13 @@
    "label": "briarwold_foxfire_falls",
    "region": "core:region/briarwold",
    "pos": [
-    2418.2,
-    113.8,
-    248.7
+    2502.0,
+    113.5,
+    244.2
    ],
    "look_at": [
     2460.0,
-    112.5,
+    112.9,
     245.0
    ],
    "fov": 58.0,
@@ -233,14 +233,14 @@
    "label": "skerrow_vista_dawn",
    "region": "core:region/skerrow",
    "pos": [
-    -793.0,
-    666.5,
-    -3868.6
+    -811.5,
+    662.0,
+    -4061.7
    ],
    "look_at": [
-    -317.4,
-    657.5,
-    -2753.3
+    -225.9,
+    653.0,
+    -2785.3
    ],
    "fov": 62.0,
    "time": 6.2,
@@ -252,12 +252,12 @@
    "region": "core:region/skerrow",
    "pos": [
     -1127.0,
-    66.5,
+    66.3,
     -2187.8
    ],
    "look_at": [
     -1100.0,
-    67.0,
+    66.8,
     -2220.0
    ],
    "fov": 58.0,
@@ -318,7 +318,7 @@
    "region": "core:region/cinderlea",
    "pos": [
     163.6,
-    70.0,
+    70.1,
     2862.3
    ],
    "look_at": [
