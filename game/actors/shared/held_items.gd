@@ -135,6 +135,10 @@ static func dress(body: Node, main: Dictionary, off: Dictionary = {}) -> Array[N
 		if not bool(body.call("attach_to_socket", socket, node, false)):
 			node.queue_free()
 			continue
+		# the closed fist holds a haft a little off the socket's own line (the rig's grip
+		# morph, HumanoidModel.grip_offset); a shield hangs on the forearm and is not held so
+		if socket != "ShieldL" and body.has_method("grip_offset"):
+			node.position = body.call("grip_offset", "R" if socket == "WeaponR" else "L")
 		held.append(node)
 		match socket:
 			"WeaponR":

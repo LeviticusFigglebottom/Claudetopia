@@ -1,0 +1,84 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.41,
+  "max": [
+   0.02,
+   0.324,
+   0.051
+  ],
+  "min": [
+   -0.02,
+   -0.086,
+   -0.051
+  ],
+  "radius": 0.212
+ },
+ "built_seconds": 16.92,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "dagger_bronze.glb",
+ "grip_origin": true,
+ "hash": "390a473cad5bd874",
+ "kind": "dagger",
+ "materials": [
+  "dagger_bronze_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "dagger_bronze",
+   "tris": 1186
+  },
+  {
+   "name": "dagger_bronze_LOD1",
+   "tris": 472
+  },
+  {
+   "name": "dagger_bronze_LOD2",
+   "tris": 176
+  }
+ ],
+ "name": "dagger_bronze",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9264,
+ "textures": [
+  "dagger_bronze_albedo.png",
+  "dagger_bronze_normal.png",
+  "dagger_bronze_orm.png"
+ ],
+ "tris": [
+  1186,
+  472,
+  176
+ ],
+ "version": 3
+}

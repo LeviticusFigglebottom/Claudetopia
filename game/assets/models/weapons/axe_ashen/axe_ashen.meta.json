@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.598,
+  "max": [
+   0.033,
+   0.494,
+   0.033
+  ],
+  "min": [
+   -0.033,
+   -0.104,
+   -0.112
+  ],
+  "radius": 0.31
+ },
+ "built_seconds": 11.76,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "axe_ashen.glb",
+ "grip_origin": true,
+ "hash": "9d56f6d02dc68bc4",
+ "kind": "axe",
+ "materials": [
+  "axe_ashen_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "axe_ashen",
+   "tris": 1428
+  },
+  {
+   "name": "axe_ashen_LOD1",
+   "tris": 570
+  },
+  {
+   "name": "axe_ashen_LOD2",
+   "tris": 214
+  }
+ ],
+ "name": "axe_ashen",
+ "params": {
+  "finish": "ashen"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9349,
+ "textures": [
+  "axe_ashen_albedo.png",
+  "axe_ashen_normal.png",
+  "axe_ashen_orm.png"
+ ],
+ "tris": [
+  1428,
+  570,
+  214
+ ],
+ "version": 3
+}

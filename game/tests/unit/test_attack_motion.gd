@@ -126,10 +126,12 @@ func _measure(clips: Array, blade_len: float) -> Dictionary:
 				tip_last = tip
 			var hgap := segment_gap(hand, hand, hips, neck)
 			out["hand_into_torso"] = maxf(float(out["hand_into_torso"]), TORSO_R * 0.8 - hgap)
-			var fore := (hand - _bone(m, "LowerArm.R")).normalized()
 			var sk := m.skeleton
-			var hand_y := (sk.global_transform.basis * sk.get_bone_global_pose(sk.find_bone("Hand.R")).basis.y).normalized()
-			out["wrist"] = maxf(float(out["wrist"]), rad_to_deg(fore.angle_to(hand_y)))
+			var hi := sk.find_bone("Hand.R")
+			# the wrist's bend: how far the hand's own axis turns from its rest line on the forearm
+			# (its twist about that axis is the forearm's to make, and is left out)
+			var rel := sk.get_bone_rest(hi).basis.get_rotation_quaternion().inverse() * sk.get_bone_pose_rotation(hi)
+			out["wrist"] = maxf(float(out["wrist"]), rad_to_deg(Vector3.UP.angle_to(rel * Vector3.UP)))
 			var hv := Vector2(hips.x - hips0.x, hips.z - hips0.z).length()
 			out["hips_move"] = maxf(float(out["hips_move"]), hv)
 			var yaw := sk.get_bone_global_pose(sk.find_bone("Hips")).basis.get_euler().y

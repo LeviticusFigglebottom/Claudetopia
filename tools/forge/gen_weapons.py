@@ -59,7 +59,7 @@ def blade_mat(pal, rng, finish):
         return M.blackened_iron(pal, age=0.35, wear=0.75, scale=0.14, name="blade_ashen")
     if finish == "bone":
         return M.bone(pal, age=0.35, wear=0.55, scale=0.10, name="blade_bone")
-    return M.iron(pal, age=0.18 + 0.08 * rng.random(), wear=0.9, scale=0.16, name="blade_iron")
+    return M.steel(pal, age=0.14 + 0.08 * rng.random(), wear=0.9, scale=0.16, name="blade_iron")
 
 
 def fitting_mat(pal, rng, finish):
@@ -314,13 +314,13 @@ def greatsword(pal, rng, params, variant):
 def dagger(pal, rng, params, variant):
     """A dagger: a short tapering double-edged blade, a small guard and a round pommel."""
     finish = _finish(params)
-    blade_l = jit(rng, params.get("blade", 0.25), 0.04)
+    blade_l = jit(rng, params.get("blade", 0.25), 0.07)
     steel = blade_mat(pal, rng, finish)
     metal = fitting_mat(pal, rng, finish)
     hide = grip_mat(pal, finish)
     g0, g1 = -0.048, 0.048
     parts = _grip("grip", g0, g1, 0.0135 * STOUT, hide, rng)
-    parts += _guard("guard", 0.085, 0.0068 * STOUT, g1 + 0.004, metal, curl=0.006)
+    parts += _guard("guard", jit(rng, 0.085, 0.12), 0.0068 * STOUT, g1 + 0.004, metal, curl=0.006)
     parts.append(_pommel("pommel", g0 - 0.012, 0.018 * STOUT, metal, "pear"))
     parts.append(_straight_blade("blade", blade_l, 0.038 * STOUT, 0.024 * STOUT, 0.0078 * STOUT, steel,
                                  base_z=g1 + 0.01, point=0.3, fuller=0.45, rings=12))
@@ -380,7 +380,7 @@ def axe(pal, rng, params, variant):
     def th(y, z):
         if y <= eye * 1.05:
             return r * 2.6
-        f = (y - eye * 1.05) / max(1e-6, bit - eye * 1.05)
+        f = min(1.0, max(0.0, (y - eye * 1.05) / max(1e-6, bit - eye * 1.05)))
         return max(0.003, r * 2.6 * (1.0 - f) ** 1.3)
 
     head = _prism("head", outline, th, steel)

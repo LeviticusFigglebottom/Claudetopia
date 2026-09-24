@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 1.497,
+  "max": [
+   0.038,
+   1.183,
+   0.162
+  ],
+  "min": [
+   -0.038,
+   -0.315,
+   -0.162
+  ],
+  "radius": 0.767
+ },
+ "built_seconds": 19.61,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "greatsword_bone.glb",
+ "grip_origin": true,
+ "hash": "0254977e17a91f97",
+ "kind": "greatsword",
+ "materials": [
+  "greatsword_bone_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "greatsword_bone",
+   "tris": 2680
+  },
+  {
+   "name": "greatsword_bone_LOD1",
+   "tris": 784
+  },
+  {
+   "name": "greatsword_bone_LOD2",
+   "tris": 402
+  }
+ ],
+ "name": "greatsword_bone",
+ "params": {
+  "finish": "bone"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9230,
+ "textures": [
+  "greatsword_bone_albedo.png",
+  "greatsword_bone_normal.png",
+  "greatsword_bone_orm.png"
+ ],
+ "tris": [
+  2680,
+  784,
+  402
+ ],
+ "two_handed": true,
+ "version": 3
+}

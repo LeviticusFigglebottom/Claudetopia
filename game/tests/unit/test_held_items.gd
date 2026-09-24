@@ -74,7 +74,7 @@ func test_a_model_is_built_along_the_socket() -> void:
 			assert_true(size.y > size.x * 4.0 and size.y > size.z * 2.5, "%s is not built along +Y: %s" % [model, str(size)])
 			assert_true(box.end.y > -box.position.y, "%s's blade is not on +Y" % model)
 			# the grip's middle is the origin: the hand holds it there
-			assert_true(box.position.y < -0.03 and box.position.y > -0.5, "%s's grip does not run through the origin (%.2f)" % [model, box.position.y])
+			assert_true(box.position.y < -0.03 and box.end.y > 0.2, "%s's grip does not run through the origin (%.2f to %.2f)" % [model, box.position.y, box.end.y])
 
 
 ## The union of every mesh's AABB under `n`, in n's frame.

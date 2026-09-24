@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 2.481,
+  "max": [
+   0.021,
+   1.577,
+   0.035
+  ],
+  "min": [
+   -0.021,
+   -0.904,
+   -0.035
+  ],
+  "radius": 1.241
+ },
+ "built_seconds": 9.67,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "spear_iron.glb",
+ "grip_origin": true,
+ "hash": "b68902d1f93c7d28",
+ "kind": "spear",
+ "materials": [
+  "spear_iron_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "spear_iron",
+   "tris": 1162
+  },
+  {
+   "name": "spear_iron_LOD1",
+   "tris": 464
+  },
+  {
+   "name": "spear_iron_LOD2",
+   "tris": 174
+  }
+ ],
+ "name": "spear_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9434,
+ "textures": [
+  "spear_iron_albedo.png",
+  "spear_iron_normal.png",
+  "spear_iron_orm.png"
+ ],
+ "tris": [
+  1162,
+  464,
+  174
+ ],
+ "two_handed": true,
+ "version": 3
+}
