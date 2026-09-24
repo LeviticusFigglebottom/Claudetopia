@@ -433,7 +433,7 @@ MATERIALS = {
     # every other slot and brought down by import_terrain.gd's `value`. It was painted as charcoal
     # (#121110 to #383532, a mean of 0.017 in linear light) and then multiplied down to 0.008
     # like the rest, and the Stair Head, where a new game begins, stood on black ground. These are
-    # the old colours lifted in linear light (2.7 x c^0.85): a mean of 0.085, drawn at 0.038, a
+    # the old colours lifted in linear light (2.7 x c^0.85): a mean of 0.085, drawn at 0.044 (value 0.52), a
     # step under the grey grass. tools/world/ground_albedo.py prints every slot as it is drawn.
     "ash_soil": {"recipe": "soil", "tile_m": 2.6, "colors": ["#353331", "#484443", "#5d5a57", "#746f6a"],
                  "grit": 900, "grit_colour": "#a39c95", "cracks": 0.3, "rough": 0.92,
@@ -523,8 +523,14 @@ def generate(name: str, size: int, out_dir: str, seed: int = SEED) -> tuple:
     os.makedirs(out_dir, exist_ok=True)
     a_path = os.path.join(out_dir, "%s_albedo_height.png" % name)
     n_path = os.path.join(out_dir, "%s_normal_rough.png" % name)
-    Image.fromarray((albedo_height * 255.0 + 0.5).astype(np.uint8), "RGBA").save(a_path, optimize=True)
-    Image.fromarray((normal_rough * 255.0 + 0.5).astype(np.uint8), "RGBA").save(n_path, optimize=True)
+    ah8 = (albedo_height * 255.0 + 0.5).astype(np.uint8)
+    nr8 = (normal_rough * 255.0 + 0.5).astype(np.uint8)
+    # the small scale at your feet -- grain, cinders, pebbles, ripples (terrain_micro.py)
+    import terrain_micro
+    if name in terrain_micro.RECIPES:
+        ah8, nr8 = terrain_micro.apply(ah8, nr8, terrain_micro.RECIPES[name], seed=sum(map(ord, name)))
+    Image.fromarray(ah8, "RGBA").save(a_path, optimize=True)
+    Image.fromarray(nr8, "RGBA").save(n_path, optimize=True)
     if os.path.abspath(out_dir).startswith(os.path.join(REPO, "game")):
         write_import_settings(a_path)
         write_import_settings(n_path)

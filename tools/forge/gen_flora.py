@@ -148,8 +148,11 @@ def grass_clump(pal, rng, params, variant, ctx):
 
 
 def grey_grass(pal, rng, params, variant, ctx):
-    greys = [pal.tint(P.lin("#8b8a86"), "mid", 0.5), pal.tint(P.lin("#a49f95"), "light", 0.35),
-             pal.tint(P.lin("#6a675f"), "dark", 0.3)]
+    # Grass on the ash heath: grey-brown, a warm straw, one blade in four dried to ochre, and a
+    # char-dark one. It was drawn from the palette's mid and light greys (sRGB 0.56 across the
+    # atlas), and on the black soil every tuft read as white litter scattered over the ground.
+    greys = [pal.tint(P.lin("#5f5a50"), "mid", 0.3), pal.tint(P.lin("#6e604a"), "earth", 0.25),
+             pal.tint(P.lin("#86683a"), "earth", 0.2), pal.tint(P.lin("#433f39"), "dark", 0.25)]
     names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], greys, seed=rng.randrange(9999),
                           size=256 if ctx["quick"] else 512, blades=26, width=0.03, lean=0.5,
                           tip_taper=0.95, roughness=0.9)

@@ -5494,3 +5494,88 @@ the trunk.
 
 * The main rebuild batches the four new pads, the redrawn rivers, the meander and the Hollow's ring.
 * Then: `./run.sh quests`, test_poi_people, and the Blackgill's meander key.
+## The ground at the Stair Head: black under a low sun, and the ash that was painted as charcoal
+
+The user's playtest of main at 6985d356 (Windows, Godot 4.7.1, Forward+, RX 9070 XT) opened on
+black ground at the Stair Head: the sky, the colossi, the character, the tent and the grass lit,
+and the terrain near-black with a faint grey speckle. It was reported as Forward+'s. It is not:
+Compatibility on this machine gives the same frame, and did before anyone looked. The whole
+foreground of the start's first view read sRGB 10, 8, 14 with a spread of 0.7 -- no texture at
+all, just the grade's shadow lift (`#2c2848` x 0.2) with nothing under it.
+
+Two faults, and the light was the larger.
+
+* **The light.** A new game hands over at 7.2 h, and Cinderlea's latitude (scale 0.5, bias -8)
+  puts its sun at six degrees then. A sun that low lights flat ground at a graze, so what the
+  ground shows is the fill, which was 0.77 of a violet. Terrain3D's grey debug view (every
+  material at albedo 0.2, 25 times the ash) came out exactly as black as the ash did, so no
+  texture would have been seen under that light. Dark ground in dim light lands in the toe of
+  Godot's ACES curve, which takes the darkest values to zero, and the region's contrast of 1.1,
+  applied after the tonemap, took everything under a twentieth of the display to black.
+* **The ash.** `ash_soil` was painted as charcoal (`#121110` to `#383532`, a mean of 0.017 in
+  linear light) and then multiplied by the slot's 0.45 like every other texture, which is meant
+  to bring a texture painted at a comfortable value down to a ground albedo: it drew at 0.008, a
+  twelfth of vale grass, and the camp's ground is 48% ash, 37% grey grass and 15% fused stone
+  (0.020). Relighting the ash alone changed nothing in the frame at the handover.
+
+Mended:
+
+* `low_sun_fill`, a region light key (default 1): the fill is multiplied by it while the sun is up
+  and low -- all of it under four degrees, none by twenty-four, none at night
+  (`Atmosphere.fill_lift`). Cinderlea asks for 4. Its noon is unchanged by it.
+* Cinderlea's contrast 1.1 -> 1.0, and its fill `#8c84b4` -> `#a09ab2`, a greyer violet, so a
+  strong fill reads as ash in shade rather than as purple.
+* The ash texture relit in linear light (2.7 x c^0.85, the height channel untouched) to a mean of
+  0.085, drawn at 0.038; the generator's colours are the old ones under the same curve. The fused
+  stone's value 0.42 -> 0.75, drawn at 0.035, in `import_terrain.gd` and `terrain_assets.tres`.
+* `tests/unit/test_ground_albedo.gd`: no slot may draw under 0.02 (texture mean x albedo_color),
+  the ash stays within a factor of two of the grey grass, and the importer's table and the
+  resource agree. `tools/world/ground_albedo.py` prints the table and, in a built world, what the
+  ground is made of at a point.
+
+Measured on Compatibility, the foreground of the start's frames (sRGB, mean over the lower third):
+
+| shot | before | after |
+|---|---|---|
+| the handover, 7.2 h, thin sun | 10, 8, 14 (spread 0.7) | 34, 24, 25 (spread 7.0) |
+| the way north | 11, 10, 15 | 34, 26, 32 |
+| noon | 43, 33, 27 | 57, 46, 36 |
+| still grey, 10 h | 24, 18, 16 | 37, 30, 24 |
+
+To find it, the capture runner takes a per-shot `"look"` (region light keys laid over the
+region's own for one shot) and `"terrain_view"` (Terrain3D's debug views), and writes the light
+each frame was taken in into perf.json; the debug console has `look <key> <value>` / `look reset`
+and `terrain grey|checkered|off`, so the same experiment can be run on a player's machine.
+
+Test on f4c07214: 1600 tests, 0 failed. Forward+ is unverified: lavapipe crashed on all three
+attempts at the new-game plan (the `propagate_notification()` error, then signal 11).
+
+### The dead ash trees and the grass tufts at the Stair Head
+
+With the ground readable, two things on it read wrong. The dead ash trees read as crumpled white
+paper: a near-white bark (sRGB 0.57 across the atlas, x0.6 of instance tint), on limbs three or
+four sides round that the smoothing angle split at every edge (4 126 of 4 464 positions split,
+normals 143 degrees apart at the median), plus -- at the mid distance -- the LOD1 bark sheets
+bridging the branches that wip/graphics-settings repairs. And the grey grass tufts lay on the
+ash like white litter (atlas sRGB 0.56).
+
+* `gen_flora.grey_grass` is grey-brown, straw, one ochre and one char-dark blade; the three tufts
+  are rebuilt (atlas linear 0.29 -> 0.12-0.15). They read as dry grass standing in the ash.
+* `lib/materials.dead_bark` is an ash-grey (`#77716a` toward the palette's mid), with softer
+  relief, streaks down the grain and rot at the foot (`_bark_common` gains `streaks` and `rot`,
+  0 for every other bark); `gen_trees` lets a species name its `smooth_angle`, 180 for the dead
+  ash tree. Baked on a test cylinder: sRGB median 0.35 against the old 0.54.
+* The Blender 4.2 on this machine has no Sapling add-on (4.2 moved it to extensions), so no
+  tree can be regrown here. `tools/forge/weather_dead_wood.py` gives the shipped trees the same
+  look: the bark albedo darkened, streaked and rotted (each texel's height read from the mesh),
+  the bark normals recomputed smooth, the impostor pictures darkened alike. Trees 0.54 -> 0.34,
+  stumps 0.59/0.50 -> 0.28/0.21.
+* **When wip/graphics-settings merges**, it brings its own tree GLBs (the LOD1 repair) and
+  impostor pictures: take its versions and run
+  `python3 tools/forge/weather_dead_wood.py game/assets/models/trees/cinderlea_dead_ash_tree_{a,b,c} --smooth --parts impostors,normals`
+  and the same with `--parts impostors` for the two char stumps, then re-measure the three dead
+  ash impostor calibrations (`tools_gd/lod_review.tscn -- --calibrate`), which were taken against
+  the white bark.
+
+Next: the full re-shoot once the atlas world is in main (the plans' cameras were drawn for the
+old world); Cinderlea's street at night; the Briarwold's light shafts on Compatibility.
