@@ -1,6 +1,5 @@
 [
   {"id": "core:item/merrowby_house_key", "name": "Merrowby House Key", "category": "key", "weight": 0.05, "value": 0, "stack": 1, "tags": ["key", "property"],
-   "unlocks": "core:place/merrowby",
    "description": "An iron key to a chalk-cob house in Merrowby, its door painted whatever colour you choose. A Foundling with a door is a Foundling who can be found."},
   {"id": "core:item/candle", "name": "Tallow Candle", "category": "misc", "weight": 0.1, "value": 1, "stack": 20, "tags": ["light", "hearth"],
    "description": "Vale-made tallow. On Candle Night every window in Hearthvale holds one, so the village can be seen being tended."},

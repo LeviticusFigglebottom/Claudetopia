@@ -45,6 +45,9 @@ const KINDS := {
 	"brazier": {"colour": Color(1.0, 0.56, 0.26), "energy": 2.4, "range": 11.0, "size": 2.1, "glow": 1.3, "real": true, "day": false},
 	"fire": {"colour": Color(1.0, 0.62, 0.32), "energy": 2.0, "range": 10.0, "size": 2.2, "glow": 1.2, "real": false, "day": false},
 	"poi": {"colour": Color(1.0, 0.72, 0.42), "energy": 2.2, "range": 11.0, "size": 2.0, "glow": 1.15, "real": true, "day": true},
+	# light thrown back off the ground into a place the sun does not reach (a cave's mouth): real
+	# light at any hour, and nothing to see of it, since there is no lamp there
+	"bounce": {"colour": Color(0.9, 0.86, 0.78), "energy": 1.0, "range": 10.0, "size": 0.0, "glow": 0.0, "real": true, "day": true},
 }
 
 ## owner instance id -> Array of [world position, kind, colour, energy, range]
@@ -140,6 +143,9 @@ func _ready() -> void:
 	Settings.changed.connect(_on_setting_changed)
 	_glow = MultiMeshInstance3D.new()
 	_glow.name = "Glows"
+	# rebuilt from _process as windows light and go dark, and never moved: an interpolated
+	# MultiMesh warns when its buffer is set outside the physics tick
+	_glow.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# the quads are grown in the vertex shader, past the instances' own box
 	_glow.extra_cull_margin = 400.0

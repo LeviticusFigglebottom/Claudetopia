@@ -160,6 +160,11 @@ func cell_of(pos: Vector3) -> Vector2i:
 	return Vector2i(int(floor((pos.x - _origin.x) / cell_size)), int(floor((pos.z - _origin.y) / cell_size)))
 
 
+## Whether a cell is built, in any ring.
+func has_cell(cell: Vector2i) -> bool:
+	return _loaded.has(cell)
+
+
 func cell_centre(cell: Vector2i) -> Vector2:
 	return Vector2(_origin.x + (float(cell.x) + 0.5) * cell_size, _origin.y + (float(cell.y) + 0.5) * cell_size)
 
@@ -450,7 +455,9 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	node.set_meta("region", str(data.get("region", "")))
 	add_child(node)
 	_loaded[cell] = node
-	var instances: Dictionary = data.get("instances", {})
+	# the furniture of the roads and the field walls: signposts, gates and drystone runs are
+	# built rather than scattered (world/wayside.gd)
+	var instances: Dictionary = Wayside.prepare(data.get("instances", {}), node, ring <= full_ring)
 	for asset_path in instances:
 		var rows: Array = instances[asset_path]
 		if rows.is_empty():
@@ -552,6 +559,8 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	mmi.set_meta("asset_path", asset_path)
 	mmi.set_meta("range_base", range_end)
 	mmi.multimesh = mm
+	# scatter stands still: nothing to interpolate between physics ticks
+	mmi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	# only trees and rocks in the near ring cast shadows; grass shadows cost more than they show
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
 		if (ring <= full_ring and kind in ["tree", "rock", "prop"]) \
@@ -599,12 +608,17 @@ func _build_lod_group(parent: Node3D, asset_path: String, lad: ScatterLod.Ladder
 ## optionally two more, [.., lean_deg, lean_toward_deg]: a tree the wind has bent, tipped
 ## `lean_deg` from upright toward the ground direction (cos, sin) of `lean_toward_deg` in x, z.
 ## A six-field row stands upright, so every cell written before the lean existed reads as it did.
-## MultiMesh instances are stored relative to their cell node so the transforms stay small.
+## MultiMesh instances are stored relative to their cell node so the transforms stay small. A row
+## `Wayside` has fitted into a run carries a ninth field after the lean pair, [sx, sy, sz], a scale
+## in the asset's own axes that stands in for the uniform one (CONTRACTS §6).
 static func instance_transform(row: Array, cell_origin: Vector3) -> Transform3D:
 	var pos := Vector3(float(row[0]), float(row[1]), float(row[2])) - cell_origin
 	var yaw := deg_to_rad(float(row[3])) if row.size() > 3 else 0.0
 	var scale := float(row[4]) if row.size() > 4 else 1.0
 	var b := Basis(Vector3.UP, yaw).scaled(Vector3(scale, scale, scale))
+	if row.size() > 8:
+		var s: Array = row[8]
+		b = Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(float(s[0]), float(s[1]), float(s[2])))
 	if row.size() > 7 and float(row[6]) != 0.0:
 		var toward := deg_to_rad(float(row[7]))
 		var dir := Vector3(cos(toward), 0.0, sin(toward))
@@ -629,6 +643,8 @@ func _build_scene(parent: Node3D, entry: Variant) -> void:
 	if packed == null:
 		return
 	var inst: Node = packed.instantiate()
+	if path.contains("/models/landmarks/"):
+		LandmarkLod.apply(inst)      # a colossus is one opaque level at a time (world/landmark_lod.gd)
 	if inst is Node3D:
 		var pos: Array = entry.get("pos", [0, 0, 0])
 		var node3d: Node3D = inst

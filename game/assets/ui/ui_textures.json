@@ -1339,6 +1339,62 @@
     48,
     48
    ]
+  },
+  "cave": {
+   "file": "markers/cave.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "farmstead": {
+   "file": "markers/farmstead.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "mill": {
+   "file": "markers/mill.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "waystone": {
+   "file": "markers/waystone.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "market_field": {
+   "file": "markers/market_field.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "quarry": {
+   "file": "markers/quarry.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "shieling": {
+   "file": "markers/shieling.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "vista": {
+   "file": "markers/vista.png",
+   "size": [
+    48,
+    48
+   ]
   }
  },
  "variants": {
@@ -1464,10 +1520,12 @@
  "markers": [
   "bridge",
   "camp",
+  "cave",
   "city",
   "deep_place",
   "default",
   "edge",
+  "farmstead",
   "fort",
   "giant_bones",
   "hamlet",
@@ -1475,12 +1533,16 @@
   "interior_dungeon",
   "landmark",
   "lodge",
+  "market_field",
+  "mill",
   "player",
   "poi",
+  "quarry",
   "quest_area",
   "reticle",
   "ruin_village",
   "ruins",
+  "shieling",
   "shrine",
   "standing_stones",
   "strange",
@@ -1488,7 +1550,9 @@
   "tower",
   "town",
   "village",
+  "vista",
   "waterfall",
+  "waystone",
   "wreck"
  ],
  "fills": {

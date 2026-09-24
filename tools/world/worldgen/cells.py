@@ -126,11 +126,24 @@ def assets_for(index: dict, rule_asset: str, region_short: str) -> list:
         return []
     if kind in names:
         return [names[kind]]
+    # A region's own variant is `<region>_<kind>_<letter>`. Matching by prefix alone took
+    # `drystone_wall_end_a` for a `drystone_wall`, and a third of every wall Skerrow was given
+    # was an end piece standing in a wall's slot; so the kind's own variants win where it has
+    # any, and a prefix is only a family where there are none (`rocks/bone`, above).
+    mine = [p for n, p in names.items() if _is_variant(n, region_short, kind)]
+    if mine:
+        return mine
     mine = [p for n, p in names.items() if n.startswith(region_short + "_" + kind + "_")]
     if mine:
         return mine
     anyones = [p for n, p in names.items() if n.endswith("_" + kind) or ("_" + kind + "_") in n]
     return anyones
+
+
+def _is_variant(name: str, region_short: str, kind: str) -> bool:
+    """`name` is `<region_short>_<kind>_<letter>` and nothing longer."""
+    head, sep, letter = name.rpartition("_")
+    return bool(sep) and len(letter) == 1 and letter.isalpha() and head == region_short + "_" + kind
 
 
 def _hex(c) -> str:
@@ -152,7 +165,7 @@ class ScatterWorld:
     def __init__(self, grid: Grid, H: np.ndarray, owner: np.ndarray, moisture: np.ndarray,
                  water: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
                  slope: np.ndarray, bank, regions: list, water_d=None, field_d=None,
-                 pad_t=None, tpi=None, forests=None):
+                 pad_t=None, tpi=None, forests=None, parcel=None, place_d=None):
         self.grid = grid
         self.H = H
         self.owner = owner
@@ -177,6 +190,33 @@ class ScatterWorld:
         self.tpi = tpi if tpi is not None else np.zeros(H.shape, dtype=np.float32)
         # the atlas's woods: {kind: 0..1 at each texel} (geography.forests)
         self.forests = dict(forests or {})
+        # how much wood of any kind stands here, 0..1: a wood's edge is where it is thin
+        wood = np.zeros(H.shape, dtype=np.float32)
+        for w in self.forests.values():
+            wood += w
+        self.wood = np.clip(wood, 0.0, 1.0)
+        # what the field a point lies in carries (fields.parcel_value, the same number the
+        # textures sow by), -1 on unenclosed ground; and how far it is to a settlement, metres
+        self.parcel = parcel if parcel is not None else np.full(H.shape, -1.0, dtype=np.float32)
+        self.place_d = place_d if place_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
+
+    ## how each field is read: nearest for the categorical and the masks, bilinear for the rest
+    NEAREST = ("owner", "water", "road_d", "road_w", "pad", "parcel")
+
+    def field(self, name: str, x, z) -> np.ndarray:
+        """One field at (x, z): `sample(x, z)[name]`, without sampling the others."""
+        g = self.grid
+        if name.startswith("forest:"):
+            return sample_bilinear(self.forests[name[len("forest:"):]], g, x, z)
+        arr = {"h": self.H, "owner": self.owner, "moisture": self.moisture, "water": self.water,
+               "road_d": self.road_d, "road_w": self.road_w, "slope": self.slope,
+               "water_d": self.water_d, "field_d": self.field_d, "pad_t": self.pad_t,
+               "tpi": self.tpi, "parcel": self.parcel, "place_d": self.place_d, "wood": self.wood}.get(name)
+        if name == "pad":
+            return sample_nearest(self.pad.astype(np.uint8), g, x, z)
+        if name in self.NEAREST:
+            return sample_nearest(arr, g, x, z)
+        return sample_bilinear(arr, g, x, z)
 
     def sample(self, x, z) -> dict:
         g = self.grid
@@ -302,6 +342,13 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
                 wood["density"] = float(per_ha)
                 wood.setdefault("cluster", 0.25)
                 entries.append((r, "forest_%s_%s" % (kind, key), wood, 1.0, kind))
+    # The countryside between the places, by landform (scatter_rules `countryside`): meadows,
+    # wildflower drifts, the woods' and hedges' margins, crops by the field, logs and copses.
+    # After every other entry, so no other rule's draws move.
+    for r in regions:
+        mult = float(region_mult.get(r.shape, 1.0))
+        for i, rule in enumerate(rules.get("countryside", {}).get(r.shape, [])):
+            entries.append((r, "country_%d" % i, rule, mult, None))
     for n, (region, key, rule, mult, wood_kind) in enumerate(entries):
         if region.index not in boxes:
             continue
@@ -321,31 +368,61 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         x, z = _candidates(rng, boxes[region.index], spacing)
         if x.size == 0:
             continue
-        s = world.sample(x, z)
-        keep = s["owner"] == region.index
+        # Each field is sampled only at the candidates still in the running: the province's own
+        # first, then each factor where the ones before it left any chance. Sampled everywhere,
+        # every field and every wood for every candidate in the province's box, this was nine
+        # tenths of a 1024 build. The arithmetic per candidate is the one it was, and the draws
+        # below are made for every candidate as before, so the scatter is the same to the byte.
+        keep = world.field("owner", x, z) == region.index
         if wood_kind is not None:
-            keep &= s["forest:" + wood_kind] > 0.01
+            forest_all = np.zeros(x.shape, dtype=np.float32)
+            forest_all[keep] = world.field("forest:" + wood_kind, x[keep], z[keep])
+            keep &= forest_all > 0.01
         if not keep.any():
             continue
         x, z = x[keep], z[keep]
-        for k in list(s.keys()):
-            s[k] = s[k][keep]
-        want_water = bool(cfg.get("water", False))
         acc = np.ones(x.shape, dtype=np.float32)
+        live = np.arange(x.size)
+        got: dict = {}
+
+        def at(name: str) -> np.ndarray:
+            """`name` at the live candidates (and remembered where it was read before)."""
+            have = got.get(name)
+            if have is None:
+                have = got[name] = (np.zeros(x.shape, dtype=bool), None)
+            seen, vals = have
+            need = live[~seen[live]]
+            v = world.field(name, x[need], z[need])
+            if vals is None:
+                vals = np.zeros(x.shape, dtype=v.dtype)
+            if need.size:
+                vals[need] = v
+                seen[need] = True
+            got[name] = (seen, vals)
+            return vals[live]
+
+        def times(factor) -> None:
+            nonlocal live
+            acc[live] *= factor
+            live = live[acc[live] != 0.0]
+
+        want_water = bool(cfg.get("water", False))
         if wood_kind is not None:
-            acc *= s["forest:" + wood_kind]
-        acc *= (s["water"] > 0) if want_water else (s["water"] == 0)
-        acc *= 1.0 - smoothstep(float(cfg.get("slope_max", 0.55)) * 0.75, float(cfg.get("slope_max", 0.55)), s["slope"])
+            times(forest_all[keep])
+        w_ = at("water")
+        times((w_ > 0) if want_water else (w_ == 0))
+        sl = at("slope")
+        times(1.0 - smoothstep(float(cfg.get("slope_max", 0.55)) * 0.75, float(cfg.get("slope_max", 0.55)), sl))
         if "slope_min" in cfg:
-            acc *= smoothstep(float(cfg["slope_min"]) * 0.6, float(cfg["slope_min"]), s["slope"])
+            times(smoothstep(float(cfg["slope_min"]) * 0.6, float(cfg["slope_min"]), at("slope")))
         mo = cfg.get("moisture", [0.0, 1.0])
-        acc *= smoothstep(mo[0] - 0.12, mo[0] + 0.05, s["moisture"])
-        acc *= 1.0 - smoothstep(mo[1] - 0.05, mo[1] + 0.12, s["moisture"])
+        times(smoothstep(mo[0] - 0.12, mo[0] + 0.05, at("moisture")))
+        times(1.0 - smoothstep(mo[1] - 0.05, mo[1] + 0.12, at("moisture")))
         hr = cfg.get("height", [-40, 900])
-        acc *= smoothstep(hr[0] - 12.0, hr[0] + 6.0, s["h"])
-        acc *= 1.0 - smoothstep(hr[1] - 6.0, hr[1] + 12.0, s["h"])
+        times(smoothstep(hr[0] - 12.0, hr[0] + 6.0, at("h")))
+        times(1.0 - smoothstep(hr[1] - 6.0, hr[1] + 12.0, at("h")))
         # keep off the carriageway and its immediate verge
-        acc *= s["road_d"] > (s["road_w"] * 0.5 + 2.5)
+        times(at("road_d") > (at("road_w") * 0.5 + 2.5))
         # A settlement's pad is flattened ground the size of the town, and excluding every
         # plant from all of it made each village the middle of a mown lawn: the Merrowby
         # street shot is taken 46 m from the centre of a 64 m pad, so nothing whatever grew
@@ -362,12 +439,12 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         if low and float(cfg.get("pad_keep", 0.0)) > 0.0:
             green = float(cfg.get("pad_green", 0.22))
             outer = float(cfg.get("pad_from", 0.90))
-            on_green = 1.0 - smoothstep(green - 0.07, green, s["pad_t"])
-            on_verge = smoothstep(outer, outer + 0.08, s["pad_t"])
-            acc *= np.where(s["pad"] > 0,
-                            np.maximum(on_green, on_verge) * float(cfg["pad_keep"]), 1.0)
+            pt = at("pad_t")
+            on_green = 1.0 - smoothstep(green - 0.07, green, pt)
+            on_verge = smoothstep(outer, outer + 0.08, pt)
+            times(np.where(at("pad") > 0, np.maximum(on_green, on_verge) * float(cfg["pad_keep"]), 1.0))
         else:
-            acc *= s["pad"] == 0
+            times(at("pad") == 0)
         # Attraction bands. A landscape's strongest line-work is what grows *along* things:
         # willows and alders following every watercourse, thorn along a field boundary, a row
         # of trees marking a lane. Exclusion alone can only ever produce an even sprinkle.
@@ -378,39 +455,63 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
                 continue
             lo, hi = float(band[0]), float(band[1])
             strength = float(band[2]) if len(band) > 2 else 1.0
-            d = s[field_key]
+            d = at(field_key)
             # 1 inside the band, falling away either side over a third of its width
             soft = max((hi - lo) * 0.35, 1.5)
             inside = smoothstep(lo - soft, lo + soft * 0.3, d) * (1.0 - smoothstep(hi - soft * 0.3, hi + soft, d))
-            acc *= (1.0 - strength) + strength * inside
+            times((1.0 - strength) + strength * inside)
         # where it stands in the shape of the land: `tpi` [from_m, to_m, strength] of height
         # above the local mean (a crest is positive, a hollow negative)
         band = cfg.get("tpi")
         if band:
             lo, hi = float(band[0]), float(band[1])
             strength = float(band[2]) if len(band) > 2 else 1.0
-            inside = smoothstep(lo - 0.3, lo + 0.1, s["tpi"]) * (1.0 - smoothstep(hi - 0.1, hi + 0.3, s["tpi"]))
-            acc *= (1.0 - strength) + strength * inside
+            tp = at("tpi")
+            inside = smoothstep(lo - 0.3, lo + 0.1, tp) * (1.0 - smoothstep(hi - 0.1, hi + 0.3, tp))
+            times((1.0 - strength) + strength * inside)
+        # which fields it grows in: `parcel` [lo, hi] of the field's number (-1 is open ground)
+        band = cfg.get("parcel")
+        if band:
+            pv = at("parcel")
+            times((pv >= float(band[0])) & (pv <= float(band[1])))
+        # attraction to the settlements (`near_place`, metres) and to the woods' margins
+        # (`wood_edge`, of the woods' strength 0..1), as the bands above
+        # A wood's band never softens below its floor: open ground (no wood at all, 0) is not the
+        # edge of one, and softening past it had bracken over every field in the Vale.
+        for field_key, band_key, soft_min, floor in (("place_d", "near_place", 40.0, None),
+                                                     ("wood", "wood_edge", 0.05, 0.0)):
+            band = cfg.get(band_key)
+            if not band:
+                continue
+            lo, hi = float(band[0]), float(band[1])
+            strength = float(band[2]) if len(band) > 2 else 1.0
+            d = at(field_key)
+            soft = max((hi - lo) * 0.35, soft_min)
+            low = lo - soft if floor is None else max(lo - soft, floor)
+            inside = smoothstep(low, lo + soft * 0.3, d) * (1.0 - smoothstep(hi - soft * 0.3, hi + soft, d))
+            times((1.0 - strength) + strength * inside)
         # clustering: a low-frequency field decides where this species actually grows
         cl = float(cfg.get("cluster", 0.35))
-        if cl > 0.0:
+        if cl > 0.0 and live.size:
             field = world.bank.field_at(cluster_noise_salt + n, min(grid.n, 1024), beta=1.8,
                                         wl_min=float(cfg.get("rows", 60.0)), wl_max=420.0)
             g2 = grid.with_n(field.shape[0])
-            cf = 0.5 + 0.5 * np.tanh(sample_bilinear(field, g2, x, z))
+            cf = 0.5 + 0.5 * np.tanh(sample_bilinear(field, g2, x[live], z[live]))
             # A gate, not a gentle multiplier. Trees come in copses and shelter belts with real
             # open ground between them; scaling every candidate by 0.45 to 1.45 only produces an
             # even sprinkle that is slightly lumpy. Below the threshold the species is simply
             # absent, above it the ground is thick with it.
             thresh = float(cfg.get("cluster_threshold", 0.46))
             gate = smoothstep(thresh, thresh + float(cfg.get("cluster_edge", 0.16)), cf)
-            acc *= (1.0 - cl) + cl * gate * float(cfg.get("cluster_boost", 2.6))
+            times((1.0 - cl) + cl * gate * float(cfg.get("cluster_boost", 2.6)))
         draw = rng.random(x.shape).astype(np.float32)
         take = draw < np.clip(acc, 0.0, 1.0)
         if not take.any():
             continue
+        live = np.flatnonzero(take)
+        y = at("h")
+        water_d_taken = at("water_d")
         x, z = x[take], z[take]
-        y = s["h"][take]
         scale_lo, scale_hi = cfg.get("scale", [0.85, 1.2])
         scale = rng.uniform(scale_lo, scale_hi, x.shape).astype(np.float32)
         yaw = rng.uniform(0.0, 360.0, x.shape).astype(np.float32) if cfg.get("yaw_random", True) else np.zeros_like(x)
@@ -444,7 +545,7 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         tints = np.clip(base_col[None, :] * (1.0 + light + hue), 0.25, 1.0)
         # A tree the wind has worked on for a hundred years leans away from it.
         # (its own draws, so bending a species changes nothing else about where it stands)
-        lean, toward = lean_of(cfg, region.shape, s["water_d"][take],
+        lean, toward = lean_of(cfg, region.shape, water_d_taken,
                                np.random.default_rng(np.random.SeedSequence([seed, 9900 + n])))
         # This region's own variants of the thing the rule names. Spreading the instances over
         # them is what stops a hillside being one tree printed four hundred times.

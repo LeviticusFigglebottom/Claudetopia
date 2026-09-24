@@ -117,11 +117,18 @@ def pad_reach(place: dict) -> float:
 
 
 def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None = None,
-               fixed_levels: dict | None = None) -> tuple:
+               fixed_levels: dict | None = None, hold: np.ndarray | None = None) -> tuple:
     """Flatten a platform at every place. Returns (heights, pad_mask, pad heights by place id).
 
     `min_levels` lifts a pad that would otherwise sit under standing water: a stilt-town in
     the marsh stands on the highest peat island it can find, not in the pools.
+
+    `hold` (0..1 at each texel, 1 where the pad is free) holds the land against a pad's skirt:
+    the build passes the roads' clearance (`landforms.road_clear`) when it lays the pads again
+    after the roads. A road is graded against the land it was routed over, and a skirt laid
+    again over it moved that land from under it: 18 m down under the Chain Bridge road beside
+    Kharrow Hold, 16 m up under the Fernhold road below Grandfather Hollow. The level core is
+    never held: whatever crosses it stands at the pad's level.
     """
     n = grid.n
     X, Z = grid.mesh()
@@ -150,6 +157,8 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
             level = float(fixed_levels[p["id"]])
         levels[p["id"]] = level
         w = 1.0 - smoothstep(r_level, r_reach, d)
+        if hold is not None:
+            w = np.where(d <= r_level, w, w * hold[i0:i1, j0:j1])
         if fixed_levels is not None and p["id"] in fixed_levels:
             # An authored pad is a landing on a shelf or at a cliff's foot. Its skirt takes the
             # ground down to it, but builds nothing out over a drop: blended over the edge of the

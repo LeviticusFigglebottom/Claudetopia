@@ -218,6 +218,103 @@ def cliff_slab(pal, rng, params, variant):
             "extra_meta": {"modular": True, "module_width_m": w}}
 
 
+def basalt_columns(pal, rng, params, variant):
+    """A face of columnar basalt: hexagonal columns packed side by side, tallest at the back and
+    stepping down to the front, their tops broken off at different heights, and fallen drums at
+    the foot. It stands where a cliff_slab would, its face toward -Y, so the same placement
+    serves both: a crag of Cinderlea's old lava instead of a bedded limestone scar."""
+    mat, stone = stone_material(pal, params, rng, kind_default="basalt")
+    w = params.get("width", 4.0)
+    d = params.get("depth", 2.4)
+    h = params.get("height", 6.0)
+    r = params.get("column_radius", 0.42)
+    # a hexagonal packing: centres a column's width apart along x, rows 0.866 of it apart
+    step = r * 1.72
+    rows = max(2, int(d / (step * 0.866)))
+    cols = max(3, int(w / step))
+    parts = []
+    tops = []
+    for row in range(rows):
+        # the back row stands tallest; the front row is broken down to a third of it
+        back = row / max(rows - 1, 1)
+        for c in range(cols + (row % 2)):
+            x = (c - (cols - 1 + (row % 2)) * 0.5) * step + rng.uniform(-0.04, 0.04) * r
+            y = (back - 0.5) * d + rng.uniform(-0.04, 0.04) * r
+            if abs(x) > w * 0.5 + r * 0.5:
+                continue
+            edge = abs(x) / (w * 0.5)
+            ch = h * (0.35 + 0.65 * back) * (1.0 - 0.3 * edge ** 2) * rng.uniform(0.78, 1.05)
+            if rng.random() < 0.12:
+                ch *= rng.uniform(0.35, 0.6)          # one snapped off low
+            ob = S.cylinder("col_%d_%d" % (row, c), radius=r * rng.uniform(0.92, 1.04), depth=ch,
+                            vertices=rng.choice((5, 6, 6, 6, 7)), mat=mat, smooth=False)
+            ob.rotation_euler = Euler((0.0, 0.0, math.radians(rng.uniform(0, 60))), "XYZ")
+            ob.location = Vector((x, y, 0.0))
+            S.apply_transforms(ob)
+            # the top is a joint too: tipped a few degrees, not sawn flat
+            for v in ob.data.vertices:
+                if v.co.z > ch * 0.5:
+                    v.co.z += (v.co.x - x) * rng.uniform(-0.12, 0.12) + (v.co.y - y) * rng.uniform(-0.12, 0.12)
+            S.bevel(ob, width=r * 0.06, segments=1, angle_deg=40)
+            parts.append(ob)
+            tops.append(ch)
+    # drums fallen from the front, lying at the foot
+    for i in range(rng.randint(3, 6)):
+        ln = rng.uniform(0.5, 1.4)
+        ob = S.cylinder("drum_%d" % i, radius=r * rng.uniform(0.85, 1.0), depth=ln, vertices=6, mat=mat,
+                        smooth=False, centered=True)
+        ob.rotation_euler = Euler((math.radians(90 + rng.uniform(-15, 15)), 0.0,
+                                   math.radians(rng.uniform(0, 180))), "XYZ")
+        ob.location = Vector((rng.uniform(-w * 0.45, w * 0.45), -d * 0.5 - rng.uniform(0.3, 1.2), r * 0.8))
+        S.apply_transforms(ob)
+        S.bevel(ob, width=r * 0.06, segments=1, angle_deg=40)
+        parts.append(ob)
+    S.drop_to_ground(parts)
+    total = sum(S.tri_count(p) for p in parts)
+    if total > 3200:
+        for p in parts:
+            S.decimate(p, 3200.0 / total)
+    return {"opaque_objs": parts, "collision": "col_glb", "materials_used": [stone],
+            "extra_meta": {"columns": len(tops), "tallest_m": round(max(tops), 2) if tops else 0.0}}
+
+
+def fallen_log(pal, rng, params, variant):
+    """A trunk that came down in a storm and has lain a few winters: bark still on, the snapped
+    top ragged, a few limbs broken to stubs, moss on its upper side, and a third of its girth
+    settled into the ground. It lies along X."""
+    bark = M.by_name(params.get("bark", "oak_bark"), pal, age=0.95, tint=0.3)
+    moss = M.by_name("moss", pal)
+    length = params.get("length", rng.uniform(5.0, 8.5))
+    r = params.get("radius", rng.uniform(0.28, 0.46))
+    ob = S.cylinder("log", radius=r, radius_top=r * rng.uniform(0.62, 0.8), depth=length, vertices=12,
+                    mat=bark, smooth=True, centered=True)
+    ob.rotation_euler = Euler((0.0, math.radians(90.0), math.radians(rng.uniform(-4, 4))), "XYZ")
+    S.apply_transforms(ob)
+    S.subdivide(ob, levels=1, simple=True)
+    S.jitter_verts(ob, amount=r * 0.12, scale=0.6, seed=rng.randrange(999))
+    parts = [ob]
+    # limbs broken to stubs, most on the upper side
+    for i in range(rng.randint(3, 6)):
+        x = rng.uniform(-length * 0.4, length * 0.45)
+        a = rng.uniform(-70, 70) if rng.random() < 0.8 else rng.uniform(100, 260)
+        ln = rng.uniform(0.35, 1.2)
+        st = S.cylinder("stub_%d" % i, radius=r * rng.uniform(0.18, 0.32), radius_top=r * 0.12, depth=ln,
+                        vertices=6, mat=bark, smooth=True)
+        st.rotation_euler = Euler((math.radians(a), math.radians(rng.uniform(-35, 35)), 0.0), "XYZ")
+        st.location = Vector((x, 0.0, 0.0))
+        S.apply_transforms(st)
+        parts.append(st)
+    # moss on whatever faces up
+    for p in parts:
+        S.assign_material_to_faces(p, moss, lambda poly: poly.normal.z > 0.55 and rng.random() < 0.7)
+    # settled a third of its girth into the ground
+    for p in parts:
+        for v in p.data.vertices:
+            v.co.z += r * 0.65
+    return {"opaque_objs": parts, "collision": "convex", "materials_used": [params.get("bark", "oak_bark"), "moss"],
+            "extra_meta": {"length_m": round(length, 2)}}
+
+
 def scree(pal, rng, params, variant):
     """A cluster of small angular stones: one instance covers a patch of slope."""
     mat, stone = stone_material(pal, params, rng)
@@ -476,6 +573,8 @@ def sunken_masonry(pal, rng, params, variant):
 KINDS = {
     "boulder": boulder,
     "cliff_slab": cliff_slab,
+    "basalt_columns": basalt_columns,
+    "fallen_log": fallen_log,
     "scree": scree,
     "standing_stone": standing_stone,
     "sunken_masonry": sunken_masonry,
