@@ -201,3 +201,49 @@ func test_a_crit_from_behind_throws_the_victim_forward() -> void:
 		assert_eq(e.anim.current_clip, str(row[2]), "a %s played %s" % [row[0], e.anim.current_clip])
 		e.free()
 	print("    a backstab's victim plays %s, a riposte's %s" % [seen.get("backstab", "?"), seen.get("riposte", "?")])
+
+
+## A foe that did not know it was in a fight is roused by the blow it takes, and it still takes the
+## blow. A backstab's victim is thrown forward, and a blow that kills it leaves it dying. Before,
+## entering the fight played the combat idle over whatever the blow had started, in the timeline and
+## in the picture. So the backstab, the sneak attack and the ambush's first blow were never seen to
+## land, and a foe killed unaware stood back up. The test above gives its blows no attacker, so the
+## foe was never roused.
+func test_a_blow_that_rouses_a_foe_is_still_seen_to_land() -> void:
+	if not ResourceLoader.exists(HumanoidModel.RIG_PATH):
+		return
+	_root = Node3D.new()
+	_tree().root.add_child(_root)
+	var attacker := Node3D.new()
+	_root.add_child(attacker)
+	for row: Array in [["backstab", 1.0, "Stagger_B"], ["", 1000.0, "Death_A"]]:
+		var e := Enemy.new()
+		e.configure("core:enemy/roadside_bandit")
+		_root.add_child(e)
+		e.perception.enabled = false
+		e.set_physics_process(false)
+		for i in 3:
+			await _tree().physics_frame
+		assert_true(e.brain.state != Brain.COMBAT, "the foe was already fighting before the blow")
+		attacker.global_position = e.global_position - e.forward() * 1.2
+		var hit := HitData.new()
+		hit.attacker = attacker
+		hit.amount = float(row[1])
+		hit.kind = "pierce"
+		hit.crit_kind = str(row[0])
+		hit.crit_mult = 3.0 if not str(row[0]).is_empty() else 1.0
+		hit.blockable = false
+		hit.parryable = false
+		hit.dodgeable = false
+		hit.origin = attacker.global_position
+		e.take_hit(hit)
+		for i in 6:
+			await _tree().physics_frame
+		var want := str(row[2])
+		assert_eq(e.brain.state, Brain.COMBAT, "the blow did not rouse the foe")
+		assert_eq(e.anim.current_clip, want, "roused by a blow, the foe's timeline plays %s, not %s" % [e.anim.current_clip, want])
+		var body := e.anim.model as HumanoidModel
+		if body != null:
+			var shown := body.current_intent() if body.holding_pose().is_empty() else body.holding_pose()
+			assert_eq(shown, want, "roused by a blow, the foe is seen to play %s, not %s" % [shown, want])
+		e.free()
