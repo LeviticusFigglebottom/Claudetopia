@@ -292,7 +292,9 @@ def mat_rock(p: Painter, spec: dict) -> tuple:
     tint = rng.uniform(0.86, 1.16, int(ids.max()) + 1).astype(np.float32)[ids]
     alb = alb * lerp(np.ones_like(tint), tint, 0.85 * body)[..., None]
     dark = hexcol(spec.get("seam_colour", spec["colors"][0]))
-    alb = lerp(alb, dark[None, None, :], (seams ** 1.4 * 0.9)[..., None])
+    # seam_dark: how far a seam goes to the seam colour. Full strength drew the few large plates'
+    # warped edges as black ink loops across the fells, doodles rather than joints.
+    alb = lerp(alb, dark[None, None, :], (seams ** 1.4 * spec.get("seam_dark", 0.9))[..., None])
     # bedding: faint parallel grain across each plate, the way sedimentary rock splits
     bed = 0.5 + 0.5 * np.tanh(p.f(45, 1.7, 0.06, 0.45, aniso=(spec.get("bedding_angle", 20.0), 4.0)) * 1.4)
     alb *= (1.0 - spec.get("bedding", 0.10) * (bed - 0.5))[..., None]
@@ -428,16 +430,20 @@ MATERIALS = {
     # the bedding is stronger and level, so a cliff (Terrain3D projects steep ground sideways)
     # shows its strata.
     "granite": {"recipe": "rock", "tile_m": 3.4, "colors": ["#4f4943", "#665e55", "#7f766b", "#988e81"],
-                "seam_colour": "#3a342e", "lichen": 0.3, "lichen_colour": "#8c8a6c", "cells": 4,
-                "jitter": 0.45, "seam": 0.018, "plate_warp": 0.14, "fine_seams": 0.35, "bedding": 0.16,
+                "seam_colour": "#3a342e", "lichen": 0.3, "lichen_colour": "#8c8a6c", "cells": 5,
+                "jitter": 0.45, "seam": 0.03, "seam_dark": 0.45, "plate_warp": 0.07, "fine_seams": 0.08,
+                "bedding": 0.16,
                 "bedding_angle": 4.0, "rough": 0.74, "normal_strength": 2.8},
     "limestone": {"recipe": "rock", "tile_m": 3.6, "colors": ["#6f6961", "#857e73", "#9c9486", "#b3aa99"],
-                  "seam_colour": "#4d463d", "aniso": (10.0, 2.2), "cells": 3, "jitter": 0.4,
-                  "seam": 0.016, "plate_warp": 0.16, "fine_seams": 0.15, "bedding": 0.3, "bedding_angle": 2.0,
+                  "seam_colour": "#4d463d", "aniso": (10.0, 2.2), "cells": 4, "jitter": 0.4,
+                  "seam": 0.028, "seam_dark": 0.45, "plate_warp": 0.07, "fine_seams": 0.05, "bedding": 0.3,
+                  "bedding_angle": 2.0,
                   "lichen": 0.3, "lichen_colour": "#9c9878", "rough": 0.8, "normal_strength": 3.0},
-    "scree": {"recipe": "pebbles", "tile_m": 2.4, "colors": ["#544e47", "#6a635a", "#827a6e"],
-              "cells": 15, "radius": 0.55, "crease": 0.05, "small_mix": 0.5, "warp": 0.1, "rough": 0.82,
-              "normal_strength": 3.0},
+    # broken stone, not cobbles: at 15 domed cells a tile the fell sides read as giant scales close
+    # to, so the stones are smaller, more of them small, flatter and nearer the gaps' colour
+    "scree": {"recipe": "pebbles", "tile_m": 2.4, "colors": ["#5a534b", "#6a635a", "#7c7468"],
+              "cells": 24, "radius": 0.42, "crease": 0.04, "small_mix": 0.7, "warp": 0.18, "rough": 0.84,
+              "normal_strength": 1.8},
     "snow": {"recipe": "snow", "tile_m": 3.2, "colors": ["#b9c6da", "#d2dcea", "#e6ecf4", "#f6f8fb"]},
     "heather": {"recipe": "grass", "tile_m": 2.2, "colors": ["#3a3a2c", "#4d4a33", "#5d5640", "#6e6349"],
                 "tip": "#8a6a86", "blades": 4200, "blade_len": 0.05, "blade_w": 0.008,
