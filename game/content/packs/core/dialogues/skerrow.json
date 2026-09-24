@@ -12,6 +12,8 @@
     {"conditions": [{"time_between": [6, 7]}], "text": "The song is not finished. Stand where you are and do not speak through the breath."}
   ],
   "nodes": {
+    "q_a_debt_with_a_nicer_voice_kharrows_word": {"speaker": "Torkh ko-Kharrow", "text": "Kharrow sings the forgiveness. It is Kharrow's to sing, every morning, before food, and it will be sung while there is a Kharrow with a mouth. The bridge is Ghast's. They cut it; they may mend it; it is not my business, and I will not hold the bone over it. — And a stone on the Red Moor with our mark and theirs and a ring with a gap. — That is nobody's. I would like to know who sets stones for bridges on my moor. Tell Dagga ko-Ghast that. She will enjoy it.", "next": "hub"},
+    "q_forty_head_and_a_hearth_the_speaker": {"speaker": "Torkh ko-Kharrow", "text": "I do. — Sit. — I lay it myself, at night, twice the price, because a price paid in the open is a price the Moot sings, and Kharrow would have to sing that a Rudd died for Kharrow's herd in a snow our verse does not mention, and our verse is four hundred lines of what Kharrow did right. I would rather pay twice in the dark than once in the song. — That is the truth, and I have not said it aloud before, and it is less than I thought it would be. Tell Ushra. She will know what it weighs. I have never been able to.", "next": "hub"},
     "greet": {"speaker": "Torkh ko-Kharrow", "text": "Torkh. The name comes with the bone; I am the ninth to carry it. When the seven clans sit, whoever holds this speaks, and when blood has been spilled I say the price. You are in Kharrow Hold, three hundred years in the cutting and nine in the hanging. Mind the edge.", "next": "hub"},
     "hub": {"speaker": "Torkh ko-Kharrow", "text": "Speak. I am holding the bone, so I am listening.", "choices": [
       {"text": "What is the Moot?", "next": "the_moot"},
@@ -19,6 +21,8 @@
       {"text": "What is the cairn on the ledge?", "next": "the_cairn", "conditions": [{"flag": "hold_told_blood_price"}]},
       {"text": "Why does the Hold owe Clan Rudd?", "next": "the_debt"},
       {"text": "What is the Dwindling, to the clans?", "next": "dwindling"},
+      {"text": "Ghast want to mend the bridge. What does Kharrow say?", "next": "q_a_debt_with_a_nicer_voice_kharrows_word", "conditions": [{"quest_at": ["core:quest/a_debt_with_a_nicer_voice", "kharrows_word"]}]},
+      {"text": "Somebody lays Kharrow coin in the grooves on the North Road.", "next": "q_forty_head_and_a_hearth_the_speaker", "conditions": [{"quest_at": ["core:quest/forty_head_and_a_hearth", "the_speaker"]}]},
       {"text": "I have said what I came to say.", "next": "bye"}
     ]},
     "the_moot": {"speaker": "Torkh ko-Kharrow", "text": "Seven clans, one Moot. Dreugh, Kharrow, Oskel, Brindle, Ghast, Rudd, Skarl. Each keeps its own hold and its own memory and its own grudges, and once a season they send who they send up the chain to sit in that hall and pass this bone from hand to hand, and whoever holds it is heard, and nobody else is. — It is not a court. Courts have a book. We have a song with four hundred lines and a breath in it, and a bone, and the fact that nobody in Skerrow has ever forgotten anything. That is enough law for a mountain. It is too much for most people.", "effects": [{"set_flag": "hold_told_the_moot"}], "next": "hub"},
@@ -124,6 +128,7 @@
     {"conditions": [{"flag": "hold_kun_told_token"}], "text": "You asked about the token. Nobody asks. They look and don't ask. Dunna says that's the clan way and it's the worst part of it."}
   ],
   "nodes": {
+    "q_forty_head_and_a_hearth_the_fosterling": {"speaker": "Kun ko-Rudd", "text": "They're asking? — Ushra's asking. Ushra always asks for things the way you'd ask a cliff to move, like it's sure to. — It's my father's token. He died in the long snow, the second one, bringing Kharrow's herd down off the Cradle side when their herders couldn't. That's not in the song. Rudd said forgiven so it wouldn't have to be. — Somebody pays for it. There's coin in the grooves on the North Road every month and nobody says for whom. I've seen it. I'm nine. Nobody tells me not to look.", "next": "hub"},
     "greet": {"speaker": "Kun ko-Rudd", "text": "Kun. Ko-Rudd, not ko-Kharrow, whatever the bench says. I'm the fosterling. That means Rudd sent me up the chain to say sorry with my feet, Ghan says, except it isn't sorry, it's the other thing, forgiven, and Kharrow won't have it. I'm nine. Don't bump the token.", "next": "hub"},
     "hub": {"speaker": "Kun ko-Rudd", "text": "What do you want?", "choices": [
       {"text": "Why is your token so big?", "next": "the_token"},
@@ -131,6 +136,7 @@
       {"text": "You're learning the Rope-Song?", "next": "the_song"},
       {"text": "What's the breath in the song?", "next": "the_breath", "conditions": [{"flag": "hold_kun_told_song"}]},
       {"text": "What are you afraid of?", "next": "afraid"},
+      {"text": "Rudd are asking for the forty head.", "next": "q_forty_head_and_a_hearth_the_fosterling", "conditions": [{"quest_at": ["core:quest/forty_head_and_a_hearth", "the_fosterling"]}]},
       {"text": "I'll let you be.", "next": "bye"}
     ]},
     "the_token": {"speaker": "Kun ko-Rudd", "text": "It was cut for my father. Rudd cuts a token for a man when he's grown and my father was grown and then he wasn't anything, in the long snow, the second one, not the one in the song. So they sent his up with me. To show Kharrow it was forgiven: a man's token on a boy, look, we've got nothing left to want from you. — It knocks. Against here, when I walk. I learned to walk so it doesn't. Torkh saw me doing it on the stair and went and stood at the cairn for a long time, and Ghan says that's the nearest Torkh comes to crying.", "effects": [{"set_flag": "hold_kun_told_token"}, {"rumour": ["core:rumour/rudd_fosterling", 0.4]}], "next": "hub"},
@@ -179,6 +185,9 @@
   "notes": "Miner at the second headframe; hears the singing shaft through the rock and hums it back; the chalk lines going down the post. The Breath as a working man hears it.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"flag": "brodd_answered"}, {"quest_done": "core:quest/answer_it"}], "text": "We strike the bar before every shift. Yesterday it answered from the face, one note, low. The men went down anyway. So did I. I would rather hear it than wonder."},
+    {"conditions": [{"flag": "brodd_silver_buried"}, {"quest_done": "core:quest/answer_it"}], "text": "Ghalorn buried the bar under a bone lintel and asked the dead. The dead agreed, he says. The shaft has been quiet since. I miss the note a little, here, at my breastbone."},
+    {"conditions": [{"flag": "brodd_silver_sold"}, {"quest_done": "core:quest/answer_it"}], "text": "Word came up the pass that a Tollmere merchant's clerks cannot sleep. I have not written back. Silver is silver. It was also ours."},
     {"conditions": [{"time_between": [6, 7]}], "text": "Hold on. — There. That is the line for today. Lower again. Now I can talk."},
     {"conditions": [{"quest_done": "core:quest/a_hand_on_the_rope"}], "text": "The shaft stopped. Did you know that? The day the name came up it stopped singing, and I stood at the face and hummed the note and nothing hummed back, and I have never been so glad and so lonely in my life."},
     {"conditions": [{"morality_max": -30}], "text": "Oskarth says you are not going down. I say fine; there is nothing down there you can carry, and one thing that can carry you."},
@@ -186,6 +195,12 @@
     {"conditions": [{"flag": "brindlecrag_told_the_lines"}], "text": "You saw the post. Two lines lower since. I have stopped telling Oskarth. He knows; he strikes the chain harder."}
   ],
   "nodes": {
+    "q_answer_it_offer": {"speaker": "Brodd ko-Brindle", "text": "I did, aloud, which is the only way I say anything, and Oskarth looked at me like I had spat on the headframe. — The note is going down. Midwinter it was at my collar and now it is at my breastbone. Something down there is running out of breath, or it is taking a bigger one. — Here. My shift-bell. Take it up to Brindle Swallow and drop it in. The beck comes out at our spring a day later. If the bell comes out with it, I will know the way. If it does not, I will know something else.", "choices": [{"text": "I'll drop your bell in the swallow.", "effects": [{"start_quest": "core:quest/answer_it"}], "next": "q_answer_it_accept"}, {"text": "Not now.", "next": "hub"}]},
+    "q_answer_it_accept": {"speaker": "Brodd ko-Brindle", "text": "Listen as it goes down. Tell me how long it rings. Count it. — Miners count. It is the only prayer we have.", "next": "hub"},
+    "q_answer_it_decide_hang_it": {"speaker": "Brodd ko-Brindle", "text": "Every shift, before we go down. If it answers back we will hear it at the face. I would rather hear it than wonder. I have always been the one who would rather.", "next": "hub"},
+    "q_answer_it_decide_under_a_lintel": {"speaker": "Brodd ko-Brindle", "text": "Under a lintel, with Ghalorn asking the dead. A door under bone is a door the dead have agreed to. Let them agree to this. It is theirs more than ours.", "next": "hub"},
+    "q_answer_it_decide_sell_it_down_the_pass": {"speaker": "Brodd ko-Brindle", "text": "Down the pass. — Some Tollmere merchant will have a bar of ringing silver on his desk and wonder why his clerks cannot sleep. Silver is silver. It was also ours.", "next": "hub"},
+    "q_answer_it_decide": {"speaker": "Brodd ko-Brindle", "text": "Put it on the ore. — ...That is it. That is the note, at my breastbone, in a bar of our own silver. — The old miners say do not answer it. I have said for a year that somebody should. Now I have the answer in my hand and I do not know what it says. You tell me.", "choices": [{"text": "Hang it in the headframe and strike it every shift.", "effects": [{"quest_choice": ["core:quest/answer_it", "hang_it"]}], "next": "q_answer_it_decide_hang_it"}, {"text": "Bury it under a bone lintel. Ghalorn's way.", "effects": [{"quest_choice": ["core:quest/answer_it", "under_a_lintel"]}], "next": "q_answer_it_decide_under_a_lintel"}, {"text": "Sell it down the pass.", "effects": [{"quest_choice": ["core:quest/answer_it", "sell_it_down_the_pass"]}], "next": "q_answer_it_decide_sell_it_down_the_pass"}, {"text": "Let me think on it.", "next": "hub"}]},
     "greet": {"speaker": "Brodd ko-Brindle", "text": "Brodd. Second headframe, morning shift, silver face. And I hear the shaft. Everybody here hears the shaft; I am the one who says so. Sit on the ore, it is warmer than the rock.", "next": "hub"},
     "hub": {"speaker": "Brodd ko-Brindle", "text": "Go on.", "choices": [
       {"text": "You can hear the Oskeld shaft from here?", "next": "the_singing"},
@@ -193,6 +208,8 @@
       {"text": "What is a stone-thrall?", "next": "stone_thralls"},
       {"text": "What's it like at the face?", "next": "the_face"},
       {"text": "What is the Dwindling, to a miner?", "next": "dwindling"},
+      {"text": "Somebody should answer the shaft, you said.", "next": "q_answer_it_offer", "conditions": [{"quest_not_done": "core:quest/answer_it"}, {"not": {"quest_active": "core:quest/answer_it"}}]},
+      {"text": "The silver hums your note. It's the shaft's.", "next": "q_answer_it_decide", "conditions": [{"quest_at": ["core:quest/answer_it", "the_answer"]}]},
       {"text": "Good digging.", "next": "bye"}
     ]},
     "the_singing": {"speaker": "Brodd ko-Brindle", "text": "Through the rock. Three valleys of it. Put your hand flat on the face at the end of the second adit and wait and you will feel it before you hear it: one note, held, the way a man holds a note when he has forgotten he is singing. — The old miners say do not answer it. I answer it. Every morning before the shift I hum it back into the face. Somebody should. If it is a person, it has been singing alone for a thousand years and somebody should hum back. If it is not a person, then I am humming at a rock, and I have done worse things at six in the morning.", "effects": [{"set_flag": "brindlecrag_told_the_singing"}], "next": "hub"},

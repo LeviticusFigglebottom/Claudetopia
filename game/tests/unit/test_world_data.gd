@@ -134,8 +134,8 @@ func test_water_levels() -> void:
 		return
 	assert_true(provider.is_water(0.0, -700.0), "the middle of the Mere should be water")
 	assert_near(provider.water_level_at(0.0, -700.0), 8.0, 0.6)
-	assert_false(provider.is_water(900.0, 2350.0), "Merrowby should be dry")
-	assert_eq(provider.water_level_at(900.0, 2350.0), TerrainProvider.NO_WATER)
+	assert_false(provider.is_water(250.0, 1330.0), "Merrowby should be dry")
+	assert_eq(provider.water_level_at(250.0, 1330.0), TerrainProvider.NO_WATER)
 	assert_gt(provider.water_depth_at(0.0, -700.0), 2.0)
 
 
@@ -314,6 +314,14 @@ func test_streamer_builds_multimeshes_from_a_cell() -> void:
 	assert_near(rad_to_deg(xform.basis.get_euler().y), 90.0, 0.1)
 	assert_near(WorldStreamer.instance_tint(row).r, Color("#ff8844").r, 0.01)
 	assert_near(WorldStreamer.instance_tint([0, 0, 0, 0, 1]).g, 1.0, 0.01)
+	# a wind-bent tree: 12 degrees off upright, its top carried toward +x+z at 36.87 degrees
+	# (the wind the atmosphere blows, wm_wind_dir); a six-field row stands straight
+	assert_near(xform.basis.y.normalized().dot(Vector3.UP), 1.0, 0.0001, "an old row leans")
+	var bent: Array = [centre.x, 12.0, centre.y, 90.0, 1.0, "#ffffff", 12.0, 36.87]
+	var up := WorldStreamer.instance_transform(bent, Vector3(centre.x, 0.0, centre.y)).basis.y.normalized()
+	assert_near(rad_to_deg(acos(up.dot(Vector3.UP))), 12.0, 0.05, "leans by its lean")
+	var flat := Vector2(up.x, up.z).normalized()
+	assert_near(flat.dot(Vector2(0.8, 0.6)), 1.0, 0.001, "leans toward where the wind goes")
 	assert_eq(Log.warning_count, warnings_before + 1, "a missing asset should warn exactly once")
 	streamer._build_cell(Vector2i(17, 16), 0, data)
 	assert_eq(Log.warning_count, warnings_before + 1, "the same missing asset warned twice")
@@ -325,8 +333,8 @@ func test_streamer_builds_multimeshes_from_a_cell() -> void:
 func test_provider_normals_and_slopes() -> void:
 	if _skip():
 		return
-	var flat := provider.get_normal(900.0, 2350.0)     # a settlement pad is flat by construction
+	var flat := provider.get_normal(250.0, 1330.0)     # a settlement pad is flat by construction
 	assert_gt(flat.y, 0.9, "a flattened pad should have an upward normal, got %s" % str(flat))
 	assert_near(flat.length(), 1.0, 0.01)
-	var slope := provider.get_slope(900.0, 2350.0)
+	var slope := provider.get_slope(250.0, 1330.0)
 	assert_true(slope < 0.4, "the pad slope is %.2f rad" % slope)

@@ -1319,3 +1319,86 @@ Jump_Start played from its push: two frames of a clip made to show a crouch.
 heightfield may differ from it by a centimetre or two on curved ground. On the heightfield alone
 (no collider) a body climbs at its pace across the map, which is faster along the ground (131% at
 40°). A jump comes 0.1 s after the press.
+## 2026-09-23 · Wickmere is drawn, not seeded
+**Decision.** The world's geography is authored in `tools/world/atlas/atlas.json` (docs/ATLAS.md
+says why each part is where it is). That covers the provinces and their ground, the ranges,
+peaks, valleys, rivers, lakes, woods, coast and roads, and the start. The builder makes the land
+from it, and noise decides only how a slope is broken. The places and points of interest were
+moved to where the map puts them, and the country between them was filled until no walkable
+ground is far from somewhere worth walking to. This supersedes "The land is built last, and the
+places land on it" (2026-09-20).
+**Why.** The playtest was dropped at the edge of a map of hilly nothingness with the odd tower
+standing in it. It said the seed took the mystique away, and it was right. A generator that
+does not know where anything stands cannot put a village where a valley opens, a road through a
+coombe, or a bell-tower where the first view needs one. It also cannot say where the country is
+empty. The earlier decision was sound for a generated world: a landscape negotiated with its
+villages feels arranged. A drawn map is arranged on purpose, the way the maps of the games this
+one stands beside are.
+**Alternatives.** Constraining the generator by hand-placed stamps (the seed still owns most of
+the ground, and the empty country with it). Shrinking the world until the old content filled it
+(the brief was a sprawling world; with 297 locations and a density rule, 8192 m is full).
+**Consequences.** Every place and POI has a position the atlas agrees with (check_atlas.py
+refuses a place outside its region's provinces). tools/world/tests/test_atlas_map.py holds the
+density: no walkable point more than about 400 m from a location, and no road more than about
+250 m. A new location is placed on the map and not left to the builder. Tests that read the
+tracked world (test_world_data, test_the_start, test_pois, the cinematic paths, the sightlines)
+disagree with the moved content until the world is rebuilt from the atlas.
+
+## 2026-09-23 · The map's hooks are kept with the systems the game already has
+**Decision.** Every settlement's work is a hand-written side quest given by somebody who lives
+there. The Jobs system is not used for it: jobs come from boards and stations, not from a
+resident with a day and lines of their own. Each point of interest's hook pays off in something
+an existing system puts there: a quest stage, an encounter, a Hearthstone, or a note or book
+lying there. A note is an encounter def with `lies` and no `spawns`: QuestItems puts it down
+and PoiEncounters stands nobody up. `core:table/poi_hooks` indexes every point of interest
+against the ids that pay it off, and test_map_quests holds each row true. Each decision a
+quest asks for sets a flag, and that flag is read by the person who asked: a greeting once the
+quest is done, or a hold or a going. Other writers' dialogue files take these lines by insertion
+only.
+**Why.** The brief was a world dense with work and reasons to walk, built from the systems
+already there. Quest plumbing belongs to the settlements stream, so new plumbing waits for it.
+Before this, 99 of the decisions' flags were read by nothing: consequences on paper only. A
+hook table that nothing checks goes stale the first time a quest is rewritten.
+**Alternatives.** A "secret" or "note" dressing of its own for points of interest: that is
+plumbing, and it is listed for the settlements stream instead. Jobs as the local work: they do
+not come from a resident. Rumours as the lasting consequence: they fade by design, and a
+decision should not.
+**Consequences.** Everything is named by id, so a point of interest that moves on the map keeps
+its payoff. Nothing in the game reads the hook table. It is an index: `tools/poi_hooks.py`
+rewrites it from the pack and names any point of interest that pays off in nothing, and
+test_map_quests fails on a stale row and on a decision nobody remembers. A remembered greeting is as specific as the person's other conditioned
+greetings, so it is one of the lines they may greet you with, not the only one.
+
+## 2026-09-23 · A talk waits for its line, a book is read where it lies, a decision can be a crime, and residents offer work
+**Decision.** The quest vocabulary gets the four things the map's quests needed. Each is opt-in, so
+the rest of the pack plays exactly as before.
+* A `talk` objective may name a `topic`, a node of the person's dialogue. It then closes only when
+  a conversation reaches that line (`EventBus.dialogue_node_entered`). A talk with no topic still
+  closes when any conversation with the person ends.
+* A `read_book` objective may say `in_place`. The book itself is laid at the objective's `where`,
+  fixed, and reading it there closes the objective. Otherwise the copy that reads it is put down,
+  as before.
+* The `bounty` effect makes a decision a crime. It goes through the crime service's own
+  `report_crime`, seen by the person spoken to or a named witness. So the severity, the region's
+  law, the report delay and the lawless regions' ill-feeling are the crime system's own. Nobody
+  seeing it means nobody reports it.
+* The `offer_work` effect has a resident read you their place's work. That is the notice post
+  where the place has one. A hamlet, lodge or camp has none, so its resident reads you a
+  carried board: one per place, with no body in the world (`JobBoard.for_place`).
+
+A quest's giver offering it at their hub now counts as a way to start it in `test_quest_reach`,
+as it always did in play.
+**Why.** Any conversation closed a talk, so a stage that sent you to tell somebody something
+closed on a greeting. Only a copy you carried off could be read, so a keeper-roll hung inside a
+tower door had to be picked up. No effect could put a price on your head. Jobs came only from
+posts and workbenches, and only towns, cities, villages and forts have a post, so thirty of the
+thirty-nine settlements offered no work but a shift at a workbench.
+**Alternatives.** Closing a talk on any authored `complete_objective` line, as deliveries do.
+That would change existing content, since one talk in the pack already has such a line. A
+`bounty` effect that adds to the ledger directly would skip the witness, the delay and the law.
+A hub choice the runner adds for residents, as it does for trade, would be another hunk in
+`_visible_choices`, where the settlements stream's deed offers are.
+**Consequences.** All 15 talks in the map's quests close on their own lines. Five of its books
+are read where they lie. All 26 residents the map added offer the work going where they live.
+The crime service now answers `bounty_for`, which it never did, so every `bounty_min` condition
+and greeting read nought until now.

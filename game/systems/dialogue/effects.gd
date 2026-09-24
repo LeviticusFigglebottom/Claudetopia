@@ -21,6 +21,13 @@ extends RefCounted
 ##   {"rumour": rumour_id}                   seeds the current place's rumour pool
 ##   {"unlock_topic": topic_id}              opens a dialogue topic (a flag under "topic/")
 ##   {"end": true}                           ends the conversation after this node
+##   {"bounty": "theft"}                     a decision that is a crime: committed here, seen by the
+##   {"bounty": {"crime": "theft", "value": 120, "at": place_id, "seen_by": npc_id, "reaction": r}}
+##                                           person spoken to (or `seen_by`), and reported by the crime
+##                                           system's rules (SocialContext.commit_crime)
+##   {"offer_work": true} | {"offer_work": place_id}
+##                                           the work going in the place (the speaker's own when true):
+##                                           its notice post, or what its people carry (JobBoard.for_place)
 ## Further supported (documented in the README):
 ##   clear_flag, inc_counter, take_item, deed, disposition, complete_quest, fail_quest,
 ##   quest_choice, complete_objective, join_faction, leave_faction, discover, notify, none
@@ -34,6 +41,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
+	"bounty", "offer_work",
 ]
 
 
@@ -150,6 +158,15 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 				ctx.add_disposition(str(arg[0]), int(arg[1]))
 			else:
 				ctx.add_disposition(ctx.npc_id, int(arg))
+		"bounty":
+			if typeof(arg) == TYPE_DICTIONARY:
+				var d: Dictionary = arg
+				ctx.commit_crime(str(d.get("crime", "")), str(d.get("at", "")), str(d.get("seen_by", "")),
+						int(d.get("value", 0)), str(d.get("reaction", "report")))
+			else:
+				ctx.commit_crime(str(arg))
+		"offer_work":
+			ctx.offer_work(str(arg) if typeof(arg) == TYPE_STRING else "")
 		"rumour":
 			var rid := ""
 			var heat := 0.6
