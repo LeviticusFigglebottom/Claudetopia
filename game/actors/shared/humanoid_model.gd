@@ -386,12 +386,21 @@ func _restore_contract_clip_names() -> void:
 
 
 ## The sidecar is the source of truth for loop flags (CONTRACTS.md §3).
+##
+## A flag is written only when it is wrong, so in practice only by the first body built. The rig's
+## Animations are one set of resources shared by every body built from it. Each write says
+## `changed`, even of the same value, and every live AnimationTree answers `changed` by queueing
+## a set-up of itself for later. Written on every build, one person stood up queued clips x bodies
+## calls (82 x about 60). In a test that stood up the farms', mills' and caves' people, the message
+## queue ran out of memory and the engine crashed. In the game it was a hitch on every spawn.
 func _apply_loop_flags() -> void:
 	for name in _clip_data:
 		var anim := _find_animation(str(name))
 		if anim == null:
 			continue
-		anim.loop_mode = Animation.LOOP_LINEAR if bool(_clip_data[name].get("loop", false)) else Animation.LOOP_NONE
+		var want := Animation.LOOP_LINEAR if bool(_clip_data[name].get("loop", false)) else Animation.LOOP_NONE
+		if anim.loop_mode != want:
+			anim.loop_mode = want
 
 
 func _find_animation(name: String) -> Animation:
