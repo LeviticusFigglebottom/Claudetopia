@@ -329,7 +329,7 @@ def surface_maps(ob, size: int = 1024, pad: int = 4, tangents: bool = False) -> 
 
 
 def sdf_detail_normal(field, maps: Dict[str, np.ndarray], eps: float = 0.0004, max_move: float = 0.004,
-                      iters: int = 3, chunk: int = 60000, box=None) -> np.ndarray:
+                      iters: int = 3, chunk: int = 60000, box=None, feather: float = 0.012) -> np.ndarray:
     """A tangent-space normal map (OpenGL, +Y up the UV's v) of the field's own surface, baked
     onto the mesh that was meshed and decimated from it.
 
@@ -339,7 +339,10 @@ def sdf_detail_normal(field, maps: Dict[str, np.ndarray], eps: float = 0.0004, m
     point on the mesh is walked onto the field's zero set and the field's normal there is
     written in the mesh's own tangent frame, so the lighting finds the detail the geometry
     lost. Where the mesh is further than `max_move` from the field (or the walk fails) the mesh's
-    own normal is kept, as it is outside `box` (lo, hi), where the field was not sampled.
+    own normal is kept, as it is outside `box` (lo, hi), where the field was not sampled; the
+    last `feather` metres inside the box ease from one to the other, or the box's edge showed
+    as a line across the cheeks and the brow (the field's smooth normal and the decimated mesh's
+    faceted one are not the same even where there is no detail).
     `maps` must come from surface_maps(..., tangents=True)."""
     size = maps["pos"].shape[0]
     out = np.zeros((size, size, 3))
@@ -381,6 +384,12 @@ def sdf_detail_normal(field, maps: Dict[str, np.ndarray], eps: float = 0.0004, m
         Bo = NxT * sgn[:, None]
         n = np.stack([np.sum(G * T, axis=1), np.sum(G * Bo, axis=1), np.sum(G * N, axis=1)], axis=1)
         n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
+        if box is not None and feather > 0.0:
+            lo, hi = np.asarray(box[0], float), np.asarray(box[1], float)
+            inset = np.min(np.minimum(P - lo, hi - P), axis=1)
+            w = np.clip(inset / feather, 0.0, 1.0)[:, None]
+            n = n * w + np.array([0.0, 0.0, 1.0]) * (1.0 - w)
+            n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
         res[c0:c0 + chunk] = n
     out[idx] = res * 0.5 + 0.5
     return out
