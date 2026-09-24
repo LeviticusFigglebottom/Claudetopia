@@ -975,19 +975,22 @@ func _pick_up_row(row: Dictionary) -> Dictionary:
 	return got
 
 
-## Takes the nearest lying pickup of the item: in the interior the player is in, or in the open
-## within FIND_M of `at`. What the built world does to where it lies is said.
+## Takes the nearest lying pickup of the item within reach: FIND_M of `at` (or of the player, when
+## `at` is INF) in the open, anywhere in the interior the player is in. What the built world does
+## to where it lies is said.
 func _pick_up_near(item: String, at: Vector3) -> Dictionary:
 	var best: Node3D = null
 	var best_d := INF
+	var from := player.global_position if at == Vector3.INF else at
+	var reach := 600.0 if Interiors.in_interior() else FIND_M
 	for node in get_tree().get_nodes_in_group("interactable"):
 		if not (node is WorldItem) or (node as Node).is_queued_for_deletion():
 			continue
 		var w := node as WorldItem
 		if w.item_id != item:
 			continue
-		var d := _flat(w.global_position, player.global_position if at == Vector3.INF else at)
-		if at != Vector3.INF and d > FIND_M:
+		var d := _flat(w.global_position, from)
+		if d > reach:
 			continue
 		if d < best_d:
 			best_d = d
@@ -1156,7 +1159,8 @@ func _escort(q: String, i: int, o: Dictionary) -> Dictionary:
 	await get_tree().process_frame
 	if not registry.is_escorted(npc):
 		return {"ok": false, "why": "%s did not set out (the stage's talk and requires: %s)" % [Ids.name_of(npc), JSON.stringify(o.get("requires", []))]}
-	var dest := _pad(place)
+	# where the escort is judged to have arrived: the place's own position (Escorts)
+	var dest := WorldProbe.place_position(place)
 	var steps := 0
 	var at_stage: int = log_node.stage_of(q)
 	while _still_open(q, at_stage, i) and steps < 400:
