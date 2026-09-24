@@ -548,6 +548,17 @@ def dead_bark(pal=None, age=0.9, tint=0.25, scale=1.0, name=None, **_):
                         lichen=0.0, scale=scale, streaks=0.8, rot=0.35 + 0.35 * age)
 
 
+def driftwood_log(pal=None, age=0.9, tint=0.15, scale=1.0, name=None, **_):
+    """Wood the sea has had: no bark, worn smooth and silvered, a pale mid grey with only the
+    faintest checking left in it. Dead bark's fissures, at their own size on a log, read as a
+    cobbled pavement."""
+    pal = _pal(pal)
+    base = pal.tint(P.lin("#8e8a82"), "mid", tint)
+    nb = NB(name or "driftwood_log")
+    return _bark_common(nb, pal, base, fissure_scale=1.4, stretch=1.0, depth=0.05, tint=tint, moss=0.0,
+                        lichen=0.0, scale=scale, streaks=0.0, rot=0.0)
+
+
 def birch_bark(pal=None, age=0.4, tint=0.1, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "birch_bark")
@@ -1426,7 +1437,7 @@ BUILDERS = {
     "lake_stone": lake_stone, "drowned_stone": drowned_stone,
     "wood_planks": wood_planks, "painted_wood": painted_wood, "carved_wood": carved_wood, "driftwood": driftwood,
     "oak_bark": oak_bark, "black_ash_bark": black_ash_bark, "birch_bark": birch_bark, "pine_bark": pine_bark,
-    "willow_bark": willow_bark, "dead_bark": dead_bark,
+    "willow_bark": willow_bark, "dead_bark": dead_bark, "driftwood_log": driftwood_log,
     "plaster_limewash": plaster_limewash, "chalk_cob": chalk_cob, "stone_blocks": stone_blocks, "drystone": drystone,
     "granite": granite, "limestone": limestone, "chalk_rock": chalk_rock, "fused_stone": fused_stone,
     "basalt": basalt,

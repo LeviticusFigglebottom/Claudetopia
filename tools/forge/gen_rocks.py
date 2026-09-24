@@ -324,7 +324,7 @@ def driftwood(pal, rng, params, variant):
     """Driftwood on the tide line: a trunk or a bough the sea has had for a year, stripped of its
     bark and silvered, its limbs worn down to knuckles, lying on the sand rather than sunk in the
     ground. It lies along X."""
-    p = {"bark": "dead_bark", "moss": False, "stubs": (0, 3), "settle": 0.3,
+    p = {"bark": "driftwood_log", "moss": False, "stubs": (0, 2), "settle": 0.3,
          "length": rng.uniform(2.2, 5.5), "radius": rng.uniform(0.12, 0.28)}
     p.update(params)
     return fallen_log(pal, rng, p, variant)

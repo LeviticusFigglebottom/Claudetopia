@@ -3,16 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0yifqrkmp17i"
-path.s3tc="res://.godot/imported/hearthvale_driftwood_a_normal.png-16f58639f98ade500255bc61e3c65e6c.s3tc.ctex"
-metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
 
 [deps]
 
 source_file="res://assets/models/rocks/hearthvale_driftwood_a/hearthvale_driftwood_a_normal.png"
-dest_files=["res://.godot/imported/hearthvale_driftwood_a_normal.png-16f58639f98ade500255bc61e3c65e6c.s3tc.ctex"]
 
 [params]
 

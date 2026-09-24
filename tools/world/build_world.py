@@ -484,7 +484,8 @@ def build(args) -> dict:
                        for p in pad_targets]
         shore_plan = SH.plan(grid, atlas, bank, rf, regions, seed, shore_discs, road_d, road_w,
                              LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M), H=H)
-        _, marsh_water = SH.marsh(grid, H, rf, regions, marsh_tab, bank, carve=False, p=shore_plan)
+        _, marsh_water = SH.marsh(grid, H, rf, regions, marsh_tab, bank, carve=False, p=shore_plan,
+                                  keep_discs=shore_discs)
         t.mark("reload")
     else:
         # the landforms come back apart from the land: the rivers and the roads are laid and
@@ -595,7 +596,8 @@ def build(args) -> dict:
         shore_sight = LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M)
         shore_plan = SH.plan(grid, atlas, bank, rf, regions, seed, shore_discs, road_d, road_w, shore_sight, H=H)
         H = SH.shape(grid, H, shore_plan, bank, shore_discs, keep=shore_keep, no_raise=shore_sight)
-        H, marsh_water = SH.marsh(grid, H, rf, regions, marsh_tab, bank, keep=shore_keep, p=shore_plan)
+        H, marsh_water = SH.marsh(grid, H, rf, regions, marsh_tab, bank, keep=shore_keep, p=shore_plan,
+                                  keep_discs=shore_discs)
         del shore_keep, shore_sight
         print("[world] shores: %s; %d marsh texels of creek and pool" % (
             ", ".join("%s %s" % (k, v) for k, v in shore_plan.counts.items()), int(marsh_water.sum())), flush=True)

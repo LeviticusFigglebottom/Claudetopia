@@ -432,7 +432,7 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         # A beach is bare: nothing but the shore's own rules grows on the sand and the shingle
         # the sea washes, nor on the rock at the water. (The dunes behind are the land's.)
         if not key.startswith("shore_") and world.shore.shape[0] > 1:
-            from .shores import SAND, SHINGLE, ROCK, BEACH_BARE_M, ROCK_BARE_M
+            from .shores import SAND, SHINGLE, ROCK, BEACH_BARE_M, ROCK_BARE_M, ROCK_BARE_H_M
             sc = at("shore")
             coastal = (sc == SAND) | (sc == SHINGLE) | (sc == ROCK)
             if coastal.any():
@@ -440,7 +440,9 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
                 idx = live[coastal]
                 sd_ = world.field("shore_d", x[idx], z[idx])
                 bare = np.zeros(sc.shape, dtype=bool)
-                bare[coastal] = np.where(sc[coastal] == ROCK, sd_ < ROCK_BARE_M, sd_ < BEACH_BARE_M)
+                # (rock is bare at the water, and on the platforms and ledges just out of it)
+                low = world.field("h", x[idx], z[idx]) < ROCK_BARE_H_M
+                bare[coastal] = np.where(sc[coastal] == ROCK, (sd_ < ROCK_BARE_M) | low, sd_ < BEACH_BARE_M)
                 times(~bare)
         if "slope_min" in cfg:
             times(smoothstep(float(cfg["slope_min"]) * 0.6, float(cfg["slope_min"]), at("slope")))

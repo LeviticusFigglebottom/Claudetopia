@@ -1,9 +1,9 @@
 {
  "bounds": {
-  "height": 0.616,
+  "height": 0.45,
   "max": [
    2.343,
-   0.616,
+   0.45,
    0.323
   ],
   "min": [
@@ -11,9 +11,9 @@
    0.0,
    -0.372
   ],
-  "radius": 2.389
+  "radius": 2.38
  },
- "built_seconds": 7.2,
+ "built_seconds": 4.95,
  "category": "rocks",
  "collision": "convex",
  "collision_params": {},
@@ -26,16 +26,16 @@
   "hearthvale_driftwood_a_mat"
  ],
  "materials_used": [
-  "dead_bark"
+  "driftwood_log"
  ],
  "meshes": [
   {
    "name": "hearthvale_driftwood_a",
-   "tris": 164
+   "tris": 144
   },
   {
    "name": "hearthvale_driftwood_a_LOD1",
-   "tris": 164
+   "tris": 144
   },
   {
    "name": "hearthvale_driftwood_a_LOD2",
@@ -72,8 +72,8 @@
   "hearthvale_driftwood_a_orm.png"
  ],
  "tris": [
-  164,
-  164,
+  144,
+  144,
   120
  ],
  "version": 3

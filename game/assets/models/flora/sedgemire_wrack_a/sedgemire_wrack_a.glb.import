@@ -4,12 +4,10 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dsgl1kmiystro"
-path="res://.godot/imported/sedgemire_wrack_a.glb-656a31b9e978a6308274385bdeb6b2c5.scn"
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_wrack_a/sedgemire_wrack_a.glb"
-dest_files=["res://.godot/imported/sedgemire_wrack_a.glb-656a31b9e978a6308274385bdeb6b2c5.scn"]
 
 [params]
 

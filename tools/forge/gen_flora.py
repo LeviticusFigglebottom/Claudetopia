@@ -221,7 +221,7 @@ def wrack(pal, rng, params, variant, ctx):
     cols = [P.lin("#2a2712"), P.lin("#332c14"), P.lin("#3d3317"), P.lin("#23261a"),
             pal.tint(P.lin("#4e4020"), "earth", 0.1)]
     names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], cols, seed=rng.randrange(9999),
-                          size=256 if ctx["quick"] else 512, blades=30, width=0.07, lean=0.9,
+                          size=256 if ctx["quick"] else 512, blades=14, width=0.05, lean=0.9,
                           tip_taper=0.55, bend=1.5, roughness=0.35)
     mat = _mat(ctx["out_dir"], "%s_wrack_foliage" % ctx["name"], names, threshold=0.45)
     ob = flat_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 6),

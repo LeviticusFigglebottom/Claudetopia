@@ -363,6 +363,11 @@ def plan(grid: Grid, atlas: dict, bank, rf, regions: list, seed: int, keep_discs
               for c in (SAND, SHINGLE, ROCK, CLIFF, MUD)}
     plat = (ndimage.gaussian_filter(plat, sig) / norm * inb).astype(np.float32)
     dune = (ndimage.gaussian_filter(dune, sig) / norm * inb).astype(np.float32)
+    # an authored shelf is left as it is drawn: nothing here reshapes it or the water at its edge
+    for c in shares:
+        shares[c][shelf] = 0.0
+    plat[shelf] = 0.0
+    dune[shelf] = 0.0
     counts = {CLASS_NAMES[c]: int(((cls == c) & coast).sum()) for c in (SAND, SHINGLE, ROCK, CLIFF, MUD)}
     counts.update(coves=len(coves), stacks=len(stacks), skerries=len(skerries), shelves=len(shelves))
     return ShorePlan(gp=gp, sd=sd.astype(np.float32), cls=cls, cliff_h=ch, plat=plat, dune=dune, w=shares,
@@ -546,13 +551,15 @@ def shape(grid: Grid, H: np.ndarray, p: ShorePlan, bank, keep_discs=(), keep: np
 # --- the marsh -------------------------------------------------------------------------------------
 
 def marsh(grid: Grid, H: np.ndarray, rf, regions: list, table: np.ndarray, bank,
-          keep: np.ndarray | None = None, carve: bool = True, p: ShorePlan | None = None) -> tuple:
+          keep: np.ndarray | None = None, carve: bool = True, p: ShorePlan | None = None,
+          keep_discs=()) -> tuple:
     """Creeks and pools in a delta province's low ground. Returns (heights, water): `water` (bool,
     full grid) is where they hold water at the table, which the water maps add to the marsh's own
     pools (hydro.water_maps `extra`) -- a creek three metres wide is narrower than the opening
     that keeps the pools from speckling, and would be lost to it. With `carve` False the heights
     are left as they are and only the water is read from them (a staged build's reload). With the
-    shore's plan `p`, the ground within MARSH_SEA_M of the sea is left to the tide-flats."""
+    shore's plan `p`, the ground within MARSH_SEA_M of the sea is left to the tide-flats. Nothing
+    is cut in `keep` (bool, full grid) or within PAD_CLEAR_M of a pad in `keep_discs`."""
     n = grid.n
     sp = grid.spacing
     water = np.zeros((n, n), dtype=bool)
@@ -585,7 +592,12 @@ def marsh(grid: Grid, H: np.ndarray, rf, regions: list, table: np.ndarray, bank,
             continue
         sub = H[i0:i1, j0:j1].astype(np.float32)
         tbl = table[i0:i1, j0:j1]
-        held = np.zeros(sub.shape, dtype=bool) if keep is None else keep[i0:i1, j0:j1]
+        held = np.zeros(sub.shape, dtype=bool) if keep is None else keep[i0:i1, j0:j1].copy()
+        for d in keep_discs:
+            px, pz, pr = float(d[0]), float(d[1]), float(d[2]) + PAD_CLEAR_M
+            if px + pr < xs[0] or px - pr > xs[-1] or pz + pr < zs[0] or pz - pr > zs[-1]:
+                continue
+            held |= (X - px) ** 2 + (Z - pz) ** 2 <= pr * pr
         low = (dw > 0.5) & (sub < tbl + MARSH_LOW_M) & ~held
         if p is not None:
             low &= sample_bilinear(p.sd, p.gp, X, Z) < -MARSH_SEA_M
@@ -680,3 +692,5 @@ SHORE_REACH_M = 60.0
 ## and a rocky shore (cells.scatter)
 BEACH_BARE_M = 24.0
 ROCK_BARE_M = 10.0
+## and a rocky shore's ground under this over the sea is its platform or its ledge (m)
+ROCK_BARE_H_M = 3.0
