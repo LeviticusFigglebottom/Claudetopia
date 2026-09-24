@@ -45,6 +45,9 @@ const KINDS := {
 	"brazier": {"colour": Color(1.0, 0.56, 0.26), "energy": 2.4, "range": 11.0, "size": 2.1, "glow": 1.3, "real": true, "day": false},
 	"fire": {"colour": Color(1.0, 0.62, 0.32), "energy": 2.0, "range": 10.0, "size": 2.2, "glow": 1.2, "real": false, "day": false},
 	"poi": {"colour": Color(1.0, 0.72, 0.42), "energy": 2.2, "range": 11.0, "size": 2.0, "glow": 1.15, "real": true, "day": true},
+	# a light on the skyline (world/horizon_layer.gd): no real light, and bright enough that the
+	# haze leaves a point of it at four kilometres
+	"beacon": {"colour": Color(1.0, 0.64, 0.32), "energy": 0.0, "range": 1.0, "size": 4.0, "glow": 14.0, "real": false, "day": false},
 }
 
 ## owner instance id -> Array of [world position, kind, colour, energy, range]
