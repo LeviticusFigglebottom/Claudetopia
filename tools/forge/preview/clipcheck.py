@@ -4,11 +4,13 @@ own animations (the clips the game plays, not the forge's Python ones), in numpy
     python3 tools/forge/preview/clipcheck.py [--clips=Run,Sprint] [--steps=12] [--body=heavy]
         [--parts=tunic,kilt] [--under=trousers] [--bones=UpperLeg,LowerLeg] [--png=<dir>]
         [--tol=0.002] [--rig=<rig.glb>] [--reweight=<cloth fn>[:k=v,...]] [--open-hem] [--novis]
+        [--hold=0.7] [--arm-out=7]
 
 --under wears parts under the one measured (the trousers under a tunic), --bones counts only the
 body vertices those bones move most, --reweight skins the part again in numpy as the forge would
 (the body's weights by nearest vertex, then the named cloth weight_adjust, "" for none), and
---open-hem drops a skirt's flat cap at its hem before measuring (to judge a part built before the
+--hold and --arm-out pose the arms as the game's ArmRoom does (HumanoidModel.ARM_HOLD under a
+cloak, ARM_ROOM for padding), --open-hem drops a skirt's flat cap at its hem before measuring (to judge a part built before the
 forge left it open), and --novis counts vertices that came through even where the rest of the figure hides them (a covered
 point is otherwise counted only when it is drawn, seen from the front, back or either side).
 
@@ -53,6 +55,13 @@ def _quat_mat(q):
                      [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
 
 
+def _qmul(a, b):
+    x1, y1, z1, w1 = a
+    x2, y2, z2, w2 = b
+    return np.array([w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2, w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+                     w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2, w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2])
+
+
 def _trs(t, r, s):
     M = np.eye(4)
     M[:3, :3] = _quat_mat(r) * np.asarray(s, float)[None, :]
@@ -83,10 +92,60 @@ class Rig:
                 length = max(length, float(ti[-1]))
             self.clips[an["name"]] = (ch, length)
 
+    ARMS = ("UpperArm.L", "UpperArm.R", "LowerArm.L", "LowerArm.R")
+    hold = 0.0          # ArmRoom.hold: the share of the arms' pose taken back to the Idle's hang
+    arm_out = 0.0       # ArmRoom.degrees: the upper arms turned out about the body's forward axis
+
+    def _sample(self, ch, i, path, t, default):
+        if (i, path) not in ch:
+            return default
+        ti, vo = ch[(i, path)]
+        if t <= ti[0]:
+            return vo[0]
+        if t >= ti[-1]:
+            return vo[-1]
+        k = int(np.searchsorted(ti, t)) - 1
+        f = (t - ti[k]) / max(ti[k + 1] - ti[k], 1e-9)
+        a, bb = vo[k], vo[k + 1]
+        if path == "rotation":
+            if np.dot(a, bb) < 0:
+                bb = -bb
+            v = a * (1 - f) + bb * f
+            return v / np.linalg.norm(v)
+        return a * (1 - f) + bb * f
+
+    def world_cache_parent(self, i, clip, t):
+        """The world matrix of node i's parent in the clip, unmodified (a shoulder is never held)."""
+        saved, self.hold, self.arm_out = (self.hold, self.arm_out), 0.0, 0.0
+        try:
+            return self.world(clip, t)[self.nodes[self.parent[i]]["name"]]
+        finally:
+            self.hold, self.arm_out = saved
+
     def world(self, clip=None, t=0.0):
         ch = self.clips[clip][0] if clip else {}
+        idle = self.clips["Idle"][0] if "Idle" in self.clips else {}
         local = []
         for i, n in enumerate(self.nodes):
+            if clip and n["name"] in self.ARMS and (self.hold > 0 or self.arm_out):
+                r = np.asarray(self._sample(ch, i, "rotation", t, n.get("rotation", [0, 0, 0, 1])), float)
+                if self.hold > 0:
+                    h = np.asarray(self._sample(idle, i, "rotation", 0.0, r), float)
+                    if np.dot(r, h) < 0:
+                        h = -h
+                    r = r * (1 - self.hold) + h * self.hold
+                    r = r / np.linalg.norm(r)
+                if self.arm_out and n["name"].startswith("UpperArm"):
+                    # about the body's forward axis (+Z) as the parent's frame sees it
+                    par = self.world_cache_parent(i, clip, t)
+                    ax = np.linalg.inv(par[:3, :3]) @ np.array([0.0, 0.0, 1.0])
+                    ax /= np.linalg.norm(ax)
+                    ang = math.radians(self.arm_out) * (1 if n["name"].endswith(".L") else -1)
+                    qa = np.concatenate([ax * math.sin(ang / 2), [math.cos(ang / 2)]])
+                    r = _qmul(qa, r)
+                local.append(_trs(self._sample(ch, i, "translation", t, n.get("translation", [0, 0, 0])), r,
+                                  self._sample(ch, i, "scale", t, n.get("scale", [1, 1, 1]))))
+                continue
             trs = {"translation": n.get("translation", [0, 0, 0]), "rotation": n.get("rotation", [0, 0, 0, 1]),
                    "scale": n.get("scale", [1, 1, 1])}
             for path in trs:
@@ -430,6 +489,8 @@ def main():
     tol = float(args.get("tol", 0.002))
     variant = args.get("body", "")
     rig = Rig(args.get("rig", RIG))
+    rig.hold = float(args.get("hold", 0.0))
+    rig.arm_out = float(args.get("arm-out", 0.0))
     body = Part(CHARS / "bodies" / variant / (variant + ".glb"), want={"Body"}) if variant else Part(args.get("rig", RIG), want={"Body"})
     skin_src = body
     if args.get("under"):
