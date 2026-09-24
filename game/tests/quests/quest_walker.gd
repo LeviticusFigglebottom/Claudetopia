@@ -1499,26 +1499,27 @@ func _after_the_end(q: String) -> void:
 	_check_greetings(q)
 
 
-## Greetings that remember this quest (their conditions name it, or a flag it set on this walk),
-## that hold now: each of their people greets you with one of them, or with a line as specific.
+## Greetings that remember this quest: a greeting whose conditions ask that it was done, how it
+## ended, or a flag it sets. If any line remembers it at all, one must hold at the end of every way
+## it goes. Each person with one that holds greets you with it, or with a line as specific (a tie
+## is broken at random, and theirs is in the draw).
 func _check_greetings(q: String) -> void:
-	var flags: Dictionary = _cur.get("flags", {})
+	var own_flags := _flags_set_in(ContentDB.get_def(q))
 	var rows_by_npc: Dictionary = {}
+	var remembering := 0
 	for row_v in Greetings.dialogue_rows():
 		var row: Dictionary = row_v
-		var text := JSON.stringify(row.get("conditions", []))
-		var about := text.contains("\"%s\"" % q)
-		if not about:
-			for f in flags:
-				if text.contains("\"%s\"" % str(f)):
-					about = true
-					break
-		if not about or not Conditions.all_of(row.get("conditions", []), Social.ctx):
+		if not _remembers(row.get("conditions", []), q, own_flags):
+			continue
+		remembering += 1
+		if not Conditions.all_of(row.get("conditions", []), Social.ctx):
 			continue
 		var npc := str(row.get("npc", ""))
 		if not rows_by_npc.has(npc):
 			rows_by_npc[npc] = []
 		(rows_by_npc[npc] as Array).append(row)
+	if remembering > 0 and rows_by_npc.is_empty():
+		_problem("nobody greets you remembering it: the %d lines that remember it are for other ways it went" % remembering)
 	var remembered := 0
 	for npc in rows_by_npc:
 		var ctx: SocialContext = Social.ctx
@@ -1555,6 +1556,41 @@ func _check_greetings(q: String) -> void:
 					" / ".join(PackedStringArray(said)), _short_text(str(((mine[0] as Dictionary).get("lines", [""]) as Array)[0]))])
 	if remembered > 0:
 		_note("remembered by %d" % remembered)
+
+
+## Every flag a definition's effects set, anywhere in it.
+func _flags_set_in(def: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	var rx := RegEx.new()
+	rx.compile("\"set_flag\":\\s*\\[?\"([^\"]+)\"")
+	for m in rx.search_all(JSON.stringify(def)):
+		out[m.get_string(1)] = true
+	return out
+
+
+## Whether conditions ask, other than under a `not`, that the quest was done, how it ended, or for
+## one of its flags.
+func _remembers(conds: Variant, q: String, own_flags: Dictionary) -> bool:
+	if typeof(conds) == TYPE_DICTIONARY:
+		conds = [conds]
+	if typeof(conds) != TYPE_ARRAY:
+		return false
+	for c_v in conds as Array:
+		if typeof(c_v) != TYPE_DICTIONARY:
+			continue
+		var c: Dictionary = c_v
+		if c.has("quest_done") and str(c["quest_done"]) == q:
+			return true
+		if c.has("quest_outcome") and typeof(c["quest_outcome"]) == TYPE_ARRAY and str((c["quest_outcome"] as Array)[0]) == q:
+			return true
+		if c.has("flag") and own_flags.has(str(c["flag"])):
+			return true
+		if c.has("flag_equals") and typeof(c["flag_equals"]) == TYPE_ARRAY and own_flags.has(str((c["flag_equals"] as Array)[0])):
+			return true
+		for key in ["all", "any"]:
+			if c.has(key) and _remembers(c[key], q, own_flags):
+				return true
+	return false
 
 
 func _short_text(t: String) -> String:
