@@ -6995,3 +6995,105 @@ Fixed along the way:
 - test_atlas_world's flat-pad check took a square a texel either side of the pad. At 16 m
   texels that reached the cliff face 16 m behind the Tide Mouth, and it failed on batch3 before
   any of this. It now takes the texels whose centres lie within the pad's core.
+
+## The water: falls, rivers in their channels, lakes and the sea
+
+Everything that draws water: `world/water_surface.gd`, `world/river_falls.gd` (the painted-look
+agent's draft of c1a927c7, reworked), and the shaders `painted_water`, `waterfall`,
+`plunge_pool`, `water_spray` and `falling_water`. Seen on software Compatibility; the before and
+after sheets are in the report.
+
+**Falls.** Every fall in rivers.json is drawn (56 on the 10:44 world):
+- The sheet is one mesh in two layers, the body and a looser veil of spray in front of it. The
+  streaks are ropes laid out in falling time, so they stretch as the water accelerates. There is a
+  green tongue at the lip, the water is white from about a third of the way down, and the edges
+  are ragged and see-through. A `fall` leaves its lip in an arc. A `cascade` lies on the river's
+  own carved line down the face, in steps whose spacing wanders and whose breaks waver across it.
+- Where it lands there is a churning disc over the file's pool (or over the river where there is
+  none): foam carried outward, rings of ripple, deep in the middle.
+- Spray and mist are particles scaled by the height, with their own soft-puff shader.
+- One looping 3D voice of the `waterfall` ambience moves to whichever fall is nearest the camera
+  (AmbienceMixer has beds and one-shots, no positional emitter).
+- The river's ribbon stops at every lip and starts again at the foot.
+- A waterfall place no river runs through (Whitecut, Foxfire, the Three Sisters) has its plain
+  `Fall<n>` sheet, `Pool<n>` and puffs replaced by the same fall. The fall is drawn from the
+  place's `lip<n>` markers, and `RiverFalls.dress_place` is called from `PoiDressing.build`. The
+  `Fall` node keeps its name, so the capture framing still finds it. Where a river's fall is
+  drawn, the settlements' `river_draws_the_water` (`RiverFalls.near`) leaves the place no water of
+  its own. The Glass Falls is dry by design; its glass now keeps the fall's ropes as ridges, so the
+  sky runs down it.
+
+**Rivers.** The ribbon carries its flow in its vertices: metres across and along, the current's
+speed from the slope of its surface, how hard it bends, and its direction. The river variant of
+the water shader (`WATER_RIVER`) does the following:
+- flow-maps its normals, two phases crossfaded so a change of speed never smears them;
+- runs rougher where it is fast and turns eddies on the inside of bends;
+- streaks foam where it is fast, thickest along the banks and on the outside of bends;
+- takes its depth colour from the channel the builder carved (hydro.py's parabola), clear over the
+  bed at its edges;
+- thins to nothing at the waterline.
+
+The ribbon also:
+- sits at the builder's surface with no lift;
+- is lowered to the lower of its banks where a pad or road lies under that surface (never by more
+  than most of the channel's depth);
+- fades out into open water.
+
+**Lakes and the sea.** The sheet was a plane lifted to the level map at vertices 90 m apart, so
+wherever two waters at different levels were nearer than that, it drew the water between them at
+a level in between: Weaver's Linn stood 13 m over itself, and a blue slab stood in the Rudd Beck's
+gorge. The sheet is now laid as cells over the water only (16 m at High), each corner at its
+water's level, with flat open water merged into fans eight cells wide (57 k triangles at High).
+It also:
+- discards where a river's ribbon or a fall's pool draws the water (a claim map, a texel and a
+  half round each; open water is never claimed);
+- discards where a cell between two waters would still stand above its own;
+- shows gusts (cat's paws that darken and roughen the water) and slicks (smooth lanes down the
+  wind);
+- has a sea whose foam line surges up the shore and draws back, with surf lines shoaling in;
+- takes its foam by the shore classes (`runtime.shore`, read by name): broken surf on rock, a
+  swash on sand and shingle, almost none on mud or in the reeds.
+
+The shore classes reach the water only after the next world build. The region look is kept, and
+it tints the falls as well.
+
+**The Water setting** (`graphics/water_quality`, Low to Painted, already in the Graphics tab) now
+also sets the falls' particle counts (0.35, 0.65, 1.0 and 1.4 of High), the shaders' fine detail
+and how far the mirror searches for the far shore (8 to 18 steps), besides the sheet's cell (32 m
+down to 12 m).
+
+### Tests
+
+`test_river_falls` (10) and `test_water_look` (9) check that:
+- every fall in rivers.json is drawn from lip to foot, with its pool;
+- a place at a drawn fall draws no water of its own;
+- a place with none gets the proper fall, and it follows the region and the quality setting;
+- the ribbon is cut over a fall;
+- no river water drawn stands above its carved bed by more than the carve's depth and the height
+  map's tolerance (3,468 points, one over tolerance before the lake fade, none after);
+- the sheet covers every wet texel with every corner at its water's level;
+- the shore classes are read by name.
+
+Filtered water, river_falls, poi_kinds and graphics_settings all pass. `./run.sh perf` passes
+(interiors, worst 96 draws). The Merrowby budget shot is 783 draws and 1.05 M primitives, of which
+water is 13 draws and 64 k. The worst of the water shots is 866 draws and 1.31 M primitives.
+
+### Still short of the bar
+
+- A river seen from its bank is still a smooth teal strip. The flow texture shows only near, and
+  nothing yet makes rapids read as broken white water from a distance.
+- The Mere's slicks and gusts are subtle, and it still reads as a clean mirror more than painted
+  water. The mere_noon shot (look.json) stands on dry shingle and shows no water.
+- The Weaver's Linn shots are blocked by the gorge's trees; the fall was never seen whole.
+- A place's fall hangs from its lip marker in front of a face the settlements agent is still
+  reshaping. The Whitecut's dark cave mouth shows under it.
+- No reeds are placed by the water code. The land agent's reed beds (shore class 6) are scattered
+  by the world build.
+
+### Next
+
+1. After the world rebuild, shoot the sea shore and the Mere with the shore classes present, and
+   tune the surf and swash by class.
+2. Rapids: white water along a steep reach that reads from a distance, driven by the ribbon's
+   speed.
+3. Frame the Weaver's Linn from above the canopy, and judge the tall falls' mist there.
