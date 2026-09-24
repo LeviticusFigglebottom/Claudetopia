@@ -784,7 +784,10 @@ func test_the_groups_the_sentences_put_up_high_stand_up_high() -> void:
 	enc2.refresh()
 	var wolves := _living(enc2, "core:enemy/down_wolf")
 	assert_eq(wolves.size(), 4)
-	assert_true(mouth != null and falls.find_child("MouthDark", true, false) != null, "a dark mouth behind the fall")
+	# the mouth is the channel's foot cut back under the ledge above it: its marker is behind the
+	# water, which falls from the lip in front of it
+	var lip := _marker(falls, "lip")
+	assert_true(mouth != null and lip != null, "a mouth behind the fall, and the lip it falls from")
 	if mouth != null:
 		for w in wolves:
 			assert_true(Vector2(w.global_position.x - mouth.global_position.x, w.global_position.z - mouth.global_position.z).length() < 2.5,
