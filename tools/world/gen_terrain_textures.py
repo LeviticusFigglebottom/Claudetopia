@@ -433,7 +433,7 @@ MATERIALS = {
     # every other slot and brought down by import_terrain.gd's `value`. It was painted as charcoal
     # (#121110 to #383532, a mean of 0.017 in linear light) and then multiplied down to 0.008
     # like the rest, and the Stair Head, where a new game begins, stood on black ground. These are
-    # the old colours lifted in linear light (2.7 x c^0.85): a mean of 0.085, drawn at 0.038, a
+    # the old colours lifted in linear light (2.7 x c^0.85): a mean of 0.085, drawn at 0.044 (value 0.52), a
     # step under the grey grass. tools/world/ground_albedo.py prints every slot as it is drawn.
     "ash_soil": {"recipe": "soil", "tile_m": 2.6, "colors": ["#353331", "#484443", "#5d5a57", "#746f6a"],
                  "grit": 900, "grit_colour": "#a39c95", "cracks": 0.3, "rough": 0.92,
