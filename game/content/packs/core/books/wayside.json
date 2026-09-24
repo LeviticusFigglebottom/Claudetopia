@@ -1,0 +1,345 @@
+[
+  {
+    "id": "core:book/wayside_carters_rest",
+    "title": "The Brake-Count",
+    "author": "Dodd Carter, and another",
+    "category": "book",
+    "body": "# Loads down\n\n*Chalked on a slate under the bench, one line a load.*\n\n---\n\nDodd, two loads, brake held. Ammet, one load, brake held. Dodd, two loads, a wheel off at the bottom, nobody hurt, the charcoal all over the road and Merrowhithe out with baskets before I was up.\n\n*On the other side of the slate, in white, the same hand every line:* One stone. One stone. One stone. I am walking home. It is further than it was.\n\n*Under it, in yellow:* Whoever you are, the Vale is south. You are going the wrong way round the Mere."
+  },
+  {
+    "id": "core:book/wayside_charters_end",
+    "title": "A Writ, Unserved",
+    "author": "Hobb Tally, bailiff of the Charter",
+    "category": "book",
+    "body": "# To Ansel Crake, debtor\n\n*A writ of the Charter, the seal whole. On its back, in pencil:*\n\n---\n\nThirty-one nights. He sits his side and I sit mine. He owes the Stilyard house forty marks and a boat. I am owed eleven marks in wages by the same house.\n\nTonight he asked me what the writ says. I said I could not tell him, it has to be served. He said then read it to the stone, and I did.\n\n*Under it:* The stone did not pay either of us. We have agreed that it is the stone's fault."
+  },
+  {
+    "id": "core:book/wayside_drovers_trough",
+    "title": "The Clerk's Count",
+    "author": "Pell Addock, clerk of the Counting Tower",
+    "category": "book",
+    "body": "# Beasts seen at the trough\n\n*A page from a Tallymen's day-book, the columns ruled in red.*\n\n---\n\nKharrow, forty head. Tax owed, tax not paid. Bacon very good.\n\nRudd, twelve head and a bull. Tax owed, tax not paid. The bull looked at me.\n\n*The last line, the ruling crooked:* No clan. Nine head, black, no mark on any of them. Drank the trough dry of salt and walked north up the gorge in the dark, and no drover with them.\n\n*In the margin:* Not counted. I would not know what to write."
+  },
+  {
+    "id": "core:book/wayside_forgiving_stones",
+    "title": "A Letter to the Guild, Unsent",
+    "author": "Pell Addock, clerk of the Counting Tower",
+    "category": "book",
+    "body": "# Sirs, respectfully\n\n*A draft, much crossed out.*\n\n---\n\nSirs. A pebble on the Forgiving Heap bears our mark and the sum of the North Road tax unpaid since the year 942, to the last penny.\n\nI did not lay it. ~~I would like to know~~ I would be obliged to learn whether the Guild has forgiven the North Road its tax. If so, I would be obliged to learn what I am to count.\n\n*Crossed through, and written again smaller:* If not, I would be obliged to learn who has."
+  },
+  {
+    "id": "core:book/wayside_withy_camp",
+    "title": "The Trap Book",
+    "author": "Nan Smoker of Merrowhithe",
+    "category": "book",
+    "body": "# Traps lifted\n\n*A line a lifting.*\n\n---\n\nTwelve traps, thirty eels, two pike that ate the eels, which we also count.\n\nTwelve traps, nine eels, the beck low.\n\n*The Toll's night:* Twelve traps, a hundred and four eels, every one white, the eyes like milk. They did not fight the withy. They lay in the bottom of the boat in a row with their heads to the north.\n\n*Under it:* Berrit says smoke them. I say put them back. We have put them back. They are in the pool under the bridge, in a row, heads north."
+  },
+  {
+    "id": "core:book/wayside_three_rights",
+    "title": "Concerning the Fourth Stone",
+    "author": "Gauder, miller at Brindle Mill",
+    "category": "book",
+    "body": "# Concerning the fourth stone\n\n*Nailed to a post by the stones.*\n\n---\n\nIt is not me. I have three rights and I am glad of them. I do not need a fourth, and if I did I would ask for it with my mouth, like a clanless man.\n\nIt is not Gullhithe. They have rolled it into the Mere every morning for a month and they are tired.\n\n*Under it, in a round hand:* It is the right to stay. Somebody wants the right to stay. Let them have it. J. W."
+  },
+  {
+    "id": "core:book/wayside_lamp_niche",
+    "title": "The Code",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# The lamps\n\n*On oilcloth, in grease pencil.*\n\n---\n\nOne lamp: road clear. Two: the Watch on the road. A lamp lit and put out: come down, bring the boat.\n\nNo lamp at all: do not come.\n\n*Scratched in with a pin, recently:* A green lamp: we are not the ones lighting it."
+  },
+  {
+    "id": "core:book/wayside_hespers_boat",
+    "title": "Hesper's Strake",
+    "author": "Hesper Wick",
+    "category": "book",
+    "body": "# What the Mere owes me\n\n*Carved into the inside of a strake.*\n\n---\n\nOne man, Tam Wick. One boat, this one. Four nets. A good knife.\n\nPaid back: nothing.\n\n*Lower down, newer and cut deeper:* I have turned my back on you thirty years. You have not come up the hill. That is the only thing you ever gave me.\n\n*And under that, with a different blade:* She is owed a launching. The Wicks."
+  },
+  {
+    "id": "core:book/wayside_listeners_tent",
+    "title": "The Listener's Leaves",
+    "author": "Ilse Varrow, Listener of the Circle",
+    "category": "book",
+    "body": "# The rope, heard\n\n*Loose leaves, the note written as a mark on a ruled line.*\n\n---\n\nThe first year: the rope holds the fourth tine's note, a little flat, day and night, calm or storm.\n\nThe ninth year: the same. I have stopped writing it every day.\n\n*This year, the hand quick:* The Toll's night: the rope rose a tone and has stayed there. The fourth tine is flat against it now. Something at the other end has got up.\n\n*Under it:* Gone to the Spire. Touch nothing. Do not pull the rope."
+  },
+  {
+    "id": "core:book/wayside_serpent_watch",
+    "title": "The Watch Roll",
+    "author": "the Gullhithe watch",
+    "category": "book",
+    "body": "# Who sat, and what they saw\n\n*Scored into hide, a line a night.*\n\n---\n\nOsk Wick. Nothing. Pell Gorry. Nothing. Osk Wick. Gulls, and a log that was a log.\n\n*And so down the hide for forty years, nothing, nothing, the names changing, the nothings not.*\n\n*The last lines, fresh:* Nobody sat. A stone came. Nobody sat. A stone came. Nobody sat. A stone came, and a wet track from the water to the cairn and back, and it was not a man's."
+  },
+  {
+    "id": "core:book/wayside_unsayers",
+    "title": "The Waiting Tally",
+    "author": "the ward of Kharrow Gate",
+    "category": "book",
+    "body": "# Sent down to wait\n\n*Notched on a stick, and read out by the ward who cut it.*\n\n---\n\nA Tollmere man who said he did not hold with laws he had not voted. He said it back at dawn.\n\nA Sayer who wanted to know what 'in kind' meant. She said it back at noon, having found out.\n\n*The long gouge:* A woman in grey who said she had already said it, long ago, to a gate that is not there any more. She did not come up at dawn. She did not go back down either. She is not on the road."
+  },
+  {
+    "id": "core:book/wayside_pike_shrine",
+    "title": "A Smoker's Note",
+    "author": "Wenna Smoker of Merrowhithe",
+    "category": "book",
+    "body": "# To whoever takes the pike\n\n*On birch bark, in charcoal.*\n\n---\n\nYou are welcome to it. That is what it is for.\n\nYou are not to pay for it. That is also what it is for. A Kharrow token on Kindleday, a Rudd on Tallowday and an Oskel this morning, and Berrit says that is seven clans' worth of paying if we let you go on.\n\n*Under it:* If you are more than one of you, come down to the smokehouses and we will feed you all. If you are one of you, and all seven, come down anyway."
+  },
+  {
+    "id": "core:book/wayside_reeves_chair",
+    "title": "Judgements Given at the Chair",
+    "author": "as heard by Berrit Smoker",
+    "category": "book",
+    "body": "# Last Tollday, at the Chair\n\n*Written out by one who stood by.*\n\n---\n\nThe net cut between two boats: each to mend the other's half.\n\nThe cow in the Wicks' reeds: the reeds to be the cow's until she comes out of her own accord.\n\nThe two brothers and the one boat: the boat to the brother who wanted it less.\n\n*Under it:* Every judgement kept. Nobody has argued. We have never in my life not argued. Whoever it was sat very still and smelled of thorn blossom in the wrong month."
+  },
+  {
+    "id": "core:book/wayside_burners_clamp",
+    "title": "The Burner's Nights",
+    "author": "Old Coll the burner",
+    "category": "book",
+    "body": "# Nights at the clamp\n\n*A stroke a night on a board.*\n\n---\n\nTen strokes: the clamp done, opened, good black coal, Merrowhithe paid in fish.\n\nTen strokes: done, opened, good.\n\n*This one, the strokes running off the board:* Forty. It breathes. I have not fed it since the tenth night and it breathes, in and out, the smoke going back into the turf on the in.\n\n*Under it:* I will not open it. Whatever it is burning, it is not my oak any more."
+  },
+  {
+    "id": "core:book/wayside_market_brow",
+    "title": "A Trader's Reckoning",
+    "author": "Jossel Ferrand, cloth-dealer of Tollmere",
+    "category": "book",
+    "body": "# Kharrow Foot, the spring market\n\n*A trader's reckoning, folded under a stone.*\n\n---\n\nTwelve bolts sold, the Oskel wife very hard to please and right to be. Four marks up on the day.\n\nOne bolt given against a blood-price for a quarrel I did not start, the ward says I did. Two marks down.\n\n*At the foot:* Came down with my stone in my pocket, as a man should. Found it split in my pocket at the brow. Every trader's the same. The clans say it was not them. The clans have never in their lives said anything was not them."
+  },
+  {
+    "id": "core:book/wayside_bier_stone",
+    "title": "The Bier Roll",
+    "author": "Hael ko-Rudd, memory-keeper",
+    "category": "book",
+    "body": "# Rested at the stone\n\n*Notch for notch, as the Rudd remember them.*\n\n---\n\nOld Orra ko-Rudd, who counted the forty head. Rested, washed, sung.\n\nThe twins, born and gone the one night. Rested together, washed, sung.\n\n*And so on, a clan's dead, one to a notch.*\n\n*The last notch, and no name against it:* Cut in the night with a Rudd knife. Nobody in Ruddow dead. Every Rudd knife accounted for. I have looked for a clan's name to write here and my memory gives me one I do not have."
+  },
+  {
+    "id": "core:book/wayside_wrist_hole",
+    "title": "A Herder's Wall-Tally",
+    "author": "the Rudd herders",
+    "category": "book",
+    "body": "# Sheltered in the Wrist\n\n*Scratched into the limestone, a line a night.*\n\n---\n\nWind. Wind. Snow, and the dogs in with us. Wind.\n\nStill. Heard the fingers.\n\n*The last line, the stroke gouged:* Still. The fire leaned in and the smoke went up the throat of the hole like breath going down a man. The dogs lay flat. We came out and slept in the snow."
+  },
+  {
+    "id": "core:book/wayside_patter_stone",
+    "title": "The Tinkers' Key",
+    "author": "the tinkers of Oskel Edge",
+    "category": "book",
+    "body": "# The marks\n\n*Scratched on a tin lid.*\n\n---\n\nA pot: work here. A pot upside down: work here, no pay.\n\nA chain: mend what they have, do not sell them new; they will not buy. A closed hand: they owe; say so at the door, softly.\n\nA dog's head: walk past quickly, and do not eat.\n\n*Under it, the newest line:* The mark with the eye and the eight strokes is none of ours. Nobody knows it. Old Mag says it is how you mark a hold before there is a hold there. We are leaving."
+  },
+  {
+    "id": "core:book/wayside_brakhs_eye",
+    "title": "What Is in the Eye",
+    "author": "Tobba ko-Oskel, aged nine",
+    "category": "book",
+    "body": "# In the brakh's eye\n\n*Counted by me on the way to the fold every day.*\n\n---\n\nA button. A button. A wool doll with no face, so he cannot look back. A bit of mirror. Two oatcakes.\n\nThe same. The same, and the oatcakes gone, which is the fox.\n\n*Lower down:* There is a hollow in the offerings like where the dog lies. It is warm. The oatcakes are not gone. It is not the fox."
+  },
+  {
+    "id": "core:book/wayside_oskel_drip",
+    "title": "The Drip Book",
+    "author": "Hild ko-Oskel, who keeps the Drip",
+    "category": "book",
+    "body": "# Brought to the water\n\n*A name for every child that drank.*\n\n---\n\nBrenn ko-Oskel, a boy, cried. Aila ko-Oskel, a girl, did not. Mother said she tasted it like a smith tastes iron.\n\n*And so down the skin, generations of Oskel, the first taste of each.*\n\n*The last line, the ink new:* Brought Dara down this morning. The water was warm and it sang. She laughed at it. I have not brought her back since."
+  },
+  {
+    "id": "core:book/wayside_singing_seat",
+    "title": "The Answer",
+    "author": "unsigned, in a Kharrow hand",
+    "category": "book",
+    "body": "# The answer to the forgiving song\n\n*Skerrish, on the back of a blood-price receipt.*\n\n---\n\nYou forgive us every year\nand every year we are still here to be forgiven.\nWe do not ask it. You do not stop.\n\nWe owe you a bridge. You owe us a silence.\nNeither of us will pay first.\n\n*Under it, in prose:* My grandmother taught me this and said never sing it. I sang it. It is a long walk down from the Hold and nobody stopped me."
+  },
+  {
+    "id": "core:book/wayside_two_clan_cairn",
+    "title": "The Stray Tally",
+    "author": "the herders of Ghast and Oskel",
+    "category": "book",
+    "body": "# Strays given back\n\n*Soot for Ghast, scratch for Oskel.*\n\n---\n\nThree Oskel ewes to Oskel. Two Ghast lambs to Ghast. A dog nobody owned to whoever it followed, which was Ghast.\n\n*And so on, twenty years of it, the soot and the scratch about even.*\n\n*The last line, neither soot nor scratch, but pressed into the stone with a finger:* One grey ewe, no mark, given back to the cairn. Where she came from, she did not say."
+  },
+  {
+    "id": "core:book/wayside_horn_hole",
+    "title": "The Watch's Inventory",
+    "author": "the Dale Watch",
+    "category": "book",
+    "body": "# Kept in the rock\n\n*Burned into a board.*\n\n---\n\nOne horn, ox, bound in bronze. Two jars of oil. Twelve torches. One sword, old, for whoever has nothing.\n\nChecked every autumn. Oiled every autumn. Blown never.\n\n*Under it, cut with a knife:* Blown. The night of the empty watch. The jars full, the sword here, the horn warm. Whoever called the dale called it with ours, and then put it back on its peg."
+  },
+  {
+    "id": "core:book/wayside_pitch_pot_shrine",
+    "title": "The First Drips",
+    "author": "Kell ko-Brindle, tapper",
+    "category": "book",
+    "body": "# Given to the stone\n\n*Tree by tree, the first drip of the year.*\n\n---\n\nThe Twisted One, gold. The Pair, gold and gold. Old Crooked, slow and gold, as he is.\n\n*This spring:* The Twisted One, red. The Pair, red. Old Crooked, red and warm.\n\n*Under it:* Every tree on the Rib road bleeds red now, not only the stand. I have not told the clan. I have given it to the stone anyway. You give what the tree gives."
+  },
+  {
+    "id": "core:book/wayside_swearers_rest",
+    "title": "The Oath on the Bench",
+    "author": "cut into the stone; rubbed by an unnamed hand",
+    "category": "book",
+    "body": "# The oath\n\n*A rubbing, the Skerrish letters white on black.*\n\n---\n\nI swear by the bones I sit in that I will hold what I am given to hold.\nI swear by the rope that I will not let go of the name.\nI swear it to the clan that was before the seven,\nwhose verse is the one you do not sing.\n\n*Under the rubbing, in ink:* Seven clans. Eight verses' worth of metre. Somebody has come to be sworn in. I did not take this to the Moot. I am afraid they would go up there and find the eighth seat warm."
+  },
+  {
+    "id": "core:book/wayside_beacon_shieling",
+    "title": "The Keeper's Stack-Count",
+    "author": "Varn ko-Skarl, keeper of the Moot Beacon",
+    "category": "book",
+    "body": "# Peat for the beacon\n\n*Knotted, and read out as knots.*\n\n---\n\nThirty turves a day in the dry. Nothing in the wet. The stack as high as my chin by the solstice, which is enough for three sittings.\n\n*Then:* The stack gone to ash in one night. The beacon cold. Me warm through, beside it, in the dew, as if somebody had sat by me and kept a fire for me in the only place I would not notice it.\n\n*Under it:* The Moot is not sitting. Something is."
+  },
+  {
+    "id": "core:book/wayside_oathbreakers_stone",
+    "title": "A Memory-Keeper's Warning",
+    "author": "Hael ko-Rudd, memory-keeper",
+    "category": "book",
+    "body": "# Do not say it\n\n*On slate, propped against the stone.*\n\n---\n\nFour names have been cut off this stone in a thousand years, and not one of them is remembered, which is how it should be.\n\nA fifth has been cut back onto the broken top. It is a living name. I have read it and I will not say it, and if you read it you will not say it either, because a name said on the Moot road is half an oath.\n\n*Under it:* Whose oath? Who has he broken it to? Nobody alive has sworn him anything."
+  },
+  {
+    "id": "core:book/wayside_oath_takers_fire",
+    "title": "A Vigil Note",
+    "author": "Rann ko-Kharrow, the night before",
+    "category": "book",
+    "body": "# The night before\n\n*Charcoal on sheepskin.*\n\n---\n\nThe wolves came at the third hour and sat just outside the light and watched, the way my father said. I did not move. They did not either.\n\nThe fire is going. I have to let it. I do not want to.\n\n*Under it, the charcoal fresher:* Somebody has lit it again. I let it go out and I sat in the dark and I heard someone come down from the bones and kneel and blow on the ash until it caught. They did not say anything. They sat where I sit, and the wolves lay down."
+  },
+  {
+    "id": "core:book/wayside_unroofed_hold",
+    "title": "The Wood-Tally",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# Carried to Dreughow\n\n*Notched into the doorpost.*\n\n---\n\nA bundle a night. Ash and birch, split small, dry.\n\nThe price was forty head. Forty head is four hundred bundles, by the Moot's reckoning of a beast to wood. This is three hundred and six.\n\n*Under it:* When it is four hundred I will knock. If they open the door, I will put the roof back."
+  },
+  {
+    "id": "core:book/wayside_dreughs_lookout",
+    "title": "The Fire Count",
+    "author": "the children of Dreughow",
+    "category": "book",
+    "body": "# Fires at the camp\n\n*Chalked under the watcher's stone.*\n\n---\n\nFive. Five. Six (bar the door). Five. Four (somebody gone, Mam went down).\n\n*And so on, down the stone, in many hands.*\n\n*The last lines, one small hand:* The stone was turned round. I turned it back and counted. Five. Then I counted Dreughow, because the stone wanted me to. Eleven fires. There are ten houses."
+  },
+  {
+    "id": "core:book/wayside_shaft_pebbles",
+    "title": "A Word Sent Up",
+    "author": "Brenn ko-Oskel, underground",
+    "category": "book",
+    "body": "# To my mother\n\n*Scratched on slate, sent up in the ore.*\n\n---\n\nI am well. The seam is good. The shaft sings the old verse at the change of shift and we sing it back, as we always do.\n\nSomeone has been singing it back a verse ahead of us. It is not a man on our shift.\n\nDo not lay a pebble for me. *Under it, in another hand, the mother's:* I did not lay it."
+  },
+  {
+    "id": "core:book/wayside_cart_wards_post",
+    "title": "The Ward's Log",
+    "author": "Tosk ko-Brindle, cart-ward",
+    "category": "book",
+    "body": "# Carts walked past the overhang\n\n*Cut on a stave.*\n\n---\n\nThree carts, one taken, one Clanless hurt, two of ours. Two carts, both taken, ours not hurt, which is worse.\n\n*Then, a run of the same:* Four carts. None taken. Five. None. Six. None.\n\n*Under it:* They stand at the overhang and watch the carts go by and do not come down. One of them lifted a hand. I think he was a Brindle. I think he was my uncle."
+  },
+  {
+    "id": "core:book/wayside_brindles_luck",
+    "title": "The Carters' Oath",
+    "author": "the ore-carters of Brindlecrag",
+    "category": "book",
+    "body": "# The rhyme\n\n*Cut on bark.*\n\n---\n\nOil on the stone and the brake will hold,\nThe ore goes down and comes back gold.\nOil on the stone, and a word for the Three,\nAnd the gorge will give the cart back to me.\n\n*Under it, in another knife:* Somebody scraped it. Somebody left a link. A link off a chain is a man cast out. Somebody cast out wanted us to know he stood here, and scraped our luck off, and did not take it."
+  },
+  {
+    "id": "core:book/wayside_gorge_porters",
+    "title": "The Porters' Manifest",
+    "author": "the Kharrow porters",
+    "category": "book",
+    "body": "# Carried up\n\n*Scratched on a board.*\n\n---\n\nBarley, six mules. Salt, two. A Sayer's books, one mule and the Sayer, who walked.\n\n*The last entry, circled:* One crate, Tollmere seal, for Kharrow Hold. Weight of four mules. Will not split. We have not opened it. It hums when the Hold rings the hour and stops when the bell stops.\n\n*Under it:* Sent word up. The Hold sent word down: we ordered nothing from Tollmere, and nothing from Tollmere hums."
+  },
+  {
+    "id": "core:book/wayside_link_keepers_fire",
+    "title": "The Link-Keeper's Roll",
+    "author": "Ghalla ko-Kharrow, link-keeper",
+    "category": "book",
+    "body": "# Links struck, links returned\n\n*Scratched on an iron strap.*\n\n---\n\nRudd, one link, for the forty head. Hanging.\n\nOskel, one link, for the shaft collapse and the men not dug for. Returned in 1031, when they dug.\n\nGhast, one link, for the bridge, the old matter. Hanging. Hanging. Hanging, forty years.\n\n*The last line:* Ghast's link is gone from my line and is back in the bridge. The bridge stands straighter. Ghast has paid nothing. Kharrow has forgiven nothing. Somebody has decided on our behalf."
+  },
+  {
+    "id": "core:book/wayside_brothers_seat",
+    "title": "The Brother's Words",
+    "author": "Dann, once ko-Rudd",
+    "category": "book",
+    "body": "# Under the seat\n\n*Cut into the stone, upside down.*\n\n---\n\nI can see the steam off the water where it falls past the stone. I cannot see the stone.\n\nThey carried it up for me. I was not allowed to thank them. I thank them here, every day, to the water.\n\n*Lower, fainter:* When I am dead, let whoever sits here next be somebody's brother too. It is a good seat for it."
+  },
+  {
+    "id": "core:book/wayside_burned_ore_house",
+    "title": "A Builder's Reckoning",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# For the roof\n\n*On a beam-end.*\n\n---\n\nSix beams, pine, from the Brindle Pines, cut on nobody's say. Forty slates to come. Turf.\n\nThe debt was a roof. The Brindle took my mother's roof in '19 and she died in the first snow. We took theirs back, all of us, and it did not warm anybody.\n\n*Under it:* So I am putting one up. It will be nobody's. Anybody can sleep in it. That is the price."
+  },
+  {
+    "id": "core:book/wayside_last_cairn",
+    "title": "The Gate-Warden's Count",
+    "author": "Ossa ko-Kharrow, gate-warden",
+    "category": "book",
+    "body": "# Stones at the cairn\n\n*Knots on a cord, counted each first snow.*\n\n---\n\nMy grandmother's count: four hundred and eleven. My mother's: three hundred and ninety. Mine, my first winter: three hundred and two. Nobody comes back over the Windgate. Some go.\n\n*This winter:* Three hundred and two. Three hundred and three. Three hundred and nine. Three hundred and forty.\n\n*Under it:* Nobody has gone over. Nobody has come back. The stones are dry underneath, as if they were carried a long way in a warm hand."
+  },
+  {
+    "id": "core:book/wayside_ice_cutters_camp",
+    "title": "The Cutters' Tally",
+    "author": "the ice-cutters of Kharrow Hold",
+    "category": "book",
+    "body": "# Blocks down\n\n*On a saw-blade.*\n\n---\n\nForty blocks, clear. Thirty-two, clear. Fifty, clear, a good cold year.\n\n*Last winter:* Forty-four blocks, clear when cut.\n\n*Under it, the letters shaky:* In the cellar in high summer: forty-four blocks, not a drop off any. In each one, something. A hand. A bird. A cup. A face I know, which I will not say. Frostmother keeps what froze. She has started giving it back."
+  },
+  {
+    "id": "core:book/wayside_knotted_rope",
+    "title": "The Rope's Count",
+    "author": "Maddra ko-Brindle, who says the names",
+    "category": "book",
+    "body": "# Knots on the rope\n\n*Said every morning, written down in case.*\n\n---\n\nFour hundred and eighty knots at the count of 1040. I say them all before the porridge. It takes the time it takes.\n\n*This spring:* Four hundred and seventy-nine. One untied from the middle, the rope still kinked where it was.\n\n*Under it:* I cannot remember what I said in that place. Nobody can. My granddaughter can. She says it is a girl's name, and she will not tell me it, because she says the girl asked her not to."
+  },
+  {
+    "id": "core:book/wayside_shift_stone",
+    "title": "The Overseer's Check",
+    "author": "Gann ko-Oskel, overseer",
+    "category": "book",
+    "body": "# Up, and down\n\n*Chalked on slate.*\n\n---\n\nFirst shift up: nine. Down: nine. Second shift up: eight. Down: eight.\n\n*Last Kindleday:* First shift up: nine, down nine. Second shift up: eight, down eight. Third shift: none sent.\n\nA third notch on the stone. Fresh. A third shift up the road that I did not send, that nobody saw go.\n\n*Under it:* The mine sang till dawn, a full shift's singing. Nobody came down, because nobody went up. I have counted every Oskel twice."
+  },
+  {
+    "id": "core:book/wayside_ganns_shieling",
+    "title": "Gann's Rope-Book",
+    "author": "old Gann ko-Oskel",
+    "category": "book",
+    "body": "# A rope for each\n\n*Scratched inside the door.*\n\n---\n\nBrindle-face, the red rope. The twins, the two grey. The old nanny, the good hemp, she chews.\n\nTied every night. Checked at dawn.\n\n*Under it:* Untied at dawn, every one, and coiled like a sailor coils. The beasts did not go. They stood and faced the mine as the old flock did before it went. Somebody is asking them. Somebody is also telling them to wait."
+  },
+  {
+    "id": "core:book/wayside_debtors_lean",
+    "title": "A Debtor's Tally-Cord",
+    "author": "as read by the Rudd",
+    "category": "book",
+    "body": "# The cord, read\n\n*A knot for each thing owed.*\n\n---\n\nA death, Kharrow's, at the Rudd bridge in 1017. Forty head. A hearth. A name said wrong at a burial.\n\nToo great to pay. Hung in the Hole in 1018.\n\n*Tied into the end, in red thread:* Paid. And the knot the red is tied with is the paying knot, the old one, that nobody has tied since the Chain Years, and every Rudd who looks at it says it was tied right."
+  },
+  {
+    "id": "core:book/wayside_neither_stone",
+    "title": "The Moot's Word on the Grass",
+    "author": "the Clan-Moot, as copied",
+    "category": "book",
+    "body": "# On the grass of Skarldale\n\n*Written on a shoulder-blade.*\n\n---\n\nThe grass is Skarl's, say the Skarl. The grass is Rudd's, say the Rudd. Sixty years; a keep burned; two sons.\n\nThe Moot says: the grass is nobody's. Let it grow. Let whoever is hungry graze it, and nobody be asked whose they are.\n\n*Under it, fresh:* Both marks cut back, side by side. Not to say the grass is both clans'. To say both clans are the grass's."
+  },
+  {
+    "id": "core:book/wayside_smelters_stone",
+    "title": "The Smelt-Book",
+    "author": "the Smeltings",
+    "category": "book",
+    "body": "# Laid on the stone\n\n*Burned into the board.*\n\n---\n\nIron, the spring smelt. Laid, taken up at dawn, cold.\n\nSilver, the night smelt, the pipes playing. Laid, taken up, cold.\n\n*This month:* Silver, laid. At dawn, gone, and in its place a lead casting of a hand, a child's size, palm up, warm.\n\n*Under it:* Palm up, like the Fallen Hand. We have not cast anything in that shape. We would not know how to make the fingers."
+  },
+  {
+    "id": "core:book/wayside_namers_fire",
+    "title": "The Namers' List",
+    "author": "the clan of Kharrow",
+    "category": "book",
+    "body": "# Waited, and crossed\n\n*Cut into the stool.*\n\n---\n\nTorra ko-Kharrow, crossed. Brask ko-Kharrow, crossed. Olla ko-Kharrow, fell, fished out at the Hold, named Olla Fished, and proud of it.\n\n*The last name, cut deep in a sure hand:* A girl, no clan. Crossed at dawn, running, which nobody does. Asked at the Hold what she was to be called. We could not tell her. She said then she would keep the one she had, and did not tell us it."
+  },
+  {
+    "id": "core:book/wayside_newsmongers_stone",
+    "title": "The Chain-Ward's Chalk",
+    "author": "Fedd ko-Ghast, chain-ward",
+    "category": "book",
+    "body": "# News paid at the chain\n\n*Copied off the stone.*\n\n---\n\nA Vale man: the cider's up a penny. A tinker: Oskel's buying chain. A Sayer: the Circle has an opinion. (She would not say what.)\n\n*Yesterday, chalked in my hand and not by me:* The Moot will sit in the Rib Cathedral on the ninth day of next week, and eight will come, and there are seven seats.\n\n*Under it:* I have not been to the Moot. I cannot chalk that well. I have told the Ghast and the Brindle both, and both think I am being funny."
+  },
+  {
+    "id": "core:book/wayside_slag_cairn",
+    "title": "The Smelters' Names",
+    "author": "the smelters of Brindlecrag",
+    "category": "book",
+    "body": "# First slag\n\n*Painted on slag.*\n\n---\n\nOskarth ko-Brindle, green. His father, black and bubbled. Ghalorn ko-Rudd, who married in, brown, and we let him.\n\n*And so on, a lump for a smelter.*\n\n*At the foot, newer:* One lump more than the smelters. Black, with a ring of silver grown out of it like a finger out of a glove. Whose? Nobody's first smelt. Somebody's last."
+  },
+  {
+    "id": "core:book/wayside_listening_stones",
+    "title": "What the Stones Sang",
+    "author": "Brenn ko-Oskel",
+    "category": "book",
+    "body": "# Heard at the stones\n\n*Notches on a bootlace, and what they mean.*\n\n---\n\nThe shaft's song, the verse for the change of shift: true.\n\nThe shaft's song, the verse for going down: true.\n\n*Then:* The stones, the shaft quiet: the verse for coming up. A verse behind. As if the shaft had sung it and the stones were late hearing, or as if the stones were singing it for somebody who has not come up yet."
+  }
+]
