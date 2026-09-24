@@ -406,6 +406,11 @@ func test_a_swing_whooshes_as_it_goes_live_and_a_guard_rings() -> void:
 			break
 		await _tree().physics_frame
 	assert_true(foe.health < hp, "the swing landed")
+	# the blow is heard where the blade meets the body, a frame or few after it is scored (Impact)
+	for i in 30:
+		if _heard.has("impact_flesh"):
+			break
+		await _tree().process_frame
 	var whoosh := _heard.find("sword_swing_light")
 	var thud := _heard.find("impact_flesh")
 	assert_true(whoosh >= 0 and thud >= 0 and whoosh < thud, "a whoosh, then flesh: %s" % str(_heard))

@@ -129,6 +129,7 @@ func test_a_landed_blow_holds_the_picture_and_not_the_clock() -> void:
 	var held := await _swing_events(SWORD)
 	var owed := 0.0
 	var stop := float(Impact.last.get("stop", 0.0))
+	var sword_gap := float(Impact.last.get("blade_gap", -1.0))
 	Settings.set_value("accessibility", "hit_pause", false, false)
 	var plain := await _swing_events(SWORD)
 	print("    a sword's light: events %s with the hold (%.3f s), %s without" % [str(held), stop, str(plain)])
@@ -141,19 +142,24 @@ func test_a_landed_blow_holds_the_picture_and_not_the_clock() -> void:
 	player.equip_weapon(GREATSWORD)
 	var foe := _foe(FOE, Vector3(0.0, 0.02, -1.6))
 	await _frames(3)
-	var hp0 := foe.health
 	var body := player.body_model()
+	var shown := int(Impact.last.get("shown_at", -1))
 	Input.action_press("attack_light")
 	await _frames(2)
 	Input.action_release("attack_light")
-	for i in 120:
-		await _tree().physics_frame
-		if foe.health < hp0:
+	for i in 240:
+		await _tree().process_frame
+		if int(Impact.last.get("shown_at", -1)) != shown:
 			owed = float(body.call("hit_stop_owed")) if body != null and body.has_method("hit_stop_owed") else 0.0
 			break
 	var heavy_stop := float(Impact.last.get("stop", 0.0))
+	var heavy_gap := float(Impact.last.get("blade_gap", -1.0))
 	print("    a greatsword's light holds %.3f s (a sword's %.3f s); owed at the blow %.3f s" % [heavy_stop, stop, owed])
 	assert_gt(heavy_stop, stop, "a greatsword holds no longer than a sword")
+	# and it was shown where the blade met the body, not while it was still over the head
+	print("    the greatsword's blow was shown with the blade %.2f m from the foe's middle (a sword's %.2f m)" % [heavy_gap, sword_gap])
+	assert_true(heavy_gap >= 0.0 and heavy_gap <= foe.capsule_radius * 1.25, "the greatsword's blow was shown with the blade %.2f m off the body" % heavy_gap)
+	assert_true(sword_gap >= 0.0 and sword_gap <= 0.35 * 1.25, "the sword's blow was shown with the blade %.2f m off the body" % sword_gap)
 	if body != null:
 		assert_gt(owed, 0.0, "the picture was not held on the blow")
 		await _frames(30)
@@ -166,7 +172,7 @@ func test_the_camera_kicks_on_a_blow_and_not_with_the_setting_off() -> void:
 	await _frames(3)
 	var hit := foe.build_hit({"name": "t", "damage": 1.0, "poise_damage": 1.0, "weapon_class": "sword"})
 	hit.origin = foe.global_position
-	hit.attacker = foe
+	hit.attacker = null     # a blow with no blade to wait for is shown at once
 	Impact.land(player, hit, "hit")
 	assert_gt(rig._kick, 0.0, "a blow taken did not kick the camera")
 	await _frames(20)
