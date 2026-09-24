@@ -589,11 +589,29 @@ def _ring_keep(n: int, stride: int) -> np.ndarray:
     return np.unique(np.r_[np.arange(0, n - 1, stride), n - 1])
 
 
-def _stride(b: Branch, stride: int) -> int:
+def _straight(b: Branch, stride: int, tol: float = 0.08) -> bool:
+    """Whether dropping every `stride`-th ring moves no point of the axis more than `tol` metres
+    off the chord that replaces it (a coppice rod, a young stem)."""
+    keep = _ring_keep(len(b.pts), stride)
+    for a, c in zip(keep[:-1], keep[1:]):
+        p0, p1 = b.pts[a], b.pts[c]
+        ab = p1 - p0
+        L2 = float(np.dot(ab, ab)) or 1e-12
+        for i in range(a + 1, c):
+            t = float(np.clip(np.dot(b.pts[i] - p0, ab) / L2, 0.0, 1.0))
+            if float(np.linalg.norm(p0 + ab * t - b.pts[i])) > tol:
+                return False
+    return True
+
+
+def _stride(b: Branch, stride: int, loose: bool = False) -> int:
     """Rings skipped at a coarse level: never on the trunk and the limbs, whose kinks and flare are
     the silhouette (a limb of a giant oak drawn every other ring cuts a kink by a metre, and
-    lod_repair then cuts the triangles out); only on branches and twigs."""
-    return 1 if b.level <= 1 else stride
+    lod_repair then cuts the triangles out); only on branches and twigs. `loose` also strides a
+    trunk or limb that is straight enough for it to cost nothing (see trim's fallback)."""
+    if b.level >= 2:
+        return stride
+    return stride if (loose and stride > 1 and _straight(b, stride)) else 1
 
 
 def drop_order(branches: list) -> list:
@@ -604,10 +622,10 @@ def drop_order(branches: list) -> list:
                                                         branches[i].importance, -i))
 
 
-def trim(branches: list, budget: int, table=SIDES["normal"], stride: int = 1) -> list:
+def trim(branches: list, budget: int, table=SIDES["normal"], stride: int = 1, loose: bool = False) -> list:
     """The indices of the branches kept under `budget` triangles. Whole twigs are dropped, finest
     and least important first, a branch only after everything growing from it; wood is never cut."""
-    cost = [tube_tris(len(_ring_keep(len(b.pts), _stride(b, stride))), sides_for(b, table)) for b in branches]
+    cost = [tube_tris(len(_ring_keep(len(b.pts), _stride(b, stride, loose))), sides_for(b, table)) for b in branches]
     total = sum(cost)
     alive = [True] * len(branches)
     for i in drop_order(branches):
@@ -669,13 +687,14 @@ def tube(b: Branch, sides: int, bark_w: float, stride: int = 1, twist: float = 0
             np.array(UV, dtype=np.float32), np.array(T, dtype=np.int64))
 
 
-def wood_mesh(tree: Tree, keep: list, table=SIDES["normal"], bark_w: float = 0.5, stride: int = 1):
+def wood_mesh(tree: Tree, keep: list, table=SIDES["normal"], bark_w: float = 0.5, stride: int = 1,
+              loose: bool = False):
     """One mesh of the kept branches: (V, N, UV, T, rank) where rank is each triangle's branch."""
     Vs, Ns, UVs, Ts, R = [], [], [], [], []
     off = 0
     for bi in keep:
         b = tree.branches[bi]
-        v, n, uv, t = tube(b, sides_for(b, table), bark_w, stride=_stride(b, stride))
+        v, n, uv, t = tube(b, sides_for(b, table), bark_w, stride=_stride(b, stride, loose))
         Vs.append(v)
         Ns.append(n)
         UVs.append(uv)

@@ -1,1 +1,1 @@
-{"cell":[9,31],"region":"core:region/cinderlea","instances":{},"scenes":[],"spawns":[],"lights":[]}
+{"cell":[9,31],"region":"core:region/cinderlea","instances":{"res://assets/models/flora/sedgemire_wrack_a/sedgemire_wrack_a.glb":[[-1637.44,0.11,3840.74,330.0,1.12,"#f5fff7"]]},"scenes":[],"spawns":[],"lights":[]}
