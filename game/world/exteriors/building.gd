@@ -100,6 +100,7 @@ func _ready() -> void:
 	_add_chimney(fabric, rooms, front)
 	_add_door(fabric)
 	_add_windows(fabric, front)
+	_hang_sign(fabric, front)
 	fabric.commit(self, "wall", _surface(_wall_spec(), 0.35, true), "Walls")
 	fabric.commit(self, "roof", _surface(_roof_spec(), 0.5, false), "Roof")
 	fabric.commit(self, "stone", _surface(_plinth_spec(), 0.6, false), "Stone")
@@ -203,8 +204,9 @@ func _add_chimney(fabric: FabricMesh, rooms: Array, front: Vector2) -> void:
 ## as a hole; a frame reads as a door, and the door is the thing a player walks toward from
 ## across the green.
 func _add_door(fabric: FabricMesh) -> void:
+	var trade := str(ContentDB.get_or_empty(interior_id).get("trade", ""))
 	door_at(fabric, Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, 0.0, -WALL_THICK * 0.5)),
-			timber_tints(culture), Color.WHITE)
+			HouseKit.door_timber(culture, trade), Color.WHITE)
 
 
 ## Somebody lives in every house that has an inside, so most of its windows are lit after dark;
@@ -215,27 +217,122 @@ func _add_windows(fabric: FabricMesh, front: Vector2) -> void:
 	var lights := RandomNumberGenerator.new()
 	lights.seed = abs(("lights:" + interior_id).hash())
 	var glows: Array = []
+	var rooms: Array = meta.get("rooms", [])
+	var ground := _ground_rooms()
+	var drawn: Array = []   # [wall key, along] of every ground-floor window, for the shut ones
 	for entry in meta.get("windows", []):
 		var win: Dictionary = entry
 		var at: Array = win.get("at", [])
 		if at.size() < 3 or float(at[1]) > STOREY_M * 2.2:
 			continue
-		var normal: Array = win.get("normal", [0, 0, 1])
-		var n := Vector3(float(normal[0]), 0.0, float(normal[2])).normalized()
-		var base := Vector3(float(at[0]) - front.x, float(at[1]), float(at[2]) - front.y)
-		var face := Transform3D(Basis(Vector3.UP, atan2(n.x, n.z)), base + n * (WALL_THICK * 0.5))
+		var n := outward(win, rooms)
 		var ground_floor := float(at[1]) < STOREY_M
+		var p := Vector2(float(at[0]), float(at[2]))
+		# the forge cut one window in the front wall across the front door's own opening
+		if ground_floor and n.z < -0.5 and absf(p.y - front.y) < 0.6 and absf(p.x - front.x) < 1.3:
+			continue
+		var base := Vector3(p.x - front.x, float(at[1]), p.y - front.y)
+		var face := Transform3D(Basis(Vector3.UP, atan2(n.x, n.z)), base + n * (WALL_THICK * 0.5))
 		var lit := lights.randf_range(0.5, 0.95) if lights.randf() < (0.85 if ground_floor else 0.55) else 0.0
 		var pane := window_at(fabric, face, timber, Color.WHITE, ground_floor, lit)
 		if lit > 0.0:
 			glows.append(to_global(pane))
+		if ground_floor:
+			drawn.append(p)
+	# every other outside wall a window with its shutters closed on it: the forge cut as many
+	# windows as the household could pay for and put them where it liked, and a cottage with one
+	# window showed the street three blank walls
+	for spot in shut_windows(ground, drawn, front):
+		var s: Dictionary = spot
+		var sn: Vector3 = s["normal"]
+		var sp: Vector2 = s["at"]
+		var sface := Transform3D(Basis(Vector3.UP, atan2(sn.x, sn.z)),
+				Vector3(sp.x - front.x, 1.48, sp.y - front.y) + sn * (WALL_THICK * 0.5))
+		shut_at(fabric, sface, timber, Color.WHITE)
 	if is_inside_tree():
 		NightLights.add(self, glows, "window")
 		# the front door faces -z in this building's space; the lamp hangs over it
 		NightLights.add(self, [to_global(Vector3(0.0, 2.3, -WALL_THICK * 0.5 - 0.6))], "door")
 
 
+## Which way a window the house forge wrote looks out. Its `normal` names the wall's axis and not
+## its side: a window in the front or the left-hand wall of a room says +z or +x like one in the
+## back or the right, and was drawn a hand's breadth inside the wall, where nobody saw it. The
+## side is the one of its room's walls the window stands on.
+static func outward(win: Dictionary, rooms: Array) -> Vector3:
+	var normal: Array = win.get("normal", [0, 0, 1])
+	var n := Vector3(float(normal[0]), 0.0, float(normal[2])).normalized()
+	var at: Array = win.get("at", [])
+	if at.size() < 3:
+		return n
+	for r_v in rooms:
+		var r: Dictionary = r_v
+		if str(r.get("id", "")) != str(win.get("room", "")):
+			continue
+		if absf(n.x) > 0.5:
+			var x := float(at[0])
+			return Vector3.LEFT if absf(x - float(r["x"])) < absf(x - float(r["x"]) - float(r["w"])) else Vector3.RIGHT
+		var z := float(at[2])
+		return Vector3.FORWARD if absf(z - float(r["z"])) < absf(z - float(r["z"]) - float(r["d"])) else Vector3.BACK
+	return n
+
+
+## Where the shut windows go, in the interior's own plan: the middle of every outside wall of the
+## ground floor long enough to take one that has no window of its own and no front door, each
+## {at: Vector2 (x, z), normal: Vector3}. `drawn` is where the real windows are.
+static func shut_windows(ground: Array, drawn: Array, door: Vector2) -> Array:
+	var out: Array = []
+	for r_v in ground:
+		var r: Dictionary = r_v
+		var x0 := float(r["x"])
+		var z0 := float(r["z"])
+		var x1 := x0 + float(r["w"])
+		var z1 := z0 + float(r["d"])
+		for wall in [[Vector2(x0, (z0 + z1) * 0.5), Vector3.LEFT, z1 - z0], [Vector2(x1, (z0 + z1) * 0.5), Vector3.RIGHT, z1 - z0],
+				[Vector2((x0 + x1) * 0.5, z0), Vector3.FORWARD, x1 - x0], [Vector2((x0 + x1) * 0.5, z1), Vector3.BACK, x1 - x0]]:
+			var mid: Vector2 = wall[0]
+			var n: Vector3 = wall[1]
+			if float(wall[2]) < 2.2:
+				continue
+			var out_n := Vector2(n.x, n.z)
+			# another room on the far side of this wall: it is inside the house
+			var beyond := mid + out_n * 0.4
+			var inside := false
+			for o_v in ground:
+				var o: Dictionary = o_v
+				if o != r and Rect2(float(o["x"]), float(o["z"]), float(o["w"]), float(o["d"])).grow(0.05).has_point(beyond):
+					inside = true
+					break
+			if inside:
+				continue
+			var along := Vector2(-out_n.y, out_n.x)
+			var free := true
+			for p_v in drawn:
+				var p: Vector2 = p_v
+				if absf((p - mid).dot(out_n)) < 0.6 and absf((p - mid).dot(along)) < float(wall[2]) * 0.5:
+					free = false
+					break
+			if free and absf((door - mid).dot(out_n)) < 0.6 and absf((door - mid).dot(along)) < 1.4:
+				free = false
+			if free:
+				out.append({"at": mid, "normal": n})
+	return out
+
+
 # --- the openings, shared with the fabric -----------------------------------------------------------
+
+## A window with its shutters closed over it: the frame and the sill of `window_at`, and the two
+## ledged leaves meeting in the middle.
+static func shut_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, stone: Color) -> void:
+	for side_v in [-1.0, 1.0]:
+		var side := float(side_v)
+		fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.45, 0.0, 0.05)), Vector3(0.1, 1.0, 0.1), timber["frame"])
+		fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.205, 0.0, 0.035)), Vector3(0.4, 0.88, 0.05), timber["shutter"])
+		for y in [-0.3, 0.3]:
+			fabric.box("joinery", at * Transform3D(Basis(), Vector3(side * 0.205, float(y), 0.065)), Vector3(0.36, 0.08, 0.02), timber["lintel"])
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 0.47, 0.05)), Vector3(1.0, 0.1, 0.1), timber["frame"])
+	fabric.box("stone", at * Transform3D(Basis(), Vector3(0.0, -0.5, 0.09)), Vector3(1.18, 0.1, 0.26), stone)
+
 
 ## A plank door in a timber frame under a lintel, on a stone step. `at` has its origin at the
 ## foot of the opening on the wall's face and +z pointing out of the wall. The panel sits back
@@ -277,8 +374,8 @@ static func window_at(fabric: FabricMesh, at: Transform3D, timber: Dictionary, s
 ## Worked timber in the culture's own wood: the interior's beam colour, lighter for a frame,
 ## darker for a lintel and darker still for a plank door. The pane between them is not a tint:
 ## it is drawn in the joinery shader's own shutter-dark by day and lit from inside after dark.
-static func timber_tints(culture: String) -> Dictionary:
-	var by_culture: Dictionary = HouseInterior.CULTURE_SURFACES.get(culture, HouseInterior.CULTURE_SURFACES["vale"])
+static func timber_tints(for_culture: String) -> Dictionary:
+	var by_culture: Dictionary = HouseInterior.CULTURE_SURFACES.get(for_culture, HouseInterior.CULTURE_SURFACES["vale"])
 	var beam: Dictionary = by_culture.get("beam", {})
 	var c := Color.html(str(beam.get("base", "#5e452c")))
 	return {
@@ -299,6 +396,74 @@ static func accent_tint(spec: Dictionary) -> Color:
 
 static func _scaled(c: Color, k: float) -> Color:
 	return Color(clampf(c.r * k, 0.0, 1.0), clampf(c.g * k, 0.0, 1.0), clampf(c.b * k, 0.0, 1.0))
+
+
+## A house that keeps a trade hangs out its sign: an iron bracket beside the door, a board on it
+## painted with the house's own name both sides, so it is read from along the street, and the
+## trade's emblem under it -- the loaf, the hammer, the jug (Settlement.EMBLEM). A house with no
+## trade has no sign. The board goes on the side of the door with more wall to it.
+func _hang_sign(fabric: FabricMesh, front: Vector2) -> void:
+	var def := ContentDB.get_or_empty(interior_id)
+	var trade := str(def.get("trade", ""))
+	if trade == "" or trade == "none" or not Settlement.EMBLEM.has(trade):
+		return
+	var b := footprint
+	var left := front.x - b.position.x
+	var right := b.end.x - front.x
+	var sx := 1.15 if right >= left else -1.15
+	var at := Transform3D(Basis(), Vector3(sx, 2.35, -WALL_THICK * 0.5))
+	HouseKit.sign_bracket(fabric, at, timber_tints(culture), true)
+	HouseKit.name_board(self, at, str(def.get("name", "")))
+	var paths := Settlement._prop_paths(str(Settlement.PROP_PREFIX.get(culture, "hearthvale")), str(Settlement.EMBLEM[trade]))
+	if paths.is_empty():
+		paths = Settlement._prop_paths("hearthvale", str(Settlement.EMBLEM[trade]))
+	if paths.is_empty():
+		return
+	var packed := load(paths[0]) as PackedScene
+	var mesh: Mesh = WorldStreamer._mesh_of(packed, 0) if packed != null else null
+	if mesh == null:
+		return
+	var box := mesh.get_aabb()
+	var k := 0.42 / maxf(maxf(box.size.x, box.size.y), maxf(box.size.z, 0.05))
+	var hang := HouseKit.emblem_frame(at) * Transform3D(Basis(), Vector3(0.0, -0.58, 0.0))
+	var top := Vector3(box.get_center().x, box.end.y, box.get_center().z)
+	var inst := MeshInstance3D.new()
+	inst.name = "Emblem"
+	inst.mesh = mesh
+	inst.transform = Transform3D(hang.basis * Basis.from_scale(Vector3.ONE * k), hang.origin) * Transform3D(Basis(), -top)
+	FabricMesh.near_only(inst, FabricMesh.PROP_RANGE_M * 0.5, false)
+	add_child(inst)
+
+
+## The ground floor of an interior's house in its front door's own frame, eaves included: x along
+## the front (the door at 0), y back from the door. Rect2() when the interior has no plan. This is
+## what `WorldDoors` asks a street for room for.
+static func footprint_of(id: String) -> Rect2:
+	var def := ContentDB.get_or_empty(id)
+	var path := str(def.get("meta", ""))
+	if path == "" or not FileAccess.file_exists(path):
+		return Rect2()
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return Rect2()
+	var meta_d: Dictionary = parsed
+	var rooms: Array = []
+	for r in meta_d.get("rooms", []):
+		if int((r as Dictionary).get("storey", 0)) == 0:
+			rooms.append(r)
+	if rooms.is_empty():
+		return Rect2()
+	var b := _bounds(rooms)
+	var front := Vector2(b.position.x + b.size.x * 0.5, b.position.y)
+	for d in meta_d.get("doors", []):
+		var door: Dictionary = d
+		if str(door.get("kind", "")) == "front":
+			var at: Array = door.get("at", [0, 0, 0])
+			front = Vector2(float(at[0]), float(at[2]))
+			break
+	var eaves := EAVES_M + WALL_THICK
+	return Rect2(b.position.x - front.x - eaves, b.position.y - front.y,
+			b.size.x + eaves * 2.0, b.size.y + eaves)
 
 
 # --- reading the interior ---------------------------------------------------------------------

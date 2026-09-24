@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.471,
+  "max": [
+   0.24,
+   0.471,
+   0.11
+  ],
+  "min": [
+   -0.207,
+   0.0,
+   -0.11
+  ],
+  "radius": 0.343
+ },
+ "built_seconds": 29.51,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_hen_a.glb",
+ "hash": "a42f8bc4ef5d410c",
+ "kind": "hen",
+ "materials": [
+  "hearthvale_hen_a_mat"
+ ],
+ "materials_used": [
+  "dyed_cloth",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_hen_a",
+   "tris": 494
+  },
+  {
+   "name": "hearthvale_hen_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_hen_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_hen_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 9111,
+ "textures": [
+  "hearthvale_hen_a_albedo.png",
+  "hearthvale_hen_a_normal.png",
+  "hearthvale_hen_a_orm.png"
+ ],
+ "tris": [
+  494,
+  300,
+  120
+ ],
+ "version": 3
+}

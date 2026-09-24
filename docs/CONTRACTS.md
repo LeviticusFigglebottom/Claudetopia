@@ -214,6 +214,11 @@ the ground is made of at a point.
   bent). A six-field row stands upright, and a reader that takes only the first six fields sees
   the tree as it would have been, so old cells and old readers both still work.
   `WorldStreamer.instance_transform` applies it.
+  A ninth field, `[.., lean_deg, lean_toward_deg, [sx, sy, sz]]`, is a scale in the asset's own
+  axes that stands in for the uniform `scale`: `Wayside` writes it at runtime for a wall or hedge
+  piece it has stretched along its line to meet the next (and `0, 0` for the lean it does not
+  have). The builder never writes it; a reader that takes eight fields sees the piece at its
+  uniform scale.
 Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 
 ## 7. Content definitions that other streams depend on
