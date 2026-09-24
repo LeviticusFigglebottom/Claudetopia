@@ -90,6 +90,12 @@ var preset := ""
 ## `--no-lod` draws the scatter as it was before trees had levels of detail (one MultiMesh a cell
 ## and asset), for an A/B of the same frame on the same build.
 var per_tree_lod := true
+## `--set=graphics.view_distance=0` sets one setting after the preset, in memory only, for an A/B of
+## the same plan with one knob moved.
+var overrides: Array[String] = []
+## `--no-horizon` shoots the world as it was before the horizon layer: no stand-ins past the
+## streamed ring and Terrain3D's clipmap at its old 32 vertices a ring, for a before and after.
+var horizon := true
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
 ## Where the stage's foes stood round the body, when they were last waited for.
@@ -111,6 +117,10 @@ func _ready() -> void:
 			preset = a.substr(9)
 		elif a == "--no-lod":
 			per_tree_lod = false
+		elif a.begins_with("--set="):
+			overrides.append(a.substr(6))
+		elif a == "--no-horizon":
+			horizon = false
 	# a measuring tool never writes the player's settings.cfg, preset or no preset
 	Settings.persist = false
 	if preset != "":
@@ -120,6 +130,15 @@ func _ready() -> void:
 			return
 		Settings.apply_graphics_preset(preset)
 		Log.info("Capture", "graphics preset: %s" % preset)
+	for o in overrides:
+		var eq := o.find("=")
+		var dot := o.find(".")
+		if dot < 0 or eq < dot:
+			Log.error("Capture", "--set= wants section.key=value, not %s" % o)
+			continue
+		var value: Variant = str_to_var(o.substr(eq + 1))
+		Settings.set_value(o.substr(0, dot), o.substr(dot + 1, eq - dot - 1), value if value != null else o.substr(eq + 1))
+		Log.info("Capture", "set %s" % o)
 	var code: int = await run()
 	get_tree().quit(code)
 
@@ -274,6 +293,13 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	_world.move_target(pos)
 	var staged := _dress_for(shot)
 	var waited := await _wait_for_streaming()
+	if _world.horizon != null:
+		if not horizon:
+			_world.horizon.visible = false
+			if is_instance_valid(_world.terrain_node):
+				_world.terrain_node.set("mesh_size", 32)
+		Log.info("Capture", "%s: horizon %s" % [str(shot.get("label", index)),
+				_world.horizon.summary() if horizon else "left out (--no-horizon)"])
 	if shot.has("body"):
 		waited += await _wait_for_foes(label)
 		if bool(shot.get("face_foes", false)) and _face_the_foes(cam, pos, label):

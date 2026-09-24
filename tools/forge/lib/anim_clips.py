@@ -41,10 +41,13 @@ STAND: Pose = anim.STAND
 # elbows soft and a touch behind, the hands beside the thighs with the fingers turned in towards them.
 # The wrists hang 23 cm out from the pelvis centre, 5 cm outside the default body's hip: close enough
 # to read as arms at rest, far enough for the hand to clear a skirt, a gambeson or a fauld.  STAND held
-# the arms some 10 degrees out with the wrists at 29 cm, which read as an A-pose.
+# the arms some 10 degrees out with the wrists at 29 cm, which read as an A-pose. Even at 28 degrees
+# the elbows read straight in a lineup; they bend about 36 now, the forearms a little forward of the
+# thigh and the wrists let fall with them.
 RELAXED: Pose = pose_add(STAND, {
-    "UpperArm.L": (-8, -3, -5), "UpperArm.R": (-8, -4, -12),
-    "Hand.L": (0, -5, 0), "Hand.R": (0, -3, 0),
+    "UpperArm.L": (-9, -3, -5), "UpperArm.R": (-9, -4, -12),
+    "LowerArm.L": (22, 0, 0), "LowerArm.R": (25, 0, 0),
+    "Hand.L": (-9, -6, 0), "Hand.R": (-9, -4, 0),
     "Hips": (0, -3, 3), "Spine": (0, 1.2, -1.5), "Chest": (0, 1.4, -1.5),
     "Shoulder.L": (0, -2, 0), "Shoulder.R": (0, -2, 0),
     HIPS_POS: (0.0, 0.018, -0.006)})
@@ -236,6 +239,69 @@ def _torso(f: float = 0.0, side: float = 0.0, turn: float = 0.0, hips_turn: floa
     if shoulder is not None:
         p[f"Shoulder.{side_r}"] = (shoulder[0], shoulder[1], 0.0)
     return p
+
+
+## How a struck body goes into its flinch. "snap" put 70% of the throw into the first frame at 60 Hz,
+## so a stagger's hand jumped 49 cm in one frame and the body read as popping, not struck; "out2" is
+## 31-37%, and the blow still lands inside a frame or two.
+REACT_EASE = "out2"
+
+
+def reaction_clip(skel: Skeleton, name: str, length: float, guard: Pose, push: Tuple[float, float],
+                  stagger: bool) -> "ClipBuilder":
+    """A body struck and thrown along `push` (forward, left, in the body's frame): a light flinch
+    (0.42 s) or a stagger (1.05 s) that steps to keep its feet, from a guard and back to it.
+
+    The spine gives along the push and turns away from the blow's side, the head whips the other
+    way a little, the arms fly out off the guard, and the hips are carried along the push. A
+    stagger is the same, twice over and held longer, and takes three steps the way it was thrown:
+    the foot on the far side leads, so the legs never cross."""
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    pf, pl = push
+    amp = 2.1 if stagger else 1.0
+    cb = ClipBuilder(skel, name, length, loop=False, grounded=True)
+    set_stance(cb, "combat")
+    flail = {"Shoulder.R": (-8, 6, 0), "UpperArm.R": (-12, 8, 0), "UpperArm.L": (-10, 6, 0)}
+    if stagger:
+        flail = {"UpperArm.R": (-30, 22, 0), "UpperArm.L": (-28, 22, 0), "LowerArm.R": (-14, 0, 0), "LowerArm.L": (-12, 0, 0)}
+
+    def thrown(k: float, arms: float) -> Pose:
+        p = _torso(f=26.0 * pf * amp * k, side=26.0 * pl * amp * k, turn=-15.0 * pl * amp * k,
+                   head_turn=8.0 * pl * amp * k,
+                   fwd=0.055 * pf * amp * k * s, left=0.055 * pl * amp * k * s, up=-0.02 * amp * k * s)
+        for b, v in flail.items():
+            p[b] = (v[0] * arms, v[1] * arms, v[2] * arms)
+        return pose_add(guard, p)
+
+    if not stagger:
+        cb.key(0.0, guard)
+        cb.key(0.10, thrown(1.0, 1.0), REACT_EASE)
+        cb.key(0.22, thrown(0.3, 0.3), "smooth")
+        cb.key(0.42, guard, "out2")
+        cb.event(0.01, "hit_react")
+        cb.event(0.26, "cancel_ok")
+        return cb
+    cb.key(0.0, guard)
+    cb.key(0.15, thrown(1.0, 1.0), REACT_EASE)
+    cb.key(0.34, thrown(0.85, 0.8), "smooth")
+    cb.key(0.58, thrown(0.5, 0.5), "smooth")
+    cb.key(0.80, thrown(0.18, 0.15), "out")
+    cb.key(1.05, guard, "out2")
+    way = FWD * pf + LEFT * pl
+    sp, fl, fr = STANCES["combat"][0], STANCES["combat"][1], STANCES["combat"][2]
+    if abs(pl) > 0.5:
+        lead = "L" if pl > 0 else "R"
+        other = "R" if lead == "L" else "L"
+        order = ((lead, 0.05, 0.26, 0.22), (other, 0.24, 0.46, 0.20), (lead, 0.46, 0.68, 0.12))
+    else:
+        order = (("R", 0.05, 0.26, 0.26), ("L", 0.24, 0.46, 0.30), ("R", 0.46, 0.68, 0.18))
+    for side, t0, t1, d in order:
+        base = skel.J[f"Foot.{side}"].copy() + LEFT * (sp if side == "L" else -sp) + FWD * (fl if side == "L" else fr)
+        cb.feet.step(side, t0 * length / 1.05, t1 * length / 1.05, base + way * d * s, height=0.05 * s)
+        cb.event(t1 * length / 1.05, "footstep_l" if side == "L" else "footstep_r")
+    cb.event(0.01, "hit_react")
+    cb.event(0.86, "cancel_ok")
+    return cb
 
 
 def hips_still(fn: Callable[[float], Pose]) -> Callable[[float], Pose]:
@@ -806,12 +872,12 @@ def defence_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     set_stance(hl, "combat")
     g = guard_of("1h")
     hl.key(0.0, g)
-    hl.key(0.08, pose_add(g, {"Hips": (-5, 3, 6), "Spine": (-12, 5, -10), "Chest": (-10, 6, -12),
+    hl.key(0.10, pose_add(g, {"Hips": (-5, 3, 6), "Spine": (-12, 5, -10), "Chest": (-10, 6, -12),
                               "Neck": (10, -4, 8), "Head": (12, -4, 10),
                               "Shoulder.R": (-10, 6, 0), "UpperArm.R": (-14, 8, 0), "UpperArm.L": (-10, 6, 0),
-                              HIPS_POS: (-0.055, 0.02, -0.02)}), "snap")
+                              HIPS_POS: (-0.055, 0.02, -0.02)}), REACT_EASE)
     hl.key(0.22, pose_add(g, {"Spine": (-4, 2, -3), "Chest": (-3, 2, -4), "Neck": (3, 0, 2),
-                              HIPS_POS: (-0.022, 0.008, -0.008)}), "out")
+                              HIPS_POS: (-0.022, 0.008, -0.008)}), "smooth")
     hl.key(0.42, g, "out2")
     hl.event(0.01, "hit_react")
     hl.event(0.26, "cancel_ok")
@@ -820,14 +886,14 @@ def defence_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     hh = ClipBuilder(skel, "Hit_Heavy", 0.78, loop=False, grounded=True)
     set_stance(hh, "combat")
     hh.key(0.0, g)
-    hh.key(0.10, pose_add(g, {"Hips": (-12, 6, 14), "Spine": (-24, 10, -20), "Chest": (-20, 12, -24),
+    hh.key(0.15, pose_add(g, {"Hips": (-12, 6, 14), "Spine": (-24, 10, -20), "Chest": (-20, 12, -24),
                               "Neck": (20, -8, 16), "Head": (22, -8, 18),
                               "Shoulder.R": (-18, 12, 0), "UpperArm.R": (-30, 16, 0), "LowerArm.R": (-20, 0, 0),
                               "Shoulder.L": (-14, 10, 0), "UpperArm.L": (-24, 14, 0),
-                              HIPS_POS: (-0.135, 0.05, -0.055)}), "snap")
+                              HIPS_POS: (-0.135, 0.05, -0.055)}), REACT_EASE)
     hh.key(0.34, pose_add(g, {"Hips": (-4, 2, 6), "Spine": (-8, 4, -8), "Chest": (-6, 4, -10), "Neck": (8, -2, 6),
                               "Head": (8, -2, 6), "UpperArm.R": (-10, 6, 0), "UpperArm.L": (-8, 4, 0),
-                              HIPS_POS: (-0.055, 0.018, -0.030)}), "out")
+                              HIPS_POS: (-0.055, 0.018, -0.030)}), "smooth")
     hh.key(0.56, pose_add(g, {"Spine": (-2, 0, -2), HIPS_POS: (-0.018, 0.004, -0.012)}), "smooth")
     hh.key(0.78, g, "out2")
     hh.feet.step("R", 0.06, 0.26, skel.J["Foot.R"] + BACK * 0.26 * s - LEFT * STANCES["combat"][0] + FWD * STANCES["combat"][2], height=0.045 * s)
@@ -839,11 +905,11 @@ def defence_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     stg = ClipBuilder(skel, "Stagger", 1.05, loop=False, grounded=True)
     set_stance(stg, "combat")
     stg.key(0.0, g)
-    stg.key(0.10, pose_add(g, {"Hips": (-14, 8, 16), "Spine": (-28, 12, -22), "Chest": (-22, 14, -26),
+    stg.key(0.15, pose_add(g, {"Hips": (-14, 8, 16), "Spine": (-28, 12, -22), "Chest": (-22, 14, -26),
                                "Neck": (24, -10, 18), "Head": (26, -10, 20),
                                "UpperArm.R": (-36, 20, 0), "UpperArm.L": (-30, 18, 0),
                                "LowerArm.R": (-16, 0, 0), "LowerArm.L": (-14, 0, 0),
-                               HIPS_POS: (-0.155, 0.06, -0.075)}), "snap")
+                               HIPS_POS: (-0.155, 0.06, -0.075)}), REACT_EASE)
     stg.key(0.34, pose_add(g, {"Hips": (-6, -4, -8), "Spine": (-14, -6, 12), "Chest": (-10, -8, 14),
                                "Neck": (14, 4, -8), "Head": (14, 4, -10),
                                "UpperArm.R": (-20, 26, 0), "UpperArm.L": (-24, 28, 0),
@@ -863,6 +929,14 @@ def defence_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     stg.event(0.01, "hit_react")
     stg.event(0.86, "cancel_ok")
     out["Stagger"] = stg
+
+    # -- the same, taken from behind and from either side -------------------------------------
+    # Hit_Light and Stagger above are a blow from the front; these are the blow from the other
+    # three ways (the game picks by where the blow came from, Impact.reaction). _B is struck from
+    # behind (thrown forward), _L from the left (thrown to the right), _R from the right.
+    for way, push in (("B", (1.0, 0.0)), ("L", (0.0, -1.0)), ("R", (0.0, 1.0))):
+        out["Hit_Light_" + way] = reaction_clip(skel, "Hit_Light_" + way, 0.42, g, push, stagger=False)
+        out["Stagger_" + way] = reaction_clip(skel, "Stagger_" + way, 1.05, g, push, stagger=True)
 
     kd = fall_clip(skel, "Knockdown", 1.15, direction="B", start=g, settle=True)
     kd.event(0.02, "hit_react")
@@ -1497,7 +1571,28 @@ def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     clips.update(defence_clips(skel))
     clips.update(ranged_clips(skel))
     clips.update(life_clips(skel))
+    _mark_cocked(clips)
     return clips
+
+
+def _mark_cocked(clips: Dict[str, ClipBuilder]) -> None:
+    """Puts a `cocked` event on every clip with a blow: the moment its wind-up has drawn the weapon
+    (or the fist, or the hand that casts) all the way back, the key that opens the hold before the
+    strike's snap. The game's AnimationDriver holds a foe's picture there when its authored
+    telegraph is longer than the clip's own wind-up, instead of playing the whole wind-up in slow
+    motion (an enemy's telegraph is gameplay timing, and its clip is only a picture of it)."""
+    for cb in clips.values():
+        if not any(n == "hit_start" for _, n in cb.events) or any(n == "cocked" for _, n in cb.events):
+            continue
+        keys = cb.track.keys
+        snaps = [i for i, k in enumerate(keys) if k.ease == "snap" and i > 0]
+        if not snaps:
+            continue
+        i = snaps[0]
+        cocked = keys[i - 2].t if i >= 2 else keys[i - 1].t
+        hs = next(t for t, n in cb.events if n == "hit_start")
+        if 0.0 < cocked < hs:
+            cb.event(cocked, "cocked")
 
 
 REQUIRED_CLIPS: List[str] = [
@@ -1509,6 +1604,7 @@ REQUIRED_CLIPS: List[str] = [
     "Attack_Dagger_1", "Attack_Dagger_2", "Attack_Unarmed_1", "Attack_Unarmed_2",
     "Riposte", "Backstab",
     "Block_Idle", "Block_Hit", "Parry", "Hit_Light", "Hit_Heavy", "Stagger", "Knockdown",
+    "Hit_Light_B", "Hit_Light_L", "Hit_Light_R", "Stagger_B", "Stagger_L", "Stagger_R",
     "Get_Up", "Death_A", "Death_B",
     "Bow_Draw", "Bow_Aim", "Bow_Release", "Cast_Quick", "Cast_Long", "Cast_Loop", "Throw",
     "Interact", "Pick_Up", "Sit_Down", "Sit_Idle", "Stand_Up", "Sleep_Idle",

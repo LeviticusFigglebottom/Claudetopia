@@ -1,0 +1,1704 @@
+[
+  {
+    "id": "core:npc/nell_hurdlegate",
+    "name": "Nell Hurdlegate",
+    "home_place": "core:poi/hurdlegate_farm",
+    "dialogue": "core:dialogue/nell_hurdlegate",
+    "bio": "Keeps Hurdlegate Farm and Ashwell's drove gate with it, as her mother did, opening it for every flock that comes down off the downs. Since the Wardens' Roll month began she has been leaving the loft door on the latch at night and not saying why.",
+    "unique_habit": "Counts every flock through the drove gate on her fingers and says the number to the gatepost, as if it had asked.",
+    "personality": {
+      "traits": [
+        "generous",
+        "brave",
+        "gossip",
+        "pious"
+      ]
+    },
+    "appearance": {
+      "seed": 9301,
+      "build": "square_short",
+      "age": 44.0,
+      "feminine": 1.0,
+      "hair": "brown_under_a_straw_hat",
+      "notes": "a drover's gate-key on a cord at her belt, sleeves rolled, a loft-ladder bruise on each shin"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/hurdlegate_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/hurdlegate_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/hurdlegate_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/hurdlegate_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "merrowday",
+        "hour": 5,
+        "place": "core:poi/hurdlegate_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "merrowday",
+        "hour": 9.0,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "merrowday",
+        "hour": 13.0,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "merrowday",
+        "hour": 17.0,
+        "place": "core:poi/hurdlegate_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/hurdlegate_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/hurdlegate_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "merchant": {
+      "stock": "core:table/stock_farm_gate",
+      "marks": 90,
+      "buys": [
+        "food",
+        "material",
+        "ingredient"
+      ]
+    }
+  },
+  {
+    "id": "core:npc/aud_brow_end",
+    "name": "Aud Brow",
+    "home_place": "core:poi/brow_end_farm",
+    "dialogue": "core:dialogue/aud_brow_end",
+    "bio": "Keeps the Brow's cattle through the winter in a byre with a red door, because the Brow's grandmothers said red keeps the grey off a beast. Somebody has been repainting the door at night with a better red than hers, and she would like to thank them to their face.",
+    "unique_habit": "Touches the red byre door with the flat of her hand every time she passes it, the way other people touch wood.",
+    "personality": {
+      "traits": [
+        "proud",
+        "cynical",
+        "brave",
+        "quiet"
+      ]
+    },
+    "appearance": {
+      "seed": 9302,
+      "build": "tall_raw_boned",
+      "age": 58.0,
+      "feminine": 1.0,
+      "hair": "grey_in_a_red_kerchief",
+      "notes": "red paint on her fingernails that will not come off, a dog at her heel that barks at everything but you"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/brow_end_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/brow_end_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/brow_end_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/brow_end_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "merrowday",
+        "hour": 5,
+        "place": "core:poi/brow_end_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "merrowday",
+        "hour": 9.0,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "merrowday",
+        "hour": 13.0,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "merrowday",
+        "hour": 17.0,
+        "place": "core:poi/brow_end_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/brow_end_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/brow_end_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/tam_hatchmoor",
+    "name": "Tam Hatchmoor",
+    "home_place": "core:poi/hatchmoor_farm",
+    "dialogue": "core:dialogue/tam_hatchmoor",
+    "bio": "Breeds the doves the Wardens' beacons send their word by, a pair to each beacon, and can tell you which bird came from which beacon by the ring on its leg and the look in its eye. A young cock came home this week ringed for a beacon that was stood down forty years ago.",
+    "unique_habit": "Talks to each dove by the name of the beacon it flies for, and answers for it in a higher voice.",
+    "personality": {
+      "traits": [
+        "kind",
+        "quiet",
+        "humble",
+        "pious"
+      ]
+    },
+    "appearance": {
+      "seed": 9303,
+      "build": "small_hunched",
+      "age": 71.0,
+      "feminine": 0.0,
+      "hair": "white_and_feathered_with_down",
+      "notes": "a dove in the crook of his arm more often than not, a satchel of brass leg-rings that clinks when he walks"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 5,
+        "place": "core:poi/hatchmoor_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 6,
+        "place": "core:poi/hatchmoor_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 12,
+        "place": "core:poi/hatchmoor_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 13,
+        "place": "core:poi/hatchmoor_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "tollday",
+        "hour": 5,
+        "place": "core:poi/hatchmoor_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "tollday",
+        "hour": 9.0,
+        "place": "core:place/hare_and_hurdle",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "tollday",
+        "hour": 13.0,
+        "place": "core:place/hare_and_hurdle",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "tollday",
+        "hour": 17.0,
+        "place": "core:poi/hatchmoor_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/hatchmoor_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/hatchmoor_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "merchant": {
+      "stock": "core:table/stock_farm_gate",
+      "marks": 90,
+      "buys": [
+        "food",
+        "material",
+        "ingredient"
+      ]
+    }
+  },
+  {
+    "id": "core:npc/joss_coldharbour",
+    "name": "Joss Coldharbour",
+    "home_place": "core:poi/coldharbour_farm",
+    "dialogue": "core:dialogue/joss_coldharbour",
+    "bio": "Farms Coldharbour, whose walls were built with stones carried off Hollin Barrow before anybody knew better, and carries one back to the mound every Tollday. The Reeve's count of stones owed has not gone down in forty years, and last week the stone he put back was in his wall again by morning.",
+    "unique_habit": "Apologises to the barrow aloud every time he walks past it, in the same four words, and has done since he was six.",
+    "personality": {
+      "traits": [
+        "humble",
+        "pious",
+        "brave",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 9304,
+      "build": "stocky_bowed",
+      "age": 49.0,
+      "feminine": 0.0,
+      "hair": "black_going_grey_cropped",
+      "notes": "barrow-chalk on his knees, a stone under one arm as often as not, a hand-cart with one wheel newer than the other"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/coldharbour_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/coldharbour_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/coldharbour_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/coldharbour_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "merrowday",
+        "hour": 5,
+        "place": "core:poi/coldharbour_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "merrowday",
+        "hour": 9.0,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "merrowday",
+        "hour": 13.0,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "merrowday",
+        "hour": 17.0,
+        "place": "core:poi/coldharbour_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/coldharbour_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/coldharbour_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/bessa_pennywort",
+    "name": "Bessa Pennywort",
+    "home_place": "core:poi/pennywort_fields",
+    "dialogue": "core:dialogue/bessa_pennywort",
+    "bio": "Farms the mill's own fields for her cousins and grinds her own grain on the door-quern rather than pay the mill, which is a family argument four generations old. The quern has been turning in the night and leaving cold flour in the trough, and she has baked it, and it does not go stale.",
+    "unique_habit": "Grinds a handful at the door-quern every time she argues with her cousins, and the argument lasts exactly as long as the handful.",
+    "personality": {
+      "traits": [
+        "gossip",
+        "generous",
+        "proud",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 9305,
+      "build": "round_short",
+      "age": 39.0,
+      "feminine": 1.0,
+      "hair": "fair_and_floury",
+      "notes": "flour to the elbows from the door-quern, a Pennywort mill-token on a ribbon, a loaf under one arm"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 5,
+        "place": "core:poi/pennywort_fields",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 6,
+        "place": "core:poi/pennywort_fields",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 12,
+        "place": "core:poi/pennywort_fields",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 13,
+        "place": "core:poi/pennywort_fields",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "tollday",
+        "hour": 5,
+        "place": "core:poi/pennywort_fields",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "tollday",
+        "hour": 9.0,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "tollday",
+        "hour": 13.0,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "tollday",
+        "hour": 17.0,
+        "place": "core:poi/pennywort_fields",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/pennywort_fields",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/pennywort_fields",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "merchant": {
+      "stock": "core:table/stock_mill_door",
+      "marks": 90,
+      "buys": [
+        "food",
+        "material",
+        "ingredient"
+      ]
+    }
+  },
+  {
+    "id": "core:npc/rab_ashway",
+    "name": "Rab Ashway",
+    "home_place": "core:poi/ashway_farm",
+    "dialogue": "core:dialogue/rab_ashway",
+    "bio": "Farms the southernmost fields in the Vale, ploughed right to the grey's edge, and every year for thirty years the grey has been a furrow further off by harvest. This spring he ploughed the last furrow at dusk and found the grey lying in it at dawn, a hand deep, and has not ploughed it again.",
+    "unique_habit": "Paces the headland every morning before breakfast and cuts the number into a stake, and has not missed a morning in thirty years.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "brave",
+        "cynical",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 9306,
+      "build": "long_lean",
+      "age": 55.0,
+      "feminine": 0.0,
+      "hair": "grey_and_sparse_under_a_hood",
+      "notes": "grey dust on his boots to the ankle that does not brush off, a headland stake over his shoulder with notches cut in it"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,merrowday,skerrday,hushday",
+        "hour": 5,
+        "place": "core:poi/ashway_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,skerrday,hushday",
+        "hour": 6,
+        "place": "core:poi/ashway_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,skerrday,hushday",
+        "hour": 12,
+        "place": "core:poi/ashway_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,skerrday,hushday",
+        "hour": 13,
+        "place": "core:poi/ashway_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "thornday,tollday",
+        "hour": 5,
+        "place": "core:poi/ashway_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "thornday,tollday",
+        "hour": 9.0,
+        "place": "core:place/pilgrims_ash",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "thornday,tollday",
+        "hour": 13.0,
+        "place": "core:place/pilgrims_ash",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "thornday,tollday",
+        "hour": 17.0,
+        "place": "core:poi/ashway_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/ashway_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/ashway_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/maud_rookwell",
+    "name": "Maud Rookwell",
+    "home_place": "core:poi/grey_end_farm",
+    "dialogue": "core:dialogue/maud_rookwell",
+    "bio": "The last person living at the Grey End, where the downs stop at the Hush. Every other house is empty. She keeps a lamp in the window facing the grey all night so that whatever walks out of it sees a window before it sees a village, and one morning she found the lamp out and the window open from inside.",
+    "unique_habit": "Trims the lamp's wick at the same moment every evening, when the first bell is heard from the Choir, and says goodnight to the grey before she draws the curtain.",
+    "personality": {
+      "traits": [
+        "brave",
+        "proud",
+        "pious",
+        "quiet"
+      ]
+    },
+    "appearance": {
+      "seed": 9307,
+      "build": "slight_bent",
+      "age": 83.0,
+      "feminine": 1.0,
+      "hair": "white_and_thin_under_a_lace_cap",
+      "notes": "a lamp-wick trimmer on a chain round her neck, fingers blacked with lamp-soot, a shawl her mother knitted"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "tallowday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/grey_end_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "tallowday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/grey_end_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "tallowday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/grey_end_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "tallowday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/grey_end_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "kindleday",
+        "hour": 5,
+        "place": "core:poi/grey_end_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "kindleday",
+        "hour": 9.0,
+        "place": "core:place/rookdown",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "kindleday",
+        "hour": 13.0,
+        "place": "core:place/rookdown",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "kindleday",
+        "hour": 17.0,
+        "place": "core:poi/grey_end_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/grey_end_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/grey_end_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/hesta_southgate",
+    "name": "Hesta Southgate",
+    "home_place": "core:poi/southgate_farm",
+    "dialogue": "core:dialogue/hesta_southgate",
+    "bio": "Keeps the stone trough at the Southgate Stone where every drover on the Brow waters his beasts, and takes no coin for it, only news. Her trough-book holds the most complete account of the Vale's comings and goings anybody keeps, written in a hand only her daughters can read.",
+    "unique_habit": "Writes down everything anybody tells her in the trough-book, in a private hand, including things she has just been told not to write down.",
+    "personality": {
+      "traits": [
+        "gossip",
+        "kind",
+        "generous",
+        "cynical"
+      ]
+    },
+    "appearance": {
+      "seed": 9308,
+      "build": "broad_cheerful",
+      "age": 52.0,
+      "feminine": 1.0,
+      "hair": "red_going_sandy_in_a_braid",
+      "notes": "a pencil behind each ear, the trough-book in her apron pocket, water-splash to the knee from the drovers' beasts"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "tallowday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/southgate_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "tallowday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/southgate_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "tallowday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/southgate_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "tallowday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/southgate_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "kindleday",
+        "hour": 5,
+        "place": "core:poi/southgate_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "kindleday",
+        "hour": 9.0,
+        "place": "core:place/rookdown",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "kindleday",
+        "hour": 13.0,
+        "place": "core:place/rookdown",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "kindleday",
+        "hour": 17.0,
+        "place": "core:poi/southgate_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/southgate_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/southgate_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/wil_ridgeway",
+    "name": "Wil Ridgeway",
+    "home_place": "core:poi/ridgeway_farm",
+    "dialogue": "core:dialogue/wil_ridgeway",
+    "bio": "Farms the ridge where the Vale's fields give out against the Wold's oaks, keeping Vale custom on the side that faces Tamwick and Woodfolk custom on the side that faces the Hollow. His family's hearth has a line on the Hearth-Roll in Grandfather Hollow, and a knot lit high in the tree, though no Ridgeway has lived in the tree for a hundred years.",
+    "unique_habit": "Greets people in the Vale way if they come from Tamwick and in the Woodfolk way if they come from the Hollow, and tangles both for anybody who comes up the middle.",
+    "personality": {
+      "traits": [
+        "kind",
+        "generous",
+        "gossip",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 9309,
+      "build": "tall_upright",
+      "age": 36.0,
+      "feminine": 0.0,
+      "hair": "brown_with_a_woodfolk_braid_at_one_temple",
+      "notes": "a Vale smock with Woodfolk oak-leaf stitching down one side only, an apple in one pocket and an acorn in the other"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 5,
+        "place": "core:poi/ridgeway_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 6,
+        "place": "core:poi/ridgeway_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 12,
+        "place": "core:poi/ridgeway_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,skerrday,hushday",
+        "hour": 13,
+        "place": "core:poi/ridgeway_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "tollday",
+        "hour": 5,
+        "place": "core:poi/ridgeway_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "tollday",
+        "hour": 9.0,
+        "place": "core:place/grandfather_hollow",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "tollday",
+        "hour": 13.0,
+        "place": "core:place/grandfather_hollow",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "tollday",
+        "hour": 17.0,
+        "place": "core:poi/ridgeway_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/ridgeway_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/ridgeway_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ebb_fallowgate",
+    "name": "Ebb Fallowgate",
+    "home_place": "core:poi/fallowgate_farm",
+    "dialogue": "core:dialogue/ebb_fallowgate",
+    "bio": "Heads a family that made a vow the year the Ninth Waystone's counts stopped, and has not sown the road field since, living on the orchard and the bees. This spring the counts started again, and the field came up in wheat in straight drills in the night, sown by nobody they know.",
+    "unique_habit": "Tells the bees every piece of family news the day it happens, standing at the hives with her veil down, before she tells anybody else.",
+    "personality": {
+      "traits": [
+        "pious",
+        "quiet",
+        "kind",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 9310,
+      "build": "wiry_tall",
+      "age": 47.0,
+      "feminine": 1.0,
+      "hair": "grey_streaked_and_netted_against_the_bees",
+      "notes": "a beekeeper's veil pushed back on her hat, honey on her cuffs, a wedding ring worn on a string round her neck"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/fallowgate_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/fallowgate_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/fallowgate_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/fallowgate_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "merrowday",
+        "hour": 5,
+        "place": "core:poi/fallowgate_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "merrowday",
+        "hour": 9.0,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "merrowday",
+        "hour": 13.0,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "merrowday",
+        "hour": 17.0,
+        "place": "core:poi/fallowgate_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/fallowgate_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/fallowgate_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/corran_larkfield",
+    "name": "Corran Larkfield",
+    "home_place": "core:poi/larkfield_farm",
+    "dialogue": "core:dialogue/corran_larkfield",
+    "bio": "Farms Larkfield between Wynstead and Merrowby, where a lark has nested in the same ring of unploughed wheat every spring since the Toll fell. This spring there are two nests in the ring, and the second is empty and warm to the hand every morning, and he is the one who checks it.",
+    "unique_habit": "Walks round the lark-ring every evening the long way, sunwise, and will not cut across it even to save a quarter-mile.",
+    "personality": {
+      "traits": [
+        "timid",
+        "kind",
+        "gossip",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 9311,
+      "build": "compact_wiry",
+      "age": 30.0,
+      "feminine": 0.0,
+      "hair": "fair_and_windblown",
+      "notes": "a lark's feather in his hat, a coil of hurdle-withy over his shoulder, mud to the knee from the ring in the wheat"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/larkfield_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/larkfield_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/larkfield_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/larkfield_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "merrowday",
+        "hour": 5,
+        "place": "core:poi/larkfield_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "merrowday",
+        "hour": 9.0,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "merrowday",
+        "hour": 13.0,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "merrowday",
+        "hour": 17.0,
+        "place": "core:poi/larkfield_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/larkfield_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/larkfield_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/wat_hazel",
+    "name": "Wat Hazel",
+    "home_place": "core:poi/hazel_bottom_farm",
+    "dialogue": "core:dialogue/wat_hazel",
+    "bio": "Lays the hedges of Hazel Bottom, the oldest in the Vale, as his family has for three hundred years. A stretch of them was laid overnight in a fashion his grandmother said died with her grandmother, and his mother cried when she saw it, and he has not touched it.",
+    "unique_habit": "Runs his hand along every hedge he passes to feel how it was laid, and says the name of whoever laid it, if he knows, under his breath.",
+    "personality": {
+      "traits": [
+        "proud",
+        "quiet",
+        "brave",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 9312,
+      "build": "strong_short",
+      "age": 62.0,
+      "feminine": 0.0,
+      "hair": "grey_and_curling_under_a_felt_cap",
+      "notes": "a billhook on his belt worn to a sliver, hedger's gauntlets stiff as bark, hazel nuts in every pocket"
+    },
+    "tags": [
+      "farmer"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/hazel_bottom_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/hazel_bottom_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "the yard, the byre and the fields"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/hazel_bottom_farm",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/hazel_bottom_farm",
+        "activity": "work",
+        "spot": "the_yard"
+      },
+      {
+        "days": "merrowday",
+        "hour": 5,
+        "place": "core:poi/hazel_bottom_farm",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "merrowday",
+        "hour": 9.0,
+        "place": "core:place/tamwick",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "merrowday",
+        "hour": 13.0,
+        "place": "core:place/tamwick",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "merrowday",
+        "hour": 17.0,
+        "place": "core:poi/hazel_bottom_farm",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/hazel_bottom_farm",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/hazel_bottom_farm",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ossie_cress",
+    "name": "Ossie Cress",
+    "home_place": "core:poi/cress_mill",
+    "dialogue": "core:dialogue/ossie_cress",
+    "bio": "Grinds barley for the Tamwick brewers and nothing else, by an agreement with the Tallymen that nobody has read in a century. For three nights the wheel turned backward against the water and the barley came out whole, and he has chained it and is waiting to see what wants it free.",
+    "unique_habit": "Tastes a pinch of every sack of meal before it leaves the mill and spits it out, and has never once said what he is tasting for.",
+    "personality": {
+      "traits": [
+        "cynical",
+        "greedy",
+        "quiet",
+        "proud"
+      ]
+    },
+    "appearance": {
+      "seed": 9313,
+      "build": "heavy_soft",
+      "age": 57.0,
+      "feminine": 0.0,
+      "hair": "white_with_meal_dust_or_age",
+      "notes": "meal-dust in every crease, a chain over one shoulder for stopping the wheel, the Tallymen's barley-token on a nail at his belt"
+    },
+    "tags": [
+      "miller"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,merrowday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/cress_mill",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/cress_mill",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "at the wheel and the stones"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/cress_mill",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/cress_mill",
+        "activity": "work",
+        "spot": "the_wheel"
+      },
+      {
+        "days": "thornday",
+        "hour": 5,
+        "place": "core:poi/cress_mill",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "thornday",
+        "hour": 9.0,
+        "place": "core:place/tamwick",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "thornday",
+        "hour": 13.0,
+        "place": "core:place/tamwick",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "thornday",
+        "hour": 17.0,
+        "place": "core:poi/cress_mill",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/cress_mill",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/cress_mill",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "merchant": {
+      "stock": "core:table/stock_mill_door",
+      "marks": 90,
+      "buys": [
+        "food",
+        "material",
+        "ingredient"
+      ]
+    }
+  },
+  {
+    "id": "core:npc/jenet_lark",
+    "name": "Jenet Lark",
+    "home_place": "core:poi/lark_mill",
+    "dialogue": "core:dialogue/jenet_lark",
+    "bio": "Keeps Lark Mill on the Larkbourne and the only clock between Wynstead and Merrowby, a water-clock off the leat by which both villages have agreed to be late. This month it has kept a quarter behind the Toll's hum every day, and the Larkbourne has risen a hand to match it.",
+    "unique_habit": "Calls out the hour from the mill door whenever the float crosses a mark, whether or not anybody is there to hear it.",
+    "personality": {
+      "traits": [
+        "proud",
+        "gossip",
+        "kind",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 9314,
+      "build": "neat",
+      "age": 43.0,
+      "feminine": 1.0,
+      "hair": "dark_and_pinned_under_a_meal_cap",
+      "notes": "a brass water-clock float on a string round her wrist, ink on one finger and meal on the rest"
+    },
+    "tags": [
+      "miller"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/lark_mill",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/lark_mill",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "at the wheel and the stones"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/lark_mill",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/lark_mill",
+        "activity": "work",
+        "spot": "the_wheel"
+      },
+      {
+        "days": "merrowday",
+        "hour": 5,
+        "place": "core:poi/lark_mill",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "merrowday",
+        "hour": 9.0,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "merrowday",
+        "hour": 13.0,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "merrowday",
+        "hour": 17.0,
+        "place": "core:poi/lark_mill",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/lark_mill",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/lark_mill",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "merchant": {
+      "stock": "core:table/stock_mill_door",
+      "marks": 90,
+      "buys": [
+        "food",
+        "material",
+        "ingredient"
+      ]
+    }
+  },
+  {
+    "id": "core:npc/gurd_ko_skarl",
+    "name": "Gurd ko-Skarl",
+    "home_place": "core:poi/skarl_mill",
+    "dialogue": "core:dialogue/gurd_ko_skarl",
+    "bio": "Grinds oats for three clans at the Skarl Mill, each on its own day, in three hoppers so that no clan's grain touches another's, which is a blood-price matter. One morning the three hoppers were found mixed to one meal, with a fourth sack beside them marked for the Oskel, who are no clan now.",
+    "unique_habit": "Knocks three times on the mill door before he opens it every morning, once for each clan, and a fourth time lately, quietly, and will not say for whom.",
+    "personality": {
+      "traits": [
+        "proud",
+        "brave",
+        "cynical",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 9315,
+      "build": "broad_heavy",
+      "age": 64.0,
+      "feminine": 0.0,
+      "hair": "iron_grey_braided_with_three_clan_beads",
+      "notes": "three hopper-keys on a thong, one for each clan, a blood-price knife worn blunt on purpose, meal in his beard"
+    },
+    "tags": [
+      "miller"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/skarl_mill",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/skarl_mill",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "at the wheel and the stones"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/skarl_mill",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,tallowday,merrowday,thornday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/skarl_mill",
+        "activity": "work",
+        "spot": "the_wheel"
+      },
+      {
+        "days": "skerrday",
+        "hour": 5,
+        "place": "core:poi/skarl_mill",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "skerrday",
+        "hour": 9.0,
+        "place": "core:place/merrowhithe",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "skerrday",
+        "hour": 13.0,
+        "place": "core:place/merrowhithe",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "skerrday",
+        "hour": 17.0,
+        "place": "core:poi/skarl_mill",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/skarl_mill",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/skarl_mill",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "merchant": {
+      "stock": "core:table/stock_mill_door",
+      "marks": 90,
+      "buys": [
+        "food",
+        "material",
+        "ingredient"
+      ]
+    }
+  },
+  {
+    "id": "core:npc/brann_of_ruddow",
+    "name": "Brann of Ruddow",
+    "home_place": "core:poi/rudd_mill",
+    "dialogue": "core:dialogue/brann_of_ruddow",
+    "bio": "Grinds Clan Rudd's oats at night under a turf roof, because the Rudds sleep by day through the winter dark and will not have the wheel heard. At noon one Tallowday the stones were heard grinding through the turf with the wheel chained, and he found them warm and floured and smelling of the Finger Shrine.",
+    "unique_habit": "Works by the light of a single rush-dip and puts it out whenever anybody opens the door, and lights it again from the embers when they have gone.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "pious",
+        "brave",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 9316,
+      "build": "tall_stooped",
+      "age": 50.0,
+      "feminine": 0.0,
+      "hair": "red_gone_grey_under_a_turf_cutter_hood",
+      "notes": "a slate on a cord round his neck with the night's grinding on it, eyes narrowed against a daylight he keeps out of"
+    },
+    "tags": [
+      "miller"
+    ],
+    "schedule": [
+      {
+        "days": "kindleday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 5,
+        "place": "core:poi/rudd_mill",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 6,
+        "place": "core:poi/rudd_mill",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "at the wheel and the stones"
+      },
+      {
+        "days": "kindleday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 12,
+        "place": "core:poi/rudd_mill",
+        "activity": "eat",
+        "spot": "the_door"
+      },
+      {
+        "days": "kindleday,merrowday,thornday,skerrday,hushday,tollday",
+        "hour": 13,
+        "place": "core:poi/rudd_mill",
+        "activity": "work",
+        "spot": "the_wheel"
+      },
+      {
+        "days": "tallowday",
+        "hour": 5,
+        "place": "core:poi/rudd_mill",
+        "activity": "eat",
+        "spot": "the_door",
+        "notes": "an early breakfast, the cart loaded"
+      },
+      {
+        "days": "tallowday",
+        "hour": 9.0,
+        "place": "core:place/kharrow_hold",
+        "activity": "work",
+        "spot": "the_market",
+        "notes": "market day"
+      },
+      {
+        "days": "tallowday",
+        "hour": 13.0,
+        "place": "core:place/kharrow_hold",
+        "activity": "eat",
+        "spot": "the_market"
+      },
+      {
+        "days": "tallowday",
+        "hour": 17.0,
+        "place": "core:poi/rudd_mill",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "home from market"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/rudd_mill",
+        "activity": "socialise",
+        "spot": "the_door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/rudd_mill",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  }
+]

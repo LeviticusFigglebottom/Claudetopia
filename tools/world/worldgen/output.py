@@ -65,7 +65,7 @@ def write_maps(out_dir: str, grid: Grid, H: np.ndarray, region_mask: np.ndarray,
 
 
 def write_runtime(out_dir: str, grid: Grid, H: np.ndarray, region_mask: np.ndarray, water: np.ndarray,
-                  water_level: np.ndarray) -> dict:
+                  water_level: np.ndarray, shore: np.ndarray | None = None) -> dict:
     """Low-resolution copies for TerrainProvider queries (height, region, water) without Terrain3D."""
     n = min(RUNTIME_N, grid.n)
     d = os.path.join(out_dir, "runtime")
@@ -89,8 +89,18 @@ def write_runtime(out_dir: str, grid: Grid, H: np.ndarray, region_mask: np.ndarr
     _write(os.path.join(d, "regions_%d.u8" % n), np.ascontiguousarray(r_lo, dtype=np.uint8).tobytes())
     _write(os.path.join(d, "water_%d.u8" % n), np.ascontiguousarray(w_lo, dtype=np.uint8).tobytes())
     _write(os.path.join(d, "water_level_%d.r32" % n), np.ascontiguousarray(lvl_lo, dtype="<f4").tobytes())
-    return {"grid": n, "heights": "runtime/heights_%d.r32" % n, "regions": "runtime/regions_%d.u8" % n,
-            "water": "runtime/water_%d.u8" % n, "water_level": "runtime/water_level_%d.r32" % n}
+    out = {"grid": n, "heights": "runtime/heights_%d.r32" % n, "regions": "runtime/regions_%d.u8" % n,
+           "water": "runtime/water_%d.u8" % n, "water_level": "runtime/water_level_%d.r32" % n}
+    if shore is not None:
+        # every shore's kind, for the water's foam and the shore's sound (worldgen.shores;
+        # CONTRACTS 6): the land within 60 m of the water's edge and the water within 60 m of the
+        # land, each the class of the bank it is nearest, 0 elsewhere
+        from .shores import CLASS_NAMES
+        s = shore if shore.shape[0] == n else shore[::max(shore.shape[0] // n, 1), ::max(shore.shape[0] // n, 1)]
+        _write(os.path.join(d, "shore_%d.u8" % n), np.ascontiguousarray(s, dtype=np.uint8).tobytes())
+        out["shore"] = "runtime/shore_%d.u8" % n
+        out["shore_classes"] = [CLASS_NAMES[k] for k in sorted(CLASS_NAMES)]
+    return out
 
 
 ## Metres between the road points written out. A road is planned and carved every 4 m, but the

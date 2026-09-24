@@ -31,5 +31,7 @@
    "description": "A curved tusk from a bristleback. Vale hunters hang one over the door so the next boar knows."},
   {"id": "core:item/ember_mote", "name": "Ember Mote", "category": "material", "weight": 0.0, "value": 40, "stack": 99, "tags": ["ember", "enchanting"],
    "ember": {"charge": 25},
-   "description": "A spark of a foe's last warmth, caught by a Kindling word before it went quiet. It hovers a finger's breadth above the palm. Name-tables burn these to write a note into iron."}
+   "description": "A spark of a foe's last warmth, caught by a Kindling word before it went quiet. It hovers a finger's breadth above the palm. Name-tables burn these to write a note into iron."},
+  {"id": "core:item/meal_sack", "name": "Sack of Meal", "category": "material", "weight": 3.0, "value": 5, "stack": 10, "tags": ["cooking"],
+   "description": "A sack of oat or barley meal from a water-mill, tied at the neck with the miller's own knot. It keeps a winter if the mice are kept out, and nobody has ever kept the mice out."}
 ]

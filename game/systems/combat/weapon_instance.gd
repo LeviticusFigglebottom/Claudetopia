@@ -278,6 +278,10 @@ func build_hit(attack_kind: String, index: int, charge_ratio: float, skill: floa
 		h.parryable = false
 	h.skill_id = skill_id
 	h.label = "%s:%s%d" % [weapon_class, attack_kind, index + 1]
+	h.weapon_class = weapon_class
+	h.weight = float(item_def.get("weight", 0.0))
+	# a heavy blow drives the body it lands on back: more for a heavier weapon (Impact)
+	h.knockback = Impact.knockback_for(h.weight, attack_kind == "heavy", clips_set)
 	if weapon_class == "dagger":
 		h.statuses = [{"id": "bleeding", "duration": 6.0, "magnitude": 0.0}]
 	_add_enchantment(h)
@@ -324,14 +328,20 @@ func on_clip_event(event_name: String) -> void:
 				if not whoosh.is_empty() and is_inside_tree():
 					Foley.play(whoosh, global_position, -4.0 if clips_set == "unarmed" else 0.0)
 				hitbox.begin_swing(current_hit)
+				if current_hit.heavy and owner_actor != null:
+					Impact.trail(owner_actor, true)
 		"hit_end":
 			if hitbox != null:
 				hitbox.end_swing()
+			if owner_actor != null:
+				Impact.trail(owner_actor, false)
 
 
 func end_attack() -> void:
 	if hitbox != null:
 		hitbox.end_swing()
+	if owner_actor != null:
+		Impact.trail(owner_actor, false)
 	current_hit = null
 
 

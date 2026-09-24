@@ -181,3 +181,47 @@ func test_a_tab_opens_by_name() -> void:
 	await _tree().process_frame
 	assert_eq(int(screen.get("_tab")), 3, "Controls by name")
 	assert_true(_controls(screen).is_empty(), "and the graphics knobs are not on it")
+
+
+## Every drop-down on every tab shows a choice it has, whatever the file holds: a playtest log had
+## "Index p_which = 2 is out of bounds (get_item_count() = 2)" from an OptionButton, and a value
+## from an older file, or one written by hand, must not be the one that does it.
+func test_every_drop_down_shows_a_choice_it_has_whatever_the_file_says() -> void:
+	# out-of-range values of the kind an older file or a hand edit leaves
+	Settings.data["graphics"]["view_distance"] = 7
+	Settings.data["graphics"]["msaa"] = 9
+	Settings.data["gameplay"]["difficulty"] = 12
+	Settings.data["accessibility"]["colourblind"] = -3
+	Settings.data["controls"]["camera_side"] = 5
+	for tab in ["Video", "Graphics", "Audio", "Controls", "Gameplay", "Accessibility"]:
+		var screen := UI.open("settings", {"tab": tab})
+		await _tree().process_frame
+		for n in screen.find_children("*", "OptionButton", true, false):
+			var o := n as OptionButton
+			if o.is_queued_for_deletion():
+				continue
+			assert_gt(o.item_count, 0, "%s: %s has choices" % [tab, o.get_meta("setting_key", o.get_meta("option_key", o.name))])
+			assert_true(o.selected >= 0 and o.selected < o.item_count,
+					"%s: %s shows choice %d of %d" % [tab, o.get_meta("setting_key", o.get_meta("option_key", o.name)), o.selected, o.item_count])
+		UI.close_all()
+		await _tree().process_frame
+
+
+## A drop-down stores what its setting means: the camera side is -1 or 1, and storing the index
+## wrote 0 for Left, which the camera reads as the right shoulder.
+func test_a_drop_down_stores_what_its_setting_means() -> void:
+	var screen := UI.open("settings", {"tab": "Controls"})
+	await _tree().process_frame
+	var side: OptionButton = null
+	for n in screen.find_children("*", "OptionButton", true, false):
+		if str(n.get_meta("option_key", "")) == "controls/camera_side" and not n.is_queued_for_deletion():
+			side = n
+	assert_true(side != null, "the camera side is on the Controls tab")
+	if side == null:
+		return
+	side.select(0)
+	side.item_selected.emit(0)
+	assert_eq(int(Settings.get_value("controls", "camera_side")), -1, "Left stores -1, the left shoulder")
+	side.select(1)
+	side.item_selected.emit(1)
+	assert_eq(int(Settings.get_value("controls", "camera_side")), 1, "and Right stores 1")

@@ -314,27 +314,32 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	var rail: Vector2 = cart - ahead * 4.0
 	k.place(k.prop("fence_post_rail"), k.on_ground(rail.x, rail.y), yaw + PI * 0.5)
 
-	# the Wardens' colours: two poles either side of the way out, a bell each. The cloth is
+	# the Wardens' colours: two poles either side of the way out, a bell each. The way out is where
+	# the marked way leaves the camp, which in the drawn atlas is not towards the Choir but west along
+	# the knoll first: the poles stood at 333 degrees and the stones went west. The cloth is
 	# weathered wool in their green with an ochre border and stripe, bleached at the pole,
 	# stained and torn at the hem and moving in the wind (banner_cloth.gdshader); it was one
 	# flat grey-green material on six rows, and read as a painted board.
+	var out := _way_out(d, ahead)
+	var out_right := Vector2(-out.y, out.x)
+	var out_yaw := PoiKit.yaw_of(out)
 	for s in [-1.0, 1.0]:
 		var cloth := ShaderMaterial.new()
 		cloth.shader = BANNER_SHADER
 		cloth.set_shader_parameter("seed", 0.37 * (s + 2.0))
-		var pole: Vector2 = at.call(17.0, 3.4 * float(s) - 1.0)
+		var pole: Vector2 = out * 17.0 + out_right * (3.4 * float(s))
 		var top := m.post(timber, pole, 4.4, 0.14)
-		var bar := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), top - Vector3(0.0, 0.25, 0.0))
+		var bar := Transform3D(Basis(Vector3.UP, out_yaw + PI * 0.5), top - Vector3(0.0, 0.25, 0.0))
 		m.block(timber, bar, Vector3(1.5, 0.08, 0.08))
-		m.sheet(top - Vector3(0.0, 0.3, 0.0), yaw, 1.2, 2.3, cloth, "Banner", 0.12, true, 6, 14)
-		k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(right.x, 0.0, right.y) * 0.72,
+		m.sheet(top - Vector3(0.0, 0.3, 0.0), out_yaw, 1.2, 2.3, cloth, "Banner", 0.12, true, 6, 14)
+		k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(out_right.x, 0.0, out_right.y) * 0.72,
 				k.rng.randf_range(0.0, TAU), 1.0, false)
 
 	# a signpost at the way out, and a lamp on a post by the fire and another at the first stone
-	var sign_at: Vector2 = at.call(18.5, 1.6)
-	k.place(k.prop("signpost"), k.on_ground(sign_at.x, sign_at.y), yaw, 1.0, true, Vector3.ZERO, true)
-	for lamp in [at.call(10.0, -4.4), at.call(19.5, -3.0)]:
-		_lamp_post(k, m, timber, lamp as Vector2, yaw)
+	var sign_at: Vector2 = out * 18.5 + out_right * 5.0
+	k.place(k.prop("signpost"), k.on_ground(sign_at.x, sign_at.y), out_yaw, 1.0, true, Vector3.ZERO, true)
+	for lamp in [at.call(10.0, -4.4), out * 19.5 - out_right * 5.0]:
+		_lamp_post(k, m, timber, lamp as Vector2, out_yaw)
 
 	# behind: the head of the stair. Two Oroth piers, the top steps going over the edge, and the
 	# Hearthstone that heard the name first
@@ -351,8 +356,11 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 			down = to_pad.normalized()
 	# a world whose land draws the stair down the bank itself (a road with this id) has it; a second
 	# one straight down the face beside it would be a stair nobody built
-	if WorldProbe.road_points(HUSH_STAIR_ROAD).size() < 2:
+	var stair_road: Array = WorldProbe.road_points(HUSH_STAIR_ROAD)
+	if stair_road.size() < 2:
 		_hush_stair(d, stone, head, down)
+	else:
+		_stair_road(d, stone, stair_road)
 	var hs: Vector2 = at.call(-3.4, -2.6)
 	k.hearthstone(k.on_ground(hs.x, hs.y), yaw, d.poi_id, d.display_name)
 
@@ -370,7 +378,7 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	k.place(k.tree("dead_ash_tree"), k.on_ground(ash.x, ash.y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
 
 	_waymarks(d, timber)
-	_camp_life(k, m, timber, ahead, right, fire, cart, yaw)
+	_camp_life(k, m, timber, ahead, right, fire, cart, yaw, out)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
 
@@ -391,7 +399,8 @@ const STAIR_HEAD_TENTS := [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]
 ## * crows sit on the colours' poles and the lamps and wheel over the heath ahead, and anybody who
 ##   walks near puts them up.
 static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vector2, right: Vector2,
-		fire: Vector2, cart: Vector2, yaw: float) -> void:
+		fire: Vector2, cart: Vector2, yaw: float, out: Vector2) -> void:
+	var out_right := Vector2(-out.y, out.x)
 	var at := func(forward: float, side: float) -> Vector2:
 		return ahead * forward + right * side
 	# a pot on three poles over the fire, and its steam
@@ -439,9 +448,9 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 		return
 	var perches: Array[Vector3] = []
 	for s in [-1.0, 1.0]:
-		var pole: Vector2 = at.call(17.0, 3.4 * float(s) - 1.0)
+		var pole: Vector2 = out * 17.0 + out_right * (3.4 * float(s))
 		perches.append(k.on_ground(pole.x, pole.y, 4.4))
-	for lamp in [at.call(19.5, -3.0), at.call(10.0, -4.4)]:
+	for lamp in [out * 19.5 - out_right * 5.0, at.call(10.0, -4.4)]:
 		var l: Vector2 = lamp
 		perches.append(k.on_ground(l.x, l.y, 2.7))
 	var wheel: Vector2 = at.call(30.0, -2.0)
@@ -451,6 +460,18 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 	crows.height = 11.0
 	k.root.add_child(crows)
 	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
+
+
+## Which way the POI's own marked way leaves it: towards its first point twelve metres or more out,
+## or `otherwise` when it has none.
+static func _way_out(d: PoiDressing, otherwise: Vector2) -> Vector2:
+	var k := d.kit
+	for p in way_of(d.path):
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			var at := Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z)
+			if at.length() >= 12.0:
+				return at.normalized()
+	return otherwise
 
 
 ## The first of `spots` (local xz) that stands at least `reach` metres from every leg of the POI's
@@ -533,6 +554,114 @@ static func _hush_stair(d: PoiDressing, stone: SurfaceTool, head: Vector2, down:
 		k.puffs(Vector3(at.x, lie + 0.9, at.y), Vector3(8.0, 1.2, 6.0), 0.08, 30, Color(0.58, 0.6, 0.64, 0.3), 10.0, 12.0)
 
 
+## The Hushline Stair where the land draws it as a road (HUSH_STAIR_ROAD): stone treads where it
+## climbs, and a parapet on its downhill side where the ground falls away, so the switchbacks down
+## the face read as a stair built into the bank and not a track worn in it. The treads lie on the
+## ground, which stays the walking surface; the parapet is solid, waist high, and keeps a walker
+## off the drop. It stops short of a bend, where the next leg of the road comes back through it.
+const STAIR_TREAD_M := 0.9
+## Rise per metre of road above which it is laid in steps.
+const STAIR_STEEP := 0.07
+const STAIR_HALF_WIDTH := 1.7
+## How much lower one side must be, a metre past the road's edge, for it to need a parapet.
+const PARAPET_FALL_M := 0.6
+## How far apart two parapet samples may be and still be one wall.
+const PARAPET_RUN_M := 4.0
+const PARAPET_HEIGHT := 0.75
+const PARAPET_SIDE := 0.35
+## A bend sharper than this has no parapet within PARAPET_CLEAR_M of it, on either leg.
+const PARAPET_BEND_DEG := 30.0
+const PARAPET_CLEAR_M := 5.0
+
+
+static func _stair_road(d: PoiDressing, stone: SurfaceTool, points: Array) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var pts: Array[Vector2] = []
+	for p in points:
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	for i in range(pts.size() - 1):
+		var a := pts[i]
+		var b := pts[i + 1]
+		var length := a.distance_to(b)
+		if length < 0.1:
+			continue
+		var dir := (b - a) / length
+		var side := Vector2(-dir.y, dir.x)
+		var basis := Basis(Vector3.UP, atan2(dir.x, dir.y))
+		var bends_in := i > 0 and _bend_deg(pts[i - 1], a, b) > PARAPET_BEND_DEG
+		var bends_out := i + 2 < pts.size() and _bend_deg(a, b, pts[i + 2]) > PARAPET_BEND_DEG
+		var run_start := Vector3.INF
+		var run_last := Vector3.INF
+		var run_fall := 0.0
+		var s := 0.0
+		while s < length:
+			var p := a + dir * s
+			var here := k.on_ground(p.x, p.y).y
+			var ahead := p + dir * minf(STAIR_TREAD_M, length - s)
+			var next := k.on_ground(ahead.x, ahead.y).y
+			var tread := p.distance_to(ahead)
+			var wet := k.water_y(p.x, p.y)
+			var dry := is_nan(wet) or here > wet
+			if dry and tread > 0.2 and absf(next - here) / tread > STAIR_STEEP:
+				# a tread: its top at the higher end, filled down into the slope
+				var top := maxf(here, next) + 0.04
+				var bottom := minf(here, next) - 0.3
+				var mid := p + dir * (tread * 0.5)
+				m.block(stone, Transform3D(basis, Vector3(mid.x, (top + bottom) * 0.5, mid.y)),
+						Vector3(STAIR_HALF_WIDTH * 2.0, top - bottom, tread))
+			# the parapet goes on whichever side falls away, clear of the bends
+			var fall := 0.0
+			var near_bend := (bends_in and s < PARAPET_CLEAR_M) \
+					or (bends_out and s + STAIR_TREAD_M > length - PARAPET_CLEAR_M)
+			if dry and not near_bend:
+				var reach := STAIR_HALF_WIDTH + 1.0
+				var left := k.on_ground(p.x + side.x * reach, p.y + side.y * reach).y
+				var right := k.on_ground(p.x - side.x * reach, p.y - side.y * reach).y
+				if absf(left - right) > PARAPET_FALL_M:
+					fall = 1.0 if left < right else -1.0
+			var wall := p + side * fall * (STAIR_HALF_WIDTH + PARAPET_SIDE * 0.5)
+			var at := Vector3(wall.x, k.on_ground(wall.x, wall.y).y, wall.y)
+			if fall != 0.0 and fall == run_fall and run_start != Vector3.INF \
+					and Vector2(run_last.x, run_last.z).distance_to(wall) < PARAPET_RUN_M:
+				run_last = at
+			else:
+				if run_start != Vector3.INF:
+					_parapet(k, m, stone, run_start, run_last, dir)
+				run_start = at if fall != 0.0 else Vector3.INF
+				run_last = run_start
+				run_fall = fall
+			s += STAIR_TREAD_M
+		if run_start != Vector3.INF:
+			_parapet(k, m, stone, run_start, run_last, dir)
+
+
+## How far the road turns at `b`, coming from `a` and going on to `c`, in degrees.
+static func _bend_deg(a: Vector2, b: Vector2, c: Vector2) -> float:
+	if a.distance_to(b) < 0.01 or b.distance_to(c) < 0.01:
+		return 0.0
+	return rad_to_deg(absf((b - a).angle_to(c - b)))
+
+
+## One run of parapet along `dir` from `a` to `b` on the ground, carried on a tread's length past
+## `b` so runs abut: a waist-high wall sloped with the road, set 0.3 m into the ground, with its
+## collider.
+static func _parapet(k: PoiKit, m: PoiMasonry, stone: SurfaceTool, a: Vector3, b: Vector3, dir: Vector2) -> void:
+	var flat := Vector2(b.x - a.x, b.z - a.z).length()
+	var slope := (b.y - a.y) / flat if flat > 0.01 else 0.0
+	var run := flat + STAIR_TREAD_M
+	var end := Vector3(a.x + dir.x * run, a.y + slope * run, a.z + dir.y * run)
+	var pitch := atan2(a.y - end.y, run)
+	var basis := Basis(Vector3.UP, atan2(dir.x, dir.y)) * Basis(Vector3.RIGHT, pitch)
+	var tall := PARAPET_HEIGHT + 0.3
+	var mid := (a + end) * 0.5 + Vector3(0.0, PARAPET_HEIGHT - tall * 0.5, 0.0)
+	var xf := Transform3D(basis, mid)
+	var size := Vector3(PARAPET_SIDE, tall, Vector2(run, end.y - a.y).length())
+	m.block(stone, xf, size)
+	k.collider(size, xf, "stone")
+
+
 ## One flight of a stair as a single sloped box from `a` to `b` (its top face on the steps' tops).
 static func _flight_collider(k: PoiKit, a: Vector3, b: Vector3, yaw: float, width: float) -> void:
 	var along := b - a
@@ -608,12 +737,28 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 
 
 ## The points a POI's `path` goes by: the built road it names (`built_road`) when the land drew
-## one, the `via` points it was written with otherwise.
+## one, the `via` points it was written with otherwise. The way stops where reaching the place it
+## goes to counts (QuestLog.REACH_RADIUS_M): the atlas's road to the Choir ran on to the Choir's
+## own position, which is inside its first colossus, and the stones followed it into the stone.
 static func way_of(path: Dictionary) -> Array:
-	var built := WorldProbe.road_points(str(path.get("built_road", "")))
-	if built.size() >= 2:
-		return built
-	return path.get("via", [])
+	var points: Array = WorldProbe.road_points(str(path.get("built_road", "")))
+	if points.size() < 2:
+		points = path.get("via", [])
+	var to := WorldProbe.xz_of(ContentDB.get_or_empty(str(path.get("to", "")))) if str(path.get("to", "")) != "" else Vector2.ZERO
+	if to == Vector2.ZERO or points.size() < 2:
+		return points
+	var out: Array = []
+	for p in points:
+		out.append(p)
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2 and out.size() >= 2 \
+				and Vector2(float(p[0]), float(p[1])).distance_to(to) <= WAY_STOPS_SHORT_M:
+			break
+	return out
+
+
+## How far short of the place it goes to a marked way stops: inside QuestLog.REACH_RADIUS_M (45 m),
+## so the last stone stands where the objective has been reached.
+const WAY_STOPS_SHORT_M := 40.0
 
 
 # --- shrines ----------------------------------------------------------------------------------------

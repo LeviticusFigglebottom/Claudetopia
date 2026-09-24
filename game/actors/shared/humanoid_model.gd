@@ -37,6 +37,16 @@ const IRIS_SHADER := preload("res://assets/shaders/eye_iris.gdshader")
 ## Skin: the Compatibility renderer has no subsurface scattering, so the shader wraps the light
 ## past the terminator and tints what it adds towards blood (see the shader).
 const SKIN_SHADER := preload("res://assets/shaders/skin.gdshader")
+## Cloth, leather and metal: a grain that tiles over the bake, mottling, dirt from the ground.
+const GARMENT_SHADER := preload("res://assets/shaders/garment.gdshader")
+const DETAIL_DIR := "res://assets/textures/characters/"
+## kind -> [shader kind, detail normal map, repeats over the UV square, normal depth]
+const GARMENT_KINDS := {
+	"cloth": [0, "weave_normal.png", 34.0, 0.45],
+	"leather": [1, "grain_normal.png", 16.0, 0.9],
+	"iron": [2, "hammer_normal.png", 5.0, 0.4],
+}
+static var _detail_cache: Dictionary = {}
 ## Headgear that covers the crown. Hair is combed for a bare head; under one of these the
 ## chosen style would stand through the helm or the hood, so the close style is worn instead.
 const COVERS_HEAD := {"headgear": ["helm", "hood"], "back": ["hooded_cloak", "ragged_cloak"]}
@@ -50,6 +60,9 @@ const ONE_SHOT_BLEND_OUT := 0.14
 ## restarted on the new clip's first frame: a 1H chain's hand-over moved a hand 46 cm in one
 ## frame (test_attack_motion), four times as far as the swing itself moves it in one.
 const ONE_SHOT_HANDOVER := 0.1
+## The longest a landed blow holds the picture still (hit_stop), and how fast it catches up after.
+const HIT_STOP_MOST_S := 0.14
+const HIT_STOP_CATCH_UP := 2.0
 ## The clips a fight hands over from, and the ones it hands over to.
 const HANDS_OVER := ["Attack_", "Riposte", "Backstab"]
 const TAKES_OVER := ["Attack_", "Dodge_", "Hit_", "Stagger", "Knockdown", "Block_Hit", "Parry", "Death_"]
@@ -176,6 +189,8 @@ var _grip := {"L": 0.0, "R": 0.0}
 var _grip_to := {"L": 0.0, "R": 0.0}
 var _sockets: Dictionary = {}            ## socket bone name -> BoneAttachment3D
 var _one_shot := ""
+var _stop_left := 0.0
+var _stop_owed := 0.0
 var _one_shot_time := 0.0
 var _one_shot_length := 0.0
 var _fired: Dictionary = {}              ## event index -> true, for the running one-shot
@@ -517,6 +532,8 @@ func apply_appearance(d: Variant) -> void:
 	_apply_proportions()
 	if arm_room != null:
 		arm_room.degrees = arm_room_for(appearance.part("torso"), body_variant_worn)
+		# a child's head is sized by ChildProportions
+		arm_room.head_scale = 1.0 if body_variant_worn == "child" else HEAD_SCALE
 	_cloak_hold = arm_hold_for(appearance.part("back"))
 	appearance_changed.emit()
 
@@ -533,8 +550,9 @@ func _parts_signature() -> String:
 
 ## Everything that decides what colour those meshes are.
 func _colour_signature_now() -> String:
-	return "%s|%s|%s|%s" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
-		str(appearance.to_dict().get("palette", {}))]
+	# the lines of age are laid on with the skin, so a record that only grows older is recoloured
+	return "%s|%s|%s|%s|%.2f" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
+		str(appearance.to_dict().get("palette", {})), age_lines_amount(appearance.age)]
 
 
 ## The hair the record chose, unless something is covering the crown.
@@ -660,6 +678,7 @@ func _apply_colours() -> void:
 					_tint_iris(mi)
 				else:
 					_skin(mi, skin)
+					_age_face(mi, _part_path(slot, str(mi.get_meta("part", ""))).replace(".glb", "_age.png"))
 				continue
 			var key := _colour_key_for(slot)
 			var kind := str(mi.get_meta("material", ""))
@@ -669,7 +688,7 @@ func _apply_colours() -> void:
 					_as_stubble(mi)
 				continue
 			if str(mi.get_meta("tint", "")) == "none":
-				_dress(mi, Color.WHITE, kind)
+				_dress(mi, Color.WHITE, kind, true)
 				continue
 			# Steel is the people's metal and leather their leather, whichever slot it is worn
 			# in: a Vale cuirass was tinted the Vale's wool brown because it sat in `torso`.
@@ -683,6 +702,8 @@ func _apply_colours() -> void:
 	for logical in ["body", "head"]:
 		if _default_meshes.has(logical):
 			_skin(_default_meshes[logical], skin)
+	if _default_meshes.has("head"):
+		_age_face(_default_meshes["head"], RIG_PATH.replace(".glb", "_head_age.png"))
 	for eye in _default_eyes:
 		_tint_iris(eye)
 
@@ -708,6 +729,29 @@ func _skin(mi: MeshInstance3D, tint: Color) -> void:
 			m.set_shader_parameter("use_normal", base.normal_texture != null)
 		m.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
 		mi.set_surface_override_material(i, m)
+
+
+## Every head is baked young. Its lines of age come in with the years: none up to AGE_LINES_FROM,
+## all of them at AGE_LINES_FULL (CharacterAppearance.age, 0 young .. 1 old).
+const AGE_LINES_FROM := 0.30
+const AGE_LINES_FULL := 0.85
+
+
+static func age_lines_amount(age: float) -> float:
+	return clampf((age - AGE_LINES_FROM) / (AGE_LINES_FULL - AGE_LINES_FROM), 0.0, 1.0)
+
+
+func _age_face(mi: MeshInstance3D, age_path: String) -> void:
+	var amount := age_lines_amount(appearance.age)
+	var tex: Texture2D = null
+	if amount > 0.0 and ResourceLoader.exists(age_path):
+		tex = load(age_path)
+	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
+		var m := mi.get_surface_override_material(i) as ShaderMaterial
+		if m == null or m.shader != SKIN_SHADER:
+			continue
+		m.set_shader_parameter("age_tex", tex)
+		m.set_shader_parameter("age_amount", amount if tex != null else 0.0)
 
 
 ## What a skin's tint is, from whichever material it is wearing (the tests and the probes ask).
@@ -748,38 +792,72 @@ func _as_stubble(mi: MeshInstance3D) -> void:
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
-func _dress(mi: MeshInstance3D, c: Color, kind: String) -> void:
+func _dress(mi: MeshInstance3D, c: Color, kind: String, woven := false) -> void:
 	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
+	var garment := GARMENT_KINDS.has(kind) or kind == "" or woven
 	for i in count:
-		var worn := mi.get_surface_override_material(i) as BaseMaterial3D
+		var worn := mi.get_surface_override_material(i)
 		if worn != null and worn.has_meta("dressed"):
-			worn.albedo_color = c
+			_set_dress_colour(worn, c)
 			continue
-		var base := mi.mesh.surface_get_material(i)
+		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
+		if garment:
+			var spec: Array = GARMENT_KINDS.get(kind, GARMENT_KINDS["cloth"])
+			var sm := ShaderMaterial.new()
+			sm.shader = GARMENT_SHADER
+			sm.set_meta("dressed", true)
+			if base != null:
+				sm.set_shader_parameter("albedo_tex", base.albedo_texture)
+				var orm: Texture2D = base.roughness_texture if base.roughness_texture != null else base.ao_texture
+				sm.set_shader_parameter("orm_tex", orm)
+				sm.set_shader_parameter("use_orm", orm != null)
+			sm.set_shader_parameter("kind", 3 if woven else int(spec[0]))
+			sm.set_shader_parameter("detail_normal", _detail(str(spec[1])))
+			sm.set_shader_parameter("mottle_tex", _detail("mottle.png"))
+			sm.set_shader_parameter("detail_scale", float(spec[2]))
+			sm.set_shader_parameter("detail_depth", float(spec[3]))
+			_set_dress_colour(sm, c)
+			mi.set_surface_override_material(i, sm)
+			continue
 		var m := (base.duplicate() if base != null else StandardMaterial3D.new()) as BaseMaterial3D
 		if m == null:
 			continue
 		m.set_meta("dressed", true)
 		m.albedo_color = c
-		match kind:
-			"cloth":
-				m.rim_enabled = true
-				m.rim = 0.32
-				m.rim_tint = 0.70
-				m.metallic_specular = 0.25
-			"leather":
-				m.rim_enabled = true
-				m.rim = 0.12
-				m.rim_tint = 0.35
-				m.metallic_specular = 0.55
-			"hair":
-				m.rim_enabled = true
-				m.rim = 0.45
-				m.rim_tint = 0.40
-				m.metallic_specular = 0.40
-			"iron":
-				m.metallic_specular = 0.65
+		if kind == "hair":
+			m.rim_enabled = true
+			m.rim = 0.45
+			m.rim_tint = 0.40
+			m.metallic_specular = 0.40
 		mi.set_surface_override_material(i, m)
+
+
+func _set_dress_colour(m: Material, c: Color) -> void:
+	if m is ShaderMaterial:
+		(m as ShaderMaterial).set_shader_parameter("tint", Vector3(c.r, c.g, c.b))
+	elif m is BaseMaterial3D:
+		(m as BaseMaterial3D).albedo_color = c
+
+
+static func _detail(file: String) -> Texture2D:
+	if not _detail_cache.has(file):
+		_detail_cache[file] = load(DETAIL_DIR + file) if ResourceLoader.exists(DETAIL_DIR + file) else null
+	return _detail_cache[file]
+
+
+## The colour a dressed part is worn in, whichever material it wears (the tests ask).
+static func dressed_colour_of(mi: MeshInstance3D) -> Color:
+	var m := mi.get_surface_override_material(0)
+	if m is ShaderMaterial:
+		var v: Variant = (m as ShaderMaterial).get_shader_parameter("tint")
+		var k: Variant = (m as ShaderMaterial).get_shader_parameter("kind")   # null when left at 0
+		if k != null and int(k) == 3:
+			return Color.WHITE
+		if v is Vector3:
+			return Color(v.x, v.y, v.z)
+	if m is BaseMaterial3D:
+		return (m as BaseMaterial3D).albedo_color
+	return Color(-1, -1, -1)
 
 
 ## Every garment is built on the default body and carries the heavy and slight bodies as
@@ -1059,6 +1137,9 @@ static func girth_for(build: float) -> float:
 ## want 7, the harness's coat, plate and tassets 8, and the heavy body's hips 3 more.
 const ARM_ROOM := {"gambeson": 7.0, "plate_torso": 8.0, "brigandine": 7.0, "coat": 3.0}
 const ARM_ROOM_HEAVY := 3.0
+## A grown head worn this much larger than the forge made it (ArmRoom.head_scale): at 1.0 every head
+## in a lineup read small on its shoulders, clothed ones most of all.
+const HEAD_SCALE := 1.06
 
 
 static func arm_room_for(torso: String, variant: String) -> float:
@@ -1725,6 +1806,35 @@ func current_intent() -> String:
 	return _one_shot
 
 
+## Holds the picture still for `seconds` where a blow lands (a hit-stop), then plays it up to
+## HIT_STOP_CATCH_UP times as fast until it has caught the time up. The model is only a picture of
+## the AnimationDriver's timeline (which keeps the hit windows, the cancels and every other §5.3
+## timing on the physics clock), so a hit-stop delays nothing but the picture, by a few frames.
+func hit_stop(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+	_stop_left = maxf(_stop_left, minf(seconds, HIT_STOP_MOST_S))
+
+
+## Seconds the picture is behind the timeline because of hit-stops, still to be caught up.
+func hit_stop_owed() -> float:
+	return _stop_owed + _stop_left
+
+
+## How much of `delta` the picture plays this frame: none while held, more while catching up.
+func _held_back(delta: float) -> float:
+	if _stop_left > 0.0:
+		var d := minf(_stop_left, delta)
+		_stop_left -= d
+		_stop_owed = minf(_stop_owed + d, HIT_STOP_MOST_S * 2.0)
+		return delta - d
+	if _stop_owed > 0.0:
+		var extra := minf(_stop_owed, delta * (HIT_STOP_CATCH_UP - 1.0))
+		_stop_owed -= extra
+		return delta + extra
+	return delta
+
+
 ## The stance held over the legs (a raised guard), or "".
 func current_stance() -> String:
 	return _stance
@@ -1735,7 +1845,7 @@ func _process(delta: float) -> void:
 	_ease_grip(delta)
 	if arm_room != null:
 		arm_room.hold = move_toward(arm_room.hold, _arm_hold_now(), delta / ARM_HOLD_BLEND_S)
-	var step := delta * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
+	var step := _held_back(delta) * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
 	if anim_tree != null:
 		anim_tree.advance(step)
 	if not _one_shot.is_empty():
