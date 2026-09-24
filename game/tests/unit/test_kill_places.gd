@@ -302,18 +302,8 @@ func test_nobody_is_stood_inside_the_choir_s_colossus() -> void:
 	_at(NAMING, "ash_wights")
 	_foes_at("core:place/sunken_choir")
 	var at := _place_xz("core:place/sunken_choir")
-	var ground := WorldProbe.get_height(at.x, at.z, at.y)
-	var robe := CylinderMesh.new()
-	robe.bottom_radius = 13.5
-	robe.top_radius = 7.0
-	robe.height = 50.0
-	var shape := CollisionShape3D.new()
-	shape.shape = robe.create_trimesh_shape()
-	var colossus := StaticBody3D.new()
-	colossus.add_child(shape)
-	_tree().root.add_child(colossus)
-	spawned.append(colossus)
-	colossus.global_position = Vector3(at.x, ground + robe.height * 0.5, at.z)
+	var robe := 13.5
+	_solid(at, robe, 7.0, 50.0)
 	await _tree().physics_frame
 	await _tree().physics_frame
 	foes.refresh()
@@ -323,7 +313,52 @@ func test_nobody_is_stood_inside_the_choir_s_colossus() -> void:
 		return
 	for wight in group.all():
 		var flat := Vector2(wight.global_position.x - at.x, wight.global_position.z - at.z).length()
-		assert_gt(flat, robe.bottom_radius, "an ash-wight stands %.1f m from the colossus's middle, inside its robe" % flat)
+		assert_gt(flat, robe, "an ash-wight stands %.1f m from the colossus's middle, inside its robe" % flat)
+
+
+## A ring with no room stands its fight further out, never at the middle: the middle of a landmark
+## is inside it, and a fight stood there cannot be finished. Held at the Choir, with its colossus
+## grown to cover the whole ring, and at the Headless Watch, with a crag under the tower as wide as
+## the ring. Every spot must be clear of the solid, outside it, and still where the kill counts.
+func test_a_ring_with_no_room_stands_its_fight_further_out() -> void:
+	foes = QuestFoes.new()
+	foes.enabled = false
+	_tree().root.add_child(foes)
+	var wide := QuestFoes.RING_MAX_M + 2.0
+	var places := ["core:place/sunken_choir", "core:poi/headless_watch"]
+	var middles: Array[Vector3] = []
+	for place in places:
+		var at := KillPlaces.place_position({"where": place})
+		middles.append(at)
+		_solid(at, wide, 6.0, 40.0)
+	await _tree().physics_frame
+	await _tree().physics_frame
+	for i in places.size():
+		var at := middles[i]
+		var spots := foes.clear_ground("test|%s" % places[i], at, 3)
+		assert_eq(spots.size(), 3, "%s gets its three" % places[i])
+		for spot in spots:
+			var flat := Vector2(spot.x - at.x, spot.z - at.z).length()
+			assert_gt(flat, wide, "%s: a foe stands %.1f m out, inside the solid" % [places[i], flat])
+			assert_true(flat <= KillPlaces.RADIUS_M, "%s: and within %.0f m, where the kill counts (%.1f m)" % [places[i], KillPlaces.RADIUS_M, flat])
+			assert_false(foes._blocked(spot), "%s: and the spot is clear" % places[i])
+
+
+## A hollow cone standing on the ground at `at`, built the way the streamer builds a landmark's
+## collision: a trimesh of its mesh, a surface with nothing inside it.
+func _solid(at: Vector3, foot: float, top: float, height: float) -> StaticBody3D:
+	var mesh := CylinderMesh.new()
+	mesh.bottom_radius = foot
+	mesh.top_radius = top
+	mesh.height = height
+	var shape := CollisionShape3D.new()
+	shape.shape = mesh.create_trimesh_shape()
+	var body := StaticBody3D.new()
+	body.add_child(shape)
+	_tree().root.add_child(body)
+	spawned.append(body)
+	body.global_position = Vector3(at.x, WorldProbe.get_height(at.x, at.z, at.y) + height * 0.5, at.z)
+	return body
 
 
 ## "The choristers come to the ring on a full night": not at noon.
