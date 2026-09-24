@@ -27,9 +27,10 @@ const MIN_HEIGHT_M := 0.45
 const TRUNK_TOP_M := 4.5
 ## How far under the ground a shape reaches, so a slope leaves no gap under it.
 const SINK_M := 0.4
-## The side of a block (m): a cell of 256 m is sixteen, and the block the player stands in is solid
-## a few ticks after its cell arrives.
-const BLOCK_M := 64.0
+## The side of a block (m): a cell of 256 m is sixty-four. The block the player stands in is solid
+## a tick or two after its cell arrives, and the densest block (a wood) is some 50 shapes, whose
+## join is a millisecond or so.
+const BLOCK_M := 32.0
 ## How much of a physics tick the shapes may take (µs). An asset seen for the first time (its meta
 ## read, a rock's hull made: 2 to 15 ms here) is made at the start of a tick of its own, so a tick
 ## runs over by one asset at most, once a session.
@@ -56,7 +57,8 @@ static var _hulls: Dictionary = {}
 static var _faces: Dictionary = {}
 ## What standing the shapes has cost: cells, blocks and shapes stood, assets made ready, and
 ## microseconds in all and in the worst tick. The capture runner and the solids probe report these.
-static var stats := {"cells": 0, "blocks": 0, "shapes": 0, "assets": 0, "stood_us_total": 0, "stood_us_max": 0, "ticks": 0}
+static var stats := {"cells": 0, "blocks": 0, "shapes": 0, "assets": 0, "asset_us_total": 0, "asset_us_max": 0,
+		"asset_worst": "", "join_us_max": 0, "tick_us": [], "stood_us_total": 0, "stood_us_max": 0, "ticks": 0}
 
 
 ## One block of a cell: its body, and what is still to stand in it.
@@ -88,6 +90,8 @@ class Job:
 static var join_whole := true
 
 var _jobs: Array = []
+## blocks whole and waiting to join the space, at the start of the next tick
+var _to_join: Array = []
 var _live: Array = []
 var _sorted_for := Vector2.INF
 
@@ -156,36 +160,65 @@ func add_cell(node: Node3D, instances: Dictionary, extra: Array = []) -> void:
 ## Stands the waiting blocks' shapes, the block nearest `eye` first, for at most `budget_usec` of
 ## this tick (0: all of them). Returns how many it stood.
 func build(eye: Vector3, budget_usec: int = BUDGET_USEC) -> int:
-	if _jobs.is_empty():
+	if _jobs.is_empty() and _to_join.is_empty():
 		return 0
 	var t0 := Time.get_ticks_usec()
 	var flat := Vector2(eye.x, eye.z)
-	# sorted again when a cell arrives or the eye has gone a block's width
+	# sorted again when a cell arrives or the eye has gone half a block: by keys the engine sorts,
+	# since a GDScript comparison over the ring's 600 blocks is milliseconds
 	if _jobs.size() > 1 and (_sorted_for == Vector2.INF or _sorted_for.distance_to(flat) > BLOCK_M * 0.5):
-		_jobs.sort_custom(func(a: Job, b: Job) -> bool:
-				return a.centre.distance_squared_to(flat) < b.centre.distance_squared_to(flat))
+		var keyed: Array = []
+		for i in _jobs.size():
+			keyed.append([(_jobs[i] as Job).centre.distance_squared_to(flat), i])
+		keyed.sort()
+		var sorted: Array = []
+		for k in keyed:
+			sorted.append(_jobs[int(k[1])])
+		_jobs = sorted
 		_sorted_for = flat
 	var deadline := t0 + budget_usec if budget_usec > 0 else 0
 	var stood := 0
-	while not _jobs.is_empty():
+	# the blocks stood whole last tick join the space first: a join files every shape of the block
+	# at once, so it is done at the start of a tick, and a tick that has joined one makes no new
+	# asset that could run it over
+	var joined := false
+	while not _to_join.is_empty():
+		_join(_to_join.pop_front())
+		joined = true
+		if deadline > 0 and Time.get_ticks_usec() - t0 >= (budget_usec >> 1):
+			break
+	# an asset seen for the first time is made only in a tick that has done nothing else heavy
+	var free_from := -1 if joined else Time.get_ticks_usec()
+	while not _jobs.is_empty() and (deadline == 0 or Time.get_ticks_usec() < deadline):
 		var job: Job = _jobs[0]
 		if job.gone:
 			_jobs.pop_front()
 			continue
-		var n := _stand(job, deadline, t0)
+		var n := _stand(job, deadline, free_from)
 		stood += maxi(n, 0)
 		if job.finished():
 			_jobs.pop_front()
-			if job.body.is_valid() and not job.in_space:
-				PhysicsServer3D.body_set_space(job.body, job.space)
-				job.in_space = true
-		elif n < 0 or (deadline > 0 and Time.get_ticks_usec() >= deadline):
+			if deadline == 0:
+				_join(job)
+			else:
+				_to_join.append(job)
+		elif n < 0:
 			break
 	var us := Time.get_ticks_usec() - t0
 	stats["stood_us_total"] += us
 	stats["stood_us_max"] = maxi(int(stats["stood_us_max"]), us)
 	stats["ticks"] += 1
+	(stats["tick_us"] as Array).append(us)
 	return stood
+
+
+func _join(job: Job) -> void:
+	if job.gone or job.in_space or not job.body.is_valid():
+		return
+	var j0 := Time.get_ticks_usec()
+	PhysicsServer3D.body_set_space(job.body, job.space)
+	stats["join_us_max"] = maxi(int(stats["join_us_max"]), Time.get_ticks_usec() - j0)
+	job.in_space = true
 
 
 ## Stands everything waiting, now: a test, or a body put down somewhere new.
@@ -193,9 +226,9 @@ func flush() -> int:
 	return build(Vector3.ZERO, 0)
 
 
-## Blocks still to stand.
+## Blocks still to stand, or to join the space.
 func pending() -> int:
-	return _jobs.size()
+	return _jobs.size() + _to_join.size()
 
 
 ## Shapes standing, in all the live bodies.
@@ -219,6 +252,22 @@ func bodies() -> Array[RID]:
 	return out
 
 
+## Shapes standing in the blocks of the cell `node`.
+func shapes_under(node: Node3D) -> int:
+	var n := 0
+	for job in _live:
+		n += (job as Job).shapes if (job as Job).node == node else 0
+	return n
+
+
+## The blocks of the cell `node` that are in the physics space.
+func in_space_under(node: Node3D) -> int:
+	var n := 0
+	for job in _live:
+		n += 1 if (job as Job).node == node and (job as Job).in_space else 0
+	return n
+
+
 ## Whether each body is in the physics space yet (it joins whole, when its last shape is in).
 func bodies_in_space() -> int:
 	var n := 0
@@ -228,8 +277,9 @@ func bodies_in_space() -> int:
 
 
 ## Stands `job`'s shapes until `deadline` (µs; 0, all of them). An asset not yet made ready is made
-## only at the start of a tick (`t0`): met later, it waits for the next, and -1 says so.
-func _stand(job: Job, deadline: int, t0: int) -> int:
+## only at the start of a tick's work (`free_from`, or -1 when the tick has done something heavy
+## already): met later, it waits for the next tick, and -1 says so.
+func _stand(job: Job, deadline: int, free_from: int) -> int:
 	var stood := 0
 	var origin := job.node.global_position
 	while job.gi < job.paths.size():
@@ -240,10 +290,17 @@ func _stand(job: Job, deadline: int, t0: int) -> int:
 			job.ri = 0
 			continue
 		if deadline > 0 and not _shape_ready(path):
-			if Time.get_ticks_usec() - t0 > 50:
+			if free_from < 0 or Time.get_ticks_usec() - free_from > 50:
 				stats["shapes"] += stood
 				return -1 if stood == 0 else stood
 			stats["assets"] += 1
+			var a0 := Time.get_ticks_usec()
+			solid_of(path, rows[job.ri], origin)
+			var aus := Time.get_ticks_usec() - a0
+			stats["asset_us_total"] += aus
+			if aus > int(stats["asset_us_max"]):
+				stats["asset_us_max"] = aus
+				stats["asset_worst"] = path.get_file()
 		var solid := solid_of(path, rows[job.ri], origin)
 		job.ri += 1
 		if not solid.is_empty():
@@ -285,6 +342,7 @@ func _drop_cell(jobs: Array) -> void:
 			job.body = RID()
 		_live.erase(job)
 		_jobs.erase(job)
+		_to_join.erase(job)
 		# the wayside's shapes were this cell's alone; the scatter's are shared and stay cached
 		job.extra = []
 		job.groups = {}
