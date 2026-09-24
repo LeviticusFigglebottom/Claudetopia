@@ -14,7 +14,7 @@
   ],
   "radius": 4.13
  },
- "built_seconds": 0.1,
+ "built_seconds": 0.19,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -74,7 +74,7 @@
   },
   {
    "name": "hearthvale_hazel_b_LOD1",
-   "tris": 966
+   "tris": 894
   },
   {
    "name": "hearthvale_hazel_b_LOD2",
@@ -123,7 +123,7 @@
  ],
  "tris": [
   5643,
-  1386,
+  1314,
   2
  ],
  "version": 3
