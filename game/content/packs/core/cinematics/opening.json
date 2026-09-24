@@ -109,10 +109,10 @@
       {
         "id": "the_choir", "duration": 10.0, "time": 16.8, "weather": "core:weather/ashfall", "fov": 55,
         "keys": [
-          {"t": 0.0, "at": {"place": "core:place/sunken_choir", "bearing": 180, "distance": 340, "height": 30},
-           "look": {"place": "core:place/sunken_choir", "height": 26}},
-          {"t": 1.0, "at": {"place": "core:place/sunken_choir", "bearing": 183, "distance": 300, "height": 25},
-           "look": {"place": "core:place/sunken_choir", "height": 28}}
+          {"t": 0.0, "at": {"place": "core:place/sunken_choir", "bearing": 157, "distance": 140, "height": 14},
+           "look": {"place": "core:poi/stair_head", "height": 25}},
+          {"t": 1.0, "at": {"place": "core:place/sunken_choir", "bearing": 156, "distance": 175, "height": 26},
+           "look": {"place": "core:poi/stair_head", "bearing": 180, "distance": 1500, "height": 40}}
         ],
         "lines": [
           {"at": 0.6, "for": 4.3, "text": "South of everything is Cinderlea, where it has gone furthest."},
