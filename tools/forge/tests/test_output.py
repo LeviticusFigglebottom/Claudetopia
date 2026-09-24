@@ -50,7 +50,15 @@ WEAPONS_MB_LIMIT = 16.0
 #
 # Both are real savings with a written justification behind them. Neither was worth
 # rebuilding a hundred committed assets for while the budget still had room.
-TOTAL_MB_LIMIT = 165.0
+#
+# Raised again, to 200, on 2026-09-24, and again on purpose: the crags (Cinderlea's basalt
+# columns) and the countryside set (meadow grass, buttercup, ox-eye daisy, fallen logs, and
+# birch and hazel to come) took the library past 165. The playtest's bar is how the world
+# looks, not what it weighs, so visuals win over size here. Both savings above are still
+# there to be spent -- the atlases' normals at half size (about 3 MB), and the landmarks'
+# albedos at 1024 (about 10 MB) -- but the landmarks are the last thing to shrink, since
+# they are what a player walks up to and looks at.
+TOTAL_MB_LIMIT = 200.0
 
 
 def metas() -> list[dict]:

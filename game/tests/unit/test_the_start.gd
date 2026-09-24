@@ -105,7 +105,14 @@ func _raise_start() -> PoiDressing:
 ## Head to the Choir where the world has one, else the path's shape between the two, so it goes
 ## where they go (PoiDressing.way_points, docs/COORDINATES.md).
 func _via() -> Array[Vector2]:
-	return PoiDressing.way_points(START, ContentDB.get_or_empty(START))
+	var out: Array[Vector2] = []
+	# the way stops where reaching the Choir counts, as its stones do (PoiBuilders.way_of): the
+	# atlas's road runs on to the Choir's own position, inside its first colossus
+	for p in PoiDressing.way_points(START, ContentDB.get_or_empty(START)):
+		out.append(p)
+		if out.size() >= 2 and p.distance_to(_xz(CHOIR)) <= 40.0:
+			break
+	return out
 
 
 # --- where it is --------------------------------------------------------------------------------
@@ -177,6 +184,12 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 		if mm.multimesh != null and str(mm.name).contains("standing_stone"):
 			marks += mm.multimesh.instance_count
 	assert_gt(marks, 15, "waystones walk away to the Choir: %d of them" % marks)
+	# they stop where reaching it counts, at the head of its avenue, and none stands in its colossus
+	# (the way the builder lays them along; a headless multimesh keeps no instance positions)
+	var way: Array = (load(PoiDressing.BUILDERS_PATH) as GDScript).call("way_of", d.path)
+	var last: Array = way[way.size() - 1]
+	var short := Vector2(float(last[0]), float(last[1])).distance_to(_xz(CHOIR))
+	assert_true(short > 20.0 and short <= REACH_M, "the way's last point is %.0f m from the Choir's middle" % short)
 
 
 ## The playtest found the start "a little sparse". The Wardens' camp has their gear about it, and
@@ -239,6 +252,66 @@ func test_nothing_the_camp_stands_solid_is_on_its_way() -> void:
 					across.append("%s (%.1f m from the way, reaching %.1f m)" % [body.get_parent().name, closest.distance_to(at), flat_reach])
 					break
 	assert_true(across.is_empty(), "the camp stands on its own way: %s" % ", ".join(across))
+
+
+## The stair down the bank, where the land draws it as a road: laid in stone steps from the camp
+## to the Hush, with a wall on the side that falls away, and no wall anywhere a person walking
+## down its middle would walk into (a switchback's next leg comes back through the last one's
+## side, so the wall stops short of every bend).
+func test_the_stair_road_is_laid_in_steps_with_a_wall_on_its_drop() -> void:
+	if provider == null:
+		return
+	var consts := (load(PoiDressing.BUILDERS_PATH) as GDScript).get_script_constant_map()
+	var road: Array[Vector2] = []
+	for p in WorldProbe.road_points(str(consts["HUSH_STAIR_ROAD"])):
+		road.append(Vector2(float(p[0]), float(p[1])))
+	if road.size() < 2:
+		return
+	var d := _raise_start()
+	if d == null:
+		return
+	var origin := Vector2(d.global_position.x, d.global_position.z)
+	var stair := d.find_child("Stair", true, false) as MeshInstance3D
+	assert_true(stair != null, "the Stair Head has its stone")
+	if stair != null:
+		var box := stair.global_transform * stair.get_aabb()
+		var mid := road[road.size() / 2]
+		assert_true(mid.x > box.position.x and mid.x < box.end.x and mid.y > box.position.z and mid.y < box.end.z,
+				"the steps go down the road, past its middle at %s (the stone covers %s)" % [mid, box])
+	# the walls: every box the dressing stands beside the road, away from the camp
+	var walls: Array[CollisionShape3D] = []
+	for s in d.find_children("*", "CollisionShape3D", true, false):
+		var cs := s as CollisionShape3D
+		if not (cs.shape is BoxShape3D):
+			continue
+		var at := Vector2(cs.global_position.x, cs.global_position.z)
+		if at.distance_to(origin) < 45.0:
+			continue
+		for i in range(road.size() - 1):
+			if Geometry2D.get_closest_point_to_segment(at, road[i], road[i + 1]).distance_to(at) < 4.0:
+				walls.append(cs)
+				break
+	assert_gt(walls.size(), 0, "a wall stands on the stair's drop")
+	# walk its middle, a body's width wide
+	var struck: Array[String] = []
+	for i in range(road.size() - 1):
+		var length := road[i].distance_to(road[i + 1])
+		var steps := int(ceil(length / 0.5))
+		for j in steps:
+			var p := road[i].lerp(road[i + 1], float(j) / float(steps))
+			var body := Vector3(p.x, provider.get_height(p.x, p.y) + 0.9, p.y)
+			for cs in walls:
+				if Vector2(cs.global_position.x, cs.global_position.z).distance_to(p) > 12.0:
+					continue
+				var size := (cs.shape as BoxShape3D).size
+				var local := cs.global_transform.affine_inverse() * body
+				if absf(local.x) < size.x * 0.5 + BODY_M * 0.4 and absf(local.y) < size.y * 0.5 + 0.9 \
+						and absf(local.z) < size.z * 0.5 + BODY_M * 0.4:
+					struck.append("leg %d at %s" % [i, p.round()])
+					break
+	assert_true(struck.is_empty(), "walking down the stair's middle meets a wall %d times: %s" % [struck.size(),
+			", ".join(struck.slice(0, 6))])
+	print("  (the stair road: %d wall runs)" % walls.size())
 
 
 func test_nothing_solid_stands_where_the_foundling_is_put() -> void:

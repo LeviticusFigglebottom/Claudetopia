@@ -33,28 +33,28 @@ const PRESETS := {
 		"shadows": true, "shadow_atlas": 2048, "shadow_cascades": 2, "shadow_distance": 0.6,
 		"shadow_filter": 1, "scatter_density": 0.5, "view_range": 0.75, "lod_bias": 0.6,
 		"fog": true, "volumetric_fog": false, "ssao": false, "ao_quality": 0, "ssil": false,
-		"sdfgi": false, "glow": false, "water_quality": 0, "water_reflections": false, "night_lights": 2,
+		"sdfgi": false, "glow": false, "water_quality": 0, "water_reflections": false, "night_lights": 2, "view_distance": 0,
 	},
 	"medium": {
 		"render_scale": 0.9, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 0.8,
 		"shadow_filter": 2, "scatter_density": 0.75, "view_range": 0.9, "lod_bias": 0.8,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 1, "ssil": false,
-		"sdfgi": false, "glow": true, "water_quality": 1, "water_reflections": true, "night_lights": 4,
+		"sdfgi": false, "glow": true, "water_quality": 1, "water_reflections": true, "night_lights": 4, "view_distance": 1,
 	},
 	"high": {
 		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 		"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
-		"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8,
+		"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8, "view_distance": 1,
 	},
 	"painted": {
 		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4,
 		"shadows": true, "shadow_atlas": 8192, "shadow_cascades": 4, "shadow_distance": 1.5,
 		"shadow_filter": 4, "scatter_density": 1.0, "view_range": 1.25, "lod_bias": 1.5,
 		"fog": true, "volumetric_fog": true, "ssao": true, "ao_quality": 3, "ssil": true,
-		"sdfgi": true, "glow": true, "water_quality": 3, "water_reflections": true, "night_lights": 8,
+		"sdfgi": true, "glow": true, "water_quality": 3, "water_reflections": true, "night_lights": 8, "view_distance": 2,
 	},
 }
 
@@ -76,9 +76,24 @@ const DEFAULTS := {
 	"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 	"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 	"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
-	"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8,
+	"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8, "view_distance": 1,
 	"color_grade": true, "vignette": true, "film_grain": false,
 }
+
+## View distance (Near, Far, Epic): the player camera's far plane, which the settlements are drawn
+## to (Tier C of docs/HORIZON.md); the horizon layer's reach (world/horizon_layer.gd); and the
+## vertices in each of Terrain3D's clipmap rings, which is what the far hills' shape is drawn from.
+const CAMERA_FAR_M: Array[float] = [3000.0, 4400.0, 6500.0]
+const TERRAIN_MESH_SIZE: Array[int] = [32, 48, 56]
+
+
+static func camera_far(g: Dictionary) -> float:
+	return CAMERA_FAR_M[clampi(int(g.get("view_distance", 1)), 0, 2)]
+
+
+static func terrain_mesh_size(g: Dictionary) -> int:
+	return TERRAIN_MESH_SIZE[clampi(int(g.get("view_distance", 1)), 0, 2)]
+
 
 const RENDERER_FORWARD_PLUS := "forward_plus"
 const RENDERER_COMPATIBILITY := "gl_compatibility"
@@ -141,6 +156,8 @@ const CONTROLS := [
 		"note": "the lake giving back the far shore; the sky's colours stay either way"},
 	{"key": "night_lights", "label": "Lamps lit at night", "kind": "slider", "min": 0.0, "max": 8.0, "step": 1.0,
 		"suffix": "lamps", "note": "real lights on the ground near you; every lamp still glows"},
+	{"key": "view_distance", "label": "View distance", "kind": "option", "choices": ["Near", "Far", "Epic"],
+		"note": "landmarks, towers and towns on the skyline, and the far hills' shape: 2.5, 4.2 or 6 km"},
 	{"key": "color_grade", "label": "Region colour grade", "kind": "check"},
 	{"key": "vignette", "label": "Vignette", "kind": "check"},
 	{"key": "film_grain", "label": "Film grain", "kind": "check"},

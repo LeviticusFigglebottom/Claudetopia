@@ -48,7 +48,7 @@ static func _unindexed_box() -> ArrayMesh:
 	var v: PackedVector3Array = src[Mesh.ARRAY_VERTEX]
 	var n: PackedVector3Array = src[Mesh.ARRAY_NORMAL]
 	var uv: PackedVector2Array = src[Mesh.ARRAY_TEX_UV]
-	var tan: PackedFloat32Array = src[Mesh.ARRAY_TANGENT]
+	var tangents: PackedFloat32Array = src[Mesh.ARRAY_TANGENT]
 	var ov := PackedVector3Array()
 	var on := PackedVector3Array()
 	var ouv := PackedVector2Array()
@@ -58,7 +58,7 @@ static func _unindexed_box() -> ArrayMesh:
 		on.append(n[i])
 		ouv.append(uv[i])
 		for c in 4:
-			otan.append(tan[i * 4 + c])
+			otan.append(tangents[i * 4 + c])
 	out[Mesh.ARRAY_VERTEX] = ov
 	out[Mesh.ARRAY_NORMAL] = on
 	out[Mesh.ARRAY_TEX_UV] = ouv

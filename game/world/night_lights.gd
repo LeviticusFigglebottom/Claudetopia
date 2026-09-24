@@ -143,6 +143,9 @@ func _ready() -> void:
 	Settings.changed.connect(_on_setting_changed)
 	_glow = MultiMeshInstance3D.new()
 	_glow.name = "Glows"
+	# rebuilt from _process as windows light and go dark, and never moved: an interpolated
+	# MultiMesh warns when its buffer is set outside the physics tick
+	_glow.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# the quads are grown in the vertex shader, past the instances' own box
 	_glow.extra_cull_margin = 400.0
