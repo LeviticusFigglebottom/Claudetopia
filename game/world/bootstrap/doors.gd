@@ -100,6 +100,13 @@ func _fill_settlements() -> void:
 		if is_instance_valid(door):
 			var p := door.global_position
 			reserved.append(Rect2(p.x - 11.0, p.z - 11.0, 22.0, 22.0))
+	# A landmark keeps its own footprint clear. Grandfather Hollow's centre is the Grandfather's
+	# trunk, and its ring of houses round a green was being laid inside the tree.
+	for entry_v in world.pois():
+		var entry: Dictionary = entry_v
+		if entry.has("scene"):
+			var lp: Array = entry.get("pos", [0, 0, 0])
+			reserved.append_array(footprint(Vector2(float(lp[0]), float(lp[2])), PoiKit.radius_of(str(entry["scene"]))))
 	var built := 0
 	for place in ContentDB.all("place"):
 		var kind := str(place.get("kind", ""))
@@ -120,6 +127,18 @@ func _fill_settlements() -> void:
 		fabric.append(s)
 		built += 1
 	Log.info("WorldDoors", "raised the fabric of %d settlements" % built)
+
+
+## A round footprint as the fabric's reserved rectangles: a cross of two, which between them hold
+## the whole disc and leave the corners of its bounding square free for plots.
+static func footprint(centre: Vector2, radius: float) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if radius <= 0.5:
+		return out
+	var k := radius * 0.72
+	out.append(Rect2(centre.x - radius, centre.y - k, radius * 2.0, k * 2.0))
+	out.append(Rect2(centre.x - k, centre.y - radius, k * 2.0, radius * 2.0))
+	return out
 
 
 func _roads() -> Array:
@@ -151,8 +170,16 @@ func _pad_radius(world: World, place_id: String) -> float:
 	for entry in world.pois():
 		var poi: Dictionary = entry
 		if str(poi.get("place_id", "")) == place_id:
-			return maxf(float(poi.get("radius_flat_m", 40.0)), 24.0)
+			return pad_radius_of(poi)
 	return 40.0
+
+
+## A built pad's room for houses. `radius_level_m` is how far the ground is truly level (the
+## builder writes it beside `radius_flat_m`, which the dressings, arrival and tests keep reading);
+## a house past it would stand on the pad's skirt. A build without it gives `radius_flat_m`.
+static func pad_radius_of(poi: Dictionary) -> float:
+	var r := float(poi.get("radius_level_m", poi.get("radius_flat_m", 40.0)))
+	return maxf(r, 24.0)
 
 
 ## Where the place stands in the world: the built POI data first, since that is the ground the

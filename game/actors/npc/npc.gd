@@ -65,6 +65,7 @@ func _ready() -> void:
 	_build_placeholder()
 	if place_id.is_empty():
 		place_id = str(def.get("home_place", ""))
+	dress_hands()
 	target_position = global_position
 	# The services these actors talk to install themselves on first use, so a village works
 	# whether or not the world scene has added them.
@@ -232,7 +233,46 @@ func apply_schedule_state(entry: Dictionary) -> void:
 
 func _apply_activity() -> void:
 	play_intent(Schedules.intent_for(activity, {"clip": _entry_clip}, def))
+	dress_hands()
 	activity_changed.emit(activity)
+
+
+## What this person carries, on the body (HeldItems): the def's `carries`, {main_hand, off_hand},
+## each an item id or "class:<weapon class>". A weapon rides in its sheath while they go about
+## their day and is drawn while they are hostile. One with no sheath (a pole, a spear) is carried
+## only on a patrol or in a fight, and nothing is taken to bed.
+func dress_hands() -> void:
+	var body := _body_model()
+	if body == null:
+		return
+	var carries: Dictionary = def.get("carries", {}) if def.get("carries") is Dictionary else {}
+	var main := _carried(str(carries.get("main_hand", "")))
+	var off := _carried(str(carries.get("off_hand", "")))
+	if not hostile and activity == "sleep":
+		main = {}
+		off = {}
+	elif not hostile and not main.is_empty() and HeldItems.sheath_for(main).is_empty() and activity != "patrol":
+		main = {}
+	if main.is_empty() and off.is_empty() and HeldItems.held_by(body).is_empty() and HeldItems.sheathed_by(body).is_empty():
+		return
+	HeldItems.dress(body, main, off, hostile)
+
+
+static func _carried(id: String) -> Dictionary:
+	if id.is_empty():
+		return {}
+	if id.begins_with("class:"):
+		return HeldItems.for_class(id.trim_prefix("class:"))
+	return ContentDB.get_or_empty(id)
+
+
+## The humanoid model standing in for this person, or null while it is a placeholder.
+func _body_model() -> Node:
+	if _model != null and _model.get_child_count() > 0:
+		var m: Node = _model.get_child(0)
+		if m.has_method("attach_to_socket"):
+			return m
+	return null
 
 
 # --- movement ----------------------------------------------------------------------------------

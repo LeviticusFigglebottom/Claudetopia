@@ -1,0 +1,84 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.407,
+  "max": [
+   0.02,
+   0.321,
+   0.049
+  ],
+  "min": [
+   -0.02,
+   -0.086,
+   -0.049
+  ],
+  "radius": 0.211
+ },
+ "built_seconds": 17.83,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "dagger_ashen.glb",
+ "grip_origin": true,
+ "hash": "26d14736e55e54de",
+ "kind": "dagger",
+ "materials": [
+  "dagger_ashen_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "dagger_ashen",
+   "tris": 1186
+  },
+  {
+   "name": "dagger_ashen_LOD1",
+   "tris": 472
+  },
+  {
+   "name": "dagger_ashen_LOD2",
+   "tris": 176
+  }
+ ],
+ "name": "dagger_ashen",
+ "params": {
+  "finish": "ashen"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9281,
+ "textures": [
+  "dagger_ashen_albedo.png",
+  "dagger_ashen_normal.png",
+  "dagger_ashen_orm.png"
+ ],
+ "tris": [
+  1186,
+  472,
+  176
+ ],
+ "version": 3
+}

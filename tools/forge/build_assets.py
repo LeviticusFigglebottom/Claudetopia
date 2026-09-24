@@ -59,7 +59,16 @@ def default_category(generator: str) -> str:
     # herb that stops at a hundred and ten.
     return {"gen_trees": "trees", "gen_rocks": "rocks", "gen_flora": "flora",
             "gen_props": "props", "gen_landmarks": "landmarks",
-            "gen_ground_kit": "props"}.get(generator, "props")
+            "gen_ground_kit": "props", "gen_impostors": "trees",
+            "gen_weapons": "weapons"}.get(generator, "props")
+
+
+IMPOSTOR_SUFFIX = "_impostor"
+
+
+def impostor_source(e: dict) -> str:
+    """The tree an impostor entry is drawn from: its own name without `_impostor`."""
+    return e["name"][: -len(IMPOSTOR_SUFFIX)] if e["name"].endswith(IMPOSTOR_SUFFIX) else e["name"]
 
 
 def short_palette(palette) -> str:
@@ -87,6 +96,8 @@ def _written(path: Path) -> bool:
 
 
 def is_current(e: dict, out_root: Path, version: int) -> bool:
+    if e["generator"] == "gen_impostors":
+        return impostor_is_current(e, out_root, version)
     paths = cli.output_paths(out_root, e["category"], e["name"])
     if not _written(paths["meta"]) or not _written(paths["glb"]):
         return False
@@ -100,6 +111,23 @@ def is_current(e: dict, out_root: Path, version: int) -> bool:
         if not _written(paths["dir"] / t):
             return False
     return True
+
+
+def impostor_is_current(e: dict, out_root: Path, version: int) -> bool:
+    """An impostor lives in its tree's folder and its tree's meta ("impostor"). It is current
+    while its hash matches, while the tree is the one it was drawn from (a rebuilt tree writes
+    a new meta without the block, or with another hash), and while its atlases have bytes."""
+    paths = cli.output_paths(out_root, e["category"], impostor_source(e))
+    if not _written(paths["meta"]) or not _written(paths["glb"]):
+        return False
+    try:
+        meta = json.loads(paths["meta"].read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    imp = meta.get("impostor") or {}
+    if imp.get("hash") != entry_hash(e, version) or imp.get("source_hash") != meta.get("hash"):
+        return False
+    return all(_written(paths["dir"] / str(imp.get(k, ""))) for k in ("albedo", "normal"))
 
 
 def build_command(e: dict, out_root: Path, quick: bool, res: int) -> list[str]:
@@ -175,16 +203,22 @@ def main(argv=None) -> int:
     t0 = time.time()
     results = []
     done = 0
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as ex:
-        futures = {ex.submit(run_one, e, out_root, args.quick, args.res, args.verbose): e for e in todo}
-        for fut in concurrent.futures.as_completed(futures):
-            r = fut.result()
-            results.append(r)
-            done += 1
-            mark = "ok " if r["ok"] else "FAIL"
-            print("[%d/%d] %s %s/%s %.1fs" % (done, len(todo), mark, r["category"], r["name"], r["seconds"]))
-            if not r["ok"]:
-                print("       %s" % r.get("log", "").replace("\n", "\n       ")[-2500:])
+    # Impostors are drawn from the trees, so they wait for every tree in this build to finish.
+    phases = [[e for e in todo if e["generator"] != "gen_impostors"],
+              [e for e in todo if e["generator"] == "gen_impostors"]]
+    for phase in phases:
+        if not phase:
+            continue
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as ex:
+            futures = {ex.submit(run_one, e, out_root, args.quick, args.res, args.verbose): e for e in phase}
+            for fut in concurrent.futures.as_completed(futures):
+                r = fut.result()
+                results.append(r)
+                done += 1
+                mark = "ok " if r["ok"] else "FAIL"
+                print("[%d/%d] %s %s/%s %.1fs" % (done, len(todo), mark, r["category"], r["name"], r["seconds"]))
+                if not r["ok"]:
+                    print("       %s" % r.get("log", "").replace("\n", "\n       ")[-2500:])
 
     failed = [r for r in results if not r["ok"]]
     by_cat: dict[str, int] = {}

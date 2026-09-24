@@ -55,7 +55,9 @@ renderer anything brighter clips mid-greys to white.
 | `lib/materials.py` | the painterly PBR node-material library. |
 | `lib/textures.py` | drawn alpha atlases: leaf clusters, blades, fronds, flowers, moss, fungus, lily pads. |
 | `lib/tree.py` | Sapling wrapper: growth, resolution caps, leaf cards, buttresses, hanging cards. |
-| `lib/impostor.py` | renders an object to an RGBA billboard and builds crossed cards (tree LOD2). |
+| `lib/impostor.py` | renders an object to an RGBA billboard and builds crossed cards (the old tree LOD2, before `gen_impostors`). |
+| `gen_impostors.py` | a tree's far picture: eight Cycles views into a 3×3 albedo atlas and a normal-and-sky-visibility atlas, LOD2 rewritten as one upright quad for `tree_impostor.gdshader`. One `<tree>_impostor` manifest entry per tree, built after the trees. |
+| `lib/lod_repair.py`, `repair_lod1.py` | drops the LOD1 bark triangles the collapse decimator stretched between branches (standing off the full tree's bark). `gen_impostors` runs it on every tree it draws; `repair_lod1.py` runs it on trees already current. Pure Python. |
 | `lib/bake.py` | UV unwrap, Cycles CPU bake to albedo / normal / ORM. |
 | `lib/export.py` | LODs, collision, glTF export, `meta.json`, Godot `.import` sidecars. |
 | `lib/runner.py` | the shared `main()` most generators use. |

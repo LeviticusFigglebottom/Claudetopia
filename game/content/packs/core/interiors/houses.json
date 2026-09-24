@@ -253,5 +253,22 @@
     "unique_object": "a cellar wall of bronze bell, with two hundred years of names scratched into it at sitting height",
     "rooms": 8,
     "props": 50
+  },
+  {
+    "id": "core:interior/the_hollow",
+    "name": "The Hollow",
+    "scene": "res://world/interiors/house.tscn",
+    "meta": "res://assets/models/interior/the_hollow/the_hollow.meta.json",
+    "place": "core:place/grandfather_hollow",
+    "resident": "core:npc/cille_tamwood",
+    "trade": "none",
+    "wealth": 2,
+    "household": 1,
+    "culture": "woodfolk",
+    "story": "The rooms the Hollow was first, before the town spread up the trunk on its rope walks: planked into the heartwood at the Grandfather's foot by the women who carried one coal in from Fernhold the winter the tree died. The Keeper of Knots lives here, and the Hearth-Roll lies open on the hall shelf, a line for every hearth the Hollow has ever lit, and a knot lit high in the trunk for each.",
+    "who_was_here": "Every Keeper of Knots since the coal came in, eleven of them, and the coal.",
+    "unique_object": "the clay pot the coal came in from Fernhold, on the hearth-stone, never washed and never used for anything since",
+    "rooms": 5,
+    "props": 49
   }
 ]

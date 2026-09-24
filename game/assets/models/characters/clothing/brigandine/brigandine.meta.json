@@ -1,25 +1,39 @@
 {
  "bounds": [
-  -0.3244,
-  -0.1643,
-  0.9736,
-  0.3173,
-  0.149,
-  1.4711
+  -0.3504,
+  -0.1571,
+  0.9664,
+  0.3485,
+  0.1752,
+  1.5713
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
- "material": "iron",
+ "material": "leather",
+ "materials": {
+  "brigandine": "leather",
+  "brigandine_coat": "cloth",
+  "brigandine_steel": "iron"
+ },
  "params": {
   "bone": null,
-  "material": "iron"
+  "material": "leather"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 851,
+ "seed": 54857,
  "slot_hint": "torso",
+ "textures": [
+  "brigandine_albedo.png",
+  "brigandine_orm.png",
+  "brigandine_coat_albedo.png",
+  "brigandine_coat_orm.png",
+  "brigandine_steel_albedo.png",
+  "brigandine_steel_orm.png"
+ ],
  "tris": [
-  4000,
+  16585,
   0,
   0
  ],

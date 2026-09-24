@@ -443,13 +443,17 @@ def driftwood(pal=None, scale=1.0, **kw):
 
 
 def _bark_common(nb, pal, base, fissure_scale, stretch, depth, tint, moss=0.35, lichen=0.0,
-                 lichen_col=None, scale=1.0):
+                 lichen_col=None, scale=1.0, streaks=0.0, rot=0.0):
     """`scale` is the size of the bark's features in metres.
 
     Every bark was fixed at one metre, which is right for an ordinary trunk and hopeless on
     a thirty-metre bole: the Grandfather came out speckled like concrete because its
     fissures were a thirtieth of its width. Hero pieces pass a larger scale; everything
     else keeps 1.0 and is unchanged.
+
+    `streaks` runs weathering down the wood (grain-long bands, silvered and darkened), and
+    `rot` lays soft umber rot and a green-black damp over the lower wood; both are 0 for a
+    living bark and change nothing there.
     """
     dark, mid, light = trio(base, 1.1)
     v = nb.coord(1.0 / scale)
@@ -475,6 +479,23 @@ def _bark_common(nb, pal, base, fissure_scale, stretch, depth, tint, moss=0.35, 
         ln = nb.noise(nb.coord(6.0), scale=1.0, detail=2.0, rough=0.6)
         lm = nb.map_range(ln.outputs["Fac"], 0.68 - 0.12 * lichen, 0.8, 0.0, 1.0)
         col = nb.mix(lm, col, lichen_col or P.lin("#9aa08c"))
+    if streaks > 0:
+        # long bands down the grain (object Z), some silvered by the weather and some stained
+        sn = nb.noise(nb.coord((9.0 / scale, 9.0 / scale, 0.35 / scale)), scale=1.0, detail=3.0, rough=0.55)
+        silver = nb.map_range(sn.outputs["Fac"], 0.58, 0.75, 0.0, streaks * 0.55)
+        stain = nb.map_range(sn.outputs["Fac"], 0.42, 0.28, 0.0, streaks * 0.7)
+        col = nb.mix(silver, col, shade(light, 1.0, 0.7))
+        col = nb.mix(stain, col, shade(dark, 0.72, 1.1))
+    if rot > 0:
+        # soft rot in patches, heavier toward the foot of the wood, and damp black-green in it
+        rn = nb.noise(nb.coord(1.1 / scale), scale=1.0, detail=3.0, rough=0.6, distortion=0.6)
+        low = nb.map_range(nb.separate_z(), 2.5, 0.2, 0.0, 1.0)
+        patch = nb.map_range(rn.outputs["Fac"], 0.56 - 0.1 * rot, 0.7, 0.0, 1.0)
+        rm = nb.math("MULTIPLY", patch, nb.math("ADD", low, 0.25, clamp=True), clamp=True)
+        rm = nb.math("MULTIPLY", rm, rot, clamp=True)
+        col = nb.mix(rm, col, pal.tint(P.lin("#3b2e25"), "dark", 0.2))
+        damp = nb.math("MULTIPLY", rm, nb.math("MULTIPLY", low, 0.6, clamp=True), clamp=True)
+        col = nb.mix(damp, col, pal.tint(P.lin("#262a20"), "dark", 0.15))
     # Bark's own fissures already carry the cavity reading, and a trunk is a big mesh to
     # trace AO rays across, so use the free curvature term here.
     col, _ = cavity_dirt(nb, col, shade(dark, 0.6), amount=0.4, distance=0.2, cheap=True)
@@ -514,12 +535,17 @@ def willow_bark(pal=None, age=0.5, tint=0.15, scale=1.0, name=None, **_):
 
 
 def dead_bark(pal=None, age=0.9, tint=0.25, scale=1.0, name=None, **_):
-    """White-grey barkless dead wood (Cinderlea ash trees)."""
+    """Weathered, barkless dead wood: ash-grey, streaked down the grain, rotting at the foot
+    (Cinderlea's ash trees and char stumps).
+
+    It was white-grey (#b9b3a8 leaned to the palette's light), and over the ash heath's black
+    soil every dead tree read as crumpled white paper. Silvered wood is a mid grey, not a white;
+    its light is in the streaks."""
     pal = _pal(pal)
-    base = pal.tint(P.lin("#b9b3a8"), "light", tint)
+    base = pal.tint(P.lin("#77716a"), "mid", tint)
     nb = NB(name or "dead_bark")
-    return _bark_common(nb, pal, base, fissure_scale=5.0, stretch=0.12, depth=0.4, tint=tint, moss=0.0,
-                        lichen=0.0, scale=scale)
+    return _bark_common(nb, pal, base, fissure_scale=5.0, stretch=0.12, depth=0.24, tint=tint, moss=0.0,
+                        lichen=0.0, scale=scale, streaks=0.8, rot=0.35 + 0.35 * age)
 
 
 def birch_bark(pal=None, age=0.4, tint=0.1, scale=1.0, name=None, **_):
@@ -988,6 +1014,17 @@ def iron(pal=None, age=0.5, wear=0.5, tint=0.05, scale=1.0, name=None, **_):
     return _metal_common(nb, pal, base, 0.55, age, wear, P.lin("#7a3f22"), 0.9, dent=0.3, scale=scale, streaks=0.5)
 
 
+def steel(pal=None, age=0.2, wear=0.8, tint=0.04, scale=1.0, name=None, **_):
+    """Worked blade iron, ground and kept: grey and light, bright along every edge, rust only in
+    the pits. `iron` is the smith's raw stock and the fittings, near black under the review's
+    exposure; a blade in it read as a stick of charcoal."""
+    pal = _pal(pal)
+    nb = NB(name or "steel")
+    base = pal.tint(P.lin("#7f848c"), "cool", tint)
+    return _metal_common(nb, pal, base, 0.36, age, wear, P.lin("#6b4a30"), 0.85, dent=0.12, scale=scale,
+                         streaks=0.2)
+
+
 def bronze(pal=None, age=0.5, wear=0.5, tint=0.1, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "bronze")
@@ -1010,6 +1047,16 @@ def bell_bronze_patina(pal=None, age=0.85, wear=0.5, tint=0.1, scale=1.0, name=N
     base = pal.tint(P.lin("#7a5a30"), "warm", tint)
     return _metal_common(nb, pal, base, 0.5, age, wear, pal.tint(P.lin("#4c8a78"), "cool", 0.25), 0.9, dent=0.15,
                          scale=scale, streaks=1.0)
+
+
+def blackened_iron(pal=None, age=0.4, wear=0.6, tint=0.05, scale=1.0, name=None, **_):
+    """The Ash-knights' iron: fire-blackened, greyed where the ash has worked into it, bright
+    only where an edge is kept."""
+    pal = _pal(pal)
+    nb = NB(name or "blackened_iron")
+    base = pal.tint(P.lin("#232326"), "dark", tint)
+    return _metal_common(nb, pal, base, 0.62, age, wear, P.lin("#6f6a64"), 0.95, dent=0.25, scale=scale,
+                         streaks=0.3, corrosion_metal=0.1)
 
 
 def rope(pal=None, age=0.4, tint=0.15, scale=1.0, name=None, axis="Z", **_):

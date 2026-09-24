@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 1.488,
+  "max": [
+   0.02,
+   1.185,
+   0.154
+  ],
+  "min": [
+   -0.022,
+   -0.303,
+   -0.155
+  ],
+  "radius": 0.76
+ },
+ "built_seconds": 21.73,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "greatsword_iron.glb",
+ "grip_origin": true,
+ "hash": "98d3324b601c1492",
+ "kind": "greatsword",
+ "materials": [
+  "greatsword_iron_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "greatsword_iron",
+   "tris": 2610
+  },
+  {
+   "name": "greatsword_iron_LOD1",
+   "tris": 714
+  },
+  {
+   "name": "greatsword_iron_LOD2",
+   "tris": 390
+  }
+ ],
+ "name": "greatsword_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9179,
+ "textures": [
+  "greatsword_iron_albedo.png",
+  "greatsword_iron_normal.png",
+  "greatsword_iron_orm.png"
+ ],
+ "tris": [
+  2610,
+  714,
+  390
+ ],
+ "two_handed": true,
+ "version": 3
+}

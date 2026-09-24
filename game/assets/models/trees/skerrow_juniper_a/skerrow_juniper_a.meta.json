@@ -24,11 +24,38 @@
  "glb": "skerrow_juniper_a.glb",
  "hash": "cf5f0f5f88b7a1b0",
  "height_m": 1.87,
+ "impostor": {
+  "albedo": "skerrow_juniper_a_impostor_albedo.png",
+  "axis": [
+   -0.0891,
+   -0.0511
+  ],
+  "billboard": "upright",
+  "bottom": 0.0101,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "35a766d9f4ad23ad",
+  "height": 1.3668,
+  "normal": "skerrow_juniper_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "cf5f0f5f88b7a1b0",
+  "views": 8,
+  "width": 2.8547
+ },
  "kind": "juniper",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "skerrow_juniper_a_mat",
   "skerrow_juniper_a_leaf_foliage",
-  "skerrow_juniper_a_impostor_foliage"
+  "skerrow_juniper_a_impostor"
  ],
  "materials_used": [
   "pine_bark",
@@ -41,7 +68,7 @@
   },
   {
    "name": "skerrow_juniper_a_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "skerrow_juniper_a_LOD1",
@@ -86,13 +113,12 @@
   "skerrow_juniper_a_leaf_normal.png",
   "skerrow_juniper_a_leaf_orm.png",
   "skerrow_juniper_a_impostor_albedo.png",
-  "skerrow_juniper_a_impostor_normal.png",
-  "skerrow_juniper_a_impostor_orm.png"
+  "skerrow_juniper_a_impostor_nrm.png"
  ],
  "tris": [
   5719,
   1320,
-  8
+  2
  ],
  "version": 3
 }

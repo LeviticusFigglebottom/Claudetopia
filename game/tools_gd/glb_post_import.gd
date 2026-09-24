@@ -2,19 +2,36 @@
 extends EditorScenePostImport
 ## Runs on every forge GLB (set as import_script/path in the .import sidecars).
 ##
-## Two jobs, both from the forge contract (CONTRACTS.md §4):
+## Three jobs, all from the forge contract (CONTRACTS.md §4):
 ##   1. materials named *_foliage become the wind shader (res://assets/shaders/foliage_wind.gdshader)
 ##      with the baked textures copied into its uniforms;
 ##   2. meshes named <mesh>_LOD1/_LOD2 are folded into the LOD0 MeshInstance3D's visibility
-##      ranges instead of all rendering at once, and <name>_col meshes become collision.
+##      ranges instead of all rendering at once, and <name>_col meshes become collision;
+##   3. a tree's LOD2, whose material is named *_impostor (tools/forge/gen_impostors.py), becomes
+##      the billboard (res://assets/shaders/tree_impostor.gdshader) with the frame and the normal
+##      atlas the tree's meta.json records under "impostor", and a culling box it can turn in.
 ##
 ## Everything else keeps Godot's StandardMaterial3D import, which is what the Principled-only
 ## materials the forge exports are meant to produce.
 
 const FOLIAGE_SHADER := "res://assets/shaders/foliage_wind.gdshader"
+const IMPOSTOR_SHADER := "res://assets/shaders/tree_impostor.gdshader"
 const LOD1_DISTANCE := 28.0
 const LOD2_DISTANCE := 75.0
 const LOD_END := 260.0
+## A tree's own bands when a scene of it is instanced whole (a point of interest's hawthorn or
+## yew), sized by its height the way world/scatter_lod.gd sizes the scattered ones at a level of
+## detail bias of one: the mid level from four heights away or 50 m, the impostor from ten or
+## 70 m. Kept in step with ScatterLod.NEAR_MIN/NEAR_PER_METRE/FAR_MIN/FAR_PER_METRE by hand; an
+## import script is no place to lean on runtime classes.
+const TREE_LOD1_MIN := 50.0
+const TREE_LOD1_PER_M := 4.0
+const TREE_LOD2_MIN := 70.0
+const TREE_LOD2_PER_M := 10.0
+
+var _impostor: Dictionary = {}
+var _height := 0.0
+var _source_dir := ""
 
 
 ## Only the categories the world scatters from MultiMeshes may take their albedo from the
@@ -34,15 +51,35 @@ func _post_import(scene: Node) -> Object:
 		if source.contains(prefix):
 			_instance_tinted = true
 			break
+	_source_dir = source.get_base_dir()
+	_impostor = {}
+	_height = 0.0
+	var meta_path := source.get_basename() + ".meta.json"
+	if FileAccess.file_exists(meta_path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+		if typeof(parsed) == TYPE_DICTIONARY:
+			# Not every sidecar is the forge's: a character's `bounds` is a list of six numbers, and
+			# reading it as the forge's dictionary failed the import of every body in the game.
+			var imp: Variant = (parsed as Dictionary).get("impostor", {})
+			_impostor = imp if imp is Dictionary else {}
+			var bounds: Variant = (parsed as Dictionary).get("bounds", {})
+			_height = float((bounds as Dictionary).get("height", 0.0)) if bounds is Dictionary else 0.0
+	var meshes := _all_mesh_instances(scene)
+	var names: Dictionary = {}
+	for node in meshes:
+		names[str(node.name)] = true
 	var by_base: Dictionary = {}
-	for node in _all_mesh_instances(scene):
+	for node in meshes:
 		_convert_materials(node)
-		var base := _base_name(node.name)
+		var base := _base_name(node.name, names)
 		if not by_base.has(base):
 			by_base[base] = {}
-		by_base[base][_lod_level(node.name)] = node
+		var level := _lod_level(node.name)
+		if not by_base[base].has(level):
+			by_base[base][level] = []
+		(by_base[base][level] as Array).append(node)
 	for base in by_base:
-		_apply_lod_ranges(by_base[base])
+		_apply_lod_ranges(by_base[base], source.contains("/models/trees/") and not _impostor.is_empty())
 	return scene
 
 
@@ -53,10 +90,18 @@ func _all_mesh_instances(root: Node) -> Array[MeshInstance3D]:
 	return out
 
 
-func _base_name(n: String) -> String:
+## The LOD group a mesh belongs to. A tree's canopy cards at LOD1 are `<tree>_cards_LOD1`, and
+## taking the suffix off left `<tree>_cards`, a group of one with no bands at all -- so a tree
+## instanced whole drew its LOD1 canopy over its LOD0 one at every distance. A grass clump's
+## LOD0 really is `<clump>_cards`, which is why the `_cards` is only dropped when no mesh of that
+## name exists.
+func _base_name(n: String, names: Dictionary = {}) -> String:
 	for suffix in ["_LOD1", "_LOD2", "_LOD3"]:
 		if n.ends_with(suffix):
-			return n.substr(0, n.length() - suffix.length())
+			var base := n.substr(0, n.length() - suffix.length())
+			if base.ends_with("_cards") and not names.has(base):
+				return base.substr(0, base.length() - "_cards".length())
+			return base
 	return n
 
 
@@ -70,29 +115,35 @@ func _lod_level(n: String) -> int:
 	return 0
 
 
-func _apply_lod_ranges(levels: Dictionary) -> void:
+func _apply_lod_ranges(levels: Dictionary, tree: bool = false) -> void:
 	## Godot's visibility ranges cross-fade by distance; the forge exports each level as a
 	## separate mesh so we set the bands here rather than relying on auto-generated LODs.
 	if levels.size() < 2:
 		return
+	var lod1 := LOD1_DISTANCE
+	var lod2 := LOD2_DISTANCE
+	if tree and _height > 0.0:
+		lod1 = maxf(TREE_LOD1_MIN, TREE_LOD1_PER_M * _height)
+		lod2 = maxf(TREE_LOD2_MIN, TREE_LOD2_PER_M * _height)
 	var bands := {
-		0: [0.0, LOD1_DISTANCE],
-		1: [LOD1_DISTANCE, LOD2_DISTANCE],
-		2: [LOD2_DISTANCE, LOD_END],
+		0: [0.0, lod1],
+		1: [lod1, lod2],
+		2: [lod2, LOD_END],
 		3: [LOD_END, 0.0],
 	}
 	var keys: Array = levels.keys()
 	keys.sort()
 	var last: int = keys[keys.size() - 1]
 	for level in keys:
-		var mi: MeshInstance3D = levels[level]
 		var band: Array = bands.get(level, [0.0, 0.0])
-		mi.visibility_range_begin = float(band[0])
-		mi.visibility_range_end = 0.0 if level == last else float(band[1])
-		mi.visibility_range_begin_margin = maxf(float(band[0]) * 0.12, 1.0)
-		mi.visibility_range_end_margin = maxf(float(band[1]) * 0.12, 1.0)
-		mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-		mi.visible = true
+		for node in levels[level]:
+			var mi: MeshInstance3D = node
+			mi.visibility_range_begin = float(band[0])
+			mi.visibility_range_end = 0.0 if level == last else float(band[1])
+			mi.visibility_range_begin_margin = maxf(float(band[0]) * 0.12, 1.0)
+			mi.visibility_range_end_margin = maxf(float(band[1]) * 0.12, 1.0)
+			mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+			mi.visible = true
 
 
 func _convert_materials(mi: MeshInstance3D) -> void:
@@ -103,6 +154,13 @@ func _convert_materials(mi: MeshInstance3D) -> void:
 		var mat := mesh.surface_get_material(i)
 		if mat == null:
 			continue
+		if mat.resource_name.ends_with("_impostor") and not _impostor.is_empty():
+			var billboard := _make_impostor_material(mat)
+			if billboard != null:
+				mesh.surface_set_material(i, billboard)
+				mi.set_surface_override_material(i, billboard)
+				_impostor_bounds(mesh)
+			continue
 		if not mat.resource_name.ends_with("_foliage") and not mat.resource_name.contains("_foliage"):
 			_tune_standard(mat)
 			continue
@@ -110,6 +168,38 @@ func _convert_materials(mi: MeshInstance3D) -> void:
 		if swapped != null:
 			mesh.surface_set_material(i, swapped)
 			mi.set_surface_override_material(i, swapped)
+
+
+func _make_impostor_material(src: Material) -> ShaderMaterial:
+	var shader: Shader = load(IMPOSTOR_SHADER) as Shader
+	if shader == null:
+		push_warning("glb_post_import: impostor shader missing, leaving %s as imported" % src.resource_name)
+		return null
+	var sm := ShaderMaterial.new()
+	sm.shader = shader
+	sm.resource_name = src.resource_name
+	if src is StandardMaterial3D:
+		sm.set_shader_parameter("albedo_atlas", (src as StandardMaterial3D).albedo_texture)
+	var nrm_path := _source_dir.path_join(str(_impostor.get("normal", "")))
+	if ResourceLoader.exists(nrm_path):
+		sm.set_shader_parameter("normal_atlas", load(nrm_path))
+	else:
+		push_warning("glb_post_import: impostor normal atlas missing: %s" % nrm_path)
+	var axis: Array = _impostor.get("axis", [0.0, 0.0])
+	sm.set_shader_parameter("frame_axis", Vector2(float(axis[0]), float(axis[1])))
+	sm.set_shader_parameter("views", int(_impostor.get("views", 8)))
+	sm.set_shader_parameter("grid", int(_impostor.get("grid", 3)))
+	return sm
+
+
+## The quad is authored flat, facing +Z; the billboard turns it about the trunk, so the box it
+## is culled by has to hold it at every turn.
+func _impostor_bounds(mesh: Mesh) -> void:
+	var box := mesh.get_aabb()
+	var axis: Array = _impostor.get("axis", [0.0, 0.0])
+	var half := box.size.x * 0.5
+	mesh.custom_aabb = AABB(Vector3(float(axis[0]) - half, box.position.y, float(axis[1]) - half),
+			Vector3(box.size.x, box.size.y, box.size.x))
 
 
 func _tune_standard(mat: Material) -> void:

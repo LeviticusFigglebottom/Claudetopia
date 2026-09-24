@@ -321,6 +321,29 @@ class BakedClip:
 # clip builder
 # --------------------------------------------------------------------------------------
 
+def _wrist_rot(blade: np.ndarray, aim: np.ndarray) -> np.ndarray:
+    """The hand's turn (in its rest frame) that points the blade, the socket's +Y in hand-local
+    space, along `aim`, choosing among all such turns the one that keeps the hand's own axis
+    (+Y, the line of the forearm at rest) nearest where it was. The blade stands square off the
+    hand, so the hand's axis has to lie across `aim`; this takes the forearm's line in that plane.
+
+    The shortest turn from the blade to the aim, which this replaces, left the twist about the
+    aim to chance, and it folded the hand back on the forearm: the attack clips bent the wrist
+    144-176 degrees off its rest (test_attack_motion). Now the bend is only as much as the
+    blade's angle to the forearm needs."""
+    y = np.array([0.0, 1.0, 0.0])
+    b = rig._unit(np.asarray(blade, float))
+    a = rig._unit(np.asarray(aim, float))
+    e2 = y - b * float(np.dot(y, b))
+    f2 = y - a * float(np.dot(y, a))
+    if np.linalg.norm(e2) < 1e-6 or np.linalg.norm(f2) < 1e-6:
+        return rig.min_rot(b, a)
+    e2, f2 = rig._unit(e2), rig._unit(f2)
+    E = np.column_stack([b, e2, np.cross(b, e2)])
+    F = np.column_stack([a, f2, np.cross(a, f2)])
+    return F @ E.T
+
+
 class ClipBuilder:
     def __init__(self, skel: Skeleton, name: str, length: float, loop: bool = False, fps: int = FPS,
                  grounded: bool = True, sparse: bool = True):
@@ -442,7 +465,7 @@ class ClipBuilder:
         v_hand = srl @ np.array([0.0, 1.0, 0.0])          # blade direction in Hand-local space
         parent_R = (W2[lo] @ sk.bones[hand].rest_local)[:3, :3]
         a_local = parent_R.T @ rig._unit(np.asarray(aim, float))
-        R = rig.min_rot(v_hand, a_local)
+        R = _wrist_rot(v_hand, a_local)
         roll = float(pose.get(f"Hand.{side}@roll", (0.0, 0.0, 0.0))[0]) if f"Hand.{side}@roll" in pose else 0.0
         if abs(roll) > 1e-6:
             R = rig.rot_axis(a_local, math.radians(roll)) @ R

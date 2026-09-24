@@ -24,11 +24,38 @@
  "glb": "skerrow_hardy_pine_c.glb",
  "hash": "45959781eb6ee4bb",
  "height_m": 13.34,
+ "impostor": {
+  "albedo": "skerrow_hardy_pine_c_impostor_albedo.png",
+  "axis": [
+   -0.3131,
+   0.0376
+  ],
+  "billboard": "upright",
+  "bottom": -0.131,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "a7a3d8a021c63470",
+  "height": 13.4935,
+  "normal": "skerrow_hardy_pine_c_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "45959781eb6ee4bb",
+  "views": 8,
+  "width": 7.5921
+ },
  "kind": "hardy_pine",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "skerrow_hardy_pine_c_mat",
   "skerrow_hardy_pine_c_leaf_foliage",
-  "skerrow_hardy_pine_c_impostor_foliage"
+  "skerrow_hardy_pine_c_impostor"
  ],
  "materials_used": [
   "pine_bark",
@@ -41,7 +68,7 @@
   },
   {
    "name": "skerrow_hardy_pine_c_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "skerrow_hardy_pine_c_LOD1",
@@ -86,13 +113,12 @@
   "skerrow_hardy_pine_c_leaf_normal.png",
   "skerrow_hardy_pine_c_leaf_orm.png",
   "skerrow_hardy_pine_c_impostor_albedo.png",
-  "skerrow_hardy_pine_c_impostor_normal.png",
-  "skerrow_hardy_pine_c_impostor_orm.png"
+  "skerrow_hardy_pine_c_impostor_nrm.png"
  ],
  "tris": [
   5240,
   1320,
-  8
+  2
  ],
  "version": 3
 }

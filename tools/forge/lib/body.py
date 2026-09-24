@@ -35,7 +35,9 @@ class BodyStyle:
     belly: float = 0.09
     chest: float = 0.5
     shoulders: float = 0.5
-    hands: float = 1.12         # slightly large hands read well
+    # True size. At 1.12 the hand was the "slightly large hand that reads well" of a figure
+    # seen from far off; in the Naming at portrait distance it read as a paddle.
+    hands: float = 1.0
     feet: float = 1.06
 
     @staticmethod
@@ -83,7 +85,8 @@ class HeadStyle:
 # body
 # --------------------------------------------------------------------------------------
 
-def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bool = True) -> Scene:
+def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bool = True,
+               hands: bool = True) -> Scene:
     """The naked body as an SDF scene (Blender space, feet at z=0).
 
     Built from named anatomical masses rather than one smooth tube, because a capsule with
@@ -166,16 +169,26 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
                                 [sx * 0.140 * s, -0.036 * td * s, neck_z - 0.014 * s],
                                 [sh[0] * 0.96, -0.010 * s, sh[2] + 0.014 * s]],
                                [0.012 * b * s, 0.011 * b * s, 0.011 * b * s, 0.015 * b * s]), k=0.042 * s)
-        # trapezius: a flatter slope than before, so the shoulder line is a shelf not a ramp
-        sc.union(sdf.tube_path([[sx * 0.020 * s, 0.014 * s, neck_z + 0.006 * s],
-                                [sx * 0.072 * s, 0.020 * s, neck_z - 0.006 * s],
-                                [sx * 0.130 * s, 0.016 * s, sh[2] + 0.028 * s],
-                                [sh[0] + sx * 0.020 * s, 0.006 * s, sh[2] + 0.020 * s]],
-                               [0.030 * b * s, 0.034 * b * s, 0.042 * b * s, 0.048 * b * s]), k=0.050 * s)
-        # deltoid: a cap that sits over the joint and carries the width
-        sc.union(sdf.ellipsoid(sh + np.array([sx * 0.026 * s, 0.0, 0.014 * s]),
-                               [(0.058 + 0.014 * mus) * lb * s, (0.054 + 0.010 * mus) * lb * s,
-                                (0.062 + 0.012 * mus) * lb * s], rot=rig.rot_axis(FWD, math.radians(-22.0 * sx))),
+        # trapezius: falling gently from the neck to the point of the shoulder. It used to rise
+        # towards the shoulder and end over the joint 5 cm thick, and the deltoid ball sat on
+        # top of that: in the A-pose it was a shoulder; with the arms let down, the mound stayed
+        # up and every figure wore an epaulette at each corner of a flat shelf.
+        sc.union(sdf.tube_path([[sx * 0.020 * s, 0.014 * s, neck_z + 0.004 * s],
+                                [sx * 0.072 * s, 0.020 * s, neck_z - 0.012 * s],
+                                [sx * 0.130 * s, 0.016 * s, sh[2] - 0.004 * s],
+                                [sh[0] - sx * 0.014 * s, 0.006 * s, sh[2] - 0.006 * s]],
+                               [0.030 * b * s, 0.032 * b * s, 0.034 * b * s, 0.030 * b * s]), k=0.050 * s)
+        # deltoid: a teardrop laid along the top and outside of the upper arm, from the point of
+        # the shoulder to a third of the way down, rather than a ball over the joint -- so it
+        # moves with the arm and, with the arm down, rounds the shoulder off instead of
+        # standing up from it
+        el0 = J[f"LowerArm.{side}"]
+        da = sdf._unit(el0 - sh)
+        fa, ua_up = _arm_frame(da, sx)
+        dl_rot = np.stack([da, fa, ua_up], axis=1)
+        sc.union(sdf.ellipsoid(sh + da * 0.034 * s + ua_up * 0.008 * s,
+                               [(0.074 + 0.010 * mus) * lb * s, (0.050 + 0.008 * mus) * lb * s,
+                                (0.047 + 0.008 * mus) * lb * s], rot=dl_rot),
                  k=0.030 * s)
 
     # -- arms -------------------------------------------------------------------------------
@@ -184,7 +197,7 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         el = J[f"LowerArm.{side}"]
         wr = J[f"Hand.{side}"]
         d = sdf._unit(el - sh)
-        fwd, up = _arm_frame(d)
+        fwd, up = _arm_frame(d, sx)
         ua = (0.041 + 0.010 * mus + 0.009 * heavy - 0.004 * fem) * lb * s
         el_r = (0.032 + 0.004 * mus + 0.004 * heavy) * lb * s
         fa = (0.039 + 0.009 * mus + 0.007 * heavy - 0.003 * fem) * lb * s
@@ -201,7 +214,7 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
             sdf.ellipsoid(el + d * (0.26 * fa_len) + fwd * 0.006 * s,
                           [fa * 1.10, fa * 1.08, fa * 1.14], k=0.034 * s),
             # wrist: narrow, which is what makes the hand read as a hand
-            sdf.ellipsoid(wr - d * 0.012 * s, [wrist * 1.12, wrist * 0.92, wrist * 1.10], k=0.020 * s),
+            _wrist(wr, d, wrist, s),
         ]
         if mus > 0.2:
             parts.append(sdf.ellipsoid(sh + d * (0.38 * ua_len) + fwd * 0.014 * s,
@@ -209,7 +222,14 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
             parts.append(sdf.ellipsoid(sh + d * (0.42 * ua_len) - fwd * 0.014 * s,
                                        [0.032 * s, 0.030 * s, 0.038 * s], k=0.038 * s))
         parts.extend(_hand_parts(skel, st, wr, d, fwd, up, sx))
-        sc.union(sdf.group(parts, internal_k=0.016 * s), k=0.026 * s)
+        arm = sdf.group(parts, internal_k=0.016 * s)
+        if not hands:
+            # The hands are meshed finer on their own (`hands_scene`) from this same arm, so the
+            # arm is cut off just before the wrist: the two meshes are one surface either side of
+            # the cut. Ended short and thin instead, the forearm's end stood out over the palm like
+            # a glove's cuff, and ended shorter still, the two surfaces crossed in a ragged line.
+            arm = _cut(arm, wr + d * HAND_CUT * s, d, k=0.002 * s)
+        sc.union(arm, k=0.026 * s)
 
     # -- legs ---------------------------------------------------------------------------------
     for side, sx in (("L", 1), ("R", -1)):
@@ -249,60 +269,81 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
     return sc
 
 
-def _arm_frame(d: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """(front, up) perpendiculars of an arm direction."""
+def _arm_frame(d: np.ndarray, sx: float = -1.0) -> Tuple[np.ndarray, np.ndarray]:
+    """(front, up) perpendiculars of an arm direction: `up` is the upper side of the A-posed arm,
+    the back of the hand, on either side (`sx` +1 left, -1 right).
+
+    It used to be cross(d, front) whatever the side, which is up on the right arm and down on
+    the left: the left hand was built palm up, and anything laid "above" the left arm (the
+    elbow's mass) sat below it."""
     u = FWD - np.dot(FWD, d) * d
     u = sdf._unit(u)
-    v = np.cross(d, u)
+    v = np.cross(d, u) * (-sx)
     return u, v
 
 
 def _hand_parts(skel: Skeleton, st: BodyStyle, wr: np.ndarray, d: np.ndarray,
                 fwd: np.ndarray, up: np.ndarray, sx: float = 1.0) -> List[sdf.Prim]:
-    """A hand, not a paddle: a palm, four fingers as one softly grooved mass with a knuckle
-    ridge, and a thumb that is its own mass set against the palm.  The fingers rest in a
-    relaxed curl, which is what a hand does when an arm hangs."""
+    """A hand at true size: a thin palm, four fingers that are each a finger, and a thumb.
+
+    The old hand was a paddle -- 1.12 scale, 4.8 cm thick, the fingers one grooved mass -- and at
+    the Naming's whole figure it read as a mitten. Now the palm is 3 cm thick and 8 cm across the
+    knuckles, and each finger is its own three-jointed tube, touching its neighbours at the root
+    and parting towards the tip, curled as a hanging hand curls them. `fwd` is the thumb's side,
+    `up` the back of the hand; the palm faces -up. The fingers carry their own small blend so
+    the part's group does not melt them back together; mesh it at `hands_scene`'s spacing."""
     p = skel.props
     s = p.height / rig.DEFAULT_HEIGHT
     hs = st.hands * p.hand_size * s
-    L = 0.170 * hs                 # wrist to fingertip, straight
-    pw = 0.046 * hs                # half width across the palm
-    pt = 0.024 * hs                # half thickness
-    # `fwd` points to the character's front; the palm faces `-up` (inwards, towards the leg)
+    L = 0.182 * hs                 # wrist to the tip of the middle finger, straight
+    pw = 0.0405 * hs               # half the width across the knuckles
+    pt = 0.0140 * hs               # half the thickness of the palm
+    kn = 0.52 * L                  # wrist to the knuckle line
+    frame = np.stack([d, fwd, up], axis=1)
     parts: List[sdf.Prim] = []
-    # palm: a wedge, thicker at the thumb side, thinning towards the little finger
-    palm = sdf.loft([
-        (wr - d * 0.020 * L, 0.030 * hs, 0.022 * hs),
-        (wr + d * 0.16 * L, pw * 0.92, pt * 1.04),
-        (wr + d * 0.42 * L, pw, pt),
-    ], fwd)
-    parts.append(palm)
-    # the knuckle ridge across the top of the palm
-    parts.append(sdf.tube_path([wr + d * 0.46 * L + fwd * pw * 0.88,
-                                wr + d * 0.50 * L + fwd * pw * 0.10,
-                                wr + d * 0.47 * L - fwd * pw * 0.80],
-                               [0.013 * hs, 0.015 * hs, 0.012 * hs], k=0.012 * s))
-    # the finger mass, curling slightly: a relaxed hand is never flat
-    curl = -up * 0.030 * hs
-    fing = sdf.loft([
-        (wr + d * 0.50 * L, pw * 0.94, pt * 0.92),
-        (wr + d * 0.72 * L + curl * 0.35, pw * 0.94, pt * 0.86),
-        (wr + d * 0.90 * L + curl * 0.80, pw * 0.84, pt * 0.76),
-        (wr + d * 1.00 * L + curl * 1.25, pw * 0.62, pt * 0.62),
-    ], fwd)
-    parts.append(sdf.Prim(fing.fn, fing.lo, fing.hi, "union", 0.010 * s))
-    # three grooves between the fingers, deepest at the tips
-    for i, f in enumerate((0.48, 0.02, -0.46)):
-        a = wr + d * 0.55 * L + fwd * (pw * f)
-        c = wr + d * 1.01 * L + fwd * (pw * f * 0.72) + curl * 1.25
-        parts.append(sdf.tube_path([a, (a + c) * 0.5 + curl * 0.35, c],
-                                   [0.0042 * hs, 0.0062 * hs, 0.0078 * hs], k=0.0055 * s, op="subtract"))
-    # thumb: its own mass, set low and across the palm, with a visible web
-    tb0 = wr + d * 0.20 * L + fwd * pw * 0.80
-    tb1 = tb0 + sdf._unit(fwd * 0.52 + d * 0.78 - up * 0.22) * 0.070 * hs
-    tb2 = tb1 + sdf._unit(fwd * 0.16 + d * 0.86 - up * 0.46) * 0.056 * hs
-    parts.append(sdf.tube_path([tb0, tb1, tb2], [0.021 * hs, 0.018 * hs, 0.014 * hs], k=0.016 * s))
-    parts.append(sdf.ellipsoid(tb0 - fwd * 0.004 * hs, [0.020 * hs, 0.020 * hs, 0.018 * hs], k=0.018 * s))
+    # palm: thicker at the heel of the hand, thinning to the knuckles
+    parts.append(sdf.loft([
+        (wr - d * 0.030 * L, 0.027 * hs, 0.019 * hs),
+        (wr + d * 0.14 * L + fwd * 0.004 * hs, pw * 0.88, pt * 1.20),
+        (wr + d * 0.36 * L, pw * 0.98, pt * 1.02),
+        (wr + d * (kn - 0.012 * hs), pw * 0.95, pt * 0.86),
+    ], fwd))
+    # the heel of the thumb and the pad under the little finger, on the palm side
+    parts.append(sdf.ellipsoid(wr + d * 0.20 * L + fwd * pw * 0.42 - up * pt * 0.50,
+                               [0.026 * hs, 0.019 * hs, 0.011 * hs], k=0.010 * s, rot=frame))
+    parts.append(sdf.ellipsoid(wr + d * 0.24 * L - fwd * pw * 0.55 - up * pt * 0.45,
+                               [0.028 * hs, 0.012 * hs, 0.009 * hs], k=0.010 * s, rot=frame))
+    # fingers: (across the knuckles as a fraction of pw, length as a fraction of L, radius,
+    # knuckle set back from the line, splay)
+    fingers = [(0.70, 0.43, 0.0094, 0.020, 0.035),    # index
+               (0.23, 0.47, 0.0096, 0.000, 0.008),    # middle
+               (-0.24, 0.44, 0.0090, 0.010, -0.020),  # ring
+               (-0.68, 0.35, 0.0079, 0.045, -0.050)]  # little
+    curl = (9.0, 24.0, 18.0)       # degrees at each joint: a relaxed hand
+    seg = (0.47, 0.29, 0.24)
+    knuckles = []
+    for off, ln, r, back, splay in fingers:
+        base = wr + d * (kn - back * L) + fwd * (pw * off)
+        knuckles.append(base + up * pt * 0.55)
+        dirv = sdf._unit(d + fwd * splay)
+        pts = [base - dirv * 0.014 * hs, base]
+        cur, ang = base, 0.0
+        for k in range(3):
+            ang += curl[k]
+            a = math.radians(ang)
+            cur = cur + sdf._unit(dirv * math.cos(a) - up * math.sin(a)) * seg[k] * ln * L
+            pts.append(cur)
+        rr = r * hs
+        parts.append(sdf.tube_path(pts, [rr * 1.04, rr, rr * 0.94, rr * 0.86, rr * 0.74], k=0.0025 * s))
+    # the knuckles standing a little proud on the back of the hand
+    parts.append(sdf.tube_path(knuckles, 0.0070 * hs, k=0.006 * s))
+    # thumb: from the heel of the palm, forward and across, curling in towards the palm
+    tb0 = wr + d * 0.12 * L + fwd * pw * 0.66 - up * pt * 0.20
+    tb1 = tb0 + sdf._unit(fwd * 0.45 + d * 0.82 - up * 0.30) * 0.043 * hs
+    tb2 = tb1 + sdf._unit(fwd * 0.16 + d * 0.88 - up * 0.42) * 0.030 * hs
+    tb3 = tb2 + sdf._unit(fwd * 0.04 + d * 0.82 - up * 0.55) * 0.024 * hs
+    parts.append(sdf.tube_path([tb0, tb1, tb2, tb3], [0.0168 * hs, 0.0126 * hs, 0.0113 * hs, 0.0097 * hs],
+                               k=0.006 * s))
     return parts
 
 
@@ -361,6 +402,68 @@ def body_mesh(skel: Skeleton, style: Optional[BodyStyle] = None, spacing: float 
               smooth: int = 4) -> Tuple[np.ndarray, np.ndarray]:
     sc = body_scene(skel, style)
     return sdf.mesh_from_scene(sc, spacing * (skel.props.height / rig.DEFAULT_HEIGHT), smooth_iters=smooth, project=1)
+
+
+# Where the body stops and the separately meshed hand takes over, along the arm from the wrist
+# joint (m, at 1.78 m): just short of it, before the palm's blend begins.
+HAND_CUT = -0.008
+
+
+def _cut(prim: sdf.Prim, point: np.ndarray, normal: np.ndarray, k: float = 0.0) -> sdf.Prim:
+    """`prim` on the side of the plane through `point` that `normal` points away from, the edge
+    rounded over `k`."""
+    n = np.asarray(normal, float)
+
+    def fn(P):
+        return sdf.smax(prim.fn(P), (P - point) @ n, k)
+    return sdf.Prim(fn, prim.lo, prim.hi, prim.op, prim.k)
+
+
+def hands_scene(skel: Skeleton, style: Optional[BodyStyle] = None) -> Scene:
+    """Both hands on their own, for meshing finer than the body: at the body's 8 mm the gap between
+    two fingers is not there to be found, and the fingers came out as one mass whatever the field
+    said. Each is the body's own arm from 3 cm above the cut (`HAND_CUT`) outwards, sunk 4 mm
+    under the body's surface until 5 mm before the cut and exactly on it from there, so the body's
+    forearm covers it up the arm and it covers the body's end, which is rounded off inside it."""
+    st = style or BodyStyle()
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    arms = body_scene(skel, st, ground_cut=False)
+    sc = Scene()
+    J = skel.J
+    for side in ("L", "R"):
+        sh, el, wr, tip = J[f"UpperArm.{side}"], J[f"LowerArm.{side}"], J[f"Hand.{side}"], J[f"HandTip.{side}"]
+        d = sdf._unit(el - sh)
+        # the arm group of this side: the one whose bounds hold the wrist
+        group = next(p for p in arms.prims if p.op == "union" and np.all(p.lo <= wr) and np.all(p.hi >= wr))
+        cut = wr + d * HAND_CUT * s
+        start = cut - d * 0.030 * s
+
+        def fn(P, group=group, d=d, cut=cut, start=start):
+            t = (P - cut) @ d
+            # Well under the body's surface (4 mm, more than decimation moves either mesh) up the
+            # forearm, and on it for the last 5 mm before the cut, where the body's end rounds off
+            # inside it: the hand covers the join. Sunk 0.8 mm to the cut, the two surfaces crossed
+            # in a ragged line; sunk 4 mm to the cut, the rounded end left a groove round the wrist.
+            sunk = 0.004 * s * np.clip((-t - 0.005 * s) / (0.003 * s), 0.0, 1.0)
+            return np.maximum(group.fn(P) + sunk, -((P - start) @ d))
+        lo = np.minimum(start, tip) - 0.09 * s
+        hi = np.maximum(start, tip) + 0.09 * s
+        sc.union(sdf.Prim(fn, lo, hi, "union", 0.0))
+    return sc
+
+
+def _wrist(wr: np.ndarray, d: np.ndarray, wrist: float, s: float) -> sdf.Prim:
+    return sdf.ellipsoid(wr - d * 0.012 * s, [wrist * 1.12, wrist * 0.92, wrist * 1.10], k=0.020 * s)
+
+
+def body_mesh_parts(skel: Skeleton, style: Optional[BodyStyle] = None, spacing: float = 0.0080,
+                    hand_spacing: float = 0.0026, smooth: int = 4):
+    """The body without its hands at `spacing`, and the hands at `hand_spacing`: two meshes, joined
+    by the caller, the hands' wrist stubs hidden inside the body's forearms."""
+    k = skel.props.height / rig.DEFAULT_HEIGHT
+    body = sdf.mesh_from_scene(body_scene(skel, style, hands=False), spacing * k, smooth_iters=smooth, project=1)
+    hands = sdf.mesh_from_scene(hands_scene(skel, style), hand_spacing * k, smooth_iters=2, project=1)
+    return body, hands
 
 
 def _face_stations(s: float, V: float, chin_z: float, hs: "HeadStyle", fem: float,
@@ -887,6 +990,17 @@ def mesh_arrays(ob) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 def set_verts(ob, verts: np.ndarray) -> None:
     ob.data.vertices.foreach_set("co", np.asarray(verts, float).ravel())
     ob.data.update()
+
+
+def join_into(dst, others: Sequence) -> None:
+    """Merge the mesh objects `others` into `dst` (one object, several shells)."""
+    bpy = _bpy()
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in others:
+        o.select_set(True)
+    dst.select_set(True)
+    bpy.context.view_layer.objects.active = dst
+    bpy.ops.object.join()
 
 
 def decimate(ob, target_tris: int, symmetry: bool = True) -> None:
