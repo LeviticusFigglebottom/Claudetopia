@@ -16,6 +16,10 @@ const DATA_DIR := "res://terrain_data"
 const ASSETS_PATH := "res://world/terrain_assets.tres"
 const TEXTURE_DIR := "res://assets/textures/terrain"
 const REGION_SIZE := 1024
+## The metres between two height samples when the manifest does not say (the full 4096 build's).
+## A build says it as `spacing_m`: 2 at 4096, 8 for a 1024 preview. Fixed at 2, a 1024 build went
+## in as a 2 km square in the north-west corner of the world, one region, and the height at the
+## world's centre came back NaN: every in-engine look at a preview world stood on nothing.
 const VERTEX_SPACING := 2.0
 
 ## Slot order is binding (docs/CONTRACTS.md §5); uv_scale is 1 / tile size in metres.
@@ -85,7 +89,7 @@ func run() -> int:
 	# region_size and vertex_spacing must be set before importing, and region_size only
 	# takes effect through change_region_size() once the data object exists.
 	terrain.call("change_region_size", REGION_SIZE)
-	terrain.set("vertex_spacing", VERTEX_SPACING)
+	terrain.set("vertex_spacing", spacing_of(manifest, grid))
 	_configure_material(terrain.get("material"))
 	if int(terrain.get("region_size")) != REGION_SIZE:
 		Log.error("ImportTerrain", "region size stuck at %d (wanted %d)" % [int(terrain.get("region_size")), REGION_SIZE])
@@ -126,6 +130,16 @@ func _clear_data_dir() -> void:
 	for f in dir.get_files():
 		if f.begins_with("terrain3d") and (f.ends_with(".res") or f.ends_with(".tres")):
 			dir.remove(f)
+
+
+## The metres between two of the build's height samples: its own `spacing_m`, or its size over its
+## grid, or VERTEX_SPACING.
+static func spacing_of(manifest: Dictionary, grid: int) -> float:
+	if manifest.has("spacing_m"):
+		return float(manifest["spacing_m"])
+	if manifest.has("size_m") and grid > 0:
+		return float(manifest["size_m"]) / float(grid)
+	return VERTEX_SPACING
 
 
 func _read_manifest() -> Dictionary:
