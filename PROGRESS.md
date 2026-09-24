@@ -5440,3 +5440,57 @@ came from a scratch tool that sampled the heights half a texel off. Corrected, a
 water in the sea or a lake, a 1024 build went from 590 to 462 samples more than 3 m over their
 ground with the falls change. Measured against the bed the carve means to cut, the samples more
 than 1.5 m over it went from 336 to 78.
+## Dense but sprawling: the opening's walk, the horizon, the rivers, the Hollow
+
+The user said the start felt sparse, and the chart's rivers were ruler-straight.
+
+**The walk, measured.** From the Hushline Stair to Merrowby is 5.7 km, 19 minutes at a jog. It was
+surveyed on the rebuilt atlas world with the game's own sightline model:
+* Something authored is in sight within 700 m at every 75 m of the road.
+* No dry ground within 2 km of the road is 450 m from anything.
+
+The sparseness is on screen, not on the map. The streamer builds five cells across, so nothing past
+about 0.6 km is drawn but the ground. The Stair Head "sees" Merrowby, the Toll and the Brow Beacon,
+and above Pilgrim's Ash the model sees the Grandfather, and none of them is there. `docs/HORIZON.md`
+is the list a horizon layer draws from. It covers the landmark models' measured heights and
+silhouettes, every tall point of interest, settlement rooflines, the Thornmarch and the Hushline as
+bands, and what is lit at night. The graphics owner has it.
+
+**Three thin stretches, filled.**
+* Minute 7, the Choir to the Glass Bridge, had nobody and nothing new. The Sweeper's Lean-To is there
+  now. Arn Sweeting is a pilgrim who came back up the Stair, sweeps the grey off the road and gives
+  **The Swept Road**: a bell to the new Turning Cairn on the Stair's last bend, to tie, ring or keep.
+  His box gives up something new after each of three main-line quests.
+* Minutes 11 to 14 were a road that climbed to a via point on a knoll and came back. The via keeps to
+  the valley floor now, and the builder cuts such spurs besides.
+* Minute 17 has the Hayward's Perch. The Novices' Seats give the plateau's lip its view over the
+  Hush.
+
+**Rivers.** The seven that come down out of the heights fall 10 to 26 in a hundred, too steep for
+the builder's meanders, so their bends are drawn. Each swing sits on the low side of the old line.
+Bridges, fords and falls are held, and every mouth is where it was. The land agent meanders the slow
+rivers, and every drawn point is an exact anchor. `"meander": 0` on the Blackgill is still to add,
+once the schema is on main.
+
+**Grandfather Hollow.** The town and the tree share one centre, and its fabric was being laid inside
+the trunk.
+* The builder (4bc399f6) lays a ring street at 48 m, which the four roads end on, and a spur at 304°
+  to the trunk's foot, on a pad flat to 72 m.
+* WorldDoors reserves every landmark's footprint, and the fabric keeps its houses and props off
+  reserved ground.
+* The door at the spur opens into **the Hollow**, a new forged house. It is the first rooms in the
+  heartwood, where Cille Tamwood, the Keeper of Knots, lives. The Hearth-Roll on its shelf tells the
+  tree's story and leads into her quest.
+
+### Tests
+
+* test_content 43, test_books 6, test_dialogue 54, test_map_quests 9, test_quest_items 13,
+  test_poi_encounters 10, test_settlements 22, test_every_door_both_ways and test_atlas (16) pass.
+* The quest walker walks The Swept Road every way.
+* test_poi_people fails twice until the next build: the Sweeper's Lean-To has no pad yet, and Willow
+  Isle waits for the readiness merge.
+
+### Next
+
+* The main rebuild batches the four new pads, the redrawn rivers, the meander and the Hollow's ring.
+* Then: `./run.sh quests`, test_poi_people, and the Blackgill's meander key.

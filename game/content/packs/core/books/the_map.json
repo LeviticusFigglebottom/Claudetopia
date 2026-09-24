@@ -586,5 +586,47 @@
     "author": "the Guild's salvage clerks, and one other",
     "category": "book",
     "body": "# The scales\n\n*Fused solid, one pan down. The Order says something was weighed here and found wanting.*\n\n---\n\n1004: levers. 1021: oxen. 1033: a Sayer. The scales did not move.\n\n*This spring, in a hand that is not the Guild's:* The other pan is down now. Nothing has been taken off the first and nothing put on the second.\n\nSomething that was weighed here and found wanting has been weighed again, and the other side is lighter. — *The Order will not say what. The pilgrims say the Foundling crossed the heath the week it moved.*"
+  },
+  {
+    "id": "core:book/note_haywards_perch",
+    "title": "Scratched on Bark, in the Post",
+    "author": "the hayward of Merrowby",
+    "category": "book",
+    "body": "# Strays, this week\n\n*One line a morning, cut first and written after, because the posts are the count and the bark is only so I remember.*\n\n---\n\n**Kindleday.** Two of Tamwick's through the hedge by the ford. Walked back.\n\n**Tallowday.** Nothing out. Which is a thing I have written twice in eleven years.\n\n**Merrowday.** One wether on the common, no mark I can read from up here. Went down to him and it is a notch under and a notch over. Took him to the Pinfold.\n\n**Thornday.** He is on the common again at first light, and the Pinfold still has him. I have cut him on the south post anyway, because the post is the count.\n\n*Under it, smaller:* I did not cut the one above mine."
+  },
+  {
+    "id": "core:book/note_novices_seats",
+    "title": "On a Novice's Slate",
+    "author": "a novice of the Tolling Order, on the first night",
+    "category": "book",
+    "body": "# The count, from the seats\n\n*Four rows of ten, and begin again. Do not turn round.*\n\n---\n\nThe first row, even, a stroke every few minutes.\n\nThe second row, even.\n\nThe third row goes on past ten: fourteen strokes, crowded to the slate's edge, as if the bells came faster than a hand could keep.\n\nThe fourth row is not there.\n\n---\n\n*Scratched under it:* I did not turn round. It was behind me the whole time, and it was closer at the end. I did not turn round. Tell Cadwen I did not."
+  },
+  {
+    "id": "core:book/swept_pass",
+    "title": "A Pilgrim's Pass",
+    "author": "the Tollmere charter-board, and the waystones",
+    "category": "book",
+    "body": "# Pass for one pilgrim, to the Choir and the line\n\n*Stamped at each waystone from the Ninth to the Stair Head. Paid in full at the charter-board. Not to be sold on.*\n\n---\n\nNinth. Tenth, the bowl empty. Eleventh. Every one down the road to the Stair Head, in the Wardens' green wax, eleven of them.\n\nThen a twelfth, in grey wax, with no waystone's mark in it. There is no twelfth waystone.\n\n---\n\n*Arn Sweeting, when you ask:* It was under the grey by the Glass Bridge. The grey is dry, and the wax was still soft. I have put the broom away for the day."
+  },
+  {
+    "id": "core:book/swept_page",
+    "title": "A Page of a Burial Count",
+    "author": "a reedfolk counter of Isseva",
+    "category": "book",
+    "body": "# The count at the water-burial jetty\n\n*A lantern a year for each one we put in the water, a spoonful of oil to the year.*\n\n---\n\nThe names down the page are Ouls and Sas and Ferrens, in the reedfolk way, the year and the lanterns.\n\nThe last line has no name. It has the year, this year, and the lanterns, and the lanterns are none.\n\n---\n\n*Arn Sweeting, when you ask:* It is wet. It came out of the grey on the Choir road, and the grey is dry, and there is no water nearer than the Glassbed. It has been wet for a week in a dry box. I think it is still being counted."
+  },
+  {
+    "id": "core:book/swept_count",
+    "title": "A Count-Card for One Night",
+    "author": "a knight of the Tolling Order",
+    "category": "book",
+    "body": "# The ring, one night\n\n*One stroke a bell. The Order's count, kept at the ring by whoever has the watch, handed to Cadwen at first light.*\n\n---\n\nForty strokes in four rows of ten, the way the Order counts, down the card.\n\nThen a gap the width of a thumb.\n\nThen the count starts again at the bottom of the card, in a different hand, and runs up, and there are twelve.\n\n---\n\n*Arn Sweeting, when you ask:* Cadwen says it is Toren's card and Toren says he never lost one. I did not tell either of them where it was: on the road, face up, pointing at the Choir, and swept clean all round, as if somebody had done my work for me."
+  },
+  {
+    "id": "core:book/the_hearth_roll",
+    "title": "The Hearth-Roll of the Hollow",
+    "author": "the Keepers of Knots, eleven hands",
+    "category": "book",
+    "body": "# The Hearth-Roll\n\n*A line for every hearth lit in the Hollow, and a knot lit in the tree for each, from the knot before it. Kept at the foot of the tree by whoever keeps the knots.*\n\n---\n\n**The first line.** The winter the Grandfather died. It had stood ninety of our fathers' lengths and it dropped every leaf in one night of no wind, and in the morning it was grey from the root to the crown and hollow, and it hummed. Fernhold said leave it. The women went in. They carried one coal from the antler hall in a clay pot, and planked these rooms into the heartwood, and lit the first knot from the coal, high in the trunk where the town would be. *One hearth: the Hollow's own.*\n\n**The second line.** Wenna Tamwood, a hearth on the first walk. The second knot, lit from the first.\n\n*And so on down the roll, in eleven hands, the ink browner at the top: the Hollins, the Larkfolds, the Thornbys, a Cooper from Tamwick, crossed through and written in again. A hearth that goes cold keeps its line and its knot. Nobody is taken off.*\n\n**The two hundred and sixth line.** Gil Larkfold's, the Knot-Hearth, lit in the biggest knot so the whole Hollow could sit at it.\n\n---\n\n*Under it, the number 207 is written and ruled off, in the present Keeper's hand, with no name after it.*\n\n*At the foot of the roll, in the first hand:* The tree is dead and it is warm. We do not know why, and we have agreed not to ask it while we are living in it."
   }
 ]

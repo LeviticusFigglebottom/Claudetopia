@@ -6,12 +6,24 @@ class_name Schedules
 ##       an array of any of those. hour: float 0..24. place: a place id or "home".
 ## activity: sleep | work | eat | idle | pray | socialise | patrol | shop (travel is derived).
 ## Rules: the current entry is the latest one at or before the hour (wrapping to earlier days);
-## travel to the next entry begins TRAVEL_LEAD_HOURS before it; rain sends outdoor `idle` home.
+## travel to the next entry begins as long before it as the walk there takes along the roads
+## (`travel_hours`: at least TRAVEL_LEAD_HOURS, at most MAX_TRAVEL_HOURS, and never more than
+## most of the time since the current entry began); rain sends outdoor `idle` home.
 ## A def may also carry `holds: [{when: [conditions], place, activity, spot}]`, which come before
 ## the timetable whenever their conditions hold (see `held_entry`).
 
 const ACTIVITIES: Array[String] = ["sleep", "work", "eat", "idle", "pray", "socialise", "patrol", "shop"]
 const TRAVEL_LEAD_HOURS := 20.0 / 60.0
+## The walking pace a journey's time is reckoned at, in metres of road a real second: an NPC's
+## travel pace (Npc.TRAVEL_SPEED), so somebody walked alongside keeps up with where the clock
+## says they have got to.
+const TRAVEL_PACE_MPS := 3.4
+## No journey takes longer than this, however far; a longer walk is made at a brisker pace.
+const MAX_TRAVEL_HOURS := 3.0
+## A journey never takes more than this share of the time the current entry had.
+const TRAVEL_SHARE_OF_GAP := 0.75
+## Real seconds in a game hour at the default day length (48 minutes), when there are no settings.
+const SECONDS_PER_GAME_HOUR := 120.0
 const RAINY: Array[String] = ["rain", "drizzle", "storm", "squall"]
 const DAY_NAMES: Array[String] = ["kindleday", "tallowday", "merrowday", "thornday", "skerrday", "hushday", "tollday"]
 
@@ -171,8 +183,14 @@ static func entry_at(schedule: Array, weekday: int, hour: float, weather: String
 	if not next.is_empty():
 		var nxt := resolve(next, weather, home_place)
 		out["next"] = {"place": nxt["place"], "activity": nxt["activity"], "spot": nxt["spot"], "starts_in_hours": next_start - hour}
-		if next_start - hour <= TRAVEL_LEAD_HOURS and nxt["place"] != cur["place"]:
+		var lead := travel_hours(str(cur["place"]), str(nxt["place"]), next_start - current_start)
+		if next_start - hour <= lead and nxt["place"] != cur["place"]:
 			out["travelling"] = true
+			# on the road: out of doors whatever the entry they left said, and between two places
+			out["indoors"] = false
+			out["travel_from"] = cur["place"]
+			out["travel_hours"] = lead
+			out["arrives_in_hours"] = next_start - hour
 			out["place"] = nxt["place"]
 			out["spot"] = nxt["spot"]
 			out["activity"] = "travel"
@@ -181,6 +199,31 @@ static func entry_at(schedule: Array, weekday: int, hour: float, weather: String
 			if nxt.has("clip"):
 				out["clip"] = nxt["clip"]
 	return out
+
+
+## How long before an entry at `to` somebody at `from` sets out: the walk along the roads
+## (`RoadRoutes`) at TRAVEL_PACE_MPS, at least TRAVEL_LEAD_HOURS and at most MAX_TRAVEL_HOURS, and
+## at most TRAVEL_SHARE_OF_GAP of the `gap_hours` the entry before it had. Places the roads do
+## not know are TRAVEL_LEAD_HOURS apart.
+static func travel_hours(from: String, to: String, gap_hours: float = INF) -> float:
+	if from == to or from == "" or to == "":
+		return TRAVEL_LEAD_HOURS
+	var metres := RoadRoutes.length_between(from, to)
+	if metres <= 0.0:
+		return TRAVEL_LEAD_HOURS
+	var hours := metres / TRAVEL_PACE_MPS / _seconds_per_game_hour()
+	hours = minf(hours, MAX_TRAVEL_HOURS)
+	if gap_hours < INF:
+		hours = minf(hours, gap_hours * TRAVEL_SHARE_OF_GAP)
+	return maxf(hours, TRAVEL_LEAD_HOURS)
+
+
+static func _seconds_per_game_hour() -> float:
+	var tree := Engine.get_main_loop() as SceneTree
+	var settings: Node = tree.root.get_node_or_null("Settings") if tree != null and tree.root != null else null
+	if settings != null and settings.has_method("get_value"):
+		return float(settings.call("get_value", "gameplay", "day_length_minutes", 48.0)) * 60.0 / 24.0
+	return SECONDS_PER_GAME_HOUR
 
 
 ## Convenience: state for a whole npc def at the clock's current day/time. A hold that applies

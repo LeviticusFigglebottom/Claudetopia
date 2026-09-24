@@ -581,12 +581,28 @@ def lights_for(rooms: list[dict], placements: list[dict], recipe: dict) -> list[
     return out
 
 
+BOOK_PROPS = ("book_single", "book_stack", "roll_book", "ledger")
+
+
+def shelve(recipe: dict, placements: list[dict]) -> None:
+    """A recipe's `books` names what lies on a room's book props: {"hall": {"book": id, "fixed":
+    true}}. The first book prop in that room carries it (house_interior.gd makes it readable);
+    otherwise the house's shelf gets what the culture pool picks. A room with no book prop is an
+    error, since the recipe has promised something that would not be there."""
+    for room_id, spec in (recipe.get("books") or {}).items():
+        target = next((p for p in placements if p.get("room") == room_id and p.get("prop") in BOOK_PROPS), None)
+        if target is None:
+            raise SystemExit("%s: the recipe puts a book in '%s' and nothing there holds one" % (recipe.get("id", "?"), room_id))
+        target.update({k: v for k, v in spec.items() if k in ("book", "item", "fixed")})
+
+
 def build(recipe: dict, out_root: str, quiet: bool = False) -> dict:
     name = recipe["name_slug"]
     rng = np.random.default_rng(int(recipe.get("seed", 1)))
     rooms = plan(recipe, rng)
     shell, timber, doors, windows = build_shell(rooms, recipe, rng)
     placements = dress(rooms, recipe, doors, windows, rng)
+    shelve(recipe, placements)
     lights = lights_for(rooms, placements, recipe)
 
     folder = os.path.join(out_root, name)
