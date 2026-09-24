@@ -18,6 +18,7 @@
 #   ./run.sh assets     rebuild generated assets (needs Blender)
 #   ./run.sh interiors  rebuild every cave and house from its recipe
 #   ./run.sh import     (re)import the Godot project headlessly
+#   ./run.sh seed-import CHECKOUT   link CHECKOUT's imported files in, then import what differs
 #   ./run.sh warnings   count the GDScript warnings, and fail if the game's grew past the baseline
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -165,6 +166,12 @@ xvfb() { if have_display; then "$@"; else xvfb-run -a -s "-screen 0 1600x900x24"
 # import then runs as it is. IMPORT_LOG names a file for its output (install_world.sh keeps one).
 import_project() {
   need_godot
+  # Godot redoes an import only when its source's modified time has changed, so an import cache
+  # linked from another checkout (seed-import) or a file whose time was kept stays stale: its
+  # sources are touched first (tools/debug/import_check.py compares each import's recorded md5).
+  if need_python >/dev/null 2>&1; then
+    "$PY" "$ROOT/tools/debug/import_check.py" --touch-stale >&2 || true
+  fi
   local ours=0
   if [ ! -e "$GAME/override.cfg" ]; then
     printf '%s\n[editor]\n\nimport/use_multiple_threads=false\n' "$IMPORT_OVERRIDE_MARK" > "$GAME/override.cfg" && ours=1
@@ -409,6 +416,15 @@ case "$cmd" in
     "$PY" "$ROOT/tools/interiors/house_forge.py" "$ROOT"/tools/interiors/recipes/houses/*.json --out "$GAME/assets/models/interior"
     import_project ;;
   import)
+    import_project ;;
+  seed-import)
+    # Link another checkout's imported files into this one, so a checkout on a shared disk does not
+    # import every asset again, then import: whatever differs here is found stale and redone.
+    src="${1:-}"
+    [ -n "$src" ] && [ -d "$src/game/.godot/imported" ] \
+      || { echo "usage: ./run.sh seed-import <another checkout with game/.godot/imported>" >&2; exit 2; }
+    mkdir -p "$GAME/.godot/imported"
+    cp -al --remove-destination "$src/game/.godot/imported/." "$GAME/.godot/imported/"
     import_project ;;
   *)
     echo "unknown command: $cmd"; exit 2 ;;
