@@ -10,9 +10,11 @@ extends Node3D
 ## scatter when it is built, as the horizon's stand-ins do.
 ##
 ## The Hushline is not a line: from the Stair Head and the Choir it is a pale, colourless haze
-## over everything south. A curtain along the south cliff foot, dense at the ground and gone by
-## seventy metres up, that thins away as the eye comes near it, so walking into the Hush is
-## walking into mist and not into a painted sheet.
+## over everything south. A curtain along the south cliff foot, standing from the Hush's floor to
+## above the cliff's brow (the Stair Head's eye is 110 m up and the foot is at sea level, so a
+## bank any lower is hidden by the edge), dense to two-thirds of its height and gone by its top,
+## that thins away as the eye comes near it, so walking into the Hush is walking into mist and
+## not into a painted sheet.
 
 const THORNMARCH_X := Vector2(3925.0, 4030.0)
 const THORNMARCH_REGION := "core:region/briarwold"
@@ -20,9 +22,9 @@ const THORNMARCH_TREE := "res://assets/models/trees/briarwold_black_ash_a/briarw
 ## Metres between trees along the wall, and how far either side of it a row is thrown.
 const THORNMARCH_STEP := 9.0
 const THORNMARCH_ROWS := 3
-const HUSHLINE_Z := 3930.0
+const HUSHLINE_Z := 3900.0
 const HUSHLINE_X := Vector2(-1600.0, 1600.0)
-const HUSHLINE_HEIGHT := 70.0
+const HUSHLINE_HEIGHT := 150.0
 const HUSHLINE_SHADER := preload("res://assets/shaders/hushline_haze.gdshader")
 
 var provider: TerrainProvider = null
