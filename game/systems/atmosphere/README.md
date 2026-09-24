@@ -196,14 +196,19 @@ the region's (`god_rays`): on Forward+ with volumetric fog turned on, its volume
 and scatters toward the sun. On Compatibility there are none, and the region does not lean on them.
 
 **Skerrow Heights — Bone and Slate.** Cold, clear, hard light from the highest sky and the lowest
-sun (scale 0.38: 32° at two in the afternoon, so every crag throws a long shadow), shadows a deep
-cold blue straight from the sky (`sky_contribution` 0.8). The thinnest air of the six (fog
+sun (scale 0.38: 32° at two in the afternoon, so every crag throws a long shadow), a near-white
+sun (`#f2eee4`) and a grey fill with a little of the sky in it (`#a9adb8`, `sky_contribution`
+0.45). The fill was a deep cold blue straight from the sky (0.8 of it, `#9fb6e6`), the sun, the
+midtones, the highlights and the lifted blacks all leaned blue as well, and the fells read as
+blue-grey plastic: the cold is in the air and the distance now, not painted over the rock, which
+is weathered grey-brown with strata and lichen (`limestone`, `granite`, `scree`). The thinnest air of the six (fog
 0.00014) and a far horizon that goes to sky-blue rather than to grey; almost no haze, and only
 eighty metres below you in the gorges. The haze is 0.0005: Godot's height fog is measured by how
 far a thing stands under the haze's top, not by how far it is from you, and at 0.0015 the whole
-island seen from a 700 m vista stood half-white under a top eighty metres below the eye. High
-contrast, cool, desaturated, wind-streaked cirrus, alpenglow at dawn (`sun_color_low` `#ffb8a8`),
-and snow under a bright blue moon.
+island seen from a 700 m vista stood half-white under a top eighty metres below the eye. Contrast
+1.12 (1.22 made every slope a hard facet), a paler sky (`#b3c4d8`), a little cirrus (0.25: at
+0.6 it streaked the whole sky), alpenglow at dawn (`sun_color_low` `#ffb8a8`), and snow under a
+bright blue moon.
 
 **Cinderlea — Ember Ash.** A sun that never climbs (nine degrees at half past four) and burns
 gold (`#ffd49a`, 1.25) through the ash, with a haze that glows round it (`fog_sun_scatter`
