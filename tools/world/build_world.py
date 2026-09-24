@@ -657,9 +657,21 @@ def build(args) -> dict:
         # where each point stands in the shape of the land, for the rules that grow on crests
         # or lie in hollows (only the `cover` rules ask)
         tpi = CELLS.topographic_position(H, grid.spacing) if cover else None
+        # what each field carries (the number the textures sow by) and how far a settlement is
+        parcel = np.where(field_labels >= 0, FL.parcel_value(field_labels, 402), -1.0).astype(np.float32)
+        settled = np.zeros(H.shape, dtype=bool)
+        X, Z = grid.mesh()
+        for p in pad_targets:
+            if ":place/" in str(p["id"]) and RD.FABRIC_COUNT.get(str(p.get("kind", "")), 0) > 0:
+                settled |= (X - float(p["position"][0])) ** 2 + (Z - float(p["position"][1])) ** 2 \
+                    <= RD.pad_radius(p) ** 2
+        place_d = (ndimage.distance_transform_edt(~settled) * grid.spacing).astype(np.float32) \
+            if settled.any() else np.full(H.shape, 1e6, dtype=np.float32)
+        del settled, X, Z
         sw = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask,
                                 ctx.slope, bank, regions, water_d=water_d, field_d=field_d,
-                                pad_t=pad_t, tpi=tpi, forests=GEO.forests(grid, atlas))
+                                pad_t=pad_t, tpi=tpi, forests=GEO.forests(grid, atlas),
+                                parcel=parcel, place_d=place_d)
         buckets = CELLS.scatter(sw, rules, regions, seed, repo_root=REPO)
         # Standing stones are set, not scattered: a ring at the Moot, pairs flanking a road
         # where it crosses the high ground, and a few alone on skylines. They go into the same

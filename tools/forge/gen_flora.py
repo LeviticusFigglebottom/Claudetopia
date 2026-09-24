@@ -163,6 +163,24 @@ def grey_grass(pal, rng, params, variant, ctx):
     return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
 
 
+def meadow_grass(pal, rng, params, variant, ctx):
+    """Meadow: long grass gone to seed, knee high and a stride across. A grass clump is a tuft a
+    hand across, and scattered over a field at any count a machine can draw it read as single
+    strands on a lawn; a field of this reads as a meadow at a tenth of the count."""
+    greens = [pal.tint(P.lin("#5f8a3c"), "green", 0.45),
+              pal.tint(P.lin("#86a24c"), "green", 0.30),
+              pal.tint(P.lin("#b9a05a"), "warm", 0.35),
+              pal.tint(P.lin("#6f9446"), "green", 0.4)]
+    names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], greens, seed=rng.randrange(9999),
+                          size=256 if ctx["quick"] else 512, blades=46, width=0.026, lean=0.45,
+                          seed_head=pal.tint(P.lin("#c9aa62"), "warm", 0.4), bend=0.7)
+    mat = _mat(ctx["out_dir"], "%s_meadow_foliage" % ctx["name"], names)
+    h = params.get("height", rng.uniform(0.55, 0.85))
+    ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 11), width=h * 1.9,
+                   height=h, radius=h * 0.85, bow=0.16, tilt=16)
+    return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
+
+
 def barley_tuft(pal, rng, params, variant, ctx):
     cols = [pal.tint(P.lin("#c9a24a"), "warm", 0.5), pal.tint(P.lin("#dcc06a"), "light", 0.35),
             pal.tint(P.lin("#8f7a34"), "earth", 0.3)]
@@ -225,11 +243,12 @@ def bracken(pal, rng, params, variant, ctx):
 
 
 def _flower(pal, rng, params, ctx, leaf_hex, flower_hex, form, second_hex=None, height=(0.35, 0.6),
-            stems=7, leaf_shape="lance", tag="flower", cards=5, bow=0.12):
+            stems=7, leaf_shape="lance", tag="flower", cards=5, bow=0.12, eye_hex=None):
     names = T.flower_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], P.lin(leaf_hex), P.lin(flower_hex),
                            seed=rng.randrange(9999), size=256 if ctx["quick"] else 512, form=form,
                            stems=stems, leaf_shape=leaf_shape,
-                           second_color=P.lin(second_hex) if second_hex else None)
+                           second_color=P.lin(second_hex) if second_hex else None,
+                           eye_color=P.lin(eye_hex) if eye_hex else None)
     mat = _mat(ctx["out_dir"], "%s_%s_foliage" % (ctx["name"], tag), names)
     h = params.get("height", rng.uniform(*height))
     ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", cards),
@@ -245,6 +264,16 @@ def foxglove(pal, rng, params, variant, ctx):
 def poppy(pal, rng, params, variant, ctx):
     return _flower(pal, rng, params, ctx, "#5f7a3a", "#b23a2e", "head", height=(0.4, 0.62),
                    stems=8, leaf_shape="fern", tag="poppy")
+
+
+def buttercup(pal, rng, params, variant, ctx):
+    return _flower(pal, rng, params, ctx, "#4f7a34", "#e8c21e", "head", height=(0.3, 0.5),
+                   stems=11, leaf_shape="fern", tag="buttercup", cards=5)
+
+
+def oxeye_daisy(pal, rng, params, variant, ctx):
+    return _flower(pal, rng, params, ctx, "#4f7a34", "#f0ece0", "head", eye_hex="#e0b22a",
+                   height=(0.42, 0.68), stems=9, leaf_shape="lance", tag="daisy", cards=5)
 
 
 def red_poppy_single(pal, rng, params, variant, ctx):
@@ -378,6 +407,9 @@ KINDS = {
     "grass_clump": grass_clump,
     "grey_grass": grey_grass,
     "barley_tuft": barley_tuft,
+    "meadow_grass": meadow_grass,
+    "buttercup": buttercup,
+    "oxeye_daisy": oxeye_daisy,
     "reeds": reeds,
     "bulrush": bulrush,
     "fern": fern,

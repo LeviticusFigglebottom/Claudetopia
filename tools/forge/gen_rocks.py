@@ -278,6 +278,43 @@ def basalt_columns(pal, rng, params, variant):
             "extra_meta": {"columns": len(tops), "tallest_m": round(max(tops), 2) if tops else 0.0}}
 
 
+def fallen_log(pal, rng, params, variant):
+    """A trunk that came down in a storm and has lain a few winters: bark still on, the snapped
+    top ragged, a few limbs broken to stubs, moss on its upper side, and a third of its girth
+    settled into the ground. It lies along X."""
+    bark = M.by_name(params.get("bark", "oak_bark"), pal, age=0.95, tint=0.3)
+    moss = M.by_name("moss", pal)
+    length = params.get("length", rng.uniform(5.0, 8.5))
+    r = params.get("radius", rng.uniform(0.28, 0.46))
+    ob = S.cylinder("log", radius=r, radius_top=r * rng.uniform(0.62, 0.8), depth=length, vertices=12,
+                    mat=bark, smooth=True, centered=True)
+    ob.rotation_euler = Euler((0.0, math.radians(90.0), math.radians(rng.uniform(-4, 4))), "XYZ")
+    S.apply_transforms(ob)
+    S.subdivide(ob, levels=1, simple=True)
+    S.jitter_verts(ob, amount=r * 0.12, scale=0.6, seed=rng.randrange(999))
+    parts = [ob]
+    # limbs broken to stubs, most on the upper side
+    for i in range(rng.randint(3, 6)):
+        x = rng.uniform(-length * 0.4, length * 0.45)
+        a = rng.uniform(-70, 70) if rng.random() < 0.8 else rng.uniform(100, 260)
+        ln = rng.uniform(0.35, 1.2)
+        st = S.cylinder("stub_%d" % i, radius=r * rng.uniform(0.18, 0.32), radius_top=r * 0.12, depth=ln,
+                        vertices=6, mat=bark, smooth=True)
+        st.rotation_euler = Euler((math.radians(a), math.radians(rng.uniform(-35, 35)), 0.0), "XYZ")
+        st.location = Vector((x, 0.0, 0.0))
+        S.apply_transforms(st)
+        parts.append(st)
+    # moss on whatever faces up
+    for p in parts:
+        S.assign_material_to_faces(p, moss, lambda poly: poly.normal.z > 0.55 and rng.random() < 0.7)
+    # settled a third of its girth into the ground
+    for p in parts:
+        for v in p.data.vertices:
+            v.co.z += r * 0.65
+    return {"opaque_objs": parts, "collision": "convex", "materials_used": [params.get("bark", "oak_bark"), "moss"],
+            "extra_meta": {"length_m": round(length, 2)}}
+
+
 def scree(pal, rng, params, variant):
     """A cluster of small angular stones: one instance covers a patch of slope."""
     mat, stone = stone_material(pal, params, rng)
@@ -537,6 +574,7 @@ KINDS = {
     "boulder": boulder,
     "cliff_slab": cliff_slab,
     "basalt_columns": basalt_columns,
+    "fallen_log": fallen_log,
     "scree": scree,
     "standing_stone": standing_stone,
     "sunken_masonry": sunken_masonry,

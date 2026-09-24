@@ -2621,6 +2621,58 @@
    "seed": 9923
   },
   {
+   "generator": "gen_flora",
+   "kind": "meadow_grass",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9959
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "meadow_grass",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9976
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "meadow_grass",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 10012
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "buttercup",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10065
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "oxeye_daisy",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10118
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "fallen_log",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10171
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "fallen_log",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 10224,
+   "params": {
+    "bark": "black_ash_bark"
+   }
+  },
+  {
    "generator": "gen_weapons",
    "kind": "sword",
    "palette": null,

@@ -414,6 +414,7 @@ def _blade(rgb, alpha, hgt, x0, y0, h, lean_x, w, color, bend=0.5, taper=0.85, r
 
 def flower_atlas(out_dir, prefix: str, leaf_color, flower_color, seed: int = 0, size: int = 512, cells: int = 2,
                  form: str = "spike", stems: int = 7, leaf_shape: str = "lance", second_color=None,
+                 eye_color=None,
                  roughness: float = 0.7) -> dict:
     """Flowering plants: foxglove/heather spikes, poppy/marigold heads, cow parsley umbels."""
     rng = random.Random(seed)
@@ -451,7 +452,9 @@ def flower_atlas(out_dir, prefix: str, leaf_color, flower_color, seed: int = 0, 
                         draw_leaf((rgb, alpha, hgt), tipx + math.cos(a) * r * 0.5, tipy + math.sin(a) * r * 0.5,
                                   r * 1.5, a + math.pi / 2, _vary(rng, fc, hue=0.01, sat=0.1, val=0.15),
                                   shape="round", rng=rng)
-                    _blob(rgb, alpha, hgt, tipx, tipy, r * 0.32, [c * 0.3 for c in fc])
+                    # the eye: dark, or its own colour (an ox-eye daisy's yellow)
+                    eye = [c * 0.3 for c in fc] if eye_color is None else list(eye_color)
+                    _blob(rgb, alpha, hgt, tipx, tipy, r * (0.32 if eye_color is None else 0.42), eye)
                 elif form == "umbel":
                     for k in range(16):
                         a = math.tau * k / 16

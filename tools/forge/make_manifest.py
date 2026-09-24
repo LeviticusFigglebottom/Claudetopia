@@ -314,6 +314,19 @@ ROCKS_CRAGS = [
     ("basalt_columns", "cinderlea", 2, None),
 ]
 
+# The countryside between the places (a playtest found it sparse, and its trees few in kind):
+# meadow grass and wildflowers, and fallen logs.
+# (birch and hazel, for the woods' edges and the hedges, come from the tree forge's grower)
+# (bracken, foxglove and bramble the lowlands take from the regions that have them: the scatter
+# falls back to another region's piece, tinted by the instance's own colour)
+FLORA_COUNTRY = [
+    ("meadow_grass", "hearthvale", 2, None), ("meadow_grass", "sedgemire", 1, None),
+    ("buttercup", "hearthvale", 1, None), ("oxeye_daisy", "hearthvale", 1, None),
+]
+ROCKS_COUNTRY = [
+    ("fallen_log", "hearthvale", 1, None), ("fallen_log", "briarwold", 1, {"bark": "black_ash_bark"}),
+]
+
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
 # rebuilds, differently -- everything after it. New work goes on the end.
@@ -321,7 +334,8 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
-          ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS), ("gen_rocks", ROCKS_CRAGS)]
+          ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS), ("gen_rocks", ROCKS_CRAGS),
+          ("gen_flora", FLORA_COUNTRY), ("gen_rocks", ROCKS_COUNTRY)]
 
 # The livestock were built as the table after GROUND_KIT, before the impostors joined TABLES, so
 # the running counter stood at this seed for them then; pinned here, as the weapons are, so the

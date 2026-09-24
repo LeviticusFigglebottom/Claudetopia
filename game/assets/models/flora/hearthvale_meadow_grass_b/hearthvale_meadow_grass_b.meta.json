@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.692,
+  "max": [
+   0.801,
+   0.692,
+   0.841
+  ],
+  "min": [
+   -0.707,
+   0.0,
+   -0.791
+  ],
+  "radius": 1.164
+ },
+ "built_seconds": 0.29,
+ "category": "flora",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_flora",
+ "glb": "hearthvale_meadow_grass_b.glb",
+ "hash": "063eaa8afe88a1d6",
+ "kind": "meadow_grass",
+ "materials": [
+  "hearthvale_meadow_grass_b_meadow_foliage"
+ ],
+ "materials_used": [
+  "grass_blades"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_meadow_grass_b_cards",
+   "tris": 22
+  },
+  {
+   "name": "hearthvale_meadow_grass_b_cards_LOD1",
+   "tris": 12
+  },
+  {
+   "name": "hearthvale_meadow_grass_b_cards_LOD2",
+   "tris": 6
+  }
+ ],
+ "name": "hearthvale_meadow_grass_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 9976,
+ "textures": [
+  "hearthvale_meadow_grass_b_atlas_albedo.png",
+  "hearthvale_meadow_grass_b_atlas_normal.png",
+  "hearthvale_meadow_grass_b_atlas_orm.png"
+ ],
+ "tris": [
+  22,
+  12,
+  6
+ ],
+ "version": 3
+}

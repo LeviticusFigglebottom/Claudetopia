@@ -165,7 +165,7 @@ class ScatterWorld:
     def __init__(self, grid: Grid, H: np.ndarray, owner: np.ndarray, moisture: np.ndarray,
                  water: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
                  slope: np.ndarray, bank, regions: list, water_d=None, field_d=None,
-                 pad_t=None, tpi=None, forests=None):
+                 pad_t=None, tpi=None, forests=None, parcel=None, place_d=None):
         self.grid = grid
         self.H = H
         self.owner = owner
@@ -190,9 +190,18 @@ class ScatterWorld:
         self.tpi = tpi if tpi is not None else np.zeros(H.shape, dtype=np.float32)
         # the atlas's woods: {kind: 0..1 at each texel} (geography.forests)
         self.forests = dict(forests or {})
+        # how much wood of any kind stands here, 0..1: a wood's edge is where it is thin
+        wood = np.zeros(H.shape, dtype=np.float32)
+        for w in self.forests.values():
+            wood += w
+        self.wood = np.clip(wood, 0.0, 1.0)
+        # what the field a point lies in carries (fields.parcel_value, the same number the
+        # textures sow by), -1 on unenclosed ground; and how far it is to a settlement, metres
+        self.parcel = parcel if parcel is not None else np.full(H.shape, -1.0, dtype=np.float32)
+        self.place_d = place_d if place_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
 
     ## how each field is read: nearest for the categorical and the masks, bilinear for the rest
-    NEAREST = ("owner", "water", "road_d", "road_w", "pad")
+    NEAREST = ("owner", "water", "road_d", "road_w", "pad", "parcel")
 
     def field(self, name: str, x, z) -> np.ndarray:
         """One field at (x, z): `sample(x, z)[name]`, without sampling the others."""
@@ -202,7 +211,7 @@ class ScatterWorld:
         arr = {"h": self.H, "owner": self.owner, "moisture": self.moisture, "water": self.water,
                "road_d": self.road_d, "road_w": self.road_w, "slope": self.slope,
                "water_d": self.water_d, "field_d": self.field_d, "pad_t": self.pad_t,
-               "tpi": self.tpi}.get(name)
+               "tpi": self.tpi, "parcel": self.parcel, "place_d": self.place_d, "wood": self.wood}.get(name)
         if name == "pad":
             return sample_nearest(self.pad.astype(np.uint8), g, x, z)
         if name in self.NEAREST:
@@ -333,6 +342,13 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
                 wood["density"] = float(per_ha)
                 wood.setdefault("cluster", 0.25)
                 entries.append((r, "forest_%s_%s" % (kind, key), wood, 1.0, kind))
+    # The countryside between the places, by landform (scatter_rules `countryside`): meadows,
+    # wildflower drifts, the woods' and hedges' margins, crops by the field, logs and copses.
+    # After every other entry, so no other rule's draws move.
+    for r in regions:
+        mult = float(region_mult.get(r.shape, 1.0))
+        for i, rule in enumerate(rules.get("countryside", {}).get(r.shape, [])):
+            entries.append((r, "country_%d" % i, rule, mult, None))
     for n, (region, key, rule, mult, wood_kind) in enumerate(entries):
         if region.index not in boxes:
             continue
@@ -452,6 +468,27 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             strength = float(band[2]) if len(band) > 2 else 1.0
             tp = at("tpi")
             inside = smoothstep(lo - 0.3, lo + 0.1, tp) * (1.0 - smoothstep(hi - 0.1, hi + 0.3, tp))
+            times((1.0 - strength) + strength * inside)
+        # which fields it grows in: `parcel` [lo, hi] of the field's number (-1 is open ground)
+        band = cfg.get("parcel")
+        if band:
+            pv = at("parcel")
+            times((pv >= float(band[0])) & (pv <= float(band[1])))
+        # attraction to the settlements (`near_place`, metres) and to the woods' margins
+        # (`wood_edge`, of the woods' strength 0..1), as the bands above
+        # A wood's band never softens below its floor: open ground (no wood at all, 0) is not the
+        # edge of one, and softening past it had bracken over every field in the Vale.
+        for field_key, band_key, soft_min, floor in (("place_d", "near_place", 40.0, None),
+                                                     ("wood", "wood_edge", 0.05, 0.0)):
+            band = cfg.get(band_key)
+            if not band:
+                continue
+            lo, hi = float(band[0]), float(band[1])
+            strength = float(band[2]) if len(band) > 2 else 1.0
+            d = at(field_key)
+            soft = max((hi - lo) * 0.35, soft_min)
+            low = lo - soft if floor is None else max(lo - soft, floor)
+            inside = smoothstep(low, lo + soft * 0.3, d) * (1.0 - smoothstep(hi - soft * 0.3, hi + soft, d))
             times((1.0 - strength) + strength * inside)
         # clustering: a low-frequency field decides where this species actually grows
         cl = float(cfg.get("cluster", 0.35))

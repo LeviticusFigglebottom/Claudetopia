@@ -6634,3 +6634,53 @@ The earlier river-float figures had the same offset and were corrected above. Th
 A cut-and-fill bench with a 1:1 batter was tried for narrow roads on sidelong ground. At 1024 it
 made no difference to the corrected count, and a bench wider than the carriageway terraced a
 steep road (the Sunken Choir's, 3.6 m). It was not kept.
+
+## Crags and outcrops, and the countryside between the places
+
+**Crags** (e1bf3041, 60881b45). `worldgen/crags.py` sets rock on the land where the land is
+steep enough to show it: slabs leaned into faces steeper than 35 degrees, sunk 0.45 of their
+depth, sized to the face and turned to face down it; boulders on the crests (topographic position
+2.5 m and up). The rock is the region's: cliff slabs (limestone in Skerrow, granite in the north,
+from the region's palette) and Cinderlea's new basalt columns. They keep 10 m off roads, 8 m off
+water and off every pad, and in a sightline's corridor a piece may not rise within 1 m of the
+ray. The 1024 world has 17,438 face pieces and 6,325 crest outcrops, and all 197 sightlines are
+still clear. Median draws in a 5 x 5 view went from 969 to 1,069 (worst 1,400 to 1,583).
+
+The basalt columns first came out a pale, plasticky blue-grey. The `basalt` material is now
+dark (#1f2023, role dark), and the columns were rebuilt.
+
+**The countryside** (playtest 4). The scatter has a `countryside` rule set per landform, read
+after every other rule so none of the existing draws move. It knows three new things about a
+point: the field it lies in (`parcel`: the same number the ground textures sow by, so the barley
+stands in the fields that are painted as barley), how far it is from a settlement (`near_place`),
+and how much wood stands there (`wood_edge`: a wood's margin is its thin outer strip). What it
+adds:
+- meadow grass as continuous fields on the pasture and open ground, and thicker in the hay
+  fields, where buttercups and ox-eye daisies grow through it; buttercup and daisy drifts in
+  the pasture;
+- barley thick to the headland in the sown fields, thickest near a village, with poppies at the
+  hedges and hay bales in the hay fields near a place;
+- bracken, foxgloves and bramble at the woods' margins and on the hedgebanks;
+- oak saplings in spreading copses, lone veteran oaks in the pasture, hawthorn scrub, and in
+  Sedgemire a lone old willow in place of the oak (Sedgemire has no oak of its own, and the
+  fallback drew Briarwold's giant oak);
+- fallen logs at the woods' edges and under the Briarwold, and the odd one by a hedge.
+
+Birch copses and hazel on the hedgebanks are in the rules but draw nothing until those trees
+are built. The tree forge has them.
+
+New in the forge: `meadow_grass`, `buttercup` and `oxeye_daisy` (gen_flora; a head flower's eye
+now has its own colour, since the daisy's second colour tinted its petals too) and `fallen_log`
+(gen_rocks). They are pinned at the end of TABLES. The weight cap is now 200 MB
+(test_output.py says why).
+
+A first cut softened the woods' band below zero, so every field counted as half a wood's edge
+and had bracken on it (+150,000 in the world). The band now stops at no wood at all.
+
+At 1024, before and after:
+- assets per cell, mean: 33.7 to 39.1;
+- draws in a 5 x 5 view, median: 1,077 to 1,233 (worst 1,575 to 1,717);
+- flora in the inner 3 x 3: instances, worst 77 k to 143 k; triangles, worst 1.5 M to 2.5 M
+  (median 0.6 M to 1.0 M). The graphics density setting thins it in the near ring;
+- the build: the scatter goes from 86 s to about 175 s, peaking at 3.3 GB instead of 2.3 GB.
+  Most of this is Sedgemire's meadow grass (770 k) and the barley (400 k).
