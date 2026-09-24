@@ -329,7 +329,7 @@ def surface_maps(ob, size: int = 1024, pad: int = 4, tangents: bool = False) -> 
 
 
 def sdf_detail_normal(field, maps: Dict[str, np.ndarray], eps: float = 0.0004, max_move: float = 0.004,
-                      iters: int = 3, chunk: int = 60000) -> np.ndarray:
+                      iters: int = 3, chunk: int = 60000, box=None) -> np.ndarray:
     """A tangent-space normal map (OpenGL, +Y up the UV's v) of the field's own surface, baked
     onto the mesh that was meshed and decimated from it.
 
@@ -339,7 +339,8 @@ def sdf_detail_normal(field, maps: Dict[str, np.ndarray], eps: float = 0.0004, m
     point on the mesh is walked onto the field's zero set and the field's normal there is
     written in the mesh's own tangent frame, so the lighting finds the detail the geometry
     lost. Where the mesh is further than `max_move` from the field (or the walk fails) the mesh's
-    own normal is kept. `maps` must come from surface_maps(..., tangents=True)."""
+    own normal is kept, as it is outside `box` (lo, hi), where the field was not sampled.
+    `maps` must come from surface_maps(..., tangents=True)."""
     size = maps["pos"].shape[0]
     out = np.zeros((size, size, 3))
     out[..., :] = (0.5, 0.5, 1.0)
@@ -368,6 +369,9 @@ def sdf_detail_normal(field, maps: Dict[str, np.ndarray], eps: float = 0.0004, m
         G = grad(Q)
         moved = np.linalg.norm(Q - P, axis=1)
         bad = (moved > max_move) | ~np.all(np.isfinite(G), axis=1) | (np.sum(G * N, axis=1) < 0.25)
+        if box is not None:
+            lo, hi = np.asarray(box[0], float), np.asarray(box[1], float)
+            bad |= np.any((P < lo) | (P > hi), axis=1)
         G[bad] = N[bad]
         T = T - N * np.sum(T * N, axis=1, keepdims=True)
         T /= np.maximum(np.linalg.norm(T, axis=1, keepdims=True), 1e-12)
