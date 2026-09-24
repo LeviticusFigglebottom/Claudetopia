@@ -105,7 +105,14 @@ func _raise_start() -> PoiDressing:
 ## Head to the Choir where the world has one, else the path's shape between the two, so it goes
 ## where they go (PoiDressing.way_points, docs/COORDINATES.md).
 func _via() -> Array[Vector2]:
-	return PoiDressing.way_points(START, ContentDB.get_or_empty(START))
+	var out: Array[Vector2] = []
+	# the way stops where reaching the Choir counts, as its stones do (PoiBuilders.way_of): the
+	# atlas's road runs on to the Choir's own position, inside its first colossus
+	for p in PoiDressing.way_points(START, ContentDB.get_or_empty(START)):
+		out.append(p)
+		if out.size() >= 2 and p.distance_to(_xz(CHOIR)) <= 40.0:
+			break
+	return out
 
 
 # --- where it is --------------------------------------------------------------------------------
@@ -177,6 +184,12 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 		if mm.multimesh != null and str(mm.name).contains("standing_stone"):
 			marks += mm.multimesh.instance_count
 	assert_gt(marks, 15, "waystones walk away to the Choir: %d of them" % marks)
+	# they stop where reaching it counts, at the head of its avenue, and none stands in its colossus
+	# (the way the builder lays them along; a headless multimesh keeps no instance positions)
+	var way: Array = (load(PoiDressing.BUILDERS_PATH) as GDScript).call("way_of", d.path)
+	var last: Array = way[way.size() - 1]
+	var short := Vector2(float(last[0]), float(last[1])).distance_to(_xz(CHOIR))
+	assert_true(short > 20.0 and short <= REACH_M, "the way's last point is %.0f m from the Choir's middle" % short)
 
 
 ## The playtest found the start "a little sparse". The Wardens' camp has their gear about it, and

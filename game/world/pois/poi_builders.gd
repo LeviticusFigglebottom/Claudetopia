@@ -293,23 +293,28 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	var rail: Vector2 = cart - ahead * 4.0
 	k.place(k.prop("fence_post_rail"), k.on_ground(rail.x, rail.y), yaw + PI * 0.5)
 
-	# the Wardens' colours: two poles either side of the way out, grey-green cloth, a bell each
+	# the Wardens' colours: two poles either side of the way out, grey-green cloth, a bell each. The
+	# way out is where the marked way leaves the camp, which in the drawn atlas is not towards the
+	# Choir but west along the knoll first: the poles stood at 333 degrees and the stones went west.
+	var out := _way_out(d, ahead)
+	var out_right := Vector2(-out.y, out.x)
+	var out_yaw := PoiKit.yaw_of(out)
 	var cloth := PoiKit.plain(Color(0.33, 0.40, 0.33), 0.95)
 	cloth.cull_mode = BaseMaterial3D.CULL_DISABLED
 	for s in [-1.0, 1.0]:
-		var pole: Vector2 = at.call(17.0, 3.4 * float(s) - 1.0)
+		var pole: Vector2 = out * 17.0 + out_right * (3.4 * float(s))
 		var top := m.post(timber, pole, 4.4, 0.14)
-		var bar := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), top - Vector3(0.0, 0.25, 0.0))
+		var bar := Transform3D(Basis(Vector3.UP, out_yaw + PI * 0.5), top - Vector3(0.0, 0.25, 0.0))
 		m.block(timber, bar, Vector3(1.5, 0.08, 0.08))
-		m.sheet(top - Vector3(0.0, 0.3, 0.0), yaw, 1.2, 2.3, cloth, "Banner", 0.12, true)
-		k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(right.x, 0.0, right.y) * 0.72,
+		m.sheet(top - Vector3(0.0, 0.3, 0.0), out_yaw, 1.2, 2.3, cloth, "Banner", 0.12, true)
+		k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(out_right.x, 0.0, out_right.y) * 0.72,
 				k.rng.randf_range(0.0, TAU), 1.0, false)
 
 	# a signpost at the way out, and a lamp on a post by the fire and another at the first stone
-	var sign_at: Vector2 = at.call(18.5, 1.6)
-	k.place(k.prop("signpost"), k.on_ground(sign_at.x, sign_at.y), yaw, 1.0, true, Vector3.ZERO, true)
-	for lamp in [at.call(10.0, -4.4), at.call(19.5, -3.0)]:
-		_lamp_post(k, m, timber, lamp as Vector2, yaw)
+	var sign_at: Vector2 = out * 18.5 + out_right * 5.0
+	k.place(k.prop("signpost"), k.on_ground(sign_at.x, sign_at.y), out_yaw, 1.0, true, Vector3.ZERO, true)
+	for lamp in [at.call(10.0, -4.4), out * 19.5 - out_right * 5.0]:
+		_lamp_post(k, m, timber, lamp as Vector2, out_yaw)
 
 	# behind: the head of the stair. Two Oroth piers, the top steps going over the edge, and the
 	# Hearthstone that heard the name first
@@ -345,7 +350,7 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	k.place(k.tree("dead_ash_tree"), k.on_ground(ash.x, ash.y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
 
 	_waymarks(d, timber)
-	_camp_life(k, m, timber, ahead, right, fire, cart, yaw)
+	_camp_life(k, m, timber, ahead, right, fire, cart, yaw, out)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
 
@@ -364,7 +369,8 @@ const STAIR_HEAD_TENTS := [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]
 ## * crows sit on the colours' poles and the lamps and wheel over the heath ahead, and anybody who
 ##   walks near puts them up.
 static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vector2, right: Vector2,
-		fire: Vector2, cart: Vector2, yaw: float) -> void:
+		fire: Vector2, cart: Vector2, yaw: float, out: Vector2) -> void:
+	var out_right := Vector2(-out.y, out.x)
 	var at := func(forward: float, side: float) -> Vector2:
 		return ahead * forward + right * side
 	# a pot on three poles over the fire, and its steam
@@ -412,9 +418,9 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 		return
 	var perches: Array[Vector3] = []
 	for s in [-1.0, 1.0]:
-		var pole: Vector2 = at.call(17.0, 3.4 * float(s) - 1.0)
+		var pole: Vector2 = out * 17.0 + out_right * (3.4 * float(s))
 		perches.append(k.on_ground(pole.x, pole.y, 4.4))
-	for lamp in [at.call(19.5, -3.0), at.call(10.0, -4.4)]:
+	for lamp in [out * 19.5 - out_right * 5.0, at.call(10.0, -4.4)]:
 		var l: Vector2 = lamp
 		perches.append(k.on_ground(l.x, l.y, 2.7))
 	var wheel: Vector2 = at.call(30.0, -2.0)
@@ -424,6 +430,18 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 	crows.height = 11.0
 	k.root.add_child(crows)
 	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
+
+
+## Which way the POI's own marked way leaves it: towards its first point twelve metres or more out,
+## or `otherwise` when it has none.
+static func _way_out(d: PoiDressing, otherwise: Vector2) -> Vector2:
+	var k := d.kit
+	for p in way_of(d.path):
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			var at := Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z)
+			if at.length() >= 12.0:
+				return at.normalized()
+	return otherwise
 
 
 ## The first of `spots` (local xz) that stands at least `reach` metres from every leg of the POI's
@@ -581,12 +599,28 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 
 
 ## The points a POI's `path` goes by: the built road it names (`built_road`) when the land drew
-## one, the `via` points it was written with otherwise.
+## one, the `via` points it was written with otherwise. The way stops where reaching the place it
+## goes to counts (QuestLog.REACH_RADIUS_M): the atlas's road to the Choir ran on to the Choir's
+## own position, which is inside its first colossus, and the stones followed it into the stone.
 static func way_of(path: Dictionary) -> Array:
-	var built := WorldProbe.road_points(str(path.get("built_road", "")))
-	if built.size() >= 2:
-		return built
-	return path.get("via", [])
+	var points: Array = WorldProbe.road_points(str(path.get("built_road", "")))
+	if points.size() < 2:
+		points = path.get("via", [])
+	var to := WorldProbe.xz_of(ContentDB.get_or_empty(str(path.get("to", "")))) if str(path.get("to", "")) != "" else Vector2.ZERO
+	if to == Vector2.ZERO or points.size() < 2:
+		return points
+	var out: Array = []
+	for p in points:
+		out.append(p)
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2 and out.size() >= 2 \
+				and Vector2(float(p[0]), float(p[1])).distance_to(to) <= WAY_STOPS_SHORT_M:
+			break
+	return out
+
+
+## How far short of the place it goes to a marked way stops: inside QuestLog.REACH_RADIUS_M (45 m),
+## so the last stone stands where the objective has been reached.
+const WAY_STOPS_SHORT_M := 40.0
 
 
 # --- shrines ----------------------------------------------------------------------------------------
