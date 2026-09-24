@@ -231,6 +231,33 @@ class WrittenLineTest(unittest.TestCase):
             self.assertGreaterEqual(len(OUT._road_keep(laid[:n])), OUT.ROAD_OUT_MIN_POINTS)
 
 
+class SpurTest(unittest.TestCase):
+    """A road does not go out to a via point on a knoll and come back down the same line.
+
+    On the final build of the drawn atlas 25 roads did, and the land under five of them stood
+    metres off their grade where the two legs lay side by side (test_the_carved_land_is_the_graded_road)."""
+
+    def test_an_out_and_back_spur_is_cut(self):
+        out = np.stack([np.zeros(30), np.arange(30) * 4.0], axis=1)            # north 116 m
+        up = np.stack([np.full(20, 6.0), 116.0 - np.arange(20) * 4.0], axis=1)  # back south beside it
+        on = np.stack([np.linspace(6.0, 206.0, 40), np.full(40, 40.0)], axis=1)  # then east
+        pts = np.vstack([out, up, on])
+        ground = np.where(np.arange(pts.shape[0]) < 10, 10.0, 10.0)
+        ground = ground + np.concatenate([np.clip(out[:, 1] - 40.0, 0, None) * 0.3,
+                                          np.clip(up[:, 1] - 40.0, 0, None) * 0.3, np.zeros(40)])
+        cut = RD.cut_spurs(pts, ground)
+        self.assertLess(float(cut[:, 1].max()), 60.0, "the road still goes up the knoll")
+        self.assertTrue(np.array_equal(cut[0], pts[0]) and np.array_equal(cut[-1], pts[-1]))
+
+    def test_a_switchback_is_not_a_spur(self):
+        # two legs of a zigzag lie side by side, but at different heights: both are kept
+        a = np.stack([np.arange(30) * 4.0, np.zeros(30)], axis=1)
+        b = np.stack([116.0 - np.arange(30) * 4.0, np.full(30, 8.0)], axis=1)
+        pts = np.vstack([a, b])
+        ground = np.arange(pts.shape[0]) * 0.4                                  # climbing 0.1
+        self.assertEqual(RD.cut_spurs(pts, ground).shape[0], pts.shape[0])
+
+
 class LandmarkFootTest(unittest.TestCase):
     """A road to a landmark that stands solid on its place stops at its foot. The Sunken Choir's
     head colossus stands on the Choir's own position, 27 m across at the foot, and the Stair Path

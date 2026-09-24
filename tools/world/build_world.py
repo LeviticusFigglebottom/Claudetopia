@@ -554,7 +554,9 @@ def build(args) -> dict:
             # carved against the land it was routed over, and the landform only comes back
             # past its carve (landforms.road_clear), so a road climbs a scar through a break in
             # it. Then the pads and the channels once more, as after the roads.
-            H = (H + lf_delta * LF.road_clear(road_d, road_w)).astype(np.float32)
+            # (and no pit is dug below a river's water beside it: LF.river_guard)
+            lf_delta = LF.river_guard(H, lf_delta * LF.road_clear(road_d, road_w), river_d, river_surf, river_w)
+            H = (H + lf_delta).astype(np.float32)
             del lf_delta
             H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
             H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)

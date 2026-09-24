@@ -160,6 +160,28 @@ class NarrowHead(unittest.TestCase):
         self.assertFalse(bool(wet[20, 200]), "a lone wet texel is noise and is dropped")
 
 
+class LandformsBesideARiver(unittest.TestCase):
+    """No landform digs a pit below a river's water beside it (landforms.river_guard). A limestone
+    scar across the Brindle Beck's head took its bed 9.7 m under the water, and the river's ribbon
+    hung over the hole."""
+
+    def test_a_pit_by_the_river_stops_over_its_water_and_one_away_from_it_does_not(self):
+        from worldgen import landforms as LF
+
+        n = 64
+        H = np.full((n, n), 102.0, dtype=np.float32)
+        river_d = np.broadcast_to(np.abs(np.arange(n, dtype=np.float32) * 2.0 - 20.0)[None, :], (n, n)).copy()
+        surf = np.full((n, n), 100.0, dtype=np.float32)
+        width = np.full((n, n), 6.0, dtype=np.float32)
+        delta = np.full((n, n), -8.0, dtype=np.float32)          # a pit everywhere
+        delta[0, :] = 3.0                                        # and a rise in one row
+        out = LF.river_guard(H, delta, river_d, surf, width)
+        near = river_d[1:] <= 3.0 + LF.RIVER_GUARD_M
+        self.assertTrue(np.allclose((H + out)[1:][near], 100.5))
+        self.assertTrue(np.allclose(out[1:][~near], -8.0))
+        self.assertTrue(np.allclose(out[0], 3.0), "a landform may still raise the land")
+
+
 class WanderingWall(unittest.TestCase):
     """The same gorge through a flat plateau, carved with a noise bank as a build carves it."""
 
@@ -176,9 +198,16 @@ class WanderingWall(unittest.TestCase):
         cls.reach = HY.VALLEY_WIDTHS * WIDTH_M * 0.5
         cls.rows = slice(n // 2 - 300, n // 2 + 300)
 
-    def test_the_valley_floor_is_as_it_was(self):
-        floor = self.dist[self.rows] <= self.reach
-        self.assertTrue(np.array_equal(self.carved[self.rows][floor], self.plane[self.rows][floor]))
+    def test_the_banks_are_as_they_were(self):
+        banks = self.dist[self.rows] <= WIDTH_M * 0.5 + 2.0
+        self.assertTrue(np.array_equal(self.carved[self.rows][banks], self.plane[self.rows][banks]))
+
+    def test_the_valley_floor_rolls_and_stays_over_the_water(self):
+        # a smooth ramp a hundred metres wide read from above as a made thing
+        floor = (self.dist[self.rows] > WIDTH_M * 0.5 + 2.0 + HY.FLOOR_INTO_M) & (self.dist[self.rows] < self.reach)
+        off = self.carved[self.rows][floor] - self.plane[self.rows][floor]
+        self.assertGreater(float(off.std()), 0.5, "the floor is still a plane")
+        self.assertGreaterEqual(float(self.carved[self.rows][floor].min()), WATER_M + HY.FLOOR_OVER_M - 1e-3)
 
     def test_the_wall_wanders_along_the_river(self):
         # where the wall's top meets the plateau, row by row, on the west side: a plane meets it

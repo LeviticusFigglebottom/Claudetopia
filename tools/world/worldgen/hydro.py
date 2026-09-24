@@ -122,6 +122,14 @@ GORGE_REACH_M = 400.0
 GORGE_WANDER_M = 10.0
 GORGE_GRAIN_M = 1.2
 GORGE_INTO_M = 40.0
+## Nor is a valley's floor. Carved as the water plus a metre and a steady climb from the bank, it
+## was a smooth ramp a hundred metres wide in rough fell, and read from above as a made thing. It
+## rolls by FLOOR_ROLL_M over 30 to 160 m and has FLOOR_GRAIN_M of grain, both coming in over the
+## first FLOOR_INTO_M from the bank, and it never falls within FLOOR_OVER_M of the water.
+FLOOR_ROLL_M = 1.8
+FLOOR_GRAIN_M = 0.9
+FLOOR_INTO_M = 16.0
+FLOOR_OVER_M = 0.6
 ## A valley comes in down its river from the source, full depth by half the valley's width plus
 ## GORGE_INTO_M down it. A river does not cut the hill behind its own source: carved from the
 ## source point outwards, the Rudd Beck's head cut a bowl into the fell behind it, and lowered the
@@ -140,10 +148,11 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
     source is left as it was. `valley_m` 0 leaves the land to the channel's own banks.
     """
     n = grid.n
-    wander = grain = None
+    wander = grain = roll = None
     if bank is not None:
         wander = np.clip(bank.detail(236, n, wl_min=60.0, wl_max=300.0, beta=1.8), -2.0, 2.0)
         grain = bank.detail(237, n, wl_min=max(3.0 * grid.spacing, 6.0), wl_max=48.0, beta=1.5)
+        roll = np.clip(bank.detail(238, n, wl_min=30.0, wl_max=160.0, beta=2.0), -2.5, 2.5)
     for r in rivers:
         vm = getattr(r, "valley_m", None)
         if vm is not None and float(vm) <= 0.0:
@@ -182,6 +191,11 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
             wall += GORGE_GRAIN_M * grain[i0:i1, j0:j1] * into
             del into
         climb = np.where(d <= reach, VALLEY_GRADE * np.maximum(d - half_w, 0.0), rim + wall)
+        if roll is not None:
+            floor_in = smoothstep(half_w + 2.0, half_w + 2.0 + FLOOR_INTO_M, d)
+            climb += floor_in * (FLOOR_ROLL_M * roll[i0:i1, j0:j1] + FLOOR_GRAIN_M * grain[i0:i1, j0:j1])
+            climb = np.where(d > half_w, np.maximum(climb, FLOOR_OVER_M - 1.0), climb)
+            del floor_in
         side = s + 1.0 + climb
         del climb, s, over, wall
         Hs = H[i0:i1, j0:j1]

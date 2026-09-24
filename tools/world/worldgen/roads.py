@@ -476,6 +476,43 @@ def _ground_along(grid: Grid, H: np.ndarray, pts: np.ndarray, width: float,
     return acc / 3.0
 
 
+## A road that comes back within SPUR_NEAR_M of where it was SPUR_ALONG_M or more before, over
+## ground within SPUR_LEVEL_M of the same height, has gone out and back: the spur is cut.
+SPUR_NEAR_M = 12.0
+SPUR_ALONG_M = 60.0
+SPUR_LEVEL_M = 3.0
+
+
+def cut_spurs(pts: np.ndarray, ground: np.ndarray, keep: np.ndarray | None = None) -> np.ndarray:
+    """`pts` with every out-and-back spur taken out; `ground` is the land under each point.
+
+    A `via` point drawn on a knoll above the way the road can take makes the road climb to it and
+    come back down the same line: on the final build of the drawn atlas 25 roads did, over 60 m
+    to 1.8 km (Pilgrim's Ash to Ashwell went up to the Wellspring's plateau and back for 1.6 km).
+    The carve can hold only one level where the two legs lie side by side, so the land under one
+    of them stood metres off its grade. Where the road comes back beside a point it passed, over
+    land at the same height, the road goes straight on from that point. `keep` marks points that
+    may not be cut out (the ends)."""
+    n = pts.shape[0]
+    if n < 4:
+        return pts
+    cum = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))])
+    out = [0]
+    i = 0
+    while i < n - 1:
+        d = np.hypot(pts[i + 1:, 0] - pts[i, 0], pts[i + 1:, 1] - pts[i, 1])
+        ok = (d < SPUR_NEAR_M) & (cum[i + 1:] - cum[i] > SPUR_ALONG_M) & (np.abs(ground[i + 1:] - ground[i]) < SPUR_LEVEL_M)
+        cand = np.flatnonzero(ok)
+        j = i + 1
+        if cand.size:
+            far = i + 1 + int(cand[-1])
+            if keep is None or not keep[i + 1:far].any():
+                j = far
+        out.append(j)
+        i = j
+    return pts[np.asarray(out)]
+
+
 def stop_short(pts: np.ndarray, centre, radius: float, at_end: bool = True) -> np.ndarray:
     """A road that runs into something solid stops at its foot: `pts` cut where, walking toward
     `centre` from the road's other end, it first comes within `radius` of it, and ending on that
@@ -612,6 +649,12 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
         pts = np.concatenate([leg if k == 0 else leg[1:] for k, leg in enumerate(legs)])
         if kind != "stair":
             pts = paths.resample_polyline(pts, step_m)
+            # no out-and-back spur to a via point drawn up a knoll (`cut_spurs`)
+            from .grid import sample_bilinear
+            before = pts.shape[0]
+            pts = cut_spurs(pts, sample_bilinear(H, grid, pts[:, 0], pts[:, 1]))
+            if pts.shape[0] < before:
+                pts = paths.resample_polyline(paths.smooth_polyline(pts, passes=3), step_m)
         # (a stair keeps its corners: resampled across a switchback, a corner is cut short by a
         # step that runs straight down the fall line, the one line a stair must not take)
         pts[0] = ends[0]
