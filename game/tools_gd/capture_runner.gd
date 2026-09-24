@@ -6,13 +6,20 @@ extends Node
 ##       -- --capture=tools/capture/plans/default.json --out=captures
 ##
 ## Plan format:
-##   {"shots": [{"label", "pos": [x, y, z], "look_at": [x, y, z] | "yaw"/"pitch",
-##               "fov", "time": hours, "place": "core:place/x", "height_above_ground": m}],
+##   {"shots": [{"label", "at": {place spec}, "look": {place spec} | "yaw"/"pitch",
+##               "fov", "time": hours}],
 ##    "flythrough": {"path": [[x, y, z], ...], "frames": n, "look_ahead": true, "time": hours},
-##    "gait": {"pos": [x, _, z], "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
+##    "gait": {"at": {place spec}, "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
 ##             "camera": {"distance": m, "height": m, "fov": deg},
 ##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]},
 ##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?}}
+##
+## A place spec is the opening cinematic's: `{"place": id, "bearing": deg, "distance": m,
+## "height": m}`, a compass bearing and a distance from the place and `height` metres above the
+## ground there (`PlaceRef`, `CinematicPath.point_of`), so a shot goes where its place goes when
+## the map is drawn again. `tools/capture/relative_plan.py` turns a plan written in coordinates
+## into one. Coordinates still work -- `"pos": [x, y, z]` with an optional `"height_above_ground"`,
+## `"place"` alone for the place itself, `"look_at": [x, y, z]` -- and stay where they are.
 ##
 ## A `cinematic` block loads the world with its body standing where the story opens and has
 ## `CinematicPlayer` scrub to each shot's samples, so every frame on disk is the player's own
@@ -26,16 +33,23 @@ extends Node
 ##
 ## For each shot it sets the clock, moves the fly camera, waits until the streamer reports the
 ## full-detail ring loaded (plus ten frames so LODs and shadows settle), saves
-## <index>_<label>.png and records Performance monitors into <out>/perf.json.
+## <index>_<label>.png and records Performance monitors into <out>/perf.json, with the light the
+## frame was taken in (the sun's height and energy, the fill, the exposure).
+##
+## A shot may try a change to the light without editing the pack: `"look": {"contrast": 1.0,
+## "ambient_tint": "#a09ab2"}` lays region-light keys over the region's own for that shot
+## (Atmosphere.look_override). `"terrain_view": "grey"` draws the ground in one of Terrain3D's
+## debug views ("grey" is every material at albedo 0.2; "checkered", "colormap", "control"), which
+## tells a dark texture from a dark light.
 ##
 ## A `gait` section films the player's own body in motion: it stands a player up on the ground
-## at `pos`, facing `heading` (a compass bearing), presses the run's actions exactly as a player
+## at `at` (or `pos`), facing `heading` (a compass bearing), presses the run's actions exactly as a player
 ## would, lets it settle, and takes `frames` shots `interval` seconds apart from its left side.
 ## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
 ## rasteriser managed: every frame is then one physics tick.
 ##
 ## A fight, as the player meets it: `"quests": {"<quest id>": "<stage id>"}` puts each quest at that
-## stage once the world stands, and a shot's `"body": [x, _, z]` stands the player's body there,
+## stage once the world stands, and a shot's `"body"` (a place spec or [x, _, z]) stands the player's body there,
 ## facing what the shot looks at, before its exposure. The world then does what it does with a
 ## player near, and a stage's foes are stood up round the place of its fight (QuestFoes), waited for
 ## up to FOES_WAIT_SECONDS. Put the shot's camera behind the body at a player's height; with
@@ -189,6 +203,23 @@ func _load_world(with_body := false) -> World:
 	return w as World
 
 
+## Terrain3D's debug view for a shot: "grey" (every material at albedo 0.2), "checkered",
+## "colormap", "control", or "" for the textures.
+func _set_terrain_view(view: String) -> void:
+	var t3d: Variant = _world.get("terrain_node") if _world else null
+	if not (t3d is Node):
+		return
+	var mat: Object = (t3d as Node).get("material")
+	if mat == null:
+		return
+	var views := {"grey": "show_grey", "checkered": "show_checkered", "colormap": "show_colormap",
+		"control": "show_control_texture"}
+	for v in views:
+		var want: bool = v == view
+		if bool(mat.get(views[v])) != want:
+			mat.set(views[v], want)
+
+
 func _take_shot(index: int, shot: Dictionary) -> void:
 	var label := str(shot.get("label", "shot_%d" % index))
 	if shot.has("time"):
@@ -201,14 +232,14 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		_failures.append("no fly camera for shot %s" % label)
 		return
 	cam.fov = float(shot.get("fov", 65.0))
-	if shot.has("look_at"):
-		var la: Array = shot["look_at"]
-		cam.move_to(pos, Vector3(float(la[0]), float(la[1]), float(la[2])))
+	var look := _look_of(shot)
+	if look != Vector3.INF:
+		cam.move_to(pos, look)
 	else:
 		cam.move_to(pos)
 		cam.set_yaw_pitch(float(shot.get("yaw", 0.0)), float(shot.get("pitch", -8.0)))
 	if shot.has("body"):
-		_stand_body(shot["body"], shot.get("look_at", null))
+		_stand_body(shot["body"], look)
 	_world.move_target(pos)
 	var waited := await _wait_for_streaming()
 	if shot.has("body"):
@@ -237,6 +268,13 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	# change to any region's weather odds.
 	if shot.has("weather"):
 		_force_weather(str(shot["weather"]))
+	# A shot can lay values over the region's light ("look": {"ambient_energy": 2.0}), to try a
+	# change beside the look as it stands without editing the pack, and can draw the ground in
+	# one of Terrain3D's debug views ("terrain_view": "grey") to tell a dark texture from a dark
+	# light. Both last for the one shot.
+	if atmos:
+		atmos.set("look_override", shot.get("look", {}))
+	_set_terrain_view(str(shot.get("terrain_view", "")))
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
@@ -404,6 +442,12 @@ func _force_weather(weather_id: String) -> void:
 
 
 func _shot_position(shot: Dictionary) -> Vector3:
+	if PlaceRef.is_spec(shot.get("at", null)):
+		var at := _spec_point(shot["at"])
+		if at == Vector3.INF:
+			_failures.append("%s: no place %s" % [str(shot.get("label", "?")), str(shot["at"].get("place", ""))])
+			return Vector3.ZERO
+		return at
 	var pos := Vector3.ZERO
 	if shot.has("place"):
 		pos = _world.place_position(str(shot["place"]))
@@ -414,6 +458,43 @@ func _shot_position(shot: Dictionary) -> Vector3:
 		var ground := _world.provider.get_height(pos.x, pos.z)
 		pos.y = ground + float(shot["height_above_ground"])
 	return pos
+
+
+## Where a shot (or a sequence) looks: its `look` place spec, else its `look_at` coordinates;
+## Vector3.INF when it says neither and aims by yaw and pitch instead.
+func _look_of(shot: Dictionary) -> Vector3:
+	if PlaceRef.is_spec(shot.get("look", null)):
+		return _spec_point(shot["look"])
+	var la: Variant = shot.get("look_at", null)
+	if typeof(la) == TYPE_ARRAY and (la as Array).size() >= 3:
+		return Vector3(float(la[0]), float(la[1]), float(la[2]))
+	return Vector3.INF
+
+
+## A place spec or [x, y, z] as a point in this world; Vector3.INF for anything else.
+func _point_of(v: Variant) -> Vector3:
+	if PlaceRef.is_spec(v):
+		return _spec_point(v)
+	if typeof(v) == TYPE_ARRAY and (v as Array).size() >= 3:
+		return Vector3(float(v[0]), float(v[1]), float(v[2]))
+	return Vector3.INF
+
+
+## A place spec in this world, as the opening's cinematic resolves one (the place's built
+## position, the terrain under the point), so a plan and the cinematic agree about a bearing.
+func _spec_point(spec: Dictionary) -> Vector3:
+	return CinematicPath.point_of(spec, Callable(self, "_ground_at"), Callable(self, "_place_at"))
+
+
+func _ground_at(x: float, z: float) -> float:
+	return _world.provider.get_height(x, z)
+
+
+func _place_at(id: String) -> Vector3:
+	if id.is_empty() or not ContentDB.has(id):
+		return Vector3.INF
+	var at := _world.place_position(id)
+	return Vector3.INF if at == Vector3.ZERO else at
 
 
 ## Puts each quest a plan names at the stage it names (see the header), starting it if need be.
@@ -430,23 +511,23 @@ func _stage_quests(quests: Variant) -> void:
 
 
 ## Stands the player's body at `at` (its x and z, on the ground), facing `look` when there is one.
-## The plan's camera stays the one drawing: the body's own rig makes itself current when it comes in.
-func _stand_body(at: Variant, look: Variant) -> void:
-	if not (at is Array and (at as Array).size() >= 3):
-		_failures.append("a shot's body is [x, y, z], not %s" % str(at))
+## `at` is a place spec or [x, y, z], as a shot's camera is. The plan's camera stays the one
+## drawing: the body's own rig makes itself current when it comes in.
+func _stand_body(at_v: Variant, look: Vector3) -> void:
+	var at := _point_of(at_v)
+	if at == Vector3.INF:
+		_failures.append("a shot's body is a place spec or [x, y, z], not %s" % str(at_v))
 		return
 	if _body == null:
 		_body = (load(PLAYER_SCENE) as PackedScene).instantiate() as Node3D
 		_world.add_child(_body)
 		_world.fly_camera.make_current()
-	var a: Array = at
-	var p := Vector3(float(a[0]), 0.0, float(a[2]))
+	var p := Vector3(at.x, 0.0, at.z)
 	p.y = _world.provider.get_height(p.x, p.z) + 0.05
 	_body.set("velocity", Vector3.ZERO)
 	_body.global_position = p
-	if look is Array and (look as Array).size() >= 3:
-		var l: Array = look
-		var to := Vector3(float(l[0]) - p.x, 0.0, float(l[2]) - p.z)
+	if look != Vector3.INF:
+		var to := Vector3(look.x - p.x, 0.0, look.z - p.z)
 		if to.length() > 0.01:
 			_body.rotation.y = atan2(-to.x, -to.z)
 			var rig: Node = _body.get("camera_rig")
@@ -561,7 +642,31 @@ func _sample_perf(label: String, pos: Vector3, waited: int, path: String) -> Dic
 		"scatter_instances": _world.streamer.instance_count() if _world.streamer else 0,
 		"frames_waited": waited,
 		"time_hours": snappedf(WorldClock.time_hours, 0.01),
+		"light": _light_now(),
 	}
+
+
+## The light the frame was taken in, so a sheet can be read against the numbers that made it: the
+## sun's height and energy, the fill's energy, colour and share of sky, and the exposure.
+func _light_now() -> Dictionary:
+	var atmos: Variant = _world.atmosphere if _world else null
+	if atmos == null:
+		return {}
+	var out := {}
+	var st: Variant = (atmos as Object).get("state")
+	if st is Dictionary:
+		out["elevation"] = snappedf(float((st as Dictionary).get("elevation", 0.0)), 0.1)
+	var sun: Variant = (atmos as Object).get("sun")
+	if sun is DirectionalLight3D:
+		out["sun_energy"] = snappedf((sun as DirectionalLight3D).light_energy, 0.01)
+	var env: Variant = (atmos as Object).get("env")
+	if env is Environment:
+		var e := env as Environment
+		out["ambient_energy"] = snappedf(e.ambient_light_energy, 0.01)
+		out["ambient_color"] = "#" + e.ambient_light_color.to_html(false)
+		out["sky_contribution"] = snappedf(e.ambient_light_sky_contribution, 0.01)
+		out["exposure"] = snappedf(e.tonemap_exposure, 0.01)
+	return out
 
 
 func _fly(index: int, fly: Dictionary) -> int:
@@ -611,8 +716,15 @@ func _gait(index: int, gait: Dictionary) -> int:
 		WorldClock.set_time(float(gait["time"]))
 	if gait.has("weather"):
 		_force_weather(str(gait["weather"]))
-	var p: Array = gait.get("pos", [0.0, 0.0, 0.0])
-	var start := Vector3(float(p[0]), 0.0, float(p[2]))
+	var start := Vector3.ZERO
+	if PlaceRef.is_spec(gait.get("at", null)):
+		start = _spec_point(gait["at"])
+		if start == Vector3.INF:
+			_failures.append("gait: no place %s" % str(gait["at"].get("place", "")))
+			return index
+	else:
+		var p: Array = gait.get("pos", [0.0, 0.0, 0.0])
+		start = Vector3(float(p[0]), 0.0, float(p[2]))
 	start.y = _world.provider.get_height(start.x, start.z)
 	var bearing := deg_to_rad(float(gait.get("heading", 90.0)))
 	var travel := Vector3(sin(bearing), 0.0, -cos(bearing))        # north is -Z (CONTRACTS §1)
@@ -797,9 +909,9 @@ func _sequence(index: int, seq: Dictionary) -> int:
 		_failures.append("no fly camera for sequence %s" % label)
 		return index
 	cam.fov = float(seq.get("fov", 65.0))
-	if seq.has("look_at"):
-		var la: Array = seq["look_at"]
-		cam.move_to(pos, Vector3(float(la[0]), float(la[1]), float(la[2])))
+	var look := _look_of(seq)
+	if look != Vector3.INF:
+		cam.move_to(pos, look)
 	else:
 		cam.move_to(pos)
 		cam.set_yaw_pitch(float(seq.get("yaw", 0.0)), float(seq.get("pitch", -8.0)))
@@ -821,10 +933,13 @@ func _sequence(index: int, seq: Dictionary) -> int:
 	if seq.get("to", null) is Array:
 		var t: Array = seq["to"]
 		end_pos = Vector3(float(t[0]), float(t[1]), float(t[2]))
+	elif PlaceRef.is_spec(seq.get("to", null)):
+		end_pos = _spec_point(seq["to"])
+		if end_pos == Vector3.INF:
+			end_pos = pos
 	var look_off := Vector3.ZERO
-	if seq.has("look_at"):
-		var la2: Array = seq["look_at"]
-		look_off = Vector3(float(la2[0]), float(la2[1]), float(la2[2])) - start_pos
+	if look != Vector3.INF:
+		look_off = look - start_pos
 	var travel := float(want) * every
 	var grid_a := PackedFloat32Array()
 	var grid_b := PackedFloat32Array()
@@ -869,7 +984,7 @@ func _sequence(index: int, seq: Dictionary) -> int:
 			var p := start_pos.lerp(end_pos, clampf(clock / maxf(travel, 0.001), 0.0, 1.0))
 			if seq.has("height_above_ground"):
 				p.y = _world.provider.get_height(p.x, p.z) + float(seq["height_above_ground"])
-			cam.move_to(p, p + look_off if seq.has("look_at") else null)
+			cam.move_to(p, p + look_off if look != Vector3.INF else null)
 		var builds := _grade_builds() - builds_at_start
 		lums.append(lum)
 		luts.append(builds)

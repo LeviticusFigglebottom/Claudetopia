@@ -416,29 +416,35 @@ func test_compass_reads_the_view_while_the_body_turns() -> void:
 
 
 ## Turning on the spot steps round. Blocking, the body faces the view; turned hard with the mouse
-## while standing, it used to pivot on planted feet at 720 degrees a second. Now the legs are told
-## a side-step toward the turn while it lasts, and nothing once it stops or once the body moves.
+## while standing, it used to pivot on planted feet at 720 degrees a second, and then was shown a
+## side-step. Now the model plays a turn on the spot the way the body turns, at its rate, and
+## stops when the body does; the legs are not told to walk.
 func test_turning_on_the_spot_steps_round() -> void:
 	await _stand(Vector3.ZERO)
 	await _reset(Vector3.ZERO, 0.0, 0.0)
 	Input.action_press("block")
 	await _ticks(20)
-	var still := absf(player.anim.locomotion.x)
+	var body := player.body_model() as HumanoidModel
+	if body == null:
+		Input.action_release("block")
+		return
+	var before := body.current_turn()
+	var seen := ""
 	var widest := 0.0
-	var left_way := 0.0
 	var yaw0 := player.rotation.y
 	for i in 30:
 		player.camera_rig.add_mouse_look(Vector2(-50.0, 0.0))     # the hand to the left: turn left
 		await _tree().physics_frame
+		if seen.is_empty():
+			seen = body.current_turn()
 		widest = maxf(widest, absf(player.anim.locomotion.x))
-		left_way = minf(left_way, player.anim.locomotion.x)
-	var turned := rad_to_deg(absf(player.rotation.y - yaw0))
+	var turned := rad_to_deg(absf(wrapf(player.rotation.y - yaw0, -PI, PI)))
 	await _ticks(40)
-	var after := absf(player.anim.locomotion.x)
+	var after := body.current_turn()
 	Input.action_release("block")
-	print("    turning on the spot (%.0f deg in half a second): side-step %.2f m/s at the most (to the %s), %.2f standing before, %.2f after" % [
-		turned, widest, "left" if left_way < 0.0 else "right", still, after])
-	assert_true(still < 0.01, "standing still, the legs were told to step (%.2f)" % still)
-	assert_true(widest > 0.5, "turning on the spot, the legs were told only %.2f m/s of step" % widest)
-	assert_true(left_way < -0.5, "a turn to the left stepped to the right")
-	assert_true(after < 0.05, "the stepping went on after the turn (%.2f)" % after)
+	print("    turning on the spot (%.0f deg in half a second): played %s, legs told %.2f m/s sideways, \"%s\" standing before, \"%s\" after" % [
+		turned, seen, widest, before, after])
+	assert_eq(before, "", "standing still, a turn was playing")
+	assert_true(seen.begins_with("Turn_L"), "turning left on the spot played \"%s\"" % seen)
+	assert_true(widest < 0.05, "turning on the spot, the legs were told to walk sideways at %.2f m/s" % widest)
+	assert_eq(after, "", "the turn went on after the body stopped turning")

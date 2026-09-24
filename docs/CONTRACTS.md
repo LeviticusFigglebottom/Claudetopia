@@ -49,9 +49,9 @@ Exported as glTF animations on the model; loop flag and events in a sidecar
  "Attack_1H_Light_1": {"loop": false, "length": 0.8, "events": [{"t": 0.32, "name": "hit_start"}, {"t": 0.48, "name": "hit_end"}, {"t": 0.55, "name": "cancel_ok"}]}}
 ```
 Required clip names (v1):
-* Locomotion: `Idle`, `Idle_Combat`, `Walk`, `Walk_Back`, `Run`, `Sprint`, `Strafe_L`,
-  `Strafe_R`, `Sneak_Idle`, `Sneak_Walk`, `Jump_Start`, `Jump_Loop`, `Jump_Land`,
-  `Fall_Loop`
+* Locomotion: `Idle`, `Idle_Combat`, `Walk`, `Walk_Back`, `Trot`, `Run`, `Sprint`, `Strafe_L`,
+  `Strafe_R`, `Sneak_Idle`, `Sneak_Walk`, `Turn_L90`, `Turn_R90`, `Turn_L180`, `Turn_R180`,
+  `Jump_Start`, `Jump_Loop`, `Jump_Land`, `Fall_Loop`
 * Dodge: `Dodge_F`, `Dodge_B`, `Dodge_L`, `Dodge_R` (roll; i-frames from data)
 * Melee: `Attack_1H_Light_1`, `_2`, `_3`, `Attack_1H_Heavy`, `Attack_2H_Light_1`,
   `_2`, `Attack_2H_Heavy`, `Attack_Dagger_1`, `_2`, `Attack_Unarmed_1`, `_2`,
@@ -70,11 +70,22 @@ has footstep events. Death clips end in a held pose.
 Every locomotion clip's sidecar carries `"speed"`: the ground speed in m/s at which its planted
 foot stands still. It is load-bearing. The game plays a gait at (ground speed / `speed`), so a
 clip authored at the wrong speed slides its feet by exactly the difference. `Walk`, `Run` and
-`Sprint` are the three gaits of DESIGN §5.2 (1.8, 5.0 and 7.8 m/s), and `Sneak_Walk` is sneak
-(1.5). The gaits also share a phase: the left foot goes down at phase 0 and the right at 0.5 in
-every one of them, because the game blends them on one normalised timeline. A gait that
-breaks this blends out of step: halfway through the blend one clip's foot is planted while the
-other's is swinging, and the leg comes out as the average of the two, half lifted.
+`Sprint` are the three gaits of DESIGN §5.2 (1.8, 5.0 and 7.8 m/s), `Trot` a slow run between
+the walk and the jog (3.6), `Sneak_Walk` is sneak (1.5), and `Walk_Back` and `Strafe_L`/`_R`
+are the locked-on backpedal and side-steps (1.8 and 3.0). The gaits also share a phase: the
+left foot goes down at phase 0 and the right at 0.5 in every one of them, because the game
+blends them on one normalised timeline. A gait that breaks this blends out of step: halfway
+through the blend one clip's foot is planted while the other's is swinging, and the leg comes
+out as the average of the two, half lifted.
+
+The turns on the spot carry `"turn"` instead: the degrees one cycle turns the body (+ to the
+left). They are authored in the turning body's own frame, a planted foot going round the other
+way, and the game plays them at (the body's turn / `turn`) cycles, as it plays a gait at the
+ground's speed.
+
+Every looping clip is a whole number of frames at 30 fps, its last frame its first again (the
+forge's `check_contract` refuses one that is not). The keys start at frame 0: baked from frame 1,
+every clip began with its first frame twice, and every loop stood still for a frame once a cycle.
 
 A change to the clips alone does not re-bake the rig, which rebuilds and repaints the body too
 and takes twenty minutes. `blender -b --python tools/forge/bake_clips.py -- --out <dir>` bakes
@@ -146,9 +157,23 @@ to measure it.
 Each: `game/assets/textures/terrain/<name>_albedo_height.png` (RGB albedo, A
 height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamless.
 
+A slot draws at its albedo texture's mean in linear light times its `value`
+(`game/tools_gd/import_terrain.gd` SLOTS, written to `game/world/terrain_assets.tres` as the
+asset's `albedo_color`, which Terrain3D multiplies in linear light). No slot draws under 0.02:
+`tests/unit/test_ground_albedo.gd` fails if one does, or if the importer's table and the resource
+disagree. `tools/world/ground_albedo.py` prints every slot as drawn and, in a built world, what
+the ground is made of at a point.
+
 ## 6. World builder outputs (`game/world/generated/`)
 
 * `world_manifest.json`: `{"seed", "size_m": 8192, "spacing_m": 2, "origin": [-4096, -4096], "grid": 4096, "sea_level": 0, "lake_level": 8, "regions": [ids in mask order], "cell_size_m": 256, "cells": [32, 32]}`
+  The world is built from the atlas (`tools/world/atlas/atlas.json`, `tools/world/atlas/SCHEMA.md`),
+  and the manifest also carries `"start": {"pos": [x, y, z], "facing_deg", "place"?}` (where the
+  atlas puts a new game: on the ground, `facing_deg` a compass bearing, 0 north = -z, 90 east),
+  `"lakes": [{"id", "level_m"}]` (every lake's own level; `lake_level` is the biggest's, and each
+  texel's water level is `runtime/water_level_*.r32`'s) and `"atlas": {"name", "provinces", "crc"}`.
+  A region of `regions` may be made of several of the atlas's provinces; `region_mask.u8` holds
+  the region's index either way.
 * `heights.r32` float32 little-endian, `grid × grid`, row-major, row = z.
 * `region_mask.u8` region index per texel (255 = open water).
 * `texture_base.u8`, `texture_overlay.u8`, `texture_blend.u8` (0–255) per texel.
@@ -158,9 +183,20 @@ height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamles
   The regions, water and water level are point samples of every fourth full texel, so runtime texel `(i, j)` sits at `origin + 8 (i, j)`. The heights are a 4 x 4 block mean, so their texel `(i, j)` is centred at `origin + 8 (i, j) + 3 m`; consumers take the offset from the two grids, or from `runtime.height_offset_m` when the manifest carries it. They are also what `FallbackTerrain` draws the ground from when Terrain3D cannot, so the set the game reads at run time is: the manifest, `pois.json`, `roads.json`, `rivers.json`, `runtime/`, `cells/` and `game/terrain_data/`. That set is tracked; the rest of this directory is not.
 * `water_mask.u8` (1 = water surface at lake/sea/river level), `flow.rg8` (river direction).
 * The water masks, `water_mask.u8` and `runtime/water_1024.u8`, are one byte a texel: 0 is dry, and water is 1 (as the builder writes it) or 255, nothing else. A shader samples an 8-bit texture as byte/255, so a 1 reads as 0.004: `WaterSurface.mask_bytes` stretches a 0-and-1 mask to 0 and 255 as the game loads it, and the water shader discards under 0.5. Until it did, every lake and the sea were discarded and the lake bed showed through. `tests/unit/test_water_look.gd` loads the mask the manifest names the way the game does and fails if any texel the file marks wet would read as dry in the shader.
-* `rivers.json`, `roads.json`: `[{"id", "points": [[x, z], ...], "width_m"}]`.
+* `rivers.json`, `roads.json`: `[{"id", "points": [[x, z], ...], "width_m"}]`. A river also carries
+  `width_from_m` and `width_to_m` (at its source and its mouth), `surface_from_m` and
+  `surface_to_m` (its water there), and `surface_m`, the water surface at every one of its
+  `points`, falling from source to mouth. A mountain river is not a straight ramp: it falls in its
+  gorge and runs nearly level across its plain, so a reader drawing the water takes `surface_m`
+  where it is given and the two ends only where it is not.
 * `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it..
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
+  An instance row may carry two more fields, `[.., lean_deg, lean_toward_deg]`: the instance is
+  tipped `lean_deg` from upright, its top carried toward the ground direction
+  `(cos, sin)(lean_toward_deg)` in x, z (the world builder writes them for trees the wind has
+  bent). A six-field row stands upright, and a reader that takes only the first six fields sees
+  the tree as it would have been, so old cells and old readers both still work.
+  `WorldStreamer.instance_transform` applies it.
 Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 
 ## 7. Content definitions that other streams depend on

@@ -85,9 +85,13 @@ func _xz(id: String) -> Vector2:
 	return WorldProbe.xz_of(ContentDB.get_or_empty(id))
 
 
+## The Stair Head as the world dresses it: on the pad the built world gave it, or, in a world
+## built before it had one, on the ground where its data puts it.
 func _raise_start() -> PoiDressing:
-	for e in WorldPois.unbuilt_entries(pois, provider):
-		if str((e as Dictionary).get("place_id", "")) == START:
+	var entries: Array = pois.duplicate()
+	entries.append_array(WorldPois.unbuilt_entries(pois, provider))
+	for e in entries:
+		if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == START:
 			var d := PoiDressing.raise(e, ContentDB.get_or_empty(START), false, provider, WorldPois.roads_from_disk())
 			_scratch = Node3D.new()
 			_scratch.name = "StartScratch"
@@ -97,17 +101,11 @@ func _raise_start() -> PoiDressing:
 	return null
 
 
-## The way the waystones go: the built road the path names when the land drew one, its own `via`
-## points otherwise (the builders' `way_of`).
+## The way's points on today's map, as the waystones stand them: the built road from the Stair
+## Head to the Choir where the world has one, else the path's shape between the two, so it goes
+## where they go (PoiDressing.way_points, docs/COORDINATES.md).
 func _via() -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	var path: Dictionary = ContentDB.get_or_empty(START).get("path", {})
-	var points: Array = WorldProbe.road_points(str(path.get("built_road", "")))
-	if points.size() < 2:
-		points = path.get("via", [])
-	for p in points:
-		out.append(Vector2(float(p[0]), float(p[1])))
-	return out
+	return PoiDressing.way_points(START, ContentDB.get_or_empty(START))
 
 
 # --- where it is --------------------------------------------------------------------------------
@@ -152,7 +150,7 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 	if provider == null:
 		return
 	var d := _raise_start()
-	assert_true(d != null, "the Stair Head is dressed although the built world has no pad for it yet")
+	assert_true(d != null, "the Stair Head is dressed, on its pad or, before it had one, on the ground")
 	if d == null:
 		return
 	# fires and lamps at a point of interest are drawn from the NightLights pool now, not each an
@@ -179,6 +177,28 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 		if mm.multimesh != null and str(mm.name).contains("standing_stone"):
 			marks += mm.multimesh.instance_count
 	assert_gt(marks, 15, "waystones walk away to the Choir: %d of them" % marks)
+
+
+## The playtest found the start "a little sparse". The Wardens' camp has their gear about it, and
+## crows sat on it.
+func test_the_camp_is_lived_in() -> void:
+	if provider == null:
+		return
+	var d := _raise_start()
+	if d == null:
+		return
+	var names: Array[String] = []
+	for n in d.find_children("*", "Node3D", true, false):
+		names.append(str(n.name))
+	for kind: String in ["cooking_pot", "spear", "shield", "peat_stack", "bucket", "rope_coil"]:
+		var marker := "_%s_" % kind
+		var found := names.any(func(n: String) -> bool: return n.contains(marker))
+		assert_true(found, "the camp has its %s" % kind)
+	var crows := d.find_child("Crows", true, false) as Crows
+	assert_true(crows != null, "and crows")
+	if crows != null:
+		assert_gt(crows.count(), 3, "%d of them" % crows.count())
+		assert_gt(crows.sitting(), 1, "sat about the camp (%d)" % crows.sitting())
 
 
 func test_nothing_solid_stands_where_the_foundling_is_put() -> void:
@@ -413,9 +433,16 @@ func test_the_hushline_landing_stands_clear_of_the_water_with_its_wights_on_it()
 			var a := TAU * float(k) / float(count) + float(index)
 			var p := landing.global_position + Vector3(cos(a), 0.0, sin(a)) * float(e.get("spread", 2.5))
 			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(p + Vector3.UP * 3.0, p + Vector3.DOWN * 3.0))
-			assert_false(hit.is_empty(), "a wight at (%.1f, %.1f) has the landing under it" % [p.x, p.z])
+			var under := NAN
 			if not hit.is_empty():
-				var under := (hit["position"] as Vector3).y
+				under = (hit["position"] as Vector3).y
+			elif not bool(landing.get_meta("raised", false)):
+				# a pad the land already lifts clear of the water is its own landing (the atlas world
+				# draws one under the cliff): the ground is under them, which this scratch has no
+				# collider for, so it is read from the terrain
+				under = provider.get_height(p.x, p.z)
+			assert_false(is_nan(under), "a wight at (%.1f, %.1f) has the landing under it" % [p.x, p.z])
+			if not is_nan(under):
 				assert_true(absf(under - p.y) < 0.35 and under >= water + 1.0,
 						"standing %.2f m above the water, on the landing" % (under - water))
 	var mist := 0

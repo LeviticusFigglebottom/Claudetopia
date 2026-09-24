@@ -19,6 +19,13 @@ extends Node3D
 ## in at once so the camera never looks through a wall and let back out over about a third of a
 ## second so it never pops back. The SpringArm3D this replaces resolved collision on physics
 ## ticks only.
+##
+## A conversation turns the camera onto whoever is speaking (`frame_speaker`): a two-shot from beside
+## the player's head, on the shoulder Settings' camera side picks, with their face near the middle
+## and the player's head and shoulder beside it, not in front of it. It eases in when the talk begins
+## and back to the follow camera on goodbye. Not in first person, where the eyes already look at
+## them. The follow camera went on looking over the player's back, and the back hid the person being
+## talked to (the flow's picture of the first conversation, 09-24).
 
 signal mode_changed(first_person: bool)
 
@@ -62,6 +69,22 @@ const RENDER_LAYER_FP_ARMS := 1 << 1
 ## A body that moves further than this between two frames was put somewhere, not walked there:
 ## the rig jumps with it instead of following.
 const SNAP_DISTANCE := 4.0
+## The conversation's two-shot: the camera this far behind the player's head, this far out to the
+## shoulder side and this far up. It looks at the speaker's face, drawn this share of the way back
+## towards the player's head. At a talking distance of a metre and a half that puts the face just off
+## the middle of the picture and the player's head some twelve degrees to the side of it.
+const TALK_BACK := 1.7
+const TALK_OVER := 1.0
+const TALK_RISE := 0.1
+const TALK_LOOK_BACK := 0.2
+## Where a speaker's face is above their feet.
+const TALK_FACE_HEIGHT := 1.6
+## How long the ease into the two-shot takes, and the ease back out of it.
+const TALK_IN_S := 0.6
+const TALK_OUT_S := 0.8
+## Nobody further than this is framed: a conversation started by something across the map (a
+## quest's word, a test) is not a reason to swing the player's camera round.
+const TALK_REACH := 6.0
 
 var yaw: float = 0.0
 var pitch: float = -0.18
@@ -74,6 +97,8 @@ var has_lock: bool = false
 var look_enabled: bool = true
 ## The body the rig follows: its parent, unless something says otherwise.
 var target: Node3D = null
+## Who the camera is framing in a conversation, or null.
+var speaker: Node3D = null
 
 var yaw_node: Node3D
 var pitch_node: Node3D
@@ -97,6 +122,11 @@ var _last_target := Vector3.ZERO
 var _snap_frame := -1
 var _ball := SphereShape3D.new()
 var _exclude: Array[RID] = []
+## How far into the conversation's two-shot the camera is, 0 to 1, the shot it eases from on
+## goodbye, and where the follow camera is under it this frame.
+var _talk_w := 0.0
+var _talk_xf := Transform3D.IDENTITY
+var _follow_xf := Transform3D.IDENTITY
 
 
 func _ready() -> void:
@@ -116,6 +146,8 @@ func _ready() -> void:
 	_apply_settings()
 	if Settings.has_signal("changed"):
 		Settings.changed.connect(_on_setting_changed)
+	EventBus.dialogue_started.connect(_on_dialogue_started)
+	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 	camera.make_current()
 	snap_to_target()
 
@@ -295,10 +327,13 @@ func _process(delta: float) -> void:
 	pitch = clampf(pitch, PITCH_MIN_FP if first_person else PITCH_MIN_TP, PITCH_MAX_FP if first_person else PITCH_MAX_TP)
 	yaw_node.rotation.y = yaw
 	pitch_node.rotation.x = pitch
+	# the follow camera looks along its arm; a conversation's two-shot is laid over it below
+	camera.rotation = Vector3.ZERO
 	_collide(delta)
 	_keep_above_ground()
 	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
 	fp_arms.visible = first_person
+	_frame_speaker(delta)
 
 
 ## Where the arm and the camera sit this frame: the whole offset from the pivot (shoulder and
@@ -347,6 +382,90 @@ func _keep_above_ground() -> void:
 		camera.global_position = Vector3(p.x, floor_y, p.z)
 
 
+## Frames `who` in a conversation's two-shot, easing in from wherever the camera is.
+func frame_speaker(who: Node3D) -> void:
+	speaker = who
+
+
+## Eases back to the follow camera.
+func release_speaker() -> void:
+	speaker = null
+
+
+func is_framing_speaker() -> bool:
+	return _talk_w > 0.0
+
+
+func _on_dialogue_started(npc_id: String) -> void:
+	var who: Node3D = NpcRegistry.instance.actor(npc_id) as Node3D if NpcRegistry.instance != null else null
+	if who == null or target == null or not is_instance_valid(target):
+		return
+	var d := who.global_position - target.global_position
+	if Vector2(d.x, d.z).length() <= TALK_REACH:
+		frame_speaker(who)
+
+
+func _on_dialogue_ended(_npc_id: String) -> void:
+	release_speaker()
+
+
+func _speaker_in_shot() -> bool:
+	return speaker != null and is_instance_valid(speaker) and speaker.is_inside_tree() and not first_person
+
+
+## Lays the conversation's two-shot over the follow camera, as far as the ease has come.
+func _frame_speaker(delta: float) -> void:
+	_follow_xf = camera.global_transform
+	var framing := _speaker_in_shot()
+	if framing:
+		_talk_xf = _two_shot()
+	_talk_w = 0.0 if first_person else move_toward(_talk_w, 1.0 if framing else 0.0,
+			maxf(delta, 0.0) / (TALK_IN_S if framing else TALK_OUT_S))
+	if _talk_w <= 0.0:
+		return
+	camera.global_transform = camera.global_transform.interpolate_with(_talk_xf, smoothstep(0.0, 1.0, _talk_w))
+
+
+## The two-shot: from beside the player's head on the camera's shoulder side, a little behind and
+## above, looking at the speaker's face drawn a little back towards the player, so the face sits
+## near the middle and the player's head and shoulder beside it. Kept out of walls the way the
+## follow camera is, and above the ground.
+func _two_shot() -> Transform3D:
+	var head := global_position
+	var face := speaker.global_position + Vector3(0.0, TALK_FACE_HEIGHT, 0.0)
+	var flat := Vector3(face.x - head.x, 0.0, face.z - head.z)
+	if flat.length() < 0.05:
+		flat = forward_flat()
+	var f := flat.normalized()
+	var right := Vector3(-f.z, 0.0, f.x)
+	var side := 1.0 if _shoulder >= 0.0 else -1.0
+	var at := _clear_from(head, head - f * TALK_BACK + right * side * TALK_OVER + Vector3.UP * TALK_RISE)
+	var provider: Object = World.terrain()
+	if provider != null and provider.has_method("get_height"):
+		at.y = maxf(at.y, float(provider.call("get_height", at.x, at.z)) + GROUND_CLEARANCE)
+	var look := face.lerp(head, TALK_LOOK_BACK)
+	if at.distance_to(look) < 0.05:
+		return camera.global_transform
+	return Transform3D(Basis.IDENTITY, at).looking_at(look, Vector3.UP)
+
+
+## `to`, or as far towards it from `from` as a ball the camera's size can go.
+func _clear_from(from: Vector3, to: Vector3) -> Vector3:
+	var space := get_world_3d().direct_space_state if is_inside_tree() else null
+	if space == null or from.distance_to(to) < 0.01:
+		return to
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = _ball
+	q.transform = Transform3D(Basis.IDENTITY, from)
+	q.motion = to - from
+	q.collision_mask = MASK_CAMERA
+	q.exclude = _exclude
+	var hit := space.cast_motion(q)
+	if hit.size() >= 1 and float(hit[0]) < 1.0:
+		return from.lerp(to, float(hit[0]))
+	return to
+
+
 func toggle_mode() -> void:
 	set_first_person(not first_person)
 
@@ -372,13 +491,18 @@ func right_flat() -> Vector3:
 	return Vector3(cos(yaw), 0.0, -sin(yaw))
 
 
-## True view direction, for aiming projectiles and interaction.
+## True view direction, for aiming projectiles and interaction: the follow camera's, also while a
+## conversation's two-shot is drawn over it. The two-shot is a picture, not where the player aims.
 func aim_direction() -> Vector3:
-	return -camera.global_transform.basis.z
+	return -_follow_view().basis.z
 
 
 func camera_position() -> Vector3:
-	return camera.global_position
+	return _follow_view().origin
+
+
+func _follow_view() -> Transform3D:
+	return _follow_xf if _talk_w > 0.0 else camera.global_transform
 
 
 func shake(_strength: float) -> void:

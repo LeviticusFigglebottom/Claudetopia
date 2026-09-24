@@ -188,7 +188,7 @@ every authored sightline's line.
   "shelf_m": 350,
   "beach_m": 60,
   "cliffs": [{"path": [[x, z], ...], "height_m": 30}],
-  "shelves": [{"polygon": [[x, z], ...], "height_m": 4, "bank_m": 90}]
+  "shelves": [{"polygon": [[x, z], ...], "height_m": 4, "bank_m": 90, "notches": [[x, z]]}]
 }
 ```
 
@@ -204,6 +204,14 @@ inside it is flat to a few centimetres, and within `bank_m` (60 m by default) th
 comes down to it as a steep bank -- steep enough to want a `stair`, not a sheer face. The sea past
 its seaward edge is the coast's: draw a low `cliffs` entry along that edge to stand it up out of
 the water. A place on a shelf gets a pad at the shelf's height; a `pads` entry makes sure of it.
+
+The seaward edge is not built as the clean line it is drawn as. It wanders in and out by up to
+7 m (spurs and bites some thirty to ninety metres apart), and blocks fallen from it lie in the
+water at its foot. Near the land behind, where the edge runs into the coast, it tapers back to
+the drawn line. A pad's footprint is left whole. `notches` are points on the seaward edge where
+the shelf is cut down into the water: a slot 8 m wide through the face, 4 m into the shelf,
+with its floor falling from a couple of metres under the shelf into the sea, for a stair or a
+slipway to go down. A notch more than 20 m from the shelf's edge is an error.
 
 The world stops at its square edge. Close it: sea, or a range too steep to climb. A province
 that runs flat into the edge is a place a player walks off the map. If the coast polygon covers
@@ -283,13 +291,23 @@ leaves at the lake's level.
  "cliff_shore_deg": 0, "reed_shore_deg": 270}
 ```
 
-The water stands at `level_m` inside the polygon; the bed falls to `depth_m` below it toward
-the middle. The land round it is held a metre or two above the water for a few hundred metres,
-so there are no dry hollows under the lake's level beside it. `islands` stand in it to their
-`height_m`. `cliff_shore_deg`, when given, is the bearing from the lake's middle of a stretch of
+The polygon is the landward edge of the lake's shore. The water stands at `level_m` inside it,
+beginning some thirty metres in (24 to 56 m on a built lake): the first metres inside the line are
+a shingle shore held a metre and a half over the water, and a cove drawn narrower than about a
+hundred metres closes up into a bump in the built shore, so draw a lake in features of a few
+hundred metres (docs/ATLAS.md, section 11). The bed falls to `depth_m` below the level toward the
+middle. The land round it is held a metre or two above the water for a few hundred metres, so
+there are no dry hollows under the lake's level beside it, and no landform digs one there.
+`islands` stand in it to their `height_m`. `cliff_shore_deg`, when given, is the bearing from the lake's middle of a stretch of
 shore that stands in a low cliff at the water; `reed_shore_deg` the bearing of one that runs out
 in a shallow reed shelf. A lake must be on land. One with no river out of it is a still water,
 which is allowed.
+
+`shore_m` (10 to 320, default 320) is how far the lake's shore and bank reach from its line.
+Every distance above scales with it: the thirty metres inside the line before the water, the
+shingle, the bank back to the land, and the few hundred metres held over the water. The default
+suits a lake in a basin. Give a pool under a fall, or in a gorge, a short one (about 40): at 320,
+the Weaver's Linn flattened a basin three hundred metres across into the wold, fall and all.
 
 ## forests
 

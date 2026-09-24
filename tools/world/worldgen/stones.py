@@ -35,8 +35,7 @@ def _put(out: dict, grid: Grid, H: np.ndarray, x: float, z: float, yaw: float, s
          asset: str, tint) -> None:
     y = float(sample_bilinear(H, grid, np.array([x], dtype=np.float32),
                               np.array([z], dtype=np.float32))[0])
-    cx, cz = grid.cell_of(np.array([x], dtype=np.float32), np.array([z], dtype=np.float32))
-    key = (int(np.clip(cx[0], 0, grid.cells - 1)), int(np.clip(cz[0], 0, grid.cells - 1)))
+    key = grid.written_cell(x, z)
     out.setdefault(key, {}).setdefault(asset, []).append(
         [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint])
 
@@ -56,15 +55,21 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         return bool(water[i, j] == 0 and pad_mask[i, j] == 0 and slope[i, j] < 0.5)
 
     for region in regions:
-        assets = _assets(index, region.short)
+        assets = _assets(index, region.art_short)
         if not assets:
             continue
         mine = owner == region.index
 
+        def here(p, region=region) -> bool:
+            """Whether a place stands in this province (a region may have several)."""
+            j, i = grid.to_tex(np.array([float(p["position"][0])]), np.array([float(p["position"][1])]))
+            j, i = int(np.clip(j[0], 0, n - 1)), int(np.clip(i[0], 0, n - 1))
+            return int(owner[i, j]) == region.index
+
         # --- the ring, where a place is a stone circle ------------------------------------
         for short, count, radius in (("standing_moot", 11, 21.0),):
             p = by_short.get(short)
-            if p is None or p.get("region", "").split("/")[-1] != region.short:
+            if p is None or p.get("region", "").split("/")[-1] != region.short or not here(p):
                 continue
             cx, cz = float(p["position"][0]), float(p["position"][1])
             start = float(rng.uniform(0.0, 2.0 * math.pi))

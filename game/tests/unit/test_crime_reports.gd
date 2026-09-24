@@ -4,7 +4,8 @@ extends TestCase
 ## villager being killed, because nothing in the world called `Bounty.commit()` for either.
 
 const OWNER := "core:npc/ellard_wynstead"
-const HERE := Vector3(900.0, 56.0, 2350.0)
+## Merrowby, wherever the map puts it (docs/COORDINATES.md).
+var HERE := at_place("core:place/merrowby", 56.0)
 
 var reports: CrimeReports
 var bounty: Bounty

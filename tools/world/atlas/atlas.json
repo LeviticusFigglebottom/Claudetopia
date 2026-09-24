@@ -5059,7 +5059,13 @@
      ]
     ],
     "height_m": 4,
-    "bank_m": 90
+    "bank_m": 90,
+    "notches": [
+     [
+      44,
+      3902
+     ]
+    ]
    }
   ]
  },
@@ -9194,6 +9200,7 @@
    "name": "The Blackgill Pot",
    "level_m": 189,
    "depth_m": 5,
+   "shore_m": 40,
    "polygon": [
     [
      2606,
@@ -9250,6 +9257,7 @@
    "name": "The Weaver's Linn",
    "level_m": 113,
    "depth_m": 5,
+   "shore_m": 40,
    "polygon": [
     [
      3296,

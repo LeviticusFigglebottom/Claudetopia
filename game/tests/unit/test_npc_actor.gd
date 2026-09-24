@@ -50,7 +50,7 @@ func _npc(id: String) -> Npc:
 	n.npc_id = id
 	_root().add_child(n)
 	_nodes.append(n)
-	n.global_position = Vector3(900, 40, 2350)
+	n.global_position = at_place("core:place/merrowby", 40.0)
 	return n
 
 
@@ -61,7 +61,7 @@ func _guard(id: String) -> Guard:
 	n.set("npc_id", id)
 	_root().add_child(n)
 	_nodes.append(n)
-	(n as Node3D).global_position = Vector3(900, 40, 2350)
+	(n as Node3D).global_position = at_place("core:place/merrowby", 40.0)
 	return n as Guard
 
 
@@ -113,15 +113,23 @@ func test_talking_to_a_shopkeeper_opens_trade() -> void:
 	svc.trade_requested.disconnect(cb)
 
 
-func test_interaction_hands_off_to_dialogue() -> void:
+## Interacting with somebody starts a conversation with them. This used to check only that the bus
+## heard `dialogue_started`, which the NPC emitted itself while nothing started a conversation, so it
+## passed while no one in the game could be spoken to.
+func test_interaction_starts_a_conversation() -> void:
 	var n := _npc(BRAM)
 	var started: Array = []
 	var cb := func(id: String) -> void: started.append(id)
 	EventBus.dialogue_started.connect(cb)
 	n.interact(_player())
-	assert_eq(started, [BRAM])
-	assert_eq(n.current_intent(), "Talk_1")
 	EventBus.dialogue_started.disconnect(cb)
+	assert_eq(started, [BRAM], "the conversation says it has begun, once")
+	assert_true(bool(Social.dialogue.call("is_running")), "and it is running")
+	assert_eq(str(Social.dialogue.get("npc_id")), BRAM, "with the person spoken to")
+	assert_eq(n.current_intent(), "Talk_1")
+	n.interact(_player())
+	assert_eq(str(Social.dialogue.get("npc_id")), BRAM, "a second press while talking does not start it again")
+	Social.dialogue.call("stop")
 
 
 func test_gestures_move_disposition_by_personality() -> void:

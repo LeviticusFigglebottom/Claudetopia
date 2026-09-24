@@ -1100,6 +1100,225 @@ frames and wall time. The quicksave key says "Not saved while the opening plays.
 probe reads the opening just before each frame is drawn, so the picture it keeps is the moment
 it read, and reports when the overall cap handed over.
 
+## 2026-09-23 · A stop plants the feet and steps them together; nothing slides into the idle
+**Decision.** When a body comes to a stand (ground speed under 0.05 m/s, no one-shot playing),
+`FootPlanter` holds each foot where the stride put it down, in the world, by a two-bone solve of
+each leg on the pose the clips have just set, and lowers the hips as far as the wider stance
+needs. The gait keeps its pose until the feet are held; then the body settles into the idle over
+them, and the foot furthest from its place in the idle lifts 6 cm and steps into it over 0.24 s,
+then the other if it is more than 3 cm off. A foot the stop caught in the air steps first. Once
+settled the feet stay held, and a foot steps again when the body has turned 20° or drifted 10 cm
+from it: a standing body turning to face someone shuffles round on its feet. The feet go back to
+the clips over 0.1 s when the body moves off, at once when it leaves the ground or is carried off
+(a teleport, a snap turn), and after a one-shot they are planted where it left them and stepped
+back into the stance.
+**Why.** The stop cross-faded a frozen stride into the idle under still feet. Measured on the
+heel and the ball of each foot, the points that bear on the ground (a foot rolling about its heel
+or its ball keeps that point still, so only a slide moves it): settling into the idle, the feet
+slid 114 cm between them after a stop from a walk, 110 cm from a jog and 43 cm from a sprint
+(58.6 cm from a jog on the ankles, the older measure). Planted, they slide 0.0 cm in all three,
+in two steps (one after the sprint), settled 0.25-0.49 s after the body stands, the hips at most
+5.5-6.6 cm lower while the stance is wide. Turning 90° on the spot over 1.5 s: five steps, no
+slide, a foot lagging the body 23° at most. After a light attack, standing: two steps back into
+the stance, 0.3 cm of slide.
+**Alternatives.** Stop clips, one on each foot, picked by where the stride is: the usual way, and
+better for a stop from a run, where a body leans back into it; but each needs the stride's phase
+matched and one per gait, and each still ends in a cross-fade into the idle. Engine IK
+(TwoBoneIK3D) does the solve, but not the steps, the hips or the letting go; the solve here is
+fifteen lines, run straight after the tree on the combat clock, where the tests read it back.
+**Consequences.** Every humanoid has it, the player, villagers and enemies, except a child's rig,
+whose legs are re-proportioned after the solve. `HumanoidModel.plant_feet` switches it off (the
+motion studio films a before and after with it). Still wrong: the slowing down before the stand.
+While the body decelerates, the gait's own feet slide on the ground: 15 cm over a stop from a
+walk, 1.8 cm from a jog, 66 cm from a sprint.
+
+## 2026-09-23 · Every clip starts on its first frame once, and a foot leaves and meets the ground at its pace
+**Decision.** The forge puts a clip's keys on frames 0..n-1 (they went on 1..n); every loop is a
+whole number of frames at 30 fps, its last frame its first again (`check_contract` refuses one
+that is not; the walk is 29 frames where it was 28.8); a one-shot is sampled on to the frame at or
+past its end. In the stride model a swing foot leaves the ground and comes down on it at the
+ground's own pace, eased in and out in the world (`swing_settle`: 1 for the walks, the backpedal
+and the side-steps, 0.7 for Trot, 0.5 for Run and 0.15 for Sprint, where the full ease carries
+the foot too far out in front and pulls the hips down); `swing_lag` and `swing_reach`, which
+faked the heel recovery and the reach by hand, are gone. Walk_Back (1.8 m/s) and the side-steps
+(3.0 m/s, a shuffle with a little flight, the swing foot crossing in front) are made on the
+stride model at the locked-on paces, and a slow run, Trot (3.6 m/s), stands between the brisk
+walk and the jog.
+**Why.** Every clip began with its first frame twice: the glTF exporter wrote keys at frame / fps
+from 1/30 s, and Godot's importer sampled from 0 and held the first pose. A loop stood still for a
+frame once a cycle with its left foot just down, and the foot was carried along the ground at the
+body's speed. And an eased swing starts and stops still in the body's frame, which moves at the
+body's speed in the world, so every foot scuffed forward as it lifted and landed running. On the
+heel and ball of the feet (the points that bear on the ground; tests/unit/foot_contact.gd), in the
+forge's own sampling, a stride slid 5.3, 6.0 and 4.1 cm at a walk, a jog and a sprint; 0.4 now.
+In the game, played through the 30 fps keys: 3.2, 2.5 and 3.1 cm a stride, 3.0 sneaking, 1.8
+backpedalling, 4.5 side-stepping (the side-steps were 23 cm, made at 1.9 m/s and played at 1.58x).
+**Alternatives.** Baking at 60 frames a second halves what a frame carries a foot and doubles the
+clips; the ease in the world gets most of it at 30. IK on every footfall would hide all of it.
+**Consequences.** Every one-shot is a frame shorter and starts a frame sooner, in step with the
+events its sidecar always gave. The clips are baked with `bake_clips.py` and transplanted, the
+body untouched.
+
+## 2026-09-23 · Whichever way the body goes, the legs go the nearest of four ways and the hips turn the rest
+**Decision.** The legs play one of four clips, the one whose way is nearest the way the body
+goes: ahead (the gaits) and back (Walk_Back) each take the ways within 67.5° of them, the
+side-steps the rest; a way is left only 10° past its edge, and the legs hand over across 0.15 s.
+The hips are turned the rest of the way toward where the body goes, over 0.08 s, and the chest is
+turned back 80% of that to face ahead (`HumanoidModel._turn_the_hips`). The whole pace is played
+along the stride.
+**Why.** Blended by the share of the pace that went sideways, a side-step and a run put the
+planted foot on a line between their two footfalls: locked on, the planted foot moved at 28% of
+the ground's speed on the diagonal ahead (3.64 m/s) and 23% backing off diagonally (2.18). Now
+2% and 5%. On the heel and ball, 79 and 49 cm a stride before the clips were re-made, 3.7 and 7.7
+now; the Trot takes most of the diagonal ahead, which a walk and a jog blended half and half left
+at 11.
+**Alternatives.** Diagonal clips, eight ways: four more clips to keep in step, and a stick
+between two of them blends again. Turning the whole body to the way it goes: the locked-on body
+has to face its foe.
+**Consequences.** A body always faces where it is going when it is not locked on, blocking or in
+first person, so the hips turn only then, and only as far as 77.5°.
+
+## 2026-09-23 · A turn on the spot is a turn, played at the rate the body turns
+**Decision.** A body standing (under 0.3 m/s) that turns faster than 60°/s plays a turn on the
+spot, Turn_L90 or Turn_R90, two steps round a quarter turn; one begun faster than 200°/s plays
+the quick about-face, Turn_L180 or Turn_R180, a long pivot step and the other foot round after
+it. The clips are made in the turning body's frame and played at the rate it turns (a cycle for
+every `turn` degrees in the sidecar), the way the gaits are played at the ground's speed, so a
+foot on the ground stays where it went down; the feet pivot on their balls, the head leads and
+the shoulders follow. A turn picks up as far round as the body has already come, comes in over
+0.03 s with the planted feet held under it, and ends when the body has turned slower than 30°/s
+for 0.08 s; the feet are then planted and stepped into the stance, as after a stop. Slower than
+60°/s the planted feet step round by themselves. The player's side-step (`turn_step_pace`) is
+gone: the model reads the body's own turn, so a villager or a foe turning on the spot steps the
+same way.
+**Why.** The side-step told the legs to walk sideways at the pace the feet go round the middle:
+it read as a shuffle, and a step sideways is not a step round. Measured on the heel and ball: a
+quarter turn over 0.7 s slides 0.9 cm in all, an about-face over 0.35 s 3.7 cm.
+**Alternatives.** Turn clips that turn the body themselves (root motion): the body would turn only
+as fast as the clip, and a flick of the view would wait on it.
+**Consequences.** A turn faster than 2.5 times the clip's own pace (321°/s for the quarter turn,
+750°/s for the about-face) turns the feet with the body for the rest; the player's standing turn
+tops out at 900°/s, so the start of the fastest flick still pivots a little.
+
+## 2026-09-23 · Braking, the legs keep the gait they were in
+**Decision.** Slowing faster than 6 m/s², the legs hold the gait they were in and go on at the
+ground's pace, however slow, with no floor on the stride's rate, until the body stands and the
+feet are planted; the hold lets go when the body speeds up, settles to a steady pace or has
+settled into its stance, easing back to the gait its pace calls for.
+**Why.** Slowing, the gait blended down through the slower gaits, and a run's feet and a walk's
+are down for different shares of a stride: while the body slowed, the heel and ball slid 0.8 cm
+in a stop from a walk, 40 cm from a jog and 35 cm from a sprint (the mean of eight stops begun at
+eight points of the stride). Now 0.1, 0.5 and 1.3 cm; with the settle after the stand, 0.7 cm at
+the most.
+**Alternatives.** Stop clips, one for each foot, chosen by where the stride is and timed to the
+distance left: the usual way, and it still needs the stride's phase matched and one per gait.
+**Consequences.** The last stride of a stop keeps its length and slows its cadence with the
+body, where a braking runner would shorten the stride at the same cadence; a stop clip is the
+next thing if it reads as slow motion. A stop from a sprint ends in the sprint's pose for a
+frame before the feet are planted and step in.
+
+## 2026-09-23 · One pad button, one thing
+**Decision.** On a pad, B is Sprint: a tap rolls and a hold runs, the same rule as Shift. The
+left stick's click sneaks; LB casts; the right stick's click locks on and nothing else; the D-pad
+is the four quick slots; Back is the chart; Start is the pause page, which now also opens what you
+can say (the Sayings). A still uses and, in a menu, confirms: the only button with two actions,
+which are never listened for at once. The first-person view and the lantern have no pad button
+yet. A player whose saved bindings are still the old defaults is moved onto these; a binding they
+changed is theirs and stays (`Settings.RETIRED_DEFAULTS`).
+**Why.** The pad had three buttons doing two things at once: the right stick's click locked on
+and switched to first person together, D-pad up cast and used the first quick slot together, and
+the map sat on Guide, which Windows keeps for itself (it opens the Game Bar), so a pad on Windows
+had no map. The Souls games, which most of the people who will play this learned on, put sprint
+and roll on one button, a tap and a hold, and crouch on the left stick's click. Doing the same
+frees LB, the one shoulder button left, for casting, which a fight needs at hand. The last
+round's "B rolls, the stick click sprints" kept B's press as an instant roll; a tap is judged on
+release, 0.22 s at the most later, and that is the cost.
+**Alternatives.** Cast on Back and the chart in the pause page: a cast on a button the thumb has
+to leave both sticks for. Three quick slots and cast on D-pad up: a slot the keyboard has and
+the pad does not. A tap-or-hold on Back for the chart and the lantern: the next thing, if a pad
+player needs the lantern without a menu.
+**Consequences.** `Player._sprint_pressed` reads a pad's button as well as a key, so the tap is
+judged the same on either. The hint strip and the controls page name the roll "tap B" on a pad.
+With "A tap of Sprint rolls" off, a pad has no roll until Dodge is given a button in the
+controls settings. test_pad_layout pins it: no pad input bound to two actions but A's pair,
+everything done in play on the pad, nothing on Guide, the retired defaults moved and a changed
+binding kept.
+
+## 2026-09-23 · A stop caught in a run's flight lands before the feet are planted
+**Decision.** Braking with both feet off the ground (a run's flight), the stride plays at its own
+pace rather than the body's, so the body comes down on a foot and brakes on it; a body that stands
+in the air finishes the flight, for a quarter of a second at the most, before its feet are
+planted. A flight begun slower than 1.5 m/s (the last push-off of a stop) is not played on, and
+the planter sets the lower foot down instead. A foot is on the ground when its heel or its ball is
+within 3 cm of it, as the forge turns the foot, not when its ankle is: a foot up on its ball
+stands. A foot caught in the air steps down at once, whatever the other is doing. The planter
+takes a standing body as carried off (a teleport) when it moves 25 cm along the ground in a frame;
+a held foot has to be 1.4 m from its place before it is given back to the clips.
+**Why.** Filmed, a stop from a sprint slowed the stride with the body and froze it in the flight:
+the body stood 0.2 s in the air with both feet up, and then the back foot, held 0.9 m from its
+place in the stance, tripped the planter's "carried off" test (0.7 m from its place) and snapped
+there in a frame, 60 cm. The stop test measured feet sliding on the ground, and neither foot was
+on it. It now measures both: over eight stops from each gait, the body stood with both feet off
+the ground for 0.22 s from a jog and 0.36 s from a sprint, and a foot moved 57 and 75 cm in a
+tick. Now 0.00 s over the eight (0.06 s at the most over thirty stops from each gait, a flight
+landing), and no foot moves faster than a step (7.0 cm in a 120th of a second).
+**Alternatives.** Stop clips, one for each foot and gait, timed to the distance left: still the
+proper thing. Letting both feet step down from the air together: the body hangs for a step's
+length.
+**Consequences.** The flight's pace is read off the last frame's pose, so it can run a frame
+into the landing, and that frame slides the foot: 2.0 cm in a stop from a sprint where it was
+1.3, the mean of eight. The feet end the braking further apart, and the hips come down as much as
+8.6 cm for them from a jog and 6.3 from a sprint (2.8 and 0.5 before) until the feet have stepped
+in. The trailing leg still hangs in the air behind while the body brakes.
+
+## 2026-09-23 · A foot a turn leaves on its ball puts its heel down
+**Decision.** A held foot on the ground that is in its place, while neither foot steps, settles to
+the tilt the clips give it over 0.08 s, turning about the lower of its heel and its ball (which
+stays put) and keeping its own heading. A held foot steps for its heading (0.15 rad from its place
+while the body settles, 0.35 after), no longer for its tilt.
+**Why.** The turns on the spot pivot on the balls with the heels 8° up, and the planter held the
+feet where the turn left them: after every turn the body stood on tiptoe, its heels 3.0 cm off
+the ground, until it next moved. The tilt counted toward the turn that makes a step, but 8° is
+under 0.15 rad, so it never made one. Now the heels are down (0.0 cm); a quarter turn slides
+1.1 cm in all and an about-face 3.9 (0.9 and 3.7 before).
+**Alternatives.** Turn clips that end flat: a turn ends wherever the body stops turning, not at the
+end of its cycle. Flattening every held foot: the back foot of a stop, flattened on its ball before
+it stepped, was pulled back and down, and the hips came 20 cm down to reach it.
+**Consequences.** A stop's feet are stepped into the stance as before, and land at the clips'
+tilt. With the step judged by heading alone, the hips come down 5.2 cm at the most in a stop from a
+walk (7.8 before); a jog's and a sprint's are unchanged at 8.6 and 6.3.
+
+## 2026-09-23 · The heightfield holds a body only where no collider does, and a jump has a take-off
+**Decision.** `Actor.snap_to_terrain` stands down while a collider holds the body, and never pulls a
+rising body down; it still lifts a sunk body, and keeps one on the heightfield down a descent.
+Every actor's floor angle is 45° (`Actor.WALKABLE_SLOPE_DEG`), and its pace along the ground is the
+same up a slope as on the flat (`floor_constant_speed`). The player's "into a wall you stop
+running" reads the speed made along the ground, not across the map. Jumping, landing, mantling,
+blocking and the fall pose ask whether the body stands on a collider or on the heightfield
+(`Player._on_ground`), not on a collider alone. A jump plays Jump_Start's crouch and push in 0.1 s,
+and the feet leave the ground on the push (the clip's `jump_off`, now an anchor the rig is timed
+to); then Jump_Loop in the air and Jump_Land on the ground. Fall_Loop is for falling faster than
+6 m/s after a jump, or 3 m/s after none.
+**Why.** From a playtest on Terrain3D's collision: "walking upwards, at any incline, seems
+impossible", and "jump doesn't work". No test had walked a slope on a collider: their ground was
+a box or the heightfield alone. On Terrain3D's collision (tests/unit/test_walking_uphill.gd, planar
+ramps at the world's 2 m spacing), a walk could not get onto a 25° slope. A jog made 36% of its
+pace up 20° and nothing from 25°, a sprint 45% up 20°, and a jump rose 0.00 m on the collision and
+on the heightfield. The snap pulled the body down to the bilinear height whenever it was within
+12 cm above it. A capsule of radius r resting on a slope stands r(1/cos θ − 1) above the height
+under its middle, so the snap sank it into the slope and the collider pushed it back downhill
+every tick. A jump's first tick rises 7.7 cm, so it was pulled back down every tick. With the snap
+standing down, a jog and a sprint still stalled at 4.0 m/s up 35° and 3.1 up 40°: the wall check
+compared the pace asked for with the pace made across the map. Now every gait climbs every slope
+from 5° to 40° at 100% of its pace along the ground, and 50° is a wall. A jump leaves the ground
+0.12 s after the press, rises 1.14 m, and lands 1.05 s after the press.
+**Alternatives.** Making the snap agree with the collision's triangles: the capsule still stands
+off a slope by r(1/cos θ − 1), so the snap would need the capsule's shape. A jump off the press with
+Jump_Start played from its push: two frames of a clip made to show a crouch.
+**Consequences.** Where a collider holds the body, the collider is the ground, and the drawn
+heightfield may differ from it by a centimetre or two on curved ground. On the heightfield alone
+(no collider) a body climbs at its pace across the map, which is faster along the ground (131% at
+40°). A jump comes 0.1 s after the press.
 ## 2026-09-23 · Wickmere is drawn, not seeded
 **Decision.** The world's geography is authored in `tools/world/atlas/atlas.json` (docs/ATLAS.md
 says why each part is where it is). That covers the provinces and their ground, the ranges,
@@ -1184,6 +1403,45 @@ are read where they lie. All 26 residents the map added offer the work going whe
 The crime service now answers `bounty_for`, which it never did, so every `bounty_min` condition
 and greeting read nought until now.
 
+## 2026-09-23 · The map is written down once; everything else says what it is beside
+
+**Decision.** A place's and a POI's `position` is the only place the map is written in
+coordinates (the atlas writes it). Everything else that means "near that place" names the place
+and says where from it: a compass bearing and a distance, an offset, a way's shape between two
+places, or, for a position a save remembers, a pin (the nearest place, where it stood then, the
+height above the ground). `PlaceRef` reads all four. A door plan no longer copies its place's
+position, the Stair Head's way is a shape, the hand-written capture plans are place specs, and
+the saves pin the player, the Hearth's landing and Echo, an interior's way out and an escort on
+the road. `test_place_ref.gd` fails when a definition writes coordinates where a place belongs.
+**Why.** The atlas moved 83 places and added 216. Every copy of a coordinate had to be found and
+edited by hand to follow them. The land agent's branch did exactly that for the door plans, the
+Stair Head's way and three tests, and the next redraw would need it again. Said as places, they
+follow without anyone touching them, and on an unmoved map they resolve to the same points: a
+way to 2 mm, a plan's camera to 7 mm, a save exactly.
+**Alternatives.** A way drawn in coordinates with the two ends it was drawn against recorded
+beside it, and re-fitted on load. That is easier to draw, but a way redrawn for the new map and
+not re-recorded is moved twice. A table of where each place moved, applied to saves: it has to
+be written for every redraw, and a save cannot say which table it predates.
+**Consequences.** Anything new that stands near a place should say so as a spec;
+tools/place_paths.py and tools/capture/relative_plan.py turn coordinates into one. The generated
+capture plans (default, pois, look, horizon) are still coordinates: their generators read the
+built world, and are run again after a redraw. A region's `map.center` is still the no-world
+fallback for region lookups, and should be kept inside its region as the atlas draws it.
+
+## 2026-09-23 · The Stair Head's waystones walk the road the builder routed
+
+**Decision.** Where the built world has a road between a POI and the place its way leads to,
+the waystones stand along that road: the one the path names (`built_road`), else the one named
+for its two ends (`core:road/<from>_<to>`, either way round). The way's drawn shape is used only
+where there is no road.
+**Why.** On the atlas world the way drawn straight from the Stair Head to the Choir crossed
+ground of 37 to 61 degrees; the builder's road goes round the knoll. DESIGN 5.1a asks for a way
+marked on walkable ground.
+**Alternatives.** Keeping the drawn shape and asking the cartographer to redraw it round the
+knoll by hand: it would be walkable only on the build it was drawn against.
+**Consequences.** The walk is the road's length: 980 m on the atlas world, against the 300-650 m
+test_the_start holds it to. That is the atlas's distance, and it is left failing for the
+coordinator to decide. On main's world there is no such road and nothing changes.
 
 ## 2026-09-24 · The quests are played, not only walked: `./run.sh quests`
 

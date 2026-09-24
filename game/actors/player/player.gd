@@ -67,17 +67,17 @@ const ALIGN_NONE := deg_to_rad(150.0)
 const SPRINT_RESUME := 0.25
 ## A press of Sprint let go within this long is a tap, and a tap rolls (see _read_sprint_tap).
 const SPRINT_TAP_S := 0.22
-## Turning on the spot. A body standing (below TURN_STEP_BELOW m/s) that turns faster than
-## TURN_STEP_FROM steps round, instead of pivoting on planted feet: the model is told a side-step
-## at the pace the feet would travel round the body (TURN_STEP_RADIUS from its middle), no more
-## than TURN_STEP_MAX. TURN_STEP_EASE eases it in and out so a flick of the view is a step or
-## two, not a twitch.
-const TURN_STEP_FROM := deg_to_rad(60.0)
-const TURN_STEP_BELOW := 0.5
-const TURN_STEP_RADIUS := 0.18
-const TURN_STEP_MAX := 1.4
-const TURN_STEP_EASE := 12.0
+## The pads whose Sprint button is read for a tap (a binding names a button on any pad).
+const PADS_READ: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7]
 const JUMP_HEIGHT := 1.1
+## A jump's take-off: from the press to the feet leaving the ground (s), in which the rig plays
+## Jump_Start's crouch and push to its `jump_off`, and how long the push goes on after it.
+const JUMP_WINDUP_S := 0.1
+const JUMP_PUSH_S := 0.12
+## In the air, falling faster than this (m/s) is a fall (Fall_Loop); slower, after a jump, it is
+## the jump's own air (Jump_Loop), and after no jump it is a step down, shown as nothing.
+const FALL_FROM := 3.0
+const JUMP_FALL_FROM := 6.0
 ## Turn rate of the committed states (attacks, casting, the bow), which are not locomotion.
 const TURN_SPEED := 14.0
 const ATTACK_STEP_SPEED := 1.6
@@ -177,11 +177,12 @@ var _ground_speed: float = 0.0
 var _free_tick: int = -2
 ## The heightfield held the body up last tick (open country has no collider under it).
 var _terrain_held: bool = false
-## Turning on the spot (see TURN_STEP_*): the yaw a tick ago, and the side-step pace being shown.
-var _step_last_yaw := 0.0
-var _turn_step := 0.0
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
+## Seconds until a pressed jump's feet leave the ground, or -1; and whether the body is in a jump's
+## air (from the take-off to the landing).
+var _jump_in := -1.0
+var _jumping := false
 
 
 func _ready() -> void:
@@ -446,6 +447,8 @@ func _physics_process(delta: float) -> void:
 func _set_state(s: int) -> void:
 	if s == state:
 		return
+	if s != State.FREE:
+		_jump_in = -1.0          # a roll, a swing or a stagger in the take-off is not a jump
 	var prev := state
 	state = s
 	state_changed.emit(prev, s)
@@ -494,21 +497,38 @@ func _tick_free(delta: float) -> void:
 			if _start_cast():
 				return
 		"jump":
-			if is_on_floor() and not is_blocking:
+			# standing on a collider or held on the heightfield: gated on a collider alone, a
+			# body on the heightfield could never jump
+			if _on_ground() and not is_blocking and _jump_in < 0.0:
 				if not _try_mantle():
-					velocity.y = sqrt(2.0 * gravity * JUMP_HEIGHT)
-					anim.play_intent("Jump_Start")
-					_emit_noise(0.4)
+					_take_off()
 				return
 		"interact":
 			if interactor.try_interact(self):
 				anim.play_intent("Interact")
-	if not is_on_floor() and _move_input.y < -0.5 and velocity.y < 1.0 and _try_mantle():
+	if not _on_ground() and _move_input.y < -0.5 and velocity.y < 1.0 and _try_mantle():
 		return
+	if _jump_in >= 0.0:
+		_jump_in -= delta
+		if _jump_in < 0.0 and _on_ground():
+			velocity.y = sqrt(2.0 * gravity * JUMP_HEIGHT)
+			_jumping = true
+			_emit_noise(0.4)
 	_move(delta)
-	if is_on_floor() and not _was_on_floor and not anim.is_busy():
-		anim.play_intent("Jump_Land")
-	_was_on_floor = is_on_floor()
+	if _on_ground() and not _was_on_floor:
+		_jumping = false
+		if not anim.is_busy():
+			anim.play_intent("Jump_Land")
+	_was_on_floor = _on_ground()
+
+
+## A jump: the rig's crouch and push (Jump_Start, to its `jump_off`) played in JUMP_WINDUP_S, and
+## the body leaves the ground as the push does. It left on the press, and the clip showed the
+## crouch while the body was already rising.
+func _take_off() -> void:
+	_jump_in = JUMP_WINDUP_S
+	anim.play_intent("Jump_Start", {"length": JUMP_WINDUP_S + JUMP_PUSH_S,
+			"events": [{"t": JUMP_WINDUP_S, "name": "jump_off"}]})
 
 
 func _update_common_toggles() -> void:
@@ -536,7 +556,7 @@ func _update_block() -> void:
 		parry_pressed_at = now()
 		if not anim.is_busy():
 			anim.play_intent("Parry")
-	var want := bool(_held["block"]) and not weapon.is_ranged() and stamina_comp.current > 0.0 and is_on_floor()
+	var want := bool(_held["block"]) and not weapon.is_ranged() and stamina_comp.current > 0.0 and _on_ground()
 	is_blocking = want
 	can_parry = parry_item
 	block_stability = block_stability_value()
@@ -605,14 +625,14 @@ func _sprint_wanted() -> bool:
 ## A tap of Sprint rolls; a hold sprints. The genre's players reach for the run key to roll (the
 ## Souls games taught most of them), and it leaves Space to jump. The roll goes through the same
 ## buffer as the Dodge key, so it cancels an attack's recovery and waits out a busy moment the same
-## way. Keyboard only: on a pad, B rolls and the stick click is a sprint and nothing else. Off
-## with its setting, and while Sprint is a toggle, where a tap is the toggle.
+## way. On a pad Sprint is B, as the Souls games have it: tapped it rolls, held it runs. Off with
+## its setting, and while Sprint is a toggle, where a tap is the toggle.
 func _read_sprint_tap() -> void:
 	if not (input_enabled and sprint_taps_roll_setting()):
 		_sprint_down_at = -1.0
 		return
 	if _just["sprint"]:
-		_sprint_down_at = now() if _sprint_key_down() else -1.0
+		_sprint_down_at = now() if _sprint_pressed() else -1.0
 	elif not bool(_held["sprint"]) and _sprint_down_at >= 0.0:
 		if now() - _sprint_down_at < SPRINT_TAP_S:
 			_buffer_action = "dodge"
@@ -626,16 +646,21 @@ static func sprint_taps_roll_setting() -> bool:
 			and not bool(Settings.get_value("controls", "toggle_sprint", false))
 
 
-## Whether Sprint is held on the keyboard (rather than on a pad).
-func _sprint_key_down() -> bool:
+## Whether a key or a pad's button bound to Sprint is held down: a press a hand made, which may
+## yet be a tap. The action pressed by a script (Input.action_press) is not, and sprints at once.
+func _sprint_pressed() -> bool:
 	for ev in InputMap.action_get_events("sprint"):
 		var key := ev as InputEventKey
-		if key == null:
-			continue
-		if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
-			return true
-		if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
-			return true
+		if key != null:
+			if key.physical_keycode != KEY_NONE and Input.is_physical_key_pressed(key.physical_keycode):
+				return true
+			if key.keycode != KEY_NONE and Input.is_key_pressed(key.keycode):
+				return true
+		var button := ev as InputEventJoypadButton
+		if button != null:
+			for pad in PADS_READ:
+				if Input.is_joy_button_pressed(pad, button.button_index):
+					return true
 	return false
 
 
@@ -738,9 +763,12 @@ func _free_move(wish: Vector3, target_speed: float, delta: float) -> void:
 		# back from a roll, a swing, the air or a strafe: carry the speed actually being made
 		_ground_speed = maxf(Vector3(velocity.x, 0.0, velocity.z).dot(forward()), 0.0)
 	else:
-		# into a wall you stop running, rather than keep the speed you were asking for
+		# into a wall you stop running, rather than keep the speed you were asking for. The speed
+		# made is along the ground: up a slope the body makes its whole pace along it and only
+		# cos θ of it across the map, and read across the map a slope was a wall, which held a
+		# jog up 35° to 4.0 m/s and a sprint up 40° to 3.1
 		var real := get_real_velocity()
-		var made := Vector2(real.x, real.z).length()
+		var made := real.length() if is_on_floor() else Vector2(real.x, real.z).length()
 		if _ground_speed > made + 0.75:
 			_ground_speed = made
 	_free_tick = tick
@@ -816,34 +844,24 @@ func _damp_horizontal(delta: float, rate: float) -> void:
 	velocity.z = horizontal.z
 
 
-func _update_locomotion_anim(delta: float) -> void:
+func _update_locomotion_anim(_delta: float) -> void:
 	# the ground velocity the body really made, in its own frame, m/s: the model plays the gait
 	# at the rate that keeps its feet planted under exactly that
 	var v := get_real_velocity()
 	var local := global_transform.basis.inverse() * Vector3(v.x, 0.0, v.z)
 	var told := Vector2(local.x, -local.z)
-	told.x += turn_step_pace(told.length(), delta)
+	# turning on the spot is the model's to show: it reads the body's own turn and plays the turn
+	# clips at its rate (HumanoidModel._update_turn)
 	anim.set_locomotion(told, is_sneaking)
 	if state == State.FREE and not anim.is_busy() and not is_blocking:
-		if not is_on_floor() and velocity.y < -3.0 and not anim.is_playing("Fall_Loop"):
-			anim.play_intent("Fall_Loop")
-		elif is_on_floor() and anim.is_playing("Fall_Loop"):
+		if not _on_ground():
+			var falling := velocity.y < -(JUMP_FALL_FROM if _jumping else FALL_FROM)
+			var air := "Fall_Loop" if falling else ("Jump_Loop" if _jumping else "")
+			if air != "" and not anim.is_playing(air):
+				anim.play_intent(air)
+		elif anim.is_playing("Fall_Loop") or anim.is_playing("Jump_Loop"):
 			anim.stop()
 	model.visible = not camera_rig.first_person
-
-
-## The side-step pace (m/s, + to the right) the legs are shown while the body turns on the spot;
-## 0 when it moves, stands still, or is busy. A turn to the left steps to the left.
-func turn_step_pace(ground_speed: float, delta: float) -> float:
-	var turn := wrapf(rotation.y - _step_last_yaw, -PI, PI) / maxf(delta, 0.0001)
-	_step_last_yaw = rotation.y
-	var want := 0.0
-	if state == State.FREE and ground_speed < TURN_STEP_BELOW and absf(turn) > TURN_STEP_FROM and _on_ground():
-		want = clampf(-turn * TURN_STEP_RADIUS, -TURN_STEP_MAX, TURN_STEP_MAX)
-	_turn_step = lerpf(_turn_step, want, 1.0 - exp(-TURN_STEP_EASE * delta))
-	if absf(_turn_step) < 0.02 and want == 0.0:
-		_turn_step = 0.0
-	return _turn_step
 
 
 # --- ATTACK -------------------------------------------------------------------------------------
@@ -1243,8 +1261,11 @@ func teleport(position: Vector3, yaw: float) -> void:
 	velocity = Vector3.ZERO
 	_ground_speed = 0.0
 	_free_tick = -2
-	_step_last_yaw = yaw          # a body put down facing a new way has not turned on the spot
-	_turn_step = 0.0
+	_jump_in = -1.0
+	_jumping = false
+	var body := body_model()
+	if body != null and body.has_method("reset_heading"):
+		body.reset_heading()      # a body put down facing a new way has not turned on the spot
 	camera_rig.yaw = yaw
 	reset_physics_interpolation()
 	camera_rig.snap_to_target()
@@ -2028,6 +2049,8 @@ func to_save() -> Dictionary:
 	d["arrows"] = arrows
 	d["first_person"] = camera_rig.first_person
 	d["sneaking"] = is_sneaking
+	# the place the body stood beside, so a load into a redrawn map finds it there (PlaceRef)
+	d["near"] = PlaceRef.pin(global_position)
 	return d
 
 
@@ -2059,6 +2082,7 @@ func from_save(d: Dictionary) -> void:
 		quick_slots[i] = str(qs[i])
 	arrows = int(d.get("arrows", arrows))
 	super.from_save(d)
+	global_position = PlaceRef.follow(global_position, d.get("near", null))
 	stamina_comp.from_save(d.get("stamina", {}))
 	caster.from_save(d.get("mana", {}))
 	camera_rig.set_first_person(bool(d.get("first_person", false)))

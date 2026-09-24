@@ -8,6 +8,7 @@ class by name, so it compiles whether or not those systems exist yet.
 |---|---|
 | `peers.gd` | Duck-typed access to other streams' systems (standing, factions, inventory, quests, progression, the player) |
 | `world_probe.gd` | Graceful access to the world stream's `World` accessor, plus cell/place/region/law geometry |
+| `place_ref.gd` | Points said as a place and where from it (bearing, offset, a way's shape), and the pins a save keeps beside a place, so both follow a redrawn map (docs/COORDINATES.md) |
 | `content_query.gd` | Tag and scalar content lookups that avoid a `ContentDB.where` bug |
 | `service.gd` | Lazy installation of this stream's service nodes |
 

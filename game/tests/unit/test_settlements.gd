@@ -4,7 +4,8 @@ extends TestCase
 ## each town is generated from its plan — and it has to be the same town every time you walk
 ## back into it, or the world moves behind your back.
 
-const CENTRE := Vector3(900.0, 56.0, 2350.0)
+## Merrowby, wherever the map puts it (docs/COORDINATES.md).
+var CENTRE := at_place("core:place/merrowby", 56.0)
 
 
 func _tree() -> SceneTree:

@@ -69,6 +69,13 @@ class Grid:
         cz = np.floor((np.asarray(z) + self.size_m / 2.0) / self.cell_size_m).astype(np.int64)
         return cx, cz
 
+    def written_cell(self, x: float, z: float) -> tuple:
+        """The cell a thing at (x, z) is filed in: the one its coordinates stand in as a cell file
+        writes them, to the centimetre, clamped to the world. Filed by the unrounded position, a
+        tuft 4 mm short of a cell's edge was written on the edge and read as the next cell's."""
+        cx, cz = self.cell_of(np.array([round(float(x), 2)]), np.array([round(float(z), 2)]))
+        return (int(np.clip(cx[0], 0, self.cells - 1)), int(np.clip(cz[0], 0, self.cells - 1)))
+
 
 def sample_bilinear(arr: np.ndarray, grid: Grid, x, z) -> np.ndarray:
     """Bilinear sample of a [z, x] array at world coordinates."""
