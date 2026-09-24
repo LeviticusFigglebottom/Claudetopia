@@ -44,6 +44,9 @@ const SETTLE_S := 1.2
 const STREAM_TIMEOUT_MS := 40000
 const HIT_FRACTION := 0.34
 ## How far from a place's own position what it holds is looked for.
+## How far off a tucked-in find the body can stand and still take it: the interact ray's 2.6 m,
+## less the eye's height over the find.
+const TAKE_REACH_M := 2.2
 const FIND_M := 70.0
 const QUEST_LOG := preload("res://systems/quests/quest_log.gd")
 
@@ -406,7 +409,10 @@ func _walk(q: String) -> void:
 		var did: Dictionary = {}
 		var blocked := _blocked_objective(q, stage)
 		if i < 0 and blocked != "":
-			_problem("stage '%s': %s" % [str(stage.get("id", at)), blocked])
+			var earned := await _unblock(q, stage)
+			if earned == "":
+				continue
+			_problem("stage '%s': %s%s" % [str(stage.get("id", at)), blocked, earned])
 			return
 		if i < 0:
 			did = await _move_on(q, stage)
@@ -442,6 +448,57 @@ func _progress_sign(q: String) -> String:
 ## and the objective is not done. A stage that has moved on has closed it.
 func _still_open(q: String, at_stage: int, i: int) -> bool:
 	return log_node.is_active(q) and log_node.stage_of(q) == at_stage and not log_node.objective_done(q, i)
+
+
+## An objective that waits on a flag somebody's line sets (Aud Fennick agrees to be walked only
+## once Cadwen has asked you to walk her): the flag is earned the way a player earns it, by
+## saying that line, and a line that is itself gated on another flag has that one earned first.
+## "" when every objective's `requires` holds after; otherwise why not, for the report.
+func _unblock(q: String, stage: Dictionary) -> String:
+	var tried: Array[String] = []
+	for o in stage.get("objectives", []):
+		for c in (o as Dictionary).get("requires", []):
+			if typeof(c) == TYPE_DICTIONARY and (c as Dictionary).size() == 1 and (c as Dictionary).has("flag") and not Conditions.all_of([c], Social.ctx):
+				var why := await _earn_flag(str(c["flag"]), 0)
+				if why != "":
+					tried.append(why)
+	if _blocked_objective(q, stage) == "":
+		return ""
+	return " (%s)" % ("; ".join(tried) if not tried.is_empty() else "no flag to earn")
+
+
+func _earn_flag(flag: String, depth: int) -> String:
+	var want := {"set_flag": flag}
+	var lines := DialogueSteer.speakers_of(want)
+	if lines.is_empty():
+		return "no line sets %s" % flag
+	var tried: Array[String] = []
+	for l in lines:
+		# the flags the line waits on: its own conditions and those of every choice that leads to it
+		var gates: Array = (l["conditions"] as Array).duplicate()
+		if int(l["choice"]) < 0:
+			var nodes: Dictionary = ContentDB.get_or_empty(str(l["dialogue"])).get("nodes", {})
+			for n in nodes.values():
+				for ch in (n as Dictionary).get("choices", []):
+					if typeof(ch) == TYPE_DICTIONARY and str((ch as Dictionary).get("next", "")) == str(l["node"]):
+						gates.append_array((ch as Dictionary).get("conditions", []))
+		if depth < 3:
+			# only a flag that must be set; one inside a `not` or an `any` is not earned
+			for g in gates:
+				if typeof(g) == TYPE_DICTIONARY and (g as Dictionary).size() == 1 and (g as Dictionary).has("flag") \
+						and str(g["flag"]) != flag and not Conditions.all_of([g], Social.ctx):
+					await _earn_flag(str(g["flag"]), depth + 1)
+		var met := await _meet(str(l["npc"]))
+		if not bool(met["ok"]):
+			tried.append(str(met["why"]))
+			continue
+		var r := DialogueSteer.drive(str(l["npc"]), {"effect": want})
+		if Conditions.all_of([{"flag": flag}], Social.ctx):
+			if verbose:
+				_say("QW . earned %s from %s" % [flag, Ids.name_of(str(l["npc"]))])
+			return ""
+		tried.append("%s: %s" % [Ids.name_of(str(l["npc"])), str(r["why"])])
+	return "%s not earned: %s" % [flag, "; ".join(tried)]
 
 
 ## An objective left to do that waits on a `requires` nothing done so far has met, said; "" when none.
@@ -746,11 +803,17 @@ func _check_person(npc: String, body: Node3D) -> void:
 	elif absf(p.y - ground) > 3.0:
 		_world("%s stands %.1f m %s the ground at %s" % [Ids.name_of(npc), absf(p.y - ground), "above" if p.y > ground else "under", where])
 	elif _shut_in(p):
-		_world("%s stands inside something solid at %s (%s)" % [Ids.name_of(npc), where, Ids.name_of(registry.place_of(npc))])
+		_world("%s stands inside something solid at %s (%s; %s)" % [Ids.name_of(npc), where, Ids.name_of(registry.place_of(npc)), _what_shuts(p)])
 
 
 ## Is a body's room at this point taken by something solid (or roofed over by a hull)?
 func _shut_in(p: Vector3) -> bool:
+	return _what_shuts(p) != ""
+
+
+## What is solid in a body's room at this point: the nearest named thing that owns the collider
+## (the dressing, the landmark, the cell), "" when the room is clear.
+func _what_shuts(p: Vector3) -> String:
 	var space := player.get_world_3d().direct_space_state
 	var shape := CapsuleShape3D.new()
 	shape.radius = 0.3
@@ -759,7 +822,15 @@ func _shut_in(p: Vector3) -> bool:
 	q.shape = shape
 	q.collision_mask = 1 << 0
 	q.transform = Transform3D(Basis.IDENTITY, p + Vector3(0.0, 0.75, 0.0))
-	return not space.intersect_shape(q, 1).is_empty()
+	var hits := space.intersect_shape(q, 1)
+	if hits.is_empty():
+		return ""
+	var node: Node = hits[0].get("collider") as Node
+	var names: Array[String] = []
+	while node != null and names.size() < 3 and not str(node.name).begins_with("Cell_"):
+		names.push_front(str(node.name))
+		node = node.get_parent()
+	return "/".join(names) if not names.is_empty() else "the ground's own collision"
 
 
 func _flat(a: Vector3, b: Vector3) -> float:
@@ -1128,8 +1199,26 @@ func _check_find(item: String, node: Node3D) -> void:
 		_world("%s lies in water at %s" % [Ids.name_of(item), where])
 	elif p.y < ground - 0.5:
 		_world("%s lies %.1f m under the ground at %s" % [Ids.name_of(item), ground - p.y, where])
-	elif _shut_in(p):
-		_world("%s lies inside something solid at %s" % [Ids.name_of(item), where])
+	elif _shut_in(p) and _stand_in_reach(p) == Vector3.INF:
+		_world("%s lies inside something solid at %s, with nowhere to stand within %.1f m (%s)" % [Ids.name_of(item), where,
+				TAKE_REACH_M, _what_shuts(p)])
+
+
+## A thing tucked in somewhere (the chit under the keel, the day-book under the cart's seat) is
+## taken the way the player takes anything: the interact ray reaches 2.6 m and sees only the
+## interactable layer, through whatever else is there. So what matters is open ground to stand on
+## within that reach: the nearest such point, or INF when there is none.
+func _stand_in_reach(p: Vector3) -> Vector3:
+	for r in [0.8, 1.3, 1.8, TAKE_REACH_M]:
+		for k in 12:
+			var a := float(k) * TAU / 12.0
+			var at := Vector3(p.x + cos(a) * r, 0.0, p.z + sin(a) * r)
+			at.y = terrain.get_height(at.x, at.z)
+			if absf(at.y - p.y) > 1.6 or _wet(at.x, at.z):
+				continue
+			if not _shut_in(at):
+				return at
+	return Vector3.INF
 
 
 ## Picks up what a fall left lying round the player.
@@ -1534,6 +1623,11 @@ func _restore(s: Dictionary) -> void:
 	if Interiors.in_interior():
 		Interiors.exit()
 		await get_tree().process_frame
+	# A load from a slot changes scene, and the houses built so far go with the old one; here the
+	# scene stays, so they are let go by hand, or a house would be walked back into as a branch
+	# left it (the book on Tallissa's shelf already taken).
+	Interiors.unload_all()
+	await get_tree().process_frame
 	SaveSystem.deserialize((s["save"] as Dictionary).duplicate(true))
 	WorldClock.set_time(float(s["hour"]), int(s["day"]))
 	var foes := QuestFoes.ensure()
