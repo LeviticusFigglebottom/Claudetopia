@@ -411,9 +411,16 @@ func test_the_hushline_landing_stands_clear_of_the_water_with_its_wights_on_it()
 			var a := TAU * float(k) / float(count) + float(index)
 			var p := landing.global_position + Vector3(cos(a), 0.0, sin(a)) * float(e.get("spread", 2.5))
 			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(p + Vector3.UP * 3.0, p + Vector3.DOWN * 3.0))
-			assert_false(hit.is_empty(), "a wight at (%.1f, %.1f) has the landing under it" % [p.x, p.z])
+			var under := NAN
 			if not hit.is_empty():
-				var under := (hit["position"] as Vector3).y
+				under = (hit["position"] as Vector3).y
+			elif not bool(landing.get_meta("raised", false)):
+				# a pad the land already lifts clear of the water is its own landing (the atlas world
+				# draws one under the cliff): the ground is under them, which this scratch has no
+				# collider for, so it is read from the terrain
+				under = provider.get_height(p.x, p.z)
+			assert_false(is_nan(under), "a wight at (%.1f, %.1f) has the landing under it" % [p.x, p.z])
+			if not is_nan(under):
 				assert_true(absf(under - p.y) < 0.35 and under >= water + 1.0,
 						"standing %.2f m above the water, on the landing" % (under - water))
 	var mist := 0
