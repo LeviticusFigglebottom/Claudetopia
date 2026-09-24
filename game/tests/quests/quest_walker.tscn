@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://wm_quest_walker"]
+
+[ext_resource type="Script" path="res://tests/quests/quest_walker.gd" id="1"]
+
+[node name="QuestWalker" type="Node"]
+script = ExtResource("1")
