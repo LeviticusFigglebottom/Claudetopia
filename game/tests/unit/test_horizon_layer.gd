@@ -267,8 +267,54 @@ func test_the_thornmarch_is_a_wood_on_the_east_ridge_and_the_hushline_a_mist() -
 	assert_false((edges.wall[first] as Node3D).visible, "a cell of the wall gives way to the cell's own trees")
 	edges.hand_over(first, false)
 	assert_true((edges.wall[first] as Node3D).visible, "and comes back")
-	assert_true(edges.haze != null and edges.haze.mesh.get_surface_count() == 1, "the Hushline is a curtain of mist")
-	var box := edges.haze.mesh.get_aabb()
-	assert_near(box.position.z, HorizonBands.HUSHLINE_Z, 1.0, "along the south cliff foot")
+	assert_gt(edges.haze.size(), 1, "the Hushline is a curtain of mist, in lengths")
+	var box := edges.mist_box()
+	assert_near(box.position.z, HorizonBands.HUSHLINE_Z, 1.0, "out over the Hush")
+	assert_near(box.position.x, HorizonBands.HUSHLINE_X.x, 1.0, "from the south-west corner")
+	assert_near(box.end.x, HorizonBands.HUSHLINE_X.y, 1.0, "to the Briar wall's corner")
+	assert_near(box.end.y, HorizonBands.HUSHLINE_TOP, 0.5, "and as tall all along")
+	var gaps := 0
+	for i in range(1, edges.haze.size()):
+		if absf(edges.haze[i].get_aabb().position.x - edges.haze[i - 1].get_aabb().end.x) > 0.01:
+			gaps += 1
+	assert_eq(gaps, 0, "one length meets the next")
+	var dry := 0
+	var x := HorizonBands.HUSHLINE_X.x
+	while x <= HorizonBands.HUSHLINE_X.y:
+		if provider.get_height(x, HorizonBands.HUSHLINE_Z) > 0.0:
+			dry += 1
+		x += 32.0
+	assert_eq(dry, 0, "it stands in the Hush's water all along, never on land")
 	edges.set_reach(4200.0)
 	assert_eq((edges.wall[first] as GeometryInstance3D).visibility_range_end, 4200.0, "drawn to the landmarks' reach")
+	assert_eq(edges.haze[0].visibility_range_end, 4200.0, "and the mist too")
+
+
+## From the Stair Head and the Choir, looking south, the Hushline is thick well above the ground
+## in front of it, the Stair Knoll's shoulder and the Choir's Crown, and not only its thin top. It
+## is set against the runtime heights the country is built from.
+func test_the_hushline_stands_thick_over_the_brow_from_the_stair_head_and_the_choir() -> void:
+	var provider := TerrainProvider.new()
+	if not provider.load_data():
+		provider.free()
+		return
+	_holder = Node3D.new()
+	_tree().root.add_child(_holder)
+	_holder.add_child(provider)
+	# where the eye stands, and how many degrees of thick mist it has to see over the brow
+	for v in [[Vector2(10.0, 3670.0), 6.0, "the Stair Head"], [Vector2(-210.0, 3240.0), 2.5, "the Choir"]]:
+		var at: Vector2 = v[0]
+		var eye := Vector3(at.x, provider.get_height(at.x, at.y) + 1.7, at.y)
+		for bearing in [165.0, 180.0, 195.0]:
+			var dir := Vector2(sin(deg_to_rad(bearing)), -cos(deg_to_rad(bearing)))
+			var d := (HorizonBands.HUSHLINE_Z - eye.z) / dir.y
+			var brow := -90.0
+			var s := 4.0
+			while s < d:
+				var g := provider.get_height(eye.x + dir.x * s, eye.z + dir.y * s)
+				brow = maxf(brow, rad_to_deg(atan2(g - eye.y, s)))
+				s += 4.0
+			var thick := rad_to_deg(atan2(HorizonBands.HUSHLINE_THICK_TO - eye.y, d))
+			assert_gt(thick - brow, float(v[1]), "from %s, %d degrees round: the mist %.1f degrees thick over the brow (at %.1f)"
+					% [v[2], int(bearing), thick - brow, brow])
+	assert_gt(HorizonBands.HUSHLINE_TOP - HorizonBands.HUSHLINE_THICK_TO, 60.0, "and thinning out over that, not ruled off")
