@@ -14,7 +14,7 @@
   ],
   "radius": 3.402
  },
- "built_seconds": 22.61,
+ "built_seconds": 12.22,
  "category": "rocks",
  "collision": "briarwold_cliff_ledge_c_col.glb",
  "collision_params": {},
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "briarwold_cliff_ledge_c",
-   "tris": 1284
+   "tris": 1816
   },
   {
    "name": "briarwold_cliff_ledge_c_LOD1",
-   "tris": 512
+   "tris": 725
   },
   {
    "name": "briarwold_cliff_ledge_c_LOD2",
-   "tris": 192
+   "tris": 271
   }
  ],
  "modular": true,
@@ -76,9 +76,9 @@
   "briarwold_cliff_ledge_c_orm.png"
  ],
  "tris": [
-  1284,
-  512,
-  192
+  1816,
+  725,
+  271
  ],
  "version": 3
 }

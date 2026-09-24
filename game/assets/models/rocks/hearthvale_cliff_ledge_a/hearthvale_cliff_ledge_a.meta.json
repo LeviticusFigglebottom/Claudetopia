@@ -14,7 +14,7 @@
   ],
   "radius": 3.593
  },
- "built_seconds": 22.15,
+ "built_seconds": 8.83,
  "category": "rocks",
  "collision": "hearthvale_cliff_ledge_a_col.glb",
  "collision_params": {},
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "hearthvale_cliff_ledge_a",
-   "tris": 1508
+   "tris": 2032
   },
   {
    "name": "hearthvale_cliff_ledge_a_LOD1",
-   "tris": 601
+   "tris": 811
   },
   {
    "name": "hearthvale_cliff_ledge_a_LOD2",
-   "tris": 225
+   "tris": 303
   }
  ],
  "modular": true,
@@ -76,9 +76,9 @@
   "hearthvale_cliff_ledge_a_orm.png"
  ],
  "tris": [
-  1508,
-  601,
-  225
+  2032,
+  811,
+  303
  ],
  "version": 3
 }

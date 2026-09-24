@@ -5,16 +5,16 @@
   "max": [
    2.5,
    3.11,
-   2.458
+   2.464
   ],
   "min": [
    -2.5,
    0.0,
    -1.7
   ],
-  "radius": 3.604
+  "radius": 3.606
  },
- "built_seconds": 22.82,
+ "built_seconds": 12.33,
  "category": "rocks",
  "collision": "cinderlea_cliff_ledge_a_col.glb",
  "collision_params": {},
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "cinderlea_cliff_ledge_a",
-   "tris": 1602
+   "tris": 2140
   },
   {
    "name": "cinderlea_cliff_ledge_a_LOD1",
-   "tris": 640
+   "tris": 856
   },
   {
    "name": "cinderlea_cliff_ledge_a_LOD2",
-   "tris": 238
+   "tris": 320
   }
  ],
  "modular": true,
@@ -76,9 +76,9 @@
   "cinderlea_cliff_ledge_a_orm.png"
  ],
  "tris": [
-  1602,
-  640,
-  238
+  2140,
+  856,
+  320
  ],
  "version": 3
 }

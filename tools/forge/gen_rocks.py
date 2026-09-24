@@ -590,6 +590,8 @@ LEDGE_STONE = {
     "basalt": {"base_hex": "#3b3b3f", "tint_role": "cool", "lichen": 0.12, "facet": 0.8},
     "sandstone": {"base_hex": "#a4825c", "tint_role": "warm", "lichen": 0.2, "facet": 0.45},
 }
+# A ledge's least triangles: over world/scatter_lod.gd's SOLID_MIN_TRIS (1500), with a margin.
+LEDGE_MIN_TRIS = 1650
 LEDGE_BY_REGION = {"hearthvale": "chalk_rock", "skerrow": "limestone", "briarwold": "granite",
                    "cinderlea": "basalt", "brightwater": "sandstone", "sedgemire": "granite"}
 
@@ -761,8 +763,21 @@ def cliff_ledge(pal, rng, params, variant):
     tris = S.tri_count(ob)
     if tris > 3000:
         S.decimate(ob, 3000.0 / tris)
-    # broken planes and hard edges, as a rock face has, rather than a smooth relief
-    S.decimate(ob, 1.0, planar_deg=11.0)
+    # Broken planes and hard edges, as a rock face has, rather than a smooth relief: coplanar
+    # faces are merged, at the widest angle that still leaves the mesh LEDGE_MIN_TRIS. A ledge is
+    # laid tens of thousands of times over the sea cliffs, and the world streamer gives an opaque
+    # piece its LOD ladder only at SOLID_MIN_TRIS (1500) and over (world/scatter_lod.gd); under it,
+    # it is drawn whole at every distance. At one angle for all, the short ledges came to 1,272.
+    whole = ob.data.copy()
+    for ang in (11.0, 8.0, 6.0, 4.5, 3.0):
+        trial = whole.copy()
+        old_mesh = ob.data
+        ob.data = trial
+        if old_mesh is not whole and old_mesh.users == 0:
+            bpy.data.meshes.remove(old_mesh)
+        S.decimate(ob, 1.0, planar_deg=ang)
+        if S.tri_count(ob) >= LEDGE_MIN_TRIS:
+            break
     S.shade_smooth(ob, 16.0)
     S.drop_to_ground([ob])
     return {"opaque_objs": [ob], "collision": "col_glb", "materials_used": [used], "tier": "field",
