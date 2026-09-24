@@ -304,11 +304,13 @@ from the Choir to the Last Camp and Greywatch, and through the Sunk Plaza to the
 * **Fourteen rivers.** The Skerrow Water, Brindle Beck, Rudd Beck, Rib Beck, the Skarl Water, the
   Wold Water, the Larkbourne and the Cressbourne all run into the Mere. The Outfall runs from it
   to the Grey Sea. The North Channel and the Greyreed are the delta's other channels. The Oskel
-  and Weaver's Gill join other rivers. The Blackgill ends at its falls, in the Blackgill Pot under
-  them, and goes on under the ground; the woodfolk say it comes up in the Mere. Every river falls
-  from source to mouth and ends in water (tested).
+  joins another river. The Blackgill ends at its falls, in the Blackgill Pot under them, and goes
+  on under the ground; the woodfolk say it comes up in the Mere. Weaver's Gill ends the same way,
+  in the Weaver's Linn at the foot of its fall, and Fern Gully below is a dry ravine that holds
+  the mist. Every river falls from source to mouth and ends in water (tested).
 * **The small waters**: the Lark Pool (46 m), the Hidden Tarn (520 m), Blackwater Tarn (415 m),
-  Hesk Pool (56 m), the Blackgill Pot (189 m), Mormere and Lissane Mere (a hand over the fen). Each is drawn to its setting:
+  Hesk Pool (56 m), the Blackgill Pot (189 m), the Weaver's Linn (113 m), Mormere and Lissane
+  Mere (a hand over the fen). Each is drawn to its setting:
   a millpond held by its dam, a cirque tarn under its back wall, a peat pool eaten ragged by the
   hags, a Builders' basin square once with steps down one side, a black pool in the carr, a reed
   mere in lobes.
