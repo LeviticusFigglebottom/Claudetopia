@@ -2605,6 +2605,393 @@
     "recipe": 1
    },
    "name": "brightwater_lime_b_impostor"
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "sword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9111,
+   "name": "sword_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "sword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9128,
+   "name": "sword_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "sword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9145,
+   "name": "sword_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "rapier",
+   "palette": null,
+   "variant": "a",
+   "seed": 9162,
+   "name": "rapier_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "greatsword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9179,
+   "name": "greatsword_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "greatsword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9196,
+   "name": "greatsword_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "greatsword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9213,
+   "name": "greatsword_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "greatsword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9230,
+   "name": "greatsword_bone",
+   "category": "weapons",
+   "params": {
+    "finish": "bone"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "dagger",
+   "palette": null,
+   "variant": "a",
+   "seed": 9247,
+   "name": "dagger_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "dagger",
+   "palette": null,
+   "variant": "a",
+   "seed": 9264,
+   "name": "dagger_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "dagger",
+   "palette": null,
+   "variant": "a",
+   "seed": 9281,
+   "name": "dagger_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "knife",
+   "palette": null,
+   "variant": "a",
+   "seed": 9298,
+   "name": "knife_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "axe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9315,
+   "name": "axe_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "axe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9332,
+   "name": "axe_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "axe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9349,
+   "name": "axe_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "axe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9366,
+   "name": "axe_long_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron",
+    "long": true
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "mace",
+   "palette": null,
+   "variant": "a",
+   "seed": 9383,
+   "name": "mace_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "mace",
+   "palette": null,
+   "variant": "a",
+   "seed": 9400,
+   "name": "mace_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "mace",
+   "palette": null,
+   "variant": "a",
+   "seed": 9417,
+   "name": "mace_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spear",
+   "palette": null,
+   "variant": "a",
+   "seed": 9434,
+   "name": "spear_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spear",
+   "palette": null,
+   "variant": "a",
+   "seed": 9451,
+   "name": "spear_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spear",
+   "palette": null,
+   "variant": "a",
+   "seed": 9468,
+   "name": "spear_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spear",
+   "palette": null,
+   "variant": "a",
+   "seed": 9485,
+   "name": "spear_long_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron",
+    "length": 2.9,
+    "head": 0.34
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "staff",
+   "palette": null,
+   "variant": "a",
+   "seed": 9502,
+   "name": "staff_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "warhammer",
+   "palette": null,
+   "variant": "a",
+   "seed": 9519,
+   "name": "warhammer_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "clapper",
+   "palette": null,
+   "variant": "a",
+   "seed": 9536,
+   "name": "clapper_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "bow",
+   "palette": null,
+   "variant": "a",
+   "seed": 9553,
+   "name": "bow_wood",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "bow",
+   "palette": null,
+   "variant": "a",
+   "seed": 9570,
+   "name": "bow_bone",
+   "category": "weapons",
+   "params": {
+    "finish": "bone"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "shield",
+   "palette": null,
+   "variant": "a",
+   "seed": 9587,
+   "name": "shield_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "shield",
+   "palette": null,
+   "variant": "a",
+   "seed": 9604,
+   "name": "shield_wood",
+   "category": "weapons",
+   "params": {
+    "finish": "wood"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "shield",
+   "palette": null,
+   "variant": "a",
+   "seed": 9621,
+   "name": "shield_bone",
+   "category": "weapons",
+   "params": {
+    "finish": "bone"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "crossbow",
+   "palette": null,
+   "variant": "a",
+   "seed": 9638,
+   "name": "crossbow_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
   }
  ]
 }

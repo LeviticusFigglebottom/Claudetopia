@@ -10,6 +10,10 @@ const QUICK_SLOT := "quick"
 const AUTO_SLOT := "auto"
 
 var participants: Dictionary = {}   # section -> Object
+## Where the slots are. The test runner gives each run a folder of its own (use_save_dir): every
+## checkout on a machine shares one user://, and two suites at once wrote, read and deleted each
+## other's slots.
+var save_dir := SAVE_DIR
 var pending: Dictionary = {}        # sections loaded but not yet consumed
 var last_slot := ""
 ## Whatever holds the game in a state that is not the player's says so here, and no slot is
@@ -78,7 +82,13 @@ func deserialize(data: Dictionary) -> void:
 
 
 func slot_path(slot: String) -> String:
-	return "%s/%s.json" % [SAVE_DIR, slot]
+	return "%s/%s.json" % [save_dir, slot]
+
+
+## Writes and reads the slots in `dir` from now on.
+func use_save_dir(dir: String) -> void:
+	save_dir = dir
+	DirAccess.make_dir_recursive_absolute(dir)
 
 
 func hold_saves(reason: String) -> void:
@@ -138,10 +148,10 @@ func delete_slot(slot: String) -> void:
 ## Slot summaries for the load menu: [{slot, saved_at, summary{...}}], newest first.
 func list_slots() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	for f in DirAccess.get_files_at(SAVE_DIR):
+	for f in DirAccess.get_files_at(save_dir):
 		if not f.ends_with(".json"):
 			continue
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/%s" % [SAVE_DIR, f]))
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/%s" % [save_dir, f]))
 		if typeof(parsed) == TYPE_DICTIONARY:
 			out.append({"slot": f.get_basename(), "saved_at": parsed.get("saved_at", ""), "summary": parsed.get("summary", {}), "schema_version": parsed.get("schema_version", 0)})
 	out.sort_custom(func(a, b): return a.saved_at > b.saved_at)

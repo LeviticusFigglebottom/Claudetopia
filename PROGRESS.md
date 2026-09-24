@@ -5329,6 +5329,378 @@ The first view with the camp's life in is described under 10.
     path's first leg, not at the Choir;
   * the path passes 10 m from the Cantor's Seat door, which is unlocked. That needs deciding:
     a detour for the curious, or a marker that keeps the first walk on the way.
+
+## Characters, second pass: the Naming, a face and hands, a skull and hair, cloth that hangs, a harness, and a child
+
+*Written while the last of it was still being done: the cloaks mid-stride, the rig and bodies
+rebuilt with the last wrist join, and the final tours at 1920, 2560 and on Forward+. Where a
+thing is unfinished it says so.*
+
+The brief was seven things wrong with the people. Then the user played the Naming and called
+it rough, which put the character creator first, and after the first merge named four more
+things in it: the Cragborn's plaid, the hands, the idle, the face. Everything below was rendered
+and looked at -- Blender clay and numpy rasters for shape, the engine for what a player sees
+(`flow_probe.gd --naming-tour`, and `character_review.tscn`, which now takes `--looks=<file>` for
+a row of appearances from four sides, `--frame=head` and `--frame=hands` to close in,
+`--pose=Walk@0.51` to hold a clip at a time, and `--mode=children`) -- and the renders decided it.
+Several things I was sure of before the first render were wrong; they are listed at the end.
+
+### The Naming, rough edge by rough edge
+
+Captured at 1280x720, 1920x1080 and 2560x1440 through the tour (twelve looks through the
+screen's own controls, four of them at the ends of both sliders, each closed in on the face,
+then every preset and three casts of the lots), and on Forward+ as well as Compatibility: the
+user plays in the editor on Forward+, which none of the earlier captures used; Mesa's software
+Vulkan runs it here, slowly.
+
+The latest full tour ran at 1280x720 from a clean class cache, as a fresh clone runs it: 235
+checks, 0 failed, no script errors, and a figure in all 34 frames. The latest Forward+ tour (the
+quick one, 41 checks, 0 failed) was taken before the last round of parts, and the 1920 and 2560
+tours are to be taken again on the final parts.
+
+* **The preview was drawn in layout pixels.** A 232x380 box, so at 2560x1440 it was a quarter
+  of the pixels stretched up, jagged, with a dark fringe from its transparent background and
+  the feet cut off. It is a 400-wide framed portrait rendered at the screen's own pixels with
+  4x MSAA; at 2560 the figure is as sharp as the text beside it.
+* **No light, no ground, no background.** A painted dusk behind the figure, flagstones with a
+  pool of light that fall away into it, a key that casts the shadow, a cool rim on the other
+  side to separate the silhouette, a fill. The first version clipped white cloth.
+* **The skin read orange, and white cloth cream.** Measured off the capture: a white gambeson
+  at 37 % saturation, a mid-brown hand at 68 % against its 50 % swatch. The portrait was lit
+  by the dusk behind it -- amber ambient -- under a warm key, and the tones darker than the
+  bake were orange in the table itself (amber 57 % saturated at hue 28). The ambient is mostly
+  a neutral cool with a little of the dusk now, the key barely warm, the darker tones redder
+  and less saturated browns, and the skin shader's lift and scatter band gentler: sampled
+  again, the gambeson is at 23 %, the hand at 60 % and the face at 49 %. On Forward+ and on
+  Compatibility alike the figure is lit with form, the skin reads as skin and cloth as cloth,
+  and the whole figure is framed with its feet and headroom.
+* **It could not be turned or looked at closely.** It turns under the mouse, the wheel closes
+  in, Face / Whole figure frame it, and choosing a face, a tone or a hair style closes in on
+  its own. The face framing lost the crown of a broad head at 1.84 m (0.23 m either side of
+  the mouth, looked at from below); it is 0.28 m round the eyes' height, from level.
+* **The build slider did nothing across its middle third.** The body variant only changes at
+  0.30 and 0.68 and the rig was not widened with a variant on. Girth is one continuous line
+  now, and the rig makes up the difference to the body worn.
+* **At the heavy end the body stood through the clothes**, because every garment was built on
+  the default body. A garment can carry the heavy and slight bodies as morph targets once the
+  forge has fitted it (`fits` in its meta, `--fits`), and until every garment on the body is
+  fitted the default body is worn and the rig widens. Measured against the variant bodies a
+  fitted tunic still left 7 % of its vertices inside the heavy body (59 % unfitted) and a coat
+  17 %, and four garments' morph targets flung a vertex a hundred kilometres -- a sampled field
+  reads 1e6 where no primitive reached, and the fit stepped on it; in the Naming at the solid
+  end of the slider the Cragborn's plaid drew as a white bar across the frame. The fit no
+  longer steps on such a reading, but the fits are off and the garments ship without them:
+  under clothes the default body is worn and widened, which shows no skin.
+* **Three of the four beards drew nothing** -- stubble, short and long were an armature with
+  no mesh -- and the chooser offered them anyway. It offers only beards that draw. Rebuilt,
+  all four draw, and the chooser offers them again (the tour checks it on both renderers).
+* **The eyes were never drawn in the engine.** Every eyeball was wound inside out, Blender
+  renders both faces so no forge review ever showed it, and the iris shader culls back faces.
+* **Every colour change built a new material for every mesh** and dropped the last; on the
+  Compatibility renderer that left the eyes pointing at freed materials (`Parameter
+  "material" is null`, four times a look) and they stopped drawing. Materials are made once.
+* **Swapping one head for another in a frame renamed the new eyes** `@MeshInstance3D@n` and
+  dressed them in skin. Eyes are known by meta now.
+* **The probe itself clicked in layout units**, so at any size but 1280x720 it missed New
+  Game; it converts to window pixels.
+* **At 1280x720 the right-hand column ran off the parchment.** Fixed widths, headings that
+  wrap.
+* **Presets and Cast lots** (six kinds of person; the lots only pick parts that draw),
+  swatches that show which one is chosen, arrows on every chooser.
+* **The gambeson's neckline in the face view was a torn-paper edge**: `torso_region` faded
+  the neckline over 5 cm, and a 26 mm padded garment thinned out over a hand's breadth. The
+  cut is crisp now.
+
+### Four more, and what they pulled in
+
+After the first merge the user looked at the Naming again and named four things: the Cragborn's
+plaid a thick white blanket, the hands paddles, the idle an A-pose, the face without features.
+
+* **The idle.** It held the upper arms 10 degrees out with the wrists 29 cm from the centre
+  line, 11 cm off the hips. The Idle is re-made -- only the Idle: the other 70 clips bake
+  identical to the committed ones, within 1e-5 on every channel, and the rig's meshes and
+  images stayed the committed ones byte for byte -- with the weight on the left leg, the pelvis
+  over that foot and dropped on the free side, the chest tipped back against it, the free foot
+  eased forward and turned out, the shoulders let down, the elbows soft, and the wrists 23 cm
+  out, 5 cm outside the hip: what a hand needs to clear a skirt, a gambeson or a fauld. The
+  first bake swung the hands 3 cm out and back with every breath, because the breathing layer
+  rolls the shoulders; a counter-roll at the upper arm keeps them hanging.
+* **The hands.** A hand was 1.12 of true size, 4.8 cm thick, and its four fingers one grooved
+  mass: at the Naming's distance, a mitten. It is true size now, with a palm 3 cm thick, four
+  three-jointed fingers that touch at the root and part towards the tips, curled as a hanging
+  hand curls them, and a thumb. At the body's 8 mm mesh the gaps between fingers are not there
+  to be found, so the hands are meshed on their own at 2.6 mm (1 800 triangles the pair) from
+  the body's own arm past a cut just short of the wrist. The first split ended the forearm
+  short inside a hand with a wrist of its own, and in the engine a ragged ring ran round every
+  forearm; cut from the one field, the two meshes are one surface. The gloves were an offset of
+  the body's 5 mm field -- a padded mitten, the paddle again -- and are made round the hands
+  sampled at 2 mm, 3 mm over each finger. `_arm_frame` had built the left hand palm up.
+* **The face.** Every mark on it had been kept faint "so it never wins at 30 pixels", and at
+  the Naming's 400 pixels there was nothing to read by. The brow, the lash line, the lid crease,
+  the inner corner of the eye, the nostrils and the wings of the nose are painted to read. The
+  mouth had never read at all, and not because it was faint: the lips were painted 3 cm in
+  front of every face -- at the eye line's depth plus 2 cm, where no mouth is -- so the seam was
+  masked out and the lips came through at a fifth of their colour. They sit on the mouth's own
+  station now, a third of the way from the lip colour to the skin's shadow; at full colour
+  they read as painted on.
+* **The plaid.** A solid loft 15 cm thick down the back and a tube 7 cm thick across the chest,
+  in undyed wool the palette left pale and plain. It is one sheet of cloth a centimetre thick
+  now: a sash over the left shoulder, pinned with a ring brooch, lying on the body across the
+  chest and round the right side, and the rest hanging from the shoulder blades to behind the
+  knee in folds. It is woven: a tartan in the clans' own madder, walnut and undyed wool, crossed
+  as a 2/2 twill and baked into the texture, and the part's meta says `"tint": "none"`, so
+  HumanoidModel lights it as cloth without dyeing it the palette's primary
+  (`test_a_woven_part_is_not_tinted`). The Cragborn preset wore a gambeson under it where the
+  game's clans wear a shirt: half of the "padded costume" was the gambeson.
+
+The idle brought one more into view. With the arms down, the deltoid -- a ball laid over the
+shoulder joint for the A-pose -- stayed up at each corner as an epaulette, and every garment,
+built as an offset of the body, carried the same two balls. The shoulder line was 4 cm high,
+above the chin, because the trapezius rose from the neck to a mound. It falls from the neck
+now and the deltoid lies along the top of the arm and goes down with it; the head sits on a
+neck. Every garment that covers a shoulder is rebuilt on that body. Before the shape, I tried
+the weights: four ways of sharing the shoulder between the collarbone and the upper arm, posed
+through a weight hook in a numpy skinning previewer, and none of them changed what could be
+seen. The mound was in the shape.
+
+### The skull, the hairline, the hair
+
+The bald cranium was an egg. The head is rebuilt as a shared vault -- parietal, frontal,
+the occipital shelf the neck tucks under, mastoids -- and a face lofted from its profile below
+the brow: a brow ridge, cheekbones and their arch, a jaw with an angle, masseters, a nose that
+projects, lips on the dental arch, and ears with a helix, concha, lobe and tragus. The vault
+and the brow are the same on all eight presets, so hair and helms fit every face; the faces
+differ below the brow. Every hair style is a scalp shell that thins to a millimetre at a
+hairline following the skull (temple corners, sideburns, round the ears, the nape) with locks
+combed over it along a flow -- a side parting, a centre parting, combed back, to the crown, to
+a bun or into a braid -- and a strand-painted albedo, ORM and normal map. Before, each style
+was a cap with a hard rim sitting on an egg. Seen in the engine (`character_review --looks
+--frame=head`, eight faces from four sides): the long hair falls behind the shoulders from a
+centre parting, the braid hangs from the nape, the bun sits at the back of the crown, and the
+hairline reads as hair growing out of a head. The bun's first coil was a dish, a button seen
+from behind; it climbs its dome now. The three beards that drew nothing draw; each carries a
+morph target per face so it lies on a broad jaw as on a narrow one.
+
+Seen and changed after the first engine renders: the long beard's hanging part fell inside
+every shirt (it hung 1 cm off the body; a shirt is 1.1 cm off it) and long hair did the same
+over the shoulders -- both hang 3 cm off now, eased out from the chin and the scalp rather than
+pushed (pushed, the beard lost its hang); and stubble read as a full short beard, an opaque
+shell in the hair colour, and is drawn see-through.
+
+Rebuilt on the body with the lower shoulders (below), the long hair lies on them and the braid
+and the long beard hang over a shirt.
+
+### The cape, the cloaks, the hood
+
+The shoulder cape was a lampshade: a rigid shell standing off the shoulders. It lies on a
+*drape field* now -- every horizontal section of the body unioned with the ones above it and
+pushed out a little per metre of fall, the space cloth takes when it is laid over the shoulders
+and let go -- so it follows the slope from the neck, breaks over the point of each shoulder and
+falls past the arm. It is one sheet drawn from both sides, not a solid with a floor under it;
+eleven folds deepen towards a hem that runs lower behind; a standing collar and a clasp close
+it. The first render of it still stood off: it rested on the height of the Neck joint, and the
+body's shoulders are 6 cm above that joint. `shoulder_line` reads the height off the body.
+
+The cloak was the same lampshade to the calf, and the ragged cloak cut from it exported nothing,
+so the Woodfolk walked about without one. The cloak is the cape carried down: open from a clasp
+at the throat and wider as it falls, folds from the shoulder blades that deepen to a hem a hand
+lower behind, weighted to the chest, spine and hips with the front panels taking some of each
+thigh. Hooded, the same sheet is carried up over a *cowl field* -- the head as a hood falls from
+it, from the crown past the ears to the shoulders, with a peak of spare cloth behind the crown
+-- and the face cut out of it; the hood on its own is that with a short cape. The ragged cloak
+is that with a hem torn into thirteen points, and the torn cloak the same with the hood down,
+which is what the player wears out of the Naming. Seen in the engine standing and at the Walk's
+contact pose from four sides: the cape rests on the shoulders and falls over the tops of the
+arms; the cloaks fall from the shoulders open at the front with their folds; the hoods frame the
+face; the Woodfolk have a torn hem again, and nothing tears at the hip when the body walks. The
+cloaks' upper edge stood to the mouth; it lies round the base of the neck now. They were draped
+over the A-posed body with its arms cut off at the shoulder, and the stub of arm left ended
+every cloak's shoulder in a square corner, a coat hanger under the cloth; the arms hanging in
+the Idle then came out through the sides at every step. They are draped over the arms as the
+Idle hangs them now, put back into the rest pose by the inverse of the Idle's skinning so the
+Idle brings them to where they were made, and the cloth that lies on an arm takes most of its
+swing. The shoulders round over the arms and the sides go with them. These last were judged in
+numpy previews; they have not been seen in the engine yet (the end says what still fails).
+
+### The skirts
+
+The dress, the robe, the skirt, the kilt and the wrap skirt took the nearest leg's weights
+whole, so a stride tore the cloth open between the legs and showed the thigh. And they were
+lofted through fixed ellipses cut for an earlier, narrower body: the final body's hips stood 1-2
+cm out through the side of every one, a torn patch of thigh at the hip of each dress in the
+family lineup, and the Lakefolk coat's column was so narrow that its trousers showed down both
+sides of it like an apron. Each station below the waistband is grown to cover the body's own
+section now (the waistband is left as cut: grown, it swallowed the belt), trousers lie 7 mm
+closer from the thigh up, under whatever is worn over them -- they showed through the tunic at
+the hips in green patches -- and below the hips a skirt's weights go to both thighs, blended
+across the centre line, with a little to the hips: the cloth over each thigh goes with it and
+the cloth between them stretches. Held at the Walk's contact pose from four sides, none of them
+opens at the thigh. The Lakefolk coat's skirt is weighted the same way now; it has not yet been
+seen walking in the engine.
+
+Every "mid-stride" lineup rendered before that one had stood in the Idle: `character_review`
+held a clip on the AnimationPlayer with the tree switched off, and HumanoidModel steps its tree
+by hand every frame, so the locomotion idle overwrote the held clip. The first cut of the skirt
+weights, judged on those renders, handed the front of each skirt to the hips, and the first real
+stride showed the forward leg out through the front of the robe, the dress, the wrap skirt and
+the kilt to the hip.
+
+### The harness, and the other armour
+
+The breastplate stopped at the collarbone over bare shoulders and ended in a hard edge at
+the waist: a corset. Plate is a harness now, three meshes of two materials: an arming coat of
+cloth under everything (sleeves to the wrist, a skirt to mid-thigh, quilted), a cuirass that
+goes over the tops of the shoulders to a ring at the neck with a keel down the breastplate, a
+gorget of three lames closing the neck, spaulders stepping down each shoulder cap, and a fauld
+and tassets over the hips; the brigandine is the same coat under riveted leather with a
+standing collar. The first render showed the cuirass cut flat at shoulder height -- a box with
+a head in it -- and the gorget spreading into a plate across the shoulder blades; both are
+fixed. The helm was an ellipsoid 3 % bigger than the vault, which the new skull's ears and any
+hair came through; it is an offset of the head it sits on, stood off by the hair, down to the
+brow in front and over the ears, lower behind, with a rolled rim, rivets, a comb and a nasal.
+
+The same class of fault in the other armour: the gambeson's sleeves stopped three quarters down
+the arm, leaving bare forearm above every padded glove (they reach the wrist); trousers ended
+3.5 cm above the top of a shoe (they end inside it). And a larger one: none of the twenty armour
+items named a part, so equipping a brigandine changed a number and nothing a player could see.
+Seventeen carry a `wear` block now and the player's body wears them over the Naming's look;
+the leather cap, the padded cap and the leather jerkin have no part yet.
+
+Rebuilt on the new body, the harness and the brigandine go over the lower shoulders. The
+brigandine's rivet rows had thrown one rivet a thousand kilometres out -- a step taken on a
+sampled field's 1e6 where no primitive reached, the fault the fits had -- and its grid could not
+be allocated, so it had not been built since the harness was made; built, its leather decimated
+from 325 000 triangles to 5 200 lay in chords that cut inside the coat, and the coat showed
+through it in patches. It has 9 000. The pauldrons, an empty file until now, are three lames over
+each shoulder.
+
+And the relaxed Idle's hands, 5 cm outside the bare hip, hung inside a gambeson's skirt and the
+harness's tassets. `ArmRoom`, a SkeletonModifier3D, turns the arms out at the shoulder after the
+clips have posed them, by a table of what is worn (7 degrees for a gambeson, 8 for plate, 3 more
+on the heavy body), so a padded body's hands hang clear in every clip. It is a new `class_name`,
+and the first tour run after it had an empty stage: a class is known to the game only once the
+import has written it into `.godot/global_script_class_cache.cfg`, HumanoidModel failed to parse
+without it, and the probe's check that the Naming has a preview body asked only for a node.
+`./run.sh run` imports now whenever a script declares a class the cache does not list (it
+imported only when a clone had never been imported), and the probe fails unless the body's
+script loaded and it draws.
+
+### Textures beside the GLBs
+
+All 54 character GLBs embedded their maps, and Godot's import, told to extract them, wrote a
+second, uncompressed copy of every one beside each part as `<glb>_<image>.png` while the
+forge's own VRAM-compressed PNGs were loaded by nothing. The 122 embedded images were the
+forge's PNGs byte for byte, so `tools/forge/externalise_textures.py` repaired it without a
+rebuild (113 extracted doubles deleted, 46 MB to 27 MB), and the forge externalises at every
+export. `tools/tests/test_glb_textures.py` walks every GLB under `game/assets`: no embedded
+image, every referenced file present, every character GLB holding a mesh, every meta counting
+the triangles its file holds, no character texture referenced by nothing. It found five parts
+that were an armature with nothing in it (the three beards, the pauldrons and the ragged cloak
+-- the exporter drops a mesh it thinks invalid and says so only on stdout); the forge now
+refuses an export that wrote no triangles. Eight culture garments also carried import
+sidecars nothing had stamped: textures without mipmaps or compression, and no post-import
+script. `apply_import_settings.gd` stamps them now.
+
+### Eyes, skin, and what the material is made of
+
+The eyes were not flat discs: they were never drawn at all (above). Wound outward, with the
+iris shader drawing both faces, the face view shows an iris with a pupil and a highlight,
+tinted by the chosen colour; counted off the rebuilt head GLBs, 94 % of each eye's faces point
+out, against 0 % in the old ones.
+
+Compatibility has no subsurface scattering, so skin wears its own shader
+(`assets/shaders/skin.gdshader`): the light wraps past the terminator and what it adds there
+is tinted towards blood, with a soft sheen instead of a specular spot. The first version made
+porcelain of every tone -- the face bakes carry painted light and the engine lit them again --
+so the paint is scaled back to the value skin is (0.84). Cloth, leather and metal each get
+their own rim and specular in `HumanoidModel._dress`, keyed off the material the forge wrote
+into each mesh's meta (a harness is several meshes of several materials: an arming coat of
+cloth under steel), and in the Naming's light the belt reads as leather against the tunic's
+wool and a cuirass as steel. A part woven in its own colours says `"tint": "none"` and is lit
+as its material without being dyed (the plaid).
+
+### A child
+
+The old note said a child needs its own rig and its own bake of the 70 clips. It does not:
+CONTRACTS §2 already says the clips retarget by bone-local rotation, and the only thing in the
+way is that the exporter writes every bone's own translation into every clip, which on a
+child's skeleton would stretch it back into a grown body on the first frame.
+`ChildProportions` (a SkeletonModifier3D, `actors/shared/child_proportions.gd`) runs after the
+clips have posed the rig and puts each bone back where the child's skeleton has it, carries
+each rotation over as a turn from the rest pose, scales the hips' travel to the child's height
+and the head to the child's (the heads are the grown ones, worn at 0.86). Everything it uses
+is read off the two forge skeletons, so a rebuilt rig does not break it. The child's clothes
+are cut on the child's own skeleton (`<garment>_child`: tunic, shirt, trousers, dress, shoes,
+boots, belt); a garment with no child's cut becomes the plain one of its slot, and a child is
+only put in its own body once those clothes exist -- bare, the child body would stand in the
+street as it did in the first render of it.
+
+Seen in the family lineup, standing and walking beside two grown people: a child in a tunic and
+trousers and a child in a dress, their clothes cut for them.
+
+Separately, nothing in the packs was ever given a child's height. Seven NPCs are tagged
+`child`, two more are only written as nine and eight and `child_small`, and every one was
+rolled as a grown person of their culture: the miller's nine-year-old stood as tall as the
+miller. `Npc.appearance_of` gives them a child's height for their years (1.22 m at seven,
+1.44 m at eleven). The capsule fallback that was meant to shrink a child had been sitting
+after the `return` of `appearance_of`, where nothing could reach it.
+
+### Diagnoses that did not survive the render
+
+* **"The eyes are flat discs."** They were never drawn in the engine at all: wound inside out
+  and culled. The discs people saw were the sockets.
+* **"A child needs its own rig and its own bake of the clips."** It needs neither; the clips
+  already retarget by rotation, and the bone translations the exporter writes into them can be
+  put back after the pose (above).
+* **"The cape stands off the shoulders because it is a rigid shell."** True of the old one, but
+  the first render of the draped one stood off too: it rested on the height of the Neck joint,
+  and the body's shoulders are 6 cm above that joint. The fault was the landmark.
+* **"The cloak flares out to the hands because the A-posed arms are in its drape."** Taking
+  the arms out moved the hem by millimetres; it was the cape's flare (0.10 per metre) carried
+  down a metre of fall, 0.46 m each side at the knee. The cloak flares at 0.045 now.
+* **"The build slider needs the heavy body."** It needed the rig's girth to follow it; the
+  heavy body is shape on top of that, and only under clothes fitted for it.
+* **"The mouth has no definition because the paint is faint."** It was painted 3 cm in front
+  of the face, where the lips' mask never reached the skin.
+* **"The epaulettes are a weighting fault."** Four weight schemes for the shoulder, tried on
+  the posed body through a weight hook in a numpy previewer, changed nothing that could be
+  seen; the mound was in the shape, a ball laid over the joint for the A-pose and a trapezius
+  rising to meet it.
+* **"The plaid needs less bulk."** It did, but half of the padded costume was the gambeson the
+  Cragborn preset wore under it, which the game's own clans do not.
+
+### Found and not fixed
+
+* **The wrist join.** The hands are a separate, finer mesh joined to the body's forearm, cut
+  from the same field. Sunk under the body right up to the cut, the hand left a groove round the
+  wrist where the body's end is rounded off, and the rig and bodies in the repo as this is
+  written have it; the hand now lies on the body for the last 5 mm and covers that end, and the
+  rig and bodies are being rebuilt from it (`tools/forge/rigbuild.sh`, then the bodies).
+* **At the Walk's full swing the forward arm comes out through the front of a cloak**, from the
+  elbow down: the cloth in front of an arm lies too far from it to take a share of its swing.
+  Reaching further ahead and behind for that share keeps the upper arm in (tried on the built
+  cloak with `tools/forge/preview/cloakreweight.py`), but the hand still shows at full swing;
+  holding the arms' swing in under a long cloak, in locomotion only, is the next thing to try.
+  None of the rebuilt cloaks has been seen in the engine yet.
+* **The hood's spare cloth still reads as a box behind the head in profile.**
+* **At the Walk's passing pose the swinging heel shows under the back of a robe to the ankle.**
+  The robe's hem is a hand off the ground and the foot comes up behind it.
+* **Men in a shirt show the default body's chest through it**: the shirt follows the pectoral
+  masses closely enough to read as a bust from the front. Flatter pectorals were tried in a numpy
+  render and were not worth the rebuild of everything cut on the body.
+* **Padded torsos hold the arms out by a table** (`HumanoidModel.ARM_ROOM`, per torso part, and
+  three degrees more on the heavy body); a cloak, a heavy belt or gloves are not counted, and the
+  clips themselves still carry the default body's pose.
+* **The heavy and slight bodies are worn only bare or under clothes that fit them**, which is none
+  yet: the garments' morph fits are built only with `--fits` and still left 7-17 % of a garment's
+  vertices inside the heavy body. Under clothes the default body is worn and the rig widened.
+* **A child whose people wear a kilt, a wrap or a robe is dressed as a Vale child** (tunic,
+  trousers, shoes): only the plain garments have a child's cut.
+* **The face is painted, not modelled.** The brow, the lids, the nostrils and the lips read now at
+  the Naming's distance; there are no modelled lids and no expressions.
+* **NPC defs give `age` in years**, and the record's `age` is 0 (young) to 1 (old). Nothing draws
+  age yet and a test pins the raw value, so it is left.
+
 ## The quests, played on the atlas world
 
 The atlas world's merge had one gate left besides the final build: every authored quest played

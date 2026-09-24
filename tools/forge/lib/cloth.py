@@ -232,9 +232,23 @@ class Garment:
     # bone nor a copy of the body's weights (hair that hangs past the neck).
     weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
     # Or the body's weights, reworked: (vertex positions, their transferred weights) -> weights.
-    # A skirt keeps the body's weights above the hips and gives most of the legs' share below
-    # them to the hips (see `_skirt_weights`).
+    # A skirt keeps the body's weights above the hips and below them gives the legs' share to
+    # both thighs, blended across the centre line (see `_skirt_weights`).
     weight_adjust: Optional[Callable[[np.ndarray, np.ndarray], np.ndarray]] = None
+    # The (z, a, b, yc) loft stations a skirt was cut through once they cover the body
+    # (`_covered`), for what is laid on it afterwards: a wrap skirt's overlap.
+    stations: list = field(default_factory=list)
+    # Colour woven into the cloth: (positions, normals) -> rgb, multiplied into the painted value.
+    # A part with a pattern is baked in its own colours and the game must not tint it again, which
+    # its meta says with "tint": "none" (the clans' plaid is a tartan, not a primary colour).
+    pattern: Optional[Callable[[np.ndarray, np.ndarray], np.ndarray]] = None
+    # Modelled round the arms as they hang in the Idle rather than as they stand in the rest
+    # pose: bound to the rest pose, it would be carried down again by every bit of its weight on
+    # an arm. `rebind_from_idle` puts each vertex where the Idle's skinning brings it back.
+    rebind: bool = False
+    # Worn on the hands: it closes with them, as the body does, by the grip_L and grip_R morph
+    # targets (grip.py), which HumanoidModel.set_grip turns on when a weapon is held.
+    grip: bool = False
     # What the painter needs to lay strands along: a flow direction anywhere on the part and
     # the centrelines of the locks it was combed into.
     flow_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
@@ -406,7 +420,11 @@ def tunic(skel: Skeleton, body, *, hem: float = 0.44, sleeves: float = 0.55,
     sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
                           relief=garment_edges(skel, collar_z=float(skel.J["Neck"][2]),
                                                sleeve_end=min(sleeves, 1.0), waist=0.010),
-                          bounds=zbox(skel, hem * skel.props.height - 0.03 * s, 0.92 * skel.props.height, xy=0.55)))
+                          # wide enough for the sleeve: the A-posed wrist stands 0.65 m out, and
+                          # at 0.55 every long sleeve (the gambeson's, the arming coat's) was cut
+                          # off halfway down the forearm by the box it was evaluated in
+                          bounds=zbox(skel, hem * skel.props.height - 0.03 * s, 0.92 * skel.props.height,
+                                      xy=0.55 if sleeves < 0.6 else 0.74)))
     # the skirt of the tunic hangs away from the legs instead of shrink-wrapping them
     hip = float(skel.J["UpperLeg.L"][2])
     z_hem = hem * skel.props.height
@@ -443,42 +461,108 @@ def trousers(skel: Skeleton, body, *, thickness: float = 0.010, length: float = 
     sc = Scene()
     s = _s(skel)
     reg = legs_region(skel, top=0.575, length=length)
-    sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s,
+    # From the top of the thigh up they lie closer, under whatever is worn over them: at full
+    # thickness they stood 2 mm outside a tunic at the hips and showed through it in patches.
+    hip = float(skel.J["UpperLeg.L"][2])
+    snug = relief_band(hip - 0.12 * s, 0.70 * skel.props.height, -0.007 * s, 0.030 * s)
+    sc.union(offset_shell(body, reg, thickness * s, gap=0.003 * s, relief=snug,
                           bounds=zbox(skel, 0.02, 0.60 * skel.props.height, xy=0.26)))
     return Garment("trousers", sc, spacing=0.0070, target_tris=3600, material="cloth")
 
 
-def _skirt_weights(skel: Skeleton) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-    """A skirt hangs from the hips and is pushed by the legs; it is not carried by them.
+def _cover(body, z: float, a: float, b: float, yc: float = 0.0, gap: float = 0.008,
+           xmax: float = 0.30) -> Tuple[float, float]:
+    """The semi-axes of an ellipse at height `z` round (0, yc), grown as little as they need to
+    be for the body's section there, `gap` out from it, to lie inside.
+
+    The skirts were lofted through fixed ellipses cut for an earlier, narrower body, and the
+    final body's hips stood 1-2 cm out through the side of every dress, robe, kilt, wrap skirt
+    and coat: in the family lineup a torn white patch of thigh showed at the hip of each dress."""
+    xs = np.arange(-xmax, xmax + 1e-9, 0.003)
+    ys = np.arange(-0.26, 0.26 + 1e-9, 0.003)
+    X, Y = np.meshgrid(xs, ys, indexing="ij")
+    P = np.stack([X.ravel(), Y.ravel(), np.full(X.size, z)], axis=1)
+    inside = body.eval(P) < gap
+    if not inside.any():
+        return a, b
+    k = float(np.sqrt((P[inside, 0] / a) ** 2 + ((P[inside, 1] - yc) / b) ** 2).max())
+    return (a * k, b * k) if k > 1.0 else (a, b)
+
+
+def _covered(body, stations: Sequence[Tuple[float, float, float, float]], gap: float,
+             hang_from: int = 1, start: int = 1) -> List[Tuple[float, float, float, float]]:
+    """(z, a, b, yc) loft stations, each from `start` on grown to cover the body (`_cover`); and
+    from station `hang_from` down none narrower than the one above, because cloth that clears
+    the hips hangs from them -- it does not tuck back in under them.
+
+    The waistband (station 0) is left as cut: an ellipse grown round the waist's section stands
+    off it at the flanks, and the belt worn over a kilt or a skirt disappeared under it."""
+    out: List[Tuple[float, float, float, float]] = []
+    for i, (z, a, b, yc) in enumerate(stations):
+        if i >= start:
+            a, b = _cover(body, z, a, b, yc, gap)
+        if i > hang_from:
+            a, b = max(a, out[-1][1]), max(b, out[-1][2])
+        out.append((z, a, b, yc))
+    return out
+
+
+def _loft_of(stations: Sequence[Tuple[float, float, float, float]]) -> Prim:
+    return sdf.loft([(np.array([0.0, yc, z]), a, b) for z, a, b, yc in stations], LEFT, axis=UP)
+
+
+def _on_ellipse(ang: float, a: float, b: float, z: float, yc: float = 0.0, inset: float = 1.0) -> np.ndarray:
+    return np.array([math.cos(ang) * a * inset, yc + math.sin(ang) * b * inset, z])
+
+
+def _on_loft(stations: Sequence[Tuple[float, float, float, float]], x: float, y: float, z: float,
+             out: float = 0.0) -> np.ndarray:
+    """The point on a loft's surface at height `z` in the direction of (x, y) from its centre,
+    `out` metres proud of it: for laying an edge on a skirt whatever size `_covered` made it."""
+    zs = [st[0] for st in stations]
+    order = np.argsort(zs)
+    a = float(np.interp(z, np.take(zs, order), np.take([st[1] for st in stations], order)))
+    b = float(np.interp(z, np.take(zs, order), np.take([st[2] for st in stations], order)))
+    yc = float(np.interp(z, np.take(zs, order), np.take([st[3] for st in stations], order)))
+    ang = math.atan2(y - yc, x)
+    r = 1.0 / math.sqrt((math.cos(ang) / a) ** 2 + (math.sin(ang) / b) ** 2) + out
+    return np.array([math.cos(ang) * r, yc + math.sin(ang) * r, z])
+
+
+def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
+                   keep_knee: float = 0.90) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+    """A skirt goes with the thighs, and stretches between them.
 
     Weighted straight from the body, every vertex below the hips took the nearest leg's weights
-    whole, so a stride tore the cloth between the legs open and showed the thigh through the
-    gap -- the dress, the robe, the kilt and the wrap skirt all did it. Below the hip joint the
-    legs' share is handed to the hips, all of it on the centre line between the legs and less
-    of it towards the sides and the hem, where the thigh really does push the cloth; and what
-    the legs keep is the thigh's, because a skirt does not bend at the knee."""
+    whole, so a stride tore the cloth open between the legs. Below the hips the legs' share goes
+    to the two thighs now, by a smooth blend across the centre line -- half each on it -- with a
+    part of it (less towards the hem) to the hips: the cloth over each thigh moves with that
+    thigh, the cloth between them with both, and it stretches instead of tearing. Nothing of it
+    is left to the shins: a skirt does not bend at the knee.
+
+    The first cut of this handed most of the legs' share to the hips, and a lineup that was
+    meant to show a stride (and showed the idle: see character_review's `_hold_pose`) passed
+    it. Held at the Walk's contact pose, the forward leg came out through the front of the robe,
+    the wrap skirt and the kilt to the hip."""
     bones = list(rig.DEFORM_NAMES)
     B = {b: i for i, b in enumerate(bones)}
     s = _s(skel)
     hips_z = float(skel.J["UpperLeg.L"][2])
     knee_z = float(skel.J["LowerLeg.L"][2])
+    legs = [B[b + side] for side in ("L", "R") for b in ("UpperLeg.", "LowerLeg.", "Foot.", "Toe.")]
 
     def fn(V, W):
         W = np.array(W, float, copy=True)
-        z, ax = V[:, 2], np.abs(V[:, 0])
+        z, x = V[:, 2], V[:, 0]
         below = _ss((hips_z - 0.02 * s - z) / (0.10 * s))
         down = np.clip((hips_z - z) / max(hips_z - knee_z, 1e-3), 0.0, 1.0)
-        keep = (0.20 + 0.40 * down) * np.clip((ax - 0.02 * s) / (0.09 * s), 0.0, 1.0)
-        keep = 1.0 - below * (1.0 - keep)
-        for side in ("L", "R"):
-            thigh = B["UpperLeg." + side]
-            for b in ("LowerLeg.", "Foot.", "Toe."):
-                j = B[b + side]
-                W[:, thigh] += W[:, j] * below
-                W[:, j] *= (1.0 - below)
-            moved = W[:, thigh] * (1.0 - keep)
-            W[:, thigh] -= moved
-            W[:, B["Hips"]] += moved
+        keep = keep_hip + (keep_knee - keep_hip) * down
+        moved = W[:, legs].sum(axis=1) * below
+        W[:, legs] *= (1.0 - below)[:, None]
+        wl = _ss((x + 0.05 * s) / (0.10 * s))
+        W[:, B["UpperLeg.L"]] += moved * keep * wl
+        W[:, B["UpperLeg.R"]] += moved * keep * (1.0 - wl)
+        W[:, B["Hips"]] += moved * (1.0 - keep)
         return W
     return fn
 
@@ -489,27 +573,29 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
     z_hem = hem * skel.props.height
     waist = float(skel.J["Spine"][2])
     sc = Scene()
-    outer = sdf.loft([
-        (np.array([0.0, 0.0, waist]), 0.134 * s, 0.100 * s),
-        (np.array([0.0, 0.0, hip + 0.02 * s]), 0.158 * s, 0.118 * s),
-        (np.array([0.0, 0.0, (hip + z_hem) * 0.5]), (0.172 + 0.030 * flare) * s, (0.130 + 0.026 * flare) * s),
-        (np.array([0.0, 0.0, z_hem + 0.02 * s]), (0.186 + 0.058 * flare) * s, (0.142 + 0.048 * flare) * s),
-        (np.array([0.0, 0.0, z_hem]), (0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s),
-    ], LEFT, axis=UP)
-    sc.union(outer)
-    # soft vertical folds
+    st = _covered(body, [
+        (waist, 0.134 * s, 0.100 * s, 0.0),
+        (hip + 0.02 * s, 0.158 * s, 0.118 * s, 0.0),
+        ((hip + z_hem) * 0.5, (0.172 + 0.030 * flare) * s, (0.130 + 0.026 * flare) * s, 0.0),
+        (z_hem + 0.02 * s, (0.186 + 0.058 * flare) * s, (0.142 + 0.048 * flare) * s, 0.0),
+        (z_hem, (0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s, 0.0),
+    ], gap=0.008 * s)
+    sc.union(_loft_of(st))
+    # soft vertical folds, from the hips to the hem on the skirt's own surface
     n = 9
+    hz, ha, hb, _ = st[1]
+    ez, ea, eb, _ = st[-1]
     for i in range(n):
         a = 2 * math.pi * i / n
-        d = np.array([math.cos(a), math.sin(a), 0.0])
-        sc.subtract(sdf.tube_path([d * 0.155 * s + np.array([0, 0, hip + 0.02 * s]),
-                                   d * (0.186 + 0.058 * flare) * s + np.array([0, 0, z_hem])],
+        sc.subtract(sdf.tube_path([_on_ellipse(a, ha, hb, hz, inset=0.985), _on_ellipse(a, ea, eb, ez)],
                                   0.010 * s), k=0.016 * s)
-    sc.union(sdf.tube_path(_ring((0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s,
-                                 z_hem + 0.010 * s), 0.0060 * s), k=0.006 * s)
+    sc.union(sdf.tube_path(_ring(ea, eb, z_hem + 0.010 * s), 0.0060 * s), k=0.006 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     g = Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
-    g.weight_adjust = _skirt_weights(skel)
+    # nearly all of the thigh's swing, from the top: at 45 % the forward thigh's front came through
+    # a robe at mid-thigh, where it moves 6 cm and the cloth stands 1 cm off it
+    g.weight_adjust = _skirt_weights(skel, keep_hip=0.80, keep_knee=1.0)
+    g.stations = st
     return g
 
 
@@ -612,13 +698,27 @@ def _signed_around(P: np.ndarray) -> np.ndarray:
     return np.arctan2(P[:, 0], -P[:, 1])
 
 
-def _cloak_weights(skel: Skeleton, hooded: bool) -> Callable[[np.ndarray], np.ndarray]:
+def _near_segments(V: np.ndarray, a: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Distance from each point to the segment a-b, and where along it (0..1) the nearest point is."""
+    ab = b - a
+    t = np.clip(((V - a) @ ab) / max(float(ab @ ab), 1e-12), 0.0, 1.0)
+    return np.linalg.norm(V - (a + t[:, None] * ab), axis=1), t
+
+
+def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable[[np.ndarray], np.ndarray]:
     """What a cloak moves with. The hood with the head above the jaw, fading into the neck by
     the shoulders; the shoulder girdle at the points of the shoulders, and some of each upper
     arm where the cloth lies over it; then the chest, the spine and the hips down the back;
     and near the hem the front panels take a share of the thigh on their side, so a stride
     pushes the cloak open instead of through it. Weighted from the body instead, a cloak to
-    the knee is torn down the middle by every step."""
+    the knee is torn down the middle by every step.
+
+    `hang`: the cloak is modelled over the arms as they hang in the Idle (`drape_field`'s
+    `hang_arms`), and the cloth that lies on an arm or hangs in front of or behind it, down to
+    the wrist, takes nearly all of that arm's swing -- the upper arm's above the elbow, the
+    forearm's below it. Without it the arms swung out through the sides of the cloak at every
+    step. The game also holds a walker's arms in under a long cloak (HumanoidModel.ARM_HOLD):
+    with the whole Walk swing, the hand came out through the front whatever the weights."""
     bones = list(rig.DEFORM_NAMES)
     B = {b: i for i, b in enumerate(bones)}
     s = _s(skel)
@@ -626,6 +726,7 @@ def _cloak_weights(skel: Skeleton, hooded: bool) -> Callable[[np.ndarray], np.nd
     J = skel.J
     neck_z, chest_z = float(J["Neck"][2]), float(J["Chest"][2])
     spine_z, hips_z = float(J["Spine"][2]), float(J["Hips"][2])
+    arms = {side: hanging_arm(skel, side) for side in ("L", "R")} if hang else {}
 
     def fn(V):
         W = np.zeros((len(V), len(bones)))
@@ -636,19 +737,50 @@ def _cloak_weights(skel: Skeleton, hooded: bool) -> Callable[[np.ndarray], np.nd
                   * np.clip((0.13 * s - ax) / (0.05 * s), 0.0, 1.0))
         rest = 1.0 - w_head - w_neck
         w_sh = rest * 0.40 * np.clip((ax - 0.09 * s) / (0.12 * s), 0.0, 1.0) * _ss((z - (chest_z - 0.06 * s)) / (0.12 * s))
-        w_ua = (rest * 0.30 * np.clip((ax - 0.21 * s) / (0.06 * s), 0.0, 1.0)
-                * _ss((z - (chest_z - 0.24 * s)) / (0.14 * s)) * (1.0 - _ss((z - (neck_z - 0.03 * s)) / (0.05 * s))))
-        rest = rest - w_sh - w_ua
+        if hang:
+            left = x >= 0
+            w_ua, w_la = np.zeros(len(V)), np.zeros(len(V))
+            # Distance ahead of and behind an arm counts at 0.4 of itself: the cloth in front of
+            # an arm and behind it is what its swing pushes. By plain distance only the cloth at
+            # the arm's side went with it, the cloth hanging in front of the arm stayed where it
+            # hung, and the Walk brought the forearm and the hand out through it.
+            ahead = np.array([1.0, 0.4, 1.0])
+            for side, m in (("L", left), ("R", ~left)):
+                sh, el, wr = (p * ahead for p in arms[side])
+                Q = V[m] * ahead
+                d_u, _ = _near_segments(Q, sh, el)
+                d_l, _ = _near_segments(Q, el, wr)
+                near = 1.0 - _ss((np.minimum(d_u, d_l) - 0.090 * s) / (0.06 * s))
+                fore = _ss((d_u - d_l) / (0.03 * s))
+                share = 0.95 * near * (rest[m] - w_sh[m])
+                w_ua[m] = share * (1.0 - fore)
+                w_la[m] = share * fore
+            rest = rest - w_sh - w_ua - w_la
+        else:
+            w_ua = (rest * 0.30 * np.clip((ax - 0.21 * s) / (0.06 * s), 0.0, 1.0)
+                    * _ss((z - (chest_z - 0.24 * s)) / (0.14 * s)) * (1.0 - _ss((z - (neck_z - 0.03 * s)) / (0.05 * s))))
+            w_la = np.zeros(len(V))
+            rest = rest - w_sh - w_ua
         w_ch = rest * _ss((z - spine_z) / (chest_z - spine_z))
         w_hip = rest * _ss((spine_z - z) / (spine_z - hips_z))
         w_sp = rest - w_ch - w_hip
         w_leg = w_hip * 0.45 * _ss((hips_z - 0.10 * s - z) / (0.25 * s)) * np.clip(-y / (0.10 * s), 0.0, 1.0)
-        w_hip = w_hip - w_leg
+        # With `hang` the back takes half of the thigh behind it too, from just under the hips
+        # down, handed from one thigh to the other across the middle of the back so that the back
+        # stays one sheet: without it the leg behind came out through the back at every stride.
+        w_back = np.zeros(len(V))
+        if hang:
+            w_back = w_hip * 0.50 * _ss((hips_z - 0.05 * s - z) / (0.25 * s)) * np.clip(y / (0.10 * s), 0.0, 1.0)
+        to_left = _ss((x / (0.08 * s) + 1.0) * 0.5)
+        w_hip = w_hip - w_leg - w_back
         left = x >= 0
         for side, m in (("L", left), ("R", ~left)):
             W[m, B["Shoulder." + side]] = w_sh[m]
             W[m, B["UpperArm." + side]] = w_ua[m]
+            W[m, B["LowerArm." + side]] = w_la[m]
             W[m, B["UpperLeg." + side]] = w_leg[m]
+        W[:, B["UpperLeg.L"]] += w_back * to_left
+        W[:, B["UpperLeg.R"]] += w_back * (1.0 - to_left)
         W[:, B["Head"]] = w_head
         W[:, B["Neck"]] = w_neck
         W[:, B["Chest"]] = w_ch
@@ -683,13 +815,17 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
     # The flare is the cloak's own cut, not what hangs it off the body: the drape already takes
     # in every section below the shoulders. At the cape's 0.10 per metre a cloak to the knee
     # came out 0.92 m across the hem, a bell rather than cloth falling from two shoulders.
-    drape = drape_field(body, skel, flare=0.045, arm_far=1.0)
+    drape = drape_field(body, skel, flare=0.045, hang_arms=True)
     if hooded:
-        cowl = cowl_field(skel, flare=0.16)
+        # a smaller peak and less flare: at a full peak and 0.16 the spare cloth fell straight
+        # from a corner behind the crown, and in profile the hood was a box on the head
+        cowl = cowl_field(skel, flare=0.11, peak=0.6)
         fld = FieldFn(lambda P: np.minimum(drape.eval(P), cowl.eval(P)))
     else:
         fld = drape
-    top = sh + 0.045 * s
+    # the cloak's upper edge lies round the base of the neck. At 4.5 cm over the shoulder line,
+    # with its collar ring on top, it stood up to the mouth in the Naming's whole figure
+    top = sh + 0.020 * s
     n_folds = 14
     start = clasp - 0.050 * s                   # the folds start under the shoulder blades
 
@@ -731,7 +867,12 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
             w = w * (1.0 - face_hole(P))
         else:
             r = np.hypot(P[:, 0], P[:, 1] - 0.012 * s)
-            w = w * np.clip((top - z) / (0.006 * s), 0.0, 1.0) * np.clip((r - 0.080 * s) / (0.006 * s), 0.0, 1.0)
+            # the top is cut round the base of the neck only: cut flat across the shoulders too,
+            # it took the top off the cloth where it rounds over each shoulder and left a flat
+            # rim from shoulder to shoulder, the top of a box
+            near_neck = np.clip((0.140 * s - r) / (0.020 * s), 0.0, 1.0)
+            below_top = np.clip((top - z) / (0.006 * s), 0.0, 1.0)
+            w = w * (1.0 - near_neck * (1.0 - below_top)) * np.clip((r - 0.080 * s) / (0.006 * s), 0.0, 1.0)
         return w
 
     def relief(P):
@@ -755,7 +896,7 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
     sc.union(shell)
     off = 0.016 * s + 0.006 * s
     if not hooded:
-        ring = np.array(_ring(0.086 * s, 0.082 * s, sh + 0.032 * s)) + np.array([0.0, 0.010 * s, 0.0])
+        ring = np.array(_ring(0.086 * s, 0.082 * s, sh + 0.010 * s)) + np.array([0.0, 0.010 * s, 0.0])
         sc.union(sdf.tube_path(ring, 0.012 * s, closed=False), k=0.008 * s)
     # the clasp at the throat: a round brooch on the front of the cloth
     front = _surface_point(fld, off, 0.0, clasp + 0.004 * s)
@@ -763,8 +904,9 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
     nm = name or ("hooded_cloak" if hooded else "cloak")
     g = Garment(nm, sc, spacing=0.0055 if not hooded else 0.0050, smooth=4, target_tris=5200 if hooded else 4400,
                 material="cloth", trim=trim, trim_depth=0.0)
-    g.weight_fn = _cloak_weights(skel, hooded)
+    g.weight_fn = _cloak_weights(skel, hooded, hang=True)
     g.double_sided = True
+    g.rebind = True
     return g
 
 
@@ -810,21 +952,33 @@ def shoes(skel: Skeleton, body) -> Garment:
 
 
 def gloves(skel: Skeleton, body) -> Garment:
-    s = _s(skel)
-    sc = Scene()
-    reg = near_bones(skel, ["Hand.L", "Hand.R"], 0.115 * s, 0.045 * s)
-    cuff = near_bones(skel, ["LowerArm.L", "LowerArm.R"], 0.075 * s, 0.03 * s)
-    wrist_l = skel.J["Hand.L"]
-    wrist_r = skel.J["Hand.R"]
+    """Leather gloves 3 mm over the hand, with a short cuff over the wrist: one mesh a hand.
 
-    def near_wrist(P):
-        d = np.minimum(np.linalg.norm(P - wrist_l, axis=1), np.linalg.norm(P - wrist_r, axis=1))
-        return 1.0 - sdf_smoothstep(0.085 * s, 0.115 * s, d)
-    lo = np.minimum(wrist_l, wrist_r) - 0.20 * s
-    hi = np.maximum(wrist_l, wrist_r) + 0.22 * s
-    sc.union(solid_shell(body, region_or(reg, region_and(cuff, near_wrist)), 0.008 * s, gap=0.002 * s,
-                         bounds=(lo, hi)))
-    return Garment("gloves", sc, spacing=0.0040, target_tris=1200, material="leather")
+    They were an offset of the body's field, 1 cm out: that field is sampled at 5 mm and has no
+    gaps between fingers in it, so a glove was a padded mitten -- the paddle the bare hand used
+    to be. The hands are sampled on their own at 2 mm here, and each glove is meshed round its
+    own hand rather than over a box spanning both."""
+    s = _s(skel)
+    hands = sdf.SampledField(bodylib.hands_scene(skel), spacing=0.002, margin=0.02)
+    fld = FieldFn(lambda P: np.minimum(hands.eval(P), body.eval(P)))
+    pieces: List[Garment] = []
+    for side in ("L", "R"):
+        wr = skel.J[f"Hand.{side}"]
+        tip = skel.J[f"HandTip.{side}"]
+        reg = near_bones(skel, [f"Hand.{side}"], 0.115 * s, 0.045 * s)
+        cuff = near_bones(skel, [f"LowerArm.{side}"], 0.075 * s, 0.03 * s)
+
+        def near_wrist(P, wr=wr):
+            return 1.0 - sdf_smoothstep(0.070 * s, 0.095 * s, np.linalg.norm(P - wr, axis=1))
+        lo = np.minimum(wr, tip) - 0.12 * s
+        hi = np.maximum(wr, tip) + 0.12 * s
+        sc = Scene()
+        sc.union(solid_shell(fld, region_or(reg, region_and(cuff, near_wrist)), 0.0020 * s, gap=0.0010 * s,
+                             bounds=(lo, hi)))
+        pieces.append(Garment("gloves" if side == "L" else "gloves_r", sc, spacing=0.0026, smooth=2,
+                              target_tris=1500, material="leather", grip=True))
+    pieces[0].layers = [pieces[1]]
+    return pieces[0]
 
 
 def belt(skel: Skeleton, body, *, pouch: bool = True) -> Garment:
@@ -1056,9 +1210,14 @@ def _rivet_rows(body, skel: Skeleton, off: float, z0: float, z1: float, pitch: f
             dirv = np.array([math.sin(a), -math.cos(a), 0.0])
             P = np.array([[0.0, 0.010 * s, z]]) + dirv[None] * 0.30 * s
             for _ in range(8):
-                dd = body.eval(P) - off
+                # A step is never more than 5 cm: where no primitive reached, a sampled field reads
+                # 1e6, and one step on that threw a rivet 1 000 km out -- the brigandine's grid
+                # then spanned it, and numpy refused to allocate it.
+                dd = np.clip(body.eval(P) - off, -0.05 * s, 0.05 * s)
                 P = P - body.gradient(P) * dd[:, None]
-            if not np.all(np.isfinite(P)) or skip(P)[0] > 0.5 or abs(P[0, 2] - z) > 0.03 * s:
+            miss = abs(float(body.eval(P)[0]) - off) > 0.003 * s or float(np.hypot(P[0, 0], P[0, 1])) > 0.35 * s
+            if (not np.all(np.isfinite(P)) or miss or skip(P)[0] > 0.5
+                    or abs(P[0, 2] - z) > 0.03 * s):
                 continue
             out.append(sdf.sphere(P[0], 0.0042 * s, k=0.002 * s))
         z += pitch
@@ -1098,7 +1257,10 @@ def plate_torso(skel: Skeleton, body, *, brigandine: bool = False) -> Garment:
     for pr in fauld_and_tassets(skel, gap=cuirass_gap + 0.012, thickness=0.007 if brigandine else PLATE_T,
                                 tassets=not brigandine):
         sc.union(pr)
-    main = Garment(name, sc, spacing=0.0034, smooth=3, target_tris=5200,
+    # The brigandine's leather body, with its standing collar and lames, decimated to 5 200
+    # triangles from 325 000, lay in chords across the chest and the shoulders that cut inside the
+    # coat 1.4 cm under it: in the engine the orange coat showed through the leather in patches.
+    main = Garment(name, sc, spacing=0.0034, smooth=3, target_tris=5200 if not brigandine else 9000,
                    material="leather" if brigandine else "iron")
     steel = Scene()
     if brigandine:
@@ -1376,10 +1538,13 @@ def comb(head, start: np.ndarray, flow, length: float, off_fn, release_z: float,
             if dh < o:
                 q = q + head.gradient(q[None])[0] * (o - dh)
             if body is not None:
+                # eased out to the clearance a little at a time: pushed out in one go, a beard
+                # leaving the chin jumped 3 cm, the runaway guard below took that for a wild
+                # projection, and every long beard stopped at the jaw
                 c = clear if clear is not None else 0.008 * s + 0.5 * o
                 db = float(body.eval(q[None])[0])
                 if db < c:
-                    q = q + body.gradient(q[None])[0] * (c - db)
+                    q = q + body.gradient(q[None])[0] * min(c - db, 2.0 * step)
         # a projection off a degenerate gradient can throw a point anywhere, and one wild
         # point is a scene bound the size of a house: a lock that jumps stops where it was
         if not np.all(np.isfinite(q)) or np.linalg.norm(q - p) > 4.0 * step:
@@ -1753,22 +1918,35 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
                           # column, where every other culture's garment is held in
                           relief=garment_edges(skel, collar_z=neck + 0.012 * s, sleeve_end=0.98,
                                                waist=-0.004),
-                          bounds=zbox(skel, 0.50 * skel.props.height, 0.96 * skel.props.height, xy=0.64)))
-    # the skirt of the coat: straight sides, no flare, so it reads as a column
-    sc.union(sdf.loft([
-        (np.array([0.0, 0.006 * s, hip + 0.16 * s]), 0.150 * s, 0.114 * s),
-        (np.array([0.0, 0.004 * s, hip - 0.04 * s]), 0.162 * s, 0.122 * s),
-        (np.array([0.0, 0.002 * s, z_hem + 0.10 * s]), 0.166 * s, 0.126 * s),
-        (np.array([0.0, 0.0, z_hem]), 0.164 * s, 0.124 * s),
-    ], LEFT, axis=UP), k=0.012 * s)
-    sc.union(sdf.tube_path(_ring(0.166 * s, 0.126 * s, z_hem + 0.014 * s), 0.0064 * s), k=0.006 * s)
+                          bounds=zbox(skel, 0.50 * skel.props.height, 0.96 * skel.props.height, xy=0.72)))
+    # the skirt of the coat: straight sides, no flare, so it reads as a column -- one that
+    # clears the hips (`_covered`), which the fixed column did not by 1.5 cm a side. It clears
+    # the body by 1.6 cm, measured down the thigh as well as at the hip and the hem: cleared by
+    # 1 cm at those alone, the trousers under it came through its sides in blue spots at the
+    # thigh's widest, between the stations, and in a strip down the free leg in the Idle
+    st = _covered(body, [
+        (hip + 0.16 * s, 0.150 * s, 0.114 * s, 0.006 * s),
+        (hip - 0.04 * s, 0.162 * s, 0.122 * s, 0.004 * s),
+        (hip - 0.14 * s, 0.164 * s, 0.124 * s, 0.003 * s),
+        (hip - 0.25 * s, 0.165 * s, 0.125 * s, 0.003 * s),
+        (z_hem + 0.10 * s, 0.166 * s, 0.126 * s, 0.002 * s),
+        (z_hem, 0.164 * s, 0.124 * s, 0.0),
+    ], gap=0.016 * s, hang_from=1)
+    sc.union(_loft_of(st), k=0.012 * s)
+    sc.union(sdf.tube_path(_ring(st[-1][1] + 0.002 * s, st[-1][2] + 0.002 * s, z_hem + 0.014 * s), 0.0064 * s),
+             k=0.006 * s)
     # standing collar: a band that rises past the jaw
     sc.union(sdf.tube_path(_ring(0.074 * s, 0.066 * s, neck + 0.056 * s), 0.014 * s), k=0.010 * s)
     # the front split, so the coat has a centre line down the middle of the silhouette
     sc.subtract(sdf.box([0.0, -0.140 * s, (hip + z_hem) * 0.5],
                         [0.007 * s, 0.045 * s, (hip - z_hem) * 0.62]), k=0.005 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    return Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth")
+    g = Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth")
+    # its skirt is a skirt: weighted from the nearest leg, a stride opened it at the side and the
+    # trousers showed through in patches; and it goes with the thigh nearly whole, since at 0.70
+    # of it at the hip the forward thigh came through the front of the coat at the Walk's contact
+    g.weight_adjust = _skirt_weights(skel, keep_hip=0.85, keep_knee=1.0)
+    return g
 
 
 class FieldFn:
@@ -1781,8 +1959,66 @@ class FieldFn:
         return self.fn(P)
 
 
+ARM_BONES = ("UpperArm.L", "LowerArm.L", "Hand.L", "UpperArm.R", "LowerArm.R", "Hand.R")
+
+
+def _idle_matrices(skel: Skeleton) -> Dict[str, np.ndarray]:
+    """Each bone's skinning matrix in the relaxed Idle: posed global times inverse rest."""
+    from . import anim, anim_clips
+    cb = anim.ClipBuilder(skel, "hang", 1.0, loop=True, grounded=False)
+    cb.key(0.0, anim_clips.RELAXED)
+    W = skel.fk(cb.local_pose(0.0))
+    return {b: W[b] @ np.linalg.inv(skel.bones[b].rest) for b in skel.bones if b in W}
+
+
+def rebind_from_idle(skel: Skeleton, V: np.ndarray, W: np.ndarray,
+                     bones: Sequence[str] = rig.DEFORM_NAMES) -> np.ndarray:
+    """Rest-pose positions for a part modelled round the Idle's hanging arms.
+
+    Where a vertex should stand in the Idle is where the rest of its weights (the chest, the
+    spine, the hips) carry the place it was modelled at; its rest position is that, taken back
+    through the blend of all its weights' Idle matrices, arms included. Skinned in the Idle it
+    lands where it was modelled; skinned in a stride it follows its share of the arm's swing."""
+    M = _idle_matrices(skel)
+    Vh = np.concatenate([V, np.ones((len(V), 1))], axis=1)
+    blend = np.zeros((len(V), 4, 4))
+    body = np.zeros((len(V), 4, 4))
+    body_w = np.zeros(len(V))
+    for i, b in enumerate(bones):
+        if b not in M:
+            continue
+        w = W[:, i]
+        if not np.any(w > 0):
+            continue
+        blend += w[:, None, None] * M[b][None]
+        if b not in ARM_BONES:
+            body += w[:, None, None] * M[b][None]
+            body_w += w
+    free = body_w < 1e-6
+    body[free] = M["Chest"]
+    body[~free] /= body_w[~free, None, None]
+    target = np.einsum("nij,nj->ni", body, Vh)
+    # a blend of two turns far apart shrinks towards singular; where it does, keep the vertex
+    ok = np.abs(np.linalg.det(blend[:, :3, :3])) > 0.25
+    out = np.array(Vh, copy=True)
+    out[ok] = np.linalg.solve(blend[ok], target[ok][:, :, None])[:, :, 0]
+    return out[:, :3]
+
+
+def hanging_arm(skel: Skeleton, side: str) -> List[np.ndarray]:
+    """Where the arm hangs in the relaxed Idle -- the shoulder, the elbow and the wrist -- in the
+    rest frame, measured from the rest shoulder: the forge's own FK of `anim_clips.RELAXED`."""
+    from . import anim, anim_clips
+    cb = anim.ClipBuilder(skel, "hang", 1.0, loop=True, grounded=False)
+    cb.key(0.0, anim_clips.RELAXED)
+    W = skel.fk(cb.local_pose(0.0))
+    sh = skel.joint_world(W, "UpperArm." + side)
+    rest = np.asarray(skel.J["UpperArm." + side], float)
+    return [rest + (skel.joint_world(W, n + side) - sh) for n in ("UpperArm.", "LowerArm.", "Hand.")]
+
+
 def drape_field(body, skel: Skeleton, flare: float = 0.10, arm_cut_x: float = 0.25,
-                arm_far: float = 0.05) -> sdf.SampledField:
+                arm_far: float = 0.05, hang_arms: bool = False) -> sdf.SampledField:
     """The body as cloth falls from it.
 
     Every horizontal section of the result is the union of the body's sections above it,
@@ -1793,15 +2029,37 @@ def drape_field(body, skel: Skeleton, flare: float = 0.10, arm_cut_x: float = 0.
 
     Left out means read as `arm_far` away. A short cape is let lie over the top of the arm at
     5 cm; a cloak to the knee must not be, because the flare closes any fixed distance in the
-    end: at 5 cm the cloak's hem had spread out to the A-posed hands, half a metre each side."""
+    end: at 5 cm the cloak's hem had spread out to the A-posed hands, half a metre each side.
+
+    `hang_arms` puts the arms back as they hang in the Idle, instead of cutting the A-posed arm
+    off at `arm_cut_x`: the stub of it that was left, out to the cut, ended every cloak's shoulder
+    in a square corner, a coat hanger under the cloth. Laid over an arm that hangs, the cloth
+    rounds over the point of the shoulder and falls down the outside of the arm."""
     s = _s(skel)
     F = np.array(body.F, copy=True)
     o, sp = body.origin, body.spacing
     xs = o[0] + np.arange(F.shape[0]) * sp
+    ys = o[1] + np.arange(F.shape[1]) * sp
     zs = o[2] + np.arange(F.shape[2]) * sp
     zc = float(skel.J["UpperArm.L"][2]) + 0.030 * s
-    arm = (np.abs(xs)[:, None] > arm_cut_x * s) & (zs[None, :] < zc)
-    F = np.where(arm[:, None, :], np.maximum(F, arm_far), F)
+    cut = arm_cut_x if not hang_arms else float(skel.J["UpperArm.L"][0]) / s - 0.005
+    arm = (np.abs(xs)[:, None] > cut * s) & (zs[None, :] < zc)
+    F = np.where(arm[:, None, :], np.maximum(F, arm_far if not hang_arms else 1.0), F)
+    if hang_arms:
+        # the arm and a sleeve on it, and room at the hand for a robe's bell sleeve: at the arm's
+        # own size the sleeves of whatever was worn under the cloak came through its sides
+        radii = [0.050 * s, 0.066 * s, 0.090 * s]
+        axes = (xs, ys, zs)
+        for side in ("L", "R"):
+            limb = sdf.chain(hanging_arm(skel, side), radii)
+            # only the part of the grid near the arm: the whole of it is 20 million points
+            idx = [np.nonzero((a >= limb.lo[i] - 0.10) & (a <= limb.hi[i] + 0.10))[0] for i, a in enumerate(axes)]
+            if any(len(i) == 0 for i in idx):
+                continue
+            sl = tuple(slice(int(i[0]), int(i[-1]) + 1) for i in idx)
+            X, Y, Z = np.meshgrid(xs[sl[0]], ys[sl[1]], zs[sl[2]], indexing="ij")
+            d = limb.fn(np.stack([X.ravel(), Y.ravel(), Z.ravel()], axis=1)).reshape(X.shape)
+            F[sl] = np.minimum(F[sl], d)
     out = np.empty_like(F)
     run = np.full(F.shape[:2], 1e3)
     for k in range(F.shape[2] - 1, -1, -1):
@@ -1882,7 +2140,7 @@ def shoulder_cape(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     sc = Scene()
     neck = float(skel.J["Neck"][2])
-    drape = drape_field(body, skel, flare=0.10)
+    drape = drape_field(body, skel, flare=0.10, hang_arms=True)
     sh = shoulder_line(body, skel)
     top = sh + 0.045 * s
     clasp_z = sh - 0.012 * s
@@ -1921,6 +2179,7 @@ def shoulder_cape(skel: Skeleton, body) -> Garment:
                 trim=trim, trim_depth=0.0)
     g.weight_fn = _cape_weights(skel)
     g.double_sided = True
+    g.rebind = True
     return g
 
 
@@ -1961,9 +2220,10 @@ def wrap_skirt(skel: Skeleton, body, *, hem: float = 0.18) -> Garment:
     g = skirt(skel, body, hem=hem, flare=0.22, name="wrap_skirt")
     z_hem = hem * skel.props.height
     hip = float(skel.J["UpperLeg.L"][2])
-    g.scene.union(sdf.tube_path([[0.130 * s, -0.100 * s, hip + 0.04 * s],
-                                 [0.114 * s, -0.118 * s, (hip + z_hem) * 0.5],
-                                 [0.098 * s, -0.126 * s, z_hem + 0.03 * s]],
+    # the overlap's edge, laid on the skirt as `_covered` cut it, standing half its width proud
+    g.scene.union(sdf.tube_path([_on_loft(g.stations, 0.130 * s, -0.100 * s, hip + 0.04 * s),
+                                 _on_loft(g.stations, 0.114 * s, -0.118 * s, (hip + z_hem) * 0.5),
+                                 _on_loft(g.stations, 0.098 * s, -0.126 * s, z_hem + 0.03 * s)],
                                 [0.011 * s, 0.012 * s, 0.012 * s]), k=0.008 * s)
     g.scene.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     g.target_tris = 3600
@@ -1979,62 +2239,170 @@ def kilt(skel: Skeleton, body) -> Garment:
     hip = float(skel.J["UpperLeg.L"][2])
     waist = float(skel.J["Spine"][2])
     sc = Scene()
-    sc.union(sdf.loft([
-        (np.array([0.0, 0.0, waist - 0.01 * s]), 0.132 * s, 0.100 * s),
-        (np.array([0.0, 0.0, hip + 0.02 * s]), 0.156 * s, 0.118 * s),
-        (np.array([0.0, 0.0, z_hem + 0.05 * s]), 0.180 * s, 0.138 * s),
-        (np.array([0.0, 0.0, z_hem]), 0.184 * s, 0.141 * s),
-    ], LEFT, axis=UP))
-    # pleats, deeper at the back than the front, the way a kilt is actually made
+    # a little more room than the long skirts: the kilt ends above the knee, so its sides are
+    # the thigh's own, and in the Idle the free leg's thigh came out through the side of it
+    st = _covered(body, [
+        (waist - 0.01 * s, 0.132 * s, 0.100 * s, 0.0),
+        (hip + 0.02 * s, 0.156 * s, 0.118 * s, 0.0),
+        (z_hem + 0.05 * s, 0.180 * s, 0.138 * s, 0.0),
+        (z_hem, 0.184 * s, 0.141 * s, 0.0),
+    ], gap=0.014 * s)
+    sc.union(_loft_of(st))
+    # pleats, deeper at the back than the front, the way a kilt is actually made; laid on the
+    # kilt's own surface all the way round (on a circle they only ever reached it at the sides)
     n = 14
+    hz, ha, hb, _ = st[1]
+    ez, ea, eb, _ = st[-1]
     for i in range(n):
         a = 2 * math.pi * i / n
-        dvec = np.array([math.cos(a), math.sin(a), 0.0])
         depth = 0.009 * s * (0.55 + 0.45 * math.sin(a))
-        sc.subtract(sdf.tube_path([dvec * 0.156 * s + np.array([0, 0, hip + 0.02 * s]),
-                                   dvec * 0.186 * s + np.array([0, 0, z_hem])], depth), k=0.013 * s)
-    sc.union(sdf.tube_path(_ring(0.185 * s, 0.142 * s, z_hem + 0.012 * s), 0.0062 * s), k=0.006 * s)
+        sc.subtract(sdf.tube_path([_on_ellipse(a, ha, hb, hz), _on_ellipse(a, ea, eb, ez)], depth), k=0.013 * s)
+    sc.union(sdf.tube_path(_ring(ea + 0.001 * s, eb + 0.001 * s, z_hem + 0.012 * s), 0.0062 * s), k=0.006 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     g = Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
     g.weight_adjust = _skirt_weights(skel)
+    g.stations = st
     return g
 
 
+# The clans' tartan, half a sett from pivot to pivot (it mirrors at both ends): a rust ground,
+# brown bands with a cream line through them, a dark line either side of the ground. Madder,
+# walnut and undyed wool -- the palette's accent, secondary and trim, darkened as a dyed wool is.
+CLAN_SETT: List[Tuple[str, float]] = [("#7e3f25", 30.0), ("#2a1d15", 4.0), ("#7e3f25", 7.0),
+                                      ("#4f3d2b", 24.0), ("#d9cfb8", 3.0), ("#4f3d2b", 24.0)]
+
+
+def tartan(sett: Sequence[Tuple[str, float]] = CLAN_SETT, mm: float = 0.00062,
+           twill: float = 0.0034) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+    """A woven check as a function of two cloth coordinates (u across, v along, in metres): the
+    warp's stripe and the weft's stripe at a point, crossed in a 2/2 twill, so where a colour
+    crosses itself it is solid and where it crosses another the two mix along a fine diagonal."""
+    cols = np.array([[int(h[i:i + 2], 16) / 255.0 for i in (1, 3, 5)] for h, _ in sett])
+    edges = np.cumsum([w * mm for _, w in sett])
+    half = float(edges[-1])
+
+    def stripe(t):
+        t = np.mod(t, 2.0 * half)
+        t = np.where(t > half, 2.0 * half - t, t)
+        return cols[np.clip(np.searchsorted(edges, t, side="right"), 0, len(cols) - 1)]
+
+    def fn(u, v):
+        warp, weft = stripe(u), stripe(v)
+        w = 0.5 + 0.30 * np.sin(2.0 * math.pi * (u + v) / twill)
+        return warp * w[:, None] + weft * (1.0 - w[:, None])
+    return fn
+
+
 def plaid(skel: Skeleton, body) -> Garment:
-    """Clans: a great blanket over the left shoulder, pinned, falling behind the knee.  It
-    gives one high shoulder and a long diagonal -- a shape no one else in the world has."""
+    """Clans: a length of tartan over the left shoulder, pinned there, across the chest and round
+    the right side under the belt in front, and down the back to behind the knee. It gives one
+    high shoulder and a long diagonal -- a shape no one else in the world has.
+
+    It was a solid loft 15 cm thick down the back and a 7 cm tube across the chest, in undyed
+    wool the palette left pale and plain: a thick white blanket, and over a shirt a padded
+    costume. Now it is one sheet of cloth a centimetre thick, woven in the clan's tartan
+    (`tartan`, baked into the texture and not tinted by the game) and held at the shoulder by a
+    ring brooch. The sash lies on the body, as a band pulled from the shoulder to the belted hip
+    does, and slips in under the belt; the back hangs from the shoulder blades on the drape of
+    the body, as the cloaks do, in folds that deepen towards a hem behind the knee."""
     s = _s(skel)
+    J = skel.J
+    knee = float(J["LowerLeg.L"][2])
+    waist = float(J["Spine"][2])
+    top = shoulder_line(body, skel)
+    drape = drape_field(body, skel, flare=0.035, arm_far=1.0)
+
+    def lies(P):
+        # 1 on the front, where the sash lies on the body; 0 behind, where the cloth hangs
+        return _ss((0.020 * s - P[:, 1]) / (0.040 * s))
+
+    fld = FieldFn(lambda P: lies(P) * body.eval(P) + (1.0 - lies(P)) * drape.eval(P))
+    z_hem = knee + 0.05 * s
+    gap, thick = 0.014 * s, 0.009 * s
+    # the sash's centre line in the front view, from the top of the left shoulder across the chest
+    # and on round the right side, where it meets the top of the back
+    sa = np.array([0.125 * s, top + 0.015 * s])
+    sb = np.array([-0.26 * s, waist - 0.035 * s])
+    sab = sb - sa
+    sl2 = float(sab @ sab)
+    s_dir = sab / math.sqrt(sl2)
+    s_perp = np.array([-s_dir[1], s_dir[0]])
+    # the back panel's top edge falls from the left shoulder to the right side at the waist
+    ex0, ez0 = 0.15 * s, top + 0.020 * s
+    ex1, ez1 = -0.20 * s, waist + 0.030 * s
+    fold_k = 2.0 * math.pi / (0.075 * s)
+
+    def sash_t(P):
+        return np.clip(((P[:, 0] - sa[0]) * sab[0] + (P[:, 2] - sa[1]) * sab[1]) / sl2, 0.0, 1.0)
+
+    def sash_dist(P):
+        t = sash_t(P)
+        return np.hypot(P[:, 0] - (sa[0] + t * sab[0]), P[:, 2] - (sa[1] + t * sab[1]))
+
+    def hem_at(P):
+        return z_hem + 0.009 * s * np.sin(P[:, 0] * fold_k + 0.6 + math.pi)
+
+    def region(P):
+        x, y, z = P[:, 0], P[:, 1], P[:, 2]
+        # a band 14 cm wide, narrowing where it gathers at the side
+        half_w = (0.072 - 0.016 * sash_t(P)) * s
+        front = (1.0 - _ss((sash_dist(P) - half_w) / (0.006 * s))) * _ss((0.030 * s - y) / (0.012 * s))
+        edge = ez1 + (x - ex1) * (ez0 - ez1) / (ex0 - ex1)
+        back = (_ss((edge - z) / (0.006 * s)) * _ss((z - hem_at(P)) / (0.006 * s))
+                * _ss((y + 0.030 * s) / (0.012 * s)) * _ss((0.215 * s - np.abs(x - 0.010 * s)) / (0.008 * s)))
+        return np.maximum(front, back)
+
+    def relief(P):
+        # the back falls in folds that deepen towards the hem
+        fall = np.clip((top - P[:, 2]) / max(top - z_hem, 1e-3), 0.0, 1.0) ** 0.7
+        folds = (0.70 * (0.5 + 0.5 * np.sin(P[:, 0] * fold_k + 0.6))
+                 + 0.30 * (0.5 + 0.5 * np.sin(P[:, 0] * fold_k * 2.3 + 1.9)))
+        behind = 1.0 - lies(P)
+        # the sash: pleats along its length where it is gathered, and its lower end let in under
+        # the belt (which stands 13-22 mm off the body) so the belt passes over it
+        across = (P[:, 0] - sa[0]) * s_perp[0] + (P[:, 2] - sa[1]) * s_perp[1]
+        pleats = 0.5 + 0.5 * np.sin(across * 2.0 * math.pi / (0.032 * s))
+        t = sash_t(P)
+        tuck = _ss((t - 0.55) / 0.30)
+        return (0.018 * s * fall * folds * behind
+                + (0.004 * s * pleats * (0.4 + 0.6 * t) - 0.006 * s * tuck) * (1.0 - behind))
+
+    shell, trim = draped_shell(fld, region, thick, gap,
+                               zbox(skel, z_hem - 0.05 * s, top + 0.08 * s, xy=0.36, ymin=-0.30, ymax=0.36),
+                               relief=relief)
     sc = Scene()
-    sh = skel.J["UpperArm.L"]
-    shx, shz = float(sh[0]), float(sh[2])
-    neck = float(skel.J["Neck"][2])
-    knee = float(skel.J["LowerLeg.L"][2])
-    chest = float(skel.J["Chest"][2])
-    waist = float(skel.J["Spine"][2])
-    # the blanket itself, hanging down the back
-    sc.union(sdf.loft([
-        (np.array([shx * 0.62, 0.030 * s, shz + 0.026 * s]), 0.090 * s, 0.070 * s),
-        (np.array([shx * 0.34, 0.058 * s, neck - 0.08 * s]), 0.140 * s, 0.092 * s),
-        (np.array([-0.010 * s, 0.080 * s, neck - 0.30 * s]), 0.154 * s, 0.068 * s),
-        (np.array([-0.020 * s, 0.088 * s, knee + 0.22 * s]), 0.152 * s, 0.060 * s),
-        (np.array([-0.026 * s, 0.092 * s, knee + 0.05 * s]), 0.140 * s, 0.054 * s),
-    ], LEFT, axis=UP), k=0.010 * s)
-    sc.intersect(sdf.plane([0.0, 0.0, knee + 0.05 * s], [0.0, 0.0, -1.0]))
-    # The length that comes OVER the shoulder and across the chest.  Without it the plaid is
-    # a panel hanging behind the man and does not exist at all from the front, which is the
-    # only angle the player usually has.
-    sc.union(sdf.tube_path([[shx * 0.38, 0.072 * s, waist - 0.02 * s],
-                            [shx * 0.72, 0.048 * s, chest - 0.02 * s],
-                            [shx * 0.92, -0.004 * s, shz + 0.030 * s],
-                            [shx * 0.66, -0.088 * s, chest - 0.01 * s],
-                            [shx * 0.10, -0.122 * s, waist + 0.02 * s],
-                            [-shx * 0.42, -0.086 * s, waist - 0.08 * s]],
-                           [0.030 * s, 0.036 * s, 0.038 * s, 0.036 * s, 0.032 * s, 0.026 * s]),
-             k=0.014 * s)
-    # the pin at the shoulder, which is where the eye goes
-    sc.union(sdf.torus([shx * 0.86, -0.052 * s, shz + 0.020 * s], 0.022 * s, 0.0070 * s,
-                       axis=np.array([0.0, 1.0, 0.0])), k=0.004 * s)
-    return Garment("plaid", sc, spacing=0.0065, target_tris=2600, material="cloth")
+    sc.union(shell)
+    g = Garment("plaid", sc, spacing=0.0055, smooth=4, target_tris=3200, material="cloth",
+                trim=trim, trim_depth=0.0)
+    g.weight_fn = _cloak_weights(skel, False)
+    g.double_sided = True
+    weave = tartan()
+
+    def pattern(P, nrm):
+        # the cloth's own directions: along and across the sash in front, down and across the back
+        front = (P[:, 1] < -0.010 * s) & (P[:, 2] < top - 0.020 * s)
+        u = np.where(front, P[:, 0] * s_perp[0] + P[:, 2] * s_perp[1], P[:, 0])
+        v = np.where(front, P[:, 0] * s_dir[0] + P[:, 2] * s_dir[1], P[:, 2])
+        return weave(u, v)
+    g.pattern = pattern
+    # the brooch: a ring with its pin across, on the front of the sash below the shoulder
+    bz = top - 0.045 * s
+    bx = 0.110 * s
+    ys = np.linspace(0.05 * s, -0.25 * s, 301)
+    Pz = np.stack([np.full_like(ys, bx), ys, np.full_like(ys, bz)], axis=1)
+    outer = gap + thick
+    i = int(np.argmax(fld.eval(Pz) > outer))
+    by = float(ys[max(i, 0)])
+    pin = Scene()
+    c = np.array([bx, by - 0.004 * s, bz])
+    pin.union(sdf.torus(c, 0.019 * s, 0.0042 * s, axis=np.array([0.0, 1.0, 0.0])))
+    pin.union(sdf.tube_path([c + np.array([-0.026 * s, -0.003 * s, 0.010 * s]),
+                             c + np.array([0.026 * s, -0.003 * s, -0.010 * s])], 0.0026 * s), k=0.002 * s)
+    pin.union(sdf.ellipsoid(c + np.array([0.0, 0.002 * s, 0.0]), [0.011 * s, 0.004 * s, 0.011 * s]), k=0.003 * s)
+    brooch = Garment("plaid_brooch", pin, spacing=0.0022, smooth=2, target_tris=500, material="iron")
+    brooch.weight_fn = _cloak_weights(skel, False)
+    g.layers.append(brooch)
+    return g
 
 
 def leg_wraps(skel: Skeleton, body) -> Garment:

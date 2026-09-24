@@ -1,11 +1,11 @@
 {
  "bounds": [
-  -0.7979,
-  -0.2408,
-  -0.0,
-  0.85,
-  0.1585,
-  1.6134
+  -0.7721,
+  -0.241,
+  -0.0001,
+  0.7721,
+  0.1586,
+  1.6142
  ],
  "collision": "none",
  "generator": "character_forge",
@@ -29,8 +29,13 @@
  "rig": "WM_Humanoid_v1",
  "seed": 1,
  "slot_hint": "body",
+ "textures": [
+  "heavy_normal.png",
+  "heavy_albedo.png",
+  "heavy_orm.png"
+ ],
  "tris": [
-  7796,
+  9599,
   0,
   0
  ],

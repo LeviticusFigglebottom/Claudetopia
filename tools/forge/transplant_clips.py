@@ -54,16 +54,31 @@ def load(path: str) -> Tuple[dict, bytes]:
 
 
 def _accessor_bytes(js: dict, binc: bytes, i: int) -> bytes:
+    """An accessor's data as bytes, for comparing: the dense part (zeros when it has no view) and,
+    for a sparse one, its indices and values after it."""
     a = js["accessors"][i]
-    v = js["bufferViews"][a["bufferView"]]
     dt = np.dtype(_COMP[a["componentType"]])
     n = _NCOMP[a["type"]]
-    start = v.get("byteOffset", 0) + a.get("byteOffset", 0)
-    stride = v.get("byteStride", 0)
     item = dt.itemsize * n
-    if stride and stride != item:
-        return b"".join(binc[start + k * stride: start + k * stride + item] for k in range(a["count"]))
-    return binc[start: start + a["count"] * item]
+    if "bufferView" in a:
+        v = js["bufferViews"][a["bufferView"]]
+        start = v.get("byteOffset", 0) + a.get("byteOffset", 0)
+        stride = v.get("byteStride", 0)
+        if stride and stride != item:
+            out = b"".join(binc[start + k * stride: start + k * stride + item] for k in range(a["count"]))
+        else:
+            out = binc[start: start + a["count"] * item]
+    else:
+        out = b"\0" * (a["count"] * item)
+    if "sparse" in a:
+        sp = a["sparse"]
+        idx_size = np.dtype(_COMP[sp["indices"]["componentType"]]).itemsize
+        iv = js["bufferViews"][sp["indices"]["bufferView"]]
+        i0 = iv.get("byteOffset", 0) + sp["indices"].get("byteOffset", 0)
+        vv = js["bufferViews"][sp["values"]["bufferView"]]
+        v0 = vv.get("byteOffset", 0) + sp["values"].get("byteOffset", 0)
+        out += binc[i0: i0 + sp["count"] * idx_size] + binc[v0: v0 + sp["count"] * item]
+    return out
 
 
 def _view_bytes(js: dict, binc: bytes, vi: int) -> bytes:
@@ -129,7 +144,13 @@ def transplant(jb: dict, bb: bytes, jd: dict, bd: bytes) -> Tuple[dict, bytes]:
         if ai not in acache:
             a = dict(src["accessors"][ai])
             if "sparse" in a:
-                raise SystemExit("sparse accessors are not handled")
+                # A morph target that moves a few vertices is written sparse: the indices it moves
+                # and their values, each in a view of its own (the closed hands, grip_L and grip_R,
+                # move only the fingers). Both views come along like any other.
+                sp = copy.deepcopy(a["sparse"])
+                for part in ("indices", "values"):
+                    sp[part]["bufferView"] = add_view(src, src_bin, sp[part]["bufferView"], vcache)
+                a["sparse"] = sp
             if "bufferView" in a:
                 a["bufferView"] = add_view(src, src_bin, a["bufferView"], vcache)
             accs.append(a)
@@ -192,6 +213,12 @@ def verify(jb: dict, bb: bytes, jd: dict, bd: bytes, jo: dict, bo: bytes) -> Lis
                     bad.append("mesh %d primitive %d %s" % (mi, pi, k))
             if "indices" in pb and _accessor_bytes(jb, bb, pb["indices"]) != _accessor_bytes(jo, bo, po["indices"]):
                 bad.append("mesh %d primitive %d indices" % (mi, pi))
+            for ti, (tb, to) in enumerate(zip(pb.get("targets", []), po.get("targets", []))):
+                for k in tb:
+                    if _accessor_bytes(jb, bb, tb[k]) != _accessor_bytes(jo, bo, to[k]):
+                        bad.append("mesh %d primitive %d morph target %d %s" % (mi, pi, ti, k))
+            if len(pb.get("targets", [])) != len(po.get("targets", [])):
+                bad.append("mesh %d primitive %d morph targets" % (mi, pi))
     for si, (sb, so) in enumerate(zip(jb.get("skins", []), jo.get("skins", []))):
         if "inverseBindMatrices" in sb and _accessor_bytes(jb, bb, sb["inverseBindMatrices"]) != \
                 _accessor_bytes(jo, bo, so["inverseBindMatrices"]):

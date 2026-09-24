@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 1.367,
+  "max": [
+   0.072,
+   1.067,
+   0.072
+  ],
+  "min": [
+   -0.072,
+   -0.3,
+   -0.072
+  ],
+  "radius": 0.691
+ },
+ "built_seconds": 26.95,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "clapper_bronze.glb",
+ "grip_origin": true,
+ "hash": "f15fa957842522ff",
+ "kind": "clapper",
+ "materials": [
+  "clapper_bronze_mat"
+ ],
+ "materials_used": [
+  "bronze",
+  "wood_planks",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "clapper_bronze",
+   "tris": 2706
+  },
+  {
+   "name": "clapper_bronze_LOD1",
+   "tris": 630
+  },
+  {
+   "name": "clapper_bronze_LOD2",
+   "tris": 404
+  }
+ ],
+ "name": "clapper_bronze",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9536,
+ "textures": [
+  "clapper_bronze_albedo.png",
+  "clapper_bronze_normal.png",
+  "clapper_bronze_orm.png"
+ ],
+ "tris": [
+  2706,
+  630,
+  404
+ ],
+ "two_handed": true,
+ "version": 3
+}

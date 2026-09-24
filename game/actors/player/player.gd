@@ -85,6 +85,8 @@ const MANTLE_MIN := 0.4
 const MANTLE_MAX := 1.3
 const MANTLE_TIME := 0.5
 const BOW_MIN_DRAW := 0.3
+## Seconds after the last act of a fight before the weapon goes back in its sheath.
+const SHEATHE_AFTER_S := 8.0
 const RIPOSTE_RANGE := 2.4
 ## How close you must be to a foe's back for the light to become a backstab.
 const BACKSTAB_RANGE := 1.8
@@ -151,6 +153,9 @@ var _attack_index: int = 0
 ## The crit this swing carries ("" or "sneak"), kept so a charged heavy is rebuilt with it.
 var _attack_crit: String = ""
 var _attack_phase: String = ""
+## Whether the weapon is in the hand (true) or in its sheath (_keep_the_weapon).
+var weapon_drawn := false
+var _last_fight_act := -INF
 var _attack_clip: String = ""
 var _chain_open: bool = false
 var _charging: bool = false
@@ -322,6 +327,39 @@ func _dress_the_body() -> void:
 	var body := body_model()
 	if body != null:
 		body.call("apply_appearance", worn_look())
+	_dress_hands()
+
+
+## The weapon in the hand, or in its sheath while it is put away, and a shield on the arm, drawn
+## (HeldItems). A lantern or a torch in the off hand is lit rather than drawn here
+## (_refresh_lantern).
+func _dress_hands() -> void:
+	var body := body_model()
+	if body == null:
+		return
+	var main := ContentDB.get_or_empty(str(equipped.get("main_hand", "")))
+	var off := ContentDB.get_or_empty(str(equipped.get("off_hand", "")))
+	if not (off.get("tags", []) as Array).has("shield"):
+		off = {}
+	HeldItems.dress(body, main, off, weapon_drawn)
+
+
+## Out of a fight the weapon rides in its sheath: a blade at the left hip, a two-handed weapon or a
+## bow across the back (HeldItems.sheath_for). A swing, a guard, a drawn bow, a riposte, a stagger
+## or a lock-on puts it in the hand in the same tick, and it goes back SHEATHE_AFTER_S after the
+## last of them, once the body is free. There is no draw clip, so the change is made at once, and
+## the first swing starts with the weapon already in the hand.
+func _keep_the_weapon() -> void:
+	var fighting := state in [State.ATTACK, State.BOW, State.RIPOSTE, State.STUNNED] or is_blocking \
+			or (lock != null and lock.is_locked())
+	if fighting:
+		_last_fight_act = now()
+		if not weapon_drawn:
+			weapon_drawn = true
+			_dress_hands()
+	elif weapon_drawn and now() - _last_fight_act >= SHEATHE_AFTER_S and state == State.FREE and not anim.is_busy():
+		weapon_drawn = false
+		_dress_hands()
 
 
 ## The humanoid model standing in for this character, or null while it is a placeholder.
@@ -429,6 +467,7 @@ func _physics_process(delta: float) -> void:
 		State.RIPOSTE: _tick_riposte(delta)
 		State.DEAD: _damp_horizontal(delta, 10.0)
 		State.DRINK: _tick_drink(delta)
+	_keep_the_weapon()
 	if state != State.MANTLE:
 		apply_gravity(delta)
 		integrate_shove(delta)
@@ -1575,6 +1614,7 @@ func equip_weapon(item_id: String, instance_data: Dictionary = {}) -> void:
 	weapon.hit_landed.connect(_on_weapon_hit)
 	equipped["main_hand"] = item_id
 	_recompute_load()
+	_dress_hands()
 	equipment_changed.emit("main_hand", item_id)
 	EventBus.item_equipped.emit("main_hand", item_id)
 
@@ -1584,6 +1624,7 @@ func equip_offhand(item_id: String) -> void:
 	equipped["off_hand"] = item_id
 	_refresh_lantern()
 	_recompute_load()
+	_dress_hands()
 	equipment_changed.emit("off_hand", item_id)
 	EventBus.item_equipped.emit("off_hand", item_id)
 

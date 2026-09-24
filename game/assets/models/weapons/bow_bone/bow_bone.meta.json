@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.WeaponL",
+ "bounds": {
+  "height": 0.175,
+  "max": [
+   0.017,
+   0.02,
+   0.754
+  ],
+  "min": [
+   -0.017,
+   -0.155,
+   -0.754
+  ],
+  "radius": 0.759
+ },
+ "built_seconds": 5.75,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "bow_bone.glb",
+ "grip_origin": true,
+ "hash": "917806429c3f7e9f",
+ "kind": "bow",
+ "materials": [
+  "bow_bone_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "leather",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "bow_bone",
+   "tris": 560
+  },
+  {
+   "name": "bow_bone_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "bow_bone_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "bow_bone",
+ "params": {
+  "finish": "bone"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9570,
+ "textures": [
+  "bow_bone_albedo.png",
+  "bow_bone_normal.png",
+  "bow_bone_orm.png"
+ ],
+ "tris": [
+  560,
+  300,
+  120
+ ],
+ "version": 3
+}

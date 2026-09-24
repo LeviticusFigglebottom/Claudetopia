@@ -1,0 +1,6 @@
+[
+  {"height": 1.84, "build": 0.7, "bulk": 1.1, "shoulder_width": 1.12, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "shirt", "legs": "kilt", "feet": "boots", "belt": "belt", "back": "plaid"}},
+  {"height": 1.72, "build": 0.45, "skin": "wheat", "hair_colour": "auburn", "culture": "clans", "feminine": 1.0,
+   "parts": {"head": "soft", "hair": "long", "torso": "shirt", "legs": "kilt", "feet": "boots", "belt": "belt", "back": "plaid"}}
+]

@@ -1,25 +1,39 @@
 {
  "bounds": [
-  -0.3245,
-  -0.1642,
-  0.9667,
-  0.3173,
-  0.1499,
-  1.4717
+  -0.3466,
+  -0.1675,
+  0.8242,
+  0.348,
+  0.1749,
+  1.5701
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "iron",
+ "materials": {
+  "plate_torso": "iron",
+  "plate_torso_coat": "cloth",
+  "plate_torso_steel": "iron"
+ },
  "params": {
   "bone": null,
   "material": "iron"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 2927,
+ "seed": 67064,
  "slot_hint": "torso",
+ "textures": [
+  "plate_torso_albedo.png",
+  "plate_torso_orm.png",
+  "plate_torso_coat_albedo.png",
+  "plate_torso_coat_orm.png",
+  "plate_torso_steel_albedo.png",
+  "plate_torso_steel_orm.png"
+ ],
  "tris": [
-  4000,
+  12380,
   0,
   0
  ],

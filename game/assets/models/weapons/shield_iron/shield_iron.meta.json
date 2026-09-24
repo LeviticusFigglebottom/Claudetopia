@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.ShieldL",
+ "bounds": {
+  "height": 0.675,
+  "max": [
+   0.111,
+   0.338,
+   0.338
+  ],
+  "min": [
+   0.046,
+   -0.338,
+   -0.338
+  ],
+  "radius": 0.479
+ },
+ "built_seconds": 24.54,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "shield_iron.glb",
+ "grip_origin": true,
+ "hash": "7feae1e552cbe39b",
+ "kind": "shield",
+ "materials": [
+  "shield_iron_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "shield_iron",
+   "tris": 1230
+  },
+  {
+   "name": "shield_iron_LOD1",
+   "tris": 492
+  },
+  {
+   "name": "shield_iron_LOD2",
+   "tris": 184
+  }
+ ],
+ "name": "shield_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9587,
+ "textures": [
+  "shield_iron_albedo.png",
+  "shield_iron_normal.png",
+  "shield_iron_orm.png"
+ ],
+ "tris": [
+  1230,
+  492,
+  184
+ ],
+ "version": 3
+}

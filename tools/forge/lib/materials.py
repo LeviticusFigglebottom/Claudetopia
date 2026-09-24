@@ -1014,6 +1014,17 @@ def iron(pal=None, age=0.5, wear=0.5, tint=0.05, scale=1.0, name=None, **_):
     return _metal_common(nb, pal, base, 0.55, age, wear, P.lin("#7a3f22"), 0.9, dent=0.3, scale=scale, streaks=0.5)
 
 
+def steel(pal=None, age=0.2, wear=0.8, tint=0.04, scale=1.0, name=None, **_):
+    """Worked blade iron, ground and kept: grey and light, bright along every edge, rust only in
+    the pits. `iron` is the smith's raw stock and the fittings, near black under the review's
+    exposure; a blade in it read as a stick of charcoal."""
+    pal = _pal(pal)
+    nb = NB(name or "steel")
+    base = pal.tint(P.lin("#7f848c"), "cool", tint)
+    return _metal_common(nb, pal, base, 0.36, age, wear, P.lin("#6b4a30"), 0.85, dent=0.12, scale=scale,
+                         streaks=0.2)
+
+
 def bronze(pal=None, age=0.5, wear=0.5, tint=0.1, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "bronze")
@@ -1036,6 +1047,16 @@ def bell_bronze_patina(pal=None, age=0.85, wear=0.5, tint=0.1, scale=1.0, name=N
     base = pal.tint(P.lin("#7a5a30"), "warm", tint)
     return _metal_common(nb, pal, base, 0.5, age, wear, pal.tint(P.lin("#4c8a78"), "cool", 0.25), 0.9, dent=0.15,
                          scale=scale, streaks=1.0)
+
+
+def blackened_iron(pal=None, age=0.4, wear=0.6, tint=0.05, scale=1.0, name=None, **_):
+    """The Ash-knights' iron: fire-blackened, greyed where the ash has worked into it, bright
+    only where an edge is kept."""
+    pal = _pal(pal)
+    nb = NB(name or "blackened_iron")
+    base = pal.tint(P.lin("#232326"), "dark", tint)
+    return _metal_common(nb, pal, base, 0.62, age, wear, P.lin("#6f6a64"), 0.95, dent=0.25, scale=scale,
+                         streaks=0.3, corrosion_metal=0.1)
 
 
 def rope(pal=None, age=0.4, tint=0.15, scale=1.0, name=None, axis="Z", **_):
