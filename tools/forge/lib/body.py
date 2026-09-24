@@ -38,7 +38,7 @@ class BodyStyle:
     # True size. At 1.12 the hand was the "slightly large hand that reads well" of a figure
     # seen from far off; in the Naming at portrait distance it read as a paddle.
     hands: float = 1.0
-    feet: float = 1.06
+    feet: float = 0.97
 
     @staticmethod
     def from_dict(d: Optional[dict]) -> "BodyStyle":
@@ -347,6 +347,21 @@ def _hand_parts(skel: Skeleton, st: BodyStyle, wr: np.ndarray, d: np.ndarray,
     return parts
 
 
+# How far past the ball the toes reach, as a share of the skeleton's toe bone, and how far the heel
+# stands behind the ankle (m at 1.78 m). The skeleton's ToeTip is 24.5 cm ahead of the ankle, and a
+# foot modelled out to it, with its heel 8.7 cm behind, was 34 cm long before a shoe went on: in a
+# lineup every shoe was a clown's. A foot is 26-27 cm; the bones are the clips' and stay as they are.
+TOE_REACH = 0.50
+HEEL_BACK = 0.034
+
+
+def foot_tip(skel: Skeleton, side: str) -> np.ndarray:
+    """Where the modelled toes end: short of the skeleton's ToeTip, a real foot's length."""
+    ball = np.asarray(skel.J[f"Toe.{side}"], float)
+    tip = np.asarray(skel.J[f"ToeTip.{side}"], float)
+    return ball + (tip - ball) * TOE_REACH
+
+
 def _foot_parts(skel: Skeleton, st: BodyStyle, side: str) -> List[sdf.Prim]:
     """A foot with an ankle, an arch and a toe break, rather than a slipper."""
     p = skel.props
@@ -355,10 +370,10 @@ def _foot_parts(skel: Skeleton, st: BodyStyle, side: str) -> List[sdf.Prim]:
     J = skel.J
     an = J[f"Foot.{side}"]
     ball = J[f"Toe.{side}"]
-    tip = J[f"ToeTip.{side}"]
+    tip = foot_tip(skel, side)
     x = float(an[0])
     sx = 1.0 if side == "L" else -1.0
-    heel = np.array([x, an[1] + 0.056 * fs, 0.034 * fs])
+    heel = np.array([x, an[1] + HEEL_BACK * fs, 0.034 * fs])
     # the sole: narrow at the heel, waisted at the arch, widest at the ball
     sole = sdf.loft([
         (heel + np.array([0.0, 0.010 * fs, 0.0]), 0.031 * fs, 0.030 * fs),
@@ -753,9 +768,12 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     for sx in (1, -1):
         ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
         tilt = rig.rot_axis(FWD, math.radians(7.0 * sx))
-        # a thin lens forward of the eyeball opens the lids and no more; deeper is a skull
-        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.66, 0.0]),
-                                  [er * 1.28, er * 0.62, er * 0.60], rot=tilt), k=0.0036 * s)
+        # a thin lens forward of the eyeball opens the lids and no more; deeper is a skull. It
+        # was 1.2 eye radii tall, level with the eye's centre, and every face stared: white showed
+        # above the iris. Lower and narrower, the upper lid covers the top of the iris, as a lid
+        # at rest does.
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.66, -er * 0.07]),
+                                  [er * 1.30, er * 0.62, er * 0.46], rot=tilt), k=0.0036 * s)
         # upper lid crease under the brow
         sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.40, er * 0.98]),
                                   [er * 0.98, er * 0.20, er * 0.18], rot=tilt), k=0.007 * s)

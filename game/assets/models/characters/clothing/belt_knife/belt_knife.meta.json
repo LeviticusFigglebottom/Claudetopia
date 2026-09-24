@@ -1,0 +1,38 @@
+{
+ "bounds": [
+  -0.1879,
+  -0.149,
+  0.8647,
+  0.1879,
+  0.1139,
+  1.1697
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "leather",
+ "materials": {
+  "belt_knife": "leather",
+  "belt_knife_iron": "iron"
+ },
+ "params": {
+  "bone": null,
+  "material": "leather"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 4533,
+ "slot_hint": "belt",
+ "textures": [
+  "belt_knife_albedo.png",
+  "belt_knife_orm.png",
+  "belt_knife_iron_albedo.png",
+  "belt_knife_iron_orm.png"
+ ],
+ "tris": [
+  1600,
+  0,
+  0
+ ],
+ "version": 1
+}

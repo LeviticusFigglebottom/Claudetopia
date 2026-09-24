@@ -102,6 +102,10 @@ static func decide(current: String, p: Dictionary, ctx: Dictionary) -> String:
 		if target_alive and d_target <= ambush_range:
 			return COMBAT
 		return current
+	# Its quarry is standing on ground it will not cross (Wards: the Singing Yew, to a wight): it
+	# turns away for home, and comes again only when the quarry steps off it.
+	if bool(ctx.get("warded", false)):
+		return RETURN if d_post > 1.5 else _resting_state(ctx)
 	# Engaged: hold combat until the target dies, is lost, or the leash breaks.
 	if current == COMBAT:
 		if not target_alive:

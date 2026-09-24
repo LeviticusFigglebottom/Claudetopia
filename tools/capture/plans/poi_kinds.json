@@ -1,0 +1,382 @@
+{
+ "shots": [
+  {
+   "label": "cave_skerrow",
+   "region": "core:region/skerrow",
+   "pos": [
+    -481.0,
+    200.0,
+    -2305.0
+   ],
+   "look_at": [
+    -464.0,
+    198.0,
+    -2288.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "cave",
+    "region": "core:region/skerrow",
+    "at": [
+     -464.0,
+     -2288.0
+    ],
+    "brief": "a limestone mouth in the scar above the dale",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "cave_briarwold",
+   "region": "core:region/briarwold",
+   "pos": [
+    3201.8,
+    217.8,
+    1168.8
+   ],
+   "look_at": [
+    3208.0,
+    215.8,
+    1192.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "cave",
+    "region": "core:region/briarwold",
+    "at": [
+     3208.0,
+     1192.0
+    ],
+    "brief": "a root-cave under an old oak on the bank",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "cave_sea",
+   "region": "core:region/cinderlea",
+   "pos": [
+    -2202.0,
+    8.4,
+    3681.3
+   ],
+   "look_at": [
+    -2192.0,
+    7.4,
+    3664.0
+   ],
+   "fov": 60.0,
+   "time": 14.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "cave",
+    "region": "core:region/cinderlea",
+    "at": [
+     -2192.0,
+     3664.0
+    ],
+    "brief": "a sea-cave under the Hushline where the tide comes in",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "quarry",
+   "region": "core:region/hearthvale",
+   "pos": [
+    2134.9,
+    121.9,
+    1855.7
+   ],
+   "look_at": [
+    2104.0,
+    116.9,
+    1864.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "quarry",
+    "region": "core:region/hearthvale",
+    "at": [
+     2104.0,
+     1864.0
+    ],
+    "brief": "the chalk pit where the Vale's lime was cut",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "farmstead",
+   "region": "core:region/hearthvale",
+   "pos": [
+    686.5,
+    44.7,
+    2534.5
+   ],
+   "look_at": [
+    712.0,
+    37.7,
+    2560.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "farmstead",
+    "region": "core:region/hearthvale",
+    "at": [
+     712.0,
+     2560.0
+    ],
+    "brief": "a cob farm with a dog that barks at nothing",
+    "encounter": "none; jobs",
+    "radius": 30
+   }
+  },
+  {
+   "label": "market_field",
+   "region": "core:region/skerrow",
+   "pos": [
+    -508.7,
+    209.3,
+    -2920.1
+   ],
+   "look_at": [
+    -512.0,
+    201.3,
+    -2960.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "market_field",
+    "region": "core:region/skerrow",
+    "at": [
+     -512.0,
+     -2960.0
+    ],
+    "brief": "Kharrow Foot, where the drovers meet",
+    "encounter": "",
+    "radius": 30
+   },
+   "day": 3
+  },
+  {
+   "label": "waystone",
+   "region": "core:region/cinderlea",
+   "pos": [
+    -1479.0,
+    111.4,
+    2056.1
+   ],
+   "look_at": [
+    -1472.0,
+    110.4,
+    2056.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "waystone",
+    "region": "core:region/cinderlea",
+    "at": [
+     -1472.0,
+     2056.0
+    ],
+    "brief": "the ninth waystone the pilgrims count",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "mill",
+   "region": "core:region/hearthvale",
+   "pos": [
+    546.6,
+    38.6,
+    2026.0
+   ],
+   "look_at": [
+    568.0,
+    34.6,
+    2008.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "mill",
+    "region": "core:region/hearthvale",
+    "at": [
+     568.0,
+     2008.0
+    ],
+    "brief": "the mill on the Larkbourne",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "windmill",
+   "region": "core:region/brightwater",
+   "pos": [
+    -1809.6,
+    36.2,
+    -1707.2
+   ],
+   "look_at": [
+    -1784.0,
+    34.2,
+    -1688.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "mill",
+    "region": "core:region/brightwater",
+    "at": [
+     -1784.0,
+     -1688.0
+    ],
+    "brief": "a windmill with four sails on the ridge",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "shieling",
+   "region": "core:region/skerrow",
+   "pos": [
+    3119.6,
+    607.6,
+    -3767.0
+   ],
+   "look_at": [
+    3104.0,
+    602.6,
+    -3776.0
+   ],
+   "fov": 60.0,
+   "time": 14.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "shieling",
+    "region": "core:region/skerrow",
+    "at": [
+     3104.0,
+     -3776.0
+    ],
+    "brief": "a summer hut on the high fell",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "vista",
+   "region": "core:region/hearthvale",
+   "pos": [
+    310.4,
+    121.9,
+    3688.5
+   ],
+   "look_at": [
+    301.7,
+    119.0,
+    3700.8
+   ],
+   "fov": 60.0,
+   "time": 12.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "vista",
+    "region": "core:region/hearthvale",
+    "at": [
+     304.0,
+     3688.0
+    ],
+    "brief": "the bench at the Larkmouth where the Vale opens",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "beacon",
+   "region": "core:region/hearthvale",
+   "pos": [
+    3615.8,
+    144.2,
+    2735.8
+   ],
+   "look_at": [
+    3584.0,
+    145.4,
+    2704.0
+   ],
+   "fov": 60.0,
+   "time": 15.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "tower",
+    "region": "core:region/hearthvale",
+    "at": [
+     3584.0,
+     2704.0
+    ],
+    "brief": "a beacon on the hill, its fire-bowl ready",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "watch",
+   "region": "core:region/skerrow",
+   "pos": [
+    811.0,
+    572.6,
+    -3932.0
+   ],
+   "look_at": [
+    784.0,
+    575.6,
+    -3896.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "tower",
+    "region": "core:region/skerrow",
+    "at": [
+     784.0,
+     -3896.0
+    ],
+    "brief": "a watch over the dale",
+    "encounter": "",
+    "radius": 30
+   }
+  }
+ ]
+}

@@ -812,5 +812,214 @@
         "item": "core:item/note_novices_seats"
       }
     ]
+  },
+  {
+    "id": "core:encounter/lies_hurdlegate_farm",
+    "place": "core:poi/hurdlegate_farm",
+    "notes": "A note lies here for whoever comes looking: The Loft Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hurdlegate_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_brow_end_farm",
+    "place": "core:poi/brow_end_farm",
+    "notes": "A note lies here for whoever comes looking: A Note on the Byre Door",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_brow_end_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hatchmoor_farm",
+    "place": "core:poi/hatchmoor_farm",
+    "notes": "A note lies here for whoever comes looking: The Dovecote Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hatchmoor_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_coldharbour_farm",
+    "place": "core:poi/coldharbour_farm",
+    "notes": "A note lies here for whoever comes looking: The Stone-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_coldharbour_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_pennywort_fields",
+    "place": "core:poi/pennywort_fields",
+    "notes": "A note lies here for whoever comes looking: By the Quern",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_pennywort_fields"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_ashway_farm",
+    "place": "core:poi/ashway_farm",
+    "notes": "A note lies here for whoever comes looking: The Ashway Headland",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_ashway_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_grey_end_farm",
+    "place": "core:poi/grey_end_farm",
+    "notes": "A note lies here for whoever comes looking: The Lamp-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_grey_end_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_southgate_farm",
+    "place": "core:poi/southgate_farm",
+    "notes": "A note lies here for whoever comes looking: The Trough-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_southgate_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_ridgeway_farm",
+    "place": "core:poi/ridgeway_farm",
+    "notes": "A note lies here for whoever comes looking: The Two Almanacs",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_ridgeway_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_fallowgate_farm",
+    "place": "core:poi/fallowgate_farm",
+    "notes": "A note lies here for whoever comes looking: The Vow, Written Down",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_fallowgate_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_larkfield_farm",
+    "place": "core:poi/larkfield_farm",
+    "notes": "A note lies here for whoever comes looking: The Lark-Ring Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_larkfield_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hazel_bottom_farm",
+    "place": "core:poi/hazel_bottom_farm",
+    "notes": "A note lies here for whoever comes looking: The Hedger's Notes",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hazel_bottom_farm"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_cress_mill",
+    "place": "core:poi/cress_mill",
+    "notes": "A note lies here for whoever comes looking: The Miller's Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_cress_mill"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_lark_mill",
+    "place": "core:poi/lark_mill",
+    "notes": "A note lies here for whoever comes looking: The Water-Clock Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_lark_mill"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_skarl_mill",
+    "place": "core:poi/skarl_mill",
+    "notes": "A note lies here for whoever comes looking: The Three Hoppers",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_skarl_mill"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_rudd_mill",
+    "place": "core:poi/rudd_mill",
+    "notes": "A note lies here for whoever comes looking: The Night Miller's Slate",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_rudd_mill"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_kharrow_hole",
+    "place": "core:poi/kharrow_hole",
+    "notes": "A note lies here for whoever comes looking: A Tally-String, Cut",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_kharrow_hole"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_root_hollow",
+    "place": "core:poi/root_hollow",
+    "notes": "A note lies here for whoever comes looking: A Woodfolk Charm-Stick",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_root_hollow"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hushline_cave",
+    "place": "core:poi/hushline_cave",
+    "notes": "A note lies here for whoever comes looking: A Bell-Label, Salt-Stiff",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hushline_cave"
+      }
+    ]
   }
 ]
