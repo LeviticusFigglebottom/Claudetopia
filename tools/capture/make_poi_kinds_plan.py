@@ -167,12 +167,13 @@ def main():
     shots = []
 
     def add(label, kind, region, spot, brief, prefer, dist, height, time=11.0, encounter="", day=None, look_up=2.0,
-            weather="core:weather/clear"):
+            weather="core:weather/clear", target=None):
         if spot is None:
             print("no spot for", label)
             return
         _, x, z = spot
-        pos, look, hits = aim(land, scatter, x, z, prefer, dist, height, look_up=look_up)
+        tx, tz = target if target is not None else (x, z)
+        pos, look, hits = aim(land, scatter, tx, tz, prefer, dist, height, look_up=look_up)
         s = {"label": label, "region": region, "pos": pos, "look_at": look, "fov": 60.0, "time": time,
              "weather": weather, "fog_scale": 1.0,
              "dress": {"kind": kind, "region": region, "at": [x, z], "brief": brief, "encounter": encounter, "radius": 30}}
@@ -283,12 +284,42 @@ def main():
         far = sum(land.h(x, z) - land.h(x + d[0] * r, z + d[1] * r) for r in (80.0, 160.0, 300.0))
         return far if drop > 2.0 else None
 
+    def view_of(x, z):
+        """The vista builder's own `_view`: the bearing the ground falls furthest along over the
+        next few hundred metres, so the camera finds the bench where the builder puts it."""
+        h0 = land.h(x, z)
+        best = None
+        for a in range(0, 360, 10):
+            u = (math.sin(math.radians(a)), math.cos(math.radians(a)))
+            drop = sum(h0 - land.h(x + u[0] * r, z + u[1] * r) for r in (40.0, 90.0, 160.0, 260.0, 400.0))
+            if best is None or drop > best[0]:
+                best = (drop, u)
+        return best[1] if best[0] > 4.0 else None
+
     spot = land.search(edge_pred, "core:region/hearthvale")
     if spot:
         _, x, z = spot
         d, _ = land.downhill(x, z)
-        add("vista", "vista", "core:region/hearthvale", spot, "the bench at the Larkmouth where the Vale opens", (-d[0], -d[1]), 10.0, 2.6, 12.0)
-        shots[-1]["look_at"] = [round(x + d[0] * 40.0, 1), round(land.h(x, z) - 2.0, 1), round(z + d[1] * 40.0, 1)]
+        v = view_of(x, z) or d
+        # the seat, seen from behind and to one side at ten metres, the country it looks at beyond
+        bx, bz = x + v[0] * 7.0, z + v[1] * 7.0
+        a = math.atan2(-v[1], -v[0]) + math.radians(40.0)
+        add("vista", "vista", "core:region/hearthvale", spot, "the bench at the Larkmouth where the Vale opens",
+            (math.cos(a), math.sin(a)), 10.0, 2.4, 12.0, look_up=0.6, target=(bx, bz))
+        shots[-1]["look_at"] = [round(bx + v[0] * 6.0, 1), round(land.h(bx, bz) + 0.2, 1), round(bz + v[1] * 6.0, 1)]
+
+    # a beacon and a plain watch, raised to eleven or twelve metres with their crowns: on a
+    # hilltop, from far enough out to see the crown against the sky
+    def top_pred(x, z):
+        if not land.clear(x, z, 12.0, 60.0) or land.slope(x, z, 6.0) > 0.1 or scatter.nearest(x, z) < 8.0:
+            return None
+        return land.h(x, z)
+
+    spot = land.search(top_pred, "core:region/hearthvale", step=40.0)
+    add("beacon", "tower", "core:region/hearthvale", spot, "a beacon on the hill, its fire-bowl ready", (0.7, 0.7), 45.0, 3.0, 15.0,
+        look_up=6.0)
+    spot = land.search(top_pred, "core:region/skerrow", step=40.0)
+    add("watch", "tower", "core:region/skerrow", spot, "a watch over the dale", (0.6, -0.8), 45.0, 3.0, 11.0, look_up=6.0)
 
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump({"shots": shots}, f, indent=1)

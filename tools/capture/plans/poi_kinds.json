@@ -295,14 +295,14 @@
    "label": "vista",
    "region": "core:region/hearthvale",
    "pos": [
-    304.0,
-    123.5,
-    3678.0
+    310.4,
+    121.9,
+    3688.5
    ],
    "look_at": [
-    304.0,
-    117.7,
-    3728.0
+    301.7,
+    119.0,
+    3700.8
    ],
    "fov": 60.0,
    "time": 12.0,
@@ -316,6 +316,64 @@
      3688.0
     ],
     "brief": "the bench at the Larkmouth where the Vale opens",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "beacon",
+   "region": "core:region/hearthvale",
+   "pos": [
+    3615.8,
+    144.2,
+    2735.8
+   ],
+   "look_at": [
+    3584.0,
+    145.4,
+    2704.0
+   ],
+   "fov": 60.0,
+   "time": 15.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "tower",
+    "region": "core:region/hearthvale",
+    "at": [
+     3584.0,
+     2704.0
+    ],
+    "brief": "a beacon on the hill, its fire-bowl ready",
+    "encounter": "",
+    "radius": 30
+   }
+  },
+  {
+   "label": "watch",
+   "region": "core:region/skerrow",
+   "pos": [
+    811.0,
+    572.6,
+    -3932.0
+   ],
+   "look_at": [
+    784.0,
+    575.6,
+    -3896.0
+   ],
+   "fov": 60.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "tower",
+    "region": "core:region/skerrow",
+    "at": [
+     784.0,
+     -3896.0
+    ],
+    "brief": "a watch over the dale",
     "encounter": "",
     "radius": 30
    }
