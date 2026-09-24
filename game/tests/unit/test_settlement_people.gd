@@ -206,7 +206,8 @@ func test_at_noon_everyone_stands_at_home_on_the_ground_with_something_to_say() 
 			var id := str(def["id"])
 			var where := registry.place_of(id)
 			assert_true(ContentDB.has(where), "%s is nowhere at noon" % id)
-			if where == place_id and not registry.is_indoors(id):
+			# somebody on the road home at noon is met on the road, not stood up at home
+			if where == place_id and not registry.is_indoors(id) and not registry.is_travelling(id):
 				var body: Node = registry.spawn(id)
 				assert_true(body is Node3D, "%s is out of doors at noon and no body was stood up" % id)
 				if body is Node3D:
