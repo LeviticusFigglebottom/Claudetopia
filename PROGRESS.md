@@ -5042,3 +5042,290 @@ land agent: Heron Watch in the channel, the two schedules over water, the refuse
 the 980 m way, the ash-wights by the road and the road through the Choir's colossi. The game
 needs nothing more for main's world to be rebuilt from the atlas. After the rebuild, run
 `tools/world/place_checks.py` and the generators docs/COORDINATES.md lists.
+## The first minute heard, the Warden answers, tents that stand, and the slow machine's other clocks
+
+Six things the opening's work left weak, then what the user's playtest of main 6985d356 found at
+the start: talking to the Warden did nothing, the tents were nonsense, and the camp was sparse.
+Then the flow's skip check under load. Each is measured with the tests it names, then the full
+suite, the journey and the flow on the final tree, merged with main.
+
+### 1. The title and the Naming play their music
+
+The user's first minute was silent.
+
+**Cause.** The music director has always brought up the title's theme on a menu called
+`main_menu`, and the Naming's own piece on `character_creation`. Its test says so by emitting
+those menus by hand. But the title and the Naming are scenes of their own, changed to with
+`change_scene_to_file`, not menus `UI.open` puts on its stack. Nothing ever emitted either name.
+
+**Fix.** Each screen now says it is up when it stands and gone when it goes
+(`EventBus.menu_opened` / `menu_closed` with the id the director listens for). The director now
+reports which piece its overlay is playing (`Music.overlay_playing()`).
+
+**Checks.**
+* `test_music_director` stands each screen up the way the game does, hears its piece start
+  (`core:music/main_theme`, then `core:music/naming`), and hears it stop when the screen goes.
+* The flow probe checks both screens as a player reaches them.
+
+### 2. A ring with no room stands its fight further out
+
+When QuestFoes found no clear spot in its ring (9 to 22 m round a fight's place), it stood the
+foes at the place's middle. The middle of a landmark is inside it. Now:
+* the rings further out are tried, 4 m apart and 16 bearings each;
+* they go out to 60 m, or to the objective's own radius less a pace, so the kill still counts
+  where they stand (KillPlaces, 140 m by default);
+* foes that find no spot of their own stand a pace from a spot that was found, or on it;
+* only when nothing within reach is clear does the fight go to the middle, and the log says so.
+
+`test_kill_places` holds two places, with every spot outside the solid, clear by QuestFoes' own
+test, and within the radius:
+* the Choir, with its colossus grown to cover the whole ring;
+* the Headless Watch, on a crag as wide as the ring.
+
+### 3. A quest is at its first stage when it says it has started
+
+`QuestLog.start` announced a quest while its stage was still -1, and whatever the announcement
+woke read that. An npc held on the quest's first stage was let go for that moment, and the
+registry took the Warden's body away on every new game. The record now stands at its first stage
+(`stage` 0 and the first stage's id) when `quest_started` goes out. `_enter_stage` enters it
+properly just after, as before, with its journal and effects.
+
+**The new-game hook's extra look round is gone.** It had asked the NPC streamer to stand the
+Warden up again after the story started, and nothing needs it now. `test_cinematic_player`'s
+hand-over test still finds her at the start on the first frame of control without it.
+
+`test_quests` holds the stage the quest is at when the announcement is heard.
+
+### 4. The people, a stage's foes and a reach look round on the wall clock too
+
+Three polls counted game time:
+* the NPC streamer's look round (0.75 s);
+* QuestFoes' check for fights to stand up (1 s);
+* the quest log's check of where the player has reached (0.5 s).
+
+On a machine drawing a frame every few seconds the engine counts each frame as an eighth of a
+second, so these came round every 6 to 30 s. That is the same slow motion the opening had. All
+three now go through `PollTimer` (systems/shared), which fires on whichever clock gets there
+first: the wall on a slow machine, the engine's count in a fixed-rate run that simulates faster
+than the wall.
+
+`test_npc_streamer` gives the streamer one long frame the engine counts as a millisecond, and
+checks that a look came round.
+
+The escorts' look (0.25 s) is left on game time. It only notices an arrival or somebody left
+behind, and a slow machine notices a moment late.
+
+### 5. Words that have to be read fade on the wall clock
+
+A Tween runs on the engine's delta. These fades now run on `WallTweens` (ui/lib), a Tween paused
+and moved on by the time that really passed:
+* the opening's lines, title card and skip prompt;
+* the HUD's subtitle, which carries the Warden's first words.
+
+On a slow machine they had inked in over several frames, so the frame the player looked at had
+the line half-in. On a quick machine the two clocks agree. A new HUD subtitle now kills the last
+one's fade rather than racing it for the label.
+
+`test_words_keep_time` gives the words one long frame and reads the ink.
+
+ARCHITECTURE §9 now says it plainly: anything a player waits on or reads is timed on the wall.
+
+### 6. The stars at dusk, and the dotted line
+
+Both are in the sky, which is the painted look's. I have told that stream and changed nothing.
+
+**The stars.** The opening's Toll shot is Hearthvale at 18.2 h, with the sun at -6.5°. Three
+things meet there:
+* `Atmosphere.SUN_KEYS` gives the stars half strength; they already start at -2°.
+* `night_of` is 0.95, so the exposure is pushed nearly to the night exposure (×1.3), which lifts
+  the twilight to a bright rose.
+* The sky shader adds the stars whatever the brightness of the sky behind them.
+
+The same happens on every Hearthvale evening. I suggested fading the stars by the sky's own
+brightness in the shader, or starting them later in the keys. The painted look did both (195d01e5,
+on its branch):
+* no stars until the sun is 6° down, 0.7 at -12°, full at -18°, so the Toll at -6.5° gets 0.13;
+* each star faded by the brightness of the sky behind it.
+
+The Toll's frame waits for the atlas world's re-shoot.
+
+**The dotted line.** It was the sky shader's NaN at the sun's bearing, `pow()` of a hair under
+zero. The painted look's clamp fixed it on 09-23 at 01:59. The frames that showed it (06:06) were
+taken before that fix reached this branch, and neither flow run since has it. I checked the
+Toll's sky at the old line's bearing.
+
+### 7. Talking to the Warden does something
+
+The playtest's first report on the new start was "talking to Wren doesn't do anything", and it
+didn't.
+
+**Cause.** The interact key reached her. The ray found her body, the prompt showed her name, and
+`Interactor.try_interact` called `Npc.interact`. That emitted `EventBus.dialogue_started` and
+stopped, as though somebody would hear it and start the talk. Nobody did: only `Social.talk`
+starts the `DialogueRunner`, and the dialogue UI only draws once the runner has begun. Every test
+and the journey had called `Social.talk` directly, and the flow only looked at where she stood.
+
+A second fault was behind the first. Sixty of the seventy-two dialogues send their `bye` node back
+to `hub`, against their own notes ("'bye' ends"). Once a conversation had started, it could not be
+left.
+
+**Fix.**
+* `Npc.interact` starts the conversation through `Social.talk`, and not while one is running. A
+  property's steward is asked the same way.
+* The runner ends the conversation after `bye`, whatever `bye` names as next.
+* `just_ended()` covers the frame (and quarter second) after a conversation ends.
+  `Interactor.try_interact` stands aside while one runs or has just ended, so the press that closes
+  a conversation does not open it again.
+
+**Checks.**
+* `test_talk_to_the_warden` stands the world up the way a new game does. At 4, 2.5 and 1.5 m it
+  faces her and reads the ray and the prompt. It presses the key bound to interact, as a key press,
+  and sees the talk on the screen. It answers down to the goodbye by the number keys. At 2.5 m it
+  reads the Naming's first objective done.
+* `test_dialogue_runner` says goodbye to a hub-shaped conversation and to the Warden's own.
+* The flow probe now does the same after the hand-over. It walks up to her on the move key,
+  presses interact, photographs the talk (`talking_to_wren_tallow`), answers it and reads the
+  objective done.
+
+`cede10cd` went in as a "WIP:" checkpoint before these ran. The empty commit `028d0bcf` carries
+its title and the results.
+
+### 8. The tents are tents
+
+The playtest's second report: "nonsensical models (inverted tent edges)" at the Stair Head.
+
+**Cause.** The forge's tent (`gen_props.tent`) made each side's sheet at the middle of its slope,
+moved it there a second time, and tilted it a right angle off. The two sheets stood out over the
+ridge pole like wings, pale in the sun, and never reached the ground. The tent was also built along
+X with the mouth at one end, where a prop's front is -Y (+Z in the game, CONTRACTS §1). All three
+camp builders turn a tent's front to the fire with a bedroll "in each mouth". So every tent stood
+side-on to its fire with the bedroll along a flank.
+
+Every camp takes its tents from the same two models (`PoiKit.prop("tent")` answers any region's),
+so every camp had both faults.
+
+**Fix.** Each sheet is made flat, tilted at the origin with its outer edge down, and moved once. A
+quarter turn at the end puts the mouth in front. `cinderlea_tent_a` and `_b` are rebuilt, keeping
+their `.import` files (and so their uids).
+
+`test_camp_tents` reads every built tent as the game loads it:
+* nothing stands outside the A by more than the canvas's thickness and sag: 3% now, 68% before;
+* the widest of it is at the ground, and the highest of it is over the ridge: 0.10 m out now,
+  1.5 m before;
+* the closed end is behind and the mouth is open in front: 4.6 m² of canvas across the tent
+  behind and 0.3 m² in front (its poles and lines), where it was 0.4 m² each way.
+
+The same two models are every camp's tents, so the camps at the other points of interest are
+fixed by the same rebuild. They were not photographed.
+
+### 9. The flow's skip check under load
+
+The settlements' flow failed one check, "pressing a key during the opening shows the skip prompt",
+at a machine load of 11 to 15. It passed 98 of 99.
+
+**Cause.** The probe photographed the last shot at its middle and pressed after. The shots run on
+the wall clock, and on a loaded machine one frame can outlast the rest of the shot. The frame after
+the key was already the hand-over, which takes the prompt down.
+
+**Fix.** The probe now:
+* photographs the last shot a quarter in (`LAST_SHOT_AT`) and presses straight after;
+* looks for the prompt on every frame drawn while the key is down, not only the first;
+* reads "taken as a skip" from the opening's own `finished(skipped)`. Before, an opening that ran
+  out on its own also counted.
+
+The prompt already fades on the wall clock (`WallTweens`). `test_words_keep_time` now also holds
+that it is fully in on the frame after its key, and gone on the frame after it is let go.
+
+### 10. Life at the Stair Head
+
+The playtest found the start "a little sparse". Nothing in it moved but the Warden and a wisp of
+smoke. `_camp_life` (poi_builders) now draws, after the rest of the camp, so that everything drawn
+before keeps its place and its random draws:
+* a pot hung on three lashed poles over the fire, steaming;
+* the fire's smoke carried up high enough to be seen from the Stair and across the heath;
+* the Wardens' spears stood by the east tent with a shield at their foot;
+* a pack at each tent's mouth, peat to feed the fire, a pail, and rope off the cart;
+* crows.
+
+**The crows.** Wickmere has no animal models, and the camp animals on the brief's list need a
+quadruped from the forge. A crow is a shape against the sky, so `Crows` (world/pois) draws a
+body, a head, a tail and two pivoted wings once and shares them. The birds:
+* sit on the colours' poles and the lamps, with two wheeling over the heath ahead;
+* flap and glide, banked into the turn;
+* are put up by anybody who walks within seven metres of a sitting one;
+* come back down to a perch nobody is standing near.
+
+`test_crows` holds that they sit and wheel, that somebody coming near puts one up, that none sits
+down beside somebody, and that all are sat again once left alone. `test_the_start`'s new
+`test_the_camp_is_lived_in` raises the Stair Head and finds the pot, the spears, the shield, the
+peat, the pail, the rope and the crows sat about it. In the first view, the pot steams on its
+tripod over the fire, the peat is stacked by the west tent, the shield and spears stand at the east
+tent's mouth, and two crows are over the heath ahead.
+
+`test_probes_compile` loads the flow probe and the capture runner with the game's singletons up,
+so a mistake in either is found in a second rather than an hour into a flow. Nothing else compiled
+them.
+
+### Runs
+
+One Godot at a time, each with the memory for it and after the world build's lock (the journey and
+the flow went ahead of a queued build, at the coordinator's word).
+
+**Targeted runs**, each on the tree that finished it. Every one had 0 failed and 0 script errors.
+* Phase A: `test_music_director` 30, `test_npc_streamer` 12, `test_quests` 38, `test_kill_places`
+  14, `test_naming_screen` 16, `test_world_status` 21, `test_signal_hygiene` 8,
+  `test_cinematic_player` 10.
+* The talk: `test_talk_to_the_warden` 1 (30 s: the world stood up, three distances, a talk answered
+  to its goodbye), `test_dialogue_runner` 26, `test_npc_actor` 16, `test_property` 13.
+* The tents, the camp, the words and the probes: `test_camp_tents` 2, `test_crows` 2,
+  `test_the_start` 14, `test_pois` 19, `test_words_keep_time` 3, `test_probes_compile` 1.
+
+**On the final tree**, `dfc83c6b`, with main's `9263fc11` (player feel, round four) merged in:
+* full suite: PASS. 1624 tests, 0 failed, 0 content problems, 0 script errors, 0 dead lambda
+  captures. The 4 logged errors, and the 14 engine errors from enemy perception in the Weaverdeep
+  footsteps test, are the same as on the Phase A tree;
+* journey: PASS, 16 of 16 steps, 0 logged errors;
+* flow: PASS. New game 109 of 109 checks, load 32, continue 35, 0 errors logged. On a loaded
+  machine, the first frame drawn after the skip key took 2.1 s and carried the prompt. After the
+  hand-over the probe walked to the Warden on W, from 7.4 m to 1.4 m, and pressed E. The talk was on
+  the screen (`talking_to_wren_tallow`: "Muddy boots, straight back, no idea where you are. You'll
+  do."). It was answered to its goodbye, and the Naming went from `wake` to `the_choir`.
+
+**Pictures** (`tools/capture`, opengl3). The Stair Head before and after the tents' rebuild: from
+the first view, from the way, each tent from its side, and from above. Before, the tents were
+white wings over their ridge poles. After, they are ridge tents with their mouths to the fire.
+The first view with the camp's life in is described under 10.
+
+`dfc83c6b` went into main as `36d83f56`.
+
+### Still weak, or not done
+
+* Other UI fades still run on game time. That covers the objective line under the compass, the
+  region card and the menus' caption; on a slow machine they ink in slowly, but none of them is
+  read against a clock.
+* The escorts' look keeps game time (above). It is a one-line change to PollTimer when it
+  matters.
+* The stars at dusk are fixed on the painted look's branch, not yet in main when this was written.
+  The Toll's shot has not been seen with the fix.
+* The camp's other animals need a forge generator for a quadruped and a way to move it. The
+  crows are drawn at runtime and are the only animals in the game.
+* `tools_gd/check_scripts.gd` stops on an internal script error at its line 20 on 4.7.2 and then
+  never quits, so a run of it hangs until killed. `test_probes_compile` covers the two probes the
+  long runs use: the flow's and the captures'.
+* `cede10cd` keeps its "WIP:" subject. It was pushed to `wip/opening` before its tests ran, so it
+  is not reworded. The empty commit after it carries the title and the results.
+* In the talk's picture, the HUD's "[E] Talk to Wren Tallow" prompt stays up under the
+  conversation, and a toast says it again. The Interactor should offer nothing while a
+  conversation runs. That is the next commit.
+* The camera stays behind the player through a conversation, so the player's back hides the
+  Warden. Next after the prompt: a conversation camera that frames the speaker over the
+  player's shoulder, eases back to the follow camera on goodbye, keeps to the camera settings
+  and stays out of first person.
+* For the atlas world (Phase B), from the cartographer's last pass:
+  * the Stair Path to the Choir ends inside the primary colossus, so the waystones and the start's
+    "goes round what stands solid" check should stop at the Naming stage's reach radius, at the
+    head of the avenue;
+  * the way now leaves the camp westward, so the camp's way-out poles and lamp should aim at the
+    path's first leg, not at the Choir;
+  * the path passes 10 m from the Cantor's Seat door, which is unlocked. That needs deciding:
+    a detour for the curious, or a marker that keeps the first walk on the way.
