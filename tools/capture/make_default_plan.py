@@ -159,6 +159,15 @@ LINE_TREE_REACH_M = 70.0
 LANDMARK_TREE_SLACK_M = 60.0
 ## The bearings a landmark shot will try, in order, when the one it was written for is blocked.
 LANDMARK_BEARING_STEPS = (0.0, 15.0, -15.0, 30.0, -30.0, 45.0, -45.0, 60.0, -60.0, 90.0, -90.0)
+## A walking camera looks past a trunk, not at it: a tree in the forward view nearer than
+## VIEW_TRUNK_REACH times its crown's reach (and never nearer than VIEW_TRUNK_MIN_M) is a frame
+## of bark. The Briarwold's first ground shot stood twelve metres from a giant oak whose crown
+## reaches twenty-six, a quarter of a turn off its bearing, and a third of the picture was trunk.
+VIEW_TRUNK_REACH = 1.2
+VIEW_TRUNK_MIN_M = 6.0
+VIEW_HALF_FOV_DEG = 50.0
+## where a ground shot looks for its spot when the way back along its bearing has none
+VIEW_SEARCH_TURNS = (0.0, 90.0, -90.0, 45.0, -45.0, 135.0, -135.0)
 
 
 class Scatter:
@@ -254,6 +263,16 @@ class Scatter:
                     return True
         return False
 
+    def crown_top_over(self, x: float, z: float) -> float:
+        """The top of the tallest crown whose footprint, with the margin, covers (x, z); -inf where
+        none does. A camera `CROWN_MARGIN_M` over it is out of every crown there."""
+        best = -math.inf
+        for _pts, trees in self._around(x, z):
+            for px, pz, _ground, reach, top in trees:
+                if math.hypot(px - x, pz - z) < reach + CROWN_MARGIN_M:
+                    best = max(best, top)
+        return best
+
     def lens_clear(self, x: float, z: float, want: float, cam_y=None) -> bool:
         """Nothing standing within `want` metres; for a raised camera, no crown round the lens.
 
@@ -266,21 +285,46 @@ class Scatter:
             return False
         return cam_y is None or not self.in_crown(x, cam_y, z)
 
+    def view_clear(self, x: float, z: float, look_deg: float,
+                   half_fov_deg: float = VIEW_HALF_FOV_DEG) -> bool:
+        """No tree stands so near in front of a lens at eye height that the frame is its trunk."""
+        look = math.radians(look_deg)
+        for _pts, trees in self._around(x, z):
+            for px, pz, _ground, reach, _top in trees:
+                d = math.hypot(px - x, pz - z)
+                if d >= max(VIEW_TRUNK_MIN_M, VIEW_TRUNK_REACH * reach):
+                    continue
+                off = abs((math.atan2(pz - z, px - x) - look + math.pi) % (2.0 * math.pi) - math.pi)
+                if math.degrees(off) < half_fov_deg:
+                    return False
+        return True
+
     def clear_spot(self, x: float, z: float, bearing_deg: float, want: float = 5.0,
-                   step: float = 9.0, tries: int = 14, eye=None):
+                   step: float = 9.0, tries: int = 14, eye=None, look_deg=None):
         """Step along the bearing until nothing is standing within `want` metres.
 
         `eye(x, z)`, when given, is the lens height at a spot; the crowns are then checked
-        at that height as well, which is what a raised camera needs.
+        at that height as well, which is what a raised camera needs. `look_deg`, when given, is
+        where a camera at eye height will look, and the spot must also leave that view clear of
+        trunks (`view_clear`); if the way back along the bearing has no such spot, the search
+        turns (VIEW_SEARCH_TURNS), and if nothing anywhere will do it takes the first spot the
+        bearing alone gave, which is what it always did.
         """
-        a = math.radians(bearing_deg)
-        for k in range(tries):
-            px, pz = x + math.cos(a) * step * k, z + math.sin(a) * step * k
-            if abs(px) > self.half - 40.0 or abs(pz) > self.half - 40.0:
-                break
-            if self.lens_clear(px, pz, want, eye(px, pz) if eye else None):
-                return px, pz
-        return x, z
+        first = None
+        turns = VIEW_SEARCH_TURNS if look_deg is not None else (0.0,)
+        for turn in turns:
+            a = math.radians(bearing_deg + turn)
+            for k in range(tries):
+                px, pz = x + math.cos(a) * step * k, z + math.sin(a) * step * k
+                if abs(px) > self.half - 40.0 or abs(pz) > self.half - 40.0:
+                    break
+                if not self.lens_clear(px, pz, want, eye(px, pz) if eye else None):
+                    continue
+                if first is None:
+                    first = (px, pz)
+                if look_deg is None or self.view_clear(px, pz, look_deg):
+                    return px, pz
+        return first if first is not None else (x, z)
 
     def crowns_across(self, cam, target, from_m: float, to_m: float) -> int:
         """Crowns the line of sight passes through between `from_m` and `to_m` along it.
@@ -432,7 +476,15 @@ def vista_camera(hh: Heights, scatter: Scatter, vx: float, vz: float, tx: float,
         return (px, cy, pz), (mx, cy - 9.0, mz), True
     hx, hz, hy = hh.high_point(vx, vz, radius)
     mx, mz = aim(hx, hz)
-    cy = hy + rise + 24.0
+    # over the tallest crown round it, whatever that takes: 36 m up was still inside a giant oak's
+    # crown on the Standing Moot's rise in the drawn Briarwold
+    cy = max(hy + rise + 24.0, scatter.crown_top_over(hx, hz) + CROWN_MARGIN_M + 0.5)
+    # and over the crowns in front of it: raised clear of the one it stood in, the Briarwold's
+    # vista still looked through two taller oaks within LINE_TREE_REACH_M of the lens
+    for _k in range(40):
+        if scatter.crowns_across((hx, cy, hz), (mx, cy - 9.0, mz), 0.0, LINE_TREE_REACH_M) == 0:
+            break
+        cy += 2.0
     print("[plan] %s: no clear vantage within %.0f m; camera raised above the trees" % (label, radius))
     return (hx, cy, hz), (mx, cy - 9.0, mz), False
 
@@ -466,7 +518,13 @@ def build_plan() -> dict:
         ax, az = sx + math.cos(a2) * 420.0, sz + math.sin(a2) * 420.0
         ax, az = scatter.clear_spot(ax, az, math.degrees(a2) + 180.0, want=9.0,
                                     eye=lambda x, z: hh.at(x, z) + 28.0)
-        shots.append(shot("%s_approach" % short, (ax, hh.at(ax, az) + 28.0, az),
+        ay = hh.at(ax, az) + 28.0
+        if scatter.in_crown(ax, ay, az):
+            # in the drawn Briarwold no spot along the bearing out of Fernhold is clear of the
+            # oaks' crowns at 28 m, so the lens goes over the tallest of them
+            ay = scatter.crown_top_over(ax, az) + CROWN_MARGIN_M + 0.5
+            print("[plan] %s_approach: no clear spot on the bearing; camera raised above the trees" % short)
+        shots.append(shot("%s_approach" % short, (ax, ay, az),
                           (sx, hh.at(sx, sz) + 4.0, sz), 55.0, hour, weather, 1.0, region_id))
     # One shot standing in the middle of each region's settlement, which is the only frame in
     # the sheet close enough for the villagers to be in it (they are kept up within 240 m) and
@@ -492,7 +550,8 @@ def build_plan() -> dict:
         for n, (sx, sz) in enumerate(spots):
             # stand on the ground and look out along it, each one on its own bearing
             ang = math.radians(bearing + 90.0 + n * 117.0)
-            sx, sz = scatter.clear_spot(sx, sz, bearing + 90.0 + n * 117.0 + 180.0, want=5.5)
+            sx, sz = scatter.clear_spot(sx, sz, bearing + 90.0 + n * 117.0 + 180.0, want=5.5,
+                                        look_deg=bearing + 90.0 + n * 117.0)
             tx, tz = sx + math.cos(ang) * 520.0, sz + math.sin(ang) * 520.0
             eye = hh.at(sx, sz) + 2.2
             shots.append(shot("%s_ground%d" % (short, n + 1), (sx, eye, sz),

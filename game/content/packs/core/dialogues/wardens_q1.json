@@ -400,6 +400,7 @@
     "npc": "core:npc/wardens_dole",
     "start": "start",
     "nodes": {
+    "q_pens_with_no_gate_ask_the_rest": {"speaker": "Sergeant Dole", "text": "For beasts. — Sheep and cattle walking up out of the ash grey to the skin and going into the Vale's ponds, and the ponds going grey after them. The Rest wants them penned at the border before they get to the water. Beasts. — And whatever else comes back. — Tell Withy I said it plain. He will hear the rest; he always does. That is why he asked.", "next": "hub"},
       "start": {
         "speaker": "core:npc/wardens_dole",
         "text": "{greeting}",
@@ -429,6 +430,7 @@
             "conditions": [{"quest_at": ["core:quest/the_reading", "you_read"]}],
             "next": "the_yard"
           },
+          {"text": "Hazelcombe wants to know what the new pens are for.", "next": "q_pens_with_no_gate_ask_the_rest", "conditions": [{"quest_at": ["core:quest/pens_with_no_gate", "ask_the_rest"]}]},
           {"text": "Nothing. Enjoy your evening.", "effects": [{"end": true}]}
         ]
       },

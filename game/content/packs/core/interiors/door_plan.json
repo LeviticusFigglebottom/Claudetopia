@@ -3,10 +3,6 @@
     "id": "core:table/door_plan_cantors_seat",
     "role": "door_plan",
     "place": "core:place/cantors_seat",
-    "position": [
-      -1900,
-      3500
-    ],
     "region": "core:region/cinderlea",
     "rows": [
       {
@@ -23,10 +19,6 @@
     "id": "core:table/door_plan_drowned_nave",
     "role": "door_plan",
     "place": "core:place/drowned_nave",
-    "position": [
-      -3500,
-      -1300
-    ],
     "region": "core:region/sedgemire",
     "rows": [
       {
@@ -43,10 +35,6 @@
     "id": "core:table/door_plan_fernhold",
     "role": "door_plan",
     "place": "core:place/fernhold",
-    "position": [
-      2300,
-      1100
-    ],
     "region": "core:region/briarwold",
     "rows": [
       {
@@ -63,10 +51,6 @@
     "id": "core:table/door_plan_frostmothers_cradle",
     "role": "door_plan",
     "place": "core:place/frostmothers_cradle",
-    "position": [
-      800,
-      -3800
-    ],
     "region": "core:region/skerrow",
     "rows": [
       {
@@ -83,10 +67,6 @@
     "id": "core:table/door_plan_gullhithe",
     "role": "door_plan",
     "place": "core:place/gullhithe",
-    "position": [
-      1500,
-      -900
-    ],
     "region": "core:region/brightwater",
     "rows": [
       {
@@ -103,10 +83,6 @@
     "id": "core:table/door_plan_hollin_barrow",
     "role": "door_plan",
     "place": "core:place/hollin_barrow",
-    "position": [
-      1700,
-      1900
-    ],
     "region": "core:region/hearthvale",
     "rows": [
       {
@@ -123,10 +99,6 @@
     "id": "core:table/door_plan_isseva",
     "role": "door_plan",
     "place": "core:place/isseva",
-    "position": [
-      -2900,
-      -500
-    ],
     "region": "core:region/sedgemire",
     "rows": [
       {
@@ -143,10 +115,6 @@
     "id": "core:table/door_plan_kharrow_hold",
     "role": "door_plan",
     "place": "core:place/kharrow_hold",
-    "position": [
-      400,
-      -2700
-    ],
     "region": "core:region/skerrow",
     "rows": [
       {
@@ -163,10 +131,6 @@
     "id": "core:table/door_plan_merrowby",
     "role": "door_plan",
     "place": "core:place/merrowby",
-    "position": [
-      900,
-      2350
-    ],
     "region": "core:region/hearthvale",
     "rows": [
       {
@@ -255,10 +219,6 @@
     "id": "core:table/door_plan_oskeld_mine",
     "role": "door_plan",
     "place": "core:place/oskeld_mine",
-    "position": [
-      -600,
-      -3200
-    ],
     "region": "core:region/skerrow",
     "rows": [
       {
@@ -275,10 +235,6 @@
     "id": "core:table/door_plan_pennywort_mill",
     "role": "door_plan",
     "place": "core:place/pennywort_mill",
-    "position": [
-      600,
-      1900
-    ],
     "region": "core:region/hearthvale",
     "rows": [
       {
@@ -295,10 +251,6 @@
     "id": "core:table/door_plan_pilgrims_ash",
     "role": "door_plan",
     "place": "core:place/pilgrims_ash",
-    "position": [
-      -1500,
-      2200
-    ],
     "region": "core:region/cinderlea",
     "rows": [
       {
@@ -315,10 +267,6 @@
     "id": "core:table/door_plan_sunken_barge",
     "role": "door_plan",
     "place": "core:place/sunken_barge",
-    "position": [
-      -700,
-      -700
-    ],
     "region": "core:region/brightwater",
     "rows": [
       {
@@ -335,10 +283,6 @@
     "id": "core:table/door_plan_undercroft",
     "role": "door_plan",
     "place": "core:place/undercroft",
-    "position": [
-      -80,
-      -100
-    ],
     "region": "core:region/brightwater",
     "rows": [
       {
@@ -355,10 +299,6 @@
     "id": "core:table/door_plan_weaverdeep",
     "role": "door_plan",
     "place": "core:place/weaverdeep",
-    "position": [
-      3400,
-      -700
-    ],
     "region": "core:region/briarwold",
     "rows": [
       {

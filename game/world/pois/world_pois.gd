@@ -176,6 +176,52 @@ func _forget_the_freed() -> void:
 	raised = keep
 
 
+## The built road between two places, as map points from `from_id` to `to_id`; empty when the
+## world has none. The road is the one the path names (`built_road`), else the one named for its two
+## ends (`core:road/<from>_<to>`, the atlas's own default), either way round; it has to start and
+## end within ROAD_END_M of them, so a road of another build is not taken for this one's.
+const ROAD_END_M := 60.0
+static var _road_cache: Array = []
+static var _road_cache_stamp := -1
+
+
+static func road_between(from_id: String, to_id: String, named := "") -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var a := PlaceRef.xz(from_id)
+	var b := PlaceRef.xz(to_id)
+	if a == Vector2.INF or b == Vector2.INF:
+		return out
+	var ids: Array[String] = ["core:road/%s_%s" % [Ids.name_of(from_id), Ids.name_of(to_id)],
+		"core:road/%s_%s" % [Ids.name_of(to_id), Ids.name_of(from_id)]]
+	if named != "":
+		ids = [named]
+	for r in _roads_with_ids():
+		var id := str((r as Dictionary).get("id", ""))
+		if not id in ids:
+			continue
+		for p in (r as Dictionary).get("points", []):
+			if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+				out.append(Vector2(float(p[0]), float(p[1])))
+		if out.size() >= 2 and out[0].distance_to(a) > out[out.size() - 1].distance_to(a):
+			out.reverse()
+		if out.size() < 2 or out[0].distance_to(a) > ROAD_END_M or out[out.size() - 1].distance_to(b) > ROAD_END_M:
+			out.clear()
+		return out
+	return out
+
+
+## roads.json as written, read once per build of it (the file's modified time says which).
+static func _roads_with_ids() -> Array:
+	if not FileAccess.file_exists(ROADS_PATH):
+		return []
+	var stamp := FileAccess.get_modified_time(ROADS_PATH)
+	if stamp != _road_cache_stamp:
+		_road_cache_stamp = stamp
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(ROADS_PATH))
+		_road_cache = parsed if typeof(parsed) == TYPE_ARRAY else []
+	return _road_cache
+
+
 static func roads_from_disk() -> Array:
 	if not FileAccess.file_exists(ROADS_PATH):
 		return []
