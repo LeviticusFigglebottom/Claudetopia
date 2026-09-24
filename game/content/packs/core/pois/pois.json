@@ -780,7 +780,7 @@
   {"id": "core:poi/lark_mill", "name": "Lark Mill", "region": "core:region/hearthvale", "kind": "mill", "position": [83, 1715], "hearthstone": false,
    "unique_feature": "a timber mill on the Larkbourne below Wynstead, its wheel turning in a leat lined with the Larkbourne's own grey stones", "visible_from": [],
    "story": "Lark Mill grinds for Wynstead and Merrowby both, and its miller keeps the only clock between them, a water-clock off the leat, by which both villages have agreed to be late.", "encounter": "none", "hook": "The mill's water-clock has started keeping a different hour from the Toll's, a quarter behind, and the Larkbourne has risen to match it."},
-  {"id": "core:poi/skarl_mill", "name": "Skarl Mill", "region": "core:region/brightwater", "kind": "mill", "position": [1370, -1143], "hearthstone": false,
+  {"id": "core:poi/skarl_mill", "name": "Skarl Mill", "region": "core:region/brightwater", "kind": "mill", "position": [1402, -1147], "hearthstone": false,
    "unique_feature": "a clan mill of dry-stone and turf on the Skarl Water below Merrowhithe, its wheel paddled with giants' rib-slivers", "visible_from": [],
    "story": "The Skarl Mill grinds oats for three clans, each on its own day, and keeps three hoppers so that no clan's grain touches another's, which is a blood-price matter.", "encounter": "none", "hook": "The three hoppers were found mixed one morning, and all three clans are waiting to hear whose fault it was."},
   {"id": "core:poi/rudd_mill", "name": "Rudd Mill", "region": "core:region/skerrow", "kind": "mill", "position": [850, -2361], "hearthstone": false,
