@@ -8,14 +8,18 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabl
 // The world's fog is left on: the haze is itself in the air, and far off it melts into it.
 //
 // Its light is the sky's at the horizon, drained of colour: a pale bank by day, a dim one at dusk
-// and a faint grey one under the moon. An unshaded sheet of a fixed colour stood white all night.
+// and a faint grey one under the moon, as the clouds are. An unshaded sheet of a fixed colour
+// stood white all night.
 
 global uniform vec3 wm_sky_horizon;
+global uniform vec3 wm_moon_color;
 
 uniform vec3 mist : source_color = vec3(0.78, 0.79, 0.80);
 uniform float density : hint_range(0.0, 1.0) = 0.85;
 // how much brighter than the horizon's sky the bank is: sunlit mist is whiter than the air
 uniform float brightness = 1.15;
+// and how much of the moon's light it gives back at night, when the sky behind it is all but black
+uniform float moonlit = 0.12;
 // metres above the sea: thick to here, gone by the top
 uniform float thick_to = 170.0;
 uniform float top = 260.0;
@@ -57,8 +61,8 @@ void fragment() {
 	float ends = smoothstep(from_x, from_x + end_fade_m, v_world.x)
 			* (1.0 - smoothstep(to_x - end_fade_m, to_x, v_world.x));
 	float near = smoothstep(near_fade_from, near_fade_to, v_dist);
-	float lum = dot(wm_sky_horizon, vec3(0.2126, 0.7152, 0.0722));
-	float tint_lum = dot(mist, vec3(0.2126, 0.7152, 0.0722));
-	ALBEDO = mist / max(tint_lum, 0.001) * clamp(lum * brightness, 0.0, 1.0);
+	vec3 to_lum = vec3(0.2126, 0.7152, 0.0722);
+	float level = max(dot(wm_sky_horizon, to_lum) * brightness, dot(wm_moon_color, to_lum) * moonlit);
+	ALBEDO = mist / max(dot(mist, to_lum), 0.001) * clamp(level, 0.0, 1.0);
 	ALPHA = clamp(edge * swell * density * ends * near, 0.0, 1.0);
 }
