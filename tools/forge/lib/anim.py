@@ -71,14 +71,14 @@ def ease(kind: str, x: float) -> float:
     raise ValueError(kind)
 
 
-def flow_slopes(ts: Sequence[float], vs: np.ndarray) -> np.ndarray:
+def flow_slopes(ts: Sequence[float], vs: np.ndarray, depart: float = 1.0) -> np.ndarray:
     """The rate of change at each key of a flowing track (Fritsch and Carlson's monotone cubic):
     zero at the last key, at a key where the motion turns back, and at one that holds; elsewhere a
     weighted harmonic mean of the two neighbouring rates, so the curve never overshoots a key. The
-    first key leaves at its segment's mean rate: a swing sets off at once, as the eased keys did
-    (from rest, a two-handed heavy stood in its guard for its first 0.05 s, and the fade in from
-    the idle drove a spear's butt 3 cm into the chest). `vs` is (keys, components); returns the
-    same shape, per unit of time."""
+    first key leaves at `depart` times its segment's mean rate: a swing sets off at once, as the
+    eased keys did (from rest, a two-handed heavy stood in its guard for its first 0.05 s, and the
+    fade in from the idle drove a spear's butt 3 cm into the chest). `vs` is (keys, components);
+    returns the same shape, per unit of time."""
     ts = np.asarray(ts, float)
     vs = np.asarray(vs, float)
     if vs.ndim == 1:
@@ -97,7 +97,15 @@ def flow_slopes(ts: Sequence[float], vs: np.ndarray) -> np.ndarray:
         with np.errstate(divide="ignore", invalid="ignore"):
             hm = (w1 + w2) / (w1 / a + w2 / b)
         m[k] = np.where(same, hm, 0.0)
-    m[0] = d[0]
+    m[0] = depart * d[0]
+    # keep the first segment monotone (Fritsch and Carlson: alpha^2 + beta^2 <= 9)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        a0 = np.where(d[0] != 0.0, m[0] / d[0], 0.0)
+        b0 = np.where(d[0] != 0.0, m[1] / d[0], 0.0)
+        r = np.sqrt(a0 * a0 + b0 * b0)
+        f = np.where(r > 3.0, 3.0 / np.maximum(r, 1e-9), 1.0)
+    m[0] = m[0] * f
+    m[1] = m[1] * f if n > 2 else m[1]
     return m
 
 
@@ -207,6 +215,7 @@ class Track:
         # A flowing track (a one-shot only) ignores the keys' eases and passes through every key
         # on a monotone cubic (`flow_at`): no key is a stop unless the motion turns or holds there.
         self.flow = False
+        self.flow_depart = 1.0            # the first key's rate, in its segment's mean rates
         self._flow_cache: Dict[str, tuple] = {}
 
     def key(self, t: float, pose: Pose, ease_kind: str = "smooth") -> "Track":
@@ -224,7 +233,7 @@ class Track:
         ks = self._channel_keys(c)
         ts = np.array([k[0] for k in ks], float)
         vs = np.array([k[1] for k in ks], float)
-        m = flow_slopes(ts, vs)
+        m = flow_slopes(ts, vs, self.flow_depart)
         self._flow_cache[c] = (ts, vs, m, stamp)
         return ts, vs, m
 
