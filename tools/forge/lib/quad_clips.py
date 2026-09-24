@@ -594,14 +594,14 @@ def rear_clip(solver: Solver, length: float = 2.2) -> QuadClip:
             fp = feet[f]
             if up > 0.02:
                 fp.planted = False
-                Wz = sk.fk({})
                 pad = math.sin(2 * math.pi * (u * 3.2 + ph))
                 # the toe carried with the trunk's rise, tucked under the chest
                 rest = solver.rest[f].toe
                 rel = rest - hip
                 ang = math.radians(52.0 * up)
-                ry = rel[1] * math.cos(ang) - rel[2] * math.sin(ang)
-                rz = rel[1] * math.sin(ang) + rel[2] * math.cos(ang)
+                # the rest toe carried round the hip as the trunk pitches up (pitch_up turns -Y to +Z)
+                ry = rel[1] * math.cos(ang) + rel[2] * math.sin(ang)
+                rz = -rel[1] * math.sin(ang) + rel[2] * math.cos(ang)
                 rot = np.array([rest[0], hip[1] + ry, hip[2] + rz + (-0.07 * crouch - 0.10 * up)])
                 fold = up * (0.75 + 0.25 * pad)
                 tuck = np.array([rest[0], -0.30 + 0.12 * pad * up, 0.0])
