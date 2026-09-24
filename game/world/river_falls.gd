@@ -384,11 +384,12 @@ static func white_water(landing: Vector3, out: Vector3, width: float, height: fl
 	spray.visibility_range_end = SPRAY_RANGE_M
 	list.append(spray)
 	if height >= MIST_FROM_M:
-		var mist_size := clampf(3.0 + 0.11 * height, 3.0, 14.0)
+		# thin and drifting: a hundred-metre fall's mist drawn thick stood at its foot as a wall
+		var mist_size := clampf(3.0 + 0.08 * height, 3.0, 11.0)
 		var mist := _particles("Mist", landing + out * (1.0 + height * 0.04) + Vector3.UP * 0.8,
-				Vector3(width * 0.8 + height * 0.05, 0.6, width * 0.6 + height * 0.05),
-				(out * 0.5 + Vector3.UP).normalized(), 25.0, Vector2(0.3, 0.9) * (1.0 + height / 60.0), 0.05,
-				int(clampf(8.0 + height * 0.35, 8.0, 48.0)), Color(0.9, 0.93, 0.95, 0.2), mist_size, 5.5)
+				Vector3(width * 0.9 + height * 0.06, 0.8, width * 0.7 + height * 0.06),
+				(out * 0.6 + Vector3.UP).normalized(), 35.0, Vector2(0.4, 1.1) * (1.0 + height / 60.0), 0.05,
+				int(clampf(6.0 + height * 0.2, 6.0, 28.0)), Color(0.9, 0.93, 0.95, 0.13), mist_size, 6.0)
 		mist.visibility_range_end = clampf(SPRAY_RANGE_M + height * 1.5, SPRAY_RANGE_M, 420.0)
 		list.append(mist)
 	return list

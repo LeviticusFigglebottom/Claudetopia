@@ -187,6 +187,8 @@ void fragment() {
 		discard;
 	}
 	float t = TIME * wave_speed * (0.7 + wm_wind_strength * 0.8);
+	// how hard the wind is on the water here: the cat's paws (open water only)
+	float gust = 0.0;
 	float dist = length(CAMERA_POSITION_WORLD - v_world);
 	float far = clamp(dist / distance_calm_m, 0.0, 1.0);
 #ifdef WATER_RIVER
@@ -225,13 +227,13 @@ void fragment() {
 	// a finer ripple runs downwind within them.
 	vec2 wind = normalize(wm_wind_dir.xz + vec2(0.0001));
 	vec2 gp = v_world.xz * 0.011 - wind * TIME * 0.035;
-	float gust = smoothstep(0.38, 0.78, vnoise(gp) * 0.7 + vnoise(gp * 2.7 + vec2(5.0, 1.0)) * 0.3);
+	gust = smoothstep(0.38, 0.78, vnoise(gp) * 0.7 + vnoise(gp * 2.7 + vec2(5.0, 1.0)) * 0.3);
 	gust *= 0.55 + 0.9 * clamp(wm_wind_strength, 0.0, 1.0);
 	vec2 wp = vec2(dot(v_world.xz, wind), dot(v_world.xz, vec2(-wind.y, wind.x)));
 	float ph = wp.x * 1.9 - TIME * 2.4 + vnoise(wp * vec2(0.3, 0.9)) * 4.0;
 	float fine = cos(ph) * (0.6 + 0.4 * vnoise(wp * vec2(0.8, 2.5) - TIME * 0.4));
 	slope += wind * fine * gust * 0.22 * detail;
-	slope *= 0.75 + 0.6 * gust;
+	slope *= 0.6 + 0.9 * gust;
 #endif
 	// far water should read as one calm sheet, not as a field of shimmering pixels
 	slope *= mix(1.0, 0.18, far);
@@ -253,6 +255,9 @@ void fragment() {
 #endif
 	float depth_t = clamp(depth / depth_fade_m, 0.0, 1.0);
 	vec3 body = mix(shallow_colour.rgb, deep_colour.rgb, depth_t) * region_tint.rgb;
+	// a gust darkens the water it roughens: it gives back less of the sky there (below), and the
+	// patches drifting across a lake are what show it is water and not a painted floor
+	body *= 1.0 - 0.18 * gust;
 
 	// shore foam: a band that follows the waterline, wobbles with the waves and breaks into
 	// patches rather than lying along the shore like a painted line
@@ -319,7 +324,7 @@ void fragment() {
 	vec3 R = reflect(-V, n_world);
 	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
 	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
-	fresnel = min(fresnel, fresnel_cap) * reflect_strength;
+	fresnel = min(fresnel, fresnel_cap) * reflect_strength * (1.0 - 0.4 * gust * (1.0 - far));
 	// Seen from under the surface the water is its own colour and gives back nothing: the mirror
 	// works out where a ray from above would land, and from below it smeared the lake bed across
 	// the ceiling (the Mere's look camera stood under its surface until the lakes were drawn).

@@ -41,7 +41,7 @@ const QUALITY_SUBDIVISIONS := [48, 64, 96, 160]
 ## over itself in a blue slab under its fall.
 const QUALITY_CELL_M := [32.0, 24.0, 16.0, 12.0]
 ## Open water this many cells square, all at one level, is laid as one quad.
-const BLOCK_CELLS := 8
+const BLOCK_CELLS := 8  # even: the block's middle is a corner of the grid
 const QUALITY_DETAIL := [0.0, 0.6, 1.0, 1.0]
 ## ... and how far over the water the mirror looks for the far shore (the shader's steps).
 const QUALITY_MIRROR_STEPS := [8, 11, 16, 18]
@@ -334,12 +334,21 @@ func water_mesh(cell: float) -> ArrayMesh:
 			for dz in block:
 				for dx in block:
 					done[(bz + dz) * cn + bx + dx] = 1
-			var q := PackedInt32Array()
-			for k in 4:
-				var gx := bx + (k & 1) * block
-				var gz := bz + (k >> 1) * block
-				q.append(_sheet_vertex(vid, level, gx, gz, cn, cell, verts, uvs, normals))
-			indices.append_array([q[0], q[1], q[3], q[0], q[3], q[2]])
+			# a fan from the block's middle through every grid corner on its edge, so its edge meets
+			# the finer cells beside it corner to corner: as one quad its edge had none of theirs,
+			# and a crack of sky ran along it across the Mere
+			var ring := PackedInt32Array()
+			for k in block:
+				ring.append(_sheet_vertex(vid, level, bx + k, bz, cn, cell, verts, uvs, normals))
+			for k in block:
+				ring.append(_sheet_vertex(vid, level, bx + block, bz + k, cn, cell, verts, uvs, normals))
+			for k in block:
+				ring.append(_sheet_vertex(vid, level, bx + block - k, bz + block, cn, cell, verts, uvs, normals))
+			for k in block:
+				ring.append(_sheet_vertex(vid, level, bx, bz + block - k, cn, cell, verts, uvs, normals))
+			var mid := _sheet_vertex(vid, level, bx + (block >> 1), bz + (block >> 1), cn, cell, verts, uvs, normals)
+			for k in ring.size():
+				indices.append_array([mid, ring[k], ring[(k + 1) % ring.size()]])
 	for cz in cn:
 		for cx in cn:
 			if grown[cz * cn + cx] == 0 or done[cz * cn + cx] == 1:
@@ -414,7 +423,9 @@ func _add_quad(st: SurfaceTool, x0: float, z0: float, x1: float, z1: float, step
 			var bx := lerpf(x0, x1, float(i + 1) / float(steps))
 			var az := lerpf(z0, z1, float(j) / float(steps))
 			var bz := lerpf(z0, z1, float(j + 1) / float(steps))
-			for corner in [[ax, az], [ax, bz], [bx, bz], [ax, az], [bx, bz], [bx, az]]:
+			# wound as the sheet is, so the shader sees it from above (FRONT_FACING): wound the other
+			# way it took the sea beyond the world for water seen from below, and gave back no sky
+			for corner in [[ax, az], [bx, az], [bx, bz], [ax, az], [bx, bz], [ax, bz]]:
 				# the shader culls nothing, so the winding does not matter, but the normal
 				# does: a generated one could come out pointing at the sea bed
 				st.set_normal(Vector3.UP)
@@ -452,10 +463,13 @@ func _build_rivers() -> void:
 		var mat := _make_material(false, false, true)
 		mat.set_shader_parameter("depth_fade_m", 1.8)
 		mat.set_shader_parameter("foam_width_m", 0.5)
-		mat.set_shader_parameter("wave_strength", 0.24)
+		mat.set_shader_parameter("wave_strength", 0.3)
+		# the current's texture held further off than a lake's ripples: a river is narrow, and
+		# calmed at the lake's distance it was one flat strip from the bank above it
+		mat.set_shader_parameter("distance_calm_m", 600.0)
 		mat.set_shader_parameter("opacity_shallow", 0.35)
 		mat.set_shader_parameter("opacity_deep", 0.9)
-		mat.set_shader_parameter("mirror_ripple", 0.45)
+		mat.set_shader_parameter("mirror_ripple", 0.8)
 		mi.material_override = mat
 		_river_materials.append(mat)
 		rivers_root.add_child(mi)
@@ -731,9 +745,9 @@ func set_region_look(region_id: String) -> void:
 			mat.set_shader_parameter("wave_strength", float(look.get("waves", 0.42)))
 		elif _river_materials.has(mat):
 			# A river is clear running water over its bed, not a strip of the lake's deep: its
-			# deep is the region's lifted halfway to its shallow, and it gives back less of the
+			# deep is the region's lifted a third of the way to its shallow, and it gives back less of the
 			# sky, which on a narrow channel seen from its bank turned it one flat blue.
-			mat.set_shader_parameter("deep_colour", deep.lerp(shallow, 0.45))
+			mat.set_shader_parameter("deep_colour", deep.lerp(shallow, 0.3))
 			mat.set_shader_parameter("shallow_colour", shallow.lightened(0.12))
 			mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)) * RIVER_REFLECT)
 	# the falls and their pools in the region's water, and those a place raises later

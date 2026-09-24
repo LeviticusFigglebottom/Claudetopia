@@ -76,10 +76,15 @@ void fragment() {
 	// way down (sooner on a tall fall), whitest along the ropes
 	float aer = clamp(v_fallen / clamp(height_m * 0.3, 1.2, 9.0), 0.0, 1.0);
 	aer = clamp(0.2 + aer * 0.7 + (rope - 0.5) * 0.55, 0.0, 1.0);
-	// a cascade: each step a slide of dark water, then the break
-	float step_t = fract(v * steps);
-	float slide = smoothstep(0.0, 0.2, step_t) * (1.0 - smoothstep(0.35, 0.6, step_t));
-	float cascade_white = clamp(1.0 - slide * 0.75 + (streak - 0.5) * 0.6, 0.0, 1.0);
+	// A cascade: each step a slide of darker water, then the break. The steps are not a ladder:
+	// their spacing wanders down the face, each break's line wavers across it and is broken
+	// where a rope of white water runs straight over it; evenly spaced and straight across they
+	// drew an 83 m cascade as a striped ribbon.
+	float wander = vnoise(vec2(v * steps * 0.37, 1.7)) * 0.9 + vnoise(vec2(across_m * 0.35, v * steps * 0.5)) * 0.6;
+	float step_t = fract(v * steps + wander);
+	float slide = smoothstep(0.0, 0.15, step_t) * (1.0 - smoothstep(0.3, 0.55, step_t));
+	slide *= smoothstep(0.25, 0.6, vnoise(vec2(across_m * 0.8 + floor(v * steps + wander) * 3.1, 0.5)));
+	float cascade_white = clamp(1.0 - slide * 0.55 + (rope - 0.5) * 0.5, 0.0, 1.0);
 	aer = mix(aer, cascade_white, cascade);
 	// white water boiling over the lip and where it lands
 	float lip_foam = (1.0 - smoothstep(0.0, 0.06 + 0.5 / max(height_m, 1.0), v)) * smoothstep(0.3, 0.7, s2 + 0.25);
