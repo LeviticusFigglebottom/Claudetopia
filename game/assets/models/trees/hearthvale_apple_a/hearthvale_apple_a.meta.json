@@ -1,49 +1,55 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 3.519,
+  "height": 5.528,
   "max": [
-   2.588,
-   3.519,
-   2.392
+   1.717,
+   5.227,
+   3.834
   ],
   "min": [
-   -2.986,
-   0.0,
-   -2.615
+   -2.882,
+   -0.301,
+   -2.418
   ],
-  "radius": 4.139
+  "radius": 4.764
  },
- "built_seconds": 8.69,
+ "built_seconds": 0.15,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 3.3,
-  "radius": 2.825
+  "height": 5.13,
+  "radius": 0.249
  },
  "generator": "gen_trees",
  "glb": "hearthvale_apple_a.glb",
+ "grown": {
+  "branches": 384,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 4260131917
+ },
  "hash": "f2148afe018014a5",
  "height_m": 5.13,
  "impostor": {
   "albedo": "hearthvale_apple_a_impostor_albedo.png",
   "axis": [
-   -0.1987,
-   -0.1113
+   -0.5824,
+   0.7081
   ],
   "billboard": "upright",
-  "bottom": -0.0352,
+  "bottom": -0.3566,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "303b4453cb32af1f",
-  "height": 3.6241,
+  "height": 5.694,
   "normal": "hearthvale_apple_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "f2148afe018014a5",
   "views": 8,
-  "width": 6.2492
+  "width": 7.5517
  },
  "kind": "apple",
  "lod1_repair": {
@@ -53,26 +59,26 @@
   "tol_m": 0.5
  },
  "materials": [
-  "hearthvale_apple_a_mat",
+  "hearthvale_apple_a_bark",
   "hearthvale_apple_a_leaf_foliage",
   "hearthvale_apple_a_impostor"
  ],
  "materials_used": [
-  "oak_bark",
+  "apple_bark",
   "foliage_leaf_card"
  ],
  "meshes": [
   {
    "name": "hearthvale_apple_a",
-   "tris": 5718
+   "tris": 5712
+  },
+  {
+   "name": "hearthvale_apple_a_LOD1",
+   "tris": 888
   },
   {
    "name": "hearthvale_apple_a_LOD2",
    "tris": 2
-  },
-  {
-   "name": "hearthvale_apple_a_LOD1",
-   "tris": 976
   },
   {
    "name": "hearthvale_apple_a_cards_LOD1",
@@ -106,18 +112,18 @@
  "seed": 154,
  "species": "apple",
  "textures": [
-  "hearthvale_apple_a_albedo.png",
-  "hearthvale_apple_a_normal.png",
-  "hearthvale_apple_a_orm.png",
-  "hearthvale_apple_a_leaf_albedo.png",
-  "hearthvale_apple_a_leaf_normal.png",
-  "hearthvale_apple_a_leaf_orm.png",
+  "../_species/hearthvale_apple/hearthvale_apple_bark_albedo.png",
+  "../_species/hearthvale_apple/hearthvale_apple_bark_normal.png",
+  "../_species/hearthvale_apple/hearthvale_apple_bark_orm.png",
+  "../_species/hearthvale_apple/hearthvale_apple_leaf_albedo.png",
+  "../_species/hearthvale_apple/hearthvale_apple_leaf_normal.png",
+  "../_species/hearthvale_apple/hearthvale_apple_leaf_orm.png",
   "hearthvale_apple_a_impostor_albedo.png",
   "hearthvale_apple_a_impostor_nrm.png"
  ],
  "tris": [
-  5718,
-  1396,
+  5712,
+  1308,
   2
  ],
  "version": 3

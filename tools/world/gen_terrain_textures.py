@@ -22,6 +22,8 @@ import argparse
 import os
 import sys
 
+import zlib
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -48,8 +50,12 @@ class Painter:
         self.size = size
         self.tile_m = tile_m
         self.grid = Grid(tile_m, size)
-        self.bank = NoiseBank(seed + (abs(hash(name)) % 100000), self.grid, base_n=size)
-        self.rng = np.random.default_rng(np.random.SeedSequence([seed, abs(hash(name)) % 100000]))
+        # the slot's own seed from its name. Python's hash() of a string changes with every
+        # process (PYTHONHASHSEED), so each run painted a different tile for the same spec and
+        # a regenerated slot never matched the one committed.
+        salt = zlib.crc32(name.encode("utf-8")) % 100000
+        self.bank = NoiseBank(seed + salt, self.grid, base_n=size)
+        self.rng = np.random.default_rng(np.random.SeedSequence([seed, salt]))
 
     def f(self, salt: int, beta=1.8, wl_min=None, wl_max=None, aniso=None) -> np.ndarray:
         """Unit-variance periodic field; wavelengths are in metres on the tile."""
@@ -292,7 +298,16 @@ def mat_rock(p: Painter, spec: dict) -> tuple:
     tint = rng.uniform(0.86, 1.16, int(ids.max()) + 1).astype(np.float32)[ids]
     alb = alb * lerp(np.ones_like(tint), tint, 0.85 * body)[..., None]
     dark = hexcol(spec.get("seam_colour", spec["colors"][0]))
-    alb = lerp(alb, dark[None, None, :], (seams ** 1.4 * 0.9)[..., None])
+    # seam_dark: how far a seam goes to the seam colour. Full strength drew the few large plates'
+    # warped edges as black ink loops across the fells, doodles rather than joints.
+    # seam_broken: a joint in rock is not an inked line. It opens and closes along its length and
+    # for stretches is only a change of plane, which the normal map (from the full seams) still
+    # draws; in the colour, patches of it fade out.
+    shown = seams
+    if spec.get("seam_broken", 0.0) > 0.0:
+        opens = np.clip((p.mottle(41, 0.7) - 0.5) * 4.0 + 0.5, 0.0, 1.0)
+        shown = seams * (1.0 - spec["seam_broken"] * (1.0 - opens))
+    alb = lerp(alb, dark[None, None, :], (shown ** 1.4 * spec.get("seam_dark", 0.9))[..., None])
     # bedding: faint parallel grain across each plate, the way sedimentary rock splits
     bed = 0.5 + 0.5 * np.tanh(p.f(45, 1.7, 0.06, 0.45, aniso=(spec.get("bedding_angle", 20.0), 4.0)) * 1.4)
     alb *= (1.0 - spec.get("bedding", 0.10) * (bed - 0.5))[..., None]
@@ -325,6 +340,13 @@ def mat_pebbles(p: Painter, spec: dict) -> tuple:
     crease = 1.0 - np.clip(stones * 2.2, 0.0, 1.0)           # only the creases darken
     alb *= (1.0 - 0.38 * crease)[..., None]
     gap = crease
+    if spec.get("matrix_colour"):
+        # stones lying loose in sand and grit rather than packed edge to edge: the gaps are the
+        # sand's own colour, mottled, and only a stone's rim is shaded
+        sand = hexcol(spec["matrix_colour"])[None, None, :] * (0.88 + 0.24 * p.mottle(63, 0.5))[..., None]
+        sand *= (1.0 + 0.08 * p.strokes(65, 0.25, 0.0))[..., None]
+        alb = lerp(sand, alb, np.clip(stones * 2.4, 0.0, 1.0)[..., None])
+        gap = crease * 0.4
     wet = spec.get("wet", 0.0)
     if wet:
         alb = lerp(alb, alb * 0.70, (gap * wet)[..., None])
@@ -421,16 +443,20 @@ MATERIALS = {
     # the bedding is stronger and level, so a cliff (Terrain3D projects steep ground sideways)
     # shows its strata.
     "granite": {"recipe": "rock", "tile_m": 3.4, "colors": ["#4f4943", "#665e55", "#7f766b", "#988e81"],
-                "seam_colour": "#3a342e", "lichen": 0.3, "lichen_colour": "#8c8a6c", "cells": 4,
-                "jitter": 0.45, "seam": 0.018, "plate_warp": 0.14, "fine_seams": 0.35, "bedding": 0.16,
+                "seam_colour": "#3a342e", "lichen": 0.3, "lichen_colour": "#8c8a6c", "cells": 5,
+                "jitter": 0.45, "seam": 0.03, "seam_dark": 0.4, "seam_broken": 0.85, "plate_warp": 0.05, "fine_seams": 0.08,
+                "bedding": 0.16,
                 "bedding_angle": 4.0, "rough": 0.74, "normal_strength": 2.8},
     "limestone": {"recipe": "rock", "tile_m": 3.6, "colors": ["#6f6961", "#857e73", "#9c9486", "#b3aa99"],
-                  "seam_colour": "#4d463d", "aniso": (10.0, 2.2), "cells": 3, "jitter": 0.4,
-                  "seam": 0.016, "plate_warp": 0.16, "fine_seams": 0.15, "bedding": 0.3, "bedding_angle": 2.0,
+                  "seam_colour": "#4d463d", "aniso": (10.0, 2.2), "cells": 4, "jitter": 0.4,
+                  "seam": 0.028, "seam_dark": 0.4, "seam_broken": 0.85, "plate_warp": 0.05, "fine_seams": 0.05, "bedding": 0.3,
+                  "bedding_angle": 2.0,
                   "lichen": 0.3, "lichen_colour": "#9c9878", "rough": 0.8, "normal_strength": 3.0},
-    "scree": {"recipe": "pebbles", "tile_m": 2.4, "colors": ["#544e47", "#6a635a", "#827a6e"],
-              "cells": 15, "radius": 0.55, "crease": 0.05, "small_mix": 0.5, "warp": 0.1, "rough": 0.82,
-              "normal_strength": 3.0},
+    # broken stone, not cobbles: at 15 domed cells a tile the fell sides read as giant scales close
+    # to, so the stones are smaller, more of them small, flatter and nearer the gaps' colour
+    "scree": {"recipe": "pebbles", "tile_m": 2.4, "colors": ["#5a534b", "#6a635a", "#7c7468"],
+              "cells": 24, "radius": 0.42, "crease": 0.04, "small_mix": 0.7, "warp": 0.18, "rough": 0.84,
+              "normal_strength": 1.8},
     "snow": {"recipe": "snow", "tile_m": 3.2, "colors": ["#b9c6da", "#d2dcea", "#e6ecf4", "#f6f8fb"]},
     "heather": {"recipe": "grass", "tile_m": 2.2, "colors": ["#3a3a2c", "#4d4a33", "#5d5640", "#6e6349"],
                 "tip": "#8a6a86", "blades": 4200, "blade_len": 0.05, "blade_w": 0.008,
@@ -450,9 +476,12 @@ MATERIALS = {
     "fused_stone": {"recipe": "rock", "tile_m": 4.0, "colors": ["#26242a", "#35323a", "#46424c", "#56515c"],
                     "seam_colour": "#101015", "cells": 3, "jitter": 0.12, "seam": 0.02, "plate_warp": 0.0, "bedding": 0.04,
                     "fine_seams": 0.25, "aniso": (45.0, 2.6), "rough": 0.42, "normal_strength": 1.8},
-    "shingle": {"recipe": "pebbles", "tile_m": 2.0, "colors": ["#857f73", "#a39b8c", "#bdb4a2"],
-                "cells": 26, "radius": 0.52, "crease": 0.05, "small_mix": 0.45, "warp": 0.08, "wet": 0.3, "rough": 0.6,
-                "normal_strength": 3.2},
+    # A lake shore of sand and loose gravel, not packed cobbles: at 26 domed pebbles a 2 m tile
+    # the Mere's shore read as grey-blue discs repeating in a grid out to the horizon. The stones
+    # are fewer, smaller and varied, lying in sand, on a larger tile.
+    "shingle": {"recipe": "pebbles", "tile_m": 3.2, "colors": ["#7d766a", "#978e7f", "#b1a893"],
+                "matrix_colour": "#a6987a", "cells": 30, "radius": 0.3, "crease": 0.05, "small_mix": 0.25,
+                "warp": 0.14, "wet": 0.25, "rough": 0.7, "normal_strength": 2.2, "height_squash": 0.35},
     "cobbles": {"recipe": "cobbles", "tile_m": 2.6, "colors": ["#5e5a55", "#767068", "#8d867c"],
                 "mortar": "#4a463f", "cells": 10},
     "barley": {"recipe": "grass", "tile_m": 2.4, "colors": ["#8a7a34", "#a8963f", "#c2ab4c", "#d8c05c"],
@@ -522,6 +551,13 @@ def generate(name: str, size: int, out_dir: str, seed: int = SEED) -> tuple:
     # gentle contrast on the height so blending has something to bite on
     h = np.clip((h - h.mean()) * 1.25 + 0.5, 0.0, 1.0)
     nrm = normal_from_height(h, nstrength, size)
+    # height_squash: how far the height Terrain3D blends by strays from the middle (the normal
+    # map keeps the full relief). Stones in sand have the sand low and the stones high, so where
+    # the shingle met the grass or mud of the Mere's shore the neighbour filled every gap and the
+    # stones stood out of it as pale discs on a dark ground, out to the horizon.
+    squash = spec.get("height_squash", 1.0)
+    if squash != 1.0:
+        h = 0.5 + (h - 0.5) * squash
     rough = np.clip(rough, 0.05, 1.0)
     alb = np.clip(alb, 0.0, 1.0)
     albedo_height = np.concatenate([alb, h[..., None]], axis=-1)

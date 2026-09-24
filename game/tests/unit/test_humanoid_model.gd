@@ -524,6 +524,36 @@ func test_stubble_is_seen_through() -> void:
 	assert_gt(seen, 0, "no stubble mesh on the body")
 
 
+## Cloth, leather and metal are not smooth tinted shells: each wears the garment shader with a
+## grain that tiles over it (weave, leather crease, hammered dents) and the mottling map.
+func test_garments_have_a_grain() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.culture = "vale"
+	a.palette = CharacterAppearance.culture_palette("vale")
+	a.set_part("head", "default")
+	a.set_part("torso", "tunic")
+	a.set_part("belt", "belt")
+	m.apply_appearance(a.to_dict())
+	var seen := {}
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
+		var part := str(mi.get_meta("part", ""))
+		if part != "tunic" and part != "belt":
+			continue
+		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as ShaderMaterial
+		assert_true(mat != null and mat.shader == HumanoidModel.GARMENT_SHADER, "the %s is not in the garment shader" % part)
+		if mat == null:
+			continue
+		assert_true(mat.get_shader_parameter("detail_normal") != null, "the %s has no grain" % part)
+		assert_true(mat.get_shader_parameter("mottle_tex") != null, "the %s has no mottling" % part)
+		assert_true(mat.get_shader_parameter("albedo_tex") != null, "the %s lost its bake" % part)
+		seen[part] = int(mat.get_shader_parameter("kind"))
+	assert_eq(seen.get("tunic", -1), 0, "the tunic is not dressed as cloth")
+	assert_eq(seen.get("belt", -1), 1, "the belt is not dressed as leather")
+
+
 ## The clans' plaid is a tartan baked in its own colours, and its meta says "tint": "none". Dressed
 ## in the palette's primary like any cloth, the rust and the brown went to a muddy pale and the
 ## check was lost: it must be lit as cloth and left its own colour.
@@ -545,15 +575,15 @@ func test_a_woven_part_is_not_tinted() -> void:
 	var plaid := 0
 	var shirt := 0
 	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
-		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as BaseMaterial3D
-		if mat == null:
+		if (mi as MeshInstance3D).get_surface_override_material(0) == null:
 			continue
+		var worn := HumanoidModel.dressed_colour_of(mi as MeshInstance3D)
 		match str(mi.get_meta("part", "")):
 			"plaid":
-				assert_eq(mat.albedo_color, Color.WHITE, "the tartan was tinted %s" % mat.albedo_color)
+				assert_eq(worn, Color.WHITE, "the tartan was tinted %s" % worn)
 				plaid += 1
 			"shirt":
-				assert_ne(mat.albedo_color, Color.WHITE, "the shirt under it was not dressed")
+				assert_ne(worn, Color.WHITE, "the shirt under it was not dressed")
 				shirt += 1
 	assert_gt(plaid, 0, "no plaid mesh on the body")
 	assert_gt(shirt, 0, "no shirt mesh on the body")
@@ -693,3 +723,75 @@ func _left_wrist_out(part: Array) -> float:
 	for i in 4:
 		await Engine.get_main_loop().process_frame
 	return float(seen.get("x", -1.0))
+
+
+## Every head is baked young and wears its lines of age by the record's age: none on a young
+## face, all of them on an old one, off the head's own _age map.
+func test_the_old_wear_their_years() -> void:
+	if not _rig_built():
+		return
+	assert_eq(HumanoidModel.age_lines_amount(0.2), 0.0, "a young face has lines")
+	assert_eq(HumanoidModel.age_lines_amount(1.0), 1.0, "an old face lacks some of its lines")
+	for head in ["default", "hawk"]:
+		var age_map := "res://assets/models/characters/humanoid_rig/humanoid_rig_head_age.png" if head == "default" \
+			else "res://assets/models/characters/heads/%s/%s_age.png" % [head, head]
+		if not ResourceLoader.exists(age_map):
+			continue
+		var amounts := []
+		for age in [0.2, 0.9]:
+			var m := _make_model()
+			var a := CharacterAppearance.new()
+			a.set_part("head", head)
+			a.age = age
+			m.apply_appearance(a.to_dict())
+			var amount := -1.0
+			for mi in m.skeleton.find_children("*", "MeshInstance3D", true, false):
+				# the last look's parts are still in the tree until the frame ends
+				if mi.is_queued_for_deletion() or not (mi as MeshInstance3D).visible:
+					continue
+				var mat := (mi as MeshInstance3D).get_surface_override_material(0) as ShaderMaterial
+				if mat == null or mat.get_shader_parameter("age_tex") == null:
+					continue
+				amount = maxf(amount, float(mat.get_shader_parameter("age_amount")))
+			amounts.append(amount)
+		assert_true(amounts[0] <= 0.0, "%s: the young face shows lines (%s)" % [head, amounts])
+		assert_gt(amounts[1], 0.8, "%s: the old face does not show its lines (%s)" % [head, amounts])
+
+
+## The rig's Animations and their library are one set of resources, shared by every body built from
+## the rig. A write to one says `changed`, and every live AnimationTree answers by queueing a set-up
+## of itself for later. So a body built while others stand must write none of them. The loop flags
+## were written on every build, the same values again: standing up a village's people queued
+## thousands of set-ups, the message queue ran out of memory, and the engine crashed
+## (test_poi_people on the batch-3 world).
+func test_another_body_built_leaves_the_shared_clips_alone() -> void:
+	if not _rig_built():
+		return
+	var first := _make_model()
+	assert_true(first != null, "no model")
+	if first == null or first.anim_player == null:
+		return
+	var said := {"n": 0, "what": []}
+	var heard := func(what: String) -> void:
+		said["n"] = int(said["n"]) + 1
+		if (said["what"] as Array).size() < 5:
+			(said["what"] as Array).append(what)
+	var listened: Array = []        # [resource, callable]
+	for lib_name in first.anim_player.get_animation_library_list():
+		var lib := first.anim_player.get_animation_library(lib_name)
+		var on_lib := heard.bind("the library '%s'" % lib_name)
+		lib.changed.connect(on_lib)
+		listened.append([lib, on_lib])
+		for anim_name in lib.get_animation_list():
+			var anim := lib.get_animation(anim_name)
+			var on_anim := heard.bind(str(anim_name))
+			anim.changed.connect(on_anim)
+			listened.append([anim, on_anim])
+	var scene: PackedScene = load(MODEL_SCENE)
+	var second := scene.instantiate() as HumanoidModel
+	_root.add_child(second)
+	for pair: Array in listened:
+		(pair[0] as Resource).changed.disconnect(pair[1] as Callable)
+	assert_true(second.anim_player != null and second.has_clip("Idle"), "the second body has no clips")
+	assert_eq(int(said["n"]), 0, "building a second body wrote the rig's shared clips %d times (%s)" % [
+			int(said["n"]), ", ".join(PackedStringArray(said["what"] as Array))])

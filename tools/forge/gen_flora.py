@@ -163,6 +163,72 @@ def grey_grass(pal, rng, params, variant, ctx):
     return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
 
 
+def meadow_grass(pal, rng, params, variant, ctx):
+    """Meadow: long grass gone to seed, knee high and a stride across. A grass clump is a tuft a
+    hand across, and scattered over a field at any count a machine can draw it read as single
+    strands on a lawn; a field of this reads as a meadow at a tenth of the count."""
+    greens = [pal.tint(P.lin("#5f8a3c"), "green", 0.45),
+              pal.tint(P.lin("#86a24c"), "green", 0.30),
+              pal.tint(P.lin("#b9a05a"), "warm", 0.35),
+              pal.tint(P.lin("#6f9446"), "green", 0.4)]
+    names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], greens, seed=rng.randrange(9999),
+                          size=256 if ctx["quick"] else 512, blades=46, width=0.026, lean=0.45,
+                          seed_head=pal.tint(P.lin("#c9aa62"), "warm", 0.4), bend=0.7)
+    mat = _mat(ctx["out_dir"], "%s_meadow_foliage" % ctx["name"], names)
+    h = params.get("height", rng.uniform(0.55, 0.85))
+    ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 11), width=h * 1.9,
+                   height=h, radius=h * 0.85, bow=0.16, tilt=16)
+    return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
+
+
+def marram(pal, rng, params, variant, ctx):
+    """Marram on the dunes: stiff grey-green blades rolled to a point, a straw-dead one in three,
+    standing up out of the sand in a tussock wider than it is tall. It is what holds a dune, and
+    what a dune is seen by: the crest combed pale by the wind, the slack below it bare."""
+    cols = [pal.tint(P.lin("#8a9a7a"), "mid", 0.25), pal.tint(P.lin("#a3ad86"), "light", 0.2),
+            pal.tint(P.lin("#c2b184"), "warm", 0.25), pal.tint(P.lin("#6f7f62"), "green", 0.2)]
+    names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], cols, seed=rng.randrange(9999),
+                          size=256 if ctx["quick"] else 512, blades=34, width=0.022, lean=0.42,
+                          tip_taper=0.95, bend=0.35, roughness=0.82)
+    mat = _mat(ctx["out_dir"], "%s_marram_foliage" % ctx["name"], names)
+    h = params.get("height", rng.uniform(0.6, 0.9))
+    ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 8), width=h * 1.4,
+                   height=h, radius=h * 0.35, bow=0.08, tilt=22)
+    return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
+
+
+def sedge_tussock(pal, rng, params, variant, ctx):
+    """A tussock of sedge on the marsh: a knee-high fountain of arching leaves from one crown, green
+    over last year's dead straw. The fen is walked from one to the next."""
+    cols = [pal.tint(P.lin("#5d7a3a"), "green", 0.35), pal.tint(P.lin("#7c8f45"), "green", 0.3),
+            pal.tint(P.lin("#a98f5a"), "warm", 0.3), pal.tint(P.lin("#8b7a4e"), "earth", 0.25)]
+    names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], cols, seed=rng.randrange(9999),
+                          size=256 if ctx["quick"] else 512, blades=40, width=0.026, lean=0.7,
+                          tip_taper=0.9, bend=1.3)
+    mat = _mat(ctx["out_dir"], "%s_sedge_foliage" % ctx["name"], names)
+    h = params.get("height", rng.uniform(0.45, 0.7))
+    ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 10), width=h * 1.3,
+                   height=h, radius=h * 0.16, bow=0.3, tilt=34)
+    return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
+
+
+def wrack(pal, rng, params, variant, ctx):
+    """Wrack along the tide line: bladder- and serrated wrack torn off the rocks and left by the
+    sea in a dark olive-brown drift, lying flat on the sand and the shingle."""
+    # broad straps, tangled and lying every way: drawn as wide blades bent over on themselves,
+    # olive to rust-brown, and laid flat
+    # (wet weed is near black; the ochre it dries to is only at the tips of the oldest)
+    cols = [P.lin("#2a2712"), P.lin("#332c14"), P.lin("#3d3317"), P.lin("#23261a"),
+            pal.tint(P.lin("#4e4020"), "earth", 0.1)]
+    names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], cols, seed=rng.randrange(9999),
+                          size=256 if ctx["quick"] else 512, blades=14, width=0.05, lean=0.9,
+                          tip_taper=0.55, bend=1.5, roughness=0.35)
+    mat = _mat(ctx["out_dir"], "%s_wrack_foliage" % ctx["name"], names, threshold=0.45)
+    ob = flat_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 6),
+                    size=params.get("size", rng.uniform(0.5, 0.8)), spread=0.7, jitter_z=0.03)
+    return {"card_objs": [ob], "collision": "none", "materials_used": ["foliage_leaf_card"]}
+
+
 def barley_tuft(pal, rng, params, variant, ctx):
     cols = [pal.tint(P.lin("#c9a24a"), "warm", 0.5), pal.tint(P.lin("#dcc06a"), "light", 0.35),
             pal.tint(P.lin("#8f7a34"), "earth", 0.3)]
@@ -225,11 +291,12 @@ def bracken(pal, rng, params, variant, ctx):
 
 
 def _flower(pal, rng, params, ctx, leaf_hex, flower_hex, form, second_hex=None, height=(0.35, 0.6),
-            stems=7, leaf_shape="lance", tag="flower", cards=5, bow=0.12):
+            stems=7, leaf_shape="lance", tag="flower", cards=5, bow=0.12, eye_hex=None):
     names = T.flower_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], P.lin(leaf_hex), P.lin(flower_hex),
                            seed=rng.randrange(9999), size=256 if ctx["quick"] else 512, form=form,
                            stems=stems, leaf_shape=leaf_shape,
-                           second_color=P.lin(second_hex) if second_hex else None)
+                           second_color=P.lin(second_hex) if second_hex else None,
+                           eye_color=P.lin(eye_hex) if eye_hex else None)
     mat = _mat(ctx["out_dir"], "%s_%s_foliage" % (ctx["name"], tag), names)
     h = params.get("height", rng.uniform(*height))
     ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", cards),
@@ -245,6 +312,16 @@ def foxglove(pal, rng, params, variant, ctx):
 def poppy(pal, rng, params, variant, ctx):
     return _flower(pal, rng, params, ctx, "#5f7a3a", "#b23a2e", "head", height=(0.4, 0.62),
                    stems=8, leaf_shape="fern", tag="poppy")
+
+
+def buttercup(pal, rng, params, variant, ctx):
+    return _flower(pal, rng, params, ctx, "#4f7a34", "#e8c21e", "head", height=(0.3, 0.5),
+                   stems=11, leaf_shape="fern", tag="buttercup", cards=5)
+
+
+def oxeye_daisy(pal, rng, params, variant, ctx):
+    return _flower(pal, rng, params, ctx, "#4f7a34", "#f0ece0", "head", eye_hex="#e0b22a",
+                   height=(0.42, 0.68), stems=9, leaf_shape="lance", tag="daisy", cards=5)
 
 
 def red_poppy_single(pal, rng, params, variant, ctx):
@@ -378,6 +455,12 @@ KINDS = {
     "grass_clump": grass_clump,
     "grey_grass": grey_grass,
     "barley_tuft": barley_tuft,
+    "meadow_grass": meadow_grass,
+    "marram": marram,
+    "sedge_tussock": sedge_tussock,
+    "wrack": wrack,
+    "buttercup": buttercup,
+    "oxeye_daisy": oxeye_daisy,
     "reeds": reeds,
     "bulrush": bulrush,
     "fern": fern,

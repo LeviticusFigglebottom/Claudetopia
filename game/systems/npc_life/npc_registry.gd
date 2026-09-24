@@ -69,6 +69,8 @@ func _ready() -> void:
 	EventBus.quest_started.connect(_on_story_moved)
 	EventBus.quest_stage_changed.connect(_on_story_moved)
 	EventBus.quest_completed.connect(_on_story_moved)
+	# somebody whose day moved on while the player talked to them is told where to go afterwards
+	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 
 
 # --- state ---------------------------------------------------------------------------------
@@ -378,10 +380,12 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 		state_changed.emit(npc_id)
 		_resync_spawn(npc_id)
 		node = spawned.get(npc_id) if spawned.has(npc_id) and is_instance_valid(spawned[npc_id]) else null
-		# somebody who stays stood up across a move is told where they are going now
-		if node != null and node.has_method("apply_schedule_state"):
-			node.call("apply_schedule_state", entry)
-	elif node != null and node.has_method("apply_schedule_state"):
+	if node != null and is_talking(npc_id):
+		# mid-conversation: the day moves on in the roster and the body finishes what it is saying,
+		# and is sent on its way when the player lets it go (_on_dialogue_ended)
+		return s
+	# somebody who stays stood up, across a move or not, is told where they are going now
+	if node != null and node.has_method("apply_schedule_state"):
 		node.call("apply_schedule_state", entry)
 	if node != null:
 		steer_traveller(npc_id)
@@ -427,6 +431,128 @@ func _on_new_day(day: int) -> void:
 func _on_weather_changed(_region_id: String, weather_id: String) -> void:
 	GameState.set_flag("_weather", weather_id)
 	simulate_all(weather_id)
+
+
+## A conversation is over: whoever it was with goes back to their day, walking from wherever they
+## stood to talk, which is how somebody whose hour turned while they talked walks away afterwards
+## and a traveller the player stopped on the road walks on.
+func _on_dialogue_ended(npc_id: String) -> void:
+	if is_spawned(npc_id):
+		simulate(npc_id)
+
+
+# --- in the player's company ---------------------------------------------------------------------
+#
+# The roster looks at everybody's day every TICK_HOURS of game time and on every hour, and moves
+# whoever it has somewhere else: a body whose place's cell is not loaded is taken away, and one
+# whose marker comes up is put down on it. Under a loaded run a single step of the clock is long
+# enough to cross an hour, and the Warden went from beside her fire while the Foundling was
+# talking to her. Nobody the player is with is taken away or put down elsewhere by that: somebody
+# they are talking to, have in the interact prompt, a quest is waiting on them to speak to, or who
+# stands within KEEP_NEAR_M of them. The roster still moves them on; they walk.
+
+## Within this of the player, a body is left where it is by the roster.
+const KEEP_NEAR_M := 20.0
+## The objectives that wait on a particular person being spoken to.
+const PINNING_OBJECTIVES: Array[String] = ["talk", "deliver"]
+
+
+## Whether the roster must leave this person's body alone (see above). False for anybody who is
+## not stood up.
+func is_kept(npc_id: String) -> bool:
+	return kept_because(npc_id) != ""
+
+
+## Why the roster must leave this person's body alone, or "" when it need not: "talking",
+## "targeted", "near" or "pinned".
+func kept_because(npc_id: String) -> String:
+	var body := actor(npc_id) as Node3D
+	if body == null:
+		return ""
+	if is_talking(npc_id):
+		return "talking"
+	if _is_targeted(body):
+		return "targeted"
+	if _near_player(body):
+		return "near"
+	if is_pinned(npc_id):
+		return "pinned"
+	return ""
+
+
+## Whether the player is with this person: talking to them, has them in the prompt, or stands
+## within KEEP_NEAR_M of them. Any body in the player group counts, not only the one the streamer
+## follows. A quest waiting on somebody is not the player being with them.
+func is_with_player(npc_id: String) -> bool:
+	var why := kept_because(npc_id)
+	return why != "" and why != "pinned"
+
+
+## Whether somebody whose day has them under a roof can be taken in now. At once when the player is
+## not with them. When the player is only near them, or a quest is waiting on them, once they have
+## walked to where their day sends them: they go in rather than vanish at the player's elbow, and
+## a stand-still player does not keep a village standing in the street all night. Not while the
+## player is talking to them or has them in the prompt.
+func can_go_in(npc_id: String) -> bool:
+	match kept_because(npc_id):
+		"":
+			return true
+		"near", "pinned":
+			var body := actor(npc_id)
+			return body == null or not bool(body.get("has_target"))
+	return false
+
+
+## True while the player's conversation is with this person.
+static func is_talking(npc_id: String) -> bool:
+	var runner: Node = Social.dialogue
+	return runner != null and is_instance_valid(runner) and bool(runner.call("is_running")) \
+			and str(runner.get("npc_id")) == npc_id
+
+
+## True while a quest's current stage waits on this person being spoken to (the Warden, for the
+## Naming's first objective).
+func is_pinned(npc_id: String) -> bool:
+	var quests: Node = Social.quests
+	if quests == null or not is_instance_valid(quests) or not quests.has_method("current_objectives"):
+		return false
+	for e_v in quests.call("current_objectives"):
+		var e: Dictionary = e_v
+		if bool(e.get("done", false)):
+			continue
+		var o: Dictionary = e.get("objective", {})
+		if PINNING_OBJECTIVES.has(str(o.get("type", ""))) and str(o.get("target", "")) == npc_id:
+			return true
+	return false
+
+
+func _is_targeted(body: Node) -> bool:
+	for p in _players():
+		var hand: Variant = p.get("interactor")
+		if hand is Node and is_instance_valid(hand) and (hand as Node).get("target") == body:
+			return true
+	return false
+
+
+func _near_player(body: Node3D) -> bool:
+	if not body.is_inside_tree():
+		return false
+	for p in _players():
+		if p.global_position.distance_to(body.global_position) <= KEEP_NEAR_M:
+			return true
+	return false
+
+
+## Every body in the player group that is standing in the world. All of them, not the first: a
+## stand-in another system left behind is no reason to take away the person beside the real one.
+func _players() -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	if not is_inside_tree():
+		return out
+	for n in get_tree().get_nodes_in_group("player"):
+		if n is Node3D and (n as Node3D).is_inside_tree() and not n.is_queued_for_deletion():
+			out.append(n as Node3D)
+	return out
 
 
 # --- spawning --------------------------------------------------------------------------------
@@ -495,6 +621,9 @@ func steer_traveller(npc_id: String) -> void:
 	var body := actor(npc_id) as Node3D
 	if body == null or not body.has_method("set_move_target"):
 		return
+	# stopped on the road to talk: they stay stopped until the player lets them go
+	if is_talking(npc_id):
+		return
 	var r := travel_route(npc_id)
 	if r.size() < 2:
 		return
@@ -527,8 +656,10 @@ func _on_cell_loaded(cell: Vector2i) -> void:
 
 ## Somebody stood up before the place they work was built — a far cell coming into the near
 ## ring raises the full dressing, markers and all — is moved onto their marker once it exists.
+## Not somebody on the road: their spot is the one at the far end, and a cell coming up along the
+## way put a traveller down there. Nor anybody the player is with (is_kept): they walk to it.
 func _settle_on_marker(npc_id: String) -> void:
-	if is_escorted(npc_id):
+	if is_escorted(npc_id) or is_travelling(npc_id) or is_kept(npc_id):
 		return
 	var marker := spot_marker(npc_id)
 	var body := actor(npc_id)
@@ -539,19 +670,30 @@ func _settle_on_marker(npc_id: String) -> void:
 func _on_cell_unloaded(cell: Vector2i) -> void:
 	loaded_cells.erase(cell)
 	for id in spawned.keys():
-		if cell_of(id) == cell:
+		if cell_of(id) == cell and not _keeps(str(id), "its cell was unloaded"):
 			despawn(id)
 
 
-## Spawns or despawns one NPC to match whether its cell is loaded.
+## Spawns or despawns one NPC to match whether its cell is loaded. Somebody the player is with is
+## not taken away (is_kept): their day has moved on, and they walk.
 func _resync_spawn(npc_id: String) -> void:
 	if not spawning_enabled or abstract_only:
 		return
 	var here := loaded_cells.has(cell_of(npc_id))
 	if here and not spawned.has(npc_id):
 		spawn(npc_id)
-	elif not here and spawned.has(npc_id):
+	elif not here and spawned.has(npc_id) and not _keeps(npc_id, "their day moved them out of the loaded cells"):
 		despawn(npc_id)
+
+
+## is_kept, saying so in the log when it keeps somebody the roster was about to take away: the
+## Warden's going in loaded runs was only ever seen as her absence.
+func _keeps(npc_id: String, what: String) -> bool:
+	var why := kept_because(npc_id)
+	if why == "":
+		return false
+	Log.info("NpcRegistry", "%s stays (%s) although %s" % [npc_id, why, what])
+	return true
 
 
 func is_spawned(npc_id: String) -> bool:
@@ -613,7 +755,7 @@ func spawn_position(npc_id: String) -> Vector3:
 		return walking
 	var marked := spot_marker(npc_id)
 	if marked != null:
-		return marked.global_position
+		return marked.global_position + gather_offset(npc_id, marked)
 	var base := WorldProbe.place_position(place_of(npc_id))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(npc_id)
@@ -645,6 +787,20 @@ func spot_marker(npc_id: String) -> Node3D:
 			continue
 		return node as Node3D
 	return null
+
+
+## Where in a shared spot one person stands. A settlement's well, green and inn door are marked
+## `gather`, because half a village is sent to each of them at some hour: they stand round it,
+## each in a place of their own that is the same every time, rather than all in one point. A
+## spot a dressing made for one person (the toll-keeper's stool) holds them exactly on it.
+static func gather_offset(npc_id: String, marker: Node3D) -> Vector3:
+	if marker == null or not bool(marker.get_meta("gather", false)):
+		return Vector3.ZERO
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("gather:" + npc_id)
+	var a := rng.randf() * TAU
+	var r := rng.randf_range(0.9, 2.6)
+	return Vector3(cos(a) * r, 0.0, sin(a) * r)
 
 
 func despawn(npc_id: String) -> void:

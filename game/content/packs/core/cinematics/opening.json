@@ -22,8 +22,8 @@
         "id": "the_mere", "duration": 12.0, "time": 7.3, "time_to": 7.5, "weather": "core:weather/clear", "fov": 52,
         "keys": [
           {"t": 0.0, "at": {"place": "core:place/tollmere", "bearing": 172, "distance": 700, "height": 40},
-           "look": {"place": "core:place/sayers_spire", "height": 26}},
-          {"t": 1.0, "at": {"place": "core:place/tollmere", "bearing": 166, "distance": 520, "height": 32},
+           "look": {"place": "core:place/sayers_spire", "height": 20}},
+          {"t": 1.0, "at": {"place": "core:place/tollmere", "bearing": 170, "distance": 520, "height": 32},
            "look": {"place": "core:place/sayers_spire", "height": 24}}
         ],
         "lines": [
@@ -33,10 +33,10 @@
       {
         "id": "the_spire", "duration": 9.0, "time": 7.6, "weather": "core:weather/clear", "fov": 50,
         "keys": [
-          {"t": 0.0, "at": {"place": "core:place/sayers_spire", "bearing": 98, "distance": 370, "height": 11},
-           "look": {"place": "core:place/sayers_spire", "height": 30}},
-          {"t": 1.0, "at": {"place": "core:place/sayers_spire", "bearing": 91, "distance": 330, "height": 9},
-           "look": {"place": "core:place/sayers_spire", "height": 32}}
+          {"t": 0.0, "at": {"place": "core:place/sayers_spire", "bearing": 125, "distance": 360, "height": 7},
+           "look": {"place": "core:place/sayers_spire", "height": 20}},
+          {"t": 1.0, "at": {"place": "core:place/sayers_spire", "bearing": 121, "distance": 320, "height": 6},
+           "look": {"place": "core:place/sayers_spire", "height": 22}}
         ],
         "lines": [
           {"at": 0.4, "for": 4.0, "text": "The Sayers say it is a bell, struck once and still ringing."},
@@ -46,9 +46,9 @@
       {
         "id": "the_nave", "duration": 7.0, "time": 8.0, "weather": "core:weather/mist", "fov": 52,
         "keys": [
-          {"t": 0.0, "at": {"place": "core:place/drowned_nave", "bearing": 113, "distance": 380, "height": 30},
+          {"t": 0.0, "at": {"place": "core:place/drowned_nave", "bearing": 113, "distance": 380, "height": 40},
            "look": {"place": "core:place/drowned_nave", "height": 55}},
-          {"t": 1.0, "at": {"place": "core:place/drowned_nave", "bearing": 108, "distance": 330, "height": 24},
+          {"t": 1.0, "at": {"place": "core:place/drowned_nave", "bearing": 108, "distance": 330, "height": 34},
            "look": {"place": "core:place/drowned_nave", "height": 58}}
         ],
         "lines": [
@@ -58,9 +58,9 @@
       {
         "id": "the_hand", "duration": 7.0, "time": 10.0, "weather": "core:weather/clear_cold", "fov": 52,
         "keys": [
-          {"t": 0.0, "at": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 108, "height": 44},
+          {"t": 0.0, "at": {"place": "core:place/fallen_hand", "bearing": 232, "distance": 110, "height": 46},
            "look": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 13, "height": 5}},
-          {"t": 1.0, "at": {"place": "core:place/fallen_hand", "bearing": 200, "distance": 100, "height": 42},
+          {"t": 1.0, "at": {"place": "core:place/fallen_hand", "bearing": 206, "distance": 100, "height": 42},
            "look": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 13, "height": 4}}
         ],
         "lines": [
@@ -123,8 +123,8 @@
         "id": "the_stair", "duration": 16.0, "time": 7.2, "weather": "core:weather/thin_sun", "fov": 55,
         "handover": true,
         "keys": [
-          {"t": 0.0, "at": {"place": "player", "bearing": 174, "distance": 330, "height": 55},
-           "look": {"place": "player", "bearing": 180, "distance": 60, "height": 25}},
+          {"t": 0.0, "at": {"place": "player", "bearing": 160, "distance": 300, "height": 30},
+           "look": {"place": "player", "bearing": 151, "distance": 100, "height": 15}},
           {"t": 0.6, "at": {"place": "player", "bearing": 176, "distance": 34, "height": 40},
            "look": {"place": "player", "bearing": 5, "distance": 60, "height": 6}},
           {"t": 1.0, "at": "player_camera"}

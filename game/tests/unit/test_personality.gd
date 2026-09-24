@@ -60,3 +60,23 @@ func test_custom_rows_override() -> void:
 	assert_eq(p.disposition_delta("bow"), 12)
 	assert_near(p.price_bias(), 0.2)
 	assert_eq(p.crime_reaction(), "flee")
+
+
+## The trait table's `opposite` column is the axis: a pack that adds a pair gets it kept one
+## side at a time, and a pair the table does not know falls back to the built-in axes.
+func test_the_trait_table_says_what_is_opposite() -> void:
+	var rows := Personality.FALLBACK_ROWS.duplicate(true)
+	rows["curious"] = {"opposite": "incurious", "greeting": "nosy"}
+	rows["incurious"] = {"opposite": "curious", "greeting": "curt"}
+	Personality.set_rows(rows)
+	assert_eq(Personality.opposite_of("curious"), "incurious")
+	var p := Personality.of(["curious"])
+	assert_true(p.is_opposed("incurious"))
+	p.add("incurious")
+	assert_false(p.has("curious"), "a new axis was held both ways at once")
+	assert_eq(Personality.opposite_of("brave"), "timid", "a row without the column keeps the built-in pair")
+	Personality.reset_rows()
+	for table in ContentQuery.where_scalar("table", "role", "personality_traits"):
+		for r in table.get("rows", []):
+			assert_eq(Personality.opposite_of(str(r["trait"])), str(r["opposite"]),
+					"%s: the table and the axis disagree" % r["trait"])

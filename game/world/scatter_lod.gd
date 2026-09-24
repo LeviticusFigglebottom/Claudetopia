@@ -466,7 +466,7 @@ static func _tri_count(mesh: Mesh) -> int:
 		var n := am.surface_get_array_index_len(si)
 		if n == 0:
 			n = am.surface_get_array_len(si)
-		tris += n / 3
+		tris += floori(n / 3.0)
 	return tris
 
 
@@ -547,6 +547,9 @@ static func _mmi(cell: Node3D, node_name: String, mesh: Mesh, cast_shadows: bool
 	mmi.set_meta("asset_path", asset_path)
 	mmi.set_meta("range_base", range_end)
 	mmi.set_meta("lod_group", true)
+	# refilled from _process as the eye moves, and never moved itself: nothing to interpolate
+	# between physics ticks, and an interpolated MultiMesh warns when its buffer is set off-tick
+	mmi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadows \
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mmi.visibility_range_end = range_end

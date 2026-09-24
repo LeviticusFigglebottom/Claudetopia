@@ -936,5 +936,1102 @@
         ]
       }
     }
+  },
+  "countryside": {
+    "_doc": "The countryside between the places, by landform (cells.scatter reads it after every other rule, so no other rule's draws move). `parcel` [lo, hi] is the field's number (fields.parcel_value, salt 402, the one the textures sow by; -1 is open ground): the textures sow barley past 0.70 to 0.79 and plough 0.60 to 0.72, so pasture is under 0.60 and the hay fields are 0.40 to 0.59. `near_place` [lo, hi, strength] is metres to a settlement's pad, and `wood_edge` [lo, hi, strength] the atlas woods' strength, 0 to 1, whose low end is a wood's margin.",
+    "downs": [
+      {
+        "kind": "herb",
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "tint_jitter": 0.1,
+        "asset": "flora/meadow_grass",
+        "density": 1500.0,
+        "scale": [
+          0.8,
+          1.3
+        ],
+        "slope_max": 0.38,
+        "moisture": [
+          0.18,
+          0.95
+        ],
+        "parcel": [
+          -1.0,
+          0.59
+        ],
+        "cluster": 0.25,
+        "cluster_threshold": 0.42,
+        "pad_keep": 0.35
+      },
+      {
+        "kind": "herb",
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "tint_jitter": 0.1,
+        "asset": "flora/meadow_grass",
+        "density": 1300.0,
+        "scale": [
+          0.8,
+          1.3
+        ],
+        "slope_max": 0.38,
+        "moisture": [
+          0.18,
+          0.95
+        ],
+        "parcel": [
+          0.4,
+          0.59
+        ],
+        "cluster": 0.0,
+        "cluster_threshold": 0.42,
+        "pad_keep": 0.35
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/buttercup",
+        "density": 520.0,
+        "scale": [
+          0.85,
+          1.25
+        ],
+        "slope_max": 0.35,
+        "parcel": [
+          0.4,
+          0.59
+        ],
+        "cluster": 0.7,
+        "cluster_threshold": 0.5
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/oxeye_daisy",
+        "density": 380.0,
+        "scale": [
+          0.85,
+          1.25
+        ],
+        "slope_max": 0.35,
+        "parcel": [
+          0.4,
+          0.59
+        ],
+        "cluster": 0.7,
+        "cluster_threshold": 0.5
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/buttercup",
+        "density": 260.0,
+        "scale": [
+          0.8,
+          1.2
+        ],
+        "slope_max": 0.35,
+        "moisture": [
+          0.3,
+          1.0
+        ],
+        "parcel": [
+          -1.0,
+          0.59
+        ],
+        "cluster": 0.92,
+        "cluster_threshold": 0.6,
+        "cluster_edge": 0.1,
+        "cluster_boost": 3.4
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/oxeye_daisy",
+        "density": 190.0,
+        "scale": [
+          0.8,
+          1.2
+        ],
+        "slope_max": 0.35,
+        "moisture": [
+          0.15,
+          0.7
+        ],
+        "parcel": [
+          -1.0,
+          0.59
+        ],
+        "cluster": 0.92,
+        "cluster_threshold": 0.6,
+        "cluster_edge": 0.1,
+        "cluster_boost": 3.4
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/barley_tuft",
+        "density": 2400.0,
+        "scale": [
+          0.9,
+          1.2
+        ],
+        "slope_max": 0.25,
+        "moisture": [
+          0.1,
+          0.75
+        ],
+        "parcel": [
+          0.74,
+          1.0
+        ],
+        "cluster": 0.0,
+        "near_place": [
+          0.0,
+          900.0,
+          0.5
+        ]
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/poppy",
+        "density": 45.0,
+        "scale": [
+          0.8,
+          1.1
+        ],
+        "slope_max": 0.25,
+        "parcel": [
+          0.74,
+          1.0
+        ],
+        "cluster": 0.8,
+        "cluster_threshold": 0.55,
+        "near_hedge": [
+          0.0,
+          12.0,
+          0.6
+        ]
+      },
+      {
+        "asset": "props/hay_bale",
+        "kind": "prop",
+        "density": 1.2,
+        "scale": [
+          0.9,
+          1.1
+        ],
+        "slope_max": 0.2,
+        "parcel": [
+          0.4,
+          0.59
+        ],
+        "near_place": [
+          0.0,
+          800.0,
+          0.95
+        ],
+        "cluster": 0.6,
+        "tint_index": -1,
+        "tint_strength": 0.0
+      },
+      {
+        "kind": "herb",
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "tint_jitter": 0.1,
+        "asset": "flora/bracken",
+        "density": 420.0,
+        "scale": [
+          0.8,
+          1.4
+        ],
+        "slope_max": 0.6,
+        "wood_edge": [
+          0.05,
+          0.55,
+          1.0
+        ],
+        "cluster": 0.5
+      },
+      {
+        "kind": "herb",
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "tint_jitter": 0.1,
+        "asset": "flora/bracken",
+        "density": 90.0,
+        "scale": [
+          0.7,
+          1.2
+        ],
+        "slope_max": 0.6,
+        "near_hedge": [
+          0.3,
+          3.5,
+          0.95
+        ],
+        "cluster": 0.55
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/foxglove",
+        "density": 70.0,
+        "scale": [
+          0.8,
+          1.2
+        ],
+        "slope_max": 0.6,
+        "wood_edge": [
+          0.05,
+          0.5,
+          0.95
+        ],
+        "cluster": 0.75,
+        "cluster_threshold": 0.55
+      },
+      {
+        "asset": "flora/briar_vine",
+        "kind": "bush",
+        "density": 30.0,
+        "scale": [
+          0.6,
+          1.0
+        ],
+        "slope_max": 0.55,
+        "wood_edge": [
+          0.05,
+          0.55,
+          0.9
+        ],
+        "cluster": 0.5,
+        "tint_index": 1,
+        "tint_strength": 0.3
+      },
+      {
+        "asset": "flora/briar_vine",
+        "kind": "bush",
+        "density": 8.0,
+        "scale": [
+          0.5,
+          0.9
+        ],
+        "slope_max": 0.55,
+        "near_hedge": [
+          0.0,
+          3.0,
+          0.95
+        ],
+        "cluster": 0.4,
+        "tint_index": 1,
+        "tint_strength": 0.3
+      },
+      {
+        "asset": "trees/hazel",
+        "kind": "tree",
+        "density": 14.0,
+        "scale": [
+          0.7,
+          1.2
+        ],
+        "slope_max": 0.5,
+        "near_hedge": [
+          0.0,
+          4.0,
+          0.95
+        ],
+        "cluster": 0.45
+      },
+      {
+        "asset": "trees/hazel",
+        "kind": "tree",
+        "density": 22.0,
+        "scale": [
+          0.6,
+          1.15
+        ],
+        "slope_max": 0.5,
+        "wood_edge": [
+          0.05,
+          0.6,
+          0.95
+        ],
+        "cluster": 0.4
+      },
+      {
+        "asset": "trees/oak",
+        "kind": "tree",
+        "density": 7.0,
+        "scale": [
+          0.32,
+          0.6
+        ],
+        "slope_max": 0.45,
+        "moisture": [
+          0.15,
+          0.85
+        ],
+        "cluster": 0.85,
+        "cluster_threshold": 0.56,
+        "cluster_boost": 3.2
+      },
+      {
+        "asset": "trees/oak",
+        "kind": "tree",
+        "density": 0.35,
+        "scale": [
+          1.5,
+          1.95
+        ],
+        "slope_max": 0.3,
+        "parcel": [
+          -1.0,
+          0.59
+        ],
+        "cluster": 0.0
+      },
+      {
+        "asset": "trees/hawthorn",
+        "kind": "tree",
+        "density": 4.0,
+        "scale": [
+          0.4,
+          0.75
+        ],
+        "slope_max": 0.5,
+        "parcel": [
+          -1.0,
+          0.59
+        ],
+        "cluster": 0.88,
+        "cluster_threshold": 0.6,
+        "cluster_boost": 3.4
+      },
+      {
+        "asset": "trees/birch",
+        "kind": "tree",
+        "density": 9.0,
+        "scale": [
+          0.55,
+          1.25
+        ],
+        "slope_max": 0.5,
+        "moisture": [
+          0.2,
+          0.9
+        ],
+        "cluster": 0.92,
+        "cluster_threshold": 0.62,
+        "cluster_edge": 0.1,
+        "cluster_boost": 4.0
+      },
+      {
+        "asset": "trees/alder",
+        "kind": "tree",
+        "density": 26.0,
+        "scale": [
+          0.6,
+          1.2
+        ],
+        "slope_max": 0.4,
+        "moisture": [
+          0.35,
+          1.0
+        ],
+        "near_water": [
+          1.0,
+          14.0,
+          0.97
+        ],
+        "cluster": 0.5
+      },
+      {
+        "asset": "trees/willow",
+        "kind": "tree",
+        "density": 12.0,
+        "scale": [
+          0.7,
+          1.2
+        ],
+        "slope_max": 0.3,
+        "moisture": [
+          0.45,
+          1.0
+        ],
+        "near_water": [
+          0.0,
+          10.0,
+          0.97
+        ],
+        "cluster": 0.5
+      },
+      {
+        "asset": "rocks/fallen_log",
+        "kind": "rock",
+        "density": 4.0,
+        "scale": [
+          0.7,
+          1.15
+        ],
+        "slope_max": 0.4,
+        "wood_edge": [
+          0.08,
+          1.0,
+          0.97
+        ],
+        "cluster": 0.4
+      },
+      {
+        "asset": "rocks/fallen_log",
+        "kind": "rock",
+        "density": 0.5,
+        "scale": [
+          0.6,
+          1.0
+        ],
+        "slope_max": 0.35,
+        "near_hedge": [
+          0.0,
+          8.0,
+          0.9
+        ],
+        "cluster": 0.0
+      }
+    ],
+    "delta": [
+      {
+        "kind": "herb",
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "tint_jitter": 0.1,
+        "asset": "flora/meadow_grass",
+        "density": 1700.0,
+        "scale": [
+          0.8,
+          1.3
+        ],
+        "slope_max": 0.38,
+        "moisture": [
+          0.22,
+          0.72
+        ],
+        "parcel": [
+          -1.0,
+          1.0
+        ],
+        "cluster": 0.3,
+        "cluster_threshold": 0.42,
+        "pad_keep": 0.35
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/buttercup",
+        "density": 420.0,
+        "scale": [
+          0.8,
+          1.2
+        ],
+        "slope_max": 0.3,
+        "moisture": [
+          0.45,
+          0.88
+        ],
+        "cluster": 0.9,
+        "cluster_threshold": 0.56,
+        "cluster_edge": 0.1,
+        "cluster_boost": 3.2
+      },
+      {
+        "asset": "trees/birch",
+        "kind": "tree",
+        "density": 7.0,
+        "scale": [
+          0.55,
+          1.15
+        ],
+        "slope_max": 0.4,
+        "moisture": [
+          0.25,
+          0.7
+        ],
+        "cluster": 0.9,
+        "cluster_threshold": 0.6,
+        "cluster_boost": 3.6
+      },
+      {
+        "asset": "trees/hawthorn",
+        "kind": "tree",
+        "density": 3.0,
+        "scale": [
+          0.45,
+          0.85
+        ],
+        "slope_max": 0.4,
+        "moisture": [
+          0.2,
+          0.65
+        ],
+        "cluster": 0.85,
+        "cluster_threshold": 0.58,
+        "cluster_boost": 3.2
+      },
+      {
+        "asset": "trees/willow",
+        "kind": "tree",
+        "density": 0.25,
+        "scale": [
+          1.2,
+          1.6
+        ],
+        "slope_max": 0.3,
+        "moisture": [
+          0.35,
+          0.8
+        ],
+        "cluster": 0.0
+      },
+      {
+        "asset": "trees/hazel",
+        "kind": "tree",
+        "density": 6.0,
+        "scale": [
+          0.6,
+          1.1
+        ],
+        "slope_max": 0.4,
+        "moisture": [
+          0.3,
+          0.75
+        ],
+        "cluster": 0.8,
+        "cluster_threshold": 0.55
+      },
+      {
+        "asset": "rocks/fallen_log",
+        "kind": "rock",
+        "density": 2.0,
+        "scale": [
+          0.6,
+          1.05
+        ],
+        "slope_max": 0.3,
+        "moisture": [
+          0.45,
+          1.0
+        ],
+        "near_water": [
+          2.0,
+          30.0,
+          0.6
+        ],
+        "cluster": 0.5
+      },
+      {
+        "kind": "herb",
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "tint_jitter": 0.1,
+        "asset": "flora/bracken",
+        "density": 120.0,
+        "scale": [
+          0.7,
+          1.2
+        ],
+        "slope_max": 0.5,
+        "moisture": [
+          0.2,
+          0.55
+        ],
+        "cluster": 0.7,
+        "cluster_threshold": 0.55
+      }
+    ],
+    "lake_basin": [
+      {
+        "kind": "herb",
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "tint_jitter": 0.1,
+        "asset": "flora/meadow_grass",
+        "density": 1200.0,
+        "scale": [
+          0.8,
+          1.3
+        ],
+        "slope_max": 0.38,
+        "moisture": [
+          0.18,
+          0.95
+        ],
+        "parcel": [
+          -1.0,
+          0.59
+        ],
+        "cluster": 0.25,
+        "cluster_threshold": 0.42,
+        "pad_keep": 0.35
+      },
+      {
+        "kind": "herb",
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "tint_jitter": 0.1,
+        "asset": "flora/meadow_grass",
+        "density": 1100.0,
+        "scale": [
+          0.8,
+          1.3
+        ],
+        "slope_max": 0.38,
+        "moisture": [
+          0.18,
+          0.95
+        ],
+        "parcel": [
+          0.4,
+          0.59
+        ],
+        "cluster": 0.0,
+        "cluster_threshold": 0.42,
+        "pad_keep": 0.35
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/oxeye_daisy",
+        "density": 300.0,
+        "scale": [
+          0.85,
+          1.2
+        ],
+        "slope_max": 0.35,
+        "parcel": [
+          0.4,
+          0.59
+        ],
+        "cluster": 0.7,
+        "cluster_threshold": 0.5
+      },
+      {
+        "kind": "herb",
+        "tint_index": -1,
+        "tint_strength": 0.0,
+        "tint_jitter": 0.08,
+        "asset": "flora/buttercup",
+        "density": 200.0,
+        "scale": [
+          0.8,
+          1.2
+        ],
+        "slope_max": 0.35,
+        "parcel": [
+          -1.0,
+          0.59
+        ],
+        "cluster": 0.92,
+        "cluster_threshold": 0.6,
+        "cluster_edge": 0.1,
+        "cluster_boost": 3.4
+      },
+      {
+        "asset": "trees/birch",
+        "kind": "tree",
+        "density": 5.0,
+        "scale": [
+          0.55,
+          1.2
+        ],
+        "slope_max": 0.5,
+        "cluster": 0.9,
+        "cluster_threshold": 0.62,
+        "cluster_boost": 3.6
+      },
+      {
+        "asset": "trees/hazel",
+        "kind": "tree",
+        "density": 10.0,
+        "scale": [
+          0.7,
+          1.2
+        ],
+        "slope_max": 0.5,
+        "near_hedge": [
+          0.0,
+          4.0,
+          0.95
+        ],
+        "cluster": 0.45
+      },
+      {
+        "asset": "rocks/fallen_log",
+        "kind": "rock",
+        "density": 0.6,
+        "scale": [
+          0.6,
+          1.0
+        ],
+        "slope_max": 0.35,
+        "near_hedge": [
+          0.0,
+          8.0,
+          0.9
+        ],
+        "cluster": 0.0
+      }
+    ],
+    "forest_rise": [
+      {
+        "asset": "rocks/fallen_log",
+        "kind": "rock",
+        "density": 5.0,
+        "scale": [
+          0.8,
+          1.4
+        ],
+        "slope_max": 0.45,
+        "wood_edge": [
+          0.3,
+          1.0,
+          0.9
+        ],
+        "cluster": 0.4
+      }
+    ]
+  },
+  "shores": {
+    "_doc": "The shores (worldgen.shores), read after every other rule so none of their draws move: by landform, and `*` for every one. `shore` is the classes a rule grows on (sand, shingle, rock, cliff, mud, reeds: the shore's own kind, out to 60 m either side of the water's edge, and a sandy bay's dunes to 210 m), and `shore_d` [lo, hi, strength] the metres from the water's edge, negative out on the water. The sea's tide line is `height` over the sea; a lake's shallows are `water` at a `height` over the sea's, which is how a reed bed keeps out of the salt.",
+    "*": [
+      {
+        "asset": "flora/wrack",
+        "kind": "herb",
+        "density": 380.0,
+        "scale": [
+          0.8,
+          1.4
+        ],
+        "slope_max": 0.35,
+        "shore": [
+          "sand",
+          "shingle"
+        ],
+        "shore_d": [
+          1.0,
+          14.0,
+          1.0
+        ],
+        "height": [
+          0.3,
+          1.6
+        ],
+        "cluster": 0.75,
+        "cluster_threshold": 0.5,
+        "rows": 25.0,
+        "tint_index": -1,
+        "tint_strength": 0.0
+      },
+      {
+        "asset": "flora/wrack",
+        "kind": "herb",
+        "density": 160.0,
+        "scale": [
+          0.7,
+          1.2
+        ],
+        "slope_max": 0.5,
+        "shore": [
+          "rock"
+        ],
+        "shore_d": [
+          0.0,
+          10.0,
+          1.0
+        ],
+        "height": [
+          -0.2,
+          1.2
+        ],
+        "cluster": 0.6,
+        "tint_index": -1,
+        "tint_strength": 0.0
+      },
+      {
+        "asset": "rocks/driftwood",
+        "kind": "rock",
+        "density": 7.0,
+        "scale": [
+          0.7,
+          1.3
+        ],
+        "slope_max": 0.35,
+        "shore": [
+          "sand",
+          "shingle"
+        ],
+        "shore_d": [
+          4.0,
+          28.0,
+          1.0
+        ],
+        "height": [
+          0.6,
+          3.5
+        ],
+        "cluster": 0.5,
+        "tint_index": -1,
+        "tint_strength": 0.0
+      },
+      {
+        "asset": "rocks/driftwood",
+        "kind": "rock",
+        "density": 2.0,
+        "scale": [
+          0.6,
+          1.1
+        ],
+        "slope_max": 0.5,
+        "shore": [
+          "rock",
+          "reeds",
+          "mud"
+        ],
+        "shore_d": [
+          0.0,
+          12.0,
+          1.0
+        ],
+        "height": [
+          0.3,
+          900.0
+        ],
+        "cluster": 0.4,
+        "tint_index": -1,
+        "tint_strength": 0.0
+      },
+      {
+        "asset": "flora/marram",
+        "kind": "herb",
+        "density": 1100.0,
+        "scale": [
+          0.8,
+          1.35
+        ],
+        "slope_max": 0.75,
+        "shore": [
+          "sand"
+        ],
+        "shore_d": [
+          22.0,
+          200.0,
+          1.0
+        ],
+        "height": [
+          1.2,
+          40.0
+        ],
+        "tpi": [
+          -0.2,
+          9.0,
+          0.7
+        ],
+        "cluster": 0.3,
+        "cluster_threshold": 0.4,
+        "tint_index": 1,
+        "tint_strength": 0.25,
+        "tint_jitter": 0.1
+      },
+      {
+        "asset": "rocks/boulder",
+        "kind": "rock",
+        "density": 22.0,
+        "scale": [
+          0.5,
+          1.6
+        ],
+        "slope_max": 1.4,
+        "shore": [
+          "rock",
+          "cliff"
+        ],
+        "shore_d": [
+          0.0,
+          30.0,
+          1.0
+        ],
+        "height": [
+          -0.3,
+          4.0
+        ],
+        "cluster": 0.45
+      },
+      {
+        "asset": "flora/reeds",
+        "kind": "herb",
+        "density": 1400.0,
+        "scale": [
+          0.8,
+          1.3
+        ],
+        "slope_max": 0.3,
+        "water": true,
+        "shore": [
+          "reeds"
+        ],
+        "shore_d": [
+          -26.0,
+          0.0,
+          1.0
+        ],
+        "height": [
+          1.0,
+          900.0
+        ],
+        "cluster": 0.45,
+        "cluster_threshold": 0.4,
+        "tint_index": 1,
+        "tint_strength": 0.25
+      },
+      {
+        "asset": "flora/reeds",
+        "kind": "herb",
+        "density": 500.0,
+        "scale": [
+          0.7,
+          1.2
+        ],
+        "slope_max": 0.3,
+        "water": true,
+        "shore": [
+          "mud"
+        ],
+        "shore_d": [
+          -8.0,
+          0.0,
+          1.0
+        ],
+        "height": [
+          1.0,
+          900.0
+        ],
+        "cluster": 0.7,
+        "cluster_threshold": 0.5,
+        "tint_index": 1,
+        "tint_strength": 0.25
+      },
+      {
+        "asset": "flora/bulrush",
+        "kind": "herb",
+        "density": 160.0,
+        "scale": [
+          0.8,
+          1.2
+        ],
+        "slope_max": 0.3,
+        "water": true,
+        "shore": [
+          "reeds",
+          "mud"
+        ],
+        "shore_d": [
+          -6.0,
+          0.0,
+          1.0
+        ],
+        "height": [
+          1.0,
+          900.0
+        ],
+        "cluster": 0.7,
+        "tint_index": 1,
+        "tint_strength": 0.25
+      },
+      {
+        "asset": "flora/sedge_tussock",
+        "kind": "herb",
+        "density": 420.0,
+        "scale": [
+          0.8,
+          1.3
+        ],
+        "slope_max": 0.3,
+        "shore": [
+          "reeds",
+          "mud"
+        ],
+        "shore_d": [
+          0.0,
+          16.0,
+          1.0
+        ],
+        "cluster": 0.5,
+        "tint_index": 1,
+        "tint_strength": 0.3
+      }
+    ],
+    "delta": [
+      {
+        "asset": "flora/sedge_tussock",
+        "kind": "herb",
+        "density": 520.0,
+        "scale": [
+          0.8,
+          1.35
+        ],
+        "slope_max": 0.3,
+        "moisture": [
+          0.45,
+          1.0
+        ],
+        "near_water": [
+          0.0,
+          18.0,
+          0.8
+        ],
+        "cluster": 0.55,
+        "cluster_threshold": 0.42,
+        "tint_index": 1,
+        "tint_strength": 0.3,
+        "pad_keep": 0.2
+      },
+      {
+        "asset": "flora/sedge_tussock",
+        "kind": "herb",
+        "density": 140.0,
+        "scale": [
+          0.7,
+          1.2
+        ],
+        "slope_max": 0.3,
+        "moisture": [
+          0.3,
+          1.0
+        ],
+        "cluster": 0.8,
+        "cluster_threshold": 0.55,
+        "tint_index": 1,
+        "tint_strength": 0.3
+      }
+    ]
   }
 }

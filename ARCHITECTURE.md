@@ -285,7 +285,12 @@ No GPU. Forward+ runs on lavapipe (software Vulkan) and is the shipped default.
   over half of a village's draws are shadow passes. The capture runner runs it after every
   shot with `-- --attribute` and writes `<out>/attribution.json`; the console command is
   `draws [measure]`. `tools/capture/plans/streets.json` is the six street shots, the worst
-  frames in the game, on their own.
+  frames in the game, on their own. `budget_merrowby.json` is the Merrowby shot alone, which
+  DESIGN's budget is measured on. `settlements.json` is what the settlements and the encounter
+  places were judged by: five regions' streets, Merrowby's street, market, gardens, gate and
+  fingerpost from inside it, and the places whose encounters stand somewhere in particular.
+  `tools/capture/run_plan.sh <plan> <out> [compat|forward] [--attribute]` runs any plan on
+  either renderer.
 * A plan with a `cinematic` block (`tools/capture/plans/opening.json`) loads the world with its
   body standing and has `CinematicPlayer.scrub()` pose each shot's key frames, so the PNGs are
   the player's own frames, letterbox and subtitles included, with `cinematic.json` beside them

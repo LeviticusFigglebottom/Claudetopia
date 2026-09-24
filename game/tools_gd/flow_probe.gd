@@ -94,6 +94,10 @@ var mode := "new"            # new | load | continue | new-game
 var load_slot := ""
 ## --naming-tour=quick makes two looks and skips the presets, for iterating on the screen.
 var tour_quick := false
+## --wander=SECONDS: once a way in has handed the body over, walk it about the country for that long
+## the way a player does (run, sprint, turn, stop), so the session's errors are a session's and not
+## only the start's (tools/debug/error_census.py reads the log).
+var wander_seconds := 0.0
 
 var _checks: Array[Dictionary] = []
 ## What _photograph_the_opening saw, for _watch_the_opening to report.
@@ -124,6 +128,8 @@ func _ready() -> void:
 		elif a.begins_with("--naming-tour"):
 			mode = "naming-tour"
 			tour_quick = a == "--naming-tour=quick"
+		elif a.begins_with("--wander="):
+			wander_seconds = float(a.substr(9))
 	out_dir = _absolute(out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_errors_at_start = Log.error_count
@@ -158,7 +164,45 @@ func _run() -> void:
 			await _naming_tour()
 		_:
 			await _straight_in_flow()
+	if wander_seconds > 0.0 and _spawned is Node3D:
+		await _wander(wander_seconds)
 	_finish()
+
+
+## Waits `seconds` on the wall clock, a frame at a time: a timer runs on game time, which a slow
+## software renderer stretches.
+func _wall_seconds(seconds: float) -> void:
+	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+
+
+## Walks the body about for `seconds`: forward in legs of a few seconds, sprinting on every other
+## one, turning the view between legs, and stopping now and then, from wherever it was handed over.
+func _wander(seconds: float) -> void:
+	var body := _spawned as Node3D
+	var from := body.global_position
+	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
+	var leg := 0
+	while Time.get_ticks_msec() < until and is_instance_valid(body):
+		var turn := InputEventMouseMotion.new()
+		turn.relative = Vector2(180.0 if leg % 3 != 2 else -260.0, 0.0)
+		turn.position = get_viewport().get_visible_rect().size * 0.5
+		Input.parse_input_event(turn)
+		Input.action_press("move_forward")
+		if leg % 2 == 1:
+			Input.action_press("sprint")
+		await _wall_seconds(4.0 if leg % 4 != 3 else 1.5)
+		Input.action_release("sprint")
+		if leg % 4 == 3:
+			Input.action_release("move_forward")
+			await _wall_seconds(1.5)
+		leg += 1
+	Input.action_release("move_forward")
+	Input.action_release("sprint")
+	if is_instance_valid(body):
+		_notes.append("wandered %d legs over %.0f s, %.0f m from where the body was handed over" % [
+				leg, seconds, Vector2(body.global_position.x - from.x, body.global_position.z - from.z).length()])
 
 
 # --- the three ways in ------------------------------------------------------------------------
@@ -1440,6 +1484,25 @@ static func _mean_luma(img: Image) -> float:
 	return total / (64.0 * 36.0)
 
 
+## The gate the editor's debugger never had: a session that reports any engine error, SCRIPT ERROR
+## or shader error, from the first autoload to here, is not a passing one. ErrorLog heard every one
+## of them (warnings are counted in the note, not failed on: an engine deprecation is not ours).
+func _check_engine_errors() -> void:
+	var elog := get_node_or_null("/root/ErrorLog")
+	if elog == null or not bool(elog.get("listening")):
+		_notes.append("ErrorLog is not listening on this engine; engine errors were not counted")
+		return
+	var errors := int(elog.call("count", "error")) + int(elog.call("count", "script_error")) \
+			+ int(elog.call("count", "shader_error"))
+	var worst: Array[String] = []
+	for r: Dictionary in elog.call("sorted_reports"):
+		if str(r["kind"]) in ["error", "script_error", "shader_error"] and worst.size() < 5:
+			worst.append("x%d %s <- %s" % [int(r["count"]), str(r["message"]).left(120), r["source"]])
+	_notes.append("engine reports: %d errors, %d warnings" % [errors, int(elog.call("count", "warning"))])
+	_check(errors == 0, "the session reported no engine or script errors%s"
+			% ("" if worst.is_empty() else ": " + "; ".join(worst)))
+
+
 func _check(ok: bool, what: String) -> bool:
 	_checks.append({"ok": ok, "what": what})
 	print("[flow] %s  %s" % ["ok  " if ok else "FAIL", what])
@@ -1466,6 +1529,7 @@ func _absolute(path: String) -> String:
 
 
 func _finish() -> void:
+	_check_engine_errors()
 	var failed := 0
 	for c in _checks:
 		if not bool(c["ok"]):

@@ -27,6 +27,22 @@ const POI_PEOPLE := {
 	"core:npc/gisel_morneth": "core:poi/thirteenth_colossus",
 	"core:npc/wennick_anthar": "core:poi/thirteenth_colossus",
 	"core:npc/arn_sweeting": "core:poi/sweepers_lean_to",
+	"core:npc/nell_hurdlegate": "core:poi/hurdlegate_farm",
+	"core:npc/aud_brow_end": "core:poi/brow_end_farm",
+	"core:npc/tam_hatchmoor": "core:poi/hatchmoor_farm",
+	"core:npc/joss_coldharbour": "core:poi/coldharbour_farm",
+	"core:npc/bessa_pennywort": "core:poi/pennywort_fields",
+	"core:npc/rab_ashway": "core:poi/ashway_farm",
+	"core:npc/maud_rookwell": "core:poi/grey_end_farm",
+	"core:npc/hesta_southgate": "core:poi/southgate_farm",
+	"core:npc/wil_ridgeway": "core:poi/ridgeway_farm",
+	"core:npc/ebb_fallowgate": "core:poi/fallowgate_farm",
+	"core:npc/corran_larkfield": "core:poi/larkfield_farm",
+	"core:npc/wat_hazel": "core:poi/hazel_bottom_farm",
+	"core:npc/ossie_cress": "core:poi/cress_mill",
+	"core:npc/jenet_lark": "core:poi/lark_mill",
+	"core:npc/gurd_ko_skarl": "core:poi/skarl_mill",
+	"core:npc/brann_of_ruddow": "core:poi/rudd_mill",
 }
 
 var host: Node3D
@@ -122,7 +138,9 @@ func test_every_person_a_sentence_names_lives_at_that_point_of_interest() -> voi
 
 
 ## A body stands exactly on its marker, so two people working one marker at one hour stand inside
-## each other: the Sayers' second chair was first put on his colleague's spot at the dig.
+## each other: the Sayers' second chair was first put on his colleague's spot at the dig. A town's
+## market square on market day is not one of these: the farmers come in to it from all round, and
+## a settlement's square is a gathering marker that stands everybody sent to it round it.
 func test_no_two_people_work_one_marker_at_once() -> void:
 	for day in 7:
 		for half in 48:
@@ -131,6 +149,8 @@ func test_no_two_people_work_one_marker_at_once() -> void:
 			for id in POI_PEOPLE:
 				var entry := Schedules.entry_for_def(ContentDB.get_or_empty(str(id)), day, hour)
 				if bool(entry.get("indoors", false)) or str(entry.get("spot", "")) == "":
+					continue
+				if Ids.type_of(str(entry.get("place", ""))) != "poi":
 					continue
 				var key := "%s|%s" % [entry.get("place", ""), entry.get("spot", "")]
 				assert_false(taken.has(key), "%s and %s both stand at '%s' at %.2f on day %d" % [taken.get(key, ""), id,
@@ -247,8 +267,11 @@ func test_everyone_stands_on_their_marker_at_every_hour_they_work() -> void:
 			var entry: Dictionary = e
 			if str(entry.get("place", "")) != place or Schedules.is_indoors(entry):
 				continue
+			# the clock counts days from one, and `set_time` leaves the day alone for anything less:
+			# an hour first found on day nought (a Tollday) was stood on whatever day the last
+			# person's hour had left on the clock, which for a farmer was their market day, in town
 			var day := -1
-			for candidate in 7:
+			for candidate in range(1, 8):
 				if day < 0 and Schedules.applies_on(entry.get("days", "all"), Schedules.weekday_of(candidate)):
 					day = candidate
 			assert_true(day >= 0, "%s works '%s' on no day at all" % [id, entry.get("spot", "")])

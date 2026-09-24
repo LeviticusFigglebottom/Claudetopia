@@ -1514,3 +1514,70 @@ walk per option instead of one per path.
 **Consequences.** The walker is slow, about a second per step plus streaming. `--only` and
 `--no-branches` narrow it. Its WORLD lines name what the land does to a place the content names,
 with coordinates, and they go to the land agent rather than into the content.
+
+## 2026-09-24 · A landed blow holds the picture, never the clock
+**Decision.** A landed blow holds both bodies' pictures still for a few frames (a hit-stop): from
+0.035 s for a dagger to 0.115 s for a heavy greatsword blow, 0.6 of that when blocked, 0.1 s on a
+parry. Then each picture plays at up to twice speed until it has caught up. The AnimationDriver's
+timeline keeps running through it, so the hit windows, the cancels, the buffer and every other
+§5.3 timing land on the same physics frame as they would without a hold. `test_impact` checks this
+frame by frame. The camera kicks, the struck material throws its bits, and a heavy drives the foe
+back by 0.16-0.85 m, depending on the weapon's weight.
+**Why.** The playtest asked for attacks that feel like hits, "in the Dark Souls 2 and Fable manner".
+A hit-stop is most of that feel, but a hit-stop that stops the game would lengthen every combo and
+recovery by its frames, and §5.3's timings are measured and fixed. The rig is already only a
+picture of the timeline (DECISIONS 2026-09-22), so holding the picture alone gets the feel for the
+cost of a few frames' lag in what is seen.
+**Alternatives.** Scaling Engine.time_scale for the hold, which is what most games do: it stretches
+every timer in the world, including the other bodies' fights and the §5.3 windows. Pausing both
+actors' logic: the same problem, only local.
+**Consequences.** For about a tenth of a second after a heavy blow, the picture runs up to 0.115 s
+behind the timeline. Hit_start of a chained blow can come while the picture is still catching up;
+at twice speed it has caught up within the next 0.115 s. The hold can be turned off
+(accessibility.hit_pause), the kick scaled to nothing (accessibility.camera_shake) and blood turned
+off (gameplay.blood).
+
+## 2026-09-24 · A long weapon's butt is held out of the body like its blade, and a fight's hand-over blends the two poses
+**Decision.** The attack audit measures what is behind the grip as well as the blade.
+- test_attack_motion measures from 13 cm behind the grip, past the hands, to the longest weapon
+  each clip set swings: a long axe's haft for 1H (0.16 m) and a spear's butt for 2H (1.18 m).
+- test_enemy_attack_motion measures each foe's own weapon, including a dressed prop's length behind
+  the hand.
+- Both hold the butt out of the torso, to the same limit as the blade.
+
+The clips keep the butt out in four ways:
+- The 2H chop, the 2H heavy and the 1H heavy lead the blade further through the keys where the
+  butt came round into the body.
+- The 2H sweep starts with its blade laid back and swings wider.
+- The riposte and the backstab rest further from the chest.
+- A foe with no `held` holds the weapon its attack clips are made for (`Enemy.held_for`), melee
+  first.
+
+A fight's hand-over is a swing into the next, a roll or a flinch. The model now blends it itself
+(`HumanoidModel._blend_handover`), bone by bone, over the same 0.1 s: each rotation is slerped from
+the pose the last clip left to the new clip's pose, eased in and out. The state machine's edge
+switches at once.
+**Why.** The spears, staffs and the scythe swing the 2H clips. Measured in the engine:
+- their butts went 6-13 cm into the chest;
+- a greatsword's or a hammer's pommel went 4-9 cm in;
+- a long haft went 2-4 cm in during the riposte and the backstab;
+- the chorister's staff went 7.5 cm in, because it held the staff through its censer swing.
+
+The 2H chain's hand-over also put a spear's butt 9.3 cm into the chest, though neither clip does. To
+cross-fade two clips, Godot's AnimationMixer takes each clip's turn of a bone from the bone's rest,
+weights it, and composes one over the other. When the two poses are far apart, as the chop's
+follow-through and the sweep's opening are, the result is not the pose between them.
+**Alternatives.**
+- Starting the sweep in the chop's own pose, so the mixer blends two nearly equal poses. That was
+  clean in the chain. But foes play the sweep cold, and their blade flicked 90° to the left in
+  three frames before the wind-up.
+- A second, chained copy of the sweep: one more clip on the rig and in every transplant.
+- Holding polearms by the end, so nothing is behind the hands. That changes a spear's reach and
+  look, and a staff is held in the middle.
+**Consequences.**
+- The sidecar is unchanged, so the §5.3 timings are exactly as they were. The blend changes only
+  the picture, and it takes the 0.1 s the cross-fade took.
+- Through the blend, the last clip's pose stands still rather than playing on underneath: a
+  follow-through stops where the next swing takes it up.
+- Every hand-over along a fight edge blends this way, for the player, foes and people alike. The
+  fades into and out of walking are still the mixer's.

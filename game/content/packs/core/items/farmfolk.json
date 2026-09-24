@@ -1,0 +1,14 @@
+[
+  {
+    "id": "core:item/dots_bell",
+    "name": "Dot's Bell",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 1,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A little brass sheep-bell on a knot of red wool, dented on one side where a ewe has knocked it against every gatepost in Ashwell for fourteen years. When it rings, one old ewe on the downs gets up and follows it home."
+  }
+]
