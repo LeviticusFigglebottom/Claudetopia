@@ -259,6 +259,114 @@ def land_gaps(walk: np.ndarray, size_m: float, thing_list: list, far: float = LA
             "blobs": blobs, "dist": dist, "empty": empty}
 
 
+## A wayside find is small: a stone, a gibbet, a cairn, a shrine in a wall. It asks the builder
+## for a pad of about this radius, not the 25 m every other point of interest gets, so it can sit
+## on a dale side without a quarry's worth of cut and fill.
+WAYSIDE_PAD_M = 12.0
+## where a wayside find may stand: a pace off the road, on ground a pad can take, clear of water
+## and of every other thing. The spacing answers "how many does a gap want": a find a pace off
+## the road is passed along about 2 * sqrt(NEAR_M^2 - SITE_OFF_M^2) of it, about 110 m.
+SITE_OFF_M = (16.0, 22.0, 28.0)
+SITE_SLOPE = 0.36          # about 20 degrees across a wayside pad (WAYSIDE_PAD_M)
+## on a dale side there may be no such ground near the spot: then steeper, further along
+SITE_SLOPE_STEEP = 0.5     # about 27 degrees
+SHIFTS_M = (0.0, -30.0, 30.0, -60.0, 60.0, -90.0, 90.0, -120.0, 120.0, -150.0, 150.0)
+SHIFTS_STEEP_M = tuple(float(v) for v in range(-240, 241, 30))
+SITE_CLEAR_M = 110.0       # from every other thing
+SITE_ROAD_CLEAR_M = 12.0   # from every road's centre line
+SITE_RIVER_CLEAR_M = 14.0  # past a river's half width
+
+
+def sites(m: dict, only: list | None = None, provinces: list | None = None) -> list:
+    """Proposed places for wayside finds along the thin gaps, the longest first: enough evenly
+    along each gap that no run of it stays thin. Each is {gap, road, province, at, slope,
+    height}. A gap with no good ground at a spot gets nothing there, and says so ("none")."""
+    if "H" not in m:
+        return []
+    H, W, size_m = m["H"], m["W"], m["size_m"]
+    n = H.shape[0]
+    res = size_m / n
+    gz, gx = np.gradient(H.astype(np.float64), res)
+    slope = np.hypot(gx, gz)
+
+    def cell(x, z):
+        return (int(min(max((z + size_m / 2) / res, 0), n - 1)), int(min(max((x + size_m / 2) / res, 0), n - 1)))
+
+    rivers = []
+    rp = os.path.join(m.get("world", GEN), "rivers.json")
+    if os.path.exists(rp):
+        for r in json.load(open(rp, encoding="utf-8")):
+            rivers.append((np.asarray(r["points"], np.float64)[:, :2], float(r.get("width_m", 8.0))))
+    road_pts = np.concatenate([resample(p, 6.0)[0] for _rid, p in m["roads"] if len(p) > 1])
+    # clear of everything the packs stand anywhere, the mine mouths and edges included
+    taken = [(t["x"], t["z"]) for t in m["things"]]
+    for sub in (("places", "places.json"), ("pois", "pois.json")):
+        pp = os.path.join(m.get("pack", PACK), *sub)
+        if os.path.exists(pp):
+            for dd in json.load(open(pp, encoding="utf-8")):
+                pos = dd.get("position")
+                if pos and len(pos) >= 2 and str(dd.get("kind", "")) in NOT_THINGS:
+                    taken.append((float(pos[0]), float(pos[1])))
+    out = []
+    for gi, g in enumerate(m["road"]["thin"]):
+        if only and gi + 1 not in only:
+            continue
+        if provinces and g.get("province") not in provinces:
+            continue
+        pts = [tuple(p) for p in g["points"]]
+        P, s = resample(pts, 4.0)
+        L = float(s[-1])
+        k = max(int(math.ceil((g["length_m"] - THIN_M) / 410.0)), 1)
+        for i in range(1, k + 1):
+            at = L * i / (k + 1)
+            best = None
+            # the gentle tier first; on a dale side, steeper ground further along the gap
+            for max_slope, shifts in ((SITE_SLOPE, SHIFTS_M), (SITE_SLOPE_STEEP, SHIFTS_STEEP_M)):
+                if best is not None:
+                    break
+                for shift in shifts:
+                    u = min(max(at + shift, 0.0), L)
+                    c = int(np.searchsorted(s, u))
+                    c = min(max(c, 1), len(P) - 1)
+                    d = P[c] - P[c - 1]
+                    d = d / max(np.hypot(*d), 1e-6)
+                    side = np.array([-d[1], d[0]])
+                    for off in SITE_OFF_M:
+                        for sgn in (1.0, -1.0):
+                            x, z = P[c] + side * off * sgn
+                            i_, j_ = cell(x, z)
+                            if W[max(i_ - 3, 0):i_ + 4, max(j_ - 3, 0):j_ + 4].any():
+                                continue
+                            sl = float(slope[max(i_ - 1, 0):i_ + 2, max(j_ - 1, 0):j_ + 2].max())
+                            if sl > max_slope:
+                                continue
+                            if min(math.hypot(x - a, z - b) for a, b in taken) < SITE_CLEAR_M:
+                                continue
+                            if float(np.min(np.hypot(road_pts[:, 0] - x, road_pts[:, 1] - z))) < SITE_ROAD_CLEAR_M:
+                                continue
+                            wet = False
+                            for rpts, w in rivers:
+                                if float(np.min(np.hypot(rpts[:, 0] - x, rpts[:, 1] - z))) < w * 0.5 + SITE_RIVER_CLEAR_M:
+                                    wet = True
+                                    break
+                            if wet:
+                                continue
+                            score = sl + abs(shift) / 400.0 + off / 200.0
+                            if best is None or score < best[0]:
+                                best = (score, float(x), float(z), sl)
+            prov = g.get("province", "")
+            if best is None:
+                out.append({"gap": gi + 1, "road": g["road"], "province": prov, "at": None,
+                            "near": [float(v) for v in P[min(int(np.searchsorted(s, at)), len(P) - 1)]]})
+                continue
+            _sc, x, z, sl = best
+            taken.append((x, z))
+            i_, j_ = cell(x, z)
+            out.append({"gap": gi + 1, "road": g["road"], "province": province_name(m["atlas"], x, z),
+                        "at": [round(x), round(z)], "slope": round(sl, 3), "height": round(float(H[i_, j_]), 1)})
+    return out
+
+
 def province_name(atlas: dict, x: float, z: float) -> str:
     p, _ = ATLAS.province_at(atlas, x, z)
     return p.get("name", p["id"]) if p else ""
@@ -325,7 +433,7 @@ def measure(world: str = GEN, pack: str = PACK, atlas_path: str = ATLAS.ATLAS_PA
     road = road_gaps(rl, tl, near, thin)
     for g in road["thin"]:
         g["province"] = province_name(atlas, *g["mid"])
-    out = {"things": tl, "roads": rl, "road": road, "atlas": atlas}
+    out = {"things": tl, "roads": rl, "road": road, "atlas": atlas, "world": world, "pack": pack}
     if os.path.exists(os.path.join(world, "world_manifest.json")):
         H, W, size_m = load_land(world)
         walk = walkable(H, W, size_m, atlas)
@@ -360,6 +468,8 @@ def main(argv=None) -> int:
     ap.add_argument("--list", type=int, default=20, help="print this many of the longest gaps")
     ap.add_argument("--near", type=float, default=NEAR_M)
     ap.add_argument("--thin", type=float, default=THIN_M)
+    ap.add_argument("--sites", default="", help="write proposed wayside-find sites along the thin gaps here (JSON)")
+    ap.add_argument("--province", action="append", default=[], help="with --sites: only gaps in this province (repeatable)")
     a = ap.parse_args(argv)
     m = measure(a.world, a.pack, a.atlas, a.near, a.thin)
     text = summary(m)
@@ -381,6 +491,12 @@ def main(argv=None) -> int:
                         "empty": m["land"]["blobs"]})
         with open(a.json, "w", encoding="utf-8") as f:
             json.dump(doc, f, indent=1)
+    if a.sites:
+        ss = sites(m, provinces=a.province or None)
+        with open(a.sites, "w", encoding="utf-8") as f:
+            json.dump(ss, f, indent=1)
+        print("%d sites proposed (%d gaps with no good ground at a spot) -> %s" % (
+            sum(1 for s in ss if s["at"]), sum(1 for s in ss if not s["at"]), a.sites))
     if a.out:
         if "land" not in m:
             print("no built land at %s: no picture" % a.world)
