@@ -182,6 +182,7 @@ func _enter(node_id: String) -> void:
 
 	current_node_id = node_id
 	history.append(node_id)
+	EventBus.dialogue_node_entered.emit(npc_id, node_id)
 	Effects.apply_all(node.get("effects", []), ctx, "dialogue:" + dialogue_id)
 	_flush_side_effects()
 
@@ -484,6 +485,13 @@ func _flush_side_effects() -> void:
 	for n in ctx.notifications:
 		EventBus.emit_notify(str(n))
 	ctx.notifications.clear()
+	# the work a resident offers is their place's board, read over the conversation the way a
+	# notice post is read: the same screen, and the conversation is there when it closes
+	for place in ctx.work_offered:
+		var board := JobBoard.for_place(str(place))
+		if board != null:
+			EventBus.job_board_opened.emit(board, Peers.player())
+	ctx.work_offered.clear()
 
 
 # --- greetings ------------------------------------------------------------------------------------

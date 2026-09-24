@@ -155,5 +155,213 @@
 
   {"id": "core:encounter/standing_moot", "place": "core:place/standing_moot",
    "notes": "The Hart of Thorns keeps the circle. Its arena was always the Moot; nothing stood it up there, so the main thread's fourth account could not be finished.",
-   "spawns": [{"enemy": "core:boss/hart_of_thorns", "count": 1, "at": "the_circle"}]}
+   "spawns": [{"enemy": "core:boss/hart_of_thorns", "count": 1, "at": "the_circle"}]},
+
+  {"id": "core:encounter/orms_long_barrow", "place": "core:poi/orms_long_barrow",
+   "notes": "hedge-wights stand up among the stones at dusk",
+   "spawns": [{"enemy": "core:enemy/hedge_wight", "count": 2, "when": "dusk"}]},
+
+  {"id": "core:encounter/hurdle_fold", "place": "core:poi/hurdle_fold",
+   "notes": "down-wolves try the hurdles after dark",
+   "spawns": [{"enemy": "core:enemy/down_wolf", "count": 3, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/lambs_bottom", "place": "core:poi/lambs_bottom",
+   "notes": "a down-wolf pack in the hut",
+   "spawns": [{"enemy": "core:enemy/down_wolf", "count": 4, "spread": 3.0}]},
+
+  {"id": "core:encounter/the_last_field", "place": "core:poi/the_last_field",
+   "notes": "hedge-wights work the grey furrows at night",
+   "spawns": [{"enemy": "core:enemy/hedge_wight", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/the_grey_end", "place": "core:poi/the_grey_end",
+   "notes": "ash-wights wander up out of the Hush along the cliff after dark",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 3, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/hanging_coombe", "place": "core:poi/hanging_coombe",
+   "notes": "four bandits and the brute who leads them",
+   "spawns": [{"enemy": "core:enemy/roadside_bandit", "count": 4, "spread": 3.0}]},
+
+  {"id": "core:encounter/wolf_holt", "place": "core:poi/wolf_holt",
+   "notes": "a down-wolf pack in the fold",
+   "spawns": [{"enemy": "core:enemy/down_wolf", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/sunk_plaza", "place": "core:poi/sunk_plaza",
+   "notes": "choristers sing in the plaza after dark",
+   "spawns": [{"enemy": "core:enemy/chorister", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/bell_street", "place": "core:poi/bell_street",
+   "notes": "ash-wights shelter in the hollow bells",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/tower_of_vaelost", "place": "core:poi/tower_of_vaelost",
+   "notes": "a bell-bearer walks its round at the foot",
+   "spawns": [{"enemy": "core:enemy/bell_bearer", "count": 1}]},
+
+  {"id": "core:encounter/anthem_hall", "place": "core:poi/anthem_hall",
+   "notes": "choristers rehearse at dusk",
+   "spawns": [{"enemy": "core:enemy/chorister", "count": 2, "when": "dusk"}]},
+
+  {"id": "core:encounter/bell_garden", "place": "core:poi/bell_garden",
+   "notes": "a bell-bearer tends the rows",
+   "spawns": [{"enemy": "core:enemy/bell_bearer", "count": 1}]},
+
+  {"id": "core:encounter/ashwinter_carts", "place": "core:poi/ashwinter_carts",
+   "notes": "ash-wights sit on the cart-beds",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/ashcombe", "place": "core:poi/ashcombe",
+   "notes": "ash-wights at the hearths after dark",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 4, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/grey_wreck", "place": "core:poi/grey_wreck",
+   "notes": "ash-wights in the hold, still in their oilskins",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/gull_holm", "place": "core:poi/gull_holm",
+   "notes": "gutter drakes in the cellars",
+   "spawns": [{"enemy": "core:enemy/gutter_drake", "count": 4, "spread": 3.0}]},
+
+  {"id": "core:encounter/tallymans_folly", "place": "core:poi/tallymans_folly",
+   "notes": "cutpurses use the cellars after dark",
+   "spawns": [{"enemy": "core:enemy/cutpurse", "count": 3, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/long_jetty", "place": "core:poi/long_jetty",
+   "notes": "bog-drowned climb to the last post at midnight",
+   "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 2, "when": "midnight"}]},
+
+  {"id": "core:encounter/peat_hags", "place": "core:poi/peat_hags",
+   "notes": "leech-hounds come up to the cuttings after dark",
+   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 3, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/sunken_tower", "place": "core:poi/sunken_tower",
+   "notes": "sallowjaws bask on the drowned courses",
+   "spawns": [{"enemy": "core:enemy/sallowjaw", "count": 2}]},
+
+  {"id": "core:encounter/eelboat_graveyard", "place": "core:poi/eelboat_graveyard",
+   "notes": "bog-drowned walk among the hulls at night",
+   "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/crookstilts", "place": "core:poi/crookstilts",
+   "notes": "leech-hounds guard the stilts after dark",
+   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/mor_oul", "place": "core:poi/mor_oul",
+   "notes": "bog-drowned at their own doors",
+   "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/wold_force", "place": "core:poi/wold_force",
+   "notes": "thornhounds drink at the pool",
+   "spawns": [{"enemy": "core:enemy/thornhound", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/blackgill_falls", "place": "core:poi/blackgill_falls",
+   "notes": "weavers in the overhang",
+   "spawns": [{"enemy": "core:enemy/weaver", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/antler_chapel", "place": "core:poi/antler_chapel",
+   "notes": "a Hart-Knight keeps vigil",
+   "spawns": [{"enemy": "core:enemy/hart_knight", "count": 1}]},
+
+  {"id": "core:encounter/antler_boilers", "place": "core:poi/antler_boilers",
+   "notes": "poachers at the boiling pots",
+   "spawns": [{"enemy": "core:enemy/poacher", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/mossgrave", "place": "core:poi/mossgrave",
+   "notes": "a Warden stands among the mounds",
+   "spawns": [{"enemy": "core:enemy/warden", "count": 1}]},
+
+  {"id": "core:encounter/wardstone_line", "place": "core:poi/wardstone_line",
+   "notes": "thornhounds run the line",
+   "spawns": [{"enemy": "core:enemy/thornhound", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/the_sentinels", "place": "core:poi/the_sentinels",
+   "notes": "wardens at dusk",
+   "spawns": [{"enemy": "core:enemy/warden", "count": 2, "when": "dusk"}]},
+
+  {"id": "core:encounter/old_quarry", "place": "core:poi/old_quarry",
+   "notes": "weavers in the cut face",
+   "spawns": [{"enemy": "core:enemy/weaver", "count": 2}]},
+
+  {"id": "core:encounter/silked_camp", "place": "core:poi/silked_camp",
+   "notes": "weavers in the silk",
+   "spawns": [{"enemy": "core:enemy/weaver", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/ghasts_broken_bridge", "place": "core:poi/ghasts_broken_bridge",
+   "notes": "crag-wolves den under the anchor stones",
+   "spawns": [{"enemy": "core:enemy/crag_wolf", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/old_eld", "place": "core:poi/old_eld",
+   "notes": "a stone-thrall walks the working after dark",
+   "spawns": [{"enemy": "core:enemy/stone_thrall", "count": 1, "when": "night"}]},
+
+  {"id": "core:encounter/the_jawbone", "place": "core:poi/the_jawbone",
+   "notes": "crag-wolves wait in the heather beyond it",
+   "spawns": [{"enemy": "core:enemy/crag_wolf", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/giants_spine", "place": "core:poi/giants_spine",
+   "notes": "stone-thralls stand up among the vertebrae",
+   "spawns": [{"enemy": "core:enemy/stone_thrall", "count": 2}]},
+
+  {"id": "core:encounter/giants_stair", "place": "core:poi/giants_stair",
+   "notes": "a stone-thrall sits on the top step",
+   "spawns": [{"enemy": "core:enemy/stone_thrall", "count": 1}]},
+
+  {"id": "core:encounter/the_bonefield", "place": "core:poi/the_bonefield",
+   "notes": "stone-thralls rise out of the scree",
+   "spawns": [{"enemy": "core:enemy/stone_thrall", "count": 2}]},
+
+  {"id": "core:encounter/ghorrow", "place": "core:poi/ghorrow",
+   "notes": "stone-thralls keep the open door",
+   "spawns": [{"enemy": "core:enemy/stone_thrall", "count": 2}]},
+
+  {"id": "core:encounter/skarl_spout", "place": "core:poi/skarl_spout",
+   "notes": "scree-hags on the scar",
+   "spawns": [{"enemy": "core:enemy/scree_hag", "count": 2}]},
+
+  {"id": "core:encounter/tallow_barrow", "place": "core:poi/tallow_barrow",
+   "notes": "hedge-wights come out of the barrow at night",
+   "spawns": [{"enemy": "core:enemy/hedge_wight", "count": 3, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/saoul", "place": "core:poi/saoul",
+   "notes": "wisps over the pool at night",
+   "spawns": [{"enemy": "core:enemy/wisp", "count": 3, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/old_crannog", "place": "core:poi/old_crannog",
+   "notes": "leech-hounds in the carr at night",
+   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/oskel_rake", "place": "core:poi/oskel_rake",
+   "notes": "stone-thralls work the rake at night",
+   "spawns": [{"enemy": "core:enemy/stone_thrall", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/the_watcher", "place": "core:poi/the_watcher",
+   "notes": "a scree-hag nests in the skull",
+   "spawns": [{"enemy": "core:enemy/scree_hag", "count": 1}]},
+
+  {"id": "core:encounter/poachers_lee", "place": "core:poi/poachers_lee",
+   "notes": "poachers",
+   "spawns": [{"enemy": "core:enemy/poacher", "count": 3, "spread": 3.0}]},
+
+  {"id": "core:encounter/knights_mound", "place": "core:poi/knights_mound",
+   "notes": "the Hart-Knight rises at night",
+   "spawns": [{"enemy": "core:enemy/hart_knight", "count": 1, "when": "night"}]},
+
+  {"id": "core:encounter/hush_bell", "place": "core:poi/hush_bell",
+   "notes": "ash-wights at night",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/row_of_mouths", "place": "core:poi/row_of_mouths",
+   "notes": "choristers walk the colonnade at night",
+   "spawns": [{"enemy": "core:enemy/chorister", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/silent_market", "place": "core:poi/silent_market",
+   "notes": "ash-wights at night",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 3, "when": "night", "spread": 3.0}]},
+
+  {"id": "core:encounter/north_gate", "place": "core:poi/north_gate",
+   "notes": "ash-wights at night",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/bell_pit", "place": "core:poi/bell_pit",
+   "notes": "bell-bearers dig in the pit at night",
+   "spawns": [{"enemy": "core:enemy/bell_bearer", "count": 2, "when": "night"}]}
 ]

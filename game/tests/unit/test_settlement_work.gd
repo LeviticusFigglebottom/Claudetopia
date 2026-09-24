@@ -14,7 +14,7 @@ func _tree() -> SceneTree:
 
 
 func _raise(place_id: String, kind: String, region: String) -> Settlement:
-	var s := Settlement.raise_at(place_id, kind, region, Vector3(900.0, 30.0, 2350.0), 64.0,
+	var s := Settlement.raise_at(place_id, kind, region, at_place(MERROWBY, 30.0), 64.0,
 		[], [] as Array[Rect2])
 	_tree().root.add_child(s)
 	return s

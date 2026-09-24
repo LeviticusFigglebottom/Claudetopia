@@ -165,7 +165,7 @@ class ScatterWorld:
     def __init__(self, grid: Grid, H: np.ndarray, owner: np.ndarray, moisture: np.ndarray,
                  water: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
                  slope: np.ndarray, bank, regions: list, water_d=None, field_d=None,
-                 pad_t=None, tpi=None):
+                 pad_t=None, tpi=None, forests=None):
         self.grid = grid
         self.H = H
         self.owner = owner
@@ -188,10 +188,13 @@ class ScatterWorld:
         # How far a point stands above (or below) the ground around it, in metres: the crest of
         # a dune ridge, the floor of a sunken street, the lip of a bench. See `topographic_position`.
         self.tpi = tpi if tpi is not None else np.zeros(H.shape, dtype=np.float32)
+        # the atlas's woods: {kind: 0..1 at each texel} (geography.forests)
+        self.forests = dict(forests or {})
 
     def sample(self, x, z) -> dict:
         g = self.grid
-        return {
+        woods = {"forest:" + kind: sample_bilinear(w, g, x, z) for kind, w in self.forests.items()}
+        return {**woods,
             "h": sample_bilinear(self.H, g, x, z),
             "owner": sample_nearest(self.owner, g, x, z),
             "moisture": sample_bilinear(self.moisture, g, x, z),
@@ -205,6 +208,27 @@ class ScatterWorld:
             "pad_t": sample_bilinear(self.pad_t, g, x, z),
             "tpi": sample_bilinear(self.tpi, g, x, z),
         }
+
+
+def lean_of(cfg: dict, shape: str, water_d: np.ndarray, rng: np.random.Generator) -> tuple:
+    """(lean_deg, toward_deg) per instance, or (None, None) for a rule that stands upright.
+
+    A rule's `lean` is {shape: [min_deg, max_deg]}: on that landform its trees are bent by the
+    prevailing wind, most where they stand exposed at the water (within 30 m, fading to nothing
+    by 450 m) and each a little differently. They lean the way the wind blows: `wind_toward`,
+    the ground direction [x, z] the atmosphere blows its wind (`wm_wind_dir` in
+    systems/atmosphere/atmosphere.gd; a test keeps the two the same), give or take ten degrees.
+    """
+    band = (cfg.get("lean") or {}).get(shape)
+    if not band:
+        return None, None
+    lo, hi = float(band[0]), float(band[1])
+    n = int(np.asarray(water_d).size)
+    exposed = 1.0 - smoothstep(30.0, 450.0, np.asarray(water_d, dtype=np.float32))
+    lean = (lo + (hi - lo) * exposed) * rng.uniform(0.7, 1.0, n)
+    wx, wz = (float(v) for v in cfg.get("wind_toward", (0.8, 0.6)))
+    toward = math.degrees(math.atan2(wz, wx)) + rng.normal(0.0, 10.0, n)
+    return lean.astype(np.float32), toward.astype(np.float32)
 
 
 def topographic_position(H: np.ndarray, spacing: float, radius_m: float = 30.0) -> np.ndarray:
@@ -221,16 +245,43 @@ def topographic_position(H: np.ndarray, spacing: float, radius_m: float = 30.0) 
     return (H - smooth).astype(np.float32)
 
 
-def _candidates(rng: np.random.Generator, size_m: float, spacing: float) -> tuple:
-    """Jittered lattice covering the world; spacing is the mean distance between candidates."""
-    k = max(int(size_m / spacing), 1)
-    step = size_m / k
-    base = (np.arange(k, dtype=np.float32) + 0.5) * step - size_m / 2.0
-    gx, gz = np.meshgrid(base, base, indexing="xy")
+def _candidates(rng: np.random.Generator, box: tuple, spacing: float) -> tuple:
+    """Jittered lattice over `box` (x0, x1, z0, z1) in world metres; spacing is the mean distance
+    between candidates. The lattice is the world's own, cut to the box, so a province's
+    candidates stand where the whole world's would have."""
+    x0, x1, z0, z1 = box
+    step = float(spacing)
+    j0, j1 = int(np.floor(x0 / step)), int(np.ceil(x1 / step))
+    i0, i1 = int(np.floor(z0 / step)), int(np.ceil(z1 / step))
+    bx = (np.arange(j0, j1, dtype=np.float64) + 0.5) * step
+    bz = (np.arange(i0, i1, dtype=np.float64) + 0.5) * step
+    gx, gz = np.meshgrid(bx.astype(np.float32), bz.astype(np.float32), indexing="xy")
     jitter = step * 0.5
     x = (gx + rng.uniform(-jitter, jitter, gx.shape)).astype(np.float32).ravel()
     z = (gz + rng.uniform(-jitter, jitter, gz.shape)).astype(np.float32).ravel()
     return x, z
+
+
+def _boxes(world, regions: list) -> dict:
+    """{province index: (x0, x1, z0, z1)} the world metres each province's texels span."""
+    g = world.grid
+    out: dict = {}
+    for r in regions:
+        m = world.owner == r.index
+        if not m.any():
+            continue
+        ii = np.flatnonzero(m.any(axis=1))
+        jj = np.flatnonzero(m.any(axis=0))
+        out[r.index] = (g.x0 + (jj[0] - 1) * g.spacing, g.x0 + (jj[-1] + 1) * g.spacing,
+                        g.z0 + (ii[0] - 1) * g.spacing, g.z0 + (ii[-1] + 1) * g.spacing)
+    return out
+
+
+## What a wood of each kind is made of, per hectare, where the atlas draws one: tree rules
+## and their understory (scatter_rules.json `forests`). A forest entry ignores its rule's height,
+## moisture and attraction bands -- the atlas says there is a wood here -- and keeps its slope
+## limit and the exclusions (water, roads, pads).
+FOREST_IGNORES = ("height", "moisture", "region_density", "near_water", "near_hedge", "near_lane", "tpi")
 
 
 def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_noise_salt: int = 700,
@@ -241,6 +292,8 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
     unmatched: set = set()
     defaults = rules.get("defaults", {})
     region_mult = rules.get("region_density", {})
+    woods = {k: v for k, v in rules.get("forests", {}).items() if not k.startswith("_")}
+    boxes = _boxes(world, regions)
     out: dict = {}
     entries: list = []
     for r in regions:
@@ -249,12 +302,27 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             rule = rules["flora"].get(key)
             if rule is None:
                 continue
-            entries.append((r, key, rule, mult))
+            entries.append((r, key, rule, mult, None))
         for i, rule in enumerate(rules.get("rocks", {}).get(r.shape, [])):
-            entries.append((r, "rock_%d" % i, rule, mult))
-    for n, (region, key, rule, mult) in enumerate(entries):
+            entries.append((r, "rock_%d" % i, rule, mult, None))
+        # the atlas's woods, in this province
+        for kind in sorted(world.forests):
+            for key, per_ha in sorted(woods.get(kind, {}).items()):
+                rule = rules["flora"].get(key)
+                if rule is None:
+                    continue
+                wood = {k: v for k, v in rule.items() if k not in FOREST_IGNORES}
+                wood["density"] = float(per_ha)
+                wood.setdefault("cluster", 0.25)
+                entries.append((r, "forest_%s_%s" % (kind, key), wood, 1.0, kind))
+    for n, (region, key, rule, mult, wood_kind) in enumerate(entries):
+        if region.index not in boxes:
+            continue
         cfg = dict(defaults)
         cfg.update(rule)
+        if wood_kind is not None:
+            for k in FOREST_IGNORES:
+                cfg.pop(k, None)
         # a rule may say what it is worth in a particular region: a wood is not a downland
         # copse at a slightly higher density, it is a different order of thing
         per_region = cfg.get("region_density", {})
@@ -263,9 +331,13 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             continue
         spacing = math.sqrt(HECTARE / density)
         rng = np.random.default_rng(np.random.SeedSequence([seed, 900 + n]))
-        x, z = _candidates(rng, grid.size_m - 4.0, spacing)
+        x, z = _candidates(rng, boxes[region.index], spacing)
+        if x.size == 0:
+            continue
         s = world.sample(x, z)
         keep = s["owner"] == region.index
+        if wood_kind is not None:
+            keep &= s["forest:" + wood_kind] > 0.01
         if not keep.any():
             continue
         x, z = x[keep], z[keep]
@@ -273,6 +345,8 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             s[k] = s[k][keep]
         want_water = bool(cfg.get("water", False))
         acc = np.ones(x.shape, dtype=np.float32)
+        if wood_kind is not None:
+            acc *= s["forest:" + wood_kind]
         acc *= (s["water"] > 0) if want_water else (s["water"] == 0)
         acc *= 1.0 - smoothstep(float(cfg.get("slope_max", 0.55)) * 0.75, float(cfg.get("slope_max", 0.55)), s["slope"])
         if "slope_min" in cfg:
@@ -381,13 +455,20 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         light = rng.normal(0.0, jit, (x.size, 1))
         hue = rng.normal(0.0, jit * 0.28, (x.size, 3))
         tints = np.clip(base_col[None, :] * (1.0 + light + hue), 0.25, 1.0)
+        # A tree the wind has worked on for a hundred years leans away from it.
+        # (its own draws, so bending a species changes nothing else about where it stands)
+        lean, toward = lean_of(cfg, region.shape, s["water_d"][take],
+                               np.random.default_rng(np.random.SeedSequence([seed, 9900 + n])))
         # This region's own variants of the thing the rule names. Spreading the instances over
         # them is what stops a hillside being one tree printed four hundred times.
-        variants = assets_for(index, str(cfg["asset"]), region.short)
+        variants = assets_for(index, str(cfg["asset"]), region.art_short)
         if not variants:
             unmatched.add(str(cfg["asset"]))
             continue
         pick = rng.integers(0, len(variants), x.shape)
+        # filed by the position as the cell file writes it, to the centimetre (Grid.written_cell)
+        x = np.round(x.astype(np.float64), 2)
+        z = np.round(z.astype(np.float64), 2)
         cx, cz = grid.cell_of(x, z)
         cx = np.clip(cx, 0, grid.cells - 1)
         cz = np.clip(cz, 0, grid.cells - 1)
@@ -404,24 +485,28 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             bucket = out.setdefault((ccx, ccz), {})
             for t in sel:
                 lst = bucket.setdefault(variants[int(pick[t])], [])
-                lst.append([round(float(x[t]), 2), round(float(y[t]), 2), round(float(z[t]), 2),
-                            round(float(yaw[t]), 1), round(float(scale[t]), 3), _hex(tints[t])])
+                row = [round(float(x[t]), 2), round(float(y[t]), 2), round(float(z[t]), 2),
+                       round(float(yaw[t]), 1), round(float(scale[t]), 3), _hex(tints[t])]
+                if lean is not None:
+                    row += [round(float(lean[t]), 1), round(float(toward[t]), 1)]
+                lst.append(row)
     if unmatched:
         print("[world] no asset for: %s" % ", ".join(sorted(unmatched)), flush=True)
     return out
 
 
 def cell_region_ids(world: ScatterWorld, regions: list) -> dict:
-    """Dominant region id per cell."""
+    """Dominant region id per cell: the content region most of the cell's provinces belong to."""
     grid = world.grid
     per = grid.texels_per_cell
-    own = world.owner
+    ids = sorted({r.id for r in regions})
+    of_province = np.array([ids.index(r.id) for r in sorted(regions, key=lambda r: r.index)], dtype=np.int32)
+    own = of_province[world.owner]
     out = {}
-    counts_shape = (grid.cells, per, grid.cells, per)
     view = own.reshape(grid.cells, per, grid.cells, per)
     for cz in range(grid.cells):
         for cx in range(grid.cells):
             block = view[cz, :, cx, :]
             vals, cnt = np.unique(block, return_counts=True)
-            out[(cx, cz)] = regions[int(vals[int(np.argmax(cnt))])].id
+            out[(cx, cz)] = ids[int(vals[int(np.argmax(cnt))])]
     return out

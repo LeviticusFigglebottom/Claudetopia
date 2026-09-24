@@ -591,7 +591,14 @@ func to_save() -> Dictionary:
 			var s: Variant = node.call("collect_state")
 			if typeof(s) == TYPE_DICTIONARY:
 				state(id).merge(s, true)
-	return {"states": states.duplicate(true)}
+	var out := states.duplicate(true)
+	# somebody walking with the player is saved with the place they were beside, so a load into a
+	# redrawn map has them on the road beside it rather than at the old coordinates (PlaceRef)
+	for id in out:
+		var p: Variant = (out[id] as Dictionary).get("escort_pos", [])
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 3:
+			out[id]["escort_near"] = PlaceRef.pin(Vector3(float(p[0]), float(p[1]), float(p[2])))
+	return {"states": out}
 
 
 func from_save(d: Dictionary) -> void:
@@ -601,6 +608,11 @@ func from_save(d: Dictionary) -> void:
 		if typeof(saved[id]) == TYPE_DICTIONARY:
 			var base: Dictionary = states.get(id, _fresh_state(ContentDB.get_or_empty(id)))
 			base.merge(saved[id], true)
+			var p: Variant = base.get("escort_pos", [])
+			if base.has("escort_near") and typeof(p) == TYPE_ARRAY and (p as Array).size() >= 3:
+				var at := PlaceRef.follow(Vector3(float(p[0]), float(p[1]), float(p[2])), base["escort_near"])
+				base["escort_pos"] = [snappedf(at.x, 0.01), snappedf(at.y, 0.01), snappedf(at.z, 0.01)]
+			base.erase("escort_near")
 			states[id] = base
 	simulate_all()
 	for id in states:

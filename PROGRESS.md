@@ -2916,6 +2916,7 @@ within 200 m, the fade holding 87.2 s for nine of nine -- and failed only the sa
    not survive 8 m. A 2 m runtime copy of the heights would be 64 MB; a small runtime field map
    from the builder would bring the hedges back. Both are the builder's files, not this stream's.
 6. **`check_scripts.gd`** wants mending for 4.7.2 or deleting.
+
 ## Walking, the view, the roll and the compass: what the player felt, measured
 
 The first report was "the walk animation seems very slow and jagged, like a crouch walk (no
@@ -4400,3 +4401,1315 @@ smaller; here they are llvmpipe's, on a machine running eight other agents.
 Known limits: every Forward+ image here is lavapipe at seven terrain LODs, stills only. The
 Forward+ extras (SSAO on, volumetric fog and SDFGI off) were not judged. The before sheets and
 the Forward+ pairs live only in this worktree's `captures/`.
+
+## Wickmere drawn by hand, and filled to walk
+
+The playtest put the Foundling at the edge of a map that was mostly empty hills, with a tower
+here and there, and said the seed had taken the mystique away. The world's geography is now drawn
+by hand in `tools/world/atlas/atlas.json`: twenty-two provinces in the six regions, with 21
+ranges, 24 peaks, 29 valleys, 14 rivers, 7 lakes, 21 woods, the coast and its cliffs, 83 roads
+and the start. The builder makes the land from it, and noise decides only how a slope is
+broken. `docs/ATLAS.md` gives the reasons for each part and every new location's story, and
+WORLD_BIBLE §6.7 points to it. The decision is recorded in DECISIONS (2026-09-23, superseding
+"The land is built last").
+
+### How full it is
+
+These figures are measured on the preview's 8 m cells (`tools/world/atlas/preview.py`). Walkable
+means dry land that is not too steep and not past the Skerrow Wall's or the Thornmarch's crest.
+
+| | |
+|---|---|
+| land | 61.4 km², of which 47.2 km² is walkable |
+| locations | 297: 57 places and 240 points of interest, 6.3 to a walkable km² |
+| nearest location | mean 180 m, 95% within 312 m, worst 501 m. 0.1% of walkable ground is over 400 m from one, in three pockets under 0.01 km² each |
+| roads | 83, 80 km: highway 3 km, road 25, lane 13, track 36, causeway 1.6, stair 0.6. No stretch is more than 289 m from a location |
+| near the start | 15 locations within 1 km of the camp, 29 within 1.5 km, 45 within 2 km |
+
+83 existing places and points of interest were moved to where the map puts them. None was
+deleted or renamed. There are 217 new locations:
+
+* 26 places. Each has one resident with a schedule, a dialogue and a habit of their own
+  (`game/content/packs/core/npcs/the_map.json`, `dialogues/the_map.json`).
+* 191 points of interest: 53 ruins, 39 camps, 29 standing stones, 23 towers, 18 bridges,
+  13 shrines, 6 waterfalls, 6 giant bones and 4 wrecks. Each has a one-line hook, and the world
+  has 22 Hearthstones in all.
+
+`tools/world/tests/test_atlas_map.py` holds these things:
+
+* every location stands in its own region's provinces, on land unless it is a bridge, wreck or
+  the like, and no two within 20 m;
+* every place or point of interest that anything in the pack names exists;
+* every river falls to its mouth;
+* the density: worst gap at most 550 m, at most 1% of the ground over 400 m, no road stretch
+  over 300 m from a location, at least 250 locations;
+* every settlement is on a road;
+* the landing;
+* the start faces the Choir.
+
+### The shapes, redrawn where they read as machine-made
+
+* Province borders, woods and the coast are broken every 140 to 210 m and pushed up to 45 to
+  70 m off the line. Neighbouring provinces share each border point for point.
+* The Wall's summits are drawn by the builder. The "fans" were the preview's shading of them.
+* The small waters are drawn to their settings, at 14 to 19 points each.
+* The Mere is drawn in features of three hundred metres and more:
+  * the Narrows' funnel;
+  * Smokehouse Bay, open-mouthed under Merrowhithe;
+  * Holm Point;
+  * Lime Bay, as wide as it is deep;
+  * the Stride Ness, about 470 m long, carrying the Long Stride and the new Ness Market;
+  * Willow Bay, closed by Willow Point;
+  * the Reed Arm narrowing to the Eelweir;
+  * the Lamp's promontory.
+* Tollmere's island has a harbour bight where the causeway lands, the Spire Rock (32 m) at its
+  high end and a low tail where the Undercroft has its water-gate.
+* The built shore had scallops, and the cause is the builder's shore band. On a build, a lake's
+  water stands about 36 m inside its polygon (24 to 56 m), so every cove under about a hundred
+  metres closed into a round bump. The drawing now has none that small (ATLAS §11).
+
+### The landing
+
+The Foundling comes up out of the Hush onto the Landing, a rock shelf 4 m above the sea under
+the cliff. The Oroth stair goes on down into the water from its seaward edge. The fields were
+agreed with the land builder:
+
+* a coast shelf at 4 m with a 90 m bank;
+* a lobe of the coast polygon with a 4 m cliff on its seaward edge;
+* a pad for the Hushline Stair;
+* the road `core:road/stair_head_hushline_stair` of kind "stair".
+
+The Stair is one traverse across the bank. Three switchbacks were tried first, and their corners
+sat mid-bank and ran 1.6. Drawn, the shelf's seaward edge is a smooth arc. The land builder breaks
+it with spurs, bites and fallen blocks, and cuts a notch where the Oroth stair leaves the shelf
+(`coast.shelves[].notches`, at (44, 3902)). The Wardens' camp stands on the Stair Knoll, a 110 m dome, so the first
+view carries over the heath to Pilgrim's Ash's smoke and Ashwell's roofs. The Ash Heath's relief
+is kept at 18 m for the same reason.
+
+These figures are from a 1024 heights build of 9277caaa with the builder at 74143ba9 (92 s, peak
+0.9 GB). The camp stands at 108.4 m and the Stair at 4.0 m. The Stair's road is 646 m long, and
+its steepest stretch is 0.57.
+
+### The map
+
+`tools/world/atlas/render_map.py` draws the paper map, `docs/atlas/wickmere_atlas.png`. It draws
+provinces by biome, woods, rivers, roads by kind (the stair with its steps), and every settlement
+and point of interest by kind. Hearthstones are ringed and the start is marked with its first
+view, and a panel gives the figures. The options are:
+
+* `--world DIR` draws a build's heights and water, with each lake's shore where the build put it;
+* `--coverage` shades what is far from anything, and over a build tints the dry band of each lake.
+
+### Tests
+
+* `check_atlas.py` finds 0 errors. The 20 warnings are places inside a border's blend, and the
+  Bell-Buoys in the Mere.
+* The Python atlas tests pass (31).
+* `./run.sh test` has 0 content problems. test_crime, test_jobs, test_world_data and
+  test_poi_encounters were brought to the moved content, and the property, crime, content and
+  point-of-interest filters pass.
+* Twelve tests read the tracked world, which still has the old positions. They fail until the
+  world is rebuilt from the atlas. Each was run alone against the content as committed:
+  * test_world_data: the region mask agrees with the place data; settlements are out of the water;
+  * test_world_spawn: a character is put on the ground at the opening;
+  * test_the_start: the Stair Head is a camp with the Warden's place in front;
+  * test_npc_streamer ×3;
+  * test_npcs_in_the_world;
+  * test_settlement_people ×2;
+  * test_cinematic_player ×2.
+
+  The rest of test_world_data passes over the old world, including the Mere's water and every
+  point of interest standing on the ground.
+* test_inventory_loot's two quest-stage tests fail on the branch this work started from, whether
+  run alone or in the full suite. The opening gave the Naming a stage called "the_choir"
+  (20ef631b), and the loot test (b1326eb6) still counts four stages. It has nothing to do with the
+  map.
+
+### Next, in order
+
+1. **Rebuild the tracked world from the merged atlas**: 9277caaa, with the land builder's notch
+   (that is the land builder's work). Then run the world-coupled tests above and test_sightlines
+   against it.
+2. **Walk the start at ground level**: the Landing, the Stair's traverse, and the first view from
+   the knoll. The Lark Pool sits 3 m under the line of sight from the camp and comes into view on
+   the way to Pilgrim's Ash. The Glass Falls are behind the plateau's lip.
+3. **The cost of the new places at bootstrap**: the 26 new places, mostly hamlets and lodges, all
+   bring their fabric and their people. Measure what the streamer carries around the Vale.
+4. **Mend test_inventory_loot** for the Naming's five stages.
+5. `namegen --check` reports four problems that were there before this pass (the Reed Lantern,
+   and duplicates among the example Merrowby people).
+
+## The quests follow the map
+
+The drawn map has 297 locations, and the quests reached few of them. The pack's 35 authored
+quests reached 25 of its 57 places and 15 of its 240 points of interest. Nine of its 39
+settlements had a resident with work to give. None of the 26 new ones did: each had a resident
+with a day and lines of their own and nothing to ask of anybody. Forty side quests are now written
+with the map, and three rules hold:
+
+* every settlement has work, given by somebody who lives there;
+* every place that is not a settlement is somewhere a quest sends you;
+* every point of interest pays off in something the game puts there.
+
+`docs/ATLAS.md` §15 lists the quests province by province, with every settlement and the work in
+it. §16 ties every point of interest's hook to the ids that pay it off. WORLD_BIBLE §6.7 points at
+both. DECISIONS (2026-09-23, "The map's hooks are kept with the systems the game already has")
+says why the work is quests and not jobs, and why a note is an encounter that stands nobody up.
+
+### What was written
+
+* **40 side quests** (`game/content/packs/core/quests/the_map.json`) in the provinces' voices:
+  * 11 in Hearthvale, 7 in Skerrow Heights, 6 each in Brightwater, Sedgemire and the Briarwold,
+    and 4 in Cinderlea;
+  * each has 4 to 6 stages and sends you from its giver's settlement to 2 to 4 other locations,
+    and 12 cross from one region into the next;
+  * each comes to a decision with three options (120 in all), and every option moves something
+    the game reads: standing with a faction, Hearth or Hollow, renown, coin, a deed, or where
+    somebody lives. Nella Candlewright can be walked home to her candle stall in Merrowby, or
+    she can go on south out of the world.
+* **Who gives them.** Each of the 26 residents the map added gives one, and Tor Rookwright gives
+  two. The other thirteen come from thirteen residents who already had dialogue in other writers'
+  files. Their offer, return and decision lines went in by text insertion only: new nodes, hub
+  choices and greetings, and nothing else in those files changed.
+* **What is remembered.** The person who asked greets you with what came of each decision once
+  the quest is done: 119 greetings in all. 99 were written for flags that nothing read, and 20
+  earlier ones now wait for the quest to finish.
+* **What lies about.** 84 books, each with an item copy to carry: 12 for the quests, and 72 notes
+  at points of interest. The notes are put down by encounter defs with `lies` and no `spawns`
+  (`encounters/the_map.json`). 103 items: 31 for the quests and the notes' 72.
+* **`core:table/poi_hooks`** gives one row per point of interest: the quests that send you there,
+  what lies there, the encounters that stand somebody up there, and its Hearthstone.
+
+### Where it reaches
+
+| | before | now |
+|---|---|---|
+| authored quests | 35 | 75 |
+| settlements with a resident's work | 9 of 39 | 39 of 39 |
+| places a quest sends you to | 25 of 57 | 57 of 57 |
+| points of interest a quest sends you to | 15 of 240 | 108 of 240 |
+| points of interest with anything to go there for | 106 of 240 | 240 of 240 |
+
+Of the 240 points of interest, 108 are sent to by a quest, 74 have something lying there to take
+or read, 83 stand up an encounter and 22 keep a Hearthstone. (It was 109 until main moved the
+Naming's first fight from the Hushline Stair to the Choir; the Stair keeps its wights and its
+Hearthstone.)
+
+### What needed plumbing
+
+Quest plumbing belongs to the settlements stream, so items 1 to 7 were not built, and that stream
+has been told of them. The quests use what the game already has. Item 8 was built here, because
+the settlements stream asked for it to be:
+
+1. **No effect adds bounty.** Bounty comes only from a crime, such as taking an item a quest marks
+   with an `owner`. So no decision here puts a price on your head. A `bounty` effect, or a crime
+   effect, would let one.
+2. **A `talk` objective closes when you finish speaking with its person, about anything.** A
+   delivery can wait for its own line (`QuestRoutes.dialogue_closes`), but a talk cannot. The
+   return lines are written, and the objective does not wait for them.
+3. **`read_book` resolves only for a book on an interior's shelf or one whose item copy can be
+   got.** A book read where it lies, as an encounter's `lies` book, cannot be the target. Every
+   book here has an item copy.
+4. **Jobs come from boards and stations, never from a resident.** "A job from somebody who lives
+   there" is not a thing the Jobs system can say, so the local work is quests.
+5. **There is no kind of secret.** Nothing hides a thing until it is found. A hook that promises
+   something hidden pays off in a note or an encounter instead.
+6. **`test_quest_reach` wants a `start_quest` effect for every authored quest and does not count a
+   giver's `offer`.** So every giver's dialogue has a line that starts their quest, as well as the
+   `offer` the dialogue runner shows.
+7. **Nothing in the game reads `core:table/poi_hooks`.** It is an index, and test_map_quests keeps
+   it true.
+8. **QuestItems put a find with no marker a few paces off a place's middle, without asking
+   whether there was room.** A dressing's collision is a hollow shell. So 24 of the 96 finds the
+   map's quests and notes leave at points of interest lay inside a boulder, a wall or a tent, or
+   under an arch or thirteen metres of waterfall rock. `QuestItems._spot_in_the_open` now keeps a
+   marker's spot exactly. Without one it takes the key's spot when that is open. Otherwise it
+   takes the first open spot round and outward from it, and otherwise the key's spot as before.
+   Open means a crouching body touches nothing on the world layer and a ball let down from 80 m
+   reaches it. The physics space has to hold the place's colliders when the find is asked for.
+   WorldPois raises the dressing first, and a query in the same frame sees it (98 of 98 spots
+   agree with the ones asked a frame later). A find asked for with no dressing in the tree takes
+   the key's spot, as every find did before.
+9. **QuestFoes' ring stood a foe inside a hollow landmark until the opening's overhead refusal.**
+   Of the map's 27 fights in the open, one needed it: the Watcher, whose scree-hag was stood under
+   the skull whenever the Watcher's own scree-hag had been killed before the stage opened. The
+   refusal is in main and merged here, and test_map_quest_ground asks QuestFoes itself.
+
+These were handled with what exists:
+
+* An escorted person goes back to their schedule unless a `holds` entry keeps them. Nella's
+  hold is in `npcs/the_map.json`, with a `gone_when` for the road south.
+* A remembered greeting is as specific as the person's other conditioned greetings. So it is one
+  of the lines they may greet you with, not always the first.
+
+### Tests
+
+* `game/tests/unit/test_map_quest_ground.gd` has 3 tests, all passing. It raises what the world
+  raises at each place the quests fight at or leave something at: a dressing, a landmark with its
+  collision, or a settlement's fabric, on flat ground. It holds to open ground every foe QuestFoes
+  stands for the 27 fights, the 45 of the places' own foes those fights count first, and the 98
+  finds.
+* `game/tests/unit/test_map_quests.gd` has 9 tests, all passing:
+  * every settlement has a resident whose work can begin;
+  * every place that is not a settlement is somewhere a quest sends you;
+  * every point of interest pays off;
+  * every hook row is true, and every hook the map wrote leads somewhere;
+  * every note can be picked up and read;
+  * every objective of every authored quest resolves (more than 300 rows);
+  * the map's quests link places and come to a decision;
+  * every decision is remembered once the quest is done.
+* These pass with 0 content problems and 0 failed tests: test_quest (82, with test_quest_items),
+  test_content (43), test_dialogue (48), test_books (6), test_kill_places (12), test_poi (38, with
+  test_poi_encounters), test_jobs (12), test_escorts (7), test_social (9), test_recipe_teachers
+  (35), test_shopkeepers (7), test_faction_lines (38) and test_inventory_loot (25). Merging main
+  mended the loot test's two quest-stage tests.
+* The test_settlement filter runs 43 tests, and 3 of them fail. They are world-coupled tests from
+  the previous section: test_settlement_people ×2 and test_world_data's settlements out of the
+  water. The tracked world still has Merrowby and Tamwick where they were before the map moved
+  them, 1.2 to 1.6 km away.
+* test_npc: 50 tests, 4 of them failing. These are the world-coupled ones from the last section:
+  test_npc_streamer ×3 and test_npcs_in_the_world.
+* The journey passes 15 of its 16 steps. The one that fails is "meet somebody who lives here":
+  nobody was standing in Merrowby at noon. It is the same world coupling as test_npc_streamer's
+  village test, which failed before any of this work. The journey stands at the tracked world's
+  Merrowby pad, which is 1.2 km from where the map put the town and its people. It should go green
+  with the rebuild, and nothing the quests changed moves anybody at noon.
+* The Python atlas tests pass (31). dead_data no longer lists `hook`, which the new test reads.
+
+### Next, in order
+
+1. **Rebuild the tracked world from the atlas** (the land builder's work), then run the
+   world-coupled tests and the journey.
+2. **The plumbing above, in the settlements stream:** a bounty effect, a talk that closes in its
+   own line, and a secret.
+3. **Walk three of the quests in the game:** Nella's walk home, the Notch on the Post's branch to
+   Pilgrim's Ash, and Cut From Below's fight in the Sunken Barge.
+
+## The plumbing the map's quests were missing
+
+Writing the forty quests that follow the map turned up five gaps in the quest plumbing that bear
+on whether the quests play right. The settlements stream owns that plumbing, and it agreed to
+these changes and to where they sit (it is changing the dialogue runner's deed offers in the same
+file). Each change is opt-in, so the rest of the pack plays as it did. DECISIONS 2026-09-23 ("A
+talk waits for its line...") gives the reasons. `game/tests/unit/test_quest_plumbing.gd` holds
+all of it in 18 tests.
+
+### What changed
+
+1. **A talk waits for its own line.** A `talk` objective may name a `topic`, which is a node of the
+   person's dialogue. The runner says `EventBus.dialogue_node_entered` for every node it enters,
+   and QuestLog closes a talk with a topic only on that node. A talk with no topic still closes
+   when any conversation with the person ends. QuestWalk checks that the topic is a line the
+   person has.
+   * All 15 talks in the map's quests now close on their return lines. Three of those lines are
+     new: Ushra at Ruddow, Aggie at Hazelwick, and Nella at the Last Camp.
+   * Nella's escort now waits until you have said you are ready. Escorts wait for the stage's
+     talk with the traveller.
+2. **A book read where it lies.** A `read_book` objective may say `in_place`. QuestItems then lays
+   the book itself, fixed and with a book to see, at the objective's `where` instead of the copy
+   that reads it. Reading it there says `book_opened`, as a book read where it lies always did.
+   QuestWalk now counts any book QuestItems lays, which includes the settlements stream's `lies`
+   books, such as the one on Willow Isle.
+   * Five of the map's books are read where they lie: the Ash Watch night-log, the Pinfold's
+     pound-book, Hound Watch's keeper-roll, the Counting Tower's ledger and the slate of names at
+     Kharrow's cairns.
+3. **A decision can be a crime.** The `bounty` effect (`{"bounty": "theft"}` or `{crime, value, at,
+   seen_by, reaction}`) goes through the crime service's own `report_crime`. The person spoken to
+   sees it, or the witness the effect names. So the severity, the law of the place's region, the
+   report delay, and the lawless regions' ill-feeling that wears off are all the crime system's.
+   If nobody sees it, nobody reports it.
+   * The crime service now answers `bounty_for`. The dialogue context has always asked it by that
+     name and it never had the method. So every `bounty_min` condition and greeting read nought,
+     and the Tollmere smith who will not serve a wanted man served everybody.
+   * None of the map's 120 options is a crime. The first decision that is one can use the effect.
+4. **A giver's offer is a way in.** test_quest_reach now counts a quest that its giver offers at
+   their hub, as play always has.
+   * The offer nodes written for the map's quests stay. Each carries its giver's pitch, an accept
+     and a decline, and each keeps the generic "Is there something I could do?" off the hub. The
+     runner offers that line only for quests nothing else starts.
+5. **Work from somebody who lives there.** Jobs came only from notice posts and workbenches.
+   Settlement.FABRIC puts posts only in towns, cities, villages and forts, so thirty of the
+   thirty-nine settlements had no work but a shift at a workbench.
+   * The `offer_work` effect has a resident open their place's work, on the same screen a post
+     opens. `JobBoard.for_place` returns the post that stands in the place, or else the place's
+     carried board: one per place, with no body in the world and nothing to walk up to.
+   * All 26 residents the map added offer it: "Is there any work going?"
+
+### Tests
+
+* test_quest_plumbing: 18 tests pass.
+* These pass with 0 content problems and 0 failed tests:
+  * test_quest (100, with test_quest_reach, test_quest_walk and test_quest_items);
+  * test_dialogue (48), test_map (12), test_content (43), test_books (6), test_poi (38);
+  * test_jobs (12), test_crime (27), test_escorts (7), test_social (9);
+  * test_faction_lines (38), test_shopkeepers (7), test_economy (10).
+* test_economy logs one error: a test that adds an item that does not exist, on purpose.
+* The merge of main before this work brought the opening's overhead refusal into QuestFoes. So
+  test_map_quest_ground now asks QuestFoes itself.
+* The merge also moved the Naming's first fight to the Choir, so the hook table was rewritten:
+  108 points of interest are now sent to by a quest.
+
+### Next
+
+The quest walker: every one of the 75 authored quests, played end to end in the rebuilt world
+through the game's own services, with each decision taken in turn. It waits for the atlas world
+in main.
+
+
+## The land built from the drawing: the atlas builder, what it costs, and what was wrong with it
+
+"Wickmere drawn by hand, and filled to walk", above, is the map: what the cartographer drew and
+why. This section is the builder that makes the land from it, which this stream owns. It covers:
+
+* the contract;
+* the order the land is made in;
+* the faults the full builds of the drawn map showed, and what was done about each;
+* what a full build costs;
+* what was looked at;
+* the tests;
+* what is still wrong.
+
+It began as the second half of "The shape of the land" (the recipe evaluation, at the end of
+this section). The playtest's verdict on the seeded world turned it into this.
+
+### The atlas is a contract with a check
+
+`tools/world/atlas/SCHEMA.md` is the contract, `atlas.schema.json` its shape, and
+`check_atlas.py` what a shape cannot say. The check covers these:
+
+* every region named exists;
+* no polygon crosses itself;
+* every river ends in water or at another river;
+* every place stands in a province of its own region;
+* no settlement is in the water;
+* every road runs between things that exist;
+* an authored pad stands a metre over its water;
+* a shelf's notch is on its edge;
+* the start is on dry land.
+
+A build checks the atlas first and refuses one with errors. The schema is the coordinator's draft,
+finished here (d7973569). The landing added `coast.shelves`, road kind `stair` and `pads`
+(f4ab6dfe), and `coast.shelves[].notches` came later (30072bad). The builder and its tests were
+written against a first atlas, drawn back out of the committed world (fec9bdf6), before the
+cartographer's map existed. Their map replaced it (merged at 987d2ca2, ee4bebc7, 9277caaa and
+a72b0458).
+
+### How the land is made, in order
+
+The order is `build_world.build`'s; SCHEMA.md gives it as an author sees it.
+
+1. Each province's ground from its level, relief and character. Borders blend over `blend_m` and
+   wander by forty or fifty metres of noise.
+2. The ranges at their crest heights, then the peaks, then the valleys.
+3. The coast, with its cliffs and shelves, then the lakes, then the drainage by biome.
+4. The coast and the lakes again, so the drawn water wins, and the causeways.
+5. The upsample to full resolution and the detail band.
+6. A pad for every place and point of interest.
+7. A saddle under every authored sightline the land stands into by no more than 25 m.
+8. The atlas's rivers in valleys of their own, and in gorges where they are held level through
+   high ground.
+9. Its roads through their `via` points, and the streets. A road to a solid landmark stops at
+   its foot.
+10. The pads again, and the rivers cut back through whatever was laid on them.
+11. Each province's landforms, held off the roads.
+12. The shelves' seaward edges broken.
+13. Water, textures, colour, points of interest, and the scatter with the atlas's woods planted
+    by kind.
+
+The manifest carries the atlas's name and checksum, the start (position, facing, place) and the
+lakes. The seed only breaks up the detail: two builds of one atlas are one world.
+
+**Sightlines** (670bf655). The seeded world's land used to refuse the authored lines and the
+content was moved to suit it (36 were refused, "Sightlines, answered"). Now the builder cuts a
+saddle. Where the ground stands into a line by up to `NOTCH_MAX_M` (25 m), it is cut down under
+the line in a notch whose sides rise at 0.6, as a pad is flattened under a place. A line with
+more than that in the way is left, and the build says how many. Hidden valleys stay hidden.
+On the final build (dbeb9d5f) the builder cut 104 saddles, the deepest 24.5 m, and left none.
+By the game's own model (`tools/sightlines.py`, which test_sightlines uses), all 197 lines it can
+see are clear and the two hidden valleys stay veiled. The build before refused 28. The
+cartographer gave 24 of them new vantages, moved Ghorrow and the Smeltings, and dropped two lines
+that no vantage in range could keep.
+
+### What the full builds showed, and what was done
+
+* **The first full build of the drawn atlas was killed at 10.1 GB**, in the texture pass
+  (2dad3272). The NoiseBank kept every field it had made. Breaking the 22 provinces' borders
+  alone asks for 42 at full resolution (2.7 GB), where the six regions asked for ten. The texture
+  pass kept some forty full-resolution patch fields (2.5 GB). The bank now keeps 512 MB, least
+  recently used first out, and lets everything go at the end of each stage; the texture pass
+  keeps ten. A 512 build made with the caches as committed and again with nothing kept at all is
+  byte for byte the same, apart from the manifest's build time. Every stage line of a build now
+  ends with its peak memory so far. The next full build peaked at 6.2 GB.
+* **The Skerrow dales were combed** (25bfd2a6). From the High Moor down to the Mere's north shore,
+  every slope was combed with fine parallel dashes, at 1024, at 2048 and at 4096. The cartographer
+  saw it first. **I put it down to the drainage, and that was wrong.** I routed the water over
+  five metres of broad noise so it would gather into gills (cb500375). The routing is sound on a
+  synthetic dale side (test_erosion.py: 66 gills cross the contour halfway down without it, 12
+  with it). But built without any drainage at all, the dales are combed just the same, and they
+  are the same without the landforms. Taken apart stage by stage, the provinces' ground is clean
+  and the combing comes in with the ranges, and the dales' edges are ranges. `line_field`
+  measured each texel to the nearest *sample* of a line, found through a distance transform of
+  the samples rasterised. That is the nearest texel holding one, and a few hundred metres out it
+  is tens of samples off the foot of the perpendicular. The distance, and the arc position a
+  range reads its crest height at, came in steps of a couple of centimetres, and the hill-shading
+  showed every step. It now projects onto the segments themselves, and is exact to a millimetre.
+  Ranges, valleys, cliffs, causeways, saddles and levees all use it.
+* **The Skerrow Wall's sea cliff rang** (25bfd2a6). Where the Wall stands 470 m out of the sea in
+  the north-west, the cubic upsample from 2048 undershot the seabed by 70 m: 210 pits down to
+  -96 m, 915 texels under -30 m. The upsample is now held inside the range of each coarse
+  texel's neighbours.
+* **The landing's edge was still the clean arc it was drawn as** (30072bad, ef3c2487). The
+  coordinator's note was that a perfect arc of rock two hundred metres across will look made at
+  ground level. `break_shelf_edges` now runs last, at full resolution:
+  * the drawn edge wanders up to 7 m in and out, as spurs and bites 30 to 90 m apart;
+  * blocks fallen from the face lie in the water at its foot, 3.5 to every hundred metres;
+  * a notch is cut where the Oroth stair leaves the shelf, at (44, 3902) on the line from the
+    camp through the pad. It is a slot 8 m wide, 4 m into the shelf, its floor falling into the
+    sea;
+  * nothing comes within 3 m of a pad.
+
+  It took four full builds to get right. On the first only the notch was cut: the breaking was
+  faded out toward the coast polygon, and the Hushline's coast has a lobe over the whole shelf.
+  On the second, faded toward the ground standing over the shelf instead, it broke the back edge
+  too, where the stair comes down the bank at the shelf's own height. That cut a 6.5 m hole of
+  sea through the stair's last step onto the landing (6217880f). Now only an edge with the sea
+  beyond it is broken, and no road is touched. On the third the bites stopped at the drawn line,
+  and the coast's band of land just outside it stood as a rib of the old arc with pools behind
+  it (d4cd96ca). A bite now takes everything seaward of the wandered edge. The edge is measured
+  to the drawn line exactly, and the outline is cleaned of texel specks. At 2048: no rib texels
+  and no pools, against 28 and 11 on the third build. An authored pad's skirt no longer fills
+  the drop below it; blended over the face, the Hushline Stair's pad had filled the sea at its
+  foot to a lip at sea level. The opening's builder needs no change: its Oroth stair starts where
+  the ground first falls a metre along the camp -> pad line, which is the notch's inner end. On
+  the final build the ground first falls a metre at (43.8, 3897.7), the pad is dry at 4.00 m over
+  its 26 m, and the Stair is 646 m long from 107.66 m down to 4.00 m, no steeper than 0.58, with
+  its ground within a metre of it and no water under it. The Hushline's own pad, which the
+  cartographer moved onto the landing beside the Stair's, is dry at 4.00 m over its 20 m.
+* **Rivers hung in the sky** (3aced4f4). A ground capture of the Lower Dales had a river ribbon
+  across the sky. `rivers.json` gave each river only its water at its two ends, and the game drew
+  the ribbon on a straight ramp between them. A seeded valley river falls about evenly, so the
+  ramp was near enough. The drawn Skerrow Water falls from the Hidden Tarn at 520 m down Kharrow
+  Gorge and runs nearly level to the Mere, and its ramp stood 158 m over the dales. Four more
+  stood 126 to 157 m up, and the Wold Water 84. A river now carries `surface_m`, its water at
+  every point, and `WaterSurface` draws on that (CONTRACTS 6). Two rivers still stood off their
+  ground on the build after, the Blackgill by 26 m and Weaver's Gill by 29 m, each over a hollow
+  it could not climb out of. **The commit says the Blackgill's 23 m is a sightline saddle cut
+  across its course. That is wrong.** Built with no saddle allowed within 30 m of a river, it is
+  23 m just the same. It is the hollow under the Blackgill Falls, which the river had to climb
+  out of to meet the Skarl Water. The cartographer ended both rivers in pools under their falls.
+  On the final build no river stands more than 11.1 m over its ground. The worst are a point or
+  two at the heads of four becks on the steep fell under the Wall, and I have not traced those.
+  It is not the landforms: a build without them floats the same.
+* **Rivers ran in slots** (304d5df9, bfb36896). The build after showed, from above, that the
+  rivers leaving the dales ran in rectangular trenches. `carve_river_valleys` held the land beside
+  a river under its valley side out to half the valley's width, then faded back to the untouched
+  land over the last fifth of it: eleven metres, for a beck nine metres wide. Where a river is
+  held level through a ridge, the fade was a wall.
+  * The Brindle Beck ran through the dales' southern ridge in a trench 95 m wide. At
+    (-1080, -1900) its walls fell from 118.6 to 63.7 m in one 9.4 m step.
+  * The Rudd Beck and the Rib Beck ran in trenches like it.
+  * In the Skarl fells ground frame, a straight dark wall ran beside the river.
+
+  Past the valley, land still over the valley side is now a gorge the river has cut. Its wall
+  climbs on at 1.2 until it meets the land. Cut as a plane, that was a smooth ramp a hundred
+  metres across, so the wall's line also wanders in and out by 10 m over a few hundred metres,
+  as spurs and gullies, and its face has 1.2 m of grain. On 1024 builds, the land within 80 m of
+  the Rudd Beck steeper than 1.5 went from 3.5 ha (steepest 6.9) to 1.9 ha (3.9). The Skarl
+  Water went from 3.2 ha (7.5) to 0.9 ha (2.8), and the other becks by about half. What is
+  still steep is where the atlas draws it: the falls, and the head of Kharrow Gorge.
+
+  The gorge carve first measured every texel to the nearest point of its river, and the land
+  behind a river's source is nearest to the source. So a beck rising under the Wall cut a bowl
+  into the fell behind its head (4d9e9b64). The Rudd Beck's bowl took the Fallen Hand's knoll,
+  80 m up the fell, from 471 to 459 m. That was after the saddle under its line to the Rudd Pike
+  Beacon had been cut to the knoll's first height, which left the one line the game refused on
+  that build. A valley now comes in down its river from the source, and the land behind the
+  source is left alone.
+* **The Stair Path ran into the Choir's head colossus** (31aef010). The atlas-readiness run of the
+  game found it. A road ended at its place's own position, and the Sunken Choir's head colossus
+  stands on the Choir's, 27 m across at the foot. A road to or from a place with a solid landmark
+  on it now stops at the landmark's foot: the widest its model's bounds reach across the ground,
+  and 3 m for a body. On the final build the Stair Path ends 16.5 m from the Choir and is 542 m
+  long, climbing from 107.7 to 129.5 m and no steeper than 0.16. The roads to the Lamp, the
+  Fallen Hand and the Drowned Nave stop at theirs.
+* **The two new pools flattened the country round them** (dbeb9d5f). A lake's shore is shaped
+  over a few hundred metres: the shingle, the bank back to the land by 320 m, and the ground
+  within 700 m held over the water. That suits the Mere. The cartographer drew the Blackgill Pot
+  and the Weaver's Linn at the feet of falls, 22 and 29 m across their radius.
+  * The linn flattened a basin three hundred metres across into the wold, 187 m deep at most, and
+    its fall went with it.
+  * The pot raised a valley 380 m away by 109 m.
+
+  A lake may now give `shore_m` (default 320), and every one of those distances scales with it.
+  Both pools are drawn with 40, and the other seven lakes are built exactly as they were.
+* **Three of the build tests failed on the drawn atlas, and the builder was at fault in one.**
+  * test_cells_cover_the_world: a Sedgemire grass tuft at x = -2304.004 was filed by its
+    unrounded position in cell 6, and written as -2304.0, which is cell 7's ground. On a 1024
+    build, 159 of 4.1 M rows were in a neighbour's cell file. Everything that files a row now
+    files it by the position as written (`Grid.written_cell`, 3c2e8dda). On the final build, 0
+    of 3.97 M rows are.
+  * test_texture_rules looked for lake bed within 150 m of each lake's middle. The drawn tarns
+    are about a hundred metres across and their water begins thirty metres inside the line, so
+    the window was mostly shore. The window is now half as wide as the middle is deep in the
+    lake.
+  * test_determinism gives each of its two 512 builds ten minutes, and the drawn atlas's scatter
+    alone took 429 and 839 s of the two run by hand, since its candidates are drawn in metres.
+    Those two builds were the same in every file, cells and all. The test only ever compared
+    the heights, and now builds heights only (bd112f73).
+* **A group of ash wights stood 46 to 49 m from the way out of the start** (76c25c8b), where
+  the opening keeps 50 m clear. The atlas-readiness run of the game found them. No group now
+  stands within 50 m of a road out of the start, counting the 12 m its members stray.
+* **The lake shaping flattened what the atlas drew at its shores** (3ef9c4c6). The Gull Cliffs,
+  a range drawn at 40 m along the Mere's north shore, came out at 24. The Spire Rock, a 32 m dome
+  at Tollmere's high end, came out at the island's own 15. A range now keeps its height to 25 m
+  from the drawn shore and drops into the water over the last 25. A peak drawn in the water
+  stands out of it.
+* **Beside a lake the landforms dug dry pits under its level** (ee34ee5f): 7.7 m by the
+  Blackwater Tarn, 2.9 m by the Hesk Pool. They were the High Moor's shakeholes and the Ashgrid's
+  sunken streets. Within 300 m of a lake a landform now stops half a metre over its water.
+* **A lake's water begins some thirty metres inside its polygon**, not at it. The cartographer
+  found this, drew to it and placed the shore towns against it. I tried moving the water out to
+  the line: the median came down from 16-32 m to 0-4 m. I put it back, because the map is
+  finished, and every lake would have grown by thirty metres all round under it. SCHEMA.md now
+  says what the builder does.
+
+Found while the builder was first written, and fixed then:
+
+* a one-texel trench of sea round every map edge the land ran off;
+* a lake bed rising over its level;
+* a river's banks raised in the lake its mouth ran into;
+* a range's pass lowering the next range across it;
+* a stair corner cut down the fall line at 1.5;
+* the detail band roughening a shelf by 1.4 m;
+* a shelf left with sea behind it.
+
+### What a full build costs
+
+`./run.sh world` at dbeb9d5f builds at 4096, 2 m a texel. Run through `build_measured.py`,
+which reads the process's peak resident memory:
+
+| stage | seconds | peak so far |
+|---|---|---|
+| regions | 105.2 | 1.8 GB |
+| heights | 86.8 | 2.2 GB |
+| sightlines | 0.3 | 2.2 GB |
+| rivers | 11.9 | 2.9 GB |
+| roads | 41.3 | 2.9 GB |
+| water | 74.6 | 2.9 GB |
+| fields | 6.1 | 2.9 GB |
+| textures | 70.2 | 5.5 GB |
+| colour | 14.1 | 5.5 GB |
+| scatter | 612.9 | 6.2 GB |
+| hedges | 10.4 | 6.2 GB |
+| write | 18.8 | 6.2 GB |
+
+The pads, landforms and encounters take under a second each. The whole build is 1054.6 s of wall
+time with a peak of 6.20 GB. The four full builds before it took 972 to 1049 s at 6.19 to 6.22
+GB. It makes 3.97 M scatter instances, heights from -24.2 to 784.1 m, and water over 17.0 percent
+of the map. The build writes 494 MB, and Terrain3D's import of it is 146 MB and a minute.
+
+The seeded world built in 280 s with 3.48 M instances, so the scatter is now what a build costs:
+613 s, 58 percent of it. It costs about as much at any size, because its candidates are drawn in
+metres and not texels: two whole 512 builds spent 429 and 839 s in it, on a quiet machine and a
+busy one. That is most of what the Python tests' own builds cost. I have not measured why. The
+likeliest cause is that each province draws its candidates over its whole bounding box, once for
+every flora rule, rock rule and kind of wood it has. Twenty-two drawn provinces with wandering
+borders have far larger boxes, all told, than six regions had.
+
+### Looked at
+
+* **From above**, the final build's hillshade: the whole map at 8 m a pixel, the Skerrow dales at
+  2 m, the four gorges, the two pools, the landing and the Choir's avenue at 1 m, and the
+  Thornmarch's scarp.
+  * The northern range stands as a row of snow-capped massifs with cols between them, as drawn.
+    From above, the cols are straight bands across the range's width, evenly spaced: each is a
+    low point on the crest line, and the massif profile carries it straight across.
+  * The dales' slopes are rough, and nowhere combed.
+  * The landing's seaward edge wanders, with the notch at the stair and blocks in the water
+    under it.
+  * The saddles show from above as straight grooves, a few hundred metres long, across the dale
+    sides.
+  * The gorges' walls are slopes now, not steps, and their line wanders. But a valley cut
+    through high ground has a smooth floor a hundred metres wide in rough fell, and from above
+    that still reads as made (under what is still wrong, below).
+  * The Weaver's Linn and the Blackgill Pot are open water at the feet of their falls.
+  * The Thornmarch's scarp now bends in and out down the east side.
+* **At ground level**, from the final build: the start, the landing to the sea and to the cliff,
+  the lower dales to the Wall, the Skarl fells, and up the Brindle Beck's and the Rudd Beck's
+  gorges.
+  * The lower dales' river ribbon is gone from the sky, and the Three Sisters' fall shows at the
+    dale head.
+  * Beside the Skarl Water the straight dark wall of the old carve is gone.
+  * Up the Brindle Beck the gorge reads as a steep valley side, not a trench.
+  * The Rudd Beck frame stands too low on its bank to show the gorge.
+  * An eighth frame, of the Blackgill Pot, did not come back. The capture waited half an hour on
+    it and was then killed for memory with the machine full, so the pot was looked at only from
+    above.
+* **The capture plans** were made again on the final build (445fb563, 45bbb137).
+  * The Briarwold's approach camera stood inside an oak's crown, because no spot on its bearing
+    out of Fernhold was clear at 28 m. It now goes over the tallest crown round it.
+  * The Briarwold's vista, raised over its own crown, still looked through two taller oaks. It
+    now climbs until its first 70 m are clear.
+
+### Tests
+
+With the final build installed:
+
+* **The whole Godot suite** (`res://tests/run_tests.tscn`): 1624 tests, 6 failed. Each is the
+  game reading the rebuilt world, not the builder:
+  * test_world_data.test_rivers_and_roads_are_sane. Its river widths (4 to 14 m) were written for
+    the seeded world, and the drawn rivers run 2 to 24 m. It also wants more than eight points
+    on every river, and Weaver's Gill now has six. The atlas-readiness branch widens the ranges
+    (709f9908) and holds a river to its drawn line instead (2719f516).
+  * test_the_start.test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front. It raises the
+    Stair Head only from the points of interest the world has no pad for, and the rebuilt world
+    has one.
+  * test_the_start.test_the_hushline_landing_stands_clear_of_the_water_with_its_wights_on_it. The
+    atlas-readiness branch reads the landing where the land holds it (dc9acdc9).
+  * test_pois.test_every_poi_in_the_world_raises_a_dressing. The Blackgill Falls raise a
+    hearthstone the data does not give them.
+  * test_poi_people.test_nobody_is_stood_inside_anything. The hermit of Willow Isle stands inside
+    the isle's masonry.
+  * test_kill_places.test_nobody_is_stood_inside_the_choir_s_colossus. The Naming's three
+    ash-wights are not all stood at the Choir once its colossus is solid.
+
+  On the same build, the atlas-readiness branch (2a3be507) passes all six: 709f9908 for the
+  rivers, the Stair Head, the Blackgill Falls and Willow Isle, 2719f516 for the rivers' points,
+  and dc9acdc9 for the landing. Its run also passes test_kill_places, 13 of 13. They clear when
+  the two branches merge.
+* **The Python tests** (`python3 -m pytest -q tools/world/tests tools/tests`), module by module:
+  * The tests that build no world: 95 passed, 3 failed. The three are test_glb_textures on the
+    characters' part files (pauldrons.glb's meta says 6441 triangles and the file holds none),
+    which this branch does not touch.
+  * test_roads: 19 passed, 2 failed on the final build.
+    * test_no_river_is_dammed: the heads of the Cressbourne, the Blackgill and Weaver's Gill were
+      dry. That is fixed after the build (993e24d2): a beck two metres wide at its head is one
+      texel wide, on the diagonal its texels meet only at their corners, and the water mask's
+      speck filter counted them side by side.
+    * test_the_carved_land_is_the_graded_road: at five roads the land under the road is 2.7 to
+      4.6 m off its graded level, mostly under it, where 2.3 to 3.6 is allowed: Pilgrim's Ash -
+      Ashwell, Elderhold - the Skarl Bridge, Kharrow Gate - the Ruddale Bridge, Ruddow - the
+      Fallen Hand, and Merrowhithe - the Rib Cathedral. On the Rib Cathedral's road the land is
+      under even the ground the road was graded against. None of the points is near a pad, a
+      river's banks or a sightline's corridor. Not traced (below).
+  * test_atlas_world: 16 passed and 1 failed. test_every_river_falls_to_the_water_it_runs_into
+    held the Blackgill's mouth to its pot's level, and at the test's 16 m texels the Blackgill's
+    head comes out under the pot. The test now holds such a river to ending under its lake
+    (ae918839). Rerun, its heights tests pass (8).
+  * test_build: its own 1024 build ran past the test's 900 s on the busy machine, and every
+    test errored. The whole-build timeout is now 2400 s (dabe9dbc). Rerun, the build took 21
+    minutes, and 15 of 16 passed, test_cells_cover_the_world and test_texture_rules among them.
+    test_rivers_run_downhill_into_the_water wanted eight points in every river, and Weaver's
+    Gill has six. It now holds a river to its line: two points or more, and no gap over 30 m, as
+    the atlas-readiness branch does in the game (2719f516). Every river of the head's builds
+    meets that. It has not been run again.
+  * test_recipes: 6 passed. The cover build at 256 ran past the old 900 s, and has not been run
+    again at 2400.
+* This pass added test_land_lines.py, test_shelf_edge.py, test_river_valleys.py and
+  test_lake_shores.py, the landing's tests in test_atlas_world.py, the routing test in
+  test_erosion.py, LandmarkFootTest in test_roads.py and CellFiling in test_build.py.
+* Three merges on this branch (8535061e, 8bbfaae1 and 6f2af960) carry no session trailers.
+  Adding them would mean rewriting history others have merged from, so they stay as they are.
+
+### Rebuilding the world
+
+`./run.sh world`, with no recipe: the atlas is `tools/world/atlas/atlas.json` and the seed is the
+pack's (8471). It builds into `game/world/generated` and imports the terrain. Nothing else is
+asked for; `cover` stays off. On a machine other things share, build outside the checkout and
+install the result (05937961):
+
+```
+tools/world/build_when_free.sh /tmp/w /tmp/w.log   # waits for 10 GB; 17 to 18 minutes, 6.2 GB
+tools/world/install_world.sh /tmp/w                # into game/world/generated, then the import
+```
+
+The capture plans `default.json`, `horizon.json`, `pois.json` and `look.json` were made again on
+the final build (45bbb137). If main's places differ when the world is rebuilt there, make them
+again (`make_default_plan.py`, `--horizon`, `--look`, `make_pois_plan.py`): every camera stands on
+the ground as built.
+
+### What the atlas still owes
+
+The cartographer answered what the build before this one (w_final4, 3aced4f4) left for the atlas
+(merged at 63458fea):
+
+* 28 authored sightlines the land refused by more than a saddle's depth. There are new vantages
+  for 24, Ghorrow and the Smeltings moved, and two lines with no vantage in range were dropped.
+* The Heron Watch stood 8 m from the North Channel, half its disc river. It is now 35 m off.
+* The Blackgill fell into a hollow under its falls and stood 23 to 26 m over the ground, climbing
+  out to meet the Skarl Water. It now ends in a pool under the falls (`blackgill_pot`).
+* Weaver's Gill stood 29 m over the floor of Fern Gully under its fall. It now ends in the
+  Weaver's Linn at the fall's foot, and the gully below is dry.
+* The Thornmarch was one straight line at x = 3965 for 7.5 km. Its crest wanders now.
+* The Hushline stood in the sea, where the escort to it could not finish on foot. It is on the
+  landing now, with a pad of its own beside the Stair's.
+* The way from the Stair Head to the Choir was 980 m. It now goes over the knoll's neck and up
+  the avenue of colossi, and on the final build it is 542 m.
+* Some people's days walked them across water. They no longer do.
+
+Nothing the builder found is still the atlas's. Of what the cartographer's answers left:
+
+* **Grandfather Hollow's roads and street run into the Grandfather.** The town and its tree share
+  one position, (2750, 450), because the town is inside the tree. The tree is solid, and its model
+  reaches 38.8 m across the ground. All four of the town's roads, and its street, run to the
+  trunk. No test covers it: test_the_start only looks within 800 m of the start. The builder can
+  stop them at the tree's foot as it now does at the Choir. But the street is laid only where
+  roads end at a settlement's centre, and the exterior builder lays its plots along it, so where
+  the town's houses and its way into the trunk stand is the game's to say first.
+
+### Next, in order
+
+1. **Merge this branch and rebuild the world in main** with `./run.sh world`. The branch head
+   builds the final build's world with the heads of the narrow becks wet (993e24d2). Then run
+   the Godot suite with the atlas-readiness branch's tests, and the Python tests.
+2. **The land under five roads is off their grade** (test_roads, above). Trace it on a
+   4096 build: the heights after the road carve and after each stage that follows it, at the
+   points the test names.
+3. **Grandfather Hollow** (above): the game's layout first, then the builder's stop at the tree.
+4. **A valley carved through high ground has a smooth floor.** The valley and gorge carve replaces
+   the land with a smooth surface, so the floor has none of the detail band's roughness. Give it
+   the same grain as the gorge wall's.
+5. **The heads of four becks** float a point or two over their ground, by 9 to 11 m: the Rib Beck,
+   the Brindle Beck, the Oskel, and Weaver's Gill at its source. Trace it; the landforms are
+   ruled out.
+6. **The build's time.** Measure where the scatter's 613 s go before changing anything. Drawing
+   each province's candidates only over its own texels is the first thing to try.
+7. **The recipe `cover`** is still off, and with it the wind-bent willows and limes. Its drop test
+   was taken on the seeded world, so it wants taking again on this one, and looking at from the
+   ground, before it goes on.
+
+### Before the atlas: the landforms and the cover, looked at
+
+This pass began as the second half of "The shape of the land": the landforms and the regional
+cover had been built and measured and left off, because nobody had looked at them from the
+ground or put them through the drop test. That was finished before the direction changed, and
+**the recipes stayed off.** Two full 4096 builds were shot in full (the 42-shot sheet and the
+three-shot horizon, each on a plan made from its own world), and every frame was looked at side
+by side:
+
+| | default (the committed world) | landforms + cover |
+|---|---|---|
+| drop test: colour / landform / together | 0.90 / 0.31 / 0.90 | 0.95 / 0.19 / 0.90 |
+| landform, image by image | 13 of 42 right | 8 of 42 right |
+| worst frame | `hearthvale_street`, 1508 draws, 1.45 M primitives | `hearthvale_street`, 1482 draws, 1.45 M |
+| road tests | pass | two fail (below) |
+
+The bar was that the landform axis rises and nothing else falls. Landform fell, from 13 images
+read right to 8, and image by image the fall is not significant either: nine read right only on
+the default world and four only on the recipes world, an exact McNemar p of 0.27. Colour's rise
+from 38 to 40 is not significant (p 0.50). Together is 38 on both. Seven images a region cannot
+resolve a change this size. They are seven *kinds* of frame, and a street in Sedgemire looks more
+like a street in the Briarwold than like Sedgemire's own vista, so the landform signature mostly
+measures that. From the ground, some of the landforms now read. The levees in Sedgemire and
+Brightwater's dune ridges read best. The Briarwold's granite stair was worse than nothing up
+close, a dark mass filling a third of two ground shots.
+
+**Where the landforms went.** They are no longer a recipe. Each province in the atlas lists its
+own (`landform` in SCHEMA.md), and the cartographer chose them: scars and shakeholes in the
+dales, buried streets on the Ashgrid only, levees and oxbows in the delta, the granite stair and
+tors in the wolds, raised beaches and dune ridges round the Mere, barrows and lynchets on the
+downs. They are built wherever the atlas names them. The drop test above is the only measure of
+them there is, and it was taken on the old world. `cover` is still a recipe, still off.
+
+**The landforms go on after the roads.** On the recipes world two road tests failed, and the
+cause was the order of the build. The router saw the landforms. It took the road from Gullhithe
+up to Kharrow Hold straight over a limestone scar: 20 m of rise between two road points 7 m
+apart, with the carved land 4.85 m off the grade against 3.6 allowed. It also laid a road along
+the lip of a granite step, 9.4 m above the ground either side. The heights now come back from
+`compose_heights` with the landform apart. The pads, rivers and roads are laid on the land
+without it, and the landform goes on last, held off every road out past its carve
+(`landforms.road_clear`). The atlas builder keeps that order.
+
+**Three small faults and two cameras**, all committed before the atlas (b671e069, e8cc8586,
+4dfbea85):
+
+* The Clanless Camp's line from Brindlecrag cleared by 0.03 m on every build. A camp that is a
+  POI had a 30 m pad (the size a hamlet gets without its houses), and flattened to its knoll's
+  median it filled out over the slope into the line. Its pad is 22 m now (`roads.CAMP_PAD_M`).
+  A camp that is a *place* keeps 30.
+* Foxfire Falls -> the Charcoal Camp cleared by 0.08 m. The camp moves 6 m west, where its pad
+  sits 3.8 m higher.
+* Pilgrim's Ash lost its cross street, because its side road now arrives 64 and 50 degrees off
+  the through street's legs. The threshold is 49 degrees (`CROSS_STREET_DOT`).
+* The Cold Fire's camera in `plans/pois.json` looked at ash where the camp used to be.
+* The Briarwold's first ground shot photographed bark: a giant oak 12 m off, a quarter-turn from
+  its look. A ground shot now also asks that no tree stand in the front hundred degrees of its
+  view nearer than 1.2 times its crown's reach (`Scatter.view_clear`), and
+  `test_capture_plan.py` holds the committed ground shots to it.
+
+**Wind-bent trees: a contract change.** CONTRACTS section 6 gains two optional fields on a
+scatter row: `[x, y, z, yaw_deg, scale, tint_hex, lean_deg, lean_toward_deg]`. Old six-field
+rows read as they did. The streamer applies it (`WorldStreamer.instance_transform`, with a unit
+test). The rules that lean are Brightwater's pollard willows and limes, which are in `cover`,
+so the default world has no bent tree yet.
+## Atlas readiness: what remembers a coordinate instead of a place (2026-09-23)
+
+The user asked for a hand-drawn world. The cartographer's atlas moves 83 places and POIs and
+adds 216; the land agent builds the world from it. When that world replaces the tracked one,
+anything in the game that wrote down where a place *was* is wrong. This round found every such
+thing, made the ones that should follow a place follow it, and ran the game on the atlas world.
+
+### The inventory
+
+`docs/COORDINATES.md` sorts every world coordinate the game, its content and its tools hold into
+three kinds:
+
+* **Derived from a place**, and already following it: the opening cinematic (every key is a
+  place, a bearing, a distance and a height), the start, NPC homes and schedules (a place and a
+  named spot), quest markers, kills and escorts, encounters, door plan rows (a ring round the
+  place), sightlines, and the journey, flow and perf probes.
+* **Literals that should follow a place**: fifteen door plans that copied their place's
+  position, the Stair Head's way (18 map points), five hand-written capture plans (48 points),
+  five kinds of saved position, the map screen's default centre, the UI review's fake player,
+  the chart's region names, and coordinates in eleven test files.
+* **Legitimately absolute**: the places' and POIs' own positions (the map itself), the atlas and
+  the built world, the map frame and cells, interior pockets, the regions' no-world fallback
+  centres, in-flight crime records, and test fixtures off the map or on synthetic ground.
+
+### The conversions
+
+| What | Now | On main's world |
+|---|---|---|
+| Door plans | name their place only; `WorldDoors` reads the place | the same 15 centres |
+| The Stair Head's way | a `shape` between the camp and the Choir (`PlaceRef.along`); along the built road where the world has one | the 18 points to 2 mm (main has no road there) |
+| Capture plans by hand (streets, start, opening_scout, gait, roll) | `{place, bearing, distance, height}` specs, resolved the way the cinematic resolves its own | within 7 mm of the old points |
+| Saves: the player, the Hearth's landing and Echo, an interior's way out, an escort on the road | a `near` pin: nearest place, where it stood, height above ground | a load with no move is exact |
+| Map screen default centre | the `start_hub` place | Merrowby, as before |
+| Chart region names (`gen_map.py`) | deep inside the region's mask, nearest its own places, whole and off the compass rose | not regenerated |
+| Tests | `TestCase.at_place`. The Mere is found as the deepest water at the lake level, the northern wall behind Windgate, each region's height as its mean over its own mask, "far away" as the emptiest grid point | pass |
+
+`PlaceRef` (game/systems/shared) holds the specs and the pins. `test_place_ref.gd` (15 tests)
+moves places the way a redrawn map does and checks that each of the above follows. It also fails
+when a definition holds coordinates where a place belongs. Four tools come with it:
+`tools/place_paths.py` and `tools/capture/relative_plan.py` turn coordinates into places,
+`tools/coordinate_scan.py` lists what is still coordinates, and `tools/world/place_checks.py`
+reports what a new build's ground does to the places. `tools/world/use_build.sh` runs the game
+on a build without committing it.
+
+### On the atlas world
+
+The land agent's builds were installed in this worktree only and never committed. Its branch
+was merged here (to 3aced4f4); it had followed the move by editing coordinates, and the merge
+keeps the places instead. The first build, w_final, found five things in the game:
+
+* **The Stair Head's waystones walked a line of 37 to 61 degrees.** The drawn way went straight
+  down the knoll; the builder routes its road round it. The waystones now stand along the road
+  where the world has one (`WorldPois.road_between`), and the drawn shape is the fallback.
+* **32 of the Stair Head's colliders named no surface.** The atlas is the first world to give the
+  camp a pad, so nothing had asked what its flights of steps sound like. They are stone.
+* **Blackgill Falls stood a Hearthstone its data does not ask for.** The terraced falls raised
+  one on their first ledge whatever the data said.
+* **Willow Isle's hermit stood inside a hill.** The atlas draws the isle as land. The builder
+  heaped a second isle on top, and the stool's marker ended up inside it. A drawn isle is not
+  heaped over, and every prop and the marker stand on the surface they are on.
+* **The Hand's camera came 1.0 m inside its 3 m clearance** at (883, 400, -3129), where the
+  Skerrow Wall rises between the shot's two keys. Both keys go up 3 m.
+
+On the last builds (w_final3 and w_final4, atlas crc d0206101):
+
+* `./run.sh test`: 1,599 tests, **1 failed**. The waystones' walk from the Stair Head to the
+  Choir is 980 m, and DESIGN 5.1a's "a couple of minutes" is 300-650 m. The camp stands on a
+  110 m knoll, the heath between is at 62-80 m, and the Choir's plateau is at 130 m: the atlas's
+  to answer. All 24 doors land both ways, and every interior holds what it should.
+* `./run.sh journey`: 16 of 16. `./run.sh fights`: 66 fights, 0 checks failed.
+* `./run.sh flow`: the same 10 of 88 checks fail as on main's world, all after the opening holds
+  on its third shot (2 of 10 shots, 601 s to the skip). The body stands at the atlas's start,
+  (10, 108, 3670), with all 9 near cells in. The Godot process peaked at 2.6 GB. One run on
+  w_final2 was killed by the machine's memory limit while five other Godots were up.
+* The hand-written start plan, photographed on the atlas world, frames the camp, the Warden and
+  the Choir on the skyline from the new Stair Head. Nothing in the plan was edited.
+
+For the map rather than the game, sent to the land agent and the coordinator:
+
+* Heron Watch (-2460, -640) stands in the North Channel: water 3.3 m over ground 2.5 m.
+* Schedules across water: Jory Wick's Gullhithe to Tollmere leg crosses 1,085 m of the Mere
+  (728 m on main's world too). Wat Thatcher's Pilgrim's Ash to Merrowby leg crosses Lark Pool,
+  76 m at (204, 2536) to (207, 2459), and 44 m more.
+* The authored sightlines: 171 of 201 honoured, 28 refused, 15 POIs no vantage sees
+  (`tools/world/tests/test_sightlines.py` fails).
+* The generated capture plans (default, pois, look, horizon) were made for an earlier atlas build
+  and fail `tools/tests/test_capture_plan.py` until they are made again. The land agent has fixed
+  the one camera that failed even after regenerating (briarwold_vista, a5dfed74).
+
+### On the final atlas build (w_final5), with main merged
+
+Main (ef226622) and the land agent's last commits (45bbb137) are merged here. Main brought the
+opening's wall clock and the Stair's landing. The land agent brought the Stair Path up the
+Choir's avenue, roads that stop at a landmark's foot, and the capture plans made on the final
+build. w_final5 (from dbeb9d5f, atlas crc e11343a1) was installed in this worktree only and
+taken out again after the runs. Two more game-side fixes came of it:
+
+* **The Stair's wights on the land.** Main's landing test looked for a raised shelf's collider
+  under each wight. The atlas draws the landing as ground under the cliff, so where the landing
+  is not raised the test now reads the terrain there.
+* **A river is a line, not a count of points.** test_world_data wanted more than eight points in
+  every river, that is, a river longer than about 160 m. The atlas's Weaver's Gill falls into its
+  linn after 93 m. A river now needs two points and no gap longer than 30 m in its line.
+
+Results on w_final5, one Godot at a time:
+
+* `./run.sh test`: 1,639 tests, 1 failed in the run: the river count above, fixed and rerun green
+  (test_world_data 14 of 14). The world-coupled files: 167 of 167 once that is in. All 24 doors
+  land both ways, and all 24 interiors hold what they should.
+* `./run.sh journey`: 16 of 16.
+* `./run.sh flow`: **PASS**, all three starts (a new game through the Naming and the opening,
+  --load, Continue; Continue alone is 35 of 35). The opening no longer holds on its third shot.
+* `tools/world/place_checks.py`: nothing. The Stair Path is 542 m (DESIGN's 300-650 m), and
+  nothing that fights stands within 50 m of it. No place stands in water, no door on water or a
+  cliff, no schedule or escort crosses water, and no quest place is out of reach of dry ground.
+* `tools/world/tests/test_sightlines.py`, `tools/tests/test_capture_plan.py`,
+  `tools/tests/test_relative_plan.py`, `tools/ui/tests/test_gen_map.py`: 25 of 25.
+
+Everything the atlas owed from the earlier builds has been answered by the cartographer and the
+land agent: Heron Watch in the channel, the two schedules over water, the refused sightlines,
+the 980 m way, the ash-wights by the road and the road through the Choir's colossi. The game
+needs nothing more for main's world to be rebuilt from the atlas. After the rebuild, run
+`tools/world/place_checks.py` and the generators docs/COORDINATES.md lists.
+## The first minute heard, the Warden answers, tents that stand, and the slow machine's other clocks
+
+Six things the opening's work left weak, then what the user's playtest of main 6985d356 found at
+the start: talking to the Warden did nothing, the tents were nonsense, and the camp was sparse.
+Then the flow's skip check under load. Each is measured with the tests it names, then the full
+suite, the journey and the flow on the final tree, merged with main.
+
+### 1. The title and the Naming play their music
+
+The user's first minute was silent.
+
+**Cause.** The music director has always brought up the title's theme on a menu called
+`main_menu`, and the Naming's own piece on `character_creation`. Its test says so by emitting
+those menus by hand. But the title and the Naming are scenes of their own, changed to with
+`change_scene_to_file`, not menus `UI.open` puts on its stack. Nothing ever emitted either name.
+
+**Fix.** Each screen now says it is up when it stands and gone when it goes
+(`EventBus.menu_opened` / `menu_closed` with the id the director listens for). The director now
+reports which piece its overlay is playing (`Music.overlay_playing()`).
+
+**Checks.**
+* `test_music_director` stands each screen up the way the game does, hears its piece start
+  (`core:music/main_theme`, then `core:music/naming`), and hears it stop when the screen goes.
+* The flow probe checks both screens as a player reaches them.
+
+### 2. A ring with no room stands its fight further out
+
+When QuestFoes found no clear spot in its ring (9 to 22 m round a fight's place), it stood the
+foes at the place's middle. The middle of a landmark is inside it. Now:
+* the rings further out are tried, 4 m apart and 16 bearings each;
+* they go out to 60 m, or to the objective's own radius less a pace, so the kill still counts
+  where they stand (KillPlaces, 140 m by default);
+* foes that find no spot of their own stand a pace from a spot that was found, or on it;
+* only when nothing within reach is clear does the fight go to the middle, and the log says so.
+
+`test_kill_places` holds two places, with every spot outside the solid, clear by QuestFoes' own
+test, and within the radius:
+* the Choir, with its colossus grown to cover the whole ring;
+* the Headless Watch, on a crag as wide as the ring.
+
+### 3. A quest is at its first stage when it says it has started
+
+`QuestLog.start` announced a quest while its stage was still -1, and whatever the announcement
+woke read that. An npc held on the quest's first stage was let go for that moment, and the
+registry took the Warden's body away on every new game. The record now stands at its first stage
+(`stage` 0 and the first stage's id) when `quest_started` goes out. `_enter_stage` enters it
+properly just after, as before, with its journal and effects.
+
+**The new-game hook's extra look round is gone.** It had asked the NPC streamer to stand the
+Warden up again after the story started, and nothing needs it now. `test_cinematic_player`'s
+hand-over test still finds her at the start on the first frame of control without it.
+
+`test_quests` holds the stage the quest is at when the announcement is heard.
+
+### 4. The people, a stage's foes and a reach look round on the wall clock too
+
+Three polls counted game time:
+* the NPC streamer's look round (0.75 s);
+* QuestFoes' check for fights to stand up (1 s);
+* the quest log's check of where the player has reached (0.5 s).
+
+On a machine drawing a frame every few seconds the engine counts each frame as an eighth of a
+second, so these came round every 6 to 30 s. That is the same slow motion the opening had. All
+three now go through `PollTimer` (systems/shared), which fires on whichever clock gets there
+first: the wall on a slow machine, the engine's count in a fixed-rate run that simulates faster
+than the wall.
+
+`test_npc_streamer` gives the streamer one long frame the engine counts as a millisecond, and
+checks that a look came round.
+
+The escorts' look (0.25 s) is left on game time. It only notices an arrival or somebody left
+behind, and a slow machine notices a moment late.
+
+### 5. Words that have to be read fade on the wall clock
+
+A Tween runs on the engine's delta. These fades now run on `WallTweens` (ui/lib), a Tween paused
+and moved on by the time that really passed:
+* the opening's lines, title card and skip prompt;
+* the HUD's subtitle, which carries the Warden's first words.
+
+On a slow machine they had inked in over several frames, so the frame the player looked at had
+the line half-in. On a quick machine the two clocks agree. A new HUD subtitle now kills the last
+one's fade rather than racing it for the label.
+
+`test_words_keep_time` gives the words one long frame and reads the ink.
+
+ARCHITECTURE §9 now says it plainly: anything a player waits on or reads is timed on the wall.
+
+### 6. The stars at dusk, and the dotted line
+
+Both are in the sky, which is the painted look's. I have told that stream and changed nothing.
+
+**The stars.** The opening's Toll shot is Hearthvale at 18.2 h, with the sun at -6.5°. Three
+things meet there:
+* `Atmosphere.SUN_KEYS` gives the stars half strength; they already start at -2°.
+* `night_of` is 0.95, so the exposure is pushed nearly to the night exposure (×1.3), which lifts
+  the twilight to a bright rose.
+* The sky shader adds the stars whatever the brightness of the sky behind them.
+
+The same happens on every Hearthvale evening. I suggested fading the stars by the sky's own
+brightness in the shader, or starting them later in the keys. The painted look did both (195d01e5,
+on its branch):
+* no stars until the sun is 6° down, 0.7 at -12°, full at -18°, so the Toll at -6.5° gets 0.13;
+* each star faded by the brightness of the sky behind it.
+
+The Toll's frame waits for the atlas world's re-shoot.
+
+**The dotted line.** It was the sky shader's NaN at the sun's bearing, `pow()` of a hair under
+zero. The painted look's clamp fixed it on 09-23 at 01:59. The frames that showed it (06:06) were
+taken before that fix reached this branch, and neither flow run since has it. I checked the
+Toll's sky at the old line's bearing.
+
+### 7. Talking to the Warden does something
+
+The playtest's first report on the new start was "talking to Wren doesn't do anything", and it
+didn't.
+
+**Cause.** The interact key reached her. The ray found her body, the prompt showed her name, and
+`Interactor.try_interact` called `Npc.interact`. That emitted `EventBus.dialogue_started` and
+stopped, as though somebody would hear it and start the talk. Nobody did: only `Social.talk`
+starts the `DialogueRunner`, and the dialogue UI only draws once the runner has begun. Every test
+and the journey had called `Social.talk` directly, and the flow only looked at where she stood.
+
+A second fault was behind the first. Sixty of the seventy-two dialogues send their `bye` node back
+to `hub`, against their own notes ("'bye' ends"). Once a conversation had started, it could not be
+left.
+
+**Fix.**
+* `Npc.interact` starts the conversation through `Social.talk`, and not while one is running. A
+  property's steward is asked the same way.
+* The runner ends the conversation after `bye`, whatever `bye` names as next.
+* `just_ended()` covers the frame (and quarter second) after a conversation ends.
+  `Interactor.try_interact` stands aside while one runs or has just ended, so the press that closes
+  a conversation does not open it again.
+
+**Checks.**
+* `test_talk_to_the_warden` stands the world up the way a new game does. At 4, 2.5 and 1.5 m it
+  faces her and reads the ray and the prompt. It presses the key bound to interact, as a key press,
+  and sees the talk on the screen. It answers down to the goodbye by the number keys. At 2.5 m it
+  reads the Naming's first objective done.
+* `test_dialogue_runner` says goodbye to a hub-shaped conversation and to the Warden's own.
+* The flow probe now does the same after the hand-over. It walks up to her on the move key,
+  presses interact, photographs the talk (`talking_to_wren_tallow`), answers it and reads the
+  objective done.
+
+`cede10cd` went in as a "WIP:" checkpoint before these ran. The empty commit `028d0bcf` carries
+its title and the results.
+
+### 8. The tents are tents
+
+The playtest's second report: "nonsensical models (inverted tent edges)" at the Stair Head.
+
+**Cause.** The forge's tent (`gen_props.tent`) made each side's sheet at the middle of its slope,
+moved it there a second time, and tilted it a right angle off. The two sheets stood out over the
+ridge pole like wings, pale in the sun, and never reached the ground. The tent was also built along
+X with the mouth at one end, where a prop's front is -Y (+Z in the game, CONTRACTS §1). All three
+camp builders turn a tent's front to the fire with a bedroll "in each mouth". So every tent stood
+side-on to its fire with the bedroll along a flank.
+
+Every camp takes its tents from the same two models (`PoiKit.prop("tent")` answers any region's),
+so every camp had both faults.
+
+**Fix.** Each sheet is made flat, tilted at the origin with its outer edge down, and moved once. A
+quarter turn at the end puts the mouth in front. `cinderlea_tent_a` and `_b` are rebuilt, keeping
+their `.import` files (and so their uids).
+
+`test_camp_tents` reads every built tent as the game loads it:
+* nothing stands outside the A by more than the canvas's thickness and sag: 3% now, 68% before;
+* the widest of it is at the ground, and the highest of it is over the ridge: 0.10 m out now,
+  1.5 m before;
+* the closed end is behind and the mouth is open in front: 4.6 m² of canvas across the tent
+  behind and 0.3 m² in front (its poles and lines), where it was 0.4 m² each way.
+
+The same two models are every camp's tents, so the camps at the other points of interest are
+fixed by the same rebuild. They were not photographed.
+
+### 9. The flow's skip check under load
+
+The settlements' flow failed one check, "pressing a key during the opening shows the skip prompt",
+at a machine load of 11 to 15. It passed 98 of 99.
+
+**Cause.** The probe photographed the last shot at its middle and pressed after. The shots run on
+the wall clock, and on a loaded machine one frame can outlast the rest of the shot. The frame after
+the key was already the hand-over, which takes the prompt down.
+
+**Fix.** The probe now:
+* photographs the last shot a quarter in (`LAST_SHOT_AT`) and presses straight after;
+* looks for the prompt on every frame drawn while the key is down, not only the first;
+* reads "taken as a skip" from the opening's own `finished(skipped)`. Before, an opening that ran
+  out on its own also counted.
+
+The prompt already fades on the wall clock (`WallTweens`). `test_words_keep_time` now also holds
+that it is fully in on the frame after its key, and gone on the frame after it is let go.
+
+### 10. Life at the Stair Head
+
+The playtest found the start "a little sparse". Nothing in it moved but the Warden and a wisp of
+smoke. `_camp_life` (poi_builders) now draws, after the rest of the camp, so that everything drawn
+before keeps its place and its random draws:
+* a pot hung on three lashed poles over the fire, steaming;
+* the fire's smoke carried up high enough to be seen from the Stair and across the heath;
+* the Wardens' spears stood by the east tent with a shield at their foot;
+* a pack at each tent's mouth, peat to feed the fire, a pail, and rope off the cart;
+* crows.
+
+**The crows.** Wickmere has no animal models, and the camp animals on the brief's list need a
+quadruped from the forge. A crow is a shape against the sky, so `Crows` (world/pois) draws a
+body, a head, a tail and two pivoted wings once and shares them. The birds:
+* sit on the colours' poles and the lamps, with two wheeling over the heath ahead;
+* flap and glide, banked into the turn;
+* are put up by anybody who walks within seven metres of a sitting one;
+* come back down to a perch nobody is standing near.
+
+`test_crows` holds that they sit and wheel, that somebody coming near puts one up, that none sits
+down beside somebody, and that all are sat again once left alone. `test_the_start`'s new
+`test_the_camp_is_lived_in` raises the Stair Head and finds the pot, the spears, the shield, the
+peat, the pail, the rope and the crows sat about it. In the first view, the pot steams on its
+tripod over the fire, the peat is stacked by the west tent, the shield and spears stand at the east
+tent's mouth, and two crows are over the heath ahead.
+
+`test_probes_compile` loads the flow probe and the capture runner with the game's singletons up,
+so a mistake in either is found in a second rather than an hour into a flow. Nothing else compiled
+them.
+
+### Runs
+
+One Godot at a time, each with the memory for it and after the world build's lock (the journey and
+the flow went ahead of a queued build, at the coordinator's word).
+
+**Targeted runs**, each on the tree that finished it. Every one had 0 failed and 0 script errors.
+* Phase A: `test_music_director` 30, `test_npc_streamer` 12, `test_quests` 38, `test_kill_places`
+  14, `test_naming_screen` 16, `test_world_status` 21, `test_signal_hygiene` 8,
+  `test_cinematic_player` 10.
+* The talk: `test_talk_to_the_warden` 1 (30 s: the world stood up, three distances, a talk answered
+  to its goodbye), `test_dialogue_runner` 26, `test_npc_actor` 16, `test_property` 13.
+* The tents, the camp, the words and the probes: `test_camp_tents` 2, `test_crows` 2,
+  `test_the_start` 14, `test_pois` 19, `test_words_keep_time` 3, `test_probes_compile` 1.
+
+**On the final tree**, `dfc83c6b`, with main's `9263fc11` (player feel, round four) merged in:
+* full suite: PASS. 1624 tests, 0 failed, 0 content problems, 0 script errors, 0 dead lambda
+  captures. The 4 logged errors, and the 14 engine errors from enemy perception in the Weaverdeep
+  footsteps test, are the same as on the Phase A tree;
+* journey: PASS, 16 of 16 steps, 0 logged errors;
+* flow: PASS. New game 109 of 109 checks, load 32, continue 35, 0 errors logged. On a loaded
+  machine, the first frame drawn after the skip key took 2.1 s and carried the prompt. After the
+  hand-over the probe walked to the Warden on W, from 7.4 m to 1.4 m, and pressed E. The talk was on
+  the screen (`talking_to_wren_tallow`: "Muddy boots, straight back, no idea where you are. You'll
+  do."). It was answered to its goodbye, and the Naming went from `wake` to `the_choir`.
+
+**Pictures** (`tools/capture`, opengl3). The Stair Head before and after the tents' rebuild: from
+the first view, from the way, each tent from its side, and from above. Before, the tents were
+white wings over their ridge poles. After, they are ridge tents with their mouths to the fire.
+The first view with the camp's life in is described under 10.
+
+`dfc83c6b` went into main as `36d83f56`.
+
+### Still weak, or not done
+
+* Other UI fades still run on game time. That covers the objective line under the compass, the
+  region card and the menus' caption; on a slow machine they ink in slowly, but none of them is
+  read against a clock.
+* The escorts' look keeps game time (above). It is a one-line change to PollTimer when it
+  matters.
+* The stars at dusk are fixed on the painted look's branch, not yet in main when this was written.
+  The Toll's shot has not been seen with the fix.
+* The camp's other animals need a forge generator for a quadruped and a way to move it. The
+  crows are drawn at runtime and are the only animals in the game.
+* `tools_gd/check_scripts.gd` stops on an internal script error at its line 20 on 4.7.2 and then
+  never quits, so a run of it hangs until killed. `test_probes_compile` covers the two probes the
+  long runs use: the flow's and the captures'.
+* `cede10cd` keeps its "WIP:" subject. It was pushed to `wip/opening` before its tests ran, so it
+  is not reworded. The empty commit after it carries the title and the results.
+* In the talk's picture, the HUD's "[E] Talk to Wren Tallow" prompt stays up under the
+  conversation, and a toast says it again. The Interactor should offer nothing while a
+  conversation runs. That is the next commit.
+* The camera stays behind the player through a conversation, so the player's back hides the
+  Warden. Next after the prompt: a conversation camera that frames the speaker over the
+  player's shoulder, eases back to the follow camera on goodbye, keeps to the camera settings
+  and stays out of first person.
+* For the atlas world (Phase B), from the cartographer's last pass:
+  * the Stair Path to the Choir ends inside the primary colossus, so the waystones and the start's
+    "goes round what stands solid" check should stop at the Naming stage's reach radius, at the
+    head of the avenue;
+  * the way now leaves the camp westward, so the camp's way-out poles and lamp should aim at the
+    path's first leg, not at the Choir;
+  * the path passes 10 m from the Cantor's Seat door, which is unlocked. That needs deciding:
+    a detour for the curious, or a marker that keeps the first walk on the way.
+## The quests, played on the atlas world
+
+The atlas world's merge had one gate left besides the final build: every authored quest played
+through on it, every way. `./run.sh quests` does that (`tests/quests/quest_walker.gd`).
+
+**How it plays.** It stands up a new game in the built world, the way the Naming screen hands one
+over. It begins each quest the way the game does: the opening, a line somebody says, the work a
+giver offers at their hub, or the quest before it. Then it drives each objective through the
+services a player's input reaches:
+
+* **Going places.** It teleports to the place and waits for the country to stream in round the
+  body.
+* **People.** It finds a person where their day has them and talks through their own dialogue.
+  `tests/quests/dialogue_steer.gd` picks the lines, looking ahead through the graph the author
+  wrote to the line the objective waits for. On the way it takes no decision and starts nobody
+  else's work.
+* **Fights.** Whatever stands at the fight is put down with hits through the damage model.
+* **Finds.** Things are picked up where they lie. Books are read where they lie or out of the
+  bag. What only a shop or a boss has is bought or taken.
+* **What gates an objective.** A flag somebody's line sets is earned by saying that line, and that
+  line's own gating flag is earned first.
+
+After each stage the walker checks that the stage's effects took. At each ending it checks that
+whoever remembers the quest greets you with it.
+
+**Every way.** Before a decision, the game is saved in memory through the same SaveSystem a slot
+uses. Each other option is chosen from that save and walked to the quest's end. The houses built
+so far are let go on each restore, as the scene change of a real load lets them go. A decision
+first met inside a branch is walked every way there.
+
+**On w_final5 (dbeb9d5f).** All 75 quests end every way they can: 224 walks with branches on,
+0 logged errors, 30 minutes. Before that, three runs found these:
+
+* **A book left open.** Reading a book where it lies opens the reader, a full-screen menu that
+  pauses the game. The walk went on paused, so nothing streamed in and nobody stood up. Four
+  quests failed on fights and finds that were never there. The walk now shuts what it left open,
+  as a player would. It also says why, when the country does not stream in.
+* **Vigil's escort.** It waits on Aud Fennick agreeing, and she agrees only once Cadwen has asked
+  for the walk. That is fine in play but was not earned by the walk; the Order's other three
+  quests hung on it.
+* **What the Water Kept, second way.** Tallissa's book had already been taken in the first
+  branch's copy of her house.
+* **Two world notes, from POI dressings.**
+  * The Wardens' hand-bell lay under the Tumbled Watch's lying stair. Its `fallen_stair` marker
+    is now by the fire at the drum's lower mouth.
+  * Ivo Goslin stood inside the mound heaped on Willow Isle. That is the heap atlas-readiness
+    709f9908 removed, and it clears with the atlas merge.
+
+The walker's WORLD lines name what the built world does to a place, person or find (water,
+height, something solid) with coordinates and the shape touched. Any such line fails the run.
+
+### Tests
+
+* `./run.sh quests` passes all 75 quests on w_final5. The two world notes are fixed on this branch
+  (the bell) or by the atlas merge (Willow Isle).
+* `tests/unit/test_dialogue_steer.gd` covers the line picking against a fixture graph.
+
+### Next
+
+Run `./run.sh quests` on the merged, rebuilt main world, and on every world build after. Its
+exit code is the gate.

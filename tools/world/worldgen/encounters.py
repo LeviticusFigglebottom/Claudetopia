@@ -24,6 +24,11 @@ AREA_PER_ENCOUNTER_M2 = {1: 210_000.0, 2: 170_000.0, 3: 140_000.0, 4: 120_000.0,
 # Nobody camps in the square outside the inn, and the verge of a road is walked too often.
 PAD_CLEAR_M = 40.0
 ROAD_CLEAR_M = 14.0
+## The roads out of the start (the atlas's roads from its `start` place) are walked by someone who
+## has not yet learned to fight, so nothing stands within this of them: the opening's own rule
+## (test_the_start.gd, CLEAR_OF_ENEMIES_M), counted from the furthest member of a group. A group
+## of ash wights stood 46 m from the way to the Choir.
+START_WAY_CLEAR_M = 50.0
 # Within this of a settlement the country is worked, patrolled and safe; it fades out to
 # SAFE_FADE_M, beyond which the full density applies.
 SAFE_M = 120.0
@@ -71,14 +76,32 @@ def _danger(regions: list) -> dict:
     return {r.id: int(getattr(r, "danger", 1) or 1) for r in regions}
 
 
-def place(world, regions: list, places: list, packs_dir: str, seed: int) -> dict:
-    """Returns {(cx, cz): [spawn, ...]}."""
+def distance_to_paths(x: np.ndarray, z: np.ndarray, paths) -> np.ndarray:
+    """Metres from each point (x, z) to the nearest of the polylines `paths` ([[x, z], ...] each)."""
+    best = np.full(np.shape(x), np.inf)
+    for p in paths:
+        p = np.asarray(p, dtype=np.float64)[:, :2]
+        if p.shape[0] < 2:
+            continue
+        a, b = p[:-1], p[1:]
+        e = b - a
+        L2 = np.maximum((e * e).sum(axis=1), 1e-12)
+        px = np.asarray(x, dtype=np.float64)[:, None]
+        pz = np.asarray(z, dtype=np.float64)[:, None]
+        u = np.clip(((px - a[:, 0]) * e[:, 0] + (pz - a[:, 1]) * e[:, 1]) / L2, 0.0, 1.0)
+        d = np.hypot(px - (a[:, 0] + u * e[:, 0]), pz - (a[:, 1] + u * e[:, 1])).min(axis=1)
+        best = np.minimum(best, d)
+    return best
+
+
+def place(world, regions: list, places: list, packs_dir: str, seed: int, start_ways=()) -> dict:
+    """Returns {(cx, cz): [spawn, ...]}. `start_ways` are the polylines of the roads out of the
+    start, which nothing stands within START_WAY_CLEAR_M of."""
     grid: Grid = world.grid
     rng = np.random.default_rng(seed ^ 0x5CA1AB1E)
     ecology = _ecology(regions)
     defs = _enemy_defs(packs_dir)
     danger = _danger(regions)
-    region_ids = [r.id for r in regions]
 
     hearths = np.array([[float(p["position"][0]), float(p["position"][1])] for p in places
                         if str(p.get("kind", "")) in
@@ -100,7 +123,8 @@ def place(world, regions: list, places: list, packs_dir: str, seed: int) -> dict
         x = (gx.ravel() + rng.uniform(0.0, step, gx.size)) - grid.size_m * 0.5
         z = (gz.ravel() + rng.uniform(0.0, step, gz.size)) - grid.size_m * 0.5
         s = world.sample(x.astype(np.float32), z.astype(np.float32))
-        keep = s["owner"] == region_ids.index(r.id)
+        # `regions` are the atlas's provinces, several of which may share a region's creatures
+        keep = s["owner"] == r.index
         keep &= s["water"] < 0.5
         keep &= s["pad"] == 0
         keep &= s["road_d"] > (s["road_w"] * 0.5 + ROAD_CLEAR_M)
@@ -112,6 +136,10 @@ def place(world, regions: list, places: list, packs_dir: str, seed: int) -> dict
             # Thin out what stands near a settlement rather than cutting it off sharply.
             near = np.clip((d - SAFE_M) / (SAFE_FADE_M - SAFE_M), 0.0, 1.0)
             keep &= rng.random(x.shape) < near
+        if len(start_ways):
+            # the group's lead stands clear by the rule and by the furthest a member strays from it
+            spread_max = max(g[2] for g in GROUPS.values())
+            keep &= distance_to_paths(x, z, start_ways) > START_WAY_CLEAR_M + spread_max
         x, z, y = x[keep], z[keep], s["h"][keep]
         if x.size == 0:
             continue
@@ -131,8 +159,7 @@ def place(world, regions: list, places: list, packs_dir: str, seed: int) -> dict
                     px, pz = float(x[i] + math.cos(a) * rad), float(z[i] + math.sin(a) * rad)
                 ph = float(sample_bilinear(world.H, grid, np.array([px], dtype=np.float32),
                                            np.array([pz], dtype=np.float32))[0])
-                cx, cz = grid.cell_of(np.array([px]), np.array([pz]))
-                key = (int(np.clip(cx[0], 0, grid.cells - 1)), int(np.clip(cz[0], 0, grid.cells - 1)))
+                key = grid.written_cell(px, pz)
                 out.setdefault(key, []).append({
                     "kind": "enemy",
                     "def": enemy_id,

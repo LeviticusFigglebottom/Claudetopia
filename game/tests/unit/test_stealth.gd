@@ -209,7 +209,7 @@ func test_pickpocket_resolution_moves_goods_and_records_the_crime() -> void:
 	victim.set_script(_script(bag_script))
 	_root().add_child(victim)
 	_nodes.append(victim)
-	victim.global_position = Vector3(900, 40, 2350)
+	victim.global_position = at_place("core:place/merrowby", 40.0)
 	victim.call("add", "core:item/rope", 1)
 	var thief := Node3D.new()
 	thief.set_script(_script(bag_script))
@@ -278,7 +278,7 @@ func test_service_samples_lights_weather_and_player() -> void:
 	assert_true(st.is_in_group("stealth"))
 	assert_eq(Stealth.instance, st)
 	st.sky_exposure_override = 0.5
-	var here := Vector3(900, 40, 2350)
+	var here := at_place("core:place/merrowby", 40.0)
 	assert_near(st.light_level(here), Stealth.sun_light(1.0, 0.5), 0.001, "noon, half sky")
 	var lamp := StealthLight.new()
 	lamp.auto_from_light = false

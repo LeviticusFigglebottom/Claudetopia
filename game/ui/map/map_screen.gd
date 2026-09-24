@@ -208,7 +208,19 @@ func _centre_on_player() -> void:
 	if player and player is Node3D:
 		centre_on_world(Vector2((player as Node3D).global_position.x, (player as Node3D).global_position.z))
 	else:
-		centre_on_world(Vector2(GameState.get_flag("_map_centre_x", 900.0), GameState.get_flag("_map_centre_z", 2350.0)))
+		centre_on_world(_home_xz())
+
+
+## Where the chart opens with nobody on the map: the place the content calls its start hub
+## (Merrowby), wherever the map has put it, else the middle of the map.
+static func _home_xz() -> Vector2:
+	for p in ContentDB.all("place"):
+		var tags: Variant = p.get("tags", [])
+		if typeof(tags) == TYPE_ARRAY and (tags as Array).has("start_hub"):
+			var xz := PlaceRef.xz(str(p.get("id", "")))
+			if xz != Vector2.INF:
+				return xz
+	return Vector2.ZERO
 
 
 # --- places, fog and markers ----------------------------------------------------------------

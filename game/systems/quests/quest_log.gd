@@ -10,7 +10,8 @@ extends Node
 ## knows what the board asked for.
 ##
 ## Objective types (CONTRACTS §7 plus this stream's list):
-##   talk      target = npc id            EventBus.dialogue_ended
+##   talk      target = npc id            EventBus.dialogue_ended; with `topic` (a node of their
+##                                        dialogue), dialogue_node_entered on that node instead
 ##   reach     target = place/poi id      position provider, or EventBus.place_discovered
 ##   kill      target = enemy id (or "" for any, or a tag:) EventBus.entity_killed; `where` (an
 ##             interior, place or POI) and `region` say where it must happen (KillPlaces)
@@ -63,6 +64,7 @@ func _ready() -> void:
 	EventBus.item_acquired.connect(_on_item_acquired)
 	EventBus.place_discovered.connect(_on_place_discovered)
 	EventBus.dialogue_ended.connect(_on_dialogue_ended)
+	EventBus.dialogue_node_entered.connect(_on_dialogue_node_entered)
 	EventBus.hearthstone_rested.connect(_on_hearthstone_rested)
 	EventBus.book_opened.connect(_on_book_opened)
 	EventBus.item_used.connect(_on_item_used)
@@ -867,9 +869,22 @@ func _on_place_discovered(place_id: String) -> void:
 
 func _on_dialogue_ended(npc_id: String) -> void:
 	_for_each_objective("talk", func(quest_id: String, i: int, o: Dictionary) -> void:
+		if str(o.get("topic", "")) != "":
+			return      # it waits for its own line (_on_dialogue_node_entered)
 		if _matches(str(o.get("target", "")), npc_id):
 			_progress(quest_id, i, 1))
 	_hand_over(npc_id)
+
+
+## A `talk` that names a `topic` (a node of the person's dialogue) closes when a conversation with
+## them reaches that line, and not before. Any conversation closed a talk, so a stage that sends you
+## to tell somebody something closed on a greeting, and the line that tells them was never needed.
+## An objective with no topic still closes when any conversation with them ends.
+func _on_dialogue_node_entered(npc_id: String, node_id: String) -> void:
+	_for_each_objective("talk", func(quest_id: String, i: int, o: Dictionary) -> void:
+		var topic := str(o.get("topic", ""))
+		if topic != "" and topic == node_id and _matches(str(o.get("target", "")), npc_id):
+			_progress(quest_id, i, 1))
 
 
 ## A delivery closes when you have spoken to the person it is for while carrying what they are

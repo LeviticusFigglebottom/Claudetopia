@@ -2,7 +2,8 @@ class_name Interactor
 extends RayCast3D
 ## Interaction probe (physics layer "interactable"). Any collider (or an ancestor of it) with
 ## `interact(player: Node)` is a target; `prompt_text() -> String` (or a `prompt` property)
-## labels it. Emits prompt_changed("" when nothing) and EventBus.notify(text, "prompt") on acquire.
+## labels it. Emits prompt_changed("" when nothing) and EventBus.notify(text, "prompt") on acquire,
+## once each time the player comes to something. While a conversation runs it offers nothing.
 
 signal prompt_changed(text: String)
 signal target_changed(target: Node)
@@ -12,6 +13,9 @@ const MASK_INTERACT := 1 << 4
 var reach: float = 2.6
 var target: Node = null
 var prompt: String = ""
+## What the prompt was last announced for (EventBus.notify), as an instance id, so that a
+## conversation ending with the player still facing the person does not announce them again.
+var _announced_id := 0
 
 
 func _ready() -> void:
@@ -33,14 +37,26 @@ func update_aim(direction: Vector3) -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	var found := _resolve(get_collider()) if is_colliding() else null
+	# Nothing is offered while somebody is talking. The prompt had stayed on the screen under the
+	# conversation, and a toast repeated it, saying that the key going on through the talk would
+	# start it.
+	var talking := _talking()
+	var found := _resolve(get_collider()) if is_colliding() and not talking else null
+	if found == null and not talking:
+		_announced_id = 0
 	if found != target:
 		target = found
 		prompt = _prompt_for(found)
 		target_changed.emit(target)
 		prompt_changed.emit(prompt)
-		if target != null and not prompt.is_empty():
+		if target != null and not prompt.is_empty() and target.get_instance_id() != _announced_id:
+			_announced_id = target.get_instance_id()
 			EventBus.notify.emit(prompt, "prompt")
+
+
+func _talking() -> bool:
+	var talk: Node = Social.dialogue if Social != null else null
+	return talk != null and bool(talk.call("is_running"))
 
 
 func _resolve(collider: Object) -> Node:

@@ -12,7 +12,7 @@
       {"days": "all", "hour": 12, "place": "core:place/gullhithe", "activity": "eat", "spot": "racks_bench"},
       {"days": "workdays", "hour": 13, "place": "core:place/gullhithe", "activity": "work", "spot": "net_loft", "notes": "nets, and the notice on the wall"},
       {"days": "workdays", "hour": 16, "place": "core:place/gullhithe", "activity": "socialise", "spot": "slipway"},
-      {"days": "restday", "hour": 8, "place": "core:place/tollmere", "activity": "idle", "spot": "charter_board", "notes": "reading the day's prices with a face on him, in front of the steward"},
+      {"days": "restday", "hour": 8, "place": "core:place/the_lamp", "activity": "socialise", "spot": "gallery", "notes": "up the lane to his aunt at the Lamp, and the day's Tollmere prices read off the boats as they pass, with a face on him"},
       {"days": "restday", "hour": 14, "place": "core:place/gullhithe", "activity": "idle", "spot": "slipway"},
       {"days": "all", "hour": 19, "place": "core:place/gullhithe", "activity": "eat", "spot": "wick_cottage_step"},
       {"days": "all", "hour": 21, "place": "core:place/gullhithe", "activity": "sleep", "spot": "wick_cottage"}
