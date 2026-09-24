@@ -1,26 +1,26 @@
 {
  "bounds": {
-  "height": 6.464,
+  "height": 5.666,
   "max": [
-   2.218,
-   6.464,
-   2.67
+   2.163,
+   5.666,
+   2.852
   ],
   "min": [
-   -2.192,
+   -2.165,
    0.0,
-   -1.616
+   -1.604
   ],
-  "radius": 4.461
+  "radius": 4.204
  },
- "built_seconds": 79.66,
+ "built_seconds": 172.8,
  "category": "rocks",
  "collision": "cinderlea_basalt_columns_a_col.glb",
  "collision_params": {},
  "columns": 16,
  "generator": "gen_rocks",
  "glb": "cinderlea_basalt_columns_a.glb",
- "hash": "8907931f774313e5",
+ "hash": "390f11350fd70ca0",
  "kind": "basalt_columns",
  "materials": [
   "cinderlea_basalt_columns_a_mat"
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "cinderlea_basalt_columns_a",
-   "tris": 1316
+   "tris": 1404
   },
   {
    "name": "cinderlea_basalt_columns_a_LOD1",
-   "tris": 526
+   "tris": 560
   },
   {
    "name": "cinderlea_basalt_columns_a_LOD2",
-   "tris": 196
+   "tris": 210
   }
  ],
  "name": "cinderlea_basalt_columns_a",
@@ -65,17 +65,17 @@
    "warm": "#a08a4a"
   }
  },
- "seed": 9111,
- "tallest_m": 6.25,
+ "seed": 9906,
+ "tallest_m": 5.54,
  "textures": [
   "cinderlea_basalt_columns_a_albedo.png",
   "cinderlea_basalt_columns_a_normal.png",
   "cinderlea_basalt_columns_a_orm.png"
  ],
  "tris": [
-  1316,
-  526,
-  196
+  1404,
+  560,
+  210
  ],
  "version": 3
 }
