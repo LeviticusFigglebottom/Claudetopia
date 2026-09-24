@@ -122,6 +122,10 @@ GORGE_REACH_M = 400.0
 GORGE_WANDER_M = 10.0
 GORGE_GRAIN_M = 1.2
 GORGE_INTO_M = 40.0
+## A valley comes in down its river from the source, full depth by half the valley's width plus
+## GORGE_INTO_M down it. A river does not cut the hill behind its own source: carved from the
+## source point outwards, the Rudd Beck's head cut a bowl into the fell behind it, and lowered the
+## Fallen Hand's knoll, 80 m up the fell, by 5 m after the saddle under its line had been cut.
 
 
 def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank | None = None) -> np.ndarray:
@@ -132,7 +136,8 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
     as it was, and land over it is a gorge the river has cut through high ground: the wall
     climbs on from the valley's edge at GORGE_GRADE until it meets the land. With a `bank`, the
     wall's line wanders and its face has a grain (GORGE_WANDER_M, GORGE_GRAIN_M); without one it
-    is a plane. `valley_m` 0 leaves the land to the channel's own banks.
+    is a plane. The valley comes in down the river from its source, and the land behind the
+    source is left as it was. `valley_m` 0 leaves the land to the channel's own banks.
     """
     n = grid.n
     wander = grain = None
@@ -148,7 +153,11 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
         reach = max(reach, half_w + 20.0)
         mask = np.zeros((n, n), dtype=bool)
         surf = np.zeros((n, n), dtype=np.float32)
+        down = np.zeros((n, n), dtype=np.float32)
         paths.rasterise_polyline(r.points, grid, value=r.surface, out_mask=mask, out_value=surf)
+        # how far down the river from its source each point of it is
+        run = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(r.points, axis=0), axis=1))])
+        paths.rasterise_polyline(r.points, grid, value=run, out_mask=mask, out_value=down)
         if not mask.any():
             continue
         # only a window round the river is worth the distance transform
@@ -161,7 +170,9 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
         d = (dist * grid.spacing).astype(np.float32)
         del dist
         s = surf[i0:i1, j0:j1][ni, nj]
-        del ni, nj
+        # (from two texels down: the source's own texel is written a metre or so down the river)
+        head = smoothstep(2.0 * grid.spacing, reach + GORGE_INTO_M, down[i0:i1, j0:j1][ni, nj])
+        del ni, nj, down
         rim = VALLEY_GRADE * max(reach - half_w, 0.0)
         over = np.maximum(d - reach, 0.0)
         wall = GORGE_GRADE * over
@@ -174,7 +185,8 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
         side = s + 1.0 + climb
         del climb, s, over, wall
         Hs = H[i0:i1, j0:j1]
-        H[i0:i1, j0:j1] = np.where(d <= reach + GORGE_REACH_M, np.minimum(Hs, side), Hs)
+        carved = lerp(Hs, np.minimum(Hs, side), head)
+        H[i0:i1, j0:j1] = np.where(d <= reach + GORGE_REACH_M, carved, Hs)
     return H
 
 

@@ -97,6 +97,40 @@ class GorgeTest(unittest.TestCase):
         self.assertTrue(np.array_equal(out, self.land))
 
 
+class RiverHead(unittest.TestCase):
+    """A river that rises in the middle of the plateau and runs south through it."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.grid = Grid(2048.0, 1024)
+        n = cls.grid.n
+        c = cls.grid.x0 + (np.arange(n) + 0.5) * cls.grid.spacing
+        cls.x = np.broadcast_to(c[None, :], (n, n))
+        cls.z = np.broadcast_to(c[:, None], (n, n))
+        cls.land = np.full((n, n), PLATEAU_M, dtype=np.float32)
+        pts = paths.resample_polyline(np.array([[RIVER_X, 0.0], [RIVER_X, 900.0]]), 20.0)
+        k = pts.shape[0]
+        river = HY.River(id="test:river/head", points=pts, width=np.full(k, WIDTH_M, np.float32),
+                         surface=np.full(k, WATER_M, np.float32))
+        cls.carved = HY.carve_river_valleys(cls.grid, cls.land.copy(), [river])
+        cls.reach = HY.VALLEY_WIDTHS * WIDTH_M * 0.5
+
+    def test_the_land_behind_the_source_is_left_as_it_was(self):
+        # the Rudd Beck's head cut a bowl into the fell behind it, and took 5 m off the Fallen
+        # Hand's knoll 80 m up the fell after the saddle under its line had been cut
+        behind = self.z < -2.0
+        self.assertTrue(np.array_equal(self.carved[behind], self.land[behind]))
+
+    def test_the_valley_comes_in_down_the_river(self):
+        across = np.abs(self.x - RIVER_X) < 30.0
+        cut = self.land - self.carved
+        near = float(cut[across & (np.abs(self.z - 10.0) < 2.0)].max())
+        full = float(cut[across & (np.abs(self.z - 400.0) < 2.0)].max())
+        self.assertLess(near, full * 0.5, "the valley is at %.1f of its depth 10 m from the source" % (near / full))
+        # and down the river it is the whole valley: 58 m cut out of the plateau at the bank
+        self.assertAlmostEqual(full, PLATEAU_M - (WATER_M + 1.0 + HY.VALLEY_GRADE * 0.0), delta=1.5)
+
+
 class WanderingWall(unittest.TestCase):
     """The same gorge through a flat plateau, carved with a noise bank as a build carves it."""
 
