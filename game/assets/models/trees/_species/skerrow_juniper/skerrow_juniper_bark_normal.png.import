@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://itad042s41gl"
+path.s3tc="res://.godot/imported/skerrow_juniper_bark_normal.png-6ed02bf635736c2631fd4c25bbd98ef7.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/skerrow_juniper/skerrow_juniper_bark_normal.png"
+dest_files=["res://.godot/imported/skerrow_juniper_bark_normal.png-6ed02bf635736c2631fd4c25bbd98ef7.s3tc.ctex"]
 
 [params]
 

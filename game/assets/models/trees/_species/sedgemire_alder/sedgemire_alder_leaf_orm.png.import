@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0uwogjj8cx0g"
+path.s3tc="res://.godot/imported/sedgemire_alder_leaf_orm.png-e150e5600cc3199ffea00b76a444d16c.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/sedgemire_alder/sedgemire_alder_leaf_orm.png"
+dest_files=["res://.godot/imported/sedgemire_alder_leaf_orm.png-e150e5600cc3199ffea00b76a444d16c.s3tc.ctex"]
 
 [params]
 

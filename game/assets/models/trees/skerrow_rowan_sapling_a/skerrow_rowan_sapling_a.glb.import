@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bebcj3scvwc43"
+path="res://.godot/imported/skerrow_rowan_sapling_a.glb-3741f68e58fa9025fa73419d02122a73.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_rowan_sapling_a/skerrow_rowan_sapling_a.glb"
+dest_files=["res://.godot/imported/skerrow_rowan_sapling_a.glb-3741f68e58fa9025fa73419d02122a73.scn"]
 
 [params]
 

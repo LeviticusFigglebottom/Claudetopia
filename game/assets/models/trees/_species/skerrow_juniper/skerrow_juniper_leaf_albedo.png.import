@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cou6a5jx7w5pi"
+path.s3tc="res://.godot/imported/skerrow_juniper_leaf_albedo.png-959364e2a7da91f625b2922ee0049078.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/skerrow_juniper/skerrow_juniper_leaf_albedo.png"
+dest_files=["res://.godot/imported/skerrow_juniper_leaf_albedo.png-959364e2a7da91f625b2922ee0049078.s3tc.ctex"]
 
 [params]
 

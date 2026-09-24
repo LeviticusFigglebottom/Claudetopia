@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://eq4uhp2j82ym"
+path="res://.godot/imported/hearthvale_birch_a.glb-96a9f4537690ee1f4c17a88ab1586550.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_birch_a/hearthvale_birch_a.glb"
+dest_files=["res://.godot/imported/hearthvale_birch_a.glb-96a9f4537690ee1f4c17a88ab1586550.scn"]
 
 [params]
 

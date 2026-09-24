@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dsc2scl3284ut"
+path.s3tc="res://.godot/imported/hearthvale_yew_veteran_a_impostor_nrm.png-b87b26ee16407eca3d200bab4f89de39.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_yew_veteran_a/hearthvale_yew_veteran_a_impostor_nrm.png"
+dest_files=["res://.godot/imported/hearthvale_yew_veteran_a_impostor_nrm.png-b87b26ee16407eca3d200bab4f89de39.s3tc.ctex"]
 
 [params]
 

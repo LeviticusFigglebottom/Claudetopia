@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://y288u228hnf2"
+path.s3tc="res://.godot/imported/skerrow_rowan_bark_albedo.png-118ded345cf8d28b4560118633634b23.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/skerrow_rowan/skerrow_rowan_bark_albedo.png"
+dest_files=["res://.godot/imported/skerrow_rowan_bark_albedo.png-118ded345cf8d28b4560118633634b23.s3tc.ctex"]
 
 [params]
 

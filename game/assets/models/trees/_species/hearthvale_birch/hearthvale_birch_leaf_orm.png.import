@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://x64dn35f6y66"
+path.s3tc="res://.godot/imported/hearthvale_birch_leaf_orm.png-6326eabcf923d034f1fb54694e5bc5f1.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/hearthvale_birch/hearthvale_birch_leaf_orm.png"
+dest_files=["res://.godot/imported/hearthvale_birch_leaf_orm.png-6326eabcf923d034f1fb54694e5bc5f1.s3tc.ctex"]
 
 [params]
 

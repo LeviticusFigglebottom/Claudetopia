@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1jy5ge6teqa4"
+path.s3tc="res://.godot/imported/brightwater_lime_c_impostor_nrm.png-ff5ba88287dc63e7f4765a2ebb623650.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/brightwater_lime_c/brightwater_lime_c_impostor_nrm.png"
+dest_files=["res://.godot/imported/brightwater_lime_c_impostor_nrm.png-ff5ba88287dc63e7f4765a2ebb623650.s3tc.ctex"]
 
 [params]
 

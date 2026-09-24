@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ct47t1p8drh3a"
+path.s3tc="res://.godot/imported/briarwold_giant_oak_moss_orm.png-2d241af28102fec84d31044a78abc2bf.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/briarwold_giant_oak/briarwold_giant_oak_moss_orm.png"
+dest_files=["res://.godot/imported/briarwold_giant_oak_moss_orm.png-2d241af28102fec84d31044a78abc2bf.s3tc.ctex"]
 
 [params]
 

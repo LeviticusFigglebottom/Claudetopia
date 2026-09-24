@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://024xp0dmli3c"
+path="res://.godot/imported/skerrow_hardy_pine_sapling_a.glb-46e9fad1a5cfd329b301fa7f6a758d4f.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_hardy_pine_sapling_a/skerrow_hardy_pine_sapling_a.glb"
+dest_files=["res://.godot/imported/skerrow_hardy_pine_sapling_a.glb-46e9fad1a5cfd329b301fa7f6a758d4f.scn"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bs5sdwcvqn6hm"
+path.s3tc="res://.godot/imported/hearthvale_hazel_leaf_orm.png-a758b5e1776cf190f9c5f61faab5724d.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/hearthvale_hazel/hearthvale_hazel_leaf_orm.png"
+dest_files=["res://.godot/imported/hearthvale_hazel_leaf_orm.png-a758b5e1776cf190f9c5f61faab5724d.s3tc.ctex"]
 
 [params]
 

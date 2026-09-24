@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://n12btxfoe6wv"
+path.s3tc="res://.godot/imported/hearthvale_oak_sapling_a_impostor_nrm.png-3d2ea04a8b13951047f1a0cdd69c999c.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_oak_sapling_a/hearthvale_oak_sapling_a_impostor_nrm.png"
+dest_files=["res://.godot/imported/hearthvale_oak_sapling_a_impostor_nrm.png-3d2ea04a8b13951047f1a0cdd69c999c.s3tc.ctex"]
 
 [params]
 

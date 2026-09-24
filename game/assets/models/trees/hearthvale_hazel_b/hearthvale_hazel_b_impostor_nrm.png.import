@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qppcx3oi0age"
+path.s3tc="res://.godot/imported/hearthvale_hazel_b_impostor_nrm.png-55edbf290684470abab97687b046b01b.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_hazel_b/hearthvale_hazel_b_impostor_nrm.png"
+dest_files=["res://.godot/imported/hearthvale_hazel_b_impostor_nrm.png-55edbf290684470abab97687b046b01b.s3tc.ctex"]
 
 [params]
 

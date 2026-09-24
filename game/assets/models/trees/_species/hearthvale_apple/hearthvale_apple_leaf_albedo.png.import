@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://m82wbo2y2ooa"
+path.s3tc="res://.godot/imported/hearthvale_apple_leaf_albedo.png-b0fde6f8ba878cba64ea510f23bfc309.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/hearthvale_apple/hearthvale_apple_leaf_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_apple_leaf_albedo.png-b0fde6f8ba878cba64ea510f23bfc309.s3tc.ctex"]
 
 [params]
 

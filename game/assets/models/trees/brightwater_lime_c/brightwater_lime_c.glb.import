@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bf2gcw2yx38y5"
+path="res://.godot/imported/brightwater_lime_c.glb-95dd1c5bffa6bd452f3dda359bcd6546.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/brightwater_lime_c/brightwater_lime_c.glb"
+dest_files=["res://.godot/imported/brightwater_lime_c.glb-95dd1c5bffa6bd452f3dda359bcd6546.scn"]
 
 [params]
 

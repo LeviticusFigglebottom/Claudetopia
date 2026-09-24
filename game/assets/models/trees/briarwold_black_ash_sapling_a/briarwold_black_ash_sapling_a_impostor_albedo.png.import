@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d177dy1cay7nl"
+path.s3tc="res://.godot/imported/briarwold_black_ash_sapling_a_impostor_albedo.png-e7956ec7f5f1d5c9dfbb6f51124c6a5a.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/briarwold_black_ash_sapling_a/briarwold_black_ash_sapling_a_impostor_albedo.png"
+dest_files=["res://.godot/imported/briarwold_black_ash_sapling_a_impostor_albedo.png-e7956ec7f5f1d5c9dfbb6f51124c6a5a.s3tc.ctex"]
 
 [params]
 

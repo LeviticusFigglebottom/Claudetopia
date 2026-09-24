@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://kdhi12cti2k4"
+path.s3tc="res://.godot/imported/skerrow_rowan_sapling_a_impostor_albedo.png-ea0d5a92ed5506988239c2f4dbb31424.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_rowan_sapling_a/skerrow_rowan_sapling_a_impostor_albedo.png"
+dest_files=["res://.godot/imported/skerrow_rowan_sapling_a_impostor_albedo.png-ea0d5a92ed5506988239c2f4dbb31424.s3tc.ctex"]
 
 [params]
 

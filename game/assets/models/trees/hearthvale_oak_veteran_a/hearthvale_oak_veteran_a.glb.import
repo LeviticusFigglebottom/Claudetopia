@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b1besmwinguse"
+path="res://.godot/imported/hearthvale_oak_veteran_a.glb-cb11b6efe4a05a4a304c228e5b0849c1.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_oak_veteran_a/hearthvale_oak_veteran_a.glb"
+dest_files=["res://.godot/imported/hearthvale_oak_veteran_a.glb-cb11b6efe4a05a4a304c228e5b0849c1.scn"]
 
 [params]
 

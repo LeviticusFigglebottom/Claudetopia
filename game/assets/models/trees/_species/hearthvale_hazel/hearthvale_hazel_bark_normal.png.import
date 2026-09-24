@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b65maggjauoav"
+path.s3tc="res://.godot/imported/hearthvale_hazel_bark_normal.png-a94f3c18ecaf4c7a5361c0a7064ebece.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/hearthvale_hazel/hearthvale_hazel_bark_normal.png"
+dest_files=["res://.godot/imported/hearthvale_hazel_bark_normal.png-a94f3c18ecaf4c7a5361c0a7064ebece.s3tc.ctex"]
 
 [params]
 

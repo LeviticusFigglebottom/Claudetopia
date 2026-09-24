@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://viofe6kkdygw"
+path.s3tc="res://.godot/imported/sedgemire_alder_c_impostor_nrm.png-c0b6ef0f50525caaee641173a8a7b297.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/sedgemire_alder_c/sedgemire_alder_c_impostor_nrm.png"
+dest_files=["res://.godot/imported/sedgemire_alder_c_impostor_nrm.png-c0b6ef0f50525caaee641173a8a7b297.s3tc.ctex"]
 
 [params]
 

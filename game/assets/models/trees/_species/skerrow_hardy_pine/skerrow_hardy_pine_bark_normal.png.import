@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dub8so4rqhfrq"
+path.s3tc="res://.godot/imported/skerrow_hardy_pine_bark_normal.png-e211c858622a3cbaffc60e98a1edc315.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/skerrow_hardy_pine/skerrow_hardy_pine_bark_normal.png"
+dest_files=["res://.godot/imported/skerrow_hardy_pine_bark_normal.png-e211c858622a3cbaffc60e98a1edc315.s3tc.ctex"]
 
 [params]
 

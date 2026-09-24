@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bryvhnac3psp0"
+path.s3tc="res://.godot/imported/briarwold_black_ash_bark_normal.png-8dca80e25c132eff8df48da072c1e12a.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/briarwold_black_ash/briarwold_black_ash_bark_normal.png"
+dest_files=["res://.godot/imported/briarwold_black_ash_bark_normal.png-8dca80e25c132eff8df48da072c1e12a.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dklpi0nodsjmw"
+path.s3tc="res://.godot/imported/hearthvale_birch_bark_albedo.png-92ac9243d6da3e2c4174879df64d4a13.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/_species/hearthvale_birch/hearthvale_birch_bark_albedo.png"
+dest_files=["res://.godot/imported/hearthvale_birch_bark_albedo.png-92ac9243d6da3e2c4174879df64d4a13.s3tc.ctex"]
 
 [params]
 

@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cee7f1bmpt4t4"
+path.s3tc="res://.godot/imported/skerrow_hardy_pine_sapling_a_impostor_albedo.png-0056cceb9d144b3bec8644323a409063.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_hardy_pine_sapling_a/skerrow_hardy_pine_sapling_a_impostor_albedo.png"
+dest_files=["res://.godot/imported/skerrow_hardy_pine_sapling_a_impostor_albedo.png-0056cceb9d144b3bec8644323a409063.s3tc.ctex"]
 
 [params]
 

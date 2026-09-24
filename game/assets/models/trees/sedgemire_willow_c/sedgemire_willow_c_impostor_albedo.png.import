@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://demcv0t27hp5b"
+path.s3tc="res://.godot/imported/sedgemire_willow_c_impostor_albedo.png-c99561734dc081ce9809379c4a4a492d.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/sedgemire_willow_c/sedgemire_willow_c_impostor_albedo.png"
+dest_files=["res://.godot/imported/sedgemire_willow_c_impostor_albedo.png-c99561734dc081ce9809379c4a4a492d.s3tc.ctex"]
 
 [params]
 

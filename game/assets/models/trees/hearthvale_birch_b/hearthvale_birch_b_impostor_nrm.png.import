@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://joerdueqor0a"
+path.s3tc="res://.godot/imported/hearthvale_birch_b_impostor_nrm.png-a6ece0489093c14efdfc45b3e2d21e1e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_birch_b/hearthvale_birch_b_impostor_nrm.png"
+dest_files=["res://.godot/imported/hearthvale_birch_b_impostor_nrm.png-a6ece0489093c14efdfc45b3e2d21e1e.s3tc.ctex"]
 
 [params]
 

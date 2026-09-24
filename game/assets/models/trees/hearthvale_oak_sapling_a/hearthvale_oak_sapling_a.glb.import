@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://btvaluuu5618f"
+path="res://.godot/imported/hearthvale_oak_sapling_a.glb-73629770be18e908d6f370fb6f0fdcc3.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/hearthvale_oak_sapling_a/hearthvale_oak_sapling_a.glb"
+dest_files=["res://.godot/imported/hearthvale_oak_sapling_a.glb-73629770be18e908d6f370fb6f0fdcc3.scn"]
 
 [params]
 

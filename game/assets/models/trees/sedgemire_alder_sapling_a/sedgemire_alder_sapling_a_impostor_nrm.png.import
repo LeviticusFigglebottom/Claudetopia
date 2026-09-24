@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2cd34tf1mjgh"
+path.s3tc="res://.godot/imported/sedgemire_alder_sapling_a_impostor_nrm.png-4f5901d4458718044cf301af3fe950d8.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/trees/sedgemire_alder_sapling_a/sedgemire_alder_sapling_a_impostor_nrm.png"
+dest_files=["res://.godot/imported/sedgemire_alder_sapling_a_impostor_nrm.png-4f5901d4458718044cf301af3fe950d8.s3tc.ctex"]
 
 [params]
 

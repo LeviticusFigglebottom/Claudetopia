@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bisamkyrc6s0h"
+path="res://.godot/imported/sedgemire_willow_c.glb-818c27c422bcc89c087a6c34bba235d5.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/sedgemire_willow_c/sedgemire_willow_c.glb"
+dest_files=["res://.godot/imported/sedgemire_willow_c.glb-818c27c422bcc89c087a6c34bba235d5.scn"]
 
 [params]
 

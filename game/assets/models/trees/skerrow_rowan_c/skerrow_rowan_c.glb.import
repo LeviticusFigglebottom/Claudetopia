@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dbnjhrrdmv3vu"
+path="res://.godot/imported/skerrow_rowan_c.glb-0666115a544a06f1ca0fe0e01e2ca59f.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/skerrow_rowan_c/skerrow_rowan_c.glb"
+dest_files=["res://.godot/imported/skerrow_rowan_c.glb-0666115a544a06f1ca0fe0e01e2ca59f.scn"]
 
 [params]
 
