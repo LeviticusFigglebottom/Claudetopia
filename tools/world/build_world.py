@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
+from worldgen import crags as CR
 from worldgen import encounters as ENC
 from worldgen import fields as FL
 from worldgen import geography as GEO
@@ -670,6 +671,16 @@ def build(args) -> dict:
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
                 stone_count += len(rows)
+        # Crags: rock set into the steep faces and outcrops on the crests (worldgen.crags),
+        # into the same buckets, so the streamer draws them in the same MultiMesh per asset
+        crag_rows, crag_counts = CR.place(grid, H, owner, water.mask, water_d, road_d, road_w, pad_mask,
+                                          regions, sightline_claims(pois, pad_targets), SIGHT.constants(),
+                                          CELLS.asset_index(REPO), bank, seed, repo_root=REPO)
+        for key, by_asset in crag_rows.items():
+            for asset, rows in by_asset.items():
+                buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+        print("[world] crags: %d face pieces, %d outcrops" % (crag_counts["face"], crag_counts["crest"]),
+              flush=True)
         t.mark("scatter")
         # The hedgerows, walls and orchard rows. Placed rather than scattered, for the same
         # reason the standing stones are: a hedge is a line somebody planted along a field

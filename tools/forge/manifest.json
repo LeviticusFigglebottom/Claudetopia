@@ -2220,6 +2220,20 @@
    "palette": "core:region/hearthvale",
    "variant": "b",
    "seed": 9075
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "basalt_columns",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9111
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "basalt_columns",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9128
   }
  ]
 }

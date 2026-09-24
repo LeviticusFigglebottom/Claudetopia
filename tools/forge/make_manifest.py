@@ -254,6 +254,12 @@ GROUND_KIT = [
     ("milestone", "hearthvale", 2, None),
 ]
 
+# Crags. Cinderlea's are old lava: columns of basalt where its ground falls away (the world
+# builder's crags pass stands them on its steep faces, as it does the other regions' cliff slabs).
+ROCKS_CRAGS = [
+    ("basalt_columns", "cinderlea", 2, None),
+]
+
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
 # rebuilds, differently -- everything after it. New work goes on the end.
@@ -261,7 +267,7 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
-          ("gen_ground_kit", GROUND_KIT)]
+          ("gen_ground_kit", GROUND_KIT), ("gen_rocks", ROCKS_CRAGS)]
 
 
 def build() -> list[dict]:
