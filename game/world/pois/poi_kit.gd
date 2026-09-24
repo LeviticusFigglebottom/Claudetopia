@@ -704,6 +704,13 @@ func light(at: Vector3, colour := Color(1.0, 0.72, 0.42), energy := 2.2, reach :
 		NightLights.add(root, [root.to_global(at)], "poi", Color(colour.r, colour.g, colour.b, 1.0), energy, reach)
 
 
+## Light thrown back into a place the sun leaves in shadow, a cave's mouth: one of NightLights'
+## real lights when the camera is near, by day as well, and no glow, because nothing there burns.
+func bounce_light(at: Vector3, colour := Color(0.9, 0.86, 0.78), energy := 1.0, reach := 10.0) -> void:
+	if root.is_inside_tree():
+		NightLights.add(root, [root.to_global(at)], "bounce", Color(colour.r, colour.g, colour.b, 1.0), energy, reach)
+
+
 ## Smoke, mist or spray: a soft billboard puff emitted in a column or a spread.
 func puffs(at: Vector3, spread: Vector3, rise: float, amount: int, colour: Color,
 		size := 1.6, life := 4.0) -> GPUParticles3D:

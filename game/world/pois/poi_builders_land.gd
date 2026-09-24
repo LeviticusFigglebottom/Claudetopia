@@ -254,16 +254,38 @@ static func vista(d: PoiDressing) -> void:
 	var yaw := PoiKit.yaw_of(view)
 	var edge := view * minf(d.pad_radius * 0.5, 7.0)
 	var only_cairn := PoiKit.brief_says(d.brief, ["cairn"]) and not PoiKit.brief_says(d.brief, ["bench"])
+	var across := Vector2(-view.y, view.x)
 	if not only_cairn:
+		# The seat: a bench on a plinth of flags, with a length of drystone wall at its back to keep
+		# the wind off, in a worn clearing. A bench alone is a plank half a metre high, and in the
+		# grass on the edge it was not there at ten metres; the wall and the flags are.
+		var m := d.masonry
+		var clearing := PoiKit.painted(5, k._spec("earth"), 0.9, 0.7)
+		m.mound(k.on_ground(edge.x - view.x * 0.4, edge.y - view.y * 0.4, -0.12), 3.4, 0.16, clearing, "Clearing", false, 2.2, 4, 16, false, 0.03)
+		var flags := m.begin()
+		var g := k.on_ground(edge.x, edge.y).y
+		for sx in [-1.0, 0.0, 1.0]:
+			for sz in [-1.0, 1.0]:
+				var q := edge + across * (float(sx) * 0.95) + view * (float(sz) * 0.5)
+				var top := maxf(g, k.on_ground(q.x, q.y).y) + 0.22
+				var xf := Transform3D(Basis(Vector3.UP, yaw + k.rng.randf_range(-0.05, 0.05)), Vector3(q.x, top - 0.3, q.y))
+				m.block(flags, xf, Vector3(0.92 + k.rng.randf_range(-0.05, 0.05), 0.6, 0.97))
+		m.commit(flags, k.surface("stone", 0.6), "Plinth", true)
+		var plinth_top := g + 0.22
+		k.collider(Vector3(2.9, 0.6, 2.0), Transform3D(Basis(Vector3.UP, yaw), Vector3(edge.x, plinth_top - 0.3, edge.y)), "stone")
 		var bench := k.prop("bench")
 		if bench != "":
 			# the bench's seat faces its -z, so its back is to the ground behind and its front to the view
-			k.place(bench, k.on_ground(edge.x, edge.y), yaw + PI, 1.0, true)
-		k.marker("the_view", k.on_ground(edge.x - view.x * 0.8, edge.y - view.y * 0.8), true)
-	# the cairn: stones heaped by everybody who stopped, the biggest at the foot
-	var cairn_at := edge + Vector2(-view.y, view.x) * (2.4 if not only_cairn else 0.0)
+			k.place(bench, Vector3(edge.x, plinth_top, edge.y), yaw + PI, 1.15, true, Vector3.ZERO, true)
+		var fabric := FabricMesh.new()
+		var back := edge - view * 1.35
+		_dry_wall(d, fabric, back - across * 1.8, back + across * 1.8, 1.05)
+		_commit_fabric(d, fabric)
+		k.marker("the_view", Vector3(edge.x - view.x * 0.6, plinth_top, edge.y - view.y * 0.6), true)
+	# the cairn: stones heaped by everybody who stopped, the biggest at the foot, as tall as a man
+	var cairn_at := edge + across * (3.2 if not only_cairn else 0.0)
 	var stones: Array = []
-	var tiers := 6
+	var tiers := 8
 	for t in tiers:
 		var r := 0.9 * (1.0 - float(t) / float(tiers)) + 0.12
 		var n := maxi(1, int(round(7.0 * (1.0 - float(t) / float(tiers)))))
@@ -271,13 +293,15 @@ static func vista(d: PoiDressing) -> void:
 			var a := TAU * float(i) / float(n) + k.rng.randf_range(-0.3, 0.3) + float(t)
 			var p := cairn_at + Vector2(sin(a), cos(a)) * r * k.rng.randf_range(0.6, 1.0)
 			stones.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.14 + float(t) * 0.22), k.rng.randf_range(0.0, TAU),
-					k.rng.randf_range(0.16, 0.24) * (1.0 - float(t) * 0.08),
+					k.rng.randf_range(0.16, 0.24) * (1.0 - float(t) * 0.06),
 					Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3))))
 	k.scatter(k.rock("boulder"), stones, true, true)
 	if only_cairn:
 		k.marker("the_view", k.on_ground(cairn_at.x - view.x * 1.8, cairn_at.y - view.y * 1.8), true)
-	_grass(d, _verge(d), Vector2.ZERO, d.pad_radius * 0.6, 26)
-	_grass(d, "heather" if k.region == "skerrow" else ("foxglove" if k.region == "briarwold" else "cow_parsley"), edge, 5.0, 14)
+	# the verge behind, where nobody sits, and the flowers round the cairn's foot, not the seat's
+	_grass(d, _verge(d), -view * 9.0, d.pad_radius * 0.4, 26)
+	_grass(d, "heather" if k.region == "skerrow" else ("foxglove" if k.region == "briarwold" else "cow_parsley"),
+			cairn_at + across * 1.6, 2.4, 12)
 
 
 # --- a cave --------------------------------------------------------------------------------------
@@ -296,12 +320,14 @@ static func cave(d: PoiDressing) -> void:
 		face = k.grain()
 	# the cave's own frame: +z runs into the hill, x across the mouth
 	var into := -face
-	var yaw_out := PoiKit.yaw_of(face)
 	var basis := Basis(Vector3.UP, PoiKit.yaw_of(into))
 	var across := Vector2(into.y, -into.x)
 	var roots := k.region == "briarwold" or PoiKit.brief_says(d.brief, ["root"])
 	var sea := PoiKit.brief_says(d.brief, ["sea", "tide", "surf", "hushline"]) or k.water_direction(40.0) != Vector2.ZERO
-	var high := 4.0 + k.rng.randf_range(0.0, 4.0)
+	# A mouth three to four and a half metres high: the slope rises two or three metres in the ten
+	# the throat goes in, and a mouth of eight stood a box of dark out of the hill that no rock
+	# round it could hide.
+	var high := 3.0 + k.rng.randf_range(0.0, 1.6)
 	var wide := high * k.rng.randf_range(0.8, 1.05)
 	var deep := 10.0
 	# the mouth stands a little uphill of the middle, its floor on the ground there
@@ -311,6 +337,9 @@ static func cave(d: PoiDressing) -> void:
 	# floor on the ground there (so the hill never rises through it) and each darker than the last,
 	# black at ten metres. It is the dark of the cave; the rock round it is the forge's own.
 	var rings := 5
+	# the rock the passage is cut through, round the dark of its lining: from outside, where the
+	# hill does not bury it, it is the region's own stone and not a box of black
+	var shell := m.begin()
 	var floors: Array[float] = []
 	var hh_last := high
 	for i in rings:
@@ -337,50 +366,52 @@ static func cave(d: PoiDressing) -> void:
 			k.collider(Vector3(0.7, hh + 0.6, span), Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 0.35), hh * 0.5, mid)), "stone")
 		var dark := lerpf(0.26, 0.02, t1)
 		m.commit(lining, PoiKit.plain(Color(dark, dark * 0.97, dark * 0.92), 0.95), "Throat%d" % i)
+		for s in [-1.0, 1.0]:
+			m.block(shell, Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 1.3), hh * 0.5 + 0.1, mid)), Vector3(1.3, hh + 1.6, span))
+		m.block(shell, Transform3D(basis, base + basis * Vector3(0.0, hh + 1.15, mid)), Vector3(ww + 3.9, 0.9, span))
 		k.collider(Vector3(ww + 0.6, 0.4, span), Transform3D(basis, base + basis * Vector3(0.0, -0.2, mid)), "stone")
+	m.commit(shell, PoiKit.painted(0, k._spec("stone"), 0.85, 0.9), "ThroatRock", true)
 	var g_end: float = floors[-1]
 	var back := m.begin()
 	m.block(back, Transform3D(basis, Vector3(o.x, g_end, o.z) + basis * Vector3(0.0, hh_last * 0.5, deep + 0.75)), Vector3(wide + 1.2, hh_last + 0.8, 0.3))
 	m.commit(back, PoiKit.plain(Color(0.01, 0.01, 0.012), 1.0), "ThroatEnd", true)
 	k.collider(Vector3(wide, hh_last + 0.4, 0.4), Transform3D(basis, Vector3(o.x, g_end, o.z) + basis * Vector3(0.0, hh_last * 0.5, deep + 0.75)), "stone")
-	# The crag the mouth is in, of the region's own rock: a slab either side for its cheeks, one
-	# laid across them for its brow, and boulders heaped over the passage and along its flanks,
-	# half in the hill, so it reads as rock breaking out of the slope and not as a thing set on it.
-	var slab := k.rock("cliff_slab")
-	var boulder := k.rock("boulder")
-	var slab_h := maxf(PoiKit.height_of(slab), 1.0) if slab != "" else 6.4
-	if slab != "":
-		# two slabs of the crag leaning together over the mouth, the way a fissure cave opens
-		# between two blocks that came to rest against each other; each is sunk into the slope
-		var sc := (high + 2.6) / slab_h
-		var lean := 0.34
-		for s in [-1.0, 1.0]:
-			var x := float(s) * (wide * 0.5 + 1.2 * sc)
-			var p := mouth + across * x - into * 0.3
-			k.place(slab, Vector3(p.x, o.y - 0.6, p.y), yaw_out + float(s) * 0.22 + k.rng.randf_range(-0.08, 0.08), sc, true,
-					Vector3(-0.16, 0.0, -float(s) * lean), true)
-	if boulder != "":
-		var bh := maxf(PoiKit.height_of(boulder), 1.0)
-		# wedged where the two slabs meet over the mouth, so its top is rock and not a lintel
-		for i in 3:
-			var x := (float(i) - 1.0) * wide * 0.28 + k.rng.randf_range(-0.3, 0.3)
-			var at3 := o + basis * Vector3(x, high + 0.9 + k.rng.randf_range(-0.2, 0.4), 0.4 + k.rng.randf_range(0.0, 0.8))
-			k.place(boulder, at3 - Vector3(0.0, bh * 0.35, 0.0), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.1, 1.6), true,
-					Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3)), true)
-		# over the passage, standing on its roof, so the hill has a crag where the passage runs
-		for i in [0, 2, 4]:
-			var z := 0.8 + (float(i) + 0.5) * deep / float(rings)
-			var hh := high * (1.0 - float(i) / float(rings) * 0.45)
-			var at := mouth + into * z + across * k.rng.randf_range(-0.8, 0.8)
-			var roof: float = floors[i] + hh + 0.7
-			var sc := (wide + 3.0) / (bh * 1.3)
-			k.place(boulder, Vector3(at.x, roof - 0.3, at.y), k.rng.randf_range(0.0, TAU), sc, true, Vector3.ZERO, true)
-		# along the flanks, stepping down into the slope
-		for s in [-1.0, 1.0]:
-			for z in [0.5, 4.0]:
-				var at := mouth + across * float(s) * (wide * 0.5 + 4.2 + k.rng.randf_range(0.0, 1.5)) + into * float(z)
-				var sc := k.rng.randf_range(1.3, 2.1)
-				k.place(boulder, k.on_ground(at.x, at.y, -bh * sc * 0.35), k.rng.randf_range(0.0, TAU), sc, true, Vector3.ZERO, true)
+	# The crag the mouth is cut into, of the region's own rock and nothing squared: boulders of
+	# every size, each turned and canted its own way so no two faces agree, sunk into the slope so
+	# the hill closes over their feet. Either side of the mouth a cheek rises in three steps up the
+	# slope, two capstones lie across the top resting on the throat's roof, and a brow stands back
+	# into the hill above them, so the mouth is a cleft in rock the hill breaks into and not a
+	# thing stood on the grass. Two leaning slabs read as a tent, and a lintel as a doorway.
+	_crag(d, mouth, into, across, o, high, wide)
+	# over the passage, standing on its roof, so the hill has a crag where the passage runs
+	for i in rings:
+		var z := 0.8 + (float(i) + 0.5) * deep / float(rings)
+		var hh := high * (1.0 - float(i) / float(rings) * 0.45)
+		var at := mouth + into * z + across * k.rng.randf_range(-0.8, 0.8)
+		var path := k.rock("boulder")
+		if path == "":
+			break
+		var bh := maxf(PoiKit.height_of(path), 1.0)
+		var sc := (wide + 4.0) / (bh * 1.3)
+		var roof: float = floors[i] + hh + 0.7
+		k.place(path, Vector3(at.x, maxf(roof - 0.3, k.on_ground(at.x, at.y).y - bh * sc * 0.55), at.y),
+				k.rng.randf_range(0.0, TAU), sc, true, Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2)), true)
+	# along the flanks, stepping down into the slope
+	for s in [-1.0, 1.0]:
+		for z in [0.5, 4.0]:
+			var path := k.rock("boulder")
+			if path == "":
+				break
+			var bh := maxf(PoiKit.height_of(path), 1.0)
+			var at := mouth + across * float(s) * (wide * 0.5 + 5.0 + k.rng.randf_range(0.0, 1.5)) + into * float(z)
+			var sc := k.rng.randf_range(1.2, 2.0)
+			k.place(path, k.on_ground(at.x, at.y, -bh * sc * 0.4), k.rng.randf_range(0.0, TAU), sc, true,
+					Vector3(k.rng.randf_range(-0.25, 0.25), 0.0, k.rng.randf_range(-0.25, 0.25)), true)
+	# Light back off the ground in front of the mouth. With the sun behind the hill the crag's faces
+	# are in its shadow, and in the painted grade a shadow that has nothing to lift it goes black,
+	# so the mouth read as a hole cut in the frame. A bounce is a real light by day and no glow.
+	var bounce := mouth - into * 5.0
+	k.bounce_light(k.on_ground(bounce.x, bounce.y, 3.2), _bounce_colour(k.region), 2.6, 16.0)
 	# where whatever lives in it waits, a little way in out of the light
 	var den := mouth + into * 3.5
 	k.marker("the_mouth", Vector3(den.x, floors[1], den.y), false, true, wide * 0.5)
@@ -392,6 +423,7 @@ static func cave(d: PoiDressing) -> void:
 			var p := mouth - into * k.rng.randf_range(1.5, 6.0) + across * k.rng.randf_range(-wide, wide)
 			heap.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.6, 1.1)))
 		k.scatter(scree, heap, true)
+	var boulder := k.rock("boulder")
 	if boulder != "":
 		var small: Array = []
 		for i in 5:
@@ -402,7 +434,7 @@ static func cave(d: PoiDressing) -> void:
 		# the roots of what grows on the hill above, down over the brow and into the ground
 		var wood := m.begin()
 		for i in 5:
-			# down the outsides of the slabs and over their shoulders, never across the mouth
+			# down the outsides of the cheeks and over their shoulders, never across the mouth
 			var side := -1.0 if i % 2 == 0 else 1.0
 			var x := side * (wide * 0.5 + k.rng.randf_range(0.6, 2.4))
 			var top := o + basis * Vector3(x * 0.7, high + 3.0, 1.8)
@@ -413,11 +445,92 @@ static func cave(d: PoiDressing) -> void:
 		m.commit(wood, k.surface("timber", 0.7), "Roots", true)
 		_grass(d, "fern", mouth - into * 2.0, 6.0, 20)
 	if sea:
-		# the tide's pool in the mouth
-		var pool_at := mouth - into * 0.6
-		m.pool(pool_at, wide * 0.55, o.y - 0.12, k.still_water(-1.2, Color(0.9, 1.0, 1.0), 0.6), "TidePool")
+		# The tide's pool in the mouth and out past it, with a bar of pale shell-sand the tide
+		# leaves at its edge and the surf breaking on it. On Cinderlea's black ash, dark rock over
+		# dark ground was a hole in the frame; the sky in the water and the pale sand are what the
+		# mouth is seen by.
+		var pool_at := mouth - into * 1.2
+		var sand_at := mouth - into * (wide * 0.55 + 2.4)
+		var sand := PoiKit.painted(5, {"base": "#bdb5a2", "accent": "#a39a86", "grout": "#7d7564", "unit": 0.18}, 0.7)
+		m.mound(k.on_ground(sand_at.x, sand_at.y, -0.15), wide * 0.9 + 1.5, 0.35, sand, "ShellSand", false, 1.4, 5, 18, false, 0.05)
+		m.pool(pool_at, wide * 0.75, o.y - 0.1, k.still_water(-1.2, Color(1.0, 1.05, 1.08), 0.55), "TidePool")
+		var surf := Vector3(sand_at.x, o.y + 0.1, sand_at.y) + Vector3(into.x, 0.0, into.y) * 1.2
+		k.puffs(surf, Vector3(wide * 0.6, 0.15, 0.6), 0.3, 18, Color(0.96, 0.98, 1.0, 0.45), 1.4, 2.4)
 	else:
 		_grass(d, _verge(d), mouth - into * 6.0, 7.0, 16)
+
+
+## The rock a cave's mouth is cut into (see `cave`): the cheeks either side, stepping up the slope,
+## the capstones over the mouth resting on the throat's roof, and the brow standing back into the
+## hill. Every piece is its own boulder, turned and canted its own way, so its faces are broken and
+## no two agree; each is sunk so the slope closes over its foot, and none stands clear of the ground.
+static func _crag(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2, o: Vector3,
+		high: float, wide: float) -> void:
+	var k := d.kit
+	# [across (in the mouth's half-widths past its edge), into, top over the mouth's floor, height as
+	# a share of the mouth's, whether it rests on the roof rather than the ground]
+	var pieces: Array = []
+	for s in [-1.0, 1.0]:
+		pieces.append([float(s), 0.6, high * 0.95, 1.05, false])
+		pieces.append([float(s) * 1.5, 3.2, high + 1.0, 0.85, false])
+		pieces.append([float(s) * 1.9, -1.4, high * 0.45, 0.55, false])
+	pieces.append([-0.35, 1.3, high + 1.6, 0.55, true])
+	pieces.append([0.4, 2.2, high + 1.8, 0.6, true])
+	pieces.append([0.0, 5.0, high + 2.6, 0.9, false])
+	for piece in pieces:
+		var path := k.rock("boulder")
+		if path == "":
+			return
+		var bh := maxf(PoiKit.height_of(path), 1.0)
+		var bw := maxf(PoiKit.half_width_of(path), 0.8)
+		var sc := high * float(piece[3]) / bh * k.rng.randf_range(0.9, 1.15)
+		var x := float(piece[0])
+		var off := 0.0
+		if absf(x) >= 1.0:
+			# a cheek: its inner face at the mouth's edge, its bulges a little into it, so the cleft
+			# is ragged and still open
+			off = signf(x) * (wide * 0.5 + bw * sc * (0.95 + (absf(x) - 1.0) * 0.7))
+		else:
+			off = x * wide
+		var at := mouth + across * off + into * float(piece[1])
+		var g := k.on_ground(at.x, at.y).y
+		var y := o.y + float(piece[2]) - bh * sc
+		if bool(piece[4]):
+			y = maxf(y, o.y + high - 0.3)
+		else:
+			# never standing on the grass: at least a quarter of it is under the slope
+			y = minf(y, g - bh * sc * 0.25)
+		# and never under it altogether
+		y = maxf(y, g + 0.6 - bh * sc)
+		var tilt := Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3))
+		k.place(path, Vector3(at.x, y, at.y), k.rng.randf_range(0.0, TAU), sc, true, tilt, true)
+
+
+## A quarry's spoil in the rock's own colours: the cut face's look (`face`) gone halfway to the
+## region's earth, since the spoil is the rock broken small with the soil it came off with.
+static func _spoil_look(k: PoiKit, face: Dictionary) -> Dictionary:
+	var earth := k._spec("earth")
+	var out := {"unit": 0.3}
+	for key in ["base", "accent", "grout"]:
+		var rock := Color.html(str(face.get(key, "#999999")))
+		var soil := Color.html(str(earth.get(key, "#555555")))
+		out[key] = "#" + rock.lerp(soil, 0.45).darkened(0.08).to_html(false)
+	return out
+
+
+## The light a mouth's surroundings throw back into it: the grey of the ash, the green of the
+## wood, the pale of limestone, the warm of the Vale's earth.
+static func _bounce_colour(region: String) -> Color:
+	match region:
+		"cinderlea":
+			return Color(0.86, 0.82, 0.78)
+		"skerrow":
+			return Color(0.86, 0.88, 0.9)
+		"briarwold":
+			return Color(0.76, 0.86, 0.7)
+		"sedgemire":
+			return Color(0.8, 0.86, 0.78)
+	return Color(0.92, 0.86, 0.74)
 
 
 # --- a quarry ------------------------------------------------------------------------------------
@@ -518,15 +631,25 @@ static func quarry(d: PoiDressing) -> void:
 		m.block(blocks, xf, size)
 		k.collider(size, xf, "stone")
 	m.commit(blocks, stone, "Blocks")
-	# the spoil heap: what was no use, tipped to one side
-	var spoil_at := centre + side * (arc_r * 0.85) + face * 3.0
-	m.mound(k.on_ground(spoil_at.x, spoil_at.y, -0.2), 4.2, 2.4, worked, "Spoil", true, 1.2, 7, 20, true, 0.14)
+	# The spoil heap: what was no use, tipped to one side. It is the face's own rock broken small
+	# and gone grey with the earth it came off with, so it is the rock's colour and not the cut
+	# face's fresh white, and it is a barrow-load a day for a season, not a hill.
+	var spoil_at := centre + side * (arc_r * 0.8) + face * 3.0
+	var spoil := PoiKit.painted(5, _spoil_look(k, look), 0.9, 0.9)
+	var spoil_r := 2.6
+	var spoil_h := 1.2
+	m.mound(k.on_ground(spoil_at.x, spoil_at.y, -0.15), spoil_r, spoil_h, spoil, "Spoil", true, 1.3, 6, 18, false, 0.16)
 	var scree := k.rock("scree")
 	if scree != "":
+		# the broken stone lying on it and round its foot, down its slope
 		var heap: Array = []
-		for i in 7:
-			var p := spoil_at + k.jitter(4.5)
-			heap.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.7, 1.2)))
+		for i in 9:
+			var a := k.rng.randf_range(0.0, TAU)
+			var rr := sqrt(k.rng.randf()) * (spoil_r + 0.8)
+			var p := spoil_at + Vector2(sin(a), cos(a)) * rr
+			var on := maxf(1.0 - rr / spoil_r, 0.0)
+			heap.append(PoiKit.transform_at(k.on_ground(p.x, p.y, spoil_h * pow(on, 1.3) - 0.15), k.rng.randf_range(0.0, TAU),
+					k.rng.randf_range(0.45, 0.8)))
 		k.scatter(scree, heap)
 	# the crane: a mast, a jib out over the floor, and a block hanging from its rope
 	var timber := m.begin()

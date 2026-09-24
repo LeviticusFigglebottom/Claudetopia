@@ -44,7 +44,7 @@ const EYE_M := 1.65
 ## what `game/world/pois/poi_builders.gd` actually raises above the pad, taken across the POIs
 ## of that kind, so the audit and the game are arguing about the same country.
 ##
-## * `tower` — a watch drum is 7.6 m and carries its fire-bowl to about 10; the toll-house's
+## * `tower` — a watch drum is 10.4 m, its merlons to 11 and a beacon's cage to 12; the toll-house's
 ##   bell frame is 9.0, the reedfolk platform and its roof 9.5, the colossus head 10.6. The
 ##   Tumbled Watch is 5, because it is lying down. Eighteen was nobody's tower.
 ## * `waterfall` — a cliff face of 11 m, 13 for the Glass Falls, and the Three Sisters' three

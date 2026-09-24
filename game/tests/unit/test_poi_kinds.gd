@@ -87,6 +87,14 @@ func test_a_vista_turns_its_bench_to_the_view_and_a_cairn_stands_alone() -> void
 	assert_false(benches.is_empty(), "a bench")
 	assert_true(_marker(d, "the_view") != null, "and a place to stand and look")
 	assert_false(_meshes(d, "*boulder").is_empty(), "and the cairn walkers add a stone to")
+	# seen at ten metres: the bench stands on a plinth of flags, clear of the grass, with a length
+	# of drystone wall at its back, in a worn clearing
+	assert_true(d.find_child("Plinth", true, false) != null, "a plinth for the bench")
+	assert_true(d.find_child("FabricDrystone", true, false) != null, "a wall at its back")
+	assert_true(d.find_child("Clearing", true, false) != null, "a clearing round it")
+	if not benches.is_empty():
+		var b := benches[0] as Node3D
+		assert_gt(b.position.y - d.kit.on_ground(b.position.x, b.position.z).y, 0.12, "the bench stands up on the flags")
 	var c := _dress("vista", "core:region/skerrow", "a cairn on the Last Look")
 	assert_true(c.find_children("*bench*", "Node3D", true, false).is_empty(), "a cairn with no bench, where the sentence says cairn")
 	assert_true(_marker(c, "the_view") != null, "and its place to look from")
@@ -94,18 +102,34 @@ func test_a_vista_turns_its_bench_to_the_view_and_a_cairn_stands_alone() -> void
 
 func test_a_cave_goes_dark_ten_metres_into_the_hill() -> void:
 	var d := _dress("cave", "core:region/skerrow", "a limestone mouth in the scar")
-	# the crag it is in is the region's own rock, not masonry: two slabs leaning together (a
-	# forge asset is known by its scene, since two of one name are renamed by the tree)
+	# The crag it is cut into is the region's own rock, and all of it boulders: two leaning slabs
+	# read as a tent, and a slab across the top as a doorway. Each piece of it has its foot in the
+	# slope, and none but the capstones on the roof stands on anything else (a forge asset is known
+	# by its scene, since two of one name are renamed by the tree).
 	var slabs := 0
 	var boulders := 0
+	var sunk := 0
 	for c in d.get_children():
 		var scene := str((c as Node).scene_file_path)
-		if scene.contains("skerrow_cliff_slab"):
+		if scene.contains("cliff_slab"):
 			slabs += 1
 		elif scene.contains("skerrow_boulder"):
 			boulders += 1
-	assert_eq(slabs, 2, "two of Skerrow's own slabs leaning together over the mouth")
-	assert_gt(boulders, 3, "and its boulders heaped over the passage and along its flanks")
+			var at := (c as Node3D).position
+			if at.y < d.kit.on_ground(at.x, at.z).y:
+				sunk += 1
+	assert_eq(slabs, 0, "no slabs stood on the slope")
+	assert_gt(boulders, 11, "boulders for its cheeks, its capstones, its brow, its roof and its flanks")
+	# the cheeks, the brow and the flanks have their feet in the slope (the capstones and the rocks
+	# over the passage rest on its roof instead)
+	assert_gt(sunk, 10, "the crag's feet in the slope (%d of %d)" % [sunk, boulders])
+	# light thrown back into the mouth, so its rock does not go black with the sun behind the hill
+	var bounce := 0
+	for s in NightLights.sources_of(d):
+		if str(s[1]) == "bounce":
+			bounce += 1
+	assert_eq(bounce, 1, "a bounce light at the mouth")
+	assert_eq(float(NightLights.KINDS["bounce"]["size"]), 0.0, "and nothing drawn for it, since nothing there burns")
 	var mouth := _marker(d, "the_mouth")
 	var end := d.find_child("ThroatEnd", true, false) as MeshInstance3D
 	assert_true(mouth != null and end != null, "a mouth, and the end of its throat")
@@ -124,6 +148,11 @@ func test_a_cave_goes_dark_ten_metres_into_the_hill() -> void:
 	assert_true(wood.find_child("Roots", true, false) != null, "a root-cave has its roots over the mouth")
 	var sea := _dress("cave", "core:region/cinderlea", "a sea-cave under the Hushline, where the tide comes in")
 	assert_true(sea.find_child("TidePool", true, false) != null, "a sea-cave has the tide in its mouth")
+	var sand := sea.find_child("ShellSand", true, false) as MeshInstance3D
+	assert_true(sand != null, "and the pale sand the tide leaves, to be seen by on the black ash")
+	if sand != null:
+		var pale: Color = (sand.material_override as ShaderMaterial).get_shader_parameter("base_color")
+		assert_gt(pale.v, 0.6, "sand paler than the ash (%.2f)" % pale.v)
 
 
 func test_a_quarry_has_its_face_its_spoil_and_its_crane() -> void:
@@ -134,6 +163,14 @@ func test_a_quarry_has_its_face_its_spoil_and_its_crane() -> void:
 	if face != null:
 		var base: Color = (face.material_override as ShaderMaterial).get_shader_parameter("base_color")
 		assert_gt(base.v, 0.8, "the Vale's face is white chalk")
+		# the spoil is the rock broken small with its earth: a heap, not a hill, and not the face's white
+		var spoil := d.find_child("Spoil", true, false) as MeshInstance3D
+		if spoil != null:
+			var size := spoil.mesh.get_aabb().size
+			assert_true(maxf(size.x, size.z) < 7.0, "a heap, not a hill (%.1f m across)" % maxf(size.x, size.z))
+			assert_true(size.y < 1.8, "and low (%.1f m)" % size.y)
+			var heap: Color = (spoil.material_override as ShaderMaterial).get_shader_parameter("base_color")
+			assert_true(heap.v < base.v - 0.15, "greyer than the fresh-cut face")
 	assert_true(_marker(d, "the_face") != null, "and somewhere a quarryman stands")
 
 
@@ -225,3 +262,24 @@ func test_a_wheel_turns_only_while_somebody_can_see_it() -> void:
 		await _tree().process_frame
 	assert_true(wheel.basis.is_equal_approx(far_basis), "and stands still with nobody near")
 	assert_eq(wheel.physics_interpolation_mode, Node.PHYSICS_INTERPOLATION_MODE_OFF, "moved outside the physics ticks, so out of their interpolation")
+
+
+## A plain watch or a beacon carries on the skyline past a kilometre and a half (the sightlines
+## credit a tower with ten metres): eleven to twelve metres with its crown, the watch's merlons or
+## the beacon's iron cage, and the far ring's silhouette the same height as the near one.
+func test_a_watch_and_a_beacon_stand_ten_to_twelve_metres_with_a_crown() -> void:
+	for brief in ["a watch over the ford", "a beacon on the headland, its fire-bowl lit"]:
+		for far in [false, true]:
+			var d := _dress("tower", "core:region/hearthvale", brief, "", far)
+			var drum := d.find_child("Drum", true, false) as MeshInstance3D
+			assert_true(drum != null, "%s has its drum (far %s)" % [brief, far])
+			if drum == null:
+				continue
+			var top := drum.mesh.get_aabb().end.y - d.kit.on_ground(0.0, 0.0).y
+			var beacon := str(brief).contains("beacon")
+			if beacon:
+				var cage := d.find_child("Cage", true, false) as MeshInstance3D
+				assert_true(cage != null, "a beacon's iron cage (far %s)" % far)
+				if cage != null:
+					top = maxf(top, cage.mesh.get_aabb().end.y - d.kit.on_ground(0.0, 0.0).y)
+			assert_true(top >= 10.0 and top <= 12.5, "%s stands %.1f m with its crown (far %s)" % [brief, top, far])

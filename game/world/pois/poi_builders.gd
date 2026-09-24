@@ -878,6 +878,11 @@ static func _landmark_clearance(d: PoiDressing) -> float:
 
 # --- towers ----------------------------------------------------------------------------------------
 
+## A plain watch's or a beacon's drum, to the corbel its crown stands on (PlaceDiscovery's
+## LANDMARK_M for a tower is this and its crown).
+const WATCH_DRUM_M := 10.4
+
+
 ## Something to climb or to see from: a drum of stone courses standing, broken or lying down
 ## its valley; a lookout on stilts; a hide in a living oak; a toll-house under snow; a
 ## colossus's head with a window for an eye. Every tower is a silhouette piece, because a
@@ -896,15 +901,40 @@ static func tower(d: PoiDressing) -> void:
 		_tower_hide(d, grain)
 	elif PoiKit.brief_says(b, ["snow"]):
 		_tower_toll_house(d, grain)
-	elif PoiKit.brief_says(b, ["head", "eye"]):
+	# "head" alone is a headland, a head of a valley, a beacon ahead: the colossus is named
+	elif PoiKit.brief_says(b, ["colossus", "fallen head"]):
 		_tower_head(d, grain)
 	else:
-		# a beacon or a plain watch: a drum with a broken crown and a door to the approach
+		# A beacon or a plain watch: a drum of courses with a door to the approach, and a crown
+		# that reads against the sky from the next valley. It stood 7.6 m with a ragged top, which
+		# the sightlines credited with ten and which read as a stub past a kilometre; it is 10.4 m
+		# of drum now, a corbelled course over it, and on that the beacon's iron cage with the
+		# fire-bowl in it, or the watch's merlons with gaps where they fell -- eleven to twelve
+		# metres all told. All of it is silhouette, so the far ring carries the same crown.
 		var stone := m.begin()
 		var g := k.on_ground(0.0, 0.0)
 		var r := 2.9
-		var h := 7.6
-		m.drum(stone, Transform3D(Basis.IDENTITY, g), r, h, 0.3, approach)
+		var h := WATCH_DRUM_M
+		var beacon := PoiKit.brief_says(b, ["bell", "fire-bowl", "beacon"])
+		var broken := 0.05 if beacon else 0.08
+		m.drum(stone, Transform3D(Basis.IDENTITY, g), r, h, broken, approach)
+		# the corbelled course the crown stands on, stepped out over the wall below it; laid from
+		# the lowest torn sector so it never floats over a gap
+		var sill := g.y + h * (1.0 - broken) - 0.05
+		var corbel := 0.45
+		m.drum(stone, Transform3D(Basis.IDENTITY, Vector3(g.x, sill, g.z)), r + 0.3, corbel, 0.0, NAN, false)
+		var crown_y := sill + corbel
+		if not beacon:
+			# the merlons, a few of them fallen: the watch's broken crenellation
+			var merlons := 12
+			var fallen := [k.rng.randi_range(0, merlons - 1), k.rng.randi_range(0, merlons - 1)]
+			for i in merlons:
+				if i in fallen:
+					continue
+				var a := TAU * (float(i) + 0.5) / float(merlons)
+				var tall := 1.15 - (0.35 if (i + 1) % merlons in fallen or (i + merlons - 1) % merlons in fallen else 0.0)
+				var at := Vector3(sin(a) * (r + 0.05), crown_y + tall * 0.5, cos(a) * (r + 0.05))
+				m.block(stone, Transform3D(Basis(Vector3.UP, a), Vector3(g.x, 0.0, g.z) + at), Vector3(0.95, tall, 0.55))
 		m.commit(stone, k.surface("stone", 0.6), "Drum", true)
 		var rubble: Array = []
 		for i in 14:
@@ -913,17 +943,32 @@ static func tower(d: PoiDressing) -> void:
 			rubble.append(PoiKit.transform_at(k.on_ground(sin(a) * rr, cos(a) * rr), k.rng.randf_range(0.0, TAU),
 					k.rng.randf_range(0.25, 0.6)))
 		k.scatter(k.rock("boulder"), rubble, true)
-		if PoiKit.brief_says(b, ["bell", "fire-bowl", "beacon"]):
-			# The fire-bowl: an Oroth bell upturned in the tower's broken crown, crown down and
-			# mouth up, sunk into it rather than balanced on top — measured against the lowest
-			# torn sector (h × (1 − broken)), because measuring against the mean left the bowl
-			# hanging two metres above the masonry with daylight under it.
+		if beacon:
+			# The fire-bowl: an Oroth bell upturned in the crown, crown down and mouth up, sunk into
+			# the corbel rather than balanced on top, and round it the iron cage a beacon is known
+			# by: eight bars flaring out from the sill and bound with two hoops.
 			var bell := k.prop("bell_medium")
 			var bs := 2.6
 			var bh := PoiKit.height_of(bell) * bs
-			var rim := g.y + h * 0.7 + bh * 0.45
+			var rim := crown_y + bh * 0.3
 			var top := Vector3(0.0, rim, 0.0)
 			k.place(bell, top, 0.0, bs, false, Vector3(PI, 0.0, 0.0), true)
+			var iron := m.begin()
+			var bars := 8
+			var cage_h := 2.0
+			for i in bars:
+				var a := TAU * float(i) / float(bars)
+				var foot := Vector3(sin(a) * (r - 0.35), crown_y - 0.1, cos(a) * (r - 0.35))
+				var head := Vector3(sin(a) * (r + 0.1), crown_y + cage_h, cos(a) * (r + 0.1))
+				m.limb(iron, Vector3(g.x, 0.0, g.z) + foot, Vector3(g.x, 0.0, g.z) + head, 0.07)
+			for hoop in [0.55, 1.0]:
+				var rr := lerpf(r - 0.35, r + 0.1, float(hoop))
+				var y := crown_y - 0.1 + cage_h * float(hoop)
+				for i in 16:
+					var a0 := TAU * float(i) / 16.0
+					var a1 := TAU * float(i + 1) / 16.0
+					m.limb(iron, Vector3(g.x + sin(a0) * rr, y, g.z + cos(a0) * rr), Vector3(g.x + sin(a1) * rr, y, g.z + cos(a1) * rr), 0.05)
+			m.commit(iron, PoiKit.plain(Color(0.12, 0.11, 0.1), 0.55, 0.6), "Cage", true)
 			k.light(top + Vector3(0.0, 0.6, 0.0), Color(1.0, 0.6, 0.28), 4.5, 26.0)
 			k.puffs(top + Vector3(0.0, 0.5, 0.0), Vector3(0.4, 0.1, 0.4), 1.4, 16, Color(0.4, 0.38, 0.36, 0.45), 2.2, 6.0)
 		# whoever uses it now left their stores by the door
