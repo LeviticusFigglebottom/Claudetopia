@@ -111,6 +111,7 @@ func _ready() -> void:
 	if not enemy_id.is_empty():
 		_read_def(ContentDB.get_or_empty(enemy_id))
 	super()
+	_dress_hands()
 	brain = get_node_or_null("Brain") as Brain
 	if brain == null:
 		brain = Brain.new()
@@ -185,6 +186,18 @@ func _read_def(d: Dictionary) -> void:
 
 func content_id() -> String:
 	return enemy_id
+
+
+## A humanoid foe holds the weapon its attacks are made with: the first of them whose
+## `weapon_class` the forge makes a model of (HeldItems). A claw, a bite or a fist holds nothing.
+func _dress_hands() -> void:
+	if anim == null or anim.model == null or not anim.model.has_method("attach_to_socket"):
+		return
+	for a in attacks:
+		var item := HeldItems.for_class(str((a as Dictionary).get("weapon_class", "")))
+		if not item.is_empty():
+			HeldItems.dress(anim.model, item)
+			return
 
 
 ## Spawner hook: configure from a def id before the node enters the tree.

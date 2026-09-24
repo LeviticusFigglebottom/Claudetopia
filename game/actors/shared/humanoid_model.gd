@@ -55,6 +55,14 @@ const DEFAULT_BLEND := 0.12
 ## Cross-fades on the state machine edges: into a one-shot fast, back to locomotion softer.
 const ONE_SHOT_BLEND_IN := 0.08
 const ONE_SHOT_BLEND_OUT := 0.14
+## A swing, a riposte or a backstab hands over to the next swing, a roll or a flinch across this
+## long (s), along an edge of its own. With no edge between two one-shots the state machine
+## restarted on the new clip's first frame: a 1H chain's hand-over moved a hand 46 cm in one
+## frame (test_attack_motion), four times as far as the swing itself moves it in one.
+const ONE_SHOT_HANDOVER := 0.1
+## The clips a fight hands over from, and the ones it hands over to.
+const HANDS_OVER := ["Attack_", "Riposte", "Backstab"]
+const TAKES_OVER := ["Attack_", "Dodge_", "Hit_", "Stagger", "Knockdown", "Block_Hit", "Parry", "Death_"]
 const LOCOMOTION_STATE := "Locomotion"
 ## One-shots that end in a pose the body keeps -- a corpse, a man knocked flat, a sleeper -- until
 ## something else is played. Everything else goes back to locomotion when it ends, and so, until
@@ -207,6 +215,7 @@ var _flight_s := 0.0                     ## seconds the body has stood in the ai
 var _flight_pace := -1.0                 ## m/s the body went at when the flight began, or -1
 var _gait_shown := -1.0                  ## the gait position the graph is set to
 var _has_turns := false
+var _handovers := {}                     ## "from>to" one-shot edges that cross-fade (_add_handovers)
 var _gait_points: Array = []             ## [[clip, ground speed m/s, point name], ...] ascending
 var _clip_speed: Dictionary = {}         ## clip -> authored ground speed (sidecar `speed`)
 var _clip_cycle: Dictionary = {}         ## clip -> seconds per stride cycle
@@ -1178,6 +1187,7 @@ func _build_animation_tree() -> void:
 		if y > 420.0:
 			y = -420.0
 			x += 200.0
+	_add_handovers(sm)
 	var tree := AnimationTree.new()
 	tree.name = "AnimationTree"
 	tree.tree_root = sm
@@ -1191,6 +1201,29 @@ func _build_animation_tree() -> void:
 	anim_tree = tree
 	_state_machine = tree.get("parameters/playback")
 	_update_locomotion(0.0)
+
+
+## The edges a fight hands over along (ONE_SHOT_HANDOVER), each played from the new clip's start.
+func _add_handovers(sm: AnimationNodeStateMachine) -> void:
+	_handovers.clear()
+	var names := anim_player.get_animation_list()
+	for from in names:
+		if _is_locomotion_clip(from) or not _starts_with_any(from, HANDS_OVER):
+			continue
+		for to in names:
+			if to == from or _is_locomotion_clip(to) or not _starts_with_any(to, TAKES_OVER):
+				continue
+			var t := _transition(ONE_SHOT_HANDOVER, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
+			t.reset = true
+			sm.add_transition(from, to, t)
+			_handovers["%s>%s" % [from, to]] = true
+
+
+static func _starts_with_any(clip: String, prefixes: Array) -> bool:
+	for p in prefixes:
+		if clip.begins_with(str(p)):
+			return true
+	return false
 
 
 ## One transition resource per edge: they are cheap, and `travel` refuses to cross-fade
@@ -1708,9 +1741,11 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 		_one_shot = ""
 		_state_machine.travel(LOCOMOTION_STATE)
 		return true
-	# travel() cross-fades along the edge built for it; from another one-shot there is no
-	# direct edge, and routing through Locomotion would flash a walk, so that case restarts.
-	if _state_machine.get_current_node() == LOCOMOTION_STATE:
+	# travel() cross-fades along the edge built for it: from locomotion, and from a swing to the
+	# next swing, a roll or a flinch (_add_handovers). From any other one-shot there is no direct
+	# edge, and routing through Locomotion would flash a walk, so that case restarts.
+	var current := str(_state_machine.get_current_node())
+	if current == LOCOMOTION_STATE or _handovers.has("%s>%s" % [current, clip_name]):
 		_state_machine.travel(clip_name)
 	else:
 		_state_machine.start(clip_name, true)

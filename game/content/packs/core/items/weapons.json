@@ -530,6 +530,7 @@
   {
     "id": "core:item/hunting_knife",
     "name": "Hunting Knife",
+    "model": "weapons/knife_iron",
     "category": "weapon",
     "weight": 0.8,
     "value": 22,
@@ -824,6 +825,7 @@
   {
     "id": "core:item/woodsmans_axe",
     "name": "Woodsman's Axe",
+    "model": "weapons/axe_long_iron",
     "category": "weapon",
     "weight": 4.6,
     "value": 48,

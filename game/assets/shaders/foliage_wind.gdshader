@@ -32,10 +32,20 @@ uniform vec2 wind_dir = vec2(0.8, 0.6);
 uniform float sway_height = 2.0;
 uniform float flutter : hint_range(0.0, 1.0) = 0.35;
 uniform float backlight : hint_range(0.0, 1.0) = 0.25;
+// A scattered tree's canopy dissolving between levels of detail (world/scatter_lod.gd sets
+// these per level; lod_fade.gdshaderinc says how). (0, 0), the default, is off, so a plant that
+// is not on a tree's ladder draws exactly as it always has.
+uniform vec2 lod_fade_in = vec2(0.0);
+uniform vec2 lod_fade_out = vec2(0.0);
+
+#include "res://assets/shaders/lod_fade.gdshaderinc"
+
+varying float v_lod_dist;
 
 void vertex() {
 	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	vec3 root = MODEL_MATRIX[3].xyz;
+	v_lod_dist = length(root - MAIN_CAM_INV_VIEW_MATRIX[3].xyz);
 	float h = clamp((world_pos.y - root.y) / max(sway_height, 0.05), 0.0, 1.6);
 	vec2 dir = normalize(wind_dir);
 	float phase = dot(root.xz, dir) * wind_scale + TIME * wind_speed;
@@ -51,6 +61,10 @@ void vertex() {
 }
 
 void fragment() {
+	if (!lod_keep_in(lod_fade_in, v_lod_dist, FRAGCOORD.xy)
+			|| !lod_keep_out(lod_fade_out, v_lod_dist, FRAGCOORD.xy)) {
+		discard;
+	}
 	// COLOR is the per-instance colour the MultiMesh carries. The world builder gives every
 	// scattered plant its own tint off the region's palette (worldgen/cells.py) and writes it
 	// into the cell data, the streamer loads it into the MultiMesh with `use_colors`, and

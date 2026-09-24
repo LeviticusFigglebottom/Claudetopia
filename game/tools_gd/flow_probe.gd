@@ -890,6 +890,21 @@ func _talk_to_the_greeter() -> void:
 	_check(shown, "and the conversation is on the screen")
 	await _settle(1.0)
 	await _capture("talking_to_%s" % Ids.name_of(greeter))
+	var cam := get_viewport().get_camera_3d()
+	var model := person.get("_model") as Node3D
+	if cam != null and model != null:
+		var facing := Vector3(sin(model.rotation.y + PI), 0.0, cos(model.rotation.y + PI))
+		var to_cam := cam.global_position - person.global_position
+		var to_body := body.global_position - person.global_position
+		_notes.append("in the talk's picture %s faces %s (model yaw %.2f, global basis z %s); the camera is %s from her, %.2f along her facing; the player %s, %.2f along it"
+				% [who, facing.round(), model.rotation.y, model.global_transform.basis.z.round(), to_cam.round(),
+					facing.dot(Vector3(to_cam.x, 0.0, to_cam.z).normalized()), to_body.round(),
+					facing.dot(Vector3(to_body.x, 0.0, to_body.z).normalized())])
+	# nothing offers the key that is going on through the conversation: the HUD's prompt and the
+	# toast raised on the way up both came down (the corner still had the toast, 09-24)
+	var hud_prompt := str(hud.call("prompt_text")) if hud != null and hud.has_method("prompt_text") else ""
+	_check(hud_prompt.is_empty() and UI.toasts_shown("prompt") == 0,
+			"while the talk is on the screen no prompt offers the key (HUD: '%s', toasts: %d)" % [hud_prompt, UI.toasts_shown("prompt")])
 	var ended := await _talk_it_through(90.0)
 	_check(ended, "it is answered down to its goodbye, and the key that ends it does not start it again")
 	var moved := await _wait_until(func() -> bool: return log_node != null and str(log_node.call("stage_id_of", quest)) != stage_before, 5.0)

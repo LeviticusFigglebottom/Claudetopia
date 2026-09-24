@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 1.171,
+  "max": [
+   0.047,
+   0.871,
+   0.148
+  ],
+  "min": [
+   -0.047,
+   -0.3,
+   -0.11
+  ],
+  "radius": 0.601
+ },
+ "built_seconds": 23.28,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "warhammer_bronze.glb",
+ "grip_origin": true,
+ "hash": "64f0b84c485cbb4b",
+ "kind": "warhammer",
+ "materials": [
+  "warhammer_bronze_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "warhammer_bronze",
+   "tris": 2986
+  },
+  {
+   "name": "warhammer_bronze_LOD1",
+   "tris": 1194
+  },
+  {
+   "name": "warhammer_bronze_LOD2",
+   "tris": 446
+  }
+ ],
+ "name": "warhammer_bronze",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9519,
+ "textures": [
+  "warhammer_bronze_albedo.png",
+  "warhammer_bronze_normal.png",
+  "warhammer_bronze_orm.png"
+ ],
+ "tris": [
+  2986,
+  1194,
+  446
+ ],
+ "two_handed": true,
+ "version": 3
+}

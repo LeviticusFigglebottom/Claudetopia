@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.682,
+  "max": [
+   0.05,
+   0.541,
+   0.058
+  ],
+  "min": [
+   -0.05,
+   -0.141,
+   -0.058
+  ],
+  "radius": 0.35
+ },
+ "built_seconds": 51.84,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "mace_bronze.glb",
+ "grip_origin": true,
+ "hash": "d9071a2dd5224ec7",
+ "kind": "mace",
+ "materials": [
+  "mace_bronze_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "mace_bronze",
+   "tris": 1796
+  },
+  {
+   "name": "mace_bronze_LOD1",
+   "tris": 718
+  },
+  {
+   "name": "mace_bronze_LOD2",
+   "tris": 268
+  }
+ ],
+ "name": "mace_bronze",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9400,
+ "textures": [
+  "mace_bronze_albedo.png",
+  "mace_bronze_normal.png",
+  "mace_bronze_orm.png"
+ ],
+ "tris": [
+  1796,
+  718,
+  268
+ ],
+ "version": 3
+}

@@ -160,6 +160,148 @@ class NarrowHead(unittest.TestCase):
         self.assertFalse(bool(wet[20, 200]), "a lone wet texel is noise and is dropped")
 
 
+class Meanders(unittest.TestCase):
+    """A drawn river wanders between its drawn points, and not in steep country or by a bridge.
+
+    Built on the atlas's lines, the rivers ran ruler-straight for hundreds of metres between their
+    points, and read as canals on the chart and from the ground."""
+
+    PATH = [[-600.0, -600.0], [0.0, -100.0], [700.0, 0.0]]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.grid = Grid(2048.0, 512)
+        n = cls.grid.n
+        cls.flat = np.full((n, n), 50.0, dtype=np.float32)
+        x = cls.grid.x0 + (np.arange(n) + 0.5) * cls.grid.spacing
+        cls.steep = (50.0 + 0.3 * np.broadcast_to(x[None, :], (n, n))).astype(np.float32)
+
+    def off_line(self, line):
+        from worldgen import atlas as ATLAS
+
+        return np.array([ATLAS.distance_to_path(float(x), float(z), self.PATH) for x, z in line])
+
+    def test_it_wanders_and_passes_every_drawn_point(self):
+        line = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a")
+        off = self.off_line(line)
+        self.assertGreater(float(off.max()), 20.0, "the river is still its drawn line")
+        self.assertLess(float(off.max()), 70.0)
+        for v in self.PATH:
+            self.assertLess(float(np.hypot(line[:, 0] - v[0], line[:, 1] - v[1]).min()), 0.01)
+        gaps = np.linalg.norm(np.diff(line, axis=0), axis=1)
+        self.assertLessEqual(float(gaps.max()), 21.0)
+
+    def test_it_is_the_same_river_every_build(self):
+        a = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a")
+        b = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a")
+        self.assertTrue(np.array_equal(a, b))
+
+    def test_it_is_straighter_down_a_steep_valley(self):
+        flat = self.off_line(HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a"))
+        steep = self.off_line(HY.meander(self.PATH, (6.0, 10.0), self.steep, self.grid, "test:river/a"))
+        self.assertLess(float(np.percentile(steep, 90)), 0.75 * float(np.percentile(flat, 90)))
+
+    def test_it_keeps_to_its_line_by_a_bridge(self):
+        bridge = np.array([[-300.0, -350.0]])
+        line = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a", bridge)
+        near = np.hypot(line[:, 0] - bridge[0, 0], line[:, 1] - bridge[0, 1]) < HY.AVOID_NEAR_M
+        self.assertTrue(near.any())
+        self.assertLess(float(self.off_line(line[near]).max()), 1.0)
+
+    def test_the_atlas_can_hold_a_river_to_its_line(self):
+        line = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a", scale=0.0)
+        self.assertLess(float(self.off_line(line).max()), 0.01)
+
+
+class Falls(unittest.TestCase):
+    """Down its falls a river's water follows the face, and its channel is cut to the water there,
+    not left hanging under it. Drawn straight between points 20 m apart down a cliff between
+    them, the channel cut a trench into the land above the cliff and built a levee over its foot;
+    and a texel took the level the river last had in it, not the level by its centre, so down a
+    fall the bed was cut to the water further down."""
+
+    SP = 2.0     # the texel of the 4096 build
+
+    @classmethod
+    def setUpClass(cls):
+        cls.grid = Grid(512.0, int(512.0 / cls.SP))
+        X, Z = cls.grid.mesh()
+        X = np.broadcast_to(X, (cls.grid.n, cls.grid.n))
+        Z = np.broadcast_to(Z, (cls.grid.n, cls.grid.n))
+        # a cliff falling 2.5 in 1 from x = 0 to 30, on a hillside falling across the river
+        cls.H = (np.where(X < 0, 200.0 - 0.1 * X, np.where(X < 30, 200.0 - 2.5 * X, 125.0 - 0.1 * (X - 30)))
+                 - 0.6 * Z).astype(np.float32)
+        cls.bank = NoiseBank(4242, cls.grid)
+
+    def carve(self, step):
+        from worldgen.grid import sample_bilinear
+
+        line = np.array([[-193.0, 0.0], [207.0, 0.0]])
+        fine = paths.resample_polyline(line, HY.FALL_SAMPLE_M)
+        h = sample_bilinear(self.H, self.grid, fine[:, 0], fine[:, 1]).astype(np.float64)
+        keep = HY.fall_points(fine, h) if step is None else np.arange(0, fine.shape[0], int(step / HY.FALL_SAMPLE_M))
+        pts, h = fine[keep], h[keep]
+        surf = HY._monotone_profile(h, float(h[0] - 0.5), float(h[-1] - 1.0))
+        r = HY.River(id="x", points=pts, width=np.full(len(pts), 5.0, dtype=np.float32), surface=surf)
+        Hc, *_ = HY.carve_rivers(self.grid, self.H.copy(), [r], self.bank)
+        x = np.arange(pts[0, 0], pts[-1, 0], 0.5)
+        z = np.zeros_like(x)
+        water = np.interp(x, pts[:, 0], surf)
+        return pts, water - sample_bilinear(Hc, self.grid, x, z), sample_bilinear(Hc - self.H, self.grid, x, z)
+
+    def test_a_steep_stretch_keeps_its_points_close_and_a_gentle_one_does_not(self):
+        pts, _over, _dh = self.carve(None)
+        gaps = np.diff(pts[:, 0])
+        at = pts[1:, 0]
+        self.assertTrue(np.allclose(gaps[(at > 0.0) & (at < 30.0)], HY.FALL_SAMPLE_M))
+        self.assertTrue(np.allclose(gaps[(at < -40.0) | (at > 70.0)], HY.RIVER_STEP_M))
+
+    def test_the_water_sits_in_its_channel_down_the_fall(self):
+        _pts, over, _dh = self.carve(None)
+        self.assertEqual(int((over > 3.0).sum()), 0, "the water hangs %.1f m over its bed" % over.max())
+
+    def test_the_channel_follows_the_face(self):
+        _p, _o, dh20 = self.carve(20.0)
+        _p, _o, dh = self.carve(None)
+        # drawn every 20 m: a trench above the cliff and a levee at its foot
+        self.assertGreater(float(dh20.max()), 3.5)
+        self.assertLess(float(dh.max()), 2.0, "the bed is built %.1f m out over the land" % dh.max())
+        self.assertLess(float(-dh.min()), 0.5 * float(-dh20.min()))
+
+    def test_a_texel_takes_the_level_by_its_centre(self):
+        grid = Grid(64.0, 32)
+        line = np.array([[-30.0, 0.3], [30.0, 0.3]])
+        value = np.array([100.0, 40.0])
+        mask = np.zeros((grid.n, grid.n), dtype=bool)
+        out = np.zeros((grid.n, grid.n), dtype=np.float32)
+        paths.rasterise_polyline(line, grid, value=value, out_mask=mask, out_value=out, at_centre=True)
+        i, j = np.nonzero(mask)
+        x = grid.x0 + j * grid.spacing
+        self.assertLess(float(np.abs(out[i, j] - np.interp(x, line[:, 0], value)).max()), 1.0)
+
+
+class LandformsBesideARiver(unittest.TestCase):
+    """No landform digs a pit below a river's water beside it (landforms.river_guard). A limestone
+    scar across the Brindle Beck's head took its bed 9.7 m under the water, and the river's ribbon
+    hung over the hole."""
+
+    def test_a_pit_by_the_river_stops_over_its_water_and_one_away_from_it_does_not(self):
+        from worldgen import landforms as LF
+
+        n = 64
+        H = np.full((n, n), 102.0, dtype=np.float32)
+        river_d = np.broadcast_to(np.abs(np.arange(n, dtype=np.float32) * 2.0 - 20.0)[None, :], (n, n)).copy()
+        surf = np.full((n, n), 100.0, dtype=np.float32)
+        width = np.full((n, n), 6.0, dtype=np.float32)
+        delta = np.full((n, n), -8.0, dtype=np.float32)          # a pit everywhere
+        delta[0, :] = 3.0                                        # and a rise in one row
+        out = LF.river_guard(H, delta, river_d, surf, width)
+        near = river_d[1:] <= 3.0 + LF.RIVER_GUARD_M
+        self.assertTrue(np.allclose((H + out)[1:][near], 100.5))
+        self.assertTrue(np.allclose(out[1:][~near], -8.0))
+        self.assertTrue(np.allclose(out[0], 3.0), "a landform may still raise the land")
+
+
 class WanderingWall(unittest.TestCase):
     """The same gorge through a flat plateau, carved with a noise bank as a build carves it."""
 
@@ -176,9 +318,16 @@ class WanderingWall(unittest.TestCase):
         cls.reach = HY.VALLEY_WIDTHS * WIDTH_M * 0.5
         cls.rows = slice(n // 2 - 300, n // 2 + 300)
 
-    def test_the_valley_floor_is_as_it_was(self):
-        floor = self.dist[self.rows] <= self.reach
-        self.assertTrue(np.array_equal(self.carved[self.rows][floor], self.plane[self.rows][floor]))
+    def test_the_banks_are_as_they_were(self):
+        banks = self.dist[self.rows] <= WIDTH_M * 0.5 + 2.0
+        self.assertTrue(np.array_equal(self.carved[self.rows][banks], self.plane[self.rows][banks]))
+
+    def test_the_valley_floor_rolls_and_stays_over_the_water(self):
+        # a smooth ramp a hundred metres wide read from above as a made thing
+        floor = (self.dist[self.rows] > WIDTH_M * 0.5 + 2.0 + HY.FLOOR_INTO_M) & (self.dist[self.rows] < self.reach)
+        off = self.carved[self.rows][floor] - self.plane[self.rows][floor]
+        self.assertGreater(float(off.std()), 0.5, "the floor is still a plane")
+        self.assertGreaterEqual(float(self.carved[self.rows][floor].min()), WATER_M + HY.FLOOR_OVER_M - 1e-3)
 
     def test_the_wall_wanders_along_the_river(self):
         # where the wall's top meets the plateau, row by row, on the west side: a plane meets it

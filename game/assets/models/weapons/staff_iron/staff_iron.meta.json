@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 1.794,
+  "max": [
+   0.032,
+   0.992,
+   0.023
+  ],
+  "min": [
+   -0.033,
+   -0.802,
+   -0.031
+  ],
+  "radius": 0.898
+ },
+ "built_seconds": 4.64,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "staff_iron.glb",
+ "grip_origin": true,
+ "hash": "52c4902f3040abe8",
+ "kind": "staff",
+ "materials": [
+  "staff_iron_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "staff_iron",
+   "tris": 1010
+  },
+  {
+   "name": "staff_iron_LOD1",
+   "tris": 402
+  },
+  {
+   "name": "staff_iron_LOD2",
+   "tris": 150
+  }
+ ],
+ "name": "staff_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9502,
+ "textures": [
+  "staff_iron_albedo.png",
+  "staff_iron_normal.png",
+  "staff_iron_orm.png"
+ ],
+ "tris": [
+  1010,
+  402,
+  150
+ ],
+ "version": 3
+}

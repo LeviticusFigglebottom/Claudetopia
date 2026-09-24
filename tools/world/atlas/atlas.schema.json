@@ -470,6 +470,11 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1500
+        },
+        "meander": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.5
         }
       }
     },

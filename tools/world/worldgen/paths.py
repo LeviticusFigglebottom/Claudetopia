@@ -104,12 +104,19 @@ def resample_polyline(points: np.ndarray, step_m: float) -> np.ndarray:
 
 
 def rasterise_polyline(points: np.ndarray, grid, value: np.ndarray | None = None,
-                       out_mask: np.ndarray | None = None, out_value: np.ndarray | None = None):
-    """Stamp a polyline (world metres) into a texel mask, optionally carrying a per-point value."""
+                       out_mask: np.ndarray | None = None, out_value: np.ndarray | None = None,
+                       at_centre: bool = False):
+    """Stamp a polyline (world metres) into a texel mask, optionally carrying a per-point value.
+
+    A texel the line crosses takes the value the line last had in it, unless `at_centre`, when
+    it takes the value where the line passes nearest the texel's centre. That is the value the
+    land's bilinear surface meets there, and it matters where the value changes fast along the
+    line: down a river's falls a texel took the level of the pool below, and the pool above was
+    cut down before its lip."""
     n = grid.n
     if out_mask is None:
         out_mask = np.zeros((n, n), dtype=bool)
-    dense = resample_polyline(points, grid.spacing * 0.5)
+    dense = resample_polyline(points, grid.spacing * (0.125 if at_centre else 0.5))
     j, i = grid.to_tex(dense[:, 0], dense[:, 1])
     j, i = grid.clamp_index(j, i)
     out_mask[i, j] = True
@@ -119,5 +126,14 @@ def rasterise_polyline(points: np.ndarray, grid, value: np.ndarray | None = None
         sd = np.linalg.norm(np.diff(dense, axis=0), axis=1)
         sdense = np.concatenate([[0.0], np.cumsum(sd)])
         v = np.interp(sdense, s, value)
+        if at_centre:
+            # for each texel, the sample nearest its centre
+            i, j = np.asarray(i), np.asarray(j)
+            cx = grid.x0 + j * grid.spacing
+            cz = grid.z0 + i * grid.spacing
+            order = np.argsort(np.hypot(dense[:, 0] - cx, dense[:, 1] - cz), kind="stable")
+            _flat, first = np.unique((i * n + j)[order], return_index=True)
+            pick = order[first]
+            i, j, v = i[pick], j[pick], v[pick]
         out_value[i, j] = v
     return out_mask, out_value

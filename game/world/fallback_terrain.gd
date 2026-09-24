@@ -433,6 +433,10 @@ func _on_cell_loaded(cell: Vector2i) -> void:
 	if node == null:
 		return
 	reground(node, provider)
+	# the trees drawn by level of detail are refilled from their group's own rows, so the rows
+	# are what is set down (WorldStreamer.set_lod_groups_down, world/scatter_lod.gd)
+	if streamer.has_method("set_lod_groups_down"):
+		streamer.call("set_lod_groups_down", node, provider)
 
 
 ## Sets every MultiMesh instance under `cell` down on the provider's ground. Returns how many moved.
@@ -443,6 +447,11 @@ static func reground(cell: Node3D, p: TerrainProvider) -> int:
 	for child in cell.get_children():
 		var mmi := child as MultiMeshInstance3D
 		if mmi == null or mmi.multimesh == null or mmi.multimesh.transform_format != MultiMesh.TRANSFORM_3D:
+			continue
+		# a level-of-detail group's MultiMeshes are refilled from the group's rows as the eye
+		# moves, so what this wrote into them would not last, and on Forward+ they read back as
+		# NaN positions; the group's rows are set down instead (ScatterLod.Group.set_down)
+		if mmi.has_meta("lod_group"):
 			continue
 		var mm := mmi.multimesh
 		var stride := buffer_stride(mm)
