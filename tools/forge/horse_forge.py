@@ -188,7 +188,7 @@ def coat_paint(skel, field: sdf.SampledField, seed: int = 7):
         c = np.broadcast_to(C["body"], (len(P), 3)).copy()
         # blocks of colour: sun-dark along the top, pale underneath, a soft sheen on the flank
         c = paint.mix(c, C["shade"], np.clip(0.55 * paint.smoothstep(0.2, 0.9, up) * (0.6 + 0.8 * big), 0, 1))
-        c = paint.mix(c, C["light"], np.clip(0.75 * paint.smoothstep(-0.2, -0.8, up) + 0.6 * R["belly"], 0, 1))
+        c = paint.mix(c, C["light"], np.clip(0.75 * (1.0 - paint.smoothstep(-0.8, -0.2, up)) + 0.6 * R["belly"], 0, 1))
         c = paint.mix(c, C["light"], 0.25 * paint.smoothstep(0.55, 0.8, big))
         # dapples: a cob in good condition shows faint rings on the quarters
         dap = n2.fbm(P, freq=9.0 / s, octaves=2)
@@ -200,7 +200,7 @@ def coat_paint(skel, field: sdf.SampledField, seed: int = 7):
         # zebra bars on the forearms and gaskins, the primitive dun marking, faint
         bars = 0.5 + 0.5 * np.sin(P[:, 2] * 70.0 / s + n1.at(P, 8.0) * 2.0)
         legband = paint.smoothstep(0.30 * s, 0.45 * s, P[:, 2]) * (1.0 - paint.smoothstep(0.62 * s, 0.85 * s, P[:, 2]))
-        c = paint.mix(c, C["points"], 0.35 * legband * paint.smoothstep(0.75, 0.95, bars))
+        c = paint.mix(c, C["points"], 0.16 * legband * paint.smoothstep(0.8, 0.97, bars))
         hair = np.clip(R["mane"] + R["tail"] + R["feather"], 0, 1)
         hair_col = C["points"] * (0.8 + 0.6 * clump[:, None]) + 0.06 * paint.smoothstep(0.5, 0.95, up)[:, None]
         c = paint.mix(c, hair_col, hair)
@@ -268,7 +268,7 @@ def tack_paint(skel, pieces: dict, seed: int = 9):
             d_down = seat[2] - p[:, 2]
             d_back = np.abs(p[:, 1] - (seat[1] + 0.06 * s))
             edge = np.maximum(paint.smoothstep(0.40 * s, 0.44 * s, d_down), paint.smoothstep(0.27 * s, 0.31 * s, d_back))
-            stripe = paint.smoothstep(0.012 * s, 0.0, np.abs(d_down - 0.35 * s))
+            stripe = 1.0 - paint.smoothstep(0.0, 0.012 * s, np.abs(d_down - 0.35 * s))
             weave = 0.5 + 0.5 * np.sin(p[:, 1] * 900.0 / s) * np.sin(p[:, 2] * 900.0 / s)
             col = paint.mix(np.broadcast_to(T["cloth"], (len(p), 3)), T["cloth_border"], np.clip(edge + stripe, 0, 1))
             col = col * (0.85 + 0.25 * big[clo] + 0.06 * weave)[:, None]
@@ -339,6 +339,36 @@ def bake_clips(arm, skel, only=None) -> dict:
 # commands
 # --------------------------------------------------------------------------------------
 
+def clean_mesh(ob) -> None:
+    """Degenerate faces and loose bits out, and the mesh validated: the glTF exporter drops a mesh
+    it judges invalid (with a warning and nothing else), which is what the joined tack was."""
+    import bpy
+    bodylib.select_only(ob)
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.dissolve_degenerate(threshold=1e-5)
+    bpy.ops.mesh.delete_loose()
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+    bpy.ops.object.mode_set(mode='OBJECT')
+    changed = ob.data.validate(verbose=True, clean_customdata=True)
+    if changed:
+        log("%s: validate fixed its mesh" % ob.name)
+
+
+def decimate_to(ob, target: int) -> None:
+    """Down to about `target` triangles: the collapse stops short on many small pieces, so it is
+    asked again, without symmetry, until it gets there or stops moving."""
+    bodylib.decimate(ob, target, symmetry=True)
+    for _ in range(3):
+        n = bodylib.tri_count(ob)
+        if n <= target * 1.1:
+            return
+        bodylib.decimate(ob, target, symmetry=False)
+        if bodylib.tri_count(ob) >= n * 0.98:
+            return
+
+
 def duplicate_joined(objs, name):
     import bpy
     bpy.ops.object.select_all(action='DESELECT')
@@ -366,6 +396,7 @@ def cmd_build(args) -> None:
     spacing = 0.016 if args.quick else 0.010
     grid = []
     body = mesh_object("Horse_Body", hb.horse_scene(skel, style), spacing, BODY_TRIS, grid_out=grid)
+    clean_mesh(body)
     field = sdf.SampledField.from_grid(*grid)
     log("body: %d tris (%.0fs)" % (bodylib.tri_count(body), time.time() - t0))
     bodylib.smart_uv(body, angle_deg=60.0, margin=0.008)
@@ -393,6 +424,7 @@ def cmd_build(args) -> None:
     bodylib.join_into(tack, pieces[1:] + eyes)
     tack.name = "Horse_Tack"
     tack.data.name = "Horse_Tack"
+    clean_mesh(tack)
     bodylib.smart_uv(tack, angle_deg=60.0, margin=0.01)
     skin_to_body(tack, arm, bv, bW)
     # the eyes go with the head, whatever the nearest skin says
@@ -407,8 +439,11 @@ def cmd_build(args) -> None:
 
     lods = []
     for lname, target in (("Horse_LOD1", LOD1_TRIS), ("Horse_LOD2", LOD2_TRIS)):
-        lob = duplicate_joined([body, tack], lname)
-        bodylib.decimate(lob, target, symmetry=True)
+        # LOD2 from LOD1: collapsed from the full mesh at a fourteenth, the tack's many small
+        # shells stopped the decimator at three times the budget
+        lob = duplicate_joined([body, tack] if not lods else [lods[-1]], lname)
+        decimate_to(lob, target)
+        clean_mesh(lob)
         lods.append(lob)
         log("%s: %d tris" % (lname, bodylib.tri_count(lob)))
 

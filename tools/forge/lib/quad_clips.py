@@ -134,7 +134,7 @@ class Solver:
     HIND_CANNON_SHARE = 0.6
     # where each pair's stance is centred, against its rest toe, as a share of the stance's length
     # (+ behind): a hind hoof lands near under the hip and pushes off well behind it
-    HIND_BACK = 0.22
+    HIND_BACK = 0.15
     FORE_BACK = 0.0
     # the pelvis tilts with the hind legs a little, about the lumbosacral joint
     def __init__(self, skel: QuadSkeleton):
@@ -422,7 +422,7 @@ def horse_gaits() -> List[GaitSpec]:
                  footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75},
                  lift=0.10, fold=0.45, bob=0.018, bobs=2, bob_at=0.05, nod=5.0, nods=2, nod_at=0.30,
                  roll=1.5, carriage=4.0, tail=0.0, ears=-4.0),
-        GaitSpec("Trot", speed=3.8, cycle=21 / FPS, duty=0.42,
+        GaitSpec("Trot", speed=3.8, cycle=21 / FPS, duty=0.38,
                  footfalls={"HL": 0.0, "FR": 0.0, "HR": 0.5, "FL": 0.5},
                  lift=0.16, fold=0.75, bob=0.04, bobs=2, bob_at=0.21, nod=2.0, nods=2, nod_at=0.25,
                  carriage=-2.0, tail=6.0, ears=-8.0),
@@ -449,11 +449,14 @@ def horse_gaits() -> List[GaitSpec]:
 
 
 def toe_slip(solver: Solver, clip: QuadClip, speed: float, samples: int = 60) -> float:
-    """The worst distance a planted toe moves over the ground between two samples, per second,
-    with the body carried forward at `speed`: 0 for a clip whose feet stand still."""
+    """The farthest any hoof strays over the ground while it is planted, in metres, with the body
+    carried forward at `speed` (and turned by the clip's `turn`): 0 for a clip whose planted
+    hooves stand still."""
     sk = solver.skel
+    turn = float(clip.extra.get("turn", 0.0))
+    centre = np.array([0.0, 0.08 * sk.props.withers / 1.5, 0.0])
     worst = 0.0
-    prev = None
+    landed: Dict[str, np.ndarray] = {}
     dt = clip.length / samples
     for i in range(samples + 1):
         t = i * dt
@@ -461,18 +464,17 @@ def toe_slip(solver: Solver, clip: QuadClip, speed: float, samples: int = 60) ->
         R, th = solver.solve(qp)
         pose = {n: (r, th if n == "Hips" else None) for n, r in R.items()}
         W = sk.fk(pose)
-        toes = {}
+        yaw = yaw_left(turn * t / clip.length)
         for f in FEET:
-            hoof = foot_bones(f)[-1]
-            p = sk.tail_world(W, hoof)
-            p = p + np.array([0.0, -speed * t, 0.0])       # carried forward: -Y
-            toes[f] = p
-        planted = {f: qp.feet[f].planted if f in qp.feet else True for f in FEET}
-        if prev is not None:
-            for f in FEET:
-                if planted[f] and prev[1][f]:
-                    worst = max(worst, float(np.linalg.norm(toes[f] - prev[0][f])) / dt)
-        prev = (toes, planted)
+            p = sk.tail_world(W, foot_bones(f)[-1])
+            p = centre + yaw @ (p - centre) + np.array([0.0, -speed * t, 0.0])
+            planted = qp.feet[f].planted if f in qp.feet else True
+            if not planted:
+                landed.pop(f, None)
+                continue
+            if f not in landed:
+                landed[f] = p
+            worst = max(worst, float(np.linalg.norm(p - landed[f])))
     return worst
 
 

@@ -25,6 +25,8 @@ extends RefCounted
 ##   {"bounty": {"crime": "theft", "value": 120, "at": place_id, "seen_by": npc_id, "reaction": r}}
 ##                                           person spoken to (or `seen_by`), and reported by the crime
 ##                                           system's rules (SocialContext.commit_crime)
+##   {"give_mount": mount_id}                a horse of the player's own (DECISIONS 2026-09-24): it stands
+##                                           at its def's `home` and is saved; a second gift is nothing
 ##   {"offer_work": true} | {"offer_work": place_id}
 ##                                           the work going in the place (the speaker's own when true):
 ##                                           its notice post, or what its people carry (JobBoard.for_place)
@@ -41,7 +43,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
-	"bounty", "offer_work",
+	"bounty", "offer_work", "give_mount",
 ]
 
 
@@ -102,6 +104,8 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 				ctx.take_item(str(p[0]), int(p[1]))
 		"marks":
 			ctx.add_marks(int(arg))
+		"give_mount":
+			ctx.give_mount(str(arg))
 		"teach_recipe":
 			ctx.teach_recipe(str(arg))
 		"teach_spell":
