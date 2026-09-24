@@ -84,7 +84,7 @@ const DEFAULTS := {
 ## to (Tier C of docs/HORIZON.md); the horizon layer's reach (world/horizon_layer.gd); and the
 ## vertices in each of Terrain3D's clipmap rings, which is what the far hills' shape is drawn from.
 const CAMERA_FAR_M: Array[float] = [3000.0, 4400.0, 6500.0]
-const TERRAIN_MESH_SIZE: Array[int] = [32, 48, 64]
+const TERRAIN_MESH_SIZE: Array[int] = [32, 48, 56]
 
 
 static func camera_far(g: Dictionary) -> float:

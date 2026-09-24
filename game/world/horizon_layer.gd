@@ -27,7 +27,7 @@ extends Node3D
 ## of ground at 64 samples is often in plain view on the screen. The model decides what the map
 ## says the player has seen; the screen shows what the land shows.
 ##
-## View distance also sets the vertices in each of Terrain3D's clipmap rings (32, 48, 64): each
+## View distance also sets the vertices in each of Terrain3D's clipmap rings (32, 48, 56): each
 ## ring is twice as coarse as the one inside it, so more vertices a ring is finer ground at every
 ## distance, and the far hills keep their shape rather than a blob's.
 ##
