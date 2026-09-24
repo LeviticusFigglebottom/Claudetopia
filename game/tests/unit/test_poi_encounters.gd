@@ -390,6 +390,13 @@ const WHAT_STANDS := {
 	"core:poi/toll_view": "nobody: none",
 	"core:poi/dole_house": "a hedge-wight after dark",
 	"core:poi/quiet_mile": "nobody: none",
+	"core:poi/salt_road_cairn": "nobody: none",
+	"core:poi/last_meal_stone": "nobody: none",
+	"core:poi/bowing_stones": "nobody: none",
+	"core:poi/scavengers_cold_camp": "two ash-wights after dark",
+	"core:poi/robing_house": "nobody: none",
+	"core:poi/harbour_milestone": "nobody: none",
+	"core:poi/first_verse": "nobody: none",
 }
 
 var host: Node3D
