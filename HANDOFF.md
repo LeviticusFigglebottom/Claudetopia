@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-23 18:07 UTC. Main is `claude/blissful-volta-dg80e6`: `6985d356` plus this file. Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24 02:09 UTC. Main is `claude/blissful-volta-dg80e6`: `6985d356` plus this file. Every area's hand-off note is in §6.
 
 ---
 
@@ -62,11 +62,11 @@ The user owns the project. Their direction, in their words where it matters:
 | `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `ebb5f18b` | Atlas final. Quest plumbing Phase A done. The Hushline has moved onto the landing. Next: the atlas items that gate the merge, then the **quest walker** (`./run.sh quests`). |
 | `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `4e479668` | PlaceRef and the coordinate inventory are done. The game runs on the atlas world (journey 16/16, fights 0 failed, 1 atlas-side test fail). Next: merge main, rerun, hand back. |
 | `wip/opening` | The intro cinematic, the start, and its loose ends | `62cd87b3` | **NPC talk and tents fixed** (tests pass). The flow now talks to Wren through the key. Camp life added. Final suite, journey and flow, then merge. |
-| `wip/player-feel` | Movement, gaits, animation feel | `dfec3504` | **Slopes and jump fixed** (5–40° climbed at full pace; jump rises about 1.1 m) with `test_walking_uphill`. Full suite, journey and flow running, then merge. Then the attack-clip audit. |
+| `wip/player-feel` | Movement, gaits, animation feel | `63b462b9` | **Slopes and jump fixed** (5–40° climbed at full pace; jump rises about 1.1 m) with `test_walking_uphill`. Full suite, journey and flow running, then merge. Then the attack-clip audit. |
 | `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `cbf7a236` | **URGENT: black ground, diagnosed** (the ash soil albedo, §4); fix next. |
 | `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `a5a930e9` | Suite passes (1616 tests, 0 failed). The flow failure was main's old opening stall. Next: merge main, then flow, then hand back. |
 | `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `7b9537b9` | Most refinements done. The empty Naming preview is fixed (class cache). WIP: the wrist rebuild, cloaks mid-stride, the brigandine review (§6.8). |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `3352cb7c` | **Brief done and verified** (test 1664 passed, 0 failed; journey 16/16; smoke PASS; flow 98/99, the miss is the opening's). Queued for the next batch merge. Next: the atlas POI kinds. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `320c1739` | **Brief done and verified** (test 1664 passed, 0 failed; journey 16/16; smoke PASS; flow 98/99, the miss is the opening's). Queued for the next batch merge. Next: the atlas POI kinds. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
 section says what it did.
@@ -656,6 +656,7 @@ Each subsection is refreshed from its agent's hand-off note. Commands assume the
 - **World symlinks:** agents once symlinked `game/world/generated` and `game/terrain_data` to a
   snapshot. Since the world is tracked, those links must not exist. Remove them with `unlink`
   before merging main.
+- **Disk allowance:** the session's writable disk is a fixed allowance of about 38 GB, and `df` shows it as "Avail". On 2026-09-24 it reached 96%. Ten worktrees with their `.godot` caches take about 1.3–1.9 GB each, and each 4096 world build about 0.5 GB plus 0.15 GB for its terrain. Delete superseded builds and captures as you go. Remove a merged agent's worktree with `git worktree remove` (the user must approve it here).
 - **Setup:**
   - Python 3.11+ with `pip install -r tools/requirements.txt` for the world, the interiors and
     sound;
