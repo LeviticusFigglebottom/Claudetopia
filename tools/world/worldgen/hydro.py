@@ -8,6 +8,7 @@ the final heights: the sea, the atlas's lakes at their levels, a delta's pools a
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -37,19 +38,22 @@ class WaterResult:
     river_dist: np.ndarray   # float32 metres to the nearest river centre line
 
 
-def _monotone_profile(h_along: np.ndarray, start: float, end: float, min_drop: float = 0.05) -> np.ndarray:
-    """A water surface that starts at `start`, ends at `end`, follows the land and never climbs."""
+def _monotone_profile(h_along: np.ndarray, start: float, end: float, min_drop=0.05) -> np.ndarray:
+    """A water surface that starts at `start`, ends at `end`, follows the land and never climbs.
+
+    `min_drop` is the least it falls from one point to the next: one figure, or one per step."""
     k = h_along.size
+    drop = np.broadcast_to(np.asarray(min_drop, dtype=np.float64), (max(k - 1, 0),))
     prof = np.minimum(h_along - 0.4, start)
     prof[0] = start
     for i in range(1, k):                      # enforce descent
-        prof[i] = min(prof[i], prof[i - 1] - min_drop)
+        prof[i] = min(prof[i], prof[i - 1] - drop[i - 1])
     # lift the tail smoothly so the mouth meets the receiving water level exactly
     t = np.linspace(0.0, 1.0, k) ** 2
     prof = lerp(prof, np.maximum(prof, end), t)
     prof[-1] = end
     for i in range(k - 2, -1, -1):
-        prof[i] = max(prof[i], prof[i + 1] + min_drop)
+        prof[i] = max(prof[i], prof[i + 1] + drop[i])
     return prof.astype(np.float32)
 
 
@@ -138,6 +142,35 @@ def meander(path, width, H: np.ndarray, grid: Grid, key: str, avoid: np.ndarray 
     return np.concatenate(out, axis=0)
 
 
+## Down a steep stretch a river keeps a point every FALL_SAMPLE_M, not every 20 m, and its water
+## follows the fall's own face. The channel is cut to the water (`carve_rivers`), and drawn
+## straight between points 20 m apart down a cliff that stands between them it cut a trench of
+## up to 20 m into the land above the cliff and built a levee of up to 8 m out over its foot,
+## which the water's ribbon, wider than the channel, hung over. At 5 m the trench is the
+## channel's own depth and the levee under 3 m (measured on 2 m and 4 m texels). A stretch is
+## steep where the land falls faster than FALL_GRADE over 20 m. Steps of pools and sheets were
+## tried and are worse: a drop narrower than a texel cannot be carved, and the water hung over
+## every lip.
+FALL_GRADE = 0.3
+FALL_SAMPLE_M = 5.0
+RIVER_STEP_M = 20.0
+
+
+def fall_points(fine: np.ndarray, h_fine: np.ndarray) -> np.ndarray:
+    """Which of a river's points, every FALL_SAMPLE_M along it, it keeps: one every RIVER_STEP_M,
+    the last, and every one down a stretch falling faster than FALL_GRADE."""
+    k = fine.shape[0]
+    per = max(int(round(RIVER_STEP_M / FALL_SAMPLE_M)), 1)
+    keep = np.zeros(k, dtype=bool)
+    keep[::per] = True
+    keep[-1] = True
+    if k > per:
+        drop = h_fine[:-per] - h_fine[per:]
+        for i in np.nonzero(np.abs(drop) > FALL_GRADE * RIVER_STEP_M)[0]:
+            keep[i:i + per + 1] = True
+    return np.nonzero(keep)[0]
+
+
 def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None = None) -> list:
     """The rivers the atlas draws, each with a surface falling from its source to its mouth.
 
@@ -170,9 +203,12 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None 
             other = by_id[into]
             k = int(np.argmin(np.hypot(other.points[:, 0] - pts[-1, 0], other.points[:, 1] - pts[-1, 1])))
             pts[-1] = other.points[k]
-        jj, ii = grid.to_tex(pts[:, 0], pts[:, 1])
-        jj, ii = grid.clamp_index(jj, ii)
-        h_along = H[ii, jj].astype(np.float64)
+        # the land along it every FALL_SAMPLE_M, and the points it keeps (`fall_points`)
+        from .grid import sample_bilinear
+        fine = paths.resample_polyline(pts, FALL_SAMPLE_M)
+        h_fine = sample_bilinear(H, grid, fine[:, 0], fine[:, 1]).astype(np.float64)
+        kept = fall_points(fine, h_fine)
+        pts, h_along = fine[kept], h_fine[kept]
         sx, sz = rv["path"][0]
         mx, mz = rv["path"][-1]
         src_lake = lake_at(atlas, sx, sz)
@@ -188,9 +224,13 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None 
             end = SEA_LEVEL - 0.6
         else:
             end = float(h_along[-1] - 1.0)
-        end = min(end, start - 0.05 * (pts.shape[0] - 1))
-        surf = _monotone_profile(h_along, start, end)
-        t = np.linspace(0.0, 1.0, pts.shape[0])
+        seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+        run = np.concatenate([[0.0], np.cumsum(seg)])
+        # at least 0.05 m of fall every 20 m, as when the points were all 20 m apart
+        min_drop = 0.05 * seg / RIVER_STEP_M
+        end = min(end, start - float(min_drop.sum()))
+        surf = _monotone_profile(h_along, start, end, min_drop)
+        t = run / max(float(run[-1]), 1e-6)
         w0, w1 = (float(v) for v in rv["width_m"])
         width = (w0 + (w1 - w0) * t ** 0.7).astype(np.float32)
         river = River(id=rv["id"], points=pts, width=width, surface=surf, valley_m=rv.get("valley_m"))
@@ -261,10 +301,10 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
         mask = np.zeros((n, n), dtype=bool)
         surf = np.zeros((n, n), dtype=np.float32)
         down = np.zeros((n, n), dtype=np.float32)
-        paths.rasterise_polyline(r.points, grid, value=r.surface, out_mask=mask, out_value=surf)
+        paths.rasterise_polyline(r.points, grid, value=r.surface, out_mask=mask, out_value=surf, at_centre=True)
         # how far down the river from its source each point of it is
         run = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(r.points, axis=0), axis=1))])
-        paths.rasterise_polyline(r.points, grid, value=run, out_mask=mask, out_value=down)
+        paths.rasterise_polyline(r.points, grid, value=run, out_mask=mask, out_value=down, at_centre=True)
         if not mask.any():
             continue
         # only a window round the river is worth the distance transform
@@ -309,8 +349,8 @@ def carve_rivers(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank):
     surf = np.zeros((n, n), dtype=np.float32)
     wide = np.zeros((n, n), dtype=np.float32)
     for r in rivers:
-        paths.rasterise_polyline(r.points, grid, value=r.surface, out_mask=mask, out_value=surf)
-        paths.rasterise_polyline(r.points, grid, value=r.width, out_mask=mask, out_value=wide)
+        paths.rasterise_polyline(r.points, grid, value=r.surface, out_mask=mask, out_value=surf, at_centre=True)
+        paths.rasterise_polyline(r.points, grid, value=r.width, out_mask=mask, out_value=wide, at_centre=True)
     if not mask.any():
         return H, np.full((n, n), 1e6, dtype=np.float32), surf, wide
     dist_t, (ii, jj) = ndimage.distance_transform_edt(~mask, return_indices=True)

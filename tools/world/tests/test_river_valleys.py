@@ -213,6 +213,73 @@ class Meanders(unittest.TestCase):
         self.assertLess(float(self.off_line(line).max()), 0.01)
 
 
+class Falls(unittest.TestCase):
+    """Down its falls a river's water follows the face, and its channel is cut to the water there,
+    not left hanging under it. Drawn straight between points 20 m apart down a cliff between
+    them, the channel cut a trench into the land above the cliff and built a levee over its foot;
+    and a texel took the level the river last had in it, not the level by its centre, so down a
+    fall the bed was cut to the water further down."""
+
+    SP = 2.0     # the texel of the 4096 build
+
+    @classmethod
+    def setUpClass(cls):
+        cls.grid = Grid(512.0, int(512.0 / cls.SP))
+        X, Z = cls.grid.mesh()
+        X = np.broadcast_to(X, (cls.grid.n, cls.grid.n))
+        Z = np.broadcast_to(Z, (cls.grid.n, cls.grid.n))
+        # a cliff falling 2.5 in 1 from x = 0 to 30, on a hillside falling across the river
+        cls.H = (np.where(X < 0, 200.0 - 0.1 * X, np.where(X < 30, 200.0 - 2.5 * X, 125.0 - 0.1 * (X - 30)))
+                 - 0.6 * Z).astype(np.float32)
+        cls.bank = NoiseBank(4242, cls.grid)
+
+    def carve(self, step):
+        from worldgen.grid import sample_bilinear
+
+        line = np.array([[-193.0, 0.0], [207.0, 0.0]])
+        fine = paths.resample_polyline(line, HY.FALL_SAMPLE_M)
+        h = sample_bilinear(self.H, self.grid, fine[:, 0], fine[:, 1]).astype(np.float64)
+        keep = HY.fall_points(fine, h) if step is None else np.arange(0, fine.shape[0], int(step / HY.FALL_SAMPLE_M))
+        pts, h = fine[keep], h[keep]
+        surf = HY._monotone_profile(h, float(h[0] - 0.5), float(h[-1] - 1.0))
+        r = HY.River(id="x", points=pts, width=np.full(len(pts), 5.0, dtype=np.float32), surface=surf)
+        Hc, *_ = HY.carve_rivers(self.grid, self.H.copy(), [r], self.bank)
+        x = np.arange(pts[0, 0], pts[-1, 0], 0.5)
+        z = np.zeros_like(x)
+        water = np.interp(x, pts[:, 0], surf)
+        return pts, water - sample_bilinear(Hc, self.grid, x, z), sample_bilinear(Hc - self.H, self.grid, x, z)
+
+    def test_a_steep_stretch_keeps_its_points_close_and_a_gentle_one_does_not(self):
+        pts, _over, _dh = self.carve(None)
+        gaps = np.diff(pts[:, 0])
+        at = pts[1:, 0]
+        self.assertTrue(np.allclose(gaps[(at > 0.0) & (at < 30.0)], HY.FALL_SAMPLE_M))
+        self.assertTrue(np.allclose(gaps[(at < -40.0) | (at > 70.0)], HY.RIVER_STEP_M))
+
+    def test_the_water_sits_in_its_channel_down_the_fall(self):
+        _pts, over, _dh = self.carve(None)
+        self.assertEqual(int((over > 3.0).sum()), 0, "the water hangs %.1f m over its bed" % over.max())
+
+    def test_the_channel_follows_the_face(self):
+        _p, _o, dh20 = self.carve(20.0)
+        _p, _o, dh = self.carve(None)
+        # drawn every 20 m: a trench above the cliff and a levee at its foot
+        self.assertGreater(float(dh20.max()), 3.5)
+        self.assertLess(float(dh.max()), 2.0, "the bed is built %.1f m out over the land" % dh.max())
+        self.assertLess(float(-dh.min()), 0.5 * float(-dh20.min()))
+
+    def test_a_texel_takes_the_level_by_its_centre(self):
+        grid = Grid(64.0, 32)
+        line = np.array([[-30.0, 0.3], [30.0, 0.3]])
+        value = np.array([100.0, 40.0])
+        mask = np.zeros((grid.n, grid.n), dtype=bool)
+        out = np.zeros((grid.n, grid.n), dtype=np.float32)
+        paths.rasterise_polyline(line, grid, value=value, out_mask=mask, out_value=out, at_centre=True)
+        i, j = np.nonzero(mask)
+        x = grid.x0 + j * grid.spacing
+        self.assertLess(float(np.abs(out[i, j] - np.interp(x, line[:, 0], value)).max()), 1.0)
+
+
 class LandformsBesideARiver(unittest.TestCase):
     """No landform digs a pit below a river's water beside it (landforms.river_guard). A limestone
     scar across the Brindle Beck's head took its bed 9.7 m under the water, and the river's ribbon
