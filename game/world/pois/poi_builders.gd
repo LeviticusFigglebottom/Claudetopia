@@ -1193,40 +1193,27 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 		while s <= length:
 			var p := a + dir * s + side * (1.7 if n % 2 == 0 else -1.7)
 			var g := k.on_ground(p.x, p.y, -0.15)
-			stones.append(PoiKit.transform_at(g, k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.48, 0.55),
-					Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))))
+			var turn := k.rng.randf_range(0.0, TAU)
+			var size := k.rng.randf_range(0.48, 0.55)
+			stones.append([g, turn, size, Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))])
 			if n % 3 == 1:
 				_lamp_post(k, m, timber, a + dir * s - side * (1.7 if n % 2 == 0 else -1.7), PoiKit.yaw_of(dir))
 			n += 1
 			s += every
 		carried = length - (s - every)
-	var lent := PoiKit.variants_of(PoiKit.ROCKS, k.region, "standing_stone").is_empty()
-	var placed := k.scatter(k.rock("standing_stone"), stones, true, true)
-	if lent:
-		_stain_lent_stone(k, placed)
+	# A waystone stands about WAYSTONE_M whatever stone it is cut from: the sizes were set for
+	# Hearthvale's 3.8 m chalk, and a region that borrows another's stone (PoiKit.lenders) gets a
+	# different height -- Cinderlea's granite is 2.2 m.
+	var stone_path := k.rock("standing_stone")
+	var fit := WAYSTONE_M / (0.5 * maxf(PoiKit.height_of(stone_path), 0.5)) if stone_path != "" else 1.0
+	var placed: Array = []
+	for st in stones:
+		placed.append(PoiKit.transform_at(st[0], float(st[1]), float(st[2]) * fit, st[3]))
+	k.scatter(stone_path, placed, true, true)
 
 
-## What a stone lent from another region's set is stained to where it stands, by region: a region
-## with no standing stone of its own is lent the first region's that has one, Hearthvale's chalk.
-## Cinderlea's is near white (sRGB 177, 165, 142), and under the ash country's lifted fill the Stair
-## Head's first waystone, four metres from the Foundling, read as a white figure in a fleece with
-## a head on it. Soot-dark there, the colour of the fused stone round it.
-const LENT_STONE_STAIN := {"cinderlea": Color(0.42, 0.40, 0.39)}
-
-
-static func _stain_lent_stone(k: PoiKit, stones: GeometryInstance3D) -> void:
-	if stones == null or not LENT_STONE_STAIN.has(k.region):
-		return
-	var mesh: Mesh = null
-	if stones is MultiMeshInstance3D and (stones as MultiMeshInstance3D).multimesh != null:
-		mesh = (stones as MultiMeshInstance3D).multimesh.mesh
-	elif stones is MeshInstance3D:
-		mesh = (stones as MeshInstance3D).mesh
-	if mesh == null or mesh.get_surface_count() != 1 or not (mesh.surface_get_material(0) is BaseMaterial3D):
-		return
-	var stained := (mesh.surface_get_material(0) as BaseMaterial3D).duplicate() as BaseMaterial3D
-	stained.albedo_color = stained.albedo_color * (LENT_STONE_STAIN[k.region] as Color)
-	stones.material_override = stained
+## A waystone's height above the ground, at the middle of its sizes.
+const WAYSTONE_M := 1.9
 
 
 ## The points a POI's `path` goes by: the built road it names (`built_road`) when the land drew
