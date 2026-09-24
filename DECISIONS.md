@@ -1319,3 +1319,28 @@ Jump_Start played from its push: two frames of a clip made to show a crouch.
 heightfield may differ from it by a centimetre or two on curved ground. On the heightfield alone
 (no collider) a body climbs at its pace across the map, which is faster along the ground (131% at
 40°). A jump comes 0.1 s after the press.
+
+## 2026-09-24 · The player's weapon is sheathed out of a fight, and drawn at once
+**Decision.** Out of a fight, the player's weapon rides in a sheath (`HeldItems.sheath_for`):
+- a one-handed blade, axe, mace or dagger at the left hip (Socket.HipL), its grip forward and up
+  for a cross-draw and its point down and back along the thigh;
+- a two-handed weapon across the back (Socket.Back), its grip over the right shoulder;
+- a bow across the back the other way.
+
+A spear and a staff stay in the hand, since they are too long for a sheath, and a shield stays on
+the arm. Any of these puts the weapon in the hand in the same tick: a swing, a raised guard, a
+drawn bow, a riposte, a stagger, or a lock-on. It goes back 8 s (`Player.SHEATHE_AFTER_S`) after
+the last of them, once the body is free. The sheath's place is worked out on the rest skeleton and
+taken into the socket's frame, so it moves with the hips or the chest.
+**Why.** The weapons are in the hands now, and a sword held out while walking the heath or talking
+to the Warden reads as a threat. The rig has had Socket.Back and Socket.HipL since the first pass.
+**Alternatives.**
+- Draw and sheathe clips, with the change made at a grab event. They would be better. But they are
+  new clips on the rig, and the first swing would wait for the draw or cancel it. They are left
+  for later.
+- A key to draw and sheathe: one more binding on a full pad.
+**Consequences.**
+- The change is instant: the weapon leaves the sheath and is in the hand in the same frame.
+- Foes stay drawn.
+- A cloak can hang over a sheathed weapon, and the two can pass through each other.
+- The drawn state is not saved; a loaded game starts sheathed.
