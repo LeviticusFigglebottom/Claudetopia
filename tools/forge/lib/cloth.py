@@ -933,13 +933,15 @@ def boots(skel: Skeleton, body, *, high: float = 0.30) -> Garment:
     # a sole and a small heel
     for side in ("L", "R"):
         an = skel.J[f"Foot.{side}"]
-        tip = skel.J[f"ToeTip.{side}"]
+        tip = bodylib.foot_tip(skel, side)
         sc.union(sdf.loft([
-            (np.array([an[0], an[1] + 0.075 * s, 0.012 * s]), 0.048 * s, 0.014 * s),
-            (np.array([an[0], an[1], 0.010 * s]), 0.054 * s, 0.012 * s),
-            (np.array([an[0], tip[1] + 0.012 * s, 0.010 * s]), 0.058 * s, 0.011 * s),
+            # a real sole: 27-28 cm long and 9-10 cm across the ball; at 5.8 cm half-widths and
+            # a heel 7.5 cm behind the ankle, the boots were a clown's
+            (np.array([an[0], an[1] + 0.058 * s, 0.012 * s]), 0.040 * s, 0.014 * s),
+            (np.array([an[0], an[1], 0.010 * s]), 0.044 * s, 0.012 * s),
+            (np.array([an[0], tip[1] + 0.012 * s, 0.010 * s]), 0.047 * s, 0.011 * s),
         ], LEFT), k=0.012 * s)
-        sc.union(sdf.box([an[0], an[1] + 0.065 * s, 0.014 * s], [0.042 * s, 0.038 * s, 0.016 * s], round_r=0.008 * s), k=0.012 * s)
+        sc.union(sdf.box([an[0], an[1] + 0.050 * s, 0.014 * s], [0.036 * s, 0.030 * s, 0.016 * s], round_r=0.008 * s), k=0.012 * s)
     sc.intersect(sdf.plane([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]), k=0.006 * s)
     return Garment("boots", sc, spacing=0.0055, target_tris=1600, material="leather")
 
@@ -991,9 +993,116 @@ def belt(skel: Skeleton, body, *, pouch: bool = True) -> Garment:
     # buckle
     sc.union(sdf.box([0.0, -0.135 * s, z], [0.026 * s, 0.014 * s, 0.024 * s], round_r=0.005 * s), k=0.006 * s)
     if pouch:
-        sc.union(sdf.box([0.105 * s, -0.030 * s, z - 0.055 * s], [0.042 * s, 0.030 * s, 0.046 * s], round_r=0.014 * s), k=0.012 * s)
-        sc.union(sdf.box([0.105 * s, -0.030 * s, z - 0.012 * s], [0.044 * s, 0.032 * s, 0.010 * s], round_r=0.006 * s), k=0.008 * s)
+        # on the front of the left hip, outside the body: at (0.105, -0.030) it sat inside the
+        # belly, and no belt in the game ever showed its pouch
+        px, py = 0.118 * s, -0.112 * s
+        sc.union(sdf.box([px, py, z - 0.052 * s], [0.040 * s, 0.022 * s, 0.044 * s], round_r=0.014 * s), k=0.010 * s)
+        sc.union(sdf.box([px, py - 0.004 * s, z - 0.016 * s], [0.042 * s, 0.024 * s, 0.012 * s], round_r=0.006 * s), k=0.006 * s)
     return Garment("belt", sc, spacing=0.0040, target_tris=900, material="leather")
+
+
+# -- what a belt carries: each people's own, so a lineup reads as different people -----------
+# A crowd of the same belt with the same pouch was the same person six times over at a distance.
+# Each of these is a belt part (the belt slot), chosen by culture in CharacterAppearance.
+
+def _knife(sc_leather: Scene, sc_metal: Scene, s: float, x: float, y: float, z: float, lean: float = 0.12) -> None:
+    """A knife in its sheath hanging from a belt at (x, y, z): the sheath down the thigh, the grip up."""
+    down = np.array([lean * np.sign(x) * 1.5, 0.02, -1.0])
+    down = down / np.linalg.norm(down)
+    top = np.array([x, y, z - 0.010 * s])
+    tipp = top + down * 0.200 * s
+    # the sheath: flat, wider at the throat
+    sc_leather.union(sdf.tube_path([top, top + down * 0.12 * s, tipp],
+                                   [0.016 * s, 0.013 * s, 0.006 * s]), k=0.004 * s)
+    # the frog that holds it to the belt
+    sc_leather.union(sdf.box(top + np.array([0.0, 0.0, 0.020 * s]), [0.016 * s, 0.008 * s, 0.020 * s],
+                             round_r=0.004 * s), k=0.004 * s)
+    grip_top = top - down * 0.095 * s
+    sc_leather.union(sdf.capsule(top - down * 0.012 * s, grip_top, 0.0105 * s), k=0.003 * s)
+    # the guard and the pommel in iron
+    sc_metal.union(sdf.box(top - down * 0.006 * s, [0.028 * s, 0.009 * s, 0.006 * s], round_r=0.003 * s))
+    sc_metal.union(sdf.sphere(grip_top - down * 0.008 * s, 0.014 * s))
+
+
+def _belt_band(skel: Skeleton, body, s: float, z: float, width: float, thick: float, gap: float) -> Prim:
+    reg = band_z(z - width, z + width, 0.006 * s)
+    return offset_shell(body, reg, thick, gap=gap, bounds=zbox(skel, z - width - 0.03 * s, z + width + 0.03 * s, xy=0.26))
+
+
+def belt_knife(skel: Skeleton, body) -> Garment:
+    """The clans' and the woodfolk's: a belt with a pouch on the left and a long knife on the right."""
+    s = _s(skel)
+    g = belt(skel, body)
+    g.name = "belt_knife"
+    z = float(skel.J["Spine"][2]) - 0.02 * s
+    metal = Scene()
+    _knife(g.scene, metal, s, -0.128 * s, -0.112 * s, z - 0.010 * s)
+    g.layers = [Garment("belt_knife_iron", metal, spacing=0.0030, smooth=2, target_tris=300, material="iron")]
+    g.target_tris = 1300
+    return g
+
+
+def sash(skel: Skeleton, body) -> Garment:
+    """The Reedfolk's: a broad cloth sash wound twice round the waist and knotted on the left hip,
+    its two ends hanging to the thigh."""
+    s = _s(skel)
+    sc = Scene()
+    z = float(skel.J["Spine"][2]) - 0.01 * s
+    sc.union(_belt_band(skel, body, s, z, 0.040 * s, 0.010 * s, 0.010 * s))
+    # the second turn, a little lower and proud of the first
+    sc.union(_belt_band(skel, body, s, z - 0.030 * s, 0.018 * s, 0.013 * s, 0.012 * s), k=0.006 * s)
+    knot = np.array([0.130 * s, -0.080 * s, z - 0.010 * s])
+    sc.union(sdf.ellipsoid(knot, [0.026 * s, 0.022 * s, 0.024 * s]), k=0.008 * s)
+    for dx, ln in ((-0.012, 0.21), (0.018, 0.17)):
+        a = knot + np.array([dx * s, -0.004 * s, -0.010 * s])
+        b = a + np.array([0.020 * s, -0.012 * s, -ln * s])
+        sc.union(sdf.tube_path([a, (a + b) * 0.5, b], [0.014 * s, 0.015 * s, 0.013 * s]), k=0.006 * s)
+    return Garment("sash", sc, spacing=0.0040, target_tris=1400, material="cloth")
+
+
+def cord_beads(skel: Skeleton, body) -> Garment:
+    """The Ash-Pilgrims': a knotted cord over the robe, and a string of prayer beads from it."""
+    s = _s(skel)
+    sc = Scene()
+    z = float(skel.J["Spine"][2]) - 0.01 * s
+    # over a robe, which stands off the body: the cord rides at the robe's surface
+    sc.union(_belt_band(skel, body, s, z, 0.008 * s, 0.009 * s, 0.022 * s))
+    knot = np.array([-0.040 * s, -0.150 * s, z])
+    sc.union(sdf.sphere(knot, 0.014 * s), k=0.004 * s)
+    for dx, ln in ((-0.006, 0.30), (0.010, 0.26)):
+        pts = [knot + np.array([dx * s, -0.006 * s * f, -ln * s * f]) for f in (0.0, 0.5, 1.0)]
+        sc.union(sdf.tube_path(pts, 0.0048 * s), k=0.003 * s)
+        sc.union(sdf.sphere(pts[-1] + np.array([0.0, 0.0, -0.008 * s]), 0.010 * s), k=0.003 * s)
+    # the beads: a loop hanging from the cord at the right hip
+    top = np.array([-0.130 * s, -0.070 * s, z - 0.010 * s])
+    for i in range(14):
+        a = 2 * math.pi * i / 14
+        p = top + np.array([0.020 * s * math.sin(a), -0.012 * s, -0.070 * s * (1.0 - math.cos(a))])
+        sc.union(sdf.sphere(p, 0.0070 * s), k=0.002 * s)
+    return Garment("cord_beads", sc, spacing=0.0032, target_tris=1400, material="cloth")
+
+
+def belt_satchel(skel: Skeleton, body) -> Garment:
+    """The Lakefolk's: a satchel on a strap from the right shoulder to the left hip, over the coat."""
+    s = _s(skel)
+    sc = Scene()
+    sh = np.asarray(skel.J["UpperArm.R"], float)
+    hip = np.asarray(skel.J["UpperLeg.L"], float)
+    a = np.array([sh[0] * 0.55, 0.0, sh[2] + 0.050 * s])
+    b = np.array([hip[0] * 1.2, 0.0, hip[2] + 0.030 * s])
+    d = sdf._unit(b - a)
+    n = sdf._unit(np.cross(d, np.array([0.0, 1.0, 0.0])))
+
+    def strap(P):
+        return 1.0 - sdf_smoothstep(0.020 * s, 0.026 * s, np.abs((P - a) @ n))
+    # over the coat, which stands 1.6 cm off the body
+    sc.union(offset_shell(body, strap, 0.005 * s, gap=0.019 * s,
+                          bounds=zbox(skel, float(hip[2]) - 0.06 * s, float(sh[2]) + 0.12 * s, xy=0.30)))
+    bag = np.array([hip[0] * 1.55, -0.010 * s, hip[2] - 0.040 * s])
+    sc.union(sdf.box(bag, [0.030 * s, 0.085 * s, 0.070 * s], round_r=0.020 * s), k=0.010 * s)
+    sc.union(sdf.box(bag + np.array([0.012 * s, 0.0, 0.040 * s]), [0.022 * s, 0.088 * s, 0.036 * s],
+                     round_r=0.012 * s), k=0.006 * s)
+    return Garment("belt_satchel", sc, spacing=0.0045, target_tris=1400, material="leather")
 
 
 def apron(skel: Skeleton, body) -> Garment:
@@ -2192,10 +2301,15 @@ def wrap_torso(skel: Skeleton, body) -> Garment:
     waist = float(skel.J["Spine"][2])
     hip = float(skel.J["UpperLeg.L"][2])
 
+    chest = float(skel.J["Chest"][2])
+
     def diagonal(P):
-        # covered below a plane running from the left shoulder down to the right hip
-        t = (P[:, 2] - (waist - 0.02 * s)) / (0.30 * s) + P[:, 0] / (0.26 * s)
-        return 1.0 - sdf_smoothstep(0.55, 1.15, t)
+        # Covered to a line that runs from the right shoulder down across the breastbone to under
+        # the left arm, the left shoulder bare but for the sash. The first cut ran from the left
+        # shoulder down to the right hip, and in the engine the whole left breast and the middle
+        # of the chest were bare skin between the sash and the cloth: a strap, not a top.
+        edge = chest + 0.030 * s + np.clip(-P[:, 0], 0.0, 0.20 * s) * 1.05
+        return 1.0 - sdf_smoothstep(edge - 0.012 * s, edge + 0.012 * s, P[:, 2])
     reg = region_and(band_z(hip - 0.02 * s, neck + 0.030 * s, 0.020 * s), diagonal)
     sc.union(offset_shell(body, reg, 0.010 * s, gap=0.004 * s,
                           relief=garment_edges(skel, waist=0.008),
@@ -2453,6 +2567,10 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "shoes": shoes,
     "gloves": gloves,
     "belt": lambda s, b: belt(s, b),
+    "belt_knife": belt_knife,
+    "sash": sash,
+    "cord_beads": cord_beads,
+    "belt_satchel": belt_satchel,
     "apron": apron,
     "gambeson": gambeson,
     "plate_torso": lambda s, b: plate_torso(s, b),

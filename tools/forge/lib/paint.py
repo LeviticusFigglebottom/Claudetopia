@@ -472,15 +472,22 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                        (ex, eye_z + eye_r * 1.02),
                                        (outer - sx * eye_r * 0.05, eye_z + eye_r * 0.55)],
                                    width=eye_r * 0.22, soft=0.95, y_centre=fy + 0.008 * s, y_depth=0.030 * s)
-                c = mix(c, t["shadow"] * 0.88, np.clip(crease, 0, 1) * 0.34)
+                c = mix(c, t["shadow"] * 0.88, np.clip(crease, 0, 1) * 0.46)
+                # the upper lid itself, between the lashes and the crease: a shade darker than
+                # the brow bone above it, so the eye has a lid over it and does not stare
+                lidband = stroke_xz(p, [(inner + sx * eye_r * 0.05, eye_z + eye_r * 0.40),
+                                        (ex, eye_z + eye_r * 0.80),
+                                        (outer, eye_z + eye_r * 0.36)],
+                                    width=eye_r * 0.40, soft=0.95, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
+                c = mix(c, t["shadow"] * 0.95, np.clip(lidband, 0, 1) * 0.30)
                 # upper lash: a dark arc hugging the top of the opening, thickest mid-eye; the
                 # line that makes an eye an eye at any distance
                 lash = stroke_xz(p, [(inner, eye_z + eye_r * 0.20),
                                      (ex - sx * eye_r * 0.30, eye_z + eye_r * 0.62),
                                      (ex + sx * eye_r * 0.45, eye_z + eye_r * 0.55),
                                      (outer + sx * eye_r * 0.12, eye_z + eye_r * 0.14)],
-                                 width=eye_r * 0.30, soft=0.70, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
-                c = mix(c, lash_col, np.clip(lash, 0, 1) * 0.90)
+                                 width=eye_r * 0.40, soft=0.65, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
+                c = mix(c, lash_col, np.clip(lash, 0, 1) * 0.95)
                 # lower lid: a light catch, which is what stops an eye reading as a hole
                 lid = stroke_xz(p, [(inner + sx * eye_r * 0.15, eye_z - eye_r * 0.52),
                                     (ex, eye_z - eye_r * 0.66),
@@ -494,12 +501,13 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                      (ex - sx * eye_r * 0.20, bz + 0.004 * s),
                                      (ex + sx * eye_r * 0.65, bz + 0.005 * s),
                                      (ex + sx * eye_r * 1.55, bz - 0.006 * s)],
-                                 width=0.0074 * s, soft=0.70, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
+                                 width=0.0105 * s, soft=0.65, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
                 head = stroke_xz(p, [(ex - sx * eye_r * 0.90, bz - 0.003 * s),
                                      (ex + sx * eye_r * 0.30, bz + 0.004 * s)],
-                                 width=0.0060 * s, soft=0.80, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
+                                 width=0.0088 * s, soft=0.75, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
                 brow_col = mix(np.clip(hair_rgb * 0.85, 0, 1), t["shadow"] * 0.55, 0.30)
-                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * (0.86 - 0.14 * float(age > 0.7)))
+                # heavy brows: a face is read by them before anything else at a distance
+                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * (0.95 - 0.14 * float(age > 0.7)))
             # -- mouth ------------------------------------------------------------------
             mw = mouth_w
             # The lips' depth is the face's own mouth station, 4 mm proud of it.  At the eye
@@ -553,14 +561,27 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                      (sx * 0.0180 * s, nt[2] - 0.0010 * s),
                                      (sx * 0.0130 * s, nt[2] - 0.0075 * s)],
                                  width=0.0024 * s, soft=0.9, y_centre=nt[1] + 0.012 * s, y_depth=0.022 * s)
-                c = mix(c, t["shadow"], np.clip(wing, 0, 1) * 0.40)
+                c = mix(c, t["shadow"], np.clip(wing, 0, 1) * 0.52)
+                # the line from the wing of the nose to the corner of the mouth, which every adult
+                # face has, deeper with age: it is most of what gives a face its expression
+                fold = stroke_xz(p, [(sx * 0.0190 * s, nt[2] - 0.0020 * s),
+                                     (sx * 0.0265 * s, mouth_z + 0.0070 * s),
+                                     (sx * (mouth_w * 1.05), mouth_z - 0.0060 * s)],
+                                 width=0.0030 * s, soft=0.9, y_centre=nt[1] + 0.022 * s, y_depth=0.026 * s)
+                c = mix(c, t["shadow"], np.clip(fold, 0, 1) * (0.16 + 0.20 * age))
             below = gauss(p, [0.0, nt[1] + 0.014 * s, nt[2] - 0.014 * s], [0.010 * s, 0.012 * s, 0.006 * s])
             c = mix(c, t["shadow"], np.clip(below, 0, 1) * 0.24)
             # under the cheekbone: a soft plane of shadow that gives a face its bones
             for sx in (1, -1):
                 hollow_c = gauss(p, [sx * eye_x * 1.62, fy + 0.012 * s, eye_z - 0.074 * s],
                                  [0.016 * s, 0.028 * s, 0.020 * s])
-                c = mix(c, t["shadow"], np.clip(hollow_c, 0, 1) * 0.14)
+                c = mix(c, t["shadow"], np.clip(hollow_c, 0, 1) * 0.24)
+                # weathering: a little shadow under each eye, more with years
+                bag = stroke_xz(p, [(sx * eye_x - sx * eye_r * 0.8, eye_z - eye_r * 1.05),
+                                    (sx * eye_x, eye_z - eye_r * 1.25),
+                                    (sx * eye_x + sx * eye_r * 0.9, eye_z - eye_r * 0.95)],
+                                width=eye_r * 0.35, soft=0.95, y_centre=fy + 0.004 * s, y_depth=0.030 * s)
+                c = mix(c, t["shadow"], np.clip(bag, 0, 1) * (0.10 + 0.22 * age))
             if stubble > 0.01:
                 jaw = (1.0 - smoothstep(mouth_z + 0.018 * s, mouth_z + 0.050 * s, p[:, 2])) * \
                     smoothstep(chin_z - 0.05 * s, chin_z - 0.01 * s, p[:, 2]) * \

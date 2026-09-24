@@ -44,7 +44,8 @@ STAND: Pose = anim.STAND
 # the arms some 10 degrees out with the wrists at 29 cm, which read as an A-pose.
 RELAXED: Pose = pose_add(STAND, {
     "UpperArm.L": (-8, -3, -5), "UpperArm.R": (-8, -4, -12),
-    "Hand.L": (0, -5, 0), "Hand.R": (0, -3, 0),
+    "LowerArm.L": (14, 0, 0), "LowerArm.R": (16, 0, 0),
+    "Hand.L": (-6, -5, 0), "Hand.R": (-6, -3, 0),
     "Hips": (0, -3, 3), "Spine": (0, 1.2, -1.5), "Chest": (0, 1.4, -1.5),
     "Shoulder.L": (0, -2, 0), "Shoulder.R": (0, -2, 0),
     HIPS_POS: (0.0, 0.018, -0.006)})

@@ -379,6 +379,8 @@ static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bo
 			d["torso"] = "coat"
 			d["legs"] = "trousers"
 			d["feet"] = "shoes"
+			# a satchel on a strap across the coat: the clerk's papers
+			d["belt"] = "belt_satchel"
 			if rng.randf() < 0.7 or full:
 				d["back"] = "shoulder_cape"
 		"reedfolk":
@@ -386,13 +388,13 @@ static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bo
 			d["torso"] = "wrap_torso"
 			d["legs"] = "wrap_skirt"
 			d["feet"] = "shoes"
-			d["belt"] = "belt"
+			d["belt"] = "sash"
 		"clans":
 			# a diagonal drape over bare knees
 			d["torso"] = "shirt"
 			d["legs"] = "kilt"
 			d["feet"] = "boots"
-			d["belt"] = "belt"
+			d["belt"] = "belt_knife"
 			if rng.randf() < 0.75 or full:
 				d["back"] = "plaid"
 		"woodfolk":
@@ -400,12 +402,13 @@ static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bo
 			d["torso"] = "shirt"
 			d["legs"] = "leg_wraps"
 			d["feet"] = "boots"
-			d["belt"] = "belt"
+			d["belt"] = "belt_knife"
 			d["back"] = "ragged_cloak" if rng.randf() < 0.7 or full else "hooded_cloak"
 		"ash_pilgrims":
 			# enveloped and cowled, with no waist at all
 			d["torso"] = "robe"
 			d["feet"] = "boots"
+			d["belt"] = "cord_beads"
 			d["back"] = "hooded_cloak"
 		_:
 			# the Vale: belted and knee-length, the baseline everyone else departs from

@@ -689,7 +689,7 @@ def _slot_hint(name: str) -> str:
         return "feet"
     if name in ("gloves",):
         return "hands"
-    if name in ("belt",):
+    if name in ("belt", "belt_knife", "sash", "cord_beads", "belt_satchel"):
         return "belt"
     if name in ("cloak", "hooded_cloak", "ragged_cloak", "torn_cloak", "plaid", "shoulder_cape"):
         return "back"
@@ -871,21 +871,22 @@ def cmd_presets(args) -> None:
         skin="wheat", hair_colour="brown", eye_colour="hazel", build=0.45, age=0.30)
     add("player_reedborn", "reedfolk",
         {"head": "narrow", "hair": "long", "torso": "wrap_torso", "legs": "wrap_skirt",
-         "feet": "shoes", "belt": "belt"},
+         "feet": "shoes", "belt": "sash"},
         skin="olive", hair_colour="black", eye_colour="dark_brown", build=0.36, age=0.26)
     add("player_cragborn", "clans",
         # the shirt the game's clans wear under the plaid (`_culture_outfit`); a padded jack under
         # it was the padded costume
         {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "shirt", "legs": "kilt",
-         "feet": "boots", "belt": "belt", "back": "plaid"},
+         "feet": "boots", "belt": "belt_knife", "back": "plaid"},
         skin="fair", hair_colour="ginger", eye_colour="grey_green", build=0.70, bulk=1.10,
         shoulder_width=1.12, age=0.34)
     add("player_ashwalker", "ash_pilgrims",
-        {"head": "hawk", "hair": "cropped", "torso": "robe", "feet": "boots", "back": "hooded_cloak"},
+        {"head": "hawk", "hair": "cropped", "torso": "robe", "feet": "boots", "belt": "cord_beads",
+         "back": "hooded_cloak"},
         skin="amber", hair_colour="soot", eye_colour="grey", build=0.38, age=0.44)
     add("player_lantern_clerk", "lakefolk",
         {"head": "soft", "hair": "bun", "torso": "coat", "legs": "trousers", "feet": "shoes",
-         "belt": "belt", "hands": "gloves"},
+         "belt": "belt_satchel", "hands": "gloves"},
         skin="porcelain", hair_colour="ash_blond", eye_colour="pale_blue", build=0.40, age=0.28,
         feminine=1.0, height=1.66)
 
@@ -900,23 +901,23 @@ def cmd_presets(args) -> None:
     # make six peoples (DESIGN.md §7, WORLD_BIBLE.md §3).
     add("lakefolk_clerk", "lakefolk",
         {"head": "narrow", "hair": "bun", "torso": "coat", "legs": "trousers", "feet": "shoes",
-         "back": "shoulder_cape", "hands": "gloves"},
+         "belt": "belt_satchel", "back": "shoulder_cape", "hands": "gloves"},
         skin="wheat", hair_colour="dark_brown", eye_colour="grey", build=0.40, age=0.50)
     add("reedfolk_eeler", "reedfolk",
         {"head": "angular", "hair": "long", "torso": "wrap_torso", "legs": "wrap_skirt",
-         "feet": "shoes", "belt": "belt"},
+         "feet": "shoes", "belt": "sash"},
         skin="umber", hair_colour="black", eye_colour="dark_brown", build=0.44, age=0.38)
     add("clans_herder", "clans",
         {"head": "broad", "hair": "braid", "beard": "long_beard", "torso": "shirt", "legs": "kilt",
-         "feet": "boots", "belt": "belt", "back": "plaid"},
+         "feet": "boots", "belt": "belt_knife", "back": "plaid"},
         skin="fair", hair_colour="auburn", eye_colour="green", build=0.68, bulk=1.08, age=0.55)
     add("woodfolk_forester", "woodfolk",
         {"head": "hawk", "hair": "tousled", "torso": "shirt", "legs": "leg_wraps",
-         "feet": "boots", "belt": "belt", "back": "ragged_cloak"},
+         "feet": "boots", "belt": "belt_knife", "back": "ragged_cloak"},
         skin="olive", hair_colour="soot", eye_colour="grey_green", build=0.42, age=0.36)
     add("ash_pilgrim", "ash_pilgrims",
         {"head": "heavy_brow", "hair": "cropped", "beard": "long_beard", "torso": "robe",
-         "feet": "boots", "back": "hooded_cloak"},
+         "feet": "boots", "belt": "cord_beads", "back": "hooded_cloak"},
         skin="deep", hair_colour="grey", eye_colour="grey", build=0.46, age=0.72)
 
     # -- the named roles the world needs ----------------------------------------------------
@@ -928,7 +929,7 @@ def cmd_presets(args) -> None:
         shoulder_width=1.10, age=0.40)
     add("bandit", "vale",
         {"head": "angular", "hair": "tousled", "beard": "stubble", "torso": "gambeson", "legs": "trousers",
-         "feet": "boots", "belt": "belt"},
+         "feet": "boots", "belt": "belt_knife"},
         skin="olive", hair_colour="soot", eye_colour="hazel", build=0.52, age=0.35, stubble=0.7)
     add("tolling_knight", "ash_pilgrims",
         {"head": "heavy_brow", "hair": "cropped", "torso": "plate_torso", "legs": "trousers", "feet": "boots",

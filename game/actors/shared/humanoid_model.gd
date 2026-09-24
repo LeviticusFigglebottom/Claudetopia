@@ -37,6 +37,16 @@ const IRIS_SHADER := preload("res://assets/shaders/eye_iris.gdshader")
 ## Skin: the Compatibility renderer has no subsurface scattering, so the shader wraps the light
 ## past the terminator and tints what it adds towards blood (see the shader).
 const SKIN_SHADER := preload("res://assets/shaders/skin.gdshader")
+## Cloth, leather and metal: a grain that tiles over the bake, mottling, dirt from the ground.
+const GARMENT_SHADER := preload("res://assets/shaders/garment.gdshader")
+const DETAIL_DIR := "res://assets/textures/characters/"
+## kind -> [shader kind, detail normal map, repeats over the UV square, normal depth]
+const GARMENT_KINDS := {
+	"cloth": [0, "weave_normal.png", 34.0, 0.8],
+	"leather": [1, "grain_normal.png", 16.0, 0.9],
+	"iron": [2, "hammer_normal.png", 5.0, 0.7],
+}
+static var _detail_cache: Dictionary = {}
 ## Headgear that covers the crown. Hair is combed for a bare head; under one of these the
 ## chosen style would stand through the helm or the hood, so the close style is worn instead.
 const COVERS_HEAD := {"headgear": ["helm", "hood"], "back": ["hooded_cloak", "ragged_cloak"]}
@@ -508,6 +518,8 @@ func apply_appearance(d: Variant) -> void:
 	_apply_proportions()
 	if arm_room != null:
 		arm_room.degrees = arm_room_for(appearance.part("torso"), body_variant_worn)
+		# a child's head is sized by ChildProportions
+		arm_room.head_scale = 1.0 if body_variant_worn == "child" else HEAD_SCALE
 	_cloak_hold = arm_hold_for(appearance.part("back"))
 	appearance_changed.emit()
 
@@ -660,7 +672,7 @@ func _apply_colours() -> void:
 					_as_stubble(mi)
 				continue
 			if str(mi.get_meta("tint", "")) == "none":
-				_dress(mi, Color.WHITE, kind)
+				_dress(mi, Color.WHITE, kind, true)
 				continue
 			# Steel is the people's metal and leather their leather, whichever slot it is worn
 			# in: a Vale cuirass was tinted the Vale's wool brown because it sat in `torso`.
@@ -739,38 +751,71 @@ func _as_stubble(mi: MeshInstance3D) -> void:
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
-func _dress(mi: MeshInstance3D, c: Color, kind: String) -> void:
+func _dress(mi: MeshInstance3D, c: Color, kind: String, woven := false) -> void:
 	var count: int = mi.mesh.get_surface_count() if mi.mesh != null else 0
+	var garment := GARMENT_KINDS.has(kind) or kind == "" or woven
 	for i in count:
-		var worn := mi.get_surface_override_material(i) as BaseMaterial3D
+		var worn := mi.get_surface_override_material(i)
 		if worn != null and worn.has_meta("dressed"):
-			worn.albedo_color = c
+			_set_dress_colour(worn, c)
 			continue
-		var base := mi.mesh.surface_get_material(i)
+		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
+		if garment:
+			var spec: Array = GARMENT_KINDS.get(kind, GARMENT_KINDS["cloth"])
+			var sm := ShaderMaterial.new()
+			sm.shader = GARMENT_SHADER
+			sm.set_meta("dressed", true)
+			if base != null:
+				sm.set_shader_parameter("albedo_tex", base.albedo_texture)
+				var orm: Texture2D = base.roughness_texture if base.roughness_texture != null else base.ao_texture
+				sm.set_shader_parameter("orm_tex", orm)
+				sm.set_shader_parameter("use_orm", orm != null)
+			sm.set_shader_parameter("kind", 3 if woven else int(spec[0]))
+			sm.set_shader_parameter("detail_normal", _detail(str(spec[1])))
+			sm.set_shader_parameter("mottle_tex", _detail("mottle.png"))
+			sm.set_shader_parameter("detail_scale", float(spec[2]))
+			sm.set_shader_parameter("detail_depth", float(spec[3]))
+			_set_dress_colour(sm, c)
+			mi.set_surface_override_material(i, sm)
+			continue
 		var m := (base.duplicate() if base != null else StandardMaterial3D.new()) as BaseMaterial3D
 		if m == null:
 			continue
 		m.set_meta("dressed", true)
 		m.albedo_color = c
-		match kind:
-			"cloth":
-				m.rim_enabled = true
-				m.rim = 0.32
-				m.rim_tint = 0.70
-				m.metallic_specular = 0.25
-			"leather":
-				m.rim_enabled = true
-				m.rim = 0.12
-				m.rim_tint = 0.35
-				m.metallic_specular = 0.55
-			"hair":
-				m.rim_enabled = true
-				m.rim = 0.45
-				m.rim_tint = 0.40
-				m.metallic_specular = 0.40
-			"iron":
-				m.metallic_specular = 0.65
+		if kind == "hair":
+			m.rim_enabled = true
+			m.rim = 0.45
+			m.rim_tint = 0.40
+			m.metallic_specular = 0.40
 		mi.set_surface_override_material(i, m)
+
+
+func _set_dress_colour(m: Material, c: Color) -> void:
+	if m is ShaderMaterial:
+		(m as ShaderMaterial).set_shader_parameter("tint", Vector3(c.r, c.g, c.b))
+	elif m is BaseMaterial3D:
+		(m as BaseMaterial3D).albedo_color = c
+
+
+static func _detail(file: String) -> Texture2D:
+	if not _detail_cache.has(file):
+		_detail_cache[file] = load(DETAIL_DIR + file) if ResourceLoader.exists(DETAIL_DIR + file) else null
+	return _detail_cache[file]
+
+
+## The colour a dressed part is worn in, whichever material it wears (the tests ask).
+static func dressed_colour_of(mi: MeshInstance3D) -> Color:
+	var m := mi.get_surface_override_material(0)
+	if m is ShaderMaterial:
+		var v: Variant = (m as ShaderMaterial).get_shader_parameter("tint")
+		if int((m as ShaderMaterial).get_shader_parameter("kind")) == 3:
+			return Color.WHITE
+		if v is Vector3:
+			return Color(v.x, v.y, v.z)
+	if m is BaseMaterial3D:
+		return (m as BaseMaterial3D).albedo_color
+	return Color(-1, -1, -1)
 
 
 ## Every garment is built on the default body and carries the heavy and slight bodies as
@@ -1050,6 +1095,9 @@ static func girth_for(build: float) -> float:
 ## want 7, the harness's coat, plate and tassets 8, and the heavy body's hips 3 more.
 const ARM_ROOM := {"gambeson": 7.0, "plate_torso": 8.0, "brigandine": 7.0, "coat": 3.0}
 const ARM_ROOM_HEAVY := 3.0
+## A grown head worn this much larger than the forge made it (ArmRoom.head_scale): at 1.0 every head
+## in a lineup read small on its shoulders, clothed ones most of all.
+const HEAD_SCALE := 1.06
 
 
 static func arm_room_for(torso: String, variant: String) -> float:
