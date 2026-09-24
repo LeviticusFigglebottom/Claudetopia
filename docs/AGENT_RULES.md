@@ -66,6 +66,9 @@ because of that.
 - Never pipe `run.sh test` or `flow` into `head`; redirect to a file and read it.
 - Never edit `game/` while a Godot run of yours is going (hot reload fakes SCRIPT ERRORs).
 - In background shells use `unlink <path>` one path at a time rather than `rm` of many paths.
+- **Stop only processes you started, by PID.** Never `pkill -f` / `killall` by a pattern: every
+  agent runs the same scripts (`gate.sh`, `run.sh`, `godot`), so a pattern kills other agents'
+  runs too. (It happened once: a `pkill -f scratchpad/gate.sh` ended every agent's waiting gate.)
 
 ## Quality bar (the user's words, from HANDOFF §1)
 The painted, mythical look of *Oblivion*, *Fable* and *Dark Souls 2*. Every environment, point of
