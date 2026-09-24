@@ -21,11 +21,11 @@ const TAG := "held_item"
 const KIND_OF_CLASS := {
 	"sword": "sword", "rapier": "rapier", "greatsword": "greatsword", "dagger": "dagger",
 	"axe": "axe", "mace": "mace", "spear": "spear", "staff": "staff", "greathammer": "warhammer",
-	"hammer": "warhammer", "bow": "bow", "crossbow": "crossbow", "shield": "shield",
+	"hammer": "warhammer", "bow": "bow", "crossbow": "crossbow", "shield": "shield", "scythe": "scythe",
 }
 ## Kinds that are made in one finish only.
 const ONLY_FINISH := {"rapier": "iron", "staff": "iron", "warhammer": "bronze", "bow": "wood", "knife": "iron",
-		"crossbow": "iron"}
+		"crossbow": "iron", "scythe": "ashen"}
 const FINISHES: Array[String] = ["iron", "bronze", "ashen", "bone"]
 ## The sockets a held item goes in, and the ones a sheathed weapon rides in.
 const HANDS: Array[String] = ["WeaponR", "WeaponL", "ShieldL"]
@@ -94,7 +94,8 @@ static func socket_for(item: Dictionary) -> String:
 ## for a sheath, and a shield, which stays on the arm).
 static func sheath_for(item: Dictionary) -> String:
 	var file := model_for(item).get_file()
-	if file.is_empty() or file.begins_with("shield") or file.begins_with("spear") or file.begins_with("staff"):
+	if file.is_empty() or file.begins_with("shield") or file.begins_with("spear") or file.begins_with("staff") \
+			or file.begins_with("scythe"):
 		return ""
 	if file.begins_with("bow") or file.begins_with("crossbow") or two_handed(item):
 		return "Back"
@@ -138,7 +139,8 @@ static func sheath_transform(body: Node, sheath: String, item: Dictionary) -> Tr
 		var limbs := (up * 0.87 - left * 0.5).normalized()
 		var x := -fwd
 		var y := limbs.cross(x).normalized()
-		return socket.affine_inverse() * Transform3D(Basis(x, y, limbs), o - fwd * 0.03)
+		# its middle low on the back, so the upper limb ends near the top of the head
+		return socket.affine_inverse() * Transform3D(Basis(x, y, limbs), o - up * 0.31 - fwd * 0.03)
 	elif model_for(item).get_file().begins_with("crossbow"):
 		# the prod (the model's X) lies across the back, the rail (its +Z) outward
 		blade = (up * 0.94 + left * 0.34).normalized()
@@ -274,6 +276,6 @@ static func for_class(weapon_class: String) -> Dictionary:
 	if not KIND_OF_CLASS.has(weapon_class):
 		return {}
 	var item := {"id": "class:%s" % weapon_class, "weapon": {"class": weapon_class}}
-	if weapon_class in ["greatsword", "spear", "greathammer", "hammer"]:
+	if weapon_class in ["greatsword", "spear", "greathammer", "hammer", "scythe"]:
 		item["tags"] = ["two_handed"]
 	return item

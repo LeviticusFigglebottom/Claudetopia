@@ -189,12 +189,22 @@ func _format(value: float, suffix: String) -> String:
 	return "%.2f" % value
 
 
-func _option(section: String, key: String, label: String, choices: Array, note := "") -> void:
+## A drop-down for one setting. `values` is what each choice stores when it is not its index:
+## the camera side is -1 or 1, and with the index stored, Left wrote 0, which the camera reads
+## as the right shoulder.
+func _option(section: String, key: String, label: String, choices: Array, note := "", values: Array = []) -> void:
 	var o := OptionButton.new()
 	for c in choices:
 		o.add_item(str(c))
-	o.selected = clampi(int(Settings.get_value(section, key, 0)), 0, choices.size() - 1)
-	o.item_selected.connect(func(index: int) -> void: Settings.set_value(section, key, index))
+	var saved: Variant = Settings.get_value(section, key, values[0] if not values.is_empty() else 0)
+	var index := _index_of(values, saved) if not values.is_empty() else int(saved)
+	o.selected = clampi(index, 0, choices.size() - 1)
+	o.item_selected.connect(func(i: int) -> void:
+			Settings.set_value(section, key, values[i] if i < values.size() else i))
+	# `option_key`, not `setting_key`: that one marks the Graphics tab's knobs
+	o.set_meta("option_key", "%s/%s" % [section, key])
+	if not values.is_empty():
+		o.set_meta("setting_values", values)
 	_row(label, o, note)
 
 
@@ -343,6 +353,7 @@ func _build_gameplay() -> void:
 			"the pause menu can still show it")
 	_check("gameplay", "show_hints", "Hints")
 	_check("gameplay", "compass", "Compass")
+	_check("gameplay", "blood", "Blood", "on a blow that lands on flesh")
 	_slider("gameplay", "hud_opacity", "How loud the HUD is", 0.2, 1.0, 0.05, "%")
 
 
@@ -352,6 +363,8 @@ func _build_accessibility() -> void:
 			"changes the bar colours only")
 	_slider("accessibility", "ui_scale", "Size of the UI", 0.8, 1.4, 0.05, "%")
 	_check("accessibility", "reduce_flashing", "Less flashing")
+	_slider("accessibility", "camera_shake", "Camera kick on a blow", 0.0, 1.0, 0.05, "%")
+	_check("accessibility", "hit_pause", "Pause on a landed blow", "a few frames; the fight's timing is the same")
 	_content.add_child(UiKit.divider())
 	_content.add_child(UiKit.wrapped(
 			"The UI scale applies the next time a screen is opened. Colour-blind palettes " +
@@ -369,7 +382,7 @@ func _build_controls() -> void:
 	_slider("controls", "mouse_sensitivity", "Mouse sensitivity", 0.05, 1.0, 0.01)
 	_slider("controls", "gamepad_sensitivity", "Stick sensitivity", 0.5, 6.0, 0.1)
 	_check("controls", "invert_y", "Invert looking up and down")
-	_option("controls", "camera_side", "Camera side", ["Left", "Right"])
+	_option("controls", "camera_side", "Camera side", ["Left", "Right"], "", [-1, 1])
 	_check("controls", "vibration", "Vibration")
 	_check("controls", "toggle_sprint", "Sprint is a toggle")
 	_check("controls", "sprint_tap_rolls", "A tap of Sprint rolls")

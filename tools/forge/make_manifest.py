@@ -292,6 +292,7 @@ WEAPONS = [
     ("clapper", "bronze", "clapper_bronze", None), ("bow", "iron", "bow_wood", None), ("bow", "bone", "bow_bone", None),
     ("shield", "iron", "shield_iron", None), ("shield", "wood", "shield_wood", None),
     ("shield", "bone", "shield_bone", None), ("crossbow", "iron", "crossbow_iron", None),
+    ("scythe", "ashen", "scythe_ashen", None),
 ]
 
 

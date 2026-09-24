@@ -48,6 +48,9 @@ const KINDS := {
 	# light thrown back off the ground into a place the sun does not reach (a cave's mouth): real
 	# light at any hour, and nothing to see of it, since there is no lamp there
 	"bounce": {"colour": Color(0.9, 0.86, 0.78), "energy": 1.0, "range": 10.0, "size": 0.0, "glow": 0.0, "real": true, "day": true},
+	# a light on the skyline (world/horizon_layer.gd): no real light, and bright enough that the
+	# haze leaves a point of it at four kilometres
+	"beacon": {"colour": Color(1.0, 0.64, 0.32), "energy": 0.0, "range": 1.0, "size": 4.0, "glow": 14.0, "real": false, "day": false},
 }
 
 ## owner instance id -> Array of [world position, kind, colour, energy, range]

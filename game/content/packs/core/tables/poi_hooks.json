@@ -1020,7 +1020,9 @@
       },
       {
         "poi": "core:poi/hurdlegate_farm",
-        "quests": [],
+        "quests": [
+          "core:quest/dot_on_the_down"
+        ],
         "finds": [
           "core:item/note_hurdlegate_farm"
         ],
@@ -1230,6 +1232,7 @@
       {
         "poi": "core:poi/last_look",
         "quests": [
+          "core:quest/dot_on_the_down",
           "core:quest/one_to_dunn"
         ],
         "finds": [],

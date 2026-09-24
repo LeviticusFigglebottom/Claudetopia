@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0ovcyk67n8pe"
+path.s3tc="res://.godot/imported/cinderlea_basalt_columns_b_orm.png-d689284558721dac4e5d698c4cb65763.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/rocks/cinderlea_basalt_columns_b/cinderlea_basalt_columns_b_orm.png"
+dest_files=["res://.godot/imported/cinderlea_basalt_columns_b_orm.png-d689284558721dac4e5d698c4cb65763.s3tc.ctex"]
 
 [params]
 

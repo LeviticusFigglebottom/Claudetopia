@@ -8,6 +8,14 @@
       {
         "conditions": [
           {
+            "quest_done": "core:quest/dot_on_the_down"
+          }
+        ],
+        "text": "Dot's by the door. — Look, she's up. She doesn't get up for me. Fourteen years I've fed her."
+      },
+      {
+        "conditions": [
+          {
             "quest_done": "core:quest/the_notch_on_the_post"
           }
         ],
@@ -47,6 +55,32 @@
               }
             ],
             "once": true
+          },
+          {
+            "text": "You keep looking up at the downs.",
+            "next": "q_dot_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/dot_on_the_down"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/dot_on_the_down"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Dot's behind me, and here's her bell.",
+            "next": "q_dot_home",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/dot_on_the_down",
+                  "down_again"
+                ]
+              }
+            ]
           },
           {
             "text": "I'll leave you to it.",
@@ -94,6 +128,46 @@
       "bye": {
         "speaker": "Nell Hurdlegate",
         "text": "Mind how you go."
+      },
+      "q_dot_offer": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Dot. My old ewe. Bottle-reared by the fire, fourteen this spring, thinks she's a dog. She went up through the drove gate behind the Brow flock yesterday and didn't come down with it. — She'll be somewhere she can see the farm from. She always is. I can't leave the gate, not with the flocks coming down.",
+        "choices": [
+          {
+            "text": "I'll go up and find her.",
+            "effects": [
+              {
+                "start_quest": "core:quest/dot_on_the_down"
+              }
+            ],
+            "next": "q_dot_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_dot_accept": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Try the Last Look. It's the last place up there that looks back down at us. — She'll not come to you. She'll come to her bell. Shake it and walk; she'll follow like a hymn.",
+        "next": "hub"
+      },
+      "q_dot_home": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Oh, you daft old thing. Look at you. — Caught on the pilgrims' bench? Facing us? Of course she was. — Give me the bell. There. She'll stand up for you now, whenever you come by. She doesn't for me. Take the eggs and the cheese and don't argue; I'm not in a state to argue.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/dots_bell",
+              1
+            ]
+          },
+          {
+            "set_flag": "dot_home"
+          }
+        ],
+        "next": "hub"
       }
     }
   },
@@ -534,6 +608,14 @@
       {
         "conditions": [
           {
+            "flag": "dot_home"
+          }
+        ],
+        "text": "You brought Nell Hurdlegate's Dot down off the Last Look. It's in the book, with your name, and a note that the ewe followed a bell. I write everything down."
+      },
+      {
+        "conditions": [
+          {
             "quest_done": "core:quest/one_short"
           }
         ],
@@ -737,6 +819,14 @@
     "notes": "The farmer of larkfield_farm (npcs/farmfolk.json).",
     "start": "greet",
     "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "dot_home"
+          }
+        ],
+        "text": "You found Dot. The whole Vale's heard. Nell cried on the drove road, Father says, and she never cries. Not even at the Long Table."
+      },
       {
         "text": "Don't cut across the ring. Round's quicker, in the end."
       }

@@ -790,8 +790,12 @@ def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable
     return fn
 
 
+GATHER = 0.040   # how far a cloak's cloth stands off behind the neck, where it is gathered (m at 1.78)
+
+
 def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragged: int = 0,
-          open_front: bool = True, hem_z: Optional[float] = None, name: Optional[str] = None) -> Garment:
+          open_front: bool = True, hem_z: Optional[float] = None, name: Optional[str] = None,
+          hood_down: bool = False) -> Garment:
     """A cloak: cloth laid over the shoulders and let fall to the knee.
 
     The old one was a rigid tube from the shoulders to the calves -- the lampshade the shoulder
@@ -804,7 +808,10 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
     Hooded, the same sheet is carried up over the head by `cowl_field`, with the face cut out
     of it and a peak of spare cloth behind the crown, and it moves with the head above the jaw.
     `ragged` tears the hem into that many leaf-shaped points (the Woodfolk's); `open_front`
-    False closes it all round (a hood's own short cape)."""
+    False closes it all round (a hood's own short cape). `hood_down` lays the hood back: a
+    thick roll of cloth round the back of the neck, and the hood itself lying down the back
+    from it. It is most of what rounds the cloak's top: over this body's square deltoids the
+    cloth alone fell only 4 cm from the neck to the point of the shoulder and read as a shelf."""
     s = _s(skel)
     L = bodylib.head_landmarks(skel)
     neck = float(skel.J["Neck"][2])
@@ -871,7 +878,10 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
             # it took the top off the cloth where it rounds over each shoulder and left a flat
             # rim from shoulder to shoulder, the top of a box
             near_neck = np.clip((0.140 * s - r) / (0.020 * s), 0.0, 1.0)
-            below_top = np.clip((top - z) / (0.006 * s), 0.0, 1.0)
+            # (behind, the cut stands as high as the cloth is gathered there: level with the
+            # front, it cut ragged holes along the top of the gathered cloth)
+            lift = GATHER * s * np.clip((P[:, 1] + 0.03 * s) / (0.06 * s), 0.0, 1.0)
+            below_top = np.clip((top + lift - z) / (0.006 * s), 0.0, 1.0)
             w = w * (1.0 - near_neck * (1.0 - below_top)) * np.clip((r - 0.080 * s) / (0.006 * s), 0.0, 1.0)
         return w
 
@@ -881,6 +891,17 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
         folds = 0.75 * (0.5 + 0.5 * np.sin(n_folds * sa + 0.4)) + 0.25 * (0.5 + 0.5 * np.sin(31 * sa + 1.3))
         # a short cape has room for shallow folds only
         out = 0.024 * s * amp_k * depth * folds
+        if not hooded:
+            # The cloth stands off the body more towards the neck, where it is gathered: the top
+            # then falls from the neck to the point of the shoulder. Laid at one distance over
+            # this body's square deltoids it lay flat from neck to arm, a shelf with a corner.
+            # Behind the neck and over the shoulders only: gathered in front as well, it stood
+            # up to the wearer's mouth.
+            ax = np.abs(P[:, 0])
+            near = np.clip(1.0 - (ax - 0.08 * s) / (0.20 * s), 0.0, 1.0)
+            high = np.clip((P[:, 2] - (sh - 0.07 * s)) / (0.06 * s), 0.0, 1.0)
+            behind = np.clip((P[:, 1] + 0.03 * s) / (0.06 * s), 0.0, 1.0)
+            out = out + GATHER * s * near ** 1.2 * high * behind
         if hooded:
             # the edge of the face opening rolled back on itself, standing a little proud
             e = np.sqrt((P[:, 0] / f_ax) ** 2 + ((P[:, 2] - f_zc) / f_az) ** 2)
@@ -888,16 +909,39 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
             out = out + 0.004 * s * near * (P[:, 1] < f_cut + 0.02 * s)
         return out
 
-    z_top = float(L["top"][2]) + 0.10 * s if hooded else top + 0.03 * s
+    z_top = float(L["top"][2]) + 0.10 * s if hooded else top + (0.03 + GATHER) * s
     shell, trim = draped_shell(fld, region, 0.012 * s, 0.016 * s,
                                zbox(skel, z_hem - 0.14 * s, z_top, xy=0.48, ymin=-0.36, ymax=0.44),
                                relief=relief)
     sc = Scene()
     sc.union(shell)
     off = 0.016 * s + 0.006 * s
-    if not hooded:
+    if not hooded and not hood_down:
         ring = np.array(_ring(0.086 * s, 0.082 * s, sh + 0.010 * s)) + np.array([0.0, 0.010 * s, 0.0])
         sc.union(sdf.tube_path(ring, 0.012 * s, closed=False), k=0.008 * s)
+    if hood_down:
+        # the roll: thin where it comes round to the clasp, thick behind the neck, and sitting a
+        # little higher there, where the hood's opening is folded back on itself
+        roll, radii = [], []
+        for a in np.linspace(-0.62 * math.pi, 0.62 * math.pi, 21):
+            t = abs(a) / math.pi                           # 0 at the front, 1 behind
+            ang = a + math.pi / 2.0                        # _ring's angle: 0 at +x, pi/2 behind
+            # on the gathered cloth round the neck (the relief below stands it 4.5 cm off there)
+            rx, ry = (0.112 + 0.012 * t) * s, (0.106 + 0.026 * t) * s
+            roll.append([rx * math.cos(ang), ry * math.sin(ang) + 0.010 * s, sh + (0.004 + 0.034 * t) * s])
+            radii.append((0.013 + 0.022 * t ** 1.5) * s)
+        sc.union(sdf.tube_path(roll, radii, closed=False), k=0.012 * s)
+        # the hood lying down the back: broad under the roll, narrowing to its point between
+        # the shoulder blades, and lying on the cloak
+        stations = []
+        for i, dz in enumerate((0.0, -0.06, -0.12, -0.18, -0.23)):
+            z = sh + (0.010 + dz) * s
+            ru = (0.070, 0.074, 0.060, 0.036, 0.012)[i] * s
+            rv = (0.024, 0.020, 0.016, 0.012, 0.008)[i] * s
+            gathered = GATHER * s * float(np.clip((z - (sh - 0.07 * s)) / (0.06 * s), 0.0, 1.0))
+            back = _surface_point(fld, off + gathered + rv, math.pi, z, centre=(0.0, 0.02 * s))
+            stations.append((back, ru, rv))
+        sc.union(sdf.sweep(stations, np.array([1.0, 0.0, 0.0])), k=0.010 * s)
     # the clasp at the throat: a round brooch on the front of the cloth
     front = _surface_point(fld, off, 0.0, clasp + 0.004 * s)
     sc.union(sdf.ellipsoid(front + np.array([0.0, -0.004 * s, 0.0]), [0.014 * s, 0.006 * s, 0.014 * s]), k=0.003 * s)
@@ -933,13 +977,15 @@ def boots(skel: Skeleton, body, *, high: float = 0.30) -> Garment:
     # a sole and a small heel
     for side in ("L", "R"):
         an = skel.J[f"Foot.{side}"]
-        tip = skel.J[f"ToeTip.{side}"]
+        tip = bodylib.foot_tip(skel, side)
         sc.union(sdf.loft([
-            (np.array([an[0], an[1] + 0.075 * s, 0.012 * s]), 0.048 * s, 0.014 * s),
-            (np.array([an[0], an[1], 0.010 * s]), 0.054 * s, 0.012 * s),
-            (np.array([an[0], tip[1] + 0.012 * s, 0.010 * s]), 0.058 * s, 0.011 * s),
+            # a real sole: 27-28 cm long and 9-10 cm across the ball; at 5.8 cm half-widths and
+            # a heel 7.5 cm behind the ankle, the boots were a clown's
+            (np.array([an[0], an[1] + 0.058 * s, 0.012 * s]), 0.040 * s, 0.014 * s),
+            (np.array([an[0], an[1], 0.010 * s]), 0.044 * s, 0.012 * s),
+            (np.array([an[0], tip[1] + 0.012 * s, 0.010 * s]), 0.047 * s, 0.011 * s),
         ], LEFT), k=0.012 * s)
-        sc.union(sdf.box([an[0], an[1] + 0.065 * s, 0.014 * s], [0.042 * s, 0.038 * s, 0.016 * s], round_r=0.008 * s), k=0.012 * s)
+        sc.union(sdf.box([an[0], an[1] + 0.050 * s, 0.014 * s], [0.036 * s, 0.030 * s, 0.016 * s], round_r=0.008 * s), k=0.012 * s)
     sc.intersect(sdf.plane([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]), k=0.006 * s)
     return Garment("boots", sc, spacing=0.0055, target_tris=1600, material="leather")
 
@@ -991,9 +1037,116 @@ def belt(skel: Skeleton, body, *, pouch: bool = True) -> Garment:
     # buckle
     sc.union(sdf.box([0.0, -0.135 * s, z], [0.026 * s, 0.014 * s, 0.024 * s], round_r=0.005 * s), k=0.006 * s)
     if pouch:
-        sc.union(sdf.box([0.105 * s, -0.030 * s, z - 0.055 * s], [0.042 * s, 0.030 * s, 0.046 * s], round_r=0.014 * s), k=0.012 * s)
-        sc.union(sdf.box([0.105 * s, -0.030 * s, z - 0.012 * s], [0.044 * s, 0.032 * s, 0.010 * s], round_r=0.006 * s), k=0.008 * s)
+        # on the front of the left hip, outside the body: at (0.105, -0.030) it sat inside the
+        # belly, and no belt in the game ever showed its pouch
+        px, py = 0.118 * s, -0.112 * s
+        sc.union(sdf.box([px, py, z - 0.052 * s], [0.040 * s, 0.022 * s, 0.044 * s], round_r=0.014 * s), k=0.010 * s)
+        sc.union(sdf.box([px, py - 0.004 * s, z - 0.016 * s], [0.042 * s, 0.024 * s, 0.012 * s], round_r=0.006 * s), k=0.006 * s)
     return Garment("belt", sc, spacing=0.0040, target_tris=900, material="leather")
+
+
+# -- what a belt carries: each people's own, so a lineup reads as different people -----------
+# A crowd of the same belt with the same pouch was the same person six times over at a distance.
+# Each of these is a belt part (the belt slot), chosen by culture in CharacterAppearance.
+
+def _knife(sc_leather: Scene, sc_metal: Scene, s: float, x: float, y: float, z: float, lean: float = 0.12) -> None:
+    """A knife in its sheath hanging from a belt at (x, y, z): the sheath down the thigh, the grip up."""
+    down = np.array([lean * np.sign(x) * 1.5, 0.02, -1.0])
+    down = down / np.linalg.norm(down)
+    top = np.array([x, y, z - 0.010 * s])
+    tipp = top + down * 0.200 * s
+    # the sheath: flat, wider at the throat
+    sc_leather.union(sdf.tube_path([top, top + down * 0.12 * s, tipp],
+                                   [0.016 * s, 0.013 * s, 0.006 * s]), k=0.004 * s)
+    # the frog that holds it to the belt
+    sc_leather.union(sdf.box(top + np.array([0.0, 0.0, 0.020 * s]), [0.016 * s, 0.008 * s, 0.020 * s],
+                             round_r=0.004 * s), k=0.004 * s)
+    grip_top = top - down * 0.095 * s
+    sc_leather.union(sdf.capsule(top - down * 0.012 * s, grip_top, 0.0105 * s), k=0.003 * s)
+    # the guard and the pommel in iron
+    sc_metal.union(sdf.box(top - down * 0.006 * s, [0.028 * s, 0.009 * s, 0.006 * s], round_r=0.003 * s))
+    sc_metal.union(sdf.sphere(grip_top - down * 0.008 * s, 0.014 * s))
+
+
+def _belt_band(skel: Skeleton, body, s: float, z: float, width: float, thick: float, gap: float) -> Prim:
+    reg = band_z(z - width, z + width, 0.006 * s)
+    return offset_shell(body, reg, thick, gap=gap, bounds=zbox(skel, z - width - 0.03 * s, z + width + 0.03 * s, xy=0.26))
+
+
+def belt_knife(skel: Skeleton, body) -> Garment:
+    """The clans' and the woodfolk's: a belt with a pouch on the left and a long knife on the right."""
+    s = _s(skel)
+    g = belt(skel, body)
+    g.name = "belt_knife"
+    z = float(skel.J["Spine"][2]) - 0.02 * s
+    metal = Scene()
+    _knife(g.scene, metal, s, -0.128 * s, -0.112 * s, z - 0.010 * s)
+    g.layers = [Garment("belt_knife_iron", metal, spacing=0.0030, smooth=2, target_tris=300, material="iron")]
+    g.target_tris = 1300
+    return g
+
+
+def sash(skel: Skeleton, body) -> Garment:
+    """The Reedfolk's: a broad cloth sash wound twice round the waist and knotted on the left hip,
+    its two ends hanging to the thigh."""
+    s = _s(skel)
+    sc = Scene()
+    z = float(skel.J["Spine"][2]) - 0.01 * s
+    sc.union(_belt_band(skel, body, s, z, 0.040 * s, 0.010 * s, 0.010 * s))
+    # the second turn, a little lower and proud of the first
+    sc.union(_belt_band(skel, body, s, z - 0.030 * s, 0.018 * s, 0.013 * s, 0.012 * s), k=0.006 * s)
+    knot = np.array([0.130 * s, -0.080 * s, z - 0.010 * s])
+    sc.union(sdf.ellipsoid(knot, [0.026 * s, 0.022 * s, 0.024 * s]), k=0.008 * s)
+    for dx, ln in ((-0.012, 0.21), (0.018, 0.17)):
+        a = knot + np.array([dx * s, -0.004 * s, -0.010 * s])
+        b = a + np.array([0.020 * s, -0.012 * s, -ln * s])
+        sc.union(sdf.tube_path([a, (a + b) * 0.5, b], [0.014 * s, 0.015 * s, 0.013 * s]), k=0.006 * s)
+    return Garment("sash", sc, spacing=0.0040, target_tris=1400, material="cloth")
+
+
+def cord_beads(skel: Skeleton, body) -> Garment:
+    """The Ash-Pilgrims': a knotted cord over the robe, and a string of prayer beads from it."""
+    s = _s(skel)
+    sc = Scene()
+    z = float(skel.J["Spine"][2]) - 0.01 * s
+    # over a robe, which stands off the body: the cord rides at the robe's surface
+    sc.union(_belt_band(skel, body, s, z, 0.008 * s, 0.009 * s, 0.022 * s))
+    knot = np.array([-0.040 * s, -0.150 * s, z])
+    sc.union(sdf.sphere(knot, 0.014 * s), k=0.004 * s)
+    for dx, ln in ((-0.006, 0.30), (0.010, 0.26)):
+        pts = [knot + np.array([dx * s, -0.006 * s * f, -ln * s * f]) for f in (0.0, 0.5, 1.0)]
+        sc.union(sdf.tube_path(pts, 0.0048 * s), k=0.003 * s)
+        sc.union(sdf.sphere(pts[-1] + np.array([0.0, 0.0, -0.008 * s]), 0.010 * s), k=0.003 * s)
+    # the beads: a loop hanging from the cord at the right hip
+    top = np.array([-0.130 * s, -0.070 * s, z - 0.010 * s])
+    for i in range(14):
+        a = 2 * math.pi * i / 14
+        p = top + np.array([0.020 * s * math.sin(a), -0.012 * s, -0.070 * s * (1.0 - math.cos(a))])
+        sc.union(sdf.sphere(p, 0.0070 * s), k=0.002 * s)
+    return Garment("cord_beads", sc, spacing=0.0032, target_tris=1400, material="cloth")
+
+
+def belt_satchel(skel: Skeleton, body) -> Garment:
+    """The Lakefolk's: a satchel on a strap from the right shoulder to the left hip, over the coat."""
+    s = _s(skel)
+    sc = Scene()
+    sh = np.asarray(skel.J["UpperArm.R"], float)
+    hip = np.asarray(skel.J["UpperLeg.L"], float)
+    a = np.array([sh[0] * 0.55, 0.0, sh[2] + 0.050 * s])
+    b = np.array([hip[0] * 1.2, 0.0, hip[2] + 0.030 * s])
+    d = sdf._unit(b - a)
+    n = sdf._unit(np.cross(d, np.array([0.0, 1.0, 0.0])))
+
+    def strap(P):
+        return 1.0 - sdf_smoothstep(0.020 * s, 0.026 * s, np.abs((P - a) @ n))
+    # over the coat, which stands 1.6 cm off the body
+    sc.union(offset_shell(body, strap, 0.005 * s, gap=0.019 * s,
+                          bounds=zbox(skel, float(hip[2]) - 0.06 * s, float(sh[2]) + 0.12 * s, xy=0.30)))
+    bag = np.array([hip[0] * 1.55, -0.010 * s, hip[2] - 0.040 * s])
+    sc.union(sdf.box(bag, [0.030 * s, 0.085 * s, 0.070 * s], round_r=0.020 * s), k=0.010 * s)
+    sc.union(sdf.box(bag + np.array([0.012 * s, 0.0, 0.040 * s]), [0.022 * s, 0.088 * s, 0.036 * s],
+                     round_r=0.012 * s), k=0.006 * s)
+    return Garment("belt_satchel", sc, spacing=0.0045, target_tris=1400, material="leather")
 
 
 def apron(skel: Skeleton, body) -> Garment:
@@ -1732,6 +1885,8 @@ class BeardStyle:
     radius: float = 0.004
     hang: float = 0.0           # how far below the chin the locks fall (metres at 1.78 m)
     target_tris: int = 1400
+    blend: float = 0.0035       # how far the locks melt into each other and the shell
+    mass: float = 0.0           # the body of a full beard under the chin (radius, metres at 1.78 m)
 
 
 def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadStyle] = None,
@@ -1766,6 +1921,18 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
             # down the jaw towards the chin, and straight down off it
             v = np.stack([-0.35 * P[:, 0] / 0.05, np.full(len(P), -0.25), np.full(len(P), -1.0)], axis=1)
             return _unit_rows(v)
+    if st.mass > 0:
+        # A full beard is a mass before it is hair: without one the locks hung from the jaw as
+        # separate strands, like icicles. The mass fills out under the chin and tapers as it
+        # falls, and the locks lie on it as a few thick clumps.
+        m = st.mass * s
+        top = np.array([0.0, L["face_y"] + 0.016 * s, L["chin_z"] + 0.006 * s])
+        low = np.array([0.0, L["face_y"] + 0.024 * s, L["chin_z"] - max(st.hang * 0.80, 0.02) * s])
+        sc.union(sdf.ellipsoid(top, [m * 1.60, m * 0.80, m * 0.80]), k=0.010 * s)
+        for sx in (1, -1):
+            # two lobes side by side, so the beard is broad across and shallow front to back
+            dx = np.array([sx * m * 0.45, 0.0, 0.0])
+            sc.union(sdf.round_cone(top + dx, low + dx * 0.4, m * 0.80, m * 0.35), k=0.012 * s)
     locks: List[np.ndarray] = []
     release_z = L["chin_z"] + 0.004 * s if st.hang > 0 else -1e9
     starts = np.zeros((0, 3))
@@ -1779,6 +1946,10 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
     for p0 in starts:
         length = rng.uniform(*st.length) * s + (st.hang * s if st.hang > 0 else 0.0)
         r0 = st.radius * s * rng.uniform(0.8, 1.2)
+        if st.mass > 0 and (p0[2] > L["mouth_z"] or abs(p0[0]) > st.mass * s * 1.3):
+            # on the cheeks and the sides of the jaw a full beard lies close: a long lock from
+            # there stood off the jaw like a leg
+            length, r0 = rng.uniform(*st.length) * s * 0.6, r0 * 0.7
         off0 = st.base * s * 0.45
 
         def off_fn(u, off0=off0):
@@ -1793,7 +1964,7 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
         if len(pts) < 3:
             continue
         locks.append(pts)
-        sc.union(_lock_prim(pts, r0, s), k=0.0035 * s)
+        sc.union(_lock_prim(pts, r0, s), k=st.blend * s)
     gm = Garment(name, sc, spacing=0.0028, smooth=4, target_tris=st.target_tris, material="hair",
                  bone="Head", trim=head)
     gm.flow_fn = flow
@@ -1878,9 +2049,11 @@ HAIR_STYLES: Dict[str, Groom] = {
 }
 BEARD_STYLES: Dict[str, BeardStyle] = {
     "stubble": BeardStyle(base=0.0016, target_tris=1000),
-    "short_beard": BeardStyle(base=0.0072, seeds=45, length=(0.018, 0.032), radius=0.0038, target_tris=1900),
-    "long_beard": BeardStyle(base=0.0085, seeds=42, length=(0.030, 0.050), radius=0.0055, hang=0.10,
-                             target_tris=2800),
+    # clumps, not strands: fewer, thicker locks melted into a thicker shell
+    "short_beard": BeardStyle(base=0.0088, seeds=28, length=(0.016, 0.028), radius=0.0062, blend=0.0050,
+                              target_tris=1900),
+    "long_beard": BeardStyle(base=0.0100, seeds=24, length=(0.030, 0.050), radius=0.0105, hang=0.10,
+                             blend=0.0095, mass=0.030, target_tris=2800),
     "moustache": BeardStyle(base=0.0034, region="moustache", seeds=14, length=(0.022, 0.034),
                             radius=0.0030, target_tris=900),
 }
@@ -2192,10 +2365,17 @@ def wrap_torso(skel: Skeleton, body) -> Garment:
     waist = float(skel.J["Spine"][2])
     hip = float(skel.J["UpperLeg.L"][2])
 
+    shz_line = float(skel.J["UpperArm.L"][2])
+
     def diagonal(P):
-        # covered below a plane running from the left shoulder down to the right hip
-        t = (P[:, 2] - (waist - 0.02 * s)) / (0.30 * s) + P[:, 0] / (0.26 * s)
-        return 1.0 - sdf_smoothstep(0.55, 1.15, t)
+        # Covered to a line that runs from the right shoulder down across the breastbone to under
+        # the left arm, the left shoulder bare but for the sash. The first cut ran from the left
+        # shoulder down to the right hip, and in the engine the whole left breast and the middle
+        # of the chest were bare skin between the sash and the cloth: a strap, not a top.
+        # (the chest joint sits below the breasts: from it the left breast was still bare, so the
+        # line starts under the left armpit, a hand below the shoulder joint)
+        edge = shz_line - 0.070 * s + np.clip(-P[:, 0], 0.0, 0.20 * s) * 0.60
+        return 1.0 - sdf_smoothstep(edge - 0.012 * s, edge + 0.012 * s, P[:, 2])
     reg = region_and(band_z(hip - 0.02 * s, neck + 0.030 * s, 0.020 * s), diagonal)
     sc.union(offset_shell(body, reg, 0.010 * s, gap=0.004 * s,
                           relief=garment_edges(skel, waist=0.008),
@@ -2262,6 +2442,15 @@ def kilt(skel: Skeleton, body) -> Garment:
     g = Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
     g.weight_adjust = _skirt_weights(skel)
     g.stations = st
+    # Woven in the clan's tartan all round, the same sett as the plaid over the shoulder: the
+    # kilt was the palette's plain brown with the check only on the plaid's apron beside it.
+    # Across is round the waist (arc length on the hip station), along is down the leg.
+    weave = tartan()
+    r_hip = 0.5 * (ha + hb)
+
+    def pattern(P, nrm):
+        return weave(np.arctan2(P[:, 0], -P[:, 1]) * r_hip, P[:, 2])
+    g.pattern = pattern
     return g
 
 
@@ -2446,13 +2635,17 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "skirt": lambda s, b: skirt(s, b),
     "dress": dress,
     "robe": robe,
-    "cloak": lambda s, b: cloak(s, b),
+    "cloak": lambda s, b: cloak(s, b, hood_down=True),
     "hooded_cloak": lambda s, b: cloak(s, b, hooded=True),
     "hood": hood,
     "boots": lambda s, b: boots(s, b),
     "shoes": shoes,
     "gloves": gloves,
     "belt": lambda s, b: belt(s, b),
+    "belt_knife": belt_knife,
+    "sash": sash,
+    "cord_beads": cord_beads,
+    "belt_satchel": belt_satchel,
     "apron": apron,
     "gambeson": gambeson,
     "plate_torso": lambda s, b: plate_torso(s, b),
@@ -2469,7 +2662,7 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "leg_wraps": leg_wraps,
     "ragged_cloak": lambda s, b: cloak(s, b, hooded=True, hem=0.38, ragged=13, name="ragged_cloak"),
     # the same with the hood down, which is how the player wears it
-    "torn_cloak": lambda s, b: cloak(s, b, hooded=False, hem=0.38, ragged=13, name="torn_cloak"),
+    "torn_cloak": lambda s, b: cloak(s, b, hooded=False, hem=0.38, ragged=13, name="torn_cloak", hood_down=True),
 }
 ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
     "horns_small": lambda s: horns(s, big=False),
@@ -2483,25 +2676,27 @@ ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
 # --------------------------------------------------------------------------------------
 
 CULTURE_PALETTES: Dict[str, Dict[str, str]] = {
-    # primary / secondary garment colours, the leather and the metal each culture uses
-    "vale": {"primary": "#a8763f", "secondary": "#7d8a4a", "accent": "#b23a2e",
-             "leather": "#6b4a2c", "metal": "#8a8f94", "trim": "#c9a24a",
-             "note": "warm wool; the accent is the family's painted-door colour"},
-    "lakefolk": {"primary": "#efe9dc", "secondary": "#5d6470", "accent": "#b08a3e",
-                 "leather": "#4a4239", "metal": "#b08a3e", "trim": "#3f7fb5",
-                 "note": "lime-white and slate, brass fittings"},
-    "reedfolk": {"primary": "#3b3a6e", "secondary": "#2f7f78", "accent": "#e8a93f",
-                 "leather": "#54452f", "metal": "#7d7a70", "trim": "#c9b26a",
-                 "note": "marsh indigo on everything"},
-    "clans": {"primary": "#c8bda6", "secondary": "#6e5a44", "accent": "#8a4a2e",
-              "leather": "#59432c", "metal": "#6f7378", "trim": "#e8e4d8",
-              "note": "undyed wool, bone tokens, chain"},
-    "woodfolk": {"primary": "#4a4030", "secondary": "#5c6b3c", "accent": "#8ab34a",
-                 "leather": "#3f3325", "metal": "#5f6259", "trim": "#2b211c",
-                 "note": "bark browns and moss"},
-    "ash_pilgrims": {"primary": "#8b8a86", "secondary": "#5a5652", "accent": "#d8cfbf",
-                     "leather": "#4a4744", "metal": "#77736d", "trim": "#a08a4a",
-                     "note": "grey, always grey"},
+    # primary / secondary garment colours, the leather and the metal each culture uses. Period
+    # dyes, low in saturation and varied in value, so the clothes sit in the painted world:
+    # madder, woad, weld, undyed wool, oak-gall browns and lichen greens.
+    "vale": {"primary": "#8f7a5a", "secondary": "#6a6b52", "accent": "#8c4a3e",
+           "leather": "#5e4632", "metal": "#7c7e7e", "trim": "#a8925c",
+           "note": "weld-yellow and oak-brown wool, lichen hose; the accent is the family's madder door"},
+    "lakefolk": {"primary": "#c6bca8", "secondary": "#5b6570", "accent": "#8f7446",
+               "leather": "#4a4239", "metal": "#8f7446", "trim": "#5d7080",
+               "note": "undyed wool and woad slate, dull brass fittings"},
+    "reedfolk": {"primary": "#4f5a69", "secondary": "#7a5a4c", "accent": "#a8804a",
+               "leather": "#54452f", "metal": "#7d7a70", "trim": "#b0a070",
+               "note": "woad blue-grey and madder brown, the marsh's own dyes"},
+    "clans": {"primary": "#c2b8a0", "secondary": "#5e4c3a", "accent": "#7c4034",
+            "leather": "#59432c", "metal": "#6f7274", "trim": "#d6cfbd",
+            "note": "undyed wool, oak-gall brown, bone tokens, chain"},
+    "woodfolk": {"primary": "#4d4536", "secondary": "#5a5f47", "accent": "#6e7650",
+               "leather": "#3f3325", "metal": "#5f6259", "trim": "#2b211c",
+               "note": "bark browns and lichen"},
+    "ash_pilgrims": {"primary": "#8b8a86", "secondary": "#5a5652", "accent": "#cfc7b6",
+                   "leather": "#4a4744", "metal": "#77736d", "trim": "#8f7f58",
+                   "note": "grey, always grey"},
 }
 MATERIAL_DEFAULTS: Dict[str, dict] = {
     "cloth": {"roughness": 0.88, "metallic": 0.0, "colour": "primary"},
