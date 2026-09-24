@@ -3936,16 +3936,15 @@ the table above, on the world as it was built then):
   34 draws each (the water, 27, now that it is drawn; Terrain3D, 27; the landmarks, 26; the
   trees' near ring, 26 and 13 K). The shadow passes went from 914 to 1048 draws.
 
-`./run.sh test` on the head: 1616 tests, 0 failed, 0 content problems, 0 script errors, RESULT
-PASS. `./run.sh flow`: the New Game start fails, and only on the opening's stall, which the
-opening's branch fixes: 89 checks, 10 failed, no script errors, every failure downstream of the
-opening stopping at its third shot of ten (no HUD, no first objective, the camera still the
-opening's). That ends `run.sh flow`'s chain, so the load and Continue starts were run on their
-own (`-- --flow=<dir> --load=flow`, `-- --flow=<dir> --continue`, into the same folder):
-Continue passes (27 of 27, and 35 of 35 on the head: it loads whichever save is newest), on
-Terrain3D with the HUD up; the load fails 5 of 32, because the
-`flow` slot was saved while the stalled opening still held the `new_game` flag, and a load with
-that flag up plays the opening again (`GameServices`), which stalls the same way.
+With main's opening merged in, on the head: `./run.sh test` 1626 tests, 0 failed, 0 script
+errors, 0 dead lambda captures (a later run under load failed 2 of main's wall-clock tests,
+test_audio_wired and test_cinematic_player, which passed run alone, 18 of 18 and 10 of 10);
+`./run.sh flow` passes all three starts (New Game 99 of 99, load 32 of 32, Continue 35 of 35, no
+errors logged, no script errors); `./run.sh journey` 16 of 16. Before that fix the flow's New
+Game start failed, and only on the opening stalling at its third shot of ten (10 of 89 checks,
+all downstream of it), and its load start failed with it, because the `flow` slot had been saved
+while the stalled opening still held the `new_game` flag and a load with that flag up plays the
+opening again.
 
 ### Forward+, seen on the coarse ground
 
