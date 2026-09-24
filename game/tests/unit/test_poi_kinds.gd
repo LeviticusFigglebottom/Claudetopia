@@ -94,7 +94,7 @@ func test_a_vista_turns_its_bench_to_the_view_and_a_cairn_stands_alone() -> void
 
 func test_a_cave_goes_dark_ten_metres_into_the_hill() -> void:
 	var d := _dress("cave", "core:region/skerrow", "a limestone mouth in the scar")
-	# the crag it is in is the region's own rock, not masonry: slabs for its cheeks and brow (a
+	# the crag it is in is the region's own rock, not masonry: two slabs leaning together (a
 	# forge asset is known by its scene, since two of one name are renamed by the tree)
 	var slabs := 0
 	var boulders := 0
@@ -104,7 +104,7 @@ func test_a_cave_goes_dark_ten_metres_into_the_hill() -> void:
 			slabs += 1
 		elif scene.contains("skerrow_boulder"):
 			boulders += 1
-	assert_eq(slabs, 3, "Skerrow's own slabs for the cheeks and the brow")
+	assert_eq(slabs, 2, "two of Skerrow's own slabs leaning together over the mouth")
 	assert_gt(boulders, 3, "and its boulders heaped over the passage and along its flanks")
 	var mouth := _marker(d, "the_mouth")
 	var end := d.find_child("ThroatEnd", true, false) as MeshInstance3D

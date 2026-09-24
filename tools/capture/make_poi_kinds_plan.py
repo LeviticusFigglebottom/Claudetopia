@@ -206,10 +206,10 @@ def main():
     # caves: in a slope, looked at from below its mouth
     for rid, brief in (("core:region/skerrow", "a limestone mouth in the scar above the dale"),
                        ("core:region/briarwold", "a root-cave under an old oak on the bank")):
-        spot = land.search(slope_pred(5.0, 14.0), rid)
+        spot = land.search(slope_pred(9.0, 18.0), rid)
         if spot:
             d, _ = land.downhill(spot[1], spot[2])
-            add("cave_" + rid.split("/")[-1], "cave", rid, spot, brief, d, 22.0, 3.5)
+            add("cave_" + rid.split("/")[-1], "cave", rid, spot, brief, d, 24.0, 4.0)
 
     def sea_pred(x, z):
         if land.h(x, z) > 7.0 or land.h(x, z) < 1.0 or not land.clear(x, z, 8.0, 30.0):
@@ -222,10 +222,10 @@ def main():
     spot = land.search(sea_pred, "core:region/cinderlea")
     if spot:
         d, _ = land.downhill(spot[1], spot[2])
-        add("cave_sea", "cave", "core:region/cinderlea", spot, "a sea-cave under the Hushline where the tide comes in", d, 20.0, 3.0, 12.0)
+        add("cave_sea", "cave", "core:region/cinderlea", spot, "a sea-cave under the Hushline where the tide comes in", d, 20.0, 3.0, 14.0)
 
-    # a quarry: a steeper Vale slope, for its chalk face
-    spot = land.search(slope_pred(8.0, 16.0), "core:region/hearthvale")
+    # a quarry: a Vale slope, for its chalk face, gentle enough for the floor it is cut down to
+    spot = land.search(slope_pred(4.0, 9.0), "core:region/hearthvale")
     if spot:
         d, _ = land.downhill(spot[1], spot[2])
         add("quarry", "quarry", "core:region/hearthvale", spot, "the chalk pit where the Vale's lime was cut", d, 32.0, 7.0)
@@ -287,7 +287,7 @@ def main():
     if spot:
         _, x, z = spot
         d, _ = land.downhill(x, z)
-        add("vista", "vista", "core:region/hearthvale", spot, "the bench at the Larkmouth where the Vale opens", (-d[0], -d[1]), 10.0, 2.6, 17.5)
+        add("vista", "vista", "core:region/hearthvale", spot, "the bench at the Larkmouth where the Vale opens", (-d[0], -d[1]), 10.0, 2.6, 12.0)
         shots[-1]["look_at"] = [round(x + d[0] * 40.0, 1), round(land.h(x, z) - 2.0, 1), round(z + d[1] * 40.0, 1)]
 
     with open(OUT, "w", encoding="utf-8") as f:

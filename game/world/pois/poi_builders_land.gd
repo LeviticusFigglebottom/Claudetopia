@@ -350,21 +350,23 @@ static func cave(d: PoiDressing) -> void:
 	var boulder := k.rock("boulder")
 	var slab_h := maxf(PoiKit.height_of(slab), 1.0) if slab != "" else 6.4
 	if slab != "":
-		var sc := (high + 2.2) / slab_h
+		# two slabs of the crag leaning together over the mouth, the way a fissure cave opens
+		# between two blocks that came to rest against each other; each is sunk into the slope
+		var sc := (high + 2.6) / slab_h
+		var lean := 0.34
 		for s in [-1.0, 1.0]:
-			var x := float(s) * (wide * 0.5 + 1.7 * sc)
-			var p := mouth + across * x - into * 0.2
-			k.place(slab, Vector3(p.x, o.y - 0.4, p.y), yaw_out + float(s) * 0.28 + k.rng.randf_range(-0.08, 0.08), sc, true,
-					Vector3(-0.12, 0.0, float(s) * 0.06), true)
-		# the brow: a slab on its side across the cheeks, its lower edge a little under their tops
-		var sb := (wide + 3.6 * sc) / slab_h
-		var brow_at := o + basis * Vector3(0.0, high + 1.8 * sb - 0.4, 0.6)
-		var along := Vector3(across.x, 0.0, across.y) * (slab_h * sb * 0.5)
-		# on its side its height runs toward -x of its own frame, which is +across, so it starts
-		# half its length the other way
-		k.place(slab, brow_at - along, yaw_out, sb, true, Vector3(-0.1, 0.0, PI * 0.5), true)
+			var x := float(s) * (wide * 0.5 + 1.2 * sc)
+			var p := mouth + across * x - into * 0.3
+			k.place(slab, Vector3(p.x, o.y - 0.6, p.y), yaw_out + float(s) * 0.22 + k.rng.randf_range(-0.08, 0.08), sc, true,
+					Vector3(-0.16, 0.0, -float(s) * lean), true)
 	if boulder != "":
 		var bh := maxf(PoiKit.height_of(boulder), 1.0)
+		# wedged where the two slabs meet over the mouth, so its top is rock and not a lintel
+		for i in 3:
+			var x := (float(i) - 1.0) * wide * 0.28 + k.rng.randf_range(-0.3, 0.3)
+			var at3 := o + basis * Vector3(x, high + 0.9 + k.rng.randf_range(-0.2, 0.4), 0.4 + k.rng.randf_range(0.0, 0.8))
+			k.place(boulder, at3 - Vector3(0.0, bh * 0.35, 0.0), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.1, 1.6), true,
+					Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3)), true)
 		# over the passage, standing on its roof, so the hill has a crag where the passage runs
 		for i in [0, 2, 4]:
 			var z := 0.8 + (float(i) + 0.5) * deep / float(rings)
@@ -399,11 +401,13 @@ static func cave(d: PoiDressing) -> void:
 	if roots:
 		# the roots of what grows on the hill above, down over the brow and into the ground
 		var wood := m.begin()
-		for i in 7:
-			var x := k.rng.randf_range(-wide * 0.6, wide * 0.6)
-			var top := o + basis * Vector3(x, high + 3.2, 1.6)
-			var bend := o + basis * Vector3(x * 1.15, high * 0.75, -0.9)
-			var q := mouth + across * (x * 1.4) - into * 1.6
+		for i in 5:
+			# down the outsides of the slabs and over their shoulders, never across the mouth
+			var side := -1.0 if i % 2 == 0 else 1.0
+			var x := side * (wide * 0.5 + k.rng.randf_range(0.6, 2.4))
+			var top := o + basis * Vector3(x * 0.7, high + 3.0, 1.8)
+			var bend := o + basis * Vector3(x, high * 0.7, -1.2)
+			var q := mouth + across * (x * 1.2) - into * 1.8
 			m.limb(wood, top, bend, k.rng.randf_range(0.1, 0.22))
 			m.limb(wood, bend, k.on_ground(q.x, q.y), k.rng.randf_range(0.08, 0.16))
 		m.commit(wood, k.surface("timber", 0.7), "Roots", true)
@@ -476,12 +480,30 @@ static func quarry(d: PoiDressing) -> void:
 				k.collider(Vector3(chord, h, 2.8), xf, "stone")
 	m.commit(cut, stone, "Face", true)
 	m.commit(lips, turf, "FaceTurf")
+	# the floor it was cut down to: a level of chalk and spoil from the face out past the middle,
+	# standing proud where the hill falls away below it
+	var worked := PoiKit.painted(5, {"base": "#c9c2ae", "accent": "#aca48f", "grout": "#857e6b", "unit": 0.4}, 0.8)
+	var along_len := arc_r + 3.0
+	var across_len := arc_r * 1.9
+	var floor_at := centre - face * (arc_r - 3.0) * 0.5
+	var low := floor_y
+	for sx in [-0.5, 0.0, 0.5]:
+		for sz in [-0.5, 0.0, 0.5]:
+			var q := floor_at + side * (across_len * float(sx)) + face * (along_len * float(sz))
+			low = minf(low, k.on_ground(q.x, q.y).y)
+	var slab_d := floor_y - low + 0.6
+	var level := m.begin()
+	var fxf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(side)), Vector3(floor_at.x, floor_y - slab_d * 0.5, floor_at.y))
+	m.block(level, fxf, Vector3(along_len, slab_d, across_len))
+	m.commit(level, worked, "QuarryFloor", true)
+	k.collider(Vector3(along_len, slab_d, across_len), fxf, "gravel")
 	# the blocks it gave up: squared, in a row where they wait, and some still lying where they fell
 	var blocks := m.begin()
 	for i in 7:
-		var p := centre + side * (-5.0 + float(i) * 1.7) + face * k.rng.randf_range(2.5, 4.0)
+		var p := centre + side * (-5.0 + float(i) * 1.7) - face * k.rng.randf_range(1.5, 3.0)
 		var size := Vector3(k.rng.randf_range(0.9, 1.4), k.rng.randf_range(0.6, 0.9), k.rng.randf_range(0.8, 1.2))
-		var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(side) + k.rng.randf_range(-0.15, 0.15)), k.on_ground(p.x, p.y, size.y * 0.5 - 0.05))
+		var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(side) + k.rng.randf_range(-0.15, 0.15)),
+				Vector3(p.x, maxf(floor_y, k.on_ground(p.x, p.y).y) + size.y * 0.5 - 0.05, p.y))
 		m.block(blocks, xf, size)
 		k.collider(size, xf, "stone")
 		if i % 3 == 0:
@@ -498,7 +520,7 @@ static func quarry(d: PoiDressing) -> void:
 	m.commit(blocks, stone, "Blocks")
 	# the spoil heap: what was no use, tipped to one side
 	var spoil_at := centre + side * (arc_r * 0.85) + face * 3.0
-	m.mound(k.on_ground(spoil_at.x, spoil_at.y, -0.2), 5.5, 3.2, PoiKit.painted(5, look, 0.9), "Spoil", true, 1.2, 7, 20, true, 0.12)
+	m.mound(k.on_ground(spoil_at.x, spoil_at.y, -0.2), 4.2, 2.4, worked, "Spoil", true, 1.2, 7, 20, true, 0.14)
 	var scree := k.rock("scree")
 	if scree != "":
 		var heap: Array = []
@@ -508,8 +530,8 @@ static func quarry(d: PoiDressing) -> void:
 		k.scatter(scree, heap)
 	# the crane: a mast, a jib out over the floor, and a block hanging from its rope
 	var timber := m.begin()
-	var mast_at := centre - side * (arc_r * 0.45) + face * 1.0
-	var foot := k.on_ground(mast_at.x, mast_at.y)
+	var mast_at := centre - side * (arc_r * 0.45) - face * 1.5
+	var foot := Vector3(mast_at.x, maxf(floor_y, k.on_ground(mast_at.x, mast_at.y).y), mast_at.y)
 	var mast_h := 7.5
 	m.rod(timber, Transform3D(Basis(), foot + Vector3(0.0, mast_h * 0.5, 0.0)), 0.16, mast_h)
 	var jib_dir := (side * 0.8 + face * 0.4).normalized()

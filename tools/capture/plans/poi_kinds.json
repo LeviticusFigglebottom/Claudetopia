@@ -4,14 +4,14 @@
    "label": "cave_skerrow",
    "region": "core:region/skerrow",
    "pos": [
-    -983.6,
-    487.3,
-    -3688.4
+    -481.0,
+    200.0,
+    -2305.0
    ],
    "look_at": [
-    -968.0,
-    485.8,
-    -3704.0
+    -464.0,
+    198.0,
+    -2288.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -21,8 +21,8 @@
     "kind": "cave",
     "region": "core:region/skerrow",
     "at": [
-     -968.0,
-     -3704.0
+     -464.0,
+     -2288.0
     ],
     "brief": "a limestone mouth in the scar above the dale",
     "encounter": "",
@@ -33,14 +33,14 @@
    "label": "cave_briarwold",
    "region": "core:region/briarwold",
    "pos": [
-    3566.0,
-    213.7,
-    1696.0
+    3201.8,
+    217.8,
+    1168.8
    ],
    "look_at": [
-    3544.0,
-    212.2,
-    1696.0
+    3208.0,
+    215.8,
+    1192.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -50,8 +50,8 @@
     "kind": "cave",
     "region": "core:region/briarwold",
     "at": [
-     3544.0,
-     1696.0
+     3208.0,
+     1192.0
     ],
     "brief": "a root-cave under an old oak on the bank",
     "encounter": "",
@@ -72,7 +72,7 @@
     3664.0
    ],
    "fov": 60.0,
-   "time": 12.0,
+   "time": 14.0,
    "weather": "core:weather/clear",
    "fog_scale": 1.0,
    "dress": {
@@ -91,14 +91,14 @@
    "label": "quarry",
    "region": "core:region/hearthvale",
    "pos": [
-    1160.0,
-    82.3,
-    2464.0
+    2134.9,
+    121.9,
+    1855.7
    ],
    "look_at": [
-    1192.0,
-    77.3,
-    2464.0
+    2104.0,
+    116.9,
+    1864.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -108,8 +108,8 @@
     "kind": "quarry",
     "region": "core:region/hearthvale",
     "at": [
-     1192.0,
-     2464.0
+     2104.0,
+     1864.0
     ],
     "brief": "the chalk pit where the Vale's lime was cut",
     "encounter": "",
@@ -305,7 +305,7 @@
     3728.0
    ],
    "fov": 60.0,
-   "time": 17.5,
+   "time": 12.0,
    "weather": "core:weather/clear",
    "fog_scale": 1.0,
    "dress": {
