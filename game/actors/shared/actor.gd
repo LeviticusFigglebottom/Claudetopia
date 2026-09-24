@@ -408,6 +408,7 @@ func take_hit(hit: HitData) -> String:
 			(hit.attacker as Actor).open_riposte(DamageModel.RIPOSTE_OPEN_DURATION)
 		anim.play_intent("Parry")
 		Foley.play("parry_clang", _struck_at())
+		Impact.land(self, hit, "parried")
 		hit_taken.emit(hit, "parried")
 		return "parried"
 	if hit.blockable and is_blocking and facing:
@@ -427,12 +428,14 @@ func take_hit(hit: HitData) -> String:
 			if not is_stunned():
 				anim.play_intent("Block_Hit")
 		Foley.play("block_clang", _struck_at())
+		Impact.land(self, hit, "blocked")
 		hit_taken.emit(hit, "blocked")
 		return "blocked"
 	var raw_full := hit.amount * hit.crit_mult
 	var dmg := DamageModel.apply_defence(raw_full, armour_flat, resist_to(hit.kind))
 	# The blow lands on whatever the body is made of: flesh, mail, stone or wood.
 	Foley.play("impact_" + body_material, _struck_at())
+	Impact.land(self, hit, "hit")
 	_apply_damage(dmg, hit.kind, hit.attacker, hit.label)
 	if dead:
 		hit_taken.emit(hit, "hit")

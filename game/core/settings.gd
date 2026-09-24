@@ -16,8 +16,10 @@ const DEFAULTS := {
 		"vignette": true, "film_grain": false},
 	"audio": {"master": 0.9, "music": 0.7, "sfx": 0.9, "ambience": 0.8, "ui": 0.8, "voice": 1.0},
 	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false, "sprint_tap_rolls": true},
-	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true, "hints_learned": [], "play_opening": true},
-	"accessibility": {"colourblind": 0, "ui_scale": 1.0, "reduce_flashing": false},
+	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true, "hints_learned": [], "play_opening": true, "blood": true},
+	# camera_shake scales the camera's kick when a blow lands (0 is none); hit_pause is the few
+	# frames a landed blow holds the picture still
+	"accessibility": {"colourblind": 0, "ui_scale": 1.0, "reduce_flashing": false, "camera_shake": 1.0, "hit_pause": true},
 }
 
 var data: Dictionary = {}

@@ -939,6 +939,8 @@ func build_hit(a: Dictionary) -> HitData:
 	hit.knockback = float(a.get("knockback", 0.0))
 	hit.parryable = not bool(a.get("unparryable", false))
 	hit.label = "%s:%s" % [Ids.name_of(enemy_id), str(a.get("name", "attack"))]
+	hit.weapon_class = str(a.get("weapon_class", "claw"))
+	hit.weight = Impact.weight_of_class(hit.weapon_class)
 	hit.statuses = a.get("statuses", [])
 	hit.origin = global_position
 	return hit
@@ -951,6 +953,8 @@ func _open_hitbox() -> void:
 	if not whoosh.is_empty():
 		Foley.play(whoosh, attack_origin.global_position)
 	_weapon_hitbox().begin_swing(build_hit(a))
+	if bool(a.get("heavy", false)):
+		Impact.trail(self, true)
 	if a.has("summons"):
 		_summon(a["summons"])
 	attack_launched.emit(str(a.get("name", "attack")))
@@ -1139,6 +1143,7 @@ func _cut_purse(a: Dictionary, victim: Node) -> void:
 
 func _close_hitbox() -> void:
 	_weapon_hitbox().end_swing()
+	Impact.trail(self, false)
 
 
 func _weapon_hitbox() -> Hitbox:
