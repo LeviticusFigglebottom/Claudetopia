@@ -17,11 +17,13 @@ extends Node3D
 ##          "equip": "core:item/iron_sword", "offhand": "core:item/...",
 ##          "length": s, "keys": [[t, "W", true], [t, "W", false], ...],
 ##          "look": [[t, dx], [t, dx, seconds], ...], "target": [x, y, z],
+##          "foe": [enemy id, x, y, z, yaw?],
 ##          "hud": false, "menu": "", "plant_feet": true,
 ##          "shots": {"from": s, "every": s, "count": n}  or  [t, t, ...]}]}
 ## A key is a real key event through the input map, so through the bindings as the game sets them
 ## up. "look" turns the view as a mouse moving `dx` pixels would, all at once or spread evenly over
-## `seconds`; "target" stands a post there that a lock can take; "hud" puts the HUD up and "menu"
+## `seconds`; "target" stands a post there that a lock can take; "foe" stands a real foe there that
+## does nothing on its own, for a blow to land on; "hud" puts the HUD up and "menu"
 ## opens that screen (UI.open) before the first tick. "feet" is the side view brought down to the
 ## feet, close; "plant_feet": false films the body as it stopped before its feet were held
 ## (HumanoidModel.plant_feet), for a before and after in one run. "equip" and "offhand" put a
@@ -157,6 +159,11 @@ func _sequence(seq: Dictionary) -> void:
 	var target: Array = seq.get("target", [])
 	if target.size() == 3:
 		_stand_target(Vector3(float(target[0]), float(target[1]), float(target[2])))
+	var foe: Array = seq.get("foe", [])
+	if foe.size() >= 4:
+		_stand_foe(str(foe[0]), Vector3(float(foe[1]), float(foe[2]), float(foe[3])), float(foe[4]) if foe.size() > 4 else PI)
+		for i in 10:
+			await get_tree().physics_frame
 	var keys: Array = seq.get("keys", []).duplicate()
 	var looks: Array = seq.get("look", []).duplicate()
 	var turning: Array = []        # [until, dx a tick]
@@ -197,6 +204,25 @@ func _sequence(seq: Dictionary) -> void:
 	for post in get_tree().get_nodes_in_group(LockOn.GROUP):
 		if post.get_parent() == self:
 			post.queue_free()
+	for n in get_children():
+		if n is Enemy:
+			n.queue_free()
+	for n in get_tree().get_nodes_in_group(ImpactFx.GROUP):
+		n.queue_free()
+
+
+## A real foe of `enemy_id` standing at `at` facing `yaw`, that neither sees nor moves on its own:
+## a blow lands on it as on any foe (its hurtbox, poise, reactions and Impact are the real ones).
+func _stand_foe(enemy_id: String, at: Vector3, yaw: float) -> void:
+	var e := Enemy.new()
+	e.configure(enemy_id)
+	e.position = at
+	e.rotation.y = yaw
+	add_child(e)
+	e.spawn_position = at
+	e.brain.post = at
+	e.perception.enabled = false
+	e.set_physics_process(false)
 
 
 ## A post a lock can take (group LockOn.GROUP, alive), standing at `at`.
