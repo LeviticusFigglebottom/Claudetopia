@@ -254,6 +254,10 @@ const WHAT_STANDS := {
 	"core:poi/eel_stews": "nobody: none",
 	"core:poi/hanging_falls": "nobody: none",
 	"core:poi/ness_market": "nobody: fishers selling the catch",
+	"core:poi/turning_cairn": "nobody: none",
+	"core:poi/sweepers_lean_to": "person: core:npc/arn_sweeting",
+	"core:poi/haywards_perch": "nobody: none",
+	"core:poi/novices_seats": "nobody: none",
 }
 
 var host: Node3D

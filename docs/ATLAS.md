@@ -56,9 +56,9 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **297**: 57 places and 240 points of interest (60 places counting the three edge places) |
-| quests | **75** authored, 40 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 240 points of interest (§16) |
-| density | **6.3 locations a walkable km²** |
+| locations | **301**: 57 places and 244 points of interest (60 places counting the three edge places) |
+| quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 244 points of interest (§16) |
+| density | **6.4 locations a walkable km²** |
 | distance to the nearest location | mean **180 m**, 95% of the ground within **312 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
 | roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
@@ -104,6 +104,19 @@ In a heights build of this atlas, the first view (DESIGN 5.1a) has:
 * **within ten minutes' walk**: the Hush Bell on the cliff to the east (650 m, in view), the Bell
   Garden and the Last Camp to the west, the Row of Mouths, the Tenth Waystone, the Thirteenth
   Colossus, and the Last Look, where the downs begin (in view).
+
+On the way, so that no minute of the opening's walk is empty (the survey is in §11):
+
+* **the Turning Cairn** (215, 3720), on the Stair Path's last bend: the bells of pilgrims who went
+  down the Stair and came back up, tied silent. The first thing to find on the climb.
+* **the Novices' Seats** (-300, 3620), on the plateau's lip west of the camp: three seats facing
+  the Hush where the Order's novices count their first night. The view over the grey.
+* **the Sweeper's Lean-To** (-60, 2960), on the Choir road between the Choir and the Glass Bridge:
+  Arn Sweeting, a pilgrim who came back, sweeps the grey off the road and keeps what his broom
+  turns up. He gives **The Swept Road**, and his box has something new each time the main line
+  moves on.
+* **the Hayward's Perch** (260, 2150), south of Wynstead: a stilt lookout over the common fields,
+  the hayward's count of strays cut into its posts.
 
 Walking north, the Pilgrim Road goes from the ash through the Vale (Ashwell, Wynstead, Merrowby)
 and down Stride Coombe past the Cracked Toll. It comes out at the Stride's Foot, where the Long
@@ -424,6 +437,27 @@ would still like the kit to build (with how they are faked today) are in §10.
   range and were dropped. Those places keep a line that holds: Dreughow for the Clanless Camp, the
   Seven Stones for the Snow Shelter. That leaves 199 lines, none refused.
 
+### The opening's walk, minute by minute
+
+The walk from the Hushline Stair to Merrowby is 5.7 km, 19 minutes at a jog (300 m a minute).
+Surveyed on the rebuilt atlas world (atlas e11343a1) with the game's own sightline model:
+
+* Something authored is in sight within 700 m at every 75 m of the road.
+* No dry ground within 2 km of it is 450 m from anything authored.
+
+Before the places above it had three thin stretches:
+
+* **Minute 7**, from the Choir to the Glass Bridge: nothing new to find and nobody. The Sweeper's
+  Lean-To is there now.
+* **Minutes 11 to 14**: the Pilgrim's Ash road climbed to a via point on a knoll 60 m over the
+  valley and came back the same way, 2197 m for a hop of 590 m. Its via now keeps to the valley
+  floor past the Wellspring.
+* **Minute 17**, from Ashwell to Wynstead: two things in sight. The Hayward's Perch is there now.
+
+The skyline the survey reports, such as Merrowby from the Stair Head and the Grandfather from
+above Pilgrim's Ash, is the model's answer. The game builds only the streamed ring, so it is not
+on screen past about 0.6 km. `docs/HORIZON.md` is the list a horizon layer draws from.
+
 ## 12. The tables
 
 ### What moved
@@ -519,7 +553,7 @@ would still like the kit to build (with how they are faked today) are in §10.
 The places (with their residents) are in bold. "Where" gives the province and the position. §16
 ties each hook to the ids that pay it off in the game.
 
-#### Hearthvale (45 new)
+#### Hearthvale (46 new)
 
 | Location | Kind | Where | The story it anchors |
 |---|---|---|---|
@@ -560,6 +594,7 @@ ties each hook to the ids that pay it off in the game.
 | Wynstead | **hamlet** | The Vale of the Larkbourne (190, 1870) | Someone has been opening the sluices at night, and the flood is drowning the lane where Gosford's name used to be; the sluice-keeper thinks that is the point. |
 | Pennywort Bridge | bridge | The Vale of the Larkbourne (-58, 1270) | The cracked millstone has turned a quarter in the parapet, and there is fresh mortar dust in the road. |
 | The Old Sheepwash | ruins | The Vale of the Larkbourne (-230, 1950) | The spring is moving again, a yard a day, toward Fallowfold's gate. |
+| The Hayward's Perch | tower | The Vale of the Larkbourne (260, 2150) | The newest cut on the south post is a notch under and a notch over, and the hayward says he did not cut it. |
 | The Pinfold | ruins | The Vale of the Larkbourne (520, 1450) | Every morning there is one more sheep in the Pinfold than anybody put there, and nobody in the Vale will own it. |
 | The Wellspring | shrine, Hearthstone | The Vale of the Larkbourne (215, 2578) | A pilgrim's flask comes back up the glass bed full, and the woman who filled it is written on the Chapter Roll as gone on. |
 | Fallowfold | **hamlet** | The West Downs (-620, 2080) | A ewe came back from the south pasture grey to the skin and will not go into the pond; the shepherd wants her named, and does not know by whom. |
@@ -569,7 +604,7 @@ ties each hook to the ids that pay it off in the game.
 | The Warden Barrow | ruins | The West Downs (-1150, 1900) | The youngest at the Rest has stopped ringing the bells, because one of them rings back. |
 | Wolf Holt | ruins | The West Downs (-1450, 1350) | The pack's leader wears a Warden's collar-bell, and the Wardens would like to know whose. |
 
-#### Cinderlea (33 new)
+#### Cinderlea (36 new)
 
 | Location | Kind | Where | The story it anchors |
 |---|---|---|---|
@@ -585,6 +620,7 @@ ties each hook to the ids that pay it off in the game.
 | The Last Hearth | shrine, Hearthstone | The Ash Heath (-1350, 2300) | The chalk the fire is banked with has turned grey overnight, right through. |
 | The Ninth Waystone | stones | The Ash Heath (-620, 2560) | The bell-counts on the stone stop in 1024 and start again this spring, in a hand the Order does not know. |
 | The Tenth Waystone | stones | The Ash Heath (-280, 2700) | The coins taken from the tenth waystone turn up in the fire at the Stair Head, melted. |
+| The Turning Cairn | shrine | The Ash Heath (215, 3720) | One bell on the cairn has been untied, and it has been rung: the thread lies on the stones beside it, cut clean. |
 | The Builders' Harbour | ruins | The Ash Strand (-3480, 2980) | The harbour bells rang last night; the reedfolk say a Salt Isles ship is due, and none has been seen in forty years. |
 | The Grey Wreck | wreck | The Ash Strand (-3500, 2420) | The barge's chart has the Salt Isles on it, and a line ruled from them to the Choir. |
 | The Strand Beacon | tower | The Ash Strand (-3420, 1950) | Sit a night at the Strand Beacon and see who lights it. |
@@ -606,6 +642,9 @@ ties each hook to the ids that pay it off in the game.
 | The Last Camp | **camp** | The Choir Plateau (-700, 3660) | A pilgrim who has waited three years asks for the one thing she has not been able to find out: whether anybody would say her name if she stayed. |
 | The Bell Garden | ruins | The Choir Plateau (-650, 3480) | Struck in the right order the garden plays a line, and the Cantor's Seat's door answers it. |
 | The Row of Mouths | ruins | The Choir Plateau (-530, 3210) | At dusk one mouth is heard singing a single note, a different pillar every night, and the Order is counting which. |
+
+| The Novices' Seats | stones | The Choir Plateau (-300, 3620) | One of the seats has been turned in the night to face the Choir, and it is a single stone the size of a cart. |
+| The Sweeper's Lean-To | camp | The Choir Plateau (-60, 2960) | The broom turned up a hand-bell with a name scratched on it, and the name is not a pilgrim's. |
 
 #### Brightwater (27 new)
 
@@ -801,7 +840,7 @@ wrong about the detail, and the build is right about the ground.
 
 When the map was drawn, the pack's 35 authored quests reached 25 of its 57 places and 15 of its 240
 points of interest, and most of the country's hamlets had a resident with nothing to ask of
-anybody. Forty side quests are written with it (`game/content/packs/core/quests/the_map.json`),
+anybody. Forty-one side quests are written with it (`game/content/packs/core/quests/the_map.json`),
 in the provinces' voices, so that:
 
 * every one of the 39 settlements has work, given by somebody who lives there, keeps a day and
@@ -809,14 +848,14 @@ in the provinces' voices, so that:
 * every one of the 18 places that is not a settlement is somewhere a quest sends you: eight deep
   places from the Sunken Barge to Frostmother's Cradle, five landmarks including the Grandfather,
   Pennywort's Mill, and four places the packs keep as points of interest;
-* every one of the 240 points of interest pays off in something the game puts there (§16).
+* every one of the 244 points of interest pays off in something the game puts there (§16).
 
-Each quest has 4 to 6 stages and sends you from its giver's settlement to 2 to 4 other locations.
-Twelve of them cross from one region into the next. Every one comes to a decision (120 options in
+Each quest has 3 to 6 stages and sends you from its giver's home to 1 to 4 other locations.
+Twelve of them cross from one region into the next. Every one comes to a decision (123 options in
 all), and each option moves something the game reads: standing, Hearth or Hollow, renown, coin, a
 deed, who lives where. The person who asked greets you afterwards with what came of it. Every
-where, marker and escort is a place id, never a coordinate. The quests and hooks leave 84 books
-lying about, each with an item copy to carry: 12 that the quests send you to find or read, and 72
+where, marker and escort is a place id, never a coordinate. The quests and hooks leave 86 books
+lying about, each with an item copy to carry: 12 that the quests send you to find or read, and 74
 notes put down at points of interest by encounter defs that stand nobody up. Five of the quests'
 books are read where they lie (`in_place`): a keeper-roll hung inside a tower door is not
 something you carry off. Every talk closes on its own line (`topic`), not on whatever you last
@@ -900,7 +939,7 @@ The quest's id follows its name. "Where it sends you" leaves out the giver's own
 | **Tamwick Twice** `tamwick_twice` | Hob Tamwick, Tamwick | Orm's Long Barrow, the Singing Yew | twenty turns · to the rest · back in the cist | standing with Wardens of the Hearth, Hearth or Hollow |
 | **Ashcombe on the Roll** `ashcombe_on_the_roll` | Pellam Ashcombe, Merrowby | The West Walk, Ashcombe | onto the roll · leave the doors · bring a door home | standing with Wardens of the Hearth and the Tolling Order, a deed, Hearth or Hollow |
 
-### Cinderlea (4)
+### Cinderlea (5)
 
 | Quest | Given by | Where it sends you | The decision | What rides on it |
 |---|---|---|---|---|
@@ -908,6 +947,7 @@ The quest's id follows its name. "Where it sends you" leaves out the giver's own
 | **Ossel's Forge** `ossels_forge` | Merrit Ash, the West Walk | The Bell Pit, the North Gate | quench it · let her finish · bury it | standing with the Tolling Order, renown, Hearth or Hollow |
 | **The Late Delivery** `the_late_delivery` | Nan Greyfold, Greyfold | The Ash-Winter Carts, the Silent Market | set the tables · leave the stall · to the wardens | standing with Wardens of the Hearth, Hearth or Hollow, renown |
 | **The Sealed Barge** `the_sealed_barge` | Wat Thatcher, Pilgrim's Ash | The Driftwood Camp, the Strand Beacon | break the seal · send to the guild · give it to the strand | standing with the Tolling Order and the Tallymen, coin, Hearth or Hollow, renown |
+| **The Swept Road** `the_swept_road` | Arn Sweeting, the Sweeper's Lean-To | The Turning Cairn | tie it · ring it · keep it | Arn's greeting, and his box after the main line moves on |
 
 ### Where the work is
 
@@ -961,8 +1001,8 @@ Each point of interest's one-line hook (§12) is tied to the ids the game has fo
 `core:table/poi_hooks` (`game/content/packs/core/tables/poi_hooks.json`). `tools/poi_hooks.py`
 writes it from the pack, and `--check` says which rows have gone stale. test_map_quests holds each
 row true: the quests it names send you there, the things lying there are put down there, the
-encounters stand somebody up there, and the Hearthstone is the place's own. 108 are sent to by a
-quest, 74 have something lying there to take or read, 83 stand an encounter up and 22 keep a
+encounters stand somebody up there, and the Hearthstone is the place's own. 110 are sent to by a
+quest, 76 have something lying there to take or read, 83 stand an encounter up and 22 keep a
 Hearthstone. Nothing in the game reads the table itself. It is the index, and the test keeps it
 honest.
 
@@ -1141,7 +1181,7 @@ honest.
 | The Wardstone Line |  |  | `wardstone_line` |  |
 | Wold Force |  |  | `wold_force` |  |
 
-### Hearthvale (45)
+### Hearthvale (46)
 
 | Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
 |---|---|---|---|---|
@@ -1171,6 +1211,7 @@ honest.
 | The Flint Pits | `the_warreners_burrow` |  |  |  |
 | The Grey End |  |  | `the_grey_end` |  |
 | The Hare Stone |  | `item/note_hare_stone` |  |  |
+| The Hayward's Perch |  | `item/note_haywards_perch` |  |  |
 | The Hush Steps |  | `item/note_hush_steps` |  |  |
 | The Lambing Fold | `one_short` |  |  |  |
 | The Last Field | `the_grey_on_the_green` |  | `the_last_field` |  |
@@ -1191,7 +1232,7 @@ honest.
 | Whitecut Falls |  |  | `whitecut_falls` |  |
 | Wolf Holt |  |  | `wolf_holt` |  |
 
-### Cinderlea (40)
+### Cinderlea (43)
 
 | Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
 |---|---|---|---|---|
@@ -1224,6 +1265,7 @@ honest.
 | The Last Milestone |  | `item/note_last_milestone` |  |  |
 | The Ninth Waystone | `thistle` |  |  |  |
 | The North Gate | `ossels_forge` |  | `north_gate` |  |
+| The Novices' Seats |  | `item/note_novices_seats` |  |  |
 | The One Poppy |  | `item/note_the_one_poppy` |  |  |
 | The Pilgrims' Bell |  |  |  | yes |
 | The Row of Mouths |  |  | `row_of_mouths` |  |
@@ -1231,7 +1273,9 @@ honest.
 | The Stair Head |  |  |  | yes |
 | The Strand Beacon | `the_sealed_barge` |  |  |  |
 | The Sunk Plaza |  |  | `sunk_plaza` |  |
+| The Sweeper's Lean-To | `the_swept_road` |  |  |  |
 | The Tenth Waystone |  | `item/note_tenth_waystone` |  |  |
 | The Thirteenth |  |  | `thirteenth_colossus` |  |
 | The Tower of Vaelost |  |  | `tower_of_vaelost` |  |
+| The Turning Cairn | `the_swept_road` |  |  |  |
 | The Weighhouse |  | `item/note_weighhouse` |  |  |
