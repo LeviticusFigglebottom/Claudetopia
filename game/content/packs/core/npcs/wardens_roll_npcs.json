@@ -47,6 +47,7 @@
   },
   {
     "id": "core:npc/wardens_dole",
+    "carries": {"main_hand": "core:item/iron_sword"},
     "name": "Sergeant Dole",
     "home_place": "core:place/wardens_rest",
     "faction": "core:faction/wardens",

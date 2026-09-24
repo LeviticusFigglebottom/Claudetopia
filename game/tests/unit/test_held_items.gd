@@ -273,3 +273,45 @@ func test_a_humanoid_foe_holds_what_it_fights_with() -> void:
 	var held := HeldItems.held_by(body)
 	e.queue_free()
 	assert_eq(held.get("WeaponR", ""), "class:sword", "the bandit's sword is not in its hand: %s" % str(held))
+
+
+func _person(id: String) -> Npc:
+	var n := (load("res://actors/npc/npc.tscn") as PackedScene).instantiate() as Npc
+	n.set_script(load("res://actors/npc/guard.gd"))
+	n.set("npc_id", id)
+	_tree().root.add_child(n)
+	return n
+
+
+## An NPC def's `carries` is on the body: a Warden's sword rides at the hip through the day, is
+## drawn when the Warden turns hostile, and is not taken to bed; a Boardwalker's pole, which has no
+## sheath, is in the hand on a patrol and nowhere at the table.
+func test_a_person_carries_what_their_def_gives_them() -> void:
+	if not _rig_built():
+		return
+	var warden := _person("core:npc/guard_wardens")
+	await _ticks(2)
+	var body: Node = warden._body_model()
+	assert_true(body != null, "the Warden has no body")
+	if body != null:
+		assert_eq(HeldItems.sheathed_by(body).get("HipL", ""), "core:item/iron_sword", "the Warden's sword is not at the hip")
+		assert_true(HeldItems.held_by(body).is_empty(), "the Warden walks about with %s in hand" % str(HeldItems.held_by(body)))
+		warden.activity = "sleep"
+		warden.dress_hands()
+		assert_true(HeldItems.sheathed_by(body).is_empty() and HeldItems.held_by(body).is_empty(), "the Warden took the sword to bed")
+		warden.activity = "patrol"
+		warden.hostile = true
+		warden.dress_hands()
+		assert_eq(HeldItems.held_by(body).get("WeaponR", ""), "core:item/iron_sword", "the hostile Warden has not drawn")
+	warden.queue_free()
+	var boardwalker := _person("core:npc/guard_reed_council")
+	await _ticks(2)
+	body = boardwalker._body_model()
+	if body != null:
+		boardwalker.activity = "patrol"
+		boardwalker.dress_hands()
+		assert_eq(HeldItems.held_by(body).get("WeaponR", ""), "class:staff", "the Boardwalker's pole is not in hand on patrol")
+		boardwalker.activity = "eat"
+		boardwalker.dress_hands()
+		assert_true(HeldItems.held_by(body).is_empty(), "the Boardwalker eats with %s in hand" % str(HeldItems.held_by(body)))
+	boardwalker.queue_free()
