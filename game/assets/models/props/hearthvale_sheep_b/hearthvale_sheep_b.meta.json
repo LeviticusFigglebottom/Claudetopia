@@ -1,9 +1,9 @@
 {
  "bounds": {
-  "height": 0.945,
+  "height": 1.317,
   "max": [
-   0.704,
-   0.945,
+   0.7,
+   1.317,
    0.313
   ],
   "min": [
@@ -11,9 +11,9 @@
    0.0,
    -0.309
   ],
-  "radius": 0.85
+  "radius": 0.965
  },
- "built_seconds": 37.66,
+ "built_seconds": 19.8,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
