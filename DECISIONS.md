@@ -1125,7 +1125,7 @@ density: no walkable point more than about 400 m from a location, and no road mo
 tracked world (test_world_data, test_the_start, test_pois, the cinematic paths, the sightlines)
 disagree with the moved content until the world is rebuilt from the atlas.
 
-## 2026-09-23 — The map is written down once; everything else says what it is beside
+## 2026-09-23 · The map is written down once; everything else says what it is beside
 
 **Decision.** A place's and a POI's `position` is the only place the map is written in
 coordinates (the atlas writes it). Everything else that means "near that place" names the place
@@ -1150,11 +1150,12 @@ capture plans (default, pois, look, horizon) are still coordinates: their genera
 built world, and are run again after a redraw. A region's `map.center` is still the no-world
 fallback for region lookups, and should be kept inside its region as the atlas draws it.
 
-## 2026-09-23 — The Stair Head's waystones walk the road the builder routed
+## 2026-09-23 · The Stair Head's waystones walk the road the builder routed
 
-**Decision.** Where the built world has a road between a POI and the place its way leads to
-(`core:road/<from>_<to>`, either way round), the waystones stand along that road. The way's
-drawn shape is used only where there is no road.
+**Decision.** Where the built world has a road between a POI and the place its way leads to,
+the waystones stand along that road: the one the path names (`built_road`), else the one named
+for its two ends (`core:road/<from>_<to>`, either way round). The way's drawn shape is used only
+where there is no road.
 **Why.** On the atlas world the way drawn straight from the Stair Head to the Choir crossed
 ground of 37 to 61 degrees; the builder's road goes round the knoll. DESIGN 5.1a asks for a way
 marked on walkable ground.
