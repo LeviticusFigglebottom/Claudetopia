@@ -6995,3 +6995,65 @@ Fixed along the way:
 - test_atlas_world's flat-pad check took a square a texel either side of the pad. At 16 m
   texels that reached the cliff face 16 m behind the Tide Mouth, and it failed on batch3 before
   any of this. It now takes the texels whose centres lie within the pad's core.
+
+## Batch 3's pre-flight, the build's memory, and crags and sea cliffs in cliff ledges
+
+**Pre-flight at 2048** (batch 3 at c8c41767). The build finished clean in 605 s, at a load
+average of 16 to 18 on four cores, with a peak of 4.21 GB, reached in the scatter. The heights
+stage reached 1.7 GB and the textures 2.1 GB. Stage times (s): regions 100.6, heights 154.1,
+roads 50.7, water 27.3, textures 17.4, scatter 199.8, write 28.8; the rest are under 10 s each.
+5.73 M scatter instances. The Tide Mouth's pad, moved ashore to (-601, 3780), is level at 4.00 m
+with no water in its core, and the shelf still forms in front of it at 3.5 to 3.8 m.
+
+**Where the memory goes.** A second 2048 build recorded the resident memory at the end of each
+stage. The build holds 2.07 GB going into the scatter. The texture stage added 0.67 GB of that:
+the surface context's patch fields, the regions' soft weights, the dither, the settlements'
+footprints, the distance to the sea and the road's profile. The scatter's own rows add 1.78 GB:
+5.65 M rows at about 315 bytes each, as Python lists. That part is the same at any size.
+
+The surface context now lets go of everything but the slope once the colour map is made
+(`SurfaceContext.release`). At 4096 that is about 1.4 GB not held through the scatter, and a 512
+build's output is byte for byte the same with it. The rows could be kept in arrays instead of
+lists for about another 1.5 GB at any size; that is a larger change and not made. It rides with
+the ledges into batch 4: batch 3 had the memory to spare.
+
+**Cliff ledges.** The settlements agent's forge rock, `cliff_ledge` (a8eeb044, in batch 3 from
+165f1212), is a module of bedded rock 5 m wide whose ends are cut to its beds' own profile, so
+ledges side by side meet as one face. The crags use it where a region has it:
+- **A crag on a face** is a run of 2 to 7 ledges along the face's contour, one level and one scale
+  throughout so the ends meet, stacked up to four rows. Each row is set back up the slope until
+  its flat back is in the hill, and each ledge's foot is under the ground at its front. A boulder
+  covers each end of every row. The tallest ledge that seats on the run's gentlest ground is used.
+- **A steep brow** (a slope of 0.55 and over) takes a short run of the smallest ledge instead of a
+  boulder. The gentler crests keep their boulders. Cinderlea keeps its basalt columns inland.
+- **The sea cliffs** (`coast_walls`): each of the atlas's cliffs of 10 m and over is dressed from
+  the water to its top, at a scale that grows with the cliff (1.0 at 45 m, up to 2.2). Every
+  column of one cliff takes the same ledge at the same height, so its beds run level along the
+  whole cliff; its stacks take the same beds. Each bed stands where the wall's face crosses its
+  middle height, a metre proud of it, and only where the wall is steep. A cave's pad at the
+  cliff's foot keeps the wall 10 m clear of it up to 14 m over its level.
+- **Bug found and fixed:** the beds were laid only to the height the atlas drew the cliff (78 m on
+  the line past the Tide Mouth); the land behind stands at 120 m, and the top third was bare.
+
+In the last 1024 build with all of it on (L1024, ee6badc6): 19,163 ledges on the faces, 4,151 on
+the brows, and 26,893 on six sea cliffs, 882 of them round the stacks. The worst cell (the
+Skerrow's north-west wall) has 2,386 ledges of 4 assets. Draw calls hardly move: a cell has at
+most 8 ledge assets, and the worst 5 x 5 view is 1,729 draws against 1,709. Triangles are the
+cost: from 40 m out from that wall, the scatter LOD ladder draws 132 ledges whole, 873 at LOD1
+and 7,662 at LOD2, 3.75 M triangles (19.9 M were they all whole), where the rock was 2.2 M before.
+
+**Not in batch 3.** The first in-engine look at L1024 had broken ground (below), but it showed
+the rock itself: a sea cliff read as a wall of sandbags, every seam lined up from the water to the
+top and one mesh repeated every 4.7 m for 300 m, and the crags read as curved walls of blocks. So
+batch 3 was built without them, and they lead batch 4 with:
+- each bed of a sea cliff and each row of a crag slid along the face by its own share of a
+  module, so no seam stands over the one below; each module a little in or out;
+- a sea cliff's beds soft (weathered back along the whole cliff, never two together), hard
+  (running on across the bays) or between (standing only on the buttresses);
+- a real in-engine look at 1024 with the ground drawn, which has not been done yet: test builds
+  are held while batch 3 is built and verified.
+
+**Why the 1024 look had no ground.** The terrain import and the game both set Terrain3D's vertex
+spacing to 2 m, the 4096 build's texel. A 1024 build went in as one region, a 2 km square in the
+north-west corner, and the height at the world's centre came back NaN; the rocks stood over a
+bare plane. Both now take the manifest's `spacing_m` (6030dbf6). That is not yet run in Godot.
