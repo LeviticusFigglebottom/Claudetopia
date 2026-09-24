@@ -272,7 +272,7 @@ func asset(root_dir: String, kind: String, variant := -1) -> String:
 		var found := variants_of(root_dir, r, kind)
 		if found.is_empty():
 			continue
-		if r != region and root_dir == ROCKS:
+		if r != region and root_dir == ROCKS and kind in WHOLE_WHEN_LENT:
 			found = full_size(found)
 		return found[v % found.size()]
 	return ""
@@ -293,10 +293,12 @@ const ROCK_KIN := {
 	"cinderlea": ["briarwold", "brightwater", "sedgemire", "skerrow", "hearthvale"],
 }
 const NOT_STONE := ["fallen_log", "driftwood"]
-## A lent rock is one of the lender's full-size pieces, at least this share of its tallest: a
+## A lent standing stone is one of the lender's whole ones, at least this share of its tallest: a
 ## broken stump that suits the old forest it lies in (Briarwold's standing stones b and c, 0.8 m
-## and 0.4 m beside a 2.2 m one) is not a standing stone in another country.
+## and 0.4 m beside a 2.2 m one) is not a standing stone in another country. Only the kinds named
+## here: other rocks come in sizes on purpose (a cliff ledge's 2.1 m module is half its 4.2 m one).
 const LENT_FULL_SIZE := 0.6
+const WHOLE_WHEN_LENT := ["standing_stone"]
 
 
 ## The regions `asset` looks in for a kind, in order, the region's own first.
