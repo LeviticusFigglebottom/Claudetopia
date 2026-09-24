@@ -458,7 +458,12 @@ func take_hit(hit: HitData) -> String:
 		riposte_open_until = -100.0
 		stunned_until = maxf(stunned_until, t + RIPOSTE_VICTIM_STUN)
 		on_action_interrupted()
-		anim.play_intent("Hit_Heavy", {"length": RIPOSTE_VICTIM_STUN})
+		# a riposte lands from in front and rocks the body back; a backstab (or any crit from behind
+		# or the side) throws it the way it was struck, as a stagger does
+		var crit_react := "Hit_Heavy"
+		if not Impact.way_of(forward(), to_origin).is_empty():
+			crit_react = reaction_clip("Stagger", hit.origin)
+		anim.play_intent(crit_react, {"length": RIPOSTE_VICTIM_STUN})
 	elif hit.knockdown:
 		knock_down(push_dir)
 	elif not poise_comp.apply(hit.poise_damage, hit.heavy):
