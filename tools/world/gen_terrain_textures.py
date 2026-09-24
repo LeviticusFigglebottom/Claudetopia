@@ -325,6 +325,13 @@ def mat_pebbles(p: Painter, spec: dict) -> tuple:
     crease = 1.0 - np.clip(stones * 2.2, 0.0, 1.0)           # only the creases darken
     alb *= (1.0 - 0.38 * crease)[..., None]
     gap = crease
+    if spec.get("matrix_colour"):
+        # stones lying loose in sand and grit rather than packed edge to edge: the gaps are the
+        # sand's own colour, mottled, and only a stone's rim is shaded
+        sand = hexcol(spec["matrix_colour"])[None, None, :] * (0.88 + 0.24 * p.mottle(63, 0.5))[..., None]
+        sand *= (1.0 + 0.08 * p.strokes(65, 0.25, 0.0))[..., None]
+        alb = lerp(sand, alb, np.clip(stones * 2.4, 0.0, 1.0)[..., None])
+        gap = crease * 0.4
     wet = spec.get("wet", 0.0)
     if wet:
         alb = lerp(alb, alb * 0.70, (gap * wet)[..., None])
@@ -450,9 +457,12 @@ MATERIALS = {
     "fused_stone": {"recipe": "rock", "tile_m": 4.0, "colors": ["#26242a", "#35323a", "#46424c", "#56515c"],
                     "seam_colour": "#101015", "cells": 3, "jitter": 0.12, "seam": 0.02, "plate_warp": 0.0, "bedding": 0.04,
                     "fine_seams": 0.25, "aniso": (45.0, 2.6), "rough": 0.42, "normal_strength": 1.8},
-    "shingle": {"recipe": "pebbles", "tile_m": 2.0, "colors": ["#857f73", "#a39b8c", "#bdb4a2"],
-                "cells": 26, "radius": 0.52, "crease": 0.05, "small_mix": 0.45, "warp": 0.08, "wet": 0.3, "rough": 0.6,
-                "normal_strength": 3.2},
+    # A lake shore of sand and loose gravel, not packed cobbles: at 26 domed pebbles a 2 m tile
+    # the Mere's shore read as grey-blue discs repeating in a grid out to the horizon. The stones
+    # are fewer, smaller and varied, lying in sand, on a larger tile.
+    "shingle": {"recipe": "pebbles", "tile_m": 3.2, "colors": ["#7d766a", "#978e7f", "#b1a893"],
+                "matrix_colour": "#a6987a", "cells": 30, "radius": 0.3, "crease": 0.05, "small_mix": 0.25,
+                "warp": 0.14, "wet": 0.25, "rough": 0.7, "normal_strength": 2.2},
     "cobbles": {"recipe": "cobbles", "tile_m": 2.6, "colors": ["#5e5a55", "#767068", "#8d867c"],
                 "mortar": "#4a463f", "cells": 10},
     "barley": {"recipe": "grass", "tile_m": 2.4, "colors": ["#8a7a34", "#a8963f", "#c2ab4c", "#d8c05c"],
