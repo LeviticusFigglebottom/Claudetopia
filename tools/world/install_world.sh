@@ -27,7 +27,9 @@ mv "$dst.new" "$dst"
 rm -rf "$dst.old"
 cd "$repo"
 start=$(date +%s)
-godot --headless --path game --import --audio-driver Dummy > "$src.import.log" 2>&1
+# run.sh's import: one file at a time, since the threaded one deadlocks on this machine (run.sh,
+# import_project, says how and why)
+IMPORT_LOG="$src.import.log" ./run.sh import
 godot --headless --path game --audio-driver Dummy res://tools_gd/import_terrain.tscn >> "$src.import.log" 2>&1
 rc=$?
 echo "[install] terrain import rc=$rc wall=$(( $(date +%s) - start ))s, log $src.import.log"
