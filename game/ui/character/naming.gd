@@ -309,6 +309,9 @@ func _build_stage(vp: SubViewport) -> void:
 	_camera.fov = 28.0
 	_camera.near = 0.03
 	_camera.current = true
+	# framed from _process as the portrait zooms and the stage resizes, in a viewport of its own:
+	# interpolating it between physics ticks only warns that it moved outside one
+	_camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	world.add_child(_camera)
 
 	_mannequin = Node3D.new()
