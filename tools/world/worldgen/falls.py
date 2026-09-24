@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from .atlas import lake_at
 from .grid import Grid, sample_bilinear, smoothstep
 
 ## The faces of each form: (metres behind the POI's centre, metres of drop), front to back.
@@ -41,10 +42,10 @@ STEP_RUN_M = 3.0
 ## a POI this near an atlas river is on it: its water is the river's (the dressing asks the same
 ## of the river's falls, within 30 m)
 ON_RIVER_M = 30.0
-## how far up the river its top may not stand over the land (the water would have to climb), and
-## how far down it the gorge below the fall may run before the fall is made lower instead
-UPSTREAM_M = 300.0
+## how far down the river the gorge below the fall may run before the fall is made lower instead
 GORGE_M = 450.0
+## how far either side of a river's drawn line above the fall the land is read for its lowest
+UP_SPREAD_M = 10.0
 ## the least drop a step keeps; a waterfall with less than this is not worth the name
 MIN_DROP_M = 4.0
 
@@ -77,6 +78,15 @@ class Step:
         for behind, drop in self.faces:
             # 0 in front of the face's line, the drop past STEP_RUN_M behind it
             out += drop * (1.0 - smoothstep(-behind - STEP_RUN_M, -behind, u))
+        return out
+
+    def pins(self) -> list:
+        """[(x, z)]: where the river through it must have a point, each face's foot and lip on the
+        line through the centre (hydro.atlas_rivers' `pins`)."""
+        out = []
+        for behind, _ in self.faces:
+            for b in (behind, behind + STEP_RUN_M):
+                out.append((self.x - self.fx * b, self.z - self.fz * b))
         return out
 
     def entry(self) -> dict:
@@ -152,10 +162,22 @@ def plan(grid: Grid, H: np.ndarray, atlas: dict, pois: list) -> dict:
         if best is not None:
             rid, (dist, k, (fx, fz), run), path = best
             # the top: the land behind the last face, and no higher than any of the land the river
-            # comes down over to get there (it cannot climb to a lip over it)
+            # comes down over from its source to get there. Its surface is the lowest land above
+            # it (hydro._monotone_profile); a top over that stood the river's surface under the
+            # step's lip, and keep_channels cut the step back down to the river's carve.
             behind = _disc_median(H, grid, x - fx * (back + 8.0), z - fz * (back + 8.0), 6.0)
-            up = _along(path, run - UPSTREAM_M, run - back - 4.0)
-            top = behind if up.shape[0] == 0 else min(behind, float(np.min(sample_bilinear(H, grid, up[:, 0], up[:, 1]))))
+            up = _along(path, 0.0, run - back - 4.0)
+            top = behind
+            if up.shape[0]:
+                # (and a little either side of the drawn line, where the river's meander may run)
+                d = np.diff(up, axis=0, prepend=up[:1] - (up[1:2] - up[:1] if up.shape[0] > 1 else 1.0))
+                d /= np.maximum(np.linalg.norm(d, axis=1, keepdims=True), 1e-6)
+                for side in (-UP_SPREAD_M, 0.0, UP_SPREAD_M):
+                    xs, zs = up[:, 0] - d[:, 1] * side, up[:, 1] + d[:, 0] * side
+                    top = min(top, float(np.min(sample_bilinear(H, grid, xs, zs))))
+            src = lake_at(atlas, float(path[0, 0]), float(path[0, 1]))
+            if src is not None:
+                top = min(top, float(src["level_m"]))
             # the gorge below: lower the fall rather than cut a gorge longer than GORGE_M
             down = _along(path, run + 4.0, run + GORGE_M)
             if down.shape[0]:
