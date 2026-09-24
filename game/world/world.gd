@@ -35,6 +35,7 @@ var status: Dictionary = {}
 var ground_notice: GroundNotice = null
 var atmosphere: Node = null
 var night_lights: NightLights = null
+var horizon: HorizonLayer = null
 var fly_camera: FlyCamera = null
 var target: Node3D = null
 
@@ -95,6 +96,7 @@ func _ready() -> void:
 	_setup_night_lights()
 	_setup_water()
 	_setup_streamer()
+	_setup_horizon()
 	EventBus.region_entered.connect(_on_region_entered)
 	var start := _spawn_position()
 	GameState.enter_region(provider.nearest_region_id_at(start.x, start.z))
@@ -317,6 +319,14 @@ func _setup_target() -> void:
 	var start := _spawn_position()
 	fly_camera.move_to(start + Vector3(0.0, 12.0, 60.0), start + Vector3(0.0, 6.0, 0.0))
 	target = fly_camera
+
+
+## What stands on the skyline past the streamed ring (world/horizon_layer.gd).
+func _setup_horizon() -> void:
+	horizon = HorizonLayer.new()
+	horizon.name = "Horizon"
+	add_child(horizon)
+	horizon.build_from(self)
 
 
 func _setup_streamer() -> void:

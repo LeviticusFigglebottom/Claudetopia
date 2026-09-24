@@ -210,12 +210,14 @@ func _build() -> void:
 func _apply_settings() -> void:
 	_base_fov = clampf(float(Settings.get_value("video", "fov", 75.0)), 50.0, 110.0)
 	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
+	camera.far = Graphics.camera_far(Settings.data.get("graphics", {}))
 	var side := int(Settings.get_value("controls", "camera_side", 1))
 	_shoulder = TP_SHOULDER * (1.0 if side >= 0 else -1.0)
 
 
 func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
-	if section == "video" and key == "fov" or section == "controls" and key == "camera_side":
+	if section == "video" and key == "fov" or section == "controls" and key == "camera_side" \
+			or section == "graphics" and key == "view_distance":
 		_apply_settings()
 
 

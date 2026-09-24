@@ -160,6 +160,11 @@ func cell_of(pos: Vector3) -> Vector2i:
 	return Vector2i(int(floor((pos.x - _origin.x) / cell_size)), int(floor((pos.z - _origin.y) / cell_size)))
 
 
+## Whether a cell is built, in any ring.
+func has_cell(cell: Vector2i) -> bool:
+	return _loaded.has(cell)
+
+
 func cell_centre(cell: Vector2i) -> Vector2:
 	return Vector2(_origin.x + (float(cell.x) + 0.5) * cell_size, _origin.y + (float(cell.y) + 0.5) * cell_size)
 
@@ -629,6 +634,8 @@ func _build_scene(parent: Node3D, entry: Variant) -> void:
 	if packed == null:
 		return
 	var inst: Node = packed.instantiate()
+	if path.contains("/models/landmarks/"):
+		LandmarkLod.apply(inst)      # a colossus is one opaque level at a time (world/landmark_lod.gd)
 	if inst is Node3D:
 		var pos: Array = entry.get("pos", [0, 0, 0])
 		var node3d: Node3D = inst
