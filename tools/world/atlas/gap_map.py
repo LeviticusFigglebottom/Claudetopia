@@ -262,7 +262,7 @@ def land_gaps(walk: np.ndarray, size_m: float, thing_list: list, far: float = LA
 ## A wayside find is small: a stone, a gibbet, a cairn, a shrine in a wall. It asks the builder
 ## for a pad of about this radius, not the 25 m every other point of interest gets, so it can sit
 ## on a dale side without a quarry's worth of cut and fill.
-WAYSIDE_PAD_M = 12.0
+WAYSIDE_PAD_M = 14.0
 ## where a wayside find may stand: a pace off the road, on ground a pad can take, clear of water
 ## and of every other thing. The spacing answers "how many does a gap want": a find a pace off
 ## the road is passed along about 2 * sqrt(NEAR_M^2 - SITE_OFF_M^2) of it, about 110 m.
